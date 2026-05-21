@@ -1,0 +1,21 @@
+.DS_Store
+
+# Local agent/tool state
+.claude/settings.local.json
+
+# Python/runtime artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Environment and secrets
+.env
+.env.*
+
+# Build/cache outputs
+dist/
+build/
+*.egg-info/
+node_modules/
