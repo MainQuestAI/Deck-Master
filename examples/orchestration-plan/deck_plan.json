@@ -1,0 +1,45 @@
+{
+  "run_id": "sample-orchestrated-run",
+  "title": "Retail Digital Transformation Orchestrated Draft",
+  "status": "draft",
+  "pages": [
+    {
+      "page_id": "opening_problem",
+      "order": 1,
+      "title": "Problem Framing",
+      "source_type": "library_slide",
+      "preview_asset": "../preview-run/links/page_001.svg",
+      "source_pptx": "/absolute/path/to/history-retail-deck.pptx",
+      "source_slide_index": 12,
+      "narrative_role": "problem framing",
+      "reuse_reason": "Best match for the inventory visibility gap.",
+      "confidence": 0.83,
+      "decision": "approved",
+      "notes": "Strong opening page."
+    },
+    {
+      "page_id": "target_architecture",
+      "order": 2,
+      "title": "Target Architecture",
+      "source_type": "generated",
+      "preview_asset": "../preview-run/links/page_002.svg",
+      "source_project": "/absolute/path/to/deck-pro-max-project",
+      "narrative_role": "target architecture",
+      "generation_reason": "Generated to fill the architecture gap.",
+      "confidence": 0.76,
+      "decision": "needs_review",
+      "notes": ""
+    },
+    {
+      "page_id": "decision_gate",
+      "order": 3,
+      "title": "Decision Gate",
+      "source_type": "placeholder",
+      "preview_asset": "../preview-run/links/page_003.svg",
+      "narrative_role": "approval checkpoint",
+      "reuse_reason": "Temporary placeholder for final decision.",
+      "decision": "replace",
+      "notes": "Needs a sharper executive conclusion."
+    }
+  ]
+}

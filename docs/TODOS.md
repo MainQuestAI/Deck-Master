@@ -5,9 +5,9 @@ Deferred work for the Deck Master orchestration layer.
 ## Deck Master 编排层
 - **Why:** 三项目架构中的编排层——单入口，整合 PPT Library（搜索）和 PPT Deck Pro Max（生成），实现叙事驱动的 Deck 组装。
 - **Pros:** 用户只需一个入口，叙事弧线→缺口识别→搜索→组装全链路自动化
-- **Cons:** 依赖 PPT Library V1 和 PPT Deck Pro Max 都稳定，过早做编排会因下游变化而频繁重构
-- **Context:** 当前两个子项目独立运行，Agent 手动编排。Deck Master 的价值在子项目稳定后才会显现。
-- **Depends on:** PPT Library V1 完成 + PPT Deck Pro Max 稳定
+- **Cons:** 真实搜索和真实生成接入仍依赖 PPT Library V1 与 PPT Deck Pro Max 稳定。
+- **Context:** MVP 已在 `codex/web-preview-ui` 分支落地：组装计划 JSON 可以生成 `runs/<run_id>/preview_manifest.json`，Web UI 可审查并回写审批状态，`export_queue.py` 可导出确认后的页面队列。详见 `docs/2026-06-06-deck-master-orchestration-mvp.md`。
+- **Depends on:** 后续真实接入依赖 PPT Library 输出候选页截图/来源元数据，PPT Deck Pro Max 输出生成页预览图/项目路径。
 
 ## Web 预览 UI
 - **Why:** Deck Master 需要在导出前预览组装效果，先审查页面来源、顺序、叙事连贯性和复用合理性。
@@ -20,5 +20,5 @@ Deferred work for the Deck Master orchestration layer.
 - **Why:** CEO Plan 10x Check #3——每页 slide 记录被用过的 Deal、赢/输结果，搜索排序 = 语义相似度 × 实战胜率。
 - **Pros:** 搜索从"语义匹配"升级为"实战验证"，结果排序更有业务含义
 - **Cons:** 需要手动或半自动记录 slide 使用和 deal 结果，数据积累需要时间
-- **Context:** slides 表 metadata_json 已预留扩展点。Deck Master 未来可写入胜率数据。
-- **Depends on:** Deck Master 编排层
+- **Context:** Deck Master 已能导出确认后的页面队列，后续可在该队列上追加 Deal 结果并写回 PPT Library 的 slide metadata。
+- **Depends on:** PPT Library 提供稳定 slide id 与 metadata 写回入口。
