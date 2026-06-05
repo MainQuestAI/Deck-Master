@@ -5,7 +5,7 @@ Status: MVP IMPLEMENTED
 
 ## 结论
 
-本轮把 Slide 胜率追踪从 TODO 推进到本地可运行闭环：基于 `export_queue.py` 导出的页面队列，记录 Deal 的赢/输结果，并按 slide 来源统计使用次数、赢单次数、输单次数和胜率。
+本轮把 Slide 胜率追踪从规划项推进到本地可运行闭环：基于 `export_queue.py` 导出的页面队列，记录 Deal 的赢/输结果，并按 slide 来源统计使用次数、赢单次数、输单次数和胜率。
 
 这先解决反馈数据的采集和统计。等 PPT Library 提供稳定 slide id 与 metadata 写回入口后，再把统计结果写回 PPT Library，用于搜索排序。
 

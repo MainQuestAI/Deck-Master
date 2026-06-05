@@ -1,6 +1,6 @@
-# TODOS — Deck Master
+# Status — Deck Master
 
-Deferred work for the Deck Master orchestration layer.
+Implementation status for the Deck Master orchestration layer.
 
 ## Deck Master 编排层
 - **Why:** 三项目架构中的编排层——单入口，整合 PPT Library（搜索）和 PPT Deck Pro Max（生成），实现叙事驱动的 Deck 组装。
