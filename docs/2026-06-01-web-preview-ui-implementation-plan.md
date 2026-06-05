@@ -317,7 +317,7 @@ http://localhost:5050
 python3 -m unittest discover -s tests -v
 ```
 
-本轮已验证：9 个测试通过；本地服务 smoke test 已确认 `/api/deck`、`/preview/page_001`、编排 run 读取和页面决策回写可用。
+本轮已验证：18 个测试通过；本地服务 smoke test 已确认 `/api/deck`、`/preview/page_001`、编排 run 读取、外部工具适配、反馈统计和页面决策回写可用。
 
 ## 风险与处理
 

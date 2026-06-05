@@ -1,0 +1,24 @@
+{
+  "_meta": {
+    "command": "search",
+    "schema_version": "1.0"
+  },
+  "results": [
+    {
+      "slide_id": 7,
+      "score": 0.91,
+      "title": "Retail Inventory Visibility",
+      "text_summary": "Architecture view for omnichannel inventory visibility.",
+      "source_file": "/absolute/path/to/history-retail-deck.pptx",
+      "page_number": 12,
+      "screenshot_path": "../preview-run/links/page_001.svg",
+      "confidence": 0.86,
+      "narrative_role": "problem framing",
+      "importance_reason": "high reuse and close semantic match",
+      "win_rate": 0.6667,
+      "won_count": 2,
+      "lost_count": 1
+    }
+  ],
+  "_errors": []
+}
