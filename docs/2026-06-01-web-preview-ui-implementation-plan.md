@@ -317,7 +317,7 @@ http://localhost:5050
 python3 -m unittest discover -s tests -v
 ```
 
-本轮已验证：6 个测试通过；本地服务 smoke test 已确认 `/api/deck`、`/preview/page_001` 和页面决策回写可用。
+本轮已验证：9 个测试通过；本地服务 smoke test 已确认 `/api/deck`、`/preview/page_001`、编排 run 读取和页面决策回写可用。
 
 ## 风险与处理
 
@@ -331,9 +331,9 @@ python3 -m unittest discover -s tests -v
 
 ## 下一步
 
-下一阶段重点是接入真实运行数据：
+下一阶段重点是接入真实外部工具数据：
 
-- Deck Master 编排层生成真实 `runs/<run_id>/preview_manifest.json`
-- PPT Library 写入历史页截图、来源路径、命中理由和置信度
-- PPT Deck Pro Max 写入生成页预览图、生成理由和项目路径
-- 增加导出前确认流程，把 `approved` 页面队列传给后续导出步骤
+- PPT Library 输出历史页截图、来源路径、命中理由和置信度
+- PPT Deck Pro Max 输出生成页预览图、生成理由和项目路径
+- Deck Master 把真实候选页输入 `scripts/orchestrate/build_run.py`
+- 导出前确认流程把 `approved` 页面队列传给后续 PPTX 生成或人工组装步骤
