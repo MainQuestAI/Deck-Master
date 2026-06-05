@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Deck Master Preview Manifest",
+  "type": "object",
+  "required": ["run_id", "title", "status", "pages"],
+  "properties": {
+    "run_id": { "type": "string", "minLength": 1 },
+    "title": { "type": "string", "minLength": 1 },
+    "status": { "type": "string", "minLength": 1 },
+    "updated_at": { "type": "string" },
+    "pages": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "page_id",
+          "order",
+          "source_type",
+          "preview_path",
+          "narrative_role",
+          "decision"
+        ],
+        "properties": {
+          "page_id": { "type": "string", "minLength": 1 },
+          "order": { "type": "integer" },
+          "title": { "type": "string" },
+          "source_type": {
+            "type": "string",
+            "enum": ["library_slide", "generated", "placeholder", "manual"]
+          },
+          "preview_path": { "type": "string", "minLength": 1 },
+          "source_pptx": { "type": "string" },
+          "source_slide_index": { "type": "integer" },
+          "source_project": { "type": "string" },
+          "narrative_role": { "type": "string", "minLength": 1 },
+          "reuse_reason": { "type": "string" },
+          "generation_reason": { "type": "string" },
+          "confidence": { "type": "number" },
+          "decision": {
+            "type": "string",
+            "enum": ["needs_review", "keep", "replace", "approved"]
+          },
+          "notes": { "type": "string" },
+          "reviewed_at": { "type": "string" }
+        }
+      }
+    }
+  }
+}

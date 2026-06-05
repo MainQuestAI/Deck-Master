@@ -1,0 +1,46 @@
+{
+  "run_id": "sample-preview-run",
+  "title": "Retail Transformation Draft",
+  "status": "draft",
+  "updated_at": "2026-06-01T00:00:00+08:00",
+  "pages": [
+    {
+      "page_id": "page_001",
+      "order": 1,
+      "title": "Problem Framing",
+      "source_type": "library_slide",
+      "preview_path": "links/page_001.svg",
+      "source_pptx": "/absolute/path/to/history-retail-deck.pptx",
+      "source_slide_index": 12,
+      "narrative_role": "problem framing",
+      "reuse_reason": "Matches the inventory visibility gap in the opening argument.",
+      "confidence": 0.83,
+      "decision": "needs_review",
+      "notes": ""
+    },
+    {
+      "page_id": "page_002",
+      "order": 2,
+      "title": "Target Architecture",
+      "source_type": "generated",
+      "preview_path": "links/page_002.svg",
+      "source_project": "/absolute/path/to/deck-pro-max-project",
+      "narrative_role": "target architecture",
+      "generation_reason": "Fills the architecture gap after the library search found no close match.",
+      "confidence": 0.76,
+      "decision": "keep",
+      "notes": "Check visual continuity with reused pages."
+    },
+    {
+      "page_id": "page_003",
+      "order": 3,
+      "title": "Decision Gate",
+      "source_type": "placeholder",
+      "preview_path": "links/page_003.svg",
+      "narrative_role": "approval checkpoint",
+      "reuse_reason": "Placeholder for final recommendation after review.",
+      "decision": "replace",
+      "notes": "Needs a stronger executive conclusion."
+    }
+  ]
+}

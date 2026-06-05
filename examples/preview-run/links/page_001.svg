@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <rect width="1280" height="720" fill="#f4efe5"/>
+  <rect x="70" y="64" width="1140" height="592" rx="28" fill="#ffffff" stroke="#2b3639" stroke-width="6"/>
+  <text x="110" y="150" font-family="Avenir, Arial" font-size="54" font-weight="700" fill="#1c2426">Problem Framing</text>
+  <text x="110" y="220" font-family="Avenir, Arial" font-size="28" fill="#586467">Library slide · source page 12 · confidence 0.83</text>
+  <rect x="110" y="290" width="310" height="210" rx="18" fill="#d8a725"/>
+  <rect x="470" y="290" width="310" height="210" rx="18" fill="#2fba73"/>
+  <rect x="830" y="290" width="310" height="210" rx="18" fill="#4f8cff"/>
+  <text x="140" y="395" font-family="Avenir, Arial" font-size="32" fill="#101010">Gap</text>
+  <text x="500" y="395" font-family="Avenir, Arial" font-size="32" fill="#101010">Evidence</text>
+  <text x="860" y="395" font-family="Avenir, Arial" font-size="32" fill="#101010">Impact</text>
+</svg>

@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Deck Master Preview</title>
+    <link rel="stylesheet" href="/static/style.css">
+  </head>
+  <body>
+    <main class="shell">
+      <aside class="rail">
+        <div class="brand">
+          <span class="eyebrow">Deck Master</span>
+          <h1 id="deck-title">Preview</h1>
+          <p id="deck-meta">Loading manifest...</p>
+        </div>
+        <div id="page-list" class="page-list"></div>
+      </aside>
+
+      <section class="stage">
+        <div class="stage-toolbar">
+          <button id="first-page">First</button>
+          <button id="prev-page">Previous</button>
+          <strong id="current-label">No page selected</strong>
+          <button id="next-page">Next</button>
+          <button id="last-page">Last</button>
+        </div>
+        <div id="preview-frame" class="preview-frame">
+          <p>Select a page to preview.</p>
+        </div>
+      </section>
+
+      <aside class="inspector">
+        <div class="panel">
+          <span class="eyebrow">Page Review</span>
+          <h2 id="page-title">No page</h2>
+          <dl id="page-details"></dl>
+        </div>
+        <div class="panel decision-panel">
+          <label for="decision">Decision</label>
+          <select id="decision">
+            <option value="needs_review">Needs review</option>
+            <option value="keep">Keep</option>
+            <option value="replace">Replace</option>
+            <option value="approved">Approved</option>
+          </select>
+          <label for="notes">Notes</label>
+          <textarea id="notes" rows="7" placeholder="Add page-level notes..."></textarea>
+          <button id="save-decision" class="primary">Save decision</button>
+          <p id="save-status" class="save-status"></p>
+        </div>
+      </aside>
+    </main>
+    <script src="/static/app.js"></script>
+  </body>
+</html>
