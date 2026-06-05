@@ -1,0 +1,22 @@
+{
+  "run_id": "sample-orchestrated-run",
+  "title": "Retail Digital Transformation Orchestrated Draft",
+  "source_manifest": "/absolute/path/to/runs/sample-orchestrated-run/preview_manifest.json",
+  "decisions": ["approved"],
+  "pages": [
+    {
+      "page_id": "opening_problem",
+      "order": 1,
+      "title": "Problem Framing",
+      "source_type": "library_slide",
+      "decision": "approved",
+      "preview_path": "links/opening_problem.svg",
+      "source_preview_asset": "/absolute/path/to/page_001.svg",
+      "source_pptx": "/absolute/path/to/history-retail-deck.pptx",
+      "source_slide_index": 12,
+      "source_project": "",
+      "narrative_role": "problem framing",
+      "notes": "Strong opening page."
+    }
+  ]
+}
