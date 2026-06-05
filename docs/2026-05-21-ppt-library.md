@@ -67,12 +67,12 @@ V1 做的是"搜到历史 slide"。10x 版本是"历史 slide 成为每次写新
 
 PPT Library 的 metadata_json 作为 Deck Master 未来写入胜率数据的扩展点。
 
-## Deferred to TODOS.md
+## Tracked outside PPT Library V1
 
 - Watch 模式跨平台兼容性测试（macOS fsevents / Linux inotify）
 - 搜索结果聚类阈值调优（需要 ground truth 标注数据）
-- Deck Master 编排层实现
-- Slide 胜率追踪与反馈闭环
+- Deck Master 编排层实现：已在 Deck Master `codex/web-preview-ui` 分支落地本地 MVP
+- Slide 胜率追踪与反馈闭环：已在 Deck Master `codex/web-preview-ui` 分支落地本地 MVP；写回搜索排序仍依赖 PPT Library metadata 入口
 
 ## Cross-Model Tensions Resolved
 
