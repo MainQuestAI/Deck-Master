@@ -48,7 +48,11 @@ def safe_link_name(page_id: str, asset: Path) -> str:
     return f"{safe_id}{suffix}"
 
 
-def reset_run_dir(run_dir: Path, force: bool) -> None:
+def reset_run_dir(run_dir: Path, force: bool, preserve_existing: bool = False) -> None:
+    if preserve_existing:
+        (run_dir / "links").mkdir(parents=True, exist_ok=True)
+        (run_dir / "notes").mkdir(parents=True, exist_ok=True)
+        return
     if run_dir.exists() and any(run_dir.iterdir()):
         if not force:
             raise BuildRunError(f"Run directory is not empty. Re-run with --force: {run_dir}")
@@ -90,12 +94,18 @@ def manifest_page(plan_path: Path, run_dir: Path, page: dict[str, Any], link_mod
     return result
 
 
-def build_run(plan_path: Path, run_dir: Path, force: bool = False, link_mode: str = "symlink") -> dict[str, Any]:
+def build_run(
+    plan_path: Path,
+    run_dir: Path,
+    force: bool = False,
+    link_mode: str = "symlink",
+    preserve_existing: bool = False,
+) -> dict[str, Any]:
     if link_mode not in {"symlink", "copy"}:
         raise BuildRunError("link_mode must be symlink or copy.")
 
     plan = load_plan(plan_path)
-    reset_run_dir(run_dir, force)
+    reset_run_dir(run_dir, force, preserve_existing=preserve_existing)
     manifest = {
         "run_id": plan["run_id"],
         "title": plan["title"],
@@ -117,6 +127,7 @@ def main() -> None:
     parser.add_argument("run_dir", help="Output run directory")
     parser.add_argument("--force", action="store_true", help="Replace an existing run directory")
     parser.add_argument("--link-mode", choices=["symlink", "copy"], default="symlink")
+    parser.add_argument("--preserve-existing", action="store_true", help="Keep existing run artifacts and only refresh preview files")
     args = parser.parse_args()
 
     try:
@@ -125,6 +136,7 @@ def main() -> None:
             Path(args.run_dir).expanduser().resolve(),
             force=args.force,
             link_mode=args.link_mode,
+            preserve_existing=args.preserve_existing,
         )
     except BuildRunError as exc:
         print(f"error: {exc}", file=sys.stderr)

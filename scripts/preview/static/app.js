@@ -78,9 +78,13 @@ function renderPage(page) {
 
   els.details.innerHTML = detailRows({
     "Source": page.source_type,
+    "Sourcing decision": page.source_decision || "",
     "Narrative role": page.narrative_role,
-    "Reason": page.reuse_reason || page.generation_reason || "",
+    "Reason": page.decision_reason || page.reuse_reason || page.generation_reason || "",
     "Confidence": page.confidence ?? "",
+    "Risks": Array.isArray(page.risk_flags) ? page.risk_flags.join(", ") : "",
+    "Alternatives": summarizeAlternatives(page.alternatives),
+    "Generation task": page.generation_task ? page.generation_task.task_id : "",
     "Original PPT": page.source_pptx || "",
     "Slide index": page.source_slide_index ?? "",
     "Preview path": page.preview_path,
@@ -92,6 +96,14 @@ function renderPage(page) {
   } else {
     els.frame.innerHTML = `<div class="empty error"><strong>Preview unavailable</strong><p>${escapeHtml(page.asset_error)}</p></div>`;
   }
+}
+
+function summarizeAlternatives(alternatives) {
+  if (!Array.isArray(alternatives) || !alternatives.length) return "";
+  return alternatives
+    .slice(0, 3)
+    .map((item) => `${item.title || item.candidate_id || "candidate"} (${item.confidence ?? ""})`)
+    .join(" · ");
 }
 
 function detailRows(rows) {

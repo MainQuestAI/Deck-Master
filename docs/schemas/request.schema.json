@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Deck Master Request",
+  "type": "object",
+  "required": ["run_id", "project_name", "business_goal", "brief", "must_cover_topics", "target_pages", "audience"],
+  "properties": {
+    "run_id": { "type": "string" },
+    "project_name": { "type": "string", "minLength": 1 },
+    "industry": { "type": "string" },
+    "audience": { "type": "string", "enum": ["exec", "team", "client"] },
+    "business_goal": { "type": "string", "minLength": 1 },
+    "brief": { "type": "string", "minLength": 1 },
+    "must_cover_topics": { "type": "array", "items": { "type": "string" } },
+    "source_constraints": { "type": "array", "items": { "type": "string" } },
+    "target_pages": { "type": "string" },
+    "style_preference": { "type": "string" }
+  }
+}

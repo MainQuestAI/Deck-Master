@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Deck Master Sourcing Plan",
+  "type": "object",
+  "required": ["run_id", "title", "decisions"],
+  "properties": {
+    "run_id": { "type": "string" },
+    "title": { "type": "string" },
+    "source": { "type": "string" },
+    "decisions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["beat_id", "order", "page_title", "role", "source_decision", "decision_reason"],
+        "properties": {
+          "beat_id": { "type": "string" },
+          "order": { "type": "integer" },
+          "page_title": { "type": "string" },
+          "role": { "type": "string" },
+          "source_decision": { "type": "string", "enum": ["reuse", "adapt", "generate", "manual_placeholder"] },
+          "decision_reason": { "type": "string" },
+          "selected_candidate": { "type": ["object", "null"] },
+          "alternatives": { "type": "array" },
+          "risk_flags": { "type": "array", "items": { "type": "string" } },
+          "confidence": { "type": "number" }
+        }
+      }
+    }
+  }
+}
