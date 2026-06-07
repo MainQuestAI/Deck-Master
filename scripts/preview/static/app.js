@@ -1,5 +1,7 @@
 const state = {
   deck: null,
+  runs: [],
+  currentRunId: new URLSearchParams(window.location.search).get("run") || "",
   selectedIndex: 0,
 };
 
@@ -15,6 +17,14 @@ const els = {
   notes: document.querySelector("#notes"),
   save: document.querySelector("#save-decision"),
   saveStatus: document.querySelector("#save-status"),
+  form: document.querySelector("#create-run-form"),
+  brief: document.querySelector("#brief"),
+  industry: document.querySelector("#industry"),
+  targetPages: document.querySelector("#target-pages"),
+  libraryMode: document.querySelector("#library-mode"),
+  create: document.querySelector("#create-run"),
+  createStatus: document.querySelector("#create-status"),
+  runList: document.querySelector("#run-list"),
   first: document.querySelector("#first-page"),
   prev: document.querySelector("#prev-page"),
   next: document.querySelector("#next-page"),
@@ -30,19 +40,72 @@ async function requestJson(url, options = {}) {
   return data;
 }
 
+function runQuery(extra = {}) {
+  const params = new URLSearchParams(extra);
+  if (state.currentRunId) {
+    params.set("run_id", state.currentRunId);
+  }
+  const query = params.toString();
+  return query ? `?${query}` : "";
+}
+
+async function loadRuns() {
+  try {
+    const data = await requestJson("/api/runs");
+    state.runs = data.runs || [];
+    renderRuns();
+    if (!state.currentRunId && state.runs.length) {
+      state.currentRunId = state.runs[0].run_id;
+      updateLocation();
+    }
+  } catch (error) {
+    els.createStatus.textContent = error.message;
+  }
+}
+
 async function loadDeck() {
   try {
-    state.deck = await requestJson("/api/deck");
+    state.deck = await requestJson(`/api/deck${runQuery()}`);
     els.title.textContent = state.deck.title;
     els.meta.textContent = `${state.deck.run_id} · ${state.deck.status} · ${state.deck.pages.length} pages`;
     renderList();
     selectPage(0);
   } catch (error) {
+    state.deck = null;
+    els.title.textContent = "Studio";
+    els.meta.textContent = "Create or select a run.";
+    els.list.innerHTML = "";
     els.frame.innerHTML = `<div class="empty error">${escapeHtml(error.message)}</div>`;
   }
 }
 
+function renderRuns() {
+  if (!els.runList) return;
+  els.runList.innerHTML = "";
+  if (!state.runs.length) {
+    els.runList.innerHTML = '<p class="muted">No runs yet.</p>';
+    return;
+  }
+  state.runs.forEach((run) => {
+    const item = document.createElement("button");
+    item.className = "run-card";
+    item.dataset.active = run.run_id === state.currentRunId ? "true" : "false";
+    item.innerHTML = `
+      <strong>${escapeHtml(run.title || run.run_id)}</strong>
+      <small>${escapeHtml(run.run_id)} · ${escapeHtml(run.status)} · ${run.pages || 0} pages</small>
+    `;
+    item.addEventListener("click", () => {
+      state.currentRunId = run.run_id;
+      updateLocation();
+      loadDeck();
+      renderRuns();
+    });
+    els.runList.appendChild(item);
+  });
+}
+
 function renderList() {
+  if (!state.deck) return;
   els.list.innerHTML = "";
   state.deck.pages.forEach((page, index) => {
     const item = document.createElement("button");
@@ -92,7 +155,7 @@ function renderPage(page) {
   });
 
   if (page.asset_exists) {
-    els.frame.innerHTML = `<img src="${page.preview_url}?t=${Date.now()}" alt="${escapeHtml(page.title || page.page_id)}">`;
+    els.frame.innerHTML = `<img src="${page.preview_url}${runQuery({ t: Date.now() })}" alt="${escapeHtml(page.title || page.page_id)}">`;
   } else {
     els.frame.innerHTML = `<div class="empty error"><strong>Preview unavailable</strong><p>${escapeHtml(page.asset_error)}</p></div>`;
   }
@@ -118,7 +181,7 @@ async function saveDecision() {
   els.save.disabled = true;
   els.saveStatus.textContent = "Saving...";
   try {
-    const updated = await requestJson(`/api/page/${page.page_id}/decision`, {
+    const updated = await requestJson(`/api/page/${page.page_id}/decision${runQuery()}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -137,8 +200,48 @@ async function saveDecision() {
   }
 }
 
+async function createRun(event) {
+  event.preventDefault();
+  const brief = els.brief.value.trim();
+  if (!brief) {
+    els.createStatus.textContent = "Brief is required.";
+    return;
+  }
+  els.create.disabled = true;
+  els.createStatus.textContent = "Generating draft...";
+  try {
+    const payload = await requestJson("/api/runs", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        brief,
+        industry: els.industry.value.trim(),
+        target_pages: els.targetPages.value,
+        audience: "client",
+        library_mode: els.libraryMode.value,
+      }),
+    });
+    state.currentRunId = payload.run_id;
+    updateLocation();
+    els.createStatus.textContent = `Draft ready: ${payload.pages} pages`;
+    await loadRuns();
+    await loadDeck();
+  } catch (error) {
+    els.createStatus.textContent = error.message;
+  } finally {
+    els.create.disabled = false;
+  }
+}
+
+function updateLocation() {
+  if (!state.currentRunId) return;
+  const url = new URL(window.location.href);
+  url.searchParams.set("run", state.currentRunId);
+  window.history.replaceState({}, "", url);
+}
+
 function escapeHtml(value) {
-  return value.replace(/[&<>"']/g, (char) => ({
+  return String(value ?? "").replace(/[&<>"']/g, (char) => ({
     "&": "&amp;",
     "<": "&lt;",
     ">": "&gt;",
@@ -147,6 +250,7 @@ function escapeHtml(value) {
   }[char]));
 }
 
+els.form.addEventListener("submit", createRun);
 els.save.addEventListener("click", saveDecision);
 els.first.addEventListener("click", () => selectPage(0));
 els.prev.addEventListener("click", () => selectPage(state.selectedIndex - 1));
@@ -157,4 +261,4 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "ArrowRight") selectPage(state.selectedIndex + 1);
 });
 
-loadDeck();
+loadRuns().then(loadDeck);

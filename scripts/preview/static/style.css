@@ -27,6 +27,7 @@ body {
 
 button,
 select,
+input,
 textarea {
   font: inherit;
 }
@@ -72,6 +73,45 @@ dd,
   display: grid;
   gap: 10px;
   margin-top: 24px;
+}
+
+.create-run {
+  display: grid;
+  gap: 10px;
+  margin: 20px 0;
+  padding: 16px;
+  background: rgba(36, 43, 46, 0.72);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 88px 1fr;
+  gap: 8px;
+  align-items: center;
+}
+
+.run-section {
+  margin-top: 18px;
+}
+
+.run-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.run-card {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  text-align: left;
+}
+
+.run-card[data-active="true"] {
+  border-color: var(--approved);
+  background: #1e2b34;
 }
 
 .page-card {
@@ -127,6 +167,7 @@ dd,
 }
 
 button,
+input,
 select {
   color: var(--text);
   background: var(--panel);
@@ -201,6 +242,10 @@ textarea {
   border-radius: 10px;
   padding: 12px;
   resize: vertical;
+}
+
+.muted {
+  color: var(--muted);
 }
 
 .empty {

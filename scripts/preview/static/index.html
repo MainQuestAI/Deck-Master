@@ -11,8 +11,39 @@
       <aside class="rail">
         <div class="brand">
           <span class="eyebrow">Deck Master</span>
-          <h1 id="deck-title">Preview</h1>
+          <h1 id="deck-title">Studio</h1>
           <p id="deck-meta">Loading manifest...</p>
+        </div>
+        <form id="create-run-form" class="create-run">
+          <label for="brief">New deck brief</label>
+          <textarea id="brief" rows="6" placeholder="例：零售客户数字化转型方案，关注全渠道、库存可视化、最后一公里配送"></textarea>
+          <div class="form-row">
+            <label for="industry">Industry</label>
+            <input id="industry" value="retail" placeholder="retail">
+          </div>
+          <div class="form-row">
+            <label for="target-pages">Pages</label>
+            <select id="target-pages">
+              <option value="auto">Auto</option>
+              <option value="15">15</option>
+              <option value="30">30</option>
+              <option value="60">60</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label for="library-mode">Library</label>
+            <select id="library-mode">
+              <option value="fixture">Demo</option>
+              <option value="auto">Auto</option>
+              <option value="real">Real</option>
+            </select>
+          </div>
+          <button class="primary" type="submit" id="create-run">Generate draft</button>
+          <p id="create-status" class="save-status"></p>
+        </form>
+        <div class="run-section">
+          <span class="eyebrow">Runs</span>
+          <div id="run-list" class="run-list"></div>
         </div>
         <div id="page-list" class="page-list"></div>
       </aside>

@@ -66,5 +66,56 @@ class ServerTests(unittest.TestCase):
         self.assertEqual("approved", page["decision"])
 
 
+class StudioServerTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.temp_dir = Path(tempfile.mkdtemp())
+        self.runs_dir = self.temp_dir / "runs"
+        self.server = ThreadingHTTPServer(("127.0.0.1", 0), build_handler(None, self.runs_dir, "fixture"))
+        self.thread = Thread(target=self.server.serve_forever, daemon=True)
+        self.thread.start()
+        self.port = self.server.server_address[1]
+
+    def tearDown(self) -> None:
+        self.server.shutdown()
+        self.server.server_close()
+        self.thread.join(timeout=2)
+        shutil.rmtree(self.temp_dir, ignore_errors=True)
+
+    def request(self, method: str, path: str, body: dict | None = None) -> tuple[int, dict]:
+        connection = HTTPConnection("127.0.0.1", self.port, timeout=10)
+        payload = json.dumps(body).encode("utf-8") if body is not None else None
+        headers = {"Content-Type": "application/json"} if body is not None else {}
+        connection.request(method, path, body=payload, headers=headers)
+        response = connection.getresponse()
+        data = json.loads(response.read().decode("utf-8"))
+        connection.close()
+        return response.status, data
+
+    def test_studio_can_create_and_load_run(self) -> None:
+        status, created = self.request(
+            "POST",
+            "/api/runs",
+            {
+                "brief": "零售数字化方案，关注全渠道、库存可视化、最后一公里配送",
+                "industry": "retail",
+                "target_pages": "auto",
+                "library_mode": "fixture",
+                "run_id": "studio-test",
+            },
+        )
+        self.assertEqual(201, status)
+        self.assertEqual("studio-test", created["run_id"])
+        self.assertEqual(12, created["pages"])
+
+        status, runs = self.request("GET", "/api/runs")
+        self.assertEqual(200, status)
+        self.assertEqual(["studio-test"], [run["run_id"] for run in runs["runs"]])
+
+        status, deck = self.request("GET", "/api/deck?run_id=studio-test")
+        self.assertEqual(200, status)
+        self.assertEqual("studio-test", deck["run_id"])
+        self.assertEqual(12, len(deck["pages"]))
+
+
 if __name__ == "__main__":
     unittest.main()
