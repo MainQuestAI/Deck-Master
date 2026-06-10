@@ -41,9 +41,11 @@ The target workflow:
 7. Deck Master creates generation task packages for pages that need new work.
 8. Deck Master builds a preview manifest.
 9. User reviews the deck in Web Studio.
-10. Deck Master runs Draft, Render, and Delivery quality gates.
-11. User approves pages and exports the approved queue.
-12. Feedback from approval and win/loss outcomes updates future search and sourcing decisions.
+10. Deck Master runs Draft Gate once `narrative_plan.json` and `page_tasks.json` exist.
+11. User reviews pages in Web Studio and approves or rejects pages.
+12. Render Gate runs only when HTML/SVG/PPTX preview assets exist.
+13. Delivery Gate runs only when an export queue or deliverable package exists.
+14. Feedback from approval and rejection updates future sourcing decisions.
 
 Expected artifacts:
 
@@ -83,9 +85,9 @@ Deck Master should remain runtime-first. The runtime owns state, recovery, tool 
 Runtime requirements:
 
 - `request.json` stores normalized user demand, constraints, audience, target pages, style preference, and source constraints.
-- `events.jsonl` records every important step, external tool call, error, and manual action.
+- `events.jsonl` records typed events for runtime recovery and audit.
 - `narrative_plan.json` stores deck-level strategy and page-level beats.
-- `page_tasks.json` stores implementation-oriented page tasks derived from narrative beats.
+- `page_tasks.json` stores layered implementation tasks derived from narrative beats.
 - `library_results/` stores full PPT Library candidate results and per-beat results.
 - `sourcing_plan.json` stores final source decisions and explanations.
 - `generation_tasks/` stores handoff packages for generation tools.
@@ -102,6 +104,28 @@ Recovery rules:
 - If preview manifest is missing, resume from preview build.
 - If preview exists, open Web Studio and preserve user approval state.
 - Any corrupt JSON should create an error event and stop before overwriting data.
+
+Event types:
+
+- `run_created`: a run folder and initial request were created.
+- `step_started`: a pipeline step started.
+- `step_completed`: a pipeline step finished successfully.
+- `tool_call`: an external tool command was prepared or executed.
+- `tool_result`: an external tool returned usable output.
+- `decision`: Deck Master made a planning, sourcing, or export decision.
+- `manual_action`: a user approval, rejection, or note was written back.
+- `warning`: a recoverable issue was detected.
+- `error`: a blocking issue was detected.
+
+Minimum event fields:
+
+- `timestamp`
+- `event_type`
+- `run_id`
+- `step`
+- `message`
+- `refs`
+- `severity`
 
 ## 4. Deck Workspace
 
@@ -123,8 +147,14 @@ Initial behavior:
 - Create the standard workspace folder structure.
 - Write `workspace_manifest.json`.
 - Create starter files under `visual-system/`, `structure-assets/`, and `quality/`.
-- Optionally register a reference PPT path.
+- Optionally register a reference PPT path and basic metadata only.
 - Support registering an existing folder as a workspace.
+
+First version boundary:
+
+- `--reference-ppt` only records path, filename, file size, modified time, and optional user note.
+- It does not extract colors, fonts, layouts, screenshots, or master templates.
+- Visual extraction from reference PPT is a later package because it requires Office parsing, heuristic cleanup, and human review.
 
 `workspace_manifest.json` minimum fields:
 
@@ -168,6 +198,13 @@ The visual system should provide stable production standards:
 - Template constraints.
 
 Deck Master does not need to render every page itself. It needs to make these standards available to the planner, preview layer, quality gate, and downstream generators.
+
+First version source:
+
+- New workspaces receive human-editable starter templates.
+- Existing workspaces can reuse committed files such as `design_spec.md`, `spec_lock.md`, and `layout_blueprint.md`.
+- If a field is unknown, the template should mark it as `pending_manual_review`.
+- No automatic visual spec extraction is required in Package 1.
 
 ### 4.3 Structure Assets
 
@@ -238,24 +275,68 @@ Planner outputs:
 - `narrative_plan.json`
 - `page_tasks.json`
 
-Each page task should include:
+`page_tasks.json` should avoid a flat structure. Use stage-specific sections so each pipeline step writes to its own area.
+
+Recommended task shape:
+
+```json
+{
+  "beat_id": "beat_004",
+  "order": 4,
+  "planning": {
+    "page_title": "库存可视化目标架构",
+    "role": "architecture",
+    "core_claim": "库存可视化需要打通门店、仓、渠道和配送履约状态。",
+    "content_goal": "说明目标架构和关键数据流。",
+    "evidence_need": ["系统截图", "库存状态样例", "履约指标"],
+    "visual_need": "分层架构图",
+    "density": "high",
+    "preferred_archetype": "architecture",
+    "workspace_refs": ["structure-assets/page_archetypes.md#architecture"],
+    "quality_requirements": ["必须有主观点", "必须说明数据如何服务决策"],
+    "gaps": []
+  },
+  "retrieval": {
+    "reuse_query": "retail inventory visibility architecture omnichannel fulfillment",
+    "constraints": ["avoid generic platform overview"]
+  },
+  "sourcing": {
+    "decision": null,
+    "selected_candidate": null,
+    "alternatives": [],
+    "risk_flags": [],
+    "confidence": null
+  },
+  "generation": {
+    "generation_brief": "生成一页库存可视化目标架构页，强调全渠道库存、履约状态和最后一公里配送。",
+    "reference_slide": null,
+    "task_path": null,
+    "status": "pending"
+  }
+}
+```
+
+Planner writes:
 
 - `beat_id`
 - `order`
-- `page_title`
-- `role`
-- `core_claim`
-- `content_goal`
-- `evidence_need`
-- `visual_need`
-- `density`
-- `preferred_archetype`
-- `workspace_refs`
-- `reuse_query`
-- `generation_brief`
-- `approval_required`
-- `quality_requirements`
-- `gaps`
+- `planning.*`
+- `retrieval.reuse_query`
+- `generation.generation_brief`
+
+Sourcing writes:
+
+- `sourcing.decision`
+- `sourcing.selected_candidate`
+- `sourcing.alternatives`
+- `sourcing.risk_flags`
+- `sourcing.confidence`
+
+Generation writes:
+
+- `generation.reference_slide`
+- `generation.task_path`
+- `generation.status`
 
 Default planning rules:
 
@@ -335,6 +416,35 @@ Scoring dimensions:
 - Visual continuity with workspace.
 - Evidence sufficiency.
 
+Initial scoring weights:
+
+| Dimension | Weight |
+|---|---:|
+| Semantic match | 0.30 |
+| Narrative role match | 0.18 |
+| Archetype match | 0.10 |
+| Screenshot availability | 0.10 |
+| Source credibility | 0.08 |
+| Win rate | 0.10 |
+| Reuse count | 0.04 |
+| Customer-context conflict | -0.12 |
+| Visual continuity with workspace | 0.06 |
+| Evidence sufficiency | 0.06 |
+
+Initial thresholds:
+
+- `reuse`: score >= 0.78, screenshot available, no high customer-context conflict.
+- `adapt`: score >= 0.58 and either archetype match >= 0.70 or narrative role match >= 0.70.
+- `generate`: score < 0.58 and no required evidence gap.
+- `manual_placeholder`: required evidence or customer fact is missing.
+
+Tie-breaking:
+
+- Prefer higher narrative role match over higher raw semantic match.
+- Prefer higher win rate when scores differ by less than 0.05.
+- Prefer candidates with screenshots when scores differ by less than 0.08.
+- If the best candidate has a context conflict, downgrade from `reuse` to `adapt`.
+
 Decision defaults:
 
 - High match plus usable screenshot: `reuse`.
@@ -394,6 +504,16 @@ First implementation boundary:
 - Merge generated previews into `preview_manifest.json`.
 - Defer expensive rendering or image generation to explicit downstream commands.
 
+Minimum orchestration strategy:
+
+- `autoplan --auto-through preview` runs request intake, planning, library search, sourcing, generation task creation, and preview build in sequence.
+- It creates generation tasks but does not automatically run expensive renderers.
+- `create-generation-tasks` can be run independently after sourcing.
+- `run-generation --beat-id <id>` should be added later for manual targeted execution.
+- Parallel execution is allowed only inside an external renderer after task files are created.
+- If task creation fails for one page, record an error for that beat and continue building preview for other pages.
+- If a downstream renderer fails later, keep the task in `failed` state and keep the page visible in preview with a risk flag.
+
 ## 9. Preview UI Upgrade
 
 The current preview UI should become the review surface for source decisions and quality risks.
@@ -412,11 +532,14 @@ User actions:
 
 - Approve page.
 - Reject page.
+- Add review note.
+
+Deferred actions:
+
 - Request replacement.
 - Lock historical slide.
 - Convert to generated page.
 - Mark manual evidence required.
-- Add review note.
 
 Manifest extensions:
 
@@ -444,7 +567,13 @@ It should run at three points:
 
 - Draft Gate: after narrative plan and page tasks.
 - Render Gate: after HTML/SVG/PPTX preview assets exist.
-- Delivery Gate: before final export or handoff.
+- Delivery Gate: after an export queue or deliverable package exists.
+
+Implementation order:
+
+- Draft Gate belongs in the first vNext implementation wave because it only needs `narrative_plan.json` and `page_tasks.json`.
+- Render Gate should wait until the pipeline has real rendered assets or fixture assets.
+- Delivery Gate should wait until export queue and package validation are in place.
 
 ### 10.1 Draft Gate
 
@@ -539,10 +668,13 @@ Severity levels:
 
 Deck Master should record which decisions worked.
 
-Signals:
+First version signal:
 
 - Page approved.
 - Page rejected.
+
+Later signals:
+
 - Page converted from reuse to generate.
 - Candidate replaced.
 - User note.
@@ -562,9 +694,22 @@ Feedback artifacts:
 
 ```text
 feedback/
-  slide_outcomes.jsonl
   sourcing_outcomes.jsonl
+  slide_outcomes.jsonl
   quality_outcomes.jsonl
+```
+
+First version only writes `sourcing_outcomes.jsonl`:
+
+```json
+{
+  "timestamp": "2026-06-10T00:00:00Z",
+  "run_id": "run_001",
+  "beat_id": "beat_004",
+  "decision": "reuse",
+  "candidate_id": "slide_123",
+  "outcome": "approved"
+}
 ```
 
 ## 12. Implementation Sequence
@@ -584,63 +729,93 @@ Verify:
 - Register the MarketingForce workshop folder.
 - Detect missing workspace files and show pending status.
 
-### Package 2: Planner reads workspace standards
+### Package 2: Planner reads workspace standards and writes layered tasks
 
 Deliver:
 
 - Planner loads page archetypes.
-- Page tasks include workspace references.
+- Page tasks use `planning`, `retrieval`, `sourcing`, and `generation` sections.
+- Planner writes only planning/retrieval/generation brief fields.
 - Default planner still works without workspace.
 
 Verify:
 
 - Same brief produces workspace-aware page tasks.
 - Missing archetype falls back to default.
+- `page_tasks.json` has no flat mixed-stage decision fields.
 
-### Package 3: Quality Gate foundation
+### Package 3: Sourcing thresholds and generation handoff
+
+Deliver:
+
+- Initial sourcing weights and thresholds.
+- Deterministic sourcing decision output.
+- Generation task creation for `adapt` and `generate`.
+- Minimum orchestration strategy for `autoplan --auto-through preview`.
+
+Verify:
+
+- Same input produces the same sourcing decision.
+- High screenshot + high score candidate becomes `reuse`.
+- Context mismatch downgrades `reuse` to `adapt`.
+- Missing evidence becomes `manual_placeholder`.
+- Generation task creation failure records an event and does not block other preview pages.
+
+### Package 4: Preview UI minimal approval upgrade
+
+Deliver:
+
+- Source decision display.
+- Candidate and risk display.
+- Approval actions limited to approve, reject, and note.
+- Export queue filters approved pages.
+
+Verify:
+
+- User can approve, reject, and note pages.
+- Export includes only approved pages.
+
+### Package 5: Draft Gate
 
 Deliver:
 
 - Draft Gate.
-- Render Gate.
-- Delivery Gate.
-- Quality reports under each run.
+- `quality_reports/draft_gate.json`.
+- `quality_reports/draft_gate.md`.
+- Draft findings visible in preview.
 
 Verify:
 
-- Retail brief Draft Gate.
+- Retail brief Draft Gate catches missing evidence.
+- Draft Gate does not require rendered assets.
+- Draft Gate findings map to page task ids.
+
+### Package 6: Render and Delivery Gate
+
+Deliver:
+
+- Render Gate for HTML/SVG/PPTX assets.
+- Delivery Gate for export queue and package validation.
+- Quality summary display in Preview UI.
+
+Verify:
+
 - Danone HTML deck Render Gate.
 - Enterprise AIGC PPTX Delivery Gate.
 - ECCO long deck regression.
+- PPT Master vector-heavy output is not misread as empty.
 
-### Package 4: Preview UI upgrade
-
-Deliver:
-
-- Quality summary display.
-- Source decision display.
-- Candidate and risk display.
-- Expanded approval actions.
-
-Verify:
-
-- User can approve, reject, lock, convert, and note pages.
-- Export includes only approved pages.
-
-### Package 5: Feedback and asset learning
+### Package 7: Feedback and asset learning
 
 Deliver:
 
-- Approval outcome logs.
-- Sourcing outcome logs.
-- Quality outcome logs.
-- PPT Library win-rate handoff.
+- `approved` and `rejected` outcomes in `sourcing_outcomes.jsonl`.
+- Later hooks for PPT Library win-rate handoff.
 
 Verify:
 
-- Approved pages update feedback queue.
-- Rejected candidates lower future priority.
-- Quality failure modes are traceable.
+- Approved pages update sourcing outcome logs.
+- Rejected candidates are traceable for later ranking changes.
 
 ## 13. Acceptance Scenarios
 
@@ -710,17 +885,34 @@ Expected:
 
 Required tests:
 
-- Runtime run creation, recovery, duplicate run handling, and corrupt JSON handling.
-- Brief intake from short text, file, and structured input.
-- Workspace initialization and workspace registration.
-- Narrative planner with and without workspace archetypes.
-- PPT Library client normal, empty, missing screenshot, and bad JSON cases.
-- Sourcing decider for reuse, adapt, generate, and manual placeholder.
-- Generation task package creation.
-- Preview manifest compatibility with old and new fields.
-- Quality Gate Draft, Render, and Delivery checks.
-- End-to-end fixture mode from brief to preview manifest.
-- Approval export filtering.
+| Test | Input | Expected output |
+|---|---|---|
+| Runtime creates run | `brief="零售数字化"` | `request.json` and `events.jsonl` exist |
+| Runtime rejects duplicate run | same `run_id` created twice | second create raises a clear error |
+| Runtime resumes from planning | `request.json` exists, `narrative_plan.json` missing | next step is planning |
+| Runtime handles corrupt JSON | invalid `request.json` | error event is written and no overwrite happens |
+| Brief intake short text | one-sentence Chinese brief | normalized request with business goal and topics |
+| Brief intake file | `examples/briefs/retail_digital_transformation.txt` | same normalized fields as text input |
+| Workspace initialization | `init-workspace --workspace tmp/ws --name Test` | standard folders and manifest exist |
+| Workspace reference registration | `--reference-ppt sample.pptx` | manifest stores path and metadata only |
+| Planner with workspace | retail brief + workspace archetypes | page tasks reference workspace archetypes |
+| Planner without workspace | retail brief only | page tasks use default archetypes |
+| Page task layering | generated `page_tasks.json` | fields are grouped under planning/retrieval/sourcing/generation |
+| PPT Library normal result | fixture with screenshot | candidate parsed with source metadata |
+| PPT Library empty result | empty fixture | beat has empty result, no silent skip |
+| PPT Library bad JSON | malformed fixture | error event and fallback decision |
+| Sourcing reuse | score >= 0.78, screenshot available | decision is `reuse` |
+| Sourcing adapt | strong archetype match, context mismatch | decision is `adapt` |
+| Sourcing generate | low score, no evidence gap | decision is `generate` |
+| Sourcing manual placeholder | required evidence missing | decision is `manual_placeholder` |
+| Generation task | one `adapt` and one `generate` page | two task files with beat ids |
+| Preview manifest compatibility | old manifest without new fields | server still loads it |
+| Preview approval | approve one page, reject one page | manifest stores both outcomes |
+| Export filtering | one approved, one rejected page | approved queue contains only approved page |
+| Draft Gate | page task missing evidence | Draft Gate emits page-level finding |
+| Render Gate fixture | HTML deck with sparse screenshot page | Render Gate emits screenshot/evidence finding |
+| Delivery Gate fixture | expected 17 pages, PPTX reports 30 | Delivery Gate emits P0 page-count finding |
+| End-to-end fixture | retail brief with fake library | run reaches preview manifest deterministically |
 
 Suggested regression samples:
 
@@ -772,11 +964,16 @@ The first vNext release is complete when:
 - A user can start from one business brief.
 - Deck Master creates a run with recoverable state.
 - Page planning reads workspace standards.
+- Page tasks are layered by planning, retrieval, sourcing, and generation sections.
 - PPT Library or fake client produces candidates.
 - Every page has a source decision.
+- Sourcing decisions use documented initial weights and thresholds.
 - Generate/adapt pages have task packages.
-- Preview UI shows decisions, candidates, risks, and approval state.
-- Quality Gate produces Draft, Render, and Delivery reports.
+- `autoplan --auto-through preview` runs the minimum sequence through preview without running expensive renderers.
+- Preview UI shows decisions, candidates, risks, and approve/reject/note state.
+- Draft Gate produces JSON and Markdown reports.
+- Render Gate and Delivery Gate specs exist and can run against fixtures when rendered/exported assets are available.
 - Export queue contains approved pages only.
+- First feedback loop writes approved/rejected outcomes to `sourcing_outcomes.jsonl`.
 - Tests cover the full fixture flow.
 - Documentation explains current capability and known boundaries.
