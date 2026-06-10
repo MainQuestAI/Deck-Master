@@ -22,3 +22,10 @@ Implementation status for the Deck Master orchestration layer.
 - **Cons:** 需要手动或半自动记录 slide 使用和 deal 结果，数据积累需要时间
 - **Context:** 本地 MVP 已在 `codex/web-preview-ui` 分支落地：基于审批队列记录 Deal 赢/输结果，并统计每个 slide 的使用次数、赢单次数、输单次数和胜率。详见 `docs/2026-06-06-slide-win-rate-feedback-mvp.md`。
 - **Depends on:** 后续写回搜索排序仍依赖 PPT Library 提供稳定 slide id 与 metadata 写回入口。
+
+## Deck Workspace 与质量门禁
+- **Why:** Deck Master 下一阶段需要从一次性 autoplan 升级为长期可复用的 Deck 生产运行时，统一管理工作区、视觉规范、页面原型、质量标准、审批和反馈闭环。
+- **Pros:** 用户可以围绕一个品牌或客户持续生产 Deck，减少重复定义模板、页面结构和验收规则的成本。
+- **Cons:** 需要新增 workspace manifest、质量报告、页面原型读取和更多 UI 状态，实施面比单次 preview 更大。
+- **Context:** 方案已整理为 vNext 实施文档，核心是 `Deck Workspace + Quality Gate + Runtime-first orchestration`。详见 `docs/deck-master-vnext-workspace-quality-gate-plan.md`。
+- **Depends on:** 当前 autoplan/runtime/preview 基础能力；PPT Library 候选检索；PPT Deck Pro Max、PPT Master、Guizang 等生成与渲染工具的任务交接。
