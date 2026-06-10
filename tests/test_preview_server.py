@@ -51,6 +51,48 @@ class ServerTests(unittest.TestCase):
         self.assertEqual("sample-preview-run", data["run_id"])
         self.assertEqual(3, len(data["pages"]))
 
+    def test_deck_api_returns_quality_reports(self) -> None:
+        quality_dir = self.run_dir / "quality_reports"
+        quality_dir.mkdir(exist_ok=True)
+        (quality_dir / "draft_gate.json").write_text(
+            json.dumps(
+                {
+                    "run_id": "sample-preview-run",
+                    "gate": "draft",
+                    "status": "rework_required",
+                    "blocks_delivery": True,
+                    "score_summary": {"average": 2.5},
+                    "findings": [
+                        {
+                            "finding_id": "page_001_missing_claim",
+                            "severity": "P1",
+                            "page_id": "page_001",
+                            "message": "页面缺少主论点。",
+                            "repair_instruction": "补充页面主张。",
+                        }
+                    ],
+                    "page_findings": [
+                        {
+                            "finding_id": "page_001_missing_claim",
+                            "severity": "P1",
+                            "page_id": "page_001",
+                            "message": "页面缺少主论点。",
+                            "repair_instruction": "补充页面主张。",
+                        }
+                    ],
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+
+        status, data = self.request("GET", "/api/deck")
+
+        self.assertEqual(200, status)
+        self.assertEqual("rework_required", data["quality"]["draft"]["status"])
+        page = next(page for page in data["pages"] if page["page_id"] == "page_001")
+        self.assertEqual(1, len(page["quality"]))
+
     def test_page_decision_api_writes_manifest(self) -> None:
         status, data = self.request(
             "POST",

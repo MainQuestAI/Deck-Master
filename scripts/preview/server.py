@@ -9,7 +9,15 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
 
-from manifest import ManifestError, find_page, load_manifest, page_payload, preview_file_path, update_page_decision
+from manifest import (
+    ManifestError,
+    find_page,
+    load_manifest,
+    load_quality_reports,
+    page_payload,
+    preview_file_path,
+    update_page_decision,
+)
 
 SCRIPTS_DIR = Path(__file__).resolve().parents[1]
 ROOT_DIR = Path(__file__).resolve().parents[2]
@@ -132,6 +140,7 @@ class PreviewHandler(BaseHTTPRequestHandler):
                     "title": manifest["title"],
                     "status": manifest["status"],
                     "updated_at": manifest.get("updated_at", ""),
+                    "quality": load_quality_reports(run_dir),
                     "pages": pages,
                 }
             )

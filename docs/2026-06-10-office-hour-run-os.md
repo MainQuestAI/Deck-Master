@@ -20,6 +20,7 @@ Deck Master 的下一阶段产品路线是 `Professional Deck Run OS`。
 - 核心指标：约 12 小时到约 2 小时。
 - 产品形态：专业 Deck 的生产运行时，避免停留在单点页面生成器。
 - 首版边界：本地/已导出资料优先，保留人工审查，不做实时飞书拉取，不做长期思考库，不做 reference PPT 自动视觉提取。
+- 质量边界：Quality Gate 是 Deck Master 的内建子系统，覆盖 Draft、Render、Delivery 三段门禁。
 
 ## 3. Why This Is Different
 
@@ -53,6 +54,8 @@ Deck Master 的差异点应压在专业 Solution Deck 的生产过程：
 - `sourcing_plan.json`：每页 reuse、adapt、generate、manual_placeholder 的来源判断。
 - `preview_manifest.json`：Web Studio 审查用的页面状态、来源、风险、备注和审批。
 - `quality_reports/draft_gate.json`：Draft Gate 对论点、证据链和页面职责的检查结果。
+- `quality_reports/render_gate.json`：Render Gate 对 PPTX 页数、稀疏页和疑似整页截图迁移的检查结果。
+- `quality_reports/delivery_gate.json`：Delivery Gate 对最终 PPTX 页数、禁用词和交付阻断项的检查结果。
 
 ## 5. CEO Review Questions
 

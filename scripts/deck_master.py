@@ -17,7 +17,12 @@ from planning.claim_map import build_claim_map
 from planning.narrative_planner import plan_narrative
 from planning.page_tasks import build_page_tasks
 from planning.sourcing_decider import decide_sourcing, load_library_results
-from quality.draft_gate import evaluate_draft, write_draft_gate_report
+from quality.gate_runner import (
+    evaluate_delivery_gate,
+    evaluate_draft_gate,
+    evaluate_render_gate,
+    write_gate_report,
+)
 from runtime.run_state import (
     CLAIM_MAP_NAME,
     CONTEXT_MANIFEST_NAME,
@@ -238,20 +243,48 @@ def command_autoplan(args: argparse.Namespace) -> dict[str, Any]:
 
 def command_quality_gate(args: argparse.Namespace) -> dict[str, Any]:
     run_dir = resolve_run_dir(args)
-    if args.gate != "draft":
-        raise RunStateError("Only quality-gate draft is supported in v1.")
     request = load_request(run_dir)
-    deck_brief = read_optional_json(run_dir, DECK_BRIEF_NAME) or {
-        "run_id": request.get("run_id", run_dir.name),
-        "project_name": request.get("project_name", run_dir.name),
-        "business_goal": request.get("business_goal", ""),
+    run_id = request.get("run_id", run_dir.name)
+    expected_pages = args.expected_pages
+    if expected_pages is None:
+        preview_manifest = read_optional_json(run_dir, "preview_manifest.json")
+        if preview_manifest and isinstance(preview_manifest.get("pages"), list):
+            expected_pages = len(preview_manifest["pages"])
+
+    if args.gate == "draft":
+        deck_brief = read_optional_json(run_dir, DECK_BRIEF_NAME) or {
+            "run_id": run_id,
+            "project_name": request.get("project_name", run_dir.name),
+            "business_goal": request.get("business_goal", ""),
+        }
+        claim_map = read_optional_json(run_dir, CLAIM_MAP_NAME) or {"run_id": run_id, "claims": [], "risk_flags": ["missing_claim_map"]}
+        page_tasks = read_optional_json(run_dir, PAGE_TASKS_NAME) or {"run_id": run_id, "tasks": []}
+        report = evaluate_draft_gate(deck_brief, claim_map, page_tasks)
+    elif args.gate == "render":
+        if not args.artifact:
+            raise RunStateError("--artifact is required for render gate.")
+        report = evaluate_render_gate(run_id, args.artifact, expected_pages=expected_pages, forbidden_terms=args.forbidden)
+    else:
+        if not args.artifact:
+            raise RunStateError("--artifact is required for delivery gate.")
+        report = evaluate_delivery_gate(run_id, args.artifact, expected_pages=expected_pages, forbidden_terms=args.forbidden)
+
+    paths = write_gate_report(run_dir, args.gate, report)
+    write_artifact(
+        run_dir,
+        f"quality_reports/{args.gate}_gate.index.json",
+        {"report": paths, "status": report["status"], "blocks_delivery": report["blocks_delivery"]},
+        action=f"quality.{args.gate}_gate.created",
+    )
+    return {
+        "run_id": run_id,
+        "run_dir": str(run_dir),
+        "gate": args.gate,
+        "status": report["status"],
+        "blocks_delivery": report["blocks_delivery"],
+        "findings": len(report["findings"]),
+        "report": paths,
     }
-    claim_map = read_optional_json(run_dir, CLAIM_MAP_NAME) or {"run_id": request.get("run_id", ""), "claims": [], "risk_flags": ["missing_claim_map"]}
-    page_tasks = read_optional_json(run_dir, PAGE_TASKS_NAME) or {"run_id": request.get("run_id", ""), "tasks": []}
-    report = evaluate_draft(deck_brief, claim_map, page_tasks)
-    paths = write_draft_gate_report(run_dir, report)
-    write_artifact(run_dir, "quality_reports/draft_gate.index.json", {"report": paths, "status": report["status"]}, action="quality.draft_gate.created")
-    return {"run_id": request.get("run_id", run_dir.name), "run_dir": str(run_dir), "status": report["status"], "findings": len(report["findings"]), "report": paths}
 
 
 def add_brief_args(parser: argparse.ArgumentParser) -> None:
@@ -341,7 +374,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_quality = sub.add_parser("quality-gate", help="Run a Deck Master quality gate")
     add_run_args(p_quality)
-    p_quality.add_argument("gate", choices=["draft"])
+    p_quality.add_argument("gate", choices=["draft", "render", "delivery"])
+    p_quality.add_argument("--artifact", help="Rendered or final PPTX artifact for render/delivery gates")
+    p_quality.add_argument("--expected-pages", type=int)
+    p_quality.add_argument("--forbidden", action="append", default=[], help="Forbidden visible term. Can be repeated.")
     p_quality.set_defaults(func=command_quality_gate)
     return parser
 

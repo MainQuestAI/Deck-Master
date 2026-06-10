@@ -27,7 +27,7 @@ Implementation status for the Deck Master orchestration layer.
 - **Why:** Deck Master 下一阶段需要从一次性 autoplan 升级为长期可复用的 Deck 生产运行时，统一管理工作区、视觉规范、页面原型、质量标准、审批和反馈闭环。
 - **Pros:** 用户可以围绕一个品牌或客户持续生产 Deck，减少重复定义模板、页面结构和验收规则的成本。
 - **Cons:** 需要新增 workspace manifest、质量报告、页面原型读取和更多 UI 状态，实施面比单次 preview 更大。
-- **Context:** 方案已整理为 vNext 实施文档，核心是 `Deck Workspace + Quality Gate + Runtime-first orchestration`。详见 `docs/deck-master-vnext-workspace-quality-gate-plan.md`。
+- **Context:** 方案已整理为 vNext 实施文档，核心是 `Deck Workspace + Quality Gate + Runtime-first orchestration`。Quality Gate 已升级为 Deck Master 内建子系统，首版支持 Draft/Render/Delivery 三段报告。详见 `docs/deck-master-vnext-workspace-quality-gate-plan.md` 与 `docs/2026-06-10-built-in-quality-gate.md`。
 - **Depends on:** 当前 autoplan/runtime/preview 基础能力；PPT Library 候选检索；PPT Deck Pro Max、PPT Master、Guizang 等生成与渲染工具的任务交接。
 
 ## 专业 Deck 对话生产运行时

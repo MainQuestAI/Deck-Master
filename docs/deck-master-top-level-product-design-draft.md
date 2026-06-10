@@ -359,20 +359,29 @@ Deck Master 需要拿到：
 
 ### 9.9 Quality Gate
 
-负责质量门禁。
+负责质量门禁，是 Deck Master 的内建子系统。
 
-首版先做 Draft Gate：
+首版覆盖三段 gate：
 
-- 检查业务目标是否清楚。
-- 检查核心论点是否存在。
-- 检查证据是否足够。
-- 检查页面任务是否有主张。
-- 标记信息缺口。
+- Draft Gate：在渲染前检查业务目标、核心论点、页面职责、信息密度、证据链和信息缺口。
+- Render Gate：在生成 PPTX 后检查页数、稀疏页、疑似整页截图迁移和渲染后内容退化。
+- Delivery Gate：在交付前检查最终 PPTX 页数、禁用词、交付阻断项和资源包完整性。
 
-后续再做：
+质量评分维度：
 
-- Render Gate：检查 HTML/SVG/PPTX 渲染后的视觉和信息密度。
-- Delivery Gate：检查页数、版本、资源、导出包和交付一致性。
+- Narrative Integrity。
+- Page Job Clarity。
+- Information Density。
+- Evidence And Specificity。
+- Screenshot And Asset Integration。
+- Layout Variety。
+- Consulting-Style Expression。
+- Visual Readiness。
+- Delivery Readiness。
+
+质量结果写入 `quality_reports/`，并在 Web Studio 展示 Pass、Conditional Pass、Rework Required、阻断原因和页面级修复建议。
+
+现有独立 `ppt-quality-gate` skill 保留为可复用能力，但 Deck Master 必须拥有自己的质量运行时、报告和阻断规则。
 
 ## 10. 当前实现状态
 
@@ -391,7 +400,7 @@ Deck Master 需要拿到：
 - `deck_brief.json`。
 - `claim_map.json`。
 - 分层 `page_tasks.json`。
-- Draft Gate 首版。
+- Draft、Render、Delivery 三段内建 Quality Gate MVP。
 
 当前实现仍偏轻量，主要价值是把运行时产物和链路打通。它还不能代表最终产品体验。
 

@@ -145,6 +145,9 @@ def preview_file_path(run_dir: str | Path, page: dict[str, Any]) -> Path:
 def page_payload(run_dir: str | Path, page: dict[str, Any]) -> dict[str, Any]:
     payload = deepcopy(page)
     payload["preview_url"] = f"/preview/{page['page_id']}"
+    quality = page_quality(run_dir, page["page_id"])
+    if quality:
+        payload["quality"] = quality
 
     try:
         asset_path = preview_file_path(run_dir, page)
@@ -156,3 +159,44 @@ def page_payload(run_dir: str | Path, page: dict[str, Any]) -> dict[str, Any]:
     payload["asset_exists"] = asset_path.exists()
     payload["asset_error"] = "" if payload["asset_exists"] else "Preview asset is missing."
     return payload
+
+
+def load_quality_reports(run_dir: str | Path) -> dict[str, Any]:
+    root = Path(run_dir).expanduser().resolve()
+    reports: dict[str, Any] = {}
+    for gate in ("draft", "render", "delivery"):
+        path = root / "quality_reports" / f"{gate}_gate.json"
+        if not path.exists():
+            continue
+        try:
+            report = json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            reports[gate] = {"status": "invalid", "findings": 0, "blocks_delivery": True}
+            continue
+        reports[gate] = {
+            "status": report.get("status", ""),
+            "blocks_delivery": bool(report.get("blocks_delivery", False)),
+            "findings": len(report.get("findings", [])),
+            "score_summary": report.get("score_summary", {}),
+            "artifact": report.get("artifact", ""),
+        }
+    return reports
+
+
+def page_quality(run_dir: str | Path, page_id: str) -> list[dict[str, Any]]:
+    root = Path(run_dir).expanduser().resolve()
+    items: list[dict[str, Any]] = []
+    for gate in ("draft", "render", "delivery"):
+        path = root / "quality_reports" / f"{gate}_gate.json"
+        if not path.exists():
+            continue
+        try:
+            report = json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            continue
+        for finding in report.get("page_findings", []):
+            if finding.get("page_id") == page_id:
+                item = deepcopy(finding)
+                item["gate"] = gate
+                items.append(item)
+    return items

@@ -67,7 +67,7 @@ async function loadDeck() {
   try {
     state.deck = await requestJson(`/api/deck${runQuery()}`);
     els.title.textContent = state.deck.title;
-    els.meta.textContent = `${state.deck.run_id} · ${state.deck.status} · ${state.deck.pages.length} pages`;
+    els.meta.textContent = `${state.deck.run_id} · ${state.deck.status} · ${state.deck.pages.length} pages${qualitySummaryText(state.deck.quality)}`;
     renderList();
     selectPage(0);
   } catch (error) {
@@ -115,7 +115,7 @@ function renderList() {
       <span class="page-no">${String(page.order).padStart(2, "0")}</span>
       <span>
         <strong>${escapeHtml(page.title || page.page_id)}</strong>
-        <small>${escapeHtml(page.source_type)} · ${escapeHtml(page.decision)}</small>
+        <small>${escapeHtml(page.source_type)} · ${escapeHtml(page.decision)}${page.quality && page.quality.length ? ` · ${page.quality.length} quality finding(s)` : ""}</small>
       </span>
       ${page.asset_exists ? "" : '<b class="warn">!</b>'}
     `;
@@ -146,6 +146,7 @@ function renderPage(page) {
     "Reason": page.decision_reason || page.reuse_reason || page.generation_reason || "",
     "Confidence": page.confidence ?? "",
     "Risks": Array.isArray(page.risk_flags) ? page.risk_flags.join(", ") : "",
+    "Quality findings": summarizeQuality(page.quality),
     "Alternatives": summarizeAlternatives(page.alternatives),
     "Generation task": page.generation_task ? page.generation_task.task_id : "",
     "Original PPT": page.source_pptx || "",
@@ -159,6 +160,20 @@ function renderPage(page) {
   } else {
     els.frame.innerHTML = `<div class="empty error"><strong>Preview unavailable</strong><p>${escapeHtml(page.asset_error)}</p></div>`;
   }
+}
+
+function qualitySummaryText(quality) {
+  if (!quality || !Object.keys(quality).length) return "";
+  return Object.entries(quality)
+    .map(([gate, report]) => ` · ${gate}: ${report.status}${report.blocks_delivery ? " blocked" : ""}`)
+    .join("");
+}
+
+function summarizeQuality(findings) {
+  if (!Array.isArray(findings) || !findings.length) return "";
+  return findings
+    .map((item) => `${item.gate || "quality"} ${item.severity || ""}: ${item.message || item.finding_id || ""}${item.repair_instruction ? ` | Repair: ${item.repair_instruction}` : ""}`)
+    .join(" · ");
 }
 
 function summarizeAlternatives(alternatives) {
