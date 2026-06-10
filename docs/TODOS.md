@@ -36,3 +36,10 @@ Implementation status for the Deck Master orchestration layer.
 - **Cons:** 首版只支持本地/已导出资料，不实时拉取飞书，也不依赖 OpenViking 在线查询。
 - **Context:** 本地上下文到 preview 的首版链路已实现：`start-conversation`、`build-brief`、`build-claim-map`、`autoplan --run-id` 和 `quality-gate draft`。详见 `docs/2026-06-10-guided-conversation-runtime.md`。
 - **Depends on:** 后续如果要接实时飞书、OpenViking 或语音入口，需要先稳定 context source 契约和客户敏感资料边界。
+
+## 顶层产品规划设计稿
+- **Why:** 当前实现已经有原型链路，但 Deck Master 的顶层产品定位、专业用户场景、规划评审问题和后续实现优先级仍需要单独沉淀。
+- **Pros:** 后续可以先基于顶层设计做 Product/CEO/Engineering/Design Review，再进入下一轮实现，避免继续堆轻量功能。
+- **Cons:** 该文档是评审输入，不是最终 10x vision，也不是最终工程 spec。
+- **Context:** 顶层设计稿已新增，覆盖用户表达、真实场景、产品定位、能力模块、当前缺口和下一轮评审问题。详见 `docs/deck-master-top-level-product-design-draft.md`。
+- **Depends on:** 下一轮规划评审确认产品目标、第一场景、上下文策略、对话体验、质量标准和工程优先级。
