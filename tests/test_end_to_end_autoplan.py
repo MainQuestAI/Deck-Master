@@ -44,9 +44,11 @@ class EndToEndAutoplanTests(unittest.TestCase):
         run_dir = Path(payload["run_dir"])
         manifest = json.loads((run_dir / "preview_manifest.json").read_text(encoding="utf-8"))
         sourcing = json.loads((run_dir / "sourcing_plan.json").read_text(encoding="utf-8"))
+        page_tasks = json.loads((run_dir / "page_tasks.json").read_text(encoding="utf-8"))
 
         self.assertEqual("autoplan_preview_ready", payload["status"])
         self.assertGreaterEqual(len(manifest["pages"]), 10)
+        self.assertIn("planning", page_tasks["tasks"][0])
         self.assertTrue({"reuse", "adapt", "generate", "manual_placeholder"}.issubset({item["source_decision"] for item in sourcing["decisions"]}))
 
 

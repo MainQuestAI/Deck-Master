@@ -10,6 +10,11 @@ from runtime.events import append_event
 
 
 REQUEST_NAME = "request.json"
+CONTEXT_MANIFEST_NAME = "context_manifest.json"
+CONVERSATION_SESSION_NAME = "conversation_session.json"
+DECK_BRIEF_NAME = "deck_brief.json"
+CLAIM_MAP_NAME = "claim_map.json"
+PAGE_TASKS_NAME = "page_tasks.json"
 NARRATIVE_PLAN_NAME = "narrative_plan.json"
 SOURCING_PLAN_NAME = "sourcing_plan.json"
 PREVIEW_MANIFEST_NAME = "preview_manifest.json"
@@ -53,7 +58,7 @@ def write_json(path: str | Path, payload: dict[str, Any]) -> Path:
 
 def ensure_run_dirs(run_dir: str | Path) -> Path:
     root = Path(run_dir).expanduser().resolve()
-    for name in ("library_results/by_beat", "generation_tasks", "links", "notes", "placeholders"):
+    for name in ("library_results/by_beat", "generation_tasks", "links", "notes", "placeholders", "quality_reports"):
         (root / name).mkdir(parents=True, exist_ok=True)
     return root
 

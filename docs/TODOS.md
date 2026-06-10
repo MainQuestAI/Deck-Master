@@ -29,3 +29,10 @@ Implementation status for the Deck Master orchestration layer.
 - **Cons:** 需要新增 workspace manifest、质量报告、页面原型读取和更多 UI 状态，实施面比单次 preview 更大。
 - **Context:** 方案已整理为 vNext 实施文档，核心是 `Deck Workspace + Quality Gate + Runtime-first orchestration`。详见 `docs/deck-master-vnext-workspace-quality-gate-plan.md`。
 - **Depends on:** 当前 autoplan/runtime/preview 基础能力；PPT Library 候选检索；PPT Deck Pro Max、PPT Master、Guizang 等生成与渲染工具的任务交接。
+
+## 专业 Deck 对话生产运行时
+- **Why:** Deck Master 的 10x 目标是把专业客户方案 Deck 从高注意力手工成片，压缩成“本地资料 + AI 引导式对话 + 可审查草案”的生产链路。
+- **Pros:** 用户可以把精力放在业务判断、论点取舍和证据组织上，Deck Master 负责上下文引用、论点编译、页面规划、历史页检索、预览和 Draft Gate。
+- **Cons:** 首版只支持本地/已导出资料，不实时拉取飞书，也不依赖 OpenViking 在线查询。
+- **Context:** 本地上下文到 preview 的首版链路已实现：`start-conversation`、`build-brief`、`build-claim-map`、`autoplan --run-id` 和 `quality-gate draft`。详见 `docs/2026-06-10-guided-conversation-runtime.md`。
+- **Depends on:** 后续如果要接实时飞书、OpenViking 或语音入口，需要先稳定 context source 契约和客户敏感资料边界。
