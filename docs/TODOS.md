@@ -37,9 +37,16 @@ Implementation status for the Deck Master orchestration layer.
 - **Context:** 本地上下文到 preview 的首版链路已实现：`start-conversation`、`build-brief`、`build-claim-map`、`autoplan --run-id` 和 `quality-gate draft`。详见 `docs/2026-06-10-guided-conversation-runtime.md`。
 - **Depends on:** 后续如果要接实时飞书、OpenViking 或语音入口，需要先稳定 context source 契约和客户敏感资料边界。
 
+## Professional Deck Run OS
+- **Why:** Office Hour 已确认下一阶段产品路线：服务售前解决方案架构师，把会后客户上下文、历史方案资产和业务判断转成可审查客户 Solution Deck 草案。
+- **Pros:** 目标从泛泛“提升做 Deck 效率”收敛为约 12 小时到约 2 小时的硬指标，并把上下文、对话、论点、页面、来源、预览、质量门禁和审批纳入一次 run。
+- **Cons:** `Run OS` 容易过早平台化，下一轮 CEO Review 需要严格控制首版范围，避免一次性扩到资产系统、实时知识库和完整视觉自动化。
+- **Context:** Office Hour 结论已落盘为 `docs/2026-06-10-office-hour-run-os.md`，顶层规划稿已升级为 `Professional Deck Run OS` 基线。首版切口是会后客户 Solution Deck 草案。
+- **Depends on:** 下一轮 `plan-ceo-review` 需要确认 2 小时目标、最窄可赢切口、首版运行时对象和真实客户项目回归样本。
+
 ## 顶层产品规划设计稿
 - **Why:** 当前实现已经有原型链路，但 Deck Master 的顶层产品定位、专业用户场景、规划评审问题和后续实现优先级仍需要单独沉淀。
-- **Pros:** 后续可以先基于顶层设计做 Product/CEO/Engineering/Design Review，再进入下一轮实现，避免继续堆轻量功能。
-- **Cons:** 该文档是评审输入，不是最终 10x vision，也不是最终工程 spec。
-- **Context:** 顶层设计稿已新增，覆盖用户表达、真实场景、产品定位、能力模块、当前缺口和下一轮评审问题。详见 `docs/deck-master-top-level-product-design-draft.md`。
-- **Depends on:** 下一轮规划评审确认产品目标、第一场景、上下文策略、对话体验、质量标准和工程优先级。
+- **Pros:** 顶层设计稿已吸收 Office Hour 结论，明确第一用户、第一场景、12h→2h 指标和 `Run OS` 路线。
+- **Cons:** 该文档仍是 CEO Review 输入，不是最终工程 spec。
+- **Context:** 顶层设计稿已更新为 `Professional Deck Run OS` 基线，覆盖用户表达、真实场景、产品定位、能力模块、当前缺口和下一轮评审问题。详见 `docs/deck-master-top-level-product-design-draft.md`。
+- **Depends on:** 下一轮规划评审确认 `Run OS` 是否过早平台化、首版最小运行时对象、Draft Gate 标准和真实项目验收方式。
