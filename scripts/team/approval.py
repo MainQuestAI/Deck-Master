@@ -21,6 +21,8 @@ def submit_approval(
     notes: str = "",
 ) -> dict[str, Any]:
     """提交 final export 审批。"""
+    import fcntl
+
     d = team_dir(workspace_dir)
     d.mkdir(parents=True, exist_ok=True)
 
@@ -39,10 +41,16 @@ def submit_approval(
     with path.open("a", encoding="utf-8") as f:
         f.write(json.dumps(request, ensure_ascii=False) + "\n")
 
-    # 更新 approval_flows.json
-    flows = _load_flows(d)
-    flows[approval_id] = request
-    _save_flows(d, flows)
+    # 使用文件锁保护 approval_flows.json 的 read-modify-write
+    lock_path = d / "approval_flows.json.lock"
+    with lock_path.open("w") as lock_file:
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+        try:
+            flows = _load_flows(d)
+            flows[approval_id] = request
+            _save_flows(d, flows)
+        finally:
+            fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
 
     _append_audit(workspace_dir, "approval.submitted", submitted_by, {"approval_id": approval_id, "run_id": run_id})
     return request
@@ -55,22 +63,32 @@ def approve(
     *,
     notes: str = "",
 ) -> dict[str, Any]:
-    """批准审批。"""
+    """批准审批。使用文件锁防止并发竞态。"""
+    import fcntl
+
     d = team_dir(workspace_dir)
-    flows = _load_flows(d)
+    d.mkdir(parents=True, exist_ok=True)
+    lock_path = d / "approval_flows.json.lock"
 
-    if approval_id not in flows:
-        raise ValueError(f"Approval not found: {approval_id}")
+    with lock_path.open("w") as lock_file:
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+        try:
+            flows = _load_flows(d)
 
-    flow = flows[approval_id]
-    if flow["status"] != "pending":
-        raise ValueError(f"Approval {approval_id} is not pending (status: {flow['status']})")
+            if approval_id not in flows:
+                raise ValueError(f"Approval not found: {approval_id}")
 
-    flow["status"] = "approved"
-    flow["approved_by"] = approver
-    flow["approved_at"] = utc_now()
-    flow["approval_notes"] = notes
-    _save_flows(d, flows)
+            flow = flows[approval_id]
+            if flow["status"] != "pending":
+                raise ValueError(f"Approval {approval_id} is not pending (status: {flow['status']})")
+
+            flow["status"] = "approved"
+            flow["approved_by"] = approver
+            flow["approved_at"] = utc_now()
+            flow["approval_notes"] = notes
+            _save_flows(d, flows)
+        finally:
+            fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
 
     _append_audit(workspace_dir, "approval.approved", approver, {"approval_id": approval_id})
     return flow
@@ -83,19 +101,29 @@ def reject(
     *,
     reason: str = "",
 ) -> dict[str, Any]:
-    """拒绝审批。"""
+    """拒绝审批。使用文件锁防止并发竞态。"""
+    import fcntl
+
     d = team_dir(workspace_dir)
-    flows = _load_flows(d)
+    d.mkdir(parents=True, exist_ok=True)
+    lock_path = d / "approval_flows.json.lock"
 
-    if approval_id not in flows:
-        raise ValueError(f"Approval not found: {approval_id}")
+    with lock_path.open("w") as lock_file:
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+        try:
+            flows = _load_flows(d)
 
-    flow = flows[approval_id]
-    flow["status"] = "rejected"
-    flow["rejected_by"] = rejecter
-    flow["rejected_at"] = utc_now()
-    flow["rejection_reason"] = reason
-    _save_flows(d, flows)
+            if approval_id not in flows:
+                raise ValueError(f"Approval not found: {approval_id}")
+
+            flow = flows[approval_id]
+            flow["status"] = "rejected"
+            flow["rejected_by"] = rejecter
+            flow["rejected_at"] = utc_now()
+            flow["rejection_reason"] = reason
+            _save_flows(d, flows)
+        finally:
+            fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
 
     _append_audit(workspace_dir, "approval.rejected", rejecter, {"approval_id": approval_id, "reason": reason})
     return flow

@@ -128,21 +128,33 @@ def register_asset(
 
     如果 canonical_slide_id 已存在，合并更新。
     如果是新 asset，添加到 graph。
-    """
-    graph = load_asset_graph(workspace_dir)
-    assets = graph.get("assets", [])
-    cid = asset.get("canonical_slide_id", "")
 
-    for i, existing in enumerate(assets):
-        if existing.get("canonical_slide_id") == cid:
-            # 合并：更新 metadata，保留历史记录
-            existing.update({k: v for k, v in asset.items() if k not in ("canonical_slide_id", "schema_version")})
-            assets[i] = existing
+    使用文件锁保护 read-modify-write，防止并发数据丢失。
+    """
+    import fcntl
+
+    path = Path(workspace_dir) / "assets" / "asset_graph.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    lock_path = path.with_suffix(".json.lock")
+
+    with lock_path.open("w") as lock_file:
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+        try:
+            graph = load_asset_graph(workspace_dir)
+            assets = graph.get("assets", [])
+            cid = asset.get("canonical_slide_id", "")
+
+            for i, existing in enumerate(assets):
+                if existing.get("canonical_slide_id") == cid:
+                    existing.update({k: v for k, v in asset.items() if k not in ("canonical_slide_id", "schema_version")})
+                    assets[i] = existing
+                    graph["assets"] = assets
+                    save_asset_graph(workspace_dir, graph)
+                    return existing
+
+            assets.append(asset)
             graph["assets"] = assets
             save_asset_graph(workspace_dir, graph)
-            return existing
-
-    assets.append(asset)
-    graph["assets"] = assets
-    save_asset_graph(workspace_dir, graph)
-    return asset
+            return asset
+        finally:
+            fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
