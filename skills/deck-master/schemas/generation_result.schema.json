@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "deck_generation_result.v1",
+  "title": "Deck Master Generation Result",
+  "type": "object",
+  "required": ["schema_version", "run_id", "tool", "task_id", "beat_id", "status"],
+  "properties": {
+    "schema_version": { "const": "deck_generation_result.v1" },
+    "run_id": { "type": "string", "minLength": 1 },
+    "tool": { "type": "string" },
+    "task_id": { "type": "string", "minLength": 1 },
+    "beat_id": { "type": "string", "minLength": 1 },
+    "status": { "type": "string", "enum": ["completed", "partial", "failed"] },
+    "artifact_type": { "type": "string" },
+    "artifact_path": { "type": "string" },
+    "preview_path": { "type": "string" },
+    "notes": { "type": "string" },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["code", "message"],
+        "properties": {
+          "code": { "type": "string" },
+          "message": { "type": "string" }
+        }
+      }
+    }
+  }
+}

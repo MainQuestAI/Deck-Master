@@ -88,6 +88,26 @@ def load_request(run_dir: str | Path) -> dict[str, Any]:
     return read_json(Path(run_dir).expanduser().resolve() / REQUEST_NAME)
 
 
+def assert_external_result_matches_run(
+    run_dir: str | Path,
+    external_run_id: Any,
+    *,
+    artifact_name: str = "external result",
+) -> str:
+    """Reject external Agent artifacts that target a different run."""
+    request = load_request(run_dir)
+    expected_run_id = str(request.get("run_id", ""))
+    actual_run_id = str(external_run_id or "")
+    if not expected_run_id:
+        raise RunStateError(f"Cannot validate {artifact_name}: request.json has no run_id.")
+    if actual_run_id != expected_run_id:
+        raise RunStateError(
+            f"{artifact_name} run_id mismatch: got '{actual_run_id}', "
+            f"expected '{expected_run_id}'."
+        )
+    return expected_run_id
+
+
 def write_artifact(run_dir: str | Path, filename: str, payload: dict[str, Any], *, action: str) -> Path:
     root = ensure_run_dirs(run_dir)
     path = write_json(root / filename, payload)

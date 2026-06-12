@@ -13,7 +13,7 @@ Implementation status for the Deck Master orchestration layer.
 - **Why:** Deck Master 需要在导出前预览组装效果，先审查页面来源、顺序、叙事连贯性和复用合理性。
 - **Pros:** 用户可以在浏览器中确认草案，减少直接导出后再返工的成本。
 - **Cons:** 需要维护一次组装任务的运行时状态、资源引用和断链处理。
-- **Context:** Preview UI 已支持 Studio 首页、run 列表、网页创建草案、来源决策、决策理由、候选页、风险标记和生成任务，同时保留原有页面预览、状态/备注回写和 sample run。详见 `docs/2026-05-28-deck-master-web-preview-ui.md`、`docs/2026-06-01-web-preview-ui-implementation-plan.md` 与 `docs/2026-06-06-demand-to-preview-autoplan.md`。
+- **Context:** Preview UI 已支持 Studio 首页、run 列表、网页创建草案、来源决策、决策理由、候选页、风险标记和生成任务，同时保留原有页面预览、状态/备注回写和 sample run。PR #2 已收口 F1/F2/F3 backend APIs 与 Agentic contract，完整 F.7 前端 Cockpit UI 进入 v0.9.5 后续计划。详见 `docs/2026-05-28-deck-master-web-preview-ui.md`、`docs/2026-06-01-web-preview-ui-implementation-plan.md`、`docs/2026-06-06-demand-to-preview-autoplan.md` 与 `docs/2026-06-12-v09-5-review-cockpit-frontend-maturity-plan.md`。
 - **Depends on:** 生成页真实图片仍依赖 PPT Deck Pro Max 后续执行；未生成前会显示 Deck Master 占位预览。
 
 ## Slide 胜率追踪与反馈闭环

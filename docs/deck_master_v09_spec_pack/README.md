@@ -13,6 +13,12 @@ This pack contains the master spec and task-level specs for:
 - Companion Tool UAT Contracts
 - Lightweight Metrics Hooks
 
+PR #2 has completed the backend Agentic contract and F1/F2/F3 API scope. Full F.7 frontend cockpit UI is tracked as the follow-up plan:
+
+```text
+docs/2026-06-12-v09-5-review-cockpit-frontend-maturity-plan.md
+```
+
 Current repository paths:
 
 ```text

@@ -57,6 +57,9 @@ class ConversationCliTests(unittest.TestCase):
 
         self.assertEqual("autoplan_preview_ready", preview["status"])
         self.assertTrue((run_dir / "context_manifest.json").exists())
+        # context_manifest must carry schema_version per v0.9 spec.
+        ctx_manifest = json.loads((run_dir / "context_manifest.json").read_text(encoding="utf-8"))
+        self.assertEqual("deck_context_manifest.v1", ctx_manifest.get("schema_version"))
         self.assertTrue((run_dir / "conversation_session.json").exists())
         self.assertTrue((run_dir / "deck_brief.json").exists())
         self.assertTrue((run_dir / "claim_map.json").exists())

@@ -29,6 +29,7 @@ class ContextConversationTests(unittest.TestCase):
     def test_context_manifest_records_local_source(self) -> None:
         manifest = build_context_manifest([self.write_context()], workspace="/tmp/workspace", run_id="run-1")
 
+        self.assertEqual("deck_context_manifest.v1", manifest["schema_version"])
         self.assertEqual("runtime_reference", manifest["strategy"])
         self.assertEqual(1, len(manifest["sources"]))
         self.assertEqual("meeting_transcript", manifest["sources"][0]["kind"])

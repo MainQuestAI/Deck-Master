@@ -7,6 +7,33 @@ from pathlib import Path
 from typing import Any
 
 from context_intake.local_sources import build_context_manifest
+from context_intake.context_pack import (
+    ContextPackError,
+    create_run_from_context_pack,
+    import_context_pack,
+    validate_context_pack,
+)
+from advisory.narrative import (
+    NarrativeAdviceError,
+    apply_narrative_advice,
+    import_narrative_advice,
+    prepare_narrative_advice_task,
+)
+from quality.external_review import (
+    ExternalReviewError,
+    import_external_review,
+    prepare_quality_review,
+)
+from generation.handback import (
+    GenerationHandbackError,
+    import_generation_result,
+    prepare_generation_handoff,
+    refresh_preview_from_generation,
+    validate_generation_result,
+)
+from learning.pack import build_learning_pack, show_learning_pack
+from validators.companion_tools import validate_ppt_library_result, validate_render_result
+from metrics.run_metrics import summarize_run_metrics
 from conversation.brief_compiler import compile_deck_brief
 from conversation.session_builder import build_conversation_session
 from generation.task_builder import create_generation_tasks
@@ -36,6 +63,7 @@ from delivery.outcome import record_delivery_outcome
 from team.opportunity import create_opportunity, attach_run
 from team.approval import submit_approval, approve, reject
 from connectors.import_contract import validate_import_manifest, import_to_context_manifest
+from skills.installer import SkillInstallError, install_skill, validate_skill, uninstall_skill
 from runtime.run_state import (
     CLAIM_MAP_NAME,
     CONTEXT_MANIFEST_NAME,
@@ -621,6 +649,168 @@ def command_validate_workspace(args: argparse.Namespace) -> dict[str, Any]:
     return result
 
 
+def command_install_skill(args: argparse.Namespace) -> dict[str, Any]:
+    return install_skill(
+        target=args.target,
+        agent_skill_dir=getattr(args, "agent_skill_dir", None),
+        force=getattr(args, "force", False),
+    )
+
+
+def command_validate_skill(args: argparse.Namespace) -> dict[str, Any]:
+    return validate_skill(
+        target=args.target,
+        agent_skill_dir=getattr(args, "agent_skill_dir", None),
+    )
+
+
+def command_uninstall_skill(args: argparse.Namespace) -> dict[str, Any]:
+    return uninstall_skill(
+        target=args.target,
+        agent_skill_dir=getattr(args, "agent_skill_dir", None),
+    )
+
+
+def command_import_context_pack(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = resolve_run_dir(args)
+    input_path = Path(args.input).expanduser().resolve()
+    try:
+        pack = json.loads(input_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise ContextPackError(f"Bad JSON in {input_path}: {exc.msg}") from exc
+    merge = getattr(args, "merge", False)
+    return import_context_pack(run_dir, pack, merge=merge)
+
+
+def command_create_run_from_context_pack(args: argparse.Namespace) -> dict[str, Any]:
+    input_path = Path(args.input).expanduser().resolve()
+    try:
+        pack = json.loads(input_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise ContextPackError(f"Bad JSON in {input_path}: {exc.msg}") from exc
+    return create_run_from_context_pack(
+        workspace=args.workspace,
+        pack=pack,
+        run_id=getattr(args, "run_id", None),
+        industry=getattr(args, "industry", "") or "",
+        audience=getattr(args, "audience", "client") or "client",
+        runs_dir=args.runs_dir,
+    )
+
+
+def command_prepare_narrative_advice(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = resolve_run_dir(args)
+    return prepare_narrative_advice_task(run_dir)
+
+
+def command_import_narrative_advice(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = resolve_run_dir(args)
+    input_path = Path(args.input).expanduser().resolve()
+    try:
+        result = json.loads(input_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise NarrativeAdviceError(f"Bad JSON in {input_path}: {exc.msg}") from exc
+    return import_narrative_advice(run_dir, result)
+
+
+def command_apply_narrative_advice(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = resolve_run_dir(args)
+    input_path = Path(args.input).expanduser().resolve()
+    try:
+        result = json.loads(input_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise NarrativeAdviceError(f"Bad JSON in {input_path}: {exc.msg}") from exc
+    dry_run = getattr(args, "dry_run", False)
+    apply_sections = None
+    raw = getattr(args, "apply", None)
+    if raw:
+        apply_sections = [s.strip() for s in raw.split(",") if s.strip()]
+    return apply_narrative_advice(run_dir, result, dry_run=dry_run, apply_sections=apply_sections)
+
+
+def command_prepare_quality_review(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = resolve_run_dir(args)
+    scope_str = getattr(args, "scope", "semantic") or "semantic"
+    scopes = [s.strip() for s in scope_str.split(",") if s.strip()]
+    return prepare_quality_review(run_dir, scopes=scopes)
+
+
+def command_import_quality_review(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = resolve_run_dir(args)
+    input_path = Path(args.input).expanduser().resolve()
+    try:
+        result = json.loads(input_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise ExternalReviewError(f"Bad JSON in {input_path}: {exc.msg}") from exc
+    replace = getattr(args, "replace", False)
+    return import_external_review(run_dir, result, replace=replace)
+
+
+def command_prepare_generation_handoff(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = resolve_run_dir(args)
+    return prepare_generation_handoff(run_dir)
+
+
+def command_import_generation_result(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = resolve_run_dir(args)
+    input_path = Path(args.input).expanduser().resolve()
+    try:
+        result = json.loads(input_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise GenerationHandbackError(f"Bad JSON in {input_path}: {exc.msg}") from exc
+    force = getattr(args, "force", False)
+    return import_generation_result(run_dir, result, force=force)
+
+
+def command_refresh_preview_from_generation(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = resolve_run_dir(args)
+    return refresh_preview_from_generation(run_dir)
+
+
+def command_build_learning_pack(args: argparse.Namespace) -> dict[str, Any]:
+    return build_learning_pack(args.workspace)
+
+
+def command_show_learning_pack(args: argparse.Namespace) -> dict[str, Any]:
+    return show_learning_pack(args.workspace)
+
+
+def command_validate_ppt_library_result(args: argparse.Namespace) -> dict[str, Any]:
+    input_path = Path(args.input).expanduser().resolve()
+    try:
+        result = json.loads(input_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        return {"valid": False, "errors": [f"Bad JSON: {exc.msg}"], "warnings": []}
+    return validate_ppt_library_result(result)
+
+
+def command_validate_render_result(args: argparse.Namespace) -> dict[str, Any]:
+    input_path = Path(args.input).expanduser().resolve()
+    try:
+        result = json.loads(input_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        return {"valid": False, "errors": [f"Bad JSON: {exc.msg}"], "warnings": []}
+    return validate_render_result(result)
+
+
+def command_validate_generation_result(args: argparse.Namespace) -> dict[str, Any]:
+    input_path = Path(args.input).expanduser().resolve()
+    try:
+        result = json.loads(input_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        return {"valid": False, "errors": [f"Bad JSON: {exc.msg}"], "warnings": []}
+    return validate_generation_result(result)
+
+
+def command_summarize_run_metrics(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = resolve_run_dir(args)
+    metrics = summarize_run_metrics(run_dir)
+    # Write run_metrics.json to run dir.
+    out_path = Path(run_dir) / "run_metrics.json"
+    out_path.write_text(json.dumps(metrics, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return metrics
+
+
 def add_brief_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--brief")
     parser.add_argument("--brief-file")
@@ -844,6 +1034,110 @@ def build_parser() -> argparse.ArgumentParser:
     p_ci.add_argument("--output", default=None, help="Write output context manifest to this path")
     p_ci.set_defaults(func=command_connector_import)
 
+    # ---- skill management ----
+    p_install = sub.add_parser("install-skill", help="Install Deck Master skill into an Agent skill directory")
+    p_install.add_argument("--target", required=True, choices=["codex", "claude-code", "hermes", "custom"])
+    p_install.add_argument("--agent-skill-dir", default=None, help="Agent skill directory (required for custom target)")
+    p_install.add_argument("--force", action="store_true", help="Replace existing symlink")
+    p_install.set_defaults(func=command_install_skill)
+
+    p_validate_skill = sub.add_parser("validate-skill", help="Validate Deck Master skill symlink")
+    p_validate_skill.add_argument("--target", required=True, choices=["codex", "claude-code", "hermes", "custom"])
+    p_validate_skill.add_argument("--agent-skill-dir", default=None)
+    p_validate_skill.set_defaults(func=command_validate_skill)
+
+    p_uninstall = sub.add_parser("uninstall-skill", help="Remove Deck Master skill symlink")
+    p_uninstall.add_argument("--target", required=True, choices=["codex", "claude-code", "hermes", "custom"])
+    p_uninstall.add_argument("--agent-skill-dir", default=None)
+    p_uninstall.set_defaults(func=command_uninstall_skill)
+
+    # ---- context pack ----
+    p_icp = sub.add_parser("import-context-pack", help="Import an Agent-generated context pack into a run")
+    add_run_args(p_icp)
+    p_icp.add_argument("--input", required=True, help="Path to context pack JSON")
+    p_icp.add_argument("--merge", action="store_true", help="Update existing sources by source_id instead of rejecting duplicates")
+    p_icp.set_defaults(func=command_import_context_pack)
+
+    p_crcp = sub.add_parser("create-run-from-context-pack", help="Create a new run from a context pack")
+    p_crcp.add_argument("--workspace", required=True, help="Workspace directory path")
+    p_crcp.add_argument("--input", required=True, help="Path to context pack JSON")
+    p_crcp.add_argument("--run-id", default=None)
+    p_crcp.add_argument("--industry", default="")
+    p_crcp.add_argument("--audience", choices=["exec", "team", "client"], default="client")
+    p_crcp.add_argument("--runs-dir", default=str(ROOT / "runs"))
+    p_crcp.set_defaults(func=command_create_run_from_context_pack)
+
+    # ---- narrative advisory ----
+    p_pna = sub.add_parser("prepare-narrative-advice", help="Generate a narrative advice task for an Agent")
+    add_run_args(p_pna)
+    p_pna.set_defaults(func=command_prepare_narrative_advice)
+
+    p_ina = sub.add_parser("import-narrative-advice", help="Import Agent narrative advice result")
+    add_run_args(p_ina)
+    p_ina.add_argument("--input", required=True, help="Path to narrative advice JSON")
+    p_ina.set_defaults(func=command_import_narrative_advice)
+
+    p_ana = sub.add_parser("apply-narrative-advice", help="Apply narrative advice to run artifacts")
+    add_run_args(p_ana)
+    p_ana.add_argument("--input", required=True, help="Path to narrative advice JSON")
+    p_ana.add_argument("--dry-run", action="store_true", help="Generate diff only, do not modify artifacts")
+    p_ana.add_argument("--apply", default=None, help="Comma-separated sections: core-thesis,page-recommendations,risks")
+    p_ana.set_defaults(func=command_apply_narrative_advice)
+
+    # ---- external quality review ----
+    p_pqr = sub.add_parser("prepare-quality-review", help="Generate external quality review task for an Agent")
+    add_run_args(p_pqr)
+    p_pqr.add_argument("--scope", default="semantic", help="Comma-separated scopes: semantic,visual,evidence,client-readiness")
+    p_pqr.set_defaults(func=command_prepare_quality_review)
+
+    p_iqr = sub.add_parser("import-quality-review", help="Import external quality review result")
+    add_run_args(p_iqr)
+    p_iqr.add_argument("--input", required=True, help="Path to external quality review JSON")
+    p_iqr.add_argument("--replace", action="store_true", help="Replace existing report from same reviewer/scope")
+    p_iqr.set_defaults(func=command_import_quality_review)
+
+    # ---- generation handoff / handback ----
+    p_pgh = sub.add_parser("prepare-generation-handoff", help="Enhance generation tasks with handoff fields for build tools")
+    add_run_args(p_pgh)
+    p_pgh.set_defaults(func=command_prepare_generation_handoff)
+
+    p_igr = sub.add_parser("import-generation-result", help="Import generation result from a build tool")
+    add_run_args(p_igr)
+    p_igr.add_argument("--input", required=True, help="Path to generation result JSON")
+    p_igr.add_argument("--force", action="store_true", help="Override locked pages")
+    p_igr.set_defaults(func=command_import_generation_result)
+
+    p_rpg = sub.add_parser("refresh-preview-from-generation", help="Update preview manifest from generation results")
+    add_run_args(p_rpg)
+    p_rpg.set_defaults(func=command_refresh_preview_from_generation)
+
+    # ---- workspace learning ----
+    p_blp = sub.add_parser("build-learning-pack", help="Aggregate workspace learning for next Agent run")
+    p_blp.add_argument("--workspace", required=True, help="Workspace directory path")
+    p_blp.set_defaults(func=command_build_learning_pack)
+
+    p_slp = sub.add_parser("show-learning-pack", help="Show existing workspace learning pack")
+    p_slp.add_argument("--workspace", required=True, help="Workspace directory path")
+    p_slp.set_defaults(func=command_show_learning_pack)
+
+    # ---- companion tool validators ----
+    p_vplr = sub.add_parser("validate-ppt-library-result", help="Validate PPT Library candidate result")
+    p_vplr.add_argument("--input", required=True, help="Path to library result JSON")
+    p_vplr.set_defaults(func=command_validate_ppt_library_result)
+
+    p_vgr = sub.add_parser("validate-generation-result", help="Validate generation result")
+    p_vgr.add_argument("--input", required=True, help="Path to generation result JSON")
+    p_vgr.set_defaults(func=command_validate_generation_result)
+
+    p_vrr = sub.add_parser("validate-render-result", help="Validate PPT Master render result")
+    p_vrr.add_argument("--input", required=True, help="Path to render result JSON")
+    p_vrr.set_defaults(func=command_validate_render_result)
+
+    # ---- metrics ----
+    p_srm = sub.add_parser("summarize-run-metrics", help="Compute run metrics from events and artifacts")
+    add_run_args(p_srm)
+    p_srm.set_defaults(func=command_summarize_run_metrics)
+
     return parser
 
 
@@ -852,7 +1146,7 @@ def main() -> None:
     args = parser.parse_args()
     try:
         print_json(args.func(args))
-    except (RunStateError, PPTLibraryClientError, WorkspaceError, ValueError) as exc:
+    except (RunStateError, PPTLibraryClientError, WorkspaceError, SkillInstallError, ContextPackError, NarrativeAdviceError, ExternalReviewError, GenerationHandbackError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         raise SystemExit(2) from exc
 
