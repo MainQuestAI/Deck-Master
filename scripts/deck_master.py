@@ -26,7 +26,16 @@ from quality.gate_runner import (
     write_gate_report,
 )
 from quality.draft_gate_v2 import evaluate_draft_gate_v2
+from quality.evidence_gate import evaluate_evidence_gate
+from quality.context_conflict_gate import evaluate_context_conflict_gate
+from quality.confidentiality_gate import evaluate_confidentiality_gate
+from quality.brand_gate import evaluate_brand_gate
 from quality.overrides import create_override, list_active_overrides, revoke_override
+from delivery.validate import validate_delivery
+from delivery.outcome import record_delivery_outcome
+from team.opportunity import create_opportunity, attach_run
+from team.approval import submit_approval, approve, reject
+from connectors.import_contract import validate_import_manifest, import_to_context_manifest
 from runtime.run_state import (
     CLAIM_MAP_NAME,
     CONTEXT_MANIFEST_NAME,
@@ -286,10 +295,52 @@ def command_quality_gate(args: argparse.Namespace) -> dict[str, Any]:
         if not args.artifact:
             raise RunStateError("--artifact is required for render gate.")
         report = evaluate_render_gate(run_id, args.artifact, expected_pages=expected_pages, forbidden_terms=args.forbidden)
-    else:
+    elif args.gate == "delivery":
         if not args.artifact:
             raise RunStateError("--artifact is required for delivery gate.")
         report = evaluate_delivery_gate(run_id, args.artifact, expected_pages=expected_pages, forbidden_terms=args.forbidden)
+    elif args.gate == "evidence":
+        claim_map = read_optional_json(run_dir, CLAIM_MAP_NAME) or {"run_id": run_id, "claims": []}
+        page_tasks = read_optional_json(run_dir, PAGE_TASKS_NAME) or {"run_id": run_id, "tasks": []}
+        ceg = read_optional_json(run_dir, "claim_evidence_graph.json") or {"run_id": run_id, "claims": [], "evidence": [], "gaps": []}
+        sourcing_plan = read_optional_json(run_dir, SOURCING_PLAN_NAME) or {"run_id": run_id, "decisions": []}
+        report = evaluate_evidence_gate(run_id, claim_map, page_tasks, ceg, sourcing_plan)
+    elif args.gate == "context-conflict":
+        sourcing_plan = read_optional_json(run_dir, SOURCING_PLAN_NAME) or {"run_id": run_id, "decisions": []}
+        ws_dir = request.get("workspace", "")
+        asset_graph: dict[str, Any] = {}
+        if ws_dir:
+            ag_path = Path(ws_dir) / "assets" / "asset_graph.json"
+            if ag_path.exists():
+                try:
+                    asset_graph = json.loads(ag_path.read_text(encoding="utf-8"))
+                except json.JSONDecodeError:
+                    pass
+        report = evaluate_context_conflict_gate(run_id, request, sourcing_plan, asset_graph)
+    elif args.gate == "confidentiality":
+        ws_dir = request.get("workspace", "")
+        ws_forbidden = str(Path(ws_dir) / "quality" / "forbidden_terms.md") if ws_dir else None
+        sourcing_plan = read_optional_json(run_dir, SOURCING_PLAN_NAME)
+        preview_manifest = read_optional_json(run_dir, "preview_manifest.json")
+        report = evaluate_confidentiality_gate(
+            run_id,
+            forbidden_terms=args.forbidden,
+            workspace_forbidden_terms_path=ws_forbidden,
+            preview_manifest=preview_manifest,
+            sourcing_plan=sourcing_plan,
+        )
+    elif args.gate == "brand":
+        ws_dir = request.get("workspace", "")
+        preview_manifest = read_optional_json(run_dir, "preview_manifest.json") or {}
+        approved_count = sum(1 for p in preview_manifest.get("pages", []) if p.get("decision") == "approved")
+        report = evaluate_brand_gate(
+            run_id,
+            workspace_dir=ws_dir or None,
+            final_artifact=args.artifact,
+            approved_page_count=approved_count,
+        )
+    else:
+        raise RunStateError(f"Unknown gate: {args.gate}")
 
     paths = write_gate_report(run_dir, args.gate, report)
     write_artifact(
@@ -328,6 +379,74 @@ def command_override_revoke(args: argparse.Namespace) -> dict[str, Any]:
     run_dir = resolve_run_dir(args)
     override = revoke_override(run_dir, args.override_id, args.reason)
     return {"status": "override_revoked", "override": override}
+
+
+def command_delivery_validate(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = resolve_run_dir(args)
+    if not args.artifact:
+        raise RunStateError("--artifact is required for delivery validate.")
+    expected_pages = args.expected_pages
+    if expected_pages is None:
+        pm = read_optional_json(run_dir, "preview_manifest.json")
+        if pm and isinstance(pm.get("pages"), list):
+            expected_pages = sum(1 for p in pm["pages"] if p.get("decision") == "approved")
+    return validate_delivery(run_dir, args.artifact, expected_page_count=expected_pages or 0)
+
+
+def command_delivery_record_outcome(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = resolve_run_dir(args)
+    return record_delivery_outcome(
+        run_dir,
+        delivered=args.delivered,
+        advanced_to_next_stage=args.advanced_to_next_stage,
+        customer_reaction=args.customer_reaction or "",
+        notes=args.notes or "",
+    )
+
+
+def command_opportunity_create(args: argparse.Namespace) -> dict[str, Any]:
+    if not args.workspace:
+        raise RunStateError("--workspace is required for opportunity create.")
+    return create_opportunity(args.workspace, args.client_name, args.industry)
+
+
+def command_opportunity_attach_run(args: argparse.Namespace) -> dict[str, Any]:
+    if not args.workspace:
+        raise RunStateError("--workspace is required for opportunity attach-run.")
+    return attach_run(args.workspace, args.opportunity_id, args.run_id)
+
+
+def command_approval_submit(args: argparse.Namespace) -> dict[str, Any]:
+    if not args.workspace:
+        raise RunStateError("--workspace is required for approval submit.")
+    return submit_approval(args.workspace, args.run_id, args.submitted_by, notes=args.notes or "")
+
+
+def command_approval_approve(args: argparse.Namespace) -> dict[str, Any]:
+    if not args.workspace:
+        raise RunStateError("--workspace is required for approval approve.")
+    return approve(args.workspace, args.approval_id, args.approver, notes=args.notes or "")
+
+
+def command_approval_reject(args: argparse.Namespace) -> dict[str, Any]:
+    if not args.workspace:
+        raise RunStateError("--workspace is required for approval reject.")
+    return reject(args.workspace, args.approval_id, args.rejecter, reason=args.reason or "")
+
+
+def command_connector_import(args: argparse.Namespace) -> dict[str, Any]:
+    manifest_path = Path(args.manifest).expanduser().resolve()
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    validation = validate_import_manifest(manifest)
+    if not validation["valid"]:
+        raise ValueError(f"Invalid import manifest: {'; '.join(validation['errors'])}")
+    context = import_to_context_manifest(manifest, base_dir=args.base_dir or "")
+    if args.output:
+        out = Path(args.output).expanduser().resolve()
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(json.dumps(context, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        return {"status": "imported", "output": str(out), "validation": validation}
+    return {"status": "imported", "context_manifest": context, "validation": validation}
 
 
 def command_next_step(args: argparse.Namespace) -> dict[str, Any]:
@@ -477,8 +596,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_quality = sub.add_parser("quality-gate", help="Run a Deck Master quality gate")
     add_run_args(p_quality)
-    p_quality.add_argument("gate", choices=["draft", "draft_v2", "render", "delivery"])
-    p_quality.add_argument("--artifact", help="Rendered or final PPTX artifact for render/delivery gates")
+    p_quality.add_argument(
+        "gate",
+        choices=["draft", "draft_v2", "render", "delivery", "evidence", "context-conflict", "confidentiality", "brand"],
+    )
+    p_quality.add_argument("--artifact", help="Rendered or final PPTX artifact for render/delivery/brand gates")
     p_quality.add_argument("--expected-pages", type=int)
     p_quality.add_argument("--forbidden", action="append", default=[], help="Forbidden visible term. Can be repeated.")
     p_quality.set_defaults(func=command_quality_gate)
@@ -532,6 +654,75 @@ def build_parser() -> argparse.ArgumentParser:
     p_val_ws = sub.add_parser("validate-workspace", help="Validate workspace integrity")
     p_val_ws.add_argument("--workspace", required=True, help="Workspace directory path")
     p_val_ws.set_defaults(func=command_validate_workspace)
+
+    # ---- delivery subcommands ----
+    p_delivery = sub.add_parser("delivery", help="Delivery validation and outcome tracking")
+    delivery_sub = p_delivery.add_subparsers(dest="delivery_command", required=True)
+
+    p_dv = delivery_sub.add_parser("validate", help="Validate final delivery artifact")
+    add_run_args(p_dv)
+    p_dv.add_argument("--artifact", required=True, help="Path to final PPTX artifact")
+    p_dv.add_argument("--expected-pages", type=int, default=None, help="Expected page count")
+    p_dv.set_defaults(func=command_delivery_validate)
+
+    p_dro = delivery_sub.add_parser("record-outcome", help="Record delivery outcome")
+    add_run_args(p_dro)
+    p_dro.add_argument("--delivered", action="store_true", help="Mark as delivered")
+    p_dro.add_argument("--advanced-to-next-stage", action="store_true", help="Advanced to next stage")
+    p_dro.add_argument("--customer-reaction", default="")
+    p_dro.add_argument("--notes", default="")
+    p_dro.set_defaults(func=command_delivery_record_outcome)
+
+    # ---- opportunity subcommands ----
+    p_opportunity = sub.add_parser("opportunity", help="Manage opportunities")
+    opp_sub = p_opportunity.add_subparsers(dest="opportunity_command", required=True)
+
+    p_oc_opp = opp_sub.add_parser("create", help="Create a new opportunity")
+    p_oc_opp.add_argument("--workspace", required=True, help="Workspace directory path")
+    p_oc_opp.add_argument("--client-name", required=True)
+    p_oc_opp.add_argument("--industry", required=True)
+    p_oc_opp.set_defaults(func=command_opportunity_create)
+
+    p_ar = opp_sub.add_parser("attach-run", help="Attach a run to an opportunity")
+    p_ar.add_argument("--workspace", required=True, help="Workspace directory path")
+    p_ar.add_argument("--opportunity-id", required=True)
+    p_ar.add_argument("--run-id", required=True)
+    p_ar.set_defaults(func=command_opportunity_attach_run)
+
+    # ---- approval subcommands ----
+    p_approval = sub.add_parser("approval", help="Manage approval flows")
+    approval_sub = p_approval.add_subparsers(dest="approval_command", required=True)
+
+    p_as = approval_sub.add_parser("submit", help="Submit a run for approval")
+    p_as.add_argument("--workspace", required=True, help="Workspace directory path")
+    p_as.add_argument("--run-id", required=True)
+    p_as.add_argument("--submitted-by", required=True)
+    p_as.add_argument("--notes", default="")
+    p_as.set_defaults(func=command_approval_submit)
+
+    p_aa = approval_sub.add_parser("approve", help="Approve a pending approval")
+    p_aa.add_argument("--workspace", required=True, help="Workspace directory path")
+    p_aa.add_argument("--approval-id", required=True)
+    p_aa.add_argument("--approver", required=True)
+    p_aa.add_argument("--notes", default="")
+    p_aa.set_defaults(func=command_approval_approve)
+
+    p_aj = approval_sub.add_parser("reject", help="Reject a pending approval")
+    p_aj.add_argument("--workspace", required=True, help="Workspace directory path")
+    p_aj.add_argument("--approval-id", required=True)
+    p_aj.add_argument("--rejecter", required=True)
+    p_aj.add_argument("--reason", default="")
+    p_aj.set_defaults(func=command_approval_reject)
+
+    # ---- connector subcommands ----
+    p_connector = sub.add_parser("connector", help="Import data from external systems")
+    conn_sub = p_connector.add_subparsers(dest="connector_command", required=True)
+
+    p_ci = conn_sub.add_parser("import", help="Import a connector manifest into context_manifest.json")
+    p_ci.add_argument("--manifest", required=True, help="Path to connector import manifest JSON")
+    p_ci.add_argument("--base-dir", default="", help="Base directory for resolving source file paths")
+    p_ci.add_argument("--output", default=None, help="Write output context manifest to this path")
+    p_ci.set_defaults(func=command_connector_import)
 
     return parser
 
