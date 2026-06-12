@@ -672,16 +672,56 @@ textarea {
 
 @media (max-width: 1050px) {
   .shell {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    overflow-x: hidden;
   }
 
   .rail,
+  .stage,
   .inspector {
+    width: 100%;
+    min-width: 0;
     border: 0;
     border-bottom: 1px solid var(--line);
   }
 
+  .brand h1,
+  .brand p {
+    overflow-wrap: anywhere;
+  }
+
+  .stage-toolbar {
+    flex-wrap: wrap;
+  }
+
   .preview-frame {
     min-height: 380px;
+  }
+}
+
+@media (max-width: 640px) {
+  .rail,
+  .stage,
+  .inspector {
+    padding: 16px;
+  }
+
+  .create-run,
+  .panel {
+    padding: 14px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .cockpit-overview,
+  .action-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .preview-frame {
+    min-height: 260px;
+    padding: 12px;
   }
 }
