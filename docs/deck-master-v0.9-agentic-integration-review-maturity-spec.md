@@ -1,12 +1,12 @@
 # Deck Master v0.9 Agentic Integration & Review Maturity Spec
 
-日期：2026-06-12  
-状态：开发主控 Spec v0.1  
-当前落库路径：`docs/deck-master-v0.9-agentic-integration-review-maturity-spec.md`  
-配套任务包：`docs/deck_master_v09_spec_pack/`  
-适用范围：Deck Master 开源版 v0.9.x 到 v1.0.0 RC 前的连续开发  
-第一运行环境：Codex-first 本地 Agent 工作流  
-低优先级兼容：Claude Code、Hermes、其他本地 / 桌面级通用 Agent  
+日期：2026-06-12
+状态：开发主控 Spec v0.1
+当前落库路径：`docs/deck-master-v0.9-agentic-integration-review-maturity-spec.md`
+配套任务包：`docs/deck_master_v09_spec_pack/`
+适用范围：Deck Master 开源版 v0.9.x 到 v1.0.0 RC 前的连续开发
+第一运行环境：Codex-first 本地 Agent 工作流
+低优先级兼容：Claude Code、Hermes、其他本地 / 桌面级通用 Agent
 核心定位：Agent-facing Solution Deck Run OS
 
 ---
