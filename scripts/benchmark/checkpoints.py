@@ -148,3 +148,29 @@ def calculate_human_review_minutes(checkpoints_or_run_dir: dict[str, Any] | str 
     if minutes < 0:
         raise BenchmarkCheckpointError("human_review_completed must be after human_review_started.")
     return minutes
+
+
+def calculate_checkpoint_duration_minutes(
+    checkpoints_or_run_dir: dict[str, Any] | str | Path,
+    start_checkpoint: str,
+    end_checkpoint: str,
+) -> float | None:
+    if isinstance(checkpoints_or_run_dir, dict):
+        payload = checkpoints_or_run_dir
+    else:
+        payload = read_benchmark_checkpoints(checkpoints_or_run_dir)
+    checkpoints = payload.get("checkpoints", {})
+    if not isinstance(checkpoints, dict):
+        raise BenchmarkCheckpointError("checkpoints must be an object.")
+
+    started = checkpoints.get(start_checkpoint)
+    completed = checkpoints.get(end_checkpoint)
+    if not isinstance(started, dict) or not isinstance(completed, dict):
+        return None
+
+    start_time = _parse_timestamp(started.get("timestamp"))
+    completed_time = _parse_timestamp(completed.get("timestamp"))
+    minutes = (completed_time - start_time).total_seconds() / 60
+    if minutes < 0:
+        raise BenchmarkCheckpointError(f"{end_checkpoint} must be after {start_checkpoint}.")
+    return minutes

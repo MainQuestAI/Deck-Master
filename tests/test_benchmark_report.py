@@ -5,6 +5,7 @@ import shutil
 import sys
 import tempfile
 import unittest
+from argparse import Namespace
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -12,6 +13,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from benchmark.case import load_benchmark_case  # noqa: E402
 from benchmark.report import BenchmarkReportError, build_benchmark_report, write_benchmark_report  # noqa: E402
+from deck_master import command_benchmark_report  # noqa: E402
 from runtime.run_state import create_run, write_json  # noqa: E402
 
 
@@ -34,6 +36,8 @@ def _case_payload() -> dict:
         },
         "success_targets": {
             "context_to_preview_minutes": 45,
+            "context_to_review_ready_minutes": 90,
+            "context_to_approved_queue_minutes": 120,
             "page_acceptance_rate_min": 0.5,
             "reuse_adapt_rate_min": 0.3,
             "p0_count_max": 0,
@@ -122,6 +126,44 @@ class BenchmarkReportTests(unittest.TestCase):
         self.assertIn("artifact_index", report)
         self.assertIn("target_evaluation", report)
 
+    def test_checkpoint_metrics_drive_context_targets(self) -> None:
+        write_json(self.run_dir / "benchmark_checkpoints.json", {
+            "schema_version": "deck_benchmark_checkpoints.v1",
+            "run_id": "retail-demo",
+            "updated_at": "2026-06-12T12:00:00+00:00",
+            "checkpoints": {
+                "context_ready": {"timestamp": "2026-06-12T10:00:00+00:00", "note": ""},
+                "preview_ready": {"timestamp": "2026-06-12T10:30:00+00:00", "note": ""},
+                "human_review_started": {"timestamp": "2026-06-12T11:00:00+00:00", "note": ""},
+                "human_review_completed": {"timestamp": "2026-06-12T11:20:00+00:00", "note": ""},
+                "approved_queue_ready": {"timestamp": "2026-06-12T11:40:00+00:00", "note": ""},
+            },
+        })
+
+        report = build_benchmark_report(self.case, self.run_dir)
+
+        self.assertEqual(30, report["efficiency_metrics"]["context_to_preview_minutes"])
+        self.assertEqual(60, report["efficiency_metrics"]["context_to_review_ready_minutes"])
+        self.assertEqual(100, report["efficiency_metrics"]["context_to_approved_queue_minutes"])
+        self.assertEqual(20, report["efficiency_metrics"]["human_review_minutes"])
+        self.assertEqual("pass", report["target_evaluation"]["context_to_approved_queue"])
+
+    def test_missing_approved_queue_checkpoint_is_pending_not_fail(self) -> None:
+        write_json(self.run_dir / "benchmark_checkpoints.json", {
+            "schema_version": "deck_benchmark_checkpoints.v1",
+            "run_id": "retail-demo",
+            "updated_at": "2026-06-12T12:00:00+00:00",
+            "checkpoints": {
+                "context_ready": {"timestamp": "2026-06-12T10:00:00+00:00", "note": ""},
+                "preview_ready": {"timestamp": "2026-06-12T10:30:00+00:00", "note": ""},
+            },
+        })
+
+        report = build_benchmark_report(self.case, self.run_dir)
+
+        self.assertIsNone(report["efficiency_metrics"]["context_to_approved_queue_minutes"])
+        self.assertEqual("pending", report["target_evaluation"]["context_to_approved_queue"])
+
     def test_write_benchmark_report_outputs_json_markdown_and_protects_existing(self) -> None:
         written = write_benchmark_report(self.case, self.run_dir, benchmark_dir=self.bench_dir)
 
@@ -134,6 +176,20 @@ class BenchmarkReportTests(unittest.TestCase):
 
         with self.assertRaises(BenchmarkReportError):
             write_benchmark_report(self.case, self.run_dir, benchmark_dir=self.bench_dir)
+
+    def test_command_benchmark_report_recomputes_pending_for_existing_run(self) -> None:
+        result = command_benchmark_report(Namespace(
+            case=str(self.case_dir / "benchmark_case.json"),
+            benchmark_dir=str(self.bench_dir),
+            run_dir=str(self.run_dir),
+            run_id=None,
+            runs_dir=str(self.temp_dir / "runs"),
+            force=True,
+        ))
+
+        report = json.loads(Path(result["report"]).read_text(encoding="utf-8"))
+        self.assertEqual("pending_external_agent", report["status"])
+        self.assertEqual(["external_quality_review"], [item["step"] for item in report["pending_external_steps"]])
 
 
 if __name__ == "__main__":

@@ -6,7 +6,11 @@ from pathlib import Path
 from typing import Any
 
 from benchmark.case import BenchmarkCase
-from benchmark.checkpoints import calculate_human_review_minutes, read_benchmark_checkpoints
+from benchmark.checkpoints import (
+    calculate_checkpoint_duration_minutes,
+    calculate_human_review_minutes,
+    read_benchmark_checkpoints,
+)
 from benchmark.markdown import render_benchmark_markdown
 from benchmark.scoring import build_score, build_target_evaluation
 from orchestrate.export_queue import export_queue
@@ -40,6 +44,39 @@ def _safe_load_any_json(path: Path) -> Any:
         return json.loads(path.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, OSError):
         return None
+
+
+def _parse_iso(value: Any) -> datetime | None:
+    if not isinstance(value, str) or not value.strip():
+        return None
+    raw = value.strip()
+    normalized = raw[:-1] + "+00:00" if raw.endswith("Z") else raw
+    try:
+        parsed = datetime.fromisoformat(normalized)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def _minutes_between_iso(start: Any, end: Any) -> float | None:
+    start_time = _parse_iso(start)
+    end_time = _parse_iso(end)
+    if not start_time or not end_time:
+        return None
+    minutes = (end_time - start_time).total_seconds() / 60
+    return minutes if minutes >= 0 else None
+
+
+def _checkpoint_timestamp(checkpoints_payload: dict[str, Any], checkpoint: str) -> str:
+    checkpoints = checkpoints_payload.get("checkpoints", {})
+    if not isinstance(checkpoints, dict):
+        return ""
+    entry = checkpoints.get(checkpoint, {})
+    if not isinstance(entry, dict):
+        return ""
+    return str(entry.get("timestamp") or "")
 
 
 def _quality_reports(run_dir: Path) -> list[dict[str, Any]]:
@@ -203,21 +240,36 @@ def _quality_metrics(run_dir: Path, reports: list[dict[str, Any]], export_payloa
 def _efficiency_metrics(case: BenchmarkCase, run_metrics: dict[str, Any], run_dir: Path) -> dict[str, Any]:
     durations = run_metrics.get("durations", {}) if isinstance(run_metrics.get("durations"), dict) else {}
     checkpoints = read_benchmark_checkpoints(run_dir)
+    context_to_preview_minutes = calculate_checkpoint_duration_minutes(
+        checkpoints, "context_ready", "preview_ready"
+    )
+    if context_to_preview_minutes is None:
+        context_to_preview_minutes = durations.get("created_to_preview_minutes")
+    context_to_review_ready_minutes = calculate_checkpoint_duration_minutes(
+        checkpoints, "context_ready", "human_review_started"
+    )
+    if context_to_review_ready_minutes is None:
+        context_to_review_ready_minutes = _minutes_between_iso(
+            _checkpoint_timestamp(checkpoints, "context_ready"),
+            run_metrics.get("first_quality_gate_at"),
+        )
+    context_to_approved_queue_minutes = calculate_checkpoint_duration_minutes(
+        checkpoints, "context_ready", "approved_queue_ready"
+    )
     human_review_minutes = calculate_human_review_minutes(checkpoints)
-    approved_minutes = durations.get("context_to_approved_queue_minutes")
-    if approved_minutes is None and run_metrics.get("approved_queue_created_at") and run_metrics.get("created_at"):
-        approved_minutes = None
     baseline = float(case.data.get("inputs", {}).get("baseline_manual_hours") or 0)
     actual_hours = None
-    if approved_minutes is not None:
-        actual_hours = float(approved_minutes) / 60.0
-    elif durations.get("created_to_preview_minutes") is not None:
-        actual_hours = float(durations["created_to_preview_minutes"]) / 60.0
+    if context_to_approved_queue_minutes is not None:
+        actual_hours = float(context_to_approved_queue_minutes) / 60.0
+    elif context_to_preview_minutes is not None:
+        actual_hours = float(context_to_preview_minutes) / 60.0
     return {
         "baseline_manual_hours": baseline,
         "created_to_preview_minutes": durations.get("created_to_preview_minutes"),
+        "context_to_preview_minutes": context_to_preview_minutes,
         "preview_to_first_quality_gate_minutes": durations.get("preview_to_first_quality_gate_minutes"),
-        "context_to_approved_queue_minutes": approved_minutes,
+        "context_to_review_ready_minutes": context_to_review_ready_minutes,
+        "context_to_approved_queue_minutes": context_to_approved_queue_minutes,
         "human_review_minutes": human_review_minutes,
         "estimated_time_saved_hours": round(baseline - actual_hours, 2) if actual_hours is not None else None,
     }

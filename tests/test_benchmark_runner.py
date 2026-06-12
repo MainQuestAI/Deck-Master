@@ -76,6 +76,46 @@ class BenchmarkRunnerTests(unittest.TestCase):
         self.assertEqual(["external_quality_review"], [item["step"] for item in pending])
         self.assertEqual("pending_external_agent", pending[0]["status"])
 
+    def test_narrative_advice_missing_is_pending_external_agent(self) -> None:
+        self.case.data["workflow"]["requires_external_quality_review"] = False
+        self.case.data["workflow"]["requires_narrative_advice"] = True
+        run_dir, _pack = create_benchmark_run(self.case, run_id="bench-narrative-missing")
+
+        pending = collect_pending_external_steps(self.case, run_dir)
+
+        self.assertEqual(["narrative_advice"], [item["step"] for item in pending])
+        self.assertEqual("pending_external_agent", pending[0]["status"])
+        self.assertTrue(pending[0]["path"].endswith("advisor_results/narrative_advice.json"))
+
+    def test_narrative_advice_imported_requires_local_apply(self) -> None:
+        self.case.data["workflow"]["requires_external_quality_review"] = False
+        self.case.data["workflow"]["requires_narrative_advice"] = True
+        run_dir, _pack = create_benchmark_run(self.case, run_id="bench-narrative-imported")
+        advice_dir = run_dir / "advisor_results"
+        advice_dir.mkdir()
+        (advice_dir / "narrative_advice.json").write_text("{}", encoding="utf-8")
+
+        pending = collect_pending_external_steps(self.case, run_dir)
+
+        self.assertEqual(["narrative_advice"], [item["step"] for item in pending])
+        self.assertEqual("pending_local_apply", pending[0]["status"])
+        self.assertTrue(pending[0]["path"].endswith("quality_reports/external_narrative_gate.json"))
+
+    def test_narrative_advice_gate_clears_pending(self) -> None:
+        self.case.data["workflow"]["requires_external_quality_review"] = False
+        self.case.data["workflow"]["requires_narrative_advice"] = True
+        run_dir, _pack = create_benchmark_run(self.case, run_id="bench-narrative-complete")
+        advice_dir = run_dir / "advisor_results"
+        advice_dir.mkdir()
+        (advice_dir / "narrative_advice.json").write_text("{}", encoding="utf-8")
+        quality_dir = run_dir / "quality_reports"
+        quality_dir.mkdir(exist_ok=True)
+        (quality_dir / "external_narrative_gate.json").write_text("{}", encoding="utf-8")
+
+        pending = collect_pending_external_steps(self.case, run_dir)
+
+        self.assertEqual([], pending)
+
 
 if __name__ == "__main__":
     unittest.main()

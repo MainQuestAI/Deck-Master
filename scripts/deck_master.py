@@ -901,11 +901,13 @@ def command_benchmark_checkpoint(args: argparse.Namespace) -> dict[str, Any]:
 def command_benchmark_report(args: argparse.Namespace) -> dict[str, Any]:
     case = load_benchmark_case(args.case, benchmark_dir=getattr(args, "benchmark_dir", None))
     run_dir = resolve_run_dir(args)
+    pending_external_steps = collect_pending_external_steps(case, run_dir)
     return write_benchmark_report(
         case,
         run_dir,
         benchmark_dir=getattr(args, "benchmark_dir", None),
         force=bool(getattr(args, "force", False)),
+        pending_external_steps=pending_external_steps,
     )
 
 

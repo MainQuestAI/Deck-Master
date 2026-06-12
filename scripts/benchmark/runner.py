@@ -156,13 +156,27 @@ def summarize_and_write_metrics(run_dir: Path) -> dict[str, Any]:
 
 def collect_pending_external_steps(case: BenchmarkCase, run_dir: Path) -> list[dict[str, Any]]:
     workflow = case.data.get("workflow", {}) if isinstance(case.data.get("workflow"), dict) else {}
+    pending: list[dict[str, Any]] = []
+    if workflow.get("requires_narrative_advice"):
+        advice_path = run_dir / "advisor_results" / "narrative_advice.json"
+        gate_path = run_dir / "quality_reports" / "external_narrative_gate.json"
+        if not advice_path.exists():
+            pending.append({
+                "step": "narrative_advice",
+                "status": "pending_external_agent",
+                "path": str(advice_path),
+            })
+        elif not gate_path.exists():
+            pending.append({
+                "step": "narrative_advice",
+                "status": "pending_local_apply",
+                "path": str(gate_path),
+            })
     checks = [
-        ("requires_narrative_advice", "narrative_advice", run_dir / "narrative_advice" / "applied.json", None),
         ("requires_external_quality_review", "external_quality_review", run_dir / "quality_reports", "external_*_gate.json"),
         ("requires_generation_result", "generation_result", run_dir / "generation_results", "*.json"),
         ("requires_render_result", "render_result", run_dir / "render_result.json", None),
     ]
-    pending: list[dict[str, Any]] = []
     for flag, step, path, pattern in checks:
         if not workflow.get(flag):
             continue

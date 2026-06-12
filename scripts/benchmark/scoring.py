@@ -59,11 +59,11 @@ def build_target_evaluation(
 ) -> dict[str, str]:
     return {
         "context_to_preview": evaluate_max_target(
-            efficiency_metrics.get("created_to_preview_minutes"),
+            efficiency_metrics.get("context_to_preview_minutes"),
             success_targets.get("context_to_preview_minutes"),
         ),
         "context_to_review_ready": evaluate_max_target(
-            efficiency_metrics.get("preview_to_first_quality_gate_minutes"),
+            efficiency_metrics.get("context_to_review_ready_minutes"),
             success_targets.get("context_to_review_ready_minutes"),
         ),
         "context_to_approved_queue": evaluate_max_target(
