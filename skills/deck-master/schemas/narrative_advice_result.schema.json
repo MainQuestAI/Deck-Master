@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "deck_narrative_advice.v1",
+  "title": "Deck Master Narrative Advice Result",
+  "type": "object",
+  "required": ["schema_version", "run_id", "advisor"],
+  "properties": {
+    "schema_version": { "const": "deck_narrative_advice.v1" },
+    "run_id": { "type": "string", "minLength": 1 },
+    "advisor": { "type": "string" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "core_thesis_rewrite": { "type": "string" },
+    "business_tension": { "type": "string" },
+    "audience_strategy": { "type": "object" },
+    "objection_map": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["objection"],
+        "properties": {
+          "objection": { "type": "string" },
+          "response_strategy": { "type": "string" },
+          "evidence_needed": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "page_recommendations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["beat_id", "action"],
+        "properties": {
+          "beat_id": { "type": "string" },
+          "action": { "type": "string" },
+          "reason": { "type": "string" },
+          "suggested_core_claim": { "type": "string" },
+          "evidence_needed": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "deck_level_risks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["risk_id", "message"],
+        "properties": {
+          "risk_id": { "type": "string" },
+          "severity": { "type": "string", "enum": ["P0", "P1", "P2"] },
+          "message": { "type": "string" }
+        }
+      }
+    }
+  }
+}

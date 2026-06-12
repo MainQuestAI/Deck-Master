@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "deck_external_quality_review.v1",
+  "title": "Deck Master External Quality Review Result",
+  "type": "object",
+  "required": ["schema_version", "run_id", "reviewer", "scope", "findings"],
+  "properties": {
+    "schema_version": { "const": "deck_external_quality_review.v1" },
+    "run_id": { "type": "string", "minLength": 1 },
+    "reviewer": { "type": "string" },
+    "scope": { "type": "string" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "summary": {
+      "type": "object",
+      "properties": {
+        "status": { "type": "string", "enum": ["pass", "conditional_pass", "rework_required"] },
+        "blocks_delivery": { "type": "boolean" },
+        "p0_count": { "type": "integer", "minimum": 0 },
+        "p1_count": { "type": "integer", "minimum": 0 },
+        "p2_count": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["finding_id", "severity", "message"],
+        "properties": {
+          "finding_id": { "type": "string", "minLength": 1 },
+          "severity": { "type": "string", "enum": ["P0", "P1", "P2"] },
+          "page_id": { "type": "string" },
+          "dimension": { "type": "string" },
+          "message": { "type": "string" },
+          "repair_instruction": { "type": "string" },
+          "refs": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  }
+}

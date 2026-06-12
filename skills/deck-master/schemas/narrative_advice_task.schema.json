@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "deck_narrative_advice_task.v1",
+  "title": "Deck Master Narrative Advice Task",
+  "type": "object",
+  "required": ["schema_version", "run_id", "task_id"],
+  "properties": {
+    "schema_version": { "const": "deck_narrative_advice_task.v1" },
+    "run_id": { "type": "string", "minLength": 1 },
+    "task_id": { "type": "string", "minLength": 1 },
+    "created_at": { "type": "string", "format": "date-time" },
+    "inputs": { "type": "object" },
+    "instructions": { "type": "array", "items": { "type": "string" } },
+    "output_schema": { "type": "string" }
+  }
+}

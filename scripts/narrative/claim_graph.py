@@ -63,6 +63,7 @@ def build_claim_evidence_graph(
     # 建立 source evidence
     evidence_counter = 0
     source_evidence_map: dict[str, str] = {}  # source_id -> evidence_id
+    candidate_evidence_map: dict[str, str] = {}  # candidate evidence_id -> graph evidence_id
     for source in sources:
         if not isinstance(source, dict):
             continue
@@ -84,6 +85,31 @@ def build_claim_evidence_graph(
             "publication_status": pub_status,
         })
 
+        # v0.9: consume evidence_candidates from context pack import.
+        candidates = source.get("evidence_candidates", [])
+        if isinstance(candidates, list):
+            for candidate in candidates:
+                if not isinstance(candidate, dict):
+                    continue
+                cand_id = str(candidate.get("evidence_id", ""))
+                if not cand_id:
+                    continue
+                evidence_counter += 1
+                cand_eid = f"evidence_{evidence_counter:03d}"
+                candidate_evidence_map[cand_id] = cand_eid
+                cand_type = _infer_evidence_type(str(candidate.get("evidence_type", kind)))
+                cand_pub = str(candidate.get("publication_status", pub_status))
+                all_evidence.append({
+                    "evidence_id": cand_eid,
+                    "source_ref": source_id,
+                    "evidence_type": cand_type,
+                    "summary": str(candidate.get("quote_or_excerpt", candidate.get("claim_hint", ""))),
+                    "confidence": 0.6 if candidate.get("quote_or_excerpt") else 0.4,
+                    "publication_status": cand_pub,
+                    "sensitivity": str(candidate.get("sensitivity", "normal")),
+                    "candidate_id": cand_id,
+                })
+
     # 构建 claims 和关联
     for index, claim in enumerate(raw_claims, start=1):
         claim_id = claim.get("claim_id", f"claim_{index:02d}")
@@ -93,6 +119,8 @@ def build_claim_evidence_graph(
         for ref in claim.get("evidence_refs", []):
             if ref in source_evidence_map:
                 supporting_evidence.append(source_evidence_map[ref])
+            elif ref in candidate_evidence_map:
+                supporting_evidence.append(candidate_evidence_map[ref])
 
         # 关联 pages
         claim_pages: list[str] = []

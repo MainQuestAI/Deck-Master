@@ -1,0 +1,241 @@
+"""Tests for Package F2/F3 — Page Workbench actions and External Result Visibility."""
+
+from __future__ import annotations
+
+import io
+import json
+import shutil
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts" / "preview"))
+sys.path.insert(0, str(ROOT / "scripts"))
+
+from server import PreviewHandler  # noqa: E402
+from review.workbench import WorkbenchError, execute_review_action  # noqa: E402
+from runtime.run_state import create_run, write_json  # noqa: E402
+from runtime.events import read_events  # noqa: E402
+
+
+def _setup_run(tmp: Path) -> Path:
+    runs_dir = tmp / "runs"
+    runs_dir.mkdir()
+    run_dir = create_run(runs_dir, {"project_name": "WbTest"}, run_id="wb-test")
+    write_json(run_dir / "page_tasks.json", {
+        "tasks": [
+            {"beat_id": "beat_001", "source_decision": "reuse",
+             "planning": {"core_claim": "Test claim", "decision_intent": "reuse"}},
+            {"beat_id": "beat_002", "source_decision": "generate",
+             "planning": {"core_claim": "ROI", "decision_intent": "generate"}},
+        ]
+    })
+    return run_dir
+
+
+class MockHandler(PreviewHandler):
+    def __init__(self, runs_dir: Path):
+        self.wfile = io.BytesIO()
+        self.rfile = io.BytesIO()
+        self.client_address = ("127.0.0.1", 0)
+        self.request_version = "HTTP/1.1"
+        self.requestline = ""
+        self._headers_buffer: list[bytes] = []
+        self.headers: dict[str, str] = {}
+        self.runs_dir = runs_dir
+        if not hasattr(self, "library_mode"):
+            self.library_mode = "fixture"
+
+    def request(self, method: str, path: str, body: dict | None = None):
+        self.path = path
+        self.command = method
+        self.requestline = f"{method} {path} HTTP/1.1"
+        self.wfile = io.BytesIO()
+        self.rfile = io.BytesIO()
+        self._headers_buffer = []
+        if body is not None:
+            payload = json.dumps(body).encode("utf-8")
+            self.rfile.write(payload)
+            self.rfile.seek(0)
+            self.headers = {"Content-Length": str(len(payload))}
+        else:
+            self.headers = {}
+        if method == "GET":
+            self.do_GET()
+        elif method == "POST":
+            self.do_POST()
+        return self._parse_response()
+
+    def _parse_response(self) -> tuple[int, dict]:
+        self.wfile.seek(0)
+        raw = self.wfile.read().decode("utf-8")
+        if not raw.strip():
+            return 500, {"error": "Empty response"}
+        header_part, _, body = raw.partition("\r\n\r\n")
+        status_line = header_part.split("\r\n")[0]
+        status_code = int(status_line.split(" ")[1])
+        try:
+            return status_code, json.loads(body)
+        except json.JSONDecodeError:
+            return status_code, {"raw": body}
+
+
+class WorkbenchDirectTest(unittest.TestCase):
+    """Test workbench actions directly."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.mkdtemp(prefix="dm_wb_")
+        self.run_dir = _setup_run(Path(self._tmp))
+
+    def tearDown(self) -> None:
+        shutil.rmtree(self._tmp, ignore_errors=True)
+
+    def test_approve_page(self) -> None:
+        result = execute_review_action(self.run_dir, "beat_001", "approve")
+        self.assertEqual(result["status"], "ok")
+        page_tasks = json.loads((self.run_dir / "page_tasks.json").read_text(encoding="utf-8"))
+        task = next(t for t in page_tasks["tasks"] if t["beat_id"] == "beat_001")
+        self.assertEqual(task["review_status"], "approved")
+
+    def test_reject_page(self) -> None:
+        result = execute_review_action(self.run_dir, "beat_001", "reject", reason="Weak evidence")
+        self.assertEqual(result["status"], "ok")
+        page_tasks = json.loads((self.run_dir / "page_tasks.json").read_text(encoding="utf-8"))
+        task = next(t for t in page_tasks["tasks"] if t["beat_id"] == "beat_001")
+        self.assertEqual(task["review_status"], "rejected")
+        self.assertEqual(task["rejection_reason"], "Weak evidence")
+
+    def test_add_note(self) -> None:
+        execute_review_action(self.run_dir, "beat_001", "add_note", note="Looks good overall")
+        page_tasks = json.loads((self.run_dir / "page_tasks.json").read_text(encoding="utf-8"))
+        task = next(t for t in page_tasks["tasks"] if t["beat_id"] == "beat_001")
+        self.assertEqual(len(task["review_notes"]), 1)
+        self.assertEqual(task["review_notes"][0]["note"], "Looks good overall")
+
+    def test_lock_source(self) -> None:
+        execute_review_action(self.run_dir, "beat_001", "lock_source", actor="user")
+        page_tasks = json.loads((self.run_dir / "page_tasks.json").read_text(encoding="utf-8"))
+        task = next(t for t in page_tasks["tasks"] if t["beat_id"] == "beat_001")
+        self.assertTrue(task["locked"])
+
+    def test_convert_to_generate(self) -> None:
+        execute_review_action(self.run_dir, "beat_001", "convert_to_generate")
+        page_tasks = json.loads((self.run_dir / "page_tasks.json").read_text(encoding="utf-8"))
+        task = next(t for t in page_tasks["tasks"] if t["beat_id"] == "beat_001")
+        self.assertEqual(task["source_decision"], "generate")
+        self.assertEqual(task["planning"]["decision_intent"], "generate")
+
+    def test_move_to_appendix(self) -> None:
+        execute_review_action(self.run_dir, "beat_001", "move_to_appendix")
+        page_tasks = json.loads((self.run_dir / "page_tasks.json").read_text(encoding="utf-8"))
+        task = next(t for t in page_tasks["tasks"] if t["beat_id"] == "beat_001")
+        self.assertEqual(task["section"], "appendix")
+
+    def test_invalid_action_raises(self) -> None:
+        with self.assertRaises(WorkbenchError):
+            execute_review_action(self.run_dir, "beat_001", "invalid_action")
+
+    def test_unknown_page_raises(self) -> None:
+        with self.assertRaises(WorkbenchError):
+            execute_review_action(self.run_dir, "beat_999", "approve")
+
+    def test_p0_blocks_approval(self) -> None:
+        # Add P0 finding.
+        quality_dir = self.run_dir / "quality_reports"
+        quality_dir.mkdir(exist_ok=True)
+        write_json(quality_dir / "draft_gate.json", {
+            "gate": "draft",
+            "findings": [
+                {"finding_id": "p0_test", "severity": "P0", "page_id": "beat_001",
+                 "message": "P0 blocking"},
+            ],
+        })
+        with self.assertRaises(WorkbenchError) as ctx:
+            execute_review_action(self.run_dir, "beat_001", "approve")
+        self.assertIn("P0", str(ctx.exception))
+
+    def test_event_written(self) -> None:
+        execute_review_action(self.run_dir, "beat_001", "approve")
+        events = read_events(self.run_dir)
+        wb_events = [e for e in events if "page_review" in str(e.get("step", ""))]
+        self.assertTrue(len(wb_events) >= 1)
+
+
+class WorkbenchAPITest(unittest.TestCase):
+    """Test via HTTP handler."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.mkdtemp(prefix="dm_wb_api_")
+        self.run_dir = _setup_run(Path(self._tmp))
+        self.handler = MockHandler(Path(self._tmp) / "runs")
+
+    def tearDown(self) -> None:
+        shutil.rmtree(self._tmp, ignore_errors=True)
+
+    def test_review_action_api(self) -> None:
+        status, data = self.handler.request(
+            "POST",
+            "/api/page/beat_001/review-action?run_id=wb-test",
+            body={"action": "approve", "actor": "user"},
+        )
+        self.assertEqual(status, 200)
+        self.assertEqual(data["status"], "ok")
+
+    def test_review_action_missing_action(self) -> None:
+        status, data = self.handler.request(
+            "POST",
+            "/api/page/beat_001/review-action?run_id=wb-test",
+            body={"actor": "user"},
+        )
+        self.assertEqual(status, 400)
+
+
+class ExternalResultsVisibilityTest(unittest.TestCase):
+    """Test F3 external result visibility API."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.mkdtemp(prefix="dm_f3_")
+        self.run_dir = _setup_run(Path(self._tmp))
+        self.handler = MockHandler(Path(self._tmp) / "runs")
+
+    def tearDown(self) -> None:
+        shutil.rmtree(self._tmp, ignore_errors=True)
+
+    def test_external_results_empty(self) -> None:
+        status, data = self.handler.request("GET", "/api/external-results/wb-test")
+        self.assertEqual(status, 200)
+        self.assertIsNone(data["narrative_advice"])
+        self.assertEqual(data["external_reviews"], [])
+        self.assertEqual(data["generation_results"], [])
+
+    def test_external_results_with_narrative_advice(self) -> None:
+        results_dir = self.run_dir / "advisor_results"
+        results_dir.mkdir()
+        write_json(results_dir / "narrative_advice.json", {
+            "schema_version": "deck_narrative_advice.v1",
+            "run_id": "wb-test",
+            "advisor": "codex",
+            "core_thesis_rewrite": "Test thesis",
+        })
+        status, data = self.handler.request("GET", "/api/external-results/wb-test")
+        self.assertEqual(status, 200)
+        self.assertIsNotNone(data["narrative_advice"])
+        self.assertEqual(data["narrative_advice"]["advisor"], "codex")
+
+    def test_external_results_with_quality_reviews(self) -> None:
+        quality_dir = self.run_dir / "quality_reports"
+        quality_dir.mkdir(exist_ok=True)
+        write_json(quality_dir / "external_semantic_codex_gate.json", {
+            "gate": "external_semantic",
+            "reviewer": "codex",
+            "findings": [{"finding_id": "f1", "severity": "P1", "message": "Test"}],
+        })
+        status, data = self.handler.request("GET", "/api/external-results/wb-test")
+        self.assertEqual(len(data["external_reviews"]), 1)
+        self.assertEqual(data["external_reviews"][0]["reviewer"], "codex")
+
+
+if __name__ == "__main__":
+    unittest.main()

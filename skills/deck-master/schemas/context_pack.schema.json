@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "deck_context_pack.v1",
+  "title": "Deck Master Context Pack",
+  "type": "object",
+  "required": ["schema_version", "run_id", "sources"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "deck_context_pack.v1"
+    },
+    "run_id": { "type": "string", "minLength": 1 },
+    "created_by": { "type": "string" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["source_id", "source_type"],
+        "additionalProperties": false,
+        "properties": {
+          "source_id": { "type": "string", "minLength": 1 },
+          "source_type": { "type": "string" },
+          "origin_type": { "type": "string" },
+          "origin_path": { "type": "string" },
+          "title": { "type": "string" },
+          "summary": { "type": "string" },
+          "sensitivity": {
+            "type": "string",
+            "enum": ["normal", "sensitive", "high"],
+            "default": "normal"
+          },
+          "evidence_candidates": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["evidence_id"],
+              "additionalProperties": false,
+              "properties": {
+                "evidence_id": { "type": "string", "minLength": 1 },
+                "evidence_type": { "type": "string" },
+                "claim_hint": { "type": "string" },
+                "quote_or_excerpt": { "type": "string" },
+                "location": { "type": "string" },
+                "publication_status": {
+                  "type": "string",
+                  "enum": ["safe_to_use", "internal_only", "needs_redaction", "unknown"],
+                  "default": "unknown"
+                },
+                "sensitivity": {
+                  "type": "string",
+                  "enum": ["normal", "sensitive", "high"],
+                  "default": "normal"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "global_constraints": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "deck_external_quality_review_task.v1",
+  "title": "Deck Master External Quality Review Task",
+  "type": "object",
+  "required": ["schema_version", "run_id", "task_id", "scope"],
+  "properties": {
+    "schema_version": { "const": "deck_external_quality_review_task.v1" },
+    "run_id": { "type": "string", "minLength": 1 },
+    "task_id": { "type": "string", "minLength": 1 },
+    "scope": { "type": "string" },
+    "inputs": { "type": "object" },
+    "review_dimensions": { "type": "array", "items": { "type": "string" } },
+    "output_schema": { "type": "string" }
+  }
+}

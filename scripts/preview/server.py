@@ -26,6 +26,9 @@ if str(SCRIPTS_DIR) not in sys.path:
 
 from runtime.events import append_typed_event
 
+from review.readiness import compute_claim_coverage, compute_deck_readiness, compute_next_actions
+from review.workbench import WorkbenchError, execute_review_action
+
 from delivery.outcome import record_delivery_outcome
 from delivery.validate import validate_delivery
 from orchestrate.export_queue import has_client_export_quality_clearance
@@ -160,6 +163,18 @@ class PreviewHandler(BaseHTTPRequestHandler):
         if path.startswith("/api/quality-governance/"):
             self.api_quality_governance(path.removeprefix("/api/quality-governance/").strip("/"))
             return
+        if path.startswith("/api/review-summary/"):
+            self.api_review_summary(path.removeprefix("/api/review-summary/").strip("/"))
+            return
+        if path.startswith("/api/claim-coverage/"):
+            self.api_claim_coverage(path.removeprefix("/api/claim-coverage/").strip("/"))
+            return
+        if path.startswith("/api/next-actions/"):
+            self.api_next_actions(path.removeprefix("/api/next-actions/").strip("/"))
+            return
+        if path.startswith("/api/external-results/"):
+            self.api_external_results(path.removeprefix("/api/external-results/").strip("/"))
+            return
         if path.startswith("/preview/"):
             self.serve_preview(path.removeprefix("/preview/"), parsed)
             return
@@ -175,6 +190,10 @@ class PreviewHandler(BaseHTTPRequestHandler):
         if path.startswith("/api/page/") and path.endswith("/decision"):
             page_id = path.removeprefix("/api/page/").removesuffix("/decision").strip("/")
             self.api_update_decision(page_id, parsed)
+            return
+        if path.startswith("/api/page/") and path.endswith("/review-action"):
+            page_id = path.removeprefix("/api/page/").removesuffix("/review-action").strip("/")
+            self.api_review_action(page_id, parsed)
             return
         if path == "/api/override/create":
             self.api_override_create(parsed)
@@ -548,6 +567,124 @@ class PreviewHandler(BaseHTTPRequestHandler):
             "lineage": lineage_data,
             "outcome": outcome_data,
         })
+
+    def _resolve_run_or_error(self, run_id: str):
+        """Resolve run_id to a Path, or return None and send error response."""
+        if not run_id:
+            self.send_error_json(HTTPStatus.BAD_REQUEST, "run_id is required.")
+            return None
+        candidate = (self.runs_dir / run_id).resolve()
+        root_text = str(self.runs_dir.resolve())
+        candidate_text = str(candidate)
+        if candidate_text != root_text and not candidate_text.startswith(root_text + "/"):
+            self.send_error_json(HTTPStatus.BAD_REQUEST, "Invalid run_id.")
+            return None
+        if not candidate.is_dir():
+            self.send_error_json(HTTPStatus.NOT_FOUND, f"Run not found: {run_id}")
+            return None
+        return candidate
+
+    def api_review_summary(self, run_id: str) -> None:
+        """Return deck readiness panel data."""
+        run_dir = self._resolve_run_or_error(run_id)
+        if not run_dir:
+            return
+        try:
+            self.send_json(compute_deck_readiness(run_dir))
+        except Exception as exc:
+            self.send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
+
+    def api_claim_coverage(self, run_id: str) -> None:
+        """Return claim coverage matrix."""
+        run_dir = self._resolve_run_or_error(run_id)
+        if not run_dir:
+            return
+        try:
+            self.send_json(compute_claim_coverage(run_dir))
+        except Exception as exc:
+            self.send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
+
+    def api_next_actions(self, run_id: str) -> None:
+        """Return prioritised next 5 actions."""
+        run_dir = self._resolve_run_or_error(run_id)
+        if not run_dir:
+            return
+        try:
+            self.send_json(compute_next_actions(run_dir))
+        except Exception as exc:
+            self.send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
+
+    def api_review_action(self, page_id: str, parsed) -> None:
+        """Execute a page review action (F2)."""
+        try:
+            run_dir = self.active_run_dir(parsed)
+        except Exception as exc:
+            self.send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
+            return
+        body = self.read_json_body()
+        action = body.get("action", "")
+        if not action:
+            self.send_error_json(HTTPStatus.BAD_REQUEST, "action is required.")
+            return
+        try:
+            result = execute_review_action(
+                run_dir,
+                page_id,
+                action,
+                actor=body.get("actor", "user"),
+                reason=body.get("reason", ""),
+                note=body.get("note", ""),
+                finding_id=body.get("finding_id", ""),
+                severity=body.get("severity", "P1"),
+                approver=body.get("approver", ""),
+            )
+            self.send_json(result)
+        except WorkbenchError as exc:
+            self.send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
+
+    def api_external_results(self, run_id: str) -> None:
+        """Return external result visibility data (F3)."""
+        run_dir = self._resolve_run_or_error(run_id)
+        if not run_dir:
+            return
+
+        results: dict[str, Any] = {
+            "run_id": run_id,
+            "narrative_advice": None,
+            "external_reviews": [],
+            "generation_results": [],
+        }
+
+        # Narrative advice.
+        narr_path = run_dir / "advisor_results" / "narrative_advice.json"
+        if narr_path.exists():
+            try:
+                results["narrative_advice"] = json.loads(narr_path.read_text(encoding="utf-8"))
+            except json.JSONDecodeError:
+                pass
+
+        # External quality reviews.
+        quality_dir = run_dir / "quality_reports"
+        if quality_dir.exists():
+            for gate_file in sorted(quality_dir.glob("external_*_gate.json")):
+                try:
+                    report = json.loads(gate_file.read_text(encoding="utf-8"))
+                    report["_report_file"] = gate_file.name
+                    results["external_reviews"].append(report)
+                except json.JSONDecodeError:
+                    pass
+
+        # Generation results.
+        gen_results_dir = run_dir / "generation_results"
+        if gen_results_dir.exists():
+            for result_file in sorted(gen_results_dir.glob("*.json")):
+                try:
+                    result = json.loads(result_file.read_text(encoding="utf-8"))
+                    results["generation_results"].append(result)
+                except json.JSONDecodeError:
+                    pass
+
+        self.send_json(results)
 
     def api_override_create(self, parsed) -> None:
         """创建 quality override。"""

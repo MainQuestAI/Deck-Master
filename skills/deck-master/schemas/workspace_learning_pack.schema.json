@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "deck_workspace_learning_pack.v1",
+  "title": "Deck Master Workspace Learning Pack",
+  "type": "object",
+  "required": ["schema_version", "workspace"],
+  "properties": {
+    "schema_version": { "const": "deck_workspace_learning_pack.v1" },
+    "workspace": { "type": "string", "minLength": 1 },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "high_value_patterns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["pattern_id", "description"],
+        "properties": {
+          "pattern_id": { "type": "string" },
+          "description": { "type": "string" },
+          "used_in_runs": { "type": "integer", "minimum": 0 },
+          "approval_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+          "best_for": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "frequent_failure_modes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["failure_id", "description"],
+        "properties": {
+          "failure_id": { "type": "string" },
+          "description": { "type": "string" },
+          "count": { "type": "integer", "minimum": 0 },
+          "repair_instruction": { "type": "string" }
+        }
+      }
+    },
+    "strong_assets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["canonical_slide_id"],
+        "properties": {
+          "canonical_slide_id": { "type": "string" },
+          "title": { "type": "string" },
+          "approval_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+          "delivered_count": { "type": "integer", "minimum": 0 },
+          "best_for": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "agent_guidance": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}
