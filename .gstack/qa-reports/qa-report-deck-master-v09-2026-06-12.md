@@ -11,7 +11,7 @@
 
 | Metric | Value |
 |---|---|
-| Unit tests | 571 (405 existing + 161 new + 5 regression) — **all passing** |
+| Unit tests | 570 total — **all passing** |
 | Packages tested | 10 (A–I, F1–F3) |
 | CLI commands verified | 18 new |
 | HTTP APIs verified | 7 new |
@@ -96,12 +96,12 @@
 ## Phase 1: Unit Test Suite
 
 ```
-Ran 571 tests in ~0.7s
+Ran 570 tests in ~0.7s
 OK
 ```
 
-All 571 tests pass. 405 pre-existing tests unmodified and still green.
-161 new feature tests + 5 regression tests for issues found during QA.
+All 570 tests pass. 405 pre-existing tests unmodified and still green.
+5 regression tests cover the issues found during QA.
 
 | Package | Tests |
 |---|---|
