@@ -248,6 +248,267 @@ textarea {
   color: var(--muted);
 }
 
+.narrative-panel {
+  border-color: rgba(79, 140, 255, 0.4);
+}
+
+.narrative-content dl,
+.narrative-dl {
+  display: grid;
+  gap: 6px;
+}
+
+.narrative-section {
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.narrative-section:last-child {
+  border-bottom: 0;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.narrative-section ul,
+.narrative-section ol {
+  margin: 4px 0 0 18px;
+  padding: 0;
+  color: var(--text);
+}
+
+.narrative-section li {
+  margin-bottom: 4px;
+}
+
+.narrative-section li small {
+  color: var(--muted);
+}
+
+.narrative-gaps dt {
+  color: var(--replace);
+}
+
+.page-narrative-detail {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+}
+
+.page-narrative-detail:empty {
+  display: none;
+}
+
+.page-narrative-detail dl {
+  display: grid;
+  gap: 6px;
+}
+
+.asset-signals-panel {
+  border-color: rgba(47, 186, 115, 0.4);
+}
+
+.asset-signals-content dl,
+.signal-dl {
+  display: grid;
+  gap: 6px;
+}
+
+.signal-section {
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.signal-section:last-child {
+  border-bottom: 0;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.signal-cards {
+  display: grid;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.signal-card {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+  background: var(--panel-strong);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.signal-card strong {
+  font-size: 13px;
+}
+
+.signal-card small {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.asset-unavailable {
+  font-style: italic;
+}
+
+.page-asset-signals-detail {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+}
+
+.page-asset-signals-detail:empty {
+  display: none;
+}
+
+.page-asset-signals-detail dl {
+  display: grid;
+  gap: 6px;
+}
+
+.governance-panel {
+  border-color: rgba(216, 167, 37, 0.4);
+}
+
+.governance-content dl,
+.governance-dl {
+  display: grid;
+  gap: 6px;
+}
+
+.governance-section {
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.governance-section:last-child {
+  border-bottom: 0;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.governance-readiness.governance-ready dd strong {
+  color: var(--keep);
+}
+
+.governance-readiness.governance-blocked dd strong {
+  color: var(--replace);
+}
+
+.gate-cards {
+  display: grid;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.gate-card {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+  background: var(--panel-strong);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.gate-card.gate-pass {
+  border-left: 3px solid var(--keep);
+}
+
+.gate-card.gate-fail {
+  border-left: 3px solid var(--replace);
+}
+
+.gate-card strong {
+  font-size: 13px;
+  text-transform: capitalize;
+}
+
+.gate-card small {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.findings-list {
+  display: grid;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.finding-item {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+  background: var(--panel-strong);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.finding-item.severity-p0 {
+  border-left: 3px solid var(--replace);
+}
+
+.finding-item.severity-p1 {
+  border-left: 3px solid var(--review);
+}
+
+.finding-item.severity-p2 {
+  border-left: 3px solid var(--muted);
+}
+
+.finding-item .repair {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.overrides-list {
+  display: grid;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.override-item {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+  background: var(--panel-strong);
+  border: 1px solid rgba(216, 167, 37, 0.3);
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.revoke-override-btn {
+  margin-top: 4px;
+  padding: 4px 8px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.delivery-form {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.form-row-inline {
+  display: flex;
+  gap: 6px;
+}
+
+.form-row-inline input {
+  flex: 1;
+}
+
+.record-reaction-btn {
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
 .empty {
   max-width: 460px;
   padding: 24px;

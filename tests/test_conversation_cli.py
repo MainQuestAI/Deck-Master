@@ -44,7 +44,15 @@ class ConversationCliTests(unittest.TestCase):
 
         self.run_cli("build-brief", "--run-dir", str(run_dir))
         self.run_cli("build-claim-map", "--run-dir", str(run_dir))
-        preview = self.run_cli("autoplan", "--run-dir", str(run_dir), "--library-mode", "fixture")
+        preview = self.run_cli(
+            "autoplan",
+            "--run-dir",
+            str(run_dir),
+            "--library-mode",
+            "fixture",
+            "--planning-mode",
+            "narrative_v2",
+        )
         quality = self.run_cli("quality-gate", "--run-dir", str(run_dir), "draft")
 
         self.assertEqual("autoplan_preview_ready", preview["status"])
@@ -52,6 +60,8 @@ class ConversationCliTests(unittest.TestCase):
         self.assertTrue((run_dir / "conversation_session.json").exists())
         self.assertTrue((run_dir / "deck_brief.json").exists())
         self.assertTrue((run_dir / "claim_map.json").exists())
+        self.assertTrue((run_dir / "consulting_judgments.json").exists())
+        self.assertTrue((run_dir / "claim_evidence_graph.json").exists())
         self.assertTrue((run_dir / "page_tasks.json").exists())
         self.assertTrue((run_dir / "preview_manifest.json").exists())
         self.assertTrue((run_dir / "quality_reports" / "draft_gate.json").exists())
@@ -64,6 +74,8 @@ class ConversationCliTests(unittest.TestCase):
         self.assertIn("retrieval", first_task)
         self.assertIn("sourcing", first_task)
         self.assertIn("generation", first_task)
+        self.assertIn("decision_intent", first_task["planning"])
+        self.assertIn("evidence_policy", first_task["planning"])
         self.assertIn(first_task["planning"]["core_claim"], narrative["beats"][0]["reuse_query"])
 
 

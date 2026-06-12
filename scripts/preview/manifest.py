@@ -10,7 +10,9 @@ from typing import Any
 
 MANIFEST_NAME = "preview_manifest.json"
 SOURCE_TYPES = {"library_slide", "generated", "placeholder", "manual"}
-DECISIONS = {"needs_review", "keep", "replace", "approved"}
+DECISIONS = {"needs_review", "keep", "replace", "approved", "rejected"}
+REVIEW_STATUSES = {"needs_review", "approved", "rejected"}
+ACTION_INTENTS = {"none", "reuse", "adapt", "generate", "manual_placeholder", "replace"}
 REQUIRED_PAGE_FIELDS = {
     "page_id",
     "order",
@@ -20,9 +22,63 @@ REQUIRED_PAGE_FIELDS = {
     "decision",
 }
 
+# Legacy decision → (review_status, action_intent)
+LEGACY_TO_REVIEW: dict[str, tuple[str, str]] = {
+    "approved": ("approved", "none"),
+    "rejected": ("rejected", "none"),
+    "needs_review": ("needs_review", "none"),
+    "keep": ("approved", "reuse"),
+    "replace": ("needs_review", "replace"),
+}
+
+# (review_status, action_intent) → legacy decision
+REVIEW_TO_LEGACY: dict[tuple[str, str], str] = {
+    ("approved", "reuse"): "keep",
+    ("approved", "adapt"): "approved",
+    ("approved", "generate"): "approved",
+    ("approved", "none"): "approved",
+    ("rejected", "none"): "rejected",
+    ("needs_review", "replace"): "replace",
+    ("needs_review", "none"): "needs_review",
+}
+
 
 class ManifestError(ValueError):
     pass
+
+
+def migrate_page_to_review_status(page: dict) -> dict:
+    """为旧 page 补充 review_status/action_intent。
+
+    如果已有 review_status 则不覆盖。
+    始终保留 legacy decision。
+    """
+    if "review_status" not in page:
+        decision = page.get("decision", "needs_review")
+        review_status, action_intent = LEGACY_TO_REVIEW.get(
+            decision, ("needs_review", "none")
+        )
+        page["review_status"] = review_status
+        page["action_intent"] = action_intent
+    return page
+
+
+def sync_legacy_decision(page: dict) -> dict:
+    """从 review_status/action_intent 同步 legacy decision。"""
+    review_status = page.get("review_status", "needs_review")
+    action_intent = page.get("action_intent", "none")
+    key = (review_status, action_intent)
+    if key in REVIEW_TO_LEGACY:
+        page["decision"] = REVIEW_TO_LEGACY[key]
+    else:
+        # fallback based on review_status alone
+        if review_status == "approved":
+            page["decision"] = "approved"
+        elif review_status == "rejected":
+            page["decision"] = "rejected"
+        else:
+            page["decision"] = "needs_review"
+    return page
 
 
 def manifest_path(run_dir: str | Path) -> Path:
@@ -40,6 +96,8 @@ def load_manifest(run_dir: str | Path) -> dict[str, Any]:
 
     validate_manifest(data)
     normalized = deepcopy(data)
+    for page in normalized["pages"]:
+        migrate_page_to_review_status(page)
     normalized["pages"] = sorted(normalized["pages"], key=lambda page: page["order"])
     return normalized
 
@@ -79,6 +137,14 @@ def validate_manifest(data: Any) -> None:
             raise ManifestError(f"Page {page_id} has invalid source_type.")
         if page["decision"] not in DECISIONS:
             raise ManifestError(f"Page {page_id} has invalid decision.")
+        if "review_status" in page and page["review_status"] not in REVIEW_STATUSES:
+            raise ManifestError(
+                f"Page {page_id} has invalid review_status: {page['review_status']}"
+            )
+        if "action_intent" in page and page["action_intent"] not in ACTION_INTENTS:
+            raise ManifestError(
+                f"Page {page_id} has invalid action_intent: {page['action_intent']}"
+            )
         validate_preview_path(page["preview_path"], page_id)
 
 
@@ -116,6 +182,8 @@ def update_page_decision(
     page_id: str,
     decision: str,
     notes: str,
+    review_status: str = "",
+    action_intent: str = "",
 ) -> dict[str, Any]:
     if decision not in DECISIONS:
         raise ManifestError(f"Invalid decision: {decision}")
@@ -126,6 +194,52 @@ def update_page_decision(
     page = find_page(data, page_id)
     page["decision"] = decision
     page["notes"] = notes
+
+    if review_status or action_intent:
+        # New fields provided: use them and sync legacy decision back
+        if review_status:
+            if review_status not in REVIEW_STATUSES:
+                raise ManifestError(f"Invalid review_status: {review_status}")
+            page["review_status"] = review_status
+        if action_intent:
+            if action_intent not in ACTION_INTENTS:
+                raise ManifestError(f"Invalid action_intent: {action_intent}")
+            page["action_intent"] = action_intent
+        sync_legacy_decision(page)
+    else:
+        # Legacy path: derive review_status/action_intent from the new decision
+        page.pop("review_status", None)
+        page.pop("action_intent", None)
+        migrate_page_to_review_status(page)
+
+    page["reviewed_at"] = datetime.now(timezone.utc).isoformat()
+    data["updated_at"] = page["reviewed_at"]
+    write_manifest(run_dir, data)
+    return page
+
+
+def update_page_review(
+    run_dir: str | Path,
+    page_id: str,
+    review_status: str,
+    action_intent: str = "none",
+    notes: str = "",
+) -> dict[str, Any]:
+    """使用新 review_status/action_intent 更新页面。
+
+    同时同步 legacy decision。
+    """
+    if review_status not in REVIEW_STATUSES:
+        raise ManifestError(f"Invalid review_status: {review_status}")
+    if action_intent not in ACTION_INTENTS:
+        raise ManifestError(f"Invalid action_intent: {action_intent}")
+
+    data = load_manifest(run_dir)
+    page = find_page(data, page_id)
+    page["review_status"] = review_status
+    page["action_intent"] = action_intent
+    page["notes"] = notes
+    sync_legacy_decision(page)
     page["reviewed_at"] = datetime.now(timezone.utc).isoformat()
     data["updated_at"] = page["reviewed_at"]
     write_manifest(run_dir, data)
