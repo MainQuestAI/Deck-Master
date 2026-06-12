@@ -11,13 +11,43 @@
 
 | Metric | Value |
 |---|---|
-| Unit tests | 570 total — **all passing** |
+| Unit tests | 580 total — **all passing** |
 | Packages tested | 10 (A–I, F1–F3) |
 | CLI commands verified | 18 new |
 | HTTP APIs verified | 7 new |
-| Issues found | 5 (1× P0, 3× P1, 1× P2) |
-| Fixes applied | 5 (all verified) |
+| Issues found | 10 total, including 3 PR #2 blocking follow-ups |
+| Fixes applied | 10 (all verified) |
 | Health score | **100/100** (after fixes) |
+
+---
+
+## PR #2 Review Follow-up Fixes
+
+After ChatGPT review of the latest PR #2 head, 3 blocking contract gaps and 2 related state-source gaps were reproduced and fixed.
+
+| Issue | Severity | Fix | Regression coverage |
+|---|---|---|---|
+| External result import accepted mismatched `run_id` | Blocking | Added shared `assert_external_result_matches_run()` and wired it into context pack import, narrative advice import/apply, external quality review import, and generation result import | 5 mismatch rejection tests |
+| Review Workbench approve/reject only updated `page_tasks.json` | Blocking | `approve/reject` now update `preview_manifest.json` through `update_page_review()`; missing manifest returns a clear Workbench error | approve/reject manifest assertions and export queue assertions |
+| Generation refresh wrote legacy preview fields only | Blocking | `refresh_preview_from_generation()` now validates formal manifest, requires run-relative preview assets, preserves `previous_preview_path`, and writes `preview_path`, `source_preview_asset`, `source_type`, `generation_status` | generation refresh regression tests |
+| Readiness/metrics counted review status from auxiliary page tasks | State-source gap | approved/rejected/needs_review now use `preview_manifest.pages[]` when present | readiness and metrics runtime-source tests |
+| Sourcing/generation summary missed real index formats | State-source gap | source decision counts use `sourcing_plan.decisions[]`; next actions/readiness support `generation_tasks/index.json.tasks[]` and `task_ids[]` | failed generation task next-action test |
+
+Scope note: F1/F2/F3 backend APIs and Agentic contract are complete for PR #2. The full F.7 front-end cockpit UI remains a follow-up item and is not claimed as complete in this PR.
+
+### Follow-up Verification
+
+```
+Ran 580 tests in 0.773s
+OK
+```
+
+| Check | Result |
+|---|---|
+| Unit tests | 580 tests, all passing |
+| `git diff --check main...HEAD` | clean |
+| Built-in LLM provider scan | clean for SDK/provider imports |
+| Real smoke | external review import -> generation refresh -> review approve -> export queue -> metrics passed |
 
 ---
 
@@ -96,22 +126,22 @@
 ## Phase 1: Unit Test Suite
 
 ```
-Ran 570 tests in ~0.7s
+Ran 580 tests in 0.773s
 OK
 ```
 
-All 570 tests pass. 405 pre-existing tests unmodified and still green.
-5 regression tests cover the issues found during QA.
+All 580 tests pass. Existing coverage remains green.
+15 regression tests cover the original QA issues and PR #2 review follow-up fixes.
 
 | Package | Tests |
 |---|---|
 | A — Skill Packaging | 22 |
-| B — Context Pack | 21 |
-| C — Narrative Advisory | 17 |
-| D — External Quality Review | 21 |
-| E — Generation Handback | 19 |
-| F1 — Review Cockpit (read-only) | 15 |
-| F2/F3 — Workbench + Visibility | 15 |
+| B — Context Pack | 22 |
+| C — Narrative Advisory | 19 |
+| D — External Quality Review | 22 |
+| E — Generation Handback | 22 |
+| F1 — Review Cockpit (read-only) | 17 |
+| F2/F3 — Workbench + Visibility | 17 |
 | G — Workspace Learning | 8 |
 | H — Companion Tool Validators | 23 |
 | I — Metrics Hooks | 4 |
@@ -219,7 +249,7 @@ Started `scripts/preview/server.py` on port 8765. Created sample run via `autopl
 
 ## Unresolved Issues
 
-None. All 5 issues found during QA have been fixed with regression tests.
+None for the PR #2 backend contract scope. Full F.7 front-end cockpit UI is a follow-up scope item.
 
 ---
 
@@ -234,6 +264,9 @@ None. All 5 issues found during QA have been fixed with regression tests.
 | Generation handoff/handback with locked page protection | verified |
 | Review Cockpit readiness/coverage/next actions | verified |
 | Page workbench actions with event logging | verified |
+| Workbench approve/reject sync to preview_manifest | verified |
+| Generation refresh writes formal preview_path runtime fields | verified |
+| External result run_id binding | verified |
 | P0 blocks approval (Quality Gate not bypassed) | verified |
 | External result visibility (narrative, reviews, generation) | verified |
 | Workspace learning pack (JSON + Markdown) | verified |

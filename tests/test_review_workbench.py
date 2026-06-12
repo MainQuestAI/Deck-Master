@@ -15,8 +15,9 @@ sys.path.insert(0, str(ROOT / "scripts" / "preview"))
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from server import PreviewHandler  # noqa: E402
+from orchestrate.export_queue import export_queue  # noqa: E402
 from review.workbench import WorkbenchError, execute_review_action  # noqa: E402
-from runtime.run_state import create_run, write_json  # noqa: E402
+from runtime.run_state import create_run, read_json, write_json  # noqa: E402
 from runtime.events import read_events  # noqa: E402
 
 
@@ -31,6 +32,47 @@ def _setup_run(tmp: Path) -> Path:
             {"beat_id": "beat_002", "source_decision": "generate",
              "planning": {"core_claim": "ROI", "decision_intent": "generate"}},
         ]
+    })
+    links_dir = run_dir / "links"
+    links_dir.mkdir(exist_ok=True)
+    (links_dir / "beat_001.svg").write_text("<svg></svg>\n", encoding="utf-8")
+    (links_dir / "beat_002.svg").write_text("<svg></svg>\n", encoding="utf-8")
+    write_json(run_dir / "preview_manifest.json", {
+        "run_id": "wb-test",
+        "title": "WbTest",
+        "status": "ready",
+        "pages": [
+            {
+                "page_id": "beat_001",
+                "beat_id": "beat_001",
+                "order": 1,
+                "title": "Test claim",
+                "source_type": "library_slide",
+                "preview_path": "links/beat_001.svg",
+                "narrative_role": "test",
+                "decision": "needs_review",
+            },
+            {
+                "page_id": "beat_002",
+                "beat_id": "beat_002",
+                "order": 2,
+                "title": "ROI",
+                "source_type": "placeholder",
+                "preview_path": "links/beat_002.svg",
+                "narrative_role": "test",
+                "decision": "needs_review",
+            },
+        ],
+    })
+    quality_dir = run_dir / "quality_reports"
+    quality_dir.mkdir(exist_ok=True)
+    write_json(quality_dir / "draft_gate.json", {
+        "schema_version": "deck_quality_report.v1",
+        "gate": "draft",
+        "status": "pass",
+        "blocks_delivery": False,
+        "summary": {"p0_count": 0, "p1_count": 0, "p2_count": 0},
+        "findings": [],
     })
     return run_dir
 
@@ -98,6 +140,12 @@ class WorkbenchDirectTest(unittest.TestCase):
         page_tasks = json.loads((self.run_dir / "page_tasks.json").read_text(encoding="utf-8"))
         task = next(t for t in page_tasks["tasks"] if t["beat_id"] == "beat_001")
         self.assertEqual(task["review_status"], "approved")
+        preview = read_json(self.run_dir / "preview_manifest.json")
+        page = next(p for p in preview["pages"] if p["page_id"] == "beat_001")
+        self.assertEqual(page["review_status"], "approved")
+        self.assertEqual(page["decision"], "approved")
+        queue = export_queue(self.run_dir, {"approved"})
+        self.assertEqual([p["page_id"] for p in queue["pages"]], ["beat_001"])
 
     def test_reject_page(self) -> None:
         result = execute_review_action(self.run_dir, "beat_001", "reject", reason="Weak evidence")
@@ -106,6 +154,18 @@ class WorkbenchDirectTest(unittest.TestCase):
         task = next(t for t in page_tasks["tasks"] if t["beat_id"] == "beat_001")
         self.assertEqual(task["review_status"], "rejected")
         self.assertEqual(task["rejection_reason"], "Weak evidence")
+        preview = read_json(self.run_dir / "preview_manifest.json")
+        page = next(p for p in preview["pages"] if p["page_id"] == "beat_001")
+        self.assertEqual(page["review_status"], "rejected")
+        self.assertEqual(page["decision"], "rejected")
+        queue = export_queue(self.run_dir, {"approved"})
+        self.assertEqual(queue["pages"], [])
+
+    def test_approve_requires_preview_manifest(self) -> None:
+        (self.run_dir / "preview_manifest.json").unlink()
+        with self.assertRaises(WorkbenchError) as ctx:
+            execute_review_action(self.run_dir, "beat_001", "approve")
+        self.assertIn("preview_manifest.json", str(ctx.exception))
 
     def test_add_note(self) -> None:
         execute_review_action(self.run_dir, "beat_001", "add_note", note="Looks good overall")

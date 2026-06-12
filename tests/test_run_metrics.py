@@ -109,6 +109,41 @@ class MetricsPageCountsTest(unittest.TestCase):
         self.assertEqual(counts["rejected"], 0)
         self.assertEqual(counts["needs_review"], 3)
 
+    def test_page_and_source_counts_use_runtime_sources(self) -> None:
+        write_json(self.run_dir / "preview_manifest.json", {
+            "run_id": "metrics-test",
+            "title": "MetricsTest",
+            "status": "ready",
+            "pages": [
+                {"page_id": "beat_001", "order": 1, "source_type": "library_slide",
+                 "preview_path": "links/beat_001.svg", "narrative_role": "test",
+                 "decision": "approved", "review_status": "approved"},
+                {"page_id": "beat_002", "order": 2, "source_type": "generated",
+                 "preview_path": "links/beat_002.svg", "narrative_role": "test",
+                 "decision": "rejected", "review_status": "rejected"},
+                {"page_id": "beat_003", "order": 3, "source_type": "placeholder",
+                 "preview_path": "links/beat_003.svg", "narrative_role": "test",
+                 "decision": "needs_review"},
+            ],
+        })
+        write_json(self.run_dir / "sourcing_plan.json", {
+            "run_id": "metrics-test",
+            "decisions": [
+                {"beat_id": "beat_001", "source_decision": "adapt"},
+                {"beat_id": "beat_002", "source_decision": "adapt"},
+                {"beat_id": "beat_003", "source_decision": "generate"},
+            ],
+        })
+
+        metrics = summarize_run_metrics(self.run_dir)
+        counts = metrics["counts"]
+        self.assertEqual(counts["approved"], 1)
+        self.assertEqual(counts["rejected"], 1)
+        self.assertEqual(counts["needs_review"], 1)
+        self.assertEqual(counts["reuse"], 0)
+        self.assertEqual(counts["adapt"], 2)
+        self.assertEqual(counts["generate"], 1)
+
 
 if __name__ == "__main__":
     unittest.main()

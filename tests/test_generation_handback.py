@@ -21,6 +21,7 @@ from scripts.generation.handback import (
     refresh_preview_from_generation,
     validate_generation_result,
 )
+from scripts.preview.manifest import load_manifest
 from scripts.runtime.run_state import create_run, read_json, write_json
 
 
@@ -55,11 +56,35 @@ def _setup_run(tmp: Path) -> Path:
         "status": "pending",
     })
     # Create preview manifest.
+    links_dir = run_dir / "links"
+    links_dir.mkdir(exist_ok=True)
+    (links_dir / "beat_001.svg").write_text("<svg></svg>\n", encoding="utf-8")
+    (links_dir / "beat_004.svg").write_text("<svg></svg>\n", encoding="utf-8")
     write_json(run_dir / "preview_manifest.json", {
         "run_id": "gen-test",
+        "title": "GenTest",
+        "status": "ready",
         "pages": [
-            {"beat_id": "beat_001", "preview_image": "", "source_type": "placeholder"},
-            {"beat_id": "beat_004", "preview_image": "", "source_type": "placeholder"},
+            {
+                "page_id": "beat_001",
+                "beat_id": "beat_001",
+                "order": 1,
+                "title": "Test page",
+                "source_type": "placeholder",
+                "preview_path": "links/beat_001.svg",
+                "narrative_role": "test",
+                "decision": "needs_review",
+            },
+            {
+                "page_id": "beat_004",
+                "beat_id": "beat_004",
+                "order": 2,
+                "title": "ROI page",
+                "source_type": "placeholder",
+                "preview_path": "links/beat_004.svg",
+                "narrative_role": "test",
+                "decision": "needs_review",
+            },
         ],
     })
     return run_dir
@@ -190,6 +215,13 @@ class GenerationImportTest(unittest.TestCase):
         with self.assertRaises(GenerationHandbackError):
             import_generation_result(self.run_dir, {"schema_version": "wrong"})
 
+    def test_import_rejects_run_id_mismatch(self) -> None:
+        with self.assertRaises(GenerationHandbackError) as ctx:
+            import_generation_result(self.run_dir, _completed_result(run_id="other-run"))
+        self.assertIn("run_id mismatch", str(ctx.exception))
+        result_path = self.run_dir / "generation_results" / "generation_001_beat_001.json"
+        self.assertFalse(result_path.exists())
+
     def test_event_written_after_import(self) -> None:
         from scripts.runtime.events import read_events
         import_generation_result(self.run_dir, _completed_result())
@@ -208,15 +240,30 @@ class GenerationPreviewRefreshTest(unittest.TestCase):
         shutil.rmtree(self._tmp, ignore_errors=True)
 
     def test_refresh_after_completed_import(self) -> None:
+        generated_dir = self.run_dir / "generated_assets" / "beat_001"
+        generated_dir.mkdir(parents=True, exist_ok=True)
+        (generated_dir / "preview.png").write_bytes(b"png")
         import_generation_result(self.run_dir, _completed_result())
         result = refresh_preview_from_generation(self.run_dir)
         self.assertEqual(result["status"], "refreshed")
         self.assertIn("beat_001", result["updated"])
         # Preview manifest should be updated.
-        preview = read_json(self.run_dir / "preview_manifest.json")
+        preview = load_manifest(self.run_dir)
         page = next(p for p in preview["pages"] if p["beat_id"] == "beat_001")
         self.assertEqual(page["source_type"], "generated")
-        self.assertIn("preview.png", page["preview_image"])
+        self.assertEqual(page["preview_path"], "generated_assets/beat_001/preview.png")
+        self.assertEqual(page["previous_preview_path"], "links/beat_001.svg")
+        self.assertEqual(page["source_preview_asset"], "generated_assets/beat_001/preview.png")
+        self.assertEqual(page["generation_status"], "completed")
+
+    def test_refresh_rejects_preview_path_outside_run(self) -> None:
+        import_generation_result(
+            self.run_dir,
+            _completed_result(preview_path="../outside.png"),
+        )
+        with self.assertRaises(GenerationHandbackError) as ctx:
+            refresh_preview_from_generation(self.run_dir)
+        self.assertIn("run-relative", str(ctx.exception))
 
     def test_refresh_no_results(self) -> None:
         result = refresh_preview_from_generation(self.run_dir)

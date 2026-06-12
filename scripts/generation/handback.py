@@ -9,15 +9,18 @@ Implements:
 
 from __future__ import annotations
 
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from preview.manifest import ManifestError, load_manifest, write_manifest
 from runtime.events import append_typed_event
 from runtime.run_state import (
     PAGE_TASKS_NAME,
     PREVIEW_MANIFEST_NAME,
     RunStateError,
+    assert_external_result_matches_run,
     ensure_run_dirs,
     read_json,
     write_json,
@@ -236,7 +239,14 @@ def import_generation_result(
         )
 
     root = ensure_run_dirs(run_dir)
-    run_id = str(result.get("run_id", ""))
+    try:
+        run_id = assert_external_result_matches_run(
+            root,
+            result.get("run_id", ""),
+            artifact_name="generation result",
+        )
+    except RunStateError as exc:
+        raise GenerationHandbackError(str(exc)) from exc
     task_id = str(result.get("task_id", ""))
     beat_id = str(result.get("beat_id", ""))
     status = str(result.get("status", ""))
@@ -315,13 +325,15 @@ def refresh_preview_from_generation(run_dir: str | Path) -> dict[str, Any]:
         request = read_json(request_path)
         run_id = str(request.get("run_id", ""))
 
-    # Load preview manifest.
-    preview_path = root / PREVIEW_MANIFEST_NAME
-    if not preview_path.exists():
+    # Load and validate preview manifest.
+    if not (root / PREVIEW_MANIFEST_NAME).exists():
         raise GenerationHandbackError(
             "preview_manifest.json not found. Run build-preview first."
         )
-    preview = read_json(preview_path)
+    try:
+        preview = load_manifest(root)
+    except ManifestError as exc:
+        raise GenerationHandbackError(f"Cannot read preview_manifest.json: {exc}") from exc
 
     # Load generation results.
     results_dir = root / RESULTS_DIR
@@ -339,19 +351,46 @@ def refresh_preview_from_generation(run_dir: str | Path) -> dict[str, Any]:
         if result.get("status") not in ("completed", "partial"):
             continue
         beat_id = str(result.get("beat_id", ""))
-        preview_img = result.get("preview_path", "")
+        result_preview_path = str(result.get("preview_path", ""))
 
         for page in preview_pages:
-            if isinstance(page, dict) and page.get("beat_id") == beat_id:
-                if preview_img:
-                    page["preview_image"] = preview_img
+            if not isinstance(page, dict):
+                continue
+            page_key = page.get("beat_id") or page.get("page_id")
+            if page_key == beat_id:
+                if result_preview_path:
+                    path = Path(result_preview_path)
+                    if path.is_absolute() or ".." in path.parts:
+                        raise GenerationHandbackError(
+                            f"Generation preview_path must be a run-relative path: {result_preview_path}"
+                        )
+                    resolved = (root / path).resolve()
+                    root_text = str(root)
+                    resolved_text = str(resolved)
+                    if resolved_text != root_text and not resolved_text.startswith(root_text + os.sep):
+                        raise GenerationHandbackError(
+                            f"Generation preview_path escapes run directory: {result_preview_path}"
+                        )
+                    if not resolved.exists():
+                        raise GenerationHandbackError(
+                            f"Generation preview_path does not exist: {result_preview_path}"
+                        )
+                    previous = page.get("preview_path", "")
+                    if previous and previous != result_preview_path:
+                        page["previous_preview_path"] = previous
+                    page["preview_path"] = result_preview_path
+                    page["source_preview_asset"] = result_preview_path
                     page["source_type"] = "generated"
-                if not preview_img and result.get("status") == "partial":
+                    page["generation_status"] = result.get("status", "")
+                if not result_preview_path and result.get("status") == "partial":
                     page["preview_missing"] = True
                 updated.append(beat_id)
                 break
 
-    write_json(preview_path, preview)
+    try:
+        write_manifest(root, preview)
+    except ManifestError as exc:
+        raise GenerationHandbackError(f"Cannot write preview_manifest.json: {exc}") from exc
 
     append_typed_event(
         root,

@@ -14,6 +14,7 @@ from runtime.run_state import (
     PAGE_TASKS_NAME,
     PREVIEW_MANIFEST_NAME,
     RunStateError,
+    SOURCING_PLAN_NAME,
     read_json,
 )
 
@@ -32,6 +33,38 @@ def _parse_timestamp(ts: str) -> datetime | None:
 def _minutes_between(a: datetime, b: datetime) -> float:
     delta = abs((b - a).total_seconds()) / 60.0
     return round(delta, 1)
+
+
+def _review_status_from_page(page: dict[str, Any]) -> str:
+    status = str(page.get("review_status", ""))
+    if status:
+        return status
+    decision = str(page.get("decision", "needs_review"))
+    if decision in {"approved", "keep"}:
+        return "approved"
+    if decision == "rejected":
+        return "rejected"
+    return "needs_review"
+
+
+def _source_counts(sourcing_plan: dict[str, Any], tasks: list[Any]) -> dict[str, int]:
+    decisions = sourcing_plan.get("decisions", [])
+    counts: dict[str, int] = {}
+    if isinstance(decisions, list) and decisions:
+        for decision in decisions:
+            if not isinstance(decision, dict):
+                continue
+            sd = str(decision.get("source_decision", "unknown"))
+            counts[sd] = counts.get(sd, 0) + 1
+        return counts
+
+    for task in tasks:
+        if not isinstance(task, dict):
+            continue
+        planning = task.get("planning", {}) if isinstance(task.get("planning"), dict) else {}
+        sd = str(task.get("source_decision", planning.get("decision_intent", "unknown")))
+        counts[sd] = counts.get(sd, 0) + 1
+    return counts
 
 
 def summarize_run_metrics(run_dir: str | Path) -> dict[str, Any]:
@@ -101,17 +134,26 @@ def summarize_run_metrics(run_dir: str | Path) -> dict[str, Any]:
             pass
 
     tasks = page_tasks_data.get("tasks", [])
-    total_pages = len(tasks)
-    approved = sum(1 for t in tasks if isinstance(t, dict) and t.get("review_status") == "approved")
-    rejected = sum(1 for t in tasks if isinstance(t, dict) and t.get("review_status") == "rejected")
+    preview_data: dict[str, Any] = {}
+    if preview_path.exists():
+        try:
+            preview_data = read_json(preview_path)
+        except RunStateError:
+            pass
+    pages = preview_data.get("pages", [])
+    page_source = pages if pages else tasks
+    total_pages = len(page_source)
+    approved = sum(1 for p in page_source if isinstance(p, dict) and _review_status_from_page(p) == "approved")
+    rejected = sum(1 for p in page_source if isinstance(p, dict) and _review_status_from_page(p) == "rejected")
     needs_review = total_pages - approved - rejected
 
-    source_counts: dict[str, int] = {}
-    for t in tasks:
-        if not isinstance(t, dict):
-            continue
-        sd = t.get("source_decision", t.get("planning", {}).get("decision_intent", "unknown"))
-        source_counts[sd] = source_counts.get(sd, 0) + 1
+    sourcing_plan: dict[str, Any] = {}
+    if (root / SOURCING_PLAN_NAME).exists():
+        try:
+            sourcing_plan = read_json(root / SOURCING_PLAN_NAME)
+        except RunStateError:
+            pass
+    source_counts = _source_counts(sourcing_plan, tasks)
 
     # Quality finding counts.
     p0_total = 0

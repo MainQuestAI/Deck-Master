@@ -18,6 +18,7 @@ from runtime.run_state import (
     DECK_BRIEF_NAME,
     PAGE_TASKS_NAME,
     RunStateError,
+    assert_external_result_matches_run,
     ensure_run_dirs,
     read_json,
     write_json,
@@ -207,7 +208,14 @@ def import_external_review(
         )
 
     root = ensure_run_dirs(run_dir)
-    run_id = str(result.get("run_id", ""))
+    try:
+        run_id = assert_external_result_matches_run(
+            root,
+            result.get("run_id", ""),
+            artifact_name="external quality review",
+        )
+    except RunStateError as exc:
+        raise ExternalReviewError(str(exc)) from exc
     scope = str(result.get("scope", ""))
     reviewer = str(result.get("reviewer", ""))
 

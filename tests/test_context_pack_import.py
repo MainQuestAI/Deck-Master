@@ -143,7 +143,7 @@ class ContextPackImportTest(unittest.TestCase):
         self._tmp = tempfile.mkdtemp(prefix="dm_ctx_pack_test_")
         self.runs_dir = Path(self._tmp) / "runs"
         self.runs_dir.mkdir()
-        self.run_dir = create_run(self.runs_dir, {"project_name": "Test"}, run_id="ctx-test")
+        self.run_dir = create_run(self.runs_dir, {"project_name": "Test"}, run_id="test-run")
 
     def tearDown(self) -> None:
         shutil.rmtree(self._tmp, ignore_errors=True)
@@ -194,6 +194,13 @@ class ContextPackImportTest(unittest.TestCase):
     def test_import_invalid_pack_raises(self) -> None:
         with self.assertRaises(ContextPackError):
             import_context_pack(self.run_dir, {"schema_version": "wrong"})
+
+    def test_import_rejects_run_id_mismatch(self) -> None:
+        with self.assertRaises(ContextPackError) as ctx:
+            import_context_pack(self.run_dir, _valid_pack(run_id="other-run"))
+        self.assertIn("run_id mismatch", str(ctx.exception))
+        self.assertFalse((self.run_dir / CONTEXT_MANIFEST_NAME).exists())
+        self.assertFalse((self.run_dir / "context_packs").exists())
 
     def test_bad_json_does_not_overwrite_manifest(self) -> None:
         # First import good pack.
@@ -259,7 +266,7 @@ class ContextPackClaimGraphTest(unittest.TestCase):
         self._tmp = tempfile.mkdtemp(prefix="dm_ctx_graph_test_")
         self.runs_dir = Path(self._tmp) / "runs"
         self.runs_dir.mkdir()
-        self.run_dir = create_run(self.runs_dir, {"project_name": "Graph"}, run_id="graph-test")
+        self.run_dir = create_run(self.runs_dir, {"project_name": "Graph"}, run_id="test-run")
 
     def tearDown(self) -> None:
         shutil.rmtree(self._tmp, ignore_errors=True)
@@ -270,7 +277,7 @@ class ContextPackClaimGraphTest(unittest.TestCase):
         manifest = read_json(self.run_dir / CONTEXT_MANIFEST_NAME)
 
         claim_map = {
-            "run_id": "graph-test",
+            "run_id": "test-run",
             "claims": [
                 {
                     "claim_id": "claim_01",

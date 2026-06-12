@@ -169,6 +169,13 @@ class ExternalReviewImportTest(unittest.TestCase):
         with self.assertRaises(ExternalReviewError):
             import_external_review(self.run_dir, {"schema_version": "wrong"})
 
+    def test_import_rejects_run_id_mismatch(self) -> None:
+        with self.assertRaises(ExternalReviewError) as ctx:
+            import_external_review(self.run_dir, _valid_review(run_id="other-run"))
+        self.assertIn("run_id mismatch", str(ctx.exception))
+        gate_path = self.run_dir / "quality_reports" / "external_semantic_codex_gate.json"
+        self.assertFalse(gate_path.exists())
+
     def test_p1_blocks_export_via_gate_report(self) -> None:
         import_external_review(self.run_dir, _valid_review())
         gate = read_json(self.run_dir / "quality_reports" / "external_semantic_codex_gate.json")

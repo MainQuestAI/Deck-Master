@@ -14,6 +14,7 @@ from typing import Any
 from runtime.run_state import (
     PAGE_TASKS_NAME,
     PREVIEW_MANIFEST_NAME,
+    SOURCING_PLAN_NAME,
     RunStateError,
     read_json,
 )
@@ -33,28 +34,73 @@ def _safe_read(path: Path) -> dict[str, Any] | None:
 # --------------------------------------------------------------------------- #
 
 
+def _review_status_from_page(page: dict[str, Any]) -> str:
+    status = str(page.get("review_status", ""))
+    if status:
+        return status
+    decision = str(page.get("decision", "needs_review"))
+    if decision in {"approved", "keep"}:
+        return "approved"
+    if decision == "rejected":
+        return "rejected"
+    return "needs_review"
+
+
+def _source_counts(sourcing_plan: dict[str, Any], tasks: list[Any]) -> dict[str, int]:
+    decisions = sourcing_plan.get("decisions", [])
+    source_counts: dict[str, int] = {}
+    if isinstance(decisions, list) and decisions:
+        for decision in decisions:
+            if not isinstance(decision, dict):
+                continue
+            sd = str(decision.get("source_decision", "unknown"))
+            source_counts[sd] = source_counts.get(sd, 0) + 1
+        return source_counts
+
+    for task in tasks:
+        if not isinstance(task, dict):
+            continue
+        planning = task.get("planning", {}) if isinstance(task.get("planning"), dict) else {}
+        sd = task.get("source_decision", planning.get("decision_intent", "unknown"))
+        source_counts[str(sd)] = source_counts.get(str(sd), 0) + 1
+    return source_counts
+
+
+def _generation_tasks_from_index(run_dir: Path, gen_index: dict[str, Any]) -> list[dict[str, Any]]:
+    raw_tasks = gen_index.get("tasks", [])
+    if isinstance(raw_tasks, list) and raw_tasks and isinstance(raw_tasks[0], dict):
+        return [task for task in raw_tasks if isinstance(task, dict)]
+
+    task_ids = gen_index.get("task_ids", raw_tasks if isinstance(raw_tasks, list) else [])
+    tasks: list[dict[str, Any]] = []
+    for task_id in task_ids:
+        if not isinstance(task_id, str):
+            continue
+        task = _safe_read(run_dir / "generation_tasks" / f"{task_id}.json")
+        if task:
+            tasks.append(task)
+    return tasks
+
+
 def compute_deck_readiness(run_dir: Path) -> dict[str, Any]:
     """Compute deck readiness panel data."""
     page_tasks = _safe_read(run_dir / PAGE_TASKS_NAME) or {}
     preview = _safe_read(run_dir / PREVIEW_MANIFEST_NAME) or {}
+    sourcing_plan = _safe_read(run_dir / SOURCING_PLAN_NAME) or {}
     claim_graph = _safe_read(run_dir / "claim_evidence_graph.json") or {}
 
     tasks = page_tasks.get("tasks", [])
     pages = preview.get("pages", [])
 
     # Page counts.
-    total = len(tasks)
-    approved = sum(1 for t in tasks if isinstance(t, dict) and t.get("review_status") == "approved")
-    rejected = sum(1 for t in tasks if isinstance(t, dict) and t.get("review_status") == "rejected")
+    page_source = pages if pages else tasks
+    total = len(page_source)
+    approved = sum(1 for p in page_source if isinstance(p, dict) and _review_status_from_page(p) == "approved")
+    rejected = sum(1 for p in page_source if isinstance(p, dict) and _review_status_from_page(p) == "rejected")
     needs_review = total - approved - rejected
 
     # Source decision counts.
-    source_counts: dict[str, int] = {}
-    for t in tasks:
-        if not isinstance(t, dict):
-            continue
-        sd = t.get("source_decision", t.get("planning", {}).get("decision_intent", "unknown"))
-        source_counts[sd] = source_counts.get(sd, 0) + 1
+    source_counts = _source_counts(sourcing_plan, tasks)
 
     # Quality findings.
     quality_dir = run_dir / "quality_reports"
@@ -91,13 +137,9 @@ def compute_deck_readiness(run_dir: Path) -> dict[str, Any]:
     if gen_tasks_dir.exists():
         gen_index = _safe_read(gen_tasks_dir / "index.json")
         if gen_index:
-            task_ids = gen_index.get("task_ids", [])
-            completed = 0
-            for tid in task_ids:
-                task = _safe_read(gen_tasks_dir / f"{tid}.json")
-                if task and task.get("status") == "completed":
-                    completed += 1
-            if completed == len(task_ids) and task_ids:
+            generation_tasks = _generation_tasks_from_index(run_dir, gen_index)
+            completed = sum(1 for task in generation_tasks if task.get("status") == "completed")
+            if completed == len(generation_tasks) and generation_tasks:
                 generation_status = "completed"
             elif completed > 0:
                 generation_status = "partial"
@@ -283,23 +325,22 @@ def compute_next_actions(run_dir: Path) -> dict[str, Any]:
     if gen_tasks_dir.exists():
         gen_index = _safe_read(gen_tasks_dir / "index.json")
         if gen_index:
-            for tid in gen_index.get("task_ids", []):
-                task = _safe_read(gen_tasks_dir / f"{tid}.json")
-                if task and task.get("status") == "failed":
+            for task in _generation_tasks_from_index(run_dir, gen_index):
+                if task.get("status") == "failed":
                     priority += 1
                     actions.append({
                         "priority": priority,
                         "action_type": "rerun_generation",
                         "target": task.get("beat_id", ""),
                         "message": f"Generation failed for {task.get('beat_id', '')}.",
-                        "refs": [f"generation_tasks/{tid}.json"],
+                        "refs": [f"generation_tasks/{task.get('task_id', '')}.json"],
                     })
 
     # 5. No preview asset.
     for page in pages:
         if not isinstance(page, dict):
             continue
-        if not page.get("preview_image") and page.get("source_type") != "placeholder":
+        if not page.get("preview_path") and page.get("source_type") != "placeholder":
             priority += 1
             actions.append({
                 "priority": priority,

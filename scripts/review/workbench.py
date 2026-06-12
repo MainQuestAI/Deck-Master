@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from preview.manifest import ManifestError, update_page_review
 from runtime.events import append_typed_event
 from runtime.run_state import (
     PAGE_TASKS_NAME,
@@ -99,11 +100,31 @@ def execute_review_action(
     if action == "approve":
         # Check if page has blocking quality findings.
         _check_no_blocking_findings(root, page_id)
+        try:
+            update_page_review(
+                root,
+                page_id,
+                review_status="approved",
+                action_intent="none",
+                notes=note,
+            )
+        except ManifestError as exc:
+            raise WorkbenchError(f"Cannot approve page: {exc}") from exc
         task["review_status"] = "approved"
         task["reviewed_at"] = _utc_now()
         task["reviewed_by"] = actor
 
     elif action == "reject":
+        try:
+            update_page_review(
+                root,
+                page_id,
+                review_status="rejected",
+                action_intent="none",
+                notes=reason,
+            )
+        except ManifestError as exc:
+            raise WorkbenchError(f"Cannot reject page: {exc}") from exc
         task["review_status"] = "rejected"
         task["reviewed_at"] = _utc_now()
         task["reviewed_by"] = actor

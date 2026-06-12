@@ -17,6 +17,7 @@ from runtime.events import append_typed_event
 from runtime.run_state import (
     CONTEXT_MANIFEST_NAME,
     RunStateError,
+    assert_external_result_matches_run,
     ensure_run_dirs,
     read_json,
     write_json,
@@ -217,6 +218,15 @@ def import_context_pack(
         )
 
     root = ensure_run_dirs(run_dir)
+    try:
+        assert_external_result_matches_run(
+            root,
+            pack.get("run_id", ""),
+            artifact_name="context pack",
+        )
+    except RunStateError as exc:
+        raise ContextPackError(str(exc)) from exc
+
     manifest_path = root / CONTEXT_MANIFEST_NAME
 
     # Load existing manifest or start fresh.

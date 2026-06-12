@@ -161,6 +161,32 @@ class ReviewSummaryAPITest(unittest.TestCase):
         self.assertEqual(counts["pages"], 3)
         self.assertEqual(counts["p1"], 1)
 
+    def test_deck_readiness_uses_preview_and_sourcing_plan(self) -> None:
+        write_json(self.run_dir / "preview_manifest.json", {
+            "run_id": "review-test",
+            "pages": [
+                {"page_id": "beat_001", "decision": "approved", "review_status": "approved"},
+                {"page_id": "beat_002", "decision": "rejected", "review_status": "rejected"},
+                {"page_id": "beat_003", "decision": "needs_review"},
+            ],
+        })
+        write_json(self.run_dir / "sourcing_plan.json", {
+            "run_id": "review-test",
+            "decisions": [
+                {"beat_id": "beat_001", "source_decision": "adapt"},
+                {"beat_id": "beat_002", "source_decision": "adapt"},
+                {"beat_id": "beat_003", "source_decision": "generate"},
+            ],
+        })
+        result = compute_deck_readiness(self.run_dir)
+        counts = result["counts"]
+        self.assertEqual(counts["approved"], 1)
+        self.assertEqual(counts["rejected"], 1)
+        self.assertEqual(counts["needs_review"], 1)
+        self.assertEqual(counts["reuse"], 0)
+        self.assertEqual(counts["adapt"], 2)
+        self.assertEqual(counts["generate"], 1)
+
     def test_review_summary_not_found(self) -> None:
         status, data = self.handler.request("GET", "/api/review-summary/nonexistent")
         self.assertEqual(status, 404)
@@ -231,6 +257,24 @@ class NextActionsAPITest(unittest.TestCase):
         actions = data["actions"]
         placeholder_actions = [a for a in actions if a["action_type"] == "resolve_placeholder"]
         self.assertTrue(len(placeholder_actions) >= 1)
+
+    def test_next_actions_includes_failed_generation_task_from_tasks_array(self) -> None:
+        tasks_dir = self.run_dir / "generation_tasks"
+        tasks_dir.mkdir(exist_ok=True)
+        write_json(tasks_dir / "index.json", {
+            "run_id": "review-test",
+            "tasks": [
+                {
+                    "task_id": "generation_001_beat_002",
+                    "beat_id": "beat_002",
+                    "status": "failed",
+                },
+            ],
+        })
+        result = compute_next_actions(self.run_dir)
+        rerun_actions = [a for a in result["actions"] if a["action_type"] == "rerun_generation"]
+        self.assertEqual(len(rerun_actions), 1)
+        self.assertEqual(rerun_actions[0]["target"], "beat_002")
 
 
 class ReviewCockpitDirectTest(unittest.TestCase):

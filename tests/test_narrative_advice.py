@@ -174,6 +174,12 @@ class NarrativeAdviceImportTest(unittest.TestCase):
         with self.assertRaises(NarrativeAdviceError):
             import_narrative_advice(self.run_dir, {"schema_version": "wrong"})
 
+    def test_import_rejects_run_id_mismatch(self) -> None:
+        with self.assertRaises(NarrativeAdviceError) as ctx:
+            import_narrative_advice(self.run_dir, _valid_advice(run_id="other-run"))
+        self.assertIn("run_id mismatch", str(ctx.exception))
+        self.assertFalse((self.run_dir / "advisor_results" / "narrative_advice.json").exists())
+
     def test_event_written_after_import(self) -> None:
         from scripts.runtime.events import read_events
         import_narrative_advice(self.run_dir, _valid_advice())
@@ -204,6 +210,13 @@ class NarrativeAdviceApplyTest(unittest.TestCase):
         page_tasks = read_json(self.run_dir / "page_tasks.json")
         beat_004 = next(t for t in page_tasks["tasks"] if t["beat_id"] == "beat_004")
         self.assertEqual(beat_004["planning"]["core_claim"], "库存可视化价值")
+
+    def test_apply_rejects_run_id_mismatch(self) -> None:
+        with self.assertRaises(NarrativeAdviceError) as ctx:
+            apply_narrative_advice(self.run_dir, _valid_advice(run_id="other-run"))
+        self.assertIn("run_id mismatch", str(ctx.exception))
+        diff_path = self.run_dir / "advisor_results" / "narrative_advice_diff.json"
+        self.assertFalse(diff_path.exists())
 
     def test_apply_updates_page_tasks(self) -> None:
         adv = _valid_advice()

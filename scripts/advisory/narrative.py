@@ -21,6 +21,7 @@ from runtime.run_state import (
     DECK_BRIEF_NAME,
     PAGE_TASKS_NAME,
     RunStateError,
+    assert_external_result_matches_run,
     ensure_run_dirs,
     read_json,
     write_json,
@@ -202,6 +203,15 @@ def import_narrative_advice(
         )
 
     root = ensure_run_dirs(run_dir)
+    try:
+        assert_external_result_matches_run(
+            root,
+            result.get("run_id", ""),
+            artifact_name="narrative advice",
+        )
+    except RunStateError as exc:
+        raise NarrativeAdviceError(str(exc)) from exc
+
     results_dir = root / RESULT_DIR
     results_dir.mkdir(parents=True, exist_ok=True)
     write_json(results_dir / RESULT_FILENAME, result)
@@ -330,7 +340,14 @@ def apply_narrative_advice(
         )
 
     root = ensure_run_dirs(run_dir)
-    run_id = str(result.get("run_id", ""))
+    try:
+        run_id = assert_external_result_matches_run(
+            root,
+            result.get("run_id", ""),
+            artifact_name="narrative advice",
+        )
+    except RunStateError as exc:
+        raise NarrativeAdviceError(str(exc)) from exc
 
     # Load artifacts.
     try:
