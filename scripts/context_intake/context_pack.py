@@ -229,7 +229,12 @@ def import_context_pack(
                 "Import aborted — existing data preserved."
             ) from exc
     else:
-        manifest = {"sources": [], "summary": "", "constraints": []}
+        manifest = {
+            "schema_version": "deck_context_manifest.v1",
+            "sources": [],
+            "summary": "",
+            "constraints": [],
+        }
 
     existing_sources: dict[str, int] = {
         s.get("source_id"): i

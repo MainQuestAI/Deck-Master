@@ -83,7 +83,13 @@ def prepare_generation_handoff(run_dir: str | Path) -> dict[str, Any]:
         )
 
     index_data = read_json(index_path)
-    task_ids = index_data.get("task_ids", [])
+    # task_builder.py writes {"tasks": [...]} with task dicts containing task_id.
+    # Fall back to "task_ids" for forward compatibility.
+    raw_tasks = index_data.get("tasks", [])
+    if raw_tasks and isinstance(raw_tasks[0], dict):
+        task_ids = [t.get("task_id", "") for t in raw_tasks if isinstance(t, dict)]
+    else:
+        task_ids = index_data.get("task_ids", raw_tasks)
 
     # Load claim-evidence graph for claim_ids / evidence_refs.
     ceg_path = root / "claim_evidence_graph.json"

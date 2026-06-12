@@ -236,9 +236,18 @@ def import_external_review(
     p1_count = sum(1 for f in findings if f.get("severity") == "P1")
     p2_count = sum(1 for f in findings if f.get("severity") == "P2")
 
-    summary = result.get("summary", {})
-    status = summary.get("status", "rework_required" if (p0_count + p1_count) > 0 else "pass")
-    blocks_delivery = bool(summary.get("blocks_delivery", p0_count > 0)) or p0_count > 0
+    # Derive status and blocks_delivery from findings — never trust external summary.
+    # An attacker or buggy Agent could send status=pass with P0/P1 findings to bypass
+    # export blocking. We compute ground truth from the findings array.
+    if p0_count > 0:
+        status = "rework_required"
+        blocks_delivery = True
+    elif p1_count > 0:
+        status = "rework_required"
+        blocks_delivery = True
+    else:
+        status = "pass"
+        blocks_delivery = False
 
     gate_report: dict[str, Any] = {
         "schema_version": "deck_quality_report.v1",

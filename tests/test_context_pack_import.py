@@ -159,6 +159,18 @@ class ContextPackImportTest(unittest.TestCase):
         self.assertEqual(manifest["sources"][0]["source_id"], "src_001")
         self.assertEqual(len(manifest["sources"][0]["evidence_candidates"]), 1)
 
+    def test_new_manifest_has_schema_version(self) -> None:
+        """Regression: when no prior context_manifest.json exists, importing a
+        context pack must create one with schema_version per spec requirement
+        '新 artifact 必须有 schema_version'."""
+        # Confirm no manifest exists yet.
+        manifest_path = self.run_dir / CONTEXT_MANIFEST_NAME
+        self.assertFalse(manifest_path.exists())
+        import_context_pack(self.run_dir, _valid_pack())
+        manifest = read_json(manifest_path)
+        self.assertIn("schema_version", manifest)
+        self.assertEqual(manifest["schema_version"], "deck_context_manifest.v1")
+
     def test_import_rejects_duplicate_without_merge(self) -> None:
         pack = _valid_pack()
         import_context_pack(self.run_dir, pack)

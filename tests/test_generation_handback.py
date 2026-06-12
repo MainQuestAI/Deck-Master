@@ -242,6 +242,36 @@ class GenerationHandoffTest(unittest.TestCase):
         self.assertIn("workspace_refs", task)
         self.assertIn("quality_requirements", task)
 
+    def test_prepare_handoff_real_task_builder_format(self) -> None:
+        """Regression: real create-generation-tasks writes index.json with
+        {"tasks": [task_dict, ...]}, not {"task_ids": [...]}. handoff must
+        read both formats."""
+        # Overwrite index.json with real task_builder format.
+        tasks_dir = self.run_dir / "generation_tasks"
+        write_json(tasks_dir / "index.json", {
+            "run_id": "gen-test",
+            "deck_pro_max_project": str(tasks_dir.parent / "deck_pro_max_project"),
+            "tasks": [
+                {
+                    "task_id": "generation_001_beat_001",
+                    "beat_id": "beat_001",
+                    "page_title": "Test page",
+                    "source_decision": "generate",
+                    "status": "pending",
+                },
+                {
+                    "task_id": "generation_002_beat_004",
+                    "beat_id": "beat_004",
+                    "page_title": "ROI page",
+                    "source_decision": "generate",
+                    "status": "pending",
+                },
+            ],
+        })
+        result = prepare_generation_handoff(self.run_dir)
+        self.assertEqual(result["status"], "prepared")
+        self.assertEqual(result["task_count"], 2)
+
 
 if __name__ == "__main__":
     unittest.main()

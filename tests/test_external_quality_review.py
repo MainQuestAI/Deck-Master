@@ -216,6 +216,27 @@ class ExternalReviewImportTest(unittest.TestCase):
         gate_after = read_json(self.run_dir / "quality_reports" / "external_semantic_codex_gate.json")
         self.assertEqual(gate_before, gate_after)
 
+    def test_p1_finding_blocks_even_if_summary_says_pass(self) -> None:
+        """Regression: external review with P1 finding but summary claiming pass
+        must still block delivery. Status/blocks_delivery are computed from
+        findings, not trusted from external summary."""
+        deceptive = _valid_review(
+            summary={
+                "status": "pass",
+                "blocks_delivery": False,
+                "p0_count": 0,
+                "p1_count": 0,
+                "p2_count": 0,
+            },
+        )
+        # findings still contain a P1
+        import_external_review(self.run_dir, deceptive)
+        gate = read_json(self.run_dir / "quality_reports" / "external_semantic_codex_gate.json")
+        self.assertEqual(gate["status"], "rework_required")
+        self.assertTrue(gate["blocks_delivery"])
+        p1_findings = [f for f in gate["findings"] if f["severity"] == "P1"]
+        self.assertEqual(len(p1_findings), 1)
+
 
 if __name__ == "__main__":
     unittest.main()
