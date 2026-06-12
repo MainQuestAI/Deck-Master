@@ -7,9 +7,12 @@ from pathlib import Path
 from typing import Any
 
 PREVIEW_DIR = Path(__file__).resolve().parents[1] / "preview"
+QUALITY_DIR = Path(__file__).resolve().parents[1] / "quality"
 sys.path.insert(0, str(PREVIEW_DIR))
+sys.path.insert(0, str(QUALITY_DIR))
 
 from manifest import DECISIONS, load_manifest
+from overrides import has_active_override
 
 
 def _get_page_findings(run_dir: Path, page_id: str) -> list[dict[str, Any]]:
@@ -77,6 +80,16 @@ def check_page_quality_blocking(
         }
 
     # 检查 quality reports
+    # P0-2: quality_reports/ 不存在时，默认 needs_quality_review，不进 client queue
+    quality_dir = run_dir / "quality_reports"
+    if not quality_dir.exists():
+        return {
+            "blocked": True,
+            "reason": "Quality reports directory not found: needs_quality_review.",
+            "severity": "",
+            "has_override": False,
+        }
+
     findings = _get_page_findings(run_dir, page_id)
 
     for f in findings:
@@ -91,13 +104,18 @@ def check_page_quality_blocking(
                 "has_override": False,
             }
 
+    # P0-1: P1 finding 必须逐条有 active override（target_id == finding_id）
     p1_findings = [f for f in findings if f.get("severity") == "P1"]
-    if p1_findings and not allow_override:
+    p1_without_override = [
+        f for f in p1_findings
+        if not has_active_override(run_dir, f.get("finding_id", ""))
+    ]
+    if p1_without_override:
         return {
             "blocked": True,
             "reason": (
-                "P1 quality findings without override: "
-                f"{[f.get('finding_id', '') for f in p1_findings]}"
+                "P1 quality findings without active override: "
+                f"{[f.get('finding_id', '') for f in p1_without_override]}"
             ),
             "severity": "P1",
             "has_override": False,
@@ -119,7 +137,7 @@ def check_page_quality_blocking(
         "blocked": False,
         "reason": "",
         "severity": "",
-        "has_override": allow_override and bool(p1_findings),
+        "has_override": bool(p1_findings),  # P1 已逐条验证有 active override 才放行
     }
 
 

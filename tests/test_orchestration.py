@@ -40,6 +40,7 @@ class OrchestrationTests(unittest.TestCase):
     def test_export_queue_filters_by_decision(self) -> None:
         run_dir = self.temp_dir / "run"
         build_run(PLAN, run_dir, force=True)
+        (run_dir / "quality_reports").mkdir(parents=True, exist_ok=True)
         queue = export_queue(run_dir, {"approved"})
 
         self.assertEqual("sample-orchestrated-run", queue["run_id"])

@@ -78,6 +78,7 @@ class ExportQualityBlockingTests(unittest.TestCase):
     def test_approved_page_without_findings_enters_client_queue(self) -> None:
         page = _base_page("p1", decision="approved", review_status="approved")
         _write_manifest(self.run_dir, _make_manifest([page]))
+        (self.run_dir / "quality_reports").mkdir(parents=True, exist_ok=True)
 
         result = export_queue(self.run_dir, {"approved"}, queue_type="client")
 
@@ -141,14 +142,31 @@ class ExportQualityBlockingTests(unittest.TestCase):
         self.assertEqual(1, result["blocked_count"])
         self.assertIn("P1", result["blocked_pages"][0]["quality_block_reason"])
 
-    # ---- P1 with allow_quality_override passes and marks override active ----
-    def test_p1_passes_with_allow_quality_override(self) -> None:
+    # ---- P1 with active override for matching finding_id passes client queue ----
+    def test_p1_passes_with_active_override_for_finding(self) -> None:
         page = _base_page("p1", decision="approved", review_status="approved")
         _write_manifest(self.run_dir, _make_manifest([page]))
         _write_gate(
             self.run_dir,
             "render",
             [{"page_id": "p1", "severity": "P1", "finding_id": "F-P1-2", "message": "y"}],
+        )
+        # 写入 active override（target_id 必须匹配 finding_id）
+        quality_dir = self.run_dir / "quality_reports"
+        overrides = [
+            {
+                "schema_version": "deck_quality_override.v1",
+                "override_id": "override_001",
+                "target_id": "F-P1-2",
+                "severity": "P1",
+                "status": "active",
+                "expires_at": "2099-12-31T00:00:00+00:00",
+                "reason": "approved",
+                "approver": "qa",
+            }
+        ]
+        (quality_dir / "overrides.json").write_text(
+            json.dumps(overrides), encoding="utf-8"
         )
 
         result = export_queue(
@@ -161,6 +179,40 @@ class ExportQualityBlockingTests(unittest.TestCase):
         self.assertEqual(["p1"], [p["page_id"] for p in result["pages"]])
         self.assertEqual(0, result["blocked_count"])
         self.assertTrue(result["pages"][0].get("quality_override_active"))
+
+    # ---- P1 with active override for DIFFERENT finding_id still blocks ----
+    def test_p1_active_override_mismatch_blocks(self) -> None:
+        page = _base_page("p1", decision="approved", review_status="approved")
+        _write_manifest(self.run_dir, _make_manifest([page]))
+        _write_gate(
+            self.run_dir,
+            "render",
+            [{"page_id": "p1", "severity": "P1", "finding_id": "F-P1-2", "message": "y"}],
+        )
+        # Override 的 target_id 与 finding_id 不匹配
+        quality_dir = self.run_dir / "quality_reports"
+        overrides = [
+            {
+                "override_id": "override_001",
+                "target_id": "DIFFERENT_FINDING",
+                "status": "active",
+                "expires_at": "2099-12-31T00:00:00+00:00",
+            }
+        ]
+        (quality_dir / "overrides.json").write_text(
+            json.dumps(overrides), encoding="utf-8"
+        )
+
+        result = export_queue(
+            self.run_dir,
+            {"approved"},
+            queue_type="client",
+            allow_quality_override=True,
+        )
+
+        self.assertEqual(0, len(result["pages"]))
+        self.assertEqual(1, result["blocked_count"])
+        self.assertIn("F-P1-2", result["blocked_pages"][0]["quality_block_reason"])
 
     # ---- needs_review cannot enter client queue ----
     def test_needs_review_blocked_in_client_queue(self) -> None:
@@ -216,6 +268,7 @@ class ExportQualityBlockingTests(unittest.TestCase):
             action_intent="manual_placeholder",
         )
         _write_manifest(self.run_dir, _make_manifest([page]))
+        (self.run_dir / "quality_reports").mkdir(parents=True, exist_ok=True)
 
         result = export_queue(self.run_dir, {"approved"}, queue_type="client")
 
@@ -223,21 +276,23 @@ class ExportQualityBlockingTests(unittest.TestCase):
         self.assertEqual(1, result["blocked_count"])
         self.assertIn("manual_placeholder", result["blocked_pages"][0]["quality_block_reason"])
 
-    # ---- missing quality reports does not block approved pages ----
-    def test_missing_quality_reports_does_not_block_approved(self) -> None:
+    # ---- missing quality reports blocks approved pages (needs_quality_review) ----
+    def test_missing_quality_reports_blocks_approved(self) -> None:
         page = _base_page("p1", decision="approved", review_status="approved")
         _write_manifest(self.run_dir, _make_manifest([page]))
         # No quality_reports/ directory created.
 
         result = export_queue(self.run_dir, {"approved"}, queue_type="client")
 
-        self.assertEqual(["p1"], [p["page_id"] for p in result["pages"]])
-        self.assertEqual(0, result["blocked_count"])
+        self.assertEqual(0, len(result["pages"]))
+        self.assertEqual(1, result["blocked_count"])
+        self.assertIn("needs_quality_review", result["blocked_pages"][0]["quality_block_reason"])
 
     # ---- backward-compatible call signature still works ----
     def test_legacy_positional_signature_still_works(self) -> None:
         page = _base_page("p1", decision="approved", review_status="approved")
         _write_manifest(self.run_dir, _make_manifest([page]))
+        (self.run_dir / "quality_reports").mkdir(parents=True, exist_ok=True)
 
         # Old callers pass only positional args; defaults must keep working.
         result = export_queue(self.run_dir, {"approved"})
@@ -262,6 +317,23 @@ class ExportQualityBlockingTests(unittest.TestCase):
         self.assertTrue(blocked["blocked"])
         self.assertEqual("P1", blocked["severity"])
         self.assertFalse(blocked["has_override"])
+
+        # allow_override=True 需要 active override 匹配 finding_id 才能放行
+        quality_dir = self.run_dir / "quality_reports"
+        overrides = [
+            {
+                "override_id": "override_001",
+                "target_id": "F-D-1",
+                "severity": "P1",
+                "status": "active",
+                "expires_at": "2099-12-31T00:00:00+00:00",
+                "reason": "ok",
+                "approver": "qa",
+            }
+        ]
+        (quality_dir / "overrides.json").write_text(
+            json.dumps(overrides), encoding="utf-8"
+        )
 
         allowed = check_page_quality_blocking(
             self.run_dir, page, queue_type="client", allow_override=True
