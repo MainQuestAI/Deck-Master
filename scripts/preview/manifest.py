@@ -11,8 +11,9 @@ from typing import Any
 MANIFEST_NAME = "preview_manifest.json"
 SOURCE_TYPES = {"library_slide", "generated", "placeholder", "manual"}
 DECISIONS = {"needs_review", "keep", "replace", "approved", "rejected"}
-REVIEW_STATUSES = {"needs_review", "approved", "rejected"}
-ACTION_INTENTS = {"none", "reuse", "adapt", "generate", "manual_placeholder", "replace"}
+REVIEW_STATUSES = {"needs_review", "needs_evidence", "approved", "rejected"}
+ACTION_INTENTS = {"none", "reuse", "adapt", "generate", "manual_placeholder", "replace", "request_evidence"}
+SOURCE_DECISIONS = {"reuse", "adapt", "generate", "manual_placeholder", "pending_replacement"}
 REQUIRED_PAGE_FIELDS = {
     "page_id",
     "order",
@@ -40,6 +41,8 @@ REVIEW_TO_LEGACY: dict[tuple[str, str], str] = {
     ("rejected", "none"): "rejected",
     ("needs_review", "replace"): "replace",
     ("needs_review", "none"): "needs_review",
+    ("needs_evidence", "request_evidence"): "needs_review",
+    ("needs_evidence", "none"): "needs_review",
 }
 
 
@@ -236,6 +239,35 @@ def update_page_review(
 
     data = load_manifest(run_dir)
     page = find_page(data, page_id)
+    page["review_status"] = review_status
+    page["action_intent"] = action_intent
+    page["notes"] = notes
+    sync_legacy_decision(page)
+    page["reviewed_at"] = datetime.now(timezone.utc).isoformat()
+    data["updated_at"] = page["reviewed_at"]
+    write_manifest(run_dir, data)
+    return page
+
+
+def update_page_source_decision(
+    run_dir: str | Path,
+    page_id: str,
+    source_decision: str,
+    *,
+    review_status: str = "needs_review",
+    action_intent: str = "none",
+    notes: str = "",
+) -> dict[str, Any]:
+    if source_decision not in SOURCE_DECISIONS:
+        raise ManifestError(f"Invalid source_decision: {source_decision}")
+    if review_status not in REVIEW_STATUSES:
+        raise ManifestError(f"Invalid review_status: {review_status}")
+    if action_intent not in ACTION_INTENTS:
+        raise ManifestError(f"Invalid action_intent: {action_intent}")
+
+    data = load_manifest(run_dir)
+    page = find_page(data, page_id)
+    page["source_decision"] = source_decision
     page["review_status"] = review_status
     page["action_intent"] = action_intent
     page["notes"] = notes

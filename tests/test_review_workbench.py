@@ -161,6 +161,25 @@ class WorkbenchDirectTest(unittest.TestCase):
         queue = export_queue(self.run_dir, {"approved"})
         self.assertEqual(queue["pages"], [])
 
+    def test_request_evidence_updates_review_state(self) -> None:
+        result = execute_review_action(
+            self.run_dir,
+            "beat_001",
+            "request_evidence",
+            reason="Need customer evidence",
+        )
+        self.assertEqual(result["status"], "ok")
+        self.assertIn("finding_id", result)
+        page_tasks = json.loads((self.run_dir / "page_tasks.json").read_text(encoding="utf-8"))
+        task = next(t for t in page_tasks["tasks"] if t["beat_id"] == "beat_001")
+        self.assertEqual(task["review_status"], "needs_evidence")
+        self.assertEqual(task["action_intent"], "request_evidence")
+        preview = read_json(self.run_dir / "preview_manifest.json")
+        page = next(p for p in preview["pages"] if p["page_id"] == "beat_001")
+        self.assertEqual(page["review_status"], "needs_evidence")
+        self.assertEqual(page["action_intent"], "request_evidence")
+        self.assertTrue((self.run_dir / "evidence_requests" / "ev_req_beat_001.json").exists())
+
     def test_approve_requires_preview_manifest(self) -> None:
         (self.run_dir / "preview_manifest.json").unlink()
         with self.assertRaises(WorkbenchError) as ctx:
@@ -186,6 +205,11 @@ class WorkbenchDirectTest(unittest.TestCase):
         task = next(t for t in page_tasks["tasks"] if t["beat_id"] == "beat_001")
         self.assertEqual(task["source_decision"], "generate")
         self.assertEqual(task["planning"]["decision_intent"], "generate")
+        preview = read_json(self.run_dir / "preview_manifest.json")
+        page = next(p for p in preview["pages"] if p["page_id"] == "beat_001")
+        self.assertEqual(page["source_decision"], "generate")
+        self.assertEqual(page["review_status"], "needs_review")
+        self.assertEqual(page["action_intent"], "generate")
 
     def test_move_to_appendix(self) -> None:
         execute_review_action(self.run_dir, "beat_001", "move_to_appendix")

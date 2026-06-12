@@ -49,7 +49,15 @@
           "confidence": { "type": "number" },
           "decision": {
             "type": "string",
-            "enum": ["needs_review", "keep", "replace", "approved"]
+            "enum": ["needs_review", "keep", "replace", "approved", "rejected"]
+          },
+          "review_status": {
+            "type": "string",
+            "enum": ["needs_review", "needs_evidence", "approved", "rejected"]
+          },
+          "action_intent": {
+            "type": "string",
+            "enum": ["none", "reuse", "adapt", "generate", "manual_placeholder", "replace", "request_evidence"]
           },
           "notes": { "type": "string" },
           "reviewed_at": { "type": "string" }

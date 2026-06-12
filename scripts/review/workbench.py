@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from preview.manifest import ManifestError, update_page_review
+from preview.manifest import ManifestError, update_page_review, update_page_source_decision
 from runtime.events import append_typed_event
 from runtime.run_state import (
     PAGE_TASKS_NAME,
@@ -131,6 +131,20 @@ def execute_review_action(
         task["rejection_reason"] = reason
 
     elif action == "request_evidence":
+        try:
+            update_page_review(
+                root,
+                page_id,
+                review_status="needs_evidence",
+                action_intent="request_evidence",
+                notes=reason,
+            )
+        except ManifestError as exc:
+            raise WorkbenchError(f"Cannot request evidence for page: {exc}") from exc
+        task["review_status"] = "needs_evidence"
+        task["action_intent"] = "request_evidence"
+        task["reviewed_at"] = _utc_now()
+        task["reviewed_by"] = actor
         # Create an evidence request finding.
         findings_dir = root / "evidence_requests"
         findings_dir.mkdir(parents=True, exist_ok=True)
@@ -146,12 +160,27 @@ def execute_review_action(
         result["finding_id"] = ev_req["finding_id"]
 
     elif action == "convert_to_generate":
+        try:
+            update_page_source_decision(
+                root,
+                page_id,
+                "generate",
+                review_status="needs_review",
+                action_intent="generate",
+                notes=reason or note,
+            )
+        except ManifestError as exc:
+            raise WorkbenchError(f"Cannot convert page to generation: {exc}") from exc
         planning = task.get("planning", {})
         if not isinstance(planning, dict):
             planning = {}
             task["planning"] = planning
         planning["decision_intent"] = "generate"
         task["source_decision"] = "generate"
+        task["action_intent"] = "generate"
+        task["review_status"] = "needs_review"
+        task["reviewed_at"] = _utc_now()
+        task["reviewed_by"] = actor
 
     elif action == "replace_candidate":
         # Mark for re-sourcing; actual candidate selection done by Agent.

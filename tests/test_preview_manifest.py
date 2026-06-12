@@ -18,6 +18,7 @@ from manifest import (
     sync_legacy_decision,
     update_page_decision,
     update_page_review,
+    update_page_source_decision,
 )
 
 
@@ -130,6 +131,11 @@ class MigrationUnitTests(unittest.TestCase):
         sync_legacy_decision(page)
         self.assertEqual("needs_review", page["decision"])
 
+    def test_sync_legacy_needs_evidence_to_needs_review(self) -> None:
+        page = {"review_status": "needs_evidence", "action_intent": "request_evidence"}
+        sync_legacy_decision(page)
+        self.assertEqual("needs_review", page["decision"])
+
     def test_sync_legacy_fallback_approved(self) -> None:
         page = {"review_status": "approved", "action_intent": "manual_placeholder"}
         sync_legacy_decision(page)
@@ -215,6 +221,12 @@ class UpdatePageReviewTests(unittest.TestCase):
         page = update_page_review(self.run_dir, "p1", "needs_review", "replace")
         self.assertEqual("replace", page["decision"])
 
+    def test_update_page_review_needs_evidence(self) -> None:
+        page = update_page_review(self.run_dir, "p1", "needs_evidence", "request_evidence")
+        self.assertEqual("needs_review", page["decision"])
+        self.assertEqual("needs_evidence", page["review_status"])
+        self.assertEqual("request_evidence", page["action_intent"])
+
     def test_update_page_review_invalid_status_raises(self) -> None:
         with self.assertRaises(ManifestError) as ctx:
             update_page_review(self.run_dir, "p1", "invalid_status")
@@ -232,6 +244,19 @@ class UpdatePageReviewTests(unittest.TestCase):
         self.assertEqual("approved", p1["review_status"])
         self.assertEqual("reuse", p1["action_intent"])
         self.assertEqual("keep", p1["decision"])
+
+    def test_update_page_source_decision_persists_generation_intent(self) -> None:
+        page = update_page_source_decision(
+            self.run_dir,
+            "p1",
+            "generate",
+            review_status="needs_review",
+            action_intent="generate",
+        )
+        self.assertEqual("generate", page["source_decision"])
+        self.assertEqual("needs_review", page["review_status"])
+        self.assertEqual("generate", page["action_intent"])
+        self.assertEqual("needs_review", page["decision"])
 
 
 class UpdatePageDecisionBackwardCompatTests(unittest.TestCase):
