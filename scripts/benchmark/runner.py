@@ -10,6 +10,7 @@ from benchmark.checkpoints import write_benchmark_checkpoint
 from conversation.session_builder import build_conversation_session
 from context_intake.context_pack import import_context_pack
 from metrics.run_metrics import summarize_run_metrics
+from preview.manifest import ManifestError, load_manifest
 from runtime.events import append_typed_event
 from runtime.run_state import (
     CONTEXT_MANIFEST_NAME,
@@ -144,7 +145,20 @@ def run_local_preview_pipeline(
             steps.append({"step": name, "status": "warning", "error": str(exc)})
             break
 
-    write_benchmark_checkpoint(run_dir, "preview_ready", note="Semi-auto benchmark local preview pipeline attempted.")
+    if _preview_manifest_ready(run_dir):
+        write_benchmark_checkpoint(run_dir, "preview_ready", note="Preview manifest generated.")
+    else:
+        append_typed_event(
+            run_dir,
+            "error",
+            "benchmark.preview.not_ready",
+            "Semi-auto benchmark did not produce a valid preview manifest.",
+            run_id=run_dir.name,
+            refs=["preview_manifest.json"],
+            severity="warning",
+            status="warning",
+            payload={"pipeline_steps": steps},
+        )
     return steps
 
 
@@ -173,10 +187,15 @@ def collect_pending_external_steps(case: BenchmarkCase, run_dir: Path) -> list[d
                 "path": str(gate_path),
             })
     checks = [
-        ("requires_external_quality_review", "external_quality_review", run_dir / "quality_reports", "external_*_gate.json"),
         ("requires_generation_result", "generation_result", run_dir / "generation_results", "*.json"),
         ("requires_render_result", "render_result", run_dir / "render_result.json", None),
     ]
+    if workflow.get("requires_external_quality_review") and not _external_quality_review_exists(run_dir):
+        pending.append({
+            "step": "external_quality_review",
+            "status": "pending_external_agent",
+            "path": str(run_dir / "quality_reports"),
+        })
     for flag, step, path, pattern in checks:
         if not workflow.get(flag):
             continue
@@ -187,6 +206,27 @@ def collect_pending_external_steps(case: BenchmarkCase, run_dir: Path) -> list[d
         if not exists:
             pending.append({"step": step, "status": "pending_external_agent", "path": str(path)})
     return pending
+
+
+def _preview_manifest_ready(run_dir: Path) -> bool:
+    try:
+        load_manifest(run_dir)
+    except ManifestError:
+        return False
+    return True
+
+
+def _external_quality_review_exists(run_dir: Path) -> bool:
+    quality_dir = run_dir / "quality_reports"
+    if not quality_dir.is_dir():
+        return False
+    patterns = (
+        "external_semantic_*_gate.json",
+        "external_visual_*_gate.json",
+        "external_evidence_*_gate.json",
+        "external_client_readiness_*_gate.json",
+    )
+    return any(any(quality_dir.glob(pattern)) for pattern in patterns)
 
 
 def write_benchmark_run_summary(

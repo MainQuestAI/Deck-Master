@@ -11,7 +11,12 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from benchmark.case import load_benchmark_case  # noqa: E402
-from benchmark.runner import collect_pending_external_steps, create_benchmark_run, summarize_and_write_metrics  # noqa: E402
+from benchmark.runner import (  # noqa: E402
+    collect_pending_external_steps,
+    create_benchmark_run,
+    run_local_preview_pipeline,
+    summarize_and_write_metrics,
+)
 
 
 class BenchmarkRunnerTests(unittest.TestCase):
@@ -115,6 +120,95 @@ class BenchmarkRunnerTests(unittest.TestCase):
         pending = collect_pending_external_steps(self.case, run_dir)
 
         self.assertEqual([], pending)
+
+    def test_narrative_gate_does_not_complete_external_quality_review(self) -> None:
+        self.case.data["workflow"]["requires_external_quality_review"] = True
+        self.case.data["workflow"]["requires_narrative_advice"] = True
+        run_dir, _pack = create_benchmark_run(self.case, run_id="bench-narrative-not-quality")
+        advice_dir = run_dir / "advisor_results"
+        advice_dir.mkdir()
+        (advice_dir / "narrative_advice.json").write_text("{}", encoding="utf-8")
+        quality_dir = run_dir / "quality_reports"
+        quality_dir.mkdir(exist_ok=True)
+        (quality_dir / "external_narrative_gate.json").write_text("{}", encoding="utf-8")
+
+        pending = collect_pending_external_steps(self.case, run_dir)
+
+        self.assertEqual(["external_quality_review"], [item["step"] for item in pending])
+
+    def test_external_quality_review_gate_clears_pending(self) -> None:
+        run_dir, _pack = create_benchmark_run(self.case, run_id="bench-external-quality-complete")
+        quality_dir = run_dir / "quality_reports"
+        quality_dir.mkdir(exist_ok=True)
+        (quality_dir / "external_semantic_codex_gate.json").write_text("{}", encoding="utf-8")
+
+        pending = collect_pending_external_steps(self.case, run_dir)
+
+        self.assertEqual([], pending)
+
+    def test_failed_preview_pipeline_does_not_write_preview_ready(self) -> None:
+        run_dir, _pack = create_benchmark_run(self.case, run_id="bench-preview-fails")
+
+        def ok(_args):
+            return {"status": "ok"}
+
+        def fail(_args):
+            raise RuntimeError("autoplan failed")
+
+        steps = run_local_preview_pipeline(
+            self.case,
+            run_dir,
+            command_funcs={
+                "build_brief": ok,
+                "build_claim_map": ok,
+                "autoplan": fail,
+                "quality_gate": ok,
+            },
+        )
+
+        checkpoints = json.loads((run_dir / "benchmark_checkpoints.json").read_text(encoding="utf-8"))
+        self.assertEqual("warning", steps[-1]["status"])
+        self.assertNotIn("preview_ready", checkpoints["checkpoints"])
+
+    def test_preview_pipeline_writes_preview_ready_when_manifest_exists(self) -> None:
+        run_dir, _pack = create_benchmark_run(self.case, run_id="bench-preview-ready")
+
+        def ok(_args):
+            return {"status": "ok"}
+
+        def write_preview(args):
+            run_root = Path(args.run_dir)
+            (run_root / "preview_manifest.json").write_text(json.dumps({
+                "run_id": "bench-preview-ready",
+                "title": "Preview Ready",
+                "status": "ready",
+                "pages": [
+                    {
+                        "page_id": "p1",
+                        "order": 1,
+                        "source_type": "generated",
+                        "preview_path": "links/p1.svg",
+                        "narrative_role": "opener",
+                        "decision": "needs_review",
+                    }
+                ],
+            }), encoding="utf-8")
+            return {"status": "ok"}
+
+        steps = run_local_preview_pipeline(
+            self.case,
+            run_dir,
+            command_funcs={
+                "build_brief": ok,
+                "build_claim_map": ok,
+                "autoplan": write_preview,
+                "quality_gate": ok,
+            },
+        )
+
+        checkpoints = json.loads((run_dir / "benchmark_checkpoints.json").read_text(encoding="utf-8"))
+        self.assertTrue(all(item["status"] == "completed" for item in steps))
+        self.assertIn("preview_ready", checkpoints["checkpoints"])
 
 
 if __name__ == "__main__":
