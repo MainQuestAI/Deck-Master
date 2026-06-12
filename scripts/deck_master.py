@@ -240,7 +240,7 @@ def command_export(args: argparse.Namespace) -> dict[str, Any]:
     else:
         output = run_dir / "approved_queue.json"
     write_json(output, queue)
-    return {"run_id": queue["run_id"], "run_dir": str(run_dir), "status": "exported", "output": str(output), "pages": len(queue["pages"])}
+    return {"run_id": queue["run_id"], "run_dir": str(run_dir), "status": "exported", "output": str(output), "pages": len(queue["pages"]), "blocked": queue["blocked_count"]}
 
 
 def command_autoplan(args: argparse.Namespace) -> dict[str, Any]:
