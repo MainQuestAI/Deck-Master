@@ -30,3 +30,16 @@ Verify that render results from PPT Master are correctly consumed by Deck Master
 ```bash
 python3 scripts/deck_master.py validate-render-result --input render_result.json
 ```
+
+## v0.9.6 UAT Report
+
+```bash
+python3 scripts/deck_master.py uat-render-tool \
+  --run-dir runs/<run_id> \
+  --input render_result.json
+```
+
+Outputs:
+
+- `runs/<run_id>/uat_reports/render_tool_uat.json`
+- `runs/<run_id>/uat_reports/render_tool_uat.md`

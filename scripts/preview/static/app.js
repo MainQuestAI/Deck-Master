@@ -4,6 +4,12 @@ const state = {
   narrative: null,
   assetSignals: null,
   governance: null,
+  reviewSummary: null,
+  claimCoverage: null,
+  nextActions: null,
+  externalResults: null,
+  exportQueue: null,
+  metrics: null,
   currentRunId: new URLSearchParams(window.location.search).get("run") || "",
   selectedIndex: 0,
 };
@@ -16,10 +22,15 @@ const els = {
   frame: document.querySelector("#preview-frame"),
   pageTitle: document.querySelector("#page-title"),
   details: document.querySelector("#page-details"),
-  decision: document.querySelector("#decision"),
   notes: document.querySelector("#notes"),
   save: document.querySelector("#save-decision"),
   saveStatus: document.querySelector("#save-status"),
+  pageActionStatus: document.querySelector("#page-action-status"),
+  approvePage: document.querySelector("#approve-page"),
+  rejectPage: document.querySelector("#reject-page"),
+  requestEvidence: document.querySelector("#request-evidence"),
+  convertGenerate: document.querySelector("#convert-generate"),
+  lockSource: document.querySelector("#lock-source"),
   form: document.querySelector("#create-run-form"),
   brief: document.querySelector("#brief"),
   industry: document.querySelector("#industry"),
@@ -40,6 +51,15 @@ const els = {
   pageAssetSignalsDetail: document.querySelector("#page-asset-signals-detail"),
   governanceTitle: document.querySelector("#governance-title"),
   governanceContent: document.querySelector("#governance-content"),
+  overallReadiness: document.querySelector("#overall-readiness"),
+  exportReadiness: document.querySelector("#export-readiness"),
+  metricsLine: document.querySelector("#metrics-line"),
+  readinessContent: document.querySelector("#readiness-content"),
+  claimCoverageContent: document.querySelector("#claim-coverage-content"),
+  nextActionsContent: document.querySelector("#next-actions-content"),
+  externalResultsContent: document.querySelector("#external-results-content"),
+  exportQueueContent: document.querySelector("#export-queue-content"),
+  metricsContent: document.querySelector("#metrics-content"),
 };
 
 async function requestJson(url, options = {}) {
@@ -84,11 +104,13 @@ async function loadDeck() {
     loadNarrative();
     loadAssetSignals();
     loadGovernance();
+    loadCockpitData();
   } catch (error) {
     state.deck = null;
     state.narrative = null;
     state.assetSignals = null;
     state.governance = null;
+    clearCockpitData();
     els.title.textContent = "Studio";
     els.meta.textContent = "Create or select a run.";
     els.list.innerHTML = "";
@@ -96,6 +118,7 @@ async function loadDeck() {
     renderNarrative();
     renderAssetSignals();
     renderGovernance();
+    renderCockpitData();
   }
 }
 
@@ -155,9 +178,11 @@ function selectPage(index) {
 function renderPage(page) {
   els.label.textContent = `${page.order} / ${state.deck.pages.length} · ${page.page_id}`;
   els.pageTitle.textContent = page.title || page.page_id;
-  els.decision.value = page.decision;
   els.notes.value = page.notes || "";
   els.saveStatus.textContent = "";
+  if (els.pageActionStatus) {
+    els.pageActionStatus.textContent = `Current status: ${page.review_status || page.decision || "needs_review"}`;
+  }
 
   els.details.innerHTML = detailRows({
     "Source": page.source_type,
@@ -183,6 +208,7 @@ function renderPage(page) {
 
   renderPageNarrativeDetail(page);
   renderPageAssetSignalsDetail(page);
+  renderPageFindingHints(page);
 }
 
 function qualitySummaryText(quality) {
@@ -214,28 +240,51 @@ function detailRows(rows) {
     .join("");
 }
 
-async function saveDecision() {
+async function runPageAction(action, extra = {}) {
   const page = state.deck.pages[state.selectedIndex];
-  els.save.disabled = true;
-  els.saveStatus.textContent = "Saving...";
+  if (!page) return;
+  const buttons = [els.save, els.approvePage, els.rejectPage, els.requestEvidence, els.convertGenerate, els.lockSource].filter(Boolean);
+  buttons.forEach((btn) => { btn.disabled = true; });
+  els.saveStatus.textContent = "Applying...";
+  if (els.pageActionStatus) els.pageActionStatus.textContent = "";
   try {
-    const updated = await requestJson(`/api/page/${page.page_id}/decision${runQuery()}`, {
+    const body = {
+      action,
+      actor: "user",
+      note: els.notes.value,
+      reason: els.notes.value,
+      ...extra,
+    };
+    const result = await requestJson(`/api/page/${page.page_id}/review-action${runQuery()}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        decision: els.decision.value,
-        notes: els.notes.value,
-      }),
+      body: JSON.stringify(body),
     });
-    state.deck.pages[state.selectedIndex] = updated;
-    renderList();
-    renderPage(updated);
-    els.saveStatus.textContent = "Saved to preview_manifest.json";
+    await refreshAfterAction(page.page_id);
+    els.saveStatus.textContent = result.message || `${action} applied`;
   } catch (error) {
     els.saveStatus.textContent = error.message;
+    if (els.pageActionStatus) els.pageActionStatus.textContent = error.message;
   } finally {
-    els.save.disabled = false;
+    buttons.forEach((btn) => { btn.disabled = false; });
   }
+}
+
+async function refreshAfterAction(pageId) {
+  const pagePayload = await requestJson(`/api/page/${encodeURIComponent(pageId)}${runQuery()}`);
+  state.deck.pages[state.selectedIndex] = pagePayload;
+  renderList();
+  renderPage(pagePayload);
+  await Promise.all([
+    loadReviewSummary(),
+    loadNextActions(),
+    loadExportQueue(),
+    loadMetrics(),
+  ]);
+}
+
+async function saveDecision() {
+  await runPageAction("add_note", { note: els.notes.value });
 }
 
 async function createRun(event) {
@@ -617,6 +666,347 @@ function renderGovernance(errorMsg) {
   }
 }
 
+function clearCockpitData() {
+  state.reviewSummary = null;
+  state.claimCoverage = null;
+  state.nextActions = null;
+  state.externalResults = null;
+  state.exportQueue = null;
+  state.metrics = null;
+}
+
+async function loadCockpitData() {
+  if (!state.currentRunId) {
+    clearCockpitData();
+    renderCockpitData();
+    return;
+  }
+  await Promise.all([
+    loadReviewSummary(),
+    loadClaimCoverage(),
+    loadNextActions(),
+    loadExternalResults(),
+    loadExportQueue(),
+    loadMetrics(),
+  ]);
+}
+
+function renderCockpitData() {
+  renderReadiness();
+  renderClaimCoverage();
+  renderNextActions();
+  renderExternalResults();
+  renderExportQueue();
+  renderMetrics();
+}
+
+async function loadReviewSummary() {
+  try {
+    state.reviewSummary = await requestJson(`/api/review-summary/${encodeURIComponent(state.currentRunId)}`);
+    renderReadiness();
+  } catch (error) {
+    state.reviewSummary = null;
+    renderReadiness(error.message);
+  }
+}
+
+async function loadClaimCoverage() {
+  try {
+    state.claimCoverage = await requestJson(`/api/claim-coverage/${encodeURIComponent(state.currentRunId)}`);
+    renderClaimCoverage();
+  } catch (error) {
+    state.claimCoverage = null;
+    renderClaimCoverage(error.message);
+  }
+}
+
+async function loadNextActions() {
+  try {
+    state.nextActions = await requestJson(`/api/next-actions/${encodeURIComponent(state.currentRunId)}`);
+    renderNextActions();
+  } catch (error) {
+    state.nextActions = null;
+    renderNextActions(error.message);
+  }
+}
+
+async function loadExternalResults() {
+  try {
+    state.externalResults = await requestJson(`/api/external-results/${encodeURIComponent(state.currentRunId)}`);
+    renderExternalResults();
+  } catch (error) {
+    state.externalResults = null;
+    renderExternalResults(error.message);
+  }
+}
+
+async function loadExportQueue() {
+  try {
+    state.exportQueue = await requestJson(`/api/export-queue/${encodeURIComponent(state.currentRunId)}?queue_type=client`);
+    renderExportQueue();
+  } catch (error) {
+    state.exportQueue = null;
+    renderExportQueue(error.message);
+  }
+}
+
+async function loadMetrics() {
+  try {
+    state.metrics = await requestJson(`/api/run-metrics/${encodeURIComponent(state.currentRunId)}`);
+    renderMetrics();
+  } catch (error) {
+    state.metrics = null;
+    renderMetrics(error.message);
+  }
+}
+
+function renderReadiness(errorMsg) {
+  if (!els.readinessContent) return;
+  if (errorMsg) {
+    els.readinessContent.innerHTML = `<p class="muted">${escapeHtml(errorMsg)}</p>`;
+    updateOverview();
+    return;
+  }
+  if (!state.reviewSummary) {
+    els.readinessContent.innerHTML = '<p class="muted">选择 run 后加载 readiness...</p>';
+    updateOverview();
+    return;
+  }
+  const readiness = state.reviewSummary.deck_readiness || {};
+  const counts = state.reviewSummary.counts || {};
+  const dimensions = ["narrative", "evidence", "generation", "quality", "export"]
+    .map((key) => `<span class="status-pill ${statusClass(readiness[key])}">${escapeHtml(key)}: ${escapeHtml(readiness[key] || "-")}</span>`)
+    .join("");
+  els.readinessContent.innerHTML = `
+    <div class="status-row">
+      <span class="status-pill ${statusClass(readiness.overall)}">overall: ${escapeHtml(readiness.overall || "-")}</span>
+      ${dimensions}
+    </div>
+    <dl class="compact-metrics">
+      ${metricRow("Pages", counts.pages)}
+      ${metricRow("Approved / Rejected / Review", `${valueOrDash(counts.approved)} / ${valueOrDash(counts.rejected)} / ${valueOrDash(counts.needs_review)}`)}
+      ${metricRow("Reuse / Adapt / Generate / Placeholder", `${valueOrDash(counts.reuse)} / ${valueOrDash(counts.adapt)} / ${valueOrDash(counts.generate)} / ${valueOrDash(counts.manual_placeholder)}`)}
+      ${metricRow("P0 / P1 / P2", `${valueOrDash(counts.p0)} / ${valueOrDash(counts.p1)} / ${valueOrDash(counts.p2)}`)}
+    </dl>
+  `;
+  updateOverview();
+}
+
+function renderClaimCoverage(errorMsg) {
+  if (!els.claimCoverageContent) return;
+  if (errorMsg) {
+    els.claimCoverageContent.innerHTML = `<p class="muted">${escapeHtml(errorMsg)}</p>`;
+    return;
+  }
+  const claims = state.claimCoverage && Array.isArray(state.claimCoverage.claims) ? state.claimCoverage.claims : [];
+  if (!claims.length) {
+    els.claimCoverageContent.innerHTML = '<p class="muted">暂无 claim coverage 数据。</p>';
+    return;
+  }
+  els.claimCoverageContent.innerHTML = claims.map((claim) => {
+    const pages = Array.isArray(claim.page_refs) ? claim.page_refs : (claim.pages || claim.linked_pages || []);
+    const evidence = Array.isArray(claim.evidence_refs) ? claim.evidence_refs : (claim.evidence || claim.supporting_evidence || []);
+    const pageLinks = pages.length
+      ? pages.map((pageId) => `<button class="inline-link claim-page-link" data-page-id="${escapeHtml(pageId)}">${escapeHtml(pageId)}</button>`).join(" ")
+      : "-";
+    return `<div class="claim-row ${statusClass(claim.status)}">
+      <strong>${escapeHtml(claim.statement || claim.claim || claim.claim_id || "")}</strong>
+      <small>${escapeHtml(claim.status || "-")} · pages: ${pageLinks} · evidence: ${escapeHtml(evidence.length ? evidence.join(", ") : "-")}</small>
+      ${claim.status === "evidence_gap" ? '<small class="warn">建议 request evidence</small>' : ""}
+    </div>`;
+  }).join("");
+  els.claimCoverageContent.querySelectorAll(".claim-page-link").forEach((btn) => {
+    btn.addEventListener("click", () => jumpToPage(btn.dataset.pageId));
+  });
+}
+
+function renderNextActions(errorMsg) {
+  if (!els.nextActionsContent) return;
+  if (errorMsg) {
+    els.nextActionsContent.innerHTML = `<p class="muted">${escapeHtml(errorMsg)}</p>`;
+    return;
+  }
+  const actions = state.nextActions && Array.isArray(state.nextActions.actions) ? state.nextActions.actions : [];
+  if (!actions.length) {
+    els.nextActionsContent.innerHTML = '<p class="muted">当前没有优先动作。</p>';
+    return;
+  }
+  els.nextActionsContent.innerHTML = actions.map((action) => {
+    const target = action.target || "";
+    return `<div class="next-action ${severityClass(action.severity)}">
+      <small>${escapeHtml(action.priority || "")} · ${escapeHtml(action.action_type || "")} · ${escapeHtml(action.severity || "")}</small>
+      <strong>${escapeHtml(action.message || "")}</strong>
+      ${target ? `<button class="inline-link action-target" data-target="${escapeHtml(target)}">${escapeHtml(target)}</button>` : ""}
+    </div>`;
+  }).join("");
+  els.nextActionsContent.querySelectorAll(".action-target").forEach((btn) => {
+    btn.addEventListener("click", () => jumpToPage(btn.dataset.target));
+  });
+}
+
+function renderExternalResults(errorMsg) {
+  if (!els.externalResultsContent) return;
+  if (errorMsg) {
+    els.externalResultsContent.innerHTML = `<p class="muted">${escapeHtml(errorMsg)}</p>`;
+    return;
+  }
+  if (!state.externalResults) {
+    els.externalResultsContent.innerHTML = '<p class="muted">选择 run 后加载 external results...</p>';
+    return;
+  }
+  const advice = state.externalResults.narrative_advice;
+  const reviews = Array.isArray(state.externalResults.external_reviews) ? state.externalResults.external_reviews : [];
+  const generations = Array.isArray(state.externalResults.generation_results) ? state.externalResults.generation_results : [];
+  const reviewSummary = reviews.map((review) => {
+    const findings = Array.isArray(review.findings) ? review.findings : [];
+    const p0 = findings.filter((f) => f.severity === "P0").length;
+    const p1 = findings.filter((f) => f.severity === "P1").length;
+    const p2 = findings.filter((f) => f.severity === "P2").length;
+    return `<div class="external-card">
+      <strong>${escapeHtml(review.reviewer || review.gate || review._report_file || "external review")}</strong>
+      <small>${escapeHtml(review.scope || "")} · P0/P1/P2: ${p0}/${p1}/${p2}</small>
+    </div>`;
+  }).join("");
+  const generationSummary = generations.map((result) => `<div class="external-card ${result.status === "failed" ? "failed" : ""}">
+    <strong>${escapeHtml(result.task_id || result.beat_id || result.tool || "generation result")}</strong>
+    <small>${escapeHtml(result.tool || "")} · ${escapeHtml(result.status || "-")} · ${escapeHtml(result.preview_path || "")}</small>
+  </div>`).join("");
+  els.externalResultsContent.innerHTML = `
+    <dl class="compact-metrics">
+      ${metricRow("Narrative advice", advice ? `${advice.advisor || "advisor"} · ${countItems(advice.page_recommendations)} page recs · ${countItems(advice.deck_level_risks)} risks` : "-")}
+      ${metricRow("External reviews", reviews.length)}
+      ${metricRow("Generation results", generations.length)}
+    </dl>
+    ${reviewSummary || ""}
+    ${generationSummary || ""}
+  `;
+}
+
+function renderExportQueue(errorMsg) {
+  if (!els.exportQueueContent) return;
+  if (errorMsg) {
+    els.exportQueueContent.innerHTML = `<p class="muted">${escapeHtml(errorMsg)}</p>`;
+    updateOverview();
+    return;
+  }
+  if (!state.exportQueue) {
+    els.exportQueueContent.innerHTML = '<p class="muted">选择 run 后加载 export queue...</p>';
+    updateOverview();
+    return;
+  }
+  const pages = Array.isArray(state.exportQueue.pages) ? state.exportQueue.pages : [];
+  const blocked = Array.isArray(state.exportQueue.blocked_pages) ? state.exportQueue.blocked_pages : [];
+  els.exportQueueContent.innerHTML = `
+    <dl class="compact-metrics">
+      ${metricRow("Ready pages", pages.length)}
+      ${metricRow("Blocked pages", blocked.length)}
+    </dl>
+    ${pages.map((page) => exportQueueRow(page, false)).join("")}
+    ${blocked.map((page) => exportQueueRow(page, true)).join("")}
+  `;
+  updateOverview();
+}
+
+function renderMetrics(errorMsg) {
+  if (!els.metricsContent) return;
+  if (errorMsg) {
+    els.metricsContent.innerHTML = `<p class="muted">${escapeHtml(errorMsg)}</p>`;
+    updateOverview();
+    return;
+  }
+  if (!state.metrics) {
+    els.metricsContent.innerHTML = '<p class="muted">选择 run 后加载 metrics...</p>';
+    updateOverview();
+    return;
+  }
+  const counts = state.metrics.counts || {};
+  const durations = state.metrics.durations || {};
+  els.metricsContent.innerHTML = `
+    <dl class="compact-metrics">
+      ${metricRow("Pages", counts.pages)}
+      ${metricRow("Approved / Rejected / Review", `${valueOrDash(counts.approved)} / ${valueOrDash(counts.rejected)} / ${valueOrDash(counts.needs_review)}`)}
+      ${metricRow("Reuse / Adapt / Generate / Placeholder", `${valueOrDash(counts.reuse)} / ${valueOrDash(counts.adapt)} / ${valueOrDash(counts.generate)} / ${valueOrDash(counts.manual_placeholder)}`)}
+      ${metricRow("P0 / P1 / P2", `${valueOrDash(counts.p0)} / ${valueOrDash(counts.p1)} / ${valueOrDash(counts.p2)}`)}
+      ${metricRow("Created to preview", `${valueOrDash(durations.created_to_preview_minutes)} min`)}
+      ${metricRow("Preview to quality gate", `${valueOrDash(durations.preview_to_first_quality_gate_minutes)} min`)}
+    </dl>
+    <p class="muted">Lightweight metrics only; not a v1.0 benchmark conclusion.</p>
+  `;
+  updateOverview();
+}
+
+function renderPageFindingHints(page) {
+  if (!els.pageActionStatus || !state.governance || !page) return;
+  const findings = Array.isArray(state.governance.page_findings) ? state.governance.page_findings : [];
+  const pageFindings = findings.filter((finding) => finding.page_id === page.page_id);
+  const p01 = pageFindings.filter((finding) => finding.severity === "P0" || finding.severity === "P1");
+  if (p01.length) {
+    els.pageActionStatus.textContent = `${p01.length} P0/P1 finding(s) may block approval/export.`;
+  }
+}
+
+function updateOverview() {
+  const readiness = state.reviewSummary ? state.reviewSummary.deck_readiness || {} : {};
+  const queue = state.exportQueue || {};
+  const metrics = state.metrics || {};
+  const counts = metrics.counts || {};
+  if (els.overallReadiness) {
+    els.overallReadiness.textContent = readiness.overall || "-";
+    els.overallReadiness.className = statusClass(readiness.overall);
+  }
+  if (els.exportReadiness) {
+    const blocked = Array.isArray(queue.blocked_pages) ? queue.blocked_pages.length : 0;
+    const ready = Array.isArray(queue.pages) ? queue.pages.length : 0;
+    els.exportReadiness.textContent = queue.run_id ? `${ready} ready / ${blocked} blocked` : "-";
+  }
+  if (els.metricsLine) {
+    els.metricsLine.textContent = counts.pages != null
+      ? `${counts.approved || 0} approved · ${counts.needs_review || 0} review · P1 ${counts.p1 || 0}`
+      : "-";
+  }
+}
+
+function jumpToPage(pageId) {
+  if (!pageId || !state.deck) return;
+  const index = state.deck.pages.findIndex((page) => page.page_id === pageId || page.beat_id === pageId);
+  if (index >= 0) selectPage(index);
+}
+
+function metricRow(label, value) {
+  return `<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(valueOrDash(value))}</dd>`;
+}
+
+function valueOrDash(value) {
+  return value === null || value === undefined || value === "" ? "-" : String(value);
+}
+
+function statusClass(status) {
+  const normalized = String(status || "").toLowerCase();
+  if (normalized.includes("ready") || normalized === "pass" || normalized === "covered") return "status-ready";
+  if (normalized.includes("block") || normalized === "fail" || normalized === "uncovered") return "status-blocked";
+  if (normalized.includes("gap") || normalized.includes("review") || normalized === "warning") return "status-warning";
+  return "status-muted";
+}
+
+function severityClass(severity) {
+  const normalized = String(severity || "").toUpperCase();
+  if (normalized === "P0") return "severity-p0";
+  if (normalized === "P1") return "severity-p1";
+  return "severity-p2";
+}
+
+function countItems(value) {
+  return Array.isArray(value) ? value.length : 0;
+}
+
+function exportQueueRow(page, blocked) {
+  return `<div class="queue-row ${blocked ? "blocked" : "ready"}">
+    <strong>${escapeHtml(page.order || "")}. ${escapeHtml(page.title || page.page_id || "")}</strong>
+    <small>${escapeHtml(page.source_type || "")} · ${escapeHtml(page.decision || "")}${page.quality_override_active ? " · override active" : ""}</small>
+    ${blocked ? `<small class="warn">${escapeHtml(page.quality_block_reason || "")}</small>` : ""}
+  </div>`;
+}
+
 async function handleRevokeOverride(overrideId) {
   if (!overrideId || !state.currentRunId) return;
   const reason = prompt("Reason for revoking this override:");
@@ -665,6 +1055,11 @@ async function handleRecordReaction() {
 
 els.form.addEventListener("submit", createRun);
 els.save.addEventListener("click", saveDecision);
+els.approvePage.addEventListener("click", () => runPageAction("approve"));
+els.rejectPage.addEventListener("click", () => runPageAction("reject"));
+els.requestEvidence.addEventListener("click", () => runPageAction("request_evidence"));
+els.convertGenerate.addEventListener("click", () => runPageAction("convert_to_generate"));
+els.lockSource.addEventListener("click", () => runPageAction("lock_source"));
 els.first.addEventListener("click", () => selectPage(0));
 els.prev.addEventListener("click", () => selectPage(state.selectedIndex - 1));
 els.next.addEventListener("click", () => selectPage(state.selectedIndex + 1));

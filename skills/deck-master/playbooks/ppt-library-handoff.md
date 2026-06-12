@@ -51,3 +51,13 @@ python3 scripts/deck_master.py decide-sourcing --run-id <run_id>
 
 Deck Master writes `sourcing_plan.json` with `reuse`, `adapt`, `generate` or
 `manual_placeholder` per beat.
+
+## v0.9.6 UAT
+
+After PPT Library writes `library_results/selection.json`, run:
+
+```bash
+python3 scripts/deck_master.py uat-ppt-library --run-dir runs/<run_id> --input library_results/selection.json
+```
+
+Use `--require-screenshot` before benchmark runs where visual candidate review is mandatory.

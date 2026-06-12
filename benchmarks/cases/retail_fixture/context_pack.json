@@ -1,0 +1,37 @@
+{
+  "schema_version": "deck_context_pack.v1",
+  "run_id": "retail-fixture",
+  "created_at": "2026-06-12T00:00:00+00:00",
+  "sources": [
+    {
+      "source_id": "retail_context_001",
+      "source_type": "business_context",
+      "origin_type": "fixture",
+      "origin_path": "benchmarks/cases/retail_fixture/context_pack.json",
+      "title": "Omnichannel inventory visibility context",
+      "summary": "Retail operators need a clearer inventory visibility workflow across stores, warehouse, and online channels.",
+      "sensitivity": "normal",
+      "evidence_candidates": [
+        {
+          "evidence_id": "retail_ev_001",
+          "claim": "Store teams lose sales when inventory status is delayed or inconsistent.",
+          "summary": "Fixture evidence for inventory status latency and missed sales risk.",
+          "publication_status": "safe_to_use",
+          "sensitivity": "normal"
+        },
+        {
+          "evidence_id": "retail_ev_002",
+          "claim": "A unified operational view can reduce manual coordination between store and warehouse teams.",
+          "summary": "Fixture evidence for operational coordination impact.",
+          "publication_status": "safe_to_use",
+          "sensitivity": "normal"
+        }
+      ]
+    }
+  ],
+  "global_constraints": [
+    "Avoid unsupported revenue uplift claims.",
+    "Make evidence gaps visible in the review cockpit."
+  ]
+}
+

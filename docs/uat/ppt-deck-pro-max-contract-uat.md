@@ -31,3 +31,17 @@ Verify that generation results from PPT Deck Pro Max are correctly consumed by D
 python3 scripts/deck_master.py import-generation-result --run-id <id> --input generation_result.json
 python3 scripts/deck_master.py validate-generation-result --input generation_result.json
 ```
+
+## v0.9.6 UAT Report
+
+```bash
+python3 scripts/deck_master.py uat-generation-tool \
+  --run-dir runs/<run_id> \
+  --tool ppt-deck-pro-max \
+  --require-preview
+```
+
+Outputs:
+
+- `runs/<run_id>/uat_reports/generation_tool_uat.json`
+- `runs/<run_id>/uat_reports/generation_tool_uat.md`

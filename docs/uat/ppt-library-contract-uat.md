@@ -35,3 +35,17 @@ Verify that PPT Library candidate output is correctly consumed by Deck Master.
 ```bash
 python3 scripts/deck_master.py validate-ppt-library-result --input library_results/selection.json
 ```
+
+## v0.9.6 UAT Report
+
+```bash
+python3 scripts/deck_master.py uat-ppt-library \
+  --run-dir runs/<run_id> \
+  --input library_results/selection.json \
+  --require-screenshot
+```
+
+Outputs:
+
+- `runs/<run_id>/uat_reports/ppt_library_uat.json`
+- `runs/<run_id>/uat_reports/ppt_library_uat.md`

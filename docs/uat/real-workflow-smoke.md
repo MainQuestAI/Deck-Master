@@ -1,0 +1,92 @@
+# Real Workflow Smoke
+
+## 目标
+
+Real workflow smoke 用来确认一个 Deck Master run 是否已经具备进入真实 companion tool 验收和后续 benchmark 的基础条件。它只检查 Deck Master 侧的交接产物、关键状态和 UAT 报告，不调用 PPT Library、PPT Deck Pro Max 或 PPT Master 的内部能力。
+
+## 预期入口
+
+```bash
+python3 scripts/deck_master.py smoke-real-workflow --run-dir runs/<run_id>
+```
+
+预期 Python 接口：
+
+```python
+from scripts.uat.real_workflow_smoke import run_real_workflow_smoke
+
+report = run_real_workflow_smoke(run_dir=Path("runs/retail-demo"))
+```
+
+## 必检产物
+
+核心 run 产物缺失时应返回 `fail`：
+
+- `request.json`
+- `context_manifest.json`
+- `deck_brief.json`
+- `claim_map.json`
+- `narrative_plan.json`
+- `page_tasks.json`
+- `sourcing_plan.json`
+- `generation_tasks/index.json`
+- `preview_manifest.json`
+- `quality_reports/draft_gate.json` 或 `quality_reports/draft_v2_gate.json`
+
+外部工具产物缺失时优先返回 `warning`，并在 `next_actions` 里说明下一步：
+
+- `uat_reports/ppt_library_uat.json`
+- `uat_reports/generation_tool_uat.json`
+- `uat_reports/render_tool_uat.json`
+- `generation_results/*.json`
+- `advisor_results/narrative_advice.json`
+- `quality_review_tasks/*.json`
+
+## 输出
+
+smoke 应写出：
+
+```text
+runs/<run_id>/uat_reports/real_workflow_smoke.json
+runs/<run_id>/uat_reports/real_workflow_smoke.md
+```
+
+JSON 报告使用独立 schema：
+
+```json
+{
+  "schema_version": "deck_real_workflow_smoke.v1",
+  "run_id": "retail-demo",
+  "status": "warning",
+  "summary": {
+    "required_checks": 10,
+    "passed": 9,
+    "warnings": 2,
+    "failed": 0
+  },
+  "phases": {
+    "run_artifacts": "pass",
+    "agentic_contract": "warning",
+    "review_export": "pass",
+    "companion_uat": "warning"
+  },
+  "findings": [],
+  "next_actions": [
+    "Run uat-generation-tool after PPT Deck Pro Max result is available."
+  ]
+}
+```
+
+## 单元测试覆盖
+
+- 完整 fixture run 返回 `pass` 或 `warning`。
+- 缺少 `preview_manifest.json` 返回 `fail`。
+- `companion_uat` 在必需 UAT 报告存在时返回 `pass`。
+- 输出结构可被 v0.9.7 benchmark harness 读取。
+
+## 边界
+
+- 不生成 Deck 内容。
+- 不渲染 PPT。
+- 不修改 companion tool 输出。
+- 不引入任何内置 LLM provider。

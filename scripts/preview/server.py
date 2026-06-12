@@ -31,7 +31,8 @@ from review.workbench import WorkbenchError, execute_review_action
 
 from delivery.outcome import record_delivery_outcome
 from delivery.validate import validate_delivery
-from orchestrate.export_queue import has_client_export_quality_clearance
+from metrics.run_metrics import summarize_run_metrics
+from orchestrate.export_queue import export_queue, has_client_export_quality_clearance
 from generation.task_builder import create_generation_tasks
 from orchestrate.preview_builder import build_preview_from_sourcing
 from planning.brief_intake import build_request
@@ -174,6 +175,12 @@ class PreviewHandler(BaseHTTPRequestHandler):
             return
         if path.startswith("/api/external-results/"):
             self.api_external_results(path.removeprefix("/api/external-results/").strip("/"))
+            return
+        if path.startswith("/api/export-queue/"):
+            self.api_export_queue(path.removeprefix("/api/export-queue/").strip("/"), parsed)
+            return
+        if path.startswith("/api/run-metrics/"):
+            self.api_run_metrics(path.removeprefix("/api/run-metrics/").strip("/"))
             return
         if path.startswith("/preview/"):
             self.serve_preview(path.removeprefix("/preview/"), parsed)
@@ -685,6 +692,41 @@ class PreviewHandler(BaseHTTPRequestHandler):
                     pass
 
         self.send_json(results)
+
+    def api_export_queue(self, run_id: str, parsed) -> None:
+        """Return export queue preview without writing queue artifacts."""
+        run_dir = self._resolve_run_or_error(run_id)
+        if not run_dir:
+            return
+
+        params = parse_qs(parsed.query)
+        decisions = set(params.get("decision", ["approved"]))
+        queue_type = (params.get("queue_type", ["client"])[0] or "client").strip()
+        allow_quality_override = (params.get("allow_quality_override", ["false"])[0] or "").lower() in {
+            "1",
+            "true",
+            "yes",
+        }
+        try:
+            queue = export_queue(
+                run_dir,
+                decisions,
+                queue_type=queue_type,
+                allow_quality_override=allow_quality_override,
+            )
+            self.send_json(queue)
+        except (ManifestError, ValueError) as exc:
+            self.send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
+
+    def api_run_metrics(self, run_id: str) -> None:
+        """Return lightweight run metrics without writing run_metrics.json."""
+        run_dir = self._resolve_run_or_error(run_id)
+        if not run_dir:
+            return
+        try:
+            self.send_json(summarize_run_metrics(run_dir))
+        except Exception as exc:
+            self.send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
 
     def api_override_create(self, parsed) -> None:
         """创建 quality override。"""

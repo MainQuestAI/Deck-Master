@@ -34,6 +34,21 @@ from generation.handback import (
 from learning.pack import build_learning_pack, show_learning_pack
 from validators.companion_tools import validate_ppt_library_result, validate_render_result
 from metrics.run_metrics import summarize_run_metrics
+from uat.generation_tool import run_generation_tool_uat
+from uat.ppt_library import run_ppt_library_uat
+from uat.real_workflow_smoke import run_real_workflow_smoke
+from uat.render_tool import run_render_tool_uat
+from benchmark.case import BenchmarkCaseError, load_benchmark_case
+from benchmark.checkpoints import BenchmarkCheckpointError, write_benchmark_checkpoint
+from benchmark.report import BenchmarkReportError, write_benchmark_report
+from benchmark.runner import (
+    BenchmarkRunError,
+    collect_pending_external_steps,
+    create_benchmark_run,
+    run_local_preview_pipeline,
+    summarize_and_write_metrics,
+    write_benchmark_run_summary,
+)
 from conversation.brief_compiler import compile_deck_brief
 from conversation.session_builder import build_conversation_session
 from generation.task_builder import create_generation_tasks
@@ -811,6 +826,156 @@ def command_summarize_run_metrics(args: argparse.Namespace) -> dict[str, Any]:
     return metrics
 
 
+def command_uat_ppt_library(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = resolve_run_dir(args)
+    input_path = Path(args.input).expanduser()
+    if not input_path.is_absolute():
+        input_path = run_dir / input_path
+    return run_ppt_library_uat(
+        run_dir,
+        input_path.resolve(),
+        require_screenshot=bool(getattr(args, "require_screenshot", False)),
+        min_candidate_coverage=float(getattr(args, "min_candidate_coverage", 0.7)),
+        min_screenshot_coverage=float(getattr(args, "min_screenshot_coverage", 0.8)),
+        min_confidence=float(getattr(args, "min_confidence", 0.4)),
+    )
+
+
+def command_uat_generation_tool(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = resolve_run_dir(args)
+    return run_generation_tool_uat(
+        run_dir,
+        tool=getattr(args, "tool", "ppt-deck-pro-max"),
+        require_preview=bool(getattr(args, "require_preview", False)),
+        require_artifact=bool(getattr(args, "require_artifact", False)),
+        sample_limit=getattr(args, "sample_limit", None),
+    )
+
+
+def command_uat_render_tool(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = resolve_run_dir(args)
+    input_path = Path(args.input).expanduser() if getattr(args, "input", None) else None
+    artifact_path = Path(args.artifact).expanduser() if getattr(args, "artifact", None) else None
+    return run_render_tool_uat(
+        run_dir,
+        input_path=input_path,
+        artifact_path=artifact_path,
+        allow_external=bool(getattr(args, "allow_external", False)),
+    )
+
+
+def command_smoke_real_workflow(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = resolve_run_dir(args)
+    return run_real_workflow_smoke(run_dir)
+
+
+def command_validate_benchmark_case(args: argparse.Namespace) -> dict[str, Any]:
+    case = load_benchmark_case(args.case, benchmark_dir=getattr(args, "benchmark_dir", None))
+    return {
+        "valid": True,
+        "errors": [],
+        "warnings": case.warnings,
+        "case_id": case.data["case_id"],
+        "case_path": str(case.path),
+        "resolved_paths": {key: str(value) for key, value in case.resolved_paths.items()},
+    }
+
+
+def command_benchmark_checkpoint(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = resolve_run_dir(args)
+    payload = write_benchmark_checkpoint(
+        run_dir,
+        args.checkpoint,
+        timestamp=getattr(args, "timestamp", None),
+        note=getattr(args, "note", "") or "",
+    )
+    return {
+        "status": "checkpoint_recorded",
+        "run_id": payload["run_id"],
+        "run_dir": str(run_dir),
+        "checkpoint": args.checkpoint,
+        "output": str(run_dir / "benchmark_checkpoints.json"),
+    }
+
+
+def command_benchmark_report(args: argparse.Namespace) -> dict[str, Any]:
+    case = load_benchmark_case(args.case, benchmark_dir=getattr(args, "benchmark_dir", None))
+    run_dir = resolve_run_dir(args)
+    return write_benchmark_report(
+        case,
+        run_dir,
+        benchmark_dir=getattr(args, "benchmark_dir", None),
+        force=bool(getattr(args, "force", False)),
+    )
+
+
+def command_benchmark_run(args: argparse.Namespace) -> dict[str, Any]:
+    case = load_benchmark_case(args.case, benchmark_dir=getattr(args, "benchmark_dir", None))
+    if getattr(args, "mode", "semi-auto") != "semi-auto":
+        raise BenchmarkRunError("Only semi-auto benchmark mode is supported in v0.9.7.")
+    run_dir, _pack = create_benchmark_run(
+        case,
+        run_id=getattr(args, "run_id", None),
+        force=bool(getattr(args, "force_run", False)),
+    )
+    pipeline_steps = run_local_preview_pipeline(
+        case,
+        run_dir,
+        command_funcs={
+            "build_brief": command_build_brief,
+            "build_claim_map": command_build_claim_map,
+            "autoplan": command_autoplan,
+            "quality_gate": command_quality_gate,
+        },
+    )
+    summarize_and_write_metrics(run_dir)
+    pending_external_steps = collect_pending_external_steps(case, run_dir)
+    write_benchmark_run_summary(
+        run_dir,
+        case,
+        pipeline_steps=pipeline_steps,
+        pending_external_steps=pending_external_steps,
+    )
+    report = write_benchmark_report(
+        case,
+        run_dir,
+        benchmark_dir=getattr(args, "benchmark_dir", None),
+        force=bool(getattr(args, "force_report", False)),
+        pending_external_steps=pending_external_steps,
+    )
+    return {
+        "status": report["status"],
+        "case_id": case.data["case_id"],
+        "run_id": run_dir.name,
+        "run_dir": str(run_dir),
+        "report": report["report"],
+        "pending_external_steps": pending_external_steps,
+    }
+
+
+def command_benchmark_list(args: argparse.Namespace) -> dict[str, Any]:
+    benchmark_dir = Path(args.benchmark_dir).expanduser().resolve()
+    cases_dir = benchmark_dir / "cases"
+    results_dir = benchmark_dir / "results"
+    cases = []
+    if cases_dir.exists():
+        for case_path in sorted(cases_dir.glob("*/benchmark_case.json")):
+            try:
+                case = load_benchmark_case(case_path, benchmark_dir=benchmark_dir)
+                cases.append({"case_id": case.data["case_id"], "case_name": case.data.get("case_name", ""), "path": str(case_path)})
+            except BenchmarkCaseError as exc:
+                cases.append({"case_id": case_path.parent.name, "path": str(case_path), "error": str(exc)})
+    results = []
+    if results_dir.exists():
+        for report_path in sorted(results_dir.glob("*/*/benchmark_report.json")):
+            results.append({
+                "case_id": report_path.parent.parent.name,
+                "run_id": report_path.parent.name,
+                "report": str(report_path),
+            })
+    return {"status": "listed", "benchmark_dir": str(benchmark_dir), "cases": cases, "results": results}
+
+
 def add_brief_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--brief")
     parser.add_argument("--brief-file")
@@ -1138,6 +1303,79 @@ def build_parser() -> argparse.ArgumentParser:
     add_run_args(p_srm)
     p_srm.set_defaults(func=command_summarize_run_metrics)
 
+    # ---- v0.9.6 companion tool UAT ----
+    p_upl = sub.add_parser("uat-ppt-library", help="Run PPT Library selection UAT")
+    add_run_args(p_upl)
+    p_upl.add_argument("--input", required=True, help="Path to library selection JSON")
+    p_upl.add_argument("--require-screenshot", action="store_true")
+    p_upl.add_argument("--min-candidate-coverage", type=float, default=0.7)
+    p_upl.add_argument("--min-screenshot-coverage", type=float, default=0.8)
+    p_upl.add_argument("--min-confidence", type=float, default=0.4)
+    p_upl.set_defaults(func=command_uat_ppt_library)
+
+    p_ugt = sub.add_parser("uat-generation-tool", help="Run generation tool handoff/handback UAT")
+    add_run_args(p_ugt)
+    p_ugt.add_argument("--tool", default="ppt-deck-pro-max")
+    p_ugt.add_argument("--require-preview", action="store_true")
+    p_ugt.add_argument("--require-artifact", action="store_true")
+    p_ugt.add_argument("--sample-limit", type=int)
+    p_ugt.set_defaults(func=command_uat_generation_tool)
+
+    p_urt = sub.add_parser("uat-render-tool", help="Run render tool artifact UAT")
+    add_run_args(p_urt)
+    p_urt.add_argument("--input", help="Path to render result JSON")
+    p_urt.add_argument("--artifact", help="Path to final artifact")
+    p_urt.add_argument("--allow-external", action="store_true")
+    p_urt.set_defaults(func=command_uat_render_tool)
+
+    p_srw = sub.add_parser("smoke-real-workflow", help="Run real workflow smoke for a Deck run")
+    add_run_args(p_srw)
+    p_srw.set_defaults(func=command_smoke_real_workflow)
+
+    # ---- v0.9.7 benchmark harness ----
+    p_vbc = sub.add_parser("validate-benchmark-case", help="Validate a benchmark case")
+    p_vbc.add_argument("--case", required=True, help="Path to benchmark_case.json")
+    p_vbc.add_argument("--benchmark-dir", default=None)
+    p_vbc.set_defaults(func=command_validate_benchmark_case)
+
+    p_brn = sub.add_parser("benchmark-run", help="Run a local semi-auto benchmark")
+    p_brn.add_argument("--case", required=True, help="Path to benchmark_case.json")
+    p_brn.add_argument("--benchmark-dir", default=str(ROOT / "benchmarks"))
+    p_brn.add_argument("--mode", choices=["semi-auto"], default="semi-auto")
+    p_brn.add_argument("--run-id", default=None)
+    p_brn.add_argument("--force-run", action="store_true", help="Replace an existing run with the same run id")
+    p_brn.add_argument("--force-report", action="store_true", help="Replace an existing benchmark report")
+    p_brn.set_defaults(func=command_benchmark_run)
+
+    p_brep = sub.add_parser("benchmark-report", help="Build a benchmark report from an existing run")
+    add_run_args(p_brep)
+    p_brep.add_argument("--case", required=True, help="Path to benchmark_case.json")
+    p_brep.add_argument("--benchmark-dir", default=str(ROOT / "benchmarks"))
+    p_brep.add_argument("--force", action="store_true", help="Replace an existing benchmark report")
+    p_brep.set_defaults(func=command_benchmark_report)
+
+    p_bcp = sub.add_parser("benchmark-checkpoint", help="Record a benchmark checkpoint")
+    add_run_args(p_bcp)
+    p_bcp.add_argument(
+        "--checkpoint",
+        required=True,
+        choices=[
+            "context_ready",
+            "preview_ready",
+            "human_review_started",
+            "human_review_completed",
+            "approved_queue_ready",
+            "final_delivery_ready",
+        ],
+    )
+    p_bcp.add_argument("--timestamp", default=None)
+    p_bcp.add_argument("--note", default="")
+    p_bcp.set_defaults(func=command_benchmark_checkpoint)
+
+    p_blist = sub.add_parser("benchmark-list", help="List benchmark cases and reports")
+    p_blist.add_argument("--benchmark-dir", default=str(ROOT / "benchmarks"))
+    p_blist.set_defaults(func=command_benchmark_list)
+
     return parser
 
 
@@ -1146,7 +1384,21 @@ def main() -> None:
     args = parser.parse_args()
     try:
         print_json(args.func(args))
-    except (RunStateError, PPTLibraryClientError, WorkspaceError, SkillInstallError, ContextPackError, NarrativeAdviceError, ExternalReviewError, GenerationHandbackError, ValueError) as exc:
+    except (
+        RunStateError,
+        PPTLibraryClientError,
+        WorkspaceError,
+        SkillInstallError,
+        ContextPackError,
+        NarrativeAdviceError,
+        ExternalReviewError,
+        GenerationHandbackError,
+        BenchmarkCaseError,
+        BenchmarkCheckpointError,
+        BenchmarkReportError,
+        BenchmarkRunError,
+        ValueError,
+    ) as exc:
         print(f"error: {exc}", file=sys.stderr)
         raise SystemExit(2) from exc
 

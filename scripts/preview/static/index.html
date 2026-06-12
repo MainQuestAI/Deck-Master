@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Deck Master Preview</title>
+    <link rel="icon" href="data:,">
     <link rel="stylesheet" href="/static/style.css">
   </head>
   <body>
@@ -49,6 +50,20 @@
       </aside>
 
       <section class="stage">
+        <div class="cockpit-overview">
+          <div>
+            <span class="eyebrow">Readiness</span>
+            <strong id="overall-readiness">-</strong>
+          </div>
+          <div>
+            <span class="eyebrow">Export</span>
+            <strong id="export-readiness">-</strong>
+          </div>
+          <div>
+            <span class="eyebrow">Metrics</span>
+            <strong id="metrics-line">-</strong>
+          </div>
+        </div>
         <div class="stage-toolbar">
           <button id="first-page">First</button>
           <button id="prev-page">Previous</button>
@@ -62,6 +77,27 @@
       </section>
 
       <aside class="inspector">
+        <div class="panel readiness-panel">
+          <span class="eyebrow">Deck Readiness</span>
+          <h2>审查总览</h2>
+          <div id="readiness-content" class="readiness-content">
+            <p class="muted">选择 run 后加载 readiness...</p>
+          </div>
+        </div>
+        <div class="panel next-actions-panel">
+          <span class="eyebrow">Next Actions</span>
+          <h2>下一步</h2>
+          <div id="next-actions-content" class="next-actions-content">
+            <p class="muted">选择 run 后加载 next actions...</p>
+          </div>
+        </div>
+        <div class="panel claim-coverage-panel">
+          <span class="eyebrow">Claim Coverage</span>
+          <h2>论点覆盖</h2>
+          <div id="claim-coverage-content" class="claim-coverage-content">
+            <p class="muted">选择 run 后加载 claim coverage...</p>
+          </div>
+        </div>
         <div class="panel narrative-panel">
           <span class="eyebrow">Narrative Review</span>
           <h2 id="narrative-title">主线审查</h2>
@@ -91,17 +127,40 @@
           <div id="page-asset-signals-detail" class="page-asset-signals-detail"></div>
         </div>
         <div class="panel decision-panel">
-          <label for="decision">Decision</label>
-          <select id="decision">
-            <option value="needs_review">Needs review</option>
-            <option value="keep">Keep</option>
-            <option value="replace">Replace</option>
-            <option value="approved">Approved</option>
-          </select>
-          <label for="notes">Notes</label>
-          <textarea id="notes" rows="7" placeholder="Add page-level notes..."></textarea>
-          <button id="save-decision" class="primary">Save decision</button>
+          <span class="eyebrow">Page Decision Workbench</span>
+          <div id="page-action-status" class="save-status"></div>
+          <div class="action-grid">
+            <button id="approve-page" class="primary">Approve</button>
+            <button id="reject-page">Reject</button>
+            <button id="request-evidence">Request evidence</button>
+            <button id="convert-generate">Convert to generate</button>
+            <button id="lock-source">Lock source</button>
+          </div>
+          <label for="notes">Action note / reason</label>
+          <textarea id="notes" rows="5" placeholder="Reason, evidence request, or page-level note..."></textarea>
+          <button id="save-decision">Add note</button>
           <p id="save-status" class="save-status"></p>
+        </div>
+        <div class="panel external-results-panel">
+          <span class="eyebrow">External Results</span>
+          <h2>外部结果</h2>
+          <div id="external-results-content" class="external-results-content">
+            <p class="muted">选择 run 后加载 external results...</p>
+          </div>
+        </div>
+        <div class="panel export-queue-panel">
+          <span class="eyebrow">Export Queue</span>
+          <h2>导出队列</h2>
+          <div id="export-queue-content" class="export-queue-content">
+            <p class="muted">选择 run 后加载 export queue...</p>
+          </div>
+        </div>
+        <div class="panel metrics-panel">
+          <span class="eyebrow">Lightweight Metrics</span>
+          <h2>指标摘要</h2>
+          <div id="metrics-content" class="metrics-content">
+            <p class="muted">选择 run 后加载 metrics...</p>
+          </div>
         </div>
       </aside>
     </main>

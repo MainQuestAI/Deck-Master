@@ -251,6 +251,44 @@ class WorkbenchAPITest(unittest.TestCase):
         )
         self.assertEqual(status, 400)
 
+    def test_review_action_approve_keeps_queue_summary_and_metrics_consistent(self) -> None:
+        status, data = self.handler.request(
+            "POST",
+            "/api/page/beat_001/review-action?run_id=wb-test",
+            body={"action": "approve", "actor": "user"},
+        )
+        self.assertEqual(status, 200)
+        self.assertEqual(data["status"], "ok")
+
+        queue_status, queue = self.handler.request("GET", "/api/export-queue/wb-test")
+        self.assertEqual(queue_status, 200)
+        self.assertEqual([p["page_id"] for p in queue["pages"]], ["beat_001"])
+        self.assertEqual(queue["blocked_pages"], [])
+
+        summary_status, summary = self.handler.request("GET", "/api/review-summary/wb-test")
+        self.assertEqual(summary_status, 200)
+        self.assertEqual(summary["counts"]["approved"], 1)
+        self.assertEqual(summary["counts"]["needs_review"], 1)
+
+        metrics_status, metrics = self.handler.request("GET", "/api/run-metrics/wb-test")
+        self.assertEqual(metrics_status, 200)
+        self.assertEqual(metrics["counts"]["approved"], summary["counts"]["approved"])
+        self.assertEqual(metrics["counts"]["needs_review"], summary["counts"]["needs_review"])
+
+    def test_review_action_reject_excludes_page_from_export_queue(self) -> None:
+        status, data = self.handler.request(
+            "POST",
+            "/api/page/beat_001/review-action?run_id=wb-test",
+            body={"action": "reject", "actor": "user", "reason": "Weak evidence"},
+        )
+        self.assertEqual(status, 200)
+        self.assertEqual(data["status"], "ok")
+
+        queue_status, queue = self.handler.request("GET", "/api/export-queue/wb-test")
+        self.assertEqual(queue_status, 200)
+        self.assertEqual(queue["pages"], [])
+        self.assertEqual(queue["blocked_pages"], [])
+
 
 class ExternalResultsVisibilityTest(unittest.TestCase):
     """Test F3 external result visibility API."""

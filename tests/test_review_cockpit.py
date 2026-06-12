@@ -84,6 +84,82 @@ def _setup_run(tmp: Path) -> Path:
     return run_dir
 
 
+def _setup_frontend_contract_run(tmp: Path) -> Path:
+    runs_dir = tmp / "runs"
+    runs_dir.mkdir()
+    run_dir = create_run(runs_dir, {"project_name": "FrontendContract"}, run_id="frontend-contract")
+    write_json(run_dir / "page_tasks.json", {
+        "tasks": [
+            {"beat_id": "beat_001", "source_decision": "reuse"},
+            {"beat_id": "beat_002", "source_decision": "generate"},
+            {"beat_id": "beat_003", "source_decision": "manual_placeholder"},
+        ],
+    })
+    write_json(run_dir / "sourcing_plan.json", {
+        "run_id": "frontend-contract",
+        "decisions": [
+            {"beat_id": "beat_001", "source_decision": "reuse"},
+            {"beat_id": "beat_002", "source_decision": "generate"},
+            {"beat_id": "beat_003", "source_decision": "manual_placeholder"},
+        ],
+    })
+    write_json(run_dir / "preview_manifest.json", {
+        "run_id": "frontend-contract",
+        "title": "FrontendContract",
+        "status": "ready",
+        "pages": [
+            {
+                "page_id": "beat_001",
+                "order": 1,
+                "title": "Approved page",
+                "source_type": "library_slide",
+                "preview_path": "links/beat_001.svg",
+                "narrative_role": "setup",
+                "decision": "approved",
+                "review_status": "approved",
+            },
+            {
+                "page_id": "beat_002",
+                "order": 2,
+                "title": "Blocked page",
+                "source_type": "generated",
+                "preview_path": "links/beat_002.svg",
+                "narrative_role": "proof",
+                "decision": "approved",
+                "review_status": "approved",
+            },
+            {
+                "page_id": "beat_003",
+                "order": 3,
+                "title": "Rejected page",
+                "source_type": "placeholder",
+                "preview_path": "links/beat_003.svg",
+                "narrative_role": "appendix",
+                "decision": "rejected",
+                "review_status": "rejected",
+            },
+        ],
+    })
+    quality_dir = run_dir / "quality_reports"
+    quality_dir.mkdir(exist_ok=True)
+    write_json(quality_dir / "draft_gate.json", {
+        "schema_version": "deck_quality_report.v1",
+        "gate": "draft",
+        "status": "pass",
+        "blocks_delivery": False,
+        "summary": {"p0_count": 0, "p1_count": 1, "p2_count": 1},
+        "findings": [
+            {
+                "finding_id": "roi_evidence_gap",
+                "severity": "P1",
+                "page_id": "beat_002",
+                "message": "ROI evidence is too thin.",
+            }
+        ],
+    })
+    return run_dir
+
+
 class MockHandler(PreviewHandler):
     """Testable handler with mock I/O."""
 
@@ -306,6 +382,51 @@ class ReviewCockpitDirectTest(unittest.TestCase):
         for action in result["actions"]:
             self.assertIn("action_type", action)
             self.assertIn("message", action)
+
+
+class FrontendContractAPITest(unittest.TestCase):
+    """Test v0.9.5 Review Cockpit frontend API contracts."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.mkdtemp(prefix="dm_frontend_contract_")
+        _setup_frontend_contract_run(Path(self._tmp))
+        self.handler = MockHandler(Path(self._tmp) / "runs")
+
+    def tearDown(self) -> None:
+        shutil.rmtree(self._tmp, ignore_errors=True)
+
+    def test_export_queue_api_returns_pages_and_blocked_pages(self) -> None:
+        status, data = self.handler.request("GET", "/api/export-queue/frontend-contract")
+        self.assertEqual(status, 200)
+        self.assertEqual(data["run_id"], "frontend-contract")
+        self.assertEqual(data["queue_type"], "client")
+        self.assertIn("pages", data)
+        self.assertIn("blocked_pages", data)
+        self.assertEqual([p["page_id"] for p in data["pages"]], ["beat_001"])
+        self.assertEqual([p["page_id"] for p in data["blocked_pages"]], ["beat_002"])
+        self.assertTrue(data["blocked_pages"][0]["quality_blocked"])
+        self.assertIn("roi_evidence_gap", data["blocked_pages"][0]["quality_block_reason"])
+
+    def test_run_metrics_api_returns_schema_counts_and_durations(self) -> None:
+        status, data = self.handler.request("GET", "/api/run-metrics/frontend-contract")
+        self.assertEqual(status, 200)
+        self.assertEqual(data["schema_version"], "deck_run_metrics.v1")
+        self.assertEqual(data["run_id"], "frontend-contract")
+        self.assertIn("counts", data)
+        self.assertIn("durations", data)
+        self.assertEqual(data["counts"]["pages"], 3)
+        self.assertEqual(data["counts"]["approved"], 2)
+        self.assertEqual(data["counts"]["rejected"], 1)
+        self.assertEqual(data["counts"]["quality_findings"], 2)
+        self.assertEqual(data["counts"]["p1"], 1)
+
+    def test_export_queue_bad_run_id_returns_404_or_400(self) -> None:
+        status, _data = self.handler.request("GET", "/api/export-queue/missing-run")
+        self.assertIn(status, {400, 404})
+
+    def test_run_metrics_bad_run_id_returns_404_or_400(self) -> None:
+        status, _data = self.handler.request("GET", "/api/run-metrics/missing-run")
+        self.assertIn(status, {400, 404})
 
 
 if __name__ == "__main__":

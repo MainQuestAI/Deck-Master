@@ -1,0 +1,46 @@
+{
+  "schema_version": "deck_benchmark_case.v1",
+  "case_id": "retail_fixture",
+  "case_name": "Retail Fixture Solution Deck",
+  "description": "Validate that Deck Master can build a reviewable solution deck draft from a small retail context pack fixture.",
+  "industry": "retail",
+  "audience": "client",
+  "target_pages": 6,
+  "workspace": "benchmarks/workspaces/retail_fixture",
+  "runs_dir": "benchmark_runs",
+  "inputs": {
+    "context_pack": "context_pack.json",
+    "baseline_manual_hours": 12,
+    "baseline_notes": "Comparable solution deck drafts usually take about 12 hours from brief to reviewable draft.",
+    "expected_output_type": "solution_deck_draft"
+  },
+  "workflow": {
+    "planning_mode": "narrative_v2",
+    "library_mode": "fixture",
+    "requires_narrative_advice": true,
+    "requires_external_quality_review": true,
+    "requires_generation_result": false,
+    "requires_render_result": false,
+    "manual_review_required": true
+  },
+  "success_targets": {
+    "context_to_preview_minutes": 45,
+    "context_to_review_ready_minutes": 90,
+    "context_to_approved_queue_minutes": 120,
+    "page_acceptance_rate_min": 0.5,
+    "reuse_adapt_rate_min": 0.3,
+    "p0_count_max": 0,
+    "evidence_gap_visible": true,
+    "quality_gate_required": true
+  },
+  "scoring": {
+    "weights": {
+      "efficiency": 0.35,
+      "page_acceptance": 0.2,
+      "evidence_readiness": 0.15,
+      "asset_reuse": 0.15,
+      "quality_governance": 0.15
+    }
+  }
+}
+

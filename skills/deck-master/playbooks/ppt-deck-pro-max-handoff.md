@@ -65,3 +65,13 @@ python3 scripts/deck_master.py import-generation-result \
 ```bash
 python3 scripts/deck_master.py refresh-preview-from-generation --run-id <run_id>
 ```
+
+## v0.9.6 UAT
+
+After generation task/result exchange, run:
+
+```bash
+python3 scripts/deck_master.py uat-generation-tool --run-dir runs/<run_id> --tool ppt-deck-pro-max --require-preview
+```
+
+The report is written to `runs/<run_id>/uat_reports/generation_tool_uat.json` and `.md`.
