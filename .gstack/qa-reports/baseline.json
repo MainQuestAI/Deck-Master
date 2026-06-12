@@ -1,0 +1,46 @@
+{
+  "date": "2026-06-12",
+  "url": "http://127.0.0.1:5059",
+  "healthScore": 100,
+  "baselineBeforeFixes": 92,
+  "issues": [
+    {
+      "id": "ISSUE-001",
+      "title": "Preview image was pushed below the first viewport",
+      "severity": "medium",
+      "category": "visual",
+      "status": "fixed"
+    },
+    {
+      "id": "ISSUE-002",
+      "title": "Request evidence did not persist review state",
+      "severity": "medium",
+      "category": "functional",
+      "status": "fixed"
+    },
+    {
+      "id": "ISSUE-003",
+      "title": "Convert to generate did not show the new sourcing intent",
+      "severity": "medium",
+      "category": "functional",
+      "status": "fixed"
+    },
+    {
+      "id": "ISSUE-004",
+      "title": "Mobile layout had horizontal overflow",
+      "severity": "medium",
+      "category": "ux",
+      "status": "fixed"
+    }
+  ],
+  "categoryScores": {
+    "console": 100,
+    "links": 100,
+    "visual": 100,
+    "functional": 100,
+    "ux": 100,
+    "performance": 100,
+    "content": 100,
+    "accessibility": 100
+  }
+}
