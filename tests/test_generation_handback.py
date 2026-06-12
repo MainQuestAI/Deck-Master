@@ -272,6 +272,27 @@ class GenerationHandoffTest(unittest.TestCase):
         self.assertEqual(result["status"], "prepared")
         self.assertEqual(result["task_count"], 2)
 
+    def test_prepare_handoff_syncs_index_tasks(self) -> None:
+        """Regression: after handoff, index.json tasks[] entries must carry
+        the same handoff fields as individual task files."""
+        tasks_dir = self.run_dir / "generation_tasks"
+        write_json(tasks_dir / "index.json", {
+            "run_id": "gen-test",
+            "tasks": [
+                {"task_id": "generation_001_beat_001", "beat_id": "beat_001",
+                 "status": "pending"},
+                {"task_id": "generation_002_beat_004", "beat_id": "beat_004",
+                 "status": "pending"},
+            ],
+        })
+        prepare_generation_handoff(self.run_dir)
+        # Read updated index and verify tasks are enhanced.
+        index = read_json(tasks_dir / "index.json")
+        for task in index["tasks"]:
+            self.assertEqual(task["schema_version"], "deck_generation_task.v1")
+            self.assertIn("workspace_refs", task)
+            self.assertIn("quality_requirements", task)
+
 
 if __name__ == "__main__":
     unittest.main()

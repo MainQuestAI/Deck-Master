@@ -109,6 +109,7 @@ def prepare_generation_handoff(run_dir: str | Path) -> dict[str, Any]:
             claim_ids_for_beat.setdefault(page_ref, []).append(claim.get("claim_id", ""))
 
     enhanced: list[str] = []
+    enhanced_tasks: dict[str, dict[str, Any]] = {}
     for task_id in task_ids:
         task_path = tasks_dir / f"{task_id}.json"
         if not task_path.exists():
@@ -138,6 +139,17 @@ def prepare_generation_handoff(run_dir: str | Path) -> dict[str, Any]:
 
         write_json(task_path, task)
         enhanced.append(task_id)
+        enhanced_tasks[task_id] = task
+
+    # Sync enhanced task data back into index so external tools reading
+    # index.json see the same fields as individual task files.
+    raw_tasks = index_data.get("tasks", [])
+    if raw_tasks and isinstance(raw_tasks[0], dict):
+        index_data["tasks"] = [
+            enhanced_tasks.get(t.get("task_id", ""), t)
+            for t in raw_tasks
+            if isinstance(t, dict)
+        ]
 
     # Update index.
     index_data["schema_version"] = HANDOFF_SCHEMA_VERSION

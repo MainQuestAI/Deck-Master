@@ -65,6 +65,7 @@ def build_context_manifest(context_files: list[str | Path], *, workspace: str = 
     sources = [source_record(path) for path in context_files]
     combined = " ".join(str(source.get("summary", "")) for source in sources)
     return {
+        "schema_version": "deck_context_manifest.v1",
         "run_id": run_id,
         "workspace": workspace,
         "strategy": "runtime_reference",
