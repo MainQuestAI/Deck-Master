@@ -2,6 +2,7 @@
 
 # Local agent/tool state
 .claude/settings.local.json
+.gbrain-source
 
 # Python/runtime artifacts
 __pycache__/
