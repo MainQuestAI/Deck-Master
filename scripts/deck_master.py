@@ -12,6 +12,8 @@ from conversation.session_builder import build_conversation_session
 from generation.task_builder import create_generation_tasks
 from orchestrate.export_queue import export_queue
 from orchestrate.preview_builder import build_preview_from_sourcing
+from narrative.claim_graph import build_claim_evidence_graph
+from narrative.judgment_builder import build_judgments
 from planning.brief_intake import build_request
 from planning.claim_map import build_claim_map
 from planning.narrative_planner import plan_narrative
@@ -23,6 +25,8 @@ from quality.gate_runner import (
     evaluate_render_gate,
     write_gate_report,
 )
+from quality.draft_gate_v2 import evaluate_draft_gate_v2
+from quality.overrides import create_override, list_active_overrides, revoke_override
 from runtime.run_state import (
     CLAIM_MAP_NAME,
     CONTEXT_MANIFEST_NAME,
@@ -38,7 +42,9 @@ from runtime.run_state import (
     write_artifact,
     write_json,
 )
+from runtime.next_step import resolve_next_step
 from tools.ppt_library_client import PPTLibraryClientError, run_library_selection
+from workspace.foundation import WorkspaceError, init_workspace, register_workspace, validate_workspace
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -214,7 +220,12 @@ def command_build_preview(args: argparse.Namespace) -> dict[str, Any]:
 
 def command_export(args: argparse.Namespace) -> dict[str, Any]:
     run_dir = resolve_run_dir(args)
-    queue = export_queue(run_dir, set(args.decision))
+    queue = export_queue(
+        run_dir,
+        set(args.decision),
+        queue_type=getattr(args, "queue_type", "client"),
+        allow_quality_override=getattr(args, "allow_quality_override", False),
+    )
     if args.output:
         output = Path(args.output).expanduser().resolve()
     else:
@@ -260,6 +271,17 @@ def command_quality_gate(args: argparse.Namespace) -> dict[str, Any]:
         claim_map = read_optional_json(run_dir, CLAIM_MAP_NAME) or {"run_id": run_id, "claims": [], "risk_flags": ["missing_claim_map"]}
         page_tasks = read_optional_json(run_dir, PAGE_TASKS_NAME) or {"run_id": run_id, "tasks": []}
         report = evaluate_draft_gate(deck_brief, claim_map, page_tasks)
+    elif args.gate == "draft_v2":
+        deck_brief = read_optional_json(run_dir, DECK_BRIEF_NAME) or {
+            "run_id": run_id,
+            "project_name": request.get("project_name", run_dir.name),
+            "business_goal": request.get("business_goal", ""),
+        }
+        claim_map = read_optional_json(run_dir, CLAIM_MAP_NAME) or {"run_id": run_id, "claims": [], "risk_flags": ["missing_claim_map"]}
+        page_tasks = read_optional_json(run_dir, PAGE_TASKS_NAME) or {"run_id": run_id, "tasks": []}
+        judgments = read_optional_json(run_dir, "consulting_judgments.json")
+        ceg = read_optional_json(run_dir, "claim_evidence_graph.json")
+        report = evaluate_draft_gate_v2(deck_brief, claim_map, page_tasks, judgments, ceg)
     elif args.gate == "render":
         if not args.artifact:
             raise RunStateError("--artifact is required for render gate.")
@@ -285,6 +307,85 @@ def command_quality_gate(args: argparse.Namespace) -> dict[str, Any]:
         "findings": len(report["findings"]),
         "report": paths,
     }
+
+
+def command_override_create(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = resolve_run_dir(args)
+    override = create_override(
+        run_dir, args.finding_id, args.severity, args.reason, args.approver,
+        scope=args.scope, actor=args.actor, expires_days=args.expires_days,
+    )
+    return {"status": "override_created", "override": override}
+
+
+def command_override_list(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = resolve_run_dir(args)
+    overrides = list_active_overrides(run_dir)
+    return {"status": "overrides_listed", "count": len(overrides), "overrides": overrides}
+
+
+def command_override_revoke(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = resolve_run_dir(args)
+    override = revoke_override(run_dir, args.override_id, args.reason)
+    return {"status": "override_revoked", "override": override}
+
+
+def command_next_step(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = resolve_run_dir(args)
+    return resolve_next_step(run_dir)
+
+
+def command_build_judgments(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = resolve_run_dir(args)
+    request = load_request(run_dir)
+    deck_brief = read_json(run_dir / DECK_BRIEF_NAME)
+    claim_map = read_json(run_dir / CLAIM_MAP_NAME)
+    context_manifest = read_optional_json(run_dir, CONTEXT_MANIFEST_NAME) or {}
+    judgments = build_judgments(request, deck_brief, claim_map, context_manifest)
+    write_artifact(run_dir, "consulting_judgments.json", judgments, action="judgments.created")
+    return {
+        "run_id": request.get("run_id", run_dir.name),
+        "run_dir": str(run_dir),
+        "status": "judgments_ready",
+        "judgments": len(judgments["judgments"]),
+    }
+
+
+def command_build_claim_graph(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = resolve_run_dir(args)
+    claim_map = read_json(run_dir / CLAIM_MAP_NAME)
+    page_tasks = read_optional_json(run_dir, PAGE_TASKS_NAME) or {"run_id": claim_map.get("run_id", ""), "tasks": []}
+    context_manifest = read_optional_json(run_dir, CONTEXT_MANIFEST_NAME) or {}
+    judgments = read_optional_json(run_dir, "consulting_judgments.json")
+    graph = build_claim_evidence_graph(claim_map, page_tasks, context_manifest, judgments)
+    write_artifact(run_dir, "claim_evidence_graph.json", graph, action="claim_evidence_graph.created")
+    return {
+        "run_id": graph["run_id"],
+        "run_dir": str(run_dir),
+        "status": "claim_graph_ready",
+        "claims": len(graph["claims"]),
+        "evidence": len(graph["evidence"]),
+        "gaps": len(graph["gaps"]),
+    }
+
+
+def command_init_workspace(args: argparse.Namespace) -> dict[str, Any]:
+    workspace_dir = Path(args.workspace).expanduser().resolve()
+    manifest = init_workspace(workspace_dir, args.name)
+    return {"workspace": str(workspace_dir), "name": args.name, "status": "initialized"}
+
+
+def command_register_workspace(args: argparse.Namespace) -> dict[str, Any]:
+    workspace_dir = Path(args.workspace).expanduser().resolve()
+    reference_ppt = Path(args.reference_ppt).expanduser().resolve() if args.reference_ppt else None
+    manifest = register_workspace(workspace_dir, reference_ppt)
+    return {"workspace": str(workspace_dir), "status": "registered", "reference_ppt": str(reference_ppt) if reference_ppt else None}
+
+
+def command_validate_workspace(args: argparse.Namespace) -> dict[str, Any]:
+    workspace_dir = Path(args.workspace).expanduser().resolve()
+    result = validate_workspace(workspace_dir)
+    return result
 
 
 def add_brief_args(parser: argparse.ArgumentParser) -> None:
@@ -370,15 +471,68 @@ def build_parser() -> argparse.ArgumentParser:
     add_run_args(p_export)
     p_export.add_argument("--output")
     p_export.add_argument("--decision", action="append", default=["approved"])
+    p_export.add_argument("--queue-type", choices=["client", "internal"], default="client")
+    p_export.add_argument("--allow-quality-override", action="store_true")
     p_export.set_defaults(func=command_export)
 
     p_quality = sub.add_parser("quality-gate", help="Run a Deck Master quality gate")
     add_run_args(p_quality)
-    p_quality.add_argument("gate", choices=["draft", "render", "delivery"])
+    p_quality.add_argument("gate", choices=["draft", "draft_v2", "render", "delivery"])
     p_quality.add_argument("--artifact", help="Rendered or final PPTX artifact for render/delivery gates")
     p_quality.add_argument("--expected-pages", type=int)
     p_quality.add_argument("--forbidden", action="append", default=[], help="Forbidden visible term. Can be repeated.")
     p_quality.set_defaults(func=command_quality_gate)
+
+    p_override = sub.add_parser("override", help="Manage quality finding overrides")
+    override_sub = p_override.add_subparsers(dest="override_command", required=True)
+
+    p_oc = override_sub.add_parser("create", help="Create a quality override")
+    add_run_args(p_oc)
+    p_oc.add_argument("--finding-id", required=True)
+    p_oc.add_argument("--severity", required=True, choices=["P1", "P2"])
+    p_oc.add_argument("--reason", required=True)
+    p_oc.add_argument("--approver", required=True)
+    p_oc.add_argument("--scope", default="client_export")
+    p_oc.add_argument("--actor", default="user")
+    p_oc.add_argument("--expires-days", type=int, default=14)
+    p_oc.set_defaults(func=command_override_create)
+
+    p_ol = override_sub.add_parser("list", help="List active overrides")
+    add_run_args(p_ol)
+    p_ol.set_defaults(func=command_override_list)
+
+    p_or = override_sub.add_parser("revoke", help="Revoke an override")
+    add_run_args(p_or)
+    p_or.add_argument("--override-id", required=True)
+    p_or.add_argument("--reason", default="")
+    p_or.set_defaults(func=command_override_revoke)
+
+    p_next = sub.add_parser("next-step", help="Resolve next step for a run")
+    add_run_args(p_next)
+    p_next.set_defaults(func=command_next_step)
+
+    p_judgments = sub.add_parser("build-judgments", help="Generate consulting judgments")
+    add_run_args(p_judgments)
+    p_judgments.set_defaults(func=command_build_judgments)
+
+    p_ceg = sub.add_parser("build-claim-graph", help="Build claim-evidence graph")
+    add_run_args(p_ceg)
+    p_ceg.set_defaults(func=command_build_claim_graph)
+
+    p_init_ws = sub.add_parser("init-workspace", help="Initialize a new Deck workspace")
+    p_init_ws.add_argument("--workspace", required=True, help="Workspace directory path")
+    p_init_ws.add_argument("--name", required=True, help="Workspace name")
+    p_init_ws.set_defaults(func=command_init_workspace)
+
+    p_reg_ws = sub.add_parser("register-workspace", help="Register an existing workspace")
+    p_reg_ws.add_argument("--workspace", required=True, help="Workspace directory path")
+    p_reg_ws.add_argument("--reference-ppt", default=None, help="Reference PPTX file path")
+    p_reg_ws.set_defaults(func=command_register_workspace)
+
+    p_val_ws = sub.add_parser("validate-workspace", help="Validate workspace integrity")
+    p_val_ws.add_argument("--workspace", required=True, help="Workspace directory path")
+    p_val_ws.set_defaults(func=command_validate_workspace)
+
     return parser
 
 
@@ -387,7 +541,7 @@ def main() -> None:
     args = parser.parse_args()
     try:
         print_json(args.func(args))
-    except (RunStateError, PPTLibraryClientError, ValueError) as exc:
+    except (RunStateError, PPTLibraryClientError, WorkspaceError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         raise SystemExit(2) from exc
 

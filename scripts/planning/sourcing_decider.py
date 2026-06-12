@@ -3,6 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from assets.scoring import compute_score_v2, tie_breaker
+
 
 SOURCE_DECISIONS = {"reuse", "adapt", "generate", "manual_placeholder"}
 
@@ -13,6 +15,17 @@ def candidate_score(candidate: dict[str, Any]) -> float:
     reuse_count = min(float(candidate.get("reuse_count") or 0), 5.0) / 5.0
     screenshot_bonus = 0.08 if candidate.get("screenshot_path") else 0.0
     return round(confidence * 0.72 + win_rate * 0.16 + reuse_count * 0.04 + screenshot_bonus, 4)
+
+
+def candidate_score_v2(
+    candidate: dict[str, Any],
+    beat: dict[str, Any],
+    *,
+    asset_feedback: dict[str, Any] | None = None,
+    asset_health: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """V2 可解释评分，委托给 assets.scoring.compute_score_v2。"""
+    return compute_score_v2(candidate, beat, asset_feedback=asset_feedback, asset_health=asset_health)
 
 
 def page_needs_manual_evidence(beat: dict[str, Any]) -> bool:
@@ -26,15 +39,69 @@ def select_best_candidate(candidates: list[dict[str, Any]]) -> dict[str, Any] | 
     return sorted(candidates, key=candidate_score, reverse=True)[0]
 
 
-def decide_for_beat(beat: dict[str, Any], candidates: list[dict[str, Any]]) -> dict[str, Any]:
+def decide_for_beat(
+    beat: dict[str, Any],
+    candidates: list[dict[str, Any]],
+    *,
+    asset_feedback_map: dict[str, dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    use_v2 = asset_feedback_map is not None
+
+    if use_v2 and candidates:
+        # V2 path: score every candidate with feedback, pick best via tie_breaker
+        scored: list[dict[str, Any]] = []
+        for c in candidates:
+            cid = c.get("canonical_slide_id", "")
+            fb = asset_feedback_map.get(cid) if asset_feedback_map else None
+            result = compute_score_v2(c, beat, asset_feedback=fb)
+            result["canonical_slide_id"] = cid
+            result["_candidate"] = c
+            scored.append(result)
+
+        ranked = tie_breaker(scored)
+        best_result = ranked[0]
+        best = best_result["_candidate"]
+        score = best_result["total_score"]
+        decision = best_result["decision"]
+        reason = best_result["reason"]
+        alternatives_raw = [r["_candidate"] for r in ranked[1:4]]
+
+        risk_flags: list[str] = []
+        if not best.get("screenshot_path"):
+            risk_flags.append("missing_screenshot")
+        if best_result["penalties_applied"]:
+            for p in best_result["penalties_applied"]:
+                risk_flags.append(p["reason"])
+
+        return {
+            "beat_id": beat.get("beat_id"),
+            "order": beat.get("order"),
+            "page_title": beat.get("page_title"),
+            "role": beat.get("role"),
+            "source_decision": decision,
+            "decision_reason": reason,
+            "selected_candidate": best,
+            "alternatives": alternatives_raw,
+            "risk_flags": risk_flags,
+            "confidence": score,
+            "scoring_version": "v2",
+            "dimension_scores": best_result["dimension_scores"],
+            "penalties_applied": best_result["penalties_applied"],
+            "generation_brief": beat.get("generation_brief", ""),
+            "visual_need": beat.get("visual_need", ""),
+            "evidence_need": beat.get("evidence_need", ""),
+            "approval_required": bool(beat.get("approval_required")),
+        }
+
+    # V1 path (original behaviour)
     best = select_best_candidate(candidates)
     alternatives = sorted(candidates, key=candidate_score, reverse=True)[1:4]
-    risk_flags: list[str] = []
+    risk_flags_v1: list[str] = []
 
     if best:
         score = candidate_score(best)
         if not best.get("screenshot_path"):
-            risk_flags.append("missing_screenshot")
+            risk_flags_v1.append("missing_screenshot")
         if score >= 0.74 and best.get("screenshot_path"):
             decision = "reuse"
             reason = "历史页匹配度高、截图可用，可直接进入审批。"
@@ -49,7 +116,7 @@ def decide_for_beat(beat: dict[str, Any], candidates: list[dict[str, Any]]) -> d
         if page_needs_manual_evidence(beat):
             decision = "manual_placeholder"
             reason = "该页需要客户案例或收益证据，当前信息不足，需要人工确认。"
-            risk_flags.append("missing_required_evidence")
+            risk_flags_v1.append("missing_required_evidence")
         else:
             decision = "generate"
             reason = "历史库没有可用候选，建议新生成页面。"
@@ -63,7 +130,7 @@ def decide_for_beat(beat: dict[str, Any], candidates: list[dict[str, Any]]) -> d
         "decision_reason": reason,
         "selected_candidate": best,
         "alternatives": alternatives,
-        "risk_flags": risk_flags,
+        "risk_flags": risk_flags_v1,
         "confidence": score,
         "generation_brief": beat.get("generation_brief", ""),
         "visual_need": beat.get("visual_need", ""),
