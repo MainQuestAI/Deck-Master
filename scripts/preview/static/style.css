@@ -222,6 +222,7 @@ button:hover {
 .preview-frame {
   display: grid;
   place-items: center;
+  align-self: start;
   min-height: 560px;
   padding: 24px;
   background: rgba(0, 0, 0, 0.26);
