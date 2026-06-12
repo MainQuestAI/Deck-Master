@@ -86,13 +86,117 @@ def read_optional_json(run_dir: Path, filename: str) -> dict[str, Any] | None:
     return read_json(path)
 
 
-def write_plan_artifacts(run_dir: Path, request: dict[str, Any]) -> dict[str, Any]:
-    narrative_plan = plan_narrative(request)
+def _load_workspace_archetypes(request: dict[str, Any]) -> dict[str, Any] | None:
+    workspace = request.get("workspace")
+    if not workspace:
+        return None
+    workspace_dir = Path(str(workspace)).expanduser().resolve()
+    json_path = workspace_dir / "structure-assets" / "page_archetypes.json"
+    if json_path.exists():
+        try:
+            payload = json.loads(json_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            return None
+        return payload if isinstance(payload, dict) else None
+
+    md_path = workspace_dir / "structure-assets" / "page_archetypes.md"
+    if not md_path.exists():
+        return None
+    roles = [
+        "opener",
+        "problem",
+        "solution",
+        "architecture",
+        "case",
+        "roi",
+        "cta",
+        "appendix",
+    ]
+    return {
+        "archetypes": [
+            {"role": role, "ref": f"structure-assets/page_archetypes.md#{role}"}
+            for role in roles
+        ]
+    }
+
+
+def _build_judgments_if_possible(
+    run_dir: Path,
+    request: dict[str, Any],
+    claim_map: dict[str, Any] | None,
+) -> dict[str, Any] | None:
+    deck_brief = read_optional_json(run_dir, DECK_BRIEF_NAME)
+    if not deck_brief or not claim_map:
+        return None
+    context_manifest = read_optional_json(run_dir, CONTEXT_MANIFEST_NAME) or {}
+    judgments = build_judgments(request, deck_brief, claim_map, context_manifest)
+    write_artifact(run_dir, "consulting_judgments.json", judgments, action="judgments.created")
+    return judgments
+
+
+def _build_claim_graph_if_possible(
+    run_dir: Path,
+    claim_map: dict[str, Any] | None,
+    page_tasks: dict[str, Any],
+    judgments: dict[str, Any] | None,
+) -> dict[str, Any] | None:
+    if not claim_map:
+        return None
+    context_manifest = read_optional_json(run_dir, CONTEXT_MANIFEST_NAME) or {}
+    graph = build_claim_evidence_graph(claim_map, page_tasks, context_manifest, judgments)
+    write_artifact(run_dir, "claim_evidence_graph.json", graph, action="claim_evidence_graph.created")
+    return graph
+
+
+def write_plan_artifacts(
+    run_dir: Path,
+    request: dict[str, Any],
+    *,
+    planning_mode: str = "classic",
+) -> dict[str, Any]:
     claim_map = read_optional_json(run_dir, CLAIM_MAP_NAME)
+    judgments: dict[str, Any] | None = None
+    claim_graph: dict[str, Any] | None = None
+    workspace_archetypes: dict[str, Any] | None = None
+
+    if planning_mode == "narrative_v2":
+        judgments = _build_judgments_if_possible(run_dir, request, claim_map)
+        workspace_archetypes = _load_workspace_archetypes(request)
+
+    narrative_plan = plan_narrative(
+        request,
+        judgments=judgments,
+        claim_graph=claim_graph,
+        workspace_archetypes=workspace_archetypes,
+    )
     if claim_map:
         enrich_narrative_with_claims(narrative_plan, claim_map)
+    page_tasks = build_page_tasks(
+        narrative_plan,
+        claim_map,
+        claim_graph=claim_graph,
+        judgments=judgments,
+    )
+
+    if planning_mode == "narrative_v2":
+        claim_graph = _build_claim_graph_if_possible(run_dir, claim_map, page_tasks, judgments)
+        narrative_plan = plan_narrative(
+            request,
+            judgments=judgments,
+            claim_graph=claim_graph,
+            workspace_archetypes=workspace_archetypes,
+        )
+        if claim_map:
+            enrich_narrative_with_claims(narrative_plan, claim_map)
+        page_tasks = build_page_tasks(
+            narrative_plan,
+            claim_map,
+            claim_graph=claim_graph,
+            judgments=judgments,
+        )
+        _build_claim_graph_if_possible(run_dir, claim_map, page_tasks, judgments)
+
     write_artifact(run_dir, NARRATIVE_PLAN_NAME, narrative_plan, action="narrative.plan.created")
-    page_tasks = build_page_tasks(narrative_plan, claim_map)
     write_artifact(run_dir, PAGE_TASKS_NAME, page_tasks, action="page_tasks.created")
     return narrative_plan
 
@@ -127,7 +231,11 @@ def command_plan(args: argparse.Namespace) -> dict[str, Any]:
     )
     run_dir = create_run(runs_dir(args), request, run_id=args.run_id or None, force=args.force)
     request = load_request(run_dir)
-    narrative_plan = write_plan_artifacts(run_dir, request)
+    narrative_plan = write_plan_artifacts(
+        run_dir,
+        request,
+        planning_mode=getattr(args, "planning_mode", "classic"),
+    )
     return {"run_id": request["run_id"], "run_dir": str(run_dir), "status": "planned", "pages": len(narrative_plan["beats"])}
 
 
@@ -245,11 +353,17 @@ def command_export(args: argparse.Namespace) -> dict[str, Any]:
 
 def command_autoplan(args: argparse.Namespace) -> dict[str, Any]:
     existing_run = bool((getattr(args, "run_id", None) or getattr(args, "run_dir", None)) and not (args.brief or args.brief_file))
+    planning_mode = getattr(args, "planning_mode", "classic")
     if existing_run:
         run_dir = resolve_run_dir(args)
         request = load_request(run_dir)
-        if not artifact_exists(run_dir, NARRATIVE_PLAN_NAME):
-            write_plan_artifacts(run_dir, request)
+        needs_plan = not artifact_exists(run_dir, NARRATIVE_PLAN_NAME)
+        needs_v2_artifacts = planning_mode == "narrative_v2" and (
+            not artifact_exists(run_dir, "consulting_judgments.json")
+            or not artifact_exists(run_dir, "claim_evidence_graph.json")
+        )
+        if needs_plan or needs_v2_artifacts:
+            write_plan_artifacts(run_dir, request, planning_mode=planning_mode)
     else:
         plan_result = command_plan(args)
         run_dir = Path(plan_result["run_dir"])
@@ -544,12 +658,17 @@ def add_library_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--ppt-lib-command", default="ppt-lib")
 
 
+def add_planning_mode_arg(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--planning-mode", choices=["classic", "narrative_v2"], default="classic")
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Deck Master demand-to-preview orchestration CLI.")
     sub = parser.add_subparsers(dest="command", required=True)
 
     p_plan = sub.add_parser("plan", help="Create request.json and narrative_plan.json from a brief")
     add_brief_args(p_plan)
+    add_planning_mode_arg(p_plan)
     p_plan.set_defaults(func=command_plan)
 
     p_start = sub.add_parser("start-conversation", help="Create a guided Deck conversation run from local context")
@@ -567,6 +686,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_autoplan = sub.add_parser("autoplan", help="Run brief intake through preview manifest")
     add_brief_args(p_autoplan)
     add_library_args(p_autoplan)
+    add_planning_mode_arg(p_autoplan)
     p_autoplan.set_defaults(func=command_autoplan)
 
     p_search = sub.add_parser("search-library", help="Run PPT Library selection for an existing run")

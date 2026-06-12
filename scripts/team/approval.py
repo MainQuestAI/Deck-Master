@@ -117,6 +117,9 @@ def reject(
                 raise ValueError(f"Approval not found: {approval_id}")
 
             flow = flows[approval_id]
+            if flow["status"] != "pending":
+                raise ValueError(f"Approval {approval_id} is not pending (status: {flow['status']})")
+
             flow["status"] = "rejected"
             flow["rejected_by"] = rejecter
             flow["rejected_at"] = utc_now()

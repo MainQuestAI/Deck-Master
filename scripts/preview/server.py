@@ -28,6 +28,7 @@ from runtime.events import append_typed_event
 
 from delivery.outcome import record_delivery_outcome
 from delivery.validate import validate_delivery
+from orchestrate.export_queue import has_client_export_quality_clearance
 from generation.task_builder import create_generation_tasks
 from orchestrate.preview_builder import build_preview_from_sourcing
 from planning.brief_intake import build_request
@@ -504,11 +505,10 @@ class PreviewHandler(BaseHTTPRequestHandler):
         # Active overrides
         active_overrides = list_active_overrides(candidate)
 
-        # Delivery readiness
+        # Delivery readiness uses the same policy as client export.
         has_blocking = any(g["blocks_delivery"] for g in gate_summary)
-        has_active_p0_override = False
-        has_active_p1_override = any(o.get("severity") == "P1" for o in active_overrides)
-        delivery_ready = not has_blocking or (has_active_p1_override and not has_active_p0_override)
+        clearance = has_client_export_quality_clearance(candidate, allow_quality_override=True)
+        delivery_ready = bool(clearance["ready"])
 
         # Final artifact validation status
         delivery_dir = candidate / "delivery"
@@ -542,6 +542,7 @@ class PreviewHandler(BaseHTTPRequestHandler):
                 "ready": delivery_ready,
                 "has_blocking_gates": has_blocking,
                 "active_override_count": len(active_overrides),
+                "reason": clearance.get("reason", ""),
             },
             "validation_status": validation_status,
             "lineage": lineage_data,

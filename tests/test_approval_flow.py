@@ -88,6 +88,13 @@ class TestApprovalFlow(unittest.TestCase):
         with self.assertRaises(ValueError):
             approve(self.ws, req["approval_id"], "bob")
 
+    def test_reject_after_approve_raises(self) -> None:
+        req = submit_approval(self.ws, "run_001", "alice")
+        approve(self.ws, req["approval_id"], "bob")
+        with self.assertRaises(ValueError) as ctx:
+            reject(self.ws, req["approval_id"], "carol", reason="no")
+        self.assertIn("not pending", str(ctx.exception))
+
     def test_approve_nonexistent_raises(self) -> None:
         with self.assertRaises(ValueError):
             approve(self.ws, "approval_nonexistent", "bob")

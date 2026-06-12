@@ -14,13 +14,16 @@ sys.path.insert(0, str(QUALITY_DIR))
 from manifest import DECISIONS, load_manifest
 from overrides import has_active_override
 
+DRAFT_GATE_FILES = {"draft_gate.json", "draft_v2_gate.json"}
+BLOCKING_STATUSES = {"rework_required"}
 
-def _get_page_findings(run_dir: Path, page_id: str) -> list[dict[str, Any]]:
-    """从 quality_reports/ 获取页面相关 findings。"""
-    findings: list[dict[str, Any]] = []
+
+def _load_gate_reports(run_dir: Path) -> list[dict[str, Any]]:
+    """Load valid quality gate reports for export policy checks."""
+    reports: list[dict[str, Any]] = []
     quality_dir = run_dir / "quality_reports"
     if not quality_dir.exists():
-        return findings
+        return reports
 
     for gate_file in sorted(quality_dir.glob("*_gate.json")):
         try:
@@ -29,13 +32,132 @@ def _get_page_findings(run_dir: Path, page_id: str) -> list[dict[str, Any]]:
             continue
         if not isinstance(report, dict):
             continue
-        for f in report.get("page_findings", []):
-            if isinstance(f, dict) and f.get("page_id") == page_id:
-                findings.append(f)
-        for f in report.get("findings", []):
-            if isinstance(f, dict) and f.get("page_id") == page_id:
-                findings.append(f)
+        report = dict(report)
+        report["_gate_name"] = str(report.get("gate") or gate_file.stem.removesuffix("_gate"))
+        report["_report_file"] = gate_file.name
+        reports.append(report)
+    return reports
+
+
+def _has_draft_gate_report(reports: list[dict[str, Any]]) -> bool:
+    return any(report.get("_report_file") in DRAFT_GATE_FILES for report in reports)
+
+
+def _report_blocks_delivery(report: dict[str, Any]) -> bool:
+    return bool(report.get("blocks_delivery")) or str(report.get("status", "")).lower() in BLOCKING_STATUSES
+
+
+def _finding_id(finding: dict[str, Any]) -> str:
+    return str(
+        finding.get("finding_id")
+        or finding.get("id")
+        or finding.get("code")
+        or finding.get("message")
+        or "unknown_finding"
+    )
+
+
+def _report_findings(report: dict[str, Any]) -> list[dict[str, Any]]:
+    findings: list[dict[str, Any]] = []
+    for key in ("findings", "page_findings"):
+        for finding in report.get(key, []):
+            if isinstance(finding, dict):
+                item = dict(finding)
+                item["_gate_name"] = report.get("_gate_name", "")
+                findings.append(item)
     return findings
+
+
+def _get_blocking_findings(run_dir: Path, page_id: str) -> list[dict[str, Any]]:
+    """Collect page-level and run-level blocking findings for a page."""
+    findings: list[dict[str, Any]] = []
+
+    for report in _load_gate_reports(run_dir):
+        report_blocks = _report_blocks_delivery(report)
+        report_findings = _report_findings(report)
+        matched = False
+
+        for finding in report_findings:
+            severity = str(finding.get("severity", "")).upper()
+            if severity not in {"P0", "P1"}:
+                continue
+            finding_page_id = finding.get("page_id")
+            if finding_page_id == page_id:
+                findings.append(finding)
+                matched = True
+            elif report_blocks:
+                findings.append(finding)
+
+        if report_blocks and not matched and not report_findings:
+            findings.append(
+                {
+                    "severity": "P1",
+                    "finding_id": f"{report.get('_gate_name', 'quality')}_gate_blocking",
+                    "message": f"{report.get('_gate_name', 'quality')} gate blocks delivery.",
+                    "_gate_name": report.get("_gate_name", ""),
+                }
+            )
+    return findings
+
+
+def has_client_export_quality_clearance(
+    run_dir: Path,
+    *,
+    allow_quality_override: bool = False,
+) -> dict[str, Any]:
+    """Return run-level quality clearance used by UI and export."""
+    reports = _load_gate_reports(run_dir)
+    if not _has_draft_gate_report(reports):
+        return {
+            "ready": False,
+            "reason": "Missing draft gate report: needs_draft_gate.",
+            "blocking_findings": [],
+        }
+
+    blocking_findings: list[dict[str, Any]] = []
+    for report in reports:
+        if not _report_blocks_delivery(report):
+            continue
+        report_findings = [
+            finding
+            for finding in _report_findings(report)
+            if str(finding.get("severity", "")).upper() in {"P0", "P1"}
+        ]
+        if report_findings:
+            blocking_findings.extend(report_findings)
+        else:
+            blocking_findings.append(
+                {
+                    "severity": "P1",
+                    "finding_id": f"{report.get('_gate_name', 'quality')}_gate_blocking",
+                    "message": f"{report.get('_gate_name', 'quality')} gate blocks delivery.",
+                    "_gate_name": report.get("_gate_name", ""),
+                }
+            )
+
+    p0_findings = [finding for finding in blocking_findings if str(finding.get("severity", "")).upper() == "P0"]
+    if p0_findings:
+        return {
+            "ready": False,
+            "reason": f"P0 quality findings block client export: {[_finding_id(f) for f in p0_findings]}",
+            "blocking_findings": blocking_findings,
+        }
+
+    p1_findings = [finding for finding in blocking_findings if str(finding.get("severity", "")).upper() == "P1"]
+    if p1_findings:
+        missing_overrides = [
+            finding
+            for finding in p1_findings
+            if not allow_quality_override or not has_active_override(run_dir, _finding_id(finding))
+        ]
+        if missing_overrides:
+            return {
+                "ready": False,
+                "reason": f"P1 quality findings require active overrides: {[_finding_id(f) for f in missing_overrides]}",
+                "blocking_findings": blocking_findings,
+            }
+
+    return {"ready": True, "reason": "", "blocking_findings": blocking_findings}
 
 
 def check_page_quality_blocking(
@@ -79,43 +201,41 @@ def check_page_quality_blocking(
             "has_override": False,
         }
 
-    # 检查 quality reports
-    # P0-2: quality_reports/ 不存在时，默认 needs_quality_review，不进 client queue
-    quality_dir = run_dir / "quality_reports"
-    if not quality_dir.exists():
+    reports = _load_gate_reports(run_dir)
+    if not _has_draft_gate_report(reports):
         return {
             "blocked": True,
-            "reason": "Quality reports directory not found: needs_quality_review.",
+            "reason": "Missing draft gate report: needs_draft_gate.",
             "severity": "",
             "has_override": False,
         }
 
-    findings = _get_page_findings(run_dir, page_id)
+    findings = _get_blocking_findings(run_dir, page_id)
 
     for f in findings:
-        severity = f.get("severity", "")
+        severity = str(f.get("severity", "")).upper()
         if severity == "P0":
             return {
                 "blocked": True,
                 "reason": (
-                    f"P0 quality finding: {f.get('finding_id', '')} - {f.get('message', '')}"
+                    f"P0 quality finding: {_finding_id(f)} - {f.get('message', '')}"
                 ),
                 "severity": "P0",
                 "has_override": False,
             }
 
     # P0-1: P1 finding 必须逐条有 active override（target_id == finding_id）
-    p1_findings = [f for f in findings if f.get("severity") == "P1"]
+    p1_findings = [f for f in findings if str(f.get("severity", "")).upper() == "P1"]
     p1_without_override = [
         f for f in p1_findings
-        if not has_active_override(run_dir, f.get("finding_id", ""))
+        if not allow_override or not has_active_override(run_dir, _finding_id(f))
     ]
     if p1_without_override:
         return {
             "blocked": True,
             "reason": (
                 "P1 quality findings without active override: "
-                f"{[f.get('finding_id', '') for f in p1_without_override]}"
+                f"{[_finding_id(f) for f in p1_without_override]}"
             ),
             "severity": "P1",
             "has_override": False,

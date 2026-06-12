@@ -40,6 +40,14 @@ class NextStepResolverTest(unittest.TestCase):
     def _write_json(self, name: str, payload: dict) -> None:
         (self.run_dir / name).write_text(json.dumps(payload), encoding="utf-8")
 
+    def _write_gate(self, name: str = "draft_gate.json", *, status: str = "pass", blocks: bool = False) -> None:
+        quality_dir = self.run_dir / "quality_reports"
+        quality_dir.mkdir(exist_ok=True)
+        (quality_dir / name).write_text(
+            json.dumps({"status": status, "blocks_delivery": blocks, "findings": []}),
+            encoding="utf-8",
+        )
+
     def _assert_shape(self, result: dict, expected_status: str) -> None:
         self.assertTrue(REQUIRED_KEYS.issubset(result.keys()), f"Missing keys in {result}")
         self.assertEqual(result["schema_version"], SCHEMA_VERSION)
@@ -125,20 +133,19 @@ class NextStepResolverTest(unittest.TestCase):
     def test_preview_with_approved_pages_returns_ready_to_export(self) -> None:
         self._write_full_pipeline()
         self._write_json(PREVIEW_MANIFEST_NAME, {"pages": [{"decision": "approved"}, {"decision": "pending"}]})
+        self._write_gate()
         result = resolve_next_step(self.run_dir)
         self._assert_shape(result, "ready_to_export")
         self.assertEqual(result.get("approved_pages"), 1)
         self.assertIn("export", result["next_command"])
 
-    def test_preview_without_approved_and_draft_gate_returns_complete(self) -> None:
+    def test_preview_without_approved_and_draft_gate_returns_needs_page_review(self) -> None:
         self._write_full_pipeline()
         self._write_json(PREVIEW_MANIFEST_NAME, {"pages": [{"decision": "pending"}]})
-        quality_dir = self.run_dir / "quality_reports"
-        quality_dir.mkdir()
-        (quality_dir / "draft_gate.json").write_text("{}", encoding="utf-8")
+        self._write_gate()
         result = resolve_next_step(self.run_dir)
-        self._assert_shape(result, "complete")
-        self.assertEqual(result["next_command"], "")
+        self._assert_shape(result, "needs_page_review")
+        self.assertIn("preview", result["next_command"])
 
     def test_preview_without_approved_and_missing_draft_gate_returns_needs_draft_gate(self) -> None:
         self._write_full_pipeline()
@@ -146,6 +153,28 @@ class NextStepResolverTest(unittest.TestCase):
         result = resolve_next_step(self.run_dir)
         self._assert_shape(result, "needs_draft_gate")
         self.assertIn("quality-gate", result["next_command"])
+
+    def test_approved_page_without_draft_gate_returns_needs_draft_gate(self) -> None:
+        self._write_full_pipeline()
+        self._write_json(PREVIEW_MANIFEST_NAME, {"pages": [{"decision": "approved"}]})
+        result = resolve_next_step(self.run_dir)
+        self._assert_shape(result, "needs_draft_gate")
+        self.assertNotEqual("ready_to_export", result["status"])
+
+    def test_blocking_draft_gate_returns_needs_quality_review(self) -> None:
+        self._write_full_pipeline()
+        self._write_json(PREVIEW_MANIFEST_NAME, {"pages": [{"decision": "approved"}]})
+        self._write_gate(status="rework_required", blocks=True)
+        result = resolve_next_step(self.run_dir)
+        self._assert_shape(result, "needs_quality_review")
+        self.assertIn("Draft gate blocks", result["blocking_issues"][0])
+
+    def test_draft_v2_gate_is_supported(self) -> None:
+        self._write_full_pipeline()
+        self._write_json(PREVIEW_MANIFEST_NAME, {"pages": [{"decision": "approved"}]})
+        self._write_gate("draft_v2_gate.json")
+        result = resolve_next_step(self.run_dir)
+        self._assert_shape(result, "ready_to_export")
 
     def test_result_always_contains_required_keys(self) -> None:
         # Verify across multiple states that the shape is stable.

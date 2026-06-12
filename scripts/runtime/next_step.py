@@ -17,6 +17,8 @@ from runtime.run_state import (
 
 
 SCHEMA_VERSION = "deck_next_step.v1"
+DRAFT_GATE_FILES = ("draft_v2_gate.json", "draft_gate.json")
+BLOCKING_STATUSES = {"rework_required"}
 
 # 状态优先级（从最缺到最完整）
 STEP_CHECKS: list[tuple[str, str, str]] = [
@@ -30,6 +32,31 @@ STEP_CHECKS: list[tuple[str, str, str]] = [
     (SOURCING_PLAN_NAME, "needs_sourcing", "python3 scripts/deck_master.py decide-sourcing --runs-dir {runs_dir} --run-id {run_id}"),
     (PREVIEW_MANIFEST_NAME, "needs_preview", "python3 scripts/deck_master.py build-preview --runs-dir {runs_dir} --run-id {run_id}"),
 ]
+
+
+def _read_draft_gate(root: Path) -> dict[str, Any] | None:
+    quality_dir = root / "quality_reports"
+    for filename in DRAFT_GATE_FILES:
+        path = quality_dir / filename
+        if not path.exists():
+            continue
+        try:
+            report = json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            return {
+                "status": "invalid",
+                "blocks_delivery": True,
+                "blocking_issue": f"Invalid quality report JSON: {filename}",
+            }
+        if isinstance(report, dict):
+            report["_report_file"] = filename
+            return report
+    return None
+
+
+def _draft_gate_blocks(report: dict[str, Any]) -> bool:
+    status = str(report.get("status", "")).lower()
+    return bool(report.get("blocks_delivery")) or status in BLOCKING_STATUSES
 
 
 def resolve_next_step(run_dir: str | Path) -> dict[str, Any]:
@@ -63,6 +90,27 @@ def resolve_next_step(run_dir: str | Path) -> dict[str, Any]:
                 "blocking_issues": blocking_issues,
             }
 
+    draft_gate = _read_draft_gate(root)
+    if draft_gate is None:
+        return {
+            "schema_version": SCHEMA_VERSION,
+            "run_id": run_id,
+            "status": "needs_draft_gate",
+            "next_command": f"python3 scripts/deck_master.py quality-gate draft --runs-dir {runs_dir} --run-id {run_id}",
+            "missing_artifacts": [],
+            "blocking_issues": [],
+        }
+
+    if _draft_gate_blocks(draft_gate):
+        return {
+            "schema_version": SCHEMA_VERSION,
+            "run_id": run_id,
+            "status": "needs_quality_review",
+            "next_command": f"python3 scripts/deck_master.py quality-gate {str(draft_gate.get('_report_file', 'draft_gate.json')).removesuffix('_gate.json')} --runs-dir {runs_dir} --run-id {run_id}",
+            "missing_artifacts": [],
+            "blocking_issues": [draft_gate.get("blocking_issue") or "Draft gate blocks client export."],
+        }
+
     # 检查是否有 approved 页面可 export
     try:
         manifest_path = root / PREVIEW_MANIFEST_NAME
@@ -79,21 +127,23 @@ def resolve_next_step(run_dir: str | Path) -> dict[str, Any]:
                 "blocking_issues": [],
                 "approved_pages": len(approved_pages),
             }
+        review_pages = [
+            p
+            for p in pages
+            if isinstance(p, dict) and p.get("decision") in {"needs_review", "keep", "replace", "pending"}
+        ]
+        if review_pages:
+            return {
+                "schema_version": SCHEMA_VERSION,
+                "run_id": run_id,
+                "status": "needs_page_review",
+                "next_command": f"python3 scripts/preview/server.py --runs-dir {runs_dir} --run-id {run_id}",
+                "missing_artifacts": [],
+                "blocking_issues": [],
+                "pending_pages": len(review_pages),
+            }
     except (json.JSONDecodeError, FileNotFoundError):
         pass
-
-    # 检查 quality reports
-    quality_dir = root / "quality_reports"
-    draft_gate = quality_dir / "draft_gate.json"
-    if not draft_gate.exists():
-        return {
-            "schema_version": SCHEMA_VERSION,
-            "run_id": run_id,
-            "status": "needs_draft_gate",
-            "next_command": f"python3 scripts/deck_master.py quality-gate draft --runs-dir {runs_dir} --run-id {run_id}",
-            "missing_artifacts": [],
-            "blocking_issues": [],
-        }
 
     return {
         "schema_version": SCHEMA_VERSION,

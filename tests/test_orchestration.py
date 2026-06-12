@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import shutil
 import sys
 import tempfile
@@ -41,6 +42,10 @@ class OrchestrationTests(unittest.TestCase):
         run_dir = self.temp_dir / "run"
         build_run(PLAN, run_dir, force=True)
         (run_dir / "quality_reports").mkdir(parents=True, exist_ok=True)
+        (run_dir / "quality_reports" / "draft_gate.json").write_text(
+            json.dumps({"status": "pass", "blocks_delivery": False, "findings": []}),
+            encoding="utf-8",
+        )
         queue = export_queue(run_dir, {"approved"})
 
         self.assertEqual("sample-orchestrated-run", queue["run_id"])

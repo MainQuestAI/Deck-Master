@@ -52,13 +52,20 @@ def _write_manifest(run_dir: Path, manifest: dict[str, Any]) -> None:
     )
 
 
-def _write_gate(run_dir: Path, gate: str, findings: list[dict[str, Any]]) -> None:
+def _write_gate(
+    run_dir: Path,
+    gate: str,
+    findings: list[dict[str, Any]],
+    *,
+    status: str | None = None,
+    blocks_delivery: bool | None = None,
+) -> None:
     quality_dir = run_dir / "quality_reports"
     quality_dir.mkdir(parents=True, exist_ok=True)
     report = {
         "gate": gate,
-        "status": "fail" if findings else "pass",
-        "blocks_delivery": bool(findings),
+        "status": status or ("rework_required" if findings else "pass"),
+        "blocks_delivery": bool(findings) if blocks_delivery is None else blocks_delivery,
         "findings": findings,
         "page_findings": [],
     }
@@ -78,7 +85,7 @@ class ExportQualityBlockingTests(unittest.TestCase):
     def test_approved_page_without_findings_enters_client_queue(self) -> None:
         page = _base_page("p1", decision="approved", review_status="approved")
         _write_manifest(self.run_dir, _make_manifest([page]))
-        (self.run_dir / "quality_reports").mkdir(parents=True, exist_ok=True)
+        _write_gate(self.run_dir, "draft", [])
 
         result = export_queue(self.run_dir, {"approved"}, queue_type="client")
 
@@ -130,6 +137,7 @@ class ExportQualityBlockingTests(unittest.TestCase):
     def test_p1_finding_blocks_without_override(self) -> None:
         page = _base_page("p1", decision="approved", review_status="approved")
         _write_manifest(self.run_dir, _make_manifest([page]))
+        _write_gate(self.run_dir, "draft", [])
         _write_gate(
             self.run_dir,
             "render",
@@ -146,6 +154,7 @@ class ExportQualityBlockingTests(unittest.TestCase):
     def test_p1_passes_with_active_override_for_finding(self) -> None:
         page = _base_page("p1", decision="approved", review_status="approved")
         _write_manifest(self.run_dir, _make_manifest([page]))
+        _write_gate(self.run_dir, "draft", [])
         _write_gate(
             self.run_dir,
             "render",
@@ -184,6 +193,7 @@ class ExportQualityBlockingTests(unittest.TestCase):
     def test_p1_active_override_mismatch_blocks(self) -> None:
         page = _base_page("p1", decision="approved", review_status="approved")
         _write_manifest(self.run_dir, _make_manifest([page]))
+        _write_gate(self.run_dir, "draft", [])
         _write_gate(
             self.run_dir,
             "render",
@@ -268,7 +278,7 @@ class ExportQualityBlockingTests(unittest.TestCase):
             action_intent="manual_placeholder",
         )
         _write_manifest(self.run_dir, _make_manifest([page]))
-        (self.run_dir / "quality_reports").mkdir(parents=True, exist_ok=True)
+        _write_gate(self.run_dir, "draft", [])
 
         result = export_queue(self.run_dir, {"approved"}, queue_type="client")
 
@@ -286,13 +296,58 @@ class ExportQualityBlockingTests(unittest.TestCase):
 
         self.assertEqual(0, len(result["pages"]))
         self.assertEqual(1, result["blocked_count"])
-        self.assertIn("needs_quality_review", result["blocked_pages"][0]["quality_block_reason"])
+        self.assertIn("needs_draft_gate", result["blocked_pages"][0]["quality_block_reason"])
+
+    def test_empty_quality_reports_blocks_approved(self) -> None:
+        page = _base_page("p1", decision="approved", review_status="approved")
+        _write_manifest(self.run_dir, _make_manifest([page]))
+        (self.run_dir / "quality_reports").mkdir(parents=True, exist_ok=True)
+
+        result = export_queue(self.run_dir, {"approved"}, queue_type="client")
+
+        self.assertEqual(0, len(result["pages"]))
+        self.assertEqual(1, result["blocked_count"])
+        self.assertIn("needs_draft_gate", result["blocked_pages"][0]["quality_block_reason"])
+
+    def test_run_level_p1_finding_blocks_client_queue(self) -> None:
+        page = _base_page("p1", decision="approved", review_status="approved")
+        _write_manifest(self.run_dir, _make_manifest([page]))
+        _write_gate(
+            self.run_dir,
+            "draft",
+            [{"severity": "P1", "finding_id": "F-RUN-P1", "message": "business goal missing"}],
+            status="rework_required",
+            blocks_delivery=True,
+        )
+
+        result = export_queue(self.run_dir, {"approved"}, queue_type="client")
+
+        self.assertEqual(0, len(result["pages"]))
+        self.assertEqual(1, result["blocked_count"])
+        self.assertIn("F-RUN-P1", result["blocked_pages"][0]["quality_block_reason"])
+
+    def test_draft_v2_claim_level_gap_blocks_all_pages(self) -> None:
+        page = _base_page("p1", decision="approved", review_status="approved")
+        _write_manifest(self.run_dir, _make_manifest([page]))
+        _write_gate(
+            self.run_dir,
+            "draft_v2",
+            [{"page_id": "claim_001", "severity": "P1", "finding_id": "F-CLAIM-GAP", "message": "evidence gap"}],
+            status="rework_required",
+            blocks_delivery=True,
+        )
+
+        result = export_queue(self.run_dir, {"approved"}, queue_type="client")
+
+        self.assertEqual(0, len(result["pages"]))
+        self.assertEqual(1, result["blocked_count"])
+        self.assertIn("F-CLAIM-GAP", result["blocked_pages"][0]["quality_block_reason"])
 
     # ---- backward-compatible call signature still works ----
     def test_legacy_positional_signature_still_works(self) -> None:
         page = _base_page("p1", decision="approved", review_status="approved")
         _write_manifest(self.run_dir, _make_manifest([page]))
-        (self.run_dir / "quality_reports").mkdir(parents=True, exist_ok=True)
+        _write_gate(self.run_dir, "draft", [])
 
         # Old callers pass only positional args; defaults must keep working.
         result = export_queue(self.run_dir, {"approved"})
@@ -305,6 +360,7 @@ class ExportQualityBlockingTests(unittest.TestCase):
     def test_check_helper_returns_structured_result(self) -> None:
         page = _base_page("p1", decision="approved", review_status="approved")
         _write_manifest(self.run_dir, _make_manifest([page]))
+        _write_gate(self.run_dir, "draft", [])
         _write_gate(
             self.run_dir,
             "delivery",
@@ -340,6 +396,12 @@ class ExportQualityBlockingTests(unittest.TestCase):
         )
         self.assertFalse(allowed["blocked"])
         self.assertTrue(allowed["has_override"])
+
+        blocked_without_flag = check_page_quality_blocking(
+            self.run_dir, page, queue_type="client", allow_override=False
+        )
+        self.assertTrue(blocked_without_flag["blocked"])
+        self.assertFalse(blocked_without_flag["has_override"])
 
 
 if __name__ == "__main__":
