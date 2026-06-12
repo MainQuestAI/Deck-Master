@@ -160,4 +160,3 @@ def run_ppt_library_uat(
     }
     report = build_uat_report(run_dir, "ppt_library", checks, metrics, recommendations)
     return write_uat_report(run_dir, "ppt_library_uat", report) if write else report
-

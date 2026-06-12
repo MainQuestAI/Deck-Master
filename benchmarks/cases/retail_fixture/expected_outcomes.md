@@ -8,4 +8,3 @@
   UAT, target evaluation, recommendations, and artifact index sections.
 - The report is suitable as a harness validation sample, not as a 10x readiness
   claim.
-

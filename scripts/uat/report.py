@@ -162,4 +162,3 @@ def write_uat_report(run_dir: Path, name: str, report: dict[str, Any]) -> dict[s
     result["json_path"] = str(json_path)
     result["markdown_path"] = str(md_path)
     return result
-

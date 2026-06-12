@@ -35,4 +35,3 @@ python3 scripts/deck_master.py benchmark-list \
   explicitly approved for local benchmark use.
 - Benchmark reports store artifact paths and summaries, not copied source text.
 - Generated reports are local files under `benchmarks/results/`.
-

@@ -146,4 +146,3 @@ def build_score(target_evaluation: dict[str, str], weights: dict[str, Any] | Non
     for key, weight in normalized_weights.items():
         overall += component_scores.get(key, 0.0) * weight
     return {"overall": round(overall, 4), **component_scores}
-

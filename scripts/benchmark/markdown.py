@@ -91,4 +91,3 @@ def render_benchmark_markdown(report: dict[str, Any]) -> str:
         lines.append("- No artifacts indexed.")
     lines.append("")
     return "\n".join(lines)
-
