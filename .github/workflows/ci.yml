@@ -1,0 +1,73 @@
+name: Deck Master CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - "codex/**"
+      - "claude/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deck-master-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Unit tests and autoplan smoke
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Check Python syntax
+        run: python -m compileall scripts tests
+
+      - name: Run unit tests
+        run: python -m unittest discover -s tests
+
+      - name: Run fixture autoplan smoke
+        run: |
+          set -euo pipefail
+          RUNS_DIR="$(mktemp -d)"
+          python scripts/deck_master.py autoplan \
+            --brief-file examples/briefs/retail_digital_transformation.txt \
+            --industry retail \
+            --library-mode fixture \
+            --runs-dir "$RUNS_DIR" \
+            --run-id ci-smoke \
+            > "$RUNS_DIR/autoplan-output.json"
+          python - "$RUNS_DIR" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          runs_dir = Path(sys.argv[1])
+          payload = json.loads((runs_dir / "autoplan-output.json").read_text(encoding="utf-8"))
+          run_dir = Path(payload["run_dir"])
+          required = [
+              "request.json",
+              "narrative_plan.json",
+              "page_tasks.json",
+              "sourcing_plan.json",
+              "preview_manifest.json",
+          ]
+          missing = [name for name in required if not (run_dir / name).exists()]
+          if missing:
+              raise SystemExit(f"Missing smoke artifacts: {missing}")
+          manifest = json.loads((run_dir / "preview_manifest.json").read_text(encoding="utf-8"))
+          pages = manifest.get("pages", [])
+          if len(pages) < 10:
+              raise SystemExit(f"Expected at least 10 preview pages, got {len(pages)}")
+          print(f"Autoplan smoke passed: {len(pages)} preview pages")
+          PY
