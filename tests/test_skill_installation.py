@@ -7,6 +7,7 @@ import shutil
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from scripts.skills.installer import (
     SKILL_NAME,
@@ -25,10 +26,18 @@ class SkillInstallationTest(unittest.TestCase):
 
     def setUp(self) -> None:
         self._tmp = tempfile.mkdtemp(prefix="dm_skill_test_")
+        self._log_patch = mock.patch(
+            "scripts.skills.installer.INSTALL_LOG_DIR",
+            Path(self._tmp) / ".deck-master",
+        )
+        self._log_patch.start()
         self.agent_dir = Path(self._tmp) / "agent_skills"
         self.agent_dir.mkdir()
+        self.source_dir = Path(self._tmp) / ".deck-master" / "current" / "skills" / SKILL_NAME
+        shutil.copytree(_REPO_ROOT / "skills" / SKILL_NAME, self.source_dir)
 
     def tearDown(self) -> None:
+        self._log_patch.stop()
         shutil.rmtree(self._tmp, ignore_errors=True)
 
     # ------------------------------------------------------------------ #
@@ -36,20 +45,20 @@ class SkillInstallationTest(unittest.TestCase):
     # ------------------------------------------------------------------ #
 
     def test_install_creates_symlink(self) -> None:
-        result = install_skill("codex", str(self.agent_dir))
+        result = install_skill("codex", str(self.agent_dir), source_skill_dir=str(self.source_dir))
         self.assertEqual(result["status"], "installed")
         link = self.agent_dir / SKILL_NAME
         self.assertTrue(link.is_symlink())
-        self.assertEqual(link.resolve(), _REPO_ROOT / "skills" / SKILL_NAME)
+        self.assertEqual(link.resolve(), self.source_dir.resolve())
 
     def test_install_idempotent(self) -> None:
-        install_skill("codex", str(self.agent_dir))
-        result = install_skill("codex", str(self.agent_dir))
+        install_skill("codex", str(self.agent_dir), source_skill_dir=str(self.source_dir))
+        result = install_skill("codex", str(self.agent_dir), source_skill_dir=str(self.source_dir))
         self.assertEqual(result["status"], "already_installed")
 
     def test_install_creates_parent_dir_if_missing(self) -> None:
         nested = self.agent_dir / "nested" / "path"
-        result = install_skill("codex", str(nested))
+        result = install_skill("codex", str(nested), source_skill_dir=str(self.source_dir))
         self.assertEqual(result["status"], "installed")
         self.assertTrue((nested / SKILL_NAME).is_symlink())
 
@@ -57,7 +66,7 @@ class SkillInstallationTest(unittest.TestCase):
         real = self.agent_dir / SKILL_NAME
         real.mkdir()
         with self.assertRaises(SkillInstallError) as ctx:
-            install_skill("codex", str(self.agent_dir))
+            install_skill("codex", str(self.agent_dir), source_skill_dir=str(self.source_dir))
         self.assertIn("real file or directory", str(ctx.exception))
 
     def test_install_force_replaces_symlink(self) -> None:
@@ -68,18 +77,18 @@ class SkillInstallationTest(unittest.TestCase):
         link.symlink_to(other)
         # Without --force should fail.
         with self.assertRaises(SkillInstallError):
-            install_skill("codex", str(self.agent_dir))
+            install_skill("codex", str(self.agent_dir), source_skill_dir=str(self.source_dir))
         # With --force should replace.
-        result = install_skill("codex", str(self.agent_dir), force=True)
+        result = install_skill("codex", str(self.agent_dir), force=True, source_skill_dir=str(self.source_dir))
         self.assertEqual(result["status"], "installed")
-        self.assertEqual(link.resolve(), _REPO_ROOT / "skills" / SKILL_NAME)
+        self.assertEqual(link.resolve(), self.source_dir.resolve())
 
     def test_install_force_does_not_delete_real_dir(self) -> None:
         real = self.agent_dir / SKILL_NAME
         real.mkdir()
         (real / "marker.txt").write_text("keep me", encoding="utf-8")
         with self.assertRaises(SkillInstallError) as ctx:
-            install_skill("codex", str(self.agent_dir), force=True)
+            install_skill("codex", str(self.agent_dir), force=True, source_skill_dir=str(self.source_dir))
         self.assertIn("real directory", str(ctx.exception))
         # Directory should still be intact.
         self.assertTrue((real / "marker.txt").exists())
@@ -91,25 +100,39 @@ class SkillInstallationTest(unittest.TestCase):
 
     def test_install_custom_target_requires_explicit_dir(self) -> None:
         with self.assertRaises(SkillInstallError) as ctx:
-            install_skill("custom", None)
+            install_skill("custom", None, source_skill_dir=str(self.source_dir))
         self.assertIn("--agent-skill-dir", str(ctx.exception))
 
     def test_install_custom_target_with_explicit_dir(self) -> None:
-        result = install_skill("custom", str(self.agent_dir))
+        result = install_skill("custom", str(self.agent_dir), source_skill_dir=str(self.source_dir))
         self.assertEqual(result["status"], "installed")
+
+    def test_install_defaults_to_installed_skill_dir(self) -> None:
+        with mock.patch("scripts.skills.installer.INSTALLED_SKILL_DIR", self.source_dir):
+            result = install_skill("codex", str(self.agent_dir))
+        self.assertEqual(result["status"], "installed")
+        self.assertEqual((self.agent_dir / SKILL_NAME).resolve(), self.source_dir.resolve())
+
+    def test_install_rejects_invalid_skill_package(self) -> None:
+        bad_source = Path(self._tmp) / "bad_skill"
+        bad_source.mkdir()
+        (bad_source / "SKILL.md").write_text("# Missing frontmatter\n", encoding="utf-8")
+        with self.assertRaises(SkillInstallError) as ctx:
+            install_skill("codex", str(self.agent_dir), source_skill_dir=str(bad_source))
+        self.assertIn("YAML frontmatter", str(ctx.exception))
 
     # ------------------------------------------------------------------ #
     # validate_skill
     # ------------------------------------------------------------------ #
 
     def test_validate_after_install(self) -> None:
-        install_skill("codex", str(self.agent_dir))
-        result = validate_skill("codex", str(self.agent_dir))
+        install_skill("codex", str(self.agent_dir), source_skill_dir=str(self.source_dir))
+        result = validate_skill("codex", str(self.agent_dir), source_skill_dir=str(self.source_dir))
         self.assertTrue(result["valid"])
         self.assertTrue(result["skill_md_exists"])
 
     def test_validate_not_installed(self) -> None:
-        result = validate_skill("codex", str(self.agent_dir))
+        result = validate_skill("codex", str(self.agent_dir), source_skill_dir=str(self.source_dir))
         self.assertFalse(result["valid"])
         self.assertIn("not exist", result["error"])
 
@@ -120,7 +143,7 @@ class SkillInstallationTest(unittest.TestCase):
         (other / "SKILL.md").write_text("wrong", encoding="utf-8")
         link = self.agent_dir / SKILL_NAME
         link.symlink_to(other)
-        result = validate_skill("codex", str(self.agent_dir))
+        result = validate_skill("codex", str(self.agent_dir), source_skill_dir=str(self.source_dir))
         self.assertFalse(result["valid"])
         self.assertIn("expected", result.get("error", ""))
 
@@ -134,20 +157,20 @@ class SkillInstallationTest(unittest.TestCase):
     # ------------------------------------------------------------------ #
 
     def test_uninstall_after_install(self) -> None:
-        install_skill("codex", str(self.agent_dir))
-        result = uninstall_skill("codex", str(self.agent_dir))
+        install_skill("codex", str(self.agent_dir), source_skill_dir=str(self.source_dir))
+        result = uninstall_skill("codex", str(self.agent_dir), source_skill_dir=str(self.source_dir))
         self.assertEqual(result["status"], "uninstalled")
         self.assertFalse((self.agent_dir / SKILL_NAME).exists())
 
     def test_uninstall_not_installed(self) -> None:
-        result = uninstall_skill("codex", str(self.agent_dir))
+        result = uninstall_skill("codex", str(self.agent_dir), source_skill_dir=str(self.source_dir))
         self.assertEqual(result["status"], "not_installed")
 
     def test_uninstall_refuses_real_dir(self) -> None:
         real = self.agent_dir / SKILL_NAME
         real.mkdir()
         with self.assertRaises(SkillInstallError) as ctx:
-            uninstall_skill("codex", str(self.agent_dir))
+            uninstall_skill("codex", str(self.agent_dir), source_skill_dir=str(self.source_dir))
         self.assertIn("not a symlink", str(ctx.exception))
 
     def test_uninstall_refuses_foreign_symlink(self) -> None:
@@ -156,7 +179,7 @@ class SkillInstallationTest(unittest.TestCase):
         link = self.agent_dir / SKILL_NAME
         link.symlink_to(other)
         with self.assertRaises(SkillInstallError) as ctx:
-            uninstall_skill("codex", str(self.agent_dir))
+            uninstall_skill("codex", str(self.agent_dir), source_skill_dir=str(self.source_dir))
         self.assertIn("not the Deck Master skill", str(ctx.exception))
 
     def test_uninstall_unsupported_target(self) -> None:

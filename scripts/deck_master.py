@@ -669,6 +669,7 @@ def command_install_skill(args: argparse.Namespace) -> dict[str, Any]:
         target=args.target,
         agent_skill_dir=getattr(args, "agent_skill_dir", None),
         force=getattr(args, "force", False),
+        source_skill_dir=getattr(args, "source_skill_dir", None),
     )
 
 
@@ -676,6 +677,7 @@ def command_validate_skill(args: argparse.Namespace) -> dict[str, Any]:
     return validate_skill(
         target=args.target,
         agent_skill_dir=getattr(args, "agent_skill_dir", None),
+        source_skill_dir=getattr(args, "source_skill_dir", None),
     )
 
 
@@ -683,6 +685,7 @@ def command_uninstall_skill(args: argparse.Namespace) -> dict[str, Any]:
     return uninstall_skill(
         target=args.target,
         agent_skill_dir=getattr(args, "agent_skill_dir", None),
+        source_skill_dir=getattr(args, "source_skill_dir", None),
     )
 
 
@@ -1205,17 +1208,20 @@ def build_parser() -> argparse.ArgumentParser:
     p_install = sub.add_parser("install-skill", help="Install Deck Master skill into an Agent skill directory")
     p_install.add_argument("--target", required=True, choices=["codex", "claude-code", "hermes", "custom"])
     p_install.add_argument("--agent-skill-dir", default=None, help="Agent skill directory (required for custom target)")
+    p_install.add_argument("--source-skill-dir", default=None, help="Deck Master skill source directory (defaults to ~/.deck-master/current/skills/deck-master)")
     p_install.add_argument("--force", action="store_true", help="Replace existing symlink")
     p_install.set_defaults(func=command_install_skill)
 
     p_validate_skill = sub.add_parser("validate-skill", help="Validate Deck Master skill symlink")
     p_validate_skill.add_argument("--target", required=True, choices=["codex", "claude-code", "hermes", "custom"])
     p_validate_skill.add_argument("--agent-skill-dir", default=None)
+    p_validate_skill.add_argument("--source-skill-dir", default=None)
     p_validate_skill.set_defaults(func=command_validate_skill)
 
     p_uninstall = sub.add_parser("uninstall-skill", help="Remove Deck Master skill symlink")
     p_uninstall.add_argument("--target", required=True, choices=["codex", "claude-code", "hermes", "custom"])
     p_uninstall.add_argument("--agent-skill-dir", default=None)
+    p_uninstall.add_argument("--source-skill-dir", default=None)
     p_uninstall.set_defaults(func=command_uninstall_skill)
 
     # ---- context pack ----

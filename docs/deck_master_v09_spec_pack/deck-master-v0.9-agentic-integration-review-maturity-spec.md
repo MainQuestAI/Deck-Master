@@ -230,7 +230,7 @@ Deck Master v0.9 要达成以下状态：
 
 让 Deck Master 的能力能够被 Codex / Claude Code / Hermes 等外部 Agent 发现、读取和调用。
 
-Skill 放在本仓库，安装时通过软链接挂到目标 Agent 的 skill 目录。此模式方便统一升级和本地管理，避免每个 Agent 维护一份复制内容。
+Skill 源码随仓库维护，真实用户安装后进入 Deck Master 顶层安装目录。目标 Agent 的 skill 目录只放入口软链接，软链接指向 `~/.deck-master/current/skills/deck-master`，避免把开发仓库暴露给用户运行环境。
 
 ## A.2 目录结构
 
@@ -240,8 +240,10 @@ Skill 放在本仓库，安装时通过软链接挂到目标 Agent 的 skill 目
 skills/
   deck-master/
     SKILL.md
-    AGENTS.md
-    README.md
+    agents/
+      openai.yaml
+    references/
+      agent-instructions.md
     playbooks/
       codex-run-solution-deck.md
       codex-review-and-repair.md
@@ -271,19 +273,22 @@ skills/
 ```bash
 python3 scripts/deck_master.py install-skill \
   --target codex \
-  --agent-skill-dir ~/.codex/skills
+  --agent-skill-dir ~/.codex/skills \
+  --source-skill-dir ~/.deck-master/current/skills/deck-master
 ```
 
 ```bash
 python3 scripts/deck_master.py validate-skill \
   --target codex \
-  --agent-skill-dir ~/.codex/skills
+  --agent-skill-dir ~/.codex/skills \
+  --source-skill-dir ~/.deck-master/current/skills/deck-master
 ```
 
 ```bash
 python3 scripts/deck_master.py uninstall-skill \
   --target codex \
-  --agent-skill-dir ~/.codex/skills
+  --agent-skill-dir ~/.codex/skills \
+  --source-skill-dir ~/.deck-master/current/skills/deck-master
 ```
 
 推荐支持 target：
@@ -295,7 +300,7 @@ hermes
 custom
 ```
 
-默认不强写死真实目录，CLI 参数必须支持显式传入。
+默认源为 `~/.deck-master/current/skills/deck-master`；如该目录不存在，开发仓库内命令可回退到仓库 `skills/deck-master`。CLI 必须支持 `--source-skill-dir`，用于 Setup、测试和受控调试。
 
 可选配置文件：
 
@@ -316,22 +321,29 @@ custom
 ## A.4 行为规则
 
 - 默认使用 symlink，不复制文件。
+- Deck Master 顶层安装目录是 `~/.deck-master`。
+- release 包进入 `~/.deck-master/releases/<version>`。
+- `~/.deck-master/current` 指向当前启用 release。
+- Agent 目录下的 `deck-master` 入口指向 `~/.deck-master/current/skills/deck-master`。
 - 目标目录不存在时创建。
-- 已存在同名 symlink 且指向当前 repo 时视为 installed。
+- 已存在同名 symlink 且指向当前安装源时视为 installed。
 - 已存在同名真实目录时拒绝覆盖，除非 `--force`。
 - `--force` 只允许替换 symlink，不默认删除真实目录。
+- 安装前必须校验 `SKILL.md` frontmatter 至少包含 `name: deck-master` 和 `description`。
 - 所有 install / uninstall / validate 操作写 typed event 到 workspace 或全局 install log。
 - 不依赖特定 Agent 的私有 API。
 
 ## A.5 验收标准
 
-- `skills/deck-master/SKILL.md` 存在。
+- `skills/deck-master/SKILL.md` 存在，且具备 Codex 可发现的 YAML frontmatter。
 - `install-skill --target codex --agent-skill-dir <tmp>` 创建软链接。
+- 默认安装源优先使用 `~/.deck-master/current/skills/deck-master`。
 - 重复安装幂等。
 - `validate-skill` 能检测 symlink 是否有效。
+- `validate-skill` 能检测 skill package 格式错误。
 - target 不支持时报错清晰。
 - `uninstall-skill` 只删除由 Deck Master 创建的 symlink。
-- 测试覆盖 symlink、force、invalid target、existing real dir。
+- 测试覆盖 symlink、force、invalid target、existing real dir、installed source precedence、invalid skill package。
 
 ---
 

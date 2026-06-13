@@ -1,7 +1,7 @@
 """Deck Master skill installer.
 
 Manages symlinks from external Agent skill directories to the
-``skills/deck-master/`` tree in this repository.
+installed Deck Master skill package under ``~/.deck-master/current``.
 """
 
 from __future__ import annotations
@@ -23,6 +23,7 @@ DEFAULT_AGENT_SKILL_DIRS = {
 
 INSTALL_LOG_DIR = Path.home() / ".deck-master"
 INSTALL_LOG_NAME = "install_log.jsonl"
+INSTALLED_SKILL_DIR = INSTALL_LOG_DIR / "current" / "skills" / SKILL_NAME
 
 
 class SkillInstallError(Exception):
@@ -36,6 +37,14 @@ def _utc_now() -> str:
 def _repo_skill_dir() -> Path:
     """Return the absolute path to ``skills/deck-master/`` in this repo."""
     return Path(__file__).resolve().parents[2] / "skills" / SKILL_NAME
+
+
+def _resolve_source_dir(source_skill_dir: str | None = None) -> Path:
+    if source_skill_dir:
+        return Path(source_skill_dir).expanduser()
+    if INSTALLED_SKILL_DIR.exists():
+        return INSTALLED_SKILL_DIR
+    return _repo_skill_dir()
 
 
 def _resolve_target_dir(target: str, agent_skill_dir: str | None) -> Path:
@@ -66,13 +75,40 @@ def _append_install_log(action: str, **fields: Any) -> None:
         fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
 
+def _skill_package_error(source: Path) -> str | None:
+    skill_md = source / "SKILL.md"
+    if not source.exists():
+        return (
+            f"Deck Master skill source not found: {source}. "
+            "Run setup first or pass --source-skill-dir explicitly."
+        )
+    if not source.is_dir():
+        return f"Deck Master skill source is not a directory: {source}."
+    if not skill_md.exists():
+        return f"SKILL.md not found in {source}."
+
+    text = skill_md.read_text(encoding="utf-8")
+    if not text.startswith("---\n"):
+        return f"SKILL.md at {skill_md} is missing YAML frontmatter."
+    parts = text.split("---", 2)
+    if len(parts) < 3:
+        return f"SKILL.md at {skill_md} has incomplete YAML frontmatter."
+    frontmatter = parts[1]
+    if "name: deck-master" not in frontmatter:
+        return f"SKILL.md at {skill_md} is missing 'name: deck-master'."
+    if "description:" not in frontmatter:
+        return f"SKILL.md at {skill_md} is missing 'description'."
+    return None
+
+
 def install_skill(
     target: str,
     agent_skill_dir: str | None = None,
     *,
     force: bool = False,
+    source_skill_dir: str | None = None,
 ) -> dict[str, Any]:
-    """Create a symlink from ``agent_skill_dir/deck-master`` to the repo skill.
+    """Create a symlink from ``agent_skill_dir/deck-master`` to the installed skill.
 
     Returns a result dict with ``status``, ``link_path`` and ``target_dir``.
     Raises ``SkillInstallError`` on failure.
@@ -83,12 +119,11 @@ def install_skill(
             f"Supported: {', '.join(sorted(SUPPORTED_TARGETS))}"
         )
 
-    source = _repo_skill_dir()
-    if not source.exists():
-        raise SkillInstallError(
-            f"Repo skill directory not found: {source}. "
-            "Run this from the Deck Master repository."
-        )
+    source = _resolve_source_dir(source_skill_dir)
+    canonical_source = source.resolve()
+    package_error = _skill_package_error(source)
+    if package_error:
+        raise SkillInstallError(package_error)
 
     target_dir = _resolve_target_dir(target, agent_skill_dir)
     link = _link_path(target_dir)
@@ -96,7 +131,7 @@ def install_skill(
     # Idempotent: already a symlink pointing here.
     if link.is_symlink():
         existing_target = link.resolve()
-        if existing_target == source:
+        if existing_target == canonical_source:
             _append_install_log(
                 "install_skill",
                 target=target,
@@ -154,8 +189,9 @@ def install_skill(
 def validate_skill(
     target: str,
     agent_skill_dir: str | None = None,
+    source_skill_dir: str | None = None,
 ) -> dict[str, Any]:
-    """Check whether the skill symlink is valid and points to the repo skill.
+    """Check whether the skill symlink is valid and points to the installed skill.
 
     Returns a result dict with ``valid``, ``link_path`` and diagnostic details.
     """
@@ -170,7 +206,8 @@ def validate_skill(
 
     target_dir = _resolve_target_dir(target, agent_skill_dir)
     link = _link_path(target_dir)
-    source = _repo_skill_dir()
+    source = _resolve_source_dir(source_skill_dir)
+    canonical_source = source.resolve() if source.exists() else source
 
     if not link.exists() and not link.is_symlink():
         return {
@@ -195,15 +232,15 @@ def validate_skill(
             "error": f"Broken symlink: {exc}",
         }
 
-    skill_md = resolved / "SKILL.md"
-    skill_md_exists = skill_md.exists()
+    package_error = _skill_package_error(resolved)
+    skill_md_exists = (resolved / "SKILL.md").exists()
 
-    valid = resolved == source and skill_md_exists
+    valid = resolved == canonical_source and package_error is None
     error = None
-    if resolved != source:
+    if resolved != canonical_source:
         error = f"Symlink points to {resolved}, expected {source}."
-    elif not skill_md_exists:
-        error = f"SKILL.md not found in {resolved}."
+    elif package_error:
+        error = package_error
 
     result: dict[str, Any] = {
         "valid": valid,
@@ -228,10 +265,11 @@ def validate_skill(
 def uninstall_skill(
     target: str,
     agent_skill_dir: str | None = None,
+    source_skill_dir: str | None = None,
 ) -> dict[str, Any]:
     """Remove the symlink created by Deck Master.
 
-    Only removes symlinks pointing to the repo skill directory.
+    Only removes symlinks pointing to the expected Deck Master skill directory.
     Raises ``SkillInstallError`` if the path is not a Deck Master symlink.
     """
     if target not in SUPPORTED_TARGETS:
@@ -242,7 +280,8 @@ def uninstall_skill(
 
     target_dir = _resolve_target_dir(target, agent_skill_dir)
     link = _link_path(target_dir)
-    source = _repo_skill_dir()
+    source = _resolve_source_dir(source_skill_dir)
+    canonical_source = source.resolve() if source.exists() else source
 
     if not link.exists() and not link.is_symlink():
         _append_install_log(
@@ -268,7 +307,7 @@ def uninstall_skill(
     except OSError:
         resolved = None
 
-    if resolved != source:
+    if resolved != canonical_source:
         raise SkillInstallError(
             f"Symlink at {link} points to {resolved}, not the Deck Master "
             f"skill ({source}). Refusing to remove a symlink we did not create."
