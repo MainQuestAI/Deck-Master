@@ -42,3 +42,18 @@ add --path <dir>` (no `--url`): URL-managed sources can auto-reclone, and the
 sync code walk for them requires an explicit `--allow-reclone` opt-in.
 
 <!-- gstack-gbrain-search-guidance:end -->
+
+## Deploy Configuration (configured by /setup-deploy)
+- Platform: local Mac launchd
+- Production URL: http://127.0.0.1:5050
+- Deploy workflow: manual local setup after push/tag
+- Deploy status command: launchctl print gui/$(id -u)/com.mainquest.deck-master.preview
+- Merge method: fast-forward main, then tag release
+- Project type: local CLI + localhost Review Cockpit
+- Post-deploy health check: http://127.0.0.1:5050/api/runs
+
+### Custom deploy hooks
+- Pre-merge: python3 -m unittest discover -s tests
+- Deploy trigger: install Deck Master skill, then bootstrap local launchd service
+- Deploy status: launchctl print gui/$(id -u)/com.mainquest.deck-master.preview
+- Health check: curl -sf http://127.0.0.1:5050/api/runs
