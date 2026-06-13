@@ -171,9 +171,25 @@ class SkillInstallationTest(unittest.TestCase):
         skill_md = _REPO_ROOT / "skills" / SKILL_NAME / "SKILL.md"
         self.assertTrue(skill_md.exists(), f"SKILL.md not found at {skill_md}")
 
-    def test_agents_md_exists_in_repo(self) -> None:
-        agents_md = _REPO_ROOT / "skills" / SKILL_NAME / "AGENTS.md"
-        self.assertTrue(agents_md.exists(), f"AGENTS.md not found at {agents_md}")
+    def test_skill_frontmatter_exists(self) -> None:
+        skill_md = _REPO_ROOT / "skills" / SKILL_NAME / "SKILL.md"
+        text = skill_md.read_text(encoding="utf-8")
+        self.assertTrue(text.startswith("---\n"), "SKILL.md missing YAML frontmatter")
+        frontmatter = text.split("---", 2)[1]
+        self.assertIn("name: deck-master", frontmatter)
+        self.assertIn("description:", frontmatter)
+
+    def test_agent_instructions_reference_exists_in_repo(self) -> None:
+        instructions = _REPO_ROOT / "skills" / SKILL_NAME / "references" / "agent-instructions.md"
+        self.assertTrue(instructions.exists(), f"Agent instructions not found at {instructions}")
+
+    def test_no_readme_in_skill_package(self) -> None:
+        readme = _REPO_ROOT / "skills" / SKILL_NAME / "README.md"
+        self.assertFalse(readme.exists(), "README.md should not be bundled inside the skill package")
+
+    def test_openai_metadata_exists(self) -> None:
+        metadata = _REPO_ROOT / "skills" / SKILL_NAME / "agents" / "openai.yaml"
+        self.assertTrue(metadata.exists(), f"openai.yaml not found at {metadata}")
 
     # ------------------------------------------------------------------ #
     # Playbooks exist

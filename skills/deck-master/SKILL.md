@@ -1,90 +1,97 @@
-# Deck Master — Agent Skill
+---
+name: deck-master
+description: Professional Solution Deck Run OS for turning customer context, briefs, historical deck assets, sourcing decisions, quality gates, external agent handoffs, review cockpit state, benchmark runs, and delivery feedback into auditable solution deck workflows. Use when Codex needs to create or resume a Deck Master run, generate a preview from a brief, inspect next steps, run deck quality gates, import narrative advice or external reviews, manage PPT Library or PPT Deck Pro Max handoffs, export approved page queues, validate benchmark cases, or operate the local Deck Master CLI and Review Cockpit.
+---
 
-## Identity
+# Deck Master
 
-- **Name:** Deck Master
-- **Version:** 0.9
-- **Repo:** `MainQuestAI/Deck-Master`
-- **Entry:** `scripts/deck_master.py`
+Use Deck Master as the runtime and review layer for professional solution decks.
+It owns run state, artifacts, typed events, sourcing decisions, quality gates,
+external tool handoffs, benchmark reports, and the localhost Review Cockpit.
 
-## What Deck Master Does
+## Entry Points
 
-Deck Master is a **professional Solution Deck Run OS**. It manages the state,
-artifacts, events, quality gates and review workflow for building client-facing
-solution decks.
+Prefer the installed CLI:
 
-Deck Master does **not** perform LLM reasoning, document parsing, or PPT
-generation itself. It defines the contracts, runtimes and review surfaces that
-external Agents (Codex, Claude Code, Hermes) and companion tools (PPT Library,
-PPT Deck Pro Max, PPT Master) plug into.
+```bash
+~/.deck-master/bin/deck-master <command> [options]
+```
 
-## When to Use This Skill
-
-Use this skill when:
-
-- Creating or resuming a Deck run from customer context.
-- Planning narrative structure, sourcing decisions or page tasks.
-- Running quality gates (draft, evidence, brand, confidentiality, render, delivery).
-- Reviewing deck readiness, claim coverage and next actions.
-- Importing Context Packs, Narrative Advice, External Quality Reviews or Generation Results.
-- Exporting an approved page queue.
-- Managing workspace learning and skill installation.
-
-## CLI Entry Point
+When working inside the development repo, this is also valid:
 
 ```bash
 python3 scripts/deck_master.py <command> [options]
 ```
 
-Run `python3 scripts/deck_master.py --help` to list all commands.
+The local Review Cockpit normally runs at:
 
-## Key Commands
+```text
+http://127.0.0.1:5050
+```
+
+## First Checks
+
+Run these before operating on a real deck workflow:
+
+```bash
+~/.deck-master/bin/deck-master --help
+~/.deck-master/bin/deck-master validate-skill --target codex
+curl -sf http://127.0.0.1:5050/api/runs
+```
+
+## Core Workflow
+
+For a brief-to-preview run:
+
+```bash
+~/.deck-master/bin/deck-master autoplan \
+  --brief-file <brief.txt> \
+  --industry <industry> \
+  --library-mode auto \
+  --runs-dir ~/.deck-master/runs \
+  --run-id <run_id> \
+  --force
+```
+
+Then open the Review Cockpit and inspect readiness, page decisions, evidence
+coverage, external results, quality findings, and export queue.
+
+## Common Commands
 
 | Command | Purpose |
 |---|---|
-| `start-conversation` | Create a guided conversation run from local context |
-| `build-brief` | Compile deck brief from context and conversation |
-| `build-claim-map` | Build claim map from brief |
-| `autoplan` | Run full brief-to-preview pipeline |
-| `search-library` | Run PPT Library candidate selection |
-| `decide-sourcing` | Create sourcing plan from library results |
-| `create-generation-tasks` | Create Deck Pro Max generation task packages |
-| `build-preview` | Build preview manifest from sourcing decisions |
-| `quality-gate <gate>` | Run a quality gate |
+| `start-conversation` | Create a guided run from local context |
+| `build-brief` | Compile a deck brief |
+| `build-claim-map` | Build claim coverage input |
+| `autoplan` | Run brief-to-preview pipeline |
+| `search-library` | Run PPT Library selection |
+| `decide-sourcing` | Decide reuse/adapt/generate per page |
+| `create-generation-tasks` | Create PPT Deck Pro Max task packages |
+| `build-preview` | Build preview manifest |
+| `quality-gate` | Run deck quality gates |
+| `next-step` | Resolve the next recommended action |
 | `export` | Export approved page queue |
-| `next-step` | Resolve the recommended next action for a run |
-| `import-context-pack` | Import an Agent-generated context pack |
-| `prepare-narrative-advice` | Generate a narrative advice task for an Agent |
-| `import-narrative-advice` | Import Agent narrative advice result |
-| `apply-narrative-advice` | Apply narrative advice to run artifacts |
-| `prepare-quality-review` | Generate an external quality review task |
-| `import-quality-review` | Import external quality review result |
-| `prepare-generation-handoff` | Generate handoff package for build tools |
-| `import-generation-result` | Import generation result from build tools |
-| `build-learning-pack` | Aggregate workspace learning for next Agent run |
-| `install-skill` | Install Deck Master skill into Agent skill directory |
-| `validate-skill` | Validate skill symlink |
-| `uninstall-skill` | Remove skill symlink |
+| `benchmark-run` | Run a local benchmark case |
+| `benchmark-report` | Rebuild benchmark report for a run |
 
-## Playbooks
+## References
 
-| Playbook | When |
-|---|---|
-| `playbooks/codex-run-solution-deck.md` | End-to-end Solution Deck run |
-| `playbooks/codex-review-and-repair.md` | Quality repair loop |
-| `playbooks/ppt-library-handoff.md` | PPT Library selection handoff |
-| `playbooks/ppt-deck-pro-max-handoff.md` | Page generation handoff |
-| `playbooks/external-quality-review.md` | External quality review task |
-| `playbooks/workspace-learning.md` | Workspace learning pack |
+Read only the relevant file when needed:
 
-## Schemas
+- `references/agent-instructions.md` for detailed agent workflow rules.
+- `playbooks/codex-run-solution-deck.md` for end-to-end production runs.
+- `playbooks/codex-review-and-repair.md` for review and repair loops.
+- `playbooks/ppt-library-handoff.md` for PPT Library handoffs.
+- `playbooks/ppt-deck-pro-max-handoff.md` for generation handoffs.
+- `playbooks/external-quality-review.md` for external review tasks.
+- `playbooks/workspace-learning.md` for workspace learning packs.
+- `schemas/*.json` for artifact contracts.
+- `prompts/*.prompt.md` for task prompts prepared for external agents.
 
-All schemas are in `schemas/`. Every artifact carries a `schema_version` field.
+## Rules
 
-## Constraints
-
-- Deck Master never calls an LLM API directly.
-- Deck Master never stores API keys.
-- All external reasoning is done by the calling Agent.
-- Bad JSON input never overwrites existing artifacts.
-- All import/apply operations write typed events.
+- Keep Deck Master provider-free; do not add LLM API calls or secrets.
+- Use Deck Master CLI commands to mutate run state.
+- Do not write directly to `events.jsonl`.
+- Use `--run-id` or `--run-dir` to scope every operation.
+- Run `next-step` when the correct next action is unclear.
