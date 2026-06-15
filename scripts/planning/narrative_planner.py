@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from planning.page_budget import beat_templates, density_for, resolve_page_count
@@ -42,6 +43,66 @@ def identify_gaps(request: dict[str, Any]) -> list[dict[str, str]]:
     if "案例" not in str(request.get("brief", "")) and "case" not in str(request.get("brief", "")).lower():
         gaps.append({"field": "case_evidence", "message": "缺少可引用案例，案例页需要人工确认或生成占位。"})
     return gaps
+
+
+def _is_restricted_sample(request: dict[str, Any]) -> bool:
+    text = " ".join(
+        [
+            str(request.get("project_name") or ""),
+            str(request.get("industry") or ""),
+            str(request.get("business_goal") or ""),
+            str(request.get("brief") or ""),
+        ]
+    )
+    lowered = text.lower()
+    if any(token in lowered for token in ["云南白药", "医药", "内容底座", "内容中台"]):
+        return True
+    return any(re.search(rf"(?<![a-z0-9]){token}(?![a-z0-9])", lowered) for token in ["dam", "cms", "ai"])
+
+
+def _planner_input_sources(planner_mode: str, workspace_archetypes: dict[str, Any] | None = None) -> list[str]:
+    if planner_mode == "fixture_template":
+        return ["fixture_template"]
+    if planner_mode == "workspace_fallback":
+        sources = ["workspace_fallback"]
+        if workspace_archetypes:
+            sources.append("workspace_archetypes")
+        return sources
+    sources = ["deck_brief", "claim_map", "workspace_archetypes"]
+    return sources
+
+
+def _planner_fallback_reason(
+    planner_mode: str,
+    request: dict[str, Any],
+    workspace_archetypes: dict[str, Any] | None,
+    judgments: dict[str, Any] | None,
+) -> str:
+    if planner_mode == "workspace_fallback":
+        if not request.get("industry"):
+            return "industry fallback applied"
+        return "workspace fallback used"
+    if planner_mode == "fixture_template":
+        return ""
+    if workspace_archetypes and not judgments:
+        return "workspace_fallback_without_claims"
+    return ""
+
+
+def _template_filter(
+    planner_mode: str,
+    request: dict[str, Any],
+    templates: list[tuple[str, str, str]],
+) -> list[tuple[str, str, str]]:
+    if planner_mode != "production_narrative":
+        return templates
+    if not _is_restricted_sample(request):
+        return templates
+    return [
+        template
+        for template in templates
+        if "库存可视化" not in template[1] and "最后一公里配送" not in template[1]
+    ]
 
 
 def topic_hint(request: dict[str, Any], fallback: str) -> str:
@@ -137,12 +198,17 @@ def plan_narrative(
     judgments: dict[str, Any] | None = None,
     claim_graph: dict[str, Any] | None = None,
     workspace_archetypes: dict[str, Any] | None = None,
+    planner_mode: str = "production_narrative",
 ) -> dict[str, Any]:
     page_count = resolve_page_count(str(request.get("target_pages") or "auto"), str(request.get("audience") or "client"))
-    density = density_for(page_count)
     gaps = identify_gaps(request)
-    beats = []
-    for index, (role, title, goal) in enumerate(beat_templates(page_count), start=1):
+    templates = _template_filter(planner_mode, request, beat_templates(page_count))
+    adjusted_page_count = len(templates)
+    density = density_for(adjusted_page_count)
+    beats: list[dict[str, Any]] = []
+    fallback_reason = _planner_fallback_reason(planner_mode, request, workspace_archetypes, judgments)
+    input_sources = _planner_input_sources(planner_mode, workspace_archetypes)
+    for index, (role, title, goal) in enumerate(templates, start=1):
         beat_id = f"beat_{index:02d}_{role}"
         evidence_need = "历史方案页或通用方法论"
         if role == "case":
@@ -224,10 +290,13 @@ def plan_narrative(
     return {
         "run_id": request.get("run_id", ""),
         "title": request.get("project_name", "Deck Master Run"),
-        "target_pages": page_count,
+        "target_pages": adjusted_page_count,
         "density": density,
         "industry": request.get("industry", ""),
         "audience": request.get("audience", "client"),
+        "planner_mode": planner_mode,
+        "input_sources": input_sources,
+        "fallback_reason": fallback_reason,
         "roles": [beat["role"] for beat in beats],
         "gaps": gaps,
         "beats": beats,
