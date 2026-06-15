@@ -399,7 +399,18 @@ def write_benchmark_report(
     out_dir.mkdir(parents=True, exist_ok=True)
     write_json(json_path, report)
     markdown_path.write_text(render_benchmark_markdown(report), encoding="utf-8")
-    run_root = Path(run_dir).expanduser().resolve()
+    _link_aux_reports(Path(run_dir).expanduser().resolve(), report, out_dir)
+    return {
+        "status": report["status"],
+        "case_id": report["case_id"],
+        "run_id": report["run_id"],
+        "report": str(json_path),
+        "markdown": str(markdown_path),
+        "result_dir": str(out_dir),
+    }
+
+
+def _link_aux_reports(run_root: Path, report: dict[str, Any], out_dir: Path) -> None:
     for name in ("run_metrics.json",):
         src = run_root / name
         if src.exists():
@@ -410,6 +421,26 @@ def write_benchmark_report(
         out_dir / "artifact_index.json",
         {"schema_version": "deck_benchmark_artifact_index.v1", "artifact_index": report.get("artifact_index", {})},
     )
+
+
+def write_benchmark_rc_report(
+    case: BenchmarkCase,
+    run_dir: str | Path,
+    *,
+    benchmark_dir: str | Path | None = None,
+    force: bool = False,
+    pending_external_steps: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    report = build_benchmark_report(case, run_dir, pending_external_steps=pending_external_steps)
+    out_dir = result_dir_for(case, run_dir, benchmark_dir)
+    json_path = out_dir / "benchmark_rc_report.json"
+    markdown_path = out_dir / "benchmark_rc_report.md"
+    if not force and (json_path.exists() or markdown_path.exists()):
+        raise BenchmarkReportError(f"Benchmark RC report already exists: {out_dir}. Use --force to overwrite.")
+    out_dir.mkdir(parents=True, exist_ok=True)
+    write_json(json_path, report)
+    markdown_path.write_text(render_benchmark_markdown(report), encoding="utf-8")
+    _link_aux_reports(Path(run_dir).expanduser().resolve(), report, out_dir)
     return {
         "status": report["status"],
         "case_id": report["case_id"],

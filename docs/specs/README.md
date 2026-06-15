@@ -20,6 +20,17 @@
 6. `deck-master-v0.9.11-orchestration-runtime-realignment-spec.md`
    - 目标：重对齐 Deck Master 主控运行时，统一 run mode、setup/workspace/run state、workspace-bound request、Planner guard、sourcing 回写、tool registry、production session 和 benchmark gate。
 
+`v0.9.11` 本轮补齐点：
+
+- 真实生产链路先走 `setup-status / setup / bind-workspace / run-state`，再进入 `start-conversation` 等编排命令。
+- benchmark 报表分成常规 `benchmark-report` 与 RC 用 `benchmark-rc-report`。
+- fixture benchmark 案例在创建时走 `run_mode=fixture`，不会被纳入 v1.0 RC 判断。
+- 文档优先说明 Deck Master 为顶层运行时，外部工具产物统一回写。
+
+发布说明：
+
+- `docs/2026-06-16-v0.9.11-wave2-release-note.md`
+
 推荐落库路径：
 
 ```text
