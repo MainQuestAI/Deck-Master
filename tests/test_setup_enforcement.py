@@ -117,9 +117,48 @@ class SetupEnforcementTests(unittest.TestCase):
             "fixture",
         )
         payload = json.loads(planned.stdout)
+        request = json.loads((workspace / "runs" / "workspace-run" / "request.json").read_text(encoding="utf-8"))
 
         self.assertEqual(str((workspace / "runs" / "workspace-run").resolve()), payload["run_dir"])
         self.assertTrue((workspace / "runs" / "workspace-run" / "request.json").exists())
+        self.assertEqual(str(workspace.resolve()), request["workspace"])
+        self.assertEqual("workspace_workspace", request["workspace_id"])
+        self.assertEqual("workspace_manifest.json", request["workspace_manifest_ref"])
+        self.assertEqual("setup", request["workspace_resolved_from"])
+
+    def test_existing_run_blocks_conflicting_cli_workspace(self) -> None:
+        run_dir = self.temp_dir / "runs" / "conflict-run"
+        run_dir.mkdir(parents=True)
+        request_workspace = self.temp_dir / "request_workspace"
+        cli_workspace = self.temp_dir / "cli_workspace"
+        request_workspace.mkdir()
+        cli_workspace.mkdir()
+        (run_dir / "request.json").write_text(
+            json.dumps(
+                {
+                    "run_id": "conflict-run",
+                    "project_name": "Conflict Run",
+                    "run_mode": "fixture",
+                    "workspace": str(request_workspace.resolve()),
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+
+        completed = self.run_cli(
+            "autoplan",
+            "--run-dir",
+            str(run_dir),
+            "--workspace",
+            str(cli_workspace),
+            "--run-mode",
+            "fixture",
+            check=False,
+        )
+
+        self.assertEqual(2, completed.returncode)
+        self.assertIn("workspace", completed.stderr)
 
 
 if __name__ == "__main__":

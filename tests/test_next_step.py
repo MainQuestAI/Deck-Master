@@ -133,14 +133,14 @@ class NextStepResolverTest(unittest.TestCase):
         self._write_json(PAGE_TASKS_NAME, {"tasks": []})
         self._write_json(SOURCING_PLAN_NAME, {"sources": []})
 
-    def test_preview_with_approved_pages_returns_ready_to_export(self) -> None:
+    def test_preview_with_approved_and_pending_pages_returns_needs_page_review(self) -> None:
         self._write_full_pipeline()
         self._write_json(PREVIEW_MANIFEST_NAME, {"pages": [{"decision": "approved"}, {"decision": "pending"}]})
         self._write_gate()
         result = self._resolve()
-        self._assert_shape(result, "ready_to_export")
+        self._assert_shape(result, "needs_page_review")
         self.assertEqual(result.get("approved_pages"), 1)
-        self.assertIn("export", result["next_command"])
+        self.assertIn("run-state", result["next_command"])
 
     def test_preview_without_approved_and_draft_gate_returns_needs_page_review(self) -> None:
         self._write_full_pipeline()
@@ -148,14 +148,14 @@ class NextStepResolverTest(unittest.TestCase):
         self._write_gate()
         result = self._resolve()
         self._assert_shape(result, "needs_page_review")
-        self.assertIn("import-quality-review", result["next_command"])
+        self.assertIn("run-state", result["next_command"])
 
     def test_preview_without_approved_and_missing_draft_gate_returns_needs_draft_gate(self) -> None:
         self._write_full_pipeline()
         self._write_json(PREVIEW_MANIFEST_NAME, {"pages": [{"decision": "pending"}]})
         result = self._resolve()
         self._assert_shape(result, "needs_page_review")
-        self.assertIn("import-quality-review", result["next_command"])
+        self.assertIn("run-state", result["next_command"])
 
     def test_approved_page_without_draft_gate_returns_needs_draft_gate(self) -> None:
         self._write_full_pipeline()

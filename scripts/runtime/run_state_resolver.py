@@ -82,36 +82,78 @@ def _draft_gate_blocks(gate: dict[str, Any] | None) -> tuple[bool, str]:
     return True, f"draft gate status is {status}"
 
 
-def _review_status_from_manifest(preview_manifest: dict[str, Any], page_tasks: dict[str, Any]) -> str:
-    manifest_status = str(preview_manifest.get("review_status") or "").strip()
-    if manifest_status:
-        return manifest_status
+def _normalize_review_status(value: Any) -> str:
+    status = str(value or "").strip().lower()
+    if status in {"approved", "keep"}:
+        return "approved"
+    if status in {"rejected", "reject", "replace"}:
+        return "rejected"
+    if status in {"needs_review", "needs_evidence", "missing", "pending", "manual_placeholder"}:
+        return "pending"
+    if not status:
+        return "pending"
+    return "pending"
 
+
+def _review_summary_from_manifest(preview_manifest: dict[str, Any], page_tasks: dict[str, Any]) -> dict[str, Any]:
     pages = preview_manifest.get("pages")
-    if isinstance(pages, list):
-        for page in pages:
-            if not isinstance(page, dict):
-                continue
-            status = str(page.get("review_status") or "").strip()
-            if status:
-                return status
-            status = str(page.get("decision") or "").strip()
-            if status:
-                return status
+    page_list = pages if isinstance(pages, list) else []
+    summary = {
+        "status": "",
+        "total_pages": len(page_list),
+        "approved_count": 0,
+        "rejected_count": 0,
+        "pending_count": 0,
+        "raw_statuses": [],
+    }
 
-    if isinstance(page_tasks, dict):
-        status = str(page_tasks.get("review_status") or "").strip()
-        if status:
-            return status
+    manifest_status = str(preview_manifest.get("review_status") or "").strip().lower()
+    if manifest_status in {"needs_review", "needs_evidence", "pending", "missing"}:
+        summary["status"] = "needs_review"
+        summary["pending_count"] = max(1, len(page_list))
+        summary["raw_statuses"].append(manifest_status)
+        return summary
+    if manifest_status == "approved" and not page_list:
+        summary["status"] = "review_complete"
+        summary["approved_count"] = 1
+        summary["raw_statuses"].append(manifest_status)
+        return summary
 
-    for page in pages if isinstance(pages, list) else []:
+    for page in page_list:
         if not isinstance(page, dict):
             continue
-        status = str(page.get("decision") or "").strip()
-        if status in {"approved", "needs_review", "replace", "keep", "pending"}:
-            return status
+        raw_status = page.get("review_status")
+        if raw_status in (None, ""):
+            raw_status = page.get("decision")
+        normalized = _normalize_review_status(raw_status)
+        summary["raw_statuses"].append(str(raw_status or ""))
+        if normalized == "approved":
+            summary["approved_count"] += 1
+        elif normalized == "rejected":
+            summary["rejected_count"] += 1
+        else:
+            summary["pending_count"] += 1
 
-    return ""
+    if summary["pending_count"]:
+        summary["status"] = "needs_review"
+    elif summary["approved_count"]:
+        summary["status"] = "review_complete"
+    elif page_list:
+        summary["status"] = "needs_review"
+    else:
+        task_status = str(page_tasks.get("review_status") or "").strip().lower() if isinstance(page_tasks, dict) else ""
+        if task_status in {"approved", "review_complete"}:
+            summary["status"] = "review_complete"
+            summary["approved_count"] = 1
+        elif task_status:
+            summary["status"] = "needs_review"
+            summary["pending_count"] = 1
+
+    return summary
+
+
+def _review_status_from_manifest(preview_manifest: dict[str, Any], page_tasks: dict[str, Any]) -> str:
+    return str(_review_summary_from_manifest(preview_manifest, page_tasks).get("status") or "")
 
 
 def _run_readiness_summary(
@@ -162,6 +204,10 @@ def _run_readiness_summary(
             "draft_gate_blocking": generation_blocked,
             "draft_gate_blocking_reason": generation_block_reason,
             "preview_review_status": review_status,
+            "preview_review_summary": _review_summary_from_manifest(
+                _safe_read(root / PREVIEW_MANIFEST_NAME) or {},
+                _safe_read(root / PAGE_TASKS_NAME) or {},
+            ),
             "render": {
                 "required": True,
                 "status": "present" if (root / "external_results" / RENDER_RESULT_NAME).exists() else "missing",
@@ -234,7 +280,7 @@ def _resolve_stage(root: Path, run_mode: str) -> tuple[str, list[dict[str, str]]
 
     if has_generation_session:
         gen_status, _ = _read_generation_status(root)
-        if gen_status in {"running", "dispatched"}:
+        if gen_status in {"created", "running", "dispatched"}:
             return (
                 "generation_running",
                 [{"action": "run_generation", "reason": f"generation session status={gen_status}"}],
@@ -246,10 +292,22 @@ def _resolve_stage(root: Path, run_mode: str) -> tuple[str, list[dict[str, str]]
                 [{"action": "run_generation", "reason": f"generation session status={gen_status}"}],
                 f"generation session status={gen_status}",
             )
-        if gen_status and gen_status not in {"completed", "results_imported", "preview_refreshed"}:
+        if gen_status in {"completed", "partial"}:
             return (
                 "needs_generation_import",
-                [{"action": "run_generation", "reason": "generation session requires import or refresh"}],
+                [{"action": "generation_import", "reason": f"generation session status={gen_status}"}],
+                f"generation session status={gen_status}",
+            )
+        if gen_status == "results_imported":
+            return (
+                "needs_preview_refresh",
+                [{"action": "preview_refresh", "reason": "generation results imported but preview is not refreshed"}],
+                "generation results imported but preview is not refreshed",
+            )
+        if gen_status and gen_status not in {"preview_refreshed", "quality_required"}:
+            return (
+                "needs_generation_import",
+                [{"action": "generation_import", "reason": "generation session requires import or refresh"}],
                 "generation session requires import or refresh",
             )
 
@@ -263,7 +321,7 @@ def _resolve_stage(root: Path, run_mode: str) -> tuple[str, list[dict[str, str]]
     preview = _safe_read(root / PREVIEW_MANIFEST_NAME) or {}
     page_tasks = _safe_read(root / PAGE_TASKS_NAME) or {}
     review_status = _review_status_from_manifest(preview, page_tasks)
-    if review_status and review_status != "approved":
+    if review_status and review_status != "review_complete":
         return (
             "needs_review",
             [{"action": "review", "reason": f"preview review status is {review_status}"}],
@@ -296,15 +354,19 @@ def _next_command(stage: str, root: Path, run_id: str) -> str:
     if stage in {"needs_page_tasks", "needs_sourcing"}:
         return f"deck-master decide-sourcing --run-dir {root} --run-id {run_id}"
     if stage == "needs_generation_session":
-        return f"deck-master create-generation-tasks --run-dir {root} --run-id {run_id}"
-    if stage in {"generation_running", "generation_failed", "needs_generation_import"}:
-        return f"deck-master import-generation-result --run-dir {root} --run-id {run_id}"
+        return f"deck-master generation-session create --run-dir {root} --run-id {run_id}"
+    if stage == "generation_running":
+        return f"deck-master generation-session status --run-dir {root} --run-id {run_id}"
+    if stage in {"generation_failed", "needs_generation_import"}:
+        return f"deck-master generation-session import-results --run-dir {root} --run-id {run_id} --input <result.json>"
+    if stage == "needs_preview_refresh":
+        return f"deck-master refresh-preview-from-generation --run-dir {root} --run-id {run_id}"
     if stage == "needs_preview":
         return f"deck-master build-preview --run-dir {root} --run-id {run_id}"
     if stage == "needs_draft_gate":
         return f"deck-master quality-gate draft --run-dir {root} --run-id {run_id}"
     if stage == "needs_review":
-        return f"deck-master import-quality-review --run-dir {root} --run-id {run_id}"
+        return f"deck-master run-state --run-dir {root} --run-id {run_id}"
     if stage in {"ready_for_benchmark", "ready_for_client_export"}:
         return f"deck-master export --run-dir {root} --run-id {run_id}"
     return f"deck-master orchestration-check --run-dir {root} --run-id {run_id}"
@@ -326,13 +388,14 @@ def _allowed_blocking(stage: str, reason: str, run_mode: str) -> tuple[list[str]
         "generation_running",
         "generation_failed",
         "needs_generation_import",
+        "needs_preview_refresh",
         "needs_preview",
         "needs_draft_gate",
     }:
         blocked_actions.append({"action": "client_export", "reason": reason})
 
     if stage == "needs_generation_session":
-        allowed.append("create_generation_tasks")
+        allowed.append("create_generation_session")
     if stage == "needs_review":
         allowed.append("open_review_cockpit")
         if run_mode in {"fixture", "dev"}:

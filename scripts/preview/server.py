@@ -29,6 +29,7 @@ from runtime.events import append_typed_event
 from runtime.setup_status import configured_runs_dir, setup_status
 from runtime.orchestration import orchestration_check
 from runtime.next_step import resolve_next_step
+from runtime.run_state_resolver import resolve_run_state
 
 from review.readiness import compute_claim_coverage, compute_deck_readiness, compute_next_actions
 from review.workbench import WorkbenchError, execute_review_action
@@ -329,7 +330,8 @@ class PreviewHandler(BaseHTTPRequestHandler):
                     return
                 cfg = setup.get("config") if isinstance(setup.get("config"), dict) else {}
                 runs_dir = Path(str(cfg.get("default_runs_dir") or self.runs_dir)).expanduser().resolve()
-                workspace = str(cfg.get("active_workspace") or "").strip()
+                workspace_report = setup.get("workspace") if isinstance(setup.get("workspace"), dict) else {}
+                workspace = str(workspace_report.get("workspace_dir") or cfg.get("active_workspace") or "").strip()
             else:
                 requested_runs_dir = body.get("runs_dir")
                 if requested_runs_dir:
@@ -345,6 +347,20 @@ class PreviewHandler(BaseHTTPRequestHandler):
             )
             run_dir = create_run(runs_dir, request, run_id=body.get("run_id") or None, force=bool(body.get("force")))
             request = load_request(run_dir)
+            if run_mode == "production":
+                run_state = resolve_run_state(run_dir, run_mode=run_mode)
+                self.send_json(
+                    {
+                        "run_id": request["run_id"],
+                        "run_dir": str(run_dir),
+                        "status": run_state.get("stage") or "needs_context",
+                        "run_state": run_state,
+                        "summary": self.run_summary(run_dir),
+                    },
+                    HTTPStatus.CREATED,
+                )
+                return
+
             narrative_plan = plan_narrative(request)
             write_artifact(run_dir, NARRATIVE_PLAN_NAME, narrative_plan, action="narrative.plan.created")
             library_results = run_library_selection(

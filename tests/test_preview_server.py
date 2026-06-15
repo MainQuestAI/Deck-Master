@@ -371,9 +371,12 @@ class StudioServerTests(unittest.TestCase):
         )
         self.assertEqual(HTTPStatus.CREATED, status)
         self.assertEqual("ready-run", created["run_id"])
+        self.assertEqual("needs_context", created["status"])
         run_request = json.loads((Path(created["run_dir"]) / "request.json").read_text(encoding="utf-8"))
         self.assertEqual("production", run_request["run_mode"])
         self.assertEqual(str(workspace.resolve()), run_request["workspace"])
+        self.assertFalse((Path(created["run_dir"]) / "preview_manifest.json").exists())
+        self.assertFalse((Path(created["run_dir"]) / "narrative_plan.json").exists())
 
     def test_classic_demo_sets_fixture_mode(self) -> None:
         status, created = self.handler.request(

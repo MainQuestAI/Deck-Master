@@ -94,7 +94,7 @@ def resolve_workspace_for_run(
                 resolved["blocked"] = True
                 resolved["conflicts"].append("workspace")
                 resolved["reasons"].append(f"workspace not ready: {workspace_root}")
-    elif resolved["workspace_required"]:
+    elif resolved["workspace_required"] and not resolved["allow_dev_bypass"]:
         resolved["blocked"] = True
         resolved["conflicts"].append("workspace")
         resolved["reasons"].append("production or benchmark run requires workspace")

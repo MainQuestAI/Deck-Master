@@ -111,7 +111,7 @@ from runtime.sourcing_import import import_sourcing, validate_sourcing
 from runtime.workspace_binding import bind_workspace
 from runtime.workspace_resolver import resolve_workspace_for_run
 from tools.ppt_library_client import PPTLibraryClientError, run_library_selection
-from workspace.foundation import WorkspaceError, init_workspace, register_workspace, validate_workspace
+from workspace.foundation import MANIFEST_NAME, WorkspaceError, init_workspace, register_workspace, validate_workspace
 from runtime.setup_status import SetupError, configured_runs_dir, require_setup_ready, run_setup, setup_status
 
 
@@ -225,6 +225,45 @@ def _normalize_planner_mode(value: str | None, run_mode: str) -> str:
     if run_mode == "fixture":
         return "fixture_template"
     return "production_narrative"
+
+
+def _workspace_id_for_path(path: str) -> str:
+    workspace_root = Path(path).expanduser().resolve()
+    manifest_path = workspace_root / MANIFEST_NAME
+    if manifest_path.exists():
+        try:
+            manifest = read_json(manifest_path)
+            candidate = str(manifest.get("workspace_id") or "").strip()
+            if candidate:
+                return candidate
+        except Exception:
+            pass
+    return f"workspace_{workspace_root.name}"
+
+
+def _apply_workspace_runtime_fields(
+    request: dict[str, Any],
+    args: argparse.Namespace,
+    *,
+    run_mode: str,
+) -> dict[str, Any]:
+    resolution = resolve_workspace_for_run(
+        run_dir=getattr(args, "run_dir", None) or getattr(args, "runs_dir", None) or ".",
+        request=request,
+        cli_workspace=getattr(args, "workspace", None) or None,
+        run_mode=run_mode,
+        allow_dev_bypass=_dev_allow_unsetup(args),
+    )
+    if resolution.get("blocked"):
+        reasons = "; ".join(str(reason) for reason in resolution.get("reasons", []) if reason)
+        raise RunStateError(reasons or "workspace resolution blocked")
+    workspace_path = str(resolution.get("resolved_workspace") or "").strip()
+    if workspace_path:
+        request["workspace"] = workspace_path
+        request["workspace_id"] = _workspace_id_for_path(workspace_path)
+        request["workspace_manifest_ref"] = MANIFEST_NAME
+        request["workspace_resolved_from"] = str(resolution.get("resolved_from") or "")
+    return request
 
 
 def _resolve_workspace_for_setup_status(args: argparse.Namespace) -> str | None:
@@ -396,6 +435,7 @@ def command_plan(args: argparse.Namespace) -> dict[str, Any]:
         run_id=args.run_id or "",
     )
     request["run_mode"] = run_mode
+    request = _apply_workspace_runtime_fields(request, args, run_mode=run_mode)
     run_dir = create_run(runs_dir(args), request, run_id=args.run_id or None, force=args.force)
     request = load_request(run_dir)
     narrative_plan = write_plan_artifacts(
@@ -420,9 +460,8 @@ def command_start_conversation(args: argparse.Namespace) -> dict[str, Any]:
         run_id=args.run_id or "",
     )
     request["run_mode"] = run_mode
-    if args.workspace:
-        request["workspace"] = str(Path(args.workspace).expanduser().resolve())
-        request["workspace_resolved_from"] = "cli"
+    request = _apply_workspace_runtime_fields(request, args, run_mode=run_mode)
+    context_manifest["workspace"] = str(request.get("workspace") or "")
     run_dir = create_run(runs_dir(args), request, run_id=args.run_id or None, force=args.force)
     request = load_request(run_dir)
     context_manifest["run_id"] = request["run_id"]
@@ -530,6 +569,8 @@ def command_autoplan(args: argparse.Namespace) -> dict[str, Any]:
     if existing_run:
         run_dir = resolve_run_dir(args)
         request = load_request(run_dir)
+        request = _apply_workspace_runtime_fields(request, args, run_mode=str(request.get("run_mode") or run_mode))
+        write_json(run_dir / REQUEST_NAME, request)
         needs_plan = not artifact_exists(run_dir, NARRATIVE_PLAN_NAME)
         needs_v2_artifacts = planning_mode == "narrative_v2" and (
             not artifact_exists(run_dir, "consulting_judgments.json")
@@ -1297,6 +1338,7 @@ def add_brief_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--run-id")
     parser.add_argument("--run-dir")
     parser.add_argument("--runs-dir", default=None)
+    parser.add_argument("--workspace", default="")
     parser.add_argument("--force", action="store_true")
     parser.add_argument("--dev-allow-unsetup", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--run-mode", choices=["production", "fixture", "dev", "benchmark"], default="production")
