@@ -4,6 +4,7 @@ import argparse
 import json
 import mimetypes
 import sys
+from typing import Any
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -25,7 +26,9 @@ if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
 
 from runtime.events import append_typed_event
-from runtime.setup_status import configured_runs_dir
+from runtime.setup_status import configured_runs_dir, setup_status
+from runtime.orchestration import orchestration_check
+from runtime.next_step import resolve_next_step
 
 from review.readiness import compute_claim_coverage, compute_deck_readiness, compute_next_actions
 from review.workbench import WorkbenchError, execute_review_action
@@ -174,6 +177,12 @@ class PreviewHandler(BaseHTTPRequestHandler):
         if path.startswith("/api/next-actions/"):
             self.api_next_actions(path.removeprefix("/api/next-actions/").strip("/"))
             return
+        if path == "/api/setup-status":
+            self.api_setup_status(parsed)
+            return
+        if path.startswith("/api/run-state/"):
+            self.api_run_state(path.removeprefix("/api/run-state/").strip("/"), parsed)
+            return
         if path.startswith("/api/external-results/"):
             self.api_external_results(path.removeprefix("/api/external-results/").strip("/"))
             return
@@ -295,6 +304,7 @@ class PreviewHandler(BaseHTTPRequestHandler):
     def api_create_run(self) -> None:
         try:
             body = self.read_json_body()
+            run_mode = self._coerce_run_mode(body)
             request = build_request(
                 brief=body.get("brief", ""),
                 brief_file=None,
@@ -304,7 +314,36 @@ class PreviewHandler(BaseHTTPRequestHandler):
                 style_preference=body.get("style_preference", ""),
                 run_id=body.get("run_id", ""),
             )
-            run_dir = create_run(self.runs_dir, request, run_id=body.get("run_id") or None, force=bool(body.get("force")))
+            request["run_mode"] = run_mode
+
+            setup = None
+            workspace = None
+            runs_dir = self.runs_dir
+            if run_mode == "production":
+                setup = setup_status(workspace=str(body.get("workspace") or None) if body.get("workspace") else None)
+                if not self._is_setup_ready_for_production(setup):
+                    self.send_error_json(
+                        HTTPStatus.CONFLICT,
+                        f"Setup is not ready for production runs. Next: {setup.get('next_command', '')}".strip(),
+                    )
+                    return
+                cfg = setup.get("config") if isinstance(setup.get("config"), dict) else {}
+                runs_dir = Path(str(cfg.get("default_runs_dir") or self.runs_dir)).expanduser().resolve()
+                workspace = str(cfg.get("active_workspace") or "").strip()
+            else:
+                requested_runs_dir = body.get("runs_dir")
+                if requested_runs_dir:
+                    runs_dir = Path(str(requested_runs_dir)).expanduser().resolve()
+
+            self.runs_dir = runs_dir
+
+            request = self._write_workspace_runtime_fields(
+                request,
+                run_mode=run_mode,
+                workspace=workspace,
+                runs_dir=runs_dir,
+            )
+            run_dir = create_run(runs_dir, request, run_id=body.get("run_id") or None, force=bool(body.get("force")))
             request = load_request(run_dir)
             narrative_plan = plan_narrative(request)
             write_artifact(run_dir, NARRATIVE_PLAN_NAME, narrative_plan, action="narrative.plan.created")
@@ -332,6 +371,109 @@ class PreviewHandler(BaseHTTPRequestHandler):
             )
         except (ValueError, ManifestError) as exc:
             self.send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
+
+    def api_setup_status(self, parsed) -> None:
+        params = parse_qs(parsed.query)
+        workspace = (params.get("workspace") or [None])[0]
+        payload = setup_status(workspace=workspace)
+        self.send_json(self._adapt_setup_status(payload))
+
+    def api_run_state(self, run_id: str, parsed) -> None:
+        run_dir = self._resolve_run_or_error(run_id, parsed=parsed)
+        if run_dir is None:
+            return
+        request = {}
+        try:
+            request = load_request(run_dir)
+        except (ValueError, ManifestError):
+            request = {}
+
+        orchestration = orchestration_check(run_dir)
+        next_step = resolve_next_step(run_dir)
+        self.send_json(
+            {
+                "schema_version": "deck_run_state.v1",
+                "run_id": run_dir.name,
+                "run_dir": str(run_dir),
+                "status": run_status(run_dir),
+                "stage": next_step.get("status", ""),
+                "orchestration": orchestration,
+                "next_step": next_step,
+                "next_command": next_step.get("next_command", ""),
+                "run_mode": request.get("run_mode", ""),
+                "workspace": request.get("workspace", ""),
+            }
+        )
+
+    def _coerce_run_mode(self, body: dict[str, object]) -> str:
+        run_mode = str(body.get("run_mode") or body.get("run-mode") or "").strip().lower()
+        if run_mode:
+            return run_mode
+
+        library_mode = str(body.get("library_mode") or "").strip().lower()
+        planning_mode = str(body.get("planning_mode") or "").strip().lower()
+        if library_mode == "fixture" or planning_mode == "classic":
+            return "fixture"
+        return "production"
+
+    def _is_setup_ready_for_production(self, payload: dict[str, Any]) -> bool:
+        if payload.get("status") != "ready":
+            return False
+        workspace = payload.get("workspace")
+        return isinstance(workspace, dict) and workspace.get("status") == "valid"
+
+    def _write_workspace_runtime_fields(
+        self,
+        request: dict[str, Any],
+        *,
+        run_mode: str,
+        workspace: str | None = None,
+        runs_dir: Path | None = None,
+    ) -> dict[str, Any]:
+        request["run_mode"] = run_mode
+        resolved_runs_dir = runs_dir or self.runs_dir
+        request["runs_dir"] = str(resolved_runs_dir)
+        request["runs_dir_resolved_from"] = "payload" if runs_dir else "studio"
+
+        if workspace:
+            request["workspace"] = workspace
+            request["workspace_resolved_from"] = "setup"
+            request["workspace_id"] = workspace.split("/")[-1]
+            request["workspace_manifest_ref"] = "workspace_manifest.json"
+        return request
+
+    def _adapt_setup_status(self, payload: dict[str, Any]) -> dict[str, Any]:
+        config = payload.get("config") if isinstance(payload.get("config"), dict) else None
+        workspace = payload.get("workspace") if isinstance(payload.get("workspace"), dict) else None
+        workspace_ready = bool(workspace and workspace.get("status") == "valid")
+        install_ready = payload.get("status") != "blocked" and bool(config)
+        run_ready = bool(config and config.get("active_workspace") and workspace_ready)
+        production_ready = bool(install_ready and workspace_ready and not payload.get("repair_items"))
+
+        response = {
+            "schema_version": payload.get("schema_version") or "deck_master_setup_status.v1",
+            "schema_version_v2": "deck_master_setup_status.v2",
+            "status": payload.get("status", "blocked"),
+            "install_ready": install_ready,
+            "workspace_ready": workspace_ready,
+            "run_ready": run_ready,
+            "production_ready": production_ready,
+            "dev_mode_allowed": False,
+            "fixture_mode_allowed": True,
+            "install_root": str(config.get("install_root") or "") if isinstance(config, dict) else "",
+            "active_workspace": str(config.get("active_workspace") or "") if isinstance(config, dict) else "",
+            "default_runs_dir": str(config.get("default_runs_dir") or "") if isinstance(config, dict) else "",
+            "active_workspace_required_for_production": True,
+            "next_command": payload.get("next_command", ""),
+            "config_path": payload.get("config_path"),
+            "missing_items": payload.get("missing_items", []),
+            "repair_items": payload.get("repair_items", []),
+            "warnings": payload.get("warnings", []),
+            "workspace": workspace,
+            "config": config,
+            "agent_targets": payload.get("agent_targets", {}),
+        }
+        return response
 
     def api_update_decision(self, page_id: str, parsed) -> None:
         try:
@@ -576,12 +718,24 @@ class PreviewHandler(BaseHTTPRequestHandler):
             "outcome": outcome_data,
         })
 
-    def _resolve_run_or_error(self, run_id: str):
+    def _resolve_run_or_error(self, run_id: str, parsed: object | None = None, *, run_dir: str | None = None):
         """Resolve run_id to a Path, or return None and send error response."""
         if not run_id:
             self.send_error_json(HTTPStatus.BAD_REQUEST, "run_id is required.")
             return None
-        candidate = (self.runs_dir / run_id).resolve()
+
+        debug_run_dir = run_dir
+        if parsed is not None and not debug_run_dir:
+            try:
+                debug_run_dir = parse_qs(parsed.query).get("run_dir", [None])[0]  # type: ignore[attr-defined]
+            except Exception:
+                debug_run_dir = None
+
+        if debug_run_dir:
+            candidate = Path(str(debug_run_dir)).expanduser().resolve()
+        else:
+            candidate = (self.runs_dir / run_id).resolve()
+
         root_text = str(self.runs_dir.resolve())
         candidate_text = str(candidate)
         if candidate_text != root_text and not candidate_text.startswith(root_text + "/"):
