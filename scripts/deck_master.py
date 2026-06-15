@@ -96,6 +96,7 @@ from runtime.run_state import (
 )
 from runtime.next_step import resolve_next_step
 from runtime.orchestration import import_plan, import_render_result, orchestration_check
+from runtime.run_state_resolver import resolve_run_state
 from tools.ppt_library_client import PPTLibraryClientError, run_library_selection
 from workspace.foundation import WorkspaceError, init_workspace, register_workspace, validate_workspace
 from runtime.setup_status import SetupError, configured_runs_dir, require_setup_ready, run_setup, setup_status
@@ -105,6 +106,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PROTECTED_COMMANDS = {
     "plan",
     "start-conversation",
+    "start",
     "build-brief",
     "build-claim-map",
     "autoplan",
@@ -173,6 +175,27 @@ def read_optional_json(run_dir: Path, filename: str) -> dict[str, Any] | None:
 
 
 def _workspace_for_setup_guard(args: argparse.Namespace) -> str | None:
+    if getattr(args, "workspace", None):
+        return str(args.workspace)
+    if getattr(args, "run_dir", None):
+        request_path = Path(args.run_dir).expanduser().resolve() / "request.json"
+        if request_path.exists():
+            try:
+                request = read_json(request_path)
+                return str(request.get("workspace") or "") or None
+            except RunStateError:
+                return None
+    return None
+
+
+def _normalize_run_mode(value: str | None) -> str:
+    mode = (value or "production").strip().lower()
+    if mode in {"production", "fixture", "dev", "benchmark"}:
+        return mode
+    return "production"
+
+
+def _resolve_workspace_for_setup_status(args: argparse.Namespace) -> str | None:
     if getattr(args, "workspace", None):
         return str(args.workspace)
     if getattr(args, "run_dir", None):
@@ -320,6 +343,7 @@ def enrich_narrative_with_claims(narrative_plan: dict[str, Any], claim_map: dict
 
 
 def command_plan(args: argparse.Namespace) -> dict[str, Any]:
+    run_mode = _normalize_run_mode(getattr(args, "run_mode", None))
     request = build_request(
         brief=args.brief or "",
         brief_file=args.brief_file,
@@ -329,6 +353,7 @@ def command_plan(args: argparse.Namespace) -> dict[str, Any]:
         style_preference=args.style_preference or "",
         run_id=args.run_id or "",
     )
+    request["run_mode"] = run_mode
     run_dir = create_run(runs_dir(args), request, run_id=args.run_id or None, force=args.force)
     request = load_request(run_dir)
     narrative_plan = write_plan_artifacts(
@@ -340,6 +365,7 @@ def command_plan(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def command_start_conversation(args: argparse.Namespace) -> dict[str, Any]:
+    run_mode = _normalize_run_mode(getattr(args, "run_mode", None))
     context_files = [str(path) for path in args.context_file]
     context_manifest = build_context_manifest(context_files, workspace=args.workspace or "")
     request = build_request(
@@ -350,8 +376,10 @@ def command_start_conversation(args: argparse.Namespace) -> dict[str, Any]:
         style_preference=args.style_preference or "",
         run_id=args.run_id or "",
     )
+    request["run_mode"] = run_mode
     if args.workspace:
         request["workspace"] = str(Path(args.workspace).expanduser().resolve())
+        request["workspace_resolved_from"] = "cli"
     run_dir = create_run(runs_dir(args), request, run_id=args.run_id or None, force=args.force)
     request = load_request(run_dir)
     context_manifest["run_id"] = request["run_id"]
@@ -665,7 +693,12 @@ def command_connector_import(args: argparse.Namespace) -> dict[str, Any]:
 
 def command_next_step(args: argparse.Namespace) -> dict[str, Any]:
     run_dir = resolve_run_dir(args)
-    return resolve_next_step(run_dir)
+    return resolve_next_step(
+        run_dir,
+        cli_workspace=getattr(args, "workspace", None),
+        run_mode=_normalize_run_mode(getattr(args, "run_mode", None)),
+        dev_allow_unsetup=bool(getattr(args, "dev_allow_unsetup", False)),
+    )
 
 
 def command_build_judgments(args: argparse.Namespace) -> dict[str, Any]:
@@ -732,7 +765,39 @@ def command_setup(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def command_setup_status(args: argparse.Namespace) -> dict[str, Any]:
-    return setup_status(workspace=getattr(args, "workspace", None))
+    return setup_status(
+        workspace=_resolve_workspace_for_setup_status(args),
+        run_mode=_normalize_run_mode(getattr(args, "run_mode", None)),
+    )
+
+
+def command_run_state(args: argparse.Namespace) -> dict[str, Any]:
+    return resolve_run_state(
+        resolve_run_dir(args),
+        cli_workspace=getattr(args, "workspace", None),
+        run_mode=_normalize_run_mode(getattr(args, "run_mode", None)),
+        dev_allow_unsetup=bool(getattr(args, "dev_allow_unsetup", False)),
+    )
+
+
+def command_doctor(args: argparse.Namespace) -> dict[str, Any]:
+    run_mode = _normalize_run_mode(getattr(args, "run_mode", None))
+    payload: dict[str, Any] = {
+        "schema_version": "deck_master_doctor.v1",
+        "run_mode": run_mode,
+        "setup_status": setup_status(
+            workspace=_resolve_workspace_for_setup_status(args),
+            run_mode=run_mode,
+        ),
+    }
+    if getattr(args, "run_dir", None):
+        payload["run_state"] = resolve_run_state(
+            resolve_run_dir(args),
+            cli_workspace=getattr(args, "workspace", None),
+            run_mode=run_mode,
+            dev_allow_unsetup=bool(getattr(args, "dev_allow_unsetup", False)),
+        )
+    return payload
 
 
 def command_install_skill(args: argparse.Namespace) -> dict[str, Any]:
@@ -761,7 +826,12 @@ def command_uninstall_skill(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def command_orchestration_check(args: argparse.Namespace) -> dict[str, Any]:
-    return orchestration_check(resolve_run_dir(args))
+    return orchestration_check(
+        resolve_run_dir(args),
+        cli_workspace=getattr(args, "workspace", None),
+        run_mode=_normalize_run_mode(getattr(args, "run_mode", None)),
+        dev_allow_unsetup=bool(getattr(args, "dev_allow_unsetup", False)),
+    )
 
 
 def command_import_plan(args: argparse.Namespace) -> dict[str, Any]:
@@ -1076,6 +1146,7 @@ def add_brief_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--runs-dir", default=None)
     parser.add_argument("--force", action="store_true")
     parser.add_argument("--dev-allow-unsetup", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument("--run-mode", choices=["production", "fixture", "dev", "benchmark"], default="production")
 
 
 def add_conversation_args(parser: argparse.ArgumentParser) -> None:
@@ -1090,6 +1161,7 @@ def add_conversation_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--runs-dir", default=None)
     parser.add_argument("--force", action="store_true")
     parser.add_argument("--dev-allow-unsetup", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument("--run-mode", choices=["production", "fixture", "dev", "benchmark"], default="production")
 
 
 def add_run_args(parser: argparse.ArgumentParser) -> None:
@@ -1097,6 +1169,8 @@ def add_run_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--run-id")
     parser.add_argument("--runs-dir", default=None)
     parser.add_argument("--dev-allow-unsetup", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument("--run-mode", choices=["production", "fixture", "dev", "benchmark"], default="production")
+    parser.add_argument("--workspace", default="")
 
 
 def add_library_args(parser: argparse.ArgumentParser) -> None:
@@ -1122,7 +1196,19 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_setup_status = sub.add_parser("setup-status", help="Check first-run Deck Master setup")
     p_setup_status.add_argument("--workspace", default=None)
+    p_setup_status.add_argument("--run-dir", default=None)
+    p_setup_status.add_argument("--run-mode", choices=["production", "fixture", "dev", "benchmark"], default="production")
     p_setup_status.set_defaults(func=command_setup_status)
+
+    p_doctor = sub.add_parser("doctor", help="Show setup and run state diagnostics")
+    p_doctor.add_argument("--workspace", default="")
+    p_doctor.add_argument("--run-dir", default=None)
+    p_doctor.add_argument("--run-mode", choices=["production", "fixture", "dev", "benchmark"], default="production")
+    p_doctor.set_defaults(func=command_doctor)
+
+    p_run_state = sub.add_parser("run-state", help="Resolve canonical run state")
+    add_run_args(p_run_state)
+    p_run_state.set_defaults(func=command_run_state)
 
     p_plan = sub.add_parser("plan", help="Create request.json and narrative_plan.json from a brief")
     add_brief_args(p_plan)
@@ -1132,6 +1218,10 @@ def build_parser() -> argparse.ArgumentParser:
     p_start = sub.add_parser("start-conversation", help="Create a guided Deck conversation run from local context")
     add_conversation_args(p_start)
     p_start.set_defaults(func=command_start_conversation)
+
+    p_start_alias = sub.add_parser("start", help="Alias for start-conversation")
+    add_conversation_args(p_start_alias)
+    p_start_alias.set_defaults(func=command_start_conversation)
 
     p_brief = sub.add_parser("build-brief", help="Compile deck_brief.json from context and conversation")
     add_run_args(p_brief)
@@ -1508,6 +1598,7 @@ def main() -> None:
             require_setup_ready(
                 dev_allow_unsetup=bool(getattr(args, "dev_allow_unsetup", False)),
                 workspace=_workspace_for_setup_guard(args),
+                run_mode=_normalize_run_mode(getattr(args, "run_mode", None)),
             )
         print_json(args.func(args))
     except (

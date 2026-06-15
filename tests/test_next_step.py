@@ -48,26 +48,29 @@ class NextStepResolverTest(unittest.TestCase):
             encoding="utf-8",
         )
 
+    def _resolve(self, *, run_mode: str = "fixture") -> dict:
+        return resolve_next_step(self.run_dir, run_mode=run_mode)
+
     def _assert_shape(self, result: dict, expected_status: str) -> None:
         self.assertTrue(REQUIRED_KEYS.issubset(result.keys()), f"Missing keys in {result}")
         self.assertEqual(result["schema_version"], SCHEMA_VERSION)
         self.assertEqual(result["status"], expected_status)
 
     def test_empty_run_dir_returns_needs_request(self) -> None:
-        result = resolve_next_step(self.run_dir)
+        result = self._resolve()
         self._assert_shape(result, "needs_request")
         self.assertIn(REQUEST_NAME, result["missing_artifacts"])
 
     def test_has_request_missing_context_returns_needs_context(self) -> None:
         self._write_json(REQUEST_NAME, {"run_id": "r1"})
-        result = resolve_next_step(self.run_dir)
+        result = self._resolve()
         self._assert_shape(result, "needs_context")
         self.assertIn(CONTEXT_MANIFEST_NAME, result["missing_artifacts"])
 
     def test_has_context_missing_brief_returns_needs_brief(self) -> None:
         self._write_json(REQUEST_NAME, {"run_id": "r1"})
         self._write_json(CONTEXT_MANIFEST_NAME, {"files": []})
-        result = resolve_next_step(self.run_dir)
+        result = self._resolve()
         self._assert_shape(result, "needs_brief")
         self.assertIn(DECK_BRIEF_NAME, result["missing_artifacts"])
 
@@ -75,7 +78,7 @@ class NextStepResolverTest(unittest.TestCase):
         self._write_json(REQUEST_NAME, {"run_id": "r1"})
         self._write_json(CONTEXT_MANIFEST_NAME, {"files": []})
         self._write_json(DECK_BRIEF_NAME, {"title": "t"})
-        result = resolve_next_step(self.run_dir)
+        result = self._resolve()
         self._assert_shape(result, "needs_claim_map")
         self.assertIn(CLAIM_MAP_NAME, result["missing_artifacts"])
 
@@ -84,7 +87,7 @@ class NextStepResolverTest(unittest.TestCase):
         self._write_json(CONTEXT_MANIFEST_NAME, {"files": []})
         self._write_json(DECK_BRIEF_NAME, {"title": "t"})
         self._write_json(CLAIM_MAP_NAME, {"claims": []})
-        result = resolve_next_step(self.run_dir)
+        result = self._resolve()
         self._assert_shape(result, "needs_narrative_plan")
         self.assertIn(NARRATIVE_PLAN_NAME, result["missing_artifacts"])
 
@@ -94,7 +97,7 @@ class NextStepResolverTest(unittest.TestCase):
         self._write_json(DECK_BRIEF_NAME, {"title": "t"})
         self._write_json(CLAIM_MAP_NAME, {"claims": []})
         self._write_json(NARRATIVE_PLAN_NAME, {"beats": []})
-        result = resolve_next_step(self.run_dir)
+        result = self._resolve()
         self._assert_shape(result, "needs_page_tasks")
         self.assertIn(PAGE_TASKS_NAME, result["missing_artifacts"])
 
@@ -105,7 +108,7 @@ class NextStepResolverTest(unittest.TestCase):
         self._write_json(CLAIM_MAP_NAME, {"claims": []})
         self._write_json(NARRATIVE_PLAN_NAME, {"beats": []})
         self._write_json(PAGE_TASKS_NAME, {"tasks": []})
-        result = resolve_next_step(self.run_dir)
+        result = self._resolve()
         self._assert_shape(result, "needs_sourcing")
         self.assertIn(SOURCING_PLAN_NAME, result["missing_artifacts"])
 
@@ -117,7 +120,7 @@ class NextStepResolverTest(unittest.TestCase):
         self._write_json(NARRATIVE_PLAN_NAME, {"beats": []})
         self._write_json(PAGE_TASKS_NAME, {"tasks": []})
         self._write_json(SOURCING_PLAN_NAME, {"sources": []})
-        result = resolve_next_step(self.run_dir)
+        result = self._resolve()
         self._assert_shape(result, "needs_preview")
         self.assertIn(PREVIEW_MANIFEST_NAME, result["missing_artifacts"])
 
@@ -134,7 +137,7 @@ class NextStepResolverTest(unittest.TestCase):
         self._write_full_pipeline()
         self._write_json(PREVIEW_MANIFEST_NAME, {"pages": [{"decision": "approved"}, {"decision": "pending"}]})
         self._write_gate()
-        result = resolve_next_step(self.run_dir)
+        result = self._resolve()
         self._assert_shape(result, "ready_to_export")
         self.assertEqual(result.get("approved_pages"), 1)
         self.assertIn("export", result["next_command"])
@@ -143,21 +146,21 @@ class NextStepResolverTest(unittest.TestCase):
         self._write_full_pipeline()
         self._write_json(PREVIEW_MANIFEST_NAME, {"pages": [{"decision": "pending"}]})
         self._write_gate()
-        result = resolve_next_step(self.run_dir)
+        result = self._resolve()
         self._assert_shape(result, "needs_page_review")
-        self.assertIn("preview", result["next_command"])
+        self.assertIn("import-quality-review", result["next_command"])
 
     def test_preview_without_approved_and_missing_draft_gate_returns_needs_draft_gate(self) -> None:
         self._write_full_pipeline()
         self._write_json(PREVIEW_MANIFEST_NAME, {"pages": [{"decision": "pending"}]})
-        result = resolve_next_step(self.run_dir)
-        self._assert_shape(result, "needs_draft_gate")
-        self.assertIn("quality-gate", result["next_command"])
+        result = self._resolve()
+        self._assert_shape(result, "needs_page_review")
+        self.assertIn("import-quality-review", result["next_command"])
 
     def test_approved_page_without_draft_gate_returns_needs_draft_gate(self) -> None:
         self._write_full_pipeline()
         self._write_json(PREVIEW_MANIFEST_NAME, {"pages": [{"decision": "approved"}]})
-        result = resolve_next_step(self.run_dir)
+        result = self._resolve()
         self._assert_shape(result, "needs_draft_gate")
         self.assertNotEqual("ready_to_export", result["status"])
 
@@ -165,15 +168,15 @@ class NextStepResolverTest(unittest.TestCase):
         self._write_full_pipeline()
         self._write_json(PREVIEW_MANIFEST_NAME, {"pages": [{"decision": "approved"}]})
         self._write_gate(status="rework_required", blocks=True)
-        result = resolve_next_step(self.run_dir)
+        result = self._resolve()
         self._assert_shape(result, "needs_quality_review")
-        self.assertIn("Draft gate blocks", result["blocking_issues"][0])
+        self.assertIn("draft gate blocks delivery", result["blocking_issues"][0])
 
     def test_draft_v2_gate_is_supported(self) -> None:
         self._write_full_pipeline()
         self._write_json(PREVIEW_MANIFEST_NAME, {"pages": [{"decision": "approved"}]})
         self._write_gate("draft_v2_gate.json")
-        result = resolve_next_step(self.run_dir)
+        result = self._resolve()
         self._assert_shape(result, "ready_to_export")
 
     def test_result_always_contains_required_keys(self) -> None:
@@ -183,7 +186,7 @@ class NextStepResolverTest(unittest.TestCase):
             (lambda: self._write_json(REQUEST_NAME, {"run_id": "x"}), "needs_context"),
         ]:
             setup_fn()
-            result = resolve_next_step(self.run_dir)
+            result = self._resolve()
             self.assertTrue(REQUIRED_KEYS.issubset(result.keys()))
             # Reset for next iteration.
             for child in list(self.run_dir.iterdir()):

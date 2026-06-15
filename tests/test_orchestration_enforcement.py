@@ -29,7 +29,7 @@ class OrchestrationEnforcementTests(unittest.TestCase):
         )
 
     def test_orchestration_check_reports_missing_context(self) -> None:
-        result = orchestration_check(self.run_dir)
+        result = orchestration_check(self.run_dir, run_mode="fixture")
 
         self.assertEqual("deck_orchestration_check.v1", result["schema_version"])
         self.assertEqual("blocked", result["status"])
@@ -78,14 +78,14 @@ class OrchestrationEnforcementTests(unittest.TestCase):
         ]:
             (self.run_dir / name).write_text(json.dumps({}), encoding="utf-8")
 
-        result = orchestration_check(self.run_dir)
+        result = orchestration_check(self.run_dir, run_mode="fixture")
         self.assertEqual("needs_quality_gate", result["status"])
         self.assertFalse(result["allow_external_production"])
 
         quality_dir = self.run_dir / "quality_reports"
         quality_dir.mkdir(exist_ok=True)
         (quality_dir / "draft_gate.json").write_text(json.dumps({"status": "pass"}), encoding="utf-8")
-        result = orchestration_check(self.run_dir)
+        result = orchestration_check(self.run_dir, run_mode="fixture")
         self.assertEqual("ready_for_external_production", result["status"])
         self.assertTrue(result["allow_external_production"])
 
