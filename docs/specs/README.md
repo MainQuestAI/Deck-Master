@@ -1,6 +1,6 @@
-# Deck Master v0.9.5 - v0.9.10 Spec Pack
+# Deck Master v0.9.5 - v0.9.11 Spec Pack
 
-本包包含 5 份连续开发 Spec，已按 Deck Master v0.9.x 到 v1.0.0 RC 的顺序组织：
+本包包含 6 份连续开发 Spec，已按 Deck Master v0.9.x 到 v1.0.0 RC 的顺序组织：
 
 1. `deck-master-v0.9.5-review-cockpit-frontend-spec.md`
    - 目标：把 v0.9 已完成的 F1/F2/F3 后端 API 收成可持续使用的 localhost Review Cockpit 前端体验。
@@ -17,6 +17,9 @@
 5. `deck-master-v0.9.10-first-run-orchestration-enforcement-spec.md`
    - 目标：补齐首次 Setup 引导、真实 run 门禁、顶部编排器约束、人工规划回写和外部工具 handback 登记。
 
+6. `deck-master-v0.9.11-orchestration-runtime-realignment-spec.md`
+   - 目标：重对齐 Deck Master 主控运行时，统一 run mode、setup/workspace/run state、workspace-bound request、Planner guard、sourcing 回写、tool registry、production session 和 benchmark gate。
+
 推荐落库路径：
 
 ```text
@@ -26,6 +29,7 @@ docs/specs/deck-master-v0.9.6-companion-tool-uat-spec.md
 docs/specs/deck-master-v0.9.7-benchmark-harness-spec.md
 docs/specs/deck-master-v0.9.9-installation-chain-hardening-spec.md
 docs/specs/deck-master-v0.9.10-first-run-orchestration-enforcement-spec.md
+docs/specs/deck-master-v0.9.11-orchestration-runtime-realignment-spec.md
 ```
 
 推荐开发顺序：
@@ -36,5 +40,6 @@ v0.9.5 Review Cockpit Frontend
 → v0.9.7 Benchmark Harness
 → v0.9.9 Installation Chain Hardening
 → v0.9.10 First-Run Setup + Orchestration Enforcement
+→ v0.9.11 Orchestration Runtime Realignment
 → v1.0.0 RC Real Benchmark Runs
 ```
