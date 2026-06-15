@@ -31,6 +31,14 @@ from generation.handback import (
     refresh_preview_from_generation,
     validate_generation_result,
 )
+from generation.session import (
+    GenerationSessionError,
+    create_generation_session,
+    generation_session_status,
+    import_generation_results,
+    run_generation as run_generation_session,
+    validate_generation_session,
+)
 from learning.pack import build_learning_pack, show_learning_pack
 from validators.companion_tools import validate_ppt_library_result, validate_render_result
 from metrics.run_metrics import summarize_run_metrics
@@ -147,6 +155,8 @@ PROTECTED_COMMANDS = {
     "benchmark-report",
     "benchmark-checkpoint",
     "delivery",
+    "generation-session",
+    "run-generation",
 }
 
 
@@ -976,6 +986,52 @@ def command_refresh_preview_from_generation(args: argparse.Namespace) -> dict[st
     return refresh_preview_from_generation(run_dir)
 
 
+def command_generation_session_create(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = resolve_run_dir(args)
+    return create_generation_session(
+        run_dir,
+        tool=getattr(args, "tool", "ppt-deck-pro-max"),
+        workspace=(str(args.workspace) if getattr(args, "workspace", None) else None),
+        tool_command=getattr(args, "tool_command", None),
+        force=bool(getattr(args, "force", False)),
+    )
+
+
+def command_generation_session_validate(args: argparse.Namespace) -> dict[str, Any]:
+    return validate_generation_session(
+        resolve_run_dir(args),
+        tool=getattr(args, "tool", None),
+        tool_command=getattr(args, "tool_command", None),
+    )
+
+
+def command_generation_session_status(args: argparse.Namespace) -> dict[str, Any]:
+    return generation_session_status(
+        resolve_run_dir(args),
+        tool=getattr(args, "tool", None),
+        tool_command=getattr(args, "tool_command", None),
+    )
+
+
+def command_run_generation(args: argparse.Namespace) -> dict[str, Any]:
+    return run_generation_session(
+        resolve_run_dir(args),
+        tool=getattr(args, "tool", "ppt-deck-pro-max"),
+        dry_run=bool(getattr(args, "dry_run", False)),
+        no_execute=bool(getattr(args, "no_execute", False)),
+        tool_command=getattr(args, "tool_command", None),
+    )
+
+
+def command_generation_session_import_results(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = resolve_run_dir(args)
+    return import_generation_results(
+        run_dir,
+        Path(args.input).expanduser(),
+        force=bool(getattr(args, "force", False)),
+    )
+
+
 def command_build_learning_pack(args: argparse.Namespace) -> dict[str, Any]:
     return build_learning_pack(args.workspace)
 
@@ -1555,6 +1611,42 @@ def build_parser() -> argparse.ArgumentParser:
     add_run_args(p_rpg)
     p_rpg.set_defaults(func=command_refresh_preview_from_generation)
 
+    p_gs = sub.add_parser("generation-session", help="Manage generation sessions")
+    gs_sub = p_gs.add_subparsers(dest="generation_session_command", required=True)
+
+    p_gs_create = gs_sub.add_parser("create", help="Create generation_session.json for a run")
+    add_run_args(p_gs_create)
+    p_gs_create.add_argument("--tool", default="ppt-deck-pro-max")
+    p_gs_create.add_argument("--tool-command", default=None, help="Override tool command directly")
+    p_gs_create.add_argument("--force", action="store_true", help="Recreate session if exists")
+    p_gs_create.set_defaults(func=command_generation_session_create)
+
+    p_gs_validate = gs_sub.add_parser("validate", help="Validate generation session and tool availability")
+    add_run_args(p_gs_validate)
+    p_gs_validate.add_argument("--tool", default=None)
+    p_gs_validate.add_argument("--tool-command", default=None, help="Override tool command directly")
+    p_gs_validate.set_defaults(func=command_generation_session_validate)
+
+    p_gs_status = gs_sub.add_parser("status", help="Read generation session status")
+    add_run_args(p_gs_status)
+    p_gs_status.add_argument("--tool", default=None)
+    p_gs_status.add_argument("--tool-command", default=None, help="Override tool command directly")
+    p_gs_status.set_defaults(func=command_generation_session_status)
+
+    p_gs_import = gs_sub.add_parser("import-results", help="Import generation result and refresh preview manifest")
+    add_run_args(p_gs_import)
+    p_gs_import.add_argument("--input", required=True, help="Path to generation result JSON")
+    p_gs_import.add_argument("--force", action="store_true", help="Override locked pages")
+    p_gs_import.set_defaults(func=command_generation_session_import_results)
+
+    p_rg = sub.add_parser("run-generation", help="Run the production generation tool")
+    add_run_args(p_rg)
+    p_rg.add_argument("--tool", default="ppt-deck-pro-max")
+    p_rg.add_argument("--tool-command", default=None, help="Override tool command directly")
+    p_rg.add_argument("--dry-run", action="store_true")
+    p_rg.add_argument("--no-execute", action="store_true")
+    p_rg.set_defaults(func=command_run_generation)
+
     # ---- workspace learning ----
     p_blp = sub.add_parser("build-learning-pack", help="Aggregate workspace learning for next Agent run")
     p_blp.add_argument("--workspace", required=True, help="Workspace directory path")
@@ -1676,6 +1768,7 @@ def main() -> None:
         SkillInstallError,
         SetupError,
         ContextPackError,
+        GenerationSessionError,
         NarrativeAdviceError,
         ExternalReviewError,
         GenerationHandbackError,
