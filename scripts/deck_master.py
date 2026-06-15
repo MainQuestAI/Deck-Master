@@ -97,6 +97,9 @@ from runtime.run_state import (
 from runtime.next_step import resolve_next_step
 from runtime.orchestration import import_plan, import_render_result, orchestration_check
 from runtime.run_state_resolver import resolve_run_state
+from runtime.sourcing_import import import_sourcing, validate_sourcing
+from runtime.workspace_binding import bind_workspace
+from runtime.workspace_resolver import resolve_workspace_for_run
 from tools.ppt_library_client import PPTLibraryClientError, run_library_selection
 from workspace.foundation import WorkspaceError, init_workspace, register_workspace, validate_workspace
 from runtime.setup_status import SetupError, configured_runs_dir, require_setup_ready, run_setup, setup_status
@@ -116,6 +119,8 @@ PROTECTED_COMMANDS = {
     "build-preview",
     "export",
     "quality-gate",
+    "import-sourcing",
+    "validate-sourcing",
     "override",
     "opportunity",
     "approval",
@@ -193,6 +198,14 @@ def _normalize_run_mode(value: str | None) -> str:
     if mode in {"production", "fixture", "dev", "benchmark"}:
         return mode
     return "production"
+
+
+def _normalize_planner_mode(value: str | None, run_mode: str) -> str:
+    if value in {"fixture_template", "workspace_fallback", "production_narrative"}:
+        return value
+    if run_mode == "fixture":
+        return "fixture_template"
+    return "production_narrative"
 
 
 def _resolve_workspace_for_setup_status(args: argparse.Namespace) -> str | None:
@@ -276,11 +289,18 @@ def write_plan_artifacts(
     request: dict[str, Any],
     *,
     planning_mode: str = "classic",
+    planner_mode: str = "production_narrative",
 ) -> dict[str, Any]:
     claim_map = read_optional_json(run_dir, CLAIM_MAP_NAME)
     judgments: dict[str, Any] | None = None
     claim_graph: dict[str, Any] | None = None
     workspace_archetypes: dict[str, Any] | None = None
+
+    run_mode = str(request.get("run_mode") or "production").strip().lower()
+    if planner_mode == "production_narrative" and run_mode == "production" and not claim_map:
+        raise RunStateError(
+            "planner blocked: run_mode=production requires claim_map for production_narrative planner"
+        )
 
     if planning_mode == "narrative_v2":
         judgments = _build_judgments_if_possible(run_dir, request, claim_map)
@@ -291,6 +311,7 @@ def write_plan_artifacts(
         judgments=judgments,
         claim_graph=claim_graph,
         workspace_archetypes=workspace_archetypes,
+        planner_mode=planner_mode,
     )
     if claim_map:
         enrich_narrative_with_claims(narrative_plan, claim_map)
@@ -308,6 +329,7 @@ def write_plan_artifacts(
             judgments=judgments,
             claim_graph=claim_graph,
             workspace_archetypes=workspace_archetypes,
+            planner_mode=planner_mode,
         )
         if claim_map:
             enrich_narrative_with_claims(narrative_plan, claim_map)
@@ -344,6 +366,7 @@ def enrich_narrative_with_claims(narrative_plan: dict[str, Any], claim_map: dict
 
 def command_plan(args: argparse.Namespace) -> dict[str, Any]:
     run_mode = _normalize_run_mode(getattr(args, "run_mode", None))
+    planner_mode = _normalize_planner_mode(getattr(args, "planner_mode", None), run_mode)
     request = build_request(
         brief=args.brief or "",
         brief_file=args.brief_file,
@@ -360,6 +383,7 @@ def command_plan(args: argparse.Namespace) -> dict[str, Any]:
         run_dir,
         request,
         planning_mode=getattr(args, "planning_mode", "classic"),
+        planner_mode=planner_mode,
     )
     return {"run_id": request["run_id"], "run_dir": str(run_dir), "status": "planned", "pages": len(narrative_plan["beats"])}
 
@@ -482,6 +506,8 @@ def command_export(args: argparse.Namespace) -> dict[str, Any]:
 def command_autoplan(args: argparse.Namespace) -> dict[str, Any]:
     existing_run = bool((getattr(args, "run_id", None) or getattr(args, "run_dir", None)) and not (args.brief or args.brief_file))
     planning_mode = getattr(args, "planning_mode", "classic")
+    run_mode = _normalize_run_mode(getattr(args, "run_mode", None))
+    planner_mode = _normalize_planner_mode(getattr(args, "planner_mode", None), run_mode)
     if existing_run:
         run_dir = resolve_run_dir(args)
         request = load_request(run_dir)
@@ -491,7 +517,7 @@ def command_autoplan(args: argparse.Namespace) -> dict[str, Any]:
             or not artifact_exists(run_dir, "claim_evidence_graph.json")
         )
         if needs_plan or needs_v2_artifacts:
-            write_plan_artifacts(run_dir, request, planning_mode=planning_mode)
+            write_plan_artifacts(run_dir, request, planning_mode=planning_mode, planner_mode=planner_mode)
     else:
         plan_result = command_plan(args)
         run_dir = Path(plan_result["run_dir"])
@@ -842,6 +868,18 @@ def command_import_render_result(args: argparse.Namespace) -> dict[str, Any]:
     return import_render_result(resolve_run_dir(args), args.input)
 
 
+def command_bind_workspace(args: argparse.Namespace) -> dict[str, Any]:
+    return bind_workspace(resolve_run_dir(args), args.workspace, reason=args.reason or "")
+
+
+def command_import_sourcing(args: argparse.Namespace) -> dict[str, Any]:
+    return import_sourcing(resolve_run_dir(args), args.input, source=args.source)
+
+
+def command_validate_sourcing(args: argparse.Namespace) -> dict[str, Any]:
+    return validate_sourcing(resolve_run_dir(args))
+
+
 def command_import_context_pack(args: argparse.Namespace) -> dict[str, Any]:
     run_dir = resolve_run_dir(args)
     input_path = Path(args.input).expanduser().resolve()
@@ -1182,6 +1220,14 @@ def add_planning_mode_arg(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--planning-mode", choices=["classic", "narrative_v2"], default="classic")
 
 
+def add_planner_mode_arg(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--planner-mode",
+        choices=["fixture_template", "workspace_fallback", "production_narrative"],
+        default=None,
+    )
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Deck Master demand-to-preview orchestration CLI.")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -1213,6 +1259,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_plan = sub.add_parser("plan", help="Create request.json and narrative_plan.json from a brief")
     add_brief_args(p_plan)
     add_planning_mode_arg(p_plan)
+    add_planner_mode_arg(p_plan)
     p_plan.set_defaults(func=command_plan)
 
     p_start = sub.add_parser("start-conversation", help="Create a guided Deck conversation run from local context")
@@ -1235,6 +1282,7 @@ def build_parser() -> argparse.ArgumentParser:
     add_brief_args(p_autoplan)
     add_library_args(p_autoplan)
     add_planning_mode_arg(p_autoplan)
+    add_planner_mode_arg(p_autoplan)
     p_autoplan.set_defaults(func=command_autoplan)
 
     p_search = sub.add_parser("search-library", help="Run PPT Library selection for an existing run")
@@ -1304,6 +1352,16 @@ def build_parser() -> argparse.ArgumentParser:
     p_orchestration = sub.add_parser("orchestration-check", help="Check run orchestration completeness")
     add_run_args(p_orchestration)
     p_orchestration.set_defaults(func=command_orchestration_check)
+
+    p_bind_workspace = sub.add_parser("bind-workspace", help="Bind an existing run to a workspace")
+    p_bind_workspace.add_argument("--run-dir")
+    p_bind_workspace.add_argument("--run-id")
+    p_bind_workspace.add_argument("--runs-dir", default=None)
+    p_bind_workspace.add_argument("--workspace", required=True)
+    p_bind_workspace.add_argument("--reason", required=True)
+    p_bind_workspace.add_argument("--dev-allow-unsetup", action="store_true", help=argparse.SUPPRESS)
+    p_bind_workspace.add_argument("--run-mode", choices=["production", "fixture", "dev", "benchmark"], default="fixture")
+    p_bind_workspace.set_defaults(func=command_bind_workspace)
 
     p_judgments = sub.add_parser("build-judgments", help="Generate consulting judgments")
     add_run_args(p_judgments)
@@ -1426,6 +1484,16 @@ def build_parser() -> argparse.ArgumentParser:
     add_run_args(p_import_render)
     p_import_render.add_argument("--input", required=True, help="Path to render result JSON")
     p_import_render.set_defaults(func=command_import_render_result)
+
+    p_import_sourcing = sub.add_parser("import-sourcing", help="Import a JSON sourcing plan override into a run")
+    add_run_args(p_import_sourcing)
+    p_import_sourcing.add_argument("--input", required=True, help="Path to sourcing plan JSON")
+    p_import_sourcing.add_argument("--source", required=True, choices=["human", "agent"])
+    p_import_sourcing.set_defaults(func=command_import_sourcing)
+
+    p_validate_sourcing = sub.add_parser("validate-sourcing", help="Validate current sourcing_plan.json")
+    add_run_args(p_validate_sourcing)
+    p_validate_sourcing.set_defaults(func=command_validate_sourcing)
 
     # ---- context pack ----
     p_icp = sub.add_parser("import-context-pack", help="Import an Agent-generated context pack into a run")

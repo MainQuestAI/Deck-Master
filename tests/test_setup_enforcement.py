@@ -113,6 +113,8 @@ class SetupEnforcementTests(unittest.TestCase):
             "workspace default run",
             "--run-id",
             "workspace-run",
+            "--run-mode",
+            "fixture",
         )
         payload = json.loads(planned.stdout)
 
