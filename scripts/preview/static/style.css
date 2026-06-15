@@ -165,6 +165,48 @@ dd,
   padding: 24px;
 }
 
+.setup-banner,
+.run-state-panel {
+  margin-bottom: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(36, 43, 46, 0.82);
+}
+
+.setup-banner.warning {
+  border-color: rgba(228, 109, 71, 0.6);
+}
+
+.setup-banner.ready {
+  border-color: rgba(47, 186, 115, 0.5);
+}
+
+.setup-banner-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.setup-next-command {
+  margin: 8px 0 0;
+  color: var(--muted);
+  word-break: break-word;
+}
+
+.run-state-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.run-state-detail {
+  margin: 8px 0 0;
+  color: var(--muted);
+}
+
 .cockpit-overview {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

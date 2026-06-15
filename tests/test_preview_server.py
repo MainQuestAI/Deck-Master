@@ -6,6 +6,7 @@ which needs socket.bind() and fails in sandboxed environments.
 from __future__ import annotations
 
 import io
+import os
 import json
 import shutil
 import sys
@@ -19,6 +20,7 @@ sys.path.insert(0, str(ROOT / "scripts" / "preview"))
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from server import PreviewHandler, _load_narrative_data, build_handler  # noqa: E402
+from runtime.setup_status import run_setup  # noqa: E402
 
 SAMPLE_RUN = ROOT / "examples" / "preview-run"
 
@@ -268,10 +270,52 @@ class StudioServerTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temp_dir = Path(tempfile.mkdtemp())
         self.runs_dir = self.temp_dir / "runs"
+        self.home_dir = self.temp_dir / "home"
+        self.home_dir.mkdir()
+        self.original_home = os.environ.get("HOME")
+        os.environ["HOME"] = str(self.home_dir)
+        from skills import installer as skill_installer
+
+        self.skill_installer = skill_installer
+        self.original_skill_dir = skill_installer.INSTALLED_SKILL_DIR
         self.handler = MockHandler(run_dir=None, runs_dir=self.runs_dir)
 
     def tearDown(self) -> None:
         shutil.rmtree(self.temp_dir, ignore_errors=True)
+        self.skill_installer.INSTALLED_SKILL_DIR = self.original_skill_dir
+        if self.original_home is None:
+            os.environ.pop("HOME", None)
+        else:
+            os.environ["HOME"] = self.original_home
+
+    def _write_ready_setup(self) -> Path:
+        from skills import installer as skill_installer
+
+        skill_root = self.home_dir / ".deck-master" / "current"
+        installed_skill = skill_root / "skills" / "deck-master"
+        installed_skill.parent.mkdir(parents=True, exist_ok=True)
+        installed_skill.mkdir(parents=True, exist_ok=True)
+        (installed_skill / "SKILL.md").write_text(
+            "---\nname: deck-master\ndescription: Test Deck Master skill.\n---\n# Deck Master\n",
+            encoding="utf-8",
+        )
+        skill_installer.INSTALLED_SKILL_DIR = installed_skill
+
+        codex_skill_dir = self.home_dir / ".codex" / "skills"
+        codex_skill_dir.mkdir(parents=True, exist_ok=True)
+        codex_link = codex_skill_dir / "deck-master"
+        if not codex_link.exists():
+            codex_link.symlink_to(installed_skill)
+
+        workspace = self.temp_dir / "workspace"
+        workspace.mkdir()
+        run_setup(
+            workspace=str(workspace),
+            runs_dir=str(self.runs_dir / "from_setup"),
+            targets=["codex"],
+            repair=True,
+        )
+        return workspace
 
     def test_studio_can_create_and_load_run(self) -> None:
         status, created = self.handler.request(
@@ -297,6 +341,89 @@ class StudioServerTests(unittest.TestCase):
         self.assertEqual(200, status)
         self.assertEqual("studio-test", deck["run_id"])
         self.assertEqual(12, len(deck["pages"]))
+
+    def test_setup_not_ready_blocks_production_run(self) -> None:
+        status, data = self.handler.request(
+            "POST",
+            "/api/runs",
+            {
+                "brief": "需要真实运行的演示",
+                "industry": "retail",
+                "target_pages": "auto",
+                "run_id": "blocked-run",
+            },
+        )
+        self.assertEqual(HTTPStatus.CONFLICT, status)
+        self.assertIn("Setup is not ready", data["error"])
+
+    def test_setup_ready_active_workspace_writes_request_workspace(self) -> None:
+        workspace = self._write_ready_setup()
+
+        status, created = self.handler.request(
+            "POST",
+            "/api/runs",
+            {
+                "brief": "真实run，带 workspace",
+                "industry": "retail",
+                "target_pages": "auto",
+                "run_id": "ready-run",
+            },
+        )
+        self.assertEqual(HTTPStatus.CREATED, status)
+        self.assertEqual("ready-run", created["run_id"])
+        run_request = json.loads((Path(created["run_dir"]) / "request.json").read_text(encoding="utf-8"))
+        self.assertEqual("production", run_request["run_mode"])
+        self.assertEqual(str(workspace.resolve()), run_request["workspace"])
+
+    def test_classic_demo_sets_fixture_mode(self) -> None:
+        status, created = self.handler.request(
+            "POST",
+            "/api/runs",
+            {
+                "brief": "经典 Demo 演示",
+                "industry": "retail",
+                "target_pages": "auto",
+                "planning_mode": "classic",
+                "run_id": "classic-demo",
+            },
+        )
+        self.assertEqual(HTTPStatus.CREATED, status)
+        self.assertEqual("classic-demo", created["run_id"])
+        run_request = json.loads((Path(created["run_dir"]) / "request.json").read_text(encoding="utf-8"))
+        self.assertEqual("fixture", run_request["run_mode"])
+
+    def test_setup_status_api_keeps_cli_compatibility(self) -> None:
+        workspace = self._write_ready_setup()
+        status, payload = self.handler.request("GET", "/api/setup-status")
+        self.assertEqual(HTTPStatus.OK, status)
+        self.assertEqual("ready", payload["status"])
+        self.assertIn("install_ready", payload)
+        self.assertIn("workspace_ready", payload)
+        self.assertIn("run_ready", payload)
+        self.assertIn("production_ready", payload)
+        self.assertEqual(str(workspace.resolve()), payload["active_workspace"])
+
+    def test_run_state_api_returns_status(self) -> None:
+        status, created = self.handler.request(
+            "POST",
+            "/api/runs",
+            {
+                "brief": "检查run状态",
+                "industry": "retail",
+                "target_pages": "auto",
+                "library_mode": "fixture",
+                "run_id": "state-run",
+            },
+        )
+        self.assertEqual(HTTPStatus.CREATED, status)
+
+        run_state_status, run_state = self.handler.request("GET", f"/api/run-state/{created['run_id']}")
+        self.assertEqual(HTTPStatus.OK, run_state_status)
+        self.assertEqual("deck_run_state.v1", run_state["schema_version"])
+        self.assertEqual("state-run", run_state["run_id"])
+        self.assertEqual("fixture", run_state["run_mode"])
+        self.assertIn("status", run_state)
+        self.assertIn("stage", run_state)
 
 
 # ---------------------------------------------------------------------------

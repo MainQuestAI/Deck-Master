@@ -12,6 +12,8 @@ const state = {
   metrics: null,
   currentRunId: new URLSearchParams(window.location.search).get("run") || "",
   selectedIndex: 0,
+  setupStatus: null,
+  runState: null,
 };
 
 const els = {
@@ -60,6 +62,12 @@ const els = {
   externalResultsContent: document.querySelector("#external-results-content"),
   exportQueueContent: document.querySelector("#export-queue-content"),
   metricsContent: document.querySelector("#metrics-content"),
+  setupBanner: document.querySelector("#setup-banner"),
+  setupStatusLabel: document.querySelector("#setup-status-label"),
+  setupNextCommand: document.querySelector("#setup-next-command"),
+  runStatePanel: document.querySelector("#run-state-panel"),
+  runStateLabel: document.querySelector("#run-state-label"),
+  runStateDetail: document.querySelector("#run-state-detail"),
 };
 
 async function requestJson(url, options = {}) {
@@ -101,6 +109,7 @@ async function loadDeck() {
     els.meta.textContent = `${state.deck.run_id} · ${state.deck.status} · ${state.deck.pages.length} pages${qualitySummaryText(state.deck.quality)}`;
     renderList();
     selectPage(0);
+    await loadRunState();
     loadNarrative();
     loadAssetSignals();
     loadGovernance();
@@ -110,7 +119,9 @@ async function loadDeck() {
     state.narrative = null;
     state.assetSignals = null;
     state.governance = null;
+    state.runState = null;
     clearCockpitData();
+    clearRunState();
     els.title.textContent = "Studio";
     els.meta.textContent = "Create or select a run.";
     els.list.innerHTML = "";
@@ -120,6 +131,88 @@ async function loadDeck() {
     renderGovernance();
     renderCockpitData();
   }
+}
+
+function clearRunState() {
+  state.runState = null;
+  renderRunState();
+}
+
+function renderRunState(errorMsg) {
+  if (!els.runStatePanel) return;
+
+  if (errorMsg) {
+    els.runStateLabel.textContent = "Error";
+    els.runStateDetail.textContent = errorMsg;
+    return;
+  }
+
+  if (!state.currentRunId || !state.runState) {
+    els.runStateLabel.textContent = "No run selected";
+    els.runStateDetail.textContent = "Select a run to view status and next command.";
+    return;
+  }
+
+  const status = state.runState.status || "unknown";
+  const stage = state.runState.stage || "";
+  const mode = state.runState.run_mode ? ` · ${state.runState.run_mode}` : "";
+  const nextCommand = state.runState.next_command || "";
+  els.runStateLabel.textContent = `${status}${stage ? ` · ${stage}` : ""}${mode}`;
+  els.runStateDetail.textContent = nextCommand ? `Next: ${nextCommand}` : "No action required.";
+}
+
+async function loadRunState() {
+  if (!state.currentRunId) {
+    clearRunState();
+    return;
+  }
+  try {
+    state.runState = await requestJson(`/api/run-state/${encodeURIComponent(state.currentRunId)}`);
+    renderRunState();
+  } catch (error) {
+    state.runState = null;
+    renderRunState(error.message);
+  }
+}
+
+function renderSetupStatus(errorMsg) {
+  if (!els.setupBanner) return;
+
+  if (errorMsg) {
+    els.setupBanner.classList.remove("ready", "warning");
+    els.setupStatusLabel.textContent = "Unavailable";
+    els.setupNextCommand.textContent = errorMsg;
+    return;
+  }
+
+  if (!state.setupStatus) {
+    els.setupBanner.classList.remove("ready", "warning");
+    els.setupStatusLabel.textContent = "Checking...";
+    els.setupNextCommand.textContent = "Loading setup status.";
+    return;
+  }
+
+  const status = String(state.setupStatus.status || "unknown");
+  const nextCommand = state.setupStatus.next_command || "";
+  els.setupBanner.classList.remove("ready", "warning");
+  if (status === "ready" && state.setupStatus.production_ready) {
+    els.setupBanner.classList.add("ready");
+  } else {
+    els.setupBanner.classList.add("warning");
+  }
+  els.setupStatusLabel.textContent = status;
+  els.setupNextCommand.textContent = nextCommand || "Setup command available from setup status";
+}
+
+async function loadSetupStatus() {
+  try {
+    state.setupStatus = await requestJson("/api/setup-status");
+  } catch (error) {
+    state.setupStatus = null;
+    renderSetupStatus(error.message);
+    return;
+  }
+  renderSetupStatus();
 }
 
 function renderRuns() {
@@ -1069,4 +1162,8 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "ArrowRight") selectPage(state.selectedIndex + 1);
 });
 
-loadRuns().then(loadDeck);
+(async function bootstrap() {
+  await loadSetupStatus();
+  await loadRuns();
+  await loadDeck();
+})();
