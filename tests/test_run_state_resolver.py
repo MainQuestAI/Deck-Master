@@ -195,8 +195,15 @@ class RunStateResolverAcceptanceTests(unittest.TestCase):
         generation_tasks.mkdir()
         (generation_tasks / "index.json").write_text(json.dumps({"tasks": [{"id": "task-1"}]}), encoding="utf-8")
         self._write_json("generation_session.json", {"run_id": "r1", "status": "quality_required"})
+        quality_dir = self.run_dir / "quality_reports"
+        quality_dir.mkdir()
+        (quality_dir / "draft_gate.json").write_text(
+            json.dumps({"status": "pass", "blocks_delivery": False}),
+            encoding="utf-8",
+        )
         state = resolve_run_state(self.run_dir, run_mode="fixture")
         self.assertEqual("needs_draft_gate", state["stage"])
+        self.assertIn("quality-gate draft", state["next_command"])
 
 
 if __name__ == "__main__":

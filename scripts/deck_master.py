@@ -119,7 +119,6 @@ ROOT = Path(__file__).resolve().parents[1]
 PROTECTED_COMMANDS = {
     "plan",
     "start-conversation",
-    "start",
     "build-brief",
     "build-claim-map",
     "autoplan",
@@ -269,8 +268,12 @@ def _apply_workspace_runtime_fields(
 def _resolve_workspace_for_setup_status(args: argparse.Namespace) -> str | None:
     if getattr(args, "workspace", None):
         return str(args.workspace)
-    if getattr(args, "run_dir", None):
-        request_path = Path(args.run_dir).expanduser().resolve() / "request.json"
+    if getattr(args, "run_dir", None) or getattr(args, "run_id", None):
+        try:
+            run_dir = resolve_run_dir(args)
+        except RunStateError:
+            return None
+        request_path = run_dir / "request.json"
         if request_path.exists():
             try:
                 request = read_json(request_path)
@@ -278,6 +281,28 @@ def _resolve_workspace_for_setup_status(args: argparse.Namespace) -> str | None:
             except RunStateError:
                 return None
     return None
+
+
+def _start_orchestration_summary(run_dir: Path, state: dict[str, Any]) -> dict[str, Any]:
+    required = [
+        REQUEST_NAME,
+        CONTEXT_MANIFEST_NAME,
+        DECK_BRIEF_NAME,
+        CLAIM_MAP_NAME,
+        NARRATIVE_PLAN_NAME,
+        PAGE_TASKS_NAME,
+        SOURCING_PLAN_NAME,
+        "preview_manifest.json",
+    ]
+    stage = str(state.get("stage") or "")
+    return {
+        "status": "ready_for_external_production"
+        if stage in {"ready_for_client_export", "ready_for_benchmark"}
+        else ("needs_quality_gate" if stage == "needs_draft_gate" else "blocked"),
+        "missing_artifacts": [name for name in required if not (run_dir / name).exists()],
+        "allow_external_production": stage in {"ready_for_client_export", "ready_for_benchmark"},
+        "next_command": state.get("next_command", ""),
+    }
 
 
 def _load_workspace_archetypes(request: dict[str, Any]) -> dict[str, Any] | None:
@@ -857,6 +882,38 @@ def command_setup_status(args: argparse.Namespace) -> dict[str, Any]:
     )
 
 
+def command_start(args: argparse.Namespace) -> dict[str, Any]:
+    run_mode = _normalize_run_mode(getattr(args, "run_mode", None))
+    setup = setup_status(
+        workspace=_resolve_workspace_for_setup_status(args),
+        run_mode=run_mode,
+        write_event=False,
+    )
+    payload: dict[str, Any] = {
+        "schema_version": "deck_master_start.v1",
+        "status": setup.get("status", "blocked"),
+        "run_mode": run_mode,
+        "setup_status": setup,
+        "active_workspace": (setup.get("config") or {}).get("active_workspace", "")
+        if isinstance(setup.get("config"), dict)
+        else "",
+        "production_ready": bool(setup.get("production_ready")),
+        "next_command": setup.get("next_command") or "deck-master setup-status",
+    }
+    if getattr(args, "run_dir", None) or getattr(args, "run_id", None):
+        run_dir = resolve_run_dir(args)
+        run_state = resolve_run_state(
+            run_dir,
+            cli_workspace=getattr(args, "workspace", None),
+            run_mode=run_mode,
+            dev_allow_unsetup=bool(getattr(args, "dev_allow_unsetup", False)),
+        )
+        payload["run_state"] = run_state
+        payload["orchestration"] = _start_orchestration_summary(run_dir, run_state)
+        payload["next_command"] = run_state.get("next_command") or payload["next_command"]
+    return payload
+
+
 def command_run_state(args: argparse.Namespace) -> dict[str, Any]:
     return resolve_run_state(
         resolve_run_dir(args),
@@ -1423,9 +1480,9 @@ def build_parser() -> argparse.ArgumentParser:
     add_conversation_args(p_start)
     p_start.set_defaults(func=command_start_conversation)
 
-    p_start_alias = sub.add_parser("start", help="Alias for start-conversation")
-    add_conversation_args(p_start_alias)
-    p_start_alias.set_defaults(func=command_start_conversation)
+    p_start_entry = sub.add_parser("start", help="Show Deck Master setup, run state, and next action")
+    add_run_args(p_start_entry)
+    p_start_entry.set_defaults(func=command_start)
 
     p_brief = sub.add_parser("build-brief", help="Compile deck_brief.json from context and conversation")
     add_run_args(p_brief)

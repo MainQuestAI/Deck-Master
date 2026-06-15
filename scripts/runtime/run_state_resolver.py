@@ -304,7 +304,13 @@ def _resolve_stage(root: Path, run_mode: str) -> tuple[str, list[dict[str, str]]
                 [{"action": "preview_refresh", "reason": "generation results imported but preview is not refreshed"}],
                 "generation results imported but preview is not refreshed",
             )
-        if gen_status and gen_status not in {"preview_refreshed", "quality_required"}:
+        if gen_status == "quality_required":
+            return (
+                "needs_draft_gate",
+                [{"action": "draft_gate", "reason": "generation results require fresh quality gate"}],
+                "generation results require fresh quality gate",
+            )
+        if gen_status and gen_status not in {"preview_refreshed"}:
             return (
                 "needs_generation_import",
                 [{"action": "generation_import", "reason": "generation session requires import or refresh"}],

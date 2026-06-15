@@ -60,6 +60,14 @@ class SetupEnforcementTests(unittest.TestCase):
         self.assertIn("Deck Master setup is not ready", completed.stderr)
         self.assertIn("deck-master setup", completed.stderr)
 
+    def test_start_without_context_file_reports_setup_next_action(self) -> None:
+        completed = self.run_cli("start")
+        payload = json.loads(completed.stdout)
+
+        self.assertEqual("deck_master_start.v1", payload["schema_version"])
+        self.assertEqual("blocked", payload["status"])
+        self.assertIn("deck-master setup", payload["next_command"])
+
     def test_setup_repair_workspace_and_status_ready(self) -> None:
         self._install_fake_skill()
         workspace = self.temp_dir / "workspace"
@@ -83,6 +91,11 @@ class SetupEnforcementTests(unittest.TestCase):
         self.assertEqual([], payload["repair_items"])
         self.assertEqual("http://127.0.0.1:5050", payload["config"]["review_cockpit_url"])
         self.assertTrue((workspace / "quality" / "delivery_checklist.md").exists())
+
+        start = self.run_cli("start", "--workspace", str(workspace))
+        start_payload = json.loads(start.stdout)
+        self.assertEqual("ready", start_payload["setup_status"]["status"])
+        self.assertTrue(start_payload["production_ready"])
 
     def test_setup_status_needs_repair_for_incomplete_workspace(self) -> None:
         self._install_fake_skill()

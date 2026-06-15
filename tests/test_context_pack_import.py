@@ -17,11 +17,13 @@ if _scripts_dir not in sys.path:
 from scripts.context_intake.context_pack import (
     SCHEMA_VERSION,
     ContextPackError,
+    create_run_from_context_pack,
     import_context_pack,
     validate_context_pack,
 )
 from scripts.runtime.run_state import create_run, read_json, CONTEXT_MANIFEST_NAME
 from scripts.narrative.claim_graph import build_claim_evidence_graph
+from scripts.workspace.foundation import repair_workspace
 
 
 def _valid_pack(**overrides) -> dict:
@@ -257,6 +259,37 @@ class ContextPackImportTest(unittest.TestCase):
             or e.get("action") == "context_pack.imported"
         ]
         self.assertTrue(len(import_events) >= 1)
+
+    def test_create_run_from_context_pack_writes_workspace_runtime_fields(self) -> None:
+        workspace = Path(self._tmp) / "workspace"
+        repair_workspace(workspace)
+        pack = _valid_pack(run_id="created-run")
+
+        result = create_run_from_context_pack(
+            workspace=str(workspace),
+            pack=pack,
+            runs_dir=self.runs_dir,
+        )
+
+        request = read_json(Path(result["run_dir"]) / "request.json")
+        self.assertEqual("production", request["run_mode"])
+        self.assertEqual(str(workspace.resolve()), request["workspace"])
+        self.assertEqual("workspace_workspace", request["workspace_id"])
+        self.assertEqual("workspace_manifest.json", request["workspace_manifest_ref"])
+        self.assertEqual("cli", request["workspace_resolved_from"])
+
+    def test_create_run_from_context_pack_blocks_bad_workspace_before_create(self) -> None:
+        missing_workspace = Path(self._tmp) / "missing_workspace"
+        pack = _valid_pack(run_id="blocked-run")
+
+        with self.assertRaises(ContextPackError):
+            create_run_from_context_pack(
+                workspace=str(missing_workspace),
+                pack=pack,
+                runs_dir=self.runs_dir,
+            )
+
+        self.assertFalse((self.runs_dir / "blocked-run").exists())
 
 
 class ContextPackClaimGraphTest(unittest.TestCase):
