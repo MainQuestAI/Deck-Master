@@ -72,6 +72,13 @@ def _brief_from_case(case: BenchmarkCase, pack: dict[str, Any]) -> str:
     return "\n".join(part for part in parts if part.strip())
 
 
+def _is_fixture_benchmark_case(case: BenchmarkCase) -> bool:
+    workflow = case.data.get("workflow", {})
+    if str(workflow.get("library_mode") or "").strip().lower() == "fixture":
+        return True
+    return str(case.data.get("case_id") or "").strip().endswith("_fixture")
+
+
 def create_benchmark_run(
     case: BenchmarkCase,
     *,
@@ -87,6 +94,7 @@ def create_benchmark_run(
     request = {
         "run_id": actual_run_id,
         "project_name": str(case.data.get("case_name") or case.data["case_id"]),
+        "run_mode": "fixture" if _is_fixture_benchmark_case(case) else "benchmark",
         "industry": str(case.data.get("industry") or ""),
         "audience": str(case.data.get("audience") or "client"),
         "business_goal": _brief_from_case(case, pack),

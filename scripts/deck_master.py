@@ -48,7 +48,7 @@ from uat.real_workflow_smoke import run_real_workflow_smoke
 from uat.render_tool import run_render_tool_uat
 from benchmark.case import BenchmarkCaseError, load_benchmark_case
 from benchmark.checkpoints import BenchmarkCheckpointError, write_benchmark_checkpoint
-from benchmark.report import BenchmarkReportError, write_benchmark_report
+from benchmark.report import BenchmarkReportError, write_benchmark_report, write_benchmark_rc_report
 from benchmark.runner import (
     BenchmarkRunError,
     collect_pending_external_steps,
@@ -153,6 +153,7 @@ PROTECTED_COMMANDS = {
     "smoke-real-workflow",
     "benchmark-run",
     "benchmark-report",
+    "benchmark-rc-report",
     "benchmark-checkpoint",
     "delivery",
     "generation-session",
@@ -1151,8 +1152,39 @@ def command_benchmark_checkpoint(args: argparse.Namespace) -> dict[str, Any]:
 def command_benchmark_report(args: argparse.Namespace) -> dict[str, Any]:
     case = load_benchmark_case(args.case, benchmark_dir=getattr(args, "benchmark_dir", None))
     run_dir = resolve_run_dir(args)
+    if bool(getattr(args, "rc_readiness", False)):
+        _ensure_ready_for_benchmark(run_dir)
     pending_external_steps = collect_pending_external_steps(case, run_dir)
     return write_benchmark_report(
+        case,
+        run_dir,
+        benchmark_dir=getattr(args, "benchmark_dir", None),
+        force=bool(getattr(args, "force", False)),
+        pending_external_steps=pending_external_steps,
+    )
+
+
+def _ensure_ready_for_benchmark(run_dir: Path) -> dict[str, Any]:
+    state = resolve_run_state(
+        run_dir,
+        cli_workspace=None,
+        run_mode=None,
+        dev_allow_unsetup=False,
+    )
+    if state.get("stage") != "ready_for_benchmark":
+        raise BenchmarkReportError(
+            "benchmark readiness blocked. current stage is "
+            f"{state.get('stage')} and expected ready_for_benchmark."
+        )
+    return state
+
+
+def command_benchmark_rc_report(args: argparse.Namespace) -> dict[str, Any]:
+    case = load_benchmark_case(args.case, benchmark_dir=getattr(args, "benchmark_dir", None))
+    run_dir = resolve_run_dir(args)
+    _ensure_ready_for_benchmark(run_dir)
+    pending_external_steps = collect_pending_external_steps(case, run_dir)
+    return write_benchmark_rc_report(
         case,
         run_dir,
         benchmark_dir=getattr(args, "benchmark_dir", None),
@@ -1723,7 +1755,19 @@ def build_parser() -> argparse.ArgumentParser:
     p_brep.add_argument("--case", required=True, help="Path to benchmark_case.json")
     p_brep.add_argument("--benchmark-dir", default=str(ROOT / "benchmarks"))
     p_brep.add_argument("--force", action="store_true", help="Replace an existing benchmark report")
+    p_brep.add_argument(
+        "--rc-readiness",
+        action="store_true",
+        help="Require run_state stage ready_for_benchmark before generating report.",
+    )
     p_brep.set_defaults(func=command_benchmark_report)
+
+    p_brr = sub.add_parser("benchmark-rc-report", help="Build RC benchmark report after ready_for_benchmark")
+    add_run_args(p_brr)
+    p_brr.add_argument("--case", required=True, help="Path to benchmark_case.json")
+    p_brr.add_argument("--benchmark-dir", default=str(ROOT / "benchmarks"))
+    p_brr.add_argument("--force", action="store_true", help="Replace an existing RC benchmark report")
+    p_brr.set_defaults(func=command_benchmark_rc_report)
 
     p_bcp = sub.add_parser("benchmark-checkpoint", help="Record a benchmark checkpoint")
     add_run_args(p_bcp)
