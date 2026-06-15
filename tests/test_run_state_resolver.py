@@ -1,0 +1,138 @@
+from __future__ import annotations
+
+import json
+import os
+import shutil
+import tempfile
+import unittest
+from pathlib import Path
+
+from datetime import datetime, timezone
+
+ROOT = Path(__file__).resolve().parents[1]
+
+import sys
+
+sys.path.insert(0, str(ROOT / "scripts"))
+
+from runtime.run_state import (  # noqa: E402
+    CLAIM_MAP_NAME,
+    CONTEXT_MANIFEST_NAME,
+    DECK_BRIEF_NAME,
+    NARRATIVE_PLAN_NAME,
+    PAGE_TASKS_NAME,
+    PREVIEW_MANIFEST_NAME,
+    REQUEST_NAME,
+    SOURCING_PLAN_NAME,
+)
+from runtime.run_state_resolver import resolve_run_state
+from runtime.setup_status import setup_status
+
+
+class RunStateResolverAcceptanceTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tmp_root = Path(tempfile.mkdtemp(prefix="dm_run_state_test_"))
+        self.home = self.tmp_root / "home"
+        self.home.mkdir()
+        self.original_home = os.environ.get("HOME")
+        os.environ["HOME"] = str(self.home)
+        self.addCleanup(self._restore_env)
+        self.run_dir = self.tmp_root / "run"
+        self.run_dir.mkdir()
+        self.addCleanup(lambda: shutil.rmtree(self.tmp_root, ignore_errors=True))
+
+    def tearDown(self) -> None:
+        self._restore_env()
+
+    def _restore_env(self) -> None:
+        if self.original_home is None:
+            os.environ.pop("HOME", None)
+        else:
+            os.environ["HOME"] = self.original_home
+
+    def _write_json(self, filename: str, payload: dict[str, object]) -> None:
+        (self.run_dir / filename).write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+
+    def _write_full_pipeline(self, include_preview: bool = False) -> None:
+        self._write_json(REQUEST_NAME, {"run_id": "r1", "run_mode": "production", "workspace": ""})
+        self._write_json(CONTEXT_MANIFEST_NAME, {"run_id": "r1"})
+        self._write_json(DECK_BRIEF_NAME, {"run_id": "r1"})
+        self._write_json(CLAIM_MAP_NAME, {"run_id": "r1", "claims": []})
+        self._write_json(NARRATIVE_PLAN_NAME, {"run_id": "r1", "beats": []})
+        self._write_json(PAGE_TASKS_NAME, {"run_id": "r1", "tasks": []})
+        self._write_json(SOURCING_PLAN_NAME, {"run_id": "r1", "tasks": []})
+        if include_preview:
+            self._write_json(PREVIEW_MANIFEST_NAME, {"run_id": "r1", "pages": []})
+
+    def test_setup_status_without_workspace_still_reports_not_production_ready(self) -> None:
+        install_root = self.home / ".deck-master"
+        install_root.mkdir(parents=True, exist_ok=True)
+        config_path = install_root / "config.json"
+        config_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "deck_master_setup.v1",
+                    "setup_completed_at": datetime.now(timezone.utc).isoformat(),
+                    "install_root": str(install_root),
+                    "active_workspace": "",
+                    "default_runs_dir": str(install_root / "runs"),
+                    "review_cockpit_url": "http://127.0.0.1:5050",
+                    "agent_targets": [],
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+        (install_root / "runs").mkdir(exist_ok=True)
+
+        status = setup_status(run_mode="production")
+        self.assertFalse(status["production_ready"])
+
+    def test_production_run_without_workspace_is_blocked(self) -> None:
+        self._write_json(REQUEST_NAME, {"run_id": "r1"})
+        self._write_json(CONTEXT_MANIFEST_NAME, {})
+        state = resolve_run_state(self.run_dir, run_mode="production")
+        self.assertEqual("blocked_workspace", state["stage"])
+
+    def test_fixture_and_dev_can_bypass_workspace(self) -> None:
+        self._write_json(REQUEST_NAME, {"run_id": "r1"})
+        self._write_json(CONTEXT_MANIFEST_NAME, {})
+        for mode, allow in (("fixture", False), ("dev", True)):
+            with self.subTest(run_mode=mode):
+                state = resolve_run_state(self.run_dir, run_mode=mode, dev_allow_unsetup=allow)
+                self.assertNotEqual("blocked_workspace", state["stage"])
+
+    def test_request_workspace_vs_cli_workspace_conflict_is_blocked(self) -> None:
+        request_workspace = self.tmp_root / "request_workspace"
+        cli_workspace = self.tmp_root / "cli_workspace"
+        self._write_json(REQUEST_NAME, {"run_id": "r1", "workspace": str(request_workspace)})
+        self._write_json(CONTEXT_MANIFEST_NAME, {})
+        state = resolve_run_state(self.run_dir, run_mode="production", cli_workspace=str(cli_workspace))
+        self.assertEqual("blocked_workspace", state["stage"])
+
+    def test_preview_review_status_takes_precedence_over_page_tasks(self) -> None:
+        self._write_full_pipeline(include_preview=True)
+        self._write_json(
+            PREVIEW_MANIFEST_NAME,
+            {
+                "pages": [
+                    {"page_id": "p1", "review_status": "needs_review", "decision": "approved"},
+                ]
+            },
+        )
+        page_tasks = {"run_id": "r1", "review_status": "approved"}
+        self._write_json(PAGE_TASKS_NAME, page_tasks)
+        state = resolve_run_state(self.run_dir, run_mode="fixture")
+        self.assertEqual("needs_review", state["stage"])
+
+    def test_generation_tasks_without_session_returns_generation_step(self) -> None:
+        self._write_full_pipeline()
+        generation_tasks = self.run_dir / "generation_tasks"
+        generation_tasks.mkdir()
+        (generation_tasks / "index.json").write_text(json.dumps({"tasks": [{"id": "task-1"}]}), encoding="utf-8")
+        state = resolve_run_state(self.run_dir, run_mode="fixture")
+        self.assertEqual("needs_generation_session", state["stage"])
+
+
+if __name__ == "__main__":
+    unittest.main()
