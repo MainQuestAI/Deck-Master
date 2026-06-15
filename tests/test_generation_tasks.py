@@ -32,6 +32,26 @@ class GenerationTaskTests(unittest.TestCase):
         self.assertEqual(2, len(tasks["tasks"]))
         self.assertTrue((self.temp_dir / "generation_tasks" / "index.json").exists())
 
+    def test_adapt_and_generate_semantics(self) -> None:
+        sourcing = {
+            "run_id": "run",
+            "decisions": [
+                {"beat_id": "b1", "source_decision": "adapt", "selected_candidate": {"slide_id": "s1"}},
+                {"beat_id": "b2", "source_decision": "generate"},
+            ],
+        }
+        tasks = create_generation_tasks(sourcing, self.temp_dir)
+
+        adapt_task = next(task for task in tasks["tasks"] if task["beat_id"] == "b1")
+        generate_task = next(task for task in tasks["tasks"] if task["beat_id"] == "b2")
+
+        self.assertEqual("adapt", adapt_task["task_type"])
+        self.assertTrue(adapt_task["reference_slide_required"])
+        self.assertEqual("rewrite_existing_slide", adapt_task["expected_operation"])
+        self.assertEqual("generate", generate_task["task_type"])
+        self.assertFalse(generate_task["reference_slide_required"])
+        self.assertEqual("create_new_slide", generate_task["expected_operation"])
+
     def test_build_deck_pro_max_init_command(self) -> None:
         command = build_init_command(project_dir=Path("/tmp/project"), pages=3)
         self.assertIn("init", command)
