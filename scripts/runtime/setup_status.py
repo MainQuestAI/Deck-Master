@@ -90,9 +90,11 @@ def _run_mode_requires_workspace(value: str) -> bool:
 
 
 def _run_mode_allows_setup_skip(mode: str, dev_allow_unsetup: bool = False) -> bool:
+    if is_dev_setup_allowed(dev_allow_unsetup):
+        return True
     normalized = _normalize_run_mode(mode)
     if normalized == "dev":
-        return is_dev_setup_allowed(dev_allow_unsetup)
+        return True
     if normalized == "fixture":
         return True
     return False
@@ -262,6 +264,8 @@ def setup_status(
     ):
         status_value = "needs_workspace"
 
+    production_ready = bool(readiness["status"]["production_ready"] and not missing and not repairs)
+
     result = {
         "schema_version": SETUP_STATUS_SCHEMA_VERSION,
         "status": status_value,
@@ -273,7 +277,7 @@ def setup_status(
         "install_ready": readiness["status"]["install_ready"],
         "workspace_ready": readiness["status"]["workspace_ready"],
         "run_ready": readiness["status"]["run_ready"],
-        "production_ready": readiness["status"]["production_ready"],
+        "production_ready": production_ready,
         "run_mode": normalized_mode,
         "workspace": workspace_report,
         "active_workspace_required_for_production": _run_mode_requires_workspace(normalized_mode),
@@ -302,6 +306,8 @@ def setup_status(
 
 def require_setup_ready(*, dev_allow_unsetup: bool = False, workspace: str | None = None, run_mode: str | None = None) -> None:
     normalized_mode = _normalize_run_mode(run_mode)
+    if _run_mode_allows_setup_skip(normalized_mode, dev_allow_unsetup):
+        return
     status = setup_status(
         workspace=workspace,
         run_mode=normalized_mode,
@@ -321,8 +327,6 @@ def require_setup_ready(*, dev_allow_unsetup: bool = False, workspace: str | Non
             "Deck Master setup is not ready. "
             f"status={status['status']}; next={status.get('next_command', '')}"
         )
-    if _run_mode_allows_setup_skip(normalized_mode, dev_allow_unsetup):
-        return
     if status["status"] == "needs_repair":
         raise SetupError(
             "Deck Master setup is not ready. "

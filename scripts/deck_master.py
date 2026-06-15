@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -94,6 +95,7 @@ from runtime.run_state import (
     DECK_BRIEF_NAME,
     NARRATIVE_PLAN_NAME,
     PAGE_TASKS_NAME,
+    REQUEST_NAME,
     SOURCING_PLAN_NAME,
     RunStateError,
     create_run,
@@ -209,6 +211,12 @@ def _normalize_run_mode(value: str | None) -> str:
     if mode in {"production", "fixture", "dev", "benchmark"}:
         return mode
     return "production"
+
+
+def _dev_allow_unsetup(args: argparse.Namespace) -> bool:
+    if bool(getattr(args, "dev_allow_unsetup", False)):
+        return True
+    return os.environ.get("DECK_MASTER_DEV_SKIP_SETUP") == "1"
 
 
 def _normalize_planner_mode(value: str | None, run_mode: str) -> str:
@@ -1179,9 +1187,28 @@ def _ensure_ready_for_benchmark(run_dir: Path) -> dict[str, Any]:
     return state
 
 
+def _is_fixture_benchmark_case(case: Any) -> bool:
+    workflow = case.data.get("workflow", {}) if hasattr(case, "data") else {}
+    if str(workflow.get("library_mode") or "").strip().lower() == "fixture":
+        return True
+    return str(case.data.get("case_id") or "").strip().endswith("_fixture")
+
+
+def _ensure_rc_benchmark_boundary(case: Any, run_dir: Path) -> None:
+    if _is_fixture_benchmark_case(case):
+        raise BenchmarkReportError("benchmark RC report blocked: fixture cases cannot enter RC benchmark.")
+    request = read_json(run_dir / REQUEST_NAME)
+    run_mode = str(request.get("run_mode") or "").strip().lower()
+    if run_mode != "benchmark":
+        raise BenchmarkReportError(
+            "benchmark RC report blocked: run_mode must be benchmark."
+        )
+
+
 def command_benchmark_rc_report(args: argparse.Namespace) -> dict[str, Any]:
     case = load_benchmark_case(args.case, benchmark_dir=getattr(args, "benchmark_dir", None))
     run_dir = resolve_run_dir(args)
+    _ensure_rc_benchmark_boundary(case, run_dir)
     _ensure_ready_for_benchmark(run_dir)
     pending_external_steps = collect_pending_external_steps(case, run_dir)
     return write_benchmark_rc_report(
@@ -1800,7 +1827,7 @@ def main() -> None:
     try:
         if args.command in PROTECTED_COMMANDS:
             require_setup_ready(
-                dev_allow_unsetup=bool(getattr(args, "dev_allow_unsetup", False)),
+                dev_allow_unsetup=_dev_allow_unsetup(args),
                 workspace=_workspace_for_setup_guard(args),
                 run_mode=_normalize_run_mode(getattr(args, "run_mode", None)),
             )

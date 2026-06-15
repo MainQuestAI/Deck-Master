@@ -69,6 +69,15 @@ class BenchmarkReportTests(unittest.TestCase):
         write_json(self.case_dir / "context_pack.json", {"schema_version": "deck_context_pack.v1"})
         self.case = load_benchmark_case(self.case_dir / "benchmark_case.json", benchmark_dir=self.bench_dir)
 
+        self.rc_case_dir = self.bench_dir / "cases" / "retail_benchmark"
+        self.rc_case_dir.mkdir(parents=True)
+        write_json(self.rc_case_dir / "benchmark_case.json", _case_payload("retail_benchmark"))
+        write_json(self.rc_case_dir / "context_pack.json", {"schema_version": "deck_context_pack.v1"})
+        self.rc_case = load_benchmark_case(
+            self.rc_case_dir / "benchmark_case.json",
+            benchmark_dir=self.bench_dir,
+        )
+
         self.fixture_case_dir = self.bench_dir / "cases" / "fixture_example"
         self.fixture_case_dir.mkdir(parents=True)
         write_json(self.fixture_case_dir / "benchmark_case.json", _case_payload("fixture_example", workflow_library_mode="fixture"))
@@ -238,9 +247,9 @@ class BenchmarkReportTests(unittest.TestCase):
         return run_dir
 
     def test_benchmark_rc_report_requires_ready_for_benchmark(self) -> None:
-        run_dir = self._ready_benchmark_run(self.case, "benchmark")
+        run_dir = self._ready_benchmark_run(self.rc_case, "benchmark")
         result = command_benchmark_rc_report(Namespace(
-            case=str(self.case_dir / "benchmark_case.json"),
+            case=str(self.rc_case_dir / "benchmark_case.json"),
             benchmark_dir=str(self.bench_dir),
             run_dir=str(run_dir),
             run_id=None,
@@ -250,6 +259,18 @@ class BenchmarkReportTests(unittest.TestCase):
         report = json.loads(Path(result["report"]).read_text(encoding="utf-8"))
         self.assertEqual("benchmark_rc_report.json", Path(result["report"]).name)
         self.assertEqual(run_dir.name, report["run_id"])
+
+    def test_benchmark_rc_report_blocks_non_benchmark_run_mode(self) -> None:
+        run_dir = self._ready_benchmark_run(self.rc_case, "production")
+        with self.assertRaises(BenchmarkReportError):
+            command_benchmark_rc_report(Namespace(
+                case=str(self.rc_case_dir / "benchmark_case.json"),
+                benchmark_dir=str(self.bench_dir),
+                run_dir=str(run_dir),
+                run_id=None,
+                runs_dir=str(self.temp_dir / "runs"),
+                force=True,
+            ))
 
     def test_benchmark_rc_report_blocks_fixture_benchmark(self) -> None:
         run_dir = self._ready_benchmark_run(self.fixture_case, "fixture")
