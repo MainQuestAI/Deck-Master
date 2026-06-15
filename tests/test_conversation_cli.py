@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -23,6 +24,7 @@ class ConversationCliTests(unittest.TestCase):
             text=True,
             capture_output=True,
             check=False,
+            env={**os.environ, "DECK_MASTER_DEV_SKIP_SETUP": "1"},
         )
         self.assertEqual(0, completed.returncode, completed.stderr)
         return json.loads(completed.stdout)

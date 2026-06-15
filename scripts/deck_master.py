@@ -95,11 +95,52 @@ from runtime.run_state import (
     write_json,
 )
 from runtime.next_step import resolve_next_step
+from runtime.orchestration import import_plan, import_render_result, orchestration_check
 from tools.ppt_library_client import PPTLibraryClientError, run_library_selection
 from workspace.foundation import WorkspaceError, init_workspace, register_workspace, validate_workspace
+from runtime.setup_status import SetupError, configured_runs_dir, require_setup_ready, run_setup, setup_status
 
 
 ROOT = Path(__file__).resolve().parents[1]
+PROTECTED_COMMANDS = {
+    "plan",
+    "start-conversation",
+    "build-brief",
+    "build-claim-map",
+    "autoplan",
+    "search-library",
+    "decide-sourcing",
+    "create-generation-tasks",
+    "build-preview",
+    "export",
+    "quality-gate",
+    "override",
+    "opportunity",
+    "approval",
+    "build-judgments",
+    "build-claim-graph",
+    "import-context-pack",
+    "create-run-from-context-pack",
+    "prepare-narrative-advice",
+    "import-narrative-advice",
+    "apply-narrative-advice",
+    "prepare-quality-review",
+    "import-quality-review",
+    "prepare-generation-handoff",
+    "import-generation-result",
+    "refresh-preview-from-generation",
+    "import-plan",
+    "import-render-result",
+    "summarize-run-metrics",
+    "uat-ppt-library",
+    "uat-generation-tool",
+    "uat-render-tool",
+    "smoke-real-workflow",
+    "benchmark-run",
+    "benchmark-report",
+    "benchmark-checkpoint",
+    "delivery",
+}
 
 
 def print_json(payload: dict[str, Any]) -> None:
@@ -107,7 +148,9 @@ def print_json(payload: dict[str, Any]) -> None:
 
 
 def runs_dir(args: argparse.Namespace) -> Path:
-    return Path(args.runs_dir).expanduser().resolve()
+    if getattr(args, "runs_dir", None):
+        return Path(args.runs_dir).expanduser().resolve()
+    return configured_runs_dir(ROOT / "runs")
 
 
 def resolve_run_dir(args: argparse.Namespace) -> Path:
@@ -127,6 +170,20 @@ def read_optional_json(run_dir: Path, filename: str) -> dict[str, Any] | None:
     if not path.exists():
         return None
     return read_json(path)
+
+
+def _workspace_for_setup_guard(args: argparse.Namespace) -> str | None:
+    if getattr(args, "workspace", None):
+        return str(args.workspace)
+    if getattr(args, "run_dir", None):
+        request_path = Path(args.run_dir).expanduser().resolve() / "request.json"
+        if request_path.exists():
+            try:
+                request = read_json(request_path)
+                return str(request.get("workspace") or "") or None
+            except RunStateError:
+                return None
+    return None
 
 
 def _load_workspace_archetypes(request: dict[str, Any]) -> dict[str, Any] | None:
@@ -664,6 +721,20 @@ def command_validate_workspace(args: argparse.Namespace) -> dict[str, Any]:
     return result
 
 
+def command_setup(args: argparse.Namespace) -> dict[str, Any]:
+    return run_setup(
+        workspace=getattr(args, "workspace", None),
+        runs_dir=getattr(args, "runs_dir", None),
+        targets=getattr(args, "target", None),
+        review_cockpit_url=getattr(args, "review_cockpit_url", None) or "http://127.0.0.1:5050",
+        repair=bool(getattr(args, "repair_workspace", False)),
+    )
+
+
+def command_setup_status(args: argparse.Namespace) -> dict[str, Any]:
+    return setup_status(workspace=getattr(args, "workspace", None))
+
+
 def command_install_skill(args: argparse.Namespace) -> dict[str, Any]:
     return install_skill(
         target=args.target,
@@ -689,6 +760,18 @@ def command_uninstall_skill(args: argparse.Namespace) -> dict[str, Any]:
     )
 
 
+def command_orchestration_check(args: argparse.Namespace) -> dict[str, Any]:
+    return orchestration_check(resolve_run_dir(args))
+
+
+def command_import_plan(args: argparse.Namespace) -> dict[str, Any]:
+    return import_plan(resolve_run_dir(args), args.input, source=args.source)
+
+
+def command_import_render_result(args: argparse.Namespace) -> dict[str, Any]:
+    return import_render_result(resolve_run_dir(args), args.input)
+
+
 def command_import_context_pack(args: argparse.Namespace) -> dict[str, Any]:
     run_dir = resolve_run_dir(args)
     input_path = Path(args.input).expanduser().resolve()
@@ -712,7 +795,7 @@ def command_create_run_from_context_pack(args: argparse.Namespace) -> dict[str, 
         run_id=getattr(args, "run_id", None),
         industry=getattr(args, "industry", "") or "",
         audience=getattr(args, "audience", "client") or "client",
-        runs_dir=args.runs_dir,
+        runs_dir=runs_dir(args),
     )
 
 
@@ -990,8 +1073,9 @@ def add_brief_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--style-preference", default="")
     parser.add_argument("--run-id")
     parser.add_argument("--run-dir")
-    parser.add_argument("--runs-dir", default=str(ROOT / "runs"))
+    parser.add_argument("--runs-dir", default=None)
     parser.add_argument("--force", action="store_true")
+    parser.add_argument("--dev-allow-unsetup", action="store_true", help=argparse.SUPPRESS)
 
 
 def add_conversation_args(parser: argparse.ArgumentParser) -> None:
@@ -1003,14 +1087,16 @@ def add_conversation_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--audience", choices=["exec", "team", "client"], default="client")
     parser.add_argument("--style-preference", default="")
     parser.add_argument("--run-id")
-    parser.add_argument("--runs-dir", default=str(ROOT / "runs"))
+    parser.add_argument("--runs-dir", default=None)
     parser.add_argument("--force", action="store_true")
+    parser.add_argument("--dev-allow-unsetup", action="store_true", help=argparse.SUPPRESS)
 
 
 def add_run_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--run-dir")
     parser.add_argument("--run-id")
-    parser.add_argument("--runs-dir", default=str(ROOT / "runs"))
+    parser.add_argument("--runs-dir", default=None)
+    parser.add_argument("--dev-allow-unsetup", action="store_true", help=argparse.SUPPRESS)
 
 
 def add_library_args(parser: argparse.ArgumentParser) -> None:
@@ -1025,6 +1111,18 @@ def add_planning_mode_arg(parser: argparse.ArgumentParser) -> None:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Deck Master demand-to-preview orchestration CLI.")
     sub = parser.add_subparsers(dest="command", required=True)
+
+    p_setup = sub.add_parser("setup", help="Configure first-run Deck Master runtime")
+    p_setup.add_argument("--workspace", default=None, help="Active Deck Master workspace")
+    p_setup.add_argument("--runs-dir", default=None, help="Default runs directory")
+    p_setup.add_argument("--target", action="append", default=[], choices=["codex", "claude-code", "hermes"], help="Agent skill target to validate")
+    p_setup.add_argument("--review-cockpit-url", default="http://127.0.0.1:5050")
+    p_setup.add_argument("--repair-workspace", action="store_true", help="Create missing standard workspace directories and placeholder files")
+    p_setup.set_defaults(func=command_setup)
+
+    p_setup_status = sub.add_parser("setup-status", help="Check first-run Deck Master setup")
+    p_setup_status.add_argument("--workspace", default=None)
+    p_setup_status.set_defaults(func=command_setup_status)
 
     p_plan = sub.add_parser("plan", help="Create request.json and narrative_plan.json from a brief")
     add_brief_args(p_plan)
@@ -1112,6 +1210,10 @@ def build_parser() -> argparse.ArgumentParser:
     p_next = sub.add_parser("next-step", help="Resolve next step for a run")
     add_run_args(p_next)
     p_next.set_defaults(func=command_next_step)
+
+    p_orchestration = sub.add_parser("orchestration-check", help="Check run orchestration completeness")
+    add_run_args(p_orchestration)
+    p_orchestration.set_defaults(func=command_orchestration_check)
 
     p_judgments = sub.add_parser("build-judgments", help="Generate consulting judgments")
     add_run_args(p_judgments)
@@ -1224,6 +1326,17 @@ def build_parser() -> argparse.ArgumentParser:
     p_uninstall.add_argument("--source-skill-dir", default=None)
     p_uninstall.set_defaults(func=command_uninstall_skill)
 
+    p_import_plan = sub.add_parser("import-plan", help="Import a human or Agent plan override into a run")
+    add_run_args(p_import_plan)
+    p_import_plan.add_argument("--input", required=True, help="Path to plan Markdown or JSON")
+    p_import_plan.add_argument("--source", required=True, choices=["human", "agent"])
+    p_import_plan.set_defaults(func=command_import_plan)
+
+    p_import_render = sub.add_parser("import-render-result", help="Import PPT Master or renderer handback result")
+    add_run_args(p_import_render)
+    p_import_render.add_argument("--input", required=True, help="Path to render result JSON")
+    p_import_render.set_defaults(func=command_import_render_result)
+
     # ---- context pack ----
     p_icp = sub.add_parser("import-context-pack", help="Import an Agent-generated context pack into a run")
     add_run_args(p_icp)
@@ -1237,7 +1350,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_crcp.add_argument("--run-id", default=None)
     p_crcp.add_argument("--industry", default="")
     p_crcp.add_argument("--audience", choices=["exec", "team", "client"], default="client")
-    p_crcp.add_argument("--runs-dir", default=str(ROOT / "runs"))
+    p_crcp.add_argument("--runs-dir", default=None)
     p_crcp.set_defaults(func=command_create_run_from_context_pack)
 
     # ---- narrative advisory ----
@@ -1391,12 +1504,18 @@ def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
     try:
+        if args.command in PROTECTED_COMMANDS:
+            require_setup_ready(
+                dev_allow_unsetup=bool(getattr(args, "dev_allow_unsetup", False)),
+                workspace=_workspace_for_setup_guard(args),
+            )
         print_json(args.func(args))
     except (
         RunStateError,
         PPTLibraryClientError,
         WorkspaceError,
         SkillInstallError,
+        SetupError,
         ContextPackError,
         NarrativeAdviceError,
         ExternalReviewError,

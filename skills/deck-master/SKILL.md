@@ -34,9 +34,20 @@ http://127.0.0.1:5050
 Run these before operating on a real deck workflow:
 
 ```bash
+~/.deck-master/bin/deck-master setup-status
 ~/.deck-master/bin/deck-master --help
 ~/.deck-master/bin/deck-master validate-skill --target codex
 curl -sf http://127.0.0.1:5050/api/runs
+```
+
+If `setup-status` is not `ready`, run setup before creating or changing a real
+Deck run:
+
+```bash
+~/.deck-master/bin/deck-master setup \
+  --workspace <workspace> \
+  --repair-workspace \
+  --target codex
 ```
 
 ## Core Workflow
@@ -48,13 +59,29 @@ For a brief-to-preview run:
   --brief-file <brief.txt> \
   --industry <industry> \
   --library-mode auto \
-  --runs-dir ~/.deck-master/runs \
   --run-id <run_id> \
   --force
 ```
 
 Then open the Review Cockpit and inspect readiness, page decisions, evidence
 coverage, external results, quality findings, and export queue.
+
+If you manually correct a Deck plan, import the corrected plan back into the run
+before using another tool:
+
+```bash
+~/.deck-master/bin/deck-master import-plan \
+  --run-dir <run_dir> \
+  --input <plan.md> \
+  --source human
+```
+
+Before calling PPT Master, PPT Deck Pro Max, or another renderer, confirm the
+run is allowed to leave Deck Master orchestration:
+
+```bash
+~/.deck-master/bin/deck-master orchestration-check --run-dir <run_dir>
+```
 
 ## Common Commands
 
@@ -73,6 +100,11 @@ coverage, external results, quality findings, and export queue.
 | `export` | Export approved page queue |
 | `benchmark-run` | Run a local benchmark case |
 | `benchmark-report` | Rebuild benchmark report for a run |
+| `setup` | Configure first-run Deck Master runtime |
+| `setup-status` | Check setup readiness |
+| `orchestration-check` | Check run completeness before external production |
+| `import-plan` | Import a human or Agent plan override |
+| `import-render-result` | Import PPT Master or renderer handback |
 
 ## References
 
@@ -91,6 +123,9 @@ Read only the relevant file when needed:
 ## Rules
 
 - Keep Deck Master provider-free; do not add LLM API calls or secrets.
+- When a user names Deck Master, treat it as the top-level orchestrator.
+- Do not complete core deck planning, generation, quality review, or delivery only outside the Deck Master run.
+- Import manual plan corrections and external tool results back into Deck Master before final reporting.
 - Use Deck Master CLI commands to mutate run state.
 - Do not write directly to `events.jsonl`.
 - Use `--run-id` or `--run-dir` to scope every operation.

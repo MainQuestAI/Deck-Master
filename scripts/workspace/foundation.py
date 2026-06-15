@@ -154,27 +154,13 @@ def validate_workspace(workspace_dir: str | Path) -> dict[str, Any]:
     manifest_path = root / MANIFEST_NAME
     if not manifest_path.is_file():
         missing_items.append(MANIFEST_NAME)
-        return {
-            "schema_version": "deck_workspace_validation.v1",
-            "workspace_dir": str(root),
-            "status": "pending_manual_review",
-            "missing_items": missing_items,
-            "reference_ppt": None,
-            "warnings": warnings,
-        }
-
-    try:
-        manifest = read_json(manifest_path)
-    except Exception:
-        missing_items.append(f"{MANIFEST_NAME} (invalid JSON)")
-        return {
-            "schema_version": "deck_workspace_validation.v1",
-            "workspace_dir": str(root),
-            "status": "pending_manual_review",
-            "missing_items": missing_items,
-            "reference_ppt": None,
-            "warnings": warnings,
-        }
+        manifest = {}
+    else:
+        try:
+            manifest = read_json(manifest_path)
+        except Exception:
+            missing_items.append(f"{MANIFEST_NAME} (invalid JSON)")
+            manifest = {}
 
     # Check standard directories.
     for rel in STANDARD_DIRS:
@@ -215,3 +201,45 @@ def validate_workspace(workspace_dir: str | Path) -> dict[str, Any]:
         "reference_ppt": ref_info,
         "warnings": warnings,
     }
+
+
+def repair_workspace(workspace_dir: str | Path, *, name: str | None = None) -> dict[str, Any]:
+    """Create missing standard workspace structure without overwriting files."""
+    root = Path(workspace_dir).expanduser().resolve()
+    root.mkdir(parents=True, exist_ok=True)
+
+    for rel in STANDARD_DIRS:
+        (root / rel).mkdir(parents=True, exist_ok=True)
+
+    for rel, content in STANDARD_FILES.items():
+        path = root / rel
+        if not path.exists():
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(content, encoding="utf-8")
+
+    asset_graph = root / "assets" / "asset_graph.json"
+    if not asset_graph.exists():
+        write_json(asset_graph, {"schema_version": ASSET_GRAPH_SCHEMA, "assets": []})
+
+    feedback = root / "assets" / "asset_feedback.jsonl"
+    if not feedback.exists():
+        feedback.parent.mkdir(parents=True, exist_ok=True)
+        feedback.write_text("", encoding="utf-8")
+
+    manifest_path = root / MANIFEST_NAME
+    if not manifest_path.exists():
+        write_json(
+            manifest_path,
+            {
+                "schema_version": SCHEMA_VERSION,
+                "name": name or root.name,
+                "workspace_dir": str(root),
+                "created_at": _utc_now(),
+                "reference_ppt": None,
+                "reference_ppt_hash": None,
+                "reference_ppt_pages": None,
+                "registered_at": _utc_now(),
+            },
+        )
+
+    return validate_workspace(root)

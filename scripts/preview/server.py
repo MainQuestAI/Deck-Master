@@ -25,6 +25,7 @@ if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
 
 from runtime.events import append_typed_event
+from runtime.setup_status import configured_runs_dir
 
 from review.readiness import compute_claim_coverage, compute_deck_readiness, compute_next_actions
 from review.workbench import WorkbenchError, execute_review_action
@@ -864,7 +865,7 @@ def build_handler(run_dir: Path | None, runs_dir: Path | None = None, library_mo
         pass
 
     Handler.run_dir = run_dir
-    Handler.runs_dir = (runs_dir or ROOT_DIR / "runs").expanduser().resolve()
+    Handler.runs_dir = (runs_dir or configured_runs_dir(ROOT_DIR / "runs")).expanduser().resolve()
     Handler.library_mode = library_mode
     return Handler
 
@@ -872,14 +873,14 @@ def build_handler(run_dir: Path | None, runs_dir: Path | None = None, library_mo
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run Deck Master local preview UI.")
     parser.add_argument("run_dir", nargs="?", help="Directory containing preview_manifest.json. Omit for Studio mode.")
-    parser.add_argument("--runs-dir", default=str(ROOT_DIR / "runs"), help="Studio mode run storage directory.")
+    parser.add_argument("--runs-dir", default=None, help="Studio mode run storage directory.")
     parser.add_argument("--library-mode", choices=["auto", "real", "fixture"], default="fixture")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=5050)
     args = parser.parse_args()
 
     run_dir = Path(args.run_dir).expanduser().resolve() if args.run_dir else None
-    runs_dir = Path(args.runs_dir).expanduser().resolve()
+    runs_dir = Path(args.runs_dir).expanduser().resolve() if args.runs_dir else configured_runs_dir(ROOT_DIR / "runs")
     runs_dir.mkdir(parents=True, exist_ok=True)
     if run_dir is not None:
         load_manifest(run_dir)

@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from runtime.setup_status import setup_status
 from runtime.run_state import (
     REQUEST_NAME,
     CONTEXT_MANIFEST_NAME,
@@ -59,6 +60,17 @@ def _draft_gate_blocks(report: dict[str, Any]) -> bool:
     return bool(report.get("blocks_delivery")) or status in BLOCKING_STATUSES
 
 
+def _with_setup_hint(result: dict[str, Any], workspace: str | None = None) -> dict[str, Any]:
+    setup = setup_status(workspace=workspace, write_event=False)
+    result["setup_status"] = setup.get("status", "")
+    result["setup_next_command"] = setup.get("next_command", "")
+    if setup.get("status") != "ready":
+        result.setdefault("blocking_issues", []).append(
+            f"Setup status is {setup.get('status')}. Run: {setup.get('next_command')}"
+        )
+    return result
+
+
 def resolve_next_step(run_dir: str | Path) -> dict[str, Any]:
     """分析 run 目录，返回下一步操作建议。"""
     root = Path(run_dir).expanduser().resolve()
@@ -70,8 +82,11 @@ def resolve_next_step(run_dir: str | Path) -> dict[str, Any]:
         try:
             request = json.loads(request_path.read_text(encoding="utf-8"))
             run_id = request.get("run_id", run_id)
+            workspace = str(request.get("workspace") or "") or None
         except (json.JSONDecodeError, KeyError):
-            pass
+            workspace = None
+    else:
+        workspace = None
 
     runs_dir = str(root.parent)
     missing_artifacts: list[str] = []
@@ -81,35 +96,35 @@ def resolve_next_step(run_dir: str | Path) -> dict[str, Any]:
         if not (root / artifact_name).exists():
             missing_artifacts.append(artifact_name)
             next_command = command_template.format(runs_dir=runs_dir, run_id=run_id)
-            return {
+            return _with_setup_hint({
                 "schema_version": SCHEMA_VERSION,
                 "run_id": run_id,
                 "status": status,
                 "next_command": next_command,
                 "missing_artifacts": missing_artifacts,
                 "blocking_issues": blocking_issues,
-            }
+            }, workspace)
 
     draft_gate = _read_draft_gate(root)
     if draft_gate is None:
-        return {
+        return _with_setup_hint({
             "schema_version": SCHEMA_VERSION,
             "run_id": run_id,
             "status": "needs_draft_gate",
             "next_command": f"python3 scripts/deck_master.py quality-gate draft --runs-dir {runs_dir} --run-id {run_id}",
             "missing_artifacts": [],
             "blocking_issues": [],
-        }
+        }, workspace)
 
     if _draft_gate_blocks(draft_gate):
-        return {
+        return _with_setup_hint({
             "schema_version": SCHEMA_VERSION,
             "run_id": run_id,
             "status": "needs_quality_review",
             "next_command": f"python3 scripts/deck_master.py quality-gate {str(draft_gate.get('_report_file', 'draft_gate.json')).removesuffix('_gate.json')} --runs-dir {runs_dir} --run-id {run_id}",
             "missing_artifacts": [],
             "blocking_issues": [draft_gate.get("blocking_issue") or "Draft gate blocks client export."],
-        }
+        }, workspace)
 
     # 检查是否有 approved 页面可 export
     try:
@@ -118,7 +133,7 @@ def resolve_next_step(run_dir: str | Path) -> dict[str, Any]:
         pages = manifest.get("pages", [])
         approved_pages = [p for p in pages if isinstance(p, dict) and p.get("decision") == "approved"]
         if approved_pages:
-            return {
+            return _with_setup_hint({
                 "schema_version": SCHEMA_VERSION,
                 "run_id": run_id,
                 "status": "ready_to_export",
@@ -126,14 +141,14 @@ def resolve_next_step(run_dir: str | Path) -> dict[str, Any]:
                 "missing_artifacts": [],
                 "blocking_issues": [],
                 "approved_pages": len(approved_pages),
-            }
+            }, workspace)
         review_pages = [
             p
             for p in pages
             if isinstance(p, dict) and p.get("decision") in {"needs_review", "keep", "replace", "pending"}
         ]
         if review_pages:
-            return {
+            return _with_setup_hint({
                 "schema_version": SCHEMA_VERSION,
                 "run_id": run_id,
                 "status": "needs_page_review",
@@ -141,15 +156,15 @@ def resolve_next_step(run_dir: str | Path) -> dict[str, Any]:
                 "missing_artifacts": [],
                 "blocking_issues": [],
                 "pending_pages": len(review_pages),
-            }
+            }, workspace)
     except (json.JSONDecodeError, FileNotFoundError):
         pass
 
-    return {
+    return _with_setup_hint({
         "schema_version": SCHEMA_VERSION,
         "run_id": run_id,
         "status": "complete",
         "next_command": "",
         "missing_artifacts": [],
         "blocking_issues": [],
-    }
+    }, workspace)

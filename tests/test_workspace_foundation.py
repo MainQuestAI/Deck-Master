@@ -16,6 +16,7 @@ from workspace.foundation import (
     STANDARD_FILES,
     WorkspaceError,
     init_workspace,
+    repair_workspace,
     register_workspace,
     validate_workspace,
 )
@@ -154,6 +155,18 @@ class WorkspaceFoundationTests(unittest.TestCase):
         self.assertEqual("valid", report["status"])  # structure is complete
         self.assertTrue(len(report["warnings"]) > 0)
         self.assertTrue(any("not found" in w for w in report["warnings"]))
+
+    def test_repair_workspace_creates_missing_standard_items(self) -> None:
+        ws = self.temp_dir / "repair"
+        ws.mkdir()
+
+        report = repair_workspace(ws, name="Repair Test")
+
+        self.assertEqual("valid", report["status"])
+        self.assertTrue((ws / MANIFEST_NAME).is_file())
+        self.assertTrue((ws / "quality/delivery_checklist.md").is_file())
+        self.assertTrue((ws / "assets/asset_graph.json").is_file())
+        self.assertTrue((ws / "assets/asset_feedback.jsonl").is_file())
 
 
 if __name__ == "__main__":

@@ -13,21 +13,36 @@ invocation**.
 Never ask Deck Master to call an LLM, parse a PDF or generate a slide.
 Never bypass Deck Master's quality gates or event log.
 
+When the user explicitly names Deck Master, Deck Master is the top-level
+orchestrator for the deck workflow. You may reason, draft, and call external
+tools, but every core plan correction, generation result, review gate, and
+delivery artifact must be written back to the Deck Master run before you report
+the work as complete.
+
 ## Before You Start
 
 1. Confirm the skill is installed:
    ```bash
-   python3 scripts/deck_master.py validate-skill --target codex
+   ~/.deck-master/bin/deck-master setup-status
+   ~/.deck-master/bin/deck-master validate-skill --target codex
    ```
 
-2. Check workspace health:
+2. If setup is not ready, run first-run setup:
    ```bash
-   python3 scripts/deck_master.py validate-workspace --workspace <path>
+   ~/.deck-master/bin/deck-master setup \
+     --workspace <workspace> \
+     --repair-workspace \
+     --target codex
    ```
 
-3. If a workspace learning pack exists, read it first:
+3. Check workspace health:
    ```bash
-   python3 scripts/deck_master.py show-learning-pack --workspace <path>
+   ~/.deck-master/bin/deck-master validate-workspace --workspace <path>
+   ```
+
+4. If a workspace learning pack exists, read it first:
+   ```bash
+   ~/.deck-master/bin/deck-master show-learning-pack --workspace <path>
    ```
 
 ## Typical Run Flow
@@ -45,6 +60,22 @@ Never bypass Deck Master's quality gates or event log.
 5. quality-gate draft  → run draft quality gate
 6. next-step           → see recommended next action
 7. export              → export approved pages
+```
+
+Before moving work to PPT Master, PPT Deck Pro Max, or another external build
+tool, run:
+
+```bash
+~/.deck-master/bin/deck-master orchestration-check --run-dir <run_dir>
+```
+
+If the plan was manually corrected, import it first:
+
+```bash
+~/.deck-master/bin/deck-master import-plan \
+  --run-dir <run_dir> \
+  --input <plan.md> \
+  --source human
 ```
 
 ## Agent Handoff Contracts
@@ -76,6 +107,17 @@ Import with: `python3 scripts/deck_master.py import-context-pack --run-id <id> -
 3. Write result per `generation_result.schema.json`.
 4. Deck Master imports: `python3 scripts/deck_master.py import-generation-result --run-id <id> --input ...`
 
+### Render / Delivery Handback
+
+After PPT Master or another renderer produces SVG, PPTX, PDF, or preview
+artifacts, import the handback record and run the relevant gates:
+
+```bash
+~/.deck-master/bin/deck-master import-render-result --run-dir <run_dir> --input <render_result.json>
+~/.deck-master/bin/deck-master quality-gate --run-dir <run_dir> render --artifact <pptx_or_pdf>
+~/.deck-master/bin/deck-master quality-gate --run-dir <run_dir> delivery --artifact <pptx_or_pdf>
+```
+
 ## Quality Gates
 
 Available gates: `draft`, `draft_v2`, `evidence`, `context-conflict`,
@@ -97,6 +139,7 @@ python3 scripts/deck_master.py override create \
 
 - Never fabricate `schema_version` values.
 - Never write directly to `events.jsonl` — use Deck Master CLI.
+- Never let a README or external workbench become the only source of truth for plan corrections or final artifacts.
 - If a CLI command fails, read the JSON error before retrying.
 - Always use `--run-id` to scope operations to a specific run.
 - When in doubt, run `next-step` to see what Deck Master recommends.
