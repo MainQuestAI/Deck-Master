@@ -154,11 +154,20 @@ class ServerTests(unittest.TestCase):
     def test_direct_preview_mode_external_runtime_apis_use_active_run_dir(self) -> None:
         external_status, external = self.handler.request("GET", "/api/external-results/sample-preview-run")
         runtime_status, runtime = self.handler.request("GET", "/api/runtime-readiness/sample-preview-run")
+        narrative_status, narrative = self.handler.request("GET", "/api/narrative/sample-preview-run")
+        asset_status, asset = self.handler.request("GET", "/api/asset-signals/sample-preview-run")
+        governance_status, governance = self.handler.request("GET", "/api/quality-governance/sample-preview-run")
 
         self.assertEqual(HTTPStatus.OK, external_status)
         self.assertEqual("sample-preview-run", external["run_id"])
         self.assertEqual(HTTPStatus.OK, runtime_status)
         self.assertEqual("deck_master_runtime_readiness.v1", runtime["schema_version"])
+        self.assertEqual(HTTPStatus.OK, narrative_status)
+        self.assertEqual("sample-preview-run", narrative["run_id"])
+        self.assertEqual(HTTPStatus.OK, asset_status)
+        self.assertEqual("sample-preview-run", asset["run_id"])
+        self.assertEqual(HTTPStatus.OK, governance_status)
+        self.assertEqual("sample-preview-run", governance["run_id"])
 
     def test_page_decision_api_writes_manifest(self) -> None:
         status, data = self.handler.request(

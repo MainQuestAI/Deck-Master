@@ -585,18 +585,8 @@ class PreviewHandler(BaseHTTPRequestHandler):
             self.send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
 
     def api_narrative(self, run_id: str) -> None:
-        if not run_id:
-            self.send_error_json(HTTPStatus.BAD_REQUEST, "run_id is required.")
-            return
-        runs_dir = self.studio_runs_dir()
-        candidate = (runs_dir / run_id).resolve()
-        root_text = str(runs_dir.resolve())
-        candidate_text = str(candidate)
-        if candidate_text != root_text and not candidate_text.startswith(root_text + "/"):
-            self.send_error_json(HTTPStatus.BAD_REQUEST, "Invalid run_id.")
-            return
-        if not candidate.is_dir():
-            self.send_error_json(HTTPStatus.NOT_FOUND, f"Run not found: {run_id}")
+        candidate = self._resolve_run_or_error(run_id)
+        if not candidate:
             return
         try:
             narrative = _load_narrative_data(candidate)
@@ -609,18 +599,8 @@ class PreviewHandler(BaseHTTPRequestHandler):
 
     def api_asset_signals(self, run_id: str) -> None:
         """返回指定 run 的 asset signals 数据。"""
-        if not run_id:
-            self.send_error_json(HTTPStatus.BAD_REQUEST, "run_id is required.")
-            return
-        runs_dir = self.studio_runs_dir()
-        candidate = (runs_dir / run_id).resolve()
-        root_text = str(runs_dir.resolve())
-        candidate_text = str(candidate)
-        if candidate_text != root_text and not candidate_text.startswith(root_text + "/"):
-            self.send_error_json(HTTPStatus.BAD_REQUEST, "Invalid run_id.")
-            return
-        if not candidate.is_dir():
-            self.send_error_json(HTTPStatus.NOT_FOUND, f"Run not found: {run_id}")
+        candidate = self._resolve_run_or_error(run_id)
+        if not candidate:
             return
         try:
             signals = _load_asset_signals(candidate)
@@ -707,18 +687,8 @@ class PreviewHandler(BaseHTTPRequestHandler):
 
     def api_quality_governance(self, run_id: str) -> None:
         """返回 quality governance 综合数据。"""
-        if not run_id:
-            self.send_error_json(HTTPStatus.BAD_REQUEST, "run_id is required.")
-            return
-        runs_dir = self.studio_runs_dir()
-        candidate = (runs_dir / run_id).resolve()
-        root_text = str(runs_dir.resolve())
-        candidate_text = str(candidate)
-        if candidate_text != root_text and not candidate_text.startswith(root_text + "/"):
-            self.send_error_json(HTTPStatus.BAD_REQUEST, "Invalid run_id.")
-            return
-        if not candidate.is_dir():
-            self.send_error_json(HTTPStatus.NOT_FOUND, f"Run not found: {run_id}")
+        candidate = self._resolve_run_or_error(run_id)
+        if not candidate:
             return
 
         try:
@@ -819,6 +789,18 @@ class PreviewHandler(BaseHTTPRequestHandler):
                 debug_run_dir = None
 
         if self.run_dir is not None and not debug_run_dir:
+            run_parts = Path(run_id).parts
+            if "/" in run_id or ".." in run_parts:
+                self.send_error_json(HTTPStatus.BAD_REQUEST, "Invalid run_id.")
+                return None
+            allowed_run_ids = {self.run_dir.name}
+            try:
+                allowed_run_ids.add(str(load_manifest(self.run_dir).get("run_id") or ""))
+            except ManifestError:
+                pass
+            if run_id not in allowed_run_ids:
+                self.send_error_json(HTTPStatus.NOT_FOUND, f"Run not found: {run_id}")
+                return None
             candidate = self.run_dir.resolve()
             root = candidate.parent
         else:
