@@ -120,6 +120,29 @@ def _ensure_session_exists(run_dir: Path) -> dict[str, Any]:
     return read_json(path)
 
 
+def _enforce_generation_session_binding(
+    result: dict[str, Any],
+    *,
+    session: dict[str, Any],
+    run_dir: Path,
+) -> None:
+    expected_run_id = str(session.get("run_id") or _run_id(run_dir))
+    result_run_id = str(result.get("run_id") or "")
+    if result_run_id != expected_run_id:
+        raise GenerationHandbackError(
+            f"generation result run_id mismatch: got '{result_run_id}', expected '{expected_run_id}'."
+        )
+
+    expected_session_id = str(session.get("session_id") or "")
+    if not expected_session_id:
+        raise GenerationHandbackError("generation session session_id is required for import-results.")
+    result_session_id = str(result.get("session_id") or "")
+    if result_session_id != expected_session_id:
+        raise GenerationHandbackError(
+            f"generation result session_id mismatch: got '{result_session_id}', expected '{expected_session_id}'."
+        )
+
+
 def _set_session_status(
     run_dir: Path,
     session: dict[str, Any],
@@ -503,6 +526,7 @@ def import_generation_results(
             expected_run_id=str(session.get("run_id") or _run_id(root)),
             expected_session_id=str(session.get("session_id") or ""),
         )
+        _enforce_generation_session_binding(raw, session=session, run_dir=root)
     except GenerationHandbackError as exc:
         append_import_log(root, import_type="generation_result", source="ppt-deck-pro-max", status="rejected", source_path=result_path, errors=[str(exc)])
         raise GenerationSessionError(str(exc)) from exc

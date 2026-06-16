@@ -130,7 +130,13 @@ class GenerationSessionBridgeTests(unittest.TestCase):
         (links / "beat-001.svg").write_bytes(b"svg")
         (links / "beat-002.svg").write_bytes(b"svg")
 
-    def _write_result(self, *, status: str = "completed", run_id: str = "session-bridge-run") -> Path:
+    def _write_result(
+        self,
+        *,
+        status: str = "completed",
+        run_id: str = "session-bridge-run",
+        session_id: str | None = None,
+    ) -> Path:
         task_id = self.tasks[0]["task_id"]
         preview_dir = self.run_dir / "generated_assets" / "beat-001"
         preview_dir.mkdir(parents=True, exist_ok=True)
@@ -150,6 +156,8 @@ class GenerationSessionBridgeTests(unittest.TestCase):
             "preview_path": "generated_assets/beat-001/preview.png",
             "errors": [],
         }
+        if session_id is not None:
+            result["session_id"] = session_id
         results_dir = self.run_dir / "generation_results"
         results_dir.mkdir(exist_ok=True)
         result_path = results_dir / f"{task_id}.json"
@@ -260,14 +268,14 @@ class GenerationSessionBridgeTests(unittest.TestCase):
     @patch("scripts.generation.session.subprocess.run")
     def test_result_import_refreshes_preview_and_marks_quality_required(self, mocked_run: unittest.mock.Mock) -> None:
         self._tool_registry(command=sys.executable)
-        create_generation_session(
+        session = create_generation_session(
             self.run_dir,
             tool="ppt-deck-pro-max",
             workspace=str(self.workspace),
             force=True,
         )
         self._create_preview_manifest()
-        result_path = self._write_result()
+        result_path = self._write_result(session_id=session["session_id"])
 
         imported = import_generation_results(self.run_dir, result_path)
 
@@ -283,6 +291,38 @@ class GenerationSessionBridgeTests(unittest.TestCase):
             {},
         )
         self.assertEqual("generated_assets/beat-001/preview.png", first_page.get("preview_path"))
+
+    def test_canonical_result_rejects_missing_session_id(self) -> None:
+        self._tool_registry(command=sys.executable)
+        create_generation_session(
+            self.run_dir,
+            tool="ppt-deck-pro-max",
+            workspace=str(self.workspace),
+            force=True,
+        )
+        result_path = self._write_result()
+
+        with self.assertRaisesRegex(GenerationSessionError, "session_id mismatch"):
+            import_generation_results(self.run_dir, result_path)
+
+        logs = read_import_log(self.run_dir)
+        self.assertEqual("rejected", logs[-1]["status"])
+
+    def test_canonical_result_rejects_session_mismatch(self) -> None:
+        self._tool_registry(command=sys.executable)
+        create_generation_session(
+            self.run_dir,
+            tool="ppt-deck-pro-max",
+            workspace=str(self.workspace),
+            force=True,
+        )
+        result_path = self._write_result(session_id="other-session")
+
+        with self.assertRaisesRegex(GenerationSessionError, "session_id mismatch"):
+            import_generation_results(self.run_dir, result_path)
+
+        logs = read_import_log(self.run_dir)
+        self.assertEqual("rejected", logs[-1]["status"])
 
     def test_deck_pro_max_result_adapter_refreshes_preview_and_logs_import(self) -> None:
         self._tool_registry(command=sys.executable)
