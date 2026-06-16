@@ -60,6 +60,14 @@ class SetupEnforcementTests(unittest.TestCase):
         self.assertIn("Deck Master setup is not ready", completed.stderr)
         self.assertIn("deck-master setup", completed.stderr)
 
+    def test_start_without_context_file_reports_setup_next_action(self) -> None:
+        completed = self.run_cli("start")
+        payload = json.loads(completed.stdout)
+
+        self.assertEqual("deck_master_start.v1", payload["schema_version"])
+        self.assertEqual("blocked", payload["status"])
+        self.assertIn("deck-master setup", payload["next_command"])
+
     def test_setup_repair_workspace_and_status_ready(self) -> None:
         self._install_fake_skill()
         workspace = self.temp_dir / "workspace"
@@ -83,6 +91,11 @@ class SetupEnforcementTests(unittest.TestCase):
         self.assertEqual([], payload["repair_items"])
         self.assertEqual("http://127.0.0.1:5050", payload["config"]["review_cockpit_url"])
         self.assertTrue((workspace / "quality" / "delivery_checklist.md").exists())
+
+        start = self.run_cli("start", "--workspace", str(workspace))
+        start_payload = json.loads(start.stdout)
+        self.assertEqual("ready", start_payload["setup_status"]["status"])
+        self.assertTrue(start_payload["production_ready"])
 
     def test_setup_status_needs_repair_for_incomplete_workspace(self) -> None:
         self._install_fake_skill()
@@ -113,11 +126,52 @@ class SetupEnforcementTests(unittest.TestCase):
             "workspace default run",
             "--run-id",
             "workspace-run",
+            "--run-mode",
+            "fixture",
         )
         payload = json.loads(planned.stdout)
+        request = json.loads((workspace / "runs" / "workspace-run" / "request.json").read_text(encoding="utf-8"))
 
         self.assertEqual(str((workspace / "runs" / "workspace-run").resolve()), payload["run_dir"])
         self.assertTrue((workspace / "runs" / "workspace-run" / "request.json").exists())
+        self.assertEqual(str(workspace.resolve()), request["workspace"])
+        self.assertEqual("workspace_workspace", request["workspace_id"])
+        self.assertEqual("workspace_manifest.json", request["workspace_manifest_ref"])
+        self.assertEqual("setup", request["workspace_resolved_from"])
+
+    def test_existing_run_blocks_conflicting_cli_workspace(self) -> None:
+        run_dir = self.temp_dir / "runs" / "conflict-run"
+        run_dir.mkdir(parents=True)
+        request_workspace = self.temp_dir / "request_workspace"
+        cli_workspace = self.temp_dir / "cli_workspace"
+        request_workspace.mkdir()
+        cli_workspace.mkdir()
+        (run_dir / "request.json").write_text(
+            json.dumps(
+                {
+                    "run_id": "conflict-run",
+                    "project_name": "Conflict Run",
+                    "run_mode": "fixture",
+                    "workspace": str(request_workspace.resolve()),
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+
+        completed = self.run_cli(
+            "autoplan",
+            "--run-dir",
+            str(run_dir),
+            "--workspace",
+            str(cli_workspace),
+            "--run-mode",
+            "fixture",
+            check=False,
+        )
+
+        self.assertEqual(2, completed.returncode)
+        self.assertIn("workspace", completed.stderr)
 
 
 if __name__ == "__main__":

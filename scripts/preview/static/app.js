@@ -12,6 +12,8 @@ const state = {
   metrics: null,
   currentRunId: new URLSearchParams(window.location.search).get("run") || "",
   selectedIndex: 0,
+  setupStatus: null,
+  runState: null,
 };
 
 const els = {
@@ -60,6 +62,12 @@ const els = {
   externalResultsContent: document.querySelector("#external-results-content"),
   exportQueueContent: document.querySelector("#export-queue-content"),
   metricsContent: document.querySelector("#metrics-content"),
+  setupBanner: document.querySelector("#setup-banner"),
+  setupStatusLabel: document.querySelector("#setup-status-label"),
+  setupNextCommand: document.querySelector("#setup-next-command"),
+  runStatePanel: document.querySelector("#run-state-panel"),
+  runStateLabel: document.querySelector("#run-state-label"),
+  runStateDetail: document.querySelector("#run-state-detail"),
 };
 
 async function requestJson(url, options = {}) {
@@ -95,6 +103,17 @@ async function loadRuns() {
 }
 
 async function loadDeck() {
+  if (!state.currentRunId) {
+    renderRunWithoutPreview(null, "Create or select a run.");
+    clearRunState();
+    return;
+  }
+  await loadRunState();
+  const currentRun = currentRunSummary();
+  if (currentRun && Number(currentRun.pages || 0) === 0) {
+    renderRunWithoutPreview(currentRun, state.runState && state.runState.next_command ? `Next: ${state.runState.next_command}` : "Preview is not ready yet.");
+    return;
+  }
   try {
     state.deck = await requestJson(`/api/deck${runQuery()}`);
     els.title.textContent = state.deck.title;
@@ -110,7 +129,9 @@ async function loadDeck() {
     state.narrative = null;
     state.assetSignals = null;
     state.governance = null;
+    state.runState = null;
     clearCockpitData();
+    clearRunState();
     els.title.textContent = "Studio";
     els.meta.textContent = "Create or select a run.";
     els.list.innerHTML = "";
@@ -120,6 +141,118 @@ async function loadDeck() {
     renderGovernance();
     renderCockpitData();
   }
+}
+
+function currentRunSummary() {
+  return state.runs.find((run) => run.run_id === state.currentRunId) || null;
+}
+
+function renderRunWithoutPreview(run, message) {
+  state.deck = null;
+  state.narrative = null;
+  state.assetSignals = null;
+  state.governance = null;
+  clearCockpitData();
+  els.title.textContent = run ? (run.title || run.run_id) : "Studio";
+  els.meta.textContent = run
+    ? `${run.run_id} · ${run.status || "request_ready"} · ${run.pages || 0} pages`
+    : "Create or select a run.";
+  els.list.innerHTML = "";
+  els.label.textContent = "No page selected";
+  els.pageTitle.textContent = run ? "Preview not ready" : "No page selected";
+  els.details.innerHTML = "";
+  els.notes.value = "";
+  els.saveStatus.textContent = "";
+  if (els.pageActionStatus) {
+    els.pageActionStatus.textContent = "";
+  }
+  els.frame.innerHTML = `<div class="empty">${escapeHtml(message || "Preview is not ready yet.")}</div>`;
+  renderNarrative();
+  renderAssetSignals();
+  renderGovernance();
+  renderCockpitData();
+}
+
+function clearRunState() {
+  state.runState = null;
+  renderRunState();
+}
+
+function renderRunState(errorMsg) {
+  if (!els.runStatePanel) return;
+
+  if (errorMsg) {
+    els.runStateLabel.textContent = "Error";
+    els.runStateDetail.textContent = errorMsg;
+    return;
+  }
+
+  if (!state.currentRunId || !state.runState) {
+    els.runStateLabel.textContent = "No run selected";
+    els.runStateDetail.textContent = "Select a run to view status and next command.";
+    return;
+  }
+
+  const status = state.runState.status || "unknown";
+  const stage = state.runState.stage || "";
+  const mode = state.runState.run_mode ? ` · ${state.runState.run_mode}` : "";
+  const nextCommand = state.runState.next_command || "";
+  els.runStateLabel.textContent = `${status}${stage ? ` · ${stage}` : ""}${mode}`;
+  els.runStateDetail.textContent = nextCommand ? `Next: ${nextCommand}` : "No action required.";
+}
+
+async function loadRunState() {
+  if (!state.currentRunId) {
+    clearRunState();
+    return;
+  }
+  try {
+    state.runState = await requestJson(`/api/run-state/${encodeURIComponent(state.currentRunId)}`);
+    renderRunState();
+  } catch (error) {
+    state.runState = null;
+    renderRunState(error.message);
+  }
+}
+
+function renderSetupStatus(errorMsg) {
+  if (!els.setupBanner) return;
+
+  if (errorMsg) {
+    els.setupBanner.classList.remove("ready", "warning");
+    els.setupStatusLabel.textContent = "Unavailable";
+    els.setupNextCommand.textContent = errorMsg;
+    return;
+  }
+
+  if (!state.setupStatus) {
+    els.setupBanner.classList.remove("ready", "warning");
+    els.setupStatusLabel.textContent = "Checking...";
+    els.setupNextCommand.textContent = "Loading setup status.";
+    return;
+  }
+
+  const status = String(state.setupStatus.status || "unknown");
+  const nextCommand = state.setupStatus.next_command || "";
+  els.setupBanner.classList.remove("ready", "warning");
+  if (status === "ready" && state.setupStatus.production_ready) {
+    els.setupBanner.classList.add("ready");
+  } else {
+    els.setupBanner.classList.add("warning");
+  }
+  els.setupStatusLabel.textContent = status;
+  els.setupNextCommand.textContent = nextCommand || "Setup command available from setup status";
+}
+
+async function loadSetupStatus() {
+  try {
+    state.setupStatus = await requestJson("/api/setup-status");
+  } catch (error) {
+    state.setupStatus = null;
+    renderSetupStatus(error.message);
+    return;
+  }
+  renderSetupStatus();
 }
 
 function renderRuns() {
@@ -310,7 +443,9 @@ async function createRun(event) {
     });
     state.currentRunId = payload.run_id;
     updateLocation();
-    els.createStatus.textContent = `Draft ready: ${payload.pages} pages`;
+    els.createStatus.textContent = payload.pages != null
+      ? `Draft ready: ${payload.pages} pages`
+      : `Run created: ${payload.status || "request_ready"}`;
     await loadRuns();
     await loadDeck();
   } catch (error) {
@@ -1069,4 +1204,8 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "ArrowRight") selectPage(state.selectedIndex + 1);
 });
 
-loadRuns().then(loadDeck);
+(async function bootstrap() {
+  await loadSetupStatus();
+  await loadRuns();
+  await loadDeck();
+})();

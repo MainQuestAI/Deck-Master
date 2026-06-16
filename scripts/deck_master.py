@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -31,6 +32,14 @@ from generation.handback import (
     refresh_preview_from_generation,
     validate_generation_result,
 )
+from generation.session import (
+    GenerationSessionError,
+    create_generation_session,
+    generation_session_status,
+    import_generation_results,
+    run_generation as run_generation_session,
+    validate_generation_session,
+)
 from learning.pack import build_learning_pack, show_learning_pack
 from validators.companion_tools import validate_ppt_library_result, validate_render_result
 from metrics.run_metrics import summarize_run_metrics
@@ -40,7 +49,7 @@ from uat.real_workflow_smoke import run_real_workflow_smoke
 from uat.render_tool import run_render_tool_uat
 from benchmark.case import BenchmarkCaseError, load_benchmark_case
 from benchmark.checkpoints import BenchmarkCheckpointError, write_benchmark_checkpoint
-from benchmark.report import BenchmarkReportError, write_benchmark_report
+from benchmark.report import BenchmarkReportError, write_benchmark_report, write_benchmark_rc_report
 from benchmark.runner import (
     BenchmarkRunError,
     collect_pending_external_steps,
@@ -86,6 +95,7 @@ from runtime.run_state import (
     DECK_BRIEF_NAME,
     NARRATIVE_PLAN_NAME,
     PAGE_TASKS_NAME,
+    REQUEST_NAME,
     SOURCING_PLAN_NAME,
     RunStateError,
     create_run,
@@ -96,8 +106,12 @@ from runtime.run_state import (
 )
 from runtime.next_step import resolve_next_step
 from runtime.orchestration import import_plan, import_render_result, orchestration_check
+from runtime.run_state_resolver import resolve_run_state
+from runtime.sourcing_import import import_sourcing, validate_sourcing
+from runtime.workspace_binding import bind_workspace
+from runtime.workspace_resolver import resolve_workspace_for_run
 from tools.ppt_library_client import PPTLibraryClientError, run_library_selection
-from workspace.foundation import WorkspaceError, init_workspace, register_workspace, validate_workspace
+from workspace.foundation import MANIFEST_NAME, WorkspaceError, init_workspace, register_workspace, validate_workspace
 from runtime.setup_status import SetupError, configured_runs_dir, require_setup_ready, run_setup, setup_status
 
 
@@ -114,6 +128,8 @@ PROTECTED_COMMANDS = {
     "build-preview",
     "export",
     "quality-gate",
+    "import-sourcing",
+    "validate-sourcing",
     "override",
     "opportunity",
     "approval",
@@ -138,8 +154,11 @@ PROTECTED_COMMANDS = {
     "smoke-real-workflow",
     "benchmark-run",
     "benchmark-report",
+    "benchmark-rc-report",
     "benchmark-checkpoint",
     "delivery",
+    "generation-session",
+    "run-generation",
 }
 
 
@@ -184,6 +203,106 @@ def _workspace_for_setup_guard(args: argparse.Namespace) -> str | None:
             except RunStateError:
                 return None
     return None
+
+
+def _normalize_run_mode(value: str | None) -> str:
+    mode = (value or "production").strip().lower()
+    if mode in {"production", "fixture", "dev", "benchmark"}:
+        return mode
+    return "production"
+
+
+def _dev_allow_unsetup(args: argparse.Namespace) -> bool:
+    if bool(getattr(args, "dev_allow_unsetup", False)):
+        return True
+    return os.environ.get("DECK_MASTER_DEV_SKIP_SETUP") == "1"
+
+
+def _normalize_planner_mode(value: str | None, run_mode: str) -> str:
+    if value in {"fixture_template", "workspace_fallback", "production_narrative"}:
+        return value
+    if run_mode == "fixture":
+        return "fixture_template"
+    return "production_narrative"
+
+
+def _workspace_id_for_path(path: str) -> str:
+    workspace_root = Path(path).expanduser().resolve()
+    manifest_path = workspace_root / MANIFEST_NAME
+    if manifest_path.exists():
+        try:
+            manifest = read_json(manifest_path)
+            candidate = str(manifest.get("workspace_id") or "").strip()
+            if candidate:
+                return candidate
+        except Exception:
+            pass
+    return f"workspace_{workspace_root.name}"
+
+
+def _apply_workspace_runtime_fields(
+    request: dict[str, Any],
+    args: argparse.Namespace,
+    *,
+    run_mode: str,
+) -> dict[str, Any]:
+    resolution = resolve_workspace_for_run(
+        run_dir=getattr(args, "run_dir", None) or getattr(args, "runs_dir", None) or ".",
+        request=request,
+        cli_workspace=getattr(args, "workspace", None) or None,
+        run_mode=run_mode,
+        allow_dev_bypass=_dev_allow_unsetup(args),
+    )
+    if resolution.get("blocked"):
+        reasons = "; ".join(str(reason) for reason in resolution.get("reasons", []) if reason)
+        raise RunStateError(reasons or "workspace resolution blocked")
+    workspace_path = str(resolution.get("resolved_workspace") or "").strip()
+    if workspace_path:
+        request["workspace"] = workspace_path
+        request["workspace_id"] = _workspace_id_for_path(workspace_path)
+        request["workspace_manifest_ref"] = MANIFEST_NAME
+        request["workspace_resolved_from"] = str(resolution.get("resolved_from") or "")
+    return request
+
+
+def _resolve_workspace_for_setup_status(args: argparse.Namespace) -> str | None:
+    if getattr(args, "workspace", None):
+        return str(args.workspace)
+    if getattr(args, "run_dir", None) or getattr(args, "run_id", None):
+        try:
+            run_dir = resolve_run_dir(args)
+        except RunStateError:
+            return None
+        request_path = run_dir / "request.json"
+        if request_path.exists():
+            try:
+                request = read_json(request_path)
+                return str(request.get("workspace") or "") or None
+            except RunStateError:
+                return None
+    return None
+
+
+def _start_orchestration_summary(run_dir: Path, state: dict[str, Any]) -> dict[str, Any]:
+    required = [
+        REQUEST_NAME,
+        CONTEXT_MANIFEST_NAME,
+        DECK_BRIEF_NAME,
+        CLAIM_MAP_NAME,
+        NARRATIVE_PLAN_NAME,
+        PAGE_TASKS_NAME,
+        SOURCING_PLAN_NAME,
+        "preview_manifest.json",
+    ]
+    stage = str(state.get("stage") or "")
+    return {
+        "status": "ready_for_external_production"
+        if stage in {"ready_for_client_export", "ready_for_benchmark"}
+        else ("needs_quality_gate" if stage == "needs_draft_gate" else "blocked"),
+        "missing_artifacts": [name for name in required if not (run_dir / name).exists()],
+        "allow_external_production": stage in {"ready_for_client_export", "ready_for_benchmark"},
+        "next_command": state.get("next_command", ""),
+    }
 
 
 def _load_workspace_archetypes(request: dict[str, Any]) -> dict[str, Any] | None:
@@ -253,11 +372,18 @@ def write_plan_artifacts(
     request: dict[str, Any],
     *,
     planning_mode: str = "classic",
+    planner_mode: str = "production_narrative",
 ) -> dict[str, Any]:
     claim_map = read_optional_json(run_dir, CLAIM_MAP_NAME)
     judgments: dict[str, Any] | None = None
     claim_graph: dict[str, Any] | None = None
     workspace_archetypes: dict[str, Any] | None = None
+
+    run_mode = str(request.get("run_mode") or "production").strip().lower()
+    if planner_mode == "production_narrative" and run_mode == "production" and not claim_map:
+        raise RunStateError(
+            "planner blocked: run_mode=production requires claim_map for production_narrative planner"
+        )
 
     if planning_mode == "narrative_v2":
         judgments = _build_judgments_if_possible(run_dir, request, claim_map)
@@ -268,6 +394,7 @@ def write_plan_artifacts(
         judgments=judgments,
         claim_graph=claim_graph,
         workspace_archetypes=workspace_archetypes,
+        planner_mode=planner_mode,
     )
     if claim_map:
         enrich_narrative_with_claims(narrative_plan, claim_map)
@@ -285,6 +412,7 @@ def write_plan_artifacts(
             judgments=judgments,
             claim_graph=claim_graph,
             workspace_archetypes=workspace_archetypes,
+            planner_mode=planner_mode,
         )
         if claim_map:
             enrich_narrative_with_claims(narrative_plan, claim_map)
@@ -320,6 +448,8 @@ def enrich_narrative_with_claims(narrative_plan: dict[str, Any], claim_map: dict
 
 
 def command_plan(args: argparse.Namespace) -> dict[str, Any]:
+    run_mode = _normalize_run_mode(getattr(args, "run_mode", None))
+    planner_mode = _normalize_planner_mode(getattr(args, "planner_mode", None), run_mode)
     request = build_request(
         brief=args.brief or "",
         brief_file=args.brief_file,
@@ -329,17 +459,21 @@ def command_plan(args: argparse.Namespace) -> dict[str, Any]:
         style_preference=args.style_preference or "",
         run_id=args.run_id or "",
     )
+    request["run_mode"] = run_mode
+    request = _apply_workspace_runtime_fields(request, args, run_mode=run_mode)
     run_dir = create_run(runs_dir(args), request, run_id=args.run_id or None, force=args.force)
     request = load_request(run_dir)
     narrative_plan = write_plan_artifacts(
         run_dir,
         request,
         planning_mode=getattr(args, "planning_mode", "classic"),
+        planner_mode=planner_mode,
     )
     return {"run_id": request["run_id"], "run_dir": str(run_dir), "status": "planned", "pages": len(narrative_plan["beats"])}
 
 
 def command_start_conversation(args: argparse.Namespace) -> dict[str, Any]:
+    run_mode = _normalize_run_mode(getattr(args, "run_mode", None))
     context_files = [str(path) for path in args.context_file]
     context_manifest = build_context_manifest(context_files, workspace=args.workspace or "")
     request = build_request(
@@ -350,8 +484,9 @@ def command_start_conversation(args: argparse.Namespace) -> dict[str, Any]:
         style_preference=args.style_preference or "",
         run_id=args.run_id or "",
     )
-    if args.workspace:
-        request["workspace"] = str(Path(args.workspace).expanduser().resolve())
+    request["run_mode"] = run_mode
+    request = _apply_workspace_runtime_fields(request, args, run_mode=run_mode)
+    context_manifest["workspace"] = str(request.get("workspace") or "")
     run_dir = create_run(runs_dir(args), request, run_id=args.run_id or None, force=args.force)
     request = load_request(run_dir)
     context_manifest["run_id"] = request["run_id"]
@@ -454,16 +589,20 @@ def command_export(args: argparse.Namespace) -> dict[str, Any]:
 def command_autoplan(args: argparse.Namespace) -> dict[str, Any]:
     existing_run = bool((getattr(args, "run_id", None) or getattr(args, "run_dir", None)) and not (args.brief or args.brief_file))
     planning_mode = getattr(args, "planning_mode", "classic")
+    run_mode = _normalize_run_mode(getattr(args, "run_mode", None))
+    planner_mode = _normalize_planner_mode(getattr(args, "planner_mode", None), run_mode)
     if existing_run:
         run_dir = resolve_run_dir(args)
         request = load_request(run_dir)
+        request = _apply_workspace_runtime_fields(request, args, run_mode=str(request.get("run_mode") or run_mode))
+        write_json(run_dir / REQUEST_NAME, request)
         needs_plan = not artifact_exists(run_dir, NARRATIVE_PLAN_NAME)
         needs_v2_artifacts = planning_mode == "narrative_v2" and (
             not artifact_exists(run_dir, "consulting_judgments.json")
             or not artifact_exists(run_dir, "claim_evidence_graph.json")
         )
         if needs_plan or needs_v2_artifacts:
-            write_plan_artifacts(run_dir, request, planning_mode=planning_mode)
+            write_plan_artifacts(run_dir, request, planning_mode=planning_mode, planner_mode=planner_mode)
     else:
         plan_result = command_plan(args)
         run_dir = Path(plan_result["run_dir"])
@@ -665,7 +804,12 @@ def command_connector_import(args: argparse.Namespace) -> dict[str, Any]:
 
 def command_next_step(args: argparse.Namespace) -> dict[str, Any]:
     run_dir = resolve_run_dir(args)
-    return resolve_next_step(run_dir)
+    return resolve_next_step(
+        run_dir,
+        cli_workspace=getattr(args, "workspace", None),
+        run_mode=_normalize_run_mode(getattr(args, "run_mode", None)),
+        dev_allow_unsetup=bool(getattr(args, "dev_allow_unsetup", False)),
+    )
 
 
 def command_build_judgments(args: argparse.Namespace) -> dict[str, Any]:
@@ -732,7 +876,71 @@ def command_setup(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def command_setup_status(args: argparse.Namespace) -> dict[str, Any]:
-    return setup_status(workspace=getattr(args, "workspace", None))
+    return setup_status(
+        workspace=_resolve_workspace_for_setup_status(args),
+        run_mode=_normalize_run_mode(getattr(args, "run_mode", None)),
+    )
+
+
+def command_start(args: argparse.Namespace) -> dict[str, Any]:
+    run_mode = _normalize_run_mode(getattr(args, "run_mode", None))
+    setup = setup_status(
+        workspace=_resolve_workspace_for_setup_status(args),
+        run_mode=run_mode,
+        write_event=False,
+    )
+    payload: dict[str, Any] = {
+        "schema_version": "deck_master_start.v1",
+        "status": setup.get("status", "blocked"),
+        "run_mode": run_mode,
+        "setup_status": setup,
+        "active_workspace": (setup.get("config") or {}).get("active_workspace", "")
+        if isinstance(setup.get("config"), dict)
+        else "",
+        "production_ready": bool(setup.get("production_ready")),
+        "next_command": setup.get("next_command") or "deck-master setup-status",
+    }
+    if getattr(args, "run_dir", None) or getattr(args, "run_id", None):
+        run_dir = resolve_run_dir(args)
+        run_state = resolve_run_state(
+            run_dir,
+            cli_workspace=getattr(args, "workspace", None),
+            run_mode=run_mode,
+            dev_allow_unsetup=bool(getattr(args, "dev_allow_unsetup", False)),
+        )
+        payload["run_state"] = run_state
+        payload["orchestration"] = _start_orchestration_summary(run_dir, run_state)
+        payload["next_command"] = run_state.get("next_command") or payload["next_command"]
+    return payload
+
+
+def command_run_state(args: argparse.Namespace) -> dict[str, Any]:
+    return resolve_run_state(
+        resolve_run_dir(args),
+        cli_workspace=getattr(args, "workspace", None),
+        run_mode=_normalize_run_mode(getattr(args, "run_mode", None)),
+        dev_allow_unsetup=bool(getattr(args, "dev_allow_unsetup", False)),
+    )
+
+
+def command_doctor(args: argparse.Namespace) -> dict[str, Any]:
+    run_mode = _normalize_run_mode(getattr(args, "run_mode", None))
+    payload: dict[str, Any] = {
+        "schema_version": "deck_master_doctor.v1",
+        "run_mode": run_mode,
+        "setup_status": setup_status(
+            workspace=_resolve_workspace_for_setup_status(args),
+            run_mode=run_mode,
+        ),
+    }
+    if getattr(args, "run_dir", None):
+        payload["run_state"] = resolve_run_state(
+            resolve_run_dir(args),
+            cli_workspace=getattr(args, "workspace", None),
+            run_mode=run_mode,
+            dev_allow_unsetup=bool(getattr(args, "dev_allow_unsetup", False)),
+        )
+    return payload
 
 
 def command_install_skill(args: argparse.Namespace) -> dict[str, Any]:
@@ -761,7 +969,12 @@ def command_uninstall_skill(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def command_orchestration_check(args: argparse.Namespace) -> dict[str, Any]:
-    return orchestration_check(resolve_run_dir(args))
+    return orchestration_check(
+        resolve_run_dir(args),
+        cli_workspace=getattr(args, "workspace", None),
+        run_mode=_normalize_run_mode(getattr(args, "run_mode", None)),
+        dev_allow_unsetup=bool(getattr(args, "dev_allow_unsetup", False)),
+    )
 
 
 def command_import_plan(args: argparse.Namespace) -> dict[str, Any]:
@@ -770,6 +983,18 @@ def command_import_plan(args: argparse.Namespace) -> dict[str, Any]:
 
 def command_import_render_result(args: argparse.Namespace) -> dict[str, Any]:
     return import_render_result(resolve_run_dir(args), args.input)
+
+
+def command_bind_workspace(args: argparse.Namespace) -> dict[str, Any]:
+    return bind_workspace(resolve_run_dir(args), args.workspace, reason=args.reason or "")
+
+
+def command_import_sourcing(args: argparse.Namespace) -> dict[str, Any]:
+    return import_sourcing(resolve_run_dir(args), args.input, source=args.source)
+
+
+def command_validate_sourcing(args: argparse.Namespace) -> dict[str, Any]:
+    return validate_sourcing(resolve_run_dir(args))
 
 
 def command_import_context_pack(args: argparse.Namespace) -> dict[str, Any]:
@@ -866,6 +1091,52 @@ def command_import_generation_result(args: argparse.Namespace) -> dict[str, Any]
 def command_refresh_preview_from_generation(args: argparse.Namespace) -> dict[str, Any]:
     run_dir = resolve_run_dir(args)
     return refresh_preview_from_generation(run_dir)
+
+
+def command_generation_session_create(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = resolve_run_dir(args)
+    return create_generation_session(
+        run_dir,
+        tool=getattr(args, "tool", "ppt-deck-pro-max"),
+        workspace=(str(args.workspace) if getattr(args, "workspace", None) else None),
+        tool_command=getattr(args, "tool_command", None),
+        force=bool(getattr(args, "force", False)),
+    )
+
+
+def command_generation_session_validate(args: argparse.Namespace) -> dict[str, Any]:
+    return validate_generation_session(
+        resolve_run_dir(args),
+        tool=getattr(args, "tool", None),
+        tool_command=getattr(args, "tool_command", None),
+    )
+
+
+def command_generation_session_status(args: argparse.Namespace) -> dict[str, Any]:
+    return generation_session_status(
+        resolve_run_dir(args),
+        tool=getattr(args, "tool", None),
+        tool_command=getattr(args, "tool_command", None),
+    )
+
+
+def command_run_generation(args: argparse.Namespace) -> dict[str, Any]:
+    return run_generation_session(
+        resolve_run_dir(args),
+        tool=getattr(args, "tool", "ppt-deck-pro-max"),
+        dry_run=bool(getattr(args, "dry_run", False)),
+        no_execute=bool(getattr(args, "no_execute", False)),
+        tool_command=getattr(args, "tool_command", None),
+    )
+
+
+def command_generation_session_import_results(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = resolve_run_dir(args)
+    return import_generation_results(
+        run_dir,
+        Path(args.input).expanduser(),
+        force=bool(getattr(args, "force", False)),
+    )
 
 
 def command_build_learning_pack(args: argparse.Namespace) -> dict[str, Any]:
@@ -987,8 +1258,58 @@ def command_benchmark_checkpoint(args: argparse.Namespace) -> dict[str, Any]:
 def command_benchmark_report(args: argparse.Namespace) -> dict[str, Any]:
     case = load_benchmark_case(args.case, benchmark_dir=getattr(args, "benchmark_dir", None))
     run_dir = resolve_run_dir(args)
+    if bool(getattr(args, "rc_readiness", False)):
+        _ensure_ready_for_benchmark(run_dir)
     pending_external_steps = collect_pending_external_steps(case, run_dir)
     return write_benchmark_report(
+        case,
+        run_dir,
+        benchmark_dir=getattr(args, "benchmark_dir", None),
+        force=bool(getattr(args, "force", False)),
+        pending_external_steps=pending_external_steps,
+    )
+
+
+def _ensure_ready_for_benchmark(run_dir: Path) -> dict[str, Any]:
+    state = resolve_run_state(
+        run_dir,
+        cli_workspace=None,
+        run_mode=None,
+        dev_allow_unsetup=False,
+    )
+    if state.get("stage") != "ready_for_benchmark":
+        raise BenchmarkReportError(
+            "benchmark readiness blocked. current stage is "
+            f"{state.get('stage')} and expected ready_for_benchmark."
+        )
+    return state
+
+
+def _is_fixture_benchmark_case(case: Any) -> bool:
+    workflow = case.data.get("workflow", {}) if hasattr(case, "data") else {}
+    if str(workflow.get("library_mode") or "").strip().lower() == "fixture":
+        return True
+    return str(case.data.get("case_id") or "").strip().endswith("_fixture")
+
+
+def _ensure_rc_benchmark_boundary(case: Any, run_dir: Path) -> None:
+    if _is_fixture_benchmark_case(case):
+        raise BenchmarkReportError("benchmark RC report blocked: fixture cases cannot enter RC benchmark.")
+    request = read_json(run_dir / REQUEST_NAME)
+    run_mode = str(request.get("run_mode") or "").strip().lower()
+    if run_mode != "benchmark":
+        raise BenchmarkReportError(
+            "benchmark RC report blocked: run_mode must be benchmark."
+        )
+
+
+def command_benchmark_rc_report(args: argparse.Namespace) -> dict[str, Any]:
+    case = load_benchmark_case(args.case, benchmark_dir=getattr(args, "benchmark_dir", None))
+    run_dir = resolve_run_dir(args)
+    _ensure_rc_benchmark_boundary(case, run_dir)
+    _ensure_ready_for_benchmark(run_dir)
+    pending_external_steps = collect_pending_external_steps(case, run_dir)
+    return write_benchmark_rc_report(
         case,
         run_dir,
         benchmark_dir=getattr(args, "benchmark_dir", None),
@@ -1074,8 +1395,10 @@ def add_brief_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--run-id")
     parser.add_argument("--run-dir")
     parser.add_argument("--runs-dir", default=None)
+    parser.add_argument("--workspace", default="")
     parser.add_argument("--force", action="store_true")
     parser.add_argument("--dev-allow-unsetup", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument("--run-mode", choices=["production", "fixture", "dev", "benchmark"], default="production")
 
 
 def add_conversation_args(parser: argparse.ArgumentParser) -> None:
@@ -1090,6 +1413,7 @@ def add_conversation_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--runs-dir", default=None)
     parser.add_argument("--force", action="store_true")
     parser.add_argument("--dev-allow-unsetup", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument("--run-mode", choices=["production", "fixture", "dev", "benchmark"], default="production")
 
 
 def add_run_args(parser: argparse.ArgumentParser) -> None:
@@ -1097,6 +1421,8 @@ def add_run_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--run-id")
     parser.add_argument("--runs-dir", default=None)
     parser.add_argument("--dev-allow-unsetup", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument("--run-mode", choices=["production", "fixture", "dev", "benchmark"], default="production")
+    parser.add_argument("--workspace", default="")
 
 
 def add_library_args(parser: argparse.ArgumentParser) -> None:
@@ -1106,6 +1432,14 @@ def add_library_args(parser: argparse.ArgumentParser) -> None:
 
 def add_planning_mode_arg(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--planning-mode", choices=["classic", "narrative_v2"], default="classic")
+
+
+def add_planner_mode_arg(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--planner-mode",
+        choices=["fixture_template", "workspace_fallback", "production_narrative"],
+        default=None,
+    )
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -1122,16 +1456,33 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_setup_status = sub.add_parser("setup-status", help="Check first-run Deck Master setup")
     p_setup_status.add_argument("--workspace", default=None)
+    p_setup_status.add_argument("--run-dir", default=None)
+    p_setup_status.add_argument("--run-mode", choices=["production", "fixture", "dev", "benchmark"], default="production")
     p_setup_status.set_defaults(func=command_setup_status)
+
+    p_doctor = sub.add_parser("doctor", help="Show setup and run state diagnostics")
+    p_doctor.add_argument("--workspace", default="")
+    p_doctor.add_argument("--run-dir", default=None)
+    p_doctor.add_argument("--run-mode", choices=["production", "fixture", "dev", "benchmark"], default="production")
+    p_doctor.set_defaults(func=command_doctor)
+
+    p_run_state = sub.add_parser("run-state", help="Resolve canonical run state")
+    add_run_args(p_run_state)
+    p_run_state.set_defaults(func=command_run_state)
 
     p_plan = sub.add_parser("plan", help="Create request.json and narrative_plan.json from a brief")
     add_brief_args(p_plan)
     add_planning_mode_arg(p_plan)
+    add_planner_mode_arg(p_plan)
     p_plan.set_defaults(func=command_plan)
 
     p_start = sub.add_parser("start-conversation", help="Create a guided Deck conversation run from local context")
     add_conversation_args(p_start)
     p_start.set_defaults(func=command_start_conversation)
+
+    p_start_entry = sub.add_parser("start", help="Show Deck Master setup, run state, and next action")
+    add_run_args(p_start_entry)
+    p_start_entry.set_defaults(func=command_start)
 
     p_brief = sub.add_parser("build-brief", help="Compile deck_brief.json from context and conversation")
     add_run_args(p_brief)
@@ -1145,6 +1496,7 @@ def build_parser() -> argparse.ArgumentParser:
     add_brief_args(p_autoplan)
     add_library_args(p_autoplan)
     add_planning_mode_arg(p_autoplan)
+    add_planner_mode_arg(p_autoplan)
     p_autoplan.set_defaults(func=command_autoplan)
 
     p_search = sub.add_parser("search-library", help="Run PPT Library selection for an existing run")
@@ -1214,6 +1566,16 @@ def build_parser() -> argparse.ArgumentParser:
     p_orchestration = sub.add_parser("orchestration-check", help="Check run orchestration completeness")
     add_run_args(p_orchestration)
     p_orchestration.set_defaults(func=command_orchestration_check)
+
+    p_bind_workspace = sub.add_parser("bind-workspace", help="Bind an existing run to a workspace")
+    p_bind_workspace.add_argument("--run-dir")
+    p_bind_workspace.add_argument("--run-id")
+    p_bind_workspace.add_argument("--runs-dir", default=None)
+    p_bind_workspace.add_argument("--workspace", required=True)
+    p_bind_workspace.add_argument("--reason", required=True)
+    p_bind_workspace.add_argument("--dev-allow-unsetup", action="store_true", help=argparse.SUPPRESS)
+    p_bind_workspace.add_argument("--run-mode", choices=["production", "fixture", "dev", "benchmark"], default="fixture")
+    p_bind_workspace.set_defaults(func=command_bind_workspace)
 
     p_judgments = sub.add_parser("build-judgments", help="Generate consulting judgments")
     add_run_args(p_judgments)
@@ -1337,6 +1699,16 @@ def build_parser() -> argparse.ArgumentParser:
     p_import_render.add_argument("--input", required=True, help="Path to render result JSON")
     p_import_render.set_defaults(func=command_import_render_result)
 
+    p_import_sourcing = sub.add_parser("import-sourcing", help="Import a JSON sourcing plan override into a run")
+    add_run_args(p_import_sourcing)
+    p_import_sourcing.add_argument("--input", required=True, help="Path to sourcing plan JSON")
+    p_import_sourcing.add_argument("--source", required=True, choices=["human", "agent"])
+    p_import_sourcing.set_defaults(func=command_import_sourcing)
+
+    p_validate_sourcing = sub.add_parser("validate-sourcing", help="Validate current sourcing_plan.json")
+    add_run_args(p_validate_sourcing)
+    p_validate_sourcing.set_defaults(func=command_validate_sourcing)
+
     # ---- context pack ----
     p_icp = sub.add_parser("import-context-pack", help="Import an Agent-generated context pack into a run")
     add_run_args(p_icp)
@@ -1396,6 +1768,42 @@ def build_parser() -> argparse.ArgumentParser:
     p_rpg = sub.add_parser("refresh-preview-from-generation", help="Update preview manifest from generation results")
     add_run_args(p_rpg)
     p_rpg.set_defaults(func=command_refresh_preview_from_generation)
+
+    p_gs = sub.add_parser("generation-session", help="Manage generation sessions")
+    gs_sub = p_gs.add_subparsers(dest="generation_session_command", required=True)
+
+    p_gs_create = gs_sub.add_parser("create", help="Create generation_session.json for a run")
+    add_run_args(p_gs_create)
+    p_gs_create.add_argument("--tool", default="ppt-deck-pro-max")
+    p_gs_create.add_argument("--tool-command", default=None, help="Override tool command directly")
+    p_gs_create.add_argument("--force", action="store_true", help="Recreate session if exists")
+    p_gs_create.set_defaults(func=command_generation_session_create)
+
+    p_gs_validate = gs_sub.add_parser("validate", help="Validate generation session and tool availability")
+    add_run_args(p_gs_validate)
+    p_gs_validate.add_argument("--tool", default=None)
+    p_gs_validate.add_argument("--tool-command", default=None, help="Override tool command directly")
+    p_gs_validate.set_defaults(func=command_generation_session_validate)
+
+    p_gs_status = gs_sub.add_parser("status", help="Read generation session status")
+    add_run_args(p_gs_status)
+    p_gs_status.add_argument("--tool", default=None)
+    p_gs_status.add_argument("--tool-command", default=None, help="Override tool command directly")
+    p_gs_status.set_defaults(func=command_generation_session_status)
+
+    p_gs_import = gs_sub.add_parser("import-results", help="Import generation result and refresh preview manifest")
+    add_run_args(p_gs_import)
+    p_gs_import.add_argument("--input", required=True, help="Path to generation result JSON")
+    p_gs_import.add_argument("--force", action="store_true", help="Override locked pages")
+    p_gs_import.set_defaults(func=command_generation_session_import_results)
+
+    p_rg = sub.add_parser("run-generation", help="Run the production generation tool")
+    add_run_args(p_rg)
+    p_rg.add_argument("--tool", default="ppt-deck-pro-max")
+    p_rg.add_argument("--tool-command", default=None, help="Override tool command directly")
+    p_rg.add_argument("--dry-run", action="store_true")
+    p_rg.add_argument("--no-execute", action="store_true")
+    p_rg.set_defaults(func=command_run_generation)
 
     # ---- workspace learning ----
     p_blp = sub.add_parser("build-learning-pack", help="Aggregate workspace learning for next Agent run")
@@ -1473,7 +1881,19 @@ def build_parser() -> argparse.ArgumentParser:
     p_brep.add_argument("--case", required=True, help="Path to benchmark_case.json")
     p_brep.add_argument("--benchmark-dir", default=str(ROOT / "benchmarks"))
     p_brep.add_argument("--force", action="store_true", help="Replace an existing benchmark report")
+    p_brep.add_argument(
+        "--rc-readiness",
+        action="store_true",
+        help="Require run_state stage ready_for_benchmark before generating report.",
+    )
     p_brep.set_defaults(func=command_benchmark_report)
+
+    p_brr = sub.add_parser("benchmark-rc-report", help="Build RC benchmark report after ready_for_benchmark")
+    add_run_args(p_brr)
+    p_brr.add_argument("--case", required=True, help="Path to benchmark_case.json")
+    p_brr.add_argument("--benchmark-dir", default=str(ROOT / "benchmarks"))
+    p_brr.add_argument("--force", action="store_true", help="Replace an existing RC benchmark report")
+    p_brr.set_defaults(func=command_benchmark_rc_report)
 
     p_bcp = sub.add_parser("benchmark-checkpoint", help="Record a benchmark checkpoint")
     add_run_args(p_bcp)
@@ -1506,8 +1926,9 @@ def main() -> None:
     try:
         if args.command in PROTECTED_COMMANDS:
             require_setup_ready(
-                dev_allow_unsetup=bool(getattr(args, "dev_allow_unsetup", False)),
+                dev_allow_unsetup=_dev_allow_unsetup(args),
                 workspace=_workspace_for_setup_guard(args),
+                run_mode=_normalize_run_mode(getattr(args, "run_mode", None)),
             )
         print_json(args.func(args))
     except (
@@ -1517,6 +1938,7 @@ def main() -> None:
         SkillInstallError,
         SetupError,
         ContextPackError,
+        GenerationSessionError,
         NarrativeAdviceError,
         ExternalReviewError,
         GenerationHandbackError,

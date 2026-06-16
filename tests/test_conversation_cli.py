@@ -56,8 +56,12 @@ class ConversationCliTests(unittest.TestCase):
             "narrative_v2",
         )
         quality = self.run_cli("quality-gate", "--run-dir", str(run_dir), "draft")
+        start_status = self.run_cli("start", "--run-dir", str(run_dir), "--run-mode", "fixture")
 
         self.assertEqual("autoplan_preview_ready", preview["status"])
+        self.assertEqual("deck_master_start.v1", start_status["schema_version"])
+        self.assertEqual(str(run_dir.resolve()), start_status["run_state"]["run_dir"])
+        self.assertIn("next_command", start_status)
         self.assertTrue((run_dir / "context_manifest.json").exists())
         # context_manifest must carry schema_version per v0.9 spec.
         ctx_manifest = json.loads((run_dir / "context_manifest.json").read_text(encoding="utf-8"))

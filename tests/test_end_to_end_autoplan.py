@@ -29,6 +29,8 @@ class EndToEndAutoplanTests(unittest.TestCase):
                 "retail",
                 "--library-mode",
                 "fixture",
+                "--run-mode",
+                "fixture",
                 "--runs-dir",
                 str(self.temp_dir),
                 "--run-id",

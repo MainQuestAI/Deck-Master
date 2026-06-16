@@ -185,6 +185,11 @@ def validate_generation_result(result: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(result, dict):
         return {"valid": False, "errors": ["Result must be a JSON object."], "warnings": []}
 
+    if not result.get("beat_id") and result.get("page_id"):
+        result["beat_id"] = str(result["page_id"])
+    if result.get("beat_id") and not result.get("page_id"):
+        result["page_id"] = str(result["beat_id"])
+
     if result.get("schema_version") != RESULT_SCHEMA_VERSION:
         errors.append(
             f"schema_version must be '{RESULT_SCHEMA_VERSION}', "
@@ -197,8 +202,8 @@ def validate_generation_result(result: dict[str, Any]) -> dict[str, Any]:
         errors.append("tool is required.")
     if not result.get("task_id"):
         errors.append("task_id is required.")
-    if not result.get("beat_id"):
-        errors.append("beat_id is required.")
+    if not result.get("beat_id") and not result.get("page_id"):
+        errors.append("beat_id/page_id is required.")
 
     status = result.get("status", "")
     if status not in VALID_STATUSES:

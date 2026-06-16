@@ -22,6 +22,8 @@ from runtime.run_state import (
     read_json,
     write_json,
 )
+from runtime.workspace_resolver import resolve_workspace_for_run
+from workspace.foundation import MANIFEST_NAME
 
 SCHEMA_VERSION = "deck_context_pack.v1"
 
@@ -194,6 +196,40 @@ def _source_to_manifest_entry(source: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _workspace_id_for_path(path: str) -> str:
+    workspace_root = Path(path).expanduser().resolve()
+    manifest_path = workspace_root / MANIFEST_NAME
+    if manifest_path.exists():
+        try:
+            manifest = read_json(manifest_path)
+            candidate = str(manifest.get("workspace_id") or "").strip()
+            if candidate:
+                return candidate
+        except Exception:
+            pass
+    return f"workspace_{workspace_root.name}"
+
+
+def _apply_workspace_runtime_fields(request: dict[str, Any], workspace: str, run_mode: str) -> dict[str, Any]:
+    resolution = resolve_workspace_for_run(
+        run_dir=".",
+        request=request,
+        cli_workspace=workspace,
+        run_mode=run_mode,
+    )
+    if resolution.get("blocked"):
+        reasons = "; ".join(str(reason) for reason in resolution.get("reasons", []) if reason)
+        raise ContextPackError(reasons or "workspace resolution blocked")
+    workspace_path = str(resolution.get("resolved_workspace") or "").strip()
+    if not workspace_path:
+        raise ContextPackError("workspace is required for context pack run creation")
+    request["workspace"] = workspace_path
+    request["workspace_id"] = _workspace_id_for_path(workspace_path)
+    request["workspace_manifest_ref"] = MANIFEST_NAME
+    request["workspace_resolved_from"] = str(resolution.get("resolved_from") or "")
+    return request
+
+
 def import_context_pack(
     run_dir: str | Path,
     pack: dict[str, Any],
@@ -354,12 +390,13 @@ def create_run_from_context_pack(
     request: dict[str, Any] = {
         "project_name": first_title or actual_run_id,
         "run_id": actual_run_id,
-        "workspace": workspace,
+        "run_mode": "production",
         "industry": industry,
         "audience": audience,
         "source": "context_pack",
         "context_pack_run_id": pack_run_id,
     }
+    request = _apply_workspace_runtime_fields(request, workspace, "production")
 
     root = create_run(runs_dir, request, run_id=actual_run_id)
     result = import_context_pack(root, pack)

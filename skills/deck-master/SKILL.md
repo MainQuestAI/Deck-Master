@@ -9,6 +9,10 @@ Use Deck Master as the runtime and review layer for professional solution decks.
 It owns run state, artifacts, typed events, sourcing decisions, quality gates,
 external tool handoffs, benchmark reports, and the localhost Review Cockpit.
 
+When a user names Deck Master, treat it as the top-level orchestrator for the
+run. Even for heavy edits and external tool calls, the source of truth stays in
+Deck Master state.
+
 ## Entry Points
 
 Prefer the installed CLI:
@@ -31,7 +35,16 @@ http://127.0.0.1:5050
 
 ## First Checks
 
-Run these before operating on a real deck workflow:
+Run these in order before operating on a real deck workflow:
+
+```bash
+~/.deck-master/bin/deck-master start
+~/.deck-master/bin/deck-master setup-status
+~/.deck-master/bin/deck-master doctor
+~/.deck-master/bin/deck-master start --run-id <run_id>
+```
+
+For setup tasks and repair, use:
 
 ```bash
 ~/.deck-master/bin/deck-master setup-status
@@ -50,9 +63,42 @@ Deck run:
   --target codex
 ```
 
+## Core Production Flow
+
+For real production workflows, enter through setup, context intake, claim
+coverage, generation session control, quality gates, review, and export:
+
+```bash
+~/.deck-master/bin/deck-master start
+~/.deck-master/bin/deck-master setup --workspace <path> --repair-workspace
+~/.deck-master/bin/deck-master start-conversation \
+  --workspace <path> \
+  --context-file <source.txt> \
+  --industry <industry> \
+  --run-id <run_id>
+~/.deck-master/bin/deck-master build-brief --run-id <run_id>
+~/.deck-master/bin/deck-master build-claim-map --run-id <run_id>
+~/.deck-master/bin/deck-master autoplan \
+  --run-id <run_id> \
+  --planning-mode narrative_v2 \
+  --library-mode auto
+~/.deck-master/bin/deck-master generation-session create --run-id <run_id>
+~/.deck-master/bin/deck-master quality-gate draft --run-id <run_id>
+~/.deck-master/bin/deck-master run-state --run-dir <run_dir>
+```
+
+If another Agent already prepared a Context Pack, create the run through Deck
+Master so workspace lineage is written into `request.json`:
+
+```bash
+~/.deck-master/bin/deck-master create-run-from-context-pack \
+  --workspace <path> \
+  --input <context_pack.json>
+```
+
 ## Core Workflow
 
-For a brief-to-preview run:
+For demo, fixture, or quick smoke runs, a brief file can still drive a preview:
 
 ```bash
 ~/.deck-master/bin/deck-master autoplan \
@@ -100,9 +146,13 @@ run is allowed to leave Deck Master orchestration:
 | `export` | Export approved page queue |
 | `benchmark-run` | Run a local benchmark case |
 | `benchmark-report` | Rebuild benchmark report for a run |
+| `benchmark-rc-report` | Build RC-ready benchmark report |
 | `setup` | Configure first-run Deck Master runtime |
 | `setup-status` | Check setup readiness |
+| `doctor` | Show setup / run diagnostics |
+| `run-state` | Resolve canonical run state |
 | `orchestration-check` | Check run completeness before external production |
+| `bind-workspace` | Bind an existing run to workspace |
 | `import-plan` | Import a human or Agent plan override |
 | `import-render-result` | Import PPT Master or renderer handback |
 

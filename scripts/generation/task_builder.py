@@ -10,15 +10,27 @@ from runtime.events import append_event
 TASK_DECISIONS = {"generate", "adapt"}
 
 
+def _task_semantics(decision: dict[str, Any]) -> tuple[str, bool, str]:
+    source_decision = str(decision.get("source_decision") or "")
+    is_adapt = source_decision == "adapt"
+    task_type = "adapt" if is_adapt else "generate"
+    expected_operation = "rewrite_existing_slide" if is_adapt else "create_new_slide"
+    return task_type, is_adapt, expected_operation
+
+
 def task_for_decision(decision: dict[str, Any], index: int) -> dict[str, Any]:
     selected = decision.get("selected_candidate") if isinstance(decision.get("selected_candidate"), dict) else None
+    task_type, is_adapt, expected_operation = _task_semantics(decision)
     return {
         "task_id": f"generation_{index:02d}_{decision.get('beat_id')}",
         "beat_id": decision.get("beat_id"),
         "page_title": decision.get("page_title"),
+        "task_type": task_type,
         "source_decision": decision.get("source_decision"),
+        "reference_slide_required": is_adapt,
+        "expected_operation": expected_operation,
         "generation_brief": decision.get("generation_brief", ""),
-        "reference_slide": selected,
+        "reference_slide": selected if is_adapt else None,
         "visual_need": decision.get("visual_need", ""),
         "evidence_need": decision.get("evidence_need", ""),
         "style_constraints": "Follow the deck-level style and preserve any selected reference slide structure.",

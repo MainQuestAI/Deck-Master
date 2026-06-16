@@ -44,6 +44,8 @@ jobs:
             --brief-file examples/briefs/retail_digital_transformation.txt \
             --industry retail \
             --library-mode fixture \
+            --run-mode fixture \
+            --dev-allow-unsetup \
             --runs-dir "$RUNS_DIR" \
             --run-id ci-smoke \
             > "$RUNS_DIR/autoplan-output.json"

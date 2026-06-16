@@ -10,6 +10,7 @@ from typing import Any
 from planning.page_tasks import build_page_tasks
 from runtime.events import append_event
 from runtime.next_step import resolve_next_step
+from runtime.run_state import REQUEST_NAME
 from runtime.run_state import (
     CLAIM_MAP_NAME,
     CONTEXT_MANIFEST_NAME,
@@ -17,7 +18,6 @@ from runtime.run_state import (
     NARRATIVE_PLAN_NAME,
     PAGE_TASKS_NAME,
     PREVIEW_MANIFEST_NAME,
-    REQUEST_NAME,
     SOURCING_PLAN_NAME,
     RunStateError,
     ensure_run_dirs,
@@ -25,6 +25,7 @@ from runtime.run_state import (
     read_json,
     write_json,
 )
+from runtime.run_state_resolver import resolve_run_state
 from validators.companion_tools import validate_render_result
 
 
@@ -53,24 +54,51 @@ def _quality_reports(root: Path) -> list[str]:
     return sorted(path.name for path in quality_dir.glob("*_gate.json"))
 
 
-def orchestration_check(run_dir: str | Path) -> dict[str, Any]:
+def orchestration_check(
+    run_dir: str | Path,
+    *,
+    cli_workspace: str | None = None,
+    run_mode: str | None = None,
+    dev_allow_unsetup: bool = False,
+) -> dict[str, Any]:
     root = Path(run_dir).expanduser().resolve()
-    run_id = root.name
-    if (root / REQUEST_NAME).exists():
-        try:
-            request = read_json(root / REQUEST_NAME)
-            run_id = str(request.get("run_id") or run_id)
-        except RunStateError:
-            pass
+    state = resolve_run_state(
+        root,
+        cli_workspace=cli_workspace,
+        run_mode=run_mode,
+        dev_allow_unsetup=dev_allow_unsetup,
+    )
+    run_id = str(state.get("run_id") or root.name)
+
+    stage = str(state.get("stage") or "")
+    reasons = [entry.get("reason", "") for entry in state.get("blocked_actions", []) if entry.get("reason")]
+    if stage in {"ready_for_client_export", "ready_for_benchmark"}:
+        status = "ready_for_external_production"
+    elif stage == "needs_draft_gate":
+        status = "needs_quality_gate"
+    elif stage == "blocked_workspace":
+        status = "blocked"
+    else:
+        status = "blocked"
 
     missing = [name for name in REQUIRED_SEQUENCE if not (root / name).exists()]
+    if status == "blocked":
+        for name in REQUIRED_SEQUENCE:
+            if name == PREVIEW_MANIFEST_NAME and state.get("stage") == "needs_preview" and name not in missing:
+                continue
     quality = _quality_reports(root)
-    next_step = resolve_next_step(root)
-
-    allow_external = not missing and bool(quality)
-    status = "ready_for_external_production" if allow_external else "blocked"
-    if not missing and not quality:
-        status = "needs_quality_gate"
+    allowed = {
+        "external_generation_allowed": status == "ready_for_external_production",
+        "external_review_allowed": status in {"ready_for_external_production", "blocked"},
+        "client_export_allowed": status == "ready_for_external_production",
+        "benchmark_rc_allowed": state.get("stage") == "ready_for_benchmark",
+    }
+    next_step = resolve_next_step(
+        root,
+        cli_workspace=cli_workspace,
+        run_mode=run_mode,
+        dev_allow_unsetup=dev_allow_unsetup,
+    )
 
     result = {
         "schema_version": SCHEMA_VERSION,
@@ -81,7 +109,9 @@ def orchestration_check(run_dir: str | Path) -> dict[str, Any]:
         "quality_reports": quality,
         "next_command": next_step.get("next_command", ""),
         "next_step_status": next_step.get("status", ""),
-        "allow_external_production": allow_external,
+        "allow_external_production": status == "ready_for_external_production",
+        "policy": allowed,
+        "reasons": reasons,
     }
     append_event(
         root,
@@ -91,7 +121,7 @@ def orchestration_check(run_dir: str | Path) -> dict[str, Any]:
         data={
             "status": status,
             "missing_artifacts": missing,
-            "allow_external_production": allow_external,
+            "allow_external_production": status == "ready_for_external_production",
         },
     )
     return result
