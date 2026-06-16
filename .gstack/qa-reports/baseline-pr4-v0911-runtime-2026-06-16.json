@@ -1,0 +1,26 @@
+{
+  "date": "2026-06-16",
+  "target": "PR #4 v0.9.11 runtime realignment",
+  "url": "http://127.0.0.1:5067/?run=browser-ready",
+  "healthScore": 100,
+  "baselineHealthScore": 92,
+  "issues": [
+    {
+      "id": "ISSUE-001",
+      "title": "Production Studio run created in setup default runs dir was invisible to later run-state requests",
+      "severity": "high",
+      "category": "functional",
+      "status": "verified"
+    }
+  ],
+  "categoryScores": {
+    "console": 100,
+    "links": 100,
+    "visual": 100,
+    "functional": 100,
+    "ux": 100,
+    "performance": 100,
+    "content": 100,
+    "accessibility": 100
+  }
+}
