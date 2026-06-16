@@ -1,6 +1,6 @@
-# Deck Master v0.9.5 - v0.9.11 Spec Pack
+# Deck Master v0.9.5 - v0.9.12 Spec Pack
 
-本包包含 6 份连续开发 Spec，已按 Deck Master v0.9.x 到 v1.0.0 RC 的顺序组织：
+本包包含 7 份连续开发 Spec，已按 Deck Master v0.9.x 到 v1.0.0 RC 的顺序组织：
 
 1. `deck-master-v0.9.5-review-cockpit-frontend-spec.md`
    - 目标：把 v0.9 已完成的 F1/F2/F3 后端 API 收成可持续使用的 localhost Review Cockpit 前端体验。
@@ -19,6 +19,9 @@
 
 6. `deck-master-v0.9.11-orchestration-runtime-realignment-spec.md`
    - 目标：重对齐 Deck Master 主控运行时，统一 run mode、setup/workspace/run state、workspace-bound request、Planner guard、sourcing 回写、tool registry、production session 和 benchmark gate。
+
+7. `deck-master-v0.9.12-skill-suite-routing-spec.md`
+   - 目标：把 Deck Master 从单一 skill 升级为 Skill Suite，统一安装和路由 PPT Library、PPT Deck Pro Max、PPT Quality Gate、PPT Master 等 companion skills。
 
 `v0.9.11` 本轮补齐点：
 
@@ -41,6 +44,7 @@ docs/specs/deck-master-v0.9.7-benchmark-harness-spec.md
 docs/specs/deck-master-v0.9.9-installation-chain-hardening-spec.md
 docs/specs/deck-master-v0.9.10-first-run-orchestration-enforcement-spec.md
 docs/specs/deck-master-v0.9.11-orchestration-runtime-realignment-spec.md
+docs/specs/deck-master-v0.9.12-skill-suite-routing-spec.md
 ```
 
 推荐开发顺序：
@@ -52,5 +56,6 @@ v0.9.5 Review Cockpit Frontend
 → v0.9.9 Installation Chain Hardening
 → v0.9.10 First-Run Setup + Orchestration Enforcement
 → v0.9.11 Orchestration Runtime Realignment
+→ v0.9.12 Skill Suite Routing
 → v1.0.0 RC Real Benchmark Runs
 ```
