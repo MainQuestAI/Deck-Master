@@ -110,6 +110,21 @@ class RunStateResolverAcceptanceTests(unittest.TestCase):
         state = resolve_run_state(self.run_dir, run_mode="production", cli_workspace=str(cli_workspace))
         self.assertEqual("blocked_workspace", state["stage"])
 
+    def test_needs_request_next_command_uses_start_entrypoint(self) -> None:
+        state = resolve_run_state(self.run_dir, run_mode="fixture")
+        self.assertEqual("needs_request", state["stage"])
+        self.assertIn("deck-master start", state["next_command"])
+        self.assertIn("--run-dir", state["next_command"])
+        self.assertNotIn("start-conversation --run-dir", state["next_command"])
+
+    def test_needs_context_next_command_uses_context_pack_import(self) -> None:
+        self._write_json(REQUEST_NAME, {"run_id": "r1", "run_mode": "fixture"})
+        state = resolve_run_state(self.run_dir, run_mode="fixture")
+        self.assertEqual("needs_context", state["stage"])
+        self.assertIn("deck-master import-context-pack", state["next_command"])
+        self.assertIn("--input <context_pack.json>", state["next_command"])
+        self.assertNotIn("start-conversation --run-dir", state["next_command"])
+
     def test_preview_review_status_takes_precedence_over_page_tasks(self) -> None:
         self._write_full_pipeline(include_preview=True)
         self._write_json(

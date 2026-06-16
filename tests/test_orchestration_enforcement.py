@@ -35,7 +35,8 @@ class OrchestrationEnforcementTests(unittest.TestCase):
         self.assertEqual("blocked", result["status"])
         self.assertIn("context_manifest.json", result["missing_artifacts"])
         self.assertFalse(result["allow_external_production"])
-        self.assertIn("start-conversation", result["next_command"])
+        self.assertIn("import-context-pack", result["next_command"])
+        self.assertIn("--input <context_pack.json>", result["next_command"])
 
     def test_import_markdown_plan_backs_up_and_writes_events(self) -> None:
         old_plan = {"run_id": "orch-run", "title": "old", "beats": []}

@@ -349,8 +349,10 @@ def _resolve_stage(root: Path, run_mode: str) -> tuple[str, list[dict[str, str]]
 
 
 def _next_command(stage: str, root: Path, run_id: str) -> str:
-    if stage in {"needs_request", "needs_context"}:
-        return f"deck-master start-conversation --run-dir {root} --run-id {run_id}"
+    if stage == "needs_request":
+        return f"deck-master start --run-dir {root} --run-id {run_id}"
+    if stage == "needs_context":
+        return f"deck-master import-context-pack --run-dir {root} --run-id {run_id} --input <context_pack.json>"
     if stage == "needs_brief":
         return f"deck-master build-brief --run-dir {root} --run-id {run_id}"
     if stage == "needs_claim_map":
