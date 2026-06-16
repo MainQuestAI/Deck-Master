@@ -34,7 +34,26 @@ tests/*suite* / tests/*setup* / tests/*install*
 
 ## 4. 数据契约
 
-### 4.1 Companion Manifest v2
+### 4.1 Companion Skill Source Matrix
+
+Stack A 必须先冻结 companion 来源矩阵，后续 suite install/status/repair 只能按该矩阵执行。不得在实现阶段临时创建半套 `skills/ppt-*` 目录。
+
+| Skill | Required | Install source | Agent link name | CLI / tool key | Required capabilities | Default blocking behavior |
+|---|---:|---|---|---|---|---|
+| `deck-master` | yes | bundled: `skills/deck-master` | `deck-master` | `deck-master` | `deck_master.run.v1`, `deck_master.setup.v1` | missing blocks all Deck Master runs |
+| `ppt-library` | yes for library sourcing, optional for direct generation | external adopted skill or release bundle | `ppt-library` | `ppt-lib` | `ppt_library.doctor.v1`, `ppt_library.search.v1`, `ppt_library.selection.v1` | missing blocks `library_sourcing`, but does not block Deck Master setup/run when the task can proceed without library sourcing |
+| `ppt-deck-pro-max` | yes for new/adapt generation | external adopted skill or release bundle | `ppt-deck-pro-max` | `ppt-deck-pro-max` | `ppt_deck_pro_max.generate.v1`, `ppt_deck_pro_max.handback.v1` | missing blocks `new_generation` |
+| `ppt-quality-gate` | yes for standalone audit and imported quality findings | external adopted skill or release bundle | `ppt-quality-gate` | `ppt-quality-gate` | `ppt_quality_gate.audit.v1`, `ppt_quality_gate.findings.v1` | missing blocks `standalone_audit`; Deck Master built-in quality gates remain available |
+| `ppt-master` | optional | external adopted skill or release bundle | `ppt-master` | `ppt-master` | `ppt_master.render.v1`, `ppt_master.handback.v1` | missing reports `optional_missing`; render/export falls back to existing Deck Master paths |
+
+Source policy:
+
+- `bundled` means the repo/release owns the skill package and can install it by symlink.
+- `external adopted skill` means Deck Master only adopts a valid existing skill/package; it must not overwrite a real user directory.
+- `release bundle` means future installer may ship the package under `~/.deck-master/current/skills/<name>`.
+- If an external skill has missing YAML frontmatter, wrong `name`, missing `description`, unsupported schema, or broken script references, suite status must report `schema_incompatible` or `capability_missing` and include `next_agent_action`.
+
+### 4.2 Companion Manifest v2
 
 新增：
 
@@ -52,9 +71,31 @@ docs/contracts/companion-manifest.v2.schema.json
   "suite_version": "0.9.12",
   "skills": [
     {
+      "name": "deck-master",
+      "required_for": ["full_deck_workflow", "setup", "run_orchestration"],
+      "install_source": "bundled",
+      "source_path": "~/.deck-master/current/skills/deck-master",
+      "min_cli_version": "0.9.12",
+      "cli": "deck-master",
+      "required_capabilities": [
+        "deck_master.run.v1",
+        "deck_master.setup.v1"
+      ],
+      "optional_capabilities": [],
+      "schema_versions": {
+        "setup_status": "deck_master_setup_status.v2"
+      },
+      "agent_targets": {
+        "codex": "~/.codex/skills/deck-master",
+        "claude-code": "~/.claude/skills/deck-master"
+      },
+      "adoption_policy": "bundled_symlink_only",
+      "conflict_policy": "never_overwrite_real_directory"
+    },
+    {
       "name": "ppt-library",
       "required_for": ["library_sourcing", "asset_feedback"],
-      "install_source": "external_cli_with_bundled_skill_docs",
+      "install_source": "external_adopted_or_release_bundle",
       "min_cli_version": "0.1.0",
       "cli": "ppt-lib",
       "required_capabilities": [
@@ -73,12 +114,77 @@ docs/contracts/companion-manifest.v2.schema.json
       },
       "adoption_policy": "adopt_valid_external_symlink_only",
       "conflict_policy": "never_overwrite_real_directory"
+    },
+    {
+      "name": "ppt-deck-pro-max",
+      "required_for": ["new_generation", "adapt_generation"],
+      "install_source": "external_adopted_or_release_bundle",
+      "min_cli_version": "0.1.0",
+      "cli": "ppt-deck-pro-max",
+      "required_capabilities": [
+        "ppt_deck_pro_max.generate.v1",
+        "ppt_deck_pro_max.handback.v1"
+      ],
+      "optional_capabilities": [],
+      "schema_versions": {
+        "generation_result_input": "ppt_deck_pro_max_generation_result.v1",
+        "generation_result_canonical": "deck_generation_result.v1"
+      },
+      "agent_targets": {
+        "codex": "~/.codex/skills/ppt-deck-pro-max",
+        "claude-code": "~/.claude/skills/ppt-deck-pro-max"
+      },
+      "adoption_policy": "adopt_valid_external_symlink_only",
+      "conflict_policy": "never_overwrite_real_directory"
+    },
+    {
+      "name": "ppt-quality-gate",
+      "required_for": ["standalone_audit", "quality_findings_import"],
+      "install_source": "external_adopted_or_release_bundle",
+      "min_cli_version": "0.1.0",
+      "cli": "ppt-quality-gate",
+      "required_capabilities": [
+        "ppt_quality_gate.audit.v1",
+        "ppt_quality_gate.findings.v1"
+      ],
+      "optional_capabilities": [],
+      "schema_versions": {
+        "quality_findings_input": "deck_master_quality_findings.v1",
+        "quality_report_canonical": "deck_quality_report.v1"
+      },
+      "agent_targets": {
+        "codex": "~/.codex/skills/ppt-quality-gate",
+        "claude-code": "~/.claude/skills/ppt-quality-gate"
+      },
+      "adoption_policy": "adopt_valid_external_symlink_only",
+      "conflict_policy": "never_overwrite_real_directory"
+    },
+    {
+      "name": "ppt-master",
+      "required_for": ["render_export_optional"],
+      "install_source": "optional_external_adopted_or_release_bundle",
+      "min_cli_version": "0.1.0",
+      "cli": "ppt-master",
+      "required_capabilities": [
+        "ppt_master.render.v1",
+        "ppt_master.handback.v1"
+      ],
+      "optional_capabilities": [],
+      "schema_versions": {
+        "render_result": "deck_master_render_result.v1"
+      },
+      "agent_targets": {
+        "codex": "~/.codex/skills/ppt-master",
+        "claude-code": "~/.claude/skills/ppt-master"
+      },
+      "adoption_policy": "adopt_valid_external_symlink_only",
+      "conflict_policy": "never_overwrite_real_directory"
     }
   ]
 }
 ```
 
-### 4.2 Setup Status v2
+### 4.3 Setup Status v2
 
 新增或扩展：
 
@@ -110,11 +216,19 @@ docs/contracts/setup-status.v2.schema.json
     "standalone_audit": "blocked",
     "render_export": "optional_missing"
   },
+  "next_command": "deck-master suite-repair --target codex",
   "next_agent_action": "Proceed with Deck Master run if no library/audit/render capability is required; otherwise guide suite repair."
 }
 ```
 
-### 4.3 Status 枚举
+Rules:
+
+- `next_command` 给 Agent 执行。
+- `next_agent_action` 给 Agent/用户理解。
+- `setup-status --include-suite` 默认 JSON 输出，`--output json` 是兼容参数。
+- `full_suite_ready=false` 不必阻断所有 run；应由 `task_readiness` 决定当前任务能否继续。
+
+### 4.4 Status 枚举
 
 必须支持：
 
@@ -135,6 +249,23 @@ unsafe_source_config
 blocked_cli_missing
 ```
 
+### 4.5 Pure-Read Inspection Contract
+
+新增或拆分纯读能力：
+
+```text
+scripts/runtime/setup_status.py
+scripts/skills/*
+```
+
+要求：
+
+- 提供纯读 setup inspection，例如 `inspect_setup_status(...)`，供 `setup-status` 和 Review Cockpit readiness API 调用。
+- 提供纯读 skill link inspection，例如 `inspect_skill_link(...)`，供 `suite-status` 调用。
+- inspection 不得写 `~/.deck-master/setup_events.jsonl`、`~/.deck-master/install_log.jsonl`、run `events.jsonl`、workspace 文件或任何 production artifact。
+- 现有会写事件或日志的 `setup_status(..., write_event=True)`、`validate_skill()` 不能直接作为 status/readiness 默认路径。
+- mutating 命令可在执行完成后写事件或日志，但命令名必须明确，例如 `setup`、`suite-install`、`suite-repair`。
+
 ## 5. CLI
 
 新增或扩展：
@@ -151,9 +282,10 @@ deck-master install-skill --suite --target codex --target claude-code
 
 - `suite-status` non-mutating。
 - `setup-status --include-suite` non-mutating。
+- `deck-master` wrapper 是 public command，测试必须覆盖；开发测试可继续使用 `python3 scripts/deck_master.py`，但 docs 和 skill first checks 必须使用 public command。
 - `suite-install` idempotent。
 - `suite-repair` 不得覆盖真实目录。
-- 所有命令支持 JSON 输出，供 Agent 判断下一步。
+- 所有命令支持 JSON 输出，供 Agent 判断下一步；默认输出保持当前 CLI 的 JSON 行为。
 - 若实现需要改现有 `install-skill`，必须保持单 skill 安装能力兼容，suite install 只能扩展现有行为。
 
 ## 6. Routing Guard
@@ -198,6 +330,10 @@ Skill docs 必须包含：
 - version mismatch 被报告。
 - permission denied 被报告。
 - `setup-status --include-suite` 不创建 run、不改 workspace。
+- `setup-status --include-suite` 和 `suite-status` 在 temporary HOME 下不新增文件、不改变已有文件 mtime。
+- malformed external skill，例如缺 YAML frontmatter、缺 `name`、缺 `description`、脚本引用不存在，会被报告为 `schema_incompatible` 或 `capability_missing`。
+- `deck-master --help`、`deck-master setup-status --include-suite --output json`、`deck-master suite-status --output json` 可执行。
+- `install-skill --suite` 不破坏单 skill 安装与 validate/uninstall 流程。
 - setup 未 production_ready 时，Deck Master 不执行 start/create-run。
 
 ## 9. 验收标准
@@ -221,7 +357,8 @@ Skill docs 必须包含：
 - 不实现 companion 深业务逻辑。
 - 不覆盖真实 skill directory。
 - 不新增内置 LLM provider。
-- setup/status 命令不得产生 production run 副作用。
+- setup/status/suite-status 命令不得写 HOME 日志、run artifact 或 workspace 文件。
+- 不临时创建未在 source matrix 中定义来源的 companion skill 目录。
 
 完成后输出：
 - 修改文件清单。

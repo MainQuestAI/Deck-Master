@@ -1,5 +1,9 @@
 # Deck Master v0.9.12 Skill Suite Runtime Foundation Spec
 
+> Current implementation source: this document is retained as the high-level background spec. After the 2026-06-16 autoplan review, implementation must use the split Stack Spec Pack under `docs/deck-master-v0.9.12-stack-spec-pack/`.
+>
+> If this file conflicts with the stack specs, the stack specs win, especially on pure-read status checks, companion source matrix, adapter-first imports, import log ownership, feedback CLI identity fields, and Review Cockpit minimum UI acceptance.
+
 ## Summary
 
 本轮目标是把 Deck Master 从单一 skill 升级为可安装、可发现、可路由、可回收结果的 Skill Suite Runtime Foundation。

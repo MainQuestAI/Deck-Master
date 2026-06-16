@@ -22,6 +22,7 @@
 
 7. `deck-master-v0.9.12-skill-suite-routing-spec.md`
    - 目标：把 Deck Master 从单一 skill 升级为 Skill Suite Runtime Foundation，先完成 suite 安装、能力状态、无副作用 readiness check、companion dry-run handoff 和 import contract。
+   - 当前实现入口：以 `docs/deck-master-v0.9.12-stack-spec-pack/` 下的 Stack A/B/C 文档为准；本文件保留为历史总览。
 
 `v0.9.11` 本轮补齐点：
 
@@ -45,6 +46,11 @@ docs/specs/deck-master-v0.9.9-installation-chain-hardening-spec.md
 docs/specs/deck-master-v0.9.10-first-run-orchestration-enforcement-spec.md
 docs/specs/deck-master-v0.9.11-orchestration-runtime-realignment-spec.md
 docs/specs/deck-master-v0.9.12-skill-suite-routing-spec.md
+docs/deck-master-v0.9.12-stack-spec-pack/README.md
+docs/deck-master-v0.9.12-stack-spec-pack/deck-master-v0.9.12-master-stack-breakdown.md
+docs/deck-master-v0.9.12-stack-spec-pack/deck-master-v0.9.12a-suite-runtime-foundation-spec.md
+docs/deck-master-v0.9.12-stack-spec-pack/deck-master-v0.9.12b-companion-workflow-contracts-spec.md
+docs/deck-master-v0.9.12-stack-spec-pack/deck-master-v0.9.12c-production-closure-governance-spec.md
 ```
 
 推荐开发顺序：
@@ -56,6 +62,6 @@ v0.9.5 Review Cockpit Frontend
 → v0.9.9 Installation Chain Hardening
 → v0.9.10 First-Run Setup + Orchestration Enforcement
 → v0.9.11 Orchestration Runtime Realignment
-→ v0.9.12 Skill Suite Runtime Foundation
+→ v0.9.12 Skill Suite Runtime Foundation Stack A/B/C
 → v1.0.0 RC Real Benchmark Runs
 ```

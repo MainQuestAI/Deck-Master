@@ -21,8 +21,9 @@
 ```text
 scripts/deck_master.py
 scripts/runtime/sourcing_import.py
-scripts/runtime/metrics.py
+scripts/runtime/import_log.py
 scripts/feedback/*
+scripts/metrics/run_metrics.py
 scripts/preview/server.py
 scripts/preview/static/index.html
 scripts/preview/static/app.js
@@ -34,7 +35,7 @@ docs/qa/*
 tests/*feedback* / tests/*cockpit* / tests/*e2e* / tests/*release*
 ```
 
-当前代码基线已确认 Review Cockpit 入口是 `scripts/preview/server.py` 和 `scripts/preview/static/*`，feedback 入口已有 `scripts/feedback/record_deal.py`，runtime import 入口已有 `scripts/runtime/sourcing_import.py`。不得新建平行 `scripts/web/review_cockpit/*` 或 `scripts/integrations/*` 目录；若 production closure 仍缺少 readiness 聚合能力，优先复用 `scripts/review/readiness.py`，再评估是否新增最小 runtime 模块。
+当前代码基线已确认 Review Cockpit 入口是 `scripts/preview/server.py` 和 `scripts/preview/static/*`，feedback 入口已有 `scripts/feedback/record_deal.py`，metrics 入口是 `scripts/metrics/run_metrics.py`，runtime import 入口已有 `scripts/runtime/sourcing_import.py`。不得新建平行 `scripts/web/review_cockpit/*` 或 `scripts/integrations/*` 目录；若 production closure 仍缺少 readiness 聚合能力，优先复用 `scripts/review/readiness.py`，再评估是否新增最小 runtime 模块。
 
 ## 4. Feedback Event Queue
 
@@ -71,22 +72,26 @@ runs/<run_id>/imports/import_log.jsonl
 ### 4.2 CLI
 
 ```bash
-deck-master record-library-feedback --run-id <run_id> --outcome <value> [--dry-run]
-deck-master record-library-feedback --run-id <run_id> --outcome <value> --apply
+deck-master record-library-feedback --run-id <run_id> --page-task-id <page_id> --beat-id <beat_id> --candidate-id <candidate_id> --outcome <value> [--dry-run]
+deck-master record-library-feedback --run-id <run_id> --input <selection_or_export_event.json> --outcome <value> [--dry-run]
+deck-master record-library-feedback --run-id <run_id> --page-task-id <page_id> --beat-id <beat_id> --candidate-id <candidate_id> --outcome <value> --apply
 ```
 
 要求：
 
 - 默认 dry-run / event queue。
+- `--page-task-id`、`--beat-id`、`--candidate-id` 必须由参数或 `--input` 提供；缺少定位字段时 rejected。
+- `idempotency_key` 必须至少包含 `run_id/page_task_id/beat_id/candidate_id/outcome`。
 - `--apply` 是 experimental 显式能力，不进入 v0.9.12c 必做验收。
 - 如果实现 `--apply`，必须显式开启。
 - `--apply` 前必须通过 `library-status`、schema validation、idempotency check。
 - `--apply` 失败不得删除 event queue。
 - 若 PPT Library 不支持 negative outcome，则记录 warning，不伪造成功。
+- dry-run 成功也必须写 run 内 event queue；真实外部 DB writeback 只允许 `--apply`。
 
 ## 5. Review Cockpit / Readiness Integration
 
-Review Cockpit 或 equivalent status output 应显示：
+Review Cockpit 最小 UI 和 JSON API 都应显示：
 
 - suite readiness。
 - task capability readiness。
@@ -95,12 +100,47 @@ Review Cockpit 或 equivalent status output 应显示：
 - quality findings blocking/warning。
 - feedback events pending/applied/failed。
 
-若当前 Review Cockpit UI 未暴露这些数据，至少需要 CLI/manifest 层可读。
+Minimum API contract：
+
+```json
+{
+  "schema_version": "deck_master_readiness_panel.v1",
+  "run_id": "customer-run",
+  "suite": {
+    "status": "degraded_ready",
+    "full_suite_ready": false,
+    "capabilities": {}
+  },
+  "imports": {
+    "library_selection_count": 1,
+    "quality_findings_count": 2,
+    "generation_result_count": 1,
+    "last_import_status": "imported"
+  },
+  "quality": {
+    "blocking_count": 1,
+    "warning_count": 3,
+    "delivery_blocked": true
+  },
+  "feedback": {
+    "pending_count": 1,
+    "applied_count": 0,
+    "failed_count": 0
+  }
+}
+```
+
+Minimum UI acceptance：
+
+- 顶部或 run detail 区显示 suite readiness。
+- quality 区显示 blocking findings 数量和 delivery blocked 状态。
+- feedback 区显示 pending feedback events。
+- UI 可以很轻，但用户必须能在 Review Cockpit 看到这三类状态。
 
 实现边界：
 
 - 优先在现有 `scripts/preview/server.py` API 和 `scripts/preview/static/*` 前端中扩展。
-- 如果 UI 改动风险过高，本 Stack 可先通过 CLI/JSON readiness 输出满足验收，再把完整 UI banner 留给后续小 PR。
+- 如果完整 UI banner 风险过高，本 Stack 可先交付最小文本状态区；只提供 CLI/JSON 时，release QA 必须标记 `degraded_cockpit_visibility`，不能作为完整通过。
 - 不创建第二套 Review Cockpit。
 
 ## 6. Quality Blocking 接入
@@ -108,11 +148,14 @@ Review Cockpit 或 equivalent status output 应显示：
 要求：
 
 - PPT Quality Gate imported findings 中 severity=blocking 的 findings 应影响 delivery readiness。
+- v0.9.12b adapter 已将 blocking/warning 归一化为 `P0/P1/P2` 和 `blocks_delivery`；Stack C 必须复用现有 gate engine 读取 canonical `deck_quality_report.v1`。
 - export/delivery reporting 前必须检查 blocking findings。
 - override 必须显式记录 reason/operator/timestamp。
 - 具体 export 阻断实现若当前仓库已有 gate engine，应复用；不要重写。
 
 ## 7. Import Log
+
+Stack B 已引入共享 import log writer。Stack C 必须补齐所有 import 类命令，并把 log 暴露给 readiness / Review Cockpit。
 
 所有 import 类命令必须写：
 
@@ -137,9 +180,15 @@ Review Cockpit 或 equivalent status output 应显示：
 library_selection
 quality_findings
 generation_result
-render_result
+render_result_optional
 feedback_event
 ```
+
+Rules:
+
+- `render_result_optional` 只有在 Stack A matrix 中 `ppt-master` 可用或本轮显式实现 render handback 时才纳入强验收。
+- 旧 import 命令补齐 import log 时，不能改变既有 artifact schema。
+- import log summary 必须进入 Review Cockpit readiness JSON。
 
 ## 8. E2E Suite Smoke
 
@@ -157,6 +206,7 @@ feedback_event
 10. validate readiness/cockpit output。
 11. export/delivery blocked when blocking finding exists。
 12. override path works only with explicit reason。
+13. verify status/readiness smoke uses temporary HOME and does not mutate real machine paths。
 
 真实机器检查只能运行 non-mutating status，不得改用户 workspace。
 
@@ -185,6 +235,7 @@ QA 必须记录：
 - feedback 默认只写 event queue，不默认写外部 DB。
 - `--apply` 如实现，必须显式开启且有 idempotency guard；如未实现，不影响 v0.9.12c 通过。
 - Review Cockpit/readiness 可看到 suite、library、generation、quality、feedback 状态。
+- Review Cockpit UI 至少可见 suite readiness、blocking findings、pending feedback events；仅 CLI/JSON 不算完整通过，除非 QA 标记 degraded。
 - blocking quality findings 会阻断 delivery readiness。
 - 所有 import 命令写 import log。
 - End-to-end suite smoke 通过。
