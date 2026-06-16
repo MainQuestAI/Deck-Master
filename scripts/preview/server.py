@@ -818,11 +818,14 @@ class PreviewHandler(BaseHTTPRequestHandler):
             except Exception:
                 debug_run_dir = None
 
-        root = self.studio_runs_dir()
+        if self.run_dir is not None and not debug_run_dir:
+            candidate = self.run_dir.resolve()
+            root = candidate.parent
+        else:
+            root = self.studio_runs_dir()
+            candidate = (root / run_id).resolve()
         if debug_run_dir:
             candidate = Path(str(debug_run_dir)).expanduser().resolve()
-        else:
-            candidate = (root / run_id).resolve()
 
         root_text = str(root.resolve())
         candidate_text = str(candidate)

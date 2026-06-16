@@ -151,6 +151,15 @@ class ServerTests(unittest.TestCase):
         page = next(p for p in data["pages"] if p["page_id"] == "page_001")
         self.assertEqual(1, len(page["quality"]))
 
+    def test_direct_preview_mode_external_runtime_apis_use_active_run_dir(self) -> None:
+        external_status, external = self.handler.request("GET", "/api/external-results/sample-preview-run")
+        runtime_status, runtime = self.handler.request("GET", "/api/runtime-readiness/sample-preview-run")
+
+        self.assertEqual(HTTPStatus.OK, external_status)
+        self.assertEqual("sample-preview-run", external["run_id"])
+        self.assertEqual(HTTPStatus.OK, runtime_status)
+        self.assertEqual("deck_master_runtime_readiness.v1", runtime["schema_version"])
+
     def test_page_decision_api_writes_manifest(self) -> None:
         status, data = self.handler.request(
             "POST",
