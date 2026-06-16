@@ -86,6 +86,7 @@ from quality.brand_gate import evaluate_brand_gate
 from quality.overrides import create_override, list_active_overrides, revoke_override
 from delivery.validate import validate_delivery
 from delivery.outcome import record_delivery_outcome
+from feedback.library_feedback import LibraryFeedbackError, record_library_feedback
 from team.opportunity import create_opportunity, attach_run
 from team.approval import submit_approval, approve, reject
 from connectors.import_contract import validate_import_manifest, import_to_context_manifest
@@ -172,6 +173,7 @@ PROTECTED_COMMANDS = {
     "delivery",
     "generation-session",
     "run-generation",
+    "record-library-feedback",
 }
 
 
@@ -1230,6 +1232,23 @@ def command_generation_session_import_results(args: argparse.Namespace) -> dict[
     )
 
 
+def command_record_library_feedback(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = resolve_run_dir(args)
+    run_id = getattr(args, "run_id", None)
+    if not run_id:
+        run_id = load_request(run_dir).get("run_id", run_dir.name)
+    return record_library_feedback(
+        run_dir,
+        run_id=str(run_id),
+        page_task_id=getattr(args, "page_task_id", ""),
+        beat_id=getattr(args, "beat_id", ""),
+        candidate_id=getattr(args, "candidate_id", ""),
+        outcome=getattr(args, "outcome", ""),
+        input_path=getattr(args, "input", None),
+        apply=bool(getattr(args, "apply", False)),
+    )
+
+
 def command_build_learning_pack(args: argparse.Namespace) -> dict[str, Any]:
     return build_learning_pack(args.workspace)
 
@@ -1930,6 +1949,17 @@ def build_parser() -> argparse.ArgumentParser:
     p_rg.add_argument("--dry-run", action="store_true")
     p_rg.add_argument("--no-execute", action="store_true")
     p_rg.set_defaults(func=command_run_generation)
+
+    p_rlf = sub.add_parser("record-library-feedback", help="Queue PPT Library feedback event inside a run")
+    add_run_args(p_rlf)
+    p_rlf.add_argument("--page-task-id", default="")
+    p_rlf.add_argument("--beat-id", default="")
+    p_rlf.add_argument("--candidate-id", default="")
+    p_rlf.add_argument("--outcome", default="")
+    p_rlf.add_argument("--input", default=None, help="Path to library feedback JSON")
+    p_rlf.add_argument("--dry-run", action="store_true", help="Write only the run-local feedback event queue")
+    p_rlf.add_argument("--apply", action="store_true", help="Experimental: apply feedback to external library")
+    p_rlf.set_defaults(func=command_record_library_feedback)
 
     # ---- workspace learning ----
     p_blp = sub.add_parser("build-learning-pack", help="Aggregate workspace learning for next Agent run")

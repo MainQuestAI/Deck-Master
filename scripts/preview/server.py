@@ -26,16 +26,19 @@ if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
 
 from runtime.events import append_typed_event
+from runtime.import_log import summarize_import_log
 from runtime.setup_status import configured_runs_dir, read_setup_config, setup_status
 from runtime.orchestration import orchestration_check
 from runtime.next_step import resolve_next_step
 from runtime.run_state_resolver import resolve_run_state
+from skills.installer import inspect_suite_status
 
 from review.readiness import compute_claim_coverage, compute_deck_readiness, compute_next_actions
 from review.workbench import WorkbenchError, execute_review_action
 
 from delivery.outcome import record_delivery_outcome
 from delivery.validate import validate_delivery
+from feedback.library_feedback import summarize_library_feedback_events
 from metrics.run_metrics import summarize_run_metrics
 from orchestrate.export_queue import export_queue, has_client_export_quality_clearance
 from generation.task_builder import create_generation_tasks
@@ -133,6 +136,53 @@ def _load_asset_signals(run_dir: Path) -> dict:
     return signals
 
 
+def _quality_blocking_summary(run_dir: Path) -> dict[str, Any]:
+    quality_dir = run_dir / "quality_reports"
+    summary = {
+        "schema_version": "deck_master_quality_blocking_summary.v1",
+        "reports": 0,
+        "blocking_reports": 0,
+        "p0": 0,
+        "p1": 0,
+        "p2": 0,
+        "delivery_blocked": False,
+    }
+    if not quality_dir.exists():
+        return summary
+    for gate_file in sorted(quality_dir.glob("*_gate.json")):
+        try:
+            report = json.loads(gate_file.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(report, dict):
+            continue
+        summary["reports"] += 1
+        report_summary = report.get("summary") if isinstance(report.get("summary"), dict) else {}
+        summary["p0"] += int(report_summary.get("p0_count") or 0)
+        summary["p1"] += int(report_summary.get("p1_count") or 0)
+        summary["p2"] += int(report_summary.get("p2_count") or 0)
+        if (
+            report.get("blocks_delivery")
+            or report.get("status") == "rework_required"
+            or int(report_summary.get("p0_count") or 0)
+            or int(report_summary.get("p1_count") or 0)
+        ):
+            summary["blocking_reports"] += 1
+    summary["delivery_blocked"] = bool(summary["p0"] or summary["p1"] or summary["blocking_reports"])
+    return summary
+
+
+def _runtime_readiness_payload(run_dir: Path) -> dict[str, Any]:
+    return {
+        "schema_version": "deck_master_runtime_readiness.v1",
+        "run_id": run_dir.name,
+        "suite_readiness": inspect_suite_status(targets=["codex"], include_optional=True),
+        "imports_summary": summarize_import_log(run_dir),
+        "quality_blocking_summary": _quality_blocking_summary(run_dir),
+        "feedback_pending_summary": summarize_library_feedback_events(run_dir),
+    }
+
+
 class PreviewHandler(BaseHTTPRequestHandler):
     run_dir: Path | None = None
     runs_dir: Path
@@ -195,6 +245,9 @@ class PreviewHandler(BaseHTTPRequestHandler):
             return
         if path.startswith("/api/external-results/"):
             self.api_external_results(path.removeprefix("/api/external-results/").strip("/"))
+            return
+        if path.startswith("/api/runtime-readiness/"):
+            self.api_runtime_readiness(path.removeprefix("/api/runtime-readiness/").strip("/"))
             return
         if path.startswith("/api/export-queue/"):
             self.api_export_queue(path.removeprefix("/api/export-queue/").strip("/"), parsed)
@@ -402,7 +455,7 @@ class PreviewHandler(BaseHTTPRequestHandler):
     def api_setup_status(self, parsed) -> None:
         params = parse_qs(parsed.query)
         workspace = (params.get("workspace") or [None])[0]
-        payload = setup_status(workspace=workspace)
+        payload = setup_status(workspace=workspace, include_suite=True)
         self.send_json(self._adapt_setup_status(payload))
 
     def api_run_state(self, run_id: str, parsed) -> None:
@@ -499,6 +552,10 @@ class PreviewHandler(BaseHTTPRequestHandler):
             "workspace": workspace,
             "config": config,
             "agent_targets": payload.get("agent_targets", {}),
+            "suite": payload.get("suite", {}),
+            "full_suite_ready": payload.get("full_suite_ready", False),
+            "capabilities": payload.get("capabilities", {}),
+            "task_readiness": payload.get("task_readiness", {}),
         }
         return response
 
@@ -846,6 +903,7 @@ class PreviewHandler(BaseHTTPRequestHandler):
             "narrative_advice": None,
             "external_reviews": [],
             "generation_results": [],
+            "runtime_readiness": _runtime_readiness_payload(run_dir),
         }
 
         # Narrative advice.
@@ -878,6 +936,12 @@ class PreviewHandler(BaseHTTPRequestHandler):
                     pass
 
         self.send_json(results)
+
+    def api_runtime_readiness(self, run_id: str) -> None:
+        run_dir = self._resolve_run_or_error(run_id)
+        if not run_dir:
+            return
+        self.send_json(_runtime_readiness_payload(run_dir))
 
     def api_export_queue(self, run_id: str, parsed) -> None:
         """Return export queue preview without writing queue artifacts."""

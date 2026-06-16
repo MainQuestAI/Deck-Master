@@ -992,6 +992,11 @@ function renderExternalResults(errorMsg) {
   const advice = state.externalResults.narrative_advice;
   const reviews = Array.isArray(state.externalResults.external_reviews) ? state.externalResults.external_reviews : [];
   const generations = Array.isArray(state.externalResults.generation_results) ? state.externalResults.generation_results : [];
+  const readiness = state.externalResults.runtime_readiness || {};
+  const suite = readiness.suite_readiness || {};
+  const importsSummary = readiness.imports_summary || {};
+  const qualitySummary = readiness.quality_blocking_summary || {};
+  const feedbackSummary = readiness.feedback_pending_summary || {};
   const reviewSummary = reviews.map((review) => {
     const findings = Array.isArray(review.findings) ? review.findings : [];
     const p0 = findings.filter((f) => f.severity === "P0").length;
@@ -1008,6 +1013,10 @@ function renderExternalResults(errorMsg) {
   </div>`).join("");
   els.externalResultsContent.innerHTML = `
     <dl class="compact-metrics">
+      ${metricRow("Suite readiness", suite.status || "-")}
+      ${metricRow("Import log", importsSummary.total || 0)}
+      ${metricRow("Blocking quality", qualitySummary.delivery_blocked ? `blocked · P0/P1 ${qualitySummary.p0 || 0}/${qualitySummary.p1 || 0}` : "clear")}
+      ${metricRow("Pending feedback", feedbackSummary.pending || 0)}
       ${metricRow("Narrative advice", advice ? `${advice.advisor || "advisor"} · ${countItems(advice.page_recommendations)} page recs · ${countItems(advice.deck_level_risks)} risks` : "-")}
       ${metricRow("External reviews", reviews.length)}
       ${metricRow("Generation results", generations.length)}

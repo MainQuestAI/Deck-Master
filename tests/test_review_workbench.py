@@ -19,6 +19,8 @@ from orchestrate.export_queue import export_queue  # noqa: E402
 from review.workbench import WorkbenchError, execute_review_action  # noqa: E402
 from runtime.run_state import create_run, read_json, write_json  # noqa: E402
 from runtime.events import read_events  # noqa: E402
+from runtime.import_log import append_import_log  # noqa: E402
+from feedback.library_feedback import record_library_feedback  # noqa: E402
 
 
 def _setup_run(tmp: Path) -> Path:
@@ -374,6 +376,48 @@ class ExternalResultsVisibilityTest(unittest.TestCase):
         status, data = self.handler.request("GET", "/api/external-results/wb-test")
         self.assertEqual(len(data["external_reviews"]), 1)
         self.assertEqual(data["external_reviews"][0]["reviewer"], "codex")
+
+    def test_external_results_include_runtime_readiness_summary(self) -> None:
+        append_import_log(
+            self.run_dir,
+            import_type="ppt_library_selection",
+            source="ppt-library",
+            status="imported",
+            canonical_refs=["external/ppt_library/library_results.json"],
+        )
+        record_library_feedback(
+            self.run_dir,
+            run_id="wb-test",
+            page_task_id="page-001",
+            beat_id="beat-001",
+            candidate_id="slide-001",
+            outcome="approved",
+        )
+        write_json(self.run_dir / "quality_reports" / "external_visual_codex_gate.json", {
+            "gate": "external_visual",
+            "reviewer": "codex",
+            "status": "rework_required",
+            "blocks_delivery": True,
+            "summary": {"p0_count": 0, "p1_count": 1, "p2_count": 0},
+            "findings": [{"finding_id": "f1", "severity": "P1", "message": "Test"}],
+        })
+
+        status, data = self.handler.request("GET", "/api/external-results/wb-test")
+
+        self.assertEqual(200, status)
+        readiness = data["runtime_readiness"]
+        self.assertIn("suite_readiness", readiness)
+        self.assertEqual(2, readiness["imports_summary"]["total"])
+        self.assertTrue(readiness["quality_blocking_summary"]["delivery_blocked"])
+        self.assertEqual(1, readiness["feedback_pending_summary"]["pending"])
+
+    def test_runtime_readiness_api_returns_summary(self) -> None:
+        status, data = self.handler.request("GET", "/api/runtime-readiness/wb-test")
+
+        self.assertEqual(200, status)
+        self.assertEqual("deck_master_runtime_readiness.v1", data["schema_version"])
+        self.assertIn("suite_readiness", data)
+        self.assertIn("imports_summary", data)
 
 
 if __name__ == "__main__":

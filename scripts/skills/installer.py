@@ -28,6 +28,7 @@ DEFAULT_AGENT_SKILL_DIRS = {
 INSTALL_LOG_DIR = Path.home() / ".deck-master"
 INSTALL_LOG_NAME = "install_log.jsonl"
 INSTALLED_SKILL_DIR = INSTALL_LOG_DIR / "current" / "skills" / SKILL_NAME
+_DEFAULT_INSTALLED_SKILL_DIR = INSTALLED_SKILL_DIR
 COMPANION_MANIFEST_NAME = "companion-manifest.json"
 
 SUITE_SKILLS: list[dict[str, Any]] = [
@@ -128,6 +129,8 @@ def _repo_skill_dir(skill_name: str = SKILL_NAME) -> Path:
 
 def _installed_skill_dir(skill_name: str = SKILL_NAME) -> Path:
     if skill_name == SKILL_NAME:
+        if INSTALLED_SKILL_DIR != _DEFAULT_INSTALLED_SKILL_DIR:
+            return INSTALLED_SKILL_DIR
         dynamic_installed = INSTALL_LOG_DIR / "current" / "skills" / SKILL_NAME
         if dynamic_installed.exists():
             return dynamic_installed

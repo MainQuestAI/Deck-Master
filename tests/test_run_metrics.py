@@ -13,6 +13,8 @@ if _scripts_dir not in sys.path:
     sys.path.insert(0, _scripts_dir)
 
 from scripts.metrics.run_metrics import summarize_run_metrics
+from scripts.feedback.library_feedback import record_library_feedback
+from scripts.runtime.import_log import append_import_log
 from scripts.runtime.events import append_typed_event
 from scripts.runtime.run_state import create_run, write_json
 
@@ -90,6 +92,30 @@ class MetricsCompleteEventsTest(unittest.TestCase):
         self.assertEqual(metrics["counts"]["p1"], 2)
         self.assertEqual(metrics["counts"]["p2"], 5)
         self.assertEqual(metrics["counts"]["quality_findings"], 7)
+        self.assertEqual(metrics["counts"]["blocking_quality_reports"], 1)
+
+    def test_import_log_and_feedback_counts(self) -> None:
+        append_import_log(
+            self.run_dir,
+            import_type="ppt_library_selection",
+            source="ppt-library",
+            status="imported",
+            canonical_refs=["external/ppt_library/library_results.json"],
+        )
+        record_library_feedback(
+            self.run_dir,
+            run_id="metrics-test",
+            page_task_id="page-001",
+            beat_id="beat-001",
+            candidate_id="slide-001",
+            outcome="approved",
+        )
+
+        metrics = summarize_run_metrics(self.run_dir)
+
+        self.assertEqual(2, metrics["counts"]["imports"])
+        self.assertEqual(1, metrics["counts"]["pending_library_feedback"])
+        self.assertEqual(1, metrics["library_feedback"]["pending"])
 
 
 class MetricsPageCountsTest(unittest.TestCase):

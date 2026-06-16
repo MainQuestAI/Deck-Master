@@ -9,7 +9,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from feedback.library_feedback import summarize_library_feedback_events
 from runtime.events import read_events
+from runtime.import_log import summarize_import_log
 from runtime.run_state import (
     PAGE_TASKS_NAME,
     PREVIEW_MANIFEST_NAME,
@@ -159,6 +161,7 @@ def summarize_run_metrics(run_dir: str | Path) -> dict[str, Any]:
     p0_total = 0
     p1_total = 0
     p2_total = 0
+    blocking_reports = 0
     if quality_dir.exists():
         for gate_file in quality_dir.glob("*_gate.json"):
             try:
@@ -169,6 +172,16 @@ def summarize_run_metrics(run_dir: str | Path) -> dict[str, Any]:
             p0_total += summary.get("p0_count", 0)
             p1_total += summary.get("p1_count", 0)
             p2_total += summary.get("p2_count", 0)
+            if (
+                report.get("blocks_delivery")
+                or report.get("status") == "rework_required"
+                or summary.get("p0_count", 0)
+                or summary.get("p1_count", 0)
+            ):
+                blocking_reports += 1
+
+    import_summary = summarize_import_log(root)
+    feedback_summary = summarize_library_feedback_events(root)
 
     return {
         "schema_version": SCHEMA_VERSION,
@@ -191,5 +204,10 @@ def summarize_run_metrics(run_dir: str | Path) -> dict[str, Any]:
             "p0": p0_total,
             "p1": p1_total,
             "p2": p2_total,
+            "blocking_quality_reports": blocking_reports,
+            "imports": import_summary["total"],
+            "pending_library_feedback": feedback_summary["pending"],
         },
+        "imports": import_summary,
+        "library_feedback": feedback_summary,
     }
