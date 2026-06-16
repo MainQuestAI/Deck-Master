@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import shutil
 import sys
 import tempfile
@@ -11,7 +12,14 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from planning.brief_intake import build_request
 from planning.narrative_planner import plan_narrative
-from tools.ppt_library_client import build_select_slides_command, run_library_selection
+from tools.ppt_library_client import (
+    PPTLibraryClientError,
+    build_select_slides_command,
+    import_library_selection,
+    run_library_selection,
+)
+from runtime.import_log import read_import_log
+from runtime.run_state import create_run, read_json
 
 
 class PPTLibraryClientTests(unittest.TestCase):
@@ -47,6 +55,69 @@ class PPTLibraryClientTests(unittest.TestCase):
         self.assertEqual("fixture", results["source"])
         self.assertTrue((self.temp_dir / "library_results" / "selection.json").exists())
         self.assertIn(plan["beats"][0]["beat_id"], results["by_beat"])
+
+    def test_import_library_selection_writes_canonical_and_legacy_results(self) -> None:
+        run_dir = create_run(self.temp_dir / "runs", {"project_name": "Library", "run_id": "lib-run"}, force=True)
+        selection_path = self.temp_dir / "selection.json"
+        selection_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "deck_master_ppt_library_selection.v1",
+                    "run_id": "lib-run",
+                    "source": "ppt-library",
+                    "selections": [
+                        {
+                            "beat_id": "beat-001",
+                            "page_task_id": "page-001",
+                            "slot_id": "hero",
+                            "query_trace_id": "query-001",
+                            "role": "opener",
+                            "candidates": [{"slide_id": "slide-001", "title": "客户首页", "score": 0.91}],
+                        }
+                    ],
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+
+        result = import_library_selection(run_dir, selection_path)
+
+        self.assertEqual("imported", result["status"])
+        self.assertTrue((run_dir / "external" / "ppt_library" / "library_results.json").exists())
+        legacy = read_json(run_dir / "library_results" / "selection.json")
+        candidate = legacy["by_beat"]["beat-001"][0]
+        self.assertEqual("page-001", candidate["page_task_id"])
+        self.assertEqual("hero", candidate["slot_id"])
+        self.assertEqual("query-001", candidate["query_trace_id"])
+        logs = read_import_log(run_dir)
+        self.assertEqual("ppt_library_selection", logs[-1]["import_type"])
+
+    def test_bad_library_selection_does_not_overwrite_existing_results(self) -> None:
+        run_dir = create_run(self.temp_dir / "runs", {"project_name": "Library", "run_id": "lib-run"}, force=True)
+        good = self.temp_dir / "good_selection.json"
+        good.write_text(
+            json.dumps(
+                {
+                    "schema_version": "deck_master_ppt_library_selection.v1",
+                    "run_id": "lib-run",
+                    "by_beat": {"beat-001": [{"slide_id": "slide-001", "title": "A"}]},
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+        import_library_selection(run_dir, good)
+        before = (run_dir / "library_results" / "selection.json").read_text(encoding="utf-8")
+        bad = self.temp_dir / "bad_selection.json"
+        bad.write_text(json.dumps({"schema_version": "wrong", "run_id": "lib-run"}), encoding="utf-8")
+
+        with self.assertRaises(PPTLibraryClientError):
+            import_library_selection(run_dir, bad)
+
+        after = (run_dir / "library_results" / "selection.json").read_text(encoding="utf-8")
+        self.assertEqual(before, after)
+        self.assertEqual("rejected", read_import_log(run_dir)[-1]["status"])
 
 
 if __name__ == "__main__":

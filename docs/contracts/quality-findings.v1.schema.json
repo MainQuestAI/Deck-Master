@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/contracts/quality-findings.v1.schema.json",
+  "title": "Deck Master Quality Findings v1",
+  "type": "object",
+  "required": ["schema_version", "run_id", "gate_class", "findings"],
+  "properties": {
+    "schema_version": {"const": "deck_master_quality_findings.v1"},
+    "run_id": {"type": "string", "minLength": 1},
+    "reviewer": {"type": "string"},
+    "gate_class": {
+      "type": "string",
+      "enum": ["semantic", "visual", "evidence", "client-readiness"]
+    },
+    "summary": {
+      "type": "object",
+      "properties": {
+        "delivery_ready": {"type": "boolean"}
+      },
+      "additionalProperties": true
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["severity"],
+        "properties": {
+          "finding_id": {"type": "string"},
+          "id": {"type": "string"},
+          "severity": {
+            "type": "string",
+            "enum": ["blocking", "warning", "critical", "P0", "P1", "P2"]
+          },
+          "page_id": {"type": "string"},
+          "beat_id": {"type": "string"},
+          "dimension": {"type": "string"},
+          "title": {"type": "string"},
+          "message": {"type": "string"},
+          "repair_instruction": {"type": "string"},
+          "refs": {
+            "type": "array",
+            "items": {"type": "string"}
+          }
+        },
+        "anyOf": [
+          {"required": ["finding_id"]},
+          {"required": ["id"]}
+        ],
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

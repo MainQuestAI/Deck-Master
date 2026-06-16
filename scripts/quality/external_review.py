@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any
 
 from runtime.events import append_typed_event
+from runtime.import_log import append_import_log
 from runtime.run_state import (
     DECK_BRIEF_NAME,
     PAGE_TASKS_NAME,
@@ -26,15 +27,34 @@ from runtime.run_state import (
 
 TASK_SCHEMA_VERSION = "deck_external_quality_review_task.v1"
 RESULT_SCHEMA_VERSION = "deck_external_quality_review.v1"
+QUALITY_FINDINGS_SCHEMA_VERSION = "deck_master_quality_findings.v1"
 
 TASK_DIR = "quality_review_tasks"
 VALID_SCOPES = {"semantic", "visual", "evidence", "client-readiness"}
 VALID_SEVERITIES = {"P0", "P1", "P2"}
 VALID_STATUSES = {"pass", "conditional_pass", "rework_required"}
+VALID_FINDINGS_GATE_CLASSES = {"semantic", "visual", "evidence", "client-readiness"}
 
 
 class ExternalReviewError(ValueError):
     """Raised when external review is invalid or import fails."""
+
+
+def _quality_findings_rejected(
+    run_dir: Path,
+    message: str,
+    *,
+    source_path: str | Path | None = None,
+) -> ExternalReviewError:
+    append_import_log(
+        run_dir,
+        import_type="quality_findings",
+        source="ppt-quality-gate",
+        status="rejected",
+        source_path=source_path,
+        errors=[message],
+    )
+    return ExternalReviewError(message)
 
 
 # --------------------------------------------------------------------------- #
@@ -182,6 +202,84 @@ def validate_external_review(result: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _map_quality_severity(value: Any, finding: dict[str, Any]) -> str:
+    raw = str(value or "").strip()
+    if raw in VALID_SEVERITIES:
+        return raw
+    if raw in {"critical", "fatal"} or str(finding.get("priority") or "") == "P0":
+        return "P0"
+    if raw in {"blocking", "blocker", "error"}:
+        return "P1"
+    if raw in {"warning", "warn", "info", ""}:
+        return "P2"
+    return "P2"
+
+
+def validate_quality_findings(payload: dict[str, Any]) -> dict[str, Any]:
+    errors: list[str] = []
+    warnings: list[str] = []
+    if not isinstance(payload, dict):
+        return {"valid": False, "errors": ["Result must be a JSON object."], "warnings": []}
+    if payload.get("schema_version") != QUALITY_FINDINGS_SCHEMA_VERSION:
+        errors.append(
+            f"schema_version must be '{QUALITY_FINDINGS_SCHEMA_VERSION}', got '{payload.get('schema_version')}'."
+        )
+    if not payload.get("run_id"):
+        errors.append("run_id is required.")
+    gate_class = str(payload.get("gate_class") or payload.get("scope") or "")
+    if gate_class not in VALID_FINDINGS_GATE_CLASSES:
+        errors.append(f"gate_class must be one of {sorted(VALID_FINDINGS_GATE_CLASSES)}.")
+    findings = payload.get("findings")
+    if not isinstance(findings, list):
+        errors.append("findings must be an array.")
+    else:
+        for index, finding in enumerate(findings):
+            if not isinstance(finding, dict):
+                errors.append(f"findings[{index}] must be an object.")
+                continue
+            if not (finding.get("finding_id") or finding.get("id")):
+                errors.append(f"findings[{index}].finding_id is required.")
+            if not (finding.get("message") or finding.get("title")):
+                errors.append(f"findings[{index}].message or title is required.")
+    return {"valid": not errors, "errors": errors, "warnings": warnings}
+
+
+def quality_findings_to_external_review(payload: dict[str, Any]) -> dict[str, Any]:
+    gate_class = str(payload.get("gate_class") or payload.get("scope") or "")
+    findings: list[dict[str, Any]] = []
+    for index, finding in enumerate(payload.get("findings", []), start=1):
+        if not isinstance(finding, dict):
+            continue
+        finding_id = str(finding.get("finding_id") or finding.get("id") or f"quality_{index:03d}")
+        message = str(finding.get("message") or finding.get("title") or "")
+        repair_instruction = str(
+            finding.get("repair_instruction")
+            or finding.get("recommendation")
+            or finding.get("suggestion")
+            or ""
+        )
+        findings.append(
+            {
+                "finding_id": finding_id,
+                "severity": _map_quality_severity(finding.get("severity"), finding),
+                "page_id": str(finding.get("page_id") or finding.get("beat_id") or ""),
+                "dimension": str(finding.get("dimension") or finding.get("category") or gate_class),
+                "message": message,
+                "repair_instruction": repair_instruction,
+                "refs": finding.get("refs", []),
+            }
+        )
+    return {
+        "schema_version": RESULT_SCHEMA_VERSION,
+        "run_id": payload.get("run_id", ""),
+        "reviewer": payload.get("reviewer", "ppt-quality-gate"),
+        "scope": gate_class,
+        "created_at": payload.get("created_at", datetime.now(timezone.utc).isoformat()),
+        "summary": {"status": "rework_required" if any(f["severity"] in {"P0", "P1"} for f in findings) else "pass"},
+        "findings": findings,
+    }
+
+
 # --------------------------------------------------------------------------- #
 # Import
 # --------------------------------------------------------------------------- #
@@ -315,4 +413,56 @@ def import_external_review(
         "p1_count": p1_count,
         "p2_count": p2_count,
         "blocks_delivery": blocks_delivery,
+    }
+
+
+def import_quality_findings(
+    run_dir: str | Path,
+    input_path: str | Path,
+    *,
+    replace: bool = False,
+) -> dict[str, Any]:
+    root = ensure_run_dirs(run_dir)
+    source_path = Path(input_path).expanduser().resolve()
+    try:
+        payload = read_json(source_path)
+    except RunStateError as exc:
+        raise _quality_findings_rejected(root, str(exc), source_path=source_path) from exc
+
+    validation = validate_quality_findings(payload)
+    if not validation["valid"]:
+        raise _quality_findings_rejected(root, "; ".join(validation["errors"]), source_path=source_path)
+
+    try:
+        run_id = assert_external_result_matches_run(
+            root,
+            payload.get("run_id", ""),
+            artifact_name="quality findings",
+        )
+    except RunStateError as exc:
+        raise _quality_findings_rejected(root, str(exc), source_path=source_path) from exc
+
+    review = quality_findings_to_external_review(payload)
+    imported = import_external_review(root, review, replace=replace)
+    append_import_log(
+        root,
+        import_type="quality_findings",
+        source="ppt-quality-gate",
+        status="imported",
+        source_path=source_path,
+        canonical_refs=[f"quality_reports/{imported['gate_report']}"],
+        warnings=validation.get("warnings", []),
+        payload={
+            "run_id": run_id,
+            "gate_class": review.get("scope"),
+            "p0_count": imported.get("p0_count", 0),
+            "p1_count": imported.get("p1_count", 0),
+            "p2_count": imported.get("p2_count", 0),
+            "blocks_delivery": imported.get("blocks_delivery", False),
+        },
+    )
+    return {
+        **imported,
+        "source_schema_version": payload.get("schema_version"),
+        "canonical_schema_version": RESULT_SCHEMA_VERSION,
     }

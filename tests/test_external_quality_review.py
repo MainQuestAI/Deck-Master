@@ -17,9 +17,11 @@ from scripts.quality.external_review import (
     RESULT_SCHEMA_VERSION,
     ExternalReviewError,
     import_external_review,
+    import_quality_findings,
     prepare_quality_review,
     validate_external_review,
 )
+from scripts.runtime.import_log import read_import_log
 from scripts.runtime.run_state import create_run, read_json, write_json
 
 
@@ -243,6 +245,67 @@ class ExternalReviewImportTest(unittest.TestCase):
         self.assertTrue(gate["blocks_delivery"])
         p1_findings = [f for f in gate["findings"] if f["severity"] == "P1"]
         self.assertEqual(len(p1_findings), 1)
+
+    def test_import_quality_findings_maps_blocking_to_p1_and_blocks_delivery(self) -> None:
+        findings_path = Path(self._tmp) / "findings.json"
+        findings_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "deck_master_quality_findings.v1",
+                    "run_id": "ext-review",
+                    "reviewer": "ppt-quality-gate",
+                    "gate_class": "visual",
+                    "summary": {"delivery_ready": True},
+                    "findings": [
+                        {
+                            "finding_id": "qf-001",
+                            "severity": "blocking",
+                            "page_id": "beat_001",
+                            "dimension": "visual_hierarchy",
+                            "title": "页面主次不清",
+                            "repair_instruction": "强化主标题和关键证据。",
+                        },
+                        {
+                            "finding_id": "qf-002",
+                            "severity": "warning",
+                            "page_id": "beat_001",
+                            "message": "副标题偏长。",
+                        },
+                    ],
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+
+        result = import_quality_findings(self.run_dir, findings_path)
+
+        self.assertTrue(result["blocks_delivery"])
+        self.assertEqual(1, result["p1_count"])
+        self.assertEqual(1, result["p2_count"])
+        gate = read_json(self.run_dir / "quality_reports" / "external_visual_ppt_quality_gate_gate.json")
+        self.assertEqual("P1", gate["findings"][0]["severity"])
+        self.assertEqual("quality_findings", read_import_log(self.run_dir)[-1]["import_type"])
+
+    def test_import_quality_findings_rejects_unsupported_gate_class(self) -> None:
+        findings_path = Path(self._tmp) / "bad_findings.json"
+        findings_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "deck_master_quality_findings.v1",
+                    "run_id": "ext-review",
+                    "gate_class": "delivery",
+                    "findings": [{"finding_id": "qf-001", "severity": "blocking", "message": "x"}],
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+
+        with self.assertRaises(ExternalReviewError):
+            import_quality_findings(self.run_dir, findings_path)
+
+        self.assertEqual("rejected", read_import_log(self.run_dir)[-1]["status"])
 
 
 if __name__ == "__main__":

@@ -46,6 +46,7 @@ def decide_for_beat(
     asset_feedback_map: dict[str, dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     use_v2 = asset_feedback_map is not None
+    beat_id = beat.get("beat_id")
 
     if use_v2 and candidates:
         # V2 path: score every candidate with feedback, pick best via tie_breaker
@@ -74,7 +75,10 @@ def decide_for_beat(
                 risk_flags.append(p["reason"])
 
         return {
-            "beat_id": beat.get("beat_id"),
+            "beat_id": beat_id,
+            "page_task_id": best.get("page_task_id") or beat.get("page_task_id") or beat_id,
+            "slot_id": best.get("slot_id") or beat.get("slot_id", ""),
+            "query_trace_id": best.get("query_trace_id") or beat.get("query_trace_id", ""),
             "order": beat.get("order"),
             "page_title": beat.get("page_title"),
             "role": beat.get("role"),
@@ -122,7 +126,10 @@ def decide_for_beat(
             reason = "历史库没有可用候选，建议新生成页面。"
 
     return {
-        "beat_id": beat.get("beat_id"),
+        "beat_id": beat_id,
+        "page_task_id": (best or {}).get("page_task_id") or beat.get("page_task_id") or beat_id,
+        "slot_id": (best or {}).get("slot_id") or beat.get("slot_id", ""),
+        "query_trace_id": (best or {}).get("query_trace_id") or beat.get("query_trace_id", ""),
         "order": beat.get("order"),
         "page_title": beat.get("page_title"),
         "role": beat.get("role"),

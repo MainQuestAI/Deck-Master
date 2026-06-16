@@ -7,7 +7,17 @@ from pathlib import Path
 from typing import Any
 
 from runtime.events import append_event
+from runtime.import_log import append_import_log
+from runtime.run_state import (
+    RunStateError,
+    assert_external_result_matches_run,
+    ensure_run_dirs,
+    read_json,
+    write_json,
+)
 
+
+SELECTION_SCHEMA_VERSION = "deck_master_ppt_library_selection.v1"
 
 CANONICAL_FIELDS = (
     "slide_id",
@@ -31,6 +41,18 @@ CANONICAL_FIELDS = (
 
 class PPTLibraryClientError(ValueError):
     pass
+
+
+def _selection_error(run_dir: Path, message: str, *, source_path: str | Path | None = None) -> PPTLibraryClientError:
+    append_import_log(
+        run_dir,
+        import_type="ppt_library_selection",
+        source="ppt-library",
+        status="rejected",
+        source_path=source_path,
+        errors=[message],
+    )
+    return PPTLibraryClientError(message)
 
 
 def build_select_slides_command(
@@ -190,6 +212,136 @@ def write_library_results(run_dir: Path, by_beat: dict[str, list[dict[str, Any]]
     payload = {"source": source, "by_beat": by_beat}
     (root / "selection.json").write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return payload
+
+
+def _normalize_selection_payload(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    if payload.get("schema_version") != SELECTION_SCHEMA_VERSION:
+        raise PPTLibraryClientError(
+            f"schema_version must be '{SELECTION_SCHEMA_VERSION}', got '{payload.get('schema_version')}'."
+        )
+
+    if isinstance(payload.get("selections"), list):
+        return [item for item in payload["selections"] if isinstance(item, dict)]
+
+    if isinstance(payload.get("by_beat"), dict):
+        items: list[dict[str, Any]] = []
+        for beat_id, candidates in payload["by_beat"].items():
+            items.append({"beat_id": beat_id, "candidates": candidates})
+        return items
+
+    if isinstance(payload.get("beats"), list):
+        return [item for item in payload["beats"] if isinstance(item, dict)]
+
+    raise PPTLibraryClientError("selection payload must contain selections, by_beat, or beats.")
+
+
+def validate_library_selection(payload: dict[str, Any]) -> dict[str, Any]:
+    errors: list[str] = []
+    warnings: list[str] = []
+    if not isinstance(payload, dict):
+        return {"valid": False, "errors": ["Result must be a JSON object."], "warnings": []}
+    if payload.get("schema_version") != SELECTION_SCHEMA_VERSION:
+        errors.append(
+            f"schema_version must be '{SELECTION_SCHEMA_VERSION}', got '{payload.get('schema_version')}'."
+        )
+    if not payload.get("run_id"):
+        errors.append("run_id is required.")
+    try:
+        items = _normalize_selection_payload(payload) if not errors else []
+    except PPTLibraryClientError as exc:
+        errors.append(str(exc))
+        items = []
+    if not items and not errors:
+        warnings.append("No library selections were provided.")
+    for index, item in enumerate(items):
+        beat_id = item.get("beat_id") or item.get("page_task_id")
+        if not beat_id:
+            errors.append(f"selections[{index}].beat_id or page_task_id is required.")
+        candidates = item.get("candidates", item.get("slides", item.get("results", [])))
+        if candidates is None:
+            candidates = []
+        if not isinstance(candidates, list):
+            errors.append(f"selections[{index}].candidates must be an array.")
+    return {"valid": not errors, "errors": errors, "warnings": warnings}
+
+
+def _selection_to_by_beat(payload: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
+    by_beat: dict[str, list[dict[str, Any]]] = {}
+    for item in _normalize_selection_payload(payload):
+        beat_id = str(item.get("beat_id") or item.get("page_task_id") or "")
+        role = str(item.get("role") or item.get("page_role") or "library")
+        page_task_id = str(item.get("page_task_id") or beat_id)
+        slot_id = str(item.get("slot_id") or "")
+        query_trace_id = str(item.get("query_trace_id") or "")
+        raw_candidates = item.get("candidates", item.get("slides", item.get("results", [])))
+        if not isinstance(raw_candidates, list):
+            raw_candidates = []
+        candidates: list[dict[str, Any]] = []
+        for index, raw in enumerate(raw_candidates, start=1):
+            if not isinstance(raw, dict):
+                continue
+            candidate = normalize_candidate(raw, beat_id=beat_id, role=role, index=index)
+            candidate["page_task_id"] = str(raw.get("page_task_id") or page_task_id)
+            candidate["slot_id"] = str(raw.get("slot_id") or slot_id)
+            candidate["query_trace_id"] = str(raw.get("query_trace_id") or query_trace_id)
+            candidates.append(candidate)
+        by_beat.setdefault(beat_id, []).extend(candidates)
+    return by_beat
+
+
+def import_library_selection(run_dir: str | Path, input_path: str | Path) -> dict[str, Any]:
+    root = ensure_run_dirs(run_dir)
+    source_path = Path(input_path).expanduser().resolve()
+    try:
+        payload = read_json(source_path)
+    except RunStateError as exc:
+        raise _selection_error(root, str(exc), source_path=source_path) from exc
+
+    validation = validate_library_selection(payload)
+    if not validation["valid"]:
+        raise _selection_error(root, "; ".join(validation["errors"]), source_path=source_path)
+
+    try:
+        run_id = assert_external_result_matches_run(
+            root,
+            payload.get("run_id", ""),
+            artifact_name="PPT Library selection",
+        )
+    except RunStateError as exc:
+        raise _selection_error(root, str(exc), source_path=source_path) from exc
+
+    by_beat = _selection_to_by_beat(payload)
+    canonical = {
+        "schema_version": SELECTION_SCHEMA_VERSION,
+        "run_id": run_id,
+        "source": payload.get("source", "ppt-library"),
+        "by_beat": by_beat,
+        "warnings": validation.get("warnings", []),
+        "source_schema_version": payload.get("schema_version"),
+    }
+    canonical_path = write_json(root / "external" / "ppt_library" / "library_results.json", canonical)
+    legacy = write_library_results(root, by_beat, source=str(payload.get("source") or "ppt-library"))
+    append_import_log(
+        root,
+        import_type="ppt_library_selection",
+        source="ppt-library",
+        status="imported",
+        source_path=source_path,
+        canonical_refs=[str(canonical_path.relative_to(root))],
+        legacy_refs=["library_results/selection.json", "library_results/by_beat/"],
+        warnings=validation.get("warnings", []),
+        payload={"beat_count": len(by_beat), "candidate_count": sum(len(v) for v in by_beat.values())},
+    )
+    append_event(root, "ppt_library.selection.imported", target="external/ppt_library/library_results.json", payload_ref="library_results/selection.json")
+    return {
+        "status": "imported",
+        "run_id": run_id,
+        "beat_count": len(by_beat),
+        "candidate_count": sum(len(v) for v in by_beat.values()),
+        "canonical_path": str(canonical_path.relative_to(root)),
+        "legacy_path": "library_results/selection.json",
+        "selection": legacy,
+    }
 
 
 def run_library_selection(

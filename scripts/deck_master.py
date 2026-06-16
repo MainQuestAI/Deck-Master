@@ -23,11 +23,13 @@ from advisory.narrative import (
 from quality.external_review import (
     ExternalReviewError,
     import_external_review,
+    import_quality_findings,
     prepare_quality_review,
 )
 from generation.handback import (
     GenerationHandbackError,
     import_generation_result,
+    normalize_generation_result,
     prepare_generation_handoff,
     refresh_preview_from_generation,
     validate_generation_result,
@@ -113,12 +115,13 @@ from runtime.run_state import (
     write_json,
 )
 from runtime.next_step import resolve_next_step
+from runtime.import_log import append_import_log
 from runtime.orchestration import import_plan, import_render_result, orchestration_check
 from runtime.run_state_resolver import resolve_run_state
 from runtime.sourcing_import import import_sourcing, validate_sourcing
 from runtime.workspace_binding import bind_workspace
 from runtime.workspace_resolver import resolve_workspace_for_run
-from tools.ppt_library_client import PPTLibraryClientError, run_library_selection
+from tools.ppt_library_client import PPTLibraryClientError, import_library_selection, run_library_selection
 from workspace.foundation import MANIFEST_NAME, WorkspaceError, init_workspace, register_workspace, validate_workspace
 from runtime.setup_status import SetupError, configured_runs_dir, require_setup_ready, run_setup, setup_status
 
@@ -131,6 +134,7 @@ PROTECTED_COMMANDS = {
     "build-claim-map",
     "autoplan",
     "search-library",
+    "import-library-selection",
     "decide-sourcing",
     "create-generation-tasks",
     "build-preview",
@@ -150,6 +154,7 @@ PROTECTED_COMMANDS = {
     "apply-narrative-advice",
     "prepare-quality-review",
     "import-quality-review",
+    "import-quality-findings",
     "prepare-generation-handoff",
     "import-generation-result",
     "refresh-preview-from-generation",
@@ -546,6 +551,25 @@ def command_search_library(args: argparse.Namespace) -> dict[str, Any]:
         command=args.ppt_lib_command,
     )
     return {"run_id": request["run_id"], "run_dir": str(run_dir), "status": "library_ready", "source": results.get("source", "")}
+
+
+def command_library_status(args: argparse.Namespace) -> dict[str, Any]:
+    suite = inspect_suite_status(targets=["codex"], include_optional=True)
+    library_items = [item for item in suite.get("skills", []) if item.get("skill") == "ppt-library"]
+    workspace = getattr(args, "workspace", "") or ""
+    return {
+        "schema_version": "deck_master_library_status.v1",
+        "status": "ready" if any(item.get("status") == "ready" for item in library_items) else "blocked",
+        "workspace": str(Path(workspace).expanduser().resolve()) if workspace else "",
+        "suite_status": suite.get("status"),
+        "ppt_library": library_items,
+        "next_command": "" if any(item.get("status") == "ready" for item in library_items) else "deck-master suite-repair --target codex",
+    }
+
+
+def command_import_library_selection(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = resolve_run_dir(args)
+    return import_library_selection(run_dir, Path(args.input).expanduser())
 
 
 def command_decide_sourcing(args: argparse.Namespace) -> dict[str, Any]:
@@ -1110,6 +1134,11 @@ def command_import_quality_review(args: argparse.Namespace) -> dict[str, Any]:
     return import_external_review(run_dir, result, replace=replace)
 
 
+def command_import_quality_findings(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = resolve_run_dir(args)
+    return import_quality_findings(run_dir, Path(args.input).expanduser(), replace=bool(getattr(args, "replace", False)))
+
+
 def command_prepare_generation_handoff(args: argparse.Namespace) -> dict[str, Any]:
     run_dir = resolve_run_dir(args)
     return prepare_generation_handoff(run_dir)
@@ -1123,7 +1152,31 @@ def command_import_generation_result(args: argparse.Namespace) -> dict[str, Any]
     except json.JSONDecodeError as exc:
         raise GenerationHandbackError(f"Bad JSON in {input_path}: {exc.msg}") from exc
     force = getattr(args, "force", False)
-    return import_generation_result(run_dir, result, force=force)
+    expected_run_id = str(load_request(run_dir).get("run_id") or run_dir.name)
+    expected_session_id = ""
+    session_path = run_dir / "generation_session.json"
+    if session_path.exists():
+        expected_session_id = str(read_json(session_path).get("session_id") or "")
+    try:
+        normalized = normalize_generation_result(
+            result,
+            expected_run_id=expected_run_id,
+            expected_session_id=expected_session_id or None,
+        )
+        imported = import_generation_result(run_dir, normalized, force=force)
+    except GenerationHandbackError as exc:
+        append_import_log(run_dir, import_type="generation_result", source="ppt-deck-pro-max", status="rejected", source_path=input_path, errors=[str(exc)])
+        raise
+    append_import_log(
+        run_dir,
+        import_type="generation_result",
+        source="ppt-deck-pro-max",
+        status="imported",
+        source_path=input_path,
+        canonical_refs=[f"generation_results/{imported.get('task_id')}.json"],
+        payload={"task_id": imported.get("task_id"), "result_status": imported.get("result_status")},
+    )
+    return imported
 
 
 def command_refresh_preview_from_generation(args: argparse.Namespace) -> dict[str, Any]:
@@ -1559,6 +1612,16 @@ def build_parser() -> argparse.ArgumentParser:
     add_library_args(p_search)
     p_search.set_defaults(func=command_search_library)
 
+    p_library_status = sub.add_parser("library-status", help="Inspect PPT Library readiness without writing files")
+    p_library_status.add_argument("--workspace", default="")
+    p_library_status.add_argument("--output", choices=["json"], default="json")
+    p_library_status.set_defaults(func=command_library_status)
+
+    p_import_library = sub.add_parser("import-library-selection", help="Import PPT Library selection handback")
+    add_run_args(p_import_library)
+    p_import_library.add_argument("--input", required=True, help="Path to deck_master_ppt_library_selection.v1 JSON")
+    p_import_library.set_defaults(func=command_import_library_selection)
+
     p_decide = sub.add_parser("decide-sourcing", help="Create sourcing_plan.json from library results")
     add_run_args(p_decide)
     p_decide.set_defaults(func=command_decide_sourcing)
@@ -1810,6 +1873,12 @@ def build_parser() -> argparse.ArgumentParser:
     p_iqr.add_argument("--input", required=True, help="Path to external quality review JSON")
     p_iqr.add_argument("--replace", action="store_true", help="Replace existing report from same reviewer/scope")
     p_iqr.set_defaults(func=command_import_quality_review)
+
+    p_iqf = sub.add_parser("import-quality-findings", help="Import PPT Quality Gate findings handback")
+    add_run_args(p_iqf)
+    p_iqf.add_argument("--input", required=True, help="Path to deck_master_quality_findings.v1 JSON")
+    p_iqf.add_argument("--replace", action="store_true", help="Replace existing report from same reviewer/scope")
+    p_iqf.set_defaults(func=command_import_quality_findings)
 
     # ---- generation handoff / handback ----
     p_pgh = sub.add_parser("prepare-generation-handoff", help="Enhance generation tasks with handoff fields for build tools")

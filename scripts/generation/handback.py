@@ -27,16 +27,77 @@ from runtime.run_state import (
 )
 
 RESULT_SCHEMA_VERSION = "deck_generation_result.v1"
+DECK_PRO_MAX_RESULT_SCHEMA_VERSION = "ppt_deck_pro_max_generation_result.v1"
 HANDOFF_SCHEMA_VERSION = "deck_generation_task.v1"
 
 RESULTS_DIR = "generation_results"
 TASKS_DIR = "generation_tasks"
 
 VALID_STATUSES = {"completed", "partial", "failed"}
+DECK_PRO_MAX_STATUSES = {"completed", "partial", "failed", "success", "error"}
 
 
 class GenerationHandbackError(ValueError):
     """Raised when generation result is invalid or import fails."""
+
+
+def normalize_generation_result(
+    result: dict[str, Any],
+    *,
+    expected_run_id: str | None = None,
+    expected_session_id: str | None = None,
+) -> dict[str, Any]:
+    """Normalize companion-tool handback into Deck Master's canonical result."""
+    if not isinstance(result, dict):
+        raise GenerationHandbackError("Result payload must be a JSON object.")
+    schema_version = result.get("schema_version")
+    if schema_version == RESULT_SCHEMA_VERSION:
+        return dict(result)
+    if schema_version != DECK_PRO_MAX_RESULT_SCHEMA_VERSION:
+        raise GenerationHandbackError(
+            f"schema_version must be '{RESULT_SCHEMA_VERSION}' or "
+            f"'{DECK_PRO_MAX_RESULT_SCHEMA_VERSION}', got '{schema_version}'."
+        )
+
+    run_id = str(result.get("run_id") or "")
+    if expected_run_id and run_id != expected_run_id:
+        raise GenerationHandbackError(
+            f"generation result run_id mismatch: got '{run_id}', expected '{expected_run_id}'."
+        )
+    session_id = str(result.get("session_id") or "")
+    if expected_session_id and session_id != expected_session_id:
+        raise GenerationHandbackError(
+            f"generation result session_id mismatch: got '{session_id}', expected '{expected_session_id}'."
+        )
+
+    outputs = result.get("outputs") if isinstance(result.get("outputs"), dict) else {}
+    artifact = result.get("artifact") if isinstance(result.get("artifact"), dict) else {}
+    preview = result.get("preview") if isinstance(result.get("preview"), dict) else {}
+    raw_status = str(result.get("status") or "")
+    status_map = {"success": "completed", "error": "failed"}
+    status = status_map.get(raw_status, raw_status)
+    if status not in VALID_STATUSES:
+        raise GenerationHandbackError(f"status must be one of {sorted(DECK_PRO_MAX_STATUSES)}.")
+
+    canonical = {
+        "schema_version": RESULT_SCHEMA_VERSION,
+        "source_schema_version": DECK_PRO_MAX_RESULT_SCHEMA_VERSION,
+        "run_id": run_id,
+        "session_id": session_id,
+        "tool": str(result.get("tool") or "ppt-deck-pro-max"),
+        "task_id": str(result.get("task_id") or result.get("task") or ""),
+        "beat_id": str(result.get("beat_id") or result.get("page_id") or ""),
+        "page_id": str(result.get("page_id") or result.get("beat_id") or ""),
+        "status": status,
+        "artifact_type": str(result.get("artifact_type") or artifact.get("type") or "pptx_slide"),
+        "artifact_path": str(result.get("artifact_path") or outputs.get("artifact_path") or artifact.get("path") or ""),
+        "preview_path": str(result.get("preview_path") or outputs.get("preview_path") or preview.get("path") or ""),
+        "notes": str(result.get("notes") or result.get("summary") or ""),
+        "errors": result.get("errors", []),
+    }
+    if status == "failed" and not canonical["errors"]:
+        canonical["errors"] = [{"code": "external_generation_failed", "message": canonical["notes"] or "Generation failed."}]
+    return canonical
 
 
 # --------------------------------------------------------------------------- #

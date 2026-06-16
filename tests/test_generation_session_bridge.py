@@ -21,8 +21,9 @@ from generation.session import (
     run_generation,
 )
 from generation.task_builder import create_generation_tasks
-from generation.handback import RESULT_SCHEMA_VERSION
+from generation.handback import DECK_PRO_MAX_RESULT_SCHEMA_VERSION, RESULT_SCHEMA_VERSION
 from runtime.events import read_events
+from runtime.import_log import read_import_log
 from runtime.run_state import create_run, read_json, write_json
 from runtime.tool_registry import resolve_tool_command
 
@@ -155,6 +156,37 @@ class GenerationSessionBridgeTests(unittest.TestCase):
         result_path.write_text(json.dumps(result, ensure_ascii=False), encoding="utf-8")
         return result_path
 
+    def _write_deck_pro_max_result(
+        self,
+        *,
+        session_id: str,
+        status: str = "success",
+        run_id: str = "session-bridge-run",
+    ) -> Path:
+        task_id = self.tasks[0]["task_id"]
+        preview_dir = self.run_dir / "generated_assets" / "beat-001"
+        preview_dir.mkdir(parents=True, exist_ok=True)
+        (preview_dir / "slide.pptx").write_bytes(b"ppt")
+        (preview_dir / "preview.png").write_bytes(b"png")
+        result = {
+            "schema_version": DECK_PRO_MAX_RESULT_SCHEMA_VERSION,
+            "run_id": run_id,
+            "session_id": session_id,
+            "tool": "ppt-deck-pro-max",
+            "task_id": task_id,
+            "beat_id": "beat-001",
+            "status": status,
+            "outputs": {
+                "artifact_path": "generated_assets/beat-001/slide.pptx",
+                "preview_path": "generated_assets/beat-001/preview.png",
+            },
+            "errors": [],
+        }
+        result_path = self.run_dir / "generation_results" / f"{task_id}.deck-pro-max.json"
+        result_path.parent.mkdir(exist_ok=True)
+        result_path.write_text(json.dumps(result, ensure_ascii=False), encoding="utf-8")
+        return result_path
+
     def test_tool_unavailable_marks_session_status_blocked(self) -> None:
         self._tool_registry(command="definitely_missing_tool")
         create_generation_session(
@@ -251,6 +283,43 @@ class GenerationSessionBridgeTests(unittest.TestCase):
             {},
         )
         self.assertEqual("generated_assets/beat-001/preview.png", first_page.get("preview_path"))
+
+    def test_deck_pro_max_result_adapter_refreshes_preview_and_logs_import(self) -> None:
+        self._tool_registry(command=sys.executable)
+        session = create_generation_session(
+            self.run_dir,
+            tool="ppt-deck-pro-max",
+            workspace=str(self.workspace),
+            force=True,
+        )
+        self._create_preview_manifest()
+        result_path = self._write_deck_pro_max_result(session_id=session["session_id"])
+
+        imported = import_generation_results(self.run_dir, result_path)
+
+        self.assertEqual("quality_required", imported["status"])
+        written = read_json(self.run_dir / "generation_results" / f"{self.tasks[0]['task_id']}.json")
+        self.assertEqual(RESULT_SCHEMA_VERSION, written["schema_version"])
+        self.assertEqual("deck_generation_result.v1", written["schema_version"])
+        logs = read_import_log(self.run_dir)
+        self.assertEqual("generation_result", logs[-1]["import_type"])
+        self.assertEqual("imported", logs[-1]["status"])
+
+    def test_deck_pro_max_result_rejects_session_mismatch(self) -> None:
+        self._tool_registry(command=sys.executable)
+        create_generation_session(
+            self.run_dir,
+            tool="ppt-deck-pro-max",
+            workspace=str(self.workspace),
+            force=True,
+        )
+        result_path = self._write_deck_pro_max_result(session_id="other-session")
+
+        with self.assertRaises(GenerationSessionError):
+            import_generation_results(self.run_dir, result_path)
+
+        logs = read_import_log(self.run_dir)
+        self.assertEqual("rejected", logs[-1]["status"])
 
     def test_tool_registry_precedence_workspace_over_global(self) -> None:
         global_home = self.temp_dir / "home"

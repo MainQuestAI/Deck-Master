@@ -9,10 +9,12 @@ from typing import Any
 from generation.handback import (
     GenerationHandbackError,
     import_generation_result,
+    normalize_generation_result,
     refresh_preview_from_generation,
     validate_generation_result,
 )
 from runtime.events import append_typed_event
+from runtime.import_log import append_import_log
 from runtime.run_state import (
     REQUEST_NAME,
     ensure_run_dirs,
@@ -482,10 +484,28 @@ def import_generation_results(
     session = _ensure_session_exists(root)
     result_path = Path(input_path).expanduser().resolve()
     if not result_path.exists():
-        raise GenerationSessionError(f"Result file not found: {result_path}")
-    raw = read_json(result_path)
+        message = f"Result file not found: {result_path}"
+        append_import_log(root, import_type="generation_result", source="ppt-deck-pro-max", status="rejected", source_path=result_path, errors=[message])
+        raise GenerationSessionError(message)
+    try:
+        raw = read_json(result_path)
+    except Exception as exc:
+        append_import_log(root, import_type="generation_result", source="ppt-deck-pro-max", status="rejected", source_path=result_path, errors=[str(exc)])
+        raise GenerationSessionError(str(exc)) from exc
     if not isinstance(raw, dict):
-        raise GenerationSessionError("Result payload must be a JSON object.")
+        message = "Result payload must be a JSON object."
+        append_import_log(root, import_type="generation_result", source="ppt-deck-pro-max", status="rejected", source_path=result_path, errors=[message])
+        raise GenerationSessionError(message)
+
+    try:
+        raw = normalize_generation_result(
+            raw,
+            expected_run_id=str(session.get("run_id") or _run_id(root)),
+            expected_session_id=str(session.get("session_id") or ""),
+        )
+    except GenerationHandbackError as exc:
+        append_import_log(root, import_type="generation_result", source="ppt-deck-pro-max", status="rejected", source_path=result_path, errors=[str(exc)])
+        raise GenerationSessionError(str(exc)) from exc
 
     if not raw.get("beat_id") and raw.get("page_id"):
         raw["beat_id"] = str(raw["page_id"])
@@ -494,15 +514,22 @@ def import_generation_results(
 
     validation = validate_generation_result(raw)
     if not validation.get("valid"):
-        raise GenerationSessionError("Invalid generation result: " + "; ".join(validation.get("errors", [])))
+        message = "Invalid generation result: " + "; ".join(validation.get("errors", []))
+        append_import_log(root, import_type="generation_result", source="ppt-deck-pro-max", status="rejected", source_path=result_path, errors=[message])
+        raise GenerationSessionError(message)
 
     status = str(raw.get("status", ""))
-    _validate_result_path(run_dir=root, value=raw.get("artifact_path"), field_name="artifact_path", required=(status in {"completed", "partial"}))
-    _validate_result_path(run_dir=root, value=raw.get("preview_path"), field_name="preview_path", required=(status == "completed"))
+    try:
+        _validate_result_path(run_dir=root, value=raw.get("artifact_path"), field_name="artifact_path", required=(status in {"completed", "partial"}))
+        _validate_result_path(run_dir=root, value=raw.get("preview_path"), field_name="preview_path", required=(status == "completed"))
+    except GenerationSessionError as exc:
+        append_import_log(root, import_type="generation_result", source="ppt-deck-pro-max", status="rejected", source_path=result_path, errors=[str(exc)])
+        raise
 
     try:
         imported = import_generation_result(root, raw, force=force)
     except GenerationHandbackError as exc:
+        append_import_log(root, import_type="generation_result", source="ppt-deck-pro-max", status="rejected", source_path=result_path, errors=[str(exc)])
         raise GenerationSessionError(str(exc)) from exc
 
     session["tasks_completed"] = session_task_counter(root)
@@ -529,6 +556,22 @@ def import_generation_results(
         run_id=session.get("run_id", root.name),
         refs=["generation_results", "generation_tasks"],
         payload={"task_id": imported.get("task_id"), "result_status": imported.get("result_status"), "refresh_status": refresh_result.get("status")},
+    )
+    append_import_log(
+        root,
+        import_type="generation_result",
+        source="ppt-deck-pro-max",
+        status="imported",
+        source_path=result_path,
+        canonical_refs=[f"{RESULTS_DIR}/{imported.get('task_id')}.json"],
+        legacy_refs=["preview_manifest.json"] if refresh_result.get("status") == "refreshed" else [],
+        payload={
+            "task_id": imported.get("task_id"),
+            "result_status": imported.get("result_status"),
+            "session_id": session.get("session_id"),
+            "refresh_status": refresh_result.get("status"),
+            "needs_quality_gate": session.get("status") == "quality_required",
+        },
     )
 
     return {
