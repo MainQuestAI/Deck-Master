@@ -20,3 +20,4 @@ dist/
 build/
 *.egg-info/
 node_modules/
+.gstack/
