@@ -192,6 +192,9 @@ class WorkbenchDirectTest(unittest.TestCase):
         task = next(t for t in page_tasks["tasks"] if t["beat_id"] == "beat_001")
         self.assertEqual(len(task["review_notes"]), 1)
         self.assertEqual(task["review_notes"][0]["note"], "Looks good overall")
+        preview = read_json(self.run_dir / "preview_manifest.json")
+        page = next(p for p in preview["pages"] if p["page_id"] == "beat_001")
+        self.assertEqual("Looks good overall", page["notes"])
 
     def test_lock_source(self) -> None:
         execute_review_action(self.run_dir, "beat_001", "lock_source", actor="user")
@@ -266,6 +269,20 @@ class WorkbenchAPITest(unittest.TestCase):
         )
         self.assertEqual(status, 200)
         self.assertEqual(data["status"], "ok")
+
+    def test_review_action_add_note_updates_deck_api(self) -> None:
+        status, data = self.handler.request(
+            "POST",
+            "/api/page/beat_001/review-action?run_id=wb-test",
+            body={"action": "add_note", "actor": "user", "note": "Keep this proof point."},
+        )
+        self.assertEqual(status, 200)
+        self.assertEqual(data["status"], "ok")
+
+        deck_status, deck = self.handler.request("GET", "/api/deck?run_id=wb-test")
+        self.assertEqual(deck_status, 200)
+        page = next(p for p in deck["pages"] if p["page_id"] == "beat_001")
+        self.assertEqual("Keep this proof point.", page["notes"])
 
     def test_review_action_missing_action(self) -> None:
         status, data = self.handler.request(

@@ -10,7 +10,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from preview.manifest import ManifestError, update_page_review, update_page_source_decision
+from preview.manifest import (
+    ManifestError,
+    find_page,
+    load_manifest,
+    update_page_review,
+    update_page_source_decision,
+)
 from runtime.events import append_typed_event
 from runtime.run_state import (
     PAGE_TASKS_NAME,
@@ -231,13 +237,26 @@ def execute_review_action(
                     continue
 
     elif action == "add_note":
+        note_text = note or reason
         notes = task.get("review_notes", [])
         notes.append({
-            "note": note or reason,
+            "note": note_text,
             "author": actor,
             "timestamp": _utc_now(),
         })
         task["review_notes"] = notes
+        try:
+            preview = load_manifest(root)
+            page = find_page(preview, page_id)
+            update_page_review(
+                root,
+                page_id,
+                review_status=str(page.get("review_status") or "needs_review"),
+                action_intent=str(page.get("action_intent") or "none"),
+                notes=note_text,
+            )
+        except ManifestError as exc:
+            raise WorkbenchError(f"Cannot add note to page: {exc}") from exc
 
     # Save updated tasks.
     write_json(page_tasks_path, page_tasks)
