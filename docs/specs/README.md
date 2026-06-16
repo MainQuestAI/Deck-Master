@@ -21,7 +21,7 @@
    - 目标：重对齐 Deck Master 主控运行时，统一 run mode、setup/workspace/run state、workspace-bound request、Planner guard、sourcing 回写、tool registry、production session 和 benchmark gate。
 
 7. `deck-master-v0.9.12-skill-suite-routing-spec.md`
-   - 目标：把 Deck Master 从单一 skill 升级为 Skill Suite，统一安装和路由 PPT Library、PPT Deck Pro Max、PPT Quality Gate、PPT Master 等 companion skills。
+   - 目标：把 Deck Master 从单一 skill 升级为 Skill Suite Runtime Foundation，先完成 suite 安装、能力状态、无副作用 readiness check、companion dry-run handoff 和 import contract。
 
 `v0.9.11` 本轮补齐点：
 
@@ -56,6 +56,6 @@ v0.9.5 Review Cockpit Frontend
 → v0.9.9 Installation Chain Hardening
 → v0.9.10 First-Run Setup + Orchestration Enforcement
 → v0.9.11 Orchestration Runtime Realignment
-→ v0.9.12 Skill Suite Routing
+→ v0.9.12 Skill Suite Runtime Foundation
 → v1.0.0 RC Real Benchmark Runs
 ```

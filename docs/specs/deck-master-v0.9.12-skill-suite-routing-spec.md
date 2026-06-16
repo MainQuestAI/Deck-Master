@@ -1,25 +1,58 @@
-# Deck Master v0.9.12 Skill Suite Routing Spec
+# Deck Master v0.9.12 Skill Suite Runtime Foundation Spec
 
 ## Summary
 
-本轮目标是把 Deck Master 从单一 skill 升级为一组可独立使用、也可被 Deck Master 统一编排的 Skill Suite。
+本轮目标是把 Deck Master 从单一 skill 升级为可安装、可发现、可路由、可回收结果的 Skill Suite Runtime Foundation。
 
-Deck Master 继续作为顶层编排器，负责 Setup、workspace、run state、页面来源决策、Review Cockpit、质量门禁、外部工具 handoff/handback 和最终交付闭环。PPT Library、PPT Deck Pro Max、PPT Quality Gate、PPT Master 作为 companion skills，分别承担资料检索、Deck 生产、质量审查和渲染执行。
+v0.9.12 只解决 companion skills 的安装、状态发现、能力路由、无副作用 readiness check、dry-run handoff 和 import contract。PPT Library 的资产智能、真实反馈写回、PPT Quality Gate 的深度质量治理、PPT Deck Pro Max 的深度生产算法和 PPT Master 的渲染实现留给后续版本。
 
-完成后，用户安装 Deck Master 时，应自动安装或校验整套 companion skills，并在 skill 层给出清晰的人机交互入口。用户也可以单独安装 PPT Library、PPT Deck Pro Max 或 PPT Quality Gate，用于独立场景。
+完成后，用户安装 Deck Master 时，Agent 能看到完整 suite 状态；用户点名 Deck Master 时，Agent 会先执行无副作用 readiness check，再进入 Setup 引导或 run 续作；PPT Library、PPT Deck Pro Max、PPT Quality Gate 和 PPT Master 可以作为 standalone skill 使用，也可以在 active Deck Master run 内通过 Deck Master 契约接入。
 
-## Background
+## Positioning
 
-v0.9.9 到 v0.9.11 已经把安装根目录、软链接结构、first-run setup、production guard、workspace-bound run、run-state resolver 和 Review Cockpit guard 基本打通。
+v0.9.12 是横切 P2/P3/P4 的基础层：
 
-当前主要问题已经转到 skill 人机交互层：
+| v0.9.12 能力 | 后续阶段价值 |
+|---|---|
+| Skill Suite Routing | 为 Narrative Engine、Asset Intelligence、Quality Governance 提供统一 Agent 入口 |
+| Suite install/status | 为所有 companion skills 提供安装和可用性基础 |
+| PPT Library read-only adapter | 为 P3 Asset Intelligence 提供可追踪 sourcing 前置 |
+| Quality findings import schema | 为 P4 Quality Governance 提供外部审查接入前置 |
+| PPT Deck Pro Max handoff/import | 为 P2/P4 的生产与审查链路提供状态机前置 |
 
-- Deck Master 只有一个大 skill 入口，无法清晰覆盖不同用户任务。
-- Setup 已有 CLI 能力，但 skill 层缺少正式的首次引导协议。
-- PPT Library、PPT Deck Pro Max、PPT Quality Gate 和 PPT Master 的关系停留在外部工具描述，缺少 suite install 与场景路由。
-- 用户点名 Deck Master 时，Agent 仍可能直接使用其他生成或设计工具，绕过 Deck Master run。
-- 用户只想审查已有 PPT 时，完整 Deck Master 流程过重；PPT Quality Gate 需要独立 skill 入口。
-- 用户只想检索历史页时，PPT Library 需要独立入口；当 Deck Master 工作流需要历史页时，它也要被 Deck Master 统一调用和登记。
+本轮重点是基础契约，而非 companion skills 的业务深水区。
+
+## Problems To Solve
+
+当前主要问题集中在 skill 人机交互和 companion runtime 边界：
+
+- Deck Master 只有一个大 skill 入口，无法清晰覆盖“完整方案流程、历史页检索、新 Deck 生产、质量审查、渲染输出”等不同用户任务。
+- Setup 已有 CLI 能力，但 skill 层缺少正式的首次引导协议，Agent 可能把底层命令直接交给用户。
+- 用户点名 Deck Master 时，Agent 仍可能先调用其他工具，绕过 Deck Master run state。
+- PPT Library、PPT Deck Pro Max、PPT Quality Gate 和 PPT Master 目前更像外部工具描述，缺少统一 suite install、capability status 和 import contract。
+- Companion readiness 只有 skill-level 判断，缺少 task-level readiness，无法支持“状态查看可继续、历史检索阻断、渲染能力可选”等真实场景。
+- PPT Library selection 只保留 `beat_id` 不够，后续页面替换、候选反馈、截图校验、保密边界和资产复利会缺追踪字段。
+- 真实反馈写回 PPT Library 涉及 usage semantics、deal lifecycle、幂等和数据污染风险，本轮需要先建立 event queue 和 dry-run。
+
+## Non-Mutation Rule
+
+v0.9.12 必须把无副作用检查作为第一原则。
+
+无副作用命令：
+
+- `setup-status --include-suite --output json`
+- `suite-status --output json`
+- `library-status --output json`
+- `doctor` 的只读诊断部分
+
+强约束：
+
+- `setup-status` 和 `suite-status` 不得创建 run，不得修改 workspace，不得修复 skill 链接。
+- setup 未达到 `production_ready=true` 前，`start` 不得创建或修改 production run。
+- Companion skill 输出必须通过 Deck Master import 命令进入 run state。
+- Import 必须写入 `imports/import_log.jsonl`。
+- Bad JSON、schema mismatch、run_id mismatch 不得覆盖已有 artifact。
+- 测试不得修改真实用户 workspace。
 
 ## Current Assets
 
@@ -33,16 +66,16 @@ Path:
 
 Current role:
 
-- Top-level deck workflow runtime.
-- Setup and production run guard.
-- Workspace, request, planning, sourcing, quality, review, export and benchmark state.
-- External tool handoff and handback contracts.
+- 顶层 deck workflow runtime。
+- Setup、workspace、production run guard。
+- request、planning、sourcing、quality、review、export、benchmark state。
+- external tool handoff / handback contract。
 
 Current gap:
 
-- Skill docs mention setup commands, but do not define an Agent-led first-run ceremony.
-- Companion skills are not managed as part of Deck Master installation.
-- Skill docs do not provide a strong routing table for common user intents.
+- Skill docs 提到 setup 命令，但缺少 Agent-led first-run ceremony。
+- Companion skills 尚未纳入 Deck Master 安装和状态模型。
+- Skill docs 缺少 task intent routing 和 active run import 规则。
 
 ### PPT Library
 
@@ -60,16 +93,22 @@ Repo:
 
 Current role:
 
-- PPT source setup, indexing, search, slide selection, compose, profile, enrichment, feedback recording and diagnostics.
-- CLI entry is `ppt-lib`.
-- Provides `search`, `select-slides`, `record-deal`, `record-usage`, `doctor`, `sources`, `index`, `status` and related commands.
+- PPT source setup、indexing、search、slide selection、compose、profile、enrichment、feedback recording、diagnostics。
+- CLI entry: `ppt-lib`。
+- Commands include `search`、`select-slides`、`record-deal`、`record-usage`、`doctor`、`sources`、`index`、`status`。
 
-Current gap:
+v0.9.12 scope:
 
-- Deck Master sees PPT Library as a tool, but does not install or validate the PPT Library skill as a companion.
-- Deck Master needs stable readiness checks for PPT Library config, index health, search health and source governance.
-- Deck Master sourcing needs a stable page-level contract that preserves Deck Master `beat_id`.
-- Approval and delivery feedback from Deck Master should write back to PPT Library usage and deal records.
+- Bundle curated skill docs or adopt valid external skill link。
+- Validate external `ppt-lib` CLI and doctor status。
+- Provide read-only adapter contract。
+- Generate feedback event queue and dry-run writeback plan。
+
+Out of this round:
+
+- Rewriting PPT Library indexing internals。
+- Silent broad indexing of Home、Downloads、cache、recycle folders。
+- Default real `record-usage` / `record-deal` writeback。
 
 ### PPT Deck Pro Max
 
@@ -81,14 +120,20 @@ Installed skill:
 
 Current role:
 
-- Product-grade deck production pipeline.
-- Covers brief, narrative arc, content governance, expert interview, redaction, visual system, page copy, build, QA and rollback.
+- Product-grade deck production pipeline。
+- Covers brief、narrative arc、content governance、expert interview、redaction、visual system、page copy、build、QA、rollback。
 
-Current gap:
+v0.9.12 scope:
 
-- It is currently installed as an independent Codex skill directory.
-- Deck Master install should be able to place it under Deck Master suite install root and expose it through agent soft links.
-- Deck Master generation sessions need a stronger route into PPT Deck Pro Max when a page or section is marked `generate` or `adapt`.
+- Bundle curated skill package or adopt valid external skill link。
+- Add Deck Master generation handoff request schema。
+- Add dry-run result import schema。
+- Track generation session state。
+
+Out of this round:
+
+- Rewriting production algorithm。
+- Deep execution of PPT Deck Pro Max pipeline inside Deck Master。
 
 ### PPT Quality Gate
 
@@ -100,25 +145,37 @@ Draft skill:
 
 Current role:
 
-- Independent audit skill for Draft Gate, Render Gate and Delivery Gate.
-- Checks narrative integrity, page job clarity, information density, evidence, screenshot integration, layout variety, consulting expression, visual readiness and delivery readiness.
+- Independent audit skill for Draft Gate、Render Gate、Delivery Gate。
+- Checks narrative integrity、page job clarity、information density、evidence、screenshot integration、layout variety、consulting expression、visual readiness、delivery readiness。
 
-Current gap:
+v0.9.12 scope:
 
-- It is still a draft skill and is not part of the Deck Master install tree.
-- Deck Master quality gates and this skill have overlapping concepts but no clear routing.
-- It needs a formal output contract so Deck Master can import findings into run state.
+- Promote docs-first skill package。
+- Add structured findings schema。
+- Add Deck Master import path for structured findings。
+- Map findings into existing external quality classes。
+
+Out of this round:
+
+- Rewriting Deck Master quality engine。
+- Turning PPT Quality Gate into final gate decision owner。
+- Complex visual or aesthetic scoring engine。
 
 ### PPT Master
 
 Current role:
 
-- Renderer / build execution layer for SVG, PPTX, HTML, PDF or related artifacts.
+- Renderer / build execution layer for SVG、PPTX、HTML、PDF。
 
-Current gap:
+v0.9.12 scope:
 
-- It should remain callable as an execution companion.
-- Deck Master needs to validate output through import-result and quality gates before final reporting.
+- Optional external companion。
+- Validate import-result contract only。
+
+Out of this round:
+
+- Renderer internals。
+- Mandatory renderer dependency for planning, status or audit tasks。
 
 ## Product Model
 
@@ -126,106 +183,152 @@ Current gap:
 
 Deck Master Suite contains:
 
-| Skill | Required by Deck Master install | Can be used independently | Main user intent |
-|---|---:|---:|---|
-| `deck-master` | yes | yes | Full solution deck workflow orchestration |
-| `ppt-library` | yes | yes | Search, reuse and govern historical PPT assets |
-| `ppt-deck-pro-max` | yes | yes | Produce new product-grade deck content and visuals |
-| `ppt-quality-gate` | yes | yes | Audit existing PPT/HTML/PDF or Deck drafts |
-| `ppt-master` | optional | yes | Render or assemble slide artifacts |
+| Skill | Install expectation | Task-level blocking | Standalone use | Main user intent |
+|---|---|---|---:|---|
+| `deck-master` | required | required for Deck Master run | yes | Full solution deck orchestration |
+| `ppt-library` | required in suite install | only for library sourcing / asset feedback | yes | Search and reuse historical PPT assets |
+| `ppt-deck-pro-max` | required in suite install | only for new generation route | yes | Produce new deck content and visual specs |
+| `ppt-quality-gate` | required in suite install | only for audit route | yes | Audit PPT/HTML/PDF or deck draft |
+| `ppt-master` | optional | only for selected render route | yes | Render or assemble slide artifacts |
 
-Deck Master install should install or validate the required companion skills by default. Optional companion skills can be reported as `optional_missing`, with a clear user-facing next action.
+Important distinction:
+
+- `suite_install_ready` means links and manifest are valid enough for Agent routing.
+- `task_capability_ready` means the current task can safely use the needed companion capability.
+- `full_suite_ready` can be false while Deck Master status/read-only operations still work.
 
 ### Responsibility Split
 
 Deck Master:
 
 - Owns the production run.
-- Decides whether a page should reuse, adapt, generate or remain manual.
-- Calls PPT Library for candidate pages.
-- Calls PPT Deck Pro Max for new content or page production.
-- Calls PPT Quality Gate for audit findings.
-- Calls PPT Master or other renderers for build output.
-- Imports every external result before reporting completion.
+- Owns setup, workspace, run state, review cockpit and final reporting.
+- Decides reuse / adapt / generate / manual_placeholder.
+- Calls companion skills through explicit contracts.
+- Imports external results before those results affect run state.
 
 PPT Library:
 
 - Owns historical slide library setup, index, search and feedback data.
-- Returns candidates and evidence for Deck Master sourcing decisions.
-- Receives usage and win/loss feedback from Deck Master.
+- Returns candidates and evidence for Deck Master sourcing.
+- Receives dry-run feedback events in v0.9.12.
 
 PPT Deck Pro Max:
 
-- Owns new deck production pipeline.
-- Produces page copy, visual system, generation tasks or full deck production artifacts.
-- Can run inside Deck Master generation sessions or standalone.
+- Owns new deck production expertise.
+- Receives Deck Master generation handoff package.
+- Returns page copy, visual spec, render task and QA notes through import contract.
 
 PPT Quality Gate:
 
 - Owns audit reasoning and repair instructions.
-- Can audit standalone artifacts.
-- Can return structured findings to Deck Master.
+- Returns structured findings.
+- Deck Master keeps final gate decision.
 
 PPT Master:
 
 - Owns rendering and assembly execution.
-- Returns output files and render metadata to Deck Master.
+- Returns output files and render metadata.
 
-## User Intent Routing
+## Routing Rules
 
-Deck Master skill should include a routing table like this:
+### User Intent Routing
 
 | User says | Primary skill | Deck Master role |
 |---|---|---|
 | "用 Deck Master 做一套客户方案" | `deck-master` | Own full workflow |
 | "从这些客户资料出一套方案 Deck" | `deck-master` | Setup, context intake, plan, sourcing, generation, review |
-| "检索历史 PPT 里有没有类似页面" | `ppt-library` | Optional run attachment if inside active Deck run |
-| "把这份 brief 做成高质量 PPT" | `ppt-deck-pro-max` | If user asked Deck Master, register generation session |
-| "帮我审一下这个 PPT 能不能交付" | `ppt-quality-gate` | If run exists, import findings |
-| "帮我把页面渲染成 PPTX / SVG" | `ppt-master` | If run exists, import render result |
-| "继续上次 Deck Master run" | `deck-master` | Run-state first, then route |
+| "检索历史 PPT 里有没有类似页面" | `ppt-library` | Attach to active run if one exists |
+| "把这份 brief 做成高质量 PPT" | `ppt-deck-pro-max` | Register generation session if inside Deck Master run |
+| "帮我审一下这个 PPT 能不能交付" | `ppt-quality-gate` | Import findings if run exists |
+| "帮我把页面渲染成 PPTX / SVG" | `ppt-master` | Import render result if run exists |
+| "继续上次 Deck Master run" | `deck-master` | Resolve run state first |
 
-Routing rule:
+### Deck Master Named First Step
 
-- If the user explicitly names Deck Master, start with `deck-master start` and `setup-status`.
-- If setup is not production ready, Agent must guide first-run setup before changing a production run.
-- If the task is a subtask inside an active Deck Master run, use companion skill output only through Deck Master import commands.
-- If the user directly names a companion skill and no Deck Master run is active, the companion skill can run standalone.
+If the user explicitly names Deck Master:
 
-## First-Run Setup Experience
+1. Run `deck-master setup-status --include-suite --output json` first.
+2. If setup is not `production_ready`, enter first-run setup ceremony and do not create or modify production run.
+3. If the user says "continue", resolve active or last run first; create a new run only when the user asks for a new run.
+4. If setup is `production_ready` and no active run applies, then call `deck-master start` or create the requested run.
+5. If a companion skill is used inside an active Deck Master run, import its result through Deck Master before reporting completion.
 
-The user experience should be Agent-led:
+This replaces any routing rule that starts with `deck-master start`.
+
+## First-Run Setup Ceremony
+
+The user experience is Agent-led:
 
 1. Agent loads Deck Master skill.
-2. Agent runs installed setup status.
+2. Agent runs `setup-status --include-suite --output json`.
 3. If `active_workspace` is missing, Agent asks the user which folder should be the active Deck workspace.
 4. Agent runs setup with the confirmed workspace.
-5. Agent validates companion skills.
+5. Agent validates companion skills and capability readiness.
 6. Agent checks Review Cockpit health.
-7. Agent reports a short readiness summary and the next action.
+7. Agent reports a short readiness summary and next action.
 
-The user should not receive a bare CLI command as the primary answer when the skill can execute it.
+Agent rule:
 
-### Setup Readiness Shape
+- Do not make a bare setup command the primary answer when the Agent can perform setup after user confirmation.
+- Do not ask for unrelated companion setup when the current user task does not need that capability.
 
-Deck Master should report:
+## Readiness Model
+
+### Setup Status With Suite
+
+Example:
 
 ```json
 {
-  "status": "needs_workspace",
+  "schema_version": "deck_master_setup_status.v2",
+  "status": "degraded_ready",
   "install_ready": true,
-  "workspace_ready": false,
-  "production_ready": false,
-  "suite_ready": false,
-  "companion_skills": {
-    "deck-master": "ready",
-    "ppt-library": "missing",
-    "ppt-deck-pro-max": "ready",
-    "ppt-quality-gate": "missing",
-    "ppt-master": "optional_missing"
+  "workspace_ready": true,
+  "production_ready": true,
+  "suite_install_ready": true,
+  "full_suite_ready": false,
+  "capabilities": {
+    "deck_master.run.v1": "ready",
+    "ppt_library.search.v1": "blocked_cli_missing",
+    "ppt_library.selection.v1": "blocked_cli_missing",
+    "ppt_library.feedback_event.v1": "ready",
+    "ppt_deck_pro_max.generation_handoff.v1": "ready",
+    "ppt_quality_gate.audit_import.v1": "missing",
+    "ppt_master.render_import.v1": "optional_missing"
   },
-  "next_agent_action": "Ask the user to confirm active workspace, then run Deck Master setup and suite install."
+  "task_readiness": {
+    "full_deck_workflow": "degraded_ready",
+    "library_sourcing": "blocked",
+    "new_generation": "ready",
+    "standalone_audit": "blocked",
+    "render_export": "optional_missing"
+  },
+  "next_agent_action": "Proceed with Deck Master run if library/audit/render capabilities are not required; guide suite repair when the task needs a blocked capability."
 }
+```
+
+### Capability Status Enum
+
+Allowed statuses:
+
+```text
+ready
+missing
+optional_missing
+wrong_symlink
+real_dir_conflict
+external_adoptable
+external_version_mismatch
+cli_missing
+doctor_failed
+schema_incompatible
+capability_missing
+permission_denied
+unsafe_source_config
+blocked_cli_missing
+blocked_schema_invalid
+degraded_ready
 ```
 
 ## Installation Model
@@ -245,28 +348,26 @@ Recommended installed tree:
       ppt-quality-gate/
       ppt-master/              # optional
     companion-manifest.json
-    scripts/
     docs/
+      contracts/
+    scripts/
   bin/
     deck-master
 ```
 
-Agent skill dirs should contain only soft links:
+Agent skill dirs contain only soft links:
 
 ```text
 ~/.codex/skills/deck-master -> ~/.deck-master/current/skills/deck-master
 ~/.codex/skills/ppt-library -> ~/.deck-master/current/skills/ppt-library
 ~/.codex/skills/ppt-deck-pro-max -> ~/.deck-master/current/skills/ppt-deck-pro-max
 ~/.codex/skills/ppt-quality-gate -> ~/.deck-master/current/skills/ppt-quality-gate
-```
-
-The same model applies to Claude Code:
-
-```text
 ~/.claude/skills/<skill-name> -> ~/.deck-master/current/skills/<skill-name>
 ```
 
-### Companion Manifest
+No development repo path can be used as the installed skill source.
+
+### Companion Manifest v2
 
 Add:
 
@@ -278,334 +379,549 @@ Example:
 
 ```json
 {
-  "schema_version": "deck_master_companion_manifest.v1",
+  "schema_version": "deck_master_companion_manifest.v2",
   "suite_name": "deck-master",
+  "suite_version": "0.9.12",
   "skills": [
     {
-      "name": "deck-master",
-      "required": true,
-      "install_source": "bundled",
-      "agent_targets": ["codex", "claude-code"]
-    },
-    {
       "name": "ppt-library",
-      "required": true,
-      "install_source": "bundled_or_external",
-      "agent_targets": ["codex", "claude-code"],
-      "cli": "ppt-lib"
-    },
-    {
-      "name": "ppt-deck-pro-max",
-      "required": true,
-      "install_source": "bundled_or_external",
-      "agent_targets": ["codex", "claude-code"]
-    },
-    {
-      "name": "ppt-quality-gate",
-      "required": true,
-      "install_source": "bundled",
-      "agent_targets": ["codex", "claude-code"]
-    },
-    {
-      "name": "ppt-master",
-      "required": false,
-      "install_source": "external",
-      "agent_targets": ["codex", "claude-code"]
+      "required_for": ["library_sourcing", "asset_feedback_event"],
+      "install_source": "external_cli_with_bundled_skill_docs",
+      "min_cli_version": "0.1.0",
+      "cli": "ppt-lib",
+      "required_capabilities": [
+        "ppt_library.doctor.v1",
+        "ppt_library.search.v1",
+        "ppt_library.selection.v1"
+      ],
+      "optional_capabilities": [
+        "ppt_library.feedback_writeback.v1"
+      ],
+      "schema_versions": {
+        "query_input": "deck_master_ppt_library_query.v1",
+        "selection_output": "deck_master_ppt_library_selection.v1",
+        "feedback_event": "deck_master_ppt_library_feedback_event.v1"
+      },
+      "agent_targets": {
+        "codex": "~/.codex/skills/ppt-library",
+        "claude-code": "~/.claude/skills/ppt-library"
+      },
+      "adoption_policy": "adopt_valid_external_symlink_only",
+      "conflict_policy": "never_overwrite_real_directory"
     }
   ]
 }
 ```
 
-## PPT Library Coverage
+### Adoption And Repair Rules
 
-Deck Master should cover PPT Library at four levels.
+- Adopt valid external symlink only when it points to an approved companion source.
+- Never overwrite a real directory in Agent skill dirs.
+- `suite-repair` may replace a wrong symlink only with explicit `--force` or a non-interactive repair policy intended for tests.
+- Real directory conflict returns `real_dir_conflict` with the path and manual repair instruction.
+- External CLI version mismatch returns `external_version_mismatch`.
+- Permission errors return `permission_denied`.
 
-### 1. Install And Skill Readiness
+## Contract Freeze
 
-Deck Master setup should validate:
+Add contracts:
 
-- `ppt-library` skill is installed as a soft link.
-- `ppt-lib` CLI is available.
-- `ppt-lib doctor --output json` can run.
-- PPT Library config path and database path are readable.
-- Search index has at least one valid source or reports a clear setup gap.
+```text
+docs/contracts/companion-manifest.v2.schema.json
+docs/contracts/setup-status.v2.schema.json
+docs/contracts/ppt-library-query.v1.schema.json
+docs/contracts/ppt-library-selection.v1.schema.json
+docs/contracts/ppt-library-feedback-event.v1.schema.json
+docs/contracts/quality-findings.v1.schema.json
+docs/contracts/generation-handoff.v1.schema.json
+docs/contracts/generation-result.v1.schema.json
+```
 
-### 2. Source Governance
+Contract invariants:
 
-Deck Master should surface PPT Library source readiness:
+- All contracts include `schema_version`.
+- Run-bound imports require matching `run_id`.
+- Page-bound imports preserve `beat_id` and `page_task_id` when available.
+- Artifacts that reference files use absolute paths.
+- Imports write an audit record before changing derived state.
+- Invalid import writes failure details to import log and leaves previous artifacts intact.
 
-- Whether a formal library source exists.
-- Whether high-risk directories are excluded.
-- Whether `/Users/dingcheng/Workspace/_resources/方案库` or the user-selected library path is covered.
-- Whether screenshots are available and absolute.
-- Whether profile readiness is sufficient for AI summary features.
+## PPT Library Foundation
 
-Deck Master should not silently index broad Home, Downloads, cache or recycle folders.
+### Readiness
 
-### 3. Sourcing Contract
+Deck Master validates:
 
-Deck Master should call PPT Library through a stable contract:
+- `ppt-library` skill soft link.
+- `ppt-lib` CLI availability.
+- `ppt-lib doctor --output json`.
+- Config path and database path readability.
+- Search index existence or explicit setup gap.
+- Source governance warnings for broad Home, Downloads, cache, recycle or dependency folders.
+- Screenshot path absolute readiness when available.
+
+Deck Master must not silently index broad or risky directories.
+
+### Query Contract
 
 Input:
 
 ```json
 {
+  "schema_version": "deck_master_ppt_library_query.v1",
   "run_id": "customer-run",
   "workspace": "/absolute/workspace",
+  "request_id": "req_001",
   "beats": [
     {
       "beat_id": "beat_03_solution_map",
+      "page_task_id": "page_03",
+      "slot_id": "main_page",
       "role": "solution_overview",
       "brief": "Need a page showing the target solution architecture.",
-      "industry": "pharma"
+      "industry": "pharma",
+      "audience": "CIO / business sponsor",
+      "evidence_need": ["architecture", "client_context"],
+      "visual_need": "solution map",
+      "reuse_modes_allowed": ["reuse", "adapt"],
+      "source_policy": {
+        "allow_confidential_sources": false,
+        "allowed_source_profiles": ["formal_library"],
+        "require_absolute_screenshot": true
+      }
     }
   ],
   "top_k": 5
 }
 ```
 
-Output must preserve `beat_id`:
+Output:
 
 ```json
 {
   "schema_version": "deck_master_ppt_library_selection.v1",
   "run_id": "customer-run",
+  "request_id": "req_001",
   "results": [
     {
       "beat_id": "beat_03_solution_map",
+      "page_task_id": "page_03",
+      "slot_id": "main_page",
+      "query_trace_id": "lib_query_001",
       "candidates": [
         {
+          "candidate_id": "cand_001",
           "slide_id": "slide_abc",
+          "canonical_slide_id": "canonical_xxx",
+          "source_deck_id": "deck_xxx",
           "source_file": "/absolute/path/to/source.pptx",
           "page_number": 12,
           "screenshot_path": "/absolute/path/to/screenshot.png",
+          "screenshot_sha256": "sha256...",
+          "title": "Solution architecture overview",
           "confidence": 0.82,
           "win_rate": 0.4,
-          "title": "Solution architecture overview",
-          "reuse_mode_recommendation": "adapt"
+          "reuse_mode_recommendation": "adapt",
+          "retrieval_reason": "Matches architecture overview and pharma context.",
+          "source_profile": "formal_library",
+          "confidentiality": "internal_reuse_allowed",
+          "risks": [],
+          "evidence_refs": []
         }
-      ]
+      ],
+      "warnings": []
     }
+  ],
+  "errors": []
+}
+```
+
+Deck Master stores:
+
+```text
+runs/<run_id>/external/ppt_library/library_results.json
+runs/<run_id>/imports/import_log.jsonl
+```
+
+Required preserved fields:
+
+```text
+run_id
+request_id
+beat_id
+page_task_id
+slot_id
+candidate_id
+canonical_slide_id
+source_deck_id
+screenshot_sha256
+source_profile
+query_trace_id
+```
+
+### Feedback Event Queue
+
+v0.9.12 does not default to real PPT Library writeback.
+
+Deck Master writes:
+
+```text
+runs/<run_id>/external/ppt_library/library_feedback_events.jsonl
+```
+
+Event schema:
+
+```json
+{
+  "schema_version": "deck_master_ppt_library_feedback_event.v1",
+  "run_id": "customer-run",
+  "event_id": "lib_feedback_001",
+  "candidate_id": "cand_001",
+  "canonical_slide_id": "canonical_xxx",
+  "page_task_id": "page_03",
+  "beat_id": "beat_03_solution_map",
+  "decision": "approved_for_adapt",
+  "deal_outcome": "unknown",
+  "dry_run_writeback_command": "ppt-lib record-usage ...",
+  "created_at": "2026-06-16T00:00:00Z"
+}
+```
+
+Real `record-usage` and `record-deal` writeback is a follow-up.
+
+## PPT Quality Gate Foundation
+
+### Scope
+
+v0.9.12 promotes PPT Quality Gate as docs-first companion skill and structured findings producer.
+
+Required output:
+
+```json
+{
+  "schema_version": "deck_master_quality_findings.v1",
+  "run_id": "customer-run",
+  "source": {
+    "skill": "ppt-quality-gate",
+    "skill_version": "0.9.12"
+  },
+  "stage": "draft_gate",
+  "artifact": {
+    "type": "pptx",
+    "path": "/absolute/path/to/deck.pptx",
+    "sha256": "sha256..."
+  },
+  "findings": [
+    {
+      "finding_id": "qg_001",
+      "gate_class": "external_semantic_alignment",
+      "severity": "blocking",
+      "page_number": 3,
+      "beat_id": "beat_03_solution_map",
+      "page_task_id": "page_03",
+      "title": "Solution architecture claim needs stronger evidence.",
+      "evidence": [],
+      "repair_instruction": "Add client-specific system boundary and supporting evidence.",
+      "import_action": "create_quality_finding"
+    }
+  ],
+  "summary": {
+    "blocking_count": 1,
+    "warning_count": 3,
+    "delivery_ready": false
+  }
+}
+```
+
+Quality finding classes should map into existing Deck Master external quality classes:
+
+```text
+external_semantic_alignment
+external_visual_readiness
+external_evidence_coverage
+external_client_readiness
+```
+
+Deck Master keeps final gate decision.
+
+## PPT Deck Pro Max Foundation
+
+### Generation Session State Machine
+
+Allowed states:
+
+```text
+created
+claimed_by_companion
+working
+result_submitted
+imported
+rejected
+expired
+cancelled
+```
+
+### Handoff Request
+
+```json
+{
+  "schema_version": "deck_master_generation_handoff.v1",
+  "run_id": "customer-run",
+  "session_id": "gen_sess_001",
+  "beat_id": "beat_03_solution_map",
+  "page_task_id": "page_03",
+  "route": "ppt-deck-pro-max",
+  "mode": "adapt",
+  "inputs": {
+    "brief_path": "/absolute/run/deck_brief.json",
+    "page_task_path": "/absolute/run/page_tasks/page_03.json",
+    "library_candidate_path": "/absolute/run/external/ppt_library/candidate_cand_001.json"
+  },
+  "expected_outputs": [
+    "page_copy",
+    "visual_spec",
+    "render_task",
+    "qa_notes"
   ]
 }
 ```
 
-Deck Master should store this as `library_results.json` and convert it into `sourcing_plan.json`.
+### Handoff Result
 
-### 4. Feedback Writeback
+```json
+{
+  "schema_version": "ppt_deck_pro_max_generation_result.v1",
+  "run_id": "customer-run",
+  "session_id": "gen_sess_001",
+  "beat_id": "beat_03_solution_map",
+  "page_task_id": "page_03",
+  "status": "result_submitted",
+  "outputs": {
+    "page_copy_path": "/absolute/path/page_copy.md",
+    "visual_spec_path": "/absolute/path/visual_spec.json",
+    "render_task_path": "/absolute/path/render_task.json",
+    "qa_notes_path": "/absolute/path/qa_notes.md"
+  },
+  "warnings": []
+}
+```
 
-Deck Master should write back:
-
-- Page approved for reuse.
-- Page adapted and delivered.
-- Page rejected.
-- Final deal outcome when known.
-
-Suggested mapping:
-
-| Deck Master event | PPT Library writeback |
-|---|---|
-| page source approved | `record-usage` |
-| page source rejected | `record-usage` with negative outcome when supported |
-| deck delivered | `record-deal` pending or delivered |
-| deal won/lost | `record-deal` final outcome |
+v0.9.12 only requires dry-run handoff generation and import validation.
 
 ## Proposed Public Interfaces
 
 ### New Or Updated CLI
 
 ```bash
+deck-master setup-status --include-suite --output json
 deck-master suite-status [--target codex] [--target claude-code] [--output json]
 deck-master suite-install [--target codex] [--target claude-code] [--include-optional]
 deck-master suite-repair [--target codex] [--target claude-code]
-deck-master setup-status --include-suite
 deck-master install-skill --suite --target codex --target claude-code
 deck-master library-status [--workspace <path>] [--output json]
-deck-master library-search --run-id <run_id> --beat-id <beat_id> --query <text>
+deck-master library-search --run-id <run_id> --beat-id <beat_id> --query <text> --dry-run
 deck-master import-library-selection --run-id <run_id> --input <selection.json>
-deck-master record-library-feedback --run-id <run_id> [--outcome <value>]
+deck-master record-library-feedback --run-id <run_id> --dry-run
+deck-master import-quality-findings --run-id <run_id> --input <findings.json>
+deck-master generation-session handoff --run-id <run_id> --page-task-id <id> --route ppt-deck-pro-max --dry-run
+deck-master generation-session import-result --run-id <run_id> --input <result.json>
 ```
 
-### Updated Skill Docs
+## Skill Docs Updates
 
-Update Deck Master skill:
+Deck Master skill:
 
 - Add `First-Run Setup Protocol`.
-- Add `Skill Suite Routing`.
-- Add `Companion Skill Matrix`.
-- Add `PPT Library Coverage`.
-- Add rule: do not output bare setup commands when Agent can perform the setup after user confirms workspace.
+- Add `Skill Suite Runtime Routing`.
+- Add `Companion Capability Matrix`.
+- Add `PPT Library Foundation`.
+- Add rule: setup-status with suite first, then setup ceremony, then run mutation.
+- Add rule: companion output affects run state only after import.
 
-Update PPT Library skill:
+PPT Library skill:
 
-- Add "Used standalone vs used by Deck Master" section.
-- Add JSON contract requirement for Deck Master selection.
-- Add `beat_id` preservation rule.
+- Add standalone vs Deck Master usage section.
+- Add Deck Master query and selection contract.
+- Add preserved field list.
 
-Promote PPT Quality Gate draft:
+PPT Quality Gate skill:
 
-- Move into Deck Master release skill tree.
+- Promote from draft into release skill tree.
 - Keep independent skill name `ppt-quality-gate`.
-- Add structured finding output compatible with Deck Master import.
+- Add structured findings schema and Deck Master import notes.
 
-Update PPT Deck Pro Max skill:
+PPT Deck Pro Max skill:
 
-- Add "Used standalone vs used by Deck Master generation session" section.
-- Add handoff result format expected by Deck Master.
+- Add standalone vs Deck Master generation session section.
+- Add handoff request/result shape.
 
 ## Implementation Plan
 
-### Phase 1: Spec And Skill Inventory
+### Phase 0: Contract Freeze And Non-Mutation Guard
 
-- Add this spec.
-- Add companion skill inventory document if needed.
-- Decide whether `ppt-master` is bundled or optional external.
-- Decide whether PPT Library source code is vendored into Deck Master release or referenced from installed external package.
+Deliver:
 
-Deliverable:
-
-- Approved v0.9.12 spec.
-
-### Phase 2: Suite Install Foundation
-
-- Add companion manifest schema.
-- Add `suite-status`.
-- Add `suite-install`.
-- Extend `install-skill` to support suite install.
-- Ensure Codex and Claude skill dirs use only soft links.
-- Preserve independent install for each companion skill.
+```text
+docs/specs/deck-master-v0.9.12-skill-suite-routing-spec.md
+docs/contracts/companion-manifest.v2.schema.json
+docs/contracts/setup-status.v2.schema.json
+docs/contracts/ppt-library-query.v1.schema.json
+docs/contracts/ppt-library-selection.v1.schema.json
+docs/contracts/ppt-library-feedback-event.v1.schema.json
+docs/contracts/quality-findings.v1.schema.json
+docs/contracts/generation-handoff.v1.schema.json
+docs/contracts/generation-result.v1.schema.json
+```
 
 Tests:
 
-- Suite install creates required links.
-- Re-running suite install is idempotent.
-- Existing valid external companion skill can be adopted or reported clearly.
-- Real directories are not overwritten.
+- `setup-status --include-suite` is non-mutating.
+- `suite-status` is non-mutating.
+- setup not production-ready prevents production run mutation.
+- Invalid imports preserve previous artifacts.
 
-### Phase 3: First-Run Skill Guidance
+### Phase 1: Suite Status And Install Foundation
+
+- Add companion manifest loader and validator.
+- Add `suite-status`.
+- Add `suite-install`.
+- Add `suite-repair`.
+- Extend `install-skill --suite`.
+- Support Codex and Claude Code soft links.
+- Report task-level capability readiness.
+
+Tests:
+
+- Idempotent suite install.
+- Wrong symlink.
+- Real directory conflict.
+- External adoptable symlink.
+- External version mismatch.
+- Permission denied.
+- Missing CLI.
+- Doctor failed.
+- Healthy suite.
+
+### Phase 2: First-Run Skill Guidance
 
 - Update `skills/deck-master/SKILL.md`.
-- Update `references/agent-instructions.md`.
-- Add first-run setup ceremony to playbook.
-- Change install output to include setup and suite next agent action.
+- Update `skills/deck-master/references/agent-instructions.md`.
+- Add setup-first ceremony to production playbook.
+- Ensure install output includes `suite_status`, `setup_status`, `next_agent_action`.
 
 Tests:
 
 - Skill docs contain required routing sections.
-- Install output includes `suite_status`, `setup_status`, `next_agent_action`.
+- Install output includes next Agent action.
+- User-facing command examples start with non-mutating status.
 
-### Phase 4: PPT Library Coverage
+### Phase 3: PPT Library Read-Only Adapter
 
 - Add `library-status`.
-- Add PPT Library adapter readiness checks.
-- Preserve `beat_id` in Deck Master library result imports.
-- Store `library_results.json`.
-- Convert selected candidates into `sourcing_plan.json`.
-- Add feedback writeback wrapper.
+- Add `library-search --dry-run`.
+- Add `import-library-selection`.
+- Store `external/ppt_library/library_results.json`.
+- Store `external/ppt_library/library_feedback_events.jsonl`.
+- Add `record-library-feedback --dry-run`.
 
 Tests:
 
-- Missing `ppt-lib` reports blocked library status.
-- Library search result with `beat_id` maps to correct page task.
-- Multiple same-role beats do not lose mapping.
-- Approved/rejected source decisions produce writeback calls in dry-run test mode.
+- Missing `ppt-lib` blocks library sourcing only.
+- Multiple same-role beats preserve mapping.
+- `beat_id`, `page_task_id`, `candidate_id`, `query_trace_id` survive import.
+- Bad JSON import leaves old results intact.
+- Feedback dry-run writes event queue only.
 
-### Phase 5: PPT Quality Gate Promotion
+### Phase 4: PPT Quality Gate Promotion Light
 
-- Move draft `ppt-quality-gate` into release skill tree.
-- Add structured result schema.
-- Add Deck Master import for quality gate findings if missing.
-- Link Draft Gate, Render Gate and Delivery Gate to Deck Master quality stages.
-
-Tests:
-
-- Skill package passes skill-creator format checks.
-- Standalone audit docs load correctly.
-- Deck Master can import structured findings.
-
-### Phase 6: PPT Deck Pro Max Suite Integration
-
-- Move or mirror `ppt-deck-pro-max` into Deck Master suite release tree.
-- Add generation session route to companion skill.
-- Ensure generation results import back to Deck Master.
-- Keep standalone skill usage intact.
+- Promote docs-first skill package.
+- Add `quality-findings.v1` schema.
+- Add `import-quality-findings`.
+- Map findings to existing external gate classes.
 
 Tests:
 
-- Suite install links PPT Deck Pro Max.
-- Deck Master generation session reports companion availability.
-- Dry-run generation produces a Deck Master-tracked handoff.
+- Skill package passes format checks.
+- Structured findings import writes import log.
+- Run-id mismatch is rejected.
+- Existing quality engine remains owner of final status.
 
-### Phase 7: QA And Release
+### Phase 5: PPT Deck Pro Max Dry-Run Route
+
+- Add generation handoff schema.
+- Add result schema.
+- Add generation session state transitions for dry-run route.
+- Import result into Deck Master run state.
+
+Tests:
+
+- Dry-run handoff creates expected request.
+- Result import requires matching `run_id` and `session_id`.
+- Rejected import preserves prior state.
+- Session status moves through expected state sequence.
+
+### Phase 6: QA And Release
 
 - Full unit tests.
-- Skill package validation.
-- Local install and reinstall.
-- Suite setup smoke on temporary HOME.
-- Real-machine status check without mutating user workspace.
+- Temporary HOME suite smoke.
+- Local reinstall smoke.
 - Review Cockpit setup banner check.
+- Real-machine suite status check without modifying user workspace.
 
 ## Acceptance Criteria
 
 Product acceptance:
 
-- A user installing Deck Master gets a complete skill suite, or a precise report of missing optional companions.
-- A user naming Deck Master sees an Agent-led setup path before production work.
-- A user can still name PPT Library, PPT Deck Pro Max or PPT Quality Gate directly for standalone work.
-- Deck Master knows when to route to PPT Library, PPT Deck Pro Max, PPT Quality Gate and PPT Master.
-- PPT Library selection keeps page/beat mapping stable.
-- Deck Master approval and delivery decisions can feed back to PPT Library.
+- User installing Deck Master gets a clear suite status and task-level capability status.
+- User naming Deck Master is routed through non-mutating readiness check before production mutation.
+- User can still use PPT Library, PPT Deck Pro Max or PPT Quality Gate directly.
+- Active Deck Master run only accepts companion output through import.
+- PPT Library selection preserves enough IDs for later page replacement, evidence and feedback.
+- PPT Quality Gate can produce structured findings that Deck Master imports.
+- PPT Deck Pro Max can receive dry-run handoff and return importable result.
 
 Engineering acceptance:
 
-- `suite-status` reports companion skill, CLI and readiness status.
+- `setup-status --include-suite` reports install/workspace/production/suite/capability status.
+- `suite-status` is non-mutating.
 - `suite-install` is idempotent.
 - Codex and Claude skill links point into `~/.deck-master/current/skills`.
-- No development repo path is used as the installed skill source.
-- `setup-status --include-suite` exposes suite gaps.
-- All existing v0.9.11 production guards remain active.
-- Tests cover missing companion skill, wrong symlink, missing CLI, and healthy suite.
+- No development repo path is used as installed skill source.
+- Full suite missing does not block read-only Deck Master status.
+- Task-required missing capability blocks only that task route.
+- All v0.9.11 production guards remain active.
+- Tests cover wrong symlink, real dir conflict, missing CLI, doctor failed, external adoption and healthy suite.
 
-## Risks And Open Questions
+## Packaging Decisions
 
-1. PPT Library packaging source:
-   - Option A: bundle only the skill docs and call external `ppt-lib`.
-   - Option B: bundle a pinned PPT Library release inside Deck Master.
-   - Recommendation: start with Option A for v0.9.12, because PPT Library already has its own repo, package and database lifecycle.
+Recommended v0.9.12 packaging:
 
-2. PPT Deck Pro Max packaging:
-   - It currently exists as a large independent skill directory.
-   - Need decide whether Deck Master release copies it, vendors a trimmed skill package, or points to an installed external release.
-   - Recommendation: bundle a curated skill package under Deck Master release, keep source repo independent.
-
-3. PPT Quality Gate promotion:
-   - Draft skill appears close to formal skill shape.
-   - Need add scripts or remove script references if those scripts are not bundled.
-   - Recommendation: promote docs first, add scripts only when available.
-
-4. PPT Master optionality:
-   - Users may have different renderer choices.
-   - Recommendation: keep PPT Master optional in suite readiness, but require result import before Deck Master delivery.
-
-5. Naming:
-   - Deck Master is the suite owner.
-   - Companion skills keep their public names to preserve standalone use.
+| Companion | Packaging | Reason |
+|---|---|---|
+| `ppt-library` | Bundle curated skill docs; call external `ppt-lib` CLI | It has its own repo, package and database lifecycle |
+| `ppt-deck-pro-max` | Bundle curated skill package; keep source repo independent | It is primarily an Agent-facing production skill |
+| `ppt-quality-gate` | Bundle docs-first promoted skill package | Draft is close to skill shape; scripts must exist or references must be removed |
+| `ppt-master` | Optional external | Renderer choice can vary by user and project |
 
 ## Out Of Scope
 
 - Rewriting PPT Library indexing internals.
-- Rewriting PPT Deck Pro Max production algorithm.
-- Building a remote package manager.
-- Adding LLM provider calls into Deck Master.
-- Changing PPT Master rendering internals.
+- Silent broad source indexing.
+- Real PPT Library feedback writeback by default.
+- Deep PPT Deck Pro Max production execution.
+- Rewriting Deck Master quality gate engine.
+- Deep PPT Master renderer integration.
+- Remote package manager.
+- Built-in LLM provider calls.
 - Multi-user hosted Deck Master deployment.
 
 ## Review Checklist
 
-- Does the suite model match the intended user experience?
-- Should PPT Library be required or optional for Deck Master install?
-- Should PPT Master be optional or required?
-- Should PPT Quality Gate ship in v0.9.12 or wait for a separate release?
-- Should Deck Master bundle companion skill docs only, or copy full companion repos?
-- Is `beat_id` preservation sufficient for PPT Library integration?
-- Is feedback writeback required in v0.9.12, or can it be a follow-up?
+- Does the foundation scope look small enough for a single PR?
+- Are `setup-status` and `suite-status` clearly non-mutating?
+- Is task-level capability readiness sufficient for real routing?
+- Should PPT Library feedback stay dry-run until v0.9.13?
+- Are the preserved PPT Library fields enough for Asset Intelligence?
+- Are Quality Gate findings mapped to the correct external gate classes?
+- Is PPT Deck Pro Max dry-run handoff enough for v0.9.12?
+- Are companion packaging decisions acceptable?
