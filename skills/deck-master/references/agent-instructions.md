@@ -23,8 +23,8 @@ the work as complete.
 
 1. Confirm the skill is installed:
    ```bash
-   ~/.deck-master/bin/deck-master setup-status
-   ~/.deck-master/bin/deck-master validate-skill --target codex
+   ~/.deck-master/bin/deck-master setup-status --include-suite --output json
+   ~/.deck-master/bin/deck-master suite-status --target codex --output json
    ```
 
 2. If setup is not ready, run first-run setup:
@@ -34,6 +34,9 @@ the work as complete.
      --repair-workspace \
      --target codex
    ```
+
+   If the workspace is unknown, ask the user for the active workspace first.
+   Do not create a production run until setup is ready.
 
 3. Check workspace health:
    ```bash

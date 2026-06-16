@@ -12,7 +12,10 @@ from unittest import mock
 from scripts.skills.installer import (
     SKILL_NAME,
     SkillInstallError,
+    inspect_skill_link,
+    inspect_suite_status,
     install_skill,
+    suite_install,
     uninstall_skill,
     validate_skill,
 )
@@ -131,6 +134,16 @@ class SkillInstallationTest(unittest.TestCase):
         self.assertTrue(result["valid"])
         self.assertTrue(result["skill_md_exists"])
 
+    def test_inspect_skill_link_is_non_mutating(self) -> None:
+        install_skill("codex", str(self.agent_dir), source_skill_dir=str(self.source_dir))
+        log_path = Path(self._tmp) / ".deck-master" / "install_log.jsonl"
+        before = log_path.read_text(encoding="utf-8")
+
+        result = inspect_skill_link("codex", str(self.agent_dir), source_skill_dir=str(self.source_dir))
+
+        self.assertTrue(result["valid"])
+        self.assertEqual(before, log_path.read_text(encoding="utf-8"))
+
     def test_validate_not_installed(self) -> None:
         result = validate_skill("codex", str(self.agent_dir), source_skill_dir=str(self.source_dir))
         self.assertFalse(result["valid"])
@@ -151,6 +164,24 @@ class SkillInstallationTest(unittest.TestCase):
         result = validate_skill("bad-agent", str(self.agent_dir))
         self.assertFalse(result["valid"])
         self.assertIn("Unsupported", result["error"])
+
+    def test_suite_status_reports_missing_companions_without_writing_log(self) -> None:
+        install_skill("codex", str(self.agent_dir), source_skill_dir=str(self.source_dir))
+        log_path = Path(self._tmp) / ".deck-master" / "install_log.jsonl"
+        before = log_path.read_text(encoding="utf-8")
+
+        result = inspect_suite_status(targets=["codex"], agent_skill_dir=str(self.agent_dir))
+
+        self.assertEqual("degraded_ready", result["status"])
+        self.assertEqual("blocked", result["task_readiness"]["library_sourcing"])
+        self.assertEqual(before, log_path.read_text(encoding="utf-8"))
+
+    def test_suite_install_installs_available_required_skill_and_reports_missing_companions(self) -> None:
+        result = suite_install(targets=["codex"], include_optional=False, agent_skill_dir=str(self.agent_dir))
+
+        self.assertIn(result["status"], {"degraded_installed", "installed"})
+        deck = [item for item in result["results"] if item["skill"] == "deck-master"]
+        self.assertTrue(deck)
 
     # ------------------------------------------------------------------ #
     # uninstall_skill

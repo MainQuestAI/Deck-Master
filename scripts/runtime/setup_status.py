@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from skills.installer import validate_skill
+from skills.installer import inspect_skill_link, inspect_suite_status, write_companion_manifest
 from workspace.foundation import repair_workspace, validate_workspace
 
 
@@ -195,6 +195,7 @@ def run_setup(
         "agent_targets": agent_targets,
     }
     _write_config(config)
+    write_companion_manifest()
     status = setup_status(workspace=str(active_workspace) if active_workspace else None, write_event=False)
     _append_setup_event("setup.completed", status=status["status"], data={"config": config, "status": status})
     return {"status": "setup_completed", "config": config, "setup_status": status}
@@ -204,7 +205,8 @@ def setup_status(
     *,
     workspace: str | None = None,
     run_mode: str | None = None,
-    write_event: bool = True,
+    write_event: bool = False,
+    include_suite: bool = False,
 ) -> dict[str, Any]:
     cfg = _read_config()
     missing: list[str] = []
@@ -248,7 +250,7 @@ def setup_status(
                 repairs.extend(workspace_report.get("missing_items", []))
 
         for target in cfg.get("agent_targets") or []:
-            agent_status[str(target)] = validate_skill(str(target))
+            agent_status[str(target)] = inspect_skill_link(str(target), skill_name="deck-master")
             if not agent_status[str(target)].get("valid"):
                 missing.append(f"agent_target:{target}")
 
@@ -284,6 +286,7 @@ def setup_status(
         "dev_mode_allowed": _run_mode_allows_setup_skip("dev", dev_allow_unsetup=False),
         "fixture_mode_allowed": _run_mode_allows_setup_skip("fixture", dev_allow_unsetup=False),
         "next_command": "",
+        "next_agent_action": "",
     }
 
     if status_value == "needs_workspace":
@@ -298,6 +301,25 @@ def setup_status(
     elif status_value == "ready" and not readiness["status"]["workspace_ready"] and _run_mode_requires_workspace(normalized_mode):
         setup_workspace = workspace_path or "<path>"
         result["next_command"] = f"deck-master setup --workspace {setup_workspace} --repair-workspace --target codex"
+
+    if result["next_command"]:
+        result["next_agent_action"] = "Run the next command to complete Deck Master setup."
+    else:
+        result["next_agent_action"] = "Deck Master setup is ready."
+
+    if include_suite:
+        targets = []
+        if isinstance(cfg, dict) and not cfg.get("_invalid"):
+            targets = [str(target) for target in (cfg.get("agent_targets") or [])]
+        suite = inspect_suite_status(targets=targets or ["codex"], include_optional=True)
+        result["suite"] = suite
+        result["full_suite_ready"] = suite["full_suite_ready"]
+        result["capabilities"] = suite["capabilities"]
+        result["task_readiness"] = suite["task_readiness"]
+        if suite.get("next_agent_action") and suite.get("status") != "ready":
+            result["next_agent_action"] = str(suite["next_agent_action"])
+        if not result["next_command"] and suite.get("next_command"):
+            result["next_command"] = str(suite["next_command"])
 
     if write_event:
         _append_setup_event("setup.status.checked", status=status_value, data=result)

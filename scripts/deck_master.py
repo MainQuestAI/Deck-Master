@@ -87,7 +87,15 @@ from delivery.outcome import record_delivery_outcome
 from team.opportunity import create_opportunity, attach_run
 from team.approval import submit_approval, approve, reject
 from connectors.import_contract import validate_import_manifest, import_to_context_manifest
-from skills.installer import SkillInstallError, install_skill, validate_skill, uninstall_skill
+from skills.installer import (
+    SkillInstallError,
+    install_skill,
+    inspect_suite_status,
+    suite_install,
+    suite_repair,
+    validate_skill,
+    uninstall_skill,
+)
 from runtime.run_state import (
     CLAIM_MAP_NAME,
     CONTEXT_MANIFEST_NAME,
@@ -879,6 +887,7 @@ def command_setup_status(args: argparse.Namespace) -> dict[str, Any]:
     return setup_status(
         workspace=_resolve_workspace_for_setup_status(args),
         run_mode=_normalize_run_mode(getattr(args, "run_mode", None)),
+        include_suite=bool(getattr(args, "include_suite", False)),
     )
 
 
@@ -944,11 +953,40 @@ def command_doctor(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def command_install_skill(args: argparse.Namespace) -> dict[str, Any]:
+    if bool(getattr(args, "suite", False)):
+        return suite_install(
+            targets=getattr(args, "target", None),
+            include_optional=bool(getattr(args, "include_optional", False)),
+        )
+    target = getattr(args, "target", None)
+    if isinstance(target, list):
+        target = target[-1] if target else None
     return install_skill(
-        target=args.target,
+        target=target,
         agent_skill_dir=getattr(args, "agent_skill_dir", None),
         force=getattr(args, "force", False),
         source_skill_dir=getattr(args, "source_skill_dir", None),
+    )
+
+
+def command_suite_status(args: argparse.Namespace) -> dict[str, Any]:
+    return inspect_suite_status(
+        targets=getattr(args, "target", None),
+        include_optional=True,
+    )
+
+
+def command_suite_install(args: argparse.Namespace) -> dict[str, Any]:
+    return suite_install(
+        targets=getattr(args, "target", None),
+        include_optional=bool(getattr(args, "include_optional", False)),
+    )
+
+
+def command_suite_repair(args: argparse.Namespace) -> dict[str, Any]:
+    return suite_repair(
+        targets=getattr(args, "target", None),
+        include_optional=bool(getattr(args, "include_optional", False)),
     )
 
 
@@ -1458,7 +1496,24 @@ def build_parser() -> argparse.ArgumentParser:
     p_setup_status.add_argument("--workspace", default=None)
     p_setup_status.add_argument("--run-dir", default=None)
     p_setup_status.add_argument("--run-mode", choices=["production", "fixture", "dev", "benchmark"], default="production")
+    p_setup_status.add_argument("--include-suite", action="store_true", help="Include Deck Master suite readiness")
+    p_setup_status.add_argument("--output", choices=["json"], default="json")
     p_setup_status.set_defaults(func=command_setup_status)
+
+    p_suite_status = sub.add_parser("suite-status", help="Inspect Deck Master suite readiness without writing files")
+    p_suite_status.add_argument("--target", action="append", default=[], choices=["codex", "claude-code", "hermes"])
+    p_suite_status.add_argument("--output", choices=["json"], default="json")
+    p_suite_status.set_defaults(func=command_suite_status)
+
+    p_suite_install = sub.add_parser("suite-install", help="Install Deck Master suite skill links")
+    p_suite_install.add_argument("--target", action="append", default=[], choices=["codex", "claude-code", "hermes"])
+    p_suite_install.add_argument("--include-optional", action="store_true")
+    p_suite_install.set_defaults(func=command_suite_install)
+
+    p_suite_repair = sub.add_parser("suite-repair", help="Repair Deck Master suite symlinks without overwriting real directories")
+    p_suite_repair.add_argument("--target", action="append", default=[], choices=["codex", "claude-code", "hermes"])
+    p_suite_repair.add_argument("--include-optional", action="store_true")
+    p_suite_repair.set_defaults(func=command_suite_repair)
 
     p_doctor = sub.add_parser("doctor", help="Show setup and run state diagnostics")
     p_doctor.add_argument("--workspace", default="")
@@ -1670,10 +1725,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     # ---- skill management ----
     p_install = sub.add_parser("install-skill", help="Install Deck Master skill into an Agent skill directory")
-    p_install.add_argument("--target", required=True, choices=["codex", "claude-code", "hermes", "custom"])
+    p_install.add_argument("--target", action="append", required=True, choices=["codex", "claude-code", "hermes", "custom"])
     p_install.add_argument("--agent-skill-dir", default=None, help="Agent skill directory (required for custom target)")
     p_install.add_argument("--source-skill-dir", default=None, help="Deck Master skill source directory (defaults to ~/.deck-master/current/skills/deck-master)")
     p_install.add_argument("--force", action="store_true", help="Replace existing symlink")
+    p_install.add_argument("--suite", action="store_true", help="Install suite skill links")
+    p_install.add_argument("--include-optional", action="store_true", help="Include optional companion skills when using --suite")
     p_install.set_defaults(func=command_install_skill)
 
     p_validate_skill = sub.add_parser("validate-skill", help="Validate Deck Master skill symlink")

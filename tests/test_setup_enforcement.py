@@ -68,6 +68,21 @@ class SetupEnforcementTests(unittest.TestCase):
         self.assertEqual("blocked", payload["status"])
         self.assertIn("deck-master setup", payload["next_command"])
 
+    def test_setup_status_include_suite_is_non_mutating_without_setup(self) -> None:
+        completed = self.run_cli("setup-status", "--include-suite", "--output", "json")
+        payload = json.loads(completed.stdout)
+
+        self.assertEqual("blocked", payload["status"])
+        self.assertIn("suite", payload)
+        self.assertFalse((self.home / ".deck-master").exists())
+
+    def test_suite_status_is_non_mutating_without_setup(self) -> None:
+        completed = self.run_cli("suite-status", "--output", "json")
+        payload = json.loads(completed.stdout)
+
+        self.assertIn(payload["status"], {"blocked", "degraded_ready"})
+        self.assertFalse((self.home / ".deck-master").exists())
+
     def test_setup_repair_workspace_and_status_ready(self) -> None:
         self._install_fake_skill()
         workspace = self.temp_dir / "workspace"

@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mainquest.ai/deck-master/contracts/companion-manifest.v2.schema.json",
+  "title": "Deck Master Companion Manifest v2",
+  "type": "object",
+  "required": ["schema_version", "suite_name", "suite_version", "skills"],
+  "properties": {
+    "schema_version": {
+      "const": "deck_master_companion_manifest.v2"
+    },
+    "suite_name": {
+      "const": "deck-master"
+    },
+    "suite_version": {
+      "type": "string"
+    },
+    "skills": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "required_for", "install_source", "cli", "required_capabilities", "agent_targets"],
+        "properties": {
+          "name": {"type": "string"},
+          "required_for": {"type": "array", "items": {"type": "string"}},
+          "install_source": {"type": "string"},
+          "source_path": {"type": "string"},
+          "min_cli_version": {"type": "string"},
+          "cli": {"type": "string"},
+          "required_capabilities": {"type": "array", "items": {"type": "string"}},
+          "optional_capabilities": {"type": "array", "items": {"type": "string"}},
+          "schema_versions": {"type": "object"},
+          "agent_targets": {"type": "object"},
+          "adoption_policy": {"type": "string"},
+          "conflict_policy": {"type": "string"}
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

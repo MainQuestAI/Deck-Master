@@ -38,18 +38,18 @@ http://127.0.0.1:5050
 Run these in order before operating on a real deck workflow:
 
 ```bash
+~/.deck-master/bin/deck-master setup-status --include-suite --output json
+~/.deck-master/bin/deck-master suite-status --output json
 ~/.deck-master/bin/deck-master start
-~/.deck-master/bin/deck-master setup-status
-~/.deck-master/bin/deck-master doctor
 ~/.deck-master/bin/deck-master start --run-id <run_id>
 ```
 
 For setup tasks and repair, use:
 
 ```bash
-~/.deck-master/bin/deck-master setup-status
+~/.deck-master/bin/deck-master setup-status --include-suite --output json
 ~/.deck-master/bin/deck-master --help
-~/.deck-master/bin/deck-master validate-skill --target codex
+~/.deck-master/bin/deck-master suite-status --target codex --output json
 curl -sf http://127.0.0.1:5050/api/runs
 ```
 
@@ -62,6 +62,10 @@ Deck run:
   --repair-workspace \
   --target codex
 ```
+
+Do not stop at showing the setup command when you can run it safely. Ask the
+user for the active workspace if it is missing, run setup after confirmation,
+then verify setup and suite readiness again before creating a production run.
 
 ## Core Production Flow
 

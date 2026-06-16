@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mainquest.ai/deck-master/contracts/setup-status.v2.schema.json",
+  "title": "Deck Master Setup Status v2",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "status",
+    "install_ready",
+    "workspace_ready",
+    "production_ready",
+    "next_command",
+    "next_agent_action"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "deck_master_setup_status.v2"
+    },
+    "status": {
+      "type": "string"
+    },
+    "config_path": {
+      "type": "string"
+    },
+    "missing_items": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "repair_items": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "warnings": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "install_ready": {"type": "boolean"},
+    "workspace_ready": {"type": "boolean"},
+    "run_ready": {"type": "boolean"},
+    "production_ready": {"type": "boolean"},
+    "full_suite_ready": {"type": "boolean"},
+    "capabilities": {"type": "object"},
+    "task_readiness": {"type": "object"},
+    "suite": {"type": "object"},
+    "next_command": {"type": "string"},
+    "next_agent_action": {"type": "string"}
+  },
+  "additionalProperties": true
+}
