@@ -103,13 +103,23 @@ async function loadRuns() {
 }
 
 async function loadDeck() {
+  if (!state.currentRunId) {
+    renderRunWithoutPreview(null, "Create or select a run.");
+    clearRunState();
+    return;
+  }
+  await loadRunState();
+  const currentRun = currentRunSummary();
+  if (currentRun && Number(currentRun.pages || 0) === 0) {
+    renderRunWithoutPreview(currentRun, state.runState && state.runState.next_command ? `Next: ${state.runState.next_command}` : "Preview is not ready yet.");
+    return;
+  }
   try {
     state.deck = await requestJson(`/api/deck${runQuery()}`);
     els.title.textContent = state.deck.title;
     els.meta.textContent = `${state.deck.run_id} · ${state.deck.status} · ${state.deck.pages.length} pages${qualitySummaryText(state.deck.quality)}`;
     renderList();
     selectPage(0);
-    await loadRunState();
     loadNarrative();
     loadAssetSignals();
     loadGovernance();
@@ -131,6 +141,36 @@ async function loadDeck() {
     renderGovernance();
     renderCockpitData();
   }
+}
+
+function currentRunSummary() {
+  return state.runs.find((run) => run.run_id === state.currentRunId) || null;
+}
+
+function renderRunWithoutPreview(run, message) {
+  state.deck = null;
+  state.narrative = null;
+  state.assetSignals = null;
+  state.governance = null;
+  clearCockpitData();
+  els.title.textContent = run ? (run.title || run.run_id) : "Studio";
+  els.meta.textContent = run
+    ? `${run.run_id} · ${run.status || "request_ready"} · ${run.pages || 0} pages`
+    : "Create or select a run.";
+  els.list.innerHTML = "";
+  els.label.textContent = "No page selected";
+  els.pageTitle.textContent = run ? "Preview not ready" : "No page selected";
+  els.details.innerHTML = "";
+  els.notes.value = "";
+  els.saveStatus.textContent = "";
+  if (els.pageActionStatus) {
+    els.pageActionStatus.textContent = "";
+  }
+  els.frame.innerHTML = `<div class="empty">${escapeHtml(message || "Preview is not ready yet.")}</div>`;
+  renderNarrative();
+  renderAssetSignals();
+  renderGovernance();
+  renderCockpitData();
 }
 
 function clearRunState() {
@@ -403,7 +443,9 @@ async function createRun(event) {
     });
     state.currentRunId = payload.run_id;
     updateLocation();
-    els.createStatus.textContent = `Draft ready: ${payload.pages} pages`;
+    els.createStatus.textContent = payload.pages != null
+      ? `Draft ready: ${payload.pages} pages`
+      : `Run created: ${payload.status || "request_ready"}`;
     await loadRuns();
     await loadDeck();
   } catch (error) {

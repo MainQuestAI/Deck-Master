@@ -378,6 +378,33 @@ class StudioServerTests(unittest.TestCase):
         self.assertFalse((Path(created["run_dir"]) / "preview_manifest.json").exists())
         self.assertFalse((Path(created["run_dir"]) / "narrative_plan.json").exists())
 
+    def test_production_run_state_uses_setup_runs_dir_across_handler_instances(self) -> None:
+        self._write_ready_setup()
+
+        status, created = self.handler.request(
+            "POST",
+            "/api/runs",
+            {
+                "brief": "真实 HTTP handler 生命周期",
+                "industry": "retail",
+                "target_pages": "auto",
+                "run_id": "ready-run-http",
+            },
+        )
+        self.assertEqual(HTTPStatus.CREATED, status)
+
+        next_handler = MockHandler(run_dir=None, runs_dir=self.runs_dir)
+        next_handler.use_setup_runs_dir = True
+        run_state_status, run_state = next_handler.request("GET", "/api/run-state/ready-run-http")
+        self.assertEqual(HTTPStatus.OK, run_state_status)
+        self.assertEqual("ready-run-http", run_state["run_id"])
+        self.assertEqual(created["run_dir"], run_state["run_dir"])
+
+        runs_status, runs = next_handler.request("GET", "/api/runs")
+        self.assertEqual(HTTPStatus.OK, runs_status)
+        self.assertEqual(str((self.runs_dir / "from_setup").resolve()), runs["runs_dir"])
+        self.assertIn("ready-run-http", [run["run_id"] for run in runs["runs"]])
+
     def test_classic_demo_sets_fixture_mode(self) -> None:
         status, created = self.handler.request(
             "POST",

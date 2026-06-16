@@ -26,7 +26,7 @@ if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
 
 from runtime.events import append_typed_event
-from runtime.setup_status import configured_runs_dir, setup_status
+from runtime.setup_status import configured_runs_dir, read_setup_config, setup_status
 from runtime.orchestration import orchestration_check
 from runtime.next_step import resolve_next_step
 from runtime.run_state_resolver import resolve_run_state
@@ -137,9 +137,18 @@ class PreviewHandler(BaseHTTPRequestHandler):
     run_dir: Path | None = None
     runs_dir: Path
     library_mode: str = "fixture"
+    use_setup_runs_dir: bool = False
 
     def log_message(self, format: str, *args: object) -> None:
         print(f"{self.address_string()} - {format % args}")
+
+    def studio_runs_dir(self) -> Path:
+        if self.run_dir is not None or not self.use_setup_runs_dir:
+            return self.runs_dir
+        config = read_setup_config()
+        if isinstance(config, dict) and not config.get("_invalid") and config.get("default_runs_dir"):
+            return Path(str(config["default_runs_dir"])).expanduser().resolve()
+        return self.runs_dir
 
     def do_GET(self) -> None:
         parsed = urlparse(self.path)
@@ -234,8 +243,9 @@ class PreviewHandler(BaseHTTPRequestHandler):
         run_id = (params.get("run_id") or params.get("run") or [""])[0].strip()
         if not run_id:
             raise ManifestError("run_id is required in studio mode.")
-        candidate = (self.runs_dir / run_id).resolve()
-        root_text = str(self.runs_dir.resolve())
+        runs_dir = self.studio_runs_dir()
+        candidate = (runs_dir / run_id).resolve()
+        root_text = str(runs_dir.resolve())
         candidate_text = str(candidate)
         if candidate_text != root_text and not candidate_text.startswith(root_text + "/"):
             raise ManifestError("Invalid run_id.")
@@ -267,13 +277,14 @@ class PreviewHandler(BaseHTTPRequestHandler):
         }
 
     def api_runs(self) -> None:
-        self.runs_dir.mkdir(parents=True, exist_ok=True)
+        runs_dir = self.studio_runs_dir()
+        runs_dir.mkdir(parents=True, exist_ok=True)
         runs = [
             self.run_summary(child)
-            for child in sorted(self.runs_dir.iterdir(), key=lambda path: path.stat().st_mtime, reverse=True)
+            for child in sorted(runs_dir.iterdir(), key=lambda path: path.stat().st_mtime, reverse=True)
             if child.is_dir()
         ]
-        self.send_json({"runs_dir": str(self.runs_dir), "runs": runs})
+        self.send_json({"runs_dir": str(runs_dir), "runs": runs})
 
     def api_deck(self, parsed) -> None:
         try:
@@ -520,8 +531,9 @@ class PreviewHandler(BaseHTTPRequestHandler):
         if not run_id:
             self.send_error_json(HTTPStatus.BAD_REQUEST, "run_id is required.")
             return
-        candidate = (self.runs_dir / run_id).resolve()
-        root_text = str(self.runs_dir.resolve())
+        runs_dir = self.studio_runs_dir()
+        candidate = (runs_dir / run_id).resolve()
+        root_text = str(runs_dir.resolve())
         candidate_text = str(candidate)
         if candidate_text != root_text and not candidate_text.startswith(root_text + "/"):
             self.send_error_json(HTTPStatus.BAD_REQUEST, "Invalid run_id.")
@@ -543,8 +555,9 @@ class PreviewHandler(BaseHTTPRequestHandler):
         if not run_id:
             self.send_error_json(HTTPStatus.BAD_REQUEST, "run_id is required.")
             return
-        candidate = (self.runs_dir / run_id).resolve()
-        root_text = str(self.runs_dir.resolve())
+        runs_dir = self.studio_runs_dir()
+        candidate = (runs_dir / run_id).resolve()
+        root_text = str(runs_dir.resolve())
         candidate_text = str(candidate)
         if candidate_text != root_text and not candidate_text.startswith(root_text + "/"):
             self.send_error_json(HTTPStatus.BAD_REQUEST, "Invalid run_id.")
@@ -640,8 +653,9 @@ class PreviewHandler(BaseHTTPRequestHandler):
         if not run_id:
             self.send_error_json(HTTPStatus.BAD_REQUEST, "run_id is required.")
             return
-        candidate = (self.runs_dir / run_id).resolve()
-        root_text = str(self.runs_dir.resolve())
+        runs_dir = self.studio_runs_dir()
+        candidate = (runs_dir / run_id).resolve()
+        root_text = str(runs_dir.resolve())
         candidate_text = str(candidate)
         if candidate_text != root_text and not candidate_text.startswith(root_text + "/"):
             self.send_error_json(HTTPStatus.BAD_REQUEST, "Invalid run_id.")
@@ -747,12 +761,13 @@ class PreviewHandler(BaseHTTPRequestHandler):
             except Exception:
                 debug_run_dir = None
 
+        root = self.studio_runs_dir()
         if debug_run_dir:
             candidate = Path(str(debug_run_dir)).expanduser().resolve()
         else:
-            candidate = (self.runs_dir / run_id).resolve()
+            candidate = (root / run_id).resolve()
 
-        root_text = str(self.runs_dir.resolve())
+        root_text = str(root.resolve())
         candidate_text = str(candidate)
         if candidate_text != root_text and not candidate_text.startswith(root_text + "/"):
             self.send_error_json(HTTPStatus.BAD_REQUEST, "Invalid run_id.")
@@ -1037,6 +1052,7 @@ def build_handler(run_dir: Path | None, runs_dir: Path | None = None, library_mo
     Handler.run_dir = run_dir
     Handler.runs_dir = (runs_dir or configured_runs_dir(ROOT_DIR / "runs")).expanduser().resolve()
     Handler.library_mode = library_mode
+    Handler.use_setup_runs_dir = True
     return Handler
 
 
