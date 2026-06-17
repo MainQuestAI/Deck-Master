@@ -1,0 +1,13 @@
+schema_version: deck_master_capability_package.v1
+name: ppt-quality-gate
+kind: product_capability
+required: true
+outputs:
+  - deck_master_quality_findings.v1
+  - deck_quality_report.v1
+operations:
+  - status
+  - doctor
+  - schema
+  - smoke --fixture
+  - writeback

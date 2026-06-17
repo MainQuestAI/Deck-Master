@@ -14,6 +14,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from benchmark.case import load_benchmark_case  # noqa: E402
 from benchmark.report import BenchmarkReportError, build_benchmark_report, write_benchmark_report  # noqa: E402
 from deck_master import command_benchmark_report, command_benchmark_rc_report  # noqa: E402
+from runtime.render import CANONICAL_RENDER_RESULT  # noqa: E402
 from runtime.run_state import create_run, write_json  # noqa: E402
 from workspace.foundation import init_workspace  # noqa: E402
 
@@ -259,6 +260,43 @@ class BenchmarkReportTests(unittest.TestCase):
         report = json.loads(Path(result["report"]).read_text(encoding="utf-8"))
         self.assertEqual("benchmark_rc_report.json", Path(result["report"]).name)
         self.assertEqual(run_dir.name, report["run_id"])
+
+    def test_benchmark_rc_report_blocks_missing_required_render_result(self) -> None:
+        payload = _case_payload("retail_benchmark")
+        payload["workflow"]["requires_render_result"] = True
+        write_json(self.rc_case_dir / "benchmark_case.json", payload)
+        run_dir = self._ready_benchmark_run(self.rc_case, "benchmark")
+        with self.assertRaises(BenchmarkReportError):
+            command_benchmark_rc_report(Namespace(
+                case=str(self.rc_case_dir / "benchmark_case.json"),
+                benchmark_dir=str(self.bench_dir),
+                run_dir=str(run_dir),
+                run_id=None,
+                runs_dir=str(self.temp_dir / "runs"),
+                force=True,
+            ))
+
+        render_path = run_dir / CANONICAL_RENDER_RESULT
+        render_path.parent.mkdir(parents=True)
+        write_json(
+            render_path,
+            {
+                "schema_version": "deck_render_result.v1",
+                "run_id": run_dir.name,
+                "tool": "ppt-master",
+                "status": "completed",
+                "artifact_path": "rendered/index.html",
+            },
+        )
+        result = command_benchmark_rc_report(Namespace(
+            case=str(self.rc_case_dir / "benchmark_case.json"),
+            benchmark_dir=str(self.bench_dir),
+            run_dir=str(run_dir),
+            run_id=None,
+            runs_dir=str(self.temp_dir / "runs"),
+            force=True,
+        ))
+        self.assertEqual("benchmark_rc_report.json", Path(result["report"]).name)
 
     def test_benchmark_rc_report_blocks_non_benchmark_run_mode(self) -> None:
         run_dir = self._ready_benchmark_run(self.rc_case, "production")

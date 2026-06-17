@@ -12,6 +12,7 @@ from context_intake.context_pack import import_context_pack
 from metrics.run_metrics import summarize_run_metrics
 from preview.manifest import ManifestError, load_manifest
 from runtime.events import append_typed_event
+from runtime.render import CANONICAL_RENDER_RESULT, LEGACY_RENDER_RESULTS
 from runtime.run_state import (
     CONTEXT_MANIFEST_NAME,
     CONVERSATION_SESSION_NAME,
@@ -196,7 +197,6 @@ def collect_pending_external_steps(case: BenchmarkCase, run_dir: Path) -> list[d
             })
     checks = [
         ("requires_generation_result", "generation_result", run_dir / "generation_results", "*.json"),
-        ("requires_render_result", "render_result", run_dir / "render_result.json", None),
     ]
     if workflow.get("requires_external_quality_review") and not _external_quality_review_exists(run_dir):
         pending.append({
@@ -213,6 +213,16 @@ def collect_pending_external_steps(case: BenchmarkCase, run_dir: Path) -> list[d
             exists = path.exists() and (not path.is_dir() or any(path.iterdir()))
         if not exists:
             pending.append({"step": step, "status": "pending_external_agent", "path": str(path)})
+    if workflow.get("requires_render_result"):
+        render_exists = (run_dir / CANONICAL_RENDER_RESULT).exists() or any(
+            (run_dir / legacy_path).exists() for legacy_path in LEGACY_RENDER_RESULTS
+        )
+        if not render_exists:
+            pending.append({
+                "step": "render_result",
+                "status": "pending_external_agent",
+                "path": str(run_dir / CANONICAL_RENDER_RESULT),
+            })
     return pending
 
 

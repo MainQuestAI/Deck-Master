@@ -92,10 +92,16 @@ from team.approval import submit_approval, approve, reject
 from connectors.import_contract import validate_import_manifest, import_to_context_manifest
 from skills.installer import (
     SkillInstallError,
+    build_release_tree,
     install_skill,
     inspect_suite_status,
+    product_capability_manifest,
     suite_install,
+    suite_migration_apply,
+    suite_migration_plan,
+    suite_migration_rollback,
     suite_repair,
+    validate_product_capability_manifest,
     validate_skill,
     uninstall_skill,
 )
@@ -118,6 +124,7 @@ from runtime.run_state import (
 from runtime.next_step import resolve_next_step
 from runtime.import_log import append_import_log
 from runtime.orchestration import import_plan, import_render_result, orchestration_check
+from runtime.render import render_fixture_html, render_status
 from runtime.run_state_resolver import resolve_run_state
 from runtime.sourcing_import import import_sourcing, validate_sourcing
 from runtime.workspace_binding import bind_workspace
@@ -159,6 +166,7 @@ PROTECTED_COMMANDS = {
     "prepare-generation-handoff",
     "import-generation-result",
     "refresh-preview-from-generation",
+    "render",
     "import-plan",
     "import-render-result",
     "summarize-run-metrics",
@@ -900,13 +908,25 @@ def command_validate_workspace(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def command_setup(args: argparse.Namespace) -> dict[str, Any]:
-    return run_setup(
+    result = run_setup(
         workspace=getattr(args, "workspace", None),
         runs_dir=getattr(args, "runs_dir", None),
         targets=getattr(args, "target", None),
         review_cockpit_url=getattr(args, "review_cockpit_url", None) or "http://127.0.0.1:5050",
         repair=bool(getattr(args, "repair_workspace", False)),
     )
+    if bool(getattr(args, "install_suite", False)):
+        result["suite_install"] = suite_install(
+            targets=getattr(args, "target", None),
+            include_optional=False,
+            repair=False,
+        )
+        result["setup_status"] = setup_status(
+            workspace=getattr(args, "workspace", None),
+            run_mode="production",
+            include_suite=True,
+        )
+    return result
 
 
 def command_setup_status(args: argparse.Namespace) -> dict[str, Any]:
@@ -1002,6 +1022,22 @@ def command_suite_status(args: argparse.Namespace) -> dict[str, Any]:
     )
 
 
+def command_product_capability_manifest(args: argparse.Namespace) -> dict[str, Any]:
+    return product_capability_manifest()
+
+
+def command_validate_product_capability_manifest(args: argparse.Namespace) -> dict[str, Any]:
+    return validate_product_capability_manifest()
+
+
+def command_suite_build_release_tree(args: argparse.Namespace) -> dict[str, Any]:
+    return build_release_tree(
+        getattr(args, "output", None),
+        force=bool(getattr(args, "force", False)),
+        dry_run=bool(getattr(args, "dry_run", False)),
+    )
+
+
 def command_suite_install(args: argparse.Namespace) -> dict[str, Any]:
     return suite_install(
         targets=getattr(args, "target", None),
@@ -1013,6 +1049,17 @@ def command_suite_repair(args: argparse.Namespace) -> dict[str, Any]:
     return suite_repair(
         targets=getattr(args, "target", None),
         include_optional=bool(getattr(args, "include_optional", False)),
+    )
+
+
+def command_suite_migrate_legacy_skills(args: argparse.Namespace) -> dict[str, Any]:
+    if bool(getattr(args, "rollback", False)):
+        return suite_migration_rollback(str(getattr(args, "rollback_id", "")))
+    if bool(getattr(args, "apply", False)):
+        return suite_migration_apply(str(getattr(args, "plan_file", "")))
+    return suite_migration_plan(
+        targets=getattr(args, "target", None),
+        agent_skill_dir=getattr(args, "agent_skill_dir", None),
     )
 
 
@@ -1047,6 +1094,18 @@ def command_import_plan(args: argparse.Namespace) -> dict[str, Any]:
 
 def command_import_render_result(args: argparse.Namespace) -> dict[str, Any]:
     return import_render_result(resolve_run_dir(args), args.input)
+
+
+def command_render(args: argparse.Namespace) -> dict[str, Any]:
+    return render_fixture_html(
+        resolve_run_dir(args),
+        output_format=getattr(args, "format", "html"),
+        fixture_safe=bool(getattr(args, "fixture_safe", False)),
+    )
+
+
+def command_render_status(args: argparse.Namespace) -> dict[str, Any]:
+    return render_status(resolve_run_dir(args))
 
 
 def command_bind_workspace(args: argparse.Namespace) -> dict[str, Any]:
@@ -1419,6 +1478,8 @@ def command_benchmark_rc_report(args: argparse.Namespace) -> dict[str, Any]:
     _ensure_rc_benchmark_boundary(case, run_dir)
     _ensure_ready_for_benchmark(run_dir)
     pending_external_steps = collect_pending_external_steps(case, run_dir)
+    if any(step.get("step") == "render_result" for step in pending_external_steps):
+        raise BenchmarkReportError("benchmark RC report blocked: render result is required before RC readiness.")
     return write_benchmark_rc_report(
         case,
         run_dir,
@@ -1562,6 +1623,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_setup.add_argument("--target", action="append", default=[], choices=["codex", "claude-code", "hermes"], help="Agent skill target to validate")
     p_setup.add_argument("--review-cockpit-url", default="http://127.0.0.1:5050")
     p_setup.add_argument("--repair-workspace", action="store_true", help="Create missing standard workspace directories and placeholder files")
+    p_setup.add_argument("--install-suite", action="store_true", help="Build release tree and install required suite skill links")
     p_setup.set_defaults(func=command_setup)
 
     p_setup_status = sub.add_parser("setup-status", help="Check first-run Deck Master setup")
@@ -1577,6 +1639,19 @@ def build_parser() -> argparse.ArgumentParser:
     p_suite_status.add_argument("--output", choices=["json"], default="json")
     p_suite_status.set_defaults(func=command_suite_status)
 
+    p_product_manifest = sub.add_parser("product-capability-manifest", help="Print Deck Master product capability manifest")
+    p_product_manifest.add_argument("--output", choices=["json"], default="json")
+    p_product_manifest.set_defaults(func=command_product_capability_manifest)
+
+    p_validate_product_manifest = sub.add_parser("validate-product-capability-manifest", help="Validate Deck Master product capability manifest")
+    p_validate_product_manifest.set_defaults(func=command_validate_product_capability_manifest)
+
+    p_release_tree = sub.add_parser("suite-build-release-tree", help="Build Deck Master release tree")
+    p_release_tree.add_argument("--output", required=True, help="Release tree output path")
+    p_release_tree.add_argument("--force", action="store_true")
+    p_release_tree.add_argument("--dry-run", action="store_true")
+    p_release_tree.set_defaults(func=command_suite_build_release_tree)
+
     p_suite_install = sub.add_parser("suite-install", help="Install Deck Master suite skill links")
     p_suite_install.add_argument("--target", action="append", default=[], choices=["codex", "claude-code", "hermes"])
     p_suite_install.add_argument("--include-optional", action="store_true")
@@ -1586,6 +1661,16 @@ def build_parser() -> argparse.ArgumentParser:
     p_suite_repair.add_argument("--target", action="append", default=[], choices=["codex", "claude-code", "hermes"])
     p_suite_repair.add_argument("--include-optional", action="store_true")
     p_suite_repair.set_defaults(func=command_suite_repair)
+
+    p_suite_migrate = sub.add_parser("suite-migrate-legacy-skills", help="Plan, apply, or rollback legacy skill directory migration")
+    p_suite_migrate.add_argument("--target", action="append", default=[], choices=["codex", "claude-code", "hermes"])
+    p_suite_migrate.add_argument("--agent-skill-dir", default=None)
+    p_suite_migrate.add_argument("--plan", action="store_true")
+    p_suite_migrate.add_argument("--apply", action="store_true")
+    p_suite_migrate.add_argument("--plan-file", default="")
+    p_suite_migrate.add_argument("--rollback", action="store_true")
+    p_suite_migrate.add_argument("--rollback-id", default="")
+    p_suite_migrate.set_defaults(func=command_suite_migrate_legacy_skills)
 
     p_doctor = sub.add_parser("doctor", help="Show setup and run state diagnostics")
     p_doctor.add_argument("--workspace", default="")
@@ -1832,6 +1917,16 @@ def build_parser() -> argparse.ArgumentParser:
     p_import_plan.add_argument("--input", required=True, help="Path to plan Markdown or JSON")
     p_import_plan.add_argument("--source", required=True, choices=["human", "agent"])
     p_import_plan.set_defaults(func=command_import_plan)
+
+    p_render = sub.add_parser("render", help="Render a run through the bundled PPT Master path")
+    add_run_args(p_render)
+    p_render.add_argument("--format", choices=["html"], default="html")
+    p_render.add_argument("--fixture-safe", action="store_true", help="Allow provider-free fixture render output")
+    p_render.set_defaults(func=command_render)
+
+    p_render_status = sub.add_parser("render-status", help="Inspect canonical or legacy render result")
+    add_run_args(p_render_status)
+    p_render_status.set_defaults(func=command_render_status)
 
     p_import_render = sub.add_parser("import-render-result", help="Import PPT Master or renderer handback result")
     add_run_args(p_import_render)

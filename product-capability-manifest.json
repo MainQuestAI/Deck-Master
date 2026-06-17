@@ -1,0 +1,41 @@
+{
+  "schema_version": "deck_master_product_capability_manifest.v1",
+  "product": "deck-master",
+  "runtime_shape": "agent_facing_local_first",
+  "provider_policy": "zero_builtin_llm_provider",
+  "required_capabilities": [
+    "deck-master",
+    "deck-planner",
+    "deck-review",
+    "ppt-master",
+    "ppt-library",
+    "ppt-deck-pro-max",
+    "ppt-quality-gate"
+  ],
+  "optional_capabilities": [
+    "deck-learning"
+  ],
+  "core_skills": [
+    "deck-master",
+    "deck-planner",
+    "deck-review"
+  ],
+  "product_capability_skills": [
+    "ppt-master",
+    "ppt-library",
+    "ppt-deck-pro-max",
+    "ppt-quality-gate"
+  ],
+  "capability_policy": {
+    "required_suite_must_be_full_ready": true,
+    "outputs_must_write_back_to_run": true,
+    "external_override_allowed": true,
+    "legacy_real_dir_requires_migration_plan": true
+  },
+  "release_tree": {
+    "skills_path": "skills",
+    "capabilities_path": "capabilities",
+    "contracts_path": "contracts",
+    "reference_packs_path": "reference-packs"
+  }
+}

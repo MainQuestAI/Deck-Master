@@ -1,0 +1,13 @@
+schema_version: deck_master_capability_package.v1
+name: ppt-master
+kind: product_capability
+required: true
+canonical_artifact: render_results/render_result.json
+outputs:
+  - deck_render_result.v1
+operations:
+  - status
+  - doctor
+  - schema
+  - smoke --fixture
+  - writeback

@@ -195,7 +195,8 @@ class GenerationSessionBridgeTests(unittest.TestCase):
         result_path.write_text(json.dumps(result, ensure_ascii=False), encoding="utf-8")
         return result_path
 
-    def test_tool_unavailable_marks_session_status_blocked(self) -> None:
+    @patch("runtime.tool_registry._bundled_tool_entry", return_value=None)
+    def test_tool_unavailable_marks_session_status_blocked(self, _bundled: unittest.mock.Mock) -> None:
         self._tool_registry(command="definitely_missing_tool")
         create_generation_session(
             self.run_dir,
@@ -223,7 +224,9 @@ class GenerationSessionBridgeTests(unittest.TestCase):
 
         self.assertEqual("dispatched", result["status"])
         self.assertIsInstance(result["command"], list)
-        self.assertEqual("python3", result["command"][0])
+        self.assertEqual(sys.executable, result["command"][0])
+        self.assertEqual("ppt_deck_pro_max.py", Path(result["command"][1]).name)
+        self.assertIn("--session-id", result["command"])
         mocked_run.assert_not_called()
 
     @patch("scripts.generation.session.subprocess.run")
@@ -361,7 +364,22 @@ class GenerationSessionBridgeTests(unittest.TestCase):
         logs = read_import_log(self.run_dir)
         self.assertEqual("rejected", logs[-1]["status"])
 
-    def test_tool_registry_precedence_workspace_over_global(self) -> None:
+    def test_bundled_tool_precedes_workspace_registry(self) -> None:
+        self._tool_registry(command="workspace-tool")
+
+        command, _, source = resolve_tool_command(
+            "ppt-deck-pro-max",
+            self.run_dir,
+            workspace=self.workspace,
+            cli_tool_command=None,
+        )
+
+        self.assertEqual(sys.executable, command[0])
+        self.assertEqual("ppt_deck_pro_max.py", Path(command[1]).name)
+        self.assertEqual("bundled capability", source)
+
+    @patch("runtime.tool_registry._bundled_tool_entry", return_value=None)
+    def test_tool_registry_precedence_workspace_over_global(self, _bundled: unittest.mock.Mock) -> None:
         global_home = self.temp_dir / "home"
         (global_home / ".deck-master").mkdir(parents=True)
         (global_home / ".deck-master" / "tools.json").write_text(
@@ -387,7 +405,7 @@ class GenerationSessionBridgeTests(unittest.TestCase):
                 self.run_dir,
                 workspace=self.workspace,
                 cli_tool_command=None,
-            )
+        )
 
         self.assertEqual("workspace-tool", command[0])
         self.assertEqual(str((self.workspace / "tool_registry.json").resolve()), source)
@@ -395,7 +413,7 @@ class GenerationSessionBridgeTests(unittest.TestCase):
     def test_tool_command_cli_overrides_registry(self) -> None:
         self._tool_registry(command="workspace-tool")
 
-        command, _, source = resolve_tool_command(
+        command, entry, source = resolve_tool_command(
             "ppt-deck-pro-max",
             self.run_dir,
             workspace=self.workspace,
@@ -403,4 +421,6 @@ class GenerationSessionBridgeTests(unittest.TestCase):
         )
 
         self.assertEqual(["custom-tool", "--flag", "generate", "--task-dir", f"{self.run_dir}/generation_tasks", "--output-dir", f"{self.run_dir}/generation_results"], command)
-        self.assertEqual("cli --tool-command", source)
+        self.assertEqual("cli_override", source)
+        self.assertEqual("cli_override", entry["source"])
+        self.assertIn("warning", entry)

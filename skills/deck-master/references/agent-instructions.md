@@ -1,6 +1,6 @@
 # Deck Master — Agent Instructions
 
-You are operating as an external Agent (Codex, Claude Code, Hermes) using the
+You are operating as an Agent (Codex, Claude Code, Hermes) using the
 Deck Master skill. This file tells you how to interact with Deck Master
 correctly.
 
@@ -32,7 +32,9 @@ the work as complete.
    ~/.deck-master/bin/deck-master setup \
      --workspace <workspace> \
      --repair-workspace \
-     --target codex
+     --target codex \
+     --target claude-code \
+     --install-suite
    ```
 
    If the workspace is unknown, ask the user for the active workspace first.
@@ -65,8 +67,8 @@ the work as complete.
 7. export              → export approved pages
 ```
 
-Before moving work to PPT Master, PPT Deck Pro Max, or another external build
-tool, run:
+Before moving work to PPT Master, PPT Deck Pro Max, or another Deck Master
+capability, run:
 
 ```bash
 ~/.deck-master/bin/deck-master orchestration-check --run-dir <run_dir>
@@ -96,19 +98,19 @@ Import with: `python3 scripts/deck_master.py import-context-pack --run-id <id> -
 4. Deck Master imports: `python3 scripts/deck_master.py import-narrative-advice --run-id <id> --input ...`
 5. Deck Master applies: `python3 scripts/deck_master.py apply-narrative-advice --run-id <id> --input ...`
 
-### External Quality Review (Deck Master prepares task, you execute, Deck Master imports)
+### Quality Review (Deck Master prepares task, you execute, Deck Master imports)
 
 1. Deck Master generates: `python3 scripts/deck_master.py prepare-quality-review --run-id <id> --scope semantic`
 2. Read the task file in `quality_review_tasks/`.
 3. Execute review and write result per schema.
 4. Deck Master imports: `python3 scripts/deck_master.py import-quality-review --run-id <id> --input ...`
 
-### Generation Handoff (Deck Master prepares, you call PPT Deck Pro Max, Deck Master imports result)
+### Generation Handoff (Deck Master prepares, PPT Deck Pro Max returns result, Deck Master imports)
 
-1. Deck Master generates: `python3 scripts/deck_master.py prepare-generation-handoff --run-id <id>`
-2. Call PPT Deck Pro Max or PPT Master with the handoff package.
-3. Write result per `generation_result.schema.json`.
-4. Deck Master imports: `python3 scripts/deck_master.py import-generation-result --run-id <id> --input ...`
+1. Deck Master creates session: `python3 scripts/deck_master.py generation-session create --run-id <id>`
+2. Deck Master prepares or dispatches generation: `python3 scripts/deck_master.py run-generation --run-id <id> --dry-run`
+3. PPT Deck Pro Max writes result per `generation_result.schema.json`.
+4. Deck Master imports: `python3 scripts/deck_master.py generation-session import-results --run-id <id> --input ...`
 
 ### Render / Delivery Handback
 
@@ -116,6 +118,7 @@ After PPT Master or another renderer produces SVG, PPTX, PDF, or preview
 artifacts, import the handback record and run the relevant gates:
 
 ```bash
+~/.deck-master/bin/deck-master render --run-dir <run_dir> --format html --fixture-safe
 ~/.deck-master/bin/deck-master import-render-result --run-dir <run_dir> --input <render_result.json>
 ~/.deck-master/bin/deck-master quality-gate --run-dir <run_dir> render --artifact <pptx_or_pdf>
 ~/.deck-master/bin/deck-master quality-gate --run-dir <run_dir> delivery --artifact <pptx_or_pdf>
@@ -142,7 +145,7 @@ python3 scripts/deck_master.py override create \
 
 - Never fabricate `schema_version` values.
 - Never write directly to `events.jsonl` — use Deck Master CLI.
-- Never let a README or external workbench become the only source of truth for plan corrections or final artifacts.
+- Never let a README or separate workbench become the only source of truth for plan corrections or final artifacts.
 - If a CLI command fails, read the JSON error before retrying.
 - Always use `--run-id` to scope operations to a specific run.
 - When in doubt, run `next-step` to see what Deck Master recommends.
