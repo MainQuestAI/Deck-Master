@@ -663,6 +663,7 @@ def inspect_suite_status(
     skills: list[dict[str, Any]] = []
     capabilities: dict[str, str] = {}
     target_reports: dict[str, list[dict[str, Any]]] = {}
+    target_readiness: dict[str, dict[str, Any]] = {}
 
     for target in resolved_targets:
         reports: list[dict[str, Any]] = []
@@ -685,6 +686,24 @@ def inspect_suite_status(
             for capability in spec.get("required_capabilities", []):
                 capabilities[str(capability)] = str(report.get("status") or "missing")
         target_reports[target] = reports
+        required_reports = [report for report in reports if report.get("required")]
+        missing_statuses = {"missing", "external_adoptable", "optional_missing", "source_missing"}
+        missing_required = [
+            str(report.get("skill"))
+            for report in required_reports
+            if str(report.get("status") or "missing") in missing_statuses
+        ]
+        blocked_required = [
+            str(report.get("skill"))
+            for report in required_reports
+            if str(report.get("status") or "missing") not in missing_statuses
+            and str(report.get("status") or "missing") != "ready"
+        ]
+        target_readiness[target] = {
+            "required_ready": not missing_required and not blocked_required,
+            "missing_required": missing_required,
+            "blocked_required": blocked_required,
+        }
 
     by_name: dict[str, str] = {}
     for item in skills:
@@ -696,12 +715,14 @@ def inspect_suite_status(
         elif current is None:
             by_name[name] = status
 
-    deck_ready = by_name.get(SKILL_NAME) == "ready"
-    required_ready = all(
-        by_name.get(str(spec["name"])) == "ready"
-        for spec in _suite_specs(include_optional=False)
+    deck_ready = all(
+        any(report.get("skill") == SKILL_NAME and report.get("status") == "ready" for report in target_reports[target])
+        for target in resolved_targets
     )
-    full_suite_ready = required_ready
+    full_suite_ready = all(
+        bool(target_readiness[target]["required_ready"])
+        for target in resolved_targets
+    )
 
     task_readiness = {
         "full_deck_workflow": "ready" if full_suite_ready else ("blocked" if not deck_ready else "degraded_ready"),
@@ -735,6 +756,7 @@ def inspect_suite_status(
         "full_suite_ready": full_suite_ready,
         "skills": skills,
         "targets": target_reports,
+        "target_readiness": target_readiness,
         "capabilities": capabilities,
         "task_readiness": task_readiness,
         "manifest_path": str(companion_manifest_path()),

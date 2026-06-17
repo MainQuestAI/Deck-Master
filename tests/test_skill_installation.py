@@ -180,6 +180,8 @@ class SkillInstallationTest(unittest.TestCase):
 
         self.assertEqual("degraded_ready", result["status"])
         self.assertEqual("blocked", result["task_readiness"]["library_sourcing"])
+        self.assertFalse(result["full_suite_ready"])
+        self.assertFalse(result["target_readiness"]["codex"]["required_ready"])
         self.assertEqual(before, log_path.read_text(encoding="utf-8"))
 
     def test_suite_install_installs_available_required_skill_and_reports_missing_companions(self) -> None:
@@ -191,6 +193,52 @@ class SkillInstallationTest(unittest.TestCase):
         self.assertTrue(result["suite_status"]["full_suite_ready"])
         for skill_name in ["deck-master", "deck-planner", "deck-review", "ppt-master", "ppt-library", "ppt-deck-pro-max", "ppt-quality-gate"]:
             self.assertTrue((self.agent_dir / skill_name).is_symlink(), f"missing suite link: {skill_name}")
+
+    def test_suite_install_multi_target_reports_full_ready_only_when_all_targets_ready(self) -> None:
+        codex_dir = Path(self._tmp) / "codex_skills"
+        claude_dir = Path(self._tmp) / "claude_skills"
+        with mock.patch.dict(
+            "scripts.skills.installer.DEFAULT_AGENT_SKILL_DIRS",
+            {"codex": str(codex_dir), "claude-code": str(claude_dir)},
+        ):
+            result = suite_install(targets=["codex", "claude-code"], include_optional=False)
+
+        self.assertEqual("installed", result["status"])
+        suite = result["suite_status"]
+        self.assertTrue(suite["full_suite_ready"])
+        self.assertTrue(suite["target_readiness"]["codex"]["required_ready"])
+        self.assertTrue(suite["target_readiness"]["claude-code"]["required_ready"])
+        self.assertEqual("ready", suite["task_readiness"]["full_deck_workflow"])
+
+    def test_suite_status_multi_target_missing_required_blocks_full_ready(self) -> None:
+        codex_dir = Path(self._tmp) / "codex_skills"
+        claude_dir = Path(self._tmp) / "claude_skills"
+        with mock.patch.dict(
+            "scripts.skills.installer.DEFAULT_AGENT_SKILL_DIRS",
+            {"codex": str(codex_dir), "claude-code": str(claude_dir)},
+        ):
+            suite_install(targets=["codex"], include_optional=False)
+            result = inspect_suite_status(targets=["codex", "claude-code"])
+
+        self.assertFalse(result["full_suite_ready"])
+        self.assertTrue(result["target_readiness"]["codex"]["required_ready"])
+        self.assertFalse(result["target_readiness"]["claude-code"]["required_ready"])
+        self.assertIn("deck-master", result["target_readiness"]["claude-code"]["missing_required"])
+        self.assertNotEqual("ready", result["task_readiness"]["full_deck_workflow"])
+
+    def test_suite_status_single_target_ready_remains_full_ready(self) -> None:
+        codex_dir = Path(self._tmp) / "codex_skills"
+        claude_dir = Path(self._tmp) / "claude_skills"
+        with mock.patch.dict(
+            "scripts.skills.installer.DEFAULT_AGENT_SKILL_DIRS",
+            {"codex": str(codex_dir), "claude-code": str(claude_dir)},
+        ):
+            suite_install(targets=["codex"], include_optional=False)
+            result = inspect_suite_status(targets=["codex"])
+
+        self.assertTrue(result["full_suite_ready"])
+        self.assertTrue(result["target_readiness"]["codex"]["required_ready"])
+        self.assertEqual("ready", result["task_readiness"]["full_deck_workflow"])
 
     def test_release_tree_contains_required_skills_capabilities_and_manifest(self) -> None:
         release_root = Path(self._tmp) / "release"
