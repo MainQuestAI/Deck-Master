@@ -9,6 +9,17 @@ from assets.scoring import compute_score_v2, tie_breaker
 SOURCE_DECISIONS = {"reuse", "adapt", "generate", "manual_placeholder"}
 
 
+def normalize_library_source(source: Any) -> str:
+    value = str(source or "").strip().lower().replace("-", "_")
+    if value in {"ppt_library", "library", "real"}:
+        return "ppt_library"
+    if value in {"fixture", "imported"}:
+        return value
+    if not value:
+        return "none"
+    return "imported"
+
+
 def candidate_score(candidate: dict[str, Any]) -> float:
     confidence = float(candidate.get("confidence") or candidate.get("score") or 0)
     win_rate = float(candidate.get("win_rate") or 0)
@@ -148,16 +159,25 @@ def decide_for_beat(
 
 def decide_sourcing(narrative_plan: dict[str, Any], library_results: dict[str, Any]) -> dict[str, Any]:
     by_beat = library_results.get("by_beat", {}) if isinstance(library_results, dict) else {}
+    library_source = normalize_library_source(library_results.get("library_source") or library_results.get("source", ""))
     decisions = []
     for beat in narrative_plan.get("beats", []):
         if not isinstance(beat, dict):
             continue
         candidates = by_beat.get(str(beat.get("beat_id")), [])
-        decisions.append(decide_for_beat(beat, candidates if isinstance(candidates, list) else []))
+        decision = decide_for_beat(beat, candidates if isinstance(candidates, list) else [])
+        selected = decision.get("selected_candidate") if isinstance(decision.get("selected_candidate"), dict) else {}
+        candidate_origin = normalize_library_source(selected.get("candidate_origin") or selected.get("library_source") or library_source)
+        if not selected:
+            candidate_origin = "none"
+        decision["library_source"] = library_source
+        decision["candidate_origin"] = candidate_origin
+        decisions.append(decision)
     return {
         "run_id": narrative_plan.get("run_id", ""),
         "title": narrative_plan.get("title", ""),
-        "source": library_results.get("source", ""),
+        "source": library_source,
+        "library_source": library_source,
         "decisions": decisions,
     }
 

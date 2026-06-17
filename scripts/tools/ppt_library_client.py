@@ -36,11 +36,26 @@ CANONICAL_FIELDS = (
     "narrative_role",
     "page_role",
     "importance_reason",
+    "candidate_origin",
+    "library_source",
 )
 
 
 class PPTLibraryClientError(ValueError):
     pass
+
+
+def normalize_library_source(source: Any) -> str:
+    value = str(source or "").strip().lower().replace("-", "_")
+    if value in {"ppt_library", "library", "real"}:
+        return "ppt_library"
+    if value == "fixture":
+        return "fixture"
+    if value in {"imported", "external", "ppt_library_import"}:
+        return "imported"
+    if not value:
+        return "none"
+    return "imported"
 
 
 def _selection_error(run_dir: Path, message: str, *, source_path: str | Path | None = None) -> PPTLibraryClientError:
@@ -204,12 +219,21 @@ def write_library_results(run_dir: Path, by_beat: dict[str, list[dict[str, Any]]
     root = run_dir / "library_results"
     by_beat_dir = root / "by_beat"
     by_beat_dir.mkdir(parents=True, exist_ok=True)
+    normalized_source = normalize_library_source(source)
+    enriched_by_beat: dict[str, list[dict[str, Any]]] = {}
     for beat_id, candidates in by_beat.items():
+        enriched_candidates = []
+        for candidate in candidates:
+            enriched = dict(candidate)
+            enriched.setdefault("library_source", normalized_source)
+            enriched.setdefault("candidate_origin", normalized_source)
+            enriched_candidates.append(enriched)
+        enriched_by_beat[beat_id] = enriched_candidates
         (by_beat_dir / f"{beat_id}.json").write_text(
-            json.dumps({"beat_id": beat_id, "candidates": candidates}, ensure_ascii=False, indent=2) + "\n",
+            json.dumps({"beat_id": beat_id, "source": normalized_source, "candidates": enriched_candidates}, ensure_ascii=False, indent=2) + "\n",
             encoding="utf-8",
         )
-    payload = {"source": source, "by_beat": by_beat}
+    payload = {"source": normalized_source, "library_source": normalized_source, "by_beat": enriched_by_beat}
     (root / "selection.json").write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return payload
 
@@ -311,16 +335,17 @@ def import_library_selection(run_dir: str | Path, input_path: str | Path) -> dic
         raise _selection_error(root, str(exc), source_path=source_path) from exc
 
     by_beat = _selection_to_by_beat(payload)
+    legacy = write_library_results(root, by_beat, source="imported")
     canonical = {
         "schema_version": SELECTION_SCHEMA_VERSION,
         "run_id": run_id,
-        "source": payload.get("source", "ppt-library"),
-        "by_beat": by_beat,
+        "source": "imported",
+        "upstream_source": payload.get("source", ""),
+        "by_beat": legacy.get("by_beat", {}),
         "warnings": validation.get("warnings", []),
         "source_schema_version": payload.get("schema_version"),
     }
     canonical_path = write_json(root / "external" / "ppt_library" / "library_results.json", canonical)
-    legacy = write_library_results(root, by_beat, source=str(payload.get("source") or "ppt-library"))
     append_import_log(
         root,
         import_type="ppt_library_selection",
@@ -352,12 +377,19 @@ def run_library_selection(
     run_dir: Path,
     mode: str = "auto",
     command: str = "ppt-lib",
+    allow_fixture_fallback: bool = False,
 ) -> dict[str, Any]:
     if mode not in {"auto", "real", "fixture"}:
         raise PPTLibraryClientError("mode must be auto, real, or fixture.")
 
     output_path = run_dir / "library_results" / "selection.raw.json"
     can_run_real = mode == "real" or (mode == "auto" and shutil.which(command))
+    run_mode = str(request.get("run_mode") or "").strip().lower()
+    production_guard = run_mode == "production" and not allow_fixture_fallback
+    fallback_message = (
+        "PPT Library fixture fallback blocked for production run. "
+        "Use --allow-fixture-library-fallback only for an explicit demo/smoke downgrade."
+    )
     if can_run_real:
         cmd = build_select_slides_command(
             command=command,
@@ -386,6 +418,11 @@ def run_library_selection(
             status="warning",
             error=completed.stderr.strip() or completed.stdout.strip() or "ppt-lib failed; using fixture.",
         )
+        if production_guard:
+            raise PPTLibraryClientError(fallback_message)
+    elif production_guard and mode in {"auto", "fixture"}:
+        append_event(run_dir, "ppt_library.fixture.blocked", status="error", error=fallback_message)
+        raise PPTLibraryClientError(fallback_message)
 
     by_beat = {
         str(beat.get("beat_id")): simulated_candidates_for_beat(run_dir, beat)

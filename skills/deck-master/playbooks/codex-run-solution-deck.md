@@ -27,7 +27,8 @@ Ingest local context files and create a guided conversation run.
 ```bash
 python3 scripts/deck_master.py start-conversation \
   --workspace <workspace> \
-  --context-dir <path-to-customer-materials> \
+  --context-file <customer-material-1.txt> \
+  --context-file <customer-material-2.txt> \
   --run-id <run_id> \
   --industry <industry> \
   --audience client
@@ -62,6 +63,10 @@ python3 scripts/deck_master.py autoplan \
   --library-mode auto \
   --planning-mode narrative_v2
 ```
+
+For production runs, auto mode must use real PPT Library results. If the
+library is unavailable, repair the suite or explicitly confirm
+`--allow-fixture-library-fallback` for a demo downgrade.
 
 Or step-by-step:
 

@@ -209,16 +209,92 @@ class RunStateResolverAcceptanceTests(unittest.TestCase):
         generation_tasks = self.run_dir / "generation_tasks"
         generation_tasks.mkdir()
         (generation_tasks / "index.json").write_text(json.dumps({"tasks": [{"id": "task-1"}]}), encoding="utf-8")
-        self._write_json("generation_session.json", {"run_id": "r1", "status": "quality_required"})
+        self._write_json(
+            "generation_session.json",
+            {"run_id": "r1", "status": "quality_required", "quality_required_at": "2026-06-17T10:00:00+00:00"},
+        )
         quality_dir = self.run_dir / "quality_reports"
         quality_dir.mkdir()
         (quality_dir / "draft_gate.json").write_text(
-            json.dumps({"status": "pass", "blocks_delivery": False}),
+            json.dumps({"status": "pass", "blocks_delivery": False, "created_at": "2026-06-17T09:59:00+00:00"}),
             encoding="utf-8",
         )
         state = resolve_run_state(self.run_dir, run_mode="fixture")
         self.assertEqual("needs_draft_gate", state["stage"])
         self.assertIn("quality-gate draft", state["next_command"])
+
+    def test_quality_required_generation_session_accepts_fresh_quality_gate(self) -> None:
+        self._write_full_pipeline(include_preview=True)
+        self._write_json(PREVIEW_MANIFEST_NAME, {"run_id": "r1", "pages": [{"page_id": "p1", "decision": "approved"}]})
+        generation_tasks = self.run_dir / "generation_tasks"
+        generation_tasks.mkdir()
+        (generation_tasks / "index.json").write_text(json.dumps({"tasks": [{"id": "task-1"}]}), encoding="utf-8")
+        self._write_json(
+            "generation_session.json",
+            {"run_id": "r1", "status": "quality_required", "quality_required_at": "2026-06-17T10:00:00+00:00"},
+        )
+        quality_dir = self.run_dir / "quality_reports"
+        quality_dir.mkdir()
+        (quality_dir / "draft_gate.json").write_text(
+            json.dumps({"status": "pass", "blocks_delivery": False, "created_at": "2026-06-17T10:01:00+00:00"}),
+            encoding="utf-8",
+        )
+        state = resolve_run_state(self.run_dir, run_mode="fixture")
+        self.assertEqual("needs_render", state["stage"])
+        self.assertIn("deck-master render", state["next_command"])
+
+    def test_quality_required_generation_session_with_render_can_export(self) -> None:
+        self._write_full_pipeline(include_preview=True)
+        self._write_json(PREVIEW_MANIFEST_NAME, {"run_id": "r1", "pages": [{"page_id": "p1", "decision": "approved"}]})
+        generation_tasks = self.run_dir / "generation_tasks"
+        generation_tasks.mkdir()
+        (generation_tasks / "index.json").write_text(json.dumps({"tasks": [{"id": "task-1"}]}), encoding="utf-8")
+        self._write_json(
+            "generation_session.json",
+            {"run_id": "r1", "status": "quality_required", "quality_required_at": "2026-06-17T10:00:00+00:00"},
+        )
+        quality_dir = self.run_dir / "quality_reports"
+        quality_dir.mkdir()
+        (quality_dir / "draft_gate.json").write_text(
+            json.dumps({"status": "pass", "blocks_delivery": False, "created_at": "2026-06-17T10:01:00+00:00"}),
+            encoding="utf-8",
+        )
+        render_dir = self.run_dir / "render_results"
+        render_dir.mkdir()
+        (render_dir / "render_result.json").write_text(
+            json.dumps({"status": "rendered", "artifact_path": "rendered/index.html"}),
+            encoding="utf-8",
+        )
+        state = resolve_run_state(self.run_dir, run_mode="fixture")
+        self.assertEqual("ready_for_client_export", state["stage"])
+
+    def test_quality_required_generation_session_blocks_on_fresh_blocking_gate(self) -> None:
+        self._write_full_pipeline(include_preview=True)
+        self._write_json(PREVIEW_MANIFEST_NAME, {"run_id": "r1", "pages": [{"page_id": "p1", "decision": "approved"}]})
+        generation_tasks = self.run_dir / "generation_tasks"
+        generation_tasks.mkdir()
+        (generation_tasks / "index.json").write_text(json.dumps({"tasks": [{"id": "task-1"}]}), encoding="utf-8")
+        self._write_json(
+            "generation_session.json",
+            {"run_id": "r1", "status": "quality_required", "quality_required_at": "2026-06-17T10:00:00+00:00"},
+        )
+        quality_dir = self.run_dir / "quality_reports"
+        quality_dir.mkdir()
+        (quality_dir / "draft_gate.json").write_text(
+            json.dumps(
+                {
+                    "status": "rework_required",
+                    "blocks_delivery": True,
+                    "blocking_issue": "draft gate blocks delivery",
+                    "created_at": "2026-06-17T10:01:00+00:00",
+                }
+            ),
+            encoding="utf-8",
+        )
+        state = resolve_run_state(self.run_dir, run_mode="fixture")
+        self.assertEqual("needs_draft_gate", state["stage"])
+        reasons = [item.get("reason", "") for item in state["blocked_actions"]]
+        self.assertTrue(any("draft gate blocks delivery" in reason for reason in reasons))
 
 
 if __name__ == "__main__":

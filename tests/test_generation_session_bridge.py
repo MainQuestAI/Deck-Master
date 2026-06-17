@@ -287,6 +287,7 @@ class GenerationSessionBridgeTests(unittest.TestCase):
         status = generation_session_status(self.run_dir, tool="ppt-deck-pro-max")
         self.assertEqual("quality_required", status["status"])
         self.assertTrue(status["needs_quality_gate"])
+        self.assertTrue(status["session"].get("quality_required_at"))
 
         preview = read_json(self.run_dir / "preview_manifest.json")
         first_page = next(
@@ -341,6 +342,8 @@ class GenerationSessionBridgeTests(unittest.TestCase):
         imported = import_generation_results(self.run_dir, result_path)
 
         self.assertEqual("quality_required", imported["status"])
+        session_after_import = read_json(self.run_dir / "generation_session.json")
+        self.assertTrue(session_after_import.get("quality_required_at"))
         written = read_json(self.run_dir / "generation_results" / f"{self.tasks[0]['task_id']}.json")
         self.assertEqual(RESULT_SCHEMA_VERSION, written["schema_version"])
         self.assertEqual("deck_generation_result.v1", written["schema_version"])

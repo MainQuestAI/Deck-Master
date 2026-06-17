@@ -78,6 +78,8 @@ def orchestration_check(
         status = "ready_for_external_production"
     elif stage == "needs_draft_gate":
         status = "needs_quality_gate"
+    elif stage == "needs_render":
+        status = "needs_render"
     elif stage == "blocked_workspace":
         status = "blocked"
     else:

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -35,6 +36,30 @@ def _safe_read(path: Path) -> dict[str, Any] | None:
         return None
 
 
+def _parse_timestamp(value: Any) -> datetime | None:
+    if not value:
+        return None
+    text = str(value).strip()
+    if not text:
+        return None
+    if text.endswith("Z"):
+        text = text[:-1] + "+00:00"
+    try:
+        parsed = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def _file_mtime(path: Path) -> datetime | None:
+    try:
+        return datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc)
+    except OSError:
+        return None
+
+
 def _read_generation_status(root: Path) -> tuple[str, dict[str, Any] | None]:
     session = _safe_read(root / GENERATION_SESSION_NAME)
     if not session:
@@ -52,6 +77,12 @@ def _generation_tasks_count(root: Path) -> int:
     return len(tasks) if isinstance(tasks, list) else 0
 
 
+def _render_result_present(root: Path) -> bool:
+    if _safe_read(root / CANONICAL_RENDER_RESULT):
+        return True
+    return any(_safe_read(root / legacy) for legacy in LEGACY_RENDER_RESULTS)
+
+
 def _pick_first_draft_gate(root: Path) -> dict[str, Any] | None:
     quality_dir = root / QUALITY_DIR
     if not quality_dir.is_dir():
@@ -60,6 +91,7 @@ def _pick_first_draft_gate(root: Path) -> dict[str, Any] | None:
         payload = _safe_read(quality_dir / filename)
         if payload:
             payload["_report_file"] = filename
+            payload["_report_path"] = str(quality_dir / filename)
             return payload
     return None
 
@@ -81,6 +113,41 @@ def _draft_gate_blocks(gate: dict[str, Any] | None) -> tuple[bool, str]:
         return True, str(gate.get("blocking_issue") or "draft gate blocks delivery")
 
     return True, f"draft gate status is {status}"
+
+
+def _gate_timestamp(gate: dict[str, Any] | None) -> datetime | None:
+    if not gate:
+        return None
+    parsed = _parse_timestamp(gate.get("created_at"))
+    if parsed:
+        return parsed
+    report_path = gate.get("_report_path")
+    if report_path:
+        return _file_mtime(Path(str(report_path)))
+    return None
+
+
+def _quality_required_timestamp(root: Path, session: dict[str, Any] | None) -> datetime | None:
+    parsed = _parse_timestamp((session or {}).get("quality_required_at"))
+    if parsed:
+        return parsed
+    return _file_mtime(root / GENERATION_SESSION_NAME)
+
+
+def _fresh_draft_gate_for_generation(root: Path, session: dict[str, Any] | None) -> tuple[bool, str]:
+    gate = _pick_first_draft_gate(root)
+    blocked, reason = _draft_gate_blocks(gate)
+    if blocked:
+        return False, reason
+    required_at = _quality_required_timestamp(root, session)
+    if not required_at:
+        return False, "generation session is missing quality_required_at"
+    gate_at = _gate_timestamp(gate)
+    if not gate_at:
+        return False, "draft gate is missing created_at"
+    if gate_at < required_at:
+        return False, "draft gate is stale for current generation results"
+    return True, ""
 
 
 def _normalize_review_status(value: Any) -> str:
@@ -291,7 +358,7 @@ def _resolve_stage(root: Path, run_mode: str) -> tuple[str, list[dict[str, str]]
         )
 
     if has_generation_session:
-        gen_status, _ = _read_generation_status(root)
+        gen_status, generation_session = _read_generation_status(root)
         if gen_status in {"created", "running", "dispatched"}:
             return (
                 "generation_running",
@@ -317,12 +384,15 @@ def _resolve_stage(root: Path, run_mode: str) -> tuple[str, list[dict[str, str]]
                 "generation results imported but preview is not refreshed",
             )
         if gen_status == "quality_required":
-            return (
-                "needs_draft_gate",
-                [{"action": "draft_gate", "reason": "generation results require fresh quality gate"}],
-                "generation results require fresh quality gate",
-            )
-        if gen_status and gen_status not in {"preview_refreshed"}:
+            fresh, freshness_reason = _fresh_draft_gate_for_generation(root, generation_session)
+            if not fresh:
+                reason = freshness_reason or "generation results require fresh quality gate"
+                return (
+                    "needs_draft_gate",
+                    [{"action": "draft_gate", "reason": reason}],
+                    reason,
+                )
+        if gen_status and gen_status not in {"preview_refreshed", "quality_required"}:
             return (
                 "needs_generation_import",
                 [{"action": "generation_import", "reason": "generation session requires import or refresh"}],
@@ -355,6 +425,13 @@ def _resolve_stage(root: Path, run_mode: str) -> tuple[str, list[dict[str, str]]
             reason,
         )
 
+    if generation_task_count > 0 and not _render_result_present(root):
+        return (
+            "needs_render",
+            [{"action": "render", "reason": "render result is missing after generation"}],
+            "render result is missing after generation",
+        )
+
     if run_mode == "benchmark":
         return "ready_for_benchmark", [], "ready for benchmark"
     return "ready_for_client_export", [], "ready for export"
@@ -385,6 +462,8 @@ def _next_command(stage: str, root: Path, run_id: str) -> str:
         return f"deck-master build-preview --run-dir {root} --run-id {run_id}"
     if stage == "needs_draft_gate":
         return f"deck-master quality-gate draft --run-dir {root} --run-id {run_id}"
+    if stage == "needs_render":
+        return f"deck-master render --run-dir {root} --run-id {run_id} --format html"
     if stage == "needs_review":
         return f"deck-master run-state --run-dir {root} --run-id {run_id}"
     if stage in {"ready_for_benchmark", "ready_for_client_export"}:
@@ -411,6 +490,7 @@ def _allowed_blocking(stage: str, reason: str, run_mode: str) -> tuple[list[str]
         "needs_preview_refresh",
         "needs_preview",
         "needs_draft_gate",
+        "needs_render",
     }:
         blocked_actions.append({"action": "client_export", "reason": reason})
 

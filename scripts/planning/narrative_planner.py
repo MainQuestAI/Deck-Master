@@ -105,6 +105,48 @@ def _template_filter(
     ]
 
 
+def _mentions_retail_specific_path(
+    request: dict[str, Any],
+    judgments: dict[str, Any] | None,
+    claim_graph: dict[str, Any] | None,
+) -> bool:
+    topics = request.get("must_cover_topics", [])
+    topic_text = " ".join(str(item) for item in topics if item) if isinstance(topics, list) else str(topics or "")
+    chunks = [
+        str(request.get("project_name") or ""),
+        str(request.get("industry") or ""),
+        str(request.get("business_goal") or ""),
+        str(request.get("brief") or ""),
+        topic_text,
+    ]
+    if judgments:
+        for item in judgments.get("judgments", []):
+            if isinstance(item, dict):
+                chunks.append(str(item.get("statement") or ""))
+    if claim_graph:
+        for item in claim_graph.get("claims", []):
+            if isinstance(item, dict):
+                chunks.append(str(item.get("statement") or ""))
+        for item in claim_graph.get("gaps", []):
+            if isinstance(item, dict):
+                chunks.append(str(item.get("description") or ""))
+    text = " ".join(chunks)
+    return any(keyword in text for keyword in ("全渠道", "库存", "最后一公里", "配送", "履约"))
+
+
+def _template_profile(
+    planner_mode: str,
+    request: dict[str, Any],
+    judgments: dict[str, Any] | None,
+    claim_graph: dict[str, Any] | None,
+) -> str:
+    if planner_mode == "fixture_template":
+        return "retail"
+    if _mentions_retail_specific_path(request, judgments, claim_graph):
+        return "retail"
+    return "generic"
+
+
 def topic_hint(request: dict[str, Any], fallback: str) -> str:
     topics = request.get("must_cover_topics") or []
     if isinstance(topics, list) and topics:
@@ -202,7 +244,11 @@ def plan_narrative(
 ) -> dict[str, Any]:
     page_count = resolve_page_count(str(request.get("target_pages") or "auto"), str(request.get("audience") or "client"))
     gaps = identify_gaps(request)
-    templates = _template_filter(planner_mode, request, beat_templates(page_count))
+    templates = _template_filter(
+        planner_mode,
+        request,
+        beat_templates(page_count, template_profile=_template_profile(planner_mode, request, judgments, claim_graph)),
+    )
     adjusted_page_count = len(templates)
     density = density_for(adjusted_page_count)
     beats: list[dict[str, Any]] = []

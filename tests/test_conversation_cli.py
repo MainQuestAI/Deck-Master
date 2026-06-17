@@ -41,6 +41,8 @@ class ConversationCliTests(unittest.TestCase):
             str(self.temp_dir),
             "--run-id",
             "conversation-e2e",
+            "--run-mode",
+            "fixture",
         )
         run_dir = Path(start["run_dir"])
 
@@ -51,6 +53,8 @@ class ConversationCliTests(unittest.TestCase):
             "--run-dir",
             str(run_dir),
             "--library-mode",
+            "fixture",
+            "--run-mode",
             "fixture",
             "--planning-mode",
             "narrative_v2",

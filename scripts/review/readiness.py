@@ -18,6 +18,8 @@ from runtime.run_state import (
     RunStateError,
     read_json,
 )
+from runtime.render import CANONICAL_RENDER_RESULT, LEGACY_RENDER_RESULTS
+from runtime.run_state_resolver import _draft_gate_blocks, _fresh_draft_gate_for_generation, _pick_first_draft_gate
 
 
 def _safe_read(path: Path) -> dict[str, Any] | None:
@@ -107,11 +109,14 @@ def compute_deck_readiness(run_dir: Path) -> dict[str, Any]:
     p0_total = 0
     p1_total = 0
     p2_total = 0
+    quality_blocks_delivery = False
     if quality_dir.exists():
         for gate_file in quality_dir.glob("*_gate.json"):
             report = _safe_read(gate_file)
             if not report:
                 continue
+            if report.get("blocks_delivery"):
+                quality_blocks_delivery = True
             summary = report.get("summary", {})
             p0_total += summary.get("p0_count", 0)
             p1_total += summary.get("p1_count", 0)
@@ -131,24 +136,58 @@ def compute_deck_readiness(run_dir: Path) -> dict[str, Any]:
     # Readiness dimensions.
     narrative = "pass" if (run_dir / "deck_brief.json").exists() else "pending"
     evidence = "blocked" if p0_total > 0 else ("conditional_pass" if p1_total > 0 else "pass")
-    quality = "blocked" if p0_total > 0 else ("conditional_pass" if p1_total > 0 else "pass")
+    quality = "blocked" if (p0_total > 0 or quality_blocks_delivery) else ("conditional_pass" if p1_total > 0 else "pass")
     generation_status = "pending"
+    generation_required = False
+    generation_quality_ready = True
+    render_required = False
+    render_ready = True
+    blocking_reasons: list[str] = []
     gen_tasks_dir = run_dir / "generation_tasks"
     if gen_tasks_dir.exists():
         gen_index = _safe_read(gen_tasks_dir / "index.json")
         if gen_index:
             generation_tasks = _generation_tasks_from_index(run_dir, gen_index)
+            generation_required = bool(generation_tasks)
             completed = sum(1 for task in generation_tasks if task.get("status") == "completed")
             if completed == len(generation_tasks) and generation_tasks:
                 generation_status = "completed"
             elif completed > 0:
                 generation_status = "partial"
+            session = _safe_read(run_dir / "generation_session.json") or {}
+            session_status = str(session.get("status") or "").strip().lower()
+            if session_status:
+                generation_status = session_status
+            render_required = generation_required
+            render_ready = (run_dir / CANONICAL_RENDER_RESULT).exists() or any((run_dir / path).exists() for path in LEGACY_RENDER_RESULTS)
+            if session_status == "quality_required":
+                generation_quality_ready, freshness_reason = _fresh_draft_gate_for_generation(run_dir, session)
+                if freshness_reason:
+                    blocking_reasons.append(freshness_reason)
+            elif session_status == "preview_refreshed":
+                gate = _pick_first_draft_gate(run_dir)
+                generation_quality_ready, freshness_reason = _draft_gate_blocks(gate)
+                generation_quality_ready = not generation_quality_ready
+                if freshness_reason:
+                    blocking_reasons.append(freshness_reason)
+            else:
+                generation_quality_ready = False
+                blocking_reasons.append(f"generation session status is {session_status or 'missing'}")
+            if not render_ready:
+                blocking_reasons.append("render result is missing")
 
-    export_ready = (
-        evidence == "pass"
-        and quality == "pass"
-        and approved > 0
-    )
+    if approved <= 0:
+        blocking_reasons.append("no approved pages")
+    if needs_review > 0:
+        blocking_reasons.append("pages still need review")
+    if evidence == "blocked":
+        blocking_reasons.append("evidence gate is blocked")
+    if quality == "blocked":
+        blocking_reasons.append("quality gate blocks delivery")
+
+    export_ready = evidence == "pass" and quality == "pass" and approved > 0
+    if generation_required:
+        export_ready = export_ready and generation_quality_ready and render_ready
     overall = (
         "ready" if export_ready
         else "blocked" if (p0_total > 0 or evidence == "blocked")
@@ -162,8 +201,13 @@ def compute_deck_readiness(run_dir: Path) -> dict[str, Any]:
             "narrative": narrative,
             "evidence": evidence,
             "generation": generation_status,
+            "generation_required": generation_required,
+            "generation_quality_ready": generation_quality_ready,
+            "render": "ready" if render_ready else "blocked",
+            "render_required": render_required,
             "quality": quality,
             "export": "ready" if export_ready else "blocked",
+            "blocking_reasons": sorted(set(reason for reason in blocking_reasons if reason)),
         },
         "counts": {
             "pages": total,

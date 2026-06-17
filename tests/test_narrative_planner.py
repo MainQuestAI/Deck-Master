@@ -118,6 +118,20 @@ class NarrativePlannerTests(unittest.TestCase):
         for keyword in ("全渠道", "库存可视化", "最后一公里", "目标架构", "案例", "价值"):
             self.assertIn(keyword, text)
 
+    def test_production_default_uses_generic_beats_without_retail_terms(self) -> None:
+        request = build_request(
+            brief="企业内容治理和智能知识运营方案",
+            industry="enterprise",
+            target_pages="auto",
+        )
+        plan = plan_narrative(request, planner_mode="production_narrative")
+        text = "\n".join(beat["page_title"] for beat in plan["beats"])
+
+        self.assertNotIn("全渠道场景", text)
+        self.assertNotIn("库存可视化", text)
+        self.assertNotIn("最后一公里配送", text)
+        self.assertIn("业务场景闭环", text)
+
     def test_page_count_can_be_explicit(self) -> None:
         request = build_request(brief="通用解决方案", target_pages="30")
         plan = plan_narrative(request)

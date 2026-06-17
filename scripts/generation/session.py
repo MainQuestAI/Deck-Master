@@ -168,6 +168,8 @@ def _set_session_status(
     session["status"] = status
     if status in {"running"} and not session.get("started_at"):
         session["started_at"] = _utc_now()
+    if status == "quality_required":
+        session["quality_required_at"] = _utc_now()
     if status in {
         "completed",
         "partial",

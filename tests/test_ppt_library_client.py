@@ -55,6 +55,44 @@ class PPTLibraryClientTests(unittest.TestCase):
         self.assertEqual("fixture", results["source"])
         self.assertTrue((self.temp_dir / "library_results" / "selection.json").exists())
         self.assertIn(plan["beats"][0]["beat_id"], results["by_beat"])
+        first_candidate = next(iter(results["by_beat"].values()))[0]
+        self.assertEqual("fixture", first_candidate["candidate_origin"])
+
+    def test_production_auto_blocks_fixture_fallback_by_default(self) -> None:
+        request = build_request(brief="真实生产方案", industry="healthcare")
+        request["run_mode"] = "production"
+        plan = plan_narrative(request)
+        plan_path = self.temp_dir / "narrative_plan.json"
+        plan_path.write_text("{}", encoding="utf-8")
+
+        with self.assertRaises(PPTLibraryClientError):
+            run_library_selection(
+                narrative_plan=plan,
+                narrative_plan_path=plan_path,
+                request=request,
+                run_dir=self.temp_dir,
+                mode="auto",
+                command="missing-ppt-lib-command",
+            )
+
+    def test_production_auto_allows_explicit_fixture_fallback(self) -> None:
+        request = build_request(brief="真实生产方案", industry="healthcare")
+        request["run_mode"] = "production"
+        plan = plan_narrative(request)
+        plan_path = self.temp_dir / "narrative_plan.json"
+        plan_path.write_text("{}", encoding="utf-8")
+
+        results = run_library_selection(
+            narrative_plan=plan,
+            narrative_plan_path=plan_path,
+            request=request,
+            run_dir=self.temp_dir,
+            mode="auto",
+            command="missing-ppt-lib-command",
+            allow_fixture_fallback=True,
+        )
+
+        self.assertEqual("fixture", results["source"])
 
     def test_import_library_selection_writes_canonical_and_legacy_results(self) -> None:
         run_dir = create_run(self.temp_dir / "runs", {"project_name": "Library", "run_id": "lib-run"}, force=True)
@@ -86,10 +124,12 @@ class PPTLibraryClientTests(unittest.TestCase):
         self.assertEqual("imported", result["status"])
         self.assertTrue((run_dir / "external" / "ppt_library" / "library_results.json").exists())
         legacy = read_json(run_dir / "library_results" / "selection.json")
+        self.assertEqual("imported", legacy["source"])
         candidate = legacy["by_beat"]["beat-001"][0]
         self.assertEqual("page-001", candidate["page_task_id"])
         self.assertEqual("hero", candidate["slot_id"])
         self.assertEqual("query-001", candidate["query_trace_id"])
+        self.assertEqual("imported", candidate["candidate_origin"])
         logs = read_import_log(run_dir)
         self.assertEqual("ppt_library_selection", logs[-1]["import_type"])
 

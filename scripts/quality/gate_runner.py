@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -64,6 +65,7 @@ def _report(
     return {
         "run_id": run_id,
         "gate": gate,
+        "created_at": datetime.now(timezone.utc).isoformat(),
         "status": status,
         "artifact": artifact,
         "scorecard": scorecard,

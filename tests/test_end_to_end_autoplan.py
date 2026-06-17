@@ -52,6 +52,8 @@ class EndToEndAutoplanTests(unittest.TestCase):
 
         self.assertEqual("autoplan_preview_ready", payload["status"])
         self.assertGreaterEqual(len(manifest["pages"]), 10)
+        self.assertIn("candidate_origin", manifest["pages"][0])
+        self.assertIn("library_source", manifest["pages"][0])
         self.assertIn("planning", page_tasks["tasks"][0])
         self.assertTrue({"reuse", "adapt", "generate", "manual_placeholder"}.issubset({item["source_decision"] for item in sourcing["decisions"]}))
 

@@ -559,6 +559,7 @@ def command_search_library(args: argparse.Namespace) -> dict[str, Any]:
         run_dir=run_dir,
         mode=args.library_mode,
         command=args.ppt_lib_command,
+        allow_fixture_fallback=bool(getattr(args, "allow_fixture_library_fallback", False)),
     )
     return {"run_id": request["run_id"], "run_dir": str(run_dir), "status": "library_ready", "source": results.get("source", "")}
 
@@ -937,23 +938,65 @@ def command_setup_status(args: argparse.Namespace) -> dict[str, Any]:
     )
 
 
+def _blocked_suite_capabilities(setup: dict[str, Any]) -> list[dict[str, str]]:
+    suite = setup.get("suite") if isinstance(setup.get("suite"), dict) else {}
+    blocked: list[dict[str, str]] = []
+    skill_items = suite.get("skills", [])
+    if not isinstance(skill_items, list):
+        skill_items = []
+    for item in skill_items:
+        if not isinstance(item, dict) or not item.get("required"):
+            continue
+        if item.get("status") == "ready" and item.get("valid") is True:
+            continue
+        blocked.append(
+            {
+                "target": str(item.get("target") or ""),
+                "skill": str(item.get("skill") or ""),
+                "status": str(item.get("status") or "blocked"),
+                "reason": str(item.get("error") or item.get("cli_error") or ""),
+            }
+        )
+    return blocked
+
+
+def _start_first_action(setup: dict[str, Any], run_state: dict[str, Any] | None = None) -> str:
+    setup_command = str(setup.get("next_command") or "").strip()
+    if setup.get("status") != "ready":
+        return setup_command or "deck-master setup-status --include-suite --output json"
+    if setup.get("full_suite_ready") is False:
+        suite = setup.get("suite") if isinstance(setup.get("suite"), dict) else {}
+        return str(suite.get("next_command") or setup_command or "deck-master suite-repair --target codex")
+    if run_state:
+        return str(run_state.get("next_command") or setup_command or "deck-master setup-status --include-suite --output json")
+    return setup_command or "deck-master setup-status --include-suite --output json"
+
+
 def command_start(args: argparse.Namespace) -> dict[str, Any]:
     run_mode = _normalize_run_mode(getattr(args, "run_mode", None))
     setup = setup_status(
         workspace=_resolve_workspace_for_setup_status(args),
         run_mode=run_mode,
+        include_suite=True,
         write_event=False,
     )
+    blocked_capabilities = _blocked_suite_capabilities(setup)
+    first_action = _start_first_action(setup)
     payload: dict[str, Any] = {
         "schema_version": "deck_master_start.v1",
         "status": setup.get("status", "blocked"),
         "run_mode": run_mode,
         "setup_status": setup,
+        "suite": setup.get("suite") or {},
+        "full_suite_ready": bool(setup.get("full_suite_ready")),
+        "task_readiness": setup.get("task_readiness") or {},
+        "blocked_capabilities": blocked_capabilities,
+        "first_action": first_action,
         "active_workspace": (setup.get("config") or {}).get("active_workspace", "")
         if isinstance(setup.get("config"), dict)
         else "",
         "production_ready": bool(setup.get("production_ready")),
-        "next_command": setup.get("next_command") or "deck-master setup-status",
+        "next_command": first_action,
     }
     if getattr(args, "run_dir", None) or getattr(args, "run_id", None):
         run_dir = resolve_run_dir(args)
@@ -965,7 +1008,9 @@ def command_start(args: argparse.Namespace) -> dict[str, Any]:
         )
         payload["run_state"] = run_state
         payload["orchestration"] = _start_orchestration_summary(run_dir, run_state)
-        payload["next_command"] = run_state.get("next_command") or payload["next_command"]
+        payload["run_next_command"] = run_state.get("next_command") or ""
+        payload["first_action"] = _start_first_action(setup, run_state)
+        payload["next_command"] = payload["first_action"]
     return payload
 
 
@@ -1599,6 +1644,7 @@ def add_run_args(parser: argparse.ArgumentParser) -> None:
 def add_library_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--library-mode", choices=["auto", "real", "fixture"], default="auto")
     parser.add_argument("--ppt-lib-command", default="ppt-lib")
+    parser.add_argument("--allow-fixture-library-fallback", action="store_true")
 
 
 def add_planning_mode_arg(parser: argparse.ArgumentParser) -> None:

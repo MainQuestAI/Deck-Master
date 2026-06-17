@@ -150,6 +150,29 @@ dd,
   margin-top: 4px;
 }
 
+.source-badge {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 1px 6px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.source-fixture {
+  color: var(--replace);
+}
+
+.source-ppt_library {
+  color: var(--approved);
+}
+
+.source-imported {
+  color: var(--review);
+}
+
 .page-no {
   color: var(--review);
   font-weight: 700;

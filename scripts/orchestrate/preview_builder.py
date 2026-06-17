@@ -63,12 +63,16 @@ def page_for_decision(run_dir: Path, decision: dict[str, Any], generation_tasks:
                 task = candidate
                 break
     source_decision = str(decision.get("source_decision"))
+    library_source = str(decision.get("library_source") or "none")
+    candidate_origin = str(decision.get("candidate_origin") or ("none" if not selected else library_source))
     page = {
         "page_id": str(decision.get("beat_id")),
         "beat_id": decision.get("beat_id"),
         "order": int(decision.get("order") or 0),
         "title": decision.get("page_title") or decision.get("beat_id"),
         "source_type": source_type_for(source_decision),
+        "library_source": library_source,
+        "candidate_origin": candidate_origin,
         "source_decision": source_decision,
         "preview_asset": preview_asset_for(run_dir, decision),
         "narrative_role": decision.get("role") or "",

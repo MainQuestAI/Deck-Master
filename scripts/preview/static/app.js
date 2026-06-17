@@ -280,6 +280,20 @@ function renderRuns() {
   });
 }
 
+function sourceLabelFor(page) {
+  const origin = String(page.candidate_origin || page.library_source || page.source_type || "").toLowerCase();
+  if (origin === "ppt_library") return "真实库";
+  if (origin === "fixture") return "Fixture";
+  if (origin === "imported") return "Imported";
+  if (page.source_type === "generated") return "Generated";
+  return origin || "";
+}
+
+function sourceBadgeFor(page) {
+  const label = sourceLabelFor(page);
+  return label ? `<span class="source-badge source-${escapeHtml(String(page.candidate_origin || page.library_source || "unknown").toLowerCase())}">${escapeHtml(label)}</span>` : "";
+}
+
 function renderList() {
   if (!state.deck) return;
   els.list.innerHTML = "";
@@ -287,11 +301,12 @@ function renderList() {
     const item = document.createElement("button");
     item.className = `page-card decision-${page.decision}`;
     item.dataset.active = index === state.selectedIndex ? "true" : "false";
+    const sourceBadge = sourceBadgeFor(page);
     item.innerHTML = `
       <span class="page-no">${String(page.order).padStart(2, "0")}</span>
       <span>
         <strong>${escapeHtml(page.title || page.page_id)}</strong>
-        <small>${escapeHtml(page.source_type)} · ${escapeHtml(page.decision)}${page.quality && page.quality.length ? ` · ${page.quality.length} quality finding(s)` : ""}</small>
+        <small>${sourceBadge}${escapeHtml(page.source_type)} · ${escapeHtml(page.decision)}${page.quality && page.quality.length ? ` · ${page.quality.length} quality finding(s)` : ""}</small>
       </span>
       ${page.asset_exists ? "" : '<b class="warn">!</b>'}
     `;
@@ -319,6 +334,8 @@ function renderPage(page) {
 
   els.details.innerHTML = detailRows({
     "Source": page.source_type,
+    "Library source": sourceLabelFor(page),
+    "Candidate origin": page.candidate_origin || "",
     "Sourcing decision": page.source_decision || "",
     "Narrative role": page.narrative_role,
     "Reason": page.decision_reason || page.reuse_reason || page.generation_reason || "",

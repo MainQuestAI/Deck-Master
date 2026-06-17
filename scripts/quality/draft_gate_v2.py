@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import Any
 
 
@@ -81,6 +82,7 @@ def evaluate_draft_gate_v2(
         "schema_version": SCHEMA_VERSION,
         "run_id": run_id,
         "gate": "draft_v2",
+        "created_at": datetime.now(timezone.utc).isoformat(),
         "status": status,
         "dimension_scores": dimension_scores,
         "findings": findings,

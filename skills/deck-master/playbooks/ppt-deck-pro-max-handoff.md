@@ -8,7 +8,8 @@ How to hand off page generation tasks to PPT Deck Pro Max and return results.
 python3 scripts/deck_master.py prepare-generation-handoff --run-id <run_id>
 ```
 
-This writes `generation_tasks/index.json` with one entry per generate page.
+This writes `generation_tasks/index.json` with one task entry for each page that
+needs `generate` or `adapt` work.
 
 ## Per-Task Structure
 
@@ -32,6 +33,10 @@ ppt-deck-pro-max generate \
   --visual-system workspace/visual-system/ \
   --archetypes workspace/structure-assets/page_archetypes.md
 ```
+
+If a task has `task_type: adapt`, preserve the selected reference slide
+structure and rewrite it for the current run. If it has `task_type: generate`,
+create a new page from the task brief.
 
 ## Write Result
 

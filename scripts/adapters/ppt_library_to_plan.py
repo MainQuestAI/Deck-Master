@@ -85,6 +85,8 @@ def convert_ppt_library_payload(
                 "order": index,
                 "title": slide.get("title") or f"PPT Library Slide {index}",
                 "source_type": "library_slide",
+                "library_source": "imported",
+                "candidate_origin": "imported",
                 "preview_asset": preview_asset_for(slide, page_id, asset_base_dir),
                 "source_pptx": source_file,
                 "source_slide_index": page_number if page_number is not None else "",

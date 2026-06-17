@@ -66,6 +66,9 @@ class SetupEnforcementTests(unittest.TestCase):
 
         self.assertEqual("deck_master_start.v1", payload["schema_version"])
         self.assertEqual("blocked", payload["status"])
+        self.assertIn("suite", payload)
+        self.assertIn("blocked_capabilities", payload)
+        self.assertIn("first_action", payload)
         self.assertIn("deck-master setup", payload["next_command"])
 
     def test_setup_status_include_suite_is_non_mutating_without_setup(self) -> None:
@@ -111,6 +114,9 @@ class SetupEnforcementTests(unittest.TestCase):
         start_payload = json.loads(start.stdout)
         self.assertEqual("ready", start_payload["setup_status"]["status"])
         self.assertTrue(start_payload["production_ready"])
+        self.assertFalse(start_payload["full_suite_ready"])
+        self.assertTrue(start_payload["blocked_capabilities"])
+        self.assertIn("suite-repair", start_payload["next_command"])
 
     def test_setup_status_needs_repair_for_incomplete_workspace(self) -> None:
         self._install_fake_skill()

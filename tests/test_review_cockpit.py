@@ -383,6 +383,44 @@ class ReviewCockpitDirectTest(unittest.TestCase):
             self.assertIn("action_type", action)
             self.assertIn("message", action)
 
+    def test_generation_run_requires_render_for_export_readiness(self) -> None:
+        write_json(self.run_dir / "preview_manifest.json", {
+            "run_id": "review-test",
+            "pages": [{"page_id": "beat_001", "decision": "approved", "review_status": "approved"}],
+        })
+        quality_dir = self.run_dir / "quality_reports"
+        for report in quality_dir.glob("*_gate.json"):
+            report.unlink()
+        write_json(quality_dir / "draft_gate.json", {
+            "status": "pass",
+            "blocks_delivery": False,
+            "created_at": "2026-06-17T10:01:00+00:00",
+            "summary": {"p0_count": 0, "p1_count": 0, "p2_count": 0},
+            "findings": [],
+        })
+        tasks_dir = self.run_dir / "generation_tasks"
+        tasks_dir.mkdir(exist_ok=True)
+        write_json(tasks_dir / "index.json", {
+            "tasks": [{"task_id": "generation_001", "beat_id": "beat_001", "status": "completed"}],
+        })
+        write_json(self.run_dir / "generation_session.json", {
+            "run_id": "review-test",
+            "status": "quality_required",
+            "quality_required_at": "2026-06-17T10:00:00+00:00",
+        })
+
+        blocked = compute_deck_readiness(self.run_dir)
+        self.assertEqual("blocked", blocked["deck_readiness"]["render"])
+        self.assertEqual("blocked", blocked["deck_readiness"]["export"])
+        self.assertIn("render result is missing", blocked["deck_readiness"]["blocking_reasons"])
+
+        render_dir = self.run_dir / "render_results"
+        render_dir.mkdir()
+        write_json(render_dir / "render_result.json", {"status": "rendered", "artifact_path": "rendered/index.html"})
+        ready = compute_deck_readiness(self.run_dir)
+        self.assertEqual("ready", ready["deck_readiness"]["render"])
+        self.assertEqual("ready", ready["deck_readiness"]["export"])
+
 
 class FrontendContractAPITest(unittest.TestCase):
     """Test v0.9.5 Review Cockpit frontend API contracts."""

@@ -38,11 +38,13 @@ http://127.0.0.1:5050
 Run these in order before operating on a real deck workflow:
 
 ```bash
-~/.deck-master/bin/deck-master setup-status --include-suite --output json
-~/.deck-master/bin/deck-master suite-status --output json
 ~/.deck-master/bin/deck-master start
 ~/.deck-master/bin/deck-master start --run-id <run_id>
 ```
+
+Read `first_action` and `next_command` from `start` before creating or changing
+production artifacts. `start` includes setup readiness, suite readiness,
+blocked capabilities, and the current run state when a run is provided.
 
 For setup tasks and repair, use:
 
@@ -100,6 +102,10 @@ coverage, generation session control, quality gates, review, and export:
 ~/.deck-master/bin/deck-master run-state --run-dir <run_dir>
 ```
 
+For production runs, `--library-mode auto` must use real PPT Library results.
+If PPT Library is unavailable, repair the suite or explicitly confirm a demo
+fallback with `--allow-fixture-library-fallback`.
+
 If another Agent already prepared a Context Pack, create the run through Deck
 Master so workspace lineage is written into `request.json`:
 
@@ -117,7 +123,8 @@ For demo, fixture, or quick smoke runs, a brief file can still drive a preview:
 ~/.deck-master/bin/deck-master autoplan \
   --brief-file <brief.txt> \
   --industry <industry> \
-  --library-mode auto \
+  --run-mode fixture \
+  --library-mode fixture \
   --run-id <run_id> \
   --force
 ```
