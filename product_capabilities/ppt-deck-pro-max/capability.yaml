@@ -1,0 +1,14 @@
+schema_version: deck_master_capability_package.v1
+name: ppt-deck-pro-max
+kind: product_capability
+required: true
+requires_session_binding: true
+outputs:
+  - ppt_deck_pro_max_generation_result.v1
+  - deck_generation_result.v1
+operations:
+  - status
+  - doctor
+  - schema
+  - smoke --fixture
+  - writeback

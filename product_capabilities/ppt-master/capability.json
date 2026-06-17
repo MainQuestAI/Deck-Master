@@ -1,0 +1,17 @@
+{
+  "schema_version": "deck_master_capability_package.v1",
+  "name": "ppt-master",
+  "kind": "product_capability",
+  "required": true,
+  "runtime": {
+    "operations": ["status", "doctor", "schema", "smoke --fixture", "writeback"],
+    "default_command": "deck-master render"
+  },
+  "contracts": {
+    "outputs": ["deck_render_result.v1"]
+  },
+  "state_policy": {
+    "active_run_outputs_must_import": true,
+    "canonical_artifact": "render_results/render_result.json"
+  }
+}

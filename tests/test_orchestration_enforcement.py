@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from runtime.orchestration import import_plan, import_render_result, orchestration_check  # noqa: E402
+from runtime.render import CANONICAL_RENDER_RESULT  # noqa: E402
 from runtime.run_state import create_run, read_json, write_json  # noqa: E402
 
 
@@ -133,10 +134,13 @@ class OrchestrationEnforcementTests(unittest.TestCase):
         self.assertTrue(result["preview_manifest_updated"])
         preview = read_json(self.run_dir / "preview_manifest.json")
         self.assertEqual(str(artifact), preview["final_artifact_path"])
-        self.assertEqual("external_results/render_result.json", preview["external_render_result"])
+        self.assertTrue((self.run_dir / CANONICAL_RENDER_RESULT).exists())
+        self.assertEqual(str(CANONICAL_RENDER_RESULT), preview["external_render_result"])
         self.assertEqual("final-preview/beat_01.png", preview["pages"][0]["preview_path"])
         events = (self.run_dir / "events.jsonl").read_text(encoding="utf-8")
         self.assertIn("external_result.imported", events)
+        imports = (self.run_dir / "imports" / "import_log.jsonl").read_text(encoding="utf-8")
+        self.assertIn("render_result", imports)
 
 
 if __name__ == "__main__":

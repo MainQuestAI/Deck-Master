@@ -14,8 +14,11 @@ from typing import Any
 
 SKILL_NAME = "deck-master"
 SUITE_NAME = "deck-master"
-SUITE_VERSION = "0.9.12"
+SUITE_VERSION = "0.9.13"
 COMPANION_MANIFEST_SCHEMA_VERSION = "deck_master_companion_manifest.v2"
+PRODUCT_CAPABILITY_MANIFEST_SCHEMA_VERSION = "deck_master_product_capability_manifest.v1"
+PRODUCT_CAPABILITY_MANIFEST_NAME = "product-capability-manifest.json"
+RELEASE_TREE_MARKER = ".release_tree_managed_by_deck_master"
 
 SUPPORTED_TARGETS = {"codex", "claude-code", "hermes", "custom"}
 
@@ -45,11 +48,47 @@ SUITE_SKILLS: list[dict[str, Any]] = [
         "conflict_policy": "never_overwrite_real_directory",
     },
     {
+        "name": "deck-planner",
+        "required": True,
+        "required_for": ["planning", "brief", "claim_map", "narrative_plan"],
+        "install_source": "bundled",
+        "cli": "deck-master",
+        "required_capabilities": ["deck_master.planning.v1"],
+        "optional_capabilities": [],
+        "schema_versions": {"planning_state": "deck_planning_state.v1"},
+        "adoption_policy": "bundled_symlink_only",
+        "conflict_policy": "never_overwrite_real_directory",
+    },
+    {
+        "name": "deck-review",
+        "required": True,
+        "required_for": ["review", "quality", "delivery"],
+        "install_source": "bundled",
+        "cli": "deck-master",
+        "required_capabilities": ["deck_master.review.v1"],
+        "optional_capabilities": [],
+        "schema_versions": {"run_state": "deck_run_state.v1"},
+        "adoption_policy": "bundled_symlink_only",
+        "conflict_policy": "never_overwrite_real_directory",
+    },
+    {
+        "name": "ppt-master",
+        "required": True,
+        "required_for": ["render", "delivery", "benchmark_rc"],
+        "install_source": "release_bundle",
+        "cli": "deck-master",
+        "required_capabilities": ["ppt_master.render.v1", "ppt_master.handback.v1"],
+        "optional_capabilities": [],
+        "schema_versions": {"render_result": "deck_render_result.v1"},
+        "adoption_policy": "bundled_symlink_only",
+        "conflict_policy": "never_overwrite_real_directory",
+    },
+    {
         "name": "ppt-library",
         "required": True,
         "required_for": ["library_sourcing", "asset_feedback"],
-        "install_source": "external_adopted_or_release_bundle",
-        "cli": "ppt-lib",
+        "install_source": "release_bundle",
+        "cli": "deck-master",
         "required_capabilities": [
             "ppt_library.doctor.v1",
             "ppt_library.search.v1",
@@ -60,15 +99,15 @@ SUITE_SKILLS: list[dict[str, Any]] = [
             "selection_output": "deck_master_ppt_library_selection.v1",
             "feedback_input": "deck_master_ppt_library_feedback.v1",
         },
-        "adoption_policy": "adopt_valid_external_symlink_only",
+        "adoption_policy": "bundled_symlink_only",
         "conflict_policy": "never_overwrite_real_directory",
     },
     {
         "name": "ppt-deck-pro-max",
         "required": True,
         "required_for": ["new_generation", "adapt_generation"],
-        "install_source": "external_adopted_or_release_bundle",
-        "cli": "ppt-deck-pro-max",
+        "install_source": "release_bundle",
+        "cli": "deck-master",
         "required_capabilities": [
             "ppt_deck_pro_max.generate.v1",
             "ppt_deck_pro_max.handback.v1",
@@ -78,15 +117,15 @@ SUITE_SKILLS: list[dict[str, Any]] = [
             "generation_result_input": "ppt_deck_pro_max_generation_result.v1",
             "generation_result_canonical": "deck_generation_result.v1",
         },
-        "adoption_policy": "adopt_valid_external_symlink_only",
+        "adoption_policy": "bundled_symlink_only",
         "conflict_policy": "never_overwrite_real_directory",
     },
     {
         "name": "ppt-quality-gate",
         "required": True,
         "required_for": ["standalone_audit", "quality_findings_import"],
-        "install_source": "external_adopted_or_release_bundle",
-        "cli": "ppt-quality-gate",
+        "install_source": "release_bundle",
+        "cli": "deck-master",
         "required_capabilities": [
             "ppt_quality_gate.audit.v1",
             "ppt_quality_gate.findings.v1",
@@ -96,19 +135,7 @@ SUITE_SKILLS: list[dict[str, Any]] = [
             "quality_findings_input": "deck_master_quality_findings.v1",
             "quality_report_canonical": "deck_quality_report.v1",
         },
-        "adoption_policy": "adopt_valid_external_symlink_only",
-        "conflict_policy": "never_overwrite_real_directory",
-    },
-    {
-        "name": "ppt-master",
-        "required": False,
-        "required_for": ["render_export_optional"],
-        "install_source": "optional_external_adopted_or_release_bundle",
-        "cli": "ppt-master",
-        "required_capabilities": ["ppt_master.render.v1", "ppt_master.handback.v1"],
-        "optional_capabilities": [],
-        "schema_versions": {"render_result": "deck_master_render_result.v1"},
-        "adoption_policy": "adopt_valid_external_symlink_only",
+        "adoption_policy": "bundled_symlink_only",
         "conflict_policy": "never_overwrite_real_directory",
     },
 ]
@@ -122,9 +149,21 @@ def _utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def _repo_root() -> Path:
+    return Path(__file__).resolve().parents[2]
+
+
 def _repo_skill_dir(skill_name: str = SKILL_NAME) -> Path:
     """Return the absolute path to a skill package in this repo."""
-    return Path(__file__).resolve().parents[2] / "skills" / skill_name
+    return _repo_root() / "skills" / skill_name
+
+
+def _repo_capability_dir(name: str) -> Path:
+    return _repo_root() / "product_capabilities" / name
+
+
+def _installed_capability_dir(name: str) -> Path:
+    return INSTALL_LOG_DIR / "current" / "capabilities" / name
 
 
 def _installed_skill_dir(skill_name: str = SKILL_NAME) -> Path:
@@ -343,8 +382,8 @@ def inspect_skill_link(
     result["resolved"] = str(resolved)
     result["skill_md_exists"] = (resolved / "SKILL.md").exists()
 
-    if skill_name == SKILL_NAME and resolved != canonical_source:
-        result["status"] = "wrong_symlink"
+    if resolved != canonical_source:
+        result["status"] = "foreign_symlink"
         result["error"] = f"Symlink points to {resolved}, expected {source}."
         return result
 
@@ -442,8 +481,60 @@ def companion_manifest() -> dict[str, Any]:
     }
 
 
+def product_capability_manifest() -> dict[str, Any]:
+    core = [str(spec["name"]) for spec in SUITE_SKILLS if str(spec["name"]).startswith("deck-")]
+    product_capabilities = [str(spec["name"]) for spec in SUITE_SKILLS if str(spec["name"]).startswith("ppt-")]
+    return {
+        "schema_version": PRODUCT_CAPABILITY_MANIFEST_SCHEMA_VERSION,
+        "product": "deck-master",
+        "runtime_shape": "agent_facing_local_first",
+        "provider_policy": "zero_builtin_llm_provider",
+        "required_capabilities": [str(spec["name"]) for spec in _suite_specs(include_optional=False)],
+        "optional_capabilities": ["deck-learning"],
+        "core_skills": core,
+        "product_capability_skills": product_capabilities,
+        "capability_policy": {
+            "required_suite_must_be_full_ready": True,
+            "outputs_must_write_back_to_run": True,
+            "external_override_allowed": True,
+            "legacy_real_dir_requires_migration_plan": True,
+        },
+        "release_tree": {
+            "skills_path": "skills",
+            "capabilities_path": "capabilities",
+            "contracts_path": "contracts",
+            "reference_packs_path": "reference-packs",
+        },
+    }
+
+
+def validate_product_capability_manifest(payload: dict[str, Any] | None = None) -> dict[str, Any]:
+    manifest = payload or product_capability_manifest()
+    errors: list[str] = []
+    if manifest.get("schema_version") != PRODUCT_CAPABILITY_MANIFEST_SCHEMA_VERSION:
+        errors.append("schema_version")
+    if manifest.get("runtime_shape") != "agent_facing_local_first":
+        errors.append("runtime_shape")
+    required = manifest.get("required_capabilities")
+    if not isinstance(required, list) or not required:
+        errors.append("required_capabilities")
+    for skill in product_capability_manifest()["required_capabilities"]:
+        if skill not in (required or []):
+            errors.append(f"required_capability:{skill}")
+    return {
+        "schema_version": "deck_master_product_capability_manifest_validation.v1",
+        "valid": not errors,
+        "errors": errors,
+        "manifest": manifest,
+    }
+
+
 def companion_manifest_path() -> Path:
     return INSTALL_LOG_DIR / "current" / COMPANION_MANIFEST_NAME
+
+
+def product_capability_manifest_path() -> Path:
+    return INSTALL_LOG_DIR / "current" / PRODUCT_CAPABILITY_MANIFEST_NAME
 
 
 def write_companion_manifest() -> Path:
@@ -455,6 +546,95 @@ def write_companion_manifest() -> Path:
     return path
 
 
+def _copytree_replace(src: Path, dst: Path) -> None:
+    if dst.exists() or dst.is_symlink():
+        if dst.is_symlink() or dst.is_file():
+            dst.unlink()
+        else:
+            shutil.rmtree(dst)
+    shutil.copytree(src, dst, symlinks=True)
+
+
+def build_release_tree(
+    output: str | Path | None = None,
+    *,
+    force: bool = False,
+    dry_run: bool = False,
+) -> dict[str, Any]:
+    release_root = Path(output).expanduser().resolve() if output else INSTALL_LOG_DIR / "current"
+    marker = release_root / RELEASE_TREE_MARKER
+    planned = [
+        "bin/deck-master",
+        PRODUCT_CAPABILITY_MANIFEST_NAME,
+        "skills",
+        "capabilities",
+        "contracts",
+        "reference-packs",
+    ]
+
+    if dry_run:
+        return {
+            "schema_version": "deck_master_release_tree.v1",
+            "status": "dry_run",
+            "release_root": str(release_root),
+            "planned": planned,
+        }
+
+    if release_root.exists() and any(release_root.iterdir()) and not marker.exists() and not force:
+        raise SkillInstallError(
+            f"Release root {release_root} is not managed by Deck Master. "
+            "Use --force only after confirming it is safe."
+        )
+
+    release_root.mkdir(parents=True, exist_ok=True)
+    marker.write_text("deck-master release tree\n", encoding="utf-8")
+
+    for subdir in ("skills", "capabilities", "contracts", "reference-packs", "bin"):
+        (release_root / subdir).mkdir(parents=True, exist_ok=True)
+
+    for spec in _suite_specs(include_optional=False):
+        name = str(spec["name"])
+        source = _repo_skill_dir(name)
+        if not source.exists():
+            raise SkillInstallError(f"Required skill package missing: {source}")
+        _copytree_replace(source, release_root / "skills" / name)
+
+    for name in [str(spec["name"]) for spec in SUITE_SKILLS if str(spec["name"]).startswith("ppt-")]:
+        source = _repo_capability_dir(name)
+        if not source.exists():
+            raise SkillInstallError(f"Required capability package missing: {source}")
+        _copytree_replace(source, release_root / "capabilities" / name)
+
+    contracts_src = _repo_root() / "docs" / "contracts"
+    if contracts_src.exists():
+        _copytree_replace(contracts_src, release_root / "contracts")
+
+    (release_root / PRODUCT_CAPABILITY_MANIFEST_NAME).write_text(
+        json.dumps(product_capability_manifest(), ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    (release_root / COMPANION_MANIFEST_NAME).write_text(
+        json.dumps(companion_manifest(), ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    bin_path = release_root / "bin" / "deck-master"
+    bin_path.write_text(
+        "#!/usr/bin/env sh\n"
+        f"exec python3 \"{_repo_root() / 'scripts' / 'deck_master.py'}\" \"$@\"\n",
+        encoding="utf-8",
+    )
+    bin_path.chmod(0o755)
+
+    return {
+        "schema_version": "deck_master_release_tree.v1",
+        "status": "built",
+        "release_root": str(release_root),
+        "manifest_path": str(release_root / PRODUCT_CAPABILITY_MANIFEST_NAME),
+        "skills": [str(spec["name"]) for spec in _suite_specs(include_optional=False)],
+        "capabilities": [str(spec["name"]) for spec in SUITE_SKILLS if str(spec["name"]).startswith("ppt-")],
+    }
+
+
 def _suite_specs(include_optional: bool = False) -> list[dict[str, Any]]:
     return [
         spec for spec in SUITE_SKILLS
@@ -462,8 +642,12 @@ def _suite_specs(include_optional: bool = False) -> list[dict[str, Any]]:
     ]
 
 
-def _cli_status(command: str) -> str:
+def _cli_status(command: str, *, skill_name: str = "") -> str:
     if command == "deck-master":
+        return "ready"
+    if skill_name.startswith("ppt-") and (
+        _installed_capability_dir(skill_name).exists() or _repo_capability_dir(skill_name).exists()
+    ):
         return "ready"
     return "ready" if shutil.which(command) else "cli_missing"
 
@@ -479,6 +663,7 @@ def inspect_suite_status(
     skills: list[dict[str, Any]] = []
     capabilities: dict[str, str] = {}
     target_reports: dict[str, list[dict[str, Any]]] = {}
+    target_readiness: dict[str, dict[str, Any]] = {}
 
     for target in resolved_targets:
         reports: list[dict[str, Any]] = []
@@ -489,7 +674,7 @@ def inspect_suite_status(
                 skill_name=str(spec["name"]),
                 required=bool(spec.get("required", True)),
             )
-            cli_state = _cli_status(str(spec.get("cli") or spec["name"]))
+            cli_state = _cli_status(str(spec.get("cli") or spec["name"]), skill_name=str(spec["name"]))
             if report.get("status") == "ready" and cli_state == "cli_missing" and spec["name"] != SKILL_NAME:
                 report["status"] = "blocked_cli_missing"
                 report["valid"] = False
@@ -501,6 +686,24 @@ def inspect_suite_status(
             for capability in spec.get("required_capabilities", []):
                 capabilities[str(capability)] = str(report.get("status") or "missing")
         target_reports[target] = reports
+        required_reports = [report for report in reports if report.get("required")]
+        missing_statuses = {"missing", "external_adoptable", "optional_missing", "source_missing"}
+        missing_required = [
+            str(report.get("skill"))
+            for report in required_reports
+            if str(report.get("status") or "missing") in missing_statuses
+        ]
+        blocked_required = [
+            str(report.get("skill"))
+            for report in required_reports
+            if str(report.get("status") or "missing") not in missing_statuses
+            and str(report.get("status") or "missing") != "ready"
+        ]
+        target_readiness[target] = {
+            "required_ready": not missing_required and not blocked_required,
+            "missing_required": missing_required,
+            "blocked_required": blocked_required,
+        }
 
     by_name: dict[str, str] = {}
     for item in skills:
@@ -512,19 +715,24 @@ def inspect_suite_status(
         elif current is None:
             by_name[name] = status
 
-    deck_ready = by_name.get(SKILL_NAME) == "ready"
-    required_ready = all(
-        by_name.get(str(spec["name"])) == "ready"
-        for spec in _suite_specs(include_optional=False)
+    deck_ready = all(
+        any(report.get("skill") == SKILL_NAME and report.get("status") == "ready" for report in target_reports[target])
+        for target in resolved_targets
     )
-    full_suite_ready = required_ready and by_name.get("ppt-master", "optional_missing") == "ready"
+    full_suite_ready = all(
+        bool(target_readiness[target]["required_ready"])
+        for target in resolved_targets
+    )
 
     task_readiness = {
-        "full_deck_workflow": "ready" if required_ready else ("blocked" if not deck_ready else "degraded_ready"),
+        "full_deck_workflow": "ready" if full_suite_ready else ("blocked" if not deck_ready else "degraded_ready"),
+        "planning": "ready" if by_name.get("deck-planner") == "ready" else "blocked",
+        "review": "ready" if by_name.get("deck-review") == "ready" else "blocked",
         "library_sourcing": "ready" if by_name.get("ppt-library") == "ready" else "blocked",
         "new_generation": "ready" if by_name.get("ppt-deck-pro-max") == "ready" else "blocked",
         "standalone_audit": "ready" if by_name.get("ppt-quality-gate") == "ready" else "blocked",
-        "render_export": "ready" if by_name.get("ppt-master") == "ready" else "optional_missing",
+        "render": "ready" if by_name.get("ppt-master") == "ready" else "blocked",
+        "delivery": "ready" if full_suite_ready else "blocked",
     }
 
     status = "ready" if full_suite_ready else "degraded_ready"
@@ -534,11 +742,11 @@ def inspect_suite_status(
     next_command = ""
     next_agent_action = "Suite ready."
     if status == "blocked":
-        next_command = "deck-master suite-repair --target codex"
+        next_command = "deck-master suite-repair --target codex --target claude-code"
         next_agent_action = "Repair Deck Master skill installation before creating or modifying production runs."
     elif not full_suite_ready:
-        next_command = "deck-master suite-repair --target codex"
-        next_agent_action = "Proceed only with tasks whose required companion capabilities are ready; repair missing companions when needed."
+        next_command = "deck-master suite-repair --target codex --target claude-code"
+        next_agent_action = "Repair missing required Deck Master product capabilities before production work."
 
     return {
         "schema_version": COMPANION_MANIFEST_SCHEMA_VERSION,
@@ -548,6 +756,7 @@ def inspect_suite_status(
         "full_suite_ready": full_suite_ready,
         "skills": skills,
         "targets": target_reports,
+        "target_readiness": target_readiness,
         "capabilities": capabilities,
         "task_readiness": task_readiness,
         "manifest_path": str(companion_manifest_path()),
@@ -564,7 +773,8 @@ def suite_install(
     agent_skill_dir: str | None = None,
 ) -> dict[str, Any]:
     resolved_targets = targets or ["codex"]
-    manifest_path = write_companion_manifest()
+    release = build_release_tree(INSTALL_LOG_DIR / "current", force=True)
+    manifest_path = Path(release["release_root"]) / COMPANION_MANIFEST_NAME
     results: list[dict[str, Any]] = []
     for target in resolved_targets:
         for spec in _suite_specs(include_optional=include_optional):
@@ -621,6 +831,181 @@ def suite_repair(
         repair=True,
         agent_skill_dir=agent_skill_dir,
     )
+
+
+def _path_type(path: Path) -> str:
+    if path.is_symlink():
+        try:
+            path.resolve(strict=True)
+        except OSError:
+            return "broken_symlink"
+        return "symlink"
+    if path.is_dir():
+        return "real_directory"
+    if path.exists():
+        return "file"
+    return "missing"
+
+
+def _recognize_legacy_skill(path: Path, skill_name: str) -> str:
+    skill_md = path / "SKILL.md"
+    if skill_md.exists():
+        try:
+            text = skill_md.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            return "unknown_real_directory"
+        if f"name: {skill_name}" in text or skill_name in text[:500]:
+            return f"legacy_{skill_name.replace('-', '_')}_skill"
+    return "unknown_real_directory"
+
+
+def suite_migration_plan(
+    *,
+    targets: list[str] | None = None,
+    agent_skill_dir: str | None = None,
+) -> dict[str, Any]:
+    resolved_targets = targets or ["codex"]
+    release_root = INSTALL_LOG_DIR / "current"
+    rollback_id = _utc_now().replace(":", "").replace("+", "Z")
+    actions: list[dict[str, Any]] = []
+    for target in resolved_targets:
+        target_dir = _resolve_target_dir(target, agent_skill_dir)
+        for spec in _suite_specs(include_optional=False):
+            skill = str(spec["name"])
+            link = _link_path(target_dir, skill)
+            target_link = release_root / "skills" / skill
+            current_type = _path_type(link)
+            action = "no_op"
+            safe_to_apply = True
+            warnings: list[str] = []
+            recognized_as = ""
+            backup_path = ""
+            if current_type == "missing":
+                action = "create_symlink"
+            elif current_type == "symlink":
+                resolved = link.resolve()
+                target_resolved = target_link.resolve() if target_link.exists() else target_link
+                if resolved == target_resolved:
+                    action = "no_op"
+                else:
+                    action = "replace_foreign_symlink"
+                    warnings.append(f"foreign symlink points to {resolved}")
+            elif current_type == "broken_symlink":
+                action = "repair_symlink"
+                warnings.append("broken symlink")
+            elif current_type == "real_directory":
+                action = "backup_and_replace_with_symlink"
+                recognized_as = _recognize_legacy_skill(link, skill)
+                backup_path = str(release_root / "migration" / "backups" / rollback_id / target / skill)
+            else:
+                action = "manual_action"
+                safe_to_apply = False
+                warnings.append(f"unsupported target path type: {current_type}")
+            actions.append({
+                "target": target,
+                "skill": skill,
+                "current_path": str(link),
+                "current_type": current_type,
+                "recognized_as": recognized_as,
+                "target_link": str(target_link),
+                "backup_path": backup_path,
+                "action": action,
+                "safe_to_apply": safe_to_apply,
+                "warnings": warnings,
+            })
+    return {
+        "schema_version": "deck_master_legacy_skill_migration_plan.v1",
+        "target": ",".join(resolved_targets),
+        "agent_skill_dir": str(agent_skill_dir or ""),
+        "created_at": _utc_now(),
+        "actions": actions,
+        "rollback": {
+            "rollback_id": rollback_id,
+            "command": f"deck-master suite-migrate-legacy-skills --rollback --rollback-id {rollback_id}",
+        },
+    }
+
+
+def _write_rollback_record(rollback_id: str, records: list[dict[str, Any]]) -> Path:
+    path = INSTALL_LOG_DIR / "current" / "migration" / "rollback" / f"{rollback_id}.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps({"rollback_id": rollback_id, "records": records}, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return path
+
+
+def suite_migration_apply(plan_file: str | Path) -> dict[str, Any]:
+    plan_path = Path(plan_file).expanduser().resolve()
+    plan = json.loads(plan_path.read_text(encoding="utf-8"))
+    rollback_id = str((plan.get("rollback") or {}).get("rollback_id") or _utc_now().replace(":", ""))
+    build_release_tree(INSTALL_LOG_DIR / "current", force=True)
+    results: list[dict[str, Any]] = []
+    rollback_records: list[dict[str, Any]] = []
+    for action in plan.get("actions", []):
+        if not action.get("safe_to_apply", False):
+            results.append({**action, "status": "blocked"})
+            continue
+        current = Path(str(action["current_path"])).expanduser()
+        target = Path(str(action["target_link"])).expanduser()
+        target.parent.mkdir(parents=True, exist_ok=True)
+        current.parent.mkdir(parents=True, exist_ok=True)
+        operation = str(action.get("action") or "")
+        if operation == "no_op":
+            results.append({**action, "status": "no_op"})
+            continue
+        if current.is_dir() and not current.is_symlink():
+            backup = Path(str(action.get("backup_path") or "")).expanduser()
+            backup.parent.mkdir(parents=True, exist_ok=True)
+            if backup.exists():
+                shutil.rmtree(backup)
+            shutil.copytree(current, backup)
+            shutil.rmtree(current)
+            rollback_records.append({"path": str(current), "backup_path": str(backup), "type": "real_directory"})
+        elif current.is_symlink() or current.exists():
+            previous = str(current.resolve()) if current.is_symlink() else ""
+            current.unlink()
+            rollback_records.append({"path": str(current), "previous_target": previous, "type": "symlink"})
+        current.symlink_to(target)
+        results.append({**action, "status": "applied"})
+    rollback_path = _write_rollback_record(rollback_id, rollback_records)
+    return {
+        "schema_version": "deck_master_legacy_skill_migration_apply.v1",
+        "status": "applied" if all(item.get("status") != "blocked" for item in results) else "blocked",
+        "plan_file": str(plan_path),
+        "rollback_id": rollback_id,
+        "rollback_record": str(rollback_path),
+        "results": results,
+    }
+
+
+def suite_migration_rollback(rollback_id: str) -> dict[str, Any]:
+    record_path = INSTALL_LOG_DIR / "current" / "migration" / "rollback" / f"{rollback_id}.json"
+    if not record_path.exists():
+        raise SkillInstallError(f"Rollback record not found: {record_path}")
+    record = json.loads(record_path.read_text(encoding="utf-8"))
+    results: list[dict[str, Any]] = []
+    for item in record.get("records", []):
+        path = Path(str(item["path"])).expanduser()
+        if path.is_symlink() or path.exists():
+            if path.is_dir() and not path.is_symlink():
+                shutil.rmtree(path)
+            else:
+                path.unlink()
+        if item.get("type") == "real_directory":
+            backup = Path(str(item["backup_path"])).expanduser()
+            if backup.exists():
+                shutil.copytree(backup, path)
+                results.append({"path": str(path), "status": "restored"})
+            else:
+                results.append({"path": str(path), "status": "missing_backup"})
+        elif item.get("type") == "symlink" and item.get("previous_target"):
+            path.symlink_to(Path(str(item["previous_target"])).expanduser())
+            results.append({"path": str(path), "status": "symlink_restored"})
+    return {
+        "schema_version": "deck_master_legacy_skill_migration_rollback.v1",
+        "status": "rolled_back",
+        "rollback_id": rollback_id,
+        "results": results,
+    }
 
 
 def uninstall_skill(

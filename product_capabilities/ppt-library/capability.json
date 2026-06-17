@@ -1,0 +1,17 @@
+{
+  "schema_version": "deck_master_capability_package.v1",
+  "name": "ppt-library",
+  "kind": "product_capability",
+  "required": true,
+  "runtime": {
+    "operations": ["status", "doctor", "schema", "smoke --fixture", "writeback"],
+    "default_command": "deck-master search-library"
+  },
+  "contracts": {
+    "outputs": ["deck_master_ppt_library_selection.v1"]
+  },
+  "state_policy": {
+    "active_run_outputs_must_import": true,
+    "canonical_artifact": "external/ppt_library/library_results.json"
+  }
+}

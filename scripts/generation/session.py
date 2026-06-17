@@ -113,6 +113,19 @@ def _resolve_tool(
     return command, entry
 
 
+def _with_generation_session_args(
+    command: list[str],
+    entry: dict[str, Any],
+    *,
+    run_id: str,
+    session_id: str,
+) -> list[str]:
+    if entry.get("type") == "bundled" and entry.get("capability") == "ppt-deck-pro-max":
+        if "--run-id" not in command:
+            return [*command, "--run-id", run_id, "--session-id", session_id]
+    return command
+
+
 def _ensure_session_exists(run_dir: Path) -> dict[str, Any]:
     path = _session_path(run_dir)
     if not path.exists():
@@ -228,15 +241,15 @@ def create_generation_session(
             request = load_request(root)
             request_workspace = str(request.get("workspace") or "")
 
-    command, _ = _resolve_tool(
+    run_id = _run_id(root)
+    session_id = f"{run_id}-gen-{_utc_now().replace(':', '').replace('-', '')}"
+    command, entry = _resolve_tool(
         tool=tool,
         run_dir=root,
         workspace=request_workspace,
         tool_command=tool_command,
     )
-
-    run_id = _run_id(root)
-    session_id = f"{run_id}-gen-{_utc_now().replace(':', '').replace('-', '')}"
+    command = _with_generation_session_args(command, entry, run_id=run_id, session_id=session_id)
     payload = {
         "schema_version": SCHEMA_VERSION,
         "run_id": run_id,
@@ -247,6 +260,7 @@ def create_generation_session(
         "tasks_completed": 0,
         "tasks_failed": 0,
         "command": command,
+        "command_entry": entry,
         "started_at": "",
         "completed_at": "",
         "errors": [],
@@ -299,7 +313,7 @@ def validate_generation_session(
         status = "blocked"
         errors.append("tool is required.")
     elif status in {"created", "dispatched", "running"}:
-        ok, reason, command, _ = _run_tool_available(
+        ok, reason, command, entry = _run_tool_available(
             active_tool,
             root,
             workspace=workspace,
@@ -309,6 +323,12 @@ def validate_generation_session(
             status = "blocked"
             errors.append(reason)
         else:
+            command = _with_generation_session_args(
+                command,
+                entry,
+                run_id=str(session.get("run_id") or _run_id(root)),
+                session_id=str(session.get("session_id") or ""),
+            )
             session["command"] = command
 
     try:
@@ -393,6 +413,12 @@ def run_generation(
             workspace=workspace,
             tool_command=tool_command,
         )
+        command = _with_generation_session_args(
+            command,
+            entry,
+            run_id=str(session.get("run_id") or _run_id(root)),
+            session_id=str(session.get("session_id") or ""),
+        )
         session["command"] = command
         _set_session_status(root, session, "dispatched", extra={"command": command, "command_entry": entry})
         append_typed_event(
@@ -428,6 +454,12 @@ def run_generation(
         _set_session_status(root, session, "blocked")
         raise GenerationSessionError(f"tool unavailable: {reason}")
 
+    command = _with_generation_session_args(
+        command,
+        entry,
+        run_id=str(session.get("run_id") or _run_id(root)),
+        session_id=str(session.get("session_id") or ""),
+    )
     session["command"] = command
     _set_session_status(root, session, "running", extra={"command_entry": entry})
 

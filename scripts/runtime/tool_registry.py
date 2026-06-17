@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import subprocess
 import shlex
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -60,6 +61,34 @@ def _default_args(run_dir: Path, workspace: str | None) -> list[str]:
     ]
 
 
+def _repo_root() -> Path:
+    return Path(__file__).resolve().parents[2]
+
+
+def _bundled_capability_exists(tool: str) -> bool:
+    repo_capability = _repo_root() / "product_capabilities" / tool
+    installed_capability = Path.home() / ".deck-master" / "current" / "capabilities" / tool
+    return repo_capability.exists() or installed_capability.exists()
+
+
+def _bundled_tool_entry(tool: str, *, run_dir: Path, workspace: str | None) -> tuple[list[str], dict[str, Any], str] | None:
+    if tool != "ppt-deck-pro-max" or not _bundled_capability_exists(tool):
+        return None
+    script = _repo_root() / "scripts" / "capabilities" / "ppt_deck_pro_max.py"
+    if not script.exists():
+        return None
+    command = [sys.executable, str(script), *_default_args(run_dir, workspace)]
+    entry = {
+        "schema_version": SCHEMA_VERSION,
+        "command": sys.executable,
+        "type": "bundled",
+        "args_template": command[1:],
+        "availability_check": [sys.executable, "--version"],
+        "capability": tool,
+    }
+    return command, entry, "bundled capability"
+
+
 def _coerce_command(command: str, *, run_dir: Path, workspace: str | None) -> list[str]:
     raw = _format_value(command, run_dir=run_dir, workspace=workspace).strip()
     if not raw:
@@ -101,8 +130,14 @@ def resolve_tool_command(
             "type": "cli",
             "args_template": args,
             "availability_check": [command[0], "--version"],
+            "source": "cli_override",
+            "warning": "Explicit capability override used. Output remains subject to Deck Master import contract.",
         }
-        return [*command, *args], entry, "cli --tool-command"
+        return [*command, *args], entry, "cli_override"
+
+    bundled = _bundled_tool_entry(tool, run_dir=root, workspace=workspace_path)
+    if bundled is not None:
+        return bundled
 
     registry_path = _registry_path(workspace_path)
     if registry_path is None:

@@ -1,16 +1,16 @@
 ---
 name: deck-master
-description: Professional Solution Deck Run OS for turning customer context, briefs, historical deck assets, sourcing decisions, quality gates, external agent handoffs, review cockpit state, benchmark runs, and delivery feedback into auditable solution deck workflows. Use when Codex needs to create or resume a Deck Master run, generate a preview from a brief, inspect next steps, run deck quality gates, import narrative advice or external reviews, manage PPT Library or PPT Deck Pro Max handoffs, export approved page queues, validate benchmark cases, or operate the local Deck Master CLI and Review Cockpit.
+description: Professional Solution Deck Run OS for turning customer context, briefs, historical deck assets, sourcing decisions, product capability handbacks, quality gates, review cockpit state, benchmark runs, and delivery feedback into auditable solution deck workflows. Use when Codex needs to create or resume a Deck Master run, generate a preview from a brief, inspect next steps, run deck quality gates, import narrative advice or review findings, manage PPT Library, PPT Master, PPT Deck Pro Max, or PPT Quality Gate handbacks, export approved page queues, validate benchmark cases, or operate the local Deck Master CLI and Review Cockpit.
 ---
 
 # Deck Master
 
 Use Deck Master as the runtime and review layer for professional solution decks.
 It owns run state, artifacts, typed events, sourcing decisions, quality gates,
-external tool handoffs, benchmark reports, and the localhost Review Cockpit.
+product capability handbacks, benchmark reports, and the localhost Review Cockpit.
 
 When a user names Deck Master, treat it as the top-level orchestrator for the
-run. Even for heavy edits and external tool calls, the source of truth stays in
+run. Even for heavy edits and capability calls, the source of truth stays in
 Deck Master state.
 
 ## Entry Points
@@ -60,7 +60,9 @@ Deck run:
 ~/.deck-master/bin/deck-master setup \
   --workspace <workspace> \
   --repair-workspace \
-  --target codex
+  --target codex \
+  --target claude-code \
+  --install-suite
 ```
 
 Do not stop at showing the setup command when you can run it safely. Ask the
@@ -74,7 +76,12 @@ coverage, generation session control, quality gates, review, and export:
 
 ```bash
 ~/.deck-master/bin/deck-master start
-~/.deck-master/bin/deck-master setup --workspace <path> --repair-workspace
+~/.deck-master/bin/deck-master setup \
+  --workspace <path> \
+  --repair-workspace \
+  --target codex \
+  --target claude-code \
+  --install-suite
 ~/.deck-master/bin/deck-master start-conversation \
   --workspace <path> \
   --context-file <source.txt> \
@@ -87,6 +94,8 @@ coverage, generation session control, quality gates, review, and export:
   --planning-mode narrative_v2 \
   --library-mode auto
 ~/.deck-master/bin/deck-master generation-session create --run-id <run_id>
+~/.deck-master/bin/deck-master run-generation --run-id <run_id> --dry-run
+~/.deck-master/bin/deck-master render --run-id <run_id> --format html --fixture-safe
 ~/.deck-master/bin/deck-master quality-gate draft --run-id <run_id>
 ~/.deck-master/bin/deck-master run-state --run-dir <run_dir>
 ```
@@ -126,7 +135,7 @@ before using another tool:
   --source human
 ```
 
-Before calling PPT Master, PPT Deck Pro Max, or another renderer, confirm the
+Before calling PPT Master, PPT Deck Pro Max, or another Deck capability, confirm the
 run is allowed to leave Deck Master orchestration:
 
 ```bash
@@ -145,6 +154,8 @@ run is allowed to leave Deck Master orchestration:
 | `decide-sourcing` | Decide reuse/adapt/generate per page |
 | `create-generation-tasks` | Create PPT Deck Pro Max task packages |
 | `build-preview` | Build preview manifest |
+| `render` | Render through bundled PPT Master path |
+| `render-status` | Inspect render result state |
 | `quality-gate` | Run deck quality gates |
 | `next-step` | Resolve the next recommended action |
 | `export` | Export approved page queue |
@@ -155,7 +166,7 @@ run is allowed to leave Deck Master orchestration:
 | `setup-status` | Check setup readiness |
 | `doctor` | Show setup / run diagnostics |
 | `run-state` | Resolve canonical run state |
-| `orchestration-check` | Check run completeness before external production |
+| `orchestration-check` | Check run completeness before capability production |
 | `bind-workspace` | Bind an existing run to workspace |
 | `import-plan` | Import a human or Agent plan override |
 | `import-render-result` | Import PPT Master or renderer handback |
@@ -169,17 +180,17 @@ Read only the relevant file when needed:
 - `playbooks/codex-review-and-repair.md` for review and repair loops.
 - `playbooks/ppt-library-handoff.md` for PPT Library handoffs.
 - `playbooks/ppt-deck-pro-max-handoff.md` for generation handoffs.
-- `playbooks/external-quality-review.md` for external review tasks.
+- `playbooks/external-quality-review.md` for quality review tasks.
 - `playbooks/workspace-learning.md` for workspace learning packs.
 - `schemas/*.json` for artifact contracts.
-- `prompts/*.prompt.md` for task prompts prepared for external agents.
+- `prompts/*.prompt.md` for task prompts prepared for Agents.
 
 ## Rules
 
 - Keep Deck Master provider-free; do not add LLM API calls or secrets.
 - When a user names Deck Master, treat it as the top-level orchestrator.
-- Do not complete core deck planning, generation, quality review, or delivery only outside the Deck Master run.
-- Import manual plan corrections and external tool results back into Deck Master before final reporting.
+- Do not complete core deck planning, generation, quality review, or delivery outside the Deck Master run state.
+- Import manual plan corrections and capability results back into Deck Master before final reporting.
 - Use Deck Master CLI commands to mutate run state.
 - Do not write directly to `events.jsonl`.
 - Use `--run-id` or `--run-dir` to scope every operation.

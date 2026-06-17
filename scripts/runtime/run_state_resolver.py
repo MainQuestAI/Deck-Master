@@ -14,6 +14,7 @@ from runtime.run_state import (
     SOURCING_PLAN_NAME,
     read_json,
 )
+from runtime.render import CANONICAL_RENDER_RESULT, LEGACY_RENDER_RESULTS
 from runtime.setup_status import setup_readiness
 from runtime.workspace_resolver import resolve_workspace_for_run
 
@@ -22,7 +23,7 @@ SCHEMA_VERSION = "deck_run_state.v1"
 GENERATION_SESSION_NAME = "generation_session.json"
 GENERATION_TASK_INDEX = Path("generation_tasks") / "index.json"
 QUALITY_DIR = "quality_reports"
-RENDER_RESULT_NAME = "render_result.json"
+
 
 
 def _safe_read(path: Path) -> dict[str, Any] | None:
@@ -166,6 +167,17 @@ def _run_readiness_summary(
     generation_session = _safe_read(root / GENERATION_SESSION_NAME)
     generation_gate = _pick_first_draft_gate(root)
     generation_blocked, generation_block_reason = _draft_gate_blocks(generation_gate)
+    render_result_path = root / CANONICAL_RENDER_RESULT
+    render_result = _safe_read(render_result_path)
+    render_source = "canonical"
+    if not render_result:
+        for legacy in LEGACY_RENDER_RESULTS:
+            payload = _safe_read(root / legacy)
+            if payload:
+                render_result_path = root / legacy
+                render_result = payload
+                render_source = "legacy"
+                break
 
     setup_status = setup_payload.get("status", {}) or {}
     return {
@@ -210,10 +222,10 @@ def _run_readiness_summary(
             ),
             "render": {
                 "required": True,
-                "status": "present" if (root / "external_results" / RENDER_RESULT_NAME).exists() else "missing",
-                "artifact_path": (
-                    _safe_read(root / "external_results" / RENDER_RESULT_NAME) or {}
-                ).get("artifact_path", ""),
+                "status": "present" if render_result else "missing",
+                "source": render_source if render_result else "missing",
+                "render_result": str(render_result_path.relative_to(root)) if render_result else "",
+                "artifact_path": (render_result or {}).get("artifact_path", ""),
             },
             "export": (root / "approved_queue.json").exists() or (root / "export_queue.json").exists(),
             "quality": bool(generation_gate) and not generation_blocked,

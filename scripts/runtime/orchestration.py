@@ -9,7 +9,9 @@ from typing import Any
 
 from planning.page_tasks import build_page_tasks
 from runtime.events import append_event
+from runtime.import_log import append_import_log
 from runtime.next_step import resolve_next_step
+from runtime.render import CANONICAL_RENDER_RESULT
 from runtime.run_state import REQUEST_NAME
 from runtime.run_state import (
     CLAIM_MAP_NAME,
@@ -194,11 +196,18 @@ def import_render_result(run_dir: str | Path, input_path: str | Path) -> dict[st
     if str(result.get("run_id") or "") != run_id:
         raise RunStateError(f"render result run_id mismatch: got {result.get('run_id')}, expected {run_id}.")
 
-    results_dir = root / "external_results"
-    results_dir.mkdir(parents=True, exist_ok=True)
-    target = results_dir / "render_result.json"
+    target = root / CANONICAL_RENDER_RESULT
+    target.parent.mkdir(parents=True, exist_ok=True)
     write_json(target, result)
     preview_updated = _update_preview_from_render_result(root, result)
+    append_import_log(
+        root,
+        import_type="render_result",
+        source=str(result.get("tool") or "ppt-master"),
+        status="accepted",
+        source_path=input_file,
+        canonical_refs=[str(CANONICAL_RENDER_RESULT)],
+    )
     append_event(
         root,
         "external_result.imported",
@@ -230,7 +239,7 @@ def _update_preview_from_render_result(root: Path, result: dict[str, Any]) -> bo
     preview["render_status"] = result.get("status", "")
     preview["final_artifact_path"] = result.get("artifact_path", "")
     preview["final_preview_dir"] = result.get("preview_dir", "")
-    preview["external_render_result"] = "external_results/render_result.json"
+    preview["external_render_result"] = str(CANONICAL_RENDER_RESULT)
     if result.get("page_count") is not None:
         preview["render_page_count"] = result.get("page_count")
 

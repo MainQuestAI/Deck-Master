@@ -12,11 +12,17 @@ from unittest import mock
 from scripts.skills.installer import (
     SKILL_NAME,
     SkillInstallError,
+    build_release_tree,
     inspect_skill_link,
     inspect_suite_status,
     install_skill,
+    product_capability_manifest,
     suite_install,
+    suite_migration_apply,
+    suite_migration_plan,
+    suite_migration_rollback,
     uninstall_skill,
+    validate_product_capability_manifest,
     validate_skill,
 )
 
@@ -174,14 +180,104 @@ class SkillInstallationTest(unittest.TestCase):
 
         self.assertEqual("degraded_ready", result["status"])
         self.assertEqual("blocked", result["task_readiness"]["library_sourcing"])
+        self.assertFalse(result["full_suite_ready"])
+        self.assertFalse(result["target_readiness"]["codex"]["required_ready"])
         self.assertEqual(before, log_path.read_text(encoding="utf-8"))
 
     def test_suite_install_installs_available_required_skill_and_reports_missing_companions(self) -> None:
         result = suite_install(targets=["codex"], include_optional=False, agent_skill_dir=str(self.agent_dir))
 
-        self.assertIn(result["status"], {"degraded_installed", "installed"})
+        self.assertEqual("installed", result["status"])
         deck = [item for item in result["results"] if item["skill"] == "deck-master"]
         self.assertTrue(deck)
+        self.assertTrue(result["suite_status"]["full_suite_ready"])
+        for skill_name in ["deck-master", "deck-planner", "deck-review", "ppt-master", "ppt-library", "ppt-deck-pro-max", "ppt-quality-gate"]:
+            self.assertTrue((self.agent_dir / skill_name).is_symlink(), f"missing suite link: {skill_name}")
+
+    def test_suite_install_multi_target_reports_full_ready_only_when_all_targets_ready(self) -> None:
+        codex_dir = Path(self._tmp) / "codex_skills"
+        claude_dir = Path(self._tmp) / "claude_skills"
+        with mock.patch.dict(
+            "scripts.skills.installer.DEFAULT_AGENT_SKILL_DIRS",
+            {"codex": str(codex_dir), "claude-code": str(claude_dir)},
+        ):
+            result = suite_install(targets=["codex", "claude-code"], include_optional=False)
+
+        self.assertEqual("installed", result["status"])
+        suite = result["suite_status"]
+        self.assertTrue(suite["full_suite_ready"])
+        self.assertTrue(suite["target_readiness"]["codex"]["required_ready"])
+        self.assertTrue(suite["target_readiness"]["claude-code"]["required_ready"])
+        self.assertEqual("ready", suite["task_readiness"]["full_deck_workflow"])
+
+    def test_suite_status_multi_target_missing_required_blocks_full_ready(self) -> None:
+        codex_dir = Path(self._tmp) / "codex_skills"
+        claude_dir = Path(self._tmp) / "claude_skills"
+        with mock.patch.dict(
+            "scripts.skills.installer.DEFAULT_AGENT_SKILL_DIRS",
+            {"codex": str(codex_dir), "claude-code": str(claude_dir)},
+        ):
+            suite_install(targets=["codex"], include_optional=False)
+            result = inspect_suite_status(targets=["codex", "claude-code"])
+
+        self.assertFalse(result["full_suite_ready"])
+        self.assertTrue(result["target_readiness"]["codex"]["required_ready"])
+        self.assertFalse(result["target_readiness"]["claude-code"]["required_ready"])
+        self.assertIn("deck-master", result["target_readiness"]["claude-code"]["missing_required"])
+        self.assertNotEqual("ready", result["task_readiness"]["full_deck_workflow"])
+
+    def test_suite_status_single_target_ready_remains_full_ready(self) -> None:
+        codex_dir = Path(self._tmp) / "codex_skills"
+        claude_dir = Path(self._tmp) / "claude_skills"
+        with mock.patch.dict(
+            "scripts.skills.installer.DEFAULT_AGENT_SKILL_DIRS",
+            {"codex": str(codex_dir), "claude-code": str(claude_dir)},
+        ):
+            suite_install(targets=["codex"], include_optional=False)
+            result = inspect_suite_status(targets=["codex"])
+
+        self.assertTrue(result["full_suite_ready"])
+        self.assertTrue(result["target_readiness"]["codex"]["required_ready"])
+        self.assertEqual("ready", result["task_readiness"]["full_deck_workflow"])
+
+    def test_release_tree_contains_required_skills_capabilities_and_manifest(self) -> None:
+        release_root = Path(self._tmp) / "release"
+
+        result = build_release_tree(release_root)
+
+        self.assertEqual("built", result["status"])
+        self.assertTrue((release_root / "bin" / "deck-master").exists())
+        manifest_path = release_root / "product-capability-manifest.json"
+        self.assertTrue(manifest_path.exists())
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        validation = validate_product_capability_manifest(manifest)
+        self.assertTrue(validation["valid"], validation["errors"])
+        for skill_name in product_capability_manifest()["required_capabilities"]:
+            self.assertTrue((release_root / "skills" / skill_name / "SKILL.md").exists(), skill_name)
+        for capability_name in ["ppt-master", "ppt-library", "ppt-deck-pro-max", "ppt-quality-gate"]:
+            self.assertTrue((release_root / "capabilities" / capability_name / "capability.json").exists(), capability_name)
+
+    def test_suite_migration_apply_and_rollback_real_directory(self) -> None:
+        legacy = self.agent_dir / "ppt-master"
+        legacy.mkdir()
+        (legacy / "SKILL.md").write_text(
+            "---\nname: ppt-master\ndescription: Legacy PPT Master\n---\n",
+            encoding="utf-8",
+        )
+        (legacy / "marker.txt").write_text("restore", encoding="utf-8")
+        plan = suite_migration_plan(targets=["codex"], agent_skill_dir=str(self.agent_dir))
+        ppt_master = next(item for item in plan["actions"] if item["skill"] == "ppt-master")
+        self.assertEqual("backup_and_replace_with_symlink", ppt_master["action"])
+        plan_file = Path(self._tmp) / "migration-plan.json"
+        plan_file.write_text(json.dumps(plan, ensure_ascii=False, indent=2), encoding="utf-8")
+
+        applied = suite_migration_apply(plan_file)
+
+        self.assertEqual("applied", applied["status"])
+        self.assertTrue((self.agent_dir / "ppt-master").is_symlink())
+        rolled_back = suite_migration_rollback(applied["rollback_id"])
+        self.assertEqual("rolled_back", rolled_back["status"])
+        self.assertTrue((self.agent_dir / "ppt-master" / "marker.txt").exists())
 
     # ------------------------------------------------------------------ #
     # uninstall_skill

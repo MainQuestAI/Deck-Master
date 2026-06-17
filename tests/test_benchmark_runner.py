@@ -17,6 +17,7 @@ from benchmark.runner import (  # noqa: E402
     run_local_preview_pipeline,
     summarize_and_write_metrics,
 )
+from runtime.render import CANONICAL_RENDER_RESULT  # noqa: E402
 
 
 class BenchmarkRunnerTests(unittest.TestCase):
@@ -145,6 +146,16 @@ class BenchmarkRunnerTests(unittest.TestCase):
         pending = collect_pending_external_steps(self.case, run_dir)
 
         self.assertEqual([], pending)
+
+    def test_render_result_pending_uses_canonical_path(self) -> None:
+        self.case.data["workflow"]["requires_external_quality_review"] = False
+        self.case.data["workflow"]["requires_render_result"] = True
+        run_dir, _pack = create_benchmark_run(self.case, run_id="bench-render-pending")
+
+        pending = collect_pending_external_steps(self.case, run_dir)
+
+        self.assertEqual(["render_result"], [item["step"] for item in pending])
+        self.assertTrue(pending[0]["path"].endswith(str(CANONICAL_RENDER_RESULT)))
 
     def test_failed_preview_pipeline_does_not_write_preview_ready(self) -> None:
         run_dir, _pack = create_benchmark_run(self.case, run_id="bench-preview-fails")

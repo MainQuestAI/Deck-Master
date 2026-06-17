@@ -1,0 +1,5 @@
+{
+  "schema_version": "deck_master_contract_schema.v1",
+  "contract": "deck_master_quality_findings.v1",
+  "required_fields": ["schema_version", "run_id", "gate_class", "findings"]
+}

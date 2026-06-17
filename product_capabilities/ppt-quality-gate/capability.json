@@ -1,0 +1,17 @@
+{
+  "schema_version": "deck_master_capability_package.v1",
+  "name": "ppt-quality-gate",
+  "kind": "product_capability",
+  "required": true,
+  "runtime": {
+    "operations": ["status", "doctor", "schema", "smoke --fixture", "writeback"],
+    "default_command": "deck-master import-quality-findings"
+  },
+  "contracts": {
+    "outputs": ["deck_master_quality_findings.v1", "deck_quality_report.v1"]
+  },
+  "state_policy": {
+    "active_run_outputs_must_import": true,
+    "blocks_delivery_when_blocking_findings_exist": true
+  }
+}
