@@ -169,8 +169,17 @@ dd,
   color: var(--approved);
 }
 
+.source-library_slide,
+.source-reuse {
+  color: var(--approved);
+}
+
 .source-imported {
   color: var(--review);
+}
+
+.source-generated {
+  color: var(--replace);
 }
 
 .page-no {

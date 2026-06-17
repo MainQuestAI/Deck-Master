@@ -285,13 +285,15 @@ function sourceLabelFor(page) {
   if (origin === "ppt_library") return "真实库";
   if (origin === "fixture") return "Fixture";
   if (origin === "imported") return "Imported";
+  if (origin === "library_slide" || origin === "reuse") return "真实库";
   if (page.source_type === "generated") return "Generated";
   return origin || "";
 }
 
 function sourceBadgeFor(page) {
   const label = sourceLabelFor(page);
-  return label ? `<span class="source-badge source-${escapeHtml(String(page.candidate_origin || page.library_source || "unknown").toLowerCase())}">${escapeHtml(label)}</span>` : "";
+  const sourceClass = String(page.candidate_origin || page.library_source || page.source_type || "unknown").toLowerCase();
+  return label ? `<span class="source-badge source-${escapeHtml(sourceClass)}">${escapeHtml(label)}</span>` : "";
 }
 
 function renderList() {
@@ -302,11 +304,15 @@ function renderList() {
     item.className = `page-card decision-${page.decision}`;
     item.dataset.active = index === state.selectedIndex ? "true" : "false";
     const sourceBadge = sourceBadgeFor(page);
+    const sourceLabel = sourceLabelFor(page);
+    const sourceType = String(page.source_type || "");
+    const showSourceType = sourceType && sourceType.toLowerCase() !== sourceLabel.toLowerCase();
+    const sourceMeta = `${sourceBadge}${showSourceType ? escapeHtml(sourceType) : ""}`;
     item.innerHTML = `
       <span class="page-no">${String(page.order).padStart(2, "0")}</span>
       <span>
         <strong>${escapeHtml(page.title || page.page_id)}</strong>
-        <small>${sourceBadge}${escapeHtml(page.source_type)} · ${escapeHtml(page.decision)}${page.quality && page.quality.length ? ` · ${page.quality.length} quality finding(s)` : ""}</small>
+        <small>${sourceMeta}${sourceMeta ? " · " : ""}${escapeHtml(page.decision)}${page.quality && page.quality.length ? ` · ${page.quality.length} quality finding(s)` : ""}</small>
       </span>
       ${page.asset_exists ? "" : '<b class="warn">!</b>'}
     `;
