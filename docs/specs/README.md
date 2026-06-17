@@ -24,6 +24,11 @@
    - 目标：把 Deck Master 从单一 skill 升级为 Skill Suite Runtime Foundation，先完成 suite 安装、能力状态、无副作用 readiness check、companion dry-run handoff 和 import contract。
    - 当前实现入口：以 `docs/deck-master-v0.9.12-stack-spec-pack/` 下的 Stack A/B/C 文档为准；本文件保留为历史总览。
 
+产品架构补充：
+
+- `deck-master-skill-system-product-architecture.md`
+  - 目标：定义 Deck Master 作为独立开源产品时的 Skill 体系，区分 Core Skills、Product Capability Skills 和 Reference Packs，为 v0.9.13+ 的 packaging / migration / setup 设计提供前置依据。
+
 `v0.9.11` 本轮补齐点：
 
 - 真实生产链路先走 `setup-status / setup / bind-workspace / run-state`，再进入 `start-conversation` 等编排命令。
@@ -46,6 +51,7 @@ docs/specs/deck-master-v0.9.9-installation-chain-hardening-spec.md
 docs/specs/deck-master-v0.9.10-first-run-orchestration-enforcement-spec.md
 docs/specs/deck-master-v0.9.11-orchestration-runtime-realignment-spec.md
 docs/specs/deck-master-v0.9.12-skill-suite-routing-spec.md
+docs/specs/deck-master-skill-system-product-architecture.md
 docs/deck-master-v0.9.12-stack-spec-pack/README.md
 docs/deck-master-v0.9.12-stack-spec-pack/deck-master-v0.9.12-master-stack-breakdown.md
 docs/deck-master-v0.9.12-stack-spec-pack/deck-master-v0.9.12a-suite-runtime-foundation-spec.md
