@@ -458,6 +458,17 @@ class FrontendContractAPITest(unittest.TestCase):
         self.assertEqual(data["counts"]["quality_findings"], 2)
         self.assertEqual(data["counts"]["p1"], 1)
 
+    def test_readiness_and_metrics_aliases_match_frontend_contract(self) -> None:
+        readiness_status, readiness = self.handler.request("GET", "/api/readiness/frontend-contract")
+        metrics_status, metrics = self.handler.request("GET", "/api/metrics/frontend-contract")
+
+        self.assertEqual(200, readiness_status)
+        self.assertEqual("frontend-contract", readiness["run_id"])
+        self.assertIn("deck_readiness", readiness)
+        self.assertEqual(200, metrics_status)
+        self.assertEqual("deck_run_metrics.v1", metrics["schema_version"])
+        self.assertEqual("frontend-contract", metrics["run_id"])
+
     def test_export_queue_bad_run_id_returns_404_or_400(self) -> None:
         status, _data = self.handler.request("GET", "/api/export-queue/missing-run")
         self.assertIn(status, {400, 404})

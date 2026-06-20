@@ -14,6 +14,7 @@ const state = {
   selectedIndex: 0,
   setupStatus: null,
   runState: null,
+  runMissing: false,
 };
 
 const els = {
@@ -88,6 +89,58 @@ function runQuery(extra = {}) {
   return query ? `?${query}` : "";
 }
 
+function reviewActionButtons() {
+  return [els.save, els.approvePage, els.rejectPage, els.requestEvidence, els.convertGenerate, els.lockSource].filter(Boolean);
+}
+
+function setReviewActionsEnabled(enabled) {
+  reviewActionButtons().forEach((btn) => {
+    btn.disabled = !enabled;
+    btn.setAttribute("aria-disabled", String(!enabled));
+  });
+}
+
+function currentPage() {
+  if (!state.deck || !Array.isArray(state.deck.pages) || !state.deck.pages.length) return null;
+  return state.deck.pages[state.selectedIndex] || null;
+}
+
+function friendlyPathText(value) {
+  return String(value || "").replace(/\/Users\/[^/\s]+/g, "~");
+}
+
+function friendlyCommand(value) {
+  return friendlyPathText(value);
+}
+
+function isPreviewReady() {
+  return Boolean(
+    state.deck
+    && state.deck.preview_ready !== false
+    && Array.isArray(state.deck.pages)
+    && state.deck.pages.length
+  );
+}
+
+function runStateText() {
+  const currentRun = currentRunSummary();
+  const status = (state.runState && state.runState.status) || (currentRun && currentRun.status) || "";
+  const stage = state.runState && state.runState.stage ? ` · ${state.runState.stage}` : "";
+  return status ? `${status}${stage}` : "";
+}
+
+function previewPendingMessage() {
+  const detail = runStateText();
+  return `Preview not ready${detail ? ` · ${detail}` : ""}. Next step is shown in Run State.`;
+}
+
+function panelPendingMessage(label) {
+  if (!state.currentRunId) return `选择 run 后加载 ${label}...`;
+  if (state.runMissing) return "Select a run to view status and next command.";
+  if (!isPreviewReady()) return previewPendingMessage();
+  return `暂无 ${label} 数据。`;
+}
+
 async function loadRuns() {
   try {
     const data = await requestJson("/api/runs");
@@ -104,22 +157,41 @@ async function loadRuns() {
 
 async function loadDeck() {
   if (!state.currentRunId) {
+    state.runMissing = false;
     renderRunWithoutPreview(null, "Create or select a run.");
     clearRunState();
     return;
   }
-  await loadRunState();
-  const currentRun = currentRunSummary();
-  if (currentRun && Number(currentRun.pages || 0) === 0) {
-    renderRunWithoutPreview(currentRun, state.runState && state.runState.next_command ? `Next: ${state.runState.next_command}` : "Preview is not ready yet.");
+  if (state.runs.length && !currentRunSummary()) {
+    state.runMissing = true;
+    state.deck = null;
+    state.narrative = null;
+    state.assetSignals = null;
+    state.governance = null;
+    clearCockpitData();
+    clearRunState();
+    els.title.textContent = "Studio";
+    els.meta.textContent = "Create or select a run.";
+    els.list.innerHTML = "";
+    renderNoPreviewPage(`Run not found: ${state.currentRunId}`, true);
+    renderNarrative();
+    renderAssetSignals();
+    renderGovernance();
+    renderCockpitData();
     return;
   }
+  state.runMissing = false;
+  await loadRunState();
   try {
     state.deck = await requestJson(`/api/deck${runQuery()}`);
     els.title.textContent = state.deck.title;
     els.meta.textContent = `${state.deck.run_id} · ${state.deck.status} · ${state.deck.pages.length} pages${qualitySummaryText(state.deck.quality)}`;
     renderList();
-    selectPage(0);
+    if (state.deck.pages.length) {
+      selectPage(0);
+    } else {
+      renderNoPreviewPage(previewPendingMessage());
+    }
     loadNarrative();
     loadAssetSignals();
     loadGovernance();
@@ -135,6 +207,7 @@ async function loadDeck() {
     els.title.textContent = "Studio";
     els.meta.textContent = "Create or select a run.";
     els.list.innerHTML = "";
+    renderNoPreviewPage(error.message, true);
     els.frame.innerHTML = `<div class="empty error">${escapeHtml(error.message)}</div>`;
     renderNarrative();
     renderAssetSignals();
@@ -158,19 +231,24 @@ function renderRunWithoutPreview(run, message) {
     ? `${run.run_id} · ${run.status || "request_ready"} · ${run.pages || 0} pages`
     : "Create or select a run.";
   els.list.innerHTML = "";
-  els.label.textContent = "No page selected";
-  els.pageTitle.textContent = run ? "Preview not ready" : "No page selected";
-  els.details.innerHTML = "";
-  els.notes.value = "";
-  els.saveStatus.textContent = "";
-  if (els.pageActionStatus) {
-    els.pageActionStatus.textContent = "";
-  }
-  els.frame.innerHTML = `<div class="empty">${escapeHtml(message || "Preview is not ready yet.")}</div>`;
+  renderNoPreviewPage(message || "Preview is not ready yet.");
   renderNarrative();
   renderAssetSignals();
   renderGovernance();
   renderCockpitData();
+}
+
+function renderNoPreviewPage(message, isError = false) {
+  els.label.textContent = "No page selected";
+  els.pageTitle.textContent = state.currentRunId ? "Preview not ready" : "No page selected";
+  els.details.innerHTML = "";
+  els.notes.value = "";
+  els.saveStatus.textContent = "";
+  if (els.pageActionStatus) {
+    els.pageActionStatus.textContent = state.currentRunId ? "Preview is not ready for page actions." : "";
+  }
+  setReviewActionsEnabled(false);
+  els.frame.innerHTML = `<div class="empty${isError ? " error" : ""}">${escapeHtml(message || "Preview is not ready yet.")}</div>`;
 }
 
 function clearRunState() {
@@ -198,7 +276,7 @@ function renderRunState(errorMsg) {
   const mode = state.runState.run_mode ? ` · ${state.runState.run_mode}` : "";
   const nextCommand = state.runState.next_command || "";
   els.runStateLabel.textContent = `${status}${stage ? ` · ${stage}` : ""}${mode}`;
-  els.runStateDetail.textContent = nextCommand ? `Next: ${nextCommand}` : "No action required.";
+  els.runStateDetail.textContent = nextCommand ? `Next: ${friendlyCommand(nextCommand)}` : "No action required.";
 }
 
 async function loadRunState() {
@@ -241,7 +319,7 @@ function renderSetupStatus(errorMsg) {
     els.setupBanner.classList.add("warning");
   }
   els.setupStatusLabel.textContent = status;
-  els.setupNextCommand.textContent = nextCommand || "Setup command available from setup status";
+  els.setupNextCommand.textContent = nextCommand ? friendlyCommand(nextCommand) : "Setup command available from setup status";
 }
 
 async function loadSetupStatus() {
@@ -334,6 +412,7 @@ function renderPage(page) {
   els.pageTitle.textContent = page.title || page.page_id;
   els.notes.value = page.notes || "";
   els.saveStatus.textContent = "";
+  setReviewActionsEnabled(true);
   if (els.pageActionStatus) {
     els.pageActionStatus.textContent = `Current status: ${page.review_status || page.decision || "needs_review"}`;
   }
@@ -392,15 +471,19 @@ function summarizeAlternatives(alternatives) {
 function detailRows(rows) {
   return Object.entries(rows)
     .filter(([, value]) => value !== "" && value !== null && value !== undefined)
-    .map(([label, value]) => `<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(String(value))}</dd>`)
+    .map(([label, value]) => `<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(friendlyPathText(String(value)))}</dd>`)
     .join("");
 }
 
 async function runPageAction(action, extra = {}) {
-  const page = state.deck.pages[state.selectedIndex];
-  if (!page) return;
-  const buttons = [els.save, els.approvePage, els.rejectPage, els.requestEvidence, els.convertGenerate, els.lockSource].filter(Boolean);
-  buttons.forEach((btn) => { btn.disabled = true; });
+  const page = currentPage();
+  if (!page) {
+    setReviewActionsEnabled(false);
+    els.saveStatus.textContent = "Preview is not ready yet.";
+    if (els.pageActionStatus) els.pageActionStatus.textContent = "Preview is not ready for page actions.";
+    return;
+  }
+  setReviewActionsEnabled(false);
   els.saveStatus.textContent = "Applying...";
   if (els.pageActionStatus) els.pageActionStatus.textContent = "";
   try {
@@ -422,7 +505,7 @@ async function runPageAction(action, extra = {}) {
     els.saveStatus.textContent = error.message;
     if (els.pageActionStatus) els.pageActionStatus.textContent = error.message;
   } finally {
-    buttons.forEach((btn) => { btn.disabled = false; });
+    setReviewActionsEnabled(Boolean(currentPage()));
   }
 }
 
@@ -514,6 +597,10 @@ function renderNarrative(errorMsg) {
   if (!els.narrativeContent) return;
   if (errorMsg) {
     els.narrativeContent.innerHTML = `<p class="muted">${escapeHtml(errorMsg)}</p>`;
+    return;
+  }
+  if (state.currentRunId && !isPreviewReady()) {
+    els.narrativeContent.innerHTML = `<p class="muted">${escapeHtml(panelPendingMessage("叙事数据"))}</p>`;
     return;
   }
   if (!state.narrative) {
@@ -619,6 +706,10 @@ function renderAssetSignals(errorMsg) {
     els.assetSignalsContent.innerHTML = `<p class="muted">${escapeHtml(errorMsg)}</p>`;
     return;
   }
+  if (state.currentRunId && !isPreviewReady()) {
+    els.assetSignalsContent.innerHTML = `<p class="muted">${escapeHtml(panelPendingMessage("资产信号"))}</p>`;
+    return;
+  }
   if (!state.assetSignals) {
     els.assetSignalsContent.innerHTML = '<p class="muted">选择 run 后加载资产信号...</p>';
     return;
@@ -719,6 +810,10 @@ function renderGovernance(errorMsg) {
   if (!els.governanceContent) return;
   if (errorMsg) {
     els.governanceContent.innerHTML = `<p class="muted">${escapeHtml(errorMsg)}</p>`;
+    return;
+  }
+  if (state.currentRunId && !isPreviewReady()) {
+    els.governanceContent.innerHTML = `<p class="muted">${escapeHtml(panelPendingMessage("质量治理"))}</p>`;
     return;
   }
   if (!state.governance) {
@@ -925,6 +1020,11 @@ function renderReadiness(errorMsg) {
     updateOverview();
     return;
   }
+  if (state.currentRunId && !isPreviewReady()) {
+    els.readinessContent.innerHTML = `<p class="muted">${escapeHtml(panelPendingMessage("readiness"))}</p>`;
+    updateOverview();
+    return;
+  }
   if (!state.reviewSummary) {
     els.readinessContent.innerHTML = '<p class="muted">选择 run 后加载 readiness...</p>';
     updateOverview();
@@ -956,6 +1056,10 @@ function renderClaimCoverage(errorMsg) {
     els.claimCoverageContent.innerHTML = `<p class="muted">${escapeHtml(errorMsg)}</p>`;
     return;
   }
+  if (state.currentRunId && !isPreviewReady()) {
+    els.claimCoverageContent.innerHTML = `<p class="muted">${escapeHtml(panelPendingMessage("claim coverage"))}</p>`;
+    return;
+  }
   const claims = state.claimCoverage && Array.isArray(state.claimCoverage.claims) ? state.claimCoverage.claims : [];
   if (!claims.length) {
     els.claimCoverageContent.innerHTML = '<p class="muted">暂无 claim coverage 数据。</p>';
@@ -984,6 +1088,10 @@ function renderNextActions(errorMsg) {
     els.nextActionsContent.innerHTML = `<p class="muted">${escapeHtml(errorMsg)}</p>`;
     return;
   }
+  if (state.currentRunId && !isPreviewReady()) {
+    els.nextActionsContent.innerHTML = `<p class="muted">${escapeHtml(panelPendingMessage("next actions"))}</p>`;
+    return;
+  }
   const actions = state.nextActions && Array.isArray(state.nextActions.actions) ? state.nextActions.actions : [];
   if (!actions.length) {
     els.nextActionsContent.innerHTML = '<p class="muted">当前没有优先动作。</p>';
@@ -1006,6 +1114,10 @@ function renderExternalResults(errorMsg) {
   if (!els.externalResultsContent) return;
   if (errorMsg) {
     els.externalResultsContent.innerHTML = `<p class="muted">${escapeHtml(errorMsg)}</p>`;
+    return;
+  }
+  if (state.currentRunId && !isPreviewReady()) {
+    els.externalResultsContent.innerHTML = `<p class="muted">${escapeHtml(panelPendingMessage("external results"))}</p>`;
     return;
   }
   if (!state.externalResults) {
@@ -1056,6 +1168,11 @@ function renderExportQueue(errorMsg) {
     updateOverview();
     return;
   }
+  if (state.currentRunId && !isPreviewReady()) {
+    els.exportQueueContent.innerHTML = `<p class="muted">${escapeHtml(panelPendingMessage("export queue"))}</p>`;
+    updateOverview();
+    return;
+  }
   if (!state.exportQueue) {
     els.exportQueueContent.innerHTML = '<p class="muted">选择 run 后加载 export queue...</p>';
     updateOverview();
@@ -1078,6 +1195,11 @@ function renderMetrics(errorMsg) {
   if (!els.metricsContent) return;
   if (errorMsg) {
     els.metricsContent.innerHTML = `<p class="muted">${escapeHtml(errorMsg)}</p>`;
+    updateOverview();
+    return;
+  }
+  if (state.currentRunId && !isPreviewReady()) {
+    els.metricsContent.innerHTML = `<p class="muted">${escapeHtml(panelPendingMessage("metrics"))}</p>`;
     updateOverview();
     return;
   }
@@ -1230,7 +1352,11 @@ els.lockSource.addEventListener("click", () => runPageAction("lock_source"));
 els.first.addEventListener("click", () => selectPage(0));
 els.prev.addEventListener("click", () => selectPage(state.selectedIndex - 1));
 els.next.addEventListener("click", () => selectPage(state.selectedIndex + 1));
-els.last.addEventListener("click", () => selectPage(state.deck.pages.length - 1));
+els.last.addEventListener("click", () => {
+  if (state.deck && Array.isArray(state.deck.pages) && state.deck.pages.length) {
+    selectPage(state.deck.pages.length - 1);
+  }
+});
 document.addEventListener("keydown", (event) => {
   if (event.key === "ArrowLeft") selectPage(state.selectedIndex - 1);
   if (event.key === "ArrowRight") selectPage(state.selectedIndex + 1);

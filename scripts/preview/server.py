@@ -11,6 +11,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
 
 from manifest import (
+    DECISIONS,
     ManifestError,
     find_page,
     load_manifest,
@@ -194,11 +195,41 @@ class PreviewHandler(BaseHTTPRequestHandler):
 
     def studio_runs_dir(self) -> Path:
         if self.run_dir is not None or not self.use_setup_runs_dir:
-            return self.runs_dir
+            return self.runs_dir.resolve()
         config = read_setup_config()
         if isinstance(config, dict) and not config.get("_invalid") and config.get("default_runs_dir"):
             return Path(str(config["default_runs_dir"])).expanduser().resolve()
-        return self.runs_dir
+        return self.runs_dir.resolve()
+
+    def run_title(self, run_dir: Path) -> str:
+        try:
+            request = load_request(run_dir)
+        except ValueError:
+            return run_dir.name
+        return str(request.get("project_name") or request.get("business_goal") or run_dir.name)
+
+    def preview_manifest_exists(self, run_dir: Path) -> bool:
+        return (run_dir / "preview_manifest.json").exists()
+
+    def preview_not_ready_payload(self, run_dir: Path) -> dict[str, Any]:
+        return {
+            "run_id": run_dir.name,
+            "title": self.run_title(run_dir),
+            "status": run_status(run_dir),
+            "updated_at": "",
+            "quality": {},
+            "pages": [],
+            "preview_ready": False,
+            "message": "Preview is not ready yet.",
+        }
+
+    def public_manifest_error(self, exc: Exception) -> str:
+        message = str(exc)
+        if "Missing preview_manifest.json" in message:
+            return "Preview is not ready yet."
+        if "Invalid JSON in preview_manifest.json" in message:
+            return "Preview manifest is invalid."
+        return message
 
     def do_GET(self) -> None:
         parsed = urlparse(self.path)
@@ -228,6 +259,9 @@ class PreviewHandler(BaseHTTPRequestHandler):
         if path.startswith("/api/quality-governance/"):
             self.api_quality_governance(path.removeprefix("/api/quality-governance/").strip("/"))
             return
+        if path.startswith("/api/readiness/"):
+            self.api_review_summary(path.removeprefix("/api/readiness/").strip("/"))
+            return
         if path.startswith("/api/review-summary/"):
             self.api_review_summary(path.removeprefix("/api/review-summary/").strip("/"))
             return
@@ -251,6 +285,9 @@ class PreviewHandler(BaseHTTPRequestHandler):
             return
         if path.startswith("/api/export-queue/"):
             self.api_export_queue(path.removeprefix("/api/export-queue/").strip("/"), parsed)
+            return
+        if path.startswith("/api/metrics/"):
+            self.api_run_metrics(path.removeprefix("/api/metrics/").strip("/"))
             return
         if path.startswith("/api/run-metrics/"):
             self.api_run_metrics(path.removeprefix("/api/run-metrics/").strip("/"))
@@ -302,6 +339,8 @@ class PreviewHandler(BaseHTTPRequestHandler):
         candidate_text = str(candidate)
         if candidate_text != root_text and not candidate_text.startswith(root_text + "/"):
             raise ManifestError("Invalid run_id.")
+        if not candidate.is_dir():
+            raise ManifestError(f"Run not found: {run_id}")
         return candidate
 
     def run_summary(self, run_dir: Path) -> dict:
@@ -342,6 +381,9 @@ class PreviewHandler(BaseHTTPRequestHandler):
     def api_deck(self, parsed) -> None:
         try:
             run_dir = self.active_run_dir(parsed)
+            if not self.preview_manifest_exists(run_dir):
+                self.send_json(self.preview_not_ready_payload(run_dir))
+                return
             manifest = load_manifest(run_dir)
             pages = [page_payload(run_dir, page) for page in manifest["pages"]]
             self.send_json(
@@ -352,10 +394,11 @@ class PreviewHandler(BaseHTTPRequestHandler):
                     "updated_at": manifest.get("updated_at", ""),
                     "quality": load_quality_reports(run_dir),
                     "pages": pages,
+                    "preview_ready": True,
                 }
             )
         except ManifestError as exc:
-            self.send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
+            self.send_error_json(HTTPStatus.BAD_REQUEST, self.public_manifest_error(exc))
 
     def api_page(self, page_id: str, parsed) -> None:
         try:
@@ -590,12 +633,19 @@ class PreviewHandler(BaseHTTPRequestHandler):
             return
         try:
             narrative = _load_narrative_data(candidate)
+            if not self.preview_manifest_exists(candidate):
+                narrative["run_id"] = candidate.name
+                narrative["title"] = self.run_title(candidate)
+                narrative["preview_ready"] = False
+                self.send_json(narrative)
+                return
             manifest = load_manifest(candidate)
             narrative["run_id"] = manifest["run_id"]
             narrative["title"] = manifest["title"]
+            narrative["preview_ready"] = True
             self.send_json(narrative)
         except ManifestError as exc:
-            self.send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
+            self.send_error_json(HTTPStatus.BAD_REQUEST, self.public_manifest_error(exc))
 
     def api_asset_signals(self, run_id: str) -> None:
         """返回指定 run 的 asset signals 数据。"""
@@ -604,8 +654,16 @@ class PreviewHandler(BaseHTTPRequestHandler):
             return
         try:
             signals = _load_asset_signals(candidate)
+            if not self.preview_manifest_exists(candidate):
+                signals["run_id"] = candidate.name
+                signals["title"] = self.run_title(candidate)
+                signals["preview_ready"] = False
+                signals["page_signals"] = []
+                self.send_json(signals)
+                return
             manifest = load_manifest(candidate)
             signals["run_id"] = manifest["run_id"]
+            signals["preview_ready"] = True
             # 为每个页面构建候选信号摘要
             page_signals = []
             sourcing_plan = signals.get("sourcing_plan", {})
@@ -683,18 +741,12 @@ class PreviewHandler(BaseHTTPRequestHandler):
             )
             self.send_json(signals)
         except ManifestError as exc:
-            self.send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
+            self.send_error_json(HTTPStatus.BAD_REQUEST, self.public_manifest_error(exc))
 
     def api_quality_governance(self, run_id: str) -> None:
         """返回 quality governance 综合数据。"""
         candidate = self._resolve_run_or_error(run_id)
         if not candidate:
-            return
-
-        try:
-            manifest = load_manifest(candidate)
-        except ManifestError as exc:
-            self.send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
             return
 
         # Gate summary
@@ -761,6 +813,9 @@ class PreviewHandler(BaseHTTPRequestHandler):
 
         self.send_json({
             "run_id": run_id,
+            "title": self.run_title(candidate),
+            "status": run_status(candidate),
+            "preview_ready": self.preview_manifest_exists(candidate),
             "gate_summary": gate_summary,
             "page_findings": page_findings,
             "active_overrides": active_overrides,
@@ -942,6 +997,25 @@ class PreviewHandler(BaseHTTPRequestHandler):
             "true",
             "yes",
         }
+        if not self.preview_manifest_exists(run_dir):
+            invalid = decisions - DECISIONS
+            if invalid:
+                self.send_error_json(HTTPStatus.BAD_REQUEST, f"Invalid decisions: {', '.join(sorted(invalid))}")
+                return
+            self.send_json(
+                {
+                    "run_id": run_id,
+                    "title": self.run_title(run_dir),
+                    "status": run_status(run_dir),
+                    "preview_ready": False,
+                    "decisions": sorted(decisions),
+                    "queue_type": queue_type,
+                    "pages": [],
+                    "blocked_pages": [],
+                    "blocked_count": 0,
+                }
+            )
+            return
         try:
             queue = export_queue(
                 run_dir,
@@ -951,7 +1025,7 @@ class PreviewHandler(BaseHTTPRequestHandler):
             )
             self.send_json(queue)
         except (ManifestError, ValueError) as exc:
-            self.send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
+            self.send_error_json(HTTPStatus.BAD_REQUEST, self.public_manifest_error(exc))
 
     def api_run_metrics(self, run_id: str) -> None:
         """Return lightweight run metrics without writing run_metrics.json."""
@@ -1094,14 +1168,20 @@ class PreviewHandler(BaseHTTPRequestHandler):
         self.send_json({"error": message}, status)
 
 
-def build_handler(run_dir: Path | None, runs_dir: Path | None = None, library_mode: str = "fixture"):
+def build_handler(
+    run_dir: Path | None,
+    runs_dir: Path | None = None,
+    library_mode: str = "fixture",
+    *,
+    use_setup_runs_dir: bool | None = None,
+):
     class Handler(PreviewHandler):
         pass
 
     Handler.run_dir = run_dir
     Handler.runs_dir = (runs_dir or configured_runs_dir(ROOT_DIR / "runs")).expanduser().resolve()
     Handler.library_mode = library_mode
-    Handler.use_setup_runs_dir = True
+    Handler.use_setup_runs_dir = bool(runs_dir is None if use_setup_runs_dir is None else use_setup_runs_dir)
     return Handler
 
 
@@ -1115,11 +1195,15 @@ def main() -> None:
     args = parser.parse_args()
 
     run_dir = Path(args.run_dir).expanduser().resolve() if args.run_dir else None
-    runs_dir = Path(args.runs_dir).expanduser().resolve() if args.runs_dir else configured_runs_dir(ROOT_DIR / "runs")
+    explicit_runs_dir = args.runs_dir is not None
+    runs_dir = Path(args.runs_dir).expanduser().resolve() if explicit_runs_dir else configured_runs_dir(ROOT_DIR / "runs")
     runs_dir.mkdir(parents=True, exist_ok=True)
     if run_dir is not None:
         load_manifest(run_dir)
-    server = ThreadingHTTPServer((args.host, args.port), build_handler(run_dir, runs_dir, args.library_mode))
+    server = ThreadingHTTPServer(
+        (args.host, args.port),
+        build_handler(run_dir, runs_dir, args.library_mode, use_setup_runs_dir=not explicit_runs_dir),
+    )
     mode = "Preview" if run_dir else "Studio"
     print(f"Deck Master {mode}: http://{args.host}:{args.port}")
     print(f"Runs directory: {runs_dir}")

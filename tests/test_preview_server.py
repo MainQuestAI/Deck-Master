@@ -20,6 +20,7 @@ sys.path.insert(0, str(ROOT / "scripts" / "preview"))
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from server import PreviewHandler, _load_narrative_data, build_handler  # noqa: E402
+from runtime.run_state import create_run, write_json  # noqa: E402
 from runtime.setup_status import run_setup  # noqa: E402
 
 SAMPLE_RUN = ROOT / "examples" / "preview-run"
@@ -422,6 +423,66 @@ class StudioServerTests(unittest.TestCase):
         self.assertEqual(HTTPStatus.OK, runs_status)
         self.assertEqual(str((self.runs_dir / "from_setup").resolve()), runs["runs_dir"])
         self.assertIn("ready-run-http", [run["run_id"] for run in runs["runs"]])
+
+    def test_studio_runs_dir_cli_explicit_overrides_setup_default(self) -> None:
+        self._write_ready_setup()
+        create_run(self.runs_dir, {"project_name": "Explicit"}, run_id="explicit-run")
+        create_run(self.runs_dir / "from_setup", {"project_name": "Setup"}, run_id="setup-run")
+
+        explicit_handler = MockHandler(run_dir=None, runs_dir=self.runs_dir)
+        explicit_handler.use_setup_runs_dir = False
+        explicit_status, explicit_runs = explicit_handler.request("GET", "/api/runs")
+
+        self.assertEqual(HTTPStatus.OK, explicit_status)
+        self.assertEqual(str(self.runs_dir.resolve()), explicit_runs["runs_dir"])
+        self.assertIn("explicit-run", [run["run_id"] for run in explicit_runs["runs"]])
+        self.assertNotIn("setup-run", [run["run_id"] for run in explicit_runs["runs"]])
+
+        setup_handler = MockHandler(run_dir=None, runs_dir=self.runs_dir)
+        setup_handler.use_setup_runs_dir = True
+        setup_status, setup_runs = setup_handler.request("GET", "/api/runs")
+
+        self.assertEqual(HTTPStatus.OK, setup_status)
+        self.assertEqual(str((self.runs_dir / "from_setup").resolve()), setup_runs["runs_dir"])
+        self.assertIn("setup-run", [run["run_id"] for run in setup_runs["runs"]])
+        self.assertNotIn("explicit-run", [run["run_id"] for run in setup_runs["runs"]])
+
+    def test_planned_run_apis_return_empty_contract_without_manifest_path(self) -> None:
+        planned = create_run(self.runs_dir, {"project_name": "Planned"}, run_id="planned-run")
+        write_json(planned / "narrative_plan.json", {"run_id": "planned-run", "beats": []})
+        handler = MockHandler(run_dir=None, runs_dir=self.runs_dir)
+
+        checks = [
+            ("GET", "/api/deck?run_id=planned-run"),
+            ("GET", "/api/narrative/planned-run"),
+            ("GET", "/api/asset-signals/planned-run"),
+            ("GET", "/api/quality-governance/planned-run"),
+            ("GET", "/api/export-queue/planned-run?queue_type=client"),
+        ]
+        for method, path in checks:
+            with self.subTest(path=path):
+                status, data = handler.request(method, path)
+                body = json.dumps(data, ensure_ascii=False)
+                self.assertEqual(HTTPStatus.OK, status)
+                self.assertNotIn(str(planned), body)
+                self.assertNotIn("preview_manifest.json", body)
+
+        deck_status, deck = handler.request("GET", "/api/deck?run_id=planned-run")
+        self.assertEqual(HTTPStatus.OK, deck_status)
+        self.assertFalse(deck["preview_ready"])
+        self.assertEqual("planned-run", deck["run_id"])
+        self.assertEqual([], deck["pages"])
+
+    def test_invalid_run_error_does_not_leak_absolute_path(self) -> None:
+        handler = MockHandler(run_dir=None, runs_dir=self.runs_dir)
+
+        status, data = handler.request("GET", "/api/deck?run_id=missing-run")
+
+        self.assertIn(status, {HTTPStatus.BAD_REQUEST, HTTPStatus.NOT_FOUND})
+        error = data["error"]
+        self.assertIn("Run not found", error)
+        self.assertNotIn(str(self.runs_dir), error)
+        self.assertNotIn("/Users/", error)
 
     def test_classic_demo_sets_fixture_mode(self) -> None:
         status, created = self.handler.request(
