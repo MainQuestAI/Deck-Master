@@ -1,19 +1,53 @@
 :root {
-  --bg-deep: #030305;
-  --glass-surface: rgba(255, 255, 255, 0.03);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-highlight: rgba(255, 255, 255, 0.15);
-  --text-primary: #ffffff;
-  --text-secondary: #9ca3af;
-  --text-tertiary: #6b7280;
-  --accent-data: #2ecc71;
-  --accent-action: #ff6b2b;
-  --status-success: #2ecc71;
-  --status-warning: #f1c40f;
-  --status-error: #e74c3c;
-  --font-main: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --ink-base: #0B0E12;
+  --surface-1: #11151B;
+  --surface-2: #161B22;
+  --surface-3: #1B212A;
+  --hairline: #232A33;
+  --hairline-soft: #1A2029;
+  --text-primary: #E6E9EE;
+  --text-secondary: #8A93A0;
+  --text-tertiary: #5A626C;
+  --accent-data: #E09043;
+  --accent-action: #E09043;
+  --accent-soft: rgba(224, 144, 67, 0.12);
+  --accent-line: rgba(224, 144, 67, 0.32);
+  --status-success: #6FAE6F;
+  --status-warning: #D9A441;
+  --status-error: #C75450;
+  --status-info: #5B8DB8;
+  --p0: #C75450;
+  --p1: #D9A441;
+  --p2: #7A8694;
+  --p3: #5A626C;
+  --font-display: "Satoshi", "Geist", system-ui, sans-serif;
+  --font-main: "Geist", system-ui, sans-serif;
   --font-chinese: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
-  --font-mono: "JetBrains Mono", "Fira Code", "Roboto Mono", "SF Mono", monospace;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+[data-theme="light"] {
+  --ink-base: #EAECF0;
+  --surface-1: #FFFFFF;
+  --surface-2: #F4F6F8;
+  --surface-3: #ECEEF2;
+  --hairline: #D4D9E0;
+  --hairline-soft: #E2E6EC;
+  --text-primary: #14181F;
+  --text-secondary: #5A626C;
+  --text-tertiary: #98A0AC;
+  --accent-data: #C2742F;
+  --accent-action: #C2742F;
+  --accent-soft: rgba(194, 116, 47, 0.10);
+  --accent-line: rgba(194, 116, 47, 0.30);
+  --status-success: #4F8A50;
+  --status-warning: #B58128;
+  --status-error: #B23B3B;
+  --status-info: #3E6E94;
+  --p0: #B23B3B;
+  --p1: #B58128;
+  --p2: #6A727D;
+  --p3: #98A0AC;
 }
 
 * {
@@ -27,7 +61,7 @@ body {
 
 body {
   margin: 0;
-  background: var(--bg-deep);
+  background: var(--ink-base);
   color: var(--text-primary);
   font-family: var(--font-main), var(--font-chinese);
   overflow-x: hidden;
@@ -104,11 +138,11 @@ textarea {
 }
 
 .glass-panel {
-  background: var(--glass-surface);
+  background: var(--surface-1);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid var(--glass-border);
-  border-top: 1px solid var(--glass-highlight);
+  border: 1px solid var(--hairline);
+  border-top: 1px solid var(--hairline);
   border-radius: 20px;
 }
 

@@ -25,6 +25,18 @@ const els = {
   metricApproved: document.querySelector("#metric-approved"),
   metricApprovals: document.querySelector("#metric-approvals"),
   metricExport: document.querySelector("#metric-export"),
+  statusDrawer: document.querySelector("#status-drawer"),
+  blockFlag: document.querySelector("#block-flag"),
+  draftGateLabel: document.querySelector("#draft-gate-label"),
+  exportLabel: document.querySelector("#export-label"),
+  langToggle: document.querySelector("#lang-toggle"),
+  bottomDrawer: document.querySelector("#bottom-drawer"),
+  bottomDrawerTabs: document.querySelector(".bottom-drawer-tabs"),
+  bottomDrawerPanels: document.querySelectorAll(".bottom-drawer-panel"),
+  buildSkillPanel: document.querySelector("#build-skill-panel"),
+  artifactPanel: document.querySelector("#artifact-panel"),
+  exportPanel: document.querySelector("#export-panel"),
+  actionBar: document.querySelector("#action-bar"),
   projectSwitcher: document.querySelector("#project-switcher"),
   projectSwitcherMeta: document.querySelector("#project-switcher-meta"),
   filterList: document.querySelector("#filter-list"),
@@ -283,6 +295,7 @@ function renderProjectSwitcher() {
 }
 
 function renderFilters() {
+  if (!els.filterList) return;
   els.filterList.innerHTML = "";
   const filters = currentWorkspace().queue?.filters || [];
   filters.forEach((filter) => {
@@ -300,6 +313,7 @@ function renderFilters() {
 }
 
 function renderPageList() {
+  if (!els.pageList) return;
   els.pageList.innerHTML = "";
   const pages = filteredPages();
   const metrics = currentWorkspace().header_metrics;
@@ -340,6 +354,7 @@ function renderPageList() {
 }
 
 function renderHeader() {
+  if (!els.workspaceTitle) return;
   const workspace = currentWorkspace();
   if (!workspace.project_id) {
     els.workspaceTitle.textContent = "请选择或创建一个方案项目";
@@ -379,6 +394,7 @@ function renderHeader() {
 }
 
 function renderCriticalAlerts() {
+  if (!els.criticalAlerts) return;
   const alerts = [];
   const workspace = currentWorkspace();
   if (state.viewMode === "page" && state.pageDetail?.summary?.critical_alerts?.length) {
@@ -421,6 +437,7 @@ function renderCriticalAlerts() {
 }
 
 function renderStageWorkspace() {
+  if (!els.previewStage) return;
   const workspace = currentWorkspace();
   const stage = currentStage();
   const delivery = workspace.run_summary?.delivery_preview || {};
@@ -476,6 +493,7 @@ function renderStageWorkspace() {
 }
 
 function renderPagePreview() {
+  if (!els.previewStage) return;
   const page = currentPageCard();
   if (!currentWorkspace().project_id) {
     els.previewPanelLabel.textContent = "方案项目工作台";
@@ -528,6 +546,7 @@ function renderPagePreview() {
 }
 
 function renderDeliveryPreview() {
+  if (!els.previewStage) return;
   const delivery = state.deliveryPreview || currentWorkspace().run_summary?.delivery_preview || {};
   els.previewPanelLabel.textContent = "交付预览";
   els.focusPageTitle.textContent = "交付级预览";
@@ -572,6 +591,7 @@ function renderDeliveryPreview() {
 }
 
 function renderPreview() {
+  if (!els.previewStage) return;
   const workspace = currentWorkspace();
   const showDeliveryMode = isDeliveryStage();
   if (els.deliveryMode) {
@@ -596,6 +616,7 @@ function renderPreview() {
 }
 
 function renderReadiness() {
+  if (!els.runReadiness) return;
   const workspace = currentWorkspace();
   if (!workspace.project_id) {
     els.readinessPill.textContent = "-";
@@ -630,6 +651,7 @@ function renderReadiness() {
 }
 
 function renderClaimCoverage() {
+  if (!els.claimCoverage) return;
   const workspace = currentWorkspace();
   if (!workspace.project_id) {
     els.claimSummaryChip.textContent = "-";
@@ -652,6 +674,7 @@ function renderClaimCoverage() {
 }
 
 function renderActivity() {
+  if (!els.activityList) return;
   const items = state.activity?.items || [];
   els.activityCount.textContent = String(items.length);
   if (!items.length) {
@@ -671,6 +694,7 @@ function renderActivity() {
 }
 
 function renderRunLevelDecisionRail() {
+  if (!els.decisionTitle) return;
   const workspace = currentWorkspace();
   const stage = currentStage();
   const deliveryPreview = workspace.run_summary?.delivery_preview || {};
@@ -715,6 +739,7 @@ function renderRunLevelDecisionRail() {
 }
 
 function renderPageDecisionRail() {
+  if (!els.decisionTitle) return;
   const { hero, summary, evidence, quality, approvals } = state.pageDetail;
   els.decisionPanelLabel.textContent = "当前页面处理";
   els.decisionTitle.textContent = hero.title;
@@ -792,6 +817,7 @@ function renderPageDecisionRail() {
 }
 
 function renderDecisionRail() {
+  if (!els.decisionTitle) return;
   const workspace = currentWorkspace();
   if (!workspace.project_id) {
     els.decisionPanelLabel.textContent = "当前推进";
@@ -814,11 +840,169 @@ function renderDecisionRail() {
 }
 
 function syncModeButtons() {
+  if (!els.pageMode || !els.deliveryMode) return;
   els.pageMode.classList.toggle("active", state.viewMode === "page");
   els.deliveryMode.classList.toggle("active", state.viewMode === "delivery");
 }
 
+// B3: P0/P1 三处联动 — 顶部阻断标记
+function renderBlockFlag() {
+  if (!els.blockFlag) return;
+  const metrics = currentWorkspace().header_metrics || {};
+  const blockedCount = (metrics.p0 || 0) + (metrics.p1 || 0);
+  if (blockedCount > 0) {
+    els.blockFlag.textContent = `${blockedCount} 项阻断待处理`;
+    els.blockFlag.dataset.tone = "danger";
+    els.blockFlag.hidden = false;
+  } else {
+    els.blockFlag.textContent = "-";
+    els.blockFlag.dataset.tone = "";
+    els.blockFlag.hidden = false;
+  }
+}
+
+// B3: 计算当前页最高风险等级（P0 > P1 > P2 > P3）
+function currentPageHighestRisk() {
+  const risks = state.pageDetail?.quality?.risks || [];
+  const order = ["P0", "P1", "P2", "P3"];
+  let highest = null;
+  for (const risk of risks) {
+    const severity = String(risk.severity || "").toUpperCase();
+    if (!order.includes(severity)) continue;
+    if (!highest || order.indexOf(severity) < order.indexOf(highest)) {
+      highest = severity;
+    }
+  }
+  return highest;
+}
+
+// B3: 主动作条状态机（spec §10.7）
+function renderActionBar() {
+  if (!els.actionBar) return;
+  const workspace = currentWorkspace();
+  if (!workspace.project_id) {
+    els.actionBar.innerHTML = "";
+    return;
+  }
+
+  // 交付预览模式下，主动作条不承载页面级动作
+  if (state.viewMode === "delivery") {
+    els.actionBar.innerHTML = '<span class="action-bar-hint mono">交付预览模式 · 页面级动作暂不可用</span>';
+    return;
+  }
+
+  const page = currentPageCard();
+  if (!page || !state.pageDetail) {
+    els.actionBar.innerHTML = '<span class="action-bar-hint mono">请先在左栏选择一页开始审查</span>';
+    return;
+  }
+
+  const reviewStatus = String(page.review_status || "");
+  const highestRisk = currentPageHighestRisk();
+  const stageLabel = currentStageLabel();
+
+  // 复用 renderActionStates 的阶段门控逻辑
+  const stageAllowsReview = ["待审阅", "待补依据", "待审批", "可交付", "已交付"].includes(stageLabel);
+  const stageAllowsEvidence = ["待审阅", "待补依据"].includes(stageLabel);
+  const stageBlocked = isStageWorkspace();
+
+  let primaryLabel = "";
+  let primaryEnabled = false;
+  let primaryAction = "";
+  let hint = "";
+
+  if (reviewStatus === "approved") {
+    primaryLabel = "下一页";
+    primaryEnabled = true;
+    primaryAction = "next-page";
+    hint = "当前页已批准 · 跳到下一待审或阻断页";
+  } else if (reviewStatus === "rejected") {
+    primaryLabel = "重新审查";
+    primaryEnabled = stageAllowsReview;
+    primaryAction = "re-review";
+    hint = primaryEnabled ? "当前页已驳回 · 可重新进入审查" : `当前阶段（${stageLabel}）不允许重新审查`;
+  } else if (reviewStatus === "needs_evidence") {
+    primaryLabel = "请求补证据";
+    primaryEnabled = stageAllowsEvidence;
+    primaryAction = "request-evidence";
+    hint = primaryEnabled ? "当前页证据不足 · 请求补齐证据后再审" : `当前阶段（${stageLabel}）不允许请求补证据`;
+  } else if (reviewStatus === "needs_review") {
+    if (highestRisk === "P0") {
+      primaryLabel = "先处理阻断";
+      primaryEnabled = false;
+      primaryAction = "";
+      hint = "P0 阻断 · 批准被锁定 · 先在风险与缺口块处理阻断，或请求补证据";
+    } else if (highestRisk === "P1") {
+      primaryLabel = "批准页面";
+      primaryEnabled = stageAllowsReview;
+      primaryAction = "approve";
+      hint = primaryEnabled ? "P1 待处理 · 批准前请确认风险已评估" : `P1 待处理 · 当前阶段（${stageLabel}）不允许批准`;
+    } else {
+      primaryLabel = "批准页面";
+      primaryEnabled = stageAllowsReview;
+      primaryAction = "approve";
+      hint = primaryEnabled ? "无显式阻断 · 可批准当前页" : stageBlocked ? `当前阶段（${stageLabel}）还在生成中，页面级审批待进入可审阶段` : `当前阶段（${stageLabel}）还不允许批准页面`;
+    }
+  } else {
+    primaryLabel = "批准页面";
+    primaryEnabled = false;
+    primaryAction = "";
+    hint = "当前页状态不支持直接操作";
+  }
+
+  const primaryClass = "btn btn-cta";
+  const primaryDisabled = primaryEnabled ? "" : "disabled aria-disabled=\"true\"";
+  const hintTone = primaryEnabled ? "" : "data-tone=\"warning\"";
+
+  els.actionBar.innerHTML = `
+    <button class="${primaryClass}" ${primaryDisabled} data-action-primary="${primaryAction}">${escapeHtml(primaryLabel)}</button>
+    <span class="action-bar-hint mono" ${hintTone}>${escapeHtml(hint)}</span>
+  `;
+
+  const primaryBtn = els.actionBar.querySelector("[data-action-primary]");
+  if (primaryBtn && primaryEnabled) {
+    primaryBtn.addEventListener("click", async () => {
+      const action = primaryBtn.dataset.actionPrimary;
+      if (action === "next-page") {
+        const nextPage = findNextReviewOrBlockedPage();
+        if (nextPage) {
+          await selectPage(nextPage.page_id);
+        } else {
+          setFeedback("当前已是最后一页，或没有更多待审 / 阻断页。", "");
+        }
+      } else if (action === "approve") {
+        await runPageAction("approve");
+      } else if (action === "request-evidence") {
+        await runPageAction("request_evidence");
+      } else if (action === "re-review") {
+        await runPageAction("approve");
+      }
+    });
+  }
+}
+
+// B3: 查找下一个待审 / 阻断页（优先阻断 P0 > P1，其次 needs_review）
+function findNextReviewOrBlockedPage() {
+  const pages = currentPages();
+  const currentIndex = pages.findIndex((page) => page.page_id === state.currentPageId);
+  if (currentIndex < 0) return null;
+
+  const after = pages.slice(currentIndex + 1);
+  const before = pages.slice(0, currentIndex);
+
+  const pick = (list) => {
+    const blocked = list.find((page) => page.blocking_count > 0);
+    if (blocked) return blocked;
+    const needsReview = list.find((page) => page.review_status === "needs_review" || page.review_status === "needs_evidence");
+    return needsReview || null;
+  };
+
+  return pick(after) || pick(before) || null;
+}
+
 function renderActionStates() {
+  if (!els.approvePage) return;
+  // B3: wire #action-bar primary action
   const stageLabel = currentStageLabel();
   const page = currentPageCard();
   const hasPage = Boolean(page && state.pageDetail && !isStageWorkspace() && state.viewMode !== "delivery");
@@ -897,6 +1081,8 @@ function renderAll() {
   renderActivity();
   renderDecisionRail();
   renderActionStates();
+  renderBlockFlag();
+  renderActionBar();
   syncModeButtons();
 }
 
@@ -1079,6 +1265,7 @@ async function createRun(event) {
 }
 
 function bindEvents() {
+  // B4: wire .bottom-drawer tab switching
   els.openCreateModal.addEventListener("click", () => setCreateModal(true));
   els.closeCreateModal.addEventListener("click", () => setCreateModal(false));
   els.createRunModal.addEventListener("click", (event) => {

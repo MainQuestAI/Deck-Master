@@ -5,61 +5,86 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Deck Master 方案项目工作台</title>
     <link rel="icon" href="data:,">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://api.fontshare.com">
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css">
   </head>
   <body>
-    <div class="ambient-light-container" aria-hidden="true">
-      <div class="light-orb orb-1"></div>
-      <div class="light-orb orb-2"></div>
-    </div>
-
     <main class="workspace-shell">
-      <header class="workspace-header glass-panel">
-        <div class="header-brand">
+      <header class="status-bar" role="banner">
+        <div class="status-bar-brand">
           <div class="mq-logo">MAINQUEST</div>
-          <div class="brand-meta">
-            <span class="panel-title">方案项目工作台</span>
-            <p>Deck Master 本地方案项目交付工作台</p>
-          </div>
+          <span class="panel-title">方案项目工作台</span>
         </div>
 
-        <div class="header-main">
-          <div class="run-heading">
-            <span class="stage-chip" id="stage-chip">载入中</span>
-            <h1 id="workspace-title">正在加载方案项目</h1>
-            <p id="workspace-subtitle">请稍候，系统正在读取当前方案项目、页面队列和风险状态。</p>
-          </div>
-
-          <div class="header-actions">
-            <label class="project-switcher-card" for="project-switcher">
-              <span class="panel-title">项目切换</span>
-              <select id="project-switcher" aria-label="方案项目切换"></select>
-              <small id="project-switcher-meta" class="muted mono">0 个方案项目</small>
-            </label>
-            <button id="open-create-modal" class="btn">新建项目</button>
-            <button id="submit-run-approval" class="btn">提交审批</button>
-            <button id="mark-delivered" class="btn btn-cta">确认交付</button>
-          </div>
+        <div class="status-bar-run">
+          <span class="stage-chip" id="stage-chip">载入中</span>
+          <h1 id="workspace-title">正在加载方案项目</h1>
+          <p id="workspace-subtitle">请稍候，系统正在读取当前方案项目、页面队列和风险状态。</p>
         </div>
 
-        <div class="header-grid">
-          <section class="header-card">
-            <span class="panel-title">当前阶段</span>
-            <strong id="stage-title">-</strong>
-            <p id="stage-detail">-</p>
-          </section>
-          <section class="header-card">
-            <span class="panel-title">下一步</span>
-            <strong id="next-step-title">-</strong>
-            <p id="next-step-detail">-</p>
-          </section>
-          <section class="header-card">
-            <span class="panel-title">风险摘要</span>
-            <strong id="risk-summary-title">-</strong>
-            <p id="risk-summary-detail">-</p>
-          </section>
-          <section class="header-card metrics-card">
-            <span class="panel-title">项目指标</span>
+        <div class="status-bar-run-meta">
+          <span class="panel-title">当前阶段</span>
+          <strong id="stage-title">-</strong>
+          <p id="stage-detail">-</p>
+        </div>
+
+        <div class="status-bar-next-step">
+          <span class="panel-title">下一步</span>
+          <strong id="next-step-title">-</strong>
+          <p id="next-step-detail">-</p>
+        </div>
+
+        <div class="status-bar-block-flag" id="block-flag" aria-live="polite">-</div>
+
+        <div class="status-bar-draft-gate">
+          <span class="panel-title">Draft Gate</span>
+          <span id="draft-gate-label" class="mono">-</span>
+        </div>
+
+        <div class="status-bar-export">
+          <span class="panel-title">导出</span>
+          <span id="export-label" class="mono">-</span>
+        </div>
+
+        <div class="status-bar-lang">
+          <button id="lang-toggle" class="btn btn-ghost" type="button" aria-label="切换语言">中/EN</button>
+        </div>
+
+        <div class="header-actions">
+          <label class="project-switcher-card" for="project-switcher">
+            <span class="panel-title">项目切换</span>
+            <select id="project-switcher" aria-label="方案项目切换"></select>
+            <small id="project-switcher-meta" class="muted mono">0 个方案项目</small>
+          </label>
+          <button id="open-create-modal" class="btn">新建项目</button>
+          <button id="submit-run-approval" class="btn">提交审批</button>
+          <button id="mark-delivered" class="btn btn-cta">确认交付</button>
+        </div>
+      </header>
+
+      <aside class="status-drawer" id="status-drawer" hidden>
+        <div class="status-drawer-section">
+          <span class="panel-title">风险摘要</span>
+          <strong id="risk-summary-title">-</strong>
+          <p id="risk-summary-detail">-</p>
+        </div>
+      </aside>
+
+      <section class="workspace-grid">
+        <aside class="left-rail glass-panel">
+          <div class="rail-top">
+            <div>
+              <span class="panel-title">页面队列</span>
+              <h2>当前待处理页面</h2>
+            </div>
+            <div class="mono muted">按顺序处理</div>
+          </div>
+
+          <div class="queue-metrics">
             <div class="metric-list">
               <div>
                 <b id="metric-pages">-</b>
@@ -78,18 +103,6 @@
                 <span>可交付 / 阻断</span>
               </div>
             </div>
-          </section>
-        </div>
-      </header>
-
-      <section class="workspace-grid">
-        <aside class="left-rail glass-panel">
-          <div class="rail-top">
-            <div>
-              <span class="panel-title">页面队列</span>
-              <h2>当前待处理页面</h2>
-            </div>
-            <div class="mono muted">按顺序处理</div>
           </div>
 
           <div id="filter-list" class="filter-list"></div>
@@ -99,6 +112,7 @@
 
         <section class="center-column">
           <section class="preview-panel glass-panel">
+            <div class="action-bar" id="action-bar"></div>
             <div class="preview-header">
               <div>
                 <span class="panel-title" id="preview-panel-label">当前页面</span>
@@ -129,32 +143,6 @@
               <button id="last-page" class="btn">最后一页</button>
             </div>
           </section>
-
-          <div class="workspace-bottom-grid">
-            <section class="glass-panel bottom-panel">
-              <div class="section-head">
-                <span class="panel-title">推进状态</span>
-                <span id="readiness-pill" class="pill muted">-</span>
-              </div>
-              <div id="run-readiness" class="stack-list"></div>
-            </section>
-
-            <section class="glass-panel bottom-panel">
-              <div class="section-head">
-                <span class="panel-title">论点覆盖</span>
-                <span id="claim-summary-chip" class="pill muted">-</span>
-              </div>
-              <div id="claim-coverage" class="stack-list"></div>
-            </section>
-
-            <section class="glass-panel bottom-panel activity-panel">
-              <div class="section-head">
-                <span class="panel-title">处理记录</span>
-                <span class="mono muted" id="activity-count">0</span>
-              </div>
-              <div id="activity-list" class="activity-list"></div>
-            </section>
-          </div>
         </section>
 
         <aside class="decision-rail glass-panel">
@@ -202,6 +190,49 @@
             </div>
           </section>
         </aside>
+      </section>
+
+      <section class="bottom-drawer collapsed" id="bottom-drawer" aria-label="run 级信息抽屉">
+        <div class="bottom-drawer-tabs" role="tablist" aria-label="底部抽屉标签">
+          <button class="bottom-drawer-tab" role="tab" aria-selected="true" aria-controls="bottom-panel-readiness" data-tab="readiness">就绪度</button>
+          <button class="bottom-drawer-tab" role="tab" aria-selected="false" aria-controls="bottom-panel-claim" data-tab="claim">论点覆盖</button>
+          <button class="bottom-drawer-tab" role="tab" aria-selected="false" aria-controls="bottom-panel-activity" data-tab="activity">事件日志</button>
+          <button class="bottom-drawer-tab" role="tab" aria-selected="false" aria-controls="bottom-panel-build-skill" data-tab="build-skill">Build Skill</button>
+          <button class="bottom-drawer-tab" role="tab" aria-selected="false" aria-controls="bottom-panel-artifact" data-tab="artifact">Artifact</button>
+          <button class="bottom-drawer-tab" role="tab" aria-selected="false" aria-controls="bottom-panel-export" data-tab="export">Export</button>
+        </div>
+        <div class="bottom-drawer-panels">
+          <div class="bottom-drawer-panel" role="tabpanel" id="bottom-panel-readiness" aria-labelledby="bottom-tab-readiness">
+            <div class="section-head">
+              <span class="panel-title">推进状态</span>
+              <span id="readiness-pill" class="pill muted">-</span>
+            </div>
+            <div id="run-readiness" class="stack-list"></div>
+          </div>
+          <div class="bottom-drawer-panel" role="tabpanel" id="bottom-panel-claim" hidden>
+            <div class="section-head">
+              <span class="panel-title">论点覆盖</span>
+              <span id="claim-summary-chip" class="pill muted">-</span>
+            </div>
+            <div id="claim-coverage" class="stack-list"></div>
+          </div>
+          <div class="bottom-drawer-panel" role="tabpanel" id="bottom-panel-activity" hidden>
+            <div class="section-head">
+              <span class="panel-title">处理记录</span>
+              <span class="mono muted" id="activity-count">0</span>
+            </div>
+            <div id="activity-list" class="activity-list"></div>
+          </div>
+          <div class="bottom-drawer-panel" role="tabpanel" id="bottom-panel-build-skill" hidden>
+            <div id="build-skill-panel" class="stack-list"></div>
+          </div>
+          <div class="bottom-drawer-panel" role="tabpanel" id="bottom-panel-artifact" hidden>
+            <div id="artifact-panel" class="stack-list"></div>
+          </div>
+          <div class="bottom-drawer-panel" role="tabpanel" id="bottom-panel-export" hidden>
+            <div id="export-panel" class="stack-list"></div>
+          </div>
+        </div>
       </section>
     </main>
 
