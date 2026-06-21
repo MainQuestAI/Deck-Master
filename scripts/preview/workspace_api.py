@@ -38,8 +38,8 @@ STATUS_LIBRARY: dict[str, dict[str, str]] = {
         "result": "完成页面级审查与意见记录。",
         "tone": "warning",
     },
-    "待补证据": {
-        "definition": "核心论点已出现证据缺口，不能直接放行。",
+    "待补依据": {
+        "definition": "核心论点已出现依据缺口，不能直接放行。",
         "owner": "内容负责人",
         "result": "补齐来源与支撑材料，恢复可审状态。",
         "tone": "warning",
@@ -112,7 +112,7 @@ RUNTIME_STAGE_TO_WORKSPACE_STAGE = {
     "needs_render": "生成中",
     "generation_failed": "风险冻结",
     "needs_draft_gate": "风险冻结",
-    "needs_evidence": "待补证据",
+    "needs_evidence": "待补依据",
     "needs_review": "待审阅",
     "ready_for_client_export": "可交付",
     "ready_for_benchmark": "可交付",
@@ -316,7 +316,7 @@ def _source_decision_label(page: dict[str, Any]) -> str:
         "manual_placeholder": "人工占位",
         "pending_replacement": "等待替换来源",
         "replace": "待替换",
-        "request_evidence": "等待补证据",
+        "request_evidence": "等待补依据",
     }
     if decision in mapping:
         return mapping[decision]
@@ -335,7 +335,7 @@ def _review_label(page: dict[str, Any]) -> tuple[str, str]:
     mapping = {
         "approved": ("已批准", "success"),
         "rejected": ("已驳回", "danger"),
-        "needs_evidence": ("待补证据", "warning"),
+        "needs_evidence": ("待补依据", "warning"),
         "needs_review": ("待审阅", "warning"),
         "keep": ("已批准", "success"),
         "replace": ("待替换", "danger"),
@@ -568,7 +568,7 @@ def _workspace_stage(
         blocker = f"{len(pending_approvals)} 项审批仍待拍板。"
         next_step = "推进审批人给出结论。"
     elif waiting_evidence:
-        stage_label = "待补证据"
+        stage_label = "待补依据"
         blocker = f"{len(waiting_evidence)} 页存在证据缺口。"
         next_step = "补齐来源和证据后再审阅。"
     elif blocking_quality:
@@ -829,7 +829,7 @@ def build_workspace_payload(run_dir: str | Path) -> dict[str, Any]:
         {"id": "all", "label": "全部页面", "count": len(cards)},
         {"id": "blocked", "label": "阻断页", "count": sum(1 for card in cards if card["blocking_count"] > 0)},
         {"id": "needs_review", "label": "待审阅", "count": sum(1 for card in cards if card["review_status"] == "needs_review")},
-        {"id": "needs_evidence", "label": "待补证据", "count": sum(1 for card in cards if card["review_status"] == "needs_evidence")},
+        {"id": "needs_evidence", "label": "待补依据", "count": sum(1 for card in cards if card["review_status"] == "needs_evidence")},
         {"id": "approved", "label": "已批准", "count": sum(1 for card in cards if card["review_status"] == "approved")},
         {"id": "rejected", "label": "已驳回", "count": sum(1 for card in cards if card["review_status"] == "rejected")},
     ]
@@ -916,7 +916,7 @@ def build_workspace_page_payload(run_dir: str | Path, page_id: str) -> dict[str,
     if not payload.get("asset_exists", True):
         critical_alerts.append({"tone": "danger", "label": "预览缺失", "detail": payload.get("asset_error", "")})
     if payload.get("review_status") == "needs_evidence":
-        critical_alerts.append({"tone": "warning", "label": "待补证据", "detail": "当前页仍缺少可用支撑材料。"})
+        critical_alerts.append({"tone": "warning", "label": "待补依据", "detail": "当前页仍缺少可用支撑材料。"})
     for risk in quality_risks:
         if risk.get("severity") in {"P0", "P1"}:
             critical_alerts.append({"tone": "danger", "label": risk["severity"], "detail": risk["summary"]})
@@ -964,7 +964,7 @@ def build_workspace_page_payload(run_dir: str | Path, page_id: str) -> dict[str,
         "available_actions": [
             {"id": "approve", "label": "批准页面", "variant": "primary"},
             {"id": "reject", "label": "驳回页面", "variant": "secondary"},
-            {"id": "request_evidence", "label": "请求补证据", "variant": "secondary"},
+            {"id": "request_evidence", "label": "请求补依据", "variant": "secondary"},
             {"id": "submit_approval", "label": "升级审批", "variant": "secondary"},
             {"id": "add_note", "label": "记录备注", "variant": "ghost"},
         ],

@@ -28,7 +28,7 @@ class WorkspaceAuditScenarioTests(unittest.TestCase):
             "run-init-wait-preview": ("needs_preview", "待准备"),
             "generation-running": ("generation_running", "生成中"),
             "needs-review": ("needs_review", "待审阅"),
-            "needs-evidence": ("needs_review", "待补证据"),
+            "needs-evidence": ("needs_review", "待补依据"),
             "pending-approval": ("ready_for_client_export", "待审批"),
             "export-ready": ("ready_for_client_export", "可交付"),
             "delivered-review": ("ready_for_client_export", "已交付"),

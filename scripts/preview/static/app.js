@@ -742,7 +742,7 @@ function renderPageDecisionRail() {
       <div class="stack-card ${claim.evidence_count ? "success" : "warning"}">
         <strong>${escapeHtml(claim.statement || claim.claim_id)}</strong>
         <p>${claim.evidence_count ? `${claim.evidence_count} 条证据已关联` : "当前没有关联证据"}</p>
-        <small>${escapeHtml((claim.evidence || []).map((item) => item.title).join(" · ") || "待补证据")}</small>
+      <small>${escapeHtml((claim.evidence || []).map((item) => item.title).join(" · ") || "待补依据")}</small>
       </div>
     `).join("")
     : '<div class="empty-inline">当前页还没有论点与证据数据。</div>';
@@ -838,9 +838,9 @@ function renderActionStates() {
     ["可交付", "已交付"].includes(stageLabel) &&
     Boolean(state.currentProjectId) &&
     !deliveryRecorded;
-  const canReviewPage = hasPage && ["待审阅", "待补证据", "待审批", "可交付", "已交付"].includes(stageLabel);
-  const canRequestEvidence = hasPage && ["待审阅", "待补证据"].includes(stageLabel);
-  const canEscalatePageApproval = hasPage && ["待审阅", "待补证据", "可交付", "待审批"].includes(stageLabel);
+  const canReviewPage = hasPage && ["待审阅", "待补依据", "待审批", "可交付", "已交付"].includes(stageLabel);
+  const canRequestEvidence = hasPage && ["待审阅", "待补依据"].includes(stageLabel);
+  const canEscalatePageApproval = hasPage && ["待审阅", "待补依据", "可交付", "待审批"].includes(stageLabel);
   const canSaveNote = Boolean(state.currentProjectId) && hasPage;
 
   els.submitRunApproval.hidden = !canSubmitRunApproval;
@@ -871,7 +871,7 @@ function renderActionStates() {
   setButtonState(
     els.requestEvidence,
     canRequestEvidence,
-    hasPage ? "当前页还不适合发起补证据动作。" : "请先选择页面。"
+    hasPage ? "当前页还不适合发起补依据动作。" : "请先选择页面。"
   );
   setButtonState(
     els.submitPageApproval,
