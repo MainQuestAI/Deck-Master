@@ -23,6 +23,18 @@ class PreviewStaticContractTests(unittest.TestCase):
         self.assertIn('id="lang-toggle"', html)
         self.assertIn('disabled title="语言切换将在后续迭代开放"', html)
 
+    def test_stage_workspace_surfaces_selected_page_context(self) -> None:
+        """Regression: ISSUE-002 — page selection looked like a dead click in stage mode.
+
+        Found by /qa on 2026-06-22.
+        Report: .gstack/qa-reports/qa-report-localhost-2026-06-22.md
+        """
+
+        script = APP_JS.read_text(encoding="utf-8")
+        self.assertIn("当前选中页面（待就绪）", script)
+        self.assertIn("当前选中页面", script)
+        self.assertIn("等待生成完成", script)
+
 
 if __name__ == "__main__":
     unittest.main()

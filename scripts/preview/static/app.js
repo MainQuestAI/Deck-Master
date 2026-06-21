@@ -445,14 +445,24 @@ function renderStageWorkspace() {
   if (!els.previewStage) return;
   const workspace = currentWorkspace();
   const stage = currentStage();
+  const focusPage = currentPageCard() || currentPages()[0] || null;
   const delivery = workspace.run_summary?.delivery_preview || {};
   const actions = workspace.run_summary?.next_actions || [];
   const blockers = workspace.health?.blocking_reasons || [];
 
-  els.previewPanelLabel.textContent = "阶段工作区";
-  els.focusPageTitle.textContent = `${stage.label || "待准备"} · ${stage.definition || "当前仍在准备阶段"}`;
-  els.focusPageMeta.textContent = stage.blocking_reason || "系统正在整理进入可处理状态所需的前置内容。";
-  els.currentLabel.textContent = "阶段工作区";
+  if (focusPage) {
+    const orderLabel = `第 ${String(focusPage.order).padStart(2, "0")} 页`;
+    const sourceLabel = focusPage.source_decision_label || focusPage.source_label || "来源待确认";
+    els.previewPanelLabel.textContent = "当前选中页面（待就绪）";
+    els.focusPageTitle.textContent = `${orderLabel} · ${focusPage.title}`;
+    els.focusPageMeta.textContent = `${focusPage.narrative_role || "未标注页面职责"} · ${sourceLabel} · 当前阶段仍在${stage.label || "待准备"}，预览与审批待开放`;
+    els.currentLabel.textContent = `${orderLabel} · 阶段工作区`;
+  } else {
+    els.previewPanelLabel.textContent = "阶段工作区";
+    els.focusPageTitle.textContent = `${stage.label || "待准备"} · ${stage.definition || "当前仍在准备阶段"}`;
+    els.focusPageMeta.textContent = stage.blocking_reason || "系统正在整理进入可处理状态所需的前置内容。";
+    els.currentLabel.textContent = "阶段工作区";
+  }
   setPreviewNavVisible(false);
 
   const blockerCards = (blockers.length ? blockers : [stage.blocking_reason || "当前还没有明确阻塞项。"]).slice(0, 3).map((item) => `
@@ -468,10 +478,18 @@ function renderStageWorkspace() {
       <p>${escapeHtml(item.message || "继续推进当前阶段。")}</p>
     </div>
   `).join("");
+  const focusPageCard = focusPage ? `
+    <div class="stage-card">
+      <span class="panel-title">当前选中页面</span>
+      <strong>${escapeHtml(`第 ${String(focusPage.order).padStart(2, "0")} 页 · ${focusPage.title}`)}</strong>
+      <p>${escapeHtml(`${focusPage.narrative_role || "未标注页面职责"} · ${focusPage.source_decision_label || focusPage.source_label || "来源待确认"}`)}</p>
+    </div>
+  ` : "";
 
   els.previewStage.innerHTML = `
     <div class="stage-workspace">
       <div class="stage-workspace-top">
+        ${focusPageCard}
         ${blockerCards}
         <div class="stage-card ${escapeHtml(delivery.artifact_ready ? "success" : "warning")}">
           <span class="panel-title">交付预览</span>
@@ -707,17 +725,24 @@ function renderRunLevelDecisionRail() {
   if (!els.decisionTitle) return;
   const workspace = currentWorkspace();
   const stage = currentStage();
+  const focusPage = currentPageCard() || currentPages()[0] || null;
   const deliveryPreview = workspace.run_summary?.delivery_preview || {};
   const approvals = workspace.run_summary?.approvals || [];
 
-  els.decisionPanelLabel.textContent = "当前推进";
-  els.decisionTitle.textContent = workspace.project_title || workspace.title || "等待选择方案项目";
-  els.decisionSummary.textContent = stage.blocking_reason || "当前还没有页面进入可逐页处理状态。";
+  if (focusPage && isStageWorkspace()) {
+    els.decisionPanelLabel.textContent = "当前页（待就绪）";
+    els.decisionTitle.textContent = focusPage.title;
+    els.decisionSummary.textContent = `${focusPage.narrative_role || "未标注页面职责"} · 当前阶段仍在${stage.label || "待准备"}，页面级操作暂未开放。`;
+  } else {
+    els.decisionPanelLabel.textContent = "当前推进";
+    els.decisionTitle.textContent = workspace.project_title || workspace.title || "等待选择方案项目";
+    els.decisionSummary.textContent = stage.blocking_reason || "当前还没有页面进入可逐页处理状态。";
+  }
   els.pageRoleContent.innerHTML = `
     <div class="stack-card">
-      <strong>${escapeHtml(stage.label || "待准备")}</strong>
-      <p>${escapeHtml(stage.definition || "当前仍在准备阶段。")}</p>
-      <small>${escapeHtml(stage.owner || "未指定责任对象")}</small>
+      <strong>${escapeHtml(focusPage && isStageWorkspace() ? `${String(focusPage.order).padStart(2, "0")} · ${focusPage.narrative_role || "未标注页面职责"}` : stage.label || "待准备")}</strong>
+      <p>${escapeHtml(focusPage && isStageWorkspace() ? focusPage.title : stage.definition || "当前仍在准备阶段。")}</p>
+      <small>${escapeHtml(focusPage && isStageWorkspace() ? `${focusPage.source_decision_label || focusPage.source_label || "来源待确认"} · 当前阶段责任对象：${stage.owner || "未指定"}` : stage.owner || "未指定责任对象")}</small>
     </div>
   `;
   els.pageSourceContent.innerHTML = `
@@ -921,7 +946,14 @@ function renderActionBar() {
   let primaryAction = "";
   let hint = "";
 
-  if (reviewStatus === "approved") {
+  if (stageBlocked) {
+    primaryLabel = stageLabel === "生成中" ? "等待生成完成" : "等待进入可审阶段";
+    primaryEnabled = false;
+    primaryAction = "";
+    hint = page
+      ? `当前选中：第 ${String(page.order).padStart(2, "0")} 页《${page.title}》· ${stageLabel}阶段先补齐预览与生成结果，再开放页面级操作`
+      : `当前阶段（${stageLabel}）还未开放页面级操作`;
+  } else if (reviewStatus === "approved") {
     primaryLabel = "下一页";
     primaryEnabled = true;
     primaryAction = "next-page";
