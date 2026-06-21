@@ -21,6 +21,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from server import PreviewHandler, _load_narrative_data, build_handler  # noqa: E402
 from runtime.setup_status import run_setup  # noqa: E402
+from runtime.run_state import write_json  # noqa: E402
 
 SAMPLE_RUN = ROOT / "examples" / "preview-run"
 
@@ -280,6 +281,191 @@ class ServerTests(unittest.TestCase):
         status, data = self.handler.request("GET", "/api/narrative/../etc")
         self.assertEqual(400, status)
 
+    def test_workspace_api_returns_run_workspace_payload(self) -> None:
+        status, data = self.handler.request("GET", "/api/workspace/sample-preview-run")
+        self.assertEqual(200, status)
+        self.assertEqual("deck_master_workspace.v0.3", data["schema_version"])
+        self.assertEqual("sample-preview-run", data["run_id"])
+        self.assertEqual("sample-preview-run", data["project_id"])
+        self.assertIn("stage", data)
+        self.assertIn("queue", data)
+        self.assertEqual(3, len(data["queue"]["pages"]))
+
+    def test_workspace_page_api_returns_claims_and_risks(self) -> None:
+        (self.run_dir / "claim_evidence_graph.json").write_text(
+            json.dumps(
+                {
+                    "claims": [
+                        {
+                            "claim_id": "claim_001",
+                            "statement": "库存可见性是转型基础",
+                            "page_refs": ["page_001"],
+                            "supporting_evidence": ["evidence_001"],
+                        }
+                    ],
+                    "evidence": [
+                        {
+                            "evidence_id": "evidence_001",
+                            "source_ref": "src_001",
+                            "publication_status": "safe_to_use",
+                            "title": "客户访谈纪要",
+                        }
+                    ],
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+        (self.run_dir / "claim_map.json").write_text(
+            json.dumps(
+                {
+                    "pages": [
+                        {
+                            "page_id": "page_001",
+                            "core_claim": "库存可见性是转型基础",
+                            "evidence_policy": "at_least_one",
+                        }
+                    ]
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+        quality_dir = self.run_dir / "quality_reports"
+        quality_dir.mkdir(exist_ok=True)
+        (quality_dir / "draft_gate.json").write_text(
+            json.dumps(
+                {
+                    "gate": "draft",
+                    "status": "rework_required",
+                    "blocks_delivery": True,
+                    "summary": {"p0_count": 0, "p1_count": 1, "p2_count": 0},
+                    "findings": [
+                        {
+                            "finding_id": "page_001_claim_gap",
+                            "severity": "P1",
+                            "page_id": "page_001",
+                            "message": "主论点证据偏弱。",
+                            "repair_instruction": "补充客户数据来源。",
+                        }
+                    ],
+                    "page_findings": [
+                        {
+                            "finding_id": "page_001_claim_gap",
+                            "severity": "P1",
+                            "page_id": "page_001",
+                            "message": "主论点证据偏弱。",
+                            "repair_instruction": "补充客户数据来源。",
+                        }
+                    ],
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+
+        status, data = self.handler.request("GET", "/api/workspace/sample-preview-run/page/page_001")
+        self.assertEqual(200, status)
+        self.assertEqual("page_001", data["hero"]["page_id"])
+        self.assertEqual("库存可见性是转型基础", data["summary"]["core_claim"])
+        self.assertEqual(1, data["evidence"]["evidence_total"])
+        self.assertTrue(data["quality"]["blocking"])
+
+    def test_workspace_approval_actions_write_activity(self) -> None:
+        submit_status, approval = self.handler.request(
+            "POST",
+            "/api/workspace/sample-preview-run/actions",
+            {"action": "submit_approval", "actor": "alice", "note": "Ready for export"},
+        )
+        self.assertEqual(200, submit_status)
+        self.assertEqual("pending", approval["status"])
+
+        page_submit_status, page_approval = self.handler.request(
+            "POST",
+            "/api/workspace/sample-preview-run/page/page_001/actions",
+            {"action": "submit_approval", "actor": "alice", "note": "Need owner sign-off"},
+        )
+        self.assertEqual(200, page_submit_status)
+        self.assertEqual("page", page_approval["scope_type"])
+
+        page_status, page_payload = self.handler.request("GET", "/api/workspace/sample-preview-run/page/page_001")
+        self.assertEqual(200, page_status)
+        self.assertEqual(2, page_payload["approvals"]["pending_count"])
+
+        approve_status, approve_payload = self.handler.request(
+            "POST",
+            "/api/workspace/sample-preview-run/page/page_001/actions",
+            {
+                "action": "approve_approval",
+                "actor": "bob",
+                "approval_id": page_approval["approval_id"],
+                "note": "Approved",
+            },
+        )
+        self.assertEqual(200, approve_status)
+        self.assertEqual("approved", approve_payload["status"])
+
+        activity_status, activity = self.handler.request("GET", "/api/workspace/sample-preview-run/activity")
+        self.assertEqual(200, activity_status)
+        titles = [item["title"] for item in activity["items"]]
+        self.assertTrue(any("提交审批" in title for title in titles))
+        self.assertTrue(any("审批通过" in title for title in titles))
+
+    def test_workspace_api_supports_run_without_preview_manifest(self) -> None:
+        pending_run = self.runs_dir / "pending-run"
+        pending_run.mkdir()
+        write_json(
+            pending_run / "request.json",
+            {
+                "run_id": "pending-run",
+                "project_name": "Pending Workspace",
+                "run_mode": "fixture",
+            },
+        )
+
+        status, data = self.handler.request("GET", "/api/workspace/pending-run?run_dir=" + str(pending_run))
+        self.assertEqual(200, status)
+        self.assertEqual("pending-run", data["run_id"])
+        self.assertEqual(0, data["header_metrics"]["pages_total"])
+        self.assertEqual("待准备", data["stage"]["label"])
+
+    def test_workspace_delivery_preview_endpoint_reports_missing_artifact(self) -> None:
+        status, data = self.handler.request("GET", "/api/workspace/sample-preview-run/delivery-preview")
+        self.assertEqual(200, status)
+        self.assertEqual("missing_render_result", data["status"])
+        self.assertFalse(data["artifact_ready"])
+
+    def test_workspace_delivery_preview_serves_rendered_html(self) -> None:
+        rendered_dir = self.run_dir / "rendered"
+        rendered_dir.mkdir(exist_ok=True)
+        (rendered_dir / "index.html").write_text("<html><body><h1>Delivery Preview</h1></body></html>", encoding="utf-8")
+        result_dir = self.run_dir / "render_results"
+        result_dir.mkdir(exist_ok=True)
+        (result_dir / "render_result.json").write_text(
+            json.dumps(
+                {
+                    "schema_version": "deck_render_result.v1",
+                    "run_id": "sample-preview-run",
+                    "tool": "ppt-master",
+                    "status": "completed",
+                    "format": "html",
+                    "artifact_path": "rendered/index.html",
+                    "created_at": "2026-06-21T10:00:00+00:00",
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        status, payload = self.handler.request("GET", "/api/workspace/sample-preview-run/delivery-preview")
+        self.assertEqual(200, status)
+        self.assertEqual("ready", payload["status"])
+        self.assertTrue(payload["artifact_ready"])
+        self.assertEqual("/delivery-preview/sample-preview-run?run=sample-preview-run", payload["artifact_url"])
+
+        artifact_status, artifact_payload = self.handler.request("GET", "/delivery-preview/sample-preview-run?run=sample-preview-run")
+        self.assertEqual(200, artifact_status)
+        self.assertIn("Delivery Preview", artifact_payload["raw"])
+
 
 # ---------------------------------------------------------------------------
 # StudioServerTests — studio mode (no fixed run_dir)
@@ -305,6 +491,13 @@ class StudioServerTests(unittest.TestCase):
             os.environ.pop("HOME", None)
         else:
             os.environ["HOME"] = self.original_home
+
+    def test_build_handler_honors_explicit_runs_dir_in_studio_mode(self) -> None:
+        isolated_runs = self.temp_dir / "isolated-runs"
+        isolated_runs.mkdir()
+        handler_cls = build_handler(None, isolated_runs, use_setup_runs_dir=False)
+        self.assertEqual(isolated_runs.resolve(), handler_cls.runs_dir)
+        self.assertFalse(handler_cls.use_setup_runs_dir)
 
     def _write_ready_setup(self) -> Path:
         from skills import installer as skill_installer

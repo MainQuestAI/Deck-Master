@@ -310,6 +310,11 @@ def compute_next_actions(run_dir: Path) -> dict[str, Any]:
     tasks = page_tasks.get("tasks", [])
     gaps = claim_graph.get("gaps", [])
     pages = preview.get("pages", [])
+    page_title_by_id = {
+        str(page.get("page_id") or page.get("beat_id") or ""): str(page.get("title") or page.get("page_id") or "")
+        for page in pages
+        if isinstance(page, dict)
+    }
 
     actions: list[dict[str, Any]] = []
     priority = 0
@@ -356,11 +361,13 @@ def compute_next_actions(run_dir: Path) -> dict[str, Any]:
         sd = task.get("source_decision", task.get("planning", {}).get("decision_intent", ""))
         if sd == "manual_placeholder":
             priority += 1
+            page_id = str(task.get("beat_id", ""))
+            page_title = page_title_by_id.get(page_id, page_id or "当前页面")
             actions.append({
                 "priority": priority,
                 "action_type": "resolve_placeholder",
-                "target": task.get("beat_id", ""),
-                "message": f"Page {task.get('beat_id', '')} requires human expert input.",
+                "target": page_id,
+                "message": f"{page_title} 仍需负责人补充判断。",
                 "refs": [PAGE_TASKS_NAME],
             })
 
@@ -372,11 +379,13 @@ def compute_next_actions(run_dir: Path) -> dict[str, Any]:
             for task in _generation_tasks_from_index(run_dir, gen_index):
                 if task.get("status") == "failed":
                     priority += 1
+                    page_id = str(task.get("beat_id", ""))
+                    page_title = page_title_by_id.get(page_id, page_id or "当前页面")
                     actions.append({
                         "priority": priority,
                         "action_type": "rerun_generation",
-                        "target": task.get("beat_id", ""),
-                        "message": f"Generation failed for {task.get('beat_id', '')}.",
+                        "target": page_id,
+                        "message": f"{page_title} 的内容生成失败，需要重新处理。",
                         "refs": [f"generation_tasks/{task.get('task_id', '')}.json"],
                     })
 
@@ -386,11 +395,13 @@ def compute_next_actions(run_dir: Path) -> dict[str, Any]:
             continue
         if not page.get("preview_path") and page.get("source_type") != "placeholder":
             priority += 1
+            page_id = str(page.get("beat_id") or page.get("page_id") or "")
+            page_title = page_title_by_id.get(page_id, page_id or "当前页面")
             actions.append({
                 "priority": priority,
                 "action_type": "generate_preview",
-                "target": page.get("beat_id", ""),
-                "message": f"No preview for {page.get('beat_id', '')}.",
+                "target": page_id,
+                "message": f"{page_title} 还没有可审预览。",
                 "refs": [PREVIEW_MANIFEST_NAME],
             })
 
@@ -399,11 +410,12 @@ def compute_next_actions(run_dir: Path) -> dict[str, Any]:
     for claim in coverage.get("claims", []):
         if claim.get("status") in ("uncovered", "evidence_gap"):
             priority += 1
+            statement = str(claim.get("statement", "")).strip() or str(claim.get("claim_id", "")).strip() or "当前论点"
             actions.append({
                 "priority": priority,
                 "action_type": "fix_claim_coverage",
                 "target": claim.get("claim_id", ""),
-                "message": f"Claim '{claim.get('statement', '')[:60]}' has status: {claim.get('status')}.",
+                "message": f"{statement} 仍缺少完整依据支撑。",
                 "refs": ["claim_evidence_graph.json"],
             })
 

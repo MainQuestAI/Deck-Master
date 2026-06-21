@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
   <rect width="1280" height="720" fill="#182023"/>
   <rect x="160" y="120" width="960" height="480" rx="36" fill="#f2eee8"/>
-  <text x="230" y="240" font-family="Avenir, Arial" font-size="60" font-weight="700" fill="#182023">Decision Gate</text>
-  <text x="232" y="306" font-family="Avenir, Arial" font-size="28" fill="#526064">Placeholder page · marked replace</text>
+  <text x="230" y="240" font-family="Avenir, Arial" font-size="60" font-weight="700" fill="#182023">交付结论与决策</text>
+  <text x="232" y="306" font-family="Avenir, Arial" font-size="28" fill="#526064">待补页面 · 当前仍需重写结论</text>
   <line x1="230" y1="375" x2="1050" y2="375" stroke="#d8a725" stroke-width="8"/>
-  <text x="232" y="455" font-family="Avenir, Arial" font-size="34" fill="#182023">Executive conclusion required before export.</text>
+  <text x="232" y="455" font-family="Avenir, Arial" font-size="34" fill="#182023">交付前必须补齐管理层结论。</text>
 </svg>

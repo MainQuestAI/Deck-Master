@@ -1,183 +1,259 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Deck Master Preview</title>
+    <title>Deck Master 方案项目工作台</title>
     <link rel="icon" href="data:,">
     <link rel="stylesheet" href="/static/style.css">
   </head>
   <body>
-    <main class="shell">
-      <aside class="rail">
-        <div class="brand">
-          <span class="eyebrow">Deck Master</span>
-          <h1 id="deck-title">Studio</h1>
-          <p id="deck-meta">Loading manifest...</p>
-        </div>
-        <form id="create-run-form" class="create-run">
-          <label for="brief">New deck brief</label>
-          <textarea id="brief" rows="6" placeholder="例：零售客户数字化转型方案，关注全渠道、库存可视化、最后一公里配送"></textarea>
-          <div class="form-row">
-            <label for="industry">Industry</label>
-            <input id="industry" value="retail" placeholder="retail">
-          </div>
-          <div class="form-row">
-            <label for="target-pages">Pages</label>
-            <select id="target-pages">
-              <option value="auto">Auto</option>
-              <option value="15">15</option>
-              <option value="30">30</option>
-              <option value="60">60</option>
-            </select>
-          </div>
-          <div class="form-row">
-            <label for="library-mode">Library</label>
-            <select id="library-mode">
-              <option value="fixture">Demo</option>
-              <option value="auto">Auto</option>
-              <option value="real">Real</option>
-            </select>
-          </div>
-          <button class="primary" type="submit" id="create-run">Generate draft</button>
-          <p id="create-status" class="save-status"></p>
-        </form>
-        <div class="run-section">
-          <span class="eyebrow">Runs</span>
-          <div id="run-list" class="run-list"></div>
-        </div>
-        <div id="page-list" class="page-list"></div>
-      </aside>
+    <div class="ambient-light-container" aria-hidden="true">
+      <div class="light-orb orb-1"></div>
+      <div class="light-orb orb-2"></div>
+    </div>
 
-      <section class="stage">
-        <div id="setup-banner" class="setup-banner">
-          <div class="setup-banner-header">
-            <span class="eyebrow">Setup</span>
-            <strong id="setup-status-label">checking...</strong>
-          </div>
-          <p id="setup-next-command" class="setup-next-command">-</p>
-        </div>
-        <div id="run-state-panel" class="run-state-panel">
-          <div class="run-state-title">
-            <span class="eyebrow">Run State</span>
-            <strong id="run-state-label">-</strong>
-          </div>
-          <p id="run-state-detail" class="run-state-detail">-</p>
-        </div>
-        <div class="cockpit-overview">
-          <div>
-            <span class="eyebrow">Readiness</span>
-            <strong id="overall-readiness">-</strong>
-          </div>
-          <div>
-            <span class="eyebrow">Export</span>
-            <strong id="export-readiness">-</strong>
-          </div>
-          <div>
-            <span class="eyebrow">Metrics</span>
-            <strong id="metrics-line">-</strong>
+    <main class="workspace-shell">
+      <header class="workspace-header glass-panel">
+        <div class="header-brand">
+          <div class="mq-logo">MAINQUEST</div>
+          <div class="brand-meta">
+            <span class="panel-title">方案项目工作台</span>
+            <p>Deck Master 本地方案项目交付工作台</p>
           </div>
         </div>
-        <div class="stage-toolbar">
-          <button id="first-page">First</button>
-          <button id="prev-page">Previous</button>
-          <strong id="current-label">No page selected</strong>
-          <button id="next-page">Next</button>
-          <button id="last-page">Last</button>
+
+        <div class="header-main">
+          <div class="run-heading">
+            <span class="stage-chip" id="stage-chip">载入中</span>
+            <h1 id="workspace-title">正在加载方案项目</h1>
+            <p id="workspace-subtitle">请稍候，系统正在读取当前方案项目、页面队列和风险状态。</p>
+          </div>
+
+          <div class="header-actions">
+            <label class="project-switcher-card" for="project-switcher">
+              <span class="panel-title">项目切换</span>
+              <select id="project-switcher" aria-label="方案项目切换"></select>
+              <small id="project-switcher-meta" class="muted mono">0 个方案项目</small>
+            </label>
+            <button id="open-create-modal" class="btn">新建项目</button>
+            <button id="submit-run-approval" class="btn">提交审批</button>
+            <button id="mark-delivered" class="btn btn-cta">确认交付</button>
+          </div>
         </div>
-        <div id="preview-frame" class="preview-frame">
-          <p>Select a page to preview.</p>
+
+        <div class="header-grid">
+          <section class="header-card">
+            <span class="panel-title">当前阶段</span>
+            <strong id="stage-title">-</strong>
+            <p id="stage-detail">-</p>
+          </section>
+          <section class="header-card">
+            <span class="panel-title">下一步</span>
+            <strong id="next-step-title">-</strong>
+            <p id="next-step-detail">-</p>
+          </section>
+          <section class="header-card">
+            <span class="panel-title">风险摘要</span>
+            <strong id="risk-summary-title">-</strong>
+            <p id="risk-summary-detail">-</p>
+          </section>
+          <section class="header-card metrics-card">
+            <span class="panel-title">项目指标</span>
+            <div class="metric-list">
+              <div>
+                <b id="metric-pages">-</b>
+                <span>页面总数</span>
+              </div>
+              <div>
+                <b id="metric-approved">-</b>
+                <span>已批准</span>
+              </div>
+              <div>
+                <b id="metric-approvals">-</b>
+                <span>待审批</span>
+              </div>
+              <div>
+                <b id="metric-export">-</b>
+                <span>可交付 / 阻断</span>
+              </div>
+            </div>
+          </section>
         </div>
+      </header>
+
+      <section class="workspace-grid">
+        <aside class="left-rail glass-panel">
+          <div class="rail-top">
+            <div>
+              <span class="panel-title">页面队列</span>
+              <h2>当前待处理页面</h2>
+            </div>
+            <div class="mono muted">按顺序处理</div>
+          </div>
+
+          <div id="filter-list" class="filter-list"></div>
+          <div id="queue-summary" class="queue-summary mono">-</div>
+          <div id="page-list" class="page-list"></div>
+        </aside>
+
+        <section class="center-column">
+          <section class="preview-panel glass-panel">
+            <div class="preview-header">
+              <div>
+                <span class="panel-title" id="preview-panel-label">当前页面</span>
+                <h2 id="focus-page-title">请选择页面</h2>
+                <p id="focus-page-meta">-</p>
+              </div>
+
+              <div class="mode-switch" role="tablist" aria-label="视图模式">
+                <button id="page-mode" class="btn active" data-mode="page">页面处理</button>
+                <button id="delivery-mode" class="btn" data-mode="delivery" hidden>交付预览</button>
+              </div>
+            </div>
+
+            <div id="critical-alerts" class="critical-alerts"></div>
+
+            <div id="preview-stage" class="preview-stage">
+              <div class="empty-state">
+                <h3>暂无预览</h3>
+                <p>请选择一个可用项目，或新建项目后再进入处理。</p>
+              </div>
+            </div>
+
+            <div class="preview-nav" id="preview-nav">
+              <button id="first-page" class="btn">第一页</button>
+              <button id="prev-page" class="btn">上一页</button>
+              <strong id="current-label" class="mono">-</strong>
+              <button id="next-page" class="btn">下一页</button>
+              <button id="last-page" class="btn">最后一页</button>
+            </div>
+          </section>
+
+          <div class="workspace-bottom-grid">
+            <section class="glass-panel bottom-panel">
+              <div class="section-head">
+                <span class="panel-title">推进状态</span>
+                <span id="readiness-pill" class="pill muted">-</span>
+              </div>
+              <div id="run-readiness" class="stack-list"></div>
+            </section>
+
+            <section class="glass-panel bottom-panel">
+              <div class="section-head">
+                <span class="panel-title">论点覆盖</span>
+                <span id="claim-summary-chip" class="pill muted">-</span>
+              </div>
+              <div id="claim-coverage" class="stack-list"></div>
+            </section>
+
+            <section class="glass-panel bottom-panel activity-panel">
+              <div class="section-head">
+                <span class="panel-title">处理记录</span>
+                <span class="mono muted" id="activity-count">0</span>
+              </div>
+              <div id="activity-list" class="activity-list"></div>
+            </section>
+          </div>
+        </section>
+
+        <aside class="decision-rail glass-panel">
+          <div class="decision-top">
+            <span class="panel-title" id="decision-panel-label">当前处理</span>
+            <h2 id="decision-title">等待选择页面</h2>
+            <p id="decision-summary">先选择一个项目，再进入页面处理。</p>
+          </div>
+
+          <section class="decision-block">
+            <span class="panel-title">页面定位</span>
+            <div id="page-role-content" class="stack-list"></div>
+          </section>
+
+          <section class="decision-block">
+            <span class="panel-title">来源与依据</span>
+            <div id="page-source-content" class="stack-list"></div>
+            <div id="page-evidence-content" class="stack-list"></div>
+          </section>
+
+          <section class="decision-block">
+            <span class="panel-title">风险与缺口</span>
+            <div id="page-risk-content" class="stack-list"></div>
+          </section>
+
+          <section class="decision-block">
+            <span class="panel-title">审批记录</span>
+            <div id="approval-content" class="stack-list"></div>
+          </section>
+
+          <section class="decision-block">
+            <span class="panel-title">处理动作</span>
+            <div class="action-grid">
+              <button id="approve-page" class="btn btn-cta">批准页面</button>
+              <button id="reject-page" class="btn">驳回页面</button>
+              <button id="request-evidence" class="btn">请求补证据</button>
+              <button id="submit-page-approval" class="btn">升级审批</button>
+            </div>
+
+            <label class="field-label" for="decision-note">备注 / 审批原因</label>
+            <textarea id="decision-note" rows="5" placeholder="记录判断依据、补证据要求或审批说明"></textarea>
+            <div class="decision-footer">
+              <button id="save-note" class="btn">记录备注</button>
+              <p id="action-feedback" class="action-feedback"></p>
+            </div>
+          </section>
+        </aside>
       </section>
-
-      <aside class="inspector">
-        <div class="panel readiness-panel">
-          <span class="eyebrow">Deck Readiness</span>
-          <h2>审查总览</h2>
-          <div id="readiness-content" class="readiness-content">
-            <p class="muted">选择 run 后加载 readiness...</p>
-          </div>
-        </div>
-        <div class="panel next-actions-panel">
-          <span class="eyebrow">Next Actions</span>
-          <h2>下一步</h2>
-          <div id="next-actions-content" class="next-actions-content">
-            <p class="muted">选择 run 后加载 next actions...</p>
-          </div>
-        </div>
-        <div class="panel claim-coverage-panel">
-          <span class="eyebrow">Claim Coverage</span>
-          <h2>论点覆盖</h2>
-          <div id="claim-coverage-content" class="claim-coverage-content">
-            <p class="muted">选择 run 后加载 claim coverage...</p>
-          </div>
-        </div>
-        <div class="panel narrative-panel">
-          <span class="eyebrow">Narrative Review</span>
-          <h2 id="narrative-title">主线审查</h2>
-          <div id="narrative-content" class="narrative-content">
-            <p class="muted">选择 run 后加载叙事数据...</p>
-          </div>
-        </div>
-        <div class="panel asset-signals-panel">
-          <span class="eyebrow">Asset Signals</span>
-          <h2 id="asset-signals-title">资产信号</h2>
-          <div id="asset-signals-content" class="asset-signals-content">
-            <p class="muted">选择 run 后加载资产信号...</p>
-          </div>
-        </div>
-        <div class="panel governance-panel">
-          <span class="eyebrow">Quality Governance</span>
-          <h2 id="governance-title">质量治理</h2>
-          <div id="governance-content" class="governance-content">
-            <p class="muted">选择 run 后加载质量治理数据...</p>
-          </div>
-        </div>
-        <div class="panel">
-          <span class="eyebrow">Page Review</span>
-          <h2 id="page-title">No page</h2>
-          <dl id="page-details"></dl>
-          <div id="page-narrative-detail" class="page-narrative-detail"></div>
-          <div id="page-asset-signals-detail" class="page-asset-signals-detail"></div>
-        </div>
-        <div class="panel decision-panel">
-          <span class="eyebrow">Page Decision Workbench</span>
-          <div id="page-action-status" class="save-status"></div>
-          <div class="action-grid">
-            <button id="approve-page" class="primary">Approve</button>
-            <button id="reject-page">Reject</button>
-            <button id="request-evidence">Request evidence</button>
-            <button id="convert-generate">Convert to generate</button>
-            <button id="lock-source">Lock source</button>
-          </div>
-          <label for="notes">Action note / reason</label>
-          <textarea id="notes" rows="5" placeholder="Reason, evidence request, or page-level note..."></textarea>
-          <button id="save-decision">Add note</button>
-          <p id="save-status" class="save-status"></p>
-        </div>
-        <div class="panel external-results-panel">
-          <span class="eyebrow">External Results</span>
-          <h2>外部结果</h2>
-          <div id="external-results-content" class="external-results-content">
-            <p class="muted">选择 run 后加载 external results...</p>
-          </div>
-        </div>
-        <div class="panel export-queue-panel">
-          <span class="eyebrow">Export Queue</span>
-          <h2>导出队列</h2>
-          <div id="export-queue-content" class="export-queue-content">
-            <p class="muted">选择 run 后加载 export queue...</p>
-          </div>
-        </div>
-        <div class="panel metrics-panel">
-          <span class="eyebrow">Lightweight Metrics</span>
-          <h2>指标摘要</h2>
-          <div id="metrics-content" class="metrics-content">
-            <p class="muted">选择 run 后加载 metrics...</p>
-          </div>
-        </div>
-      </aside>
     </main>
+
+    <div id="create-run-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="create-run-title">
+      <div class="modal-card glass-panel">
+        <div class="modal-head">
+          <div>
+            <span class="panel-title">新建项目</span>
+            <h2 id="create-run-title">新建方案项目</h2>
+          </div>
+          <button id="close-create-modal" class="btn btn-ghost">关闭</button>
+        </div>
+
+        <form id="create-run-form" class="modal-form">
+          <label class="field-label" for="brief">需求简述</label>
+          <textarea id="brief" rows="6" placeholder="例：面向零售客户的数字化转型方案，重点看全渠道、库存可视化和最后一公里配送。"></textarea>
+
+          <div class="form-two-col">
+            <div>
+              <label class="field-label" for="industry">行业</label>
+              <input id="industry" value="retail" placeholder="retail">
+            </div>
+            <div>
+              <label class="field-label" for="target-pages">目标页数</label>
+              <select id="target-pages">
+                <option value="auto">自动判断</option>
+                <option value="15">15</option>
+                <option value="30">30</option>
+                <option value="60">60</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-two-col">
+            <div>
+              <label class="field-label" for="library-mode">资产模式</label>
+              <select id="library-mode">
+                <option value="fixture">演示样例</option>
+                <option value="auto">自动判断</option>
+                <option value="real">真实资产</option>
+              </select>
+            </div>
+            <div class="modal-actions">
+              <button class="btn btn-cta" type="submit" id="create-run-submit">创建项目</button>
+            </div>
+          </div>
+
+          <p id="create-status" class="action-feedback"></p>
+        </form>
+      </div>
+    </div>
+
     <script src="/static/app.js"></script>
   </body>
 </html>

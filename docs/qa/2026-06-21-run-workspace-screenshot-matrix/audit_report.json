@@ -1,0 +1,262 @@
+{
+  "schema_version": "deck_master_workspace_screenshot_audit.v1",
+  "generated_at": "2026-06-21T09:13:03Z",
+  "output_root": "/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/qa/2026-06-21-run-workspace-screenshot-matrix",
+  "base_url": "http://127.0.0.1:49632",
+  "capture_engine": "/Users/dingcheng/.npm-global/lib/node_modules/playwright/cli.js",
+  "scenario_manifest": "/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/qa/2026-06-21-run-workspace-screenshot-matrix/generated-runs/audit_runs_manifest.json",
+  "counts": {
+    "scenes": 8,
+    "screenshots": 24
+  },
+  "scenes": [
+    {
+      "slug": "empty",
+      "label": "无项目空态",
+      "url_query": "",
+      "captures": [
+        {
+          "breakpoint_id": "desktop-1600",
+          "breakpoint_label": "1600 宽桌面",
+          "width": 1600,
+          "height": 1280,
+          "relative_path": "screenshots/empty-desktop-1600.png",
+          "absolute_path": "/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/qa/2026-06-21-run-workspace-screenshot-matrix/screenshots/empty-desktop-1600.png"
+        },
+        {
+          "breakpoint_id": "desktop-1440",
+          "breakpoint_label": "1440 宽桌面",
+          "width": 1440,
+          "height": 1280,
+          "relative_path": "screenshots/empty-desktop-1440.png",
+          "absolute_path": "/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/qa/2026-06-21-run-workspace-screenshot-matrix/screenshots/empty-desktop-1440.png"
+        },
+        {
+          "breakpoint_id": "desktop-1280",
+          "breakpoint_label": "1280 宽桌面",
+          "width": 1280,
+          "height": 1180,
+          "relative_path": "screenshots/empty-desktop-1280.png",
+          "absolute_path": "/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/qa/2026-06-21-run-workspace-screenshot-matrix/screenshots/empty-desktop-1280.png"
+        }
+      ]
+    },
+    {
+      "slug": "run-init-wait-preview",
+      "label": "前期准备",
+      "url_query": "?run=run-init-wait-preview",
+      "captures": [
+        {
+          "breakpoint_id": "desktop-1600",
+          "breakpoint_label": "1600 宽桌面",
+          "width": 1600,
+          "height": 1280,
+          "relative_path": "screenshots/run-init-wait-preview-desktop-1600.png",
+          "absolute_path": "/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/qa/2026-06-21-run-workspace-screenshot-matrix/screenshots/run-init-wait-preview-desktop-1600.png"
+        },
+        {
+          "breakpoint_id": "desktop-1440",
+          "breakpoint_label": "1440 宽桌面",
+          "width": 1440,
+          "height": 1280,
+          "relative_path": "screenshots/run-init-wait-preview-desktop-1440.png",
+          "absolute_path": "/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/qa/2026-06-21-run-workspace-screenshot-matrix/screenshots/run-init-wait-preview-desktop-1440.png"
+        },
+        {
+          "breakpoint_id": "desktop-1280",
+          "breakpoint_label": "1280 宽桌面",
+          "width": 1280,
+          "height": 1180,
+          "relative_path": "screenshots/run-init-wait-preview-desktop-1280.png",
+          "absolute_path": "/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/qa/2026-06-21-run-workspace-screenshot-matrix/screenshots/run-init-wait-preview-desktop-1280.png"
+        }
+      ]
+    },
+    {
+      "slug": "generation-running",
+      "label": "内容生成中",
+      "url_query": "?run=generation-running",
+      "captures": [
+        {
+          "breakpoint_id": "desktop-1600",
+          "breakpoint_label": "1600 宽桌面",
+          "width": 1600,
+          "height": 1280,
+          "relative_path": "screenshots/generation-running-desktop-1600.png",
+          "absolute_path": "/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/qa/2026-06-21-run-workspace-screenshot-matrix/screenshots/generation-running-desktop-1600.png"
+        },
+        {
+          "breakpoint_id": "desktop-1440",
+          "breakpoint_label": "1440 宽桌面",
+          "width": 1440,
+          "height": 1280,
+          "relative_path": "screenshots/generation-running-desktop-1440.png",
+          "absolute_path": "/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/qa/2026-06-21-run-workspace-screenshot-matrix/screenshots/generation-running-desktop-1440.png"
+        },
+        {
+          "breakpoint_id": "desktop-1280",
+          "breakpoint_label": "1280 宽桌面",
+          "width": 1280,
+          "height": 1180,
+          "relative_path": "screenshots/generation-running-desktop-1280.png",
+          "absolute_path": "/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/qa/2026-06-21-run-workspace-screenshot-matrix/screenshots/generation-running-desktop-1280.png"
+        }
+      ]
+    },
+    {
+      "slug": "needs-review",
+      "label": "待审阅方案",
+      "url_query": "?run=needs-review",
+      "captures": [
+        {
+          "breakpoint_id": "desktop-1600",
+          "breakpoint_label": "1600 宽桌面",
+          "width": 1600,
+          "height": 1280,
+          "relative_path": "screenshots/needs-review-desktop-1600.png",
+          "absolute_path": "/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/qa/2026-06-21-run-workspace-screenshot-matrix/screenshots/needs-review-desktop-1600.png"
+        },
+        {
+          "breakpoint_id": "desktop-1440",
+          "breakpoint_label": "1440 宽桌面",
+          "width": 1440,
+          "height": 1280,
+          "relative_path": "screenshots/needs-review-desktop-1440.png",
+          "absolute_path": "/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/qa/2026-06-21-run-workspace-screenshot-matrix/screenshots/needs-review-desktop-1440.png"
+        },
+        {
+          "breakpoint_id": "desktop-1280",
+          "breakpoint_label": "1280 宽桌面",
+          "width": 1280,
+          "height": 1180,
+          "relative_path": "screenshots/needs-review-desktop-1280.png",
+          "absolute_path": "/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/qa/2026-06-21-run-workspace-screenshot-matrix/screenshots/needs-review-desktop-1280.png"
+        }
+      ]
+    },
+    {
+      "slug": "needs-evidence",
+      "label": "待补依据方案",
+      "url_query": "?run=needs-evidence",
+      "captures": [
+        {
+          "breakpoint_id": "desktop-1600",
+          "breakpoint_label": "1600 宽桌面",
+          "width": 1600,
+          "height": 1280,
+          "relative_path": "screenshots/needs-evidence-desktop-1600.png",
+          "absolute_path": "/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/qa/2026-06-21-run-workspace-screenshot-matrix/screenshots/needs-evidence-desktop-1600.png"
+        },
+        {
+          "breakpoint_id": "desktop-1440",
+          "breakpoint_label": "1440 宽桌面",
+          "width": 1440,
+          "height": 1280,
+          "relative_path": "screenshots/needs-evidence-desktop-1440.png",
+          "absolute_path": "/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/qa/2026-06-21-run-workspace-screenshot-matrix/screenshots/needs-evidence-desktop-1440.png"
+        },
+        {
+          "breakpoint_id": "desktop-1280",
+          "breakpoint_label": "1280 宽桌面",
+          "width": 1280,
+          "height": 1180,
+          "relative_path": "screenshots/needs-evidence-desktop-1280.png",
+          "absolute_path": "/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/qa/2026-06-21-run-workspace-screenshot-matrix/screenshots/needs-evidence-desktop-1280.png"
+        }
+      ]
+    },
+    {
+      "slug": "pending-approval",
+      "label": "待审批方案",
+      "url_query": "?run=pending-approval",
+      "captures": [
+        {
+          "breakpoint_id": "desktop-1600",
+          "breakpoint_label": "1600 宽桌面",
+          "width": 1600,
+          "height": 1280,
+          "relative_path": "screenshots/pending-approval-desktop-1600.png",
+          "absolute_path": "/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/qa/2026-06-21-run-workspace-screenshot-matrix/screenshots/pending-approval-desktop-1600.png"
+        },
+        {
+          "breakpoint_id": "desktop-1440",
+          "breakpoint_label": "1440 宽桌面",
+          "width": 1440,
+          "height": 1280,
+          "relative_path": "screenshots/pending-approval-desktop-1440.png",
+          "absolute_path": "/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/qa/2026-06-21-run-workspace-screenshot-matrix/screenshots/pending-approval-desktop-1440.png"
+        },
+        {
+          "breakpoint_id": "desktop-1280",
+          "breakpoint_label": "1280 宽桌面",
+          "width": 1280,
+          "height": 1180,
+          "relative_path": "screenshots/pending-approval-desktop-1280.png",
+          "absolute_path": "/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/qa/2026-06-21-run-workspace-screenshot-matrix/screenshots/pending-approval-desktop-1280.png"
+        }
+      ]
+    },
+    {
+      "slug": "export-ready",
+      "label": "可交付方案",
+      "url_query": "?run=export-ready",
+      "captures": [
+        {
+          "breakpoint_id": "desktop-1600",
+          "breakpoint_label": "1600 宽桌面",
+          "width": 1600,
+          "height": 1280,
+          "relative_path": "screenshots/export-ready-desktop-1600.png",
+          "absolute_path": "/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/qa/2026-06-21-run-workspace-screenshot-matrix/screenshots/export-ready-desktop-1600.png"
+        },
+        {
+          "breakpoint_id": "desktop-1440",
+          "breakpoint_label": "1440 宽桌面",
+          "width": 1440,
+          "height": 1280,
+          "relative_path": "screenshots/export-ready-desktop-1440.png",
+          "absolute_path": "/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/qa/2026-06-21-run-workspace-screenshot-matrix/screenshots/export-ready-desktop-1440.png"
+        },
+        {
+          "breakpoint_id": "desktop-1280",
+          "breakpoint_label": "1280 宽桌面",
+          "width": 1280,
+          "height": 1180,
+          "relative_path": "screenshots/export-ready-desktop-1280.png",
+          "absolute_path": "/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/qa/2026-06-21-run-workspace-screenshot-matrix/screenshots/export-ready-desktop-1280.png"
+        }
+      ]
+    },
+    {
+      "slug": "delivered-review",
+      "label": "已交付回看",
+      "url_query": "?run=delivered-review",
+      "captures": [
+        {
+          "breakpoint_id": "desktop-1600",
+          "breakpoint_label": "1600 宽桌面",
+          "width": 1600,
+          "height": 1280,
+          "relative_path": "screenshots/delivered-review-desktop-1600.png",
+          "absolute_path": "/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/qa/2026-06-21-run-workspace-screenshot-matrix/screenshots/delivered-review-desktop-1600.png"
+        },
+        {
+          "breakpoint_id": "desktop-1440",
+          "breakpoint_label": "1440 宽桌面",
+          "width": 1440,
+          "height": 1280,
+          "relative_path": "screenshots/delivered-review-desktop-1440.png",
+          "absolute_path": "/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/qa/2026-06-21-run-workspace-screenshot-matrix/screenshots/delivered-review-desktop-1440.png"
+        },
+        {
+          "breakpoint_id": "desktop-1280",
+          "breakpoint_label": "1280 宽桌面",
+          "width": 1280,
+          "height": 1180,
+          "relative_path": "screenshots/delivered-review-desktop-1280.png",
+          "absolute_path": "/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/qa/2026-06-21-run-workspace-screenshot-matrix/screenshots/delivered-review-desktop-1280.png"
+        }
+      ]
+    }
+  ]
+}

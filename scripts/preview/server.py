@@ -35,6 +35,14 @@ from skills.installer import inspect_suite_status
 
 from review.readiness import compute_claim_coverage, compute_deck_readiness, compute_next_actions
 from review.workbench import WorkbenchError, execute_review_action
+from workspace_api import (
+    build_delivery_preview_payload,
+    build_workspace_activity_payload,
+    build_workspace_page_payload,
+    build_workspace_payload,
+    handle_workspace_page_action,
+    handle_workspace_run_action,
+)
 
 from delivery.outcome import record_delivery_outcome
 from delivery.validate import validate_delivery
@@ -219,6 +227,12 @@ class PreviewHandler(BaseHTTPRequestHandler):
         if path.startswith("/api/page/"):
             self.api_page(path.removeprefix("/api/page/"), parsed)
             return
+        if path.startswith("/api/workspace/"):
+            self.api_workspace(path.removeprefix("/api/workspace/"), parsed)
+            return
+        if path.startswith("/delivery-preview/"):
+            self.serve_delivery_preview(path.removeprefix("/delivery-preview/").strip("/"), parsed)
+            return
         if path.startswith("/api/narrative/"):
             self.api_narrative(path.removeprefix("/api/narrative/").strip("/"))
             return
@@ -275,6 +289,9 @@ class PreviewHandler(BaseHTTPRequestHandler):
             page_id = path.removeprefix("/api/page/").removesuffix("/review-action").strip("/")
             self.api_review_action(page_id, parsed)
             return
+        if path.startswith("/api/workspace/"):
+            self.api_workspace_post(path.removeprefix("/api/workspace/"), parsed)
+            return
         if path == "/api/override/create":
             self.api_override_create(parsed)
             return
@@ -308,6 +325,9 @@ class PreviewHandler(BaseHTTPRequestHandler):
         title = run_dir.name
         pages = 0
         decisions: dict[str, int] = {}
+        stage_label = ""
+        stage_tone = "muted"
+        pending_approvals = 0
         try:
             manifest = load_manifest(run_dir)
             title = manifest.get("title", title)
@@ -321,15 +341,33 @@ class PreviewHandler(BaseHTTPRequestHandler):
                 title = request.get("project_name", title)
             except ValueError:
                 title = run_dir.name
+        try:
+            workspace = build_workspace_payload(run_dir)
+            stage_label = str((workspace.get("stage") or {}).get("label") or "")
+            stage_tone = str((workspace.get("stage") or {}).get("tone") or "muted")
+            pending_approvals = int((workspace.get("header_metrics") or {}).get("pending_approvals") or 0)
+        except Exception:
+            pass
         return {
             "run_id": run_dir.name,
             "title": title,
             "status": run_status(run_dir),
             "pages": pages,
             "decisions": decisions,
+            "stage_label": stage_label,
+            "stage_tone": stage_tone,
+            "pending_approvals": pending_approvals,
         }
 
     def api_runs(self) -> None:
+        if self.run_dir is not None:
+            self.send_json(
+                {
+                    "runs_dir": str(self.run_dir.parent.resolve()),
+                    "runs": [self.run_summary(self.run_dir)],
+                }
+            )
+            return
         runs_dir = self.studio_runs_dir()
         runs_dir.mkdir(parents=True, exist_ok=True)
         runs = [
@@ -365,6 +403,55 @@ class PreviewHandler(BaseHTTPRequestHandler):
             self.send_json(page_payload(run_dir, page))
         except ManifestError as exc:
             self.send_error_json(HTTPStatus.NOT_FOUND, str(exc))
+
+    def api_workspace(self, path_suffix: str, parsed) -> None:
+        parts = [part for part in path_suffix.strip("/").split("/") if part]
+        if not parts:
+            self.send_error_json(HTTPStatus.BAD_REQUEST, "run_id is required.")
+            return
+
+        run_id = parts[0]
+        run_dir = self._resolve_run_or_error(run_id, parsed=parsed)
+        if not run_dir:
+            return
+
+        try:
+            if len(parts) == 1:
+                self.send_json(build_workspace_payload(run_dir))
+                return
+            if len(parts) == 2 and parts[1] == "activity":
+                self.send_json(build_workspace_activity_payload(run_dir))
+                return
+            if len(parts) == 2 and parts[1] == "delivery-preview":
+                self.send_json(build_delivery_preview_payload(run_dir))
+                return
+            if len(parts) == 3 and parts[1] == "page":
+                self.send_json(build_workspace_page_payload(run_dir, parts[2]))
+                return
+            self.send_error_json(HTTPStatus.NOT_FOUND, "Workspace route not found.")
+        except (ManifestError, ValueError) as exc:
+            self.send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
+
+    def api_workspace_post(self, path_suffix: str, parsed) -> None:
+        parts = [part for part in path_suffix.strip("/").split("/") if part]
+        if not parts:
+            self.send_error_json(HTTPStatus.BAD_REQUEST, "run_id is required.")
+            return
+        run_id = parts[0]
+        run_dir = self._resolve_run_or_error(run_id, parsed=parsed)
+        if not run_dir:
+            return
+        body = self.read_json_body()
+        try:
+            if len(parts) == 2 and parts[1] == "actions":
+                self.send_json(handle_workspace_run_action(run_dir, body))
+                return
+            if len(parts) == 4 and parts[1] == "page" and parts[3] == "actions":
+                self.send_json(handle_workspace_page_action(run_dir, parts[2], body))
+                return
+            self.send_error_json(HTTPStatus.NOT_FOUND, "Workspace route not found.")
+        except ValueError as exc:
+            self.send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
 
     def api_create_run(self) -> None:
         try:
@@ -1058,6 +1145,32 @@ class PreviewHandler(BaseHTTPRequestHandler):
         except ManifestError as exc:
             self.send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
 
+    def serve_delivery_preview(self, run_id: str, parsed) -> None:
+        run_dir = self._resolve_run_or_error(run_id, parsed=parsed)
+        if not run_dir:
+            return
+        payload = build_delivery_preview_payload(run_dir)
+        if not payload.get("artifact_ready"):
+            self.send_error_json(HTTPStatus.NOT_FOUND, str(payload.get("detail") or "Delivery preview artifact is missing."))
+            return
+        artifact_path = str(payload.get("artifact_path") or "")
+        target = (run_dir / artifact_path).resolve()
+        root_text = str(run_dir.resolve())
+        target_text = str(target)
+        if target_text != root_text and not target_text.startswith(root_text + "/"):
+            self.send_error_json(HTTPStatus.BAD_REQUEST, "Invalid delivery preview path.")
+            return
+        if not target.exists() or not target.is_file():
+            self.send_error_json(HTTPStatus.NOT_FOUND, "Delivery preview file not found.")
+            return
+        content_type = mimetypes.guess_type(target.name)[0] or "text/html"
+        content = target.read_bytes()
+        self.send_response(HTTPStatus.OK)
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
     def read_json_body(self) -> dict:
         length = int(self.headers.get("Content-Length", "0"))
         raw_body = self.rfile.read(length) if length else b"{}"
@@ -1094,14 +1207,20 @@ class PreviewHandler(BaseHTTPRequestHandler):
         self.send_json({"error": message}, status)
 
 
-def build_handler(run_dir: Path | None, runs_dir: Path | None = None, library_mode: str = "fixture"):
+def build_handler(
+    run_dir: Path | None,
+    runs_dir: Path | None = None,
+    library_mode: str = "fixture",
+    *,
+    use_setup_runs_dir: bool = True,
+):
     class Handler(PreviewHandler):
         pass
 
     Handler.run_dir = run_dir
     Handler.runs_dir = (runs_dir or configured_runs_dir(ROOT_DIR / "runs")).expanduser().resolve()
     Handler.library_mode = library_mode
-    Handler.use_setup_runs_dir = True
+    Handler.use_setup_runs_dir = use_setup_runs_dir
     return Handler
 
 
@@ -1115,11 +1234,20 @@ def main() -> None:
     args = parser.parse_args()
 
     run_dir = Path(args.run_dir).expanduser().resolve() if args.run_dir else None
+    explicit_runs_dir = bool(args.runs_dir)
     runs_dir = Path(args.runs_dir).expanduser().resolve() if args.runs_dir else configured_runs_dir(ROOT_DIR / "runs")
     runs_dir.mkdir(parents=True, exist_ok=True)
     if run_dir is not None:
         load_manifest(run_dir)
-    server = ThreadingHTTPServer((args.host, args.port), build_handler(run_dir, runs_dir, args.library_mode))
+    server = ThreadingHTTPServer(
+        (args.host, args.port),
+        build_handler(
+            run_dir,
+            runs_dir,
+            args.library_mode,
+            use_setup_runs_dir=not explicit_runs_dir,
+        ),
+    )
     mode = "Preview" if run_dir else "Studio"
     print(f"Deck Master {mode}: http://{args.host}:{args.port}")
     print(f"Runs directory: {runs_dir}")
