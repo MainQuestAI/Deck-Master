@@ -6,6 +6,8 @@ const state = {
   deliveryPreview: null,
   currentProjectId: new URLSearchParams(window.location.search).get("run") || "",
   currentPageId: new URLSearchParams(window.location.search).get("page") || "",
+  drawerTab: new URLSearchParams(window.location.search).get("drawer-tab") || "readiness",
+  drawerExpanded: new URLSearchParams(window.location.search).get("drawer") === "expanded",
   filter: "all",
   viewMode: "page",
   loading: false,
@@ -51,6 +53,7 @@ const els = {
   currentLabel: document.querySelector("#current-label"),
   runReadiness: document.querySelector("#run-readiness"),
   readinessPill: document.querySelector("#readiness-pill"),
+  readinessBadge: document.querySelector("#readiness-badge"),
   claimSummaryChip: document.querySelector("#claim-summary-chip"),
   claimCoverage: document.querySelector("#claim-coverage"),
   activityCount: document.querySelector("#activity-count"),
@@ -242,6 +245,8 @@ function updateLocation() {
   } else {
     url.searchParams.delete("page");
   }
+  url.searchParams.set("drawer-tab", state.drawerTab);
+  url.searchParams.set("drawer", state.drawerExpanded ? "expanded" : "collapsed");
   window.history.replaceState({}, "", url);
 }
 
@@ -618,6 +623,11 @@ function renderPreview() {
 function renderReadiness() {
   if (!els.runReadiness) return;
   const workspace = currentWorkspace();
+  const blockCount = (workspace.health?.blocking_reasons || []).length;
+  if (els.readinessBadge) {
+    els.readinessBadge.textContent = String(blockCount);
+    els.readinessBadge.classList.toggle("is-visible", blockCount > 0);
+  }
   if (!workspace.project_id) {
     els.readinessPill.textContent = "-";
     els.readinessPill.className = "pill muted";
@@ -1069,6 +1079,20 @@ function renderActionStates() {
   );
 }
 
+function renderDrawerState() {
+  if (!els.bottomDrawer) return;
+  els.bottomDrawer.classList.toggle("collapsed", !state.drawerExpanded);
+  if (els.bottomDrawerTabs) {
+    els.bottomDrawerTabs.querySelectorAll("[data-tab]").forEach((btn) => {
+      const active = btn.dataset.tab === state.drawerTab;
+      btn.setAttribute("aria-selected", active ? "true" : "false");
+    });
+  }
+  els.bottomDrawerPanels.forEach((panel) => {
+    panel.hidden = panel.id !== `bottom-panel-${state.drawerTab}`;
+  });
+}
+
 function renderAll() {
   renderHeader();
   renderProjectSwitcher();
@@ -1076,6 +1100,7 @@ function renderAll() {
   renderPageList();
   renderCriticalAlerts();
   renderPreview();
+  renderDrawerState();
   renderReadiness();
   renderClaimCoverage();
   renderActivity();
@@ -1265,7 +1290,25 @@ async function createRun(event) {
 }
 
 function bindEvents() {
-  // B4: wire .bottom-drawer tab switching
+  // B4: bottom-drawer tab switching + collapse toggle
+  if (els.bottomDrawerTabs) {
+    els.bottomDrawerTabs.addEventListener("click", (event) => {
+      const tab = event.target.closest("[data-tab]");
+      if (!tab) return;
+      const tabName = tab.dataset.tab;
+      const sameTab = tabName === state.drawerTab;
+      state.drawerExpanded = sameTab ? !state.drawerExpanded : true;
+      state.drawerTab = tabName;
+      els.bottomDrawerTabs.querySelectorAll("[data-tab]").forEach((btn) => {
+        btn.setAttribute("aria-selected", btn === tab ? "true" : "false");
+      });
+      els.bottomDrawerPanels.forEach((panel) => {
+        panel.hidden = panel.id !== `bottom-panel-${tabName}`;
+      });
+      els.bottomDrawer.classList.toggle("collapsed", !state.drawerExpanded);
+      updateLocation();
+    });
+  }
   els.openCreateModal.addEventListener("click", () => setCreateModal(true));
   els.closeCreateModal.addEventListener("click", () => setCreateModal(false));
   els.createRunModal.addEventListener("click", (event) => {
