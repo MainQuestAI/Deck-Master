@@ -323,7 +323,7 @@ function renderPageList() {
   const pages = filteredPages();
   const metrics = currentWorkspace().header_metrics;
   if (metrics) {
-    els.queueSummary.textContent = `${metrics.pages_total} 页 / ${metrics.pages_approved} 已批准 / ${metrics.pages_waiting} 待处理 / ${metrics.p0 + metrics.p1} 项高优先级风险`;
+    els.queueSummary.textContent = `共 ${metrics.pages_total} 页 · 待处理 ${metrics.pages_waiting} · 已批准 ${metrics.pages_approved} · 高优风险 ${metrics.p0 + metrics.p1}`;
   } else {
     els.queueSummary.textContent = "当前还没有页面队列。";
   }
@@ -337,17 +337,21 @@ function renderPageList() {
     const item = document.createElement("button");
     item.className = "page-card";
     item.dataset.active = page.page_id === state.currentPageId ? "true" : "false";
+    const approvalLabel = page.approval_state === "pending" ? "待审批" : "无审批";
+    const riskTone = page.blocking_count > 0 ? "danger" : page.risk_count > 0 ? "warning" : "muted";
     item.innerHTML = `
       <div class="page-card-top">
-        <span class="page-order mono">${String(page.order).padStart(2, "0")}</span>
+        <span class="page-order mono">P${String(page.order).padStart(2, "0")}</span>
         <span class="status-pill ${page.status_tone}">${escapeHtml(page.status_label)}</span>
       </div>
       <strong>${escapeHtml(page.title)}</strong>
-      <small>${escapeHtml(page.narrative_role || "未标注页面职责")}</small>
+      <div class="page-card-tags">
+        <span class="page-chip">${escapeHtml(page.narrative_role || "未标注页面职责")}</span>
+        <span class="page-chip">${escapeHtml(page.source_label || "来源待确认")}</span>
+      </div>
       <div class="page-card-meta">
-        <span>${escapeHtml(page.source_label)}</span>
-        <span class="mono">R${page.risk_count}</span>
-        <span>${page.approval_state === "pending" ? "待审批" : "无审批"}</span>
+        <span class="page-risk page-risk-${riskTone}">风险 ${page.risk_count}</span>
+        <span>${escapeHtml(approvalLabel)}</span>
       </div>
     `;
     item.addEventListener("click", async () => {
@@ -479,10 +483,18 @@ function renderStageWorkspace() {
     </div>
   `).join("");
   const focusPageCard = focusPage ? `
-    <div class="stage-card">
-      <span class="panel-title">当前选中页面</span>
+    <div class="stage-card stage-card-focus">
+      <div class="stage-card-topline">
+        <span class="panel-title">当前选中页面</span>
+        <span class="status-pill ${escapeHtml(focusPage.status_tone || "muted")}">${escapeHtml(focusPage.status_label || "待处理")}</span>
+      </div>
       <strong>${escapeHtml(`第 ${String(focusPage.order).padStart(2, "0")} 页 · ${focusPage.title}`)}</strong>
-      <p>${escapeHtml(`${focusPage.narrative_role || "未标注页面职责"} · ${focusPage.source_decision_label || focusPage.source_label || "来源待确认"}`)}</p>
+      <p>${escapeHtml(`这页承担“${focusPage.narrative_role || "未标注页面职责"}”的说明任务。当前仍处于${stage.label || "待准备"}阶段，先补齐预览与生成结果，再开放页面级操作。`)}</p>
+      <div class="stage-card-tags">
+        <span class="page-chip">${escapeHtml(focusPage.source_decision_label || focusPage.source_label || "来源待确认")}</span>
+        <span class="page-chip">风险 ${escapeHtml(String(focusPage.risk_count || 0))}</span>
+        <span class="page-chip">${escapeHtml(focusPage.approval_state === "pending" ? "待审批" : "无审批")}</span>
+      </div>
     </div>
   ` : "";
 
@@ -556,7 +568,16 @@ function renderPagePreview() {
   setPreviewNavVisible(true);
 
   if (focusPage.has_preview) {
-    els.previewStage.innerHTML = `<img src="${previewUrlWithProject(focusPage.preview_url)}" alt="${escapeHtml(focusPage.title)}">`;
+    els.previewStage.innerHTML = `
+      <div class="page-preview-frame">
+        <div class="page-preview-toolbar">
+          <span class="panel-title">当前预览</span>
+          <span class="page-chip">第 ${String(focusPage.order).padStart(2, "0")} 页</span>
+          <span class="page-chip">${escapeHtml(focusPage.narrative_role || "未标注页面职责")}</span>
+        </div>
+        <img src="${previewUrlWithProject(focusPage.preview_url)}" alt="${escapeHtml(focusPage.title)}">
+      </div>
+    `;
     return;
   }
 
