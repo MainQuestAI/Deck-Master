@@ -487,6 +487,27 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(200, artifact_status)
         self.assertIn("Delivery Preview", artifact_payload["raw"])
 
+    def test_workspace_mark_delivered_is_idempotent_after_delivery_recorded(self) -> None:
+        first_status, first_payload = self.handler.request(
+            "POST",
+            "/api/workspace/sample-preview-run/actions",
+            {"action": "mark_delivered", "actor": "alice", "note": "Delivered"},
+        )
+        second_status, second_payload = self.handler.request(
+            "POST",
+            "/api/workspace/sample-preview-run/actions",
+            {"action": "mark_delivered", "actor": "alice", "note": "Delivered again"},
+        )
+
+        self.assertEqual(200, first_status)
+        self.assertEqual(200, second_status)
+        self.assertEqual(first_payload["delivered_at"], second_payload["delivered_at"])
+
+        activity_status, activity = self.handler.request("GET", "/api/workspace/sample-preview-run/activity")
+        self.assertEqual(200, activity_status)
+        delivered_titles = [item for item in activity["items"] if "交付结果已记录" in item["title"]]
+        self.assertEqual(1, len(delivered_titles))
+
 
 # ---------------------------------------------------------------------------
 # StudioServerTests — studio mode (no fixed run_dir)

@@ -833,14 +833,18 @@ function renderActionStates() {
     Boolean(state.currentProjectId) &&
     !deliveryRecorded &&
     !pendingRunApproval;
-  const canMarkDelivered = ["可交付", "已交付"].includes(stageLabel) && Boolean(state.currentProjectId);
+  const showMarkDelivered = ["可交付", "已交付"].includes(stageLabel) && Boolean(state.currentProjectId);
+  const canMarkDelivered =
+    ["可交付", "已交付"].includes(stageLabel) &&
+    Boolean(state.currentProjectId) &&
+    !deliveryRecorded;
   const canReviewPage = hasPage && ["待审阅", "待补证据", "待审批", "可交付", "已交付"].includes(stageLabel);
   const canRequestEvidence = hasPage && ["待审阅", "待补证据"].includes(stageLabel);
   const canEscalatePageApproval = hasPage && ["待审阅", "待补证据", "可交付", "待审批"].includes(stageLabel);
   const canSaveNote = Boolean(state.currentProjectId) && hasPage;
 
   els.submitRunApproval.hidden = !canSubmitRunApproval;
-  els.markDelivered.hidden = !canMarkDelivered;
+  els.markDelivered.hidden = !showMarkDelivered;
 
   setButtonState(
     els.submitRunApproval,
@@ -850,7 +854,7 @@ function renderActionStates() {
   setButtonState(
     els.markDelivered,
     canMarkDelivered,
-    canMarkDelivered ? "" : "当前还没有进入可交付阶段。"
+    canMarkDelivered ? "" : deliveryRecorded ? "当前方案项目已经记录过交付结果。" : "当前还没有进入可交付阶段。"
   );
   els.markDelivered.textContent = deliveryRecorded ? "已记录交付" : "确认交付";
 

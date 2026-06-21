@@ -1063,6 +1063,9 @@ def handle_workspace_run_action(run_dir: str | Path, body: dict[str, Any]) -> di
         )
     if action == "mark_delivered":
         delivered = bool(body.get("delivered", True))
+        existing_delivery = _delivery_outcome(root)
+        if delivered and existing_delivery.get("delivered"):
+            return existing_delivery
         return record_delivery_outcome(
             root,
             delivered=delivered,
