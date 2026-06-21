@@ -1,0 +1,43 @@
+{
+  "name": "deck-master-skills",
+  "version": "0.1.0",
+  "conformance_version": "1.0.0",
+  "description": "Deck Master local skill bundle for run orchestration, planning, review, render, library, and quality workflows.",
+  "skills": [
+    {
+      "name": "deck-master",
+      "path": "deck-master/SKILL.md",
+      "description": "Top-level Deck Master run orchestration and localhost review cockpit operations."
+    },
+    {
+      "name": "deck-planner",
+      "path": "deck-planner/SKILL.md",
+      "description": "Planning workflow for deck brief, claim map, narrative plan, and page tasks."
+    },
+    {
+      "name": "deck-review",
+      "path": "deck-review/SKILL.md",
+      "description": "Review, quality, export readiness, and delivery checks inside Deck Master."
+    },
+    {
+      "name": "ppt-deck-pro-max",
+      "path": "ppt-deck-pro-max/SKILL.md",
+      "description": "Generation-session production capability bundled into Deck Master."
+    },
+    {
+      "name": "ppt-library",
+      "path": "ppt-library/SKILL.md",
+      "description": "Historical slide retrieval and library selection capability."
+    },
+    {
+      "name": "ppt-master",
+      "path": "ppt-master/SKILL.md",
+      "description": "Render and build capability for delivery-oriented HTML preview artifacts."
+    },
+    {
+      "name": "ppt-quality-gate",
+      "path": "ppt-quality-gate/SKILL.md",
+      "description": "Structured quality governance and findings import capability."
+    }
+  ]
+}

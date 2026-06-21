@@ -1,6 +1,12 @@
 ---
 name: ppt-library
 description: Deck Master bundled asset intelligence capability for historical slide search, candidate selection import, and run-local library feedback queue.
+triggers:
+  - search slide library
+  - find historical slides
+  - import library selection
+  - record library feedback
+  - ppt library
 ---
 
 # PPT Library Capability

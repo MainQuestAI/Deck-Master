@@ -1,6 +1,12 @@
 ---
 name: deck-review
 description: Deck Master review and delivery entry for quality gates, Review Cockpit state, findings, repair loops, export readiness, and delivery readiness. Use when the user asks whether a Deck Master run or generated deck is ready to deliver.
+triggers:
+  - review a deck run
+  - check deck quality gates
+  - check delivery readiness
+  - import review findings
+  - export approved page queue
 ---
 
 # Deck Review

@@ -1,6 +1,12 @@
 ---
 name: deck-master
 description: Professional Solution Deck Run OS for turning customer context, briefs, historical deck assets, sourcing decisions, product capability handbacks, quality gates, review cockpit state, benchmark runs, and delivery feedback into auditable solution deck workflows. Use when Codex needs to create or resume a Deck Master run, generate a preview from a brief, inspect next steps, run deck quality gates, import narrative advice or review findings, manage PPT Library, PPT Master, PPT Deck Pro Max, or PPT Quality Gate handbacks, export approved page queues, validate benchmark cases, or operate the local Deck Master CLI and Review Cockpit.
+triggers:
+  - deck master
+  - create a deck master run
+  - resume a deck run
+  - inspect deck next steps
+  - review cockpit
 ---
 
 # Deck Master

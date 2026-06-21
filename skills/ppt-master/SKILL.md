@@ -1,6 +1,12 @@
 ---
 name: ppt-master
 description: Deck Master bundled build and render capability for producing run-local HTML render artifacts and canonical render results. Use inside a Deck Master run when a preview needs a delivery-oriented render handback.
+triggers:
+  - render deck preview
+  - build html render artifact
+  - import render result
+  - check render status
+  - ppt master
 ---
 
 # PPT Master Capability

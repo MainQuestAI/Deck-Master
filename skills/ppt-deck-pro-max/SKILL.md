@@ -1,6 +1,11 @@
 ---
 name: ppt-deck-pro-max
 description: Deck Master bundled production intelligence capability for generation sessions, page production handoff, and generation result import with run_id plus session_id binding.
+triggers:
+  - start a generation session
+  - run page production
+  - import generation results
+  - ppt deck pro max
 ---
 
 # PPT Deck Pro Max Capability

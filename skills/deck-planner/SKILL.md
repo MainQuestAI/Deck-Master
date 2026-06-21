@@ -1,6 +1,12 @@
 ---
 name: deck-planner
 description: Deck Master planning entry for context intake, brief, claim map, narrative plan, page tasks, and sourcing intent inside a Deck Master run. Use when the user asks to plan a solution deck structure, turn customer material into a narrative plan, or prepare page-level production tasks.
+triggers:
+  - plan a solution deck
+  - build deck brief
+  - make a claim map
+  - create a narrative plan
+  - prepare page tasks
 ---
 
 # Deck Planner

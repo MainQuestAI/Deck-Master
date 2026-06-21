@@ -1,6 +1,11 @@
 ---
 name: ppt-quality-gate
 description: Deck Master bundled quality governance capability for fixture-safe quality findings, quality report import, and delivery blocking review.
+triggers:
+  - run deck quality review
+  - import quality findings
+  - check delivery blockers
+  - ppt quality gate
 ---
 
 # PPT Quality Gate Capability
