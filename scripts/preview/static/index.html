@@ -152,6 +152,23 @@
             <p id="decision-summary">先选择一个项目，再进入页面处理。</p>
           </div>
 
+          <section class="decision-block decision-block-actions">
+            <span class="panel-title">处理动作</span>
+            <div class="action-grid">
+              <button id="approve-page" class="btn btn-cta">批准页面</button>
+              <button id="reject-page" class="btn">驳回页面</button>
+              <button id="request-evidence" class="btn">请求补证据</button>
+              <button id="submit-page-approval" class="btn">升级审批</button>
+            </div>
+
+            <label class="field-label" for="decision-note">备注 / 审批原因</label>
+            <textarea id="decision-note" rows="5" placeholder="记录判断依据、补证据要求或审批说明"></textarea>
+            <div class="decision-footer">
+              <button id="save-note" class="btn">记录备注</button>
+              <p id="action-feedback" class="action-feedback"></p>
+            </div>
+          </section>
+
           <section class="decision-block">
             <span class="panel-title">页面定位</span>
             <div id="page-role-content" class="stack-list"></div>
@@ -171,23 +188,6 @@
           <section class="decision-block">
             <span class="panel-title">审批记录</span>
             <div id="approval-content" class="stack-list"></div>
-          </section>
-
-          <section class="decision-block">
-            <span class="panel-title">处理动作</span>
-            <div class="action-grid">
-              <button id="approve-page" class="btn btn-cta">批准页面</button>
-              <button id="reject-page" class="btn">驳回页面</button>
-              <button id="request-evidence" class="btn">请求补证据</button>
-              <button id="submit-page-approval" class="btn">升级审批</button>
-            </div>
-
-            <label class="field-label" for="decision-note">备注 / 审批原因</label>
-            <textarea id="decision-note" rows="5" placeholder="记录判断依据、补证据要求或审批说明"></textarea>
-            <div class="decision-footer">
-              <button id="save-note" class="btn">记录备注</button>
-              <p id="action-feedback" class="action-feedback"></p>
-            </div>
           </section>
         </aside>
       </section>
