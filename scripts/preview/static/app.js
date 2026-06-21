@@ -824,8 +824,15 @@ function renderActionStates() {
   const hasPage = Boolean(page && state.pageDetail && !isStageWorkspace() && state.viewMode !== "delivery");
   const pageReviewStatus = page?.review_status || "";
   const deliveryRecorded = Boolean(currentWorkspace().run_summary?.delivery?.delivered);
+  const pendingRunApproval = (currentWorkspace().run_summary?.approvals || []).some(
+    (task) => task.scope_type === "run" && task.status === "pending"
+  );
 
-  const canSubmitRunApproval = ["可交付", "待审批"].includes(stageLabel) && Boolean(state.currentProjectId) && !deliveryRecorded;
+  const canSubmitRunApproval =
+    ["可交付", "待审批"].includes(stageLabel) &&
+    Boolean(state.currentProjectId) &&
+    !deliveryRecorded &&
+    !pendingRunApproval;
   const canMarkDelivered = ["可交付", "已交付"].includes(stageLabel) && Boolean(state.currentProjectId);
   const canReviewPage = hasPage && ["待审阅", "待补证据", "待审批", "可交付", "已交付"].includes(stageLabel);
   const canRequestEvidence = hasPage && ["待审阅", "待补证据"].includes(stageLabel);
@@ -838,7 +845,7 @@ function renderActionStates() {
   setButtonState(
     els.submitRunApproval,
     canSubmitRunApproval,
-    canSubmitRunApproval ? "" : "当前阶段还不适合发起方案项目审批。"
+    canSubmitRunApproval ? "" : pendingRunApproval ? "当前方案项目已经有待审批任务。" : "当前阶段还不适合发起方案项目审批。"
   );
   setButtonState(
     els.markDelivered,

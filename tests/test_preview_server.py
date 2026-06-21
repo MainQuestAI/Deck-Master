@@ -411,6 +411,27 @@ class ServerTests(unittest.TestCase):
         self.assertTrue(any("提交审批" in title for title in titles))
         self.assertTrue(any("审批通过" in title for title in titles))
 
+    def test_workspace_run_submit_approval_is_idempotent_while_pending(self) -> None:
+        first_status, first_payload = self.handler.request(
+            "POST",
+            "/api/workspace/sample-preview-run/actions",
+            {"action": "submit_approval", "actor": "alice", "note": "Ready for export"},
+        )
+        second_status, second_payload = self.handler.request(
+            "POST",
+            "/api/workspace/sample-preview-run/actions",
+            {"action": "submit_approval", "actor": "alice", "note": "Ready for export"},
+        )
+
+        self.assertEqual(200, first_status)
+        self.assertEqual(200, second_status)
+        self.assertEqual(first_payload["approval_id"], second_payload["approval_id"])
+
+        page_status, page_payload = self.handler.request("GET", "/api/workspace/sample-preview-run/page/page_001")
+        self.assertEqual(200, page_status)
+        run_approvals = [task for task in page_payload["approvals"]["tasks"] if task["scope_type"] == "run"]
+        self.assertEqual(1, len(run_approvals))
+
     def test_workspace_api_supports_run_without_preview_manifest(self) -> None:
         pending_run = self.runs_dir / "pending-run"
         pending_run.mkdir()

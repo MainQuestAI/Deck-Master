@@ -170,6 +170,29 @@ def _save_approval_tasks(run_dir: Path, tasks: list[dict[str, Any]]) -> None:
     tmp_path.replace(path)
 
 
+def _find_pending_approval_task(
+    tasks: list[dict[str, Any]],
+    *,
+    scope_type: str,
+    target_id: str,
+    subject: str,
+    approval_type: str,
+) -> dict[str, Any] | None:
+    for task in tasks:
+        if task.get("status") != "pending":
+            continue
+        if task.get("scope_type") != scope_type:
+            continue
+        if str(task.get("target_id") or "") != target_id:
+            continue
+        if str(task.get("subject") or "") != subject:
+            continue
+        if str(task.get("approval_type") or "approval") != approval_type:
+            continue
+        return task
+    return None
+
+
 def _create_approval_task(
     run_dir: Path,
     *,
@@ -181,6 +204,15 @@ def _create_approval_task(
     approval_type: str = "approval",
 ) -> dict[str, Any]:
     tasks = _load_approval_tasks(run_dir)
+    existing = _find_pending_approval_task(
+        tasks,
+        scope_type=scope_type,
+        target_id=target_id,
+        subject=subject,
+        approval_type=approval_type,
+    )
+    if existing:
+        return existing
     approval_id = f"approval_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S%f')}"
     task = {
         "approval_id": approval_id,
