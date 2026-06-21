@@ -491,6 +491,50 @@
 
 **结论**：Sequential implementation，主路径无并行化机会。B8 测试可后期并行编写但运行需主路径就绪。
 
+---
+
+## 12. 实现进度 Handoff（2026-06-21）
+
+本节记录实现执行状态，供下一位 agent 接手。详细执行路径见 `/Users/dingcheng/.claude/plans/spec-encapsulated-metcalfe.md`（含 Explore 发现的 6 处 spec 修正）。
+
+### 12.1 已完成（commit 7f25acb）
+
+| 批次 | 状态 | 验证 |
+|---|---|---|
+| B1 设计 token 与字体 | ✅ done | DevTools token 生效、三字体加载零 Inter |
+| B2 骨架重构 | ✅ done | status-bar + queue-metrics + action-bar + bottom-drawer 6 tabs |
+| B2.5 验证闸 | ✅ passed | node --check、72 els id 全命中、console 零错误、renderAll 5 projects 渲染 |
+| B3 右栏决策台 + 主动作条 | ✅ done | renderActionBar 状态机 + renderBlockFlag + findNextReviewOrBlockedPage，批准→已批准→下一页流程过 |
+
+文档基线另在 commit 5f59936（audit + IA v1 + DESIGN.md + 本 spec + AGENTS.md）。
+
+### 12.2 剩余批次（B4-B8，按依赖顺序）
+
+| 批次 | 状态 | 要点 |
+|---|---|---|
+| **B4** 底部抽屉 tab 切换接线 | ⏳ 待做 | B2 已建 6-tab 结构（`#bottom-drawer` collapsed + tablist + `.bottom-drawer-panel`）。B4 接：tab 切换（仅一 panel 可见）、展开/收起 toggle、阻断 badge（复用 renderBlockFlag 信号，**不自动展开**只 badge）。spec §4 B4 + §10.7。 |
+| **B5** 双语 i18n | ⏳ 待做（最大工作量） | 从零建双轨：`lang/zh.js`+`en.js` + `t(key)`（缺 key 回退+warn）。静态节点 data-i18n，render* 动态文案走 t(key)，切换触发全量 renderAll。~80 字符串 + 6 个 format* 函数。一次性 pass 不与 B3/B4 交错。**stage label 保持 API 中文不经 t()**（eng review 风险#3）。spec §10.5 key 规则 + §11.2。 |
+| **B6** 状态覆盖 | ⏳ 待做 | skeleton（页面列表/预览/决策，>300ms 才显示）、强阻断态（P0/P1 驱动主动作条）、完成态下一页建议（B3 已搭 findNextReviewOrBlockedPage，B6 补 skeleton 样式 + 文案规则）。依赖 B5 稳定。spec §10.7。 |
+| **B7a** CSS 玻璃清残 + token 全量替换 | ⏳ 待做 | style.css 46 个 rgba + 16 hex 全替换为 token var()；删 .glass-panel backdrop-filter 改实面+hairline；删 .ambient-light-container 样式（index.html 已删 div，CSS 残留 lines 75-104）。spec §11.3 A3。 |
+| **B7b** 标题层级 scale→元素 | ⏳ 待做 | 应用 §10.5 scale→元素映射。注意 .pt 13px/.dlabel 12px 不回归可读性（label 豁免 body 16px）。 |
+| **B8** Playwright 关键流测试 | ⏳ 待做 | 从零建 Node 项目（package.json + playwright + config，放 `scripts/preview/static/tests/e2e/`，与 Python tests/ 隔离）。webServer 自动起 `python scripts/preview/server.py`。6 关键流：开页/选页/审批闭环/状态恢复(URL param)/语言切换/阻断联动三处。format* 6 纯函数 bonus Node assert 单测。spec §11.4。 |
+
+### 12.3 交接关键提醒（下位 agent 必读）
+
+1. **dev server 用 5052，不是 5050**。5050 是 launchd 部署副本（`~/.deck-master/current`，服务旧 index.html）。起 dev server：`python3 scripts/preview/server.py --host 127.0.0.1 --port 5052 --runs-dir ~/.deck-master/runs --library-mode fixture`。验证 URL：`http://127.0.0.1:5052/?run=yunnan-baiyao-ai-foundation-deck-v1`。
+2. **阶段限制是既有逻辑，非 bug**：当前 run 阶段"生成中"触发 `isStageWorkspace()`，renderActionStates（~line 1025）把 canReviewPage 设 false（"生成中"不在可审阶段数组 `["待审阅","待补依据","待审批","可交付","已交付"]`）。前端审批按钮禁用但 API 接受。B3 的 action-bar 主操作复用此限制（禁用 + 提示）。要从前端点测审批，需切换到"待审阅"等阶段的 run，或直接 API 测。
+3. **三风险守卫**（eng review §11.2）：① els 重映射 → B2.5 闸 + null 守卫（已加全 render*）。② `[data-approval-action]` 重绑（renderPageDecisionRail 779-791 作用域 #approval-content）→ B3 未动这些按钮位置，仍工作；B4/B5 若动需复查。③ stage label 保持中文不经 t()（B5 必守）。
+4. **6 处 spec 修正**已在 plan 文件记录（`~/.claude/plans/spec-encapsulated-metcalfe.md`），实现时以 plan 为准：状态恢复=URL param 非 localStorage；Inter 仅 CSS 引用；B8 从零建 Node；Build Skill/Export 是新建非迁移；#critical-alerts 已在中栏不提权；B7 拆 B7a/B7b。
+5. **浏览器验证**：用 chrome-devtools MCP，导航超时 10s 是 load 事件慢（预览图加载）非 bug，用 evaluate_script 检查运行时 state 更可靠（snapshot 抓 busy 中间态会误判）。
+6. **截图路径**：chrome-devtools 截图限 workspace root（repo 内），存 `docs/qa/<批次>/`。`$CLAUDE_JOB_DIR` 变量在截图 filePath 不展开，别用。
+
+### 12.4 验收闸（全部完成后）
+
+- §2 成功标准全勾 + §7 验收清单 + spec §17 回归层不回退。
+- `npx playwright test` 全绿（B8）。
+- `python3 -m unittest discover -s tests` 保持绿（后端契约未改）。
+- `/design-review` 截图级视觉 QA。
+
 ## GSTACK REVIEW REPORT
 
 | Review | Trigger | Why | Runs | Status | Findings |
