@@ -50,6 +50,7 @@ from uat.ppt_library import run_ppt_library_uat
 from uat.real_workflow_smoke import run_real_workflow_smoke
 from uat.render_tool import run_render_tool_uat
 from benchmark.case import BenchmarkCaseError, load_benchmark_case
+from benchmark.aggregate import BenchmarkAggregateError, write_benchmark_aggregate_report
 from benchmark.checkpoints import BenchmarkCheckpointError, write_benchmark_checkpoint
 from benchmark.report import BenchmarkReportError, write_benchmark_report, write_benchmark_rc_report
 from benchmark.runner import (
@@ -1675,6 +1676,14 @@ def command_benchmark_list(args: argparse.Namespace) -> dict[str, Any]:
     return {"status": "listed", "benchmark_dir": str(benchmark_dir), "cases": cases, "results": results}
 
 
+def command_benchmark_aggregate_report(args: argparse.Namespace) -> dict[str, Any]:
+    return write_benchmark_aggregate_report(
+        getattr(args, "benchmark_dir", str(ROOT / "benchmarks")),
+        min_real_cases=int(getattr(args, "min_real_cases", 3)),
+        force=bool(getattr(args, "force", False)),
+    )
+
+
 def add_brief_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--brief")
     parser.add_argument("--brief-file")
@@ -2331,6 +2340,12 @@ def build_parser() -> argparse.ArgumentParser:
     p_blist.add_argument("--benchmark-dir", default=str(ROOT / "benchmarks"))
     p_blist.set_defaults(func=command_benchmark_list)
 
+    p_bagg = sub.add_parser("benchmark-aggregate-report", help="Build aggregate benchmark report")
+    p_bagg.add_argument("--benchmark-dir", default=str(ROOT / "benchmarks"))
+    p_bagg.add_argument("--min-real-cases", type=int, default=3)
+    p_bagg.add_argument("--force", action="store_true")
+    p_bagg.set_defaults(func=command_benchmark_aggregate_report)
+
     return parser
 
 
@@ -2357,6 +2372,7 @@ def main() -> None:
         ExternalReviewError,
         GenerationHandbackError,
         BenchmarkCaseError,
+        BenchmarkAggregateError,
         BenchmarkCheckpointError,
         BenchmarkReportError,
         BenchmarkRunError,

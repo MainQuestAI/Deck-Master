@@ -1,5 +1,39 @@
 # Real Production Closure Test Evidence
 
+## C3 Evidence — Real Benchmark Metadata & Aggregate Report
+
+Implemented on 2026-06-22 in `/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure`.
+
+Coverage added:
+
+- Three sanitized real benchmark metadata cases:
+  - `benchmarks/cases/real_retail_growth/benchmark_case.json`
+  - `benchmarks/cases/real_manufacturing_geo/benchmark_case.json`
+  - `benchmarks/cases/real_healthcare_enablement/benchmark_case.json`
+- Real metadata validation requires `source_material.raw_source_policy=local_path_only`.
+- Real metadata validation rejects embedded private source content fields.
+- Real metadata validation blocks `workflow.library_mode=fixture`.
+- Aggregate benchmark report contract: `docs/contracts/benchmark-aggregate-report.v1.schema.json`.
+- Aggregate report builder: `scripts/benchmark/aggregate.py`.
+- CLI entry: `deck-master benchmark-aggregate-report`.
+- Benchmark `.gitignore` now excludes local private source folders, workspaces, generated runs, generated reports, and local-only JSON.
+
+| Command | Result | Notes |
+|---|---|---|
+| `python3 -m unittest tests.test_benchmark_case tests.test_benchmark_aggregate tests.test_benchmark_report` | pass | 19 benchmark case/report/aggregate tests passed |
+| `python3 -m json.tool docs/contracts/benchmark-aggregate-report.v1.schema.json` | pass | Aggregate report contract parses |
+| `python3 scripts/deck_master.py validate-benchmark-case --case benchmarks/cases/real_retail_growth/benchmark_case.json --benchmark-dir benchmarks` | pass | Real retail metadata validates |
+| `python3 scripts/deck_master.py validate-benchmark-case --case benchmarks/cases/real_manufacturing_geo/benchmark_case.json --benchmark-dir benchmarks` | pass | Real manufacturing metadata validates |
+| `python3 scripts/deck_master.py validate-benchmark-case --case benchmarks/cases/real_healthcare_enablement/benchmark_case.json --benchmark-dir benchmarks` | pass | Real healthcare metadata validates |
+| `python3 scripts/deck_master.py benchmark-aggregate-report --benchmark-dir benchmarks --force` | pass | Aggregate status `metadata_ready`; real metadata case count is `3` |
+| `git diff --check` | pass | No whitespace or patch formatting issues |
+| `python3 -m compileall scripts tests` | pass | Python files compile |
+| `python3 -m unittest discover -s tests` | pass | 793 tests passed |
+
+Accepted C3 constraint:
+
+- C3 commits only sanitized metadata and aggregate tooling. Private raw documents, generated benchmark runs, generated reports, caches, and local workspaces remain excluded from the repository.
+
 ## C2 Evidence — Stage / Verify / Activate / Rollback
 
 Implemented on 2026-06-22 in `/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure`.

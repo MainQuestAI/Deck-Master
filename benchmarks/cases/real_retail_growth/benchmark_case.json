@@ -1,19 +1,18 @@
 {
   "schema_version": "deck_benchmark_case.v1",
-  "case_id": "real_case_template",
+  "case_id": "real_retail_growth",
   "case_type": "real_metadata",
-  "template": true,
-  "case_name": "Real Customer Case Template",
-  "description": "Template for a user-owned real workflow benchmark case.",
-  "industry": "replace_me",
+  "case_name": "Real Retail Growth Solution Deck",
+  "description": "Sanitized metadata for a real retail growth solution-deck workflow. Raw source material remains local-only.",
+  "industry": "retail",
   "audience": "client",
-  "target_pages": 15,
-  "workspace": "benchmarks/workspaces/replace_me",
+  "target_pages": 16,
+  "workspace": "~/DeckMasterPrivateBenchmarks/real_retail_growth/workspace",
   "runs_dir": "benchmark_runs",
   "inputs": {
-    "context_pack": "context_pack.json",
-    "baseline_manual_hours": 12,
-    "baseline_notes": "Replace with a real baseline estimate from comparable work.",
+    "context_pack": "~/DeckMasterPrivateBenchmarks/real_retail_growth/context_pack.json",
+    "baseline_manual_hours": 14,
+    "baseline_notes": "Comparable solution deck previously required roughly two working days of manual synthesis and slide drafting.",
     "expected_output_type": "solution_deck_draft"
   },
   "workflow": {
@@ -22,19 +21,20 @@
     "requires_narrative_advice": true,
     "requires_external_quality_review": true,
     "requires_generation_result": true,
-    "requires_render_result": false,
+    "requires_render_result": true,
     "manual_review_required": true
   },
   "source_material": {
     "classification": "private_local_reference",
     "raw_source_policy": "local_path_only",
     "local_source_paths": [
-      "~/DeckMasterPrivateBenchmarks/replace_me/raw"
+      "~/DeckMasterPrivateBenchmarks/real_retail_growth/raw"
     ],
     "submitted_material_types": [
-      "brief",
+      "business_brief",
       "meeting_notes",
-      "reference_deck"
+      "reference_deck",
+      "public_market_notes"
     ],
     "redaction_status": "metadata_only",
     "excluded_from_repo": true
@@ -43,8 +43,8 @@
     "context_to_preview_minutes": 45,
     "context_to_review_ready_minutes": 90,
     "context_to_approved_queue_minutes": 120,
-    "page_acceptance_rate_min": 0.5,
-    "reuse_adapt_rate_min": 0.3,
+    "page_acceptance_rate_min": 0.7,
+    "reuse_adapt_rate_min": 0.25,
     "p0_count_max": 0,
     "evidence_gap_visible": true,
     "quality_gate_required": true

@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/contracts/benchmark-aggregate-report.v1.schema.json",
+  "title": "Deck Master Benchmark Aggregate Report v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "status",
+    "created_at",
+    "benchmark_dir",
+    "case_counts",
+    "report_counts",
+    "private_source_policy",
+    "metrics",
+    "real_cases",
+    "reports"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "deck_benchmark_aggregate_report.v1"
+    },
+    "status": {
+      "enum": ["blocked", "metadata_ready", "report_ready"]
+    },
+    "created_at": {
+      "type": "string"
+    },
+    "benchmark_dir": {
+      "type": "string"
+    },
+    "min_real_cases": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "case_counts": {
+      "type": "object",
+      "required": ["total", "real_metadata", "fixture", "invalid"],
+      "properties": {
+        "total": {"type": "integer", "minimum": 0},
+        "real_metadata": {"type": "integer", "minimum": 0},
+        "fixture": {"type": "integer", "minimum": 0},
+        "invalid": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "report_counts": {
+      "type": "object",
+      "required": ["total", "benchmark_report", "benchmark_rc_report"],
+      "properties": {
+        "total": {"type": "integer", "minimum": 0},
+        "benchmark_report": {"type": "integer", "minimum": 0},
+        "benchmark_rc_report": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "private_source_policy": {
+      "type": "object",
+      "required": ["raw_sources_committed", "allowed_reference", "real_cases_have_local_source_policy"],
+      "properties": {
+        "raw_sources_committed": {"const": false},
+        "allowed_reference": {"const": "local_path_only"},
+        "real_cases_have_local_source_policy": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "metrics": {
+      "type": "object"
+    },
+    "real_cases": {
+      "type": "array",
+      "items": {"type": "object"}
+    },
+    "fixture_cases": {
+      "type": "array",
+      "items": {"type": "object"}
+    },
+    "invalid_cases": {
+      "type": "array",
+      "items": {"type": "object"}
+    },
+    "reports": {
+      "type": "array",
+      "items": {"type": "object"}
+    }
+  },
+  "additionalProperties": false
+}
