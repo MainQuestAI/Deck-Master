@@ -12,6 +12,7 @@ from quality.overrides import list_active_overrides
 from review.readiness import compute_claim_coverage, compute_deck_readiness, compute_next_actions
 from review.workbench import WorkbenchError, execute_review_action
 from runtime.events import append_typed_event, read_events
+from runtime.final_readiness import final_readiness_clearance
 from runtime.render import CANONICAL_RENDER_RESULT, find_render_result
 from runtime.run_state import RunStateError, load_request, run_status
 from runtime.run_state_resolver import resolve_run_state
@@ -476,7 +477,10 @@ def build_delivery_preview_payload(run_dir: str | Path) -> dict[str, Any]:
     render_result_path, render_result, source = find_render_result(root)
     raw_artifact_path = str((render_result or {}).get("artifact_path") or "")
     artifact_file, artifact_relative_path = _resolve_run_relative_path(root, raw_artifact_path)
-    artifact_ready = bool(artifact_file and artifact_file.exists())
+    artifact_file_ready = bool(artifact_file and artifact_file.exists())
+    final_readiness = final_readiness_clearance(root)
+    final_ready = bool(final_readiness.get("ready"))
+    artifact_ready = bool(artifact_file_ready and final_ready)
     delivery = _delivery_outcome(root)
     render_status_value = str((render_result or {}).get("status") or "")
     raw_artifacts = (render_result or {}).get("artifacts")
@@ -496,10 +500,14 @@ def build_delivery_preview_payload(run_dir: str | Path) -> dict[str, Any]:
         status = "missing_artifact_path"
         summary = "渲染结果存在，但还没有登记交付产物路径。"
         detail = "检查 render_result.json，补齐 artifact_path。"
-    elif not artifact_ready:
+    elif not artifact_file_ready:
         status = "artifact_missing"
         summary = "交付预览文件缺失，当前无法直接回看交付成片。"
         detail = "检查 rendered/index.html 或重新执行交付渲染。"
+    elif not final_ready:
+        status = "final_readiness_blocked"
+        summary = "最终放行检查未通过。"
+        detail = str(final_readiness.get("reason") or "先运行最终放行检查并处理阻断项。")
     else:
         status = "ready"
         summary = "交付级预览已就绪。"
@@ -531,12 +539,18 @@ def build_delivery_preview_payload(run_dir: str | Path) -> dict[str, Any]:
         "artifact_count": len(artifact_list),
         "formats": formats,
         "editability": editability,
+        "final_readiness": {
+            "ready": final_ready,
+            "status": str(final_readiness.get("status") or ""),
+            "reason": str(final_readiness.get("reason") or ""),
+            "path": str(final_readiness.get("path") or ""),
+        },
         "source_fingerprint": str((render_result or {}).get("source_fingerprint") or ""),
         "source_mode": "real" if (render_result or {}).get("schema_version") == "deck_render_result.v2" else source,
         "created_at": str((render_result or {}).get("created_at") or ""),
         "summary": summary,
         "detail": detail,
-        "recommended_action": "补齐交付渲染" if status != "ready" else "进入交付预览",
+        "recommended_action": "处理最终放行检查" if status == "final_readiness_blocked" else ("补齐交付渲染" if status != "ready" else "进入交付预览"),
         "delivered": bool(delivery.get("delivered")),
         "delivered_at": str(delivery.get("delivered_at") or ""),
         "delivery_notes": str(delivery.get("notes") or ""),
@@ -569,6 +583,7 @@ def _workspace_stage(
     approvals: list[dict[str, Any]],
     delivery: dict[str, Any],
     run_state_summary: dict[str, Any],
+    final_readiness: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     ready = deck_readiness.get("deck_readiness", {})
     counts = deck_readiness.get("counts", {})
@@ -578,6 +593,9 @@ def _workspace_stage(
     waiting_review = [page for page in pages if str(page.get("review_status")) in {"", "needs_review"}]
     preview_missing = [page for page in pages if not page.get("asset_exists", True)]
     export_ready = str(ready.get("export") or "") == "ready"
+    final_readiness = final_readiness or {}
+    final_ready = bool(final_readiness.get("ready"))
+    final_reason = str(final_readiness.get("reason") or "")
     generation_state = str(ready.get("generation") or "")
     generation_required = bool(ready.get("generation_required"))
     runtime_stage = str(run_state_summary.get("stage") or "")
@@ -615,6 +633,10 @@ def _workspace_stage(
         stage_label = "风险冻结"
         blocker = "高优先级质量风险仍在阻断推进。"
         next_step = "先处理 P0/P1 风险，再恢复导出判断。"
+    elif export_ready and not waiting_review and not final_ready:
+        stage_label = "风险冻结"
+        blocker = final_reason or "最终放行检查还没有通过。"
+        next_step = "先运行或修复最终放行检查，再进入客户导出。"
     elif export_ready and not waiting_review:
         stage_label = "可交付"
         blocker = "当前内容、门禁与交付链路已满足进入交付的前置条件。"
@@ -826,6 +848,7 @@ def build_workspace_payload(run_dir: str | Path) -> dict[str, Any]:
     run_state_summary = _next_step_summary(root)
     approvals = _load_approval_tasks(root)
     delivery = _delivery_outcome(root)
+    final_readiness = final_readiness_clearance(root)
     if manifest:
         readiness = compute_deck_readiness(root)
         next_actions = compute_next_actions(root)
@@ -837,6 +860,7 @@ def build_workspace_payload(run_dir: str | Path) -> dict[str, Any]:
             approvals=approvals,
             delivery=delivery,
             run_state_summary=run_state_summary,
+            final_readiness=final_readiness,
         )
         claim_summary = _workspace_claim_summary(root)
         queue = export_queue(root, {"approved"}, queue_type="client", allow_quality_override=False)
@@ -855,6 +879,9 @@ def build_workspace_payload(run_dir: str | Path) -> dict[str, Any]:
         blocking = [stage["blocking_reason"]] if stage["blocking_reason"] else []
         title = str(request.get("project_name") or request.get("business_goal") or root.name)
         updated_at = ""
+
+    if not final_readiness.get("ready") and final_readiness.get("reason"):
+        blocking = list(dict.fromkeys([str(final_readiness.get("reason")), *blocking]))
 
     workspace_name = str(request.get("workspace_id") or request.get("project_name") or title or root.name)
     focus_page_id = _focus_page_id(cards)
@@ -890,6 +917,12 @@ def build_workspace_payload(run_dir: str | Path) -> dict[str, Any]:
         "generation": runtime_artifacts.get("generation", {}),
         "build": runtime_artifacts.get("build", {}),
         "render": runtime_artifacts.get("render", {}),
+        "final_readiness": {
+            "ready": bool(final_readiness.get("ready")),
+            "status": str(final_readiness.get("status") or ""),
+            "reason": str(final_readiness.get("reason") or ""),
+            "path": str(final_readiness.get("path") or ""),
+        },
     }
 
     return {

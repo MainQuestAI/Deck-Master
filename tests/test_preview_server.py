@@ -493,6 +493,13 @@ class ServerTests(unittest.TestCase):
             ),
             encoding="utf-8",
         )
+        write_json(self.run_dir / "delivery" / "final_readiness.json", {
+            "schema_version": "deck_final_readiness.v1",
+            "run_id": "sample-preview-run",
+            "ready": True,
+            "status": "ready",
+            "blockers": [],
+        })
 
         status, payload = self.handler.request("GET", "/api/workspace/sample-preview-run/delivery-preview")
         self.assertEqual(200, status)

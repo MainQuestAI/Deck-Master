@@ -406,6 +406,16 @@ def _seed_delivery_preview(run_dir: Path, project_title: str, scenario_state: st
             "created_at": _now(),
         },
     )
+    _write_json(
+        run_dir / "delivery" / "final_readiness.json",
+        {
+            "schema_version": "deck_final_readiness.v1",
+            "run_id": run_dir.name,
+            "ready": True,
+            "status": "ready",
+            "blockers": [],
+        },
+    )
 
 
 def _seed_common_artifacts(run_dir: Path, project_title: str) -> None:

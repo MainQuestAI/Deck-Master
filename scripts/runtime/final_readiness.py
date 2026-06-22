@@ -233,3 +233,37 @@ def compute_final_readiness(
 
 def read_final_readiness(run_dir: str | Path) -> dict[str, Any]:
     return _safe_read_json(Path(run_dir).expanduser().resolve() / FINAL_READINESS_PATH)
+
+
+def final_readiness_clearance(run_dir: str | Path) -> dict[str, Any]:
+    root = Path(run_dir).expanduser().resolve()
+    path = root / FINAL_READINESS_PATH
+    payload = _safe_read_json(path)
+    if not payload:
+        return {
+            "ready": False,
+            "status": "missing",
+            "reason": "Final readiness is missing.",
+            "path": str(FINAL_READINESS_PATH),
+            "readiness": {},
+            "blockers": [{"code": "final_readiness_missing", "severity": "P0", "message": "Final readiness is missing."}],
+        }
+
+    blockers = payload.get("blockers") if isinstance(payload.get("blockers"), list) else []
+    ready = bool(payload.get("ready")) and str(payload.get("status") or "") == "ready"
+    reason = ""
+    if not ready:
+        for blocker in blockers:
+            if isinstance(blocker, dict) and blocker.get("message"):
+                reason = str(blocker.get("message"))
+                break
+        if not reason:
+            reason = "Final readiness is blocked."
+    return {
+        "ready": ready,
+        "status": str(payload.get("status") or "blocked"),
+        "reason": reason,
+        "path": str(FINAL_READINESS_PATH),
+        "readiness": payload,
+        "blockers": blockers,
+    }

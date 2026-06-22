@@ -427,6 +427,7 @@ function renderStageWorkspace() {
   const production = workspace.run_summary?.production_flow || workspace.runtime || {};
   const build = production.build || {};
   const render = production.render || {};
+  const finalReadiness = production.final_readiness || delivery.final_readiness || {};
   const actions = workspace.run_summary?.next_actions || [];
   const blockers = workspace.health?.blocking_reasons || [];
 
@@ -464,6 +465,11 @@ function renderStageWorkspace() {
       label: "渲染状态",
       value: render.status || "missing",
       detail: `${render.tool || "ppt-master"} · ${render.editability?.join(", ") || "未登记可编辑性"}`,
+    },
+    {
+      label: "最终放行",
+      value: finalReadiness.status || "missing",
+      detail: finalReadiness.ready ? "客户导出已放行。" : (finalReadiness.reason || "等待最终放行检查。"),
     },
   ].map((item) => `
     <div class="stage-check-item">
@@ -588,6 +594,11 @@ function renderDeliveryPreview() {
           <span class="panel-title">产物信息</span>
           <strong>${escapeHtml(`${delivery.artifact_count || 0} 个产物`)}</strong>
           <p>${escapeHtml(`格式：${delivery.formats?.join(", ") || delivery.format || "未记录"} · 可编辑性：${delivery.editability?.join(", ") || "未登记"}`)}</p>
+        </div>
+        <div class="stage-card ${escapeHtml(delivery.final_readiness?.ready ? "success" : "warning")}">
+          <span class="panel-title">最终放行</span>
+          <strong>${escapeHtml(delivery.final_readiness?.status || "missing")}</strong>
+          <p>${escapeHtml(delivery.final_readiness?.ready ? "客户导出已放行。" : (delivery.final_readiness?.reason || "等待最终放行检查。"))}</p>
         </div>
         <div class="stage-card">
           <span class="panel-title">交付记录</span>

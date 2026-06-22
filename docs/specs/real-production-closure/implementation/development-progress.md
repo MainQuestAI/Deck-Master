@@ -35,7 +35,7 @@ Stack B is partially complete. Stack C remains open.
 | B1 artifact validator | complete | `scripts/runtime/artifact_validator.py`, `scripts/runtime/build.py`, `scripts/runtime/run_state_resolver.py`, `docs/contracts/artifact-validation.v1.schema.json` |
 | B2 delivery validation and lineage | complete | `scripts/delivery/validate.py`, `docs/contracts/final-version-lineage.v1.schema.json` |
 | B3 single final readiness | complete | `scripts/runtime/final_readiness.py`, `docs/contracts/final-readiness.v1.schema.json`, `deck-master final-readiness` |
-| B4 export/workbench readiness enforcement | pending | export CLI, workspace API, UI delivery preview |
+| B4 export/workbench readiness enforcement | complete | `scripts/orchestrate/export_queue.py`, workspace API, preview UI, benchmark report |
 | B5 fixture/dev/production isolation | pending | runtime mode guards, tests, benchmark paths |
 
 ## Open Stack C
@@ -56,8 +56,9 @@ Stack B is partially complete. Stack C remains open.
 - B1 artifact validator targeted tests passed 31 tests.
 - B2 delivery validation targeted tests passed 11 tests.
 - B3 final readiness targeted tests passed 6 tests.
+- B4 export/workbench readiness enforcement related tests passed 112 tests; full suite passed 778 tests.
 - System Python in PPT-Deck-Pro-Max lacks `python-pptx`; use the Codex bundled Python for full PPT-side test runs until the local env is updated.
 
 ## Next Work
 
-Continue Stack B with B4. The next implementation should force export and workspace delivery status to read `final_readiness.json`.
+Continue Stack B with B5. The next implementation should harden fixture/dev/production isolation around placeholder and fallback behavior.

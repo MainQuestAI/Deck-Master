@@ -617,10 +617,18 @@ def command_build_preview(args: argparse.Namespace) -> dict[str, Any]:
 
 def command_export(args: argparse.Namespace) -> dict[str, Any]:
     run_dir = resolve_run_dir(args)
+    queue_type = getattr(args, "queue_type", "client")
+    final_readiness = {}
+    if queue_type == "client":
+        final_readiness = compute_final_readiness(
+            run_dir,
+            run_mode=_normalize_run_mode(getattr(args, "run_mode", None)),
+            dev_allow_unsetup=bool(getattr(args, "dev_allow_unsetup", False)),
+        )
     queue = export_queue(
         run_dir,
         set(args.decision),
-        queue_type=getattr(args, "queue_type", "client"),
+        queue_type=queue_type,
         allow_quality_override=getattr(args, "allow_quality_override", False),
     )
     if args.output:
@@ -628,7 +636,15 @@ def command_export(args: argparse.Namespace) -> dict[str, Any]:
     else:
         output = run_dir / "approved_queue.json"
     write_json(output, queue)
-    return {"run_id": queue["run_id"], "run_dir": str(run_dir), "status": "exported", "output": str(output), "pages": len(queue["pages"]), "blocked": queue["blocked_count"]}
+    return {
+        "run_id": queue["run_id"],
+        "run_dir": str(run_dir),
+        "status": "exported" if queue["pages"] else "blocked",
+        "output": str(output),
+        "pages": len(queue["pages"]),
+        "blocked": queue["blocked_count"],
+        "final_readiness": final_readiness or queue.get("final_readiness", {}),
+    }
 
 
 def command_autoplan(args: argparse.Namespace) -> dict[str, Any]:

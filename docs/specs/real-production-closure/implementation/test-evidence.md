@@ -405,3 +405,30 @@ New B3 test cases cover:
 - Approved page count mismatch blocks readiness.
 - No-write mode returns readiness without writing `final_readiness.json`.
 - Schema version stays stable.
+
+## B4 Evidence — Export & Workbench Readiness Enforcement
+
+Implemented on 2026-06-22 in `/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure`.
+
+Coverage added:
+
+- Client export now enforces `delivery/final_readiness.json`.
+- Missing or blocked final readiness moves matching client export pages to `blocked_pages`.
+- Internal export remains available and is marked as degraded when final readiness is missing or blocked.
+- `deck-master export` refreshes final readiness before client export.
+- Workspace delivery preview reads final readiness before marking artifacts ready.
+- Workspace stage, production flow, delivery preview API, and preview UI surface final readiness status and reason.
+- Benchmark reports include final readiness status in the readiness section.
+
+| Command | Result | Notes |
+|---|---|---|
+| `python3 -m unittest tests.test_export_quality_blocking tests.test_review_cockpit tests.test_review_workbench tests.test_orchestration tests.test_final_readiness tests.test_benchmark_report tests.test_preview_server tests.test_workspace_audit_scenarios` | pass | 112 B4 related tests passed |
+| `git diff --check` | pass | No whitespace or patch formatting issues |
+| `python3 -m compileall scripts tests` | pass | Python files compile |
+| `python3 -m unittest discover -s tests` | pass | 778 tests passed |
+
+New B4 test cases cover:
+
+- Missing final readiness blocks client export.
+- Internal export marks degraded when final readiness is missing.
+- Existing quality blocking tests pass only when final readiness fixture is ready.

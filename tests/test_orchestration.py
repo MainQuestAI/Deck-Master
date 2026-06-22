@@ -46,6 +46,19 @@ class OrchestrationTests(unittest.TestCase):
             json.dumps({"status": "pass", "blocks_delivery": False, "findings": []}),
             encoding="utf-8",
         )
+        (run_dir / "delivery").mkdir(parents=True, exist_ok=True)
+        (run_dir / "delivery" / "final_readiness.json").write_text(
+            json.dumps(
+                {
+                    "schema_version": "deck_final_readiness.v1",
+                    "run_id": "sample-orchestrated-run",
+                    "ready": True,
+                    "status": "ready",
+                    "blockers": [],
+                }
+            ),
+            encoding="utf-8",
+        )
         queue = export_queue(run_dir, {"approved"})
 
         self.assertEqual("sample-orchestrated-run", queue["run_id"])
