@@ -76,6 +76,7 @@ class BuildRuntimeTests(unittest.TestCase):
 
         artifact_manifest = read_json(self.run_dir / "build" / "artifact_manifest.json")
         self.assertEqual("deck_artifact_manifest.v1", artifact_manifest["schema_version"])
+        self.assertTrue(artifact_manifest["validation"]["valid"], artifact_manifest["validation"].get("errors"))
         artifact_kinds = {artifact["kind"] for artifact in artifact_manifest["artifacts"]}
         self.assertEqual({"deck_html", "deck_pdf", "deck_pptx", "page_png"}, artifact_kinds)
         for artifact in artifact_manifest["artifacts"]:
@@ -96,6 +97,19 @@ class BuildRuntimeTests(unittest.TestCase):
         status = build_status(self.run_dir)
         self.assertEqual("completed", status["status"])
         self.assertEqual(3, status["page_count"])
+        self.assertTrue(status["artifact_validation"]["valid"], status["artifact_validation"].get("errors"))
+
+    def test_build_status_detects_corrupt_artifacts(self) -> None:
+        self._write_preview(1)
+        run_build(self.run_dir)
+        (self.run_dir / "build" / "deck.pdf").write_text("corrupt", encoding="utf-8")
+
+        status = build_status(self.run_dir)
+
+        self.assertEqual("invalid", status["status"])
+        validation = status["artifact_validation"]
+        self.assertFalse(validation["valid"])
+        self.assertTrue(any("deck_pdf" in error for error in validation["errors"]))
 
     def test_command_render_uses_build_runtime_for_production(self) -> None:
         self._write_preview(1)

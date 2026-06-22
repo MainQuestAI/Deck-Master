@@ -9,6 +9,7 @@ from html import escape
 from pathlib import Path
 from typing import Any
 
+from runtime.artifact_validator import validate_artifact_manifest
 from runtime.events import append_event
 from runtime.run_state import PREVIEW_MANIFEST_NAME, ensure_run_dirs, load_request, read_json, write_json
 
@@ -374,6 +375,14 @@ def run_build(run_dir: str | Path) -> dict[str, Any]:
         "warnings": manifest.get("warnings", []),
         "created_at": _utc_now(),
     }
+    artifact_validation = validate_artifact_manifest(
+        root,
+        artifact_manifest,
+        expected_source_fingerprint=str(manifest.get("source_fingerprint") or ""),
+    )
+    artifact_manifest["validation"] = artifact_validation
+    if not artifact_validation.get("valid"):
+        raise BuildError("artifact validation failed: " + "; ".join(artifact_validation.get("errors", [])))
     artifact_manifest_path = build_dir / ARTIFACT_MANIFEST_NAME
     write_json(artifact_manifest_path, artifact_manifest)
 
@@ -432,14 +441,28 @@ def build_status(run_dir: str | Path) -> dict[str, Any]:
     artifact_manifest_path = root / BUILD_DIR / ARTIFACT_MANIFEST_NAME
     render_result_path = root / RENDER_RESULTS_DIR / RENDER_RESULT_NAME
     render_result = read_json(render_result_path) if render_result_path.exists() else {}
+    artifact_manifest = read_json(artifact_manifest_path) if artifact_manifest_path.exists() else {}
+    artifact_validation = (
+        validate_artifact_manifest(
+            root,
+            artifact_manifest,
+            expected_source_fingerprint=str(artifact_manifest.get("source_fingerprint") or ""),
+        )
+        if artifact_manifest
+        else {}
+    )
+    status = "completed" if render_result else ("prepared" if manifest_path.exists() else "missing")
+    if artifact_validation and not artifact_validation.get("valid"):
+        status = "invalid"
     return {
         "schema_version": "deck_build_status.v1",
         "run_dir": str(root),
-        "status": "completed" if render_result else ("prepared" if manifest_path.exists() else "missing"),
+        "status": status,
         "build_manifest": str(manifest_path) if manifest_path.exists() else "",
         "artifact_manifest": str(artifact_manifest_path) if artifact_manifest_path.exists() else "",
         "render_result": str(render_result_path) if render_result else "",
         "artifact_path": str(render_result.get("artifact_path") or ""),
         "page_count": render_result.get("page_count", 0),
         "warning_count": len(render_result.get("warnings", [])) if isinstance(render_result.get("warnings"), list) else 0,
+        "artifact_validation": artifact_validation,
     }

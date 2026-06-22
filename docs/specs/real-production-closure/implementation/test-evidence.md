@@ -1,5 +1,62 @@
 # Real Production Closure Test Evidence
 
+## B1 Evidence — Unified Artifact Validator
+
+Implemented on 2026-06-22 in `/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure`.
+
+Coverage added:
+
+- Runtime validator: `scripts/runtime/artifact_validator.py`.
+- Runtime contract: `docs/contracts/artifact-validation.v1.schema.json`.
+- Supported artifact checks:
+  - HTML: signature/markup check.
+  - PDF: `%PDF-` signature.
+  - PNG: PNG magic bytes.
+  - JPEG: JPEG magic bytes.
+  - SVG: SVG/XML signature.
+  - PPTX: zip package plus required Office parts.
+  - JSON report artifacts: JSON object/array signature.
+- Safety checks:
+  - run-relative path only.
+  - no absolute paths.
+  - no path traversal.
+  - file exists and is a file.
+  - non-empty bytes.
+  - declared byte size matches actual size.
+  - declared SHA-256 matches actual checksum.
+  - known media type matches artifact kind.
+  - bundled placeholder content is rejected.
+  - stale source fingerprint is rejected.
+- Build runtime now validates artifact manifest before writing render result v2.
+- `build status` revalidates artifact manifest against disk, so corrupted files change status to `invalid`.
+- Run-state build summary now exposes artifact validation and marks build status `invalid` when artifact validation fails.
+
+| Command | Result | Notes |
+|---|---|---|
+| `python3 -m json.tool docs/contracts/artifact-validation.v1.schema.json` | pass | Artifact validation contract parses |
+| `python3 -m unittest tests.test_artifact_validator tests.test_build_runtime tests.test_run_state_resolver` | pass | 31 artifact/build/run-state tests passed |
+| `python3 -m compileall scripts/runtime tests/test_artifact_validator.py tests/test_build_runtime.py` | pass | Runtime validator and related tests compile |
+| `git diff --check` | pass | No whitespace or patch formatting issues |
+| `python3 -m compileall scripts tests` | pass | Full scripts/tests compile check passed |
+| `python3 scripts/deck_master.py setup-status --include-suite --output json` | pass | Setup status `ready`; suite status `degraded_ready` |
+| `python3 -m unittest discover -s tests` | pass | 766 tests passed |
+
+New B1 test cases cover:
+
+- HTML/PDF/PNG/JPEG/SVG/PPTX signatures validate successfully.
+- Path traversal is blocked.
+- Empty artifacts are blocked.
+- Checksum mismatch is blocked.
+- Magic-byte mismatch is blocked.
+- Placeholder content is blocked.
+- Stale source fingerprint is blocked.
+- Artifact manifest embeds validation output.
+- Corrupt build artifacts make `build status` return `invalid`.
+
+Validation note:
+
+- A first full-test attempt failed after a temporary Stack A E2E setup changed Deck Master's global active workspace to a deleted temp directory. The setup config was restored to `/Users/dingcheng/Workspace/_internal/迈富时PPT工作坊`, then full tests passed.
+
 ## Stack A E2E Evidence — Dispatch / Bridge / Import / Build / Render
 
 Verified on 2026-06-22 across:
@@ -278,6 +335,7 @@ The repository copy removed those trailing spaces so `git diff --check` can pass
 git diff --check
 python3 -m json.tool docs/contracts/build-manifest.v1.schema.json
 python3 -m json.tool docs/contracts/artifact-manifest.v1.schema.json
+python3 -m json.tool docs/contracts/artifact-validation.v1.schema.json
 python3 -m json.tool docs/contracts/render-result.v2.schema.json
 python3 -m json.tool product_capabilities/ppt-master/contracts/render-result.v2.schema.json
 python3 -m json.tool docs/specs/real-production-closure/implementation/baseline-lock.json

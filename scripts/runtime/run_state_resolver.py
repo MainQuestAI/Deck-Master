@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from runtime.artifact_validator import validate_artifact_manifest
 from runtime.run_state import (
     CLAIM_MAP_NAME,
     CONTEXT_MANIFEST_NAME,
@@ -109,11 +110,26 @@ def _build_status(root: Path) -> dict[str, Any]:
         artifacts = [item for item in artifact_manifest["artifacts"] if isinstance(item, dict)]
     elif render_result and isinstance(render_result.get("artifacts"), list):
         artifacts = [item for item in render_result["artifacts"] if isinstance(item, dict)]
+    artifact_validation = (
+        validate_artifact_manifest(
+            root,
+            artifact_manifest,
+            expected_source_fingerprint=str(artifact_manifest.get("source_fingerprint") or ""),
+        )
+        if artifact_manifest
+        else {}
+    )
     invalid_artifacts = [
         str(item.get("artifact_id") or item.get("path") or "artifact")
         for item in artifacts
         if str(item.get("validation_status") or "validated") != "validated"
     ]
+    if artifact_validation and not artifact_validation.get("valid"):
+        invalid_artifacts.extend(
+            str(item.get("artifact_id") or item.get("path") or "artifact")
+            for item in artifact_validation.get("artifacts", [])
+            if isinstance(item, dict) and not item.get("valid")
+        )
     if render_result:
         status = str(render_result.get("status") or "completed")
     elif artifact_manifest:
@@ -122,6 +138,8 @@ def _build_status(root: Path) -> dict[str, Any]:
         status = "prepared"
     else:
         status = "missing"
+    if artifact_validation and not artifact_validation.get("valid"):
+        status = "invalid"
     return {
         "status": status,
         "build_manifest": str(BUILD_MANIFEST) if build_manifest else "",
@@ -136,6 +154,7 @@ def _build_status(root: Path) -> dict[str, Any]:
         ),
         "artifact_count": len(artifacts),
         "invalid_artifacts": invalid_artifacts,
+        "validation": artifact_validation,
         "editability": sorted(set(str(item.get("editability") or "") for item in artifacts if item.get("editability"))),
         "formats": sorted(set(str(item.get("kind") or "") for item in artifacts if item.get("kind"))),
         "artifact_path": str((render_result or {}).get("artifact_path") or ""),

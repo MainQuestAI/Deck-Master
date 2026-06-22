@@ -32,7 +32,7 @@ Stack B and Stack C remain open.
 
 | Task | Status | Entry |
 |---|---|---|
-| B1 artifact validator | pending | `scripts/runtime/build.py`, `scripts/runtime/render.py`, `scripts/validators/`, `docs/contracts/` |
+| B1 artifact validator | complete | `scripts/runtime/artifact_validator.py`, `scripts/runtime/build.py`, `scripts/runtime/run_state_resolver.py`, `docs/contracts/artifact-validation.v1.schema.json` |
 | B2 delivery validation and lineage | pending | `scripts/delivery/`, `scripts/orchestrate/export_queue.py`, `docs/contracts/` |
 | B3 single final readiness | pending | new `final_readiness.json`, CLI, runtime consumers |
 | B4 export/workbench readiness enforcement | pending | export CLI, workspace API, UI delivery preview |
@@ -53,8 +53,9 @@ Stack B and Stack C remain open.
 - Deck Master A5 branch passed 759 tests before A2 cross-repo work.
 - PPT-Deck-Pro-Max A2 branch passed 150 tests with Codex bundled Python.
 - Stack A cross-repo smoke passed `needs_build -> needs_render -> ready_for_client_export`.
+- B1 artifact validator targeted tests passed 31 tests.
 - System Python in PPT-Deck-Pro-Max lacks `python-pptx`; use the Codex bundled Python for full PPT-side test runs until the local env is updated.
 
 ## Next Work
 
-Start Stack B with B1. The first implementation should create a single artifact validator and route current build/render artifacts through it before expanding delivery readiness.
+Continue Stack B with B2. The next implementation should route delivery validation through artifact validation and write `final_version_lineage.json`.
