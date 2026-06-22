@@ -14,6 +14,7 @@ from preview.manifest import (
     ManifestError,
     find_page,
     load_manifest,
+    migrate_page_to_review_status,
     update_page_review,
     update_page_source_decision,
 )
@@ -63,6 +64,58 @@ def _find_task_index(tasks: list[dict[str, Any]], page_id: str) -> int:
     raise WorkbenchError(f"Page not found: {page_id}")
 
 
+def _infer_source_decision(page: dict[str, Any]) -> str:
+    action_intent = str(page.get("action_intent") or "").strip().lower()
+    if action_intent in {"reuse", "adapt", "generate", "manual_placeholder"}:
+        return action_intent
+    if action_intent == "replace":
+        return "pending_replacement"
+    source_type = str(page.get("source_type") or "").strip().lower()
+    return {
+        "library_slide": "reuse",
+        "generated": "generate",
+        "placeholder": "manual_placeholder",
+        "manual": "manual_placeholder",
+    }.get(source_type, "reuse")
+
+
+def _bootstrap_page_tasks(root: Path, page_tasks_path: Path) -> dict[str, Any]:
+    try:
+        preview = load_manifest(root)
+    except ManifestError as exc:
+        raise WorkbenchError("page_tasks.json not found.") from exc
+
+    tasks: list[dict[str, Any]] = []
+    for raw_page in preview.get("pages", []):
+        if not isinstance(raw_page, dict):
+            continue
+        page = migrate_page_to_review_status(dict(raw_page))
+        source_decision = str(page.get("source_decision") or _infer_source_decision(page))
+        task: dict[str, Any] = {
+            "beat_id": str(page.get("page_id") or ""),
+            "review_status": str(page.get("review_status") or "needs_review"),
+            "source_decision": source_decision,
+            "planning": {
+                "core_claim": str(page.get("title") or ""),
+                "decision_intent": str(page.get("action_intent") or source_decision or "none"),
+            },
+        }
+        if page.get("notes"):
+            task["review_notes"] = [{
+                "note": str(page.get("notes") or ""),
+                "author": "system",
+                "timestamp": _utc_now(),
+            }]
+        tasks.append(task)
+
+    page_tasks = {
+        "run_id": str(preview.get("run_id") or root.name),
+        "tasks": tasks,
+    }
+    write_json(page_tasks_path, page_tasks)
+    return page_tasks
+
+
 def execute_review_action(
     run_dir: str | Path,
     page_id: str,
@@ -89,9 +142,10 @@ def execute_review_action(
     page_tasks_path = root / PAGE_TASKS_NAME
 
     if not page_tasks_path.exists():
-        raise WorkbenchError("page_tasks.json not found.")
+        page_tasks = _bootstrap_page_tasks(root, page_tasks_path)
+    else:
+        page_tasks = read_json(page_tasks_path)
 
-    page_tasks = read_json(page_tasks_path)
     tasks = page_tasks.get("tasks", [])
     idx = _find_task_index(tasks, page_id)
     task = tasks[idx]
@@ -247,7 +301,7 @@ def execute_review_action(
         task["review_notes"] = notes
         try:
             preview = load_manifest(root)
-            page = find_page(preview, page_id)
+            page = migrate_page_to_review_status(find_page(preview, page_id))
             update_page_review(
                 root,
                 page_id,
