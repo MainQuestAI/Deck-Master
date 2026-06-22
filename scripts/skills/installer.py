@@ -168,7 +168,10 @@ def _repo_skill_dir(skill_name: str = SKILL_NAME) -> Path:
 
 
 def _repo_capability_dir(name: str) -> Path:
-    return _repo_root() / "product_capabilities" / name
+    source = _repo_root() / "product_capabilities" / name
+    if source.exists():
+        return source
+    return _repo_root() / "capabilities" / name
 
 
 def _installed_capability_dir(name: str) -> Path:
@@ -901,6 +904,8 @@ def build_release_tree(
         "capabilities",
         "contracts",
         "reference-packs",
+        "examples",
+        "benchmarks",
         "scripts",
     ]
 
@@ -921,7 +926,7 @@ def build_release_tree(
     release_root.mkdir(parents=True, exist_ok=True)
     marker.write_text("deck-master release tree\n", encoding="utf-8")
 
-    for subdir in ("skills", "capabilities", "contracts", "reference-packs", "bin", "scripts"):
+    for subdir in ("skills", "capabilities", "contracts", "reference-packs", "examples", "benchmarks", "bin", "scripts"):
         (release_root / subdir).mkdir(parents=True, exist_ok=True)
 
     for spec in _suite_specs(include_optional=False):
@@ -938,8 +943,26 @@ def build_release_tree(
         _copytree_replace(source, release_root / "capabilities" / name)
 
     contracts_src = _repo_root() / "docs" / "contracts"
+    if not contracts_src.exists():
+        contracts_src = _repo_root() / "contracts"
     if contracts_src.exists():
         _copytree_replace(contracts_src, release_root / "contracts")
+
+    examples_src = _repo_root() / "examples"
+    if examples_src.exists():
+        _copytree_replace(
+            examples_src,
+            release_root / "examples",
+            ignore=shutil.ignore_patterns("__pycache__", "*.pyc", ".pytest_cache", ".mypy_cache"),
+        )
+
+    benchmarks_src = _repo_root() / "benchmarks"
+    if benchmarks_src.exists():
+        _copytree_replace(
+            benchmarks_src,
+            release_root / "benchmarks",
+            ignore=shutil.ignore_patterns("results", "__pycache__", "*.pyc", ".pytest_cache", ".mypy_cache"),
+        )
 
     _copytree_replace(
         _repo_root() / "scripts",
@@ -1009,6 +1032,8 @@ def build_release_tree(
         "self_contained": True,
         "entrypoint": "bin/deck-master",
         "scripts": "scripts",
+        "examples": "examples",
+        "benchmarks": "benchmarks",
         "product_capability_manifest": PRODUCT_CAPABILITY_MANIFEST_NAME,
         "companion_manifest": COMPANION_MANIFEST_NAME,
         "capability_lock": CAPABILITY_LOCK_NAME,

@@ -40,9 +40,11 @@ def _check(check_id: str, status: str, *, required: bool, summary: str, details:
 def _json_parse_check() -> dict[str, Any]:
     roots = [
         REPO_ROOT / "docs" / "contracts",
+        REPO_ROOT / "contracts",
         REPO_ROOT / "skills" / "deck-master" / "schemas",
     ]
     roots.extend(sorted((REPO_ROOT / "product_capabilities").glob("*/contracts")))
+    roots.extend(sorted((REPO_ROOT / "capabilities").glob("*/contracts")))
     files: list[Path] = []
     for root in roots:
         if root.exists():
