@@ -1251,7 +1251,7 @@ def build_release_tree(
     for subdir in ("skills", "capabilities", "contracts", "reference-packs", "examples", "benchmarks", "bin", "scripts"):
         (release_root / subdir).mkdir(parents=True, exist_ok=True)
 
-    for spec in _suite_specs(include_optional=False):
+    for spec in _suite_specs(include_optional=True):
         name = str(spec["name"])
         source = _repo_skill_dir(name)
         if not source.exists():
@@ -1309,7 +1309,7 @@ def build_release_tree(
     )
     bin_path.chmod(0o755)
 
-    release_skills = [str(spec["name"]) for spec in _suite_specs(include_optional=False)]
+    release_skills = [str(spec["name"]) for spec in _suite_specs(include_optional=True)]
     release_capabilities = [str(spec["name"]) for spec in SUITE_SKILLS if str(spec["name"]).startswith("ppt-")]
     source = {
         "repo_root": str(_repo_root()),

@@ -340,6 +340,7 @@ class SkillInstallationTest(unittest.TestCase):
         self.assertTrue(validation["valid"], validation["errors"])
         for skill_name in product_capability_manifest()["required_capabilities"]:
             self.assertTrue((release_root / "skills" / skill_name / "SKILL.md").exists(), skill_name)
+        self.assertTrue((release_root / "skills" / "deck-learn" / "SKILL.md").exists())
         for capability_name in ["ppt-master", "ppt-library", "ppt-deck-pro-max", "ppt-quality-gate"]:
             self.assertTrue((release_root / "capabilities" / capability_name / "capability.json").exists(), capability_name)
 
