@@ -104,8 +104,8 @@ def validate_render_result(result: dict[str, Any]) -> dict[str, Any]:
         return {"valid": False, "errors": ["Result must be a JSON object."], "warnings": []}
 
     schema = result.get("schema_version")
-    if schema != "deck_render_result.v1":
-        errors.append(f"schema_version must be 'deck_render_result.v1', got '{schema}'.")
+    if schema not in {"deck_render_result.v1", "deck_render_result.v2"}:
+        errors.append(f"schema_version must be 'deck_render_result.v1' or 'deck_render_result.v2', got '{schema}'.")
 
     if not result.get("run_id"):
         errors.append("run_id is required.")
@@ -127,6 +127,12 @@ def validate_render_result(result: dict[str, Any]) -> dict[str, Any]:
         page_count = result.get("page_count")
         if page_count is not None and not isinstance(page_count, int):
             errors.append(f"page_count must be integer, got '{page_count}'.")
+        if schema == "deck_render_result.v2":
+            if not result.get("source_fingerprint"):
+                errors.append("source_fingerprint is required.")
+            artifacts = result.get("artifacts")
+            if not isinstance(artifacts, list) or not artifacts:
+                errors.append("artifacts are required.")
 
     if status == "failed":
         err_list = result.get("errors", [])

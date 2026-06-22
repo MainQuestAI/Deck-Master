@@ -79,7 +79,10 @@ SUITE_SKILLS: list[dict[str, Any]] = [
         "cli": "deck-master",
         "required_capabilities": ["ppt_master.render.v1", "ppt_master.handback.v1"],
         "optional_capabilities": [],
-        "schema_versions": {"render_result": "deck_render_result.v1"},
+        "schema_versions": {
+            "render_result": "deck_render_result.v2",
+            "render_result_legacy": "deck_render_result.v1",
+        },
         "adoption_policy": "bundled_symlink_only",
         "conflict_policy": "never_overwrite_real_directory",
     },

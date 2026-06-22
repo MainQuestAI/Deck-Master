@@ -38,13 +38,14 @@ class RenderToolUATTest(unittest.TestCase):
         *,
         artifact_exists: bool = True,
         page_count: int = 1,
+        schema_version: str = "deck_render_result.v1",
     ) -> Path:
         artifact_path = run_dir / "exports" / "retail-demo.pptx"
         if artifact_exists:
             artifact_path.write_bytes(b"fake-pptx")
 
         render_result = {
-            "schema_version": "deck_render_result.v1",
+            "schema_version": schema_version,
             "run_id": "retail-demo",
             "tool": "ppt-master",
             "status": "completed",
@@ -53,6 +54,24 @@ class RenderToolUATTest(unittest.TestCase):
             "page_count": page_count,
             "errors": [],
         }
+        if schema_version == "deck_render_result.v2":
+            render_result.update(
+                {
+                    "source_fingerprint": "a" * 64,
+                    "artifacts": [
+                        {
+                            "artifact_id": "deck_pptx",
+                            "kind": "deck_pptx",
+                            "path": "exports/retail-demo.pptx",
+                            "media_type": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                            "sha256": "b" * 64,
+                            "bytes": 9,
+                            "validation_status": "validated",
+                            "editability": "flat_image",
+                        }
+                    ],
+                }
+            )
         path = run_dir / "render_result.json"
         path.write_text(json.dumps(render_result, ensure_ascii=False), encoding="utf-8")
         return path
@@ -70,6 +89,19 @@ class RenderToolUATTest(unittest.TestCase):
             self.assertEqual(report["status"], "pass")
             self.assertTrue(report["metrics"]["artifact_exists"])
             self.assertEqual(report["metrics"]["page_count"], 1)
+
+    def test_valid_render_result_v2_passes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = self._run_dir(Path(tmp))
+            input_path = self._render_result(run_dir, schema_version="deck_render_result.v2")
+
+            report = render_uat.run_render_tool_uat(
+                run_dir=run_dir,
+                input_path=input_path,
+            )
+
+            self.assertEqual(report["status"], "pass")
+            self.assertTrue(report["metrics"]["artifact_exists"])
 
     def test_missing_artifact_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/contracts/artifact-manifest.v1.schema.json",
+  "title": "Deck Master Artifact Manifest v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "source_fingerprint",
+    "page_count",
+    "artifacts",
+    "created_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "deck_artifact_manifest.v1"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_fingerprint": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "page_count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/artifact"
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "$defs": {
+    "artifact": {
+      "type": "object",
+      "required": [
+        "artifact_id",
+        "kind",
+        "path",
+        "media_type",
+        "sha256",
+        "bytes",
+        "validation_status",
+        "editability"
+      ],
+      "properties": {
+        "artifact_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "deck_html",
+            "deck_pdf",
+            "deck_pptx",
+            "page_png",
+            "artifact_manifest"
+          ]
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "not": {
+            "pattern": "^(?:/|[A-Za-z]:\\\\)|(?:^|/)\\.\\.(?:/|$)"
+          }
+        },
+        "media_type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "validation_status": {
+          "type": "string",
+          "enum": [
+            "validated"
+          ]
+        },
+        "editability": {
+          "type": "string",
+          "enum": [
+            "native",
+            "flat_image"
+          ]
+        },
+        "page_id": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

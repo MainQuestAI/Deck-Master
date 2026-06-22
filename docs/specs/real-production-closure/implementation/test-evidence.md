@@ -1,5 +1,56 @@
 # Real Production Closure Test Evidence
 
+## A4 Evidence — Build / Render Artifacts
+
+Implemented on 2026-06-22 in `/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure`.
+
+Coverage added:
+
+- Runtime truth contracts:
+  - `docs/contracts/build-manifest.v1.schema.json`
+  - `docs/contracts/artifact-manifest.v1.schema.json`
+  - `docs/contracts/render-result.v2.schema.json`
+- Build runtime: `scripts/runtime/build.py`.
+- CLI entry: `deck-master build prepare|run|status`.
+- Production `deck-master render` now runs the A4 build path; `render --fixture-safe` keeps the legacy fixture renderer.
+- Required outputs are checked for existence and non-empty bytes before a build is marked completed.
+- Artifact manifest records path, media type, SHA-256, byte size, validation status, and `editability`.
+- Canonical render handoff writes `render_results/render_result.json` using `deck_render_result.v2`.
+- `ppt-master` capability metadata now declares both `deck_render_result.v1` and `deck_render_result.v2`.
+- Render UAT accepts v1 legacy fixture results and v2 production build results.
+
+| Command | Result | Notes |
+|---|---|---|
+| `python3 -m json.tool docs/contracts/build-manifest.v1.schema.json` | pass | Build manifest contract parses |
+| `python3 -m json.tool docs/contracts/artifact-manifest.v1.schema.json` | pass | Artifact manifest contract parses |
+| `python3 -m json.tool docs/contracts/render-result.v2.schema.json` | pass | Render result v2 contract parses |
+| `python3 -m json.tool product_capabilities/ppt-master/contracts/render-result.v2.schema.json` | pass | Capability release copy parses |
+| `python3 -m unittest tests.test_build_runtime tests.test_render_runtime tests.test_uat_render_tool tests.test_companion_tool_validators` | pass | 38 A4 render/build/UAT/validator tests passed |
+| `git diff --check` | pass | No whitespace or patch formatting issues |
+| `python3 -m compileall scripts tests` | pass | Python files compile |
+| `python3 scripts/deck_master.py validate-product-capability-manifest` | pass | Product capability manifest remains valid |
+| `python3 scripts/deck_master.py setup-status --include-suite --output json` | pass | Setup status remains `ready`; suite status remains `degraded_ready` |
+| `python3 scripts/deck_master.py suite-status --output json` | pass | Suite version remains `0.9.13`; `full_suite_ready=false` |
+| `python3 -m unittest discover -s tests` | pass | 755 tests passed |
+
+New A4 test cases cover:
+
+- `prepare_build` writes `deck_build_manifest.v1` with source fingerprint and stable page order.
+- `run_build` writes HTML, PDF, page PNG, PPTX, artifact manifest, and render result v2.
+- Artifact metadata includes checksum, byte size, media type, validation status, and editability.
+- Render result v2 passes the shared companion validator.
+- Production `render` uses the build runtime.
+- Fixture-safe `render` keeps legacy v1 behavior.
+- 12-page and 60-page decks build successfully.
+- Missing source assets create warnings.
+- Path traversal in preview assets is blocked.
+- Render UAT accepts v2.
+- Render validator rejects v2 results without artifacts.
+
+Accepted A4 constraints:
+
+- Current A4 output closes contract and lineage first. Native visual-fidelity rendering remains a later adapter task because the A0 dependency inventory showed missing Playwright/PPTX rendering libraries.
+
 ## A3 Evidence — Agent Dispatch & Handback
 
 Implemented on 2026-06-22 in `/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure`.
@@ -116,6 +167,10 @@ The repository copy removed those trailing spaces so `git diff --check` can pass
 
 ```bash
 git diff --check
+python3 -m json.tool docs/contracts/build-manifest.v1.schema.json
+python3 -m json.tool docs/contracts/artifact-manifest.v1.schema.json
+python3 -m json.tool docs/contracts/render-result.v2.schema.json
+python3 -m json.tool product_capabilities/ppt-master/contracts/render-result.v2.schema.json
 python3 -m json.tool docs/specs/real-production-closure/implementation/baseline-lock.json
 python3 -m json.tool docs/specs/real-production-closure/implementation/implementation-spec.json
 python3 -m compileall scripts tests

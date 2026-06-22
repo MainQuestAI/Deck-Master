@@ -5,6 +5,7 @@ required: true
 canonical_artifact: render_results/render_result.json
 outputs:
   - deck_render_result.v1
+  - deck_render_result.v2
 operations:
   - status
   - doctor

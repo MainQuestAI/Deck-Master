@@ -1,0 +1,15 @@
+{
+  "schema_version": "deck_master_contract_schema.v1",
+  "contract": "deck_render_result.v2",
+  "required_fields": [
+    "schema_version",
+    "run_id",
+    "session_id",
+    "tool",
+    "status",
+    "source_fingerprint",
+    "artifact_path",
+    "artifact_manifest",
+    "artifacts"
+  ]
+}

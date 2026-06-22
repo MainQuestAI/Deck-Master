@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/contracts/build-manifest.v1.schema.json",
+  "title": "Deck Master Build Manifest v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "status",
+    "source_fingerprint",
+    "page_count",
+    "pages",
+    "required_outputs",
+    "created_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "deck_build_manifest.v1"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "prepared"
+      ]
+    },
+    "source_fingerprint": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "page_count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "pages": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/page"
+      }
+    },
+    "required_outputs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "enum": [
+          "deck_html",
+          "deck_pdf",
+          "page_png",
+          "deck_pptx"
+        ]
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "$defs": {
+    "page": {
+      "type": "object",
+      "required": [
+        "page_id",
+        "beat_id",
+        "order",
+        "title",
+        "source_path"
+      ],
+      "properties": {
+        "page_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "beat_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "order": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "title": {
+          "type": "string"
+        },
+        "source_path": {
+          "type": "string",
+          "not": {
+            "pattern": "^(?:/|[A-Za-z]:\\\\)|(?:^|/)\\.\\.(?:/|$)"
+          }
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

@@ -124,6 +124,7 @@ from runtime.run_state import (
 from runtime.next_step import resolve_next_step
 from runtime.import_log import append_import_log
 from runtime.orchestration import import_plan, import_render_result, orchestration_check
+from runtime.build import build_status, prepare_build, run_build
 from runtime.render import render_fixture_html, render_status
 from runtime.run_state_resolver import resolve_run_state
 from runtime.sourcing_import import import_sourcing, validate_sourcing
@@ -1142,6 +1143,8 @@ def command_import_render_result(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def command_render(args: argparse.Namespace) -> dict[str, Any]:
+    if not bool(getattr(args, "fixture_safe", False)):
+        return run_build(resolve_run_dir(args))
     return render_fixture_html(
         resolve_run_dir(args),
         output_format=getattr(args, "format", "html"),
@@ -1151,6 +1154,18 @@ def command_render(args: argparse.Namespace) -> dict[str, Any]:
 
 def command_render_status(args: argparse.Namespace) -> dict[str, Any]:
     return render_status(resolve_run_dir(args))
+
+
+def command_build_prepare(args: argparse.Namespace) -> dict[str, Any]:
+    return prepare_build(resolve_run_dir(args))
+
+
+def command_build_run(args: argparse.Namespace) -> dict[str, Any]:
+    return run_build(resolve_run_dir(args))
+
+
+def command_build_status(args: argparse.Namespace) -> dict[str, Any]:
+    return build_status(resolve_run_dir(args))
 
 
 def command_bind_workspace(args: argparse.Namespace) -> dict[str, Any]:
@@ -1975,6 +1990,21 @@ def build_parser() -> argparse.ArgumentParser:
     p_import_plan.add_argument("--input", required=True, help="Path to plan Markdown or JSON")
     p_import_plan.add_argument("--source", required=True, choices=["human", "agent"])
     p_import_plan.set_defaults(func=command_import_plan)
+
+    p_build = sub.add_parser("build", help="Prepare, run, or inspect production build artifacts")
+    build_sub = p_build.add_subparsers(dest="build_command", required=True)
+
+    p_build_prepare = build_sub.add_parser("prepare", help="Write build manifest from current preview manifest")
+    add_run_args(p_build_prepare)
+    p_build_prepare.set_defaults(func=command_build_prepare)
+
+    p_build_run = build_sub.add_parser("run", help="Build HTML/PDF/PNG/PPTX artifacts")
+    add_run_args(p_build_run)
+    p_build_run.set_defaults(func=command_build_run)
+
+    p_build_status = build_sub.add_parser("status", help="Inspect production build artifacts")
+    add_run_args(p_build_status)
+    p_build_status.set_defaults(func=command_build_status)
 
     p_render = sub.add_parser("render", help="Render a run through the bundled PPT Master path")
     add_run_args(p_render)
