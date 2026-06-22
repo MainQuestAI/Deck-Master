@@ -234,7 +234,7 @@ def _check_result(
     require_artifact: bool,
 ) -> None:
     ref = str(path.relative_to(run_dir))
-    validation = validate_generation_result(result)
+    validation = validate_generation_result(result, run_dir=run_dir)
     checks.append(build_check(f"{path.stem}.base_contract", validation.get("valid", False), "error", "; ".join(validation.get("errors", [])) or "generation result base contract ok.", refs=[ref]))
     checks.append(build_check(f"{path.stem}.schema_version", result.get("schema_version") == RESULT_SCHEMA_VERSION, "error", f"schema_version must be {RESULT_SCHEMA_VERSION}.", refs=[ref]))
     if result.get("run_id"):

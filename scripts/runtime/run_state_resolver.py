@@ -359,7 +359,7 @@ def _resolve_stage(root: Path, run_mode: str) -> tuple[str, list[dict[str, str]]
 
     if has_generation_session:
         gen_status, generation_session = _read_generation_status(root)
-        if gen_status in {"created", "running", "dispatched"}:
+        if gen_status in {"created", "running", "dispatched", "awaiting_agent_execution"}:
             return (
                 "generation_running",
                 [{"action": "run_generation", "reason": f"generation session status={gen_status}"}],
@@ -371,7 +371,7 @@ def _resolve_stage(root: Path, run_mode: str) -> tuple[str, list[dict[str, str]]
                 [{"action": "run_generation", "reason": f"generation session status={gen_status}"}],
                 f"generation session status={gen_status}",
             )
-        if gen_status in {"completed", "partial"}:
+        if gen_status in {"completed", "partial", "result_files_present"}:
             return (
                 "needs_generation_import",
                 [{"action": "generation_import", "reason": f"generation session status={gen_status}"}],
@@ -392,7 +392,9 @@ def _resolve_stage(root: Path, run_mode: str) -> tuple[str, list[dict[str, str]]
                     [{"action": "draft_gate", "reason": reason}],
                     reason,
                 )
-        if gen_status and gen_status not in {"preview_refreshed", "quality_required"}:
+        if gen_status == "ready_for_build":
+            pass
+        elif gen_status and gen_status not in {"preview_refreshed", "quality_required"}:
             return (
                 "needs_generation_import",
                 [{"action": "generation_import", "reason": "generation session requires import or refresh"}],

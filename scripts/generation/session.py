@@ -39,7 +39,9 @@ VALID_STATUSES = {
     "completed",
     "partial",
     "failed",
+    "result_files_present",
     "results_imported",
+    "ready_for_build",
     "preview_refreshed",
     "quality_required",
 }
@@ -174,7 +176,9 @@ def _set_session_status(
         "completed",
         "partial",
         "failed",
+        "result_files_present",
         "results_imported",
+        "ready_for_build",
         "preview_refreshed",
         "quality_required",
     }:
@@ -559,6 +563,7 @@ def import_generation_results(
             raw,
             expected_run_id=str(session.get("run_id") or _run_id(root)),
             expected_session_id=str(session.get("session_id") or ""),
+            run_dir=root,
         )
         _enforce_generation_session_binding(raw, session=session, run_dir=root)
     except GenerationHandbackError as exc:
@@ -570,7 +575,7 @@ def import_generation_results(
     if raw.get("beat_id") and not raw.get("page_id"):
         raw["page_id"] = str(raw["beat_id"])
 
-    validation = validate_generation_result(raw)
+    validation = validate_generation_result(raw, run_dir=root)
     if not validation.get("valid"):
         message = "Invalid generation result: " + "; ".join(validation.get("errors", []))
         append_import_log(root, import_type="generation_result", source="ppt-deck-pro-max", status="rejected", source_path=result_path, errors=[message])
@@ -584,6 +589,17 @@ def import_generation_results(
         append_import_log(root, import_type="generation_result", source="ppt-deck-pro-max", status="rejected", source_path=result_path, errors=[str(exc)])
         raise
 
+    session = _set_session_status(root, session, "result_files_present")
+    append_typed_event(
+        root,
+        "step_completed",
+        "generation.result_files_present",
+        "Generation result files are present and validated.",
+        run_id=session.get("run_id", root.name),
+        refs=[str(result_path)],
+        payload={"session_id": session.get("session_id"), "result_status": status},
+    )
+
     try:
         imported = import_generation_result(root, raw, force=force)
     except GenerationHandbackError as exc:
@@ -591,6 +607,7 @@ def import_generation_results(
         raise GenerationSessionError(str(exc)) from exc
 
     session["tasks_completed"] = session_task_counter(root)
+    session = _set_session_status(root, session, "results_imported")
     refresh_result = refresh_preview_from_generation(root)
     if refresh_result.get("status") == "refreshed":
         session = _set_session_status(root, session, "quality_required")

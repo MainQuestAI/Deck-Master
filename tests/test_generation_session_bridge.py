@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import shutil
 import sys
@@ -21,7 +22,11 @@ from generation.session import (
     run_generation,
 )
 from generation.task_builder import create_generation_tasks
-from generation.handback import DECK_PRO_MAX_RESULT_SCHEMA_VERSION, RESULT_SCHEMA_VERSION
+from generation.handback import (
+    DECK_PRO_MAX_RESULT_SCHEMA_VERSION,
+    RESULT_SCHEMA_VERSION,
+    source_fingerprint_for_run,
+)
 from runtime.events import read_events
 from runtime.import_log import read_import_log
 from runtime.run_state import create_run, read_json, write_json
@@ -151,10 +156,44 @@ class GenerationSessionBridgeTests(unittest.TestCase):
             "tool": "ppt-deck-pro-max",
             "task_id": task_id,
             "beat_id": "beat-001",
+            "page_id": "beat-001",
+            "producer": {
+                "capability": "ppt-deck-pro-max",
+                "version": "test",
+                "source_ref": "test",
+            },
             "status": status,
+            "source_fingerprint": source_fingerprint_for_run(self.run_dir),
+            "artifacts": [
+                {
+                    "artifact_id": "beat-001_artifact",
+                    "kind": "page_pptx",
+                    "path": "generated_assets/beat-001/slide.pptx",
+                    "media_type": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                    "sha256": hashlib.sha256(artifact_path.read_bytes()).hexdigest(),
+                    "bytes": artifact_path.stat().st_size,
+                    "validation_status": "validated",
+                    "editability": "native",
+                    "page_id": "beat-001",
+                    "created_at": "2026-06-22T00:00:00+00:00",
+                }
+            ],
+            "preview": {
+                "artifact_id": "beat-001_preview",
+                "kind": "page_png",
+                "path": "generated_assets/beat-001/preview.png",
+                "media_type": "image/png",
+                "sha256": hashlib.sha256(preview_path.read_bytes()).hexdigest(),
+                "bytes": preview_path.stat().st_size,
+                "validation_status": "validated",
+                "editability": "not_applicable",
+                "page_id": "beat-001",
+                "created_at": "2026-06-22T00:00:00+00:00",
+            },
             "artifact_path": "generated_assets/beat-001/slide.pptx",
             "preview_path": "generated_assets/beat-001/preview.png",
             "errors": [],
+            "created_at": "2026-06-22T00:00:00+00:00",
         }
         if session_id is not None:
             result["session_id"] = session_id
@@ -346,7 +385,7 @@ class GenerationSessionBridgeTests(unittest.TestCase):
         self.assertTrue(session_after_import.get("quality_required_at"))
         written = read_json(self.run_dir / "generation_results" / f"{self.tasks[0]['task_id']}.json")
         self.assertEqual(RESULT_SCHEMA_VERSION, written["schema_version"])
-        self.assertEqual("deck_generation_result.v1", written["schema_version"])
+        self.assertEqual(DECK_PRO_MAX_RESULT_SCHEMA_VERSION, written["source_schema_version"])
         logs = read_import_log(self.run_dir)
         self.assertEqual("generation_result", logs[-1]["import_type"])
         self.assertEqual("imported", logs[-1]["status"])

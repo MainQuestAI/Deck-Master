@@ -1268,6 +1268,7 @@ def command_import_generation_result(args: argparse.Namespace) -> dict[str, Any]
             result,
             expected_run_id=expected_run_id,
             expected_session_id=expected_session_id or None,
+            run_dir=run_dir,
         )
         imported = import_generation_result(run_dir, normalized, force=force)
     except GenerationHandbackError as exc:
@@ -1385,7 +1386,8 @@ def command_validate_generation_result(args: argparse.Namespace) -> dict[str, An
         result = json.loads(input_path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
         return {"valid": False, "errors": [f"Bad JSON: {exc.msg}"], "warnings": []}
-    return validate_generation_result(result)
+    run_dir = resolve_run_dir(args) if getattr(args, "run_dir", None) or getattr(args, "run_id", None) else None
+    return validate_generation_result(result, run_dir=run_dir)
 
 
 def command_summarize_run_metrics(args: argparse.Namespace) -> dict[str, Any]:
@@ -2117,6 +2119,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_vplr.set_defaults(func=command_validate_ppt_library_result)
 
     p_vgr = sub.add_parser("validate-generation-result", help="Validate generation result")
+    add_run_args(p_vgr)
     p_vgr.add_argument("--input", required=True, help="Path to generation result JSON")
     p_vgr.set_defaults(func=command_validate_generation_result)
 
