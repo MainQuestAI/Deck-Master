@@ -1,5 +1,38 @@
 # Real Production Closure Test Evidence
 
+## C1 Evidence — Self-Contained Release Tree
+
+Implemented on 2026-06-22 in `/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure`.
+
+Coverage added:
+
+- Release tree now includes a bundled `scripts/` directory.
+- Release entrypoint `bin/deck-master` resolves its own release root at runtime and calls `scripts/deck_master.py` inside the release tree.
+- Release build writes `release-manifest.json`.
+- Release build writes `deck_capability_lock.json`.
+- Release build writes `SHA256SUMS` for release integrity checks.
+- Existing `suite-build-release-tree` command remains available.
+- New `release-build` command is available as the target release-building entrypoint.
+
+| Command | Result | Notes |
+|---|---|---|
+| `python3 -m unittest tests.test_skill_installation` | pass | 35 installer/release tests passed |
+| `python3 scripts/deck_master.py release-build --output <tmp>/release --force` | pass | Temporary release package built; release manifest and capability lock parse; release entrypoint starts with `--help` |
+| `git diff --check` | pass | No whitespace or patch formatting issues |
+| `python3 -m compileall scripts tests` | pass | Python files compile |
+| `python3 -m unittest discover -s tests` | pass | 783 tests passed |
+
+New C1 test coverage verifies:
+
+- Release package contains required skills, product capabilities, contracts, scripts, manifests, capability lock, and checksum list.
+- Release entrypoint does not embed the source checkout's `scripts/deck_master.py` path.
+- Release entrypoint can start with `--help` from the release package.
+- `SHA256SUMS` includes runtime scripts, release manifest, and capability lock.
+
+Accepted C1 constraint:
+
+- C1 adds self-contained release build output only. Stage, verify, activate, rollback, and release smoke behavior remain C2 scope.
+
 ## B1 Evidence — Unified Artifact Validator
 
 Implemented on 2026-06-22 in `/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure`.

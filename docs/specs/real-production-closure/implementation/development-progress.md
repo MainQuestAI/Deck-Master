@@ -6,7 +6,7 @@ Last updated: 2026-06-22
 
 Stack A is functionally closed for the current scope. Deck Master can dispatch production generation to an external Agent bridge, import canonical `deck_generation_result.v2` files, refresh previews, expose build/render stages, and produce contract-verified build/render artifacts.
 
-Stack B is partially complete. Stack C remains open.
+Stack B is complete for the current scope. Stack C is in progress.
 
 ## Checkpoints
 
@@ -42,7 +42,7 @@ Stack B is partially complete. Stack C remains open.
 
 | Task | Status | Entry |
 |---|---|---|
-| C1 self-contained release tree | pending | suite release builder, release manifest, capability lock |
+| C1 self-contained release tree | complete | `scripts/skills/installer.py`, `deck-master release-build`, release manifest, capability lock, `SHA256SUMS` |
 | C2 stage/verify/activate rollback | pending | installer, rollback metadata, release smoke |
 | C3 real benchmark cases | pending | benchmark case metadata, local-only source paths, aggregate report |
 | C4 CI/RC gate | pending | schema checks, artifact validator, release smoke, browser smoke, RC report |
@@ -58,8 +58,9 @@ Stack B is partially complete. Stack C remains open.
 - B3 final readiness targeted tests passed 6 tests.
 - B4 export/workbench readiness enforcement related tests passed 112 tests; full suite passed 778 tests.
 - B5 fixture/dev/production isolation related tests passed 80 tests; full suite passed 783 tests.
+- C1 self-contained release tree targeted tests passed 35 tests.
 - System Python in PPT-Deck-Pro-Max lacks `python-pptx`; use the Codex bundled Python for full PPT-side test runs until the local env is updated.
 
 ## Next Work
 
-Continue Stack C with C1. The next implementation should make the release tree self-contained and verify it without relying on the source checkout.
+Continue Stack C with C2. The next implementation should add stage, verify, activate, rollback, and release smoke behavior on top of the self-contained release tree.

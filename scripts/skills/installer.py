@@ -7,7 +7,9 @@ installed Deck Master skill package under ``~/.deck-master/current``.
 from __future__ import annotations
 
 import json
+import hashlib
 import shutil
+import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -18,6 +20,9 @@ SUITE_VERSION = "0.9.13"
 COMPANION_MANIFEST_SCHEMA_VERSION = "deck_master_companion_manifest.v2"
 PRODUCT_CAPABILITY_MANIFEST_SCHEMA_VERSION = "deck_master_product_capability_manifest.v1"
 PRODUCT_CAPABILITY_MANIFEST_NAME = "product-capability-manifest.json"
+RELEASE_MANIFEST_NAME = "release-manifest.json"
+CAPABILITY_LOCK_NAME = "deck_capability_lock.json"
+SHA256SUMS_NAME = "SHA256SUMS"
 RELEASE_TREE_MARKER = ".release_tree_managed_by_deck_master"
 
 SUPPORTED_TARGETS = {"codex", "claude-code", "hermes", "custom"}
@@ -549,13 +554,70 @@ def write_companion_manifest() -> Path:
     return path
 
 
-def _copytree_replace(src: Path, dst: Path) -> None:
+def _copytree_replace(src: Path, dst: Path, *, ignore: Any | None = None) -> None:
     if dst.exists() or dst.is_symlink():
         if dst.is_symlink() or dst.is_file():
             dst.unlink()
         else:
             shutil.rmtree(dst)
-    shutil.copytree(src, dst, symlinks=True)
+    shutil.copytree(src, dst, symlinks=True, ignore=ignore)
+
+
+def _git_head() -> str | None:
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=_repo_root(),
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    head = result.stdout.strip()
+    return head or None
+
+
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as fh:
+        for chunk in iter(lambda: fh.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _release_files(release_root: Path) -> list[tuple[str, Path]]:
+    files: list[tuple[str, Path]] = []
+    for path in release_root.rglob("*"):
+        if not path.is_file() or path.is_symlink():
+            continue
+        rel = path.relative_to(release_root).as_posix()
+        if rel == SHA256SUMS_NAME:
+            continue
+        files.append((rel, path))
+    return sorted(files, key=lambda item: item[0])
+
+
+def _contract_lock_entries(release_root: Path) -> list[dict[str, Any]]:
+    contracts_root = release_root / "contracts"
+    if not contracts_root.exists():
+        return []
+    entries: list[dict[str, Any]] = []
+    for path in sorted(contracts_root.rglob("*")):
+        if not path.is_file() or path.is_symlink():
+            continue
+        entries.append({
+            "path": path.relative_to(release_root).as_posix(),
+            "sha256": _sha256_file(path),
+        })
+    return entries
+
+
+def _write_sha256sums(release_root: Path) -> Path:
+    lines = [f"{_sha256_file(path)}  {rel}\n" for rel, path in _release_files(release_root)]
+    path = release_root / SHA256SUMS_NAME
+    path.write_text("".join(lines), encoding="utf-8")
+    return path
 
 
 def build_release_tree(
@@ -569,10 +631,15 @@ def build_release_tree(
     planned = [
         "bin/deck-master",
         PRODUCT_CAPABILITY_MANIFEST_NAME,
+        COMPANION_MANIFEST_NAME,
+        RELEASE_MANIFEST_NAME,
+        CAPABILITY_LOCK_NAME,
+        SHA256SUMS_NAME,
         "skills",
         "capabilities",
         "contracts",
         "reference-packs",
+        "scripts",
     ]
 
     if dry_run:
@@ -592,7 +659,7 @@ def build_release_tree(
     release_root.mkdir(parents=True, exist_ok=True)
     marker.write_text("deck-master release tree\n", encoding="utf-8")
 
-    for subdir in ("skills", "capabilities", "contracts", "reference-packs", "bin"):
+    for subdir in ("skills", "capabilities", "contracts", "reference-packs", "bin", "scripts"):
         (release_root / subdir).mkdir(parents=True, exist_ok=True)
 
     for spec in _suite_specs(include_optional=False):
@@ -612,6 +679,12 @@ def build_release_tree(
     if contracts_src.exists():
         _copytree_replace(contracts_src, release_root / "contracts")
 
+    _copytree_replace(
+        _repo_root() / "scripts",
+        release_root / "scripts",
+        ignore=shutil.ignore_patterns("__pycache__", "*.pyc", ".pytest_cache", ".mypy_cache"),
+    )
+
     (release_root / PRODUCT_CAPABILITY_MANIFEST_NAME).write_text(
         json.dumps(product_capability_manifest(), ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
@@ -623,18 +696,82 @@ def build_release_tree(
     bin_path = release_root / "bin" / "deck-master"
     bin_path.write_text(
         "#!/usr/bin/env sh\n"
-        f"exec python3 \"{_repo_root() / 'scripts' / 'deck_master.py'}\" \"$@\"\n",
+        'RELEASE_ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"\n'
+        'exec python3 "$RELEASE_ROOT/scripts/deck_master.py" "$@"\n',
         encoding="utf-8",
     )
     bin_path.chmod(0o755)
+
+    release_skills = [str(spec["name"]) for spec in _suite_specs(include_optional=False)]
+    release_capabilities = [str(spec["name"]) for spec in SUITE_SKILLS if str(spec["name"]).startswith("ppt-")]
+    source = {
+        "repo_root": str(_repo_root()),
+        "git_head": _git_head(),
+    }
+    capability_lock = {
+        "schema_version": "deck_capability_lock.v1",
+        "suite_name": SUITE_NAME,
+        "suite_version": SUITE_VERSION,
+        "built_at": _utc_now(),
+        "source": source,
+        "skills": [
+            {
+                "name": str(spec["name"]),
+                "path": f"skills/{spec['name']}",
+                "required": bool(spec.get("required", True)),
+                "install_source": str(spec.get("install_source") or ""),
+                "required_capabilities": list(spec.get("required_capabilities") or []),
+            }
+            for spec in _suite_specs(include_optional=False)
+        ],
+        "capabilities": [
+            {
+                "name": name,
+                "path": f"capabilities/{name}",
+                "required": True,
+            }
+            for name in release_capabilities
+        ],
+        "contracts": _contract_lock_entries(release_root),
+    }
+    (release_root / CAPABILITY_LOCK_NAME).write_text(
+        json.dumps(capability_lock, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    release_manifest = {
+        "schema_version": "deck_master_release_manifest.v1",
+        "suite_name": SUITE_NAME,
+        "suite_version": SUITE_VERSION,
+        "built_at": _utc_now(),
+        "release_root": str(release_root),
+        "self_contained": True,
+        "entrypoint": "bin/deck-master",
+        "scripts": "scripts",
+        "product_capability_manifest": PRODUCT_CAPABILITY_MANIFEST_NAME,
+        "companion_manifest": COMPANION_MANIFEST_NAME,
+        "capability_lock": CAPABILITY_LOCK_NAME,
+        "sha256sums": SHA256SUMS_NAME,
+        "source": source,
+        "skills": release_skills,
+        "capabilities": release_capabilities,
+    }
+    (release_root / RELEASE_MANIFEST_NAME).write_text(
+        json.dumps(release_manifest, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    sha256sums_path = _write_sha256sums(release_root)
 
     return {
         "schema_version": "deck_master_release_tree.v1",
         "status": "built",
         "release_root": str(release_root),
         "manifest_path": str(release_root / PRODUCT_CAPABILITY_MANIFEST_NAME),
-        "skills": [str(spec["name"]) for spec in _suite_specs(include_optional=False)],
-        "capabilities": [str(spec["name"]) for spec in SUITE_SKILLS if str(spec["name"]).startswith("ppt-")],
+        "release_manifest": str(release_root / RELEASE_MANIFEST_NAME),
+        "capability_lock": str(release_root / CAPABILITY_LOCK_NAME),
+        "sha256sums": str(sha256sums_path),
+        "self_contained": True,
+        "skills": release_skills,
+        "capabilities": release_capabilities,
     }
 
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import shutil
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -247,6 +248,39 @@ class SkillInstallationTest(unittest.TestCase):
 
         self.assertEqual("built", result["status"])
         self.assertTrue((release_root / "bin" / "deck-master").exists())
+        self.assertTrue(result["self_contained"])
+        self.assertTrue((release_root / "scripts" / "deck_master.py").exists())
+        self.assertTrue((release_root / "release-manifest.json").exists())
+        self.assertTrue((release_root / "deck_capability_lock.json").exists())
+        self.assertTrue((release_root / "SHA256SUMS").exists())
+
+        bin_text = (release_root / "bin" / "deck-master").read_text(encoding="utf-8")
+        self.assertNotIn(str(_REPO_ROOT / "scripts" / "deck_master.py"), bin_text)
+        self.assertIn("RELEASE_ROOT", bin_text)
+        self.assertIn("scripts/deck_master.py", bin_text)
+
+        completed = subprocess.run(
+            [str(release_root / "bin" / "deck-master"), "--help"],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(0, completed.returncode, completed.stderr)
+
+        release_manifest = json.loads((release_root / "release-manifest.json").read_text(encoding="utf-8"))
+        self.assertEqual("deck_master_release_manifest.v1", release_manifest["schema_version"])
+        self.assertTrue(release_manifest["self_contained"])
+        self.assertEqual("bin/deck-master", release_manifest["entrypoint"])
+
+        capability_lock = json.loads((release_root / "deck_capability_lock.json").read_text(encoding="utf-8"))
+        self.assertEqual("deck_capability_lock.v1", capability_lock["schema_version"])
+        self.assertTrue(capability_lock["contracts"])
+
+        checksums = (release_root / "SHA256SUMS").read_text(encoding="utf-8")
+        self.assertIn("scripts/deck_master.py", checksums)
+        self.assertIn("release-manifest.json", checksums)
+        self.assertIn("deck_capability_lock.json", checksums)
+
         manifest_path = release_root / "product-capability-manifest.json"
         self.assertTrue(manifest_path.exists())
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))

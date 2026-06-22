@@ -1759,6 +1759,12 @@ def build_parser() -> argparse.ArgumentParser:
     p_release_tree.add_argument("--dry-run", action="store_true")
     p_release_tree.set_defaults(func=command_suite_build_release_tree)
 
+    p_release_build = sub.add_parser("release-build", help="Build self-contained Deck Master release tree")
+    p_release_build.add_argument("--output", required=True, help="Release tree output path")
+    p_release_build.add_argument("--force", action="store_true")
+    p_release_build.add_argument("--dry-run", action="store_true")
+    p_release_build.set_defaults(func=command_suite_build_release_tree)
+
     p_suite_install = sub.add_parser("suite-install", help="Install Deck Master suite skill links")
     p_suite_install.add_argument("--target", action="append", default=[], choices=["codex", "claude-code", "hermes"])
     p_suite_install.add_argument("--include-optional", action="store_true")
