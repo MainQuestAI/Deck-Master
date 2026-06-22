@@ -106,6 +106,18 @@ v1.0 成功标准：
 - Suite status 同时展示 public skill 和 capability alias。
 - v1.1 之后再评估是否把旧名从主导航中隐藏。
 
+### Full PPT Master Preservation Rule
+
+`ppt-master` 是特殊兼容名。历史独立 PPT Master 仓库包含完整的 `references/`、`scripts/`、`templates/`、`workflows/` 和大量模板资产；Deck Master 的 render wrapper 只能作为 run 内 artifact handback 入口，不能替代完整 PPT Master 生产 skill。
+
+硬规则：
+
+- 如果 `~/.codex/skills/ppt-master` 或其他 Agent skill 目录中已经存在完整 PPT Master real directory，Deck Master setup、suite repair、suite migration 必须保留它。
+- 完整 PPT Master real directory 在 suite status 中应视为 `external_full_package` 和 `ready`。
+- Deck Master 不得把完整 PPT Master 备份后替换成 `~/.deck-master/current/skills/ppt-master` 的薄 wrapper。
+- Deck Master 内置 render wrapper 后续应公开为 `deck-renderer`，`ppt-master` 只作为兼容入口或完整外部包入口。
+- 如果只安装 Deck Master render wrapper，文档必须明确它只负责 Deck Master run 内 build/render handback，不具备完整 PPT Master 的设计、模板、参考资料和视觉生产能力。
+
 ## Final Skill Table
 
 | Skill | 当前现状 | v1.0 定位 | 典型输入 | 触发条件 | 禁止触发 | 主要产物 | 下一步 |

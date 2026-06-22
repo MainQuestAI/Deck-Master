@@ -30,7 +30,8 @@
     "required_suite_must_be_full_ready": true,
     "outputs_must_write_back_to_run": true,
     "external_override_allowed": true,
-    "legacy_real_dir_requires_migration_plan": true
+    "legacy_real_dir_requires_migration_plan": true,
+    "full_external_capability_directory_must_be_preserved": true
   },
   "release_tree": {
     "skills_path": "skills",
