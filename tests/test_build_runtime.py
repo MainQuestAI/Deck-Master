@@ -14,7 +14,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from deck_master import command_render  # noqa: E402
 from runtime.build import BuildError, build_status, prepare_build, run_build  # noqa: E402
-from runtime.run_state import create_run, read_json, write_json  # noqa: E402
+from runtime.run_state import RunStateError, create_run, read_json, write_json  # noqa: E402
 from validators.companion_tools import validate_render_result  # noqa: E402
 
 
@@ -124,6 +124,9 @@ class BuildRuntimeTests(unittest.TestCase):
 
     def test_command_render_fixture_safe_keeps_legacy_fixture_renderer(self) -> None:
         self._write_preview(1)
+        request = read_json(self.run_dir / "request.json")
+        request["run_mode"] = "fixture"
+        write_json(self.run_dir / "request.json", request)
 
         result = command_render(
             Namespace(run_dir=str(self.run_dir), run_id=None, runs_dir=None, fixture_safe=True, format="html")
@@ -133,6 +136,14 @@ class BuildRuntimeTests(unittest.TestCase):
         render_result = read_json(self.run_dir / "render_results" / "render_result.json")
         self.assertEqual("deck_render_result.v1", render_result["schema_version"])
         self.assertTrue((self.run_dir / "rendered" / "index.html").exists())
+
+    def test_command_render_fixture_safe_blocks_production(self) -> None:
+        self._write_preview(1)
+
+        with self.assertRaises(RunStateError):
+            command_render(
+                Namespace(run_dir=str(self.run_dir), run_id=None, runs_dir=None, fixture_safe=True, format="html")
+            )
 
     def test_run_build_handles_12_and_60_page_decks(self) -> None:
         for page_count in (12, 60):

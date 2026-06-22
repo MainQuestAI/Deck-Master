@@ -432,3 +432,32 @@ New B4 test cases cover:
 - Missing final readiness blocks client export.
 - Internal export marks degraded when final readiness is missing.
 - Existing quality blocking tests pass only when final readiness fixture is ready.
+
+## B5 Evidence — Fixture/Dev/Production Isolation
+
+Implemented on 2026-06-22 in `/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure`.
+
+Coverage added:
+
+- PPT Library fixture fallback is blocked for production and benchmark runs, including explicit fallback flags.
+- `import-sourcing` rejects `manual_placeholder` decisions for production and benchmark runs.
+- Preview build rejects production/benchmark sourcing plans that contain `manual_placeholder`.
+- `render --fixture-safe` is blocked for production and benchmark runs.
+- Fixture/dev paths retain fixture rendering and manual placeholder import behavior for tests and demos.
+
+| Command | Result | Notes |
+|---|---|---|
+| `python3 -m unittest tests.test_ppt_library_client tests.test_planner_sourcing_controls tests.test_build_runtime tests.test_generation_session_bridge` | pass | 42 B5 strict-mode tests passed |
+| `python3 -m unittest tests.test_end_to_end_autoplan tests.test_sourcing_decider tests.test_orchestration tests.test_preview_server` | pass | 38 adjacent fixture/preview tests passed |
+| `git diff --check` | pass | No whitespace or patch formatting issues |
+| `python3 -m compileall scripts tests` | pass | Python files compile |
+| `python3 -m unittest discover -s tests` | pass | 783 tests passed |
+
+New B5 test cases cover:
+
+- Production mode blocks explicit PPT Library fixture fallback.
+- Benchmark mode blocks fixture library mode.
+- Production import-sourcing blocks `manual_placeholder`.
+- Fixture import-sourcing allows `manual_placeholder`.
+- Production preview build blocks `manual_placeholder`.
+- Production render blocks `--fixture-safe`.

@@ -1172,10 +1172,15 @@ def command_import_render_result(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def command_render(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = resolve_run_dir(args)
     if not bool(getattr(args, "fixture_safe", False)):
-        return run_build(resolve_run_dir(args))
+        return run_build(run_dir)
+    request = load_request(run_dir)
+    run_mode = _normalize_run_mode(str(request.get("run_mode") or getattr(args, "run_mode", None)))
+    if run_mode in {"production", "benchmark"}:
+        raise RunStateError("render --fixture-safe is blocked for production and benchmark runs.")
     return render_fixture_html(
-        resolve_run_dir(args),
+        run_dir,
         output_format=getattr(args, "format", "html"),
         fixture_safe=bool(getattr(args, "fixture_safe", False)),
     )

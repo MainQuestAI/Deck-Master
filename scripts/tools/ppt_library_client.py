@@ -385,11 +385,14 @@ def run_library_selection(
     output_path = run_dir / "library_results" / "selection.raw.json"
     can_run_real = mode == "real" or (mode == "auto" and shutil.which(command))
     run_mode = str(request.get("run_mode") or "").strip().lower()
-    production_guard = run_mode == "production" and not allow_fixture_fallback
+    strict_mode = run_mode in {"production", "benchmark"}
+    production_guard = strict_mode
     fallback_message = (
-        "PPT Library fixture fallback blocked for production run. "
-        "Use --allow-fixture-library-fallback only for an explicit demo/smoke downgrade."
+        "PPT Library fixture fallback is blocked for production and benchmark runs."
     )
+    if strict_mode and (mode == "fixture" or allow_fixture_fallback):
+        append_event(run_dir, "ppt_library.fixture.blocked", status="error", error=fallback_message)
+        raise PPTLibraryClientError(fallback_message)
     if can_run_real:
         cmd = build_select_slides_command(
             command=command,

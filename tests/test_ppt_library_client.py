@@ -75,24 +75,39 @@ class PPTLibraryClientTests(unittest.TestCase):
                 command="missing-ppt-lib-command",
             )
 
-    def test_production_auto_allows_explicit_fixture_fallback(self) -> None:
+    def test_production_auto_blocks_explicit_fixture_fallback(self) -> None:
         request = build_request(brief="真实生产方案", industry="healthcare")
         request["run_mode"] = "production"
         plan = plan_narrative(request)
         plan_path = self.temp_dir / "narrative_plan.json"
         plan_path.write_text("{}", encoding="utf-8")
 
-        results = run_library_selection(
-            narrative_plan=plan,
-            narrative_plan_path=plan_path,
-            request=request,
-            run_dir=self.temp_dir,
-            mode="auto",
-            command="missing-ppt-lib-command",
-            allow_fixture_fallback=True,
-        )
+        with self.assertRaises(PPTLibraryClientError):
+            run_library_selection(
+                narrative_plan=plan,
+                narrative_plan_path=plan_path,
+                request=request,
+                run_dir=self.temp_dir,
+                mode="auto",
+                command="missing-ppt-lib-command",
+                allow_fixture_fallback=True,
+            )
 
-        self.assertEqual("fixture", results["source"])
+    def test_benchmark_blocks_fixture_library_mode(self) -> None:
+        request = build_request(brief="真实 benchmark", industry="healthcare")
+        request["run_mode"] = "benchmark"
+        plan = plan_narrative(request)
+        plan_path = self.temp_dir / "narrative_plan.json"
+        plan_path.write_text("{}", encoding="utf-8")
+
+        with self.assertRaises(PPTLibraryClientError):
+            run_library_selection(
+                narrative_plan=plan,
+                narrative_plan_path=plan_path,
+                request=request,
+                run_dir=self.temp_dir,
+                mode="fixture",
+            )
 
     def test_import_library_selection_writes_canonical_and_legacy_results(self) -> None:
         run_dir = create_run(self.temp_dir / "runs", {"project_name": "Library", "run_id": "lib-run"}, force=True)
