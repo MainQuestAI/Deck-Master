@@ -1,5 +1,37 @@
 # Real Production Closure Test Evidence
 
+## C5 Evidence — Docs & Release Closure
+
+Implemented on 2026-06-22 in `/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure`.
+
+Coverage added:
+
+- Root entry: `README.md`.
+- Quick start: `docs/quick-start.md`.
+- Agent guide: `docs/agent-guide.md`.
+- Migration guide: `docs/migration/real-production-closure.md`.
+- Troubleshooting guide: `docs/troubleshooting.md`.
+- Release notes: `docs/releases/v0.9.14-real-production-closure.md`.
+
+Documentation scope:
+
+- Describes only implemented Real Production Closure capabilities.
+- Keeps browser smoke marked optional unless explicitly required.
+- States private benchmark source documents remain excluded.
+- States native visual-fidelity rendering remains adapter work.
+
+| Command | Result | Notes |
+|---|---|---|
+| `rg -n "不是.*而是|不是.*，而是" <new-docs>` | pass | New user-facing docs avoid the banned phrasing pattern |
+| `git diff --check` | pass | No whitespace or patch formatting issues |
+| `python3 -m json.tool docs/contracts/rc-gate-report.v1.schema.json` | pass | RC gate contract parses |
+| `python3 -m json.tool docs/contracts/benchmark-aggregate-report.v1.schema.json` | pass | Benchmark aggregate contract parses |
+| `python3 -m compileall scripts tests` | pass | Python files compile |
+| `python3 scripts/deck_master.py setup-status --include-suite --output json` | pass | Setup status JSON parses |
+| `python3 scripts/deck_master.py suite-status --output json` | pass | Suite status JSON parses |
+| `python3 scripts/deck_master.py rc-gate --output-dir <tmp>/rc-gate --benchmark-dir benchmarks --skip-browser-smoke --force` | pass | RC gate status `pass`; 6 checks, 0 required failures |
+| `python3 -m unittest discover -s tests` | pass | 795 tests passed |
+
 ## C4 Evidence — CI / RC Gate
 
 Implemented on 2026-06-22 in `/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure`.
