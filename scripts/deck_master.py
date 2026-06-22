@@ -130,6 +130,7 @@ from runtime.orchestration import import_plan, import_render_result, orchestrati
 from runtime.build import build_status, prepare_build, run_build
 from runtime.render import render_fixture_html, render_status
 from runtime.final_readiness import compute_final_readiness
+from runtime.rc_gate import RCGateError, write_rc_gate_report
 from runtime.run_state_resolver import resolve_run_state
 from runtime.sourcing_import import import_sourcing, validate_sourcing
 from runtime.workspace_binding import bind_workspace
@@ -1684,6 +1685,17 @@ def command_benchmark_aggregate_report(args: argparse.Namespace) -> dict[str, An
     )
 
 
+def command_rc_gate(args: argparse.Namespace) -> dict[str, Any]:
+    return write_rc_gate_report(
+        getattr(args, "output_dir", str(ROOT / "rc_reports")),
+        benchmark_dir=getattr(args, "benchmark_dir", str(ROOT / "benchmarks")),
+        skip_browser_smoke=bool(getattr(args, "skip_browser_smoke", False)),
+        require_browser_smoke=bool(getattr(args, "require_browser_smoke", False)),
+        min_real_cases=int(getattr(args, "min_real_cases", 3)),
+        force=bool(getattr(args, "force", False)),
+    )
+
+
 def add_brief_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--brief")
     parser.add_argument("--brief-file")
@@ -2346,6 +2358,15 @@ def build_parser() -> argparse.ArgumentParser:
     p_bagg.add_argument("--force", action="store_true")
     p_bagg.set_defaults(func=command_benchmark_aggregate_report)
 
+    p_rc_gate = sub.add_parser("rc-gate", help="Run Deck Master release-candidate gate")
+    p_rc_gate.add_argument("--output-dir", default=str(ROOT / "rc_reports"))
+    p_rc_gate.add_argument("--benchmark-dir", default=str(ROOT / "benchmarks"))
+    p_rc_gate.add_argument("--min-real-cases", type=int, default=3)
+    p_rc_gate.add_argument("--skip-browser-smoke", action="store_true")
+    p_rc_gate.add_argument("--require-browser-smoke", action="store_true")
+    p_rc_gate.add_argument("--force", action="store_true")
+    p_rc_gate.set_defaults(func=command_rc_gate)
+
     return parser
 
 
@@ -2376,6 +2397,7 @@ def main() -> None:
         BenchmarkCheckpointError,
         BenchmarkReportError,
         BenchmarkRunError,
+        RCGateError,
         ValueError,
     ) as exc:
         print(f"error: {exc}", file=sys.stderr)

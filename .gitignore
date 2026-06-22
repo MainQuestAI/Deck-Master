@@ -21,3 +21,4 @@ build/
 *.egg-info/
 node_modules/
 .gstack/
+rc_reports/

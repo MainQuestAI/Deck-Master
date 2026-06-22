@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/contracts/rc-gate-report.v1.schema.json",
+  "title": "Deck Master RC Gate Report v1",
+  "type": "object",
+  "required": ["schema_version", "status", "created_at", "benchmark_dir", "summary", "checks"],
+  "properties": {
+    "schema_version": {
+      "const": "deck_rc_gate_report.v1"
+    },
+    "status": {
+      "enum": ["pass", "warning", "fail"]
+    },
+    "created_at": {
+      "type": "string"
+    },
+    "benchmark_dir": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "object",
+      "required": ["checks", "required_failures", "optional_warnings"],
+      "properties": {
+        "checks": {"type": "integer", "minimum": 0},
+        "required_failures": {"type": "integer", "minimum": 0},
+        "optional_warnings": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["check_id", "status", "required", "summary", "details"],
+        "properties": {
+          "check_id": {"type": "string"},
+          "status": {"enum": ["pass", "warning", "fail", "skipped"]},
+          "required": {"type": "boolean"},
+          "summary": {"type": "string"},
+          "details": {"type": "object"}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

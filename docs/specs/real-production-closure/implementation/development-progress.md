@@ -45,7 +45,7 @@ Stack B is complete for the current scope. Stack C is in progress.
 | C1 self-contained release tree | complete | `scripts/skills/installer.py`, `deck-master release-build`, release manifest, capability lock, `SHA256SUMS` |
 | C2 stage/verify/activate rollback | complete | `install_release_tree`, `verify_release_tree`, `rollback_release_tree`, `deck-master release-smoke`, `deck-master release-rollback` |
 | C3 real benchmark cases | complete | real benchmark metadata cases, local-only source paths, aggregate benchmark report |
-| C4 CI/RC gate | pending | schema checks, artifact validator, release smoke, browser smoke, RC report |
+| C4 CI/RC gate | complete | `deck-master rc-gate`, CI RC gate step, schema checks, artifact validator, release smoke, fixture E2E, optional browser smoke, benchmark aggregate |
 | C5 docs and release notes | pending | README, Quick Start, Agent Guide, Migration, Troubleshooting, Release Notes |
 
 ## Current Validation Notes
@@ -61,8 +61,9 @@ Stack B is complete for the current scope. Stack C is in progress.
 - C1 self-contained release tree targeted tests passed 35 tests.
 - C2 stage/verify/activate rollback targeted tests passed 39 tests.
 - C3 benchmark metadata and aggregate report targeted tests passed 19 tests.
+- C4 RC gate targeted tests passed 44 tests.
 - System Python in PPT-Deck-Pro-Max lacks `python-pptx`; use the Codex bundled Python for full PPT-side test runs until the local env is updated.
 
 ## Next Work
 
-Continue Stack C with C4. The next implementation should add schema checks, artifact validator checks, release smoke, fixture E2E, browser smoke, and RC report gating.
+Continue Stack C with C5. The next implementation should update user-facing docs and release notes so they describe only the implemented production-closure capabilities.

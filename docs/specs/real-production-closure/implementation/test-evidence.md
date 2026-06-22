@@ -1,5 +1,36 @@
 # Real Production Closure Test Evidence
 
+## C4 Evidence — CI / RC Gate
+
+Implemented on 2026-06-22 in `/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure`.
+
+Coverage added:
+
+- RC gate contract: `docs/contracts/rc-gate-report.v1.schema.json`.
+- RC gate runtime: `scripts/runtime/rc_gate.py`.
+- CLI entry: `deck-master rc-gate`.
+- CI now runs `deck-master rc-gate` after unit tests and fixture autoplan smoke.
+- Required RC checks:
+  - JSON contract and benchmark case parsing.
+  - Artifact validator smoke.
+  - Self-contained release smoke.
+  - Fixture autoplan E2E smoke.
+  - Benchmark aggregate readiness.
+- Browser smoke is supported as optional environment validation; CI skips it explicitly. Use `--require-browser-smoke` when the browser runtime must be enforced.
+
+| Command | Result | Notes |
+|---|---|---|
+| `python3 -m unittest tests.test_rc_gate tests.test_benchmark_aggregate tests.test_skill_installation` | pass | 44 RC/release/benchmark tests passed |
+| `python3 -m json.tool docs/contracts/rc-gate-report.v1.schema.json` | pass | RC gate report contract parses |
+| `python3 scripts/deck_master.py rc-gate --output-dir <tmp>/rc-gate --benchmark-dir benchmarks --skip-browser-smoke --force` | pass | RC gate status `pass`; 6 checks, 0 required failures |
+| `git diff --check` | pass | No whitespace or patch formatting issues |
+| `python3 -m compileall scripts tests` | pass | Python files compile |
+| `python3 -m unittest discover -s tests` | pass | 795 tests passed |
+
+Accepted C4 constraint:
+
+- Browser smoke is optional by default because the local/CI environment may not have Playwright installed. Requiring browser validation is available through `--require-browser-smoke`.
+
 ## C3 Evidence — Real Benchmark Metadata & Aggregate Report
 
 Implemented on 2026-06-22 in `/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure`.
