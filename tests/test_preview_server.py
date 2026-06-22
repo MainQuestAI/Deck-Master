@@ -432,6 +432,23 @@ class ServerTests(unittest.TestCase):
         run_approvals = [task for task in page_payload["approvals"]["tasks"] if task["scope_type"] == "run"]
         self.assertEqual(1, len(run_approvals))
 
+    def test_workspace_page_actions_bootstrap_page_tasks_for_preview_fixture(self) -> None:
+        """Regression: ISSUE-001 — sample preview fixture should allow page actions."""
+
+        status, payload = self.handler.request(
+            "POST",
+            "/api/workspace/sample-preview-run/page/page_001/actions",
+            {"action": "approve", "actor": "qa"},
+        )
+
+        self.assertEqual(200, status)
+        self.assertEqual("ok", payload["status"])
+        self.assertTrue((self.run_dir / "page_tasks.json").exists())
+        deck_status, deck = self.handler.request("GET", "/api/deck")
+        self.assertEqual(200, deck_status)
+        page = next(item for item in deck["pages"] if item["page_id"] == "page_001")
+        self.assertEqual("approved", page["review_status"])
+
     def test_workspace_api_supports_run_without_preview_manifest(self) -> None:
         pending_run = self.runs_dir / "pending-run"
         pending_run.mkdir()

@@ -198,6 +198,38 @@ class WorkbenchDirectTest(unittest.TestCase):
         page = next(p for p in preview["pages"] if p["page_id"] == "beat_001")
         self.assertEqual("Looks good overall", page["notes"])
 
+    def test_bootstraps_page_tasks_from_preview_manifest_when_missing(self) -> None:
+        # Regression: ISSUE-001 — direct preview fixtures can act without page_tasks.json.
+        # Found by /qa on 2026-06-22
+        # Report: .gstack/qa-reports/qa-report-deck-master-main-2026-06-22.md
+        (self.run_dir / "page_tasks.json").unlink()
+
+        result = execute_review_action(self.run_dir, "beat_001", "approve")
+
+        self.assertEqual(result["status"], "ok")
+        page_tasks = read_json(self.run_dir / "page_tasks.json")
+        task = next(t for t in page_tasks["tasks"] if t["beat_id"] == "beat_001")
+        self.assertEqual(task["review_status"], "approved")
+
+    def test_add_note_preserves_legacy_approved_status(self) -> None:
+        # Regression: ISSUE-001 — legacy keep pages must stay approved after add_note.
+        # Found by /qa on 2026-06-22
+        # Report: .gstack/qa-reports/qa-report-deck-master-main-2026-06-22.md
+        preview = read_json(self.run_dir / "preview_manifest.json")
+        page = next(p for p in preview["pages"] if p["page_id"] == "beat_002")
+        page["decision"] = "keep"
+        page.pop("review_status", None)
+        page.pop("action_intent", None)
+        write_json(self.run_dir / "preview_manifest.json", preview)
+
+        execute_review_action(self.run_dir, "beat_002", "add_note", note="Keep continuity")
+
+        preview = read_json(self.run_dir / "preview_manifest.json")
+        page = next(p for p in preview["pages"] if p["page_id"] == "beat_002")
+        self.assertEqual("approved", page["review_status"])
+        self.assertEqual("keep", page["decision"])
+        self.assertEqual("Keep continuity", page["notes"])
+
     def test_lock_source(self) -> None:
         execute_review_action(self.run_dir, "beat_001", "lock_source", actor="user")
         page_tasks = json.loads((self.run_dir / "page_tasks.json").read_text(encoding="utf-8"))
