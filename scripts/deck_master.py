@@ -126,6 +126,7 @@ from runtime.import_log import append_import_log
 from runtime.orchestration import import_plan, import_render_result, orchestration_check
 from runtime.build import build_status, prepare_build, run_build
 from runtime.render import render_fixture_html, render_status
+from runtime.final_readiness import compute_final_readiness
 from runtime.run_state_resolver import resolve_run_state
 from runtime.sourcing_import import import_sourcing, validate_sourcing
 from runtime.workspace_binding import bind_workspace
@@ -788,6 +789,18 @@ def command_delivery_validate(args: argparse.Namespace) -> dict[str, Any]:
         if pm and isinstance(pm.get("pages"), list):
             expected_pages = sum(1 for p in pm["pages"] if p.get("decision") == "approved")
     return validate_delivery(run_dir, args.artifact, expected_page_count=expected_pages or 0)
+
+
+def command_final_readiness(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = resolve_run_dir(args)
+    return compute_final_readiness(
+        run_dir,
+        artifact_path=getattr(args, "artifact", None),
+        expected_page_count=getattr(args, "expected_pages", None),
+        write=not bool(getattr(args, "no_write", False)),
+        run_mode=_normalize_run_mode(getattr(args, "run_mode", None)),
+        dev_allow_unsetup=bool(getattr(args, "dev_allow_unsetup", False)),
+    )
 
 
 def command_delivery_record_outcome(args: argparse.Namespace) -> dict[str, Any]:
@@ -1818,6 +1831,13 @@ def build_parser() -> argparse.ArgumentParser:
     p_export.add_argument("--queue-type", choices=["client", "internal"], default="client")
     p_export.add_argument("--allow-quality-override", action="store_true")
     p_export.set_defaults(func=command_export)
+
+    p_final_readiness = sub.add_parser("final-readiness", help="Compute final client readiness")
+    add_run_args(p_final_readiness)
+    p_final_readiness.add_argument("--artifact", help="Final artifact path. Defaults to render_result artifact_path.")
+    p_final_readiness.add_argument("--expected-pages", type=int, default=None, help="Expected final page count")
+    p_final_readiness.add_argument("--no-write", action="store_true", help="Return readiness without writing final_readiness.json")
+    p_final_readiness.set_defaults(func=command_final_readiness)
 
     p_quality = sub.add_parser("quality-gate", help="Run a Deck Master quality gate")
     add_run_args(p_quality)

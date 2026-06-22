@@ -378,3 +378,30 @@ New B2 test cases cover:
 - Artifact outside the run directory is rejected.
 - Invalid build artifact manifest blocks delivery.
 - Stale source fingerprint blocks delivery.
+
+## B3 Evidence — Final Readiness
+
+Implemented on 2026-06-22 in `/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure`.
+
+Coverage added:
+
+- Runtime readiness module added at `scripts/runtime/final_readiness.py`.
+- Canonical readiness output added at `delivery/final_readiness.json`.
+- Runtime contract added: `docs/contracts/final-readiness.v1.schema.json`.
+- CLI entry added: `deck-master final-readiness`.
+- Final readiness consumes run-state, render result, delivery validation, lineage, quality gates, and page-count consistency.
+- `ready=true` is only emitted when no blocker remains.
+
+| Command | Result | Notes |
+|---|---|---|
+| `python3 -m unittest tests.test_final_readiness` | pass | 6 B3 final readiness tests passed |
+| `python3 -m json.tool docs/contracts/final-readiness.v1.schema.json` | pass | Final readiness contract parses |
+
+New B3 test cases cover:
+
+- Ready run writes `delivery/final_readiness.json`.
+- Missing render blocks readiness.
+- Blocking quality gate blocks readiness.
+- Approved page count mismatch blocks readiness.
+- No-write mode returns readiness without writing `final_readiness.json`.
+- Schema version stays stable.

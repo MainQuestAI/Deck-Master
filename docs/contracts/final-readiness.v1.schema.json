@@ -1,0 +1,186 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/contracts/final-readiness.v1.schema.json",
+  "title": "Deck Master Final Readiness v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "run_dir",
+    "run_mode",
+    "ready",
+    "status",
+    "computed_at",
+    "final_artifact",
+    "page_counts",
+    "run_state",
+    "render",
+    "delivery_validation",
+    "lineage",
+    "quality_gates",
+    "blockers",
+    "warnings"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "deck_final_readiness.v1"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "run_dir": {
+      "type": "string",
+      "minLength": 1
+    },
+    "run_mode": {
+      "type": "string"
+    },
+    "ready": {
+      "type": "boolean"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ready",
+        "blocked"
+      ]
+    },
+    "computed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "final_artifact": {
+      "type": "object",
+      "required": [
+        "path",
+        "absolute_path",
+        "hash",
+        "exists"
+      ],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "absolute_path": {
+          "type": "string"
+        },
+        "hash": {
+          "type": "string"
+        },
+        "exists": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": true
+    },
+    "page_counts": {
+      "type": "object",
+      "required": [
+        "approved",
+        "rendered",
+        "delivery_validation"
+      ],
+      "properties": {
+        "approved": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rendered": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "delivery_validation": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        }
+      },
+      "additionalProperties": true
+    },
+    "run_state": {
+      "type": "object",
+      "required": [
+        "stage",
+        "next_command",
+        "blocked_actions"
+      ],
+      "additionalProperties": true
+    },
+    "render": {
+      "type": "object",
+      "required": [
+        "source",
+        "result_path",
+        "status",
+        "source_fingerprint",
+        "artifact_manifest"
+      ],
+      "additionalProperties": true
+    },
+    "delivery_validation": {
+      "type": "object",
+      "required": [
+        "status",
+        "blocks_delivery",
+        "finding_count"
+      ],
+      "additionalProperties": true
+    },
+    "lineage": {
+      "type": "object",
+      "required": [
+        "path",
+        "schema_version",
+        "artifact_hash",
+        "source_fingerprint"
+      ],
+      "additionalProperties": true
+    },
+    "quality_gates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "gate",
+          "status",
+          "blocks_delivery"
+        ],
+        "additionalProperties": true
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "code",
+          "severity",
+          "message"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "minLength": 1
+          },
+          "severity": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": true
+}
