@@ -89,8 +89,8 @@ SUITE_SKILLS: list[dict[str, Any]] = [
             "render_result": "deck_render_result.v2",
             "render_result_legacy": "deck_render_result.v1",
         },
-        "adoption_policy": "bundled_symlink_only",
-        "conflict_policy": "never_overwrite_real_directory",
+        "adoption_policy": "preserve_full_external_or_bundled_symlink",
+        "conflict_policy": "never_overwrite_full_external_directory",
     },
     {
         "name": "ppt-library",
@@ -252,6 +252,22 @@ def _skill_package_error(source: Path, *, expected_name: str = SKILL_NAME) -> st
     return None
 
 
+def _is_full_external_skill_package(path: Path, skill_name: str) -> bool:
+    """Detect high-value standalone skill packages that must not be replaced."""
+    if skill_name != "ppt-master":
+        return False
+    if not path.exists() or path.is_symlink() or not path.is_dir():
+        return False
+    if _skill_package_error(path, expected_name=skill_name):
+        return False
+    required_dirs = ("references", "scripts", "templates")
+    for dirname in required_dirs:
+        child = path / dirname
+        if not child.is_dir() or not any(child.iterdir()):
+            return False
+    return True
+
+
 def _install_named_skill(
     skill_name: str,
     target: str,
@@ -303,6 +319,23 @@ def _install_named_skill(
         link.unlink()
 
     elif link.exists():
+        if _is_full_external_skill_package(link, skill_name):
+            _append_install_log(
+                "install_skill",
+                target=target,
+                skill=skill_name,
+                status="external_full_package_preserved",
+                link=str(link),
+                source=str(source),
+            )
+            return {
+                "status": "external_full_package_preserved",
+                "skill": skill_name,
+                "link": str(link),
+                "source": str(source),
+                "target_dir": str(target_dir),
+                "source_type": "external_full_package",
+            }
         if not force:
             raise SkillInstallError(
                 f"A real file or directory already exists at {link}. "
@@ -380,6 +413,15 @@ def inspect_skill_link(
         return result
 
     if not link.is_symlink():
+        if _is_full_external_skill_package(link, skill_name):
+            result.update({
+                "valid": True,
+                "status": "ready",
+                "resolved": str(link.resolve()),
+                "skill_md_exists": True,
+                "source_type": "external_full_package",
+            })
+            return result
         result["status"] = "real_dir_conflict"
         result["error"] = "Path exists but is not a symlink."
         return result
@@ -510,6 +552,7 @@ def product_capability_manifest() -> dict[str, Any]:
             "outputs_must_write_back_to_run": True,
             "external_override_allowed": True,
             "legacy_real_dir_requires_migration_plan": True,
+            "full_external_capability_directory_must_be_preserved": True,
         },
         "release_tree": {
             "skills_path": "skills",
@@ -1335,9 +1378,14 @@ def suite_migration_plan(
                 action = "repair_symlink"
                 warnings.append("broken symlink")
             elif current_type == "real_directory":
-                action = "backup_and_replace_with_symlink"
                 recognized_as = _recognize_legacy_skill(link, skill)
-                backup_path = str(release_root / "migration" / "backups" / rollback_id / target / skill)
+                if _is_full_external_skill_package(link, skill):
+                    action = "preserve_external_full_package"
+                    recognized_as = "external_full_ppt_master_skill"
+                    warnings.append("preserving full external PPT Master package")
+                else:
+                    action = "backup_and_replace_with_symlink"
+                    backup_path = str(release_root / "migration" / "backups" / rollback_id / target / skill)
             else:
                 action = "manual_action"
                 safe_to_apply = False
@@ -1392,7 +1440,7 @@ def suite_migration_apply(plan_file: str | Path) -> dict[str, Any]:
         target.parent.mkdir(parents=True, exist_ok=True)
         current.parent.mkdir(parents=True, exist_ok=True)
         operation = str(action.get("action") or "")
-        if operation == "no_op":
+        if operation in {"no_op", "preserve_external_full_package"}:
             results.append({**action, "status": "no_op"})
             continue
         if current.is_dir() and not current.is_symlink():

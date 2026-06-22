@@ -49,6 +49,19 @@ class SkillInstallationTest(unittest.TestCase):
         self.source_dir = Path(self._tmp) / ".deck-master" / "current" / "skills" / SKILL_NAME
         shutil.copytree(_REPO_ROOT / "skills" / SKILL_NAME, self.source_dir)
 
+    def _write_full_ppt_master_skill(self) -> Path:
+        path = self.agent_dir / "ppt-master"
+        path.mkdir()
+        (path / "SKILL.md").write_text(
+            "---\nname: ppt-master\ndescription: Full standalone PPT Master\n---\n# PPT Master\n",
+            encoding="utf-8",
+        )
+        for dirname in ("references", "scripts", "templates"):
+            child = path / dirname
+            child.mkdir()
+            (child / "marker.txt").write_text("keep", encoding="utf-8")
+        return path
+
     def tearDown(self) -> None:
         self._log_patch.stop()
         shutil.rmtree(self._tmp, ignore_errors=True)
@@ -153,6 +166,21 @@ class SkillInstallationTest(unittest.TestCase):
 
         self.assertTrue(result["valid"])
         self.assertEqual(before, log_path.read_text(encoding="utf-8"))
+
+    def test_inspect_preserves_full_external_ppt_master_real_dir(self) -> None:
+        full_package = self._write_full_ppt_master_skill()
+
+        result = inspect_skill_link(
+            "codex",
+            str(self.agent_dir),
+            source_skill_dir=str(_REPO_ROOT / "skills" / "ppt-master"),
+            skill_name="ppt-master",
+        )
+
+        self.assertTrue(result["valid"])
+        self.assertEqual("ready", result["status"])
+        self.assertEqual("external_full_package", result["source_type"])
+        self.assertEqual(str(full_package.resolve()), result["resolved"])
 
     def test_validate_not_installed(self) -> None:
         result = validate_skill("codex", str(self.agent_dir), source_skill_dir=str(self.source_dir))
@@ -374,6 +402,35 @@ class SkillInstallationTest(unittest.TestCase):
         rolled_back = suite_migration_rollback(applied["rollback_id"])
         self.assertEqual("rolled_back", rolled_back["status"])
         self.assertTrue((self.agent_dir / "ppt-master" / "marker.txt").exists())
+
+    def test_suite_install_preserves_full_external_ppt_master_real_dir(self) -> None:
+        full_package = self._write_full_ppt_master_skill()
+
+        result = suite_install(targets=["codex"], agent_skill_dir=str(self.agent_dir))
+
+        ppt_master = next(item for item in result["results"] if item["skill"] == "ppt-master")
+        self.assertEqual("external_full_package_preserved", ppt_master["status"])
+        self.assertFalse(full_package.is_symlink())
+        self.assertTrue((full_package / "references" / "marker.txt").exists())
+        self.assertEqual("ready", result["suite_status"]["task_readiness"]["render"])
+
+    def test_suite_migration_plan_preserves_full_external_ppt_master_real_dir(self) -> None:
+        full_package = self._write_full_ppt_master_skill()
+        plan = suite_migration_plan(targets=["codex"], agent_skill_dir=str(self.agent_dir))
+        ppt_master = next(item for item in plan["actions"] if item["skill"] == "ppt-master")
+
+        self.assertEqual("preserve_external_full_package", ppt_master["action"])
+        self.assertTrue(ppt_master["safe_to_apply"])
+        self.assertEqual("external_full_ppt_master_skill", ppt_master["recognized_as"])
+
+        plan_file = Path(self._tmp) / "migration-plan.json"
+        plan_file.write_text(json.dumps(plan, ensure_ascii=False, indent=2), encoding="utf-8")
+        applied = suite_migration_apply(plan_file)
+        applied_ppt_master = next(item for item in applied["results"] if item["skill"] == "ppt-master")
+
+        self.assertEqual("no_op", applied_ppt_master["status"])
+        self.assertFalse(full_package.is_symlink())
+        self.assertTrue((full_package / "scripts" / "marker.txt").exists())
 
     # ------------------------------------------------------------------ #
     # uninstall_skill
