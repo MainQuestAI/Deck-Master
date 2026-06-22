@@ -162,6 +162,67 @@ function formatActionType(actionType) {
   return mapping[String(actionType || "").trim()] || "下一步";
 }
 
+function formatProductionStage(stage) {
+  const mapping = {
+    needs_request: "待创建项目请求",
+    needs_context: "待补项目背景",
+    needs_brief: "待生成方案简报",
+    needs_claim_map: "待建立论点依据",
+    needs_narrative_plan: "待生成叙事方案",
+    needs_page_tasks: "待生成页面任务",
+    needs_sourcing: "待确认页面来源",
+    needs_preview: "待生成页面预览",
+    needs_generation_session: "待创建生成会话",
+    awaiting_agent_execution: "等待 Agent 执行",
+    generation_running: "内容生成中",
+    needs_generation_import: "待导入生成结果",
+    needs_preview_refresh: "待刷新页面预览",
+    needs_draft_gate: "待通过质量门禁",
+    needs_build: "待生成构建清单",
+    needs_render: "待生成交付产物",
+    needs_review: "待完成页面审阅",
+    ready_for_benchmark: "可进入基准测试",
+    ready_for_client_export: "可进入客户导出",
+    blocked_workspace: "工作区被阻断",
+  };
+  return mapping[String(stage || "").trim()] || String(stage || "待准备");
+}
+
+function formatRuntimeStatus(status) {
+  const mapping = {
+    completed: "已完成",
+    prepared: "已准备",
+    ready: "已放行",
+    blocked: "已阻断",
+    missing: "缺失",
+    invalid: "无效",
+    failed: "失败",
+    running: "进行中",
+    pending: "等待中",
+  };
+  return mapping[String(status || "").trim()] || String(status || "缺失");
+}
+
+function formatArtifactKinds(kinds = []) {
+  const mapping = {
+    deck_html: "HTML",
+    deck_pdf: "PDF",
+    deck_pptx: "PPTX",
+    page_png: "页面图片",
+  };
+  const labels = kinds.map((kind) => mapping[String(kind || "").trim()] || String(kind || "").trim()).filter(Boolean);
+  return labels.length ? labels.join("、") : "暂无格式";
+}
+
+function formatEditability(values = []) {
+  const mapping = {
+    native: "可编辑",
+    flat_image: "扁平图像",
+  };
+  const labels = values.map((value) => mapping[String(value || "").trim()] || String(value || "").trim()).filter(Boolean);
+  return labels.length ? labels.join("、") : "未登记可编辑性";
+}
+
 function currentWorkspace() {
   return state.workspace || {};
 }
@@ -453,22 +514,22 @@ function renderStageWorkspace() {
   const flowCards = [
     {
       label: "生产阶段",
-      value: production.stage || stage.label || "待准备",
+      value: production.stage ? formatProductionStage(production.stage) : (stage.label || "待准备"),
       detail: production.next_command || stage.next_step || "等待下一步动作。",
     },
     {
       label: "构建状态",
-      value: build.status || "missing",
-      detail: `产物 ${build.artifact_count || 0} 个 · ${build.formats?.join(", ") || "暂无格式"}`,
+      value: formatRuntimeStatus(build.status),
+      detail: `产物 ${build.artifact_count || 0} 个 · ${formatArtifactKinds(build.formats || [])}`,
     },
     {
       label: "渲染状态",
-      value: render.status || "missing",
-      detail: `${render.tool || "ppt-master"} · ${render.editability?.join(", ") || "未登记可编辑性"}`,
+      value: formatRuntimeStatus(render.status),
+      detail: `${render.tool || "ppt-master"} · ${formatEditability(render.editability || [])}`,
     },
     {
       label: "最终放行",
-      value: finalReadiness.status || "missing",
+      value: formatRuntimeStatus(finalReadiness.status),
       detail: finalReadiness.ready ? "客户导出已放行。" : (finalReadiness.reason || "等待最终放行检查。"),
     },
   ].map((item) => `

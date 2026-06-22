@@ -97,6 +97,13 @@ class FinalReadinessTests(unittest.TestCase):
         self.assertIn("final_render_missing", codes)
         self.assertIn("final_lineage_missing", codes)
 
+    def test_run_state_blocker_uses_user_facing_message(self) -> None:
+        readiness = compute_final_readiness(self.run_dir)
+
+        blocker = next(item for item in readiness["blockers"] if item["code"] == "final_run_state_not_ready")
+        self.assertIn("项目背景与输入资料", blocker["message"])
+        self.assertNotIn("Run state is", blocker["message"])
+
     def test_quality_gate_blocks_readiness(self) -> None:
         self._write_baseline(gate_blocks=True)
         run_build(self.run_dir)

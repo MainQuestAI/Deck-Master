@@ -467,6 +467,63 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(0, data["header_metrics"]["pages_total"])
         self.assertEqual("待准备", data["stage"]["label"])
 
+    def test_workspace_translates_preparation_stage_and_readiness_reason(self) -> None:
+        pending_run = self.runs_dir / "needs-context-run"
+        (pending_run / "links").mkdir(parents=True)
+        (pending_run / "links" / "page_001.svg").write_text("<svg></svg>\n", encoding="utf-8")
+        write_json(
+            pending_run / "request.json",
+            {
+                "run_id": "needs-context-run",
+                "project_name": "Needs Context",
+                "run_mode": "fixture",
+            },
+        )
+        write_json(
+            pending_run / "preview_manifest.json",
+            {
+                "run_id": "needs-context-run",
+                "title": "Needs Context",
+                "pages": [
+                    {
+                        "page_id": "page_001",
+                        "beat_id": "page_001",
+                        "order": 1,
+                        "title": "Page 1",
+                        "source_type": "library_slide",
+                        "preview_path": "links/page_001.svg",
+                        "decision": "needs_review",
+                    }
+                ],
+            },
+        )
+        write_json(
+            pending_run / "delivery" / "final_readiness.json",
+            {
+                "schema_version": "deck_final_readiness.v1",
+                "run_id": "needs-context-run",
+                "ready": False,
+                "status": "blocked",
+                "blockers": [
+                    {
+                        "code": "final_run_state_not_ready",
+                        "severity": "P0",
+                        "message": "Run state is needs_context.",
+                    }
+                ],
+            },
+        )
+
+        status, data = self.handler.request("GET", "/api/workspace/needs-context-run?run_dir=" + str(pending_run))
+
+        self.assertEqual(200, status)
+        self.assertEqual("待准备", data["stage"]["label"])
+        self.assertIn("项目背景与输入资料", data["stage"]["blocking_reason"])
+        self.assertIn("项目背景与输入资料", data["health"]["blocking_reasons"][0])
+        self.assertIn("项目背景与输入资料", data["runtime"]["final_readiness"]["reason"])
+        self.assertNotIn("Run state is", json.dumps(data, ensure_ascii=False))
+        self.assertNotIn("generation session status is missing", json.dumps(data, ensure_ascii=False))
+
     def test_workspace_delivery_preview_endpoint_reports_missing_artifact(self) -> None:
         status, data = self.handler.request("GET", "/api/workspace/sample-preview-run/delivery-preview")
         self.assertEqual(200, status)

@@ -78,6 +78,30 @@ def _add_blocker(blockers: list[dict[str, str]], code: str, message: str, *, sev
     blockers.append({"code": code, "severity": severity, "message": message})
 
 
+def _run_state_not_ready_message(stage: str) -> str:
+    stage_messages = {
+        "needs_request": "项目请求还未创建，不能进入最终交付。",
+        "needs_context": "项目背景与输入资料还未补齐，不能进入最终交付。",
+        "needs_brief": "方案简报还未生成，不能进入最终交付。",
+        "needs_claim_map": "论点与依据关系还未建立，不能进入最终交付。",
+        "needs_narrative_plan": "叙事方案还未生成，不能进入最终交付。",
+        "needs_page_tasks": "页面任务还未生成，不能进入最终交付。",
+        "needs_sourcing": "页面来源方案还未确认，不能进入最终交付。",
+        "needs_preview": "页面预览还未生成，不能进入最终交付。",
+        "needs_generation_session": "内容生成会话还未创建，不能进入最终交付。",
+        "awaiting_agent_execution": "内容生成已派发，仍在等待 Agent 回传结果。",
+        "generation_running": "内容生成仍在进行中，不能进入最终交付。",
+        "needs_generation_import": "Agent 生成结果还未导入，不能进入最终交付。",
+        "needs_preview_refresh": "最新生成结果还未刷新到预览，不能进入最终交付。",
+        "needs_draft_gate": "草稿质量门禁还未通过，不能进入最终交付。",
+        "needs_build": "构建清单还未生成，不能进入最终交付。",
+        "needs_render": "最终渲染产物还未生成，不能进入最终交付。",
+        "needs_review": "页面审阅还未完成，不能进入最终交付。",
+        "blocked_workspace": "项目工作区存在阻断项，不能进入最终交付。",
+    }
+    return stage_messages.get(stage, f"当前运行阶段还未达到最终交付条件：{stage or 'unknown'}。")
+
+
 def _quality_gate_summary(root: Path) -> list[dict[str, Any]]:
     quality_dir = root / "quality_reports"
     if not quality_dir.is_dir():
@@ -122,7 +146,7 @@ def compute_final_readiness(
 
     stage = str(run_state.get("stage") or "")
     if stage not in {"ready_for_client_export", "ready_for_benchmark"}:
-        _add_blocker(blockers, "final_run_state_not_ready", f"Run state is {stage or 'unknown'}.")
+        _add_blocker(blockers, "final_run_state_not_ready", _run_state_not_ready_message(stage))
 
     if not render_result:
         _add_blocker(blockers, "final_render_missing", "Render result is missing.")

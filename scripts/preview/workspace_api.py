@@ -76,6 +76,13 @@ BLOCKING_REASON_TRANSLATIONS = {
     "pages still need review": "仍有页面待主审处理。",
     "evidence gate is blocked": "证据门禁仍在阻断。",
     "quality gate blocks delivery": "质量门禁仍在阻断导出。",
+    "Final readiness is missing.": "最终放行检查尚未生成。",
+    "Final readiness is blocked.": "最终放行检查仍未通过。",
+    "Quality gate report is missing.": "质量门禁报告尚未生成。",
+    "Render result is missing.": "当前缺少最终渲染结果。",
+    "Render result is not completed.": "最终渲染还没有完成。",
+    "context manifest is missing": "项目背景与输入资料还未补齐。",
+    "generation session status is missing": "内容生成会话状态尚未建立。",
     "render result is missing": "当前缺少最新渲染结果。",
     "render result is missing after build": "构建已准备，仍缺少最终渲染结果。",
     "build manifest is missing after review and quality gate": "审阅和质量门禁已通过，仍缺少构建清单。",
@@ -88,6 +95,9 @@ def _translate_blocking_reason(reason: str) -> str:
     text = str(reason or "").strip()
     if not text:
         return ""
+    if text.startswith("Run state is ") and text.endswith("."):
+        stage = text.removeprefix("Run state is ").removesuffix(".").strip()
+        return _runtime_stage_reason(stage)
     if text.startswith("generation session status="):
         status = text.split("=", 1)[1].strip() or "unknown"
         status_mapping = {
@@ -101,6 +111,30 @@ def _translate_blocking_reason(reason: str) -> str:
         }
         return status_mapping.get(status, f"内容生成状态仍为 {status}。")
     return BLOCKING_REASON_TRANSLATIONS.get(text, text)
+
+
+def _runtime_stage_reason(stage: str) -> str:
+    stage_mapping = {
+        "needs_request": "项目请求还未创建。",
+        "needs_context": "项目背景与输入资料还未补齐。",
+        "needs_brief": "方案简报还未生成。",
+        "needs_claim_map": "论点与依据关系还未建立。",
+        "needs_narrative_plan": "叙事方案还未生成。",
+        "needs_page_tasks": "页面任务还未生成。",
+        "needs_sourcing": "页面来源方案还未确认。",
+        "needs_preview": "页面预览还未生成。",
+        "needs_generation_session": "内容生成会话还未创建。",
+        "awaiting_agent_execution": "内容生成已派发，正在等待 Agent 回传结果。",
+        "generation_running": "内容生成仍在进行中。",
+        "needs_generation_import": "Agent 生成结果还未导入。",
+        "needs_preview_refresh": "最新生成结果还未刷新到预览。",
+        "needs_draft_gate": "草稿质量门禁还未通过。",
+        "needs_build": "构建清单还未生成。",
+        "needs_render": "最终渲染产物还未生成。",
+        "needs_review": "页面审阅还未完成。",
+        "blocked_workspace": "项目工作区存在阻断项。",
+    }
+    return stage_mapping.get(stage, f"当前运行阶段仍为 {stage or 'unknown'}。")
 
 RUNTIME_STAGE_TO_WORKSPACE_STAGE = {
     "needs_request": "待准备",
@@ -507,7 +541,7 @@ def build_delivery_preview_payload(run_dir: str | Path) -> dict[str, Any]:
     elif not final_ready:
         status = "final_readiness_blocked"
         summary = "最终放行检查未通过。"
-        detail = str(final_readiness.get("reason") or "先运行最终放行检查并处理阻断项。")
+        detail = _translate_blocking_reason(str(final_readiness.get("reason") or "先运行最终放行检查并处理阻断项。"))
     else:
         status = "ready"
         summary = "交付级预览已就绪。"
@@ -542,7 +576,7 @@ def build_delivery_preview_payload(run_dir: str | Path) -> dict[str, Any]:
         "final_readiness": {
             "ready": final_ready,
             "status": str(final_readiness.get("status") or ""),
-            "reason": str(final_readiness.get("reason") or ""),
+            "reason": _translate_blocking_reason(str(final_readiness.get("reason") or "")),
             "path": str(final_readiness.get("path") or ""),
         },
         "source_fingerprint": str((render_result or {}).get("source_fingerprint") or ""),
@@ -603,6 +637,16 @@ def _workspace_stage(
     runtime_reason = ""
     if isinstance(blocked_actions, list) and blocked_actions:
         runtime_reason = _translate_blocking_reason(str(blocked_actions[0].get("reason") or ""))
+    runtime_preparation_next_step = {
+        "needs_request": "先创建项目请求。",
+        "needs_context": "先导入项目背景与输入资料。",
+        "needs_brief": "先生成方案简报。",
+        "needs_claim_map": "先建立论点与依据关系。",
+        "needs_narrative_plan": "先生成叙事方案。",
+        "needs_page_tasks": "先生成页面任务。",
+        "needs_sourcing": "先确认页面来源方案。",
+        "needs_preview": "先生成可审页面预览。",
+    }
     runtime_stage_next_step = {
         "needs_generation_session": "先创建生成会话，准备派发给 Agent。",
         "awaiting_agent_execution": "等待 Agent 执行并回传生成结果。",
@@ -617,6 +661,10 @@ def _workspace_stage(
         stage_label = "已交付"
         blocker = "已记录交付结果，可转入复盘。"
         next_step = "查看反馈并沉淀复用经验。"
+    elif runtime_stage in runtime_preparation_next_step:
+        stage_label = "待准备"
+        blocker = runtime_reason or _runtime_stage_reason(runtime_stage)
+        next_step = runtime_preparation_next_step[runtime_stage]
     elif runtime_stage in runtime_stage_next_step:
         stage_label = "生成中"
         blocker = runtime_reason or "生产链路仍在补齐生成、构建或渲染结果。"
@@ -881,7 +929,7 @@ def build_workspace_payload(run_dir: str | Path) -> dict[str, Any]:
         updated_at = ""
 
     if not final_readiness.get("ready") and final_readiness.get("reason"):
-        blocking = list(dict.fromkeys([str(final_readiness.get("reason")), *blocking]))
+        blocking = list(dict.fromkeys([_translate_blocking_reason(str(final_readiness.get("reason"))), *blocking]))
 
     workspace_name = str(request.get("workspace_id") or request.get("project_name") or title or root.name)
     focus_page_id = _focus_page_id(cards)
@@ -920,7 +968,7 @@ def build_workspace_payload(run_dir: str | Path) -> dict[str, Any]:
         "final_readiness": {
             "ready": bool(final_readiness.get("ready")),
             "status": str(final_readiness.get("status") or ""),
-            "reason": str(final_readiness.get("reason") or ""),
+            "reason": _translate_blocking_reason(str(final_readiness.get("reason") or "")),
             "path": str(final_readiness.get("path") or ""),
         },
     }

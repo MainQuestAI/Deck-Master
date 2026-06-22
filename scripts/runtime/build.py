@@ -156,7 +156,7 @@ def prepare_build(run_dir: str | Path) -> dict[str, Any]:
     warnings: list[str] = []
     for index, page in enumerate(pages, start=1):
         page_id = str(page.get("page_id") or page.get("beat_id") or f"page_{index:03d}")
-        source_path, source_ref = _safe_source(root, page.get("source_preview_asset") or page.get("preview_path"))
+        source_path, source_ref = _safe_source(root, page.get("preview_path") or page.get("source_preview_asset"))
         if source_ref and source_path is not None and not source_path.exists():
             warnings.append(f"page source missing: {source_ref}")
         page_sources.append(

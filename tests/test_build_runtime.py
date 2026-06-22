@@ -176,6 +176,32 @@ class BuildRuntimeTests(unittest.TestCase):
 
         self.assertEqual(["page source missing: links/beat_001.svg"], result["warnings"])
 
+    def test_prepare_build_prefers_run_relative_preview_path_over_external_source(self) -> None:
+        source = "links/beat_001.svg"
+        (self.run_dir / source).write_text("<svg><text>Page 1</text></svg>", encoding="utf-8")
+        write_json(
+            self.run_dir / "preview_manifest.json",
+            {
+                "run_id": "build-run",
+                "pages": [
+                    {
+                        "page_id": "beat_001",
+                        "order": 1,
+                        "title": "页面 1",
+                        "preview_path": source,
+                        "source_preview_asset": "/tmp/external-source.svg",
+                    }
+                ],
+            },
+        )
+
+        result = prepare_build(self.run_dir)
+
+        self.assertEqual("prepared", result["status"])
+        manifest = read_json(self.run_dir / "build" / "build_manifest.json")
+        self.assertEqual(source, manifest["pages"][0]["source_path"])
+        self.assertEqual([], result["warnings"])
+
     def test_prepare_build_rejects_path_traversal(self) -> None:
         write_json(
             self.run_dir / "preview_manifest.json",
