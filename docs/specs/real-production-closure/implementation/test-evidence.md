@@ -1,5 +1,86 @@
 # Real Production Closure Test Evidence
 
+## Stack A E2E Evidence — Dispatch / Bridge / Import / Build / Render
+
+Verified on 2026-06-22 across:
+
+- Deck Master: `/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure`
+- PPT-Deck-Pro-Max bridge: `/Users/dingcheng/Coding-Project/02-key-project/PPT-Deck-Pro-Max-deck-master-bridge`
+
+Flow verified:
+
+1. Create a production Deck Master run with two generation tasks.
+2. `run-generation --no-execute` writes `generation_dispatch/dispatch_package.json`.
+3. PPT-Deck-Pro-Max `deck-master-import` imports the dispatch package.
+4. PPT-Deck-Pro-Max `deck-master-export` copies existing assembled HTML and page screenshots into the Deck Master run and writes two canonical `deck_generation_result.v2` JSON files.
+5. Deck Master `generation-session import-results` imports the result directory and refreshes preview paths.
+6. Run-state reports `needs_build` after review and draft gate are satisfied.
+7. `deck-master build prepare` writes build manifest, then run-state reports `needs_render`.
+8. `deck-master build run` writes HTML, PDF, PNG, PPTX, artifact manifest, and canonical render result.
+9. Run-state reports `ready_for_client_export`.
+
+Observed smoke result:
+
+| Check | Result |
+|---|---|
+| Dispatch package exists | pass |
+| Generation result JSON count | `2` |
+| Import status | `batch_imported` |
+| Preview paths refreshed | `generation_results/artifacts/slide_01/preview.png`, `generation_results/artifacts/slide_02/preview.png` |
+| Stage before build | `needs_build` |
+| Stage after build prepare | `needs_render` |
+| Stage after build run | `ready_for_client_export` |
+| Build status | `completed` |
+| Build page count | `2` |
+| Artifact manifest | present |
+| Render result v2 | present |
+| Final artifacts | `deck.html`, `deck.pdf`, `deck.pptx`, page PNGs |
+| Runtime build formats | `deck_html`, `deck_pdf`, `deck_pptx`, `page_png` |
+| Runtime editability | `flat_image`, `native` |
+| Invalid artifacts | `[]` |
+
+Accepted smoke constraint:
+
+- The smoke uses a temporary Deck Master workspace and manually provided PPT-side assembled HTML/screenshots to avoid relying on Playwright availability. This still exercises the real cross-repository import/export contract, Deck Master generation import, build runtime, render result v2, and A5 run-state transitions.
+
+## A2 Evidence — PPT-Deck-Pro-Max Bridge
+
+Implemented on 2026-06-22 in `/Users/dingcheng/Coding-Project/02-key-project/PPT-Deck-Pro-Max-deck-master-bridge`.
+
+Coverage added:
+
+- CLI commands:
+  - `python3 scripts/run_deck_pipeline.py deck-master-import --input <run>/generation_dispatch/dispatch_package.json --project-dir <project>`
+  - `python3 scripts/run_deck_pipeline.py deck-master-export --project-dir <project>`
+- Bridge manifest: `deck_master_bridge.json`.
+- Dispatch schema copy: `references/deck_master_dispatch_package.v1.schema.json`.
+- Result schema copy: `references/deck_master_generation_result.v2.schema.json`.
+- Import preserves `run_id`, `session_id`, `source_fingerprint`, task id, page id, beat id, source decision, expected outputs, quality requirements, and workspace refs.
+- Export writes one `deck_generation_result.v2` JSON per task into the originating Deck Master run's `generation_results/`.
+- Export copies existing PPT-side assembled HTML and screenshots into run-relative artifact paths.
+- Export writes SHA-256, byte size, media type, validation status, editability, `artifact_path`, and `preview_path`.
+- Safety checks block unsupported schema, missing run/session/hash, invalid source fingerprint, path-like task/page ids, output outside the Deck Master run, missing assembled HTML, and missing screenshot.
+
+| Command | Result | Notes |
+|---|---|---|
+| `python3 -m json.tool references/deck_master_dispatch_package.v1.schema.json` | pass | Dispatch package schema parses |
+| `python3 -m json.tool references/deck_master_generation_result.v2.schema.json` | pass | Generation result v2 schema parses |
+| `python3 -m unittest tests.test_deck_master_bridge` | pass | 6 bridge tests passed |
+| `git diff --check` | pass | No whitespace or patch formatting issues |
+| `python3 -m compileall scripts tests` | pass | System Python compile check passed |
+| `python3 -m unittest discover -s tests` | blocked by environment | System Python lacks `python-pptx`; existing `test_extract_layout_from_pptx` cannot import `pptx` |
+| `/Users/dingcheng/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 -m compileall scripts tests` | pass | Bundled Python compile check passed |
+| `/Users/dingcheng/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 -m unittest discover -s tests` | pass | 150 PPT-Deck-Pro-Max tests passed |
+
+New A2 test cases cover:
+
+- Dispatch import preserves contract fields and writes project state.
+- Export writes canonical v2 results from existing assembled HTML and screenshots.
+- Missing assembled artifacts block export.
+- Output outside the Deck Master run blocks export.
+- Path-like task ids block import.
+- CLI import and export work through `run_deck_pipeline.py`.
+
 ## A5 Evidence — Runtime & Review Workspace Integration
 
 Implemented on 2026-06-22 in `/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure`.
