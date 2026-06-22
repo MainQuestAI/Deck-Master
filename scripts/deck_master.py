@@ -980,7 +980,7 @@ def command_setup(args: argparse.Namespace) -> dict[str, Any]:
         workspace=getattr(args, "workspace", None),
         runs_dir=getattr(args, "runs_dir", None),
         targets=getattr(args, "target", None),
-        review_cockpit_url=getattr(args, "review_cockpit_url", None) or "http://127.0.0.1:5050",
+        review_cockpit_url=getattr(args, "review_cockpit_url", None),
         repair=bool(getattr(args, "repair_workspace", False)),
     )
     if bool(getattr(args, "install_suite", False)):
@@ -1795,7 +1795,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_setup.add_argument("--workspace", default=None, help="Active Deck Master workspace")
     p_setup.add_argument("--runs-dir", default=None, help="Default runs directory")
     p_setup.add_argument("--target", action="append", default=[], choices=["codex", "claude-code", "hermes"], help="Agent skill target to validate")
-    p_setup.add_argument("--review-cockpit-url", default="http://127.0.0.1:5050")
+    p_setup.add_argument("--review-cockpit-url", default=None)
     p_setup.add_argument("--repair-workspace", action="store_true", help="Create missing standard workspace directories and placeholder files")
     p_setup.add_argument("--install-suite", action="store_true", help="Build release tree and install required suite skill links")
     p_setup.set_defaults(func=command_setup)

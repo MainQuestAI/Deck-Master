@@ -174,24 +174,33 @@ def run_setup(
 ) -> dict[str, Any]:
     root = install_root()
     root.mkdir(parents=True, exist_ok=True)
+    existing = _read_config()
+    if not isinstance(existing, dict) or existing.get("_invalid"):
+        existing = {}
 
-    active_workspace = Path(workspace).expanduser().resolve() if workspace else None
+    workspace_value = workspace or str(existing.get("active_workspace") or "")
+    active_workspace = Path(workspace_value).expanduser().resolve() if workspace_value else None
     if active_workspace and repair:
         repair_workspace(active_workspace)
 
+    existing_runs = str(existing.get("default_runs_dir") or "")
     default_runs = Path(runs_dir).expanduser().resolve() if runs_dir else None
+    if default_runs is None and existing_runs:
+        default_runs = Path(existing_runs).expanduser().resolve()
     if default_runs is None:
         default_runs = active_workspace / "runs" if active_workspace else root / "runs"
     default_runs.mkdir(parents=True, exist_ok=True)
 
-    agent_targets = targets or ["codex"]
+    existing_targets = existing.get("agent_targets") if isinstance(existing.get("agent_targets"), list) else []
+    agent_targets = targets or existing_targets or ["codex"]
+    review_url = review_cockpit_url or str(existing.get("review_cockpit_url") or "") or DEFAULT_REVIEW_COCKPIT_URL
     config = {
         "schema_version": SCHEMA_VERSION,
         "setup_completed_at": _utc_now(),
         "install_root": str(root),
         "active_workspace": str(active_workspace) if active_workspace else "",
         "default_runs_dir": str(default_runs),
-        "review_cockpit_url": review_cockpit_url or DEFAULT_REVIEW_COCKPIT_URL,
+        "review_cockpit_url": review_url,
         "agent_targets": agent_targets,
     }
     _write_config(config)
