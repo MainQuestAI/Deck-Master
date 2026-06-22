@@ -14,6 +14,18 @@ This branch contains the Real Production Closure iteration:
 - Release trees are self-contained and can be installed through staging, verification, activation, and rollback.
 - RC gate produces one report covering schema parse, artifact validator, release smoke, fixture E2E, optional browser smoke, and benchmark aggregate readiness.
 
+## v1 Skill Suite
+
+Deck Master v1 exposes product-facing `deck-*` skills:
+
+- `deck-init` creates the project workspace and material/reference directories.
+- `deck-brief`, `deck-planner`, and `deck-sourcing` turn raw inputs into page-level production decisions.
+- `deck-producer`, `deck-builder`, and `deck-quality` handle production, build, and quality gates.
+- `deck-review` owns final readiness and export decisions.
+- `deck-autopilot` advances a run until a safe stop condition.
+
+Legacy `ppt-*` skills remain installed as compatibility entries. `ppt-master` is the full backend dependency for `deck-builder`.
+
 ## Start Here
 
 - [Quick Start](docs/quick-start.md)
@@ -27,6 +39,9 @@ This branch contains the Real Production Closure iteration:
 ```bash
 python3 scripts/deck_master.py setup-status --include-suite --output json
 python3 scripts/deck_master.py suite-status --output json
+python3 scripts/deck_master.py init-project --workspace <workspace> --name <project>
+python3 scripts/deck_master.py route-skill --input-type raw_materials
+python3 scripts/deck_master.py workflow-autopilot --mode quick --run-dir <run_dir>
 python3 scripts/deck_master.py release-build --output /tmp/deck-master-release --force
 python3 scripts/deck_master.py rc-gate --output-dir /tmp/deck-master-rc --benchmark-dir benchmarks --skip-browser-smoke --force
 ```

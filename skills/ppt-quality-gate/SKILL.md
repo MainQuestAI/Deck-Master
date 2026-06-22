@@ -8,10 +8,13 @@ triggers:
   - ppt quality gate
 ---
 
-# PPT Quality Gate Capability
+# PPT Quality Gate Compatibility Entry
 
-Use this capability for structured quality review inside Deck Master. Active
-run findings must be imported into Deck Master quality reports.
+This compatibility entry is kept for existing prompts and local installs.
+For new Deck Master workflows, prefer `deck-quality`.
+
+Use it for structured quality review inside Deck Master. Active run findings
+must be imported into Deck Master quality reports.
 
 ## First Checks
 

@@ -129,6 +129,7 @@ from runtime.run_state import (
     write_json,
 )
 from runtime.next_step import resolve_next_step
+from runtime.skill_route import route_for_input_type, route_for_stage
 from runtime.import_log import append_import_log
 from runtime.orchestration import import_plan, import_render_result, orchestration_check
 from runtime.build import build_status, prepare_build, run_build
@@ -141,6 +142,7 @@ from runtime.workspace_binding import bind_workspace
 from runtime.workspace_resolver import resolve_workspace_for_run
 from tools.ppt_library_client import PPTLibraryClientError, import_library_selection, run_library_selection
 from workspace.foundation import MANIFEST_NAME, WorkspaceError, init_workspace, register_workspace, validate_workspace
+from workspace.project_init import init_deck_project
 from runtime.setup_status import SetupError, configured_runs_dir, require_setup_ready, run_setup, setup_status
 
 
@@ -192,6 +194,8 @@ PROTECTED_COMMANDS = {
     "generation-session",
     "run-generation",
     "record-library-feedback",
+    "workflow-autopilot",
+    "autopilot-v1",
 }
 
 
@@ -962,6 +966,10 @@ def command_init_workspace(args: argparse.Namespace) -> dict[str, Any]:
     return {"workspace": str(workspace_dir), "name": args.name, "status": "initialized"}
 
 
+def command_init_project(args: argparse.Namespace) -> dict[str, Any]:
+    return init_deck_project(args.workspace, name=args.name)
+
+
 def command_register_workspace(args: argparse.Namespace) -> dict[str, Any]:
     workspace_dir = Path(args.workspace).expanduser().resolve()
     reference_ppt = Path(args.reference_ppt).expanduser().resolve() if args.reference_ppt else None
@@ -1078,7 +1086,186 @@ def command_start(args: argparse.Namespace) -> dict[str, Any]:
         payload["run_next_command"] = run_state.get("next_command") or ""
         payload["first_action"] = _start_first_action(setup, run_state)
         payload["next_command"] = payload["first_action"]
+        payload["recommended_skill"] = run_state.get("recommended_skill", "")
+        payload["skill_route"] = run_state.get("skill_route", {})
+    else:
+        setup_stage = ""
+        setup_reason = ""
+        if setup.get("status") != "ready":
+            setup_stage = "blocked_setup"
+            setup_reason = "Deck Master setup is not ready."
+        elif setup.get("full_suite_ready") is False:
+            setup_stage = "blocked_suite"
+            setup_reason = "Deck Master suite is not fully ready."
+        if setup_stage:
+            route = route_for_stage(setup_stage, reason=setup_reason, next_command=payload["next_command"])
+        else:
+            route = route_for_input_type("project_start", next_command="deck-master init-project --workspace <workspace> --name <project>")
+        payload["recommended_skill"] = route["recommended_skill"]
+        payload["skill_route"] = route
     return payload
+
+
+def command_route_skill(args: argparse.Namespace) -> dict[str, Any]:
+    if getattr(args, "run_dir", None) or getattr(args, "run_id", None):
+        run_state = resolve_run_state(
+            resolve_run_dir(args),
+            cli_workspace=getattr(args, "workspace", None),
+            run_mode=_normalize_run_mode(getattr(args, "run_mode", None)),
+            dev_allow_unsetup=bool(getattr(args, "dev_allow_unsetup", False)),
+        )
+        return run_state.get("skill_route") or route_for_stage(
+            str(run_state.get("stage") or ""),
+            reason=str(run_state.get("skill_reason") or ""),
+            next_command=str(run_state.get("next_command") or ""),
+        )
+    return route_for_input_type(
+        str(getattr(args, "input_type", "") or ""),
+        next_command=str(getattr(args, "next_command", "") or ""),
+    )
+
+
+def _autopilot_args(args: argparse.Namespace, **overrides: Any) -> argparse.Namespace:
+    values = vars(args).copy()
+    defaults = {
+        "library_mode": "auto",
+        "ppt_lib_command": "ppt-lib",
+        "allow_fixture_library_fallback": False,
+        "planning_mode": "classic",
+        "planner_mode": None,
+        "gate": "draft",
+        "artifact": None,
+        "expected_pages": None,
+        "forbidden": [],
+        "output": None,
+        "decision": ["approved"],
+        "queue_type": "client",
+        "allow_quality_override": False,
+        "force": False,
+        "tool": "ppt-deck-pro-max",
+        "tool_command": None,
+        "dry_run": False,
+        "no_execute": False,
+    }
+    defaults.update(values)
+    defaults.update(overrides)
+    return argparse.Namespace(**defaults)
+
+
+def _autopilot_stop_reason(stage: str) -> str:
+    return {
+        "needs_request": "需要先创建项目请求。",
+        "needs_context": "需要先导入项目资料或 context pack。",
+        "blocked_workspace": "工作区未就绪，需要先运行 deck-init 或 setup repair。",
+        "awaiting_agent_execution": "正在等待外部 Agent 执行生成任务并回传结果。",
+        "generation_running": "生成任务仍在运行或等待状态更新。",
+        "generation_failed": "生成任务失败，需要人工查看原因。",
+        "needs_generation_import": "需要导入 Agent 回传的 generation result。",
+        "needs_review": "页面需要人工审阅或批准。",
+        "ready_for_client_export": "已到客户导出阶段。",
+        "ready_for_benchmark": "已到 benchmark 放行阶段。",
+    }.get(stage, f"当前阶段 {stage} 无自动动作。")
+
+
+def _autopilot_action(stage: str, args: argparse.Namespace) -> tuple[str, dict[str, Any] | None]:
+    if stage == "needs_brief":
+        return "build-brief", command_build_brief(_autopilot_args(args))
+    if stage == "needs_claim_map":
+        return "build-claim-map", command_build_claim_map(_autopilot_args(args))
+    if stage in {"needs_narrative_plan", "needs_page_tasks", "needs_sourcing", "needs_preview"}:
+        return "autoplan", command_autoplan(_autopilot_args(args))
+    if stage == "needs_generation_session":
+        command_generation_session_create(_autopilot_args(args, force=False))
+        return "run-generation", command_run_generation(_autopilot_args(args))
+    if stage == "needs_preview_refresh":
+        return "refresh-preview-from-generation", command_refresh_preview_from_generation(_autopilot_args(args))
+    if stage == "needs_draft_gate":
+        return "quality-gate draft", command_quality_gate(_autopilot_args(args, gate="draft"))
+    if stage == "needs_build":
+        return "build prepare", command_build_prepare(_autopilot_args(args))
+    if stage == "needs_render":
+        return "build run", command_build_run(_autopilot_args(args))
+    if stage in {"ready_for_client_export", "ready_for_benchmark"}:
+        return "export", command_export(_autopilot_args(args, queue_type="client"))
+    return "", None
+
+
+def command_workflow_autopilot(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = resolve_run_dir(args)
+    mode = str(getattr(args, "mode", "quick") or "quick")
+    max_steps = int(getattr(args, "max_steps", 8) or 8)
+    steps: list[dict[str, Any]] = []
+    review_only_allowed = {"needs_draft_gate", "needs_review", "ready_for_client_export", "ready_for_benchmark"}
+    repair_allowed = {"needs_draft_gate", "needs_build", "needs_render", "ready_for_client_export", "ready_for_benchmark"}
+
+    status = "stopped"
+    stop_reason = ""
+    final_state: dict[str, Any] = {}
+
+    for index in range(max_steps):
+        state = resolve_run_state(
+            run_dir,
+            cli_workspace=getattr(args, "workspace", None),
+            run_mode=_normalize_run_mode(getattr(args, "run_mode", None)),
+            dev_allow_unsetup=bool(getattr(args, "dev_allow_unsetup", False)),
+        )
+        final_state = state
+        stage = str(state.get("stage") or "")
+        route = state.get("skill_route") or route_for_stage(stage, next_command=str(state.get("next_command") or ""))
+
+        if mode == "review-only" and stage not in review_only_allowed:
+            stop_reason = "review-only mode only advances review, quality, and export stages."
+            break
+        if mode == "repair" and stage not in repair_allowed:
+            stop_reason = "repair mode only advances quality, build, render, and export stages."
+            break
+
+        action, result = _autopilot_action(stage, args)
+        if not action:
+            stop_reason = _autopilot_stop_reason(stage)
+            break
+
+        steps.append(
+            {
+                "index": index + 1,
+                "stage": stage,
+                "recommended_skill": route.get("recommended_skill", ""),
+                "action": action,
+                "result_status": str((result or {}).get("status") or ""),
+            }
+        )
+
+        next_state = resolve_run_state(
+            run_dir,
+            cli_workspace=getattr(args, "workspace", None),
+            run_mode=_normalize_run_mode(getattr(args, "run_mode", None)),
+            dev_allow_unsetup=bool(getattr(args, "dev_allow_unsetup", False)),
+        )
+        final_state = next_state
+        if str(next_state.get("stage") or "") == stage:
+            stop_reason = f"autopilot stopped because stage did not advance after {action}."
+            break
+    else:
+        status = "max_steps_reached"
+        stop_reason = f"Stopped after {max_steps} steps."
+
+    if steps and status != "max_steps_reached":
+        status = "advanced"
+    report = {
+        "schema_version": "deck_master_autopilot.v1",
+        "status": status,
+        "mode": mode,
+        "run_id": str(final_state.get("run_id") or run_dir.name),
+        "run_dir": str(run_dir),
+        "steps": steps,
+        "stop_reason": stop_reason,
+        "final_stage": str(final_state.get("stage") or ""),
+        "recommended_skill": str(final_state.get("recommended_skill") or ""),
+        "next_command": str(final_state.get("next_command") or ""),
+        "skill_route": final_state.get("skill_route") or {},
+    }
+    write_json(run_dir / "workflow_autopilot_report.json", report)
+    return report
 
 
 def command_run_state(args: argparse.Namespace) -> dict[str, Any]:
@@ -1899,6 +2086,19 @@ def build_parser() -> argparse.ArgumentParser:
     add_planner_mode_arg(p_autoplan)
     p_autoplan.set_defaults(func=command_autoplan)
 
+    def add_autopilot_parser(name: str) -> None:
+        p_workflow = sub.add_parser(name, help="Advance a Deck Master workflow until a safe stop condition")
+        add_run_args(p_workflow)
+        add_library_args(p_workflow)
+        add_planning_mode_arg(p_workflow)
+        add_planner_mode_arg(p_workflow)
+        p_workflow.add_argument("--mode", choices=["quick", "production", "repair", "review-only"], default="quick")
+        p_workflow.add_argument("--max-steps", type=int, default=8)
+        p_workflow.set_defaults(func=command_workflow_autopilot)
+
+    add_autopilot_parser("workflow-autopilot")
+    add_autopilot_parser("autopilot-v1")
+
     p_search = sub.add_parser("search-library", help="Run PPT Library selection for an existing run")
     add_run_args(p_search)
     add_library_args(p_search)
@@ -1991,6 +2191,12 @@ def build_parser() -> argparse.ArgumentParser:
     add_run_args(p_next)
     p_next.set_defaults(func=command_next_step)
 
+    p_route_skill = sub.add_parser("route-skill", help="Resolve the recommended Deck Master skill")
+    p_route_skill.add_argument("--input-type", default="", help="Known input type such as raw_materials or approved_preview")
+    p_route_skill.add_argument("--next-command", default="", help="Optional command to include in route output")
+    add_run_args(p_route_skill)
+    p_route_skill.set_defaults(func=command_route_skill)
+
     p_orchestration = sub.add_parser("orchestration-check", help="Check run orchestration completeness")
     add_run_args(p_orchestration)
     p_orchestration.set_defaults(func=command_orchestration_check)
@@ -2017,6 +2223,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_init_ws.add_argument("--workspace", required=True, help="Workspace directory path")
     p_init_ws.add_argument("--name", required=True, help="Workspace name")
     p_init_ws.set_defaults(func=command_init_workspace)
+
+    p_init_project = sub.add_parser("init-project", help="Initialize a Deck Master project workspace")
+    p_init_project.add_argument("--workspace", required=True, help="Workspace directory path")
+    p_init_project.add_argument("--name", required=True, help="Project name")
+    p_init_project.set_defaults(func=command_init_project)
 
     p_reg_ws = sub.add_parser("register-workspace", help="Register an existing workspace")
     p_reg_ws.add_argument("--workspace", required=True, help="Workspace directory path")

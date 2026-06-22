@@ -18,6 +18,7 @@ from runtime.run_state import (
 )
 from runtime.render import CANONICAL_RENDER_RESULT, LEGACY_RENDER_RESULTS
 from runtime.setup_status import setup_readiness
+from runtime.skill_route import route_for_stage
 from runtime.workspace_resolver import resolve_workspace_for_run
 
 SCHEMA_VERSION = "deck_run_state.v1"
@@ -663,6 +664,13 @@ def resolve_run_state(
     blocked_actions.extend({"action": "workspace", "reason": msg} for msg in workspace.get("reasons", []) if msg)
 
     readiness = _run_readiness_summary(root, request, setup_payload, workspace, review_status)
+    next_command = _next_command(stage, root, run_id)
+    first_reason = reason
+    for item in blocked_actions:
+        if item.get("reason"):
+            first_reason = str(item["reason"])
+            break
+    skill_route = route_for_stage(stage, reason=first_reason, next_command=next_command)
 
     return {
         "schema_version": SCHEMA_VERSION,
@@ -674,5 +682,10 @@ def resolve_run_state(
         "readiness": readiness,
         "allowed_actions": allowed_actions,
         "blocked_actions": blocked_actions,
-        "next_command": _next_command(stage, root, run_id),
+        "next_command": next_command,
+        "recommended_skill": skill_route["recommended_skill"],
+        "skill_stage": skill_route["skill_stage"],
+        "skill_reason": skill_route["skill_reason"],
+        "next_skill_command": skill_route["next_skill_command"],
+        "skill_route": skill_route,
     }

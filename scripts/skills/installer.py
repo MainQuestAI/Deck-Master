@@ -17,8 +17,8 @@ from typing import Any
 
 SKILL_NAME = "deck-master"
 SUITE_NAME = "deck-master"
-SUITE_VERSION = "0.9.13"
-COMPANION_MANIFEST_SCHEMA_VERSION = "deck_master_companion_manifest.v2"
+SUITE_VERSION = "1.0.0"
+COMPANION_MANIFEST_SCHEMA_VERSION = "deck_master_companion_manifest.v3"
 PRODUCT_CAPABILITY_MANIFEST_SCHEMA_VERSION = "deck_master_product_capability_manifest.v1"
 PRODUCT_CAPABILITY_MANIFEST_NAME = "product-capability-manifest.json"
 RELEASE_MANIFEST_NAME = "release-manifest.json"
@@ -44,6 +44,12 @@ SUITE_SKILLS: list[dict[str, Any]] = [
     {
         "name": "deck-master",
         "required": True,
+        "role": "orchestrator",
+        "public_name": "deck-master",
+        "compat_aliases": [],
+        "input_types": ["deck_workflow", "run_state", "review_cockpit"],
+        "exit_artifacts": ["run_state", "next_step", "review_workspace"],
+        "backend_dependency": "",
         "required_for": ["full_deck_workflow", "setup", "run_orchestration"],
         "install_source": "bundled",
         "cli": "deck-master",
@@ -54,8 +60,104 @@ SUITE_SKILLS: list[dict[str, Any]] = [
         "conflict_policy": "never_overwrite_real_directory",
     },
     {
+        "name": "deck-setup",
+        "required": True,
+        "role": "setup",
+        "public_name": "deck-setup",
+        "compat_aliases": [],
+        "input_types": ["first_run_setup", "suite_install"],
+        "exit_artifacts": ["setup_status", "suite_status"],
+        "backend_dependency": "",
+        "required_for": ["setup", "suite_install"],
+        "install_source": "bundled",
+        "cli": "deck-master",
+        "required_capabilities": ["deck_master.setup.v1"],
+        "optional_capabilities": [],
+        "schema_versions": {"setup_status": "deck_master_setup_status.v2"},
+        "adoption_policy": "bundled_symlink_only",
+        "conflict_policy": "never_overwrite_real_directory",
+    },
+    {
+        "name": "deck-upgrade",
+        "required": True,
+        "role": "upgrade",
+        "public_name": "deck-upgrade",
+        "compat_aliases": [],
+        "input_types": ["upgrade", "rollback", "release_tree"],
+        "exit_artifacts": ["release_manifest", "capability_lock", "sha256sums"],
+        "backend_dependency": "",
+        "required_for": ["upgrade", "release_management"],
+        "install_source": "bundled",
+        "cli": "deck-master",
+        "required_capabilities": ["deck_master.release.v1"],
+        "optional_capabilities": [],
+        "schema_versions": {"release_manifest": "deck_master_release_manifest.v1"},
+        "adoption_policy": "bundled_symlink_only",
+        "conflict_policy": "never_overwrite_real_directory",
+    },
+    {
+        "name": "deck-doctor",
+        "required": True,
+        "role": "diagnostics",
+        "public_name": "deck-doctor",
+        "compat_aliases": [],
+        "input_types": ["setup_issue", "suite_issue", "run_issue"],
+        "exit_artifacts": ["doctor_report", "setup_status", "run_state"],
+        "backend_dependency": "",
+        "required_for": ["diagnostics", "repair"],
+        "install_source": "bundled",
+        "cli": "deck-master",
+        "required_capabilities": ["deck_master.doctor.v1"],
+        "optional_capabilities": [],
+        "schema_versions": {"doctor_report": "deck_master_doctor.v1"},
+        "adoption_policy": "bundled_symlink_only",
+        "conflict_policy": "never_overwrite_real_directory",
+    },
+    {
+        "name": "deck-init",
+        "required": True,
+        "role": "workspace_initialization",
+        "public_name": "deck-init",
+        "compat_aliases": ["init-workspace"],
+        "input_types": ["new_workspace", "raw_materials_directory", "project_start"],
+        "exit_artifacts": ["deck_project", "material_inventory", "workspace_policy", "run_bindings"],
+        "backend_dependency": "",
+        "required_for": ["deck_init", "workspace"],
+        "install_source": "bundled",
+        "cli": "deck-master",
+        "required_capabilities": ["deck_master.workspace_init.v1"],
+        "optional_capabilities": [],
+        "schema_versions": {"deck_project": "deck_master_project.v1"},
+        "adoption_policy": "bundled_symlink_only",
+        "conflict_policy": "never_overwrite_real_directory",
+    },
+    {
+        "name": "deck-brief",
+        "required": True,
+        "role": "briefing",
+        "public_name": "deck-brief",
+        "compat_aliases": ["build-brief"],
+        "input_types": ["raw_materials", "deep_research_report", "meeting_notes"],
+        "exit_artifacts": ["deck_brief", "claim_map_seed"],
+        "backend_dependency": "",
+        "required_for": ["brief", "context"],
+        "install_source": "bundled",
+        "cli": "deck-master",
+        "required_capabilities": ["deck_master.brief.v1"],
+        "optional_capabilities": [],
+        "schema_versions": {"deck_brief": "deck_brief.v1"},
+        "adoption_policy": "bundled_symlink_only",
+        "conflict_policy": "never_overwrite_real_directory",
+    },
+    {
         "name": "deck-planner",
         "required": True,
+        "role": "planning",
+        "public_name": "deck-planner",
+        "compat_aliases": ["autoplan"],
+        "input_types": ["deck_brief", "claim_map", "narrative_request"],
+        "exit_artifacts": ["narrative_plan", "page_tasks", "sourcing_intent"],
+        "backend_dependency": "",
         "required_for": ["planning", "brief", "claim_map", "narrative_plan"],
         "install_source": "bundled",
         "cli": "deck-master",
@@ -66,8 +168,95 @@ SUITE_SKILLS: list[dict[str, Any]] = [
         "conflict_policy": "never_overwrite_real_directory",
     },
     {
+        "name": "deck-sourcing",
+        "required": True,
+        "role": "asset_sourcing",
+        "public_name": "deck-sourcing",
+        "compat_aliases": ["ppt-library"],
+        "input_types": ["page_tasks", "asset_request", "historical_slide_search"],
+        "exit_artifacts": ["library_selection", "sourcing_plan", "asset_feedback"],
+        "backend_dependency": "ppt-library",
+        "required_for": ["library_sourcing", "asset_feedback"],
+        "install_source": "bundled",
+        "cli": "deck-master",
+        "required_capabilities": ["deck_master.sourcing.v1"],
+        "optional_capabilities": ["ppt_library.feedback.v1"],
+        "schema_versions": {"sourcing_plan": "deck_sourcing_plan.v1"},
+        "adoption_policy": "bundled_symlink_only",
+        "conflict_policy": "never_overwrite_real_directory",
+    },
+    {
+        "name": "deck-producer",
+        "required": True,
+        "role": "page_production",
+        "public_name": "deck-producer",
+        "compat_aliases": ["ppt-deck-pro-max"],
+        "input_types": ["generation_session", "page_tasks", "dispatch_package"],
+        "exit_artifacts": ["deck_generation_result.v2", "preview_refresh"],
+        "backend_dependency": "ppt-deck-pro-max",
+        "required_for": ["new_generation", "adapt_generation"],
+        "install_source": "bundled",
+        "cli": "deck-master",
+        "required_capabilities": ["deck_master.generation.v1"],
+        "optional_capabilities": [],
+        "schema_versions": {
+            "generation_result": "deck_generation_result.v2",
+            "generation_result_legacy": "deck_generation_result.v1",
+        },
+        "adoption_policy": "bundled_symlink_only",
+        "conflict_policy": "never_overwrite_real_directory",
+    },
+    {
+        "name": "deck-builder",
+        "required": True,
+        "role": "build",
+        "public_name": "deck-builder",
+        "compat_aliases": ["ppt-master", "render"],
+        "input_types": ["approved_preview", "build_manifest", "render_request"],
+        "exit_artifacts": ["build_manifest", "artifact_manifest", "render_result.v2", "final_artifacts"],
+        "backend_dependency": "ppt-master",
+        "required_for": ["build", "render", "delivery", "benchmark_rc"],
+        "install_source": "bundled",
+        "cli": "deck-master",
+        "required_capabilities": ["deck_master.build.v1"],
+        "optional_capabilities": [],
+        "schema_versions": {
+            "build_manifest": "deck_build_manifest.v1",
+            "render_result": "deck_render_result.v2",
+        },
+        "adoption_policy": "bundled_symlink_only",
+        "conflict_policy": "never_overwrite_real_directory",
+    },
+    {
+        "name": "deck-quality",
+        "required": True,
+        "role": "quality_gate",
+        "public_name": "deck-quality",
+        "compat_aliases": ["ppt-quality-gate"],
+        "input_types": ["draft_review", "render_artifact", "delivery_artifact", "pptx_package"],
+        "exit_artifacts": ["quality_report", "customer_visible_safety_gate", "delivery_gate"],
+        "backend_dependency": "ppt-quality-gate",
+        "required_for": ["quality", "standalone_audit", "quality_findings_import"],
+        "install_source": "bundled",
+        "cli": "deck-master",
+        "required_capabilities": ["deck_master.quality.v1"],
+        "optional_capabilities": [],
+        "schema_versions": {
+            "quality_report": "deck_quality_report.v1",
+            "customer_visible_safety_gate": "deck_customer_visible_safety_gate.v1",
+        },
+        "adoption_policy": "bundled_symlink_only",
+        "conflict_policy": "never_overwrite_real_directory",
+    },
+    {
         "name": "deck-review",
         "required": True,
+        "role": "review_delivery",
+        "public_name": "deck-review",
+        "compat_aliases": ["export", "final-readiness"],
+        "input_types": ["quality_report", "final_readiness", "review_workspace"],
+        "exit_artifacts": ["export_queue", "final_readiness", "delivery_validation"],
+        "backend_dependency": "",
         "required_for": ["review", "quality", "delivery"],
         "install_source": "bundled",
         "cli": "deck-master",
@@ -78,8 +267,50 @@ SUITE_SKILLS: list[dict[str, Any]] = [
         "conflict_policy": "never_overwrite_real_directory",
     },
     {
+        "name": "deck-learn",
+        "required": False,
+        "role": "learning",
+        "public_name": "deck-learn",
+        "compat_aliases": ["build-learning-pack"],
+        "input_types": ["delivery_outcome", "library_feedback", "benchmark_result"],
+        "exit_artifacts": ["workspace_learning_pack", "feedback_queue"],
+        "backend_dependency": "",
+        "required_for": ["learning", "asset_feedback"],
+        "install_source": "bundled",
+        "cli": "deck-master",
+        "required_capabilities": ["deck_master.learning.v1"],
+        "optional_capabilities": [],
+        "schema_versions": {"workspace_learning_pack": "deck_workspace_learning_pack.v1"},
+        "adoption_policy": "bundled_symlink_only",
+        "conflict_policy": "never_overwrite_real_directory",
+    },
+    {
+        "name": "deck-autopilot",
+        "required": True,
+        "role": "workflow",
+        "public_name": "deck-autopilot",
+        "compat_aliases": ["autopilot-v1"],
+        "input_types": ["raw_materials", "run_state", "repair_request", "review_request"],
+        "exit_artifacts": ["workflow_report", "run_state", "next_step"],
+        "backend_dependency": "",
+        "required_for": ["workflow_autopilot", "full_deck_workflow"],
+        "install_source": "bundled",
+        "cli": "deck-master",
+        "required_capabilities": ["deck_master.autopilot.v1"],
+        "optional_capabilities": [],
+        "schema_versions": {"workflow_report": "deck_master_autopilot.v1"},
+        "adoption_policy": "bundled_symlink_only",
+        "conflict_policy": "never_overwrite_real_directory",
+    },
+    {
         "name": "ppt-master",
         "required": True,
+        "role": "compatibility_backend",
+        "public_name": "deck-builder",
+        "compat_aliases": [],
+        "input_types": ["render_request", "build_backend"],
+        "exit_artifacts": ["render_result.v2", "final_artifacts"],
+        "backend_dependency": "",
         "required_for": ["render", "delivery", "benchmark_rc"],
         "install_source": "release_bundle",
         "cli": "deck-master",
@@ -95,6 +326,12 @@ SUITE_SKILLS: list[dict[str, Any]] = [
     {
         "name": "ppt-library",
         "required": True,
+        "role": "compatibility_alias",
+        "public_name": "deck-sourcing",
+        "compat_aliases": [],
+        "input_types": ["historical_slide_search", "library_selection"],
+        "exit_artifacts": ["library_selection", "asset_feedback"],
+        "backend_dependency": "",
         "required_for": ["library_sourcing", "asset_feedback"],
         "install_source": "release_bundle",
         "cli": "deck-master",
@@ -114,6 +351,12 @@ SUITE_SKILLS: list[dict[str, Any]] = [
     {
         "name": "ppt-deck-pro-max",
         "required": True,
+        "role": "compatibility_alias",
+        "public_name": "deck-producer",
+        "compat_aliases": [],
+        "input_types": ["generation_session", "page_production"],
+        "exit_artifacts": ["deck_generation_result.v2"],
+        "backend_dependency": "",
         "required_for": ["new_generation", "adapt_generation"],
         "install_source": "release_bundle",
         "cli": "deck-master",
@@ -132,6 +375,12 @@ SUITE_SKILLS: list[dict[str, Any]] = [
     {
         "name": "ppt-quality-gate",
         "required": True,
+        "role": "compatibility_alias",
+        "public_name": "deck-quality",
+        "compat_aliases": [],
+        "input_types": ["quality_audit", "quality_findings"],
+        "exit_artifacts": ["quality_report", "quality_findings"],
+        "backend_dependency": "",
         "required_for": ["standalone_audit", "quality_findings_import"],
         "install_source": "release_bundle",
         "cli": "deck-master",
@@ -510,6 +759,12 @@ def companion_manifest() -> dict[str, Any]:
     for spec in SUITE_SKILLS:
         item = {
             "name": spec["name"],
+            "role": spec.get("role", ""),
+            "public_name": spec.get("public_name", spec["name"]),
+            "compat_aliases": list(spec.get("compat_aliases") or []),
+            "input_types": list(spec.get("input_types") or []),
+            "exit_artifacts": list(spec.get("exit_artifacts") or []),
+            "backend_dependency": spec.get("backend_dependency", ""),
             "required_for": spec["required_for"],
             "install_source": spec["install_source"],
             "min_cli_version": "0.1.0" if spec["name"] != SKILL_NAME else SUITE_VERSION,
@@ -536,17 +791,41 @@ def companion_manifest() -> dict[str, Any]:
 
 
 def product_capability_manifest() -> dict[str, Any]:
-    core = [str(spec["name"]) for spec in SUITE_SKILLS if str(spec["name"]).startswith("deck-")]
+    core = [
+        str(spec["name"])
+        for spec in SUITE_SKILLS
+        if str(spec["name"]).startswith("deck-") and str(spec.get("role") or "") != "compatibility_alias"
+    ]
     product_capabilities = [str(spec["name"]) for spec in SUITE_SKILLS if str(spec["name"]).startswith("ppt-")]
+    backend_dependencies = {
+        str(spec["name"]): str(spec.get("backend_dependency") or "")
+        for spec in SUITE_SKILLS
+        if spec.get("backend_dependency")
+    }
+    public_routes = {
+        str(spec["name"]): {
+            "role": str(spec.get("role") or ""),
+            "public_name": str(spec.get("public_name") or spec["name"]),
+            "compat_aliases": list(spec.get("compat_aliases") or []),
+            "input_types": list(spec.get("input_types") or []),
+            "exit_artifacts": list(spec.get("exit_artifacts") or []),
+            "backend_dependency": str(spec.get("backend_dependency") or ""),
+        }
+        for spec in SUITE_SKILLS
+    }
     return {
         "schema_version": PRODUCT_CAPABILITY_MANIFEST_SCHEMA_VERSION,
         "product": "deck-master",
         "runtime_shape": "agent_facing_local_first",
         "provider_policy": "zero_builtin_llm_provider",
         "required_capabilities": [str(spec["name"]) for spec in _suite_specs(include_optional=False)],
-        "optional_capabilities": ["deck-learning"],
+        "optional_capabilities": ["deck-learn"],
         "core_skills": core,
+        "public_skills": core,
         "product_capability_skills": product_capabilities,
+        "compatibility_skills": product_capabilities,
+        "backend_dependencies": backend_dependencies,
+        "skill_routes": public_routes,
         "capability_policy": {
             "required_suite_must_be_full_ready": True,
             "outputs_must_write_back_to_run": True,
@@ -1149,6 +1428,12 @@ def inspect_suite_status(
                 report["status"] = "blocked_cli_missing"
                 report["valid"] = False
             report["cli_status"] = cli_state
+            report["role"] = str(spec.get("role") or "")
+            report["public_name"] = str(spec.get("public_name") or spec["name"])
+            report["compat_aliases"] = list(spec.get("compat_aliases") or [])
+            report["input_types"] = list(spec.get("input_types") or [])
+            report["exit_artifacts"] = list(spec.get("exit_artifacts") or [])
+            report["backend_dependency"] = str(spec.get("backend_dependency") or "")
             report["required_for"] = spec["required_for"]
             report["required"] = bool(spec.get("required", True))
             reports.append(report)
@@ -1194,14 +1479,30 @@ def inspect_suite_status(
         for target in resolved_targets
     )
 
+    def ready(*names: str) -> bool:
+        return all(by_name.get(name) == "ready" for name in names)
+
     task_readiness = {
         "full_deck_workflow": "ready" if full_suite_ready else ("blocked" if not deck_ready else "degraded_ready"),
+        "setup": "ready" if ready("deck-setup") else "blocked",
+        "upgrade": "ready" if ready("deck-upgrade") else "blocked",
+        "diagnostics": "ready" if ready("deck-doctor") else "blocked",
+        "deck_init": "ready" if ready("deck-init") else "blocked",
+        "brief": "ready" if ready("deck-brief") else "blocked",
         "planning": "ready" if by_name.get("deck-planner") == "ready" else "blocked",
         "review": "ready" if by_name.get("deck-review") == "ready" else "blocked",
-        "library_sourcing": "ready" if by_name.get("ppt-library") == "ready" else "blocked",
-        "new_generation": "ready" if by_name.get("ppt-deck-pro-max") == "ready" else "blocked",
-        "standalone_audit": "ready" if by_name.get("ppt-quality-gate") == "ready" else "blocked",
-        "render": "ready" if by_name.get("ppt-master") == "ready" else "blocked",
+        "deck_sourcing": "ready" if ready("deck-sourcing") else "blocked",
+        "library_sourcing": "ready" if ready("deck-sourcing", "ppt-library") else "blocked",
+        "deck_producer": "ready" if ready("deck-producer") else "blocked",
+        "new_generation": "ready" if ready("deck-producer", "ppt-deck-pro-max") else "blocked",
+        "deck_builder_adapter": "ready" if ready("deck-builder") else "blocked",
+        "ppt_master_backend": "ready" if ready("ppt-master") else "blocked",
+        "deck_builder": "ready" if ready("deck-builder", "ppt-master") else "blocked",
+        "render": "ready" if ready("deck-builder", "ppt-master") else "blocked",
+        "deck_quality": "ready" if ready("deck-quality") else "blocked",
+        "standalone_audit": "ready" if ready("deck-quality", "ppt-quality-gate") else "blocked",
+        "learning": "ready" if by_name.get("deck-learn") == "ready" else "optional",
+        "workflow_autopilot": "ready" if ready("deck-autopilot") else "blocked",
         "delivery": "ready" if full_suite_ready else "blocked",
     }
 

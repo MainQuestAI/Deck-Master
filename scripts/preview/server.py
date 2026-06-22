@@ -568,6 +568,9 @@ class PreviewHandler(BaseHTTPRequestHandler):
                 "orchestration": orchestration,
                 "next_step": next_step,
                 "next_command": next_step.get("next_command", ""),
+                "recommended_skill": next_step.get("recommended_skill", ""),
+                "skill_stage": next_step.get("skill_stage", ""),
+                "skill_route": next_step.get("skill_route", {}),
                 "run_mode": request.get("run_mode", ""),
                 "workspace": request.get("workspace", ""),
             }

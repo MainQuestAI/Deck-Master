@@ -90,6 +90,7 @@ class NextStepResolverTest(unittest.TestCase):
         result = self._resolve()
         self._assert_shape(result, "needs_brief")
         self.assertIn(DECK_BRIEF_NAME, result["missing_artifacts"])
+        self.assertEqual("deck-brief", result["recommended_skill"])
 
     def test_has_brief_missing_claim_map_returns_needs_claim_map(self) -> None:
         self._write_json(REQUEST_NAME, {"run_id": "r1"})
@@ -203,6 +204,7 @@ class NextStepResolverTest(unittest.TestCase):
 
         self._assert_shape(result, "needs_build")
         self.assertEqual("needs_build", result["runtime_stage"])
+        self.assertEqual("deck-builder", result["recommended_skill"])
         self.assertIn("build prepare", result["next_command"])
 
     def test_prepared_build_without_render_returns_needs_render(self) -> None:
@@ -218,6 +220,7 @@ class NextStepResolverTest(unittest.TestCase):
 
         self._assert_shape(result, "needs_render")
         self.assertEqual("needs_render", result["runtime_stage"])
+        self.assertEqual("deck-builder", result["recommended_skill"])
         self.assertIn("build run", result["next_command"])
 
     def test_result_always_contains_required_keys(self) -> None:

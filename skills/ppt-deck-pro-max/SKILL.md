@@ -8,10 +8,13 @@ triggers:
   - ppt deck pro max
 ---
 
-# PPT Deck Pro Max Capability
+# PPT Deck Pro Max Compatibility Entry
 
-Use this capability for page production inside a Deck Master generation session.
-Active run output must return through Deck Master generation-session import.
+This compatibility entry is kept for existing prompts and local installs.
+For new Deck Master workflows, prefer `deck-producer`.
+
+Use it for page production inside a Deck Master generation session. Active run
+output must return through Deck Master generation-session import.
 
 ## First Checks
 

@@ -4,6 +4,17 @@
 状态：v1.0 前置产品 Spec，供 Skill Suite 重命名、路由、Workspace 初始化、Setup/Upgrade、连续 Workflow 迭代使用。
 参考对象：GStack skill suite、Deck Master v0.9.12 Skill Suite Runtime Foundation、Deck Master Skill System Product Architecture、当前本机 v0.9.13 安装版。
 
+## Implementation Status
+
+2026-06-22 已落地首版实现：
+
+- `skills/manifest.json` 已升级为 v1 Skill Suite 路由清单。
+- `deck-init`、`deck-brief`、`deck-sourcing`、`deck-producer`、`deck-builder`、`deck-quality`、`deck-learn`、`deck-autopilot` 等公共 Skill 包已加入安装树。
+- `ppt-library`、`ppt-deck-pro-max`、`ppt-master`、`ppt-quality-gate` 保留为兼容入口，其中 `ppt-master` 是 `deck-builder` 的完整后端依赖。
+- `init-project` 已实现项目 Workspace 初始化，写入 `.deck-master/deck_project.json`、`material_inventory.json`、`workspace_policy.json` 和 `run_bindings.json`。
+- `route-skill`、`next-step`、`run-state`、Review Workspace runtime payload 已返回 `recommended_skill` 和 `skill_route`。
+- `workflow-autopilot` / `autopilot-v1` 已实现安全连续推进入口。
+
 ## Summary
 
 本轮目标是把 Deck Master 的 skill 体系从“能力包列表”升级为“用户输入驱动的专业 Deck 生产系统”。

@@ -9,10 +9,13 @@ triggers:
   - ppt master
 ---
 
-# PPT Master Capability
+# PPT Master Backend Compatibility Entry
 
-PPT Master is the default Deck Master build and render capability. In an active
-Deck Master run, every output must return through Deck Master import or state
+PPT Master is the full production backend used by `deck-builder`. This
+compatibility entry is kept for existing prompts and local installs.
+
+Use `deck-builder` as the public Deck Master build entry. In an active Deck
+Master run, every backend output must return through Deck Master import or state
 update paths.
 
 ## First Checks

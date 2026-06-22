@@ -16,6 +16,7 @@ from runtime.run_state import (
     read_json,
 )
 from runtime.run_state_resolver import resolve_run_state
+from runtime.skill_route import route_for_stage
 
 SCHEMA_VERSION = "deck_next_step.v1"
 
@@ -126,6 +127,11 @@ def resolve_next_step(
 
     missing_artifacts = MISSING_BY_STAGE.get(stage, [])
     blocking_issues: list[str] = [entry.get("reason", "") for entry in state.get("blocked_actions", []) if entry.get("reason")]
+    route = route_for_stage(
+        str(stage),
+        reason=blocking_issues[0] if blocking_issues else "",
+        next_command=str(state.get("next_command") or ""),
+    )
 
     approved_pages, pending_pages = _counts_from_preview(root)
 
@@ -138,6 +144,11 @@ def resolve_next_step(
         "missing_artifacts": missing_artifacts,
         "blocking_issues": blocking_issues,
         "run_mode": state.get("run_mode", ""),
+        "recommended_skill": route["recommended_skill"],
+        "skill_stage": route["skill_stage"],
+        "skill_reason": route["skill_reason"],
+        "next_skill_command": route["next_skill_command"],
+        "skill_route": route,
     }
 
     if approved_pages:

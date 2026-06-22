@@ -962,6 +962,9 @@ def build_workspace_payload(run_dir: str | Path) -> dict[str, Any]:
     production_flow = {
         "stage": run_state_summary.get("stage", ""),
         "next_command": run_state_summary.get("next_command", ""),
+        "recommended_skill": run_state_summary.get("recommended_skill", ""),
+        "skill_stage": run_state_summary.get("skill_stage", ""),
+        "skill_route": run_state_summary.get("skill_route", {}),
         "generation": runtime_artifacts.get("generation", {}),
         "build": runtime_artifacts.get("build", {}),
         "render": runtime_artifacts.get("render", {}),

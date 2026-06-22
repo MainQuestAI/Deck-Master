@@ -53,7 +53,26 @@ The release tree includes:
 - `deck_capability_lock.json`
 - `SHA256SUMS`
 
-## 4. Production Generation Handoff
+## 4. Initialize A Project Workspace
+
+```bash
+python3 scripts/deck_master.py init-project --workspace <workspace> --name <project>
+python3 scripts/deck_master.py route-skill --input-type raw_materials
+```
+
+`init-project` creates customer material, meeting, AI process, reference, delivery, quality, and `.deck-master` metadata directories. It is idempotent and keeps existing user files.
+
+## 5. Use The v1 Skill Route
+
+```bash
+python3 scripts/deck_master.py next-step --run-dir <run_dir>
+python3 scripts/deck_master.py route-skill --run-dir <run_dir>
+python3 scripts/deck_master.py workflow-autopilot --mode quick --run-dir <run_dir>
+```
+
+`next-step` and `route-skill` now return `recommended_skill`, `skill_stage`, and `skill_route`. Build stages route to `deck-builder`; raw material routes to `deck-brief`; final delivery routes to `deck-review`.
+
+## 6. Production Generation Handoff
 
 Production generation creates an Agent dispatch package and waits for an external result.
 
@@ -74,7 +93,7 @@ python3 scripts/deck_master.py generation-session import-results --run-dir <run_
 
 The imported result must match `deck_generation_result.v2`, run/session ids, checksum, and run-relative artifact paths.
 
-## 5. Build, Render, Readiness, Export
+## 7. Build, Render, Readiness, Export
 
 ```bash
 python3 scripts/deck_master.py build prepare --run-dir <run_dir>
@@ -85,7 +104,7 @@ python3 scripts/deck_master.py export --run-dir <run_dir>
 
 Client export requires final readiness to be ready. Internal export can continue with degraded marking when needed.
 
-## 6. RC Gate
+## 8. RC Gate
 
 ```bash
 python3 scripts/deck_master.py rc-gate \

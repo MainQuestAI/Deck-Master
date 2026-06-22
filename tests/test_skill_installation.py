@@ -223,7 +223,25 @@ class SkillInstallationTest(unittest.TestCase):
         deck = [item for item in result["results"] if item["skill"] == "deck-master"]
         self.assertTrue(deck)
         self.assertTrue(result["suite_status"]["full_suite_ready"])
-        for skill_name in ["deck-master", "deck-planner", "deck-review", "ppt-master", "ppt-library", "ppt-deck-pro-max", "ppt-quality-gate"]:
+        for skill_name in [
+            "deck-master",
+            "deck-setup",
+            "deck-upgrade",
+            "deck-doctor",
+            "deck-init",
+            "deck-brief",
+            "deck-planner",
+            "deck-sourcing",
+            "deck-producer",
+            "deck-builder",
+            "deck-quality",
+            "deck-review",
+            "deck-autopilot",
+            "ppt-master",
+            "ppt-library",
+            "ppt-deck-pro-max",
+            "ppt-quality-gate",
+        ]:
             self.assertTrue((self.agent_dir / skill_name).is_symlink(), f"missing suite link: {skill_name}")
 
     def test_suite_install_multi_target_reports_full_ready_only_when_all_targets_ready(self) -> None:
@@ -271,6 +289,9 @@ class SkillInstallationTest(unittest.TestCase):
         self.assertTrue(result["full_suite_ready"])
         self.assertTrue(result["target_readiness"]["codex"]["required_ready"])
         self.assertEqual("ready", result["task_readiness"]["full_deck_workflow"])
+        self.assertEqual("ready", result["task_readiness"]["deck_builder_adapter"])
+        self.assertEqual("ready", result["task_readiness"]["ppt_master_backend"])
+        self.assertEqual("ready", result["task_readiness"]["deck_builder"])
 
     def test_release_tree_contains_required_skills_capabilities_and_manifest(self) -> None:
         release_root = Path(self._tmp) / "release"

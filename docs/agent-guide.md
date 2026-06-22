@@ -11,6 +11,29 @@ This guide is for Codex, Claude Code, and other local coding agents working on D
 - Do not use fixture fallback in production or benchmark mode.
 - Do not commit private benchmark source documents, generated runs, generated reports, caches, tokens, or local env files.
 
+## Skill Routing
+
+Use public `deck-*` names for new workflows:
+
+- `deck-init`: project workspace and material directories.
+- `deck-brief`: raw material to brief and claim inputs.
+- `deck-planner`: narrative, sections, page tasks.
+- `deck-sourcing`: reuse/adapt/generate decisions.
+- `deck-producer`: generation session and result import.
+- `deck-builder`: build artifacts through the PPT Master backend.
+- `deck-quality`: quality gates and customer-visible safety.
+- `deck-review`: final readiness, repair queue, and export.
+- `deck-autopilot`: continuous workflow until a safe stop condition.
+
+Use these commands to route instead of guessing:
+
+```bash
+python3 scripts/deck_master.py route-skill --input-type raw_materials
+python3 scripts/deck_master.py next-step --run-dir <run_dir>
+```
+
+Legacy `ppt-*` entries remain valid compatibility names. Prefer `deck-builder` in user-facing text; mention `ppt-master` only as the full backend dependency.
+
 ## Generation Handoff
 
 Production generation uses this state flow:
