@@ -1,5 +1,33 @@
 # Real Production Closure Test Evidence
 
+## A5 Evidence — Runtime & Review Workspace Integration
+
+Implemented on 2026-06-22 in `/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure`.
+
+Coverage added:
+
+- Run state now exposes `awaiting_agent_execution`, `needs_build`, and `needs_render` as distinct runtime stages.
+- `next-step` now carries `runtime_stage` while preserving legacy `status` values for compatibility.
+- Workspace API now exposes `runtime.production_flow` with generation, build, render, artifact count, formats, editability, source fingerprint, and next command.
+- Delivery preview API now exposes render v2 artifact metadata including `artifact_manifest`, `artifact_count`, `formats`, `editability`, and `source_mode`.
+- Review Workspace stage selection now uses run-state for Agent, Build, and Render blockers while keeping old readiness fields available.
+- UI stage workspace now shows production stage, build status, render status, formats, and editability.
+
+| Command | Result | Notes |
+|---|---|---|
+| `python3 -m unittest tests.test_run_state_resolver tests.test_next_step tests.test_preview_server` | pass | 64 A5 runtime/workspace tests passed |
+| `git diff --check` | pass | No whitespace or patch formatting issues |
+| `python3 -m compileall scripts tests` | pass | Python files compile |
+| `python3 -m unittest discover -s tests` | pass | 759 tests passed |
+
+New A5 test cases cover:
+
+- `awaiting_agent_execution` is surfaced as its own run-state stage.
+- Fresh generation results with no build manifest return `needs_build`.
+- Existing build manifest with no render result returns `needs_render`.
+- `next-step` exposes `needs_build`, `needs_render`, and `runtime_stage`.
+- Workspace API exposes build/render artifact metadata from render result v2.
+
 ## A4 Evidence — Build / Render Artifacts
 
 Implemented on 2026-06-22 in `/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure`.

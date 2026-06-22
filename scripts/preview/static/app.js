@@ -424,6 +424,9 @@ function renderStageWorkspace() {
   const workspace = currentWorkspace();
   const stage = currentStage();
   const delivery = workspace.run_summary?.delivery_preview || {};
+  const production = workspace.run_summary?.production_flow || workspace.runtime || {};
+  const build = production.build || {};
+  const render = production.render || {};
   const actions = workspace.run_summary?.next_actions || [];
   const blockers = workspace.health?.blocking_reasons || [];
 
@@ -444,6 +447,28 @@ function renderStageWorkspace() {
     <div class="stage-check-item">
       <strong>${escapeHtml(formatActionType(item.action_type))}</strong>
       <p>${escapeHtml(item.message || "继续推进当前阶段。")}</p>
+    </div>
+  `).join("");
+  const flowCards = [
+    {
+      label: "生产阶段",
+      value: production.stage || stage.label || "待准备",
+      detail: production.next_command || stage.next_step || "等待下一步动作。",
+    },
+    {
+      label: "构建状态",
+      value: build.status || "missing",
+      detail: `产物 ${build.artifact_count || 0} 个 · ${build.formats?.join(", ") || "暂无格式"}`,
+    },
+    {
+      label: "渲染状态",
+      value: render.status || "missing",
+      detail: `${render.tool || "ppt-master"} · ${render.editability?.join(", ") || "未登记可编辑性"}`,
+    },
+  ].map((item) => `
+    <div class="stage-check-item">
+      <strong>${escapeHtml(item.label)}：${escapeHtml(item.value)}</strong>
+      <p>${escapeHtml(item.detail)}</p>
     </div>
   `).join("");
 
@@ -467,6 +492,7 @@ function renderStageWorkspace() {
           <span class="panel-title">当前要推进的事情</span>
           <h3>${escapeHtml(stage.next_step || "继续推进当前阶段")}</h3>
           <div class="stage-check-grid">
+            ${flowCards}
             ${actionCards || '<div class="stage-check-item"><strong>等待下一步</strong><p>当前没有额外动作建议。</p></div>'}
           </div>
         </section>
@@ -556,7 +582,12 @@ function renderDeliveryPreview() {
         <div class="stage-card">
           <span class="panel-title">渲染时间</span>
           <strong>${escapeHtml(formatTime(delivery.created_at))}</strong>
-          <p>${escapeHtml(`渲染状态：${delivery.render_status || "未记录"}`)}</p>
+          <p>${escapeHtml(`渲染状态：${delivery.render_status || "未记录"} · 来源：${delivery.source_mode || delivery.render_source || "未记录"}`)}</p>
+        </div>
+        <div class="stage-card">
+          <span class="panel-title">产物信息</span>
+          <strong>${escapeHtml(`${delivery.artifact_count || 0} 个产物`)}</strong>
+          <p>${escapeHtml(`格式：${delivery.formats?.join(", ") || delivery.format || "未记录"} · 可编辑性：${delivery.editability?.join(", ") || "未登记"}`)}</p>
         </div>
         <div class="stage-card">
           <span class="panel-title">交付记录</span>

@@ -504,6 +504,70 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(200, artifact_status)
         self.assertIn("Delivery Preview", artifact_payload["raw"])
 
+    def test_workspace_api_exposes_build_and_render_metadata(self) -> None:
+        build_dir = self.run_dir / "build"
+        pages_dir = build_dir / "pages"
+        pages_dir.mkdir(parents=True, exist_ok=True)
+        (build_dir / "deck.html").write_text("<html><body>A4</body></html>", encoding="utf-8")
+        (pages_dir / "page_001.png").write_bytes(b"\x89PNG\r\n\x1a\nfake")
+        result_dir = self.run_dir / "render_results"
+        result_dir.mkdir(exist_ok=True)
+        artifacts = [
+            {
+                "artifact_id": "deck_html",
+                "kind": "deck_html",
+                "path": "build/deck.html",
+                "media_type": "text/html",
+                "sha256": "a" * 64,
+                "bytes": 28,
+                "validation_status": "validated",
+                "editability": "native",
+            },
+            {
+                "artifact_id": "page_001_png",
+                "kind": "page_png",
+                "path": "build/pages/page_001.png",
+                "media_type": "image/png",
+                "sha256": "b" * 64,
+                "bytes": 12,
+                "validation_status": "validated",
+                "editability": "flat_image",
+            },
+        ]
+        (build_dir / "artifact_manifest.json").write_text(
+            json.dumps({"schema_version": "deck_artifact_manifest.v1", "run_id": "sample-preview-run", "artifacts": artifacts}),
+            encoding="utf-8",
+        )
+        (result_dir / "render_result.json").write_text(
+            json.dumps(
+                {
+                    "schema_version": "deck_render_result.v2",
+                    "run_id": "sample-preview-run",
+                    "tool": "ppt-master",
+                    "status": "completed",
+                    "artifact_path": "build/deck.html",
+                    "artifact_manifest": "build/artifact_manifest.json",
+                    "source_fingerprint": "c" * 64,
+                    "artifacts": artifacts,
+                    "page_count": 1,
+                    "created_at": "2026-06-22T10:00:00+00:00",
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        status, workspace = self.handler.request("GET", "/api/workspace/sample-preview-run")
+        delivery_status, delivery = self.handler.request("GET", "/api/workspace/sample-preview-run/delivery-preview")
+
+        self.assertEqual(200, status)
+        self.assertEqual(200, delivery_status)
+        self.assertEqual("completed", workspace["runtime"]["render"]["status"])
+        self.assertEqual(2, workspace["runtime"]["build"]["artifact_count"])
+        self.assertIn("native", workspace["runtime"]["build"]["editability"])
+        self.assertEqual("real", delivery["source_mode"])
+        self.assertEqual(2, delivery["artifact_count"])
+        self.assertIn("deck_html", delivery["formats"])
+
     def test_workspace_mark_delivered_is_idempotent_after_delivery_recorded(self) -> None:
         first_status, first_payload = self.handler.request(
             "POST",

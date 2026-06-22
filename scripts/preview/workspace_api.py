@@ -76,6 +76,9 @@ BLOCKING_REASON_TRANSLATIONS = {
     "evidence gate is blocked": "证据门禁仍在阻断。",
     "quality gate blocks delivery": "质量门禁仍在阻断导出。",
     "render result is missing": "当前缺少最新渲染结果。",
+    "render result is missing after build": "构建已准备，仍缺少最终渲染结果。",
+    "build manifest is missing after review and quality gate": "审阅和质量门禁已通过，仍缺少构建清单。",
+    "artifact manifest contains invalid artifacts": "构建产物存在无效项，需要重新渲染。",
     "preview manifest is missing": "当前还没有形成可审页面预览。",
 }
 
@@ -89,6 +92,8 @@ def _translate_blocking_reason(reason: str) -> str:
         status_mapping = {
             "running": "内容生成任务仍在进行中。",
             "pending": "内容生成任务已经排队，等待开始。",
+            "dispatched": "内容生成任务已派发，等待 Agent 回传结果。",
+            "awaiting_agent_execution": "内容生成任务已派发，等待 Agent 执行。",
             "quality_required": "最新生成结果还缺质量复核。",
             "preview_refreshed": "页面预览已刷新，等待继续判断。",
             "completed": "内容生成已完成，等待导入结果。",
@@ -106,9 +111,11 @@ RUNTIME_STAGE_TO_WORKSPACE_STAGE = {
     "needs_sourcing": "待准备",
     "needs_preview": "待准备",
     "needs_generation_session": "生成中",
+    "awaiting_agent_execution": "生成中",
     "generation_running": "生成中",
     "needs_generation_import": "生成中",
     "needs_preview_refresh": "生成中",
+    "needs_build": "生成中",
     "needs_render": "生成中",
     "generation_failed": "风险冻结",
     "needs_draft_gate": "风险冻结",
@@ -472,6 +479,14 @@ def build_delivery_preview_payload(run_dir: str | Path) -> dict[str, Any]:
     artifact_ready = bool(artifact_file and artifact_file.exists())
     delivery = _delivery_outcome(root)
     render_status_value = str((render_result or {}).get("status") or "")
+    raw_artifacts = (render_result or {}).get("artifacts")
+    artifact_list = raw_artifacts if isinstance(raw_artifacts, list) else []
+    formats = sorted(
+        set(str(item.get("kind") or "") for item in artifact_list if isinstance(item, dict) and item.get("kind"))
+    )
+    editability = sorted(
+        set(str(item.get("editability") or "") for item in artifact_list if isinstance(item, dict) and item.get("editability"))
+    )
 
     if not render_result:
         status = "missing_render_result"
@@ -512,6 +527,12 @@ def build_delivery_preview_payload(run_dir: str | Path) -> dict[str, Any]:
         "artifact_ready": artifact_ready,
         "artifact_url": artifact_url,
         "format": str((render_result or {}).get("format") or "html"),
+        "artifact_manifest": str((render_result or {}).get("artifact_manifest") or ""),
+        "artifact_count": len(artifact_list),
+        "formats": formats,
+        "editability": editability,
+        "source_fingerprint": str((render_result or {}).get("source_fingerprint") or ""),
+        "source_mode": "real" if (render_result or {}).get("schema_version") == "deck_render_result.v2" else source,
         "created_at": str((render_result or {}).get("created_at") or ""),
         "summary": summary,
         "detail": detail,
@@ -547,6 +568,7 @@ def _workspace_stage(
     deck_readiness: dict[str, Any],
     approvals: list[dict[str, Any]],
     delivery: dict[str, Any],
+    run_state_summary: dict[str, Any],
 ) -> dict[str, Any]:
     ready = deck_readiness.get("deck_readiness", {})
     counts = deck_readiness.get("counts", {})
@@ -558,11 +580,29 @@ def _workspace_stage(
     export_ready = str(ready.get("export") or "") == "ready"
     generation_state = str(ready.get("generation") or "")
     generation_required = bool(ready.get("generation_required"))
+    runtime_stage = str(run_state_summary.get("stage") or "")
+    blocked_actions = run_state_summary.get("blocked_actions") or []
+    runtime_reason = ""
+    if isinstance(blocked_actions, list) and blocked_actions:
+        runtime_reason = _translate_blocking_reason(str(blocked_actions[0].get("reason") or ""))
+    runtime_stage_next_step = {
+        "needs_generation_session": "先创建生成会话，准备派发给 Agent。",
+        "awaiting_agent_execution": "等待 Agent 执行并回传生成结果。",
+        "generation_running": "等待生成任务完成。",
+        "needs_generation_import": "导入 Agent 回传的生成结果。",
+        "needs_preview_refresh": "用最新生成结果刷新页面预览。",
+        "needs_build": "先生成 build manifest，锁定本次构建输入。",
+        "needs_render": "执行 build run，补齐 HTML/PDF/PNG/PPTX 产物。",
+    }
 
     if delivery.get("delivered"):
         stage_label = "已交付"
         blocker = "已记录交付结果，可转入复盘。"
         next_step = "查看反馈并沉淀复用经验。"
+    elif runtime_stage in runtime_stage_next_step:
+        stage_label = "生成中"
+        blocker = runtime_reason or "生产链路仍在补齐生成、构建或渲染结果。"
+        next_step = runtime_stage_next_step[runtime_stage]
     elif pending_approvals:
         stage_label = "待审批"
         blocker = f"{len(pending_approvals)} 项审批仍待拍板。"
@@ -629,10 +669,12 @@ def _workspace_stage_without_manifest(run_dir: Path, *, run_state_summary: dict[
         "needs_sourcing": "先完成来源决策和页面取材。",
         "needs_preview": "先生成首版页面与预览。",
         "needs_generation_session": "先发起内容生成任务。",
+        "awaiting_agent_execution": "等待 Agent 执行并回传生成结果。",
         "generation_running": "等待内容生成完成。",
         "needs_generation_import": "先导入最新生成结果。",
         "needs_preview_refresh": "先刷新最新页面预览。",
-        "needs_render": "先补齐最新渲染结果。",
+        "needs_build": "先准备构建清单。",
+        "needs_render": "先补齐最新构建和渲染结果。",
     }
     next_step = next_step_mapping.get(runtime_stage, "继续补齐前置内容。")
     return {
@@ -788,7 +830,14 @@ def build_workspace_payload(run_dir: str | Path) -> dict[str, Any]:
         readiness = compute_deck_readiness(root)
         next_actions = compute_next_actions(root)
         cards = _build_page_cards(root, manifest["pages"], approvals)
-        stage = _workspace_stage(root, pages=cards, deck_readiness=readiness, approvals=approvals, delivery=delivery)
+        stage = _workspace_stage(
+            root,
+            pages=cards,
+            deck_readiness=readiness,
+            approvals=approvals,
+            delivery=delivery,
+            run_state_summary=run_state_summary,
+        )
         claim_summary = _workspace_claim_summary(root)
         queue = export_queue(root, {"approved"}, queue_type="client", allow_quality_override=False)
         metrics = readiness.get("counts", {})
@@ -834,6 +883,15 @@ def build_workspace_payload(run_dir: str | Path) -> dict[str, Any]:
         {"id": "rejected", "label": "已驳回", "count": sum(1 for card in cards if card["review_status"] == "rejected")},
     ]
 
+    runtime_artifacts = ((run_state_summary.get("readiness") or {}).get("artifacts") or {})
+    production_flow = {
+        "stage": run_state_summary.get("stage", ""),
+        "next_command": run_state_summary.get("next_command", ""),
+        "generation": runtime_artifacts.get("generation", {}),
+        "build": runtime_artifacts.get("build", {}),
+        "render": runtime_artifacts.get("render", {}),
+    }
+
     return {
         "schema_version": "deck_master_workspace.v0.3",
         "run_id": _resolved_run_id(root),
@@ -846,6 +904,7 @@ def build_workspace_payload(run_dir: str | Path) -> dict[str, Any]:
         "stage": stage,
         "project_stage": stage,
         "status": run_status(root),
+        "runtime": production_flow,
         "focus_page_id": focus_page_id,
         "header_metrics": {
             "pages_total": metrics.get("pages", len(cards)),
@@ -885,6 +944,7 @@ def build_workspace_payload(run_dir: str | Path) -> dict[str, Any]:
                 "notes": delivery.get("notes", ""),
             },
             "delivery_preview": build_delivery_preview_payload(root),
+            "production_flow": production_flow,
             "next_actions": next_actions.get("actions", [])[:5],
             "active_overrides": list_active_overrides(root),
         },
