@@ -4,8 +4,8 @@
   "sourceHeadBeforeQaFixes": "997413a",
   "url": "http://127.0.0.1:5063/?run=qa-real-production-closure-20260622",
   "runId": "qa-real-production-closure-20260622",
-  "qaStatus": "passed_with_fixes",
-  "healthScore": 96,
+  "qaStatus": "passed_with_fixes_no_residual_suite_risk",
+  "healthScore": 98,
   "baselineBeforeFixes": 88,
   "issues": [
     {
@@ -21,6 +21,13 @@
       "severity": "medium",
       "category": "ux",
       "status": "fixed"
+    },
+    {
+      "id": "QA-20260622-003",
+      "title": "Codex suite readiness was degraded by missing or legacy skill links",
+      "severity": "medium",
+      "category": "setup",
+      "status": "fixed"
     }
   ],
   "categoryScores": {
@@ -31,7 +38,8 @@
     "ux": 94,
     "performance": 100,
     "content": 96,
-    "accessibility": 92
+    "accessibility": 92,
+    "setup": 100
   },
   "validation": {
     "gitDiffCheck": "pass",
@@ -40,11 +48,17 @@
     "unitTests": "798 passed",
     "productCapabilityManifest": "pass",
     "setupStatus": "ready",
-    "suiteStatus": "degraded_ready",
+    "suiteStatus": "ready",
     "releaseBuild": "built",
     "releaseSmoke": "passed",
     "benchmarkAggregate": "metadata_ready",
     "rcGate": "pass"
+  },
+  "suiteMigration": {
+    "status": "applied",
+    "rollbackId": "2026-06-22T092726.961744Z0000",
+    "rollbackRecord": "/Users/dingcheng/.deck-master/current/migration/rollback/2026-06-22T092726.961744Z0000.json",
+    "requiredSkillsReady": 7
   },
   "browserEvidence": {
     "consoleErrors": 0,
