@@ -82,7 +82,7 @@ v1.0 成功标准：
 | `deck-planner` | 方案结构规划 | 这套 Deck 怎么讲、分几章、每页做什么 |
 | `deck-sourcing` | 素材决策 | 哪些页复用、改写、新做、补证据 |
 | `deck-producer` | 页面生产 | 页面内容、视觉任务、generation result 如何产出 |
-| `deck-renderer` | 构建渲染 | HTML / PDF / PNG / PPTX 等产物如何生成 |
+| `deck-builder` | 构建出片 | HTML / PDF / PNG / PPTX 等交付产物如何生成 |
 | `deck-quality` | 文件级质量门禁 | 最终文件有没有客户可见风险、缺页、坏图、占位语 |
 | `deck-review` | 交付审查 | 这个 run 是否可以交付、如何返修、能否 export |
 | `deck-learn` | 反馈沉淀 | 本次项目经验如何沉淀给下一次使用 |
@@ -96,7 +96,7 @@ v1.0 成功标准：
 |---|---|---|
 | `ppt-library` | `deck-sourcing` | 保留 `ppt-library`，文档说明其为 asset retrieval capability；用户侧推荐 `deck-sourcing` |
 | `ppt-deck-pro-max` | `deck-producer` | 保留 `ppt-deck-pro-max`，文档说明其为 production capability；用户侧推荐 `deck-producer` |
-| `ppt-master` | `deck-renderer` | 保留 `ppt-master`，文档说明其为 render engine；用户侧推荐 `deck-renderer` |
+| `ppt-master` | `deck-builder` | 保留 `ppt-master`，文档说明其为完整 PPT 生产引擎或 Deck Builder 后端；用户侧推荐 `deck-builder` |
 | `ppt-quality-gate` | `deck-quality` | 保留 `ppt-quality-gate`，文档说明其为 quality engine；用户侧推荐 `deck-quality` |
 
 兼容期规则：
@@ -106,23 +106,43 @@ v1.0 成功标准：
 - Suite status 同时展示 public skill 和 capability alias。
 - v1.1 之后再评估是否把旧名从主导航中隐藏。
 
-### Full PPT Master Preservation Rule
+### PPT Master Dependency Policy
 
-`ppt-master` 是特殊兼容名。历史独立 PPT Master 仓库包含完整的 `references/`、`scripts/`、`templates/`、`workflows/` 和大量模板资产；Deck Master 的 render wrapper 只能作为 run 内 artifact handback 入口，不能替代完整 PPT Master 生产 skill。
+`deck-builder` 是 Deck Master 的公共阶段名和用户入口。它负责把已完成的页面内容、视觉任务、素材决策和 generation result 构造成可交付 Deck，并把产物登记回 Deck Master run。
+
+`ppt-master` 是完整 PPT 生产引擎和依赖项。历史独立 PPT Master 仓库包含完整的 `references/`、`scripts/`、`templates/`、`workflows/` 和大量模板资产；Deck Master 内部的 build / render wrapper 只能作为 run 内 artifact handback adapter，不能替代完整 PPT Master 生产 skill。
+
+#### Install Profiles
+
+| 安装场景 | 默认行为 | Deck Builder 状态 |
+|---|---|---|
+| 用户已安装完整 `ppt-master` | Deck Master 保留并采用它，标记为 `external_full_package` | `ready`，作为默认 builder backend |
+| 用户未安装 `ppt-master`，安装 Deck Master production profile | Deck Master 一并安装固定版本完整 PPT Master | `ready`，由 bundled full package 提供后端 |
+| 用户只安装 Deck Master core / lite profile | 只安装 `deck-builder` adapter 和 Deck Master run artifact 登记能力 | `degraded_ready`，production export 阻断或要求安装 full backend |
+| 企业环境已有托管版 PPT Master | 用户提供已批准路径，Deck Master 验证 frontmatter、references、scripts、templates | `ready` 或 `blocked_policy` |
+
+#### Relationship Model
+
+| 名称 | 产品身份 | 是否用户主入口 | 职责 |
+|---|---|---:|---|
+| `deck-builder` | Deck Master v1.0 公共 skill | 是 | build manifest、PPT Master dispatch、artifact import、editability、lineage、交付登记 |
+| `ppt-master` | 完整 PPT 生产引擎 / 依赖项 | 可独立使用 | strategist / executor / template / SVG pipeline / PPTX export |
+| `deck-builder backend` | 内部 adapter | 否 | 把 Deck Master run 转成 PPT Master 任务，再把产物转回 Deck Master artifact contract |
 
 硬规则：
 
 - 如果 `~/.codex/skills/ppt-master` 或其他 Agent skill 目录中已经存在完整 PPT Master real directory，Deck Master setup、suite repair、suite migration 必须保留它。
 - 完整 PPT Master real directory 在 suite status 中应视为 `external_full_package` 和 `ready`。
 - Deck Master 不得把完整 PPT Master 备份后替换成 `~/.deck-master/current/skills/ppt-master` 的薄 wrapper。
-- Deck Master 内置 render wrapper 后续应公开为 `deck-renderer`，`ppt-master` 只作为兼容入口或完整外部包入口。
-- 如果只安装 Deck Master render wrapper，文档必须明确它只负责 Deck Master run 内 build/render handback，不具备完整 PPT Master 的设计、模板、参考资料和视觉生产能力。
+- Deck Master 内置 build / render wrapper 后续应公开为 `deck-builder`，`ppt-master` 只作为兼容入口或完整外部包入口。
+- 如果只安装 Deck Master builder adapter，文档必须明确它只负责 Deck Master run 内 build/render handback，不具备完整 PPT Master 的设计、模板、参考资料和视觉生产能力。
+- production profile 缺完整 PPT Master 后端时，client export 必须 blocked；internal export 可 degraded，但需要明确标记。
 
 ## Final Skill Table
 
 | Skill | 当前现状 | v1.0 定位 | 典型输入 | 触发条件 | 禁止触发 | 主要产物 | 下一步 |
 |---|---|---|---|---|---|---|---|
-| `deck-master` | 已存在，承担总控、setup、run、review、export 等大量职责 | 只做总控、路由、run state、next step、Review Cockpit | “继续这个 Deck Master run”“现在卡在哪里”“帮我用 Deck Master 做完整流程” | 用户点名 Deck Master；需要恢复 run；需要判断下一步 | 用户只要求安装修复时交给 `deck-setup` / `deck-doctor`；只给 standalone PPTX 质检时交给 `deck-quality` | `run-state`、`next-step`、route decision、Review Cockpit state | 按状态转给 init / brief / planner / sourcing / producer / renderer / quality / review |
+| `deck-master` | 已存在，承担总控、setup、run、review、export 等大量职责 | 只做总控、路由、run state、next step、Review Cockpit | “继续这个 Deck Master run”“现在卡在哪里”“帮我用 Deck Master 做完整流程” | 用户点名 Deck Master；需要恢复 run；需要判断下一步 | 用户只要求安装修复时交给 `deck-setup` / `deck-doctor`；只给 standalone PPTX 质检时交给 `deck-quality` | `run-state`、`next-step`、route decision、Review Cockpit state | 按状态转给 init / brief / planner / sourcing / producer / builder / quality / review |
 | `deck-setup` | setup 命令藏在 `deck-master` skill | 本机首次安装、skill 链接、workspace 全局配置、preview 服务启动 | “安装 Deck Master”“本机能不能用”“setup 一下” | 无可用安装；suite 未 ready；首次使用 | 项目材料规划；页面生产；质量审查 | setup status、suite status、active workspace、preview health | `deck-init` 或 `deck-master start` |
 | `deck-upgrade` | 当前通过 release/install 命令处理，未形成 skill | 版本升级、release tree 切换、回滚、迁移 | “升级 Deck Master”“部署当前版本到本机”“回滚上一版” | 用户要求升级/部署/回滚；当前 release 落后 | 普通项目生产；单 run 修复 | release manifest、capability lock、SHA256SUMS、rollback marker | `deck-doctor` 验证，再回到 `deck-master` |
 | `deck-doctor` | doctor 命令存在，入口不独立 | 诊断安装、suite、workspace、run、preview 服务 | “为什么打不开”“skill 失效”“suite 不 ready” | 出现运行异常；preview 失败；link 错误；workspace 丢失 | 用户给出新项目材料；用户要审 PPT 内容 | diagnosis report、repair plan、repair evidence | `deck-setup` / `deck-upgrade` / 对应 run skill |
@@ -130,8 +150,8 @@ v1.0 成功标准：
 | `deck-brief` | `deck-planner` 内含 brief 生成 | 原始材料理解、brief、claim、证据索引 | 会议纪要、客户资料、研究报告、访谈记录、现有 Word/PDF/Markdown | 用户给材料并问“做 PPT 前先理解一下” | 用户已给结构化 brief 且只需规划页面 | `deck_brief.json`、`claim_map.json`、evidence inventory | `deck-planner` |
 | `deck-planner` | 已存在，负责 brief、claim map、narrative、page tasks | 叙事结构、章节、页面任务、讲标逻辑 | 已有 brief、deep research 摘要、项目目标、受众 | 用户要求“规划这套 Deck”“出页级结构”“主叙事怎么讲” | 用户只要检索历史页；只要质检现有 PPTX | `narrative_plan.json`、`page_tasks.json`、sourcing intent | `deck-sourcing` |
 | `deck-sourcing` | 当前为 `ppt-library` + `decide-sourcing` 的组合 | 决定每页复用、改写、新做、补证据、阻断 | page tasks、历史页库、参考 PPT、证据缺口 | 用户问“哪些页复用”“找类似页面”“这页要新做吗” | 没有 page task 时先回到 planner；只做最终交付审查时交给 review | `library_candidates.json`、`sourcing_plan.json`、reuse/adapt/generate decisions | `deck-producer` 或人工补证据 |
-| `deck-producer` | 当前为 `ppt-deck-pro-max` | 页面生产和 generation result 回写 | generation dispatch package、页面任务、视觉要求、素材决策 | 用户要求“生成页面”“把 brief 做成页面”“执行 generation session” | 未完成 sourcing；缺 run/session binding；生产模式没有真实 executor | `deck_generation_result.v2`、page content、speaker notes、visual tasks | `deck-renderer` |
-| `deck-renderer` | 当前为 `ppt-master` | build / render 产物生成与登记 | generation result、page assets、render request | 用户要求“导出 HTML/PDF/PPTX/PNG”“生成预览” | 内容未生产完成；production 下缺安全产物 | `build_manifest.json`、HTML/PDF/PNG/PPTX、artifact manifest | `deck-quality` |
+| `deck-producer` | 当前为 `ppt-deck-pro-max` | 页面生产和 generation result 回写 | generation dispatch package、页面任务、视觉要求、素材决策 | 用户要求“生成页面”“把 brief 做成页面”“执行 generation session” | 未完成 sourcing；缺 run/session binding；生产模式没有真实 executor | `deck_generation_result.v2`、page content、speaker notes、visual tasks | `deck-builder` |
+| `deck-builder` | 当前为 `ppt-master` + Deck Master render/build adapter | build manifest、构建出片、产物生成与登记 | generation result、page assets、build request、render request | 用户要求“导出 HTML/PDF/PPTX/PNG”“生成预览”“构建交付版” | 内容未生产完成；production 下缺完整 PPT Master 后端或安全产物 | `build_manifest.json`、HTML/PDF/PNG/PPTX、artifact manifest、editability metadata | `deck-quality` |
 | `deck-quality` | 当前为 `ppt-quality-gate` | 文件级门禁和客户可见安全扫描 | PPTX、PDF、HTML、render artifact、quality policy | 用户要求“质量检查”“PPT 能不能给客户看”“扫禁词/占位语” | 用户要 run 级 export 决策时由 `deck-review` 汇总 | quality reports、customer-visible safety report、artifact validation | `deck-review` |
 | `deck-review` | 已存在，负责审查与交付 | run 级 readiness、返修队列、client/internal export 判断 | 完整 Deck Master run、quality reports、render artifacts | 用户问“能不能交付”“导出给客户”“列返修清单” | 只给原始材料时先 init/brief；只查安装问题时 doctor | `final_readiness.json`、repair queue、export queue | export 或 repair loop |
 | `deck-learn` | 架构文档提到，尚未实现 | 项目反馈、素材复利、benchmark metadata | 成交反馈、客户反馈、页面效果、返修记录 | 用户说“沉淀经验”“记录这页好用”“形成 benchmark” | 当前 run 仍未完成交付；敏感原文未脱敏 | learning pack、library feedback events、benchmark metadata | 下一次 `deck-sourcing` / `deck-brief` |
@@ -148,12 +168,12 @@ v1.0 成功标准：
 | 用户问“哪些内容复用历史方案，哪些新做” | `deck-sourcing` | 调 PPT Library / 候选页检索 / reuse-adapt-generate 决策 | sourcing plan ready |
 | 用户给历史 PPT，希望找相似页面或可复用资产 | `deck-sourcing` | 检索素材库，必要时提示先建立 library index | candidates ready 或 blocked |
 | 用户给 generation session / dispatch package | `deck-producer` | 执行页面生产，生成 canonical generation result | generation result imported |
-| 用户给已有页面内容，要生成文件 | `deck-renderer` | build / render，登记 artifact | artifact manifest ready |
+| 用户给已有页面内容，要生成文件 | `deck-builder` | build / render，登记 artifact | artifact manifest ready |
 | 用户给 standalone PPTX / PDF / HTML，问能不能交付 | `deck-quality` | 文件级质量门禁，扫最终可见内容 | quality report ready |
 | 用户给 Deck Master run，问能否交付 | `deck-review` | 汇总 render、quality、safety、lineage、readiness | final readiness ready 或 blocked |
 | 用户说安装、配置、本机不能用 | `deck-setup` / `deck-doctor` | 检查和修复安装、suite、preview 服务 | setup ready 或 repair blocked |
 | 用户说升级、部署当前版本、回滚 | `deck-upgrade` | stage -> verify -> activate，失败恢复 previous | release active |
-| 用户说从材料直接推进到可审查版本 | `deck-autopilot` | 自动串联 init、brief、planner、sourcing、producer、renderer、quality、review | ready、awaiting agent、blocked 三选一 |
+| 用户说从材料直接推进到可审查版本 | `deck-autopilot` | 自动串联 init、brief、planner、sourcing、producer、builder、quality、review | ready、awaiting agent、blocked 三选一 |
 
 ### Routing Priority
 
@@ -301,8 +321,8 @@ v1.0 成功标准：
 | Mode | 场景 | 行为 |
 |---|---|---|
 | `quick` | 用户要快速形成可审阅方向 | 使用项目材料，生成 brief / plan / sourcing，不进入生产 export |
-| `production` | 用户要真实推进交付 | 严格走 setup、workspace、run、sourcing、generation、render、quality、review |
-| `repair` | 用户已有阻断报告 | 读取 findings，生成返修任务，回到 producer / renderer / quality |
+| `production` | 用户要真实推进交付 | 严格走 setup、workspace、run、sourcing、generation、builder、quality、review |
+| `repair` | 用户已有阻断报告 | 读取 findings，生成返修任务，回到 producer / builder / quality |
 | `review-only` | 用户已有文件或 run | 只跑 quality / review / readiness |
 
 ### Production Workflow
@@ -315,7 +335,7 @@ deck-autopilot production
   -> deck-planner narrative and page tasks
   -> deck-sourcing reuse/adapt/generate decisions
   -> deck-producer generation session
-  -> deck-renderer artifact build
+  -> deck-builder artifact build
   -> deck-quality file and customer-visible gates
   -> deck-review final readiness and export queue
 ```
@@ -422,7 +442,7 @@ Skill roles：
 | `orchestrator` | 总控、路由、状态 | `deck-master`、`deck-autopilot` |
 | `project` | Workspace 和项目初始化 | `deck-init` |
 | `planning` | 材料理解和方案规划 | `deck-brief`、`deck-planner` |
-| `production` | sourcing、generation、render | `deck-sourcing`、`deck-producer`、`deck-renderer` |
+| `production` | sourcing、generation、build/render | `deck-sourcing`、`deck-producer`、`deck-builder` |
 | `governance` | quality、review、export | `deck-quality`、`deck-review` |
 | `learning` | 反馈、benchmark、经验沉淀 | `deck-learn` |
 | `compat` | 历史名称兼容 | `ppt-library`、`ppt-master` 等 |
@@ -471,7 +491,7 @@ Review Cockpit / Workspace UI 需要按 v1.0 skill 体系展示状态：
 | Plan | brief、claim map、narrative、page tasks | `deck-brief` / `deck-planner` |
 | Sourcing | reuse/adapt/generate、候选页、缺证据 | `deck-sourcing` |
 | Production | generation session、awaiting agent、import status | `deck-producer` |
-| Render | artifact manifest、文件签名、stale 状态 | `deck-renderer` |
+| Build | build manifest、artifact manifest、文件签名、stale 状态、editability | `deck-builder` |
 | Quality | artifact validator、customer-visible safety、P0 blockers | `deck-quality` |
 | Review | final readiness、repair queue、export queue | `deck-review` |
 
@@ -500,7 +520,7 @@ Review Cockpit / Workspace UI 需要按 v1.0 skill 体系展示状态：
 目标：
 
 - 扩展 `skills/manifest.json`。
-- 新增 `deck-setup`、`deck-upgrade`、`deck-doctor`、`deck-init`、`deck-brief`、`deck-sourcing`、`deck-producer`、`deck-renderer`、`deck-quality`、`deck-learn`、`deck-autopilot` 的 SKILL.md skeleton。
+- 新增 `deck-setup`、`deck-upgrade`、`deck-doctor`、`deck-init`、`deck-brief`、`deck-sourcing`、`deck-producer`、`deck-builder`、`deck-quality`、`deck-learn`、`deck-autopilot` 的 SKILL.md skeleton。
 - 当前 `ppt-*` skill 改为兼容 wrapper。
 
 验收：
@@ -556,20 +576,22 @@ Review Cockpit / Workspace UI 需要按 v1.0 skill 体系展示状态：
 - reuse/adapt/generate 规则可测试。
 - 无 page task 时不会误触发 library search。
 
-### Phase 5: Producer / Renderer / Quality Public Renaming
+### Phase 5: Producer / Builder / Quality Public Naming
 
 目标：
 
 - `deck-producer` 包装 generation session。
-- `deck-renderer` 包装 render/build manifest。
+- `deck-builder` 包装 build manifest、PPT Master backend dispatch、render artifacts 和 import-result。
 - `deck-quality` 包装 artifact validator 和 customer-visible safety gate。
 - 保留旧 `ppt-*` 入口。
+- production profile 缺完整 PPT Master 后端时，`deck-builder` 必须阻断 client export。
 
 验收：
 
 - 新旧入口都能跑。
 - 文档推荐新入口。
 - Run state 仍只认 canonical artifacts。
+- `suite-status` 能区分 `deck-builder adapter ready` 与 `ppt-master backend ready`。
 
 ### Phase 6: Deck Autopilot
 
@@ -595,7 +617,7 @@ Review Cockpit / Workspace UI 需要按 v1.0 skill 体系展示状态：
 
 验收：
 
-- 用户能从 UI 判断当前处于 init、brief、planner、sourcing、producer、renderer、quality、review 哪一段。
+- 用户能从 UI 判断当前处于 init、brief、planner、sourcing、producer、builder、quality、review 哪一段。
 - 文档不会继续把 `ppt-*` 当主入口推荐给普通用户。
 
 ## Test Plan
@@ -622,7 +644,7 @@ Routing 测试：
 - brief JSON -> `deck-planner`。
 - page tasks -> `deck-sourcing`。
 - generation dispatch package -> `deck-producer`。
-- render request -> `deck-renderer`。
+- build / render request -> `deck-builder`。
 - standalone PPTX -> `deck-quality`。
 - Deck Master run export request -> `deck-review`。
 - install problem -> `deck-setup`。
@@ -644,6 +666,14 @@ Workflow 测试：
 - `deck-autopilot repair` 能读取 quality findings 生成返修队列。
 - `deck-review` 只读取 final readiness 做 client export 判断。
 
+PPT Master 依赖测试：
+
+- 已存在完整 `ppt-master` real directory 时，`suite-status` 返回 `source_type=external_full_package` 且 `deck-builder` 可用。
+- `suite-repair` 和 migration plan 不得把完整 `ppt-master` 替换为 Deck Master 薄 wrapper。
+- production profile 缺完整 PPT Master 时，安装流程必须安装固定版本完整后端，或阻断 production build。
+- core / lite profile 缺完整 PPT Master 时，`deck-builder` 只能返回 degraded，不得放行 client export。
+- 托管版 PPT Master 路径必须通过 frontmatter、`references/`、`scripts/`、`templates/` 三类检查。
+
 回归测试：
 
 ```bash
@@ -662,6 +692,7 @@ v1.0 Skill Suite 完成标准：
 - `deck-init` 能创建项目 Workspace 和参考素材目录。
 - `deck-master start` 能给出 skill-level next action。
 - `deck-autopilot` 能连续推进一个项目，不要求用户每步确认。
+- `deck-builder` 能采用已有完整 PPT Master，或在 production profile 中安装固定版本完整 PPT Master。
 - setup、upgrade、doctor 与生产流程分离。
 - Review Cockpit 能显示当前阶段和业务化阻断原因。
 - 客户可见内容安全门禁接入 `deck-quality` 和 `deck-review`。
@@ -677,6 +708,7 @@ v1.0 Skill Suite 完成标准：
 | `deck-init` 是否创建标准中文目录 | 是 | 匹配当前用户 Workspace 工作方式，同时允许配置英文模板 |
 | `deck-autopilot` 是否默认 production | 否 | 默认 quick，用户明确要求真实交付时进入 production |
 | `deck-learn` 是否进入 v1.0 必做 | 可 skeleton 先行 | 反馈沉淀重要，但不阻塞 v1.0 主交付链 |
+| 构建出片阶段是否命名为 `deck-builder` | 是 | 比旧 render 命名更能覆盖 build manifest、PPT Master backend、HTML/PDF/PNG/PPTX 产物和可编辑性登记 |
 
 ## Next Iteration Entry
 
@@ -686,7 +718,7 @@ v1.0 Skill Suite 完成标准：
 2. Phase 2：`deck-init` Workspace 初始化。
 3. Phase 3：routing resolver 和 `next-step` skill-level 输出。
 4. Phase 4：`deck-sourcing` 合并 library + sourcing decision。
-5. Phase 5：producer / renderer / quality 新名入口。
+5. Phase 5：producer / builder / quality 新名入口。
 6. Phase 6：`deck-autopilot` 连续 workflow。
 7. Phase 7：UI 和文档收口。
 
