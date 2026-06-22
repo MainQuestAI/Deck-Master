@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from quality.customer_visible_safety import DEFAULT_FORBIDDEN_TERMS
 from quality.pptx_audit import audit_pptx
 from quality.rubric import (
     DIMENSION_LABELS,
@@ -231,7 +232,8 @@ def evaluate_delivery_gate(
     expected_pages: int | None = None,
     forbidden_terms: list[str] | None = None,
 ) -> dict[str, Any]:
-    audit = audit_pptx(artifact, expected_pages=expected_pages, forbidden_terms=forbidden_terms)
+    terms = forbidden_terms if forbidden_terms is not None else DEFAULT_FORBIDDEN_TERMS
+    audit = audit_pptx(artifact, expected_pages=expected_pages, forbidden_terms=terms)
     scorecard = default_scorecard(4)
     findings: list[dict[str, Any]] = []
 
@@ -248,20 +250,28 @@ def evaluate_delivery_gate(
             )
         )
 
-    for hit in audit["forbidden_hits"]:
+    for index, hit in enumerate(audit["forbidden_hits"], start=1):
+        hit_terms = list(hit.get("terms") or [])
+        if not hit_terms and hit.get("term"):
+            hit_terms = [str(hit["term"])]
+        slide_number = hit.get("slide_number") if isinstance(hit.get("slide_number"), int) else 0
+        page_id = f"slide_{slide_number:03d}" if slide_number else ""
+        package_path = str(hit.get("package_path") or page_id or str(audit["artifact"]))
         lower_score(scorecard, "consulting_style_expression", 1)
-        findings.append(
-            finding(
-                f"slide_{hit['slide_number']:03d}_forbidden_terms",
-                "P0",
-                "consulting_style_expression",
-                f"可见内容包含内部或禁用词：{', '.join(hit['terms'])}",
-                [f"slide_{hit['slide_number']:03d}"],
-                "删除或改写客户不可见措辞，再重新生成最终 PPTX。",
-                page_id=f"slide_{hit['slide_number']:03d}",
-                risk_flags=hit["terms"],
-            )
+        item = finding(
+            f"{page_id or 'pptx'}_forbidden_terms_{index:03d}",
+            "P0",
+            "consulting_style_expression",
+            f"最终 PPT 包含内部或禁用词：{', '.join(hit_terms)}",
+            [package_path],
+            "删除或改写客户不可见措辞，再重新生成最终 PPTX。",
+            page_id=page_id,
+            risk_flags=hit_terms,
         )
+        item["scope"] = str(hit.get("scope") or "")
+        item["package_path"] = package_path
+        item["excerpt"] = str(hit.get("excerpt") or "")
+        findings.append(item)
 
     if not audit["media_files"]:
         lower_score(scorecard, "delivery_readiness", 3)

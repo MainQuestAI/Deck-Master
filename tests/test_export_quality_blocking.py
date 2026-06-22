@@ -123,6 +123,27 @@ class ExportQualityBlockingTests(unittest.TestCase):
         self.assertTrue(result["blocked_pages"][0]["final_readiness_blocked"])
         self.assertIn("Final readiness", result["blocked_pages"][0]["final_readiness_reason"])
 
+    def test_client_queue_blocks_when_customer_visible_safety_missing(self) -> None:
+        page = _base_page("p1", decision="approved", review_status="approved")
+        _write_manifest(self.run_dir, _make_manifest([page]))
+        readiness_path = self.run_dir / "delivery" / "final_readiness.json"
+        payload = json.loads(readiness_path.read_text(encoding="utf-8"))
+        payload["customer_visible_safety"] = {
+            "required": False,
+            "path": "",
+            "status": "",
+            "blocks_delivery": False,
+            "findings": 0,
+        }
+        readiness_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+        _write_gate(self.run_dir, "draft", [])
+
+        result = export_queue(self.run_dir, {"approved"}, queue_type="client")
+
+        self.assertEqual([], result["pages"])
+        self.assertEqual(1, result["blocked_count"])
+        self.assertIn("客户可见内容安全检查", result["blocked_pages"][0]["quality_block_reason"])
+
     def test_internal_queue_marks_degraded_without_final_readiness(self) -> None:
         page = _base_page("p1", decision="approved", review_status="approved")
         _write_manifest(self.run_dir, _make_manifest([page]))

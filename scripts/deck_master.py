@@ -79,6 +79,10 @@ from quality.gate_runner import (
     evaluate_render_gate,
     write_gate_report,
 )
+from quality.customer_visible_safety import (
+    evaluate_customer_visible_safety_gate,
+    load_customer_visible_forbidden_terms,
+)
 from quality.draft_gate_v2 import evaluate_draft_gate_v2
 from quality.evidence_gate import evaluate_evidence_gate
 from quality.context_conflict_gate import evaluate_context_conflict_gate
@@ -716,7 +720,35 @@ def command_quality_gate(args: argparse.Namespace) -> dict[str, Any]:
     elif args.gate == "delivery":
         if not args.artifact:
             raise RunStateError("--artifact is required for delivery gate.")
-        report = evaluate_delivery_gate(run_id, args.artifact, expected_pages=expected_pages, forbidden_terms=args.forbidden)
+        safety_terms = load_customer_visible_forbidden_terms(run_dir, extra_terms=args.forbidden)
+        report = evaluate_delivery_gate(run_id, args.artifact, expected_pages=expected_pages, forbidden_terms=safety_terms)
+        safety_report = evaluate_customer_visible_safety_gate(
+            run_id,
+            args.artifact,
+            expected_pages=expected_pages,
+            forbidden_terms=safety_terms,
+        )
+        safety_paths = write_gate_report(run_dir, "customer_visible_safety", safety_report)
+        write_artifact(
+            run_dir,
+            "quality_reports/customer_visible_safety_gate.index.json",
+            {
+                "report": safety_paths,
+                "status": safety_report["status"],
+                "blocks_delivery": safety_report["blocks_delivery"],
+            },
+            action="quality.customer_visible_safety_gate.created",
+        )
+    elif args.gate in {"customer-visible-safety", "customer_visible_safety"}:
+        if not args.artifact:
+            raise RunStateError("--artifact is required for customer-visible-safety gate.")
+        safety_terms = load_customer_visible_forbidden_terms(run_dir, extra_terms=args.forbidden)
+        report = evaluate_customer_visible_safety_gate(
+            run_id,
+            args.artifact,
+            expected_pages=expected_pages,
+            forbidden_terms=safety_terms,
+        )
     elif args.gate == "evidence":
         claim_map = read_optional_json(run_dir, CLAIM_MAP_NAME) or {"run_id": run_id, "claims": []}
         page_tasks = read_optional_json(run_dir, PAGE_TASKS_NAME) or {"run_id": run_id, "tasks": []}
@@ -760,17 +792,18 @@ def command_quality_gate(args: argparse.Namespace) -> dict[str, Any]:
     else:
         raise RunStateError(f"Unknown gate: {args.gate}")
 
-    paths = write_gate_report(run_dir, args.gate, report)
+    gate_name = str(report.get("gate") or args.gate)
+    paths = write_gate_report(run_dir, gate_name, report)
     write_artifact(
         run_dir,
-        f"quality_reports/{args.gate}_gate.index.json",
+        f"quality_reports/{gate_name}_gate.index.json",
         {"report": paths, "status": report["status"], "blocks_delivery": report["blocks_delivery"]},
-        action=f"quality.{args.gate}_gate.created",
+        action=f"quality.{gate_name}_gate.created",
     )
     return {
         "run_id": run_id,
         "run_dir": str(run_dir),
-        "gate": args.gate,
+        "gate": gate_name,
         "status": report["status"],
         "blocks_delivery": report["blocks_delivery"],
         "findings": len(report["findings"]),
@@ -1912,7 +1945,18 @@ def build_parser() -> argparse.ArgumentParser:
     add_run_args(p_quality)
     p_quality.add_argument(
         "gate",
-        choices=["draft", "draft_v2", "render", "delivery", "evidence", "context-conflict", "confidentiality", "brand"],
+        choices=[
+            "draft",
+            "draft_v2",
+            "render",
+            "delivery",
+            "customer-visible-safety",
+            "customer_visible_safety",
+            "evidence",
+            "context-conflict",
+            "confidentiality",
+            "brand",
+        ],
     )
     p_quality.add_argument("--artifact", help="Rendered or final PPTX artifact for render/delivery/brand gates")
     p_quality.add_argument("--expected-pages", type=int)

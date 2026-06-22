@@ -50,6 +50,14 @@ def _report_blocks_delivery(report: dict[str, Any]) -> bool:
     return bool(report.get("blocks_delivery")) or str(report.get("status", "")).lower() in BLOCKING_STATUSES
 
 
+def _client_customer_visible_safety_block(final_readiness: dict[str, Any]) -> str:
+    readiness = final_readiness.get("readiness") if isinstance(final_readiness.get("readiness"), dict) else {}
+    safety = readiness.get("customer_visible_safety") if isinstance(readiness.get("customer_visible_safety"), dict) else {}
+    if safety and not safety.get("path"):
+        return "客户可见内容安全检查尚未完成。"
+    return ""
+
+
 def _finding_id(finding: dict[str, Any]) -> str:
     return str(
         finding.get("finding_id")
@@ -295,6 +303,11 @@ def export_queue(
         and enforce_final_readiness
         and not bool(final_readiness.get("ready"))
     )
+    final_safety_block_reason = (
+        _client_customer_visible_safety_block(final_readiness)
+        if queue_type == "client" and enforce_final_readiness
+        else ""
+    )
 
     for page in manifest["pages"]:
         if page["decision"] not in decisions:
@@ -322,10 +335,10 @@ def export_queue(
             "notes": page.get("notes", ""),
         }
 
-        if final_readiness_blocks_client:
+        if final_readiness_blocks_client or final_safety_block_reason:
             page_entry["quality_blocked"] = True
             page_entry["final_readiness_blocked"] = True
-            page_entry["quality_block_reason"] = str(final_readiness.get("reason") or "Final readiness is blocked.")
+            page_entry["quality_block_reason"] = final_safety_block_reason or str(final_readiness.get("reason") or "Final readiness is blocked.")
             page_entry["final_readiness_reason"] = page_entry["quality_block_reason"]
             blocked_pages.append(page_entry)
         elif blocking["blocked"]:

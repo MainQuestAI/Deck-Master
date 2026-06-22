@@ -488,6 +488,36 @@ def prepare_generation_handoff(run_dir: str | Path) -> dict[str, Any]:
         task["run_id"] = run_id
         task["claim_ids"] = claim_ids_for_beat.get(beat_id, [])
         task["evidence_refs"] = planning.get("evidence_need", [])
+        task.setdefault(
+            "customer_visible_content",
+            {
+                "title": task.get("page_title", ""),
+                "body_brief": task.get("generation_brief", ""),
+                "evidence_summary": planning.get("evidence_need", ""),
+            },
+        )
+        task.setdefault("speaker_notes", "")
+        task.setdefault(
+            "internal_production_notes",
+            {
+                "layout_instruction": task.get("visual_need", ""),
+                "reference_slide_required": bool(task.get("reference_slide_required")),
+                "reference_slide": task.get("reference_slide"),
+            },
+        )
+        task.setdefault(
+            "content_boundary",
+            {
+                "slide_text_source": "customer_visible_content only",
+                "speaker_notes_source": "speaker_notes only",
+                "never_render_to_slide_text": [
+                    "internal_production_notes",
+                    "layout_instruction",
+                    "reference_slide",
+                    "task metadata",
+                ],
+            },
+        )
         task["workspace_refs"] = [
             "visual-system/spec_lock.md",
             "structure-assets/page_archetypes.md",
@@ -495,8 +525,14 @@ def prepare_generation_handoff(run_dir: str | Path) -> dict[str, Any]:
         task["quality_requirements"] = [
             "页面必须有主观点",
             "必须说明证据如何支撑判断",
+            "PPT 正文只能读取 customer_visible_content，不得渲染 internal_production_notes、布局说明或制作指令",
         ]
-        task["expected_outputs"] = ["preview_path", "artifact_path", "generation_notes"]
+        task["expected_outputs"] = [
+            "preview_path",
+            "artifact_path",
+            "generation_notes",
+            "customer_visible_content",
+        ]
 
         write_json(task_path, task)
         enhanced.append(task_id)

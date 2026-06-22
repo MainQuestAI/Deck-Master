@@ -12,6 +12,7 @@ from runtime.run_state_resolver import resolve_run_state
 
 SCHEMA_VERSION = "deck_final_readiness.v1"
 FINAL_READINESS_PATH = Path("delivery") / "final_readiness.json"
+CUSTOMER_VISIBLE_SAFETY_GATE = Path("quality_reports") / "customer_visible_safety_gate.json"
 
 
 def _utc_now() -> str:
@@ -124,6 +125,19 @@ def _quality_gate_summary(root: Path) -> list[dict[str, Any]]:
     return gates
 
 
+def _is_fixture_policy(run_state: dict[str, Any]) -> bool:
+    mode = str(run_state.get("run_mode") or "").strip().lower()
+    policy = str(run_state.get("policy_mode") or "").strip().lower()
+    return mode in {"fixture", "dev"} or policy == "fixture"
+
+
+def _customer_visible_safety_report(root: Path) -> tuple[Path, dict[str, Any], bool]:
+    path = root / CUSTOMER_VISIBLE_SAFETY_GATE
+    if not path.exists():
+        return path, {}, False
+    return path, _safe_read_json(path), True
+
+
 def compute_final_readiness(
     run_dir: str | Path,
     *,
@@ -181,6 +195,27 @@ def compute_final_readiness(
     quality_gates = _quality_gate_summary(root)
     if not quality_gates:
         _add_blocker(blockers, "final_quality_gate_missing", "Quality gate report is missing.", severity="P1")
+    _safety_path, safety_report, safety_exists = _customer_visible_safety_report(root)
+    safety_optional = _is_fixture_policy(run_state)
+    if not safety_exists:
+        message = "最终文件还没有完成客户可见内容安全检查。"
+        if safety_optional:
+            warnings.append(message)
+        else:
+            _add_blocker(blockers, "final_customer_visible_safety_missing", message)
+    elif not safety_report or safety_report.get("schema_version") != "deck_customer_visible_safety_gate.v1":
+        message = "客户可见内容安全检查报告无法解析或版本无效。"
+        if safety_optional:
+            warnings.append(message)
+        else:
+            _add_blocker(blockers, "final_customer_visible_safety_invalid", message)
+    elif safety_report.get("blocks_delivery") or str(safety_report.get("status") or "").lower() in {"rework_required", "failed", "blocked"}:
+        _add_blocker(
+            blockers,
+            "final_customer_visible_safety_blocked",
+            "最终文件包含内部制作语言或模板占位语，需要返修。",
+        )
+
     for gate in quality_gates:
         if gate.get("blocks_delivery") or str(gate.get("status") or "").lower() in {"rework_required", "failed", "blocked"}:
             _add_blocker(
@@ -241,6 +276,13 @@ def compute_final_readiness(
             "source_fingerprint": str(lineage.get("source_fingerprint") or ""),
         },
         "quality_gates": quality_gates,
+        "customer_visible_safety": {
+            "required": not safety_optional,
+            "path": str(CUSTOMER_VISIBLE_SAFETY_GATE) if safety_exists else "",
+            "status": str(safety_report.get("status") or ""),
+            "blocks_delivery": bool(safety_report.get("blocks_delivery")),
+            "findings": len(safety_report.get("findings", [])) if isinstance(safety_report.get("findings"), list) else 0,
+        },
         "blockers": blockers,
         "warnings": warnings,
     }
@@ -277,7 +319,22 @@ def final_readiness_clearance(run_dir: str | Path) -> dict[str, Any]:
     ready = bool(payload.get("ready")) and str(payload.get("status") or "") == "ready"
     reason = ""
     if not ready:
+        preferred_codes = {
+            "final_customer_visible_safety_blocked",
+            "final_customer_visible_safety_missing",
+            "final_customer_visible_safety_invalid",
+        }
         for blocker in blockers:
+            if (
+                isinstance(blocker, dict)
+                and blocker.get("code") in preferred_codes
+                and blocker.get("message")
+            ):
+                reason = str(blocker.get("message"))
+                break
+        for blocker in blockers:
+            if reason:
+                break
             if isinstance(blocker, dict) and blocker.get("message"):
                 reason = str(blocker.get("message"))
                 break
