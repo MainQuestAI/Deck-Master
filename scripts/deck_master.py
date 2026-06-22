@@ -1318,6 +1318,16 @@ def command_generation_session_status(args: argparse.Namespace) -> dict[str, Any
     )
 
 
+def command_generation_session_dispatch(args: argparse.Namespace) -> dict[str, Any]:
+    return run_generation_session(
+        resolve_run_dir(args),
+        tool=getattr(args, "tool", "ppt-deck-pro-max"),
+        dry_run=False,
+        no_execute=True,
+        tool_command=getattr(args, "tool_command", None),
+    )
+
+
 def command_run_generation(args: argparse.Namespace) -> dict[str, Any]:
     return run_generation_session(
         resolve_run_dir(args),
@@ -2078,6 +2088,12 @@ def build_parser() -> argparse.ArgumentParser:
     p_gs_status.add_argument("--tool", default=None)
     p_gs_status.add_argument("--tool-command", default=None, help="Override tool command directly")
     p_gs_status.set_defaults(func=command_generation_session_status)
+
+    p_gs_dispatch = gs_sub.add_parser("dispatch", help="Write Agent dispatch package without launching an executor")
+    add_run_args(p_gs_dispatch)
+    p_gs_dispatch.add_argument("--tool", default="ppt-deck-pro-max")
+    p_gs_dispatch.add_argument("--tool-command", default=None, help="Override tool command directly")
+    p_gs_dispatch.set_defaults(func=command_generation_session_dispatch)
 
     p_gs_import = gs_sub.add_parser("import-results", help="Import generation result and refresh preview manifest")
     add_run_args(p_gs_import)

@@ -203,6 +203,18 @@ class RunStateResolverAcceptanceTests(unittest.TestCase):
         self.assertEqual("needs_generation_import", state["stage"])
         self.assertIn("generation-session import-results", state["next_command"])
 
+    def test_awaiting_agent_execution_reports_generation_running(self) -> None:
+        self._write_full_pipeline(include_preview=True)
+        generation_tasks = self.run_dir / "generation_tasks"
+        generation_tasks.mkdir()
+        (generation_tasks / "index.json").write_text(json.dumps({"tasks": [{"id": "task-1"}]}), encoding="utf-8")
+        self._write_json("generation_session.json", {"run_id": "r1", "status": "awaiting_agent_execution"})
+
+        state = resolve_run_state(self.run_dir, run_mode="fixture")
+
+        self.assertEqual("generation_running", state["stage"])
+        self.assertIn("generation-session status", state["next_command"])
+
     def test_quality_required_generation_session_needs_quality_gate(self) -> None:
         self._write_full_pipeline(include_preview=True)
         self._write_json(PREVIEW_MANIFEST_NAME, {"run_id": "r1", "pages": [{"page_id": "p1", "decision": "approved"}]})

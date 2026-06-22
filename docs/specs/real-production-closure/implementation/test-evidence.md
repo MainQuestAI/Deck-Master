@@ -1,5 +1,39 @@
 # Real Production Closure Test Evidence
 
+## A3 Evidence — Agent Dispatch & Handback
+
+Implemented on 2026-06-22 in `/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure`.
+
+Coverage added:
+
+- Production `run-generation` writes `generation_dispatch/dispatch_package.json` and `generation_dispatch/agent_instructions.md`.
+- Production bundled placeholder execution is disabled; session enters `awaiting_agent_execution`.
+- Explicit `generation-session dispatch` CLI entry uses the same dispatch path.
+- Fixture/dev runs can still use the bundled adapter for test-only placeholder generation.
+- `generation-session import-results` accepts a single result file or a result directory.
+- Every successful import writes `generation_import_receipts/*.json`.
+- Duplicate imports are idempotent and marked with `duplicate_import=true`.
+- Batch import can return `partial` when at least one result imports and at least one result is rejected.
+
+| Command | Result | Notes |
+|---|---|---|
+| `python3 -m unittest tests.test_generation_session_bridge tests.test_generation_handback tests.test_run_state_resolver tests.test_uat_generation_tool tests.test_companion_tool_validators` | pass | 86 generation dispatch/handback/run-state/UAT tests passed |
+| `python3 -m compileall scripts tests` | pass | Python files compile |
+| `python3 -m unittest discover -s tests` | pass | 745 tests passed |
+| `git diff --check` | pass | No whitespace or patch formatting issues |
+
+New A3 test cases cover:
+
+- Production bundled generation dispatches without subprocess execution.
+- Dispatch writes an Agent package and instruction file.
+- Dry-run and no-execute paths enter `awaiting_agent_execution`.
+- Fixture mode can still execute the bundled fixture adapter.
+- Fixture dry-run writes an Agent dispatch package.
+- Awaiting Agent state resolves as generation running.
+- Successful import writes a receipt.
+- Duplicate import writes a new receipt and marks the import as duplicate.
+- Batch import reports partial success when one result is rejected.
+
 ## A1 Evidence — Generation Result v2
 
 Implemented on 2026-06-22 in `/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure`.
