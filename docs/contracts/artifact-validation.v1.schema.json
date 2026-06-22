@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/contracts/artifact-validation.v1.schema.json",
+  "title": "Deck Master Artifact Validation v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "valid",
+    "errors",
+    "warnings",
+    "artifacts"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "deck_artifact_validation.v1"
+    },
+    "valid": {
+      "type": "boolean"
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "artifact_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/artifact_validation"
+      }
+    }
+  },
+  "$defs": {
+    "artifact_validation": {
+      "type": "object",
+      "required": [
+        "artifact_id",
+        "path",
+        "kind",
+        "media_type",
+        "valid",
+        "errors",
+        "warnings"
+      ],
+      "properties": {
+        "artifact_id": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "media_type": {
+          "type": "string"
+        },
+        "valid": {
+          "type": "boolean"
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

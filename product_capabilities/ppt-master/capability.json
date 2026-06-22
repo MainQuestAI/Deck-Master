@@ -8,7 +8,7 @@
     "default_command": "deck-master render"
   },
   "contracts": {
-    "outputs": ["deck_render_result.v1"]
+    "outputs": ["deck_render_result.v1", "deck_render_result.v2"]
   },
   "state_policy": {
     "active_run_outputs_must_import": true,

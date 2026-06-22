@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/contracts/final-version-lineage.v1.schema.json",
+  "title": "Deck Master Final Version Lineage v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "artifact_path",
+    "artifact_run_relative",
+    "artifact_hash",
+    "expected_page_count",
+    "artifact_validation",
+    "gates_checked"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "deck_final_version_lineage.v1"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "artifact_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "artifact_run_relative": {
+      "type": "string",
+      "minLength": 1
+    },
+    "artifact_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "page_count": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "expected_page_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "source_fingerprint": {
+      "type": "string"
+    },
+    "artifact_validation": {
+      "type": "object",
+      "required": [
+        "valid",
+        "errors",
+        "warnings"
+      ],
+      "additionalProperties": true
+    },
+    "artifact_manifest_validation": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "build_manifest": {
+      "type": "string"
+    },
+    "artifact_manifest": {
+      "type": "string"
+    },
+    "render_result": {
+      "type": "string"
+    },
+    "gates_checked": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "gate",
+          "status",
+          "blocks_delivery"
+        ],
+        "properties": {
+          "gate": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "blocks_delivery": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

@@ -63,6 +63,9 @@ def _required_fields_for_decision(source_decision: str) -> tuple[bool, bool]:
 
 def validate_sourcing_payload(payload: dict[str, Any], run_dir: Path) -> list[str]:
     errors: list[str] = []
+    request = read_json(run_dir / REQUEST_NAME)
+    run_mode = str(request.get("run_mode") or "production").strip().lower()
+    strict_mode = run_mode in {"production", "benchmark"}
     if payload.get("schema_version") != SCHEMA_VERSION:
         errors.append(f"schema_version must be {SCHEMA_VERSION}")
 
@@ -100,6 +103,10 @@ def validate_sourcing_payload(payload: dict[str, Any], run_dir: Path) -> list[st
             errors.append(
                 f"decisions[{index}].source_decision must be one of "
                 f"{sorted(SCHEME_ALLOWED_DECISIONS)}"
+            )
+        if strict_mode and source_decision == "manual_placeholder":
+            errors.append(
+                f"decisions[{index}].source_decision=manual_placeholder is not allowed for {run_mode} runs"
             )
 
         if not str(decision.get("decision_reason") or "").strip():

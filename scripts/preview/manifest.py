@@ -310,7 +310,7 @@ def page_payload(run_dir: str | Path, page: dict[str, Any]) -> dict[str, Any]:
 def load_quality_reports(run_dir: str | Path) -> dict[str, Any]:
     root = Path(run_dir).expanduser().resolve()
     reports: dict[str, Any] = {}
-    for gate in ("draft", "render", "delivery"):
+    for gate in ("draft", "render", "delivery", "customer_visible_safety"):
         path = root / "quality_reports" / f"{gate}_gate.json"
         if not path.exists():
             continue
@@ -332,7 +332,7 @@ def load_quality_reports(run_dir: str | Path) -> dict[str, Any]:
 def page_quality(run_dir: str | Path, page_id: str) -> list[dict[str, Any]]:
     root = Path(run_dir).expanduser().resolve()
     items: list[dict[str, Any]] = []
-    for gate in ("draft", "render", "delivery"):
+    for gate in ("draft", "render", "delivery", "customer_visible_safety"):
         path = root / "quality_reports" / f"{gate}_gate.json"
         if not path.exists():
             continue

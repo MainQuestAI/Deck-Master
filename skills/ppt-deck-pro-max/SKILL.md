@@ -24,6 +24,16 @@ Active run output must return through Deck Master generation-session import.
 
 ```bash
 ~/.deck-master/bin/deck-master generation-session create --run-dir <run_dir> --run-id <run_id>
-~/.deck-master/bin/deck-master run-generation --run-dir <run_dir> --run-id <run_id> --dry-run
+~/.deck-master/bin/deck-master run-generation --run-dir <run_dir> --run-id <run_id>
+~/.deck-master/bin/deck-master generation-session dispatch --run-dir <run_dir> --run-id <run_id>
 ~/.deck-master/bin/deck-master generation-session import-results --run-dir <run_dir> --run-id <run_id> --input <result.json>
+~/.deck-master/bin/deck-master generation-session import-results --run-dir <run_dir> --run-id <run_id> --input <result_dir>
 ```
+
+## Production Dispatch
+
+Production `run-generation` writes `generation_dispatch/dispatch_package.json` and sets the session to `awaiting_agent_execution`.
+Read the dispatch package, produce real assets under the run directory, then write `deck_generation_result.v2` files into `generation_results/`.
+
+Each completed result must include run/session binding, run-relative paths, SHA-256 checksums, byte sizes, `source_fingerprint`, and `producer` metadata.
+Bundled placeholder output is fixture/dev only and cannot be imported as production output.

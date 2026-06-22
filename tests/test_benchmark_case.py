@@ -40,6 +40,21 @@ def _valid_case() -> dict:
     }
 
 
+def _real_metadata_case() -> dict:
+    payload = _valid_case()
+    payload["case_id"] = "real_retail_growth"
+    payload["case_type"] = "real_metadata"
+    payload["workflow"]["library_mode"] = "production"
+    payload["source_material"] = {
+        "classification": "private_local_reference",
+        "raw_source_policy": "local_path_only",
+        "local_source_paths": ["~/DeckMasterPrivateBenchmarks/real_retail_growth/raw"],
+        "submitted_material_types": ["brief", "notes"],
+        "excluded_from_repo": True,
+    }
+    return payload
+
+
 class BenchmarkCaseTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temp_dir = Path(tempfile.mkdtemp())
@@ -96,6 +111,36 @@ class BenchmarkCaseTests(unittest.TestCase):
 
         self.assertEqual(1, len(case.warnings))
         self.assertIn("scoring.weights", case.warnings[0])
+
+    def test_real_metadata_case_requires_local_source_policy(self) -> None:
+        payload = _real_metadata_case()
+        payload["source_material"]["raw_source_policy"] = "committed_copy"
+        self._write_case(payload)
+
+        with self.assertRaises(BenchmarkCaseError) as ctx:
+            load_benchmark_case(self.case_path)
+
+        self.assertIn("local_path_only", str(ctx.exception))
+
+    def test_real_metadata_case_rejects_embedded_private_content(self) -> None:
+        payload = _real_metadata_case()
+        payload["source_material"]["source_excerpt"] = "Private customer text"
+        self._write_case(payload)
+
+        with self.assertRaises(BenchmarkCaseError) as ctx:
+            load_benchmark_case(self.case_path)
+
+        self.assertIn("must not embed", str(ctx.exception))
+
+    def test_real_metadata_case_rejects_fixture_library_mode(self) -> None:
+        payload = _real_metadata_case()
+        payload["workflow"]["library_mode"] = "fixture"
+        self._write_case(payload)
+
+        with self.assertRaises(BenchmarkCaseError) as ctx:
+            load_benchmark_case(self.case_path)
+
+        self.assertIn("library_mode=fixture", str(ctx.exception))
 
 
 if __name__ == "__main__":

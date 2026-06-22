@@ -7,7 +7,10 @@ installed Deck Master skill package under ``~/.deck-master/current``.
 from __future__ import annotations
 
 import json
+import hashlib
+import os
 import shutil
+import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -18,6 +21,9 @@ SUITE_VERSION = "0.9.13"
 COMPANION_MANIFEST_SCHEMA_VERSION = "deck_master_companion_manifest.v2"
 PRODUCT_CAPABILITY_MANIFEST_SCHEMA_VERSION = "deck_master_product_capability_manifest.v1"
 PRODUCT_CAPABILITY_MANIFEST_NAME = "product-capability-manifest.json"
+RELEASE_MANIFEST_NAME = "release-manifest.json"
+CAPABILITY_LOCK_NAME = "deck_capability_lock.json"
+SHA256SUMS_NAME = "SHA256SUMS"
 RELEASE_TREE_MARKER = ".release_tree_managed_by_deck_master"
 
 SUPPORTED_TARGETS = {"codex", "claude-code", "hermes", "custom"}
@@ -79,7 +85,10 @@ SUITE_SKILLS: list[dict[str, Any]] = [
         "cli": "deck-master",
         "required_capabilities": ["ppt_master.render.v1", "ppt_master.handback.v1"],
         "optional_capabilities": [],
-        "schema_versions": {"render_result": "deck_render_result.v1"},
+        "schema_versions": {
+            "render_result": "deck_render_result.v2",
+            "render_result_legacy": "deck_render_result.v1",
+        },
         "adoption_policy": "preserve_full_external_or_bundled_symlink",
         "conflict_policy": "never_overwrite_full_external_directory",
     },
@@ -159,7 +168,10 @@ def _repo_skill_dir(skill_name: str = SKILL_NAME) -> Path:
 
 
 def _repo_capability_dir(name: str) -> Path:
-    return _repo_root() / "product_capabilities" / name
+    source = _repo_root() / "product_capabilities" / name
+    if source.exists():
+        return source
+    return _repo_root() / "capabilities" / name
 
 
 def _installed_capability_dir(name: str) -> Path:
@@ -589,13 +601,331 @@ def write_companion_manifest() -> Path:
     return path
 
 
-def _copytree_replace(src: Path, dst: Path) -> None:
+def _copytree_replace(src: Path, dst: Path, *, ignore: Any | None = None) -> None:
     if dst.exists() or dst.is_symlink():
         if dst.is_symlink() or dst.is_file():
             dst.unlink()
         else:
             shutil.rmtree(dst)
-    shutil.copytree(src, dst, symlinks=True)
+    shutil.copytree(src, dst, symlinks=True, ignore=ignore)
+
+
+def _git_head() -> str | None:
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=_repo_root(),
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    head = result.stdout.strip()
+    return head or None
+
+
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as fh:
+        for chunk in iter(lambda: fh.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _release_files(release_root: Path) -> list[tuple[str, Path]]:
+    files: list[tuple[str, Path]] = []
+    for path in release_root.rglob("*"):
+        if not path.is_file() or path.is_symlink():
+            continue
+        rel_path = path.relative_to(release_root)
+        rel = rel_path.as_posix()
+        if rel in {SHA256SUMS_NAME, "release-activation.json"}:
+            continue
+        if "__pycache__" in rel_path.parts or path.suffix == ".pyc":
+            continue
+        files.append((rel, path))
+    return sorted(files, key=lambda item: item[0])
+
+
+def _contract_lock_entries(release_root: Path) -> list[dict[str, Any]]:
+    contracts_root = release_root / "contracts"
+    if not contracts_root.exists():
+        return []
+    entries: list[dict[str, Any]] = []
+    for path in sorted(contracts_root.rglob("*")):
+        if not path.is_file() or path.is_symlink():
+            continue
+        entries.append({
+            "path": path.relative_to(release_root).as_posix(),
+            "sha256": _sha256_file(path),
+        })
+    return entries
+
+
+def _write_sha256sums(release_root: Path) -> Path:
+    lines = [f"{_sha256_file(path)}  {rel}\n" for rel, path in _release_files(release_root)]
+    path = release_root / SHA256SUMS_NAME
+    path.write_text("".join(lines), encoding="utf-8")
+    return path
+
+
+def _remove_path(path: Path) -> None:
+    if path.is_symlink() or path.is_file():
+        path.unlink()
+    elif path.exists():
+        shutil.rmtree(path)
+
+
+def _release_id() -> str:
+    return _utc_now().replace(":", "").replace("+", "Z").replace(".", "")
+
+
+def _safe_release_child(root: Path, rel: str) -> Path | None:
+    rel_path = Path(rel)
+    if rel_path.is_absolute() or ".." in rel_path.parts:
+        return None
+    try:
+        path = (root / rel_path).resolve()
+        path.relative_to(root.resolve())
+    except (OSError, ValueError):
+        return None
+    return path
+
+
+def verify_release_tree(
+    release_root: str | Path | None = None,
+    *,
+    run_smoke: bool = True,
+) -> dict[str, Any]:
+    root = Path(release_root).expanduser().resolve() if release_root else INSTALL_LOG_DIR / "current"
+    errors: list[dict[str, Any]] = []
+    warnings: list[dict[str, Any]] = []
+
+    def add_error(code: str, path: str = "", detail: str = "") -> None:
+        errors.append({"code": code, "path": path, "detail": detail})
+
+    required_files = [
+        RELEASE_TREE_MARKER,
+        "bin/deck-master",
+        "scripts/deck_master.py",
+        PRODUCT_CAPABILITY_MANIFEST_NAME,
+        COMPANION_MANIFEST_NAME,
+        RELEASE_MANIFEST_NAME,
+        CAPABILITY_LOCK_NAME,
+        SHA256SUMS_NAME,
+    ]
+    for rel in required_files:
+        path = root / rel
+        if not path.exists():
+            add_error("missing_required_file", rel)
+
+    product_manifest: dict[str, Any] | None = None
+    product_manifest_path = root / PRODUCT_CAPABILITY_MANIFEST_NAME
+    if product_manifest_path.exists():
+        try:
+            product_manifest = json.loads(product_manifest_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            add_error("invalid_json", PRODUCT_CAPABILITY_MANIFEST_NAME, str(exc))
+        else:
+            validation = validate_product_capability_manifest(product_manifest)
+            if not validation["valid"]:
+                add_error(
+                    "invalid_product_capability_manifest",
+                    PRODUCT_CAPABILITY_MANIFEST_NAME,
+                    ",".join(validation["errors"]),
+                )
+
+    for rel, schema_version in [
+        (COMPANION_MANIFEST_NAME, COMPANION_MANIFEST_SCHEMA_VERSION),
+        (RELEASE_MANIFEST_NAME, "deck_master_release_manifest.v1"),
+        (CAPABILITY_LOCK_NAME, "deck_capability_lock.v1"),
+    ]:
+        path = root / rel
+        if not path.exists():
+            continue
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            add_error("invalid_json", rel, str(exc))
+            continue
+        if payload.get("schema_version") != schema_version:
+            add_error("invalid_schema_version", rel, str(payload.get("schema_version") or ""))
+        if rel == RELEASE_MANIFEST_NAME and payload.get("self_contained") is not True:
+            add_error("release_not_self_contained", rel)
+        if rel == CAPABILITY_LOCK_NAME and not payload.get("contracts"):
+            add_error("missing_contract_lock_entries", rel)
+
+    for skill_name in product_capability_manifest()["required_capabilities"]:
+        if not (root / "skills" / skill_name / "SKILL.md").exists():
+            add_error("missing_skill_package", f"skills/{skill_name}/SKILL.md")
+    for capability_name in [str(spec["name"]) for spec in SUITE_SKILLS if str(spec["name"]).startswith("ppt-")]:
+        if not (root / "capabilities" / capability_name / "capability.json").exists():
+            add_error("missing_capability_package", f"capabilities/{capability_name}/capability.json")
+
+    bin_path = root / "bin" / "deck-master"
+    if bin_path.exists():
+        bin_text = bin_path.read_text(encoding="utf-8")
+        source_script = str(_repo_root() / "scripts" / "deck_master.py")
+        if source_script in bin_text:
+            add_error("source_checkout_path_embedded", "bin/deck-master", source_script)
+        if "RELEASE_ROOT" not in bin_text or "scripts/deck_master.py" not in bin_text:
+            add_error("invalid_release_entrypoint", "bin/deck-master")
+
+    sha_path = root / SHA256SUMS_NAME
+    if sha_path.exists():
+        declared: dict[str, str] = {}
+        for line_no, raw_line in enumerate(sha_path.read_text(encoding="utf-8").splitlines(), start=1):
+            line = raw_line.strip()
+            if not line:
+                continue
+            parts = line.split(maxsplit=1)
+            if len(parts) != 2:
+                add_error("invalid_sha256sums_line", SHA256SUMS_NAME, str(line_no))
+                continue
+            digest, rel = parts[0], parts[1].strip()
+            target = _safe_release_child(root, rel)
+            if target is None:
+                add_error("unsafe_sha256_path", rel)
+                continue
+            if not target.exists() or not target.is_file():
+                add_error("sha256_target_missing", rel)
+                continue
+            actual = _sha256_file(target)
+            if actual != digest:
+                add_error("sha256_mismatch", rel)
+            declared[rel] = digest
+        actual_files = {rel for rel, _path in _release_files(root)}
+        for rel in sorted(actual_files - set(declared)):
+            add_error("file_missing_from_sha256sums", rel)
+        for rel in sorted(set(declared) - actual_files):
+            add_error("sha256_entry_without_file", rel)
+
+    smoke: dict[str, Any] = {"skipped": not run_smoke}
+    if run_smoke and bin_path.exists():
+        try:
+            completed = subprocess.run(
+                [str(bin_path), "--help"],
+                cwd=root,
+                check=False,
+                capture_output=True,
+                env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+                text=True,
+                timeout=15,
+            )
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            add_error("release_smoke_failed", "bin/deck-master", str(exc))
+            smoke = {"skipped": False, "status": "failed", "error": str(exc)}
+        else:
+            smoke = {
+                "skipped": False,
+                "status": "passed" if completed.returncode == 0 else "failed",
+                "returncode": completed.returncode,
+            }
+            if completed.returncode != 0:
+                add_error("release_smoke_failed", "bin/deck-master", completed.stderr.strip())
+    elif run_smoke:
+        smoke = {"skipped": False, "status": "failed", "error": "missing bin/deck-master"}
+
+    if product_manifest is None and product_manifest_path.exists():
+        warnings.append({"code": "product_manifest_unavailable", "path": PRODUCT_CAPABILITY_MANIFEST_NAME})
+
+    return {
+        "schema_version": "deck_master_release_verification.v1",
+        "release_root": str(root),
+        "valid": not errors,
+        "status": "passed" if not errors else "failed",
+        "errors": errors,
+        "warnings": warnings,
+        "smoke": smoke,
+    }
+
+
+def _activate_staged_release(staged_release: Path) -> dict[str, Any]:
+    current = INSTALL_LOG_DIR / "current"
+    previous = INSTALL_LOG_DIR / "previous"
+    failed_dir = INSTALL_LOG_DIR / "failed"
+    previous_path = ""
+    try:
+        _remove_path(previous)
+        if current.exists() or current.is_symlink():
+            shutil.move(str(current), str(previous))
+            previous_path = str(previous)
+        current.parent.mkdir(parents=True, exist_ok=True)
+        shutil.move(str(staged_release), str(current))
+    except Exception as exc:
+        if current.exists() or current.is_symlink():
+            failed_dir.mkdir(parents=True, exist_ok=True)
+            failed_path = failed_dir / f"activation-{_release_id()}"
+            shutil.move(str(current), str(failed_path))
+        if previous.exists() and not current.exists():
+            shutil.move(str(previous), str(current))
+        raise SkillInstallError(f"Release activation failed and previous release was restored: {exc}") from exc
+
+    activation = {
+        "schema_version": "deck_master_release_activation.v1",
+        "status": "activated",
+        "activated_at": _utc_now(),
+        "current": str(current),
+        "previous": previous_path,
+    }
+    (current / "release-activation.json").write_text(
+        json.dumps(activation, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    return activation
+
+
+def install_release_tree(*, run_smoke: bool = True) -> dict[str, Any]:
+    release_id = _release_id()
+    staged_release = INSTALL_LOG_DIR / "staging" / f"release-{release_id}"
+    if staged_release.exists():
+        _remove_path(staged_release)
+    build = build_release_tree(staged_release, force=True)
+    verification = verify_release_tree(staged_release, run_smoke=run_smoke)
+    if not verification["valid"]:
+        return {
+            "schema_version": "deck_master_release_install.v1",
+            "status": "blocked",
+            "release_id": release_id,
+            "staged_release": str(staged_release),
+            "build": build,
+            "verification": verification,
+            "activated": False,
+        }
+    activation = _activate_staged_release(staged_release)
+    return {
+        "schema_version": "deck_master_release_install.v1",
+        "status": "installed",
+        "release_id": release_id,
+        "build": build,
+        "verification": verification,
+        "activation": activation,
+        "activated": True,
+    }
+
+
+def rollback_release_tree() -> dict[str, Any]:
+    current = INSTALL_LOG_DIR / "current"
+    previous = INSTALL_LOG_DIR / "previous"
+    if not previous.exists():
+        raise SkillInstallError(f"Previous release not found: {previous}")
+    failed_dir = INSTALL_LOG_DIR / "failed"
+    failed_dir.mkdir(parents=True, exist_ok=True)
+    archived_current = failed_dir / f"rollback-current-{_release_id()}"
+    if current.exists() or current.is_symlink():
+        shutil.move(str(current), str(archived_current))
+    shutil.move(str(previous), str(current))
+    verification = verify_release_tree(current, run_smoke=True)
+    if not verification["valid"]:
+        raise SkillInstallError("Rollback restored previous release, but verification failed.")
+    return {
+        "schema_version": "deck_master_release_rollback.v1",
+        "status": "rolled_back",
+        "current": str(current),
+        "archived_current": str(archived_current),
+        "verification": verification,
+    }
 
 
 def build_release_tree(
@@ -609,10 +939,17 @@ def build_release_tree(
     planned = [
         "bin/deck-master",
         PRODUCT_CAPABILITY_MANIFEST_NAME,
+        COMPANION_MANIFEST_NAME,
+        RELEASE_MANIFEST_NAME,
+        CAPABILITY_LOCK_NAME,
+        SHA256SUMS_NAME,
         "skills",
         "capabilities",
         "contracts",
         "reference-packs",
+        "examples",
+        "benchmarks",
+        "scripts",
     ]
 
     if dry_run:
@@ -632,7 +969,7 @@ def build_release_tree(
     release_root.mkdir(parents=True, exist_ok=True)
     marker.write_text("deck-master release tree\n", encoding="utf-8")
 
-    for subdir in ("skills", "capabilities", "contracts", "reference-packs", "bin"):
+    for subdir in ("skills", "capabilities", "contracts", "reference-packs", "examples", "benchmarks", "bin", "scripts"):
         (release_root / subdir).mkdir(parents=True, exist_ok=True)
 
     for spec in _suite_specs(include_optional=False):
@@ -649,8 +986,32 @@ def build_release_tree(
         _copytree_replace(source, release_root / "capabilities" / name)
 
     contracts_src = _repo_root() / "docs" / "contracts"
+    if not contracts_src.exists():
+        contracts_src = _repo_root() / "contracts"
     if contracts_src.exists():
         _copytree_replace(contracts_src, release_root / "contracts")
+
+    examples_src = _repo_root() / "examples"
+    if examples_src.exists():
+        _copytree_replace(
+            examples_src,
+            release_root / "examples",
+            ignore=shutil.ignore_patterns("__pycache__", "*.pyc", ".pytest_cache", ".mypy_cache"),
+        )
+
+    benchmarks_src = _repo_root() / "benchmarks"
+    if benchmarks_src.exists():
+        _copytree_replace(
+            benchmarks_src,
+            release_root / "benchmarks",
+            ignore=shutil.ignore_patterns("results", "__pycache__", "*.pyc", ".pytest_cache", ".mypy_cache"),
+        )
+
+    _copytree_replace(
+        _repo_root() / "scripts",
+        release_root / "scripts",
+        ignore=shutil.ignore_patterns("__pycache__", "*.pyc", ".pytest_cache", ".mypy_cache"),
+    )
 
     (release_root / PRODUCT_CAPABILITY_MANIFEST_NAME).write_text(
         json.dumps(product_capability_manifest(), ensure_ascii=False, indent=2) + "\n",
@@ -663,18 +1024,84 @@ def build_release_tree(
     bin_path = release_root / "bin" / "deck-master"
     bin_path.write_text(
         "#!/usr/bin/env sh\n"
-        f"exec python3 \"{_repo_root() / 'scripts' / 'deck_master.py'}\" \"$@\"\n",
+        'RELEASE_ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"\n'
+        'exec python3 "$RELEASE_ROOT/scripts/deck_master.py" "$@"\n',
         encoding="utf-8",
     )
     bin_path.chmod(0o755)
+
+    release_skills = [str(spec["name"]) for spec in _suite_specs(include_optional=False)]
+    release_capabilities = [str(spec["name"]) for spec in SUITE_SKILLS if str(spec["name"]).startswith("ppt-")]
+    source = {
+        "repo_root": str(_repo_root()),
+        "git_head": _git_head(),
+    }
+    capability_lock = {
+        "schema_version": "deck_capability_lock.v1",
+        "suite_name": SUITE_NAME,
+        "suite_version": SUITE_VERSION,
+        "built_at": _utc_now(),
+        "source": source,
+        "skills": [
+            {
+                "name": str(spec["name"]),
+                "path": f"skills/{spec['name']}",
+                "required": bool(spec.get("required", True)),
+                "install_source": str(spec.get("install_source") or ""),
+                "required_capabilities": list(spec.get("required_capabilities") or []),
+            }
+            for spec in _suite_specs(include_optional=False)
+        ],
+        "capabilities": [
+            {
+                "name": name,
+                "path": f"capabilities/{name}",
+                "required": True,
+            }
+            for name in release_capabilities
+        ],
+        "contracts": _contract_lock_entries(release_root),
+    }
+    (release_root / CAPABILITY_LOCK_NAME).write_text(
+        json.dumps(capability_lock, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    release_manifest = {
+        "schema_version": "deck_master_release_manifest.v1",
+        "suite_name": SUITE_NAME,
+        "suite_version": SUITE_VERSION,
+        "built_at": _utc_now(),
+        "release_root": str(release_root),
+        "self_contained": True,
+        "entrypoint": "bin/deck-master",
+        "scripts": "scripts",
+        "examples": "examples",
+        "benchmarks": "benchmarks",
+        "product_capability_manifest": PRODUCT_CAPABILITY_MANIFEST_NAME,
+        "companion_manifest": COMPANION_MANIFEST_NAME,
+        "capability_lock": CAPABILITY_LOCK_NAME,
+        "sha256sums": SHA256SUMS_NAME,
+        "source": source,
+        "skills": release_skills,
+        "capabilities": release_capabilities,
+    }
+    (release_root / RELEASE_MANIFEST_NAME).write_text(
+        json.dumps(release_manifest, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    sha256sums_path = _write_sha256sums(release_root)
 
     return {
         "schema_version": "deck_master_release_tree.v1",
         "status": "built",
         "release_root": str(release_root),
         "manifest_path": str(release_root / PRODUCT_CAPABILITY_MANIFEST_NAME),
-        "skills": [str(spec["name"]) for spec in _suite_specs(include_optional=False)],
-        "capabilities": [str(spec["name"]) for spec in SUITE_SKILLS if str(spec["name"]).startswith("ppt-")],
+        "release_manifest": str(release_root / RELEASE_MANIFEST_NAME),
+        "capability_lock": str(release_root / CAPABILITY_LOCK_NAME),
+        "sha256sums": str(sha256sums_path),
+        "self_contained": True,
+        "skills": release_skills,
+        "capabilities": release_capabilities,
     }
 
 
@@ -816,8 +1243,21 @@ def suite_install(
     agent_skill_dir: str | None = None,
 ) -> dict[str, Any]:
     resolved_targets = targets or ["codex"]
-    release = build_release_tree(INSTALL_LOG_DIR / "current", force=True)
-    manifest_path = Path(release["release_root"]) / COMPANION_MANIFEST_NAME
+    release_install = install_release_tree()
+    if release_install["status"] != "installed":
+        return {
+            "schema_version": "deck_master_suite_install.v1",
+            "status": "blocked",
+            "release_install": release_install,
+            "manifest_path": str(INSTALL_LOG_DIR / "current" / COMPANION_MANIFEST_NAME),
+            "results": [],
+            "suite_status": inspect_suite_status(
+                targets=resolved_targets,
+                include_optional=True,
+                agent_skill_dir=agent_skill_dir,
+            ),
+        }
+    manifest_path = INSTALL_LOG_DIR / "current" / COMPANION_MANIFEST_NAME
     results: list[dict[str, Any]] = []
     for target in resolved_targets:
         for spec in _suite_specs(include_optional=include_optional):
@@ -853,6 +1293,7 @@ def suite_install(
         "schema_version": "deck_master_suite_install.v1",
         "status": status,
         "manifest_path": str(manifest_path),
+        "release_install": release_install,
         "results": results,
         "suite_status": inspect_suite_status(
             targets=resolved_targets,
@@ -985,7 +1426,9 @@ def suite_migration_apply(plan_file: str | Path) -> dict[str, Any]:
     plan_path = Path(plan_file).expanduser().resolve()
     plan = json.loads(plan_path.read_text(encoding="utf-8"))
     rollback_id = str((plan.get("rollback") or {}).get("rollback_id") or _utc_now().replace(":", ""))
-    build_release_tree(INSTALL_LOG_DIR / "current", force=True)
+    release_install = install_release_tree()
+    if release_install["status"] != "installed":
+        raise SkillInstallError("Release install blocked; legacy skill migration was not applied.")
     results: list[dict[str, Any]] = []
     rollback_records: list[dict[str, Any]] = []
     for action in plan.get("actions", []):
@@ -1021,6 +1464,7 @@ def suite_migration_apply(plan_file: str | Path) -> dict[str, Any]:
         "plan_file": str(plan_path),
         "rollback_id": rollback_id,
         "rollback_record": str(rollback_path),
+        "release_install": release_install,
         "results": results,
     }
 

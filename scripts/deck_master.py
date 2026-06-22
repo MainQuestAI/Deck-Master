@@ -50,6 +50,7 @@ from uat.ppt_library import run_ppt_library_uat
 from uat.real_workflow_smoke import run_real_workflow_smoke
 from uat.render_tool import run_render_tool_uat
 from benchmark.case import BenchmarkCaseError, load_benchmark_case
+from benchmark.aggregate import BenchmarkAggregateError, write_benchmark_aggregate_report
 from benchmark.checkpoints import BenchmarkCheckpointError, write_benchmark_checkpoint
 from benchmark.report import BenchmarkReportError, write_benchmark_report, write_benchmark_rc_report
 from benchmark.runner import (
@@ -78,6 +79,10 @@ from quality.gate_runner import (
     evaluate_render_gate,
     write_gate_report,
 )
+from quality.customer_visible_safety import (
+    evaluate_customer_visible_safety_gate,
+    load_customer_visible_forbidden_terms,
+)
 from quality.draft_gate_v2 import evaluate_draft_gate_v2
 from quality.evidence_gate import evaluate_evidence_gate
 from quality.context_conflict_gate import evaluate_context_conflict_gate
@@ -94,7 +99,9 @@ from skills.installer import (
     SkillInstallError,
     build_release_tree,
     install_skill,
+    rollback_release_tree,
     inspect_suite_status,
+    verify_release_tree,
     product_capability_manifest,
     suite_install,
     suite_migration_apply,
@@ -124,7 +131,10 @@ from runtime.run_state import (
 from runtime.next_step import resolve_next_step
 from runtime.import_log import append_import_log
 from runtime.orchestration import import_plan, import_render_result, orchestration_check
+from runtime.build import build_status, prepare_build, run_build
 from runtime.render import render_fixture_html, render_status
+from runtime.final_readiness import compute_final_readiness
+from runtime.rc_gate import RCGateError, write_rc_gate_report
 from runtime.run_state_resolver import resolve_run_state
 from runtime.sourcing_import import import_sourcing, validate_sourcing
 from runtime.workspace_binding import bind_workspace
@@ -615,10 +625,18 @@ def command_build_preview(args: argparse.Namespace) -> dict[str, Any]:
 
 def command_export(args: argparse.Namespace) -> dict[str, Any]:
     run_dir = resolve_run_dir(args)
+    queue_type = getattr(args, "queue_type", "client")
+    final_readiness = {}
+    if queue_type == "client":
+        final_readiness = compute_final_readiness(
+            run_dir,
+            run_mode=_normalize_run_mode(getattr(args, "run_mode", None)),
+            dev_allow_unsetup=bool(getattr(args, "dev_allow_unsetup", False)),
+        )
     queue = export_queue(
         run_dir,
         set(args.decision),
-        queue_type=getattr(args, "queue_type", "client"),
+        queue_type=queue_type,
         allow_quality_override=getattr(args, "allow_quality_override", False),
     )
     if args.output:
@@ -626,7 +644,15 @@ def command_export(args: argparse.Namespace) -> dict[str, Any]:
     else:
         output = run_dir / "approved_queue.json"
     write_json(output, queue)
-    return {"run_id": queue["run_id"], "run_dir": str(run_dir), "status": "exported", "output": str(output), "pages": len(queue["pages"]), "blocked": queue["blocked_count"]}
+    return {
+        "run_id": queue["run_id"],
+        "run_dir": str(run_dir),
+        "status": "exported" if queue["pages"] else "blocked",
+        "output": str(output),
+        "pages": len(queue["pages"]),
+        "blocked": queue["blocked_count"],
+        "final_readiness": final_readiness or queue.get("final_readiness", {}),
+    }
 
 
 def command_autoplan(args: argparse.Namespace) -> dict[str, Any]:
@@ -694,7 +720,35 @@ def command_quality_gate(args: argparse.Namespace) -> dict[str, Any]:
     elif args.gate == "delivery":
         if not args.artifact:
             raise RunStateError("--artifact is required for delivery gate.")
-        report = evaluate_delivery_gate(run_id, args.artifact, expected_pages=expected_pages, forbidden_terms=args.forbidden)
+        safety_terms = load_customer_visible_forbidden_terms(run_dir, extra_terms=args.forbidden)
+        report = evaluate_delivery_gate(run_id, args.artifact, expected_pages=expected_pages, forbidden_terms=safety_terms)
+        safety_report = evaluate_customer_visible_safety_gate(
+            run_id,
+            args.artifact,
+            expected_pages=expected_pages,
+            forbidden_terms=safety_terms,
+        )
+        safety_paths = write_gate_report(run_dir, "customer_visible_safety", safety_report)
+        write_artifact(
+            run_dir,
+            "quality_reports/customer_visible_safety_gate.index.json",
+            {
+                "report": safety_paths,
+                "status": safety_report["status"],
+                "blocks_delivery": safety_report["blocks_delivery"],
+            },
+            action="quality.customer_visible_safety_gate.created",
+        )
+    elif args.gate in {"customer-visible-safety", "customer_visible_safety"}:
+        if not args.artifact:
+            raise RunStateError("--artifact is required for customer-visible-safety gate.")
+        safety_terms = load_customer_visible_forbidden_terms(run_dir, extra_terms=args.forbidden)
+        report = evaluate_customer_visible_safety_gate(
+            run_id,
+            args.artifact,
+            expected_pages=expected_pages,
+            forbidden_terms=safety_terms,
+        )
     elif args.gate == "evidence":
         claim_map = read_optional_json(run_dir, CLAIM_MAP_NAME) or {"run_id": run_id, "claims": []}
         page_tasks = read_optional_json(run_dir, PAGE_TASKS_NAME) or {"run_id": run_id, "tasks": []}
@@ -738,17 +792,18 @@ def command_quality_gate(args: argparse.Namespace) -> dict[str, Any]:
     else:
         raise RunStateError(f"Unknown gate: {args.gate}")
 
-    paths = write_gate_report(run_dir, args.gate, report)
+    gate_name = str(report.get("gate") or args.gate)
+    paths = write_gate_report(run_dir, gate_name, report)
     write_artifact(
         run_dir,
-        f"quality_reports/{args.gate}_gate.index.json",
+        f"quality_reports/{gate_name}_gate.index.json",
         {"report": paths, "status": report["status"], "blocks_delivery": report["blocks_delivery"]},
-        action=f"quality.{args.gate}_gate.created",
+        action=f"quality.{gate_name}_gate.created",
     )
     return {
         "run_id": run_id,
         "run_dir": str(run_dir),
-        "gate": args.gate,
+        "gate": gate_name,
         "status": report["status"],
         "blocks_delivery": report["blocks_delivery"],
         "findings": len(report["findings"]),
@@ -787,6 +842,18 @@ def command_delivery_validate(args: argparse.Namespace) -> dict[str, Any]:
         if pm and isinstance(pm.get("pages"), list):
             expected_pages = sum(1 for p in pm["pages"] if p.get("decision") == "approved")
     return validate_delivery(run_dir, args.artifact, expected_page_count=expected_pages or 0)
+
+
+def command_final_readiness(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = resolve_run_dir(args)
+    return compute_final_readiness(
+        run_dir,
+        artifact_path=getattr(args, "artifact", None),
+        expected_page_count=getattr(args, "expected_pages", None),
+        write=not bool(getattr(args, "no_write", False)),
+        run_mode=_normalize_run_mode(getattr(args, "run_mode", None)),
+        dev_allow_unsetup=bool(getattr(args, "dev_allow_unsetup", False)),
+    )
 
 
 def command_delivery_record_outcome(args: argparse.Namespace) -> dict[str, Any]:
@@ -913,7 +980,7 @@ def command_setup(args: argparse.Namespace) -> dict[str, Any]:
         workspace=getattr(args, "workspace", None),
         runs_dir=getattr(args, "runs_dir", None),
         targets=getattr(args, "target", None),
-        review_cockpit_url=getattr(args, "review_cockpit_url", None) or "http://127.0.0.1:5050",
+        review_cockpit_url=getattr(args, "review_cockpit_url", None),
         repair=bool(getattr(args, "repair_workspace", False)),
     )
     if bool(getattr(args, "install_suite", False)):
@@ -1083,6 +1150,17 @@ def command_suite_build_release_tree(args: argparse.Namespace) -> dict[str, Any]
     )
 
 
+def command_release_smoke(args: argparse.Namespace) -> dict[str, Any]:
+    return verify_release_tree(
+        getattr(args, "release_root", None),
+        run_smoke=not bool(getattr(args, "no_smoke", False)),
+    )
+
+
+def command_release_rollback(args: argparse.Namespace) -> dict[str, Any]:
+    return rollback_release_tree()
+
+
 def command_suite_install(args: argparse.Namespace) -> dict[str, Any]:
     return suite_install(
         targets=getattr(args, "target", None),
@@ -1142,8 +1220,15 @@ def command_import_render_result(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def command_render(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = resolve_run_dir(args)
+    if not bool(getattr(args, "fixture_safe", False)):
+        return run_build(run_dir)
+    request = load_request(run_dir)
+    run_mode = _normalize_run_mode(str(request.get("run_mode") or getattr(args, "run_mode", None)))
+    if run_mode in {"production", "benchmark"}:
+        raise RunStateError("render --fixture-safe is blocked for production and benchmark runs.")
     return render_fixture_html(
-        resolve_run_dir(args),
+        run_dir,
         output_format=getattr(args, "format", "html"),
         fixture_safe=bool(getattr(args, "fixture_safe", False)),
     )
@@ -1151,6 +1236,18 @@ def command_render(args: argparse.Namespace) -> dict[str, Any]:
 
 def command_render_status(args: argparse.Namespace) -> dict[str, Any]:
     return render_status(resolve_run_dir(args))
+
+
+def command_build_prepare(args: argparse.Namespace) -> dict[str, Any]:
+    return prepare_build(resolve_run_dir(args))
+
+
+def command_build_run(args: argparse.Namespace) -> dict[str, Any]:
+    return run_build(resolve_run_dir(args))
+
+
+def command_build_status(args: argparse.Namespace) -> dict[str, Any]:
+    return build_status(resolve_run_dir(args))
 
 
 def command_bind_workspace(args: argparse.Namespace) -> dict[str, Any]:
@@ -1268,6 +1365,7 @@ def command_import_generation_result(args: argparse.Namespace) -> dict[str, Any]
             result,
             expected_run_id=expected_run_id,
             expected_session_id=expected_session_id or None,
+            run_dir=run_dir,
         )
         imported = import_generation_result(run_dir, normalized, force=force)
     except GenerationHandbackError as exc:
@@ -1313,6 +1411,16 @@ def command_generation_session_status(args: argparse.Namespace) -> dict[str, Any
     return generation_session_status(
         resolve_run_dir(args),
         tool=getattr(args, "tool", None),
+        tool_command=getattr(args, "tool_command", None),
+    )
+
+
+def command_generation_session_dispatch(args: argparse.Namespace) -> dict[str, Any]:
+    return run_generation_session(
+        resolve_run_dir(args),
+        tool=getattr(args, "tool", "ppt-deck-pro-max"),
+        dry_run=False,
+        no_execute=True,
         tool_command=getattr(args, "tool_command", None),
     )
 
@@ -1385,7 +1493,8 @@ def command_validate_generation_result(args: argparse.Namespace) -> dict[str, An
         result = json.loads(input_path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
         return {"valid": False, "errors": [f"Bad JSON: {exc.msg}"], "warnings": []}
-    return validate_generation_result(result)
+    run_dir = resolve_run_dir(args) if getattr(args, "run_dir", None) or getattr(args, "run_id", None) else None
+    return validate_generation_result(result, run_dir=run_dir)
 
 
 def command_summarize_run_metrics(args: argparse.Namespace) -> dict[str, Any]:
@@ -1601,6 +1710,25 @@ def command_benchmark_list(args: argparse.Namespace) -> dict[str, Any]:
     return {"status": "listed", "benchmark_dir": str(benchmark_dir), "cases": cases, "results": results}
 
 
+def command_benchmark_aggregate_report(args: argparse.Namespace) -> dict[str, Any]:
+    return write_benchmark_aggregate_report(
+        getattr(args, "benchmark_dir", str(ROOT / "benchmarks")),
+        min_real_cases=int(getattr(args, "min_real_cases", 3)),
+        force=bool(getattr(args, "force", False)),
+    )
+
+
+def command_rc_gate(args: argparse.Namespace) -> dict[str, Any]:
+    return write_rc_gate_report(
+        getattr(args, "output_dir", str(ROOT / "rc_reports")),
+        benchmark_dir=getattr(args, "benchmark_dir", str(ROOT / "benchmarks")),
+        skip_browser_smoke=bool(getattr(args, "skip_browser_smoke", False)),
+        require_browser_smoke=bool(getattr(args, "require_browser_smoke", False)),
+        min_real_cases=int(getattr(args, "min_real_cases", 3)),
+        force=bool(getattr(args, "force", False)),
+    )
+
+
 def add_brief_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--brief")
     parser.add_argument("--brief-file")
@@ -1667,7 +1795,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_setup.add_argument("--workspace", default=None, help="Active Deck Master workspace")
     p_setup.add_argument("--runs-dir", default=None, help="Default runs directory")
     p_setup.add_argument("--target", action="append", default=[], choices=["codex", "claude-code", "hermes"], help="Agent skill target to validate")
-    p_setup.add_argument("--review-cockpit-url", default="http://127.0.0.1:5050")
+    p_setup.add_argument("--review-cockpit-url", default=None)
     p_setup.add_argument("--repair-workspace", action="store_true", help="Create missing standard workspace directories and placeholder files")
     p_setup.add_argument("--install-suite", action="store_true", help="Build release tree and install required suite skill links")
     p_setup.set_defaults(func=command_setup)
@@ -1697,6 +1825,20 @@ def build_parser() -> argparse.ArgumentParser:
     p_release_tree.add_argument("--force", action="store_true")
     p_release_tree.add_argument("--dry-run", action="store_true")
     p_release_tree.set_defaults(func=command_suite_build_release_tree)
+
+    p_release_build = sub.add_parser("release-build", help="Build self-contained Deck Master release tree")
+    p_release_build.add_argument("--output", required=True, help="Release tree output path")
+    p_release_build.add_argument("--force", action="store_true")
+    p_release_build.add_argument("--dry-run", action="store_true")
+    p_release_build.set_defaults(func=command_suite_build_release_tree)
+
+    p_release_smoke = sub.add_parser("release-smoke", help="Verify a Deck Master release tree")
+    p_release_smoke.add_argument("--release-root", default=None, help="Release tree path; defaults to ~/.deck-master/current")
+    p_release_smoke.add_argument("--no-smoke", action="store_true", help="Skip launching the release entrypoint")
+    p_release_smoke.set_defaults(func=command_release_smoke)
+
+    p_release_rollback = sub.add_parser("release-rollback", help="Restore the previous Deck Master release tree")
+    p_release_rollback.set_defaults(func=command_release_rollback)
 
     p_suite_install = sub.add_parser("suite-install", help="Install Deck Master suite skill links")
     p_suite_install.add_argument("--target", action="append", default=[], choices=["codex", "claude-code", "hermes"])
@@ -1792,11 +1934,29 @@ def build_parser() -> argparse.ArgumentParser:
     p_export.add_argument("--allow-quality-override", action="store_true")
     p_export.set_defaults(func=command_export)
 
+    p_final_readiness = sub.add_parser("final-readiness", help="Compute final client readiness")
+    add_run_args(p_final_readiness)
+    p_final_readiness.add_argument("--artifact", help="Final artifact path. Defaults to render_result artifact_path.")
+    p_final_readiness.add_argument("--expected-pages", type=int, default=None, help="Expected final page count")
+    p_final_readiness.add_argument("--no-write", action="store_true", help="Return readiness without writing final_readiness.json")
+    p_final_readiness.set_defaults(func=command_final_readiness)
+
     p_quality = sub.add_parser("quality-gate", help="Run a Deck Master quality gate")
     add_run_args(p_quality)
     p_quality.add_argument(
         "gate",
-        choices=["draft", "draft_v2", "render", "delivery", "evidence", "context-conflict", "confidentiality", "brand"],
+        choices=[
+            "draft",
+            "draft_v2",
+            "render",
+            "delivery",
+            "customer-visible-safety",
+            "customer_visible_safety",
+            "evidence",
+            "context-conflict",
+            "confidentiality",
+            "brand",
+        ],
     )
     p_quality.add_argument("--artifact", help="Rendered or final PPTX artifact for render/delivery/brand gates")
     p_quality.add_argument("--expected-pages", type=int)
@@ -1964,6 +2124,21 @@ def build_parser() -> argparse.ArgumentParser:
     p_import_plan.add_argument("--source", required=True, choices=["human", "agent"])
     p_import_plan.set_defaults(func=command_import_plan)
 
+    p_build = sub.add_parser("build", help="Prepare, run, or inspect production build artifacts")
+    build_sub = p_build.add_subparsers(dest="build_command", required=True)
+
+    p_build_prepare = build_sub.add_parser("prepare", help="Write build manifest from current preview manifest")
+    add_run_args(p_build_prepare)
+    p_build_prepare.set_defaults(func=command_build_prepare)
+
+    p_build_run = build_sub.add_parser("run", help="Build HTML/PDF/PNG/PPTX artifacts")
+    add_run_args(p_build_run)
+    p_build_run.set_defaults(func=command_build_run)
+
+    p_build_status = build_sub.add_parser("status", help="Inspect production build artifacts")
+    add_run_args(p_build_status)
+    p_build_status.set_defaults(func=command_build_status)
+
     p_render = sub.add_parser("render", help="Render a run through the bundled PPT Master path")
     add_run_args(p_render)
     p_render.add_argument("--format", choices=["html"], default="html")
@@ -2077,6 +2252,12 @@ def build_parser() -> argparse.ArgumentParser:
     p_gs_status.add_argument("--tool-command", default=None, help="Override tool command directly")
     p_gs_status.set_defaults(func=command_generation_session_status)
 
+    p_gs_dispatch = gs_sub.add_parser("dispatch", help="Write Agent dispatch package without launching an executor")
+    add_run_args(p_gs_dispatch)
+    p_gs_dispatch.add_argument("--tool", default="ppt-deck-pro-max")
+    p_gs_dispatch.add_argument("--tool-command", default=None, help="Override tool command directly")
+    p_gs_dispatch.set_defaults(func=command_generation_session_dispatch)
+
     p_gs_import = gs_sub.add_parser("import-results", help="Import generation result and refresh preview manifest")
     add_run_args(p_gs_import)
     p_gs_import.add_argument("--input", required=True, help="Path to generation result JSON")
@@ -2117,6 +2298,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_vplr.set_defaults(func=command_validate_ppt_library_result)
 
     p_vgr = sub.add_parser("validate-generation-result", help="Validate generation result")
+    add_run_args(p_vgr)
     p_vgr.add_argument("--input", required=True, help="Path to generation result JSON")
     p_vgr.set_defaults(func=command_validate_generation_result)
 
@@ -2214,6 +2396,21 @@ def build_parser() -> argparse.ArgumentParser:
     p_blist.add_argument("--benchmark-dir", default=str(ROOT / "benchmarks"))
     p_blist.set_defaults(func=command_benchmark_list)
 
+    p_bagg = sub.add_parser("benchmark-aggregate-report", help="Build aggregate benchmark report")
+    p_bagg.add_argument("--benchmark-dir", default=str(ROOT / "benchmarks"))
+    p_bagg.add_argument("--min-real-cases", type=int, default=3)
+    p_bagg.add_argument("--force", action="store_true")
+    p_bagg.set_defaults(func=command_benchmark_aggregate_report)
+
+    p_rc_gate = sub.add_parser("rc-gate", help="Run Deck Master release-candidate gate")
+    p_rc_gate.add_argument("--output-dir", default=str(ROOT / "rc_reports"))
+    p_rc_gate.add_argument("--benchmark-dir", default=str(ROOT / "benchmarks"))
+    p_rc_gate.add_argument("--min-real-cases", type=int, default=3)
+    p_rc_gate.add_argument("--skip-browser-smoke", action="store_true")
+    p_rc_gate.add_argument("--require-browser-smoke", action="store_true")
+    p_rc_gate.add_argument("--force", action="store_true")
+    p_rc_gate.set_defaults(func=command_rc_gate)
+
     return parser
 
 
@@ -2240,9 +2437,11 @@ def main() -> None:
         ExternalReviewError,
         GenerationHandbackError,
         BenchmarkCaseError,
+        BenchmarkAggregateError,
         BenchmarkCheckpointError,
         BenchmarkReportError,
         BenchmarkRunError,
+        RCGateError,
         ValueError,
     ) as exc:
         print(f"error: {exc}", file=sys.stderr)

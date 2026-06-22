@@ -73,3 +73,25 @@ jobs:
               raise SystemExit(f"Expected at least 10 preview pages, got {len(pages)}")
           print(f"Autoplan smoke passed: {len(pages)} preview pages")
           PY
+
+      - name: Run RC gate
+        run: |
+          set -euo pipefail
+          OUT_DIR="$(mktemp -d)"
+          python scripts/deck_master.py rc-gate \
+            --output-dir "$OUT_DIR/rc-gate" \
+            --benchmark-dir benchmarks \
+            --skip-browser-smoke \
+            --force \
+            > "$OUT_DIR/rc-gate-output.json"
+          python - "$OUT_DIR/rc-gate-output.json" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          payload = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+          report = json.loads(Path(payload["report"]).read_text(encoding="utf-8"))
+          if report["status"] != "pass":
+              raise SystemExit(f"RC gate failed: {report['status']}")
+          print("RC gate passed")
+          PY

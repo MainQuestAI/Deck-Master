@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -35,6 +36,18 @@ def generate(args: argparse.Namespace) -> int:
     task_dir = Path(args.task_dir).expanduser().resolve()
     output_dir = Path(args.output_dir).expanduser().resolve()
     run_dir = task_dir.parent
+    request_path = run_dir / "request.json"
+    run_mode = "production"
+    if request_path.exists():
+        request = _read_json(request_path)
+        run_mode = str(request.get("run_mode") or "production").strip().lower()
+    if run_mode not in {"fixture", "dev"}:
+        print(
+            "Bundled PPT Deck Pro Max adapter is fixture-only. "
+            "Use Deck Master Agent dispatch for production generation.",
+            file=sys.stderr,
+        )
+        return 2
     output_dir.mkdir(parents=True, exist_ok=True)
     assets_dir = run_dir / "generated_assets"
     assets_dir.mkdir(parents=True, exist_ok=True)

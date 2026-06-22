@@ -68,7 +68,7 @@ class DraftGateTests(unittest.TestCase):
         self.assertTrue(report["blocks_delivery"])
         finding_ids = {finding["finding_id"] for finding in report["findings"]}
         self.assertIn("delivery_page_count_mismatch", finding_ids)
-        self.assertIn("slide_002_forbidden_terms", finding_ids)
+        self.assertTrue(any(item.startswith("slide_002_forbidden_terms") for item in finding_ids))
 
     def test_render_gate_flags_possible_full_slide_image(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

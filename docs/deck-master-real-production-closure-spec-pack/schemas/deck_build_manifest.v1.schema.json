@@ -1,0 +1,194 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "deck_build_manifest.v1.schema.json",
+  "title": "Deck Build Manifest v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "build_id",
+    "profile",
+    "source_fingerprint",
+    "page_order",
+    "pages",
+    "output_targets",
+    "created_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "deck_build_manifest.v1"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "build_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "profile": {
+      "type": "string",
+      "enum": [
+        "fixture",
+        "dev",
+        "production_html",
+        "production_pptx",
+        "benchmark",
+        "client_delivery"
+      ]
+    },
+    "source_fingerprint": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "page_order": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "pages": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "page_id",
+          "source_artifacts"
+        ],
+        "properties": {
+          "page_id": {
+            "type": "string"
+          },
+          "source_artifacts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "artifact_id",
+                "kind",
+                "path",
+                "media_type",
+                "sha256",
+                "bytes",
+                "validation_status"
+              ],
+              "properties": {
+                "artifact_id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "page_html",
+                    "html_fragment",
+                    "page_svg",
+                    "page_png",
+                    "page_jpeg",
+                    "page_pptx",
+                    "deck_html",
+                    "deck_pdf",
+                    "deck_pptx",
+                    "asset_bundle",
+                    "quality_report",
+                    "source_snapshot"
+                  ]
+                },
+                "path": {
+                  "type": "string",
+                  "minLength": 1,
+                  "not": {
+                    "pattern": "^(?:/|[A-Za-z]:\\\\)|(?:^|/)\\.\\.(?:/|$)"
+                  }
+                },
+                "media_type": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "bytes": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "validation_status": {
+                  "type": "string",
+                  "enum": [
+                    "validated",
+                    "invalid",
+                    "unvalidated",
+                    "stale",
+                    "missing"
+                  ]
+                },
+                "editability": {
+                  "type": "string",
+                  "enum": [
+                    "native",
+                    "hybrid",
+                    "flat_image",
+                    "not_applicable",
+                    "unknown"
+                  ]
+                },
+                "page_id": {
+                  "type": "string"
+                },
+                "created_at": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": true
+            },
+            "minItems": 1
+          },
+          "title": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "output_targets": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "html",
+          "pdf",
+          "page_png",
+          "pptx"
+        ]
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "theme_ref": {
+      "type": "string"
+    },
+    "visual_system_ref": {
+      "type": "string"
+    },
+    "editability_requirement": {
+      "type": "string",
+      "enum": [
+        "any",
+        "native",
+        "hybrid_or_native",
+        "flat_allowed"
+      ]
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": true
+}

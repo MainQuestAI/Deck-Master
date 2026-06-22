@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from generation.dispatch import write_generation_dispatch_package
 from generation.handback import (
     GenerationHandbackError,
     import_generation_result,
@@ -30,16 +31,20 @@ SESSION_NAME = "generation_session.json"
 SESSIONS_DIR = "generation_sessions"
 TASKS_DIR = "generation_tasks"
 RESULTS_DIR = "generation_results"
+RECEIPTS_DIR = "generation_import_receipts"
 
 VALID_STATUSES = {
     "created",
     "blocked",
     "dispatched",
+    "awaiting_agent_execution",
     "running",
     "completed",
     "partial",
     "failed",
+    "result_files_present",
     "results_imported",
+    "ready_for_build",
     "preview_refreshed",
     "quality_required",
 }
@@ -168,13 +173,17 @@ def _set_session_status(
     session["status"] = status
     if status in {"running"} and not session.get("started_at"):
         session["started_at"] = _utc_now()
+    if status == "awaiting_agent_execution":
+        session["awaiting_agent_execution_at"] = _utc_now()
     if status == "quality_required":
         session["quality_required_at"] = _utc_now()
     if status in {
         "completed",
         "partial",
         "failed",
+        "result_files_present",
         "results_imported",
+        "ready_for_build",
         "preview_refreshed",
         "quality_required",
     }:
@@ -187,6 +196,69 @@ def _set_session_status(
     if history.exists():
         write_json(history, session)
     return session
+
+
+def _run_mode(request: dict[str, Any]) -> str:
+    mode = str(request.get("run_mode") or "production").strip().lower()
+    if mode in {"production", "benchmark", "fixture", "dev"}:
+        return mode
+    return "production"
+
+
+def _write_agent_dispatch(
+    root: Path,
+    session: dict[str, Any],
+    *,
+    tool: str,
+    command: list[str],
+    command_entry: dict[str, Any],
+    dry_run: bool,
+    no_execute: bool,
+    reason: str,
+) -> dict[str, Any]:
+    dispatch = write_generation_dispatch_package(
+        root,
+        session=session,
+        tool=tool,
+        command=command,
+        command_entry=command_entry,
+        reason=reason,
+    )
+    extra = {
+        "command": command,
+        "command_entry": command_entry,
+        "dispatch_package": dispatch.get("dispatch_package"),
+        "agent_instructions": dispatch.get("agent_instructions"),
+    }
+    session = _set_session_status(root, session, "awaiting_agent_execution", extra=extra)
+    append_typed_event(
+        root,
+        "tool_call",
+        "generation.agent_dispatch.prepared",
+        "Generation Agent dispatch package prepared.",
+        run_id=session.get("run_id", root.name),
+        refs=[str(dispatch.get("dispatch_package") or "")],
+        payload={
+            "tool": tool,
+            "session_id": session.get("session_id"),
+            "dry_run": dry_run,
+            "no_execute": no_execute,
+            "dispatch_package": dispatch.get("dispatch_package"),
+            "agent_instructions": dispatch.get("agent_instructions"),
+            "reason": reason,
+        },
+    )
+    return {
+        "status": "awaiting_agent_execution",
+        "run_id": session.get("run_id", root.name),
+        "session_id": session.get("session_id"),
+        "tool": tool,
+        "command": command,
+        "dispatch_package": dispatch.get("dispatch_package"),
+        "agent_instructions": dispatch.get("agent_instructions"),
+        "dry_run": dry_run,
+        "no_execute": no_execute,
+    }
 
 
 def _write_session(run_dir: Path, payload: dict[str, Any]) -> dict[str, Any]:
@@ -406,15 +478,20 @@ def run_generation(
     request = load_request(root) if (root / REQUEST_NAME).exists() else {}
     session = _ensure_session_exists(root)
     workspace = str(request.get("workspace") or "")
+    run_mode = _run_mode(request)
     session["tool"] = tool
 
     if dry_run or no_execute:
-        command, entry = _resolve_tool(
-            tool=tool,
-            run_dir=root,
-            workspace=workspace,
-            tool_command=tool_command,
-        )
+        try:
+            command, entry = _resolve_tool(
+                tool=tool,
+                run_dir=root,
+                workspace=workspace,
+                tool_command=tool_command,
+            )
+        except ToolRegistryError as exc:
+            _set_session_status(root, session, "blocked")
+            raise GenerationSessionError(f"tool unavailable: {exc}") from exc
         command = _with_generation_session_args(
             command,
             entry,
@@ -422,46 +499,53 @@ def run_generation(
             session_id=str(session.get("session_id") or ""),
         )
         session["command"] = command
-        _set_session_status(root, session, "dispatched", extra={"command": command, "command_entry": entry})
-        append_typed_event(
+        return _write_agent_dispatch(
             root,
-            "tool_call",
-            "generation.run.prepared",
-            "Generation command prepared.",
-            run_id=session.get("run_id", root.name),
-            refs=[SESSION_NAME],
-            payload={
-                "tool": tool,
-                "dry_run": dry_run,
-                "no_execute": no_execute,
-                "command": command,
-            },
+            session,
+            tool=tool,
+            command=command,
+            command_entry=entry,
+            dry_run=dry_run,
+            no_execute=no_execute,
+            reason="manual_dispatch_requested",
         )
-        return {
-            "status": "dispatched",
-            "run_id": session.get("run_id", root.name),
-            "tool": tool,
-            "command": command,
-            "dry_run": dry_run,
-            "no_execute": no_execute,
-        }
 
-    ok, reason, command, entry = _run_tool_available(
-        tool,
-        root,
-        workspace=workspace,
-        tool_command=tool_command,
-    )
-    if not ok:
+    try:
+        command, entry = _resolve_tool(
+            tool=tool,
+            run_dir=root,
+            workspace=workspace,
+            tool_command=tool_command,
+        )
+    except ToolRegistryError as exc:
         _set_session_status(root, session, "blocked")
-        raise GenerationSessionError(f"tool unavailable: {reason}")
-
+        raise GenerationSessionError(f"tool unavailable: {exc}") from exc
     command = _with_generation_session_args(
         command,
         entry,
         run_id=str(session.get("run_id") or _run_id(root)),
         session_id=str(session.get("session_id") or ""),
     )
+    if run_mode in {"production", "benchmark"} and entry.get("type") == "bundled":
+        return _write_agent_dispatch(
+            root,
+            session,
+            tool=tool,
+            command=command,
+            command_entry=entry,
+            dry_run=dry_run,
+            no_execute=no_execute,
+            reason="bundled_fixture_adapter_disabled_for_production",
+        )
+
+    availability_check = entry.get("availability_check")
+    if not isinstance(availability_check, list):
+        availability_check = []
+    ok, reason = check_tool_available(command, availability_check=availability_check or None)
+    if not ok:
+        _set_session_status(root, session, "blocked")
+        raise GenerationSessionError(f"tool unavailable: {reason}")
+
     session["command"] = command
     _set_session_status(root, session, "running", extra={"command_entry": entry})
 
@@ -531,15 +615,82 @@ def _validate_result_path(run_dir: Path, value: Any, *, field_name: str, require
     return str(path)
 
 
-def import_generation_results(
-    run_dir: str | Path,
-    input_path: str | Path,
+def _duplicate_import(root: Path, result: dict[str, Any]) -> bool:
+    task_id = str(result.get("task_id") or "")
+    if not task_id:
+        return False
+    if not any((root / RECEIPTS_DIR).glob(f"{task_id}-*.json")):
+        return False
+    canonical_path = root / RESULTS_DIR / f"{task_id}.json"
+    if not canonical_path.exists():
+        return False
+    try:
+        existing = read_json(canonical_path)
+    except Exception:
+        return False
+    return (
+        existing.get("status") == result.get("status")
+        and existing.get("source_fingerprint") == result.get("source_fingerprint")
+        and existing.get("artifact_path") == result.get("artifact_path")
+        and existing.get("preview_path") == result.get("preview_path")
+    )
+
+
+def _write_import_receipt(
+    root: Path,
+    *,
+    result: dict[str, Any],
+    source_path: Path,
+    imported: dict[str, Any],
+    duplicate: bool,
+) -> str:
+    receipts_dir = root / RECEIPTS_DIR
+    receipts_dir.mkdir(parents=True, exist_ok=True)
+    timestamp = _utc_now()
+    safe_timestamp = timestamp.replace(":", "").replace(".", "").replace("+", "Z")
+    task_id = str(imported.get("task_id") or result.get("task_id") or "unknown")
+    receipt_path = receipts_dir / f"{task_id}-{safe_timestamp}.json"
+    counter = 1
+    while receipt_path.exists():
+        receipt_path = receipts_dir / f"{task_id}-{safe_timestamp}-{counter}.json"
+        counter += 1
+    payload = {
+        "schema_version": "deck_generation_import_receipt.v1",
+        "receipt_id": receipt_path.stem,
+        "run_id": str(result.get("run_id") or root.name),
+        "session_id": str(result.get("session_id") or ""),
+        "task_id": task_id,
+        "result_status": str(result.get("status") or ""),
+        "status": "imported",
+        "duplicate_import": duplicate,
+        "source_path": str(source_path),
+        "canonical_result_path": f"{RESULTS_DIR}/{task_id}.json",
+        "created_at": timestamp,
+    }
+    write_json(receipt_path, payload)
+    append_typed_event(
+        root,
+        "artifact_written",
+        "generation.import_receipt.written",
+        "Generation import receipt written.",
+        run_id=payload["run_id"],
+        refs=[str(receipt_path.relative_to(root))],
+        payload={
+            "task_id": task_id,
+            "session_id": payload["session_id"],
+            "duplicate_import": duplicate,
+        },
+    )
+    return str(receipt_path.relative_to(root))
+
+
+def _import_generation_result_file(
+    root: Path,
+    session: dict[str, Any],
+    result_path: Path,
     *,
     force: bool = False,
 ) -> dict[str, Any]:
-    root = _run_dir(run_dir)
-    session = _ensure_session_exists(root)
-    result_path = Path(input_path).expanduser().resolve()
     if not result_path.exists():
         message = f"Result file not found: {result_path}"
         append_import_log(root, import_type="generation_result", source="ppt-deck-pro-max", status="rejected", source_path=result_path, errors=[message])
@@ -559,6 +710,7 @@ def import_generation_results(
             raw,
             expected_run_id=str(session.get("run_id") or _run_id(root)),
             expected_session_id=str(session.get("session_id") or ""),
+            run_dir=root,
         )
         _enforce_generation_session_binding(raw, session=session, run_dir=root)
     except GenerationHandbackError as exc:
@@ -570,7 +722,7 @@ def import_generation_results(
     if raw.get("beat_id") and not raw.get("page_id"):
         raw["page_id"] = str(raw["beat_id"])
 
-    validation = validate_generation_result(raw)
+    validation = validate_generation_result(raw, run_dir=root)
     if not validation.get("valid"):
         message = "Invalid generation result: " + "; ".join(validation.get("errors", []))
         append_import_log(root, import_type="generation_result", source="ppt-deck-pro-max", status="rejected", source_path=result_path, errors=[message])
@@ -584,13 +736,33 @@ def import_generation_results(
         append_import_log(root, import_type="generation_result", source="ppt-deck-pro-max", status="rejected", source_path=result_path, errors=[str(exc)])
         raise
 
+    duplicate = _duplicate_import(root, raw)
+    session = _set_session_status(root, session, "result_files_present")
+    append_typed_event(
+        root,
+        "step_completed",
+        "generation.result_files_present",
+        "Generation result files are present and validated.",
+        run_id=session.get("run_id", root.name),
+        refs=[str(result_path)],
+        payload={"session_id": session.get("session_id"), "result_status": status},
+    )
+
     try:
         imported = import_generation_result(root, raw, force=force)
     except GenerationHandbackError as exc:
         append_import_log(root, import_type="generation_result", source="ppt-deck-pro-max", status="rejected", source_path=result_path, errors=[str(exc)])
         raise GenerationSessionError(str(exc)) from exc
 
+    receipt_path = _write_import_receipt(
+        root,
+        result=raw,
+        source_path=result_path,
+        imported=imported,
+        duplicate=duplicate,
+    )
     session["tasks_completed"] = session_task_counter(root)
+    session = _set_session_status(root, session, "results_imported")
     refresh_result = refresh_preview_from_generation(root)
     if refresh_result.get("status") == "refreshed":
         session = _set_session_status(root, session, "quality_required")
@@ -629,6 +801,8 @@ def import_generation_results(
             "session_id": session.get("session_id"),
             "refresh_status": refresh_result.get("status"),
             "needs_quality_gate": session.get("status") == "quality_required",
+            "receipt": receipt_path,
+            "duplicate_import": duplicate,
         },
     )
 
@@ -640,7 +814,46 @@ def import_generation_results(
         "needs_quality_gate": session.get("status") == "quality_required",
         "import_result": imported,
         "refresh_preview": refresh_result,
+        "receipt": receipt_path,
+        "duplicate_import": duplicate,
     }
+
+
+def import_generation_results(
+    run_dir: str | Path,
+    input_path: str | Path,
+    *,
+    force: bool = False,
+) -> dict[str, Any]:
+    root = _run_dir(run_dir)
+    session = _ensure_session_exists(root)
+    target = Path(input_path).expanduser().resolve()
+    if target.is_dir():
+        result_files = sorted(path for path in target.glob("*.json") if path.is_file())
+        if not result_files:
+            message = f"No generation result JSON files found in {target}"
+            append_import_log(root, import_type="generation_result", source="ppt-deck-pro-max", status="rejected", source_path=target, errors=[message])
+            raise GenerationSessionError(message)
+        imported: list[dict[str, Any]] = []
+        errors: list[dict[str, str]] = []
+        for result_file in result_files:
+            try:
+                imported.append(_import_generation_result_file(root, session, result_file, force=force))
+                session = read_json(_session_path(root))
+            except GenerationSessionError as exc:
+                errors.append({"path": str(result_file), "error": str(exc)})
+        if errors and not imported:
+            raise GenerationSessionError("; ".join(error["error"] for error in errors))
+        return {
+            "schema_version": SCHEMA_VERSION,
+            "run_id": session.get("run_id", root.name),
+            "session_id": session.get("session_id"),
+            "status": "batch_imported" if not errors else "partial",
+            "needs_quality_gate": session.get("status") == "quality_required",
+            "imports": imported,
+            "errors": errors,
+        }
+    return _import_generation_result_file(root, session, target, force=force)
 
 
 def session_task_counter(run_dir: Path) -> int:

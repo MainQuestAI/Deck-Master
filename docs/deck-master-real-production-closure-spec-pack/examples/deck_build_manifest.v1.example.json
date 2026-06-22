@@ -1,0 +1,41 @@
+{
+  "schema_version": "deck_build_manifest.v1",
+  "run_id": "client-demo-001",
+  "build_id": "build-20260622-001",
+  "profile": "client_delivery",
+  "source_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "page_order": [
+    "page_001"
+  ],
+  "pages": [
+    {
+      "page_id": "page_001",
+      "title": "项目价值总览",
+      "role": "opener",
+      "source_artifacts": [
+        {
+          "artifact_id": "page_001_html",
+          "kind": "page_html",
+          "path": "generated_assets/page_001/index.html",
+          "media_type": "text/html",
+          "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "bytes": 18240,
+          "validation_status": "validated",
+          "editability": "native",
+          "page_id": "page_001",
+          "created_at": "2026-06-22T08:00:00Z"
+        }
+      ]
+    }
+  ],
+  "output_targets": [
+    "html",
+    "pdf",
+    "page_png",
+    "pptx"
+  ],
+  "theme_ref": "workspace/visual-system/theme.json",
+  "visual_system_ref": "workspace/visual-system/visual-system.md",
+  "editability_requirement": "flat_allowed",
+  "created_at": "2026-06-22T08:05:00Z"
+}
