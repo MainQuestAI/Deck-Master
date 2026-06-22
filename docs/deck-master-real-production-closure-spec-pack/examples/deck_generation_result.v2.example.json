@@ -1,0 +1,46 @@
+{
+  "schema_version": "deck_generation_result.v2",
+  "run_id": "client-demo-001",
+  "session_id": "client-demo-001-gen-20260622",
+  "task_id": "task_001",
+  "page_id": "page_001",
+  "beat_id": "beat_01_opener",
+  "producer": {
+    "capability": "ppt-deck-pro-max",
+    "version": "2.x",
+    "source_ref": "pinned-sha"
+  },
+  "status": "completed",
+  "source_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "artifacts": [
+    {
+      "artifact_id": "page_001_html",
+      "kind": "page_html",
+      "path": "generated_assets/page_001/index.html",
+      "media_type": "text/html",
+      "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "bytes": 18240,
+      "validation_status": "validated",
+      "editability": "native",
+      "page_id": "page_001",
+      "created_at": "2026-06-22T08:00:00Z"
+    }
+  ],
+  "preview": {
+    "artifact_id": "page_001_preview",
+    "kind": "page_png",
+    "path": "generated_assets/page_001/preview.png",
+    "media_type": "image/png",
+    "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "bytes": 245600,
+    "validation_status": "validated",
+    "editability": "not_applicable",
+    "page_id": "page_001",
+    "created_at": "2026-06-22T08:00:10Z"
+  },
+  "provenance": {
+    "handoff_ref": "handoffs/ppt_deck_pro_max/client-demo-001-gen-20260622/handoff_manifest.json"
+  },
+  "errors": [],
+  "created_at": "2026-06-22T08:00:10Z"
+}

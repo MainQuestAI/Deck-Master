@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "deck_capability_lock.v1.schema.json",
+  "title": "Deck Capability Lock v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "suite_version",
+    "capabilities",
+    "generated_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "deck_capability_lock.v1"
+    },
+    "suite_version": {
+      "type": "string"
+    },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "source_repo",
+          "source_sha",
+          "package_path",
+          "content_sha256",
+          "contract_versions"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "source_repo": {
+            "type": "string"
+          },
+          "source_sha": {
+            "type": "string"
+          },
+          "package_path": {
+            "type": "string"
+          },
+          "content_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "license": {
+            "type": "string"
+          },
+          "contract_versions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": true
+}
