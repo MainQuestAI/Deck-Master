@@ -6,7 +6,7 @@ Last updated: 2026-06-22
 
 Stack A is functionally closed for the current scope. Deck Master can dispatch production generation to an external Agent bridge, import canonical `deck_generation_result.v2` files, refresh previews, expose build/render stages, and produce contract-verified build/render artifacts.
 
-Stack B and Stack C remain open.
+Stack B is partially complete. Stack C remains open.
 
 ## Checkpoints
 
@@ -33,7 +33,7 @@ Stack B and Stack C remain open.
 | Task | Status | Entry |
 |---|---|---|
 | B1 artifact validator | complete | `scripts/runtime/artifact_validator.py`, `scripts/runtime/build.py`, `scripts/runtime/run_state_resolver.py`, `docs/contracts/artifact-validation.v1.schema.json` |
-| B2 delivery validation and lineage | pending | `scripts/delivery/`, `scripts/orchestrate/export_queue.py`, `docs/contracts/` |
+| B2 delivery validation and lineage | complete | `scripts/delivery/validate.py`, `docs/contracts/final-version-lineage.v1.schema.json` |
 | B3 single final readiness | pending | new `final_readiness.json`, CLI, runtime consumers |
 | B4 export/workbench readiness enforcement | pending | export CLI, workspace API, UI delivery preview |
 | B5 fixture/dev/production isolation | pending | runtime mode guards, tests, benchmark paths |
@@ -54,8 +54,9 @@ Stack B and Stack C remain open.
 - PPT-Deck-Pro-Max A2 branch passed 150 tests with Codex bundled Python.
 - Stack A cross-repo smoke passed `needs_build -> needs_render -> ready_for_client_export`.
 - B1 artifact validator targeted tests passed 31 tests.
+- B2 delivery validation targeted tests passed 11 tests.
 - System Python in PPT-Deck-Pro-Max lacks `python-pptx`; use the Codex bundled Python for full PPT-side test runs until the local env is updated.
 
 ## Next Work
 
-Continue Stack B with B2. The next implementation should route delivery validation through artifact validation and write `final_version_lineage.json`.
+Continue Stack B with B3. The next implementation should create a single `final_readiness.json` gate that consumes delivery validation, lineage, build/render state, and quality reports.

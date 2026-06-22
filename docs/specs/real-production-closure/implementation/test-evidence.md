@@ -345,3 +345,36 @@ python3 -m unittest discover -s tests
 ```
 
 All commands above passed on 2026-06-22 in `/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure`.
+
+## B2 Evidence — Delivery Validation & Lineage
+
+Implemented on 2026-06-22 in `/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure`.
+
+Coverage added:
+
+- Delivery validation now validates the final artifact through the shared artifact validator.
+- Final artifacts must stay inside the run directory.
+- Missing, invalid, corrupted, unparsable, and empty artifacts block delivery.
+- PPTX page count mismatches block delivery.
+- Blocking quality gates block delivery.
+- Build artifact manifest failures block delivery.
+- Stale source fingerprints across build manifest, artifact manifest, and render result block delivery.
+- Every successful validation writes `delivery/final_version_lineage.json`.
+- Runtime contract added: `docs/contracts/final-version-lineage.v1.schema.json`.
+
+| Command | Result | Notes |
+|---|---|---|
+| `python3 -m unittest tests.test_delivery_validation` | pass | 11 B2 delivery validation tests passed |
+| `python3 -m json.tool docs/contracts/final-version-lineage.v1.schema.json` | pass | Final version lineage contract parses |
+
+New B2 test cases cover:
+
+- Missing final artifact returns P0.
+- Page count mismatch returns P1.
+- Valid final HTML passes without expected page count.
+- Lineage file is written with artifact validation.
+- Quality gate reports are read into lineage.
+- Invalid PPTX is rejected by artifact validation and parse validation.
+- Artifact outside the run directory is rejected.
+- Invalid build artifact manifest blocks delivery.
+- Stale source fingerprint blocks delivery.
