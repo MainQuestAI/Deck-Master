@@ -1,5 +1,42 @@
 # Real Production Closure Test Evidence
 
+## C2 Evidence — Stage / Verify / Activate / Rollback
+
+Implemented on 2026-06-22 in `/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure`.
+
+Coverage added:
+
+- `suite-install` now builds a release under `~/.deck-master/staging/`.
+- The staged release must pass manifest, capability lock, checksum, required package, self-contained entrypoint, and smoke checks before activation.
+- Activation moves the prior `current` release to `previous`, then moves the verified staged release to `current`.
+- Activation failure attempts to restore the prior `current` release.
+- `release-rollback` restores `previous` to `current` and verifies the restored release.
+- `release-smoke` verifies either the current release or an explicit release root.
+- Release verification ignores runtime-only files such as Python bytecode caches and `release-activation.json`.
+
+| Command | Result | Notes |
+|---|---|---|
+| `python3 -m unittest tests.test_skill_installation` | pass | 39 installer/release tests passed |
+| `HOME=<tmp>/home python3 scripts/deck_master.py suite-install --target codex` | pass | Temporary HOME install completed through staging and activation |
+| `HOME=<tmp>/home python3 scripts/deck_master.py release-smoke` | pass | Activated release verified as valid |
+| `git diff --check` | pass | No whitespace or patch formatting issues |
+| `python3 -m compileall scripts tests` | pass | Python files compile |
+| `python3 scripts/deck_master.py setup-status --include-suite --output json` | pass | Setup status JSON parses |
+| `python3 scripts/deck_master.py suite-status --output json` | pass | Suite status JSON parses |
+| `python3 -m unittest discover -s tests` | pass | 787 tests passed |
+
+New C2 test coverage verifies:
+
+- Tampered release checksum blocks verification.
+- `suite-install` activates only a verified staged release.
+- Failed staged verification leaves the existing `current` release untouched.
+- Rollback restores the previous verified release.
+- Smoke verification remains valid after activation metadata is written.
+
+Accepted C2 constraint:
+
+- C2 changes release installation semantics and release verification. It does not yet add archive packaging, CI release jobs, or RC report generation; those remain C4 scope.
+
 ## C1 Evidence — Self-Contained Release Tree
 
 Implemented on 2026-06-22 in `/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure`.

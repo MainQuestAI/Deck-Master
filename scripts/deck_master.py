@@ -94,7 +94,9 @@ from skills.installer import (
     SkillInstallError,
     build_release_tree,
     install_skill,
+    rollback_release_tree,
     inspect_suite_status,
+    verify_release_tree,
     product_capability_manifest,
     suite_install,
     suite_migration_apply,
@@ -1113,6 +1115,17 @@ def command_suite_build_release_tree(args: argparse.Namespace) -> dict[str, Any]
     )
 
 
+def command_release_smoke(args: argparse.Namespace) -> dict[str, Any]:
+    return verify_release_tree(
+        getattr(args, "release_root", None),
+        run_smoke=not bool(getattr(args, "no_smoke", False)),
+    )
+
+
+def command_release_rollback(args: argparse.Namespace) -> dict[str, Any]:
+    return rollback_release_tree()
+
+
 def command_suite_install(args: argparse.Namespace) -> dict[str, Any]:
     return suite_install(
         targets=getattr(args, "target", None),
@@ -1764,6 +1777,14 @@ def build_parser() -> argparse.ArgumentParser:
     p_release_build.add_argument("--force", action="store_true")
     p_release_build.add_argument("--dry-run", action="store_true")
     p_release_build.set_defaults(func=command_suite_build_release_tree)
+
+    p_release_smoke = sub.add_parser("release-smoke", help="Verify a Deck Master release tree")
+    p_release_smoke.add_argument("--release-root", default=None, help="Release tree path; defaults to ~/.deck-master/current")
+    p_release_smoke.add_argument("--no-smoke", action="store_true", help="Skip launching the release entrypoint")
+    p_release_smoke.set_defaults(func=command_release_smoke)
+
+    p_release_rollback = sub.add_parser("release-rollback", help="Restore the previous Deck Master release tree")
+    p_release_rollback.set_defaults(func=command_release_rollback)
 
     p_suite_install = sub.add_parser("suite-install", help="Install Deck Master suite skill links")
     p_suite_install.add_argument("--target", action="append", default=[], choices=["codex", "claude-code", "hermes"])

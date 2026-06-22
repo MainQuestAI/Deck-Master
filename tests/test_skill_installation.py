@@ -15,6 +15,8 @@ from scripts.skills.installer import (
     SkillInstallError,
     build_release_tree,
     inspect_skill_link,
+    install_release_tree,
+    rollback_release_tree,
     inspect_suite_status,
     install_skill,
     product_capability_manifest,
@@ -25,6 +27,7 @@ from scripts.skills.installer import (
     uninstall_skill,
     validate_product_capability_manifest,
     validate_skill,
+    verify_release_tree,
 )
 
 
@@ -290,6 +293,65 @@ class SkillInstallationTest(unittest.TestCase):
             self.assertTrue((release_root / "skills" / skill_name / "SKILL.md").exists(), skill_name)
         for capability_name in ["ppt-master", "ppt-library", "ppt-deck-pro-max", "ppt-quality-gate"]:
             self.assertTrue((release_root / "capabilities" / capability_name / "capability.json").exists(), capability_name)
+
+    def test_verify_release_tree_rejects_tampered_checksum(self) -> None:
+        release_root = Path(self._tmp) / "release"
+        build_release_tree(release_root)
+        (release_root / "release-manifest.json").write_text("{}", encoding="utf-8")
+
+        result = verify_release_tree(release_root, run_smoke=False)
+
+        self.assertFalse(result["valid"])
+        codes = {error["code"] for error in result["errors"]}
+        self.assertIn("sha256_mismatch", codes)
+
+    def test_suite_install_activates_verified_release_via_staging(self) -> None:
+        result = suite_install(targets=["codex"], include_optional=False, agent_skill_dir=str(self.agent_dir))
+
+        self.assertEqual("installed", result["status"])
+        self.assertTrue(result["release_install"]["activated"])
+        current = Path(self._tmp) / ".deck-master" / "current"
+        self.assertTrue((current / "release-activation.json").exists())
+        staged = Path(self._tmp) / ".deck-master" / "staging" / f"release-{result['release_install']['release_id']}"
+        self.assertFalse(staged.exists())
+        self.assertTrue(verify_release_tree(current, run_smoke=True)["valid"])
+        for skill_name in product_capability_manifest()["required_capabilities"]:
+            self.assertTrue((self.agent_dir / skill_name).is_symlink(), skill_name)
+
+    def test_suite_install_blocks_when_stage_verification_fails_without_touching_current(self) -> None:
+        current = Path(self._tmp) / ".deck-master" / "current"
+        current.mkdir(parents=True, exist_ok=True)
+        (current / "keep.txt").write_text("previous-current", encoding="utf-8")
+        verification = {
+            "schema_version": "deck_master_release_verification.v1",
+            "release_root": "staged",
+            "valid": False,
+            "status": "failed",
+            "errors": [{"code": "forced_failure"}],
+            "warnings": [],
+            "smoke": {"skipped": True},
+        }
+
+        with mock.patch("scripts.skills.installer.verify_release_tree", return_value=verification):
+            result = suite_install(targets=["codex"], include_optional=False, agent_skill_dir=str(self.agent_dir))
+
+        self.assertEqual("blocked", result["status"])
+        self.assertEqual("previous-current", (current / "keep.txt").read_text(encoding="utf-8"))
+
+    def test_release_rollback_restores_previous_release(self) -> None:
+        current = Path(self._tmp) / ".deck-master" / "current"
+        build_release_tree(current, force=True)
+        original_manifest = (current / "release-manifest.json").read_text(encoding="utf-8")
+        install_result = install_release_tree(run_smoke=True)
+        self.assertTrue(install_result["activated"])
+        self.assertEqual(original_manifest, (Path(self._tmp) / ".deck-master" / "previous" / "release-manifest.json").read_text(encoding="utf-8"))
+
+        rollback = rollback_release_tree()
+
+        self.assertEqual("rolled_back", rollback["status"])
+        self.assertTrue(rollback["verification"]["valid"])
+        self.assertEqual(original_manifest, (current / "release-manifest.json").read_text(encoding="utf-8"))
+        self.assertFalse((current / "release-activation.json").exists())
 
     def test_suite_migration_apply_and_rollback_real_directory(self) -> None:
         legacy = self.agent_dir / "ppt-master"
