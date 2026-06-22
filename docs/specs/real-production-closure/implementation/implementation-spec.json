@@ -1,0 +1,123 @@
+{
+  "schema_version": "deck_master_real_production_closure_implementation_spec.v1",
+  "task_id": "A0",
+  "task_name": "Baseline & Contract Freeze",
+  "scope": {
+    "in_scope": [
+      "baseline lock",
+      "implementation spec",
+      "CLI command mapping",
+      "state migration mapping",
+      "contract source ownership",
+      "test baseline evidence"
+    ],
+    "out_of_scope": [
+      "runtime behavior changes",
+      "generation result v2 implementation",
+      "Agent dispatch implementation",
+      "build/render implementation",
+      "final readiness implementation"
+    ]
+  },
+  "frozen_cli_policy": {
+    "compatibility_anchor": "existing deck_master.py commands",
+    "target_command_strategy": "add aliases or grouped commands only when the implementing task introduces the behavior",
+    "mappings": [
+      {
+        "target": "contract-validate --all",
+        "current": [
+          "validate-generation-result",
+          "validate-render-result",
+          "validate-product-capability-manifest"
+        ],
+        "decision": "defer aggregate command until A1/B1"
+      },
+      {
+        "target": "release-build",
+        "current": [
+          "suite-build-release-tree"
+        ],
+        "decision": "keep current command; C1 may add alias"
+      },
+      {
+        "target": "release-smoke",
+        "current": [],
+        "decision": "introduce in C2/C4"
+      },
+      {
+        "target": "final-readiness",
+        "current": [],
+        "decision": "introduce in B3"
+      },
+      {
+        "target": "build prepare/run/status",
+        "current": [
+          "render",
+          "render-status"
+        ],
+        "decision": "introduce build command group in A4"
+      },
+      {
+        "target": "artifact-status",
+        "current": [
+          "render-status"
+        ],
+        "decision": "introduce after B1 artifact validator"
+      }
+    ]
+  },
+  "frozen_state_policy": {
+    "canonical_generation_wait_state": "awaiting_agent_execution",
+    "legacy_generation_wait_states": [
+      "created",
+      "dispatched"
+    ],
+    "mappings": [
+      {
+        "target": "awaiting_agent_execution",
+        "current": [
+          "created",
+          "dispatched"
+        ],
+        "task": "A3"
+      },
+      {
+        "target": "needs_generation_execution",
+        "current": [
+          "needs_generation_session",
+          "generation_running"
+        ],
+        "task": "A5"
+      },
+      {
+        "target": "needs_build",
+        "current": [],
+        "task": "A4/A5"
+      },
+      {
+        "target": "needs_render",
+        "current": [
+          "needs_render"
+        ],
+        "task": "A4/A5"
+      }
+    ]
+  },
+  "contract_sources": {
+    "runtime_truth": "docs/contracts/",
+    "capability_release_copies": "product_capabilities/*/contracts/",
+    "agent_task_schemas": "skills/deck-master/schemas/",
+    "planning_pack_schemas": "docs/deck-master-real-production-closure-spec-pack/schemas/"
+  },
+  "next_task_order": [
+    "A1",
+    "A3",
+    "A4",
+    "A5"
+  ],
+  "cross_repo_task": {
+    "task_id": "A2",
+    "repository": "PPT-Deck-Pro-Max",
+    "start_after": "A1 contract accepted"
+  }
+}
