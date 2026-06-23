@@ -12,6 +12,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from planning.brief_intake import build_request
 from planning.narrative_planner import plan_narrative
+from orchestrate.preview_builder import build_preview_from_sourcing
 from runtime.run_state import (
     NARRATIVE_PLAN_NAME,
     PAGE_TASKS_NAME,
@@ -150,6 +151,96 @@ class PlannerSourcingControlTests(unittest.TestCase):
 
         with self.assertRaises(RunStateError):
             import_sourcing(run_dir, input_path, source="human")
+
+    def test_import_sourcing_production_blocks_manual_placeholder(self) -> None:
+        run_dir = self._run_with_plan()
+        request = read_json(run_dir / "request.json")
+        request["run_mode"] = "production"
+        write_json(run_dir / "request.json", request)
+        input_path = self.temp_dir / "production_placeholder_sourcing.json"
+        write_json(
+            input_path,
+            {
+                "schema_version": "deck_sourcing_plan.v1",
+                "run_id": "source-run",
+                "source": "human",
+                "decisions": [
+                    {
+                        "beat_id": "beat_001",
+                        "source_decision": "manual_placeholder",
+                        "decision_reason": "No production evidence",
+                        "generation_brief": "Do not ship",
+                    },
+                    {
+                        "beat_id": "beat_002",
+                        "source_decision": "generate",
+                        "decision_reason": "Generate solution",
+                        "generation_brief": "Build solution",
+                    },
+                ],
+            },
+        )
+
+        with self.assertRaises(RunStateError) as ctx:
+            import_sourcing(run_dir, input_path, source="human")
+
+        self.assertIn("manual_placeholder is not allowed", str(ctx.exception))
+
+    def test_import_sourcing_fixture_allows_manual_placeholder(self) -> None:
+        run_dir = self._run_with_plan()
+        input_path = self.temp_dir / "fixture_placeholder_sourcing.json"
+        write_json(
+            input_path,
+            {
+                "schema_version": "deck_sourcing_plan.v1",
+                "run_id": "source-run",
+                "source": "human",
+                "decisions": [
+                    {
+                        "beat_id": "beat_001",
+                        "source_decision": "manual_placeholder",
+                        "decision_reason": "Fixture placeholder",
+                        "generation_brief": "Fixture page",
+                    },
+                    {
+                        "beat_id": "beat_002",
+                        "source_decision": "generate",
+                        "decision_reason": "Fixture generation",
+                        "generation_brief": "Build solution",
+                    },
+                ],
+            },
+        )
+
+        result = import_sourcing(run_dir, input_path, source="human")
+
+        self.assertEqual("imported", result["status"])
+        plan = read_json(run_dir / SOURCING_PLAN_NAME)
+        self.assertEqual("manual_placeholder", plan["decisions"][0]["source_decision"])
+
+    def test_production_preview_blocks_manual_placeholder(self) -> None:
+        run_dir = self._run_with_plan()
+        request = read_json(run_dir / "request.json")
+        request["run_mode"] = "production"
+        write_json(run_dir / "request.json", request)
+        sourcing_plan = {
+            "run_id": "source-run",
+            "title": "Source Run",
+            "decisions": [
+                {
+                    "beat_id": "beat_001",
+                    "order": 1,
+                    "page_title": "开场",
+                    "source_decision": "manual_placeholder",
+                    "decision_reason": "No source",
+                }
+            ],
+        }
+
+        with self.assertRaises(ValueError) as ctx:
+            build_preview_from_sourcing(sourcing_plan, run_dir)
+
+        self.assertIn("manual_placeholder sourcing is not allowed", str(ctx.exception))
 
     def test_import_sourcing_complete_backs_up_and_refreshes_preview(self) -> None:
         run_dir = self._run_with_plan()

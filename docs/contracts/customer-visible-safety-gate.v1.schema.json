@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/contracts/customer-visible-safety-gate.v1.schema.json",
+  "title": "Deck Master Customer Visible Safety Gate v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "gate",
+    "status",
+    "artifact",
+    "summary",
+    "findings",
+    "blocks_delivery"
+  ],
+  "properties": {
+    "schema_version": {"const": "deck_customer_visible_safety_gate.v1"},
+    "run_id": {"type": "string", "minLength": 1},
+    "gate": {"const": "customer_visible_safety"},
+    "created_at": {"type": "string"},
+    "status": {"type": "string", "enum": ["pass", "rework_required", "blocked"]},
+    "artifact": {"type": "string"},
+    "summary": {
+      "type": "object",
+      "required": ["scanned_items", "forbidden_hits", "p0_count"],
+      "properties": {
+        "scanned_items": {"type": "integer", "minimum": 0},
+        "forbidden_hits": {"type": "integer", "minimum": 0},
+        "terms_loaded": {"type": "integer", "minimum": 0},
+        "p0_count": {"type": "integer", "minimum": 0},
+        "p1_count": {"type": "integer", "minimum": 0},
+        "p2_count": {"type": "integer", "minimum": 0},
+        "findings": {"type": "integer", "minimum": 0},
+        "page_findings": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": true
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["finding_id", "severity", "term", "scope", "package_path", "message", "repair_instruction"],
+        "properties": {
+          "finding_id": {"type": "string"},
+          "severity": {"const": "P0"},
+          "dimension": {"const": "customer_visible_safety"},
+          "message": {"type": "string"},
+          "refs": {"type": "array", "items": {"type": "string"}},
+          "repair_instruction": {"type": "string"},
+          "page_id": {"type": "string"},
+          "term": {"type": "string"},
+          "scope": {"type": "string"},
+          "package_path": {"type": "string"},
+          "slide_number": {"type": ["integer", "null"]},
+          "excerpt": {"type": "string"}
+        },
+        "additionalProperties": true
+      }
+    },
+    "page_findings": {
+      "type": "array",
+      "items": {"type": "object"}
+    },
+    "repair_plan": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "blocks_delivery": {"type": "boolean"},
+    "audit": {"type": "object"},
+    "forbidden_terms": {
+      "type": "array",
+      "items": {"type": "string"}
+    }
+  },
+  "additionalProperties": true
+}

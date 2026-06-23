@@ -1,0 +1,257 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/contracts/render-result.v2.schema.json",
+  "title": "Deck Master Render Result v2",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "session_id",
+    "tool",
+    "status",
+    "source_fingerprint",
+    "build_manifest",
+    "artifact_manifest",
+    "artifacts",
+    "created_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "deck_render_result.v2"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "session_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "tool": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "completed",
+        "partial",
+        "failed"
+      ]
+    },
+    "artifact_path": {
+      "type": "string",
+      "not": {
+        "pattern": "^(?:/|[A-Za-z]:\\\\)|(?:^|/)\\.\\.(?:/|$)"
+      }
+    },
+    "preview_dir": {
+      "type": "string",
+      "not": {
+        "pattern": "^(?:/|[A-Za-z]:\\\\)|(?:^|/)\\.\\.(?:/|$)"
+      }
+    },
+    "page_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "source_fingerprint": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "build_manifest": {
+      "type": "string",
+      "minLength": 1,
+      "not": {
+        "pattern": "^(?:/|[A-Za-z]:\\\\)|(?:^|/)\\.\\.(?:/|$)"
+      }
+    },
+    "artifact_manifest": {
+      "type": "string",
+      "minLength": 1,
+      "not": {
+        "pattern": "^(?:/|[A-Za-z]:\\\\)|(?:^|/)\\.\\.(?:/|$)"
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/artifact"
+      },
+      "minItems": 1
+    },
+    "page_previews": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "page_id",
+          "preview_path"
+        ],
+        "properties": {
+          "page_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "preview_path": {
+            "type": "string",
+            "minLength": 1,
+            "not": {
+              "pattern": "^(?:/|[A-Za-z]:\\\\)|(?:^|/)\\.\\.(?:/|$)"
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "object",
+            "required": [
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": true
+          }
+        ]
+      }
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "enum": [
+              "completed",
+              "partial"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "artifact_path",
+          "preview_dir",
+          "page_count",
+          "page_previews"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "failed"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "errors"
+        ],
+        "properties": {
+          "errors": {
+            "minItems": 1
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "artifact": {
+      "type": "object",
+      "required": [
+        "artifact_id",
+        "kind",
+        "path",
+        "media_type",
+        "sha256",
+        "bytes",
+        "validation_status",
+        "editability"
+      ],
+      "properties": {
+        "artifact_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "deck_html",
+            "deck_pdf",
+            "deck_pptx",
+            "page_png",
+            "artifact_manifest"
+          ]
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "not": {
+            "pattern": "^(?:/|[A-Za-z]:\\\\)|(?:^|/)\\.\\.(?:/|$)"
+          }
+        },
+        "media_type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "validation_status": {
+          "type": "string",
+          "enum": [
+            "validated"
+          ]
+        },
+        "editability": {
+          "type": "string",
+          "enum": [
+            "native",
+            "flat_image"
+          ]
+        },
+        "page_id": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

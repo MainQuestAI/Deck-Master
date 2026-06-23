@@ -1,0 +1,28 @@
+{
+  "schema_version": "deck_real_benchmark_case.v1",
+  "case_id": "replace_me",
+  "case_name": "replace_me",
+  "case_type": "solution_deck",
+  "private_input_ref": "local-only://replace_me",
+  "industry": "replace_me",
+  "audience": "client",
+  "target_pages": 12,
+  "production_profile": "client_delivery",
+  "manual_baseline": {
+    "review_ready_minutes": 480,
+    "final_delivery_minutes": 720,
+    "baseline_source": "user_estimate"
+  },
+  "success_targets": {
+    "page_acceptance_rate_min": 0.5,
+    "review_ready_ratio_to_baseline_max": 0.6,
+    "artifact_validity_rate": 1.0,
+    "placeholder_count_max": 0,
+    "client_visible_p0_max": 0
+  },
+  "privacy": {
+    "commit_raw_material": false,
+    "commit_generated_artifacts": false,
+    "commit_metrics_only": true
+  }
+}

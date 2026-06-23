@@ -50,6 +50,22 @@ def _write_manifest(run_dir: Path, manifest: dict[str, Any]) -> None:
     (run_dir / "preview_manifest.json").write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8"
     )
+    _write_final_readiness(run_dir, ready=True)
+
+
+def _write_final_readiness(run_dir: Path, *, ready: bool, reason: str = "") -> None:
+    delivery_dir = run_dir / "delivery"
+    delivery_dir.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "schema_version": "deck_final_readiness.v1",
+        "run_id": run_dir.name,
+        "ready": ready,
+        "status": "ready" if ready else "blocked",
+        "blockers": [] if ready else [{"code": "fixture_block", "severity": "P0", "message": reason or "blocked"}],
+    }
+    (delivery_dir / "final_readiness.json").write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
 
 
 def _write_gate(
@@ -93,6 +109,51 @@ class ExportQualityBlockingTests(unittest.TestCase):
         self.assertEqual([], result["blocked_pages"])
         self.assertEqual(0, result["blocked_count"])
         self.assertEqual("client", result["queue_type"])
+
+    def test_missing_final_readiness_blocks_client_queue(self) -> None:
+        page = _base_page("p1", decision="approved", review_status="approved")
+        _write_manifest(self.run_dir, _make_manifest([page]))
+        (self.run_dir / "delivery" / "final_readiness.json").unlink()
+        _write_gate(self.run_dir, "draft", [])
+
+        result = export_queue(self.run_dir, {"approved"}, queue_type="client")
+
+        self.assertEqual([], result["pages"])
+        self.assertEqual(1, result["blocked_count"])
+        self.assertTrue(result["blocked_pages"][0]["final_readiness_blocked"])
+        self.assertIn("Final readiness", result["blocked_pages"][0]["final_readiness_reason"])
+
+    def test_client_queue_blocks_when_customer_visible_safety_missing(self) -> None:
+        page = _base_page("p1", decision="approved", review_status="approved")
+        _write_manifest(self.run_dir, _make_manifest([page]))
+        readiness_path = self.run_dir / "delivery" / "final_readiness.json"
+        payload = json.loads(readiness_path.read_text(encoding="utf-8"))
+        payload["customer_visible_safety"] = {
+            "required": False,
+            "path": "",
+            "status": "",
+            "blocks_delivery": False,
+            "findings": 0,
+        }
+        readiness_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+        _write_gate(self.run_dir, "draft", [])
+
+        result = export_queue(self.run_dir, {"approved"}, queue_type="client")
+
+        self.assertEqual([], result["pages"])
+        self.assertEqual(1, result["blocked_count"])
+        self.assertIn("客户可见内容安全检查", result["blocked_pages"][0]["quality_block_reason"])
+
+    def test_internal_queue_marks_degraded_without_final_readiness(self) -> None:
+        page = _base_page("p1", decision="approved", review_status="approved")
+        _write_manifest(self.run_dir, _make_manifest([page]))
+        (self.run_dir / "delivery" / "final_readiness.json").unlink()
+        _write_gate(self.run_dir, "draft", [])
+
+        result = export_queue(self.run_dir, {"approved"}, queue_type="internal")
+
+        self.assertEqual(["p1"], [p["page_id"] for p in result["pages"]])
+        self.assertTrue(result["final_readiness"]["degraded"])
 
     # ---- P0 finding blocks client queue unconditionally ----
     def test_p0_finding_blocks_client_queue(self) -> None:

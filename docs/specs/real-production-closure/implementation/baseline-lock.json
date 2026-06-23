@@ -1,0 +1,111 @@
+{
+  "schema_version": "deck_master_real_production_closure_baseline_lock.v1",
+  "locked_at": "2026-06-22T00:00:00+08:00",
+  "iteration": {
+    "name": "Real Production Closure",
+    "planned_versions": [
+      "0.9.14",
+      "0.9.15",
+      "0.9.16"
+    ],
+    "first_task": "A0",
+    "first_task_name": "Baseline & Contract Freeze",
+    "scope_policy": "A0 freezes baseline, commands, state semantics, and contract ownership only. Runtime behavior changes start after A0."
+  },
+  "repositories": {
+    "deck_master": {
+      "path": "/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure",
+      "branch": "codex/real-production-closure",
+      "head": "14fc43dc6e955928100f02f0e82af5b833c29177",
+      "origin_main": "14fc43dc6e955928100f02f0e82af5b833c29177",
+      "status": "new worktree with A0 docs pending",
+      "base_commit_subject": "test(qa): regression test for ISSUE-001 — preview fixture actions"
+    },
+    "ppt_deck_pro_max": {
+      "path": "/Users/dingcheng/Coding-Project/02-key-project/PPT-Deck-Pro-Max",
+      "branch": "main",
+      "head": "d6287172313e9b2c1fb04f8f2082dde3786f2ac4",
+      "status": "main tracks origin/main; one untracked docs file is present",
+      "untracked": [
+        "docs/2026-06-10-content-density-and-visual-archetype-strategy.md"
+      ]
+    },
+    "ppt_library": {
+      "path": "/Users/dingcheng/Coding-Project/02-key-project/PPT-Library",
+      "branch": "main",
+      "head": "0e48b7fa2f62de1c750118f275e5fe0a52709e1e",
+      "status": "main tracks origin/main; no local changes reported"
+    }
+  },
+  "spec_package": {
+    "path": "docs/deck-master-real-production-closure-spec-pack",
+    "file_count": 41,
+    "package_manifest_sha256": "250a26746f2426852d5650b6ae2864c40c0e540070da375ccca04c7057112450",
+    "master_spec_sha256": "5358779f455109b693be64aecf5019ee5df5ab3ed06a0da13f593772de2ab90b",
+    "review_note_sha256": "56344beb272bb5722216087c4f45e87bf9cf801af711998bd71cd4f0db126060"
+  },
+  "runtime_status": {
+    "setup_status": "ready",
+    "suite_version": "0.9.13",
+    "suite_status": "degraded_ready",
+    "full_suite_ready": false,
+    "product_capability_manifest_valid": true,
+    "next_command": "deck-master suite-repair --target codex --target claude-code",
+    "codex_missing_required_skills": [
+      "deck-planner",
+      "deck-review",
+      "ppt-quality-gate"
+    ],
+    "codex_blocked_required_skills": [
+      "ppt-master",
+      "ppt-library",
+      "ppt-deck-pro-max"
+    ],
+    "claude_code_missing_required_skills": [
+      "deck-planner",
+      "deck-review",
+      "ppt-master",
+      "ppt-library",
+      "ppt-deck-pro-max",
+      "ppt-quality-gate"
+    ]
+  },
+  "dependency_inventory": {
+    "python": {
+      "command": "python3",
+      "version": "3.14.5",
+      "modules": {
+        "pptx": "missing",
+        "jsonschema": "missing"
+      }
+    },
+    "node": {
+      "version": "v22.22.3",
+      "npm": "10.9.8",
+      "modules": {
+        "playwright": "missing",
+        "pptxgenjs": "missing"
+      }
+    },
+    "office": {
+      "soffice": "/opt/homebrew/bin/soffice"
+    }
+  },
+  "contract_ownership": {
+    "runtime_contract_source": "docs/contracts/",
+    "capability_contract_release_copies": "product_capabilities/*/contracts/",
+    "agent_task_schemas": "skills/deck-master/schemas/",
+    "rule": "Deck Master runtime contracts are authored in docs/contracts first; capability and skill copies are generated or synchronized after the runtime contract is accepted."
+  },
+  "frozen_decisions": {
+    "cli_policy": "Keep existing CLI names as compatibility anchors. Add target command names or aliases only when the implementing task introduces behavior.",
+    "state_policy": "Use awaiting_agent_execution as the new production generation wait state. Accept dispatched as a legacy input status during migration.",
+    "contract_policy": "No duplicate canonical contract sources. Runtime truth starts in docs/contracts."
+  },
+  "test_baseline": {
+    "compileall": "pass",
+    "unittest": "pass: 733 tests",
+    "diff_check": "pass",
+    "json_validation": "pass"
+  }
+}

@@ -11,6 +11,8 @@ from runtime.run_state import RunStateError, read_json
 
 SCHEMA_VERSION = "deck_benchmark_case.v1"
 ALLOWED_PLANNING_MODES = {"classic", "narrative_v2"}
+ALLOWED_CASE_TYPES = {"fixture", "real_metadata"}
+PRIVATE_CONTENT_FIELDS = {"raw_content", "raw_source_text", "source_excerpt", "embedded_text", "content"}
 _SAFE_CASE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 
 
@@ -61,6 +63,10 @@ def validate_benchmark_case(data: dict[str, Any]) -> list[str]:
 
     _validate_case_id(data.get("case_id"))
     _require_non_empty_string(data.get("case_name"), "case_name")
+    case_type = data.get("case_type")
+    if case_type is not None and case_type not in ALLOWED_CASE_TYPES:
+        allowed = ", ".join(sorted(ALLOWED_CASE_TYPES))
+        raise BenchmarkCaseError(f"case_type must be one of: {allowed}.")
 
     target_pages = data.get("target_pages")
     if target_pages is not None and (
@@ -80,6 +86,33 @@ def validate_benchmark_case(data: dict[str, Any]) -> list[str]:
     if planning_mode not in ALLOWED_PLANNING_MODES:
         allowed = ", ".join(sorted(ALLOWED_PLANNING_MODES))
         raise BenchmarkCaseError(f"workflow.planning_mode must be one of: {allowed}.")
+    if case_type == "real_metadata":
+        if workflow.get("library_mode") == "fixture":
+            raise BenchmarkCaseError("real_metadata cases cannot use workflow.library_mode=fixture.")
+        source_material = _require_object(data.get("source_material"), "source_material")
+        if source_material.get("raw_source_policy") != "local_path_only":
+            raise BenchmarkCaseError("source_material.raw_source_policy must be local_path_only for real_metadata cases.")
+        local_paths = source_material.get("local_source_paths")
+        if not isinstance(local_paths, list) or not local_paths:
+            raise BenchmarkCaseError("source_material.local_source_paths must contain at least one local path.")
+        invalid_paths = [
+            str(index)
+            for index, value in enumerate(local_paths)
+            if not isinstance(value, str) or not value.strip() or "\n" in value or "\r" in value
+        ]
+        if invalid_paths:
+            raise BenchmarkCaseError(
+                "source_material.local_source_paths entries must be non-empty single-line strings: "
+                + ", ".join(invalid_paths)
+            )
+        forbidden = sorted(key for key in PRIVATE_CONTENT_FIELDS if key in source_material)
+        if forbidden:
+            raise BenchmarkCaseError(
+                "real_metadata cases must not embed private source content: "
+                + ", ".join(forbidden)
+            )
+        if source_material.get("excluded_from_repo") is not True:
+            warnings.append("source_material.excluded_from_repo should be true for real_metadata cases.")
 
     success_targets = _require_object(data.get("success_targets"), "success_targets")
     if not success_targets:

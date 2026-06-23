@@ -6,13 +6,16 @@ import sys
 from pathlib import Path
 from typing import Any
 
-PREVIEW_DIR = Path(__file__).resolve().parents[1] / "preview"
-QUALITY_DIR = Path(__file__).resolve().parents[1] / "quality"
+SCRIPTS_DIR = Path(__file__).resolve().parents[1]
+PREVIEW_DIR = SCRIPTS_DIR / "preview"
+QUALITY_DIR = SCRIPTS_DIR / "quality"
+sys.path.insert(0, str(SCRIPTS_DIR))
 sys.path.insert(0, str(PREVIEW_DIR))
 sys.path.insert(0, str(QUALITY_DIR))
 
 from manifest import DECISIONS, load_manifest
 from overrides import has_active_override
+from runtime.final_readiness import final_readiness_clearance
 
 DRAFT_GATE_FILES = {"draft_gate.json", "draft_v2_gate.json"}
 BLOCKING_STATUSES = {"rework_required"}
@@ -45,6 +48,14 @@ def _has_draft_gate_report(reports: list[dict[str, Any]]) -> bool:
 
 def _report_blocks_delivery(report: dict[str, Any]) -> bool:
     return bool(report.get("blocks_delivery")) or str(report.get("status", "")).lower() in BLOCKING_STATUSES
+
+
+def _client_customer_visible_safety_block(final_readiness: dict[str, Any]) -> str:
+    readiness = final_readiness.get("readiness") if isinstance(final_readiness.get("readiness"), dict) else {}
+    safety = readiness.get("customer_visible_safety") if isinstance(readiness.get("customer_visible_safety"), dict) else {}
+    if safety and not safety.get("path"):
+        return "客户可见内容安全检查尚未完成。"
+    return ""
 
 
 def _finding_id(finding: dict[str, Any]) -> str:
@@ -267,6 +278,7 @@ def export_queue(
     *,
     queue_type: str = "client",
     allow_quality_override: bool = False,
+    enforce_final_readiness: bool = True,
 ) -> dict[str, Any]:
     """导出审查后的页面队列。
 
@@ -285,6 +297,17 @@ def export_queue(
     manifest = load_manifest(run_dir)
     pages: list[dict[str, Any]] = []
     blocked_pages: list[dict[str, Any]] = []
+    final_readiness = final_readiness_clearance(run_dir)
+    final_readiness_blocks_client = (
+        queue_type == "client"
+        and enforce_final_readiness
+        and not bool(final_readiness.get("ready"))
+    )
+    final_safety_block_reason = (
+        _client_customer_visible_safety_block(final_readiness)
+        if queue_type == "client" and enforce_final_readiness
+        else ""
+    )
 
     for page in manifest["pages"]:
         if page["decision"] not in decisions:
@@ -312,7 +335,13 @@ def export_queue(
             "notes": page.get("notes", ""),
         }
 
-        if blocking["blocked"]:
+        if final_readiness_blocks_client or final_safety_block_reason:
+            page_entry["quality_blocked"] = True
+            page_entry["final_readiness_blocked"] = True
+            page_entry["quality_block_reason"] = final_safety_block_reason or str(final_readiness.get("reason") or "Final readiness is blocked.")
+            page_entry["final_readiness_reason"] = page_entry["quality_block_reason"]
+            blocked_pages.append(page_entry)
+        elif blocking["blocked"]:
             page_entry["quality_blocked"] = True
             page_entry["quality_block_reason"] = blocking["reason"]
             blocked_pages.append(page_entry)
@@ -327,6 +356,14 @@ def export_queue(
         "source_manifest": str((run_dir / "preview_manifest.json").resolve()),
         "decisions": sorted(decisions),
         "queue_type": queue_type,
+        "final_readiness": {
+            "ready": bool(final_readiness.get("ready")),
+            "status": str(final_readiness.get("status") or ""),
+            "reason": str(final_readiness.get("reason") or ""),
+            "path": str(final_readiness.get("path") or ""),
+            "enforced": bool(queue_type == "client" and enforce_final_readiness),
+            "degraded": bool(queue_type == "internal" and not final_readiness.get("ready")),
+        },
         "pages": pages,
         "blocked_pages": blocked_pages,
         "blocked_count": len(blocked_pages),

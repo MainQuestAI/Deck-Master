@@ -14,6 +14,7 @@ from benchmark.checkpoints import (
 from benchmark.markdown import render_benchmark_markdown
 from benchmark.scoring import build_score, build_target_evaluation
 from orchestrate.export_queue import export_queue
+from runtime.final_readiness import final_readiness_clearance
 from runtime.run_state import RunStateError, read_json, write_json
 
 
@@ -312,6 +313,7 @@ def build_benchmark_report(
         export_payload = export_queue(root, {"approved"}, queue_type="client")
     except Exception:  # noqa: BLE001 - report should remain readable on partial runs.
         export_payload = {"pages": [], "blocked_pages": [], "blocked_count": 0}
+    final_clearance = final_readiness_clearance(root)
     reports = _quality_reports(root)
     page_metrics = _page_metrics(root, run_metrics)
     source_metrics = _source_metrics(run_metrics)
@@ -356,6 +358,9 @@ def build_benchmark_report(
             "overall": "needs_review" if status != "completed" else "report_ready",
             "export_ready": bool(export_payload.get("pages")),
             "quality_blocked": bool(export_payload.get("blocked_count")),
+            "final_ready": bool(final_clearance.get("ready")),
+            "final_status": str(final_clearance.get("status") or ""),
+            "final_reason": str(final_clearance.get("reason") or ""),
         },
         "efficiency_metrics": efficiency_metrics,
         "page_metrics": page_metrics,

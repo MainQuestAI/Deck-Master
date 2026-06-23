@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import shutil
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -14,6 +15,8 @@ from scripts.skills.installer import (
     SkillInstallError,
     build_release_tree,
     inspect_skill_link,
+    install_release_tree,
+    rollback_release_tree,
     inspect_suite_status,
     install_skill,
     product_capability_manifest,
@@ -24,6 +27,7 @@ from scripts.skills.installer import (
     uninstall_skill,
     validate_product_capability_manifest,
     validate_skill,
+    verify_release_tree,
 )
 
 
@@ -44,6 +48,19 @@ class SkillInstallationTest(unittest.TestCase):
         self.agent_dir.mkdir()
         self.source_dir = Path(self._tmp) / ".deck-master" / "current" / "skills" / SKILL_NAME
         shutil.copytree(_REPO_ROOT / "skills" / SKILL_NAME, self.source_dir)
+
+    def _write_full_ppt_master_skill(self) -> Path:
+        path = self.agent_dir / "ppt-master"
+        path.mkdir()
+        (path / "SKILL.md").write_text(
+            "---\nname: ppt-master\ndescription: Full standalone PPT Master\n---\n# PPT Master\n",
+            encoding="utf-8",
+        )
+        for dirname in ("references", "scripts", "templates"):
+            child = path / dirname
+            child.mkdir()
+            (child / "marker.txt").write_text("keep", encoding="utf-8")
+        return path
 
     def tearDown(self) -> None:
         self._log_patch.stop()
@@ -150,6 +167,23 @@ class SkillInstallationTest(unittest.TestCase):
         self.assertTrue(result["valid"])
         self.assertEqual(before, log_path.read_text(encoding="utf-8"))
 
+    def test_inspect_preserves_full_external_ppt_master_real_dir(self) -> None:
+        full_package = self._write_full_ppt_master_skill()
+
+        result = inspect_skill_link(
+            "codex",
+            str(self.agent_dir),
+            source_skill_dir=str(_REPO_ROOT / "skills" / "ppt-master"),
+            skill_name="ppt-master",
+        )
+
+        self.assertTrue(result["valid"])
+        self.assertEqual("ready", result["status"])
+        self.assertEqual("external_full_package", result["source_type"])
+        self.assertEqual(str(full_package.resolve()), result["resolved"])
+        self.assertFalse(result["production_capable"])
+        self.assertEqual("external_full_package", result["backend_type"])
+
     def test_validate_not_installed(self) -> None:
         result = validate_skill("codex", str(self.agent_dir), source_skill_dir=str(self.source_dir))
         self.assertFalse(result["valid"])
@@ -191,7 +225,25 @@ class SkillInstallationTest(unittest.TestCase):
         deck = [item for item in result["results"] if item["skill"] == "deck-master"]
         self.assertTrue(deck)
         self.assertTrue(result["suite_status"]["full_suite_ready"])
-        for skill_name in ["deck-master", "deck-planner", "deck-review", "ppt-master", "ppt-library", "ppt-deck-pro-max", "ppt-quality-gate"]:
+        for skill_name in [
+            "deck-master",
+            "deck-setup",
+            "deck-upgrade",
+            "deck-doctor",
+            "deck-init",
+            "deck-brief",
+            "deck-planner",
+            "deck-sourcing",
+            "deck-producer",
+            "deck-builder",
+            "deck-quality",
+            "deck-review",
+            "deck-autopilot",
+            "ppt-master",
+            "ppt-library",
+            "ppt-deck-pro-max",
+            "ppt-quality-gate",
+        ]:
             self.assertTrue((self.agent_dir / skill_name).is_symlink(), f"missing suite link: {skill_name}")
 
     def test_suite_install_multi_target_reports_full_ready_only_when_all_targets_ready(self) -> None:
@@ -239,6 +291,12 @@ class SkillInstallationTest(unittest.TestCase):
         self.assertTrue(result["full_suite_ready"])
         self.assertTrue(result["target_readiness"]["codex"]["required_ready"])
         self.assertEqual("ready", result["task_readiness"]["full_deck_workflow"])
+        self.assertEqual("ready", result["task_readiness"]["deck_builder_adapter"])
+        self.assertEqual("ready", result["task_readiness"]["ppt_master_adapter"])
+        self.assertEqual("blocked", result["task_readiness"]["ppt_master_backend"])
+        self.assertEqual("ready", result["task_readiness"]["deck_builder"])
+        self.assertEqual("blocked_backend_uncertified", result["capabilities"]["ppt_master.render.v1"])
+        self.assertEqual("blocked_backend_uncertified", result["capabilities"]["ppt_master.handback.v1"])
 
     def test_release_tree_contains_required_skills_capabilities_and_manifest(self) -> None:
         release_root = Path(self._tmp) / "release"
@@ -247,6 +305,39 @@ class SkillInstallationTest(unittest.TestCase):
 
         self.assertEqual("built", result["status"])
         self.assertTrue((release_root / "bin" / "deck-master").exists())
+        self.assertTrue(result["self_contained"])
+        self.assertTrue((release_root / "scripts" / "deck_master.py").exists())
+        self.assertTrue((release_root / "release-manifest.json").exists())
+        self.assertTrue((release_root / "deck_capability_lock.json").exists())
+        self.assertTrue((release_root / "SHA256SUMS").exists())
+
+        bin_text = (release_root / "bin" / "deck-master").read_text(encoding="utf-8")
+        self.assertNotIn(str(_REPO_ROOT / "scripts" / "deck_master.py"), bin_text)
+        self.assertIn("RELEASE_ROOT", bin_text)
+        self.assertIn("scripts/deck_master.py", bin_text)
+
+        completed = subprocess.run(
+            [str(release_root / "bin" / "deck-master"), "--help"],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(0, completed.returncode, completed.stderr)
+
+        release_manifest = json.loads((release_root / "release-manifest.json").read_text(encoding="utf-8"))
+        self.assertEqual("deck_master_release_manifest.v1", release_manifest["schema_version"])
+        self.assertTrue(release_manifest["self_contained"])
+        self.assertEqual("bin/deck-master", release_manifest["entrypoint"])
+
+        capability_lock = json.loads((release_root / "deck_capability_lock.json").read_text(encoding="utf-8"))
+        self.assertEqual("deck_capability_lock.v1", capability_lock["schema_version"])
+        self.assertTrue(capability_lock["contracts"])
+
+        checksums = (release_root / "SHA256SUMS").read_text(encoding="utf-8")
+        self.assertIn("scripts/deck_master.py", checksums)
+        self.assertIn("release-manifest.json", checksums)
+        self.assertIn("deck_capability_lock.json", checksums)
+
         manifest_path = release_root / "product-capability-manifest.json"
         self.assertTrue(manifest_path.exists())
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -254,8 +345,79 @@ class SkillInstallationTest(unittest.TestCase):
         self.assertTrue(validation["valid"], validation["errors"])
         for skill_name in product_capability_manifest()["required_capabilities"]:
             self.assertTrue((release_root / "skills" / skill_name / "SKILL.md").exists(), skill_name)
+        self.assertTrue((release_root / "skills" / "deck-learn" / "SKILL.md").exists())
         for capability_name in ["ppt-master", "ppt-library", "ppt-deck-pro-max", "ppt-quality-gate"]:
             self.assertTrue((release_root / "capabilities" / capability_name / "capability.json").exists(), capability_name)
+
+    def test_verify_release_tree_rejects_tampered_checksum(self) -> None:
+        release_root = Path(self._tmp) / "release"
+        build_release_tree(release_root)
+        (release_root / "release-manifest.json").write_text("{}", encoding="utf-8")
+
+        result = verify_release_tree(release_root, run_smoke=False)
+
+        self.assertFalse(result["valid"])
+        codes = {error["code"] for error in result["errors"]}
+        self.assertIn("sha256_mismatch", codes)
+
+    def test_root_product_capability_manifest_matches_runtime_truth(self) -> None:
+        manifest = json.loads((_REPO_ROOT / "product-capability-manifest.json").read_text(encoding="utf-8"))
+
+        self.assertEqual(product_capability_manifest(), manifest)
+
+    def test_ppt_master_render_v2_contract_copy_matches_runtime_contract(self) -> None:
+        canonical = _REPO_ROOT / "docs" / "contracts" / "render-result.v2.schema.json"
+        capability_copy = _REPO_ROOT / "product_capabilities" / "ppt-master" / "contracts" / "render-result.v2.schema.json"
+
+        self.assertEqual(canonical.read_text(encoding="utf-8"), capability_copy.read_text(encoding="utf-8"))
+
+    def test_suite_install_activates_verified_release_via_staging(self) -> None:
+        result = suite_install(targets=["codex"], include_optional=False, agent_skill_dir=str(self.agent_dir))
+
+        self.assertEqual("installed", result["status"])
+        self.assertTrue(result["release_install"]["activated"])
+        current = Path(self._tmp) / ".deck-master" / "current"
+        self.assertTrue((current / "release-activation.json").exists())
+        staged = Path(self._tmp) / ".deck-master" / "staging" / f"release-{result['release_install']['release_id']}"
+        self.assertFalse(staged.exists())
+        self.assertTrue(verify_release_tree(current, run_smoke=True)["valid"])
+        for skill_name in product_capability_manifest()["required_capabilities"]:
+            self.assertTrue((self.agent_dir / skill_name).is_symlink(), skill_name)
+
+    def test_suite_install_blocks_when_stage_verification_fails_without_touching_current(self) -> None:
+        current = Path(self._tmp) / ".deck-master" / "current"
+        current.mkdir(parents=True, exist_ok=True)
+        (current / "keep.txt").write_text("previous-current", encoding="utf-8")
+        verification = {
+            "schema_version": "deck_master_release_verification.v1",
+            "release_root": "staged",
+            "valid": False,
+            "status": "failed",
+            "errors": [{"code": "forced_failure"}],
+            "warnings": [],
+            "smoke": {"skipped": True},
+        }
+
+        with mock.patch("scripts.skills.installer.verify_release_tree", return_value=verification):
+            result = suite_install(targets=["codex"], include_optional=False, agent_skill_dir=str(self.agent_dir))
+
+        self.assertEqual("blocked", result["status"])
+        self.assertEqual("previous-current", (current / "keep.txt").read_text(encoding="utf-8"))
+
+    def test_release_rollback_restores_previous_release(self) -> None:
+        current = Path(self._tmp) / ".deck-master" / "current"
+        build_release_tree(current, force=True)
+        original_manifest = (current / "release-manifest.json").read_text(encoding="utf-8")
+        install_result = install_release_tree(run_smoke=True)
+        self.assertTrue(install_result["activated"])
+        self.assertEqual(original_manifest, (Path(self._tmp) / ".deck-master" / "previous" / "release-manifest.json").read_text(encoding="utf-8"))
+
+        rollback = rollback_release_tree()
+
+        self.assertEqual("rolled_back", rollback["status"])
+        self.assertTrue(rollback["verification"]["valid"])
+        self.assertEqual(original_manifest, (current / "release-manifest.json").read_text(encoding="utf-8"))
+        self.assertFalse((current / "release-activation.json").exists())
 
     def test_suite_migration_apply_and_rollback_real_directory(self) -> None:
         legacy = self.agent_dir / "ppt-master"
@@ -278,6 +440,36 @@ class SkillInstallationTest(unittest.TestCase):
         rolled_back = suite_migration_rollback(applied["rollback_id"])
         self.assertEqual("rolled_back", rolled_back["status"])
         self.assertTrue((self.agent_dir / "ppt-master" / "marker.txt").exists())
+
+    def test_suite_install_preserves_full_external_ppt_master_real_dir(self) -> None:
+        full_package = self._write_full_ppt_master_skill()
+
+        result = suite_install(targets=["codex"], agent_skill_dir=str(self.agent_dir))
+
+        ppt_master = next(item for item in result["results"] if item["skill"] == "ppt-master")
+        self.assertEqual("external_full_package_preserved", ppt_master["status"])
+        self.assertFalse(full_package.is_symlink())
+        self.assertTrue((full_package / "references" / "marker.txt").exists())
+        self.assertEqual("ready", result["suite_status"]["task_readiness"]["ppt_master_adapter"])
+        self.assertEqual("blocked", result["suite_status"]["task_readiness"]["render"])
+
+    def test_suite_migration_plan_preserves_full_external_ppt_master_real_dir(self) -> None:
+        full_package = self._write_full_ppt_master_skill()
+        plan = suite_migration_plan(targets=["codex"], agent_skill_dir=str(self.agent_dir))
+        ppt_master = next(item for item in plan["actions"] if item["skill"] == "ppt-master")
+
+        self.assertEqual("preserve_external_full_package", ppt_master["action"])
+        self.assertTrue(ppt_master["safe_to_apply"])
+        self.assertEqual("external_full_ppt_master_skill", ppt_master["recognized_as"])
+
+        plan_file = Path(self._tmp) / "migration-plan.json"
+        plan_file.write_text(json.dumps(plan, ensure_ascii=False, indent=2), encoding="utf-8")
+        applied = suite_migration_apply(plan_file)
+        applied_ppt_master = next(item for item in applied["results"] if item["skill"] == "ppt-master")
+
+        self.assertEqual("no_op", applied_ppt_master["status"])
+        self.assertFalse(full_package.is_symlink())
+        self.assertTrue((full_package / "scripts" / "marker.txt").exists())
 
     # ------------------------------------------------------------------ #
     # uninstall_skill

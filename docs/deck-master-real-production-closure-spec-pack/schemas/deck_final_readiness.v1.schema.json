@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "deck_final_readiness.v1.schema.json",
+  "title": "Deck Final Readiness v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "profile",
+    "status",
+    "checks",
+    "blocking_reasons",
+    "warnings",
+    "generated_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "deck_final_readiness.v1"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "profile": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ready",
+        "degraded",
+        "blocked"
+      ]
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "check_id",
+          "required",
+          "status",
+          "reason",
+          "refs"
+        ],
+        "properties": {
+          "check_id": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ready",
+              "degraded",
+              "blocked",
+              "not_applicable"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          },
+          "refs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "next_action": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "blocking_reasons": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "source_fingerprint": {
+      "type": "string"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": true
+}

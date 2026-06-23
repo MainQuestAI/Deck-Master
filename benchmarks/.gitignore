@@ -1,2 +1,5 @@
 benchmark_runs/
 results/
+private_sources/
+workspaces/
+*.local.json

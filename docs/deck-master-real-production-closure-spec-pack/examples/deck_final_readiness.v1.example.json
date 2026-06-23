@@ -1,0 +1,44 @@
+{
+  "schema_version": "deck_final_readiness.v1",
+  "run_id": "client-demo-001",
+  "profile": "client_delivery",
+  "status": "ready",
+  "checks": [
+    {
+      "check_id": "setup",
+      "required": true,
+      "status": "ready",
+      "reason": "",
+      "refs": [
+        "setup_status.json"
+      ],
+      "next_action": ""
+    },
+    {
+      "check_id": "artifact_validation",
+      "required": true,
+      "status": "ready",
+      "reason": "",
+      "refs": [
+        "artifacts/artifact_manifest.json"
+      ],
+      "next_action": ""
+    },
+    {
+      "check_id": "review",
+      "required": true,
+      "status": "ready",
+      "reason": "",
+      "refs": [
+        "preview_manifest.json"
+      ],
+      "next_action": ""
+    }
+  ],
+  "blocking_reasons": [],
+  "warnings": [
+    "PPTX editability=flat_image"
+  ],
+  "source_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "generated_at": "2026-06-22T09:00:00Z"
+}

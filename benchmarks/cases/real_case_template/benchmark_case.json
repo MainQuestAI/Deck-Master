@@ -1,6 +1,8 @@
 {
   "schema_version": "deck_benchmark_case.v1",
   "case_id": "real_case_template",
+  "case_type": "real_metadata",
+  "template": true,
   "case_name": "Real Customer Case Template",
   "description": "Template for a user-owned real workflow benchmark case.",
   "industry": "replace_me",
@@ -16,12 +18,26 @@
   },
   "workflow": {
     "planning_mode": "narrative_v2",
-    "library_mode": "fixture",
+    "library_mode": "production",
     "requires_narrative_advice": true,
     "requires_external_quality_review": true,
     "requires_generation_result": true,
     "requires_render_result": false,
     "manual_review_required": true
+  },
+  "source_material": {
+    "classification": "private_local_reference",
+    "raw_source_policy": "local_path_only",
+    "local_source_paths": [
+      "~/DeckMasterPrivateBenchmarks/replace_me/raw"
+    ],
+    "submitted_material_types": [
+      "brief",
+      "meeting_notes",
+      "reference_deck"
+    ],
+    "redaction_status": "metadata_only",
+    "excluded_from_repo": true
   },
   "success_targets": {
     "context_to_preview_minutes": 45,

@@ -10,7 +10,7 @@ from validators.companion_tools import validate_render_result
 
 
 REPORT_NAME = "render_tool_uat"
-RENDER_RESULT_SCHEMA_VERSION = "deck_render_result.v1"
+VALID_RENDER_RESULT_SCHEMA_VERSIONS = {"deck_render_result.v1", "deck_render_result.v2"}
 VALID_STATUSES = {"completed", "partial", "failed"}
 
 
@@ -160,7 +160,14 @@ def _check_render_result(
 ) -> None:
     validation = validate_render_result(result)
     checks.append(build_check("render_result_base_contract", validation.get("valid", False), "error", "; ".join(validation.get("errors", [])) or "render result base contract ok."))
-    checks.append(build_check("render_result_schema_version", result.get("schema_version") == RENDER_RESULT_SCHEMA_VERSION, "error", f"schema_version must be {RENDER_RESULT_SCHEMA_VERSION}."))
+    checks.append(
+        build_check(
+            "render_result_schema_version",
+            result.get("schema_version") in VALID_RENDER_RESULT_SCHEMA_VERSIONS,
+            "error",
+            f"schema_version must be one of {sorted(VALID_RENDER_RESULT_SCHEMA_VERSIONS)}.",
+        )
+    )
     if result.get("run_id"):
         checks.append(build_check("render_result_run_id_match", str(result.get("run_id")) == run_id, "error", f"render result run_id is {result.get('run_id')}, expected {run_id}."))
     status = str(result.get("status") or "")

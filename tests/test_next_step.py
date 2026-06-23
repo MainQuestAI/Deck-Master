@@ -48,6 +48,23 @@ class NextStepResolverTest(unittest.TestCase):
             encoding="utf-8",
         )
 
+    def _write_generation_ready_for_build(self) -> None:
+        self._write_full_pipeline()
+        self._write_json(PREVIEW_MANIFEST_NAME, {"pages": [{"page_id": "p1", "decision": "approved"}]})
+        tasks_dir = self.run_dir / "generation_tasks"
+        tasks_dir.mkdir()
+        (tasks_dir / "index.json").write_text(json.dumps({"tasks": [{"id": "task-1"}]}), encoding="utf-8")
+        self._write_json(
+            "generation_session.json",
+            {"run_id": "r1", "status": "quality_required", "quality_required_at": "2026-06-17T10:00:00+00:00"},
+        )
+        quality_dir = self.run_dir / "quality_reports"
+        quality_dir.mkdir(exist_ok=True)
+        (quality_dir / "draft_gate.json").write_text(
+            json.dumps({"status": "pass", "blocks_delivery": False, "created_at": "2026-06-17T10:01:00+00:00"}),
+            encoding="utf-8",
+        )
+
     def _resolve(self, *, run_mode: str = "fixture") -> dict:
         return resolve_next_step(self.run_dir, run_mode=run_mode)
 
@@ -73,6 +90,7 @@ class NextStepResolverTest(unittest.TestCase):
         result = self._resolve()
         self._assert_shape(result, "needs_brief")
         self.assertIn(DECK_BRIEF_NAME, result["missing_artifacts"])
+        self.assertEqual("deck-brief", result["recommended_skill"])
 
     def test_has_brief_missing_claim_map_returns_needs_claim_map(self) -> None:
         self._write_json(REQUEST_NAME, {"run_id": "r1"})
@@ -178,6 +196,32 @@ class NextStepResolverTest(unittest.TestCase):
         self._write_gate("draft_v2_gate.json")
         result = self._resolve()
         self._assert_shape(result, "ready_to_export")
+
+    def test_generation_ready_for_build_returns_needs_build(self) -> None:
+        self._write_generation_ready_for_build()
+
+        result = self._resolve()
+
+        self._assert_shape(result, "needs_build")
+        self.assertEqual("needs_build", result["runtime_stage"])
+        self.assertEqual("deck-builder", result["recommended_skill"])
+        self.assertIn("build prepare", result["next_command"])
+
+    def test_prepared_build_without_render_returns_needs_render(self) -> None:
+        self._write_generation_ready_for_build()
+        build_dir = self.run_dir / "build"
+        build_dir.mkdir()
+        (build_dir / "build_manifest.json").write_text(
+            json.dumps({"schema_version": "deck_build_manifest.v1", "run_id": "r1"}),
+            encoding="utf-8",
+        )
+
+        result = self._resolve()
+
+        self._assert_shape(result, "needs_render")
+        self.assertEqual("needs_render", result["runtime_stage"])
+        self.assertEqual("deck-builder", result["recommended_skill"])
+        self.assertIn("build run", result["next_command"])
 
     def test_result_always_contains_required_keys(self) -> None:
         # Verify across multiple states that the shape is stable.

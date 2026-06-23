@@ -9,10 +9,13 @@ triggers:
   - ppt library
 ---
 
-# PPT Library Capability
+# PPT Library Compatibility Entry
 
-Use this capability for historical asset retrieval inside Deck Master. Active
-run output must return through Deck Master sourcing state.
+This compatibility entry is kept for existing prompts and local installs.
+For new Deck Master workflows, prefer `deck-sourcing`.
+
+Use it for historical asset retrieval inside Deck Master. Active run output
+must return through Deck Master sourcing state.
 
 ## First Checks
 

@@ -27,6 +27,7 @@ from runtime.run_state import (  # noqa: E402
 )
 from runtime.run_state_resolver import resolve_run_state
 from runtime.setup_status import setup_status
+from workspace.foundation import init_workspace
 
 
 class RunStateResolverAcceptanceTests(unittest.TestCase):
@@ -203,6 +204,18 @@ class RunStateResolverAcceptanceTests(unittest.TestCase):
         self.assertEqual("needs_generation_import", state["stage"])
         self.assertIn("generation-session import-results", state["next_command"])
 
+    def test_awaiting_agent_execution_reports_agent_wait_state(self) -> None:
+        self._write_full_pipeline(include_preview=True)
+        generation_tasks = self.run_dir / "generation_tasks"
+        generation_tasks.mkdir()
+        (generation_tasks / "index.json").write_text(json.dumps({"tasks": [{"id": "task-1"}]}), encoding="utf-8")
+        self._write_json("generation_session.json", {"run_id": "r1", "status": "awaiting_agent_execution"})
+
+        state = resolve_run_state(self.run_dir, run_mode="fixture")
+
+        self.assertEqual("awaiting_agent_execution", state["stage"])
+        self.assertIn("generation-session status", state["next_command"])
+
     def test_quality_required_generation_session_needs_quality_gate(self) -> None:
         self._write_full_pipeline(include_preview=True)
         self._write_json(PREVIEW_MANIFEST_NAME, {"run_id": "r1", "pages": [{"page_id": "p1", "decision": "approved"}]})
@@ -240,8 +253,62 @@ class RunStateResolverAcceptanceTests(unittest.TestCase):
             encoding="utf-8",
         )
         state = resolve_run_state(self.run_dir, run_mode="fixture")
+        self.assertEqual("needs_build", state["stage"])
+        self.assertIn("deck-master build prepare", state["next_command"])
+
+    def test_production_ready_for_build_requires_certified_builder_backend(self) -> None:
+        workspace = self.tmp_root / "workspace"
+        init_workspace(workspace, "Production Workspace")
+        self._write_full_pipeline(include_preview=True)
+        self._write_json(REQUEST_NAME, {"run_id": "r1", "run_mode": "production", "workspace": str(workspace)})
+        self._write_json(PREVIEW_MANIFEST_NAME, {"run_id": "r1", "pages": [{"page_id": "p1", "decision": "approved"}]})
+        generation_tasks = self.run_dir / "generation_tasks"
+        generation_tasks.mkdir()
+        (generation_tasks / "index.json").write_text(json.dumps({"tasks": [{"id": "task-1"}]}), encoding="utf-8")
+        self._write_json(
+            "generation_session.json",
+            {"run_id": "r1", "status": "quality_required", "quality_required_at": "2026-06-17T10:00:00+00:00"},
+        )
+        quality_dir = self.run_dir / "quality_reports"
+        quality_dir.mkdir()
+        (quality_dir / "draft_gate.json").write_text(
+            json.dumps({"status": "pass", "blocks_delivery": False, "created_at": "2026-06-17T10:01:00+00:00"}),
+            encoding="utf-8",
+        )
+
+        state = resolve_run_state(self.run_dir, run_mode="production")
+
+        self.assertEqual("needs_builder_backend", state["stage"])
+        self.assertEqual("deck-builder", state["recommended_skill"])
+        self.assertIn("suite-status", state["next_command"])
+
+    def test_build_manifest_without_render_needs_render(self) -> None:
+        self._write_full_pipeline(include_preview=True)
+        self._write_json(PREVIEW_MANIFEST_NAME, {"run_id": "r1", "pages": [{"page_id": "p1", "decision": "approved"}]})
+        generation_tasks = self.run_dir / "generation_tasks"
+        generation_tasks.mkdir()
+        (generation_tasks / "index.json").write_text(json.dumps({"tasks": [{"id": "task-1"}]}), encoding="utf-8")
+        self._write_json(
+            "generation_session.json",
+            {"run_id": "r1", "status": "quality_required", "quality_required_at": "2026-06-17T10:00:00+00:00"},
+        )
+        quality_dir = self.run_dir / "quality_reports"
+        quality_dir.mkdir()
+        (quality_dir / "draft_gate.json").write_text(
+            json.dumps({"status": "pass", "blocks_delivery": False, "created_at": "2026-06-17T10:01:00+00:00"}),
+            encoding="utf-8",
+        )
+        build_dir = self.run_dir / "build"
+        build_dir.mkdir()
+        (build_dir / "build_manifest.json").write_text(
+            json.dumps({"schema_version": "deck_build_manifest.v1", "run_id": "r1", "status": "prepared"}),
+            encoding="utf-8",
+        )
+
+        state = resolve_run_state(self.run_dir, run_mode="fixture")
+
         self.assertEqual("needs_render", state["stage"])
-        self.assertIn("deck-master render", state["next_command"])
+        self.assertIn("deck-master build run", state["next_command"])
 
     def test_quality_required_generation_session_with_render_can_export(self) -> None:
         self._write_full_pipeline(include_preview=True)

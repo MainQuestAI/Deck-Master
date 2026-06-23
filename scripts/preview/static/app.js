@@ -162,6 +162,67 @@ function formatActionType(actionType) {
   return mapping[String(actionType || "").trim()] || "下一步";
 }
 
+function formatProductionStage(stage) {
+  const mapping = {
+    needs_request: "待创建项目请求",
+    needs_context: "待补项目背景",
+    needs_brief: "待生成方案简报",
+    needs_claim_map: "待建立论点依据",
+    needs_narrative_plan: "待生成叙事方案",
+    needs_page_tasks: "待生成页面任务",
+    needs_sourcing: "待确认页面来源",
+    needs_preview: "待生成页面预览",
+    needs_generation_session: "待创建生成会话",
+    awaiting_agent_execution: "等待 Agent 执行",
+    generation_running: "内容生成中",
+    needs_generation_import: "待导入生成结果",
+    needs_preview_refresh: "待刷新页面预览",
+    needs_draft_gate: "待通过质量门禁",
+    needs_build: "待生成构建清单",
+    needs_render: "待生成交付产物",
+    needs_review: "待完成页面审阅",
+    ready_for_benchmark: "可进入基准测试",
+    ready_for_client_export: "可进入客户导出",
+    blocked_workspace: "工作区被阻断",
+  };
+  return mapping[String(stage || "").trim()] || String(stage || "待准备");
+}
+
+function formatRuntimeStatus(status) {
+  const mapping = {
+    completed: "已完成",
+    prepared: "已准备",
+    ready: "已放行",
+    blocked: "已阻断",
+    missing: "缺失",
+    invalid: "无效",
+    failed: "失败",
+    running: "进行中",
+    pending: "等待中",
+  };
+  return mapping[String(status || "").trim()] || String(status || "缺失");
+}
+
+function formatArtifactKinds(kinds = []) {
+  const mapping = {
+    deck_html: "HTML",
+    deck_pdf: "PDF",
+    deck_pptx: "PPTX",
+    page_png: "页面图片",
+  };
+  const labels = kinds.map((kind) => mapping[String(kind || "").trim()] || String(kind || "").trim()).filter(Boolean);
+  return labels.length ? labels.join("、") : "暂无格式";
+}
+
+function formatEditability(values = []) {
+  const mapping = {
+    native: "可编辑",
+    flat_image: "扁平图像",
+  };
+  const labels = values.map((value) => mapping[String(value || "").trim()] || String(value || "").trim()).filter(Boolean);
+  return labels.length ? labels.join("、") : "未登记可编辑性";
+}
+
 function currentWorkspace() {
   return state.workspace || {};
 }
@@ -424,6 +485,10 @@ function renderStageWorkspace() {
   const workspace = currentWorkspace();
   const stage = currentStage();
   const delivery = workspace.run_summary?.delivery_preview || {};
+  const production = workspace.run_summary?.production_flow || workspace.runtime || {};
+  const build = production.build || {};
+  const render = production.render || {};
+  const finalReadiness = production.final_readiness || delivery.final_readiness || {};
   const actions = workspace.run_summary?.next_actions || [];
   const blockers = workspace.health?.blocking_reasons || [];
 
@@ -444,6 +509,33 @@ function renderStageWorkspace() {
     <div class="stage-check-item">
       <strong>${escapeHtml(formatActionType(item.action_type))}</strong>
       <p>${escapeHtml(item.message || "继续推进当前阶段。")}</p>
+    </div>
+  `).join("");
+  const flowCards = [
+    {
+      label: "生产阶段",
+      value: production.stage ? formatProductionStage(production.stage) : (stage.label || "待准备"),
+      detail: production.next_command || stage.next_step || "等待下一步动作。",
+    },
+    {
+      label: "构建状态",
+      value: formatRuntimeStatus(build.status),
+      detail: `产物 ${build.artifact_count || 0} 个 · ${formatArtifactKinds(build.formats || [])}`,
+    },
+    {
+      label: "渲染状态",
+      value: formatRuntimeStatus(render.status),
+      detail: `${render.tool || "ppt-master"} · ${formatEditability(render.editability || [])}`,
+    },
+    {
+      label: "最终放行",
+      value: formatRuntimeStatus(finalReadiness.status),
+      detail: finalReadiness.ready ? "客户导出已放行。" : (finalReadiness.reason || "等待最终放行检查。"),
+    },
+  ].map((item) => `
+    <div class="stage-check-item">
+      <strong>${escapeHtml(item.label)}：${escapeHtml(item.value)}</strong>
+      <p>${escapeHtml(item.detail)}</p>
     </div>
   `).join("");
 
@@ -467,6 +559,7 @@ function renderStageWorkspace() {
           <span class="panel-title">当前要推进的事情</span>
           <h3>${escapeHtml(stage.next_step || "继续推进当前阶段")}</h3>
           <div class="stage-check-grid">
+            ${flowCards}
             ${actionCards || '<div class="stage-check-item"><strong>等待下一步</strong><p>当前没有额外动作建议。</p></div>'}
           </div>
         </section>
@@ -556,7 +649,17 @@ function renderDeliveryPreview() {
         <div class="stage-card">
           <span class="panel-title">渲染时间</span>
           <strong>${escapeHtml(formatTime(delivery.created_at))}</strong>
-          <p>${escapeHtml(`渲染状态：${delivery.render_status || "未记录"}`)}</p>
+          <p>${escapeHtml(`渲染状态：${delivery.render_status || "未记录"} · 来源：${delivery.source_mode || delivery.render_source || "未记录"}`)}</p>
+        </div>
+        <div class="stage-card">
+          <span class="panel-title">产物信息</span>
+          <strong>${escapeHtml(`${delivery.artifact_count || 0} 个产物`)}</strong>
+          <p>${escapeHtml(`格式：${delivery.formats?.join(", ") || delivery.format || "未记录"} · 可编辑性：${delivery.editability?.join(", ") || "未登记"}`)}</p>
+        </div>
+        <div class="stage-card ${escapeHtml(delivery.final_readiness?.ready ? "success" : "warning")}">
+          <span class="panel-title">最终放行</span>
+          <strong>${escapeHtml(delivery.final_readiness?.status || "missing")}</strong>
+          <p>${escapeHtml(delivery.final_readiness?.ready ? "客户导出已放行。" : (delivery.final_readiness?.reason || "等待最终放行检查。"))}</p>
         </div>
         <div class="stage-card">
           <span class="panel-title">交付记录</span>

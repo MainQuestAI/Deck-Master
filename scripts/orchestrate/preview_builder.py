@@ -6,12 +6,38 @@ from pathlib import Path
 from typing import Any
 
 from runtime.events import append_event
+from runtime.run_state import REQUEST_NAME, read_json
 
 ORCHESTRATE_DIR = Path(__file__).resolve().parent
 if str(ORCHESTRATE_DIR) not in sys.path:
     sys.path.insert(0, str(ORCHESTRATE_DIR))
 
 from build_run import build_run
+
+
+def _run_mode(run_dir: Path) -> str:
+    request_path = run_dir / REQUEST_NAME
+    if not request_path.exists():
+        return "production"
+    try:
+        request = read_json(request_path)
+    except Exception:
+        return "production"
+    mode = str(request.get("run_mode") or "production").strip().lower()
+    return mode if mode in {"production", "benchmark", "fixture", "dev"} else "production"
+
+
+def _assert_preview_allowed(run_dir: Path, sourcing_plan: dict[str, Any]) -> None:
+    mode = _run_mode(run_dir)
+    if mode not in {"production", "benchmark"}:
+        return
+    blocked = [
+        str(decision.get("beat_id") or f"decision_{index}")
+        for index, decision in enumerate(sourcing_plan.get("decisions", []), start=1)
+        if isinstance(decision, dict) and str(decision.get("source_decision") or "") == "manual_placeholder"
+    ]
+    if blocked:
+        raise ValueError(f"manual_placeholder sourcing is not allowed for {mode} preview builds: {', '.join(blocked)}")
 
 
 def write_status_svg(path: Path, label: str, title: str, detail: str) -> Path:
@@ -98,6 +124,7 @@ def build_orchestration_plan_from_sourcing(
     generation_tasks: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     root = Path(run_dir).expanduser().resolve()
+    _assert_preview_allowed(root, sourcing_plan)
     pages = [
         page_for_decision(root, decision, generation_tasks)
         for decision in sourcing_plan.get("decisions", [])

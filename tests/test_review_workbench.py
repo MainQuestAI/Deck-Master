@@ -76,6 +76,13 @@ def _setup_run(tmp: Path) -> Path:
         "summary": {"p0_count": 0, "p1_count": 0, "p2_count": 0},
         "findings": [],
     })
+    write_json(run_dir / "delivery" / "final_readiness.json", {
+        "schema_version": "deck_final_readiness.v1",
+        "run_id": "wb-test",
+        "ready": True,
+        "status": "ready",
+        "blockers": [],
+    })
     return run_dir
 
 

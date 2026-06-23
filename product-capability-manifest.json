@@ -5,20 +5,57 @@
   "provider_policy": "zero_builtin_llm_provider",
   "required_capabilities": [
     "deck-master",
+    "deck-setup",
+    "deck-upgrade",
+    "deck-doctor",
+    "deck-init",
+    "deck-brief",
     "deck-planner",
+    "deck-sourcing",
+    "deck-producer",
+    "deck-builder",
+    "deck-quality",
     "deck-review",
+    "deck-autopilot",
     "ppt-master",
     "ppt-library",
     "ppt-deck-pro-max",
     "ppt-quality-gate"
   ],
   "optional_capabilities": [
-    "deck-learning"
+    "deck-learn"
   ],
   "core_skills": [
     "deck-master",
+    "deck-setup",
+    "deck-upgrade",
+    "deck-doctor",
+    "deck-init",
+    "deck-brief",
     "deck-planner",
-    "deck-review"
+    "deck-sourcing",
+    "deck-producer",
+    "deck-builder",
+    "deck-quality",
+    "deck-review",
+    "deck-learn",
+    "deck-autopilot"
+  ],
+  "public_skills": [
+    "deck-master",
+    "deck-setup",
+    "deck-upgrade",
+    "deck-doctor",
+    "deck-init",
+    "deck-brief",
+    "deck-planner",
+    "deck-sourcing",
+    "deck-producer",
+    "deck-builder",
+    "deck-quality",
+    "deck-review",
+    "deck-learn",
+    "deck-autopilot"
   ],
   "product_capability_skills": [
     "ppt-master",
@@ -26,11 +63,326 @@
     "ppt-deck-pro-max",
     "ppt-quality-gate"
   ],
+  "compatibility_skills": [
+    "ppt-master",
+    "ppt-library",
+    "ppt-deck-pro-max",
+    "ppt-quality-gate"
+  ],
+  "backend_dependencies": {
+    "deck-sourcing": "ppt-library",
+    "deck-producer": "ppt-deck-pro-max",
+    "deck-builder": "ppt-master",
+    "deck-quality": "ppt-quality-gate"
+  },
+  "skill_routes": {
+    "deck-master": {
+      "role": "orchestrator",
+      "public_name": "deck-master",
+      "compat_aliases": [],
+      "input_types": [
+        "deck_workflow",
+        "run_state",
+        "review_cockpit"
+      ],
+      "exit_artifacts": [
+        "run_state",
+        "next_step",
+        "review_workspace"
+      ],
+      "backend_dependency": ""
+    },
+    "deck-setup": {
+      "role": "setup",
+      "public_name": "deck-setup",
+      "compat_aliases": [],
+      "input_types": [
+        "first_run_setup",
+        "suite_install"
+      ],
+      "exit_artifacts": [
+        "setup_status",
+        "suite_status"
+      ],
+      "backend_dependency": ""
+    },
+    "deck-upgrade": {
+      "role": "upgrade",
+      "public_name": "deck-upgrade",
+      "compat_aliases": [],
+      "input_types": [
+        "upgrade",
+        "rollback",
+        "release_tree"
+      ],
+      "exit_artifacts": [
+        "release_manifest",
+        "capability_lock",
+        "sha256sums"
+      ],
+      "backend_dependency": ""
+    },
+    "deck-doctor": {
+      "role": "diagnostics",
+      "public_name": "deck-doctor",
+      "compat_aliases": [],
+      "input_types": [
+        "setup_issue",
+        "suite_issue",
+        "run_issue"
+      ],
+      "exit_artifacts": [
+        "doctor_report",
+        "setup_status",
+        "run_state"
+      ],
+      "backend_dependency": ""
+    },
+    "deck-init": {
+      "role": "workspace_initialization",
+      "public_name": "deck-init",
+      "compat_aliases": [
+        "init-workspace"
+      ],
+      "input_types": [
+        "new_workspace",
+        "raw_materials_directory",
+        "project_start"
+      ],
+      "exit_artifacts": [
+        "deck_project",
+        "material_inventory",
+        "workspace_policy",
+        "run_bindings"
+      ],
+      "backend_dependency": ""
+    },
+    "deck-brief": {
+      "role": "briefing",
+      "public_name": "deck-brief",
+      "compat_aliases": [
+        "build-brief"
+      ],
+      "input_types": [
+        "raw_materials",
+        "deep_research_report",
+        "meeting_notes"
+      ],
+      "exit_artifacts": [
+        "deck_brief",
+        "claim_map_seed"
+      ],
+      "backend_dependency": ""
+    },
+    "deck-planner": {
+      "role": "planning",
+      "public_name": "deck-planner",
+      "compat_aliases": [
+        "autoplan"
+      ],
+      "input_types": [
+        "deck_brief",
+        "claim_map",
+        "narrative_request"
+      ],
+      "exit_artifacts": [
+        "narrative_plan",
+        "page_tasks",
+        "sourcing_intent"
+      ],
+      "backend_dependency": ""
+    },
+    "deck-sourcing": {
+      "role": "asset_sourcing",
+      "public_name": "deck-sourcing",
+      "compat_aliases": [
+        "ppt-library"
+      ],
+      "input_types": [
+        "page_tasks",
+        "asset_request",
+        "historical_slide_search"
+      ],
+      "exit_artifacts": [
+        "library_selection",
+        "sourcing_plan",
+        "asset_feedback"
+      ],
+      "backend_dependency": "ppt-library"
+    },
+    "deck-producer": {
+      "role": "page_production",
+      "public_name": "deck-producer",
+      "compat_aliases": [
+        "ppt-deck-pro-max"
+      ],
+      "input_types": [
+        "generation_session",
+        "page_tasks",
+        "dispatch_package"
+      ],
+      "exit_artifacts": [
+        "deck_generation_result.v2",
+        "preview_refresh"
+      ],
+      "backend_dependency": "ppt-deck-pro-max"
+    },
+    "deck-builder": {
+      "role": "build",
+      "public_name": "deck-builder",
+      "compat_aliases": [
+        "ppt-master",
+        "render"
+      ],
+      "input_types": [
+        "approved_preview",
+        "build_manifest",
+        "render_request"
+      ],
+      "exit_artifacts": [
+        "build_manifest",
+        "artifact_manifest",
+        "render_result.v2",
+        "final_artifacts"
+      ],
+      "backend_dependency": "ppt-master"
+    },
+    "deck-quality": {
+      "role": "quality_gate",
+      "public_name": "deck-quality",
+      "compat_aliases": [
+        "ppt-quality-gate"
+      ],
+      "input_types": [
+        "draft_review",
+        "render_artifact",
+        "delivery_artifact",
+        "pptx_package"
+      ],
+      "exit_artifacts": [
+        "quality_report",
+        "customer_visible_safety_gate",
+        "delivery_gate"
+      ],
+      "backend_dependency": "ppt-quality-gate"
+    },
+    "deck-review": {
+      "role": "review_delivery",
+      "public_name": "deck-review",
+      "compat_aliases": [
+        "export",
+        "final-readiness"
+      ],
+      "input_types": [
+        "quality_report",
+        "final_readiness",
+        "review_workspace"
+      ],
+      "exit_artifacts": [
+        "export_queue",
+        "final_readiness",
+        "delivery_validation"
+      ],
+      "backend_dependency": ""
+    },
+    "deck-learn": {
+      "role": "learning",
+      "public_name": "deck-learn",
+      "compat_aliases": [
+        "build-learning-pack"
+      ],
+      "input_types": [
+        "delivery_outcome",
+        "library_feedback",
+        "benchmark_result"
+      ],
+      "exit_artifacts": [
+        "workspace_learning_pack",
+        "feedback_queue"
+      ],
+      "backend_dependency": ""
+    },
+    "deck-autopilot": {
+      "role": "workflow",
+      "public_name": "deck-autopilot",
+      "compat_aliases": [
+        "autopilot-v1"
+      ],
+      "input_types": [
+        "raw_materials",
+        "run_state",
+        "repair_request",
+        "review_request"
+      ],
+      "exit_artifacts": [
+        "workflow_report",
+        "run_state",
+        "next_step"
+      ],
+      "backend_dependency": ""
+    },
+    "ppt-master": {
+      "role": "compatibility_backend",
+      "public_name": "deck-builder",
+      "compat_aliases": [],
+      "input_types": [
+        "render_request",
+        "build_backend"
+      ],
+      "exit_artifacts": [
+        "render_result.v2",
+        "final_artifacts"
+      ],
+      "backend_dependency": ""
+    },
+    "ppt-library": {
+      "role": "compatibility_alias",
+      "public_name": "deck-sourcing",
+      "compat_aliases": [],
+      "input_types": [
+        "historical_slide_search",
+        "library_selection"
+      ],
+      "exit_artifacts": [
+        "library_selection",
+        "asset_feedback"
+      ],
+      "backend_dependency": ""
+    },
+    "ppt-deck-pro-max": {
+      "role": "compatibility_alias",
+      "public_name": "deck-producer",
+      "compat_aliases": [],
+      "input_types": [
+        "generation_session",
+        "page_production"
+      ],
+      "exit_artifacts": [
+        "deck_generation_result.v2"
+      ],
+      "backend_dependency": ""
+    },
+    "ppt-quality-gate": {
+      "role": "compatibility_alias",
+      "public_name": "deck-quality",
+      "compat_aliases": [],
+      "input_types": [
+        "quality_audit",
+        "quality_findings"
+      ],
+      "exit_artifacts": [
+        "quality_report",
+        "quality_findings"
+      ],
+      "backend_dependency": ""
+    }
+  },
   "capability_policy": {
     "required_suite_must_be_full_ready": true,
     "outputs_must_write_back_to_run": true,
     "external_override_allowed": true,
-    "legacy_real_dir_requires_migration_plan": true
+    "legacy_real_dir_requires_migration_plan": true,
+    "full_external_capability_directory_must_be_preserved": true
   },
   "release_tree": {
     "skills_path": "skills",

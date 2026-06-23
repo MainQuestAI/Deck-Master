@@ -1,46 +1,69 @@
 {
-  "date": "2026-06-12",
-  "url": "http://127.0.0.1:5059",
-  "healthScore": 100,
-  "baselineBeforeFixes": 92,
+  "date": "2026-06-22",
+  "branch": "codex/real-production-closure",
+  "sourceHeadBeforeQaFixes": "997413a",
+  "url": "http://127.0.0.1:5063/?run=qa-real-production-closure-20260622",
+  "runId": "qa-real-production-closure-20260622",
+  "qaStatus": "passed_with_fixes_no_residual_suite_risk",
+  "healthScore": 98,
+  "baselineBeforeFixes": 88,
   "issues": [
     {
-      "id": "ISSUE-001",
-      "title": "Preview image was pushed below the first viewport",
-      "severity": "medium",
-      "category": "visual",
-      "status": "fixed"
-    },
-    {
-      "id": "ISSUE-002",
-      "title": "Request evidence did not persist review state",
-      "severity": "medium",
+      "id": "QA-20260622-001",
+      "title": "autoplan preview manifest could not enter build prepare when source_preview_asset was external",
+      "severity": "high",
       "category": "functional",
       "status": "fixed"
     },
     {
-      "id": "ISSUE-003",
-      "title": "Convert to generate did not show the new sourcing intent",
-      "severity": "medium",
-      "category": "functional",
-      "status": "fixed"
-    },
-    {
-      "id": "ISSUE-004",
-      "title": "Mobile layout had horizontal overflow",
+      "id": "QA-20260622-002",
+      "title": "Workspace exposed raw runtime codes and misleading preparation state",
       "severity": "medium",
       "category": "ux",
+      "status": "fixed"
+    },
+    {
+      "id": "QA-20260622-003",
+      "title": "Codex suite readiness was degraded by missing or legacy skill links",
+      "severity": "medium",
+      "category": "setup",
       "status": "fixed"
     }
   ],
   "categoryScores": {
     "console": 100,
     "links": 100,
-    "visual": 100,
+    "visual": 94,
     "functional": 100,
-    "ux": 100,
+    "ux": 94,
     "performance": 100,
-    "content": 100,
-    "accessibility": 100
+    "content": 96,
+    "accessibility": 92,
+    "setup": 100
+  },
+  "validation": {
+    "gitDiffCheck": "pass",
+    "jsonContracts": "pass",
+    "compileall": "pass",
+    "unitTests": "798 passed",
+    "productCapabilityManifest": "pass",
+    "setupStatus": "ready",
+    "suiteStatus": "ready",
+    "releaseBuild": "built",
+    "releaseSmoke": "passed",
+    "benchmarkAggregate": "metadata_ready",
+    "rcGate": "pass"
+  },
+  "suiteMigration": {
+    "status": "applied",
+    "rollbackId": "2026-06-22T092726.961744Z0000",
+    "rollbackRecord": "/Users/dingcheng/.deck-master/current/migration/rollback/2026-06-22T092726.961744Z0000.json",
+    "requiredSkillsReady": 7
+  },
+  "browserEvidence": {
+    "consoleErrors": 0,
+    "desktopOverflowPx": 0,
+    "mobileOverflowPx": 3,
+    "finalScreenshot": ".gstack/qa-reports/screenshots/real-production-closure-final-browser-i18n-20260622.png"
   }
 }

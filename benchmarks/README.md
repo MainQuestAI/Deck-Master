@@ -27,6 +27,10 @@ python3 scripts/deck_master.py benchmark-checkpoint \
 
 python3 scripts/deck_master.py benchmark-list \
   --benchmark-dir benchmarks
+
+python3 scripts/deck_master.py benchmark-aggregate-report \
+  --benchmark-dir benchmarks \
+  --force
 ```
 
 ## Data Policy
@@ -35,3 +39,20 @@ python3 scripts/deck_master.py benchmark-list \
   explicitly approved for local benchmark use.
 - Benchmark reports store artifact paths and summaries, not copied source text.
 - Generated reports are local files under `benchmarks/results/`.
+- Real benchmark cases committed here must use `case_type=real_metadata`.
+- Real benchmark cases must set `source_material.raw_source_policy` to
+  `local_path_only` and only reference local private source paths.
+- Do not commit raw source documents, customer excerpts, caches, generated
+  benchmark runs, or generated benchmark reports.
+
+## Real Metadata Cases
+
+This repository includes three sanitized real-case metadata entries:
+
+- `real_retail_growth`
+- `real_manufacturing_geo`
+- `real_healthcare_enablement`
+
+Their raw source material is expected under a local private path such as
+`~/DeckMasterPrivateBenchmarks/<case_id>/`. These paths are references only;
+the referenced files are not part of the repository.

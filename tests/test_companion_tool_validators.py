@@ -113,6 +113,22 @@ class RenderResultValidatorTest(unittest.TestCase):
         result = validate_render_result(self._valid_render())
         self.assertTrue(result["valid"], result.get("errors"))
 
+    def test_valid_completed_v2(self) -> None:
+        result = validate_render_result(
+            self._valid_render(
+                schema_version="deck_render_result.v2",
+                source_fingerprint="a" * 64,
+                artifacts=[{"artifact_id": "deck_html", "path": "/tmp/final.html"}],
+            )
+        )
+        self.assertTrue(result["valid"], result.get("errors"))
+
+    def test_v2_requires_artifacts(self) -> None:
+        result = validate_render_result(
+            self._valid_render(schema_version="deck_render_result.v2", source_fingerprint="a" * 64)
+        )
+        self.assertFalse(result["valid"])
+
     def test_valid_failed(self) -> None:
         result = validate_render_result(self._valid_render(
             status="failed",

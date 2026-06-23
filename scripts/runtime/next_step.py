@@ -16,6 +16,7 @@ from runtime.run_state import (
     read_json,
 )
 from runtime.run_state_resolver import resolve_run_state
+from runtime.skill_route import route_for_stage
 
 SCHEMA_VERSION = "deck_next_step.v1"
 
@@ -29,11 +30,14 @@ STAGE_STATUS_MAP = {
     "needs_sourcing": "needs_sourcing",
     "needs_preview": "needs_preview",
     "needs_generation_session": "needs_generation_session",
+    "awaiting_agent_execution": "needs_generation_execution",
     "generation_running": "needs_generation_session",
     "generation_failed": "needs_generation_session",
     "needs_generation_import": "needs_generation_session",
     "needs_preview_refresh": "needs_preview",
     "needs_draft_gate": "needs_draft_gate",
+    "needs_builder_backend": "needs_builder_backend",
+    "needs_build": "needs_build",
     "needs_render": "needs_render",
     "needs_review": "needs_page_review",
     "ready_for_client_export": "ready_to_export",
@@ -51,10 +55,13 @@ MISSING_BY_STAGE = {
     "needs_sourcing": [SOURCING_PLAN_NAME],
     "needs_preview": [PREVIEW_MANIFEST_NAME],
     "needs_generation_session": ["generation_session.json"],
+    "awaiting_agent_execution": ["generation_dispatch/dispatch_package.json"],
     "generation_running": ["generation_session.json"],
     "generation_failed": ["generation_session.json"],
     "needs_generation_import": ["generation_session.json"],
     "needs_preview_refresh": [PREVIEW_MANIFEST_NAME],
+    "needs_builder_backend": ["ppt-master production backend"],
+    "needs_build": ["build/build_manifest.json"],
     "needs_render": ["render_results/render_result.json"],
 }
 
@@ -122,6 +129,11 @@ def resolve_next_step(
 
     missing_artifacts = MISSING_BY_STAGE.get(stage, [])
     blocking_issues: list[str] = [entry.get("reason", "") for entry in state.get("blocked_actions", []) if entry.get("reason")]
+    route = route_for_stage(
+        str(stage),
+        reason=blocking_issues[0] if blocking_issues else "",
+        next_command=str(state.get("next_command") or ""),
+    )
 
     approved_pages, pending_pages = _counts_from_preview(root)
 
@@ -130,9 +142,15 @@ def resolve_next_step(
         "run_id": run_id,
         "status": status,
         "next_command": state.get("next_command", ""),
+        "runtime_stage": stage,
         "missing_artifacts": missing_artifacts,
         "blocking_issues": blocking_issues,
         "run_mode": state.get("run_mode", ""),
+        "recommended_skill": route["recommended_skill"],
+        "skill_stage": route["skill_stage"],
+        "skill_reason": route["skill_reason"],
+        "next_skill_command": route["next_skill_command"],
+        "skill_route": route,
     }
 
     if approved_pages:

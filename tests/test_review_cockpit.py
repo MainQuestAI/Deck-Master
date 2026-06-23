@@ -157,6 +157,13 @@ def _setup_frontend_contract_run(tmp: Path) -> Path:
             }
         ],
     })
+    write_json(run_dir / "delivery" / "final_readiness.json", {
+        "schema_version": "deck_final_readiness.v1",
+        "run_id": "frontend-contract",
+        "ready": True,
+        "status": "ready",
+        "blockers": [],
+    })
     return run_dir
 
 

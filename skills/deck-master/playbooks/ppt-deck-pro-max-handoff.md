@@ -24,35 +24,67 @@ Each task carries:
 
 ## Invoke PPT Deck Pro Max
 
-For each task in `generation_tasks/`:
+Production runs dispatch an Agent package instead of executing the bundled fixture adapter:
 
 ```bash
-ppt-deck-pro-max generate \
-  --task generation_tasks/<task_id>.json \
-  --output generated_assets/<beat_id>/ \
-  --visual-system workspace/visual-system/ \
-  --archetypes workspace/structure-assets/page_archetypes.md
+python3 scripts/deck_master.py run-generation --run-id <run_id>
 ```
 
-If a task has `task_type: adapt`, preserve the selected reference slide
-structure and rewrite it for the current run. If it has `task_type: generate`,
-create a new page from the task brief.
+This writes:
+
+- `generation_dispatch/dispatch_package.json`
+- `generation_dispatch/agent_instructions.md`
+
+The session status becomes `awaiting_agent_execution`. The Agent reads the dispatch package, creates the requested assets, and writes one result JSON per task into `generation_results/`.
+
+Equivalent explicit dispatch entry:
+
+```bash
+python3 scripts/deck_master.py generation-session dispatch --run-id <run_id>
+```
 
 ## Write Result
 
-Write `generation_result.json` per `schemas/generation_result.schema.json`:
+Write one `deck_generation_result.v2` JSON per task:
 
 ```json
 {
-  "schema_version": "deck_generation_result.v1",
+  "schema_version": "deck_generation_result.v2",
   "run_id": "<run_id>",
-  "tool": "ppt-deck-pro-max",
+  "session_id": "<session_id>",
   "task_id": "<task_id>",
+  "page_id": "<beat_id>",
   "beat_id": "<beat_id>",
+  "producer": {
+    "capability": "ppt-deck-pro-max",
+    "version": "<version>",
+    "source_ref": "<source_ref>"
+  },
   "status": "completed",
-  "artifact_path": "generated_assets/<beat_id>/slide.pptx",
-  "preview_path": "generated_assets/<beat_id>/preview.png",
-  "errors": []
+  "source_fingerprint": "<sha256 from dispatch_package.json>",
+  "artifacts": [
+    {
+      "artifact_id": "<beat_id>_artifact",
+      "kind": "page_pptx",
+      "path": "generated_assets/<beat_id>/slide.pptx",
+      "media_type": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "sha256": "<artifact_sha256>",
+      "bytes": 123,
+      "validation_status": "validated",
+      "editability": "native"
+    }
+  ],
+  "preview": {
+    "artifact_id": "<beat_id>_preview",
+    "kind": "page_png",
+    "path": "generated_assets/<beat_id>/preview.png",
+    "media_type": "image/png",
+    "sha256": "<preview_sha256>",
+    "bytes": 123,
+    "validation_status": "validated",
+    "editability": "not_applicable"
+  },
+  "created_at": "2026-06-22T00:00:00+00:00"
 }
 ```
 
@@ -61,15 +93,26 @@ On failure set `"status": "failed"` and populate `errors`.
 ## Import Result
 
 ```bash
-python3 scripts/deck_master.py import-generation-result \
-  --run-id <run_id> --input generation_result.json
+python3 scripts/deck_master.py generation-session import-results \
+  --run-id <run_id> --input generation_results/<task_id>.json
 ```
 
-## Refresh Preview
+Batch import is also supported:
 
 ```bash
-python3 scripts/deck_master.py refresh-preview-from-generation --run-id <run_id>
+python3 scripts/deck_master.py generation-session import-results \
+  --run-id <run_id> --input generation_results/
 ```
+
+Every import writes a receipt under `generation_import_receipts/`.
+
+## Fixture Adapter
+
+```bash
+python3 scripts/deck_master.py run-generation --run-id <run_id> --run-mode fixture
+```
+
+The bundled adapter is fixture/dev only and must not be used as production evidence.
 
 ## v0.9.6 UAT
 

@@ -30,6 +30,7 @@ from runtime.import_log import summarize_import_log
 from runtime.setup_status import configured_runs_dir, read_setup_config, setup_status
 from runtime.orchestration import orchestration_check
 from runtime.next_step import resolve_next_step
+from runtime.final_readiness import final_readiness_clearance
 from runtime.run_state_resolver import resolve_run_state
 from skills.installer import inspect_suite_status
 
@@ -567,6 +568,9 @@ class PreviewHandler(BaseHTTPRequestHandler):
                 "orchestration": orchestration,
                 "next_step": next_step,
                 "next_command": next_step.get("next_command", ""),
+                "recommended_skill": next_step.get("recommended_skill", ""),
+                "skill_stage": next_step.get("skill_stage", ""),
+                "skill_route": next_step.get("skill_route", {}),
                 "run_mode": request.get("run_mode", ""),
                 "workspace": request.get("workspace", ""),
             }
@@ -643,6 +647,8 @@ class PreviewHandler(BaseHTTPRequestHandler):
             "full_suite_ready": payload.get("full_suite_ready", False),
             "capabilities": payload.get("capabilities", {}),
             "task_readiness": payload.get("task_readiness", {}),
+            "production_backend_ready": payload.get("production_backend_ready", False),
+            "client_delivery_ready": payload.get("client_delivery_ready", False),
         }
         return response
 
@@ -818,10 +824,11 @@ class PreviewHandler(BaseHTTPRequestHandler):
         # Active overrides
         active_overrides = list_active_overrides(candidate)
 
-        # Delivery readiness uses the same policy as client export.
+        # Delivery readiness uses the final readiness gate that client export enforces.
         has_blocking = any(g["blocks_delivery"] for g in gate_summary)
         clearance = has_client_export_quality_clearance(candidate, allow_quality_override=True)
-        delivery_ready = bool(clearance["ready"])
+        final_clearance = final_readiness_clearance(candidate)
+        delivery_ready = bool(final_clearance["ready"])
 
         # Final artifact validation status
         delivery_dir = candidate / "delivery"
@@ -855,7 +862,9 @@ class PreviewHandler(BaseHTTPRequestHandler):
                 "ready": delivery_ready,
                 "has_blocking_gates": has_blocking,
                 "active_override_count": len(active_overrides),
-                "reason": clearance.get("reason", ""),
+                "reason": final_clearance.get("reason", "") or clearance.get("reason", ""),
+                "final_readiness_status": final_clearance.get("status", ""),
+                "final_readiness_path": final_clearance.get("path", ""),
             },
             "validation_status": validation_status,
             "lineage": lineage_data,

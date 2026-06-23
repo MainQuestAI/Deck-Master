@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "deck_artifact_manifest.v1.schema.json",
+  "title": "Deck Artifact Manifest v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "profile",
+    "source_fingerprint",
+    "artifacts",
+    "validation_summary",
+    "created_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "deck_artifact_manifest.v1"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "build_id": {
+      "type": "string"
+    },
+    "profile": {
+      "type": "string"
+    },
+    "source_fingerprint": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "artifact_id",
+          "kind",
+          "path",
+          "media_type",
+          "sha256",
+          "bytes",
+          "validation_status"
+        ],
+        "properties": {
+          "artifact_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "page_html",
+              "html_fragment",
+              "page_svg",
+              "page_png",
+              "page_jpeg",
+              "page_pptx",
+              "deck_html",
+              "deck_pdf",
+              "deck_pptx",
+              "asset_bundle",
+              "quality_report",
+              "source_snapshot"
+            ]
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "not": {
+              "pattern": "^(?:/|[A-Za-z]:\\\\)|(?:^|/)\\.\\.(?:/|$)"
+            }
+          },
+          "media_type": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "validation_status": {
+            "type": "string",
+            "enum": [
+              "validated",
+              "invalid",
+              "unvalidated",
+              "stale",
+              "missing"
+            ]
+          },
+          "editability": {
+            "type": "string",
+            "enum": [
+              "native",
+              "hybrid",
+              "flat_image",
+              "not_applicable",
+              "unknown"
+            ]
+          },
+          "page_id": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "validation_summary": {
+      "type": "object",
+      "required": [
+        "status",
+        "valid",
+        "invalid",
+        "missing",
+        "stale"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "ready",
+            "blocked",
+            "degraded"
+          ]
+        },
+        "valid": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "invalid": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "missing": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "stale": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": true
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": true
+}

@@ -4,6 +4,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from runtime.artifact_validator import validate_artifact_manifest
+from runtime.builder_backend import builder_backend_status, production_requires_builder_backend
 from runtime.run_state import (
     CLAIM_MAP_NAME,
     CONTEXT_MANIFEST_NAME,
@@ -17,6 +19,7 @@ from runtime.run_state import (
 )
 from runtime.render import CANONICAL_RENDER_RESULT, LEGACY_RENDER_RESULTS
 from runtime.setup_status import setup_readiness
+from runtime.skill_route import route_for_stage
 from runtime.workspace_resolver import resolve_workspace_for_run
 
 SCHEMA_VERSION = "deck_run_state.v1"
@@ -24,6 +27,8 @@ SCHEMA_VERSION = "deck_run_state.v1"
 GENERATION_SESSION_NAME = "generation_session.json"
 GENERATION_TASK_INDEX = Path("generation_tasks") / "index.json"
 QUALITY_DIR = "quality_reports"
+BUILD_MANIFEST = Path("build") / "build_manifest.json"
+ARTIFACT_MANIFEST = Path("build") / "artifact_manifest.json"
 
 
 
@@ -77,10 +82,95 @@ def _generation_tasks_count(root: Path) -> int:
     return len(tasks) if isinstance(tasks, list) else 0
 
 
+def _run_mode_for_root(root: Path) -> str:
+    request = _safe_read(root / REQUEST_NAME) or {}
+    mode = str(request.get("run_mode") or "production").strip().lower()
+    return mode if mode in {"production", "benchmark", "fixture", "dev"} else "production"
+
+
 def _render_result_present(root: Path) -> bool:
     if _safe_read(root / CANONICAL_RENDER_RESULT):
         return True
     return any(_safe_read(root / legacy) for legacy in LEGACY_RENDER_RESULTS)
+
+
+def _read_render_result(root: Path) -> tuple[Path, dict[str, Any] | None, str]:
+    render_result_path = root / CANONICAL_RENDER_RESULT
+    render_result = _safe_read(render_result_path)
+    if render_result:
+        return render_result_path, render_result, "canonical"
+    for legacy in LEGACY_RENDER_RESULTS:
+        legacy_path = root / legacy
+        legacy_result = _safe_read(legacy_path)
+        if legacy_result:
+            return legacy_path, legacy_result, "legacy"
+    return render_result_path, None, "missing"
+
+
+def _build_status(root: Path) -> dict[str, Any]:
+    build_manifest_path = root / BUILD_MANIFEST
+    artifact_manifest_path = root / ARTIFACT_MANIFEST
+    build_manifest = _safe_read(build_manifest_path)
+    artifact_manifest = _safe_read(artifact_manifest_path)
+    render_result_path, render_result, render_source = _read_render_result(root)
+    artifacts = []
+    if artifact_manifest and isinstance(artifact_manifest.get("artifacts"), list):
+        artifacts = [item for item in artifact_manifest["artifacts"] if isinstance(item, dict)]
+    elif render_result and isinstance(render_result.get("artifacts"), list):
+        artifacts = [item for item in render_result["artifacts"] if isinstance(item, dict)]
+    fixture_policy = _run_mode_for_root(root) in {"fixture", "dev"}
+    artifact_validation = (
+        validate_artifact_manifest(
+            root,
+            artifact_manifest,
+            expected_source_fingerprint=str(artifact_manifest.get("source_fingerprint") or ""),
+            allow_contract_smoke=fixture_policy,
+            allow_non_client_deliverable=fixture_policy,
+        )
+        if artifact_manifest
+        else {}
+    )
+    invalid_artifacts = [
+        str(item.get("artifact_id") or item.get("path") or "artifact")
+        for item in artifacts
+        if str(item.get("validation_status") or "validated") != "validated"
+    ]
+    if artifact_validation and not artifact_validation.get("valid"):
+        invalid_artifacts.extend(
+            str(item.get("artifact_id") or item.get("path") or "artifact")
+            for item in artifact_validation.get("artifacts", [])
+            if isinstance(item, dict) and not item.get("valid")
+        )
+    if render_result:
+        status = str(render_result.get("status") or "completed")
+    elif artifact_manifest:
+        status = "built"
+    elif build_manifest:
+        status = "prepared"
+    else:
+        status = "missing"
+    if artifact_validation and not artifact_validation.get("valid"):
+        status = "invalid"
+    return {
+        "status": status,
+        "build_manifest": str(BUILD_MANIFEST) if build_manifest else "",
+        "artifact_manifest": str(ARTIFACT_MANIFEST) if artifact_manifest else "",
+        "render_result": str(render_result_path.relative_to(root)) if render_result else "",
+        "render_source": render_source,
+        "source_fingerprint": str(
+            (render_result or {}).get("source_fingerprint")
+            or (artifact_manifest or {}).get("source_fingerprint")
+            or (build_manifest or {}).get("source_fingerprint")
+            or ""
+        ),
+        "artifact_count": len(artifacts),
+        "invalid_artifacts": invalid_artifacts,
+        "validation": artifact_validation,
+        "editability": sorted(set(str(item.get("editability") or "") for item in artifacts if item.get("editability"))),
+        "formats": sorted(set(str(item.get("kind") or "") for item in artifacts if item.get("kind"))),
+        "artifact_path": str((render_result or {}).get("artifact_path") or ""),
+        "page_count": int((render_result or {}).get("page_count") or (artifact_manifest or {}).get("page_count") or 0),
+    }
 
 
 def _pick_first_draft_gate(root: Path) -> dict[str, Any] | None:
@@ -234,17 +324,9 @@ def _run_readiness_summary(
     generation_session = _safe_read(root / GENERATION_SESSION_NAME)
     generation_gate = _pick_first_draft_gate(root)
     generation_blocked, generation_block_reason = _draft_gate_blocks(generation_gate)
-    render_result_path = root / CANONICAL_RENDER_RESULT
-    render_result = _safe_read(render_result_path)
-    render_source = "canonical"
-    if not render_result:
-        for legacy in LEGACY_RENDER_RESULTS:
-            payload = _safe_read(root / legacy)
-            if payload:
-                render_result_path = root / legacy
-                render_result = payload
-                render_source = "legacy"
-                break
+    render_result_path, render_result, render_source = _read_render_result(root)
+    build = _build_status(root)
+    builder_backend = builder_backend_status()
 
     setup_status = setup_payload.get("status", {}) or {}
     return {
@@ -277,7 +359,11 @@ def _run_readiness_summary(
                 "task_count": _generation_tasks_count(root),
                 "session_exists": bool(generation_session),
                 "session_status": generation_session.get("status") if generation_session else "",
+                "producer": (generation_session or {}).get("tool") or (generation_session or {}).get("producer") or "",
+                "profile": (generation_session or {}).get("run_mode") or (generation_session or {}).get("profile") or "",
             },
+            "build": build,
+            "builder_backend": builder_backend,
             "preview": (root / PREVIEW_MANIFEST_NAME).exists(),
             "quality_gate": bool(generation_gate),
             "draft_gate_blocking": generation_blocked,
@@ -289,10 +375,15 @@ def _run_readiness_summary(
             ),
             "render": {
                 "required": True,
-                "status": "present" if render_result else "missing",
+                "status": str((render_result or {}).get("status") or ("present" if render_result else "missing")),
                 "source": render_source if render_result else "missing",
                 "render_result": str(render_result_path.relative_to(root)) if render_result else "",
                 "artifact_path": (render_result or {}).get("artifact_path", ""),
+                "tool": (render_result or {}).get("tool", ""),
+                "format": (render_result or {}).get("format", ""),
+                "source_fingerprint": (render_result or {}).get("source_fingerprint", ""),
+                "artifact_manifest": (render_result or {}).get("artifact_manifest", ""),
+                "editability": build.get("editability", []),
             },
             "export": (root / "approved_queue.json").exists() or (root / "export_queue.json").exists(),
             "quality": bool(generation_gate) and not generation_blocked,
@@ -359,7 +450,13 @@ def _resolve_stage(root: Path, run_mode: str) -> tuple[str, list[dict[str, str]]
 
     if has_generation_session:
         gen_status, generation_session = _read_generation_status(root)
-        if gen_status in {"created", "running", "dispatched"}:
+        if gen_status in {"dispatched", "awaiting_agent_execution"}:
+            return (
+                "awaiting_agent_execution",
+                [{"action": "agent_execution", "reason": f"generation session status={gen_status}"}],
+                f"generation session status={gen_status}",
+            )
+        if gen_status in {"created", "running"}:
             return (
                 "generation_running",
                 [{"action": "run_generation", "reason": f"generation session status={gen_status}"}],
@@ -371,7 +468,7 @@ def _resolve_stage(root: Path, run_mode: str) -> tuple[str, list[dict[str, str]]
                 [{"action": "run_generation", "reason": f"generation session status={gen_status}"}],
                 f"generation session status={gen_status}",
             )
-        if gen_status in {"completed", "partial"}:
+        if gen_status in {"completed", "partial", "result_files_present"}:
             return (
                 "needs_generation_import",
                 [{"action": "generation_import", "reason": f"generation session status={gen_status}"}],
@@ -392,7 +489,9 @@ def _resolve_stage(root: Path, run_mode: str) -> tuple[str, list[dict[str, str]]
                     [{"action": "draft_gate", "reason": reason}],
                     reason,
                 )
-        if gen_status and gen_status not in {"preview_refreshed", "quality_required"}:
+        if gen_status == "ready_for_build":
+            pass
+        elif gen_status and gen_status not in {"preview_refreshed", "quality_required"}:
             return (
                 "needs_generation_import",
                 [{"action": "generation_import", "reason": "generation session requires import or refresh"}],
@@ -425,11 +524,33 @@ def _resolve_stage(root: Path, run_mode: str) -> tuple[str, list[dict[str, str]]
             reason,
         )
 
+    if generation_task_count > 0:
+        backend = builder_backend_status()
+        if production_requires_builder_backend(run_mode) and not backend.get("production_capable"):
+            return (
+                "needs_builder_backend",
+                [{"action": "builder_backend", "reason": str(backend.get("blocking_reason") or "PPT Master backend is not ready")}],
+                str(backend.get("blocking_reason") or "PPT Master backend is not ready"),
+            )
+
     if generation_task_count > 0 and not _render_result_present(root):
+        build_status = _build_status(root)
+        if not build_status.get("build_manifest"):
+            return (
+                "needs_build",
+                [{"action": "build", "reason": "build manifest is missing after review and quality gate"}],
+                "build manifest is missing after review and quality gate",
+            )
+        if build_status.get("invalid_artifacts"):
+            return (
+                "needs_render",
+                [{"action": "render", "reason": "artifact manifest contains invalid artifacts"}],
+                "artifact manifest contains invalid artifacts",
+            )
         return (
             "needs_render",
-            [{"action": "render", "reason": "render result is missing after generation"}],
-            "render result is missing after generation",
+            [{"action": "render", "reason": "render result is missing after build"}],
+            "render result is missing after build",
         )
 
     if run_mode == "benchmark":
@@ -454,6 +575,8 @@ def _next_command(stage: str, root: Path, run_id: str) -> str:
         return f"deck-master generation-session create --run-dir {root} --run-id {run_id}"
     if stage == "generation_running":
         return f"deck-master generation-session status --run-dir {root} --run-id {run_id}"
+    if stage == "awaiting_agent_execution":
+        return f"deck-master generation-session status --run-dir {root} --run-id {run_id}"
     if stage in {"generation_failed", "needs_generation_import"}:
         return f"deck-master generation-session import-results --run-dir {root} --run-id {run_id} --input <result.json>"
     if stage == "needs_preview_refresh":
@@ -462,8 +585,12 @@ def _next_command(stage: str, root: Path, run_id: str) -> str:
         return f"deck-master build-preview --run-dir {root} --run-id {run_id}"
     if stage == "needs_draft_gate":
         return f"deck-master quality-gate draft --run-dir {root} --run-id {run_id}"
+    if stage == "needs_builder_backend":
+        return "deck-master suite-status --target codex --output json"
+    if stage == "needs_build":
+        return f"deck-master build prepare --run-dir {root} --run-id {run_id}"
     if stage == "needs_render":
-        return f"deck-master render --run-dir {root} --run-id {run_id} --format html"
+        return f"deck-master build run --run-dir {root} --run-id {run_id}"
     if stage == "needs_review":
         return f"deck-master run-state --run-dir {root} --run-id {run_id}"
     if stage in {"ready_for_benchmark", "ready_for_client_export"}:
@@ -484,18 +611,23 @@ def _allowed_blocking(stage: str, reason: str, run_mode: str) -> tuple[list[str]
         "needs_page_tasks",
         "needs_sourcing",
         "needs_generation_session",
+        "awaiting_agent_execution",
         "generation_running",
         "generation_failed",
         "needs_generation_import",
         "needs_preview_refresh",
         "needs_preview",
         "needs_draft_gate",
+        "needs_builder_backend",
+        "needs_build",
         "needs_render",
     }:
         blocked_actions.append({"action": "client_export", "reason": reason})
 
     if stage == "needs_generation_session":
         allowed.append("create_generation_session")
+    if stage == "awaiting_agent_execution":
+        allowed.append("inspect_generation_dispatch")
     if stage == "needs_review":
         allowed.append("open_review_cockpit")
         if run_mode in {"fixture", "dev"}:
@@ -556,6 +688,13 @@ def resolve_run_state(
     blocked_actions.extend({"action": "workspace", "reason": msg} for msg in workspace.get("reasons", []) if msg)
 
     readiness = _run_readiness_summary(root, request, setup_payload, workspace, review_status)
+    next_command = _next_command(stage, root, run_id)
+    first_reason = reason
+    for item in blocked_actions:
+        if item.get("reason"):
+            first_reason = str(item["reason"])
+            break
+    skill_route = route_for_stage(stage, reason=first_reason, next_command=next_command)
 
     return {
         "schema_version": SCHEMA_VERSION,
@@ -567,5 +706,10 @@ def resolve_run_state(
         "readiness": readiness,
         "allowed_actions": allowed_actions,
         "blocked_actions": blocked_actions,
-        "next_command": _next_command(stage, root, run_id),
+        "next_command": next_command,
+        "recommended_skill": skill_route["recommended_skill"],
+        "skill_stage": skill_route["skill_stage"],
+        "skill_reason": skill_route["skill_reason"],
+        "next_skill_command": skill_route["next_skill_command"],
+        "skill_route": skill_route,
     }

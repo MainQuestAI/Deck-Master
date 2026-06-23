@@ -1,0 +1,52 @@
+{
+  "schema_version": "deck_benchmark_case.v1",
+  "case_id": "real_manufacturing_geo",
+  "case_type": "real_metadata",
+  "case_name": "Real Manufacturing GEO Expansion Deck",
+  "description": "Sanitized metadata for a real manufacturing GEO expansion solution-deck workflow. Raw source material remains local-only.",
+  "industry": "manufacturing",
+  "audience": "client",
+  "target_pages": 18,
+  "workspace": "~/DeckMasterPrivateBenchmarks/real_manufacturing_geo/workspace",
+  "runs_dir": "benchmark_runs",
+  "inputs": {
+    "context_pack": "~/DeckMasterPrivateBenchmarks/real_manufacturing_geo/context_pack.json",
+    "baseline_manual_hours": 18,
+    "baseline_notes": "Comparable multi-chapter GEO proposal deck required manual narrative planning, source consolidation, and page-level review.",
+    "expected_output_type": "proposal_solution_deck"
+  },
+  "workflow": {
+    "planning_mode": "narrative_v2",
+    "library_mode": "production",
+    "requires_narrative_advice": true,
+    "requires_external_quality_review": true,
+    "requires_generation_result": true,
+    "requires_render_result": true,
+    "manual_review_required": true
+  },
+  "source_material": {
+    "classification": "private_local_reference",
+    "raw_source_policy": "local_path_only",
+    "local_source_paths": [
+      "~/DeckMasterPrivateBenchmarks/real_manufacturing_geo/raw"
+    ],
+    "submitted_material_types": [
+      "rfp_extract",
+      "solution_notes",
+      "compliance_outline",
+      "legacy_deck"
+    ],
+    "redaction_status": "metadata_only",
+    "excluded_from_repo": true
+  },
+  "success_targets": {
+    "context_to_preview_minutes": 60,
+    "context_to_review_ready_minutes": 120,
+    "context_to_approved_queue_minutes": 180,
+    "page_acceptance_rate_min": 0.65,
+    "reuse_adapt_rate_min": 0.2,
+    "p0_count_max": 0,
+    "evidence_gap_visible": true,
+    "quality_gate_required": true
+  }
+}
