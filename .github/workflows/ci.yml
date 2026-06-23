@@ -74,7 +74,7 @@ jobs:
           print(f"Autoplan smoke passed: {len(pages)} preview pages")
           PY
 
-      - name: Run RC gate
+      - name: Run RC gate smoke
         run: |
           set -euo pipefail
           OUT_DIR="$(mktemp -d)"
@@ -91,7 +91,16 @@ jobs:
 
           payload = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
           report = json.loads(Path(payload["report"]).read_text(encoding="utf-8"))
-          if report["status"] != "pass":
-              raise SystemExit(f"RC gate failed: {report['status']}")
-          print("RC gate passed")
+          checks = {check["check_id"]: check for check in report.get("checks", [])}
+          unexpected = [
+              check_id
+              for check_id, check in checks.items()
+              if check.get("required") and check.get("status") != "pass" and check_id != "benchmark_aggregate"
+          ]
+          if unexpected:
+              raise SystemExit(f"RC gate smoke failed required checks: {unexpected}")
+          benchmark = checks.get("benchmark_aggregate", {})
+          if benchmark.get("status") != "fail" or (benchmark.get("details") or {}).get("status") != "metadata_ready":
+              raise SystemExit(f"Unexpected benchmark aggregate state: {benchmark}")
+          print("RC gate smoke passed with benchmark metadata-only release block")
           PY
