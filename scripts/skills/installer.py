@@ -29,6 +29,7 @@ PRODUCT_CAPABILITY_MANIFEST_NAME = "product-capability-manifest.json"
 RELEASE_MANIFEST_NAME = "release-manifest.json"
 CAPABILITY_LOCK_NAME = "deck_capability_lock.json"
 SHA256SUMS_NAME = "SHA256SUMS"
+REVISION_NAME = "REVISION"
 RELEASE_TREE_MARKER = ".release_tree_managed_by_deck_master"
 
 SUPPORTED_TARGETS = {"codex", "claude-code", "hermes", "custom"}
@@ -416,6 +417,26 @@ def _repo_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
 
+def _source_revision() -> str:
+    root = _repo_root()
+    revision_file = root / REVISION_NAME
+    if revision_file.exists():
+        revision = revision_file.read_text(encoding="utf-8").strip()
+        if revision:
+            return revision
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(root), "rev-parse", "--short", "HEAD"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        return "unknown"
+    revision = result.stdout.strip()
+    return revision or "unknown"
+
+
 def _repo_skill_dir(skill_name: str = SKILL_NAME) -> Path:
     """Return the absolute path to a skill package in this repo."""
     return _repo_root() / "skills" / skill_name
@@ -769,6 +790,7 @@ def validate_skill(
 
 
 def companion_manifest() -> dict[str, Any]:
+    revision = _source_revision()
     skills: list[dict[str, Any]] = []
     for spec in SUITE_SKILLS:
         item = {
@@ -800,6 +822,9 @@ def companion_manifest() -> dict[str, Any]:
         "schema_version": COMPANION_MANIFEST_SCHEMA_VERSION,
         "suite_name": SUITE_NAME,
         "suite_version": SUITE_VERSION,
+        "generated_at": _utc_now(),
+        "git_commit": revision,
+        "release_id": f"main-{revision}",
         "skills": skills,
     }
 
@@ -1007,6 +1032,7 @@ def verify_release_tree(
         RELEASE_MANIFEST_NAME,
         CAPABILITY_LOCK_NAME,
         SHA256SUMS_NAME,
+        REVISION_NAME,
     ]
     for rel in required_files:
         path = root / rel
@@ -1314,6 +1340,7 @@ def build_release_tree(
         json.dumps(companion_manifest(), ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
+    (release_root / REVISION_NAME).write_text(_source_revision() + "\n", encoding="utf-8")
     bin_path = release_root / "bin" / "deck-master"
     bin_path.write_text(
         "#!/usr/bin/env sh\n"
