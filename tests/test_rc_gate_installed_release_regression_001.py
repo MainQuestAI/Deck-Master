@@ -50,7 +50,10 @@ class InstalledReleaseRCGateRegressionTests(unittest.TestCase):
 
         self.assertEqual(0, completed.returncode, completed.stderr[-2000:])
         payload = json.loads((output_dir / "rc_gate_report.json").read_text(encoding="utf-8"))
-        self.assertEqual("pass", payload["status"])
+        self.assertEqual("fail", payload["status"])
+        checks = {check["check_id"]: check for check in payload["checks"]}
+        self.assertEqual("fail", checks["benchmark_aggregate"]["status"])
+        self.assertEqual("metadata_ready", checks["benchmark_aggregate"]["details"]["status"])
 
 
 if __name__ == "__main__":

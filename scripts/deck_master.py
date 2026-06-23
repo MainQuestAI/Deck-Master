@@ -1161,6 +1161,7 @@ def _autopilot_stop_reason(stage: str) -> str:
         "generation_running": "生成任务仍在运行或等待状态更新。",
         "generation_failed": "生成任务失败，需要人工查看原因。",
         "needs_generation_import": "需要导入 Agent 回传的 generation result。",
+        "needs_builder_backend": "缺少可用于生产交付的 Deck Builder 后端。",
         "needs_review": "页面需要人工审阅或批准。",
         "ready_for_client_export": "已到客户导出阶段。",
         "ready_for_benchmark": "已到 benchmark 放行阶段。",
@@ -1196,7 +1197,7 @@ def command_workflow_autopilot(args: argparse.Namespace) -> dict[str, Any]:
     max_steps = int(getattr(args, "max_steps", 8) or 8)
     steps: list[dict[str, Any]] = []
     review_only_allowed = {"needs_draft_gate", "needs_review", "ready_for_client_export", "ready_for_benchmark"}
-    repair_allowed = {"needs_draft_gate", "needs_build", "needs_render", "ready_for_client_export", "ready_for_benchmark"}
+    repair_allowed = {"needs_draft_gate", "needs_builder_backend", "needs_build", "needs_render", "ready_for_client_export", "ready_for_benchmark"}
 
     status = "stopped"
     stop_reason = ""

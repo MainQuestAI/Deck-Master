@@ -18,6 +18,11 @@ PNG_1X1 = (
     b"\x08\x04\x00\x00\x00\xb5\x1c\x0c\x02\x00\x00\x00\x0bIDATx\xdac\xfc"
     b"\xff\x1f\x00\x03\x03\x02\x00\xef\xbf\xa7\xdb\x00\x00\x00\x00IEND\xaeB`\x82"
 )
+PNG_2X2 = (
+    b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x02\x00\x00\x00\x02"
+    b"\x08\x04\x00\x00\x00\xb5\x1c\x0c\x02\x00\x00\x00\x0bIDATx\xdac\xfc"
+    b"\xff\x1f\x00\x03\x03\x02\x00\xef\xbf\xa7\xdb\x00\x00\x00\x00IEND\xaeB`\x82"
+)
 
 
 class ArtifactValidatorTests(unittest.TestCase):
@@ -27,8 +32,17 @@ class ArtifactValidatorTests(unittest.TestCase):
 
     def _write_pptx(self, path: Path) -> None:
         with zipfile.ZipFile(path, "w") as pptx:
-            pptx.writestr("[Content_Types].xml", "<Types/>")
+            pptx.writestr(
+                "[Content_Types].xml",
+                "<Types><Override PartName=\"/ppt/presentation.xml\"/>"
+                "<Override PartName=\"/ppt/slides/slide1.xml\"/></Types>",
+            )
             pptx.writestr("ppt/presentation.xml", "<p:presentation/>")
+            pptx.writestr(
+                "ppt/slides/slide1.xml",
+                "<p:sld xmlns:p=\"http://schemas.openxmlformats.org/presentationml/2006/main\" "
+                "xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\"><a:t>Ready</a:t></p:sld>",
+            )
 
     def _artifact(self, rel: str, *, kind: str, media_type: str) -> dict:
         path = self.temp_dir / rel
@@ -45,8 +59,8 @@ class ArtifactValidatorTests(unittest.TestCase):
 
     def test_accepts_supported_artifact_signatures(self) -> None:
         (self.temp_dir / "deck.html").write_text("<!doctype html><html></html>", encoding="utf-8")
-        (self.temp_dir / "deck.pdf").write_bytes(b"%PDF-1.4\n%%EOF\n")
-        (self.temp_dir / "page.png").write_bytes(PNG_1X1)
+        (self.temp_dir / "deck.pdf").write_bytes(b"%PDF-1.4\n1 0 obj << /Type /Page >> endobj\n%%EOF\n")
+        (self.temp_dir / "page.png").write_bytes(PNG_2X2)
         (self.temp_dir / "page.jpg").write_bytes(b"\xff\xd8\xff\xe0jpeg\xff\xd9")
         (self.temp_dir / "page.svg").write_text("<svg></svg>", encoding="utf-8")
         self._write_pptx(self.temp_dir / "deck.pptx")
@@ -128,6 +142,35 @@ class ArtifactValidatorTests(unittest.TestCase):
 
         self.assertFalse(result["valid"])
         self.assertIn("artifact points to bundled placeholder content.", result["errors"])
+
+    def test_rejects_tiny_png_preview(self) -> None:
+        (self.temp_dir / "tiny.png").write_bytes(PNG_1X1)
+        artifact = self._artifact("tiny.png", kind="page_png", media_type="image/png")
+
+        result = validate_artifact_descriptor(self.temp_dir, artifact)
+
+        self.assertFalse(result["valid"])
+        self.assertTrue(any("too small" in error for error in result["errors"]))
+
+    def test_rejects_non_client_deliverable_manifest_for_client_context(self) -> None:
+        (self.temp_dir / "deck.html").write_text("<!doctype html><html><section>Smoke</section></html>", encoding="utf-8")
+        manifest = {
+            "source_fingerprint": "a" * 64,
+            "source_mode": "contract_smoke",
+            "non_client_deliverable": True,
+            "page_count": 1,
+            "artifacts": [self._artifact("deck.html", kind="deck_html", media_type="text/html")],
+        }
+
+        result = validate_artifact_manifest(
+            self.temp_dir,
+            manifest,
+            expected_source_fingerprint="a" * 64,
+            allow_non_client_deliverable=False,
+        )
+
+        self.assertFalse(result["valid"])
+        self.assertIn("manifest is marked non-client-deliverable: contract_smoke.", result["errors"])
 
     def test_rejects_stale_manifest_fingerprint(self) -> None:
         (self.temp_dir / "deck.html").write_text("<!doctype html><html></html>", encoding="utf-8")

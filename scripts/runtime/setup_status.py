@@ -325,6 +325,8 @@ def setup_status(
         result["full_suite_ready"] = suite["full_suite_ready"]
         result["capabilities"] = suite["capabilities"]
         result["task_readiness"] = suite["task_readiness"]
+        result["production_backend_ready"] = suite["task_readiness"].get("ppt_master_backend") == "ready"
+        result["client_delivery_ready"] = suite["task_readiness"].get("client_delivery") == "ready"
         if suite.get("next_agent_action") and suite.get("status") != "ready":
             result["next_agent_action"] = str(suite["next_agent_action"])
         if not result["next_command"] and suite.get("next_command"):

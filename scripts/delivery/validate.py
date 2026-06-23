@@ -33,6 +33,7 @@ def validate_delivery(
     run_dir = Path(run_dir).expanduser().resolve()
     artifact = Path(artifact_path).expanduser().resolve()
     run_id = run_dir.name
+    fixture_policy = _is_fixture_policy(run_dir)
 
     findings = []
 
@@ -61,7 +62,12 @@ def validate_delivery(
     # 2. artifact hash
     artifact_hash = _compute_hash(artifact)
     descriptor = _artifact_descriptor(run_dir, artifact, artifact_rel)
-    artifact_validation = validate_artifact_descriptor(run_dir, descriptor)
+    artifact_validation = validate_artifact_descriptor(
+        run_dir,
+        descriptor,
+        allow_contract_smoke=fixture_policy,
+        allow_non_client_deliverable=fixture_policy,
+    )
     if not artifact_validation.get("valid"):
         findings.append({
             "finding_id": "delivery_artifact_invalid",
@@ -122,7 +128,12 @@ def validate_delivery(
                     "repair_instruction": "修复 quality gate JSON 后再验证交付。",
                 })
 
-    artifact_manifest, artifact_manifest_validation = _validate_build_artifacts(run_dir, findings)
+    artifact_manifest, artifact_manifest_validation = _validate_build_artifacts(
+        run_dir,
+        findings,
+        allow_contract_smoke=fixture_policy,
+        allow_non_client_deliverable=fixture_policy,
+    )
     build_manifest = _read_json(run_dir / BUILD_MANIFEST)
     render_result = _read_json(run_dir / RENDER_RESULT)
     source_fingerprint = str(
@@ -232,7 +243,18 @@ def _read_json(path: Path) -> dict[str, Any]:
         return {}
     return payload if isinstance(payload, dict) else {}
 
-def _validate_build_artifacts(run_dir: Path, findings: list[dict[str, Any]]) -> tuple[dict[str, Any], dict[str, Any]]:
+def _is_fixture_policy(run_dir: Path) -> bool:
+    request = _read_json(run_dir / "request.json")
+    mode = str(request.get("run_mode") or "production").strip().lower()
+    return mode in {"fixture", "dev"}
+
+def _validate_build_artifacts(
+    run_dir: Path,
+    findings: list[dict[str, Any]],
+    *,
+    allow_contract_smoke: bool = False,
+    allow_non_client_deliverable: bool = False,
+) -> tuple[dict[str, Any], dict[str, Any]]:
     artifact_manifest = _read_json(run_dir / ARTIFACT_MANIFEST)
     if not artifact_manifest:
         return {}, {}
@@ -240,6 +262,8 @@ def _validate_build_artifacts(run_dir: Path, findings: list[dict[str, Any]]) -> 
         run_dir,
         artifact_manifest,
         expected_source_fingerprint=str(artifact_manifest.get("source_fingerprint") or ""),
+        allow_contract_smoke=allow_contract_smoke,
+        allow_non_client_deliverable=allow_non_client_deliverable,
     )
     if not validation.get("valid"):
         findings.append({

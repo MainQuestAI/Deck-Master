@@ -205,12 +205,12 @@ def _browser_smoke_check(*, skip: bool, require: bool) -> dict[str, Any]:
 
 def _benchmark_aggregate_check(benchmark_dir: Path, min_real_cases: int) -> dict[str, Any]:
     report = build_benchmark_aggregate_report(benchmark_dir, min_real_cases=min_real_cases)
-    status = "pass" if report["status"] in {"metadata_ready", "report_ready"} else "fail"
+    status = "pass" if report["status"] == "report_ready" else "fail"
     return _check(
         "benchmark_aggregate",
         status,
         required=True,
-        summary="Benchmark aggregate has enough real metadata cases.",
+        summary="Benchmark aggregate requires real completed benchmark reports for RC.",
         details=report,
     )
 

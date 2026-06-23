@@ -36,6 +36,7 @@ STAGE_STATUS_MAP = {
     "needs_generation_import": "needs_generation_session",
     "needs_preview_refresh": "needs_preview",
     "needs_draft_gate": "needs_draft_gate",
+    "needs_builder_backend": "needs_builder_backend",
     "needs_build": "needs_build",
     "needs_render": "needs_render",
     "needs_review": "needs_page_review",
@@ -59,6 +60,7 @@ MISSING_BY_STAGE = {
     "generation_failed": ["generation_session.json"],
     "needs_generation_import": ["generation_session.json"],
     "needs_preview_refresh": [PREVIEW_MANIFEST_NAME],
+    "needs_builder_backend": ["ppt-master production backend"],
     "needs_build": ["build/build_manifest.json"],
     "needs_render": ["render_results/render_result.json"],
 }

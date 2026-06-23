@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from runtime.artifact_validator import validate_artifact_manifest
+from runtime.builder_backend import builder_backend_status, production_requires_builder_backend
 from runtime.run_state import (
     CLAIM_MAP_NAME,
     CONTEXT_MANIFEST_NAME,
@@ -81,6 +82,12 @@ def _generation_tasks_count(root: Path) -> int:
     return len(tasks) if isinstance(tasks, list) else 0
 
 
+def _run_mode_for_root(root: Path) -> str:
+    request = _safe_read(root / REQUEST_NAME) or {}
+    mode = str(request.get("run_mode") or "production").strip().lower()
+    return mode if mode in {"production", "benchmark", "fixture", "dev"} else "production"
+
+
 def _render_result_present(root: Path) -> bool:
     if _safe_read(root / CANONICAL_RENDER_RESULT):
         return True
@@ -111,11 +118,14 @@ def _build_status(root: Path) -> dict[str, Any]:
         artifacts = [item for item in artifact_manifest["artifacts"] if isinstance(item, dict)]
     elif render_result and isinstance(render_result.get("artifacts"), list):
         artifacts = [item for item in render_result["artifacts"] if isinstance(item, dict)]
+    fixture_policy = _run_mode_for_root(root) in {"fixture", "dev"}
     artifact_validation = (
         validate_artifact_manifest(
             root,
             artifact_manifest,
             expected_source_fingerprint=str(artifact_manifest.get("source_fingerprint") or ""),
+            allow_contract_smoke=fixture_policy,
+            allow_non_client_deliverable=fixture_policy,
         )
         if artifact_manifest
         else {}
@@ -316,6 +326,7 @@ def _run_readiness_summary(
     generation_blocked, generation_block_reason = _draft_gate_blocks(generation_gate)
     render_result_path, render_result, render_source = _read_render_result(root)
     build = _build_status(root)
+    builder_backend = builder_backend_status()
 
     setup_status = setup_payload.get("status", {}) or {}
     return {
@@ -352,6 +363,7 @@ def _run_readiness_summary(
                 "profile": (generation_session or {}).get("run_mode") or (generation_session or {}).get("profile") or "",
             },
             "build": build,
+            "builder_backend": builder_backend,
             "preview": (root / PREVIEW_MANIFEST_NAME).exists(),
             "quality_gate": bool(generation_gate),
             "draft_gate_blocking": generation_blocked,
@@ -512,6 +524,15 @@ def _resolve_stage(root: Path, run_mode: str) -> tuple[str, list[dict[str, str]]
             reason,
         )
 
+    if generation_task_count > 0:
+        backend = builder_backend_status()
+        if production_requires_builder_backend(run_mode) and not backend.get("production_capable"):
+            return (
+                "needs_builder_backend",
+                [{"action": "builder_backend", "reason": str(backend.get("blocking_reason") or "PPT Master backend is not ready")}],
+                str(backend.get("blocking_reason") or "PPT Master backend is not ready"),
+            )
+
     if generation_task_count > 0 and not _render_result_present(root):
         build_status = _build_status(root)
         if not build_status.get("build_manifest"):
@@ -564,6 +585,8 @@ def _next_command(stage: str, root: Path, run_id: str) -> str:
         return f"deck-master build-preview --run-dir {root} --run-id {run_id}"
     if stage == "needs_draft_gate":
         return f"deck-master quality-gate draft --run-dir {root} --run-id {run_id}"
+    if stage == "needs_builder_backend":
+        return "deck-master suite-status --target codex --output json"
     if stage == "needs_build":
         return f"deck-master build prepare --run-dir {root} --run-id {run_id}"
     if stage == "needs_render":
@@ -595,6 +618,7 @@ def _allowed_blocking(stage: str, reason: str, run_mode: str) -> tuple[list[str]
         "needs_preview_refresh",
         "needs_preview",
         "needs_draft_gate",
+        "needs_builder_backend",
         "needs_build",
         "needs_render",
     }:

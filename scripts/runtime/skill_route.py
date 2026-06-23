@@ -5,9 +5,21 @@ from typing import Any
 SCHEMA_VERSION = "deck_skill_route.v1"
 
 SKILL_META: dict[str, dict[str, Any]] = {
+    "deck-master": {
+        "skill_stage": "orchestration",
+        "label": "Deck Master",
+        "backend_dependency": "",
+        "compat_skills": [],
+    },
     "deck-setup": {
         "skill_stage": "setup",
         "label": "Setup",
+        "backend_dependency": "",
+        "compat_skills": [],
+    },
+    "deck-upgrade": {
+        "skill_stage": "upgrade",
+        "label": "Upgrade",
         "backend_dependency": "",
         "compat_skills": [],
     },
@@ -98,6 +110,7 @@ STAGE_TO_SKILL = {
     "needs_generation_import": "deck-producer",
     "needs_preview_refresh": "deck-producer",
     "needs_draft_gate": "deck-quality",
+    "needs_builder_backend": "deck-builder",
     "needs_build": "deck-builder",
     "needs_render": "deck-builder",
     "needs_review": "deck-review",
@@ -108,6 +121,12 @@ STAGE_TO_SKILL = {
 INPUT_TYPE_TO_SKILL = {
     "first_run_setup": "deck-setup",
     "suite_install": "deck-setup",
+    "deck_workflow": "deck-master",
+    "run_state": "deck-master",
+    "review_cockpit": "deck-master",
+    "upgrade": "deck-upgrade",
+    "rollback": "deck-upgrade",
+    "release_tree": "deck-upgrade",
     "setup_issue": "deck-doctor",
     "suite_issue": "deck-doctor",
     "run_issue": "deck-doctor",

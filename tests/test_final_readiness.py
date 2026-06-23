@@ -124,8 +124,8 @@ class FinalReadinessTests(unittest.TestCase):
 
     def test_production_missing_customer_visible_safety_gate_blocks_readiness(self) -> None:
         self._write_baseline()
-        write_json(self.run_dir / "request.json", {"run_id": "final-ready", "run_mode": "production"})
         run_build(self.run_dir)
+        write_json(self.run_dir / "request.json", {"run_id": "final-ready", "run_mode": "production"})
 
         readiness = compute_final_readiness(
             self.run_dir,

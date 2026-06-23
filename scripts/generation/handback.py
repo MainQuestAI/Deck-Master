@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any
 
 from preview.manifest import ManifestError, load_manifest, write_manifest
+from runtime.artifact_validator import validate_artifact_descriptor
 from runtime.events import append_typed_event
 from runtime.run_state import (
     PAGE_TASKS_NAME,
@@ -265,6 +266,16 @@ def _validate_artifact(
             errors.append(f"{field_name}.sha256 mismatch.")
         if run_mode in {"production", "benchmark"} and _looks_like_placeholder(resolved):
             errors.append(f"{field_name}.path points to bundled placeholder content.")
+        artifact_validation = validate_artifact_descriptor(
+            run_dir,
+            artifact,
+            expected_page_count=1 if kind in {"page_pptx", "page_html"} else None,
+            allow_contract_smoke=run_mode in {"fixture", "dev"},
+            allow_non_client_deliverable=run_mode in {"fixture", "dev"},
+        )
+        if not artifact_validation.get("valid"):
+            for error in artifact_validation.get("errors", []):
+                errors.append(f"{field_name}.{error}")
 
 
 def normalize_generation_result(

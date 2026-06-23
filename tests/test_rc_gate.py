@@ -18,21 +18,22 @@ class RCGateTests(unittest.TestCase):
         self.temp_dir = Path(tempfile.mkdtemp(prefix="dm_rc_gate_"))
         self.addCleanup(lambda: shutil.rmtree(self.temp_dir, ignore_errors=True))
 
-    def test_rc_gate_passes_with_optional_browser_skipped(self) -> None:
+    def test_rc_gate_blocks_metadata_only_benchmarks(self) -> None:
         report = build_rc_gate_report(
             benchmark_dir=ROOT / "benchmarks",
             skip_browser_smoke=True,
         )
 
         self.assertEqual("deck_rc_gate_report.v1", report["schema_version"])
-        self.assertEqual("pass", report["status"])
+        self.assertEqual("fail", report["status"])
         by_id = {check["check_id"]: check for check in report["checks"]}
         self.assertEqual("pass", by_id["schema_json_parse"]["status"])
         self.assertEqual("pass", by_id["artifact_validator"]["status"])
         self.assertEqual("pass", by_id["release_smoke"]["status"])
         self.assertEqual("pass", by_id["fixture_e2e"]["status"])
         self.assertEqual("skipped", by_id["browser_smoke"]["status"])
-        self.assertEqual("pass", by_id["benchmark_aggregate"]["status"])
+        self.assertEqual("fail", by_id["benchmark_aggregate"]["status"])
+        self.assertEqual("metadata_ready", by_id["benchmark_aggregate"]["details"]["status"])
 
     def test_write_rc_gate_report_outputs_json_and_markdown(self) -> None:
         result = write_rc_gate_report(
@@ -41,7 +42,7 @@ class RCGateTests(unittest.TestCase):
             skip_browser_smoke=True,
         )
 
-        self.assertEqual("pass", result["status"])
+        self.assertEqual("fail", result["status"])
         self.assertTrue(Path(result["report"]).exists())
         self.assertTrue(Path(result["markdown"]).exists())
         payload = json.loads(Path(result["report"]).read_text(encoding="utf-8"))

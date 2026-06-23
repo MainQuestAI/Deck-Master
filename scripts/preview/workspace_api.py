@@ -129,6 +129,7 @@ def _runtime_stage_reason(stage: str) -> str:
         "needs_generation_import": "Agent 生成结果还未导入。",
         "needs_preview_refresh": "最新生成结果还未刷新到预览。",
         "needs_draft_gate": "草稿质量门禁还未通过。",
+        "needs_builder_backend": "缺少可用于生产交付的构建后端。",
         "needs_build": "构建清单还未生成。",
         "needs_render": "最终渲染产物还未生成。",
         "needs_review": "页面审阅还未完成。",
@@ -150,6 +151,7 @@ RUNTIME_STAGE_TO_WORKSPACE_STAGE = {
     "generation_running": "生成中",
     "needs_generation_import": "生成中",
     "needs_preview_refresh": "生成中",
+    "needs_builder_backend": "风险冻结",
     "needs_build": "生成中",
     "needs_render": "生成中",
     "generation_failed": "风险冻结",
@@ -653,6 +655,7 @@ def _workspace_stage(
         "generation_running": "等待生成任务完成。",
         "needs_generation_import": "导入 Agent 回传的生成结果。",
         "needs_preview_refresh": "用最新生成结果刷新页面预览。",
+        "needs_builder_backend": "先安装或认证完整 Deck Builder 后端。",
         "needs_build": "先生成 build manifest，锁定本次构建输入。",
         "needs_render": "执行 build run，补齐 HTML/PDF/PNG/PPTX 产物。",
     }
@@ -743,6 +746,7 @@ def _workspace_stage_without_manifest(run_dir: Path, *, run_state_summary: dict[
         "generation_running": "等待内容生成完成。",
         "needs_generation_import": "先导入最新生成结果。",
         "needs_preview_refresh": "先刷新最新页面预览。",
+        "needs_builder_backend": "先补齐可用于生产交付的构建后端。",
         "needs_build": "先准备构建清单。",
         "needs_render": "先补齐最新构建和渲染结果。",
     }

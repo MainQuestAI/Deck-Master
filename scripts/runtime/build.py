@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import json
 import hashlib
 import io
 import zipfile
@@ -10,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from runtime.artifact_validator import validate_artifact_manifest
+from runtime.builder_backend import builder_backend_status, production_requires_builder_backend
 from runtime.events import append_event
 from runtime.run_state import PREVIEW_MANIFEST_NAME, ensure_run_dirs, load_request, read_json, write_json
 
@@ -22,6 +24,7 @@ BUILD_MANIFEST_NAME = "build_manifest.json"
 ARTIFACT_MANIFEST_NAME = "artifact_manifest.json"
 RENDER_RESULTS_DIR = "render_results"
 RENDER_RESULT_NAME = "render_result.json"
+CONTRACT_SMOKE_SOURCE_MODE = "contract_smoke"
 
 PNG_1X1 = base64.b64decode(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII="
@@ -106,9 +109,23 @@ def _artifact(
         "bytes": path.stat().st_size,
         "validation_status": "validated",
         "editability": editability,
+        "source_mode": CONTRACT_SMOKE_SOURCE_MODE,
+        "non_client_deliverable": True,
         "page_id": page_id,
         "created_at": _utc_now(),
     }
+
+
+def _run_mode(request: dict[str, Any]) -> str:
+    mode = str(request.get("run_mode") or "production").strip().lower()
+    return mode if mode in {"production", "benchmark", "fixture", "dev"} else "production"
+
+
+def _assert_builder_backend_available(request: dict[str, Any]) -> dict[str, Any]:
+    status = builder_backend_status()
+    if production_requires_builder_backend(_run_mode(request)) and not status.get("production_capable"):
+        raise BuildError("needs_builder_backend: " + str(status.get("blocking_reason") or "PPT Master backend is not ready."))
+    return status
 
 
 def build_source_fingerprint(run_dir: str | Path) -> str:
@@ -122,6 +139,21 @@ def build_source_fingerprint(run_dir: str | Path) -> str:
     results_dir = root / "generation_results"
     if results_dir.is_dir():
         refs.extend(path.relative_to(root) for path in sorted(results_dir.glob("*.json")) if path.is_file())
+    preview_path = root / PREVIEW_MANIFEST_NAME
+    if preview_path.exists():
+        try:
+            preview = json.loads(preview_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            preview = {}
+        for page in _ordered_pages(preview if isinstance(preview, dict) else {}):
+            try:
+                source_path, source_ref = _safe_source(root, page.get("preview_path") or page.get("source_preview_asset"))
+            except BuildError:
+                continue
+            if source_ref and source_path is not None and source_path.exists() and source_path.is_file():
+                rel = source_path.relative_to(root)
+                if rel not in refs:
+                    refs.append(rel)
     for rel in refs:
         path = root / rel
         if not path.exists() or not path.is_file():
@@ -141,6 +173,7 @@ def _ordered_pages(preview: dict[str, Any]) -> list[dict[str, Any]]:
 def prepare_build(run_dir: str | Path) -> dict[str, Any]:
     root = ensure_run_dirs(run_dir)
     request = load_request(root)
+    backend = builder_backend_status()
     run_id = str(request.get("run_id") or root.name)
     preview_path = root / PREVIEW_MANIFEST_NAME
     if not preview_path.exists():
@@ -173,6 +206,10 @@ def prepare_build(run_dir: str | Path) -> dict[str, Any]:
         "schema_version": BUILD_MANIFEST_SCHEMA_VERSION,
         "run_id": run_id,
         "status": "prepared",
+        "run_mode": _run_mode(request),
+        "source_mode": CONTRACT_SMOKE_SOURCE_MODE,
+        "non_client_deliverable": True,
+        "builder_backend": backend,
         "source_fingerprint": build_source_fingerprint(root),
         "page_count": len(page_sources),
         "pages": page_sources,
@@ -335,6 +372,7 @@ def _assert_required_outputs(paths: list[Path]) -> None:
 def run_build(run_dir: str | Path) -> dict[str, Any]:
     root = ensure_run_dirs(run_dir)
     request = load_request(root)
+    backend = _assert_builder_backend_available(request)
     run_id = str(request.get("run_id") or root.name)
     manifest = _load_or_prepare_manifest(root)
     build_dir = root / BUILD_DIR
@@ -369,6 +407,10 @@ def run_build(run_dir: str | Path) -> dict[str, Any]:
     artifact_manifest = {
         "schema_version": ARTIFACT_MANIFEST_SCHEMA_VERSION,
         "run_id": run_id,
+        "run_mode": _run_mode(request),
+        "source_mode": CONTRACT_SMOKE_SOURCE_MODE,
+        "non_client_deliverable": True,
+        "builder_backend": backend,
         "source_fingerprint": manifest.get("source_fingerprint"),
         "page_count": manifest.get("page_count"),
         "artifacts": artifacts,
@@ -379,6 +421,8 @@ def run_build(run_dir: str | Path) -> dict[str, Any]:
         root,
         artifact_manifest,
         expected_source_fingerprint=str(manifest.get("source_fingerprint") or ""),
+        allow_contract_smoke=True,
+        allow_non_client_deliverable=True,
     )
     artifact_manifest["validation"] = artifact_validation
     if not artifact_validation.get("valid"):
@@ -392,6 +436,10 @@ def run_build(run_dir: str | Path) -> dict[str, Any]:
         "session_id": session_id,
         "tool": "ppt-master",
         "status": "completed",
+        "run_mode": _run_mode(request),
+        "source_mode": CONTRACT_SMOKE_SOURCE_MODE,
+        "non_client_deliverable": True,
+        "builder_backend": backend,
         "artifact_path": _run_relative(root, html_path),
         "preview_dir": f"{BUILD_DIR}/pages",
         "page_count": int(manifest.get("page_count") or 0),
@@ -447,6 +495,8 @@ def build_status(run_dir: str | Path) -> dict[str, Any]:
             root,
             artifact_manifest,
             expected_source_fingerprint=str(artifact_manifest.get("source_fingerprint") or ""),
+            allow_contract_smoke=True,
+            allow_non_client_deliverable=True,
         )
         if artifact_manifest
         else {}

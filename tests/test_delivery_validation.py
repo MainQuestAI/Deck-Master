@@ -27,7 +27,12 @@ class DeliveryValidationTests(unittest.TestCase):
             pptx.writestr("[Content_Types].xml", "<Types/>")
             pptx.writestr("ppt/presentation.xml", "<p:presentation/>")
             for index in range(1, slide_count + 1):
-                pptx.writestr(f"ppt/slides/slide{index}.xml", "<p:sld/>")
+                pptx.writestr(
+                    f"ppt/slides/slide{index}.xml",
+                    "<p:sld xmlns:p=\"http://schemas.openxmlformats.org/presentationml/2006/main\" "
+                    "xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\">"
+                    f"<a:t>Slide {index}</a:t></p:sld>",
+                )
 
     def _write_html(self, path: Path) -> None:
         path.write_text("<!doctype html><html></html>", encoding="utf-8")

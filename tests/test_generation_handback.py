@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import json
+import io
 import shutil
 import sys
 import tempfile
 import unittest
 import hashlib
+import zipfile
 from pathlib import Path
 
 _scripts_dir = str(Path(__file__).resolve().parent.parent / "scripts")
@@ -26,6 +28,29 @@ from scripts.generation.handback import (
 )
 from scripts.preview.manifest import load_manifest
 from scripts.runtime.run_state import create_run, read_json, write_json
+
+PNG_2X2 = (
+    b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x02\x00\x00\x00\x02"
+    b"\x08\x04\x00\x00\x00\xb5\x1c\x0c\x02\x00\x00\x00\x0bIDATx\xdac\xfc"
+    b"\xff\x1f\x00\x03\x03\x02\x00\xef\xbf\xa7\xdb\x00\x00\x00\x00IEND\xaeB`\x82"
+)
+
+
+def _pptx_bytes() -> bytes:
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as pptx:
+        pptx.writestr(
+            "[Content_Types].xml",
+            "<Types><Override PartName=\"/ppt/presentation.xml\"/>"
+            "<Override PartName=\"/ppt/slides/slide1.xml\"/></Types>",
+        )
+        pptx.writestr("ppt/presentation.xml", "<p:presentation/>")
+        pptx.writestr(
+            "ppt/slides/slide1.xml",
+            "<p:sld xmlns:p=\"http://schemas.openxmlformats.org/presentationml/2006/main\" "
+            "xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\"><a:t>Generated</a:t></p:sld>",
+        )
+    return buffer.getvalue()
 
 
 def _setup_run(tmp: Path) -> Path:
@@ -97,13 +122,13 @@ def _write_generation_assets(
     run_dir: Path,
     *,
     beat_id: str = "beat_001",
-    artifact_body: bytes = b"ppt",
-    preview_body: bytes = b"png",
+    artifact_body: bytes | None = None,
+    preview_body: bytes | None = None,
 ) -> None:
     generated_dir = run_dir / "generated_assets" / beat_id
     generated_dir.mkdir(parents=True, exist_ok=True)
-    (generated_dir / "slide.pptx").write_bytes(artifact_body)
-    (generated_dir / "preview.png").write_bytes(preview_body)
+    (generated_dir / "slide.pptx").write_bytes(artifact_body if artifact_body is not None else _pptx_bytes())
+    (generated_dir / "preview.png").write_bytes(preview_body if preview_body is not None else PNG_2X2)
 
 
 def _sha256(path: Path) -> str:
@@ -137,8 +162,8 @@ def _descriptor(
 def _completed_result(
     run_dir: Path,
     *,
-    artifact_body: bytes = b"ppt",
-    preview_body: bytes = b"png",
+    artifact_body: bytes | None = None,
+    preview_body: bytes | None = None,
     **overrides,
 ) -> dict:
     _write_generation_assets(run_dir, artifact_body=artifact_body, preview_body=preview_body)

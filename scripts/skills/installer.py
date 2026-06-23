@@ -15,6 +15,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+try:  # Supports both `python scripts/deck_master.py` and package imports in tests.
+    from runtime.builder_backend import inspect_builder_backend_package
+except ModuleNotFoundError:  # pragma: no cover - exercised by package-import test path.
+    from scripts.runtime.builder_backend import inspect_builder_backend_package
+
 SKILL_NAME = "deck-master"
 SUITE_NAME = "deck-master"
 SUITE_VERSION = "1.0.0"
@@ -663,12 +668,16 @@ def inspect_skill_link(
 
     if not link.is_symlink():
         if _is_full_external_skill_package(link, skill_name):
+            backend = inspect_builder_backend_package(link) if skill_name == "ppt-master" else {}
             result.update({
                 "valid": True,
                 "status": "ready",
                 "resolved": str(link.resolve()),
                 "skill_md_exists": True,
                 "source_type": "external_full_package",
+                "backend_type": "external_full_package" if skill_name == "ppt-master" else "",
+                "production_capable": bool(backend.get("production_capable")) if backend else None,
+                "backend_status": backend,
             })
             return result
         result["status"] = "real_dir_conflict"
@@ -702,6 +711,11 @@ def inspect_skill_link(
         result["source_type"] = "external_adopted"
     else:
         result["source_type"] = "bundled"
+    if skill_name == "ppt-master":
+        backend = inspect_builder_backend_package(resolved)
+        result["backend_type"] = "production_backend" if backend.get("production_capable") else "adapter_only"
+        result["production_capable"] = bool(backend.get("production_capable"))
+        result["backend_status"] = backend
     return result
 
 
@@ -1439,7 +1453,10 @@ def inspect_suite_status(
             reports.append(report)
             skills.append({**report, "target": target})
             for capability in spec.get("required_capabilities", []):
-                capabilities[str(capability)] = str(report.get("status") or "missing")
+                capability_status = str(report.get("status") or "missing")
+                if str(spec["name"]) == "ppt-master" and not bool(report.get("production_capable")):
+                    capability_status = "blocked_backend_uncertified"
+                capabilities[str(capability)] = capability_status
         target_reports[target] = reports
         required_reports = [report for report in reports if report.get("required")]
         missing_statuses = {"missing", "external_adoptable", "optional_missing", "source_missing"}
@@ -1461,6 +1478,7 @@ def inspect_suite_status(
         }
 
     by_name: dict[str, str] = {}
+    production_capable_by_name: dict[str, bool] = {}
     for item in skills:
         name = str(item["skill"])
         current = by_name.get(name)
@@ -1469,6 +1487,8 @@ def inspect_suite_status(
             by_name[name] = "ready"
         elif current is None:
             by_name[name] = status
+        if name == "ppt-master":
+            production_capable_by_name[name] = production_capable_by_name.get(name, False) or bool(item.get("production_capable"))
 
     deck_ready = all(
         any(report.get("skill") == SKILL_NAME and report.get("status") == "ready" for report in target_reports[target])
@@ -1496,14 +1516,16 @@ def inspect_suite_status(
         "deck_producer": "ready" if ready("deck-producer") else "blocked",
         "new_generation": "ready" if ready("deck-producer", "ppt-deck-pro-max") else "blocked",
         "deck_builder_adapter": "ready" if ready("deck-builder") else "blocked",
-        "ppt_master_backend": "ready" if ready("ppt-master") else "blocked",
-        "deck_builder": "ready" if ready("deck-builder", "ppt-master") else "blocked",
-        "render": "ready" if ready("deck-builder", "ppt-master") else "blocked",
+        "ppt_master_adapter": "ready" if ready("ppt-master") else "blocked",
+        "ppt_master_backend": "ready" if production_capable_by_name.get("ppt-master") else "blocked",
+        "deck_builder": "ready" if ready("deck-builder") else "blocked",
+        "render": "ready" if production_capable_by_name.get("ppt-master") else "blocked",
         "deck_quality": "ready" if ready("deck-quality") else "blocked",
         "standalone_audit": "ready" if ready("deck-quality", "ppt-quality-gate") else "blocked",
         "learning": "ready" if by_name.get("deck-learn") == "ready" else "optional",
         "workflow_autopilot": "ready" if ready("deck-autopilot") else "blocked",
         "delivery": "ready" if full_suite_ready else "blocked",
+        "client_delivery": "ready" if full_suite_ready and production_capable_by_name.get("ppt-master") else "blocked",
     }
 
     status = "ready" if full_suite_ready else "degraded_ready"

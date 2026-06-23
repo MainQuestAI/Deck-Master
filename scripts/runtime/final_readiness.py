@@ -95,6 +95,7 @@ def _run_state_not_ready_message(stage: str) -> str:
         "needs_generation_import": "Agent 生成结果还未导入，不能进入最终交付。",
         "needs_preview_refresh": "最新生成结果还未刷新到预览，不能进入最终交付。",
         "needs_draft_gate": "草稿质量门禁还未通过，不能进入最终交付。",
+        "needs_builder_backend": "缺少可用于生产交付的 Deck Builder 后端，不能进入最终交付。",
         "needs_build": "构建清单还未生成，不能进入最终交付。",
         "needs_render": "最终渲染产物还未生成，不能进入最终交付。",
         "needs_review": "页面审阅还未完成，不能进入最终交付。",

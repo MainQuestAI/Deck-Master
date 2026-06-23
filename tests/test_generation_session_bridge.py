@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import json
 import hashlib
+import io
 import os
 import shutil
 import sys
 import tempfile
 import unittest
+import zipfile
 from pathlib import Path
 from unittest.mock import patch
 
@@ -31,6 +33,29 @@ from runtime.events import read_events
 from runtime.import_log import read_import_log
 from runtime.run_state import create_run, read_json, write_json
 from runtime.tool_registry import resolve_tool_command
+
+PNG_2X2 = (
+    b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x02\x00\x00\x00\x02"
+    b"\x08\x04\x00\x00\x00\xb5\x1c\x0c\x02\x00\x00\x00\x0bIDATx\xdac\xfc"
+    b"\xff\x1f\x00\x03\x03\x02\x00\xef\xbf\xa7\xdb\x00\x00\x00\x00IEND\xaeB`\x82"
+)
+
+
+def _pptx_bytes() -> bytes:
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as pptx:
+        pptx.writestr(
+            "[Content_Types].xml",
+            "<Types><Override PartName=\"/ppt/presentation.xml\"/>"
+            "<Override PartName=\"/ppt/slides/slide1.xml\"/></Types>",
+        )
+        pptx.writestr("ppt/presentation.xml", "<p:presentation/>")
+        pptx.writestr(
+            "ppt/slides/slide1.xml",
+            "<p:sld xmlns:p=\"http://schemas.openxmlformats.org/presentationml/2006/main\" "
+            "xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\"><a:t>Generated</a:t></p:sld>",
+        )
+    return buffer.getvalue()
 
 
 class GenerationSessionBridgeTests(unittest.TestCase):
@@ -150,8 +175,8 @@ class GenerationSessionBridgeTests(unittest.TestCase):
         preview_dir.mkdir(parents=True, exist_ok=True)
         artifact_path = preview_dir / "slide.pptx"
         preview_path = preview_dir / "preview.png"
-        artifact_path.write_bytes(b"ppt")
-        preview_path.write_bytes(b"png")
+        artifact_path.write_bytes(_pptx_bytes())
+        preview_path.write_bytes(PNG_2X2)
 
         result = {
             "schema_version": RESULT_SCHEMA_VERSION,
@@ -216,8 +241,8 @@ class GenerationSessionBridgeTests(unittest.TestCase):
         task_id = self.tasks[0]["task_id"]
         preview_dir = self.run_dir / "generated_assets" / "beat-001"
         preview_dir.mkdir(parents=True, exist_ok=True)
-        (preview_dir / "slide.pptx").write_bytes(b"ppt")
-        (preview_dir / "preview.png").write_bytes(b"png")
+        (preview_dir / "slide.pptx").write_bytes(_pptx_bytes())
+        (preview_dir / "preview.png").write_bytes(PNG_2X2)
         result = {
             "schema_version": DECK_PRO_MAX_RESULT_SCHEMA_VERSION,
             "run_id": run_id,

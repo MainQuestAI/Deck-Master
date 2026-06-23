@@ -24,6 +24,17 @@ class SkillRouteTest(unittest.TestCase):
         self.assertEqual("ppt-master", route["backend_dependency"])
         self.assertIn("ppt-master", route["compat_skills"])
 
+    def test_missing_builder_backend_routes_to_deck_builder(self) -> None:
+        route = route_for_stage("needs_builder_backend", next_command="deck-master suite-status")
+
+        self.assertEqual("deck-builder", route["recommended_skill"])
+        self.assertEqual("build", route["skill_stage"])
+
+    def test_upgrade_inputs_route_to_deck_upgrade(self) -> None:
+        for input_type in ("upgrade", "rollback", "release-tree"):
+            with self.subTest(input_type=input_type):
+                self.assertEqual("deck-upgrade", route_for_input_type(input_type)["recommended_skill"])
+
 
 if __name__ == "__main__":
     unittest.main()

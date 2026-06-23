@@ -181,6 +181,8 @@ class SkillInstallationTest(unittest.TestCase):
         self.assertEqual("ready", result["status"])
         self.assertEqual("external_full_package", result["source_type"])
         self.assertEqual(str(full_package.resolve()), result["resolved"])
+        self.assertFalse(result["production_capable"])
+        self.assertEqual("external_full_package", result["backend_type"])
 
     def test_validate_not_installed(self) -> None:
         result = validate_skill("codex", str(self.agent_dir), source_skill_dir=str(self.source_dir))
@@ -290,8 +292,11 @@ class SkillInstallationTest(unittest.TestCase):
         self.assertTrue(result["target_readiness"]["codex"]["required_ready"])
         self.assertEqual("ready", result["task_readiness"]["full_deck_workflow"])
         self.assertEqual("ready", result["task_readiness"]["deck_builder_adapter"])
-        self.assertEqual("ready", result["task_readiness"]["ppt_master_backend"])
+        self.assertEqual("ready", result["task_readiness"]["ppt_master_adapter"])
+        self.assertEqual("blocked", result["task_readiness"]["ppt_master_backend"])
         self.assertEqual("ready", result["task_readiness"]["deck_builder"])
+        self.assertEqual("blocked_backend_uncertified", result["capabilities"]["ppt_master.render.v1"])
+        self.assertEqual("blocked_backend_uncertified", result["capabilities"]["ppt_master.handback.v1"])
 
     def test_release_tree_contains_required_skills_capabilities_and_manifest(self) -> None:
         release_root = Path(self._tmp) / "release"
@@ -354,6 +359,17 @@ class SkillInstallationTest(unittest.TestCase):
         self.assertFalse(result["valid"])
         codes = {error["code"] for error in result["errors"]}
         self.assertIn("sha256_mismatch", codes)
+
+    def test_root_product_capability_manifest_matches_runtime_truth(self) -> None:
+        manifest = json.loads((_REPO_ROOT / "product-capability-manifest.json").read_text(encoding="utf-8"))
+
+        self.assertEqual(product_capability_manifest(), manifest)
+
+    def test_ppt_master_render_v2_contract_copy_matches_runtime_contract(self) -> None:
+        canonical = _REPO_ROOT / "docs" / "contracts" / "render-result.v2.schema.json"
+        capability_copy = _REPO_ROOT / "product_capabilities" / "ppt-master" / "contracts" / "render-result.v2.schema.json"
+
+        self.assertEqual(canonical.read_text(encoding="utf-8"), capability_copy.read_text(encoding="utf-8"))
 
     def test_suite_install_activates_verified_release_via_staging(self) -> None:
         result = suite_install(targets=["codex"], include_optional=False, agent_skill_dir=str(self.agent_dir))
@@ -434,7 +450,8 @@ class SkillInstallationTest(unittest.TestCase):
         self.assertEqual("external_full_package_preserved", ppt_master["status"])
         self.assertFalse(full_package.is_symlink())
         self.assertTrue((full_package / "references" / "marker.txt").exists())
-        self.assertEqual("ready", result["suite_status"]["task_readiness"]["render"])
+        self.assertEqual("ready", result["suite_status"]["task_readiness"]["ppt_master_adapter"])
+        self.assertEqual("blocked", result["suite_status"]["task_readiness"]["render"])
 
     def test_suite_migration_plan_preserves_full_external_ppt_master_real_dir(self) -> None:
         full_package = self._write_full_ppt_master_skill()
