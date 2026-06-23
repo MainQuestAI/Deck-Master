@@ -832,6 +832,10 @@ class StudioServerTests(unittest.TestCase):
         self.assertEqual(str(workspace.resolve()), payload["active_workspace"])
         self.assertIn("suite", payload)
         self.assertIn("task_readiness", payload)
+        self.assertIn("production_backend_ready", payload)
+        self.assertIn("client_delivery_ready", payload)
+        self.assertFalse(payload["production_backend_ready"])
+        self.assertFalse(payload["client_delivery_ready"])
 
     def test_run_state_api_returns_status(self) -> None:
         status, created = self.handler.request(

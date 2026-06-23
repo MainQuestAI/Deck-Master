@@ -647,6 +647,8 @@ class PreviewHandler(BaseHTTPRequestHandler):
             "full_suite_ready": payload.get("full_suite_ready", False),
             "capabilities": payload.get("capabilities", {}),
             "task_readiness": payload.get("task_readiness", {}),
+            "production_backend_ready": payload.get("production_backend_ready", False),
+            "client_delivery_ready": payload.get("client_delivery_ready", False),
         }
         return response
 
