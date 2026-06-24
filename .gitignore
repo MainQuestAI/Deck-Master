@@ -18,6 +18,8 @@ venv/
 # Build/cache outputs
 dist/
 build/
+!scripts/build/
+!scripts/build/**
 *.egg-info/
 node_modules/
 .gstack/
