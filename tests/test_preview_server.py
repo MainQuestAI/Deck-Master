@@ -21,7 +21,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from server import PreviewHandler, _load_narrative_data, build_handler  # noqa: E402
 from runtime.setup_status import run_setup  # noqa: E402
-from runtime.run_state import write_json  # noqa: E402
+from runtime.run_state import create_run, write_json  # noqa: E402
 
 SAMPLE_RUN = ROOT / "examples" / "preview-run"
 
@@ -169,6 +169,19 @@ class ServerTests(unittest.TestCase):
         self.assertEqual("sample-preview-run", asset["run_id"])
         self.assertEqual(HTTPStatus.OK, governance_status)
         self.assertEqual("sample-preview-run", governance["run_id"])
+
+    def test_readiness_and_metrics_aliases_match_canonical_routes(self) -> None:
+        readiness_status, readiness = self.handler.request("GET", "/api/readiness/sample-preview-run")
+        review_status, review = self.handler.request("GET", "/api/review-summary/sample-preview-run")
+        metrics_status, metrics = self.handler.request("GET", "/api/metrics/sample-preview-run")
+        run_metrics_status, run_metrics = self.handler.request("GET", "/api/run-metrics/sample-preview-run")
+
+        self.assertEqual(HTTPStatus.OK, readiness_status)
+        self.assertEqual(HTTPStatus.OK, review_status)
+        self.assertEqual(readiness, review)
+        self.assertEqual(HTTPStatus.OK, metrics_status)
+        self.assertEqual(HTTPStatus.OK, run_metrics_status)
+        self.assertEqual(metrics, run_metrics)
 
     def test_page_decision_api_writes_manifest(self) -> None:
         status, data = self.handler.request(
@@ -466,6 +479,21 @@ class ServerTests(unittest.TestCase):
         self.assertEqual("pending-run", data["run_id"])
         self.assertEqual(0, data["header_metrics"]["pages_total"])
         self.assertEqual("待准备", data["stage"]["label"])
+        self.assertIn("display_next_step_detail", data["stage"])
+        self.assertIn("display_blocker_summary", data["stage"])
+        visible_stage_text = json.dumps(
+            {
+                "display_next_step_detail": data["stage"]["display_next_step_detail"],
+                "display_blocker_summary": data["stage"]["display_blocker_summary"],
+                "display_primary_action_label": data["stage"]["display_primary_action_label"],
+            },
+            ensure_ascii=False,
+        )
+        self.assertNotIn(str(pending_run), visible_stage_text)
+        self.assertNotIn("/Users/", visible_stage_text)
+        self.assertNotIn("/private/", visible_stage_text)
+        self.assertNotIn("--run-dir", visible_stage_text)
+        self.assertNotIn("deck-master ", visible_stage_text)
 
     def test_workspace_translates_preparation_stage_and_readiness_reason(self) -> None:
         pending_run = self.runs_dir / "needs-context-run"
@@ -519,6 +547,7 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(200, status)
         self.assertEqual("待准备", data["stage"]["label"])
         self.assertIn("项目背景与输入资料", data["stage"]["blocking_reason"])
+        self.assertIn("项目背景与输入资料", data["stage"]["display_blocker_summary"])
         self.assertIn("项目背景与输入资料", data["health"]["blocking_reasons"][0])
         self.assertIn("项目背景与输入资料", data["runtime"]["final_readiness"]["reason"])
         self.assertNotIn("Run state is", json.dumps(data, ensure_ascii=False))
@@ -802,6 +831,66 @@ class StudioServerTests(unittest.TestCase):
         self.assertEqual(HTTPStatus.OK, runs_status)
         self.assertEqual(str((self.runs_dir / "from_setup").resolve()), runs["runs_dir"])
         self.assertIn("ready-run-http", [run["run_id"] for run in runs["runs"]])
+
+    def test_studio_runs_dir_cli_explicit_overrides_setup_default(self) -> None:
+        self._write_ready_setup()
+        create_run(self.runs_dir, {"project_name": "Explicit"}, run_id="explicit-run")
+        create_run(self.runs_dir / "from_setup", {"project_name": "Setup"}, run_id="setup-run")
+
+        explicit_handler = MockHandler(run_dir=None, runs_dir=self.runs_dir)
+        explicit_handler.use_setup_runs_dir = False
+        explicit_status, explicit_runs = explicit_handler.request("GET", "/api/runs")
+
+        self.assertEqual(HTTPStatus.OK, explicit_status)
+        self.assertEqual(str(self.runs_dir.resolve()), explicit_runs["runs_dir"])
+        self.assertIn("explicit-run", [run["run_id"] for run in explicit_runs["runs"]])
+        self.assertNotIn("setup-run", [run["run_id"] for run in explicit_runs["runs"]])
+
+        setup_handler = MockHandler(run_dir=None, runs_dir=self.runs_dir)
+        setup_handler.use_setup_runs_dir = True
+        setup_status, setup_runs = setup_handler.request("GET", "/api/runs")
+
+        self.assertEqual(HTTPStatus.OK, setup_status)
+        self.assertEqual(str((self.runs_dir / "from_setup").resolve()), setup_runs["runs_dir"])
+        self.assertIn("setup-run", [run["run_id"] for run in setup_runs["runs"]])
+        self.assertNotIn("explicit-run", [run["run_id"] for run in setup_runs["runs"]])
+
+    def test_planned_run_apis_return_empty_contract_without_manifest_path(self) -> None:
+        planned = create_run(self.runs_dir, {"project_name": "Planned"}, run_id="planned-run")
+        write_json(planned / "narrative_plan.json", {"run_id": "planned-run", "beats": []})
+        handler = MockHandler(run_dir=None, runs_dir=self.runs_dir)
+
+        checks = [
+            ("GET", "/api/deck?run_id=planned-run"),
+            ("GET", "/api/narrative/planned-run"),
+            ("GET", "/api/asset-signals/planned-run"),
+            ("GET", "/api/quality-governance/planned-run"),
+            ("GET", "/api/export-queue/planned-run?queue_type=client"),
+        ]
+        for method, path in checks:
+            with self.subTest(path=path):
+                status, data = handler.request(method, path)
+                body = json.dumps(data, ensure_ascii=False)
+                self.assertEqual(HTTPStatus.OK, status)
+                self.assertNotIn(str(planned), body)
+                self.assertNotIn("preview_manifest.json", body)
+
+        deck_status, deck = handler.request("GET", "/api/deck?run_id=planned-run")
+        self.assertEqual(HTTPStatus.OK, deck_status)
+        self.assertFalse(deck["preview_ready"])
+        self.assertEqual("planned-run", deck["run_id"])
+        self.assertEqual([], deck["pages"])
+
+    def test_invalid_run_error_does_not_leak_absolute_path(self) -> None:
+        handler = MockHandler(run_dir=None, runs_dir=self.runs_dir)
+
+        status, data = handler.request("GET", "/api/deck?run_id=missing-run")
+
+        self.assertIn(status, {HTTPStatus.BAD_REQUEST, HTTPStatus.NOT_FOUND})
+        error = data["error"]
+        self.assertIn("Run not found", error)
+        self.assertNotIn(str(self.runs_dir), error)
+        self.assertNotIn("/Users/", error)
 
     def test_classic_demo_sets_fixture_mode(self) -> None:
         status, created = self.handler.request(

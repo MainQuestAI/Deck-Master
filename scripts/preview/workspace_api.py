@@ -90,6 +90,57 @@ BLOCKING_REASON_TRANSLATIONS = {
     "preview manifest is missing": "当前还没有形成可审页面预览。",
 }
 
+VISIBLE_TEXT_FALLBACKS = {
+    "待准备": "先生成首版页面与预览。",
+    "生成中": "等待生成和预览完成。",
+    "待补依据": "先补齐当前页关键依据。",
+    "待审批": "等待审批结论。",
+    "风险冻结": "先处理阻断项，再恢复交付判断。",
+    "待审阅": "先处理当前页判断。",
+    "可交付": "确认交付预览和最终放行状态。",
+    "已交付": "查看反馈并沉淀复用经验。",
+}
+
+UNSAFE_VISIBLE_TEXT_MARKERS = (
+    "deck-master ",
+    "python3 ",
+    "--run-dir",
+    ".json",
+    "/Users/",
+    "/private/",
+)
+
+
+def _safe_visible_text(value: str, *, fallback: str) -> str:
+    text = str(value or "").strip()
+    if not text:
+        return fallback
+    if any(marker in text for marker in UNSAFE_VISIBLE_TEXT_MARKERS):
+        return fallback
+    return text
+
+
+def _with_display_fields(stage: dict[str, Any]) -> dict[str, Any]:
+    label = str(stage.get("label") or "待准备")
+    fallback = VISIBLE_TEXT_FALLBACKS.get(label, "继续推进当前阶段。")
+    next_step = _safe_visible_text(str(stage.get("next_step") or ""), fallback=fallback)
+    blocking = _safe_visible_text(
+        str(stage.get("blocking_reason") or ""),
+        fallback="当前仍有前置项需要处理。",
+    )
+    return {
+        **stage,
+        "display_stage_label": label,
+        "display_stage_definition": _safe_visible_text(
+            str(stage.get("definition") or ""),
+            fallback=STATUS_LIBRARY.get(label, STATUS_LIBRARY["待准备"])["definition"],
+        ),
+        "display_next_step_title": "下一步",
+        "display_next_step_detail": next_step,
+        "display_blocker_summary": blocking,
+        "display_primary_action_label": next_step,
+    }
+
 
 def _translate_blocking_reason(reason: str) -> str:
     text = str(reason or "").strip()
@@ -709,7 +760,7 @@ def _workspace_stage(
         next_step = "优先处理阻断页，再推进批准。"
 
     definition = STATUS_LIBRARY[stage_label]
-    return {
+    return _with_display_fields({
         "code": stage_label,
         "label": stage_label,
         "definition": definition["definition"],
@@ -718,7 +769,7 @@ def _workspace_stage(
         "owner": definition["owner"],
         "expected_result": definition["result"],
         "tone": definition["tone"],
-    }
+    })
 
 
 def _workspace_stage_without_manifest(run_dir: Path, *, run_state_summary: dict[str, Any]) -> dict[str, Any]:
@@ -751,7 +802,7 @@ def _workspace_stage_without_manifest(run_dir: Path, *, run_state_summary: dict[
         "needs_render": "先补齐最新构建和渲染结果。",
     }
     next_step = next_step_mapping.get(runtime_stage, "继续补齐前置内容。")
-    return {
+    return _with_display_fields({
         "code": stage_label,
         "label": stage_label,
         "definition": definition["definition"],
@@ -760,7 +811,7 @@ def _workspace_stage_without_manifest(run_dir: Path, *, run_state_summary: dict[
         "owner": definition["owner"],
         "expected_result": definition["result"],
         "tone": definition["tone"],
-    }
+    })
 
 
 def _focus_page_id(pages: list[dict[str, Any]]) -> str:

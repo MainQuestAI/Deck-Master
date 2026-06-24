@@ -329,6 +329,12 @@ class SkillInstallationTest(unittest.TestCase):
         self.assertTrue(release_manifest["self_contained"])
         self.assertEqual("bin/deck-master", release_manifest["entrypoint"])
 
+        companion = json.loads((release_root / "companion-manifest.json").read_text(encoding="utf-8"))
+        revision = (release_root / "REVISION").read_text(encoding="utf-8").strip()
+        self.assertTrue(revision)
+        self.assertEqual(revision, companion["git_commit"])
+        self.assertEqual(f"main-{revision}", companion["release_id"])
+
         capability_lock = json.loads((release_root / "deck_capability_lock.json").read_text(encoding="utf-8"))
         self.assertEqual("deck_capability_lock.v1", capability_lock["schema_version"])
         self.assertTrue(capability_lock["contracts"])

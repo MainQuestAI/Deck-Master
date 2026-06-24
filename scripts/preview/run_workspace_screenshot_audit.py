@@ -30,11 +30,11 @@ CHROME_CANDIDATES = [
 ]
 
 PLAYWRIGHT_WAIT_SELECTORS = {
-    "empty": "text=请选择或创建一个方案项目",
+    "empty": "text=当前还没有方案项目",
     "run-init-wait-preview": "text=待准备",
     "generation-running": "text=生成中",
     "needs-review": "text=待审阅",
-    "needs-evidence": "text=待补证据",
+    "needs-evidence": "text=待补依据",
     "pending-approval": "text=待审批",
     "export-ready": "text=可交付",
     "delivered-review": "text=已交付",
@@ -147,7 +147,7 @@ def _capture_with_playwright(
         "--color-scheme",
         "dark",
         "--timeout",
-        "30000",
+        "60000",
         "--wait-for-timeout",
         "1200",
         "--wait-for-selector",

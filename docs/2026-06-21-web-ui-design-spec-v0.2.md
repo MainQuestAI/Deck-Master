@@ -3,7 +3,9 @@
 日期：2026-06-21  
 状态：实现对齐稿  
 适用范围：Deck Master localhost Web UI  
-前台产品名：方案项目工作台
+前台产品名：审稿桌
+
+> 2026-06-23 v0.3 覆盖说明：涉及顶部状态带、待准备态安全文案、右侧决策流顺序和前台命名时，以 [Review Desk 修复迭代 Spec v0.3](/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/specs/web-ui/review-desk-remediation-spec-v0.3.md) 为准。`方案项目` 只表示当前处理对象，前台主界面统一收口为 `审稿桌`。
 
 ## 1. 结论
 
