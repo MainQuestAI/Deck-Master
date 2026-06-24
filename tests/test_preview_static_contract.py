@@ -40,6 +40,15 @@ class PreviewStaticContractTests(unittest.TestCase):
         self.assertIn('id="lang-toggle"', html)
         self.assertIn('disabled title="语言切换将在后续迭代开放"', html)
 
+    def test_preview_shell_has_no_external_font_requests(self) -> None:
+        """Regression: the local review desk must not depend on third-party fonts."""
+
+        html = INDEX_HTML.read_text(encoding="utf-8")
+        blocked_hosts = ("fonts.googleapis.com", "fonts.gstatic.com", "api.fontshare.com")
+        for host in blocked_hosts:
+            with self.subTest(host=host):
+                self.assertNotIn(host, html)
+
     def test_stage_workspace_surfaces_selected_page_context(self) -> None:
         """Regression: ISSUE-002 — page selection looked like a dead click in stage mode.
 
