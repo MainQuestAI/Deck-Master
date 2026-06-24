@@ -1,6 +1,6 @@
 {
   "schema_version": "deck_skill_handoff.v1",
-  "handoff_id": "handoff_brief_to_planner_4f183b80ecc0",
+  "handoff_id": "handoff_brief_to_planner_e3956becac7f",
   "run_id": "r",
   "from_stage": "deck-brief",
   "to_stage": "deck-planner",
@@ -61,5 +61,5 @@
     "non_bypassable": false
   },
   "created_by": "deck-brief",
-  "created_at": "2026-06-24T12:00:00+00:00"
+  "created_at": "2026-06-24T10:00:00+00:00"
 }
