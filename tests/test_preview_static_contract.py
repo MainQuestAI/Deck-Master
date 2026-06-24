@@ -19,7 +19,7 @@ class PreviewStaticContractTests(unittest.TestCase):
         self.assertIn("function deriveShellState()", script)
         self.assertIn("Setup 未就绪", script)
         self.assertIn("待选择项目", script)
-        self.assertIn("工作台还未准备完成", script)
+        self.assertIn("审稿桌还未准备完成", script)
         self.assertIn("先选择一个方案项目", script)
 
     def test_left_rail_is_labeled_as_task_directory(self) -> None:
@@ -51,6 +51,33 @@ class PreviewStaticContractTests(unittest.TestCase):
         self.assertIn("当前选中页面（待就绪）", script)
         self.assertIn("当前选中页面", script)
         self.assertIn("等待生成完成", script)
+
+    def test_review_desk_identity_and_safe_display_contract(self) -> None:
+        """Regression: v0.3 shell must not surface machine commands as user copy."""
+
+        html = INDEX_HTML.read_text(encoding="utf-8")
+        script = APP_JS.read_text(encoding="utf-8")
+        self.assertIn("Deck Master 审稿桌", html)
+        self.assertIn(">审稿桌<", html)
+        self.assertIn("function safeDisplayText(", script)
+        self.assertIn("unsafeVisibleTextPattern", script)
+        self.assertIn("诊断命令已收起", script)
+        self.assertNotIn("setup.next_command ||", script)
+        self.assertNotIn("runState.next_command ||", script)
+
+    def test_decision_rail_order_keeps_actions_after_risk(self) -> None:
+        """Regression: v0.3 decision rail follows location/evidence/risk/action order."""
+
+        html = INDEX_HTML.read_text(encoding="utf-8")
+        role_pos = html.index('id="page-role-content"')
+        source_pos = html.index('id="page-source-content"')
+        risk_pos = html.index('id="page-risk-content"')
+        approval_pos = html.index('id="approval-content"')
+        actions_pos = html.index("decision-block-actions")
+        self.assertLess(role_pos, source_pos)
+        self.assertLess(source_pos, risk_pos)
+        self.assertLess(risk_pos, approval_pos)
+        self.assertLess(approval_pos, actions_pos)
 
 
 if __name__ == "__main__":

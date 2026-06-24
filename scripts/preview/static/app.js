@@ -187,6 +187,29 @@ function formatActionType(actionType) {
   return mapping[String(actionType || "").trim()] || "下一步";
 }
 
+const unsafeVisibleTextPattern = /(deck-master\s|python3\s|--run-dir|\.json\b|\/Users\/|\/private\/)/;
+
+function safeDisplayText(value, fallback = "继续推进当前阶段。") {
+  const text = String(value || "").trim();
+  if (!text || unsafeVisibleTextPattern.test(text)) {
+    return fallback;
+  }
+  return text;
+}
+
+function stageDisplay(stage, key, fallback) {
+  const displayKey = `display_${key}`;
+  return safeDisplayText(stage?.[displayKey] || stage?.[key] || "", fallback);
+}
+
+function stageNextDetail(stage, fallback = "继续推进当前阶段。") {
+  return safeDisplayText(stage?.display_next_step_detail || stage?.next_step || "", fallback);
+}
+
+function stageBlockerSummary(stage, fallback = "当前仍有前置项需要处理。") {
+  return safeDisplayText(stage?.display_blocker_summary || stage?.blocking_reason || "", fallback);
+}
+
 function describeMutationAction(action) {
   const mapping = {
     approve: "批准页面",
@@ -299,21 +322,24 @@ function deriveShellState() {
   const stageLabel = currentStageLabel();
   const selectedProject = state.projects.find((project) => project.run_id === state.currentProjectId) || null;
   const projectName = workspace.project_title || selectedProject?.title || state.currentProjectId || "方案项目";
+  const stageDefinition = stageDisplay(stage, "stage_definition", stage.definition || "当前阶段待确认。");
+  const stageNext = stageNextDetail(stage, "继续推进当前阶段。");
+  const stageBlocker = stageBlockerSummary(stage, "当前仍有前置项需要处理。");
   const setupBlocks = uniqueList([...(setup.missing_items || []), ...(setup.repair_items || [])]);
   const workspaceBlocks = uniqueList([
     ...(workspace.health?.blocking_reasons || []),
     ...(runState.next_step?.blocking_issues || []),
-  ]);
+  ]).map((item) => safeDisplayText(item, "当前仍有前置项需要处理。"));
 
   if (state.loading && !workspace.project_id) {
     return {
       id: "loading",
       tone: "muted",
       stageLabel: "载入中",
-      headline: "正在读取当前工作台",
-      subtitle: "系统正在同步当前 run、页面队列和动作状态。",
+      headline: "正在读取审稿桌",
+      subtitle: "系统正在同步当前方案项目、页面队列和动作状态。",
       stageTitle: state.currentProjectId ? "当前项目" : "系统状态",
-      stageDetail: state.currentProjectId ? projectName : "准备进入工作台",
+      stageDetail: state.currentProjectId ? projectName : "准备进入审稿桌",
       nextTitle: "下一步",
       nextDetail: "载入完成后会自动切到当前状态对应的主舞台。",
       blockTitle: "请稍候",
@@ -347,14 +373,14 @@ function deriveShellState() {
       id: "setup",
       tone: "warning",
       stageLabel: "Setup 未就绪",
-      headline: "工作台还未准备完成",
+      headline: "审稿桌还未准备完成",
       subtitle: setup.active_workspace
-        ? `当前工作目录已识别：${setup.active_workspace}`
+        ? "当前工作目录已识别，仍需补齐前置项。"
         : "系统还没有识别到可用工作目录。",
       stageTitle: "系统缺口",
       stageDetail: setupBlocks[0] || "仍有前置项待补齐。",
       nextTitle: "下一步",
-      nextDetail: setup.next_command || "先补齐安装、工作目录或 run 绑定，再进入工作台。",
+      nextDetail: safeDisplayText(setup.display_next_step_detail || setup.next_command, "先补齐安装、工作目录或项目绑定。"),
       blockTitle: missingCount ? `${missingCount} 项待补齐` : "仍有前置项待处理",
       blockDetail: setupBlocks[0] || "请先完成 setup。",
       blockTone: "danger",
@@ -370,14 +396,14 @@ function deriveShellState() {
       stageLabel: "待选择项目",
       headline: state.projects.length ? "先选择一个方案项目" : "当前还没有方案项目",
       subtitle: state.projects.length
-        ? "项目切换放在右上角。选中后，左栏、中间舞台和右栏会同步进入当前 run。"
-        : "点击右上角新建项目，完成后会自动回到工作台。",
+        ? "项目切换放在顶部。选中后，左栏、中间舞台和右栏会同步进入当前方案项目。"
+        : "点击顶部新建项目，完成后会自动回到审稿桌。",
       stageTitle: "项目状态",
       stageDetail: state.projects.length ? `${state.projects.length} 个可用项目` : "0 个可用项目",
       nextTitle: "下一步",
-      nextDetail: state.projects.length ? "选择一个项目，马上进入当前阶段判断。" : "新建项目后进入工作台。",
+      nextDetail: state.projects.length ? "选择一个项目，马上进入当前阶段判断。" : "新建项目后进入审稿桌。",
       blockTitle: "当前入口",
-      blockDetail: state.projects.length ? "工作台已就绪，等待选择项目。" : "当前还没有可进入的项目。",
+      blockDetail: state.projects.length ? "审稿桌已就绪，等待选择项目。" : "当前还没有可进入的项目。",
       blockTone: "",
       blockers: [],
     };
@@ -388,16 +414,16 @@ function deriveShellState() {
       id: "error",
       tone: "danger",
       stageLabel: "状态不一致",
-      headline: "run 状态和工作台绑定不一致",
-      subtitle: "当前页面读取到的 run 信息和工作台数据不在同一个项目上。",
+      headline: "项目状态和审稿桌绑定不一致",
+      subtitle: "当前页面读取到的状态信息和审稿桌数据不在同一个项目上。",
       stageTitle: "当前项目",
       stageDetail: `${runState.run_id} / ${workspace.project_id}`,
       nextTitle: "建议动作",
       nextDetail: "重新选择项目，再刷新当前工作台。",
       blockTitle: "当前阻断",
-      blockDetail: "run-state 与 workspace payload 不一致。",
+      blockDetail: "当前项目状态与审稿桌数据不一致。",
       blockTone: "danger",
-      blockers: ["run-state 与 workspace payload 不一致。"],
+      blockers: ["当前项目状态与审稿桌数据不一致。"],
     };
   }
 
@@ -407,15 +433,15 @@ function deriveShellState() {
       tone: "danger",
       stageLabel: "项目未载入",
       headline: "当前项目还没有稳定载入",
-      subtitle: "工作台没有拿到完整的 run 数据。",
+      subtitle: "审稿桌没有拿到完整的项目数据。",
       stageTitle: "当前项目",
       stageDetail: projectName,
       nextTitle: "建议动作",
       nextDetail: "重新选择项目，或刷新页面后重试。",
       blockTitle: "当前阻断",
-      blockDetail: "缺少 workspace payload。",
+      blockDetail: "缺少审稿桌数据。",
       blockTone: "danger",
-      blockers: ["缺少 workspace payload。"],
+      blockers: ["缺少审稿桌数据。"],
     };
   }
 
@@ -425,11 +451,11 @@ function deriveShellState() {
       tone: stage.tone || "warning",
       stageLabel: stage.label || "生成中",
       headline: workspace.project_title || "当前方案项目",
-      subtitle: stage.blocking_reason || "当前仍在补齐页面生成或预览构建。",
+      subtitle: stageBlocker,
       stageTitle: "当前判断",
-      stageDetail: stage.definition || "页面生成或预览构建还在推进。",
+      stageDetail: stageDefinition || "页面生成或预览构建还在推进。",
       nextTitle: "下一步",
-      nextDetail: runState.next_command || stage.next_step || "等待生成完成，或补齐缺失预览。",
+      nextDetail: stageNext || "等待生成完成，或补齐缺失预览。",
       blockTitle: workspaceBlocks.length ? `${workspaceBlocks.length} 项当前阻塞` : "当前无显式阻塞",
       blockDetail: workspaceBlocks[0] || "当前没有显式阻塞项。",
       blockTone: workspaceBlocks.length ? "danger" : "",
@@ -446,9 +472,9 @@ function deriveShellState() {
       headline: workspace.project_title || "当前方案项目",
       subtitle: "当前已进入页级处理主路径。选中页面后，中间舞台和右栏动作会同步刷新。",
       stageTitle: "当前判断",
-      stageDetail: stage.definition || "当前已进入可逐页处理阶段。",
+      stageDetail: stageDefinition || "当前已进入可逐页处理阶段。",
       nextTitle: "下一步",
-      nextDetail: stage.next_step || "先选中一个页面，完成当前页判断。",
+      nextDetail: stageNext || "先选中一个页面，完成当前页判断。",
       blockTitle: workspaceBlocks.length ? `${workspaceBlocks.length} 项需关注` : "当前无主阻断",
       blockDetail: workspaceBlocks[0] || "当前可以直接进入页面处理。",
       blockTone: workspaceBlocks.length ? "danger" : "",
@@ -468,7 +494,7 @@ function deriveShellState() {
     nextDetail:
       currentWorkspace().run_summary?.delivery?.delivered
         ? `交付时间：${formatTime(currentWorkspace().run_summary?.delivery?.delivered_at)}`
-        : stage.next_step || "先确认交付预览，再记录最终交付。",
+        : stageNextDetail(stage, "先确认交付预览，再记录最终交付。"),
     blockTitle: workspaceBlocks.length ? `${workspaceBlocks.length} 项交付阻断` : "交付链路已清晰",
     blockDetail: workspaceBlocks[0] || "当前可以进入交付预览和交付确认。",
     blockTone: workspaceBlocks.length ? "danger" : "",
@@ -978,7 +1004,7 @@ function renderShellWorkspace() {
     </div>
   `).join("");
 
-  els.previewPanelLabel.textContent = shellState.id === "setup" ? "系统入口" : "工作台入口";
+  els.previewPanelLabel.textContent = shellState.id === "setup" ? "系统入口" : "审稿桌入口";
   els.focusPageTitle.textContent = shellState.headline;
   els.focusPageMeta.textContent = shellState.subtitle;
   els.currentLabel.textContent = shellState.stageLabel;
@@ -992,20 +1018,20 @@ function renderShellWorkspace() {
           <span class="status-pill ${escapeHtml(shellState.tone || "muted")}">${escapeHtml(shellState.stageLabel)}</span>
         </div>
         <strong>${escapeHtml(shellState.blockTitle || shellState.headline)}</strong>
-        <p>${escapeHtml(shellState.nextDetail || shellState.subtitle)}</p>
+        <p>${escapeHtml(safeDisplayText(shellState.nextDetail || shellState.subtitle, "继续推进当前阶段。"))}</p>
         <div class="stage-card-tags">
           <span class="page-chip">${escapeHtml(shellState.stageTitle || "当前判断")}</span>
           <span class="page-chip">${escapeHtml(shellState.stageDetail || "待确认")}</span>
         </div>
       </div>
       <div class="stage-workspace-top">
-        ${cards || `<div class="stage-card"><span class="panel-title">当前状态</span><strong>${escapeHtml(shellState.blockDetail || "当前入口已就绪")}</strong><p>${escapeHtml(shellState.subtitle)}</p></div>`}
+        ${cards || `<div class="stage-card"><span class="panel-title">当前状态</span><strong>${escapeHtml(safeDisplayText(shellState.blockDetail, "当前入口已就绪"))}</strong><p>${escapeHtml(safeDisplayText(shellState.subtitle, "继续推进当前阶段。"))}</p></div>`}
       </div>
       <section class="stage-checklist">
         <span class="panel-title">现在该做什么</span>
         <h3>${escapeHtml(shellState.nextTitle || "下一步")}</h3>
         <div class="stage-check-grid">
-          ${warnings || `<div class="stage-check-item"><strong>${escapeHtml(shellState.nextTitle || "下一步")}</strong><p>${escapeHtml(shellState.nextDetail || "当前没有额外说明。")}</p></div>`}
+          ${warnings || `<div class="stage-check-item"><strong>${escapeHtml(shellState.nextTitle || "下一步")}</strong><p>${escapeHtml(safeDisplayText(shellState.nextDetail, "当前没有额外说明。"))}</p></div>`}
         </div>
       </section>
     </div>
@@ -1017,9 +1043,13 @@ function renderStageWorkspace() {
   const workspace = currentWorkspace();
   const stage = currentStage();
   const focusPage = currentPageCard() || currentPages()[0] || null;
-  const delivery = workspace.run_summary?.delivery_preview || {};
   const actions = workspace.run_summary?.next_actions || [];
-  const blockers = workspace.health?.blocking_reasons || [];
+  const blockers = (workspace.health?.blocking_reasons || []).map((item) => (
+    safeDisplayText(item, "当前仍有前置项需要处理。")
+  ));
+  const stageBlocker = stageBlockerSummary(stage, "当前仍有前置项需要处理。");
+  const nextStep = stageNextDetail(stage, "等待生成和预览完成。");
+  const expectedResult = safeDisplayText(stage.expected_result, "形成可处理页面与交付判断。");
 
   if (focusPage) {
     const orderLabel = `第 ${String(focusPage.order).padStart(2, "0")} 页`;
@@ -1030,63 +1060,49 @@ function renderStageWorkspace() {
     els.currentLabel.textContent = `${orderLabel} · 阶段工作区`;
   } else {
     els.previewPanelLabel.textContent = "阶段工作区";
-    els.focusPageTitle.textContent = `${stage.label || "待准备"} · ${stage.definition || "当前仍在准备阶段"}`;
-    els.focusPageMeta.textContent = stage.blocking_reason || "系统正在整理进入可处理状态所需的前置内容。";
+    els.focusPageTitle.textContent = `${stage.label || "待准备"} · ${stageDisplay(stage, "stage_definition", "当前仍在准备阶段")}`;
+    els.focusPageMeta.textContent = stageBlocker;
     els.currentLabel.textContent = "阶段工作区";
   }
   setPreviewNavVisible(false);
 
-  const blockerCards = (blockers.length ? blockers : [stage.blocking_reason || "当前还没有明确阻塞项。"]).slice(0, 3).map((item) => `
-    <div class="stage-card ${escapeHtml(stage.tone || "muted")}">
-      <span class="panel-title">当前阻塞</span>
-      <strong>${escapeHtml(item)}</strong>
-      <p>${escapeHtml(stage.next_step || "继续推进当前阶段。")}</p>
+  const blockerItems = (blockers.length ? blockers : [stageBlocker]).slice(0, 3).map((item) => `
+    <div class="stage-check-item">
+      <strong>当前卡点</strong>
+      <p>${escapeHtml(item)}</p>
     </div>
   `).join("");
   const actionCards = actions.slice(0, 3).map((item) => `
     <div class="stage-check-item">
       <strong>${escapeHtml(formatActionType(item.action_type))}</strong>
-      <p>${escapeHtml(item.message || "继续推进当前阶段。")}</p>
+      <p>${escapeHtml(safeDisplayText(item.message, nextStep))}</p>
     </div>
   `).join("");
-  const focusPageCard = focusPage ? `
-    <div class="stage-card stage-card-focus">
-      <div class="stage-card-topline">
-        <span class="panel-title">当前选中页面</span>
-        <span class="status-pill ${escapeHtml(focusPage.status_tone || "muted")}">${escapeHtml(focusPage.status_label || "待处理")}</span>
-      </div>
-      <strong>${escapeHtml(`第 ${String(focusPage.order).padStart(2, "0")} 页 · ${focusPage.title}`)}</strong>
-      <p>${escapeHtml(`这页承担“${focusPage.narrative_role || "未标注页面职责"}”的说明任务。当前仍处于${stage.label || "待准备"}阶段，先补齐预览与生成结果，再开放页面级操作。`)}</p>
-      <div class="stage-card-tags">
-        <span class="page-chip">${escapeHtml(focusPage.source_decision_label || focusPage.source_label || "来源待确认")}</span>
-        <span class="page-chip">风险 ${escapeHtml(String(focusPage.risk_count || 0))}</span>
-        <span class="page-chip">${escapeHtml(focusPage.approval_state === "pending" ? "待审批" : "无审批")}</span>
-      </div>
-    </div>
-  ` : "";
+  const focusPageSummary = focusPage
+    ? `当前选中第 ${String(focusPage.order).padStart(2, "0")} 页《${focusPage.title}》，这页承担“${focusPage.narrative_role || "未标注页面职责"}”。`
+    : "当前还没有可审页面。";
 
   els.previewStage.innerHTML = `
-    <div class="stage-workspace">
-      <div class="stage-workspace-top">
-        ${focusPageCard}
-        ${blockerCards}
-        <div class="stage-card ${escapeHtml(delivery.artifact_ready ? "success" : "warning")}">
-          <span class="panel-title">交付预览</span>
-          <strong>${escapeHtml(delivery.summary || "当前还没有交付级预览。")}</strong>
-          <p>${escapeHtml(delivery.detail || "进入可交付阶段后可查看最终交付预览。")}</p>
+    <div class="stage-workspace stage-workspace-focused">
+      <div class="stage-card stage-card-focus ${escapeHtml(stage.tone || "muted")}">
+        <div class="stage-card-topline">
+          <span class="panel-title">${escapeHtml(stage.label || "待准备")}</span>
+          <span class="status-pill ${escapeHtml(stage.tone || "muted")}">${escapeHtml(stage.label || "待准备")}</span>
         </div>
-        <div class="stage-card">
-          <span class="panel-title">责任对象</span>
-          <strong>${escapeHtml(stage.owner || "未指定")}</strong>
-          <p>${escapeHtml(`目标结果：${stage.expected_result || "形成可处理页面与交付判断"}`)}</p>
+        <strong>${escapeHtml(stageBlocker)}</strong>
+        <p>${escapeHtml(nextStep)}</p>
+        <div class="stage-card-tags">
+          <span class="page-chip">责任：${escapeHtml(stage.owner || "未指定")}</span>
+          <span class="page-chip">结果：${escapeHtml(expectedResult)}</span>
         </div>
       </div>
       <div class="stage-workspace-body">
         <section class="stage-checklist">
-          <span class="panel-title">当前要推进的事情</span>
-          <h3>${escapeHtml(stage.next_step || "继续推进当前阶段")}</h3>
-          <div class="stage-check-grid">
-            ${actionCards || '<div class="stage-check-item"><strong>等待下一步</strong><p>当前没有额外动作建议。</p></div>'}
+          <span class="panel-title">阶段工作区</span>
+          <h3>${escapeHtml(focusPageSummary)}</h3>
+          <div class="stage-check-grid stage-check-grid-compact">
+            ${blockerItems}
+            ${actionCards || `<div class="stage-check-item"><strong>建议动作</strong><p>${escapeHtml(nextStep)}</p></div>`}
           </div>
         </section>
       </div>
@@ -1098,7 +1114,7 @@ function renderPagePreview() {
   if (!els.previewStage) return;
   const page = currentPageCard();
   if (!currentWorkspace().project_id) {
-    els.previewPanelLabel.textContent = "方案项目工作台";
+    els.previewPanelLabel.textContent = "审稿桌";
     els.focusPageTitle.textContent = "尚未加载方案项目";
     els.focusPageMeta.textContent = "顶部切换方案项目，或新建项目进入处理。";
     els.currentLabel.textContent = "-";
@@ -1122,7 +1138,7 @@ function renderPagePreview() {
     els.previewStage.innerHTML = `
       <div class="empty-state">
         <h3>当前没有页面</h3>
-        <p>先补齐页面生成、预览构建或前置资料，再回到工作台处理。</p>
+        <p>先补齐页面生成、预览构建或前置资料，再回到审稿桌处理。</p>
       </div>
     `;
     return;
@@ -1252,7 +1268,7 @@ function renderReadiness() {
       <div class="stack-card warning">
         <strong>系统仍未就绪</strong>
         <p>${escapeHtml(shellState.blockDetail)}</p>
-        <small>${escapeHtml(setup.next_command || "完成 setup 后可进入 run 工作台。")}</small>
+        <small>${escapeHtml(safeDisplayText(setup.next_command, "诊断命令已收起，可由执行器继续处理。"))}</small>
       </div>
       ${blocks.map((item) => `<div class="stack-card warning"><strong>待补齐</strong><p>${escapeHtml(item)}</p></div>`).join("")}
       ${(setup.warnings || []).map((item) => `<div class="stack-card"><strong>提示</strong><p>${escapeHtml(item)}</p></div>`).join("")}
@@ -1299,7 +1315,7 @@ function renderClaimCoverage() {
   if (!workspace.project_id) {
     els.claimSummaryChip.textContent = shellState.stageLabel || "-";
     els.claimSummaryChip.className = `pill ${shellState.tone || "muted"}`;
-    els.claimCoverage.innerHTML = `<div class="empty-inline">${escapeHtml(shellState.id === "setup" ? "完成 setup 后，这里会显示 run 级论点覆盖。" : "选择项目后，这里会显示 run 级论点覆盖。")}</div>`;
+    els.claimCoverage.innerHTML = `<div class="empty-inline">${escapeHtml(shellState.id === "setup" ? "完成 setup 后，这里会显示项目级论点覆盖。" : "选择项目后，这里会显示项目级论点覆盖。")}</div>`;
     return;
   }
 
@@ -1321,7 +1337,7 @@ function renderActivity() {
   const shellState = state.shellState || deriveShellState();
   if (!currentWorkspace().project_id) {
     els.activityCount.textContent = "0";
-    els.activityList.innerHTML = `<div class="empty-inline">${escapeHtml(shellState.id === "setup" ? "完成 setup 后，这里会记录处理过程。" : "进入项目后，这里会记录当前 run 的处理过程。")}</div>`;
+    els.activityList.innerHTML = `<div class="empty-inline">${escapeHtml(shellState.id === "setup" ? "完成 setup 后，这里会记录处理过程。" : "进入项目后，这里会记录当前方案项目的处理过程。")}</div>`;
     return;
   }
   const items = state.activity?.items || [];
@@ -1369,8 +1385,8 @@ function renderShellDecisionRail() {
   els.pageEvidenceContent.innerHTML = `
     <div class="stack-card">
       <strong>${escapeHtml(shellState.nextTitle || "下一步")}</strong>
-      <p>${escapeHtml(shellState.nextDetail || "当前没有额外说明。")}</p>
-      <small>${escapeHtml(currentSetupStatus().next_command || "")}</small>
+      <p>${escapeHtml(safeDisplayText(shellState.nextDetail, "当前没有额外说明。"))}</p>
+      <small>${escapeHtml(safeDisplayText(currentSetupStatus().next_command, "诊断命令已收起，可由执行器继续处理。"))}</small>
     </div>
   `;
   els.pageRiskContent.innerHTML = blocks.length
@@ -1413,7 +1429,7 @@ function renderRunLevelDecisionRail() {
   els.pageEvidenceContent.innerHTML = `
     <div class="stack-card">
       <strong>下一步</strong>
-      <p>${escapeHtml(stage.next_step || "继续推进当前阶段。")}</p>
+      <p>${escapeHtml(stageNextDetail(stage, "继续推进当前阶段。"))}</p>
       <small>${escapeHtml(`目标结果：${stage.expected_result || "形成可处理页面与交付判断"}`)}</small>
     </div>
   `;
@@ -1564,9 +1580,9 @@ function renderBlockFlag() {
     els.blockFlag.dataset.tone = "danger";
     els.blockFlag.hidden = false;
   } else {
-    els.blockFlag.textContent = "-";
+    els.blockFlag.textContent = "";
     els.blockFlag.dataset.tone = "";
-    els.blockFlag.hidden = false;
+    els.blockFlag.hidden = true;
   }
 }
 

@@ -479,6 +479,21 @@ class ServerTests(unittest.TestCase):
         self.assertEqual("pending-run", data["run_id"])
         self.assertEqual(0, data["header_metrics"]["pages_total"])
         self.assertEqual("待准备", data["stage"]["label"])
+        self.assertIn("display_next_step_detail", data["stage"])
+        self.assertIn("display_blocker_summary", data["stage"])
+        visible_stage_text = json.dumps(
+            {
+                "display_next_step_detail": data["stage"]["display_next_step_detail"],
+                "display_blocker_summary": data["stage"]["display_blocker_summary"],
+                "display_primary_action_label": data["stage"]["display_primary_action_label"],
+            },
+            ensure_ascii=False,
+        )
+        self.assertNotIn(str(pending_run), visible_stage_text)
+        self.assertNotIn("/Users/", visible_stage_text)
+        self.assertNotIn("/private/", visible_stage_text)
+        self.assertNotIn("--run-dir", visible_stage_text)
+        self.assertNotIn("deck-master ", visible_stage_text)
 
     def test_workspace_translates_preparation_stage_and_readiness_reason(self) -> None:
         pending_run = self.runs_dir / "needs-context-run"
@@ -532,6 +547,7 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(200, status)
         self.assertEqual("待准备", data["stage"]["label"])
         self.assertIn("项目背景与输入资料", data["stage"]["blocking_reason"])
+        self.assertIn("项目背景与输入资料", data["stage"]["display_blocker_summary"])
         self.assertIn("项目背景与输入资料", data["health"]["blocking_reasons"][0])
         self.assertIn("项目背景与输入资料", data["runtime"]["final_readiness"]["reason"])
         self.assertNotIn("Run state is", json.dumps(data, ensure_ascii=False))

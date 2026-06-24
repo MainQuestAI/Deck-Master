@@ -14,8 +14,12 @@
 
 - [design-system.md](/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/specs/web-ui/design-system.md)
 - [implementation-guidelines.md](/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/specs/web-ui/implementation-guidelines.md)
+- [review-desk-remediation-spec-v0.3.md](/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/specs/web-ui/review-desk-remediation-spec-v0.3.md)
 - 关联设计底稿：[docs/2026-06-21-web-ui-design-spec-v0.2.md](/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/2026-06-21-web-ui-design-spec-v0.2.md)
 - 初版设计说明：[docs/2026-06-10-web-ui-design-spec.md](/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/2026-06-10-web-ui-design-spec.md)
+- 本轮评审：
+  - [2026-06-23-review-desk-design-qa.md](/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/qa/2026-06-23-review-desk-design-qa.md)
+  - [2026-06-23-review-desk-parallel-review.md](/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/qa/2026-06-23-review-desk-parallel-review.md)
 
 不纳入本目录的内容：
 
