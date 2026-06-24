@@ -211,3 +211,59 @@ def route_for_input_type(input_type: str, *, reason: str = "", next_command: str
         source="input_type",
         input_type=normalized,
     )
+
+
+def _registry():
+    """Lazy manifest registry accessor (cached). Avoids importing the skills
+    package at module load and degrades gracefully if unavailable."""
+    try:
+        from skills.manifest import load_registry
+
+        reg = getattr(_registry, "_cache", None)
+        if reg is None:
+            reg = load_registry()
+            _registry._cache = reg  # type: ignore[attr-defined]
+        return reg
+    except Exception:
+        return None
+
+
+def route_for_skill_name(name_or_alias: str, *, reason: str = "", next_command: str = "") -> dict[str, Any]:
+    """Manifest-driven route: resolve a public skill name or compat alias via
+    the canonical Skill Manifest (D4) and return its route payload."""
+    reg = _registry()
+    skill = name_or_alias
+    if reg is not None:
+        try:
+            skill = reg.resolve(name_or_alias).name
+        except KeyError:
+            skill = "deck-master"
+    route_reason = reason or f"resolved skill is {skill}"
+    return _route_payload(
+        skill=skill,
+        reason=route_reason,
+        next_command=next_command,
+        source="manifest_skill_name",
+    )
+
+
+def manifest_public_skills() -> list[str]:
+    """Public skill names from the canonical manifest (single truth source)."""
+    reg = _registry()
+    if reg is None:
+        return [s for s in STAGE_TO_SKILL.values()]
+    return [s.name for s in reg.public_skills()]
+
+
+def route_for_stage_manifest_aware(stage: str, *, reason: str = "", next_command: str = "") -> dict[str, Any]:
+    """Like :func:`route_for_stage` but validates the recommended skill against
+    the manifest, falling back to deck-master if the curated map drifts."""
+    payload = route_for_stage(stage, reason=reason, next_command=next_command)
+    reg = _registry()
+    if reg is not None:
+        try:
+            reg.resolve(payload["recommended_skill"])
+        except KeyError:
+            payload["recommended_skill"] = "deck-master"
+            payload["skill_reason"] = reason or "curated skill not in manifest; fell back"
+    return payload
