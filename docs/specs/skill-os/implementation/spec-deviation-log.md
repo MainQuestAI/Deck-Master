@@ -24,12 +24,22 @@
 - 兼容：不破坏现有 1.0.0 运行。
 - 验证：A0 全量测试 836 passed；C5 clean install / dogfood 阶段复核 SHA。
 
+### DEV-002 — input_type 共享不作为硬冲突
+
+- 日期：2026-06-24
+- 发现任务：A1
+- 事实：现有 `skills/manifest.json` 中 `page_tasks` 同时是 `deck-sourcing` 与 `deck-producer` 的 input_type，`generation_session` 同时是 `deck-producer` 与私有 `ppt-deck-pro-max` 的 input_type。这是基线既有、合法的设计——`skill_route` 由 runtime stage + input_type 联合消歧，不单凭 input_type。
+- 决策：A1 loader 不把「input_type 共享」作为硬冲突；仍保留 skill name 重复、compat alias 冲突、stage order 重复作为硬错误。
+- 影响：路由仍依赖 stage 消歧；A5 route 统一时复核该假设。
+- 兼容：不破坏现有 manifest 与 skill_route 行为。
+- 验证：`tests/test_skill_manifest.py` 27 passed；全量 863 passed。
+
 ## 任务进度
 
 | 任务 | 状态 | 完成证据 |
 |---|---|---|
 | A0 | ✅ done | baseline-freeze.md，836 passed |
-| A1 | ⏳ pending | — |
+| A1 | ✅ done | manifest.py loader + 9 contracts + schema；27 新测试，863 passed |
 | A2 | ⏳ pending | — |
 | A3 | ⏳ pending | — |
 | A4 | ⏳ pending | — |
