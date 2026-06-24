@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import json
-import shutil
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -44,11 +43,10 @@ def _answer_required(run: Path, stage_id: str) -> None:
             )
 
 
-def _fresh(name: str) -> Path:
-    run = BASE / name
-    if run.exists():
-        shutil.rmtree(run)
-    run.mkdir(parents=True)
+def _fresh(tmp_path: Path, name: str) -> Path:
+    """Per-test scratch dir under pytest's tmp_path (never pollutes the worktree)."""
+    run = tmp_path / name
+    run.mkdir(parents=True, exist_ok=True)
     return run
 
 
@@ -91,48 +89,44 @@ def _seed_through(run: Path, upto: str) -> None:
             break
 
 
-def test_interactive_stops_at_brief_approval():
-    run = _fresh("_ap_brief")
+def test_interactive_stops_at_brief_approval(tmp_path):
+    run = _fresh(tmp_path, "_ap_brief")
     _seed_brief(run)
     result = AutopilotV2(now=NOW).run(run, mode="interactive", max_steps=4, run_id="r")
     assert result.stop_reason == "approval_required"
     assert any(s.action == "prepare_handoff" for s in result.steps)
-    shutil.rmtree(run)
 
 
-def test_quick_mode_auto_advances_brief():
-    run = _fresh("_ap_quick")
+def test_quick_mode_auto_advances_brief(tmp_path):
+    run = _fresh(tmp_path, "_ap_quick")
     _seed_brief(run)
     result = AutopilotV2(now=NOW).run(run, mode="quick", max_steps=4, run_id="r")
     # quick clears brief approval -> advance; planner has no artifacts -> stop
     assert any(s.action == "advance" and s.stage_before == "deck-brief" for s in result.steps)
     assert result.final_stage == "deck-planner"
-    shutil.rmtree(run)
 
 
-def test_final_export_always_stops():
-    run = _fresh("_ap_export")
+def test_final_export_always_stops(tmp_path):
+    run = _fresh(tmp_path, "_ap_export")
     _seed_through(run, "deck-review")
     # quick mode auto-advances through approval gates and reaches deck-review,
     # where the final client export transition must ALWAYS stop (never auto-export).
     result = AutopilotV2(now=NOW).run(run, mode="quick", max_steps=10, run_id="r")
     assert result.stop_reason == "final_export_requires_approval"
     assert result.final_stage == "deck-review"
-    shutil.rmtree(run)
 
 
-def test_interactive_stops_at_first_approval_gate():
-    run = _fresh("_ap_export_int")
+def test_interactive_stops_at_first_approval_gate(tmp_path):
+    run = _fresh(tmp_path, "_ap_export_int")
     _seed_through(run, "deck-review")
     result = AutopilotV2(now=NOW).run(run, mode="interactive", max_steps=10, run_id="r")
     # interactive stops at the first high-impact approval (deck-brief), never reaching export
     assert result.stop_reason == "approval_required"
     assert result.final_stage == "deck-brief"
-    shutil.rmtree(run)
 
 
-def test_preauth_valid_clears_brief():
-    run = _fresh("_ap_preauth")
+def test_preauth_valid_clears_brief(tmp_path):
+    run = _fresh(tmp_path, "_ap_preauth")
     _seed_brief(run)
     t = transition_key("deck-brief", "deck-planner")
     PreauthorizationRuntime(now=NOW).create(
@@ -143,8 +137,8 @@ def test_preauth_valid_clears_brief():
     assert any(s.action == "advance" and s.preauthorization_id for s in result.steps)
 
 
-def test_preauth_expired_does_not_clear():
-    run = _fresh("_ap_preauth_exp")
+def test_preauth_expired_does_not_clear(tmp_path):
+    run = _fresh(tmp_path, "_ap_preauth_exp")
     _seed_brief(run)
     t = transition_key("deck-brief", "deck-planner")
     PreauthorizationRuntime(now=NOW).create(
@@ -155,8 +149,8 @@ def test_preauth_expired_does_not_clear():
     assert result.stop_reason == "approval_required"
 
 
-def test_preauth_out_of_scope_does_not_clear():
-    run = _fresh("_ap_preauth_oos")
+def test_preauth_out_of_scope_does_not_clear(tmp_path):
+    run = _fresh(tmp_path, "_ap_preauth_oos")
     _seed_brief(run)
     other = transition_key("deck-planner", "deck-sourcing")
     PreauthorizationRuntime(now=NOW).create(
@@ -167,23 +161,23 @@ def test_preauth_out_of_scope_does_not_clear():
     assert result.stop_reason == "approval_required"
 
 
-def test_review_only_blocks_upstream():
-    run = _fresh("_ap_ro")
+def test_review_only_blocks_upstream(tmp_path):
+    run = _fresh(tmp_path, "_ap_ro")
     _seed_brief(run)  # current = deck-brief (upstream)
     result = AutopilotV2(now=NOW).run(run, mode="review-only", max_steps=4, run_id="r")
     assert result.stop_reason == "review_only_blocked_upstream"
 
 
-def test_repair_mode_only_owner_stage():
-    run = _fresh("_ap_repair")
+def test_repair_mode_only_owner_stage(tmp_path):
+    run = _fresh(tmp_path, "_ap_repair")
     _seed_brief(run)  # current = deck-brief, repair owner = deck-sourcing
     result = AutopilotV2(now=NOW).run(
         run, mode="repair", max_steps=4, run_id="r", repair_owner_stage="deck-sourcing")
     assert result.stop_reason == "repair_owner_stage_mismatch"
 
 
-def test_evidence_recorded_per_step():
-    run = _fresh("_ap_evidence")
+def test_evidence_recorded_per_step(tmp_path):
+    run = _fresh(tmp_path, "_ap_evidence")
     _seed_brief(run)
     result = AutopilotV2(now=NOW).run(run, mode="interactive", max_steps=4, run_id="r")
     assert len(result.steps) >= 1
@@ -193,16 +187,16 @@ def test_evidence_recorded_per_step():
     assert s.handoff_id
 
 
-def test_blocking_questions_stop_when_unanswered():
-    run = _fresh("_ap_block")
+def test_blocking_questions_stop_when_unanswered(tmp_path):
+    run = _fresh(tmp_path, "_ap_block")
     # seed init artifacts but DON'T answer init forcing questions
     _seed_init(run, answer=False)
     result = AutopilotV2(now=NOW).run(run, mode="quick", max_steps=4, run_id="r")
     assert result.stop_reason == "blocking_questions"
 
 
-def test_automatic_init_to_brief_advances():
-    run = _fresh("_ap_init")
+def test_automatic_init_to_brief_advances(tmp_path):
+    run = _fresh(tmp_path, "_ap_init")
     _seed_init(run)
     result = AutopilotV2(now=NOW).run(run, mode="quick", max_steps=4, run_id="r")
     # init is already complete in the state view (artifacts + questions), so
@@ -210,4 +204,3 @@ def test_automatic_init_to_brief_advances():
     # -> it stops there, having effectively advanced past init.
     assert result.final_stage == "deck-brief"
     assert result.stop_reason in {"missing_artifacts", "blocking_questions"}
-    shutil.rmtree(run)
