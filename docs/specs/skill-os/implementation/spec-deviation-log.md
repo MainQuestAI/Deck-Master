@@ -73,5 +73,5 @@
 | C1 | ⏳ pending | — |
 | C2 | ✅ done | scripts/skills/validator.py + 18 SKILL.md 契约附录；100% public 合规；8 新测试 |
 | C3 | ✅ done | scripts/workflow/migration.py（legacy bootstrap 不伪造审批，回滚，inference report）；docs/migration/；8 新测试 |
-| C4 | ⏳ pending | — |
+| C4 | ✅ done | tests/test_skill_os_release_contract.py（9 schema 真校验 + contracts hash + smoke 流水线）；CI 增 pytest+jsonschema 步骤；docs/releases/v1.1.0 |
 | C5 | ⏳ pending | — |

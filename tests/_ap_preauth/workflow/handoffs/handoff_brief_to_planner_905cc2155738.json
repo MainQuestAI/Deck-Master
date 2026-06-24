@@ -1,10 +1,10 @@
 {
   "schema_version": "deck_skill_handoff.v1",
-  "handoff_id": "handoff_brief_to_planner_2a8c744472a6",
+  "handoff_id": "handoff_brief_to_planner_905cc2155738",
   "run_id": "r",
   "from_stage": "deck-brief",
   "to_stage": "deck-planner",
-  "status": "awaiting_approval",
+  "status": "consumed",
   "contract_version": "1.1.0",
   "idempotency_key": "r:deck-brief:492dccfa1fec07900bf106f1f326f627fdf1f1723aa683b1734a699c9aa3dce4",
   "input_artifacts": [
@@ -61,5 +61,7 @@
     "non_bypassable": false
   },
   "created_by": "deck-brief",
-  "created_at": "2026-06-24T10:00:00+00:00"
+  "created_at": "2026-06-24T10:00:00+00:00",
+  "accepted_by": "autopilot",
+  "accepted_at": "2026-06-24T10:00:00+00:00"
 }
