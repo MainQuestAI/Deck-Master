@@ -41,7 +41,7 @@
 | A0 | ✅ done | baseline-freeze.md，836 passed |
 | A1 | ✅ done | manifest.py loader + 9 contracts + schema；27 新测试，863 passed |
 | A2 | ✅ done | scripts/workflow/ (state/validator/fingerprint)；workflow_state.v1 schema；runtime_stage 桥接；21 新测试，884 passed |
-| A3 | ⏳ pending | — |
+| A3 | ✅ done | scripts/workflow/handoff.py (append-only prepare/accept/consume/reject/stale/supersede, idempotent, file lock, current 投影)；13 新测试，897 passed |
 | A4 | ⏳ pending | — |
 | A5 | ⏳ pending | — |
 | B1–B5 | ⏳ pending | — |
