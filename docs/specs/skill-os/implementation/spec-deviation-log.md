@@ -46,5 +46,15 @@
 | A5 | ✅ done | workflow CLI 组 (status/stages/handoff/approval/preauth)；manifest 驱动 route；四入口 current_skill_stage 一致；15 新测试，929 passed |
 | B1 | ✅ done | questions.py + decisions.py（gap-only，required/assumption 区分，blocking 阻断 exit，answer 绑 input_fingerprint，stale 重现）；7 新测试，936 passed |
 | B2 | ✅ done | scripts/sourcing/plan.py（per-page 6 类决策，authority/freshness/permission，coverage/approval_readiness，v1 安全迁移）；11 新测试，947 passed |
-| B3–B5 | ⏳ pending | — |
+| B3 | ✅ done | scripts/production/page_package.py（customer_visible/internal_only 严格分区，leak 检测，claim/evidence/asset 绑定，index 覆盖，generation result 引用）；12 新测试，959 passed；DEV-003 跨仓库 bridge 待独立 PR |
+| B4–B5 | ⏳ pending | — |
 | C1–C5 | ⏳ pending | — |
+
+### DEV-003 — 跨仓库 PPT Deck Pro Max bridge 需独立 PR + 固定 SHA
+
+- 日期：2026-06-24
+- 发现任务：B3
+- 事实：B3 要求「PPT Deck Pro Max bridge 对应分支」与 generation result 引用 page_package，但 PPT Deck Pro Max 是独立仓库（`MainQuestAI/PPT-Deck-Pro-Max`）。本轮只能在 Deck-Master 侧定义 bridge 契约接口（`generation_result_reference`），无法在单一 PR 内修改外部仓库并固定 SHA。
+- 处理：Deck-Master 侧 page_package + generation_result_reference 已落地；跨仓库 bridge 适配留待独立 PR，落地后回填 SHA 到 capability lock。
+- 兼容：不破坏现有 generation session 机制。
+- 验证：`tests/test_page_package.py` 12 passed；全量 959 passed。
