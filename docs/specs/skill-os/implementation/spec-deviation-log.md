@@ -45,7 +45,7 @@
 | A4 | ✅ done | scripts/workflow/approval.py + policy.py（绑定 handoff/fingerprint，accept/reject/revoke/stale，non-bypassable，final export 不可预授权）；17 新测试，914 passed |
 | A5 | ✅ done | workflow CLI 组 (status/stages/handoff/approval/preauth)；manifest 驱动 route；四入口 current_skill_stage 一致；15 新测试，929 passed |
 | B1 | ✅ done | questions.py + decisions.py（gap-only，required/assumption 区分，blocking 阻断 exit，answer 绑 input_fingerprint，stale 重现）；7 新测试，936 passed |
-| B2 | ✅ done | scripts/sourcing/plan.py（per-page 6 类决策，authority/freshness/permission，coverage/approval_readiness，v1 安全迁移）；11 新测试，947 passed |
+| B2 | ✅ done | scripts/sourcing/plan.py（per-page 6 类决策，authority/freshness/permission，coverage/approval_readiness，v1 安全迁移）；11 新测试 |
 | B3 | ✅ done | scripts/production/page_package.py（customer_visible/internal_only 严格分区，leak 检测，claim/evidence/asset 绑定，index 覆盖，generation result 引用）；12 新测试，959 passed；DEV-003 跨仓库 bridge 待独立 PR |
 | B4 | ✅ done | scripts/build/manifest.py（白名单投影，package/customer_payload hash，backend 契约版本校验，直接 preview 阻断，显式 legacy adapter）；12 新测试，971 passed |
 | B5 | ✅ done | scripts/workflow/autopilot.py（5 模式，validate/action/exit/handoff 循环，approval 停，final export 永停，repair routing，evidence）；state.py 接 handoff；11 新测试，983 passed；DEV-004 |
@@ -69,3 +69,9 @@
 - 影响：state.py（A2 路径）被修改；属 B5 必需集成，已在此登记。A2 原测试全绿（无 handoff 注入分支不变）。
 - 兼容：向后兼容；handoff_runtime=None 时行为不变。
 - 验证：`test_workflow_autopilot_v2.py` 11 passed + A2-A4+B1 全绿；全量 983 passed。
+
+| C1 | ⏳ pending | — |
+| C2 | ✅ done | scripts/skills/validator.py + 18 SKILL.md 契约附录；100% public 合规；8 新测试 |
+| C3 | ⏳ pending | — |
+| C4 | ⏳ pending | — |
+| C5 | ⏳ pending | — |

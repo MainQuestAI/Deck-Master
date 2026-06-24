@@ -1,8 +1,8 @@
 {
   "schema_version": "deck_stage_approval.v1",
-  "approval_id": "approval_d5dde41e85c8",
+  "approval_id": "approval_a69a760f88bb",
   "run_id": "r",
-  "handoff_id": "handoff_brief_to_planner_cc4673ae630f",
+  "handoff_id": "handoff_brief_to_planner_3d75eab4a01d",
   "from_stage": "deck-brief",
   "to_stage": "deck-planner",
   "decision": "approved",
@@ -23,7 +23,7 @@
       }
     ]
   },
-  "preauthorization_id": "preauth:policy_ce5e89b2865d",
+  "preauthorization_id": "preauth:policy_0f62f3f26414",
   "created_at": "2026-06-24T10:00:00+00:00",
   "expires_at": "2026-06-25T10:00:00+00:00",
   "decided_at": "2026-06-24T10:00:00+00:00"

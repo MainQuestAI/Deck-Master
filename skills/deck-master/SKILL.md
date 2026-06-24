@@ -208,3 +208,40 @@ Read only the relevant file when needed:
 - Do not write directly to `events.jsonl`.
 - Use `--run-id` or `--run-dir` to scope every operation.
 - Run `next-step` when the correct next action is unclear.
+
+
+<!-- skill-os-contract:v1 -->
+
+## Use When
+Top-level Deck Master run orchestration and review cockpit operations.
+
+## Do Not Use
+Do not use outside its lane in the Skill OS workflow. Do not treat a successful command return code as stage completion.
+
+## First Checks
+- n/a (operations/orchestrator lane)
+
+## Forcing Questions
+- n/a (no production forcing questions)
+
+## Runtime Ownership
+Skill OS operations/orchestrator; not a production stage. Reads workflow state and routes to the responsible production skill.
+
+## Allowed Commands
+```bash
+deck-master workflow --run-dir <run_dir>
+deck-master workflow status --run-dir <run_dir>
+deck-master run-state --run-dir <run_dir>
+```
+
+## Exit Artifacts
+run_state, next_step, review_workspace
+
+## Next Skill
+(see workflow runtime)
+
+## Stop Conditions
+- user-initiated stop
+
+## Safety Rules
+Keep internal-only production notes out of customer-visible content. Never bypass the final client export approval. Obey the stage contract's transition policy.

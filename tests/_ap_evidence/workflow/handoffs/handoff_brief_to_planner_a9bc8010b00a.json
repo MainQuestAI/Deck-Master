@@ -1,6 +1,6 @@
 {
   "schema_version": "deck_skill_handoff.v1",
-  "handoff_id": "handoff_brief_to_planner_ad54e5840c0b",
+  "handoff_id": "handoff_brief_to_planner_a9bc8010b00a",
   "run_id": "r",
   "from_stage": "deck-brief",
   "to_stage": "deck-planner",

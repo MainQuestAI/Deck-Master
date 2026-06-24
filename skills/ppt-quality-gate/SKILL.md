@@ -29,3 +29,8 @@ must be imported into Deck Master quality reports.
 ~/.deck-master/bin/deck-master quality-gate draft --run-dir <run_dir> --run-id <run_id>
 ~/.deck-master/bin/deck-master import-quality-findings --run-dir <run_dir> --run-id <run_id> --input <findings.json>
 ```
+
+
+<!-- skill-os-contract:v1 -->
+## Public Stage
+Maps to public stage: deck-quality. This is a compatibility wrapper; prefer the public `deck-quality` skill for new runs.

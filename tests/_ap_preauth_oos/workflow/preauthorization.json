@@ -1,6 +1,6 @@
 {
   "schema_version": "deck_workflow_policy.v1",
-  "policy_id": "policy_a2978b4714b6",
+  "policy_id": "policy_ffa0ec5e6d16",
   "run_id": "r",
   "mode": "preauthorized",
   "actor": {
