@@ -70,8 +70,8 @@
 - 兼容：向后兼容；handoff_runtime=None 时行为不变。
 - 验证：`test_workflow_autopilot_v2.py` 11 passed + A2-A4+B1 全绿；全量 983 passed。
 
-| C1 | ⏳ pending | — |
+| C1 | ✅ done | workspace_api skill_os_projection（9-stage 安全展示，blocker/awaiting 区分，stale 原因，accept/reject 写 runtime，无 raw path）；server /api/skill-os；9 新测试 |
 | C2 | ✅ done | scripts/skills/validator.py + 18 SKILL.md 契约附录；100% public 合规；8 新测试 |
 | C3 | ✅ done | scripts/workflow/migration.py（legacy bootstrap 不伪造审批，回滚，inference report）；docs/migration/；8 新测试 |
 | C4 | ✅ done | tests/test_skill_os_release_contract.py（9 schema 真校验 + contracts hash + smoke 流水线）；CI 增 pytest+jsonschema 步骤；docs/releases/v1.1.0 |
-| C5 | ⏳ pending | — |
+| C5 | ✅ done | docs/qa/skill-os/（acceptance-matrix + dogfood-summary）+ test_skill_os_acceptance.py（量化指标断言）；clean-install dogfood 待 1.1.0 release 重建（DEV-001） |

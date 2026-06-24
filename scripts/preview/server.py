@@ -44,6 +44,7 @@ from workspace_api import (
     build_workspace_payload,
     handle_workspace_page_action,
     handle_workspace_run_action,
+    skill_os_projection,
 )
 
 from delivery.outcome import record_delivery_outcome
@@ -468,6 +469,9 @@ class PreviewHandler(BaseHTTPRequestHandler):
                 return
             if len(parts) == 2 and parts[1] == "delivery-preview":
                 self.send_json(build_delivery_preview_payload(run_dir))
+                return
+            if len(parts) == 2 and parts[1] == "skill-os":
+                self.send_json(skill_os_projection(run_dir))
                 return
             if len(parts) == 3 and parts[1] == "page":
                 self.send_json(build_workspace_page_payload(run_dir, parts[2]))
