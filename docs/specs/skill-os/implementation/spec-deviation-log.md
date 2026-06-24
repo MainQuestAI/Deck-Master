@@ -48,7 +48,7 @@
 | B2 | ✅ done | scripts/sourcing/plan.py（per-page 6 类决策，authority/freshness/permission，coverage/approval_readiness，v1 安全迁移）；11 新测试，947 passed |
 | B3 | ✅ done | scripts/production/page_package.py（customer_visible/internal_only 严格分区，leak 检测，claim/evidence/asset 绑定，index 覆盖，generation result 引用）；12 新测试，959 passed；DEV-003 跨仓库 bridge 待独立 PR |
 | B4 | ✅ done | scripts/build/manifest.py（白名单投影，package/customer_payload hash，backend 契约版本校验，直接 preview 阻断，显式 legacy adapter）；12 新测试，971 passed |
-| B5 | ⏳ pending | — |
+| B5 | ✅ done | scripts/workflow/autopilot.py（5 模式，validate/action/exit/handoff 循环，approval 停，final export 永停，repair routing，evidence）；state.py 接 handoff；11 新测试，983 passed；DEV-004 |
 | C1–C5 | ⏳ pending | — |
 
 ### DEV-003 — 跨仓库 PPT Deck Pro Max bridge 需独立 PR + 固定 SHA
@@ -59,3 +59,13 @@
 - 处理：Deck-Master 侧 page_package + generation_result_reference 已落地；跨仓库 bridge 适配留待独立 PR，落地后回填 SHA 到 capability lock。
 - 兼容：不破坏现有 generation session 机制。
 - 验证：`tests/test_page_package.py` 12 passed；全量 959 passed。
+
+### DEV-004 — state.py 接入 handoff runtime（B5 集成所需，跨 A2 路径）
+
+- 日期：2026-06-24
+- 发现任务：B5
+- 事实：A2 的 `WorkflowStateResolver` 仅按 artifact 推导阶段完成，不感知 handoff；导致 B5 autopilot 在 accept/consume 高影响阶段 handoff 后，state 仍标记 awaiting_approval，无法推进 ladder。
+- 处理：给 `WorkflowStateResolver` 增加可选 `handoff_runtime` 注入；当某阶段存在 accepted/consumed handoff 时标记 COMPLETED。默认不注入时行为与 A2 一致（向后兼容）。同时修正 `fingerprint_set` 使其与路径无关（只 hash 内容），并让 staleness 排除 `workflow/` 自身运行时记录与本阶段输出，避免误判 stale。
+- 影响：state.py（A2 路径）被修改；属 B5 必需集成，已在此登记。A2 原测试全绿（无 handoff 注入分支不变）。
+- 兼容：向后兼容；handoff_runtime=None 时行为不变。
+- 验证：`test_workflow_autopilot_v2.py` 11 passed + A2-A4+B1 全绿；全量 983 passed。

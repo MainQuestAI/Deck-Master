@@ -303,6 +303,10 @@ class HandoffRuntime:
                 return h
         return None
 
+    def latest_for_stage(self, run_dir: str | Path, from_stage: str, to_stage: str | None) -> dict[str, Any] | None:
+        """Latest non-superseded/cancelled/rejected handoff for a transition."""
+        return self._latest_for_transition(run_dir, (from_stage, to_stage))
+
     def _latest_for_transition(self, root: Path, transition: tuple[str, str | None]) -> dict[str, Any] | None:
         frm, to = transition
         latest: dict[str, Any] | None = None

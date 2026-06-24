@@ -47,16 +47,20 @@ def fingerprint_file(path: Path) -> str | None:
 
 
 def fingerprint_set(paths: Iterable[Path]) -> str:
-    """Aggregate sha256 over a sorted list of (path, hash) pairs.
+    """Aggregate sha256 over a sorted list of file content hashes.
 
-    Empty input maps to a stable zero fingerprint so callers can always embed
-    a value.
+    Path-independent: only file *contents* participate, so resolving a
+    symlinked root (``/tmp`` vs ``/private/tmp`` on macOS) does not change the
+    fingerprint. Empty input maps to a stable zero fingerprint so callers can
+    always embed a value.
     """
-    items: list[tuple[str, str]] = []
+    hashes: list[str] = []
     for p in sorted(set(paths)):
         if p.exists() and not p.is_dir():
-            items.append((str(p), fingerprint_file(p) or ""))
-    blob = json.dumps(items, ensure_ascii=False, separators=(",", ":"))
+            h = fingerprint_file(p)
+            if h:
+                hashes.append(h)
+    blob = json.dumps(sorted(hashes))
     return hashlib.sha256(blob.encode("utf-8")).hexdigest()
 
 

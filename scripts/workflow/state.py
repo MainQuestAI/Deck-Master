@@ -76,10 +76,12 @@ class WorkflowStateResolver:
         registry: Registry | None = None,
         *,
         runtime_stage_fn: RuntimeStageFn | None = None,
+        handoff_runtime: Any = None,
         now: datetime | None = None,
     ) -> None:
         self.registry = registry or load_registry()
         self._runtime_stage_fn = runtime_stage_fn
+        self._handoff_runtime = handoff_runtime  # if provided, consult handoffs for completion
         self._now = now or datetime.now(timezone.utc)
 
     # --- public API ---
@@ -160,15 +162,25 @@ class WorkflowStateResolver:
             if state.stale and exit_report.valid:
                 state.status = STALE
             elif exit_report.valid:
-                if contract.approval_required and stage_id in {
-                    "deck-brief",
-                    "deck-planner",
-                    "deck-sourcing",
-                    "deck-review",
+                # If a handoff runtime is provided and this stage has an
+                # accepted/consumed handoff, the stage is COMPLETED (the
+                # transition was approved/auto-accepted). This is what lets the
+                # ladder advance past approval-gated stages (B5 integration).
+                handoff_consumed = self._handoff_accepted(root, stage_id, contract.next_stage)
+                if handoff_consumed and contract.approval_required and stage_id in {
+                    "deck-brief", "deck-planner", "deck-sourcing", "deck-review",
+                }:
+                    state.status = COMPLETED
+                    state.handoff_id = handoff_consumed
+                elif contract.approval_required and stage_id in {
+                    "deck-brief", "deck-planner", "deck-sourcing", "deck-review",
                 }:
                     state.status = AWAITING_APPROVAL
                 else:
+                    # automatic stage: completed when its exit artifacts exist.
                     state.status = COMPLETED
+                if handoff_consumed and not state.handoff_id:
+                    state.handoff_id = handoff_consumed
             elif entry.valid:
                 # entry ok but not all outputs → in progress (or ready if nothing yet)
                 state.status = IN_PROGRESS if outputs else READY
@@ -190,12 +202,16 @@ class WorkflowStateResolver:
         own_outputs = {p.resolve() for p in outputs}
         dep_files: list[Path] = []
         for d in contract.staleness_dependencies:
+            # skip this stage's own workflow bookkeeping (decision log, handoffs,
+            # approvals): those are naturally written while the stage runs, so
+            # their mtime advancing past the stage's outputs is NOT an upstream
+            # change. Staleness tracks upstream *content* artifacts only.
+            if d.startswith("workflow/"):
+                continue
             resolved = _resolve_dependency(root, d)
             if not resolved:
                 continue
             for p in resolved:
-                # exclude this stage's own output files: a stage is stale only
-                # when an *upstream* dependency changed after its outputs.
                 if p.resolve() in own_outputs:
                     continue
                 dep_files.append(p)
@@ -278,6 +294,21 @@ class WorkflowStateResolver:
         except Exception:
             return ""
         return str(value or "")
+
+    def _handoff_accepted(self, root: Path, stage_id: str, next_stage: str | None) -> str:
+        """If a handoff runtime is wired in, return the handoff_id of the latest
+        accepted/consumed handoff for this transition (else '')."""
+        if self._handoff_runtime is None:
+            return ""
+        try:
+            latest = self._handoff_runtime.latest_for_stage(root, stage_id, next_stage)
+        except Exception:
+            return ""
+        if latest is None:
+            return ""
+        if latest.get("status") in {"accepted", "consumed"}:
+            return str(latest.get("handoff_id", ""))
+        return ""
 
     def _source_fingerprint(self, stages: list[StageState]) -> str:
         payload = [

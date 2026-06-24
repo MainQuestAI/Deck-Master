@@ -1,0 +1,30 @@
+{
+  "schema_version": "deck_stage_approval.v1",
+  "approval_id": "approval_d5dde41e85c8",
+  "run_id": "r",
+  "handoff_id": "handoff_brief_to_planner_cc4673ae630f",
+  "from_stage": "deck-brief",
+  "to_stage": "deck-planner",
+  "decision": "approved",
+  "actor": {
+    "id": "autopilot",
+    "role": "preauthorized"
+  },
+  "artifact_binding": {
+    "output_fingerprint": "492dccfa1fec07900bf106f1f326f627fdf1f1723aa683b1734a699c9aa3dce4",
+    "artifacts": [
+      {
+        "path": "deck_brief.json",
+        "sha256": "c29c103eddae7738be46e6bb9c87d4dc9edd18b252acb017de4f10a64be0b29c"
+      },
+      {
+        "path": "claim_map.json",
+        "sha256": "af63434a2d17da7c1bd71d65a932babe2f66f2259ca23d7dc1f5b089dae78c0a"
+      }
+    ]
+  },
+  "preauthorization_id": "preauth:policy_ce5e89b2865d",
+  "created_at": "2026-06-24T10:00:00+00:00",
+  "expires_at": "2026-06-25T10:00:00+00:00",
+  "decided_at": "2026-06-24T10:00:00+00:00"
+}

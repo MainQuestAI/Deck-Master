@@ -1455,6 +1455,27 @@ def command_workflow_preauth_revoke(args: argparse.Namespace) -> dict[str, Any]:
     return preauth.revoke(resolve_run_dir(args), str(args.policy_id), by_actor=_actor_from_args(args)).data
 
 
+def command_workflow_autopilot_v2(args: argparse.Namespace) -> dict[str, Any]:
+    from workflow.autopilot import AutopilotV2
+
+    ap = AutopilotV2()
+    result = ap.run(
+        resolve_run_dir(args),
+        mode=str(args.mode),
+        max_steps=int(getattr(args, "max_steps", 8) or 8),
+        run_id=str(getattr(args, "run_id", "") or "") or None,
+        repair_owner_stage=str(getattr(args, "repair_owner_stage", "") or ""),
+    )
+    return {
+        "mode": result.mode,
+        "stop_reason": result.stop_reason,
+        "final_stage": result.final_stage,
+        "started_at": result.started_at,
+        "ended_at": result.ended_at,
+        "steps": [s.__dict__ for s in result.steps],
+    }
+
+
 def command_doctor(args: argparse.Namespace) -> dict[str, Any]:
     run_mode = _normalize_run_mode(getattr(args, "run_mode", None))
     payload: dict[str, Any] = {
@@ -2485,6 +2506,13 @@ def build_parser() -> argparse.ArgumentParser:
     p_wf_p_rv.add_argument("--actor-id", default="cli")
     p_wf_p_rv.add_argument("--actor-role", default="operator")
     p_wf_p_rv.set_defaults(func=command_workflow_preauth_revoke)
+
+    p_wf_ap = wf_sub.add_parser("autopilot", help="Run the contract-aware, approval-aware workflow executor (v2)")
+    add_run_args(p_wf_ap)
+    p_wf_ap.add_argument("--mode", required=True, choices=["interactive", "preauthorized", "quick", "repair", "review-only"])
+    p_wf_ap.add_argument("--max-steps", type=int, default=8)
+    p_wf_ap.add_argument("--repair-owner-stage", default="")
+    p_wf_ap.set_defaults(func=command_workflow_autopilot_v2)
 
     p_orchestration = sub.add_parser("orchestration-check", help="Check run orchestration completeness")
     add_run_args(p_orchestration)
