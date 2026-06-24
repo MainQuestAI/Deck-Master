@@ -1,0 +1,172 @@
+{
+  "schema_version": "deck_skill_os_iteration_plan.v1",
+  "title": "Deck Master v1.1 Skill OS Runtime",
+  "baseline_sha": "4605213f1ee3ba937e4658855582c7517b5af027",
+  "target_version": "1.1.0",
+  "stacks": [
+    {
+      "stack_id": "A",
+      "name": "Stage Contract & Handoff Runtime",
+      "tasks": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5"
+      ]
+    },
+    {
+      "stack_id": "B",
+      "name": "Production Boundary & Autopilot v2",
+      "tasks": [
+        "B1",
+        "B2",
+        "B3",
+        "B4",
+        "B5"
+      ]
+    },
+    {
+      "stack_id": "C",
+      "name": "Review Desk, Compatibility & Release Closure",
+      "tasks": [
+        "C1",
+        "C2",
+        "C3",
+        "C4",
+        "C5"
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "task_id": "A0",
+      "depends_on": [],
+      "repository": "MainQuestAI/Deck-Master"
+    },
+    {
+      "task_id": "A1",
+      "depends_on": [
+        "A0"
+      ],
+      "repository": "MainQuestAI/Deck-Master"
+    },
+    {
+      "task_id": "A2",
+      "depends_on": [
+        "A1"
+      ],
+      "repository": "MainQuestAI/Deck-Master"
+    },
+    {
+      "task_id": "A3",
+      "depends_on": [
+        "A2"
+      ],
+      "repository": "MainQuestAI/Deck-Master"
+    },
+    {
+      "task_id": "A4",
+      "depends_on": [
+        "A3"
+      ],
+      "repository": "MainQuestAI/Deck-Master"
+    },
+    {
+      "task_id": "A5",
+      "depends_on": [
+        "A1",
+        "A2",
+        "A3",
+        "A4"
+      ],
+      "repository": "MainQuestAI/Deck-Master"
+    },
+    {
+      "task_id": "B1",
+      "depends_on": [
+        "A5"
+      ],
+      "repository": "MainQuestAI/Deck-Master"
+    },
+    {
+      "task_id": "B2",
+      "depends_on": [
+        "A5"
+      ],
+      "repository": "MainQuestAI/Deck-Master"
+    },
+    {
+      "task_id": "B3",
+      "depends_on": [
+        "B1",
+        "B2"
+      ],
+      "repository": "MainQuestAI/Deck-Master + MainQuestAI/PPT-Deck-Pro-Max"
+    },
+    {
+      "task_id": "B4",
+      "depends_on": [
+        "B3"
+      ],
+      "repository": "MainQuestAI/Deck-Master + PPT Master backend"
+    },
+    {
+      "task_id": "B5",
+      "depends_on": [
+        "B1",
+        "B2",
+        "B3",
+        "B4"
+      ],
+      "repository": "MainQuestAI/Deck-Master"
+    },
+    {
+      "task_id": "C1",
+      "depends_on": [
+        "B5"
+      ],
+      "repository": "MainQuestAI/Deck-Master"
+    },
+    {
+      "task_id": "C2",
+      "depends_on": [
+        "A1",
+        "B5"
+      ],
+      "repository": "MainQuestAI/Deck-Master"
+    },
+    {
+      "task_id": "C3",
+      "depends_on": [
+        "A5",
+        "B3",
+        "B4"
+      ],
+      "repository": "MainQuestAI/Deck-Master"
+    },
+    {
+      "task_id": "C4",
+      "depends_on": [
+        "C1",
+        "C2",
+        "C3"
+      ],
+      "repository": "MainQuestAI/Deck-Master"
+    },
+    {
+      "task_id": "C5",
+      "depends_on": [
+        "C4"
+      ],
+      "repository": "MainQuestAI/Deck-Master"
+    }
+  ],
+  "non_bypassable_requirements": [
+    "final_client_export_approval",
+    "handoff_for_every_transition",
+    "builder_internal_field_isolation"
+  ],
+  "created_at": "2026-06-24T06:06:08.973166+00:00"
+}

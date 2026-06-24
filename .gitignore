@@ -22,3 +22,4 @@ build/
 node_modules/
 .gstack/
 rc_reports/
+tests/_ap_*/

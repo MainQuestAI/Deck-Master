@@ -1273,3 +1273,130 @@ def handle_workspace_run_action(run_dir: str | Path, body: dict[str, Any]) -> di
             notes=note,
         )
     raise ValueError(f"Unsupported workspace action: {action}")
+
+
+# ---------------------------------------------------------------------------
+# Skill OS projection (C1) — Review Desk view of the 9-stage ladder.
+# Safe display copy only: no raw CLI, absolute paths, or internal_only fields
+# on the main view. Technical detail stays in a diagnostic drawer.
+# ---------------------------------------------------------------------------
+
+def skill_os_projection(run_dir: str | Path) -> dict[str, Any]:
+    """Project the Skill OS workflow state for the Review Desk main view.
+
+    Returns the 9-stage ladder with safe labels, blocker vs awaiting-approval
+    distinction, stale reason, and recommended next skill — without raw paths
+    or commands on the main surface.
+    """
+    from workflow.state import WorkflowStateResolver
+    from workflow.handoff import HandoffRuntime
+    from skills.manifest import load_registry
+
+    root = Path(run_dir).expanduser().resolve()
+    reg = load_registry()
+    handoffs = HandoffRuntime(registry=reg)
+    state = WorkflowStateResolver(registry=reg, handoff_runtime=handoffs).resolve(root, run_id=root.name)
+    contract_by_stage = {c.stage_id: c for c in reg.ordered_contracts()}
+
+    stages: list[dict[str, Any]] = []
+    for s in state.get("stages", []):
+        sid = s["stage_id"]
+        contract = contract_by_stage.get(sid)
+        display = (contract.raw.get("display") if contract else {}) or {}
+        # consult handoff runtime for a stale handoff on this stage's transition
+        handoff_stale = False
+        if contract is not None:
+            try:
+                latest = handoffs.latest_for_stage(root, sid, contract.next_stage)
+            except Exception:
+                latest = None
+            if latest and latest.get("status") == "stale":
+                handoff_stale = True
+        is_blocker = s.get("status") in {"entry_blocked", "failed"} or bool(s.get("missing_artifacts"))
+        is_awaiting = s.get("status") == "awaiting_approval"
+        is_stale = s.get("status") == "stale" or s.get("stale") or handoff_stale
+        stages.append({
+            "stage_id": sid,
+            "label": display.get("label", sid),
+            "status": s.get("status"),
+            "is_blocker": is_blocker,
+            "is_awaiting_approval": is_awaiting,
+            "is_stale": is_stale,
+            "stale_reason": "上游产物已变化，本阶段结果需重新确认" if is_stale else "",
+            "missing": s.get("missing_artifacts", []),
+            "next_skill": (contract.next_stage if contract else None),
+            "safe_copy": _stage_safe_copy(s.get("status"), display),
+        })
+
+    return {
+        "schema_version": "deck_review_skill_os_view.v1",
+        "run_id": state.get("run_id"),
+        "current_stage": state.get("current_skill_stage"),
+        "recommended_next_skill": state.get("recommended_next_skill"),
+        "approval_required": bool(state.get("approval_required")),
+        "current_handoff": _current_handoff_for(handoffs, root),
+        "stages": stages,
+        # diagnostic drawer (not rendered on the main surface)
+        "diagnostic": {
+            "runtime_stage": state.get("runtime_stage"),
+            "source_fingerprint": state.get("source_fingerprint"),
+        },
+    }
+
+
+def _current_handoff_for(handoffs: Any, root: Path) -> dict[str, Any] | None:
+    """Projection of the latest accepted/awaiting handoff for the current stage,
+    so the Review Desk can POST accept/reject without deriving state."""
+    try:
+        current = handoffs.current(root)
+    except Exception:
+        return None
+    if not current:
+        return None
+    return {
+        "handoff_id": current.get("handoff_id"),
+        "from_stage": current.get("from_stage"),
+        "to_stage": current.get("to_stage"),
+        "status": current.get("status"),
+    }
+
+
+def _stage_safe_copy(status: str | None, display: dict[str, str]) -> dict[str, str]:
+    """User-facing copy for a stage card. Never exposes raw paths or commands."""
+    label = display.get("label", "")
+    completion = display.get("completion_message", "")
+    if status == "completed":
+        return {"headline": f"{label} 已完成", "detail": completion or "已进入下一阶段。"}
+    if status == "awaiting_approval":
+        return {"headline": f"{label} 等待确认", "detail": "产物已就绪，需用户确认后才能进入下一阶段。"}
+    if status == "stale":
+        return {"headline": f"{label} 需重新确认", "detail": "上游内容已变化，本阶段结果已过期。"}
+    if status == "entry_blocked":
+        return {"headline": f"{label} 暂无法进入", "detail": "缺少前置产物或确认，无法开始本阶段。"}
+    if status == "ready":
+        return {"headline": f"{label} 可开始", "detail": "前置条件已满足，可进入本阶段。"}
+    if status == "in_progress":
+        return {"headline": f"{label} 进行中", "detail": "正在产出本阶段产物。"}
+    return {"headline": f"{label}", "detail": ""}
+
+
+def skill_os_accept_handoff(run_dir: str | Path, handoff_id: str, *, actor: str) -> dict[str, Any]:
+    """Accept an awaiting-approval handoff from the Review Desk (writes runtime)."""
+    from workflow.handoff import HandoffRuntime
+    from skills.manifest import load_registry
+
+    reg = load_registry()
+    return HandoffRuntime(registry=reg).accept(run_dir, handoff_id, actor=actor)
+
+
+def skill_os_reject_handoff(
+    run_dir: str | Path, handoff_id: str, *, actor: str, reason: str, repair_owner_stage: str = ""
+) -> dict[str, Any]:
+    """Reject a handoff and route repair from the Review Desk (writes runtime)."""
+    from workflow.handoff import HandoffRuntime
+    from skills.manifest import load_registry
+
+    reg = load_registry()
+    return HandoffRuntime(registry=reg).reject(
+        run_dir, handoff_id, reason=reason, repair_owner_stage=repair_owner_stage, actor=actor
+    )

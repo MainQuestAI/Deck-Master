@@ -44,6 +44,9 @@ from workspace_api import (
     build_workspace_payload,
     handle_workspace_page_action,
     handle_workspace_run_action,
+    skill_os_accept_handoff,
+    skill_os_projection,
+    skill_os_reject_handoff,
 )
 
 from delivery.outcome import record_delivery_outcome
@@ -292,6 +295,15 @@ class PreviewHandler(BaseHTTPRequestHandler):
         if path.startswith("/api/run-state/"):
             self.api_run_state(path.removeprefix("/api/run-state/").strip("/"), parsed)
             return
+        if path.startswith("/api/workflow-status/"):
+            self.api_workflow_status(path.removeprefix("/api/workflow-status/").strip("/"), parsed)
+            return
+        if path.startswith("/api/workflow-handoffs/"):
+            self.api_workflow_handoffs(path.removeprefix("/api/workflow-handoffs/").strip("/"), parsed)
+            return
+        if path.startswith("/api/workflow-questions/"):
+            self.api_workflow_questions(path.removeprefix("/api/workflow-questions/").strip("/"), parsed)
+            return
         if path.startswith("/api/external-results/"):
             self.api_external_results(path.removeprefix("/api/external-results/").strip("/"))
             return
@@ -329,6 +341,18 @@ class PreviewHandler(BaseHTTPRequestHandler):
             return
         if path.startswith("/api/workspace/"):
             self.api_workspace_post(path.removeprefix("/api/workspace/"), parsed)
+            return
+        if path.startswith("/api/workflow-handoff/") and path.endswith("/accept"):
+            run_id = path.removeprefix("/api/workflow-handoff/").removesuffix("/accept").strip("/")
+            self.api_workflow_handoff_decide(run_id, parsed, decision="accept")
+            return
+        if path.startswith("/api/workflow-handoff/") and path.endswith("/reject"):
+            run_id = path.removeprefix("/api/workflow-handoff/").removesuffix("/reject").strip("/")
+            self.api_workflow_handoff_decide(run_id, parsed, decision="reject")
+            return
+        if path.startswith("/api/workflow-autopilot/") and path.endswith("/resume"):
+            run_id = path.removeprefix("/api/workflow-autopilot/").removesuffix("/resume").strip("/")
+            self.api_workflow_autopilot_resume(run_id, parsed)
             return
         if path == "/api/override/create":
             self.api_override_create(parsed)
@@ -469,6 +493,9 @@ class PreviewHandler(BaseHTTPRequestHandler):
             if len(parts) == 2 and parts[1] == "delivery-preview":
                 self.send_json(build_delivery_preview_payload(run_dir))
                 return
+            if len(parts) == 2 and parts[1] == "skill-os":
+                self.send_json(skill_os_projection(run_dir))
+                return
             if len(parts) == 3 and parts[1] == "page":
                 self.send_json(build_workspace_page_payload(run_dir, parts[2]))
                 return
@@ -495,6 +522,92 @@ class PreviewHandler(BaseHTTPRequestHandler):
                 return
             self.send_error_json(HTTPStatus.NOT_FOUND, "Workspace route not found.")
         except ValueError as exc:
+            self.send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
+
+    # --- Skill OS HTTP routes (08-review-desk-integration.md §3) ---
+
+    def api_workflow_status(self, run_id: str, parsed) -> None:
+        run_dir = self._resolve_run_or_error(run_id, parsed=parsed)
+        if not run_dir:
+            return
+        try:
+            self.send_json(skill_os_projection(run_dir))
+        except (ManifestError, ValueError) as exc:
+            self.send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
+
+    def api_workflow_handoffs(self, run_id: str, parsed) -> None:
+        from workflow.handoff import HandoffRuntime
+
+        run_dir = self._resolve_run_or_error(run_id, parsed=parsed)
+        if not run_dir:
+            return
+        try:
+            rt = HandoffRuntime()
+            self.send_json({"handoffs": rt.list(run_dir), "current": rt.current(run_dir)})
+        except (ManifestError, ValueError) as exc:
+            self.send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
+
+    def api_workflow_questions(self, run_id: str, parsed) -> None:
+        from workflow.questions import QuestionResolver
+
+        run_dir = self._resolve_run_or_error(run_id, parsed=parsed)
+        if not run_dir:
+            return
+        params = parse_qs(parsed.query)
+        stage = (params.get("stage") or [""])[0].strip()
+        if not stage:
+            self.send_error_json(HTTPStatus.BAD_REQUEST, "stage query param is required.")
+            return
+        try:
+            qr = QuestionResolver()
+            self.send_json({
+                "stage_id": stage,
+                "gaps": [g.__dict__ for g in qr.gaps(run_dir, stage)],
+                "blocking": [g.question_id for g in qr.blocking(run_dir, stage)],
+            })
+        except (ManifestError, ValueError, KeyError) as exc:
+            self.send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
+
+    def api_workflow_handoff_decide(self, run_id: str, parsed, *, decision: str) -> None:
+        run_dir = self._resolve_run_or_error(run_id, parsed=parsed)
+        if not run_dir:
+            return
+        body = self.read_json_body()
+        handoff_id = str(body.get("handoff_id") or "").strip()
+        actor = str(body.get("actor") or body.get("actor_id") or "review-desk").strip()
+        if not handoff_id:
+            self.send_error_json(HTTPStatus.BAD_REQUEST, "handoff_id is required.")
+            return
+        try:
+            if decision == "accept":
+                self.send_json(skill_os_accept_handoff(run_dir, handoff_id, actor=actor))
+            else:
+                reason = str(body.get("reason") or "rejected from review desk").strip()
+                repair_owner = str(body.get("repair_owner_stage") or "").strip()
+                self.send_json(skill_os_reject_handoff(
+                    run_dir, handoff_id, actor=actor, reason=reason, repair_owner_stage=repair_owner,
+                ))
+        except (ManifestError, ValueError) as exc:
+            self.send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
+
+    def api_workflow_autopilot_resume(self, run_id: str, parsed) -> None:
+        from workflow.autopilot import AutopilotV2
+
+        run_dir = self._resolve_run_or_error(run_id, parsed=parsed)
+        if not run_dir:
+            return
+        body = self.read_json_body() or {}
+        mode = str(body.get("mode") or "interactive").strip()
+        max_steps = int(body.get("max_steps") or 6)
+        try:
+            result = AutopilotV2().run(run_dir, mode=mode, max_steps=max_steps, run_id=run_id)
+            self.send_json({
+                "mode": result.mode,
+                "stop_reason": result.stop_reason,
+                "final_stage": result.final_stage,
+                "steps": [s.__dict__ for s in result.steps],
+            })
+        except (ManifestError, ValueError) as exc:
             self.send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
 
     def api_create_run(self) -> None:

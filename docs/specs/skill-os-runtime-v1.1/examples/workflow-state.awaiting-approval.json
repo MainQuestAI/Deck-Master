@@ -1,0 +1,119 @@
+{
+  "schema_version": "deck_workflow_state.v1",
+  "run_id": "demo-run",
+  "current_skill_stage": "deck-brief",
+  "runtime_stage": "needs_brief_approval",
+  "stages": [
+    {
+      "stage_id": "deck-init",
+      "status": "completed",
+      "entry_valid": true,
+      "exit_valid": true,
+      "missing_artifacts": [],
+      "blockers": [],
+      "output_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "stage_id": "deck-brief",
+      "status": "awaiting_approval",
+      "entry_valid": true,
+      "exit_valid": false,
+      "missing_artifacts": [],
+      "blockers": [],
+      "output_fingerprint": ""
+    },
+    {
+      "stage_id": "deck-planner",
+      "status": "not_started",
+      "entry_valid": false,
+      "exit_valid": false,
+      "missing_artifacts": [],
+      "blockers": [],
+      "output_fingerprint": ""
+    },
+    {
+      "stage_id": "deck-sourcing",
+      "status": "not_started",
+      "entry_valid": false,
+      "exit_valid": false,
+      "missing_artifacts": [],
+      "blockers": [],
+      "output_fingerprint": ""
+    },
+    {
+      "stage_id": "deck-producer",
+      "status": "not_started",
+      "entry_valid": false,
+      "exit_valid": false,
+      "missing_artifacts": [],
+      "blockers": [],
+      "output_fingerprint": ""
+    },
+    {
+      "stage_id": "deck-builder",
+      "status": "not_started",
+      "entry_valid": false,
+      "exit_valid": false,
+      "missing_artifacts": [],
+      "blockers": [],
+      "output_fingerprint": ""
+    },
+    {
+      "stage_id": "deck-quality",
+      "status": "not_started",
+      "entry_valid": false,
+      "exit_valid": false,
+      "missing_artifacts": [],
+      "blockers": [],
+      "output_fingerprint": ""
+    },
+    {
+      "stage_id": "deck-review",
+      "status": "not_started",
+      "entry_valid": false,
+      "exit_valid": false,
+      "missing_artifacts": [],
+      "blockers": [],
+      "output_fingerprint": ""
+    },
+    {
+      "stage_id": "deck-learn",
+      "status": "not_started",
+      "entry_valid": false,
+      "exit_valid": false,
+      "missing_artifacts": [],
+      "blockers": [],
+      "output_fingerprint": ""
+    }
+  ],
+  "completed_skills": [
+    "deck-init"
+  ],
+  "stale_skills": [],
+  "required_next_skill": "deck-planner",
+  "recommended_next_skill": "deck-planner",
+  "approval_required": true,
+  "approval_status": "pending",
+  "current_handoff": {
+    "handoff_id": "handoff_brief_planner_001",
+    "status": "awaiting_approval"
+  },
+  "missing_artifacts": [],
+  "invalid_artifacts": [],
+  "stale_artifacts": [],
+  "allowed_actions": [
+    "inspect_handoff",
+    "approve_handoff",
+    "reject_handoff"
+  ],
+  "blocked_actions": [
+    {
+      "action": "enter_deck_planner",
+      "reason": "brief handoff approval required"
+    }
+  ],
+  "source_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "resolver_version": "1.1.0",
+  "generated_at": "2026-06-24T10:01:00+00:00",
+  "legacy_inferred": false
+}

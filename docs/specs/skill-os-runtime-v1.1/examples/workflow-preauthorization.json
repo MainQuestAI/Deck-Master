@@ -1,0 +1,31 @@
+{
+  "schema_version": "deck_workflow_policy.v1",
+  "policy_id": "policy_demo_001",
+  "run_id": "demo-run",
+  "mode": "preauthorized",
+  "actor": {
+    "id": "owner",
+    "role": "project_owner"
+  },
+  "allowed_transitions": [
+    "deck-brief->deck-planner",
+    "deck-planner->deck-sourcing"
+  ],
+  "protected_transitions": [
+    "deck-review->client-export"
+  ],
+  "material_roots": [
+    "00-客户原始需求",
+    "03-参考素材"
+  ],
+  "allowed_source_classes": [
+    "approved_internal_library",
+    "public_source"
+  ],
+  "max_generated_pages": 12,
+  "max_cost_class": "medium",
+  "baseline_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "created_at": "2026-06-24T09:00:00+00:00",
+  "expires_at": "2026-06-25T09:00:00+00:00",
+  "revoked": false
+}

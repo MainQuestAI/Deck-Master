@@ -40,3 +40,8 @@ Read the dispatch package, produce real assets under the run directory, then wri
 
 Each completed result must include run/session binding, run-relative paths, SHA-256 checksums, byte sizes, `source_fingerprint`, and `producer` metadata.
 Bundled placeholder output is fixture/dev only and cannot be imported as production output.
+
+
+<!-- skill-os-contract:v1 -->
+## Public Stage
+Maps to public stage: deck-producer. This is a compatibility wrapper; prefer the public `deck-producer` skill for new runs.

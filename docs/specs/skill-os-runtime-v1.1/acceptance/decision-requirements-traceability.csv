@@ -1,0 +1,16 @@
+decision_id,requirement_id,task,test,negative_test,evidence,release_gate
+D1,SO-001,A1/B1/C2/C3,test_stage_contract_registry,test_no_new_interview_skill,contract validation report,C2 skill doc conformance
+D2,SO-001,A1/A2/C1,test_stage_contract_registry,test_unknown_stage_rejected,contract validation report,C1 review desk stage view
+D3,SO-008,A1/A2/A5,test_workflow_cli,test_route_run_state_mismatch,consistency matrix,A5 workflow CLI closure
+D4,SO-002,A1/C2/C3,test_skill_manifest,test_duplicate_skill_identity_source,manifest provenance report,C3 compatibility smoke
+D5,SO-003,A2/A4,test_workflow_state,test_cached_state_without_artifact_rebuild,snapshot rebuild diff,A5 workflow consistency
+D6,SO-004,A3/A5,test_skill_handoff,test_duplicate_handoff_prepare,handoff trace,A5 workflow CLI closure
+D7,SO-007,A4/B5/C5,test_workflow_approval,test_stale_approval_reuse,mutation evidence,C5 dogfood evidence pack
+D8,SO-005,A4/A5/B5,test_workflow_approval,test_high_impact_transition_without_approval,negative policy report,C5 final acceptance
+D9,SO-013,A5/B5,test_workflow_autopilot_v2,test_mechanical_gate_without_evidence,all-mode report,B5 autopilot v2 closure
+D10,SO-005,A4/B5,test_workflow_preauthorization,test_natural_language_infinite_preauthorization,negative policy report,B5 autopilot v2 closure
+D11,SO-009,B2/B3/B4,test_sourcing_plan_v2,test_cross_boundary_artifact_write,coverage report,B4 builder boundary closure
+D12,SO-010,B3/B4,test_page_package,test_builder_direct_preview_manifest_input,package index,B4 build manifest v2 closure
+D13,SO-014,A1/A2/C1,test_review_desk_skill_os,test_quality_status_used_as_review_approval,browser evidence,C1 review desk closure
+D14,SO-014,A2/C1,test_review_desk_skill_os,test_frontend_stage_inference,browser screenshots and API tests,C1 review desk closure
+D15,SO-016,C2/C3/C4,test_skill_os_migration,test_ppt_legacy_entry_without_canonical_stage,compat smoke,C4 release closure

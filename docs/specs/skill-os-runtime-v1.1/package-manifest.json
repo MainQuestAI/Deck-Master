@@ -1,0 +1,290 @@
+{
+  "schema_version": "deck_spec_pack_manifest.v1",
+  "title": "Deck Master v1.1 Skill OS Runtime Spec Pack",
+  "baseline_sha": "4605213f1ee3ba937e4658855582c7517b5af027",
+  "target_version": "1.1.0",
+  "file_count": 56,
+  "files": [
+    {
+      "path": "00-master-spec.md",
+      "bytes": 11371,
+      "sha256": "0bbb22390f6d9b88807784910ab28386ba01e9eb881b4ebb043865c5bfd39f50"
+    },
+    {
+      "path": "01-baseline-gap-register.md",
+      "bytes": 3104,
+      "sha256": "9b283349fb7da5d6257d3741504a9a1812cf73ffca624abb9efdbfcb7a18a7f1"
+    },
+    {
+      "path": "02-skill-os-architecture.md",
+      "bytes": 3956,
+      "sha256": "a0604ad18b791d6ae872f1f2447bb108b5217d4d9c9117cecee1189481166078"
+    },
+    {
+      "path": "03-stage-contract-model.md",
+      "bytes": 4756,
+      "sha256": "0187fd91955374b209d1bc147f079cc04866690490d6927bcd9a1759f1559484"
+    },
+    {
+      "path": "04-cli-runtime-contract.md",
+      "bytes": 3840,
+      "sha256": "8be837bba0bb5461a0f77677b8572e02eb5aa8d2bb534275d9d2256c12881505"
+    },
+    {
+      "path": "05-artifact-contracts.md",
+      "bytes": 3518,
+      "sha256": "d3f10d50401623a09b36e36dc7d066b04be35d959c9fe52ded212a168d962828"
+    },
+    {
+      "path": "06-production-boundaries.md",
+      "bytes": 2965,
+      "sha256": "a9c1fdfa87ece608a810e1c33db37c1fb02714e4ea8b350b7236805663bbff37"
+    },
+    {
+      "path": "07-approval-autopilot-policy.md",
+      "bytes": 2798,
+      "sha256": "395e289e7b05261c73c00a2533f0035c86fdc4d7a15f0db3a002a495f3ca8cf2"
+    },
+    {
+      "path": "08-review-desk-integration.md",
+      "bytes": 2296,
+      "sha256": "673df4af358f84601e0424843b032cfab64f5fd6906ff1d01d5a9a0e1cc79269"
+    },
+    {
+      "path": "09-compatibility-migration-release.md",
+      "bytes": 2961,
+      "sha256": "a1fd58e85502526e4b3b140f78f400c3ab66f301e438215653edb43ffea0c38c"
+    },
+    {
+      "path": "README.md",
+      "bytes": 2843,
+      "sha256": "2d38253e0f4cc8377579a880986e06b215ec354ee98a95879557535fe86b75d5"
+    },
+    {
+      "path": "acceptance/acceptance-matrix.md",
+      "bytes": 1689,
+      "sha256": "8f002e511df278e4a3dcab3b4db3e827f8b34315aaaac1e7cc887a29bebca66a"
+    },
+    {
+      "path": "acceptance/qa-test-plan.md",
+      "bytes": 2168,
+      "sha256": "0e29150f55ae993e125eefe03d85b9980224825d096d7c61051711d751a1006e"
+    },
+    {
+      "path": "acceptance/rc-checklist.md",
+      "bytes": 1459,
+      "sha256": "48e0f664381cd160ec22d405f79db9638681838fa24ebcd9098e5024732c9534"
+    },
+    {
+      "path": "acceptance/requirements-traceability.csv",
+      "bytes": 1169,
+      "sha256": "b1f9b4f3b9dac7828c2d9acdcf4cc73cf465065cb154ea32c8020f7d55017d3b"
+    },
+    {
+      "path": "agents/agent-execution-protocol.md",
+      "bytes": 1268,
+      "sha256": "953df5c8d56371c3a150008bc13cc0e8765136fe42ac842edaa9c6cf48277903"
+    },
+    {
+      "path": "agents/codex-prompts.md",
+      "bytes": 1114,
+      "sha256": "0fa7315e1f110bd7cd460aed580d1acfe736e2f491b4a024d5434d6da907fe7b"
+    },
+    {
+      "path": "agents/review-protocol.md",
+      "bytes": 1027,
+      "sha256": "d9e114e19df8d0dba54ad92d6f99fc62f463a0bff6524fd81d1595b2d287f259"
+    },
+    {
+      "path": "combined-spec.md",
+      "bytes": 78679,
+      "sha256": "a1a391a074749718f3ea53ad1cd1b6f1a8f6b48020dfe42d60db53cfd34f1225"
+    },
+    {
+      "path": "examples/build-manifest.v2.json",
+      "bytes": 1237,
+      "sha256": "2e5ee84582670ce282c950d7226862cd50b2f2b4f6ffb3af56f50c20af89064d"
+    },
+    {
+      "path": "examples/page-package.v1.json",
+      "bytes": 2552,
+      "sha256": "59a7d719c58f074b6a0b4d07fc44a23e210947277c77eb997205d62eec9af738"
+    },
+    {
+      "path": "examples/skill-handoff.brief-to-planner.json",
+      "bytes": 1917,
+      "sha256": "c4d4c3e45095a8376eda874e1983d159ec0f7f1bbafca5f51350a10a7d4a47fc"
+    },
+    {
+      "path": "examples/sourcing-plan.v2.json",
+      "bytes": 1338,
+      "sha256": "3fbd25cdcdaa332d97e219e8bb56d8bfa1a7b31385d4f16f9bb06ffb2116c9d0"
+    },
+    {
+      "path": "examples/stage-contract.deck-planner.json",
+      "bytes": 2276,
+      "sha256": "6247b5b3ce33d7ae39ff6689f102458826ff65d25f2057a07a8894a5e0fb00b3"
+    },
+    {
+      "path": "examples/workflow-preauthorization.json",
+      "bytes": 794,
+      "sha256": "f99fcabda9bb6f875f91dfa008f1b4d0e7d3865bc1f382f6d16842a8685d2a02"
+    },
+    {
+      "path": "examples/workflow-state.awaiting-approval.json",
+      "bytes": 3007,
+      "sha256": "154679319de7959c0de8d0ae33a81b841c1d7f951aa213f8891c5d6bbe93d420"
+    },
+    {
+      "path": "iteration-plan.json",
+      "bytes": 3219,
+      "sha256": "572081dab1ce1124ee540d21352ca5f52f7417bd0827b007108089c73051f996"
+    },
+    {
+      "path": "schemas/deck_build_manifest.v2.schema.json",
+      "bytes": 2881,
+      "sha256": "322a5dc4ac10c9b3411f7dce8072a8e793fa9f4055419f9325168c3472bdb61f"
+    },
+    {
+      "path": "schemas/deck_decision_record.v1.schema.json",
+      "bytes": 1362,
+      "sha256": "5b9adc0e46f9225f7f90b9e30d55be3f21976840885e3ffa4692bd6b00659bcc"
+    },
+    {
+      "path": "schemas/deck_page_package.v1.schema.json",
+      "bytes": 3787,
+      "sha256": "3afd4932ddf252d1e0b4c38ffda3a1a7054851a007ffbac85a2cb6519e641a95"
+    },
+    {
+      "path": "schemas/deck_skill_handoff.v1.schema.json",
+      "bytes": 3631,
+      "sha256": "f69b1a881fb77b36623890134dcf4f4c7d2ffc62e48e669a3409c52b51948b86"
+    },
+    {
+      "path": "schemas/deck_sourcing_plan.v2.schema.json",
+      "bytes": 3023,
+      "sha256": "8970445124d49626a09111b5189b998a46c16c6c0ce23162b17dafefc54c351b"
+    },
+    {
+      "path": "schemas/deck_stage_approval.v1.schema.json",
+      "bytes": 2424,
+      "sha256": "57b4cd3f1a966f2d251bbbf8372d8c3453ef7de29ae7e9756859da29be3c5ffa"
+    },
+    {
+      "path": "schemas/deck_stage_contract.v1.schema.json",
+      "bytes": 4638,
+      "sha256": "8ffd299cc7fad43f9dd416f7ca8756e5a2110005645bf9383735937f2d0c8088"
+    },
+    {
+      "path": "schemas/deck_workflow_policy.v1.schema.json",
+      "bytes": 1819,
+      "sha256": "845c94a551671d788085a9fcb99b32869e3a74a778f69b152d93aa6d80f8f9cb"
+    },
+    {
+      "path": "schemas/deck_workflow_state.v1.schema.json",
+      "bytes": 3380,
+      "sha256": "9ae565a63d61bc20b94927cbfa41c3beb8fb077f6e0ac4c132b5f2148ae5978b"
+    },
+    {
+      "path": "stacks/stack-a-stage-contract-handoff-runtime.md",
+      "bytes": 910,
+      "sha256": "f945e3866b339831a980a4b3cd9b25105b998e32b60375fb5f44f4b49ae15c31"
+    },
+    {
+      "path": "stacks/stack-b-production-boundary-autopilot.md",
+      "bytes": 976,
+      "sha256": "1c57c28695c50bb0e582aff4579943975c5f0f4aa50aecf8471d4c18ad113ea3"
+    },
+    {
+      "path": "stacks/stack-c-review-desk-compat-release.md",
+      "bytes": 814,
+      "sha256": "700549f49470992fb9bc068841f555f93129aea7aa326ee1580b7e99075c99a5"
+    },
+    {
+      "path": "tasks/A0-baseline-version-freeze.md",
+      "bytes": 1262,
+      "sha256": "1dfafbff9f0a4cb8ca335f03a150a8046d25a972bacb28bb36f4510b6ab84d59"
+    },
+    {
+      "path": "tasks/A1-manifest-stage-contract-registry.md",
+      "bytes": 1459,
+      "sha256": "208ad8bd8f6c00173838563537dae81a4d0ffa5ab3ae41dcabd01d0d096a7d02"
+    },
+    {
+      "path": "tasks/A2-workflow-state-resolver.md",
+      "bytes": 1406,
+      "sha256": "103702cfc99f78da7512dd891dc8ddd37ac77ca0cc485b47457376233bfae4fe"
+    },
+    {
+      "path": "tasks/A3-handoff-runtime.md",
+      "bytes": 1169,
+      "sha256": "0a253680a0c524b239e57e3dff0f99fa03abb36dd42985556aa6917bd225e727"
+    },
+    {
+      "path": "tasks/A4-approval-preauthorization-runtime.md",
+      "bytes": 1310,
+      "sha256": "7650979b0779d7e379826958f88424a6794d27cc8fb0532bb5c18b6f36c0e05e"
+    },
+    {
+      "path": "tasks/A5-workflow-cli-route-integration.md",
+      "bytes": 1230,
+      "sha256": "65ef41e9c159876dbbd533602fa8cc3b5159ec811197c4b1a83910cfefa2fec0"
+    },
+    {
+      "path": "tasks/B1-forcing-questions-decision-log.md",
+      "bytes": 1338,
+      "sha256": "8dd7f2cf5e943b72869d73153eaae51ab650499adbcd35f9d323484a9df31ea6"
+    },
+    {
+      "path": "tasks/B2-sourcing-plan-v2.md",
+      "bytes": 1248,
+      "sha256": "ccef7022af4fefd5ab42a1b0b8a2a79e5055f368ea9e1ed2fab83d881fc73222"
+    },
+    {
+      "path": "tasks/B3-page-package-producer-contract.md",
+      "bytes": 1377,
+      "sha256": "64a645b429af3467ea92f837c9e0059cb9264b459e61c72f659ba47283aa5d62"
+    },
+    {
+      "path": "tasks/B4-build-manifest-v2-builder-boundary.md",
+      "bytes": 1284,
+      "sha256": "5112c2cb2dd7b91daa1c3d8b852a639d893dfecf18acb6fb0e6a29de23e6a8b0"
+    },
+    {
+      "path": "tasks/B5-autopilot-v2.md",
+      "bytes": 1279,
+      "sha256": "d2a57147a1a59386f9a50e52f48b01aefe6d34862fe95a3180bcc8342679288e"
+    },
+    {
+      "path": "tasks/C1-review-desk-skill-os-view.md",
+      "bytes": 1268,
+      "sha256": "162a3651720dd8ee89684038ed4c4fc7e974d80943afa931ab8bde6238781966"
+    },
+    {
+      "path": "tasks/C2-skill-doc-manifest-conformance.md",
+      "bytes": 1275,
+      "sha256": "51887be2a3c92cdba28e58d19ae15457fa86d371c74100cbda44ce2f7fd2fd67"
+    },
+    {
+      "path": "tasks/C3-legacy-compat-migration.md",
+      "bytes": 1269,
+      "sha256": "5f73ed1aaa6b259d9f806f506b51e27b3bde04615a626b261ac881b78ca35730"
+    },
+    {
+      "path": "tasks/C4-installer-ci-rc-release.md",
+      "bytes": 1331,
+      "sha256": "a5ff56290a0efa76001e2d9ebc8fbaac4ac199168fd59e1a430ab9f328880db0"
+    },
+    {
+      "path": "tasks/C5-dogfood-final-acceptance.md",
+      "bytes": 1208,
+      "sha256": "e016429fa22affc2030769f5dd67c47d7846f9f5c6205177fb4bd645d30d3f40"
+    },
+    {
+      "path": "validation-report.json",
+      "bytes": 1951,
+      "sha256": "60c1de9ef80a0a28e2750c225d711f5efa937b5888f678af30970fd38c5d1083"
+    }
+  ],
+  "created_at": "2026-06-24T06:06:10.497713+00:00"
+}

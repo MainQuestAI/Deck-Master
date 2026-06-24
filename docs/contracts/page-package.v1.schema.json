@@ -1,0 +1,193 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/contracts/page-package.v1.schema.json",
+  "title": "Deck Page Package v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "page_id",
+    "order",
+    "status",
+    "customer_visible",
+    "visual_spec",
+    "asset_bindings",
+    "citations",
+    "internal_only",
+    "provenance",
+    "source_fingerprint"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "deck_page_package.v1"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "page_id": {
+      "type": "string"
+    },
+    "beat_id": {
+      "type": "string"
+    },
+    "order": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "status": {
+      "enum": [
+        "draft",
+        "blocked",
+        "ready_for_build",
+        "stale"
+      ]
+    },
+    "customer_visible": {
+      "type": "object",
+      "required": [
+        "title",
+        "body_blocks"
+      ],
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "subtitle": {
+          "type": "string"
+        },
+        "body_blocks": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "footnotes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "callouts": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "speaker_notes": {
+      "type": "string"
+    },
+    "audience_context": {
+      "type": "object"
+    },
+    "visual_spec": {
+      "type": "object"
+    },
+    "asset_bindings": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "citations": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "claim_bindings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "evidence_bindings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "style_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "build_requirements": {
+      "type": "object"
+    },
+    "quality_intent": {
+      "type": "object"
+    },
+    "internal_only": {
+      "type": "object",
+      "properties": {
+        "production_rationale": {
+          "type": "string"
+        },
+        "agent_instructions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "unresolved_questions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "private_source_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "review_notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "provenance": {
+      "type": "object",
+      "required": [
+        "producer",
+        "created_at",
+        "input_artifacts"
+      ],
+      "properties": {
+        "producer": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "input_artifacts": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "source_fingerprint": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,798 @@
+{
+  "schema_version": "deck_stage_contract_registry.v1",
+  "suite_version": "1.1.0",
+  "contracts": [
+    {
+      "schema_version": "deck_stage_contract.v1",
+      "stage_id": "deck-init",
+      "skill_name": "deck-init",
+      "order": 1,
+      "lane": "production",
+      "business_question": "项目资料、边界和工作目录是否已经准备好？",
+      "allowed_previous_stages": [],
+      "entry": {
+        "required_artifacts": [],
+        "required_decisions": [],
+        "validators": ["workspace_writable"],
+        "required_capabilities": ["deck_master.workspace_init.v1"]
+      },
+      "first_checks": [
+        "workspace root exists and is writable",
+        "raw material roots are reachable",
+        "workspace policy available"
+      ],
+      "forcing_questions": [
+        {
+          "question_id": "init.scan_scope",
+          "category": "scope",
+          "prompt": "本轮要扫描和纳入的材料范围是什么？",
+          "required": true,
+          "assumption_allowed": false,
+          "evidence_required": false,
+          "trigger": "missing_scan_scope"
+        },
+        {
+          "question_id": "init.privacy_boundary",
+          "category": "privacy",
+          "prompt": "哪些内容属于客户隐私边界，不得进入产出？",
+          "required": true,
+          "assumption_allowed": true,
+          "evidence_required": false,
+          "trigger": "missing_privacy_boundary"
+        },
+        {
+          "question_id": "init.customer_visible_forbidden",
+          "category": "safety",
+          "prompt": "是否存在客户可见禁词或禁用主张清单？",
+          "required": false,
+          "assumption_allowed": true,
+          "evidence_required": false,
+          "trigger": "missing_forbidden_terms"
+        }
+      ],
+      "outputs": [
+        {
+          "artifact_type": "project_metadata",
+          "path_pattern": "deck_project.json",
+          "required": true,
+          "schema_version": "deck_master_project.v1",
+          "validator": "validate_deck_project"
+        },
+        {
+          "artifact_type": "material_inventory",
+          "path_pattern": "material_inventory.json",
+          "required": true,
+          "schema_version": "deck_master_material_inventory.v1",
+          "validator": "validate_material_inventory"
+        },
+        {
+          "artifact_type": "workspace_policy",
+          "path_pattern": "workspace_policy.json",
+          "required": true,
+          "schema_version": "deck_master_workspace_policy.v1",
+          "validator": "validate_workspace_policy"
+        }
+      ],
+      "exit_criteria": {
+        "required_artifacts": ["deck_project.json", "material_inventory.json", "workspace_policy.json"],
+        "required_decisions": ["init.scan_scope", "init.privacy_boundary"],
+        "validators": ["material_inventory_complete", "workspace_policy_fresh"],
+        "required_capabilities": []
+      },
+      "transition_policy": {
+        "next_stage": "deck-brief",
+        "mode": "automatic",
+        "approval_required": false,
+        "preauthorizable": true,
+        "non_bypassable": false
+      },
+      "stop_conditions": ["missing_material_roots", "workspace_not_writable", "unresolvable_privacy_boundary"],
+      "staleness_dependencies": ["deck_project.json", "material_inventory.json", "workspace_policy.json"],
+      "display": {
+        "label": "工作区初始化",
+        "completion_message": "工作区、材料清单和隐私边界已就绪，自动进入需求访谈。"
+      }
+    },
+    {
+      "schema_version": "deck_stage_contract.v1",
+      "stage_id": "deck-brief",
+      "skill_name": "deck-brief",
+      "order": 2,
+      "lane": "production",
+      "business_question": "客户的问题、目标、受众、主张和证据是什么？",
+      "allowed_previous_stages": ["deck-init"],
+      "entry": {
+        "required_artifacts": ["deck_project.json", "material_inventory.json"],
+        "required_decisions": [],
+        "validators": ["init_handoff_accepted", "material_inventory_fresh"],
+        "required_capabilities": ["deck_master.brief.v1"]
+      },
+      "first_checks": [
+        "init handoff accepted",
+        "context manifest available",
+        "material inventory fresh"
+      ],
+      "forcing_questions": [
+        {
+          "question_id": "brief.decision_object",
+          "category": "business",
+          "prompt": "这次沟通要让受众做出什么决策？",
+          "required": true,
+          "assumption_allowed": false,
+          "evidence_required": false,
+          "trigger": "missing_decision_object"
+        },
+        {
+          "question_id": "brief.success_criteria",
+          "category": "business",
+          "prompt": "成功标准是什么？怎么算赢？",
+          "required": true,
+          "assumption_allowed": false,
+          "evidence_required": false,
+          "trigger": "missing_success_criteria"
+        },
+        {
+          "question_id": "brief.non_negotiable_constraints",
+          "category": "constraint",
+          "prompt": "有哪些不可谈判的约束？",
+          "required": true,
+          "assumption_allowed": true,
+          "evidence_required": false,
+          "trigger": "missing_constraints"
+        },
+        {
+          "question_id": "brief.forbidden_claims",
+          "category": "safety",
+          "prompt": "有哪些主张是明确禁用的？",
+          "required": false,
+          "assumption_allowed": true,
+          "evidence_required": false,
+          "trigger": "missing_forbidden_claims"
+        },
+        {
+          "question_id": "brief.evidence_gap",
+          "category": "evidence",
+          "prompt": "当前证据存在哪些缺口？",
+          "required": true,
+          "assumption_allowed": true,
+          "evidence_required": false,
+          "trigger": "missing_evidence_gap"
+        }
+      ],
+      "outputs": [
+        {
+          "artifact_type": "deck_brief",
+          "path_pattern": "deck_brief.json",
+          "required": true,
+          "schema_version": "deck_brief.v1",
+          "validator": "validate_deck_brief"
+        },
+        {
+          "artifact_type": "claim_map_seed",
+          "path_pattern": "claim_map.json",
+          "required": true,
+          "schema_version": "deck_claim_map.v1",
+          "validator": "validate_claim_map"
+        }
+      ],
+      "exit_criteria": {
+        "required_artifacts": ["deck_brief.json", "claim_map.json"],
+        "required_decisions": ["brief.decision_object", "brief.success_criteria", "brief.evidence_gap"],
+        "validators": ["brief_internal_consistent", "claim_seed_present"],
+        "required_capabilities": []
+      },
+      "transition_policy": {
+        "next_stage": "deck-planner",
+        "mode": "manual",
+        "approval_required": true,
+        "preauthorizable": true,
+        "non_bypassable": false
+      },
+      "stop_conditions": ["blocking_question", "irresolvable_constraint", "fatal_evidence_gap"],
+      "staleness_dependencies": ["deck_brief.json", "claim_map.json", "material_inventory.json", "workflow/decision_log.jsonl"],
+      "display": {
+        "label": "需求访谈",
+        "completion_message": "Brief 与主张种子已完成，等待确认后进入方案规划。"
+      }
+    },
+    {
+      "schema_version": "deck_stage_contract.v1",
+      "stage_id": "deck-planner",
+      "skill_name": "deck-planner",
+      "order": 3,
+      "lane": "production",
+      "business_question": "这套 Deck 怎么讲、分几页、每页承担什么任务？",
+      "allowed_previous_stages": ["deck-brief"],
+      "entry": {
+        "required_artifacts": ["deck_brief.json", "claim_map.json"],
+        "required_decisions": ["brief.approved"],
+        "validators": ["brief_fresh"],
+        "required_capabilities": ["deck_master.planning.v1"]
+      },
+      "first_checks": ["brief handoff accepted", "claim map fresh", "page budget policy available"],
+      "forcing_questions": [
+        {
+          "question_id": "planner.primary_thesis",
+          "category": "narrative",
+          "prompt": "这套 Deck 最希望受众接受的核心判断是什么？",
+          "required": true,
+          "assumption_allowed": false,
+          "evidence_required": false,
+          "trigger": "missing_primary_thesis"
+        },
+        {
+          "question_id": "planner.counter_question",
+          "category": "narrative",
+          "prompt": "受众最可能提出的反方疑问是什么？",
+          "required": true,
+          "assumption_allowed": true,
+          "evidence_required": false,
+          "trigger": "missing_counter_question"
+        },
+        {
+          "question_id": "planner.page_budget",
+          "category": "scope",
+          "prompt": "页数预算是多少？",
+          "required": true,
+          "assumption_allowed": false,
+          "evidence_required": false,
+          "trigger": "missing_page_budget"
+        },
+        {
+          "question_id": "planner.proof_order",
+          "category": "evidence",
+          "prompt": "证据的出现顺序如何支撑核心判断？",
+          "required": true,
+          "assumption_allowed": true,
+          "evidence_required": false,
+          "trigger": "missing_proof_order"
+        }
+      ],
+      "outputs": [
+        {
+          "artifact_type": "narrative_plan",
+          "path_pattern": "narrative_plan.json",
+          "required": true,
+          "schema_version": "deck_narrative_plan.v2",
+          "validator": "validate_narrative_plan"
+        },
+        {
+          "artifact_type": "page_tasks",
+          "path_pattern": "page_tasks.json",
+          "required": true,
+          "schema_version": "deck_page_tasks.v1",
+          "validator": "validate_page_tasks"
+        }
+      ],
+      "exit_criteria": {
+        "required_artifacts": ["narrative_plan.json", "page_tasks.json"],
+        "required_decisions": ["planner.primary_thesis"],
+        "validators": ["page_task_coverage", "evidence_need_visible"],
+        "required_capabilities": []
+      },
+      "transition_policy": {
+        "next_stage": "deck-sourcing",
+        "mode": "manual",
+        "approval_required": true,
+        "preauthorizable": true,
+        "non_bypassable": false
+      },
+      "stop_conditions": ["blocking_question", "page_budget_conflict", "missing_required_evidence_policy"],
+      "staleness_dependencies": ["deck_brief.json", "claim_map.json", "workflow/decision_log.jsonl"],
+      "display": {
+        "label": "方案规划",
+        "completion_message": "叙事和页面任务已完成，等待确认后进入素材来源决策。"
+      }
+    },
+    {
+      "schema_version": "deck_stage_contract.v1",
+      "stage_id": "deck-sourcing",
+      "skill_name": "deck-sourcing",
+      "order": 4,
+      "lane": "production",
+      "business_question": "每页使用什么材料、证据和资产？",
+      "allowed_previous_stages": ["deck-planner"],
+      "entry": {
+        "required_artifacts": ["narrative_plan.json", "page_tasks.json"],
+        "required_decisions": ["planner.approved"],
+        "validators": ["planner_handoff_accepted", "page_tasks_fresh"],
+        "required_capabilities": ["deck_master.sourcing.v1"]
+      },
+      "first_checks": ["planner handoff accepted", "page tasks fresh", "sourcing roots available"],
+      "forcing_questions": [
+        {
+          "question_id": "sourcing.source_authority",
+          "category": "evidence",
+          "prompt": "每个关键主张的来源权威性是否足够？",
+          "required": true,
+          "assumption_allowed": false,
+          "evidence_required": true,
+          "trigger": "missing_source_authority"
+        },
+        {
+          "question_id": "sourcing.reuse_license",
+          "category": "permission",
+          "prompt": "复用的历史资产是否取得了使用许可？",
+          "required": true,
+          "assumption_allowed": true,
+          "evidence_required": true,
+          "trigger": "missing_reuse_license"
+        },
+        {
+          "question_id": "sourcing.freshness",
+          "category": "evidence",
+          "prompt": "引用数据或案例是否在可接受时效内？",
+          "required": true,
+          "assumption_allowed": true,
+          "evidence_required": false,
+          "trigger": "missing_freshness"
+        },
+        {
+          "question_id": "sourcing.screenshot_consent",
+          "category": "permission",
+          "prompt": "截图或客户素材是否获得展示授权？",
+          "required": true,
+          "assumption_allowed": true,
+          "evidence_required": false,
+          "trigger": "missing_screenshot_consent"
+        },
+        {
+          "question_id": "sourcing.generation_strategy",
+          "category": "asset",
+          "prompt": "缺失资产采用检索复用还是新生产？",
+          "required": true,
+          "assumption_allowed": false,
+          "evidence_required": false,
+          "trigger": "missing_generation_strategy"
+        }
+      ],
+      "outputs": [
+        {
+          "artifact_type": "sourcing_plan",
+          "path_pattern": "sourcing_plan.json",
+          "required": true,
+          "schema_version": "deck_sourcing_plan.v2",
+          "validator": "validate_sourcing_plan"
+        },
+        {
+          "artifact_type": "library_selection",
+          "path_pattern": "library_selection.json",
+          "required": false,
+          "schema_version": "deck_master_ppt_library_selection.v1",
+          "validator": "validate_library_selection"
+        }
+      ],
+      "exit_criteria": {
+        "required_artifacts": ["sourcing_plan.json"],
+        "required_decisions": ["sourcing.source_authority", "sourcing.reuse_license", "sourcing.generation_strategy"],
+        "validators": ["sourcing_page_coverage", "evidence_source_bound"],
+        "required_capabilities": []
+      },
+      "transition_policy": {
+        "next_stage": "deck-producer",
+        "mode": "manual",
+        "approval_required": true,
+        "preauthorizable": true,
+        "non_bypassable": false
+      },
+      "stop_conditions": ["blocking_question", "unresolved_permission", "missing_generation_strategy"],
+      "staleness_dependencies": ["sourcing_plan.json", "page_tasks.json", "narrative_plan.json", "workflow/decision_log.jsonl"],
+      "display": {
+        "label": "素材来源",
+        "completion_message": "素材与证据来源已确定，等待确认后进入页面生产。"
+      }
+    },
+    {
+      "schema_version": "deck_stage_contract.v1",
+      "stage_id": "deck-producer",
+      "skill_name": "deck-producer",
+      "order": 5,
+      "lane": "production",
+      "business_question": "每页具体表达什么、客户可见内容是什么？",
+      "allowed_previous_stages": ["deck-sourcing"],
+      "entry": {
+        "required_artifacts": ["sourcing_plan.json"],
+        "required_decisions": ["sourcing.approved"],
+        "validators": ["sourcing_handoff_accepted", "sourcing_plan_fresh"],
+        "required_capabilities": ["deck_master.generation.v1"]
+      },
+      "first_checks": ["sourcing handoff accepted", "sourcing plan fresh", "required page set known"],
+      "forcing_questions": [
+        {
+          "question_id": "producer.page_claim",
+          "category": "content",
+          "prompt": "每页要表达的核心主张是什么？",
+          "required": true,
+          "assumption_allowed": false,
+          "evidence_required": false,
+          "trigger": "missing_page_claim"
+        },
+        {
+          "question_id": "producer.public_evidence",
+          "category": "safety",
+          "prompt": "证据是否可对客户公开？",
+          "required": true,
+          "assumption_allowed": false,
+          "evidence_required": false,
+          "trigger": "missing_public_evidence"
+        },
+        {
+          "question_id": "producer.visual_lead",
+          "category": "content",
+          "prompt": "每页的视觉主角是什么？",
+          "required": true,
+          "assumption_allowed": true,
+          "evidence_required": false,
+          "trigger": "missing_visual_lead"
+        },
+        {
+          "question_id": "producer.internal_client_boundary",
+          "category": "safety",
+          "prompt": "内部制作说明与客户可见内容的边界如何界定？",
+          "required": true,
+          "assumption_allowed": false,
+          "evidence_required": false,
+          "trigger": "missing_internal_client_boundary"
+        }
+      ],
+      "outputs": [
+        {
+          "artifact_type": "page_package",
+          "path_pattern": "page_packages/*.json",
+          "required": true,
+          "schema_version": "deck_page_package.v1",
+          "validator": "validate_page_package"
+        },
+        {
+          "artifact_type": "generation_result",
+          "path_pattern": "generation_result.json",
+          "required": false,
+          "schema_version": "deck_generation_result.v2",
+          "validator": "validate_generation_result"
+        }
+      ],
+      "exit_criteria": {
+        "required_artifacts": ["page_packages/"],
+        "required_decisions": ["producer.public_evidence", "producer.internal_client_boundary"],
+        "validators": ["required_page_packages_valid", "no_internal_only_in_client_fields"],
+        "required_capabilities": []
+      },
+      "transition_policy": {
+        "next_stage": "deck-builder",
+        "mode": "automatic",
+        "approval_required": false,
+        "preauthorizable": false,
+        "non_bypassable": false
+      },
+      "stop_conditions": ["blocking_question", "internal_field_leak", "missing_required_page_package"],
+      "staleness_dependencies": ["page_packages/", "sourcing_plan.json", "workflow/decision_log.jsonl"],
+      "display": {
+        "label": "页面生产",
+        "completion_message": "所需页面内容包已全部生成并通过校验，自动进入构建。"
+      }
+    },
+    {
+      "schema_version": "deck_stage_contract.v1",
+      "stage_id": "deck-builder",
+      "skill_name": "deck-builder",
+      "order": 6,
+      "lane": "production",
+      "business_question": "如何把批准的内容构建成最终文件？",
+      "allowed_previous_stages": ["deck-producer"],
+      "entry": {
+        "required_artifacts": ["page_packages/"],
+        "required_decisions": [],
+        "validators": ["producer_handoff_accepted", "required_page_packages_valid"],
+        "required_capabilities": ["deck_master.build.v1"]
+      },
+      "first_checks": ["producer handoff accepted", "page packages valid", "certified build backend ready"],
+      "forcing_questions": [
+        {
+          "question_id": "builder.output_mode",
+          "category": "build",
+          "prompt": "输出格式与模式是什么（HTML/PDF/PPTX/PNG）？",
+          "required": true,
+          "assumption_allowed": true,
+          "evidence_required": false,
+          "trigger": "missing_output_mode"
+        },
+        {
+          "question_id": "builder.font_policy",
+          "category": "build",
+          "prompt": "字体策略是否已确认？",
+          "required": false,
+          "assumption_allowed": true,
+          "evidence_required": false,
+          "trigger": "missing_font_policy"
+        }
+      ],
+      "outputs": [
+        {
+          "artifact_type": "build_manifest",
+          "path_pattern": "build_manifest.json",
+          "required": true,
+          "schema_version": "deck_build_manifest.v2",
+          "validator": "validate_build_manifest"
+        },
+        {
+          "artifact_type": "artifact_manifest",
+          "path_pattern": "artifact_manifest.json",
+          "required": true,
+          "schema_version": "deck_artifact_manifest.v1",
+          "validator": "validate_artifact_manifest"
+        },
+        {
+          "artifact_type": "render_result",
+          "path_pattern": "render_result.json",
+          "required": true,
+          "schema_version": "deck_render_result.v2",
+          "validator": "validate_render_result"
+        }
+      ],
+      "exit_criteria": {
+        "required_artifacts": ["build_manifest.json", "artifact_manifest.json", "render_result.json"],
+        "required_decisions": [],
+        "validators": ["build_manifest_consumes_page_package", "render_artifacts_resolved", "no_business_claims_introduced"],
+        "required_capabilities": []
+      },
+      "transition_policy": {
+        "next_stage": "deck-quality",
+        "mode": "automatic",
+        "approval_required": false,
+        "preauthorizable": true,
+        "non_bypassable": false
+      },
+      "stop_conditions": ["build_backend_unavailable", "render_failed", "preview_manifest_used_without_adapter"],
+      "staleness_dependencies": ["build_manifest.json", "render_result.json", "page_packages/"],
+      "display": {
+        "label": "构建",
+        "completion_message": "构建产物已生成，自动进入质量门禁。"
+      }
+    },
+    {
+      "schema_version": "deck_stage_contract.v1",
+      "stage_id": "deck-quality",
+      "skill_name": "deck-quality",
+      "order": 7,
+      "lane": "production",
+      "business_question": "文件和客户可见内容是否安全、完整、可解析？",
+      "allowed_previous_stages": ["deck-builder"],
+      "entry": {
+        "required_artifacts": ["build_manifest.json", "render_result.json"],
+        "required_decisions": [],
+        "validators": ["builder_handoff_accepted", "render_artifacts_resolved"],
+        "required_capabilities": ["deck_master.quality.v1"]
+      },
+      "first_checks": ["builder handoff accepted", "render artifacts present", "quality rules loaded"],
+      "forcing_questions": [
+        {
+          "question_id": "quality.rule_conflict",
+          "category": "quality",
+          "prompt": "是否存在规则冲突或需人工判断项？",
+          "required": false,
+          "assumption_allowed": true,
+          "evidence_required": false,
+          "trigger": "rule_conflict_detected"
+        }
+      ],
+      "outputs": [
+        {
+          "artifact_type": "quality_report",
+          "path_pattern": "quality_report.json",
+          "required": true,
+          "schema_version": "deck_quality_report.v1",
+          "validator": "validate_quality_report"
+        },
+        {
+          "artifact_type": "customer_visible_safety_gate",
+          "path_pattern": "customer_visible_safety_gate.json",
+          "required": true,
+          "schema_version": "deck_customer_visible_safety_gate.v1",
+          "validator": "validate_customer_visible_safety_gate"
+        },
+        {
+          "artifact_type": "repair_findings",
+          "path_pattern": "repair_findings.json",
+          "required": false,
+          "schema_version": "deck_repair_findings.v1",
+          "validator": "validate_repair_findings"
+        }
+      ],
+      "exit_criteria": {
+        "required_artifacts": ["quality_report.json", "customer_visible_safety_gate.json"],
+        "required_decisions": [],
+        "validators": ["no_p0_p1_blocking", "customer_visible_safety_passed"],
+        "required_capabilities": []
+      },
+      "transition_policy": {
+        "next_stage": "deck-review",
+        "mode": "automatic",
+        "approval_required": false,
+        "preauthorizable": true,
+        "non_bypassable": false
+      },
+      "stop_conditions": ["p0_finding", "p1_finding", "customer_visible_safety_blocked"],
+      "staleness_dependencies": ["quality_report.json", "customer_visible_safety_gate.json", "render_result.json", "build_manifest.json"],
+      "display": {
+        "label": "质量门禁",
+        "completion_message": "质量门禁通过，自动进入评审与交付。"
+      }
+    },
+    {
+      "schema_version": "deck_stage_contract.v1",
+      "stage_id": "deck-review",
+      "skill_name": "deck-review",
+      "order": 8,
+      "lane": "production",
+      "business_question": "是否可交付？返修应回到哪个阶段？",
+      "allowed_previous_stages": ["deck-quality"],
+      "entry": {
+        "required_artifacts": ["quality_report.json", "customer_visible_safety_gate.json"],
+        "required_decisions": [],
+        "validators": ["quality_handoff_accepted", "final_artifacts_present"],
+        "required_capabilities": ["deck_master.review.v1"]
+      },
+      "first_checks": ["quality handoff accepted", "final artifacts present", "final readiness computable"],
+      "forcing_questions": [
+        {
+          "question_id": "review.risk_acceptance",
+          "category": "review",
+          "prompt": "残留风险是否可接受？",
+          "required": true,
+          "assumption_allowed": false,
+          "evidence_required": false,
+          "trigger": "missing_risk_acceptance"
+        },
+        {
+          "question_id": "review.final_version",
+          "category": "review",
+          "prompt": "最终交付版本是否已确定？",
+          "required": true,
+          "assumption_allowed": false,
+          "evidence_required": false,
+          "trigger": "missing_final_version"
+        },
+        {
+          "question_id": "review.delivery_target",
+          "category": "delivery",
+          "prompt": "交付对象与交付方式是什么？",
+          "required": true,
+          "assumption_allowed": false,
+          "evidence_required": false,
+          "trigger": "missing_delivery_target"
+        },
+        {
+          "question_id": "review.approver",
+          "category": "delivery",
+          "prompt": "最终审批人是谁？",
+          "required": true,
+          "assumption_allowed": false,
+          "evidence_required": false,
+          "trigger": "missing_approver"
+        }
+      ],
+      "outputs": [
+        {
+          "artifact_type": "final_readiness",
+          "path_pattern": "final_readiness.json",
+          "required": true,
+          "schema_version": "deck_final_readiness.v1",
+          "validator": "validate_final_readiness"
+        },
+        {
+          "artifact_type": "final_artifact_approval",
+          "path_pattern": "final_artifact_approval.json",
+          "required": true,
+          "schema_version": "deck_final_artifact_approval.v1",
+          "validator": "validate_final_artifact_approval"
+        },
+        {
+          "artifact_type": "export_queue",
+          "path_pattern": "export_queue.json",
+          "required": false,
+          "schema_version": "deck_export_queue.v1",
+          "validator": "validate_export_queue"
+        }
+      ],
+      "exit_criteria": {
+        "required_artifacts": ["final_readiness.json", "final_artifact_approval.json"],
+        "required_decisions": ["review.risk_acceptance", "review.final_version", "review.approver"],
+        "validators": ["final_readiness_passed", "final_approval_bound"],
+        "required_capabilities": []
+      },
+      "transition_policy": {
+        "next_stage": "client_export",
+        "mode": "manual",
+        "approval_required": true,
+        "preauthorizable": false,
+        "non_bypassable": true
+      },
+      "stop_conditions": ["review_rejected", "final_readiness_failed", "missing_final_approval"],
+      "staleness_dependencies": ["final_readiness.json", "final_artifact_approval.json", "quality_report.json", "render_result.json"],
+      "display": {
+        "label": "评审与交付",
+        "completion_message": "评审完成，最终产物已批准，等待显式确认后导出客户文件。"
+      }
+    },
+    {
+      "schema_version": "deck_stage_contract.v1",
+      "stage_id": "deck-learn",
+      "skill_name": "deck-learn",
+      "order": 9,
+      "lane": "post_delivery",
+      "business_question": "哪些经验可以安全沉淀？",
+      "allowed_previous_stages": ["deck-review"],
+      "entry": {
+        "required_artifacts": ["final_readiness.json"],
+        "required_decisions": ["delivery.recorded"],
+        "validators": ["delivery_recorded"],
+        "required_capabilities": ["deck_master.learning.v1"]
+      },
+      "first_checks": ["delivery outcome recorded", "feedback events available"],
+      "forcing_questions": [
+        {
+          "question_id": "learn.desensitization",
+          "category": "privacy",
+          "prompt": "沉淀前是否完成脱敏？",
+          "required": true,
+          "assumption_allowed": false,
+          "evidence_required": false,
+          "trigger": "missing_desensitization"
+        },
+        {
+          "question_id": "learn.reuse_scope",
+          "category": "learning",
+          "prompt": "可复用范围是什么？",
+          "required": true,
+          "assumption_allowed": true,
+          "evidence_required": false,
+          "trigger": "missing_reuse_scope"
+        },
+        {
+          "question_id": "learn.win_loss_reason",
+          "category": "learning",
+          "prompt": "本轮胜负的核心原因是什么？",
+          "required": false,
+          "assumption_allowed": true,
+          "evidence_required": false,
+          "trigger": "missing_win_loss_reason"
+        }
+      ],
+      "outputs": [
+        {
+          "artifact_type": "workspace_learning_pack",
+          "path_pattern": "workspace_learning_pack.json",
+          "required": true,
+          "schema_version": "deck_workspace_learning_pack.v1",
+          "validator": "validate_workspace_learning_pack"
+        },
+        {
+          "artifact_type": "feedback_events",
+          "path_pattern": "feedback_events.jsonl",
+          "required": false,
+          "schema_version": "deck_feedback_events.v1",
+          "validator": "validate_feedback_events"
+        }
+      ],
+      "exit_criteria": {
+        "required_artifacts": ["workspace_learning_pack.json"],
+        "required_decisions": ["learn.desensitization"],
+        "validators": ["learning_desensitized", "feedback_events_valid"],
+        "required_capabilities": []
+      },
+      "transition_policy": {
+        "next_stage": null,
+        "mode": "optional",
+        "approval_required": false,
+        "preauthorizable": false,
+        "non_bypassable": false
+      },
+      "stop_conditions": ["desensitization_failed", "delivery_not_recorded"],
+      "staleness_dependencies": ["workspace_learning_pack.json", "final_readiness.json"],
+      "display": {
+        "label": "经验沉淀",
+        "completion_message": "经验已安全沉淀，本轮结束。"
+      }
+    }
+  ]
+}

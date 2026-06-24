@@ -1,0 +1,42 @@
+{
+  "schema_version": "deck_build_manifest.v2",
+  "run_id": "demo-run",
+  "status": "prepared",
+  "source_fingerprint": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "builder_backend": {
+    "name": "ppt-master",
+    "production_capable": true,
+    "contract_versions": [
+      "deck_build_manifest.v2",
+      "deck_render_result.v2"
+    ]
+  },
+  "output_profile": "client_delivery",
+  "pages": [
+    {
+      "page_id": "page_001",
+      "order": 1,
+      "page_package_path": "page_packages/page_001.json",
+      "page_package_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "customer_payload_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "approved_assets": [
+        {
+          "path": "assets/page_001.png",
+          "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        }
+      ],
+      "editability_target": "hybrid"
+    }
+  ],
+  "required_outputs": [
+    "deck_html",
+    "deck_pdf",
+    "page_png",
+    "deck_pptx"
+  ],
+  "style_lock": {
+    "path": "style_lock.json",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "created_at": "2026-06-24T10:30:00+00:00"
+}

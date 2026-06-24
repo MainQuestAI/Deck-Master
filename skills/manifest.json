@@ -1,7 +1,7 @@
 {
   "name": "deck-master-skills",
-  "version": "1.0.0",
-  "conformance_version": "1.0.0",
+  "version": "1.1.0",
+  "conformance_version": "1.1.0",
   "description": "Deck Master v1 local skill suite for setup, workspace init, briefing, planning, sourcing, production, build, quality, review, learning, and autopilot workflows.",
   "skills": [
     {
@@ -10,8 +10,16 @@
       "role": "orchestrator",
       "public": true,
       "compat_aliases": [],
-      "input_types": ["deck_workflow", "run_state", "review_cockpit"],
-      "exit_artifacts": ["run_state", "next_step", "review_workspace"],
+      "input_types": [
+        "deck_workflow",
+        "run_state",
+        "review_cockpit"
+      ],
+      "exit_artifacts": [
+        "run_state",
+        "next_step",
+        "review_workspace"
+      ],
       "description": "Top-level Deck Master run orchestration and review cockpit operations."
     },
     {
@@ -20,8 +28,14 @@
       "role": "setup",
       "public": true,
       "compat_aliases": [],
-      "input_types": ["first_run_setup", "suite_install"],
-      "exit_artifacts": ["setup_status", "suite_status"],
+      "input_types": [
+        "first_run_setup",
+        "suite_install"
+      ],
+      "exit_artifacts": [
+        "setup_status",
+        "suite_status"
+      ],
       "description": "First-run setup, suite install, workspace binding, and readiness repair."
     },
     {
@@ -30,8 +44,16 @@
       "role": "upgrade",
       "public": true,
       "compat_aliases": [],
-      "input_types": ["upgrade", "rollback", "release_tree"],
-      "exit_artifacts": ["release_manifest", "capability_lock", "sha256sums"],
+      "input_types": [
+        "upgrade",
+        "rollback",
+        "release_tree"
+      ],
+      "exit_artifacts": [
+        "release_manifest",
+        "capability_lock",
+        "sha256sums"
+      ],
       "description": "Self-contained release tree upgrade, verification, activation, and rollback."
     },
     {
@@ -40,100 +62,209 @@
       "role": "diagnostics",
       "public": true,
       "compat_aliases": [],
-      "input_types": ["setup_issue", "suite_issue", "run_issue"],
-      "exit_artifacts": ["doctor_report", "setup_status", "run_state"],
+      "input_types": [
+        "setup_issue",
+        "suite_issue",
+        "run_issue"
+      ],
+      "exit_artifacts": [
+        "doctor_report",
+        "setup_status",
+        "run_state"
+      ],
       "description": "Diagnostics for setup, suite readiness, workspace validity, and run blockers."
     },
     {
       "name": "deck-init",
+      "stage_id": "deck-init",
       "path": "deck-init/SKILL.md",
       "role": "workspace_initialization",
       "public": true,
-      "compat_aliases": ["init-workspace"],
-      "input_types": ["new_workspace", "raw_materials_directory", "project_start"],
-      "exit_artifacts": ["deck_project", "material_inventory", "workspace_policy", "run_bindings"],
+      "compat_aliases": [
+        "init-workspace"
+      ],
+      "input_types": [
+        "new_workspace",
+        "raw_materials_directory",
+        "project_start"
+      ],
+      "exit_artifacts": [
+        "deck_project",
+        "material_inventory",
+        "workspace_policy",
+        "run_bindings"
+      ],
       "description": "Project workspace initialization with material, reference, process, delivery, and metadata directories."
     },
     {
       "name": "deck-brief",
+      "stage_id": "deck-brief",
       "path": "deck-brief/SKILL.md",
       "role": "briefing",
       "public": true,
-      "compat_aliases": ["build-brief"],
-      "input_types": ["raw_materials", "deep_research_report", "meeting_notes"],
-      "exit_artifacts": ["deck_brief", "claim_map_seed"],
+      "compat_aliases": [
+        "build-brief"
+      ],
+      "input_types": [
+        "raw_materials",
+        "deep_research_report",
+        "meeting_notes"
+      ],
+      "exit_artifacts": [
+        "deck_brief",
+        "claim_map_seed"
+      ],
       "description": "Turn raw material and research into deck brief inputs."
     },
     {
       "name": "deck-planner",
+      "stage_id": "deck-planner",
       "path": "deck-planner/SKILL.md",
       "role": "planning",
       "public": true,
-      "compat_aliases": ["autoplan"],
-      "input_types": ["deck_brief", "claim_map", "narrative_request"],
-      "exit_artifacts": ["narrative_plan", "page_tasks", "sourcing_intent"],
+      "compat_aliases": [
+        "autoplan"
+      ],
+      "input_types": [
+        "deck_brief",
+        "claim_map",
+        "narrative_request"
+      ],
+      "exit_artifacts": [
+        "narrative_plan",
+        "page_tasks",
+        "sourcing_intent"
+      ],
       "description": "Planning workflow for claim map, narrative plan, page tasks, and sourcing intent."
     },
     {
       "name": "deck-sourcing",
+      "stage_id": "deck-sourcing",
       "path": "deck-sourcing/SKILL.md",
       "role": "asset_sourcing",
       "public": true,
-      "compat_aliases": ["ppt-library"],
-      "input_types": ["page_tasks", "asset_request", "historical_slide_search"],
-      "exit_artifacts": ["library_selection", "sourcing_plan", "asset_feedback"],
+      "compat_aliases": [
+        "ppt-library"
+      ],
+      "input_types": [
+        "page_tasks",
+        "asset_request",
+        "historical_slide_search"
+      ],
+      "exit_artifacts": [
+        "library_selection",
+        "sourcing_plan",
+        "asset_feedback"
+      ],
       "description": "Historical asset sourcing and page sourcing decisions."
     },
     {
       "name": "deck-producer",
+      "stage_id": "deck-producer",
       "path": "deck-producer/SKILL.md",
       "role": "page_production",
       "public": true,
-      "compat_aliases": ["ppt-deck-pro-max"],
-      "input_types": ["generation_session", "page_tasks", "dispatch_package"],
-      "exit_artifacts": ["deck_generation_result.v2", "preview_refresh"],
+      "compat_aliases": [
+        "ppt-deck-pro-max"
+      ],
+      "input_types": [
+        "generation_session",
+        "page_tasks",
+        "dispatch_package"
+      ],
+      "exit_artifacts": [
+        "deck_generation_result.v2",
+        "preview_refresh"
+      ],
       "description": "Generation sessions, dispatch packages, and canonical generation result import."
     },
     {
       "name": "deck-builder",
+      "stage_id": "deck-builder",
       "path": "deck-builder/SKILL.md",
       "role": "build",
       "public": true,
-      "compat_aliases": ["ppt-master", "render"],
-      "input_types": ["approved_preview", "build_manifest", "render_request"],
-      "exit_artifacts": ["build_manifest", "artifact_manifest", "render_result.v2", "final_artifacts"],
+      "compat_aliases": [
+        "ppt-master",
+        "render"
+      ],
+      "input_types": [
+        "approved_preview",
+        "build_manifest",
+        "render_request"
+      ],
+      "exit_artifacts": [
+        "build_manifest",
+        "artifact_manifest",
+        "render_result.v2",
+        "final_artifacts"
+      ],
       "backend_dependency": "ppt-master",
       "description": "Public build entry for HTML, PDF, PNG, PPTX, artifact manifest, render result, and editability metadata."
     },
     {
       "name": "deck-quality",
+      "stage_id": "deck-quality",
       "path": "deck-quality/SKILL.md",
       "role": "quality_gate",
       "public": true,
-      "compat_aliases": ["ppt-quality-gate"],
-      "input_types": ["draft_review", "render_artifact", "delivery_artifact", "pptx_package"],
-      "exit_artifacts": ["quality_report", "customer_visible_safety_gate", "delivery_gate"],
+      "compat_aliases": [
+        "ppt-quality-gate"
+      ],
+      "input_types": [
+        "draft_review",
+        "render_artifact",
+        "delivery_artifact",
+        "pptx_package"
+      ],
+      "exit_artifacts": [
+        "quality_report",
+        "customer_visible_safety_gate",
+        "delivery_gate"
+      ],
       "description": "Quality gates, customer-visible safety, evidence, confidentiality, and delivery blockers."
     },
     {
       "name": "deck-review",
+      "stage_id": "deck-review",
       "path": "deck-review/SKILL.md",
       "role": "review_delivery",
       "public": true,
-      "compat_aliases": ["export", "final-readiness"],
-      "input_types": ["quality_report", "final_readiness", "review_workspace"],
-      "exit_artifacts": ["export_queue", "final_readiness", "delivery_validation"],
+      "compat_aliases": [
+        "export",
+        "final-readiness"
+      ],
+      "input_types": [
+        "quality_report",
+        "final_readiness",
+        "review_workspace"
+      ],
+      "exit_artifacts": [
+        "export_queue",
+        "final_readiness",
+        "delivery_validation"
+      ],
       "description": "Review, repair, export readiness, and delivery checks."
     },
     {
       "name": "deck-learn",
+      "stage_id": "deck-learn",
       "path": "deck-learn/SKILL.md",
       "role": "learning",
       "public": true,
       "optional": true,
-      "compat_aliases": ["build-learning-pack"],
-      "input_types": ["delivery_outcome", "library_feedback", "benchmark_result"],
-      "exit_artifacts": ["workspace_learning_pack", "feedback_queue"],
+      "compat_aliases": [
+        "build-learning-pack"
+      ],
+      "input_types": [
+        "delivery_outcome",
+        "library_feedback",
+        "benchmark_result"
+      ],
+      "exit_artifacts": [
+        "workspace_learning_pack",
+        "feedback_queue"
+      ],
       "description": "Delivery outcomes, reusable asset feedback, benchmark results, and workspace learning packs."
     },
     {
@@ -141,9 +272,20 @@
       "path": "deck-autopilot/SKILL.md",
       "role": "workflow",
       "public": true,
-      "compat_aliases": ["autopilot-v1"],
-      "input_types": ["raw_materials", "run_state", "repair_request", "review_request"],
-      "exit_artifacts": ["workflow_report", "run_state", "next_step"],
+      "compat_aliases": [
+        "autopilot-v1"
+      ],
+      "input_types": [
+        "raw_materials",
+        "run_state",
+        "repair_request",
+        "review_request"
+      ],
+      "exit_artifacts": [
+        "workflow_report",
+        "run_state",
+        "next_step"
+      ],
       "description": "Continuous workflow advancement across setup, planning, sourcing, production, build, quality, review, and delivery checkpoints."
     },
     {

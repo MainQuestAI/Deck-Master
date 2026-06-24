@@ -136,10 +136,15 @@ from runtime.build import build_status, prepare_build, run_build
 from runtime.render import render_fixture_html, render_status
 from runtime.final_readiness import compute_final_readiness
 from runtime.rc_gate import RCGateError, write_rc_gate_report
-from runtime.run_state_resolver import resolve_run_state
+from runtime.run_state_resolver import resolve_run_state, resolve_runtime_stage
 from runtime.sourcing_import import import_sourcing, validate_sourcing
 from runtime.workspace_binding import bind_workspace
 from runtime.workspace_resolver import resolve_workspace_for_run
+from workflow import resolve_workflow_state
+from workflow.handoff import HandoffError, HandoffRuntime
+from workflow.approval import ApprovalError, ApprovalRuntime
+from workflow.policy import PolicyError, PreauthorizationRuntime, transition_key
+from runtime.skill_route import route_for_skill_name, route_for_stage_manifest_aware
 from tools.ppt_library_client import PPTLibraryClientError, import_library_selection, run_library_selection
 from workspace.foundation import MANIFEST_NAME, WorkspaceError, init_workspace, register_workspace, validate_workspace
 from workspace.project_init import init_deck_project
@@ -918,12 +923,21 @@ def command_connector_import(args: argparse.Namespace) -> dict[str, Any]:
 
 def command_next_step(args: argparse.Namespace) -> dict[str, Any]:
     run_dir = resolve_run_dir(args)
-    return resolve_next_step(
+    payload = resolve_next_step(
         run_dir,
         cli_workspace=getattr(args, "workspace", None),
         run_mode=_normalize_run_mode(getattr(args, "run_mode", None)),
         dev_allow_unsetup=bool(getattr(args, "dev_allow_unsetup", False)),
     )
+    # Project the contract stage so next-step shares the same resolution as
+    # run-state / route-skill / workflow status (A5 consistency).
+    try:
+        wf = resolve_workflow_state(run_dir, runtime_stage_fn=_safe_runtime_stage)
+        payload["current_skill_stage"] = wf.get("current_skill_stage", "")
+        payload["contract_recommended_next_skill"] = wf.get("recommended_next_skill", "")
+    except Exception:
+        pass
+    return payload
 
 
 def command_build_judgments(args: argparse.Namespace) -> dict[str, Any]:
@@ -1114,15 +1128,25 @@ def command_route_skill(args: argparse.Namespace) -> dict[str, Any]:
             run_mode=_normalize_run_mode(getattr(args, "run_mode", None)),
             dev_allow_unsetup=bool(getattr(args, "dev_allow_unsetup", False)),
         )
-        return run_state.get("skill_route") or route_for_stage(
+        payload = run_state.get("skill_route") or route_for_stage_manifest_aware(
             str(run_state.get("stage") or ""),
             reason=str(run_state.get("skill_reason") or ""),
             next_command=str(run_state.get("next_command") or ""),
         )
-    return route_for_input_type(
+        # manifest-driven projection: share current_skill_stage with the other
+        # three state entries (A5 consistency).
+        try:
+            wf = resolve_workflow_state(resolve_run_dir(args), runtime_stage_fn=_safe_runtime_stage)
+            payload["current_skill_stage"] = wf.get("current_skill_stage", "")
+        except Exception:
+            pass
+        return payload
+    # No run context: route by input type (manifest-validated).
+    payload = route_for_input_type(
         str(getattr(args, "input_type", "") or ""),
         next_command=str(getattr(args, "next_command", "") or ""),
     )
+    return payload
 
 
 def _autopilot_args(args: argparse.Namespace, **overrides: Any) -> argparse.Namespace:
@@ -1270,12 +1294,186 @@ def command_workflow_autopilot(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def command_run_state(args: argparse.Namespace) -> dict[str, Any]:
-    return resolve_run_state(
+    state = resolve_run_state(
         resolve_run_dir(args),
         cli_workspace=getattr(args, "workspace", None),
         run_mode=_normalize_run_mode(getattr(args, "run_mode", None)),
         dev_allow_unsetup=bool(getattr(args, "dev_allow_unsetup", False)),
     )
+    # Project the contract view (current_skill_stage) alongside the runtime
+    # view so run-state / next-step / route-skill / workflow status all share
+    # one stage resolution (A5 consistency). Additive; never overrides runtime.
+    try:
+        wf = resolve_workflow_state(
+            resolve_run_dir(args),
+            run_id=str(state.get("run_id") or ""),
+            runtime_stage_fn=_safe_runtime_stage,
+        )
+        state["current_skill_stage"] = wf.get("current_skill_stage", "")
+        state["contract_recommended_next_skill"] = wf.get("recommended_next_skill", "")
+        state["contract_approval_required"] = bool(wf.get("approval_required", False))
+    except Exception:
+        pass
+    return state
+
+
+def _safe_runtime_stage(run_dir: str | Path) -> str:
+    try:
+        return resolve_runtime_stage(run_dir)
+    except Exception:
+        return ""
+
+
+def _actor_from_args(args: argparse.Namespace) -> dict[str, Any]:
+    return {
+        "id": str(getattr(args, "actor_id", "") or "cli"),
+        "role": str(getattr(args, "actor_role", "") or "operator"),
+    }
+
+
+def _wf_state(args: argparse.Namespace) -> dict[str, Any]:
+    return resolve_workflow_state(
+        resolve_run_dir(args),
+        run_id=str(getattr(args, "run_id", "") or ""),
+        runtime_stage_fn=_safe_runtime_stage,
+    )
+
+
+def command_workflow_status(args: argparse.Namespace) -> dict[str, Any]:
+    return _wf_state(args)
+
+
+def command_workflow_stages(args: argparse.Namespace) -> dict[str, Any]:
+    state = _wf_state(args)
+    return {"run_id": state.get("run_id"), "stages": state.get("stages", [])}
+
+
+def command_workflow_handoff_prepare(args: argparse.Namespace) -> dict[str, Any]:
+    rt = HandoffRuntime()
+    return rt.prepare(
+        resolve_run_dir(args),
+        str(args.from_stage),
+        run_id=str(getattr(args, "run_id", "") or "") or None,
+        created_by=str(getattr(args, "created_by", "") or "") or None,
+    )
+
+
+def command_workflow_handoff_list(args: argparse.Namespace) -> dict[str, Any]:
+    rt = HandoffRuntime()
+    return {"handoffs": rt.list(resolve_run_dir(args))}
+
+
+def command_workflow_handoff_accept(args: argparse.Namespace) -> dict[str, Any]:
+    rt = HandoffRuntime()
+    return rt.accept(resolve_run_dir(args), str(args.handoff_id), actor=str(_actor_from_args(args).get("id")))
+
+
+def command_workflow_handoff_consume(args: argparse.Namespace) -> dict[str, Any]:
+    rt = HandoffRuntime()
+    return rt.consume(resolve_run_dir(args), str(args.handoff_id))
+
+
+def command_workflow_handoff_reject(args: argparse.Namespace) -> dict[str, Any]:
+    rt = HandoffRuntime()
+    return rt.reject(
+        resolve_run_dir(args),
+        str(args.handoff_id),
+        reason=str(args.reason),
+        repair_owner_stage=str(getattr(args, "repair_owner_stage", "") or ""),
+        actor=str(_actor_from_args(args).get("id")),
+    )
+
+
+def command_workflow_approval_request(args: argparse.Namespace) -> dict[str, Any]:
+    ap = ApprovalRuntime()
+    return ap.request(
+        resolve_run_dir(args),
+        str(args.handoff_id),
+        run_id=str(getattr(args, "run_id", "") or ""),
+        actor=_actor_from_args(args),
+    )
+
+
+def command_workflow_approval_approve(args: argparse.Namespace) -> dict[str, Any]:
+    ap = ApprovalRuntime()
+    return ap.approve(
+        resolve_run_dir(args),
+        str(args.approval_id),
+        actor=_actor_from_args(args),
+        preauthorization_id=str(getattr(args, "preauthorization_id", "") or ""),
+    )
+
+
+def command_workflow_approval_reject(args: argparse.Namespace) -> dict[str, Any]:
+    ap = ApprovalRuntime()
+    return ap.reject(
+        resolve_run_dir(args),
+        str(args.approval_id),
+        actor=_actor_from_args(args),
+        reason=str(args.reason),
+        repair_owner_stage=str(getattr(args, "repair_owner_stage", "") or ""),
+    )
+
+
+def command_workflow_approval_list(args: argparse.Namespace) -> dict[str, Any]:
+    ap = ApprovalRuntime()
+    return {"approvals": ap.list(resolve_run_dir(args))}
+
+
+def command_workflow_approval_status(args: argparse.Namespace) -> dict[str, Any]:
+    ap = ApprovalRuntime()
+    cleared, reason = ap.is_transition_cleared(
+        resolve_run_dir(args), str(args.from_stage), run_id=str(getattr(args, "run_id", "") or "")
+    )
+    return {"from_stage": args.from_stage, "cleared": cleared, "reason": reason}
+
+
+def command_workflow_preauth_create(args: argparse.Namespace) -> dict[str, Any]:
+    preauth = PreauthorizationRuntime()
+    transitions = [t for t in str(args.allowed_transitions or "").split(",") if t]
+    policy = preauth.create(
+        resolve_run_dir(args),
+        run_id=str(args.run_id),
+        actor=_actor_from_args(args),
+        mode=str(args.mode),
+        allowed_transitions=transitions,
+        material_roots=[m for m in str(getattr(args, "material_roots", "") or "").split(",") if m],
+        max_generated_pages=int(getattr(args, "max_generated_pages", 0) or 0) or None,
+        max_cost_class=str(getattr(args, "max_cost_class", "low")),
+        ttl_seconds=int(getattr(args, "ttl_seconds", 3600) or 3600),
+    )
+    return policy.data
+
+
+def command_workflow_preauth_list(args: argparse.Namespace) -> dict[str, Any]:
+    preauth = PreauthorizationRuntime()
+    return {"preauthorizations": [p.data for p in preauth.list(resolve_run_dir(args))]}
+
+
+def command_workflow_preauth_revoke(args: argparse.Namespace) -> dict[str, Any]:
+    preauth = PreauthorizationRuntime()
+    return preauth.revoke(resolve_run_dir(args), str(args.policy_id), by_actor=_actor_from_args(args)).data
+
+
+def command_workflow_autopilot_v2(args: argparse.Namespace) -> dict[str, Any]:
+    from workflow.autopilot import AutopilotV2
+
+    ap = AutopilotV2()
+    result = ap.run(
+        resolve_run_dir(args),
+        mode=str(args.mode),
+        max_steps=int(getattr(args, "max_steps", 8) or 8),
+        run_id=str(getattr(args, "run_id", "") or "") or None,
+        repair_owner_stage=str(getattr(args, "repair_owner_stage", "") or ""),
+    )
+    return {
+        "mode": result.mode,
+        "stop_reason": result.stop_reason,
+        "final_stage": result.final_stage,
+        "started_at": result.started_at,
+        "ended_at": result.ended_at,
+        "steps": [s.__dict__ for s in result.steps],
+    }
 
 
 def command_doctor(args: argparse.Namespace) -> dict[str, Any]:
@@ -2198,6 +2396,124 @@ def build_parser() -> argparse.ArgumentParser:
     add_run_args(p_route_skill)
     p_route_skill.set_defaults(func=command_route_skill)
 
+    # --- Skill OS workflow group (A5) ---
+    p_workflow_os = sub.add_parser("workflow", help="Skill OS workflow runtime: stages, handoffs, approvals, preauthorization")
+    wf_sub = p_workflow_os.add_subparsers(dest="workflow_command", required=True)
+
+    p_wf_status = wf_sub.add_parser("status", help="Resolve the contract workflow state for a run")
+    add_run_args(p_wf_status)
+    p_wf_status.set_defaults(func=command_workflow_status)
+
+    p_wf_stages = wf_sub.add_parser("stages", help="List per-stage contract status")
+    add_run_args(p_wf_stages)
+    p_wf_stages.set_defaults(func=command_workflow_stages)
+
+    # handoff
+    p_wf_h = wf_sub.add_parser("handoff", help="Stage handoff runtime")
+    h_sub = p_wf_h.add_subparsers(dest="handoff_command", required=True)
+
+    p_wf_h_prep = h_sub.add_parser("prepare", help="Prepare an append-only handoff for a stage (exit-validated)")
+    add_run_args(p_wf_h_prep)
+    p_wf_h_prep.add_argument("--from-stage", required=True)
+    p_wf_h_prep.add_argument("--created-by", default="")
+    p_wf_h_prep.set_defaults(func=command_workflow_handoff_prepare)
+
+    p_wf_h_list = h_sub.add_parser("list", help="List handoffs")
+    add_run_args(p_wf_h_list)
+    p_wf_h_list.set_defaults(func=command_workflow_handoff_list)
+
+    p_wf_h_acc = h_sub.add_parser("accept", help="Accept an awaiting-approval handoff")
+    add_run_args(p_wf_h_acc)
+    p_wf_h_acc.add_argument("--handoff-id", required=True)
+    p_wf_h_acc.add_argument("--actor-id", default="cli")
+    p_wf_h_acc.add_argument("--actor-role", default="operator")
+    p_wf_h_acc.set_defaults(func=command_workflow_handoff_accept)
+
+    p_wf_h_con = h_sub.add_parser("consume", help="Mark an accepted handoff as consumed")
+    add_run_args(p_wf_h_con)
+    p_wf_h_con.add_argument("--handoff-id", required=True)
+    p_wf_h_con.set_defaults(func=command_workflow_handoff_consume)
+
+    p_wf_h_rej = h_sub.add_parser("reject", help="Reject a handoff and route repair")
+    add_run_args(p_wf_h_rej)
+    p_wf_h_rej.add_argument("--handoff-id", required=True)
+    p_wf_h_rej.add_argument("--reason", required=True)
+    p_wf_h_rej.add_argument("--repair-owner-stage", default="")
+    p_wf_h_rej.add_argument("--actor-id", default="cli")
+    p_wf_h_rej.add_argument("--actor-role", default="operator")
+    p_wf_h_rej.set_defaults(func=command_workflow_handoff_reject)
+
+    # approval
+    p_wf_a = wf_sub.add_parser("approval", help="Transition approval runtime")
+    a_sub = p_wf_a.add_subparsers(dest="approval_command", required=True)
+
+    p_wf_a_req = a_sub.add_parser("request", help="Open a pending approval bound to a handoff")
+    add_run_args(p_wf_a_req)
+    p_wf_a_req.add_argument("--handoff-id", required=True)
+    p_wf_a_req.add_argument("--actor-id", default="cli")
+    p_wf_a_req.add_argument("--actor-role", default="requester")
+    p_wf_a_req.set_defaults(func=command_workflow_approval_request)
+
+    p_wf_a_app = a_sub.add_parser("approve", help="Approve a pending approval (human)")
+    add_run_args(p_wf_a_app)
+    p_wf_a_app.add_argument("--approval-id", required=True)
+    p_wf_a_app.add_argument("--actor-id", default="cli")
+    p_wf_a_app.add_argument("--actor-role", default="approver")
+    p_wf_a_app.add_argument("--preauthorization-id", default="")
+    p_wf_a_app.set_defaults(func=command_workflow_approval_approve)
+
+    p_wf_a_rej = a_sub.add_parser("reject", help="Reject a pending approval with repair routing")
+    add_run_args(p_wf_a_rej)
+    p_wf_a_rej.add_argument("--approval-id", required=True)
+    p_wf_a_rej.add_argument("--reason", required=True)
+    p_wf_a_rej.add_argument("--repair-owner-stage", default="")
+    p_wf_a_rej.add_argument("--actor-id", default="cli")
+    p_wf_a_rej.add_argument("--actor-role", default="approver")
+    p_wf_a_rej.set_defaults(func=command_workflow_approval_reject)
+
+    p_wf_a_list = a_sub.add_parser("list", help="List approvals")
+    add_run_args(p_wf_a_list)
+    p_wf_a_list.set_defaults(func=command_workflow_approval_list)
+
+    p_wf_a_st = a_sub.add_parser("status", help="Check whether a transition's approval gate is cleared")
+    add_run_args(p_wf_a_st)
+    p_wf_a_st.add_argument("--from-stage", required=True)
+    p_wf_a_st.set_defaults(func=command_workflow_approval_status)
+
+    # preauthorization
+    p_wf_p = wf_sub.add_parser("preauth", help="Explicit transition preauthorization (D10)")
+    pre_sub = p_wf_p.add_subparsers(dest="preauth_command", required=True)
+
+    p_wf_p_cr = pre_sub.add_parser("create", help="Create a scoped preauthorization")
+    add_run_args(p_wf_p_cr)
+    p_wf_p_cr.add_argument("--mode", required=True, choices=["interactive", "preauthorized", "quick", "repair", "review-only"])
+    p_wf_p_cr.add_argument("--allowed-transitions", required=True, help="Comma-separated transition keys, e.g. deck-brief->deck-planner")
+    p_wf_p_cr.add_argument("--actor-id", default="cli")
+    p_wf_p_cr.add_argument("--actor-role", default="operator")
+    p_wf_p_cr.add_argument("--material-roots", default="")
+    p_wf_p_cr.add_argument("--max-generated-pages", type=int, default=0)
+    p_wf_p_cr.add_argument("--max-cost-class", default="low", choices=["none", "low", "medium", "high"])
+    p_wf_p_cr.add_argument("--ttl-seconds", type=int, default=3600)
+    p_wf_p_cr.set_defaults(func=command_workflow_preauth_create)
+
+    p_wf_p_ls = pre_sub.add_parser("list", help="List preauthorizations")
+    add_run_args(p_wf_p_ls)
+    p_wf_p_ls.set_defaults(func=command_workflow_preauth_list)
+
+    p_wf_p_rv = pre_sub.add_parser("revoke", help="Revoke a preauthorization")
+    add_run_args(p_wf_p_rv)
+    p_wf_p_rv.add_argument("--policy-id", required=True)
+    p_wf_p_rv.add_argument("--actor-id", default="cli")
+    p_wf_p_rv.add_argument("--actor-role", default="operator")
+    p_wf_p_rv.set_defaults(func=command_workflow_preauth_revoke)
+
+    p_wf_ap = wf_sub.add_parser("autopilot", help="Run the contract-aware, approval-aware workflow executor (v2)")
+    add_run_args(p_wf_ap)
+    p_wf_ap.add_argument("--mode", required=True, choices=["interactive", "preauthorized", "quick", "repair", "review-only"])
+    p_wf_ap.add_argument("--max-steps", type=int, default=8)
+    p_wf_ap.add_argument("--repair-owner-stage", default="")
+    p_wf_ap.set_defaults(func=command_workflow_autopilot_v2)
+
     p_orchestration = sub.add_parser("orchestration-check", help="Check run orchestration completeness")
     add_run_args(p_orchestration)
     p_orchestration.set_defaults(func=command_orchestration_check)
@@ -2654,6 +2970,9 @@ def main() -> None:
         BenchmarkReportError,
         BenchmarkRunError,
         RCGateError,
+        HandoffError,
+        ApprovalError,
+        PolicyError,
         ValueError,
     ) as exc:
         print(f"error: {exc}", file=sys.stderr)

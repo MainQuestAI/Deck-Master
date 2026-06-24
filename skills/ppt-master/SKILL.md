@@ -61,3 +61,8 @@ only as import inputs and must be normalized into the canonical path.
 Production/client export requires a certified backend result. Contract-smoke or
 fixture-safe outputs are internal verification materials and must stay marked
 `non_client_deliverable`.
+
+
+<!-- skill-os-contract:v1 -->
+## Public Stage
+Maps to public stage: deck-builder. This is a compatibility wrapper; prefer the public `deck-builder` skill for new runs.

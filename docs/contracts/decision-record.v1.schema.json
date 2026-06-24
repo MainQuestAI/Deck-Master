@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/contracts/decision-record.v1.schema.json",
+  "title": "Deck Decision Record v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "decision_id",
+    "run_id",
+    "stage_id",
+    "question_id",
+    "answer",
+    "actor",
+    "required",
+    "input_fingerprint",
+    "created_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "deck_decision_record.v1"
+    },
+    "decision_id": {
+      "type": "string"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "stage_id": {
+      "type": "string"
+    },
+    "question_id": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string"
+    },
+    "answer": {},
+    "actor": {
+      "type": "object"
+    },
+    "source_type": {
+      "enum": [
+        "user",
+        "approved_document",
+        "agent_assumption",
+        "system_policy"
+      ]
+    },
+    "required": {
+      "type": "boolean"
+    },
+    "assumption_allowed": {
+      "type": "boolean"
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "input_fingerprint": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

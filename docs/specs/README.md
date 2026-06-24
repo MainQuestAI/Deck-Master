@@ -30,6 +30,10 @@
   - 目标：定义 Deck Master 作为独立开源产品时的 Skill 体系，区分 Core Skills、Product Capability Skills 和 Reference Packs，为 v0.9.13+ 的 packaging / migration / setup 设计提供前置依据。
 - `deck-master-v1.0-skill-suite-interaction-spec.md`
   - 目标：参考 GStack 的多 skill 体系，把 Deck Master v1.0 Skill Suite 设计成用户输入驱动的完整工作流，明确 `deck-*` 主入口、`ppt-*` 兼容别名、Workspace 初始化、连续 workflow、setup / upgrade / doctor、路由表和验收标准。
+- `skill-os-runtime-v1.1/`
+  - 目标：把 Deck Master v1.1 升级为具备阶段契约、交接、审批、自动推进和可视化状态的 Skill OS Runtime。
+  - 当前入口：`skill-os-runtime-v1.1/README.md`、`skill-os-runtime-v1.1/00-master-spec.md`、`skill-os-runtime-v1.1/iteration-plan.json`。
+  - 本地补充：`skill-os-runtime-v1.1/LOCAL_ADOPTION.md` 和 `skill-os-runtime-v1.1/acceptance/decision-traceability.md`。
 
 `v0.9.11` 本轮补齐点：
 
@@ -55,6 +59,9 @@ docs/specs/deck-master-v0.9.11-orchestration-runtime-realignment-spec.md
 docs/specs/deck-master-v0.9.12-skill-suite-routing-spec.md
 docs/specs/deck-master-skill-system-product-architecture.md
 docs/specs/deck-master-v1.0-skill-suite-interaction-spec.md
+docs/specs/skill-os-runtime-v1.1/README.md
+docs/specs/skill-os-runtime-v1.1/LOCAL_ADOPTION.md
+docs/specs/skill-os-runtime-v1.1/acceptance/decision-traceability.md
 docs/deck-master-v0.9.12-stack-spec-pack/README.md
 docs/deck-master-v0.9.12-stack-spec-pack/deck-master-v0.9.12-master-stack-breakdown.md
 docs/deck-master-v0.9.12-stack-spec-pack/deck-master-v0.9.12a-suite-runtime-foundation-spec.md
@@ -73,5 +80,6 @@ v0.9.5 Review Cockpit Frontend
 → v0.9.11 Orchestration Runtime Realignment
 → v0.9.12 Skill Suite Runtime Foundation Stack A/B/C
 → v1.0 Skill Suite Interaction + Workspace Workflow
+→ v1.1 Skill OS Runtime Stack A/B/C
 → v1.0.0 RC Real Benchmark Runs
 ```

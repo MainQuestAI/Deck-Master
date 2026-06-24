@@ -1,0 +1,188 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/contracts/skill-handoff.v1.schema.json",
+  "title": "Deck Skill Handoff v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "handoff_id",
+    "run_id",
+    "from_stage",
+    "to_stage",
+    "status",
+    "contract_version",
+    "input_artifacts",
+    "output_artifacts",
+    "output_fingerprint",
+    "exit_validation",
+    "approval_policy",
+    "created_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "deck_skill_handoff.v1"
+    },
+    "handoff_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "from_stage": {
+      "type": "string"
+    },
+    "to_stage": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "status": {
+      "enum": [
+        "draft",
+        "awaiting_approval",
+        "accepted",
+        "consumed",
+        "rejected",
+        "stale",
+        "superseded",
+        "cancelled"
+      ]
+    },
+    "contract_version": {
+      "type": "string"
+    },
+    "idempotency_key": {
+      "type": "string"
+    },
+    "input_artifacts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/artifactRef"
+      }
+    },
+    "output_artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/artifactRef"
+      }
+    },
+    "output_fingerprint": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "exit_validation": {
+      "type": "object",
+      "required": [
+        "valid",
+        "checks"
+      ],
+      "properties": {
+        "valid": {
+          "type": "boolean"
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "approval_policy": {
+      "type": "object",
+      "required": [
+        "required",
+        "preauthorizable"
+      ],
+      "properties": {
+        "required": {
+          "type": "boolean"
+        },
+        "preauthorizable": {
+          "type": "boolean"
+        },
+        "non_bypassable": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "approval_id": {
+      "type": "string"
+    },
+    "created_by": {
+      "type": "string"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "accepted_by": {
+      "type": "string"
+    },
+    "accepted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "rejected_reason": {
+      "type": "string"
+    },
+    "repair_owner_stage": {
+      "type": "string"
+    },
+    "stale_reason": {
+      "type": "string"
+    },
+    "supersedes": {
+      "type": "string"
+    }
+  },
+  "$defs": {
+    "artifactRef": {
+      "type": "object",
+      "required": [
+        "path",
+        "sha256",
+        "artifact_type"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "artifact_type": {
+          "type": "string"
+        },
+        "schema_version": {
+          "type": "string"
+        },
+        "source_fingerprint": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

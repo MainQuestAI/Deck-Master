@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/contracts/build-manifest.v2.schema.json",
+  "title": "Deck Build Manifest v2",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "status",
+    "source_fingerprint",
+    "builder_backend",
+    "output_profile",
+    "pages",
+    "required_outputs",
+    "created_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "deck_build_manifest.v2"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "prepared",
+        "building",
+        "completed",
+        "blocked",
+        "failed",
+        "stale"
+      ]
+    },
+    "source_fingerprint": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "builder_backend": {
+      "type": "object",
+      "required": [
+        "name",
+        "production_capable",
+        "contract_versions"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "production_capable": {
+          "type": "boolean"
+        },
+        "contract_versions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "output_profile": {
+      "enum": [
+        "fixture",
+        "dev",
+        "production_html",
+        "production_pptx",
+        "benchmark",
+        "client_delivery"
+      ]
+    },
+    "pages": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/pageBuild"
+      }
+    },
+    "required_outputs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "style_lock": {
+      "type": "object"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "$defs": {
+    "pageBuild": {
+      "type": "object",
+      "required": [
+        "page_id",
+        "order",
+        "page_package_path",
+        "page_package_sha256",
+        "customer_payload_sha256",
+        "approved_assets"
+      ],
+      "properties": {
+        "page_id": {
+          "type": "string"
+        },
+        "order": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "page_package_path": {
+          "type": "string"
+        },
+        "page_package_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "customer_payload_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "approved_assets": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "editability_target": {
+          "enum": [
+            "native",
+            "hybrid",
+            "flat_image"
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

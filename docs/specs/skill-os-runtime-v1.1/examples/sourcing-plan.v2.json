@@ -1,0 +1,51 @@
+{
+  "schema_version": "deck_sourcing_plan.v2",
+  "run_id": "demo-run",
+  "status": "awaiting_approval",
+  "source_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "pages": [
+    {
+      "page_id": "page_001",
+      "page_task_id": "task_001",
+      "decision": "adapt",
+      "reason": "历史页结构匹配，但客户数据和结论需改写。",
+      "confidence": 0.86,
+      "claim_ids": [
+        "claim_001"
+      ],
+      "evidence_need": [
+        "客户当前基线",
+        "同类项目效果"
+      ],
+      "selected_sources": [
+        {
+          "source_id": "slide_abc",
+          "role": "structure_reference",
+          "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        }
+      ],
+      "source_authority": "approved_internal_library",
+      "freshness_status": "current",
+      "permission_status": "approved",
+      "usage_constraints": [
+        "不得保留原客户名称"
+      ],
+      "missing_evidence": [
+        "客户当前基线"
+      ],
+      "production_budget_class": "medium"
+    }
+  ],
+  "coverage": {
+    "page_tasks": 1,
+    "decisions": 1,
+    "complete": true
+  },
+  "approval_readiness": {
+    "ready": false,
+    "blockers": [
+      "客户当前基线缺失"
+    ]
+  },
+  "created_at": "2026-06-24T10:10:00+00:00"
+}

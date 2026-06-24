@@ -1,0 +1,91 @@
+{
+  "schema_version": "deck_stage_contract.v1",
+  "stage_id": "deck-planner",
+  "skill_name": "deck-planner",
+  "order": 3,
+  "lane": "production",
+  "business_question": "这套 Deck 怎么讲、分几页、每页承担什么任务？",
+  "allowed_previous_stages": [
+    "deck-brief"
+  ],
+  "entry": {
+    "required_artifacts": [
+      "deck_brief.json",
+      "claim_map.json"
+    ],
+    "required_decisions": [
+      "brief.approved"
+    ],
+    "validators": [
+      "brief_fresh"
+    ],
+    "required_capabilities": []
+  },
+  "first_checks": [
+    "brief handoff accepted",
+    "claim map fresh",
+    "page budget policy available"
+  ],
+  "forcing_questions": [
+    {
+      "question_id": "planner.primary_thesis",
+      "category": "narrative",
+      "prompt": "这套 Deck 最希望受众接受的核心判断是什么？",
+      "required": true,
+      "assumption_allowed": false,
+      "evidence_required": false,
+      "trigger": "missing_primary_thesis"
+    }
+  ],
+  "outputs": [
+    {
+      "artifact_type": "narrative_plan",
+      "path_pattern": "narrative_plan.json",
+      "required": true,
+      "schema_version": "deck_narrative_plan.v2",
+      "validator": "validate_narrative_plan"
+    },
+    {
+      "artifact_type": "page_tasks",
+      "path_pattern": "page_tasks.json",
+      "required": true,
+      "schema_version": "deck_page_tasks.v1",
+      "validator": "validate_page_tasks"
+    }
+  ],
+  "exit_criteria": {
+    "required_artifacts": [
+      "narrative_plan.json",
+      "page_tasks.json"
+    ],
+    "required_decisions": [
+      "planner.primary_thesis"
+    ],
+    "validators": [
+      "page_task_coverage",
+      "evidence_need_visible"
+    ],
+    "required_capabilities": []
+  },
+  "transition_policy": {
+    "next_stage": "deck-sourcing",
+    "mode": "manual",
+    "approval_required": true,
+    "preauthorizable": true,
+    "non_bypassable": false
+  },
+  "stop_conditions": [
+    "blocking_question",
+    "page_budget_conflict",
+    "missing_required_evidence_policy"
+  ],
+  "staleness_dependencies": [
+    "deck_brief.json",
+    "claim_map.json",
+    "workflow/decision_log.jsonl"
+  ],
+  "display": {
+    "label": "方案规划",
+    "completion_message": "叙事和页面任务已完成，等待确认后进入素材来源决策。"
+  }
+}

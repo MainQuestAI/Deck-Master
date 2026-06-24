@@ -1,0 +1,60 @@
+{
+  "schema_version": "deck_skill_handoff.v1",
+  "handoff_id": "handoff_brief_planner_001",
+  "run_id": "demo-run",
+  "from_stage": "deck-brief",
+  "to_stage": "deck-planner",
+  "status": "awaiting_approval",
+  "contract_version": "1.1.0",
+  "idempotency_key": "demo-run:deck-brief:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "input_artifacts": [
+    {
+      "path": "context_manifest.json",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "artifact_type": "context_manifest",
+      "schema_version": "deck_context_manifest.v1",
+      "source_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  ],
+  "output_artifacts": [
+    {
+      "path": "deck_brief.json",
+      "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "artifact_type": "deck_brief",
+      "schema_version": "deck_brief.v1",
+      "source_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "path": "claim_map.json",
+      "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "artifact_type": "claim_map",
+      "schema_version": "deck_claim_map.v1",
+      "source_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  ],
+  "output_fingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "exit_validation": {
+    "valid": true,
+    "checks": [
+      {
+        "check": "required_artifacts",
+        "status": "pass"
+      },
+      {
+        "check": "blocking_questions",
+        "status": "pass"
+      }
+    ]
+  },
+  "decisions": [
+    "decision_brief_audience_001"
+  ],
+  "warnings": [],
+  "approval_policy": {
+    "required": true,
+    "preauthorizable": true,
+    "non_bypassable": false
+  },
+  "created_by": "deck-brief",
+  "created_at": "2026-06-24T10:00:00+00:00"
+}

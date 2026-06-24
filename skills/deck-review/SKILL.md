@@ -53,3 +53,47 @@ ready while workspace, render, quality, or import gates are blocked.
 Review output must be visible through Deck Master artifacts such as
 `quality_reports/*`, `render_results/render_result.json`, Review Cockpit state,
 and export queues.
+
+
+<!-- skill-os-contract:v1 -->
+
+## Use When
+Review, repair, export readiness, and delivery checks.
+
+## Do Not Use
+Do not use outside its lane in the Skill OS workflow. Do not treat a successful command return code as stage completion.
+
+## First Checks
+- quality handoff accepted
+- final artifacts present
+- final readiness computable
+
+## Forcing Questions
+- review.risk_acceptance: 残留风险是否可接受？
+- review.final_version: 最终交付版本是否已确定？
+- review.delivery_target: 交付对象与交付方式是什么？
+- review.approver: 最终审批人是谁？
+
+## Runtime Ownership
+Skill OS workflow runtime; stage `deck-review`. Stage completion is validated by the contract entry/exit validator and handoff/approval runtime, not by command return code.
+
+## Allowed Commands
+```bash
+deck-master export --run-dir <run_dir>
+deck-master workflow status --run-dir <run_dir>
+deck-master run-state --run-dir <run_dir>
+```
+
+## Exit Artifacts
+export_queue, final_readiness, delivery_validation
+
+## Next Skill
+client_export
+
+## Stop Conditions
+- review_rejected
+- final_readiness_failed
+- missing_final_approval
+
+## Safety Rules
+Keep internal-only production notes out of customer-visible content. Never bypass the final client export approval. Obey the stage contract's transition policy.

@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/contracts/stage-approval.v1.schema.json",
+  "title": "Deck Stage Approval v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "approval_id",
+    "run_id",
+    "handoff_id",
+    "from_stage",
+    "to_stage",
+    "decision",
+    "actor",
+    "artifact_binding",
+    "created_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "deck_stage_approval.v1"
+    },
+    "approval_id": {
+      "type": "string"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "handoff_id": {
+      "type": "string"
+    },
+    "from_stage": {
+      "type": "string"
+    },
+    "to_stage": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "decision": {
+      "enum": [
+        "pending",
+        "approved",
+        "rejected",
+        "revoked",
+        "stale"
+      ]
+    },
+    "actor": {
+      "type": "object",
+      "required": [
+        "id",
+        "role"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "reason": {
+      "type": "string"
+    },
+    "artifact_binding": {
+      "type": "object",
+      "required": [
+        "output_fingerprint",
+        "artifacts"
+      ],
+      "properties": {
+        "output_fingerprint": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "artifacts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "path",
+              "sha256"
+            ],
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "preauthorization_id": {
+      "type": "string"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "decided_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "repair_owner_stage": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}
