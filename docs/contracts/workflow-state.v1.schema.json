@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/contracts/workflow-state.v1.schema.json",
+  "title": "Deck Workflow State v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "current_skill_stage",
+    "runtime_stage",
+    "stages",
+    "recommended_next_skill",
+    "generated_at",
+    "source_fingerprint"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "deck_workflow_state.v1"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "current_skill_stage": {
+      "type": "string"
+    },
+    "runtime_stage": {
+      "type": "string"
+    },
+    "stages": {
+      "type": "array",
+      "minItems": 9,
+      "items": {
+        "$ref": "#/$defs/stageState"
+      }
+    },
+    "completed_skills": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "stale_skills": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "required_next_skill": {
+      "type": "string"
+    },
+    "recommended_next_skill": {
+      "type": "string"
+    },
+    "approval_required": {
+      "type": "boolean"
+    },
+    "approval_status": {
+      "type": "string"
+    },
+    "current_handoff": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "missing_artifacts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "invalid_artifacts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "stale_artifacts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "allowed_actions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "blocked_actions": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "source_fingerprint": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "resolver_version": {
+      "type": "string"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "legacy_inferred": {
+      "type": "boolean"
+    }
+  },
+  "$defs": {
+    "stageState": {
+      "type": "object",
+      "required": [
+        "stage_id",
+        "status",
+        "entry_valid",
+        "exit_valid"
+      ],
+      "properties": {
+        "stage_id": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "not_started",
+            "entry_blocked",
+            "ready",
+            "in_progress",
+            "awaiting_questions",
+            "awaiting_approval",
+            "completed",
+            "stale",
+            "failed",
+            "skipped"
+          ]
+        },
+        "entry_valid": {
+          "type": "boolean"
+        },
+        "exit_valid": {
+          "type": "boolean"
+        },
+        "handoff_id": {
+          "type": "string"
+        },
+        "approval_status": {
+          "type": "string"
+        },
+        "missing_artifacts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "blockers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "output_fingerprint": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

@@ -713,3 +713,15 @@ def resolve_run_state(
         "next_skill_command": skill_route["next_skill_command"],
         "skill_route": skill_route,
     }
+
+
+def resolve_runtime_stage(run_dir: str | Path, **kwargs: Any) -> str:
+    """Return the fine-grained runtime stage for a run.
+
+    Thin projection over :func:`resolve_run_state` exposing only the
+    ``stage`` value. Consumed by the Skill OS workflow state resolver to
+    populate ``runtime_stage`` independently from the contract ``current_skill_stage``
+    (A2). Kept separate so the contract view and the runtime view never drift
+    silently: callers compare the two to detect divergence.
+    """
+    return str(resolve_run_state(run_dir, **kwargs).get("stage") or "")
