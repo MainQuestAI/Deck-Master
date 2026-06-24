@@ -1911,8 +1911,113 @@ async function refreshCurrentProject() {
     return;
   }
   await loadProjects();
-  await loadWorkspace();
+  try { await loadWorkspace(); } catch (e) { /* early-stage run may have no preview_manifest; Skill OS rail still works */ }
+  await loadSkillOsRail();
 }
+
+// === Skill OS Stage Rail (C1) ===
+// Fetches the contract projection from the runtime (never derives stage
+// state in the frontend — 08-review-desk-integration.md §3). Renders the
+// 9-stage ladder with safe copy, and wires accept/reject POST endpoints.
+async function loadSkillOsRail() {
+  const rail = document.getElementById("skill-os-stages");
+  const actions = document.getElementById("skill-os-actions");
+  const copy = document.getElementById("skill-os-safe-copy");
+  const current = document.getElementById("skill-os-current");
+  if (!rail || !state.currentProjectId) return;
+  try {
+    const proj = await requestJson(`/api/workflow-status/${encodeURIComponent(state.currentProjectId)}`);
+    state.skillOs = proj;
+    renderSkillOsRail(proj, rail, actions, copy, current);
+  } catch (err) {
+    rail.innerHTML = '<li class="s-notstarted"><span class="stage-dot"></span><span class="stage-label">阶段信息不可用</span></li>';
+    actions.innerHTML = "";
+    copy.textContent = "";
+    current.textContent = "-";
+  }
+}
+
+function renderSkillOsRail(proj, railEl, actionsEl, copyEl, currentEl) {
+  const STATUS_CLASS = {
+    completed: "s-completed",
+    awaiting_approval: "s-awaiting",
+    stale: "s-stale",
+    entry_blocked: "s-blocked",
+    failed: "s-blocked",
+    ready: "s-current",
+    in_progress: "s-current",
+    not_started: "s-notstarted",
+  };
+  const STATUS_BADGE = {
+    completed: "已完成",
+    awaiting_approval: "待确认",
+    stale: "已过期",
+    entry_blocked: "阻断",
+    failed: "失败",
+    ready: "可开始",
+    in_progress: "进行中",
+    not_started: "未开始",
+  };
+  railEl.innerHTML = "";
+  for (const s of proj.stages || []) {
+    const cls = STATUS_CLASS[s.status] || "s-notstarted";
+    const li = document.createElement("li");
+    li.className = cls + (s.stage_id === proj.current_stage ? " s-current" : "");
+    li.innerHTML = `<span class="stage-dot"></span><span class="stage-label">${s.label || s.stage_id}</span><span class="stage-badge">${STATUS_BADGE[s.status] || s.status}</span>`;
+    railEl.appendChild(li);
+  }
+  currentEl.textContent = proj.current_stage || "-";
+  // safe copy for the current stage
+  const curStage = (proj.stages || []).find(s => s.stage_id === proj.current_stage);
+  copyEl.textContent = curStage && curStage.safe_copy ? `${curStage.safe_copy.headline} — ${curStage.safe_copy.detail}` : "";
+  // accept/reject actions only for awaiting-approval current stage
+  actionsEl.innerHTML = "";
+  if (curStage && curStage.is_awaiting_approval) {
+    const acc = document.createElement("button");
+    acc.className = "btn"; acc.type = "button"; acc.textContent = "确认进入下一阶段";
+    acc.addEventListener("click", () => skillOsHandoffDecide("accept"));
+    const rej = document.createElement("button");
+    rej.className = "btn btn-ghost"; rej.type = "button"; rej.textContent = "驳回返修";
+    rej.addEventListener("click", () => skillOsHandoffDecide("reject"));
+    actionsEl.appendChild(acc);
+    actionsEl.appendChild(rej);
+  }
+}
+
+async function skillOsHandoffDecide(decision) {
+  const proj = state.skillOs;
+  if (!proj || !state.currentProjectId) return;
+  // need a handoff_id for the current awaiting-approval stage
+  let handoffId = proj.current_handoff && proj.current_handoff.handoff_id;
+  if (!handoffId) {
+    try {
+      const list = await requestJson(`/api/workflow-handoffs/${encodeURIComponent(state.currentProjectId)}`);
+      const awaiting = (list.handoffs || []).find(h => h.from_stage === proj.current_stage && h.status === "awaiting_approval");
+      handoffId = awaiting && awaiting.handoff_id;
+    } catch (err) { handoffId = null; }
+  }
+  if (!handoffId) {
+    alert("当前阶段没有可确认的交接记录。请先在 CLI 运行 workflow handoff prepare。");
+    return;
+  }
+  const body = { handoff_id: handoffId, actor: "review-desk" };
+  if (decision === "reject") {
+    const reason = prompt("驳回原因（将路由返修）：");
+    if (!reason) return;
+    body.reason = reason;
+  }
+  try {
+    await requestJson(`/api/workflow-handoff/${encodeURIComponent(state.currentProjectId)}/${decision}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    await loadSkillOsRail();
+  } catch (err) {
+    alert(`操作失败：${err.message || err}`);
+  }
+}
+
 
 async function selectPage(pageId) {
   state.currentPageId = pageId;
@@ -2100,10 +2205,11 @@ async function boot() {
     }
     renderProjectSwitcher();
     if (setupReady() && state.currentProjectId) {
-      await loadWorkspace();
+      try { await loadWorkspace(); } catch (e) { /* early-stage run may lack preview_manifest */ }
     } else {
       renderAll();
     }
+    await loadSkillOsRail();
   } catch (error) {
     state.shellError = {
       scope: "setup",

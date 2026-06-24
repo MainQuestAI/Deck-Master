@@ -1,8 +1,8 @@
 # Deck Master Skill OS 改造规划稿
 
-日期：2026-06-24  
-状态：规划稿，用于后续与 ChatGPT 讨论正式 Spec  
-范围：Deck Master Skill 体系、CLI、Run State、Artifact、Review Cockpit、安装与验证链路  
+日期：2026-06-24
+状态：规划稿，用于后续与 ChatGPT 讨论正式 Spec
+范围：Deck Master Skill 体系、CLI、Run State、Artifact、Review Cockpit、安装与验证链路
 
 ## 1. 本文定位
 
@@ -388,7 +388,7 @@ builder 只能读取允许进入客户可见文件的字段。
 
 Skill 文档里的流程必须由 CLI 验证。
 
-Agent 不能只靠自然语言判断“阶段完成”。  
+Agent 不能只靠自然语言判断“阶段完成”。
 必须读取 artifacts、run state 或 CLI 返回结果。
 
 ## 9. 实施优先级建议

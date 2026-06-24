@@ -1334,12 +1334,30 @@ def skill_os_projection(run_dir: str | Path) -> dict[str, Any]:
         "current_stage": state.get("current_skill_stage"),
         "recommended_next_skill": state.get("recommended_next_skill"),
         "approval_required": bool(state.get("approval_required")),
+        "current_handoff": _current_handoff_for(handoffs, root),
         "stages": stages,
         # diagnostic drawer (not rendered on the main surface)
         "diagnostic": {
             "runtime_stage": state.get("runtime_stage"),
             "source_fingerprint": state.get("source_fingerprint"),
         },
+    }
+
+
+def _current_handoff_for(handoffs: Any, root: Path) -> dict[str, Any] | None:
+    """Projection of the latest accepted/awaiting handoff for the current stage,
+    so the Review Desk can POST accept/reject without deriving state."""
+    try:
+        current = handoffs.current(root)
+    except Exception:
+        return None
+    if not current:
+        return None
+    return {
+        "handoff_id": current.get("handoff_id"),
+        "from_stage": current.get("from_stage"),
+        "to_stage": current.get("to_stage"),
+        "status": current.get("status"),
     }
 
 

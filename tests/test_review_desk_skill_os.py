@@ -128,3 +128,136 @@ def test_diagnostic_drawer_separate(tmp_path):
     # diagnostic is a separate drawer, not in the stages main surface
     for s in proj["stages"]:
         assert "source_fingerprint" not in s  # technical detail kept in diagnostic
+
+
+# --- HTTP-level tests: real server, POST accept/reject + GET workflow-status ---
+
+import http.client
+import socket
+import threading
+from http.server import ThreadingHTTPServer
+
+
+def _free_port() -> int:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(("127.0.0.1", 0))
+        return s.getsockname()[1]
+
+
+def _start_server(runs_dir: Path, port: int) -> tuple[ThreadingHTTPServer, threading.Thread]:
+    sys.path.insert(0, str(REPO_ROOT / "scripts" / "preview"))
+    from server import build_handler  # noqa: E402
+
+    handler = build_handler(run_dir=None, runs_dir=runs_dir, library_mode="fixture", use_setup_runs_dir=False)
+    httpd = ThreadingHTTPServer(("127.0.0.1", port), handler)
+    t = threading.Thread(target=httpd.serve_forever, daemon=True)
+    t.start()
+    return httpd, t
+
+
+def _http(port: int, method: str, path: str, body: dict | None = None) -> tuple[int, dict]:
+    conn = http.client.HTTPConnection("127.0.0.1", port, timeout=5)
+    payload = json.dumps(body).encode() if body is not None else None
+    headers = {"Content-Type": "application/json"} if body is not None else {}
+    conn.request(method, path, body=payload, headers=headers)
+    resp = conn.getresponse()
+    data = resp.read().decode()
+    conn.close()
+    return resp.status, (json.loads(data) if data else {})
+
+
+def _seed_brief_run(run: Path) -> None:
+    for f in ("deck_project.json", "material_inventory.json", "workspace_policy.json",
+              "deck_brief.json", "claim_map.json", "request.json"):
+        (run / f).write_text("{}\n", encoding="utf-8")
+
+
+def test_http_workflow_status_returns_projection(tmp_path):
+    runs = tmp_path / "runs"
+    (runs / "demo").mkdir(parents=True)
+    _seed_brief_run(runs / "demo")
+    port = _free_port()
+    httpd, _t = _start_server(runs, port)
+    try:
+        status, body = _http(port, "GET", "/api/workflow-status/demo")
+        assert status == 200
+        assert body["schema_version"] == "deck_review_skill_os_view.v1"
+        assert body["current_stage"] == "deck-brief"
+        assert len(body["stages"]) == 9
+    finally:
+        httpd.shutdown()
+
+
+def test_http_handoff_accept_writes_runtime(tmp_path):
+    runs = tmp_path / "runs"
+    (runs / "demo").mkdir(parents=True)
+    _seed_brief_run(runs / "demo")
+    # prepare a brief handoff so there is something to accept
+    from workflow.handoff import HandoffRuntime  # noqa: E402
+    h = HandoffRuntime(registry=REGISTRY)
+    rec = h.prepare(runs / "demo", "deck-brief", run_id="demo")
+    assert rec["status"] == "awaiting_approval"
+
+    port = _free_port()
+    httpd, _t = _start_server(runs, port)
+    try:
+        status, body = _http(port, "POST", "/api/workflow-handoff/demo/accept",
+                             body={"handoff_id": rec["handoff_id"], "actor": "qa-http"})
+        assert status == 200
+        assert body["status"] == "accepted"
+        assert body["accepted_by"] == "qa-http"
+        # re-fetch projection: current stage advanced past brief
+        _, proj = _http(port, "GET", "/api/workflow-status/demo")
+        assert proj["current_stage"] == "deck-planner"
+    finally:
+        httpd.shutdown()
+
+
+def test_http_handoff_reject_routes_repair(tmp_path):
+    runs = tmp_path / "runs"
+    (runs / "demo").mkdir(parents=True)
+    _seed_brief_run(runs / "demo")
+    from workflow.handoff import HandoffRuntime  # noqa: E402
+    rec = HandoffRuntime(registry=REGISTRY).prepare(runs / "demo", "deck-brief", run_id="demo")
+
+    port = _free_port()
+    httpd, _t = _start_server(runs, port)
+    try:
+        status, body = _http(port, "POST", "/api/workflow-handoff/demo/reject",
+                             body={"handoff_id": rec["handoff_id"], "actor": "qa-http",
+                                   "reason": "narrative wrong", "repair_owner_stage": "deck-planner"})
+        assert status == 200
+        assert body["status"] == "rejected"
+        assert body["repair_owner_stage"] == "deck-planner"
+    finally:
+        httpd.shutdown()
+
+
+def test_http_handoff_accept_missing_handoff_id_400(tmp_path):
+    runs = tmp_path / "runs"
+    (runs / "demo").mkdir(parents=True)
+    _seed_brief_run(runs / "demo")
+    port = _free_port()
+    httpd, _t = _start_server(runs, port)
+    try:
+        status, body = _http(port, "POST", "/api/workflow-handoff/demo/accept", body={})
+        assert status == 400
+        assert "handoff_id" in body["error"]
+    finally:
+        httpd.shutdown()
+
+
+def test_http_workflow_handoffs_list(tmp_path):
+    runs = tmp_path / "runs"
+    (runs / "demo").mkdir(parents=True)
+    _seed_brief_run(runs / "demo")
+    from workflow.handoff import HandoffRuntime  # noqa: E402
+    HandoffRuntime(registry=REGISTRY).prepare(runs / "demo", "deck-brief", run_id="demo")
+    port = _free_port()
+    httpd, _t = _start_server(runs, port)
+    try:
+        status, body = _http(port, "GET", "/api/workflow-handoffs/demo")
+        assert status == 200
+        assert len(body["handoffs"]) == 1
+    finally:
+        httpd.shutdown()

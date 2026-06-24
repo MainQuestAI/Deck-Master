@@ -118,4 +118,3 @@
 5. Autopilot 的 `interactive / preauthorized / quick / repair / review-only` 五种模式是否足够。
 6. Review Desk 的最小可见状态是否能让非技术用户理解当前阻断点。
 7. 旧 `ppt-*` 入口映射到公开 Stage 的兼容策略是否会造成误导。
-

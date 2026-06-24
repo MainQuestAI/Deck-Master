@@ -70,8 +70,19 @@
 - 兼容：向后兼容；handoff_runtime=None 时行为不变。
 - 验证：`test_workflow_autopilot_v2.py` 11 passed + A2-A4+B1 全绿；全量 983 passed。
 
-| C1 | ✅ done | workspace_api skill_os_projection（9-stage 安全展示，blocker/awaiting 区分，stale 原因，accept/reject 写 runtime，无 raw path）；server /api/skill-os；9 新测试 |
+| C1 | ✅ done | workspace_api skill_os_projection + current_handoff；server POST /api/workflow-handoff/<run>/accept|reject + GET workflow-status/handoffs/questions + autopilot resume；前端 left-rail stage ladder（app.js/index.html/style.css）真实渲染 + 浏览器级 accept 写 runtime；14 测试（含 5 HTTP 端到端） |
 | C2 | ✅ done | scripts/skills/validator.py + 18 SKILL.md 契约附录；100% public 合规；8 新测试 |
 | C3 | ✅ done | scripts/workflow/migration.py（legacy bootstrap 不伪造审批，回滚，inference report）；docs/migration/；8 新测试 |
 | C4 | ✅ done | tests/test_skill_os_release_contract.py（9 schema 真校验 + contracts hash + smoke 流水线）；CI 增 pytest+jsonschema 步骤；docs/releases/v1.1.0 |
 | C5 | ✅ done | docs/qa/skill-os/（acceptance-matrix + dogfood-summary）+ test_skill_os_acceptance.py（量化指标断言）；clean-install dogfood 待 1.1.0 release 重建（DEV-001） |
+
+### DEV-005 — 评审 P1 闭环：C1 HTTP POST + 前端 stage rail
+
+- 日期：2026-06-24
+- 发现：code review 指出 C1 的 accept/reject 仅是 Python helper，未暴露真实 HTTP POST；stage ladder 未接前端主界面。
+- 处理：
+  - server.py 新增 POST `/api/workflow-handoff/<run>/accept|reject`、GET `/api/workflow-status/<run>`、`/api/workflow-handoffs/<run>`、`/api/workflow-questions/<run>?stage=`、POST `/api/workflow-autopilot/<run>/resume`（08 §3 契约）。
+  - workspace_api.skill_os_projection 增加 `current_handoff` 投影，供前端取 handoff_id。
+  - 前端 left-rail 新增 Skill OS stage ladder widget（index.html + app.js + style.css），fetch projection 渲染 9 stage + safe copy + accept/reject 按钮；boot() 与 refreshCurrentProject() 均调用 loadSkillOsRail，且不依赖 preview_manifest 存在（08 §5 早期 stage 可用）。
+  - 浏览器实测：点击"确认进入下一阶段"→ POST accept → ladder `deck-brief → deck-planner` 刷新，0 console error。
+- 验证：`tests/test_review_desk_skill_os.py` 14 passed（含 5 个真实 HTTP 端到端：POST accept/reject、GET workflow-status/handoffs、accept 后 current_stage 推进）；全量 1027 passed。

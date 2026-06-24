@@ -1,8 +1,8 @@
 # Deck Master v1.1 Skill OS Runtime Spec Pack
 
-日期：2026-06-24  
-基线：`origin/main @ 4605213f1ee3ba937e4658855582c7517b5af027`  
-目标版本：`Deck Master Skill Suite 1.1.0`  
+日期：2026-06-24
+基线：`origin/main @ 4605213f1ee3ba937e4658855582c7517b5af027`
+目标版本：`Deck Master Skill Suite 1.1.0`
 目标阶段：从“Skill 命名体系 + 命令集合”升级为“具备阶段契约、交接、审批、自动推进和可视化状态的 Skill OS”。
 
 ## 本地接入补充
