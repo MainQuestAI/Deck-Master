@@ -1,0 +1,59 @@
+{
+  "json_parse": [
+    "examples/build-manifest.v2.json",
+    "examples/page-package.v1.json",
+    "examples/skill-handoff.brief-to-planner.json",
+    "examples/sourcing-plan.v2.json",
+    "examples/stage-contract.deck-planner.json",
+    "examples/workflow-preauthorization.json",
+    "examples/workflow-state.awaiting-approval.json",
+    "iteration-plan.json",
+    "schemas/deck_build_manifest.v2.schema.json",
+    "schemas/deck_decision_record.v1.schema.json",
+    "schemas/deck_page_package.v1.schema.json",
+    "schemas/deck_skill_handoff.v1.schema.json",
+    "schemas/deck_sourcing_plan.v2.schema.json",
+    "schemas/deck_stage_approval.v1.schema.json",
+    "schemas/deck_stage_contract.v1.schema.json",
+    "schemas/deck_workflow_policy.v1.schema.json",
+    "schemas/deck_workflow_state.v1.schema.json"
+  ],
+  "schema_validation": [
+    {
+      "schema": "schemas/deck_stage_contract.v1.schema.json",
+      "example": "examples/stage-contract.deck-planner.json",
+      "status": "pass"
+    },
+    {
+      "schema": "schemas/deck_workflow_state.v1.schema.json",
+      "example": "examples/workflow-state.awaiting-approval.json",
+      "status": "pass"
+    },
+    {
+      "schema": "schemas/deck_skill_handoff.v1.schema.json",
+      "example": "examples/skill-handoff.brief-to-planner.json",
+      "status": "pass"
+    },
+    {
+      "schema": "schemas/deck_sourcing_plan.v2.schema.json",
+      "example": "examples/sourcing-plan.v2.json",
+      "status": "pass"
+    },
+    {
+      "schema": "schemas/deck_page_package.v1.schema.json",
+      "example": "examples/page-package.v1.json",
+      "status": "pass"
+    },
+    {
+      "schema": "schemas/deck_build_manifest.v2.schema.json",
+      "example": "examples/build-manifest.v2.json",
+      "status": "pass"
+    },
+    {
+      "schema": "schemas/deck_workflow_policy.v1.schema.json",
+      "example": "examples/workflow-preauthorization.json",
+      "status": "pass"
+    }
+  ],
+  "errors": []
+}

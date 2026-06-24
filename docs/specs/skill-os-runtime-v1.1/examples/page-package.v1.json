@@ -1,0 +1,103 @@
+{
+  "schema_version": "deck_page_package.v1",
+  "run_id": "demo-run",
+  "page_id": "page_001",
+  "beat_id": "beat_001",
+  "order": 1,
+  "status": "ready_for_build",
+  "customer_visible": {
+    "title": "从分散运营走向统一增长闭环",
+    "subtitle": "统一数据、内容与执行链路，缩短从洞察到行动的周期",
+    "body_blocks": [
+      {
+        "type": "insight",
+        "text": "当前增长动作分散在多个系统和团队中。"
+      },
+      {
+        "type": "mechanism",
+        "text": "通过统一工作流把洞察、内容、触达和复盘连接起来。"
+      }
+    ],
+    "labels": [
+      "现状",
+      "目标"
+    ],
+    "footnotes": [
+      "数据口径以双方确认的项目基线为准。"
+    ],
+    "callouts": []
+  },
+  "speaker_notes": "本页先讲现状，再说明为什么需要统一工作流。",
+  "audience_context": {
+    "audience": "客户管理层"
+  },
+  "visual_spec": {
+    "archetype": "before_after_flow",
+    "visual_protagonist": "closed_loop_diagram"
+  },
+  "asset_bindings": [
+    {
+      "asset_id": "asset_001",
+      "role": "proof_screenshot",
+      "path": "assets/page_001.png",
+      "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "approved": true
+    }
+  ],
+  "citations": [
+    {
+      "evidence_id": "evidence_001",
+      "display": "项目现状访谈纪要",
+      "customer_visible": true
+    }
+  ],
+  "claim_bindings": [
+    "claim_001"
+  ],
+  "evidence_bindings": [
+    "evidence_001"
+  ],
+  "style_refs": [
+    "style_lock.json"
+  ],
+  "build_requirements": {
+    "output_modes": [
+      "html",
+      "pptx",
+      "pdf",
+      "png"
+    ],
+    "editability_target": "hybrid"
+  },
+  "quality_intent": {
+    "required_gates": [
+      "customer_visible_safety",
+      "evidence",
+      "render"
+    ]
+  },
+  "internal_only": {
+    "production_rationale": "采用闭环图以强化因果关系。",
+    "agent_instructions": [
+      "不要在图内生成小字。"
+    ],
+    "unresolved_questions": [],
+    "private_source_refs": [
+      "local://meeting-notes"
+    ],
+    "review_notes": [
+      "客户名称待最终替换。"
+    ]
+  },
+  "provenance": {
+    "producer": "ppt-deck-pro-max",
+    "created_at": "2026-06-24T10:20:00+00:00",
+    "input_artifacts": [
+      {
+        "path": "sourcing_plan.v2.json",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    ]
+  },
+  "source_fingerprint": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+}

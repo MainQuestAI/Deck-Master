@@ -51,6 +51,23 @@ v1.0 的设计方向：
 | skill 调工具，工具写结构化产物 | Agent 文字说明不能替代机器可读状态 | 每个 Deck skill 输出必须进入 run artifact、Workspace index 或 release manifest |
 | Skill docs 加上前置检查和退出门槛 | 入口可用性需要自动判断 | 每个 Deck skill 需要 `First checks`、`Exit artifacts`、`Do not use when` |
 
+### GStack Handoff Pattern
+
+GStack 的关键经验在于阶段交接有硬规则。`office-hours` 完成 design doc 后，
+会明确告诉用户文档路径，并提示后续 `plan-ceo-review` 或 `plan-eng-review`
+可以读取该设计稿继续评审。`ship` 也会读取既有 review 记录、判断是否过期、
+缺失时主动运行或提示补审。
+
+Deck Master v1.0 需要吸收这套交接模式：
+
+1. 每个 skill 完成时必须写入机器可读产物。
+2. 每个 skill 必须声明下游候选 skill。
+3. 每个 skill 必须判断下游是否已经满足进入条件。
+4. 如果下游是方向、范围、交付放行等高影响动作，必须主动询问用户是否继续。
+5. 如果下游只是低风险机械步骤，`deck-autopilot` 可继续推进，但必须记录 evidence。
+
+这会把 Deck Master 从“当前命令执行完了”升级为“当前阶段完成，下一阶段是否应该开始”。
+
 ## Product Target
 
 Deck Master v1.0 的目标用户是非技术背景的解决方案架构师、售前负责人、方案顾问和使用 AI Coding / AI Agent 生产交付物的个人开发者。
@@ -160,9 +177,9 @@ v1.0 成功标准：
 | `deck-init` | 当前缺失独立入口 | 项目 Workspace 初始化和材料目录建立 | 原始材料文件夹、客户项目目录、deep research 包、参考素材 | 用户给一堆材料准备做 PPT；新客户项目启动；需要建立参考目录 | 已有 run 且只需继续执行；单文件质量审查 | `deck_project.json`、材料清单、目录结构、项目禁词、run binding | `deck-brief` |
 | `deck-brief` | `deck-planner` 内含 brief 生成 | 原始材料理解、brief、claim、证据索引 | 会议纪要、客户资料、研究报告、访谈记录、现有 Word/PDF/Markdown | 用户给材料并问“做 PPT 前先理解一下” | 用户已给结构化 brief 且只需规划页面 | `deck_brief.json`、`claim_map.json`、evidence inventory | `deck-planner` |
 | `deck-planner` | 已存在，负责 brief、claim map、narrative、page tasks | 叙事结构、章节、页面任务、讲标逻辑 | 已有 brief、deep research 摘要、项目目标、受众 | 用户要求“规划这套 Deck”“出页级结构”“主叙事怎么讲” | 用户只要检索历史页；只要质检现有 PPTX | `narrative_plan.json`、`page_tasks.json`、sourcing intent | `deck-sourcing` |
-| `deck-sourcing` | 当前为 `ppt-library` + `decide-sourcing` 的组合 | 决定每页复用、改写、新做、补证据、阻断 | page tasks、历史页库、参考 PPT、证据缺口 | 用户问“哪些页复用”“找类似页面”“这页要新做吗” | 没有 page task 时先回到 planner；只做最终交付审查时交给 review | `library_candidates.json`、`sourcing_plan.json`、reuse/adapt/generate decisions | `deck-producer` 或人工补证据 |
-| `deck-producer` | 当前为 `ppt-deck-pro-max` | 页面生产和 generation result 回写 | generation dispatch package、页面任务、视觉要求、素材决策 | 用户要求“生成页面”“把 brief 做成页面”“执行 generation session” | 未完成 sourcing；缺 run/session binding；生产模式没有真实 executor | `deck_generation_result.v2`、page content、speaker notes、visual tasks | `deck-builder` |
-| `deck-builder` | 当前为 `ppt-master` + Deck Master render/build adapter | build manifest、构建出片、产物生成与登记 | generation result、page assets、build request、render request | 用户要求“导出 HTML/PDF/PPTX/PNG”“生成预览”“构建交付版” | 内容未生产完成；production 下缺完整 PPT Master 后端或安全产物 | `build_manifest.json`、HTML/PDF/PNG/PPTX、artifact manifest、editability metadata | `deck-quality` |
+| `deck-sourcing` | 当前为 `ppt-library` + `decide-sourcing` 的组合 | 材料来源和证据状态决策 | page tasks、历史页库、参考 PPT、证据缺口 | 用户问“哪些页复用”“找类似页面”“这页要新做吗” | 没有 page task 时先回到 planner；不写最终页文案；不做页面排版；不构建文件 | `library_candidates.json`、`sourcing_plan.json`、每页来源决策、证据缺口、人工确认项 | `deck-producer`、`deck-planner` 或人工补证据 |
+| `deck-producer` | 当前为 `ppt-deck-pro-max` | 页面内容包生产和 generation result 回写 | page tasks、sourcing plan、视觉要求、素材决策 | 用户要求“生成页面”“把 brief 做成页面”“执行 generation session” | 未完成 sourcing；缺 run/session binding；不负责整套文件装配；不判断最终交付 | `page_package.json`、`deck_generation_result.v2`、客户可见文案、speaker notes、visual tasks、asset requests | `deck-builder` 或 `deck-quality` 预检 |
+| `deck-builder` | 当前为 `ppt-master` + Deck Master render/build adapter | 文件构建、出片和 artifact 登记 | approved page packages、generation result、page assets、build request、render request | 用户要求“导出 HTML/PDF/PPTX/PNG”“生成预览”“构建交付版” | 内容包未完成；production 下缺完整 PPT Master 后端；不重写业务主张；不补写页面内容 | `build_manifest.json`、HTML/PDF/PNG/PPTX、artifact manifest、editability metadata、source lineage | `deck-quality` |
 | `deck-quality` | 当前为 `ppt-quality-gate` | 文件级门禁和客户可见安全扫描 | PPTX、PDF、HTML、render artifact、quality policy | 用户要求“质量检查”“PPT 能不能给客户看”“扫禁词/占位语” | 用户要 run 级 export 决策时由 `deck-review` 汇总 | quality reports、customer-visible safety report、artifact validation | `deck-review` |
 | `deck-review` | 已存在，负责审查与交付 | run 级 readiness、返修队列、client/internal export 判断 | 完整 Deck Master run、quality reports、render artifacts | 用户问“能不能交付”“导出给客户”“列返修清单” | 只给原始材料时先 init/brief；只查安装问题时 doctor | `final_readiness.json`、repair queue、export queue | export 或 repair loop |
 | `deck-learn` | 架构文档提到，尚未实现 | 项目反馈、素材复利、benchmark metadata | 成交反馈、客户反馈、页面效果、返修记录 | 用户说“沉淀经验”“记录这页好用”“形成 benchmark” | 当前 run 仍未完成交付；敏感原文未脱敏 | learning pack、library feedback events、benchmark metadata | 下一次 `deck-sourcing` / `deck-brief` |
@@ -323,6 +340,66 @@ v1.0 成功标准：
 }
 ```
 
+### Producer Output
+
+`deck-producer` 输出的是页面内容包，不是最终文件。每个页面内容包必须把客户可见内容和内部制作字段分开：
+
+```json
+{
+  "schema_version": "deck_page_package.v1",
+  "run_id": "run-id",
+  "page_task_id": "page_03",
+  "source_decision_id": "src_003",
+  "customer_visible": {
+    "title": "统一内容资产底座支撑全球营销复用",
+    "body_points": ["..."],
+    "callouts": ["..."]
+  },
+  "speaker_notes": ["..."],
+  "visual_spec": {
+    "layout_intent": "before_after_comparison",
+    "required_assets": ["客户系统截图", "内容流转示意图"]
+  },
+  "internal_production_notes": ["仅供制作使用，不进入客户可见正文"],
+  "next_skill": "deck-builder"
+}
+```
+
+硬规则：
+
+- `customer_visible` 是唯一允许进入 PPT 正文、HTML 正文和 PDF 正文的字段。
+- `speaker_notes` 只能进入备注区，最终客户版可按策略移除。
+- `internal_production_notes` 只能被 builder / reviewer 使用，任何客户可见 artifact 命中都必须 P0 阻断。
+- 页面内容包缺 `source_decision_id` 时，退回 `deck-sourcing`。
+
+### Builder Output
+
+`deck-builder` 输出的是可检查文件和构建登记，不改写页面业务主张。
+
+```json
+{
+  "schema_version": "deck_build_manifest.v1",
+  "run_id": "run-id",
+  "input_page_packages": ["page_01_package.json", "page_02_package.json"],
+  "artifacts": [
+    {
+      "artifact_id": "html_preview_001",
+      "format": "html",
+      "path": "artifacts/preview/index.html",
+      "editable": false,
+      "source_lineage": ["page_01", "page_02"]
+    }
+  ],
+  "next_skill": "deck-quality"
+}
+```
+
+硬规则：
+
+- builder 可因版式适配调整布局，但不得新增未经过 producer 的业务主张。
+- builder 必须记录每个 artifact 来自哪些 page package。
+- builder 完成后必须触发 `deck-quality`，不能直接进入 client export。
+
 ## Continuous Workflow
 
 `deck-autopilot` 是 v1.0 需要新增的连续工作流入口。它参考 GStack `autoplan` 的做法，帮助用户用一句话启动完整链路，同时保留清晰的阶段证据。
@@ -363,6 +440,83 @@ deck-autopilot production
 - 安装、升级、文件权限、preview 服务连续修复失败。
 
 其他情况下，`deck-autopilot` 继续推进并记录阶段证据。
+
+## Skill Handoff Contract
+
+Deck Master v1.0 的每个 public skill 都必须实现阶段交接契约。该契约参考
+GStack 的 design doc -> review -> plan -> ship 模式，目标是让 Agent 在阶段完成后
+主动提出正确下一步，而不是等待用户重新猜命令。
+
+### Handoff Record
+
+每个 skill 完成时，必须向 run 或项目目录写入 `skill_handoff.json` 或等价字段：
+
+```json
+{
+  "schema_version": "deck_skill_handoff.v1",
+  "run_id": "run-id",
+  "completed_skill": "deck-planner",
+  "status": "ready_for_next_skill",
+  "exit_artifacts": [
+    "deck_brief.json",
+    "claim_map.json",
+    "narrative_plan.json",
+    "page_tasks.json"
+  ],
+  "recommended_next_skills": [
+    {
+      "skill": "deck-sourcing",
+      "reason": "页面任务已完成，需要决定每页材料来源",
+      "entry_requirements_met": true,
+      "requires_user_approval": true
+    }
+  ],
+  "blocked_next_skills": [
+    {
+      "skill": "deck-producer",
+      "reason": "缺少 sourcing_plan.json"
+    }
+  ]
+}
+```
+
+### Entry Dependency Matrix
+
+| From Skill | Exit Ready Means | Recommended Next Skill | Entry Requirements | Must Ask User? |
+|---|---|---|---|---|
+| `deck-init` | 项目目录、材料清单、禁词、run binding ready | `deck-brief` | `material_inventory.json` 存在，资料范围明确 | 是，除非用户已要求连续推进 |
+| `deck-brief` | brief、claim seed、证据索引 ready | `deck-planner` | `deck_brief.json` 和 `claim_map.json` 存在 | 是，涉及叙事方向 |
+| `deck-planner` | narrative plan、page tasks ready | `deck-sourcing` | 每页有 page task、core claim、evidence need | 是，涉及页级结构确认 |
+| `deck-sourcing` | 每页都有 reuse/adapt/generate/evidence/manual/blocked 决策 | `deck-producer` | 无 blocked 决策；需要人工补证据的页面已确认处理方式 | 是，涉及生产成本和素材授权 |
+| `deck-producer` | page packages 或 generation result imported | `deck-builder` | 每个待构建页面有客户可见字段和素材路径 | 通常否，production 模式可自动继续 |
+| `deck-builder` | artifact manifest ready | `deck-quality` | HTML/PPTX/PDF/PNG 至少一个 artifact 可扫描 | 否，质量门禁必须自动运行 |
+| `deck-quality` | quality report ready | `deck-review` | 无缺失扫描报告；P0 状态明确 | 否，review 必须汇总门禁 |
+| `deck-review` | final readiness ready | `deck-learn` 或 export | client export 仅在 final readiness pass 时允许 | export 前必须确认 |
+| `deck-learn` | learning pack ready | 下一次 run | 脱敏完成，反馈来源明确 | 否 |
+
+### User Approval Prompt
+
+需要用户确认的交接，必须用清楚的决策问题。格式参考 GStack AskUserQuestion：
+
+```text
+D<N> — 是否进入下一阶段
+当前阶段：deck-planner 已完成页级任务。
+当前产物：narrative_plan.json、page_tasks.json。
+建议下一步：进入 deck-sourcing，决定哪些页复用、改写、新做或补证据。
+风险：如果跳过 sourcing，后续页面生产会缺材料来源和证据边界。
+Recommendation: 进入 deck-sourcing，因为页面结构已经稳定，下一步应锁定材料来源。
+选项：
+A) 进入 deck-sourcing（推荐）
+B) 先人工审一遍 page tasks
+C) 暂停，输出当前阶段总结
+```
+
+规则：
+
+- 高影响阶段必须问：`deck-brief -> deck-planner`、`deck-planner -> deck-sourcing`、`deck-sourcing -> deck-producer`、`deck-review -> export`。
+- 机械门禁默认自动：`deck-builder -> deck-quality`、`deck-quality -> deck-review`。
+- `deck-autopilot production` 可跳过部分确认，但必须在 handoff 里记录 `approval_policy=autopilot_preapproved`。
+- 如果下游 entry requirements 不满足，不能询问“是否继续”，只能报告阻断和补齐动作。
 
 ## Setup, Upgrade, Doctor
 
@@ -481,6 +635,7 @@ do_not_use_when:
 ## Allowed Commands
 ## Exit Artifacts
 ## Next Skill
+## Handoff Prompt
 ## Safety Rules
 ```
 
@@ -490,6 +645,7 @@ do_not_use_when:
 - `Do Not Use When` 必须指出常见误触发。
 - `Exit Artifacts` 必须是机器可读文件或明确的 run state。
 - `Next Skill` 必须告诉 Agent 下一步。
+- `Handoff Prompt` 必须说明何时主动询问用户进入下一阶段。
 - `Safety Rules` 必须覆盖客户可见内容、敏感资料、fixture / production 边界。
 
 ## UI And Review Workspace
@@ -611,12 +767,16 @@ Review Cockpit / Workspace UI 需要按 v1.0 skill 体系展示状态：
 - 新增连续 workflow。
 - 支持 `quick`、`production`、`repair`、`review-only`。
 - 阶段之间写 evidence，不以用户确认作为默认门。
+- 对高影响阶段记录 `approval_policy`，没有用户确认时不得伪装成已审批。
 
 验收：
 
 - 从材料启动 quick workflow，能到 page tasks / sourcing。
 - production workflow 在无 executor 时停在 `awaiting_agent_execution`。
 - repair workflow 能从 quality findings 生成返修任务。
+- 每个阶段都产生 handoff record。
+- `deck-planner -> deck-sourcing` 会主动询问是否进入下一阶段。
+- `deck-builder -> deck-quality` 自动继续并记录 evidence。
 
 ### Phase 7: UI And Docs
 

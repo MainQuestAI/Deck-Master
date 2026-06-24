@@ -1,0 +1,21 @@
+requirement_id,task,test,evidence
+SO-001,A1,test_stage_contract_registry,contract validation report
+SO-002,A1,test_skill_manifest,manifest provenance report
+SO-003,A2,test_workflow_state,snapshot rebuild diff
+SO-004,A3,test_skill_handoff,handoff trace
+SO-005,A4/B5,"test_workflow_approval,test_workflow_autopilot_v2",negative policy report
+SO-006,A4/B5/C5,test_export_approval,final export evidence
+SO-007,A2/A4,test_workflow_approval,mutation evidence
+SO-008,A5,test_workflow_cli,consistency matrix
+SO-009,B2,test_sourcing_plan_v2,coverage report
+SO-010,B3,test_page_package,package index
+SO-011,B3/B4,"test_page_package,test_build_manifest_v2",leakage scan
+SO-012,B4,test_build_manifest_v2,negative build result
+SO-013,B5,test_workflow_autopilot_v2,all-mode report
+SO-014,C1,test_review_desk_skill_os,browser evidence
+SO-015,C3,test_skill_os_migration,bootstrap report
+SO-016,C2/C3,"test_skill_doc_contract,test_skill_os_migration",compat smoke
+SO-017,C3,test_skill_os_migration,install evidence
+SO-018,C2,test_skill_doc_contract,conformance report
+SO-019,C4,release install jobs,temp HOME logs
+SO-020,C5,skill-os E2E suite,dogfood evidence pack
