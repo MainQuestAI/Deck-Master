@@ -47,7 +47,8 @@
 | B1 | ✅ done | questions.py + decisions.py（gap-only，required/assumption 区分，blocking 阻断 exit，answer 绑 input_fingerprint，stale 重现）；7 新测试，936 passed |
 | B2 | ✅ done | scripts/sourcing/plan.py（per-page 6 类决策，authority/freshness/permission，coverage/approval_readiness，v1 安全迁移）；11 新测试，947 passed |
 | B3 | ✅ done | scripts/production/page_package.py（customer_visible/internal_only 严格分区，leak 检测，claim/evidence/asset 绑定，index 覆盖，generation result 引用）；12 新测试，959 passed；DEV-003 跨仓库 bridge 待独立 PR |
-| B4–B5 | ⏳ pending | — |
+| B4 | ✅ done | scripts/build/manifest.py（白名单投影，package/customer_payload hash，backend 契约版本校验，直接 preview 阻断，显式 legacy adapter）；12 新测试，971 passed |
+| B5 | ⏳ pending | — |
 | C1–C5 | ⏳ pending | — |
 
 ### DEV-003 — 跨仓库 PPT Deck Pro Max bridge 需独立 PR + 固定 SHA
