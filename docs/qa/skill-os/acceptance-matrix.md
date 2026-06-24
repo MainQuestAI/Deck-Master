@@ -31,7 +31,7 @@ Definition of Done（master spec §8）：
 3. 所有要求审批的 Transition 都有有效 Approval ✅
 4. Autopilot 无法绕过审批或最终导出确认 ✅
 5. Builder 生产输入切换到 Page Package ✅
-6. Review Desk 可展示/批准/驳回/恢复 Workflow ✅（API 投影 + accept/reject）
+6. Review Desk 可展示/批准/驳回/恢复 Workflow ✅（前端 stage rail + HTTP accept/reject + API 投影）
 7. Legacy Run 不丢状态，可安全 bootstrap ✅
 8. `ppt-*` 和外部完整 Skill Package 不被覆盖或绕开 ✅（compat 文档 + manifest）
 9. CI、RC、clean install、E2E 全部通过 — CI 已增强；clean install 待 1.1.0 release 重建（DEV-001）
