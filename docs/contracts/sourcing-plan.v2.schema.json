@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/contracts/sourcing-plan.v2.schema.json",
+  "title": "Deck Sourcing Plan v2",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "status",
+    "source_fingerprint",
+    "pages",
+    "created_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "deck_sourcing_plan.v2"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "draft",
+        "awaiting_approval",
+        "approved",
+        "blocked",
+        "stale"
+      ]
+    },
+    "source_fingerprint": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "pages": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/pageDecision"
+      }
+    },
+    "coverage": {
+      "type": "object"
+    },
+    "approval_readiness": {
+      "type": "object"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "$defs": {
+    "pageDecision": {
+      "type": "object",
+      "required": [
+        "page_id",
+        "page_task_id",
+        "decision",
+        "reason",
+        "confidence",
+        "evidence_need",
+        "selected_sources",
+        "permission_status"
+      ],
+      "properties": {
+        "page_id": {
+          "type": "string"
+        },
+        "page_task_id": {
+          "type": "string"
+        },
+        "decision": {
+          "enum": [
+            "reuse",
+            "adapt",
+            "generate",
+            "evidence",
+            "manual",
+            "blocked"
+          ]
+        },
+        "reason": {
+          "type": "string"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "claim_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "evidence_need": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "selected_sources": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "source_authority": {
+          "type": "string"
+        },
+        "freshness_status": {
+          "type": "string"
+        },
+        "permission_status": {
+          "enum": [
+            "approved",
+            "pending",
+            "restricted",
+            "blocked",
+            "not_required"
+          ]
+        },
+        "usage_constraints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "missing_evidence": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "production_budget_class": {
+          "enum": [
+            "none",
+            "low",
+            "medium",
+            "high"
+          ]
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}
