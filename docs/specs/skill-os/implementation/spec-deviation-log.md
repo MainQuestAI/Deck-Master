@@ -42,7 +42,7 @@
 | A1 | ✅ done | manifest.py loader + 9 contracts + schema；27 新测试，863 passed |
 | A2 | ✅ done | scripts/workflow/ (state/validator/fingerprint)；workflow_state.v1 schema；runtime_stage 桥接；21 新测试，884 passed |
 | A3 | ✅ done | scripts/workflow/handoff.py (append-only prepare/accept/consume/reject/stale/supersede, idempotent, file lock, current 投影)；13 新测试，897 passed |
-| A4 | ⏳ pending | — |
+| A4 | ✅ done | scripts/workflow/approval.py + policy.py（绑定 handoff/fingerprint，accept/reject/revoke/stale，non-bypassable，final export 不可预授权）；17 新测试，914 passed |
 | A5 | ⏳ pending | — |
 | B1–B5 | ⏳ pending | — |
 | C1–C5 | ⏳ pending | — |

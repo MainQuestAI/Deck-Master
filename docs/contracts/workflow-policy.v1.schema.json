@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/contracts/workflow-policy.v1.schema.json",
+  "title": "Deck Workflow Policy v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "policy_id",
+    "run_id",
+    "mode",
+    "actor",
+    "allowed_transitions",
+    "created_at",
+    "expires_at",
+    "protected_transitions"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "deck_workflow_policy.v1"
+    },
+    "policy_id": {
+      "type": "string"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "mode": {
+      "enum": [
+        "interactive",
+        "preauthorized",
+        "quick",
+        "repair",
+        "review-only"
+      ]
+    },
+    "actor": {
+      "type": "object"
+    },
+    "allowed_transitions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "protected_transitions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "contains": {
+        "const": "deck-review->client-export"
+      }
+    },
+    "material_roots": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "allowed_source_classes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "max_generated_pages": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "max_cost_class": {
+      "enum": [
+        "none",
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "baseline_fingerprint": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "revoked": {
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false
+}
