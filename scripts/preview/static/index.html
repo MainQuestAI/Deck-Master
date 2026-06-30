@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Deck Master 审稿桌</title>
+    <title>Deck Master 方案项目工作台</title>
     <link rel="icon" href="data:,">
     <link rel="stylesheet" href="/static/style.css">
   </head>
@@ -12,7 +12,7 @@
       <header class="status-bar" role="banner">
         <div class="status-bar-brand">
           <div class="mq-logo">MAINQUEST</div>
-          <span class="panel-title">审稿桌</span>
+          <span class="panel-title">方案项目工作台</span>
         </div>
 
         <div class="status-bar-run">
@@ -157,6 +157,23 @@
             <p id="decision-summary">先选择一个项目，再进入页面处理。</p>
           </div>
 
+          <section class="decision-block decision-block-actions">
+            <span class="panel-title">处理动作</span>
+            <div class="action-grid">
+              <button id="approve-page" class="btn btn-cta">批准页面</button>
+              <button id="reject-page" class="btn">驳回页面</button>
+              <button id="request-evidence" class="btn">请求补证据</button>
+              <button id="submit-page-approval" class="btn">升级审批</button>
+            </div>
+
+            <label class="field-label" for="decision-note">备注 / 审批原因</label>
+            <textarea id="decision-note" rows="5" placeholder="记录判断依据、补证据要求或审批说明"></textarea>
+            <div class="decision-footer">
+              <button id="save-note" class="btn">记录备注</button>
+              <p id="action-feedback" class="action-feedback"></p>
+            </div>
+          </section>
+
           <section class="decision-block">
             <span class="panel-title">页面定位</span>
             <div id="page-role-content" class="stack-list"></div>
@@ -177,27 +194,10 @@
             <span class="panel-title">审批记录</span>
             <div id="approval-content" class="stack-list"></div>
           </section>
-
-          <section class="decision-block decision-block-actions">
-            <span class="panel-title">处理动作</span>
-            <div class="action-grid">
-              <button id="approve-page" class="btn btn-cta">批准页面</button>
-              <button id="reject-page" class="btn">驳回页面</button>
-              <button id="request-evidence" class="btn">请求补证据</button>
-              <button id="submit-page-approval" class="btn">升级审批</button>
-            </div>
-
-            <label class="field-label" for="decision-note">备注 / 审批原因</label>
-            <textarea id="decision-note" rows="4" placeholder="记录判断依据、补证据要求或审批说明"></textarea>
-            <div class="decision-footer">
-              <button id="save-note" class="btn">记录备注</button>
-              <p id="action-feedback" class="action-feedback"></p>
-            </div>
-          </section>
         </aside>
       </section>
 
-      <section class="bottom-drawer collapsed" id="bottom-drawer" aria-label="项目级信息抽屉">
+      <section class="bottom-drawer collapsed" id="bottom-drawer" aria-label="run 级信息抽屉">
         <div class="bottom-drawer-tabs" role="tablist" aria-label="底部抽屉标签">
           <button class="bottom-drawer-tab" role="tab" aria-selected="true" aria-controls="bottom-panel-readiness" data-tab="readiness">就绪度<span class="drawer-badge" id="readiness-badge"></span></button>
           <button class="bottom-drawer-tab" role="tab" aria-selected="false" aria-controls="bottom-panel-claim" data-tab="claim">论点覆盖</button>

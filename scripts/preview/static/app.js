@@ -336,10 +336,10 @@ function deriveShellState() {
       id: "loading",
       tone: "muted",
       stageLabel: "载入中",
-      headline: "正在读取审稿桌",
+      headline: "正在读取当前工作台",
       subtitle: "系统正在同步当前方案项目、页面队列和动作状态。",
       stageTitle: state.currentProjectId ? "当前项目" : "系统状态",
-      stageDetail: state.currentProjectId ? projectName : "准备进入审稿桌",
+      stageDetail: state.currentProjectId ? projectName : "准备进入工作台",
       nextTitle: "下一步",
       nextDetail: "载入完成后会自动切到当前状态对应的主舞台。",
       blockTitle: "请稍候",
@@ -373,14 +373,17 @@ function deriveShellState() {
       id: "setup",
       tone: "warning",
       stageLabel: "Setup 未就绪",
-      headline: "审稿桌还未准备完成",
+      headline: "工作台还未准备完成",
       subtitle: setup.active_workspace
         ? "当前工作目录已识别，仍需补齐前置项。"
         : "系统还没有识别到可用工作目录。",
       stageTitle: "系统缺口",
       stageDetail: setupBlocks[0] || "仍有前置项待补齐。",
       nextTitle: "下一步",
-      nextDetail: safeDisplayText(setup.display_next_step_detail || setup.next_command, "先补齐安装、工作目录或项目绑定。"),
+      nextDetail: safeDisplayText(
+        setup.display_next_step_detail || setup.next_command,
+        "先补齐安装、工作目录或项目绑定。"
+      ),
       blockTitle: missingCount ? `${missingCount} 项待补齐` : "仍有前置项待处理",
       blockDetail: setupBlocks[0] || "请先完成 setup。",
       blockTone: "danger",
@@ -397,13 +400,13 @@ function deriveShellState() {
       headline: state.projects.length ? "先选择一个方案项目" : "当前还没有方案项目",
       subtitle: state.projects.length
         ? "项目切换放在顶部。选中后，左栏、中间舞台和右栏会同步进入当前方案项目。"
-        : "点击顶部新建项目，完成后会自动回到审稿桌。",
+        : "点击顶部新建项目，完成后会自动回到工作台。",
       stageTitle: "项目状态",
       stageDetail: state.projects.length ? `${state.projects.length} 个可用项目` : "0 个可用项目",
       nextTitle: "下一步",
-      nextDetail: state.projects.length ? "选择一个项目，马上进入当前阶段判断。" : "新建项目后进入审稿桌。",
+      nextDetail: state.projects.length ? "选择一个项目，马上进入当前阶段判断。" : "新建项目后进入工作台。",
       blockTitle: "当前入口",
-      blockDetail: state.projects.length ? "审稿桌已就绪，等待选择项目。" : "当前还没有可进入的项目。",
+      blockDetail: state.projects.length ? "工作台已就绪，等待选择项目。" : "当前还没有可进入的项目。",
       blockTone: "",
       blockers: [],
     };
@@ -414,16 +417,16 @@ function deriveShellState() {
       id: "error",
       tone: "danger",
       stageLabel: "状态不一致",
-      headline: "项目状态和审稿桌绑定不一致",
-      subtitle: "当前页面读取到的状态信息和审稿桌数据不在同一个项目上。",
+      headline: "项目状态和工作台绑定不一致",
+      subtitle: "当前页面读取到的状态信息和工作台数据不在同一个项目上。",
       stageTitle: "当前项目",
       stageDetail: `${runState.run_id} / ${workspace.project_id}`,
       nextTitle: "建议动作",
       nextDetail: "重新选择项目，再刷新当前工作台。",
       blockTitle: "当前阻断",
-      blockDetail: "当前项目状态与审稿桌数据不一致。",
+      blockDetail: "当前项目状态与工作台数据不一致。",
       blockTone: "danger",
-      blockers: ["当前项目状态与审稿桌数据不一致。"],
+      blockers: ["当前项目状态与工作台数据不一致。"],
     };
   }
 
@@ -433,15 +436,15 @@ function deriveShellState() {
       tone: "danger",
       stageLabel: "项目未载入",
       headline: "当前项目还没有稳定载入",
-      subtitle: "审稿桌没有拿到完整的项目数据。",
+      subtitle: "工作台没有拿到完整的项目数据。",
       stageTitle: "当前项目",
       stageDetail: projectName,
       nextTitle: "建议动作",
       nextDetail: "重新选择项目，或刷新页面后重试。",
       blockTitle: "当前阻断",
-      blockDetail: "缺少审稿桌数据。",
+      blockDetail: "缺少工作台数据。",
       blockTone: "danger",
-      blockers: ["缺少审稿桌数据。"],
+      blockers: ["缺少工作台数据。"],
     };
   }
 
@@ -1004,7 +1007,7 @@ function renderShellWorkspace() {
     </div>
   `).join("");
 
-  els.previewPanelLabel.textContent = shellState.id === "setup" ? "系统入口" : "审稿桌入口";
+  els.previewPanelLabel.textContent = shellState.id === "setup" ? "系统入口" : "工作台入口";
   els.focusPageTitle.textContent = shellState.headline;
   els.focusPageMeta.textContent = shellState.subtitle;
   els.currentLabel.textContent = shellState.stageLabel;
@@ -1025,7 +1028,7 @@ function renderShellWorkspace() {
         </div>
       </div>
       <div class="stage-workspace-top">
-        ${cards || `<div class="stage-card"><span class="panel-title">当前状态</span><strong>${escapeHtml(safeDisplayText(shellState.blockDetail, "当前入口已就绪"))}</strong><p>${escapeHtml(safeDisplayText(shellState.subtitle, "继续推进当前阶段。"))}</p></div>`}
+        ${cards || `<div class="stage-card"><span class="panel-title">当前状态</span><strong>${escapeHtml(shellState.blockDetail || "当前入口已就绪")}</strong><p>${escapeHtml(safeDisplayText(shellState.subtitle, "继续推进当前阶段。"))}</p></div>`}
       </div>
       <section class="stage-checklist">
         <span class="panel-title">现在该做什么</span>
@@ -1043,6 +1046,7 @@ function renderStageWorkspace() {
   const workspace = currentWorkspace();
   const stage = currentStage();
   const focusPage = currentPageCard() || currentPages()[0] || null;
+  const delivery = workspace.run_summary?.delivery_preview || {};
   const actions = workspace.run_summary?.next_actions || [];
   const blockers = (workspace.health?.blocking_reasons || []).map((item) => (
     safeDisplayText(item, "当前仍有前置项需要处理。")
@@ -1060,16 +1064,17 @@ function renderStageWorkspace() {
     els.currentLabel.textContent = `${orderLabel} · 阶段工作区`;
   } else {
     els.previewPanelLabel.textContent = "阶段工作区";
-    els.focusPageTitle.textContent = `${stage.label || "待准备"} · ${stageDisplay(stage, "stage_definition", "当前仍在准备阶段")}`;
+    els.focusPageTitle.textContent = `${stage.label || "待准备"} · ${stageDefinition || "当前仍在准备阶段"}`;
     els.focusPageMeta.textContent = stageBlocker;
     els.currentLabel.textContent = "阶段工作区";
   }
   setPreviewNavVisible(false);
 
-  const blockerItems = (blockers.length ? blockers : [stageBlocker]).slice(0, 3).map((item) => `
-    <div class="stage-check-item">
-      <strong>当前卡点</strong>
-      <p>${escapeHtml(item)}</p>
+  const blockerCards = (blockers.length ? blockers : [stageBlocker]).slice(0, 3).map((item) => `
+    <div class="stage-card ${escapeHtml(stage.tone || "muted")}">
+      <span class="panel-title">当前阻塞</span>
+      <strong>${escapeHtml(item)}</strong>
+      <p>${escapeHtml(nextStep)}</p>
     </div>
   `).join("");
   const actionCards = actions.slice(0, 3).map((item) => `
@@ -1078,30 +1083,43 @@ function renderStageWorkspace() {
       <p>${escapeHtml(safeDisplayText(item.message, nextStep))}</p>
     </div>
   `).join("");
-  const focusPageSummary = focusPage
-    ? `当前选中第 ${String(focusPage.order).padStart(2, "0")} 页《${focusPage.title}》，这页承担“${focusPage.narrative_role || "未标注页面职责"}”。`
-    : "当前还没有可审页面。";
+  const focusPageCard = focusPage ? `
+    <div class="stage-card stage-card-focus">
+      <div class="stage-card-topline">
+        <span class="panel-title">当前选中页面</span>
+        <span class="status-pill ${escapeHtml(focusPage.status_tone || "muted")}">${escapeHtml(focusPage.status_label || "待处理")}</span>
+      </div>
+      <strong>${escapeHtml(`第 ${String(focusPage.order).padStart(2, "0")} 页 · ${focusPage.title}`)}</strong>
+      <p>${escapeHtml(`这页承担“${focusPage.narrative_role || "未标注页面职责"}”的说明任务。当前仍处于${stage.label || "待准备"}阶段，先补齐预览与生成结果，再开放页面级操作。`)}</p>
+      <div class="stage-card-tags">
+        <span class="page-chip">${escapeHtml(focusPage.source_decision_label || focusPage.source_label || "来源待确认")}</span>
+        <span class="page-chip">风险 ${escapeHtml(String(focusPage.risk_count || 0))}</span>
+        <span class="page-chip">${escapeHtml(focusPage.approval_state === "pending" ? "待审批" : "无审批")}</span>
+      </div>
+    </div>
+  ` : "";
 
   els.previewStage.innerHTML = `
-    <div class="stage-workspace stage-workspace-focused">
-      <div class="stage-card stage-card-focus ${escapeHtml(stage.tone || "muted")}">
-        <div class="stage-card-topline">
-          <span class="panel-title">${escapeHtml(stage.label || "待准备")}</span>
-          <span class="status-pill ${escapeHtml(stage.tone || "muted")}">${escapeHtml(stage.label || "待准备")}</span>
+    <div class="stage-workspace">
+      <div class="stage-workspace-top">
+        ${focusPageCard}
+        ${blockerCards}
+        <div class="stage-card ${escapeHtml(delivery.artifact_ready ? "success" : "warning")}">
+          <span class="panel-title">交付预览</span>
+          <strong>${escapeHtml(delivery.summary || "当前还没有交付级预览。")}</strong>
+          <p>${escapeHtml(delivery.detail || "进入可交付阶段后可查看最终交付预览。")}</p>
         </div>
-        <strong>${escapeHtml(stageBlocker)}</strong>
-        <p>${escapeHtml(nextStep)}</p>
-        <div class="stage-card-tags">
-          <span class="page-chip">责任：${escapeHtml(stage.owner || "未指定")}</span>
-          <span class="page-chip">结果：${escapeHtml(expectedResult)}</span>
+        <div class="stage-card">
+          <span class="panel-title">责任对象</span>
+          <strong>${escapeHtml(stage.owner || "未指定")}</strong>
+          <p>${escapeHtml(`目标结果：${expectedResult}`)}</p>
         </div>
       </div>
       <div class="stage-workspace-body">
         <section class="stage-checklist">
-          <span class="panel-title">阶段工作区</span>
-          <h3>${escapeHtml(focusPageSummary)}</h3>
-          <div class="stage-check-grid stage-check-grid-compact">
-            ${blockerItems}
+          <span class="panel-title">当前要推进的事情</span>
+          <h3>${escapeHtml(nextStep)}</h3>
+          <div class="stage-check-grid">
             ${actionCards || `<div class="stage-check-item"><strong>建议动作</strong><p>${escapeHtml(nextStep)}</p></div>`}
           </div>
         </section>
@@ -1114,7 +1132,7 @@ function renderPagePreview() {
   if (!els.previewStage) return;
   const page = currentPageCard();
   if (!currentWorkspace().project_id) {
-    els.previewPanelLabel.textContent = "审稿桌";
+    els.previewPanelLabel.textContent = "方案项目工作台";
     els.focusPageTitle.textContent = "尚未加载方案项目";
     els.focusPageMeta.textContent = "顶部切换方案项目，或新建项目进入处理。";
     els.currentLabel.textContent = "-";
@@ -1138,7 +1156,7 @@ function renderPagePreview() {
     els.previewStage.innerHTML = `
       <div class="empty-state">
         <h3>当前没有页面</h3>
-        <p>先补齐页面生成、预览构建或前置资料，再回到审稿桌处理。</p>
+        <p>先补齐页面生成、预览构建或前置资料，再回到工作台处理。</p>
       </div>
     `;
     return;
@@ -1386,7 +1404,7 @@ function renderShellDecisionRail() {
     <div class="stack-card">
       <strong>${escapeHtml(shellState.nextTitle || "下一步")}</strong>
       <p>${escapeHtml(safeDisplayText(shellState.nextDetail, "当前没有额外说明。"))}</p>
-      <small>${escapeHtml(safeDisplayText(currentSetupStatus().next_command, "诊断命令已收起，可由执行器继续处理。"))}</small>
+      <small>${escapeHtml(safeDisplayText(currentSetupStatus().display_next_step_detail || currentSetupStatus().next_command, "诊断命令已收起，可由执行器继续处理。"))}</small>
     </div>
   `;
   els.pageRiskContent.innerHTML = blocks.length
@@ -1430,7 +1448,7 @@ function renderRunLevelDecisionRail() {
     <div class="stack-card">
       <strong>下一步</strong>
       <p>${escapeHtml(stageNextDetail(stage, "继续推进当前阶段。"))}</p>
-      <small>${escapeHtml(`目标结果：${stage.expected_result || "形成可处理页面与交付判断"}`)}</small>
+      <small>${escapeHtml(`目标结果：${safeDisplayText(stage.expected_result, "形成可处理页面与交付判断。")}`)}</small>
     </div>
   `;
   els.pageRiskContent.innerHTML = (workspace.health?.blocking_reasons || []).length
@@ -1556,7 +1574,7 @@ function renderBlockFlag() {
       ...(currentSetupStatus().missing_items || []),
       ...(currentSetupStatus().repair_items || []),
     ]).length;
-    els.blockFlag.textContent = missingCount ? `${missingCount} 项 setup 待处理` : "setup 仍有待确认项";
+    els.blockFlag.textContent = missingCount ? `${missingCount} 项前置项待处理` : "仍有前置项待确认";
     els.blockFlag.dataset.tone = "danger";
     els.blockFlag.hidden = false;
     return;
@@ -1911,25 +1929,29 @@ async function refreshCurrentProject() {
     return;
   }
   await loadProjects();
-  try { await loadWorkspace(); } catch (e) { /* early-stage run may have no preview_manifest; Skill OS rail still works */ }
+  try { await loadWorkspace(); } catch (e) { /* early-stage run may lack preview_manifest */ }
   await loadSkillOsRail();
 }
 
-// === Skill OS Stage Rail (C1) ===
-// Fetches the contract projection from the runtime (never derives stage
-// state in the frontend — 08-review-desk-integration.md §3). Renders the
-// 9-stage ladder with safe copy, and wires accept/reject POST endpoints.
 async function loadSkillOsRail() {
   const rail = document.getElementById("skill-os-stages");
   const actions = document.getElementById("skill-os-actions");
   const copy = document.getElementById("skill-os-safe-copy");
   const current = document.getElementById("skill-os-current");
-  if (!rail || !state.currentProjectId) return;
+  if (!rail || !actions || !copy || !current) return;
+  if (!state.currentProjectId) {
+    state.skillOs = null;
+    rail.innerHTML = '<li class="s-notstarted"><span class="stage-dot"></span><span class="stage-label">等待选择项目</span></li>';
+    actions.innerHTML = "";
+    copy.textContent = "";
+    current.textContent = "-";
+    return;
+  }
   try {
     const proj = await requestJson(`/api/workflow-status/${encodeURIComponent(state.currentProjectId)}`);
     state.skillOs = proj;
     renderSkillOsRail(proj, rail, actions, copy, current);
-  } catch (err) {
+  } catch (error) {
     rail.innerHTML = '<li class="s-notstarted"><span class="stage-dot"></span><span class="stage-label">阶段信息不可用</span></li>';
     actions.innerHTML = "";
     copy.textContent = "";
@@ -1938,7 +1960,7 @@ async function loadSkillOsRail() {
 }
 
 function renderSkillOsRail(proj, railEl, actionsEl, copyEl, currentEl) {
-  const STATUS_CLASS = {
+  const statusClass = {
     completed: "s-completed",
     awaiting_approval: "s-awaiting",
     stale: "s-stale",
@@ -1948,7 +1970,7 @@ function renderSkillOsRail(proj, railEl, actionsEl, copyEl, currentEl) {
     in_progress: "s-current",
     not_started: "s-notstarted",
   };
-  const STATUS_BADGE = {
+  const statusBadge = {
     completed: "已完成",
     awaiting_approval: "待确认",
     stale: "已过期",
@@ -1958,54 +1980,68 @@ function renderSkillOsRail(proj, railEl, actionsEl, copyEl, currentEl) {
     in_progress: "进行中",
     not_started: "未开始",
   };
+  const currentStage = (proj.stages || []).find((stage) => stage.stage_id === proj.current_stage) || null;
+
   railEl.innerHTML = "";
-  for (const s of proj.stages || []) {
-    const cls = STATUS_CLASS[s.status] || "s-notstarted";
+  for (const stage of proj.stages || []) {
+    const cls = statusClass[stage.status] || "s-notstarted";
     const li = document.createElement("li");
-    li.className = cls + (s.stage_id === proj.current_stage ? " s-current" : "");
-    li.innerHTML = `<span class="stage-dot"></span><span class="stage-label">${s.label || s.stage_id}</span><span class="stage-badge">${STATUS_BADGE[s.status] || s.status}</span>`;
+    li.className = cls + (stage.stage_id === proj.current_stage ? " s-current" : "");
+    li.innerHTML = `<span class="stage-dot"></span><span class="stage-label">${stage.label || stage.stage_id}</span><span class="stage-badge">${statusBadge[stage.status] || stage.status}</span>`;
     railEl.appendChild(li);
   }
-  currentEl.textContent = proj.current_stage || "-";
-  // safe copy for the current stage
-  const curStage = (proj.stages || []).find(s => s.stage_id === proj.current_stage);
-  copyEl.textContent = curStage && curStage.safe_copy ? `${curStage.safe_copy.headline} — ${curStage.safe_copy.detail}` : "";
-  // accept/reject actions only for awaiting-approval current stage
+
+  currentEl.textContent = currentStage?.label || proj.current_stage || "-";
+  copyEl.textContent = currentStage?.safe_copy
+    ? `${currentStage.safe_copy.headline} — ${currentStage.safe_copy.detail}`
+    : "";
   actionsEl.innerHTML = "";
-  if (curStage && curStage.is_awaiting_approval) {
-    const acc = document.createElement("button");
-    acc.className = "btn"; acc.type = "button"; acc.textContent = "确认进入下一阶段";
-    acc.addEventListener("click", () => skillOsHandoffDecide("accept"));
-    const rej = document.createElement("button");
-    rej.className = "btn btn-ghost"; rej.type = "button"; rej.textContent = "驳回返修";
-    rej.addEventListener("click", () => skillOsHandoffDecide("reject"));
-    actionsEl.appendChild(acc);
-    actionsEl.appendChild(rej);
+  if (currentStage && currentStage.is_awaiting_approval) {
+    const acceptBtn = document.createElement("button");
+    acceptBtn.className = "btn";
+    acceptBtn.type = "button";
+    acceptBtn.textContent = "确认进入下一阶段";
+    acceptBtn.addEventListener("click", () => skillOsHandoffDecide("accept"));
+
+    const rejectBtn = document.createElement("button");
+    rejectBtn.className = "btn btn-ghost";
+    rejectBtn.type = "button";
+    rejectBtn.textContent = "驳回返修";
+    rejectBtn.addEventListener("click", () => skillOsHandoffDecide("reject"));
+
+    actionsEl.appendChild(acceptBtn);
+    actionsEl.appendChild(rejectBtn);
   }
 }
 
 async function skillOsHandoffDecide(decision) {
   const proj = state.skillOs;
   if (!proj || !state.currentProjectId) return;
-  // need a handoff_id for the current awaiting-approval stage
+
   let handoffId = proj.current_handoff && proj.current_handoff.handoff_id;
   if (!handoffId) {
     try {
       const list = await requestJson(`/api/workflow-handoffs/${encodeURIComponent(state.currentProjectId)}`);
-      const awaiting = (list.handoffs || []).find(h => h.from_stage === proj.current_stage && h.status === "awaiting_approval");
+      const awaiting = (list.handoffs || []).find((item) => (
+        item.from_stage === proj.current_stage && item.status === "awaiting_approval"
+      ));
       handoffId = awaiting && awaiting.handoff_id;
-    } catch (err) { handoffId = null; }
+    } catch (error) {
+      handoffId = null;
+    }
   }
   if (!handoffId) {
-    alert("当前阶段没有可确认的交接记录。请先在 CLI 运行 workflow handoff prepare。");
+    alert("当前阶段还没有可确认的交接记录，请先完成上一阶段的交付准备。");
     return;
   }
+
   const body = { handoff_id: handoffId, actor: "review-desk" };
   if (decision === "reject") {
     const reason = prompt("驳回原因（将路由返修）：");
     if (!reason) return;
     body.reason = reason;
   }
+
   try {
     await requestJson(`/api/workflow-handoff/${encodeURIComponent(state.currentProjectId)}/${decision}`, {
       method: "POST",
@@ -2013,11 +2049,10 @@ async function skillOsHandoffDecide(decision) {
       body: JSON.stringify(body),
     });
     await loadSkillOsRail();
-  } catch (err) {
-    alert(`操作失败：${err.message || err}`);
+  } catch (error) {
+    alert(`操作失败：${error.message || error}`);
   }
 }
-
 
 async function selectPage(pageId) {
   state.currentPageId = pageId;
@@ -2149,9 +2184,11 @@ function bindEvents() {
       state.activity = null;
       state.deliveryPreview = null;
       renderAll();
+      await loadSkillOsRail();
       return;
     }
     await loadWorkspace();
+    await loadSkillOsRail();
   });
 
   els.pageMode.addEventListener("click", () => {
