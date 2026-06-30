@@ -33,6 +33,102 @@ _ROLE_EVIDENCE_TYPES: dict[str, list[str]] = {
     "appendix": ["data_point", "product_screenshot", "customer_material"],
 }
 
+REQUIRED_SOLUTION_MODULES: list[dict[str, str]] = [
+    {"module_id": "company_credentials", "label": "公司介绍/资质"},
+    {"module_id": "demand_understanding", "label": "需求理解"},
+    {"module_id": "problem_diagnosis", "label": "现状与问题诊断"},
+    {"module_id": "target_vision", "label": "目标愿景"},
+    {"module_id": "business_solution", "label": "业务方案"},
+    {"module_id": "platform_architecture", "label": "平台规划/架构"},
+    {"module_id": "implementation_path", "label": "实施路径"},
+    {"module_id": "service_assurance", "label": "服务与保障"},
+    {"module_id": "case_evidence", "label": "案例/证据"},
+    {"module_id": "next_step", "label": "收尾与推进动作"},
+]
+
+_ROLE_MODULE_COVERAGE: dict[str, set[str]] = {
+    "opener": {"company_credentials", "target_vision"},
+    "problem": {"demand_understanding", "problem_diagnosis"},
+    "solution": {"business_solution"},
+    "architecture": {"platform_architecture"},
+    "case": {"case_evidence"},
+    "roi": {"case_evidence"},
+    "cta": {"next_step"},
+}
+
+_TITLE_MODULE_HINTS: tuple[tuple[str, set[str]], ...] = (
+    ("资质", {"company_credentials"}),
+    ("公司", {"company_credentials"}),
+    ("需求", {"demand_understanding"}),
+    ("痛点", {"problem_diagnosis"}),
+    ("挑战", {"problem_diagnosis"}),
+    ("现状", {"problem_diagnosis"}),
+    ("愿景", {"target_vision"}),
+    ("方案", {"business_solution"}),
+    ("能力", {"business_solution"}),
+    ("架构", {"platform_architecture"}),
+    ("平台", {"platform_architecture"}),
+    ("实施", {"implementation_path"}),
+    ("路径", {"implementation_path"}),
+    ("服务", {"service_assurance"}),
+    ("保障", {"service_assurance"}),
+    ("案例", {"case_evidence"}),
+    ("证据", {"case_evidence"}),
+    ("推进", {"next_step"}),
+    ("下一步", {"next_step"}),
+)
+
+
+def _modules_for_beat(beat: dict[str, Any]) -> set[str]:
+    role = str(beat.get("role") or "")
+    title = str(beat.get("page_title") or beat.get("title") or "")
+    modules = set(_ROLE_MODULE_COVERAGE.get(role, set()))
+    for token, implied in _TITLE_MODULE_HINTS:
+        if token in title:
+            modules.update(implied)
+    return modules
+
+
+def build_required_modules_status(beats: list[dict[str, Any]]) -> dict[str, Any]:
+    coverage = {
+        item["module_id"]: {
+            "module_id": item["module_id"],
+            "label": item["label"],
+            "status": "missing",
+            "beat_ids": [],
+            "page_titles": [],
+        }
+        for item in REQUIRED_SOLUTION_MODULES
+    }
+
+    for beat in beats:
+        if not isinstance(beat, dict):
+            continue
+        beat_id = str(beat.get("beat_id") or "")
+        page_title = str(beat.get("page_title") or beat.get("title") or "")
+        for module_id in _modules_for_beat(beat):
+            item = coverage.get(module_id)
+            if item is None:
+                continue
+            item["status"] = "covered"
+            if beat_id and beat_id not in item["beat_ids"]:
+                item["beat_ids"].append(beat_id)
+            if page_title and page_title not in item["page_titles"]:
+                item["page_titles"].append(page_title)
+
+    required_modules_status = [coverage[item["module_id"]] for item in REQUIRED_SOLUTION_MODULES]
+    missing_modules = [item["label"] for item in required_modules_status if item["status"] != "covered"]
+    return {
+        "required_modules_status": required_modules_status,
+        "missing_modules": missing_modules,
+        "coverage_matrix": {
+            "required_modules": required_modules_status,
+            "covered_count": len(required_modules_status) - len(missing_modules),
+            "missing_count": len(missing_modules),
+            "complete": not missing_modules,
+        },
+    }
+
 
 def identify_gaps(request: dict[str, Any]) -> list[dict[str, str]]:
     gaps: list[dict[str, str]] = []
@@ -333,6 +429,8 @@ def plan_narrative(
 
         beats.append(beat)
 
+    module_coverage = build_required_modules_status(beats)
+
     return {
         "run_id": request.get("run_id", ""),
         "title": request.get("project_name", "Deck Master Run"),
@@ -346,4 +444,7 @@ def plan_narrative(
         "roles": [beat["role"] for beat in beats],
         "gaps": gaps,
         "beats": beats,
+        "coverage_matrix": module_coverage["coverage_matrix"],
+        "required_modules_status": module_coverage["required_modules_status"],
+        "missing_modules": module_coverage["missing_modules"],
     }

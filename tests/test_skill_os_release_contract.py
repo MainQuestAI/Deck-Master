@@ -20,6 +20,7 @@ if str(REPO_ROOT / "scripts") not in sys.path:
 import jsonschema  # noqa: E402
 
 from skills.manifest import load_registry  # noqa: E402
+from workflow.decisions import DecisionLog  # noqa: E402
 from workflow.approval import ApprovalRuntime  # noqa: E402
 from workflow.autopilot import AutopilotV2  # noqa: E402
 from workflow.handoff import HandoffRuntime  # noqa: E402
@@ -46,6 +47,27 @@ SCHEMA_FILES = [
 @pytest.fixture(scope="module")
 def registry():
     return load_registry()
+
+
+def _answer_required(run: Path, registry) -> None:
+    from workflow.questions import QuestionResolver  # noqa: E402
+
+    qr = QuestionResolver(registry=registry)
+    contract = registry.contract("deck-init")
+    fp = qr.input_fingerprint(contract, run)
+    log = DecisionLog()
+    for question in contract.forcing_questions:
+        if question.get("required"):
+            log.record(
+                run,
+                run_id="r",
+                stage_id="deck-init",
+                question_id=question["question_id"],
+                answer="answered",
+                actor={"id": "test", "role": "operator"},
+                required=True,
+                input_fingerprint=fp,
+            )
 
 
 def test_all_skill_os_schemas_are_valid_draft202012():
@@ -87,6 +109,7 @@ def test_skill_os_pipeline_smoke(tmp_path, registry):
     run = tmp_path
     for f in ("deck_project.json", "material_inventory.json", "workspace_policy.json"):
         (run / f).write_text("{}\n", encoding="utf-8")
+    _answer_required(run, registry)
 
     # 1. resolve state
     state = WorkflowStateResolver(registry=registry).resolve(run, run_id="r")

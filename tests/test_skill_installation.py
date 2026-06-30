@@ -29,9 +29,11 @@ from scripts.skills.installer import (
     validate_skill,
     verify_release_tree,
 )
+from scripts.skills.manifest import load_registry
 
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
+_REGISTRY = load_registry()
 
 
 class SkillInstallationTest(unittest.TestCase):
@@ -215,6 +217,7 @@ class SkillInstallationTest(unittest.TestCase):
         self.assertEqual("degraded_ready", result["status"])
         self.assertEqual("blocked", result["task_readiness"]["library_sourcing"])
         self.assertFalse(result["full_suite_ready"])
+        self.assertIn("blocking_summary", result)
         self.assertFalse(result["target_readiness"]["codex"]["required_ready"])
         self.assertEqual(before, log_path.read_text(encoding="utf-8"))
 
@@ -295,6 +298,9 @@ class SkillInstallationTest(unittest.TestCase):
         self.assertEqual("ready", result["task_readiness"]["ppt_master_adapter"])
         self.assertEqual("blocked", result["task_readiness"]["ppt_master_backend"])
         self.assertEqual("ready", result["task_readiness"]["deck_builder"])
+        self.assertFalse(result["production_backend_ready"])
+        self.assertFalse(result["client_delivery_ready"])
+        self.assertTrue(result["blocking_summary"])
         self.assertEqual("blocked_backend_uncertified", result["capabilities"]["ppt_master.render.v1"])
         self.assertEqual("blocked_backend_uncertified", result["capabilities"]["ppt_master.handback.v1"])
 
@@ -326,17 +332,20 @@ class SkillInstallationTest(unittest.TestCase):
 
         release_manifest = json.loads((release_root / "release-manifest.json").read_text(encoding="utf-8"))
         self.assertEqual("deck_master_release_manifest.v1", release_manifest["schema_version"])
+        self.assertEqual(_REGISTRY.suite_version, release_manifest["suite_version"])
         self.assertTrue(release_manifest["self_contained"])
         self.assertEqual("bin/deck-master", release_manifest["entrypoint"])
 
         companion = json.loads((release_root / "companion-manifest.json").read_text(encoding="utf-8"))
         revision = (release_root / "REVISION").read_text(encoding="utf-8").strip()
         self.assertTrue(revision)
+        self.assertEqual(_REGISTRY.suite_version, companion["suite_version"])
         self.assertEqual(revision, companion["git_commit"])
         self.assertEqual(f"main-{revision}", companion["release_id"])
 
         capability_lock = json.loads((release_root / "deck_capability_lock.json").read_text(encoding="utf-8"))
         self.assertEqual("deck_capability_lock.v1", capability_lock["schema_version"])
+        self.assertEqual(_REGISTRY.suite_version, capability_lock["suite_version"])
         self.assertTrue(capability_lock["contracts"])
 
         checksums = (release_root / "SHA256SUMS").read_text(encoding="utf-8")

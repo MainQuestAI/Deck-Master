@@ -924,6 +924,8 @@ class StudioServerTests(unittest.TestCase):
         self.assertIn("task_readiness", payload)
         self.assertIn("production_backend_ready", payload)
         self.assertIn("client_delivery_ready", payload)
+        self.assertIn("repair_items_count", payload)
+        self.assertIn("blocking_summary", payload)
         self.assertFalse(payload["production_backend_ready"])
         self.assertFalse(payload["client_delivery_ready"])
 

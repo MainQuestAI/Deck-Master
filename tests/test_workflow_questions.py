@@ -132,6 +132,49 @@ def test_decision_log_append_only(tmp_path):
     assert latest["answer"] == "a2"
 
 
+def test_vague_answer_triggers_follow_up(tmp_path):
+    _seed_brief_inputs(tmp_path)
+    qr = QuestionResolver(registry=REGISTRY)
+    contract = REGISTRY.contract("deck-brief")
+    fp0 = qr.input_fingerprint(contract, tmp_path)
+    dl = DecisionLog()
+    dl.record(
+        tmp_path,
+        run_id="r",
+        stage_id="deck-brief",
+        question_id="brief.decision_object",
+        answer="待定",
+        actor={"id": "boss", "role": "approver"},
+        required=True,
+        input_fingerprint=fp0,
+    )
+    gap = next(g for g in qr.gaps(tmp_path, "deck-brief") if g.question_id == "brief.decision_object")
+    assert gap.answer_status == "needs_follow_up"
+    assert gap.challenge_round == 1
+
+
+def test_second_vague_answer_escalates_to_human_judgment(tmp_path):
+    _seed_brief_inputs(tmp_path)
+    qr = QuestionResolver(registry=REGISTRY)
+    contract = REGISTRY.contract("deck-brief")
+    fp0 = qr.input_fingerprint(contract, tmp_path)
+    dl = DecisionLog()
+    for _ in range(2):
+        dl.record(
+            tmp_path,
+            run_id="r",
+            stage_id="deck-brief",
+            question_id="brief.decision_object",
+            answer="都可以",
+            actor={"id": "boss", "role": "approver"},
+            required=True,
+            input_fingerprint=fp0,
+        )
+    gap = next(g for g in qr.gaps(tmp_path, "deck-brief") if g.question_id == "brief.decision_object")
+    assert gap.answer_status == "needs_human_judgment"
+    assert gap.challenge_round == 2
+
+
 def test_no_question_happy_path_for_init(tmp_path):
     # deck-init has no required forcing questions in the contract? it has
     # init.scan_scope + init.privacy_boundary required. Verify they surface.

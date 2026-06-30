@@ -14,6 +14,7 @@ if str(REPO_ROOT / "scripts") not in sys.path:
     sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
 from skills.manifest import load_registry  # noqa: E402
+from workflow.decisions import DecisionLog  # noqa: E402
 from workflow.approval import (  # noqa: E402
     ApprovalError,
     ApprovalRuntime,
@@ -35,11 +36,34 @@ REGISTRY = load_registry()
 BOSS = {"id": "boss", "role": "approver"}
 
 
+def _answer_required(run: Path, stage_id: str) -> None:
+    from workflow.questions import QuestionResolver  # noqa: E402
+
+    qr = QuestionResolver(registry=REGISTRY)
+    contract = REGISTRY.contract(stage_id)
+    fp = qr.input_fingerprint(contract, run)
+    log = DecisionLog()
+    for question in contract.forcing_questions:
+        if question.get("required"):
+            log.record(
+                run,
+                run_id="r",
+                stage_id=stage_id,
+                question_id=question["question_id"],
+                answer="answered",
+                actor=BOSS,
+                required=True,
+                input_fingerprint=fp,
+            )
+
+
 def _seed_brief(run: Path, thesis="t") -> None:
     for f in ("deck_project.json", "material_inventory.json", "workspace_policy.json"):
         (run / f).write_text("{}\n", encoding="utf-8")
+    _answer_required(run, "deck-init")
     (run / "deck_brief.json").write_text(json.dumps({"thesis": thesis}), encoding="utf-8")
     (run / "claim_map.json").write_text(json.dumps({"claims": []}), encoding="utf-8")
+    _answer_required(run, "deck-brief")
 
 
 def _seed_through_review(run: Path) -> None:
@@ -64,6 +88,7 @@ def _seed_through_review(run: Path) -> None:
         (run / f).write_text("{}\n", encoding="utf-8")
     (run / "page_packages").mkdir()
     (run / "page_packages" / "p1.json").write_text("{}\n", encoding="utf-8")
+    _answer_required(run, "deck-review")
 
 
 # --- preauthorization ---

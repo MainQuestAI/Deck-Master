@@ -24,19 +24,44 @@ from runtime.skill_route import (  # noqa: E402
     route_for_input_type,
     route_for_skill_name,
 )
+from workflow.decisions import DecisionLog  # noqa: E402
+from workflow.questions import QuestionResolver  # noqa: E402
+from skills.manifest import load_registry  # noqa: E402
 
 DM = ["python", "deck_master.py"]  # not used; we call funcs directly
+REGISTRY = load_registry()
+
+
+def _answer_required(run: Path, stage_id: str) -> None:
+    qr = QuestionResolver(registry=REGISTRY)
+    contract = REGISTRY.contract(stage_id)
+    fp = qr.input_fingerprint(contract, run)
+    log = DecisionLog()
+    for question in contract.forcing_questions:
+        if question.get("required"):
+            log.record(
+                run,
+                run_id="r",
+                stage_id=stage_id,
+                question_id=question["question_id"],
+                answer="answered",
+                actor={"id": "test", "role": "operator"},
+                required=True,
+                input_fingerprint=fp,
+            )
 
 
 def _seed_init(run: Path) -> None:
     for f in ("deck_project.json", "material_inventory.json", "workspace_policy.json"):
         (run / f).write_text("{}\n", encoding="utf-8")
+    _answer_required(run, "deck-init")
 
 
 def _seed_brief(run: Path) -> None:
     _seed_init(run)
     (run / "deck_brief.json").write_text(json.dumps({"thesis": "x"}), encoding="utf-8")
     (run / "claim_map.json").write_text(json.dumps({"claims": []}), encoding="utf-8")
+    _answer_required(run, "deck-brief")
 
 
 def _run_cli(argv: list[str]) -> tuple[int, dict | None, str]:

@@ -14,6 +14,7 @@ if str(REPO_ROOT / "scripts") not in sys.path:
     sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
 from skills.manifest import load_registry  # noqa: E402
+from workflow.decisions import DecisionLog  # noqa: E402
 from workflow.handoff import (  # noqa: E402
     ACCEPTED,
     AWAITING_APPROVAL,
@@ -26,15 +27,40 @@ from workflow.handoff import (  # noqa: E402
 REGISTRY = load_registry()
 
 
-def _seed_init(run: Path) -> None:
+def _answer_required(run: Path, stage_id: str) -> None:
+    from workflow.questions import QuestionResolver  # noqa: E402
+
+    qr = QuestionResolver(registry=REGISTRY)
+    contract = REGISTRY.contract(stage_id)
+    fp = qr.input_fingerprint(contract, run)
+    log = DecisionLog()
+    for question in contract.forcing_questions:
+        if question.get("required"):
+            log.record(
+                run,
+                run_id="r",
+                stage_id=stage_id,
+                question_id=question["question_id"],
+                answer="answered",
+                actor={"id": "test", "role": "operator"},
+                required=True,
+                input_fingerprint=fp,
+            )
+
+
+def _seed_init(run: Path, *, answer: bool = True) -> None:
     for f in ("deck_project.json", "material_inventory.json", "workspace_policy.json"):
         (run / f).write_text("{}\n", encoding="utf-8")
+    if answer:
+        _answer_required(run, "deck-init")
 
 
-def _seed_brief(run: Path, *, thesis="t") -> None:
+def _seed_brief(run: Path, *, thesis="t", answer: bool = True) -> None:
     _seed_init(run)
     (run / "deck_brief.json").write_text(json.dumps({"thesis": thesis}), encoding="utf-8")
     (run / "claim_map.json").write_text(json.dumps({"claims": []}), encoding="utf-8")
+    if answer:
+        _answer_required(run, "deck-brief")
 
 
 def test_prepare_refuses_when_exit_validation_fails(tmp_path):
@@ -64,6 +90,13 @@ def test_prepare_brief_is_awaiting_approval(tmp_path):
     rec = rt.prepare(tmp_path, "deck-brief", run_id="r")
     assert rec["status"] == AWAITING_APPROVAL
     assert rec["approval_policy"]["required"] is True
+
+
+def test_prepare_brief_blocks_when_forcing_questions_unanswered(tmp_path):
+    rt = HandoffRuntime(registry=REGISTRY)
+    _seed_brief(tmp_path, answer=False)
+    with pytest.raises(HandoffError, match="blocking"):
+        rt.prepare(tmp_path, "deck-brief", run_id="r")
 
 
 def test_idempotent_prepare_returns_same(tmp_path):

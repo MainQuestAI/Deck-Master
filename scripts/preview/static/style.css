@@ -1556,12 +1556,22 @@ textarea {
   color: #fbbf24;
 }
 
+.skill-os-stages li.s-awaiting-answer .stage-dot {
+  background: #f59e0b;
+}
+
+.skill-os-stages li.s-awaiting-answer .stage-badge {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+}
+
 .skill-os-stages li.s-stale .stage-dot,
 .skill-os-stages li.s-blocked .stage-dot {
   background: #ef4444;
 }
 
-.skill-os-stages li.s-stale .stage-badge {
+.skill-os-stages li.s-stale .stage-badge,
+.skill-os-stages li.s-blocked .stage-badge {
   background: rgba(239, 68, 68, 0.2);
   color: #f87171;
 }
@@ -1585,4 +1595,20 @@ textarea {
   margin-top: 6px;
   font-size: 12px;
   line-height: 1.4;
+}
+
+.skill-os-next-action {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.skill-os-blocking-summary {
+  margin: 8px 0 0;
+  padding-left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.72));
 }

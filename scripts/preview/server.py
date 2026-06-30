@@ -560,10 +560,12 @@ class PreviewHandler(BaseHTTPRequestHandler):
             return
         try:
             qr = QuestionResolver()
+            gaps = [g.__dict__ for g in qr.gaps(run_dir, stage)]
             self.send_json({
                 "stage_id": stage,
-                "gaps": [g.__dict__ for g in qr.gaps(run_dir, stage)],
-                "blocking": [g.question_id for g in qr.blocking(run_dir, stage)],
+                "gaps": gaps,
+                "blocking": [g["question_id"] for g in gaps if g.get("required")],
+                "pending_questions_count": len(gaps),
             })
         except (ManifestError, ValueError, KeyError) as exc:
             self.send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
@@ -795,6 +797,7 @@ class PreviewHandler(BaseHTTPRequestHandler):
             "config_path": payload.get("config_path"),
             "missing_items": payload.get("missing_items", []),
             "repair_items": payload.get("repair_items", []),
+            "repair_items_count": payload.get("repair_items_count", 0),
             "warnings": payload.get("warnings", []),
             "workspace": workspace,
             "config": config,
@@ -805,6 +808,7 @@ class PreviewHandler(BaseHTTPRequestHandler):
             "task_readiness": payload.get("task_readiness", {}),
             "production_backend_ready": payload.get("production_backend_ready", False),
             "client_delivery_ready": payload.get("client_delivery_ready", False),
+            "blocking_summary": payload.get("blocking_summary", []),
         }
         return response
 

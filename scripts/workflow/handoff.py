@@ -34,6 +34,7 @@ from typing import Any, Iterator
 
 from skills.manifest import Registry, load_registry
 from workflow import fingerprint as fp
+from workflow.questions import QuestionResolver
 from workflow.validator import required_outputs, resolve_artifact_files, validate_exit
 
 SCHEMA_VERSION = "deck_skill_handoff.v1"
@@ -120,11 +121,13 @@ class HandoffRuntime:
         creator = created_by or from_stage
 
         # 1. exit validation must pass
+        exit_validation = QuestionResolver(registry=self.registry).exit_validation(root, from_stage)
         exit_report = validate_exit(contract, root)
-        if not exit_report.valid:
+        if not exit_validation.valid:
             raise HandoffError(
                 f"cannot prepare handoff for {from_stage}: exit validation failed; "
-                f"missing={exit_report.missing}, invalid={exit_report.invalid}"
+                f"missing={exit_report.missing}, invalid={exit_report.invalid}, "
+                f"blocking={exit_validation.blocking}"
             )
 
         # 2. build artifact refs
@@ -173,11 +176,8 @@ class HandoffRuntime:
                 "output_artifacts": output_refs,
                 "output_fingerprint": output_fingerprint,
                 "exit_validation": {
-                    "valid": True,
-                    "checks": [
-                        {"check": "required_artifacts", "status": "pass"},
-                        {"check": "blocking_questions", "status": "pass"},
-                    ],
+                    "valid": exit_validation.valid,
+                    "checks": exit_validation.checks,
                 },
                 "decisions": list(decisions or []),
                 "warnings": list(warnings or []),

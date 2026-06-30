@@ -1079,6 +1079,9 @@ def command_start(args: argparse.Namespace) -> dict[str, Any]:
         "suite": setup.get("suite") or {},
         "full_suite_ready": bool(setup.get("full_suite_ready")),
         "task_readiness": setup.get("task_readiness") or {},
+        "production_backend_ready": bool(setup.get("production_backend_ready")),
+        "client_delivery_ready": bool(setup.get("client_delivery_ready")),
+        "blocking_summary": setup.get("blocking_summary") or [],
         "blocked_capabilities": blocked_capabilities,
         "first_action": first_action,
         "active_workspace": (setup.get("config") or {}).get("active_workspace", "")
@@ -1340,7 +1343,22 @@ def _wf_state(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def command_workflow_status(args: argparse.Namespace) -> dict[str, Any]:
-    return _wf_state(args)
+    payload = _wf_state(args)
+    try:
+        from workflow.questions import QuestionResolver
+        from workflow.stage_checks import evaluate_stage_checks
+
+        run_dir = resolve_run_dir(args)
+        current_stage = str(payload.get("current_skill_stage") or "")
+        if current_stage:
+            question_gaps = QuestionResolver().blocking(run_dir, current_stage)
+            stage_checks = evaluate_stage_checks(run_dir, current_stage)
+            payload["pending_questions_count"] = len(question_gaps)
+            payload["coverage_gaps"] = list(stage_checks.coverage_gaps)
+            payload["required_modules_status"] = list(stage_checks.required_modules_status)
+    except Exception:
+        pass
+    return payload
 
 
 def command_workflow_stages(args: argparse.Namespace) -> dict[str, Any]:

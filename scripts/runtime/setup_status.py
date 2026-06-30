@@ -100,6 +100,42 @@ def _run_mode_allows_setup_skip(mode: str, dev_allow_unsetup: bool = False) -> b
     return False
 
 
+def _setup_blocking_summary(
+    *,
+    status_value: str,
+    workspace_path: str,
+    missing: list[str],
+    repairs: list[str],
+    suite: dict[str, Any] | None = None,
+    next_command: str = "",
+) -> list[dict[str, Any]]:
+    summary: list[dict[str, Any]] = []
+    if status_value == "blocked":
+        summary.append({
+            "code": "install_config_blocked",
+            "blocking_type": "installation",
+            "message": "本机安装态或 setup 配置还未闭环，当前无法稳定进入生产流程。",
+            "repair_owner": "installation",
+            "next_command": next_command,
+            "details": list(missing),
+        })
+    elif status_value in {"needs_workspace", "needs_repair"}:
+        summary.append({
+            "code": "workspace_repair_required",
+            "blocking_type": "workspace",
+            "message": "当前 workspace 还未达到生产要求，需先补齐工作区基础材料。",
+            "repair_owner": "workspace",
+            "next_command": next_command,
+            "details": list(repairs),
+            "workspace": workspace_path,
+        })
+    if isinstance(suite, dict):
+        for item in suite.get("blocking_summary", []):
+            if isinstance(item, dict):
+                summary.append(item)
+    return summary
+
+
 def setup_readiness(
     *,
     run_mode: str | None = None,
@@ -285,6 +321,7 @@ def setup_status(
         "missing_items": missing,
         "repair_items": repairs,
         "warnings": warnings,
+        "repair_items_count": len(repairs),
         "install_ready": readiness["status"]["install_ready"],
         "workspace_ready": readiness["status"]["workspace_ready"],
         "run_ready": readiness["status"]["run_ready"],
@@ -325,12 +362,21 @@ def setup_status(
         result["full_suite_ready"] = suite["full_suite_ready"]
         result["capabilities"] = suite["capabilities"]
         result["task_readiness"] = suite["task_readiness"]
-        result["production_backend_ready"] = suite["task_readiness"].get("ppt_master_backend") == "ready"
-        result["client_delivery_ready"] = suite["task_readiness"].get("client_delivery") == "ready"
+        result["production_backend_ready"] = bool(suite.get("production_backend_ready"))
+        result["client_delivery_ready"] = bool(suite.get("client_delivery_ready"))
         if suite.get("next_agent_action") and suite.get("status") != "ready":
             result["next_agent_action"] = str(suite["next_agent_action"])
         if not result["next_command"] and suite.get("next_command"):
             result["next_command"] = str(suite["next_command"])
+
+    result["blocking_summary"] = _setup_blocking_summary(
+        status_value=status_value,
+        workspace_path=workspace_path,
+        missing=missing,
+        repairs=repairs,
+        suite=result.get("suite") if isinstance(result.get("suite"), dict) else None,
+        next_command=str(result.get("next_command") or ""),
+    )
 
     if write_event:
         _append_setup_event("setup.status.checked", status=status_value, data=result)

@@ -1288,17 +1288,22 @@ def skill_os_projection(run_dir: str | Path) -> dict[str, Any]:
     distinction, stale reason, and recommended next skill — without raw paths
     or commands on the main surface.
     """
-    from workflow.state import WorkflowStateResolver
-    from workflow.handoff import HandoffRuntime
     from skills.manifest import load_registry
+    from workflow.handoff import HandoffRuntime
+    from workflow.questions import QuestionResolver
+    from workflow.stage_checks import evaluate_stage_checks
+    from workflow.state import WorkflowStateResolver
 
     root = Path(run_dir).expanduser().resolve()
     reg = load_registry()
     handoffs = HandoffRuntime(registry=reg)
+    questions = QuestionResolver(registry=reg)
     state = WorkflowStateResolver(registry=reg, handoff_runtime=handoffs).resolve(root, run_id=root.name)
     contract_by_stage = {c.stage_id: c for c in reg.ordered_contracts()}
 
     stages: list[dict[str, Any]] = []
+    current_stage_id = str(state.get("current_skill_stage") or "")
+    current_stage_summary: dict[str, Any] = {}
     for s in state.get("stages", []):
         sid = s["stage_id"]
         contract = contract_by_stage.get(sid)
@@ -1312,21 +1317,60 @@ def skill_os_projection(run_dir: str | Path) -> dict[str, Any]:
                 latest = None
             if latest and latest.get("status") == "stale":
                 handoff_stale = True
-        is_blocker = s.get("status") in {"entry_blocked", "failed"} or bool(s.get("missing_artifacts"))
-        is_awaiting = s.get("status") == "awaiting_approval"
-        is_stale = s.get("status") == "stale" or s.get("stale") or handoff_stale
-        stages.append({
+
+        question_gaps = questions.blocking(root, sid) if s.get("status") in {"ready", "in_progress", "awaiting_approval", "completed"} else []
+        stage_checks = evaluate_stage_checks(root, sid) if sid in {"deck-planner", "deck-sourcing"} else evaluate_stage_checks(root, "")
+        effective_status = str(s.get("status") or "")
+        if question_gaps and effective_status in {"ready", "in_progress", "awaiting_approval", "completed"}:
+            effective_status = "awaiting_answer"
+        elif stage_checks.coverage_gaps and effective_status in {"ready", "in_progress", "awaiting_approval", "completed"}:
+            effective_status = "coverage_gap"
+
+        is_blocker = effective_status in {"entry_blocked", "failed", "awaiting_answer", "coverage_gap"} or bool(s.get("missing_artifacts"))
+        is_awaiting = effective_status == "awaiting_approval"
+        is_stale = effective_status == "stale" or s.get("stale") or handoff_stale
+        stage_row = {
             "stage_id": sid,
             "label": display.get("label", sid),
-            "status": s.get("status"),
+            "status": effective_status,
             "is_blocker": is_blocker,
             "is_awaiting_approval": is_awaiting,
             "is_stale": is_stale,
             "stale_reason": "上游产物已变化，本阶段结果需重新确认" if is_stale else "",
             "missing": s.get("missing_artifacts", []),
             "next_skill": (contract.next_stage if contract else None),
-            "safe_copy": _stage_safe_copy(s.get("status"), display),
-        })
+            "pending_questions_count": len(question_gaps),
+            "coverage_gaps": list(stage_checks.coverage_gaps),
+            "required_modules_status": list(stage_checks.required_modules_status),
+            "safe_copy": _stage_safe_copy(
+                effective_status,
+                display,
+                current_question=question_gaps[0].prompt if question_gaps else "",
+                coverage_gaps=stage_checks.coverage_gaps,
+            ),
+        }
+        stages.append(stage_row)
+
+        if sid == current_stage_id:
+            current_stage_summary = {
+                "pending_questions_count": len(question_gaps),
+                "coverage_gaps": list(stage_checks.coverage_gaps),
+                "required_modules_status": list(stage_checks.required_modules_status),
+                "blocking_summary": _projection_blocking_summary(
+                    effective_status,
+                    stage_label=display.get("label", sid),
+                    question_gaps=question_gaps,
+                    stage_checks=stage_checks,
+                    missing_artifacts=list(s.get("missing_artifacts", [])),
+                ),
+                "repair_owner": stage_checks.repair_owner or sid,
+                "safe_next_action": _projection_safe_next_action(
+                    effective_status,
+                    question_gaps=question_gaps,
+                    stage_checks=stage_checks,
+                    next_skill=(contract.next_stage if contract else ""),
+                ),
+            }
 
     return {
         "schema_version": "deck_review_skill_os_view.v1",
@@ -1336,6 +1380,12 @@ def skill_os_projection(run_dir: str | Path) -> dict[str, Any]:
         "approval_required": bool(state.get("approval_required")),
         "current_handoff": _current_handoff_for(handoffs, root),
         "stages": stages,
+        "pending_questions_count": current_stage_summary.get("pending_questions_count", 0),
+        "coverage_gaps": current_stage_summary.get("coverage_gaps", []),
+        "required_modules_status": current_stage_summary.get("required_modules_status", []),
+        "blocking_summary": current_stage_summary.get("blocking_summary", []),
+        "repair_owner": current_stage_summary.get("repair_owner", current_stage_id),
+        "safe_next_action": current_stage_summary.get("safe_next_action", ""),
         # diagnostic drawer (not rendered on the main surface)
         "diagnostic": {
             "runtime_stage": state.get("runtime_stage"),
@@ -1361,14 +1411,27 @@ def _current_handoff_for(handoffs: Any, root: Path) -> dict[str, Any] | None:
     }
 
 
-def _stage_safe_copy(status: str | None, display: dict[str, str]) -> dict[str, str]:
+def _stage_safe_copy(
+    status: str | None,
+    display: dict[str, str],
+    *,
+    current_question: str = "",
+    coverage_gaps: list[str] | None = None,
+) -> dict[str, str]:
     """User-facing copy for a stage card. Never exposes raw paths or commands."""
     label = display.get("label", "")
     completion = display.get("completion_message", "")
     if status == "completed":
         return {"headline": f"{label} 已完成", "detail": completion or "已进入下一阶段。"}
+    if status == "awaiting_answer":
+        detail = f"当前先回答：{current_question}" if current_question else "还有关键问题未回答，当前不能把模糊信息直接当成事实。"
+        return {"headline": f"{label} 等待回答", "detail": detail}
     if status == "awaiting_approval":
         return {"headline": f"{label} 等待确认", "detail": "产物已就绪，需用户确认后才能进入下一阶段。"}
+    if status == "coverage_gap":
+        missing = "、".join(coverage_gaps or [])
+        detail = f"当前存在覆盖缺口：{missing}" if missing else "当前存在覆盖缺口，需先补齐。"
+        return {"headline": f"{label} 覆盖缺口", "detail": detail}
     if status == "stale":
         return {"headline": f"{label} 需重新确认", "detail": "上游内容已变化，本阶段结果已过期。"}
     if status == "entry_blocked":
@@ -1378,6 +1441,59 @@ def _stage_safe_copy(status: str | None, display: dict[str, str]) -> dict[str, s
     if status == "in_progress":
         return {"headline": f"{label} 进行中", "detail": "正在产出本阶段产物。"}
     return {"headline": f"{label}", "detail": ""}
+
+
+def _projection_blocking_summary(
+    status: str,
+    *,
+    stage_label: str,
+    question_gaps: list[Any],
+    stage_checks: Any,
+    missing_artifacts: list[str],
+) -> list[dict[str, Any]]:
+    summary: list[dict[str, Any]] = []
+    if status == "awaiting_answer" and question_gaps:
+        first = question_gaps[0]
+        summary.append({
+            "code": "awaiting_answer",
+            "blocking_type": "awaiting_answer",
+            "message": f"{stage_label} 还有 {len(question_gaps)} 个关键问题待回答，当前先回答：{first.prompt}",
+            "repair_owner": "",
+        })
+    summary.extend(list(stage_checks.blocking_summary or []))
+    if status == "entry_blocked" and missing_artifacts:
+        summary.append({
+            "code": "entry_blocked",
+            "blocking_type": "entry_blocked",
+            "message": f"{stage_label} 缺少前置产物：{'、'.join(missing_artifacts)}",
+            "repair_owner": "",
+        })
+    if status == "awaiting_approval":
+        summary.append({
+            "code": "awaiting_approval",
+            "blocking_type": "awaiting_approval",
+            "message": f"{stage_label} 产物已就绪，等待确认进入下一阶段。",
+            "repair_owner": "",
+        })
+    return summary
+
+
+def _projection_safe_next_action(
+    status: str,
+    *,
+    question_gaps: list[Any],
+    stage_checks: Any,
+    next_skill: str,
+) -> str:
+    if status == "awaiting_answer" and question_gaps:
+        return f"先回答问题：{question_gaps[0].prompt}"
+    if status == "coverage_gap":
+        return stage_checks.safe_next_action or "先补齐覆盖缺口，再继续。"
+    if status == "awaiting_approval":
+        return "确认当前阶段产物后，再进入下一阶段。"
+    if status == "ready" and next_skill:
+        return f"当前可继续进入 {next_skill}。"
+    return ""
 
 
 def skill_os_accept_handoff(run_dir: str | Path, handoff_id: str, *, actor: str) -> dict[str, Any]:

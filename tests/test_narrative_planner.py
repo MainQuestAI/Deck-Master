@@ -270,6 +270,25 @@ class NarrativePlannerTests(unittest.TestCase):
         for b in case_beats:
             self.assertEqual(b["customer_specificity_level"], "client_specific")
 
+    def test_required_modules_status_is_exposed(self) -> None:
+        request = build_request(brief="企业级解决方案", industry="enterprise", target_pages="auto")
+        plan = plan_narrative(request)
+
+        self.assertIn("coverage_matrix", plan)
+        self.assertIn("required_modules_status", plan)
+        self.assertIn("missing_modules", plan)
+        self.assertGreaterEqual(len(plan["required_modules_status"]), 10)
+        self.assertFalse(plan["missing_modules"])
+
+    def test_small_page_budget_surfaces_missing_modules(self) -> None:
+        request = build_request(brief="超短版方案", industry="enterprise", target_pages="3")
+        plan = plan_narrative(request)
+
+        self.assertTrue(plan["missing_modules"])
+        labels = {item["label"] for item in plan["required_modules_status"] if item["status"] == "missing"}
+        self.assertIn("平台规划/架构", labels)
+        self.assertIn("案例/证据", labels)
+
 
 if __name__ == "__main__":
     unittest.main()

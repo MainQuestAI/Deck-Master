@@ -1938,31 +1938,39 @@ async function loadSkillOsRail() {
   const actions = document.getElementById("skill-os-actions");
   const copy = document.getElementById("skill-os-safe-copy");
   const current = document.getElementById("skill-os-current");
-  if (!rail || !actions || !copy || !current) return;
+  const nextAction = document.getElementById("skill-os-next-action");
+  const blocking = document.getElementById("skill-os-blocking-summary");
+  if (!rail || !actions || !copy || !current || !nextAction || !blocking) return;
   if (!state.currentProjectId) {
     state.skillOs = null;
     rail.innerHTML = '<li class="s-notstarted"><span class="stage-dot"></span><span class="stage-label">等待选择项目</span></li>';
     actions.innerHTML = "";
     copy.textContent = "";
+    nextAction.textContent = "";
+    blocking.innerHTML = "";
     current.textContent = "-";
     return;
   }
   try {
     const proj = await requestJson(`/api/workflow-status/${encodeURIComponent(state.currentProjectId)}`);
     state.skillOs = proj;
-    renderSkillOsRail(proj, rail, actions, copy, current);
+    renderSkillOsRail(proj, rail, actions, copy, current, nextAction, blocking);
   } catch (error) {
     rail.innerHTML = '<li class="s-notstarted"><span class="stage-dot"></span><span class="stage-label">阶段信息不可用</span></li>';
     actions.innerHTML = "";
     copy.textContent = "";
+    nextAction.textContent = "";
+    blocking.innerHTML = "";
     current.textContent = "-";
   }
 }
 
-function renderSkillOsRail(proj, railEl, actionsEl, copyEl, currentEl) {
+function renderSkillOsRail(proj, railEl, actionsEl, copyEl, currentEl, nextActionEl, blockingEl) {
   const statusClass = {
     completed: "s-completed",
     awaiting_approval: "s-awaiting",
+    awaiting_answer: "s-awaiting-answer",
+    coverage_gap: "s-blocked",
     stale: "s-stale",
     entry_blocked: "s-blocked",
     failed: "s-blocked",
@@ -1973,6 +1981,8 @@ function renderSkillOsRail(proj, railEl, actionsEl, copyEl, currentEl) {
   const statusBadge = {
     completed: "已完成",
     awaiting_approval: "待确认",
+    awaiting_answer: "等回答",
+    coverage_gap: "缺口",
     stale: "已过期",
     entry_blocked: "阻断",
     failed: "失败",
@@ -1995,6 +2005,13 @@ function renderSkillOsRail(proj, railEl, actionsEl, copyEl, currentEl) {
   copyEl.textContent = currentStage?.safe_copy
     ? `${currentStage.safe_copy.headline} — ${currentStage.safe_copy.detail}`
     : "";
+  nextActionEl.textContent = proj.safe_next_action ? `下一步：${proj.safe_next_action}` : "";
+  blockingEl.innerHTML = "";
+  for (const item of (proj.blocking_summary || []).slice(0, 3)) {
+    const li = document.createElement("li");
+    li.textContent = safeDisplayText(item.message || "");
+    blockingEl.appendChild(li);
+  }
   actionsEl.innerHTML = "";
   if (currentStage && currentStage.is_awaiting_approval) {
     const acceptBtn = document.createElement("button");

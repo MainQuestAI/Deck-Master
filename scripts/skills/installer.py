@@ -20,9 +20,14 @@ try:  # Supports both `python scripts/deck_master.py` and package imports in tes
 except ModuleNotFoundError:  # pragma: no cover - exercised by package-import test path.
     from scripts.runtime.builder_backend import inspect_builder_backend_package
 
+try:  # Supports both `python scripts/deck_master.py` and package imports in tests.
+    from skills.manifest import load_registry
+except ModuleNotFoundError:  # pragma: no cover - exercised by package-import test path.
+    from scripts.skills.manifest import load_registry
+
 SKILL_NAME = "deck-master"
 SUITE_NAME = "deck-master"
-SUITE_VERSION = "1.0.0"
+DEFAULT_SUITE_VERSION = "1.0.0"
 COMPANION_MANIFEST_SCHEMA_VERSION = "deck_master_companion_manifest.v3"
 PRODUCT_CAPABILITY_MANIFEST_SCHEMA_VERSION = "deck_master_product_capability_manifest.v1"
 PRODUCT_CAPABILITY_MANIFEST_NAME = "product-capability-manifest.json"
@@ -45,6 +50,13 @@ INSTALL_LOG_NAME = "install_log.jsonl"
 INSTALLED_SKILL_DIR = INSTALL_LOG_DIR / "current" / "skills" / SKILL_NAME
 _DEFAULT_INSTALLED_SKILL_DIR = INSTALLED_SKILL_DIR
 COMPANION_MANIFEST_NAME = "companion-manifest.json"
+
+
+def _suite_version() -> str:
+    try:
+        return load_registry().suite_version
+    except Exception:  # pragma: no cover - fallback only if canonical manifest load fails unexpectedly.
+        return DEFAULT_SUITE_VERSION
 
 SUITE_SKILLS: list[dict[str, Any]] = [
     {
@@ -790,6 +802,7 @@ def validate_skill(
 
 def companion_manifest() -> dict[str, Any]:
     revision = _source_revision()
+    suite_version = _suite_version()
     skills: list[dict[str, Any]] = []
     for spec in SUITE_SKILLS:
         item = {
@@ -802,7 +815,7 @@ def companion_manifest() -> dict[str, Any]:
             "backend_dependency": spec.get("backend_dependency", ""),
             "required_for": spec["required_for"],
             "install_source": spec["install_source"],
-            "min_cli_version": "0.1.0" if spec["name"] != SKILL_NAME else SUITE_VERSION,
+            "min_cli_version": "0.1.0" if spec["name"] != SKILL_NAME else suite_version,
             "cli": spec["cli"],
             "required_capabilities": spec["required_capabilities"],
             "optional_capabilities": spec["optional_capabilities"],
@@ -820,7 +833,7 @@ def companion_manifest() -> dict[str, Any]:
     return {
         "schema_version": COMPANION_MANIFEST_SCHEMA_VERSION,
         "suite_name": SUITE_NAME,
-        "suite_version": SUITE_VERSION,
+        "suite_version": suite_version,
         "generated_at": _utc_now(),
         "git_commit": revision,
         "release_id": f"main-{revision}",
@@ -1252,6 +1265,7 @@ def build_release_tree(
     force: bool = False,
     dry_run: bool = False,
 ) -> dict[str, Any]:
+    suite_version = _suite_version()
     release_root = Path(output).expanduser().resolve() if output else INSTALL_LOG_DIR / "current"
     marker = release_root / RELEASE_TREE_MARKER
     planned = [
@@ -1358,7 +1372,7 @@ def build_release_tree(
     capability_lock = {
         "schema_version": "deck_capability_lock.v1",
         "suite_name": SUITE_NAME,
-        "suite_version": SUITE_VERSION,
+        "suite_version": suite_version,
         "built_at": _utc_now(),
         "source": source,
         "skills": [
@@ -1388,7 +1402,7 @@ def build_release_tree(
     release_manifest = {
         "schema_version": "deck_master_release_manifest.v1",
         "suite_name": SUITE_NAME,
-        "suite_version": SUITE_VERSION,
+        "suite_version": suite_version,
         "built_at": _utc_now(),
         "release_root": str(release_root),
         "self_contained": True,
@@ -1448,6 +1462,7 @@ def inspect_suite_status(
     agent_skill_dir: str | None = None,
 ) -> dict[str, Any]:
     """Pure-read suite readiness inspection."""
+    suite_version = _suite_version()
     resolved_targets = targets or ["codex"]
     skills: list[dict[str, Any]] = []
     capabilities: dict[str, str] = {}
@@ -1554,6 +1569,9 @@ def inspect_suite_status(
         "client_delivery": "ready" if full_suite_ready and production_capable_by_name.get("ppt-master") else "blocked",
     }
 
+    production_backend_ready = bool(production_capable_by_name.get("ppt-master"))
+    client_delivery_ready = task_readiness["client_delivery"] == "ready"
+
     status = "ready" if full_suite_ready else "degraded_ready"
     if not deck_ready:
         status = "blocked"
@@ -1567,17 +1585,62 @@ def inspect_suite_status(
         next_command = "deck-master suite-repair --target codex --target claude-code"
         next_agent_action = "Repair missing required Deck Master product capabilities before production work."
 
+    blocking_summary: list[dict[str, Any]] = []
+    if status == "blocked":
+        blocking_summary.append({
+            "code": "suite_installation_blocked",
+            "blocking_type": "installation",
+            "message": "Deck Master 安装态仍有 required skill 缺失或失效，当前不能进入稳定生产流程。",
+            "repair_owner": "installation",
+            "next_command": next_command,
+        })
+    elif not full_suite_ready:
+        blocking_summary.append({
+            "code": "suite_required_missing",
+            "blocking_type": "installation",
+            "message": "Deck Master required suite 尚未全部就绪，部分生产能力仍不可用。",
+            "repair_owner": "installation",
+            "next_command": next_command,
+        })
+
+    ppt_master_report = next((item for item in skills if str(item.get("skill")) == "ppt-master"), None)
+    backend_reasons = []
+    if isinstance(ppt_master_report, dict):
+        backend_status = ppt_master_report.get("backend_status")
+        if isinstance(backend_status, dict):
+            backend_reasons = [str(item) for item in (backend_status.get("reasons") or []) if item]
+    if not production_backend_ready:
+        reason = "；".join(backend_reasons) if backend_reasons else "外部 production backend 还未认证"
+        blocking_summary.append({
+            "code": "production_backend_uncertified",
+            "blocking_type": "backend",
+            "message": f"PPT Master 外部生产后端未认证：{reason}",
+            "repair_owner": "backend",
+            "next_command": "",
+        })
+    if not client_delivery_ready:
+        blocking_summary.append({
+            "code": "client_delivery_blocked",
+            "blocking_type": "delivery",
+            "message": "客户版交付仍被阻断，当前 release 还未满足真实 render 和 client delivery 前提。",
+            "repair_owner": "backend",
+            "next_command": "",
+        })
+
     return {
         "schema_version": COMPANION_MANIFEST_SCHEMA_VERSION,
         "suite_name": SUITE_NAME,
-        "suite_version": SUITE_VERSION,
+        "suite_version": suite_version,
         "status": status,
         "full_suite_ready": full_suite_ready,
+        "production_backend_ready": production_backend_ready,
+        "client_delivery_ready": client_delivery_ready,
         "skills": skills,
         "targets": target_reports,
         "target_readiness": target_readiness,
         "capabilities": capabilities,
         "task_readiness": task_readiness,
+        "blocking_summary": blocking_summary,
         "manifest_path": str(companion_manifest_path()),
         "next_command": next_command,
         "next_agent_action": next_agent_action,
