@@ -349,6 +349,11 @@ class SkillInstallationTest(unittest.TestCase):
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         validation = validate_product_capability_manifest(manifest)
         self.assertTrue(validation["valid"], validation["errors"])
+        companion = json.loads((release_root / "companion-manifest.json").read_text(encoding="utf-8"))
+        revision = (release_root / "REVISION").read_text(encoding="utf-8").strip()
+        self.assertTrue(revision)
+        self.assertEqual(revision, companion["git_commit"])
+        self.assertEqual(f"main-{revision}", companion["release_id"])
         for skill_name in product_capability_manifest()["required_capabilities"]:
             self.assertTrue((release_root / "skills" / skill_name / "SKILL.md").exists(), skill_name)
         self.assertTrue((release_root / "skills" / "deck-learn" / "SKILL.md").exists())

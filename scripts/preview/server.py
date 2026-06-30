@@ -1408,7 +1408,7 @@ def build_handler(
     runs_dir: Path | None = None,
     library_mode: str = "fixture",
     *,
-    use_setup_runs_dir: bool = True,
+    use_setup_runs_dir: bool | None = None,
 ):
     class Handler(PreviewHandler):
         pass
@@ -1416,7 +1416,7 @@ def build_handler(
     Handler.run_dir = run_dir
     Handler.runs_dir = (runs_dir or configured_runs_dir(ROOT_DIR / "runs")).expanduser().resolve()
     Handler.library_mode = library_mode
-    Handler.use_setup_runs_dir = use_setup_runs_dir
+    Handler.use_setup_runs_dir = bool(runs_dir is None if use_setup_runs_dir is None else use_setup_runs_dir)
     return Handler
 
 
@@ -1430,19 +1430,14 @@ def main() -> None:
     args = parser.parse_args()
 
     run_dir = Path(args.run_dir).expanduser().resolve() if args.run_dir else None
-    explicit_runs_dir = bool(args.runs_dir)
-    runs_dir = Path(args.runs_dir).expanduser().resolve() if args.runs_dir else configured_runs_dir(ROOT_DIR / "runs")
+    explicit_runs_dir = args.runs_dir is not None
+    runs_dir = Path(args.runs_dir).expanduser().resolve() if explicit_runs_dir else configured_runs_dir(ROOT_DIR / "runs")
     runs_dir.mkdir(parents=True, exist_ok=True)
     if run_dir is not None:
         load_manifest(run_dir)
     server = ThreadingHTTPServer(
         (args.host, args.port),
-        build_handler(
-            run_dir,
-            runs_dir,
-            args.library_mode,
-            use_setup_runs_dir=not explicit_runs_dir,
-        ),
+        build_handler(run_dir, runs_dir, args.library_mode, use_setup_runs_dir=not explicit_runs_dir),
     )
     mode = "Preview" if run_dir else "Studio"
     print(f"Deck Master {mode}: http://{args.host}:{args.port}")

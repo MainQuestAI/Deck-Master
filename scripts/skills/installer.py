@@ -431,10 +431,9 @@ def _source_revision() -> str:
             capture_output=True,
             text=True,
         )
-    except (FileNotFoundError, subprocess.CalledProcessError):
+    except (OSError, subprocess.CalledProcessError):
         return "unknown"
-    revision = result.stdout.strip()
-    return revision or "unknown"
+    return result.stdout.strip() or "unknown"
 
 
 def _repo_skill_dir(skill_name: str = SKILL_NAME) -> Path:
