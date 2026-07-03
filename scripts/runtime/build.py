@@ -11,8 +11,9 @@ from pathlib import Path
 from typing import Any
 
 from runtime.artifact_validator import validate_artifact_manifest
-from runtime.builder_backend import builder_backend_status, production_requires_builder_backend
+from runtime.builder_backend import backend_render_runtime_ready, builder_backend_status, production_requires_builder_backend
 from runtime.events import append_event
+from runtime.render_handoff import RENDER_REQUEST_NAME, write_render_request
 from runtime.run_state import PREVIEW_MANIFEST_NAME, ensure_run_dirs, load_request, read_json, write_json
 
 BUILD_MANIFEST_SCHEMA_VERSION = "deck_build_manifest.v1"
@@ -125,6 +126,8 @@ def _assert_builder_backend_available(request: dict[str, Any]) -> dict[str, Any]
     status = builder_backend_status()
     if production_requires_builder_backend(_run_mode(request)) and not status.get("production_capable"):
         raise BuildError("needs_builder_backend: " + str(status.get("blocking_reason") or "PPT Master backend is not ready."))
+    if production_requires_builder_backend(_run_mode(request)) and not backend_render_runtime_ready():
+        raise BuildError("needs_builder_backend: PPT Master backend is certified but Deck Master render runtime is not wired to the external backend yet.")
     return status
 
 
@@ -377,6 +380,41 @@ def run_build(run_dir: str | Path) -> dict[str, Any]:
     manifest = _load_or_prepare_manifest(root)
     build_dir = root / BUILD_DIR
     build_dir.mkdir(parents=True, exist_ok=True)
+    if production_requires_builder_backend(_run_mode(request)):
+        render_request_path, render_request = write_render_request(
+            root,
+            build_dir_name=BUILD_DIR,
+            build_manifest_name=BUILD_MANIFEST_NAME,
+            render_results_dir=RENDER_RESULTS_DIR,
+            render_result_name=RENDER_RESULT_NAME,
+            request=request,
+            manifest=manifest,
+            backend=backend,
+        )
+        append_event(
+            root,
+            "build.render_handoff_ready",
+            target=run_id,
+            payload_ref=str(render_request_path.relative_to(root)),
+            data={
+                "page_count": int(manifest.get("page_count") or 0),
+                "required_outputs": render_request.get("required_outputs", []),
+                "expected_render_result": render_request.get("expected_render_result", {}),
+            },
+        )
+        return {
+            "schema_version": "deck_build_run_result.v1",
+            "status": "awaiting_external_render",
+            "handoff_status": "handoff_ready",
+            "run_id": run_id,
+            "run_dir": str(root),
+            "build_manifest": str((build_dir / BUILD_MANIFEST_NAME).relative_to(root)),
+            "render_request": str(render_request_path.relative_to(root)),
+            "expected_render_result": render_request.get("expected_render_result", {}),
+            "page_count": int(manifest.get("page_count") or 0),
+            "warnings": manifest.get("warnings", []),
+        }
+
     result_dir = root / RENDER_RESULTS_DIR
     result_dir.mkdir(parents=True, exist_ok=True)
     session_id = "build-" + datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
@@ -486,8 +524,11 @@ def run_build(run_dir: str | Path) -> dict[str, Any]:
 def build_status(run_dir: str | Path) -> dict[str, Any]:
     root = Path(run_dir).expanduser().resolve()
     manifest_path = root / BUILD_DIR / BUILD_MANIFEST_NAME
+    render_request_path = root / BUILD_DIR / RENDER_REQUEST_NAME
     artifact_manifest_path = root / BUILD_DIR / ARTIFACT_MANIFEST_NAME
     render_result_path = root / RENDER_RESULTS_DIR / RENDER_RESULT_NAME
+    build_manifest = read_json(manifest_path) if manifest_path.exists() else {}
+    render_request = read_json(render_request_path) if render_request_path.exists() else {}
     render_result = read_json(render_result_path) if render_result_path.exists() else {}
     artifact_manifest = read_json(artifact_manifest_path) if artifact_manifest_path.exists() else {}
     artifact_validation = (
@@ -501,18 +542,33 @@ def build_status(run_dir: str | Path) -> dict[str, Any]:
         if artifact_manifest
         else {}
     )
-    status = "completed" if render_result else ("prepared" if manifest_path.exists() else "missing")
+    if render_result:
+        status = "completed"
+    elif render_request:
+        status = str(render_request.get("status") or "awaiting_external_render")
+    else:
+        status = "prepared" if manifest_path.exists() else "missing"
     if artifact_validation and not artifact_validation.get("valid"):
         status = "invalid"
+    request_pages = ((render_request.get("inputs") or {}).get("pages") or []) if isinstance(render_request.get("inputs"), dict) else []
+    page_count = (
+        render_result.get("page_count")
+        or render_request.get("page_count")
+        or (len(request_pages) if isinstance(request_pages, list) else 0)
+        or build_manifest.get("page_count")
+        or 0
+    )
+    warnings = render_result.get("warnings") or render_request.get("warnings") or build_manifest.get("warnings") or []
     return {
         "schema_version": "deck_build_status.v1",
         "run_dir": str(root),
         "status": status,
         "build_manifest": str(manifest_path) if manifest_path.exists() else "",
+        "render_request": str(render_request_path) if render_request else "",
         "artifact_manifest": str(artifact_manifest_path) if artifact_manifest_path.exists() else "",
         "render_result": str(render_result_path) if render_result else "",
         "artifact_path": str(render_result.get("artifact_path") or ""),
-        "page_count": render_result.get("page_count", 0),
-        "warning_count": len(render_result.get("warnings", [])) if isinstance(render_result.get("warnings"), list) else 0,
+        "page_count": page_count,
+        "warning_count": len(warnings) if isinstance(warnings, list) else 0,
         "artifact_validation": artifact_validation,
     }

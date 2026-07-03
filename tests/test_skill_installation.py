@@ -3,16 +3,27 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 import tempfile
+import sys
 import unittest
+from typing import Any
 from pathlib import Path
 from unittest import mock
+
+_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(_ROOT / "scripts"))
 
 from scripts.skills.installer import (
     SKILL_NAME,
     SkillInstallError,
+    backend_bind,
+    backend_status,
+    backend_unbind,
+    backend_verify,
+    CAPABILITY_LOCK_NAME,
     build_release_tree,
     inspect_skill_link,
     install_release_tree,
@@ -30,6 +41,13 @@ from scripts.skills.installer import (
     verify_release_tree,
 )
 from scripts.skills.manifest import load_registry
+from scripts.runtime.builder_backend import inspect_builder_backend_package
+from scripts.runtime.builder_backend import builder_backend_status
+try:
+    from runtime.setup_status import setup_status as runtime_setup_status
+except ModuleNotFoundError:  # pragma: no cover - package-import fallback.
+    from scripts.runtime.setup_status import setup_status as runtime_setup_status
+import scripts.deck_master as deck_master
 
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -41,6 +59,11 @@ class SkillInstallationTest(unittest.TestCase):
 
     def setUp(self) -> None:
         self._tmp = tempfile.mkdtemp(prefix="dm_skill_test_")
+        self._previous_backend_override = os.environ.pop("DECK_MASTER_PPT_MASTER_BACKEND", None)
+        self._tmp_home = Path(self._tmp) / "home"
+        self._tmp_home.mkdir()
+        self._home_patch = mock.patch.dict(os.environ, {"HOME": str(self._tmp_home)}, clear=False)
+        self._home_patch.start()
         self._log_patch = mock.patch(
             "scripts.skills.installer.INSTALL_LOG_DIR",
             Path(self._tmp) / ".deck-master",
@@ -51,21 +74,149 @@ class SkillInstallationTest(unittest.TestCase):
         self.source_dir = Path(self._tmp) / ".deck-master" / "current" / "skills" / SKILL_NAME
         shutil.copytree(_REPO_ROOT / "skills" / SKILL_NAME, self.source_dir)
 
-    def _write_full_ppt_master_skill(self) -> Path:
+    def _write_full_ppt_master_skill(
+        self,
+        *,
+        manifest: bool = False,
+        manifest_schema: str = "deck_master_backend_manifest.v1",
+        missing_operation: str | None = None,
+        missing_key_script: str | None = None,
+        include_workflows: bool = True,
+        contracts_as_list: bool = False,
+        smoke_passes: bool = True,
+    ) -> Path:
         path = self.agent_dir / "ppt-master"
         path.mkdir()
         (path / "SKILL.md").write_text(
             "---\nname: ppt-master\ndescription: Full standalone PPT Master\n---\n# PPT Master\n",
             encoding="utf-8",
         )
-        for dirname in ("references", "scripts", "templates"):
+
+        for dirname in ("references", "templates", "scripts") + (("workflows",) if include_workflows else tuple()):
             child = path / dirname
             child.mkdir()
             (child / "marker.txt").write_text("keep", encoding="utf-8")
+
+        key_scripts = ("project_manager.py", "finalize_svg.py", "svg_to_pptx.py")
+        for name in key_scripts:
+            if missing_key_script == name:
+                continue
+            (path / "scripts" / name).write_text("# generated for test\n", encoding="utf-8")
+        if manifest:
+            (path / "scripts" / "deck_master_backend_smoke.py").write_text(
+                (
+                    "import json\n"
+                    "import sys\n"
+                    "from pathlib import Path\n"
+                    "out = Path(sys.argv[sys.argv.index('--output-dir') + 1]) if '--output-dir' in sys.argv else Path('.')\n"
+                    "exports = out / 'exports'\n"
+                    "exports.mkdir(parents=True, exist_ok=True)\n"
+                    "render_dir = out / 'render_results'\n"
+                    "render_dir.mkdir(parents=True, exist_ok=True)\n"
+                    "pptx = exports / 'smoke.pptx'\n"
+                    "pptx.write_bytes(b'pptx')\n"
+                    "render_result = render_dir / 'render_result.json'\n"
+                    "render_result.write_text(json.dumps({\n"
+                    "  'schema_version': 'deck_render_result.v2',\n"
+                    "  'run_id': 'smoke-run',\n"
+                    "  'tool': 'ppt-master',\n"
+                    "  'status': 'completed',\n"
+                    "  'artifact_path': str(pptx),\n"
+                    "  'page_count': 1,\n"
+                    "  'source_fingerprint': 'a' * 64,\n"
+                    "  'artifacts': [{'artifact_id': 'deck_pptx', 'kind': 'deck_pptx', 'path': str(pptx), 'media_type': 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'sha256': 'b' * 64, 'bytes': 4, 'validation_status': 'validated', 'editability': 'flat_image'}]\n"
+                    "}, ensure_ascii=False), encoding='utf-8')\n"
+                    "print(json.dumps({'status': 'pass', 'contract_smoke_output': {'render_result_path': str(render_result), 'fake_pptx_path': str(pptx)}}))\n"
+                    if smoke_passes
+                    else "raise SystemExit(1)\n"
+                ),
+                encoding="utf-8",
+            )
+
+        if manifest:
+            operations = ["render", "smoke", "writeback"]
+            if missing_operation:
+                operations.remove(missing_operation)
+            manifest_data = {
+                "schema_version": manifest_schema,
+                "name": "ppt-master",
+                "kind": "deck_master_backend_manifest",
+                "operations": operations,
+                "runtime": {
+                    "operations": operations,
+                    "smoke_command": "python3 scripts/deck_master_backend_smoke.py",
+                    "default_command": "python3 scripts/project_manager.py",
+                },
+                "contracts": (
+                    ["deck_render_result.v1", "deck_render_result.v2"]
+                    if contracts_as_list
+                    else {"outputs": ["deck_render_result.v1", "deck_render_result.v2"]}
+                ),
+                "writeback": {"canonical_artifact": "render_results/render_result.json"},
+                "skill_root": "skills/ppt-master",
+            }
+            (path / "deck-master-backend.json").write_text(
+                json.dumps(manifest_data, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
         return path
+
+    def _write_bound_backend_repo(
+        self,
+        *,
+        manifest: bool = True,
+        manifest_schema: str = "deck_master_backend_manifest.v1",
+        missing_operation: str | None = None,
+        missing_key_script: str | None = None,
+        include_workflows: bool = True,
+        contracts_as_list: bool = False,
+        smoke_passes: bool = True,
+    ) -> Path:
+        skill_root = self._write_full_ppt_master_skill(
+            manifest=manifest,
+            manifest_schema=manifest_schema,
+            missing_operation=missing_operation,
+            missing_key_script=missing_key_script,
+            include_workflows=include_workflows,
+            contracts_as_list=contracts_as_list,
+            smoke_passes=smoke_passes,
+        )
+        repo = Path(self._tmp) / "backend_repo"
+        if repo.exists():
+            shutil.rmtree(repo)
+        (repo / "skills").mkdir(parents=True)
+        shutil.copytree(skill_root, repo / "skills" / "ppt-master")
+        subprocess.run(["git", "init"], cwd=repo, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(["git", "config", "user.name", "deck-master-test"], cwd=repo, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=repo, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(["git", "add", "."], cwd=repo, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(["git", "commit", "-m", "test backend binding"], cwd=repo, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return repo
+
+    def _run_backend_cli(self, *args: str) -> dict[str, Any]:
+        command = [
+            sys.executable,
+            str(_REPO_ROOT / "scripts" / "deck_master.py"),
+            *args,
+        ]
+        env = os.environ.copy()
+        env["HOME"] = str(self._tmp_home)
+        result = subprocess.run(
+            command,
+            cwd=str(_REPO_ROOT),
+            check=False,
+            capture_output=True,
+            text=True,
+            env=env,
+        )
+        self.assertEqual(0, result.returncode, msg=result.stderr)
+        return json.loads(result.stdout)
 
     def tearDown(self) -> None:
         self._log_patch.stop()
+        self._home_patch.stop()
+        if self._previous_backend_override is not None:
+            os.environ["DECK_MASTER_PPT_MASTER_BACKEND"] = self._previous_backend_override
         shutil.rmtree(self._tmp, ignore_errors=True)
 
     # ------------------------------------------------------------------ #
@@ -304,6 +455,611 @@ class SkillInstallationTest(unittest.TestCase):
         self.assertEqual("blocked_backend_uncertified", result["capabilities"]["ppt_master.render.v1"])
         self.assertEqual("blocked_backend_uncertified", result["capabilities"]["ppt_master.handback.v1"])
 
+    def test_inspect_builder_backend_package_valid_manifest_is_production_capable(self) -> None:
+        path = self._write_full_ppt_master_skill(manifest=True, include_workflows=True)
+        result = inspect_builder_backend_package(path)
+
+        self.assertTrue(result["production_capable"])
+        self.assertEqual("deck_master_backend_manifest.v1", result["capability_schema"])
+
+    def test_inspect_builder_backend_package_rejects_wrong_schema(self) -> None:
+        path = self._write_full_ppt_master_skill(
+            manifest=True,
+            manifest_schema="random.schema.v1",
+            include_workflows=True,
+        )
+        result = inspect_builder_backend_package(path)
+
+        self.assertFalse(result["production_capable"])
+        self.assertIn("schema", " ".join(str(reason) for reason in result["reasons"]).lower())
+
+    def test_inspect_builder_backend_package_rejects_missing_operation(self) -> None:
+        path = self._write_full_ppt_master_skill(
+            manifest=True,
+            missing_operation="writeback",
+            include_workflows=True,
+        )
+        result = inspect_builder_backend_package(path)
+
+        self.assertFalse(result["production_capable"])
+        self.assertIn("lacks operations", " ".join(result["reasons"]))
+
+    def test_inspect_builder_backend_package_rejects_missing_key_script(self) -> None:
+        path = self._write_full_ppt_master_skill(
+            manifest=True,
+            missing_key_script="svg_to_pptx.py",
+            include_workflows=True,
+        )
+        result = inspect_builder_backend_package(path)
+
+        self.assertFalse(result["production_capable"])
+        self.assertIn("key script missing", " ".join(result["reasons"]))
+
+    def test_inspect_builder_backend_package_rejects_invalid_contracts_block(self) -> None:
+        path = self._write_full_ppt_master_skill(
+            manifest=True,
+            contracts_as_list=True,
+            include_workflows=True,
+        )
+        result = inspect_builder_backend_package(path)
+
+        self.assertFalse(result["production_capable"])
+        self.assertIn("contracts block is invalid", " ".join(result["reasons"]))
+
+    def test_inspect_builder_backend_package_rejects_failing_smoke(self) -> None:
+        path = self._write_full_ppt_master_skill(
+            manifest=True,
+            smoke_passes=False,
+            include_workflows=True,
+        )
+        result = inspect_builder_backend_package(path)
+
+        self.assertFalse(result["production_capable"])
+        self.assertIn("smoke command failed", " ".join(result["reasons"]))
+
+    def test_inspect_skill_link_prefers_env_backend_override_for_ppt_master(self) -> None:
+        override_root = self._write_full_ppt_master_skill(manifest=True, include_workflows=True)
+        with mock.patch.dict("os.environ", {"DECK_MASTER_PPT_MASTER_BACKEND": str(override_root)}):
+            result = inspect_skill_link("codex", str(self.agent_dir), skill_name="ppt-master")
+
+        self.assertTrue(result["valid"])
+        self.assertEqual("env_backend_override", result["status"])
+        self.assertEqual("env_backend_override", result["source_type"])
+        self.assertTrue(result["production_capable"])
+        self.assertIn("backend_status", result)
+        self.assertNotEqual("ready", result["status"])
+
+    def test_builder_backend_status_treats_runtime_blocked_binding_as_blocked(self) -> None:
+        dependency_status = {
+            "name": "ppt-master",
+            "dependency_kind": "external_repo",
+            "binding_status": "bound_verified_runtime_blocked",
+            "repo_label": "unit/repo",
+            "repo_path": "/tmp/repo",
+            "skill_path": "/tmp/repo/skills/ppt-master",
+            "git_sha": "abc",
+            "git_branch": "main",
+            "worktree_dirty": False,
+            "verified": True,
+            "verified_at": "2026-01-01T00:00:00Z",
+            "validated_capabilities": ["render", "smoke", "writeback"],
+            "summary": "PPT Master 已绑定且已完成验证。",
+        }
+
+        with mock.patch(
+            "scripts.runtime.builder_backend._binding_status_for_name",
+            return_value=dependency_status,
+        ), mock.patch("scripts.runtime.builder_backend._candidate_paths", return_value=[]):
+            status = builder_backend_status()
+
+        self.assertEqual("blocked", status["status"])
+        self.assertTrue(status["binding_verified"])
+        self.assertFalse(status["runtime_ready"])
+        self.assertFalse(status["render_capable"])
+        self.assertFalse(status["production_capable"])
+        self.assertEqual("bound_verified_runtime_blocked", status["dependency_status"]["binding_status"])
+
+    def test_suite_status_keeps_render_and_client_delivery_blocked_when_backend_certified(self) -> None:
+        fake_target = {
+            "status": "ready",
+            "skill": "deck-master",
+            "production_capable": True,
+            "backend_status": {"production_capable": True},
+        }
+
+        def fake_inspect_skill_link(target: str, agent_skill_dir: str | None = None, source_skill_dir: str | None = None, *, skill_name: str = "deck-master", required: bool = True) -> dict[str, Any]:
+            if skill_name == "ppt-master":
+                return {
+                    **fake_target,
+                    "skill": skill_name,
+                    "production_capable": True,
+                }
+            return {
+                "status": "ready",
+                "skill": skill_name,
+                "source_type": "bundled",
+            }
+
+        with mock.patch(
+            "scripts.skills.installer.external_dependency_statuses",
+            return_value=[{
+                "name": "ppt-master",
+                "dependency_kind": "external_repo",
+                "binding_status": "bound_verified_runtime_blocked",
+                "repo_label": "",
+                "repo_path": "/tmp/repo",
+                "skill_path": "",
+                "git_sha": "abc",
+                "git_branch": "main",
+                "worktree_dirty": False,
+                "verified": True,
+                "verified_at": "2026-01-01T00:00:00Z",
+                "validated_capabilities": ["render", "smoke", "writeback"],
+                "summary": "PPT Master 已绑定且已完成验证。",
+            }],
+        ), mock.patch(
+            "scripts.skills.installer.backend_dependency_statuses",
+            return_value=[{
+                "name": "ppt-master",
+                "dependency_kind": "external_repo",
+                "binding_status": "bound_verified_runtime_blocked",
+                "repo_label": "",
+                "repo_path": "/tmp/repo",
+                "skill_path": "",
+                "git_sha": "abc",
+                "git_branch": "main",
+                "worktree_dirty": False,
+                "verified": True,
+                "verified_at": "2026-01-01T00:00:00Z",
+                "validated_capabilities": ["render", "smoke", "writeback"],
+                "summary": "PPT Master 已绑定且已完成验证。",
+            }],
+        ), mock.patch("scripts.skills.installer.backend_render_runtime_ready", return_value=False), mock.patch(
+            "scripts.skills.installer.inspect_skill_link",
+            side_effect=fake_inspect_skill_link,
+        ):
+            result = inspect_suite_status(targets=["codex"], agent_skill_dir=str(self.agent_dir))
+
+        self.assertTrue(result["production_backend_ready"])
+        self.assertEqual("ready", result["task_readiness"]["ppt_master_backend"])
+        self.assertEqual("blocked_runtime_not_wired", result["capabilities"]["ppt_master.render.v1"])
+        self.assertEqual("blocked_runtime_not_wired", result["capabilities"]["ppt_master.handback.v1"])
+        self.assertEqual("blocked", result["task_readiness"]["render"])
+        self.assertEqual("blocked", result["task_readiness"]["client_delivery"])
+        self.assertFalse(result["client_delivery_ready"])
+
+    def test_suite_status_keeps_client_delivery_blocked_when_runtime_ready(self) -> None:
+        def fake_inspect_skill_link(target: str, agent_skill_dir: str | None = None, source_skill_dir: str | None = None, *, skill_name: str = "deck-master", required: bool = True) -> dict[str, Any]:
+            return {
+                "status": "ready",
+                "skill": skill_name,
+                "required": required,
+                "source_type": "mocked",
+                "production_capable": skill_name == "ppt-master",
+            }
+
+        verified_backend = {
+            "name": "ppt-master",
+            "dependency_kind": "external_repo",
+            "binding_status": "bound_verified",
+            "repo_label": "unit/repo",
+            "repo_path": "/tmp/repo",
+            "skill_path": "/tmp/repo/skills/ppt-master",
+            "git_sha": "abc",
+            "git_branch": "main",
+            "worktree_dirty": False,
+            "verified": True,
+            "verified_at": "2026-01-01T00:00:00Z",
+            "validated_capabilities": ["render", "smoke", "writeback"],
+            "summary": "PPT Master 已绑定且已完成验证。",
+        }
+        with mock.patch(
+            "scripts.skills.installer.external_dependency_statuses",
+            return_value=[verified_backend],
+        ), mock.patch(
+            "scripts.skills.installer.backend_dependency_statuses",
+            return_value=[verified_backend],
+        ), mock.patch("scripts.skills.installer.backend_render_runtime_ready", return_value=True), mock.patch(
+            "scripts.skills.installer.inspect_skill_link",
+            side_effect=fake_inspect_skill_link,
+        ), mock.patch.dict(
+            os.environ,
+            {"DECK_MASTER_RC_GATE_REPORT": str(Path(self._tmp) / "missing-rc-gate-report.json")},
+            clear=False,
+        ):
+            result = inspect_suite_status(targets=["codex"], agent_skill_dir=str(self.agent_dir))
+
+        self.assertEqual("ready", result["task_readiness"]["render"])
+        self.assertEqual("blocked", result["task_readiness"]["client_delivery"])
+        self.assertFalse(result["client_delivery_ready"])
+        self.assertIn("rc_gate_report", result["client_delivery_evidence"]["missing"])
+
+    def test_suite_status_marks_client_delivery_ready_with_rc_gate_evidence(self) -> None:
+        def fake_inspect_skill_link(target: str, agent_skill_dir: str | None = None, source_skill_dir: str | None = None, *, skill_name: str = "deck-master", required: bool = True) -> dict[str, Any]:
+            return {
+                "status": "ready",
+                "skill": skill_name,
+                "required": required,
+                "source_type": "mocked",
+                "production_capable": skill_name == "ppt-master",
+            }
+
+        verified_backend = {
+            "name": "ppt-master",
+            "dependency_kind": "external_repo",
+            "binding_status": "bound_verified",
+            "repo_label": "unit/repo",
+            "repo_path": "/tmp/repo",
+            "skill_path": "/tmp/repo/skills/ppt-master",
+            "git_sha": "backend-sha",
+            "git_branch": "main",
+            "worktree_dirty": False,
+            "verified": True,
+            "verified_at": "2026-01-01T00:00:00Z",
+            "validated_capabilities": ["render", "smoke", "writeback"],
+            "summary": "PPT Master 已绑定且已完成验证。",
+        }
+        verified_bridge = {
+            "name": "ppt-deck-pro-max",
+            "dependency_kind": "generation_bridge",
+            "binding_status": "bound_verified",
+            "repo_label": "unit/bridge",
+            "repo_path": "/tmp/bridge",
+            "skill_path": "",
+            "git_sha": "bridge-sha",
+            "git_branch": "main",
+            "worktree_dirty": False,
+            "verified": True,
+            "verified_at": "2026-01-01T00:00:00Z",
+            "validated_capabilities": ["dispatch_import", "generation_result_export"],
+            "summary": "Bridge 已固定。",
+        }
+        report_path = Path(self._tmp) / "rc_gate_report.json"
+        report_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "deck_rc_gate_report.v1",
+                    "status": "pass",
+                    "checks": [
+                        {
+                            "check_id": "external_dependency_closure",
+                            "status": "pass",
+                            "details": {
+                                "dependencies": {
+                                    "ppt-master": {
+                                        "binding_status": "bound_verified",
+                                        "git_sha": "backend-sha",
+                                        "verified": True,
+                                    },
+                                    "ppt-deck-pro-max": {
+                                        "binding_status": "bound_verified",
+                                        "git_sha": "bridge-sha",
+                                        "verified": True,
+                                    },
+                                }
+                            },
+                        }
+                    ],
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        with mock.patch(
+            "scripts.skills.installer.external_dependency_statuses",
+            return_value=[verified_backend, verified_bridge],
+        ), mock.patch(
+            "scripts.skills.installer.backend_dependency_statuses",
+            return_value=[verified_backend],
+        ), mock.patch("scripts.skills.installer.backend_render_runtime_ready", return_value=True), mock.patch(
+            "scripts.skills.installer.inspect_skill_link",
+            side_effect=fake_inspect_skill_link,
+        ), mock.patch.dict(os.environ, {"DECK_MASTER_RC_GATE_REPORT": str(report_path)}, clear=False):
+            result = inspect_suite_status(targets=["codex"], agent_skill_dir=str(self.agent_dir))
+
+        self.assertTrue(result["production_backend_ready"])
+        self.assertEqual("ready", result["task_readiness"]["render"])
+        self.assertEqual("ready", result["task_readiness"]["client_delivery"])
+        self.assertTrue(result["client_delivery_ready"])
+        self.assertTrue(result["client_delivery_evidence"]["dependency_snapshot_matches"])
+
+    def test_suite_status_requires_binding_for_production_backend_truth(self) -> None:
+        def fake_inspect_skill_link(target: str, agent_skill_dir: str | None = None, source_skill_dir: str | None = None, *, skill_name: str = "deck-master", required: bool = True) -> dict[str, Any]:
+            return {
+                "status": "ready",
+                "skill": skill_name,
+                "required": bool(required),
+                "source_type": "mocked",
+                "production_capable": True,
+            }
+
+        with mock.patch("scripts.skills.installer.external_dependency_statuses", return_value=[{
+            "name": "ppt-master",
+            "dependency_kind": "external_repo",
+            "binding_status": "unbound",
+            "repo_label": "",
+            "repo_path": "",
+            "skill_path": "",
+            "git_sha": "",
+            "git_branch": "",
+            "worktree_dirty": False,
+            "verified": False,
+            "verified_at": "",
+            "validated_capabilities": [],
+            "summary": "No formal backend binding found for PPT Master.",
+        }]), mock.patch("scripts.skills.installer.inspect_skill_link", side_effect=fake_inspect_skill_link):
+            result = inspect_suite_status(targets=["codex"], agent_skill_dir=str(self.agent_dir))
+
+        self.assertFalse(result["production_backend_ready"])
+        self.assertEqual("blocked", result["task_readiness"]["ppt_master_backend"])
+        self.assertEqual("blocked_backend_uncertified", result["capabilities"]["ppt_master.render.v1"])
+        self.assertEqual("blocked_backend_uncertified", result["capabilities"]["ppt_master.handback.v1"])
+
+    def test_release_lock_includes_external_dependencies(self) -> None:
+        release_root = Path(self._tmp) / "release"
+        build_release_tree(release_root)
+        capability_lock = json.loads((release_root / CAPABILITY_LOCK_NAME).read_text(encoding="utf-8"))
+
+        self.assertIn("external_dependencies", capability_lock)
+        dependencies = capability_lock["external_dependencies"]
+        self.assertIsInstance(dependencies, list)
+        self.assertIn("ppt-master", {item["name"] for item in dependencies})
+        self.assertIn("ppt-deck-pro-max", {item["name"] for item in dependencies})
+        self.assertEqual("ppt-master", dependencies[0]["name"])
+        self.assertIn("dependency_kind", dependencies[0])
+        self.assertIn("binding_status", dependencies[0])
+        self.assertIn("repo_label", dependencies[0])
+        self.assertIn("verified", dependencies[0])
+        self.assertIn("external_dependency_status", capability_lock)
+        external = capability_lock["external_dependency_status"]
+        self.assertIsInstance(external, list)
+        self.assertEqual("ppt-master", external[0]["name"])
+        self.assertIn("dependency_kind", external[0])
+        self.assertIn("binding_status", external[0])
+        self.assertIn("repo_label", external[0])
+        self.assertIn("verified", external[0])
+        self.assertEqual(dependencies, external)
+
+        bridge = next(item for item in dependencies if item["name"] == "ppt-deck-pro-max")
+        self.assertEqual("generation_bridge", bridge["dependency_kind"])
+        self.assertEqual("https://github.com/MainQuestAI/PPT-Deck-Pro-Max.git", bridge["repo"])
+        self.assertEqual("codex/deck-master-bridge", bridge["git_branch"])
+        self.assertEqual("9444d88f573c3afa567bfb1763041325ef765313", bridge["git_sha"])
+        self.assertEqual("9444d88f", bridge["short_sha"])
+        self.assertEqual("bound_verified", bridge["binding_status"])
+        self.assertTrue(bridge["verified"])
+        self.assertEqual(
+            ["dispatch_import", "generation_result_export", "result_import_contract"],
+            bridge["validated_capabilities"],
+        )
+
+    def test_suite_and_setup_status_report_generation_bridge_snapshot(self) -> None:
+        config_path = Path.home() / ".deck-master" / "config.json"
+        install_root = config_path.parent
+        install_root.mkdir(parents=True, exist_ok=True)
+        default_runs = install_root / "runs"
+        default_runs.mkdir(exist_ok=True)
+        config_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "deck_master_setup.v1",
+                    "setup_completed_at": "2026-01-01T00:00:00Z",
+                    "install_root": str(install_root),
+                    "active_workspace": "",
+                    "default_runs_dir": str(default_runs),
+                    "review_cockpit_url": "http://127.0.0.1:5050",
+                    "agent_targets": [],
+                    "setup_status": {},
+                },
+                ensure_ascii=False,
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+
+        def fake_inspect_skill_link(
+            target: str,
+            agent_skill_dir: str | None = None,
+            source_skill_dir: str | None = None,
+            *,
+            skill_name: str = "deck-master",
+            required: bool = True,
+        ) -> dict[str, Any]:
+            return {
+                "status": "ready",
+                "skill": skill_name,
+                "required": required,
+                "source_type": "mocked",
+                "production_capable": skill_name == "ppt-master",
+            }
+
+        with mock.patch("scripts.skills.installer.inspect_skill_link", side_effect=fake_inspect_skill_link):
+            suite = inspect_suite_status(targets=["codex"], agent_skill_dir=str(self.agent_dir))
+
+        setup = runtime_setup_status(run_mode="dev", include_suite=False)
+        for payload in (suite, setup):
+            bridge = next(
+                item for item in payload["external_dependency_status"]
+                if item["name"] == "ppt-deck-pro-max"
+            )
+            self.assertEqual("generation_bridge", bridge["dependency_kind"])
+            self.assertEqual("https://github.com/MainQuestAI/PPT-Deck-Pro-Max.git", bridge["source"])
+            self.assertEqual("9444d88f573c3afa567bfb1763041325ef765313", bridge["git_sha"])
+            self.assertEqual("9444d88f", bridge["short_sha"])
+            self.assertIn("PPT Deck Pro Max generation bridge pinned", bridge["summary"])
+            self.assertFalse(payload["client_delivery_ready"])
+
+    def test_release_lock_preserves_runtime_blocked_binding_truth(self) -> None:
+        repo = self._write_bound_backend_repo()
+        bind_result = backend_bind("ppt-master", str(repo))
+        self.assertTrue(bind_result["verified"])
+
+        with mock.patch.dict(os.environ, {"DECK_MASTER_PPT_MASTER_RUNTIME_WIRED": "0"}, clear=False):
+            release_root = Path(self._tmp) / "release-runtime-blocked"
+            result = build_release_tree(release_root)
+
+        self.assertEqual("built", result["status"])
+        capability_lock = json.loads((release_root / CAPABILITY_LOCK_NAME).read_text(encoding="utf-8"))
+        dependencies = capability_lock["external_dependencies"]
+        self.assertEqual("bound_verified_runtime_blocked", dependencies[0]["binding_status"])
+        self.assertEqual(dependencies, capability_lock["external_dependency_status"])
+
+    def test_backend_bind_verify_unbind_cycle(self) -> None:
+        repo = self._write_bound_backend_repo()
+
+        bound = backend_bind(name="ppt-master", repo_path=str(repo))
+        self.assertEqual("ppt-master", bound["name"])
+        self.assertTrue(bound["verified"])
+        self.assertIn("verified_at", bound)
+        status = backend_status()
+        self.assertTrue(status["production_bound_verified"])
+        self.assertIn(status["binding_status"], {"bound_verified", "bound_verified_runtime_blocked"})
+
+        manifest_path = repo / "skills" / "ppt-master" / "deck-master-backend.json"
+        payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+        payload["operations"] = ["render", "smoke"]
+        payload["runtime"]["operations"] = ["render", "smoke"]
+        manifest_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+        verified = backend_verify("ppt-master")
+        self.assertFalse(verified["verified"])
+
+        unbound = backend_unbind("ppt-master")
+        self.assertEqual("unbound", unbound["status"])
+        after_unbound = backend_status()
+        self.assertFalse(after_unbound["production_bound_verified"])
+        self.assertEqual("unbound", after_unbound["binding_status"])
+
+    def test_backend_cli_bind_status_verify_unbind_cycle(self) -> None:
+        repo = self._write_bound_backend_repo()
+        initial = self._run_backend_cli("backend", "status")
+        self.assertEqual("unbound", initial["binding_status"])
+
+        bound = self._run_backend_cli("backend", "bind", "ppt-master", "--repo", str(repo))
+        self.assertEqual("ppt-master", bound["name"])
+        self.assertTrue(bound["verified"])
+        registry_path = self._tmp_home / ".deck-master" / "backend_bindings.json"
+        self.assertTrue(registry_path.exists())
+        registry = json.loads(registry_path.read_text(encoding="utf-8"))
+        self.assertEqual("deck_backend_bindings.v1", registry["schema_version"])
+        self.assertEqual(1, len(registry["bindings"]))
+        self.assertEqual("ppt-master", registry["bindings"][0]["name"])
+        self.assertEqual(str(repo.resolve()), registry["bindings"][0]["repo_path"])
+
+        status = self._run_backend_cli("backend", "status")
+        self.assertIn(status["binding_status"], {"bound_verified", "bound_verified_runtime_blocked"})
+        self.assertTrue(status["production_bound_verified"])
+
+        verified = self._run_backend_cli("backend", "verify", "ppt-master")
+        self.assertEqual(str(repo.resolve()), verified["repo_path"])
+
+        unbound = self._run_backend_cli("backend", "unbind", "ppt-master")
+        self.assertEqual("unbound", unbound["status"])
+
+    def test_setup_status_uses_backend_binding_truth(self) -> None:
+        config_path = Path.home() / ".deck-master" / "config.json"
+        install_root = config_path.parent
+        install_root.mkdir(parents=True, exist_ok=True)
+        default_runs = install_root / "runs"
+        default_runs.mkdir(exist_ok=True)
+        config = {
+            "schema_version": "deck_master_setup.v1",
+            "setup_completed_at": "2026-01-01T00:00:00Z",
+            "install_root": str(install_root),
+            "active_workspace": "",
+            "default_runs_dir": str(default_runs),
+            "review_cockpit_url": "http://127.0.0.1:5050",
+            "agent_targets": [],
+            "setup_status": {},
+        }
+        config_path.write_text(json.dumps(config, ensure_ascii=False, indent=2), encoding="utf-8")
+
+        dependency_status = [{
+            "name": "ppt-master",
+            "dependency_kind": "external_repo",
+            "binding_status": "bound_verified_runtime_blocked",
+            "repo_label": "unit/repo",
+            "repo_path": "/tmp/repo",
+            "skill_path": "/tmp/repo/skills/ppt-master",
+            "git_sha": "abc",
+            "git_branch": "main",
+            "worktree_dirty": False,
+            "verified": True,
+            "verified_at": "2026-01-01T00:00:00Z",
+            "validated_capabilities": ["render", "smoke", "writeback"],
+            "summary": "PPT Master 已绑定且已完成验证。",
+        }]
+        with mock.patch(
+            "runtime.setup_status.inspect_suite_status",
+            return_value={
+                "status": "ready",
+                "full_suite_ready": True,
+                "production_backend_ready": True,
+                "client_delivery_ready": False,
+                "external_dependency_status": dependency_status,
+                "capabilities": {},
+                "task_readiness": {"render": "blocked"},
+                "blocking_summary": [],
+            },
+        ):
+            result = runtime_setup_status(run_mode="dev", include_suite=False)
+
+        self.assertEqual("ready", result["status"])
+        self.assertTrue(result["production_backend_ready"])
+        self.assertEqual("bound_verified_runtime_blocked", result["external_dependency_status"][0]["binding_status"])
+        self.assertIn("external_dependency_status", result)
+
+    def test_suite_status_treats_env_backend_override_as_diagnostic_only(self) -> None:
+        def fake_inspect_skill_link(
+            target: str,
+            agent_skill_dir: str | None = None,
+            source_skill_dir: str | None = None,
+            *,
+            skill_name: str = "deck-master",
+            required: bool = True,
+        ) -> dict[str, Any]:
+            if skill_name == "ppt-master":
+                return {
+                    "status": "env_backend_override",
+                    "skill": skill_name,
+                    "valid": True,
+                    "required": True,
+                    "source_type": "env_backend_override",
+                    "production_capable": True,
+                }
+            return {
+                "status": "ready",
+                "skill": skill_name,
+                "required": required,
+                "source_type": "mocked",
+                "production_capable": True,
+            }
+
+        with mock.patch(
+            "scripts.skills.installer.external_dependency_statuses",
+            return_value=[{
+                "name": "ppt-master",
+                "dependency_kind": "external_repo",
+                "binding_status": "bound_verified",
+                "repo_label": "",
+                "repo_path": "",
+                "skill_path": "",
+                "git_sha": "",
+                "git_branch": "",
+                "worktree_dirty": False,
+                "verified": True,
+                "verified_at": "2026-01-01T00:00:00Z",
+                "validated_capabilities": ["render", "smoke", "writeback"],
+                "summary": "PPT Master 已绑定且已完成验证。",
+            }],
+        ), mock.patch("scripts.skills.installer.inspect_skill_link", side_effect=fake_inspect_skill_link):
+            result = inspect_suite_status(targets=["codex"], agent_skill_dir=str(self.agent_dir))
+
+        self.assertEqual("degraded_ready", result["status"])
+        self.assertIn("ppt-master", result["target_readiness"]["codex"]["blocked_required"])
+        self.assertTrue(result["production_backend_ready"])
+        self.assertEqual("ready", result["task_readiness"]["ppt_master_backend"])
+        self.assertEqual("blocked", result["task_readiness"]["ppt_master_adapter"])
+
     def test_release_tree_contains_required_skills_capabilities_and_manifest(self) -> None:
         release_root = Path(self._tmp) / "release"
 
@@ -438,6 +1194,20 @@ class SkillInstallationTest(unittest.TestCase):
         self.assertTrue(rollback["verification"]["valid"])
         self.assertEqual(original_manifest, (current / "release-manifest.json").read_text(encoding="utf-8"))
         self.assertFalse((current / "release-activation.json").exists())
+
+    def test_release_install_cli_calls_staged_installer(self) -> None:
+        parser = deck_master.build_parser()
+
+        for argv, expected_smoke in ((["release-install"], True), (["release-install", "--no-smoke"], False)):
+            with self.subTest(argv=argv), mock.patch(
+                "scripts.deck_master.install_release_tree",
+                return_value={"status": "installed", "activated": True},
+            ) as install:
+                args = parser.parse_args(argv)
+                result = args.func(args)
+
+            self.assertEqual("installed", result["status"])
+            install.assert_called_once_with(run_smoke=expected_smoke)
 
     def test_suite_migration_apply_and_rollback_real_directory(self) -> None:
         legacy = self.agent_dir / "ppt-master"
@@ -596,6 +1366,60 @@ class SkillInstallationTest(unittest.TestCase):
             except json.JSONDecodeError as exc:
                 self.fail(f"Schema {name} is not valid JSON: {exc}")
             self.assertIn("$id", data, f"Schema {name} missing $id")
+
+    def test_setup_status_v2_schema_holds_minimum_public_fields(self) -> None:
+        schema_path = _REPO_ROOT / "docs" / "contracts" / "setup-status.v2.schema.json"
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+
+        for key in {
+            "workspace_entry_ready",
+            "production_backend_ready",
+            "client_delivery_ready",
+            "external_dependency_status",
+            "blocking_summary",
+            "setup_blocking_summary",
+            "workspace_blocking_summary",
+            "suite_blocking_summary",
+            "client_delivery_blocking_summary",
+            "full_suite_ready",
+        }:
+            self.assertIn(key, schema["properties"], key)
+        for key in {
+            "workspace_entry_ready",
+            "production_backend_ready",
+            "client_delivery_ready",
+            "external_dependency_status",
+            "blocking_summary",
+            "setup_blocking_summary",
+            "workspace_blocking_summary",
+            "suite_blocking_summary",
+            "client_delivery_blocking_summary",
+        }:
+            self.assertIn(key, schema["required"], key)
+
+        dependency_schema = schema["$defs"]["dependency_status_entry"]
+        for key in {
+            "name",
+            "dependency_kind",
+            "binding_status",
+            "repo_label",
+            "git_sha",
+            "short_sha",
+            "verified",
+            "validated_capabilities",
+            "summary",
+        }:
+            self.assertIn(key, dependency_schema["properties"], key)
+            self.assertIn(key, dependency_schema["required"])
+        self.assertEqual(
+            [
+                "unbound",
+                "bound_blocked",
+                "bound_verified_runtime_blocked",
+                "bound_verified",
+            ],
+            dependency_schema["properties"]["binding_status"]["enum"],
+        )
 
 
 if __name__ == "__main__":

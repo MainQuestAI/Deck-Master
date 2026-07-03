@@ -97,7 +97,12 @@ from team.approval import submit_approval, approve, reject
 from connectors.import_contract import validate_import_manifest, import_to_context_manifest
 from skills.installer import (
     SkillInstallError,
+    backend_bind,
+    backend_status,
+    backend_unbind,
+    backend_verify,
     build_release_tree,
+    install_release_tree,
     install_skill,
     rollback_release_tree,
     inspect_suite_status,
@@ -1561,6 +1566,10 @@ def command_release_smoke(args: argparse.Namespace) -> dict[str, Any]:
     )
 
 
+def command_release_install(args: argparse.Namespace) -> dict[str, Any]:
+    return install_release_tree(run_smoke=not bool(getattr(args, "no_smoke", False)))
+
+
 def command_release_rollback(args: argparse.Namespace) -> dict[str, Any]:
     return rollback_release_tree()
 
@@ -1577,6 +1586,22 @@ def command_suite_repair(args: argparse.Namespace) -> dict[str, Any]:
         targets=getattr(args, "target", None),
         include_optional=bool(getattr(args, "include_optional", False)),
     )
+
+
+def command_backend_bind(args: argparse.Namespace) -> dict[str, Any]:
+    return backend_bind(name=str(args.name), repo_path=str(args.repo))
+
+
+def command_backend_status(args: argparse.Namespace) -> dict[str, Any]:
+    return backend_status()
+
+
+def command_backend_verify(args: argparse.Namespace) -> dict[str, Any]:
+    return backend_verify(name=str(args.name))
+
+
+def command_backend_unbind(args: argparse.Namespace) -> dict[str, Any]:
+    return backend_unbind(name=str(args.name))
 
 
 def command_suite_migrate_legacy_skills(args: argparse.Namespace) -> dict[str, Any]:
@@ -2036,8 +2061,12 @@ def command_benchmark_rc_report(args: argparse.Namespace) -> dict[str, Any]:
     _ensure_rc_benchmark_boundary(case, run_dir)
     _ensure_ready_for_benchmark(run_dir)
     pending_external_steps = collect_pending_external_steps(case, run_dir)
-    if any(step.get("step") == "render_result" for step in pending_external_steps):
-        raise BenchmarkReportError("benchmark RC report blocked: render result is required before RC readiness.")
+    if pending_external_steps:
+        steps = ", ".join(str(step.get("step") or "unknown") for step in pending_external_steps)
+        raise BenchmarkReportError(
+            "benchmark RC report blocked: pending external steps must be completed before RC report: "
+            f"{steps}."
+        )
     return write_benchmark_rc_report(
         case,
         run_dir,
@@ -2241,6 +2270,10 @@ def build_parser() -> argparse.ArgumentParser:
     p_release_smoke.add_argument("--no-smoke", action="store_true", help="Skip launching the release entrypoint")
     p_release_smoke.set_defaults(func=command_release_smoke)
 
+    p_release_install = sub.add_parser("release-install", help="Install Deck Master release tree via staging verification and activation")
+    p_release_install.add_argument("--no-smoke", action="store_true", help="Skip launching the release entrypoint")
+    p_release_install.set_defaults(func=command_release_install)
+
     p_release_rollback = sub.add_parser("release-rollback", help="Restore the previous Deck Master release tree")
     p_release_rollback.set_defaults(func=command_release_rollback)
 
@@ -2253,6 +2286,21 @@ def build_parser() -> argparse.ArgumentParser:
     p_suite_repair.add_argument("--target", action="append", default=[], choices=["codex", "claude-code", "hermes"])
     p_suite_repair.add_argument("--include-optional", action="store_true")
     p_suite_repair.set_defaults(func=command_suite_repair)
+
+    p_backend = sub.add_parser("backend", help="Manage external backend binding")
+    backend_cmds = p_backend.add_subparsers(dest="backend_command", required=True)
+    p_backend_bind = backend_cmds.add_parser("bind", help="Bind a backend dependency repo as the trusted source")
+    p_backend_bind.add_argument("name", choices=["ppt-master"])
+    p_backend_bind.add_argument("--repo", required=True, help="Path to backend dependency repository root")
+    p_backend_bind.set_defaults(func=command_backend_bind)
+    p_backend_status = backend_cmds.add_parser("status", help="Show backend dependency binding status")
+    p_backend_status.set_defaults(func=command_backend_status)
+    p_backend_verify = backend_cmds.add_parser("verify", help="Re-run certification on the bound backend dependency")
+    p_backend_verify.add_argument("name", choices=["ppt-master"])
+    p_backend_verify.set_defaults(func=command_backend_verify)
+    p_backend_unbind = backend_cmds.add_parser("unbind", help="Unbind a backend dependency")
+    p_backend_unbind.add_argument("name", choices=["ppt-master"])
+    p_backend_unbind.set_defaults(func=command_backend_unbind)
 
     p_suite_migrate = sub.add_parser("suite-migrate-legacy-skills", help="Plan, apply, or rollback legacy skill directory migration")
     p_suite_migrate.add_argument("--target", action="append", default=[], choices=["codex", "claude-code", "hermes"])

@@ -635,7 +635,7 @@ class PreviewHandler(BaseHTTPRequestHandler):
                 if not self._is_setup_ready_for_production(setup):
                     self.send_error_json(
                         HTTPStatus.CONFLICT,
-                        f"Setup is not ready for production runs. Next: {setup.get('next_command', '')}".strip(),
+                        "Setup is not ready for production runs. Complete setup before creating a production project.",
                     )
                     return
                 cfg = setup.get("config") if isinstance(setup.get("config"), dict) else {}
@@ -751,6 +751,29 @@ class PreviewHandler(BaseHTTPRequestHandler):
         workspace = payload.get("workspace")
         return isinstance(workspace, dict) and workspace.get("status") == "valid"
 
+    @staticmethod
+    def _as_bool(value: object, default: bool = False) -> bool:
+        return value if isinstance(value, bool) else default
+
+    @staticmethod
+    def _as_list(value: object) -> list[Any]:
+        if isinstance(value, list):
+            return value
+        return []
+
+    @staticmethod
+    def _as_dict(value: object) -> dict[str, Any]:
+        return value if isinstance(value, dict) else {}
+
+    @staticmethod
+    def _coerce_dependency_status(payload: dict[str, Any]) -> list[Any]:
+        suite = payload.get("suite")
+        suite_dependencies = PreviewHandler._as_list(PreviewHandler._as_dict(suite).get("external_dependency_status"))
+        top_dependencies = PreviewHandler._as_list(payload.get("external_dependency_status"))
+        if top_dependencies:
+            return top_dependencies
+        return suite_dependencies
+
     def _write_workspace_runtime_fields(
         self,
         request: dict[str, Any],
@@ -774,10 +797,89 @@ class PreviewHandler(BaseHTTPRequestHandler):
     def _adapt_setup_status(self, payload: dict[str, Any]) -> dict[str, Any]:
         config = payload.get("config") if isinstance(payload.get("config"), dict) else None
         workspace = payload.get("workspace") if isinstance(payload.get("workspace"), dict) else None
-        workspace_ready = bool(workspace and workspace.get("status") == "valid")
-        install_ready = payload.get("status") != "blocked" and bool(config)
-        run_ready = bool(config and config.get("active_workspace") and workspace_ready)
-        production_ready = bool(install_ready and workspace_ready and not payload.get("repair_items"))
+        suite = self._as_dict(payload.get("suite"))
+        repair_items = self._as_list(payload.get("repair_items"))
+        repair_items_count = payload.get("repair_items_count")
+        repair_items_count = (
+            int(repair_items_count)
+            if isinstance(repair_items_count, int) and not isinstance(repair_items_count, bool)
+            else len(repair_items)
+        )
+        workspace_ready = self._as_bool(
+            payload.get("workspace_ready"),
+            bool(workspace and workspace.get("status") == "valid"),
+        )
+        install_ready = self._as_bool(payload.get("install_ready"), bool(config))
+        run_ready = self._as_bool(
+            payload.get("run_ready"),
+            bool(config and config.get("active_workspace") and workspace_ready),
+        )
+        production_ready = self._as_bool(
+            payload.get("production_ready"),
+            bool(install_ready and workspace_ready and not self._as_list(payload.get("repair_items"))),
+        )
+        workspace_entry_ready = self._as_bool(
+            payload.get("workspace_entry_ready"),
+            self._as_bool(
+                payload.get("workspace_access_ready"),
+                bool(payload.get("status") == "ready" and install_ready and workspace_ready and run_ready),
+            ),
+        )
+        production_backend_ready = self._as_bool(
+            payload.get("production_backend_ready"),
+            self._as_bool(suite.get("production_backend_ready")),
+        )
+        client_delivery_ready = self._as_bool(
+            payload.get("client_delivery_ready"),
+            self._as_bool(suite.get("client_delivery_ready")),
+        )
+        blocking_summary = self._as_list(payload.get("blocking_summary"))
+        if not blocking_summary and suite.get("blocking_summary"):
+            blocking_summary = self._as_list(suite.get("blocking_summary"))
+        external_dependency_status = self._coerce_dependency_status(payload)
+        setup_blocking_summary = self._as_list(payload.get("setup_blocking_summary"))
+        workspace_blocking_summary = self._as_list(payload.get("workspace_blocking_summary"))
+        suite_blocking_summary = self._as_list(payload.get("suite_blocking_summary"))
+        client_delivery_blocking_summary = self._as_list(payload.get("client_delivery_blocking_summary"))
+        if not (setup_blocking_summary or workspace_blocking_summary or suite_blocking_summary or client_delivery_blocking_summary):
+            for item in self._as_list(blocking_summary):
+                if not isinstance(item, dict):
+                    continue
+                code = str(item.get("code") or "")
+                blocking_type = str(item.get("blocking_type") or "")
+                if blocking_type == "workspace":
+                    workspace_blocking_summary.append(item)
+                elif blocking_type == "delivery" or code == "client_delivery_blocked":
+                    client_delivery_blocking_summary.append(item)
+                elif blocking_type in {"backend", "runtime"} or code.startswith("suite_"):
+                    suite_blocking_summary.append(item)
+                else:
+                    setup_blocking_summary.append(item)
+
+        readiness_layers = self._as_dict(payload.get("readiness_layers"))
+        if not readiness_layers:
+            readiness_layers = {
+                "setup": {
+                    "ready": bool(install_ready and not setup_blocking_summary),
+                    "status": "ready" if install_ready and not setup_blocking_summary else "blocked",
+                    "blocking_summary": setup_blocking_summary,
+                },
+                "workspace": {
+                    "ready": workspace_entry_ready,
+                    "status": "ready" if workspace_entry_ready else payload.get("status", "blocked"),
+                    "blocking_summary": workspace_blocking_summary,
+                },
+                "suite": {
+                    "ready": self._as_bool(payload.get("full_suite_ready"), self._as_bool(suite.get("full_suite_ready"))),
+                    "status": str(suite.get("status") or ""),
+                    "blocking_summary": suite_blocking_summary,
+                },
+                "client_delivery": {
+                    "ready": client_delivery_ready,
+                    "status": "ready" if client_delivery_ready else "blocked",
+                    "blocking_summary": client_delivery_blocking_summary,
+                },
+            }
 
         response = {
             "schema_version": payload.get("schema_version") or "deck_master_setup_status.v1",
@@ -786,29 +888,39 @@ class PreviewHandler(BaseHTTPRequestHandler):
             "install_ready": install_ready,
             "workspace_ready": workspace_ready,
             "run_ready": run_ready,
+            "workspace_entry_ready": workspace_entry_ready,
+            "workspace_access_ready": workspace_entry_ready,
             "production_ready": production_ready,
-            "dev_mode_allowed": False,
-            "fixture_mode_allowed": True,
+            "dev_mode_allowed": self._as_bool(payload.get("dev_mode_allowed"), False),
+            "fixture_mode_allowed": self._as_bool(payload.get("fixture_mode_allowed"), True),
+            "active_workspace_required_for_production": self._as_bool(payload.get("active_workspace_required_for_production"), True),
             "install_root": str(config.get("install_root") or "") if isinstance(config, dict) else "",
             "active_workspace": str(config.get("active_workspace") or "") if isinstance(config, dict) else "",
             "default_runs_dir": str(config.get("default_runs_dir") or "") if isinstance(config, dict) else "",
-            "active_workspace_required_for_production": True,
             "next_command": payload.get("next_command", ""),
+            "next_agent_action": payload.get("next_agent_action", ""),
             "config_path": payload.get("config_path"),
-            "missing_items": payload.get("missing_items", []),
-            "repair_items": payload.get("repair_items", []),
-            "repair_items_count": payload.get("repair_items_count", 0),
-            "warnings": payload.get("warnings", []),
+            "missing_items": self._as_list(payload.get("missing_items")),
+            "repair_items": self._as_list(payload.get("repair_items")),
+            "repair_items_count": repair_items_count,
+            "warnings": self._as_list(payload.get("warnings")),
             "workspace": workspace,
             "config": config,
-            "agent_targets": payload.get("agent_targets", {}),
-            "suite": payload.get("suite", {}),
-            "full_suite_ready": payload.get("full_suite_ready", False),
-            "capabilities": payload.get("capabilities", {}),
-            "task_readiness": payload.get("task_readiness", {}),
-            "production_backend_ready": payload.get("production_backend_ready", False),
-            "client_delivery_ready": payload.get("client_delivery_ready", False),
-            "blocking_summary": payload.get("blocking_summary", []),
+            "agent_targets": self._as_list(payload.get("agent_targets")),
+            "suite": self._as_dict(payload.get("suite")),
+            "full_suite_ready": self._as_bool(payload.get("full_suite_ready"), self._as_bool(suite.get("full_suite_ready"))),
+            "capabilities": self._as_dict(payload.get("capabilities")),
+            "task_readiness": self._as_dict(payload.get("task_readiness")),
+            "production_backend_ready": production_backend_ready,
+            "client_delivery_ready": client_delivery_ready,
+            "blocking_summary": self._as_list(blocking_summary),
+            "setup_blocking_summary": setup_blocking_summary,
+            "workspace_blocking_summary": workspace_blocking_summary,
+            "suite_blocking_summary": suite_blocking_summary,
+            "client_delivery_blocking_summary": client_delivery_blocking_summary,
+            "readiness_layers": readiness_layers,
+            "suite_external_dependency_status": self._as_list(self._as_dict(suite).get("external_dependency_status")),
+            "external_dependency_status": self._as_list(external_dependency_status),
         }
         return response
 

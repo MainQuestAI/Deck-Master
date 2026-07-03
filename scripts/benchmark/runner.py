@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -80,6 +81,66 @@ def _is_fixture_benchmark_case(case: BenchmarkCase) -> bool:
     return str(case.data.get("case_id") or "").strip().endswith("_fixture")
 
 
+def _is_real_metadata_case(case: BenchmarkCase) -> bool:
+    return case.data.get("case_type") == "real_metadata" and not case.data.get("template")
+
+
+def _resolve_local_source_path(case: BenchmarkCase, raw_path: str) -> Path:
+    path = Path(raw_path).expanduser()
+    if path.is_absolute():
+        return path.resolve()
+    base_dir = case.benchmark_dir or case.case_dir
+    return (base_dir / path).resolve()
+
+
+def _directory_is_writable(path: Path) -> bool:
+    if not path.is_dir() or not os.access(path, os.W_OK):
+        return False
+    probe = path / f".deck_master_benchmark_preflight_write_test_{os.getpid()}"
+    try:
+        probe.write_text("ok", encoding="utf-8")
+        probe.unlink()
+    except OSError:
+        return False
+    return True
+
+
+def validate_benchmark_run_inputs(case: BenchmarkCase) -> None:
+    """Fail early when a real benchmark case points at unavailable local inputs."""
+    if not _is_real_metadata_case(case):
+        return
+
+    missing: list[str] = []
+    workspace_path = case.resolved_paths.get("workspace")
+    if workspace_path is None:
+        missing.append("workspace is required")
+    elif not workspace_path.is_dir():
+        missing.append(f"workspace does not exist: {workspace_path}")
+    elif not _directory_is_writable(workspace_path):
+        missing.append(f"workspace is not writable: {workspace_path}")
+
+    context_path = case.resolved_paths.get("context_pack")
+    if context_path is None:
+        missing.append("inputs.context_pack is required")
+    elif not context_path.is_file():
+        missing.append(f"inputs.context_pack does not exist: {context_path}")
+
+    source_material = case.data.get("source_material", {})
+    local_source_paths = source_material.get("local_source_paths", []) if isinstance(source_material, dict) else []
+    for index, raw_path in enumerate(local_source_paths):
+        if not isinstance(raw_path, str) or not raw_path.strip():
+            continue
+        source_path = _resolve_local_source_path(case, raw_path)
+        if not source_path.is_dir():
+            missing.append(f"source_material.local_source_paths[{index}] does not exist: {source_path}")
+
+    if missing:
+        details = "; ".join(missing)
+        raise BenchmarkRunError(
+            f"Benchmark real case input preflight failed for {case.data['case_id']}: {details}."
+        )
+
+
 def create_benchmark_run(
     case: BenchmarkCase,
     *,
@@ -91,6 +152,7 @@ def create_benchmark_run(
     if runs_dir is None:
         raise BenchmarkCaseError("Benchmark case runs_dir could not be resolved.")
 
+    validate_benchmark_run_inputs(case)
     pack = _context_pack_for_run(case, actual_run_id)
     request = {
         "run_id": actual_run_id,

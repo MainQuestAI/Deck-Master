@@ -34,6 +34,12 @@
   - 目标：把 Deck Master v1.1 升级为具备阶段契约、交接、审批、自动推进和可视化状态的 Skill OS Runtime。
   - 当前入口：`skill-os-runtime-v1.1/README.md`、`skill-os-runtime-v1.1/00-master-spec.md`、`skill-os-runtime-v1.1/iteration-plan.json`。
   - 本地补充：`skill-os-runtime-v1.1/LOCAL_ADOPTION.md` 和 `skill-os-runtime-v1.1/acceptance/decision-traceability.md`。
+- `deck-master-v1.3.0-production-closure-spec.md`
+  - 目标：把 `ppt-master` 外部生产后端、`ppt-deck-pro-max` bridge、真实 benchmark 和 RC gate 收成可验证的生产闭环。
+  - 当前入口：`deck-master-v1.3.0-production-closure-spec.md`。
+- `production-closure-v1.3.0/`
+  - 目标：把 v1.3.0 Production Closure Spec 拆成可执行开发包。
+  - 当前入口：`production-closure-v1.3.0/00-development-package.md`、`production-closure-v1.3.0/README.md`、`production-closure-v1.3.0/implementation/`、`production-closure-v1.3.0/tasks/`。
 
 `v0.9.11` 本轮补齐点：
 
@@ -59,6 +65,15 @@ docs/specs/deck-master-v0.9.11-orchestration-runtime-realignment-spec.md
 docs/specs/deck-master-v0.9.12-skill-suite-routing-spec.md
 docs/specs/deck-master-skill-system-product-architecture.md
 docs/specs/deck-master-v1.0-skill-suite-interaction-spec.md
+docs/specs/deck-master-v1.3.0-production-closure-spec.md
+docs/specs/production-closure-v1.3.0/00-development-package.md
+docs/specs/production-closure-v1.3.0/README.md
+docs/specs/production-closure-v1.3.0/implementation/development-plan.md
+docs/specs/production-closure-v1.3.0/implementation/P1-ppt-master-backend-certification-implementation.md
+docs/specs/production-closure-v1.3.0/implementation/P2-deck-master-backend-binding-and-lock-implementation.md
+docs/specs/production-closure-v1.3.0/implementation/P3-ppt-deck-pro-max-bridge-lock-and-smoke-implementation.md
+docs/specs/production-closure-v1.3.0/implementation/P4-real-benchmark-execution-closure-implementation.md
+docs/specs/production-closure-v1.3.0/implementation/P5-rc-gate-dogfood-release-closure-implementation.md
 docs/specs/skill-os-runtime-v1.1/README.md
 docs/specs/skill-os-runtime-v1.1/LOCAL_ADOPTION.md
 docs/specs/skill-os-runtime-v1.1/acceptance/decision-traceability.md
@@ -81,5 +96,6 @@ v0.9.5 Review Cockpit Frontend
 → v0.9.12 Skill Suite Runtime Foundation Stack A/B/C
 → v1.0 Skill Suite Interaction + Workspace Workflow
 → v1.1 Skill OS Runtime Stack A/B/C
+→ v1.3.0 Production Closure
 → v1.0.0 RC Real Benchmark Runs
 ```

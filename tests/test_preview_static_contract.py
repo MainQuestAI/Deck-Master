@@ -70,9 +70,46 @@ class PreviewStaticContractTests(unittest.TestCase):
         self.assertIn(">方案项目工作台<", html)
         self.assertIn("function safeDisplayText(", script)
         self.assertIn("unsafeVisibleTextPattern", script)
-        self.assertIn("诊断命令已收起", script)
+        self.assertIn("诊断命令由执行器管理，仅展示可执行状态。", script)
         self.assertNotIn("setup.next_command ||", script)
         self.assertNotIn("runState.next_command ||", script)
+
+    def test_setup_entry_uses_workspace_readiness_not_delivery_readiness(self) -> None:
+        """Regression: workspace entry must not be blocked by client delivery readiness."""
+
+        script = APP_JS.read_text(encoding="utf-8")
+        self.assertIn("function workspaceEntryReady()", script)
+        self.assertIn("setup.workspace_entry_ready", script)
+        self.assertIn("function clientDeliveryReady()", script)
+        self.assertIn("client_delivery_blocking_summary", script)
+        self.assertNotIn("setup.production_ready", script)
+
+    def test_quality_and_alert_cards_route_visible_copy_through_safe_display(self) -> None:
+        """Regression: risk summaries and next actions must not bypass safe display filtering."""
+
+        script = APP_JS.read_text(encoding="utf-8")
+        self.assertIn("detail: safeDisplayText(", script)
+        self.assertIn("safeDisplayText(risk.summary || \"\", \"当前存在质量风险。\")", script)
+        self.assertIn("safeDisplayText(risk.repair_instruction || \"\", \"当前没有修复说明\")", script)
+
+    def test_run_level_visible_text_routes_through_safe_display(self) -> None:
+        """Regression: run-level visible text must not expose paths, commands, or internal files."""
+
+        script = APP_JS.read_text(encoding="utf-8")
+        self.assertIn("function safeErrorMessage(", script)
+        self.assertIn("function safeDeliveryDetail(", script)
+        self.assertIn("stageBlockerSummary(stage, \"当前还没有页面进入可逐页处理状态。\")", script)
+        self.assertIn("safeDeliveryDetail(delivery.detail", script)
+        self.assertIn("safeDeliveryDetail(deliveryPreview.detail", script)
+        self.assertIn("safeDisplayText(item.message, \"当前存在待处理动作。\")", script)
+        self.assertIn("safeDisplayText(item, \"当前仍有前置项需要处理。\")", script)
+        self.assertIn("safeErrorMessage(error, \"方案项目创建失败，请先确认 setup 状态。\")", script)
+        self.assertNotIn("detail: error.message", script)
+        self.assertNotIn("setFeedback(error.message", script)
+        self.assertNotIn("textContent = error.message", script)
+        self.assertNotIn("stage.blocking_reason ||", script)
+        self.assertNotIn("delivery.detail ||", script)
+        self.assertNotIn("deliveryPreview.detail ||", script)
 
     def test_decision_rail_order_prioritizes_actions_before_context_blocks(self) -> None:
         """Regression: redesigned decision rail keeps actions before context and approval."""

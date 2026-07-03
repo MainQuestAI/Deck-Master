@@ -6,6 +6,7 @@ import unittest
 import zipfile
 from argparse import Namespace
 from pathlib import Path
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 import sys
@@ -14,6 +15,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from deck_master import command_render  # noqa: E402
 from runtime.build import BuildError, build_source_fingerprint, build_status, prepare_build, run_build  # noqa: E402
+from runtime.builder_backend import backend_render_runtime_ready  # noqa: E402
 from runtime.run_state import RunStateError, create_run, read_json, write_json  # noqa: E402
 from validators.companion_tools import validate_render_result  # noqa: E402
 
@@ -130,10 +132,14 @@ class BuildRuntimeTests(unittest.TestCase):
         request["run_mode"] = "production"
         write_json(self.run_dir / "request.json", request)
 
-        with self.assertRaises(BuildError) as ctx:
-            command_render(
-                Namespace(run_dir=str(self.run_dir), run_id=None, runs_dir=None, fixture_safe=False, format="html")
-            )
+        with mock.patch(
+            "runtime.build.builder_backend_status",
+            return_value={"production_capable": False, "blocking_reason": "PPT Master backend is not ready."},
+        ):
+            with self.assertRaises(BuildError) as ctx:
+                command_render(
+                    Namespace(run_dir=str(self.run_dir), run_id=None, runs_dir=None, fixture_safe=False, format="html")
+                )
 
         self.assertIn("needs_builder_backend", str(ctx.exception))
 
@@ -204,10 +210,70 @@ class BuildRuntimeTests(unittest.TestCase):
         request["run_mode"] = "production"
         write_json(self.run_dir / "request.json", request)
 
-        with self.assertRaises(BuildError) as ctx:
-            run_build(self.run_dir)
+        with mock.patch(
+            "runtime.build.builder_backend_status",
+            return_value={"production_capable": False, "blocking_reason": "PPT Master backend is not ready."},
+        ):
+            with self.assertRaises(BuildError) as ctx:
+                run_build(self.run_dir)
 
         self.assertIn("needs_builder_backend", str(ctx.exception))
+
+    def test_run_build_writes_production_render_request_handoff(self) -> None:
+        self._write_preview(2)
+        request = read_json(self.run_dir / "request.json")
+        request["run_mode"] = "production"
+        write_json(self.run_dir / "request.json", request)
+
+        with mock.patch(
+            "runtime.build.builder_backend_status",
+            return_value={"production_capable": True, "backend_name": "ppt-master", "status": "ready"},
+        ):
+            result = run_build(self.run_dir)
+
+        self.assertEqual("awaiting_external_render", result["status"])
+        self.assertEqual("handoff_ready", result["handoff_status"])
+        self.assertEqual("build/render_request.json", result["render_request"])
+        self.assertFalse((self.run_dir / "build" / "artifact_manifest.json").exists())
+        self.assertFalse((self.run_dir / "render_results" / "render_result.json").exists())
+
+        render_request = read_json(self.run_dir / "build" / "render_request.json")
+        self.assertEqual("deck_render_request.v1", render_request["schema_version"])
+        self.assertEqual("awaiting_external_render", render_request["status"])
+        self.assertEqual("deck_render_result.v2", render_request["expected_render_result"]["schema_version"])
+        self.assertEqual("render_results/render_result.json", render_request["expected_render_result"]["writeback_path"])
+        self.assertEqual("build/artifact_manifest.json", render_request["expected_render_result"]["artifact_manifest_path"])
+        self.assertEqual("build/artifact_manifest.json", render_request["writeback"]["artifact_manifest"])
+        self.assertEqual("ppt-master", render_request["backend_identity"]["name"])
+        self.assertEqual(2, len(render_request["inputs"]["pages"]))
+
+        status = build_status(self.run_dir)
+        self.assertEqual("awaiting_external_render", status["status"])
+        self.assertEqual(2, status["page_count"])
+        self.assertTrue(status["render_request"].endswith("build/render_request.json"))
+        self.assertEqual("", status["artifact_manifest"])
+        self.assertEqual("", status["render_result"])
+
+    def test_run_build_blocks_production_when_backend_certified_but_runtime_not_wired(self) -> None:
+        self._write_preview(1)
+        request = read_json(self.run_dir / "request.json")
+        request["run_mode"] = "production"
+        write_json(self.run_dir / "request.json", request)
+
+        with mock.patch(
+            "runtime.build.builder_backend_status",
+            return_value={"production_capable": True, "blocking_reason": "PPT Master production backend is ready."},
+        ), mock.patch("runtime.build.backend_render_runtime_ready", return_value=False):
+            with self.assertRaises(BuildError) as ctx:
+                run_build(self.run_dir)
+
+        self.assertIn("render runtime is not wired", str(ctx.exception))
+
+    def test_backend_render_runtime_ready_defaults_to_handoff_contract(self) -> None:
+        with mock.patch.dict("os.environ", {}, clear=True):
+            self.assertTrue(backend_render_runtime_ready())
+        with mock.patch.dict("os.environ", {"DECK_MASTER_PPT_MASTER_RUNTIME_WIRED": "0"}):
+            self.assertFalse(backend_render_runtime_ready())
 
     def test_prepare_build_records_missing_source_warning(self) -> None:
         self._write_preview(1, missing_source=True)

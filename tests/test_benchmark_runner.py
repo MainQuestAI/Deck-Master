@@ -12,6 +12,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from benchmark.case import load_benchmark_case  # noqa: E402
 from benchmark.runner import (  # noqa: E402
+    BenchmarkRunError,
     collect_pending_external_steps,
     create_benchmark_run,
     run_local_preview_pipeline,
@@ -63,6 +64,45 @@ class BenchmarkRunnerTests(unittest.TestCase):
         }, ensure_ascii=False, indent=2), encoding="utf-8")
         self.case = load_benchmark_case(self.case_dir / "benchmark_case.json", benchmark_dir=self.bench_dir)
 
+    def _write_real_case(
+        self,
+        *,
+        case_id: str,
+        context_pack: Path,
+        raw_source_dir: Path,
+        workspace_dir: Path | None = None,
+    ) -> Path:
+        real_case_dir = self.bench_dir / "cases" / case_id
+        real_case_dir.mkdir(parents=True, exist_ok=True)
+        actual_workspace = workspace_dir or self.temp_dir / "private" / case_id / "workspace"
+        (real_case_dir / "benchmark_case.json").write_text(json.dumps({
+            "schema_version": "deck_benchmark_case.v1",
+            "case_id": case_id,
+            "case_type": "real_metadata",
+            "case_name": f"Real case {case_id}",
+            "industry": "retail",
+            "audience": "client",
+            "target_pages": 12,
+            "workspace": str(actual_workspace),
+            "runs_dir": "benchmark_runs",
+            "inputs": {
+                "context_pack": str(context_pack),
+                "baseline_manual_hours": 14,
+            },
+            "workflow": {
+                "planning_mode": "narrative_v2",
+                "library_mode": "production",
+            },
+            "source_material": {
+                "classification": "private_local_reference",
+                "raw_source_policy": "local_path_only",
+                "local_source_paths": [str(raw_source_dir)],
+                "excluded_from_repo": True,
+            },
+            "success_targets": {"context_to_preview_minutes": 45},
+        }, ensure_ascii=False, indent=2), encoding="utf-8")
+        return real_case_dir / "benchmark_case.json"
+
     def test_create_benchmark_run_writes_run_artifacts(self) -> None:
         run_dir, _pack = create_benchmark_run(self.case, run_id="bench-retail-test")
 
@@ -74,6 +114,100 @@ class BenchmarkRunnerTests(unittest.TestCase):
         metrics = summarize_and_write_metrics(run_dir)
         self.assertEqual("deck_run_metrics.v1", metrics["schema_version"])
         self.assertTrue((run_dir / "run_metrics.json").exists())
+
+    def test_real_case_missing_context_pack_fails_preflight(self) -> None:
+        private_raw = self.temp_dir / "private" / "real_missing_context" / "raw"
+        private_raw.mkdir(parents=True)
+        case_path = self._write_real_case(
+            case_id="real_missing_context",
+            context_pack=self.temp_dir / "private" / "real_missing_context" / "context_pack.json",
+            raw_source_dir=private_raw,
+        )
+        case = load_benchmark_case(case_path, benchmark_dir=self.bench_dir)
+
+        with self.assertRaises(BenchmarkRunError) as ctx:
+            create_benchmark_run(case, run_id="bench-real-missing-context")
+
+        message = str(ctx.exception)
+        self.assertIn("Benchmark real case input preflight failed", message)
+        self.assertIn("inputs.context_pack does not exist", message)
+
+    def test_real_case_missing_private_source_dir_fails_preflight(self) -> None:
+        private_dir = self.temp_dir / "private" / "real_missing_raw"
+        context_pack = private_dir / "context_pack.json"
+        context_pack.parent.mkdir(parents=True)
+        context_pack.write_text(json.dumps({
+            "schema_version": "deck_context_pack.v1",
+            "sources": [],
+            "global_constraints": [],
+        }), encoding="utf-8")
+        case_path = self._write_real_case(
+            case_id="real_missing_raw",
+            context_pack=context_pack,
+            raw_source_dir=private_dir / "raw",
+        )
+        case = load_benchmark_case(case_path, benchmark_dir=self.bench_dir)
+
+        with self.assertRaises(BenchmarkRunError) as ctx:
+            create_benchmark_run(case, run_id="bench-real-missing-raw")
+
+        message = str(ctx.exception)
+        self.assertIn("Benchmark real case input preflight failed", message)
+        self.assertIn("source_material.local_source_paths[0] does not exist", message)
+
+    def test_real_case_missing_workspace_fails_preflight(self) -> None:
+        private_dir = self.temp_dir / "private" / "real_missing_workspace"
+        context_pack = private_dir / "context_pack.json"
+        raw_dir = private_dir / "raw"
+        raw_dir.mkdir(parents=True)
+        context_pack.write_text(json.dumps({
+            "schema_version": "deck_context_pack.v1",
+            "sources": [],
+            "global_constraints": [],
+        }), encoding="utf-8")
+        case_path = self._write_real_case(
+            case_id="real_missing_workspace",
+            context_pack=context_pack,
+            raw_source_dir=raw_dir,
+            workspace_dir=private_dir / "workspace",
+        )
+        case = load_benchmark_case(case_path, benchmark_dir=self.bench_dir)
+
+        with self.assertRaises(BenchmarkRunError) as ctx:
+            create_benchmark_run(case, run_id="bench-real-missing-workspace")
+
+        message = str(ctx.exception)
+        self.assertIn("Benchmark real case input preflight failed", message)
+        self.assertIn("workspace does not exist", message)
+
+    def test_real_case_unwritable_workspace_fails_preflight(self) -> None:
+        private_dir = self.temp_dir / "private" / "real_unwritable_workspace"
+        workspace_dir = private_dir / "workspace"
+        raw_dir = private_dir / "raw"
+        context_pack = private_dir / "context_pack.json"
+        workspace_dir.mkdir(parents=True)
+        raw_dir.mkdir(parents=True)
+        context_pack.write_text(json.dumps({
+            "schema_version": "deck_context_pack.v1",
+            "sources": [],
+            "global_constraints": [],
+        }), encoding="utf-8")
+        workspace_dir.chmod(0o555)
+        self.addCleanup(lambda: workspace_dir.chmod(0o755) if workspace_dir.exists() else None)
+        case_path = self._write_real_case(
+            case_id="real_unwritable_workspace",
+            context_pack=context_pack,
+            raw_source_dir=raw_dir,
+            workspace_dir=workspace_dir,
+        )
+        case = load_benchmark_case(case_path, benchmark_dir=self.bench_dir)
+
+        with self.assertRaises(BenchmarkRunError) as ctx:
+            create_benchmark_run(case, run_id="bench-real-unwritable-workspace")
+
+        message = str(ctx.exception)
+        self.assertIn("Benchmark real case input preflight failed", message)
+        self.assertIn("workspace is not writable", message)
 
     def test_pending_external_steps_are_reported(self) -> None:
         run_dir, _pack = create_benchmark_run(self.case, run_id="bench-retail-pending")

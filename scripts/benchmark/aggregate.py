@@ -79,14 +79,24 @@ def _load_reports(benchmark_dir: Path) -> list[dict[str, Any]]:
         payload = _safe_read_json(path)
         if not payload:
             continue
+        path_case_id = path.parent.parent.name
+        path_run_id = path.parent.name
+        payload_case_id = payload.get("case_id")
+        payload_run_id = payload.get("run_id")
+        payload_matches_path = payload_case_id == path_case_id and payload_run_id == path_run_id
+        status = payload.get("status")
         score = payload.get("score", {}) if isinstance(payload.get("score"), dict) else {}
         readiness = payload.get("readiness", {}) if isinstance(payload.get("readiness"), dict) else {}
         page_metrics = payload.get("page_metrics", {}) if isinstance(payload.get("page_metrics"), dict) else {}
         efficiency = payload.get("efficiency_metrics", {}) if isinstance(payload.get("efficiency_metrics"), dict) else {}
         reports.append({
-            "case_id": payload.get("case_id"),
-            "run_id": payload.get("run_id"),
-            "status": payload.get("status"),
+            "case_id": payload_case_id,
+            "run_id": payload_run_id,
+            "path_case_id": path_case_id,
+            "path_run_id": path_run_id,
+            "payload_matches_path": payload_matches_path,
+            "p4_eligible": payload_matches_path and status == "completed",
+            "status": status,
             "report_type": path.name,
             "path": str(path),
             "score_overall": score.get("overall"),
@@ -95,6 +105,68 @@ def _load_reports(benchmark_dir: Path) -> list[dict[str, Any]]:
             "estimated_time_saved_hours": efficiency.get("estimated_time_saved_hours"),
         })
     return reports
+
+
+def _build_report_coverage(
+    real_cases: list[dict[str, Any]],
+    reports: list[dict[str, Any]],
+) -> dict[str, Any]:
+    real_case_ids = {
+        str(case.get("case_id"))
+        for case in real_cases
+        if case.get("case_id")
+    }
+    by_case: dict[str, set[str]] = {case_id: set() for case_id in real_case_ids}
+    by_case_run: dict[str, dict[str, set[str]]] = {case_id: {} for case_id in real_case_ids}
+    for report in reports:
+        if not report.get("p4_eligible"):
+            continue
+        case_id = str(report.get("path_case_id") or "")
+        run_id = str(report.get("path_run_id") or "")
+        report_type = report.get("report_type")
+        if not case_id or case_id not in by_case or not isinstance(report_type, str):
+            continue
+        by_case[case_id].add(report_type)
+        if run_id:
+            by_case_run[case_id].setdefault(run_id, set()).add(report_type)
+
+    required_types = {"benchmark_report.json", "benchmark_rc_report.json"}
+    cases = []
+    for case_id in sorted(real_case_ids):
+        present = by_case.get(case_id, set())
+        runs = []
+        complete_run_ids = []
+        best_run_types: set[str] = set()
+        for run_id, report_types in sorted(by_case_run.get(case_id, {}).items()):
+            missing_for_run = sorted(required_types - report_types)
+            if len(report_types) > len(best_run_types):
+                best_run_types = report_types
+            if not missing_for_run:
+                complete_run_ids.append(run_id)
+            runs.append({
+                "run_id": run_id,
+                "benchmark_report": "benchmark_report.json" in report_types,
+                "benchmark_rc_report": "benchmark_rc_report.json" in report_types,
+                "complete": not missing_for_run,
+                "missing_report_types": missing_for_run,
+            })
+        missing = sorted(required_types - best_run_types) if not complete_run_ids else []
+        cases.append({
+            "case_id": case_id,
+            "benchmark_report": "benchmark_report.json" in present,
+            "benchmark_rc_report": "benchmark_rc_report.json" in present,
+            "complete": bool(complete_run_ids),
+            "complete_run_ids": complete_run_ids,
+            "missing_report_types": missing,
+            "runs": runs,
+        })
+    complete_case_ids = [item["case_id"] for item in cases if item["complete"]]
+    return {
+        "required_report_types": sorted(required_types),
+        "complete_real_case_count": len(complete_case_ids),
+        "complete_real_case_ids": complete_case_ids,
+        "cases": cases,
+    }
 
 
 def _numeric(values: list[Any]) -> list[float]:
@@ -123,9 +195,14 @@ def build_benchmark_aggregate_report(
         case for case in cases
         if case.get("case_type") != "real_metadata" or case.get("template")
     ]
+    report_coverage = _build_report_coverage(real_cases, reports)
     status = "blocked"
     if len(real_cases) >= min_real_cases:
-        status = "report_ready" if reports else "metadata_ready"
+        status = (
+            "report_ready"
+            if report_coverage["complete_real_case_count"] >= min_real_cases
+            else "metadata_ready"
+        )
     metrics = {
         "average_score_overall": _mean(_numeric([report.get("score_overall") for report in reports])),
         "average_page_acceptance_rate": _mean(_numeric([report.get("page_acceptance_rate") for report in reports])),
@@ -148,7 +225,9 @@ def build_benchmark_aggregate_report(
             "total": len(reports),
             "benchmark_report": sum(1 for report in reports if report.get("report_type") == "benchmark_report.json"),
             "benchmark_rc_report": sum(1 for report in reports if report.get("report_type") == "benchmark_rc_report.json"),
+            "complete_real_case_pairs": report_coverage["complete_real_case_count"],
         },
+        "report_coverage": report_coverage,
         "private_source_policy": {
             "raw_sources_committed": False,
             "allowed_reference": "local_path_only",
@@ -176,6 +255,7 @@ def render_benchmark_aggregate_markdown(report: dict[str, Any]) -> str:
         f"- Fixture cases: `{counts.get('fixture', 0)}`",
         f"- Invalid cases: `{counts.get('invalid', 0)}`",
         f"- Reports: `{report_counts.get('total', 0)}`",
+        f"- Complete real case report pairs: `{report_counts.get('complete_real_case_pairs', 0)}`",
         f"- Average score: `{metrics.get('average_score_overall')}`",
         f"- Average page acceptance: `{metrics.get('average_page_acceptance_rate')}`",
         f"- Final ready count: `{metrics.get('final_ready_count', 0)}`",
@@ -189,6 +269,15 @@ def render_benchmark_aggregate_markdown(report: dict[str, Any]) -> str:
             f"{case.get('target_pages', '')} pages, source policy `{case.get('raw_source_policy', '')}`"
         )
     if not report.get("real_cases"):
+        lines.append("- None")
+    lines.extend(["", "## Real Case Report Coverage", ""])
+    coverage_cases = report.get("report_coverage", {}).get("cases", [])
+    for item in coverage_cases:
+        missing = ", ".join(item.get("missing_report_types", [])) or "none"
+        lines.append(
+            f"- `{item.get('case_id')}`: complete `{item.get('complete')}`, missing `{missing}`"
+        )
+    if not coverage_cases:
         lines.append("- None")
     lines.extend(["", "## Reports", ""])
     for item in report.get("reports", []):

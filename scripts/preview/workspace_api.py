@@ -16,6 +16,7 @@ from runtime.final_readiness import final_readiness_clearance
 from runtime.render import CANONICAL_RENDER_RESULT, find_render_result
 from runtime.run_state import RunStateError, load_request, run_status
 from runtime.run_state_resolver import resolve_run_state
+from runtime.setup_status import setup_status
 
 APPROVAL_STORE_DIR = "review_workspace"
 APPROVAL_STORE_FILE = "approval_tasks.json"
@@ -442,6 +443,42 @@ def _claim_graph(run_dir: Path) -> dict[str, Any]:
     return _safe_read_json(run_dir / "claim_evidence_graph.json") or {}
 
 
+def _safe_external_dependencies_from_setup() -> list[dict[str, Any]]:
+    try:
+        status = setup_status(include_suite=False)
+    except Exception:
+        return []
+
+    def _safe_dependency(item: dict[str, Any]) -> dict[str, Any]:
+        summary = item.get("summary")
+        if not summary:
+            summary = item.get("message")
+            if not summary:
+                summary = item.get("description") or ""
+        return {
+            "name": str(item.get("name") or ""),
+            "repo_label": str(item.get("repo_label") or item.get("repo") or ""),
+            "binding_status": str(item.get("binding_status") or item.get("status") or ""),
+            "short_sha": str(item.get("short_sha") or ""),
+            "git_sha": str(item.get("git_sha") or ""),
+            "git_branch": str(item.get("git_branch") or ""),
+            "verified": bool(item.get("verified")),
+            "verified_at": str(item.get("verified_at") or ""),
+            "summary": str(summary or ""),
+        }
+
+    external = status.get("external_dependency_status")
+    if isinstance(external, list) and external:
+        return [_safe_dependency(item) for item in external if isinstance(item, dict)]
+
+    suite = status.get("suite") if isinstance(status, dict) else None
+    if isinstance(suite, dict):
+        suite_dependencies = suite.get("external_dependency_status")
+        if isinstance(suite_dependencies, list):
+            return [_safe_dependency(item) for item in suite_dependencies if isinstance(item, dict)]
+    return []
+
+
 def _claim_map(run_dir: Path) -> dict[str, Any]:
     return _safe_read_json(run_dir / "claim_map.json") or {}
 
@@ -586,11 +623,11 @@ def build_delivery_preview_payload(run_dir: str | Path) -> dict[str, Any]:
     elif not raw_artifact_path:
         status = "missing_artifact_path"
         summary = "渲染结果存在，但还没有登记交付产物路径。"
-        detail = "检查 render_result.json，补齐 artifact_path。"
+        detail = "重新生成交付预览，确保系统登记可回看的交付产物。"
     elif not artifact_file_ready:
         status = "artifact_missing"
         summary = "交付预览文件缺失，当前无法直接回看交付成片。"
-        detail = "检查 rendered/index.html 或重新执行交付渲染。"
+        detail = "重新执行交付渲染，补齐可回看的交付预览。"
     elif not final_ready:
         status = "final_readiness_blocked"
         summary = "最终放行检查未通过。"
@@ -1014,6 +1051,7 @@ def build_workspace_payload(run_dir: str | Path) -> dict[str, Any]:
     ]
 
     runtime_artifacts = ((run_state_summary.get("readiness") or {}).get("artifacts") or {})
+    external_dependencies = _safe_external_dependencies_from_setup()
     production_flow = {
         "stage": run_state_summary.get("stage", ""),
         "next_command": run_state_summary.get("next_command", ""),
@@ -1023,6 +1061,7 @@ def build_workspace_payload(run_dir: str | Path) -> dict[str, Any]:
         "generation": runtime_artifacts.get("generation", {}),
         "build": runtime_artifacts.get("build", {}),
         "render": runtime_artifacts.get("render", {}),
+        "external_dependencies": external_dependencies,
         "final_readiness": {
             "ready": bool(final_readiness.get("ready")),
             "status": str(final_readiness.get("status") or ""),
@@ -1082,6 +1121,7 @@ def build_workspace_payload(run_dir: str | Path) -> dict[str, Any]:
                 "customer_reaction": delivery.get("customer_reaction", ""),
                 "notes": delivery.get("notes", ""),
             },
+            "external_dependencies": external_dependencies,
             "delivery_preview": build_delivery_preview_payload(root),
             "production_flow": production_flow,
             "next_actions": next_actions.get("actions", [])[:5],

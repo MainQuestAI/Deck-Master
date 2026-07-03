@@ -46,6 +46,30 @@ def _real_case(case_id: str, industry: str) -> dict:
     }
 
 
+def _write_report(
+    report_dir: Path,
+    *,
+    case_id: str,
+    run_id: str,
+    name: str,
+    score: float = 0.8,
+    status: str = "completed",
+    payload_case_id: str | None = None,
+    payload_run_id: str | None = None,
+) -> None:
+    report_dir.mkdir(parents=True, exist_ok=True)
+    write_json(report_dir / name, {
+        "schema_version": "deck_benchmark_report.v1",
+        "case_id": payload_case_id or case_id,
+        "run_id": payload_run_id or run_id,
+        "status": status,
+        "readiness": {"final_ready": True},
+        "score": {"overall": score},
+        "page_metrics": {"page_acceptance_rate": 0.75},
+        "efficiency_metrics": {"estimated_time_saved_hours": 9.5},
+    })
+
+
 class BenchmarkAggregateTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temp_dir = Path(tempfile.mkdtemp(prefix="dm_bench_aggregate_"))
@@ -60,29 +84,130 @@ class BenchmarkAggregateTests(unittest.TestCase):
             case_dir.mkdir(parents=True, exist_ok=True)
             write_json(case_dir / "benchmark_case.json", _real_case(case_id, industry))
 
-    def test_aggregate_report_counts_real_cases_and_metrics(self) -> None:
+    def test_single_benchmark_report_does_not_make_p4_report_ready(self) -> None:
         report_dir = self.bench_dir / "results" / "real_retail_growth" / "run-001"
-        report_dir.mkdir(parents=True)
-        write_json(report_dir / "benchmark_report.json", {
-            "schema_version": "deck_benchmark_report.v1",
-            "case_id": "real_retail_growth",
-            "run_id": "run-001",
-            "status": "completed",
-            "readiness": {"final_ready": True},
-            "score": {"overall": 0.8},
-            "page_metrics": {"page_acceptance_rate": 0.75},
-            "efficiency_metrics": {"estimated_time_saved_hours": 9.5},
-        })
+        _write_report(report_dir, case_id="real_retail_growth", run_id="run-001", name="benchmark_report.json")
 
         report = build_benchmark_aggregate_report(self.bench_dir)
 
         self.assertEqual("deck_benchmark_aggregate_report.v1", report["schema_version"])
-        self.assertEqual("report_ready", report["status"])
+        self.assertEqual("metadata_ready", report["status"])
         self.assertEqual(3, report["case_counts"]["real_metadata"])
         self.assertEqual(1, report["report_counts"]["total"])
+        self.assertEqual(0, report["report_counts"]["complete_real_case_pairs"])
         self.assertEqual(0.8, report["metrics"]["average_score_overall"])
         self.assertEqual(1, report["metrics"]["final_ready_count"])
+        coverage = {
+            item["case_id"]: item
+            for item in report["report_coverage"]["cases"]
+        }
+        self.assertFalse(coverage["real_retail_growth"]["complete"])
+        self.assertEqual(["benchmark_rc_report.json"], coverage["real_retail_growth"]["missing_report_types"])
         self.assertFalse(report["private_source_policy"]["raw_sources_committed"])
+
+    def test_three_real_cases_with_benchmark_and_rc_reports_make_report_ready(self) -> None:
+        for index, case_id in enumerate([
+            "real_retail_growth",
+            "real_manufacturing_geo",
+            "real_healthcare_enablement",
+        ], start=1):
+            report_dir = self.bench_dir / "results" / case_id / f"run-00{index}"
+            _write_report(report_dir, case_id=case_id, run_id=f"run-00{index}", name="benchmark_report.json")
+            _write_report(report_dir, case_id=case_id, run_id=f"run-00{index}", name="benchmark_rc_report.json")
+
+        report = build_benchmark_aggregate_report(self.bench_dir)
+
+        self.assertEqual("report_ready", report["status"])
+        self.assertEqual(6, report["report_counts"]["total"])
+        self.assertEqual(3, report["report_counts"]["benchmark_report"])
+        self.assertEqual(3, report["report_counts"]["benchmark_rc_report"])
+        self.assertEqual(3, report["report_counts"]["complete_real_case_pairs"])
+        self.assertEqual(3, report["report_coverage"]["complete_real_case_count"])
+        self.assertTrue(all(item["complete"] for item in report["report_coverage"]["cases"]))
+
+    def test_report_types_split_across_runs_do_not_complete_real_case_pair(self) -> None:
+        for index, case_id in enumerate([
+            "real_retail_growth",
+            "real_manufacturing_geo",
+            "real_healthcare_enablement",
+        ], start=1):
+            _write_report(
+                self.bench_dir / "results" / case_id / f"run-00{index}-a",
+                case_id=case_id,
+                run_id=f"run-00{index}-a",
+                name="benchmark_report.json",
+            )
+            _write_report(
+                self.bench_dir / "results" / case_id / f"run-00{index}-b",
+                case_id=case_id,
+                run_id=f"run-00{index}-b",
+                name="benchmark_rc_report.json",
+            )
+
+        report = build_benchmark_aggregate_report(self.bench_dir)
+
+        self.assertEqual("metadata_ready", report["status"])
+        self.assertEqual(0, report["report_counts"]["complete_real_case_pairs"])
+        self.assertFalse(any(item["complete"] for item in report["report_coverage"]["cases"]))
+
+    def test_pending_or_warning_reports_do_not_complete_real_case_pair(self) -> None:
+        for index, case_id in enumerate([
+            "real_retail_growth",
+            "real_manufacturing_geo",
+            "real_healthcare_enablement",
+        ], start=1):
+            report_dir = self.bench_dir / "results" / case_id / f"run-00{index}"
+            _write_report(
+                report_dir,
+                case_id=case_id,
+                run_id=f"run-00{index}",
+                name="benchmark_report.json",
+                status="pending_external_agent",
+            )
+            _write_report(
+                report_dir,
+                case_id=case_id,
+                run_id=f"run-00{index}",
+                name="benchmark_rc_report.json",
+                status="warning",
+            )
+
+        report = build_benchmark_aggregate_report(self.bench_dir)
+
+        self.assertEqual("metadata_ready", report["status"])
+        self.assertEqual(0, report["report_counts"]["complete_real_case_pairs"])
+        self.assertEqual(0, report["report_coverage"]["complete_real_case_count"])
+        self.assertTrue(all(not item["runs"] for item in report["report_coverage"]["cases"]))
+
+    def test_payload_case_or_run_mismatch_does_not_complete_real_case_pair(self) -> None:
+        for index, case_id in enumerate([
+            "real_retail_growth",
+            "real_manufacturing_geo",
+            "real_healthcare_enablement",
+        ], start=1):
+            run_id = f"run-00{index}"
+            report_dir = self.bench_dir / "results" / case_id / run_id
+            _write_report(
+                report_dir,
+                case_id=case_id,
+                run_id=run_id,
+                name="benchmark_report.json",
+                payload_case_id=f"{case_id}_other",
+            )
+            _write_report(
+                report_dir,
+                case_id=case_id,
+                run_id=run_id,
+                name="benchmark_rc_report.json",
+                payload_run_id=f"{run_id}-other",
+            )
+
+        report = build_benchmark_aggregate_report(self.bench_dir)
+
+        self.assertEqual("metadata_ready", report["status"])
+        self.assertEqual(0, report["report_counts"]["complete_real_case_pairs"])
+        self.assertEqual(0, report["report_coverage"]["complete_real_case_count"])
+        self.assertFalse(all(item["payload_matches_path"] for item in report["reports"]))
 
     def test_aggregate_report_is_blocked_until_three_real_cases_exist(self) -> None:
         shutil.rmtree(self.bench_dir / "cases" / "real_healthcare_enablement")
