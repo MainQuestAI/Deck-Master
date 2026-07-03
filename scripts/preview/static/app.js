@@ -373,6 +373,10 @@ function currentRunState() {
   return state.runState || {};
 }
 
+function canEnterProjectContext() {
+  return Boolean(state.currentProjectId || state.projects.length);
+}
+
 function workspaceEntryReady() {
   const setup = currentSetupStatus();
   if (typeof setup.workspace_entry_ready === "boolean") {
@@ -559,7 +563,7 @@ function deriveShellState() {
     };
   }
 
-  if (state.setupStatus && !setupReady()) {
+  if (state.setupStatus && !setupReady() && !canEnterProjectContext()) {
     const missingCount = setupBlocks.length;
     return {
       id: "setup",
@@ -585,24 +589,29 @@ function deriveShellState() {
   }
 
   if (!state.currentProjectId) {
+    const setupBlocked = !setupReady() && setupBlocks.length > 0;
     return {
       id: "project-selection",
       tone: "muted",
       stageLabel: "待选择项目",
       headline: state.projects.length ? "先选择一个方案项目" : "当前还没有方案项目",
-      subtitle: clientDeliveryReady()
-        ? (state.projects.length
-            ? "项目切换放在顶部。选中后，左栏、中间舞台和右栏会同步进入当前方案项目。"
-            : "点击顶部新建项目，完成后会自动回到工作台。")
-        : "工作区已可进入；客户交付条件仍需单独补齐。",
+      subtitle: setupBlocked
+        ? "当前 workspace 仍有前置项待补齐，但已有方案项目可继续查看。"
+        : clientDeliveryReady()
+          ? (state.projects.length
+              ? "项目切换放在顶部。选中后，左栏、中间舞台和右栏会同步进入当前方案项目。"
+              : "点击顶部新建项目，完成后会自动回到工作台。")
+          : "工作区已可进入；客户交付条件仍需单独补齐。",
       stageTitle: "项目状态",
       stageDetail: state.projects.length ? `${state.projects.length} 个可用项目` : "0 个可用项目",
       nextTitle: "下一步",
       nextDetail: state.projects.length ? "选择一个项目，马上进入当前阶段判断。" : "新建项目后进入工作台。",
-      blockTitle: "当前入口",
-      blockDetail: state.projects.length ? "工作台已就绪，等待选择项目。" : "当前还没有可进入的项目。",
-      blockTone: "",
-      blockers: [],
+      blockTitle: setupBlocked ? `${setupBlocks.length} 项前置待补齐` : "当前入口",
+      blockDetail: setupBlocked
+        ? (setupBlocks[0] || "当前仍有前置项待处理。")
+        : (state.projects.length ? "工作台已就绪，等待选择项目。" : "当前还没有可进入的项目。"),
+      blockTone: setupBlocked ? "danger" : "",
+      blockers: setupBlocked ? setupBlocks : [],
       warnings: clientDeliveryReady() ? [] : deliveryBlocks.slice(0, 3),
     };
   }
@@ -2118,16 +2127,6 @@ async function loadPageDetail() {
 }
 
 async function loadWorkspace() {
-  if (!setupReady()) {
-    state.runState = null;
-    state.workspace = null;
-    state.pageDetail = null;
-    state.activity = null;
-    state.deliveryPreview = null;
-    renderAll();
-    return;
-  }
-
   if (!state.currentProjectId) {
     state.runState = null;
     state.workspace = null;
@@ -2180,16 +2179,17 @@ async function loadWorkspace() {
 
 async function refreshCurrentProject() {
   await loadSetupStatus({ silent: true });
-  if (!setupReady()) {
+  await loadProjects();
+  if (!state.currentProjectId) {
     state.runState = null;
     state.workspace = null;
     state.pageDetail = null;
     state.activity = null;
     state.deliveryPreview = null;
     renderAll();
+    await loadSkillOsRail();
     return;
   }
-  await loadProjects();
   try { await loadWorkspace(); } catch (e) { /* early-stage run may lack preview_manifest */ }
   await loadSkillOsRail();
 }
@@ -2515,11 +2515,9 @@ async function boot() {
   renderAll();
   try {
     await loadSetupStatus({ silent: true });
-    if (setupReady()) {
-      await loadProjects();
-    }
+    await loadProjects();
     renderProjectSwitcher();
-    if (setupReady() && state.currentProjectId) {
+    if (state.currentProjectId) {
       try { await loadWorkspace(); } catch (e) { /* early-stage run may lack preview_manifest */ }
     } else {
       renderAll();
