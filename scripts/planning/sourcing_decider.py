@@ -170,6 +170,10 @@ def decide_sourcing(narrative_plan: dict[str, Any], library_results: dict[str, A
         candidate_origin = normalize_library_source(selected.get("candidate_origin") or selected.get("library_source") or library_source)
         if not selected:
             candidate_origin = "none"
+        if library_source == "fixture" and decision.get("source_decision") == "manual_placeholder":
+            decision["source_decision"] = "generate"
+            decision["decision_reason"] = "公开 fixture demo 使用生成型页面承接该信息缺口。"
+            decision["risk_flags"] = sorted(set(list(decision.get("risk_flags") or []) + ["needs_public_evidence"]))
         decision["library_source"] = library_source
         decision["candidate_origin"] = candidate_origin
         decisions.append(decision)

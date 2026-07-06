@@ -76,6 +76,15 @@ def _suite_version() -> str:
     except Exception:  # pragma: no cover - fallback only if canonical manifest load fails unexpectedly.
         return DEFAULT_SUITE_VERSION
 
+
+def _package_version() -> str:
+    manifest_path = _repo_root() / "skills" / "manifest.json"
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except Exception:  # pragma: no cover - fallback only if package manifest is unavailable.
+        return _suite_version()
+    return str(manifest.get("package_version") or manifest.get("version") or _suite_version())
+
 SUITE_SKILLS: list[dict[str, Any]] = [
     {
         "name": "deck-master",
@@ -905,6 +914,8 @@ def product_capability_manifest() -> dict[str, Any]:
     return {
         "schema_version": PRODUCT_CAPABILITY_MANIFEST_SCHEMA_VERSION,
         "product": "deck-master",
+        "license": "Apache-2.0",
+        "package_version": _package_version(),
         "runtime_shape": "agent_facing_local_first",
         "provider_policy": "zero_builtin_llm_provider",
         "required_capabilities": [str(spec["name"]) for spec in _suite_specs(include_optional=False)],
@@ -1382,6 +1393,14 @@ def build_release_tree(
         release_root / "scripts",
         ignore=shutil.ignore_patterns("__pycache__", "*.pyc", ".pytest_cache", ".mypy_cache"),
     )
+    for source_name, target_name in (
+        ("README.md", "README.md"),
+        ("LICENSE", "LICENSE"),
+        ("docs/known-limitations.md", "KNOWN_LIMITATIONS.md"),
+    ):
+        source_path = _repo_root() / source_name
+        if source_path.exists():
+            shutil.copy2(source_path, release_root / target_name)
 
     (release_root / PRODUCT_CAPABILITY_MANIFEST_NAME).write_text(
         json.dumps(product_capability_manifest(), ensure_ascii=False, indent=2) + "\n",
@@ -1404,7 +1423,6 @@ def build_release_tree(
     release_skills = [str(spec["name"]) for spec in _suite_specs(include_optional=True)]
     release_capabilities = [str(spec["name"]) for spec in SUITE_SKILLS if str(spec["name"]).startswith("ppt-")]
     source = {
-        "repo_root": str(_repo_root()),
         "git_head": _git_head(),
     }
     external_dependencies = external_dependency_statuses()

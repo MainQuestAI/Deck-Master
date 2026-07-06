@@ -823,15 +823,12 @@ class SkillInstallationTest(unittest.TestCase):
         bridge = next(item for item in dependencies if item["name"] == "ppt-deck-pro-max")
         self.assertEqual("generation_bridge", bridge["dependency_kind"])
         self.assertEqual("https://github.com/MainQuestAI/PPT-Deck-Pro-Max.git", bridge["repo"])
-        self.assertEqual("codex/deck-master-bridge", bridge["git_branch"])
-        self.assertEqual("9444d88f573c3afa567bfb1763041325ef765313", bridge["git_sha"])
-        self.assertEqual("9444d88f", bridge["short_sha"])
-        self.assertEqual("bound_verified", bridge["binding_status"])
-        self.assertTrue(bridge["verified"])
-        self.assertEqual(
-            ["dispatch_import", "generation_result_export", "result_import_contract"],
-            bridge["validated_capabilities"],
-        )
+        self.assertEqual("", bridge["git_branch"])
+        self.assertEqual("", bridge["git_sha"])
+        self.assertEqual("", bridge["short_sha"])
+        self.assertEqual("not_configured", bridge["binding_status"])
+        self.assertFalse(bridge["verified"])
+        self.assertEqual([], bridge["validated_capabilities"])
 
     def test_suite_and_setup_status_report_generation_bridge_snapshot(self) -> None:
         config_path = Path.home() / ".deck-master" / "config.json"
@@ -884,9 +881,10 @@ class SkillInstallationTest(unittest.TestCase):
             )
             self.assertEqual("generation_bridge", bridge["dependency_kind"])
             self.assertEqual("https://github.com/MainQuestAI/PPT-Deck-Pro-Max.git", bridge["source"])
-            self.assertEqual("9444d88f573c3afa567bfb1763041325ef765313", bridge["git_sha"])
-            self.assertEqual("9444d88f", bridge["short_sha"])
-            self.assertIn("PPT Deck Pro Max generation bridge pinned", bridge["summary"])
+            self.assertEqual("", bridge["git_sha"])
+            self.assertEqual("", bridge["short_sha"])
+            self.assertEqual("not_configured", bridge["binding_status"])
+            self.assertIn("not configured", bridge["summary"])
             self.assertFalse(payload["client_delivery_ready"])
 
     def test_release_lock_preserves_runtime_blocked_binding_truth(self) -> None:
@@ -1414,6 +1412,9 @@ class SkillInstallationTest(unittest.TestCase):
         self.assertEqual(
             [
                 "unbound",
+                "not_configured",
+                "invalid",
+                "configured_unverified",
                 "bound_blocked",
                 "bound_verified_runtime_blocked",
                 "bound_verified",

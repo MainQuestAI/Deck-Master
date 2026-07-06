@@ -233,7 +233,7 @@ def _run_review_desk_browser_smoke(
     *,
     setup_status_fixture: Callable[..., dict[str, Any]] | None = None,
     workspace_payload_fixture: Callable[[str | Path], dict[str, Any]] | None = None,
-    expected_title_contains: str | None = "Retail Transformation Draft",
+    expected_title_contains: str | None = "Retail Transformation Technical Preview Demo",
     expected_visible_text: str | None = None,
     exercise_delivery_preview: bool = False,
     forbidden_markers: tuple[str, ...] = (

@@ -15,8 +15,8 @@ python scripts/deck_master.py preview-gate --run-dir /tmp/deck-master-demo/oss-d
 
 ```bash
 git ls-files .gstack
-rg -n "Users/|home/|placeholder|客户|售前|internal|agent|restore" README.md docs examples scripts/preview/static
-rg -n "glass-panel|backdrop-filter|方案项目工作台" scripts/preview/static
+rg -n "Users/|home/|/private|placeholder|真实客户|客户名称|售前|internal agent|agent_dispatch" README.md docs/quick-start.md docs/known-limitations.md examples/briefs examples/preview-run
+rg -n "glass-panel|backdrop-filter|方案项目工作台|border-radius:\\s*(1[2-9]|[2-9][0-9])px" scripts/preview/static
 ```
 
 ## 3. 后端负向测试

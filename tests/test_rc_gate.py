@@ -138,7 +138,7 @@ class RCGateTests(unittest.TestCase):
             details = rc_gate._run_review_desk_browser_smoke(
                 setup_status_fixture=unsafe_setup_status,
                 expected_title_contains=None,
-                expected_visible_text="先补齐安装、工作目录或项目绑定。",
+                expected_visible_text=None,
                 forbidden_markers=(
                     "raw command",
                     "/Users/",

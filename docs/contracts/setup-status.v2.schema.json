@@ -147,6 +147,9 @@
           "type": "string",
           "enum": [
             "unbound",
+            "not_configured",
+            "invalid",
+            "configured_unverified",
             "bound_blocked",
             "bound_verified_runtime_blocked",
             "bound_verified"

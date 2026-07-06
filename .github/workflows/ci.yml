@@ -33,8 +33,8 @@ jobs:
       - name: Check Python syntax
         run: python -m compileall scripts tests
 
-      - name: Install Skill OS test deps
-        run: python -m pip install --quiet pytest jsonschema
+      - name: Install project with dev dependencies
+        run: python -m pip install --quiet -e ".[dev]"
 
       - name: Run unit tests
         run: python -m unittest discover -s tests
@@ -87,33 +87,26 @@ jobs:
           print(f"Autoplan smoke passed: {len(pages)} preview pages")
           PY
 
-      - name: Run RC gate smoke
+      - name: Run Technical Preview gate
+        run: |
+          set -euo pipefail
+          RUNS_DIR="$(mktemp -d)"
+          python scripts/deck_master.py autoplan \
+            --brief-file examples/briefs/retail_digital_transformation.txt \
+            --industry retail \
+            --library-mode fixture \
+            --run-mode fixture \
+            --dev-allow-unsetup \
+            --runs-dir "$RUNS_DIR" \
+            --run-id ci-preview \
+            > "$RUNS_DIR/autoplan-output.json"
+          python scripts/deck_master.py preview-gate \
+            --run-dir "$RUNS_DIR/ci-preview" \
+            --expect-unconfigured-backend-ok
+
+      - name: Build release tree smoke
         run: |
           set -euo pipefail
           OUT_DIR="$(mktemp -d)"
-          python scripts/deck_master.py rc-gate \
-            --output-dir "$OUT_DIR/rc-gate" \
-            --benchmark-dir benchmarks \
-            --skip-browser-smoke \
-            --force \
-            > "$OUT_DIR/rc-gate-output.json"
-          python - "$OUT_DIR/rc-gate-output.json" <<'PY'
-          import json
-          import sys
-          from pathlib import Path
-
-          payload = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
-          report = json.loads(Path(payload["report"]).read_text(encoding="utf-8"))
-          checks = {check["check_id"]: check for check in report.get("checks", [])}
-          unexpected = [
-              check_id
-              for check_id, check in checks.items()
-              if check.get("required") and check.get("status") != "pass" and check_id != "benchmark_aggregate"
-          ]
-          if unexpected:
-              raise SystemExit(f"RC gate smoke failed required checks: {unexpected}")
-          benchmark = checks.get("benchmark_aggregate", {})
-          if benchmark.get("status") != "fail" or (benchmark.get("details") or {}).get("status") != "metadata_ready":
-              raise SystemExit(f"Unexpected benchmark aggregate state: {benchmark}")
-          print("RC gate smoke passed with benchmark metadata-only release block")
-          PY
+          python scripts/deck_master.py release-build --output "$OUT_DIR/release" --force
+          "$OUT_DIR/release/bin/deck-master" --help

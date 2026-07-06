@@ -66,8 +66,8 @@ class PreviewStaticContractTests(unittest.TestCase):
 
         html = INDEX_HTML.read_text(encoding="utf-8")
         script = APP_JS.read_text(encoding="utf-8")
-        self.assertIn("Deck Master 方案项目工作台", html)
-        self.assertIn(">方案项目工作台<", html)
+        self.assertIn("Deck Master Review Desk", html)
+        self.assertIn(">Review Desk<", html)
         self.assertIn("function safeDisplayText(", script)
         self.assertIn("unsafeVisibleTextPattern", script)
         self.assertIn("诊断命令由执行器管理，仅展示可执行状态。", script)

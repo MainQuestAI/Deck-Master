@@ -36,7 +36,7 @@ DEPENDENCY_KIND_GENERATION_BRIDGE = "generation_bridge"
 RUNTIME_READY_ENV = "DECK_MASTER_PPT_MASTER_RUNTIME_WIRED"
 GENERATION_BRIDGE_NAME = "ppt-deck-pro-max"
 GENERATION_BRIDGE_REPO = "https://github.com/MainQuestAI/PPT-Deck-Pro-Max.git"
-GENERATION_BRIDGE_REPO_PATH = "/Users/dingcheng/Coding-Project/02-key-project/PPT-Deck-Pro-Max-deck-master-bridge"
+GENERATION_BRIDGE_REPO_PATH_ENV = "DECK_MASTER_PPT_DECK_PRO_MAX_BRIDGE"
 GENERATION_BRIDGE_BRANCH = "codex/deck-master-bridge"
 GENERATION_BRIDGE_SHA = "9444d88f573c3afa567bfb1763041325ef765313"
 GENERATION_BRIDGE_VERIFIED_AT = "2026-07-03T00:00:00+08:00"
@@ -409,26 +409,62 @@ def _binding_status_for_name(name: str, *, render_runtime_ready: bool) -> dict[s
 
 
 def _generation_bridge_status() -> dict[str, Any]:
-    return {
+    configured_path = os.environ.get(GENERATION_BRIDGE_REPO_PATH_ENV, "").strip()
+    base = {
         "name": GENERATION_BRIDGE_NAME,
         "dependency_kind": DEPENDENCY_KIND_GENERATION_BRIDGE,
-        "binding_status": "bound_verified",
         "repo": GENERATION_BRIDGE_REPO,
         "repo_label": _repo_label_from_remote(GENERATION_BRIDGE_REPO),
-        "repo_path": GENERATION_BRIDGE_REPO_PATH,
+        "repo_path": configured_path,
         "skill_path": "",
-        "git_remote": GENERATION_BRIDGE_REPO,
-        "git_sha": GENERATION_BRIDGE_SHA,
-        "short_sha": _short_sha(GENERATION_BRIDGE_SHA),
-        "git_branch": GENERATION_BRIDGE_BRANCH,
+        "git_remote": "",
+        "git_sha": "",
+        "short_sha": "",
+        "git_branch": "",
         "worktree_dirty": False,
-        "verified": True,
-        "verified_at": GENERATION_BRIDGE_VERIFIED_AT,
-        "validated_capabilities": list(GENERATION_BRIDGE_CAPABILITIES),
+        "verified": False,
+        "verified_at": "",
+        "validated_capabilities": [],
         "source": GENERATION_BRIDGE_REPO,
+    }
+    if not configured_path:
+        return {
+            **base,
+            "binding_status": "not_configured",
+            "summary": (
+                "PPT Deck Pro Max generation bridge is not configured. "
+                f"Set {GENERATION_BRIDGE_REPO_PATH_ENV} to a local open-source checkout for production generation."
+            ),
+        }
+
+    repo_path = Path(configured_path).expanduser()
+    if not repo_path.exists() or _git_command(repo_path, ["rev-parse", "--is-inside-work-tree"]) != "true":
+        return {
+            **base,
+            "binding_status": "invalid",
+            "summary": "Configured PPT Deck Pro Max generation bridge path is not a git worktree.",
+        }
+
+    metadata = _read_git_metadata(repo_path)
+    current_sha = str(metadata.get("git_sha") or "")
+    verified = bool(current_sha and current_sha == GENERATION_BRIDGE_SHA)
+    status = "bound_verified" if verified else "configured_unverified"
+    return {
+        **base,
+        "binding_status": status,
+        "repo_path": str(repo_path.resolve()),
+        "git_remote": str(metadata.get("git_remote") or ""),
+        "git_sha": current_sha,
+        "short_sha": _short_sha(current_sha),
+        "git_branch": str(metadata.get("git_branch") or ""),
+        "worktree_dirty": bool(metadata.get("worktree_dirty")),
+        "verified": verified,
+        "verified_at": GENERATION_BRIDGE_VERIFIED_AT if verified else "",
+        "validated_capabilities": list(GENERATION_BRIDGE_CAPABILITIES) if verified else [],
         "summary": (
-            "PPT Deck Pro Max generation bridge pinned to "
-            f"{_repo_label_from_remote(GENERATION_BRIDGE_REPO)}@{_short_sha(GENERATION_BRIDGE_SHA)}."
+            "PPT Deck Pro Max generation bridge is pinned and verified."
+            if verified
+            else "PPT Deck Pro Max generation bridge is configured but not pinned to the expected release SHA."
         ),
     }
 

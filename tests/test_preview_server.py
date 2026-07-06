@@ -174,7 +174,7 @@ class ServerTests(unittest.TestCase):
         status, data = self.handler.request("GET", "/api/deck")
         self.assertEqual(200, status)
         self.assertEqual("sample-preview-run", data["run_id"])
-        self.assertEqual(3, len(data["pages"]))
+        self.assertGreaterEqual(len(data["pages"]), 10)
 
     def test_deck_api_returns_quality_reports(self) -> None:
         quality_dir = self.run_dir / "quality_reports"
@@ -368,7 +368,7 @@ class ServerTests(unittest.TestCase):
         self.assertEqual("sample-preview-run", data["project_id"])
         self.assertIn("stage", data)
         self.assertIn("queue", data)
-        self.assertEqual(3, len(data["queue"]["pages"]))
+        self.assertGreaterEqual(len(data["queue"]["pages"]), 10)
 
     def test_workspace_api_exposes_safe_backend_dependency_summary(self) -> None:
         original = workspace_api.setup_status

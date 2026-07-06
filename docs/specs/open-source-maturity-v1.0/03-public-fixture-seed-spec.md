@@ -48,7 +48,7 @@ examples/briefs/retail_digital_transformation.txt
 ## 5. 验证
 
 ```bash
-rg -n "/Users/|/home/|placeholder|客户|售前|internal|agent" examples/preview-run examples/briefs README.md docs/quick-start.md
+rg -n "Users/|home/|/private|placeholder|真实客户|客户名称|售前|internal agent|agent_dispatch" examples/preview-run examples/briefs README.md docs/quick-start.md docs/known-limitations.md
 python scripts/deck_master.py autoplan --brief-file examples/briefs/retail_digital_transformation.txt --industry retail --library-mode fixture --run-mode fixture --dev-allow-unsetup --runs-dir /tmp/deck-master-demo --run-id oss-demo
 ```
 

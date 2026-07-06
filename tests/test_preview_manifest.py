@@ -159,6 +159,11 @@ class LoadManifestMigrationTests(unittest.TestCase):
         temp_dir = Path(tempfile.mkdtemp())
         run_dir = temp_dir / "run"
         shutil.copytree(SAMPLE_RUN, run_dir)
+        manifest_path = run_dir / "preview_manifest.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest["pages"][1]["decision"] = "keep"
+        manifest["pages"][2]["decision"] = "replace"
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
         self.addCleanup(lambda: shutil.rmtree(temp_dir, ignore_errors=True))
         return run_dir
 

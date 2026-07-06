@@ -2162,6 +2162,84 @@ def command_rc_gate(args: argparse.Namespace) -> dict[str, Any]:
     )
 
 
+def command_preview_gate(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = Path(str(args.run_dir)).expanduser().resolve()
+    checks: list[dict[str, Any]] = []
+
+    def add(check_id: str, passed: bool, summary: str, details: dict[str, Any] | None = None) -> None:
+        checks.append(
+            {
+                "check_id": check_id,
+                "status": "pass" if passed else "fail",
+                "summary": summary,
+                "details": details or {},
+            }
+        )
+
+    add("run_dir_exists", run_dir.is_dir(), "Run directory exists.", {"run_dir": str(run_dir)})
+    required_files = [
+        "request.json",
+        "narrative_plan.json",
+        "page_tasks.json",
+        "sourcing_plan.json",
+        "preview_manifest.json",
+    ]
+    missing = [name for name in required_files if not (run_dir / name).exists()]
+    add("required_files", not missing, "Fixture run has required planning and preview files.", {"missing": missing})
+
+    page_count = 0
+    unsafe_markers: list[str] = []
+    manifest: dict[str, Any] = {}
+    manifest_path = run_dir / "preview_manifest.json"
+    if manifest_path.exists():
+        manifest = read_json(manifest_path)
+        pages = manifest.get("pages") if isinstance(manifest.get("pages"), list) else []
+        page_count = len(pages)
+        manifest_text = manifest_path.read_text(encoding="utf-8")
+        markers = ("Users/", "home/", "placeholder", "真实客户", "客户名称", "售前", "internal", "agent")
+        unsafe_markers = [marker for marker in markers if marker in manifest_text]
+    add("preview_pages", page_count >= 10, "Preview manifest has at least 10 pages.", {"page_count": page_count})
+    add("public_demo_safety", not unsafe_markers, "Preview manifest has no public-demo safety markers.", {"markers": unsafe_markers})
+
+    preview_static = ROOT / "scripts" / "preview" / "static"
+    static_required = ["index.html", "style.css", "app.js"]
+    missing_static = [name for name in static_required if not (preview_static / name).exists()]
+    add("review_desk_static", not missing_static, "Review Desk static assets are present.", {"missing": missing_static})
+
+    backend = backend_status()
+    dependencies = backend.get("external_dependency_status") if isinstance(backend.get("external_dependency_status"), list) else []
+    dependency_statuses = {
+        str(item.get("name") or ""): str(item.get("binding_status") or "")
+        for item in dependencies
+        if isinstance(item, dict)
+    }
+    bad_ready = [
+        str(item.get("name") or "")
+        for item in dependencies
+        if isinstance(item, dict)
+        and str(item.get("name") or "") in {"ppt-master", "ppt-deck-pro-max"}
+        and str(item.get("binding_status") or "") == "bound_verified"
+        and not str(item.get("repo_path") or item.get("git_sha") or "").strip()
+        and bool(getattr(args, "expect_unconfigured_backend_ok", False))
+    ]
+    add(
+        "unconfigured_backend_not_ready",
+        not bad_ready,
+        "Unconfigured production dependencies do not report ready.",
+        {"dependency_statuses": dependency_statuses, "unexpected_ready": bad_ready},
+    )
+
+    status = "pass" if all(check["status"] == "pass" for check in checks) else "fail"
+    return {
+        "schema_version": "deck_master_preview_gate.v1",
+        "status": status,
+        "run_dir": str(run_dir),
+        "checks": checks,
+        "preview_manifest": str(manifest_path),
+        "title": str(manifest.get("title") or ""),
+    }
+
+
 def add_brief_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--brief")
     parser.add_argument("--brief-file")
@@ -3005,6 +3083,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_rc_gate.add_argument("--force", action="store_true")
     p_rc_gate.set_defaults(func=command_rc_gate)
 
+    p_preview_gate = sub.add_parser("preview-gate", help="Run Deck Master Technical Preview gate")
+    p_preview_gate.add_argument("--run-dir", required=True)
+    p_preview_gate.add_argument("--expect-unconfigured-backend-ok", action="store_true")
+    p_preview_gate.set_defaults(func=command_preview_gate)
+
     return parser
 
 
@@ -3018,7 +3101,10 @@ def main() -> None:
                 workspace=_workspace_for_setup_guard(args),
                 run_mode=_normalize_run_mode(getattr(args, "run_mode", None)),
             )
-        print_json(args.func(args))
+        result = args.func(args)
+        print_json(result)
+        if args.command == "preview-gate" and isinstance(result, dict) and result.get("status") != "pass":
+            raise SystemExit(2)
     except (
         RunStateError,
         PPTLibraryClientError,

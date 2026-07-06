@@ -1347,7 +1347,7 @@ function renderPagePreview() {
   if (!els.previewStage) return;
   const page = currentPageCard();
   if (!currentWorkspace().project_id) {
-    els.previewPanelLabel.textContent = "方案项目工作台";
+    els.previewPanelLabel.textContent = "Review Desk";
     els.focusPageTitle.textContent = "尚未加载方案项目";
     els.focusPageMeta.textContent = "顶部切换方案项目，或新建项目进入处理。";
     els.currentLabel.textContent = "-";
