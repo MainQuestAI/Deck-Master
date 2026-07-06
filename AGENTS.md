@@ -1,13 +1,78 @@
 # AGENTS.md
 
-Deck Master Web UI 重构线程的 AI agent 指引。本文件给 Codex / Claude Code / OpenCode 等所有在本 worktree 工作的 agent 读。
+Deck Master is an Agent-operable Solution Deck Run OS. This file is the
+first entrypoint for Codex, Claude Code, OpenCode, and other local coding
+agents working in this repository.
 
-## Design System
+## Agent First Read Order
 
-实现任何视觉或 UI 改动前，先读 `DESIGN.md`。
+1. `AGENTS.md` for project rules, task routing, and safety boundaries.
+2. `docs/agent-task-index.md` for user-intent to command routing.
+3. `docs/agent-recovery-playbook.md` for blocked-state repair decisions.
+4. `docs/contracts/` for runtime JSON contracts and schema truth.
 
-- 所有字体、颜色、间距、审美方向在 `DESIGN.md` 定义，为设计源真相。
-- 未经老板明确批准，不得偏离 `DESIGN.md`。已锁定的方向（记忆点=严肃工具感、Satoshi/Geist/IBM Plex Mono、冷墨底+琥珀铜单点、去玻璃改发丝实面）不要擅自推翻。
-- 当前重构线程依据：`docs/2026-06-21-web-ui-redesign-audit.md`（问题诊断）+ `docs/2026-06-21-web-ui-ia-v1.md`（信息架构与落地映射）。改 `scripts/preview/static/` 前先读这两份。
-- 信息架构已锁定：首屏围绕当前页，run 级信息降为顶部状态带 + 底部抽屉；右栏动作收敛为主动作+次动作。落地映射见 IA v1 §7。
-- QA / review 时，凡不符合 `DESIGN.md` 的代码（错误字体、玻璃面板、多余强调色、大圆角、弹跳动效）一律标记为偏离。
+## Project Truth
+
+- Runtime contracts: `docs/contracts/`.
+- Public capability manifest: `product-capability-manifest.json`.
+- Skill task schemas: `skills/deck-master/schemas/`.
+- CLI entrypoint: `scripts/deck_master.py` and installed command `deck-master`.
+- Technical Preview demo: `scripts/demo.sh` plus `preview-gate`.
+- Release verification: `release-build` plus `release-smoke`.
+
+Do not infer state from prose when a JSON command exists. Prefer these
+machine-readable commands:
+
+```bash
+deck-master agent-doctor --mode preview --output json
+deck-master agent-doctor --mode production --output json
+deck-master suite-status --output json
+deck-master next-step --run-dir <run_dir>
+deck-master preview-gate --run-dir <run_dir> --expect-unconfigured-backend-ok
+deck-master final-readiness --run-dir <run_dir> --no-write
+```
+
+## Task Routing
+
+- New fixture demo or public preview: run `bash scripts/demo.sh`, then
+  `preview-gate`.
+- Continue an existing run: run `next-step` first, then execute only the
+  returned `next_command`.
+- Diagnose readiness: run `agent-doctor`; use `preview` for public demo and
+  `production` for production backend checks.
+- Check client export: run `final-readiness`; do not export when it is blocked.
+- Build release tree: run `release-build`, then `release-smoke`.
+- Repair blocked state: read `docs/agent-recovery-playbook.md` and follow the
+  matching blocked code or runtime stage.
+
+## Forbidden Actions
+
+- Do not report production backend readiness unless JSON status says ready.
+- Do not use fixture fallback in production or benchmark mode.
+- Do not write placeholder artifacts into production runs.
+- Do not commit generated runs, private benchmark sources, local env files,
+  tokens, caches, or raw customer material.
+- Do not expose absolute local paths, private customer names, or internal
+  execution commands in customer-visible artifacts.
+- Do not overwrite user files unless a command explicitly supports `--force`
+  and the user asked for replacement.
+
+## Stop And Report
+
+Stop and report when:
+
+- `agent-doctor --mode production` returns `blocked`.
+- `suite-status` reports a required skill or capability as missing.
+- `next-step` points to an external Agent handoff waiting state.
+- `final-readiness` returns blockers.
+- A contract schema mismatch appears and no migration command is documented.
+- A command would require private backend binding or customer material not
+  present in the repository.
+
+## UI And Design Work
+
+For visual or UI changes, read `DESIGN.md` before editing. Keep the locked
+direction: serious tool feel, Satoshi/Geist/IBM Plex Mono stack, cold ink
+surface with amber-copper action accent, hairline solid panels, no glass
+panels, restrained radius, and no decorative gradients. The Review Desk IA
+source is `docs/2026-06-21-web-ui-ia-v1.md`; design QA should flag deviations.

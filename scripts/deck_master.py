@@ -213,6 +213,50 @@ def print_json(payload: dict[str, Any]) -> None:
     print(json.dumps(payload, ensure_ascii=False, indent=2))
 
 
+def _agent_evidence_path(path: str | Path) -> str:
+    candidate = Path(path)
+    try:
+        resolved = candidate.expanduser().resolve()
+        return str(resolved.relative_to(ROOT))
+    except (OSError, ValueError):
+        return str(path)
+
+
+def _unique_strings(items: list[Any]) -> list[str]:
+    result: list[str] = []
+    seen: set[str] = set()
+    for item in items:
+        text = str(item or "").strip()
+        if not text or text in seen:
+            continue
+        seen.add(text)
+        result.append(text)
+    return result
+
+
+def _add_agent_output_contract(
+    payload: dict[str, Any],
+    *,
+    next_agent_action: str,
+    evidence_paths: list[str | Path],
+) -> dict[str, Any]:
+    payload.setdefault("next_agent_action", next_agent_action)
+    payload.setdefault("evidence_paths", _unique_strings([_agent_evidence_path(path) for path in evidence_paths]))
+    return payload
+
+
+def _blocked_next_agent_action(payload: dict[str, Any], fallback: str) -> str:
+    blockers = payload.get("blockers")
+    if isinstance(blockers, list):
+        for blocker in blockers:
+            if isinstance(blocker, dict) and blocker.get("message"):
+                return str(blocker["message"])
+    errors = payload.get("errors")
+    if isinstance(errors, list) and errors:
+        return fallback
+    return fallback
+
+
 def runs_dir(args: argparse.Namespace) -> Path:
     if getattr(args, "runs_dir", None):
         return Path(args.runs_dir).expanduser().resolve()
@@ -860,13 +904,29 @@ def command_delivery_validate(args: argparse.Namespace) -> dict[str, Any]:
 
 def command_final_readiness(args: argparse.Namespace) -> dict[str, Any]:
     run_dir = resolve_run_dir(args)
-    return compute_final_readiness(
+    payload = compute_final_readiness(
         run_dir,
         artifact_path=getattr(args, "artifact", None),
         expected_page_count=getattr(args, "expected_pages", None),
         write=not bool(getattr(args, "no_write", False)),
         run_mode=_normalize_run_mode(getattr(args, "run_mode", None)),
         dev_allow_unsetup=bool(getattr(args, "dev_allow_unsetup", False)),
+    )
+    status = str(payload.get("status") or "")
+    next_agent_action = (
+        "Final readiness is ready; export may proceed."
+        if status == "ready"
+        else _blocked_next_agent_action(payload, "Resolve final-readiness blockers before export.")
+    )
+    return _add_agent_output_contract(
+        payload,
+        next_agent_action=next_agent_action,
+        evidence_paths=[
+            run_dir / "delivery" / "final_readiness.json",
+            run_dir / "render_results" / "render_result.json",
+            run_dir / "delivery" / "final_version_lineage.json",
+            run_dir / "quality_reports",
+        ],
     )
 
 
@@ -942,7 +1002,27 @@ def command_next_step(args: argparse.Namespace) -> dict[str, Any]:
         payload["contract_recommended_next_skill"] = wf.get("recommended_next_skill", "")
     except Exception:
         pass
-    return payload
+    next_command = str(payload.get("next_command") or "").strip()
+    runtime_stage = str(payload.get("runtime_stage") or "").strip()
+    blocking_issues = payload.get("blocking_issues") if isinstance(payload.get("blocking_issues"), list) else []
+    if next_command:
+        next_agent_action = f"Run the returned next_command: {next_command}"
+    elif blocking_issues:
+        next_agent_action = str(blocking_issues[0])
+    else:
+        next_agent_action = f"Continue from runtime_stage {runtime_stage or 'unknown'}."
+    return _add_agent_output_contract(
+        payload,
+        next_agent_action=next_agent_action,
+        evidence_paths=[
+            run_dir / REQUEST_NAME,
+            run_dir / NARRATIVE_PLAN_NAME,
+            run_dir / PAGE_TASKS_NAME,
+            run_dir / SOURCING_PLAN_NAME,
+            run_dir / "preview_manifest.json",
+            run_dir / "workflow_state.json",
+        ],
+    )
 
 
 def command_build_judgments(args: argparse.Namespace) -> dict[str, Any]:
@@ -1519,6 +1599,328 @@ def command_doctor(args: argparse.Namespace) -> dict[str, Any]:
     return payload
 
 
+def _agent_doctor_add_check(
+    checks: list[dict[str, Any]],
+    check_id: str,
+    status: str,
+    summary: str,
+    *,
+    details: dict[str, Any] | None = None,
+    evidence_paths: list[str | Path] | None = None,
+) -> None:
+    checks.append(
+        {
+            "check_id": check_id,
+            "status": status,
+            "summary": summary,
+            "details": details or {},
+            "evidence_paths": _unique_strings([_agent_evidence_path(path) for path in (evidence_paths or [])]),
+        }
+    )
+
+
+def _agent_doctor_path_check(
+    checks: list[dict[str, Any]],
+    check_id: str,
+    paths: list[str | Path],
+    summary: str,
+    *,
+    missing_status: str = "blocked",
+) -> None:
+    missing = [str(path) for path in paths if not Path(path).exists()]
+    _agent_doctor_add_check(
+        checks,
+        check_id,
+        "pass" if not missing else missing_status,
+        summary,
+        details={"missing": missing},
+        evidence_paths=paths,
+    )
+
+
+def _production_dependency_report(suite_payload: dict[str, Any]) -> tuple[bool, list[str], list[dict[str, Any]]]:
+    dependencies = suite_payload.get("external_dependency_status")
+    if not isinstance(dependencies, list):
+        dependencies = []
+    required = {"ppt-master", "ppt-deck-pro-max"}
+    by_name = {
+        str(item.get("name") or ""): item
+        for item in dependencies
+        if isinstance(item, dict)
+    }
+    missing: list[str] = []
+    for name in sorted(required):
+        item = by_name.get(name)
+        if not item:
+            missing.append(name)
+            continue
+        binding_status = str(item.get("binding_status") or "")
+        verified = bool(item.get("verified"))
+        git_sha = str(item.get("git_sha") or "").strip()
+        if binding_status != "bound_verified" or not verified or not git_sha:
+            missing.append(name)
+    return not missing, missing, dependencies
+
+
+def _agent_doctor_result(mode: str, checks: list[dict[str, Any]]) -> dict[str, Any]:
+    errors = [
+        {"check_id": check["check_id"], "summary": check["summary"], "details": check.get("details", {})}
+        for check in checks
+        if check.get("status") in {"blocked", "fail"}
+    ]
+    warnings = [
+        {"check_id": check["check_id"], "summary": check["summary"], "details": check.get("details", {})}
+        for check in checks
+        if check.get("status") == "warn"
+    ]
+    status = "blocked" if errors else "ready"
+    evidence_paths = _unique_strings(
+        [
+            path
+            for check in checks
+            for path in (check.get("evidence_paths") if isinstance(check.get("evidence_paths"), list) else [])
+        ]
+    )
+    if status == "ready" and mode == "preview":
+        next_agent_action = (
+            "Preview path is Agent-operable. Use fixture mode, then stop before production until production mode is ready."
+        )
+    elif status == "ready":
+        next_agent_action = "Production prerequisites are ready; continue with final-readiness or release validation."
+    else:
+        first_error = errors[0]["summary"] if errors else "Agent doctor is blocked."
+        next_agent_action = f"Stop and report: {first_error}"
+    return {
+        "schema_version": "deck_master_agent_doctor.v1",
+        "status": status,
+        "mode": mode,
+        "checks": checks,
+        "errors": errors,
+        "warnings": warnings,
+        "next_agent_action": next_agent_action,
+        "evidence_paths": evidence_paths,
+    }
+
+
+def command_agent_doctor(args: argparse.Namespace) -> dict[str, Any]:
+    mode = str(getattr(args, "mode", "preview") or "preview")
+    checks: list[dict[str, Any]] = []
+    contracts_root = ROOT / "docs" / "contracts"
+    if not contracts_root.exists():
+        contracts_root = ROOT / "contracts"
+
+    _agent_doctor_path_check(
+        checks,
+        "cli_entrypoint",
+        [ROOT / "scripts" / "deck_master.py"],
+        "Local deck-master CLI entrypoint is present.",
+    )
+    _agent_doctor_path_check(
+        checks,
+        "agent_docs",
+        [ROOT / "AGENTS.md", ROOT / "docs" / "agent-task-index.md", ROOT / "docs" / "agent-recovery-playbook.md"],
+        "Agent entrypoint and routing docs are present.",
+    )
+    _agent_doctor_path_check(
+        checks,
+        "contracts",
+        [
+            contracts_root / "setup-status.v2.schema.json",
+            contracts_root / "workflow-state.v1.schema.json",
+            contracts_root / "final-readiness.v1.schema.json",
+            contracts_root / "rc-gate-report.v1.schema.json",
+        ],
+        "Core runtime contracts are present.",
+    )
+    _agent_doctor_path_check(
+        checks,
+        "review_desk_static",
+        [
+            ROOT / "scripts" / "preview" / "static" / "index.html",
+            ROOT / "scripts" / "preview" / "static" / "style.css",
+            ROOT / "scripts" / "preview" / "static" / "app.js",
+        ],
+        "Review Desk static files are present.",
+    )
+    _agent_doctor_path_check(
+        checks,
+        "fixture_demo_entrypoint",
+        [ROOT / "scripts" / "demo.sh", ROOT / "examples" / "briefs" / "retail_digital_transformation.txt"],
+        "Fixture demo entrypoint and public brief are present.",
+    )
+
+    run_dir_raw = str(getattr(args, "run_dir", "") or "").strip()
+    run_dir = Path(run_dir_raw).expanduser().resolve() if run_dir_raw else Path("/tmp/deck-master-demo/oss-demo")
+    if run_dir.exists():
+        try:
+            preview_payload = command_preview_gate(
+                argparse.Namespace(run_dir=str(run_dir), expect_unconfigured_backend_ok=True)
+            )
+        except Exception as exc:
+            _agent_doctor_add_check(
+                checks,
+                "preview_gate",
+                "blocked",
+                "Preview gate could not run.",
+                details={"run_dir": str(run_dir), "error": str(exc)},
+                evidence_paths=[run_dir],
+            )
+        else:
+            _agent_doctor_add_check(
+                checks,
+                "preview_gate",
+                "pass" if preview_payload.get("status") == "pass" else "blocked",
+                "Fixture preview gate result is available.",
+                details={
+                    "status": preview_payload.get("status"),
+                    "run_dir": str(run_dir),
+                    "next_agent_action": preview_payload.get("next_agent_action", ""),
+                },
+                evidence_paths=[run_dir, run_dir / "preview_manifest.json"],
+            )
+    elif run_dir_raw:
+        _agent_doctor_add_check(
+            checks,
+            "preview_gate",
+            "blocked",
+            "Requested run directory is missing; preview-gate cannot verify the demo.",
+            details={"run_dir": str(run_dir)},
+            evidence_paths=[run_dir],
+        )
+    else:
+        _agent_doctor_add_check(
+            checks,
+            "preview_gate",
+            "warn",
+            "Fixture demo run is not created yet; run scripts/demo.sh before preview-gate.",
+            details={
+                "expected_run_dir": str(run_dir),
+                "next_command": "bash scripts/demo.sh",
+            },
+            evidence_paths=[ROOT / "scripts" / "demo.sh"],
+        )
+
+    suite_payload = inspect_suite_status(
+        targets=getattr(args, "target", None),
+        include_optional=True,
+    )
+    production_dependencies_ready, missing_dependencies, dependencies = _production_dependency_report(suite_payload)
+    if mode == "preview":
+        _agent_doctor_add_check(
+            checks,
+            "production_backend_projection",
+            "pass" if production_dependencies_ready else "warn",
+            (
+                "Production backend is fully bound."
+                if production_dependencies_ready
+                else "Production backend is not ready; preview must stay in fixture mode."
+            ),
+            details={
+                "missing_or_unready": missing_dependencies,
+                "external_dependency_status": dependencies,
+            },
+            evidence_paths=["product-capability-manifest.json", "docs/agent-recovery-playbook.md"],
+        )
+        return _agent_doctor_result(mode, checks)
+
+    _agent_doctor_add_check(
+        checks,
+        "suite_status",
+        "pass" if bool(suite_payload.get("full_suite_ready")) else "blocked",
+        (
+            "Required suite capabilities are ready."
+            if bool(suite_payload.get("full_suite_ready"))
+            else "Required suite capabilities are missing or blocked."
+        ),
+        details={
+            "status": suite_payload.get("status"),
+            "full_suite_ready": suite_payload.get("full_suite_ready"),
+            "blocking_summary": suite_payload.get("blocking_summary", []),
+        },
+        evidence_paths=["skills/manifest.json", "product-capability-manifest.json"],
+    )
+    _agent_doctor_add_check(
+        checks,
+        "production_backend",
+        "pass" if production_dependencies_ready else "blocked",
+        (
+            "Production backend dependencies are bound, verified, and pinned."
+            if production_dependencies_ready
+            else "Production backend dependencies are missing, unverified, or not pinned."
+        ),
+        details={
+            "missing_or_unready": missing_dependencies,
+            "external_dependency_status": dependencies,
+        },
+        evidence_paths=["product-capability-manifest.json", "docs/agent-recovery-playbook.md"],
+    )
+
+    release_root_raw = str(getattr(args, "release_root", "") or "").strip()
+    release_root = Path(release_root_raw).expanduser().resolve() if release_root_raw else Path.home() / ".deck-master" / "current"
+    capability_lock = release_root / "deck_capability_lock.json"
+    _agent_doctor_add_check(
+        checks,
+        "capability_lock",
+        "pass" if capability_lock.exists() else "blocked",
+        (
+            "Capability lock is present."
+            if capability_lock.exists()
+            else "Capability lock is missing; production release state is not pinned."
+        ),
+        details={"release_root": str(release_root), "capability_lock": str(capability_lock)},
+        evidence_paths=[capability_lock],
+    )
+
+    if run_dir_raw:
+        try:
+            final_payload = command_final_readiness(
+                argparse.Namespace(
+                    run_dir=str(run_dir),
+                    run_id=None,
+                    runs_dir=None,
+                    artifact=None,
+                    expected_pages=None,
+                    no_write=True,
+                    run_mode="production",
+                    dev_allow_unsetup=False,
+                    workspace=getattr(args, "workspace", ""),
+                )
+            )
+        except Exception as exc:
+            _agent_doctor_add_check(
+                checks,
+                "final_readiness",
+                "blocked",
+                "Final readiness could not run.",
+                details={"run_dir": str(run_dir), "error": str(exc)},
+                evidence_paths=[run_dir],
+            )
+        else:
+            _agent_doctor_add_check(
+                checks,
+                "final_readiness",
+                "pass" if final_payload.get("status") == "ready" else "blocked",
+                "Final readiness result is available.",
+                details={
+                    "status": final_payload.get("status"),
+                    "blockers": final_payload.get("blockers", []),
+                    "next_agent_action": final_payload.get("next_agent_action", ""),
+                },
+                evidence_paths=[run_dir / "delivery" / "final_readiness.json", run_dir / "render_results" / "render_result.json"],
+            )
+    else:
+        _agent_doctor_add_check(
+            checks,
+            "final_readiness",
+            "blocked",
+            "Production mode requires --run-dir so final-readiness can be checked.",
+            details={"next_command": "deck-master final-readiness --run-dir <run_dir> --no-write"},
+            evidence_paths=[],
+        )
+
+    return _agent_doctor_result(mode, checks)
+
+
 def command_install_skill(args: argparse.Namespace) -> dict[str, Any]:
     if bool(getattr(args, "suite", False)):
         return suite_install(
@@ -1537,9 +1939,26 @@ def command_install_skill(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def command_suite_status(args: argparse.Namespace) -> dict[str, Any]:
-    return inspect_suite_status(
+    payload = inspect_suite_status(
         targets=getattr(args, "target", None),
         include_optional=True,
+    )
+    next_agent_action = str(payload.get("next_agent_action") or "")
+    if not next_agent_action:
+        next_agent_action = (
+            "Suite ready."
+            if payload.get("status") == "ready"
+            else "Run deck-master suite-repair --target codex, then rerun suite-status."
+        )
+    return _add_agent_output_contract(
+        payload,
+        next_agent_action=next_agent_action,
+        evidence_paths=[
+            "product-capability-manifest.json",
+            "skills/manifest.json",
+            "skills/deck-master/SKILL.md",
+            "docs/contracts",
+        ],
     )
 
 
@@ -1560,9 +1979,25 @@ def command_suite_build_release_tree(args: argparse.Namespace) -> dict[str, Any]
 
 
 def command_release_smoke(args: argparse.Namespace) -> dict[str, Any]:
-    return verify_release_tree(
+    payload = verify_release_tree(
         getattr(args, "release_root", None),
         run_smoke=not bool(getattr(args, "no_smoke", False)),
+    )
+    next_agent_action = (
+        "Release smoke passed; release tree is ready for publication checks."
+        if payload.get("status") == "passed"
+        else "Rebuild the release tree once, then rerun release-smoke and inspect errors."
+    )
+    release_root = Path(str(payload.get("release_root") or getattr(args, "release_root", "") or "")).expanduser()
+    return _add_agent_output_contract(
+        payload,
+        next_agent_action=next_agent_action,
+        evidence_paths=[
+            release_root / "release-manifest.json",
+            release_root / "deck_capability_lock.json",
+            release_root / "SHA256SUMS",
+            release_root / "bin" / "deck-master",
+        ],
     )
 
 
@@ -2230,7 +2665,7 @@ def command_preview_gate(args: argparse.Namespace) -> dict[str, Any]:
     )
 
     status = "pass" if all(check["status"] == "pass" for check in checks) else "fail"
-    return {
+    payload = {
         "schema_version": "deck_master_preview_gate.v1",
         "status": status,
         "run_dir": str(run_dir),
@@ -2238,6 +2673,21 @@ def command_preview_gate(args: argparse.Namespace) -> dict[str, Any]:
         "preview_manifest": str(manifest_path),
         "title": str(manifest.get("title") or ""),
     }
+    return _add_agent_output_contract(
+        payload,
+        next_agent_action=(
+            "Proceed with Review Desk preview or release validation."
+            if status == "pass"
+            else "Fix failed preview-gate checks before treating the demo as ready."
+        ),
+        evidence_paths=[
+            run_dir / "request.json",
+            run_dir / "preview_manifest.json",
+            ROOT / "scripts" / "preview" / "static" / "index.html",
+            ROOT / "scripts" / "preview" / "static" / "style.css",
+            ROOT / "scripts" / "preview" / "static" / "app.js",
+        ],
+    )
 
 
 def add_brief_args(parser: argparse.ArgumentParser) -> None:
@@ -2319,6 +2769,15 @@ def build_parser() -> argparse.ArgumentParser:
     p_setup_status.add_argument("--output", choices=["json"], default="json")
     p_setup_status.set_defaults(func=command_setup_status)
 
+    p_agent_doctor = sub.add_parser("agent-doctor", help="Check Agent-operable readiness")
+    p_agent_doctor.add_argument("--mode", choices=["preview", "production"], default="preview")
+    p_agent_doctor.add_argument("--run-dir", default=None)
+    p_agent_doctor.add_argument("--workspace", default="")
+    p_agent_doctor.add_argument("--release-root", default=None)
+    p_agent_doctor.add_argument("--target", action="append", default=[], choices=["codex", "claude-code", "hermes"])
+    p_agent_doctor.add_argument("--output", choices=["json"], default="json")
+    p_agent_doctor.set_defaults(func=command_agent_doctor)
+
     p_suite_status = sub.add_parser("suite-status", help="Inspect Deck Master suite readiness without writing files")
     p_suite_status.add_argument("--target", action="append", default=[], choices=["codex", "claude-code", "hermes"])
     p_suite_status.add_argument("--output", choices=["json"], default="json")
@@ -2346,6 +2805,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_release_smoke = sub.add_parser("release-smoke", help="Verify a Deck Master release tree")
     p_release_smoke.add_argument("--release-root", default=None, help="Release tree path; defaults to ~/.deck-master/current")
     p_release_smoke.add_argument("--no-smoke", action="store_true", help="Skip launching the release entrypoint")
+    p_release_smoke.add_argument("--output", choices=["json"], default="json")
     p_release_smoke.set_defaults(func=command_release_smoke)
 
     p_release_install = sub.add_parser("release-install", help="Install Deck Master release tree via staging verification and activation")

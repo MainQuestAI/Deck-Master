@@ -1109,6 +1109,7 @@ def verify_release_tree(
 
     required_files = [
         RELEASE_TREE_MARKER,
+        "AGENTS.md",
         "bin/deck-master",
         "scripts/deck_master.py",
         PRODUCT_CAPABILITY_MANIFEST_NAME,
@@ -1117,6 +1118,12 @@ def verify_release_tree(
         CAPABILITY_LOCK_NAME,
         SHA256SUMS_NAME,
         REVISION_NAME,
+        "docs/agent-task-index.md",
+        "docs/agent-recovery-playbook.md",
+        "contracts/setup-status.v2.schema.json",
+        "contracts/workflow-state.v1.schema.json",
+        "contracts/final-readiness.v1.schema.json",
+        "contracts/rc-gate-report.v1.schema.json",
     ]
     for rel in required_files:
         path = root / rel
@@ -1428,6 +1435,7 @@ def build_release_tree(
         ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "*.egg-info", ".pytest_cache", ".mypy_cache"),
     )
     for source_name, target_name in (
+        ("AGENTS.md", "AGENTS.md"),
         ("README.md", "README.md"),
         ("LICENSE", "LICENSE"),
         ("NOTICE", "NOTICE"),
@@ -1437,6 +1445,8 @@ def build_release_tree(
         ("THIRD_PARTY_NOTICES.md", "THIRD_PARTY_NOTICES.md"),
         ("CHANGELOG.md", "CHANGELOG.md"),
         ("docs/known-limitations.md", "KNOWN_LIMITATIONS.md"),
+        ("docs/agent-task-index.md", "docs/agent-task-index.md"),
+        ("docs/agent-recovery-playbook.md", "docs/agent-recovery-playbook.md"),
         ("docs/quick-start.md", "docs/quick-start.md"),
         ("docs/known-limitations.md", "docs/known-limitations.md"),
         ("docs/releases/2026-07-06-release-checklist.md", "docs/releases/2026-07-06-release-checklist.md"),
@@ -1513,6 +1523,10 @@ def build_release_tree(
         "scripts": "scripts",
         "examples": "examples",
         "benchmarks": "benchmarks",
+        "agent_entrypoint": "AGENTS.md",
+        "agent_task_index": "docs/agent-task-index.md",
+        "agent_recovery_playbook": "docs/agent-recovery-playbook.md",
+        "contracts": "contracts",
         "product_capability_manifest": PRODUCT_CAPABILITY_MANIFEST_NAME,
         "companion_manifest": COMPANION_MANIFEST_NAME,
         "capability_lock": CAPABILITY_LOCK_NAME,
