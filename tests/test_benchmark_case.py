@@ -48,7 +48,7 @@ def _real_metadata_case() -> dict:
     payload["source_material"] = {
         "classification": "private_local_reference",
         "raw_source_policy": "local_path_only",
-        "local_source_paths": ["~/DeckMasterPrivateBenchmarks/real_retail_growth/raw"],
+        "local_source_paths": ["~/deck-master-local-benchmarks/real_retail_growth/raw"],
         "submitted_material_types": ["brief", "notes"],
         "excluded_from_repo": True,
     }

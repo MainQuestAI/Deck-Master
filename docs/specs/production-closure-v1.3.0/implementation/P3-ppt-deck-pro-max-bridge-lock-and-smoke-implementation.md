@@ -1,7 +1,7 @@
 # P3 细化实现稿 — PPT Deck Pro Max Bridge Lock And Smoke
 
-日期：2026-07-03  
-状态：Draft v0.1  
+日期：2026-07-03
+状态：Draft v0.1
 对应任务包：[`../tasks/P3-ppt-deck-pro-max-bridge-lock-and-smoke.md`](../tasks/P3-ppt-deck-pro-max-bridge-lock-and-smoke.md)
 
 ## 1. 目标
@@ -20,7 +20,7 @@
 当前本机可核验的 bridge worktree 位于：
 
 ```text
-/Users/dingcheng/Coding-Project/02-key-project/PPT-Deck-Pro-Max-deck-master-bridge
+<ppt-deck-pro-max-bridge-repo>
 ```
 
 git 信息：
@@ -102,7 +102,7 @@ git 信息：
   "name": "ppt-deck-pro-max",
   "dependency_kind": "generation_bridge",
   "repo": "https://github.com/MainQuestAI/PPT-Deck-Pro-Max.git",
-  "repo_path": "/Users/dingcheng/Coding-Project/02-key-project/PPT-Deck-Pro-Max-deck-master-bridge",
+  "repo_path": "<ppt-deck-pro-max-bridge-repo>",
   "git_branch": "codex/deck-master-bridge",
   "git_sha": "9444d88f573c3afa567bfb1763041325ef765313",
   "verified": true,
@@ -183,7 +183,7 @@ release build 时把 bridge 依赖快照写进 `deck_capability_lock.json`。
 
 ```bash
 python3 -m unittest tests.test_deck_master_bridge
-/Users/dingcheng/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 -m unittest discover -s tests
+<bundled-python> -m unittest discover -s tests
 ```
 
 补充说明：

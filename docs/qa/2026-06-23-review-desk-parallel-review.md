@@ -1,7 +1,7 @@
 # Deck Master Review Desk 并行评审结论
 
-日期：2026-06-23  
-状态：passed  
+日期：2026-06-23
+状态：passed
 适用范围：Review Desk 修复迭代 v0.3
 
 ## 1. 总结
@@ -17,7 +17,7 @@
 
 设计线直接引用本轮设计 QA：
 
-- [2026-06-23-review-desk-design-qa.md](/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/qa/2026-06-23-review-desk-design-qa.md)
+- [2026-06-23-review-desk-design-qa.md](/docs/qa/2026-06-23-review-desk-design-qa.md)
 
 评分：
 
@@ -41,7 +41,7 @@
 
 位置：
 
-- [scripts/preview/static/app.js](/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/scripts/preview/static/app.js)
+- [scripts/preview/static/app.js](/scripts/preview/static/app.js)
 
 观察：
 
@@ -60,8 +60,8 @@
 
 位置：
 
-- [scripts/preview/static/index.html](/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/scripts/preview/static/index.html)
-- [scripts/preview/static/style.css](/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/scripts/preview/static/style.css)
+- [scripts/preview/static/index.html](/scripts/preview/static/index.html)
+- [scripts/preview/static/style.css](/scripts/preview/static/style.css)
 
 观察：
 
@@ -79,8 +79,8 @@
 
 位置：
 
-- [docs/2026-06-21-web-ui-design-spec-v0.2.md](/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/2026-06-21-web-ui-design-spec-v0.2.md)
-- [docs/specs/web-ui/design-system.md](/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/specs/web-ui/design-system.md)
+- [docs/2026-06-21-web-ui-design-spec-v0.2.md](/docs/2026-06-21-web-ui-design-spec-v0.2.md)
+- [docs/specs/web-ui/design-system.md](/docs/specs/web-ui/design-system.md)
 
 观察：
 
@@ -98,9 +98,9 @@
 
 位置：
 
-- [tests/test_preview_static_contract.py](/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/tests/test_preview_static_contract.py)
-- [tests/test_review_cockpit.py](/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/tests/test_review_cockpit.py)
-- [tests/test_preview_server.py](/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/tests/test_preview_server.py)
+- [tests/test_preview_static_contract.py](/tests/test_preview_static_contract.py)
+- [tests/test_review_cockpit.py](/tests/test_review_cockpit.py)
+- [tests/test_preview_server.py](/tests/test_preview_server.py)
 
 观察：
 
@@ -125,10 +125,10 @@
 
 ## 5. 本轮进入实现前的真源文件
 
-1. [review-desk-remediation-spec-v0.3.md](/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/specs/web-ui/review-desk-remediation-spec-v0.3.md)
-2. [design-system.md](/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/specs/web-ui/design-system.md)
-3. [implementation-guidelines.md](/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/specs/web-ui/implementation-guidelines.md)
+1. [review-desk-remediation-spec-v0.3.md](/docs/specs/web-ui/review-desk-remediation-spec-v0.3.md)
+2. [design-system.md](/docs/specs/web-ui/design-system.md)
+3. [implementation-guidelines.md](/docs/specs/web-ui/implementation-guidelines.md)
 
 ## 6. 结论
 
-这轮结构修复已经完成。最新截图矩阵位于 `/private/tmp/deck-master-review-desk-v03-audit/`，共 8 个场景、24 张桌面截图。
+这轮结构修复已经完成。最新截图矩阵位于 `<temp-dir>/deck-master-review-desk-v03-audit/`，共 8 个场景、24 张桌面截图。

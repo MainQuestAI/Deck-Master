@@ -4,7 +4,7 @@
 
 ## 1. 接入结论
 
-本目录已吸收 `/Users/dingcheng/Downloads/deck-master-skill-os-runtime-spec-pack.zip` 返回的完整 Spec Pack，作为 Deck Master v1.1 Skill OS Runtime 的候选实施基线。
+本目录已吸收 `<local-downloads>/deck-master-skill-os-runtime-spec-pack.zip` 返回的完整 Spec Pack，作为 Deck Master v1.1 Skill OS Runtime 的候选实施基线。
 
 当前建议：
 
@@ -17,7 +17,7 @@
 
 原始包：
 
-`/Users/dingcheng/Downloads/deck-master-skill-os-runtime-spec-pack.zip`
+`<local-downloads>/deck-master-skill-os-runtime-spec-pack.zip`
 
 仓库接入目录：
 

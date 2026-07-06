@@ -1,7 +1,7 @@
 # P2 细化实现稿 — Deck Master Backend Binding And Lock
 
-日期：2026-07-03  
-状态：Draft v0.1  
+日期：2026-07-03
+状态：Draft v0.1
 对应任务包：[`../tasks/P2-deck-master-backend-binding-and-lock.md`](../tasks/P2-deck-master-backend-binding-and-lock.md)
 
 ## 1. 目标
@@ -329,7 +329,7 @@ P2 只做最小可用展示，不做版式重构。
 ```bash
 python3 -m unittest tests.test_skill_installation
 PYTHONPATH=scripts python3 -m unittest tests.test_preview_server
-python3 scripts/deck_master.py backend bind ppt-master --repo /Users/dingcheng/.codex/skills/.backups/ppt-master-repo-668131f0
+python3 scripts/deck_master.py backend bind ppt-master --repo <ppt-master-backend-repo>
 python3 scripts/deck_master.py backend status
 python3 scripts/deck_master.py suite-status --target codex --output json
 python3 scripts/deck_master.py setup-status --include-suite --output json

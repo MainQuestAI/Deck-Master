@@ -30,7 +30,7 @@ class TestConfidentialityGate(unittest.TestCase):
     def test_p0_sensitive_pattern_api_key(self):
         result = evaluate_confidentiality_gate(
             run_id="run-003",
-            artifact_text="api_key = sk-abc123def456",
+            artifact_text="api_key = REDACTED_API_KEY_SAMPLE",
         )
         self.assertEqual(result["status"], "rework_required")
         self.assertTrue(result["blocks_delivery"])

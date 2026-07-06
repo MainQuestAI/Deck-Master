@@ -119,7 +119,7 @@ DevEx 结论：
 
 选择：D
 
-结论：本期做完整 Workspace Foundation，以本地迈富时 PPT 工作坊为真实样本。
+结论：本期做完整 Workspace Foundation，以本地客户工作坊样本 PPT 工作坊为真实样本。
 
 本期 Workspace 范围：
 

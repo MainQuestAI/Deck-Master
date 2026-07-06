@@ -1,11 +1,11 @@
 # Deck Master v1.3.0 Production Closure 执行清单
 
-日期：2026-07-03  
-状态：已校正到当前实现状态，用于固化 v1.3.0 外部依赖、真实 benchmark 和 RC 收口证据  
-范围：`ppt-master` 生产后端认证、`ppt-deck-pro-max` bridge 固定化、真实 benchmark、RC 放行  
+日期：2026-07-03
+状态：已校正到当前实现状态，用于固化 v1.3.0 外部依赖、真实 benchmark 和 RC 收口证据
+范围：`ppt-master` 生产后端认证、`ppt-deck-pro-max` bridge 固定化、真实 benchmark、RC 放行
 关联仓库：
 
-- Deck Master：`/Users/dingcheng/Coding-Project/02-key-project/Deck-Master`
+- Deck Master：`<repo-root>`
 - `ppt-master`：`https://github.com/hugohe3/ppt-master`
 - `PPT-Deck-Pro-Max`：本地 bridge 分支 `codex/deck-master-bridge`，当前已知 SHA `9444d88f573c3afa567bfb1763041325ef765313`
 
@@ -352,7 +352,7 @@ v1.3.0 的推进顺序固定为：
 
 ### D1. 建 3 个私有 benchmark 目录
 
-位置：`~/DeckMasterPrivateBenchmarks/`
+位置：`~/deck-master-local-benchmarks/`
 
 动作：
 

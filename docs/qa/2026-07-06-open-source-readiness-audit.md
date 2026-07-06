@@ -164,7 +164,7 @@
 - **服务器安全**：默认绑定 `127.0.0.1`（`server.py:1544` `--host default="127.0.0.1"`），仅本地；无 CORS 头（本地工具不需要）。
 - **路径穿越已防**：`server.py:379-383` 对 URL `run_id` 做 `.resolve()` + `startswith(root + "/")` 包含检查，不合法即抛 `ManifestError("Invalid run_id.")`。✅
 - **依赖 CVE**：`pip-audit` 仅报 pip 自身 1 个（PYSEC-2026-196，工具链问题，非项目依赖）。项目唯一依赖 `python-pptx` 无 CVE。
-- **唯一问题**：`scripts/runtime/builder_backend.py:39` 硬编码 `GENERATION_BRIDGE_REPO_PATH = "/Users/dingcheng/Coding-Project/02-key-project/PPT-Deck-Pro-Max-deck-master-bridge"`，并在 `_generation_bridge_status()`（`:411-433`）中作为 `"repo_path"` 输出、`"binding_status": "bound_verified"`、`"verified": True`。开源后他人运行会报告一个指向不存在路径的"已验证"绑定，既泄露作者家目录、又误导状态。**Major**。
+- **唯一问题**：`scripts/runtime/builder_backend.py:39` 硬编码 `GENERATION_BRIDGE_REPO_PATH = "<ppt-deck-pro-max-bridge-repo>"`，并在 `_generation_bridge_status()`（`:411-433`）中作为 `"repo_path"` 输出、`"binding_status": "bound_verified"`、`"verified": True`。开源后他人运行会报告一个指向不存在路径的"已验证"绑定，既泄露作者家目录、又误导状态。**Major**。
 
 ## 6. 依赖与构建
 

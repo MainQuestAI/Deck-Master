@@ -1,7 +1,7 @@
 # P1 细化实现稿 — PPT Master Backend Certification
 
-日期：2026-07-03  
-状态：Implemented locally (2026-07-03)  
+日期：2026-07-03
+状态：Implemented locally (2026-07-03)
 对应任务包：[`../tasks/P1-ppt-master-backend-certification.md`](../tasks/P1-ppt-master-backend-certification.md)
 
 ## 1. 目标
@@ -20,7 +20,7 @@
 本机当前可用、且 remote 指向 `https://github.com/hugohe3/ppt-master.git` 的 git 仓是：
 
 ```text
-/Users/dingcheng/.codex/skills/.backups/ppt-master-repo-668131f0
+<ppt-master-backend-repo>
 ```
 
 当前 HEAD：
@@ -329,7 +329,7 @@ PY
 ## 8. 实现前必须确认的事实
 
 1. P1 的目标口径是“建立可认证基础”，还是“认证后即允许 production build 真实外调”
-2. 外部 `ppt-master` 的唯一 git 真源是否固定为 `/Users/dingcheng/.codex/skills/.backups/ppt-master-repo-668131f0`
+2. 外部 `ppt-master` 的唯一 git 真源是否固定为 `<ppt-master-backend-repo>`
 3. `writeback` 与主仓现有 `handback` 命名是否视为同一 contract 概念
 4. smoke 的最小交付标准是否只要求 `render_result` 写回样本，还是还要求最小 PPTX 产物
 5. 是否要求 smoke 顺带校验关键 Python 依赖可用

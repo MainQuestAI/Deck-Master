@@ -1070,6 +1070,15 @@ class SkillInstallationTest(unittest.TestCase):
         self.assertTrue((release_root / "release-manifest.json").exists())
         self.assertTrue((release_root / "deck_capability_lock.json").exists())
         self.assertTrue((release_root / "SHA256SUMS").exists())
+        self.assertTrue((release_root / "CONTRIBUTING.md").exists())
+        self.assertTrue((release_root / "SECURITY.md").exists())
+        self.assertTrue((release_root / "CODE_OF_CONDUCT.md").exists())
+        self.assertTrue((release_root / "THIRD_PARTY_NOTICES.md").exists())
+        self.assertTrue((release_root / "NOTICE").exists())
+        self.assertTrue((release_root / "docs" / "quick-start.md").exists())
+        self.assertTrue((release_root / "docs" / "known-limitations.md").exists())
+        self.assertTrue((release_root / "docs" / "releases" / "2026-07-06-release-checklist.md").exists())
+        self.assertFalse(any(release_root.rglob("*.egg-info")))
 
         bin_text = (release_root / "bin" / "deck-master").read_text(encoding="utf-8")
         self.assertNotIn(str(_REPO_ROOT / "scripts" / "deck_master.py"), bin_text)
@@ -1089,6 +1098,7 @@ class SkillInstallationTest(unittest.TestCase):
         self.assertEqual(_REGISTRY.suite_version, release_manifest["suite_version"])
         self.assertTrue(release_manifest["self_contained"])
         self.assertEqual("bin/deck-master", release_manifest["entrypoint"])
+        self.assertEqual(".", release_manifest["release_root"])
 
         companion = json.loads((release_root / "companion-manifest.json").read_text(encoding="utf-8"))
         revision = (release_root / "REVISION").read_text(encoding="utf-8").strip()
@@ -1096,6 +1106,7 @@ class SkillInstallationTest(unittest.TestCase):
         self.assertEqual(_REGISTRY.suite_version, companion["suite_version"])
         self.assertEqual(revision, companion["git_commit"])
         self.assertEqual(f"main-{revision}", companion["release_id"])
+        self.assertNotIn(str(_REPO_ROOT), json.dumps(companion))
 
         capability_lock = json.loads((release_root / "deck_capability_lock.json").read_text(encoding="utf-8"))
         self.assertEqual("deck_capability_lock.v1", capability_lock["schema_version"])
@@ -1122,6 +1133,52 @@ class SkillInstallationTest(unittest.TestCase):
         self.assertTrue((release_root / "skills" / "deck-learn" / "SKILL.md").exists())
         for capability_name in ["ppt-master", "ppt-library", "ppt-deck-pro-max", "ppt-quality-gate"]:
             self.assertTrue((release_root / "capabilities" / capability_name / "capability.json").exists(), capability_name)
+        self.assertFalse((release_root / "benchmarks" / "benchmark_runs").exists())
+        self.assertFalse((release_root / "benchmarks" / "results").exists())
+        self.assertFalse((release_root / "benchmarks" / "private_sources").exists())
+        self.assertFalse((release_root / "benchmarks" / "workspaces").exists())
+
+    def test_release_tree_metadata_is_public_path_safe(self) -> None:
+        release_root = Path(self._tmp) / "release-public-safe"
+        private_root = Path(self._tmp) / "private-backend"
+        dependency = {
+            "name": "ppt-master",
+            "dependency_kind": "external_repo",
+            "binding_status": "bound_verified",
+            "repo_label": "unit/backend",
+            "repo_path": str(private_root),
+            "skill_path": str(private_root / "skills" / "ppt-master"),
+            "git_remote": "git@github.com:unit/private-backend.git",
+            "git_sha": "abc123",
+            "short_sha": "abc123",
+            "git_branch": "main",
+            "worktree_dirty": False,
+            "verified": True,
+            "verified_at": "2026-01-01T00:00:00Z",
+            "validated_capabilities": ["render", "smoke", "writeback"],
+            "source": str(private_root),
+            "summary": "PPT Master 已绑定且已完成验证。",
+        }
+
+        with mock.patch("scripts.skills.installer.external_dependency_statuses", return_value=[dependency]):
+            build_release_tree(release_root)
+
+        capability_lock_text = (release_root / "deck_capability_lock.json").read_text(encoding="utf-8")
+        companion_text = (release_root / "companion-manifest.json").read_text(encoding="utf-8")
+        release_manifest_text = (release_root / "release-manifest.json").read_text(encoding="utf-8")
+
+        self.assertNotIn(str(private_root), capability_lock_text)
+        self.assertNotIn(str(_REPO_ROOT), companion_text)
+        self.assertNotIn(str(release_root), release_manifest_text)
+
+        capability_lock = json.loads(capability_lock_text)
+        locked = capability_lock["external_dependencies"][0]
+        self.assertEqual("", locked["repo_path"])
+        self.assertEqual("", locked["skill_path"])
+        self.assertEqual("", locked["git_remote"])
+        self.assertEqual("", locked["source"])
+        self.assertEqual("abc123", locked["git_sha"])
+        self.assertTrue(locked["verified"])
 
     def test_verify_release_tree_rejects_tampered_checksum(self) -> None:
         release_root = Path(self._tmp) / "release"

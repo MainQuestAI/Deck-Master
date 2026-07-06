@@ -1,12 +1,12 @@
 # Deck Master Review Desk 设计 QA
 
-日期：2026-06-23  
-状态：passed  
-范围：`needs-review`、`run-init-wait-preview` 两条桌面态  
+日期：2026-06-23
+状态：passed
+范围：`needs-review`、`run-init-wait-preview` 两条桌面态
 视觉真源：
 
 - `/tmp/deck-master-design-preview.html`
-- [docs/2026-06-21-web-ui-design-spec-v0.2.md](/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/2026-06-21-web-ui-design-spec-v0.2.md)
+- [docs/2026-06-21-web-ui-design-spec-v0.2.md](/docs/2026-06-21-web-ui-design-spec-v0.2.md)
 - `codex/deck-master-webui-redesign-v2:docs/2026-06-21-web-ui-ia-v1.md`
 
 ## 1. 结论
@@ -48,7 +48,7 @@
 ### [P1] 顶部状态带退化成大面积总览区
 
 - 状态：closed
-- 证据：`/private/tmp/deck-master-review-desk-v03-audit/screenshots/needs-review-desktop-1440.png`
+- 证据：`<temp-dir>/deck-master-review-desk-v03-audit/screenshots/needs-review-desktop-1440.png`
 
 ### [P1] 待准备态泄露原始命令和绝对路径
 
@@ -63,12 +63,12 @@
 ### [P2] 待审阅态里，预览还没有回到首屏主位
 
 - 状态：closed
-- 证据：`/private/tmp/deck-master-review-desk-v03-audit/screenshots/needs-review-desktop-1440.png`
+- 证据：`<temp-dir>/deck-master-review-desk-v03-audit/screenshots/needs-review-desktop-1440.png`
 
 ### [P2] 待准备态主叙事还不够强
 
 - 状态：closed
-- 证据：`/private/tmp/deck-master-review-desk-v03-audit/screenshots/run-init-wait-preview-desktop-1440.png`
+- 证据：`<temp-dir>/deck-master-review-desk-v03-audit/screenshots/run-init-wait-preview-desktop-1440.png`
 
 ### [P2] 前台身份还没有收口
 
@@ -87,7 +87,7 @@
 
 最新截图证据保存在：
 
-- `/private/tmp/deck-master-review-desk-v03-audit/`
+- `<temp-dir>/deck-master-review-desk-v03-audit/`
 
 本轮截图矩阵共 8 个场景、24 张桌面截图。
 

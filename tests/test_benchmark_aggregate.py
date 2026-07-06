@@ -22,10 +22,10 @@ def _real_case(case_id: str, industry: str) -> dict:
         "industry": industry,
         "audience": "client",
         "target_pages": 12,
-        "workspace": f"~/DeckMasterPrivateBenchmarks/{case_id}/workspace",
+        "workspace": f"~/deck-master-local-benchmarks/{case_id}/workspace",
         "runs_dir": "benchmark_runs",
         "inputs": {
-            "context_pack": f"~/DeckMasterPrivateBenchmarks/{case_id}/context_pack.json",
+            "context_pack": f"~/deck-master-local-benchmarks/{case_id}/context_pack.json",
             "baseline_manual_hours": 14,
         },
         "workflow": {
@@ -35,7 +35,7 @@ def _real_case(case_id: str, industry: str) -> dict:
         "source_material": {
             "classification": "private_local_reference",
             "raw_source_policy": "local_path_only",
-            "local_source_paths": [f"~/DeckMasterPrivateBenchmarks/{case_id}/raw"],
+            "local_source_paths": [f"~/deck-master-local-benchmarks/{case_id}/raw"],
             "excluded_from_repo": True,
         },
         "success_targets": {

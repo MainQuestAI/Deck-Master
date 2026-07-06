@@ -1,8 +1,8 @@
 # Deck Master v1.3.0 Production Closure Spec
 
-日期：2026-07-03  
-状态：Current Implementation Sync  
-用途：记录 v1.3.0 已如何把外部生产依赖、真实 benchmark 和 RC gate 收成可验证闭环，并明确后续发布固化边界  
+日期：2026-07-03
+状态：Current Implementation Sync
+用途：记录 v1.3.0 已如何把外部生产依赖、真实 benchmark 和 RC gate 收成可验证闭环，并明确后续发布固化边界
 前置文档：
 
 - `docs/planning/2026-07-03-deck-master-v1.3.0-production-closure-execution-plan.md`
@@ -144,12 +144,12 @@ v1.3.0 Spec 包含四个子范围。
 
 ### 5.1 `ppt-master` 以外部 Git 仓为真源
 
-`hugohe3/ppt-master` 是 v1.3.0 的唯一 production backend 真源。  
+`hugohe3/ppt-master` 是 v1.3.0 的唯一 production backend 真源。
 安装态目录保留用于运行，但不再作为 release 追溯真源。
 
 ### 5.2 本轮采用“外部依赖固定 SHA”模式
 
-v1.3.0 不引入 vendored backend snapshot。  
+v1.3.0 不引入 vendored backend snapshot。
 所有 production 依赖统一按：
 
 1. 仓库路径；
@@ -163,7 +163,7 @@ v1.3.0 不引入 vendored backend snapshot。
 
 真实 benchmark 的 raw source 继续放在：
 
-- `~/DeckMasterPrivateBenchmarks/<case_id>/raw`
+- `~/deck-master-local-benchmarks/<case_id>/raw`
 
 仓库内只保留 metadata、路径引用和最终 benchmark report。
 
@@ -171,7 +171,7 @@ v1.3.0 不引入 vendored backend snapshot。
 
 ## 6.1 新增绑定概念
 
-Deck Master 增加“外部 backend 绑定”概念。  
+Deck Master 增加“外部 backend 绑定”概念。
 绑定对象至少覆盖：
 
 1. `ppt-master`
@@ -382,7 +382,7 @@ smoke 通过后，verify 结果写入 `validated_capabilities`：
 每个 real case 使用：
 
 ```text
-~/DeckMasterPrivateBenchmarks/<case_id>/
+~/deck-master-local-benchmarks/<case_id>/
   context_pack.json
   raw/
   workspace/

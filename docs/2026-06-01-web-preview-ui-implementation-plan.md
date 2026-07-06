@@ -2,7 +2,7 @@
 
 Date: 2026-06-01
 Branch: `codex/web-preview-ui`
-Worktree: `/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-web-preview-ui`
+Worktree: `<deck-master-web-preview-worktree>`
 Status: MVP IMPLEMENTED
 
 ## 结论

@@ -65,7 +65,7 @@ v0.9.12 必须把无副作用检查作为第一原则。
 Path:
 
 ```text
-/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/skills/deck-master
+<repo-root>/skills/deck-master
 ```
 
 Current role:
@@ -86,13 +86,13 @@ Current gap:
 Installed skill:
 
 ```text
-/Users/dingcheng/.codex/skills/ppt-library/SKILL.md
+<ppt-library-skill>/SKILL.md
 ```
 
 Repo:
 
 ```text
-/Users/dingcheng/Coding-Project/02-key-project/PPT-Library
+<ppt-library-repo>
 ```
 
 Current role:
@@ -119,7 +119,7 @@ Out of this round:
 Installed skill:
 
 ```text
-/Users/dingcheng/.codex/skills/ppt-deck-pro-max/SKILL.md
+<ppt-deck-pro-max-skill>/SKILL.md
 ```
 
 Current role:
@@ -144,7 +144,7 @@ Out of this round:
 Draft skill:
 
 ```text
-/Users/dingcheng/Workspace/_internal/迈富时PPT工作坊/skill-drafts/ppt-quality-gate
+<local-private-workspace>/skill-drafts/ppt-quality-gate
 ```
 
 Current role:

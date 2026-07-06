@@ -208,7 +208,7 @@ deck-master quality-gate delivery --run-dir <path> --artifact <path>
 
 真实场景 smoke：
 
-- 对云南白药工作坊执行 `setup-status`。
+- 对医药客户样本工作坊执行 `setup-status`。
 - 导入人工校准版规划。
 - 执行 `orchestration-check`，下一步指向 context / preview / quality 补齐。
 - Review Cockpit 能看到该 run，状态不再只停留在 `planned`。

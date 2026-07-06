@@ -4,7 +4,7 @@
 
 日期：2026-06-11
 分支：`codex/deck-master-endgame-runtime`
-工作区：`/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-endgame-runtime`
+工作区：`<deck-master-endgame-runtime-worktree>`
 
 ## 1. 当前目标
 
@@ -19,7 +19,7 @@
 ## 2. 已完成
 
 - 已从 `origin/main` 创建独立分支：`codex/deck-master-endgame-runtime`。
-- 已创建独立 worktree：`/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-endgame-runtime`。
+- 已创建独立 worktree：`<deck-master-endgame-runtime-worktree>`。
 - 已启动 worker subagent：`Godel`。
 - 已将 `Godel` 的写入范围限定在 Runtime Contract：
   - `scripts/runtime/events.py`

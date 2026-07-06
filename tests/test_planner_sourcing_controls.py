@@ -68,8 +68,8 @@ class PlannerSourcingControlTests(unittest.TestCase):
             {
                 "run_id": "blocked-plan",
                 "project_name": "Blocked Plan",
-                "brief": "云南白药 AI 内容底座方案",
-                "business_goal": "云南白药 AI 内容底座方案",
+                "brief": "医药客户 AI 内容底座方案",
+                "business_goal": "医药客户 AI 内容底座方案",
                 "run_mode": "production",
             },
             run_id="blocked-plan",
@@ -96,7 +96,7 @@ class PlannerSourcingControlTests(unittest.TestCase):
 
     def test_production_narrative_filters_restricted_retail_beats(self) -> None:
         request = build_request(
-            brief="云南白药 DAM AI 内容底座方案，面向医药知识和内容中台治理",
+            brief="医药客户 DAM AI 内容底座方案，面向医药知识和内容中台治理",
             industry="医药",
             target_pages="auto",
         )

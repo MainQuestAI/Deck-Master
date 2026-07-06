@@ -1,8 +1,8 @@
 # v1.3.0 Production Closure — 开发计划
 
-分支建议：`feat/v1.3.0-production-closure`  
-主仓：`/Users/dingcheng/Coding-Project/02-key-project/Deck-Master`  
-主 Spec：`docs/specs/deck-master-v1.3.0-production-closure-spec.md`  
+分支建议：`feat/v1.3.0-production-closure`
+主仓：`<repo-root>`
+主 Spec：`docs/specs/deck-master-v1.3.0-production-closure-spec.md`
 目标：记录外部 production backend、外部 generation bridge、真实 benchmark 和 RC gate 已收成可验证闭环，并明确后续发布固化事项
 
 ## 执行原则

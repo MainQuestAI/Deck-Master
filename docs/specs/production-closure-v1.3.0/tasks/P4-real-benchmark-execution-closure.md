@@ -31,7 +31,7 @@
 
 本机私有目录：
 
-- `~/DeckMasterPrivateBenchmarks/<case_id>/`
+- `~/deck-master-local-benchmarks/<case_id>/`
 
 注意：
 
@@ -70,7 +70,7 @@
 
 ## 8. 依赖与并发
 
-依赖 `P1`、`P2`、`P3`。  
+依赖 `P1`、`P2`、`P3`。
 未满足前置条件时，不启动正式执行。
 
 ## 9. Agent 交付报告

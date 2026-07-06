@@ -1971,6 +1971,16 @@ function renderActionStates() {
   const canRequestEvidence = hasPage && ["待审阅", "待补依据"].includes(stageLabel);
   const canEscalatePageApproval = hasPage && ["待审阅", "待补依据", "可交付", "待审批"].includes(stageLabel);
   const canSaveNote = Boolean(state.currentProjectId) && hasPage;
+  const primaryActionState = state.primaryActionState || derivePrimaryActionState(
+    shellState,
+    state.selectedPageState || deriveSelectedPageState(shellState)
+  );
+  const highestRisk = currentPageHighestRisk();
+  const canApprovePage =
+    canReviewPage &&
+    pageReviewStatus !== "approved" &&
+    pageReviewStatus !== "needs_evidence" &&
+    highestRisk !== "P0";
   const shellReason = {
     setup: "先完成 setup，页面级动作才会开放。",
     "project-selection": "先选择项目，页面级动作才会开放。",
@@ -1996,8 +2006,14 @@ function renderActionStates() {
 
   setButtonState(
     els.approvePage,
-    canReviewPage && pageReviewStatus !== "approved",
-    hasPage ? "当前页还不能执行批准动作。" : (shellReason || "请先选择页面。")
+    canApprovePage,
+    hasPage && pageReviewStatus === "needs_evidence"
+      ? "当前页证据不足，先请求补证据。"
+      : hasPage && highestRisk === "P0"
+        ? "当前页存在 P0 阻断，先处理风险与缺口。"
+        : hasPage
+          ? "当前页还不能执行批准动作。"
+          : (shellReason || "请先选择页面。")
   );
   setButtonState(
     els.rejectPage,
@@ -2019,6 +2035,17 @@ function renderActionStates() {
     canSaveNote,
     canSaveNote ? "" : (shellReason || "请先选择页面后再记录备注。")
   );
+
+  [els.approvePage, els.rejectPage, els.requestEvidence, els.submitPageApproval]
+    .forEach((button) => button?.classList.remove("btn-cta"));
+  const primaryActionButton = {
+    approve: els.approvePage,
+    "re-review": els.approvePage,
+    "request-evidence": els.requestEvidence,
+  }[primaryActionState.action];
+  if (primaryActionState.enabled && primaryActionButton && !primaryActionButton.disabled) {
+    primaryActionButton.classList.add("btn-cta");
+  }
 }
 
 function renderDrawerState() {

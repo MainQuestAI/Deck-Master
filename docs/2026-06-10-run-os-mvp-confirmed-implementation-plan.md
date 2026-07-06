@@ -1,8 +1,8 @@
 # Deck Master Run OS MVP 确认版实现方案
 
-日期：2026-06-10  
-状态：确认版 v0.2  
-来源：Office Hour、CEO Review、DevEx Review、Engineering Review、Design Review、终局蓝图评审、Run OS MVP 方案评审  
+日期：2026-06-10
+状态：确认版 v0.2
+来源：Office Hour、CEO Review、DevEx Review、Engineering Review、Design Review、终局蓝图评审、Run OS MVP 方案评审
 适用范围：Deck Master 下一轮产品化实现
 
 ## 1. 文档定位
@@ -27,8 +27,8 @@ Deck Master 的长期产品方向见：
 - `docs/2026-06-10-guided-conversation-runtime.md`
 - `docs/2026-06-10-built-in-quality-gate.md`
 - `docs/deck-master-vnext-workspace-quality-gate-plan.md`
-- `/Users/dingcheng/MQ-Workspace/Deck Master的终局思考.md`
-- `/Users/dingcheng/MQ-Workspace/Deck Master RUN OS MVP 方案评审.md`
+- `<local-strategy-note>`
+- `<local-strategy-review>`
 
 后续实现优先按本文档推进。旧文档保留为背景和决策记录。
 

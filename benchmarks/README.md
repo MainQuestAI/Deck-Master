@@ -77,7 +77,7 @@ This repository includes three sanitized real-case metadata entries:
 - `real_healthcare_enablement`
 
 Their raw source material is expected under a local private path such as
-`~/DeckMasterPrivateBenchmarks/<case_id>/`. These paths are references only;
+`~/deck-master-local-benchmarks/<case_id>/`. These paths are references only;
 the referenced files are not part of the repository.
 
 For real metadata cases, `benchmark-run` fails before creating a run when the

@@ -874,8 +874,6 @@ def companion_manifest() -> dict[str, Any]:
             "adoption_policy": spec["adoption_policy"],
             "conflict_policy": spec["conflict_policy"],
         }
-        if spec["name"] == SKILL_NAME:
-            item["source_path"] = str(_resolve_source_dir(skill_name=SKILL_NAME))
         skills.append(item)
     return {
         "schema_version": COMPANION_MANIFEST_SCHEMA_VERSION,
@@ -886,6 +884,31 @@ def companion_manifest() -> dict[str, Any]:
         "release_id": f"main-{revision}",
         "skills": skills,
     }
+
+
+_RELEASE_PRIVATE_MARKERS = ("/Users/", "/private/", str(Path.home()))
+_PUBLIC_DEPENDENCY_PATH_FIELDS = {"repo_path", "skill_path", "git_remote", "source"}
+
+
+def _release_safe_dependency_value(key: str, value: Any) -> Any:
+    if key in _PUBLIC_DEPENDENCY_PATH_FIELDS:
+        return ""
+    if isinstance(value, str) and any(marker and marker in value for marker in _RELEASE_PRIVATE_MARKERS):
+        return ""
+    return value
+
+
+def _public_external_dependency_statuses(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    public_items: list[dict[str, Any]] = []
+    for item in items:
+        public_item = {
+            key: _release_safe_dependency_value(key, value)
+            for key, value in item.items()
+        }
+        for field in sorted(_PUBLIC_DEPENDENCY_PATH_FIELDS):
+            public_item.setdefault(field, "")
+        public_items.append(public_item)
+    return public_items
 
 
 def product_capability_manifest() -> dict[str, Any]:
@@ -1330,6 +1353,7 @@ def build_release_tree(
         "reference-packs",
         "examples",
         "benchmarks",
+        "docs",
         "scripts",
     ]
 
@@ -1350,7 +1374,7 @@ def build_release_tree(
     release_root.mkdir(parents=True, exist_ok=True)
     marker.write_text("deck-master release tree\n", encoding="utf-8")
 
-    for subdir in ("skills", "capabilities", "contracts", "reference-packs", "examples", "benchmarks", "bin", "scripts"):
+    for subdir in ("skills", "capabilities", "contracts", "reference-packs", "examples", "benchmarks", "docs", "bin", "scripts"):
         (release_root / subdir).mkdir(parents=True, exist_ok=True)
 
     for spec in _suite_specs(include_optional=True):
@@ -1385,21 +1409,41 @@ def build_release_tree(
         _copytree_replace(
             benchmarks_src,
             release_root / "benchmarks",
-            ignore=shutil.ignore_patterns("results", "__pycache__", "*.pyc", ".pytest_cache", ".mypy_cache"),
+            ignore=shutil.ignore_patterns(
+                "benchmark_runs",
+                "results",
+                "private_sources",
+                "workspaces",
+                "*.local.json",
+                "__pycache__",
+                "*.pyc",
+                ".pytest_cache",
+                ".mypy_cache",
+            ),
         )
 
     _copytree_replace(
         _repo_root() / "scripts",
         release_root / "scripts",
-        ignore=shutil.ignore_patterns("__pycache__", "*.pyc", ".pytest_cache", ".mypy_cache"),
+        ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "*.egg-info", ".pytest_cache", ".mypy_cache"),
     )
     for source_name, target_name in (
         ("README.md", "README.md"),
         ("LICENSE", "LICENSE"),
+        ("NOTICE", "NOTICE"),
+        ("CONTRIBUTING.md", "CONTRIBUTING.md"),
+        ("SECURITY.md", "SECURITY.md"),
+        ("CODE_OF_CONDUCT.md", "CODE_OF_CONDUCT.md"),
+        ("THIRD_PARTY_NOTICES.md", "THIRD_PARTY_NOTICES.md"),
+        ("CHANGELOG.md", "CHANGELOG.md"),
         ("docs/known-limitations.md", "KNOWN_LIMITATIONS.md"),
+        ("docs/quick-start.md", "docs/quick-start.md"),
+        ("docs/known-limitations.md", "docs/known-limitations.md"),
+        ("docs/releases/2026-07-06-release-checklist.md", "docs/releases/2026-07-06-release-checklist.md"),
     ):
         source_path = _repo_root() / source_name
         if source_path.exists():
+            (release_root / target_name).parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source_path, release_root / target_name)
 
     (release_root / PRODUCT_CAPABILITY_MANIFEST_NAME).write_text(
@@ -1425,7 +1469,7 @@ def build_release_tree(
     source = {
         "git_head": _git_head(),
     }
-    external_dependencies = external_dependency_statuses()
+    external_dependencies = _public_external_dependency_statuses(external_dependency_statuses())
     capability_lock = {
         "schema_version": "deck_capability_lock.v1",
         "suite_name": SUITE_NAME,
@@ -1463,7 +1507,7 @@ def build_release_tree(
         "suite_name": SUITE_NAME,
         "suite_version": suite_version,
         "built_at": _utc_now(),
-        "release_root": str(release_root),
+        "release_root": ".",
         "self_contained": True,
         "entrypoint": "bin/deck-master",
         "scripts": "scripts",

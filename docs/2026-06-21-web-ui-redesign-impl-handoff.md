@@ -2,7 +2,7 @@
 
 日期：2026-06-21
 分支：`codex/deck-master-webui-redesign`
-worktree：`/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-webui-redesign`
+worktree：`<deck-master-webui-redesign-worktree>`
 
 ## 1. 这轮做了什么
 

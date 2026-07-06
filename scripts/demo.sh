@@ -3,6 +3,12 @@ set -eu
 
 RUNS_DIR="${RUNS_DIR:-/tmp/deck-master-demo}"
 RUN_ID="${RUN_ID:-oss-demo}"
+FORCE="${DECK_MASTER_DEMO_FORCE:-1}"
+
+FORCE_ARGS=""
+if [ "$FORCE" != "0" ]; then
+  FORCE_ARGS="--force"
+fi
 
 python3 scripts/deck_master.py autoplan \
   --brief-file examples/briefs/retail_digital_transformation.txt \
@@ -11,7 +17,8 @@ python3 scripts/deck_master.py autoplan \
   --run-mode fixture \
   --dev-allow-unsetup \
   --runs-dir "$RUNS_DIR" \
-  --run-id "$RUN_ID"
+  --run-id "$RUN_ID" \
+  $FORCE_ARGS
 
 cat <<EOF
 

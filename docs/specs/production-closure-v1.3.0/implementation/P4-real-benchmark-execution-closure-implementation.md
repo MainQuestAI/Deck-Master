@@ -1,7 +1,7 @@
 # P4 细化实现稿 — Real Benchmark Execution Closure
 
-日期：2026-07-03  
-状态：Completed / Current Evidence Synced  
+日期：2026-07-03
+状态：Completed / Current Evidence Synced
 对应任务包：[`../tasks/P4-real-benchmark-execution-closure.md`](../tasks/P4-real-benchmark-execution-closure.md)
 
 ## 1. 目标
@@ -33,7 +33,7 @@ benchmarks/cases/<case_id>/benchmark_case.json
 
 1. `case_type=real_metadata`
 2. `raw_source_policy=local_path_only`
-3. raw source 只引用 `~/DeckMasterPrivateBenchmarks/<case_id>/...`
+3. raw source 只引用 `~/deck-master-local-benchmarks/<case_id>/...`
 
 ### 2.2 当前 aggregate 已进入 report 层
 
@@ -105,9 +105,9 @@ benchmarks/results/aggregate/benchmark_aggregate_report.json
 当前已按以下结构保留本地私有素材引用：
 
 ```text
-~/DeckMasterPrivateBenchmarks/real_retail_growth/
-~/DeckMasterPrivateBenchmarks/real_manufacturing_geo/
-~/DeckMasterPrivateBenchmarks/real_healthcare_enablement/
+~/deck-master-local-benchmarks/real_retail_growth/
+~/deck-master-local-benchmarks/real_manufacturing_geo/
+~/deck-master-local-benchmarks/real_healthcare_enablement/
 ```
 
 每个 case 的最低要求仍为：

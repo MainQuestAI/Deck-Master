@@ -2,7 +2,7 @@
 
 任务：A0 — Baseline & Version Freeze
 分支：`feat/skill-os-runtime-v1.1`
-工作区：`/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-skill-os-v1.1`
+工作区：`<deck-master-skill-os-worktree>`
 记录日期：2026-06-24
 
 ## 1. main / release / suite / contract 基线
