@@ -18,6 +18,7 @@ from typing import Any
 try:  # Supports both `python scripts/deck_master.py` and package imports in tests.
     from runtime.builder_backend import (
         backend_render_runtime_ready,
+        backend_render_runtime_status,
         backend_dependency_statuses,
         bind_backend_dependency,
         external_dependency_statuses,
@@ -28,6 +29,7 @@ try:  # Supports both `python scripts/deck_master.py` and package imports in tes
 except ModuleNotFoundError:  # pragma: no cover - exercised by package-import test path.
     from scripts.runtime.builder_backend import (
         backend_render_runtime_ready,
+        backend_render_runtime_status,
         backend_dependency_statuses,
         bind_backend_dependency,
         external_dependency_statuses,
@@ -1573,8 +1575,14 @@ def _suite_specs(include_optional: bool = False) -> list[dict[str, Any]]:
     ]
 
 
-def _backend_truth_status(render_runtime_ready: bool | None = None) -> dict[str, Any]:
-    statuses = backend_dependency_statuses(render_runtime_ready=render_runtime_ready)
+def _backend_truth_status(
+    render_runtime_ready: bool | None = None,
+    render_runtime_status: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    statuses = backend_dependency_statuses(
+        render_runtime_ready=render_runtime_ready,
+        render_runtime_status=render_runtime_status,
+    )
     for item in statuses:
         if item.get("name") == "ppt-master":
             return item
@@ -1646,15 +1654,34 @@ def _dependency_snapshot(items: list[dict[str, Any]]) -> dict[str, dict[str, Any
     return snapshot
 
 
-def _client_delivery_evidence(external_dependency_status: list[dict[str, Any]]) -> dict[str, Any]:
+def _render_runtime_status_for_ready(render_runtime_ready: bool) -> dict[str, Any]:
+    status = backend_render_runtime_status()
+    if bool(status.get("runtime_ready")) == bool(render_runtime_ready):
+        return status
+    ready = bool(render_runtime_ready)
+    return {
+        "runtime_ready": ready,
+        "runtime_ready_source": "external_backend_smoke" if ready else "contract_probe",
+        "runtime_ready_trusted_for_rc": ready,
+    }
+
+
+def _client_delivery_evidence(
+    external_dependency_status: list[dict[str, Any]],
+    *,
+    render_runtime_trusted_for_rc: bool = False,
+) -> dict[str, Any]:
     report_path = _rc_gate_report_path()
     evidence: dict[str, Any] = {
         "rc_gate_report": str(report_path),
         "rc_gate_passed": False,
         "external_dependency_closure_passed": False,
         "dependency_snapshot_matches": False,
+        "render_runtime_trusted_for_rc": bool(render_runtime_trusted_for_rc),
         "missing": [],
     }
+    if not render_runtime_trusted_for_rc:
+        evidence["missing"].append("trusted_render_runtime")
     report = _safe_read_rc_gate_report(report_path)
     if report is None:
         evidence["missing"].append("rc_gate_report")
@@ -1688,14 +1715,24 @@ def _client_delivery_evidence(external_dependency_status: list[dict[str, Any]]) 
 
 def backend_status() -> dict[str, Any]:
     render_runtime_ready = backend_render_runtime_ready()
-    status = _backend_truth_status(render_runtime_ready=render_runtime_ready)
+    render_runtime_status = _render_runtime_status_for_ready(render_runtime_ready)
+    render_runtime_ready = bool(render_runtime_status["runtime_ready"])
+    status = _backend_truth_status(
+        render_runtime_ready=render_runtime_ready,
+        render_runtime_status=render_runtime_status,
+    )
     return {
         "schema_version": "deck_master_suite_status.v1",
         "backend_dependency": "ppt-master",
         "binding_runtime_ready": bool(render_runtime_ready),
+        "runtime_ready_source": str(render_runtime_status["runtime_ready_source"]),
+        "runtime_ready_trusted_for_rc": bool(render_runtime_status["runtime_ready_trusted_for_rc"]),
         "production_bound_verified": bool(status.get("verified")),
         "binding_status": str(status.get("binding_status")),
-        "external_dependency_status": external_dependency_statuses(render_runtime_ready=render_runtime_ready),
+        "external_dependency_status": external_dependency_statuses(
+            render_runtime_ready=render_runtime_ready,
+            render_runtime_status=render_runtime_status,
+        ),
     }
 
 
@@ -1736,9 +1773,16 @@ def inspect_suite_status(
     target_readiness: dict[str, dict[str, Any]] = {}
 
     render_runtime_ready = backend_render_runtime_ready()
-    external_dependency_status = external_dependency_statuses(render_runtime_ready=render_runtime_ready)
+    render_runtime_status = _render_runtime_status_for_ready(render_runtime_ready)
+    render_runtime_ready = bool(render_runtime_status["runtime_ready"])
+    render_runtime_trusted_for_rc = bool(render_runtime_status["runtime_ready_trusted_for_rc"])
+    external_dependency_status = external_dependency_statuses(
+        render_runtime_ready=render_runtime_ready,
+        render_runtime_status=render_runtime_status,
+    )
     backend_truth = _dependency_by_name(external_dependency_status, "ppt-master") or _backend_truth_status(
-        render_runtime_ready=render_runtime_ready
+        render_runtime_ready=render_runtime_ready,
+        render_runtime_status=render_runtime_status,
     )
     ppt_master_bound_verified = (
         str(backend_truth.get("binding_status")) in {"bound_verified", "bound_verified_runtime_blocked"}
@@ -1825,12 +1869,16 @@ def inspect_suite_status(
     production_backend_ready = ppt_master_production_ready
     render_ready = bool(production_backend_ready and render_runtime_ready and not ppt_master_runtime_blocked)
     required_external_dependencies_ready = _required_external_dependencies_ready(external_dependency_status)
-    client_delivery_evidence = _client_delivery_evidence(external_dependency_status)
+    client_delivery_evidence = _client_delivery_evidence(
+        external_dependency_status,
+        render_runtime_trusted_for_rc=render_runtime_trusted_for_rc,
+    )
     client_delivery_ready = bool(
         full_suite_ready
         and production_backend_ready
         and render_ready
         and required_external_dependencies_ready
+        and render_runtime_trusted_for_rc
         and client_delivery_evidence.get("rc_gate_passed")
         and client_delivery_evidence.get("external_dependency_closure_passed")
         and client_delivery_evidence.get("dependency_snapshot_matches")
@@ -1928,6 +1976,9 @@ def inspect_suite_status(
         "status": status,
         "full_suite_ready": full_suite_ready,
         "production_backend_ready": production_backend_ready,
+        "render_runtime_ready": render_runtime_ready,
+        "runtime_ready_source": str(render_runtime_status["runtime_ready_source"]),
+        "runtime_ready_trusted_for_rc": render_runtime_trusted_for_rc,
         "client_delivery_ready": client_delivery_ready,
         "client_delivery_evidence": client_delivery_evidence,
         "external_dependency_status": external_dependency_status,

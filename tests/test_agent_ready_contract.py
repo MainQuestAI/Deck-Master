@@ -94,10 +94,27 @@ class AgentReadyContractTests(unittest.TestCase):
 
         self.assertIn("v0.9.14-preview.1", combined)
         self.assertIn("Technical Preview (agent-operable)", combined)
+        self.assertIn("0.9.14a1", combined)
+        self.assertIn("Production readiness: not claimed", combined)
         self.assertNotIn("v1.0-agent-ready", combined)
         self.assertNotIn("deck-master-agent-ready-release", combined)
         self.assertIn("python3 scripts/deck_master.py release-build --output /tmp/deck-master-0.9.14-preview-release --force", combined)
         self.assertIn('python -m pip install -e ".[dev]"', combined)
+
+    def test_ci_installs_playwright_browser_binaries(self) -> None:
+        workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+
+        self.assertIn("python -m playwright install --with-deps chromium", workflow)
+        self.assertIn("Run unit tests", workflow)
+
+    def test_security_docs_describe_current_local_write_boundary(self) -> None:
+        security = (ROOT / "SECURITY.md").read_text(encoding="utf-8")
+        quick_start = (ROOT / "docs" / "quick-start.md").read_text(encoding="utf-8")
+        combined = security + "\n" + quick_start
+
+        self.assertIn("local write token plus same-origin guard", combined)
+        self.assertIn("--allow-remote-preview", combined)
+        self.assertIn("not a network authentication boundary", combined)
 
     def test_task_index_and_recovery_playbook_cover_required_workflows(self) -> None:
         task_index = (ROOT / "docs" / "agent-task-index.md").read_text(encoding="utf-8")

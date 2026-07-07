@@ -5,6 +5,7 @@ import os
 from datetime import datetime, timezone
 import shlex
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -45,6 +46,8 @@ GENERATION_BRIDGE_CAPABILITIES = (
     "generation_result_export",
     "result_import_contract",
 )
+RUNTIME_READY_TRUE_VALUES = {"1", "true", "on", "yes", "enabled"}
+RUNTIME_READY_FALSE_VALUES = {"0", "false", "off", "no", "disabled"}
 
 
 def _utc_now() -> str:
@@ -55,13 +58,41 @@ def production_requires_builder_backend(run_mode: str | None) -> bool:
     return str(run_mode or "production").strip().lower() in PRODUCTION_RUN_MODES
 
 
-def backend_render_runtime_ready() -> bool:
+def backend_render_runtime_status() -> dict[str, Any]:
     flag = os.environ.get(RUNTIME_READY_ENV, "").strip().lower()
-    if flag in {"0", "false", "off", "no", "disabled"}:
-        return False
-    if flag in {"1", "true", "on", "yes", "enabled"}:
-        return True
-    return render_handoff_contract_ready()
+    if flag in RUNTIME_READY_FALSE_VALUES:
+        return {
+            "runtime_ready": False,
+            "runtime_ready_source": "env_override",
+            "runtime_ready_trusted_for_rc": False,
+        }
+    if flag in RUNTIME_READY_TRUE_VALUES:
+        return {
+            "runtime_ready": True,
+            "runtime_ready_source": "env_override",
+            "runtime_ready_trusted_for_rc": False,
+        }
+    ready = bool(render_handoff_contract_ready())
+    return {
+        "runtime_ready": ready,
+        "runtime_ready_source": "contract_probe",
+        "runtime_ready_trusted_for_rc": ready,
+    }
+
+
+def backend_render_runtime_ready() -> bool:
+    return bool(backend_render_runtime_status()["runtime_ready"])
+
+
+def _runtime_status_from_ready(render_runtime_ready: bool | None = None) -> dict[str, Any]:
+    if render_runtime_ready is None:
+        return backend_render_runtime_status()
+    ready = bool(render_runtime_ready)
+    return {
+        "runtime_ready": ready,
+        "runtime_ready_source": "external_backend_smoke" if ready else "contract_probe",
+        "runtime_ready_trusted_for_rc": ready,
+    }
 
 
 def backend_bindings_path() -> Path:
@@ -324,7 +355,13 @@ def unbind_backend_dependency(name: str = BACKEND_NAME) -> dict[str, Any]:
     return {"status": "unbound", "name": name}
 
 
-def _binding_status_for_name(name: str, *, render_runtime_ready: bool) -> dict[str, Any]:
+def _binding_status_for_name(
+    name: str,
+    *,
+    render_runtime_ready: bool,
+    render_runtime_status: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    runtime_status = render_runtime_status or _runtime_status_from_ready(render_runtime_ready)
     if name != BACKEND_NAME:
         return {
             "name": name,
@@ -341,6 +378,9 @@ def _binding_status_for_name(name: str, *, render_runtime_ready: bool) -> dict[s
             "verified": False,
             "verified_at": "",
             "source": "",
+            "runtime_ready": bool(runtime_status["runtime_ready"]),
+            "runtime_ready_source": str(runtime_status["runtime_ready_source"]),
+            "runtime_ready_trusted_for_rc": bool(runtime_status["runtime_ready_trusted_for_rc"]),
             "validated_capabilities": [],
             "summary": "Dependency is not supported by this build.",
         }
@@ -362,6 +402,9 @@ def _binding_status_for_name(name: str, *, render_runtime_ready: bool) -> dict[s
             "verified": False,
             "verified_at": "",
             "source": "",
+            "runtime_ready": bool(runtime_status["runtime_ready"]),
+            "runtime_ready_source": str(runtime_status["runtime_ready_source"]),
+            "runtime_ready_trusted_for_rc": bool(runtime_status["runtime_ready_trusted_for_rc"]),
             "validated_capabilities": [],
             "summary": "No formal backend binding found for PPT Master.",
         }
@@ -404,6 +447,9 @@ def _binding_status_for_name(name: str, *, render_runtime_ready: bool) -> dict[s
         "verified_at": str(binding.get("verified_at") or ""),
         "validated_capabilities": list(capabilities or []),
         "source": str(binding.get("git_remote") or binding.get("repo_label") or binding.get("repo_path") or ""),
+        "runtime_ready": bool(runtime_status["runtime_ready"]),
+        "runtime_ready_source": str(runtime_status["runtime_ready_source"]),
+        "runtime_ready_trusted_for_rc": bool(runtime_status["runtime_ready_trusted_for_rc"]),
         "summary": summary,
     }
 
@@ -469,14 +515,37 @@ def _generation_bridge_status() -> dict[str, Any]:
     }
 
 
-def backend_dependency_statuses(*, render_runtime_ready: bool | None = None) -> list[dict[str, Any]]:
+def generation_bridge_status() -> dict[str, Any]:
+    return _generation_bridge_status()
+
+
+def backend_dependency_statuses(
+    *,
+    render_runtime_ready: bool | None = None,
+    render_runtime_status: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
+    runtime_status = (
+        render_runtime_status
+        or (backend_render_runtime_status() if render_runtime_ready is None else _runtime_status_from_ready(render_runtime_ready))
+    )
     return [
-        _binding_status_for_name(BACKEND_NAME, render_runtime_ready=bool(backend_render_runtime_ready() if render_runtime_ready is None else render_runtime_ready)),
+        _binding_status_for_name(
+            BACKEND_NAME,
+            render_runtime_ready=bool(runtime_status["runtime_ready"]),
+            render_runtime_status=runtime_status,
+        ),
     ]
 
 
-def external_dependency_statuses(*, render_runtime_ready: bool | None = None) -> list[dict[str, Any]]:
-    return backend_dependency_statuses(render_runtime_ready=render_runtime_ready)
+def external_dependency_statuses(
+    *,
+    render_runtime_ready: bool | None = None,
+    render_runtime_status: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
+    return backend_dependency_statuses(
+        render_runtime_ready=render_runtime_ready,
+        render_runtime_status=render_runtime_status,
+    )
 
 
 def _candidate_paths() -> list[Path]:
@@ -602,7 +671,7 @@ def _run_smoke_check(root: Path, smoke_command: str | None) -> tuple[dict[str, A
     with tempfile.TemporaryDirectory(prefix="deck_master_backend_smoke_") as temp_dir:
         try:
             completed = subprocess.run(
-                ["python3", smoke_command, "--output-dir", temp_dir],
+                [sys.executable, smoke_command, "--output-dir", temp_dir],
                 cwd=root,
                 capture_output=True,
                 text=True,
@@ -762,10 +831,12 @@ def inspect_builder_backend_package(path: str | Path) -> dict[str, Any]:
 
 
 def builder_backend_status() -> dict[str, Any]:
-    render_runtime_ready = backend_render_runtime_ready()
+    runtime_status = backend_render_runtime_status()
+    render_runtime_ready = bool(runtime_status["runtime_ready"])
     dependency_status = _binding_status_for_name(
         BACKEND_NAME,
         render_runtime_ready=render_runtime_ready,
+        render_runtime_status=runtime_status,
     )
     candidates = [inspect_builder_backend_package(path) for path in _candidate_paths()]
     bound = _find_backend_binding(BACKEND_NAME)
@@ -807,6 +878,8 @@ def builder_backend_status() -> dict[str, Any]:
         "backend_type": backend_type,
         "binding_verified": binding_verified,
         "runtime_ready": runtime_ready,
+        "runtime_ready_source": str(runtime_status["runtime_ready_source"]),
+        "runtime_ready_trusted_for_rc": bool(runtime_status["runtime_ready_trusted_for_rc"]),
         "render_capable": render_capable,
         "production_capable": render_capable,
         "dependency_status": dependency_status,

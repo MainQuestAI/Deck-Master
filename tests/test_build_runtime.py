@@ -15,7 +15,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from deck_master import command_render  # noqa: E402
 from runtime.build import BuildError, build_source_fingerprint, build_status, prepare_build, run_build  # noqa: E402
-from runtime.builder_backend import backend_render_runtime_ready  # noqa: E402
+from runtime.builder_backend import backend_render_runtime_ready, backend_render_runtime_status  # noqa: E402
 from runtime.run_state import RunStateError, create_run, read_json, write_json  # noqa: E402
 from validators.companion_tools import validate_render_result  # noqa: E402
 
@@ -270,10 +270,27 @@ class BuildRuntimeTests(unittest.TestCase):
         self.assertIn("render runtime is not wired", str(ctx.exception))
 
     def test_backend_render_runtime_ready_defaults_to_handoff_contract(self) -> None:
-        with mock.patch.dict("os.environ", {}, clear=True):
+        with mock.patch.dict("os.environ", {}, clear=True), mock.patch(
+            "runtime.builder_backend.render_handoff_contract_ready",
+            return_value=True,
+        ):
             self.assertTrue(backend_render_runtime_ready())
+            status = backend_render_runtime_status()
+            self.assertEqual("contract_probe", status["runtime_ready_source"])
+            self.assertTrue(status["runtime_ready_trusted_for_rc"])
         with mock.patch.dict("os.environ", {"DECK_MASTER_PPT_MASTER_RUNTIME_WIRED": "0"}):
             self.assertFalse(backend_render_runtime_ready())
+            status = backend_render_runtime_status()
+            self.assertEqual("env_override", status["runtime_ready_source"])
+            self.assertFalse(status["runtime_ready_trusted_for_rc"])
+
+    def test_backend_render_runtime_env_true_is_not_trusted_for_rc(self) -> None:
+        with mock.patch.dict("os.environ", {"DECK_MASTER_PPT_MASTER_RUNTIME_WIRED": "1"}):
+            status = backend_render_runtime_status()
+
+        self.assertTrue(status["runtime_ready"])
+        self.assertEqual("env_override", status["runtime_ready_source"])
+        self.assertFalse(status["runtime_ready_trusted_for_rc"])
 
     def test_prepare_build_records_missing_source_warning(self) -> None:
         self._write_preview(1, missing_source=True)

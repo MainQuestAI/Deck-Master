@@ -70,6 +70,28 @@ STATIC_DIR = Path(__file__).parent / "static"
 WRITE_TOKEN_ENV = "DECK_MASTER_REVIEW_WRITE_TOKEN"
 WRITE_TOKEN_HEADER = "X-Deck-Master-Write-Token"
 LOOPBACK_HOSTS = {"127.0.0.1", "localhost", "::1"}
+REMOTE_PREVIEW_WARNING = (
+    "WARNING: Review Desk write token is a local preview guard, not a network "
+    "authentication boundary. Anyone who can load the page can read the token."
+)
+
+
+def is_loopback_bind_host(host: str) -> bool:
+    text = str(host or "").strip().lower()
+    if text.startswith("[") and text.endswith("]"):
+        text = text[1:-1]
+    return text in LOOPBACK_HOSTS
+
+
+def validate_preview_bind_host(host: str, *, allow_remote_preview: bool = False) -> str:
+    if is_loopback_bind_host(host):
+        return ""
+    if allow_remote_preview:
+        return REMOTE_PREVIEW_WARNING
+    raise ValueError(
+        "Refusing to bind Review Desk to a non-loopback host. Use "
+        "--allow-remote-preview only for trusted local-network demos."
+    )
 
 
 def _load_narrative_data(run_dir: Path) -> dict:
@@ -1621,7 +1643,17 @@ def main() -> None:
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=5050)
     parser.add_argument("--write-token", default=None, help=f"Review Desk write token. Defaults to {WRITE_TOKEN_ENV} or a generated token.")
+    parser.add_argument(
+        "--allow-remote-preview",
+        action="store_true",
+        help="Allow binding Review Desk to a non-loopback host for trusted local-network demos.",
+    )
     args = parser.parse_args()
+
+    try:
+        remote_warning = validate_preview_bind_host(args.host, allow_remote_preview=args.allow_remote_preview)
+    except ValueError as exc:
+        parser.error(str(exc))
 
     run_dir = Path(args.run_dir).expanduser().resolve() if args.run_dir else None
     explicit_runs_dir = args.runs_dir is not None
@@ -1645,6 +1677,8 @@ def main() -> None:
     if run_dir:
         print(f"Run directory: {run_dir}")
     print(f"Write protection: enabled ({WRITE_TOKEN_HEADER})")
+    if remote_warning:
+        print(remote_warning, file=sys.stderr)
     server.serve_forever()
 
 

@@ -2,6 +2,12 @@
 
 Deck Master is currently v0.9.14-preview.1 / Technical Preview (agent-operable).
 
+Version mapping:
+
+- GitHub release label: `v0.9.14-preview.1`
+- Python package version: `0.9.14a1`
+- Production readiness: not claimed
+
 ## M1 Technical Preview
 
 M1 guarantees a local fixture demo and Review Desk preview path. It does not guarantee a full production deck build unless production companion backends are configured and verified.
@@ -11,7 +17,7 @@ Current M1 boundaries:
 1. Fixture demo is the default first-run path.
 2. Production backend status must be checked through `setup-status`, `suite-status`, `agent-doctor`, or `backend status`.
 3. If the `ppt-master` production backend is not configured and verified, production export commands should block instead of reporting ready. `ppt-deck-pro-max` is a page-production Skill in the suite, not a separately bound production backend.
-4. Review Desk write operations use a local write token plus same-origin guard.
+4. Review Desk write operations use a local write token plus same-origin guard. Non-loopback preview hosts are disabled by default and require explicit `--allow-remote-preview`.
 5. Browser smoke depends on local Playwright/browser availability.
 6. The public demo uses synthetic retail transformation content.
 

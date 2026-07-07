@@ -21,7 +21,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 import server as preview_server
 import workspace_api
-from server import PreviewHandler, _load_narrative_data, build_handler  # noqa: E402
+from server import PreviewHandler, _load_narrative_data, build_handler, validate_preview_bind_host  # noqa: E402
 from runtime.run_state import create_run, write_json  # noqa: E402
 from runtime.setup_status import run_setup  # noqa: E402
 from runtime.run_state import create_run, write_json  # noqa: E402
@@ -226,6 +226,22 @@ class ServerTests(unittest.TestCase):
 
         self.assertEqual(200, status)
         self.assertEqual("ok", payload["status"])
+
+    def test_preview_host_policy_allows_loopback(self) -> None:
+        self.assertEqual("", validate_preview_bind_host("127.0.0.1"))
+        self.assertEqual("", validate_preview_bind_host("localhost"))
+        self.assertEqual("", validate_preview_bind_host("::1"))
+
+    def test_preview_host_policy_rejects_remote_without_explicit_flag(self) -> None:
+        with self.assertRaises(ValueError) as ctx:
+            validate_preview_bind_host("0.0.0.0")
+
+        self.assertIn("--allow-remote-preview", str(ctx.exception))
+
+    def test_preview_host_policy_allows_remote_with_warning(self) -> None:
+        warning = validate_preview_bind_host("0.0.0.0", allow_remote_preview=True)
+
+        self.assertIn("not a network authentication boundary", warning)
 
     def test_deck_api_returns_pages(self) -> None:
         status, data = self.handler.request("GET", "/api/deck")

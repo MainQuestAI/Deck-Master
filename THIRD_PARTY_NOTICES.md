@@ -21,3 +21,6 @@ The current Python runtime dependency list is intentionally small:
 
 Before a stable release, regenerate this inventory from the lockfile or packaging metadata and verify license compatibility.
 
+For v0.9.14-preview.1, this file has been checked against the dependencies
+declared in `pyproject.toml`. This is a Technical Preview dependency inventory,
+not a final stable-release legal audit.

@@ -69,6 +69,8 @@ python3 scripts/preview/server.py /tmp/deck-master-demo/oss-demo
 
 Open the local URL printed by the server. Review Desk should show the page queue and the current run state. Local write operations use a per-server write token and same-origin guard.
 
+The preview server binds to `127.0.0.1` by default. Non-loopback hosts require `--allow-remote-preview` and should only be used on trusted local networks because the write token is visible to browsers that can load the page.
+
 ## 5. Production Boundary
 
 The Technical Preview first-run path is fixture/demo. Production backend commands require configured and verified companion capabilities. The production external backend is `ppt-master`; `ppt-deck-pro-max` is a suite Skill for page production. If `ppt-master` is missing, Deck Master should report `unbound` or `not_configured` and provide a fixture/demo path.

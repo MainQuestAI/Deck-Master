@@ -1,7 +1,14 @@
 # 2026-07-06 Open Source Readiness Release Checklist
 
-Status: M1 validated locally
+Status: M1 validated locally; PR release gate requires GitHub CI green
 Target: M1 public Technical Preview
+
+Version mapping:
+
+- GitHub release label: `v0.9.14-preview.1`
+- Python package version: `0.9.14a1`
+- Release stage: Technical Preview / agent-operable
+- Production readiness: not claimed
 
 ## Decisions
 
@@ -26,8 +33,10 @@ Target: M1 public Technical Preview
 - [x] `preview-gate` passes without a configured production backend.
 - [x] Unconfigured production backend does not report `bound_verified`.
 - [x] Review Desk M1 design scan passes.
-- [x] Git does not track `.gstack/qa-reports`.
+- [x] Local QA report cache is not tracked.
 - [x] Release tree includes README, LICENSE, and Known Limitations.
+- [ ] GitHub Actions complete unittest, schema validation, fixture smoke, preview-gate, and release-build smoke.
+- [ ] Release tree public hygiene scan passes.
 
 ## M2 RC Conditions
 
@@ -35,5 +44,6 @@ Target: M1 public Technical Preview
 - [ ] Production external dependency handling is closed.
 - [ ] `rc-gate --skip-browser-smoke` passes.
 - [ ] `rc-gate --require-browser-smoke` passes.
-- [ ] Localhost write operations have token or origin checks.
+- [x] Localhost write operations have token and origin checks.
+- [ ] Production deployment hardening beyond the local Review Desk guard is closed.
 - [ ] GitHub issue/PR templates, CODEOWNERS, ROADMAP, and dependabot are present.

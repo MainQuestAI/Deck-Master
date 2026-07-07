@@ -6,6 +6,13 @@ Deck Master is a local-first Solution Deck Run OS. It turns a brief, source cont
 **License:** Apache-2.0.
 **Support:** best-effort during preview.
 
+Version mapping for this preview:
+
+- GitHub release label: `v0.9.14-preview.1`
+- Python package version: `0.9.14a1`
+- Release stage: Technical Preview / agent-operable
+- Production readiness: not claimed
+
 ## Who It Is For
 
 Deck Master is built for solution architects and proposal builders who need a repeatable way to decide which pages should be generated, which pages should be reused, and which pages are ready for review or delivery.
@@ -45,6 +52,8 @@ The demo uses fixture mode and synthetic retail transformation content. It is th
 ## Review Desk
 
 Review Desk is the local browser interface for inspecting the generated page queue, checking page status, and approving work before export. M1 focuses on a public fixture demo and Review Desk preview. M2 will close the full production backend and release-candidate gates.
+
+Review Desk write operations use a per-server local write token and same-origin guard. The server binds to `127.0.0.1` by default; non-loopback hosts require `--allow-remote-preview` and are only for trusted local-network demos. The write token is not a network authentication boundary because any browser that can load the page can read it.
 
 ## Capability Boundaries
 

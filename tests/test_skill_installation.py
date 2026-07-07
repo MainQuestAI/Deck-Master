@@ -43,6 +43,7 @@ from scripts.skills.installer import (
 from scripts.skills.manifest import load_registry
 from scripts.runtime.builder_backend import inspect_builder_backend_package
 from scripts.runtime.builder_backend import builder_backend_status
+import scripts.runtime.builder_backend as builder_backend
 try:
     from runtime.setup_status import setup_status as runtime_setup_status
 except ModuleNotFoundError:  # pragma: no cover - package-import fallback.
@@ -517,6 +518,21 @@ class SkillInstallationTest(unittest.TestCase):
         self.assertFalse(result["production_capable"])
         self.assertIn("smoke command failed", " ".join(result["reasons"]))
 
+    def test_backend_smoke_uses_current_python_interpreter(self) -> None:
+        completed = subprocess.CompletedProcess(
+            args=[],
+            returncode=1,
+            stdout="",
+            stderr="failed",
+        )
+
+        with mock.patch("scripts.runtime.builder_backend.subprocess.run", return_value=completed) as run:
+            _payload, errors = builder_backend._run_smoke_check(Path(self._tmp), "scripts/backend_smoke.py")
+
+        self.assertTrue(errors)
+        command = run.call_args.args[0]
+        self.assertEqual(sys.executable, command[0])
+
     def test_inspect_skill_link_prefers_env_backend_override_for_ppt_master(self) -> None:
         override_root = self._write_full_ppt_master_skill(manifest=True, include_workflows=True)
         with mock.patch.dict("os.environ", {"DECK_MASTER_PPT_MASTER_BACKEND": str(override_root)}):
@@ -742,6 +758,79 @@ class SkillInstallationTest(unittest.TestCase):
         self.assertEqual("ready", result["task_readiness"]["client_delivery"])
         self.assertTrue(result["client_delivery_ready"])
         self.assertTrue(result["client_delivery_evidence"]["dependency_snapshot_matches"])
+
+    def test_suite_status_blocks_client_delivery_for_env_runtime_override(self) -> None:
+        def fake_inspect_skill_link(target: str, agent_skill_dir: str | None = None, source_skill_dir: str | None = None, *, skill_name: str = "deck-master", required: bool = True) -> dict[str, Any]:
+            return {
+                "status": "ready",
+                "skill": skill_name,
+                "required": required,
+                "source_type": "mocked",
+                "production_capable": skill_name == "ppt-master",
+            }
+
+        verified_backend = {
+            "name": "ppt-master",
+            "dependency_kind": "external_repo",
+            "binding_status": "bound_verified",
+            "repo_label": "unit/repo",
+            "repo_path": "/tmp/repo",
+            "skill_path": "/tmp/repo/skills/ppt-master",
+            "git_sha": "backend-sha",
+            "git_branch": "main",
+            "worktree_dirty": False,
+            "verified": True,
+            "verified_at": "2026-01-01T00:00:00Z",
+            "validated_capabilities": ["render", "smoke", "writeback"],
+            "summary": "PPT Master 已绑定且已完成验证。",
+        }
+        report_path = Path(self._tmp) / "rc_gate_report_env_override.json"
+        report_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "deck_rc_gate_report.v1",
+                    "status": "pass",
+                    "checks": [
+                        {
+                            "check_id": "external_dependency_closure",
+                            "status": "pass",
+                            "details": {
+                                "dependencies": {
+                                    "ppt-master": {
+                                        "binding_status": "bound_verified",
+                                        "git_sha": "backend-sha",
+                                        "verified": True,
+                                    },
+                                }
+                            },
+                        }
+                    ],
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        with mock.patch(
+            "scripts.skills.installer.external_dependency_statuses",
+            return_value=[verified_backend],
+        ), mock.patch(
+            "scripts.skills.installer.backend_dependency_statuses",
+            return_value=[verified_backend],
+        ), mock.patch("scripts.skills.installer.inspect_skill_link", side_effect=fake_inspect_skill_link), mock.patch.dict(
+            os.environ,
+            {
+                "DECK_MASTER_RC_GATE_REPORT": str(report_path),
+                "DECK_MASTER_PPT_MASTER_RUNTIME_WIRED": "1",
+            },
+            clear=False,
+        ):
+            result = inspect_suite_status(targets=["codex"], agent_skill_dir=str(self.agent_dir))
+
+        self.assertEqual("env_override", result["runtime_ready_source"])
+        self.assertFalse(result["runtime_ready_trusted_for_rc"])
+        self.assertFalse(result["client_delivery_ready"])
+        self.assertEqual("blocked", result["task_readiness"]["client_delivery"])
+        self.assertIn("trusted_render_runtime", result["client_delivery_evidence"]["missing"])
 
     def test_suite_status_requires_binding_for_production_backend_truth(self) -> None:
         def fake_inspect_skill_link(target: str, agent_skill_dir: str | None = None, source_skill_dir: str | None = None, *, skill_name: str = "deck-master", required: bool = True) -> dict[str, Any]:
@@ -1139,6 +1228,41 @@ class SkillInstallationTest(unittest.TestCase):
         self.assertEqual("", locked["source"])
         self.assertEqual("abc123", locked["git_sha"])
         self.assertTrue(locked["verified"])
+
+    def test_release_tree_public_hygiene_scan_has_no_private_markers(self) -> None:
+        release_root = Path(self._tmp) / "release-hygiene"
+        build_release_tree(release_root)
+
+        risky_path_markers = {".gstack", "private_sources", ".local.json"}
+        risky_paths = [
+            str(path.relative_to(release_root))
+            for path in release_root.rglob("*")
+            if any(marker in str(path.relative_to(release_root)) for marker in risky_path_markers)
+        ]
+        self.assertEqual([], risky_paths)
+
+        public_files = [
+            "README.md",
+            "AGENTS.md",
+            "SECURITY.md",
+            "THIRD_PARTY_NOTICES.md",
+            "product-capability-manifest.json",
+            "companion-manifest.json",
+            "deck_capability_lock.json",
+            "release-manifest.json",
+            "docs/quick-start.md",
+            "docs/known-limitations.md",
+            "docs/releases/2026-07-06-release-checklist.md",
+        ]
+        risky_text_markers = ["/Users/", "/private/", "dingcheng", ".gstack", "private_sources", ".local.json"]
+        findings: list[str] = []
+        for relative in public_files:
+            text = (release_root / relative).read_text(encoding="utf-8")
+            for marker in risky_text_markers:
+                if marker in text:
+                    findings.append(f"{relative}: {marker}")
+
+        self.assertEqual([], findings)
 
     def test_verify_release_tree_rejects_tampered_checksum(self) -> None:
         release_root = Path(self._tmp) / "release"

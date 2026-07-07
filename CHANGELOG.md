@@ -4,6 +4,9 @@
 
 Status: Technical Preview (agent-operable).
 
+Version mapping: GitHub release label `v0.9.14-preview.1` maps to Python
+package version `0.9.14a1`. This preview does not claim production readiness.
+
 This preview focuses on open-source readiness:
 
 1. Apache-2.0 project license.
