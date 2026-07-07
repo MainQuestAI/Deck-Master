@@ -1978,16 +1978,30 @@ def command_suite_build_release_tree(args: argparse.Namespace) -> dict[str, Any]
     )
 
 
+def _release_smoke_next_agent_action(payload: dict[str, Any], release_root_arg: str | None) -> str:
+    if payload.get("status") == "passed":
+        return "Release smoke passed; release tree is ready for publication checks."
+    release_root = str(payload.get("release_root") or release_root_arg or "~/.deck-master/current")
+    target = "/tmp/deck-master-0.9.14-preview-release"
+    prefix = (
+        f"Default active release tree is stale or incomplete at {release_root}."
+        if not release_root_arg
+        else f"Release smoke failed for {release_root}."
+    )
+    return (
+        f"{prefix} Build and verify a fresh tree: "
+        f"python3 scripts/deck_master.py release-build --output {target} --force && "
+        f"python3 scripts/deck_master.py release-smoke --release-root {target}"
+    )
+
+
 def command_release_smoke(args: argparse.Namespace) -> dict[str, Any]:
+    release_root_arg = getattr(args, "release_root", None)
     payload = verify_release_tree(
-        getattr(args, "release_root", None),
+        release_root_arg,
         run_smoke=not bool(getattr(args, "no_smoke", False)),
     )
-    next_agent_action = (
-        "Release smoke passed; release tree is ready for publication checks."
-        if payload.get("status") == "passed"
-        else "Rebuild the release tree once, then rerun release-smoke and inspect errors."
-    )
+    next_agent_action = _release_smoke_next_agent_action(payload, release_root_arg)
     release_root = Path(str(payload.get("release_root") or getattr(args, "release_root", "") or "")).expanduser()
     return _add_agent_output_contract(
         payload,

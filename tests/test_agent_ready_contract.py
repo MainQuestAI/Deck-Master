@@ -78,6 +78,26 @@ class AgentReadyContractTests(unittest.TestCase):
         self.assertIn("Forbidden Actions", agents)
         self.assertIn("Task Routing", agents)
         self.assertIn("agent-doctor --mode preview", agents)
+        self.assertIn("python3 scripts/deck_master.py", agents)
+        self.assertIn('python -m pip install -e ".[dev]"', agents)
+
+    def test_open_source_docs_use_preview_version_and_source_checkout_cli(self) -> None:
+        docs = {
+            "README.md": (ROOT / "README.md").read_text(encoding="utf-8"),
+            "CHANGELOG.md": (ROOT / "CHANGELOG.md").read_text(encoding="utf-8"),
+            "AGENTS.md": (ROOT / "AGENTS.md").read_text(encoding="utf-8"),
+            "docs/agent-task-index.md": (ROOT / "docs" / "agent-task-index.md").read_text(encoding="utf-8"),
+            "docs/agent-recovery-playbook.md": (ROOT / "docs" / "agent-recovery-playbook.md").read_text(encoding="utf-8"),
+            "docs/known-limitations.md": (ROOT / "docs" / "known-limitations.md").read_text(encoding="utf-8"),
+        }
+        combined = "\n".join(docs.values())
+
+        self.assertIn("v0.9.14-preview.1", combined)
+        self.assertIn("Technical Preview (agent-operable)", combined)
+        self.assertNotIn("v1.0-agent-ready", combined)
+        self.assertNotIn("deck-master-agent-ready-release", combined)
+        self.assertIn("python3 scripts/deck_master.py release-build --output /tmp/deck-master-0.9.14-preview-release --force", combined)
+        self.assertIn('python -m pip install -e ".[dev]"', combined)
 
     def test_task_index_and_recovery_playbook_cover_required_workflows(self) -> None:
         task_index = (ROOT / "docs" / "agent-task-index.md").read_text(encoding="utf-8")
@@ -94,6 +114,7 @@ class AgentReadyContractTests(unittest.TestCase):
             self.assertIn(required, task_index)
         for command in ["next-step", "suite-status", "preview-gate", "final-readiness", "release-smoke"]:
             self.assertIn(command, task_index)
+        self.assertIn('python -m pip install -e ".[dev]"', task_index)
         for required in [
             "Backend Missing",
             "Preview Missing",
@@ -210,6 +231,15 @@ class AgentReadyContractTests(unittest.TestCase):
         smoke_payload = json.loads(smoke.stdout)
         self.assertEqual("passed", smoke_payload["status"])
         self.assertTrue(smoke_payload["next_agent_action"])
+
+    def test_default_release_smoke_failure_points_to_fresh_build(self) -> None:
+        smoke = self.run_cli("release-smoke", "--no-smoke", "--output", "json")
+        payload = json.loads(smoke.stdout)
+
+        self.assertEqual("failed", payload["status"])
+        self.assertIn("Default active release tree", payload["next_agent_action"])
+        self.assertIn("python3 scripts/deck_master.py release-build --output /tmp/deck-master-0.9.14-preview-release --force", payload["next_agent_action"])
+        self.assertIn("python3 scripts/deck_master.py release-smoke --release-root /tmp/deck-master-0.9.14-preview-release", payload["next_agent_action"])
 
 
 if __name__ == "__main__":

@@ -13,7 +13,7 @@ unexpected runtime stage. Do not repair by editing random artifacts.
 - Verify with:
 
 ```bash
-deck-master agent-doctor --mode production --output json
+python3 scripts/deck_master.py agent-doctor --mode production --output json
 ```
 
 ## Preview Missing
@@ -23,8 +23,8 @@ deck-master agent-doctor --mode production --output json
 - Auto action: rebuild preview only when upstream artifacts exist.
 
 ```bash
-deck-master build-preview --run-dir <run_dir>
-deck-master preview-gate --run-dir <run_dir> --expect-unconfigured-backend-ok
+python3 scripts/deck_master.py build-preview --run-dir <run_dir>
+python3 scripts/deck_master.py preview-gate --run-dir <run_dir> --expect-unconfigured-backend-ok
 ```
 
 - Stop when: request, narrative plan, page tasks, or sourcing plan is missing.
@@ -44,8 +44,8 @@ deck-master preview-gate --run-dir <run_dir> --expect-unconfigured-backend-ok
 - Auto action: recreate or redispatch the generation session.
 
 ```bash
-deck-master generation-session status --run-dir <run_dir>
-deck-master generation-session dispatch --run-dir <run_dir>
+python3 scripts/deck_master.py generation-session status --run-dir <run_dir>
+python3 scripts/deck_master.py generation-session dispatch --run-dir <run_dir>
 ```
 
 - Stop when: external Agent execution is required.
@@ -59,7 +59,7 @@ deck-master generation-session dispatch --run-dir <run_dir>
 - Verify with:
 
 ```bash
-deck-master final-readiness --run-dir <run_dir> --no-write
+python3 scripts/deck_master.py final-readiness --run-dir <run_dir> --no-write
 ```
 
 ## Final Readiness Blocked
@@ -73,7 +73,7 @@ deck-master final-readiness --run-dir <run_dir> --no-write
 - Verify with:
 
 ```bash
-deck-master final-readiness --run-dir <run_dir> --no-write
+python3 scripts/deck_master.py final-readiness --run-dir <run_dir> --no-write
 ```
 
 ## Release Smoke Failed
@@ -82,8 +82,8 @@ deck-master final-readiness --run-dir <run_dir> --no-write
 - Auto action: rebuild release tree once.
 
 ```bash
-deck-master release-build --output /tmp/deck-master-agent-ready-release --force
-deck-master release-smoke --release-root /tmp/deck-master-agent-ready-release
+python3 scripts/deck_master.py release-build --output /tmp/deck-master-0.9.14-preview-release --force
+python3 scripts/deck_master.py release-smoke --release-root /tmp/deck-master-0.9.14-preview-release
 ```
 
 - Stop when: checksum, missing contract, or missing capability errors remain.

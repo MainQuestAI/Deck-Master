@@ -2,7 +2,7 @@
 
 Deck Master is a local-first Solution Deck Run OS. It turns a brief, source context, page plan, generation handoff, Review Desk decisions, build artifacts, and final readiness into one traceable workflow.
 
-**Status:** public Technical Preview.
+**Status:** v0.9.14-preview.1 / Technical Preview (agent-operable).
 **License:** Apache-2.0.
 **Support:** best-effort during preview.
 
@@ -12,21 +12,35 @@ Deck Master is built for solution architects and proposal builders who need a re
 
 ## Install
 
+Use Python 3.11 or 3.12 for the Technical Preview. Python 3.14 is not a
+supported test environment because the PPTX dependency chain may not have
+compatible wheels yet.
+
 ```bash
-python3 -m venv .venv
+python3.11 -m venv .venv
 . .venv/bin/activate
 python -m pip install -e ".[dev]"
 ```
+
+If local Python cannot bootstrap pip in a venv, use the equivalent uv path:
+
+```bash
+uv venv --python 3.12 .venv
+uv pip install --python .venv/bin/python -e ".[dev]"
+```
+
+Source checkout commands use `python3 scripts/deck_master.py ...`. After the
+editable install above, the equivalent installed command is `deck-master ...`.
 
 ## Run The Public Demo
 
 ```bash
 bash scripts/demo.sh
 python3 scripts/deck_master.py preview-gate --run-dir /tmp/deck-master-demo/oss-demo --expect-unconfigured-backend-ok
-python3 scripts/preview/server.py --run-dir /tmp/deck-master-demo/oss-demo
+python3 scripts/preview/server.py /tmp/deck-master-demo/oss-demo
 ```
 
-The demo uses fixture mode and synthetic retail transformation content. It is the default first-run path for the Technical Preview.
+The demo uses fixture mode and synthetic retail transformation content. It is the default first-run path for v0.9.14-preview.1.
 
 ## Review Desk
 
@@ -44,24 +58,27 @@ Current M1 guarantees:
 Current M1 limits:
 
 1. Production backend companions must be configured and verified before production commands can be treated as ready.
-2. A missing production backend must not be reported as `bound_verified`.
-3. Browser smoke depends on local Playwright/browser availability.
+2. A missing `ppt-master` production backend must not be reported as `bound_verified`.
+3. `ppt-deck-pro-max` is a Deck Master suite Skill for page production, not a separately bound production backend.
+4. Browser smoke depends on local Playwright/browser availability.
 
 See [Known Limitations](docs/known-limitations.md).
 
 ## Core Commands
 
 ```bash
-deck-master --help
+python3 scripts/deck_master.py --help
 python3 scripts/deck_master.py setup-status --include-suite --output json
 python3 scripts/deck_master.py suite-status --output json
 python3 scripts/deck_master.py autoplan --brief-file examples/briefs/retail_digital_transformation.txt --industry retail --library-mode fixture --run-mode fixture --dev-allow-unsetup --runs-dir /tmp/deck-master-demo --run-id oss-demo
 python3 scripts/deck_master.py preview-gate --run-dir /tmp/deck-master-demo/oss-demo --expect-unconfigured-backend-ok
 ```
 
+After install, `deck-master --help` is equivalent to the source checkout help command.
+
 ## Release Gates
 
-M1 uses `preview-gate` for the public Technical Preview.
+M1 uses `preview-gate` for v0.9.14-preview.1.
 M2 uses `rc-gate` for formal release-candidate validation.
 
 ```bash

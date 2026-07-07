@@ -95,6 +95,8 @@ def _setup_status_schema_errors(payload: dict) -> list[str]:
 class MockHandler(PreviewHandler):
     """Testable handler with mock I/O — no socket binding."""
 
+    write_token = "test-write-token"
+
     def __init__(self, run_dir: Path | None = None, runs_dir: Path | None = None):
         self.wfile = io.BytesIO()
         self.rfile = io.BytesIO()
@@ -113,21 +115,31 @@ class MockHandler(PreviewHandler):
         if not hasattr(self, "library_mode"):
             self.library_mode = "fixture"
 
-    def request(self, method: str, path: str, body: dict | None = None):
+    def request(
+        self,
+        method: str,
+        path: str,
+        body: dict | None = None,
+        *,
+        headers: dict[str, str] | None = None,
+        include_write_token: bool = True,
+    ):
         self.path = path
         self.command = method
         self.requestline = f"{method} {path} HTTP/1.1"
         self.wfile = io.BytesIO()
         self.rfile = io.BytesIO()
         self._headers_buffer = []
+        request_headers = dict(headers or {})
+        if method == "POST" and include_write_token:
+            request_headers.setdefault(preview_server.WRITE_TOKEN_HEADER, self.write_token)
 
         if body is not None:
             payload = json.dumps(body).encode("utf-8")
             self.rfile.write(payload)
             self.rfile.seek(0)
-            self.headers = {"Content-Length": str(len(payload))}
-        else:
-            self.headers = {}
+            request_headers["Content-Length"] = str(len(payload))
+        self.headers = request_headers
 
         if method == "GET":
             self.do_GET()
@@ -169,6 +181,51 @@ class ServerTests(unittest.TestCase):
 
     def tearDown(self) -> None:
         shutil.rmtree(self.temp_dir, ignore_errors=True)
+
+    def test_post_write_requires_token(self) -> None:
+        status, data = self.handler.request(
+            "POST",
+            "/api/workspace/sample-preview-run/page/page_001/actions",
+            {"action": "approve", "actor": "qa"},
+            include_write_token=False,
+        )
+
+        self.assertEqual(HTTPStatus.FORBIDDEN, status)
+        self.assertIn("Write token", data["error"])
+
+    def test_post_write_rejects_bad_token(self) -> None:
+        status, data = self.handler.request(
+            "POST",
+            "/api/workspace/sample-preview-run/page/page_001/actions",
+            {"action": "approve", "actor": "qa"},
+            headers={preview_server.WRITE_TOKEN_HEADER: "wrong-token"},
+            include_write_token=False,
+        )
+
+        self.assertEqual(HTTPStatus.FORBIDDEN, status)
+        self.assertIn("Write token", data["error"])
+
+    def test_post_write_rejects_external_origin(self) -> None:
+        status, data = self.handler.request(
+            "POST",
+            "/api/workspace/sample-preview-run/page/page_001/actions",
+            {"action": "approve", "actor": "qa"},
+            headers={"Origin": "https://example.com", "Host": "127.0.0.1:5050"},
+        )
+
+        self.assertEqual(HTTPStatus.FORBIDDEN, status)
+        self.assertIn("origin", data["error"])
+
+    def test_post_write_allows_same_origin_with_token(self) -> None:
+        status, payload = self.handler.request(
+            "POST",
+            "/api/workspace/sample-preview-run/page/page_001/actions",
+            {"action": "approve", "actor": "qa"},
+            headers={"Origin": "http://127.0.0.1:5050", "Host": "127.0.0.1:5050"},
+        )
+
+        self.assertEqual(200, status)
+        self.assertEqual("ok", payload["status"])
 
     def test_deck_api_returns_pages(self) -> None:
         status, data = self.handler.request("GET", "/api/deck")

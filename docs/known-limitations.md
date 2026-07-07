@@ -1,6 +1,6 @@
 # Known Limitations
 
-Deck Master is currently a public Technical Preview.
+Deck Master is currently v0.9.14-preview.1 / Technical Preview (agent-operable).
 
 ## M1 Technical Preview
 
@@ -9,10 +9,11 @@ M1 guarantees a local fixture demo and Review Desk preview path. It does not gua
 Current M1 boundaries:
 
 1. Fixture demo is the default first-run path.
-2. Production backend status must be checked through `setup-status`, `suite-status`, or `backend status`.
+2. Production backend status must be checked through `setup-status`, `suite-status`, `agent-doctor`, or `backend status`.
 3. If the `ppt-master` production backend is not configured and verified, production export commands should block instead of reporting ready. `ppt-deck-pro-max` is a page-production Skill in the suite, not a separately bound production backend.
-4. Browser smoke depends on local Playwright/browser availability.
-5. The public demo uses synthetic retail transformation content.
+4. Review Desk write operations use a local write token plus same-origin guard.
+5. Browser smoke depends on local Playwright/browser availability.
+6. The public demo uses synthetic retail transformation content.
 
 ## M2 RC Requirements
 
@@ -20,5 +21,5 @@ Before formal RC, Deck Master must also close:
 
 1. Production external dependency handling.
 2. Review Desk full design-system alignment.
-3. Localhost write-operation token or origin checks.
-4. Release tree install, verification, and rollback evidence.
+3. Release tree install, verification, and rollback evidence.
+4. Production deployment hardening beyond the local Review Desk write guard.

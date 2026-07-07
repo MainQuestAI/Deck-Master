@@ -3,6 +3,8 @@ from __future__ import annotations
 import argparse
 import json
 import mimetypes
+import os
+import secrets
 import sys
 from typing import Any
 from http import HTTPStatus
@@ -65,6 +67,9 @@ from tools.ppt_library_client import run_library_selection
 
 
 STATIC_DIR = Path(__file__).parent / "static"
+WRITE_TOKEN_ENV = "DECK_MASTER_REVIEW_WRITE_TOKEN"
+WRITE_TOKEN_HEADER = "X-Deck-Master-Write-Token"
+LOOPBACK_HOSTS = {"127.0.0.1", "localhost", "::1"}
 
 
 def _load_narrative_data(run_dir: Path) -> dict:
@@ -201,6 +206,7 @@ class PreviewHandler(BaseHTTPRequestHandler):
     runs_dir: Path
     library_mode: str = "fixture"
     use_setup_runs_dir: bool = False
+    write_token: str = ""
 
     def log_message(self, format: str, *args: object) -> None:
         print(f"{self.address_string()} - {format % args}")
@@ -328,6 +334,8 @@ class PreviewHandler(BaseHTTPRequestHandler):
     def do_POST(self) -> None:
         parsed = urlparse(self.path)
         path = unquote(parsed.path)
+        if not self.write_guard_allows_request():
+            return
         if path == "/api/runs":
             self.api_create_run()
             return
@@ -367,6 +375,59 @@ class PreviewHandler(BaseHTTPRequestHandler):
             self.api_delivery_record_reaction(parsed)
             return
         self.send_error_json(HTTPStatus.NOT_FOUND, "Route not found.")
+
+    def header_value(self, name: str) -> str:
+        value = self.headers.get(name, "")
+        if value:
+            return str(value)
+        lowered = name.lower()
+        for key, candidate in getattr(self.headers, "items", lambda: [])():
+            if str(key).lower() == lowered:
+                return str(candidate)
+        return ""
+
+    def write_guard_allows_request(self) -> bool:
+        expected = str(getattr(self, "write_token", "") or "")
+        supplied = self.header_value(WRITE_TOKEN_HEADER)
+        if not expected or not secrets.compare_digest(supplied, expected):
+            self.send_error_json(HTTPStatus.FORBIDDEN, "Write token is required for Review Desk mutations.")
+            return False
+        if not self.same_origin_or_local_request():
+            self.send_error_json(HTTPStatus.FORBIDDEN, "Write request origin is not allowed.")
+            return False
+        return True
+
+    def same_origin_or_local_request(self) -> bool:
+        origin = self.header_value("Origin") or self.header_value("Referer")
+        if not origin:
+            return True
+        parsed = urlparse(origin)
+        if not parsed.scheme or not parsed.netloc:
+            return False
+        origin_host = str(parsed.hostname or "").lower()
+        origin_port = parsed.port or (443 if parsed.scheme == "https" else 80)
+        host_header = self.header_value("Host")
+        if host_header:
+            host, port = self.split_host_port(host_header)
+            if parsed.netloc == host_header:
+                return True
+            return host in LOOPBACK_HOSTS and origin_host in LOOPBACK_HOSTS and (port is None or port == origin_port)
+        return origin_host in LOOPBACK_HOSTS
+
+    def split_host_port(self, value: str) -> tuple[str, int | None]:
+        text = value.strip()
+        if text.startswith("[") and "]" in text:
+            host, _, raw_port = text[1:].partition("]")
+            raw_port = raw_port.removeprefix(":")
+        elif text.count(":") == 1:
+            host, raw_port = text.rsplit(":", 1)
+        else:
+            host, raw_port = text, ""
+        try:
+            port = int(raw_port) if raw_port else None
+        except ValueError:
+            port = None
+        return host.lower(), port
 
     def active_run_dir(self, parsed) -> Path:
         if self.run_dir is not None:
@@ -1500,7 +1561,21 @@ class PreviewHandler(BaseHTTPRequestHandler):
             self.send_error_json(HTTPStatus.NOT_FOUND, "Static file not found.")
             return
         content_type = mimetypes.guess_type(target.name)[0] or "text/plain"
-        content = target.read_bytes()
+        if target.name == "index.html":
+            runtime_config = {
+                "writeToken": str(getattr(self, "write_token", "") or ""),
+                "writeTokenHeader": WRITE_TOKEN_HEADER,
+            }
+            text = target.read_text(encoding="utf-8")
+            injection = (
+                "<script>"
+                f"window.__DECK_MASTER_CONFIG__ = {json.dumps(runtime_config, ensure_ascii=False)};"
+                "</script>"
+            )
+            text = text.replace("</head>", f"    {injection}\n  </head>")
+            content = text.encode("utf-8")
+        else:
+            content = target.read_bytes()
         self.send_response(HTTPStatus.OK)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(content)))
@@ -1525,6 +1600,7 @@ def build_handler(
     library_mode: str = "fixture",
     *,
     use_setup_runs_dir: bool | None = None,
+    write_token: str | None = None,
 ):
     class Handler(PreviewHandler):
         pass
@@ -1533,6 +1609,7 @@ def build_handler(
     Handler.runs_dir = (runs_dir or configured_runs_dir(ROOT_DIR / "runs")).expanduser().resolve()
     Handler.library_mode = library_mode
     Handler.use_setup_runs_dir = bool(runs_dir is None if use_setup_runs_dir is None else use_setup_runs_dir)
+    Handler.write_token = write_token or secrets.token_urlsafe(32)
     return Handler
 
 
@@ -1543,6 +1620,7 @@ def main() -> None:
     parser.add_argument("--library-mode", choices=["auto", "real", "fixture"], default="fixture")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=5050)
+    parser.add_argument("--write-token", default=None, help=f"Review Desk write token. Defaults to {WRITE_TOKEN_ENV} or a generated token.")
     args = parser.parse_args()
 
     run_dir = Path(args.run_dir).expanduser().resolve() if args.run_dir else None
@@ -1553,13 +1631,20 @@ def main() -> None:
         load_manifest(run_dir)
     server = ThreadingHTTPServer(
         (args.host, args.port),
-        build_handler(run_dir, runs_dir, args.library_mode, use_setup_runs_dir=not explicit_runs_dir),
+        build_handler(
+            run_dir,
+            runs_dir,
+            args.library_mode,
+            use_setup_runs_dir=not explicit_runs_dir,
+            write_token=args.write_token or os.environ.get(WRITE_TOKEN_ENV) or None,
+        ),
     )
     mode = "Preview" if run_dir else "Studio"
     print(f"Deck Master {mode}: http://{args.host}:{args.port}")
     print(f"Runs directory: {runs_dir}")
     if run_dir:
         print(f"Run directory: {run_dir}")
+    print(f"Write protection: enabled ({WRITE_TOKEN_HEADER})")
     server.serve_forever()
 
 

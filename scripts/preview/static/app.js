@@ -20,6 +20,8 @@ const state = {
   loading: false,
 };
 
+const runtimeConfig = window.__DECK_MASTER_CONFIG__ || {};
+
 const els = {
   workspaceTitle: document.querySelector("#workspace-title"),
   workspaceSubtitle: document.querySelector("#workspace-subtitle"),
@@ -104,7 +106,16 @@ const els = {
 };
 
 async function requestJson(url, options = {}) {
-  const response = await fetch(url, options);
+  const requestOptions = { ...options };
+  const method = String(requestOptions.method || "GET").toUpperCase();
+  if (method !== "GET" && method !== "HEAD") {
+    const headers = new Headers(requestOptions.headers || {});
+    if (runtimeConfig.writeToken) {
+      headers.set(runtimeConfig.writeTokenHeader || "X-Deck-Master-Write-Token", runtimeConfig.writeToken);
+    }
+    requestOptions.headers = headers;
+  }
+  const response = await fetch(url, requestOptions);
   const data = await response.json();
   if (!response.ok) {
     throw new Error(data.error || "请求失败");

@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts" / "preview"))
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from server import PreviewHandler  # noqa: E402
+from server import PreviewHandler, WRITE_TOKEN_HEADER  # noqa: E402
 from orchestrate.export_queue import export_queue  # noqa: E402
 from review.workbench import WorkbenchError, execute_review_action  # noqa: E402
 from runtime.run_state import create_run, read_json, write_json  # noqa: E402
@@ -87,6 +87,8 @@ def _setup_run(tmp: Path) -> Path:
 
 
 class MockHandler(PreviewHandler):
+    write_token = "test-write-token"
+
     def __init__(self, runs_dir: Path):
         self.wfile = io.BytesIO()
         self.rfile = io.BytesIO()
@@ -106,13 +108,15 @@ class MockHandler(PreviewHandler):
         self.wfile = io.BytesIO()
         self.rfile = io.BytesIO()
         self._headers_buffer = []
+        request_headers = {}
+        if method == "POST":
+            request_headers[WRITE_TOKEN_HEADER] = self.write_token
         if body is not None:
             payload = json.dumps(body).encode("utf-8")
             self.rfile.write(payload)
             self.rfile.seek(0)
-            self.headers = {"Content-Length": str(len(payload))}
-        else:
-            self.headers = {}
+            request_headers["Content-Length"] = str(len(payload))
+        self.headers = request_headers
         if method == "GET":
             self.do_GET()
         elif method == "POST":

@@ -3,14 +3,20 @@
 This index routes user intent to the safest Agent command path. Prefer these
 entries over guessing file locations or reading historical specs.
 
+## Source Checkout Command Form
+
+Use `python3 scripts/deck_master.py ...` before installation. For test and
+editable-install work, use Python 3.11 or 3.12. After installing with
+`python -m pip install -e ".[dev]"`, `deck-master ...` is equivalent.
+
 ## New Public Preview Run
 
-- Intent: generate the public fixture demo or verify Technical Preview.
+- Intent: generate the public fixture demo or verify v0.9.14-preview.1.
 - Command:
 
 ```bash
 bash scripts/demo.sh
-deck-master preview-gate --run-dir /tmp/deck-master-demo/oss-demo --expect-unconfigured-backend-ok
+python3 scripts/deck_master.py preview-gate --run-dir /tmp/deck-master-demo/oss-demo --expect-unconfigured-backend-ok
 ```
 
 - Expected artifacts: `request.json`, `narrative_plan.json`, `page_tasks.json`,
@@ -24,7 +30,7 @@ deck-master preview-gate --run-dir /tmp/deck-master-demo/oss-demo --expect-uncon
 - Command:
 
 ```bash
-deck-master next-step --run-dir <run_dir>
+python3 scripts/deck_master.py next-step --run-dir <run_dir>
 ```
 
 - Expected artifacts: no write by default; returns `next_command`,
@@ -38,9 +44,9 @@ deck-master next-step --run-dir <run_dir>
 - Commands:
 
 ```bash
-deck-master agent-doctor --mode preview --output json
-deck-master suite-status --output json
-deck-master agent-doctor --mode production --output json
+python3 scripts/deck_master.py agent-doctor --mode preview --output json
+python3 scripts/deck_master.py suite-status --output json
+python3 scripts/deck_master.py agent-doctor --mode production --output json
 ```
 
 - Success state: `agent-doctor.status == "ready"` and suite output explains any
@@ -54,7 +60,7 @@ deck-master agent-doctor --mode production --output json
 - Command:
 
 ```bash
-deck-master final-readiness --run-dir <run_dir> --no-write
+python3 scripts/deck_master.py final-readiness --run-dir <run_dir> --no-write
 ```
 
 - Expected artifacts checked: render result, final artifact, lineage, quality
@@ -68,8 +74,8 @@ deck-master final-readiness --run-dir <run_dir> --no-write
 - Commands:
 
 ```bash
-deck-master next-step --run-dir <run_dir>
-deck-master agent-doctor --mode production --run-dir <run_dir> --output json
+python3 scripts/deck_master.py next-step --run-dir <run_dir>
+python3 scripts/deck_master.py agent-doctor --mode production --run-dir <run_dir> --output json
 ```
 
 - Expected output: `runtime_stage`, `blocking_issues`, `errors`,
@@ -82,11 +88,14 @@ deck-master agent-doctor --mode production --run-dir <run_dir> --output json
 - Commands:
 
 ```bash
-deck-master release-build --output /tmp/deck-master-agent-ready-release --force
-deck-master release-smoke --release-root /tmp/deck-master-agent-ready-release
+python3 scripts/deck_master.py release-build --output /tmp/deck-master-0.9.14-preview-release --force
+python3 scripts/deck_master.py release-smoke --release-root /tmp/deck-master-0.9.14-preview-release
 ```
 
 - Success state: release smoke `status == "passed"`.
+- If checking the default `~/.deck-master/current` fails, treat it as an
+  active-install smoke failure; build and smoke a fresh tree before reporting
+  release readiness.
 - If blocked: follow `docs/agent-recovery-playbook.md#release-smoke-failed`.
 
 ## QA
@@ -95,10 +104,17 @@ deck-master release-smoke --release-root /tmp/deck-master-agent-ready-release
 - Commands:
 
 ```bash
+python3.11 -m venv .venv
+. .venv/bin/activate
+python -m pip install -e ".[dev]"
 python3 -m unittest discover -s tests
 python3 -m pytest -q
-deck-master agent-doctor --mode preview --output json
+python3 scripts/deck_master.py agent-doctor --mode preview --output json
 ```
+
+If venv pip bootstrap is unavailable, use `uv venv --python 3.12 .venv` and
+`uv pip install --python .venv/bin/python -e ".[dev]"`, then run the same
+commands through `.venv/bin/python`.
 
 - Success state: all tests pass and `agent-doctor` returns `ready` or explains
   only expected preview warnings.

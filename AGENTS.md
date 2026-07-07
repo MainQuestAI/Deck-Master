@@ -16,7 +16,9 @@ agents working in this repository.
 - Runtime contracts: `docs/contracts/`.
 - Public capability manifest: `product-capability-manifest.json`.
 - Skill task schemas: `skills/deck-master/schemas/`.
-- CLI entrypoint: `scripts/deck_master.py` and installed command `deck-master`.
+- Source checkout CLI entrypoint: `python3 scripts/deck_master.py`.
+- Editable install uses Python 3.11 or 3.12 in a venv; after
+  `python -m pip install -e ".[dev]"`, installed command is `deck-master`.
 - Technical Preview demo: `scripts/demo.sh` plus `preview-gate`.
 - Release verification: `release-build` plus `release-smoke`.
 
@@ -24,12 +26,12 @@ Do not infer state from prose when a JSON command exists. Prefer these
 machine-readable commands:
 
 ```bash
-deck-master agent-doctor --mode preview --output json
-deck-master agent-doctor --mode production --output json
-deck-master suite-status --output json
-deck-master next-step --run-dir <run_dir>
-deck-master preview-gate --run-dir <run_dir> --expect-unconfigured-backend-ok
-deck-master final-readiness --run-dir <run_dir> --no-write
+python3 scripts/deck_master.py agent-doctor --mode preview --output json
+python3 scripts/deck_master.py agent-doctor --mode production --output json
+python3 scripts/deck_master.py suite-status --output json
+python3 scripts/deck_master.py next-step --run-dir <run_dir>
+python3 scripts/deck_master.py preview-gate --run-dir <run_dir> --expect-unconfigured-backend-ok
+python3 scripts/deck_master.py final-readiness --run-dir <run_dir> --no-write
 ```
 
 ## Task Routing
@@ -41,7 +43,8 @@ deck-master final-readiness --run-dir <run_dir> --no-write
 - Diagnose readiness: run `agent-doctor`; use `preview` for public demo and
   `production` for production backend checks.
 - Check client export: run `final-readiness`; do not export when it is blocked.
-- Build release tree: run `release-build`, then `release-smoke`.
+- Build release tree: run `release-build` to a fresh output path, then
+  `release-smoke --release-root <that_path>`.
 - Repair blocked state: read `docs/agent-recovery-playbook.md` and follow the
   matching blocked code or runtime stage.
 

@@ -55,6 +55,13 @@ class OpenSourcePreviewGateTests(unittest.TestCase):
         backend = statuses[0]
         self.assertIn(backend["binding_status"], {"unbound", "bound_verified", "bound_verified_runtime_blocked"})
 
+    def test_product_capability_manifest_separates_pdpm_from_production_backend(self) -> None:
+        manifest = json.loads((ROOT / "product-capability-manifest.json").read_text(encoding="utf-8"))
+
+        self.assertEqual({"deck-builder": "ppt-master"}, manifest["backend_dependencies"])
+        self.assertEqual("ppt-deck-pro-max", manifest["suite_skill_dependencies"]["deck-producer"])
+        self.assertIn("ppt-deck-pro-max", manifest["compatibility_skills"])
+
     def test_preview_gate_passes_fixture_demo_without_backend_binding(self) -> None:
         run_dir = self._write_demo_run()
         completed = subprocess.run(

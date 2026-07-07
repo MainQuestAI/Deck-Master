@@ -1,18 +1,28 @@
 # Deck Master Quick Start
 
-This guide runs the public Technical Preview path. It uses fixture mode, synthetic demo content, and the local Review Desk.
+This guide runs v0.9.14-preview.1 / Technical Preview (agent-operable). It uses fixture mode, synthetic demo content, and the local Review Desk.
 
 ## 1. Install
 
+Use Python 3.11 or 3.12 for this preview.
+
 ```bash
-python3 -m venv .venv
+python3.11 -m venv .venv
 . .venv/bin/activate
 python -m pip install -e ".[dev]"
+```
+
+If local Python cannot bootstrap pip in a venv, use:
+
+```bash
+uv venv --python 3.12 .venv
+uv pip install --python .venv/bin/python -e ".[dev]"
 ```
 
 Check the CLI:
 
 ```bash
+python3 scripts/deck_master.py --help
 deck-master --help
 ```
 
@@ -54,14 +64,14 @@ The preview gate checks fixture demo readiness and confirms that an unconfigured
 ## 4. Open Review Desk
 
 ```bash
-python3 scripts/preview/server.py --run-dir /tmp/deck-master-demo/oss-demo
+python3 scripts/preview/server.py /tmp/deck-master-demo/oss-demo
 ```
 
-Open the local URL printed by the server. Review Desk should show the page queue and the current run state.
+Open the local URL printed by the server. Review Desk should show the page queue and the current run state. Local write operations use a per-server write token and same-origin guard.
 
 ## 5. Production Boundary
 
-The Technical Preview first-run path is fixture/demo. Production backend commands require configured and verified companion capabilities. If a production backend is missing, Deck Master should report `unbound` or `not_configured` and provide a fixture/demo path.
+The Technical Preview first-run path is fixture/demo. Production backend commands require configured and verified companion capabilities. The production external backend is `ppt-master`; `ppt-deck-pro-max` is a suite Skill for page production. If `ppt-master` is missing, Deck Master should report `unbound` or `not_configured` and provide a fixture/demo path.
 
 Use these commands to inspect readiness:
 

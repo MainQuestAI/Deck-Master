@@ -918,10 +918,20 @@ def product_capability_manifest() -> dict[str, Any]:
         if str(spec["name"]).startswith("deck-") and str(spec.get("role") or "") != "compatibility_alias"
     ]
     product_capabilities = [str(spec["name"]) for spec in SUITE_SKILLS if str(spec["name"]).startswith("ppt-")]
-    backend_dependencies = {
+    raw_backend_dependencies = {
         str(spec["name"]): str(spec.get("backend_dependency") or "")
         for spec in SUITE_SKILLS
         if spec.get("backend_dependency")
+    }
+    backend_dependencies = {
+        name: dependency
+        for name, dependency in raw_backend_dependencies.items()
+        if dependency == "ppt-master"
+    }
+    suite_skill_dependencies = {
+        name: dependency
+        for name, dependency in raw_backend_dependencies.items()
+        if dependency != "ppt-master"
     }
     public_routes = {
         str(spec["name"]): {
@@ -948,6 +958,7 @@ def product_capability_manifest() -> dict[str, Any]:
         "product_capability_skills": product_capabilities,
         "compatibility_skills": product_capabilities,
         "backend_dependencies": backend_dependencies,
+        "suite_skill_dependencies": suite_skill_dependencies,
         "skill_routes": public_routes,
         "capability_policy": {
             "required_suite_must_be_full_ready": True,

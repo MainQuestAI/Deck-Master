@@ -2,7 +2,7 @@
   "schema_version": "deck_master_product_capability_manifest.v1",
   "product": "deck-master",
   "license": "Apache-2.0",
-  "package_version": "0.9.14.dev1",
+  "package_version": "0.9.14a1",
   "runtime_shape": "agent_facing_local_first",
   "provider_policy": "zero_builtin_llm_provider",
   "required_capabilities": [
@@ -72,9 +72,11 @@
     "ppt-quality-gate"
   ],
   "backend_dependencies": {
+    "deck-builder": "ppt-master"
+  },
+  "suite_skill_dependencies": {
     "deck-sourcing": "ppt-library",
     "deck-producer": "ppt-deck-pro-max",
-    "deck-builder": "ppt-master",
     "deck-quality": "ppt-quality-gate"
   },
   "skill_routes": {

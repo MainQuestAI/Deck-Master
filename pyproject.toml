@@ -4,10 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "deck-master"
-version = "0.9.14.dev1"
+version = "0.9.14a1"
 description = "Local-first Solution Deck Run OS with fixture demo, Review Desk, and release readiness gates."
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.14"
 license = { text = "Apache-2.0" }
 authors = [
   { name = "MainQuest AI" }
@@ -33,4 +33,3 @@ py-modules = ["deck_master"]
 
 [tool.setuptools.packages.find]
 where = ["scripts"]
-
