@@ -6,10 +6,10 @@ unexpected runtime stage. Do not repair by editing random artifacts.
 ## Backend Missing
 
 - Detect by: `agent-doctor --mode production` check `production_backend` or
-  `suite-status.external_dependency_status`.
+  `suite-status.external_dependency_status` for `ppt-master`.
 - Auto action: none for production. Fixture preview may continue.
-- Stop when: any required dependency is not `bound_verified` with a verified
-  git SHA.
+- Stop when the `ppt-master` production backend is not `bound_verified` with a
+  verified git SHA.
 - Verify with:
 
 ```bash

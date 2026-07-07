@@ -699,21 +699,6 @@ class SkillInstallationTest(unittest.TestCase):
             "validated_capabilities": ["render", "smoke", "writeback"],
             "summary": "PPT Master 已绑定且已完成验证。",
         }
-        verified_bridge = {
-            "name": "ppt-deck-pro-max",
-            "dependency_kind": "generation_bridge",
-            "binding_status": "bound_verified",
-            "repo_label": "unit/bridge",
-            "repo_path": "/tmp/bridge",
-            "skill_path": "",
-            "git_sha": "bridge-sha",
-            "git_branch": "main",
-            "worktree_dirty": False,
-            "verified": True,
-            "verified_at": "2026-01-01T00:00:00Z",
-            "validated_capabilities": ["dispatch_import", "generation_result_export"],
-            "summary": "Bridge 已固定。",
-        }
         report_path = Path(self._tmp) / "rc_gate_report.json"
         report_path.write_text(
             json.dumps(
@@ -731,11 +716,6 @@ class SkillInstallationTest(unittest.TestCase):
                                         "git_sha": "backend-sha",
                                         "verified": True,
                                     },
-                                    "ppt-deck-pro-max": {
-                                        "binding_status": "bound_verified",
-                                        "git_sha": "bridge-sha",
-                                        "verified": True,
-                                    },
                                 }
                             },
                         }
@@ -747,7 +727,7 @@ class SkillInstallationTest(unittest.TestCase):
 
         with mock.patch(
             "scripts.skills.installer.external_dependency_statuses",
-            return_value=[verified_backend, verified_bridge],
+            return_value=[verified_backend],
         ), mock.patch(
             "scripts.skills.installer.backend_dependency_statuses",
             return_value=[verified_backend],
@@ -803,8 +783,7 @@ class SkillInstallationTest(unittest.TestCase):
         self.assertIn("external_dependencies", capability_lock)
         dependencies = capability_lock["external_dependencies"]
         self.assertIsInstance(dependencies, list)
-        self.assertIn("ppt-master", {item["name"] for item in dependencies})
-        self.assertIn("ppt-deck-pro-max", {item["name"] for item in dependencies})
+        self.assertEqual({"ppt-master"}, {item["name"] for item in dependencies})
         self.assertEqual("ppt-master", dependencies[0]["name"])
         self.assertIn("dependency_kind", dependencies[0])
         self.assertIn("binding_status", dependencies[0])
@@ -820,17 +799,7 @@ class SkillInstallationTest(unittest.TestCase):
         self.assertIn("verified", external[0])
         self.assertEqual(dependencies, external)
 
-        bridge = next(item for item in dependencies if item["name"] == "ppt-deck-pro-max")
-        self.assertEqual("generation_bridge", bridge["dependency_kind"])
-        self.assertEqual("https://github.com/MainQuestAI/PPT-Deck-Pro-Max.git", bridge["repo"])
-        self.assertEqual("", bridge["git_branch"])
-        self.assertEqual("", bridge["git_sha"])
-        self.assertEqual("", bridge["short_sha"])
-        self.assertEqual("not_configured", bridge["binding_status"])
-        self.assertFalse(bridge["verified"])
-        self.assertEqual([], bridge["validated_capabilities"])
-
-    def test_suite_and_setup_status_report_generation_bridge_snapshot(self) -> None:
+    def test_suite_and_setup_status_report_only_production_backend_dependency(self) -> None:
         config_path = Path.home() / ".deck-master" / "config.json"
         install_root = config_path.parent
         install_root.mkdir(parents=True, exist_ok=True)
@@ -875,16 +844,7 @@ class SkillInstallationTest(unittest.TestCase):
 
         setup = runtime_setup_status(run_mode="dev", include_suite=False)
         for payload in (suite, setup):
-            bridge = next(
-                item for item in payload["external_dependency_status"]
-                if item["name"] == "ppt-deck-pro-max"
-            )
-            self.assertEqual("generation_bridge", bridge["dependency_kind"])
-            self.assertEqual("https://github.com/MainQuestAI/PPT-Deck-Pro-Max.git", bridge["source"])
-            self.assertEqual("", bridge["git_sha"])
-            self.assertEqual("", bridge["short_sha"])
-            self.assertEqual("not_configured", bridge["binding_status"])
-            self.assertIn("not configured", bridge["summary"])
+            self.assertEqual({"ppt-master"}, {item["name"] for item in payload["external_dependency_status"]})
             self.assertFalse(payload["client_delivery_ready"])
 
     def test_release_lock_preserves_runtime_blocked_binding_truth(self) -> None:

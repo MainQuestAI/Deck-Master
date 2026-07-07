@@ -10,7 +10,7 @@ Current M1 boundaries:
 
 1. Fixture demo is the default first-run path.
 2. Production backend status must be checked through `setup-status`, `suite-status`, or `backend status`.
-3. If `ppt-master` or `ppt-deck-pro-max` bridge is not configured, production commands should block instead of reporting ready.
+3. If the `ppt-master` production backend is not configured and verified, production export commands should block instead of reporting ready. `ppt-deck-pro-max` is a page-production Skill in the suite, not a separately bound production backend.
 4. Browser smoke depends on local Playwright/browser availability.
 5. The public demo uses synthetic retail transformation content.
 
@@ -22,4 +22,3 @@ Before formal RC, Deck Master must also close:
 2. Review Desk full design-system alignment.
 3. Localhost write-operation token or origin checks.
 4. Release tree install, verification, and rollback evidence.
-

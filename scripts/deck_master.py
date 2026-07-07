@@ -1642,7 +1642,7 @@ def _production_dependency_report(suite_payload: dict[str, Any]) -> tuple[bool, 
     dependencies = suite_payload.get("external_dependency_status")
     if not isinstance(dependencies, list):
         dependencies = []
-    required = {"ppt-master", "ppt-deck-pro-max"}
+    required = {"ppt-master"}
     by_name = {
         str(item.get("name") or ""): item
         for item in dependencies
@@ -1659,7 +1659,7 @@ def _production_dependency_report(suite_payload: dict[str, Any]) -> tuple[bool, 
         git_sha = str(item.get("git_sha") or "").strip()
         if binding_status != "bound_verified" or not verified or not git_sha:
             missing.append(name)
-    return not missing, missing, dependencies
+    return not missing, missing, [item for item in dependencies if isinstance(item, dict) and item.get("name") in required]
 
 
 def _agent_doctor_result(mode: str, checks: list[dict[str, Any]]) -> dict[str, Any]:
@@ -2652,7 +2652,7 @@ def command_preview_gate(args: argparse.Namespace) -> dict[str, Any]:
         str(item.get("name") or "")
         for item in dependencies
         if isinstance(item, dict)
-        and str(item.get("name") or "") in {"ppt-master", "ppt-deck-pro-max"}
+        and str(item.get("name") or "") == "ppt-master"
         and str(item.get("binding_status") or "") == "bound_verified"
         and not str(item.get("repo_path") or item.get("git_sha") or "").strip()
         and bool(getattr(args, "expect_unconfigured_backend_ok", False))

@@ -47,12 +47,6 @@ class RCGateTests(unittest.TestCase):
                 "git_sha": "backend-sha",
                 "verified": True,
             },
-            {
-                "name": "ppt-deck-pro-max",
-                "binding_status": "bound_verified",
-                "git_sha": "bridge-sha",
-                "verified": True,
-            },
         ]
 
         def fake_build_release_tree(release_root: Path, *, force: bool = False) -> dict[str, str]:

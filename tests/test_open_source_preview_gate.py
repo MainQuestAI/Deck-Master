@@ -47,14 +47,13 @@ class OpenSourcePreviewGateTests(unittest.TestCase):
         (run_dir / "preview_manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
         return run_dir
 
-    def test_generation_bridge_is_not_configured_without_env_path(self) -> None:
+    def test_external_dependencies_only_report_production_backend(self) -> None:
         with mock.patch.dict(os.environ, {"DECK_MASTER_PPT_DECK_PRO_MAX_BRIDGE": ""}, clear=False):
             statuses = external_dependency_statuses(render_runtime_ready=False)
 
-        bridge = next(item for item in statuses if item["name"] == "ppt-deck-pro-max")
-        self.assertEqual("not_configured", bridge["binding_status"])
-        self.assertFalse(bridge["verified"])
-        self.assertEqual("", bridge["repo_path"])
+        self.assertEqual({"ppt-master"}, {item["name"] for item in statuses})
+        backend = statuses[0]
+        self.assertIn(backend["binding_status"], {"unbound", "bound_verified", "bound_verified_runtime_blocked"})
 
     def test_preview_gate_passes_fixture_demo_without_backend_binding(self) -> None:
         run_dir = self._write_demo_run()

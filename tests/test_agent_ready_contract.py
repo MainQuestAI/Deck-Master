@@ -117,6 +117,7 @@ class AgentReadyContractTests(unittest.TestCase):
         checks = {item["check_id"]: item for item in payload["checks"]}
         self.assertEqual("warn", checks["production_backend_projection"]["status"])
         self.assertIn("fixture mode", checks["production_backend_projection"]["summary"])
+        self.assertEqual(["ppt-master"], checks["production_backend_projection"]["details"]["missing_or_unready"])
 
     def test_agent_doctor_production_blocks_without_backend_binding(self) -> None:
         completed = self.run_cli("agent-doctor", "--mode", "production", "--output", "json")
@@ -128,6 +129,7 @@ class AgentReadyContractTests(unittest.TestCase):
         self.assertTrue(payload["errors"])
         checks = {item["check_id"]: item for item in payload["checks"]}
         self.assertEqual("blocked", checks["production_backend"]["status"])
+        self.assertEqual(["ppt-master"], checks["production_backend"]["details"]["missing_or_unready"])
 
     def test_key_blocked_outputs_include_next_agent_action(self) -> None:
         bad_run = self.write_demo_run(page_count=3)

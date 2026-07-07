@@ -1600,14 +1600,11 @@ def _production_backend_ready_from_status(status: dict[str, Any]) -> bool:
 
 
 def _required_external_dependencies_ready(items: list[dict[str, Any]]) -> bool:
-    for name in ("ppt-master", "ppt-deck-pro-max"):
-        item = _dependency_by_name(items, name)
-        ready_statuses = {"bound_verified"}
-        if name == "ppt-master":
-            ready_statuses.add("bound_verified_runtime_blocked")
-        if str(item.get("binding_status") or "") not in ready_statuses or not bool(item.get("verified")):
-            return False
-    return True
+    item = _dependency_by_name(items, "ppt-master")
+    return (
+        str(item.get("binding_status") or "") in {"bound_verified", "bound_verified_runtime_blocked"}
+        and bool(item.get("verified"))
+    )
 
 
 def _rc_gate_report_path() -> Path:
@@ -1629,13 +1626,12 @@ def _safe_read_rc_gate_report(path: Path) -> dict[str, Any] | None:
 
 def _dependency_snapshot(items: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     snapshot: dict[str, dict[str, Any]] = {}
-    for name in ("ppt-master", "ppt-deck-pro-max"):
-        item = _dependency_by_name(items, name)
-        snapshot[name] = {
-            "binding_status": str(item.get("binding_status") or ""),
-            "git_sha": str(item.get("git_sha") or ""),
-            "verified": bool(item.get("verified")),
-        }
+    item = _dependency_by_name(items, "ppt-master")
+    snapshot["ppt-master"] = {
+        "binding_status": str(item.get("binding_status") or ""),
+        "git_sha": str(item.get("git_sha") or ""),
+        "verified": bool(item.get("verified")),
+    }
     return snapshot
 
 

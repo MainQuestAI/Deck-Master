@@ -476,10 +476,7 @@ def backend_dependency_statuses(*, render_runtime_ready: bool | None = None) -> 
 
 
 def external_dependency_statuses(*, render_runtime_ready: bool | None = None) -> list[dict[str, Any]]:
-    return [
-        *backend_dependency_statuses(render_runtime_ready=render_runtime_ready),
-        _generation_bridge_status(),
-    ]
+    return backend_dependency_statuses(render_runtime_ready=render_runtime_ready)
 
 
 def _candidate_paths() -> list[Path]:

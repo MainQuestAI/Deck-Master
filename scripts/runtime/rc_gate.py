@@ -456,13 +456,12 @@ def _dependency_by_name(items: list[dict[str, Any]], name: str) -> dict[str, Any
 
 def _dependency_snapshot(items: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     snapshot: dict[str, dict[str, Any]] = {}
-    for name in ("ppt-master", "ppt-deck-pro-max"):
-        item = _dependency_by_name(items, name)
-        snapshot[name] = {
-            "binding_status": str(item.get("binding_status") or ""),
-            "git_sha": str(item.get("git_sha") or ""),
-            "verified": bool(item.get("verified")),
-        }
+    item = _dependency_by_name(items, "ppt-master")
+    snapshot["ppt-master"] = {
+        "binding_status": str(item.get("binding_status") or ""),
+        "git_sha": str(item.get("git_sha") or ""),
+        "verified": bool(item.get("verified")),
+    }
     return snapshot
 
 
@@ -471,16 +470,11 @@ def _external_dependency_closure_check(benchmark_report: dict[str, Any]) -> dict
     dependency_snapshot = _dependency_snapshot(dependencies)
     failures: list[str] = []
     backend = _dependency_by_name(dependencies, "ppt-master")
-    bridge = _dependency_by_name(dependencies, "ppt-deck-pro-max")
 
     if backend.get("binding_status") not in {"bound_verified", "bound_verified_runtime_blocked"} or not backend.get("verified"):
         failures.append("ppt-master is not bound_verified")
     if not str(backend.get("git_sha") or ""):
         failures.append("ppt-master git_sha is missing")
-    if bridge.get("binding_status") != "bound_verified" or not bridge.get("verified"):
-        failures.append("ppt-deck-pro-max bridge is not bound_verified")
-    if not str(bridge.get("git_sha") or ""):
-        failures.append("ppt-deck-pro-max bridge git_sha is missing")
     if benchmark_report.get("status") != "report_ready":
         failures.append("benchmark aggregate is not report_ready")
 
@@ -508,7 +502,7 @@ def _external_dependency_closure_check(benchmark_report: dict[str, Any]) -> dict
         "external_dependency_closure",
         "pass" if not failures else "fail",
         required=True,
-        summary="External backend, bridge, release lock, and benchmark closure are verified.",
+        summary="External production backend, release lock, and benchmark closure are verified.",
         details={
             "dependencies": dependency_snapshot,
             "capability_lock_dependencies": lock_snapshot,
