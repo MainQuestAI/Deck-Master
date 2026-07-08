@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <rect width="1280" height="720" fill="#101314"/>
+  <rect x="70" y="70" width="1140" height="580" rx="32" fill="#f2eee8"/>
+  <text x="120" y="170" font-family="Avenir Next, Helvetica, sans-serif" font-size="32" fill="#7a5b00" letter-spacing="4">GENERATE</text>
+  <text x="120" y="330" font-family="Avenir Next, Helvetica, sans-serif" font-size="68" font-weight="700" fill="#111314">案例与证据</text>
+  <text x="120" y="430" font-family="Avenir Next, Helvetica, sans-serif" font-size="30" fill="#596064">公开 fixture demo 使用生成型页面承接该信息缺口。</text>
+</svg>

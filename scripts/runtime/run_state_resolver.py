@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from runtime.artifact_validator import validate_artifact_manifest
-from runtime.builder_backend import builder_backend_status, production_requires_builder_backend
+from runtime.builder_backend import backend_render_runtime_ready, builder_backend_status, production_requires_builder_backend
 from runtime.run_state import (
     CLAIM_MAP_NAME,
     CONTEXT_MANIFEST_NAME,
@@ -105,6 +105,17 @@ def _read_render_result(root: Path) -> tuple[Path, dict[str, Any] | None, str]:
         if legacy_result:
             return legacy_path, legacy_result, "legacy"
     return render_result_path, None, "missing"
+
+
+def _invalid_production_render_reason(render_result: dict[str, Any] | None) -> str:
+    if not isinstance(render_result, dict) or not render_result:
+        return ""
+    source_mode = str(render_result.get("source_mode") or "").strip().lower()
+    if source_mode == "contract_smoke":
+        return "production render result still uses contract_smoke source_mode"
+    if bool(render_result.get("non_client_deliverable")):
+        return "production render result is still marked non_client_deliverable"
+    return ""
 
 
 def _build_status(root: Path) -> dict[str, Any]:
@@ -531,6 +542,20 @@ def _resolve_stage(root: Path, run_mode: str) -> tuple[str, list[dict[str, str]]
                 "needs_builder_backend",
                 [{"action": "builder_backend", "reason": str(backend.get("blocking_reason") or "PPT Master backend is not ready")}],
                 str(backend.get("blocking_reason") or "PPT Master backend is not ready"),
+            )
+        if production_requires_builder_backend(run_mode) and not backend_render_runtime_ready():
+            return (
+                "needs_builder_backend",
+                [{"action": "builder_backend", "reason": "PPT Master backend is certified but Deck Master render runtime is not wired to the external backend yet."}],
+                "PPT Master backend is certified but Deck Master render runtime is not wired to the external backend yet.",
+            )
+        render_result_path, render_result, _render_source = _read_render_result(root)
+        invalid_reason = _invalid_production_render_reason(render_result)
+        if production_requires_builder_backend(run_mode) and invalid_reason:
+            return (
+                "needs_render",
+                [{"action": "render", "reason": invalid_reason}],
+                invalid_reason,
             )
 
     if generation_task_count > 0 and not _render_result_present(root):

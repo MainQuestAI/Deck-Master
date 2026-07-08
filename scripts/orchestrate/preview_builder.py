@@ -65,18 +65,43 @@ def source_type_for(source_decision: str) -> str:
     return "placeholder"
 
 
+def public_generation_task(task: dict[str, Any] | None) -> dict[str, Any] | None:
+    if not isinstance(task, dict):
+        return None
+    return {
+        key: task.get(key)
+        for key in (
+            "task_id",
+            "beat_id",
+            "page_title",
+            "task_type",
+            "source_decision",
+            "expected_operation",
+            "generation_brief",
+            "visual_need",
+            "evidence_need",
+            "customer_visible_content",
+            "speaker_notes",
+            "style_constraints",
+            "status",
+        )
+        if key in task
+    }
+
+
 def preview_asset_for(run_dir: Path, decision: dict[str, Any]) -> str:
     selected = decision.get("selected_candidate") if isinstance(decision.get("selected_candidate"), dict) else None
     if selected and selected.get("screenshot_path"):
         return str(selected["screenshot_path"])
-    label = str(decision.get("source_decision", "placeholder")).upper()
+    label = str(decision.get("source_decision", "fixture")).upper()
     return str(
         write_status_svg(
-            run_dir / "placeholders" / f"{decision.get('beat_id')}.svg",
+            run_dir / "preview_assets" / f"{decision.get('beat_id')}.svg",
             label,
             str(decision.get("page_title") or decision.get("beat_id")),
             str(decision.get("decision_reason") or ""),
         )
+        .relative_to(run_dir)
     )
 
 
@@ -108,7 +133,7 @@ def page_for_decision(run_dir: Path, decision: dict[str, Any], generation_tasks:
         "alternatives": decision.get("alternatives", []),
         "risk_flags": decision.get("risk_flags", []),
         "tool_refs": {"sourcing_plan": "sourcing_plan.json"},
-        "generation_task": task,
+        "generation_task": public_generation_task(task),
         "source_pptx": selected.get("source_file", ""),
         "source_slide_index": selected.get("page_number", ""),
         "ppt_library_slide_id": selected.get("slide_id", selected.get("candidate_id", "")),
@@ -148,6 +173,7 @@ def build_preview_from_sourcing(
 ) -> dict[str, Any]:
     root = Path(run_dir).expanduser().resolve()
     build_orchestration_plan_from_sourcing(sourcing_plan, root, generation_tasks)
-    manifest = build_run(root / "orchestration_plan.json", root, force=False, preserve_existing=True)
+    link_mode = "copy" if _run_mode(root) == "fixture" else "symlink"
+    manifest = build_run(root / "orchestration_plan.json", root, force=False, link_mode=link_mode, preserve_existing=True)
     append_event(root, "preview.manifest.created", payload_ref="preview_manifest.json", data={"pages": len(manifest["pages"])})
     return manifest

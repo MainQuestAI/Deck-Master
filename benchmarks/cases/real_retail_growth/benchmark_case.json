@@ -7,10 +7,10 @@
   "industry": "retail",
   "audience": "client",
   "target_pages": 16,
-  "workspace": "~/DeckMasterPrivateBenchmarks/real_retail_growth/workspace",
+  "workspace": "~/deck-master-local-benchmarks/real_retail_growth/workspace",
   "runs_dir": "benchmark_runs",
   "inputs": {
-    "context_pack": "~/DeckMasterPrivateBenchmarks/real_retail_growth/context_pack.json",
+    "context_pack": "~/deck-master-local-benchmarks/real_retail_growth/context_pack.json",
     "baseline_manual_hours": 14,
     "baseline_notes": "Comparable solution deck previously required roughly two working days of manual synthesis and slide drafting.",
     "expected_output_type": "solution_deck_draft"
@@ -28,7 +28,7 @@
     "classification": "private_local_reference",
     "raw_source_policy": "local_path_only",
     "local_source_paths": [
-      "~/DeckMasterPrivateBenchmarks/real_retail_growth/raw"
+      "~/deck-master-local-benchmarks/real_retail_growth/raw"
     ],
     "submitted_material_types": [
       "business_brief",

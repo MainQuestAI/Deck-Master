@@ -2,7 +2,9 @@
   "name": "deck-master-skills",
   "version": "1.1.0",
   "conformance_version": "1.1.0",
-  "description": "Deck Master v1 local skill suite for setup, workspace init, briefing, planning, sourcing, production, build, quality, review, learning, and autopilot workflows.",
+  "license": "Apache-2.0",
+  "package_version": "0.9.14a1",
+  "description": "Deck Master local skill suite for setup, workspace init, briefing, planning, sourcing, production, build, quality, review, learning, and autopilot workflows.",
   "skills": [
     {
       "name": "deck-master",

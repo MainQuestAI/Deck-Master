@@ -7,10 +7,10 @@
   "industry": "manufacturing",
   "audience": "client",
   "target_pages": 18,
-  "workspace": "~/DeckMasterPrivateBenchmarks/real_manufacturing_geo/workspace",
+  "workspace": "~/deck-master-local-benchmarks/real_manufacturing_geo/workspace",
   "runs_dir": "benchmark_runs",
   "inputs": {
-    "context_pack": "~/DeckMasterPrivateBenchmarks/real_manufacturing_geo/context_pack.json",
+    "context_pack": "~/deck-master-local-benchmarks/real_manufacturing_geo/context_pack.json",
     "baseline_manual_hours": 18,
     "baseline_notes": "Comparable multi-chapter GEO proposal deck required manual narrative planning, source consolidation, and page-level review.",
     "expected_output_type": "proposal_solution_deck"
@@ -28,7 +28,7 @@
     "classification": "private_local_reference",
     "raw_source_policy": "local_path_only",
     "local_source_paths": [
-      "~/DeckMasterPrivateBenchmarks/real_manufacturing_geo/raw"
+      "~/deck-master-local-benchmarks/real_manufacturing_geo/raw"
     ],
     "submitted_material_types": [
       "rfp_extract",

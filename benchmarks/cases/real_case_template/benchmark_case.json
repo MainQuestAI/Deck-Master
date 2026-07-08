@@ -29,7 +29,7 @@
     "classification": "private_local_reference",
     "raw_source_policy": "local_path_only",
     "local_source_paths": [
-      "~/DeckMasterPrivateBenchmarks/replace_me/raw"
+      "~/deck-master-local-benchmarks/replace_me/raw"
     ],
     "submitted_material_types": [
       "brief",

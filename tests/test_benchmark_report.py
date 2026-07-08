@@ -247,8 +247,14 @@ class BenchmarkReportTests(unittest.TestCase):
         write_json(quality_dir / "draft_v2_gate.json", {"status": "pass", "blocks_delivery": False})
         return run_dir
 
+    def _mark_external_quality_complete(self, run_dir: Path) -> None:
+        quality_dir = run_dir / "quality_reports"
+        quality_dir.mkdir(parents=True, exist_ok=True)
+        write_json(quality_dir / "external_semantic_codex_gate.json", {"status": "pass", "findings": []})
+
     def test_benchmark_rc_report_requires_ready_for_benchmark(self) -> None:
         run_dir = self._ready_benchmark_run(self.rc_case, "benchmark")
+        self._mark_external_quality_complete(run_dir)
         result = command_benchmark_rc_report(Namespace(
             case=str(self.rc_case_dir / "benchmark_case.json"),
             benchmark_dir=str(self.bench_dir),
@@ -261,12 +267,10 @@ class BenchmarkReportTests(unittest.TestCase):
         self.assertEqual("benchmark_rc_report.json", Path(result["report"]).name)
         self.assertEqual(run_dir.name, report["run_id"])
 
-    def test_benchmark_rc_report_blocks_missing_required_render_result(self) -> None:
-        payload = _case_payload("retail_benchmark")
-        payload["workflow"]["requires_render_result"] = True
-        write_json(self.rc_case_dir / "benchmark_case.json", payload)
+    def test_benchmark_rc_report_blocks_pending_external_steps(self) -> None:
         run_dir = self._ready_benchmark_run(self.rc_case, "benchmark")
-        with self.assertRaises(BenchmarkReportError):
+
+        with self.assertRaises(BenchmarkReportError) as ctx:
             command_benchmark_rc_report(Namespace(
                 case=str(self.rc_case_dir / "benchmark_case.json"),
                 benchmark_dir=str(self.bench_dir),
@@ -275,6 +279,28 @@ class BenchmarkReportTests(unittest.TestCase):
                 runs_dir=str(self.temp_dir / "runs"),
                 force=True,
             ))
+
+        message = str(ctx.exception)
+        self.assertIn("benchmark RC report blocked", message)
+        self.assertIn("pending external steps", message)
+        self.assertIn("external_quality_review", message)
+
+    def test_benchmark_rc_report_blocks_missing_required_render_result(self) -> None:
+        payload = _case_payload("retail_benchmark")
+        payload["workflow"]["requires_render_result"] = True
+        write_json(self.rc_case_dir / "benchmark_case.json", payload)
+        run_dir = self._ready_benchmark_run(self.rc_case, "benchmark")
+        self._mark_external_quality_complete(run_dir)
+        with self.assertRaises(BenchmarkReportError) as ctx:
+            command_benchmark_rc_report(Namespace(
+                case=str(self.rc_case_dir / "benchmark_case.json"),
+                benchmark_dir=str(self.bench_dir),
+                run_dir=str(run_dir),
+                run_id=None,
+                runs_dir=str(self.temp_dir / "runs"),
+                force=True,
+            ))
+        self.assertIn("render_result", str(ctx.exception))
 
         render_path = run_dir / CANONICAL_RENDER_RESULT
         render_path.parent.mkdir(parents=True)
@@ -300,6 +326,7 @@ class BenchmarkReportTests(unittest.TestCase):
 
     def test_benchmark_rc_report_blocks_non_benchmark_run_mode(self) -> None:
         run_dir = self._ready_benchmark_run(self.rc_case, "production")
+        self._mark_external_quality_complete(run_dir)
         with self.assertRaises(BenchmarkReportError):
             command_benchmark_rc_report(Namespace(
                 case=str(self.rc_case_dir / "benchmark_case.json"),
@@ -312,6 +339,7 @@ class BenchmarkReportTests(unittest.TestCase):
 
     def test_benchmark_rc_report_blocks_fixture_benchmark(self) -> None:
         run_dir = self._ready_benchmark_run(self.fixture_case, "fixture")
+        self._mark_external_quality_complete(run_dir)
         with self.assertRaises(BenchmarkReportError):
             command_benchmark_rc_report(Namespace(
                 case=str(self.fixture_case_dir / "benchmark_case.json"),

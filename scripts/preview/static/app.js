@@ -20,6 +20,8 @@ const state = {
   loading: false,
 };
 
+const runtimeConfig = window.__DECK_MASTER_CONFIG__ || {};
+
 const els = {
   workspaceTitle: document.querySelector("#workspace-title"),
   workspaceSubtitle: document.querySelector("#workspace-subtitle"),
@@ -104,7 +106,16 @@ const els = {
 };
 
 async function requestJson(url, options = {}) {
-  const response = await fetch(url, options);
+  const requestOptions = { ...options };
+  const method = String(requestOptions.method || "GET").toUpperCase();
+  if (method !== "GET" && method !== "HEAD") {
+    const headers = new Headers(requestOptions.headers || {});
+    if (runtimeConfig.writeToken) {
+      headers.set(runtimeConfig.writeTokenHeader || "X-Deck-Master-Write-Token", runtimeConfig.writeToken);
+    }
+    requestOptions.headers = headers;
+  }
+  const response = await fetch(url, requestOptions);
   const data = await response.json();
   if (!response.ok) {
     throw new Error(data.error || "请求失败");
@@ -187,7 +198,17 @@ function formatActionType(actionType) {
   return mapping[String(actionType || "").trim()] || "下一步";
 }
 
-const unsafeVisibleTextPattern = /(deck-master\s|python3\s|--run-dir|\.json\b|\/Users\/|\/private\/)/;
+const unsafeVisibleTextPattern = /(deck-master\s|python3\s|--run-dir|--workspace|artifact_path|render_result|rendered\/index\.html|\.json\b|\/Users\/|\/private\/)/;
+const unsafeDomAttributePattern = /(deck-master\s|python3\s|--run-dir|--workspace|artifact_path|render_result|rendered\/index\.html|\.json\b|\/Users\/|\/private\/|\bcmd=|\bcommand=|file:|javascript:|data:)/i;
+
+function decodedForSafety(value) {
+  const text = String(value || "").trim();
+  try {
+    return decodeURIComponent(text);
+  } catch {
+    return text;
+  }
+}
 
 function safeDisplayText(value, fallback = "继续推进当前阶段。") {
   const text = String(value || "").trim();
@@ -195,6 +216,80 @@ function safeDisplayText(value, fallback = "继续推进当前阶段。") {
     return fallback;
   }
   return text;
+}
+
+function safeDomAttributeValue(value) {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  if (unsafeDomAttributePattern.test(text) || unsafeDomAttributePattern.test(decodedForSafety(text))) {
+    return "";
+  }
+  return text;
+}
+
+function safeProjectId(value) {
+  const text = safeDomAttributeValue(value);
+  return /^[A-Za-z0-9_-]+$/.test(text) ? text : "";
+}
+
+function safeClassToken(value, allowed, fallback = "") {
+  const text = safeDomAttributeValue(value);
+  return allowed.includes(text) ? text : fallback;
+}
+
+function safeToneClass(value, fallback = "muted") {
+  return safeClassToken(value, ["muted", "warning", "danger", "success", "info"], fallback);
+}
+
+function safeSeverityClass(value, fallback = "info") {
+  const text = String(value || "").trim().toLowerCase();
+  if (["p0", "danger", "error"].includes(text)) return "danger";
+  if (["p1", "warning", "warn"].includes(text)) return "warning";
+  return safeClassToken(text, ["muted", "warning", "danger", "success", "info"], fallback);
+}
+
+function safeApprovalScope(value) {
+  const text = safeDomAttributeValue(value || "run");
+  return ["page", "run"].includes(text) ? text : "";
+}
+
+function safeApprovalId(value) {
+  const text = safeDomAttributeValue(value);
+  return /^[A-Za-z0-9_.:-]+$/.test(text) ? text : "";
+}
+
+function safeLocalDomUrl(value, allowedPrefixes) {
+  const raw = safeDomAttributeValue(value);
+  if (!raw) return "";
+  let target;
+  try {
+    target = new URL(raw, window.location.origin);
+  } catch {
+    return "";
+  }
+  if (target.origin !== window.location.origin || !["http:", "https:"].includes(target.protocol)) {
+    return "";
+  }
+  const pathAndQuery = `${target.pathname}${target.search}`;
+  const decodedPathAndQuery = decodedForSafety(pathAndQuery);
+  if (unsafeDomAttributePattern.test(pathAndQuery) || unsafeDomAttributePattern.test(decodedPathAndQuery)) {
+    return "";
+  }
+  if (!allowedPrefixes.some((prefix) => target.pathname.startsWith(prefix))) {
+    return "";
+  }
+  return pathAndQuery;
+}
+
+function safeErrorMessage(error, fallback = "当前操作失败，请刷新后重试。") {
+  const message = error && typeof error === "object" && "message" in error
+    ? error.message
+    : error;
+  return safeDisplayText(message, fallback);
+}
+
+function safeDeliveryDetail(value, fallback = "当前交付预览还没有准备完成。") {
+  return safeDisplayText(value, fallback);
 }
 
 function stageDisplay(stage, key, fallback) {
@@ -208,6 +303,43 @@ function stageNextDetail(stage, fallback = "继续推进当前阶段。") {
 
 function stageBlockerSummary(stage, fallback = "当前仍有前置项需要处理。") {
   return safeDisplayText(stage?.display_blocker_summary || stage?.blocking_reason || "", fallback);
+}
+
+function summarizeBindingStatus(value, fallback = "待确认") {
+  if (typeof value === "boolean") return value ? "已就绪" : "未就绪";
+  const text = String(value || "").trim();
+  if (!text) return fallback;
+  if (text === "ready") return "已就绪";
+  if (["blocked", "missing", "failed", "not_ready", "unready"].includes(text)) return "未就绪";
+  return safeDisplayText(text, fallback);
+}
+
+function summarizeDependencySha(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "--";
+  return raw.length <= 8 ? raw : `${raw.slice(0, 8)}`;
+}
+
+function summarizeDependency(dep, index) {
+  const source = dep || {};
+  const label = safeDisplayText(
+    String(source.repo_label || source.label || source.name || source.repository || source.skill || `依赖 ${index + 1}`).trim(),
+    `依赖 ${index + 1}`
+  );
+  const status = summarizeBindingStatus(
+    source.binding_status || source.ready || source.status || source.certified || source.production_ready || source.verified,
+    "待确认"
+  );
+  const sha = safeDisplayText(
+    summarizeDependencySha(source.short_sha || source.sha_short || source.git_sha || source.sha || source.commit || source.revision),
+    "--"
+  );
+  const summary = safeDisplayText(
+    String(source.summary || source.message || source.detail || source.description || ""),
+    `无说明，当前状态：${status}。`
+  );
+
+  return `<div class="stack-card">\n      <strong>${label}</strong>\n      <p>${summary}</p>\n      <small>绑定状态：${status} · SHA：${sha}</small>\n    </div>`;
 }
 
 function describeMutationAction(action) {
@@ -252,9 +384,66 @@ function currentRunState() {
   return state.runState || {};
 }
 
-function setupReady() {
+function canEnterProjectContext() {
+  return Boolean(state.currentProjectId || state.projects.length);
+}
+
+function workspaceEntryReady() {
   const setup = currentSetupStatus();
-  return Boolean(setup.install_ready && setup.workspace_ready && setup.run_ready);
+  if (typeof setup.workspace_entry_ready === "boolean") {
+    return setup.workspace_entry_ready;
+  }
+  if (typeof setup.workspace_access_ready === "boolean") {
+    return setup.workspace_access_ready;
+  }
+  return Boolean(setup.status === "ready" && setup.install_ready && setup.workspace_ready && setup.run_ready);
+}
+
+function setupReady() {
+  return workspaceEntryReady();
+}
+
+function clientDeliveryReady() {
+  const setup = currentSetupStatus();
+  return Boolean(setup.client_delivery_ready);
+}
+
+function blockingSummaryMessages(keys, fallbackItems = []) {
+  const setup = currentSetupStatus();
+  const items = [];
+  keys.forEach((key) => {
+    if (Array.isArray(setup[key])) items.push(...setup[key]);
+  });
+  if (!items.length) items.push(...fallbackItems);
+  return uniqueList(items.map((item) => {
+    if (item && typeof item === "object") {
+      return safeDisplayText(item.message || item.code || "", "当前仍有前置项待处理。");
+    }
+    return safeDisplayText(item, "当前仍有前置项待处理。");
+  }));
+}
+
+function workspaceEntryBlockMessages() {
+  const setup = currentSetupStatus();
+  return blockingSummaryMessages(
+    ["setup_blocking_summary", "workspace_blocking_summary"],
+    [...(setup.missing_items || []), ...(setup.repair_items || [])]
+  );
+}
+
+function deliveryBlockMessages() {
+  return blockingSummaryMessages(["suite_blocking_summary", "client_delivery_blocking_summary"]);
+}
+
+function setupBindingSnapshot() {
+  const setup = currentSetupStatus();
+  const topLevel = Array.isArray(setup.external_dependency_status) ? setup.external_dependency_status : [];
+  const suiteLevel = Array.isArray(setup.suite_external_dependency_status)
+    ? setup.suite_external_dependency_status
+    : Array.isArray(setup.suite?.external_dependency_status)
+      ? setup.suite.external_dependency_status
+      : [];
+  return topLevel.length ? topLevel : suiteLevel;
 }
 
 function uniqueList(items) {
@@ -288,13 +477,30 @@ function currentPageCard() {
 }
 
 function previewUrlWithProject(url) {
-  if (!url) return "";
-  const target = new URL(url, window.location.origin);
-  if (state.currentProjectId) {
-    target.searchParams.set("run", state.currentProjectId);
+  const safeUrl = safeLocalDomUrl(url, ["/preview/"]);
+  if (!safeUrl) return "";
+  const target = new URL(safeUrl, window.location.origin);
+  const runId = safeProjectId(state.currentProjectId);
+  if (runId) {
+    target.searchParams.set("run", runId);
   }
   target.searchParams.set("t", String(Date.now()));
   return `${target.pathname}${target.search}`;
+}
+
+function approvalActionButtons(task) {
+  if (task.status !== "pending") return "";
+  const scope = safeApprovalScope(task.scope_type);
+  const approvalId = safeApprovalId(task.approval_id);
+  if (!scope || !approvalId) {
+    return '<small>审批操作暂不可用，请刷新审批任务后重试。</small>';
+  }
+  return `
+    <div class="inline-actions">
+      <button class="btn btn-small" data-approval-action="approve" data-scope="${scope}" data-approval-id="${approvalId}">批准</button>
+      <button class="btn btn-small" data-approval-action="reject" data-scope="${scope}" data-approval-id="${approvalId}">驳回</button>
+    </div>
+  `;
 }
 
 function updateLocation() {
@@ -325,7 +531,8 @@ function deriveShellState() {
   const stageDefinition = stageDisplay(stage, "stage_definition", stage.definition || "当前阶段待确认。");
   const stageNext = stageNextDetail(stage, "继续推进当前阶段。");
   const stageBlocker = stageBlockerSummary(stage, "当前仍有前置项需要处理。");
-  const setupBlocks = uniqueList([...(setup.missing_items || []), ...(setup.repair_items || [])]);
+  const setupBlocks = workspaceEntryBlockMessages();
+  const deliveryBlocks = deliveryBlockMessages();
   const workspaceBlocks = uniqueList([
     ...(workspace.health?.blocking_reasons || []),
     ...(runState.next_step?.blocking_issues || []),
@@ -355,19 +562,19 @@ function deriveShellState() {
       tone: "danger",
       stageLabel: "状态异常",
       headline: state.shellError.title || "工作台状态异常",
-      subtitle: state.shellError.detail || "当前无法稳定读取方案项目状态。",
+      subtitle: safeDisplayText(state.shellError.detail, "当前无法稳定读取方案项目状态。"),
       stageTitle: "问题位置",
       stageDetail: state.shellError.scope === "setup" ? "系统准备阶段" : projectName,
       nextTitle: "建议动作",
       nextDetail: state.shellError.recovery || "重新选择项目，或刷新页面后重试。",
       blockTitle: "当前阻断",
-      blockDetail: state.shellError.detail || "当前请求失败。",
+      blockDetail: safeDisplayText(state.shellError.detail, "当前请求失败。"),
       blockTone: "danger",
-      blockers: [state.shellError.detail || "当前请求失败。"],
+      blockers: [safeDisplayText(state.shellError.detail, "当前请求失败。")],
     };
   }
 
-  if (state.setupStatus && !setupReady()) {
+  if (state.setupStatus && !setupReady() && !canEnterProjectContext()) {
     const missingCount = setupBlocks.length;
     return {
       id: "setup",
@@ -381,7 +588,7 @@ function deriveShellState() {
       stageDetail: setupBlocks[0] || "仍有前置项待补齐。",
       nextTitle: "下一步",
       nextDetail: safeDisplayText(
-        setup.display_next_step_detail || setup.next_command,
+        setup.display_next_step_detail,
         "先补齐安装、工作目录或项目绑定。"
       ),
       blockTitle: missingCount ? `${missingCount} 项待补齐` : "仍有前置项待处理",
@@ -393,22 +600,30 @@ function deriveShellState() {
   }
 
   if (!state.currentProjectId) {
+    const setupBlocked = !setupReady() && setupBlocks.length > 0;
     return {
       id: "project-selection",
       tone: "muted",
       stageLabel: "待选择项目",
       headline: state.projects.length ? "先选择一个方案项目" : "当前还没有方案项目",
-      subtitle: state.projects.length
-        ? "项目切换放在顶部。选中后，左栏、中间舞台和右栏会同步进入当前方案项目。"
-        : "点击顶部新建项目，完成后会自动回到工作台。",
+      subtitle: setupBlocked
+        ? "当前 workspace 仍有前置项待补齐，但已有方案项目可继续查看。"
+        : clientDeliveryReady()
+          ? (state.projects.length
+              ? "项目切换放在顶部。选中后，左栏、中间舞台和右栏会同步进入当前方案项目。"
+              : "点击顶部新建项目，完成后会自动回到工作台。")
+          : "工作区已可进入；客户交付条件仍需单独补齐。",
       stageTitle: "项目状态",
       stageDetail: state.projects.length ? `${state.projects.length} 个可用项目` : "0 个可用项目",
       nextTitle: "下一步",
       nextDetail: state.projects.length ? "选择一个项目，马上进入当前阶段判断。" : "新建项目后进入工作台。",
-      blockTitle: "当前入口",
-      blockDetail: state.projects.length ? "工作台已就绪，等待选择项目。" : "当前还没有可进入的项目。",
-      blockTone: "",
-      blockers: [],
+      blockTitle: setupBlocked ? `${setupBlocks.length} 项前置待补齐` : "当前入口",
+      blockDetail: setupBlocked
+        ? (setupBlocks[0] || "当前仍有前置项待处理。")
+        : (state.projects.length ? "工作台已就绪，等待选择项目。" : "当前还没有可进入的项目。"),
+      blockTone: setupBlocked ? "danger" : "",
+      blockers: setupBlocked ? setupBlocks : [],
+      warnings: clientDeliveryReady() ? [] : deliveryBlocks.slice(0, 3),
     };
   }
 
@@ -689,8 +904,9 @@ function setButtonState(button, enabled, label) {
   if (!button) return;
   button.disabled = !enabled;
   button.setAttribute("aria-disabled", enabled ? "false" : "true");
-  if (label) {
-    button.title = label;
+  const safeTitle = safeDomAttributeValue(label);
+  if (safeTitle) {
+    button.title = safeTitle;
   } else {
     button.removeAttribute("title");
   }
@@ -731,11 +947,13 @@ function renderProjectSwitcher() {
   els.projectSwitcher.appendChild(placeholder);
   els.projectSwitcher.disabled = shellState.id === "setup";
   state.projects.forEach((project) => {
+    const runId = safeProjectId(project.run_id);
     const option = document.createElement("option");
-    option.value = project.run_id;
+    option.value = runId;
+    option.disabled = !runId;
     const stageLabel = project.stage_label ? ` · ${project.stage_label}` : "";
-    option.textContent = `${project.title || "未命名方案项目"}${stageLabel}`;
-    option.selected = project.run_id === state.currentProjectId;
+    option.textContent = `${safeDisplayText(project.title || "未命名方案项目", "未命名方案项目")}${stageLabel}`;
+    option.selected = Boolean(runId && runId === state.currentProjectId);
     els.projectSwitcher.appendChild(option);
   });
 }
@@ -837,10 +1055,11 @@ function renderPageList() {
     item.dataset.active = page.page_id === state.currentPageId ? "true" : "false";
     const approvalLabel = page.approval_state === "pending" ? "待审批" : "无审批";
     const riskTone = page.blocking_count > 0 ? "danger" : page.risk_count > 0 ? "warning" : "muted";
+    const statusTone = safeToneClass(page.status_tone);
     item.innerHTML = `
       <div class="page-card-top">
         <span class="page-order mono">P${String(page.order).padStart(2, "0")}</span>
-        <span class="status-pill ${page.status_tone}">${escapeHtml(page.status_label)}</span>
+        <span class="status-pill ${statusTone}">${escapeHtml(page.status_label)}</span>
       </div>
       <strong>${escapeHtml(page.title)}</strong>
       <div class="page-card-tags">
@@ -865,10 +1084,11 @@ function renderHeader() {
   const shellState = state.shellState || deriveShellState();
   const workspace = currentWorkspace();
   const metrics = workspace.header_metrics || {};
+  const shellTone = safeToneClass(shellState.tone);
   els.workspaceTitle.textContent = shellState.headline;
   els.workspaceSubtitle.textContent = shellState.subtitle;
   els.stageChip.textContent = shellState.stageLabel;
-  els.stageChip.className = `stage-chip ${shellState.tone || "muted"}`;
+  els.stageChip.className = `stage-chip ${shellTone}`;
   els.stageTitle.textContent = shellState.stageTitle || "-";
   els.stageDetail.textContent = shellState.stageDetail || "-";
   els.nextStepTitle.textContent = shellState.nextTitle || "-";
@@ -885,7 +1105,7 @@ function renderHeader() {
   els.exportLabel.textContent = workspace.project_id
     ? `${metrics.export_ready ?? 0} ready / ${metrics.export_blocked ?? 0} blocked`
     : shellState.id === "setup"
-      ? (currentSetupStatus().production_ready ? "ready" : "hold")
+      ? (setupReady() ? "workspace ready" : "hold")
       : "-";
 
   if (shellState.id === "setup") {
@@ -896,7 +1116,7 @@ function renderHeader() {
     els.metricPages.textContent = currentSetupStatus().active_workspace ? "1" : "0";
     els.metricApproved.textContent = String(missingCount);
     els.metricApprovals.textContent = String((currentSetupStatus().warnings || []).length);
-    els.metricExport.textContent = currentSetupStatus().production_ready ? "ready" : "hold";
+    els.metricExport.textContent = setupReady() ? "workspace" : "hold";
     return;
   }
 
@@ -964,7 +1184,10 @@ function renderCriticalAlerts() {
       alerts.push({
         tone: risk.severity === "P0" ? "danger" : "warning",
         label: risk.severity,
-        detail: `${risk.page_title} · ${risk.summary}`,
+        detail: safeDisplayText(
+          `${risk.page_title || "当前页面"} · ${risk.summary || ""}`,
+          "当前存在需要优先处理的风险。"
+        ),
       });
     });
   } else if (workspace.run_summary?.next_actions?.length) {
@@ -972,7 +1195,7 @@ function renderCriticalAlerts() {
       alerts.push({
         tone: item.severity === "P0" ? "danger" : "warning",
         label: formatActionType(item.action_type),
-        detail: item.message || "",
+        detail: safeDisplayText(item.message || "", "当前存在待处理动作。"),
       });
     });
   }
@@ -1012,13 +1235,14 @@ function renderShellWorkspace() {
   els.focusPageMeta.textContent = shellState.subtitle;
   els.currentLabel.textContent = shellState.stageLabel;
   setPreviewNavVisible(false);
+  const shellTone = safeToneClass(shellState.tone);
 
   els.previewStage.innerHTML = `
     <div class="stage-workspace">
-      <div class="stage-card stage-card-focus ${escapeHtml(shellState.tone || "muted")}">
+      <div class="stage-card stage-card-focus ${shellTone}">
         <div class="stage-card-topline">
           <span class="panel-title">${escapeHtml(shellState.stageLabel)}</span>
-          <span class="status-pill ${escapeHtml(shellState.tone || "muted")}">${escapeHtml(shellState.stageLabel)}</span>
+          <span class="status-pill ${shellTone}">${escapeHtml(shellState.stageLabel)}</span>
         </div>
         <strong>${escapeHtml(shellState.blockTitle || shellState.headline)}</strong>
         <p>${escapeHtml(safeDisplayText(shellState.nextDetail || shellState.subtitle, "继续推进当前阶段。"))}</p>
@@ -1054,6 +1278,8 @@ function renderStageWorkspace() {
   const stageBlocker = stageBlockerSummary(stage, "当前仍有前置项需要处理。");
   const nextStep = stageNextDetail(stage, "等待生成和预览完成。");
   const expectedResult = safeDisplayText(stage.expected_result, "形成可处理页面与交付判断。");
+  const stageTone = safeToneClass(stage.tone);
+  const focusPageTone = safeToneClass(focusPage?.status_tone);
 
   if (focusPage) {
     const orderLabel = `第 ${String(focusPage.order).padStart(2, "0")} 页`;
@@ -1071,7 +1297,7 @@ function renderStageWorkspace() {
   setPreviewNavVisible(false);
 
   const blockerCards = (blockers.length ? blockers : [stageBlocker]).slice(0, 3).map((item) => `
-    <div class="stage-card ${escapeHtml(stage.tone || "muted")}">
+    <div class="stage-card ${stageTone}">
       <span class="panel-title">当前阻塞</span>
       <strong>${escapeHtml(item)}</strong>
       <p>${escapeHtml(nextStep)}</p>
@@ -1087,7 +1313,7 @@ function renderStageWorkspace() {
     <div class="stage-card stage-card-focus">
       <div class="stage-card-topline">
         <span class="panel-title">当前选中页面</span>
-        <span class="status-pill ${escapeHtml(focusPage.status_tone || "muted")}">${escapeHtml(focusPage.status_label || "待处理")}</span>
+        <span class="status-pill ${focusPageTone}">${escapeHtml(focusPage.status_label || "待处理")}</span>
       </div>
       <strong>${escapeHtml(`第 ${String(focusPage.order).padStart(2, "0")} 页 · ${focusPage.title}`)}</strong>
       <p>${escapeHtml(`这页承担“${focusPage.narrative_role || "未标注页面职责"}”的说明任务。当前仍处于${stage.label || "待准备"}阶段，先补齐预览与生成结果，再开放页面级操作。`)}</p>
@@ -1107,7 +1333,7 @@ function renderStageWorkspace() {
         <div class="stage-card ${escapeHtml(delivery.artifact_ready ? "success" : "warning")}">
           <span class="panel-title">交付预览</span>
           <strong>${escapeHtml(delivery.summary || "当前还没有交付级预览。")}</strong>
-          <p>${escapeHtml(delivery.detail || "进入可交付阶段后可查看最终交付预览。")}</p>
+          <p>${escapeHtml(safeDeliveryDetail(delivery.detail, "进入可交付阶段后可查看最终交付预览。"))}</p>
         </div>
         <div class="stage-card">
           <span class="panel-title">责任对象</span>
@@ -1132,7 +1358,7 @@ function renderPagePreview() {
   if (!els.previewStage) return;
   const page = currentPageCard();
   if (!currentWorkspace().project_id) {
-    els.previewPanelLabel.textContent = "方案项目工作台";
+    els.previewPanelLabel.textContent = "Review Desk";
     els.focusPageTitle.textContent = "尚未加载方案项目";
     els.focusPageMeta.textContent = "顶部切换方案项目，或新建项目进入处理。";
     els.currentLabel.textContent = "-";
@@ -1168,7 +1394,8 @@ function renderPagePreview() {
   els.currentLabel.textContent = `第 ${String(focusPage.order).padStart(2, "0")} 页`;
   setPreviewNavVisible(true);
 
-  if (focusPage.has_preview) {
+  const previewUrl = previewUrlWithProject(focusPage.preview_url);
+  if (focusPage.has_preview && previewUrl) {
     els.previewStage.innerHTML = `
       <div class="page-preview-frame">
         <div class="page-preview-toolbar">
@@ -1176,9 +1403,13 @@ function renderPagePreview() {
           <span class="page-chip">第 ${String(focusPage.order).padStart(2, "0")} 页</span>
           <span class="page-chip">${escapeHtml(focusPage.narrative_role || "未标注页面职责")}</span>
         </div>
-        <img src="${previewUrlWithProject(focusPage.preview_url)}" alt="${escapeHtml(focusPage.title)}">
       </div>
     `;
+    const frame = els.previewStage.querySelector(".page-preview-frame");
+    const image = document.createElement("img");
+    image.src = previewUrl;
+    image.alt = safeDomAttributeValue(focusPage.title) || "页面预览";
+    frame.appendChild(image);
     return;
   }
 
@@ -1193,9 +1424,10 @@ function renderPagePreview() {
 function renderDeliveryPreview() {
   if (!els.previewStage) return;
   const delivery = state.deliveryPreview || currentWorkspace().run_summary?.delivery_preview || {};
+  const artifactUrl = safeLocalDomUrl(delivery.artifact_url, ["/delivery-preview/"]);
   els.previewPanelLabel.textContent = "交付预览";
   els.focusPageTitle.textContent = "交付级预览";
-  els.focusPageMeta.textContent = delivery.summary || "当前正在检查交付级预览产物。";
+  els.focusPageMeta.textContent = safeDisplayText(delivery.summary, "当前正在检查交付级预览产物。");
   els.currentLabel.textContent = "交付预览";
   setPreviewNavVisible(false);
 
@@ -1203,7 +1435,7 @@ function renderDeliveryPreview() {
     els.previewStage.innerHTML = `
       <div class="empty-state">
         <h3>${escapeHtml(delivery.summary || "当前还没有交付级预览")}</h3>
-        <p>${escapeHtml(delivery.detail || "完成交付渲染后，这里会展示最终交付预览。")}</p>
+        <p>${escapeHtml(safeDeliveryDetail(delivery.detail, "完成交付渲染后，这里会展示最终交付预览。"))}</p>
       </div>
     `;
     return;
@@ -1215,7 +1447,7 @@ function renderDeliveryPreview() {
         <div class="stage-card success">
           <span class="panel-title">预览状态</span>
           <strong>${escapeHtml(delivery.summary || "交付级预览已就绪")}</strong>
-          <p>${escapeHtml(delivery.detail || "")}</p>
+          <p>${escapeHtml(safeDeliveryDetail(delivery.detail, "交付级预览已就绪。"))}</p>
         </div>
         <div class="stage-card">
           <span class="panel-title">渲染时间</span>
@@ -1228,11 +1460,24 @@ function renderDeliveryPreview() {
           <p>${escapeHtml(delivery.delivered ? formatTime(delivery.delivered_at) : "可在右上角完成交付确认。")}</p>
         </div>
       </div>
-      <div class="delivery-preview-frame-wrap">
-        <iframe class="delivery-preview-frame" src="${escapeHtml(delivery.artifact_url)}" title="交付级预览"></iframe>
-      </div>
+      <div class="delivery-preview-frame-wrap"></div>
     </div>
   `;
+  const frameWrap = els.previewStage.querySelector(".delivery-preview-frame-wrap");
+  if (artifactUrl) {
+    const frame = document.createElement("iframe");
+    frame.className = "delivery-preview-frame";
+    frame.src = artifactUrl;
+    frame.title = "交付级预览";
+    frameWrap.appendChild(frame);
+  } else {
+    frameWrap.innerHTML = `
+      <div class="empty-state">
+        <h3>交付预览暂不可用</h3>
+        <p>当前交付预览链接未通过安全检查，请重新生成交付预览。</p>
+      </div>
+    `;
+  }
 }
 
 function renderPreview() {
@@ -1279,24 +1524,24 @@ function renderReadiness() {
 
   if (shellState.id === "setup") {
     const setup = currentSetupStatus();
-    const blocks = uniqueList([...(setup.missing_items || []), ...(setup.repair_items || [])]);
+    const blocks = workspaceEntryBlockMessages();
     els.readinessPill.textContent = shellState.stageLabel;
     els.readinessPill.className = "pill warning";
     els.runReadiness.innerHTML = `
       <div class="stack-card warning">
         <strong>系统仍未就绪</strong>
         <p>${escapeHtml(shellState.blockDetail)}</p>
-        <small>${escapeHtml(safeDisplayText(setup.next_command, "诊断命令已收起，可由执行器继续处理。"))}</small>
+        <small>请先进入 setup 与后端绑定校验，再继续创建或加载方案项目。</small>
       </div>
-      ${blocks.map((item) => `<div class="stack-card warning"><strong>待补齐</strong><p>${escapeHtml(item)}</p></div>`).join("")}
-      ${(setup.warnings || []).map((item) => `<div class="stack-card"><strong>提示</strong><p>${escapeHtml(item)}</p></div>`).join("")}
+      ${blocks.map((item) => `<div class="stack-card warning"><strong>待补齐</strong><p>${escapeHtml(safeDisplayText(item, "当前仍有前置项待处理。"))}</p></div>`).join("")}
+      ${(setup.warnings || []).map((item) => `<div class="stack-card"><strong>提示</strong><p>${escapeHtml(safeDisplayText(item, "当前有提示信息。"))}</p></div>`).join("")}
     `;
     return;
   }
 
   if (!workspace.project_id) {
     els.readinessPill.textContent = shellState.stageLabel || "-";
-    els.readinessPill.className = `pill ${shellState.tone || "muted"}`;
+    els.readinessPill.className = `pill ${safeToneClass(shellState.tone)}`;
     els.runReadiness.innerHTML = `<div class="empty-inline">${escapeHtml(shellState.nextDetail || "当前还没有方案项目数据。")}</div>`;
     return;
   }
@@ -1306,18 +1551,18 @@ function renderReadiness() {
   const summary = workspace.run_summary || {};
   const deliveryPreview = summary.delivery_preview || {};
   els.readinessPill.textContent = stage.label || "-";
-  els.readinessPill.className = `pill ${stage.tone || "muted"}`;
+  els.readinessPill.className = `pill ${safeToneClass(stage.tone)}`;
 
   const deliveryCard = deliveryPreview.artifact_ready
     ? `<div class="stack-card success"><strong>交付预览已就绪</strong><p>${escapeHtml(deliveryPreview.summary || "")}</p><small>${escapeHtml(formatTime(deliveryPreview.created_at))}</small></div>`
-    : `<div class="stack-card warning"><strong>交付预览未就绪</strong><p>${escapeHtml(deliveryPreview.detail || "当前还没有交付级预览产物。")}</p></div>`;
+    : `<div class="stack-card warning"><strong>交付预览未就绪</strong><p>${escapeHtml(safeDeliveryDetail(deliveryPreview.detail, "当前还没有交付级预览产物。"))}</p></div>`;
   const blocks = (health.blocking_reasons || []).length
-    ? health.blocking_reasons.map((item) => `<div class="stack-card warning">${escapeHtml(item)}</div>`).join("")
+    ? health.blocking_reasons.map((item) => `<div class="stack-card warning">${escapeHtml(safeDisplayText(item, "当前仍有前置项需要处理。"))}</div>`).join("")
     : '<div class="stack-card success">当前没有明确阻断，已具备继续推进条件。</div>';
   const nextActions = (summary.next_actions || []).slice(0, 3).map((item) => `
     <div class="stack-card">
       <strong>${escapeHtml(formatActionType(item.action_type))}</strong>
-      <p>${escapeHtml(item.message || "")}</p>
+      <p>${escapeHtml(safeDisplayText(item.message, "当前存在待处理动作。"))}</p>
     </div>
   `).join("");
   const delivery = summary.delivery?.delivered
@@ -1332,7 +1577,7 @@ function renderClaimCoverage() {
   const workspace = currentWorkspace();
   if (!workspace.project_id) {
     els.claimSummaryChip.textContent = shellState.stageLabel || "-";
-    els.claimSummaryChip.className = `pill ${shellState.tone || "muted"}`;
+    els.claimSummaryChip.className = `pill ${safeToneClass(shellState.tone)}`;
     els.claimCoverage.innerHTML = `<div class="empty-inline">${escapeHtml(shellState.id === "setup" ? "完成 setup 后，这里会显示项目级论点覆盖。" : "选择项目后，这里会显示项目级论点覆盖。")}</div>`;
     return;
   }
@@ -1366,7 +1611,7 @@ function renderActivity() {
   }
 
   els.activityList.innerHTML = items.slice(0, 12).map((item) => `
-    <article class="activity-item ${escapeHtml(item.severity || "info")}">
+    <article class="activity-item ${safeSeverityClass(item.severity)}">
       <div class="activity-top">
         <strong>${escapeHtml(item.title)}</strong>
         <span class="mono">${escapeHtml(formatTime(item.timestamp))}</span>
@@ -1374,6 +1619,46 @@ function renderActivity() {
       <p>${escapeHtml(item.detail || "无补充说明")}</p>
     </article>
   `).join("");
+}
+
+function renderBuildSkillPanel() {
+  if (!els.buildSkillPanel) return;
+  const shellState = state.shellState || deriveShellState();
+  const setup = currentSetupStatus();
+  const dependencies = setupBindingSnapshot();
+  const productionStatus = summarizeBindingStatus(setup.production_backend_ready, "待确认");
+  const deliveryStatus = summarizeBindingStatus(setup.client_delivery_ready, "待确认");
+
+  if (!["setup", "project-selection"].includes(shellState.id)) {
+    els.buildSkillPanel.innerHTML = `<div class="empty-inline">后端绑定状态会在 setup 页签中展示，当前为方案运行态。</div>`;
+    return;
+  }
+
+  const depCards = dependencies.length
+    ? dependencies.map(summarizeDependency).join("")
+    : `<div class="stack-card">\n        <strong>后端依赖</strong>\n        <p>当前未返回可展示的后端依赖明细。</p>\n      </div>`;
+  const layeredBlockingSummary = [
+    ...(Array.isArray(setup.suite_blocking_summary) ? setup.suite_blocking_summary : []),
+    ...(Array.isArray(setup.client_delivery_blocking_summary) ? setup.client_delivery_blocking_summary : []),
+  ];
+  const blockingSummary = layeredBlockingSummary.length
+    ? layeredBlockingSummary
+    : (Array.isArray(setup.blocking_summary) ? setup.blocking_summary : []);
+  const blockingCards = blockingSummary.length
+    ? blockingSummary
+        .filter((item) => item && typeof item === "object" && item.message)
+        .map((item) => `<div class="stack-card warning"><strong>${escapeHtml(item.code || "阻断")}</strong><p>${escapeHtml(safeDisplayText(item.message, "当前存在阻断项。"))}</p></div>`).join("")
+    : `<div class="stack-card success">当前无阻断项。</div>`;
+
+  els.buildSkillPanel.innerHTML = `
+    <div class="stack-card">
+      <strong>Build Skill 后端绑定</strong>
+      <p>生产后端：${escapeHtml(productionStatus)} · 客户交付：${escapeHtml(deliveryStatus)}</p>
+      <small>仅展示可核验字段：仓库标签、状态、短 SHA。</small>
+    </div>
+    ${depCards}
+    ${blockingCards}
+  `;
 }
 
 function renderShellDecisionRail() {
@@ -1404,7 +1689,7 @@ function renderShellDecisionRail() {
     <div class="stack-card">
       <strong>${escapeHtml(shellState.nextTitle || "下一步")}</strong>
       <p>${escapeHtml(safeDisplayText(shellState.nextDetail, "当前没有额外说明。"))}</p>
-      <small>${escapeHtml(safeDisplayText(currentSetupStatus().display_next_step_detail || currentSetupStatus().next_command, "诊断命令已收起，可由执行器继续处理。"))}</small>
+      <small>${escapeHtml("诊断命令由执行器管理，仅展示可执行状态。")}</small>
     </div>
   `;
   els.pageRiskContent.innerHTML = blocks.length
@@ -1428,7 +1713,7 @@ function renderRunLevelDecisionRail() {
   } else {
     els.decisionPanelLabel.textContent = "当前推进";
     els.decisionTitle.textContent = workspace.project_title || workspace.title || "等待选择方案项目";
-    els.decisionSummary.textContent = stage.blocking_reason || "当前还没有页面进入可逐页处理状态。";
+    els.decisionSummary.textContent = stageBlockerSummary(stage, "当前还没有页面进入可逐页处理状态。");
   }
   els.pageRoleContent.innerHTML = `
     <div class="stack-card">
@@ -1441,7 +1726,7 @@ function renderRunLevelDecisionRail() {
     <div class="stack-card">
       <strong>交付链路</strong>
       <p>${escapeHtml(deliveryPreview.summary || "当前还没有交付级预览产物。")}</p>
-      <small>${escapeHtml(deliveryPreview.detail || "进入可交付阶段后可查看交付预览。")}</small>
+      <small>${escapeHtml(safeDeliveryDetail(deliveryPreview.detail, "进入可交付阶段后可查看交付预览。"))}</small>
     </div>
   `;
   els.pageEvidenceContent.innerHTML = `
@@ -1452,7 +1737,7 @@ function renderRunLevelDecisionRail() {
     </div>
   `;
   els.pageRiskContent.innerHTML = (workspace.health?.blocking_reasons || []).length
-    ? workspace.health.blocking_reasons.map((item) => `<div class="stack-card warning"><strong>阻断</strong><p>${escapeHtml(item)}</p></div>`).join("")
+    ? workspace.health.blocking_reasons.map((item) => `<div class="stack-card warning"><strong>阻断</strong><p>${escapeHtml(safeDisplayText(item, "当前仍有前置项需要处理。"))}</p></div>`).join("")
     : '<div class="stack-card success">当前没有显式阻断项。</div>';
   els.approvalContent.innerHTML = approvals.length
     ? approvals.slice(0, 4).map((task) => `
@@ -1504,8 +1789,8 @@ function renderPageDecisionRail() {
     ? quality.risks.map((risk) => `
       <div class="stack-card ${risk.severity === "P0" ? "danger" : risk.severity === "P1" ? "warning" : ""}">
         <strong>${escapeHtml(risk.severity)}</strong>
-        <p>${escapeHtml(risk.summary || "")}</p>
-        <small>${escapeHtml(risk.repair_instruction || "当前没有修复说明")}</small>
+        <p>${escapeHtml(safeDisplayText(risk.summary || "", "当前存在质量风险。"))}</p>
+        <small>${escapeHtml(safeDisplayText(risk.repair_instruction || "", "当前没有修复说明"))}</small>
       </div>
     `).join("")
     : '<div class="stack-card success">当前页没有显式质量阻断。</div>';
@@ -1517,12 +1802,7 @@ function renderPageDecisionRail() {
         <strong>${escapeHtml(task.subject || "审批任务")}</strong>
         <p>${escapeHtml(task.reason || "无审批原因")}</p>
         <small>${escapeHtml(formatApprovalStatus(task.status))} · ${escapeHtml(formatActor(task.submitted_by))} · ${escapeHtml(formatTime(task.submitted_at))}</small>
-        ${task.status === "pending" ? `
-          <div class="inline-actions">
-            <button class="btn btn-small" data-approval-action="approve" data-scope="${escapeHtml(task.scope_type || "run")}" data-approval-id="${escapeHtml(task.approval_id)}">批准</button>
-            <button class="btn btn-small" data-approval-action="reject" data-scope="${escapeHtml(task.scope_type || "run")}" data-approval-id="${escapeHtml(task.approval_id)}">驳回</button>
-          </div>
-        ` : ""}
+        ${approvalActionButtons(task)}
       </div>
     `).join("")
     : '<div class="empty-inline">当前页和当前方案项目还没有审批任务。</div>';
@@ -1702,6 +1982,16 @@ function renderActionStates() {
   const canRequestEvidence = hasPage && ["待审阅", "待补依据"].includes(stageLabel);
   const canEscalatePageApproval = hasPage && ["待审阅", "待补依据", "可交付", "待审批"].includes(stageLabel);
   const canSaveNote = Boolean(state.currentProjectId) && hasPage;
+  const primaryActionState = state.primaryActionState || derivePrimaryActionState(
+    shellState,
+    state.selectedPageState || deriveSelectedPageState(shellState)
+  );
+  const highestRisk = currentPageHighestRisk();
+  const canApprovePage =
+    canReviewPage &&
+    pageReviewStatus !== "approved" &&
+    pageReviewStatus !== "needs_evidence" &&
+    highestRisk !== "P0";
   const shellReason = {
     setup: "先完成 setup，页面级动作才会开放。",
     "project-selection": "先选择项目，页面级动作才会开放。",
@@ -1727,8 +2017,14 @@ function renderActionStates() {
 
   setButtonState(
     els.approvePage,
-    canReviewPage && pageReviewStatus !== "approved",
-    hasPage ? "当前页还不能执行批准动作。" : (shellReason || "请先选择页面。")
+    canApprovePage,
+    hasPage && pageReviewStatus === "needs_evidence"
+      ? "当前页证据不足，先请求补证据。"
+      : hasPage && highestRisk === "P0"
+        ? "当前页存在 P0 阻断，先处理风险与缺口。"
+        : hasPage
+          ? "当前页还不能执行批准动作。"
+          : (shellReason || "请先选择页面。")
   );
   setButtonState(
     els.rejectPage,
@@ -1750,6 +2046,17 @@ function renderActionStates() {
     canSaveNote,
     canSaveNote ? "" : (shellReason || "请先选择页面后再记录备注。")
   );
+
+  [els.approvePage, els.rejectPage, els.requestEvidence, els.submitPageApproval]
+    .forEach((button) => button?.classList.remove("btn-cta"));
+  const primaryActionButton = {
+    approve: els.approvePage,
+    "re-review": els.approvePage,
+    "request-evidence": els.requestEvidence,
+  }[primaryActionState.action];
+  if (primaryActionState.enabled && primaryActionButton && !primaryActionButton.disabled) {
+    primaryActionButton.classList.add("btn-cta");
+  }
 }
 
 function renderDrawerState() {
@@ -1774,6 +2081,7 @@ function renderAll() {
   renderFilters();
   renderPageList();
   renderCriticalAlerts();
+  renderBuildSkillPanel();
   renderPreview();
   renderDrawerState();
   renderReadiness();
@@ -1802,7 +2110,7 @@ async function loadSetupStatus({ silent = false } = {}) {
     state.shellError = {
       scope: "setup",
       title: "setup 状态读取失败",
-      detail: error.message,
+      detail: safeErrorMessage(error, "setup 状态读取失败，请刷新后重试。"),
       recovery: "刷新页面后重试，或先检查本地 preview 服务。",
     };
   }
@@ -1830,7 +2138,7 @@ async function loadDeliveryPreview({ silent = false } = {}) {
     state.deliveryPreview = {
       artifact_ready: false,
       summary: "交付预览暂不可用。",
-      detail: error.message,
+      detail: safeErrorMessage(error, "交付预览暂不可用，请刷新后重试。"),
       render_status: "failed",
     };
   }
@@ -1851,22 +2159,12 @@ async function loadPageDetail() {
     );
   } catch (error) {
     state.pageDetail = null;
-    setFeedback(error.message, "danger");
+    setFeedback(safeErrorMessage(error, "当前页详情读取失败，请重新选择页面。"), "danger");
   }
   renderAll();
 }
 
 async function loadWorkspace() {
-  if (!setupReady()) {
-    state.runState = null;
-    state.workspace = null;
-    state.pageDetail = null;
-    state.activity = null;
-    state.deliveryPreview = null;
-    renderAll();
-    return;
-  }
-
   if (!state.currentProjectId) {
     state.runState = null;
     state.workspace = null;
@@ -1908,7 +2206,7 @@ async function loadWorkspace() {
     state.shellError = {
       scope: "workspace",
       title: "当前方案项目无法载入",
-      detail: error.message,
+      detail: safeErrorMessage(error, "当前方案项目无法载入，请重新选择项目或刷新页面。"),
       recovery: "重新选择项目，或刷新页面后重试。",
     };
   } finally {
@@ -1919,16 +2217,17 @@ async function loadWorkspace() {
 
 async function refreshCurrentProject() {
   await loadSetupStatus({ silent: true });
-  if (!setupReady()) {
+  await loadProjects();
+  if (!state.currentProjectId) {
     state.runState = null;
     state.workspace = null;
     state.pageDetail = null;
     state.activity = null;
     state.deliveryPreview = null;
     renderAll();
+    await loadSkillOsRail();
     return;
   }
-  await loadProjects();
   try { await loadWorkspace(); } catch (e) { /* early-stage run may lack preview_manifest */ }
   await loadSkillOsRail();
 }
@@ -2067,7 +2366,7 @@ async function skillOsHandoffDecide(decision) {
     });
     await loadSkillOsRail();
   } catch (error) {
-    alert(`操作失败：${error.message || error}`);
+    alert(`操作失败：${safeErrorMessage(error, "当前操作失败，请刷新后重试。")}`);
   }
 }
 
@@ -2100,7 +2399,7 @@ async function runPageAction(action, extra = {}) {
     setFeedback(`${targetLabel}已完成“${actionLabel}”，工作台正在刷新。`, "success");
     await refreshCurrentProject();
   } catch (error) {
-    setFeedback(`${targetLabel}执行“${actionLabel}”失败：${error.message}`, "danger");
+    setFeedback(`${targetLabel}执行“${actionLabel}”失败：${safeErrorMessage(error, "当前页面操作失败，请刷新后重试。")}`, "danger");
   }
 }
 
@@ -2123,7 +2422,7 @@ async function runRunAction(action, extra = {}) {
     setFeedback(`${targetLabel}已完成“${actionLabel}”，工作台正在刷新。`, "success");
     await refreshCurrentProject();
   } catch (error) {
-    setFeedback(`${targetLabel}执行“${actionLabel}”失败：${error.message}`, "danger");
+    setFeedback(`${targetLabel}执行“${actionLabel}”失败：${safeErrorMessage(error, "当前项目操作失败，请刷新后重试。")}`, "danger");
   }
 }
 
@@ -2155,7 +2454,7 @@ async function createRun(event) {
     setCreateModal(false);
     await refreshCurrentProject();
   } catch (error) {
-    els.createStatus.textContent = error.message;
+    els.createStatus.textContent = safeErrorMessage(error, "方案项目创建失败，请先确认 setup 状态。");
   } finally {
     els.createRunSubmit.disabled = false;
   }
@@ -2254,11 +2553,9 @@ async function boot() {
   renderAll();
   try {
     await loadSetupStatus({ silent: true });
-    if (setupReady()) {
-      await loadProjects();
-    }
+    await loadProjects();
     renderProjectSwitcher();
-    if (setupReady() && state.currentProjectId) {
+    if (state.currentProjectId) {
       try { await loadWorkspace(); } catch (e) { /* early-stage run may lack preview_manifest */ }
     } else {
       renderAll();
@@ -2268,7 +2565,7 @@ async function boot() {
     state.shellError = {
       scope: "setup",
       title: "工作台加载失败",
-      detail: error.message,
+      detail: safeErrorMessage(error, "工作台加载失败，请刷新后重试。"),
       recovery: "刷新页面后重试。",
     };
     renderAll();

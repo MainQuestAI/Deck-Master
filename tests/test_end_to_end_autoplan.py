@@ -55,7 +55,9 @@ class EndToEndAutoplanTests(unittest.TestCase):
         self.assertIn("candidate_origin", manifest["pages"][0])
         self.assertIn("library_source", manifest["pages"][0])
         self.assertIn("planning", page_tasks["tasks"][0])
-        self.assertTrue({"reuse", "adapt", "generate", "manual_placeholder"}.issubset({item["source_decision"] for item in sourcing["decisions"]}))
+        source_decisions = {item["source_decision"] for item in sourcing["decisions"]}
+        self.assertTrue({"reuse", "adapt", "generate"}.issubset(source_decisions))
+        self.assertNotIn("manual_placeholder", source_decisions)
 
 
 if __name__ == "__main__":

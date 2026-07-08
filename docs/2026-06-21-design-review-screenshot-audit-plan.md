@@ -1,7 +1,7 @@
 # 方案项目工作台设计评审与截图审计计划
 
-日期：2026-06-21  
-状态：v0.2  
+日期：2026-06-21
+状态：v0.2
 适用范围：Deck Master localhost Web UI
 
 ## 1. 目标
@@ -78,8 +78,8 @@
 
 本轮桌面截图矩阵已生成：
 
-- [截图矩阵说明](/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/qa/2026-06-21-run-workspace-screenshot-matrix/README.md)
-- [截图总目录](/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/qa/2026-06-21-run-workspace-screenshot-matrix/screenshots)
+- [截图矩阵说明](/docs/qa/2026-06-21-run-workspace-screenshot-matrix/README.md)
+- [截图总目录](/docs/qa/2026-06-21-run-workspace-screenshot-matrix/screenshots)
 
 ## 8. 门禁标准
 

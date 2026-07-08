@@ -373,6 +373,45 @@ class GenerationSessionBridgeTests(unittest.TestCase):
         mocked_run.assert_not_called()
 
     @patch("scripts.generation.session.subprocess.run")
+    def test_dispatch_package_exposes_cross_repo_smoke_contract(self, mocked_run: unittest.mock.Mock) -> None:
+        self._tool_registry(command="python3")
+        session = create_generation_session(
+            self.run_dir,
+            tool="ppt-deck-pro-max",
+            workspace=str(self.workspace),
+            force=True,
+        )
+
+        result = run_generation(self.run_dir, tool="ppt-deck-pro-max", no_execute=True)
+
+        package = read_json(self.run_dir / result["dispatch_package"])
+        self.assertEqual("deck_generation_dispatch_package.v1", package["schema_version"])
+        self.assertEqual(session["run_id"], package["run_id"])
+        self.assertEqual(session["session_id"], package["session_id"])
+        self.assertEqual("ppt-deck-pro-max", package["tool"])
+        self.assertEqual("deck_generation_result.v2", package["output_contract"]["schema_version"])
+        for key in {
+            "run_id",
+            "session_id",
+            "task_id",
+            "page_id",
+            "producer",
+            "status",
+            "source_fingerprint",
+            "artifacts",
+            "preview",
+            "created_at",
+        }:
+            self.assertIn(key, package["output_contract"]["required"])
+        self.assertEqual(2, package["task_count"])
+        self.assertEqual(
+            {"beat-001", "beat-002"},
+            {task["beat_id"] for task in package["tasks"]},
+        )
+        self.assertIn("generation-session import-results", package["import_commands"]["batch"])
+        mocked_run.assert_not_called()
+
+    @patch("scripts.generation.session.subprocess.run")
     def test_result_import_rejects_run_id_mismatch(self, mocked_run: unittest.mock.Mock) -> None:
         self._tool_registry(command="python3")
         create_generation_session(

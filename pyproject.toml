@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "deck-master"
+version = "0.9.14a1"
+description = "Local-first Solution Deck Run OS with fixture demo, Review Desk, and release readiness gates."
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+license = { text = "Apache-2.0" }
+authors = [
+  { name = "MainQuest AI" }
+]
+dependencies = [
+  "python-pptx>=0.6.21"
+]
+
+[project.optional-dependencies]
+dev = [
+  "coverage",
+  "jsonschema",
+  "playwright",
+  "pytest"
+]
+
+[project.scripts]
+deck-master = "deck_master:main"
+
+[tool.setuptools]
+package-dir = { "" = "scripts" }
+py-modules = ["deck_master"]
+
+[tool.setuptools.packages.find]
+where = ["scripts"]

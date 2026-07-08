@@ -21,6 +21,11 @@ python3 scripts/deck_master.py benchmark-report \
   --case benchmarks/cases/retail_fixture/benchmark_case.json \
   --run-dir benchmark_runs/<run_id>
 
+python3 scripts/deck_master.py benchmark-rc-report \
+  --case benchmarks/cases/retail_fixture/benchmark_case.json \
+  --run-dir benchmark_runs/<run_id> \
+  --force
+
 python3 scripts/deck_master.py benchmark-checkpoint \
   --run-dir benchmark_runs/<run_id> \
   --checkpoint human_review_started
@@ -32,6 +37,24 @@ python3 scripts/deck_master.py benchmark-aggregate-report \
   --benchmark-dir benchmarks \
   --force
 ```
+
+## P4 Report Readiness
+
+`benchmark-aggregate-report` treats P4 as report-ready only when at least three
+non-template `real_metadata` cases each have both completed reports in the same
+`results/<case_id>/<run_id>/` directory:
+
+- `benchmark_report.json`
+- `benchmark_rc_report.json`
+
+Each report payload must have `status=completed`, and its `case_id` / `run_id`
+must match the result directory path. Reports with `pending_external_agent`,
+`warning`, or mismatched payload metadata remain visible in the aggregate but do
+not count toward P4 completion.
+
+One generated benchmark report is still useful evidence, but it keeps the
+aggregate status at `metadata_ready` until the real-case report pairs are
+complete.
 
 ## Data Policy
 
@@ -54,5 +77,15 @@ This repository includes three sanitized real-case metadata entries:
 - `real_healthcare_enablement`
 
 Their raw source material is expected under a local private path such as
-`~/DeckMasterPrivateBenchmarks/<case_id>/`. These paths are references only;
+`~/deck-master-local-benchmarks/<case_id>/`. These paths are references only;
 the referenced files are not part of the repository.
+
+For real metadata cases, `benchmark-run` fails before creating a run when the
+local private inputs are unavailable:
+
+- missing or unwritable `workspace`
+- missing `inputs.context_pack`
+- missing `source_material.local_source_paths[]` directory
+
+The error message names the missing path so the local private benchmark bundle
+can be fixed without inspecting the generated run directory.

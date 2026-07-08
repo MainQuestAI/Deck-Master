@@ -14,7 +14,7 @@
   },
   "repositories": {
     "deck_master": {
-      "path": "/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure",
+      "path": "<deck-master-real-production-closure-worktree>",
       "branch": "codex/real-production-closure",
       "head": "14fc43dc6e955928100f02f0e82af5b833c29177",
       "origin_main": "14fc43dc6e955928100f02f0e82af5b833c29177",
@@ -22,7 +22,7 @@
       "base_commit_subject": "test(qa): regression test for ISSUE-001 — preview fixture actions"
     },
     "ppt_deck_pro_max": {
-      "path": "/Users/dingcheng/Coding-Project/02-key-project/PPT-Deck-Pro-Max",
+      "path": "<ppt-deck-pro-max-repo>",
       "branch": "main",
       "head": "d6287172313e9b2c1fb04f8f2082dde3786f2ac4",
       "status": "main tracks origin/main; one untracked docs file is present",
@@ -31,7 +31,7 @@
       ]
     },
     "ppt_library": {
-      "path": "/Users/dingcheng/Coding-Project/02-key-project/PPT-Library",
+      "path": "<ppt-library-repo>",
       "branch": "main",
       "head": "0e48b7fa2f62de1c750118f275e5fe0a52709e1e",
       "status": "main tracks origin/main; no local changes reported"

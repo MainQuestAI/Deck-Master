@@ -3,7 +3,7 @@
 Date: 2026-05-28
 Status: MVP IMPLEMENTED
 Source: Boss request
-Reference: `/Users/dingcheng/.codex/skills/.backups/ppt-master-repo-668131f0/skills/ppt-master`
+Reference: `<ppt-master-backend-skill>`
 
 ## 需求结论
 

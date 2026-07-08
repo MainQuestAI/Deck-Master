@@ -2,7 +2,7 @@
 
 - 生成时间：2026-06-21T09:13:03Z
 - 预览入口：`http://127.0.0.1:49632`
-- 截图引擎：`/Users/dingcheng/.npm-global/lib/node_modules/playwright/cli.js`
+- 截图引擎：`<playwright-cli>`
 - 总截图数：24
 
 ## 场景清单

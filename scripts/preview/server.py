@@ -3,6 +3,8 @@ from __future__ import annotations
 import argparse
 import json
 import mimetypes
+import os
+import secrets
 import sys
 from typing import Any
 from http import HTTPStatus
@@ -65,6 +67,31 @@ from tools.ppt_library_client import run_library_selection
 
 
 STATIC_DIR = Path(__file__).parent / "static"
+WRITE_TOKEN_ENV = "DECK_MASTER_REVIEW_WRITE_TOKEN"
+WRITE_TOKEN_HEADER = "X-Deck-Master-Write-Token"
+LOOPBACK_HOSTS = {"127.0.0.1", "localhost", "::1"}
+REMOTE_PREVIEW_WARNING = (
+    "WARNING: Review Desk write token is a local preview guard, not a network "
+    "authentication boundary. Anyone who can load the page can read the token."
+)
+
+
+def is_loopback_bind_host(host: str) -> bool:
+    text = str(host or "").strip().lower()
+    if text.startswith("[") and text.endswith("]"):
+        text = text[1:-1]
+    return text in LOOPBACK_HOSTS
+
+
+def validate_preview_bind_host(host: str, *, allow_remote_preview: bool = False) -> str:
+    if is_loopback_bind_host(host):
+        return ""
+    if allow_remote_preview:
+        return REMOTE_PREVIEW_WARNING
+    raise ValueError(
+        "Refusing to bind Review Desk to a non-loopback host. Use "
+        "--allow-remote-preview only for trusted local-network demos."
+    )
 
 
 def _load_narrative_data(run_dir: Path) -> dict:
@@ -201,6 +228,7 @@ class PreviewHandler(BaseHTTPRequestHandler):
     runs_dir: Path
     library_mode: str = "fixture"
     use_setup_runs_dir: bool = False
+    write_token: str = ""
 
     def log_message(self, format: str, *args: object) -> None:
         print(f"{self.address_string()} - {format % args}")
@@ -328,6 +356,8 @@ class PreviewHandler(BaseHTTPRequestHandler):
     def do_POST(self) -> None:
         parsed = urlparse(self.path)
         path = unquote(parsed.path)
+        if not self.write_guard_allows_request():
+            return
         if path == "/api/runs":
             self.api_create_run()
             return
@@ -367,6 +397,59 @@ class PreviewHandler(BaseHTTPRequestHandler):
             self.api_delivery_record_reaction(parsed)
             return
         self.send_error_json(HTTPStatus.NOT_FOUND, "Route not found.")
+
+    def header_value(self, name: str) -> str:
+        value = self.headers.get(name, "")
+        if value:
+            return str(value)
+        lowered = name.lower()
+        for key, candidate in getattr(self.headers, "items", lambda: [])():
+            if str(key).lower() == lowered:
+                return str(candidate)
+        return ""
+
+    def write_guard_allows_request(self) -> bool:
+        expected = str(getattr(self, "write_token", "") or "")
+        supplied = self.header_value(WRITE_TOKEN_HEADER)
+        if not expected or not secrets.compare_digest(supplied, expected):
+            self.send_error_json(HTTPStatus.FORBIDDEN, "Write token is required for Review Desk mutations.")
+            return False
+        if not self.same_origin_or_local_request():
+            self.send_error_json(HTTPStatus.FORBIDDEN, "Write request origin is not allowed.")
+            return False
+        return True
+
+    def same_origin_or_local_request(self) -> bool:
+        origin = self.header_value("Origin") or self.header_value("Referer")
+        if not origin:
+            return True
+        parsed = urlparse(origin)
+        if not parsed.scheme or not parsed.netloc:
+            return False
+        origin_host = str(parsed.hostname or "").lower()
+        origin_port = parsed.port or (443 if parsed.scheme == "https" else 80)
+        host_header = self.header_value("Host")
+        if host_header:
+            host, port = self.split_host_port(host_header)
+            if parsed.netloc == host_header:
+                return True
+            return host in LOOPBACK_HOSTS and origin_host in LOOPBACK_HOSTS and (port is None or port == origin_port)
+        return origin_host in LOOPBACK_HOSTS
+
+    def split_host_port(self, value: str) -> tuple[str, int | None]:
+        text = value.strip()
+        if text.startswith("[") and "]" in text:
+            host, _, raw_port = text[1:].partition("]")
+            raw_port = raw_port.removeprefix(":")
+        elif text.count(":") == 1:
+            host, raw_port = text.rsplit(":", 1)
+        else:
+            host, raw_port = text, ""
+        try:
+            port = int(raw_port) if raw_port else None
+        except ValueError:
+            port = None
+        return host.lower(), port
 
     def active_run_dir(self, parsed) -> Path:
         if self.run_dir is not None:
@@ -635,7 +718,7 @@ class PreviewHandler(BaseHTTPRequestHandler):
                 if not self._is_setup_ready_for_production(setup):
                     self.send_error_json(
                         HTTPStatus.CONFLICT,
-                        f"Setup is not ready for production runs. Next: {setup.get('next_command', '')}".strip(),
+                        "Setup is not ready for production runs. Complete setup before creating a production project.",
                     )
                     return
                 cfg = setup.get("config") if isinstance(setup.get("config"), dict) else {}
@@ -751,6 +834,29 @@ class PreviewHandler(BaseHTTPRequestHandler):
         workspace = payload.get("workspace")
         return isinstance(workspace, dict) and workspace.get("status") == "valid"
 
+    @staticmethod
+    def _as_bool(value: object, default: bool = False) -> bool:
+        return value if isinstance(value, bool) else default
+
+    @staticmethod
+    def _as_list(value: object) -> list[Any]:
+        if isinstance(value, list):
+            return value
+        return []
+
+    @staticmethod
+    def _as_dict(value: object) -> dict[str, Any]:
+        return value if isinstance(value, dict) else {}
+
+    @staticmethod
+    def _coerce_dependency_status(payload: dict[str, Any]) -> list[Any]:
+        suite = payload.get("suite")
+        suite_dependencies = PreviewHandler._as_list(PreviewHandler._as_dict(suite).get("external_dependency_status"))
+        top_dependencies = PreviewHandler._as_list(payload.get("external_dependency_status"))
+        if top_dependencies:
+            return top_dependencies
+        return suite_dependencies
+
     def _write_workspace_runtime_fields(
         self,
         request: dict[str, Any],
@@ -774,10 +880,89 @@ class PreviewHandler(BaseHTTPRequestHandler):
     def _adapt_setup_status(self, payload: dict[str, Any]) -> dict[str, Any]:
         config = payload.get("config") if isinstance(payload.get("config"), dict) else None
         workspace = payload.get("workspace") if isinstance(payload.get("workspace"), dict) else None
-        workspace_ready = bool(workspace and workspace.get("status") == "valid")
-        install_ready = payload.get("status") != "blocked" and bool(config)
-        run_ready = bool(config and config.get("active_workspace") and workspace_ready)
-        production_ready = bool(install_ready and workspace_ready and not payload.get("repair_items"))
+        suite = self._as_dict(payload.get("suite"))
+        repair_items = self._as_list(payload.get("repair_items"))
+        repair_items_count = payload.get("repair_items_count")
+        repair_items_count = (
+            int(repair_items_count)
+            if isinstance(repair_items_count, int) and not isinstance(repair_items_count, bool)
+            else len(repair_items)
+        )
+        workspace_ready = self._as_bool(
+            payload.get("workspace_ready"),
+            bool(workspace and workspace.get("status") == "valid"),
+        )
+        install_ready = self._as_bool(payload.get("install_ready"), bool(config))
+        run_ready = self._as_bool(
+            payload.get("run_ready"),
+            bool(config and config.get("active_workspace") and workspace_ready),
+        )
+        production_ready = self._as_bool(
+            payload.get("production_ready"),
+            bool(install_ready and workspace_ready and not self._as_list(payload.get("repair_items"))),
+        )
+        workspace_entry_ready = self._as_bool(
+            payload.get("workspace_entry_ready"),
+            self._as_bool(
+                payload.get("workspace_access_ready"),
+                bool(payload.get("status") == "ready" and install_ready and workspace_ready and run_ready),
+            ),
+        )
+        production_backend_ready = self._as_bool(
+            payload.get("production_backend_ready"),
+            self._as_bool(suite.get("production_backend_ready")),
+        )
+        client_delivery_ready = self._as_bool(
+            payload.get("client_delivery_ready"),
+            self._as_bool(suite.get("client_delivery_ready")),
+        )
+        blocking_summary = self._as_list(payload.get("blocking_summary"))
+        if not blocking_summary and suite.get("blocking_summary"):
+            blocking_summary = self._as_list(suite.get("blocking_summary"))
+        external_dependency_status = self._coerce_dependency_status(payload)
+        setup_blocking_summary = self._as_list(payload.get("setup_blocking_summary"))
+        workspace_blocking_summary = self._as_list(payload.get("workspace_blocking_summary"))
+        suite_blocking_summary = self._as_list(payload.get("suite_blocking_summary"))
+        client_delivery_blocking_summary = self._as_list(payload.get("client_delivery_blocking_summary"))
+        if not (setup_blocking_summary or workspace_blocking_summary or suite_blocking_summary or client_delivery_blocking_summary):
+            for item in self._as_list(blocking_summary):
+                if not isinstance(item, dict):
+                    continue
+                code = str(item.get("code") or "")
+                blocking_type = str(item.get("blocking_type") or "")
+                if blocking_type == "workspace":
+                    workspace_blocking_summary.append(item)
+                elif blocking_type == "delivery" or code == "client_delivery_blocked":
+                    client_delivery_blocking_summary.append(item)
+                elif blocking_type in {"backend", "runtime"} or code.startswith("suite_"):
+                    suite_blocking_summary.append(item)
+                else:
+                    setup_blocking_summary.append(item)
+
+        readiness_layers = self._as_dict(payload.get("readiness_layers"))
+        if not readiness_layers:
+            readiness_layers = {
+                "setup": {
+                    "ready": bool(install_ready and not setup_blocking_summary),
+                    "status": "ready" if install_ready and not setup_blocking_summary else "blocked",
+                    "blocking_summary": setup_blocking_summary,
+                },
+                "workspace": {
+                    "ready": workspace_entry_ready,
+                    "status": "ready" if workspace_entry_ready else payload.get("status", "blocked"),
+                    "blocking_summary": workspace_blocking_summary,
+                },
+                "suite": {
+                    "ready": self._as_bool(payload.get("full_suite_ready"), self._as_bool(suite.get("full_suite_ready"))),
+                    "status": str(suite.get("status") or ""),
+                    "blocking_summary": suite_blocking_summary,
+                },
+                "client_delivery": {
+                    "ready": client_delivery_ready,
+                    "status": "ready" if client_delivery_ready else "blocked",
+                    "blocking_summary": client_delivery_blocking_summary,
+                },
+            }
 
         response = {
             "schema_version": payload.get("schema_version") or "deck_master_setup_status.v1",
@@ -786,29 +971,39 @@ class PreviewHandler(BaseHTTPRequestHandler):
             "install_ready": install_ready,
             "workspace_ready": workspace_ready,
             "run_ready": run_ready,
+            "workspace_entry_ready": workspace_entry_ready,
+            "workspace_access_ready": workspace_entry_ready,
             "production_ready": production_ready,
-            "dev_mode_allowed": False,
-            "fixture_mode_allowed": True,
+            "dev_mode_allowed": self._as_bool(payload.get("dev_mode_allowed"), False),
+            "fixture_mode_allowed": self._as_bool(payload.get("fixture_mode_allowed"), True),
+            "active_workspace_required_for_production": self._as_bool(payload.get("active_workspace_required_for_production"), True),
             "install_root": str(config.get("install_root") or "") if isinstance(config, dict) else "",
             "active_workspace": str(config.get("active_workspace") or "") if isinstance(config, dict) else "",
             "default_runs_dir": str(config.get("default_runs_dir") or "") if isinstance(config, dict) else "",
-            "active_workspace_required_for_production": True,
             "next_command": payload.get("next_command", ""),
+            "next_agent_action": payload.get("next_agent_action", ""),
             "config_path": payload.get("config_path"),
-            "missing_items": payload.get("missing_items", []),
-            "repair_items": payload.get("repair_items", []),
-            "repair_items_count": payload.get("repair_items_count", 0),
-            "warnings": payload.get("warnings", []),
+            "missing_items": self._as_list(payload.get("missing_items")),
+            "repair_items": self._as_list(payload.get("repair_items")),
+            "repair_items_count": repair_items_count,
+            "warnings": self._as_list(payload.get("warnings")),
             "workspace": workspace,
             "config": config,
-            "agent_targets": payload.get("agent_targets", {}),
-            "suite": payload.get("suite", {}),
-            "full_suite_ready": payload.get("full_suite_ready", False),
-            "capabilities": payload.get("capabilities", {}),
-            "task_readiness": payload.get("task_readiness", {}),
-            "production_backend_ready": payload.get("production_backend_ready", False),
-            "client_delivery_ready": payload.get("client_delivery_ready", False),
-            "blocking_summary": payload.get("blocking_summary", []),
+            "agent_targets": self._as_list(payload.get("agent_targets")),
+            "suite": self._as_dict(payload.get("suite")),
+            "full_suite_ready": self._as_bool(payload.get("full_suite_ready"), self._as_bool(suite.get("full_suite_ready"))),
+            "capabilities": self._as_dict(payload.get("capabilities")),
+            "task_readiness": self._as_dict(payload.get("task_readiness")),
+            "production_backend_ready": production_backend_ready,
+            "client_delivery_ready": client_delivery_ready,
+            "blocking_summary": self._as_list(blocking_summary),
+            "setup_blocking_summary": setup_blocking_summary,
+            "workspace_blocking_summary": workspace_blocking_summary,
+            "suite_blocking_summary": suite_blocking_summary,
+            "client_delivery_blocking_summary": client_delivery_blocking_summary,
+            "readiness_layers": readiness_layers,
+            "suite_external_dependency_status": self._as_list(self._as_dict(suite).get("external_dependency_status")),
+            "external_dependency_status": self._as_list(external_dependency_status),
         }
         return response
 
@@ -1388,7 +1583,21 @@ class PreviewHandler(BaseHTTPRequestHandler):
             self.send_error_json(HTTPStatus.NOT_FOUND, "Static file not found.")
             return
         content_type = mimetypes.guess_type(target.name)[0] or "text/plain"
-        content = target.read_bytes()
+        if target.name == "index.html":
+            runtime_config = {
+                "writeToken": str(getattr(self, "write_token", "") or ""),
+                "writeTokenHeader": WRITE_TOKEN_HEADER,
+            }
+            text = target.read_text(encoding="utf-8")
+            injection = (
+                "<script>"
+                f"window.__DECK_MASTER_CONFIG__ = {json.dumps(runtime_config, ensure_ascii=False)};"
+                "</script>"
+            )
+            text = text.replace("</head>", f"    {injection}\n  </head>")
+            content = text.encode("utf-8")
+        else:
+            content = target.read_bytes()
         self.send_response(HTTPStatus.OK)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(content)))
@@ -1413,6 +1622,7 @@ def build_handler(
     library_mode: str = "fixture",
     *,
     use_setup_runs_dir: bool | None = None,
+    write_token: str | None = None,
 ):
     class Handler(PreviewHandler):
         pass
@@ -1421,6 +1631,7 @@ def build_handler(
     Handler.runs_dir = (runs_dir or configured_runs_dir(ROOT_DIR / "runs")).expanduser().resolve()
     Handler.library_mode = library_mode
     Handler.use_setup_runs_dir = bool(runs_dir is None if use_setup_runs_dir is None else use_setup_runs_dir)
+    Handler.write_token = write_token or secrets.token_urlsafe(32)
     return Handler
 
 
@@ -1431,7 +1642,18 @@ def main() -> None:
     parser.add_argument("--library-mode", choices=["auto", "real", "fixture"], default="fixture")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=5050)
+    parser.add_argument("--write-token", default=None, help=f"Review Desk write token. Defaults to {WRITE_TOKEN_ENV} or a generated token.")
+    parser.add_argument(
+        "--allow-remote-preview",
+        action="store_true",
+        help="Allow binding Review Desk to a non-loopback host for trusted local-network demos.",
+    )
     args = parser.parse_args()
+
+    try:
+        remote_warning = validate_preview_bind_host(args.host, allow_remote_preview=args.allow_remote_preview)
+    except ValueError as exc:
+        parser.error(str(exc))
 
     run_dir = Path(args.run_dir).expanduser().resolve() if args.run_dir else None
     explicit_runs_dir = args.runs_dir is not None
@@ -1441,13 +1663,22 @@ def main() -> None:
         load_manifest(run_dir)
     server = ThreadingHTTPServer(
         (args.host, args.port),
-        build_handler(run_dir, runs_dir, args.library_mode, use_setup_runs_dir=not explicit_runs_dir),
+        build_handler(
+            run_dir,
+            runs_dir,
+            args.library_mode,
+            use_setup_runs_dir=not explicit_runs_dir,
+            write_token=args.write_token or os.environ.get(WRITE_TOKEN_ENV) or None,
+        ),
     )
     mode = "Preview" if run_dir else "Studio"
     print(f"Deck Master {mode}: http://{args.host}:{args.port}")
     print(f"Runs directory: {runs_dir}")
     if run_dir:
         print(f"Run directory: {run_dir}")
+    print(f"Write protection: enabled ({WRITE_TOKEN_HEADER})")
+    if remote_warning:
+        print(remote_warning, file=sys.stderr)
     server.serve_forever()
 
 

@@ -108,6 +108,8 @@ class SetupEnforcementTests(unittest.TestCase):
         self.assertEqual([], payload["missing_items"])
         self.assertEqual([], payload["repair_items"])
         self.assertEqual("http://127.0.0.1:5050", payload["config"]["review_cockpit_url"])
+        self.assertTrue(payload["workspace_entry_ready"])
+        self.assertEqual([], payload["workspace_blocking_summary"])
         self.assertTrue((workspace / "quality" / "delivery_checklist.md").exists())
 
         start = self.run_cli("start", "--workspace", str(workspace))

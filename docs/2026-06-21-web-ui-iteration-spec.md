@@ -495,7 +495,7 @@
 
 ## 12. 实现进度 Handoff（2026-06-21）
 
-本节记录实现执行状态，供下一位 agent 接手。详细执行路径见 `/Users/dingcheng/.claude/plans/spec-encapsulated-metcalfe.md`（含 Explore 发现的 6 处 spec 修正）。
+本节记录实现执行状态，供下一位 agent 接手。详细执行路径见 `<local-agent-plan>`（含 Explore 发现的 6 处 spec 修正）。
 
 ### 12.1 已完成（commit 7f25acb）
 

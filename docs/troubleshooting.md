@@ -133,7 +133,7 @@ Allowed:
 ```json
 {
   "raw_source_policy": "local_path_only",
-  "local_source_paths": ["~/DeckMasterPrivateBenchmarks/<case_id>/raw"]
+  "local_source_paths": ["~/deck-master-local-benchmarks/<case_id>/raw"]
 }
 ```
 

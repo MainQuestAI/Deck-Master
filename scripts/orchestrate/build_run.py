@@ -89,7 +89,10 @@ def manifest_page(plan_path: Path, run_dir: Path, page: dict[str, Any], link_mod
     result["preview_path"] = f"links/{link_name}"
     result["decision"] = page.get("decision", "needs_review")
     result["notes"] = page.get("notes", "")
-    result["source_preview_asset"] = str(source)
+    try:
+        result["source_preview_asset"] = str(source.relative_to(run_dir))
+    except ValueError:
+        result["source_preview_asset"] = str(source)
     result["asset_link_mode"] = link_mode
     return result
 

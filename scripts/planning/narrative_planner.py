@@ -151,7 +151,7 @@ def _is_restricted_sample(request: dict[str, Any]) -> bool:
         ]
     )
     lowered = text.lower()
-    if any(token in lowered for token in ["云南白药", "医药", "内容底座", "内容中台"]):
+    if any(token in lowered for token in ["医药", "医疗", "healthcare", "pharma", "内容底座", "内容中台"]):
         return True
     return any(re.search(rf"(?<![a-z0-9]){token}(?![a-z0-9])", lowered) for token in ["dam", "cms", "ai"])
 

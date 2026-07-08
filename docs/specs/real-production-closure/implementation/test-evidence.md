@@ -2,7 +2,7 @@
 
 ## C5 Evidence — Docs & Release Closure
 
-Implemented on 2026-06-22 in `/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure`.
+Implemented on 2026-06-22 in `<deck-master-real-production-closure-worktree>`.
 
 Coverage added:
 
@@ -34,7 +34,7 @@ Documentation scope:
 
 ## C4 Evidence — CI / RC Gate
 
-Implemented on 2026-06-22 in `/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure`.
+Implemented on 2026-06-22 in `<deck-master-real-production-closure-worktree>`.
 
 Coverage added:
 
@@ -65,7 +65,7 @@ Accepted C4 constraint:
 
 ## C3 Evidence — Real Benchmark Metadata & Aggregate Report
 
-Implemented on 2026-06-22 in `/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure`.
+Implemented on 2026-06-22 in `<deck-master-real-production-closure-worktree>`.
 
 Coverage added:
 
@@ -99,7 +99,7 @@ Accepted C3 constraint:
 
 ## C2 Evidence — Stage / Verify / Activate / Rollback
 
-Implemented on 2026-06-22 in `/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure`.
+Implemented on 2026-06-22 in `<deck-master-real-production-closure-worktree>`.
 
 Coverage added:
 
@@ -136,7 +136,7 @@ Accepted C2 constraint:
 
 ## C1 Evidence — Self-Contained Release Tree
 
-Implemented on 2026-06-22 in `/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure`.
+Implemented on 2026-06-22 in `<deck-master-real-production-closure-worktree>`.
 
 Coverage added:
 
@@ -169,7 +169,7 @@ Accepted C1 constraint:
 
 ## B1 Evidence — Unified Artifact Validator
 
-Implemented on 2026-06-22 in `/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure`.
+Implemented on 2026-06-22 in `<deck-master-real-production-closure-worktree>`.
 
 Coverage added:
 
@@ -222,14 +222,14 @@ New B1 test cases cover:
 
 Validation note:
 
-- A first full-test attempt failed after a temporary Stack A E2E setup changed Deck Master's global active workspace to a deleted temp directory. The setup config was restored to `/Users/dingcheng/Workspace/_internal/迈富时PPT工作坊`, then full tests passed.
+- A first full-test attempt failed after a temporary Stack A E2E setup changed Deck Master's global active workspace to a deleted temp directory. The setup config was restored to `<local-private-workspace>`, then full tests passed.
 
 ## Stack A E2E Evidence — Dispatch / Bridge / Import / Build / Render
 
 Verified on 2026-06-22 across:
 
-- Deck Master: `/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure`
-- PPT-Deck-Pro-Max bridge: `/Users/dingcheng/Coding-Project/02-key-project/PPT-Deck-Pro-Max-deck-master-bridge`
+- Deck Master: `<deck-master-real-production-closure-worktree>`
+- PPT-Deck-Pro-Max bridge: `<ppt-deck-pro-max-bridge-repo>`
 
 Flow verified:
 
@@ -269,7 +269,7 @@ Accepted smoke constraint:
 
 ## A2 Evidence — PPT-Deck-Pro-Max Bridge
 
-Implemented on 2026-06-22 in `/Users/dingcheng/Coding-Project/02-key-project/PPT-Deck-Pro-Max-deck-master-bridge`.
+Implemented on 2026-06-22 in `<ppt-deck-pro-max-bridge-repo>`.
 
 Coverage added:
 
@@ -293,8 +293,8 @@ Coverage added:
 | `git diff --check` | pass | No whitespace or patch formatting issues |
 | `python3 -m compileall scripts tests` | pass | System Python compile check passed |
 | `python3 -m unittest discover -s tests` | blocked by environment | System Python lacks `python-pptx`; existing `test_extract_layout_from_pptx` cannot import `pptx` |
-| `/Users/dingcheng/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 -m compileall scripts tests` | pass | Bundled Python compile check passed |
-| `/Users/dingcheng/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 -m unittest discover -s tests` | pass | 150 PPT-Deck-Pro-Max tests passed |
+| `<bundled-python> -m compileall scripts tests` | pass | Bundled Python compile check passed |
+| `<bundled-python> -m unittest discover -s tests` | pass | 150 PPT-Deck-Pro-Max tests passed |
 
 New A2 test cases cover:
 
@@ -307,7 +307,7 @@ New A2 test cases cover:
 
 ## A5 Evidence — Runtime & Review Workspace Integration
 
-Implemented on 2026-06-22 in `/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure`.
+Implemented on 2026-06-22 in `<deck-master-real-production-closure-worktree>`.
 
 Coverage added:
 
@@ -335,7 +335,7 @@ New A5 test cases cover:
 
 ## A4 Evidence — Build / Render Artifacts
 
-Implemented on 2026-06-22 in `/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure`.
+Implemented on 2026-06-22 in `<deck-master-real-production-closure-worktree>`.
 
 Coverage added:
 
@@ -386,7 +386,7 @@ Accepted A4 constraints:
 
 ## A3 Evidence — Agent Dispatch & Handback
 
-Implemented on 2026-06-22 in `/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure`.
+Implemented on 2026-06-22 in `<deck-master-real-production-closure-worktree>`.
 
 Coverage added:
 
@@ -420,7 +420,7 @@ New A3 test cases cover:
 
 ## A1 Evidence — Generation Result v2
 
-Implemented on 2026-06-22 in `/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure`.
+Implemented on 2026-06-22 in `<deck-master-real-production-closure-worktree>`.
 
 Coverage added:
 
@@ -494,7 +494,7 @@ The imported planning pack had trailing whitespace in:
 - `docs/deck-master-real-production-closure-spec-pack/README.md`
 - `docs/deck-master-real-production-closure-spec-pack/combined-spec.md`
 
-The repository copy removed those trailing spaces so `git diff --check` can pass. The source zip remains available at `/Users/dingcheng/Downloads/deck-master-real-production-closure-spec-pack.zip`.
+The repository copy removed those trailing spaces so `git diff --check` can pass. The source zip remains available at `<local-downloads>/deck-master-real-production-closure-spec-pack.zip`.
 
 ## Re-run Commands
 
@@ -511,11 +511,11 @@ python3 -m compileall scripts tests
 python3 -m unittest discover -s tests
 ```
 
-All commands above passed on 2026-06-22 in `/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure`.
+All commands above passed on 2026-06-22 in `<deck-master-real-production-closure-worktree>`.
 
 ## B2 Evidence — Delivery Validation & Lineage
 
-Implemented on 2026-06-22 in `/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure`.
+Implemented on 2026-06-22 in `<deck-master-real-production-closure-worktree>`.
 
 Coverage added:
 
@@ -548,7 +548,7 @@ New B2 test cases cover:
 
 ## B3 Evidence — Final Readiness
 
-Implemented on 2026-06-22 in `/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure`.
+Implemented on 2026-06-22 in `<deck-master-real-production-closure-worktree>`.
 
 Coverage added:
 
@@ -575,7 +575,7 @@ New B3 test cases cover:
 
 ## B4 Evidence — Export & Workbench Readiness Enforcement
 
-Implemented on 2026-06-22 in `/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure`.
+Implemented on 2026-06-22 in `<deck-master-real-production-closure-worktree>`.
 
 Coverage added:
 
@@ -602,7 +602,7 @@ New B4 test cases cover:
 
 ## B5 Evidence — Fixture/Dev/Production Isolation
 
-Implemented on 2026-06-22 in `/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-real-production-closure`.
+Implemented on 2026-06-22 in `<deck-master-real-production-closure-worktree>`.
 
 Coverage added:
 

@@ -1,110 +1,91 @@
 # Deck Master Quick Start
 
-This guide covers the implemented Real Production Closure path.
+This guide runs v0.9.14-preview.1 / Technical Preview (agent-operable). It uses fixture mode, synthetic demo content, and the local Review Desk.
 
-## 1. Check Local Readiness
+## 1. Install
+
+Use Python 3.11 or 3.12 for this preview.
 
 ```bash
-python3 scripts/deck_master.py setup-status --include-suite --output json
-python3 scripts/deck_master.py suite-status --output json
+python3.11 -m venv .venv
+. .venv/bin/activate
+python -m pip install -e ".[dev]"
+```
+
+If local Python cannot bootstrap pip in a venv, use:
+
+```bash
+uv venv --python 3.12 .venv
+uv pip install --python .venv/bin/python -e ".[dev]"
+```
+
+Check the CLI:
+
+```bash
+python3 scripts/deck_master.py --help
+deck-master --help
+```
+
+## 2. Create The Fixture Demo
+
+```bash
+bash scripts/demo.sh
+```
+
+Equivalent explicit command:
+
+```bash
+python3 scripts/deck_master.py autoplan \
+  --brief-file examples/briefs/retail_digital_transformation.txt \
+  --industry retail \
+  --library-mode fixture \
+  --run-mode fixture \
+  --dev-allow-unsetup \
+  --runs-dir /tmp/deck-master-demo \
+  --run-id oss-demo
 ```
 
 Expected result:
 
-- setup status JSON parses.
-- suite status returns a readable readiness result.
-- missing companion skill links can be repaired with `suite-install`.
+1. A run directory at `/tmp/deck-master-demo/oss-demo`.
+2. `preview_manifest.json` exists.
+3. At least 10 preview pages are present.
 
-## 2. Install Or Repair The Suite
-
-```bash
-python3 scripts/deck_master.py suite-install --target codex
-```
-
-The install path now builds a staged release, verifies it, activates it as `~/.deck-master/current`, and keeps the prior release as `~/.deck-master/previous`.
-
-Rollback:
+## 3. Run The Preview Gate
 
 ```bash
-python3 scripts/deck_master.py release-rollback
+python3 scripts/deck_master.py preview-gate \
+  --run-dir /tmp/deck-master-demo/oss-demo \
+  --expect-unconfigured-backend-ok
 ```
 
-Smoke check:
+The preview gate checks fixture demo readiness and confirms that an unconfigured production backend does not get reported as ready.
+
+## 4. Open Review Desk
 
 ```bash
-python3 scripts/deck_master.py release-smoke
+python3 scripts/preview/server.py /tmp/deck-master-demo/oss-demo
 ```
 
-## 3. Build A Self-Contained Release Tree
+Open the local URL printed by the server. Review Desk should show the page queue and the current run state. Local write operations use a per-server write token and same-origin guard.
+
+The preview server binds to `127.0.0.1` by default. Non-loopback hosts require `--allow-remote-preview` and should only be used on trusted local networks because the write token is visible to browsers that can load the page.
+
+## 5. Production Boundary
+
+The Technical Preview first-run path is fixture/demo. Production backend commands require configured and verified companion capabilities. The production external backend is `ppt-master`; `ppt-deck-pro-max` is a suite Skill for page production. If `ppt-master` is missing, Deck Master should report `unbound` or `not_configured` and provide a fixture/demo path.
+
+Use these commands to inspect readiness:
 
 ```bash
-python3 scripts/deck_master.py release-build --output /tmp/deck-master-release --force
-/tmp/deck-master-release/bin/deck-master --help
+python3 scripts/deck_master.py setup-status --include-suite --output json
+python3 scripts/deck_master.py suite-status --output json
+python3 scripts/deck_master.py backend status
 ```
 
-The release tree includes:
+## 6. Formal RC Gate
 
-- `bin/deck-master`
-- `scripts/`
-- `skills/`
-- `capabilities/`
-- `contracts/`
-- `release-manifest.json`
-- `deck_capability_lock.json`
-- `SHA256SUMS`
-
-## 4. Initialize A Project Workspace
-
-```bash
-python3 scripts/deck_master.py init-project --workspace <workspace> --name <project>
-python3 scripts/deck_master.py route-skill --input-type raw_materials
-```
-
-`init-project` creates customer material, meeting, AI process, reference, delivery, quality, and `.deck-master` metadata directories. It is idempotent and keeps existing user files.
-
-## 5. Use The v1 Skill Route
-
-```bash
-python3 scripts/deck_master.py next-step --run-dir <run_dir>
-python3 scripts/deck_master.py route-skill --run-dir <run_dir>
-python3 scripts/deck_master.py workflow-autopilot --mode quick --run-dir <run_dir>
-```
-
-`next-step` and `route-skill` now return `recommended_skill`, `skill_stage`, and `skill_route`. Build stages route to `deck-builder`; raw material routes to `deck-brief`; final delivery routes to `deck-review`.
-
-## 6. Production Generation Handoff
-
-Production generation creates an Agent dispatch package and waits for an external result.
-
-```bash
-python3 scripts/deck_master.py run-generation --run-dir <run_dir> --no-execute
-```
-
-Expected output inside the run:
-
-- `generation_dispatch/dispatch_package.json`
-- `generation_dispatch/agent_instructions.md`
-
-Import a result:
-
-```bash
-python3 scripts/deck_master.py generation-session import-results --run-dir <run_dir> --input <result_or_dir>
-```
-
-The imported result must match `deck_generation_result.v2`, run/session ids, checksum, and run-relative artifact paths.
-
-## 7. Build, Render, Readiness, Export
-
-```bash
-python3 scripts/deck_master.py build prepare --run-dir <run_dir>
-python3 scripts/deck_master.py build run --run-dir <run_dir>
-python3 scripts/deck_master.py final-readiness --run-dir <run_dir>
-python3 scripts/deck_master.py export --run-dir <run_dir>
-```
-
-Client export requires final readiness to be ready. Internal export can continue with degraded marking when needed.
-
-## 8. RC Gate
+Use this only for M2 release-candidate validation:
 
 ```bash
 python3 scripts/deck_master.py rc-gate \
@@ -113,10 +94,3 @@ python3 scripts/deck_master.py rc-gate \
   --skip-browser-smoke \
   --force
 ```
-
-The RC gate writes:
-
-- `rc_gate_report.json`
-- `rc_gate_report.md`
-
-Use `--require-browser-smoke` only when Playwright/browser runtime is available and must be enforced.

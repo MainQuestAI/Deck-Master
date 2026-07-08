@@ -1,7 +1,7 @@
 # Skill OS Runtime v1.1 — 开发计划
 
 分支：`feat/skill-os-runtime-v1.1`
-工作区：`/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-skill-os-v1.1`
+工作区：`<deck-master-skill-os-worktree>`
 基线：`4605213` · 目标：`1.1.0` · 基线测试：836 passed
 
 ## 执行原则

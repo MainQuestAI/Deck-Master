@@ -187,7 +187,7 @@ def simulated_candidates_for_beat(run_dir: Path, beat: dict[str, Any]) -> list[d
         return []
     confidence = 0.86 if role in {"opener", "problem"} else 0.62
     screenshot = write_review_svg(
-        run_dir / "placeholders" / f"library_{beat_id}.svg",
+        run_dir / "preview_assets" / f"library_{beat_id}.svg",
         title,
         str(beat.get("reuse_query") or ""),
     )
@@ -200,9 +200,9 @@ def simulated_candidates_for_beat(run_dir: Path, beat: dict[str, Any]) -> list[d
             "role": role,
             "title": f"历史页候选：{title}",
             "text_summary": str(beat.get("content_goal") or ""),
-            "source_file": "/Users/dingcheng/Workspace/_resources/方案库/通用方案/fixture-history-deck.pptx",
+            "source_file": "fixture://retail-history-deck",
             "page_number": int(beat.get("order") or 1),
-            "screenshot_path": str(screenshot),
+            "screenshot_path": str(screenshot.relative_to(run_dir)),
             "confidence": confidence,
             "score": confidence,
             "win_rate": 0.67 if role in {"opener", "problem"} else 0.45,

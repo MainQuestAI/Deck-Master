@@ -5,6 +5,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+try:  # pragma: no cover - exercised by package-import test path.
+    from runtime.builder_backend import external_dependency_statuses
+except ModuleNotFoundError:  # pragma: no cover - exercised by package-import test path.
+    from scripts.runtime.builder_backend import external_dependency_statuses
 from skills.installer import inspect_skill_link, inspect_suite_status, write_companion_manifest
 from workspace.foundation import repair_workspace, validate_workspace
 
@@ -133,7 +137,61 @@ def _setup_blocking_summary(
         for item in suite.get("blocking_summary", []):
             if isinstance(item, dict):
                 summary.append(item)
-    return summary
+    deduped: list[dict[str, Any]] = []
+    seen_codes: set[str] = set()
+    for item in summary:
+        code = str(item.get("code") or "")
+        if code and code in seen_codes:
+            continue
+        if code:
+            seen_codes.add(code)
+        deduped.append(item)
+    return deduped
+
+
+def _summary_without_raw_operator_hints(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    public_items: list[dict[str, Any]] = []
+    raw_markers = ("deck-master ", "python3 ", "--", "/Users/", "/private/")
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        details = []
+        for detail in item.get("details", []):
+            text = str(detail or "").strip()
+            if not text or text.startswith("/") or any(marker in text for marker in raw_markers):
+                continue
+            details.append(text)
+        public_item = {
+            "code": str(item.get("code") or ""),
+            "blocking_type": str(item.get("blocking_type") or ""),
+            "message": str(item.get("message") or ""),
+            "repair_owner": str(item.get("repair_owner") or ""),
+        }
+        if details:
+            public_item["details"] = details
+        public_items.append(public_item)
+    return public_items
+
+
+def _split_blocking_summary(items: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
+    layers = {
+        "setup": [],
+        "workspace": [],
+        "suite": [],
+        "client_delivery": [],
+    }
+    for item in _summary_without_raw_operator_hints(items):
+        code = str(item.get("code") or "")
+        blocking_type = str(item.get("blocking_type") or "")
+        if blocking_type == "workspace":
+            layers["workspace"].append(item)
+        elif blocking_type == "delivery" or code == "client_delivery_blocked":
+            layers["client_delivery"].append(item)
+        elif blocking_type in {"backend", "runtime"} or code.startswith("suite_"):
+            layers["suite"].append(item)
+        else:
+            layers["setup"].append(item)
+    return layers
 
 
 def setup_readiness(
@@ -263,6 +321,7 @@ def setup_status(
     normalized_mode = _normalize_run_mode(run_mode)
     readiness = setup_readiness(workspace=workspace, run_mode=normalized_mode)
     status_value = "ready"
+    suite_projection: dict[str, Any] | None = None
 
     if cfg is None:
         missing.append(str(config_path()))
@@ -311,7 +370,25 @@ def setup_status(
     ):
         status_value = "needs_workspace"
 
+    workspace_entry_ready = bool(
+        status_value == "ready"
+        and readiness["status"]["install_ready"]
+        and readiness["status"]["workspace_ready"]
+        and readiness["status"]["run_ready"]
+        and not missing
+        and not repairs
+    )
     production_ready = bool(readiness["status"]["production_ready"] and not missing and not repairs)
+
+    targets = []
+    if isinstance(cfg, dict) and not cfg.get("_invalid"):
+        targets = [str(target) for target in (cfg.get("agent_targets") or [])]
+    suite_projection = inspect_suite_status(targets=targets or ["codex"], include_optional=True)
+    external_dependency_status = suite_projection.get("external_dependency_status", [])
+    if not isinstance(external_dependency_status, list):
+        external_dependency_status = external_dependency_statuses()
+    production_backend_ready = bool(suite_projection.get("production_backend_ready"))
+    client_delivery_ready = bool(suite_projection.get("client_delivery_ready"))
 
     result = {
         "schema_version": SETUP_STATUS_SCHEMA_VERSION,
@@ -325,6 +402,8 @@ def setup_status(
         "install_ready": readiness["status"]["install_ready"],
         "workspace_ready": readiness["status"]["workspace_ready"],
         "run_ready": readiness["status"]["run_ready"],
+        "workspace_entry_ready": workspace_entry_ready,
+        "workspace_access_ready": workspace_entry_ready,
         "production_ready": production_ready,
         "run_mode": normalized_mode,
         "workspace": workspace_report,
@@ -333,6 +412,12 @@ def setup_status(
         "fixture_mode_allowed": _run_mode_allows_setup_skip("fixture", dev_allow_unsetup=False),
         "next_command": "",
         "next_agent_action": "",
+        "full_suite_ready": bool(suite_projection.get("full_suite_ready")) if isinstance(suite_projection, dict) else False,
+        "capabilities": suite_projection.get("capabilities", {}) if isinstance(suite_projection, dict) else {},
+        "task_readiness": suite_projection.get("task_readiness", {}) if isinstance(suite_projection, dict) else {},
+        "production_backend_ready": production_backend_ready,
+        "client_delivery_ready": client_delivery_ready,
+        "external_dependency_status": external_dependency_status,
     }
 
     if status_value == "needs_workspace":
@@ -353,30 +438,52 @@ def setup_status(
     else:
         result["next_agent_action"] = "Deck Master setup is ready."
 
-    if include_suite:
-        targets = []
-        if isinstance(cfg, dict) and not cfg.get("_invalid"):
-            targets = [str(target) for target in (cfg.get("agent_targets") or [])]
-        suite = inspect_suite_status(targets=targets or ["codex"], include_optional=True)
-        result["suite"] = suite
-        result["full_suite_ready"] = suite["full_suite_ready"]
-        result["capabilities"] = suite["capabilities"]
-        result["task_readiness"] = suite["task_readiness"]
-        result["production_backend_ready"] = bool(suite.get("production_backend_ready"))
-        result["client_delivery_ready"] = bool(suite.get("client_delivery_ready"))
-        if suite.get("next_agent_action") and suite.get("status") != "ready":
-            result["next_agent_action"] = str(suite["next_agent_action"])
-        if not result["next_command"] and suite.get("next_command"):
-            result["next_command"] = str(suite["next_command"])
+    if isinstance(suite_projection, dict):
+        result["production_backend_ready"] = bool(suite_projection.get("production_backend_ready"))
+        result["client_delivery_ready"] = bool(suite_projection.get("client_delivery_ready"))
+        result["external_dependency_status"] = suite_projection.get("external_dependency_status", external_dependency_status)
+        if suite_projection.get("next_agent_action") and suite_projection.get("status") != "ready":
+            result["next_agent_action"] = str(suite_projection["next_agent_action"])
+        if not result["next_command"] and suite_projection.get("next_command"):
+            result["next_command"] = str(suite_projection["next_command"])
+        if include_suite:
+            result["suite"] = suite_projection
 
     result["blocking_summary"] = _setup_blocking_summary(
         status_value=status_value,
         workspace_path=workspace_path,
         missing=missing,
         repairs=repairs,
-        suite=result.get("suite") if isinstance(result.get("suite"), dict) else None,
+        suite=suite_projection if isinstance(suite_projection, dict) else None,
         next_command=str(result.get("next_command") or ""),
     )
+    layered_blocks = _split_blocking_summary(result["blocking_summary"])
+    result["setup_blocking_summary"] = layered_blocks["setup"]
+    result["workspace_blocking_summary"] = layered_blocks["workspace"]
+    result["suite_blocking_summary"] = layered_blocks["suite"]
+    result["client_delivery_blocking_summary"] = layered_blocks["client_delivery"]
+    result["readiness_layers"] = {
+        "setup": {
+            "ready": bool(result["install_ready"] and not result["setup_blocking_summary"]),
+            "status": "ready" if result["install_ready"] and not result["setup_blocking_summary"] else "blocked",
+            "blocking_summary": result["setup_blocking_summary"],
+        },
+        "workspace": {
+            "ready": workspace_entry_ready,
+            "status": "ready" if workspace_entry_ready else status_value,
+            "blocking_summary": result["workspace_blocking_summary"],
+        },
+        "suite": {
+            "ready": bool(result["full_suite_ready"]),
+            "status": str(suite_projection.get("status") or "") if isinstance(suite_projection, dict) else "",
+            "blocking_summary": result["suite_blocking_summary"],
+        },
+        "client_delivery": {
+            "ready": bool(result["client_delivery_ready"]),
+            "status": "ready" if result["client_delivery_ready"] else "blocked",
+            "blocking_summary": result["client_delivery_blocking_summary"],
+        },
+    }
 
     if write_event:
         _append_setup_event("setup.status.checked", status=status_value, data=result)

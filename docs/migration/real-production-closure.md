@@ -77,7 +77,7 @@ Real benchmark metadata must use:
   "case_type": "real_metadata",
   "source_material": {
     "raw_source_policy": "local_path_only",
-    "local_source_paths": ["~/DeckMasterPrivateBenchmarks/<case_id>/raw"],
+    "local_source_paths": ["~/deck-master-local-benchmarks/<case_id>/raw"],
     "excluded_from_repo": true
   }
 }

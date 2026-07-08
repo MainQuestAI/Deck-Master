@@ -16,9 +16,27 @@ from pathlib import Path
 from typing import Any
 
 try:  # Supports both `python scripts/deck_master.py` and package imports in tests.
-    from runtime.builder_backend import inspect_builder_backend_package
+    from runtime.builder_backend import (
+        backend_render_runtime_ready,
+        backend_render_runtime_status,
+        backend_dependency_statuses,
+        bind_backend_dependency,
+        external_dependency_statuses,
+        inspect_builder_backend_package,
+        unbind_backend_dependency,
+        verify_backend_dependency,
+    )
 except ModuleNotFoundError:  # pragma: no cover - exercised by package-import test path.
-    from scripts.runtime.builder_backend import inspect_builder_backend_package
+    from scripts.runtime.builder_backend import (
+        backend_render_runtime_ready,
+        backend_render_runtime_status,
+        backend_dependency_statuses,
+        bind_backend_dependency,
+        external_dependency_statuses,
+        inspect_builder_backend_package,
+        unbind_backend_dependency,
+        verify_backend_dependency,
+    )
 
 try:  # Supports both `python scripts/deck_master.py` and package imports in tests.
     from skills.manifest import load_registry
@@ -50,6 +68,8 @@ INSTALL_LOG_NAME = "install_log.jsonl"
 INSTALLED_SKILL_DIR = INSTALL_LOG_DIR / "current" / "skills" / SKILL_NAME
 _DEFAULT_INSTALLED_SKILL_DIR = INSTALLED_SKILL_DIR
 COMPANION_MANIFEST_NAME = "companion-manifest.json"
+RC_GATE_REPORT_ENV = "DECK_MASTER_RC_GATE_REPORT"
+DEFAULT_RC_GATE_REPORT = "rc_reports/rc_gate_report.json"
 
 
 def _suite_version() -> str:
@@ -57,6 +77,15 @@ def _suite_version() -> str:
         return load_registry().suite_version
     except Exception:  # pragma: no cover - fallback only if canonical manifest load fails unexpectedly.
         return DEFAULT_SUITE_VERSION
+
+
+def _package_version() -> str:
+    manifest_path = _repo_root() / "skills" / "manifest.json"
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except Exception:  # pragma: no cover - fallback only if package manifest is unavailable.
+        return _suite_version()
+    return str(manifest.get("package_version") or manifest.get("version") or _suite_version())
 
 SUITE_SKILLS: list[dict[str, Any]] = [
     {
@@ -691,6 +720,26 @@ def inspect_skill_link(
         "skill_md_exists": False,
     }
 
+    backend_override = os.environ.get("DECK_MASTER_PPT_MASTER_BACKEND", "").strip()
+    if skill_name == "ppt-master" and backend_override:
+        override_root = Path(backend_override).expanduser()
+        backend = inspect_builder_backend_package(override_root)
+        valid_override = bool(override_root.exists()) and bool(backend.get("full_package"))
+        result.update({
+            "valid": bool(valid_override),
+            "status": "env_backend_override",
+            "resolved": str(override_root.resolve() if override_root.exists() else override_root),
+            "source_type": "env_backend_override",
+            "backend_type": "production_backend" if backend.get("production_capable") else "adapter_only",
+            "production_capable": bool(backend.get("production_capable")),
+            "skill_md_exists": bool((override_root / "SKILL.md").exists()),
+            "backend_status": backend,
+        })
+        if not valid_override or backend.get("reasons"):
+            result["error"] = "; ".join(str(item) for item in backend.get("reasons", []) if item)
+            result["status"] = "schema_incompatible"
+        return result
+
     if not link.exists() and not link.is_symlink():
         result["error"] = "Symlink does not exist. Run install-skill first."
         if source.exists():
@@ -827,8 +876,6 @@ def companion_manifest() -> dict[str, Any]:
             "adoption_policy": spec["adoption_policy"],
             "conflict_policy": spec["conflict_policy"],
         }
-        if spec["name"] == SKILL_NAME:
-            item["source_path"] = str(_resolve_source_dir(skill_name=SKILL_NAME))
         skills.append(item)
     return {
         "schema_version": COMPANION_MANIFEST_SCHEMA_VERSION,
@@ -841,6 +888,31 @@ def companion_manifest() -> dict[str, Any]:
     }
 
 
+_RELEASE_PRIVATE_MARKERS = ("/Users/", "/private/", str(Path.home()))
+_PUBLIC_DEPENDENCY_PATH_FIELDS = {"repo_path", "skill_path", "git_remote", "source"}
+
+
+def _release_safe_dependency_value(key: str, value: Any) -> Any:
+    if key in _PUBLIC_DEPENDENCY_PATH_FIELDS:
+        return ""
+    if isinstance(value, str) and any(marker and marker in value for marker in _RELEASE_PRIVATE_MARKERS):
+        return ""
+    return value
+
+
+def _public_external_dependency_statuses(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    public_items: list[dict[str, Any]] = []
+    for item in items:
+        public_item = {
+            key: _release_safe_dependency_value(key, value)
+            for key, value in item.items()
+        }
+        for field in sorted(_PUBLIC_DEPENDENCY_PATH_FIELDS):
+            public_item.setdefault(field, "")
+        public_items.append(public_item)
+    return public_items
+
+
 def product_capability_manifest() -> dict[str, Any]:
     core = [
         str(spec["name"])
@@ -848,10 +920,20 @@ def product_capability_manifest() -> dict[str, Any]:
         if str(spec["name"]).startswith("deck-") and str(spec.get("role") or "") != "compatibility_alias"
     ]
     product_capabilities = [str(spec["name"]) for spec in SUITE_SKILLS if str(spec["name"]).startswith("ppt-")]
-    backend_dependencies = {
+    raw_backend_dependencies = {
         str(spec["name"]): str(spec.get("backend_dependency") or "")
         for spec in SUITE_SKILLS
         if spec.get("backend_dependency")
+    }
+    backend_dependencies = {
+        name: dependency
+        for name, dependency in raw_backend_dependencies.items()
+        if dependency == "ppt-master"
+    }
+    suite_skill_dependencies = {
+        name: dependency
+        for name, dependency in raw_backend_dependencies.items()
+        if dependency != "ppt-master"
     }
     public_routes = {
         str(spec["name"]): {
@@ -867,6 +949,8 @@ def product_capability_manifest() -> dict[str, Any]:
     return {
         "schema_version": PRODUCT_CAPABILITY_MANIFEST_SCHEMA_VERSION,
         "product": "deck-master",
+        "license": "Apache-2.0",
+        "package_version": _package_version(),
         "runtime_shape": "agent_facing_local_first",
         "provider_policy": "zero_builtin_llm_provider",
         "required_capabilities": [str(spec["name"]) for spec in _suite_specs(include_optional=False)],
@@ -876,6 +960,7 @@ def product_capability_manifest() -> dict[str, Any]:
         "product_capability_skills": product_capabilities,
         "compatibility_skills": product_capabilities,
         "backend_dependencies": backend_dependencies,
+        "suite_skill_dependencies": suite_skill_dependencies,
         "skill_routes": public_routes,
         "capability_policy": {
             "required_suite_must_be_full_ready": True,
@@ -1037,6 +1122,7 @@ def verify_release_tree(
 
     required_files = [
         RELEASE_TREE_MARKER,
+        "AGENTS.md",
         "bin/deck-master",
         "scripts/deck_master.py",
         PRODUCT_CAPABILITY_MANIFEST_NAME,
@@ -1045,6 +1131,12 @@ def verify_release_tree(
         CAPABILITY_LOCK_NAME,
         SHA256SUMS_NAME,
         REVISION_NAME,
+        "docs/agent-task-index.md",
+        "docs/agent-recovery-playbook.md",
+        "contracts/setup-status.v2.schema.json",
+        "contracts/workflow-state.v1.schema.json",
+        "contracts/final-readiness.v1.schema.json",
+        "contracts/rc-gate-report.v1.schema.json",
     ]
     for rel in required_files:
         path = root / rel
@@ -1281,6 +1373,7 @@ def build_release_tree(
         "reference-packs",
         "examples",
         "benchmarks",
+        "docs",
         "scripts",
     ]
 
@@ -1301,7 +1394,7 @@ def build_release_tree(
     release_root.mkdir(parents=True, exist_ok=True)
     marker.write_text("deck-master release tree\n", encoding="utf-8")
 
-    for subdir in ("skills", "capabilities", "contracts", "reference-packs", "examples", "benchmarks", "bin", "scripts"):
+    for subdir in ("skills", "capabilities", "contracts", "reference-packs", "examples", "benchmarks", "docs", "bin", "scripts"):
         (release_root / subdir).mkdir(parents=True, exist_ok=True)
 
     for spec in _suite_specs(include_optional=True):
@@ -1336,14 +1429,45 @@ def build_release_tree(
         _copytree_replace(
             benchmarks_src,
             release_root / "benchmarks",
-            ignore=shutil.ignore_patterns("results", "__pycache__", "*.pyc", ".pytest_cache", ".mypy_cache"),
+            ignore=shutil.ignore_patterns(
+                "benchmark_runs",
+                "results",
+                "private_sources",
+                "workspaces",
+                "*.local.json",
+                "__pycache__",
+                "*.pyc",
+                ".pytest_cache",
+                ".mypy_cache",
+            ),
         )
 
     _copytree_replace(
         _repo_root() / "scripts",
         release_root / "scripts",
-        ignore=shutil.ignore_patterns("__pycache__", "*.pyc", ".pytest_cache", ".mypy_cache"),
+        ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "*.egg-info", ".pytest_cache", ".mypy_cache"),
     )
+    for source_name, target_name in (
+        ("AGENTS.md", "AGENTS.md"),
+        ("README.md", "README.md"),
+        ("LICENSE", "LICENSE"),
+        ("NOTICE", "NOTICE"),
+        ("CONTRIBUTING.md", "CONTRIBUTING.md"),
+        ("SECURITY.md", "SECURITY.md"),
+        ("CODE_OF_CONDUCT.md", "CODE_OF_CONDUCT.md"),
+        ("THIRD_PARTY_NOTICES.md", "THIRD_PARTY_NOTICES.md"),
+        ("CHANGELOG.md", "CHANGELOG.md"),
+        ("docs/known-limitations.md", "KNOWN_LIMITATIONS.md"),
+        ("docs/agent-task-index.md", "docs/agent-task-index.md"),
+        ("docs/agent-recovery-playbook.md", "docs/agent-recovery-playbook.md"),
+        ("docs/quick-start.md", "docs/quick-start.md"),
+        ("docs/known-limitations.md", "docs/known-limitations.md"),
+        ("docs/releases/2026-07-06-release-checklist.md", "docs/releases/2026-07-06-release-checklist.md"),
+    ):
+        source_path = _repo_root() / source_name
+        if source_path.exists():
+            (release_root / target_name).parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source_path, release_root / target_name)
 
     (release_root / PRODUCT_CAPABILITY_MANIFEST_NAME).write_text(
         json.dumps(product_capability_manifest(), ensure_ascii=False, indent=2) + "\n",
@@ -1366,14 +1490,16 @@ def build_release_tree(
     release_skills = [str(spec["name"]) for spec in _suite_specs(include_optional=True)]
     release_capabilities = [str(spec["name"]) for spec in SUITE_SKILLS if str(spec["name"]).startswith("ppt-")]
     source = {
-        "repo_root": str(_repo_root()),
         "git_head": _git_head(),
     }
+    external_dependencies = _public_external_dependency_statuses(external_dependency_statuses())
     capability_lock = {
         "schema_version": "deck_capability_lock.v1",
         "suite_name": SUITE_NAME,
         "suite_version": suite_version,
         "built_at": _utc_now(),
+        "external_dependencies": external_dependencies,
+        "external_dependency_status": external_dependencies,
         "source": source,
         "skills": [
             {
@@ -1404,12 +1530,16 @@ def build_release_tree(
         "suite_name": SUITE_NAME,
         "suite_version": suite_version,
         "built_at": _utc_now(),
-        "release_root": str(release_root),
+        "release_root": ".",
         "self_contained": True,
         "entrypoint": "bin/deck-master",
         "scripts": "scripts",
         "examples": "examples",
         "benchmarks": "benchmarks",
+        "agent_entrypoint": "AGENTS.md",
+        "agent_task_index": "docs/agent-task-index.md",
+        "agent_recovery_playbook": "docs/agent-recovery-playbook.md",
+        "contracts": "contracts",
         "product_capability_manifest": PRODUCT_CAPABILITY_MANIFEST_NAME,
         "companion_manifest": COMPANION_MANIFEST_NAME,
         "capability_lock": CAPABILITY_LOCK_NAME,
@@ -1445,6 +1575,179 @@ def _suite_specs(include_optional: bool = False) -> list[dict[str, Any]]:
     ]
 
 
+def _backend_truth_status(
+    render_runtime_ready: bool | None = None,
+    render_runtime_status: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    statuses = backend_dependency_statuses(
+        render_runtime_ready=render_runtime_ready,
+        render_runtime_status=render_runtime_status,
+    )
+    for item in statuses:
+        if item.get("name") == "ppt-master":
+            return item
+    return {
+        "name": "ppt-master",
+        "binding_status": "unbound",
+        "dependency_kind": "external_repo",
+        "repo_label": "",
+        "repo_path": "",
+        "skill_path": "",
+        "git_sha": "",
+        "git_branch": "",
+        "worktree_dirty": False,
+        "verified": False,
+        "verified_at": "",
+        "validated_capabilities": [],
+        "summary": "No formal backend binding found for PPT Master.",
+    }
+
+
+def _dependency_by_name(items: list[dict[str, Any]], name: str) -> dict[str, Any]:
+    for item in items:
+        if item.get("name") == name:
+            return item
+    return {}
+
+
+def _production_backend_ready_from_status(status: dict[str, Any]) -> bool:
+    return (
+        str(status.get("name") or "") == "ppt-master"
+        and str(status.get("binding_status") or "") in {"bound_verified", "bound_verified_runtime_blocked"}
+        and bool(status.get("verified"))
+    )
+
+
+def _required_external_dependencies_ready(items: list[dict[str, Any]]) -> bool:
+    item = _dependency_by_name(items, "ppt-master")
+    return (
+        str(item.get("binding_status") or "") in {"bound_verified", "bound_verified_runtime_blocked"}
+        and bool(item.get("verified"))
+    )
+
+
+def _rc_gate_report_path() -> Path:
+    override = os.environ.get(RC_GATE_REPORT_ENV, "").strip()
+    if override:
+        return Path(override).expanduser()
+    return _repo_root() / DEFAULT_RC_GATE_REPORT
+
+
+def _safe_read_rc_gate_report(path: Path) -> dict[str, Any] | None:
+    if not path.exists():
+        return None
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return None
+    return payload if isinstance(payload, dict) else None
+
+
+def _dependency_snapshot(items: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    snapshot: dict[str, dict[str, Any]] = {}
+    item = _dependency_by_name(items, "ppt-master")
+    snapshot["ppt-master"] = {
+        "binding_status": str(item.get("binding_status") or ""),
+        "git_sha": str(item.get("git_sha") or ""),
+        "verified": bool(item.get("verified")),
+    }
+    return snapshot
+
+
+def _render_runtime_status_for_ready(render_runtime_ready: bool) -> dict[str, Any]:
+    status = backend_render_runtime_status()
+    if bool(status.get("runtime_ready")) == bool(render_runtime_ready):
+        return status
+    ready = bool(render_runtime_ready)
+    return {
+        "runtime_ready": ready,
+        "runtime_ready_source": "external_backend_smoke" if ready else "contract_probe",
+        "runtime_ready_trusted_for_rc": ready,
+    }
+
+
+def _client_delivery_evidence(
+    external_dependency_status: list[dict[str, Any]],
+    *,
+    render_runtime_trusted_for_rc: bool = False,
+) -> dict[str, Any]:
+    report_path = _rc_gate_report_path()
+    evidence: dict[str, Any] = {
+        "rc_gate_report": str(report_path),
+        "rc_gate_passed": False,
+        "external_dependency_closure_passed": False,
+        "dependency_snapshot_matches": False,
+        "render_runtime_trusted_for_rc": bool(render_runtime_trusted_for_rc),
+        "missing": [],
+    }
+    if not render_runtime_trusted_for_rc:
+        evidence["missing"].append("trusted_render_runtime")
+    report = _safe_read_rc_gate_report(report_path)
+    if report is None:
+        evidence["missing"].append("rc_gate_report")
+        return evidence
+    evidence["rc_gate_passed"] = report.get("status") == "pass"
+    checks = report.get("checks") if isinstance(report.get("checks"), list) else []
+    closure = next(
+        (
+            check for check in checks
+            if isinstance(check, dict) and check.get("check_id") == "external_dependency_closure"
+        ),
+        {},
+    )
+    evidence["external_dependency_closure_passed"] = closure.get("status") == "pass"
+    report_dependencies = (closure.get("details") or {}).get("dependencies") if isinstance(closure.get("details"), dict) else {}
+    current_dependencies = _dependency_snapshot(external_dependency_status)
+    evidence["current_dependencies"] = current_dependencies
+    evidence["reported_dependencies"] = report_dependencies if isinstance(report_dependencies, dict) else {}
+    evidence["dependency_snapshot_matches"] = (
+        isinstance(report_dependencies, dict)
+        and all(report_dependencies.get(name) == current_dependencies.get(name) for name in current_dependencies)
+    )
+    if not evidence["rc_gate_passed"]:
+        evidence["missing"].append("rc_gate_pass")
+    if not evidence["external_dependency_closure_passed"]:
+        evidence["missing"].append("external_dependency_closure_pass")
+    if not evidence["dependency_snapshot_matches"]:
+        evidence["missing"].append("current_dependency_snapshot_match")
+    return evidence
+
+
+def backend_status() -> dict[str, Any]:
+    render_runtime_ready = backend_render_runtime_ready()
+    render_runtime_status = _render_runtime_status_for_ready(render_runtime_ready)
+    render_runtime_ready = bool(render_runtime_status["runtime_ready"])
+    status = _backend_truth_status(
+        render_runtime_ready=render_runtime_ready,
+        render_runtime_status=render_runtime_status,
+    )
+    return {
+        "schema_version": "deck_master_suite_status.v1",
+        "backend_dependency": "ppt-master",
+        "binding_runtime_ready": bool(render_runtime_ready),
+        "runtime_ready_source": str(render_runtime_status["runtime_ready_source"]),
+        "runtime_ready_trusted_for_rc": bool(render_runtime_status["runtime_ready_trusted_for_rc"]),
+        "production_bound_verified": bool(status.get("verified")),
+        "binding_status": str(status.get("binding_status")),
+        "external_dependency_status": external_dependency_statuses(
+            render_runtime_ready=render_runtime_ready,
+            render_runtime_status=render_runtime_status,
+        ),
+    }
+
+
+def backend_bind(name: str, repo_path: str) -> dict[str, Any]:
+    return bind_backend_dependency(repo_path=repo_path, name=name)
+
+
+def backend_verify(name: str) -> dict[str, Any]:
+    return verify_backend_dependency(name=name)
+
+
+def backend_unbind(name: str) -> dict[str, Any]:
+    return unbind_backend_dependency(name=name)
+
+
 def _cli_status(command: str, *, skill_name: str = "") -> str:
     if command == "deck-master":
         return "ready"
@@ -1469,6 +1772,24 @@ def inspect_suite_status(
     target_reports: dict[str, list[dict[str, Any]]] = {}
     target_readiness: dict[str, dict[str, Any]] = {}
 
+    render_runtime_ready = backend_render_runtime_ready()
+    render_runtime_status = _render_runtime_status_for_ready(render_runtime_ready)
+    render_runtime_ready = bool(render_runtime_status["runtime_ready"])
+    render_runtime_trusted_for_rc = bool(render_runtime_status["runtime_ready_trusted_for_rc"])
+    external_dependency_status = external_dependency_statuses(
+        render_runtime_ready=render_runtime_ready,
+        render_runtime_status=render_runtime_status,
+    )
+    backend_truth = _dependency_by_name(external_dependency_status, "ppt-master") or _backend_truth_status(
+        render_runtime_ready=render_runtime_ready,
+        render_runtime_status=render_runtime_status,
+    )
+    ppt_master_bound_verified = (
+        str(backend_truth.get("binding_status")) in {"bound_verified", "bound_verified_runtime_blocked"}
+        and bool(backend_truth.get("verified"))
+    )
+    ppt_master_production_ready = _production_backend_ready_from_status(backend_truth)
+    ppt_master_runtime_blocked = str(backend_truth.get("binding_status")) == "bound_verified_runtime_blocked"
     for target in resolved_targets:
         reports: list[dict[str, Any]] = []
         for spec in _suite_specs(include_optional=include_optional):
@@ -1495,8 +1816,13 @@ def inspect_suite_status(
             skills.append({**report, "target": target})
             for capability in spec.get("required_capabilities", []):
                 capability_status = str(report.get("status") or "missing")
-                if str(spec["name"]) == "ppt-master" and not bool(report.get("production_capable")):
+                if str(spec["name"]) != "ppt-master":
+                    capabilities[str(capability)] = capability_status
+                    continue
+                if not ppt_master_bound_verified:
                     capability_status = "blocked_backend_uncertified"
+                elif ppt_master_runtime_blocked or not render_runtime_ready:
+                    capability_status = "blocked_runtime_not_wired"
                 capabilities[str(capability)] = capability_status
         target_reports[target] = reports
         required_reports = [report for report in reports if report.get("required")]
@@ -1519,7 +1845,6 @@ def inspect_suite_status(
         }
 
     by_name: dict[str, str] = {}
-    production_capable_by_name: dict[str, bool] = {}
     for item in skills:
         name = str(item["skill"])
         current = by_name.get(name)
@@ -1528,8 +1853,6 @@ def inspect_suite_status(
             by_name[name] = "ready"
         elif current is None:
             by_name[name] = status
-        if name == "ppt-master":
-            production_capable_by_name[name] = production_capable_by_name.get(name, False) or bool(item.get("production_capable"))
 
     deck_ready = all(
         any(report.get("skill") == SKILL_NAME and report.get("status") == "ready" for report in target_reports[target])
@@ -1543,6 +1866,23 @@ def inspect_suite_status(
     def ready(*names: str) -> bool:
         return all(by_name.get(name) == "ready" for name in names)
 
+    production_backend_ready = ppt_master_production_ready
+    render_ready = bool(production_backend_ready and render_runtime_ready and not ppt_master_runtime_blocked)
+    required_external_dependencies_ready = _required_external_dependencies_ready(external_dependency_status)
+    client_delivery_evidence = _client_delivery_evidence(
+        external_dependency_status,
+        render_runtime_trusted_for_rc=render_runtime_trusted_for_rc,
+    )
+    client_delivery_ready = bool(
+        full_suite_ready
+        and production_backend_ready
+        and render_ready
+        and required_external_dependencies_ready
+        and render_runtime_trusted_for_rc
+        and client_delivery_evidence.get("rc_gate_passed")
+        and client_delivery_evidence.get("external_dependency_closure_passed")
+        and client_delivery_evidence.get("dependency_snapshot_matches")
+    )
     task_readiness = {
         "full_deck_workflow": "ready" if full_suite_ready else ("blocked" if not deck_ready else "degraded_ready"),
         "setup": "ready" if ready("deck-setup") else "blocked",
@@ -1558,19 +1898,16 @@ def inspect_suite_status(
         "new_generation": "ready" if ready("deck-producer", "ppt-deck-pro-max") else "blocked",
         "deck_builder_adapter": "ready" if ready("deck-builder") else "blocked",
         "ppt_master_adapter": "ready" if ready("ppt-master") else "blocked",
-        "ppt_master_backend": "ready" if production_capable_by_name.get("ppt-master") else "blocked",
+        "ppt_master_backend": "ready" if production_backend_ready else "blocked",
         "deck_builder": "ready" if ready("deck-builder") else "blocked",
-        "render": "ready" if production_capable_by_name.get("ppt-master") else "blocked",
+        "render": "ready" if render_ready else "blocked",
         "deck_quality": "ready" if ready("deck-quality") else "blocked",
         "standalone_audit": "ready" if ready("deck-quality", "ppt-quality-gate") else "blocked",
         "learning": "ready" if by_name.get("deck-learn") == "ready" else "optional",
         "workflow_autopilot": "ready" if ready("deck-autopilot") else "blocked",
         "delivery": "ready" if full_suite_ready else "blocked",
-        "client_delivery": "ready" if full_suite_ready and production_capable_by_name.get("ppt-master") else "blocked",
+        "client_delivery": "ready" if client_delivery_ready else "blocked",
     }
-
-    production_backend_ready = bool(production_capable_by_name.get("ppt-master"))
-    client_delivery_ready = task_readiness["client_delivery"] == "ready"
 
     status = "ready" if full_suite_ready else "degraded_ready"
     if not deck_ready:
@@ -1603,12 +1940,7 @@ def inspect_suite_status(
             "next_command": next_command,
         })
 
-    ppt_master_report = next((item for item in skills if str(item.get("skill")) == "ppt-master"), None)
-    backend_reasons = []
-    if isinstance(ppt_master_report, dict):
-        backend_status = ppt_master_report.get("backend_status")
-        if isinstance(backend_status, dict):
-            backend_reasons = [str(item) for item in (backend_status.get("reasons") or []) if item]
+    backend_reasons = [str(backend_truth.get("summary") or "")]
     if not production_backend_ready:
         reason = "；".join(backend_reasons) if backend_reasons else "外部 production backend 还未认证"
         blocking_summary.append({
@@ -1618,11 +1950,21 @@ def inspect_suite_status(
             "repair_owner": "backend",
             "next_command": "",
         })
+    elif not render_ready:
+        blocking_summary.append({
+            "code": "render_runtime_not_wired",
+            "blocking_type": "runtime",
+            "message": "后端已认证，但 Deck Master 运行时仍走内部 contract_smoke 路径，render 尚未闭环到外部后端。",
+            "repair_owner": "runtime",
+            "next_command": "",
+        })
     if not client_delivery_ready:
+        missing = client_delivery_evidence.get("missing") if isinstance(client_delivery_evidence.get("missing"), list) else []
+        missing_text = "；缺少：" + "、".join(str(item) for item in missing) if missing else ""
         blocking_summary.append({
             "code": "client_delivery_blocked",
             "blocking_type": "delivery",
-            "message": "客户版交付仍被阻断，当前 release 还未满足真实 render 和 client delivery 前提。",
+            "message": "客户版交付仍被阻断，当前 release 还未满足真实 render、外部依赖闭环和 RC gate 前提。" + missing_text,
             "repair_owner": "backend",
             "next_command": "",
         })
@@ -1634,7 +1976,12 @@ def inspect_suite_status(
         "status": status,
         "full_suite_ready": full_suite_ready,
         "production_backend_ready": production_backend_ready,
+        "render_runtime_ready": render_runtime_ready,
+        "runtime_ready_source": str(render_runtime_status["runtime_ready_source"]),
+        "runtime_ready_trusted_for_rc": render_runtime_trusted_for_rc,
         "client_delivery_ready": client_delivery_ready,
+        "client_delivery_evidence": client_delivery_evidence,
+        "external_dependency_status": external_dependency_status,
         "skills": skills,
         "targets": target_reports,
         "target_readiness": target_readiness,

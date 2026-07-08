@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <rect width="1280" height="720" fill="#f5f1e8"/>
+  <rect x="64" y="64" width="1152" height="592" rx="28" fill="#111314"/>
+  <text x="112" y="178" font-family="Avenir Next, Helvetica, sans-serif" font-size="34" fill="#d8a725" letter-spacing="4">PPT LIBRARY CANDIDATE</text>
+  <text x="112" y="320" font-family="Avenir Next, Helvetica, sans-serif" font-size="64" font-weight="700" fill="#f2eee8">最后一公里配送</text>
+  <text x="112" y="410" font-family="Avenir Next, Helvetica, sans-serif" font-size="30" fill="#9ca6a6">retail 全渠道、库存可视化、最后一公里配送 solution 最后一公里配送</text>
+  <circle cx="1080" cy="540" r="92" fill="#d8a725"/>
+  <text x="1034" y="556" font-family="Avenir Next, Helvetica, sans-serif" font-size="42" font-weight="700" fill="#111314">DM</text>
+</svg>

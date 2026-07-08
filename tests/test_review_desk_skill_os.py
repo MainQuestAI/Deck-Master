@@ -186,6 +186,8 @@ import socket
 import threading
 from http.server import ThreadingHTTPServer
 
+TEST_WRITE_TOKEN = "test-write-token"
+
 
 def _free_port() -> int:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -197,7 +199,13 @@ def _start_server(runs_dir: Path, port: int) -> tuple[ThreadingHTTPServer, threa
     sys.path.insert(0, str(REPO_ROOT / "scripts" / "preview"))
     from server import build_handler  # noqa: E402
 
-    handler = build_handler(run_dir=None, runs_dir=runs_dir, library_mode="fixture", use_setup_runs_dir=False)
+    handler = build_handler(
+        run_dir=None,
+        runs_dir=runs_dir,
+        library_mode="fixture",
+        use_setup_runs_dir=False,
+        write_token=TEST_WRITE_TOKEN,
+    )
     httpd = ThreadingHTTPServer(("127.0.0.1", port), handler)
     t = threading.Thread(target=httpd.serve_forever, daemon=True)
     t.start()
@@ -208,6 +216,8 @@ def _http(port: int, method: str, path: str, body: dict | None = None) -> tuple[
     conn = http.client.HTTPConnection("127.0.0.1", port, timeout=5)
     payload = json.dumps(body).encode() if body is not None else None
     headers = {"Content-Type": "application/json"} if body is not None else {}
+    if method == "POST":
+        headers["X-Deck-Master-Write-Token"] = TEST_WRITE_TOKEN
     conn.request(method, path, body=payload, headers=headers)
     resp = conn.getresponse()
     data = resp.read().decode()

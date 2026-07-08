@@ -8,7 +8,16 @@
     "status",
     "install_ready",
     "workspace_ready",
+    "workspace_entry_ready",
     "production_ready",
+    "production_backend_ready",
+    "client_delivery_ready",
+    "external_dependency_status",
+    "blocking_summary",
+    "setup_blocking_summary",
+    "workspace_blocking_summary",
+    "suite_blocking_summary",
+    "client_delivery_blocking_summary",
     "next_command",
     "next_agent_action"
   ],
@@ -30,6 +39,10 @@
       "type": "array",
       "items": {"type": "string"}
     },
+    "repair_items_count": {
+      "type": "integer",
+      "minimum": 0
+    },
     "warnings": {
       "type": "array",
       "items": {"type": "string"}
@@ -37,13 +50,141 @@
     "install_ready": {"type": "boolean"},
     "workspace_ready": {"type": "boolean"},
     "run_ready": {"type": "boolean"},
+    "workspace_entry_ready": {"type": "boolean"},
+    "workspace_access_ready": {"type": "boolean"},
     "production_ready": {"type": "boolean"},
+    "production_backend_ready": {"type": "boolean"},
+    "client_delivery_ready": {"type": "boolean"},
     "full_suite_ready": {"type": "boolean"},
+    "external_dependency_status": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/dependency_status_entry"
+      }
+    },
+    "blocking_summary": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/blocking_summary_entry"
+      }
+    },
+    "setup_blocking_summary": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/blocking_summary_entry"
+      }
+    },
+    "workspace_blocking_summary": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/blocking_summary_entry"
+      }
+    },
+    "suite_blocking_summary": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/blocking_summary_entry"
+      }
+    },
+    "client_delivery_blocking_summary": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/blocking_summary_entry"
+      }
+    },
+    "readiness_layers": {"type": "object"},
+    "suite_external_dependency_status": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/dependency_status_entry"
+      }
+    },
     "capabilities": {"type": "object"},
     "task_readiness": {"type": "object"},
-    "suite": {"type": "object"},
+    "suite": {
+      "type": "object",
+      "properties": {
+        "status": {"type": "string"},
+        "full_suite_ready": {"type": "boolean"},
+        "production_backend_ready": {"type": "boolean"},
+        "client_delivery_ready": {"type": "boolean"},
+        "external_dependency_status": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/dependency_status_entry"
+          }
+        },
+        "blocking_summary": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/blocking_summary_entry"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
     "next_command": {"type": "string"},
     "next_agent_action": {"type": "string"}
+  },
+  "$defs": {
+    "dependency_status_entry": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "name",
+        "dependency_kind",
+        "binding_status",
+        "repo_label",
+        "git_sha",
+        "short_sha",
+        "verified",
+        "validated_capabilities",
+        "summary"
+      ],
+      "properties": {
+        "name": {"type": "string"},
+        "binding_status": {
+          "type": "string",
+          "enum": [
+            "unbound",
+            "not_configured",
+            "invalid",
+            "configured_unverified",
+            "bound_blocked",
+            "bound_verified_runtime_blocked",
+            "bound_verified"
+          ]
+        },
+        "dependency_kind": {"type": "string"},
+        "repo_label": {"type": "string"},
+        "repo_path": {"type": "string"},
+        "skill_path": {"type": "string"},
+        "git_remote": {"type": "string"},
+        "git_sha": {"type": "string"},
+        "short_sha": {"type": "string"},
+        "git_branch": {"type": "string"},
+        "verified": {"type": "boolean"},
+        "verified_at": {"type": "string"},
+        "worktree_dirty": {"type": "boolean"},
+        "summary": {"type": "string"},
+        "status": {"type": "string"},
+        "validated_capabilities": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "blocking_summary_entry": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["code", "blocking_type", "message", "repair_owner"],
+      "properties": {
+        "code": {"type": "string"},
+        "blocking_type": {"type": "string"},
+        "message": {"type": "string"},
+        "repair_owner": {"type": "string"},
+        "next_command": {"type": "string"},
+        "details": {"type": "array", "items": {"type": "string"}},
+        "workspace": {"type": "string"}
+      }
+    }
   },
   "additionalProperties": true
 }

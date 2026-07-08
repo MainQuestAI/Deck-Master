@@ -6,6 +6,7 @@ import shutil
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from datetime import datetime, timezone
 
@@ -334,6 +335,49 @@ class RunStateResolverAcceptanceTests(unittest.TestCase):
         )
         state = resolve_run_state(self.run_dir, run_mode="fixture")
         self.assertEqual("ready_for_client_export", state["stage"])
+
+    def test_production_contract_smoke_render_result_stays_needs_render(self) -> None:
+        workspace = self.tmp_root / "workspace"
+        init_workspace(workspace, "Production Workspace")
+        self._write_full_pipeline(include_preview=True)
+        self._write_json(REQUEST_NAME, {"run_id": "r1", "run_mode": "production", "workspace": str(workspace)})
+        self._write_json(PREVIEW_MANIFEST_NAME, {"run_id": "r1", "pages": [{"page_id": "p1", "decision": "approved"}]})
+        generation_tasks = self.run_dir / "generation_tasks"
+        generation_tasks.mkdir()
+        (generation_tasks / "index.json").write_text(json.dumps({"tasks": [{"id": "task-1"}]}), encoding="utf-8")
+        self._write_json(
+            "generation_session.json",
+            {"run_id": "r1", "status": "quality_required", "quality_required_at": "2026-06-17T10:00:00+00:00"},
+        )
+        quality_dir = self.run_dir / "quality_reports"
+        quality_dir.mkdir()
+        (quality_dir / "draft_gate.json").write_text(
+            json.dumps({"status": "pass", "blocks_delivery": False, "created_at": "2026-06-17T10:01:00+00:00"}),
+            encoding="utf-8",
+        )
+        render_dir = self.run_dir / "render_results"
+        render_dir.mkdir()
+        (render_dir / "render_result.json").write_text(
+            json.dumps(
+                {
+                    "status": "completed",
+                    "artifact_path": "build/deck.html",
+                    "source_mode": "contract_smoke",
+                    "non_client_deliverable": True,
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        with mock.patch(
+            "runtime.run_state_resolver.builder_backend_status",
+            return_value={"production_capable": True, "blocking_reason": ""},
+        ), mock.patch("runtime.run_state_resolver.backend_render_runtime_ready", return_value=True):
+            state = resolve_run_state(self.run_dir, run_mode="production")
+
+        self.assertEqual("needs_render", state["stage"])
+        reasons = [item.get("reason", "") for item in state["blocked_actions"]]
+        self.assertTrue(any("contract_smoke" in reason for reason in reasons))
 
     def test_quality_required_generation_session_blocks_on_fresh_blocking_gate(self) -> None:
         self._write_full_pipeline(include_preview=True)

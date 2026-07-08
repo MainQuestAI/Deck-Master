@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Deck Master 方案项目工作台</title>
+    <title>Deck Master Review Desk</title>
     <link rel="icon" href="data:,">
     <link rel="stylesheet" href="/static/style.css">
   </head>
@@ -12,7 +12,7 @@
       <header class="status-bar" role="banner">
         <div class="status-bar-brand">
           <div class="mq-logo">MAINQUEST</div>
-          <span class="panel-title">方案项目工作台</span>
+          <span class="panel-title">Review Desk</span>
         </div>
 
         <div class="status-bar-run">
@@ -70,7 +70,7 @@
       </aside>
 
       <section class="workspace-grid">
-        <aside class="left-rail glass-panel">
+        <aside class="left-rail">
           <div class="rail-top">
             <div>
               <span class="panel-title" id="queue-panel-label">任务目录</span>
@@ -118,7 +118,7 @@
         </aside>
 
         <section class="center-column">
-          <section class="preview-panel glass-panel">
+          <section class="preview-panel">
             <div class="action-bar" id="action-bar"></div>
             <div class="preview-header">
               <div>
@@ -152,7 +152,7 @@
           </section>
         </section>
 
-        <aside class="decision-rail glass-panel">
+        <aside class="decision-rail">
           <div class="decision-top">
             <span class="panel-title" id="decision-panel-label">当前处理</span>
             <h2 id="decision-title">等待选择页面</h2>
@@ -162,7 +162,7 @@
           <section class="decision-block decision-block-actions">
             <span class="panel-title">处理动作</span>
             <div class="action-grid">
-              <button id="approve-page" class="btn btn-cta">批准页面</button>
+              <button id="approve-page" class="btn">批准页面</button>
               <button id="reject-page" class="btn">驳回页面</button>
               <button id="request-evidence" class="btn">请求补证据</button>
               <button id="submit-page-approval" class="btn">升级审批</button>
@@ -201,12 +201,12 @@
 
       <section class="bottom-drawer collapsed" id="bottom-drawer" aria-label="run 级信息抽屉">
         <div class="bottom-drawer-tabs" role="tablist" aria-label="底部抽屉标签">
-          <button class="bottom-drawer-tab" role="tab" aria-selected="true" aria-controls="bottom-panel-readiness" data-tab="readiness">就绪度<span class="drawer-badge" id="readiness-badge"></span></button>
-          <button class="bottom-drawer-tab" role="tab" aria-selected="false" aria-controls="bottom-panel-claim" data-tab="claim">论点覆盖</button>
-          <button class="bottom-drawer-tab" role="tab" aria-selected="false" aria-controls="bottom-panel-activity" data-tab="activity">事件日志</button>
-          <button class="bottom-drawer-tab" role="tab" aria-selected="false" aria-controls="bottom-panel-build-skill" data-tab="build-skill">Build Skill</button>
-          <button class="bottom-drawer-tab" role="tab" aria-selected="false" aria-controls="bottom-panel-artifact" data-tab="artifact">Artifact</button>
-          <button class="bottom-drawer-tab" role="tab" aria-selected="false" aria-controls="bottom-panel-export" data-tab="export">Export</button>
+          <button class="bottom-drawer-tab" id="bottom-tab-readiness" role="tab" aria-selected="true" aria-controls="bottom-panel-readiness" data-tab="readiness">就绪度<span class="drawer-badge" id="readiness-badge"></span></button>
+          <button class="bottom-drawer-tab" id="bottom-tab-claim" role="tab" aria-selected="false" aria-controls="bottom-panel-claim" data-tab="claim">论点覆盖</button>
+          <button class="bottom-drawer-tab" id="bottom-tab-activity" role="tab" aria-selected="false" aria-controls="bottom-panel-activity" data-tab="activity">事件日志</button>
+          <button class="bottom-drawer-tab" id="bottom-tab-build-skill" role="tab" aria-selected="false" aria-controls="bottom-panel-build-skill" data-tab="build-skill">Build Skill</button>
+          <button class="bottom-drawer-tab" id="bottom-tab-artifact" role="tab" aria-selected="false" aria-controls="bottom-panel-artifact" data-tab="artifact">Artifact</button>
+          <button class="bottom-drawer-tab" id="bottom-tab-export" role="tab" aria-selected="false" aria-controls="bottom-panel-export" data-tab="export">Export</button>
         </div>
         <div class="bottom-drawer-panels">
           <div class="bottom-drawer-panel" role="tabpanel" id="bottom-panel-readiness" aria-labelledby="bottom-tab-readiness">
@@ -216,27 +216,27 @@
             </div>
             <div id="run-readiness" class="stack-list"></div>
           </div>
-          <div class="bottom-drawer-panel" role="tabpanel" id="bottom-panel-claim" hidden>
+          <div class="bottom-drawer-panel" role="tabpanel" id="bottom-panel-claim" aria-labelledby="bottom-tab-claim" hidden>
             <div class="section-head">
               <span class="panel-title">论点覆盖</span>
               <span id="claim-summary-chip" class="pill muted">-</span>
             </div>
             <div id="claim-coverage" class="stack-list"></div>
           </div>
-          <div class="bottom-drawer-panel" role="tabpanel" id="bottom-panel-activity" hidden>
+          <div class="bottom-drawer-panel" role="tabpanel" id="bottom-panel-activity" aria-labelledby="bottom-tab-activity" hidden>
             <div class="section-head">
               <span class="panel-title">处理记录</span>
               <span class="mono muted" id="activity-count">0</span>
             </div>
             <div id="activity-list" class="activity-list"></div>
           </div>
-          <div class="bottom-drawer-panel" role="tabpanel" id="bottom-panel-build-skill" hidden>
+          <div class="bottom-drawer-panel" role="tabpanel" id="bottom-panel-build-skill" aria-labelledby="bottom-tab-build-skill" hidden>
             <div id="build-skill-panel" class="stack-list"></div>
           </div>
-          <div class="bottom-drawer-panel" role="tabpanel" id="bottom-panel-artifact" hidden>
+          <div class="bottom-drawer-panel" role="tabpanel" id="bottom-panel-artifact" aria-labelledby="bottom-tab-artifact" hidden>
             <div id="artifact-panel" class="stack-list"></div>
           </div>
-          <div class="bottom-drawer-panel" role="tabpanel" id="bottom-panel-export" hidden>
+          <div class="bottom-drawer-panel" role="tabpanel" id="bottom-panel-export" aria-labelledby="bottom-tab-export" hidden>
             <div id="export-panel" class="stack-list"></div>
           </div>
         </div>
@@ -244,7 +244,7 @@
     </main>
 
     <div id="create-run-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="create-run-title">
-      <div class="modal-card glass-panel">
+      <div class="modal-card">
         <div class="modal-head">
           <div>
             <span class="panel-title">新建项目</span>

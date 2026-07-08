@@ -4,7 +4,7 @@
 
 日期：2026-06-11
 分支：`codex/deck-master-endgame-runtime`
-工作区：`/Users/dingcheng/Coding-Project/02-key-project/Deck-Master-endgame-runtime`
+工作区：`<deck-master-endgame-runtime-worktree>`
 基线提交：`9e57e48`
 状态：P0-0 主控清单
 

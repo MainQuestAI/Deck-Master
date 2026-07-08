@@ -1,9 +1,9 @@
 # Deck Master localhost Web UI 系统级重构方案
 
-日期：2026-06-21  
-状态：规划稿 v1.0  
-适用范围：Deck Master localhost Web UI 的产品级重构  
-文档角色：本稿是上位重构方案；[2026-06-21-web-ui-design-spec-v0.2.md](/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/2026-06-21-web-ui-design-spec-v0.2.md) 降为其中的界面级子稿
+日期：2026-06-21
+状态：规划稿 v1.0
+适用范围：Deck Master localhost Web UI 的产品级重构
+文档角色：本稿是上位重构方案；[2026-06-21-web-ui-design-spec-v0.2.md](/docs/2026-06-21-web-ui-design-spec-v0.2.md) 降为其中的界面级子稿
 
 ## 1. 结论
 
@@ -102,13 +102,13 @@ Web UI 本轮不负责：
 
 第一用户仍是售前解决方案架构师，但在 Web UI 里要进一步拆成三种使用心态：
 
-1. 审稿心态  
+1. 审稿心态
 我想判断这页能不能过。
 
-2. 交付心态  
+2. 交付心态
 我想知道这一套 Deck 离可交付还有多远。
 
-3. 返工心态  
+3. 返工心态
 我想知道下一步该补什么、改什么、重跑什么。
 
 Web UI 的成熟度，取决于它能否同时服务这三种心态。
@@ -311,7 +311,7 @@ preview_ready · needs_generation_session
 
 - 品牌系统：MainQuest AI Visual Identity System (MQDS) v4.1
 - localhost Web UI 模式：Dark Mode `Glass Terminal`
-- 参考文件：[2026-06-21-mainquest-web-ui-visual-alignment-spec.md](/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/2026-06-21-mainquest-web-ui-visual-alignment-spec.md)
+- 参考文件：[2026-06-21-mainquest-web-ui-visual-alignment-spec.md](/docs/2026-06-21-mainquest-web-ui-visual-alignment-spec.md)
 
 这一层现在需要做的，已经从“猜测标准”变成“把标准映射到 Deck Master 的 Run Workspace”。
 

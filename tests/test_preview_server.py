@@ -19,16 +19,83 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts" / "preview"))
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from server import PreviewHandler, _load_narrative_data, build_handler  # noqa: E402
+import server as preview_server
+import workspace_api
+from server import PreviewHandler, _load_narrative_data, build_handler, validate_preview_bind_host  # noqa: E402
 from runtime.run_state import create_run, write_json  # noqa: E402
 from runtime.setup_status import run_setup  # noqa: E402
 from runtime.run_state import create_run, write_json  # noqa: E402
 
+try:
+    import jsonschema  # type: ignore
+except ImportError:  # pragma: no cover - optional local dev dependency.
+    jsonschema = None
+
 SAMPLE_RUN = ROOT / "examples" / "preview-run"
+
+
+def _schema_type_matches(value: object, schema_type: str) -> bool:
+    if schema_type == "object":
+        return isinstance(value, dict)
+    if schema_type == "array":
+        return isinstance(value, list)
+    if schema_type == "string":
+        return isinstance(value, str)
+    if schema_type == "boolean":
+        return isinstance(value, bool)
+    if schema_type == "integer":
+        return isinstance(value, int) and not isinstance(value, bool)
+    return True
+
+
+def _validate_schema_subset(payload: object, schema: dict, root_schema: dict, path: str = "$") -> list[str]:
+    errors: list[str] = []
+    if "$ref" in schema:
+        ref = str(schema["$ref"])
+        if ref.startswith("#/$defs/"):
+            schema = root_schema.get("$defs", {}).get(ref.removeprefix("#/$defs/"), {})
+
+    expected_type = schema.get("type")
+    if isinstance(expected_type, str) and not _schema_type_matches(payload, expected_type):
+        return [f"{path}: expected {expected_type}"]
+
+    if "const" in schema and payload != schema["const"]:
+        errors.append(f"{path}: expected const {schema['const']!r}")
+    if "enum" in schema and payload not in schema["enum"]:
+        errors.append(f"{path}: expected one of {schema['enum']!r}")
+    if isinstance(payload, int) and not isinstance(payload, bool) and "minimum" in schema and payload < schema["minimum"]:
+        errors.append(f"{path}: expected >= {schema['minimum']}")
+
+    if isinstance(payload, dict):
+        for key in schema.get("required", []):
+            if key not in payload:
+                errors.append(f"{path}.{key}: missing required field")
+        properties = schema.get("properties", {})
+        for key, child_schema in properties.items():
+            if key in payload and isinstance(child_schema, dict):
+                errors.extend(_validate_schema_subset(payload[key], child_schema, root_schema, f"{path}.{key}"))
+    elif isinstance(payload, list) and isinstance(schema.get("items"), dict):
+        for index, item in enumerate(payload):
+            errors.extend(_validate_schema_subset(item, schema["items"], root_schema, f"{path}[{index}]"))
+    return errors
+
+
+def _setup_status_schema_errors(payload: dict) -> list[str]:
+    schema = json.loads((ROOT / "docs" / "contracts" / "setup-status.v2.schema.json").read_text(encoding="utf-8"))
+    if jsonschema is not None:
+        jsonschema.Draft202012Validator.check_schema(schema)
+        validator = jsonschema.Draft202012Validator(schema)
+        return [
+            f"{'/'.join(str(part) for part in error.path) or '<root>'}: {error.message}"
+            for error in sorted(validator.iter_errors(payload), key=lambda item: list(item.path))
+        ]
+    return _validate_schema_subset(payload, schema, schema)
 
 
 class MockHandler(PreviewHandler):
     """Testable handler with mock I/O — no socket binding."""
+
+    write_token = "test-write-token"
 
     def __init__(self, run_dir: Path | None = None, runs_dir: Path | None = None):
         self.wfile = io.BytesIO()
@@ -48,21 +115,31 @@ class MockHandler(PreviewHandler):
         if not hasattr(self, "library_mode"):
             self.library_mode = "fixture"
 
-    def request(self, method: str, path: str, body: dict | None = None):
+    def request(
+        self,
+        method: str,
+        path: str,
+        body: dict | None = None,
+        *,
+        headers: dict[str, str] | None = None,
+        include_write_token: bool = True,
+    ):
         self.path = path
         self.command = method
         self.requestline = f"{method} {path} HTTP/1.1"
         self.wfile = io.BytesIO()
         self.rfile = io.BytesIO()
         self._headers_buffer = []
+        request_headers = dict(headers or {})
+        if method == "POST" and include_write_token:
+            request_headers.setdefault(preview_server.WRITE_TOKEN_HEADER, self.write_token)
 
         if body is not None:
             payload = json.dumps(body).encode("utf-8")
             self.rfile.write(payload)
             self.rfile.seek(0)
-            self.headers = {"Content-Length": str(len(payload))}
-        else:
-            self.headers = {}
+            request_headers["Content-Length"] = str(len(payload))
+        self.headers = request_headers
 
         if method == "GET":
             self.do_GET()
@@ -105,11 +182,72 @@ class ServerTests(unittest.TestCase):
     def tearDown(self) -> None:
         shutil.rmtree(self.temp_dir, ignore_errors=True)
 
+    def test_post_write_requires_token(self) -> None:
+        status, data = self.handler.request(
+            "POST",
+            "/api/workspace/sample-preview-run/page/page_001/actions",
+            {"action": "approve", "actor": "qa"},
+            include_write_token=False,
+        )
+
+        self.assertEqual(HTTPStatus.FORBIDDEN, status)
+        self.assertIn("Write token", data["error"])
+
+    def test_post_write_rejects_bad_token(self) -> None:
+        status, data = self.handler.request(
+            "POST",
+            "/api/workspace/sample-preview-run/page/page_001/actions",
+            {"action": "approve", "actor": "qa"},
+            headers={preview_server.WRITE_TOKEN_HEADER: "wrong-token"},
+            include_write_token=False,
+        )
+
+        self.assertEqual(HTTPStatus.FORBIDDEN, status)
+        self.assertIn("Write token", data["error"])
+
+    def test_post_write_rejects_external_origin(self) -> None:
+        status, data = self.handler.request(
+            "POST",
+            "/api/workspace/sample-preview-run/page/page_001/actions",
+            {"action": "approve", "actor": "qa"},
+            headers={"Origin": "https://example.com", "Host": "127.0.0.1:5050"},
+        )
+
+        self.assertEqual(HTTPStatus.FORBIDDEN, status)
+        self.assertIn("origin", data["error"])
+
+    def test_post_write_allows_same_origin_with_token(self) -> None:
+        status, payload = self.handler.request(
+            "POST",
+            "/api/workspace/sample-preview-run/page/page_001/actions",
+            {"action": "approve", "actor": "qa"},
+            headers={"Origin": "http://127.0.0.1:5050", "Host": "127.0.0.1:5050"},
+        )
+
+        self.assertEqual(200, status)
+        self.assertEqual("ok", payload["status"])
+
+    def test_preview_host_policy_allows_loopback(self) -> None:
+        self.assertEqual("", validate_preview_bind_host("127.0.0.1"))
+        self.assertEqual("", validate_preview_bind_host("localhost"))
+        self.assertEqual("", validate_preview_bind_host("::1"))
+
+    def test_preview_host_policy_rejects_remote_without_explicit_flag(self) -> None:
+        with self.assertRaises(ValueError) as ctx:
+            validate_preview_bind_host("0.0.0.0")
+
+        self.assertIn("--allow-remote-preview", str(ctx.exception))
+
+    def test_preview_host_policy_allows_remote_with_warning(self) -> None:
+        warning = validate_preview_bind_host("0.0.0.0", allow_remote_preview=True)
+
+        self.assertIn("not a network authentication boundary", warning)
+
     def test_deck_api_returns_pages(self) -> None:
         status, data = self.handler.request("GET", "/api/deck")
         self.assertEqual(200, status)
         self.assertEqual("sample-preview-run", data["run_id"])
-        self.assertEqual(3, len(data["pages"]))
+        self.assertGreaterEqual(len(data["pages"]), 10)
 
     def test_deck_api_returns_quality_reports(self) -> None:
         quality_dir = self.run_dir / "quality_reports"
@@ -303,7 +441,54 @@ class ServerTests(unittest.TestCase):
         self.assertEqual("sample-preview-run", data["project_id"])
         self.assertIn("stage", data)
         self.assertIn("queue", data)
-        self.assertEqual(3, len(data["queue"]["pages"]))
+        self.assertGreaterEqual(len(data["queue"]["pages"]), 10)
+
+    def test_workspace_api_exposes_safe_backend_dependency_summary(self) -> None:
+        original = workspace_api.setup_status
+
+        def fake_setup_status(**kwargs):
+            return {
+                "config": {"install_root": str(self.runs_dir)},
+                "install_ready": True,
+                "workspace_ready": True,
+                "run_ready": True,
+                "production_ready": True,
+                "external_dependency_status": [
+                    {
+                        "name": "ppt-master",
+                        "repo_label": "deck-master/ppt-master",
+                        "git_remote": "https://github.com/example/ppt-master.git",
+                        "repo_path": "/Users/example/.deck-master/backend/ppt-master",
+                        "skill_path": "/Users/example/.deck-master/backend/ppt-master/skills/ppt-master",
+                        "binding_status": "bound_verified",
+                        "short_sha": "feedcafe",
+                        "git_sha": "feedcafe1234",
+                        "git_branch": "main",
+                        "verified": True,
+                        "verified_at": "2026-01-01T00:00:00Z",
+                        "summary": "PPT Master 已绑定且已完成验证。",
+                    }
+                ],
+                "workspace": {},
+            }
+
+        workspace_api.setup_status = fake_setup_status
+        try:
+            status, payload = self.handler.request("GET", "/api/workspace/sample-preview-run")
+            self.assertEqual(HTTPStatus.OK, status)
+            dependencies = payload["run_summary"].get("external_dependencies")
+            self.assertIsInstance(dependencies, list)
+            self.assertEqual("ppt-master", dependencies[0]["name"])
+            self.assertEqual("deck-master/ppt-master", dependencies[0]["repo_label"])
+            self.assertEqual("feedcafe", dependencies[0]["short_sha"])
+            self.assertIn("summary", dependencies[0])
+            self.assertNotIn("repo_path", dependencies[0])
+            self.assertNotIn("skill_path", dependencies[0])
+            runtime_dependencies = payload["runtime"].get("external_dependencies", [])
+            self.assertIsInstance(runtime_dependencies, list)
+            self.assertEqual(dependencies, runtime_dependencies)
+        finally:
+            workspace_api.setup_status = original
 
     def test_workspace_page_api_returns_claims_and_risks(self) -> None:
         (self.run_dir / "claim_evidence_graph.json").write_text(
@@ -560,6 +745,49 @@ class ServerTests(unittest.TestCase):
         self.assertEqual("missing_render_result", data["status"])
         self.assertFalse(data["artifact_ready"])
 
+    def test_workspace_delivery_preview_detail_does_not_expose_internal_files(self) -> None:
+        result_dir = self.run_dir / "render_results"
+        result_dir.mkdir(exist_ok=True)
+
+        (result_dir / "render_result.json").write_text(
+            json.dumps(
+                {
+                    "schema_version": "deck_render_result.v1",
+                    "run_id": "sample-preview-run",
+                    "tool": "ppt-master",
+                    "status": "completed",
+                    "format": "html",
+                }
+            ),
+            encoding="utf-8",
+        )
+        status, payload = self.handler.request("GET", "/api/workspace/sample-preview-run/delivery-preview")
+        self.assertEqual(200, status)
+        self.assertEqual("missing_artifact_path", payload["status"])
+        self.assertNotIn("render_result.json", payload["detail"])
+        self.assertNotIn("artifact_path", payload["detail"])
+        self.assertNotIn("rendered/index.html", payload["detail"])
+
+        (result_dir / "render_result.json").write_text(
+            json.dumps(
+                {
+                    "schema_version": "deck_render_result.v1",
+                    "run_id": "sample-preview-run",
+                    "tool": "ppt-master",
+                    "status": "completed",
+                    "format": "html",
+                    "artifact_path": "rendered/index.html",
+                }
+            ),
+            encoding="utf-8",
+        )
+        status, payload = self.handler.request("GET", "/api/workspace/sample-preview-run/delivery-preview")
+        self.assertEqual(200, status)
+        self.assertEqual("artifact_missing", payload["status"])
+        self.assertNotIn("render_result.json", payload["detail"])
+        self.assertNotIn("artifact_path", payload["detail"])
+        self.assertNotIn("rendered/index.html", payload["detail"])
+
     def test_workspace_delivery_preview_serves_rendered_html(self) -> None:
         rendered_dir = self.run_dir / "rendered"
         rendered_dir.mkdir(exist_ok=True)
@@ -783,6 +1011,9 @@ class StudioServerTests(unittest.TestCase):
         )
         self.assertEqual(HTTPStatus.CONFLICT, status)
         self.assertIn("Setup is not ready", data["error"])
+        self.assertNotIn("deck-master ", data["error"])
+        self.assertNotIn("--workspace", data["error"])
+        self.assertNotIn("/Users/", data["error"])
 
     def test_setup_ready_active_workspace_writes_request_workspace(self) -> None:
         workspace = self._write_ready_setup()
@@ -918,6 +1149,7 @@ class StudioServerTests(unittest.TestCase):
         self.assertIn("install_ready", payload)
         self.assertIn("workspace_ready", payload)
         self.assertIn("run_ready", payload)
+        self.assertIn("workspace_entry_ready", payload)
         self.assertIn("production_ready", payload)
         self.assertEqual(str(workspace.resolve()), payload["active_workspace"])
         self.assertIn("suite", payload)
@@ -926,8 +1158,221 @@ class StudioServerTests(unittest.TestCase):
         self.assertIn("client_delivery_ready", payload)
         self.assertIn("repair_items_count", payload)
         self.assertIn("blocking_summary", payload)
+        self.assertIn("setup_blocking_summary", payload)
+        self.assertIn("workspace_blocking_summary", payload)
+        self.assertIn("suite_blocking_summary", payload)
+        self.assertIn("client_delivery_blocking_summary", payload)
+        self.assertIn("readiness_layers", payload)
         self.assertFalse(payload["production_backend_ready"])
         self.assertFalse(payload["client_delivery_ready"])
+
+    def test_setup_status_api_payload_matches_v2_schema(self) -> None:
+        self._write_ready_setup()
+        status, payload = self.handler.request("GET", "/api/setup-status")
+        self.assertEqual(HTTPStatus.OK, status)
+        self.assertEqual("deck_master_setup_status.v2", payload["schema_version"])
+        self.assertEqual([], _setup_status_schema_errors(payload))
+
+    def test_setup_status_blocked_payload_matches_v2_schema(self) -> None:
+        status, payload = self.handler.request("GET", "/api/setup-status")
+        self.assertEqual(HTTPStatus.OK, status)
+        self.assertEqual("deck_master_setup_status.v2", payload["schema_version"])
+        self.assertEqual("blocked", payload["status"])
+        self.assertEqual([], _setup_status_schema_errors(payload))
+
+    def test_setup_status_api_separates_workspace_entry_from_client_delivery(self) -> None:
+        workspace = self._write_ready_setup()
+        original_setup_status = preview_server.setup_status
+
+        fake_payload = {
+            "schema_version": "deck_master_setup_status.v2",
+            "status": "ready",
+            "install_ready": True,
+            "workspace_ready": True,
+            "run_ready": True,
+            "workspace_entry_ready": True,
+            "production_ready": False,
+            "production_backend_ready": True,
+            "client_delivery_ready": False,
+            "config": {
+                "install_root": str(self.home_dir / ".deck-master"),
+                "active_workspace": str(workspace.resolve()),
+                "default_runs_dir": str(self.runs_dir),
+            },
+            "workspace": {"status": "valid", "workspace_dir": str(workspace.resolve())},
+            "blocking_summary": [
+                {
+                    "code": "client_delivery_blocked",
+                    "blocking_type": "delivery",
+                    "message": "客户版交付仍被阻断。",
+                    "repair_owner": "backend",
+                    "next_command": "deck-master suite-status --output json",
+                },
+            ],
+            "client_delivery_blocking_summary": [
+                {
+                    "code": "client_delivery_blocked",
+                    "blocking_type": "delivery",
+                    "message": "客户版交付仍被阻断。",
+                    "repair_owner": "backend",
+                },
+            ],
+            "suite": {"status": "ready", "full_suite_ready": True},
+        }
+
+        def fake_setup_status(**kwargs):
+            return fake_payload
+
+        preview_server.setup_status = fake_setup_status
+        try:
+            status, payload = self.handler.request("GET", "/api/setup-status")
+            self.assertEqual(HTTPStatus.OK, status)
+            self.assertTrue(payload["workspace_entry_ready"])
+            self.assertTrue(payload["workspace_access_ready"])
+            self.assertFalse(payload["production_ready"])
+            self.assertFalse(payload["client_delivery_ready"])
+            self.assertEqual([], payload["workspace_blocking_summary"])
+            self.assertEqual(
+                fake_payload["client_delivery_blocking_summary"],
+                payload["client_delivery_blocking_summary"],
+            )
+            self.assertTrue(payload["readiness_layers"]["workspace"]["ready"])
+            self.assertFalse(payload["readiness_layers"]["client_delivery"]["ready"])
+        finally:
+            preview_server.setup_status = original_setup_status
+
+    def test_setup_status_api_uses_backend_truth_without_recompute(self) -> None:
+        workspace = self._write_ready_setup()
+        original_setup_status = preview_server.setup_status
+
+        fake_payload = {
+            "schema_version": "deck_master_setup_status.v2",
+            "status": "ready",
+            "missing_items": ["suite item"],
+            "repair_items": ["backend item"],
+            "warnings": ["警告: 仅测试"],
+            "repair_items_count": 99,
+            "install_ready": False,
+            "workspace_ready": True,
+            "run_ready": True,
+            "production_ready": False,
+            "active_workspace_required_for_production": True,
+            "dev_mode_allowed": False,
+            "fixture_mode_allowed": True,
+            "config": {
+                "install_root": str(ROOT),
+                "active_workspace": str(workspace.resolve()),
+                "default_runs_dir": str(self.runs_dir),
+            },
+            "config_path": str(self.runs_dir / "config.json"),
+            "workspace": {
+                "status": "valid",
+                "workspace_path": str(workspace),
+            },
+            "next_command": "--run-dir should_not_recompute",
+            "next_agent_action": "继续",
+            "external_dependency_status": [
+                {
+                    "repo_label": "deck-master/ppt-master",
+                    "status": "ready",
+                    "short_sha": "0123456789abcdef",
+                    "summary": "PPT Master 已就绪",
+                },
+            ],
+            "production_backend_ready": False,
+            "client_delivery_ready": True,
+            "blocking_summary": [
+                {"code": "suite_blocked", "message": "当前依赖链阻断后端绑定。"},
+            ],
+            "suite": {
+                "status": "ready",
+                "full_suite_ready": True,
+                "production_backend_ready": True,
+                "client_delivery_ready": False,
+                "external_dependency_status": [
+                    {
+                        "repo_label": "suite-ppt-master",
+                        "status": "ready",
+                        "short_sha": "fedcba987654",
+                    },
+                ],
+            },
+            "capabilities": {"deck_master.build.v1": "ready"},
+            "task_readiness": {"delivery": "ready"},
+            "full_suite_ready": False,
+            "agent_targets": ["codex"],
+        }
+
+        def fake_setup_status(**kwargs):
+            return fake_payload
+
+        preview_server.setup_status = fake_setup_status
+        try:
+            status, payload = self.handler.request("GET", "/api/setup-status")
+            self.assertEqual(HTTPStatus.OK, status)
+            self.assertFalse(payload["install_ready"])
+            self.assertTrue(payload["workspace_ready"])
+            self.assertTrue(payload["run_ready"])
+            self.assertFalse(payload["production_ready"])
+            self.assertFalse(payload["production_backend_ready"])
+            self.assertTrue(payload["client_delivery_ready"])
+            self.assertEqual(payload["next_agent_action"], fake_payload["next_agent_action"])
+            self.assertEqual(payload["repair_items_count"], 99)
+            self.assertEqual(payload["external_dependency_status"], fake_payload.get("external_dependency_status"))
+            self.assertEqual(payload["suite_external_dependency_status"], fake_payload["suite"]["external_dependency_status"])
+            self.assertEqual(payload["blocking_summary"], fake_payload.get("blocking_summary"))
+            self.assertEqual(payload["suite"], fake_payload.get("suite"))
+            self.assertEqual(payload["next_command"], fake_payload["next_command"])
+            self.assertEqual(payload["active_workspace_required_for_production"], fake_payload["active_workspace_required_for_production"])
+        finally:
+            preview_server.setup_status = original_setup_status
+
+    def test_setup_status_api_falls_back_suite_dependency_summary_when_top_level_missing(self) -> None:
+        workspace = self._write_ready_setup()
+        original_setup_status = preview_server.setup_status
+
+        suite_dependencies = [
+            {
+                "repo_label": "suite-ppt-master",
+                "status": "ready",
+                "short_sha": "fedcba987654",
+            },
+        ]
+        fake_payload = {
+            "schema_version": "deck_master_setup_status.v2",
+            "status": "ready",
+            "install_ready": True,
+            "workspace_ready": True,
+            "run_ready": True,
+            "production_ready": True,
+            "active_workspace_required_for_production": True,
+            "config": {
+                "install_root": str(ROOT),
+                "active_workspace": str(workspace.resolve()),
+                "default_runs_dir": str(self.runs_dir),
+            },
+            "suite": {
+                "status": "ready",
+                "full_suite_ready": True,
+                "external_dependency_status": suite_dependencies,
+            },
+        }
+
+        def fake_setup_status(**kwargs):
+            return fake_payload
+
+        preview_server.setup_status = fake_setup_status
+        try:
+            status, payload = self.handler.request("GET", "/api/setup-status")
+            self.assertEqual(HTTPStatus.OK, status)
+            self.assertEqual(payload["external_dependency_status"], suite_dependencies)
+            self.assertEqual(payload["suite_external_dependency_status"], suite_dependencies)
+            self.assertIn("blocking_summary", payload)
+            self.assertEqual(payload["blocking_summary"], [])
+            self.assertEqual(payload["run_ready"], True)
+            self.assertEqual(payload["production_ready"], True)
+        finally:
+            preview_server.setup_status = original_setup_status
 
     def test_run_state_api_returns_status(self) -> None:
         status, created = self.handler.request(
