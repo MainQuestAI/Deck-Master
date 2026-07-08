@@ -2,14 +2,14 @@
 
 Deck Master is a local-first Solution Deck Run OS. It turns a brief, source context, page plan, generation handoff, Review Desk decisions, build artifacts, and final readiness into one traceable workflow.
 
-**Status:** v0.9.14-preview.1 / Technical Preview (agent-operable).
+**Status:** v0.9.14-preview.2 / Technical Preview (agent-operable).
 **License:** Apache-2.0.
 **Support:** best-effort during preview.
 
 Version mapping for this preview:
 
-- GitHub release label: `v0.9.14-preview.1`
-- Python package version: `0.9.14a1`
+- GitHub release label: `v0.9.14-preview.2`
+- Python package version: `0.9.14a2`
 - Release stage: Technical Preview / agent-operable
 - Production readiness: not claimed
 
@@ -49,7 +49,7 @@ python3 scripts/deck_master.py preview-gate --run-dir /tmp/deck-master-demo/oss-
 python3 scripts/preview/server.py /tmp/deck-master-demo/oss-demo
 ```
 
-The demo uses fixture mode and synthetic retail transformation content. It is the default first-run path for v0.9.14-preview.1.
+The demo uses fixture mode and synthetic retail transformation content. It is the default first-run path for v0.9.14-preview.2.
 
 ## Review Desk
 
@@ -120,7 +120,7 @@ After install, `deck-master --help` is equivalent to the source checkout help co
 
 ## Release Gates
 
-M1 uses `preview-gate` for v0.9.14-preview.1.
+M1 uses `preview-gate` for v0.9.14-preview.2.
 M2 uses `rc-gate` for formal release-candidate validation.
 
 ```bash

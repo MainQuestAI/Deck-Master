@@ -5,8 +5,8 @@ Target: M1 public Technical Preview
 
 Version mapping:
 
-- GitHub release label: `v0.9.14-preview.1`
-- Python package version: `0.9.14a1`
+- GitHub release label: `v0.9.14-preview.2`
+- Python package version: `0.9.14a2`
 - Release stage: Technical Preview / agent-operable
 - Production readiness: not claimed
 
@@ -35,8 +35,20 @@ Version mapping:
 - [x] Review Desk M1 design scan passes.
 - [x] Local QA report cache is not tracked.
 - [x] Release tree includes README, LICENSE, and Known Limitations.
-- [ ] GitHub Actions complete unittest, schema validation, fixture smoke, preview-gate, and release-build smoke.
-- [ ] Release tree public hygiene scan passes.
+- [x] GitHub Actions complete unittest, schema validation, fixture smoke, preview-gate, and release-build smoke.
+- [x] Release tree public hygiene scan passes.
+
+Verification commands for the preview.2 release:
+
+```bash
+python -m unittest discover -s tests
+python -m pytest -q
+bash scripts/demo.sh
+python scripts/deck_master.py preview-gate --run-dir /tmp/deck-master-demo/oss-demo --expect-unconfigured-backend-ok
+python scripts/deck_master.py release-build --output /tmp/deck-master-0.9.14-preview.2-release --force
+python scripts/deck_master.py release-smoke --release-root /tmp/deck-master-0.9.14-preview.2-release
+python -m unittest tests.test_skill_installation.SkillInstallationTest.test_release_tree_public_hygiene_scan_has_no_private_markers
+```
 
 ## M2 RC Conditions
 

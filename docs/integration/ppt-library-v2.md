@@ -66,7 +66,7 @@ Master contract for handback/import.
 ```bash
 ppt-lib capabilities --output json
 ppt-lib select-slides --help
-python3 scripts/deck_master.py validate-ppt-library-result --input <candidate.json>
+python3 scripts/deck_master.py validate-ppt-library-result --input <selection.json>
 ```
 
 For a cross-repo smoke, generate `selection.json` with PPT Library contract

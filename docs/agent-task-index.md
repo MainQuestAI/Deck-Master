@@ -13,7 +13,7 @@ Python 3.12+. After installing with `python -m pip install -e ".[dev]"`,
 
 ## New Public Preview Run
 
-- Intent: generate the public fixture demo or verify v0.9.14-preview.1.
+- Intent: generate the public fixture demo or verify v0.9.14-preview.2.
 - Command:
 
 ```bash
@@ -106,7 +106,7 @@ python3 scripts/deck_master.py release-smoke --release-root /tmp/deck-master-0.9
 - Commands:
 
 ```bash
-python3.11 -m venv .venv
+python3.12 -m venv .venv
 . .venv/bin/activate
 python -m pip install -e ".[dev]"
 python3 -m unittest discover -s tests
@@ -117,6 +117,9 @@ python3 scripts/deck_master.py agent-doctor --mode preview --output json
 If venv pip bootstrap is unavailable, use `uv venv --python 3.12 .venv` and
 `uv pip install --python .venv/bin/python -e ".[dev]"`, then run the same
 commands through `.venv/bin/python`.
+
+For compatibility evidence, optionally repeat the same command set on Python
+3.11 after the Python 3.12 release smoke is green.
 
 - Success state: all tests pass and `agent-doctor` returns `ready` or explains
   only expected preview warnings.

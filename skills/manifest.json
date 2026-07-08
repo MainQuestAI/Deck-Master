@@ -3,7 +3,7 @@
   "version": "1.1.0",
   "conformance_version": "1.1.0",
   "license": "Apache-2.0",
-  "package_version": "0.9.14a1",
+  "package_version": "0.9.14a2",
   "description": "Deck Master local skill suite for setup, workspace init, briefing, planning, sourcing, production, build, quality, review, learning, and autopilot workflows.",
   "skills": [
     {

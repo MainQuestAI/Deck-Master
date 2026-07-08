@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.9.14-preview.2
+
+Status: Technical Preview (agent-operable).
+
+Version mapping: GitHub release label `v0.9.14-preview.2` maps to Python
+package version `0.9.14a2`. This preview does not claim production readiness.
+
+This preview carries the final release hygiene patch after
+`v0.9.14-preview.1`, including Python 3.12 CI coverage, release checklist
+closure, PPT Library handback wording cleanup, and refreshed Agent QA routing.
+
 ## v0.9.14-preview.1
 
 Status: Technical Preview (agent-operable).

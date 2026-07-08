@@ -1,6 +1,6 @@
 # Deck Master Quick Start
 
-This guide runs v0.9.14-preview.1 / Technical Preview (agent-operable). It uses fixture mode, synthetic demo content, and the local Review Desk.
+This guide runs v0.9.14-preview.2 / Technical Preview (agent-operable). It uses fixture mode, synthetic demo content, and the local Review Desk.
 
 ## 1. Install
 
