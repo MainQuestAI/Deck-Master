@@ -17,7 +17,9 @@ agents working in this repository.
 - Public capability manifest: `product-capability-manifest.json`.
 - Skill task schemas: `skills/deck-master/schemas/`.
 - Source checkout CLI entrypoint: `python3 scripts/deck_master.py`.
-- Editable install uses Python 3.11 or 3.12 in a venv; after
+- Editable install uses Python 3.12 by default. Python 3.11 and 3.12 are
+  supported for preview commands; real PPT Library v2 integration requires
+  Python 3.12+. After
   `python -m pip install -e ".[dev]"`, installed command is `deck-master`.
 - Technical Preview demo: `scripts/demo.sh` plus `preview-gate`.
 - Release verification: `release-build` plus `release-smoke`.

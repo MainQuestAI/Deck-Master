@@ -7,7 +7,11 @@ public skills from drifting back into "command index" docs (G-01).
 """
 from __future__ import annotations
 
+import argparse
+import contextlib
+import io
 import re
+import shlex
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -108,12 +112,104 @@ def _extract_commands(body: str) -> list[str]:
     return commands
 
 
+def _iter_bash_blocks(body: str) -> list[str]:
+    return [
+        match.group(1)
+        for match in re.finditer(r"```(?:bash|sh)\n(.*?)```", body, re.DOTALL)
+    ]
+
+
+def _iter_logical_lines(block: str) -> list[str]:
+    lines: list[str] = []
+    current = ""
+    for raw in block.splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        if line.endswith("\\"):
+            current += line[:-1].strip() + " "
+            continue
+        line = current + line
+        current = ""
+        if line:
+            lines.append(line)
+    if current.strip():
+        lines.append(current.strip())
+    return lines
+
+
+def _placeholder_value(name: str) -> str:
+    key = name.strip().lower()
+    if key == "command":
+        return "<command>"
+    if any(token in key for token in ("dir", "workspace", "path", "repo", "root")):
+        return "/tmp/deck-master"
+    if any(token in key for token in ("file", "input", "artifact", "json", "pptx", "txt", "md")):
+        return "/tmp/deck-master/input.json"
+    if "industry" in key:
+        return "retail"
+    if "mode" in key:
+        return "fixture"
+    if "outcome" in key:
+        return "selected"
+    return key.replace("-", "_") or "value"
+
+
+def _normalize_command_line(line: str) -> str:
+    line = re.sub(r"\[[^\]]+\]", "", line)
+    return re.sub(r"<([^>]+)>", lambda match: _placeholder_value(match.group(1)), line)
+
+
+def _deck_master_invocations(body: str) -> list[tuple[str, list[str]]]:
+    invocations: list[tuple[str, list[str]]] = []
+    for block in _iter_bash_blocks(body):
+        for line in _iter_logical_lines(block):
+            if "deck-master" not in line and "deck_master.py" not in line:
+                continue
+            if "<command>" in line:
+                continue
+            normalized = _normalize_command_line(line)
+            try:
+                tokens = shlex.split(normalized, comments=True)
+            except ValueError:
+                continue
+            args: list[str] | None = None
+            for index, token in enumerate(tokens):
+                if token == "deck-master" or token.endswith("/deck-master"):
+                    args = tokens[index + 1 :]
+                    break
+                if token.endswith("scripts/deck_master.py") or token.endswith("deck_master.py"):
+                    args = tokens[index + 1 :]
+                    break
+            if not args:
+                continue
+            if args[0].startswith("<"):
+                continue
+            invocations.append((line, args))
+    return invocations
+
+
+def _validate_command_args(parser: argparse.ArgumentParser, args: list[str]) -> str | None:
+    stderr = io.StringIO()
+    stdout = io.StringIO()
+    with contextlib.redirect_stderr(stderr), contextlib.redirect_stdout(stdout):
+        try:
+            parser.parse_args(args)
+        except SystemExit as exc:
+            if exc.code == 0:
+                return None
+            detail = " ".join(stderr.getvalue().split())
+            return detail or "invalid command arguments"
+    return None
+
+
 def validate_skill_doc(
     skill_name: str,
     doc_path: Path,
     registry: Registry,
     *,
     known_commands: set[str] | None = None,
+    command_parser: argparse.ArgumentParser | None = None,
 ) -> DocReport:
     text = doc_path.read_text(encoding="utf-8")
     fm, body = _parse_frontmatter(text)
@@ -152,6 +248,19 @@ def validate_skill_doc(
                     DocViolation(skill_name, str(doc_path), "command", f"unknown command: {cmd}")
                 )
 
+    if command_parser is not None:
+        for original, args in _deck_master_invocations(body):
+            error = _validate_command_args(command_parser, args)
+            if error:
+                report.violations.append(
+                    DocViolation(
+                        skill_name,
+                        str(doc_path),
+                        "command_args",
+                        f"invalid command: {original} ({error})",
+                    )
+                )
+
     # exit artifacts must mention manifest exit_artifacts (if the skill has them)
     if skill is not None and skill.exit_artifacts:
         body_lower = body.lower()
@@ -179,6 +288,7 @@ def validate_all(
     *,
     registry: Registry | None = None,
     known_commands: set[str] | None = None,
+    command_parser: argparse.ArgumentParser | None = None,
 ) -> list[DocReport]:
     reg = registry or load_registry()
     root = skills_root or _default_skills_root()
@@ -189,7 +299,15 @@ def validate_all(
             reports.append(DocReport(skill=skill.name, path=str(doc_path), ok=False,
                                      violations=[DocViolation(skill.name, str(doc_path), "exists", "SKILL.md not found")]))
             continue
-        reports.append(validate_skill_doc(skill.name, doc_path, reg, known_commands=known_commands))
+        reports.append(
+            validate_skill_doc(
+                skill.name,
+                doc_path,
+                reg,
+                known_commands=known_commands,
+                command_parser=command_parser,
+            )
+        )
     return reports
 
 

@@ -53,7 +53,9 @@ Skill OS operations/orchestrator; not a production stage. Reads workflow state a
 
 ## Allowed Commands
 ```bash
-deck-master setup --run-dir <run_dir>
+deck-master setup --workspace <workspace> --repair-workspace --target codex --install-suite
+deck-master setup-status --include-suite --output json
+deck-master suite-status --target codex --output json
 deck-master workflow status --run-dir <run_dir>
 deck-master run-state --run-dir <run_dir>
 ```

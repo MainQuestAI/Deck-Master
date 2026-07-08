@@ -4,10 +4,12 @@ This guide runs v0.9.14-preview.1 / Technical Preview (agent-operable). It uses 
 
 ## 1. Install
 
-Use Python 3.11 or 3.12 for this preview.
+Use Python 3.12 by default for this preview. Deck Master preview commands work
+on Python 3.11 or 3.12, but real PPT Library v2 integration requires Python
+3.12+.
 
 ```bash
-python3.11 -m venv .venv
+python3.12 -m venv .venv
 . .venv/bin/activate
 python -m pip install -e ".[dev]"
 ```
@@ -75,13 +77,27 @@ The preview server binds to `127.0.0.1` by default. Non-loopback hosts require `
 
 The Technical Preview first-run path is fixture/demo. Production backend commands require configured and verified companion capabilities. The production external backend is `ppt-master`; `ppt-deck-pro-max` is a suite Skill for page production. If `ppt-master` is missing, Deck Master should report `unbound` or `not_configured` and provide a fixture/demo path.
 
+Before real production use:
+
+1. Use Python 3.12 for PPT Library v2.
+2. Validate the active workspace before creating a production run.
+3. Confirm that PPT files, screenshots, historical proposals, and customer context are authorized for local indexing and reuse.
+4. Do not index Downloads, caches, raw customer folders, or private benchmark sources unless the user explicitly confirms that scope.
+5. Verify PPT Master backend status before treating build/export as delivery-ready.
+
 Use these commands to inspect readiness:
 
 ```bash
 python3 scripts/deck_master.py setup-status --include-suite --output json
 python3 scripts/deck_master.py suite-status --output json
 python3 scripts/deck_master.py backend status
+python3 scripts/deck_master.py backend verify ppt-master
 ```
+
+For integration details, see:
+
+- [PPT Library v2 Integration](integration/ppt-library-v2.md)
+- [PPT Master Integration](integration/ppt-master.md)
 
 ## 6. Formal RC Gate
 

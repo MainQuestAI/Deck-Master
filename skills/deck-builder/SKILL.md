@@ -58,7 +58,11 @@ Skill OS workflow runtime; stage `deck-builder`. Stage completion is validated b
 
 ## Allowed Commands
 ```bash
-deck-master build --run-dir <run_dir>
+deck-master build prepare --run-dir <run_dir>
+deck-master build run --run-dir <run_dir>
+deck-master build status --run-dir <run_dir>
+deck-master render-status --run-dir <run_dir>
+deck-master import-render-result --run-dir <run_dir> --input <render_result.json>
 deck-master workflow status --run-dir <run_dir>
 deck-master run-state --run-dir <run_dir>
 ```

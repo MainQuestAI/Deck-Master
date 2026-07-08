@@ -1,19 +1,19 @@
 ---
 name: deck-master
-description: Professional Solution Deck Run OS for turning customer context, briefs, historical deck assets, sourcing decisions, product capability handbacks, quality gates, review cockpit state, benchmark runs, and delivery feedback into auditable solution deck workflows. Use when Codex needs to create or resume a Deck Master run, generate a preview from a brief, inspect next steps, run deck quality gates, import narrative advice or review findings, manage PPT Library, PPT Master, PPT Deck Pro Max, or PPT Quality Gate handbacks, export approved page queues, validate benchmark cases, or operate the local Deck Master CLI and Review Cockpit.
+description: Professional Solution Deck Run OS for turning customer context, briefs, historical deck assets, sourcing decisions, product capability handbacks, quality gates, Review Desk state, benchmark runs, and delivery feedback into auditable solution deck workflows. Use when Codex needs to create or resume a Deck Master run, generate a preview from a brief, inspect next steps, run deck quality gates, import narrative advice or review findings, manage PPT Library, PPT Master, PPT Deck Pro Max, or PPT Quality Gate handbacks, export approved page queues, validate benchmark cases, or operate the local Deck Master CLI and Review Desk.
 triggers:
   - deck master
   - create a deck master run
   - resume a deck run
   - inspect deck next steps
-  - review cockpit
+  - review desk
 ---
 
 # Deck Master
 
 Use Deck Master as the runtime and review layer for professional solution decks.
 It owns run state, artifacts, typed events, sourcing decisions, quality gates,
-product capability handbacks, benchmark reports, and the localhost Review Cockpit.
+product capability handbacks, benchmark reports, and the localhost Review Desk.
 
 When a user names Deck Master, treat it as the top-level orchestrator for the
 run. Even for heavy edits and capability calls, the source of truth stays in
@@ -33,7 +33,7 @@ When working inside the development repo, this is also valid:
 python3 scripts/deck_master.py <command> [options]
 ```
 
-The local Review Cockpit normally runs at:
+The local Review Desk normally runs at:
 
 ```text
 http://127.0.0.1:5050
@@ -135,7 +135,7 @@ For demo, fixture, or quick smoke runs, a brief file can still drive a preview:
   --force
 ```
 
-Then open the Review Cockpit and inspect readiness, page decisions, evidence
+Then open the Review Desk and inspect readiness, page decisions, evidence
 coverage, external results, quality findings, and export queue.
 
 If you manually correct a Deck plan, import the corrected plan back into the run
@@ -213,7 +213,7 @@ Read only the relevant file when needed:
 <!-- skill-os-contract:v1 -->
 
 ## Use When
-Top-level Deck Master run orchestration and review cockpit operations.
+Top-level Deck Master run orchestration and Review Desk operations.
 
 ## Do Not Use
 Do not use outside its lane in the Skill OS workflow. Do not treat a successful command return code as stage completion.
@@ -229,8 +229,9 @@ Skill OS operations/orchestrator; not a production stage. Reads workflow state a
 
 ## Allowed Commands
 ```bash
-deck-master workflow --run-dir <run_dir>
 deck-master workflow status --run-dir <run_dir>
+deck-master next-step --run-dir <run_dir>
+deck-master route-skill --run-dir <run_dir>
 deck-master run-state --run-dir <run_dir>
 ```
 

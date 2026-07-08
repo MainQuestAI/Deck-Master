@@ -16,10 +16,10 @@ rollback.
 ## Allowed Commands
 
 ```bash
-~/.deck-master/bin/deck-master release-build
-~/.deck-master/bin/deck-master release-smoke
+~/.deck-master/bin/deck-master release-build --output <release_dir> --force
+~/.deck-master/bin/deck-master release-smoke --release-root <release_dir>
 ~/.deck-master/bin/deck-master release-rollback
-~/.deck-master/bin/deck-master rc-gate
+~/.deck-master/bin/deck-master rc-gate --output-dir <output_dir> --force
 ```
 
 ## Output Rule
@@ -47,7 +47,9 @@ Skill OS operations/orchestrator; not a production stage. Reads workflow state a
 
 ## Allowed Commands
 ```bash
-deck-master suite-status --run-dir <run_dir>
+deck-master suite-status --target codex --output json
+deck-master release-build --output <release_dir> --force
+deck-master release-smoke --release-root <release_dir>
 deck-master workflow status --run-dir <run_dir>
 deck-master run-state --run-dir <run_dir>
 ```

@@ -19,12 +19,14 @@ Deck Master is built for solution architects and proposal builders who need a re
 
 ## Install
 
-Use Python 3.11 or 3.12 for the Technical Preview. Python 3.14 is not a
-supported test environment because the PPTX dependency chain may not have
-compatible wheels yet.
+Use Python 3.12 by default for the Technical Preview. Deck Master preview
+commands are tested on Python 3.11 and 3.12, but real PPT Library v2
+integration requires Python 3.12+. Python 3.14 is not a supported test
+environment because the PPTX dependency chain may not have compatible wheels
+yet.
 
 ```bash
-python3.11 -m venv .venv
+python3.12 -m venv .venv
 . .venv/bin/activate
 python -m pip install -e ".[dev]"
 ```
@@ -73,6 +75,37 @@ Current M1 limits:
 
 See [Known Limitations](docs/known-limitations.md).
 
+## Before Real Production Use
+
+The preview demo is fixture-safe. Before using real customer material or
+production deck assets, confirm these items explicitly:
+
+1. Use Python 3.12 when integrating PPT Library v2.
+2. Register and validate an active workspace; do not index Downloads, caches,
+   raw customer folders, or private benchmark sources unless the user confirms
+   that scope.
+3. Confirm source authorization before indexing PPT files, screenshots,
+   historical proposals, or customer context.
+4. Check Agent and suite readiness:
+
+```bash
+python3 scripts/deck_master.py setup-status --include-suite --output json
+python3 scripts/deck_master.py suite-status --target codex --output json
+python3 scripts/deck_master.py agent-doctor --mode production --output json
+```
+
+5. Bind and verify a production PPT Master backend before treating build or
+   export commands as delivery-ready:
+
+```bash
+python3 scripts/deck_master.py backend status
+python3 scripts/deck_master.py backend bind ppt-master --repo <ppt-master-backend>
+python3 scripts/deck_master.py backend verify ppt-master
+```
+
+If production readiness is blocked, keep the run in fixture/demo mode or stop
+and repair the reported blocker.
+
 ## Core Commands
 
 ```bash
@@ -97,7 +130,11 @@ python3 scripts/deck_master.py rc-gate --output-dir /tmp/deck-master-rc --benchm
 ## Project Docs
 
 - [Quick Start](docs/quick-start.md)
+- [Agent Entry](AGENTS.md)
+- [Agent Task Index](docs/agent-task-index.md)
 - [Known Limitations](docs/known-limitations.md)
+- [PPT Library v2 Integration](docs/integration/ppt-library-v2.md)
+- [PPT Master Integration](docs/integration/ppt-master.md)
 - [Release Checklist](docs/releases/2026-07-06-release-checklist.md)
 - [Contributing](CONTRIBUTING.md)
 - [Security](SECURITY.md)

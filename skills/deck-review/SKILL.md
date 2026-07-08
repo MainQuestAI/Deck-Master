@@ -1,6 +1,6 @@
 ---
 name: deck-review
-description: Deck Master review and delivery entry for quality gates, Review Cockpit state, findings, repair loops, export readiness, and delivery readiness. Use when the user asks whether a Deck Master run or generated deck is ready to deliver.
+description: Deck Master review and delivery entry for quality gates, Review Desk state, findings, repair loops, export readiness, and delivery readiness. Use when the user asks whether a Deck Master run or generated deck is ready to deliver.
 triggers:
   - review a deck run
   - check deck quality gates
@@ -51,7 +51,7 @@ ready while workspace, render, quality, or import gates are blocked.
 ## Output Expectations
 
 Review output must be visible through Deck Master artifacts such as
-`quality_reports/*`, `render_results/render_result.json`, Review Cockpit state,
+`quality_reports/*`, `render_results/render_result.json`, Review Desk state,
 and export queues.
 
 

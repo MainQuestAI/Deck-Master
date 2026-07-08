@@ -49,7 +49,9 @@ Skill OS workflow runtime; stage `deck-quality`. Stage completion is validated b
 
 ## Allowed Commands
 ```bash
-deck-master quality-gate --run-dir <run_dir>
+deck-master quality-gate draft --run-dir <run_dir>
+deck-master quality-gate customer-visible-safety --run-dir <run_dir> --artifact <pptx>
+deck-master quality-gate delivery --run-dir <run_dir> --artifact <pptx>
 deck-master workflow status --run-dir <run_dir>
 deck-master run-state --run-dir <run_dir>
 ```

@@ -50,7 +50,8 @@ Skill OS workflow runtime; stage `deck-init`. Stage completion is validated by t
 
 ## Allowed Commands
 ```bash
-deck-master init-project --run-dir <run_dir>
+deck-master init-project --workspace <workspace> --name <project_name>
+deck-master validate-workspace --workspace <workspace>
 deck-master workflow status --run-dir <run_dir>
 deck-master run-state --run-dir <run_dir>
 ```

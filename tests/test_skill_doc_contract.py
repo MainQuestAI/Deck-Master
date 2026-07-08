@@ -113,6 +113,24 @@ def test_unknown_command_fails(tmp_path):
     assert any(v.rule == "command" for v in rep.violations)
 
 
+def test_invalid_command_arguments_fail(tmp_path):
+    bad = GOOD_DOC.replace(
+        "deck-master build-brief --run-dir <run_dir>",
+        "deck-master setup --run-dir <run_dir>",
+    )
+    doc = tmp_path / "deck-brief" / "SKILL.md"
+    _write(doc, bad)
+    rep = validate_skill_doc(
+        "deck-brief",
+        doc,
+        REGISTRY,
+        known_commands=_real_commands(),
+        command_parser=_real_parser(),
+    )
+    assert not rep.ok
+    assert any(v.rule == "command_args" for v in rep.violations)
+
+
 def test_compat_wrapper_must_reference_public_stage(tmp_path):
     # ppt-library is a compat backend (public=False); its doc must reference public stage
     skill = REGISTRY.skill("ppt-library")  # private
@@ -135,7 +153,7 @@ def test_all_required_sections_enforced():
 def test_real_public_skill_docs_conform():
     """Every real public SKILL.md must satisfy the Skill Doc Contract."""
     known = _real_commands()
-    reports = validate_all(registry=REGISTRY, known_commands=known)
+    reports = validate_all(registry=REGISTRY, known_commands=known, command_parser=_real_parser())
     public_reports = [r for r in reports if REGISTRY.skill(r.skill).public]
     failures = [r for r in public_reports if not r.ok]
     assert not failures, "\n".join(
@@ -145,7 +163,7 @@ def test_real_public_skill_docs_conform():
 
 def test_real_compat_docs_reference_public_stage():
     known = _real_commands()
-    reports = validate_all(registry=REGISTRY, known_commands=known)
+    reports = validate_all(registry=REGISTRY, known_commands=known, command_parser=_real_parser())
     compat_reports = [r for r in reports if not REGISTRY.skill(r.skill).public]
     failures = [r for r in compat_reports if not r.ok]
     assert not failures, "\n".join(
@@ -183,3 +201,9 @@ def _real_commands() -> set[str]:
         return cmds
     except Exception:
         return KNOWN_COMMANDS
+
+
+def _real_parser():
+    import deck_master
+
+    return deck_master.build_parser()

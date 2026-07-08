@@ -6,8 +6,10 @@ entries over guessing file locations or reading historical specs.
 ## Source Checkout Command Form
 
 Use `python3 scripts/deck_master.py ...` before installation. For test and
-editable-install work, use Python 3.11 or 3.12. After installing with
-`python -m pip install -e ".[dev]"`, `deck-master ...` is equivalent.
+editable-install work, use Python 3.12 by default. Python 3.11 and 3.12 are
+supported for preview commands; real PPT Library v2 integration requires
+Python 3.12+. After installing with `python -m pip install -e ".[dev]"`,
+`deck-master ...` is equivalent.
 
 ## New Public Preview Run
 

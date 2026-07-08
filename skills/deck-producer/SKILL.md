@@ -52,6 +52,12 @@ Skill OS workflow runtime; stage `deck-producer`. Stage completion is validated 
 
 ## Allowed Commands
 ```bash
+deck-master generation-session create --run-dir <run_dir>
+deck-master generation-session status --run-dir <run_dir>
+deck-master run-generation --run-dir <run_dir>
+deck-master generation-session dispatch --run-dir <run_dir>
+deck-master generation-session import-results --run-dir <run_dir> --input <result.json>
+deck-master refresh-preview-from-generation --run-dir <run_dir>
 deck-master build-preview --run-dir <run_dir>
 deck-master workflow status --run-dir <run_dir>
 deck-master run-state --run-dir <run_dir>
