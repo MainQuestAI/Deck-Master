@@ -55,6 +55,43 @@ class InstalledReleaseRCGateRegressionTests(unittest.TestCase):
         self.assertEqual("fail", checks["benchmark_aggregate"]["status"])
         self.assertEqual("metadata_ready", checks["benchmark_aggregate"]["details"]["status"])
 
+    def test_release_tree_ci_tier_rc_gate_passes_without_local_evidence(self) -> None:
+        # The CI tier must pass on a fresh clone / release tree that has no
+        # local-only benchmark results and no bound production backend.
+        release_root = self.temp_dir / "release-ci"
+        build_release_tree(release_root, force=True)
+
+        output_dir = self.temp_dir / "rc-gate-ci"
+        completed = subprocess.run(
+            [
+                str(release_root / "bin" / "deck-master"),
+                "rc-gate",
+                "--tier",
+                "ci",
+                "--output-dir",
+                str(output_dir),
+                "--skip-browser-smoke",
+                "--force",
+            ],
+            cwd=self.temp_dir,
+            env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=120,
+        )
+
+        self.assertEqual(0, completed.returncode, completed.stderr[-2000:])
+        payload = json.loads((output_dir / "rc_gate_report.json").read_text(encoding="utf-8"))
+        self.assertEqual("ci", payload["tier"])
+        self.assertEqual("pass", payload["status"])
+        checks = {check["check_id"]: check for check in payload["checks"]}
+        self.assertEqual("skipped", checks["benchmark_aggregate"]["status"])
+        self.assertFalse(checks["benchmark_aggregate"]["required"])
+        self.assertEqual("pass", checks["external_dependency_closure"]["status"])
+        self.assertTrue(checks["external_dependency_closure"]["required"])
+
+
 
 if __name__ == "__main__":
     unittest.main()

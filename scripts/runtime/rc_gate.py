@@ -435,15 +435,47 @@ def _browser_smoke_check(*, skip: bool, require: bool) -> dict[str, Any]:
     )
 
 
-def _benchmark_aggregate_check(benchmark_dir: Path, min_real_cases: int) -> dict[str, Any]:
-    report = build_benchmark_aggregate_report(benchmark_dir, min_real_cases=min_real_cases)
-    status = "pass" if report["status"] == "report_ready" else "fail"
+def _external_dependency_closure_ci_check() -> dict[str, Any]:
+    """CI-tier external dependency closure.
+
+    Verifies the release tree's capability lock is well-formed and carries an
+    external dependency snapshot, which is reproducible from a fresh clone
+    (``build_release_tree`` works entirely from committed source). Skips the
+    live production-backend binding assertion and the benchmark readiness gate,
+    which both require local-only state (a bound ``ppt-master`` backend and
+    local-only benchmark results). The full tier runs those; CI does not.
+    """
+    failures: list[str] = []
+    lock_snapshot: dict[str, dict[str, Any]] = {}
+    try:
+        with tempfile.TemporaryDirectory(prefix="dm_rc_dependency_lock_") as tmp:
+            release_root = Path(tmp) / "release"
+            build_release_tree(release_root, force=True)
+            lock = json.loads((release_root / "deck_capability_lock.json").read_text(encoding="utf-8"))
+            locked = lock.get("external_dependency_status")
+            if not isinstance(locked, list):
+                locked = lock.get("external_dependencies")
+            if not isinstance(locked, list):
+                failures.append("capability lock missing external dependencies")
+                locked = []
+            lock_snapshot = _dependency_snapshot([item for item in locked if isinstance(item, dict)])
+    except Exception as exc:  # noqa: BLE001 - RC gate reports closure errors as check details.
+        failures.append(f"capability lock could not be built: {exc}")
+
     return _check(
-        "benchmark_aggregate",
-        status,
+        "external_dependency_closure",
+        "pass" if not failures else "fail",
         required=True,
-        summary="Benchmark aggregate requires real completed benchmark reports for RC.",
-        details=report,
+        summary="CI tier: release capability lock is well-formed (live backend binding and benchmark gates skipped).",
+        details={
+            "tier": "ci",
+            "capability_lock_dependencies": lock_snapshot,
+            "skipped": [
+                "ppt-master bound_verified assertion (requires locally-bound backend)",
+                "benchmark aggregate report_ready gate (requires local-only results)",
+            ],
+            "failures": failures,
+        },
     )
 
 
@@ -518,23 +550,41 @@ def build_rc_gate_report(
     skip_browser_smoke: bool = False,
     require_browser_smoke: bool = False,
     min_real_cases: int = 3,
+    tier: str = "full",
 ) -> dict[str, Any]:
     bench_root = Path(benchmark_dir).expanduser().resolve() if benchmark_dir else REPO_ROOT / "benchmarks"
     benchmark_report = build_benchmark_aggregate_report(bench_root, min_real_cases=min_real_cases)
+    if tier == "ci":
+        # CI tier: skip checks that need local-only state. benchmark_aggregate
+        # needs gitignored benchmarks/results/; the live closure needs a
+        # locally-bound ppt-master backend. The CI closure still verifies the
+        # release tree's capability lock is well-formed (reproducible from a
+        # fresh clone). benchmark_report is computed for visibility only.
+        benchmark_check = _check(
+            "benchmark_aggregate",
+            "skipped",
+            required=False,
+            summary="Skipped in CI tier: requires local-only benchmark results.",
+            details=benchmark_report,
+        )
+        closure_check = _external_dependency_closure_ci_check()
+    else:
+        benchmark_check = _check(
+            "benchmark_aggregate",
+            "pass" if benchmark_report["status"] == "report_ready" else "fail",
+            required=True,
+            summary="Benchmark aggregate requires real completed benchmark reports for RC.",
+            details=benchmark_report,
+        )
+        closure_check = _external_dependency_closure_check(benchmark_report)
     checks = [
         _json_parse_check(),
         _artifact_validator_check(),
         _release_smoke_check(),
         _fixture_e2e_check(),
         _browser_smoke_check(skip=skip_browser_smoke, require=require_browser_smoke),
-        _check(
-            "benchmark_aggregate",
-            "pass" if benchmark_report["status"] == "report_ready" else "fail",
-            required=True,
-            summary="Benchmark aggregate requires real completed benchmark reports for RC.",
-            details=benchmark_report,
-        ),
-        _external_dependency_closure_check(benchmark_report),
+        benchmark_check,
+        closure_check,
     ]
     required_failures = [check for check in checks if check["required"] and check["status"] != "pass"]
     optional_warnings = [
@@ -549,6 +599,7 @@ def build_rc_gate_report(
     return {
         "schema_version": SCHEMA_VERSION,
         "status": status,
+        "tier": tier,
         "created_at": _utc_now(),
         "benchmark_dir": str(bench_root),
         "summary": {
@@ -565,6 +616,7 @@ def render_rc_gate_markdown(report: dict[str, Any]) -> str:
         "# Deck Master RC Gate Report",
         "",
         f"- Status: `{report.get('status')}`",
+        f"- Tier: `{report.get('tier', 'full')}`",
         f"- Required failures: `{(report.get('summary') or {}).get('required_failures', 0)}`",
         f"- Optional warnings: `{(report.get('summary') or {}).get('optional_warnings', 0)}`",
         "",
@@ -586,6 +638,7 @@ def write_rc_gate_report(
     skip_browser_smoke: bool = False,
     require_browser_smoke: bool = False,
     min_real_cases: int = 3,
+    tier: str = "full",
     force: bool = False,
 ) -> dict[str, Any]:
     out_dir = Path(output_dir).expanduser().resolve()
@@ -598,6 +651,7 @@ def write_rc_gate_report(
         skip_browser_smoke=skip_browser_smoke,
         require_browser_smoke=require_browser_smoke,
         min_real_cases=min_real_cases,
+        tier=tier,
     )
     out_dir.mkdir(parents=True, exist_ok=True)
     write_json(json_path, report)

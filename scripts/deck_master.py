@@ -2607,6 +2607,7 @@ def command_rc_gate(args: argparse.Namespace) -> dict[str, Any]:
         skip_browser_smoke=bool(getattr(args, "skip_browser_smoke", False)),
         require_browser_smoke=bool(getattr(args, "require_browser_smoke", False)),
         min_real_cases=int(getattr(args, "min_real_cases", 3)),
+        tier=str(getattr(args, "tier", "full")),
         force=bool(getattr(args, "force", False)),
     )
 
@@ -3554,6 +3555,14 @@ def build_parser() -> argparse.ArgumentParser:
     p_rc_gate.add_argument("--min-real-cases", type=int, default=3)
     p_rc_gate.add_argument("--skip-browser-smoke", action="store_true")
     p_rc_gate.add_argument("--require-browser-smoke", action="store_true")
+    p_rc_gate.add_argument(
+        "--tier",
+        choices=["full", "ci"],
+        default="full",
+        help="full: all checks incl. local-only benchmark/dependency closure (default). "
+        "ci: reproducible subset only; skip checks needing local-only benchmark "
+        "results or a bound production backend. For PR/CI gates on a fresh clone.",
+    )
     p_rc_gate.add_argument("--force", action="store_true")
     p_rc_gate.set_defaults(func=command_rc_gate)
 
