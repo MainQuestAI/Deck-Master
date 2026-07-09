@@ -3,6 +3,7 @@
 # Local agent/tool state
 .claude/settings.local.json
 .gbrain-source
+.zcode/
 
 # Python/runtime artifacts
 __pycache__/
@@ -25,3 +26,6 @@ node_modules/
 .gstack/
 rc_reports/
 tests/_ap_*/
+
+# Re-ignore bytecode caches under un-ignored source dirs (e.g. scripts/build/)
+**/__pycache__/
