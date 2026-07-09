@@ -58,4 +58,4 @@ python -m unittest tests.test_skill_installation.SkillInstallationTest.test_rele
 - [ ] `rc-gate --require-browser-smoke` passes.
 - [x] Localhost write operations have token and origin checks.
 - [ ] Production deployment hardening beyond the local Review Desk guard is closed.
-- [ ] GitHub issue/PR templates, CODEOWNERS, ROADMAP, and dependabot are present.
+- [x] GitHub issue/PR templates, CODEOWNERS, ROADMAP, and dependabot are present.
