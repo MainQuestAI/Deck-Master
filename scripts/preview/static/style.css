@@ -20,6 +20,9 @@
   --status-warning-soft: rgba(217, 164, 65, 0.18);
   --status-error-soft: rgba(199, 84, 80, 0.18);
   --status-info-soft: rgba(91, 141, 184, 0.16);
+  --status-success-line: rgba(111, 174, 111, 0.45);
+  --status-warning-line: rgba(217, 164, 65, 0.40);
+  --status-error-line: rgba(199, 84, 80, 0.45);
   --p0: #C75450;
   --p1: #D9A441;
   --p2: #7A8694;
@@ -124,7 +127,6 @@ textarea {
   border: 1px solid var(--hairline);
   border-radius: 4px;
   background: var(--surface-1);
-  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.22);
   overflow: hidden;
 }
 
@@ -526,21 +528,21 @@ textarea {
 .pill.success,
 .status-pill.success {
   color: var(--status-success);
-  border-color: rgba(46, 204, 113, 0.45);
+  border-color: var(--status-success-line);
 }
 
 .stage-chip.warning,
 .pill.warning,
 .status-pill.warning {
   color: var(--status-warning);
-  border-color: rgba(241, 196, 15, 0.4);
+  border-color: var(--status-warning-line);
 }
 
 .stage-chip.danger,
 .pill.danger,
 .status-pill.danger {
   color: var(--status-error);
-  border-color: rgba(231, 76, 60, 0.45);
+  border-color: var(--status-error-line);
 }
 
 .stage-chip.muted,
@@ -714,16 +716,16 @@ textarea {
 }
 
 .alert-card.success {
-  border-color: rgba(46, 204, 113, 0.32);
+  border-color: var(--status-success-line);
   color: var(--status-success);
 }
 
 .alert-card.warning {
-  border-color: rgba(241, 196, 15, 0.32);
+  border-color: var(--status-warning-line);
 }
 
 .alert-card.danger {
-  border-color: rgba(231, 76, 60, 0.34);
+  border-color: var(--status-error-line);
   color: #ffc4bc;
 }
 
@@ -917,11 +919,17 @@ textarea {
   background: rgba(255, 255, 255, 0.04);
 }
 
-.stack-card.success,
-.activity-item.info {
-  border-color: rgba(224, 144, 67, 0.24);
+.stack-card.success {
+  border-color: var(--status-success-line);
   background:
-    linear-gradient(180deg, rgba(224, 144, 67, 0.08), rgba(255, 255, 255, 0.04)),
+    linear-gradient(180deg, var(--status-success-soft), rgba(255, 255, 255, 0.04)),
+    rgba(255, 255, 255, 0.04);
+}
+
+.activity-item.info {
+  border-color: rgba(91, 141, 184, 0.24);
+  background:
+    linear-gradient(180deg, var(--status-info-soft), rgba(255, 255, 255, 0.04)),
     rgba(255, 255, 255, 0.04);
 }
 

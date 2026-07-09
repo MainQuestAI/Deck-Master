@@ -25,7 +25,7 @@
 - **UI/Labels:** 同 body（Geist）。
 - **Data/Tables:** IBM Plex Mono（Google Fonts）— 页码、状态枚举、置信度、run id。必须支持 tabular-nums。mono 是结构身份标记，是“工具感”的关键来源。权重 400/500/600。
 - **Code:** IBM Plex Mono。
-- **Loading:** CDN（Google Fonts + Fontshare）。生产可后续自托管。
+- **Loading:** 自托管（`scripts/preview/static/fonts/`，`@font-face`）。Review Desk 是本地工具，必须离线可用、不依赖第三方 CDN（由 `tests/test_preview_static_contract.py` 强制）。字体二进制与 license 见 `THIRD_PARTY_NOTICES.md`。
 - **Scale:** 12 / 13 / 14 / 16 / 18 / 22 / 28 / 40 / 56 / 72（clamp 用于 hero）。
 - **禁用为主字体:** Inter / Roboto / Arial / Helvetica / Open Sans / Lato / Montserrat / Poppins / Space Grotesk（AI 收敛陷阱）。Geist 因老板明确引用 Things/Linear 质感而采用，但仅作 body，不作 display。
 
