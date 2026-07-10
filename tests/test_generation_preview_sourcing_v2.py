@@ -146,9 +146,9 @@ class GenerationPreviewSourcingV2Tests(unittest.TestCase):
             self.assertTrue(asset.startswith("preview_assets/"))
             self.assertTrue((self.run_dir / asset).is_file())
 
-    def test_production_and_benchmark_block_manual_or_blocked_v2_pages(self) -> None:
+    def test_production_and_benchmark_block_manual_evidence_or_blocked_v2_pages(self) -> None:
         for run_mode in ("production", "benchmark"):
-            for decision in ("manual", "blocked"):
+            for decision in ("manual", "evidence", "blocked"):
                 with self.subTest(run_mode=run_mode, decision=decision):
                     self._write_request(run_mode)
                     with self.assertRaises(ValueError) as ctx:
@@ -157,6 +157,19 @@ class GenerationPreviewSourcingV2Tests(unittest.TestCase):
                             self.run_dir,
                         )
                     self.assertIn(decision, str(ctx.exception))
+
+    def test_fixture_and_dev_allow_evidence_placeholder_preview(self) -> None:
+        for run_mode in ("fixture", "dev"):
+            with self.subTest(run_mode=run_mode):
+                self._write_request(run_mode)
+                manifest = build_preview_from_sourcing(
+                    self._plan([self._page(f"{run_mode}-evidence", "evidence")]),
+                    self.run_dir,
+                )
+                page = manifest["pages"][0]
+                self.assertEqual("manual_placeholder", page["source_decision"])
+                self.assertEqual("placeholder", page["source_type"])
+                self.assertTrue((self.run_dir / page["preview_path"]).is_file())
 
     def test_legacy_v1_preview_flows_only_through_canonical_reader(self) -> None:
         legacy = {

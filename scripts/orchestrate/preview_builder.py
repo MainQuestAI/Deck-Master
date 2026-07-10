@@ -115,7 +115,7 @@ def _assert_preview_allowed(run_dir: Path, sourcing_plan: dict[str, Any]) -> Non
         if not isinstance(page, dict):
             continue
         decision = str(page.get("decision") or "")
-        if decision in {"manual", "blocked"}:
+        if decision in {"manual", "evidence", "blocked"}:
             page_id = str(page.get("page_id") or f"page_{index}")
             blocked.append(f"{page_id} ({decision})")
     if blocked:
