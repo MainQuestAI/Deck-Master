@@ -1,4 +1,4 @@
-# Deck Master v0.9.5 - v0.9.12 Spec Pack
+# Deck Master Development Spec Pack
 
 本包包含 7 份连续开发 Spec，已按 Deck Master v0.9.x 到 v1.0.0 RC 的顺序组织：
 
@@ -43,6 +43,11 @@
 - `open-source-maturity-v1.0/`
   - 目标：把 2026-07-06 开源成熟度计划拆成可执行开发包，先达成 M1 public Technical Preview，再推进 M2 正式开源 RC。
   - 当前入口：`open-source-maturity-v1.0/README.md`、`open-source-maturity-v1.0/00-master-spec.md`、`open-source-maturity-v1.0/tasks/`、`open-source-maturity-v1.0/acceptance/`。
+- `deck-master-ppt-library-bridge-runtime-closure-spec-v1.md`
+  - 目标：固定 release-local Python 3.12，补齐 PPT Library per-beat bridge、零标注语义降级、路径脱敏、跨页去重、Sourcing v2 单一真相源和多维 readiness。
+  - 边界：Deck Master 主责实现；PPT Library 代码和本机数据库仅做独立只读验证，不在本 Spec 中修改。
+  - 基线：正式发布基线为 `main@cc5b112`；开发目标基线为 `chore/1.0.0-rc-governance-ci-tier@ed2bc42`。
+  - 状态：当前 active closure spec；完成后再进入 v1.0.0 RC 真实 benchmark 放行。
 
 `v0.9.11` 本轮补齐点：
 
@@ -87,6 +92,7 @@ docs/specs/open-source-maturity-v1.0/tasks/T5-public-fixture-seed.md
 docs/specs/open-source-maturity-v1.0/tasks/T6-repo-hygiene-release-tree.md
 docs/specs/open-source-maturity-v1.0/tasks/T7-review-desk-design-minimum.md
 docs/specs/open-source-maturity-v1.0/tasks/T8-m2-rc-hardening.md
+docs/specs/deck-master-ppt-library-bridge-runtime-closure-spec-v1.md
 docs/specs/skill-os-runtime-v1.1/README.md
 docs/specs/skill-os-runtime-v1.1/LOCAL_ADOPTION.md
 docs/specs/skill-os-runtime-v1.1/acceptance/decision-traceability.md
@@ -111,5 +117,6 @@ v0.9.5 Review Cockpit Frontend
 → v1.1 Skill OS Runtime Stack A/B/C
 → v1.3.0 Production Closure
 → Open Source Maturity M1 Technical Preview / M2 RC
+→ PPT Library Bridge & Runtime Closure v1
 → v1.0.0 RC Real Benchmark Runs
 ```
