@@ -42,6 +42,11 @@
       "type": "string",
       "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
     },
+    "safeIdentity": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[^/\\\\]+$"
+    },
     "candidate": {
       "type": "object",
       "additionalProperties": false,
@@ -61,9 +66,9 @@
         "reuse_policy"
       ],
       "properties": {
-        "candidate_id": {"type": "string", "minLength": 1},
-        "slide_id": {"type": ["string", "null"]},
-        "asset_key": {"type": "string", "minLength": 1},
+        "candidate_id": {"$ref": "#/$defs/safeIdentity"},
+        "slide_id": {"type": ["string", "null"], "pattern": "^[^/\\\\]+$"},
+        "asset_key": {"$ref": "#/$defs/safeIdentity"},
         "title": {"type": "string"},
         "text_summary": {"type": "string"},
         "page_number": {"type": ["integer", "string", "null"]},
@@ -71,13 +76,19 @@
         "confidence": {"type": "number", "minimum": 0, "maximum": 1},
         "source_asset_id": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
         "source_display_name": {"type": "string", "minLength": 1},
-        "screenshot_ref": {"type": "string"},
+        "screenshot_ref": {
+          "type": "string",
+          "pattern": "^(?!.*(?:^|/)\\.\\.(?:/|$))(?:$|preview_assets/[A-Za-z0-9._/-]+)$"
+        },
         "candidate_origin": {"enum": ["ppt_library", "fixture"]},
         "reuse_policy": {"enum": ["reuse", "adapt", "adapt_only", "reuse_or_adapt"]},
         "page_task_id": {"$ref": "#/$defs/identifier"},
         "slot_id": {"type": "string"},
         "query_trace_id": {"type": "string"},
-        "screenshot_path": {"type": "string", "pattern": "^preview_assets/"},
+        "screenshot_path": {
+          "type": "string",
+          "pattern": "^(?!.*(?:^|/)\\.\\.(?:/|$))preview_assets/[A-Za-z0-9._/-]+$"
+        },
         "win_rate": {"type": "number", "minimum": 0, "maximum": 1},
         "reuse_count": {"type": "integer", "minimum": 0}
       }

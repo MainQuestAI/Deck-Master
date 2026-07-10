@@ -22,6 +22,12 @@ from runtime.run_state import (
 BRIDGE_PLAN_SCHEMA_VERSION = "deck_master_ppt_library_bridge_plan.v1"
 SELECTION_SCHEMA_VERSION_V1 = "deck_master_ppt_library_selection.v1"
 SELECTION_SCHEMA_VERSION = "deck_master_ppt_library_selection.v2"
+SELECTION_V2_SCHEMA_PATH = (
+    Path(__file__).resolve().parents[2]
+    / "docs"
+    / "contracts"
+    / "ppt-library-selection.v2.schema.json"
+)
 
 PASSTHROUGH_ROLES = {
     "opener",
@@ -269,6 +275,21 @@ def _normalized_source_path(value: Any) -> str:
     return str(value or "").strip().replace("\\", "/")
 
 
+def _identity_is_safe(value: str) -> bool:
+    return bool(value) and value not in {".", ".."} and not any(
+        character in value for character in ("/", "\\", "\x00", "\n", "\r")
+    )
+
+
+def _safe_external_identity(value: Any, *, namespace: str) -> str:
+    identity = str(value or "").strip()
+    if not identity:
+        return ""
+    if _identity_is_safe(identity):
+        return identity
+    return f"hash-{_sha256(f'{namespace}:{identity}')}"
+
+
 def _source_display_name(source_path: str, source_asset_id: str) -> str:
     basename = source_path.rsplit("/", 1)[-1].strip()
     if basename and basename not in {".", ".."} and ".." not in basename and SAFE_DISPLAY_RE.fullmatch(basename):
@@ -306,8 +327,10 @@ def normalize_candidate(
     index: int,
     candidate_origin: str = "ppt_library",
 ) -> tuple[dict[str, Any], str]:
-    canonical_slide_id = str(slide.get("canonical_slide_id") or "").strip()
-    slide_id = str(slide.get("slide_id") or "").strip()
+    raw_canonical_slide_id = str(slide.get("canonical_slide_id") or "").strip()
+    raw_slide_id = str(slide.get("slide_id") or "").strip()
+    canonical_slide_id = _safe_external_identity(raw_canonical_slide_id, namespace="canonical_slide_id")
+    slide_id = _safe_external_identity(raw_slide_id, namespace="slide_id")
     source_path = _normalized_source_path(slide.get("source_file") or slide.get("source_path"))
     page_number = slide.get("page_number", "")
     source_hash = _sha256(source_path) if source_path else ""
@@ -519,22 +542,149 @@ def _normalize_selection_payload(payload: dict[str, Any]) -> list[dict[str, Any]
     raise PPTLibraryClientError("selection payload must contain selections, by_beat, or beats.")
 
 
-def validate_library_selection(payload: dict[str, Any]) -> dict[str, Any]:
+def _schema_type_matches(value: Any, expected: str) -> bool:
+    if expected == "object":
+        return isinstance(value, dict)
+    if expected == "array":
+        return isinstance(value, list)
+    if expected == "string":
+        return isinstance(value, str)
+    if expected == "integer":
+        return isinstance(value, int) and not isinstance(value, bool)
+    if expected == "number":
+        return isinstance(value, (int, float)) and not isinstance(value, bool)
+    if expected == "boolean":
+        return isinstance(value, bool)
+    if expected == "null":
+        return value is None
+    return True
+
+
+def _resolve_local_schema_ref(schema: dict[str, Any], root_schema: dict[str, Any]) -> dict[str, Any]:
+    ref = schema.get("$ref")
+    if not isinstance(ref, str) or not ref.startswith("#/"):
+        return schema
+    resolved: Any = root_schema
+    for part in ref[2:].split("/"):
+        resolved = resolved[part.replace("~1", "/").replace("~0", "~")]
+    return resolved if isinstance(resolved, dict) else schema
+
+
+def _validate_schema_fallback(
+    value: Any,
+    schema: dict[str, Any],
+    root_schema: dict[str, Any],
+    *,
+    path: str = "$",
+) -> list[str]:
+    schema = _resolve_local_schema_ref(schema, root_schema)
     errors: list[str] = []
-    warnings: list[str] = []
+    if "const" in schema and value != schema["const"]:
+        errors.append(f"{path}: must equal {schema['const']!r}.")
+    if "enum" in schema and value not in schema["enum"]:
+        errors.append(f"{path}: {value!r} is not an allowed value.")
+
+    expected_types = schema.get("type")
+    if isinstance(expected_types, str):
+        expected_types = [expected_types]
+    if isinstance(expected_types, list) and not any(_schema_type_matches(value, item) for item in expected_types):
+        errors.append(f"{path}: expected type {' or '.join(expected_types)}.")
+        return errors
+
+    if isinstance(value, dict):
+        required = schema.get("required", [])
+        for field in required if isinstance(required, list) else []:
+            if field not in value:
+                errors.append(f"{path}.{field}: required field is missing.")
+        properties = schema.get("properties", {})
+        properties = properties if isinstance(properties, dict) else {}
+        property_names = schema.get("propertyNames")
+        additional = schema.get("additionalProperties", True)
+        for field, child in value.items():
+            child_path = f"{path}.{field}"
+            if isinstance(property_names, dict):
+                errors.extend(_validate_schema_fallback(field, property_names, root_schema, path=f"{path}.<property>"))
+            if field in properties and isinstance(properties[field], dict):
+                errors.extend(_validate_schema_fallback(child, properties[field], root_schema, path=child_path))
+            elif additional is False:
+                errors.append(f"{child_path}: additional field is not allowed.")
+            elif isinstance(additional, dict):
+                errors.extend(_validate_schema_fallback(child, additional, root_schema, path=child_path))
+
+    if isinstance(value, list):
+        item_schema = schema.get("items")
+        if isinstance(item_schema, dict):
+            for index, item in enumerate(value):
+                errors.extend(_validate_schema_fallback(item, item_schema, root_schema, path=f"{path}[{index}]"))
+        if schema.get("uniqueItems"):
+            encoded = [json.dumps(item, sort_keys=True, ensure_ascii=False) for item in value]
+            if len(encoded) != len(set(encoded)):
+                errors.append(f"{path}: array items must be unique.")
+
+    if isinstance(value, str):
+        min_length = schema.get("minLength")
+        if isinstance(min_length, int) and len(value) < min_length:
+            errors.append(f"{path}: string is shorter than {min_length} characters.")
+        pattern = schema.get("pattern")
+        if isinstance(pattern, str) and re.search(pattern, value) is None:
+            errors.append(f"{path}: value does not match required pattern.")
+
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        minimum = schema.get("minimum")
+        maximum = schema.get("maximum")
+        if isinstance(minimum, (int, float)) and value < minimum:
+            errors.append(f"{path}: value is below minimum {minimum}.")
+        if isinstance(maximum, (int, float)) and value > maximum:
+            errors.append(f"{path}: value exceeds maximum {maximum}.")
+    return errors
+
+
+def _validate_selection_v2_contract(payload: dict[str, Any]) -> list[str]:
+    try:
+        schema = json.loads(SELECTION_V2_SCHEMA_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return [f"Selection v2 schema is unavailable or invalid: {exc}"]
+    try:
+        import jsonschema  # type: ignore
+    except ImportError:
+        return _validate_schema_fallback(payload, schema, schema)
+
+    try:
+        jsonschema.Draft202012Validator.check_schema(schema)
+    except jsonschema.exceptions.SchemaError as exc:
+        return [f"Selection v2 schema is invalid: {exc.message}"]
+    validator = jsonschema.Draft202012Validator(schema)
+    errors: list[str] = []
+    for error in sorted(
+        validator.iter_errors(payload),
+        key=lambda item: tuple(str(part) for part in item.absolute_path),
+    ):
+        where = "$" + "".join(
+            f"[{part}]" if isinstance(part, int) else f".{part}"
+            for part in error.absolute_path
+        )
+        errors.append(f"{where}: {error.message}")
+    return errors
+
+
+def validate_library_selection(payload: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(payload, dict):
         return {"valid": False, "errors": ["Result must be a JSON object."], "warnings": []}
     schema_version = payload.get("schema_version")
-    if schema_version not in {SELECTION_SCHEMA_VERSION_V1, SELECTION_SCHEMA_VERSION}:
+    if schema_version == SELECTION_SCHEMA_VERSION:
+        errors = _validate_selection_v2_contract(payload)
+        warnings = [] if payload.get("selections") else ["No library selections were provided."]
+        return {"valid": not errors, "errors": errors, "warnings": warnings}
+
+    errors: list[str] = []
+    warnings: list[str] = []
+    if schema_version != SELECTION_SCHEMA_VERSION_V1:
         errors.append(
-            f"schema_version must be '{SELECTION_SCHEMA_VERSION}' or '{SELECTION_SCHEMA_VERSION_V1}', got '{schema_version}'."
+            f"schema_version must be '{SELECTION_SCHEMA_VERSION}' or "
+            f"'{SELECTION_SCHEMA_VERSION_V1}', got '{schema_version}'."
         )
     if not payload.get("run_id"):
         errors.append("run_id is required.")
-    if schema_version == SELECTION_SCHEMA_VERSION:
-        for field in ("status", "source", "preview_degraded", "selections", "warnings", "by_beat"):
-            if field not in payload:
-                errors.append(f"{field} is required.")
     try:
         items = _normalize_selection_payload(payload) if not errors else []
     except PPTLibraryClientError as exc:
@@ -554,47 +704,6 @@ def validate_library_selection(payload: dict[str, Any]) -> dict[str, Any]:
             candidates = []
         if not isinstance(candidates, list):
             errors.append(f"selections[{index}].candidates must be an array.")
-        if schema_version == SELECTION_SCHEMA_VERSION:
-            for field in (
-                "page_task_id",
-                "query_trace_id",
-                "role_original",
-                "role_strategy",
-                "role_mapped",
-                "retrieval_method",
-                "fallback_reason",
-                "preview_status",
-            ):
-                if field not in item:
-                    errors.append(f"selections[{index}].{field} is required.")
-            required_candidate_fields = {
-                "candidate_id",
-                "slide_id",
-                "asset_key",
-                "title",
-                "text_summary",
-                "page_number",
-                "score",
-                "confidence",
-                "source_asset_id",
-                "source_display_name",
-                "screenshot_ref",
-                "candidate_origin",
-                "reuse_policy",
-            }
-            for candidate_index, candidate in enumerate(candidates if isinstance(candidates, list) else []):
-                if not isinstance(candidate, dict):
-                    errors.append(f"selections[{index}].candidates[{candidate_index}] must be an object.")
-                    continue
-                for field in sorted(required_candidate_fields - set(candidate)):
-                    errors.append(f"selections[{index}].candidates[{candidate_index}].{field} is required.")
-                if any(field in candidate for field in ("source_file", "source_path", "screenshot_path")):
-                    errors.append(f"selections[{index}].candidates[{candidate_index}] contains a raw path field.")
-                screenshot_ref = str(candidate.get("screenshot_ref") or "")
-                if screenshot_ref and not _is_run_relative_ref(screenshot_ref):
-                    errors.append(f"selections[{index}].candidates[{candidate_index}].screenshot_ref must be run-relative.")
-                if re.fullmatch(r"[a-f0-9]{64}", str(candidate.get("source_asset_id") or "")) is None:
-                    errors.append(f"selections[{index}].candidates[{candidate_index}].source_asset_id must be a SHA-256 value.")
     return {"valid": not errors, "errors": errors, "warnings": warnings}
 
 
@@ -620,12 +729,6 @@ def _legacy_query_trace_id(run_id: str, beat_id: str, value: Any) -> str:
     if re.fullmatch(r"[a-f0-9]{64}", trace_id):
         return trace_id
     return _query_trace_id(run_id, beat_id, trace_id)
-
-
-def _is_run_relative_ref(value: str) -> bool:
-    normalized = value.replace("\\", "/")
-    path = Path(normalized)
-    return not path.is_absolute() and ".." not in path.parts and normalized.startswith("preview_assets/")
 
 
 def _normalize_v2_candidates(
@@ -656,6 +759,11 @@ def _normalize_v2_candidates(
     for raw in candidates:
         if not isinstance(raw, dict):
             continue
+        for field in ("candidate_id", "asset_key"):
+            if not _identity_is_safe(str(raw.get(field) or "")):
+                raise PPTLibraryClientError(f"Unsafe v2 candidate identity: {field}.")
+        if raw.get("slide_id") is not None and not _identity_is_safe(str(raw.get("slide_id") or "")):
+            raise PPTLibraryClientError("Unsafe v2 candidate identity: slide_id.")
         candidate = {field: raw[field] for field in allowed_fields if field in raw}
         source_asset_id = str(candidate["source_asset_id"])
         candidate["source_display_name"] = _source_display_name(

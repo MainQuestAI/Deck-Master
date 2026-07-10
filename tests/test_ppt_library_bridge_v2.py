@@ -41,6 +41,49 @@ def _beat(beat_id: str, role: str, order: int, **extra: object) -> dict[str, obj
     }
 
 
+def _valid_v2_payload() -> dict[str, object]:
+    return {
+        "schema_version": "deck_master_ppt_library_selection.v2",
+        "run_id": "bridge-run",
+        "status": "library_ready",
+        "source": "ppt_library",
+        "preview_degraded": False,
+        "warnings": [],
+        "by_beat": {},
+        "selections": [
+            {
+                "beat_id": "beat-001",
+                "page_task_id": "page-001",
+                "query_trace_id": hashlib.sha256(b"trace").hexdigest(),
+                "role_original": "opener",
+                "role_strategy": "passthrough",
+                "role_mapped": "opener",
+                "retrieval_method": "role_selection",
+                "fallback_reason": "",
+                "preview_status": "ready",
+                "preview_degraded": False,
+                "candidates": [
+                    {
+                        "candidate_id": "candidate-001",
+                        "slide_id": "slide-001",
+                        "asset_key": "canonical:slide-001",
+                        "title": "Title",
+                        "text_summary": "Summary",
+                        "page_number": 1,
+                        "score": 0.8,
+                        "confidence": 0.8,
+                        "source_asset_id": hashlib.sha256(b"source").hexdigest(),
+                        "source_display_name": "Safe Deck.pptx",
+                        "screenshot_ref": "preview_assets/ppt_library/preview.png",
+                        "candidate_origin": "ppt_library",
+                        "reuse_policy": "reuse_or_adapt",
+                    }
+                ],
+            }
+        ],
+    }
+
+
 class PPTLibraryBridgeContractTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temp_dir = Path(tempfile.mkdtemp())
@@ -189,6 +232,75 @@ class PPTLibraryBridgeContractTests(unittest.TestCase):
         self.assertFalse(result["valid"])
         self.assertTrue(any("page_task_id" in error for error in result["errors"]))
         self.assertTrue(any("query_trace_id" in error for error in result["errors"]))
+
+    def test_v2_validation_rejects_enum_format_path_and_shape_drift(self) -> None:
+        mutations = [
+            ("status", lambda payload: payload.__setitem__("status", "ready")),
+            ("source", lambda payload: payload.__setitem__("source", "external")),
+            ("retrieval_method", lambda payload: payload["selections"][0].__setitem__("retrieval_method", "search")),
+            ("role_strategy", lambda payload: payload["selections"][0].__setitem__("role_strategy", "guessed")),
+            ("role_mapped", lambda payload: payload["selections"][0].__setitem__("role_mapped", "executive_summary")),
+            ("preview_status", lambda payload: payload["selections"][0].__setitem__("preview_status", "unknown")),
+            ("candidate_origin", lambda payload: payload["selections"][0]["candidates"][0].__setitem__("candidate_origin", "external")),
+            ("reuse_policy", lambda payload: payload["selections"][0]["candidates"][0].__setitem__("reuse_policy", "copy")),
+            ("query_trace_id", lambda payload: payload["selections"][0].__setitem__("query_trace_id", "trace")),
+            ("source_asset_id", lambda payload: payload["selections"][0]["candidates"][0].__setitem__("source_asset_id", "source")),
+            ("absolute screenshot_ref", lambda payload: payload["selections"][0]["candidates"][0].__setitem__("screenshot_ref", "/Users/reviewer/preview.png")),
+            ("non-run screenshot_ref", lambda payload: payload["selections"][0]["candidates"][0].__setitem__("screenshot_ref", "screens/preview.png")),
+            ("escaping screenshot_ref", lambda payload: payload["selections"][0]["candidates"][0].__setitem__("screenshot_ref", "preview_assets/../private.png")),
+            ("top required field", lambda payload: payload.pop("status")),
+            ("selection required field", lambda payload: payload["selections"][0].pop("preview_status")),
+            ("top additional field", lambda payload: payload.__setitem__("unexpected", True)),
+            ("selection additional field", lambda payload: payload["selections"][0].__setitem__("unexpected", True)),
+            ("candidate additional field", lambda payload: payload["selections"][0]["candidates"][0].__setitem__("unexpected", True)),
+            ("candidate required field", lambda payload: payload["selections"][0]["candidates"][0].pop("title")),
+        ]
+
+        for label, mutate in mutations:
+            with self.subTest(label=label):
+                payload = _valid_v2_payload()
+                mutate(payload)
+                result = validate_library_selection(payload)
+                self.assertFalse(result["valid"], result)
+
+    def test_real_candidates_hash_three_malicious_identity_values(self) -> None:
+        attacks = [
+            {"canonical_slide_id": "/Users/reviewer/customer.pptx", "slide_id": "safe-slide"},
+            {"slide_id": "/private/reviewer/secret"},
+            {"slide_id": "../escape"},
+        ]
+
+        for attack in attacks:
+            with self.subTest(attack=attack):
+                raw = {**attack, "score": 0.8}
+                first, _ = normalize_candidate(raw, run_dir=self.temp_dir, reuse_policy="adapt", index=1)
+                second, _ = normalize_candidate(raw, run_dir=self.temp_dir, reuse_policy="adapt", index=1)
+                self.assertEqual(first["asset_key"], second["asset_key"])
+                self.assertEqual(first["candidate_id"], second["candidate_id"])
+                serialized = json.dumps(first)
+                for value in attack.values():
+                    if "/" in value or "\\" in value:
+                        self.assertNotIn(value, serialized)
+                self.assertNotIn("/", first["candidate_id"])
+                self.assertNotIn("\\", first["candidate_id"])
+
+    def test_v2_import_rejects_unsafe_identity_fields(self) -> None:
+        run_dir = create_run(self.temp_dir / "runs", {"project_name": "Bridge", "run_id": "bridge-run"}, force=True)
+        attacks = [
+            ("asset_key", "/Users/reviewer/asset"),
+            ("candidate_id", "/private/reviewer/candidate"),
+            ("slide_id", "../escape"),
+        ]
+
+        for index, (field, value) in enumerate(attacks):
+            with self.subTest(field=field, value=value):
+                payload = _valid_v2_payload()
+                payload["selections"][0]["candidates"][0][field] = value
+                selection_path = self.temp_dir / f"unsafe-{index}.json"
+                selection_path.write_text(json.dumps(payload), encoding="utf-8")
+                with self.assertRaises(PPTLibraryClientError):
+                    import_library_selection(run_dir, selection_path)
+        self.assertFalse((run_dir / "library_results" / "selection.json").exists())
 
     def test_bridge_contract_schemas_are_valid_and_accept_built_plan(self) -> None:
         plan_schema = json.loads(
