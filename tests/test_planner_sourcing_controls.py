@@ -240,6 +240,51 @@ class PlannerSourcingControlTests(unittest.TestCase):
             import_sourcing(run_dir, input_path, source="agent")
         self.assertIn("duplicate page_task_id", str(ctx.exception))
 
+    def test_import_sourcing_rejects_v1_run_id_mismatch_before_backup_or_overwrite(self) -> None:
+        run_dir = self._run_with_plan()
+        current_path = run_dir / SOURCING_PLAN_NAME
+        write_json(current_path, {"run_id": "source-run", "sentinel": "unchanged"})
+        original = current_path.read_bytes()
+        overrides_path = run_dir / "overrides"
+        self.assertFalse(overrides_path.exists())
+        input_path = self.temp_dir / "wrong_run_v1.json"
+        write_json(
+            input_path,
+            {
+                "schema_version": "deck_sourcing_plan.v1",
+                "run_id": "different-run",
+                "decisions": [],
+            },
+        )
+
+        with self.assertRaises(RunStateError) as ctx:
+            import_sourcing(run_dir, input_path, source="human")
+
+        self.assertIn("run_id mismatch", str(ctx.exception))
+        self.assertEqual(original, current_path.read_bytes())
+        self.assertFalse(overrides_path.exists())
+
+    def test_import_sourcing_rejects_v2_run_id_mismatch_before_backup_or_overwrite(self) -> None:
+        run_dir = self._run_with_plan()
+        current_path = run_dir / SOURCING_PLAN_NAME
+        write_json(current_path, {"run_id": "source-run", "sentinel": "unchanged"})
+        original = current_path.read_bytes()
+        overrides_path = run_dir / "overrides"
+        self.assertFalse(overrides_path.exists())
+        input_path = self.temp_dir / "wrong_run_v2.json"
+        plan = build_sourcing_plan_v2(
+            run_id="different-run",
+            page_tasks=read_json(run_dir / PAGE_TASKS_NAME),
+        )
+        write_json(input_path, plan)
+
+        with self.assertRaises(RunStateError) as ctx:
+            import_sourcing(run_dir, input_path, source="agent")
+
+        self.assertIn("run_id mismatch", str(ctx.exception))
+        self.assertEqual(original, current_path.read_bytes())
+        self.assertFalse(overrides_path.exists())
+
     def test_validate_sourcing_reads_legacy_without_rewriting(self) -> None:
         run_dir = self._run_with_plan()
         legacy = {

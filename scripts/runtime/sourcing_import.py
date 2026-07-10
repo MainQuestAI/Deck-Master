@@ -14,6 +14,7 @@ from runtime.run_state import (
     PREVIEW_MANIFEST_NAME,
     REQUEST_NAME,
     RunStateError,
+    assert_external_result_matches_run,
     ensure_run_dirs,
     read_json,
     write_json,
@@ -222,9 +223,14 @@ def import_sourcing(
 
     request = read_json(root / REQUEST_NAME)
     run_mode = str(request.get("run_mode") or "production").strip().lower()
-    run_id = str(request.get("run_id") or root.name)
+    raw_payload = read_json(input_file)
+    run_id = assert_external_result_matches_run(
+        root,
+        raw_payload.get("run_id") if isinstance(raw_payload, dict) else None,
+        artifact_name="sourcing plan",
+    )
     try:
-        canonical = canonicalize_sourcing_plan(read_json(input_file))
+        canonical = canonicalize_sourcing_plan(raw_payload)
     except ValueError as exc:
         raise RunStateError(f"Invalid sourcing plan: {exc}") from exc
     canonical["run_id"] = run_id
