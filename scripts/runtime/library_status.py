@@ -244,9 +244,10 @@ def _legacy_selection_schemas_ready(
     ):
         return False
     required = capability_schema.get("required")
-    if not isinstance(required, list) or not {"schema_version", "run_id"}.issubset(
-        {str(item) for item in required}
-    ):
+    if not isinstance(required, list) or {str(item) for item in required} != {
+        "schema_version",
+        "run_id",
+    }:
         return False
     expected_shapes = {
         ("selections", "array"),

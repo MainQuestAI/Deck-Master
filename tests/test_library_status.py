@@ -728,6 +728,23 @@ class LibraryStatusV2Tests(unittest.TestCase):
 
             self.assertFalse(library_status_module._contract_ready(root))
 
+    def test_matching_legacy_schemas_with_global_selections_required_are_blocked(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = _contract_root(Path(tmp))
+            incompatible_schema = _legacy_selection_schema()
+            incompatible_schema["required"].append("selections")
+            for schema_path in (
+                root
+                / "product_capabilities"
+                / "ppt-library"
+                / "contracts"
+                / "library-selection.v1.schema.json",
+                root / "docs" / "contracts" / "ppt-library-selection.v1.schema.json",
+            ):
+                schema_path.write_text(json.dumps(incompatible_schema), encoding="utf-8")
+
+            self.assertFalse(library_status_module._contract_ready(root))
+
     def test_matching_legacy_schemas_with_wrong_version_const_are_blocked(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = _contract_root(Path(tmp))
