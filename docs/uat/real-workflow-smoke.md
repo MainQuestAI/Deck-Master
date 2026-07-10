@@ -59,7 +59,7 @@ JSON 报告使用独立 schema：
 ```json
 {
   "schema_version": "deck_real_workflow_smoke.v1",
-  "run_id": "retail-demo",
+  "run_id": "uat-8b66f8a97e8a96ac",
   "status": "warning",
   "summary": {
     "required_checks": 10,
@@ -94,6 +94,8 @@ JSON 报告使用独立 schema：
 - 不修改 companion tool 输出。
 - 不引入任何内置 LLM provider。
 - 真实 UAT 只读取 run 副本，不修改原始 run。
+- UAT 报告默认将原始 `run_id` 替换为稳定的 `uat-<sha256-prefix>`，并递归清理
+  metrics、findings 和 recommendations 中的原始 ID。
 - JSON/Markdown evidence 会在写出后扫描绝对路径、原始 source 字段和
   `DECK_MASTER_EVIDENCE_FORBIDDEN_MARKERS` 指定的私有标识；命中后删除输出并失败。
 
@@ -105,7 +107,8 @@ CI tier 只运行 fresh clone 可复现检查，不要求真实 run：
 python3 scripts/deck_master.py rc-gate --tier ci --output-dir <output_dir> --skip-browser-smoke
 ```
 
-full tier 必须显式传入只读 UAT 副本，并可重复传入私有标识扫描项：
+full tier 必须显式传入系统 temp 根下的隔离 UAT 副本，并可重复传入私有标识扫描项。
+HOME、仓库/worktree、`~/.deck-master/runs`、非 temp 目录及带软链接的副本路径会被拒绝：
 
 ```bash
 python3 scripts/deck_master.py rc-gate \
@@ -115,3 +118,16 @@ python3 scripts/deck_master.py rc-gate \
   --evidence-forbidden-marker <private_marker> \
   --output-dir <output_dir>
 ```
+
+full tier 会直接读取副本中的真实产物：
+
+- PPT Library selection：优先读取 `external/ppt_library/library_results.v2.json`，
+  兼容 `library_results/selection.json`、`ppt-library-selection.json` 和
+  `ppt_library_selection.json`。
+- Sourcing：读取 `sourcing_plan.json`。
+- 两者必须为 v2；selection 必须具备逐页 identity chain 且没有绝对路径和 raw
+  source 字段；sourcing 必须使用 `pages[]`、一页一决策且 selected `asset_key`
+  全局无重复。
+
+artifact 缺失、v1、schema 无效或安全扫描失败都会阻断 full RC。CI tier 继续只运行
+仓库内 synthetic contract checks，不读取本机 UAT、PPT Library 或 benchmark evidence。

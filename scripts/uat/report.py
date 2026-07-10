@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -28,7 +29,7 @@ def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def _run_id_from_dir(run_dir: Path) -> str:
+def _raw_run_id_from_dir(run_dir: Path) -> str:
     request_path = run_dir / "request.json"
     if request_path.exists():
         try:
@@ -37,6 +38,24 @@ def _run_id_from_dir(run_dir: Path) -> str:
         except json.JSONDecodeError:
             return run_dir.name
     return run_dir.name
+
+
+def _safe_run_id(raw_run_id: str) -> str:
+    digest = hashlib.sha256(f"deck-master-uat:{raw_run_id}".encode("utf-8")).hexdigest()
+    return f"uat-{digest[:16]}"
+
+
+def _replace_private_run_id(value: Any, raw_run_id: str, safe_run_id: str) -> Any:
+    if isinstance(value, dict):
+        return {
+            str(key).replace(raw_run_id, safe_run_id): _replace_private_run_id(item, raw_run_id, safe_run_id)
+            for key, item in value.items()
+        }
+    if isinstance(value, list):
+        return [_replace_private_run_id(item, raw_run_id, safe_run_id) for item in value]
+    if isinstance(value, str):
+        return value.replace(raw_run_id, safe_run_id)
+    return value
 
 
 def build_check(
@@ -107,9 +126,11 @@ def build_uat_report(
         for check in checks
         if not check.get("passed")
     ]
-    return {
+    raw_run_id = _raw_run_id_from_dir(run_dir)
+    safe_run_id = _safe_run_id(raw_run_id)
+    report = {
         "schema_version": schema_version,
-        "run_id": _run_id_from_dir(run_dir),
+        "run_id": safe_run_id,
         "tool": tool,
         "status": status,
         "created_at": utc_now(),
@@ -123,6 +144,7 @@ def build_uat_report(
         "findings": findings,
         "recommendations": recommendations,
     }
+    return _replace_private_run_id(report, raw_run_id, safe_run_id)
 
 
 def render_uat_markdown(report: dict[str, Any]) -> str:
@@ -174,14 +196,16 @@ def render_uat_markdown(report: dict[str, Any]) -> str:
 
 
 def write_uat_report(run_dir: Path, name: str, report: dict[str, Any]) -> dict[str, Any]:
+    raw_run_id = _raw_run_id_from_dir(run_dir)
+    safe_report = _replace_private_run_id(report, raw_run_id, _safe_run_id(raw_run_id))
     output_dir = run_dir / "uat_reports"
     output_dir.mkdir(parents=True, exist_ok=True)
     json_path = output_dir / f"{name}.json"
     md_path = output_dir / f"{name}.md"
-    payload = json.dumps(report, ensure_ascii=False, indent=2) + "\n"
+    payload = json.dumps(safe_report, ensure_ascii=False, indent=2) + "\n"
     json.loads(payload)
     json_path.write_text(payload, encoding="utf-8")
-    md_path.write_text(render_uat_markdown(report), encoding="utf-8")
+    md_path.write_text(render_uat_markdown(safe_report), encoding="utf-8")
     violations = _evidence_safety_violations(
         json_path.read_text(encoding="utf-8"),
         md_path.read_text(encoding="utf-8"),
@@ -195,12 +219,12 @@ def write_uat_report(run_dir: Path, name: str, report: dict[str, Any]) -> dict[s
         "artifact_written",
         f"uat.{name}.written",
         f"UAT report written: {name}",
-        run_id=str(report.get("run_id", "")),
+        run_id=str(safe_report.get("run_id", "")),
         refs=[f"uat_reports/{name}.json", f"uat_reports/{name}.md"],
-        severity="info" if report.get("status") != "fail" else "warning",
-        payload={"status": report.get("status"), "tool": report.get("tool")},
+        severity="info" if safe_report.get("status") != "fail" else "warning",
+        payload={"status": safe_report.get("status"), "tool": safe_report.get("tool")},
     )
-    result = dict(report)
+    result = dict(safe_report)
     result["json_path"] = str(json_path)
     result["markdown_path"] = str(md_path)
     return result

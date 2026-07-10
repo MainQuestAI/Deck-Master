@@ -27,6 +27,7 @@ from tools.ppt_library_client import (
     build_bridge_plan,
     normalize_candidate,
     run_library_selection,
+    validate_library_selection,
 )
 from uat.real_workflow_smoke import run_real_workflow_smoke
 
@@ -696,6 +697,218 @@ def _strict_fixture_policy_check() -> dict[str, Any]:
     )
 
 
+def _path_is_within(path: Path, root: Path) -> bool:
+    try:
+        path.relative_to(root)
+        return True
+    except ValueError:
+        return False
+
+
+def _validated_uat_copy_dir(uat_run_dir: str | Path) -> tuple[Path | None, str | None]:
+    raw = Path(uat_run_dir).expanduser()
+    raw_absolute = Path(os.path.abspath(raw))
+    relative: Path | None = None
+    lexical_root: Path | None = None
+    resolved_root: Path | None = None
+    temp_roots = {
+        Path(os.path.abspath(tempfile.gettempdir())),
+        Path(os.path.abspath("/tmp")),
+    }
+    for temp_root in temp_roots:
+        for root in (temp_root, temp_root.resolve()):
+            try:
+                relative = raw_absolute.relative_to(root)
+                lexical_root = root
+                resolved_root = temp_root.resolve()
+                break
+            except ValueError:
+                continue
+        if relative is not None:
+            break
+    if relative is None or lexical_root is None or resolved_root is None or not relative.parts:
+        return None, "UAT_COPY_OUTSIDE_SYSTEM_TEMP"
+
+    current = lexical_root
+    for part in relative.parts:
+        current = current / part
+        if current.is_symlink():
+            return None, "UAT_COPY_SYMLINK_REJECTED"
+
+    try:
+        resolved = raw_absolute.resolve(strict=True)
+    except OSError:
+        return None, "UAT_COPY_UNAVAILABLE"
+    if not resolved.is_dir() or not _path_is_within(resolved, resolved_root):
+        return None, "UAT_COPY_OUTSIDE_SYSTEM_TEMP"
+
+    persistent_roots = (
+        REPO_ROOT.resolve(),
+        Path.home().resolve(),
+        (Path.home() / ".deck-master" / "runs").resolve(),
+    )
+    if any(_path_is_within(resolved, root) for root in persistent_roots):
+        return None, "UAT_COPY_PERSISTENT_LOCATION_REJECTED"
+    return resolved, None
+
+
+def _read_uat_json_artifact(
+    run_dir: Path,
+    candidates: tuple[str, ...],
+) -> tuple[dict[str, Any] | None, str | None]:
+    for relative in candidates:
+        path = run_dir / relative
+        if not path.exists() and not path.is_symlink():
+            continue
+        if path.is_symlink():
+            return None, "ARTIFACT_SYMLINK_REJECTED"
+        try:
+            resolved = path.resolve(strict=True)
+        except OSError:
+            return None, "ARTIFACT_UNAVAILABLE"
+        if not _path_is_within(resolved, run_dir) or not resolved.is_file():
+            return None, "ARTIFACT_OUTSIDE_UAT_COPY"
+        try:
+            payload = json.loads(resolved.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return None, "ARTIFACT_JSON_INVALID"
+        return (payload if isinstance(payload, dict) else None), (
+            None if isinstance(payload, dict) else "ARTIFACT_JSON_INVALID"
+        )
+    return None, None
+
+
+def _artifact_matches_schema(payload: dict[str, Any], schema_name: str) -> bool:
+    try:
+        import jsonschema  # type: ignore
+
+        schema = json.loads((REPO_ROOT / "docs" / "contracts" / schema_name).read_text(encoding="utf-8"))
+    except (ImportError, OSError, json.JSONDecodeError):
+        return False
+    try:
+        jsonschema.Draft202012Validator(schema).validate(payload)
+    except jsonschema.ValidationError:
+        return False
+    return True
+
+
+def _validate_real_uat_artifacts(run_dir: Path) -> tuple[dict[str, Any], list[str]]:
+    failures: list[str] = []
+    selection, selection_error = _read_uat_json_artifact(
+        run_dir,
+        (
+            "external/ppt_library/library_results.v2.json",
+            "library_results/selection.json",
+            "ppt-library-selection.json",
+            "ppt_library_selection.json",
+        ),
+    )
+    sourcing, sourcing_error = _read_uat_json_artifact(run_dir, ("sourcing_plan.json",))
+    summary: dict[str, Any] = {
+        "selection_schema": "missing",
+        "selection_pages": 0,
+        "selection_candidates": 0,
+        "sourcing_schema": "missing",
+        "sourcing_pages": 0,
+        "selected_assets": 0,
+        "duplicate_asset_keys": 0,
+    }
+    selection_task_ids: set[str] = set()
+    sourcing_task_ids: set[str] = set()
+
+    if selection_error:
+        failures.append(f"SELECTION_{selection_error}")
+    elif selection is None:
+        failures.append("SELECTION_V2_MISSING")
+    else:
+        summary["selection_schema"] = str(selection.get("schema_version") or "invalid")
+        if selection.get("schema_version") != "deck_master_ppt_library_selection.v2":
+            failures.append("SELECTION_V2_REQUIRED")
+        elif _evidence_safety_violations(json.dumps(selection, ensure_ascii=False)):
+            failures.append("SELECTION_UNSAFE_CONTENT")
+        elif not validate_library_selection(selection).get("valid"):
+            failures.append("SELECTION_V2_INVALID")
+        selections = selection.get("selections") if isinstance(selection.get("selections"), list) else []
+        summary["selection_pages"] = len(selections)
+        identities: set[tuple[str, str]] = set()
+        candidate_count = 0
+        identity_valid = bool(selections)
+        for item in selections:
+            if not isinstance(item, dict):
+                identity_valid = False
+                continue
+            beat_id = str(item.get("beat_id") or "")
+            page_task_id = str(item.get("page_task_id") or "")
+            query_trace_id = str(item.get("query_trace_id") or "")
+            identity = (beat_id, page_task_id)
+            if not all(identity) or not query_trace_id or identity in identities:
+                identity_valid = False
+            identities.add(identity)
+            if page_task_id:
+                selection_task_ids.add(page_task_id)
+            candidates = item.get("candidates") if isinstance(item.get("candidates"), list) else []
+            candidate_count += len(candidates)
+            for candidate in candidates:
+                if not isinstance(candidate, dict) or not all(
+                    str(candidate.get(field) or "")
+                    for field in ("candidate_id", "asset_key", "source_asset_id")
+                ):
+                    identity_valid = False
+        summary["selection_candidates"] = candidate_count
+        if selection.get("schema_version") == "deck_master_ppt_library_selection.v2" and not identity_valid:
+            failures.append("SELECTION_IDENTITY_CHAIN_INCOMPLETE")
+
+    if sourcing_error:
+        failures.append(f"SOURCING_{sourcing_error}")
+    elif sourcing is None:
+        failures.append("SOURCING_V2_MISSING")
+    else:
+        summary["sourcing_schema"] = str(sourcing.get("schema_version") or "invalid")
+        if sourcing.get("schema_version") != "deck_sourcing_plan.v2":
+            failures.append("SOURCING_V2_REQUIRED")
+        elif _evidence_safety_violations(json.dumps(sourcing, ensure_ascii=False)):
+            failures.append("SOURCING_UNSAFE_CONTENT")
+        elif not _artifact_matches_schema(sourcing, "sourcing-plan.v2.schema.json"):
+            failures.append("SOURCING_V2_INVALID")
+        pages = sourcing.get("pages") if isinstance(sourcing.get("pages"), list) else []
+        summary["sourcing_pages"] = len(pages)
+        page_ids: set[str] = set()
+        task_ids: set[str] = set()
+        asset_keys: list[str] = []
+        pages_valid = bool(pages)
+        for page in pages:
+            if not isinstance(page, dict):
+                pages_valid = False
+                continue
+            page_id = str(page.get("page_id") or "")
+            page_task_id = str(page.get("page_task_id") or "")
+            if not page_id or not page_task_id or page_id in page_ids or page_task_id in task_ids:
+                pages_valid = False
+            page_ids.add(page_id)
+            task_ids.add(page_task_id)
+            if page_task_id:
+                sourcing_task_ids.add(page_task_id)
+            sources = page.get("selected_sources") if isinstance(page.get("selected_sources"), list) else []
+            for source in sources:
+                asset_key = str(source.get("asset_key") or "") if isinstance(source, dict) else ""
+                if not asset_key:
+                    pages_valid = False
+                else:
+                    asset_keys.append(asset_key)
+        duplicate_count = len(asset_keys) - len(set(asset_keys))
+        summary["selected_assets"] = len(asset_keys)
+        summary["duplicate_asset_keys"] = duplicate_count
+        if sourcing.get("schema_version") == "deck_sourcing_plan.v2" and not pages_valid:
+            failures.append("SOURCING_PAGE_DECISIONS_INVALID")
+        if duplicate_count:
+            failures.append("SOURCING_DUPLICATE_ASSET_KEY")
+
+    if selection_task_ids and sourcing_task_ids and selection_task_ids != sourcing_task_ids:
+        failures.append("UAT_PAGE_IDENTITY_MISMATCH")
+
+    return summary, sorted(set(failures))
+
+
 def _real_workflow_uat_check(uat_run_dir: str | Path | None) -> dict[str, Any]:
     if not uat_run_dir:
         return _check(
@@ -705,14 +918,23 @@ def _real_workflow_uat_check(uat_run_dir: str | Path | None) -> dict[str, Any]:
             summary="Full tier requires an explicit real UAT run copy.",
             details={"uat_status": "missing", "failures": ["UAT_RUN_REQUIRED"]},
         )
-    run_dir = Path(uat_run_dir).expanduser().resolve()
-    if not run_dir.is_dir():
+    run_dir, copy_error = _validated_uat_copy_dir(uat_run_dir)
+    if copy_error or run_dir is None:
         return _check(
             "real_workflow_uat",
             "fail",
             required=True,
-            summary="The configured real UAT run copy is unavailable.",
-            details={"uat_status": "missing", "failures": ["UAT_RUN_UNAVAILABLE"]},
+            summary="Full-tier UAT requires an isolated, non-symlinked system-temp copy.",
+            details={"uat_status": "blocked", "failures": [copy_error or "UAT_COPY_INVALID"]},
+        )
+    artifacts, artifact_failures = _validate_real_uat_artifacts(run_dir)
+    if artifact_failures:
+        return _check(
+            "real_workflow_uat",
+            "fail",
+            required=True,
+            summary="Real UAT artifacts do not satisfy the v2 release contract.",
+            details={"uat_status": "blocked", "artifacts": artifacts, "failures": artifact_failures},
         )
     try:
         report = run_real_workflow_smoke(run_dir, write=False)
@@ -722,7 +944,7 @@ def _real_workflow_uat_check(uat_run_dir: str | Path | None) -> dict[str, Any]:
             "fail",
             required=True,
             summary="Real workflow UAT could not be evaluated.",
-            details={"uat_status": "error", "failures": [type(exc).__name__]},
+            details={"uat_status": "error", "artifacts": artifacts, "failures": [type(exc).__name__]},
         )
     uat_status = str(report.get("status") or "")
     phases = report.get("phases") if isinstance(report.get("phases"), dict) else {}
@@ -735,6 +957,7 @@ def _real_workflow_uat_check(uat_run_dir: str | Path | None) -> dict[str, Any]:
         summary="Real workflow UAT must pass without warnings in the full tier.",
         details={
             "uat_status": uat_status or "invalid",
+            "artifacts": artifacts,
             "phases": {str(key): str(value) for key, value in phases.items()},
             "summary": {
                 key: int(summary.get(key) or 0)

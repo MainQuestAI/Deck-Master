@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import shutil
 import sys
@@ -22,6 +23,77 @@ class RCGateD4ClosureTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temp_dir = Path(tempfile.mkdtemp(prefix="dm_rc_d4_"))
         self.addCleanup(lambda: shutil.rmtree(self.temp_dir, ignore_errors=True))
+
+    def _write_real_v2_artifacts(self, run_dir: Path) -> None:
+        run_dir.mkdir(parents=True, exist_ok=True)
+        selection_dir = run_dir / "external" / "ppt_library"
+        selection_dir.mkdir(parents=True, exist_ok=True)
+        candidate = {
+            "candidate_id": "candidate-001",
+            "slide_id": "slide-001",
+            "asset_key": "canonical:slide-001",
+            "title": "Reusable page",
+            "text_summary": "Safe summary",
+            "page_number": 1,
+            "score": 0.9,
+            "confidence": 0.9,
+            "source_asset_id": hashlib.sha256(b"source").hexdigest(),
+            "source_display_name": "Reference Deck.pptx",
+            "screenshot_ref": "",
+            "candidate_origin": "ppt_library",
+            "reuse_policy": "reuse_or_adapt",
+        }
+        selection = {
+            "schema_version": "deck_master_ppt_library_selection.v2",
+            "run_id": "private-customer-run",
+            "status": "library_degraded",
+            "source": "ppt_library",
+            "preview_degraded": True,
+            "warnings": [],
+            "selections": [
+                {
+                    "beat_id": "beat-001",
+                    "page_task_id": "page-001",
+                    "query_trace_id": hashlib.sha256(b"query").hexdigest(),
+                    "role_original": "opener",
+                    "role_strategy": "passthrough",
+                    "role_mapped": "opener",
+                    "retrieval_method": "role_selection",
+                    "fallback_reason": "",
+                    "preview_status": "missing",
+                    "preview_degraded": True,
+                    "candidates": [candidate],
+                }
+            ],
+            "by_beat": {"beat-001": [candidate]},
+        }
+        (selection_dir / "library_results.v2.json").write_text(json.dumps(selection), encoding="utf-8")
+        sourcing = {
+            "schema_version": "deck_sourcing_plan.v2",
+            "run_id": "private-customer-run",
+            "status": "approved",
+            "source_fingerprint": hashlib.sha256(b"sourcing").hexdigest(),
+            "pages": [
+                {
+                    "page_id": "beat-001",
+                    "page_task_id": "page-001",
+                    "decision": "reuse",
+                    "reason": "approved source",
+                    "confidence": 0.9,
+                    "evidence_need": [],
+                    "selected_sources": [
+                        {
+                            "asset_key": "canonical:slide-001",
+                            "query_trace_id": hashlib.sha256(b"query").hexdigest(),
+                            "page_task_id": "page-001",
+                        }
+                    ],
+                    "permission_status": "approved",
+                }
+            ],
+            "created_at": "2026-07-11T00:00:00+00:00",
+        }
+        (run_dir / "sourcing_plan.json").write_text(json.dumps(sourcing), encoding="utf-8")
 
     def test_unknown_tier_fails_closed(self) -> None:
         with self.assertRaises(rc_gate.RCGateError):
@@ -65,6 +137,7 @@ class RCGateD4ClosureTests(unittest.TestCase):
         self.assertTrue(checks["real_workflow_uat"]["required"])
 
     def test_full_tier_treats_uat_warning_as_failure(self) -> None:
+        self._write_real_v2_artifacts(self.temp_dir)
         with mock.patch(
             "runtime.rc_gate.run_real_workflow_smoke",
             return_value={
@@ -78,6 +151,82 @@ class RCGateD4ClosureTests(unittest.TestCase):
 
         self.assertEqual("fail", check["status"])
         self.assertEqual("warning", check["details"]["uat_status"])
+
+    def test_real_uat_rejects_home_repo_non_temp_and_symlink(self) -> None:
+        for unsafe_dir in (Path.home(), ROOT):
+            check = rc_gate._real_workflow_uat_check(unsafe_dir)
+            self.assertEqual("fail", check["status"])
+            self.assertIn("UAT_COPY", check["details"]["failures"][0])
+
+        link = self.temp_dir / "linked-run"
+        link.symlink_to(Path.home(), target_is_directory=True)
+        check = rc_gate._real_workflow_uat_check(link)
+        self.assertEqual("fail", check["status"])
+        self.assertIn("SYMLINK", check["details"]["failures"][0])
+
+    def test_real_uat_accepts_real_v2_artifacts(self) -> None:
+        self._write_real_v2_artifacts(self.temp_dir)
+        with mock.patch(
+            "runtime.rc_gate.run_real_workflow_smoke",
+            return_value={
+                "status": "pass",
+                "summary": {"checks": 4, "passed": 4, "warnings": 0, "failed": 0},
+                "phases": {"run_artifacts": "pass", "companion_uat": "pass"},
+            },
+        ):
+            check = rc_gate._real_workflow_uat_check(self.temp_dir)
+
+        self.assertEqual("pass", check["status"], check)
+        self.assertEqual("deck_master_ppt_library_selection.v2", check["details"]["artifacts"]["selection_schema"])
+        self.assertEqual("deck_sourcing_plan.v2", check["details"]["artifacts"]["sourcing_schema"])
+
+    def test_real_uat_rejects_missing_or_v1_artifacts(self) -> None:
+        missing = rc_gate._real_workflow_uat_check(self.temp_dir)
+        self.assertEqual("fail", missing["status"])
+        self.assertIn("SELECTION_V2_MISSING", missing["details"]["failures"])
+
+        self._write_real_v2_artifacts(self.temp_dir)
+        selection_path = self.temp_dir / "external" / "ppt_library" / "library_results.v2.json"
+        selection = json.loads(selection_path.read_text(encoding="utf-8"))
+        selection["schema_version"] = "deck_master_ppt_library_selection.v1"
+        selection_path.write_text(json.dumps(selection), encoding="utf-8")
+        check = rc_gate._real_workflow_uat_check(self.temp_dir)
+        self.assertEqual("fail", check["status"])
+        self.assertIn("SELECTION_V2_REQUIRED", check["details"]["failures"])
+
+        self._write_real_v2_artifacts(self.temp_dir)
+        sourcing_path = self.temp_dir / "sourcing_plan.json"
+        sourcing = json.loads(sourcing_path.read_text(encoding="utf-8"))
+        sourcing["schema_version"] = "deck_sourcing_plan.v1"
+        sourcing_path.write_text(json.dumps(sourcing), encoding="utf-8")
+        check = rc_gate._real_workflow_uat_check(self.temp_dir)
+        self.assertEqual("fail", check["status"])
+        self.assertIn("SOURCING_V2_REQUIRED", check["details"]["failures"])
+
+    def test_real_uat_rejects_duplicate_asset_and_unsafe_selection(self) -> None:
+        self._write_real_v2_artifacts(self.temp_dir)
+        sourcing_path = self.temp_dir / "sourcing_plan.json"
+        sourcing = json.loads(sourcing_path.read_text(encoding="utf-8"))
+        duplicate = dict(sourcing["pages"][0])
+        duplicate["page_id"] = "beat-002"
+        duplicate["page_task_id"] = "page-002"
+        duplicate["selected_sources"] = [dict(duplicate["selected_sources"][0], page_task_id="page-002")]
+        sourcing["pages"].append(duplicate)
+        sourcing_path.write_text(json.dumps(sourcing), encoding="utf-8")
+        check = rc_gate._real_workflow_uat_check(self.temp_dir)
+        self.assertEqual("fail", check["status"])
+        self.assertIn("SOURCING_DUPLICATE_ASSET_KEY", check["details"]["failures"])
+
+        for field in ("source_path", "source_file"):
+            with self.subTest(field=field):
+                self._write_real_v2_artifacts(self.temp_dir)
+                selection_path = self.temp_dir / "external" / "ppt_library" / "library_results.v2.json"
+                selection = json.loads(selection_path.read_text(encoding="utf-8"))
+                selection["selections"][0]["candidates"][0][field] = "/Users/example/private.pptx"
+                selection_path.write_text(json.dumps(selection), encoding="utf-8")
+                check = rc_gate._real_workflow_uat_check(self.temp_dir)
+                self.assertEqual("fail", check["status"])
+                self.assertIn("SELECTION_UNSAFE_CONTENT", check["details"]["failures"])
 
     def test_rc_evidence_scan_fails_closed_for_paths_fields_and_customer_marker(self) -> None:
         unsafe_report = {

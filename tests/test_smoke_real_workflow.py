@@ -110,7 +110,7 @@ class RealWorkflowSmokeTest(unittest.TestCase):
 
             self.assertIn(report["status"], {"pass", "warning"})
             self.assertEqual(report["schema_version"], "deck_real_workflow_smoke.v1")
-            self.assertEqual(report["run_id"], "retail-demo")
+            self.assertRegex(report["run_id"], r"^uat-[a-f0-9]{16}$")
             self.assertIn(report["phases"]["run_artifacts"], {"pass", "warning"})
             self.assertEqual(report["phases"]["companion_uat"], "pass")
 

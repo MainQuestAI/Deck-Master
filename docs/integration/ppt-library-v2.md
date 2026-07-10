@@ -96,7 +96,7 @@ mode, then import it with `import-library-selection` for the same Deck Master
 run.
 
 Full RC verification additionally requires local backend, benchmark, and a
-read-only real run copy:
+read-only real run copy under the system temporary root:
 
 ```bash
 python3 scripts/deck_master.py rc-gate \
@@ -109,3 +109,8 @@ python3 scripts/deck_master.py rc-gate \
 
 RC JSON and Markdown contain only safe summaries. Evidence writing fails when
 absolute local paths, raw source fields, or configured private markers appear.
+Full RC rejects UAT paths under HOME, the repository/worktree, persistent Deck
+Master runs, non-temporary roots, and paths containing symlinks. It validates
+the copy's actual selection v2 and sourcing v2 artifacts before running workflow
+smoke. UAT reports replace the original run ID with a stable hashed reference by
+default.
