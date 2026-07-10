@@ -56,6 +56,87 @@ class GenerationTaskTests(unittest.TestCase):
         self.assertFalse(generate_task["reference_slide_required"])
         self.assertEqual("create_new_slide", generate_task["expected_operation"])
 
+    def test_v2_tasks_preserve_stable_identity_and_source_lineage(self) -> None:
+        primary = {
+            "asset_key": "canonical:slide-001",
+            "query_trace_id": "trace-001",
+            "page_task_id": "page-task-001",
+            "slide_id": "slide-001",
+            "source_asset_id": "source-001",
+            "source_display_name": "Safe Source.pptx",
+        }
+        alternative = {
+            "asset_key": "canonical:slide-002",
+            "query_trace_id": "trace-001",
+            "page_task_id": "page-task-001",
+            "slide_id": "slide-002",
+            "source_asset_id": "source-002",
+            "source_display_name": "Alternative Source.pptx",
+        }
+        sourcing = {
+            "schema_version": "deck_sourcing_plan.v2",
+            "run_id": "run",
+            "pages": [
+                {
+                    "page_id": "beat-001",
+                    "page_task_id": "page-task-001",
+                    "order": 7,
+                    "page_title": "改写页",
+                    "decision": "adapt",
+                    "reason": "Use the strongest safe source",
+                    "claim_ids": ["claim-001", "claim-002"],
+                    "evidence_need": ["metric-001"],
+                    "selected_sources": [primary, alternative],
+                    "generation_brief": "Adapt the source to the current claim.",
+                }
+            ],
+        }
+
+        tasks = create_generation_tasks(sourcing, self.temp_dir)
+        task = tasks["tasks"][0]
+
+        self.assertEqual("generation_page-task-001", task["task_id"])
+        self.assertEqual("page-task-001", task["page_task_id"])
+        self.assertEqual("beat-001", task["page_id"])
+        self.assertEqual("beat-001", task["beat_id"])
+        self.assertEqual("trace-001", task["query_trace_id"])
+        self.assertEqual("canonical:slide-001", task["asset_key"])
+        self.assertEqual(["claim-001", "claim-002"], task["claim_ids"])
+        self.assertEqual(["metric-001"], task["evidence_need"])
+        self.assertEqual(primary, task["selected_candidate"])
+        self.assertEqual(primary, task["reference_slide"])
+        self.assertEqual([alternative], task["alternatives"])
+
+    def test_v2_task_id_does_not_change_when_page_order_changes(self) -> None:
+        pages = [
+            {
+                "page_id": "beat-001",
+                "page_task_id": "page-task-001",
+                "order": 1,
+                "decision": "generate",
+                "selected_sources": [],
+            },
+            {
+                "page_id": "beat-002",
+                "page_task_id": "page-task-002",
+                "order": 2,
+                "decision": "generate",
+                "selected_sources": [],
+            },
+        ]
+        first = create_generation_tasks(
+            {"schema_version": "deck_sourcing_plan.v2", "run_id": "run", "pages": pages},
+            self.temp_dir / "first",
+        )
+        second = create_generation_tasks(
+            {"schema_version": "deck_sourcing_plan.v2", "run_id": "run", "pages": list(reversed(pages))},
+            self.temp_dir / "second",
+        )
+
+        first_ids = {task["page_task_id"]: task["task_id"] for task in first["tasks"]}
+        second_ids = {task["page_task_id"]: task["task_id"] for task in second["tasks"]}
+        self.assertEqual(first_ids, second_ids)
+
     def test_build_deck_pro_max_init_command(self) -> None:
         command = build_init_command(project_dir=Path("/tmp/project"), pages=3)
         self.assertIn("init", command)
