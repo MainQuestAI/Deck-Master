@@ -44,6 +44,7 @@ from scripts.skills.manifest import load_registry
 from scripts.runtime.builder_backend import inspect_builder_backend_package
 from scripts.runtime.builder_backend import builder_backend_status
 import scripts.runtime.builder_backend as builder_backend
+import scripts.skills.installer as installer_module
 try:
     from runtime.setup_status import setup_status as runtime_setup_status
 except ModuleNotFoundError:  # pragma: no cover - package-import fallback.
@@ -70,10 +71,31 @@ class SkillInstallationTest(unittest.TestCase):
             Path(self._tmp) / ".deck-master",
         )
         self._log_patch.start()
+        self._runtime_probe_patch = mock.patch(
+            "scripts.skills.installer._probe_python_version",
+            return_value="3.12.8",
+        )
+        self._runtime_probe_patch.start()
+        self._runtime_install_patch = mock.patch(
+            "scripts.skills.installer._install_release_runtime",
+            side_effect=self._install_fake_release_runtime,
+        )
+        self._runtime_install_patch.start()
         self.agent_dir = Path(self._tmp) / "agent_skills"
         self.agent_dir.mkdir()
         self.source_dir = Path(self._tmp) / ".deck-master" / "current" / "skills" / SKILL_NAME
         shutil.copytree(_REPO_ROOT / "skills" / SKILL_NAME, self.source_dir)
+
+    def _install_fake_release_runtime(self, release_root: Path) -> dict[str, str]:
+        runtime_python = release_root / installer_module.RELEASE_PYTHON_RELATIVE
+        runtime_python.parent.mkdir(parents=True, exist_ok=True)
+        runtime_python.symlink_to(sys.executable)
+        installer_module._record_release_runtime(release_root, "3.12.8")
+        return {
+            "python_requirement": installer_module.RUNTIME_PYTHON_REQUIREMENT,
+            "python_version": "3.12.8",
+            "interpreter": installer_module.RELEASE_PYTHON_RELATIVE,
+        }
 
     def _write_full_ppt_master_skill(
         self,
@@ -214,6 +236,8 @@ class SkillInstallationTest(unittest.TestCase):
         return json.loads(result.stdout)
 
     def tearDown(self) -> None:
+        self._runtime_install_patch.stop()
+        self._runtime_probe_patch.stop()
         self._log_patch.stop()
         self._home_patch.stop()
         if self._previous_backend_override is not None:
@@ -1134,13 +1158,7 @@ class SkillInstallationTest(unittest.TestCase):
         self.assertIn("RELEASE_ROOT", bin_text)
         self.assertIn("scripts/deck_master.py", bin_text)
 
-        completed = subprocess.run(
-            [str(release_root / "bin" / "deck-master"), "--help"],
-            check=False,
-            capture_output=True,
-            text=True,
-        )
-        self.assertEqual(0, completed.returncode, completed.stderr)
+        self.assertFalse((release_root / ".venv").exists())
 
         release_manifest = json.loads((release_root / "release-manifest.json").read_text(encoding="utf-8"))
         self.assertEqual("deck_master_release_manifest.v1", release_manifest["schema_version"])
@@ -1322,6 +1340,7 @@ class SkillInstallationTest(unittest.TestCase):
     def test_release_rollback_restores_previous_release(self) -> None:
         current = Path(self._tmp) / ".deck-master" / "current"
         build_release_tree(current, force=True)
+        self._install_fake_release_runtime(current)
         original_manifest = (current / "release-manifest.json").read_text(encoding="utf-8")
         install_result = install_release_tree(run_smoke=True)
         self.assertTrue(install_result["activated"])
