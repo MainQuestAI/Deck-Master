@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import os
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -9,6 +11,17 @@ from runtime.events import append_typed_event
 
 
 SCHEMA_VERSION = "deck_uat_report.v1"
+_UNSAFE_MARKERS = (
+    "/Users/",
+    "/Volumes/",
+    "/home/",
+    "/opt/",
+    "/private/",
+    "/tmp/",
+    "/var/",
+    "\\Users\\",
+)
+_UNSAFE_KEYS = ('"source_file"', '"source_path"')
 
 
 def utc_now() -> str:
@@ -34,13 +47,34 @@ def build_check(
     *,
     refs: list[str] | None = None,
 ) -> dict[str, Any]:
+    safe_refs = []
+    for ref in refs or []:
+        value = str(ref).strip().replace("\\", "/")
+        if not value or value.startswith("/") or "../" in value or value == "..":
+            value = "[external-ref]"
+        if value not in safe_refs:
+            safe_refs.append(value)
     return {
         "check_id": check_id,
         "passed": bool(passed),
         "severity": severity,
         "message": message,
-        "refs": refs or [],
+        "refs": safe_refs,
     }
+
+
+def _evidence_safety_violations(*texts: str) -> list[str]:
+    configured = [
+        marker.strip()
+        for marker in os.environ.get("DECK_MASTER_EVIDENCE_FORBIDDEN_MARKERS", "").split(",")
+        if marker.strip()
+    ]
+    joined = "\n".join(texts)
+    violations = [f"forbidden marker: {marker}" for marker in (*_UNSAFE_MARKERS, *configured) if marker in joined]
+    violations.extend(f"forbidden field: {key.strip(chr(34))}" for key in _UNSAFE_KEYS if key in joined)
+    if re.search(r'"\s*:\s*"/(?!/)', joined):
+        violations.append("absolute path value")
+    return sorted(set(violations))
 
 
 def build_uat_report(
@@ -148,6 +182,14 @@ def write_uat_report(run_dir: Path, name: str, report: dict[str, Any]) -> dict[s
     json.loads(payload)
     json_path.write_text(payload, encoding="utf-8")
     md_path.write_text(render_uat_markdown(report), encoding="utf-8")
+    violations = _evidence_safety_violations(
+        json_path.read_text(encoding="utf-8"),
+        md_path.read_text(encoding="utf-8"),
+    )
+    if violations:
+        json_path.unlink(missing_ok=True)
+        md_path.unlink(missing_ok=True)
+        raise ValueError(f"UAT evidence safety scan failed: {', '.join(violations)}")
     append_typed_event(
         run_dir,
         "artifact_written",

@@ -51,7 +51,14 @@ def run_real_workflow_smoke(run_dir: Path, *, write: bool = True) -> dict[str, A
         checks.append(build_check("review_export.computable", True, "error", "review/export APIs computable."))
         phases["review_export"] = "pass"
     except Exception as exc:
-        checks.append(build_check("review_export.computable", False, "error", f"review/export computation failed: {exc}"))
+        checks.append(
+            build_check(
+                "review_export.computable",
+                False,
+                "error",
+                f"review/export computation failed ({type(exc).__name__}).",
+            )
+        )
         phases["review_export"] = "fail"
 
     uat_dir = run_dir / "uat_reports"

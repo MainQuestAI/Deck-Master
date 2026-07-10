@@ -42,6 +42,9 @@ report = run_real_workflow_smoke(run_dir=Path("runs/retail-demo"))
 - `advisor_results/narrative_advice.json`
 - `quality_review_tasks/*.json`
 
+独立运行 smoke 时，`warning` 仍用于定位缺失证据。进入 full-tier RC 时，
+`pass` 是唯一放行状态；任一 phase 为 `warning` 或 `fail` 都会阻断 RC。
+
 ## 输出
 
 smoke 应写出：
@@ -90,3 +93,25 @@ JSON 报告使用独立 schema：
 - 不渲染 PPT。
 - 不修改 companion tool 输出。
 - 不引入任何内置 LLM provider。
+- 真实 UAT 只读取 run 副本，不修改原始 run。
+- JSON/Markdown evidence 会在写出后扫描绝对路径、原始 source 字段和
+  `DECK_MASTER_EVIDENCE_FORBIDDEN_MARKERS` 指定的私有标识；命中后删除输出并失败。
+
+## RC 入口
+
+CI tier 只运行 fresh clone 可复现检查，不要求真实 run：
+
+```bash
+python3 scripts/deck_master.py rc-gate --tier ci --output-dir <output_dir> --skip-browser-smoke
+```
+
+full tier 必须显式传入只读 UAT 副本，并可重复传入私有标识扫描项：
+
+```bash
+python3 scripts/deck_master.py rc-gate \
+  --tier full \
+  --benchmark-dir <benchmark_dir> \
+  --uat-run-dir <read_only_run_copy> \
+  --evidence-forbidden-marker <private_marker> \
+  --output-dir <output_dir>
+```

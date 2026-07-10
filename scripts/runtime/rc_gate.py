@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import socket
 import subprocess
@@ -17,8 +18,17 @@ from urllib.parse import unquote
 
 from benchmark.aggregate import build_benchmark_aggregate_report
 from runtime.artifact_validator import sha256_file, validate_artifact_manifest
+from runtime.library_status import inspect_library_status
 from runtime.run_state import write_json
 from skills.installer import build_release_tree, external_dependency_statuses, verify_release_tree
+from sourcing.plan import build_sourcing_plan_v2, migrate_v1
+from tools.ppt_library_client import (
+    PPTLibraryClientError,
+    build_bridge_plan,
+    normalize_candidate,
+    run_library_selection,
+)
+from uat.real_workflow_smoke import run_real_workflow_smoke
 
 
 SCHEMA_VERSION = "deck_rc_gate_report.v1"
@@ -33,6 +43,19 @@ class BrowserSmokeUnavailable(RuntimeError):
     pass
 
 
+_UNSAFE_EVIDENCE_MARKERS = (
+    "/Users/",
+    "/Volumes/",
+    "/home/",
+    "/opt/",
+    "/private/",
+    "/tmp/",
+    "/var/",
+    "\\Users\\",
+)
+_UNSAFE_EVIDENCE_KEYS = ('"source_file"', '"source_path"')
+
+
 def _utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
@@ -45,6 +68,35 @@ def _check(check_id: str, status: str, *, required: bool, summary: str, details:
         "summary": summary,
         "details": details or {},
     }
+
+
+def _safe_benchmark_summary(report: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "status": str(report.get("status") or ""),
+        "min_real_cases": int(report.get("min_real_cases") or 0),
+        "case_counts": dict(report.get("case_counts") or {}),
+        "report_counts": dict(report.get("report_counts") or {}),
+        "private_source_policy": dict(report.get("private_source_policy") or {}),
+        "metrics": dict(report.get("metrics") or {}),
+    }
+
+
+def _evidence_safety_violations(
+    *texts: str,
+    forbidden_markers: list[str] | tuple[str, ...] | None = None,
+) -> list[str]:
+    markers = [*_UNSAFE_EVIDENCE_MARKERS, *(forbidden_markers or [])]
+    violations: list[str] = []
+    joined = "\n".join(texts)
+    for marker in markers:
+        if marker and marker in joined:
+            violations.append(f"forbidden marker: {marker}")
+    for key in _UNSAFE_EVIDENCE_KEYS:
+        if key in joined:
+            violations.append(f"forbidden field: {key.strip(chr(34))}")
+    if re.search(r'"\s*:\s*"/(?!/)', joined):
+        violations.append("absolute path value")
+    return sorted(set(violations))
 
 
 def _json_parse_check() -> dict[str, Any]:
@@ -80,12 +132,32 @@ def _release_smoke_check() -> dict[str, Any]:
         release_root = Path(tmp) / "release"
         build_release_tree(release_root, force=True)
         verification = verify_release_tree(release_root, run_smoke=True)
+        smoke = verification.get("smoke") if isinstance(verification.get("smoke"), dict) else {}
+        runtime = verification.get("runtime") if isinstance(verification.get("runtime"), dict) else {}
+        safe_verification = {
+            "schema_version": verification.get("schema_version"),
+            "valid": bool(verification.get("valid")),
+            "status": verification.get("status"),
+            "errors": list(verification.get("errors") or []),
+            "warnings": list(verification.get("warnings") or []),
+            "smoke": {
+                "skipped": bool(smoke.get("skipped")),
+                "status": smoke.get("status"),
+                "returncode": smoke.get("returncode"),
+            },
+            "runtime": {
+                "python_requirement": runtime.get("python_requirement"),
+                "python_version": runtime.get("python_version"),
+                "interpreter": runtime.get("interpreter"),
+                "disposable_stage": bool(runtime.get("disposable_stage")),
+            },
+        }
         return _check(
             "release_smoke",
             "pass" if verification.get("valid") else "fail",
             required=True,
             summary="Self-contained release tree builds and starts.",
-            details=verification,
+            details=safe_verification,
         )
 
 
@@ -172,7 +244,7 @@ def _fixture_e2e_check() -> dict[str, Any]:
         missing = [name for name in required if not (run_dir / name).exists()]
         preview = json.loads((run_dir / "preview_manifest.json").read_text(encoding="utf-8"))
         page_count = len(preview.get("pages", [])) if isinstance(preview.get("pages"), list) else 0
-        details.update({"run_dir": str(run_dir), "missing": missing, "page_count": page_count})
+        details.update({"run_id": "rc-fixture-smoke", "missing": missing, "page_count": page_count})
         passed = not missing and page_count >= 10
         return _check(
             "fixture_e2e",
@@ -435,6 +507,243 @@ def _browser_smoke_check(*, skip: bool, require: bool) -> dict[str, Any]:
     )
 
 
+def _bridge_v2_contract_check() -> dict[str, Any]:
+    failures: list[str] = []
+    with tempfile.TemporaryDirectory(prefix="dm_rc_bridge_v2_") as tmp:
+        run_dir = Path(tmp)
+        narrative = {
+            "beats": [
+                {"beat_id": "beat-001", "role": "opener", "page_title": "Opening", "reuse_query": "opening proof"},
+                {"beat_id": "beat-002", "role": "capability_detail", "page_title": "Capability", "reuse_query": "capability proof"},
+                {"beat_id": "beat-003", "role": "section_handoff", "page_title": "Transition"},
+            ]
+        }
+        page_tasks = {
+            "tasks": [
+                {"beat_id": f"beat-00{index}", "page_task_id": f"page-00{index}"}
+                for index in range(1, 4)
+            ]
+        }
+        try:
+            plan = build_bridge_plan(
+                narrative,
+                page_tasks,
+                run_id="rc-bridge-v2",
+                run_mode="production",
+            )
+            requests = plan.get("requests") if isinstance(plan.get("requests"), list) else []
+            if len(requests) != 3:
+                failures.append("bridge plan is not per-page")
+            if len({item.get("query_trace_id") for item in requests}) != len(requests):
+                failures.append("query trace identity is not unique per page")
+            strategies = {item.get("role_strategy") for item in requests}
+            if not {"passthrough", "mapped", "semantic_only"}.issubset(strategies):
+                failures.append("role strategies are incomplete")
+            candidate, _ = normalize_candidate(
+                {
+                    "slide_id": "slide-001",
+                    "source_file": "/private/library/private-deck.pptx",
+                    "page_number": 7,
+                    "title": "Reusable page",
+                    "score": 0.9,
+                },
+                run_dir=run_dir,
+                reuse_policy="reuse_or_adapt",
+                index=1,
+            )
+            encoded = json.dumps(candidate, ensure_ascii=False)
+            if "source_file" in candidate or "source_path" in candidate:
+                failures.append("normalized candidate retains raw source fields")
+            if _evidence_safety_violations(encoded):
+                failures.append("normalized candidate retains an absolute source path")
+            if not candidate.get("asset_key") or not candidate.get("source_asset_id"):
+                failures.append("normalized candidate identity is incomplete")
+        except Exception as exc:  # noqa: BLE001 - reported as a gate failure.
+            failures.append(f"bridge contract check raised {type(exc).__name__}")
+    return _check(
+        "bridge_v2_contract",
+        "pass" if not failures else "fail",
+        required=True,
+        summary="Bridge v2 per-page policy, identity, and sanitized candidate contract are reproducible.",
+        details={"schema_version": "deck_master_ppt_library_selection.v2", "failures": failures},
+    )
+
+
+def _sourcing_v2_contract_check() -> dict[str, Any]:
+    failures: list[str] = []
+    page_tasks = {
+        "tasks": [
+            {"beat_id": "beat-001", "page_task_id": "page-001", "page_title": "Page one"},
+            {"beat_id": "beat-002", "page_task_id": "page-002", "page_title": "Page two"},
+        ]
+    }
+    shared = {
+        "candidate_id": "candidate-shared",
+        "slide_id": "slide-shared",
+        "asset_key": "canonical:shared",
+        "query_trace_id": "query-shared",
+        "page_task_id": "page-001",
+        "score": 0.9,
+        "confidence": 0.9,
+        "candidate_origin": "ppt_library",
+        "reuse_policy": "reuse_or_adapt",
+    }
+    second = {**shared, "candidate_id": "candidate-second", "asset_key": "canonical:second", "page_task_id": "page-002", "score": 0.8}
+    library_results = {
+        "source": "ppt_library",
+        "selections": [
+            {"beat_id": "beat-001", "page_task_id": "page-001", "query_trace_id": "query-one", "candidates": [shared]},
+            {"beat_id": "beat-002", "page_task_id": "page-002", "query_trace_id": "query-two", "candidates": [{**shared, "page_task_id": "page-002"}, second]},
+        ],
+    }
+    try:
+        plan = build_sourcing_plan_v2(
+            run_id="rc-sourcing-v2",
+            page_tasks=page_tasks,
+            library_results=library_results,
+            permission_default="approved",
+        )
+        pages = plan.get("pages") if isinstance(plan.get("pages"), list) else []
+        if len(pages) != 2 or len({page.get("page_id") for page in pages}) != 2:
+            failures.append("pages[] does not contain one decision per page")
+        selected_keys = [
+            source.get("asset_key")
+            for page in pages
+            for source in page.get("selected_sources", [])
+            if isinstance(source, dict)
+        ]
+        if len(selected_keys) != len(set(selected_keys)):
+            failures.append("selected asset_key values are not globally unique")
+        legacy = {"schema_version": "deck_sourcing_plan.v1", "run_id": "legacy-run", "decisions": [{"beat_id": "legacy-001", "source_decision": "generate"}]}
+        before = json.dumps(legacy, sort_keys=True)
+        migrated = migrate_v1(legacy)
+        if migrated.get("schema_version") != "deck_sourcing_plan.v2" or migrated.get("migrated_from") != "deck_sourcing_plan.v1":
+            failures.append("legacy v1 migration does not produce canonical v2")
+        if json.dumps(legacy, sort_keys=True) != before:
+            failures.append("legacy v1 migration modified its input")
+    except Exception as exc:  # noqa: BLE001 - reported as a gate failure.
+        failures.append(f"sourcing contract check raised {type(exc).__name__}")
+    return _check(
+        "sourcing_v2_contract",
+        "pass" if not failures else "fail",
+        required=True,
+        summary="Sourcing v2 pages, unique allocation, and read-only v1 migration are reproducible.",
+        details={"schema_version": "deck_sourcing_plan.v2", "failures": failures},
+    )
+
+
+def _library_status_v2_contract_check(*, live: bool) -> dict[str, Any]:
+    status = inspect_library_status(cache_ttl_seconds=0) if live else inspect_library_status(
+        which=lambda _command: None,
+        cache_ttl_seconds=0,
+    )
+    required_fields = {
+        "schema_version", "status", "runtime_ready", "contract_ready", "semantic_search_ready",
+        "role_selection_ready", "fallback_ready", "preview_ready", "business_ranking_ready",
+        "data_hygiene_status", "blocking_summary", "warnings",
+    }
+    failures: list[str] = []
+    if status.get("schema_version") != "deck_master_library_status.v2":
+        failures.append("library status schema version is not v2")
+    if set(status) != required_fields:
+        failures.append("library status fields are inconsistent")
+    if live and status.get("status") == "blocked":
+        failures.append("live PPT Library status is blocked")
+    safe_summary = {
+        key: status.get(key)
+        for key in (
+            "schema_version", "status", "runtime_ready", "contract_ready", "semantic_search_ready",
+            "role_selection_ready", "fallback_ready", "preview_ready", "business_ranking_ready",
+            "data_hygiene_status", "blocking_summary", "warnings",
+        )
+    }
+    return _check(
+        "library_status_v2_contract",
+        "pass" if not failures else "fail",
+        required=True,
+        summary="Library Status v2 fields and readiness truth are consistent.",
+        details={"live": live, "status": safe_summary, "failures": failures},
+    )
+
+
+def _strict_fixture_policy_check() -> dict[str, Any]:
+    failures: list[str] = []
+    for run_mode in ("production", "benchmark"):
+        with tempfile.TemporaryDirectory(prefix=f"dm_rc_{run_mode}_fixture_") as tmp:
+            run_dir = Path(tmp)
+            narrative = {"run_id": f"rc-{run_mode}", "beats": [{"beat_id": "beat-001", "role": "opener", "page_title": "Opening"}]}
+            (run_dir / "page_tasks.json").write_text(
+                json.dumps({"tasks": [{"beat_id": "beat-001", "page_task_id": "page-001"}]}),
+                encoding="utf-8",
+            )
+            try:
+                run_library_selection(
+                    narrative_plan=narrative,
+                    narrative_plan_path=run_dir / "narrative_plan.json",
+                    request={"run_id": f"rc-{run_mode}", "run_mode": run_mode},
+                    run_dir=run_dir,
+                    mode="fixture",
+                )
+            except PPTLibraryClientError:
+                continue
+            failures.append(f"fixture mode was accepted for {run_mode}")
+    return _check(
+        "strict_fixture_policy",
+        "pass" if not failures else "fail",
+        required=True,
+        summary="Production and benchmark runs reject fixture library selection.",
+        details={"modes": ["production", "benchmark"], "failures": failures},
+    )
+
+
+def _real_workflow_uat_check(uat_run_dir: str | Path | None) -> dict[str, Any]:
+    if not uat_run_dir:
+        return _check(
+            "real_workflow_uat",
+            "fail",
+            required=True,
+            summary="Full tier requires an explicit real UAT run copy.",
+            details={"uat_status": "missing", "failures": ["UAT_RUN_REQUIRED"]},
+        )
+    run_dir = Path(uat_run_dir).expanduser().resolve()
+    if not run_dir.is_dir():
+        return _check(
+            "real_workflow_uat",
+            "fail",
+            required=True,
+            summary="The configured real UAT run copy is unavailable.",
+            details={"uat_status": "missing", "failures": ["UAT_RUN_UNAVAILABLE"]},
+        )
+    try:
+        report = run_real_workflow_smoke(run_dir, write=False)
+    except Exception as exc:  # noqa: BLE001 - report only the stable exception type.
+        return _check(
+            "real_workflow_uat",
+            "fail",
+            required=True,
+            summary="Real workflow UAT could not be evaluated.",
+            details={"uat_status": "error", "failures": [type(exc).__name__]},
+        )
+    uat_status = str(report.get("status") or "")
+    phases = report.get("phases") if isinstance(report.get("phases"), dict) else {}
+    summary = report.get("summary") if isinstance(report.get("summary"), dict) else {}
+    passed = uat_status == "pass" and all(value == "pass" for value in phases.values())
+    return _check(
+        "real_workflow_uat",
+        "pass" if passed else "fail",
+        required=True,
+        summary="Real workflow UAT must pass without warnings in the full tier.",
+        details={
+            "uat_status": uat_status or "invalid",
+            "phases": {str(key): str(value) for key, value in phases.items()},
+            "summary": {
+                key: int(summary.get(key) or 0)
+                for key in ("checks", "passed", "warnings", "failed")
+            },
+        },
+    )
+
+
 def _external_dependency_closure_ci_check() -> dict[str, Any]:
     """CI-tier external dependency closure.
 
@@ -551,40 +860,61 @@ def build_rc_gate_report(
     require_browser_smoke: bool = False,
     min_real_cases: int = 3,
     tier: str = "full",
+    uat_run_dir: str | Path | None = None,
 ) -> dict[str, Any]:
+    if tier not in {"ci", "full"}:
+        raise RCGateError("tier must be 'ci' or 'full'.")
     bench_root = Path(benchmark_dir).expanduser().resolve() if benchmark_dir else REPO_ROOT / "benchmarks"
-    benchmark_report = build_benchmark_aggregate_report(bench_root, min_real_cases=min_real_cases)
     if tier == "ci":
         # CI tier: skip checks that need local-only state. benchmark_aggregate
         # needs gitignored benchmarks/results/; the live closure needs a
         # locally-bound ppt-master backend. The CI closure still verifies the
         # release tree's capability lock is well-formed (reproducible from a
         # fresh clone). benchmark_report is computed for visibility only.
+        benchmark_summary = {
+            "status": "skipped",
+            "min_real_cases": min_real_cases,
+            "case_counts": {},
+            "report_counts": {},
+            "private_source_policy": {},
+            "metrics": {},
+        }
         benchmark_check = _check(
             "benchmark_aggregate",
             "skipped",
             required=False,
             summary="Skipped in CI tier: requires local-only benchmark results.",
-            details=benchmark_report,
+            details=benchmark_summary,
         )
         closure_check = _external_dependency_closure_ci_check()
+        library_status_check = _library_status_v2_contract_check(live=False)
+        full_only_checks: list[dict[str, Any]] = []
     else:
+        benchmark_report = build_benchmark_aggregate_report(bench_root, min_real_cases=min_real_cases)
+        benchmark_summary = _safe_benchmark_summary(benchmark_report)
         benchmark_check = _check(
             "benchmark_aggregate",
             "pass" if benchmark_report["status"] == "report_ready" else "fail",
             required=True,
             summary="Benchmark aggregate requires real completed benchmark reports for RC.",
-            details=benchmark_report,
+            details=benchmark_summary,
         )
         closure_check = _external_dependency_closure_check(benchmark_report)
+        library_status_check = _library_status_v2_contract_check(live=True)
+        full_only_checks = [_real_workflow_uat_check(uat_run_dir)]
     checks = [
         _json_parse_check(),
         _artifact_validator_check(),
         _release_smoke_check(),
         _fixture_e2e_check(),
+        _bridge_v2_contract_check(),
+        _sourcing_v2_contract_check(),
+        library_status_check,
+        _strict_fixture_policy_check(),
         _browser_smoke_check(skip=skip_browser_smoke, require=require_browser_smoke),
         benchmark_check,
         closure_check,
+        *full_only_checks,
     ]
     required_failures = [check for check in checks if check["required"] and check["status"] != "pass"]
     optional_warnings = [
@@ -601,7 +931,7 @@ def build_rc_gate_report(
         "status": status,
         "tier": tier,
         "created_at": _utc_now(),
-        "benchmark_dir": str(bench_root),
+        "benchmark_dir": "repository-benchmarks" if bench_root == (REPO_ROOT / "benchmarks").resolve() else "external-benchmark-evidence",
         "summary": {
             "checks": len(checks),
             "required_failures": len(required_failures),
@@ -639,6 +969,8 @@ def write_rc_gate_report(
     require_browser_smoke: bool = False,
     min_real_cases: int = 3,
     tier: str = "full",
+    uat_run_dir: str | Path | None = None,
+    evidence_forbidden_markers: list[str] | tuple[str, ...] | None = None,
     force: bool = False,
 ) -> dict[str, Any]:
     out_dir = Path(output_dir).expanduser().resolve()
@@ -652,10 +984,22 @@ def write_rc_gate_report(
         require_browser_smoke=require_browser_smoke,
         min_real_cases=min_real_cases,
         tier=tier,
+        uat_run_dir=uat_run_dir,
     )
     out_dir.mkdir(parents=True, exist_ok=True)
     write_json(json_path, report)
     markdown_path.write_text(render_rc_gate_markdown(report), encoding="utf-8")
+    json_text = json_path.read_text(encoding="utf-8")
+    markdown_text = markdown_path.read_text(encoding="utf-8")
+    violations = _evidence_safety_violations(
+        json_text,
+        markdown_text,
+        forbidden_markers=evidence_forbidden_markers,
+    )
+    if violations:
+        json_path.unlink(missing_ok=True)
+        markdown_path.unlink(missing_ok=True)
+        raise RCGateError(f"RC evidence safety scan failed: {', '.join(violations)}")
     return {
         "status": report["status"],
         "report": str(json_path),

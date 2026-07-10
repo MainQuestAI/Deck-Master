@@ -43,6 +43,12 @@
 - [ ] Release archive
 - [ ] SHA256SUMS
 - [ ] Capability lock
+- [ ] `rc-gate --tier ci` 在 fresh clone / release tree 无本机 PPT Library 时通过
+- [ ] Bridge v2、Sourcing v2、Library Status v2 required checks 通过
+- [ ] Production / benchmark fixture policy required check 通过
+- [ ] `rc-gate --tier full` 使用只读真实 UAT 副本通过
+- [ ] Full-tier UAT status 和所有 phase 均为 pass
+- [ ] RC JSON/Markdown evidence safety scan 通过
 
 ## Real Benchmark
 

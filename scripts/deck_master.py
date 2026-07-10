@@ -2613,6 +2613,8 @@ def command_rc_gate(args: argparse.Namespace) -> dict[str, Any]:
         require_browser_smoke=bool(getattr(args, "require_browser_smoke", False)),
         min_real_cases=int(getattr(args, "min_real_cases", 3)),
         tier=str(getattr(args, "tier", "full")),
+        uat_run_dir=getattr(args, "uat_run_dir", None),
+        evidence_forbidden_markers=getattr(args, "evidence_forbidden_marker", None),
         force=bool(getattr(args, "force", False)),
     )
 
@@ -3560,6 +3562,17 @@ def build_parser() -> argparse.ArgumentParser:
     p_rc_gate.add_argument("--min-real-cases", type=int, default=3)
     p_rc_gate.add_argument("--skip-browser-smoke", action="store_true")
     p_rc_gate.add_argument("--require-browser-smoke", action="store_true")
+    p_rc_gate.add_argument(
+        "--uat-run-dir",
+        default=None,
+        help="Read-only run copy used by full-tier real workflow UAT.",
+    )
+    p_rc_gate.add_argument(
+        "--evidence-forbidden-marker",
+        action="append",
+        default=[],
+        help="Additional private marker that must not appear in RC evidence; repeat as needed.",
+    )
     p_rc_gate.add_argument(
         "--tier",
         choices=["full", "ci"],

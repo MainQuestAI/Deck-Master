@@ -3,13 +3,16 @@
   "$id": "https://deck-master.local/contracts/rc-gate-report.v1.schema.json",
   "title": "Deck Master RC Gate Report v1",
   "type": "object",
-  "required": ["schema_version", "status", "created_at", "benchmark_dir", "summary", "checks"],
+  "required": ["schema_version", "status", "tier", "created_at", "benchmark_dir", "summary", "checks"],
   "properties": {
     "schema_version": {
       "const": "deck_rc_gate_report.v1"
     },
     "status": {
       "enum": ["pass", "warning", "fail"]
+    },
+    "tier": {
+      "enum": ["ci", "full"]
     },
     "created_at": {
       "type": "string"
