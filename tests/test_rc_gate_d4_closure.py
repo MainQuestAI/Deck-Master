@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 import shutil
@@ -164,6 +165,25 @@ class RCGateD4ClosureTests(unittest.TestCase):
         self.assertEqual("fail", check["status"])
         self.assertIn("SYMLINK", check["details"]["failures"][0])
 
+    def test_real_uat_rejects_symlinks_anywhere_inside_copy(self) -> None:
+        outside = self.temp_dir / "outside"
+        outside.mkdir()
+        (outside / "external.json").write_text("{}", encoding="utf-8")
+        for case in ("request", "preview", "nested"):
+            with self.subTest(case=case):
+                run_dir = self.temp_dir / f"run-{case}"
+                self._write_real_v2_artifacts(run_dir)
+                if case == "request":
+                    (run_dir / "request.json").symlink_to(outside / "external.json")
+                elif case == "preview":
+                    (run_dir / "preview_manifest.json").symlink_to(outside / "external.json")
+                else:
+                    (run_dir / "context").mkdir()
+                    (run_dir / "context" / "linked").symlink_to(outside, target_is_directory=True)
+                check = rc_gate._real_workflow_uat_check(run_dir)
+                self.assertEqual("fail", check["status"])
+                self.assertIn("UAT_COPY_INTERNAL_SYMLINK_REJECTED", check["details"]["failures"])
+
     def test_real_uat_accepts_real_v2_artifacts(self) -> None:
         self._write_real_v2_artifacts(self.temp_dir)
         with mock.patch(
@@ -179,6 +199,65 @@ class RCGateD4ClosureTests(unittest.TestCase):
         self.assertEqual("pass", check["status"], check)
         self.assertEqual("deck_master_ppt_library_selection.v2", check["details"]["artifacts"]["selection_schema"])
         self.assertEqual("deck_sourcing_plan.v2", check["details"]["artifacts"]["sourcing_schema"])
+
+    def test_real_uat_allows_generate_page_without_selected_source(self) -> None:
+        self._write_real_v2_artifacts(self.temp_dir)
+        sourcing_path = self.temp_dir / "sourcing_plan.json"
+        sourcing = json.loads(sourcing_path.read_text(encoding="utf-8"))
+        sourcing["pages"][0]["decision"] = "generate"
+        sourcing["pages"][0]["selected_sources"] = []
+        sourcing_path.write_text(json.dumps(sourcing), encoding="utf-8")
+        with mock.patch(
+            "runtime.rc_gate.run_real_workflow_smoke",
+            return_value={
+                "status": "pass",
+                "summary": {"checks": 1, "passed": 1, "warnings": 0, "failed": 0},
+                "phases": {"run_artifacts": "pass"},
+            },
+        ):
+            check = rc_gate._real_workflow_uat_check(self.temp_dir)
+        self.assertEqual("pass", check["status"], check)
+
+    def test_real_uat_rejects_selection_sourcing_identity_mismatches(self) -> None:
+        for case in ("missing_asset", "cross_page", "trace_mismatch"):
+            with self.subTest(case=case):
+                run_dir = self.temp_dir / f"identity-{case}"
+                self._write_real_v2_artifacts(run_dir)
+                selection_path = run_dir / "external" / "ppt_library" / "library_results.v2.json"
+                sourcing_path = run_dir / "sourcing_plan.json"
+                selection = json.loads(selection_path.read_text(encoding="utf-8"))
+                sourcing = json.loads(sourcing_path.read_text(encoding="utf-8"))
+                selected = sourcing["pages"][0]["selected_sources"][0]
+                expected_code = ""
+                if case == "missing_asset":
+                    selected["asset_key"] = "canonical:missing"
+                    expected_code = "SOURCING_SELECTION_CANDIDATE_MISSING"
+                elif case == "trace_mismatch":
+                    selected["query_trace_id"] = hashlib.sha256(b"other-query").hexdigest()
+                    expected_code = "SOURCING_SELECTION_TRACE_MISMATCH"
+                else:
+                    second_candidate = copy.deepcopy(selection["selections"][0]["candidates"][0])
+                    second_candidate["candidate_id"] = "candidate-002"
+                    second_candidate["slide_id"] = "slide-002"
+                    second_candidate["asset_key"] = "canonical:slide-002"
+                    second_candidate["source_asset_id"] = hashlib.sha256(b"source-2").hexdigest()
+                    second_selection = copy.deepcopy(selection["selections"][0])
+                    second_selection["beat_id"] = "beat-002"
+                    second_selection["page_task_id"] = "page-002"
+                    second_selection["query_trace_id"] = hashlib.sha256(b"query-2").hexdigest()
+                    second_selection["candidates"] = [second_candidate]
+                    selection["selections"].append(second_selection)
+                    second_page = copy.deepcopy(sourcing["pages"][0])
+                    second_page["page_id"] = "beat-002"
+                    second_page["page_task_id"] = "page-002"
+                    second_page["selected_sources"][0]["page_task_id"] = "page-002"
+                    sourcing["pages"].append(second_page)
+                    expected_code = "SOURCING_SELECTION_CROSS_PAGE"
+                selection_path.write_text(json.dumps(selection), encoding="utf-8")
+                sourcing_path.write_text(json.dumps(sourcing), encoding="utf-8")
+                check = rc_gate._real_workflow_uat_check(run_dir)
+                self.assertEqual("fail", check["status"])
+                self.assertIn(expected_code, check["details"]["failures"])
 
     def test_real_uat_rejects_missing_or_v1_artifacts(self) -> None:
         missing = rc_gate._real_workflow_uat_check(self.temp_dir)
@@ -270,6 +349,7 @@ class RCGateD4ClosureTests(unittest.TestCase):
             refs=["/Users/example/private-client/input.pptx", "library_results/selection.json"],
         )
         report = build_uat_report(run_dir, "ppt_library", [check], {}, [])
+        self.assertIn("run_id", report)
         self.assertNotIn("/Users/", json.dumps(report))
         self.assertIn("library_results/selection.json", json.dumps(report))
 

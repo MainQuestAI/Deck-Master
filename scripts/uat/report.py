@@ -29,32 +29,46 @@ def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def _raw_run_id_from_dir(run_dir: Path) -> str:
+def _private_run_identifiers(run_dir: Path) -> list[str]:
+    identifiers = [run_dir.name]
     request_path = run_dir / "request.json"
     if request_path.exists():
         try:
             request = json.loads(request_path.read_text(encoding="utf-8"))
-            return str(request.get("run_id") or run_dir.name)
+            request_run_id = str(request.get("run_id") or "").strip()
+            if request_run_id:
+                identifiers.append(request_run_id)
         except json.JSONDecodeError:
-            return run_dir.name
-    return run_dir.name
+            pass
+    return sorted(set(identifiers), key=lambda item: (-len(item), item))
 
 
-def _safe_run_id(raw_run_id: str) -> str:
-    digest = hashlib.sha256(f"deck-master-uat:{raw_run_id}".encode("utf-8")).hexdigest()
+def _safe_run_id(private_identifiers: list[str]) -> str:
+    canonical = json.dumps(sorted(private_identifiers), ensure_ascii=False, separators=(",", ":"))
+    digest = hashlib.sha256(f"deck-master-uat:{canonical}".encode("utf-8")).hexdigest()
     return f"uat-{digest[:16]}"
 
 
-def _replace_private_run_id(value: Any, raw_run_id: str, safe_run_id: str) -> Any:
+def _replace_private_run_ids(value: Any, private_identifiers: list[str], safe_run_id: str) -> Any:
+    patterns = [
+        re.compile(rf"(?<![A-Za-z0-9_-]){re.escape(identifier)}(?![A-Za-z0-9_-])")
+        for identifier in private_identifiers
+    ]
+
+    def replace(text: str) -> str:
+        for pattern in patterns:
+            text = pattern.sub(safe_run_id, text)
+        return text
+
     if isinstance(value, dict):
         return {
-            str(key).replace(raw_run_id, safe_run_id): _replace_private_run_id(item, raw_run_id, safe_run_id)
+            replace(str(key)): _replace_private_run_ids(item, private_identifiers, safe_run_id)
             for key, item in value.items()
         }
     if isinstance(value, list):
-        return [_replace_private_run_id(item, raw_run_id, safe_run_id) for item in value]
+        return [_replace_private_run_ids(item, private_identifiers, safe_run_id) for item in value]
     if isinstance(value, str):
-        return value.replace(raw_run_id, safe_run_id)
+        return replace(value)
     return value
 
 
@@ -126,8 +140,8 @@ def build_uat_report(
         for check in checks
         if not check.get("passed")
     ]
-    raw_run_id = _raw_run_id_from_dir(run_dir)
-    safe_run_id = _safe_run_id(raw_run_id)
+    private_identifiers = _private_run_identifiers(run_dir)
+    safe_run_id = _safe_run_id(private_identifiers)
     report = {
         "schema_version": schema_version,
         "run_id": safe_run_id,
@@ -144,7 +158,7 @@ def build_uat_report(
         "findings": findings,
         "recommendations": recommendations,
     }
-    return _replace_private_run_id(report, raw_run_id, safe_run_id)
+    return _replace_private_run_ids(report, private_identifiers, safe_run_id)
 
 
 def render_uat_markdown(report: dict[str, Any]) -> str:
@@ -196,8 +210,12 @@ def render_uat_markdown(report: dict[str, Any]) -> str:
 
 
 def write_uat_report(run_dir: Path, name: str, report: dict[str, Any]) -> dict[str, Any]:
-    raw_run_id = _raw_run_id_from_dir(run_dir)
-    safe_report = _replace_private_run_id(report, raw_run_id, _safe_run_id(raw_run_id))
+    private_identifiers = _private_run_identifiers(run_dir)
+    safe_report = _replace_private_run_ids(
+        report,
+        private_identifiers,
+        _safe_run_id(private_identifiers),
+    )
     output_dir = run_dir / "uat_reports"
     output_dir.mkdir(parents=True, exist_ok=True)
     json_path = output_dir / f"{name}.json"

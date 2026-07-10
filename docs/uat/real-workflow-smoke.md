@@ -108,7 +108,8 @@ python3 scripts/deck_master.py rc-gate --tier ci --output-dir <output_dir> --ski
 ```
 
 full tier 必须显式传入系统 temp 根下的隔离 UAT 副本，并可重复传入私有标识扫描项。
-HOME、仓库/worktree、`~/.deck-master/runs`、非 temp 目录及带软链接的副本路径会被拒绝：
+HOME、仓库/worktree、`~/.deck-master/runs`、非 temp 目录、带软链接的副本路径，
+以及副本内部任意文件或目录软链接都会被拒绝。扫描不会跟随软链接目标：
 
 ```bash
 python3 scripts/deck_master.py rc-gate \
@@ -128,6 +129,9 @@ full tier 会直接读取副本中的真实产物：
 - 两者必须为 v2；selection 必须具备逐页 identity chain 且没有绝对路径和 raw
   source 字段；sourcing 必须使用 `pages[]`、一页一决策且 selected `asset_key`
   全局无重复。
+- 每个 sourcing selected source 必须按 `page_task_id + query_trace_id + asset_key`
+  命中同页 selection candidate；可选的 `candidate_id`、`source_asset_id` 和
+  `slide_id` 若存在也必须一致。generate/gap 页允许 `selected_sources=[]`。
 
 artifact 缺失、v1、schema 无效或安全扫描失败都会阻断 full RC。CI tier 继续只运行
 仓库内 synthetic contract checks，不读取本机 UAT、PPT Library 或 benchmark evidence。

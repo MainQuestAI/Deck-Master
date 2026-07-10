@@ -114,3 +114,6 @@ Master runs, non-temporary roots, and paths containing symlinks. It validates
 the copy's actual selection v2 and sourcing v2 artifacts before running workflow
 smoke. UAT reports replace the original run ID with a stable hashed reference by
 default.
+The preflight also rejects any symlink found recursively inside the copy without
+following its target. Every selected sourcing source must match a same-page
+selection candidate by page-task ID, query trace, and asset key.

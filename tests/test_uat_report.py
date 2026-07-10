@@ -78,8 +78,9 @@ class UATReportTest(unittest.TestCase):
 
     def test_customer_run_id_is_redacted_from_report_content(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            raw_run_id = "customer-name-private-deck"
-            run_dir = Path(tmp) / raw_run_id
+            raw_run_id = "generic-run"
+            raw_dir_name = "customer-name-private-deck"
+            run_dir = Path(tmp) / raw_dir_name
             run_dir.mkdir()
             (run_dir / "request.json").write_text(json.dumps({"run_id": raw_run_id}), encoding="utf-8")
             report = uat_report.build_uat_report(
@@ -94,14 +95,15 @@ class UATReportTest(unittest.TestCase):
                         "refs": [],
                     }
                 ],
-                {"label": raw_run_id},
-                [f"Review {raw_run_id}."],
+                {raw_dir_name: [raw_run_id, raw_dir_name]},
+                [f"Review {raw_run_id} in {raw_dir_name}."],
             )
-            report["writer_regression"] = raw_run_id
+            report["writer_regression"] = {raw_dir_name: [raw_run_id, raw_dir_name]}
             written = uat_report.write_uat_report(run_dir, "redacted", report)
             evidence = Path(written["json_path"]).read_text(encoding="utf-8") + Path(written["markdown_path"]).read_text(encoding="utf-8")
 
             self.assertNotIn(raw_run_id, evidence)
+            self.assertNotIn(raw_dir_name, evidence)
             self.assertIn(report["run_id"], evidence)
 
 

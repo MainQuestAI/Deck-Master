@@ -778,6 +778,22 @@ def _read_uat_json_artifact(
     return None, None
 
 
+def _uat_copy_symlink_failure(run_dir: Path) -> str | None:
+    pending = [run_dir]
+    while pending:
+        directory = pending.pop()
+        try:
+            with os.scandir(directory) as entries:
+                for entry in entries:
+                    if entry.is_symlink():
+                        return "UAT_COPY_INTERNAL_SYMLINK_REJECTED"
+                    if entry.is_dir(follow_symlinks=False):
+                        pending.append(Path(entry.path))
+        except OSError:
+            return "UAT_COPY_SCAN_FAILED"
+    return None
+
+
 def _artifact_matches_schema(payload: dict[str, Any], schema_name: str) -> bool:
     try:
         import jsonschema  # type: ignore
@@ -815,6 +831,9 @@ def _validate_real_uat_artifacts(run_dir: Path) -> tuple[dict[str, Any], list[st
     }
     selection_task_ids: set[str] = set()
     sourcing_task_ids: set[str] = set()
+    selection_pool: dict[tuple[str, str, str], dict[str, Any]] = {}
+    selection_asset_pages: dict[str, set[str]] = {}
+    selection_page_asset_traces: dict[tuple[str, str], set[str]] = {}
 
     if selection_error:
         failures.append(f"SELECTION_{selection_error}")
@@ -854,6 +873,21 @@ def _validate_real_uat_artifacts(run_dir: Path) -> tuple[dict[str, Any], list[st
                     for field in ("candidate_id", "asset_key", "source_asset_id")
                 ):
                     identity_valid = False
+                    continue
+                candidate_page_task_id = str(candidate.get("page_task_id") or page_task_id)
+                candidate_trace_id = str(candidate.get("query_trace_id") or query_trace_id)
+                asset_key = str(candidate.get("asset_key") or "")
+                if candidate_page_task_id != page_task_id or candidate_trace_id != query_trace_id:
+                    identity_valid = False
+                pool_key = (candidate_page_task_id, candidate_trace_id, asset_key)
+                if pool_key in selection_pool:
+                    identity_valid = False
+                selection_pool[pool_key] = candidate
+                selection_asset_pages.setdefault(asset_key, set()).add(candidate_page_task_id)
+                selection_page_asset_traces.setdefault(
+                    (candidate_page_task_id, asset_key),
+                    set(),
+                ).add(candidate_trace_id)
         summary["selection_candidates"] = candidate_count
         if selection.get("schema_version") == "deck_master_ppt_library_selection.v2" and not identity_valid:
             failures.append("SELECTION_IDENTITY_CHAIN_INCOMPLETE")
@@ -893,8 +927,27 @@ def _validate_real_uat_artifacts(run_dir: Path) -> tuple[dict[str, Any], list[st
                 asset_key = str(source.get("asset_key") or "") if isinstance(source, dict) else ""
                 if not asset_key:
                     pages_valid = False
-                else:
-                    asset_keys.append(asset_key)
+                    continue
+                asset_keys.append(asset_key)
+                source_page_task_id = str(source.get("page_task_id") or "")
+                source_trace_id = str(source.get("query_trace_id") or "")
+                if source_page_task_id != page_task_id:
+                    failures.append("SOURCING_SELECTION_CROSS_PAGE")
+                    continue
+                candidate = selection_pool.get((source_page_task_id, source_trace_id, asset_key))
+                if candidate is None:
+                    known_pages = selection_asset_pages.get(asset_key, set())
+                    if asset_key in selection_asset_pages and source_page_task_id not in known_pages:
+                        failures.append("SOURCING_SELECTION_CROSS_PAGE")
+                    elif selection_page_asset_traces.get((source_page_task_id, asset_key)):
+                        failures.append("SOURCING_SELECTION_TRACE_MISMATCH")
+                    else:
+                        failures.append("SOURCING_SELECTION_CANDIDATE_MISSING")
+                    continue
+                for field in ("candidate_id", "source_asset_id", "slide_id"):
+                    selected_value = source.get(field)
+                    if selected_value not in {None, ""} and selected_value != candidate.get(field):
+                        failures.append("SOURCING_SELECTION_IDENTITY_MISMATCH")
         duplicate_count = len(asset_keys) - len(set(asset_keys))
         summary["selected_assets"] = len(asset_keys)
         summary["duplicate_asset_keys"] = duplicate_count
@@ -926,6 +979,15 @@ def _real_workflow_uat_check(uat_run_dir: str | Path | None) -> dict[str, Any]:
             required=True,
             summary="Full-tier UAT requires an isolated, non-symlinked system-temp copy.",
             details={"uat_status": "blocked", "failures": [copy_error or "UAT_COPY_INVALID"]},
+        )
+    symlink_failure = _uat_copy_symlink_failure(run_dir)
+    if symlink_failure:
+        return _check(
+            "real_workflow_uat",
+            "fail",
+            required=True,
+            summary="Full-tier UAT rejects symlinks anywhere inside the run copy.",
+            details={"uat_status": "blocked", "failures": [symlink_failure]},
         )
     artifacts, artifact_failures = _validate_real_uat_artifacts(run_dir)
     if artifact_failures:
