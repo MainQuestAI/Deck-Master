@@ -90,6 +90,9 @@ class RealWorkflowSmokeTest(unittest.TestCase):
         (run_dir / "quality_reports" / "draft_gate.json").write_text(
             json.dumps({"status": "pass"}), encoding="utf-8"
         )
+        (run_dir / "advisor_tasks").mkdir()
+        (run_dir / "advisor_tasks" / "narrative_advice_task.json").write_text("{}", encoding="utf-8")
+        (run_dir / "quality_review_tasks").mkdir()
         (run_dir / "uat_reports").mkdir()
         for report_name in [
             "ppt_library_uat.json",
@@ -101,6 +104,12 @@ class RealWorkflowSmokeTest(unittest.TestCase):
                 encoding="utf-8",
             )
         return run_dir
+
+    def _set_companion_status(self, run_dir: Path, report_name: str, status: str, *, schema: str = "deck_uat_report.v1") -> None:
+        (run_dir / "uat_reports" / report_name).write_text(
+            json.dumps({"schema_version": schema, "status": status, "private": "/Users/example/raw"}),
+            encoding="utf-8",
+        )
 
     def test_complete_fixture_passes_or_warns(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -126,6 +135,27 @@ class RealWorkflowSmokeTest(unittest.TestCase):
             self.assertTrue(
                 any("preview_manifest" in finding["finding_id"] for finding in report["findings"])
             )
+
+    def test_companion_report_status_controls_phase(self) -> None:
+        cases = (("pass", "pass"), ("warning", "warning"), ("fail", "fail"))
+        for companion_status, expected in cases:
+            with self.subTest(status=companion_status), tempfile.TemporaryDirectory() as tmp:
+                run_dir = self._complete_run(Path(tmp))
+                self._set_companion_status(run_dir, "ppt_library_uat.json", companion_status)
+                report = real_workflow_smoke.run_real_workflow_smoke(run_dir=run_dir, write=False)
+
+                self.assertEqual(expected, report["phases"]["companion_uat"])
+                self.assertEqual(expected, report["status"])
+                self.assertNotIn("/Users/example/raw", json.dumps(report))
+
+    def test_invalid_companion_schema_fails_phase(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = self._complete_run(Path(tmp))
+            self._set_companion_status(run_dir, "ppt_library_uat.json", "pass", schema="wrong")
+            report = real_workflow_smoke.run_real_workflow_smoke(run_dir=run_dir, write=False)
+
+            self.assertEqual("fail", report["phases"]["companion_uat"])
+            self.assertEqual("fail", report["status"])
 
 
 if __name__ == "__main__":

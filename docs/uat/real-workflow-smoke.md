@@ -42,6 +42,15 @@ report = run_real_workflow_smoke(run_dir=Path("runs/retail-demo"))
 - `advisor_results/narrative_advice.json`
 - `quality_review_tasks/*.json`
 
+三个 companion UAT JSON 会读取并校验 `schema_version` 与 `status`。任一报告
+`status=fail` 时 `companion_uat=fail`，任一报告为 `warning` 或缺失时 phase 为
+`warning`，三个报告全部 `pass` 时 phase 才为 `pass`。总报告只记录这些安全状态，
+不复制 companion finding、路径或私有正文。
+
+Generation UAT 读取 `generation_tasks/index.json` 时，带 `task_id` 的摘要条目会
+优先解析 `generation_tasks/<task_id>.json`。文件缺失时才回退旧版内嵌完整 task；
+摘要没有对应完整文件会 fail-closed。index 自身缺 `schema_version` 继续记 warning。
+
 独立运行 smoke 时，`warning` 仍用于定位缺失证据。进入 full-tier RC 时，
 `pass` 是唯一放行状态；任一 phase 为 `warning` 或 `fail` 都会阻断 RC。
 

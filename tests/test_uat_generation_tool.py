@@ -91,6 +91,35 @@ class GenerationToolUATTest(unittest.TestCase):
             self.assertEqual(report["metrics"]["task_count"], 1)
             self.assertEqual(report["metrics"]["enhanced_task_count"], 1)
 
+    def test_summary_index_loads_canonical_task_file(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = self._run_dir(Path(tmp))
+            tasks_dir = run_dir / "generation_tasks"
+            index = json.loads((tasks_dir / "index.json").read_text(encoding="utf-8"))
+            full_task = index["tasks"][0]
+            (tasks_dir / "task-001.json").write_text(json.dumps(full_task), encoding="utf-8")
+            index["tasks"] = [{"task_id": "task-001", "page_task_id": "page-001"}]
+            (tasks_dir / "index.json").write_text(json.dumps(index), encoding="utf-8")
+
+            report = generation_uat.run_generation_tool_uat(run_dir, write=False)
+
+            self.assertEqual("pass", report["status"], report)
+            self.assertEqual(1, report["metrics"]["enhanced_task_count"])
+            self.assertFalse(any("missing schema_version" in item["message"] for item in report["findings"]))
+
+    def test_summary_index_missing_canonical_task_file_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = self._run_dir(Path(tmp))
+            index_path = run_dir / "generation_tasks" / "index.json"
+            index = json.loads(index_path.read_text(encoding="utf-8"))
+            index["tasks"] = [{"task_id": "task-001", "page_task_id": "page-001"}]
+            index_path.write_text(json.dumps(index), encoding="utf-8")
+
+            report = generation_uat.run_generation_tool_uat(run_dir, write=False)
+
+            self.assertEqual("fail", report["status"])
+            self.assertTrue(any("generation_task_file_task-001" in item["finding_id"] for item in report["findings"]))
+
     def test_require_preview_missing_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             run_dir = self._run_dir(Path(tmp))

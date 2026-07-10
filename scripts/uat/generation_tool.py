@@ -165,23 +165,31 @@ def _load_tasks(run_dir: Path, checks: list[dict[str, Any]], run_id: str) -> tup
 
     tasks: list[dict[str, Any]] = []
     task_ids: set[str] = set()
+    embedded_by_id: dict[str, dict[str, Any]] = {}
     if has_tasks:
         for item in raw_tasks:
             if isinstance(item, dict):
-                tasks.append(item)
                 if item.get("task_id"):
-                    task_ids.add(str(item["task_id"]))
+                    task_id = str(item["task_id"])
+                    task_ids.add(task_id)
+                    embedded_by_id[task_id] = item
+                else:
+                    tasks.append(item)
             elif isinstance(item, str):
                 task_ids.add(item)
     if has_task_ids:
         task_ids.update(str(item) for item in raw_task_ids if item)
 
-    loaded_ids = {str(task.get("task_id", "")) for task in tasks if task.get("task_id")}
-    for task_id in sorted(task_ids - loaded_ids):
+    for task_id in sorted(task_ids):
         task_path = run_dir / TASKS_DIR / f"{task_id}.json"
-        checks.append(build_check(f"generation_task_file_{task_id}", task_path.exists(), "error", f"{task_id}.json missing.", refs=[str(task_path.relative_to(run_dir))]))
         if not task_path.exists():
+            embedded = embedded_by_id.get(task_id)
+            embedded_complete = bool(embedded and embedded.get("schema_version") and embedded.get("run_id"))
+            checks.append(build_check(f"generation_task_file_{task_id}", embedded_complete, "error", f"{task_id}.json missing.", refs=[str(task_path.relative_to(run_dir))]))
+            if embedded is not None:
+                tasks.append(embedded)
             continue
+        checks.append(build_check(f"generation_task_file_{task_id}", True, "error", f"{task_id}.json exists.", refs=[str(task_path.relative_to(run_dir))]))
         try:
             task = json.loads(task_path.read_text(encoding="utf-8"))
         except json.JSONDecodeError as exc:
