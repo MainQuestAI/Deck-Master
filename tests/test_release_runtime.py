@@ -5,6 +5,7 @@ import os
 import shutil
 import sys
 import tempfile
+import tomllib
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -42,6 +43,19 @@ class ReleaseRuntimeTests(unittest.TestCase):
             for path in root.rglob("*")
             if path.is_file() and not path.is_symlink()
         }
+
+    def test_jsonschema_is_declared_once_as_a_runtime_dependency(self) -> None:
+        project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]
+
+        runtime_matches = [item for item in project["dependencies"] if item.startswith("jsonschema")]
+        dev_matches = [
+            item
+            for item in project["optional-dependencies"]["dev"]
+            if item.startswith("jsonschema")
+        ]
+
+        self.assertEqual(["jsonschema>=4.23,<5"], runtime_matches)
+        self.assertEqual([], dev_matches)
 
     def test_release_build_contains_install_source_and_release_local_launcher(self) -> None:
         release_root = self.temp_dir / "release"

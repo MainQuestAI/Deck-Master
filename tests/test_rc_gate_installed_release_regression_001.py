@@ -29,6 +29,84 @@ class InstalledReleaseRCGateRegressionTests(unittest.TestCase):
         with mock.patch.dict(os.environ, {"DECK_MASTER_PYTHON": python312}):
             _install_release_runtime(release_root)
 
+    def test_release_local_fixture_sourcing_loads_jsonschema(self) -> None:
+        release_root = self.temp_dir / "release-sourcing"
+        self.build_installed_release(release_root)
+        # D3A still resolves this contract through the source-tree docs layout.
+        # Keep this packaging regression scoped to the release-local dependency.
+        shutil.copytree(
+            release_root / "contracts",
+            release_root / "docs" / "contracts",
+            dirs_exist_ok=True,
+        )
+        runs_dir = self.temp_dir / "runs"
+        env = {
+            **os.environ,
+            "DECK_MASTER_DEV_SKIP_SETUP": "1",
+            "PYTHONDONTWRITEBYTECODE": "1",
+        }
+
+        plan = subprocess.run(
+            [
+                str(release_root / "bin" / "deck-master"),
+                "plan",
+                "--brief-file",
+                str(release_root / "examples" / "briefs" / "retail_digital_transformation.txt"),
+                "--industry",
+                "retail",
+                "--run-mode",
+                "fixture",
+                "--runs-dir",
+                str(runs_dir),
+                "--run-id",
+                "runtime-jsonschema",
+            ],
+            cwd=release_root,
+            env=env,
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=60,
+        )
+        self.assertEqual(0, plan.returncode, plan.stderr[-2000:])
+        run_dir = Path(json.loads(plan.stdout)["run_dir"])
+
+        search = subprocess.run(
+            [
+                str(release_root / "bin" / "deck-master"),
+                "search-library",
+                "--run-dir",
+                str(run_dir),
+                "--library-mode",
+                "fixture",
+            ],
+            cwd=release_root,
+            env=env,
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=60,
+        )
+        self.assertEqual(0, search.returncode, search.stderr[-2000:])
+
+        sourcing = subprocess.run(
+            [
+                str(release_root / "bin" / "deck-master"),
+                "decide-sourcing",
+                "--run-dir",
+                str(run_dir),
+            ],
+            cwd=release_root,
+            env=env,
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=60,
+        )
+
+        self.assertEqual(0, sourcing.returncode, sourcing.stderr[-2000:])
+        self.assertEqual("sourcing_ready", json.loads(sourcing.stdout)["status"])
+
     def test_release_tree_can_run_rc_gate_from_its_own_layout(self) -> None:
         # Regression: installed release rc-gate looked for source-only
         # product_capabilities and missed release-local capabilities.
