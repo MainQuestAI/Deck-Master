@@ -12,6 +12,8 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
 
+from jsonschema import Draft202012Validator
+
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ROOT / "scripts"
@@ -53,6 +55,62 @@ LIBRARY_SCHEMA_VERSIONS = {
     "library_status": "deck_master_library_status.v2",
     "feedback_input": "deck_master_ppt_library_feedback.v1",
 }
+
+
+def _legacy_selection_schema() -> dict[str, object]:
+    return {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://deck-master.local/contracts/ppt-library-selection.v1.schema.json",
+        "title": "Deck Master PPT Library Selection v1",
+        "type": "object",
+        "required": ["schema_version", "run_id"],
+        "properties": {
+            "schema_version": {"const": "deck_master_ppt_library_selection.v1"},
+            "run_id": {"type": "string", "minLength": 1},
+            "source": {"type": "string"},
+            "selections": {
+                "type": "array",
+                "items": {"$ref": "#/$defs/selection"},
+            },
+            "by_beat": {
+                "type": "object",
+                "additionalProperties": {
+                    "type": "array",
+                    "items": {"type": "object"},
+                },
+            },
+            "beats": {
+                "type": "array",
+                "items": {"$ref": "#/$defs/selection"},
+            },
+        },
+        "anyOf": [
+            {"required": ["selections"]},
+            {"required": ["by_beat"]},
+            {"required": ["beats"]},
+        ],
+        "$defs": {
+            "selection": {
+                "type": "object",
+                "required": ["candidates"],
+                "properties": {
+                    "beat_id": {"type": "string"},
+                    "page_task_id": {"type": "string"},
+                    "slot_id": {"type": "string"},
+                    "query_trace_id": {"type": "string"},
+                    "role": {"type": "string"},
+                    "candidates": {
+                        "type": "array",
+                        "items": {"type": "object"},
+                    },
+                },
+                "anyOf": [
+                    {"required": ["beat_id"]},
+                    {"required": ["page_task_id"]},
+                ],
+            }
+        },
+    }
 
 
 def _contract_root(root: Path) -> Path:
@@ -133,17 +191,15 @@ schema_versions:
     )
     legacy_contract.parent.mkdir(parents=True)
     legacy_contract.write_text(
-        json.dumps(
-            {
-                "schema_version": "deck_master_contract_schema.v1",
-                "contract": "deck_master_ppt_library_selection.v1",
-                "required_fields": ["schema_version", "run_id", "selections"],
-            }
-        ),
+        json.dumps(_legacy_selection_schema()),
         encoding="utf-8",
     )
     contracts = root / "docs" / "contracts"
     contracts.mkdir(parents=True)
+    (contracts / "ppt-library-selection.v1.schema.json").write_text(
+        json.dumps(_legacy_selection_schema()),
+        encoding="utf-8",
+    )
     (contracts / "ppt-library-selection.v2.schema.json").write_text(
         json.dumps(
             {
@@ -611,17 +667,81 @@ class LibraryStatusV2Tests(unittest.TestCase):
         self.assertFalse(result["contract_ready"])
         self.assertIn("PPT_LIBRARY_CONTRACT_MISSING", result["blocking_summary"])
 
-    def test_contract_requires_legacy_and_v2_schemas(self) -> None:
+    def test_contract_accepts_all_legacy_selection_shapes(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = _contract_root(Path(tmp))
-            legacy_schema = (
+            capability_schema_path = (
                 root
                 / "product_capabilities"
                 / "ppt-library"
                 / "contracts"
                 / "library-selection.v1.schema.json"
             )
-            legacy_schema.write_text(json.dumps({"contract": "wrong.v1"}), encoding="utf-8")
+            docs_schema_path = root / "docs" / "contracts" / "ppt-library-selection.v1.schema.json"
+            capability_schema = json.loads(capability_schema_path.read_text(encoding="utf-8"))
+            docs_schema = json.loads(docs_schema_path.read_text(encoding="utf-8"))
+            validator = Draft202012Validator(docs_schema)
+            base = {
+                "schema_version": "deck_master_ppt_library_selection.v1",
+                "run_id": "legacy-run",
+            }
+
+            self.assertEqual(capability_schema, docs_schema)
+            for shape in (
+                {"selections": [{"beat_id": "beat-1", "candidates": []}]},
+                {"by_beat": {"beat-1": []}},
+                {"beats": [{"page_task_id": "page-1", "candidates": []}]},
+            ):
+                with self.subTest(shape=next(iter(shape))):
+                    self.assertEqual([], list(validator.iter_errors({**base, **shape})))
+            self.assertTrue(library_status_module._contract_ready(root))
+
+    def test_docs_legacy_schema_drift_changes_fingerprint_and_blocks_contract(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = _contract_root(Path(tmp))
+            ready_before, fingerprint_before = library_status_module._contract_state(root)
+            docs_schema_path = root / "docs" / "contracts" / "ppt-library-selection.v1.schema.json"
+            docs_schema = json.loads(docs_schema_path.read_text(encoding="utf-8"))
+            docs_schema["anyOf"] = [{"required": ["selections"]}]
+            docs_schema_path.write_text(json.dumps(docs_schema), encoding="utf-8")
+
+            ready_after, fingerprint_after = library_status_module._contract_state(root)
+
+            self.assertTrue(ready_before)
+            self.assertFalse(ready_after)
+            self.assertNotEqual(fingerprint_before, fingerprint_after)
+
+    def test_matching_legacy_schemas_without_all_compatible_shapes_are_blocked(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = _contract_root(Path(tmp))
+            reduced_schema = _legacy_selection_schema()
+            reduced_schema["anyOf"] = [{"required": ["selections"]}]
+            for schema_path in (
+                root
+                / "product_capabilities"
+                / "ppt-library"
+                / "contracts"
+                / "library-selection.v1.schema.json",
+                root / "docs" / "contracts" / "ppt-library-selection.v1.schema.json",
+            ):
+                schema_path.write_text(json.dumps(reduced_schema), encoding="utf-8")
+
+            self.assertFalse(library_status_module._contract_ready(root))
+
+    def test_matching_legacy_schemas_with_wrong_version_const_are_blocked(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = _contract_root(Path(tmp))
+            wrong_schema = _legacy_selection_schema()
+            wrong_schema["properties"]["schema_version"]["const"] = "legacy.selection.v0"
+            for schema_path in (
+                root
+                / "product_capabilities"
+                / "ppt-library"
+                / "contracts"
+                / "library-selection.v1.schema.json",
+                root / "docs" / "contracts" / "ppt-library-selection.v1.schema.json",
+            ):
+                schema_path.write_text(json.dumps(wrong_schema), encoding="utf-8")
 
             self.assertFalse(library_status_module._contract_ready(root))
 

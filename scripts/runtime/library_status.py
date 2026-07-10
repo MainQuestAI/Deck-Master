@@ -229,6 +229,50 @@ def _normalized_declaration(payload: Mapping[str, Any], *, capability: bool) -> 
     }
 
 
+def _legacy_selection_schemas_ready(
+    capability_schema: Mapping[str, Any] | None,
+    docs_schema: Mapping[str, Any] | None,
+) -> bool:
+    if not capability_schema or not docs_schema or capability_schema != docs_schema:
+        return False
+    properties = capability_schema.get("properties")
+    if not isinstance(properties, Mapping):
+        return False
+    version = properties.get("schema_version")
+    if not isinstance(version, Mapping) or version.get("const") != (
+        "deck_master_ppt_library_selection.v1"
+    ):
+        return False
+    required = capability_schema.get("required")
+    if not isinstance(required, list) or not {"schema_version", "run_id"}.issubset(
+        {str(item) for item in required}
+    ):
+        return False
+    expected_shapes = {
+        ("selections", "array"),
+        ("by_beat", "object"),
+        ("beats", "array"),
+    }
+    actual_shapes = {
+        (name, str(schema.get("type")))
+        for name in ("selections", "by_beat", "beats")
+        if isinstance((schema := properties.get(name)), Mapping)
+    }
+    any_of = capability_schema.get("anyOf")
+    if not isinstance(any_of, list):
+        return False
+    required_shapes = {
+        tuple(str(item) for item in branch.get("required", []))
+        for branch in any_of
+        if isinstance(branch, Mapping) and isinstance(branch.get("required"), list)
+    }
+    return actual_shapes == expected_shapes and required_shapes == {
+        ("selections",),
+        ("by_beat",),
+        ("beats",),
+    }
+
+
 def _contract_state(repo_root: Path) -> tuple[bool, str]:
     paths = (
         repo_root / "product_capabilities" / "ppt-library" / "capability.json",
@@ -238,6 +282,7 @@ def _contract_state(repo_root: Path) -> tuple[bool, str]:
         / "ppt-library"
         / "contracts"
         / "library-selection.v1.schema.json",
+        repo_root / "docs" / "contracts" / "ppt-library-selection.v1.schema.json",
         repo_root / "docs" / "contracts" / "ppt-library-selection.v2.schema.json",
         repo_root / "docs" / "contracts" / "ppt-library-bridge-plan.v1.schema.json",
         repo_root / "docs" / "contracts" / "library-status.v2.schema.json",
@@ -254,11 +299,12 @@ def _contract_state(repo_root: Path) -> tuple[bool, str]:
 
     capability = _read_json_object(paths[0])
     capability_yaml = _read_capability_yaml(paths[1])
-    legacy_selection = _read_json_object(paths[2])
-    selection = _read_json_object(paths[3])
-    bridge_plan = _read_json_object(paths[4])
-    library_status = _read_json_object(paths[5])
-    installer_spec = _read_installer_library_spec(paths[7])
+    capability_legacy_selection = _read_json_object(paths[2])
+    docs_legacy_selection = _read_json_object(paths[3])
+    selection = _read_json_object(paths[4])
+    bridge_plan = _read_json_object(paths[5])
+    library_status = _read_json_object(paths[6])
+    installer_spec = _read_installer_library_spec(paths[8])
     if not capability or capability.get("name") != "ppt-library":
         return False, digest.hexdigest()
     if not capability_yaml or capability_yaml.get("name") != "ppt-library" or not installer_spec:
@@ -273,15 +319,17 @@ def _contract_state(repo_root: Path) -> tuple[bool, str]:
         json_declaration == _EXPECTED_DECLARATION
         and yaml_declaration == _EXPECTED_DECLARATION
         and installer_declaration == _EXPECTED_DECLARATION
-        and (legacy_selection or {}).get("contract")
-        == "deck_master_ppt_library_selection.v1"
+        and _legacy_selection_schemas_ready(
+            capability_legacy_selection,
+            docs_legacy_selection,
+        )
         and isinstance(selection_version, dict)
         and selection_version.get("const") == "deck_master_ppt_library_selection.v2"
         and isinstance(bridge_version, dict)
         and bridge_version.get("const") == "deck_master_ppt_library_bridge_plan.v1"
         and isinstance(status_version, dict)
         and status_version.get("const") == SCHEMA_VERSION
-        and paths[6].is_file()
+        and paths[7].is_file()
     )
     return ready, digest.hexdigest()
 
