@@ -18,6 +18,7 @@
     "workspace_blocking_summary",
     "suite_blocking_summary",
     "client_delivery_blocking_summary",
+    "library_status",
     "next_command",
     "next_agent_action"
   ],
@@ -101,6 +102,9 @@
     },
     "capabilities": {"type": "object"},
     "task_readiness": {"type": "object"},
+    "library_status": {
+      "$ref": "#/$defs/library_status_summary"
+    },
     "suite": {
       "type": "object",
       "properties": {
@@ -119,6 +123,9 @@
           "items": {
             "$ref": "#/$defs/blocking_summary_entry"
           }
+        },
+        "library_status": {
+          "$ref": "#/$defs/library_status_summary"
         }
       },
       "additionalProperties": true
@@ -127,6 +134,46 @@
     "next_agent_action": {"type": "string"}
   },
   "$defs": {
+    "library_status_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "status",
+        "runtime_ready",
+        "contract_ready",
+        "semantic_search_ready",
+        "role_selection_ready",
+        "fallback_ready",
+        "preview_ready",
+        "business_ranking_ready",
+        "data_hygiene_status",
+        "blocking_summary",
+        "warnings"
+      ],
+      "properties": {
+        "schema_version": {"const": "deck_master_library_status.v2"},
+        "status": {"enum": ["ready", "degraded_ready", "blocked"]},
+        "runtime_ready": {"type": "boolean"},
+        "contract_ready": {"type": "boolean"},
+        "semantic_search_ready": {"type": "boolean"},
+        "role_selection_ready": {"type": "boolean"},
+        "fallback_ready": {"type": "boolean"},
+        "preview_ready": {"type": "boolean"},
+        "business_ranking_ready": {"enum": ["ready", "cold_start", "blocked"]},
+        "data_hygiene_status": {"enum": ["ready", "degraded", "blocked"]},
+        "blocking_summary": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "warnings": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        }
+      }
+    },
     "dependency_status_entry": {
       "type": "object",
       "additionalProperties": true,

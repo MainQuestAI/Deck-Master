@@ -44,6 +44,11 @@ try:  # Supports both `python scripts/deck_master.py` and package imports in tes
 except ModuleNotFoundError:  # pragma: no cover - exercised by package-import test path.
     from scripts.skills.manifest import load_registry
 
+try:  # Supports both `python scripts/deck_master.py` and package imports in tests.
+    from runtime.library_status import inspect_library_status
+except ModuleNotFoundError:  # pragma: no cover - exercised by package-import test path.
+    from scripts.runtime.library_status import inspect_library_status
+
 SKILL_NAME = "deck-master"
 SUITE_NAME = "deck-master"
 DEFAULT_SUITE_VERSION = "1.0.0"
@@ -2008,6 +2013,7 @@ def inspect_suite_status(
     agent_skill_dir: str | None = None,
 ) -> dict[str, Any]:
     """Pure-read suite readiness inspection."""
+    library_status = inspect_library_status()
     suite_version = _suite_version()
     resolved_targets = targets or ["codex"]
     skills: list[dict[str, Any]] = []
@@ -2230,6 +2236,7 @@ def inspect_suite_status(
         "target_readiness": target_readiness,
         "capabilities": capabilities,
         "task_readiness": task_readiness,
+        "library_status": library_status,
         "blocking_summary": blocking_summary,
         "manifest_path": str(companion_manifest_path()),
         "next_command": next_command,

@@ -17,6 +17,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from server import PreviewHandler  # noqa: E402
 from review.readiness import compute_claim_coverage, compute_deck_readiness, compute_next_actions  # noqa: E402
 from runtime.run_state import create_run, write_json  # noqa: E402
+from workspace_api import build_workspace_payload  # noqa: E402
 
 
 def _setup_run(tmp: Path) -> Path:
@@ -270,6 +271,48 @@ class ReviewSummaryAPITest(unittest.TestCase):
         self.assertEqual(counts["adapt"], 2)
         self.assertEqual(counts["generate"], 1)
 
+    def test_deck_readiness_uses_canonical_v2_sourcing_and_library_selection(self) -> None:
+        write_json(self.run_dir / "sourcing_plan.json", {
+            "schema_version": "deck_sourcing_plan.v2",
+            "run_id": "review-test",
+            "status": "draft",
+            "source_fingerprint": "b" * 64,
+            "created_at": "2026-07-10T00:00:00+00:00",
+            "pages": [
+                {"page_id": "beat_001", "page_task_id": "page_001", "decision": "reuse"},
+                {"page_id": "beat_002", "page_task_id": "page_002", "decision": "adapt"},
+                {"page_id": "beat_003", "page_task_id": "page_003", "decision": "generate"},
+            ],
+        })
+        library_dir = self.run_dir / "library_results"
+        library_dir.mkdir(exist_ok=True)
+        write_json(library_dir / "selection.json", {
+            "schema_version": "deck_master_ppt_library_selection.v2",
+            "selections": [
+                {
+                    "beat_id": "beat_001",
+                    "page_task_id": "page_001",
+                    "retrieval_method": "role_selection",
+                    "preview_status": "ready",
+                    "preview_degraded": False,
+                },
+                {
+                    "beat_id": "beat_002",
+                    "page_task_id": "page_002",
+                    "retrieval_method": "semantic_fallback",
+                    "preview_status": "missing",
+                    "preview_degraded": True,
+                },
+            ],
+        })
+
+        result = compute_deck_readiness(self.run_dir)
+
+        self.assertEqual(1, result["sourcing_readiness"]["role_selection_count"])
+        self.assertEqual(1, result["sourcing_readiness"]["semantic_fallback_count"])
+        self.assertEqual(1, result["sourcing_readiness"]["preview_degradation_count"])
+        self.assertEqual(1, result["sourcing_readiness"]["generate_gap_count"])
+
     def test_review_summary_not_found(self) -> None:
         status, data = self.handler.request("GET", "/api/review-summary/nonexistent")
         self.assertEqual(status, 404)
@@ -475,6 +518,19 @@ class FrontendContractAPITest(unittest.TestCase):
         self.assertEqual(200, metrics_status)
         self.assertEqual("deck_run_metrics.v1", metrics["schema_version"])
         self.assertEqual("frontend-contract", metrics["run_id"])
+
+    def test_workspace_payload_exposes_sourcing_readiness_without_private_content(self) -> None:
+        run_dir = Path(self._tmp) / "runs" / "frontend-contract"
+        workspace = build_workspace_payload(run_dir)
+
+        summary = workspace["run_summary"]["sourcing_readiness"]
+        self.assertIn("role_selection_count", summary)
+        self.assertIn("semantic_fallback_count", summary)
+        self.assertIn("preview_degradation_count", summary)
+        self.assertIn("generate_gap_count", summary)
+        serialized = json.dumps(summary)
+        self.assertNotIn("/Users/", serialized)
+        self.assertNotIn("/private/", serialized)
 
     def test_export_queue_bad_run_id_returns_404_or_400(self) -> None:
         status, _data = self.handler.request("GET", "/api/export-queue/missing-run")

@@ -170,6 +170,58 @@ class MetricsPageCountsTest(unittest.TestCase):
         self.assertEqual(counts["adapt"], 2)
         self.assertEqual(counts["generate"], 1)
 
+    def test_v2_sourcing_readiness_exposes_library_degradation_and_generate_gaps(self) -> None:
+        write_json(self.run_dir / "sourcing_plan.json", {
+            "schema_version": "deck_sourcing_plan.v2",
+            "run_id": "metrics-test",
+            "status": "draft",
+            "source_fingerprint": "a" * 64,
+            "created_at": "2026-07-10T00:00:00+00:00",
+            "pages": [
+                {"page_id": "beat_001", "page_task_id": "page_001", "decision": "reuse"},
+                {"page_id": "beat_002", "page_task_id": "page_002", "decision": "adapt"},
+                {"page_id": "beat_003", "page_task_id": "page_003", "decision": "generate"},
+            ],
+        })
+        library_dir = self.run_dir / "library_results"
+        library_dir.mkdir(exist_ok=True)
+        write_json(library_dir / "selection.json", {
+            "schema_version": "deck_master_ppt_library_selection.v2",
+            "selections": [
+                {
+                    "beat_id": "beat_001",
+                    "page_task_id": "page_001",
+                    "retrieval_method": "role_selection",
+                    "preview_status": "ready",
+                    "preview_degraded": False,
+                },
+                {
+                    "beat_id": "beat_002",
+                    "page_task_id": "page_002",
+                    "retrieval_method": "semantic_fallback",
+                    "preview_status": "missing",
+                    "preview_degraded": True,
+                },
+                {
+                    "beat_id": "beat_003",
+                    "page_task_id": "page_003",
+                    "retrieval_method": "none",
+                    "preview_status": "missing",
+                    "preview_degraded": False,
+                },
+            ],
+        })
+
+        metrics = summarize_run_metrics(self.run_dir)
+
+        self.assertEqual(1, metrics["sourcing_readiness"]["role_selection_count"])
+        self.assertEqual(1, metrics["sourcing_readiness"]["semantic_fallback_count"])
+        self.assertEqual(1, metrics["sourcing_readiness"]["preview_degradation_count"])
+        self.assertEqual(1, metrics["sourcing_readiness"]["generate_gap_count"])
+        self.assertEqual(1, metrics["counts"]["reuse"])
+        self.assertEqual(1, metrics["counts"]["adapt"])
+        self.assertEqual(1, metrics["counts"]["generate"])
+
 
 if __name__ == "__main__":
     unittest.main()

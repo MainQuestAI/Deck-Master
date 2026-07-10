@@ -16,9 +16,9 @@ from runtime.run_state import (
     PAGE_TASKS_NAME,
     PREVIEW_MANIFEST_NAME,
     RunStateError,
-    SOURCING_PLAN_NAME,
     read_json,
 )
+from review.readiness import summarize_sourcing_readiness
 
 SCHEMA_VERSION = "deck_run_metrics.v1"
 
@@ -47,26 +47,6 @@ def _review_status_from_page(page: dict[str, Any]) -> str:
     if decision == "rejected":
         return "rejected"
     return "needs_review"
-
-
-def _source_counts(sourcing_plan: dict[str, Any], tasks: list[Any]) -> dict[str, int]:
-    decisions = sourcing_plan.get("decisions", [])
-    counts: dict[str, int] = {}
-    if isinstance(decisions, list) and decisions:
-        for decision in decisions:
-            if not isinstance(decision, dict):
-                continue
-            sd = str(decision.get("source_decision", "unknown"))
-            counts[sd] = counts.get(sd, 0) + 1
-        return counts
-
-    for task in tasks:
-        if not isinstance(task, dict):
-            continue
-        planning = task.get("planning", {}) if isinstance(task.get("planning"), dict) else {}
-        sd = str(task.get("source_decision", planning.get("decision_intent", "unknown")))
-        counts[sd] = counts.get(sd, 0) + 1
-    return counts
 
 
 def summarize_run_metrics(run_dir: str | Path) -> dict[str, Any]:
@@ -149,13 +129,8 @@ def summarize_run_metrics(run_dir: str | Path) -> dict[str, Any]:
     rejected = sum(1 for p in page_source if isinstance(p, dict) and _review_status_from_page(p) == "rejected")
     needs_review = total_pages - approved - rejected
 
-    sourcing_plan: dict[str, Any] = {}
-    if (root / SOURCING_PLAN_NAME).exists():
-        try:
-            sourcing_plan = read_json(root / SOURCING_PLAN_NAME)
-        except RunStateError:
-            pass
-    source_counts = _source_counts(sourcing_plan, tasks)
+    sourcing_readiness = summarize_sourcing_readiness(root, fallback_tasks=tasks)
+    source_counts = sourcing_readiness["decision_counts"]
 
     # Quality finding counts.
     p0_total = 0
@@ -199,7 +174,7 @@ def summarize_run_metrics(run_dir: str | Path) -> dict[str, Any]:
             "reuse": source_counts.get("reuse", 0),
             "adapt": source_counts.get("adapt", 0),
             "generate": source_counts.get("generate", 0),
-            "manual_placeholder": source_counts.get("manual_placeholder", 0),
+            "manual_placeholder": source_counts.get("manual", 0),
             "quality_findings": p0_total + p1_total + p2_total,
             "p0": p0_total,
             "p1": p1_total,
@@ -210,4 +185,5 @@ def summarize_run_metrics(run_dir: str | Path) -> dict[str, Any]:
         },
         "imports": import_summary,
         "library_feedback": feedback_summary,
+        "sourcing_readiness": sourcing_readiness,
     }

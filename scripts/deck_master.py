@@ -154,6 +154,7 @@ from tools.ppt_library_client import PPTLibraryClientError, import_library_selec
 from workspace.foundation import MANIFEST_NAME, WorkspaceError, init_workspace, register_workspace, validate_workspace
 from workspace.project_init import init_deck_project
 from runtime.setup_status import SetupError, configured_runs_dir, require_setup_ready, run_setup, setup_status
+from runtime.library_status import inspect_library_status
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -640,17 +641,7 @@ def command_search_library(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def command_library_status(args: argparse.Namespace) -> dict[str, Any]:
-    suite = inspect_suite_status(targets=["codex"], include_optional=True)
-    library_items = [item for item in suite.get("skills", []) if item.get("skill") == "ppt-library"]
-    workspace = getattr(args, "workspace", "") or ""
-    return {
-        "schema_version": "deck_master_library_status.v1",
-        "status": "ready" if any(item.get("status") == "ready" for item in library_items) else "blocked",
-        "workspace": str(Path(workspace).expanduser().resolve()) if workspace else "",
-        "suite_status": suite.get("status"),
-        "ppt_library": library_items,
-        "next_command": "" if any(item.get("status") == "ready" for item in library_items) else "deck-master suite-repair --target codex",
-    }
+    return inspect_library_status()
 
 
 def command_import_library_selection(args: argparse.Namespace) -> dict[str, Any]:
