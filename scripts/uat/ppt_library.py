@@ -5,7 +5,8 @@ from pathlib import Path
 from typing import Any
 
 from runtime.run_state import read_json
-from uat.report import build_check, build_uat_report, write_uat_report
+from tools.ppt_library_client import validate_library_selection
+from uat.report import build_check, build_uat_report, evidence_safety_violations, write_uat_report
 
 
 def _run_id(run_dir: Path) -> str:
@@ -87,6 +88,25 @@ def run_ppt_library_uat(
 
     schema_version = str(payload.get("schema_version") or "")
     is_v2 = schema_version == "deck_master_ppt_library_selection.v2"
+    if is_v2:
+        validation = validate_library_selection(payload)
+        checks.append(
+            build_check(
+                "selection.v2_schema",
+                bool(validation.get("valid")),
+                "error",
+                "selection v2 schema is valid.",
+            )
+        )
+        serialized = json.dumps(payload, ensure_ascii=False, sort_keys=True)
+        checks.append(
+            build_check(
+                "selection.v2_payload_safety",
+                not evidence_safety_violations(serialized),
+                "error",
+                "selection v2 payload contains no raw source fields or absolute local paths.",
+            )
+        )
     groups = _selection_groups(run_dir, payload)
     candidate_count = sum(len(candidates) for _, _, candidates in groups)
     beat_count = len(groups)

@@ -96,7 +96,7 @@ def build_check(
     }
 
 
-def _evidence_safety_violations(*texts: str) -> list[str]:
+def evidence_safety_violations(*texts: str) -> list[str]:
     configured = [
         marker.strip()
         for marker in os.environ.get("DECK_MASTER_EVIDENCE_FORBIDDEN_MARKERS", "").split(",")
@@ -224,7 +224,7 @@ def write_uat_report(run_dir: Path, name: str, report: dict[str, Any]) -> dict[s
     json.loads(payload)
     json_path.write_text(payload, encoding="utf-8")
     md_path.write_text(render_uat_markdown(safe_report), encoding="utf-8")
-    violations = _evidence_safety_violations(
+    violations = evidence_safety_violations(
         json_path.read_text(encoding="utf-8"),
         md_path.read_text(encoding="utf-8"),
     )

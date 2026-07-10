@@ -227,6 +227,37 @@ class PPTLibraryUATTest(unittest.TestCase):
             self.assertEqual("pass", report["status"], report)
             self.assertEqual(0, report["metrics"]["duplicate_slide_id_count"])
 
+    def test_v2_whole_payload_rejects_raw_source_fields_and_absolute_paths(self) -> None:
+        cases = ("top_level", "by_beat", "unknown_nested", "absolute_path")
+        for case in cases:
+            with self.subTest(case=case), tempfile.TemporaryDirectory() as tmp:
+                run_dir = self._run_dir(Path(tmp))
+                selection_path = self._v2_selection_path(run_dir)
+                payload = json.loads(selection_path.read_text(encoding="utf-8"))
+                if case == "top_level":
+                    payload["source_path"] = "/Users/example/private.pptx"
+                elif case == "by_beat":
+                    payload["by_beat"]["beat-001"][0]["source_file"] = "/Users/example/private.pptx"
+                elif case == "unknown_nested":
+                    payload["unknown"] = {"deep": {"source_file": "private.pptx"}}
+                else:
+                    payload["selections"][0]["candidates"][0]["title"] = "/Users/example/private.pptx"
+                selection_path.write_text(json.dumps(payload), encoding="utf-8")
+
+                report = ppt_library_uat.run_ppt_library_uat(
+                    run_dir,
+                    selection_path,
+                    write=False,
+                )
+
+                self.assertEqual("fail", report["status"])
+                self.assertTrue(
+                    any(
+                        finding["finding_id"] in {"selection.v2_schema", "selection.v2_payload_safety"}
+                        for finding in report["findings"]
+                    )
+                )
+
 
 if __name__ == "__main__":
     unittest.main()
