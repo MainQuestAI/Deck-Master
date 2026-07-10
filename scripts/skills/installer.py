@@ -1532,8 +1532,8 @@ def install_release_tree(*, run_smoke: bool = True) -> dict[str, Any]:
             "verification": verification,
             "activated": False,
         }
-    global_launcher = _write_global_launcher()
     activation = _activate_staged_release(staged_release)
+    global_launcher = _write_global_launcher()
     return {
         "schema_version": "deck_master_release_install.v1",
         "status": "installed",

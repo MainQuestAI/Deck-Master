@@ -224,6 +224,40 @@ class ReleaseRuntimeTests(unittest.TestCase):
         self.assertIn('exec "$DECK_MASTER_HOME/current/.venv/bin/python"', shim_text)
         self.assertIn('"$DECK_MASTER_HOME/current/scripts/deck_master.py"', shim_text)
 
+    def test_release_install_activation_failure_does_not_leave_first_install_shim(self) -> None:
+        with mock.patch.object(installer, "_install_release_runtime", side_effect=self._fake_runtime_install), mock.patch.object(
+            installer,
+            "_probe_python_version",
+            return_value="3.12.8",
+        ), mock.patch.object(
+            installer,
+            "_activate_staged_release",
+            side_effect=installer.SkillInstallError("forced activation failure"),
+        ):
+            with self.assertRaises(installer.SkillInstallError):
+                installer.install_release_tree(run_smoke=True)
+
+        self.assertFalse((self.install_root / "bin" / "deck-master").exists())
+
+    def test_release_install_activation_failure_preserves_existing_shim(self) -> None:
+        shim = self.install_root / "bin" / "deck-master"
+        shim.parent.mkdir(parents=True)
+        shim.write_text("existing shim\n", encoding="utf-8")
+
+        with mock.patch.object(installer, "_install_release_runtime", side_effect=self._fake_runtime_install), mock.patch.object(
+            installer,
+            "_probe_python_version",
+            return_value="3.12.8",
+        ), mock.patch.object(
+            installer,
+            "_activate_staged_release",
+            side_effect=installer.SkillInstallError("forced activation failure"),
+        ):
+            with self.assertRaises(installer.SkillInstallError):
+                installer.install_release_tree(run_smoke=True)
+
+        self.assertEqual("existing shim\n", shim.read_text(encoding="utf-8"))
+
     def test_rollback_verification_failure_restores_previously_active_current(self) -> None:
         current = self.install_root / "current"
         previous = self.install_root / "previous"
