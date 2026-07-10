@@ -94,6 +94,40 @@ def _sample_claim_graph() -> dict:
 
 
 class PageTasksTests(unittest.TestCase):
+    def test_page_task_identity_uses_stable_fallback_order(self) -> None:
+        plan = {
+            "run_id": "identity-run",
+            "beats": [
+                {"beat_id": "beat_1", "page_task_id": "explicit"},
+                {"beat_id": "beat_2", "task_id": "task"},
+                {"beat_id": "beat_3", "page_id": "page"},
+                {"beat_id": "beat_4"},
+            ],
+        }
+
+        result = build_page_tasks(plan)
+
+        self.assertEqual(
+            ["explicit", "task", "page", "beat_4"],
+            [task["page_task_id"] for task in result["tasks"]],
+        )
+
+    def test_page_task_identity_rejects_missing_or_duplicate_ids(self) -> None:
+        invalid_plans = [
+            {"beats": [{"page_task_id": "task_1"}]},
+            {"beats": [{"beat_id": "beat_1"}, {"beat_id": "beat_1"}]},
+            {
+                "beats": [
+                    {"beat_id": "beat_1", "page_task_id": "task_1"},
+                    {"beat_id": "beat_2", "page_task_id": "task_1"},
+                ]
+            },
+        ]
+
+        for plan in invalid_plans:
+            with self.subTest(plan=plan), self.assertRaises(ValueError):
+                build_page_tasks(plan)
+
     # ------------------------------------------------------------------ #
     # Backward compatibility
     # ------------------------------------------------------------------ #

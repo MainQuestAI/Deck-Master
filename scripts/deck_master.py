@@ -72,7 +72,7 @@ from planning.brief_intake import build_request
 from planning.claim_map import build_claim_map
 from planning.narrative_planner import plan_narrative
 from planning.page_tasks import build_page_tasks
-from planning.sourcing_decider import decide_sourcing, load_library_results
+from sourcing.plan import build_sourcing_plan_v2
 from quality.gate_runner import (
     evaluate_delivery_gate,
     evaluate_draft_gate,
@@ -142,7 +142,7 @@ from runtime.render import render_fixture_html, render_status
 from runtime.final_readiness import compute_final_readiness
 from runtime.rc_gate import RCGateError, write_rc_gate_report
 from runtime.run_state_resolver import resolve_run_state, resolve_runtime_stage
-from runtime.sourcing_import import import_sourcing, validate_sourcing
+from runtime.sourcing_import import import_sourcing, validate_sourcing, validate_sourcing_payload
 from runtime.workspace_binding import bind_workspace
 from runtime.workspace_resolver import resolve_workspace_for_run
 from workflow import resolve_workflow_state
@@ -660,15 +660,22 @@ def command_import_library_selection(args: argparse.Namespace) -> dict[str, Any]
 
 def command_decide_sourcing(args: argparse.Namespace) -> dict[str, Any]:
     run_dir = resolve_run_dir(args)
-    narrative_plan = read_json(run_dir / NARRATIVE_PLAN_NAME)
-    library_results = load_library_results(run_dir)
-    sourcing_plan = decide_sourcing(narrative_plan, library_results)
+    page_tasks = read_json(run_dir / PAGE_TASKS_NAME)
+    library_results = read_json(run_dir / "library_results" / "selection.json")
+    sourcing_plan = build_sourcing_plan_v2(
+        run_id=str(page_tasks.get("run_id") or run_dir.name),
+        page_tasks=page_tasks,
+        library_results=library_results,
+    )
+    validation_errors = validate_sourcing_payload(sourcing_plan, run_dir)
+    if validation_errors:
+        raise RunStateError("Invalid generated sourcing plan: " + "; ".join(validation_errors))
     write_artifact(run_dir, SOURCING_PLAN_NAME, sourcing_plan, action="sourcing.plan.created")
     return {
         "run_id": sourcing_plan.get("run_id", run_dir.name),
         "run_dir": str(run_dir),
         "status": "sourcing_ready",
-        "decisions": len(sourcing_plan["decisions"]),
+        "pages": len(sourcing_plan["pages"]),
     }
 
 

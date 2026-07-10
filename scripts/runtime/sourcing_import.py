@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import shutil
 from datetime import datetime, timezone
 from pathlib import Path
@@ -17,172 +18,186 @@ from runtime.run_state import (
     read_json,
     write_json,
 )
+from sourcing.plan import ALL_DECISIONS, SCHEMA_VERSION
+from sourcing.reader import canonicalize_sourcing_plan
 
-SCHEMA_VERSION = "deck_sourcing_plan.v1"
-SCHEME_ALLOWED_DECISIONS = {"reuse", "adapt", "generate", "manual_placeholder"}
 VALID_FILE_EXTENSIONS = {".json"}
 PLAN_PATH = "sourcing_plan.json"
+SCHEMA_PATH = Path(__file__).resolve().parents[2] / "docs" / "contracts" / "sourcing-plan.v2.schema.json"
 
 
 def _utc_stamp() -> str:
     return datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
 
 
-def _collect_required_beats(run_dir: Path) -> list[str]:
-    required: list[str] = []
+def _collect_required_pages(run_dir: Path) -> list[tuple[str, str]]:
+    page_tasks = read_json(run_dir / PAGE_TASKS_NAME)
+    required: list[tuple[str, str]] = []
+    for task in page_tasks.get("tasks", []):
+        if not isinstance(task, dict):
+            continue
+        page_id = str(task.get("page_id") or task.get("beat_id") or "").strip()
+        page_task_id = str(task.get("page_task_id") or task.get("task_id") or page_id).strip()
+        if page_id and page_task_id:
+            required.append((page_id, page_task_id))
+    if required:
+        return required
 
     narrative_plan = read_json(run_dir / NARRATIVE_PLAN_NAME)
     for beat in narrative_plan.get("beats", []):
-        beat_id = str(beat.get("beat_id") or "").strip()
-        if beat_id and beat_id not in required:
-            required.append(beat_id)
-
-    page_tasks = read_json(run_dir / PAGE_TASKS_NAME)
-    for task in page_tasks.get("tasks", []):
-        beat_id = str(task.get("beat_id") or "").strip()
-        if beat_id and beat_id not in required:
-            required.append(beat_id)
-
+        if not isinstance(beat, dict):
+            continue
+        page_id = str(beat.get("beat_id") or "").strip()
+        page_task_id = str(
+            beat.get("page_task_id")
+            or beat.get("task_id")
+            or beat.get("page_id")
+            or page_id
+        ).strip()
+        if page_id and page_task_id:
+            required.append((page_id, page_task_id))
     if not required:
-        raise RunStateError(
-            "narrative_plan.json and page_tasks.json have no beats/tasks. Run planning first."
-        )
-
+        raise RunStateError("narrative_plan.json and page_tasks.json have no beats/tasks. Run planning first.")
     return required
 
 
-def _required_fields_for_decision(source_decision: str) -> tuple[bool, bool]:
-    if source_decision in {"reuse", "adapt"}:
-        return True, False
-    if source_decision == "generate":
-        return False, True
-    if source_decision == "manual_placeholder":
-        return False, True
-    return False, True
-
-
-def validate_sourcing_payload(payload: dict[str, Any], run_dir: Path) -> list[str]:
-    errors: list[str] = []
-    request = read_json(run_dir / REQUEST_NAME)
-    run_mode = str(request.get("run_mode") or "production").strip().lower()
-    strict_mode = run_mode in {"production", "benchmark"}
-    if payload.get("schema_version") != SCHEMA_VERSION:
-        errors.append(f"schema_version must be {SCHEMA_VERSION}")
-
-    run_id = str(payload.get("run_id") or "").strip()
-    if not run_id:
-        errors.append("run_id is required")
-
-    source = str(payload.get("source") or "").strip()
-    if source not in {"human", "agent"}:
-        errors.append("source must be human or agent")
-
-    decisions = payload.get("decisions")
-    if not isinstance(decisions, list):
-        errors.append("decisions must be an array")
-        return errors
-    if not decisions:
-        errors.append("decisions cannot be empty")
-
-    required_beats = _collect_required_beats(run_dir)
-    decision_by_beat: set[str] = set()
-
-    for index, decision in enumerate(decisions, start=1):
-        if not isinstance(decision, dict):
-            errors.append(f"decisions[{index}] must be an object")
+def _align_legacy_page_task_ids(payload: dict[str, Any], run_dir: Path) -> dict[str, Any]:
+    if payload.get("migrated_from") != "deck_sourcing_plan.v1":
+        return payload
+    task_by_page = dict(_collect_required_pages(run_dir))
+    for page in payload.get("pages", []):
+        if not isinstance(page, dict):
             continue
+        page_id = str(page.get("page_id") or "")
+        page_task_id = task_by_page.get(page_id)
+        if not page_task_id:
+            continue
+        page["page_task_id"] = page_task_id
+        for source in page.get("selected_sources", []):
+            if isinstance(source, dict):
+                source["page_task_id"] = page_task_id
+    return payload
 
-        beat_id = str(decision.get("beat_id") or "").strip()
-        if not beat_id:
-            errors.append(f"decisions[{index}].beat_id is required")
-        else:
-            decision_by_beat.add(beat_id)
 
-        source_decision = str(decision.get("source_decision") or "").strip()
-        if source_decision not in SCHEME_ALLOWED_DECISIONS:
-            errors.append(
-                f"decisions[{index}].source_decision must be one of "
-                f"{sorted(SCHEME_ALLOWED_DECISIONS)}"
-            )
-        if strict_mode and source_decision == "manual_placeholder":
-            errors.append(
-                f"decisions[{index}].source_decision=manual_placeholder is not allowed for {run_mode} runs"
-            )
+def _schema_errors(payload: dict[str, Any]) -> list[str]:
+    try:
+        import jsonschema  # type: ignore
+    except ImportError:  # pragma: no cover - runtime dependency
+        return ["jsonschema is required to validate sourcing plans"]
 
-        if not str(decision.get("decision_reason") or "").strip():
-            errors.append(f"decisions[{index}].decision_reason is required")
-
-        require_selected_candidate, require_generation_brief = _required_fields_for_decision(source_decision)
-        if require_selected_candidate:
-            selected_candidate = decision.get("selected_candidate")
-            if not isinstance(selected_candidate, dict):
-                errors.append(
-                    f"decisions[{index}].selected_candidate is required for source_decision={source_decision}"
-                )
-        if require_generation_brief:
-            if not str(decision.get("generation_brief") or "").strip():
-                errors.append(
-                    f"decisions[{index}].generation_brief is required for source_decision={source_decision}"
-                )
-
-    missing_beats = [beat_id for beat_id in required_beats if beat_id not in decision_by_beat]
-    if missing_beats:
-        errors.append("missing decisions for beats: " + ", ".join(missing_beats))
-
+    schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
+    validator = jsonschema.Draft202012Validator(schema)
+    errors: list[str] = []
+    for error in sorted(validator.iter_errors(payload), key=lambda item: list(item.absolute_path)):
+        location = ".".join(str(part) for part in error.absolute_path) or "payload"
+        errors.append(f"{location}: {error.message}")
     return errors
 
 
-def _normalize_decisions(decisions: list[Any]) -> list[dict[str, Any]]:
-    return [decision for decision in decisions if isinstance(decision, dict)]
+def validate_sourcing_payload(payload: dict[str, Any], run_dir: Path) -> list[str]:
+    errors = _schema_errors(payload)
+    request = read_json(run_dir / REQUEST_NAME)
+    run_mode = str(request.get("run_mode") or "production").strip().lower()
+    strict_mode = run_mode in {"production", "benchmark"}
+
+    pages = payload.get("pages")
+    if not isinstance(pages, list):
+        return errors or ["pages must be an array"]
+
+    seen_page_ids: set[str] = set()
+    seen_page_task_ids: set[str] = set()
+    actual_pairs: set[tuple[str, str]] = set()
+    for index, page in enumerate(pages, start=1):
+        if not isinstance(page, dict):
+            continue
+        page_id = str(page.get("page_id") or "").strip()
+        page_task_id = str(page.get("page_task_id") or "").strip()
+        if page_id in seen_page_ids:
+            errors.append(f"duplicate page_id: {page_id}")
+        if page_task_id in seen_page_task_ids:
+            errors.append(f"duplicate page_task_id: {page_task_id}")
+        if page_id:
+            seen_page_ids.add(page_id)
+        if page_task_id:
+            seen_page_task_ids.add(page_task_id)
+        if page_id and page_task_id:
+            actual_pairs.add((page_id, page_task_id))
+
+        decision = str(page.get("decision") or "")
+        if decision not in ALL_DECISIONS:
+            errors.append(f"pages[{index}].decision is invalid")
+        if strict_mode and decision == "manual":
+            errors.append(
+                f"pages[{index}].decision=manual; manual_placeholder is not allowed for {run_mode} runs"
+            )
+
+        selected_sources = page.get("selected_sources")
+        if decision in {"reuse", "adapt"} and not selected_sources:
+            errors.append(f"pages[{index}].selected_sources is required for decision={decision}")
+        if isinstance(selected_sources, list):
+            for source_index, source in enumerate(selected_sources, start=1):
+                if not isinstance(source, dict):
+                    continue
+                for field in ("asset_key", "query_trace_id", "page_task_id"):
+                    if not str(source.get(field) or "").strip():
+                        errors.append(f"pages[{index}].selected_sources[{source_index}].{field} is required")
+                source_page_task_id = str(source.get("page_task_id") or "").strip()
+                if source_page_task_id and page_task_id and source_page_task_id != page_task_id:
+                    errors.append(
+                        f"pages[{index}].selected_sources[{source_index}].page_task_id must match page_task_id"
+                    )
+
+    required_pairs = set(_collect_required_pages(run_dir))
+    missing = sorted(required_pairs - actual_pairs)
+    unexpected = sorted(actual_pairs - required_pairs)
+    if missing:
+        errors.append("missing pages for page tasks: " + ", ".join(f"{page}/{task}" for page, task in missing))
+    if unexpected:
+        errors.append("unexpected page task identities: " + ", ".join(f"{page}/{task}" for page, task in unexpected))
+    return errors
 
 
-def refresh_preview_sources_summary(run_dir: Path, decisions: list[dict[str, Any]]) -> bool:
+def refresh_preview_sources_summary(run_dir: Path, pages: list[dict[str, Any]]) -> bool:
     preview_path = run_dir / PREVIEW_MANIFEST_NAME
     if not preview_path.exists():
         return False
-
     preview = read_json(preview_path)
-    pages = preview.get("pages")
-    if not isinstance(pages, list):
+    preview_pages = preview.get("pages")
+    if not isinstance(preview_pages, list):
         return False
 
-    decision_lookup: dict[str, dict[str, Any]] = {}
+    page_lookup: dict[str, dict[str, Any]] = {}
     source_counts: dict[str, int] = {}
-    covered = 0
-
-    for decision in decisions:
-        beat_id = str(decision.get("beat_id") or "").strip()
-        if not beat_id:
-            continue
-        decision_lookup[beat_id] = decision
-        source = str(decision.get("source_decision") or "unknown")
-        source_counts[source] = source_counts.get(source, 0) + 1
-        covered += 1
-
     for page in pages:
-        if not isinstance(page, dict):
+        page_id = str(page.get("page_id") or "").strip()
+        if not page_id:
             continue
-        beat_id = str(page.get("beat_id") or page.get("page_id") or "").strip()
-        if not beat_id:
+        page_lookup[page_id] = page
+        decision = str(page.get("decision") or "unknown")
+        source_counts[decision] = source_counts.get(decision, 0) + 1
+
+    for preview_page in preview_pages:
+        if not isinstance(preview_page, dict):
             continue
-        decision = decision_lookup.get(beat_id)
-        if not decision:
+        page_id = str(preview_page.get("beat_id") or preview_page.get("page_id") or "").strip()
+        page = page_lookup.get(page_id)
+        if not page:
             continue
-        page["source_decision"] = str(decision.get("source_decision") or page.get("source_decision") or "")
-        page["decision_reason"] = str(decision.get("decision_reason") or page.get("decision_reason") or "")
-        if decision.get("generation_brief"):
-            page["generation_brief"] = str(decision.get("generation_brief"))
+        preview_page["source_decision"] = str(page.get("decision") or preview_page.get("source_decision") or "")
+        preview_page["decision_reason"] = str(page.get("reason") or preview_page.get("decision_reason") or "")
+        if page.get("generation_brief"):
+            preview_page["generation_brief"] = str(page["generation_brief"])
 
     preview["sourcing_summary"] = {
         "schema_version": "deck_sourcing_summary.v1",
         "source_counts": source_counts,
-        "total_decisions": covered,
-        "total_pages": len(pages),
+        "total_decisions": len(page_lookup),
+        "total_pages": len(preview_pages),
     }
     preview["source_summary"] = {
-        "decisions": len(decisions),
+        "decisions": len(pages),
         "by_decision": source_counts,
-        "covered_beats": len(decision_lookup),
+        "covered_beats": len(page_lookup),
     }
     preview["updated_at"] = datetime.now(timezone.utc).isoformat()
     write_manifest(run_dir, preview)
@@ -203,16 +218,18 @@ def import_sourcing(
     if not input_file.is_file():
         raise RunStateError(f"Sourcing plan input not found: {input_file}")
     if input_file.suffix.lower() not in VALID_FILE_EXTENSIONS:
-        raise RunStateError("P0 only supports JSON sourcing plans. Use a .json input file.")
+        raise RunStateError("Only JSON sourcing plans are supported. Use a .json input file.")
 
-    existing = read_json(input_file)
     request = read_json(root / REQUEST_NAME)
-    request_run_mode = str(request.get("run_mode") or "production").strip().lower()
+    run_mode = str(request.get("run_mode") or "production").strip().lower()
     run_id = str(request.get("run_id") or root.name)
-
-    existing["run_id"] = run_id
-    existing["source"] = source
-    errors = validate_sourcing_payload(existing, root)
+    try:
+        canonical = canonicalize_sourcing_plan(read_json(input_file))
+    except ValueError as exc:
+        raise RunStateError(f"Invalid sourcing plan: {exc}") from exc
+    canonical["run_id"] = run_id
+    canonical = _align_legacy_page_task_ids(canonical, root)
+    errors = validate_sourcing_payload(canonical, root)
     if errors:
         raise RunStateError("Invalid sourcing plan: " + "; ".join(errors))
 
@@ -221,21 +238,12 @@ def import_sourcing(
     current_plan = root / PLAN_PATH
     if current_plan.exists():
         shutil.copy2(current_plan, backup_dir / PLAN_PATH)
-
-    target = write_json(current_plan, existing)
-    decisions = _normalize_decisions(existing.get("decisions", []))
-    payload = {
-        "schema_version": SCHEMA_VERSION,
-        "run_id": run_id,
-        "run_mode": request_run_mode,
-        "source": source,
-        "decisions": decisions,
-    }
-    payload["status"] = "imported"
+    target = write_json(current_plan, canonical)
+    pages = [page for page in canonical.get("pages", []) if isinstance(page, dict)]
 
     preview_refreshed = False
     if (root / PREVIEW_MANIFEST_NAME).exists():
-        preview_refreshed = refresh_preview_sources_summary(root, decisions)
+        preview_refreshed = refresh_preview_sources_summary(root, pages)
         append_event(
             root,
             "preview.manifest.refreshed",
@@ -243,7 +251,7 @@ def import_sourcing(
             payload_ref=PLAN_PATH,
             data={
                 "sourcing_plan": str(target.relative_to(root)),
-                "decisions": len(decisions),
+                "pages": len(pages),
                 "source_summary_updated": preview_refreshed,
             },
         )
@@ -257,34 +265,39 @@ def import_sourcing(
             "source": source,
             "input": str(input_file),
             "backup_dir": str(backup_dir),
-            "decisions": len(decisions),
+            "pages": len(pages),
             "preview_manifest_refreshed": preview_refreshed,
         },
     )
-
     return {
-        **payload,
+        "schema_version": SCHEMA_VERSION,
+        "run_id": run_id,
+        "run_mode": run_mode,
+        "source": source,
         "status": "imported",
         "run_dir": str(root),
         "input": str(input_file),
         "backup_dir": str(backup_dir),
-        "decisions": len(decisions),
+        "pages": len(pages),
         "preview_manifest_refreshed": preview_refreshed,
     }
 
 
 def validate_sourcing(run_dir: str | Path) -> dict[str, Any]:
     root = Path(run_dir).expanduser().resolve()
-    plan_path = root / PLAN_PATH
-    payload = read_json(plan_path)
-    errors = validate_sourcing_payload(payload, root)
-    valid = not errors
     request = read_json(root / REQUEST_NAME)
+    try:
+        payload = canonicalize_sourcing_plan(read_json(root / PLAN_PATH))
+        payload = _align_legacy_page_task_ids(payload, root)
+        errors = validate_sourcing_payload(payload, root)
+    except ValueError as exc:
+        payload = {"pages": []}
+        errors = [str(exc)]
     return {
         "schema_version": SCHEMA_VERSION,
-        "status": "valid" if valid else "invalid",
+        "status": "valid" if not errors else "invalid",
         "run_id": str(request.get("run_id") or root.name),
         "run_dir": str(root),
         "errors": errors,
-        "decisions": len(payload.get("decisions", []) if isinstance(payload.get("decisions"), list) else []),
+        "pages": len(payload.get("pages", [])) if isinstance(payload.get("pages"), list) else 0,
     }
