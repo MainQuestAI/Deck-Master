@@ -2,18 +2,25 @@
 
 from __future__ import annotations
 
+import copy
+import hashlib
 import json
 import re
 import shutil
 import subprocess
 import sys
 import tempfile
+import threading
+import time
 from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any
 
 
 SCHEMA_VERSION = "deck_master_library_status.v2"
+SEMANTIC_PROBE_QUERY = "business solution architecture"
+COMMAND_TIMEOUT_SECONDS = 15
+DEFAULT_CACHE_TTL_SECONDS = 10.0
 CANONICAL_ROLES = {
     "opener",
     "problem",
@@ -24,6 +31,8 @@ CANONICAL_ROLES = {
     "cta",
     "appendix",
 }
+_STATUS_CACHE: dict[tuple[Any, ...], tuple[float, dict[str, Any]]] = {}
+_STATUS_CACHE_LOCK = threading.Lock()
 
 
 def _normalized_key(value: Any) -> str:
@@ -82,30 +91,63 @@ def _read_json_object(path: Path) -> dict[str, Any] | None:
     return payload if isinstance(payload, dict) else None
 
 
-def _contract_ready(repo_root: Path) -> bool:
-    capability = _read_json_object(
-        repo_root / "product_capabilities" / "ppt-library" / "capability.json"
+def _contract_state(repo_root: Path) -> tuple[bool, str]:
+    paths = (
+        repo_root / "product_capabilities" / "ppt-library" / "capability.json",
+        repo_root / "docs" / "contracts" / "ppt-library-selection.v2.schema.json",
+        repo_root / "docs" / "contracts" / "ppt-library-bridge-plan.v1.schema.json",
+        repo_root / "docs" / "contracts" / "library-status.v2.schema.json",
+        repo_root / "scripts" / "tools" / "ppt_library_client.py",
     )
-    selection = _read_json_object(
-        repo_root / "docs" / "contracts" / "ppt-library-selection.v2.schema.json"
-    )
-    bridge_plan = _read_json_object(
-        repo_root / "docs" / "contracts" / "ppt-library-bridge-plan.v1.schema.json"
-    )
+    digest = hashlib.sha256()
+    for path in paths:
+        digest.update(path.relative_to(repo_root).as_posix().encode("utf-8"))
+        try:
+            digest.update(path.read_bytes())
+        except OSError:
+            digest.update(b"<missing>")
+
+    capability = _read_json_object(paths[0])
+    selection = _read_json_object(paths[1])
+    bridge_plan = _read_json_object(paths[2])
+    library_status = _read_json_object(paths[3])
     if not capability or capability.get("name") != "ppt-library":
-        return False
+        return False, digest.hexdigest()
     operations = (capability.get("runtime") or {}).get("operations")
-    if not isinstance(operations, list) or "status" not in operations:
-        return False
+    if not isinstance(operations, list) or not {"status", "search", "select-slides"}.issubset(
+        {str(item) for item in operations}
+    ):
+        return False, digest.hexdigest()
+    contracts = capability.get("contracts") if isinstance(capability.get("contracts"), dict) else {}
+    outputs = contracts.get("outputs") if isinstance(contracts.get("outputs"), list) else []
+    state_policy = (
+        capability.get("state_policy") if isinstance(capability.get("state_policy"), dict) else {}
+    )
     selection_version = ((selection or {}).get("properties") or {}).get("schema_version")
     bridge_version = ((bridge_plan or {}).get("properties") or {}).get("schema_version")
-    return bool(
-        isinstance(selection_version, dict)
+    status_version = ((library_status or {}).get("properties") or {}).get("schema_version")
+    ready = bool(
+        {
+            "deck_master_ppt_library_selection.v1",
+            "deck_master_ppt_library_selection.v2",
+        }.issubset({str(item) for item in outputs})
+        and contracts.get("canonical_output") == "deck_master_ppt_library_selection.v2"
+        and contracts.get("readiness_output") == SCHEMA_VERSION
+        and state_policy.get("canonical_artifact")
+        == "external/ppt_library/library_results.v2.json"
+        and isinstance(selection_version, dict)
         and selection_version.get("const") == "deck_master_ppt_library_selection.v2"
         and isinstance(bridge_version, dict)
         and bridge_version.get("const") == "deck_master_ppt_library_bridge_plan.v1"
-        and (repo_root / "scripts" / "tools" / "ppt_library_client.py").is_file()
+        and isinstance(status_version, dict)
+        and status_version.get("const") == SCHEMA_VERSION
+        and paths[4].is_file()
     )
+    return ready, digest.hexdigest()
+
+
+def _contract_ready(repo_root: Path) -> bool:
+    return _contract_state(repo_root)[0]
 
 
 def _role_selection_ready(payload: Mapping[str, Any], values: Mapping[str, Any]) -> bool:
@@ -167,25 +209,104 @@ def _data_hygiene_status(values: Mapping[str, Any], *, runtime_ready: bool) -> s
     return "degraded"
 
 
-def _clone_library_state(source_home: Path, target_home: Path) -> bool:
+def _copy_snapshot_file(
+    source: Path,
+    target: Path,
+    *,
+    copy_runner: Callable[..., subprocess.CompletedProcess[str]],
+) -> bool:
     clone_flag = "-c" if sys.platform == "darwin" else "--reflink=always"
+    commands = (
+        ["cp", clone_flag, str(source), str(target)],
+        ["cp", str(source), str(target)],
+    )
+    for command in commands:
+        try:
+            target.unlink(missing_ok=True)
+            completed = copy_runner(
+                command,
+                capture_output=True,
+                text=True,
+                check=False,
+                timeout=COMMAND_TIMEOUT_SECONDS,
+            )
+        except (OSError, subprocess.SubprocessError):
+            continue
+        if completed.returncode == 0 and target.is_file():
+            return True
+    return False
+
+
+def _clone_library_state(
+    source_home: Path,
+    target_home: Path,
+    *,
+    copy_runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
+) -> bool:
     for name in ("index.db", "config.yml"):
         source = source_home / name
         if not source.is_file():
             continue
-        try:
-            completed = subprocess.run(
-                ["cp", clone_flag, str(source), str(target_home / name)],
-                capture_output=True,
-                text=True,
-                check=False,
-                timeout=15,
-            )
-        except (OSError, subprocess.SubprocessError):
-            return False
-        if completed.returncode != 0:
+        if not _copy_snapshot_file(source, target_home / name, copy_runner=copy_runner):
             return False
     return (target_home / "index.db").is_file()
+
+
+def _search_probe_ready(payload: Any) -> bool:
+    if isinstance(payload, list):
+        return bool(payload)
+    if not isinstance(payload, dict):
+        return False
+    for key in ("results", "slides", "items", "matches"):
+        results = payload.get(key)
+        if isinstance(results, list):
+            return bool(results)
+    return False
+
+
+def _source_signature(source_home: Path) -> tuple[Any, ...] | None:
+    try:
+        index_stat = (source_home / "index.db").stat()
+    except OSError:
+        return None
+    try:
+        config_stat = (source_home / "config.yml").stat()
+        config_signature = (config_stat.st_mtime_ns, config_stat.st_size)
+    except OSError:
+        config_signature = (0, 0)
+    return (
+        str(source_home),
+        index_stat.st_mtime_ns,
+        index_stat.st_size,
+        *config_signature,
+    )
+
+
+def _clear_library_status_cache() -> None:
+    with _STATUS_CACHE_LOCK:
+        _STATUS_CACHE.clear()
+
+
+def _cached_status(key: tuple[Any, ...], now: float) -> dict[str, Any] | None:
+    with _STATUS_CACHE_LOCK:
+        cached = _STATUS_CACHE.get(key)
+        if cached is None:
+            return None
+        expires_at, payload = cached
+        if expires_at <= now:
+            _STATUS_CACHE.pop(key, None)
+            return None
+        return copy.deepcopy(payload)
+
+
+def _store_cached_status(
+    key: tuple[Any, ...],
+    payload: dict[str, Any],
+    *,
+    expires_at: float,
+) -> None:
+    with _STATUS_CACHE_LOCK:
+        _STATUS_CACHE[key] = (expires_at, copy.deepcopy(payload))
 
 
 def inspect_library_status(
@@ -196,6 +317,8 @@ def inspect_library_status(
     library_home: str | Path | None = None,
     snapshotter: Callable[[Path, Path], bool] = _clone_library_state,
     runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
+    cache_ttl_seconds: float = DEFAULT_CACHE_TTL_SECONDS,
+    clock: Callable[[], float] = time.monotonic,
 ) -> dict[str, Any]:
     """Return v2 status without changing the source Library or user files."""
     root = Path(repo_root).resolve() if repo_root else Path(__file__).resolve().parents[2]
@@ -204,9 +327,21 @@ def inspect_library_status(
         if library_home is not None
         else Path.home() / ".ppt-library"
     )
-    contract_ready = _contract_ready(root)
+    contract_ready, contract_fingerprint = _contract_state(root)
     cli_path = which(command)
+    source_signature = _source_signature(source_home) if cli_path else None
+    cache_key = (
+        str(Path(cli_path).expanduser().resolve()) if cli_path else "",
+        *source_signature,
+        contract_fingerprint,
+    ) if source_signature else None
+    now = clock()
+    if cache_key is not None and cache_ttl_seconds > 0:
+        cached = _cached_status(cache_key, now)
+        if cached is not None:
+            return cached
     payload: dict[str, Any] = {}
+    search_probe_ready = False
     runtime_ready = False
     runtime_failure = "PPT_LIBRARY_CLI_MISSING" if not cli_path else ""
     state_ready = (source_home / "index.db").is_file() if cli_path else False
@@ -233,23 +368,52 @@ def inspect_library_status(
                         capture_output=True,
                         text=True,
                         check=False,
-                        timeout=15,
+                        timeout=COMMAND_TIMEOUT_SECONDS,
                     )
                 except (OSError, subprocess.SubprocessError):
                     completed = None
+            if completed is not None and completed.returncode == 0:
+                try:
+                    decoded = json.loads(completed.stdout)
+                except (TypeError, json.JSONDecodeError):
+                    decoded = None
+                if isinstance(decoded, dict):
+                    payload = decoded
+                    runtime_ready = True
+                    try:
+                        search_completed = runner(
+                            [
+                                command,
+                                "--home-dir",
+                                str(isolated_home),
+                                "search",
+                                SEMANTIC_PROBE_QUERY,
+                                "--top-k",
+                                "1",
+                                "--threshold",
+                                "0",
+                                "--output",
+                                "json",
+                            ],
+                            capture_output=True,
+                            text=True,
+                            check=False,
+                            timeout=COMMAND_TIMEOUT_SECONDS,
+                        )
+                    except (OSError, subprocess.SubprocessError):
+                        search_completed = None
+                    if search_completed is not None and search_completed.returncode == 0:
+                        try:
+                            search_payload = json.loads(search_completed.stdout)
+                        except (TypeError, json.JSONDecodeError):
+                            search_payload = None
+                        search_probe_ready = _search_probe_ready(search_payload)
+                else:
+                    runtime_failure = "PPT_LIBRARY_STATUS_INVALID"
+
         if completed is None or completed.returncode != 0:
             if runtime_failure != "PPT_LIBRARY_READ_ONLY_SNAPSHOT_UNAVAILABLE":
                 runtime_failure = "PPT_LIBRARY_STATUS_FAILED"
-        else:
-            try:
-                decoded = json.loads(completed.stdout)
-            except (TypeError, json.JSONDecodeError):
-                decoded = None
-            if isinstance(decoded, dict):
-                payload = decoded
-                runtime_ready = True
-            else:
-                runtime_failure = "PPT_LIBRARY_STATUS_INVALID"
 
     values = _flatten(payload)
     semantic_explicit = _as_bool(
@@ -261,13 +425,11 @@ def inspect_library_status(
             "semantic_search_available",
         )
     )
-    slide_count = _as_number(
-        _first(values, "slides_count", "slide_count", "total_slides", "indexed_slides")
-    )
     semantic_search_ready = bool(
         runtime_ready
         and contract_ready
-        and (semantic_explicit if semantic_explicit is not None else (slide_count or 0) > 0)
+        and search_probe_ready
+        and semantic_explicit is not False
     )
     role_selection_ready = bool(
         semantic_search_ready and _role_selection_ready(payload, values)
@@ -309,7 +471,7 @@ def inspect_library_status(
     ):
         status = "ready"
 
-    return {
+    result = {
         "schema_version": SCHEMA_VERSION,
         "status": status,
         "runtime_ready": runtime_ready,
@@ -323,6 +485,13 @@ def inspect_library_status(
         "blocking_summary": blocking_summary,
         "warnings": warnings,
     }
+    if cache_key is not None and cache_ttl_seconds > 0 and runtime_ready:
+        _store_cached_status(
+            cache_key,
+            result,
+            expires_at=now + cache_ttl_seconds,
+        )
+    return result
 
 
 __all__ = ["SCHEMA_VERSION", "inspect_library_status"]
