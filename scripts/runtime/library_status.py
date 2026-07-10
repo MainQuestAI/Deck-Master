@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import ast
 import copy
 import hashlib
 import json
 import re
 import shutil
+import sqlite3
 import subprocess
 import sys
 import tempfile
@@ -33,6 +35,37 @@ CANONICAL_ROLES = {
 }
 _STATUS_CACHE: dict[tuple[Any, ...], tuple[float, dict[str, Any]]] = {}
 _STATUS_CACHE_LOCK = threading.Lock()
+_EXPECTED_DECLARATION = {
+    "operations": (
+        "status",
+        "search",
+        "select-slides",
+        "doctor",
+        "schema",
+        "smoke --fixture",
+        "writeback",
+    ),
+    "outputs": (
+        "deck_master_ppt_library_selection.v1",
+        "deck_master_ppt_library_selection.v2",
+    ),
+    "canonical_output": "deck_master_ppt_library_selection.v2",
+    "readiness_output": SCHEMA_VERSION,
+    "canonical_artifact": "external/ppt_library/library_results.v2.json",
+    "required_capabilities": (
+        "ppt_library.doctor.v1",
+        "ppt_library.search.v1",
+        "ppt_library.selection.v1",
+        "ppt_library.selection.v2",
+        "ppt_library.status.v2",
+    ),
+    "schema_versions": {
+        "selection_output_legacy": "deck_master_ppt_library_selection.v1",
+        "selection_output": "deck_master_ppt_library_selection.v2",
+        "library_status": SCHEMA_VERSION,
+        "feedback_input": "deck_master_ppt_library_feedback.v1",
+    },
+}
 
 
 def _normalized_key(value: Any) -> str:
@@ -91,13 +124,125 @@ def _read_json_object(path: Path) -> dict[str, Any] | None:
     return payload if isinstance(payload, dict) else None
 
 
+def _yaml_scalar(value: str) -> Any:
+    normalized = value.strip()
+    if normalized in {"true", "false"}:
+        return normalized == "true"
+    if len(normalized) >= 2 and normalized[0] == normalized[-1] and normalized[0] in "\"'":
+        return normalized[1:-1]
+    return normalized
+
+
+def _read_capability_yaml(path: Path) -> dict[str, Any] | None:
+    """Parse the manifest's intentionally small, dependency-free YAML subset."""
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return None
+    payload: dict[str, Any] = {}
+    section: str | None = None
+    for raw_line in lines:
+        if not raw_line.strip() or raw_line.lstrip().startswith("#"):
+            continue
+        indent = len(raw_line) - len(raw_line.lstrip(" "))
+        line = raw_line.strip()
+        if indent == 0:
+            if ":" not in line:
+                return None
+            key, value = line.split(":", 1)
+            section = key.strip()
+            payload[section] = _yaml_scalar(value) if value.strip() else None
+            continue
+        if indent != 2 or section is None:
+            return None
+        if line.startswith("- "):
+            if payload[section] is None:
+                payload[section] = []
+            if not isinstance(payload[section], list):
+                return None
+            payload[section].append(_yaml_scalar(line[2:]))
+            continue
+        if ":" not in line:
+            return None
+        if payload[section] is None:
+            payload[section] = {}
+        if not isinstance(payload[section], dict):
+            return None
+        key, value = line.split(":", 1)
+        payload[section][key.strip()] = _yaml_scalar(value)
+    return payload
+
+
+def _read_installer_library_spec(path: Path) -> dict[str, Any] | None:
+    try:
+        module = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    except (OSError, SyntaxError):
+        return None
+    value_node: ast.expr | None = None
+    for node in module.body:
+        if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            if node.target.id == "SUITE_SKILLS":
+                value_node = node.value
+                break
+        if isinstance(node, ast.Assign) and any(
+            isinstance(target, ast.Name) and target.id == "SUITE_SKILLS"
+            for target in node.targets
+        ):
+            value_node = node.value
+            break
+    if value_node is None:
+        return None
+    try:
+        specs = ast.literal_eval(value_node)
+    except (ValueError, TypeError, SyntaxError):
+        return None
+    if not isinstance(specs, (list, tuple)):
+        return None
+    return next(
+        (
+            spec
+            for spec in specs
+            if isinstance(spec, dict) and spec.get("name") == "ppt-library"
+        ),
+        None,
+    )
+
+
+def _normalized_declaration(payload: Mapping[str, Any], *, capability: bool) -> dict[str, Any]:
+    contracts = payload.get("contracts") if capability else payload
+    runtime = payload.get("runtime") if capability else payload
+    state_policy = payload.get("state_policy") if capability else payload
+    contracts = contracts if isinstance(contracts, Mapping) else {}
+    runtime = runtime if isinstance(runtime, Mapping) else {}
+    state_policy = state_policy if isinstance(state_policy, Mapping) else {}
+    outputs_key = "outputs" if capability or "outputs" in contracts else "contract_outputs"
+    return {
+        "operations": tuple(str(item) for item in runtime.get("operations", [])),
+        "outputs": tuple(str(item) for item in contracts.get(outputs_key, [])),
+        "canonical_output": contracts.get("canonical_output"),
+        "readiness_output": contracts.get("readiness_output"),
+        "canonical_artifact": state_policy.get("canonical_artifact"),
+        "required_capabilities": tuple(
+            str(item) for item in payload.get("required_capabilities", [])
+        ),
+        "schema_versions": payload.get("schema_versions"),
+    }
+
+
 def _contract_state(repo_root: Path) -> tuple[bool, str]:
     paths = (
         repo_root / "product_capabilities" / "ppt-library" / "capability.json",
+        repo_root / "product_capabilities" / "ppt-library" / "capability.yaml",
+        repo_root
+        / "product_capabilities"
+        / "ppt-library"
+        / "contracts"
+        / "library-selection.v1.schema.json",
         repo_root / "docs" / "contracts" / "ppt-library-selection.v2.schema.json",
         repo_root / "docs" / "contracts" / "ppt-library-bridge-plan.v1.schema.json",
         repo_root / "docs" / "contracts" / "library-status.v2.schema.json",
         repo_root / "scripts" / "tools" / "ppt_library_client.py",
+        repo_root / "scripts" / "skills" / "installer.py",
     )
     digest = hashlib.sha256()
     for path in paths:
@@ -108,40 +253,35 @@ def _contract_state(repo_root: Path) -> tuple[bool, str]:
             digest.update(b"<missing>")
 
     capability = _read_json_object(paths[0])
-    selection = _read_json_object(paths[1])
-    bridge_plan = _read_json_object(paths[2])
-    library_status = _read_json_object(paths[3])
+    capability_yaml = _read_capability_yaml(paths[1])
+    legacy_selection = _read_json_object(paths[2])
+    selection = _read_json_object(paths[3])
+    bridge_plan = _read_json_object(paths[4])
+    library_status = _read_json_object(paths[5])
+    installer_spec = _read_installer_library_spec(paths[7])
     if not capability or capability.get("name") != "ppt-library":
         return False, digest.hexdigest()
-    operations = (capability.get("runtime") or {}).get("operations")
-    if not isinstance(operations, list) or not {"status", "search", "select-slides"}.issubset(
-        {str(item) for item in operations}
-    ):
+    if not capability_yaml or capability_yaml.get("name") != "ppt-library" or not installer_spec:
         return False, digest.hexdigest()
-    contracts = capability.get("contracts") if isinstance(capability.get("contracts"), dict) else {}
-    outputs = contracts.get("outputs") if isinstance(contracts.get("outputs"), list) else []
-    state_policy = (
-        capability.get("state_policy") if isinstance(capability.get("state_policy"), dict) else {}
-    )
+    json_declaration = _normalized_declaration(capability, capability=True)
+    yaml_declaration = _normalized_declaration(capability_yaml, capability=False)
+    installer_declaration = _normalized_declaration(installer_spec, capability=False)
     selection_version = ((selection or {}).get("properties") or {}).get("schema_version")
     bridge_version = ((bridge_plan or {}).get("properties") or {}).get("schema_version")
     status_version = ((library_status or {}).get("properties") or {}).get("schema_version")
     ready = bool(
-        {
-            "deck_master_ppt_library_selection.v1",
-            "deck_master_ppt_library_selection.v2",
-        }.issubset({str(item) for item in outputs})
-        and contracts.get("canonical_output") == "deck_master_ppt_library_selection.v2"
-        and contracts.get("readiness_output") == SCHEMA_VERSION
-        and state_policy.get("canonical_artifact")
-        == "external/ppt_library/library_results.v2.json"
+        json_declaration == _EXPECTED_DECLARATION
+        and yaml_declaration == _EXPECTED_DECLARATION
+        and installer_declaration == _EXPECTED_DECLARATION
+        and (legacy_selection or {}).get("contract")
+        == "deck_master_ppt_library_selection.v1"
         and isinstance(selection_version, dict)
         and selection_version.get("const") == "deck_master_ppt_library_selection.v2"
         and isinstance(bridge_version, dict)
         and bridge_version.get("const") == "deck_master_ppt_library_bridge_plan.v1"
         and isinstance(status_version, dict)
         and status_version.get("const") == SCHEMA_VERSION
-        and paths[4].is_file()
+        and paths[6].is_file()
     )
     return ready, digest.hexdigest()
 
@@ -237,18 +377,92 @@ def _copy_snapshot_file(
     return False
 
 
+def _backup_index_database(
+    source: Path,
+    target: Path,
+    *,
+    timeout_seconds: float = COMMAND_TIMEOUT_SECONDS,
+    clock: Callable[[], float] = time.monotonic,
+) -> bool:
+    started_at = clock()
+    succeeded = False
+    source_connection: sqlite3.Connection | None = None
+    target_connection: sqlite3.Connection | None = None
+
+    def progress(_status: int, _remaining: int, _total: int) -> None:
+        if clock() - started_at > timeout_seconds:
+            raise TimeoutError("PPT Library snapshot backup timed out")
+
+    try:
+        target.unlink(missing_ok=True)
+        source_connection = sqlite3.connect(
+            f"{source.resolve().as_uri()}?mode=ro",
+            uri=True,
+            timeout=min(timeout_seconds, 5.0),
+        )
+        target_connection = sqlite3.connect(
+            target,
+            timeout=min(timeout_seconds, 5.0),
+        )
+        source_connection.backup(
+            target_connection,
+            pages=256,
+            progress=progress,
+            sleep=0.05,
+        )
+        succeeded = target.is_file()
+        return succeeded
+    except (OSError, sqlite3.Error, TimeoutError):
+        return False
+    finally:
+        if target_connection is not None:
+            target_connection.close()
+        if source_connection is not None:
+            source_connection.close()
+        if not succeeded:
+            target.unlink(missing_ok=True)
+
+
 def _clone_library_state(
     source_home: Path,
     target_home: Path,
     *,
     copy_runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
 ) -> bool:
-    for name in ("index.db", "config.yml"):
-        source = source_home / name
-        if not source.is_file():
-            continue
-        if not _copy_snapshot_file(source, target_home / name, copy_runner=copy_runner):
+    source_index = source_home / "index.db"
+    source_signature = _source_signature(source_home)
+    if not source_index.is_file() or source_signature is None:
+        return False
+    with tempfile.TemporaryDirectory(
+        prefix="sqlite-backup-source-",
+        dir=target_home,
+    ) as staging_dir:
+        staging_home = Path(staging_dir)
+        for name in ("index.db", "index.db-wal"):
+            source = source_home / name
+            if source.is_file() and not _copy_snapshot_file(
+                source,
+                staging_home / name,
+                copy_runner=copy_runner,
+            ):
+                return False
+        if not _backup_index_database(
+            staging_home / "index.db",
+            target_home / "index.db",
+        ):
             return False
+        source_config = source_home / "config.yml"
+        if source_config.is_file():
+            if not _copy_snapshot_file(
+                source_config,
+                target_home / "config.yml",
+                copy_runner=copy_runner,
+            ):
+                return False
+    if _source_signature(source_home) != source_signature:
+        (target_home / "index.db").unlink(missing_ok=True)
+        (target_home / "config.yml").unlink(missing_ok=True)
+        return False
     return (target_home / "index.db").is_file()
 
 
@@ -266,20 +480,17 @@ def _search_probe_ready(payload: Any) -> bool:
 
 def _source_signature(source_home: Path) -> tuple[Any, ...] | None:
     try:
-        index_stat = (source_home / "index.db").stat()
+        (source_home / "index.db").stat()
     except OSError:
         return None
-    try:
-        config_stat = (source_home / "config.yml").stat()
-        config_signature = (config_stat.st_mtime_ns, config_stat.st_size)
-    except OSError:
-        config_signature = (0, 0)
-    return (
-        str(source_home),
-        index_stat.st_mtime_ns,
-        index_stat.st_size,
-        *config_signature,
-    )
+    signatures: list[Any] = [str(source_home)]
+    for name in ("index.db", "index.db-wal", "index.db-shm", "config.yml"):
+        try:
+            stat = (source_home / name).stat()
+            signatures.extend((name, stat.st_mtime_ns, stat.st_size))
+        except OSError:
+            signatures.extend((name, 0, 0))
+    return tuple(signatures)
 
 
 def _clear_library_status_cache() -> None:

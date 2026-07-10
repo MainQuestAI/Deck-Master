@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import json
 import shutil
+import sqlite3
 import subprocess
 import sys
 import tempfile
 import unittest
+from contextlib import closing
 from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
@@ -38,6 +40,20 @@ EXPECTED_KEYS = {
     "warnings",
 }
 
+REQUIRED_LIBRARY_CAPABILITIES = [
+    "ppt_library.doctor.v1",
+    "ppt_library.search.v1",
+    "ppt_library.selection.v1",
+    "ppt_library.selection.v2",
+    "ppt_library.status.v2",
+]
+LIBRARY_SCHEMA_VERSIONS = {
+    "selection_output_legacy": "deck_master_ppt_library_selection.v1",
+    "selection_output": "deck_master_ppt_library_selection.v2",
+    "library_status": "deck_master_library_status.v2",
+    "feedback_input": "deck_master_ppt_library_feedback.v1",
+}
+
 
 def _contract_root(root: Path) -> Path:
     capability = root / "product_capabilities" / "ppt-library" / "capability.json"
@@ -47,7 +63,17 @@ def _contract_root(root: Path) -> Path:
             {
                 "schema_version": "deck_master_capability_package.v1",
                 "name": "ppt-library",
-                "runtime": {"operations": ["status", "search", "select-slides"]},
+                "runtime": {
+                    "operations": [
+                        "status",
+                        "search",
+                        "select-slides",
+                        "doctor",
+                        "schema",
+                        "smoke --fixture",
+                        "writeback",
+                    ]
+                },
                 "contracts": {
                     "outputs": [
                         "deck_master_ppt_library_selection.v1",
@@ -59,6 +85,59 @@ def _contract_root(root: Path) -> Path:
                 "state_policy": {
                     "canonical_artifact": "external/ppt_library/library_results.v2.json"
                 },
+                "required_capabilities": REQUIRED_LIBRARY_CAPABILITIES,
+                "schema_versions": LIBRARY_SCHEMA_VERSIONS,
+            }
+        ),
+        encoding="utf-8",
+    )
+    capability.with_suffix(".yaml").write_text(
+        """schema_version: deck_master_capability_package.v1
+name: ppt-library
+kind: product_capability
+required: true
+canonical_artifact: external/ppt_library/library_results.v2.json
+canonical_output: deck_master_ppt_library_selection.v2
+readiness_output: deck_master_library_status.v2
+outputs:
+  - deck_master_ppt_library_selection.v1
+  - deck_master_ppt_library_selection.v2
+operations:
+  - status
+  - search
+  - select-slides
+  - doctor
+  - schema
+  - smoke --fixture
+  - writeback
+required_capabilities:
+  - ppt_library.doctor.v1
+  - ppt_library.search.v1
+  - ppt_library.selection.v1
+  - ppt_library.selection.v2
+  - ppt_library.status.v2
+schema_versions:
+  selection_output_legacy: deck_master_ppt_library_selection.v1
+  selection_output: deck_master_ppt_library_selection.v2
+  library_status: deck_master_library_status.v2
+  feedback_input: deck_master_ppt_library_feedback.v1
+""",
+        encoding="utf-8",
+    )
+    legacy_contract = (
+        root
+        / "product_capabilities"
+        / "ppt-library"
+        / "contracts"
+        / "library-selection.v1.schema.json"
+    )
+    legacy_contract.parent.mkdir(parents=True)
+    legacy_contract.write_text(
+        json.dumps(
+            {
+                "schema_version": "deck_master_contract_schema.v1",
+                "contract": "deck_master_ppt_library_selection.v1",
+                "required_fields": ["schema_version", "run_id", "selections"],
             }
         ),
         encoding="utf-8",
@@ -101,6 +180,38 @@ def _contract_root(root: Path) -> Path:
     bridge = root / "scripts" / "tools" / "ppt_library_client.py"
     bridge.parent.mkdir(parents=True)
     bridge.write_text("# bridge fixture\n", encoding="utf-8")
+    installer = root / "scripts" / "skills" / "installer.py"
+    installer.parent.mkdir(parents=True)
+    installer.write_text(
+        "SUITE_SKILLS = "
+        + repr(
+            [
+                {
+                    "name": "ppt-library",
+                    "required_capabilities": REQUIRED_LIBRARY_CAPABILITIES,
+                    "schema_versions": LIBRARY_SCHEMA_VERSIONS,
+                    "contract_outputs": [
+                        "deck_master_ppt_library_selection.v1",
+                        "deck_master_ppt_library_selection.v2",
+                    ],
+                    "canonical_output": "deck_master_ppt_library_selection.v2",
+                    "readiness_output": "deck_master_library_status.v2",
+                    "canonical_artifact": "external/ppt_library/library_results.v2.json",
+                    "operations": [
+                        "status",
+                        "search",
+                        "select-slides",
+                        "doctor",
+                        "schema",
+                        "smoke --fixture",
+                        "writeback",
+                    ],
+                }
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
     return root
 
 
@@ -117,6 +228,17 @@ def _library_home(root: Path) -> Path:
     home = root / "library-home"
     home.mkdir()
     (home / "index.db").write_bytes(b"database fixture")
+    (home / "config.yml").write_text("schema_version: '1.0'\n", encoding="utf-8")
+    return home
+
+
+def _sqlite_library_home(root: Path) -> Path:
+    home = root / "library-home"
+    home.mkdir()
+    with closing(sqlite3.connect(home / "index.db")) as connection:
+        with connection:
+            connection.execute("CREATE TABLE slides (id INTEGER PRIMARY KEY, title TEXT)")
+            connection.execute("INSERT INTO slides (title) VALUES ('checkpointed')")
     (home / "config.yml").write_text("schema_version: '1.0'\n", encoding="utf-8")
     return home
 
@@ -351,7 +473,7 @@ class LibraryStatusV2Tests(unittest.TestCase):
     def test_reflink_failure_falls_back_to_regular_copy(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            source = _library_home(root)
+            source = _sqlite_library_home(root)
             target = root / "snapshot"
             target.mkdir()
             calls: list[list[str]] = []
@@ -370,7 +492,9 @@ class LibraryStatusV2Tests(unittest.TestCase):
             )
 
             self.assertTrue(copied)
-            self.assertEqual(source.joinpath("index.db").read_bytes(), target.joinpath("index.db").read_bytes())
+            with closing(sqlite3.connect(target / "index.db")) as connection:
+                self.assertEqual(1, connection.execute("SELECT COUNT(*) FROM slides").fetchone()[0])
+            self.assertEqual(source.joinpath("config.yml").read_bytes(), target.joinpath("config.yml").read_bytes())
             self.assertEqual(4, len(calls))
             self.assertEqual("cp", calls[1][0])
             self.assertEqual(3, len(calls[1]))
@@ -378,7 +502,7 @@ class LibraryStatusV2Tests(unittest.TestCase):
     def test_regular_copy_timeout_is_fail_closed(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            source = _library_home(root)
+            source = _sqlite_library_home(root)
             target = root / "snapshot"
             target.mkdir()
             calls = 0
@@ -399,6 +523,75 @@ class LibraryStatusV2Tests(unittest.TestCase):
             self.assertFalse(copied)
             self.assertEqual(2, calls)
 
+    def test_sqlite_backup_includes_committed_uncheckpointed_wal_data(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = _sqlite_library_home(root)
+            target = root / "snapshot"
+            target.mkdir()
+            writer = sqlite3.connect(source / "index.db")
+            try:
+                writer.execute("PRAGMA journal_mode=WAL")
+                writer.execute("PRAGMA wal_autocheckpoint=0")
+                writer.execute("INSERT INTO slides (title) VALUES ('committed-in-wal')")
+                writer.commit()
+                self.assertGreater((source / "index.db-wal").stat().st_size, 0)
+
+                copied = library_status_module._clone_library_state(source, target)
+
+                self.assertTrue(copied)
+                with closing(sqlite3.connect(target / "index.db")) as snapshot:
+                    titles = [row[0] for row in snapshot.execute("SELECT title FROM slides ORDER BY id")]
+                self.assertEqual(["checkpointed", "committed-in-wal"], titles)
+            finally:
+                writer.close()
+
+    def test_sqlite_backup_does_not_change_source_files_or_stats(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = _sqlite_library_home(root)
+            target = root / "snapshot"
+            target.mkdir()
+            writer = sqlite3.connect(source / "index.db")
+            try:
+                writer.execute("PRAGMA journal_mode=WAL")
+                writer.execute("PRAGMA wal_autocheckpoint=0")
+                writer.execute("INSERT INTO slides (title) VALUES ('committed-in-wal')")
+                writer.commit()
+                before = {
+                    path.name: (path.stat().st_size, path.stat().st_mtime_ns)
+                    for path in source.iterdir()
+                    if path.is_file()
+                }
+
+                self.assertTrue(library_status_module._clone_library_state(source, target))
+
+                after = {
+                    path.name: (path.stat().st_size, path.stat().st_mtime_ns)
+                    for path in source.iterdir()
+                    if path.is_file()
+                }
+                self.assertEqual(before, after)
+            finally:
+                writer.close()
+
+    def test_sqlite_backup_timeout_removes_partial_snapshot(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = _sqlite_library_home(root)
+            target = root / "snapshot.db"
+            clock = mock.Mock(side_effect=[0.0, 2.0])
+
+            copied = library_status_module._backup_index_database(
+                source / "index.db",
+                target,
+                timeout_seconds=1.0,
+                clock=clock,
+            )
+
+            self.assertFalse(copied)
+            self.assertFalse(target.exists())
+
     def test_v1_only_capability_is_contract_blocked(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = _contract_root(Path(tmp))
@@ -417,6 +610,43 @@ class LibraryStatusV2Tests(unittest.TestCase):
 
         self.assertFalse(result["contract_ready"])
         self.assertIn("PPT_LIBRARY_CONTRACT_MISSING", result["blocking_summary"])
+
+    def test_contract_requires_legacy_and_v2_schemas(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = _contract_root(Path(tmp))
+            legacy_schema = (
+                root
+                / "product_capabilities"
+                / "ppt-library"
+                / "contracts"
+                / "library-selection.v1.schema.json"
+            )
+            legacy_schema.write_text(json.dumps({"contract": "wrong.v1"}), encoding="utf-8")
+
+            self.assertFalse(library_status_module._contract_ready(root))
+
+    def test_contract_requires_json_yaml_and_installer_declarations_to_match(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = _contract_root(Path(tmp))
+            yaml_path = root / "product_capabilities" / "ppt-library" / "capability.yaml"
+            yaml_path.write_text(
+                yaml_path.read_text(encoding="utf-8").replace(
+                    "canonical_output: deck_master_ppt_library_selection.v2",
+                    "canonical_output: deck_master_ppt_library_selection.v1",
+                ),
+                encoding="utf-8",
+            )
+            self.assertFalse(library_status_module._contract_ready(root))
+
+            root = _contract_root(Path(tmp) / "installer-drift")
+            installer_path = root / "scripts" / "skills" / "installer.py"
+            installer_path.write_text(
+                installer_path.read_text(encoding="utf-8").replace(
+                    "ppt_library.status.v2", "ppt_library.status.v1"
+                ),
+                encoding="utf-8",
+            )
+            self.assertFalse(library_status_module._contract_ready(root))
 
     def test_cache_hit_and_source_change_invalidation(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -460,6 +690,61 @@ class LibraryStatusV2Tests(unittest.TestCase):
             self.assertEqual(4, runner.call_count)
             self.assertEqual(2, snapshotter.call_count)
 
+    def test_wal_change_invalidates_cache_without_main_database_change(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = _contract_root(Path(tmp))
+            library_home = _sqlite_library_home(root)
+            snapshotter = mock.Mock(return_value=True)
+            runner = _runner({}, search_payload={"results": [{"slide_id": "probe-result"}]})
+            writer = sqlite3.connect(library_home / "index.db")
+            try:
+                writer.execute("PRAGMA journal_mode=WAL")
+                writer.execute("PRAGMA wal_autocheckpoint=0")
+                writer.execute("INSERT INTO slides (title) VALUES ('first-wal-row')")
+                writer.commit()
+                main_before = (library_home / "index.db").stat()
+
+                first = inspect_library_status(
+                    repo_root=root,
+                    which=lambda _: "/opt/tools/ppt-lib",
+                    library_home=library_home,
+                    snapshotter=snapshotter,
+                    runner=runner,
+                    cache_ttl_seconds=30,
+                )
+                second = inspect_library_status(
+                    repo_root=root,
+                    which=lambda _: "/opt/tools/ppt-lib",
+                    library_home=library_home,
+                    snapshotter=snapshotter,
+                    runner=runner,
+                    cache_ttl_seconds=30,
+                )
+                self.assertEqual(first, second)
+                self.assertEqual(2, runner.call_count)
+
+                writer.execute("INSERT INTO slides (title) VALUES ('second-wal-row')")
+                writer.commit()
+                main_after = (library_home / "index.db").stat()
+                self.assertEqual(
+                    (main_before.st_size, main_before.st_mtime_ns),
+                    (main_after.st_size, main_after.st_mtime_ns),
+                )
+
+                third = inspect_library_status(
+                    repo_root=root,
+                    which=lambda _: "/opt/tools/ppt-lib",
+                    library_home=library_home,
+                    snapshotter=snapshotter,
+                    runner=runner,
+                    cache_ttl_seconds=30,
+                )
+                self.assertEqual(first, third)
+                self.assertEqual(4, runner.call_count)
+                self.assertEqual(2, snapshotter.call_count)
+            finally:
+                writer.close()
+
     def test_contract_fingerprint_change_invalidates_cache(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = _contract_root(Path(tmp))
@@ -479,6 +764,42 @@ class LibraryStatusV2Tests(unittest.TestCase):
             capability = json.loads(capability_path.read_text(encoding="utf-8"))
             capability["contracts"]["readiness_output"] = "legacy_status"
             capability_path.write_text(json.dumps(capability), encoding="utf-8")
+            second = inspect_library_status(
+                repo_root=root,
+                which=lambda _: "/opt/tools/ppt-lib",
+                library_home=library_home,
+                snapshotter=snapshotter,
+                runner=runner,
+                cache_ttl_seconds=30,
+            )
+
+            self.assertTrue(first["contract_ready"])
+            self.assertFalse(second["contract_ready"])
+            self.assertEqual(4, runner.call_count)
+            self.assertEqual(2, snapshotter.call_count)
+
+    def test_companion_manifest_drift_invalidates_contract_cache(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = _contract_root(Path(tmp))
+            library_home = _library_home(root)
+            snapshotter = mock.Mock(return_value=True)
+            runner = _runner({}, search_payload={"results": [{"slide_id": "probe-result"}]})
+
+            first = inspect_library_status(
+                repo_root=root,
+                which=lambda _: "/opt/tools/ppt-lib",
+                library_home=library_home,
+                snapshotter=snapshotter,
+                runner=runner,
+                cache_ttl_seconds=30,
+            )
+            installer = root / "scripts" / "skills" / "installer.py"
+            installer.write_text(
+                installer.read_text(encoding="utf-8").replace(
+                    "ppt_library.status.v2", "ppt_library.status.v1"
+                ),
+                encoding="utf-8",
+            )
             second = inspect_library_status(
                 repo_root=root,
                 which=lambda _: "/opt/tools/ppt-lib",
