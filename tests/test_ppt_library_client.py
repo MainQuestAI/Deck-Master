@@ -74,6 +74,8 @@ class PPTLibraryClientTests(unittest.TestCase):
                 mode="auto",
                 command="missing-ppt-lib-command",
             )
+        blocked = read_json(self.temp_dir / "external" / "ppt_library" / "library_results.v2.json")
+        self.assertEqual("library_blocked", blocked["status"])
 
     def test_production_auto_blocks_explicit_fixture_fallback(self) -> None:
         request = build_request(brief="真实生产方案", industry="healthcare")
@@ -137,14 +139,15 @@ class PPTLibraryClientTests(unittest.TestCase):
         result = import_library_selection(run_dir, selection_path)
 
         self.assertEqual("imported", result["status"])
-        self.assertTrue((run_dir / "external" / "ppt_library" / "library_results.json").exists())
+        self.assertTrue((run_dir / "external" / "ppt_library" / "library_results.v2.json").exists())
         legacy = read_json(run_dir / "library_results" / "selection.json")
         self.assertEqual("imported", legacy["source"])
+        self.assertRegex(legacy["selections"][0]["query_trace_id"], r"^[a-f0-9]{64}$")
         candidate = legacy["by_beat"]["beat-001"][0]
         self.assertEqual("page-001", candidate["page_task_id"])
         self.assertEqual("hero", candidate["slot_id"])
         self.assertEqual("query-001", candidate["query_trace_id"])
-        self.assertEqual("imported", candidate["candidate_origin"])
+        self.assertEqual("ppt_library", candidate["candidate_origin"])
         logs = read_import_log(run_dir)
         self.assertEqual("ppt_library_selection", logs[-1]["import_type"])
 

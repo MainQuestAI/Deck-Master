@@ -629,7 +629,14 @@ def command_search_library(args: argparse.Namespace) -> dict[str, Any]:
         command=args.ppt_lib_command,
         allow_fixture_fallback=bool(getattr(args, "allow_fixture_library_fallback", False)),
     )
-    return {"run_id": request["run_id"], "run_dir": str(run_dir), "status": "library_ready", "source": results.get("source", "")}
+    return {
+        "run_id": request["run_id"],
+        "run_dir": str(run_dir),
+        "status": results.get("status", "library_blocked"),
+        "source": results.get("source", ""),
+        "preview_degraded": bool(results.get("preview_degraded", False)),
+        "selection_count": len(results.get("selections", [])),
+    }
 
 
 def command_library_status(args: argparse.Namespace) -> dict[str, Any]:
@@ -2929,7 +2936,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_import_library = sub.add_parser("import-library-selection", help="Import PPT Library selection handback")
     add_run_args(p_import_library)
-    p_import_library.add_argument("--input", required=True, help="Path to deck_master_ppt_library_selection.v1 JSON")
+    p_import_library.add_argument("--input", required=True, help="Path to PPT Library selection v2 or legacy v1 JSON")
     p_import_library.set_defaults(func=command_import_library_selection)
 
     p_decide = sub.add_parser("decide-sourcing", help="Create sourcing_plan.json from library results")
