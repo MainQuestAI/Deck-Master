@@ -22,7 +22,11 @@ from runtime.run_state import (
     read_json,
     write_json,
 )
-from runtime.sourcing_import import import_sourcing, validate_sourcing
+from runtime.sourcing_import import (
+    _resolve_sourcing_schema_path,
+    import_sourcing,
+    validate_sourcing,
+)
 from sourcing.plan import build_sourcing_plan_v2
 from runtime.workspace_binding import bind_workspace
 from workspace.foundation import init_workspace
@@ -62,6 +66,35 @@ class PlannerSourcingControlTests(unittest.TestCase):
             },
         )
         return run_dir
+
+    def test_sourcing_schema_resolver_prefers_source_layout(self) -> None:
+        root = self.temp_dir / "source-layout"
+        source_schema = root / "docs" / "contracts" / "sourcing-plan.v2.schema.json"
+        installed_schema = root / "contracts" / "sourcing-plan.v2.schema.json"
+        source_schema.parent.mkdir(parents=True)
+        installed_schema.parent.mkdir(parents=True)
+        source_schema.write_text("{}\n", encoding="utf-8")
+        installed_schema.write_text("{}\n", encoding="utf-8")
+
+        self.assertEqual(source_schema, _resolve_sourcing_schema_path(root))
+
+    def test_sourcing_schema_resolver_supports_installed_layout(self) -> None:
+        root = self.temp_dir / "installed-layout"
+        installed_schema = root / "contracts" / "sourcing-plan.v2.schema.json"
+        installed_schema.parent.mkdir(parents=True)
+        installed_schema.write_text("{}\n", encoding="utf-8")
+
+        self.assertEqual(installed_schema, _resolve_sourcing_schema_path(root))
+
+    def test_sourcing_schema_resolver_reports_checked_paths(self) -> None:
+        root = self.temp_dir / "missing-layout"
+
+        with self.assertRaises(FileNotFoundError) as ctx:
+            _resolve_sourcing_schema_path(root)
+
+        message = str(ctx.exception)
+        self.assertIn(str(root / "docs" / "contracts" / "sourcing-plan.v2.schema.json"), message)
+        self.assertIn(str(root / "contracts" / "sourcing-plan.v2.schema.json"), message)
 
     def test_production_planner_without_claim_map_blocks(self) -> None:
         run_dir = create_run(

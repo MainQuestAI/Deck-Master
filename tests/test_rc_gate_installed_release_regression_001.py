@@ -32,13 +32,6 @@ class InstalledReleaseRCGateRegressionTests(unittest.TestCase):
     def test_release_local_fixture_sourcing_loads_jsonschema(self) -> None:
         release_root = self.temp_dir / "release-sourcing"
         self.build_installed_release(release_root)
-        # D3A still resolves this contract through the source-tree docs layout.
-        # Keep this packaging regression scoped to the release-local dependency.
-        shutil.copytree(
-            release_root / "contracts",
-            release_root / "docs" / "contracts",
-            dirs_exist_ok=True,
-        )
         runs_dir = self.temp_dir / "runs"
         env = {
             **os.environ,

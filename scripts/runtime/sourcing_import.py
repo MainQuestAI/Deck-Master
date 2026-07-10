@@ -24,11 +24,24 @@ from sourcing.reader import canonicalize_sourcing_plan
 
 VALID_FILE_EXTENSIONS = {".json"}
 PLAN_PATH = "sourcing_plan.json"
-SCHEMA_PATH = Path(__file__).resolve().parents[2] / "docs" / "contracts" / "sourcing-plan.v2.schema.json"
+SCHEMA_NAME = "sourcing-plan.v2.schema.json"
 
 
 def _utc_stamp() -> str:
     return datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
+
+
+def _resolve_sourcing_schema_path(root: Path | None = None) -> Path:
+    runtime_root = root or Path(__file__).resolve().parents[2]
+    candidates = (
+        runtime_root / "docs" / "contracts" / SCHEMA_NAME,
+        runtime_root / "contracts" / SCHEMA_NAME,
+    )
+    for candidate in candidates:
+        if candidate.is_file():
+            return candidate
+    checked = ", ".join(str(path) for path in candidates)
+    raise FileNotFoundError(f"Sourcing plan schema not found; checked: {checked}")
 
 
 def _collect_required_pages(run_dir: Path) -> list[tuple[str, str]]:
@@ -86,7 +99,12 @@ def _schema_errors(payload: dict[str, Any]) -> list[str]:
     except ImportError:  # pragma: no cover - runtime dependency
         return ["jsonschema is required to validate sourcing plans"]
 
-    schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
+    try:
+        schema_path = _resolve_sourcing_schema_path()
+    except FileNotFoundError as exc:
+        return [str(exc)]
+
+    schema = json.loads(schema_path.read_text(encoding="utf-8"))
     validator = jsonschema.Draft202012Validator(schema)
     errors: list[str] = []
     for error in sorted(validator.iter_errors(payload), key=lambda item: list(item.absolute_path)):
