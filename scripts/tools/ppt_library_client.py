@@ -28,6 +28,7 @@ SELECTION_V2_SCHEMA_PATH = (
     / "contracts"
     / "ppt-library-selection.v2.schema.json"
 )
+LIBRARY_COMMAND_TIMEOUT_SECONDS = 60
 
 PASSTHROUGH_ROLES = {
     "opener",
@@ -225,8 +226,7 @@ def build_select_slides_command(
         "select-slides",
         "--plan",
         str(plan_path),
-        "--brief",
-        brief,
+        f"--brief={brief}",
         "--ranking",
         ranking,
         "--max-per-role",
@@ -239,7 +239,7 @@ def build_select_slides_command(
 
 
 def build_search_command(*, command: str, query: str) -> list[str]:
-    return [command, "search", query, "--ranking", "business", "--output", "json"]
+    return [command, "search", "--ranking", "business", "--output", "json", "--", query]
 
 
 def write_review_svg(path: Path, title: str, subtitle: str) -> Path:
@@ -297,16 +297,34 @@ def _source_display_name(source_path: str, source_asset_id: str) -> str:
     return f"PPT Library asset {source_asset_id[:8]}"
 
 
+def _is_safe_screenshot_source(source: Path, run_dir: Path) -> bool:
+    """Confine screenshot copy sources to run_dir or the PPT Library home."""
+    try:
+        source.relative_to(run_dir)
+        return True
+    except ValueError:
+        pass
+    library_home = Path.home() / ".ppt-library"
+    try:
+        source.relative_to(library_home)
+        return True
+    except ValueError:
+        pass
+    return False
+
+
 def _preview_ref(run_dir: Path, screenshot_path: Any, asset_key: str) -> tuple[str, str]:
     raw_path = str(screenshot_path or "").strip()
     if not raw_path:
         return "", "missing"
-    source = Path(raw_path).expanduser()
+    source = Path(raw_path)
     if not source.is_absolute():
         source = run_dir / source
     try:
         source = source.resolve()
         if not source.is_file():
+            return "", "invalid"
+        if not _is_safe_screenshot_source(source, run_dir.resolve()):
             return "", "invalid"
         suffix = source.suffix.lower() if re.fullmatch(r"\.[a-z0-9]{1,8}", source.suffix.lower()) else ".bin"
         preview_key = f"{asset_key}:{_normalized_source_path(raw_path)}"
@@ -930,7 +948,10 @@ def _run_role_selection(
         brief=brief,
         output_path=raw_path,
     )
-    completed = subprocess.run(cmd, cwd=run_dir, text=True, capture_output=True, check=False)
+    try:
+        completed = subprocess.run(cmd, cwd=run_dir, text=True, capture_output=True, check=False, timeout=LIBRARY_COMMAND_TIMEOUT_SECONDS)
+    except subprocess.TimeoutExpired:
+        raise PPTLibraryClientError("PPT Library role selection timed out.") from None
     if completed.returncode != 0 or not raw_path.exists():
         raise PPTLibraryClientError(
             completed.stderr.strip() or completed.stdout.strip() or "PPT Library role selection failed."
@@ -947,7 +968,10 @@ def _run_semantic_search(
 ) -> list[dict[str, Any]]:
     raw_path = private_root / f"selection.raw.{request['query_trace_id']}.search.json"
     cmd = build_search_command(command=command, query=request["query"])
-    completed = subprocess.run(cmd, cwd=run_dir, text=True, capture_output=True, check=False)
+    try:
+        completed = subprocess.run(cmd, cwd=run_dir, text=True, capture_output=True, check=False, timeout=LIBRARY_COMMAND_TIMEOUT_SECONDS)
+    except subprocess.TimeoutExpired:
+        raise PPTLibraryClientError("PPT Library semantic search timed out.") from None
     raw_path.write_text(completed.stdout or "", encoding="utf-8")
     if completed.returncode != 0:
         raise PPTLibraryClientError(
@@ -1156,7 +1180,7 @@ def run_library_selection(
         warnings.extend(candidate_warnings)
         if not candidates:
             retrieval_method = "none"
-            fallback_reason = "SEMANTIC_SEARCH_GAP" if retrieval_method == "none" else fallback_reason
+            fallback_reason = "SEMANTIC_SEARCH_GAP"
         selections.append(
             _selection_record(
                 bridge_request,

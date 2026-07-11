@@ -374,7 +374,7 @@ class PlannerSourcingControlTests(unittest.TestCase):
         with self.assertRaises(ValueError) as ctx:
             build_preview_from_sourcing(sourcing_plan, run_dir)
 
-        self.assertIn("manual_placeholder sourcing is not allowed", str(ctx.exception))
+        self.assertIn("manual/evidence/blocked sourcing decisions are not allowed", str(ctx.exception))
 
     def test_import_sourcing_complete_backs_up_and_refreshes_preview(self) -> None:
         run_dir = self._run_with_plan()

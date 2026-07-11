@@ -120,7 +120,7 @@ def _assert_preview_allowed(run_dir: Path, sourcing_plan: dict[str, Any]) -> Non
             blocked.append(f"{page_id} ({decision})")
     if blocked:
         raise ValueError(
-            f"manual_placeholder sourcing is not allowed for {mode} preview builds; "
+            f"manual/evidence/blocked sourcing decisions are not allowed for {mode} preview builds; "
             f"blocked pages: {', '.join(blocked)}"
         )
 

@@ -667,6 +667,7 @@ def command_decide_sourcing(args: argparse.Namespace) -> dict[str, Any]:
         "run_dir": str(run_dir),
         "status": "sourcing_ready",
         "pages": len(sourcing_plan["pages"]),
+        "decisions": len(sourcing_plan["pages"]),
     }
 
 

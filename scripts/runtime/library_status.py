@@ -10,7 +10,6 @@ import re
 import shutil
 import sqlite3
 import subprocess
-import sys
 import tempfile
 import threading
 import time
@@ -404,9 +403,8 @@ def _copy_snapshot_file(
     *,
     copy_runner: Callable[..., subprocess.CompletedProcess[str]],
 ) -> bool:
-    clone_flag = "-c" if sys.platform == "darwin" else "--reflink=always"
     commands = (
-        ["cp", clone_flag, str(source), str(target)],
+        ["cp", "--reflink=always", str(source), str(target)],
         ["cp", str(source), str(target)],
     )
     for command in commands:

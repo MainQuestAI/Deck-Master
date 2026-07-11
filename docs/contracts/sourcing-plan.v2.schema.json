@@ -159,11 +159,7 @@
     },
     "selectedSource": {
       "type": "object",
-      "required": [
-        "asset_key",
-        "query_trace_id",
-        "page_task_id"
-      ],
+      "additionalProperties": true,
       "properties": {
         "candidate_id": {"type": "string"},
         "slide_id": {"type": ["string", "null"]},
@@ -200,8 +196,7 @@
           "type": "array",
           "items": {"type": "string"}
         }
-      },
-      "additionalProperties": false
+      }
     }
   },
   "additionalProperties": false

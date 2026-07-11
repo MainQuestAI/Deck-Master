@@ -18,7 +18,6 @@
     "workspace_blocking_summary",
     "suite_blocking_summary",
     "client_delivery_blocking_summary",
-    "library_status",
     "next_command",
     "next_agent_action"
   ],
