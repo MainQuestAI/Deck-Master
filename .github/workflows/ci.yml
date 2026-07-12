@@ -117,7 +117,7 @@ jobs:
           set -euo pipefail
           OUT_DIR="$(mktemp -d)"
           python scripts/deck_master.py release-build --output "$OUT_DIR/release" --force
-          "$OUT_DIR/release/bin/deck-master" --help
+          python scripts/deck_master.py release-smoke --release-root "$OUT_DIR/release"
 
   rc_gate_ci:
     name: CI-tier rc-gate (reproducible subset, Python 3.12)

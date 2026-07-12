@@ -54,6 +54,17 @@ SEMANTIC_ONLY_ROLES = {
 }
 SAFE_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 SAFE_DISPLAY_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9 ._()\-]{0,127}$")
+_ALLOWED_IMAGE_SUFFIXES = frozenset({".png", ".jpg", ".jpeg", ".webp", ".svg"})
+_MAX_SCREENSHOT_BYTES = 20 * 1024 * 1024
+_IMAGE_MAGIC_PREFIXES = (
+    b"\x89PNG\r\n\x1a\n",
+    b"\xff\xd8\xff",
+    b"RIFF",
+)
+_SENSITIVE_NAME_PATTERNS = re.compile(
+    r"(confidential|private|secret|internal|proposal|contract|nda|customer|client)",
+    re.IGNORECASE,
+)
 
 
 class PPTLibraryClientError(ValueError):
@@ -292,25 +303,59 @@ def _safe_external_identity(value: Any, *, namespace: str) -> str:
 
 def _source_display_name(source_path: str, source_asset_id: str) -> str:
     basename = source_path.rsplit("/", 1)[-1].strip()
-    if basename and basename not in {".", ".."} and ".." not in basename and SAFE_DISPLAY_RE.fullmatch(basename):
-        return basename
+    if basename and basename not in {".", ".."} and ".." not in basename:
+        if SAFE_DISPLAY_RE.fullmatch(basename) and not _SENSITIVE_NAME_PATTERNS.search(basename):
+            return basename
     return f"PPT Library asset {source_asset_id[:8]}"
 
 
 def _is_safe_screenshot_source(source: Path, run_dir: Path) -> bool:
-    """Confine screenshot copy sources to run_dir or the PPT Library home."""
+    """Confine screenshot copy sources: path root + image type + magic bytes + size."""
+    in_run_dir = False
     try:
         source.relative_to(run_dir)
-        return True
+        in_run_dir = True
     except ValueError:
         pass
     library_home = Path.home() / ".ppt-library"
+    in_library = False
     try:
         source.relative_to(library_home)
-        return True
+        in_library = True
     except ValueError:
         pass
-    return False
+    if not in_run_dir and not in_library:
+        return False
+    if in_run_dir:
+        try:
+            rel = source.relative_to(run_dir)
+            if not str(rel).startswith("preview_assets/"):
+                return False
+        except ValueError:
+            return False
+    suffix = source.suffix.lower()
+    if suffix not in _ALLOWED_IMAGE_SUFFIXES:
+        return False
+    try:
+        if source.stat().st_size > _MAX_SCREENSHOT_BYTES:
+            return False
+    except OSError:
+        return False
+    if suffix == ".svg":
+        try:
+            header = source.read_bytes()[:256]
+        except OSError:
+            return False
+        if b"<svg" not in header and b"<?xml" not in header:
+            return False
+    else:
+        try:
+            header = source.read_bytes()[:16]
+        except OSError:
+            return False
+        if not any(header.startswith(magic) for magic in _IMAGE_MAGIC_PREFIXES):
+            return False
+    return True
 
 
 def _preview_ref(run_dir: Path, screenshot_path: Any, asset_key: str) -> tuple[str, str]:

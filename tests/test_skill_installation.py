@@ -1122,7 +1122,21 @@ class SkillInstallationTest(unittest.TestCase):
                 "validated_capabilities": ["render", "smoke", "writeback"],
                 "summary": "PPT Master 已绑定且已完成验证。",
             }],
-        ), mock.patch("scripts.skills.installer.inspect_skill_link", side_effect=fake_inspect_skill_link):
+        ), mock.patch("scripts.skills.installer.inspect_skill_link", side_effect=fake_inspect_skill_link), \
+           mock.patch("scripts.skills.installer.inspect_library_status", return_value={
+               "schema_version": "deck_master_library_status.v2",
+               "status": "degraded_ready",
+               "runtime_ready": True,
+               "contract_ready": True,
+               "semantic_search_ready": True,
+               "role_selection_ready": True,
+               "fallback_ready": True,
+               "preview_ready": True,
+               "business_ranking_ready": "ready",
+               "data_hygiene_status": "ready",
+               "blocking_summary": [],
+               "warnings": [],
+           }):
             result = inspect_suite_status(targets=["codex"], agent_skill_dir=str(self.agent_dir))
 
         self.assertEqual("degraded_ready", result["status"])

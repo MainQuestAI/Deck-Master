@@ -35,7 +35,7 @@ def _task_semantics(page: dict[str, Any]) -> tuple[str, bool, str]:
     return task_type, is_adapt, expected_operation
 
 
-def task_for_page(page: dict[str, Any]) -> dict[str, Any]:
+def task_for_page(page: dict[str, Any], *, run_id: str = "") -> dict[str, Any]:
     selected_sources = [source for source in page.get("selected_sources", []) if isinstance(source, dict)]
     selected = selected_sources[0] if selected_sources else None
     alternatives = selected_sources[1:]
@@ -50,6 +50,8 @@ def task_for_page(page: dict[str, Any]) -> dict[str, Any]:
     evidence_need = page.get("evidence_need", [])
     source_decision = _source_decision(page)
     return {
+        "schema_version": "deck_generation_task.v1",
+        "run_id": run_id,
         "task_id": _generation_task_id(page_task_id),
         "page_task_id": page_task_id,
         "page_id": page_id,
@@ -68,6 +70,9 @@ def task_for_page(page: dict[str, Any]) -> dict[str, Any]:
         "claim_ids": list(page.get("claim_ids") or []),
         "visual_need": visual_need,
         "evidence_need": evidence_need,
+        "workspace_refs": list(page.get("workspace_refs") or []),
+        "quality_requirements": list(page.get("quality_requirements") or []),
+        "expected_outputs": list(page.get("expected_outputs") or ["preview_path", "artifact_path"]),
         "customer_visible_content": {
             "title": page_title or "",
             "body_brief": generation_brief,
@@ -99,18 +104,24 @@ def create_generation_tasks(sourcing_plan: dict[str, Any], run_dir: str | Path) 
     tasks_dir = root / "generation_tasks"
     tasks_dir.mkdir(parents=True, exist_ok=True)
     canonical_plan = canonicalize_sourcing_plan(sourcing_plan)
+    run_id = str(canonical_plan.get("run_id") or "")
     tasks = [
-        task_for_page(page)
+        task_for_page(page, run_id=run_id)
         for page in canonical_plan.get("pages", [])
         if isinstance(page, dict) and _source_decision(page) in TASK_DECISIONS
     ]
+    new_task_ids = {task["task_id"] for task in tasks}
+    for old_file in tasks_dir.glob("*.json"):
+        if old_file.stem not in new_task_ids and old_file.name != "index":
+            old_file.unlink()
     for task in tasks:
         (tasks_dir / f"{task['task_id']}.json").write_text(
             json.dumps(task, ensure_ascii=False, indent=2) + "\n",
             encoding="utf-8",
         )
     payload = {
-        "run_id": canonical_plan.get("run_id", ""),
+        "schema_version": "deck_generation_task_index.v1",
+        "run_id": run_id,
         "deck_pro_max_project": str((root / "deck_pro_max_project").resolve()),
         "tasks": tasks,
     }

@@ -164,9 +164,9 @@ class PPTLibraryBridgeContractTests(unittest.TestCase):
         self.assertNotIn("UNKNOWN_ROLE_SEMANTIC_FALLBACK", json.dumps(plan))
 
     def test_candidate_sanitizes_paths_copies_preview_and_dedupes_identity(self) -> None:
-        screenshot = self.temp_dir / "private" / "shot.png"
+        screenshot = self.temp_dir / "preview_assets" / "shot.png"
         screenshot.parent.mkdir()
-        screenshot.write_bytes(b"png")
+        screenshot.write_bytes(b"\x89PNG\r\n\x1a\n" + b"\x00" * 8)
         source = "/Users/acme/private/Customer Secret Deck.pptx"
         candidate, preview_status = normalize_candidate(
             {
@@ -183,10 +183,11 @@ class PPTLibraryBridgeContractTests(unittest.TestCase):
             index=1,
         )
 
+        source_hash = hashlib.sha256(source.encode("utf-8")).hexdigest()
         self.assertEqual("canonical:canonical-001", candidate["asset_key"])
         self.assertEqual(1.0, candidate["confidence"])
-        self.assertEqual(hashlib.sha256(source.encode("utf-8")).hexdigest(), candidate["source_asset_id"])
-        self.assertEqual("Customer Secret Deck.pptx", candidate["source_display_name"])
+        self.assertEqual(source_hash, candidate["source_asset_id"])
+        self.assertEqual(f"PPT Library asset {source_hash[:8]}", candidate["source_display_name"])
         self.assertEqual("ready", preview_status)
         self.assertFalse(Path(candidate["screenshot_ref"]).is_absolute())
         self.assertTrue((self.temp_dir / candidate["screenshot_ref"]).is_file())

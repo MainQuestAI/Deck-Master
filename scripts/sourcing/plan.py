@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any
 
@@ -94,6 +94,12 @@ class PageInput:
     order: float
     index: int
     allow_repeat_source: bool
+    role: str = ""
+    content_goal: str = ""
+    generation_brief: str = ""
+    visual_need: str = ""
+    workspace_refs: list[str] = field(default_factory=list)
+    quality_requirements: list[str] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -154,6 +160,14 @@ def _extract_pages(page_tasks: dict[str, Any] | list[dict[str, Any]]) -> list[Pa
                     item.get("allow_repeat_source") is True
                     or retrieval.get("allow_repeat_source") is True
                 ),
+                role=str(planning.get("role") or ""),
+                content_goal=str(planning.get("content_goal") or ""),
+                generation_brief=str(
+                    (item.get("generation") or {}).get("generation_brief") or ""
+                ),
+                visual_need=str(planning.get("visual_need") or ""),
+                workspace_refs=_string_list(planning.get("workspace_refs")),
+                quality_requirements=_string_list(planning.get("quality_requirements")),
             )
         )
     return out
@@ -200,6 +214,8 @@ def _safe_selected_source(
     safe["asset_key"] = asset_key
     safe["query_trace_id"] = query_trace_id
     safe["page_task_id"] = page.page_task_id
+    safe["retrieval_method"] = str(selection.get("retrieval_method") or "")
+    safe["preview_status"] = str(selection.get("preview_status") or "ready")
     for field in ("screenshot_ref", "screenshot_path"):
         value = str(safe.get(field) or "")
         if value and (not value.startswith("preview_assets/") or ".." in value or "\\" in value):
@@ -279,11 +295,24 @@ def _decide_for_page(
     allow_generate: bool,
 ) -> dict[str, Any]:
     if selected:
-        decision = (
-            DECISION_ADAPT
-            if selected.get("reuse_safe") is False or selected.get("reuse_policy") == "adapt_only"
-            else DECISION_REUSE
-        )
+        reuse_policy = str(selected.get("reuse_policy") or "")
+        preview_status = str(selected.get("preview_status") or "ready")
+        retrieval_method = str(selected.get("retrieval_method") or "")
+        reuse_safe = selected.get("reuse_safe")
+
+        if reuse_policy == "adapt_only":
+            decision, reason = DECISION_ADAPT, "POLICY_ADAPT_ONLY"
+        elif reuse_policy == "adapt":
+            decision, reason = DECISION_ADAPT, "POLICY_ADAPT"
+        elif retrieval_method == "semantic_fallback":
+            decision, reason = DECISION_ADAPT, "SEMANTIC_FALLBACK_ADAPT"
+        elif preview_status in ("missing", "invalid"):
+            decision, reason = DECISION_ADAPT, "PREVIEW_MISSING_ADAPT"
+        elif reuse_safe is False:
+            decision, reason = DECISION_ADAPT, "REUSE_SAFE_FALSE_ADAPT"
+        else:
+            decision, reason = DECISION_REUSE, "ROLE_SELECTION_PREVIEW_READY"
+
         source_authority = str(selected.get("source_authority") or "unknown")
         freshness = str(selected.get("freshness_status") or "unknown")
         permission = str(selected.get("permission_status") or permission_default)
@@ -291,19 +320,20 @@ def _decide_for_page(
         confidence = _number(selected.get("confidence"), _number(selected.get("score"), 0.5))
     else:
         if page.evidence_need and not allow_generate:
-            decision = DECISION_EVIDENCE
+            decision, reason = DECISION_EVIDENCE, "NO_CANDIDATE_EVIDENCE"
         elif allow_generate:
-            decision = DECISION_GENERATE
+            decision, reason = DECISION_GENERATE, "NO_CANDIDATE_GENERATE"
         else:
-            decision = DECISION_MANUAL
+            decision, reason = DECISION_MANUAL, "NO_CANDIDATE_MANUAL"
         source_authority = "pending"
         freshness = "pending"
-        permission = PERMISSION_NOT_REQUIRED if decision == DECISION_EVIDENCE else permission_default
+        permission = PERMISSION_NOT_REQUIRED
         selected_sources = []
         confidence = 0.3
 
     if permission == PERMISSION_BLOCKED:
         decision = DECISION_BLOCKED
+        reason = "PERMISSION_BLOCKED"
 
     missing_evidence = list(page.evidence_need) if not selected_sources and page.evidence_need else []
     return {
@@ -312,7 +342,7 @@ def _decide_for_page(
         "order": int(page.order) if page.order.is_integer() else page.order,
         "page_title": page.title,
         "decision": decision,
-        "reason": f"auto-decided: {decision}",
+        "reason": reason,
         "confidence": round(confidence, 4),
         "claim_ids": list(page.claim_ids),
         "evidence_need": list(page.evidence_need),
@@ -323,6 +353,13 @@ def _decide_for_page(
         "usage_constraints": _string_list(selected.get("usage_constraints") if selected else []),
         "missing_evidence": missing_evidence,
         "production_budget_class": _budget_for(decision),
+        "role": page.role,
+        "content_goal": page.content_goal,
+        "generation_brief": page.generation_brief,
+        "visual_need": page.visual_need,
+        "workspace_refs": list(page.workspace_refs),
+        "quality_requirements": list(page.quality_requirements),
+        "expected_outputs": ["preview_path", "artifact_path"],
     }
 
 
@@ -365,7 +402,15 @@ def build_sourcing_plan_v2(
     )
     source_fingerprint = _sha({
         "run_id": run_id,
-        "pages": [page.page_id for page in pages_in],
+        "pages": [
+            {
+                "page_id": p["page_id"],
+                "decision": p["decision"],
+                "asset_key": (p["selected_sources"][0].get("asset_key", "") if p.get("selected_sources") else ""),
+                "query_trace_id": (p["selected_sources"][0].get("query_trace_id", "") if p.get("selected_sources") else ""),
+            }
+            for p in pages
+        ],
         "library_source": library_results.get("library_source") or library_results.get("source") or "none",
     })
     return {
@@ -452,7 +497,16 @@ def migrate_v1(v1_plan: dict[str, Any]) -> dict[str, Any]:
                 or legacy.get("query_trace_id")
                 or _sha(["legacy-query", run_id, page_id])
             )
-            page_input = PageInput(page_id, page_task_id, [], [], "", float(index + 1), index, False)
+            page_input = PageInput(
+                page_id=page_id,
+                page_task_id=page_task_id,
+                claim_ids=[],
+                evidence_need=[],
+                title="",
+                order=float(index + 1),
+                index=index,
+                allow_repeat_source=False,
+            )
             selected = _safe_selected_source(migrated_candidate, page_input, {})
 
         permission = PERMISSION_APPROVED if selected else PERMISSION_NOT_REQUIRED
@@ -476,6 +530,12 @@ def migrate_v1(v1_plan: dict[str, Any]) -> dict[str, Any]:
             "missing_evidence": _string_list(legacy.get("missing_evidence")),
             "production_budget_class": _budget_for(decision),
             "generation_brief": str(legacy.get("generation_brief") or ""),
+            "role": "",
+            "content_goal": "",
+            "visual_need": "",
+            "workspace_refs": [],
+            "quality_requirements": [],
+            "expected_outputs": ["preview_path", "artifact_path"],
             "legacy_source_decision": legacy_decision,
         })
 

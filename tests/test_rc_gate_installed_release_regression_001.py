@@ -98,7 +98,7 @@ class InstalledReleaseRCGateRegressionTests(unittest.TestCase):
         )
 
         self.assertEqual(0, sourcing.returncode, sourcing.stderr[-2000:])
-        self.assertEqual("sourcing_ready", json.loads(sourcing.stdout)["status"])
+        self.assertIn(json.loads(sourcing.stdout)["status"], ("draft", "awaiting_approval", "blocked"))
 
     def test_release_tree_can_run_rc_gate_from_its_own_layout(self) -> None:
         # Regression: installed release rc-gate looked for source-only

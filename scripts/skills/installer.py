@@ -2135,6 +2135,14 @@ def inspect_suite_status(
     def ready(*names: str) -> bool:
         return all(by_name.get(name) == "ready" for name in names)
 
+    lib_status_value = str(library_status.get("status") or "")
+    lib_runtime_blocked = (
+        lib_status_value == "blocked"
+        and not bool(library_status.get("runtime_ready"))
+        and ready("ppt-library")
+    )
+    lib_degraded = lib_status_value == "degraded_ready"
+
     production_backend_ready = ppt_master_production_ready
     render_ready = bool(production_backend_ready and render_runtime_ready and not ppt_master_runtime_blocked)
     required_external_dependencies_ready = _required_external_dependencies_ready(external_dependency_status)
@@ -2162,7 +2170,10 @@ def inspect_suite_status(
         "planning": "ready" if by_name.get("deck-planner") == "ready" else "blocked",
         "review": "ready" if by_name.get("deck-review") == "ready" else "blocked",
         "deck_sourcing": "ready" if ready("deck-sourcing") else "blocked",
-        "library_sourcing": "ready" if ready("deck-sourcing", "ppt-library") else "blocked",
+        "library_sourcing": (
+            "blocked" if (not ready("deck-sourcing", "ppt-library") or lib_runtime_blocked)
+            else ("degraded_ready" if lib_degraded else "ready")
+        ),
         "deck_producer": "ready" if ready("deck-producer") else "blocked",
         "new_generation": "ready" if ready("deck-producer", "ppt-deck-pro-max") else "blocked",
         "deck_builder_adapter": "ready" if ready("deck-builder") else "blocked",
@@ -2179,7 +2190,7 @@ def inspect_suite_status(
     }
 
     status = "ready" if full_suite_ready else "degraded_ready"
-    if not deck_ready:
+    if not deck_ready or lib_runtime_blocked:
         status = "blocked"
 
     next_command = ""
@@ -2236,6 +2247,16 @@ def inspect_suite_status(
             "message": "客户版交付仍被阻断，当前 release 还未满足真实 render、外部依赖闭环和 RC gate 前提。" + missing_text,
             "repair_owner": "backend",
             "next_command": "",
+        })
+    if lib_runtime_blocked:
+        lib_blockers = library_status.get("blocking_summary") or []
+        lib_msg = "；".join(lib_blockers) if lib_blockers else "PPT Library runtime or contract is blocked"
+        blocking_summary.append({
+            "code": "library_runtime_blocked",
+            "blocking_type": "library",
+            "message": lib_msg,
+            "repair_owner": "agent",
+            "next_command": "deck-master library-status",
         })
 
     return {

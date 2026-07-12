@@ -662,13 +662,20 @@ def command_decide_sourcing(args: argparse.Namespace) -> dict[str, Any]:
     if validation_errors:
         raise RunStateError("Invalid generated sourcing plan: " + "; ".join(validation_errors))
     write_artifact(run_dir, SOURCING_PLAN_NAME, sourcing_plan, action="sourcing.plan.created")
-    return {
+    plan_status = str(sourcing_plan.get("status") or "draft")
+    result = {
         "run_id": sourcing_plan.get("run_id", run_dir.name),
         "run_dir": str(run_dir),
-        "status": "sourcing_ready",
+        "status": plan_status,
         "pages": len(sourcing_plan["pages"]),
         "decisions": len(sourcing_plan["pages"]),
     }
+    if plan_status == "blocked":
+        result["blocking_summary"] = sourcing_plan.get("approval_readiness", {}).get("blocked_pages", [])
+        result["next_command"] = "review blocked pages in sourcing_plan.json"
+    elif plan_status == "draft":
+        result["next_command"] = "review pending pages in sourcing_plan.json"
+    return result
 
 
 def command_create_generation_tasks(args: argparse.Namespace) -> dict[str, Any]:
