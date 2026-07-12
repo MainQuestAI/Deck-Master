@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/contracts/ppt-library-selection.v2.schema.json",
+  "title": "Deck Master PPT Library Selection v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "status",
+    "source",
+    "preview_degraded",
+    "selections",
+    "warnings",
+    "by_beat"
+  ],
+  "properties": {
+    "schema_version": {"const": "deck_master_ppt_library_selection.v2"},
+    "run_id": {"type": "string", "minLength": 1},
+    "status": {"enum": ["library_ready", "library_degraded", "library_gap", "library_blocked"]},
+    "source": {"enum": ["ppt_library", "imported", "fixture"]},
+    "preview_degraded": {"type": "boolean"},
+    "selections": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/selection"}
+    },
+    "warnings": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "by_beat": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {"$ref": "#/$defs/candidate"}
+      }
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "safeIdentity": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[^/\\\\]+$"
+    },
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "candidate_id",
+        "slide_id",
+        "asset_key",
+        "title",
+        "text_summary",
+        "page_number",
+        "score",
+        "confidence",
+        "source_asset_id",
+        "source_display_name",
+        "screenshot_ref",
+        "candidate_origin",
+        "reuse_policy"
+      ],
+      "properties": {
+        "candidate_id": {"$ref": "#/$defs/safeIdentity"},
+        "slide_id": {"type": ["string", "null"], "pattern": "^[^/\\\\]+$"},
+        "asset_key": {"$ref": "#/$defs/safeIdentity"},
+        "title": {"type": "string"},
+        "text_summary": {"type": "string"},
+        "page_number": {"type": ["integer", "string", "null"]},
+        "score": {"type": "number", "minimum": 0, "maximum": 1},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "source_asset_id": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "source_display_name": {"type": "string", "minLength": 1},
+        "screenshot_ref": {
+          "type": "string",
+          "pattern": "^(?!.*(?:^|/)\\.\\.(?:/|$))(?:$|preview_assets/[A-Za-z0-9._/-]+)$"
+        },
+        "candidate_origin": {"enum": ["ppt_library", "fixture"]},
+        "reuse_policy": {"enum": ["reuse", "adapt", "adapt_only", "reuse_or_adapt"]},
+        "page_task_id": {"$ref": "#/$defs/identifier"},
+        "slot_id": {"type": "string"},
+        "query_trace_id": {"type": "string"},
+        "screenshot_path": {
+          "type": "string",
+          "pattern": "^(?!.*(?:^|/)\\.\\.(?:/|$))preview_assets/[A-Za-z0-9._/-]+$"
+        },
+        "win_rate": {"type": "number", "minimum": 0, "maximum": 1},
+        "reuse_count": {"type": "integer", "minimum": 0}
+      }
+    },
+    "selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "beat_id",
+        "page_task_id",
+        "query_trace_id",
+        "role_original",
+        "role_strategy",
+        "role_mapped",
+        "retrieval_method",
+        "fallback_reason",
+        "preview_status",
+        "preview_degraded",
+        "candidates"
+      ],
+      "properties": {
+        "beat_id": {"$ref": "#/$defs/identifier"},
+        "page_task_id": {"$ref": "#/$defs/identifier"},
+        "query_trace_id": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "role_original": {"type": "string"},
+        "role_strategy": {"enum": ["passthrough", "mapped", "semantic_only"]},
+        "role_mapped": {
+          "type": ["string", "null"],
+          "enum": ["opener", "problem", "solution", "architecture", "case", "roi", "cta", "appendix", null]
+        },
+        "retrieval_method": {"enum": ["role_selection", "semantic_fallback", "none"]},
+        "fallback_reason": {"type": "string"},
+        "preview_status": {"enum": ["ready", "missing", "invalid"]},
+        "preview_degraded": {"type": "boolean"},
+        "candidates": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/candidate"}
+        }
+      }
+    }
+  }
+}

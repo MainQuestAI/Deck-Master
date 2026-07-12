@@ -55,7 +55,11 @@ The demo uses fixture mode and synthetic retail transformation content. It is th
 
 Review Desk is the local browser interface for inspecting the generated page queue, checking page status, and approving work before export. M1 focuses on a public fixture demo and Review Desk preview. M2 will close the full production backend and release-candidate gates.
 
+![Review Desk](docs/assets/review-desk.png)
+
 Review Desk write operations use a per-server local write token and same-origin guard. The server binds to `127.0.0.1` by default; non-loopback hosts require `--allow-remote-preview` and are only for trusted local-network demos. The write token is not a network authentication boundary because any browser that can load the page can read it.
+
+For the full user path (install, demo, Review Desk, production configuration), see the [User Guide](docs/user-guide.md).
 
 ## Capability Boundaries
 

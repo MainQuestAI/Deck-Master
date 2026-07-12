@@ -1,11 +1,12 @@
 # Known Limitations
 
-Deck Master is currently v0.9.14-preview.1 / Technical Preview (agent-operable).
+Deck Master is currently v0.9.14-preview.2 / Technical Preview (agent-operable).
 
 Version mapping:
 
-- GitHub release label: `v0.9.14-preview.1`
-- Python package version: `0.9.14a1`
+- GitHub release label: `v0.9.14-preview.2`
+- Python package version: `0.9.14a2`
+- Suite / Skill OS contract version: `1.1.0` (from `skills/stage-contracts.json`, tracked in `docs/releases/v1.1.0-release-notes.md`). This is a separate axis from the package version: it tracks the skill/handoff contract maturity, not the installable release. `docs/releases/v1.1.0-release-notes.md` documents that contract release, not a package 1.1.0.
 - Production readiness: not claimed
 
 ## M1 Technical Preview

@@ -75,6 +75,62 @@ class RCGateTests(unittest.TestCase):
             check["details"]["dependencies"]["ppt-master"],
         )
 
+    def test_rc_gate_ci_tier_skips_local_only_checks_and_passes(self) -> None:
+        report = build_rc_gate_report(
+            benchmark_dir=ROOT / "benchmarks",
+            skip_browser_smoke=True,
+            tier="ci",
+        )
+
+        self.assertEqual("deck_rc_gate_report.v1", report["schema_version"])
+        self.assertEqual("ci", report["tier"])
+        self.assertEqual("pass", report["status"])
+        by_id = {check["check_id"]: check for check in report["checks"]}
+        # Reproducible checks still run and pass in a fresh clone.
+        self.assertEqual("pass", by_id["schema_json_parse"]["status"])
+        self.assertEqual("pass", by_id["artifact_validator"]["status"])
+        self.assertEqual("pass", by_id["release_smoke"]["status"])
+        self.assertEqual("pass", by_id["fixture_e2e"]["status"])
+        self.assertEqual("skipped", by_id["browser_smoke"]["status"])
+        # Local-only checks are skipped (not required) so the gate can go green in CI.
+        self.assertEqual("skipped", by_id["benchmark_aggregate"]["status"])
+        self.assertFalse(by_id["benchmark_aggregate"]["required"])
+        # The CI closure still runs a real, required capability-lock consistency check.
+        self.assertEqual("pass", by_id["external_dependency_closure"]["status"])
+        self.assertTrue(by_id["external_dependency_closure"]["required"])
+
+    def test_external_dependency_closure_ci_check_validates_lock(self) -> None:
+        dependencies = [{"name": "ppt-master", "binding_status": "bound_verified", "git_sha": "sha", "verified": True}]
+
+        def fake_build(release_root: Path, *, force: bool = False) -> dict[str, str]:
+            release_root.mkdir(parents=True, exist_ok=True)
+            (release_root / "deck_capability_lock.json").write_text(
+                json.dumps({"external_dependency_status": dependencies}),
+                encoding="utf-8",
+            )
+            return {"status": "built"}
+
+        with mock.patch("runtime.rc_gate.build_release_tree", side_effect=fake_build):
+            check = rc_gate._external_dependency_closure_ci_check()
+        self.assertEqual("external_dependency_closure", check["check_id"])
+        self.assertEqual("pass", check["status"])
+        self.assertTrue(check["required"])
+        self.assertEqual([], check["details"]["failures"])
+        self.assertIn("ppt-master bound_verified assertion", check["details"]["skipped"][0])
+
+        def fake_build_malformed(release_root: Path, *, force: bool = False) -> dict[str, str]:
+            release_root.mkdir(parents=True, exist_ok=True)
+            (release_root / "deck_capability_lock.json").write_text(
+                json.dumps({"external_dependency_status": "not-a-list"}),
+                encoding="utf-8",
+            )
+            return {"status": "built"}
+
+        with mock.patch("runtime.rc_gate.build_release_tree", side_effect=fake_build_malformed):
+            check = rc_gate._external_dependency_closure_ci_check()
+        self.assertEqual("fail", check["status"])
+        self.assertIn("capability lock missing external dependencies", check["details"]["failures"][0])
+
     def test_browser_smoke_runs_review_desk_when_runtime_available(self) -> None:
         with mock.patch(
             "runtime.rc_gate._run_review_desk_browser_smoke",

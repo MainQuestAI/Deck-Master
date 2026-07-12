@@ -418,6 +418,11 @@ def setup_status(
         "production_backend_ready": production_backend_ready,
         "client_delivery_ready": client_delivery_ready,
         "external_dependency_status": external_dependency_status,
+        "library_status": (
+            suite_projection.get("library_status", {})
+            if isinstance(suite_projection, dict)
+            else {}
+        ),
     }
 
     if status_value == "needs_workspace":

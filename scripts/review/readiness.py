@@ -20,6 +20,7 @@ from runtime.run_state import (
 )
 from runtime.render import CANONICAL_RENDER_RESULT, LEGACY_RENDER_RESULTS
 from runtime.run_state_resolver import _draft_gate_blocks, _fresh_draft_gate_for_generation, _pick_first_draft_gate
+from sourcing.reader import read_sourcing_plan
 
 
 def _safe_read(path: Path) -> dict[str, Any] | None:
@@ -48,24 +49,87 @@ def _review_status_from_page(page: dict[str, Any]) -> str:
     return "needs_review"
 
 
-def _source_counts(sourcing_plan: dict[str, Any], tasks: list[Any]) -> dict[str, int]:
-    decisions = sourcing_plan.get("decisions", [])
-    source_counts: dict[str, int] = {}
-    if isinstance(decisions, list) and decisions:
-        for decision in decisions:
-            if not isinstance(decision, dict):
-                continue
-            sd = str(decision.get("source_decision", "unknown"))
-            source_counts[sd] = source_counts.get(sd, 0) + 1
-        return source_counts
+def summarize_sourcing_readiness(
+    run_dir: Path,
+    *,
+    fallback_tasks: list[Any] | None = None,
+) -> dict[str, Any]:
+    """Summarize canonical Sourcing v2 plus safe Library selection signals."""
+    pages: list[dict[str, Any]] = []
+    sourcing_path = run_dir / SOURCING_PLAN_NAME
+    if sourcing_path.exists():
+        try:
+            canonical = read_sourcing_plan(sourcing_path)
+        except (OSError, ValueError):
+            canonical = {}
+        raw_pages = canonical.get("pages", []) if isinstance(canonical, dict) else []
+        pages = [page for page in raw_pages if isinstance(page, dict)]
 
-    for task in tasks:
-        if not isinstance(task, dict):
+    if not pages:
+        for index, task in enumerate(fallback_tasks or []):
+            if not isinstance(task, dict):
+                continue
+            planning = task.get("planning") if isinstance(task.get("planning"), dict) else {}
+            raw_decision = str(
+                task.get("source_decision") or planning.get("decision_intent") or "unknown"
+            )
+            decision = "manual" if raw_decision == "manual_placeholder" else raw_decision
+            page_id = str(task.get("page_id") or task.get("beat_id") or f"page_{index + 1}")
+            pages.append(
+                {
+                    "page_id": page_id,
+                    "page_task_id": str(task.get("page_task_id") or page_id),
+                    "decision": decision,
+                }
+            )
+
+    decision_counts: dict[str, int] = {}
+    for page in pages:
+        decision = str(page.get("decision") or "unknown")
+        decision_counts[decision] = decision_counts.get(decision, 0) + 1
+
+    selection = _safe_read(run_dir / "library_results" / "selection.json") or {}
+    raw_selections = selection.get("selections", [])
+    selection_by_identity: dict[str, dict[str, Any]] = {}
+    if isinstance(raw_selections, list):
+        for item in raw_selections:
+            if not isinstance(item, dict):
+                continue
+            for identity in (item.get("beat_id"), item.get("page_task_id")):
+                key = str(identity or "").strip()
+                if key and key not in selection_by_identity:
+                    selection_by_identity[key] = item
+
+    role_selection_count = 0
+    semantic_fallback_count = 0
+    preview_degradation_count = 0
+    for page in pages:
+        selection_item = selection_by_identity.get(str(page.get("page_id") or ""))
+        if selection_item is None:
+            selection_item = selection_by_identity.get(str(page.get("page_task_id") or ""))
+        if selection_item is None:
             continue
-        planning = task.get("planning", {}) if isinstance(task.get("planning"), dict) else {}
-        sd = task.get("source_decision", planning.get("decision_intent", "unknown"))
-        source_counts[str(sd)] = source_counts.get(str(sd), 0) + 1
-    return source_counts
+        retrieval_method = str(selection_item.get("retrieval_method") or "")
+        role_selection_count += int(retrieval_method == "role_selection")
+        semantic_fallback_count += int(retrieval_method == "semantic_fallback")
+        preview_degradation_count += int(bool(selection_item.get("preview_degraded")))
+
+    generate_gap_count = decision_counts.get("generate", 0)
+    if not pages:
+        status = "pending"
+    elif semantic_fallback_count or preview_degradation_count or generate_gap_count:
+        status = "degraded"
+    else:
+        status = "ready"
+    return {
+        "status": status,
+        "total_pages": len(pages),
+        "role_selection_count": role_selection_count,
+        "semantic_fallback_count": semantic_fallback_count,
+        "preview_degradation_count": preview_degradation_count,
+        "generate_gap_count": generate_gap_count,
+        "decision_counts": decision_counts,
+    }
 
 
 def _generation_tasks_from_index(run_dir: Path, gen_index: dict[str, Any]) -> list[dict[str, Any]]:
@@ -88,7 +152,6 @@ def compute_deck_readiness(run_dir: Path) -> dict[str, Any]:
     """Compute deck readiness panel data."""
     page_tasks = _safe_read(run_dir / PAGE_TASKS_NAME) or {}
     preview = _safe_read(run_dir / PREVIEW_MANIFEST_NAME) or {}
-    sourcing_plan = _safe_read(run_dir / SOURCING_PLAN_NAME) or {}
     claim_graph = _safe_read(run_dir / "claim_evidence_graph.json") or {}
 
     tasks = page_tasks.get("tasks", [])
@@ -102,7 +165,8 @@ def compute_deck_readiness(run_dir: Path) -> dict[str, Any]:
     needs_review = total - approved - rejected
 
     # Source decision counts.
-    source_counts = _source_counts(sourcing_plan, tasks)
+    sourcing_readiness = summarize_sourcing_readiness(run_dir, fallback_tasks=tasks)
+    source_counts = sourcing_readiness["decision_counts"]
 
     # Quality findings.
     quality_dir = run_dir / "quality_reports"
@@ -217,11 +281,12 @@ def compute_deck_readiness(run_dir: Path) -> dict[str, Any]:
             "reuse": source_counts.get("reuse", 0),
             "adapt": source_counts.get("adapt", 0),
             "generate": source_counts.get("generate", 0),
-            "manual_placeholder": source_counts.get("manual_placeholder", 0),
+            "manual_placeholder": source_counts.get("manual", 0),
             "p0": p0_total,
             "p1": p1_total,
             "p2": p2_total,
         },
+        "sourcing_readiness": sourcing_readiness,
     }
 
 

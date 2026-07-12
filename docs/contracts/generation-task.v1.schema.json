@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/contracts/generation-task.v1.schema.json",
+  "title": "Deck Generation Task v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "task_id",
+    "page_task_id",
+    "beat_id",
+    "task_type",
+    "source_decision",
+    "generation_brief",
+    "expected_outputs",
+    "status"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "deck_generation_task.v1"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "task_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "page_task_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "page_id": {
+      "type": "string"
+    },
+    "beat_id": {
+      "type": "string"
+    },
+    "page_title": {
+      "type": ["string", "null"]
+    },
+    "task_type": {
+      "enum": ["generate", "adapt"]
+    },
+    "source_decision": {
+      "type": "string"
+    },
+    "reference_slide_required": {
+      "type": "boolean"
+    },
+    "expected_operation": {
+      "type": "string"
+    },
+    "generation_brief": {
+      "type": "string"
+    },
+    "selected_candidate": {
+      "type": ["object", "null"]
+    },
+    "reference_slide": {
+      "type": ["object", "null"]
+    },
+    "alternatives": {
+      "type": "array",
+      "items": {"type": "object"}
+    },
+    "query_trace_id": {
+      "type": "string"
+    },
+    "asset_key": {
+      "type": "string"
+    },
+    "claim_ids": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "visual_need": {
+      "type": "string"
+    },
+    "evidence_need": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "workspace_refs": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "quality_requirements": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "expected_outputs": {
+      "type": "array",
+      "items": {"type": "string"},
+      "minItems": 1
+    },
+    "customer_visible_content": {
+      "type": "object"
+    },
+    "speaker_notes": {
+      "type": "string"
+    },
+    "internal_production_notes": {
+      "type": "object"
+    },
+    "content_boundary": {
+      "type": "object"
+    },
+    "style_constraints": {
+      "type": "string"
+    },
+    "status": {
+      "enum": ["pending", "in_progress", "completed", "failed", "skipped"]
+    }
+  },
+  "additionalProperties": true
+}

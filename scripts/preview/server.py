@@ -31,13 +31,19 @@ if str(SCRIPTS_DIR) not in sys.path:
 from runtime.events import append_typed_event
 from runtime.import_log import summarize_import_log
 from runtime.setup_status import configured_runs_dir, read_setup_config, setup_status
+from runtime.library_status import inspect_library_status
 from runtime.orchestration import orchestration_check
 from runtime.next_step import resolve_next_step
 from runtime.final_readiness import final_readiness_clearance
 from runtime.run_state_resolver import resolve_run_state
 from skills.installer import inspect_suite_status
 
-from review.readiness import compute_claim_coverage, compute_deck_readiness, compute_next_actions
+from review.readiness import (
+    compute_claim_coverage,
+    compute_deck_readiness,
+    compute_next_actions,
+    summarize_sourcing_readiness,
+)
 from review.workbench import WorkbenchError, execute_review_action
 from workspace_api import (
     build_delivery_preview_payload,
@@ -213,10 +219,13 @@ def _quality_blocking_summary(run_dir: Path) -> dict[str, Any]:
 
 
 def _runtime_readiness_payload(run_dir: Path) -> dict[str, Any]:
+    suite_readiness = inspect_suite_status(targets=["codex"], include_optional=True)
     return {
         "schema_version": "deck_master_runtime_readiness.v1",
         "run_id": run_dir.name,
-        "suite_readiness": inspect_suite_status(targets=["codex"], include_optional=True),
+        "suite_readiness": suite_readiness,
+        "library_status": suite_readiness.get("library_status", {}),
+        "sourcing_readiness": summarize_sourcing_readiness(run_dir),
         "imports_summary": summarize_import_log(run_dir),
         "quality_blocking_summary": _quality_blocking_summary(run_dir),
         "feedback_pending_summary": summarize_library_feedback_events(run_dir),
@@ -964,6 +973,12 @@ class PreviewHandler(BaseHTTPRequestHandler):
                 },
             }
 
+        library_status = self._as_dict(payload.get("library_status"))
+        if not library_status:
+            library_status = self._as_dict(suite.get("library_status"))
+        if not library_status:
+            library_status = inspect_library_status()
+
         response = {
             "schema_version": payload.get("schema_version") or "deck_master_setup_status.v1",
             "schema_version_v2": "deck_master_setup_status.v2",
@@ -994,6 +1009,7 @@ class PreviewHandler(BaseHTTPRequestHandler):
             "full_suite_ready": self._as_bool(payload.get("full_suite_ready"), self._as_bool(suite.get("full_suite_ready"))),
             "capabilities": self._as_dict(payload.get("capabilities")),
             "task_readiness": self._as_dict(payload.get("task_readiness")),
+            "library_status": library_status,
             "production_backend_ready": production_backend_ready,
             "client_delivery_ready": client_delivery_ready,
             "blocking_summary": self._as_list(blocking_summary),

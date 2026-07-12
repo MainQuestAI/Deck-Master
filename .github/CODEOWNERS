@@ -1,0 +1,25 @@
+# CODEOWNERS for Deck Master
+#
+# Each line: <path-pattern> <owner(s)>
+# Owners are requested for review on PRs touching these paths.
+# Default reviewers for the whole repository:
+
+*                           @zangqing828-ux
+
+# Runtime truth and contracts — high-trust surfaces, require careful review.
+
+/docs/contracts/            @zangqing828-ux
+/skills/deck-master/schemas/ @zangqing828-ux
+/product-capability-manifest.json @zangqing828-ux
+/AGENTS.md                  @zangqing828-ux
+/DESIGN.md                  @zangqing828-ux
+
+# Release-candidate gate and release tooling.
+
+/scripts/runtime/rc_gate.py @zangqing828-ux
+/scripts/skills/installer.py @zangqing828-ux
+/.github/workflows/         @zangqing828-ux
+
+# Review Desk UI.
+
+/scripts/preview/           @zangqing828-ux

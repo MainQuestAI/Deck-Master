@@ -44,6 +44,17 @@
     "approval_readiness": {
       "type": "object"
     },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "migrated_from": {
+      "const": "deck_sourcing_plan.v1"
+    },
     "created_at": {
       "type": "string",
       "format": "date-time"
@@ -64,10 +75,12 @@
       ],
       "properties": {
         "page_id": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1
         },
         "page_task_id": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1
         },
         "decision": {
           "enum": [
@@ -80,7 +93,8 @@
           ]
         },
         "reason": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1
         },
         "confidence": {
           "type": "number",
@@ -102,7 +116,7 @@
         "selected_sources": {
           "type": "array",
           "items": {
-            "type": "object"
+            "$ref": "#/$defs/selectedSource"
           }
         },
         "source_authority": {
@@ -142,6 +156,47 @@
         }
       },
       "additionalProperties": true
+    },
+    "selectedSource": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "candidate_id": {"type": "string"},
+        "slide_id": {"type": ["string", "null"]},
+        "asset_key": {"type": "string", "minLength": 1, "pattern": "^[^/\\\\]+$"},
+        "query_trace_id": {"type": "string", "minLength": 1},
+        "page_task_id": {"type": "string", "minLength": 1},
+        "title": {"type": "string"},
+        "text_summary": {"type": "string"},
+        "page_number": {"type": ["integer", "string", "null"]},
+        "score": {"type": "number", "minimum": 0, "maximum": 1},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "source_asset_id": {"type": "string"},
+        "source_display_name": {"type": "string"},
+        "screenshot_ref": {
+          "type": "string",
+          "pattern": "^(?!.*(?:^|/)\\.\\.(?:/|$))(?:$|preview_assets/[A-Za-z0-9._/-]+)$"
+        },
+        "candidate_origin": {"enum": ["ppt_library", "fixture", "imported"]},
+        "reuse_policy": {"enum": ["reuse", "adapt", "adapt_only", "reuse_or_adapt"]},
+        "slot_id": {"type": "string"},
+        "screenshot_path": {
+          "type": "string",
+          "pattern": "^(?!.*(?:^|/)\\.\\.(?:/|$))preview_assets/[A-Za-z0-9._/-]+$"
+        },
+        "win_rate": {"type": "number", "minimum": 0, "maximum": 1},
+        "reuse_count": {"type": "integer", "minimum": 0},
+        "source_authority": {"type": "string"},
+        "freshness_status": {"type": "string"},
+        "permission_status": {
+          "enum": ["approved", "pending", "restricted", "blocked", "not_required"]
+        },
+        "reuse_safe": {"type": "boolean"},
+        "usage_constraints": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      }
     }
   },
   "additionalProperties": false

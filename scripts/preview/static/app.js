@@ -1550,6 +1550,7 @@ function renderReadiness() {
   const health = workspace.health || {};
   const summary = workspace.run_summary || {};
   const deliveryPreview = summary.delivery_preview || {};
+  const sourcing = summary.sourcing_readiness || {};
   els.readinessPill.textContent = stage.label || "-";
   els.readinessPill.className = `pill ${safeToneClass(stage.tone)}`;
 
@@ -1568,7 +1569,17 @@ function renderReadiness() {
   const delivery = summary.delivery?.delivered
     ? `<div class="stack-card success">已记录交付 · ${escapeHtml(formatTime(summary.delivery.delivered_at))}</div>`
     : `<div class="stack-card">尚未记录交付 · 当前可交付 ${summary.export_queue?.ready ?? 0} 页，阻断 ${summary.export_queue?.blocked ?? 0} 页</div>`;
-  els.runReadiness.innerHTML = `${deliveryCard}${delivery}${blocks}${nextActions}`;
+  const sourcingTone = (sourcing.semantic_fallback_count || sourcing.preview_degradation_count || sourcing.generate_gap_count)
+    ? "warning"
+    : "success";
+  const sourcingCard = `
+    <div class="stack-card ${sourcingTone}">
+      <strong>Library 来源状态</strong>
+      <p>角色筛选 ${Number(sourcing.role_selection_count || 0)} 页 · 语义降级 ${Number(sourcing.semantic_fallback_count || 0)} 页</p>
+      <small>预览退化 ${Number(sourcing.preview_degradation_count || 0)} 页 · 待生成缺口 ${Number(sourcing.generate_gap_count || 0)} 页</small>
+    </div>
+  `;
+  els.runReadiness.innerHTML = `${sourcingCard}${deliveryCard}${delivery}${blocks}${nextActions}`;
 }
 
 function renderClaimCoverage() {

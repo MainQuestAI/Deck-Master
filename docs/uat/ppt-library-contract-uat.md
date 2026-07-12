@@ -49,3 +49,16 @@ Outputs:
 
 - `runs/<run_id>/uat_reports/ppt_library_uat.json`
 - `runs/<run_id>/uat_reports/ppt_library_uat.md`
+
+## Selection v2
+
+- Canonical input is `deck_master_ppt_library_selection.v2` using `selections[]`.
+- Candidate identity requires `candidate_id`, `asset_key`, and `source_asset_id`.
+- `source_file` and `source_path` are forbidden in v2 public artifacts.
+- The full v2 payload must pass the canonical schema and recursive evidence
+  safety scan, including `by_beat` and unknown nested objects.
+- `page_task_id` and `query_trace_id` are checked at selection level and against
+  candidate values when candidates carry them.
+- `screenshot_ref` must remain run-relative. Missing or degraded previews are a
+  warning by default and an error with `--require-screenshot`.
+- v1 continues to require `source_file` and uses `canonical_slide_id` coverage.

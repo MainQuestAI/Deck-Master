@@ -62,7 +62,8 @@ class UATReportTest(unittest.TestCase):
 
             saved = json.loads(json_path.read_text(encoding="utf-8"))
             self.assertEqual(saved["schema_version"], "deck_uat_report.v1")
-            self.assertEqual(saved["run_id"], "retail-demo")
+            self.assertRegex(saved["run_id"], r"^uat-[a-f0-9]{16}$")
+            self.assertNotIn("retail-demo", json_path.read_text(encoding="utf-8"))
             self.assertEqual(saved["tool"], "ppt_library")
             self.assertEqual(saved["status"], "warning")
             self.assertEqual(saved["summary"]["checks"], 2)
@@ -73,6 +74,37 @@ class UATReportTest(unittest.TestCase):
             self.assertIn("ppt_library", markdown)
             self.assertIn("warning", markdown)
             self.assertIn("candidate_count", markdown)
+            self.assertNotIn("retail-demo", markdown)
+
+    def test_customer_run_id_is_redacted_from_report_content(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            raw_run_id = "generic-run"
+            raw_dir_name = "customer-name-private-deck"
+            run_dir = Path(tmp) / raw_dir_name
+            run_dir.mkdir()
+            (run_dir / "request.json").write_text(json.dumps({"run_id": raw_run_id}), encoding="utf-8")
+            report = uat_report.build_uat_report(
+                run_dir,
+                "ppt_library",
+                [
+                    {
+                        "check_id": "run_id_mismatch",
+                        "passed": False,
+                        "severity": "warning",
+                        "message": f"run_id {raw_run_id} needs review",
+                        "refs": [],
+                    }
+                ],
+                {raw_dir_name: [raw_run_id, raw_dir_name]},
+                [f"Review {raw_run_id} in {raw_dir_name}."],
+            )
+            report["writer_regression"] = {raw_dir_name: [raw_run_id, raw_dir_name]}
+            written = uat_report.write_uat_report(run_dir, "redacted", report)
+            evidence = Path(written["json_path"]).read_text(encoding="utf-8") + Path(written["markdown_path"]).read_text(encoding="utf-8")
+
+            self.assertNotIn(raw_run_id, evidence)
+            self.assertNotIn(raw_dir_name, evidence)
+            self.assertIn(report["run_id"], evidence)
 
 
 if __name__ == "__main__":

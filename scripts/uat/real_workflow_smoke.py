@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any
 
@@ -21,6 +22,45 @@ REQUIRED_ARTIFACTS = [
     "generation_tasks/index.json",
     "preview_manifest.json",
 ]
+
+COMPANION_REPORTS = {
+    "ppt_library": ("ppt_library_uat.json", {"deck_uat_report.v1"}),
+    "generation_tool": ("generation_tool_uat.json", {"deck_uat_report.v1", "deck_generation_tool_uat.v1"}),
+    "render_tool": ("render_tool_uat.json", {"deck_uat_report.v1", "deck_render_tool_uat.v1"}),
+}
+
+
+def _companion_report_statuses(run_dir: Path, checks: list[dict[str, Any]]) -> dict[str, str]:
+    statuses: dict[str, str] = {}
+    uat_dir = run_dir / "uat_reports"
+    for label, (filename, allowed_schemas) in COMPANION_REPORTS.items():
+        path = uat_dir / filename
+        check_id = f"companion.{label}_uat"
+        if not path.is_file():
+            statuses[label] = "missing"
+            checks.append(build_check(check_id, False, "warning", f"{filename} report missing."))
+            continue
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            statuses[label] = "fail"
+            checks.append(build_check(check_id, False, "error", f"{filename} report is invalid JSON."))
+            continue
+        schema_valid = isinstance(payload, dict) and payload.get("schema_version") in allowed_schemas
+        status = str(payload.get("status") or "") if isinstance(payload, dict) else ""
+        if not schema_valid or status not in {"pass", "warning", "fail"}:
+            statuses[label] = "fail"
+            checks.append(build_check(check_id, False, "error", f"{filename} report schema/status is invalid."))
+        elif status == "fail":
+            statuses[label] = "fail"
+            checks.append(build_check(check_id, False, "error", f"{filename} status is fail."))
+        elif status == "warning":
+            statuses[label] = "warning"
+            checks.append(build_check(check_id, False, "warning", f"{filename} status is warning."))
+        else:
+            statuses[label] = "pass"
+            checks.append(build_check(check_id, True, "info", f"{filename} status is pass."))
+    return statuses
 
 
 def run_real_workflow_smoke(run_dir: Path, *, write: bool = True) -> dict[str, Any]:
@@ -51,31 +91,39 @@ def run_real_workflow_smoke(run_dir: Path, *, write: bool = True) -> dict[str, A
         checks.append(build_check("review_export.computable", True, "error", "review/export APIs computable."))
         phases["review_export"] = "pass"
     except Exception as exc:
-        checks.append(build_check("review_export.computable", False, "error", f"review/export computation failed: {exc}"))
+        checks.append(
+            build_check(
+                "review_export.computable",
+                False,
+                "error",
+                f"review/export computation failed ({type(exc).__name__}).",
+            )
+        )
         phases["review_export"] = "fail"
 
-    uat_dir = run_dir / "uat_reports"
-    checks.append(build_check("companion.ppt_library_uat", (uat_dir / "ppt_library_uat.json").exists(), "warning", "ppt_library_uat report missing."))
-    checks.append(build_check("companion.generation_tool_uat", (uat_dir / "generation_tool_uat.json").exists(), "warning", "generation_tool_uat report missing."))
-    checks.append(build_check("companion.render_tool_uat", (uat_dir / "render_tool_uat.json").exists(), "warning", "render_tool_uat report missing."))
+    companion_statuses = _companion_report_statuses(run_dir, checks)
 
     run_artifact_fail = any(not check.get("passed") and str(check.get("check_id", "")).startswith("artifact.") for check in checks)
     phases["run_artifacts"] = "fail" if run_artifact_fail else "pass"
     agentic_warning = any(not check.get("passed") and str(check.get("check_id", "")).startswith("agentic.") for check in checks)
     phases["agentic_contract"] = "warning" if agentic_warning else "pass"
-    companion_warning = any(not check.get("passed") and str(check.get("check_id", "")).startswith("companion.") for check in checks)
-    phases["companion_uat"] = "warning" if companion_warning else "pass"
+    if "fail" in companion_statuses.values():
+        phases["companion_uat"] = "fail"
+    elif any(status in {"warning", "missing"} for status in companion_statuses.values()):
+        phases["companion_uat"] = "warning"
+    else:
+        phases["companion_uat"] = "pass"
 
     if agentic_warning:
         recommendations.append("Import external narrative and quality review results before client export.")
-    if companion_warning:
+    if phases["companion_uat"] != "pass":
         recommendations.append("Run companion UAT commands before benchmark.")
 
     report = build_uat_report(
         run_dir,
         "real_workflow_smoke",
         checks,
-        {"phases": phases},
+        {"phases": phases, "companion_statuses": companion_statuses},
         recommendations,
         schema_version="deck_real_workflow_smoke.v1",
     )

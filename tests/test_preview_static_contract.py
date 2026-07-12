@@ -125,6 +125,18 @@ class PreviewStaticContractTests(unittest.TestCase):
         self.assertLess(source_pos, risk_pos)
         self.assertLess(risk_pos, approval_pos)
 
+    def test_readiness_drawer_renders_library_retrieval_and_generation_gaps(self) -> None:
+        script = APP_JS.read_text(encoding="utf-8")
+
+        self.assertIn("role_selection_count", script)
+        self.assertIn("semantic_fallback_count", script)
+        self.assertIn("preview_degradation_count", script)
+        self.assertIn("generate_gap_count", script)
+        self.assertIn("角色筛选", script)
+        self.assertIn("语义降级", script)
+        self.assertIn("预览退化", script)
+        self.assertIn("待生成缺口", script)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -11,6 +11,7 @@ import hashlib
 import os
 import shutil
 import subprocess
+import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -43,6 +44,11 @@ try:  # Supports both `python scripts/deck_master.py` and package imports in tes
 except ModuleNotFoundError:  # pragma: no cover - exercised by package-import test path.
     from scripts.skills.manifest import load_registry
 
+try:  # Supports both `python scripts/deck_master.py` and package imports in tests.
+    from runtime.library_status import inspect_library_status
+except ModuleNotFoundError:  # pragma: no cover - exercised by package-import test path.
+    from scripts.runtime.library_status import inspect_library_status
+
 SKILL_NAME = "deck-master"
 SUITE_NAME = "deck-master"
 DEFAULT_SUITE_VERSION = "1.0.0"
@@ -54,6 +60,12 @@ CAPABILITY_LOCK_NAME = "deck_capability_lock.json"
 SHA256SUMS_NAME = "SHA256SUMS"
 REVISION_NAME = "REVISION"
 RELEASE_TREE_MARKER = ".release_tree_managed_by_deck_master"
+RUNTIME_PYTHON_REQUIREMENT = ">=3.12,<3.13"
+RELEASE_PYTHON_RELATIVE = ".venv/bin/python"
+RUNTIME_PYTHON_ERROR = (
+    "Deck Master installed releases require Python 3.12. Set DECK_MASTER_PYTHON\n"
+    "to a Python 3.12 executable or install python3.12. No release was activated."
+)
 
 SUPPORTED_TARGETS = {"codex", "claude-code", "hermes", "custom"}
 
@@ -386,12 +398,32 @@ SUITE_SKILLS: list[dict[str, Any]] = [
             "ppt_library.doctor.v1",
             "ppt_library.search.v1",
             "ppt_library.selection.v1",
+            "ppt_library.selection.v2",
+            "ppt_library.status.v2",
         ],
         "optional_capabilities": ["ppt_library.feedback.v1"],
         "schema_versions": {
-            "selection_output": "deck_master_ppt_library_selection.v1",
+            "selection_output_legacy": "deck_master_ppt_library_selection.v1",
+            "selection_output": "deck_master_ppt_library_selection.v2",
+            "library_status": "deck_master_library_status.v2",
             "feedback_input": "deck_master_ppt_library_feedback.v1",
         },
+        "operations": [
+            "status",
+            "search",
+            "select-slides",
+            "doctor",
+            "schema",
+            "smoke --fixture",
+            "writeback",
+        ],
+        "contract_outputs": [
+            "deck_master_ppt_library_selection.v1",
+            "deck_master_ppt_library_selection.v2",
+        ],
+        "canonical_output": "deck_master_ppt_library_selection.v2",
+        "readiness_output": "deck_master_library_status.v2",
+        "canonical_artifact": "external/ppt_library/library_results.v2.json",
         "adoption_policy": "bundled_symlink_only",
         "conflict_policy": "never_overwrite_real_directory",
     },
@@ -1057,7 +1089,7 @@ def _release_files(release_root: Path) -> list[tuple[str, Path]]:
         rel = rel_path.as_posix()
         if rel in {SHA256SUMS_NAME, "release-activation.json"}:
             continue
-        if "__pycache__" in rel_path.parts or path.suffix == ".pyc":
+        if ".venv" in rel_path.parts or "__pycache__" in rel_path.parts or path.suffix == ".pyc":
             continue
         files.append((rel, path))
     return sorted(files, key=lambda item: item[0])
@@ -1085,6 +1117,128 @@ def _write_sha256sums(release_root: Path) -> Path:
     return path
 
 
+def _probe_python_version(executable: str | Path) -> str:
+    if not str(executable).strip():
+        return ""
+    try:
+        completed = subprocess.run(
+            [str(executable), "-c", "import platform; print(platform.python_version())"],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=15,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return ""
+    return completed.stdout.strip() if completed.returncode == 0 else ""
+
+
+def _is_python_312(version: str) -> bool:
+    parts = version.split(".")
+    try:
+        return len(parts) >= 2 and (int(parts[0]), int(parts[1])) == (3, 12)
+    except ValueError:
+        return False
+
+
+def _resolve_runtime_python() -> tuple[str, str]:
+    override = os.environ.get("DECK_MASTER_PYTHON", "").strip()
+    if override:
+        executable = override if Path(override).is_absolute() else str(shutil.which(override) or override)
+    else:
+        executable = str(shutil.which("python3.12") or "")
+    if executable:
+        executable = str(Path(executable).expanduser().resolve())
+    version = _probe_python_version(executable)
+    if not _is_python_312(version):
+        raise SkillInstallError(RUNTIME_PYTHON_ERROR)
+    return executable, version
+
+
+def _record_release_runtime(release_root: Path, version: str) -> None:
+    manifest_path = release_root / RELEASE_MANIFEST_NAME
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["runtime"] = {
+        "python_requirement": RUNTIME_PYTHON_REQUIREMENT,
+        "python_version": version,
+        "interpreter": RELEASE_PYTHON_RELATIVE,
+    }
+    tmp = manifest_path.with_suffix(manifest_path.suffix + ".tmp")
+    tmp.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    tmp.replace(manifest_path)
+    _write_sha256sums(release_root)
+
+
+def _run_runtime_setup(command: list[str], *, cwd: Path, failure: str) -> None:
+    try:
+        completed = subprocess.run(
+            command,
+            cwd=cwd,
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=300,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise SkillInstallError(f"{failure}: {exc}") from exc
+    if completed.returncode != 0:
+        detail = completed.stderr.strip() or completed.stdout.strip() or f"exit {completed.returncode}"
+        raise SkillInstallError(f"{failure}: {detail}")
+
+
+def _clean_runtime_build_artifacts(release_root: Path) -> None:
+    _remove_path(release_root / "build")
+    for path in list(release_root.rglob("*.egg-info")):
+        if ".venv" not in path.relative_to(release_root).parts:
+            _remove_path(path)
+
+
+def _install_release_runtime(release_root: Path) -> dict[str, str]:
+    executable, _source_version = _resolve_runtime_python()
+    runtime_root = release_root / ".venv"
+    _remove_path(runtime_root)
+    _run_runtime_setup(
+        [executable, "-m", "venv", str(runtime_root)],
+        cwd=release_root,
+        failure="Deck Master release runtime creation failed",
+    )
+    runtime_python = release_root / RELEASE_PYTHON_RELATIVE
+    _run_runtime_setup(
+        [str(runtime_python), "-m", "pip", "install", str(release_root)],
+        cwd=release_root,
+        failure="Deck Master release runtime installation failed",
+    )
+    _clean_runtime_build_artifacts(release_root)
+    runtime_version = _probe_python_version(runtime_python)
+    if not _is_python_312(runtime_version):
+        raise SkillInstallError(RUNTIME_PYTHON_ERROR)
+    _record_release_runtime(release_root, runtime_version)
+    return {
+        "python_requirement": RUNTIME_PYTHON_REQUIREMENT,
+        "python_version": runtime_version,
+        "interpreter": RELEASE_PYTHON_RELATIVE,
+    }
+
+
+def _global_launcher_text() -> str:
+    return (
+        "#!/usr/bin/env sh\n"
+        'DECK_MASTER_HOME="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"\n'
+        'exec "$DECK_MASTER_HOME/current/.venv/bin/python" '
+        '"$DECK_MASTER_HOME/current/scripts/deck_master.py" "$@"\n'
+    )
+
+
+def _write_global_launcher() -> Path:
+    launcher = INSTALL_LOG_DIR / "bin" / "deck-master"
+    launcher.parent.mkdir(parents=True, exist_ok=True)
+    tmp = launcher.with_suffix(".tmp")
+    tmp.write_text(_global_launcher_text(), encoding="utf-8")
+    tmp.chmod(0o755)
+    tmp.replace(launcher)
+    return launcher
+
+
 def _remove_path(path: Path) -> None:
     if path.is_symlink() or path.is_file():
         path.unlink()
@@ -1108,12 +1262,34 @@ def _safe_release_child(root: Path, rel: str) -> Path | None:
     return path
 
 
+def _verify_disposable_release(root: Path) -> dict[str, Any]:
+    preflight = verify_release_tree(root, run_smoke=False)
+    if not preflight["valid"]:
+        return preflight
+    with tempfile.TemporaryDirectory(prefix="deck-master-release-smoke-") as temp_dir:
+        staged_release = Path(temp_dir) / "release"
+        shutil.copytree(
+            root,
+            staged_release,
+            symlinks=True,
+            ignore=shutil.ignore_patterns(".venv", "__pycache__", "*.pyc"),
+        )
+        runtime = _install_release_runtime(staged_release)
+        verification = verify_release_tree(staged_release, run_smoke=True)
+        verification["release_root"] = str(root)
+        verification["runtime"] = {**runtime, "disposable_stage": True}
+        return verification
+
+
 def verify_release_tree(
     release_root: str | Path | None = None,
     *,
     run_smoke: bool = True,
 ) -> dict[str, Any]:
     root = Path(release_root).expanduser().resolve() if release_root else INSTALL_LOG_DIR / "current"
+    runtime_python = root / RELEASE_PYTHON_RELATIVE
+    if run_smoke and not runtime_python.exists():
+        return _verify_disposable_release(root)
     errors: list[dict[str, Any]] = []
     warnings: list[dict[str, Any]] = []
 
@@ -1124,6 +1300,7 @@ def verify_release_tree(
         RELEASE_TREE_MARKER,
         "AGENTS.md",
         "bin/deck-master",
+        "pyproject.toml",
         "scripts/deck_master.py",
         PRODUCT_CAPABILITY_MANIFEST_NAME,
         COMPANION_MANIFEST_NAME,
@@ -1159,6 +1336,7 @@ def verify_release_tree(
                     ",".join(validation["errors"]),
                 )
 
+    release_manifest: dict[str, Any] | None = None
     for rel, schema_version in [
         (COMPANION_MANIFEST_NAME, COMPANION_MANIFEST_SCHEMA_VERSION),
         (RELEASE_MANIFEST_NAME, "deck_master_release_manifest.v1"),
@@ -1174,8 +1352,10 @@ def verify_release_tree(
             continue
         if payload.get("schema_version") != schema_version:
             add_error("invalid_schema_version", rel, str(payload.get("schema_version") or ""))
-        if rel == RELEASE_MANIFEST_NAME and payload.get("self_contained") is not True:
-            add_error("release_not_self_contained", rel)
+        if rel == RELEASE_MANIFEST_NAME:
+            release_manifest = payload
+            if payload.get("self_contained") is not True:
+                add_error("release_not_self_contained", rel)
         if rel == CAPABILITY_LOCK_NAME and not payload.get("contracts"):
             add_error("missing_contract_lock_entries", rel)
 
@@ -1192,8 +1372,36 @@ def verify_release_tree(
         source_script = str(_repo_root() / "scripts" / "deck_master.py")
         if source_script in bin_text:
             add_error("source_checkout_path_embedded", "bin/deck-master", source_script)
-        if "RELEASE_ROOT" not in bin_text or "scripts/deck_master.py" not in bin_text:
+        if (
+            "RELEASE_ROOT" not in bin_text
+            or "scripts/deck_master.py" not in bin_text
+            or 'exec "$RELEASE_ROOT/.venv/bin/python"' not in bin_text
+            or "exec python3" in bin_text
+        ):
             add_error("invalid_release_entrypoint", "bin/deck-master")
+
+    runtime_manifest = release_manifest.get("runtime") if isinstance(release_manifest, dict) else None
+    if not isinstance(runtime_manifest, dict):
+        add_error("missing_runtime_manifest", RELEASE_MANIFEST_NAME)
+        runtime_manifest = {}
+    if runtime_manifest.get("python_requirement") != RUNTIME_PYTHON_REQUIREMENT:
+        add_error("invalid_python_requirement", RELEASE_MANIFEST_NAME)
+    if runtime_manifest.get("interpreter") != RELEASE_PYTHON_RELATIVE:
+        add_error("invalid_runtime_interpreter", RELEASE_MANIFEST_NAME)
+
+    actual_runtime_version: str | None = None
+    if runtime_python.exists():
+        actual_runtime_version = _probe_python_version(runtime_python)
+        if not _is_python_312(actual_runtime_version):
+            add_error("unsupported_runtime_python", RELEASE_PYTHON_RELATIVE, actual_runtime_version)
+        if runtime_manifest.get("python_version") != actual_runtime_version:
+            add_error(
+                "runtime_version_mismatch",
+                RELEASE_MANIFEST_NAME,
+                f"manifest={runtime_manifest.get('python_version')}; actual={actual_runtime_version}",
+            )
+    elif runtime_manifest.get("python_version") is not None:
+        add_error("runtime_interpreter_missing", RELEASE_PYTHON_RELATIVE)
 
     sha_path = root / SHA256SUMS_NAME
     if sha_path.exists():
@@ -1261,6 +1469,12 @@ def verify_release_tree(
         "errors": errors,
         "warnings": warnings,
         "smoke": smoke,
+        "runtime": {
+            "python_requirement": RUNTIME_PYTHON_REQUIREMENT,
+            "python_version": actual_runtime_version,
+            "interpreter": RELEASE_PYTHON_RELATIVE,
+            "disposable_stage": False,
+        },
     }
 
 
@@ -1276,6 +1490,17 @@ def _activate_staged_release(staged_release: Path) -> dict[str, Any]:
             previous_path = str(previous)
         current.parent.mkdir(parents=True, exist_ok=True)
         shutil.move(str(staged_release), str(current))
+        activation = {
+            "schema_version": "deck_master_release_activation.v1",
+            "status": "activated",
+            "activated_at": _utc_now(),
+            "current": str(current),
+            "previous": previous_path,
+        }
+        (current / "release-activation.json").write_text(
+            json.dumps(activation, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
     except Exception as exc:
         if current.exists() or current.is_symlink():
             failed_dir.mkdir(parents=True, exist_ok=True)
@@ -1284,18 +1509,6 @@ def _activate_staged_release(staged_release: Path) -> dict[str, Any]:
         if previous.exists() and not current.exists():
             shutil.move(str(previous), str(current))
         raise SkillInstallError(f"Release activation failed and previous release was restored: {exc}") from exc
-
-    activation = {
-        "schema_version": "deck_master_release_activation.v1",
-        "status": "activated",
-        "activated_at": _utc_now(),
-        "current": str(current),
-        "previous": previous_path,
-    }
-    (current / "release-activation.json").write_text(
-        json.dumps(activation, ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8",
-    )
     return activation
 
 
@@ -1305,6 +1518,33 @@ def install_release_tree(*, run_smoke: bool = True) -> dict[str, Any]:
     if staged_release.exists():
         _remove_path(staged_release)
     build = build_release_tree(staged_release, force=True)
+    preflight = verify_release_tree(staged_release, run_smoke=False)
+    if not preflight["valid"]:
+        return {
+            "schema_version": "deck_master_release_install.v1",
+            "status": "blocked",
+            "release_id": release_id,
+            "staged_release": str(staged_release),
+            "build": build,
+            "runtime_install": {"status": "skipped", "error": "release preflight failed"},
+            "verification": preflight,
+            "activated": False,
+        }
+    try:
+        runtime_install = _install_release_runtime(staged_release)
+    except SkillInstallError as exc:
+        if str(exc) == RUNTIME_PYTHON_ERROR:
+            raise
+        return {
+            "schema_version": "deck_master_release_install.v1",
+            "status": "blocked",
+            "release_id": release_id,
+            "staged_release": str(staged_release),
+            "build": build,
+            "runtime_install": {"status": "failed", "error": str(exc)},
+            "verification": preflight,
+            "activated": False,
+        }
     verification = verify_release_tree(staged_release, run_smoke=run_smoke)
     if not verification["valid"]:
         return {
@@ -1313,17 +1553,21 @@ def install_release_tree(*, run_smoke: bool = True) -> dict[str, Any]:
             "release_id": release_id,
             "staged_release": str(staged_release),
             "build": build,
+            "runtime_install": {"status": "installed", **runtime_install},
             "verification": verification,
             "activated": False,
         }
     activation = _activate_staged_release(staged_release)
+    global_launcher = _write_global_launcher()
     return {
         "schema_version": "deck_master_release_install.v1",
         "status": "installed",
         "release_id": release_id,
         "build": build,
+        "runtime_install": {"status": "installed", **runtime_install},
         "verification": verification,
         "activation": activation,
+        "global_launcher": str(global_launcher),
         "activated": True,
     }
 
@@ -1339,15 +1583,31 @@ def rollback_release_tree() -> dict[str, Any]:
     if current.exists() or current.is_symlink():
         shutil.move(str(current), str(archived_current))
     shutil.move(str(previous), str(current))
-    verification = verify_release_tree(current, run_smoke=True)
+    if not (current / RELEASE_PYTHON_RELATIVE).exists():
+        verification = verify_release_tree(current, run_smoke=False)
+        verification["valid"] = False
+        verification["status"] = "failed"
+        verification["errors"].append({
+            "code": "runtime_interpreter_missing",
+            "path": RELEASE_PYTHON_RELATIVE,
+            "detail": "rollback candidate is not an installed release",
+        })
+    else:
+        verification = verify_release_tree(current, run_smoke=True)
     if not verification["valid"]:
+        _remove_path(previous)
+        shutil.move(str(current), str(previous))
+        if archived_current.exists():
+            shutil.move(str(archived_current), str(current))
         raise SkillInstallError("Rollback restored previous release, but verification failed.")
+    global_launcher = _write_global_launcher()
     return {
         "schema_version": "deck_master_release_rollback.v1",
         "status": "rolled_back",
         "current": str(current),
         "archived_current": str(archived_current),
         "verification": verification,
+        "global_launcher": str(global_launcher),
     }
 
 
@@ -1362,6 +1622,7 @@ def build_release_tree(
     marker = release_root / RELEASE_TREE_MARKER
     planned = [
         "bin/deck-master",
+        "pyproject.toml",
         PRODUCT_CAPABILITY_MANIFEST_NAME,
         COMPANION_MANIFEST_NAME,
         RELEASE_MANIFEST_NAME,
@@ -1391,6 +1652,7 @@ def build_release_tree(
             "Use --force only after confirming it is safe."
         )
 
+    _remove_path(release_root / ".venv")
     release_root.mkdir(parents=True, exist_ok=True)
     marker.write_text("deck-master release tree\n", encoding="utf-8")
 
@@ -1445,9 +1707,10 @@ def build_release_tree(
     _copytree_replace(
         _repo_root() / "scripts",
         release_root / "scripts",
-        ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "*.egg-info", ".pytest_cache", ".mypy_cache"),
+        ignore=shutil.ignore_patterns(".venv", "__pycache__", "*.pyc", "*.egg-info", ".pytest_cache", ".mypy_cache"),
     )
     for source_name, target_name in (
+        ("pyproject.toml", "pyproject.toml"),
         ("AGENTS.md", "AGENTS.md"),
         ("README.md", "README.md"),
         ("LICENSE", "LICENSE"),
@@ -1482,7 +1745,7 @@ def build_release_tree(
     bin_path.write_text(
         "#!/usr/bin/env sh\n"
         'RELEASE_ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"\n'
-        'exec python3 "$RELEASE_ROOT/scripts/deck_master.py" "$@"\n',
+        'exec "$RELEASE_ROOT/.venv/bin/python" "$RELEASE_ROOT/scripts/deck_master.py" "$@"\n',
         encoding="utf-8",
     )
     bin_path.chmod(0o755)
@@ -1544,6 +1807,11 @@ def build_release_tree(
         "companion_manifest": COMPANION_MANIFEST_NAME,
         "capability_lock": CAPABILITY_LOCK_NAME,
         "sha256sums": SHA256SUMS_NAME,
+        "runtime": {
+            "python_requirement": RUNTIME_PYTHON_REQUIREMENT,
+            "python_version": None,
+            "interpreter": RELEASE_PYTHON_RELATIVE,
+        },
         "source": source,
         "skills": release_skills,
         "capabilities": release_capabilities,
@@ -1765,6 +2033,7 @@ def inspect_suite_status(
     agent_skill_dir: str | None = None,
 ) -> dict[str, Any]:
     """Pure-read suite readiness inspection."""
+    library_status = inspect_library_status()
     suite_version = _suite_version()
     resolved_targets = targets or ["codex"]
     skills: list[dict[str, Any]] = []
@@ -1866,6 +2135,13 @@ def inspect_suite_status(
     def ready(*names: str) -> bool:
         return all(by_name.get(name) == "ready" for name in names)
 
+    lib_status_value = str(library_status.get("status") or "")
+    lib_blocked = (
+        lib_status_value == "blocked"
+        and ready("ppt-library")
+    )
+    lib_degraded = lib_status_value == "degraded_ready"
+
     production_backend_ready = ppt_master_production_ready
     render_ready = bool(production_backend_ready and render_runtime_ready and not ppt_master_runtime_blocked)
     required_external_dependencies_ready = _required_external_dependencies_ready(external_dependency_status)
@@ -1893,7 +2169,10 @@ def inspect_suite_status(
         "planning": "ready" if by_name.get("deck-planner") == "ready" else "blocked",
         "review": "ready" if by_name.get("deck-review") == "ready" else "blocked",
         "deck_sourcing": "ready" if ready("deck-sourcing") else "blocked",
-        "library_sourcing": "ready" if ready("deck-sourcing", "ppt-library") else "blocked",
+        "library_sourcing": (
+            "blocked" if (not ready("deck-sourcing", "ppt-library") or lib_blocked)
+            else ("degraded_ready" if lib_degraded else "ready")
+        ),
         "deck_producer": "ready" if ready("deck-producer") else "blocked",
         "new_generation": "ready" if ready("deck-producer", "ppt-deck-pro-max") else "blocked",
         "deck_builder_adapter": "ready" if ready("deck-builder") else "blocked",
@@ -1910,7 +2189,7 @@ def inspect_suite_status(
     }
 
     status = "ready" if full_suite_ready else "degraded_ready"
-    if not deck_ready:
+    if not deck_ready or lib_blocked:
         status = "blocked"
 
     next_command = ""
@@ -1968,6 +2247,16 @@ def inspect_suite_status(
             "repair_owner": "backend",
             "next_command": "",
         })
+    if lib_blocked:
+        lib_blockers = library_status.get("blocking_summary") or []
+        lib_msg = "；".join(lib_blockers) if lib_blockers else "PPT Library is blocked"
+        blocking_summary.append({
+            "code": "library_blocked",
+            "blocking_type": "library",
+            "message": lib_msg,
+            "repair_owner": "agent",
+            "next_command": "deck-master library-status",
+        })
 
     return {
         "schema_version": COMPANION_MANIFEST_SCHEMA_VERSION,
@@ -1987,6 +2276,7 @@ def inspect_suite_status(
         "target_readiness": target_readiness,
         "capabilities": capabilities,
         "task_readiness": task_readiness,
+        "library_status": library_status,
         "blocking_summary": blocking_summary,
         "manifest_path": str(companion_manifest_path()),
         "next_command": next_command,

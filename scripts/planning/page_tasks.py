@@ -64,13 +64,32 @@ def build_page_tasks(
 ) -> dict[str, Any]:
     claims = claim_map.get("claims", []) if isinstance(claim_map, dict) else []
     tasks = []
+    seen_beat_ids: set[str] = set()
+    seen_page_task_ids: set[str] = set()
     for index, beat in enumerate(narrative_plan.get("beats", []), start=1):
         if not isinstance(beat, dict):
-            continue
+            raise ValueError(f"beats[{index}] must be an object with beat_id")
         claim = claim_for_index(claims, index)
         risk_flags = list(claim.get("risk_flags", [])) if isinstance(claim, dict) else []
 
-        beat_id = beat.get("beat_id", "")
+        beat_id = str(beat.get("beat_id") or "").strip()
+        if not beat_id:
+            raise ValueError(f"beats[{index}] is missing beat_id")
+        if beat_id in seen_beat_ids:
+            raise ValueError(f"duplicate beat_id: {beat_id}")
+        seen_beat_ids.add(beat_id)
+
+        page_task_id = str(
+            beat.get("page_task_id")
+            or beat.get("task_id")
+            or beat.get("page_id")
+            or beat_id
+        ).strip()
+        if not page_task_id:
+            raise ValueError(f"beats[{index}] is missing page_task_id")
+        if page_task_id in seen_page_task_ids:
+            raise ValueError(f"duplicate page_task_id: {page_task_id}")
+        seen_page_task_ids.add(page_task_id)
 
         # Find associated claim_ids from claim_graph.
         graph_claim_ids = _find_claim_ids_for_beat(beat_id, claim_graph)
@@ -115,6 +134,7 @@ def build_page_tasks(
 
         task: dict[str, Any] = {
             "beat_id": beat_id,
+            "page_task_id": page_task_id,
             "order": beat.get("order", index),
             "planning": planning,
             "retrieval": {

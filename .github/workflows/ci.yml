@@ -7,6 +7,7 @@ on:
       - main
       - "codex/**"
       - "claude/**"
+      - "chore/**"
   workflow_dispatch:
 
 permissions:
@@ -116,4 +117,55 @@ jobs:
           set -euo pipefail
           OUT_DIR="$(mktemp -d)"
           python scripts/deck_master.py release-build --output "$OUT_DIR/release" --force
-          "$OUT_DIR/release/bin/deck-master" --help
+          python scripts/deck_master.py release-smoke --release-root "$OUT_DIR/release"
+
+  rc_gate_ci:
+    name: CI-tier rc-gate (reproducible subset, Python 3.12)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Check Python syntax
+        run: python -m compileall scripts tests
+
+      - name: Install project with dev dependencies
+        run: python -m pip install --quiet -e ".[dev]"
+
+      - name: Install Playwright Chromium
+        run: python -m playwright install --with-deps chromium
+
+      # The CI tier runs only the reproducible checks (schema, artifact,
+      # release-smoke, fixture-e2e, browser-smoke, capability-lock closure)
+      # and skips the local-only benchmark_aggregate + live backend-binding
+      # checks. A fresh clone has no benchmarks/results/ and no bound
+      # ppt-master backend, so the full tier would fail by design here.
+      # If browser smoke proves flaky in CI, fall back to --skip-browser-smoke.
+      - name: Run CI-tier rc-gate
+        run: |
+          set -euo pipefail
+          OUT_DIR="$(mktemp -d)"
+          python scripts/deck_master.py rc-gate \
+            --tier ci \
+            --require-browser-smoke \
+            --output-dir "$OUT_DIR/rc-gate" \
+            --force
+          python - "$OUT_DIR/rc-gate/rc_gate_report.json" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          report = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+          assert report["tier"] == "ci", f"unexpected tier: {report.get('tier')}"
+          assert report["status"] == "pass", f"CI-tier rc-gate did not pass: {report['status']}"
+          checks = {c["check_id"]: c for c in report["checks"]}
+          assert checks["benchmark_aggregate"]["status"] == "skipped"
+          assert checks["external_dependency_closure"]["status"] == "pass"
+          print(f"CI-tier rc-gate passed ({report['summary']['checks']} checks)")
+          PY

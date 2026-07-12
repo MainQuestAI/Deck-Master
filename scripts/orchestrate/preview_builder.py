@@ -7,12 +7,91 @@ from typing import Any
 
 from runtime.events import append_event
 from runtime.run_state import REQUEST_NAME, read_json
+from sourcing.reader import canonicalize_sourcing_plan
 
 ORCHESTRATE_DIR = Path(__file__).resolve().parent
 if str(ORCHESTRATE_DIR) not in sys.path:
     sys.path.insert(0, str(ORCHESTRATE_DIR))
 
 from build_run import build_run
+
+
+PLACEHOLDER_DECISIONS = {"manual", "evidence", "blocked"}
+PUBLIC_SOURCE_FIELDS = {
+    "candidate_id",
+    "slide_id",
+    "asset_key",
+    "query_trace_id",
+    "page_task_id",
+    "title",
+    "text_summary",
+    "page_number",
+    "score",
+    "confidence",
+    "source_asset_id",
+    "source_display_name",
+    "screenshot_ref",
+    "candidate_origin",
+    "reuse_policy",
+    "slot_id",
+    "win_rate",
+    "reuse_count",
+    "source_authority",
+    "freshness_status",
+    "permission_status",
+    "reuse_safe",
+    "usage_constraints",
+}
+
+
+def _source_decision(page: dict[str, Any]) -> str:
+    decision = str(page.get("decision") or "").strip().lower()
+    return "manual_placeholder" if decision in PLACEHOLDER_DECISIONS else decision
+
+
+def _selected_sources(page: dict[str, Any]) -> list[dict[str, Any]]:
+    sources = page.get("selected_sources")
+    if not isinstance(sources, list):
+        return []
+    return [source for source in sources if isinstance(source, dict)]
+
+
+def _safe_screenshot_ref(value: Any) -> str:
+    ref = str(value or "").strip()
+    if not ref:
+        return ""
+    path = Path(ref)
+    if path.is_absolute() or ".." in path.parts or "\\" in ref or not ref.startswith("preview_assets/"):
+        return ""
+    return ref
+
+
+def _resolved_preview_asset(run_dir: Path, screenshot_ref: str) -> Path | None:
+    if not screenshot_ref:
+        return None
+    candidate = (run_dir / screenshot_ref).resolve()
+    try:
+        candidate.relative_to(run_dir.resolve())
+    except ValueError:
+        return None
+    return candidate
+
+
+def _public_source(source: dict[str, Any] | None, run_dir: Path) -> dict[str, Any] | None:
+    if not source:
+        return None
+    public = {key: source[key] for key in PUBLIC_SOURCE_FIELDS if key in source}
+    screenshot_ref = _safe_screenshot_ref(public.get("screenshot_ref"))
+    if screenshot_ref and _resolved_preview_asset(run_dir, screenshot_ref) is not None:
+        public["screenshot_ref"] = screenshot_ref
+    else:
+        public.pop("screenshot_ref", None)
+    return public
+
+
+def _safe_page_filename(page_id: str) -> str:
+    safe = "".join(character if character.isalnum() or character in "-_" else "_" for character in page_id)
+    return safe or "page"
 
 
 def _run_mode(run_dir: Path) -> str:
@@ -31,13 +110,19 @@ def _assert_preview_allowed(run_dir: Path, sourcing_plan: dict[str, Any]) -> Non
     mode = _run_mode(run_dir)
     if mode not in {"production", "benchmark"}:
         return
-    blocked = [
-        str(decision.get("beat_id") or f"decision_{index}")
-        for index, decision in enumerate(sourcing_plan.get("decisions", []), start=1)
-        if isinstance(decision, dict) and str(decision.get("source_decision") or "") == "manual_placeholder"
-    ]
+    blocked = []
+    for index, page in enumerate(sourcing_plan.get("pages", []), start=1):
+        if not isinstance(page, dict):
+            continue
+        decision = str(page.get("decision") or "")
+        if decision in {"manual", "evidence", "blocked"}:
+            page_id = str(page.get("page_id") or f"page_{index}")
+            blocked.append(f"{page_id} ({decision})")
     if blocked:
-        raise ValueError(f"manual_placeholder sourcing is not allowed for {mode} preview builds: {', '.join(blocked)}")
+        raise ValueError(
+            f"manual/evidence/blocked sourcing decisions are not allowed for {mode} preview builds; "
+            f"blocked pages: {', '.join(blocked)}"
+        )
 
 
 def write_status_svg(path: Path, label: str, title: str, detail: str) -> Path:
@@ -72,12 +157,17 @@ def public_generation_task(task: dict[str, Any] | None) -> dict[str, Any] | None
         key: task.get(key)
         for key in (
             "task_id",
+            "page_task_id",
+            "page_id",
             "beat_id",
             "page_title",
             "task_type",
             "source_decision",
             "expected_operation",
             "generation_brief",
+            "query_trace_id",
+            "asset_key",
+            "claim_ids",
             "visual_need",
             "evidence_need",
             "customer_visible_content",
@@ -89,52 +179,76 @@ def public_generation_task(task: dict[str, Any] | None) -> dict[str, Any] | None
     }
 
 
-def preview_asset_for(run_dir: Path, decision: dict[str, Any]) -> str:
-    selected = decision.get("selected_candidate") if isinstance(decision.get("selected_candidate"), dict) else None
-    if selected and selected.get("screenshot_path"):
-        return str(selected["screenshot_path"])
-    label = str(decision.get("source_decision", "fixture")).upper()
+def preview_asset_for(run_dir: Path, page: dict[str, Any]) -> str:
+    sources = _selected_sources(page)
+    selected = sources[0] if sources else None
+    screenshot_ref = _safe_screenshot_ref((selected or {}).get("screenshot_ref"))
+    preview_asset = _resolved_preview_asset(run_dir, screenshot_ref)
+    if preview_asset is not None and preview_asset.is_file():
+        return screenshot_ref
+
+    raw_ref = str((selected or {}).get("screenshot_ref") or "").strip()
+    invalid_ref = bool(raw_ref and preview_asset is None)
+    label = "INVALID PREVIEW" if invalid_ref else "MISSING PREVIEW"
+    detail = "Preview reference is invalid." if invalid_ref else "Preview asset is unavailable."
+    page_id = str(page.get("page_id") or "page")
     return str(
         write_status_svg(
-            run_dir / "preview_assets" / f"{decision.get('beat_id')}.svg",
+            run_dir / "preview_assets" / "sourcing_status" / f"{_safe_page_filename(page_id)}.svg",
             label,
-            str(decision.get("page_title") or decision.get("beat_id")),
-            str(decision.get("decision_reason") or ""),
+            str(page.get("page_title") or page_id),
+            detail,
         )
         .relative_to(run_dir)
     )
 
 
 def page_for_decision(run_dir: Path, decision: dict[str, Any], generation_tasks: dict[str, Any] | None = None) -> dict[str, Any]:
-    selected = decision.get("selected_candidate") if isinstance(decision.get("selected_candidate"), dict) else {}
+    selected_sources = _selected_sources(decision)
+    selected = selected_sources[0] if selected_sources else {}
+    public_selected = _public_source(selected, run_dir)
+    alternatives = [source for source in (_public_source(item, run_dir) for item in selected_sources[1:]) if source]
+    page_id = str(decision.get("page_id") or "")
+    page_task_id = str(decision.get("page_task_id") or page_id)
     task = None
     if generation_tasks:
         for candidate in generation_tasks.get("tasks", []):
-            if candidate.get("beat_id") == decision.get("beat_id"):
+            if (
+                candidate.get("page_task_id") == page_task_id
+                or candidate.get("page_id") == page_id
+                or candidate.get("beat_id") == page_id
+            ):
                 task = candidate
                 break
-    source_decision = str(decision.get("source_decision"))
-    library_source = str(decision.get("library_source") or "none")
-    candidate_origin = str(decision.get("candidate_origin") or ("none" if not selected else library_source))
+    source_decision = _source_decision(decision)
+    candidate_origin = str(selected.get("candidate_origin") or decision.get("candidate_origin") or "none")
+    library_source = str(decision.get("library_source") or candidate_origin)
     page = {
-        "page_id": str(decision.get("beat_id")),
-        "beat_id": decision.get("beat_id"),
+        "page_id": page_id,
+        "page_task_id": page_task_id,
+        "beat_id": page_id,
         "order": int(decision.get("order") or 0),
-        "title": decision.get("page_title") or decision.get("beat_id"),
+        "title": decision.get("page_title") or page_id,
         "source_type": source_type_for(source_decision),
         "library_source": library_source,
         "candidate_origin": candidate_origin,
         "source_decision": source_decision,
         "preview_asset": preview_asset_for(run_dir, decision),
         "narrative_role": decision.get("role") or "",
-        "decision_reason": decision.get("decision_reason", ""),
-        "reuse_reason": decision.get("decision_reason", ""),
+        "decision_reason": decision.get("reason", ""),
+        "reuse_reason": decision.get("reason", ""),
         "confidence": decision.get("confidence", 0),
-        "alternatives": decision.get("alternatives", []),
+        "selected_candidate": public_selected,
+        "alternatives": alternatives,
+        "query_trace_id": selected.get("query_trace_id", ""),
+        "asset_key": selected.get("asset_key", ""),
+        "source_asset_id": selected.get("source_asset_id", ""),
+        "source_display_name": selected.get("source_display_name", ""),
+        "claim_ids": list(decision.get("claim_ids") or []),
+        "evidence_need": list(decision.get("evidence_need") or []),
         "risk_flags": decision.get("risk_flags", []),
         "tool_refs": {"sourcing_plan": "sourcing_plan.json"},
         "generation_task": public_generation_task(task),
-        "source_pptx": selected.get("source_file", ""),
         "source_slide_index": selected.get("page_number", ""),
         "ppt_library_slide_id": selected.get("slide_id", selected.get("candidate_id", "")),
         "decision": "needs_review",
@@ -149,15 +263,16 @@ def build_orchestration_plan_from_sourcing(
     generation_tasks: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     root = Path(run_dir).expanduser().resolve()
-    _assert_preview_allowed(root, sourcing_plan)
+    canonical_plan = canonicalize_sourcing_plan(sourcing_plan)
+    _assert_preview_allowed(root, canonical_plan)
     pages = [
-        page_for_decision(root, decision, generation_tasks)
-        for decision in sourcing_plan.get("decisions", [])
-        if isinstance(decision, dict)
+        page_for_decision(root, page, generation_tasks)
+        for page in canonical_plan.get("pages", [])
+        if isinstance(page, dict)
     ]
     plan = {
-        "run_id": sourcing_plan.get("run_id", root.name),
-        "title": sourcing_plan.get("title", root.name),
+        "run_id": canonical_plan.get("run_id", root.name),
+        "title": canonical_plan.get("title", root.name),
         "status": "draft",
         "pages": sorted(pages, key=lambda page: page["order"]),
     }

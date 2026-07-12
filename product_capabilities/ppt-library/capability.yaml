@@ -2,12 +2,28 @@ schema_version: deck_master_capability_package.v1
 name: ppt-library
 kind: product_capability
 required: true
-canonical_artifact: external/ppt_library/library_results.json
+canonical_artifact: external/ppt_library/library_results.v2.json
+canonical_output: deck_master_ppt_library_selection.v2
+readiness_output: deck_master_library_status.v2
 outputs:
   - deck_master_ppt_library_selection.v1
+  - deck_master_ppt_library_selection.v2
 operations:
   - status
+  - search
+  - select-slides
   - doctor
   - schema
   - smoke --fixture
   - writeback
+required_capabilities:
+  - ppt_library.doctor.v1
+  - ppt_library.search.v1
+  - ppt_library.selection.v1
+  - ppt_library.selection.v2
+  - ppt_library.status.v2
+schema_versions:
+  selection_output_legacy: deck_master_ppt_library_selection.v1
+  selection_output: deck_master_ppt_library_selection.v2
+  library_status: deck_master_library_status.v2
+  feedback_input: deck_master_ppt_library_feedback.v1

@@ -44,6 +44,7 @@ from scripts.skills.manifest import load_registry
 from scripts.runtime.builder_backend import inspect_builder_backend_package
 from scripts.runtime.builder_backend import builder_backend_status
 import scripts.runtime.builder_backend as builder_backend
+import scripts.skills.installer as installer_module
 try:
     from runtime.setup_status import setup_status as runtime_setup_status
 except ModuleNotFoundError:  # pragma: no cover - package-import fallback.
@@ -70,10 +71,31 @@ class SkillInstallationTest(unittest.TestCase):
             Path(self._tmp) / ".deck-master",
         )
         self._log_patch.start()
+        self._runtime_probe_patch = mock.patch(
+            "scripts.skills.installer._probe_python_version",
+            return_value="3.12.8",
+        )
+        self._runtime_probe_patch.start()
+        self._runtime_install_patch = mock.patch(
+            "scripts.skills.installer._install_release_runtime",
+            side_effect=self._install_fake_release_runtime,
+        )
+        self._runtime_install_patch.start()
         self.agent_dir = Path(self._tmp) / "agent_skills"
         self.agent_dir.mkdir()
         self.source_dir = Path(self._tmp) / ".deck-master" / "current" / "skills" / SKILL_NAME
         shutil.copytree(_REPO_ROOT / "skills" / SKILL_NAME, self.source_dir)
+
+    def _install_fake_release_runtime(self, release_root: Path) -> dict[str, str]:
+        runtime_python = release_root / installer_module.RELEASE_PYTHON_RELATIVE
+        runtime_python.parent.mkdir(parents=True, exist_ok=True)
+        runtime_python.symlink_to(sys.executable)
+        installer_module._record_release_runtime(release_root, "3.12.8")
+        return {
+            "python_requirement": installer_module.RUNTIME_PYTHON_REQUIREMENT,
+            "python_version": "3.12.8",
+            "interpreter": installer_module.RELEASE_PYTHON_RELATIVE,
+        }
 
     def _write_full_ppt_master_skill(
         self,
@@ -214,6 +236,8 @@ class SkillInstallationTest(unittest.TestCase):
         return json.loads(result.stdout)
 
     def tearDown(self) -> None:
+        self._runtime_install_patch.stop()
+        self._runtime_probe_patch.stop()
         self._log_patch.stop()
         self._home_patch.stop()
         if self._previous_backend_override is not None:
@@ -1098,7 +1122,21 @@ class SkillInstallationTest(unittest.TestCase):
                 "validated_capabilities": ["render", "smoke", "writeback"],
                 "summary": "PPT Master 已绑定且已完成验证。",
             }],
-        ), mock.patch("scripts.skills.installer.inspect_skill_link", side_effect=fake_inspect_skill_link):
+        ), mock.patch("scripts.skills.installer.inspect_skill_link", side_effect=fake_inspect_skill_link), \
+           mock.patch("scripts.skills.installer.inspect_library_status", return_value={
+               "schema_version": "deck_master_library_status.v2",
+               "status": "degraded_ready",
+               "runtime_ready": True,
+               "contract_ready": True,
+               "semantic_search_ready": True,
+               "role_selection_ready": True,
+               "fallback_ready": True,
+               "preview_ready": True,
+               "business_ranking_ready": "ready",
+               "data_hygiene_status": "ready",
+               "blocking_summary": [],
+               "warnings": [],
+           }):
             result = inspect_suite_status(targets=["codex"], agent_skill_dir=str(self.agent_dir))
 
         self.assertEqual("degraded_ready", result["status"])
@@ -1106,6 +1144,59 @@ class SkillInstallationTest(unittest.TestCase):
         self.assertTrue(result["production_backend_ready"])
         self.assertEqual("ready", result["task_readiness"]["ppt_master_backend"])
         self.assertEqual("blocked", result["task_readiness"]["ppt_master_adapter"])
+
+    def _lib_blocked_mock(self, **overrides) -> mock.MagicMock:
+        base = {
+            "schema_version": "deck_master_library_status.v2",
+            "status": "blocked",
+            "runtime_ready": True,
+            "contract_ready": True,
+            "semantic_search_ready": True,
+            "role_selection_ready": True,
+            "fallback_ready": True,
+            "preview_ready": True,
+            "business_ranking_ready": "ready",
+            "data_hygiene_status": "ready",
+            "blocking_summary": [],
+            "warnings": [],
+        }
+        base.update(overrides)
+        return mock.patch("scripts.skills.installer.inspect_library_status", return_value=base)
+
+    def _ready_skill_link_mock(self) -> mock.MagicMock:
+        def fake(target, agent_skill_dir=None, source_skill_dir=None, *, skill_name="deck-master", required=True):
+            return {"status": "ready", "skill": skill_name, "required": required, "source_type": "mocked", "production_capable": True}
+        return mock.patch("scripts.skills.installer.inspect_skill_link", side_effect=fake)
+
+    def test_library_blocked_runtime_unavailable_propagates(self) -> None:
+        with self._ready_skill_link_mock(), self._lib_blocked_mock(
+            runtime_ready=False,
+            blocking_summary=["PPT_LIBRARY_STATE_MISSING"],
+        ):
+            result = inspect_suite_status(targets=["codex"], agent_skill_dir=str(self.agent_dir))
+        self.assertEqual("blocked", result["task_readiness"]["library_sourcing"])
+        self.assertEqual("blocked", result["status"])
+
+    def test_library_blocked_contract_missing_propagates(self) -> None:
+        with self._ready_skill_link_mock(), self._lib_blocked_mock(
+            runtime_ready=True,
+            contract_ready=False,
+            blocking_summary=["PPT_LIBRARY_CONTRACT_MISSING"],
+        ):
+            result = inspect_suite_status(targets=["codex"], agent_skill_dir=str(self.agent_dir))
+        self.assertEqual("blocked", result["task_readiness"]["library_sourcing"])
+        self.assertEqual("blocked", result["status"])
+
+    def test_library_blocked_semantic_search_unavailable_propagates(self) -> None:
+        with self._ready_skill_link_mock(), self._lib_blocked_mock(
+            runtime_ready=True,
+            contract_ready=True,
+            semantic_search_ready=False,
+            blocking_summary=["PPT_LIBRARY_SEMANTIC_SEARCH_UNAVAILABLE"],
+        ):
+            result = inspect_suite_status(targets=["codex"], agent_skill_dir=str(self.agent_dir))
+        self.assertEqual("blocked", result["task_readiness"]["library_sourcing"])
+        self.assertEqual("blocked", result["status"])
 
     def test_release_tree_contains_required_skills_capabilities_and_manifest(self) -> None:
         release_root = Path(self._tmp) / "release"
@@ -1134,13 +1225,7 @@ class SkillInstallationTest(unittest.TestCase):
         self.assertIn("RELEASE_ROOT", bin_text)
         self.assertIn("scripts/deck_master.py", bin_text)
 
-        completed = subprocess.run(
-            [str(release_root / "bin" / "deck-master"), "--help"],
-            check=False,
-            capture_output=True,
-            text=True,
-        )
-        self.assertEqual(0, completed.returncode, completed.stderr)
+        self.assertFalse((release_root / ".venv").exists())
 
         release_manifest = json.loads((release_root / "release-manifest.json").read_text(encoding="utf-8"))
         self.assertEqual("deck_master_release_manifest.v1", release_manifest["schema_version"])
@@ -1322,6 +1407,7 @@ class SkillInstallationTest(unittest.TestCase):
     def test_release_rollback_restores_previous_release(self) -> None:
         current = Path(self._tmp) / ".deck-master" / "current"
         build_release_tree(current, force=True)
+        self._install_fake_release_runtime(current)
         original_manifest = (current / "release-manifest.json").read_text(encoding="utf-8")
         install_result = install_release_tree(run_smoke=True)
         self.assertTrue(install_result["activated"])

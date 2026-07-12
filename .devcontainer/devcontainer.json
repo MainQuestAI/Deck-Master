@@ -1,0 +1,30 @@
+{
+  "name": "Deck Master",
+  "build": {
+    "dockerfile": "../Dockerfile",
+    "context": ".."
+  },
+  "forwardPorts": [5050],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "tamasfe.even-better-toml",
+        "redhat.vscode-yaml"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.terminal.activateEnvironment": false,
+        "files.exclude": {
+          "**/.venv": true,
+          "**/__pycache__": true
+        }
+      }
+    }
+  },
+  "postCreateCommand": "python -m pip install -e '.[dev]' --quiet && python -m playwright install chromium",
+  "remoteEnv": {
+    "DECK_MASTER_REVIEW_WRITE_TOKEN": "${localEnv:DECK_MASTER_REVIEW_WRITE_TOKEN}"
+  }
+}

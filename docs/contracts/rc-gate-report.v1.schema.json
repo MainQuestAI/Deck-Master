@@ -11,6 +11,9 @@
     "status": {
       "enum": ["pass", "warning", "fail"]
     },
+    "tier": {
+      "enum": ["ci", "full"]
+    },
     "created_at": {
       "type": "string"
     },

@@ -22,10 +22,15 @@ from runtime.run_state import (
     read_json,
     write_json,
 )
-from runtime.sourcing_import import import_sourcing
+from runtime.sourcing_import import (
+    _resolve_sourcing_schema_path,
+    import_sourcing,
+    validate_sourcing,
+)
+from sourcing.plan import build_sourcing_plan_v2
 from runtime.workspace_binding import bind_workspace
 from workspace.foundation import init_workspace
-from deck_master import write_plan_artifacts
+from deck_master import command_decide_sourcing, write_plan_artifacts
 
 
 class PlannerSourcingControlTests(unittest.TestCase):
@@ -55,12 +60,41 @@ class PlannerSourcingControlTests(unittest.TestCase):
             {
                 "run_id": "source-run",
                 "tasks": [
-                    {"beat_id": "beat_001", "order": 1},
-                    {"beat_id": "beat_002", "order": 2},
+                    {"beat_id": "beat_001", "page_task_id": "task_001", "order": 1},
+                    {"beat_id": "beat_002", "page_task_id": "task_002", "order": 2},
                 ],
             },
         )
         return run_dir
+
+    def test_sourcing_schema_resolver_prefers_source_layout(self) -> None:
+        root = self.temp_dir / "source-layout"
+        source_schema = root / "docs" / "contracts" / "sourcing-plan.v2.schema.json"
+        installed_schema = root / "contracts" / "sourcing-plan.v2.schema.json"
+        source_schema.parent.mkdir(parents=True)
+        installed_schema.parent.mkdir(parents=True)
+        source_schema.write_text("{}\n", encoding="utf-8")
+        installed_schema.write_text("{}\n", encoding="utf-8")
+
+        self.assertEqual(source_schema, _resolve_sourcing_schema_path(root))
+
+    def test_sourcing_schema_resolver_supports_installed_layout(self) -> None:
+        root = self.temp_dir / "installed-layout"
+        installed_schema = root / "contracts" / "sourcing-plan.v2.schema.json"
+        installed_schema.parent.mkdir(parents=True)
+        installed_schema.write_text("{}\n", encoding="utf-8")
+
+        self.assertEqual(installed_schema, _resolve_sourcing_schema_path(root))
+
+    def test_sourcing_schema_resolver_reports_checked_paths(self) -> None:
+        root = self.temp_dir / "missing-layout"
+
+        with self.assertRaises(FileNotFoundError) as ctx:
+            _resolve_sourcing_schema_path(root)
+
+        message = str(ctx.exception)
+        self.assertIn(str(root / "docs" / "contracts" / "sourcing-plan.v2.schema.json"), message)
+        self.assertIn(str(root / "contracts" / "sourcing-plan.v2.schema.json"), message)
 
     def test_production_planner_without_claim_map_blocks(self) -> None:
         run_dir = create_run(
@@ -216,7 +250,107 @@ class PlannerSourcingControlTests(unittest.TestCase):
 
         self.assertEqual("imported", result["status"])
         plan = read_json(run_dir / SOURCING_PLAN_NAME)
-        self.assertEqual("manual_placeholder", plan["decisions"][0]["source_decision"])
+        self.assertEqual("deck_sourcing_plan.v2", plan["schema_version"])
+        self.assertEqual("manual", plan["pages"][0]["decision"])
+        self.assertNotIn("decisions", plan)
+
+    def test_import_sourcing_accepts_v2_and_rejects_duplicate_identity(self) -> None:
+        run_dir = self._run_with_plan()
+        page_tasks = read_json(run_dir / PAGE_TASKS_NAME)
+        plan = build_sourcing_plan_v2(run_id="source-run", page_tasks=page_tasks)
+        input_path = self.temp_dir / "v2_sourcing.json"
+        write_json(input_path, plan)
+
+        result = import_sourcing(run_dir, input_path, source="agent")
+
+        self.assertEqual(2, result["pages"])
+        self.assertEqual("deck_sourcing_plan.v2", read_json(run_dir / SOURCING_PLAN_NAME)["schema_version"])
+        self.assertEqual("valid", validate_sourcing(run_dir)["status"])
+
+        plan["pages"][1]["page_task_id"] = plan["pages"][0]["page_task_id"]
+        write_json(input_path, plan)
+        with self.assertRaises(RunStateError) as ctx:
+            import_sourcing(run_dir, input_path, source="agent")
+        self.assertIn("duplicate page_task_id", str(ctx.exception))
+
+    def test_import_sourcing_rejects_v1_run_id_mismatch_before_backup_or_overwrite(self) -> None:
+        run_dir = self._run_with_plan()
+        current_path = run_dir / SOURCING_PLAN_NAME
+        write_json(current_path, {"run_id": "source-run", "sentinel": "unchanged"})
+        original = current_path.read_bytes()
+        overrides_path = run_dir / "overrides"
+        self.assertFalse(overrides_path.exists())
+        input_path = self.temp_dir / "wrong_run_v1.json"
+        write_json(
+            input_path,
+            {
+                "schema_version": "deck_sourcing_plan.v1",
+                "run_id": "different-run",
+                "decisions": [],
+            },
+        )
+
+        with self.assertRaises(RunStateError) as ctx:
+            import_sourcing(run_dir, input_path, source="human")
+
+        self.assertIn("run_id mismatch", str(ctx.exception))
+        self.assertEqual(original, current_path.read_bytes())
+        self.assertFalse(overrides_path.exists())
+
+    def test_import_sourcing_rejects_v2_run_id_mismatch_before_backup_or_overwrite(self) -> None:
+        run_dir = self._run_with_plan()
+        current_path = run_dir / SOURCING_PLAN_NAME
+        write_json(current_path, {"run_id": "source-run", "sentinel": "unchanged"})
+        original = current_path.read_bytes()
+        overrides_path = run_dir / "overrides"
+        self.assertFalse(overrides_path.exists())
+        input_path = self.temp_dir / "wrong_run_v2.json"
+        plan = build_sourcing_plan_v2(
+            run_id="different-run",
+            page_tasks=read_json(run_dir / PAGE_TASKS_NAME),
+        )
+        write_json(input_path, plan)
+
+        with self.assertRaises(RunStateError) as ctx:
+            import_sourcing(run_dir, input_path, source="agent")
+
+        self.assertIn("run_id mismatch", str(ctx.exception))
+        self.assertEqual(original, current_path.read_bytes())
+        self.assertFalse(overrides_path.exists())
+
+    def test_validate_sourcing_reads_legacy_without_rewriting(self) -> None:
+        run_dir = self._run_with_plan()
+        legacy = {
+            "schema_version": "deck_sourcing_plan.v1",
+            "run_id": "source-run",
+            "decisions": [
+                {"beat_id": "beat_001", "source_decision": "generate", "decision_reason": "legacy"},
+                {"beat_id": "beat_002", "source_decision": "generate", "decision_reason": "legacy"},
+            ],
+        }
+        write_json(run_dir / SOURCING_PLAN_NAME, legacy)
+
+        result = validate_sourcing(run_dir)
+
+        self.assertEqual("valid", result["status"])
+        self.assertEqual(2, result["pages"])
+        self.assertEqual("deck_sourcing_plan.v1", read_json(run_dir / SOURCING_PLAN_NAME)["schema_version"])
+
+    def test_import_sourcing_rejects_selected_source_without_identity(self) -> None:
+        run_dir = self._run_with_plan()
+        plan = build_sourcing_plan_v2(
+            run_id="source-run",
+            page_tasks=read_json(run_dir / PAGE_TASKS_NAME),
+        )
+        plan["pages"][0]["decision"] = "reuse"
+        plan["pages"][0]["selected_sources"] = [{}]
+        input_path = self.temp_dir / "missing_source_identity.json"
+        write_json(input_path, plan)
+
+        with self.assertRaises(RunStateError) as ctx:
+            import_sourcing(run_dir, input_path, source="agent")
+
+        self.assertIn("asset_key", str(ctx.exception))
 
     def test_production_preview_blocks_manual_placeholder(self) -> None:
         run_dir = self._run_with_plan()
@@ -240,7 +374,7 @@ class PlannerSourcingControlTests(unittest.TestCase):
         with self.assertRaises(ValueError) as ctx:
             build_preview_from_sourcing(sourcing_plan, run_dir)
 
-        self.assertIn("manual_placeholder sourcing is not allowed", str(ctx.exception))
+        self.assertIn("manual/evidence/blocked sourcing decisions are not allowed", str(ctx.exception))
 
     def test_import_sourcing_complete_backs_up_and_refreshes_preview(self) -> None:
         run_dir = self._run_with_plan()
@@ -300,11 +434,49 @@ class PlannerSourcingControlTests(unittest.TestCase):
         result = import_sourcing(run_dir, input_path, source="human")
 
         self.assertEqual("imported", result["status"])
+        plan = read_json(run_dir / SOURCING_PLAN_NAME)
+        self.assertEqual("deck_sourcing_plan.v2", plan["schema_version"])
+        self.assertNotIn("decisions", plan)
         self.assertTrue((Path(result["backup_dir"]) / SOURCING_PLAN_NAME).exists())
         preview = read_json(run_dir / "preview_manifest.json")
         self.assertEqual(2, preview["sourcing_summary"]["total_decisions"])
         self.assertEqual("generate", preview["pages"][0]["source_decision"])
         self.assertIn("sourcing.override.imported", (run_dir / "events.jsonl").read_text(encoding="utf-8"))
+
+    def test_decide_sourcing_writes_only_v2_pages_and_reports_page_count(self) -> None:
+        run_dir = self._run_with_plan()
+        write_json(
+            run_dir / "library_results" / "selection.json",
+            {
+                "schema_version": "deck_master_ppt_library_selection.v2",
+                "run_id": "source-run",
+                "source": "ppt_library",
+                "selections": [
+                    {
+                        "beat_id": "beat_001",
+                        "page_task_id": "task_001",
+                        "query_trace_id": "trace-001",
+                        "candidates": [],
+                    },
+                    {
+                        "beat_id": "beat_002",
+                        "page_task_id": "task_002",
+                        "query_trace_id": "trace-002",
+                        "candidates": [],
+                    },
+                ],
+                "by_beat": {"beat_001": [], "beat_002": []},
+            },
+        )
+
+        args = type("Args", (), {"run_dir": str(run_dir)})()
+        result = command_decide_sourcing(args)
+        plan = read_json(run_dir / SOURCING_PLAN_NAME)
+
+        self.assertEqual(2, result["pages"])
+        self.assertEqual("deck_sourcing_plan.v2", plan["schema_version"])
+        self.assertEqual(2, len(plan["pages"]))
+        self.assertNotIn("decisions", plan)
 
 
 if __name__ == "__main__":

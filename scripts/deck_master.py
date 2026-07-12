@@ -72,7 +72,7 @@ from planning.brief_intake import build_request
 from planning.claim_map import build_claim_map
 from planning.narrative_planner import plan_narrative
 from planning.page_tasks import build_page_tasks
-from planning.sourcing_decider import decide_sourcing, load_library_results
+from sourcing.plan import build_sourcing_plan_v2
 from quality.gate_runner import (
     evaluate_delivery_gate,
     evaluate_draft_gate,
@@ -142,7 +142,7 @@ from runtime.render import render_fixture_html, render_status
 from runtime.final_readiness import compute_final_readiness
 from runtime.rc_gate import RCGateError, write_rc_gate_report
 from runtime.run_state_resolver import resolve_run_state, resolve_runtime_stage
-from runtime.sourcing_import import import_sourcing, validate_sourcing
+from runtime.sourcing_import import import_sourcing, validate_sourcing, validate_sourcing_payload
 from runtime.workspace_binding import bind_workspace
 from runtime.workspace_resolver import resolve_workspace_for_run
 from workflow import resolve_workflow_state
@@ -154,6 +154,7 @@ from tools.ppt_library_client import PPTLibraryClientError, import_library_selec
 from workspace.foundation import MANIFEST_NAME, WorkspaceError, init_workspace, register_workspace, validate_workspace
 from workspace.project_init import init_deck_project
 from runtime.setup_status import SetupError, configured_runs_dir, require_setup_ready, run_setup, setup_status
+from runtime.library_status import inspect_library_status
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -629,21 +630,18 @@ def command_search_library(args: argparse.Namespace) -> dict[str, Any]:
         command=args.ppt_lib_command,
         allow_fixture_fallback=bool(getattr(args, "allow_fixture_library_fallback", False)),
     )
-    return {"run_id": request["run_id"], "run_dir": str(run_dir), "status": "library_ready", "source": results.get("source", "")}
+    return {
+        "run_id": request["run_id"],
+        "run_dir": str(run_dir),
+        "status": results.get("status", "library_blocked"),
+        "source": results.get("source", ""),
+        "preview_degraded": bool(results.get("preview_degraded", False)),
+        "selection_count": len(results.get("selections", [])),
+    }
 
 
 def command_library_status(args: argparse.Namespace) -> dict[str, Any]:
-    suite = inspect_suite_status(targets=["codex"], include_optional=True)
-    library_items = [item for item in suite.get("skills", []) if item.get("skill") == "ppt-library"]
-    workspace = getattr(args, "workspace", "") or ""
-    return {
-        "schema_version": "deck_master_library_status.v1",
-        "status": "ready" if any(item.get("status") == "ready" for item in library_items) else "blocked",
-        "workspace": str(Path(workspace).expanduser().resolve()) if workspace else "",
-        "suite_status": suite.get("status"),
-        "ppt_library": library_items,
-        "next_command": "" if any(item.get("status") == "ready" for item in library_items) else "deck-master suite-repair --target codex",
-    }
+    return inspect_library_status()
 
 
 def command_import_library_selection(args: argparse.Namespace) -> dict[str, Any]:
@@ -653,16 +651,31 @@ def command_import_library_selection(args: argparse.Namespace) -> dict[str, Any]
 
 def command_decide_sourcing(args: argparse.Namespace) -> dict[str, Any]:
     run_dir = resolve_run_dir(args)
-    narrative_plan = read_json(run_dir / NARRATIVE_PLAN_NAME)
-    library_results = load_library_results(run_dir)
-    sourcing_plan = decide_sourcing(narrative_plan, library_results)
+    page_tasks = read_json(run_dir / PAGE_TASKS_NAME)
+    library_results = read_json(run_dir / "library_results" / "selection.json")
+    sourcing_plan = build_sourcing_plan_v2(
+        run_id=str(page_tasks.get("run_id") or run_dir.name),
+        page_tasks=page_tasks,
+        library_results=library_results,
+    )
+    validation_errors = validate_sourcing_payload(sourcing_plan, run_dir)
+    if validation_errors:
+        raise RunStateError("Invalid generated sourcing plan: " + "; ".join(validation_errors))
     write_artifact(run_dir, SOURCING_PLAN_NAME, sourcing_plan, action="sourcing.plan.created")
-    return {
+    plan_status = str(sourcing_plan.get("status") or "draft")
+    result = {
         "run_id": sourcing_plan.get("run_id", run_dir.name),
         "run_dir": str(run_dir),
-        "status": "sourcing_ready",
-        "decisions": len(sourcing_plan["decisions"]),
+        "status": plan_status,
+        "pages": len(sourcing_plan["pages"]),
+        "decisions": len(sourcing_plan["pages"]),
     }
+    if plan_status == "blocked":
+        result["blocking_summary"] = sourcing_plan.get("approval_readiness", {}).get("blocked_pages", [])
+        result["next_command"] = "review blocked pages in sourcing_plan.json"
+    elif plan_status == "draft":
+        result["next_command"] = "review pending pages in sourcing_plan.json"
+    return result
 
 
 def command_create_generation_tasks(args: argparse.Namespace) -> dict[str, Any]:
@@ -2607,6 +2620,9 @@ def command_rc_gate(args: argparse.Namespace) -> dict[str, Any]:
         skip_browser_smoke=bool(getattr(args, "skip_browser_smoke", False)),
         require_browser_smoke=bool(getattr(args, "require_browser_smoke", False)),
         min_real_cases=int(getattr(args, "min_real_cases", 3)),
+        tier=str(getattr(args, "tier", "full")),
+        uat_run_dir=getattr(args, "uat_run_dir", None),
+        evidence_forbidden_markers=getattr(args, "evidence_forbidden_marker", None),
         force=bool(getattr(args, "force", False)),
     )
 
@@ -2928,7 +2944,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_import_library = sub.add_parser("import-library-selection", help="Import PPT Library selection handback")
     add_run_args(p_import_library)
-    p_import_library.add_argument("--input", required=True, help="Path to deck_master_ppt_library_selection.v1 JSON")
+    p_import_library.add_argument("--input", required=True, help="Path to PPT Library selection v2 or legacy v1 JSON")
     p_import_library.set_defaults(func=command_import_library_selection)
 
     p_decide = sub.add_parser("decide-sourcing", help="Create sourcing_plan.json from library results")
@@ -3554,6 +3570,25 @@ def build_parser() -> argparse.ArgumentParser:
     p_rc_gate.add_argument("--min-real-cases", type=int, default=3)
     p_rc_gate.add_argument("--skip-browser-smoke", action="store_true")
     p_rc_gate.add_argument("--require-browser-smoke", action="store_true")
+    p_rc_gate.add_argument(
+        "--uat-run-dir",
+        default=None,
+        help="Read-only run copy used by full-tier real workflow UAT.",
+    )
+    p_rc_gate.add_argument(
+        "--evidence-forbidden-marker",
+        action="append",
+        default=[],
+        help="Additional private marker that must not appear in RC evidence; repeat as needed.",
+    )
+    p_rc_gate.add_argument(
+        "--tier",
+        choices=["full", "ci"],
+        default="full",
+        help="full: all checks incl. local-only benchmark/dependency closure (default). "
+        "ci: reproducible subset only; skip checks needing local-only benchmark "
+        "results or a bound production backend. For PR/CI gates on a fresh clone.",
+    )
     p_rc_gate.add_argument("--force", action="store_true")
     p_rc_gate.set_defaults(func=command_rc_gate)
 

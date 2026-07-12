@@ -14,6 +14,7 @@ import tempfile
 import unittest
 from http import HTTPStatus
 from pathlib import Path
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts" / "preview"))
@@ -292,8 +293,26 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(1, len(page["quality"]))
 
     def test_direct_preview_mode_external_runtime_apis_use_active_run_dir(self) -> None:
-        external_status, external = self.handler.request("GET", "/api/external-results/sample-preview-run")
-        runtime_status, runtime = self.handler.request("GET", "/api/runtime-readiness/sample-preview-run")
+        library_status = {
+            "schema_version": "deck_master_library_status.v2",
+            "status": "degraded_ready",
+            "runtime_ready": True,
+            "contract_ready": True,
+            "semantic_search_ready": True,
+            "role_selection_ready": False,
+            "fallback_ready": True,
+            "preview_ready": False,
+            "business_ranking_ready": "cold_start",
+            "data_hygiene_status": "degraded",
+            "blocking_summary": [],
+            "warnings": ["ROLE_SELECTION_UNAVAILABLE"],
+        }
+        with mock.patch(
+            "server.inspect_suite_status",
+            return_value={"status": "degraded_ready", "library_status": library_status},
+        ):
+            external_status, external = self.handler.request("GET", "/api/external-results/sample-preview-run")
+            runtime_status, runtime = self.handler.request("GET", "/api/runtime-readiness/sample-preview-run")
         narrative_status, narrative = self.handler.request("GET", "/api/narrative/sample-preview-run")
         asset_status, asset = self.handler.request("GET", "/api/asset-signals/sample-preview-run")
         governance_status, governance = self.handler.request("GET", "/api/quality-governance/sample-preview-run")
@@ -302,6 +321,9 @@ class ServerTests(unittest.TestCase):
         self.assertEqual("sample-preview-run", external["run_id"])
         self.assertEqual(HTTPStatus.OK, runtime_status)
         self.assertEqual("deck_master_runtime_readiness.v1", runtime["schema_version"])
+        self.assertEqual(library_status, runtime["library_status"])
+        self.assertIn("role_selection_count", runtime["sourcing_readiness"])
+        self.assertNotIn("/Users/", json.dumps(runtime["library_status"]))
         self.assertEqual(HTTPStatus.OK, narrative_status)
         self.assertEqual("sample-preview-run", narrative["run_id"])
         self.assertEqual(HTTPStatus.OK, asset_status)
