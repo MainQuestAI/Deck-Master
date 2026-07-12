@@ -405,9 +405,26 @@ def build_sourcing_plan_v2(
         "pages": [
             {
                 "page_id": p["page_id"],
+                "page_task_id": p["page_task_id"],
                 "decision": p["decision"],
-                "asset_key": (p["selected_sources"][0].get("asset_key", "") if p.get("selected_sources") else ""),
-                "query_trace_id": (p["selected_sources"][0].get("query_trace_id", "") if p.get("selected_sources") else ""),
+                "reason": p["reason"],
+                "generation_brief": p.get("generation_brief", ""),
+                "visual_need": p.get("visual_need", ""),
+                "claim_ids": p.get("claim_ids", []),
+                "evidence_need": p.get("evidence_need", []),
+                "workspace_refs": p.get("workspace_refs", []),
+                "quality_requirements": p.get("quality_requirements", []),
+                "selected_sources": [
+                    {
+                        "asset_key": s.get("asset_key", ""),
+                        "query_trace_id": s.get("query_trace_id", ""),
+                        "score": s.get("score", 0),
+                        "confidence": s.get("confidence", 0),
+                        "reuse_policy": s.get("reuse_policy", ""),
+                        "permission_status": s.get("permission_status", ""),
+                    }
+                    for s in p.get("selected_sources", [])
+                ],
             }
             for p in pages
         ],

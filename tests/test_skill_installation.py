@@ -1145,6 +1145,59 @@ class SkillInstallationTest(unittest.TestCase):
         self.assertEqual("ready", result["task_readiness"]["ppt_master_backend"])
         self.assertEqual("blocked", result["task_readiness"]["ppt_master_adapter"])
 
+    def _lib_blocked_mock(self, **overrides) -> mock.MagicMock:
+        base = {
+            "schema_version": "deck_master_library_status.v2",
+            "status": "blocked",
+            "runtime_ready": True,
+            "contract_ready": True,
+            "semantic_search_ready": True,
+            "role_selection_ready": True,
+            "fallback_ready": True,
+            "preview_ready": True,
+            "business_ranking_ready": "ready",
+            "data_hygiene_status": "ready",
+            "blocking_summary": [],
+            "warnings": [],
+        }
+        base.update(overrides)
+        return mock.patch("scripts.skills.installer.inspect_library_status", return_value=base)
+
+    def _ready_skill_link_mock(self) -> mock.MagicMock:
+        def fake(target, agent_skill_dir=None, source_skill_dir=None, *, skill_name="deck-master", required=True):
+            return {"status": "ready", "skill": skill_name, "required": required, "source_type": "mocked", "production_capable": True}
+        return mock.patch("scripts.skills.installer.inspect_skill_link", side_effect=fake)
+
+    def test_library_blocked_runtime_unavailable_propagates(self) -> None:
+        with self._ready_skill_link_mock(), self._lib_blocked_mock(
+            runtime_ready=False,
+            blocking_summary=["PPT_LIBRARY_STATE_MISSING"],
+        ):
+            result = inspect_suite_status(targets=["codex"], agent_skill_dir=str(self.agent_dir))
+        self.assertEqual("blocked", result["task_readiness"]["library_sourcing"])
+        self.assertEqual("blocked", result["status"])
+
+    def test_library_blocked_contract_missing_propagates(self) -> None:
+        with self._ready_skill_link_mock(), self._lib_blocked_mock(
+            runtime_ready=True,
+            contract_ready=False,
+            blocking_summary=["PPT_LIBRARY_CONTRACT_MISSING"],
+        ):
+            result = inspect_suite_status(targets=["codex"], agent_skill_dir=str(self.agent_dir))
+        self.assertEqual("blocked", result["task_readiness"]["library_sourcing"])
+        self.assertEqual("blocked", result["status"])
+
+    def test_library_blocked_semantic_search_unavailable_propagates(self) -> None:
+        with self._ready_skill_link_mock(), self._lib_blocked_mock(
+            runtime_ready=True,
+            contract_ready=True,
+            semantic_search_ready=False,
+            blocking_summary=["PPT_LIBRARY_SEMANTIC_SEARCH_UNAVAILABLE"],
+        ):
+            result = inspect_suite_status(targets=["codex"], agent_skill_dir=str(self.agent_dir))
+        self.assertEqual("blocked", result["task_readiness"]["library_sourcing"])
+        self.assertEqual("blocked", result["status"])
+
     def test_release_tree_contains_required_skills_capabilities_and_manifest(self) -> None:
         release_root = Path(self._tmp) / "release"
 

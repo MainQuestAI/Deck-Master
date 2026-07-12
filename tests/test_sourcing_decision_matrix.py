@@ -219,6 +219,42 @@ class DecisionMatrixTest(unittest.TestCase):
         self.assertIn(plan["status"], ("draft", "awaiting_approval", "blocked"))
         self.assertNotEqual("sourcing_ready", plan["status"])
 
+    def test_fingerprint_changes_with_generation_brief(self) -> None:
+        pt_a = _page_tasks()
+        pt_b = _page_tasks()
+        pt_b["pages"][0]["generation"]["generation_brief"] = "different brief"
+        plan_a = build_sourcing_plan_v2(run_id="fp", page_tasks=pt_a, library_results=_no_candidate_library_results())
+        plan_b = build_sourcing_plan_v2(run_id="fp", page_tasks=pt_b, library_results=_no_candidate_library_results())
+        self.assertNotEqual(plan_a["source_fingerprint"], plan_b["source_fingerprint"])
+
+    def test_fingerprint_changes_with_visual_need(self) -> None:
+        pt_a = _page_tasks()
+        pt_b = _page_tasks()
+        pt_b["pages"][0]["planning"]["visual_need"] = "different visual"
+        plan_a = build_sourcing_plan_v2(run_id="fp", page_tasks=pt_a, library_results=_no_candidate_library_results())
+        plan_b = build_sourcing_plan_v2(run_id="fp", page_tasks=pt_b, library_results=_no_candidate_library_results())
+        self.assertNotEqual(plan_a["source_fingerprint"], plan_b["source_fingerprint"])
+
+    def test_fingerprint_changes_with_score(self) -> None:
+        plan_a = build_sourcing_plan_v2(run_id="fp", page_tasks=_page_tasks(), library_results=_library_results(reuse_policy="reuse_or_adapt"))
+        plan_b = build_sourcing_plan_v2(run_id="fp", page_tasks=_page_tasks(), library_results=_library_results(reuse_policy="reuse_or_adapt"))
+        # Same inputs → same fingerprint
+        self.assertEqual(plan_a["source_fingerprint"], plan_b["source_fingerprint"])
+        # Different score → different fingerprint
+        lib_c = _library_results(reuse_policy="reuse_or_adapt")
+        lib_c["selections"][0]["candidates"][0]["score"] = 0.5
+        plan_c = build_sourcing_plan_v2(run_id="fp", page_tasks=_page_tasks(), library_results=lib_c)
+        self.assertNotEqual(plan_a["source_fingerprint"], plan_c["source_fingerprint"])
+
+    def test_fingerprint_stable_across_created_at(self) -> None:
+        from datetime import datetime, timezone
+        t1 = datetime(2026, 1, 1, tzinfo=timezone.utc)
+        t2 = datetime(2026, 7, 12, tzinfo=timezone.utc)
+        plan_a = build_sourcing_plan_v2(run_id="fp", page_tasks=_page_tasks(), library_results=_no_candidate_library_results(), now=t1)
+        plan_b = build_sourcing_plan_v2(run_id="fp", page_tasks=_page_tasks(), library_results=_no_candidate_library_results(), now=t2)
+        self.assertEqual(plan_a["source_fingerprint"], plan_b["source_fingerprint"],
+                         "Fingerprint must not change when only created_at differs")
+
 
 if __name__ == "__main__":
     unittest.main()

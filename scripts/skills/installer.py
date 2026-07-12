@@ -2136,9 +2136,8 @@ def inspect_suite_status(
         return all(by_name.get(name) == "ready" for name in names)
 
     lib_status_value = str(library_status.get("status") or "")
-    lib_runtime_blocked = (
+    lib_blocked = (
         lib_status_value == "blocked"
-        and not bool(library_status.get("runtime_ready"))
         and ready("ppt-library")
     )
     lib_degraded = lib_status_value == "degraded_ready"
@@ -2171,7 +2170,7 @@ def inspect_suite_status(
         "review": "ready" if by_name.get("deck-review") == "ready" else "blocked",
         "deck_sourcing": "ready" if ready("deck-sourcing") else "blocked",
         "library_sourcing": (
-            "blocked" if (not ready("deck-sourcing", "ppt-library") or lib_runtime_blocked)
+            "blocked" if (not ready("deck-sourcing", "ppt-library") or lib_blocked)
             else ("degraded_ready" if lib_degraded else "ready")
         ),
         "deck_producer": "ready" if ready("deck-producer") else "blocked",
@@ -2190,7 +2189,7 @@ def inspect_suite_status(
     }
 
     status = "ready" if full_suite_ready else "degraded_ready"
-    if not deck_ready or lib_runtime_blocked:
+    if not deck_ready or lib_blocked:
         status = "blocked"
 
     next_command = ""
@@ -2248,11 +2247,11 @@ def inspect_suite_status(
             "repair_owner": "backend",
             "next_command": "",
         })
-    if lib_runtime_blocked:
+    if lib_blocked:
         lib_blockers = library_status.get("blocking_summary") or []
-        lib_msg = "；".join(lib_blockers) if lib_blockers else "PPT Library runtime or contract is blocked"
+        lib_msg = "；".join(lib_blockers) if lib_blockers else "PPT Library is blocked"
         blocking_summary.append({
-            "code": "library_runtime_blocked",
+            "code": "library_blocked",
             "blocking_type": "library",
             "message": lib_msg,
             "repair_owner": "agent",

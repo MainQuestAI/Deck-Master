@@ -61,10 +61,6 @@ _IMAGE_MAGIC_PREFIXES = (
     b"\xff\xd8\xff",
     b"RIFF",
 )
-_SENSITIVE_NAME_PATTERNS = re.compile(
-    r"(confidential|private|secret|internal|proposal|contract|nda|customer|client)",
-    re.IGNORECASE,
-)
 
 
 class PPTLibraryClientError(ValueError):
@@ -302,10 +298,6 @@ def _safe_external_identity(value: Any, *, namespace: str) -> str:
 
 
 def _source_display_name(source_path: str, source_asset_id: str) -> str:
-    basename = source_path.rsplit("/", 1)[-1].strip()
-    if basename and basename not in {".", ".."} and ".." not in basename:
-        if SAFE_DISPLAY_RE.fullmatch(basename) and not _SENSITIVE_NAME_PATTERNS.search(basename):
-            return basename
     return f"PPT Library asset {source_asset_id[:8]}"
 
 
@@ -356,6 +348,23 @@ def _is_safe_screenshot_source(source: Path, run_dir: Path) -> bool:
         if not any(header.startswith(magic) for magic in _IMAGE_MAGIC_PREFIXES):
             return False
     return True
+
+
+def _validate_preview_asset(run_dir: Path, ref: str) -> bool:
+    """Validate a preview_assets/ ref: path safety + symlink + image type + magic + size."""
+    ref = str(ref or "").strip()
+    if not ref or not ref.startswith("preview_assets/"):
+        return False
+    if ".." in ref or "\\" in ref:
+        return False
+    try:
+        resolved = (run_dir / ref).resolve()
+        resolved.relative_to(run_dir.resolve())
+    except (ValueError, OSError):
+        return False
+    if not resolved.is_file():
+        return False
+    return _is_safe_screenshot_source(resolved, run_dir.resolve())
 
 
 def _preview_ref(run_dir: Path, screenshot_path: Any, asset_key: str) -> tuple[str, str]:
@@ -840,7 +849,7 @@ def _normalize_v2_candidates(
         candidate["screenshot_ref"] = screenshot_ref
         if not screenshot_ref:
             statuses.append("missing")
-        elif (run_dir / screenshot_ref).is_file():
+        elif _validate_preview_asset(run_dir, screenshot_ref):
             statuses.append("ready")
         else:
             statuses.append("invalid")

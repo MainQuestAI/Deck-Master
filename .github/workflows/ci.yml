@@ -169,4 +169,3 @@ jobs:
           assert checks["external_dependency_closure"]["status"] == "pass"
           print(f"CI-tier rc-gate passed ({report['summary']['checks']} checks)")
           PY
-
