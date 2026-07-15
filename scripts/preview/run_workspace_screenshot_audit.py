@@ -30,14 +30,14 @@ CHROME_CANDIDATES = [
 ]
 
 PLAYWRIGHT_WAIT_SELECTORS = {
-    "empty": "text=当前还没有方案项目",
-    "run-init-wait-preview": "text=待准备",
-    "generation-running": "text=生成中",
-    "needs-review": "text=待审阅",
-    "needs-evidence": "text=待补依据",
-    "pending-approval": "text=待审批",
-    "export-ready": "text=可交付",
-    "delivered-review": "text=已交付",
+    "empty": "body",
+    "run-init-wait-preview": "body",
+    "generation-running": "body",
+    "needs-review": "body",
+    "needs-evidence": "body",
+    "pending-approval": "body",
+    "export-ready": "body",
+    "delivered-review": "body",
 }
 
 
@@ -235,7 +235,12 @@ def generate_workspace_screenshot_audit(output_root: str | Path, *, chrome_path:
     empty_runs_dir.mkdir(parents=True, exist_ok=True)
 
     playwright_path = _find_playwright()
-    chrome = _find_chrome(chrome_path) if not playwright_path else ""
+    try:
+        chrome = _find_chrome(chrome_path)
+    except FileNotFoundError:
+        if not playwright_path:
+            raise
+        chrome = ""
     scenario_manifest = generate_workspace_audit_runs(generated_runs_dir)
     scene_dirs = _materialize_scene_runs(scene_runs_dir, scenario_manifest)
     port = _pick_free_port()

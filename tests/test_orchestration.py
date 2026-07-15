@@ -59,7 +59,7 @@ class OrchestrationTests(unittest.TestCase):
             ),
             encoding="utf-8",
         )
-        queue = export_queue(run_dir, {"approved"})
+        queue = export_queue(run_dir, {"approved"}, enforce_final_readiness=False)
 
         self.assertEqual("sample-orchestrated-run", queue["run_id"])
         self.assertEqual(1, len(queue["pages"]))

@@ -304,6 +304,24 @@ def _normalize_run_mode(value: str | None) -> str:
     return "production"
 
 
+def _resolve_run_mode(args: argparse.Namespace, run_dir: Path | None = None) -> str:
+    explicit = getattr(args, "run_mode", None)
+    if explicit:
+        return _normalize_run_mode(str(explicit))
+    root = run_dir
+    if root is None and (getattr(args, "run_dir", None) or getattr(args, "run_id", None)):
+        try:
+            root = resolve_run_dir(args)
+        except RunStateError:
+            root = None
+    if root is not None:
+        request = read_optional_json(root, REQUEST_NAME) or {}
+        inherited = str(request.get("run_mode") or "").strip()
+        if inherited:
+            return _normalize_run_mode(inherited)
+    return "production"
+
+
 def _dev_allow_unsetup(args: argparse.Namespace) -> bool:
     if bool(getattr(args, "dev_allow_unsetup", False)):
         return True
@@ -540,7 +558,7 @@ def enrich_narrative_with_claims(narrative_plan: dict[str, Any], claim_map: dict
 
 
 def command_plan(args: argparse.Namespace) -> dict[str, Any]:
-    run_mode = _normalize_run_mode(getattr(args, "run_mode", None))
+    run_mode = _resolve_run_mode(args)
     planner_mode = _normalize_planner_mode(getattr(args, "planner_mode", None), run_mode)
     request = build_request(
         brief=args.brief or "",
@@ -565,7 +583,7 @@ def command_plan(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def command_start_conversation(args: argparse.Namespace) -> dict[str, Any]:
-    run_mode = _normalize_run_mode(getattr(args, "run_mode", None))
+    run_mode = _resolve_run_mode(args)
     context_files = [str(path) for path in args.context_file]
     context_manifest = build_context_manifest(context_files, workspace=args.workspace or "")
     request = build_request(
@@ -701,7 +719,7 @@ def command_export(args: argparse.Namespace) -> dict[str, Any]:
     if queue_type == "client":
         final_readiness = compute_final_readiness(
             run_dir,
-            run_mode=_normalize_run_mode(getattr(args, "run_mode", None)),
+            run_mode=_resolve_run_mode(args, run_dir),
             dev_allow_unsetup=bool(getattr(args, "dev_allow_unsetup", False)),
         )
     queue = export_queue(
@@ -729,7 +747,7 @@ def command_export(args: argparse.Namespace) -> dict[str, Any]:
 def command_autoplan(args: argparse.Namespace) -> dict[str, Any]:
     existing_run = bool((getattr(args, "run_id", None) or getattr(args, "run_dir", None)) and not (args.brief or args.brief_file))
     planning_mode = getattr(args, "planning_mode", "classic")
-    run_mode = _normalize_run_mode(getattr(args, "run_mode", None))
+    run_mode = _resolve_run_mode(args)
     planner_mode = _normalize_planner_mode(getattr(args, "planner_mode", None), run_mode)
     if existing_run:
         run_dir = resolve_run_dir(args)
@@ -922,7 +940,7 @@ def command_final_readiness(args: argparse.Namespace) -> dict[str, Any]:
         artifact_path=getattr(args, "artifact", None),
         expected_page_count=getattr(args, "expected_pages", None),
         write=not bool(getattr(args, "no_write", False)),
-        run_mode=_normalize_run_mode(getattr(args, "run_mode", None)),
+        run_mode=_resolve_run_mode(args, run_dir),
         dev_allow_unsetup=bool(getattr(args, "dev_allow_unsetup", False)),
     )
     status = str(payload.get("status") or "")
@@ -1004,7 +1022,7 @@ def command_next_step(args: argparse.Namespace) -> dict[str, Any]:
     payload = resolve_next_step(
         run_dir,
         cli_workspace=getattr(args, "workspace", None),
-        run_mode=_normalize_run_mode(getattr(args, "run_mode", None)),
+        run_mode=_resolve_run_mode(args, run_dir),
         dev_allow_unsetup=bool(getattr(args, "dev_allow_unsetup", False)),
     )
     # Project the contract stage so next-step shares the same resolution as
@@ -1120,7 +1138,7 @@ def command_setup(args: argparse.Namespace) -> dict[str, Any]:
 def command_setup_status(args: argparse.Namespace) -> dict[str, Any]:
     return setup_status(
         workspace=_resolve_workspace_for_setup_status(args),
-        run_mode=_normalize_run_mode(getattr(args, "run_mode", None)),
+        run_mode=_resolve_run_mode(args),
         include_suite=bool(getattr(args, "include_suite", False)),
     )
 
@@ -1160,7 +1178,7 @@ def _start_first_action(setup: dict[str, Any], run_state: dict[str, Any] | None 
 
 
 def command_start(args: argparse.Namespace) -> dict[str, Any]:
-    run_mode = _normalize_run_mode(getattr(args, "run_mode", None))
+    run_mode = _resolve_run_mode(args)
     setup = setup_status(
         workspace=_resolve_workspace_for_setup_status(args),
         run_mode=run_mode,
@@ -1226,7 +1244,7 @@ def command_route_skill(args: argparse.Namespace) -> dict[str, Any]:
         run_state = resolve_run_state(
             resolve_run_dir(args),
             cli_workspace=getattr(args, "workspace", None),
-            run_mode=_normalize_run_mode(getattr(args, "run_mode", None)),
+            run_mode=_resolve_run_mode(args),
             dev_allow_unsetup=bool(getattr(args, "dev_allow_unsetup", False)),
         )
         payload = run_state.get("skill_route") or route_for_stage_manifest_aware(
@@ -1332,7 +1350,7 @@ def command_workflow_autopilot(args: argparse.Namespace) -> dict[str, Any]:
         state = resolve_run_state(
             run_dir,
             cli_workspace=getattr(args, "workspace", None),
-            run_mode=_normalize_run_mode(getattr(args, "run_mode", None)),
+            run_mode=_resolve_run_mode(args, run_dir),
             dev_allow_unsetup=bool(getattr(args, "dev_allow_unsetup", False)),
         )
         final_state = state
@@ -1364,7 +1382,7 @@ def command_workflow_autopilot(args: argparse.Namespace) -> dict[str, Any]:
         next_state = resolve_run_state(
             run_dir,
             cli_workspace=getattr(args, "workspace", None),
-            run_mode=_normalize_run_mode(getattr(args, "run_mode", None)),
+            run_mode=_resolve_run_mode(args, run_dir),
             dev_allow_unsetup=bool(getattr(args, "dev_allow_unsetup", False)),
         )
         final_state = next_state
@@ -1395,10 +1413,11 @@ def command_workflow_autopilot(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def command_run_state(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = resolve_run_dir(args)
     state = resolve_run_state(
-        resolve_run_dir(args),
+        run_dir,
         cli_workspace=getattr(args, "workspace", None),
-        run_mode=_normalize_run_mode(getattr(args, "run_mode", None)),
+        run_mode=_resolve_run_mode(args, run_dir),
         dev_allow_unsetup=bool(getattr(args, "dev_allow_unsetup", False)),
     )
     # Project the contract view (current_skill_stage) alongside the runtime
@@ -1406,7 +1425,7 @@ def command_run_state(args: argparse.Namespace) -> dict[str, Any]:
     # one stage resolution (A5 consistency). Additive; never overrides runtime.
     try:
         wf = resolve_workflow_state(
-            resolve_run_dir(args),
+            run_dir,
             run_id=str(state.get("run_id") or ""),
             runtime_stage_fn=_safe_runtime_stage,
         )
@@ -1593,7 +1612,7 @@ def command_workflow_autopilot_v2(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def command_doctor(args: argparse.Namespace) -> dict[str, Any]:
-    run_mode = _normalize_run_mode(getattr(args, "run_mode", None))
+    run_mode = _resolve_run_mode(args)
     payload: dict[str, Any] = {
         "schema_version": "deck_master_doctor.v1",
         "run_mode": run_mode,
@@ -2013,6 +2032,7 @@ def command_release_smoke(args: argparse.Namespace) -> dict[str, Any]:
     payload = verify_release_tree(
         release_root_arg,
         run_smoke=not bool(getattr(args, "no_smoke", False)),
+        include_rc_gate=not bool(getattr(args, "no_smoke", False)),
     )
     next_agent_action = _release_smoke_next_agent_action(payload, release_root_arg)
     release_root = Path(str(payload.get("release_root") or getattr(args, "release_root", "") or "")).expanduser()
@@ -2097,7 +2117,7 @@ def command_orchestration_check(args: argparse.Namespace) -> dict[str, Any]:
     return orchestration_check(
         resolve_run_dir(args),
         cli_workspace=getattr(args, "workspace", None),
-        run_mode=_normalize_run_mode(getattr(args, "run_mode", None)),
+        run_mode=_resolve_run_mode(args),
         dev_allow_unsetup=bool(getattr(args, "dev_allow_unsetup", False)),
     )
 
@@ -2756,7 +2776,7 @@ def add_run_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--run-id")
     parser.add_argument("--runs-dir", default=None)
     parser.add_argument("--dev-allow-unsetup", action="store_true", help=argparse.SUPPRESS)
-    parser.add_argument("--run-mode", choices=["production", "fixture", "dev", "benchmark"], default="production")
+    parser.add_argument("--run-mode", choices=["production", "fixture", "dev", "benchmark"], default=None)
     parser.add_argument("--workspace", default="")
 
 
@@ -3608,11 +3628,11 @@ def main() -> None:
             require_setup_ready(
                 dev_allow_unsetup=_dev_allow_unsetup(args),
                 workspace=_workspace_for_setup_guard(args),
-                run_mode=_normalize_run_mode(getattr(args, "run_mode", None)),
+                run_mode=_resolve_run_mode(args),
             )
         result = args.func(args)
         print_json(result)
-        if args.command == "preview-gate" and isinstance(result, dict) and result.get("status") != "pass":
+        if args.command in {"preview-gate", "rc-gate"} and isinstance(result, dict) and result.get("status") != "pass":
             raise SystemExit(2)
     except (
         RunStateError,

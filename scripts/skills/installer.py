@@ -1262,7 +1262,7 @@ def _safe_release_child(root: Path, rel: str) -> Path | None:
     return path
 
 
-def _verify_disposable_release(root: Path) -> dict[str, Any]:
+def _verify_disposable_release(root: Path, *, include_rc_gate: bool = False) -> dict[str, Any]:
     preflight = verify_release_tree(root, run_smoke=False)
     if not preflight["valid"]:
         return preflight
@@ -1275,7 +1275,7 @@ def _verify_disposable_release(root: Path) -> dict[str, Any]:
             ignore=shutil.ignore_patterns(".venv", "__pycache__", "*.pyc"),
         )
         runtime = _install_release_runtime(staged_release)
-        verification = verify_release_tree(staged_release, run_smoke=True)
+        verification = verify_release_tree(staged_release, run_smoke=True, include_rc_gate=include_rc_gate)
         verification["release_root"] = str(root)
         verification["runtime"] = {**runtime, "disposable_stage": True}
         return verification
@@ -1285,11 +1285,12 @@ def verify_release_tree(
     release_root: str | Path | None = None,
     *,
     run_smoke: bool = True,
+    include_rc_gate: bool = False,
 ) -> dict[str, Any]:
     root = Path(release_root).expanduser().resolve() if release_root else INSTALL_LOG_DIR / "current"
     runtime_python = root / RELEASE_PYTHON_RELATIVE
     if run_smoke and not runtime_python.exists():
-        return _verify_disposable_release(root)
+        return _verify_disposable_release(root, include_rc_gate=include_rc_gate)
     errors: list[dict[str, Any]] = []
     warnings: list[dict[str, Any]] = []
 
@@ -1314,6 +1315,8 @@ def verify_release_tree(
         "contracts/workflow-state.v1.schema.json",
         "contracts/final-readiness.v1.schema.json",
         "contracts/rc-gate-report.v1.schema.json",
+        "skills/manifest.json",
+        "skills/stage-contracts.json",
     ]
     for rel in required_files:
         path = root / rel
@@ -1435,15 +1438,63 @@ def verify_release_tree(
     smoke: dict[str, Any] = {"skipped": not run_smoke}
     if run_smoke and bin_path.exists():
         try:
-            completed = subprocess.run(
-                [str(bin_path), "--help"],
-                cwd=root,
-                check=False,
-                capture_output=True,
-                env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
-                text=True,
-                timeout=15,
-            )
+            smoke_env = {
+                **os.environ,
+                "PYTHONDONTWRITEBYTECODE": "1",
+                "DECK_MASTER_DEV_SKIP_SETUP": "1",
+                "DECK_MASTER_RELEASE_SMOKE_ACTIVE": "1",
+            }
+            with tempfile.TemporaryDirectory(prefix="deck-master-release-commands-") as smoke_dir:
+                smoke_root = Path(smoke_dir)
+                run_dir = smoke_root / "fixture-run"
+                run_dir.mkdir()
+                (run_dir / "request.json").write_text(
+                    json.dumps(
+                        {
+                            "schema_version": "deck_request.v1",
+                            "run_id": "fixture-run",
+                            "run_mode": "fixture",
+                            "brief": "release smoke",
+                        }
+                    ) + "\n",
+                    encoding="utf-8",
+                )
+                commands = [
+                    [str(bin_path), "--help"],
+                    [str(bin_path), "suite-status", "--output", "json"],
+                    [str(bin_path), "workflow", "status", "--run-dir", str(run_dir)],
+                    [str(bin_path), "next-step", "--run-dir", str(run_dir)],
+                ]
+                if include_rc_gate and os.environ.get("DECK_MASTER_RELEASE_SMOKE_ACTIVE") != "1":
+                    commands.append(
+                        [
+                            str(bin_path),
+                            "rc-gate",
+                            "--tier",
+                            "ci",
+                            "--skip-browser-smoke",
+                            "--output-dir",
+                            str(smoke_root / "rc-gate"),
+                            "--force",
+                        ]
+                    )
+                command_results = []
+                completed = None
+                for command in commands:
+                    completed = subprocess.run(
+                        command,
+                        cwd=root,
+                        check=False,
+                        capture_output=True,
+                        env=smoke_env,
+                        text=True,
+                        timeout=120,
+                    )
+                    command_results.append(
+                        {"command": command[1:3], "returncode": completed.returncode}
+                    )
+                    if completed.returncode != 0:
+                        break
         except (OSError, subprocess.TimeoutExpired) as exc:
             add_error("release_smoke_failed", "bin/deck-master", str(exc))
             smoke = {"skipped": False, "status": "failed", "error": str(exc)}
@@ -1452,6 +1503,7 @@ def verify_release_tree(
                 "skipped": False,
                 "status": "passed" if completed.returncode == 0 else "failed",
                 "returncode": completed.returncode,
+                "commands": command_results,
             }
             if completed.returncode != 0:
                 add_error("release_smoke_failed", "bin/deck-master", completed.stderr.strip())
@@ -1665,6 +1717,12 @@ def build_release_tree(
         if not source.exists():
             raise SkillInstallError(f"Required skill package missing: {source}")
         _copytree_replace(source, release_root / "skills" / name)
+
+    for registry_name in ("manifest.json", "stage-contracts.json"):
+        registry_source = _repo_root() / "skills" / registry_name
+        if not registry_source.exists():
+            raise SkillInstallError(f"Required skill registry missing: {registry_source}")
+        shutil.copy2(registry_source, release_root / "skills" / registry_name)
 
     for name in [str(spec["name"]) for spec in SUITE_SKILLS if str(spec["name"]).startswith("ppt-")]:
         source = _repo_capability_dir(name)

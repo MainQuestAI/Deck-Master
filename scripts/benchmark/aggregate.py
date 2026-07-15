@@ -89,13 +89,17 @@ def _load_reports(benchmark_dir: Path) -> list[dict[str, Any]]:
         readiness = payload.get("readiness", {}) if isinstance(payload.get("readiness"), dict) else {}
         page_metrics = payload.get("page_metrics", {}) if isinstance(payload.get("page_metrics"), dict) else {}
         efficiency = payload.get("efficiency_metrics", {}) if isinstance(payload.get("efficiency_metrics"), dict) else {}
+        rc_eligibility = payload.get("rc_eligibility", {}) if isinstance(payload.get("rc_eligibility"), dict) else {}
+        rc_eligible = bool(rc_eligibility.get("eligible"))
         reports.append({
             "case_id": payload_case_id,
             "run_id": payload_run_id,
             "path_case_id": path_case_id,
             "path_run_id": path_run_id,
             "payload_matches_path": payload_matches_path,
-            "p4_eligible": payload_matches_path and status == "completed",
+            "p4_eligible": payload_matches_path and status == "completed" and rc_eligible,
+            "rc_eligible": rc_eligible,
+            "rc_eligibility": rc_eligibility,
             "status": status,
             "report_type": path.name,
             "path": str(path),

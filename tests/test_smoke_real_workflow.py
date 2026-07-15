@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib
+import hashlib
 import json
 import sys
 import tempfile
@@ -93,6 +94,66 @@ class RealWorkflowSmokeTest(unittest.TestCase):
         (run_dir / "advisor_tasks").mkdir()
         (run_dir / "advisor_tasks" / "narrative_advice_task.json").write_text("{}", encoding="utf-8")
         (run_dir / "quality_review_tasks").mkdir()
+        artifact = run_dir / "build" / "deck.pptx"
+        artifact.parent.mkdir()
+        artifact.write_bytes(b"final deck")
+        artifact_hash = hashlib.sha256(artifact.read_bytes()).hexdigest()
+        (run_dir / "render_results").mkdir()
+        (run_dir / "render_results" / "render_result.json").write_text(
+            json.dumps(
+                {
+                    "schema_version": "deck_render_result.v2",
+                    "status": "completed",
+                    "artifact_path": "build/deck.pptx",
+                    "source_fingerprint": "fixture-fingerprint",
+                    "artifacts": [{"path": "build/deck.pptx", "sha256": artifact_hash}],
+                }
+            ),
+            encoding="utf-8",
+        )
+        (run_dir / "delivery").mkdir()
+        (run_dir / "delivery" / "final_readiness.json").write_text(
+            json.dumps(
+                {
+                    "schema_version": "deck_final_readiness.v1",
+                    "run_id": run_id,
+                    "ready": True,
+                    "status": "ready",
+                    "computed_at": "2026-07-13T00:00:00+00:00",
+                    "final_artifact": {"path": "build/deck.pptx", "hash": artifact_hash},
+                }
+            ),
+            encoding="utf-8",
+        )
+        (run_dir / "final_artifact_approval.json").write_text(
+            json.dumps(
+                {
+                    "schema_version": "deck_final_artifact_approval.v1",
+                    "run_id": run_id,
+                    "run_dir_name": run_id,
+                    "approval_id": "approval-test",
+                    "handoff_id": "handoff-test",
+                    "decision": "approved",
+                    "approver": {"id": "boss", "role": "approver"},
+                    "approved_at": "2026-07-13T00:01:00+00:00",
+                    "final_artifact": {"path": "build/deck.pptx", "sha256": artifact_hash},
+                    "readiness": {"path": "delivery/final_readiness.json", "ready": True},
+                }
+            ),
+            encoding="utf-8",
+        )
+        (run_dir / "workflow" / "approvals").mkdir(parents=True)
+        (run_dir / "workflow" / "approvals" / "approval-test.json").write_text(
+            json.dumps(
+                {
+                    "approval_id": "approval-test",
+                    "handoff_id": "handoff-test",
+                    "to_stage": "client_export",
+                    "decision": "approved",
+                }
+            ),
+            encoding="utf-8",
+        )
         (run_dir / "uat_reports").mkdir()
         for report_name in [
             "ppt_library_uat.json",

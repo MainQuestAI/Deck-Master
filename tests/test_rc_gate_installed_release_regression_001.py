@@ -128,7 +128,7 @@ class InstalledReleaseRCGateRegressionTests(unittest.TestCase):
             timeout=120,
         )
 
-        self.assertEqual(0, completed.returncode, completed.stderr[-2000:])
+        self.assertEqual(2, completed.returncode, completed.stderr[-2000:])
         payload = json.loads((output_dir / "rc_gate_report.json").read_text(encoding="utf-8"))
         self.assertEqual("fail", payload["status"])
         checks = {check["check_id"]: check for check in payload["checks"]}

@@ -12,21 +12,6 @@ triggers:
 
 Use this optional skill after review, delivery, or benchmark completion.
 
-## Allowed Commands
-
-```bash
-~/.deck-master/bin/deck-master record-library-feedback --run-dir <run_dir> --apply
-~/.deck-master/bin/deck-master delivery record-outcome --run-dir <run_dir>
-~/.deck-master/bin/deck-master build-learning-pack --workspace <workspace>
-~/.deck-master/bin/deck-master show-learning-pack --workspace <workspace>
-```
-
-## Output Rule
-
-Learning output must stay in the workspace and avoid customer secrets, keys,
-raw private documents, or build caches.
-
-
 <!-- skill-os-contract:v1 -->
 
 ## Use When
@@ -49,7 +34,10 @@ Skill OS workflow runtime; stage `deck-learn`. Stage completion is validated by 
 
 ## Allowed Commands
 ```bash
-deck-master final-readiness --run-dir <run_dir>
+deck-master record-library-feedback --run-dir <run_dir> --apply
+deck-master delivery record-outcome --run-dir <run_dir>
+deck-master build-learning-pack --workspace <workspace>
+deck-master show-learning-pack --workspace <workspace>
 deck-master workflow status --run-dir <run_dir>
 deck-master run-state --run-dir <run_dir>
 ```

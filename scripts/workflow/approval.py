@@ -144,6 +144,10 @@ class ApprovalRuntime:
         self._write(root, approval_id, record)
         # accept the underlying handoff
         self.handoffs.accept(root, record["handoff_id"], actor=str(actor.get("id") or "approver"))
+        if record.get("to_stage") == "client_export":
+            from runtime.final_approval import write_final_artifact_approval
+
+            write_final_artifact_approval(root, record)
         return record
 
     def reject(
@@ -185,6 +189,10 @@ class ApprovalRuntime:
             record["reason"] = reason
         record["decided_at"] = _utc(self._clock())
         self._write(root, approval_id, record)
+        if record.get("to_stage") == "client_export":
+            from runtime.final_approval import invalidate_final_artifact_approval
+
+            invalidate_final_artifact_approval(root, approval_id)
         return record
 
     # --- gate query ---

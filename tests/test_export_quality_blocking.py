@@ -11,8 +11,10 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts" / "orchestrate"))
 sys.path.insert(0, str(ROOT / "scripts" / "preview"))
+sys.path.insert(0, str(ROOT / "scripts"))
 
 from export_queue import check_page_quality_blocking, export_queue
+from runtime.final_approval import write_final_artifact_approval
 
 
 def _make_manifest(pages: list[dict[str, Any]]) -> dict[str, Any]:
@@ -56,16 +58,39 @@ def _write_manifest(run_dir: Path, manifest: dict[str, Any]) -> None:
 def _write_final_readiness(run_dir: Path, *, ready: bool, reason: str = "") -> None:
     delivery_dir = run_dir / "delivery"
     delivery_dir.mkdir(parents=True, exist_ok=True)
+    artifact = run_dir / "build" / "deck.pptx"
+    artifact.parent.mkdir(parents=True, exist_ok=True)
+    artifact.write_bytes(b"approved deck")
+    import hashlib
+
+    artifact_hash = hashlib.sha256(artifact.read_bytes()).hexdigest()
     payload = {
         "schema_version": "deck_final_readiness.v1",
         "run_id": run_dir.name,
         "ready": ready,
         "status": "ready" if ready else "blocked",
+        "computed_at": "2026-07-13T00:00:00+00:00",
+        "final_artifact": {"path": "build/deck.pptx", "hash": artifact_hash},
         "blockers": [] if ready else [{"code": "fixture_block", "severity": "P0", "message": reason or "blocked"}],
     }
     (delivery_dir / "final_readiness.json").write_text(
         json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8"
     )
+    if ready:
+        approval = {
+                "run_id": run_dir.name,
+                "approval_id": "approval_fixture",
+                "handoff_id": "handoff_fixture",
+                "decision": "approved",
+                "actor": {"id": "boss", "role": "approver"},
+                "decided_at": "2026-07-13T00:01:00+00:00",
+                "artifact_binding": {"output_fingerprint": "fixture", "artifacts": []},
+                "to_stage": "client_export",
+            }
+        approval_dir = run_dir / "workflow" / "approvals"
+        approval_dir.mkdir(parents=True, exist_ok=True)
+        (approval_dir / "approval_fixture.json").write_text(json.dumps(approval), encoding="utf-8")
+        write_final_artifact_approval(run_dir, approval)
 
 
 def _write_gate(
@@ -122,6 +147,17 @@ class ExportQualityBlockingTests(unittest.TestCase):
         self.assertEqual(1, result["blocked_count"])
         self.assertTrue(result["blocked_pages"][0]["final_readiness_blocked"])
         self.assertIn("Final readiness", result["blocked_pages"][0]["final_readiness_reason"])
+
+    def test_missing_final_approval_blocks_client_queue(self) -> None:
+        page = _base_page("p1", decision="approved", review_status="approved")
+        _write_manifest(self.run_dir, _make_manifest([page]))
+        (self.run_dir / "final_artifact_approval.json").unlink()
+        _write_gate(self.run_dir, "draft", [])
+
+        result = export_queue(self.run_dir, {"approved"}, queue_type="client")
+
+        self.assertEqual([], result["pages"])
+        self.assertIn("approval is missing", result["blocked_pages"][0]["quality_block_reason"])
 
     def test_client_queue_blocks_when_customer_visible_safety_missing(self) -> None:
         page = _base_page("p1", decision="approved", review_status="approved")

@@ -129,7 +129,7 @@ def test_ready_for_export_stage_present(tmp_path):
               "deck_brief.json", "claim_map.json", "narrative_plan.json", "page_tasks.json",
               "sourcing_plan.json", "build_manifest.json", "artifact_manifest.json",
               "render_result.json", "quality_report.json", "customer_visible_safety_gate.json",
-              "final_readiness.json", "final_artifact_approval.json"):
+              "delivery/final_readiness.json"):
         _touch(tmp_path / f)
     _touch(tmp_path / "page_packages" / "p1.json")
     _answer_required(tmp_path, "deck-review")

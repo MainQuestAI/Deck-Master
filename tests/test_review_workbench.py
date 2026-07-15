@@ -158,7 +158,8 @@ class WorkbenchDirectTest(unittest.TestCase):
         self.assertEqual(page["review_status"], "approved")
         self.assertEqual(page["decision"], "approved")
         queue = export_queue(self.run_dir, {"approved"})
-        self.assertEqual([p["page_id"] for p in queue["pages"]], ["beat_001"])
+        self.assertEqual(queue["pages"], [])
+        self.assertIn("approval is missing", queue["blocked_pages"][0]["quality_block_reason"])
 
     def test_reject_page(self) -> None:
         result = execute_review_action(self.run_dir, "beat_001", "reject", reason="Weak evidence")
@@ -348,8 +349,9 @@ class WorkbenchAPITest(unittest.TestCase):
 
         queue_status, queue = self.handler.request("GET", "/api/export-queue/wb-test")
         self.assertEqual(queue_status, 200)
-        self.assertEqual([p["page_id"] for p in queue["pages"]], ["beat_001"])
-        self.assertEqual(queue["blocked_pages"], [])
+        self.assertEqual(queue["pages"], [])
+        self.assertEqual([p["page_id"] for p in queue["blocked_pages"]], ["beat_001"])
+        self.assertIn("approval is missing", queue["blocked_pages"][0]["quality_block_reason"])
 
         summary_status, summary = self.handler.request("GET", "/api/review-summary/wb-test")
         self.assertEqual(summary_status, 200)

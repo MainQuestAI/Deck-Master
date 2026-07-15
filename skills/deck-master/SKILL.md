@@ -103,7 +103,9 @@ coverage, generation session control, quality gates, review, and export:
   --library-mode auto
 ~/.deck-master/bin/deck-master generation-session create --run-id <run_id>
 ~/.deck-master/bin/deck-master run-generation --run-id <run_id> --dry-run
-~/.deck-master/bin/deck-master render --run-id <run_id> --format html --fixture-safe
+~/.deck-master/bin/deck-master build prepare --run-id <run_id>
+~/.deck-master/bin/deck-master build run --run-id <run_id>
+~/.deck-master/bin/deck-master import-render-result --run-id <run_id> --input <render_result.json>
 ~/.deck-master/bin/deck-master quality-gate draft --run-id <run_id>
 ~/.deck-master/bin/deck-master run-state --run-dir <run_dir>
 ```

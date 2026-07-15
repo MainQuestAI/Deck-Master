@@ -12,21 +12,6 @@ triggers:
 
 Use this skill after page tasks exist and before new page production starts.
 
-## Allowed Commands
-
-```bash
-~/.deck-master/bin/deck-master search-library --run-dir <run_dir>
-~/.deck-master/bin/deck-master import-library-selection --run-dir <run_dir> --input <selection.json>
-~/.deck-master/bin/deck-master decide-sourcing --run-dir <run_dir>
-~/.deck-master/bin/deck-master record-library-feedback --run-dir <run_dir> --page-task-id <page> --candidate-id <candidate> --outcome <outcome>
-```
-
-## Decision Rule
-
-Use existing assets when they match the page claim, audience, visual pattern,
-and evidence need. Send pages to production when reuse would weaken the story.
-
-
 <!-- skill-os-contract:v1 -->
 
 ## Use When
@@ -52,7 +37,10 @@ Skill OS workflow runtime; stage `deck-sourcing`. Stage completion is validated 
 
 ## Allowed Commands
 ```bash
+deck-master search-library --run-dir <run_dir>
+deck-master import-library-selection --run-dir <run_dir> --input <selection.json>
 deck-master decide-sourcing --run-dir <run_dir>
+deck-master record-library-feedback --run-dir <run_dir> --page-task-id <page> --candidate-id <candidate> --outcome <outcome>
 deck-master workflow status --run-dir <run_dir>
 deck-master run-state --run-dir <run_dir>
 ```

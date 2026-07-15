@@ -74,7 +74,7 @@ def _seed_through(run: Path, upto: str) -> None:
         "deck-producer": ["page_packages/"],
         "deck-builder": ["build_manifest.json", "artifact_manifest.json", "render_result.json"],
         "deck-quality": ["quality_report.json", "customer_visible_safety_gate.json"],
-        "deck-review": ["final_readiness.json", "final_artifact_approval.json"],
+        "deck-review": ["delivery/final_readiness.json"],
     }
     order = ["deck-init", "deck-brief", "deck-planner", "deck-sourcing", "deck-producer",
              "deck-builder", "deck-quality", "deck-review"]

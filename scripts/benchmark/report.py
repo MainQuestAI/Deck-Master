@@ -223,6 +223,48 @@ def _artifact_index(run_dir: Path) -> dict[str, str]:
     return index
 
 
+def _rc_eligibility(
+    run_dir: Path,
+    *,
+    final_clearance: dict[str, Any],
+    export_payload: dict[str, Any],
+    quality_metrics: dict[str, Any],
+    uat_summary: dict[str, str],
+    pending: list[dict[str, Any]],
+) -> dict[str, Any]:
+    render = _safe_read_json(run_dir / "render_results" / "render_result.json")
+    artifacts = render.get("artifacts") if isinstance(render.get("artifacts"), list) else []
+    render_v2_ready = (
+        render.get("schema_version") == "deck_render_result.v2"
+        and str(render.get("status") or "") == "completed"
+        and len([item for item in artifacts if isinstance(item, dict)]) > 0
+    )
+    readiness = final_clearance.get("readiness") if isinstance(final_clearance.get("readiness"), dict) else {}
+    readiness_render = readiness.get("render") if isinstance(readiness.get("render"), dict) else {}
+    readiness_lineage = readiness.get("lineage") if isinstance(readiness.get("lineage"), dict) else {}
+    render_fingerprint = str(readiness_render.get("source_fingerprint") or render.get("source_fingerprint") or "")
+    lineage_fingerprint = str(readiness_lineage.get("source_fingerprint") or "")
+    fingerprint_matches = bool(render_fingerprint) and render_fingerprint == lineage_fingerprint
+    required_uat = {key: uat_summary.get(key) for key in ("ppt_library", "generation_tool", "render_tool", "real_workflow_smoke")}
+    checks = {
+        "workflow_completed": bool(final_clearance.get("ready")),
+        "final_ready": bool(final_clearance.get("ready")),
+        "export_ready": bool(export_payload.get("pages")),
+        "quality_clear": not bool(quality_metrics.get("export_blocked_count")),
+        "required_uat_passed": all(value == "pass" for value in required_uat.values()),
+        "render_v2_artifacts_present": render_v2_ready,
+        "no_pending_steps": not pending,
+        "source_fingerprint_matches": fingerprint_matches,
+    }
+    return {
+        "eligible": all(checks.values()),
+        "checks": checks,
+        "required_uat": required_uat,
+        "render_artifact_count": len(artifacts),
+        "source_fingerprint": render_fingerprint,
+    }
+
+
 def _quality_metrics(run_dir: Path, reports: list[dict[str, Any]], export_payload: dict[str, Any]) -> dict[str, Any]:
     counts = _count_findings_by_severity(reports)
     claim_graph = _safe_read_json(run_dir / "claim_evidence_graph.json")
@@ -342,6 +384,14 @@ def build_benchmark_report(
         status = "pending_external_agent"
     elif any(value == "fail" for value in target_evaluation.values()):
         status = "warning"
+    rc_eligibility = _rc_eligibility(
+        root,
+        final_clearance=final_clearance,
+        export_payload=export_payload,
+        quality_metrics=quality_metrics,
+        uat_summary=uat_summary,
+        pending=pending,
+    )
     return {
         "schema_version": SCHEMA_VERSION,
         "case_id": case.data["case_id"],
@@ -371,6 +421,7 @@ def build_benchmark_report(
         "target_evaluation": target_evaluation,
         "score": score,
         "pending_external_steps": pending,
+        "rc_eligibility": rc_eligibility,
         "recommendations": _recommendations(
             target_evaluation=target_evaluation,
             quality_metrics=quality_metrics,

@@ -82,10 +82,11 @@ def _seed_through_review(run: Path) -> None:
         "render_result.json",
         "quality_report.json",
         "customer_visible_safety_gate.json",
-        "final_readiness.json",
-        "final_artifact_approval.json",
+        "delivery/final_readiness.json",
     ):
-        (run / f).write_text("{}\n", encoding="utf-8")
+        path = run / f
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("{}\n", encoding="utf-8")
     (run / "page_packages").mkdir()
     (run / "page_packages" / "p1.json").write_text("{}\n", encoding="utf-8")
     _answer_required(run, "deck-review")

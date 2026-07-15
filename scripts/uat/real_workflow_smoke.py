@@ -21,6 +21,9 @@ REQUIRED_ARTIFACTS = [
     "sourcing_plan.json",
     "generation_tasks/index.json",
     "preview_manifest.json",
+    "render_results/render_result.json",
+    "delivery/final_readiness.json",
+    "final_artifact_approval.json",
 ]
 
 COMPANION_REPORTS = {
@@ -86,7 +89,9 @@ def run_real_workflow_smoke(run_dir: Path, *, write: bool = True) -> dict[str, A
         compute_deck_readiness(run_dir)
         compute_claim_coverage(run_dir)
         compute_next_actions(run_dir)
-        export_queue(run_dir, {"approved"}, queue_type="client")
+        export_result = export_queue(run_dir, {"approved"}, queue_type="client")
+        if not export_result.get("pages"):
+            raise ValueError("client export queue is empty")
         summarize_run_metrics(run_dir)
         checks.append(build_check("review_export.computable", True, "error", "review/export APIs computable."))
         phases["review_export"] = "pass"

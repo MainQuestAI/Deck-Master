@@ -21,8 +21,16 @@ dependencies = [
 dev = [
   "coverage",
   "playwright",
-  "pytest"
+  "pytest",
+  "ruff"
 ]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 140
+
+[tool.ruff.lint]
+select = ["E9", "F63", "F7", "F82"]
 
 [project.scripts]
 deck-master = "deck_master:main"

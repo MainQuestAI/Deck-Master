@@ -64,6 +64,7 @@ def _write_report(
         "run_id": payload_run_id or run_id,
         "status": status,
         "readiness": {"final_ready": True},
+        "rc_eligibility": {"eligible": True, "checks": {"final_ready": True}},
         "score": {"overall": score},
         "page_metrics": {"page_acceptance_rate": 0.75},
         "efficiency_metrics": {"estimated_time_saved_hours": 9.5},

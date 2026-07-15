@@ -674,17 +674,10 @@
       "outputs": [
         {
           "artifact_type": "final_readiness",
-          "path_pattern": "final_readiness.json",
+          "path_pattern": "delivery/final_readiness.json",
           "required": true,
           "schema_version": "deck_final_readiness.v1",
           "validator": "validate_final_readiness"
-        },
-        {
-          "artifact_type": "final_artifact_approval",
-          "path_pattern": "final_artifact_approval.json",
-          "required": true,
-          "schema_version": "deck_final_artifact_approval.v1",
-          "validator": "validate_final_artifact_approval"
         },
         {
           "artifact_type": "export_queue",
@@ -695,9 +688,9 @@
         }
       ],
       "exit_criteria": {
-        "required_artifacts": ["final_readiness.json", "final_artifact_approval.json"],
+        "required_artifacts": ["delivery/final_readiness.json"],
         "required_decisions": ["review.risk_acceptance", "review.final_version", "review.approver"],
-        "validators": ["final_readiness_passed", "final_approval_bound"],
+        "validators": ["final_readiness_passed"],
         "required_capabilities": []
       },
       "transition_policy": {
@@ -708,7 +701,7 @@
         "non_bypassable": true
       },
       "stop_conditions": ["review_rejected", "final_readiness_failed", "missing_final_approval"],
-      "staleness_dependencies": ["final_readiness.json", "final_artifact_approval.json", "quality_report.json", "render_result.json"],
+      "staleness_dependencies": ["quality_report.json", "render_result.json"],
       "display": {
         "label": "评审与交付",
         "completion_message": "评审完成，最终产物已批准，等待显式确认后导出客户文件。"

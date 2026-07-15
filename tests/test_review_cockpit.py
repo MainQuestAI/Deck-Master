@@ -490,10 +490,10 @@ class FrontendContractAPITest(unittest.TestCase):
         self.assertEqual(data["queue_type"], "client")
         self.assertIn("pages", data)
         self.assertIn("blocked_pages", data)
-        self.assertEqual([p["page_id"] for p in data["pages"]], ["beat_001"])
-        self.assertEqual([p["page_id"] for p in data["blocked_pages"]], ["beat_002"])
-        self.assertTrue(data["blocked_pages"][0]["quality_blocked"])
-        self.assertIn("roi_evidence_gap", data["blocked_pages"][0]["quality_block_reason"])
+        self.assertEqual(data["pages"], [])
+        self.assertEqual([p["page_id"] for p in data["blocked_pages"]], ["beat_001", "beat_002"])
+        self.assertIn("approval is missing", data["blocked_pages"][0]["quality_block_reason"])
+        self.assertIn("roi_evidence_gap", data["blocked_pages"][1]["quality_block_reason"])
 
     def test_run_metrics_api_returns_schema_counts_and_durations(self) -> None:
         status, data = self.handler.request("GET", "/api/run-metrics/frontend-contract")

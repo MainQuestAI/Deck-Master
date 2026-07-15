@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Enforce final artifact approval at every client export entry.
+- Return a failing process status when RC Gate is blocked or failed.
+- Preserve fixture run mode across state and routing commands.
+- Package Skill OS registries and expand isolated release smoke coverage.
+- Require delivery-grade evidence before benchmark reports qualify for RC.
+
 ## v0.9.14-preview.2
 
 Status: Technical Preview (agent-operable).

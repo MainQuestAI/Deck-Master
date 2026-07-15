@@ -16,6 +16,7 @@ sys.path.insert(0, str(QUALITY_DIR))
 from manifest import DECISIONS, load_manifest
 from overrides import has_active_override
 from runtime.final_readiness import final_readiness_clearance
+from runtime.final_approval import final_approval_clearance
 
 DRAFT_GATE_FILES = {"draft_gate.json", "draft_v2_gate.json"}
 BLOCKING_STATUSES = {"rework_required"}
@@ -298,10 +299,16 @@ def export_queue(
     pages: list[dict[str, Any]] = []
     blocked_pages: list[dict[str, Any]] = []
     final_readiness = final_readiness_clearance(run_dir)
+    final_approval = final_approval_clearance(run_dir)
     final_readiness_blocks_client = (
         queue_type == "client"
         and enforce_final_readiness
         and not bool(final_readiness.get("ready"))
+    )
+    final_approval_blocks_client = (
+        queue_type == "client"
+        and enforce_final_readiness
+        and not bool(final_approval.get("ready"))
     )
     final_safety_block_reason = (
         _client_customer_visible_safety_block(final_readiness)
@@ -335,15 +342,19 @@ def export_queue(
             "notes": page.get("notes", ""),
         }
 
-        if final_readiness_blocks_client or final_safety_block_reason:
-            page_entry["quality_blocked"] = True
-            page_entry["final_readiness_blocked"] = True
-            page_entry["quality_block_reason"] = final_safety_block_reason or str(final_readiness.get("reason") or "Final readiness is blocked.")
-            page_entry["final_readiness_reason"] = page_entry["quality_block_reason"]
-            blocked_pages.append(page_entry)
-        elif blocking["blocked"]:
+        if blocking["blocked"]:
             page_entry["quality_blocked"] = True
             page_entry["quality_block_reason"] = blocking["reason"]
+            blocked_pages.append(page_entry)
+        elif final_readiness_blocks_client or final_approval_blocks_client or final_safety_block_reason:
+            page_entry["quality_blocked"] = True
+            page_entry["final_readiness_blocked"] = True
+            page_entry["quality_block_reason"] = (
+                final_safety_block_reason
+                or str(final_readiness.get("reason") or "")
+                or str(final_approval.get("reason") or "Final approval is blocked.")
+            )
+            page_entry["final_readiness_reason"] = page_entry["quality_block_reason"]
             blocked_pages.append(page_entry)
         else:
             if blocking.get("has_override"):
@@ -363,6 +374,12 @@ def export_queue(
             "path": str(final_readiness.get("path") or ""),
             "enforced": bool(queue_type == "client" and enforce_final_readiness),
             "degraded": bool(queue_type == "internal" and not final_readiness.get("ready")),
+        },
+        "final_approval": {
+            "ready": bool(final_approval.get("ready")),
+            "reason": str(final_approval.get("reason") or ""),
+            "path": str(final_approval.get("path") or ""),
+            "enforced": bool(queue_type == "client" and enforce_final_readiness),
         },
         "pages": pages,
         "blocked_pages": blocked_pages,

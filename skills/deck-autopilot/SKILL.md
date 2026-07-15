@@ -13,21 +13,6 @@ triggers:
 Use this skill when the user wants Deck Master to keep advancing the workflow
 until a real blocker appears.
 
-## Allowed Commands
-
-```bash
-~/.deck-master/bin/deck-master workflow-autopilot --mode quick --run-dir <run_dir>
-~/.deck-master/bin/deck-master workflow-autopilot --mode production --run-dir <run_dir>
-~/.deck-master/bin/deck-master workflow-autopilot --mode repair --run-dir <run_dir>
-~/.deck-master/bin/deck-master workflow-autopilot --mode review-only --run-dir <run_dir>
-```
-
-## Stop Conditions
-
-Stop and report when material is missing, setup is blocked, Agent execution is
-waiting, quality has P0 findings, final readiness is blocked, or export is ready.
-
-
 <!-- skill-os-contract:v1 -->
 
 ## Use When
@@ -47,7 +32,9 @@ Skill OS operations/orchestrator; not a production stage. Reads workflow state a
 
 ## Allowed Commands
 ```bash
-deck-master workflow-autopilot --run-dir <run_dir>
+deck-master workflow autopilot --mode quick --run-dir <run_dir>
+deck-master workflow autopilot --mode repair --run-dir <run_dir>
+deck-master workflow autopilot --mode review-only --run-dir <run_dir>
 deck-master workflow status --run-dir <run_dir>
 deck-master run-state --run-dir <run_dir>
 ```
@@ -60,6 +47,11 @@ workflow_report, run_state, next_step
 
 ## Stop Conditions
 - user-initiated stop
+- material_missing
+- setup_blocked
+- awaiting_agent_execution
+- approval_required
+- final_export_requires_approval
 
 ## Safety Rules
 Keep internal-only production notes out of customer-visible content. Never bypass the final client export approval. Obey the stage contract's transition policy.
