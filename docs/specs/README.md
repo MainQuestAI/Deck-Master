@@ -48,6 +48,8 @@
   - 边界：Deck Master 主责实现；PPT Library 代码和本机数据库仅做独立只读验证，不在本 Spec 中修改。
   - 基线：正式发布基线为 `main@cc5b112`；开发目标基线为 `chore/1.0.0-rc-governance-ci-tier@ed2bc42`。
   - 状态：当前 active closure spec；完成后再进入 v1.0.0 RC 真实 benchmark 放行。
+- `deck-master-high-density-builder-next-iteration-spec.md`
+  - 目标：把 CyberPPT、native-svg-redraw、PPT Master、image-to-code 和 officecli 的可迁移能力串成 Deck Master 下一轮高密度 Builder 迭代 Spec，作为后续 GStack 评审和工程拆包输入。
 
 `v0.9.11` 本轮补齐点：
 
@@ -93,6 +95,7 @@ docs/specs/open-source-maturity-v1.0/tasks/T6-repo-hygiene-release-tree.md
 docs/specs/open-source-maturity-v1.0/tasks/T7-review-desk-design-minimum.md
 docs/specs/open-source-maturity-v1.0/tasks/T8-m2-rc-hardening.md
 docs/specs/deck-master-ppt-library-bridge-runtime-closure-spec-v1.md
+docs/specs/deck-master-high-density-builder-next-iteration-spec.md
 docs/specs/skill-os-runtime-v1.1/README.md
 docs/specs/skill-os-runtime-v1.1/LOCAL_ADOPTION.md
 docs/specs/skill-os-runtime-v1.1/acceptance/decision-traceability.md
@@ -118,5 +121,6 @@ v0.9.5 Review Cockpit Frontend
 → v1.3.0 Production Closure
 → Open Source Maturity M1 Technical Preview / M2 RC
 → PPT Library Bridge & Runtime Closure v1
+→ High-Density Builder Next Iteration Spec
 → v1.0.0 RC Real Benchmark Runs
 ```
