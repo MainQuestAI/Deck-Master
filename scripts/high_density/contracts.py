@@ -1,0 +1,128 @@
+from __future__ import annotations
+
+import hashlib
+import json
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+SCHEMA_DIR = Path(__file__).resolve().parents[2] / "docs" / "contracts"
+SCHEMA_FILES = {
+    "page_package": "page-package.v1.schema.json",
+    "content_lock": "content-lock.v1.schema.json",
+    "blueprint_manifest": "blueprint-manifest.v1.schema.json",
+    "page_scene": "page-scene.v1.schema.json",
+    "high_density_manifest": "high-density-manifest.v1.schema.json",
+    "high_density_status": "high-density-status.v1.schema.json",
+    "build_manifest": "build-manifest.v2.schema.json",
+    "artifact_manifest": "artifact-manifest.v1.schema.json",
+    "render_result": "render-result.v2.schema.json",
+}
+
+
+class ContractError(ValueError):
+    pass
+
+
+def utc_now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def canonical_json(value: Any) -> bytes:
+    return json.dumps(value, sort_keys=True, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+
+
+def sha256_bytes(value: bytes) -> str:
+    return hashlib.sha256(value).hexdigest()
+
+
+def sha256_json(value: Any) -> str:
+    return sha256_bytes(canonical_json(value))
+
+
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def read_json(path: Path) -> dict[str, Any]:
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError as exc:
+        raise ContractError(f"missing JSON artifact: {path}") from exc
+    except json.JSONDecodeError as exc:
+        raise ContractError(f"invalid JSON artifact {path}: {exc.msg}") from exc
+    if not isinstance(value, dict):
+        raise ContractError(f"JSON artifact must be an object: {path}")
+    return value
+
+
+def write_json(path: Path, value: dict[str, Any]) -> Path:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(json.dumps(value, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    tmp.replace(path)
+    return path
+
+
+def run_relative(root: Path, path: Path) -> str:
+    try:
+        return path.resolve().relative_to(root.resolve()).as_posix()
+    except ValueError as exc:
+        raise ContractError(f"artifact path escapes run directory: {path}") from exc
+
+
+def safe_run_path(root: Path, value: str) -> Path:
+    raw = str(value or "").strip()
+    candidate = Path(raw)
+    if not raw or candidate.is_absolute() or ".." in candidate.parts:
+        raise ContractError(f"artifact path must be run-relative: {raw}")
+    resolved = (root / candidate).resolve()
+    try:
+        resolved.relative_to(root.resolve())
+    except ValueError as exc:
+        raise ContractError(f"artifact path escapes run directory: {raw}") from exc
+    return resolved
+
+
+def validate_document(kind: str, document: dict[str, Any]) -> dict[str, Any]:
+    schema_name = SCHEMA_FILES.get(kind)
+    if not schema_name:
+        raise ContractError(f"unknown contract kind: {kind}")
+    schema_path = SCHEMA_DIR / schema_name
+    try:
+        import jsonschema
+    except ImportError as exc:  # pragma: no cover - declared runtime dependency
+        raise ContractError("jsonschema is required for high-density contract validation") from exc
+    schema = json.loads(schema_path.read_text(encoding="utf-8"))
+    validator = jsonschema.Draft202012Validator(schema)
+    errors = [
+        f"{'.'.join(str(part) for part in error.absolute_path) or '$'}: {error.message}"
+        for error in sorted(validator.iter_errors(document), key=lambda item: str(list(item.absolute_path)))
+    ]
+    return {"valid": not errors, "errors": errors, "schema": schema_name}
+
+
+def assert_valid(kind: str, document: dict[str, Any]) -> None:
+    result = validate_document(kind, document)
+    if not result["valid"]:
+        raise ContractError(f"{kind} contract invalid: {'; '.join(result['errors'])}")
+
+
+__all__ = [
+    "ContractError",
+    "SCHEMA_DIR",
+    "assert_valid",
+    "canonical_json",
+    "read_json",
+    "run_relative",
+    "safe_run_path",
+    "sha256_file",
+    "sha256_json",
+    "utc_now",
+    "validate_document",
+    "write_json",
+]

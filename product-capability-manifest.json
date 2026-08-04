@@ -25,7 +25,8 @@
     "ppt-quality-gate"
   ],
   "optional_capabilities": [
-    "deck-learn"
+    "deck-learn",
+    "deck-builder-high-density"
   ],
   "core_skills": [
     "deck-master",
@@ -38,6 +39,7 @@
     "deck-sourcing",
     "deck-producer",
     "deck-builder",
+    "deck-builder-high-density",
     "deck-quality",
     "deck-review",
     "deck-learn",
@@ -54,6 +56,7 @@
     "deck-sourcing",
     "deck-producer",
     "deck-builder",
+    "deck-builder-high-density",
     "deck-quality",
     "deck-review",
     "deck-learn",
@@ -250,6 +253,24 @@
         "final_artifacts"
       ],
       "backend_dependency": "ppt-master"
+    },
+    "deck-builder-high-density": {
+      "role": "build_profile",
+      "public_name": "deck-builder-high-density",
+      "compat_aliases": [],
+      "input_types": [
+        "page_packages",
+        "content_lock",
+        "blueprint",
+        "page_scene"
+      ],
+      "exit_artifacts": [
+        "high_density_manifest",
+        "deck_pptx",
+        "artifact_manifest",
+        "render_result.v2"
+      ],
+      "backend_dependency": ""
     },
     "deck-quality": {
       "role": "quality_gate",

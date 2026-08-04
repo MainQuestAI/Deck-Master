@@ -1,0 +1,4 @@
+interface:
+  display_name: "High-Density Deck Builder"
+  short_description: "Build editable high-density PPTX"
+  default_prompt: "Use $deck-builder-high-density to build an editable high-density PPTX from the current Deck Master run."

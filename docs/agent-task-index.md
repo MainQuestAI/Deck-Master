@@ -84,6 +84,47 @@ python3 scripts/deck_master.py agent-doctor --mode production --run-dir <run_dir
   `next_agent_action`.
 - If the next action needs external backend or handoff output, stop and report.
 
+## High-Density Build
+
+- Intent: build the independent high-density deck route from locked Page
+  Packages through Agent blueprint work, semantic scene reconstruction, native
+  SVG, editable PPTX, readback, and canonical handback.
+- Capability check:
+
+```bash
+python3 scripts/deck_master.py suite-status --capability deck_master.build.high_density.v1 --output json
+```
+
+- Prepare and run:
+
+```bash
+python3 scripts/deck_master.py build prepare --run-dir <run_dir> --profile high-density --output-profile production_pptx
+python3 scripts/deck_master.py build run --run-dir <run_dir> --profile high-density
+```
+
+- Continue an Agent-owned stage with the exact command returned by:
+
+```bash
+python3 scripts/deck_master.py next-step --run-dir <run_dir>
+```
+
+- Check progress:
+
+```bash
+python3 scripts/deck_master.py build status --run-dir <run_dir> --profile high-density --watch
+```
+
+- Repair a page-scoped failure:
+
+```bash
+python3 scripts/deck_master.py build retry --run-dir <run_dir> --profile high-density --page-id <page_id> --stage <stage>
+```
+
+- Success state: `high_density_status.v1.status == "completed"`, the build
+  manifest is completed with a high-density manifest reference, and canonical
+  artifact/render handback validates.
+- If blocked: read `docs/agent-recovery-playbook.md#high-density-builder`.
+
 ## Build And Verify Release
 
 - Intent: create a self-contained release tree and verify it.

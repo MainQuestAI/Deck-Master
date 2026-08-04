@@ -258,6 +258,37 @@ def _blocked_next_agent_action(payload: dict[str, Any], fallback: str) -> str:
     return fallback
 
 
+def _high_density_runtime() -> Any:
+    try:
+        from high_density import (
+            build_high_density_status,
+            prepare_high_density,
+            retry_high_density,
+            run_high_density,
+        )
+    except ImportError as exc:
+        raise _HighDensityCliError(
+            "HIGH_DENSITY_CAPABILITY_MISSING",
+            "high-density runtime is unavailable; install the registered Skill and its Python dependencies",
+        ) from exc
+
+    return {
+        "build_status": build_high_density_status,
+        "prepare": prepare_high_density,
+        "retry": retry_high_density,
+        "run": run_high_density,
+    }
+
+
+class _HighDensityCliError(RunStateError):
+    def __init__(self, code: str, message: str) -> None:
+        self.code = code
+        self.stage = "content_lock"
+        self.page_id = ""
+        self.artifacts: list[str] = []
+        super().__init__(message)
+
+
 def runs_dir(args: argparse.Namespace) -> Path:
     if getattr(args, "runs_dir", None):
         return Path(args.runs_dir).expanduser().resolve()
@@ -1976,6 +2007,16 @@ def command_suite_status(args: argparse.Namespace) -> dict[str, Any]:
         include_optional=True,
     )
     next_agent_action = str(payload.get("next_agent_action") or "")
+    capability = str(getattr(args, "capability", "") or "").strip()
+    if capability:
+        capability_status = str((payload.get("capabilities") or {}).get(capability) or "missing")
+        payload["capability_filter"] = capability
+        payload["capability_status"] = capability_status
+        payload["capability_ready"] = capability_status == "ready"
+        if capability_status != "ready":
+            next_agent_action = (
+                f"Capability {capability} is {capability_status}; install or repair the registered high-density Skill."
+            )
     if not next_agent_action:
         next_agent_action = (
             "Suite ready."
@@ -2150,15 +2191,70 @@ def command_render_status(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def command_build_prepare(args: argparse.Namespace) -> dict[str, Any]:
-    return prepare_build(resolve_run_dir(args))
+    run_dir = resolve_run_dir(args)
+    profile = _persist_build_options(run_dir, args)
+    if profile == "high_density":
+        return _high_density_runtime()["prepare"](
+            run_dir,
+            output_profile=str(getattr(args, "output_profile", None) or "production_pptx"),
+        )
+    return prepare_build(run_dir)
 
 
 def command_build_run(args: argparse.Namespace) -> dict[str, Any]:
-    return run_build(resolve_run_dir(args))
+    run_dir = resolve_run_dir(args)
+    profile = _persist_build_options(run_dir, args)
+    if profile == "high_density":
+        return _high_density_runtime()["run"](run_dir)
+    return run_build(run_dir)
 
 
 def command_build_status(args: argparse.Namespace) -> dict[str, Any]:
-    return build_status(resolve_run_dir(args))
+    run_dir = resolve_run_dir(args)
+    profile = _persist_build_options(run_dir, args, persist=False)
+    if profile == "high_density":
+        return _high_density_runtime()["build_status"](run_dir)
+    return build_status(run_dir)
+
+
+def command_build_retry(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = resolve_run_dir(args)
+    profile = _persist_build_options(run_dir, args)
+    if profile != "high_density":
+        raise _HighDensityCliError("BUILD_PROFILE_UNSUPPORTED", "build retry currently requires --profile high-density")
+    return _high_density_runtime()["retry"](
+        run_dir,
+        page_id=str(args.page_id),
+        stage=getattr(args, "stage", None),
+    )
+
+
+def _persist_build_options(
+    run_dir: Path,
+    args: argparse.Namespace,
+    *,
+    persist: bool = True,
+) -> str:
+    request = load_request(run_dir)
+    requested = getattr(args, "profile", None)
+    requested_internal = "high_density" if requested == "high-density" else ("standard" if requested == "standard" else "")
+    existing = str(request.get("builder_profile") or "").strip()
+    if requested_internal and existing and existing != requested_internal:
+        raise _HighDensityCliError(
+            "BUILDER_PROFILE_MISMATCH",
+            f"requested profile {requested_internal} conflicts with existing profile {existing}"
+        )
+    effective = requested_internal or existing or "standard"
+    if effective not in {"standard", "high_density"}:
+        raise _HighDensityCliError("BUILD_PROFILE_UNSUPPORTED", f"unsupported builder profile: {effective}")
+    if persist and requested_internal:
+        request["builder_profile"] = effective
+    output_profile = getattr(args, "output_profile", None)
+    if persist and output_profile:
+        request["output_profile"] = str(output_profile)
+    if persist and (requested_internal or output_profile):
+        write_json(run_dir / REQUEST_NAME, request)
+    return effective
 
 
 def command_bind_workspace(args: argparse.Namespace) -> dict[str, Any]:
@@ -2830,6 +2926,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_suite_status = sub.add_parser("suite-status", help="Inspect Deck Master suite readiness without writing files")
     p_suite_status.add_argument("--target", action="append", default=[], choices=["codex", "claude-code", "hermes"])
+    p_suite_status.add_argument("--capability", default=None, help="Filter readiness output to one capability")
     p_suite_status.add_argument("--output", choices=["json"], default="json")
     p_suite_status.set_defaults(func=command_suite_status)
 
@@ -3311,15 +3408,28 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_build_prepare = build_sub.add_parser("prepare", help="Write build manifest from current preview manifest")
     add_run_args(p_build_prepare)
+    p_build_prepare.add_argument("--profile", choices=["standard", "high-density"], default=None)
+    p_build_prepare.add_argument("--output-profile", choices=["production_pptx", "client_delivery"], default=None)
     p_build_prepare.set_defaults(func=command_build_prepare)
 
     p_build_run = build_sub.add_parser("run", help="Build HTML/PDF/PNG/PPTX artifacts")
     add_run_args(p_build_run)
+    p_build_run.add_argument("--profile", choices=["standard", "high-density"], default=None)
+    p_build_run.add_argument("--output-profile", choices=["production_pptx", "client_delivery"], default=None)
     p_build_run.set_defaults(func=command_build_run)
 
     p_build_status = build_sub.add_parser("status", help="Inspect production build artifacts")
     add_run_args(p_build_status)
+    p_build_status.add_argument("--profile", choices=["standard", "high-density"], default=None)
+    p_build_status.add_argument("--watch", action="store_true")
     p_build_status.set_defaults(func=command_build_status)
+
+    p_build_retry = build_sub.add_parser("retry", help="Retry one high-density page or stage")
+    add_run_args(p_build_retry)
+    p_build_retry.add_argument("--profile", choices=["high-density"], required=True)
+    p_build_retry.add_argument("--page-id", required=True)
+    p_build_retry.add_argument("--stage", choices=["content_lock", "blueprint", "page_scene", "svg", "visual_review", "pptx", "readback", "handback"], default=None)
+    p_build_retry.set_defaults(func=command_build_retry)
 
     p_render = sub.add_parser("render", help="Render a run through the bundled PPT Master path")
     add_run_args(p_render)
@@ -3656,6 +3766,31 @@ def main() -> None:
         PolicyError,
         ValueError,
     ) as exc:
+        if getattr(exc, "code", ""):
+            code = str(getattr(exc, "code"))
+            page_id = str(getattr(exc, "page_id", "") or "")
+            stage = str(getattr(exc, "stage", "") or "")
+            if code == "HIGH_DENSITY_CAPABILITY_MISSING":
+                next_command = "deck-master suite-status --capability deck_master.build.high_density.v1 --output json"
+            elif page_id:
+                next_command = f"deck-master build retry --run-dir <run_dir> --profile high-density --page-id {page_id}"
+                if stage:
+                    next_command += f" --stage {stage}"
+            else:
+                next_command = "deck-master build status --run-dir <run_dir> --profile high-density"
+            payload = {
+                "code": code,
+                "message": str(exc),
+                "cause": str(exc),
+                "fix": "Repair the recorded high-density stage and resume with the retry command.",
+                "next_command": next_command,
+                "docs": "docs/agent-recovery-playbook.md#high-density-builder",
+                "stage": stage,
+                "page_id": page_id,
+                "artifacts": list(getattr(exc, "artifacts", []) or []),
+            }
+            print_json(payload)
+            raise SystemExit(2) from exc
         print(f"error: {exc}", file=sys.stderr)
         raise SystemExit(2) from exc
 

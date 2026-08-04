@@ -65,6 +65,12 @@ SKILL_META: dict[str, dict[str, Any]] = {
         "backend_dependency": "ppt-master",
         "compat_skills": ["ppt-master", "render"],
     },
+    "deck-builder-high-density": {
+        "skill_stage": "high_density_build",
+        "label": "High-Density Builder",
+        "backend_dependency": "",
+        "compat_skills": [],
+    },
     "deck-quality": {
         "skill_stage": "quality",
         "label": "Quality",

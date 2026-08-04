@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/contracts/blueprint-manifest.v1.schema.json",
+  "title": "Deck Blueprint Manifest v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "page_id",
+    "image_path",
+    "image_sha256",
+    "prompt_sha256",
+    "source_canvas",
+    "slide_frame",
+    "fit_mode",
+    "internal_annotations",
+    "approved",
+    "created_at"
+  ],
+  "properties": {
+    "schema_version": {"const": "deck_blueprint_manifest.v1"},
+    "run_id": {"type": "string", "minLength": 1},
+    "page_id": {"type": "string", "minLength": 1},
+    "image_path": {
+      "type": "string",
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+"
+    },
+    "image_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "prompt_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "source_canvas": {
+      "type": "object",
+      "required": ["width", "height", "unit"],
+      "properties": {
+        "width": {"type": "number", "exclusiveMinimum": 0},
+        "height": {"type": "number", "exclusiveMinimum": 0},
+        "unit": {"const": "px"}
+      },
+      "additionalProperties": false
+    },
+    "slide_frame": {
+      "type": "object",
+      "required": ["x", "y", "w", "h"],
+      "properties": {
+        "x": {"type": "number", "minimum": 0},
+        "y": {"type": "number", "minimum": 0},
+        "w": {"type": "number", "exclusiveMinimum": 0},
+        "h": {"type": "number", "exclusiveMinimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "fit_mode": {"enum": ["contain", "cover", "approved_frame"]},
+    "internal_annotations": {"type": "array", "items": {"type": "string"}},
+    "approved": {"type": "boolean"},
+    "created_at": {"type": "string", "format": "date-time"}
+  },
+  "additionalProperties": false
+}

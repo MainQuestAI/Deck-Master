@@ -131,6 +131,18 @@
       "additionalProperties": {
         "type": "string"
       }
+    },
+    "profile_routes": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["skill_name", "required_capabilities"],
+        "properties": {
+          "skill_name": {"type": "string", "minLength": 1},
+          "required_capabilities": {"type": "array", "items": {"type": "string"}}
+        },
+        "additionalProperties": false
+      }
     }
   },
   "$defs": {

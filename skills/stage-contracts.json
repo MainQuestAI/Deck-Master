@@ -485,6 +485,12 @@
         "validators": ["producer_handoff_accepted", "required_page_packages_valid"],
         "required_capabilities": ["deck_master.build.v1"]
       },
+      "profile_routes": {
+        "high_density": {
+          "skill_name": "deck-builder-high-density",
+          "required_capabilities": ["deck_master.build.v1", "deck_master.build.high_density.v1"]
+        }
+      },
       "first_checks": ["producer handoff accepted", "page packages valid", "certified build backend ready"],
       "forcing_questions": [
         {
