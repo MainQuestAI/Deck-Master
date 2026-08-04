@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import inspect
 import json
 import sys
+import tempfile
+import unittest
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -422,3 +425,22 @@ def test_high_density_contract_rejects_unsafe_lineage_path() -> None:
     }
     with pytest.raises(ContractError):
         assert_valid("content_lock", payload)
+
+
+def load_tests(loader: unittest.TestLoader, tests: unittest.TestSuite, pattern: str | None) -> unittest.TestSuite:
+    """Expose pytest-style regression functions to the repository unittest gate."""
+    suite = unittest.TestSuite()
+    for name, test_fn in sorted(globals().items()):
+        if not name.startswith("test_") or not callable(test_fn):
+            continue
+
+        def invoke(fn: object = test_fn) -> None:
+            parameters = inspect.signature(fn).parameters
+            with tempfile.TemporaryDirectory() as directory:
+                if "tmp_path" in parameters:
+                    fn(Path(directory))
+                else:
+                    fn()
+
+        suite.addTest(unittest.FunctionTestCase(invoke, description=name))
+    return suite
