@@ -108,6 +108,64 @@ def resolve_next_step(
     dev_allow_unsetup: bool = False,
 ) -> dict[str, Any]:
     root = Path(run_dir).expanduser().resolve()
+    high_density_status_path = root / "high_density_build" / "status.json"
+    if high_density_status_path.exists():
+        try:
+            high_density = json.loads(high_density_status_path.read_text(encoding="utf-8"))
+        except Exception:
+            high_density = {}
+        if isinstance(high_density, dict) and high_density.get("builder_profile") == "high_density":
+            action = high_density.get("next_action") if isinstance(high_density.get("next_action"), dict) else {}
+            stage = str(high_density.get("current_stage") or "content_lock")
+            status = str(high_density.get("status") or "building")
+            next_command = str(action.get("resume_command") or f"deck-master build run --run-dir {root} --profile high-density")
+            missing = []
+            output_ref = str(action.get("output_ref") or "").strip()
+            if output_ref:
+                missing.append(output_ref)
+            completed = status == "completed"
+            if completed:
+                build_manifest = {}
+                build_manifest_path = root / "build" / "build_manifest.json"
+                if build_manifest_path.exists():
+                    try:
+                        build_manifest = json.loads(build_manifest_path.read_text(encoding="utf-8"))
+                    except (OSError, ValueError):
+                        build_manifest = {}
+                page_count = len(build_manifest.get("pages") or [])
+                artifact = root / "high_density_build" / "pptx" / "deck_high_density.pptx"
+                next_command = f"deck-master quality-gate render --run-dir {root} --artifact {artifact} --expected-pages {page_count}"
+            route = {
+                "schema_version": "deck_skill_route.v1",
+                "source": "high_density_handback" if completed else "high_density_status",
+                "runtime_stage": "needs_quality_review" if completed else f"high_density:{stage}",
+                "input_type": "pptx_package" if completed else "high_density_build",
+                "recommended_skill": "deck-quality" if completed else "deck-builder-high-density",
+                "skill_stage": "quality" if completed else "high_density_build",
+                "skill_label": "Quality" if completed else "High-Density Builder",
+                "skill_reason": "high-density handback is complete; run the final quality gate" if completed else f"high-density status is {status} at {stage}",
+                "next_skill_command": next_command,
+                "backend_dependency": "ppt-quality-gate" if completed else "",
+                "compat_skills": ["ppt-quality-gate"] if completed else [],
+            }
+            result = {
+                "schema_version": SCHEMA_VERSION,
+                "run_id": str(high_density.get("run_id") or root.name),
+                "status": "needs_quality_review" if completed else status,
+                "next_command": next_command,
+                "runtime_stage": "needs_quality_review" if completed else f"high_density:{stage}",
+                "missing_artifacts": missing,
+                "blocking_issues": [str((high_density.get("error") or {}).get("message"))] if isinstance(high_density.get("error"), dict) and high_density.get("error", {}).get("message") else [],
+                "run_mode": str((read_json(root / REQUEST_NAME).get("run_mode") if (root / REQUEST_NAME).exists() else "") or ""),
+                "recommended_skill": "deck-quality" if completed else "deck-builder-high-density",
+                "skill_stage": "quality" if completed else "high_density_build",
+                "skill_reason": route["skill_reason"],
+                "next_skill_command": next_command,
+                "skill_route": route,
+            }
+            if high_density.get("current_page_id"):
+                result["current_page_id"] = high_density["current_page_id"]
+            return result
     state = resolve_run_state(
         root,
         cli_workspace=cli_workspace,

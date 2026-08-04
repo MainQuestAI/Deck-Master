@@ -135,6 +135,8 @@ def legacy_preview_adapter(preview_manifest: dict[str, Any], *, run_id: str) -> 
         if not isinstance(p, dict):
             continue
         pid = str(p.get("page_id") or p.get("beat_id") or f"page_{i}")
+        if not pid or "/" in pid or "\\" in pid or Path(pid).is_absolute() or ".." in Path(pid).parts:
+            raise BuildManifestError(f"preview page_id must be a safe run-relative identifier: {pid}")
         title = str(p.get("page_title") or p.get("title") or pid)
         body_blocks = list(p.get("body_blocks") or [{"type": "text", "text": str(p.get("body") or "")}])
         content = PageContent(
@@ -166,8 +168,14 @@ def build_manifest_v2(
     required_page_ids: list[str] | None = None,
     required_outputs: list[str] | None = None,
     style_lock: dict[str, Any] | None = None,
+    builder_profile: str = "standard",
+    high_density_manifest: str | None = None,
     now: datetime | None = None,
 ) -> dict[str, Any]:
+    if builder_profile not in {"standard", "high_density"}:
+        raise BuildManifestError(f"unsupported builder_profile: {builder_profile}")
+    if builder_profile == "standard" and high_density_manifest:
+        raise BuildManifestError("standard builder cannot reference high_density_manifest")
     # 1. backend contract version check
     _assert_backend_contracts(builder_backend)
 
@@ -197,11 +205,13 @@ def build_manifest_v2(
         "run_id": run_id,
         "pages": [{"page_id": pb["page_id"], "sha": pb["customer_payload_sha256"]} for pb in page_builds],
         "output_profile": output_profile,
+        "builder_profile": builder_profile,
     })
-    return {
+    result = {
         "schema_version": SCHEMA_VERSION,
         "run_id": run_id,
         "status": "prepared",
+        "builder_profile": builder_profile,
         "source_fingerprint": source_fingerprint,
         "builder_backend": {
             "name": str(builder_backend.get("name", "")),
@@ -214,6 +224,9 @@ def build_manifest_v2(
         "style_lock": dict(style_lock or {}),
         "created_at": _utc(now or _now()),
     }
+    if high_density_manifest:
+        result["high_density_manifest"] = high_density_manifest
+    return result
 
 
 def _assert_backend_contracts(backend: dict[str, Any]) -> None:

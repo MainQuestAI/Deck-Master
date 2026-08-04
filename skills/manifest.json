@@ -205,6 +205,31 @@
       "description": "Public build entry for HTML, PDF, PNG, PPTX, artifact manifest, render result, and editability metadata."
     },
     {
+      "name": "deck-builder-high-density",
+      "stage_id": "deck-builder",
+      "profile": "high_density",
+      "capability": "deck_master.build.high_density.v1",
+      "path": "deck-builder-high-density/SKILL.md",
+      "role": "build_profile",
+      "public": true,
+      "optional": true,
+      "compat_aliases": [],
+      "input_types": [
+        "page_packages",
+        "content_lock",
+        "blueprint",
+        "page_scene"
+      ],
+      "exit_artifacts": [
+        "high_density_manifest",
+        "deck_pptx",
+        "artifact_manifest",
+        "render_result.v2"
+      ],
+      "backend_dependency": "",
+      "description": "Independent high-density build route from NBB content lock and ImageGen blueprint through native SVG, editable PPTX, readback, and canonical handback."
+    },
+    {
       "name": "deck-quality",
       "stage_id": "deck-quality",
       "path": "deck-quality/SKILL.md",

@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/contracts/content-lock.v1.schema.json",
+  "title": "Deck Content Lock v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "page_id",
+    "page_package_ref",
+    "page_package_sha256",
+    "source_fingerprint",
+    "customer_visible",
+    "evidence_bindings",
+    "enrichment",
+    "content_lock_sha256",
+    "created_at"
+  ],
+  "properties": {
+    "schema_version": {"const": "deck_content_lock.v1"},
+    "run_id": {"type": "string", "minLength": 1},
+    "page_id": {"type": "string", "minLength": 1},
+    "page_package_ref": {
+      "type": "string",
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+"
+    },
+    "page_package_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "source_fingerprint": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "content_lock_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "customer_visible": {"type": "object"},
+    "speaker_notes": {"type": "string"},
+    "asset_bindings": {"type": "array", "items": {"type": "object"}},
+    "evidence_bindings": {
+      "type": "array",
+      "items": {"oneOf": [{"type": "string"}, {"type": "object"}]}
+    },
+    "enrichment": {
+      "type": "object",
+      "required": ["framework", "version", "analysis", "derived_claims", "structure_decisions"],
+      "properties": {
+        "framework": {"const": "nbb"},
+        "version": {"type": "string", "minLength": 1},
+        "analysis": {"type": "object"},
+        "derived_claims": {"type": "array", "items": {"type": "object"}},
+        "structure_decisions": {"type": "array", "items": {"type": "object"}}
+      },
+      "additionalProperties": false
+    },
+    "created_at": {"type": "string", "format": "date-time"}
+  },
+  "additionalProperties": false
+}

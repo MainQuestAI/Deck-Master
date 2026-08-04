@@ -187,6 +187,9 @@
     "source_fingerprint": {
       "type": "string",
       "pattern": "^[a-f0-9]{64}$"
+    },
+    "legacy_inferred": {
+      "type": "boolean"
     }
   },
   "additionalProperties": false

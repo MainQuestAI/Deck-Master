@@ -113,6 +113,10 @@ class StageContract:
     def staleness_dependencies(self) -> list[str]:
         return list(self.raw.get("staleness_dependencies", []))
 
+    @property
+    def profile_routes(self) -> dict[str, dict[str, Any]]:
+        return dict(self.raw.get("profile_routes", {}))
+
 
 @dataclass(frozen=True)
 class Registry:

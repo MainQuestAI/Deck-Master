@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/contracts/page-scene.v1.schema.json",
+  "title": "Deck Page Scene v1",
+  "type": "object",
+  "required": ["schema_version", "run_id", "page_id", "canvas", "content_lock_sha256", "elements", "created_at"],
+  "properties": {
+    "schema_version": {"const": "deck_page_scene.v1"},
+    "run_id": {"type": "string", "minLength": 1},
+    "page_id": {"type": "string", "minLength": 1},
+    "source": {"enum": ["agent_reconstructed", "fixture_auto", "imported"]},
+    "canvas": {
+      "type": "object",
+      "required": ["width", "height", "unit"],
+      "properties": {
+        "width": {"type": "number", "exclusiveMinimum": 0},
+        "height": {"type": "number", "exclusiveMinimum": 0},
+        "unit": {"enum": ["px"]}
+      },
+      "additionalProperties": false
+    },
+    "content_lock_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "blueprint_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "transform": {
+      "type": "object",
+      "properties": {
+        "scale": {"type": "number", "exclusiveMinimum": 0},
+        "offset_x": {"type": "number"},
+        "offset_y": {"type": "number"},
+        "fit_mode": {"enum": ["contain", "cover", "approved_frame"]}
+      },
+      "additionalProperties": false
+    },
+    "background": {"type": "object"},
+    "elements": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/element"}
+    },
+    "created_at": {"type": "string", "format": "date-time"}
+  },
+  "$defs": {
+    "bbox": {
+      "type": "object",
+      "required": ["x", "y", "w", "h"],
+      "properties": {
+        "x": {"type": "number", "minimum": 0},
+        "y": {"type": "number", "minimum": 0},
+        "w": {"type": "number", "exclusiveMinimum": 0},
+        "h": {"type": "number", "exclusiveMinimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "element": {
+      "type": "object",
+      "required": ["element_id", "kind", "role", "priority", "bbox", "editability_target", "asset_policy"],
+      "properties": {
+        "element_id": {"type": "string", "minLength": 1},
+        "kind": {"enum": ["text", "rect", "line", "path", "polygon", "image"]},
+        "role": {"type": "string", "minLength": 1},
+        "priority": {"enum": ["P0", "P1", "P2"]},
+        "bbox": {"$ref": "#/$defs/bbox"},
+        "text_ref": {"type": "string"},
+        "evidence_refs": {"type": "array", "items": {"type": "string"}},
+        "text": {"type": "string"},
+        "path": {"type": "string", "minLength": 1},
+        "asset_ref": {"type": "string", "minLength": 1},
+        "asset_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "points": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "array",
+            "prefixItems": [{"type": "number"}, {"type": "number"}],
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "text_fit": {
+          "type": "object",
+          "required": ["preferred_size_px", "min_size_px", "max_lines"],
+          "properties": {
+            "preferred_size_px": {"type": "number", "exclusiveMinimum": 0},
+            "min_size_px": {"type": "number", "exclusiveMinimum": 0},
+            "max_lines": {"type": "integer", "minimum": 1},
+            "line_height": {"type": "number", "exclusiveMinimum": 0}
+          },
+          "additionalProperties": false
+        },
+        "overflow_policy": {"enum": ["block", "reflow"]},
+        "editability_target": {"enum": ["native_text", "native_shape", "native_line", "registered_asset"]},
+        "asset_policy": {"enum": ["none", "registered"]},
+        "style": {"type": "object"},
+        "pptx_expectation": {"type": "object"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"kind": {"const": "text"}}},
+          "then": {"required": ["text", "text_ref", "text_fit", "overflow_policy"]}
+        },
+        {
+          "if": {"properties": {"kind": {"const": "path"}}},
+          "then": {"required": ["path"]}
+        },
+        {
+          "if": {"properties": {"kind": {"const": "polygon"}}},
+          "then": {"required": ["points"]}
+        },
+        {
+          "if": {"properties": {"kind": {"const": "image"}}},
+          "then": {
+            "required": ["asset_ref", "asset_sha256"],
+            "properties": {
+              "editability_target": {"const": "registered_asset"},
+              "asset_policy": {"const": "registered"}
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

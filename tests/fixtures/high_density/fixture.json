@@ -1,0 +1,132 @@
+{
+  "schema_version": "deck_high_density_fixture.v1",
+  "run_id": "hd-fixture-v1",
+  "pages": [
+    {
+      "page_id": "P001",
+      "order": 1,
+      "page_class": "framework",
+      "title": "Synthetic framework page",
+      "subtitle": "A locked structure for deterministic acceptance",
+      "body_blocks": [
+        {"title": "Inputs", "text": "Evidence, constraints, and decision context.", "type": "framework"},
+        {"title": "Method", "text": "Classify the problem, choose the governing lens, and sequence the work.", "type": "framework"},
+        {"title": "Output", "text": "A shared decision model with measurable next actions.", "type": "framework"},
+        {"title": "Control", "text": "Keep each visible claim linked to synthetic evidence.", "type": "framework"}
+      ],
+      "labels": ["framework", "synthetic evidence"],
+      "footnotes": ["Synthetic fixture evidence only"],
+      "speaker_notes": "Synthetic speaker note for the framework page",
+      "claim_bindings": ["C001"],
+      "evidence_bindings": ["E001"]
+    },
+    {
+      "page_id": "P002",
+      "order": 2,
+      "page_class": "process",
+      "title": "Synthetic process page",
+      "subtitle": "A repeatable operating path with explicit controls",
+      "body_blocks": [
+        {"title": "Discover", "text": "Collect the decision context and define the outcome.", "type": "process"},
+        {"title": "Shape", "text": "Turn the context into a page-level content and visual contract.", "type": "process"},
+        {"title": "Build", "text": "Reconstruct the approved composition as native objects.", "type": "process"},
+        {"title": "Verify", "text": "Read back text, geometry, notes, and editability before handback.", "type": "process"}
+      ],
+      "labels": ["process", "synthetic evidence"],
+      "footnotes": ["Synthetic fixture evidence only"],
+      "speaker_notes": "Synthetic speaker note for the process page",
+      "claim_bindings": ["C002"],
+      "evidence_bindings": ["E002"]
+    },
+    {
+      "page_id": "P003",
+      "order": 3,
+      "page_class": "table",
+      "title": "Synthetic table page",
+      "subtitle": "A compact comparison of controlled alternatives",
+      "body_blocks": [
+        {"title": "Option A", "text": "Lower setup effort with a narrower operating envelope.", "type": "table"},
+        {"title": "Option B", "text": "Balanced control and reuse for the first release.", "type": "table"},
+        {"title": "Option C", "text": "Higher flexibility with additional validation cost.", "type": "table"},
+        {"title": "Decision", "text": "Select the option that satisfies the locked acceptance criteria.", "type": "table"}
+      ],
+      "labels": ["table", "synthetic evidence"],
+      "footnotes": ["Synthetic fixture evidence only"],
+      "speaker_notes": "Synthetic speaker note for the table page",
+      "claim_bindings": ["C003"],
+      "evidence_bindings": ["E003"]
+    },
+    {
+      "page_id": "P004",
+      "order": 4,
+      "page_class": "comparison",
+      "title": "Synthetic comparison page",
+      "subtitle": "A decision view that makes tradeoffs visible",
+      "body_blocks": [
+        {"title": "Baseline", "text": "Preserves the current workflow and minimizes change.", "type": "comparison"},
+        {"title": "Target", "text": "Adds native editability and stronger visual consistency.", "type": "comparison"},
+        {"title": "Tradeoff", "text": "Requires a longer build path and more explicit gates.", "type": "comparison"},
+        {"title": "Recommendation", "text": "Use the target route when downstream editing matters.", "type": "comparison"}
+      ],
+      "labels": ["comparison", "synthetic evidence"],
+      "footnotes": ["Synthetic fixture evidence only"],
+      "speaker_notes": "Synthetic speaker note for the comparison page",
+      "claim_bindings": ["C004"],
+      "evidence_bindings": ["E004"]
+    },
+    {
+      "page_id": "P005",
+      "order": 5,
+      "page_class": "architecture",
+      "title": "Synthetic architecture page",
+      "subtitle": "A layered route from locked content to editable output",
+      "body_blocks": [
+        {"title": "Content lock", "text": "Freezes visible claims, evidence, notes, and source lineage.", "type": "architecture"},
+        {"title": "Blueprint", "text": "Provides composition evidence without becoming the fact source.", "type": "architecture"},
+        {"title": "Scene", "text": "Maps visual regions to semantic native elements and text refs.", "type": "architecture"},
+        {"title": "Handback", "text": "Publishes editable PPTX plus canonical manifests and readback.", "type": "architecture"}
+      ],
+      "labels": ["architecture", "synthetic evidence"],
+      "footnotes": ["Synthetic fixture evidence only"],
+      "speaker_notes": "Synthetic speaker note for the architecture page",
+      "claim_bindings": ["C005"],
+      "evidence_bindings": ["E005"]
+    },
+    {
+      "page_id": "P006",
+      "order": 6,
+      "page_class": "data_story",
+      "title": "Synthetic data story page",
+      "subtitle": "A measurable narrative with visible evidence anchors",
+      "body_blocks": [
+        {"title": "Signal", "text": "The content lock preserves the highest-value facts and numbers.", "type": "data_story"},
+        {"title": "Pattern", "text": "Higher density requires stronger region hierarchy and fit rules.", "type": "data_story"},
+        {"title": "Implication", "text": "Native redraw makes post-generation correction practical.", "type": "data_story"},
+        {"title": "Measure", "text": "Readback confirms slide count, text presence, notes, and geometry.", "type": "data_story"}
+      ],
+      "labels": ["data story", "synthetic evidence"],
+      "footnotes": ["Synthetic fixture evidence only"],
+      "speaker_notes": "Synthetic speaker note for the data story page",
+      "claim_bindings": ["C006"],
+      "evidence_bindings": ["E006"]
+    },
+    {
+      "page_id": "P007",
+      "order": 7,
+      "page_class": "dense_narrative",
+      "title": "Synthetic dense narrative page",
+      "subtitle": "A high-density closing view with explicit next actions",
+      "body_blocks": [
+        {"title": "Context", "text": "The route starts from validated Page Packages and a locked narrative.", "type": "dense_narrative"},
+        {"title": "Evidence", "text": "Every visible region retains claim and evidence bindings.", "type": "dense_narrative"},
+        {"title": "Action", "text": "Agent-owned stages return exact continuation commands when needed.", "type": "dense_narrative"},
+        {"title": "Outcome", "text": "The final deck remains editable while visual intent stays traceable.", "type": "dense_narrative"}
+      ],
+      "labels": ["dense narrative", "synthetic evidence"],
+      "footnotes": ["Synthetic fixture evidence only"],
+      "speaker_notes": "Synthetic speaker note for the dense narrative page",
+      "claim_bindings": ["C007"],
+      "evidence_bindings": ["E007"]
+    }
+  ]
+}

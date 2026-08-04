@@ -1,0 +1,15 @@
+{
+  "page_count": 7,
+  "page_classes": [
+    "framework",
+    "process",
+    "table",
+    "comparison",
+    "architecture",
+    "data_story",
+    "dense_narrative"
+  ],
+  "expected_slide_count": 7,
+  "expected_speaker_notes_count": 7,
+  "whole_page_image_allowed": false
+}

@@ -87,3 +87,35 @@ python3 scripts/deck_master.py release-smoke --release-root /tmp/deck-master-0.9
 ```
 
 - Stop when: checksum, missing contract, or missing capability errors remain.
+
+## High-Density Builder
+
+- Detect by: `build status --profile high-density` returns `blocked`, or a
+  high-density command returns a structured error with an `HD_*` code.
+- Read the persisted failure before changing artifacts:
+
+```bash
+python3 scripts/deck_master.py build status --run-dir <run_dir> --profile high-density
+python3 scripts/deck_master.py next-step --run-dir <run_dir>
+```
+
+- Auto action: follow the returned `next_command`. A page-scoped failure uses
+  `build retry --profile high-density --page-id <page_id> --stage <stage>` and
+  invalidates that stage and all downstream artifacts.
+- Blueprint waiting: the Agent must generate or approve the blueprint at the
+  recorded `output_ref`, then rerun the recorded resume command.
+- Scene waiting: the Agent must write a semantic `page_scene.v1` with locked
+  text references and in-canvas geometry, then resume the run.
+- Visual review waiting: the Agent must write a passing visual review tied to
+  the current SVG and blueprint hashes, then resume the run.
+- Stop when: the error is `HIGH_DENSITY_CAPABILITY_MISSING`, a production run
+  lacks the required Agent/ImageGen capability, or the error remains after one
+  targeted retry. Do not mark the canonical build manifest completed while
+  high-density status is blocked or awaiting Agent work.
+- Verify after repair:
+
+```bash
+python3 scripts/deck_master.py build run --run-dir <run_dir> --profile high-density
+python3 scripts/deck_master.py build status --run-dir <run_dir> --profile high-density
+python3 scripts/deck_master.py final-readiness --run-dir <run_dir> --no-write
+```
