@@ -757,7 +757,9 @@ def readback_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dic
         actual_elements = {str(shape.name): shape for shape in slide.shapes if shape.name}
         expected_trace = {str(item.get("element_id") or ""): item for item in trace_pages.get(str(scenes[slide_index]["page_id"]), {}).get("elements", []) if isinstance(item, dict)}
         expected_order = [str(item.get("element_id") or "") for item in trace_pages.get(str(scenes[slide_index]["page_id"]), {}).get("elements", []) if isinstance(item, dict)]
-        actual_order = [str(shape.name) for shape in slide.shapes if shape.name]
+        # Include unnamed shapes in the order inventory so an unregistered
+        # object cannot bypass the trace/readback gate.
+        actual_order = [str(shape.name or "") for shape in slide.shapes]
         if expected_order != actual_order:
             z_order_mismatches.append({"page_id": str(scenes[slide_index]["page_id"]), "expected": expected_order, "actual": actual_order})
         for name in actual_order:

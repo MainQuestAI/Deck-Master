@@ -13,6 +13,8 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from pptx import Presentation
+from pptx.util import Inches
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT / "scripts") not in sys.path:
@@ -637,6 +639,20 @@ def test_readback_batches_full_deck_render(tmp_path: Path, monkeypatch: pytest.M
 
     assert sum(command and command[0].endswith("soffice") for command in commands) == 1
     assert sum(command and command[0].endswith("pdftoppm") for command in commands) == 1
+
+
+def test_readback_rejects_unregistered_shape(tmp_path: Path) -> None:
+    run, lock, scene = _prepared_fixture(tmp_path)
+    presentation = Presentation(pptx_path(run))
+    extra = presentation.slides[0].shapes.add_textbox(Inches(1), Inches(1), Inches(1), Inches(1))
+    extra.name = ""
+    presentation.save(pptx_path(run))
+    trace = read_json(trace_path(run))
+    trace["pptx_sha256"] = sha256_file(pptx_path(run))
+    write_json(trace_path(run), trace)
+
+    with pytest.raises(PptxEditabilityError, match="PPTX readback failed"):
+        readback_pptx(run, [scene], {"P001": lock}, pptx_path(run))
 
 
 def test_scene_mutation_without_svg_change_does_not_change_pptx(tmp_path: Path) -> None:
