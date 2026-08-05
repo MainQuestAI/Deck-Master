@@ -866,7 +866,13 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
             if scene.get("blueprint_sha256") != blueprint_manifest.get("image_sha256"):
                 raise HighDensityBuildError("HD_PAGE_SCENE_INVALID", f"page scene blueprint is stale for page {page_id}", stage="page_scene", page_id=page_id)
         elif execution_mode in {"fixture", "dev"}:
-            scene = build_fixture_scene(lock, str(blueprint_manifest["image_sha256"]))
+            layout_id = str((package.get("visual_spec") or {}).get("page_type") or "")
+            scene = build_fixture_scene(
+                lock,
+                str(blueprint_manifest["image_sha256"]),
+                blueprint_path=blueprint_path(root, page_id),
+                layout_id=layout_id,
+            )
             write_scene(root, scene)
         else:
             return _waiting(

@@ -94,11 +94,21 @@ Render normalized blueprint and SVG at the same `1672 x 941` canvas. Metrics are
 
 Initial gates: text-masked SSIM `>= 0.92`, P0 region SSIM `>= 0.92`, P0/P1 bbox edge delta `<= 2 px`, 100% P0/P1 text/component coverage, zero unresolved overflow/overlap/wrong-anchor findings. Production needs producer self-review and main review evidence.
 
+Controlled SVG paint effects use one shared parser for validation and PPTX compilation. The supported subset is direct linear/radial gradients with 2-8 stops plus one shadow or glow effect. Inheritance, transforms, masks, clip paths, patterns, `use`, and arbitrary pixel filters are blocked with the element or definition ID.
+
 ### E. SVG to DrawingML and Handback
 
 The compiler reads approved SVG DOM, `page_scene.v2` sidecar, content-lock notes/text refs, and registered asset map. Geometry, styles, visible text, and z-order come from SVG. The Scene cannot generate PPTX independently.
 
 Supported native output includes text/tspan, rect/circle/ellipse, line/polyline/polygon, supported paths, controlled opacity/fill/stroke, registered images, groups, and notes. Unsupported SVG elements fail with the element ID and a recovery action. Write `deck_svg_to_drawingml_trace.v1`, `deck_pptx_readback.v2`, and SVG/PPTX render parity evidence. PPTX parity requires text-masked SSIM `>= 0.97`, P0/P1 geometry `<= 0.75 pt`, exact P0 text, complete P1 text, and full trace coverage.
+
+Deck rendering is batched: one `soffice` conversion produces the complete PDF and one `pdftoppm` invocation produces all page previews. Readback checks gradient fills, effect lists, stop alpha, trace coverage, and the final SVG/PPTX visual gate.
+
+### F. Acceptance Evidence
+
+The hermetic acceptance fixture contains seven independent blueprints and seven layout IDs: `framework`, `process`, `table`, `comparison`, `architecture`, `data_story`, and `dense_narrative`. The acceptance test requires distinct blueprint, scene, SVG, and PPTX render hashes, plus a metamorphic failure when an old blueprint is changed before redraw.
+
+Release acceptance may run `PYTHONPATH=scripts python3 -m high_density.provider_smoke --run-dir <run_dir> --page-id P001 --output <run_dir>/high_density_build/provider_smoke_evidence.json` after a fresh provider output completes the full chain. The evidence contains lineage hashes and gate results only; raw provider payloads and images stay outside the repository.
 
 ## Exit Artifacts
 
