@@ -625,10 +625,31 @@ def _render_pptx_pages(root: Path, pptx: Path, pages: list[tuple[str, int]]) -> 
         return {}
     with tempfile.TemporaryDirectory(prefix="deck-master-pptx-render-") as directory:
         temp = Path(directory)
-        result = subprocess.run([soffice, "--headless", "--convert-to", "pdf", "--outdir", str(temp), str(pptx)], capture_output=True, text=True)
+        # Isolate the headless profile so adjacent readback runs cannot race
+        # on LibreOffice's shared user installation.
+        profile = temp / "lo-profile"
+        profile.mkdir()
+        result = subprocess.run(
+            [
+                soffice,
+                f"-env:UserInstallation={profile.as_uri()}",
+                "--headless",
+                "--nologo",
+                "--nodefault",
+                "--nofirststartwizard",
+                "--convert-to",
+                "pdf",
+                "--outdir",
+                str(temp),
+                str(pptx),
+            ],
+            capture_output=True,
+            text=True,
+        )
         pdf = temp / f"{pptx.stem}.pdf"
         if result.returncode != 0 or not pdf.exists():
-            raise PptxEditabilityError(result.stderr.strip() or "LibreOffice failed to render PPTX")
+            detail = result.stderr.strip() or result.stdout.strip() or "LibreOffice failed to render PPTX"
+            raise PptxEditabilityError(detail)
         prefix = temp / "page"
         result = subprocess.run([pdftoppm, "-png", "-r", "144", str(pdf), str(prefix)], capture_output=True, text=True)
         if result.returncode != 0:

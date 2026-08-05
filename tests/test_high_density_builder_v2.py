@@ -637,7 +637,9 @@ def test_readback_batches_full_deck_render(tmp_path: Path, monkeypatch: pytest.M
     monkeypatch.setattr(pptx_module.subprocess, "run", counted_run)
     readback_pptx(run, scenes, locks, pptx_path(run))
 
-    assert sum(command and command[0].endswith("soffice") for command in commands) == 1
+    soffice_commands = [command for command in commands if command and command[0].endswith("soffice")]
+    assert len(soffice_commands) == 1
+    assert any(argument.startswith("-env:UserInstallation=file:") for argument in soffice_commands[0])
     assert sum(command and command[0].endswith("pdftoppm") for command in commands) == 1
 
 
