@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/contracts/high-density-provider-smoke.v1.schema.json",
+  "title": "High-Density Provider Smoke Evidence v1",
+  "type": "object",
+  "required": ["schema_version", "run_id_sha256", "page_id", "status", "provider", "lineage", "artifacts", "gates", "created_at"],
+  "properties": {
+    "schema_version": {"const": "deck_high_density_provider_smoke.v1"},
+    "run_id_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "page_id": {"type": "string", "minLength": 1},
+    "status": {"const": "pass"},
+    "provider": {
+      "type": "object",
+      "required": ["tool", "model", "request_id_sha256"],
+      "properties": {
+        "tool": {"type": "string", "minLength": 1},
+        "model": {"type": "string", "minLength": 1},
+        "request_id_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      },
+      "additionalProperties": false
+    },
+    "lineage": {
+      "type": "object",
+      "required": ["prompt_sha256", "image_sha256", "content_lock_sha256", "nbb_plan_sha256", "style_lock_sha256"],
+      "properties": {
+        "prompt_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "image_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "content_lock_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "nbb_plan_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "style_lock_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      },
+      "additionalProperties": false
+    },
+    "artifacts": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "required": ["path", "sha256"],
+        "properties": {
+          "path": {"type": "string", "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+"},
+          "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+        },
+        "additionalProperties": false
+      }
+    },
+    "gates": {
+      "type": "object",
+      "required": ["high_density_manifest", "visual_review", "readback", "svg_to_pptx"],
+      "properties": {
+        "high_density_manifest": {"const": "pass"},
+        "visual_review": {"const": "pass"},
+        "readback": {"const": "pass"},
+        "svg_to_pptx": {"const": "pass"}
+      },
+      "additionalProperties": false
+    },
+    "raw_provider_payload_included": {"const": false},
+    "created_at": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false
+}
