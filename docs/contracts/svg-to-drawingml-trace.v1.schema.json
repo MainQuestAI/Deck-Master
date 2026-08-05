@@ -10,7 +10,7 @@
     "page_id": {"type": "string"},
     "svg_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
     "pptx_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
-    "elements": {"type": "array", "items": {"type": "object"}},
+    "elements": {"type": "array", "items": {"type": "object", "properties": {"element_id": {"type": "string"}, "paint": {"type": "object"}, "effect": {"type": "object"}}, "additionalProperties": true}},
     "coverage": {"type": "object"},
     "unsupported": {"type": "array", "items": {"type": "object"}},
     "created_at": {"type": "string"}

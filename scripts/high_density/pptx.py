@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import math
 import re
 import shutil
 import subprocess
@@ -13,10 +14,12 @@ from pptx import Presentation
 from pptx.enum.shapes import MSO_CONNECTOR, MSO_SHAPE, MSO_SHAPE_TYPE
 from pptx.dml.color import RGBColor
 from pptx.oxml.ns import qn
+from pptx.oxml.xmlchemy import OxmlElement
 from pptx.util import Inches, Pt
 
 from .contracts import ContractError, assert_v2, read_json, sha256_file, sha256_json, utc_now, write_json
 from .svg import svg_path, validate_svg, wrap_text, _estimated_width
+from .svg_paint import parse_node_paint, parse_svg_paint
 from .visual import VisualMetricsError, compute_visual_metrics, write_visual_metrics
 
 PPTX_DIR = Path("high_density_build/pptx")
@@ -62,21 +65,121 @@ def _inches(value: float, total: float) -> float:
     return float(value) / total * (SLIDE_WIDTH_IN if total == CANVAS_WIDTH else SLIDE_HEIGHT_IN)
 
 
-def _set_shape_fill(shape: Any, style: dict[str, Any]) -> None:
-    fill = str(style.get("fill") or "").lower()
-    if fill in {"", "none", "transparent"} or fill.startswith("url("):
+def _remove_children(parent: Any, names: set[str]) -> None:
+    for child in list(parent):
+        if str(child.tag).split("}")[-1] in names:
+            parent.remove(child)
+
+
+def _append_color(parent: Any, color: str, alpha: float = 1.0) -> None:
+    color_node = OxmlElement("a:srgbClr")
+    color_node.set("val", str(color).lstrip("#").upper())
+    alpha_node = OxmlElement("a:alpha")
+    alpha_node.set("val", str(max(0, min(100000, int(round(alpha * 100000))))))
+    color_node.append(alpha_node)
+    parent.append(color_node)
+
+
+def _append_gradient(parent: Any, gradient: dict[str, Any], alpha: float) -> None:
+    gradient_fill = OxmlElement("a:gradFill")
+    gradient_fill.set("rotWithShape", "0")
+    stop_list = OxmlElement("a:gsLst")
+    for stop in gradient.get("stops") or []:
+        stop_node = OxmlElement("a:gs")
+        stop_node.set("pos", str(max(0, min(100000, int(round(float(stop["offset"]) * 100000))))))
+        _append_color(stop_node, str(stop["color"]), alpha * float(stop.get("opacity") or 1))
+        stop_list.append(stop_node)
+    gradient_fill.append(stop_list)
+    if gradient.get("gradient_type") == "linear":
+        linear = OxmlElement("a:lin")
+        linear.set("ang", str(int(round(float(gradient.get("angle") or 0) * 60000)) % 21600000))
+        linear.set("scaled", "1")
+        gradient_fill.append(linear)
+    else:
+        path = OxmlElement("a:path")
+        path.set("path", "circle")
+        coordinates = gradient.get("coordinates") or {}
+        fill_to = OxmlElement("a:fillToRect")
+        fill_to.set("l", str(int(round(float(coordinates.get("fx", 0.5)) * 100000))))
+        fill_to.set("t", str(int(round(float(coordinates.get("fy", 0.5)) * 100000))))
+        fill_to.set("r", str(int(round((1 - float(coordinates.get("fx", 0.5))) * 100000))))
+        fill_to.set("b", str(int(round((1 - float(coordinates.get("fy", 0.5))) * 100000))))
+        path.append(fill_to)
+        gradient_fill.append(path)
+    parent.append(gradient_fill)
+
+
+def _append_effect(parent: Any, effect: dict[str, Any], alpha: float) -> None:
+    effects = OxmlElement("a:effectLst")
+    color = str(effect.get("color") or "#000000")
+    opacity = alpha * float(effect.get("opacity") or 0)
+    std_deviation = float(effect.get("std_deviation") or 0)
+    if effect.get("kind") == "shadow":
+        shadow = OxmlElement("a:outerShdw")
+        shadow.set("blurRad", str(int(round(std_deviation * 12700))))
+        distance = math.hypot(float(effect.get("dx") or 0), float(effect.get("dy") or 0))
+        shadow.set("dist", str(int(round(distance * 12700))))
+        shadow.set("dir", str(int(round(math.degrees(math.atan2(float(effect.get("dy") or 0), float(effect.get("dx") or 0))) % 360 * 60000))))
+        _append_color(shadow, color, opacity)
+        effects.append(shadow)
+    else:
+        glow = OxmlElement("a:glow")
+        glow.set("rad", str(int(round(std_deviation * 12700))))
+        _append_color(glow, color, opacity)
+        effects.append(glow)
+    parent.append(effects)
+
+
+def _paint_trace(paint: dict[str, Any]) -> dict[str, Any]:
+    result = {"kind": str(paint.get("kind") or "none"), "fidelity": str(paint.get("fidelity") or "native")}
+    if paint.get("kind") == "solid":
+        result["color"] = str(paint.get("color") or "")
+    if paint.get("kind") == "gradient":
+        result.update({"gradient_id": str(paint.get("gradient_id") or ""), "gradient_type": str(paint.get("gradient_type") or ""), "coordinates": dict(paint.get("coordinates") or {}), "stop_count": len(paint.get("stops") or [])})
+    return result
+
+
+def _set_shape_fill(shape: Any, style: dict[str, Any], paint: dict[str, Any] | None = None, trace_entry: dict[str, Any] | None = None) -> None:
+    paint = paint or {
+        "fill": {"kind": "solid", "color": str(style.get("fill") or "#18212b")} if str(style.get("fill") or "").lower() not in {"", "none", "transparent"} else {"kind": "none"},
+        "stroke": {"kind": "solid", "color": str(style.get("stroke") or "#d5dde5")} if str(style.get("stroke") or "").lower() not in {"", "none", "transparent"} else {"kind": "none"},
+        "opacity": float(style.get("opacity") or 1),
+        "fill_opacity": 1.0,
+        "stroke_opacity": 1.0,
+        "effect": None,
+    }
+    overall_opacity = float(paint.get("opacity") or 1)
+    fill = paint.get("fill") or {"kind": "none"}
+    if fill.get("kind") == "gradient":
         shape.fill.background()
-    else:
+        _remove_children(shape._element.spPr, {"solidFill", "gradFill", "noFill", "blipFill", "pattFill", "grpFill"})
+        _append_gradient(shape._element.spPr, fill, overall_opacity * float(paint.get("fill_opacity") or 1))
+    elif fill.get("kind") == "solid":
         shape.fill.solid()
-        shape.fill.fore_color.rgb = _rgb(fill)
-        if float(style.get("opacity") or 1) < 1:
-            shape.fill.transparency = max(0, min(100, int((1 - float(style.get("opacity") or 1)) * 100)))
-    stroke = str(style.get("stroke") or "").lower()
-    if stroke in {"", "none", "transparent"}:
-        shape.line.fill.background()
+        shape.fill.fore_color.rgb = _rgb(fill.get("color"), "18212b")
+        shape.fill.transparency = max(0, min(100, int((1 - overall_opacity * float(paint.get("fill_opacity") or 1)) * 100)))
     else:
-        shape.line.color.rgb = _rgb(stroke, "d5dde5")
+        shape.fill.background()
+    stroke = paint.get("stroke") or {"kind": "none"}
+    if stroke.get("kind") == "gradient":
+        line = shape.line._get_or_add_ln()
+        _remove_children(line, {"solidFill", "gradFill", "noFill", "pattFill", "grpFill"})
+        _append_gradient(line, stroke, overall_opacity * float(paint.get("stroke_opacity") or 1))
         shape.line.width = Pt(float(style.get("stroke_width") or 1))
+    elif stroke.get("kind") == "solid":
+        shape.line.color.rgb = _rgb(stroke.get("color"), "d5dde5")
+        shape.line.width = Pt(float(style.get("stroke_width") or 1))
+    else:
+        shape.line.fill.background()
+    effect = paint.get("effect")
+    if effect:
+        sp_pr = shape._element.spPr
+        _remove_children(sp_pr, {"effectLst"})
+        _append_effect(sp_pr, effect, overall_opacity)
+    if trace_entry is not None:
+        trace_entry["paint"] = {"fill": _paint_trace(fill), "stroke": _paint_trace(stroke)}
+        if effect:
+            trace_entry["effect"] = {"type": str(effect.get("kind") or ""), **{key: value for key, value in effect.items() if key not in {"kind"}}}
 
 
 def _remove_theme_effects(shape: Any) -> None:
@@ -124,7 +227,24 @@ def _add_text(slide: Any, element: dict[str, Any], trace: list[dict[str, Any]]) 
     font.bold = str(style.get("font_weight") or "400") in {"600", "700", "bold", "Bold"}
     font.color.rgb = _rgb(style.get("fill"), "18212b")
     paragraph.space_after = Pt(0)
-    trace.append({"element_id": element["element_id"], "object_type": "text", "shape_name": shape.name, "bbox": bbox, "text": element.get("text", ""), "text_ref": element.get("text_ref", "")})
+    trace_entry = {"element_id": element["element_id"], "object_type": "text", "shape_name": shape.name, "bbox": bbox, "text": element.get("text", ""), "text_ref": element.get("text_ref", "")}
+    paint = element.get("_paint") or {}
+    text_paint = paint.get("fill") or {"kind": "solid", "color": str(style.get("fill") or "#18212b"), "fidelity": "native"}
+    run_properties = run._r.get_or_add_rPr()
+    _remove_children(run_properties, {"solidFill", "gradFill", "noFill", "blipFill", "pattFill", "grpFill"})
+    if text_paint.get("kind") == "gradient":
+        _append_gradient(run_properties, text_paint, float(paint.get("opacity") or 1) * float(paint.get("fill_opacity") or 1))
+    elif text_paint.get("kind") == "solid":
+        solid = OxmlElement("a:solidFill")
+        _append_color(solid, str(text_paint.get("color") or "#18212b"), float(paint.get("opacity") or 1) * float(paint.get("fill_opacity") or 1))
+        run_properties.append(solid)
+    if paint.get("effect"):
+        _remove_children(shape._element.spPr, {"effectLst"})
+        _append_effect(shape._element.spPr, paint["effect"], float(paint.get("opacity") or 1))
+    trace_entry["paint"] = {"fill": _paint_trace(text_paint), "stroke": _paint_trace(paint.get("stroke") or {"kind": "none"})}
+    if paint.get("effect"):
+        trace_entry["effect"] = {"type": str(paint["effect"].get("kind") or ""), **{key: value for key, value in paint["effect"].items() if key not in {"kind"}}}
+    trace.append(trace_entry)
 
 
 def _add_rect(slide: Any, element: dict[str, Any], trace: list[dict[str, Any]]) -> None:
@@ -134,8 +254,9 @@ def _add_rect(slide: Any, element: dict[str, Any], trace: list[dict[str, Any]]) 
     shape = slide.shapes.add_shape(shape_type, Inches(_inches(float(bbox["x"]), CANVAS_WIDTH)), Inches(_inches(float(bbox["y"]), CANVAS_HEIGHT)), Inches(_inches(float(bbox["w"]), CANVAS_WIDTH)), Inches(_inches(float(bbox["h"]), CANVAS_HEIGHT)))
     shape.name = str(element["element_id"])
     _remove_theme_effects(shape)
-    _set_shape_fill(shape, style)
-    trace.append({"element_id": element["element_id"], "object_type": "shape", "shape_name": shape.name, "bbox": bbox})
+    trace_entry = {"element_id": element["element_id"], "object_type": "shape", "shape_name": shape.name, "bbox": bbox}
+    _set_shape_fill(shape, style, element.get("_paint"), trace_entry)
+    trace.append(trace_entry)
 
 
 def _add_line(slide: Any, element: dict[str, Any], trace: list[dict[str, Any]]) -> None:
@@ -144,9 +265,10 @@ def _add_line(slide: Any, element: dict[str, Any], trace: list[dict[str, Any]]) 
     shape.name = str(element["element_id"])
     _remove_theme_effects(shape)
     style = element.get("style") or {}
-    shape.line.color.rgb = _rgb(style.get("stroke"), "657485")
+    trace_entry = {"element_id": element["element_id"], "object_type": "line", "shape_name": shape.name, "bbox": bbox}
+    _set_shape_fill(shape, style, element.get("_paint"), trace_entry)
     shape.line.width = Pt(float(style.get("stroke_width") or 2))
-    trace.append({"element_id": element["element_id"], "object_type": "line", "shape_name": shape.name, "bbox": bbox})
+    trace.append(trace_entry)
 
 
 _PATH_TOKEN_RE = re.compile(r"([AaCcHhLlMmQqSsTtVvZz])|([-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)")
@@ -251,8 +373,9 @@ def _add_freeform(slide: Any, element: dict[str, Any], points: list[tuple[float,
     shape = builder.convert_to_shape()
     shape.name = str(element["element_id"])
     _remove_theme_effects(shape)
-    _set_shape_fill(shape, element.get("style") or {})
-    trace.append({"element_id": element["element_id"], "object_type": "freeform", "shape_name": shape.name, "bbox": element["bbox"], "closed": closed})
+    trace_entry = {"element_id": element["element_id"], "object_type": "freeform", "shape_name": shape.name, "bbox": element["bbox"], "closed": closed}
+    _set_shape_fill(shape, element.get("style") or {}, element.get("_paint"), trace_entry)
+    trace.append(trace_entry)
 
 
 def _add_path(slide: Any, element: dict[str, Any], trace: list[dict[str, Any]], *, allow_curves: bool) -> None:
@@ -272,8 +395,9 @@ def _add_ellipse(slide: Any, element: dict[str, Any], trace: list[dict[str, Any]
     shape = slide.shapes.add_shape(MSO_SHAPE.OVAL, Inches(_inches(float(bbox["x"]), CANVAS_WIDTH)), Inches(_inches(float(bbox["y"]), CANVAS_HEIGHT)), Inches(_inches(float(bbox["w"]), CANVAS_WIDTH)), Inches(_inches(float(bbox["h"]), CANVAS_HEIGHT)))
     shape.name = str(element["element_id"])
     _remove_theme_effects(shape)
-    _set_shape_fill(shape, element.get("style") or {})
-    trace.append({"element_id": element["element_id"], "object_type": "shape", "shape_name": shape.name, "bbox": bbox})
+    trace_entry = {"element_id": element["element_id"], "object_type": "shape", "shape_name": shape.name, "bbox": bbox}
+    _set_shape_fill(shape, element.get("style") or {}, element.get("_paint"), trace_entry)
+    trace.append(trace_entry)
 
 
 def _add_image(slide: Any, element: dict[str, Any], asset_paths: dict[str, Path], trace: list[dict[str, Any]]) -> None:
@@ -377,11 +501,15 @@ def _svg_elements(root: Path, scene: dict[str, Any], asset_paths: dict[str, Path
         svg_root = ElementTree.fromstring(root.read_text(encoding="utf-8"))
     except (OSError, ElementTree.ParseError) as exc:
         raise PptxEditabilityError(f"approved SVG cannot be parsed: {exc}") from exc
+    try:
+        paint_registry = parse_svg_paint(svg_root)
+    except ContractError as exc:
+        raise PptxEditabilityError(f"approved SVG paint is unsupported: {exc}") from exc
     scene_by_id = {str(item.get("element_id")): item for item in scene.get("elements", [])}
     elements: list[dict[str, Any]] = []
     for node in svg_root.iter():
         tag = str(node.tag).split("}")[-1]
-        if tag in {"svg", "g", "defs", "linearGradient", "radialGradient", "stop", "symbol", "tspan", "title", "desc", "metadata"}:
+        if tag in {"svg", "g", "defs", "linearGradient", "radialGradient", "filter", "feDropShadow", "feGaussianBlur", "stop", "symbol", "tspan", "title", "desc", "metadata"}:
             continue
         element = _node_element(node, scene_by_id)
         if element.get("kind") == "text":
@@ -397,6 +525,10 @@ def _svg_elements(root: Path, scene: dict[str, Any], asset_paths: dict[str, Path
                 raise PptxEditabilityError(f"registered image asset is unavailable: {asset_ref}")
             if expected_sha and sha256_file(asset_path) != expected_sha:
                 raise PptxEditabilityError(f"registered image asset hash mismatch: {asset_ref}")
+        try:
+            element["_paint"] = parse_node_paint(node, paint_registry)
+        except ContractError as exc:
+            raise PptxEditabilityError(f"approved SVG paint is unsupported on {element['element_id']}: {exc}") from exc
         elements.append(element)
     if not elements:
         raise PptxEditabilityError("approved SVG contains no visible elements")
@@ -484,11 +616,13 @@ def compile_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dict
     return output, trace_file
 
 
-def _render_pptx_page(root: Path, pptx: Path, page_id: str, page_index: int) -> Path:
+def _render_pptx_pages(root: Path, pptx: Path, pages: list[tuple[str, int]]) -> dict[str, Path]:
     soffice = shutil.which("soffice")
     pdftoppm = shutil.which("pdftoppm")
     if not soffice or not pdftoppm:
         raise PptxEditabilityError("soffice and pdftoppm are required for PPTX render parity")
+    if not pages:
+        return {}
     with tempfile.TemporaryDirectory(prefix="deck-master-pptx-render-") as directory:
         temp = Path(directory)
         result = subprocess.run([soffice, "--headless", "--convert-to", "pdf", "--outdir", str(temp), str(pptx)], capture_output=True, text=True)
@@ -496,16 +630,60 @@ def _render_pptx_page(root: Path, pptx: Path, page_id: str, page_index: int) -> 
         if result.returncode != 0 or not pdf.exists():
             raise PptxEditabilityError(result.stderr.strip() or "LibreOffice failed to render PPTX")
         prefix = temp / "page"
-        result = subprocess.run([pdftoppm, "-png", "-f", str(page_index + 1), "-singlefile", "-r", "144", str(pdf), str(prefix)], capture_output=True, text=True)
-        if result.returncode != 0 or not (temp / "page.png").exists():
+        result = subprocess.run([pdftoppm, "-png", "-r", "144", str(pdf), str(prefix)], capture_output=True, text=True)
+        if result.returncode != 0:
             raise PptxEditabilityError(result.stderr.strip() or "pdftoppm failed to render PPTX")
-        output = pptx_preview_path(root, page_id)
-        output.parent.mkdir(parents=True, exist_ok=True)
         from PIL import Image
 
-        with Image.open(temp / "page.png") as image:
-            image.convert("RGB").resize((CANVAS_WIDTH, CANVAS_HEIGHT), Image.Resampling.LANCZOS).save(output, format="PNG")
-        return output
+        outputs: dict[str, Path] = {}
+        for page_id, page_index in pages:
+            source = temp / f"page-{page_index + 1}.png"
+            if not source.exists():
+                candidates = sorted(temp.glob(f"page-{page_index + 1}*.png"))
+                source = candidates[0] if candidates else source
+            if not source.exists():
+                raise PptxEditabilityError(f"pdftoppm did not produce page {page_index + 1}")
+            output = pptx_preview_path(root, page_id)
+            output.parent.mkdir(parents=True, exist_ok=True)
+            with Image.open(source) as image:
+                image.convert("RGB").resize((CANVAS_WIDTH, CANVAS_HEIGHT), Image.Resampling.LANCZOS).save(output, format="PNG")
+            outputs[page_id] = output
+        return outputs
+
+
+def _render_pptx_page(root: Path, pptx: Path, page_id: str, page_index: int) -> Path:
+    return _render_pptx_pages(root, pptx, [(page_id, page_index)])[page_id]
+
+
+def _drawingml_paint_inventory(presentation: Presentation) -> dict[str, Any]:
+    gradients = 0
+    gradient_stops = 0
+    effects = 0
+    effect_types: list[str] = []
+    alpha_values: list[int] = []
+    elements: list[dict[str, Any]] = []
+    for slide in presentation.slides:
+        for shape in slide.shapes:
+            shape_gradients = 0
+            shape_effects = 0
+            for node in shape._element.iter():
+                local = str(node.tag).split("}")[-1]
+                if local == "gradFill":
+                    shape_gradients += 1
+                    gradient_stops += sum(1 for child in node.iter() if str(child.tag).split("}")[-1] == "gs")
+                elif local in {"outerShdw", "glow"}:
+                    shape_effects += 1
+                    effect_types.append("shadow" if local == "outerShdw" else "glow")
+                elif local == "alpha" and node.get("val") is not None:
+                    try:
+                        alpha_values.append(int(node.get("val") or 0))
+                    except ValueError:
+                        pass
+            gradients += shape_gradients
+            effects += shape_effects
+            if shape_gradients or shape_effects:
+                elements.append({"shape_name": str(shape.name or ""), "gradients": shape_gradients, "effects": shape_effects})
+    return {"gradient_count": gradients, "gradient_stop_count": gradient_stops, "effect_count": effects, "effect_types": sorted(effect_types), "gradient_stop_alpha_values": alpha_values, "elements": elements}
 
 
 def readback_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dict[str, Any]], output: Path) -> Path:
@@ -590,19 +768,32 @@ def readback_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dic
     required_trace_ids = {str(element.get("element_id") or "") for scene in scenes for element in scene.get("elements", []) if element.get("priority") in {"P0", "P1"}}
     missing_trace_ids = sorted(required_trace_ids - traced_ids)
     trace_status = "pass" if not missing_trace_ids else "failed"
+    expected_gradient_count = sum(1 for item in trace_payload.get("elements", []) if isinstance(item, dict) and any(str(paint.get("kind") or "") == "gradient" for paint in (item.get("paint") or {}).values() if isinstance(paint, dict)))
+    expected_gradient_stop_count = sum(int(paint.get("stop_count") or 0) for item in trace_payload.get("elements", []) if isinstance(item, dict) for paint in (item.get("paint") or {}).values() if isinstance(paint, dict) and str(paint.get("kind") or "") == "gradient")
+    expected_effect_count = sum(1 for item in trace_payload.get("elements", []) if isinstance(item, dict) and item.get("effect"))
+    expected_effect_types = sorted(str(item.get("effect", {}).get("type") or "") for item in trace_payload.get("elements", []) if isinstance(item, dict) and item.get("effect"))
+    paint_inventory = _drawingml_paint_inventory(presentation)
+    paint_status = "pass" if paint_inventory["gradient_count"] == expected_gradient_count and paint_inventory["gradient_stop_count"] == expected_gradient_stop_count and paint_inventory["effect_count"] == expected_effect_count and paint_inventory["effect_types"] == expected_effect_types else "failed"
     visual_parity: dict[str, Any] = {"status": "pass", "pages": []}
-    for index, scene in enumerate(scenes):
-        try:
-            pptx_preview = _render_pptx_page(root, output, str(scene["page_id"]), index)
-            svg_preview = root / PREVIEW_DIR / f"{scene['page_id']}.png"
-            metrics = compute_visual_metrics(root, scene, svg_preview, pptx_preview, comparison="svg_vs_pptx", candidate_geometry=pptx_geometries.get(str(scene["page_id"])))
-            metrics_file = write_visual_metrics(root, scene, metrics, comparison="svg_vs_pptx")
-            visual_parity["pages"].append({"page_id": scene["page_id"], "metrics_path": str(metrics_file.relative_to(root)), "status": metrics["status"]})
-            if metrics["status"] != "pass":
+    try:
+        pptx_previews = _render_pptx_pages(root, output, [(str(scene["page_id"]), index) for index, scene in enumerate(scenes)])
+    except (PptxEditabilityError, OSError) as exc:
+        visual_parity["status"] = "failed"
+        visual_parity["pages"] = [{"page_id": scene["page_id"], "status": "failed", "error": str(exc)} for scene in scenes]
+    else:
+        for scene in scenes:
+            try:
+                page_id = str(scene["page_id"])
+                pptx_preview = pptx_previews[page_id]
+                svg_preview = root / PREVIEW_DIR / f"{page_id}.png"
+                metrics = compute_visual_metrics(root, scene, svg_preview, pptx_preview, comparison="svg_vs_pptx", candidate_geometry=pptx_geometries.get(page_id))
+                metrics_file = write_visual_metrics(root, scene, metrics, comparison="svg_vs_pptx")
+                visual_parity["pages"].append({"page_id": page_id, "metrics_path": str(metrics_file.relative_to(root)), "status": metrics["status"]})
+                if metrics["status"] != "pass":
+                    visual_parity["status"] = "failed"
+            except (PptxEditabilityError, VisualMetricsError, OSError) as exc:
                 visual_parity["status"] = "failed"
-        except (PptxEditabilityError, VisualMetricsError, OSError) as exc:
-            visual_parity["status"] = "failed"
-            visual_parity["pages"].append({"page_id": scene["page_id"], "status": "failed", "error": str(exc)})
+                visual_parity["pages"].append({"page_id": scene["page_id"], "status": "failed", "error": str(exc)})
     report = {
         "schema_version": "deck_pptx_readback.v2",
         "run_id": str(scenes[0]["run_id"]) if scenes else "",
@@ -615,11 +806,12 @@ def readback_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dic
         "text_readback": {"expected_p0_p1": len(expected_text), "missing": missing_text, "mismatches": text_mismatches},
         "geometry": {"out_of_bounds": geometry_errors, "mismatches": geometry_mismatches},
         "trace_coverage": {"status": trace_status, "p0_p1": "pass" if not missing_trace_ids else "failed", "missing_element_ids": missing_trace_ids},
+        "drawingml_paint": {**paint_inventory, "expected_gradient_count": expected_gradient_count, "expected_gradient_stop_count": expected_gradient_stop_count, "expected_effect_count": expected_effect_count, "expected_effect_types": expected_effect_types, "status": paint_status},
         "visual_parity": visual_parity,
         "editable_object_count": sum(len(slide.shapes) for slide in presentation.slides),
         "image_shape_count": actual_image_count,
         "expected_image_count": expected_image_count,
-        "status": "pass" if len(presentation.slides) == len(scenes) and notes_count == expected_notes_count and actual_image_count == expected_image_count and not missing_text and not text_mismatches and not missing_elements and not geometry_errors and not geometry_mismatches and trace_status == "pass" and visual_parity["status"] == "pass" else "failed",
+        "status": "pass" if len(presentation.slides) == len(scenes) and notes_count == expected_notes_count and actual_image_count == expected_image_count and not missing_text and not text_mismatches and not missing_elements and not geometry_errors and not geometry_mismatches and trace_status == "pass" and paint_status == "pass" and visual_parity["status"] == "pass" else "failed",
         "created_at": utc_now(),
     }
     assert_v2("pptx_readback", report)
