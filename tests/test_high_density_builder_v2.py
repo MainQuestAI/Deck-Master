@@ -17,8 +17,8 @@ if str(ROOT / "scripts") not in sys.path:
 from build.manifest import build_manifest_v2
 from high_density.blueprint import BlueprintInvalid, build_blueprint_prompt, ensure_blueprint_manifest
 from high_density.capability import inspect_high_density_capability
-from high_density.content import build_content_lock, build_nbb_page, load_page_packages
-from high_density.contracts import ContractError, assert_valid, read_json, sha256_file, write_json
+from high_density.content import build_content_lock, build_nbb_page, build_nbb_plan, load_nbb_plan, load_page_packages, write_nbb_plan
+from high_density.contracts import ContractError, assert_valid, read_json, sha256_file, sha256_json, write_json
 from high_density.engine import (
     build_high_density_status,
     prepare_high_density,
@@ -83,6 +83,23 @@ def _prepared_fixture(tmp_path: Path) -> tuple[Path, dict, dict]:
     lock = read_json(run / "high_density_build/content_locks/P001.json")
     scene = load_scene(run, "P001")
     return run, lock, scene
+
+
+def _approved_page_plan(package: dict) -> tuple[dict, dict]:
+    plan = build_nbb_plan(
+        [package],
+        run_id=str(package["run_id"]),
+        selected_storyline_id="storyline.decision",
+        approved_by="test",
+    )
+    return plan, plan["pages"][0]
+
+
+def _write_approved_nbb_plan(run: Path) -> dict:
+    packages = load_page_packages(run, expected_run_id=run.name)
+    plan = build_nbb_plan(packages, run_id=run.name, selected_storyline_id="storyline.decision", approved_by="test")
+    write_nbb_plan(run, plan)
+    return plan
 
 
 def test_prepare_rejects_malformed_page_package(tmp_path: Path) -> None:
@@ -230,10 +247,105 @@ def test_nbb_rejects_unsupported_factual_claim() -> None:
         build_nbb_page(package)
 
 
+def test_nbb_plan_contains_content_specific_candidates_and_precise_page_refs(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path, page_count=2)
+    packages = load_page_packages(run, expected_run_id=run.name)
+
+    plan = build_nbb_plan(packages, run_id=run.name)
+    write_nbb_plan(run, plan)
+
+    assert plan["selection"]["status"] == "pending_user_decision"
+    assert len(plan["storyline_candidates"]) == 3
+    conclusions = {candidate["management_conclusion"] for candidate in plan["storyline_candidates"]}
+    assert len(conclusions) == 3
+    assert "Synthetic framework page" in plan["storyline_candidates"][0]["management_conclusion"]
+    assert plan["scr"]["evidence_refs"]
+    assert all(page["page_package_sha256"] == sha256_json(package) for page, package in zip(plan["pages"], packages, strict=True))
+    assert all(page["page_plan_sha256"] for page in plan["pages"])
+    assert load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)["nbb_plan_sha256"] == plan["nbb_plan_sha256"]
+
+
+def test_content_lock_requires_approved_nbb_page_plan(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path)
+    package = read_json(run / "page_packages/P001.json")
+
+    with pytest.raises(ContractError, match="approved NBB page plan is required"):
+        build_content_lock(package, nbb_plan_sha256="a" * 64)
+
+
+def test_production_waits_for_storyline_confirmation_then_resumes(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path, mode="production", project_name="production nbb")
+    write_style_lock(run, run.name, "cyber-01", approved=True, approver="test")
+    prepare_high_density(run)
+    assert run_high_density(run)["next_action"]["kind"] == "agent_nbb_enrich"
+
+    packages = load_page_packages(run, expected_run_id=run.name)
+    pending = build_nbb_plan(packages, run_id=run.name)
+    write_nbb_plan(run, pending)
+    waiting = run_high_density(run)
+
+    assert waiting["status"] == "awaiting_user_decision"
+    assert waiting["current_stage"] == "content_lock"
+    assert waiting["next_action"]["recommended_storyline_id"] == "storyline.decision"
+    assert len(waiting["next_action"]["storyline_candidates"]) == 3
+
+    resumed = retry_high_density(run, page_id="", stage="content_lock", storyline_id="storyline.risk")
+
+    assert resumed["status"] == "awaiting_agent_build"
+    assert resumed["current_stage"] == "blueprint"
+    lock = read_json(run / "high_density_build/content_locks/P001.json")
+    assert lock["lineage"]["selected_storyline_id"] == "storyline.risk"
+    assert lock["lineage"]["nbb_page_plan_sha256"]
+
+
+def test_nbb_plan_rejects_unknown_page_evidence_ref(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path)
+    packages = load_page_packages(run, expected_run_id=run.name)
+    plan = build_nbb_plan(packages, run_id=run.name, selected_storyline_id="storyline.decision", approved_by="test")
+    plan["pages"][0]["evidence_refs"] = ["E999"]
+    plan["pages"][0]["page_plan_sha256"] = sha256_json({key: value for key, value in plan["pages"][0].items() if key != "page_plan_sha256"})
+    plan["nbb_plan_sha256"] = sha256_json({key: value for key, value in plan.items() if key not in {"nbb_plan_sha256", "created_at", "updated_at"}})
+    write_nbb_plan(run, plan)
+
+    with pytest.raises(ContractError, match="evidence refs are invalid"):
+        load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=True)
+
+
+def test_nbb_plan_rejects_missing_required_component(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path)
+    packages = load_page_packages(run, expected_run_id=run.name)
+    plan = build_nbb_plan(packages, run_id=run.name, selected_storyline_id="storyline.decision", approved_by="test")
+    plan["pages"][0]["components"] = plan["pages"][0]["components"][1:]
+    plan["pages"][0]["page_plan_sha256"] = sha256_json({key: value for key, value in plan["pages"][0].items() if key != "page_plan_sha256"})
+    plan["nbb_plan_sha256"] = sha256_json({key: value for key, value in plan.items() if key not in {"nbb_plan_sha256", "created_at", "updated_at"}})
+    write_nbb_plan(run, plan)
+
+    with pytest.raises(ContractError, match="required components are incomplete"):
+        load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=True)
+
+
+def test_pending_nbb_plan_invalidates_previous_downstream(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path)
+    _blueprint(run)
+    prepare_high_density(run)
+    assert run_high_density(run)["status"] == "completed"
+
+    packages = load_page_packages(run, expected_run_id=run.name)
+    pending = build_nbb_plan(packages, run_id=run.name)
+    write_nbb_plan(run, pending)
+    waiting = run_high_density(run)
+
+    assert waiting["status"] == "awaiting_user_decision"
+    assert not (run / "high_density_build/content_locks/P001.json").exists()
+    assert not (run / "high_density_build/svg/P001.svg").exists()
+    assert not (run / "high_density_build/pptx/deck_high_density.pptx").exists()
+
+
 def test_content_lock_contains_required_components_and_text_refs(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path)
     package = read_json(run / "page_packages/P001.json")
-    lock = build_content_lock(package, nbb_plan_sha256="a" * 64)
+    _, page_plan = _approved_page_plan(package)
+    lock = build_content_lock(package, page_plan, nbb_plan_sha256="a" * 64)
 
     assert lock["schema_version"] == "deck_content_lock.v2"
     assert lock["required_component_ids"]
@@ -244,7 +356,8 @@ def test_content_lock_contains_required_components_and_text_refs(tmp_path: Path)
 def test_blueprint_prompt_changes_with_locked_content(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path)
     package = read_json(run / "page_packages/P001.json")
-    lock = build_content_lock(package, nbb_plan_sha256="b" * 64)
+    _, page_plan = _approved_page_plan(package)
+    lock = build_content_lock(package, page_plan, nbb_plan_sha256="b" * 64)
     style = {"style_id": "cyber-01", "name": "Ink Cobalt", "palette": {"primary": "#419BFD"}, "grid": {"system": "12-column"}}
     changed = json.loads(json.dumps(lock))
     changed["customer_visible"]["title"] = "Changed locked title"
@@ -259,7 +372,8 @@ def test_blueprint_prompt_preserves_structured_content(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path)
     package = read_json(run / "page_packages/P001.json")
     package["customer_visible"]["body_blocks"][0] = {"title": "Metric table", "rows": [{"metric": "conversion", "value": "42%"}], "type": "table"}
-    lock = build_content_lock(package, nbb_plan_sha256="c" * 64)
+    _, page_plan = _approved_page_plan(package)
+    lock = build_content_lock(package, page_plan, nbb_plan_sha256="c" * 64)
     style = {"style_id": "cyber-01", "name": "Ink Cobalt", "palette": {}, "grid": {}}
 
     prompt = build_blueprint_prompt(lock, style, nbb_plan_sha256="c" * 64)
@@ -272,7 +386,8 @@ def test_blueprint_manifest_requires_prompt_before_image(tmp_path: Path) -> None
     run, _ = _make_run(tmp_path)
     image = _blueprint(run)
     package = read_json(run / "page_packages/P001.json")
-    lock = build_content_lock(package)
+    _, page_plan = _approved_page_plan(package)
+    lock = build_content_lock(package, page_plan)
 
     assert image.exists()
     with pytest.raises(BlueprintInvalid, match="prompt must be written"):
@@ -296,6 +411,7 @@ def test_production_uses_agent_svg_without_overwriting_it(tmp_path: Path) -> Non
     write_style_lock(run, run.name, "cyber-01", approved=True, approver="test")
     _blueprint(run)
     prepare_high_density(run)
+    _write_approved_nbb_plan(run)
     assert run_high_density(run)["current_stage"] == "page_scene"
 
     lock = read_json(run / "high_density_build/content_locks/P001.json")

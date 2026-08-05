@@ -11,9 +11,33 @@
     "status": {"enum": ["prepared", "building", "awaiting_agent_build", "awaiting_user_decision", "blocked", "failed", "completed"]},
     "current_page_id": {"type": "string"},
     "current_stage": {"type": "string"},
-    "next_action": {"type": "object"},
+    "next_action": {"$ref": "#/$defs/action"},
     "error": {"type": "object"},
     "updated_at": {"type": "string"}
   },
-  "additionalProperties": true
+  "additionalProperties": true,
+  "$defs": {
+    "action": {
+      "type": "object",
+      "required": ["kind"],
+      "properties": {
+        "kind": {"enum": ["none", "retry", "awaiting_user_decision", "agent_nbb_enrich", "agent_imagegen", "agent_visual_reconstruct", "agent_svg_repair", "agent_self_review", "agent_main_review"]},
+        "run_id": {"type": "string"},
+        "page_id": {"type": "string"},
+        "stage": {"type": "string"},
+        "input_ref": {"type": "string"},
+        "output_ref": {"type": "string"},
+        "input_refs": {"type": "array", "items": {"type": "string"}},
+        "output_refs": {"type": "array", "items": {"type": "string"}},
+        "required_schema": {"type": ["string", "object"]},
+        "acceptance_command": {"type": "string"},
+        "resume_command": {"type": "string"},
+        "reason": {"type": "string"},
+        "recommended_storyline_id": {"type": "string"},
+        "storyline_candidates": {"type": "array", "items": {"type": "object"}},
+        "approval_command": {"type": "string"}
+      },
+      "additionalProperties": true
+    }
+  }
 }

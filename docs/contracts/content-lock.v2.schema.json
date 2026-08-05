@@ -3,7 +3,7 @@
   "$id": "https://deck-master.local/contracts/content-lock.v2.schema.json",
   "title": "Deck Content Lock v2",
   "type": "object",
-  "required": ["schema_version", "run_id", "page_id", "page_package_ref", "page_package_sha256", "source_fingerprint", "customer_visible", "evidence_bindings", "enrichment", "required_component_ids", "required_text_refs", "density_target", "target_language", "content_lock_sha256", "created_at"],
+  "required": ["schema_version", "run_id", "page_id", "page_package_ref", "page_package_sha256", "source_fingerprint", "customer_visible", "speaker_notes", "asset_bindings", "evidence_bindings", "enrichment", "required_component_ids", "required_text_refs", "density_target", "target_language", "effective_language", "lineage", "content_lock_sha256", "created_at"],
   "properties": {
     "schema_version": {"const": "deck_content_lock.v2"},
     "run_id": {"type": "string", "minLength": 1},
@@ -14,17 +14,76 @@
     "customer_visible": {"type": "object"},
     "speaker_notes": {"type": "string"},
     "asset_bindings": {"type": "array", "items": {"type": "object"}},
-    "evidence_bindings": {"type": "array", "items": {"oneOf": [{"type": "string"}, {"type": "object"}]}},
-    "enrichment": {"type": "object"},
+    "evidence_bindings": {"type": "array", "minItems": 1, "items": {"type": "object"}},
+    "enrichment": {"$ref": "#/$defs/enrichment"},
     "required_component_ids": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
-    "required_text_refs": {"type": "array", "minItems": 1, "items": {"type": "object"}},
-    "density_target": {"type": "object"},
+    "required_text_refs": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/textRef"}},
+    "density_target": {"type": "object", "required": ["score", "band", "information_regions", "component_count", "evidence_count", "numeric_count"], "properties": {"score": {"type": "number", "minimum": 0}, "band": {"enum": ["low", "medium", "high"]}, "information_regions": {"type": "integer", "minimum": 3}, "component_count": {"type": "integer", "minimum": 1}, "evidence_count": {"type": "integer", "minimum": 1}, "numeric_count": {"type": "integer", "minimum": 0}}, "additionalProperties": false},
     "target_language": {"type": "string", "minLength": 1},
-    "effective_language": {"type": "string"},
-    "lineage": {"type": "object"},
+    "effective_language": {"type": "string", "minLength": 1},
+    "lineage": {"$ref": "#/$defs/lineage"},
     "content_lock_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
-    "created_at": {"type": "string"},
+    "created_at": {"type": "string", "minLength": 1},
     "updated_at": {"type": "string"}
   },
-  "additionalProperties": true
+  "additionalProperties": false,
+  "$defs": {
+    "textRef": {
+      "type": "object",
+      "required": ["ref", "priority", "required"],
+      "properties": {
+        "ref": {"type": "string", "minLength": 1},
+        "priority": {"enum": ["P0", "P1", "P2"]},
+        "required": {"const": true},
+        "structural": {"type": "boolean"},
+        "value": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "derivedClaim": {
+      "type": "object",
+      "required": ["claim_id", "origin", "evidence_refs", "derivation_note", "factual_value_added"],
+      "properties": {
+        "claim_id": {"type": "string", "minLength": 1},
+        "origin": {"enum": ["source", "derived", "structural_label"]},
+        "evidence_refs": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "derivation_note": {"type": "string", "minLength": 1},
+        "factual_value_added": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "enrichment": {
+      "type": "object",
+      "required": ["framework", "version", "storyline_id", "analysis", "evidence_ledger", "conclusion", "supporting_arguments", "caveat", "so_what", "handoff", "material_pool", "derived_claims", "structure_decisions", "component_plan", "evidence_coverage"],
+      "properties": {
+        "framework": {"const": "nbb"},
+        "version": {"type": "string", "minLength": 1},
+        "storyline_id": {"type": "string", "minLength": 1},
+        "analysis": {"type": "object"},
+        "evidence_ledger": {"type": "array", "minItems": 1, "items": {"type": "object"}},
+        "conclusion": {"type": "string", "minLength": 1},
+        "supporting_arguments": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "caveat": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "so_what": {"type": "string", "minLength": 1},
+        "handoff": {"type": "string", "minLength": 1},
+        "material_pool": {"type": "object"},
+        "derived_claims": {"type": "array", "items": {"$ref": "#/$defs/derivedClaim"}},
+        "structure_decisions": {"type": "array", "items": {"type": "object"}},
+        "component_plan": {"type": "array", "minItems": 1, "items": {"type": "object"}},
+        "evidence_coverage": {"type": "object", "required": ["facts", "numeric_values", "derived_claims"], "properties": {"facts": {"type": "number", "minimum": 0, "maximum": 1}, "numeric_values": {"type": "number", "minimum": 0, "maximum": 1}, "derived_claims": {"type": "number", "minimum": 0, "maximum": 1}}, "additionalProperties": false}
+      },
+      "additionalProperties": false
+    },
+    "lineage": {
+      "type": "object",
+      "required": ["page_package_sha256", "nbb_plan_sha256", "selected_storyline_id", "nbb_page_plan_sha256"],
+      "properties": {
+        "page_package_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "nbb_plan_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "selected_storyline_id": {"type": "string", "minLength": 1},
+        "nbb_page_plan_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      },
+      "additionalProperties": false
+    }
+  }
 }

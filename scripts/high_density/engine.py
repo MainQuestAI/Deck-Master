@@ -19,7 +19,18 @@ from .blueprint import (
     ensure_blueprint_manifest,
     load_blueprint_manifest,
 )
-from .content import LOCKS_DIR, NBB_PLAN_PATH, build_content_lock, build_nbb_plan, load_content_lock, load_page_packages, write_content_lock, write_nbb_plan
+from .content import (
+    LOCKS_DIR,
+    NBB_PLAN_PATH,
+    approve_nbb_plan,
+    build_content_lock,
+    build_nbb_plan,
+    load_content_lock,
+    load_nbb_plan,
+    load_page_packages,
+    write_content_lock,
+    write_nbb_plan,
+)
 from .contracts import ContractError, assert_valid, assert_v2, read_json as read_contract_json, run_relative, safe_run_path, sha256_file, sha256_json, utc_now, write_json as write_contract_json
 from .pptx import PptxEditabilityError, compile_pptx, readback_pptx, pptx_path, readback_path, trace_path
 from .scene import build_fixture_scene, load_scene, scene_path, validate_scene_content, write_scene
@@ -157,6 +168,7 @@ def _waiting(
     output_ref: str,
     output_refs: list[str] | None = None,
     reason: str,
+    details: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     waiting_status = "awaiting_user_decision" if kind == "awaiting_user_decision" else "awaiting_agent_build"
     resolved_output_refs = list(dict.fromkeys([output_ref, *(output_refs or [])]))
@@ -174,6 +186,8 @@ def _waiting(
         "resume_command": _resume_command(root),
         "reason": reason,
     }
+    if details:
+        next_action.update(details)
     payload = _status_payload(root, waiting_status, page_id=page_id, stage=stage, next_action=next_action)
     _write_status(root, payload)
     append_event(root, f"high_density.{waiting_status}", target=page_id or _run_id(root), payload_ref=STATUS_PATH.as_posix(), data=next_action)
@@ -318,22 +332,10 @@ def _high_density_source_fingerprint(manifest: dict[str, Any], style_lock: dict[
     )
 
 
-def _validate_nbb_plan_lineage(plan: dict[str, Any], packages: list[dict[str, Any]], run_id: str) -> None:
-    if str(plan.get("run_id") or "") != run_id:
-        raise ContractError(f"NBB plan run_id mismatch: expected {run_id}")
-    try:
-        expected_pages = {(str(package.get("page_id") or ""), int(package.get("order") or 0)) for package in packages}
-        plan_pages = plan.get("pages")
-        if not isinstance(plan_pages, list):
-            raise ValueError("pages must be an array")
-        actual_pages = {(str(page.get("page_id") or ""), int(page.get("order") or 0)) for page in plan_pages if isinstance(page, dict)}
-        page_count = int(plan.get("page_count") or 0)
-    except (TypeError, ValueError) as exc:
-        raise ContractError("NBB plan page coverage is malformed") from exc
-    if page_count != len(expected_pages) or actual_pages != expected_pages:
-        raise ContractError("NBB plan page coverage is stale for the current Page Packages")
-    if plan.get("blocked_pages"):
-        raise ContractError("NBB plan contains blocked pages")
+def _validate_nbb_plan_lineage(root: Path, plan: dict[str, Any], packages: list[dict[str, Any]], run_id: str) -> None:
+    loaded = load_nbb_plan(root, packages=packages, expected_run_id=run_id, require_approved=True)
+    if loaded.get("nbb_plan_sha256") != plan.get("nbb_plan_sha256"):
+        raise ContractError("NBB plan changed while validating lineage")
 
 
 def _refresh_build_manifest_lineage(root: Path, manifest: dict[str, Any], packages: list[dict[str, Any]], style_lock: dict[str, Any], nbb_plan_sha256: str) -> dict[str, Any]:
@@ -375,15 +377,29 @@ def _prepare_high_density(run_dir: str | Path, *, output_profile: str = "product
         style_selection_pending = True
         write_style_lock(root, _run_id(root), "cyber-01", approved=False)
         style_lock = load_style_lock(root, require_approved=False, expected_run_id=_run_id(root))
-    try:
-        nbb_plan = build_nbb_plan(packages, run_id=_run_id(root))
-        write_nbb_plan(root, nbb_plan)
-    except ContractError as exc:
-        raise HighDensityBuildError("HD_CONTENT_LOCK_INVALID", str(exc), stage="content_lock") from exc
+    nbb_plan_sha256 = "0" * 64
     lock_paths: list[str] = []
-    for package in packages:
-        path = write_content_lock(root, package, nbb_plan_sha256=str(nbb_plan["nbb_plan_sha256"]))
-        lock_paths.append(run_relative(root, path))
+    if mode in {"fixture", "dev"}:
+        try:
+            nbb_plan = build_nbb_plan(
+                packages,
+                run_id=_run_id(root),
+                selected_storyline_id="storyline.decision",
+                approved_by="fixture",
+            )
+            write_nbb_plan(root, nbb_plan)
+            nbb_plan_sha256 = str(nbb_plan["nbb_plan_sha256"])
+            page_plans = {str(page["page_id"]): page for page in nbb_plan["pages"]}
+            for package in packages:
+                path = write_content_lock(
+                    root,
+                    package,
+                    page_plans[str(package["page_id"])],
+                    nbb_plan_sha256=nbb_plan_sha256,
+                )
+                lock_paths.append(run_relative(root, path))
+        except ContractError as exc:
+            raise HighDensityBuildError("HD_CONTENT_LOCK_INVALID", str(exc), stage="content_lock") from exc
     builder_manifest = build_manifest_v2(
         run_id=_run_id(root),
         packages=packages,
@@ -402,7 +418,7 @@ def _prepare_high_density(run_dir: str | Path, *, output_profile: str = "product
         now=None,
     )
     builder_manifest["run_mode"] = _mode(root)
-    builder_manifest["source_fingerprint"] = _high_density_source_fingerprint(builder_manifest, style_lock, str(nbb_plan["nbb_plan_sha256"]))
+    builder_manifest["source_fingerprint"] = _high_density_source_fingerprint(builder_manifest, style_lock, nbb_plan_sha256)
     builder_manifest["pages"] = [
         {
             **page,
@@ -615,6 +631,25 @@ def _invalidate_page_scene_downstream(root: Path, page_id: str) -> None:
         _remove_if_exists(path)
 
 
+def _invalidate_nbb_downstream(root: Path, packages: list[dict[str, Any]], *, remove_plan: bool = True) -> None:
+    if remove_plan:
+        _remove_if_exists(root / NBB_PLAN_PATH)
+    for package in packages:
+        page_id = str(package.get("page_id") or "")
+        _remove_if_exists(root / LOCKS_DIR / f"{page_id}.json")
+        _remove_if_exists(root / LOCKS_DIR / f"{page_id}.content_lock.json")
+        _invalidate_page_downstream(root, page_id)
+
+
+def _reset_nbb_downstream(root: Path, manifest: dict[str, Any], packages: list[dict[str, Any]], style_lock: dict[str, Any]) -> dict[str, Any]:
+    """Remove artifacts that could have been produced from an unapproved NBB state."""
+    _invalidate_nbb_downstream(root, packages, remove_plan=False)
+    refreshed = _refresh_build_manifest_lineage(root, manifest, packages, style_lock, "0" * 64)
+    refreshed["status"] = "building"
+    write_contract_json(root / BUILD_MANIFEST_PATH, refreshed)
+    return refreshed
+
+
 def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
     root = ensure_run_dirs(run_dir)
     _ensure_dirs(root)
@@ -634,21 +669,85 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
         style_lock = load_style_lock(root, require_approved=True, expected_run_id=_run_id(root))
     except StyleSelectionRequired as exc:
         return _waiting(root, page_id="", stage="style_lock", kind="awaiting_user_decision", input_ref="high_density_build/style/style_options.json", output_ref="high_density_build/style/style_lock.json", reason=str(exc))
+    manifest["status"] = "building"
+    write_contract_json(root / BUILD_MANIFEST_PATH, manifest)
     nbb_plan_sha256 = "0" * 64
     nbb_plan_file = root / NBB_PLAN_PATH
     if not nbb_plan_file.exists():
-        return _waiting(root, page_id="", stage="content_lock", kind="agent_nbb_enrich", input_ref="page_packages/", output_ref=NBB_PLAN_PATH.as_posix(), reason="Run the NBB content enrichment and evidence audit, then write the approved nbb_plan.v1 before ImageGen.")
-    if nbb_plan_file.exists():
-        try:
-            nbb_plan = read_contract_json(nbb_plan_file)
-            assert_v2("nbb_plan", nbb_plan)
-            expected_nbb_sha = sha256_json({key: value for key, value in nbb_plan.items() if key not in {"nbb_plan_sha256", "created_at", "updated_at"}})
-            if str(nbb_plan.get("nbb_plan_sha256") or "") != expected_nbb_sha:
-                raise ContractError("NBB plan hash is stale")
-            _validate_nbb_plan_lineage(nbb_plan, packages, _run_id(root))
-            nbb_plan_sha256 = expected_nbb_sha
-        except ContractError as exc:
-            raise HighDensityBuildError("HD_CONTENT_LOCK_INVALID", str(exc), stage="content_lock") from exc
+        manifest = _reset_nbb_downstream(root, manifest, packages, style_lock)
+        return _waiting(
+            root,
+            page_id="",
+            stage="content_lock",
+            kind="agent_nbb_enrich",
+            input_ref="page_packages/",
+            output_ref=NBB_PLAN_PATH.as_posix(),
+            reason="Run the content-specific NBB enrichment and evidence audit, then write a pending deck_nbb_plan.v1 with two or three candidate storylines.",
+        )
+    try:
+        pending_plan = load_nbb_plan(root, packages=packages, expected_run_id=_run_id(root), require_approved=False)
+    except ContractError as exc:
+        message = str(exc)
+        if "Page Package hash is stale" in message or "page coverage is stale" in message:
+            _invalidate_nbb_downstream(root, packages)
+            manifest = _refresh_build_manifest_lineage(root, manifest, packages, style_lock, "0" * 64)
+            manifest["status"] = "building"
+            write_contract_json(root / BUILD_MANIFEST_PATH, manifest)
+            append_event(root, "high_density.nbb_invalidated", target=_run_id(root), payload_ref=NBB_PLAN_PATH.as_posix(), data={"reason": "page_package_changed"})
+            return _waiting(
+                root,
+                page_id="",
+                stage="content_lock",
+                kind="agent_nbb_enrich",
+                input_ref="page_packages/",
+                output_ref=NBB_PLAN_PATH.as_posix(),
+                reason=f"The Page Packages changed, so the previous NBB plan and all downstream artifacts were invalidated: {message}",
+            )
+        manifest = _reset_nbb_downstream(root, manifest, packages, style_lock)
+        return _waiting(
+            root,
+            page_id="",
+            stage="content_lock",
+            kind="agent_nbb_enrich",
+            input_ref="page_packages/",
+            output_ref=NBB_PLAN_PATH.as_posix(),
+            reason=f"Regenerate the malformed or stale NBB plan before content locks can be created: {message}",
+        )
+    selection = pending_plan.get("selection") or {}
+    if str(selection.get("status") or "") != "approved":
+        manifest = _reset_nbb_downstream(root, manifest, packages, style_lock)
+        candidates = [
+            {
+                "storyline_id": str(item.get("storyline_id") or ""),
+                "management_conclusion": str(item.get("management_conclusion") or ""),
+                "audience": str(item.get("audience") or ""),
+                "visual_potential": str(item.get("visual_potential") or ""),
+                "not_recommended_because": str(item.get("not_recommended_because") or ""),
+            }
+            for item in pending_plan.get("storyline_candidates") or []
+        ]
+        recommended_id = str(selection.get("recommended_storyline_id") or "")
+        return _waiting(
+            root,
+            page_id="",
+            stage="content_lock",
+            kind="awaiting_user_decision",
+            input_ref=NBB_PLAN_PATH.as_posix(),
+            output_ref=NBB_PLAN_PATH.as_posix(),
+            reason="Select one NBB storyline candidate. The same approved plan can resume without asking again until the Page Packages change.",
+            details={
+                "required_schema": "deck_nbb_plan.v1",
+                "recommended_storyline_id": recommended_id,
+                "storyline_candidates": candidates,
+                "approval_command": f"deck-master build retry --run-dir {root} --profile high-density --stage content_lock --storyline-id {recommended_id}",
+            },
+        )
+    try:
+        nbb_plan = load_nbb_plan(root, packages=packages, expected_run_id=_run_id(root), require_approved=True)
+        nbb_plan_sha256 = str(nbb_plan["nbb_plan_sha256"])
+    except ContractError as exc:
+        raise HighDensityBuildError("HD_CONTENT_LOCK_INVALID", str(exc), stage="content_lock") from exc
+    page_plans = {str(page.get("page_id") or ""): page for page in nbb_plan.get("pages") or [] if isinstance(page, dict)}
     refreshed_manifest = _refresh_build_manifest_lineage(root, manifest, packages, style_lock, nbb_plan_sha256)
     if (
         refreshed_manifest.get("source_fingerprint") != manifest.get("source_fingerprint")
@@ -664,20 +763,23 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
     page_records: list[dict[str, Any]] = []
     for package in packages:
         page_id = str(package["page_id"])
+        page_plan = page_plans.get(page_id)
+        if page_plan is None:
+            raise HighDensityBuildError("HD_CONTENT_LOCK_INVALID", f"NBB page plan is missing on page {page_id}", stage="content_lock", page_id=page_id)
         try:
             try:
                 lock = load_content_lock(root, page_id, expected_run_id=_run_id(root))
             except ContractError:
-                write_content_lock(root, package, nbb_plan_sha256=nbb_plan_sha256)
+                write_content_lock(root, package, page_plan, nbb_plan_sha256=nbb_plan_sha256)
                 lock = load_content_lock(root, page_id, expected_run_id=_run_id(root))
-            current_lock = build_content_lock(package, nbb_plan_sha256=nbb_plan_sha256)
+            current_lock = build_content_lock(package, page_plan, nbb_plan_sha256=nbb_plan_sha256)
             lock_stale = (
                 lock.get("page_package_sha256") != current_lock.get("page_package_sha256")
                 or lock.get("content_lock_sha256") != current_lock.get("content_lock_sha256")
                 or str((lock.get("lineage") or {}).get("nbb_plan_sha256") or "") != nbb_plan_sha256
             )
             if lock_stale:
-                write_content_lock(root, package, nbb_plan_sha256=nbb_plan_sha256)
+                write_content_lock(root, package, page_plan, nbb_plan_sha256=nbb_plan_sha256)
                 _invalidate_page_downstream(root, page_id)
                 lock = load_content_lock(root, page_id, expected_run_id=_run_id(root))
                 append_event(
@@ -955,7 +1057,13 @@ def _remove_if_exists(path: Path) -> None:
         path.unlink()
 
 
-def _retry_high_density(run_dir: str | Path, *, page_id: str, stage: str | None = None) -> dict[str, Any]:
+def _retry_high_density(
+    run_dir: str | Path,
+    *,
+    page_id: str = "",
+    stage: str | None = None,
+    storyline_id: str = "",
+) -> dict[str, Any]:
     root = Path(run_dir).expanduser().resolve()
     manifest_path = root / BUILD_MANIFEST_PATH
     if not manifest_path.exists():
@@ -965,51 +1073,65 @@ def _retry_high_density(run_dir: str | Path, *, page_id: str, stage: str | None 
         assert_valid("build_manifest", manifest)
     except ContractError as exc:
         raise HighDensityBuildError("HD_RETRY_TARGET_INVALID", str(exc), stage=stage or "content_lock", page_id=page_id) from exc
-    allowed_pages = {str(item.get("page_id") or "") for item in manifest.get("pages", []) if isinstance(item, dict)}
-    if page_id not in allowed_pages:
-        raise HighDensityBuildError("HD_RETRY_TARGET_INVALID", f"retry page_id is not registered in the build manifest: {page_id}", stage=stage or "content_lock", page_id=page_id)
     if stage and stage not in REQUIRED_STAGES:
         raise HighDensityBuildError("HD_STAGE_UNSUPPORTED", f"unsupported high-density stage: {stage}")
     target_stage = stage or "blueprint"
+    allowed_pages = {str(item.get("page_id") or "") for item in manifest.get("pages", []) if isinstance(item, dict)}
+    if target_stage == "content_lock" and not page_id:
+        if storyline_id:
+            try:
+                approve_nbb_plan(root, storyline_id, approver="user")
+            except ContractError as exc:
+                raise HighDensityBuildError("HD_NBB_SELECTION_INVALID", str(exc), stage="content_lock") from exc
+        elif not (root / NBB_PLAN_PATH).exists():
+            raise HighDensityBuildError("HD_NBB_SELECTION_INVALID", "deck-scope content_lock retry requires an NBB plan and storyline_id", stage="content_lock")
+        target_page_ids = sorted(allowed_pages)
+    else:
+        if not page_id:
+            raise HighDensityBuildError("HD_RETRY_TARGET_INVALID", f"retry stage {target_stage} requires --page-id", stage=target_stage)
+        if page_id not in allowed_pages:
+            raise HighDensityBuildError("HD_RETRY_TARGET_INVALID", f"retry page_id is not registered in the build manifest: {page_id}", stage=stage or "content_lock", page_id=page_id)
+        target_page_ids = [page_id]
     stages = list(REQUIRED_STAGES)
     start = stages.index(target_stage)
-    for downstream in stages[start:]:
-        if downstream == "content_lock":
-            _remove_if_exists(root / LOCKS_DIR / f"{page_id}.json")
-            _remove_if_exists(root / LOCKS_DIR / f"{page_id}.content_lock.json")
-        elif downstream == "blueprint":
-            blueprint = blueprint_path(root, page_id)
-            if blueprint is not None:
-                _remove_if_exists(blueprint)
-            _remove_if_exists(root / BLUEPRINT_MANIFEST_DIR / f"{page_id}.manifest.json")
-            _remove_if_exists(root / BLUEPRINT_MANIFEST_DIR / f"{page_id}.blueprint_manifest.json")
-            _remove_if_exists(root / "high_density_build" / "prompts" / f"{page_id}.blueprint_prompt.json")
-        elif downstream == "page_scene":
-            _remove_if_exists(scene_path(root, page_id))
-            _remove_if_exists(root / "high_density_build" / "scenes" / f"{page_id}.page_scene.json")
-        elif downstream == "svg":
-            _remove_if_exists(svg_path(root, page_id))
-            _remove_if_exists(preview_path(root, page_id))
-        elif downstream == "visual_review":
-            _remove_if_exists(review_path(root, page_id))
-            _remove_if_exists(root / "high_density_build" / "reviews" / f"{page_id}.metrics.json")
-            _remove_if_exists(root / "high_density_build" / "reviews" / f"{page_id}.svg_vs_pptx.metrics.json")
-        elif downstream in {"pptx", "readback", "handback"}:
-            _remove_if_exists(pptx_path(root))
-            _remove_if_exists(trace_path(root))
-            _remove_if_exists(readback_path(root))
-            _remove_if_exists(root / MANIFEST_PATH)
-            _remove_if_exists(root / ARTIFACT_MANIFEST_PATH)
-            _remove_if_exists(root / RENDER_RESULT_PATH)
+    for target_page_id in target_page_ids:
+        for downstream in stages[start:]:
+            if downstream == "content_lock":
+                _remove_if_exists(root / LOCKS_DIR / f"{target_page_id}.json")
+                _remove_if_exists(root / LOCKS_DIR / f"{target_page_id}.content_lock.json")
+            elif downstream == "blueprint":
+                blueprint = blueprint_path(root, target_page_id)
+                if blueprint is not None:
+                    _remove_if_exists(blueprint)
+                _remove_if_exists(root / BLUEPRINT_MANIFEST_DIR / f"{target_page_id}.manifest.json")
+                _remove_if_exists(root / BLUEPRINT_MANIFEST_DIR / f"{target_page_id}.blueprint_manifest.json")
+                _remove_if_exists(root / "high_density_build" / "prompts" / f"{target_page_id}.blueprint_prompt.json")
+            elif downstream == "page_scene":
+                _remove_if_exists(scene_path(root, target_page_id))
+                _remove_if_exists(root / "high_density_build" / "scenes" / f"{target_page_id}.page_scene.json")
+            elif downstream == "svg":
+                _remove_if_exists(svg_path(root, target_page_id))
+                _remove_if_exists(preview_path(root, target_page_id))
+            elif downstream == "visual_review":
+                _remove_if_exists(review_path(root, target_page_id))
+                _remove_if_exists(root / "high_density_build" / "reviews" / f"{target_page_id}.metrics.json")
+                _remove_if_exists(root / "high_density_build" / "reviews" / f"{target_page_id}.svg_vs_pptx.metrics.json")
+    if target_stage in {"content_lock", "blueprint", "page_scene", "svg", "visual_review", "pptx", "readback", "handback"}:
+        _remove_if_exists(pptx_path(root))
+        _remove_if_exists(trace_path(root))
+        _remove_if_exists(readback_path(root))
+        _remove_if_exists(root / MANIFEST_PATH)
+        _remove_if_exists(root / ARTIFACT_MANIFEST_PATH)
+        _remove_if_exists(root / RENDER_RESULT_PATH)
     status = _status_payload(root, "building", page_id=page_id, stage=target_stage, next_action={"kind": "retry", "page_id": page_id, "stage": target_stage, "resume_command": _resume_command(root)})
     _write_status(root, status)
     append_event(root, "high_density.retry_started", target=page_id, payload_ref=STATUS_PATH.as_posix(), data={"stage": target_stage})
     return _run_high_density(root)
 
 
-def retry_high_density(run_dir: str | Path, *, page_id: str, stage: str | None = None) -> dict[str, Any]:
+def retry_high_density(run_dir: str | Path, *, page_id: str = "", stage: str | None = None, storyline_id: str = "") -> dict[str, Any]:
     try:
-        return _retry_high_density(run_dir, page_id=page_id, stage=stage)
+        return _retry_high_density(run_dir, page_id=page_id, stage=stage, storyline_id=storyline_id)
     except HighDensityBuildError as error:
         record_high_density_failure(run_dir, error)
         raise
