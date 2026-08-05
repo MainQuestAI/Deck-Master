@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import html
+import math
 import re
 import shutil
 import subprocess
@@ -12,7 +13,7 @@ from xml.etree import ElementTree
 from .blueprint import load_blueprint_manifest
 from .contracts import ContractError, assert_v2, read_json, safe_run_path, sha256_file, utc_now, write_json
 from .scene import load_scene
-from .visual import VisualMetricsError, compute_visual_metrics, normalize_blueprint, write_visual_metrics
+from .visual import VisualMetricsError, _svg_geometry_bbox, compute_visual_metrics, normalize_blueprint, write_visual_metrics
 
 SVG_DIR = Path("high_density_build/svg")
 PREVIEW_DIR = Path("high_density_build/previews")
@@ -21,6 +22,7 @@ COMPARISON_DIR = Path("high_density_build/comparisons")
 CANVAS_WIDTH = 1672
 CANVAS_HEIGHT = 941
 FORBIDDEN_TAGS = {"foreignObject", "script", "iframe", "style"}
+UNSUPPORTED_TAGS = {"linearGradient", "radialGradient", "filter", "mask", "clipPath", "pattern", "use"}
 
 
 class SvgVisualError(ContractError):
@@ -291,6 +293,9 @@ def validate_svg(path: Path, *, page_id: str = "") -> dict[str, Any]:
     forbidden = sorted(tags & FORBIDDEN_TAGS)
     if forbidden:
         raise SvgVisualError(f"forbidden SVG elements: {', '.join(forbidden)}", page_id=page_id)
+    unsupported = sorted(tags & UNSUPPORTED_TAGS)
+    if unsupported:
+        raise SvgVisualError(f"unsupported SVG element {', '.join(unsupported)} requires native compiler support", page_id=page_id, code="HD_SVG_UNSUPPORTED_ELEMENT")
     if root.tag.split("}")[-1] != "svg" or root.get("viewBox") != f"0 0 {CANVAS_WIDTH} {CANVAS_HEIGHT}":
         raise SvgVisualError("SVG canvas or viewBox is invalid", page_id=page_id)
     if root.get("data-pptx-page-role") != "content":
@@ -300,19 +305,53 @@ def validate_svg(path: Path, *, page_id: str = "") -> dict[str, Any]:
     for node in root.iter():
         tag = str(node.tag).split("}")[-1]
         node_id = str(node.get("id") or "")
+        for raw_name in node.attrib:
+            attr_name = str(raw_name).split("}")[-1].lower()
+            if attr_name.startswith("on"):
+                raise SvgVisualError(f"SVG event attribute is blocked: {attr_name} on {node_id or tag}", page_id=page_id, code="HD_SVG_UNSAFE_ATTRIBUTE")
+            if attr_name in {"href", "xlink:href"} and tag != "image":
+                raise SvgVisualError(f"external SVG href is blocked on {node_id or tag}", page_id=page_id, code="HD_SVG_UNSAFE_ATTRIBUTE")
         if node_id:
             if node_id in ids:
                 raise SvgVisualError(f"duplicate SVG element id: {node_id}", page_id=page_id)
             ids.add(node_id)
         if node.get("style") or node.get("class"):
             raise SvgVisualError("external CSS/style attributes are blocked", page_id=page_id)
-        if str(node.get("opacity") or "1") in {"0", "0.0"}:
+        if node.get("transform"):
+            raise SvgVisualError(f"per-element SVG transforms are unsupported: {node_id}", page_id=page_id, code="HD_SVG_UNSUPPORTED_ELEMENT")
+        if node.get("opacity") is not None:
+            try:
+                opacity = float(str(node.get("opacity")).removesuffix("px"))
+            except (TypeError, ValueError) as exc:
+                raise SvgVisualError(f"SVG opacity is invalid: {node_id}", page_id=page_id) from exc
+            if not math.isfinite(opacity) or opacity <= 0 or opacity > 1:
+                raise SvgVisualError(f"SVG opacity must be between 0 and 1: {node_id}", page_id=page_id)
+        for attribute in ("x", "y", "x1", "y1", "x2", "y2", "cx", "cy", "r", "rx", "ry", "width", "height", "stroke-width", "font-size"):
+            if node.get(attribute) is None:
+                continue
+            try:
+                value = float(str(node.get(attribute)).removesuffix("px"))
+            except (TypeError, ValueError) as exc:
+                raise SvgVisualError(f"SVG {attribute} is invalid: {node_id}", page_id=page_id) from exc
+            if not math.isfinite(value) or (attribute in {"width", "height", "r", "rx", "ry", "stroke-width", "font-size"} and value < 0):
+                raise SvgVisualError(f"SVG {attribute} is out of range: {node_id}", page_id=page_id)
+        for paint in ("fill", "stroke"):
+            value = str(node.get(paint) or "").strip()
+            if value and value.lower() not in {"none", "transparent"} and not re.fullmatch(r"#[0-9a-fA-F]{6}", value):
+                raise SvgVisualError(f"SVG {paint} is outside the supported native palette: {node_id}", page_id=page_id, code="HD_SVG_UNSUPPORTED_STYLE")
+        if node.get("opacity") is not None and str(node.get("opacity")) in {"0", "0.0"}:
             raise SvgVisualError(f"hidden SVG element is blocked: {node_id}", page_id=page_id)
         if tag in visible_tags:
             if not node_id:
                 raise SvgVisualError(f"visible SVG element must have a stable element id: {tag}", page_id=page_id)
             if not str(node.get("data-pptx-bounds") or ""):
                 raise SvgVisualError(f"visible SVG element is missing data-pptx-bounds: {node_id}", page_id=page_id)
+            try:
+                bbox = _svg_geometry_bbox(node)
+            except VisualMetricsError as exc:
+                raise SvgVisualError(f"SVG element geometry is invalid: {node_id}", page_id=page_id) from exc
+            if bbox["x"] < -0.01 or bbox["y"] < -0.01 or bbox["x"] + bbox["w"] > CANVAS_WIDTH + 0.01 or bbox["y"] + bbox["h"] > CANVAS_HEIGHT + 0.01:
+                raise SvgVisualError(f"SVG element overflows the canvas: {node_id}", page_id=page_id)
         if tag != "image":
             continue
         if node.get("data-pptx-asset") != "registered":
@@ -382,6 +421,10 @@ def build_visual_review(root: Path, scene: dict[str, Any], *, mode: str) -> Path
     return path
 
 
+def _metrics_projection(metrics: dict[str, Any]) -> dict[str, Any]:
+    return {key: metrics.get(key) for key in ("schema_version", "comparison", "inputs", "thresholds", "values", "coverage", "geometry", "findings", "status")}
+
+
 def load_visual_review(root: Path, page_id: str) -> dict[str, Any]:
     review = read_json(review_path(root, page_id))
     if review.get("schema_version") != "deck_visual_review.v2" or review.get("page_id") != page_id:
@@ -396,11 +439,12 @@ def load_visual_review(root: Path, page_id: str) -> dict[str, Any]:
     except ContractError as exc:
         raise SvgVisualError(f"visual review metrics path is invalid on page {page_id}", page_id=page_id) from exc
     metrics = read_json(metrics_file)
+    try:
+        assert_v2("visual_metrics", metrics)
+    except ContractError as exc:
+        raise SvgVisualError(f"visual review metrics contract is invalid on page {page_id}", page_id=page_id) from exc
     if sha256_file(metrics_file) != str(review.get("metrics_sha256") or "") or metrics.get("status") != "pass":
         raise SvgVisualError(f"visual review metrics are stale or failed on page {page_id}", page_id=page_id)
-    values = metrics.get("values") or {}
-    if float(values.get("text_masked_ssim") or 0) < 0.92 or float(values.get("bbox_max_delta_px") or 0) > 2.0:
-        raise SvgVisualError(f"visual review fidelity gate failed on page {page_id}", page_id=page_id)
     current_svg = svg_path(root, page_id)
     try:
         current_svg_sha = sha256_file(current_svg)
@@ -416,6 +460,22 @@ def load_visual_review(root: Path, page_id: str) -> dict[str, Any]:
         raise SvgVisualError(f"visual review run_id is stale on page {page_id}", page_id=page_id)
     if str(review.get("blueprint_sha256") or "") != str(scene.get("blueprint_sha256") or ""):
         raise SvgVisualError(f"visual review is stale for blueprint on page {page_id}", page_id=page_id)
+    current_preview = preview_path(root, page_id)
+    if not current_preview.exists() or str(review.get("svg_preview_sha256") or "") != sha256_file(current_preview):
+        raise SvgVisualError(f"visual review is stale for SVG preview on page {page_id}", page_id=page_id)
+    try:
+        blueprint_manifest = load_blueprint_manifest(root, page_id, expected_run_id=str(scene.get("run_id") or ""))
+        blueprint_preview = normalize_blueprint(root, blueprint_manifest)
+        if str(review.get("blueprint_preview_sha256") or "") != sha256_file(blueprint_preview):
+            raise SvgVisualError(f"visual review is stale for blueprint preview on page {page_id}", page_id=page_id)
+        computed = compute_visual_metrics(root, scene, blueprint_preview, current_preview)
+    except (ContractError, VisualMetricsError, OSError) as exc:
+        raise SvgVisualError(f"visual review metrics could not be recomputed on page {page_id}", page_id=page_id) from exc
+    if _metrics_projection(metrics) != _metrics_projection(computed):
+        raise SvgVisualError(f"visual review metrics are not tool-computed for current artifacts on page {page_id}", page_id=page_id)
+    values = computed.get("values") or {}
+    if float(values.get("text_masked_ssim") or 0) < 0.92 or float(values.get("bbox_max_delta_px") or 0) > 2.0:
+        raise SvgVisualError(f"visual review fidelity gate failed on page {page_id}", page_id=page_id)
     return review
 
 

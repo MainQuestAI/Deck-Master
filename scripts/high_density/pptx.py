@@ -15,8 +15,8 @@ from pptx.dml.color import RGBColor
 from pptx.oxml.ns import qn
 from pptx.util import Inches, Pt
 
-from .contracts import ContractError, assert_v2, read_json, sha256_file, utc_now, write_json
-from .svg import svg_path, wrap_text, _estimated_width
+from .contracts import ContractError, assert_v2, read_json, sha256_file, sha256_json, utc_now, write_json
+from .svg import svg_path, validate_svg, wrap_text, _estimated_width
 from .visual import VisualMetricsError, compute_visual_metrics, write_visual_metrics
 
 PPTX_DIR = Path("high_density_build/pptx")
@@ -414,11 +414,15 @@ def compile_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dict
     for scene in scenes:
         try:
             assert_v2("page_scene", scene)
-            assert_v2("content_lock", locks.get(str(scene.get("page_id") or ""), {}))
+            page_id = str(scene.get("page_id") or "")
+            lock = locks.get(page_id, {})
+            assert_v2("content_lock", lock)
         except ContractError as exc:
             raise PptxEditabilityError(f"PPTX compiler input contract is invalid: {exc}") from exc
         if str(scene.get("run_id") or "") != run_id:
             raise PptxEditabilityError("PPTX compiler scene run_ids are inconsistent")
+        if str(lock.get("run_id") or "") != run_id or str(lock.get("page_id") or "") != page_id:
+            raise PptxEditabilityError(f"PPTX compiler content lock identity is inconsistent on page {page_id}")
     presentation = Presentation()
     presentation.slide_width = Inches(SLIDE_WIDTH_IN)
     presentation.slide_height = Inches(SLIDE_HEIGHT_IN)
@@ -429,6 +433,10 @@ def compile_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dict
         svg_file = svg_path(root, page_id)
         if not svg_file.exists():
             raise PptxEditabilityError(f"approved SVG is missing on page {page_id}")
+        try:
+            validate_svg(svg_file, page_id=page_id)
+        except ContractError as exc:
+            raise PptxEditabilityError(f"approved SVG validation failed on page {page_id}: {exc}") from exc
         slide = presentation.slides.add_slide(blank_layout)
         trace: list[dict[str, Any]] = []
         elements = _svg_elements(svg_file, scene, (asset_paths_by_page or {}).get(page_id, {}))
@@ -459,7 +467,19 @@ def compile_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dict
     output.parent.mkdir(parents=True, exist_ok=True)
     presentation.save(output)
     trace_file = trace_path(root)
-    trace_payload = {"schema_version": "deck_svg_to_drawingml_trace.v1", "run_id": run_id, "pptx_sha256": sha256_file(output), "pages": trace_pages, "elements": [item for page in trace_pages for item in page["elements"]], "coverage": {"p0_p1": "pass"}, "created_at": utc_now()}
+    svg_hashes = {str(page["page_id"]): str(page["svg_sha256"]) for page in trace_pages}
+    trace_payload = {
+        "schema_version": "deck_svg_to_drawingml_trace.v1",
+        "run_id": run_id,
+        "page_id": "deck",
+        "svg_sha256": sha256_json(svg_hashes),
+        "pptx_sha256": sha256_file(output),
+        "pages": trace_pages,
+        "elements": [item for page in trace_pages for item in page["elements"]],
+        "coverage": {"p0_p1": "pass"},
+        "created_at": utc_now(),
+    }
+    assert_v2("svg_to_drawingml_trace", trace_payload)
     write_json(trace_file, trace_payload)
     return output, trace_file
 
@@ -498,13 +518,26 @@ def readback_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dic
     presentation = Presentation(output)
     try:
         trace_payload = read_json(trace_path(root))
+        assert_v2("svg_to_drawingml_trace", trace_payload)
     except ContractError as exc:
         raise PptxEditabilityError("SVG-to-DrawingML trace is missing before readback") from exc
+    run_id = str(scenes[0]["run_id"]) if scenes else ""
+    if str(trace_payload.get("run_id") or "") != run_id:
+        raise PptxEditabilityError("SVG-to-DrawingML trace run_id is stale")
+    if str(trace_payload.get("pptx_sha256") or "") != sha256_file(output):
+        raise PptxEditabilityError("SVG-to-DrawingML trace is stale for the PPTX")
+    expected_svg_hashes = {str(scene["page_id"]): sha256_file(svg_path(root, str(scene["page_id"]))) for scene in scenes}
+    if str(trace_payload.get("svg_sha256") or "") != sha256_json(expected_svg_hashes):
+        raise PptxEditabilityError("SVG-to-DrawingML trace is stale for the approved SVG set")
+    trace_pages = {str(page.get("page_id") or ""): page for page in trace_payload.get("pages", []) if isinstance(page, dict)}
+    if set(trace_pages) != set(expected_svg_hashes) or any(trace_pages[page_id].get("svg_sha256") != svg_hash for page_id, svg_hash in expected_svg_hashes.items()):
+        raise PptxEditabilityError("SVG-to-DrawingML trace page coverage is stale")
     expected_text: list[str] = []
     for scene in scenes:
         expected_text.extend(str(element.get("text") or "") for element in scene.get("elements", []) if element.get("kind") == "text" and element.get("priority") in {"P0", "P1"})
     actual_text: list[str] = []
     missing_elements: list[str] = []
+    text_mismatches: list[dict[str, str]] = []
     geometry_errors: list[str] = []
     geometry_mismatches: list[dict[str, Any]] = []
     notes_count = 0
@@ -512,6 +545,7 @@ def readback_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dic
     actual_image_count = sum(1 for slide in presentation.slides for shape in slide.shapes if shape.shape_type == MSO_SHAPE_TYPE.PICTURE)
     expected_notes_count = sum(1 for scene in scenes if str((locks.get(str(scene["page_id"])) or {}).get("speaker_notes") or "").strip())
     pages: list[dict[str, Any]] = []
+    pptx_geometries: dict[str, dict[str, dict[str, float]]] = {}
     for slide_index, slide in enumerate(presentation.slides):
         actual_text.extend(shape.text for shape in slide.shapes if hasattr(shape, "text") and shape.text)
         if slide.notes_slide.notes_text_frame.text.strip():
@@ -526,23 +560,32 @@ def readback_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dic
         actual_elements = {str(shape.name): shape for shape in slide.shapes if shape.name}
         page_missing: list[str] = []
         page_mismatch: list[dict[str, Any]] = []
+        page_geometry: dict[str, dict[str, float]] = {}
         for element_id, element in expected_elements.items():
             shape = actual_elements.get(element_id)
             if shape is None:
                 missing_elements.append(element_id)
                 page_missing.append(element_id)
                 continue
+            if element.get("kind") == "text" and element.get("priority") in {"P0", "P1"}:
+                expected_text_value = str(element.get("text") or "")
+                actual_text_value = str(getattr(shape, "text", "") or "")
+                if actual_text_value != expected_text_value:
+                    text_mismatches.append({"element_id": element_id, "expected": expected_text_value, "actual": actual_text_value})
             expected = element["bbox"]
             actual = {"x": float(shape.left) / float(presentation.slide_width) * CANVAS_WIDTH, "y": float(shape.top) / float(presentation.slide_height) * CANVAS_HEIGHT, "w": float(shape.width) / float(presentation.slide_width) * CANVAS_WIDTH, "h": float(shape.height) / float(presentation.slide_height) * CANVAS_HEIGHT}
+            page_geometry[element_id] = actual
             deltas = {key: abs(actual[key] - float(expected[key])) for key in ("x", "y", "w", "h")}
             px_to_pt = SLIDE_WIDTH_IN * 72 / CANVAS_WIDTH
             if max(deltas.values()) * px_to_pt > PPTX_BBOX_TOLERANCE_PT:
                 entry = {"element_id": element_id, "expected": expected, "actual": actual, "delta": deltas}
                 geometry_mismatches.append(entry)
                 page_mismatch.append(entry)
-        pages.append({"page_id": str(scenes[slide_index]["page_id"]), "missing_elements": page_missing, "geometry_mismatches": page_mismatch, "shape_count": len(slide.shapes), "shape_inventory": [{"name": str(shape.name or ""), "shape_type": str(shape.shape_type), "z_order": index} for index, shape in enumerate(slide.shapes)], "notes_present": bool(slide.notes_slide.notes_text_frame.text.strip())})
+        page_id = str(scenes[slide_index]["page_id"])
+        pptx_geometries[page_id] = page_geometry
+        pages.append({"page_id": page_id, "missing_elements": page_missing, "geometry_mismatches": page_mismatch, "shape_count": len(slide.shapes), "shape_inventory": [{"name": str(shape.name or ""), "shape_type": str(shape.shape_type), "z_order": index} for index, shape in enumerate(slide.shapes)], "notes_present": bool(slide.notes_slide.notes_text_frame.text.strip())})
     normalized_actual = "\n".join(actual_text)
-    missing_text = [text for text in expected_text if text and text not in normalized_actual]
+    missing_text = [item["expected"] for item in text_mismatches]
     traced_ids = {str(item.get("element_id") or "") for item in trace_payload.get("elements", []) if isinstance(item, dict)}
     required_trace_ids = {str(element.get("element_id") or "") for scene in scenes for element in scene.get("elements", []) if element.get("priority") in {"P0", "P1"}}
     missing_trace_ids = sorted(required_trace_ids - traced_ids)
@@ -552,7 +595,7 @@ def readback_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dic
         try:
             pptx_preview = _render_pptx_page(root, output, str(scene["page_id"]), index)
             svg_preview = root / PREVIEW_DIR / f"{scene['page_id']}.png"
-            metrics = compute_visual_metrics(root, scene, svg_preview, pptx_preview, comparison="svg_vs_pptx")
+            metrics = compute_visual_metrics(root, scene, svg_preview, pptx_preview, comparison="svg_vs_pptx", candidate_geometry=pptx_geometries.get(str(scene["page_id"])))
             metrics_file = write_visual_metrics(root, scene, metrics, comparison="svg_vs_pptx")
             visual_parity["pages"].append({"page_id": scene["page_id"], "metrics_path": str(metrics_file.relative_to(root)), "status": metrics["status"]})
             if metrics["status"] != "pass":
@@ -569,14 +612,14 @@ def readback_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dic
         "speaker_notes_count": notes_count,
         "expected_speaker_notes_count": expected_notes_count,
         "pages": pages,
-        "text_readback": {"expected_p0_p1": len(expected_text), "missing": missing_text},
+        "text_readback": {"expected_p0_p1": len(expected_text), "missing": missing_text, "mismatches": text_mismatches},
         "geometry": {"out_of_bounds": geometry_errors, "mismatches": geometry_mismatches},
         "trace_coverage": {"status": trace_status, "p0_p1": "pass" if not missing_trace_ids else "failed", "missing_element_ids": missing_trace_ids},
         "visual_parity": visual_parity,
         "editable_object_count": sum(len(slide.shapes) for slide in presentation.slides),
         "image_shape_count": actual_image_count,
         "expected_image_count": expected_image_count,
-        "status": "pass" if len(presentation.slides) == len(scenes) and notes_count == expected_notes_count and actual_image_count == expected_image_count and not missing_text and not missing_elements and not geometry_errors and not geometry_mismatches and trace_status == "pass" and visual_parity["status"] == "pass" else "failed",
+        "status": "pass" if len(presentation.slides) == len(scenes) and notes_count == expected_notes_count and actual_image_count == expected_image_count and not missing_text and not text_mismatches and not missing_elements and not geometry_errors and not geometry_mismatches and trace_status == "pass" and visual_parity["status"] == "pass" else "failed",
         "created_at": utc_now(),
     }
     assert_v2("pptx_readback", report)

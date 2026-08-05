@@ -105,7 +105,8 @@ def safe_run_path(root: Path, value: str) -> Path:
 
 def validate_document(kind: str, document: dict[str, Any]) -> dict[str, Any]:
     schema_name = SCHEMA_FILES.get(kind)
-    if document.get("schema_version", "").endswith(".v1") and kind in PREVIEW_SCHEMA_FILES:
+    schema_version = document.get("schema_version")
+    if isinstance(schema_version, str) and schema_version.endswith(".v1") and kind in PREVIEW_SCHEMA_FILES:
         # v1 artifacts remain readable for migration/diagnostics. Production
         # writers and handback validation always call the v2 schema above.
         schema_name = PREVIEW_SCHEMA_FILES[kind]

@@ -109,7 +109,7 @@ def _content_summary(lock: dict[str, Any]) -> dict[str, Any]:
         "subtitle": str(visible.get("subtitle") or ""),
         "conclusion": str(enrichment.get("conclusion") or ""),
         "so_what": str(enrichment.get("so_what") or ""),
-        "body": [str(block.get("text") if isinstance(block, dict) and block.get("text") is not None else block.get("title") if isinstance(block, dict) else block) for block in blocks],
+        "body": [json.dumps(block, ensure_ascii=False, sort_keys=True) if isinstance(block, (dict, list)) else str(block) for block in blocks],
         "evidence_ids": [str(item.get("evidence_id") if isinstance(item, dict) else item) for item in lock.get("evidence_bindings") or []],
         "required_components": list(lock.get("required_component_ids") or []),
         "target_language": str(lock.get("target_language") or "zh-CN"),
@@ -202,6 +202,12 @@ def ensure_blueprint_manifest(root: Path, page_id: str, lock: dict[str, Any], *,
         raise BlueprintInvalid(f"blueprint prompt must be written before image generation on page {page_id}")
     prompt = read_json(prompt_file)
     assert_v2("blueprint_prompt", prompt)
+    expected_nbb_sha = nbb_plan_sha256 or str((lock.get("lineage") or {}).get("nbb_plan_sha256") or "0" * 64)
+    expected_style_sha = str((style_lock or {}).get("style_lock_sha256") or prompt.get("style_lock_sha256") or "0" * 64)
+    if str(prompt.get("run_id") or "") != str(lock.get("run_id") or "") or str(prompt.get("page_id") or "") != page_id:
+        raise BlueprintInvalid(f"blueprint prompt identity is stale on page {page_id}")
+    if str(prompt.get("nbb_plan_sha256") or "") != expected_nbb_sha or str(prompt.get("style_lock_sha256") or "") != expected_style_sha:
+        raise BlueprintInvalid(f"blueprint prompt lineage is stale on page {page_id}")
     expected_prompt = build_blueprint_prompt(lock, style_lock, nbb_plan_sha256=nbb_plan_sha256 or str((lock.get("lineage") or {}).get("nbb_plan_sha256") or "0" * 64))
     expected_prompt_sha = sha256_json(expected_prompt)
     if prompt.get("prompt_sha256") != expected_prompt_sha or prompt.get("content_lock_sha256") != lock.get("content_lock_sha256"):
@@ -271,6 +277,11 @@ def load_blueprint_manifest(root: Path, page_id: str, *, expected_run_id: str | 
         raise BlueprintInvalid(f"blueprint manifest image_path mismatch on page {page_id}")
     prompt = read_json(safe_run_path(root, str(manifest.get("prompt_ref") or "")))
     assert_v2("blueprint_prompt", prompt)
+    if str(prompt.get("run_id") or "") != str(manifest.get("run_id") or "") or str(prompt.get("page_id") or "") != page_id:
+        raise BlueprintInvalid(f"blueprint prompt identity is stale on page {page_id}")
+    for field in ("content_lock_sha256", "nbb_plan_sha256", "style_lock_sha256"):
+        if str(prompt.get(field) or "") != str(manifest.get(field) or ""):
+            raise BlueprintInvalid(f"blueprint prompt {field} is stale on page {page_id}")
     if prompt.get("prompt_sha256") != manifest.get("prompt_sha256"):
         raise BlueprintInvalid(f"blueprint prompt hash is stale on page {page_id}")
     if str(manifest.get("image_sha256") or "") != sha256_file(image):

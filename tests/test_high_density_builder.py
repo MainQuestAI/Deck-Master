@@ -385,7 +385,7 @@ def test_unsupported_curved_path_blocks_pptx_stage(tmp_path: Path) -> None:
             "element_id": "curve.path",
             "kind": "path",
             "role": "connector",
-            "priority": "P1",
+            "priority": "P2",
             "bbox": {"x": 100, "y": 100, "w": 200, "h": 100},
             "path": "M 100 100 C 160 40 240 260 300 200",
             "editability_target": "native_shape",

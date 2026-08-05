@@ -103,6 +103,12 @@ def load_style_lock(root: Path, *, require_approved: bool = True, expected_run_i
         raise StyleSelectionRequired(root / STYLE_OPTIONS_PATH)
     lock = read_json(path)
     assert_v2("style_lock", lock)
+    selected = next((item for item in CYBER_PPT_STYLES if item["style_id"] == lock.get("style_id")), None)
+    if selected is None:
+        raise ContractError(f"style lock must select one of the fixed CyberPPT styles: {lock.get('style_id')}")
+    for key in ("style_id", "name", "source", "palette", "grid", "typography", "chart_language", "table_language", "surface_system", "density_rules", "prohibitions"):
+        if lock.get(key) != selected.get(key):
+            raise ContractError(f"style lock does not match the registered style: {lock.get('style_id')}")
     if expected_run_id and str(lock.get("run_id") or "") != expected_run_id:
         raise ContractError(f"style lock run_id mismatch: expected {expected_run_id}")
     if require_approved and lock.get("approved") is not True:

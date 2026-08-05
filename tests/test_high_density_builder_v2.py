@@ -18,7 +18,7 @@ from build.manifest import build_manifest_v2
 from high_density.blueprint import BlueprintInvalid, build_blueprint_prompt, ensure_blueprint_manifest
 from high_density.capability import inspect_high_density_capability
 from high_density.content import build_content_lock, build_nbb_page, load_page_packages
-from high_density.contracts import ContractError, read_json, sha256_file, write_json
+from high_density.contracts import ContractError, assert_valid, read_json, sha256_file, write_json
 from high_density.engine import (
     build_high_density_status,
     prepare_high_density,
@@ -29,7 +29,7 @@ from high_density.engine import (
 from high_density.pptx import PptxEditabilityError, _render_pptx_page, compile_pptx, pptx_path, trace_path
 from high_density.scene import build_fixture_scene, load_scene, validate_scene_content, write_scene
 from high_density.style import write_style_lock
-from high_density.svg import SvgVisualError, compile_svg, preview_path, render_preview, svg_path
+from high_density.svg import SvgVisualError, compile_svg, load_visual_review, preview_path, render_preview, review_path, svg_path, validate_svg
 from production.page_package import PageContent, PagePackageIndex, build_page_package
 from runtime.run_state import create_run
 
@@ -94,6 +94,19 @@ def test_prepare_rejects_malformed_page_package(tmp_path: Path) -> None:
     assert build_high_density_status(run)["status"] == "blocked"
 
 
+def test_prepare_rejects_non_object_page_package_index(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path)
+    (run / "page_packages/index.json").write_text("[]", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="index must be an object"):
+        prepare_high_density(run)
+
+
+def test_contract_rejects_non_string_schema_version() -> None:
+    with pytest.raises(ContractError):
+        assert_valid("page_package", {"schema_version": 1})
+
+
 def test_prepare_rejects_cross_run_page_package(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path)
     package = read_json(run / "page_packages/P001.json")
@@ -155,6 +168,12 @@ def test_watch_waits_until_stable_end_state(tmp_path: Path) -> None:
     assert len(watched["watch"]["events"]) >= 2
 
 
+def test_cli_high_density_runtime_exposes_watch_action() -> None:
+    from deck_master import _high_density_runtime
+
+    assert callable(_high_density_runtime()["watch"])
+
+
 def test_capability_blocks_missing_visual_dependency(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     import high_density.capability as capability
 
@@ -174,6 +193,11 @@ def test_production_requires_approved_style_lock(tmp_path: Path) -> None:
     assert prepared["status"] == "awaiting_user_decision"
     assert build_high_density_status(run)["current_stage"] == "style_lock"
     assert (run / "high_density_build/style/style_options.json").exists()
+    waiting = run_high_density(run)
+    assert waiting["status"] == "awaiting_user_decision"
+    watched = watch_high_density_status(run, timeout_seconds=0.01, poll_seconds=0.01)
+    assert watched["status"] == "awaiting_user_decision"
+    assert watched["watch"]["timed_out"] is False
 
 
 def test_style_lock_change_invalidates_blueprints(tmp_path: Path) -> None:
@@ -231,6 +255,19 @@ def test_blueprint_prompt_changes_with_locked_content(tmp_path: Path) -> None:
     assert "Changed locked title" in second
 
 
+def test_blueprint_prompt_preserves_structured_content(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path)
+    package = read_json(run / "page_packages/P001.json")
+    package["customer_visible"]["body_blocks"][0] = {"title": "Metric table", "rows": [{"metric": "conversion", "value": "42%"}], "type": "table"}
+    lock = build_content_lock(package, nbb_plan_sha256="c" * 64)
+    style = {"style_id": "cyber-01", "name": "Ink Cobalt", "palette": {}, "grid": {}}
+
+    prompt = build_blueprint_prompt(lock, style, nbb_plan_sha256="c" * 64)
+
+    assert "conversion" in prompt
+    assert "42%" in prompt
+
+
 def test_blueprint_manifest_requires_prompt_before_image(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path)
     image = _blueprint(run)
@@ -252,6 +289,33 @@ def test_distinct_blueprints_produce_distinct_svg(tmp_path: Path) -> None:
     compile_svg(second, second_path)
 
     assert first_path.read_text(encoding="utf-8") != second_path.read_text(encoding="utf-8")
+
+
+def test_production_uses_agent_svg_without_overwriting_it(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path, mode="production", project_name="production visual")
+    write_style_lock(run, run.name, "cyber-01", approved=True, approver="test")
+    _blueprint(run)
+    prepare_high_density(run)
+    assert run_high_density(run)["current_stage"] == "page_scene"
+
+    lock = read_json(run / "high_density_build/content_locks/P001.json")
+    blueprint_manifest = read_json(run / "high_density_build/blueprints/P001.blueprint_manifest.json")
+    scene = build_fixture_scene(
+        lock,
+        str(blueprint_manifest["image_sha256"]),
+        blueprint_path=run / "high_density_build/blueprints/P001.svg",
+    )
+    write_scene(run, scene)
+    svg_file = svg_path(run, "P001")
+    compile_svg(scene, svg_file)
+    custom_svg = svg_file.read_text(encoding="utf-8").replace("#f7f9fb", "#123456", 1)
+    svg_file.write_text(custom_svg, encoding="utf-8")
+
+    result = run_high_density(run)
+
+    assert result["status"] == "awaiting_agent_build"
+    assert result["current_stage"] == "visual_review"
+    assert "#123456" in svg_file.read_text(encoding="utf-8")
 
 
 def test_scene_rejects_missing_required_content(tmp_path: Path) -> None:
@@ -280,6 +344,40 @@ def test_visual_metrics_are_computed_from_artifacts(tmp_path: Path) -> None:
     assert metrics["status"] == "pass"
     assert metrics["inputs"]["reference_sha256"] == sha256_file(output)
     assert metrics["values"]["text_masked_ssim"] == pytest.approx(1.0)
+
+
+def test_visual_bbox_metrics_read_actual_svg_geometry(tmp_path: Path) -> None:
+    run, _, scene = _prepared_fixture(tmp_path)
+    reference = run / "high_density_build/previews/reference.png"
+    shutil.copy2(preview_path(run, "P001"), reference)
+    svg = svg_path(run, "P001")
+    original = svg.read_text(encoding="utf-8")
+    svg.write_text(original.replace('id="block.01" x="80.00"', 'id="block.01" x="120.00"', 1), encoding="utf-8")
+    candidate = run / "high_density_build/previews/mutated.png"
+    render_preview(svg, candidate)
+
+    from high_density.visual import compute_visual_metrics
+
+    metrics = compute_visual_metrics(run, scene, reference, candidate)
+
+    assert metrics["status"] == "failed"
+    assert metrics["values"]["bbox_max_delta_px"] >= 40
+    assert any(item["code"] == "p0_p1_bbox_drift" for item in metrics["findings"])
+
+
+def test_visual_review_rejects_handwritten_metrics(tmp_path: Path) -> None:
+    run, _, _ = _prepared_fixture(tmp_path)
+    metrics_file = run / "high_density_build/reviews/P001.metrics.json"
+    review_file = review_path(run, "P001")
+    metrics = read_json(metrics_file)
+    metrics["geometry"]["pairs"][0]["target"]["x"] += 1
+    write_json(metrics_file, metrics)
+    review = read_json(review_file)
+    review["metrics_sha256"] = sha256_file(metrics_file)
+    write_json(review_file, review)
+
+    with pytest.raises(SvgVisualError, match="not tool-computed"):
+        load_visual_review(run, "P001")
 
 
 def test_near_full_image_is_blocked(tmp_path: Path) -> None:
@@ -372,3 +470,12 @@ def test_unsupported_svg_element_blocks_compile(tmp_path: Path) -> None:
 
     with pytest.raises(PptxEditabilityError, match="unsupported SVG element mask"):
         compile_pptx(run, [scene], {"P001": lock})
+
+
+def test_svg_rejects_unsafe_event_attribute(tmp_path: Path) -> None:
+    run, _, _ = _prepared_fixture(tmp_path)
+    svg = svg_path(run, "P001")
+    svg.write_text(svg.read_text(encoding="utf-8").replace("<svg ", '<svg onload="alert(1)" ', 1), encoding="utf-8")
+
+    with pytest.raises(SvgVisualError, match="event attribute"):
+        validate_svg(svg, page_id="P001")

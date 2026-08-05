@@ -65,6 +65,8 @@ def load_page_packages(root: Path, *, expected_run_id: str | None = None) -> lis
             index = json.loads(index_path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as exc:
             raise ContractError(f"invalid page package index: {index_path}") from exc
+        if not isinstance(index, dict):
+            raise ContractError(f"page package index must be an object: {index_path}")
         index_ids = [str(item.get("page_id") or "") for item in index.get("pages", []) if isinstance(item, dict)]
         package_ids = [str(item.get("page_id") or "") for item in packages]
         if sorted(index_ids) != sorted(package_ids):
@@ -293,6 +295,8 @@ def build_nbb_plan(packages: list[dict[str, Any]], *, run_id: str) -> dict[str, 
     blocked: list[dict[str, Any]] = []
     for package in packages:
         page_id = str(package.get("page_id") or "")
+        if str(package.get("run_id") or "") != run_id:
+            raise ContractError(f"NBB plan package run_id mismatch on {page_id}: expected {run_id}")
         try:
             result = build_nbb_page(package)
         except ContractError as exc:

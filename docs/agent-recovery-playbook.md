@@ -104,7 +104,7 @@ python3 scripts/deck_master.py next-step --run-dir <run_dir>
   invalidates that stage and all downstream artifacts.
 - Blueprint waiting: the Agent must generate or approve the blueprint at the
   recorded `output_ref`, then rerun the recorded resume command.
-- Scene waiting: the Agent must write a semantic `page_scene.v1` with locked
+- Scene waiting: the Agent must write a semantic `page_scene.v2` with locked
   text references and in-canvas geometry, then resume the run.
 - Visual review waiting: the Agent must write a passing visual review tied to
   the current SVG and blueprint hashes, then resume the run.

@@ -194,15 +194,40 @@ def validate_scene(scene: dict[str, Any]) -> None:
             raise ContractError(f"scene element_id must be unique: {element_id}")
         ids.add(element_id)
         bbox = element.get("bbox") or {}
-        x, y, w, h = (float(bbox.get(key) or 0) for key in ("x", "y", "w", "h"))
+        try:
+            x, y, w, h = (float(bbox.get(key) or 0) for key in ("x", "y", "w", "h"))
+            z_index = int(element.get("z_index") or 0)
+        except (TypeError, ValueError) as exc:
+            raise ContractError(f"scene element {element_id} has invalid geometry or z-order") from exc
+        if not all(math.isfinite(value) for value in (x, y, w, h)):
+            raise ContractError(f"scene element {element_id} has non-finite geometry")
         if x < 0 or y < 0 or w <= 0 or h <= 0 or x + w > width + 0.01 or y + h > height + 0.01:
             raise ContractError(f"scene element {element_id} is out of canvas bounds")
+        style = element.get("style") or {}
+        try:
+            opacity = float(style.get("opacity", 1))
+            for key in ("stroke_width", "radius"):
+                if key in style and style[key] is not None:
+                    value = float(style[key])
+                    if not math.isfinite(value) or value < 0:
+                        raise ValueError(key)
+            if not math.isfinite(opacity) or opacity <= 0 or opacity > 1:
+                raise ValueError("opacity")
+        except (TypeError, ValueError) as exc:
+            raise ContractError(f"scene element {element_id} has invalid style values") from exc
         if str(element.get("kind") or "") == "text":
             ref = str(element.get("text_ref") or "")
             if not ref.startswith("content_lock."):
                 raise ContractError(f"text element {element_id} must reference content_lock")
-            if float((element.get("style") or {}).get("opacity", 1)) <= 0:
-                raise ContractError(f"text element {element_id} is hidden")
+            fit = element.get("text_fit") or {}
+            try:
+                preferred = float(fit.get("preferred_size_px") or 0)
+                minimum = float(fit.get("min_size_px") or 0)
+                max_lines = int(fit.get("max_lines") or 0)
+            except (TypeError, ValueError) as exc:
+                raise ContractError(f"text element {element_id} has invalid fit policy") from exc
+            if not all(math.isfinite(value) for value in (preferred, minimum)) or preferred <= 0 or minimum <= 0 or max_lines < 1:
+                raise ContractError(f"text element {element_id} has invalid fit policy")
         if element.get("kind") == "image":
             if element.get("asset_policy") != "registered" or element.get("editability_target") != "registered_asset":
                 raise ContractError(f"image element {element_id} must use registered asset policy")

@@ -7,6 +7,7 @@ from .engine import (
     record_high_density_failure,
     retry_high_density,
     run_high_density,
+    watch_high_density_status,
 )
 
 __all__ = [
@@ -16,4 +17,5 @@ __all__ = [
     "record_high_density_failure",
     "retry_high_density",
     "run_high_density",
+    "watch_high_density_status",
 ]
