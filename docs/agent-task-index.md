@@ -120,7 +120,7 @@ python3 scripts/deck_master.py build status --run-dir <run_dir> --profile high-d
 python3 scripts/deck_master.py build retry --run-dir <run_dir> --profile high-density --page-id <page_id> --stage <stage>
 ```
 
-- Success state: `high_density_status.v1.status == "completed"`, the build
+- Success state: `high_density_status.v2.status == "completed"`, the build
   manifest is completed with a high-density manifest reference, and canonical
   artifact/render handback validates.
 - If blocked: read `docs/agent-recovery-playbook.md#high-density-builder`.

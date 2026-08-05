@@ -9,11 +9,15 @@ from pathlib import Path
 from typing import Any
 from xml.etree import ElementTree
 
-from .contracts import ContractError, read_json, sha256_file, utc_now, write_json
+from .blueprint import load_blueprint_manifest
+from .contracts import ContractError, assert_v2, read_json, safe_run_path, sha256_file, utc_now, write_json
+from .scene import load_scene
+from .visual import VisualMetricsError, compute_visual_metrics, normalize_blueprint, write_visual_metrics
 
 SVG_DIR = Path("high_density_build/svg")
 PREVIEW_DIR = Path("high_density_build/previews")
 REVIEW_DIR = Path("high_density_build/reviews")
+COMPARISON_DIR = Path("high_density_build/comparisons")
 CANVAS_WIDTH = 1672
 CANVAS_HEIGHT = 941
 FORBIDDEN_TAGS = {"foreignObject", "script", "iframe", "style"}
@@ -36,6 +40,10 @@ def preview_path(root: Path, page_id: str) -> Path:
 
 def review_path(root: Path, page_id: str) -> Path:
     return root / REVIEW_DIR / f"{page_id}.visual_review.json"
+
+
+def metrics_path(root: Path, page_id: str) -> Path:
+    return root / REVIEW_DIR / f"{page_id}.metrics.json"
 
 
 def _estimated_width(text: str, size: float) -> float:
@@ -103,7 +111,11 @@ def _text_svg(element: dict[str, Any], page_id: str) -> str:
         "font-family": str(style.get("font_family") or "Arial"),
         "font-size": f"{size:.2f}px",
         "font-weight": str(style.get("font_weight") or "400"),
+        "opacity": str(style.get("opacity") or 1),
+        "data-pptx-component": str(element.get("component_id") or ""),
+        "data-pptx-z": str(element.get("z_index") or 0),
         "data-pptx-bounds": f"{x:.2f},{float(bbox['y']):.2f},{float(bbox['w']):.2f},{float(bbox['h']):.2f}",
+        "data-pptx-text": text,
     }
     tspans = []
     for index, line in enumerate(lines):
@@ -125,6 +137,9 @@ def _rect_svg(element: dict[str, Any]) -> str:
         "fill": _color(style.get("fill"), "none"),
         "stroke": _color(style.get("stroke"), "none"),
         "stroke-width": str(style.get("stroke_width") or 0),
+        "opacity": str(style.get("opacity") or 1),
+        "data-pptx-component": str(element.get("component_id") or ""),
+        "data-pptx-z": str(element.get("z_index") or 0),
         "data-pptx-bounds": f"{float(bbox['x']):.2f},{float(bbox['y']):.2f},{float(bbox['w']):.2f},{float(bbox['h']):.2f}",
     }
     return f"<rect {_attrs(attrs)}/>"
@@ -149,14 +164,43 @@ def _image_svg(element: dict[str, Any], asset: Path | None, page_id: str) -> str
         f'x="{float(bbox["x"]):.2f}" y="{float(bbox["y"]):.2f}" '
         f'width="{float(bbox["w"]):.2f}" height="{float(bbox["h"]):.2f}" '
         f'href="{_asset_data_uri(asset)}" data-pptx-asset="registered" '
+        f'data-pptx-asset-id="{html.escape(str(element.get("asset_ref") or ""), quote=True)}" '
+        f'data-pptx-component="{html.escape(str(element.get("component_id") or ""), quote=True)}" '
         f'data-pptx-bounds="{float(bbox["x"]):.2f},{float(bbox["y"]):.2f},{float(bbox["w"]):.2f},{float(bbox["h"]):.2f}"/>'
     )
 
 
 def compile_svg(scene: dict[str, Any], output: Path, *, assets: dict[str, Path] | None = None) -> Path:
+    from .scene import validate_scene
+
     page_id = str(scene["page_id"])
+    try:
+        validate_scene(scene)
+    except ContractError as exc:
+        raise SvgVisualError(str(exc), page_id=page_id, code="HD_PAGE_SCENE_INVALID") from exc
+    scene_elements = list(scene.get("elements", []))
+    image_area = 0.0
+    p0_text = [element for element in scene_elements if element.get("kind") == "text" and element.get("priority") == "P0"]
+    for element in scene_elements:
+        if element.get("kind") != "image":
+            continue
+        bbox = element.get("bbox") or {}
+        area = float(bbox.get("w") or 0) * float(bbox.get("h") or 0)
+        image_area += area
+        if area / (CANVAS_WIDTH * CANVAS_HEIGHT) > 0.35:
+            raise SvgVisualError(f"image asset exceeds 35% of canvas: {element.get('element_id')}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
+        image_z = int(element.get("z_index") or 0)
+        for text in p0_text:
+            text_bbox = text.get("bbox") or {}
+            overlap_w = max(0.0, min(float(bbox.get("x") or 0) + float(bbox.get("w") or 0), float(text_bbox.get("x") or 0) + float(text_bbox.get("w") or 0)) - max(float(bbox.get("x") or 0), float(text_bbox.get("x") or 0)))
+            overlap_h = max(0.0, min(float(bbox.get("y") or 0) + float(bbox.get("h") or 0), float(text_bbox.get("y") or 0) + float(text_bbox.get("h") or 0)) - max(float(bbox.get("y") or 0), float(text_bbox.get("y") or 0)))
+            if image_z >= int(text.get("z_index") or 0) and overlap_w * overlap_h > 0:
+                raise SvgVisualError(f"image asset covers P0 text: {element.get('element_id')} -> {text.get('element_id')}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
+    if image_area / (CANVAS_WIDTH * CANVAS_HEIGHT) > 0.50:
+        raise SvgVisualError("registered image assets exceed 50% of canvas", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
     elements: list[str] = []
-    for element in scene.get("elements", []):
+    ordered_elements = sorted(enumerate(scene_elements), key=lambda item: (int(item[1].get("z_index") or 0), item[0]))
+    for _, element in ordered_elements:
         kind = element.get("kind")
         if kind == "text":
             elements.append(_text_svg(element, page_id))
@@ -173,8 +217,30 @@ def compile_svg(scene: dict[str, Any], output: Path, *, assets: dict[str, Path] 
                 "y2": f"{float(bbox['y']) + float(bbox['h']):.2f}",
                 "stroke": _color(style.get("stroke"), "#657485"),
                 "stroke-width": str(style.get("stroke_width") or 2),
+                "opacity": str(style.get("opacity") or 1),
+                "data-pptx-component": str(element.get("component_id") or ""),
+                "data-pptx-z": str(element.get("z_index") or 0),
+                "data-pptx-bounds": f"{float(bbox['x']):.2f},{float(bbox['y']):.2f},{float(bbox['w']):.2f},{float(bbox['h']):.2f}",
             }
             elements.append(f"<line {_attrs(attrs)}/>")
+        elif kind in {"circle", "ellipse"}:
+            bbox = element["bbox"]
+            style = element.get("style") or {}
+            attrs = {
+                "id": element["element_id"],
+                "cx": f"{float(bbox['x']) + float(bbox['w']) / 2:.2f}",
+                "cy": f"{float(bbox['y']) + float(bbox['h']) / 2:.2f}",
+                "rx": f"{float(bbox['w']) / 2:.2f}",
+                "ry": f"{float(bbox['h']) / 2:.2f}",
+                "fill": _color(style.get("fill"), "none"),
+                "stroke": _color(style.get("stroke"), "none"),
+                "stroke-width": str(style.get("stroke_width") or 0),
+                "opacity": str(style.get("opacity") or 1),
+                "data-pptx-component": str(element.get("component_id") or ""),
+                "data-pptx-z": str(element.get("z_index") or 0),
+                "data-pptx-bounds": f"{float(bbox['x']):.2f},{float(bbox['y']):.2f},{float(bbox['w']):.2f},{float(bbox['h']):.2f}",
+            }
+            elements.append(f"<ellipse {_attrs(attrs)}/>")
         elif kind == "path":
             path_data = str(element.get("path") or "")
             if not path_data or re.search(r"[<>&]", path_data):
@@ -184,7 +250,8 @@ def compile_svg(scene: dict[str, Any], output: Path, *, assets: dict[str, Path] 
             stroke = _color(style.get("stroke"), "none")
             elements.append(
                 f'<path id="{html.escape(str(element["element_id"]), quote=True)}" '
-                f'd="{html.escape(path_data, quote=True)}" fill="{fill}" stroke="{stroke}"/>'
+                f'd="{html.escape(path_data, quote=True)}" fill="{fill}" stroke="{stroke}" stroke-width="{style.get("stroke_width") or 0}" '
+                f'opacity="{style.get("opacity") or 1}" data-pptx-component="{html.escape(str(element.get("component_id") or ""), quote=True)}" data-pptx-z="{element.get("z_index") or 0}" data-pptx-bounds="{float(element["bbox"]["x"]):.2f},{float(element["bbox"]["y"]):.2f},{float(element["bbox"]["w"]):.2f},{float(element["bbox"]["h"]):.2f}"/>'
             )
         elif kind == "polygon":
             points = element.get("points") or []
@@ -195,7 +262,8 @@ def compile_svg(scene: dict[str, Any], output: Path, *, assets: dict[str, Path] 
             elements.append(
                 f'<polygon id="{html.escape(str(element["element_id"]), quote=True)}" '
                 f'points="{point_text}" fill="{_color(style.get("fill"), "none")}" '
-                f'stroke="{_color(style.get("stroke"), "none")}" stroke-width="{style.get("stroke_width") or 0}"/>'
+                f'stroke="{_color(style.get("stroke"), "none")}" stroke-width="{style.get("stroke_width") or 0}" opacity="{style.get("opacity") or 1}" '
+                f'data-pptx-component="{html.escape(str(element.get("component_id") or ""), quote=True)}" data-pptx-z="{element.get("z_index") or 0}" data-pptx-bounds="{float(element["bbox"]["x"]):.2f},{float(element["bbox"]["y"]):.2f},{float(element["bbox"]["w"]):.2f},{float(element["bbox"]["h"]):.2f}"/>'
             )
         elif kind == "image":
             elements.append(_image_svg(element, (assets or {}).get(str(element.get("asset_ref") or "")), page_id))
@@ -227,8 +295,25 @@ def validate_svg(path: Path, *, page_id: str = "") -> dict[str, Any]:
         raise SvgVisualError("SVG canvas or viewBox is invalid", page_id=page_id)
     if root.get("data-pptx-page-role") != "content":
         raise SvgVisualError("SVG root is missing data-pptx-page-role", page_id=page_id)
+    ids: set[str] = set()
+    visible_tags = {"text", "rect", "circle", "ellipse", "line", "path", "polyline", "polygon", "image"}
     for node in root.iter():
-        if str(node.tag).split("}")[-1] != "image":
+        tag = str(node.tag).split("}")[-1]
+        node_id = str(node.get("id") or "")
+        if node_id:
+            if node_id in ids:
+                raise SvgVisualError(f"duplicate SVG element id: {node_id}", page_id=page_id)
+            ids.add(node_id)
+        if node.get("style") or node.get("class"):
+            raise SvgVisualError("external CSS/style attributes are blocked", page_id=page_id)
+        if str(node.get("opacity") or "1") in {"0", "0.0"}:
+            raise SvgVisualError(f"hidden SVG element is blocked: {node_id}", page_id=page_id)
+        if tag in visible_tags:
+            if not node_id:
+                raise SvgVisualError(f"visible SVG element must have a stable element id: {tag}", page_id=page_id)
+            if not str(node.get("data-pptx-bounds") or ""):
+                raise SvgVisualError(f"visible SVG element is missing data-pptx-bounds: {node_id}", page_id=page_id)
+        if tag != "image":
             continue
         if node.get("data-pptx-asset") != "registered":
             raise SvgVisualError("SVG image is missing registered asset marker", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
@@ -260,29 +345,38 @@ def render_preview(svg: Path, preview: Path) -> Path:
 
 def build_visual_review(root: Path, scene: dict[str, Any], *, mode: str) -> Path:
     page_id = str(scene["page_id"])
+    try:
+        blueprint_manifest = load_blueprint_manifest(root, page_id, expected_run_id=str(scene.get("run_id") or ""))
+        blueprint_preview = normalize_blueprint(root, blueprint_manifest)
+        svg_preview = preview_path(root, page_id)
+        metrics = compute_visual_metrics(root, scene, blueprint_preview, svg_preview)
+        metrics_file = write_visual_metrics(root, scene, metrics)
+    except (ContractError, VisualMetricsError, OSError) as exc:
+        raise SvgVisualError(f"visual metrics could not be computed on page {page_id}: {exc}", page_id=page_id) from exc
     priorities = {element["priority"] for element in scene.get("elements", [])}
+    passed_metrics = metrics.get("status") == "pass"
     review = {
-        "schema_version": "deck_visual_review.v1",
+        "schema_version": "deck_visual_review.v2",
         "run_id": scene["run_id"],
         "page_id": page_id,
         "svg_sha256": sha256_file(svg_path(root, page_id)),
         "blueprint_sha256": str(scene.get("blueprint_sha256") or ""),
-        "review_mode": "synthetic_fixture" if mode in {"fixture", "dev"} else "agent_main_review",
-        "visual_status": "pass",
-        "text_masked_ssim": 1.0 if mode in {"fixture", "dev"} else None,
-        "bbox_max_delta_px": 0.0,
-        "overflow_findings": [],
-        "layout_checks": {"canvas_ratio": "pass", "stable_ids": "pass", "p0_p1_geometry": "pass"},
-        "icon_checks": [],
-        "issues_found": [],
-        "unresolved_issues": [],
-        "p0_p1_present": "P0" in priorities and "P1" in priorities,
-        "self_review_count": 1,
-        "revision_count": 0,
+        "blueprint_preview_sha256": sha256_file(blueprint_preview),
+        "svg_preview_sha256": sha256_file(svg_preview),
+        "review_mode": "computed_fixture" if mode in {"fixture", "dev"} else "agent_main_review",
+        "metrics_ref": str(metrics_file.relative_to(root).as_posix()),
+        "metrics_sha256": sha256_file(metrics_file),
+        "visual_status": "pass" if passed_metrics and mode in {"fixture", "dev"} else "needs_review",
+        "full_page_checks": {"canvas_ratio": "pass", "stable_ids": "pass", "p0_p1_geometry": "pass" if passed_metrics else "failed"},
+        "region_checks": [],
+        "issues_found": list(metrics.get("findings") or []),
+        "unresolved_issues": [] if passed_metrics else list(metrics.get("findings") or []),
+        "self_review": {"status": "pass" if passed_metrics else "failed", "source": "tool_metrics"},
+        "main_review": {"status": "pass" if passed_metrics and mode in {"fixture", "dev"} else "pending", "source": "fixture_policy" if mode in {"fixture", "dev"} else "agent"},
+        "verdict": "pass" if passed_metrics and mode in {"fixture", "dev"} else "needs_review",
         "created_at": utc_now(),
     }
-    if mode not in {"fixture", "dev"}:
-        review["visual_status"] = "needs_review"
+    assert_v2("visual_review", review)
     path = review_path(root, page_id)
     write_json(path, review)
     return path
@@ -290,16 +384,22 @@ def build_visual_review(root: Path, scene: dict[str, Any], *, mode: str) -> Path
 
 def load_visual_review(root: Path, page_id: str) -> dict[str, Any]:
     review = read_json(review_path(root, page_id))
-    if review.get("schema_version") != "deck_visual_review.v1" or review.get("page_id") != page_id:
+    if review.get("schema_version") != "deck_visual_review.v2" or review.get("page_id") != page_id:
         raise SvgVisualError(f"visual review contract is invalid on page {page_id}", page_id=page_id)
-    if review.get("visual_status") != "pass" or review.get("unresolved_issues"):
+    assert_v2("visual_review", review)
+    if review.get("visual_status") != "pass" or review.get("verdict") != "pass" or review.get("unresolved_issues"):
         raise SvgVisualError(f"visual review has not passed on page {page_id}", page_id=page_id)
+    if str((review.get("self_review") or {}).get("status") or "") != "pass" or str((review.get("main_review") or {}).get("status") or "") != "pass":
+        raise SvgVisualError(f"visual review requires passing self and main review evidence on page {page_id}", page_id=page_id)
     try:
-        ssim = float(review.get("text_masked_ssim"))
-        bbox_delta = float(review.get("bbox_max_delta_px"))
-    except (TypeError, ValueError) as exc:
-        raise SvgVisualError(f"visual review metrics are missing on page {page_id}", page_id=page_id) from exc
-    if ssim < 0.92 or bbox_delta > 2.0:
+        metrics_file = safe_run_path(root, str(review.get("metrics_ref") or ""))
+    except ContractError as exc:
+        raise SvgVisualError(f"visual review metrics path is invalid on page {page_id}", page_id=page_id) from exc
+    metrics = read_json(metrics_file)
+    if sha256_file(metrics_file) != str(review.get("metrics_sha256") or "") or metrics.get("status") != "pass":
+        raise SvgVisualError(f"visual review metrics are stale or failed on page {page_id}", page_id=page_id)
+    values = metrics.get("values") or {}
+    if float(values.get("text_masked_ssim") or 0) < 0.92 or float(values.get("bbox_max_delta_px") or 0) > 2.0:
         raise SvgVisualError(f"visual review fidelity gate failed on page {page_id}", page_id=page_id)
     current_svg = svg_path(root, page_id)
     try:
@@ -308,11 +408,12 @@ def load_visual_review(root: Path, page_id: str) -> dict[str, Any]:
         raise SvgVisualError(f"current SVG is missing on page {page_id}", page_id=page_id) from exc
     if str(review.get("svg_sha256") or "") != current_svg_sha:
         raise SvgVisualError(f"visual review is stale for SVG on page {page_id}", page_id=page_id)
-    scene_file = root / "high_density_build" / "page_scenes" / f"{page_id}.json"
     try:
-        scene = read_json(scene_file)
+        scene = load_scene(root, page_id)
     except ContractError as exc:
         raise SvgVisualError(f"current page scene is missing on page {page_id}", page_id=page_id) from exc
+    if str(review.get("run_id") or "") != str(scene.get("run_id") or ""):
+        raise SvgVisualError(f"visual review run_id is stale on page {page_id}", page_id=page_id)
     if str(review.get("blueprint_sha256") or "") != str(scene.get("blueprint_sha256") or ""):
         raise SvgVisualError(f"visual review is stale for blueprint on page {page_id}", page_id=page_id)
     return review
@@ -326,6 +427,7 @@ __all__ = [
     "build_visual_review",
     "compile_svg",
     "load_visual_review",
+    "metrics_path",
     "preview_path",
     "render_preview",
     "review_path",

@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/contracts/blueprint-prompt.v1.schema.json",
+  "title": "Blueprint Prompt v1",
+  "type": "object",
+  "required": ["schema_version", "run_id", "page_id", "prompt_template_version", "prompt_text", "prompt_sha256", "content_lock_sha256", "nbb_plan_sha256", "style_lock_sha256", "created_at"],
+  "properties": {
+    "schema_version": {"const": "deck_blueprint_prompt.v1"},
+    "run_id": {"type": "string", "minLength": 1},
+    "page_id": {"type": "string", "minLength": 1},
+    "prompt_template_version": {"type": "string", "minLength": 1},
+    "prompt_text": {"type": "string", "minLength": 40},
+    "prompt_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "content_lock_ref": {"type": "string"},
+    "content_lock_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "nbb_plan_ref": {"type": "string"},
+    "nbb_plan_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "style_lock_ref": {"type": "string"},
+    "style_lock_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "content_summary": {"type": "object"},
+    "required_components": {"type": "array", "items": {"type": "string"}},
+    "forbidden_items": {"type": "array", "items": {"type": "string"}},
+    "created_at": {"type": "string"}
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,374 @@
+from __future__ import annotations
+
+import json
+import shutil
+import sys
+import threading
+import time
+from datetime import datetime, timezone
+from pathlib import Path
+
+import pytest
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT / "scripts") not in sys.path:
+    sys.path.insert(0, str(ROOT / "scripts"))
+
+from build.manifest import build_manifest_v2
+from high_density.blueprint import BlueprintInvalid, build_blueprint_prompt, ensure_blueprint_manifest
+from high_density.capability import inspect_high_density_capability
+from high_density.content import build_content_lock, build_nbb_page, load_page_packages
+from high_density.contracts import ContractError, read_json, sha256_file, write_json
+from high_density.engine import (
+    build_high_density_status,
+    prepare_high_density,
+    retry_high_density,
+    run_high_density,
+    watch_high_density_status,
+)
+from high_density.pptx import PptxEditabilityError, _render_pptx_page, compile_pptx, pptx_path, trace_path
+from high_density.scene import build_fixture_scene, load_scene, validate_scene_content, write_scene
+from high_density.style import write_style_lock
+from high_density.svg import SvgVisualError, compile_svg, preview_path, render_preview, svg_path
+from production.page_package import PageContent, PagePackageIndex, build_page_package
+from runtime.run_state import create_run
+
+
+FIXTURE_DIR = ROOT / "tests" / "fixtures" / "high_density"
+FIXTURE = json.loads((FIXTURE_DIR / "fixture.json").read_text(encoding="utf-8"))
+
+
+def _package(run_id: str, page: dict) -> dict:
+    return build_page_package(
+        run_id=run_id,
+        content=PageContent(
+            page_id=str(page["page_id"]),
+            order=int(page["order"]),
+            title=str(page["title"]),
+            subtitle=str(page["subtitle"]),
+            body_blocks=list(page["body_blocks"]),
+            labels=list(page["labels"]),
+            footnotes=list(page["footnotes"]),
+            speaker_notes=str(page["speaker_notes"]),
+            claim_bindings=list(page["claim_bindings"]),
+            evidence_bindings=list(page["evidence_bindings"]),
+            visual_spec={"page_type": page["page_class"]},
+        ),
+        status="ready_for_build",
+        now=datetime(2026, 1, 1, tzinfo=timezone.utc),
+    )
+
+
+def _make_run(tmp_path: Path, *, mode: str = "fixture", page_count: int = 1, project_name: str = "v2 fixture") -> tuple[Path, PagePackageIndex]:
+    run = create_run(tmp_path / "runs", {"project_name": project_name, "run_mode": mode}, run_id="hd-v2-test", force=True)
+    index = PagePackageIndex(run)
+    for page in FIXTURE["pages"][:page_count]:
+        index.write(_package(str(run.name), page))
+    return run, index
+
+
+def _blueprint(run: Path, page_id: str = "P001", *, fill: str = "#f7f9fb") -> Path:
+    path = run / "high_density_build" / "blueprints" / f"{page_id}.svg"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text((FIXTURE_DIR / "blueprint.svg").read_text(encoding="utf-8").replace("#f7f9fb", fill), encoding="utf-8")
+    return path
+
+
+def _prepared_fixture(tmp_path: Path) -> tuple[Path, dict, dict]:
+    run, _ = _make_run(tmp_path)
+    _blueprint(run)
+    prepare_high_density(run)
+    result = run_high_density(run)
+    assert result["status"] == "completed"
+    lock = read_json(run / "high_density_build/content_locks/P001.json")
+    scene = load_scene(run, "P001")
+    return run, lock, scene
+
+
+def test_prepare_rejects_malformed_page_package(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path)
+    (run / "page_packages/P001.json").write_text("{broken", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="invalid page package"):
+        prepare_high_density(run)
+    assert build_high_density_status(run)["status"] == "blocked"
+
+
+def test_prepare_rejects_cross_run_page_package(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path)
+    package = read_json(run / "page_packages/P001.json")
+    package["run_id"] = "another-run"
+    (run / "page_packages/P001.json").write_text(json.dumps(package), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="run_id mismatch"):
+        prepare_high_density(run)
+
+
+def test_retry_rejects_unknown_or_unsafe_page_id(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path)
+    prepare_high_density(run)
+    outside = tmp_path / "outside.txt"
+    outside.write_text("untouched", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="not registered"):
+        retry_high_density(run, page_id="../outside", stage="svg")
+    assert outside.read_text(encoding="utf-8") == "untouched"
+
+
+def test_watch_waits_until_stable_end_state(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path)
+    status_path = run / "high_density_build/status.json"
+    write_json(
+        status_path,
+        {
+            "schema_version": "deck_high_density_status.v2",
+            "run_id": run.name,
+            "builder_profile": "high_density",
+            "status": "building",
+            "current_stage": "blueprint",
+            "next_action": {"kind": "agent_imagegen"},
+            "updated_at": "2026-01-01T00:00:00+00:00",
+        },
+    )
+
+    def finish() -> None:
+        time.sleep(0.05)
+        write_json(
+            status_path,
+            {
+                "schema_version": "deck_high_density_status.v2",
+                "run_id": run.name,
+                "builder_profile": "high_density",
+                "status": "completed",
+                "current_stage": "handback",
+                "next_action": {"kind": "none"},
+                "updated_at": "2026-01-01T00:00:01+00:00",
+            },
+        )
+
+    worker = threading.Thread(target=finish)
+    worker.start()
+    watched = watch_high_density_status(run, timeout_seconds=1, poll_seconds=0.01)
+    worker.join()
+    assert watched["status"] == "completed"
+    assert watched["watch"]["timed_out"] is False
+    assert len(watched["watch"]["events"]) >= 2
+
+
+def test_capability_blocks_missing_visual_dependency(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import high_density.capability as capability
+
+    original_which = capability.shutil.which
+    monkeypatch.setattr(capability.shutil, "which", lambda name: "" if name == "rsvg-convert" else original_which(name))
+    report = inspect_high_density_capability(ROOT)
+    assert report["ready"] is False
+    assert report["status"] == "blocked_runtime_dependency"
+    svg_check = next(item for item in report["checks"] if item["name"] == "renderers")
+    assert svg_check["ready"] is False
+
+
+def test_production_requires_approved_style_lock(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path, mode="production", project_name="production example")
+    prepared = prepare_high_density(run)
+
+    assert prepared["status"] == "awaiting_user_decision"
+    assert build_high_density_status(run)["current_stage"] == "style_lock"
+    assert (run / "high_density_build/style/style_options.json").exists()
+
+
+def test_style_lock_change_invalidates_blueprints(tmp_path: Path) -> None:
+    run, _, _ = _prepared_fixture(tmp_path)
+    write_style_lock(run, run.name, "cyber-02", approved=True, approver="test")
+
+    result = run_high_density(run)
+
+    assert result["status"] == "awaiting_agent_build"
+    assert result["current_stage"] == "blueprint"
+    assert not (run / "high_density_build/blueprints/P001.blueprint_manifest.json").exists()
+
+
+def test_nbb_blocks_low_density_without_evidence() -> None:
+    package = _package("nbb-run", FIXTURE["pages"][0])
+    package["customer_visible"]["body_blocks"] = [{"type": "text", "text": "One short point"}]
+    package["customer_visible"]["callouts"] = []
+    package["evidence_bindings"] = []
+
+    with pytest.raises(ContractError, match="too sparse"):
+        build_nbb_page(package)
+
+
+def test_nbb_rejects_unsupported_factual_claim() -> None:
+    package = _package("nbb-run", FIXTURE["pages"][0])
+    package["customer_visible"]["body_blocks"] = [{"type": "text", "text": "42% unsupported claim"} for _ in range(6)]
+    package["evidence_bindings"] = []
+
+    with pytest.raises(ContractError, match="unsupported factual values"):
+        build_nbb_page(package)
+
+
+def test_content_lock_contains_required_components_and_text_refs(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path)
+    package = read_json(run / "page_packages/P001.json")
+    lock = build_content_lock(package, nbb_plan_sha256="a" * 64)
+
+    assert lock["schema_version"] == "deck_content_lock.v2"
+    assert lock["required_component_ids"]
+    assert {item["ref"] for item in lock["required_text_refs"]} >= {"content_lock.customer_visible.title", "content_lock.enrichment.so_what"}
+    assert lock["lineage"]["nbb_plan_sha256"] == "a" * 64
+
+
+def test_blueprint_prompt_changes_with_locked_content(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path)
+    package = read_json(run / "page_packages/P001.json")
+    lock = build_content_lock(package, nbb_plan_sha256="b" * 64)
+    style = {"style_id": "cyber-01", "name": "Ink Cobalt", "palette": {"primary": "#419BFD"}, "grid": {"system": "12-column"}}
+    changed = json.loads(json.dumps(lock))
+    changed["customer_visible"]["title"] = "Changed locked title"
+
+    first = build_blueprint_prompt(lock, style, nbb_plan_sha256="b" * 64)
+    second = build_blueprint_prompt(changed, style, nbb_plan_sha256="b" * 64)
+    assert first != second
+    assert "Changed locked title" in second
+
+
+def test_blueprint_manifest_requires_prompt_before_image(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path)
+    image = _blueprint(run)
+    package = read_json(run / "page_packages/P001.json")
+    lock = build_content_lock(package)
+
+    assert image.exists()
+    with pytest.raises(BlueprintInvalid, match="prompt must be written"):
+        ensure_blueprint_manifest(run, "P001", lock)
+
+
+def test_distinct_blueprints_produce_distinct_svg(tmp_path: Path) -> None:
+    run, lock, _ = _prepared_fixture(tmp_path)
+    first = build_fixture_scene(lock, "1" * 64)
+    second = build_fixture_scene(lock, "2" * 64)
+    first_path = run / "high_density_build/svg/first.svg"
+    second_path = run / "high_density_build/svg/second.svg"
+    compile_svg(first, first_path)
+    compile_svg(second, second_path)
+
+    assert first_path.read_text(encoding="utf-8") != second_path.read_text(encoding="utf-8")
+
+
+def test_scene_rejects_missing_required_content(tmp_path: Path) -> None:
+    run, lock, scene = _prepared_fixture(tmp_path)
+    scene["elements"] = [element for element in scene["elements"] if element["element_id"] != "title.main"]
+
+    with pytest.raises(ContractError, match="missing required text refs"):
+        validate_scene_content(scene, lock)
+
+
+def test_svg_rejects_missing_required_component(tmp_path: Path) -> None:
+    run, _, scene = _prepared_fixture(tmp_path)
+    scene["required_component_ids"].append("component.missing")
+
+    with pytest.raises(SvgVisualError, match="missing required components"):
+        compile_svg(scene, run / "high_density_build/svg/missing.svg")
+
+
+def test_visual_metrics_are_computed_from_artifacts(tmp_path: Path) -> None:
+    run, _, scene = _prepared_fixture(tmp_path)
+    from high_density.visual import compute_visual_metrics
+
+    output = render_preview(svg_path(run, "P001"), run / "high_density_build/previews/metrics.png")
+    metrics = compute_visual_metrics(run, scene, output, output)
+
+    assert metrics["status"] == "pass"
+    assert metrics["inputs"]["reference_sha256"] == sha256_file(output)
+    assert metrics["values"]["text_masked_ssim"] == pytest.approx(1.0)
+
+
+def test_near_full_image_is_blocked(tmp_path: Path) -> None:
+    run, _, scene = _prepared_fixture(tmp_path)
+    scene["elements"].append({"element_id": "image.near_full", "component_id": "component.proof", "kind": "image", "role": "proof", "priority": "P2", "bbox": {"x": 20, "y": 20, "w": 900, "h": 800}, "asset_ref": "proof", "asset_sha256": "a" * 64, "editability_target": "registered_asset", "asset_policy": "registered"})
+
+    with pytest.raises(SvgVisualError, match="exceeds 35%"):
+        compile_svg(scene, run / "high_density_build/svg/near-full.svg")
+
+
+def test_image_cannot_cover_p0_text(tmp_path: Path) -> None:
+    run, _, scene = _prepared_fixture(tmp_path)
+    scene["elements"].append({"element_id": "image.cover", "component_id": "component.proof", "kind": "image", "role": "proof", "priority": "P2", "z_index": 30, "bbox": {"x": 80, "y": 56, "w": 300, "h": 100}, "asset_ref": "proof", "asset_sha256": "a" * 64, "editability_target": "registered_asset", "asset_policy": "registered"})
+
+    with pytest.raises(SvgVisualError, match="covers P0 text"):
+        compile_svg(scene, run / "high_density_build/svg/cover.svg")
+
+
+def test_svg_mutation_changes_pptx_trace_and_render(tmp_path: Path) -> None:
+    run, lock, scene = _prepared_fixture(tmp_path)
+    original_pptx_hash = sha256_file(pptx_path(run))
+    original_trace = read_json(trace_path(run))
+    original_preview = sha256_file(run / "high_density_build/previews/P001.pptx.png")
+    svg = svg_path(run, "P001")
+    svg.write_text(svg.read_text(encoding="utf-8").replace("#f7f9fb", "#fff3e8", 1), encoding="utf-8")
+    render_preview(svg, preview_path(run, "P001"))
+    compile_pptx(run, [scene], {"P001": lock})
+    new_preview = _render_pptx_page(run, pptx_path(run), "P001", 0)
+    new_trace = read_json(trace_path(run))
+
+    assert sha256_file(pptx_path(run)) != original_pptx_hash
+    assert new_trace["pages"][0]["svg_sha256"] != original_trace["pages"][0]["svg_sha256"]
+    assert sha256_file(new_preview) != original_preview
+
+
+def test_scene_mutation_without_svg_change_does_not_change_pptx(tmp_path: Path) -> None:
+    run, lock, scene = _prepared_fixture(tmp_path)
+    original_svg_hash = sha256_file(svg_path(run, "P001"))
+    original_pptx = _render_pptx_page(run, pptx_path(run), "P001", 0)
+    scene["review_note"] = "semantic-only mutation"
+    write_scene(run, scene)
+    compile_pptx(run, [scene], {"P001": lock})
+    mutated_pptx = _render_pptx_page(run, pptx_path(run), "P001", 0)
+
+    assert sha256_file(svg_path(run, "P001")) == original_svg_hash
+    assert sha256_file(mutated_pptx) == sha256_file(original_pptx)
+
+
+def test_svg_text_drift_blocks_drawingml_compile(tmp_path: Path) -> None:
+    run, lock, scene = _prepared_fixture(tmp_path)
+    title = str(lock["customer_visible"]["title"])
+    svg = svg_path(run, "P001")
+    svg.write_text(svg.read_text(encoding="utf-8").replace(title, "drifted text"), encoding="utf-8")
+
+    with pytest.raises(PptxEditabilityError, match="SVG text drift"):
+        compile_pptx(run, [scene], {"P001": lock})
+
+
+def test_circle_is_compiled_as_native_shape(tmp_path: Path) -> None:
+    run, lock, scene = _prepared_fixture(tmp_path)
+    scene["elements"].append(
+        {
+            "element_id": "proof.circle",
+            "component_id": "component.proof",
+            "kind": "circle",
+            "role": "proof_marker",
+            "priority": "P2",
+            "bbox": {"x": 1460, "y": 100, "w": 48, "h": 48},
+            "editability_target": "native_shape",
+            "asset_policy": "none",
+            "style": {"fill": "#419BFD", "stroke": "#1f6fd1", "stroke_width": 1},
+        }
+    )
+    write_scene(run, scene)
+    (run / "high_density_build/reviews/P001.visual_review.json").unlink()
+
+    result = run_high_density(run)
+
+    assert result["status"] == "completed"
+    trace = read_json(run / "high_density_build/traces/P001.json")
+    circle_trace = next(item for item in trace["trace"]["elements"] if item["element_id"] == "proof.circle")
+    assert circle_trace["object_type"] == "shape"
+
+
+def test_unsupported_svg_element_blocks_compile(tmp_path: Path) -> None:
+    run, lock, scene = _prepared_fixture(tmp_path)
+    svg = svg_path(run, "P001")
+    original = svg.read_text(encoding="utf-8")
+    svg.write_text(original.replace("</g></svg>", '<mask id="unsupported.mask"><rect x="0" y="0" width="10" height="10" /></mask></g></svg>'), encoding="utf-8")
+
+    with pytest.raises(PptxEditabilityError, match="unsupported SVG element mask"):
+        compile_pptx(run, [scene], {"P001": lock})

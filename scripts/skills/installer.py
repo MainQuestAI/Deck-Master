@@ -301,10 +301,18 @@ SUITE_SKILLS: list[dict[str, Any]] = [
         "required_capabilities": ["deck_master.build.high_density.v1"],
         "optional_capabilities": [],
         "schema_versions": {
-            "content_lock": "deck_content_lock.v1",
-            "page_scene": "deck_page_scene.v1",
-            "high_density_manifest": "deck_high_density_manifest.v1",
-            "high_density_status": "deck_high_density_status.v1",
+            "nbb_plan": "deck_nbb_plan.v1",
+            "style_lock": "deck_high_density_style_lock.v1",
+            "content_lock": "deck_content_lock.v2",
+            "blueprint_prompt": "deck_blueprint_prompt.v1",
+            "blueprint_manifest": "deck_blueprint_manifest.v2",
+            "page_scene": "deck_page_scene.v2",
+            "visual_metrics": "deck_visual_metrics.v1",
+            "visual_review": "deck_visual_review.v2",
+            "svg_to_drawingml_trace": "deck_svg_to_drawingml_trace.v1",
+            "pptx_readback": "deck_pptx_readback.v2",
+            "high_density_manifest": "deck_high_density_manifest.v2",
+            "high_density_status": "deck_high_density_status.v2",
         },
         "adoption_policy": "bundled_symlink_only",
         "conflict_policy": "never_overwrite_real_directory",
@@ -2204,6 +2212,20 @@ def inspect_suite_status(
         elif current is None:
             by_name[name] = status
 
+    try:
+        from high_density.capability import inspect_high_density_capability
+
+        high_density_capability = inspect_high_density_capability(_repo_root())
+    except Exception as exc:  # pragma: no cover - import path is covered by runtime tests
+        high_density_capability = {
+            "capability": "deck_master.build.high_density.v1",
+            "status": "blocked_runtime_dependency",
+            "ready": False,
+            "checks": [{"name": "runtime_import", "ready": False, "detail": str(exc)}],
+        }
+    if by_name.get("deck-builder-high-density") == "ready":
+        capabilities["deck_master.build.high_density.v1"] = str(high_density_capability.get("status") or "blocked_runtime_dependency")
+
     deck_ready = all(
         any(report.get("skill") == SKILL_NAME and report.get("status") == "ready" for report in target_reports[target])
         for target in resolved_targets
@@ -2260,6 +2282,7 @@ def inspect_suite_status(
         "ppt_master_adapter": "ready" if ready("ppt-master") else "blocked",
         "ppt_master_backend": "ready" if production_backend_ready else "blocked",
         "deck_builder": "ready" if ready("deck-builder") else "blocked",
+        "deck_builder_high_density": "ready" if high_density_capability.get("ready") else "blocked",
         "render": "ready" if render_ready else "blocked",
         "deck_quality": "ready" if ready("deck-quality") else "blocked",
         "standalone_audit": "ready" if ready("deck-quality", "ppt-quality-gate") else "blocked",
@@ -2356,6 +2379,7 @@ def inspect_suite_status(
         "targets": target_reports,
         "target_readiness": target_readiness,
         "capabilities": capabilities,
+        "high_density_capability": high_density_capability,
         "task_readiness": task_readiness,
         "library_status": library_status,
         "blocking_summary": blocking_summary,

@@ -135,6 +135,7 @@ def test_page_package_change_invalidates_downstream(tmp_path: Path) -> None:
     first = run_high_density(run)
     old_lock = read_json(run / "high_density_build/content_locks/P001.json")
     old_svg = (run / "high_density_build/svg/P001.svg").read_text(encoding="utf-8")
+    old_source_fingerprint = read_json(run / "build/build_manifest.json")["source_fingerprint"]
     assert first["status"] == "completed"
 
     package = read_json(run / "page_packages/P001.json")
@@ -143,8 +144,10 @@ def test_page_package_change_invalidates_downstream(tmp_path: Path) -> None:
     invalidated = run_high_density(run)
 
     new_lock = read_json(run / "high_density_build/content_locks/P001.json")
+    new_source_fingerprint = read_json(run / "build/build_manifest.json")["source_fingerprint"]
     assert invalidated["status"] == "awaiting_agent_build"
     assert old_lock["content_lock_sha256"] != new_lock["content_lock_sha256"]
+    assert old_source_fingerprint != new_source_fingerprint
     assert not (run / "high_density_build/svg/P001.svg").exists()
     assert not (run / "high_density_build/pptx/deck_high_density.pptx").exists()
 

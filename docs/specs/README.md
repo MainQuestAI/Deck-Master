@@ -51,7 +51,13 @@
 - `deck-master-high-density-builder-next-iteration-spec.md`
   - 目标：把 CyberPPT、native-svg-redraw、PPT Master、image-to-code 和 officecli 的可迁移能力串成 Deck Master 下一轮高密度 Builder 迭代 Spec，作为后续 GStack 评审和工程拆包输入。
 - `deck-master-high-density-builder-engineering-spec-v1.md`
-  - 目标：把已确认的 73 页 MVP 路线推进为工程 Spec，锁定独立 `deck-builder-high-density` Skill、Agent-managed high-density runtime、`content_lock.v1` / `page_scene.v1` / `high_density_manifest.v1`、v2 向后兼容、视觉还原门、DX 错误码和首版 P0/P1 工程包。
+  - 状态：历史基线，已被 High-density Builder Core Engineering Spec v2 替代。
+  - 历史目标：锁定独立 Skill、Agent-managed runtime 和首版合同外壳。
+- `deck-master-high-density-builder-core-engineering-spec-v2.md`
+  - 状态：当前 active development spec。
+  - 目标：重新实现 NBB 内容增强、内容驱动 ImageGen、图片到原生 SVG、真实视觉 QA、SVG-to-DrawingML PPTX 和 73 页外部 benchmark，并以 20 项反伪实现探针作为核心验收门。
+- `deck-master-high-density-builder-reference-migration-evidence.md`
+  - 目标：记录 CyberPPT、native-svg-redraw、Product Design `image-to-code`、PPT Master 和 OfficeCLI 的参考证据、迁移行为、重写落点与冲突裁决。
 
 `v0.9.11` 本轮补齐点：
 

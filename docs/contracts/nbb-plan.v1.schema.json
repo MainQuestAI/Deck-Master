@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/contracts/nbb-plan.v1.schema.json",
+  "title": "NBB Plan v1",
+  "type": "object",
+  "required": ["schema_version", "run_id", "page_count", "evidence_ledger", "storyline_audit", "scr", "pages", "nbb_plan_sha256", "created_at"],
+  "properties": {
+    "schema_version": {"const": "deck_nbb_plan.v1"},
+    "run_id": {"type": "string", "minLength": 1},
+    "page_count": {"type": "integer", "minimum": 1},
+    "evidence_ledger": {"type": "array", "items": {"type": "object"}},
+    "storyline_audit": {"type": "object"},
+    "scr": {"type": "object"},
+    "pages": {"type": "array", "items": {"type": "object"}},
+    "blocked_pages": {"type": "array", "items": {"type": "object"}},
+    "nbb_plan_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "created_at": {"type": "string"}
+  },
+  "additionalProperties": true
+}

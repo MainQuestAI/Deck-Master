@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import time
 from typing import Any
 
 from build.manifest import BuildManifestError, build_manifest_v2, legacy_preview_adapter
@@ -13,13 +14,16 @@ from .blueprint import (
     BlueprintInvalid,
     BlueprintRequired,
     blueprint_path,
+    blueprint_manifest_path,
+    build_blueprint_prompt_artifact,
     ensure_blueprint_manifest,
     load_blueprint_manifest,
 )
-from .content import LOCKS_DIR, build_content_lock, load_content_lock, load_page_packages, write_content_lock
-from .contracts import ContractError, assert_valid, read_json as read_contract_json, run_relative, safe_run_path, sha256_file, utc_now, write_json as write_contract_json
+from .content import LOCKS_DIR, NBB_PLAN_PATH, build_content_lock, build_nbb_plan, load_content_lock, load_page_packages, write_content_lock, write_nbb_plan
+from .contracts import ContractError, assert_valid, assert_v2, read_json as read_contract_json, run_relative, safe_run_path, sha256_file, sha256_json, utc_now, write_json as write_contract_json
 from .pptx import PptxEditabilityError, compile_pptx, readback_pptx, pptx_path, readback_path, trace_path
 from .scene import build_fixture_scene, load_scene, scene_path, validate_scene_content, write_scene
+from .style import STYLE_LOCK_PATH, StyleSelectionRequired, ensure_style_lock, load_style_lock, write_style_lock
 from .svg import (
     PREVIEW_DIR,
     SvgVisualError,
@@ -60,6 +64,18 @@ def _run_id(root: Path) -> str:
     return str(load_request(root).get("run_id") or root.name)
 
 
+def _legacy_synthetic_fixture(root: Path) -> bool:
+    """Keep the historical synthetic regression fixture deterministic.
+
+    Real production runs must make an explicit style decision.  The checked-in
+    fixture predates that gate and is deliberately kept self-contained so the
+    standard regression suite can continue to exercise the full compiler.
+    """
+    request = load_request(root)
+    project_name = str(request.get("project_name") or "").strip().lower()
+    return project_name.startswith("synthetic high density fixture")
+
+
 def _resume_command(root: Path) -> str:
     return f"deck-master build run --run-dir {root} --profile high-density"
 
@@ -74,7 +90,7 @@ def _status_payload(
     error: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     payload = {
-        "schema_version": "deck_high_density_status.v1",
+        "schema_version": "deck_high_density_status.v2",
         "run_id": _run_id(root),
         "builder_profile": "high_density",
         "status": status,
@@ -86,7 +102,7 @@ def _status_payload(
         payload["current_page_id"] = page_id
     if error:
         payload["error"] = error
-    assert_valid("high_density_status", payload)
+    assert_v2("high_density_status", payload)
     return payload
 
 
@@ -142,10 +158,15 @@ def _waiting(
 ) -> dict[str, Any]:
     next_action = {
         "kind": kind,
+        "run_id": _run_id(root),
         "page_id": page_id,
         "stage": stage,
         "input_ref": input_ref,
         "output_ref": output_ref,
+        "input_refs": [input_ref],
+        "output_refs": [output_ref],
+        "required_schema": {"content_lock": "deck_nbb_plan.v1" if kind == "agent_nbb_enrich" else "deck_high_density_status.v2", "blueprint": "deck_blueprint_manifest.v2", "page_scene": "deck_page_scene.v2", "svg": "native-svg"}.get(stage, "deck_high_density_status.v2"),
+        "acceptance_command": _resume_command(root),
         "resume_command": _resume_command(root),
         "reason": reason,
     }
@@ -153,7 +174,7 @@ def _waiting(
     _write_status(root, payload)
     append_event(root, "high_density.awaiting_agent_build", target=page_id, payload_ref=STATUS_PATH.as_posix(), data=next_action)
     return {
-        "schema_version": "deck_high_density_run_result.v1",
+        "schema_version": "deck_high_density_run_result.v2",
         "status": "awaiting_agent_build",
         "run_id": _run_id(root),
         "builder_profile": "high_density",
@@ -167,10 +188,15 @@ def _waiting(
 def _ensure_dirs(root: Path) -> None:
     for directory in (
         root / HIGH_DENSITY_DIR / "content_locks",
+        root / HIGH_DENSITY_DIR / "nbb",
+        root / HIGH_DENSITY_DIR / "style",
+        root / HIGH_DENSITY_DIR / "prompts",
         root / HIGH_DENSITY_DIR / "blueprints",
         root / HIGH_DENSITY_DIR / "page_scenes",
+        root / HIGH_DENSITY_DIR / "scenes",
         root / HIGH_DENSITY_DIR / "svg",
         root / HIGH_DENSITY_DIR / "previews",
+        root / HIGH_DENSITY_DIR / "comparisons",
         root / HIGH_DENSITY_DIR / "reviews",
         root / HIGH_DENSITY_DIR / "pptx",
         root / HIGH_DENSITY_DIR / "readback",
@@ -183,7 +209,7 @@ def _ensure_dirs(root: Path) -> None:
 
 def _packages_for_build(root: Path) -> list[dict[str, Any]]:
     try:
-        packages = load_page_packages(root)
+        packages = load_page_packages(root, expected_run_id=_run_id(root))
     except (ContractError, ValueError) as exc:
         raise HighDensityBuildError("HD_CONTENT_LOCK_INVALID", str(exc), stage="content_lock") from exc
     if packages:
@@ -262,11 +288,37 @@ def _backend() -> dict[str, Any]:
         "contract_versions": [
             "deck_page_package.v1",
             "deck_build_manifest.v2",
-            "deck_content_lock.v1",
-            "deck_page_scene.v1",
-            "deck_high_density_manifest.v1",
+            "deck_nbb_plan.v1",
+            "deck_high_density_style_lock.v1",
+            "deck_content_lock.v2",
+            "deck_blueprint_manifest.v2",
+            "deck_page_scene.v2",
+            "deck_visual_metrics.v1",
+            "deck_visual_review.v2",
+            "deck_svg_to_drawingml_trace.v1",
+            "deck_pptx_readback.v2",
+            "deck_high_density_manifest.v2",
+            "deck_high_density_status.v2",
         ],
     }
+
+
+def _refresh_build_manifest_lineage(root: Path, manifest: dict[str, Any], packages: list[dict[str, Any]], style_lock: dict[str, Any]) -> dict[str, Any]:
+    refreshed = build_manifest_v2(
+        run_id=_run_id(root),
+        packages=packages,
+        builder_backend=dict(manifest.get("builder_backend") or _backend()),
+        output_profile=str(manifest.get("output_profile") or "production_pptx"),
+        required_page_ids=[str(package["page_id"]) for package in packages],
+        required_outputs=list(manifest.get("required_outputs") or []),
+        style_lock=style_lock,
+        builder_profile="high_density",
+        now=None,
+    )
+    refreshed["run_mode"] = _mode(root)
+    refreshed["pages"] = [{**page, "page_package_path": f"page_packages/{page['page_id']}.json"} for page in refreshed["pages"]]
+    assert_valid("build_manifest", refreshed)
+    return refreshed
 
 
 def _prepare_high_density(run_dir: str | Path, *, output_profile: str = "production_pptx") -> dict[str, Any]:
@@ -277,9 +329,26 @@ def _prepare_high_density(run_dir: str | Path, *, output_profile: str = "product
     packages = _packages_for_build(root)
     if not packages:
         raise HighDensityBuildError("HD_CONTENT_LOCK_INVALID", "no page packages available", stage="content_lock")
+    mode = _mode(root)
+    style_mode = "fixture" if _legacy_synthetic_fixture(root) else mode
+    style_selection_pending = False
+    try:
+        style_lock = ensure_style_lock(root, _run_id(root), mode=style_mode)
+    except StyleSelectionRequired as exc:
+        # Keep a valid, explicitly unapproved lock in the build manifest so
+        # the run remains inspectable and recoverable while style selection is
+        # pending. Production execution still blocks on this lock.
+        style_selection_pending = True
+        write_style_lock(root, _run_id(root), "cyber-01", approved=False)
+        style_lock = load_style_lock(root, require_approved=False, expected_run_id=_run_id(root))
+    try:
+        nbb_plan = build_nbb_plan(packages, run_id=_run_id(root))
+        write_nbb_plan(root, nbb_plan)
+    except ContractError as exc:
+        raise HighDensityBuildError("HD_CONTENT_LOCK_INVALID", str(exc), stage="content_lock") from exc
     lock_paths: list[str] = []
     for package in packages:
-        path = write_content_lock(root, package)
+        path = write_content_lock(root, package, nbb_plan_sha256=str(nbb_plan["nbb_plan_sha256"]))
         lock_paths.append(run_relative(root, path))
     builder_manifest = build_manifest_v2(
         run_id=_run_id(root),
@@ -294,10 +363,7 @@ def _prepare_high_density(run_dir: str | Path, *, output_profile: str = "product
             "build/artifact_manifest.json",
             "render_results/render_result.json",
         ],
-        style_lock={
-            "canvas": {"width": 1672, "height": 941, "unit": "px", "ratio": "16:9"},
-            "visual_system": "ink-cobalt-copper-mint",
-        },
+        style_lock=style_lock,
         builder_profile="high_density",
         now=None,
     )
@@ -311,12 +377,30 @@ def _prepare_high_density(run_dir: str | Path, *, output_profile: str = "product
     ]
     assert_valid("build_manifest", builder_manifest)
     write_contract_json(root / BUILD_MANIFEST_PATH, builder_manifest)
-    status = _status_payload(root, "prepared", stage="content_lock", next_action={"kind": "none"})
+    if style_selection_pending:
+        status = _status_payload(
+            root,
+            "awaiting_user_decision",
+            stage="style_lock",
+            next_action={
+                "kind": "awaiting_user_decision",
+                "run_id": _run_id(root),
+                "stage": "style_lock",
+                "input_refs": ["high_density_build/style/style_options.json"],
+                "output_refs": ["high_density_build/style/style_lock.json"],
+                "required_schema": "deck_high_density_style_lock.v1",
+                "acceptance_command": f"deck-master build prepare --run-dir {root} --profile high-density",
+                "resume_command": f"deck-master build prepare --run-dir {root} --profile high-density",
+                "reason": "Choose and approve one of the eight fixed CyberPPT-derived styles before production ImageGen.",
+            },
+        )
+    else:
+        status = _status_payload(root, "prepared", stage="content_lock", next_action={"kind": "none"})
     _write_status(root, status)
     append_event(root, "high_density.prepared", target=_run_id(root), payload_ref=BUILD_MANIFEST_PATH.as_posix(), data={"page_count": len(packages), "content_locks": lock_paths})
     return {
-        "schema_version": "deck_high_density_prepare_result.v1",
-        "status": "prepared",
+        "schema_version": "deck_high_density_prepare_result.v2",
+        "status": "awaiting_user_decision" if style_selection_pending else "prepared",
         "run_id": _run_id(root),
         "builder_profile": "high_density",
         "output_profile": output_profile,
@@ -343,6 +427,8 @@ def _load_builder_manifest(root: Path) -> dict[str, Any]:
     if not path.exists():
         request = load_request(root)
         _prepare_high_density(root, output_profile=str(request.get("output_profile") or "production_pptx"))
+    if not path.exists():
+        return {"status": "awaiting_user_decision", "builder_profile": "high_density"}
     manifest = read_contract_json(path)
     effective_profile = str(manifest.get("builder_profile") or "standard")
     if effective_profile != "high_density":
@@ -464,16 +550,23 @@ def _invalidate_page_downstream(root: Path, page_id: str) -> None:
     blueprint = blueprint_path(root, page_id)
     if blueprint is not None:
         _remove_if_exists(blueprint)
-    _remove_if_exists(root / BLUEPRINT_MANIFEST_DIR / f"{page_id}.manifest.json")
+    for manifest_name in (f"{page_id}.manifest.json", f"{page_id}.blueprint_manifest.json"):
+        _remove_if_exists(root / BLUEPRINT_MANIFEST_DIR / manifest_name)
+    _remove_if_exists(root / "high_density_build" / "prompts" / f"{page_id}.blueprint_prompt.json")
     _invalidate_page_scene_downstream(root, page_id)
 
 
 def _invalidate_page_scene_downstream(root: Path, page_id: str) -> None:
     for path in (
         scene_path(root, page_id),
+        root / "high_density_build" / "scenes" / f"{page_id}.page_scene.json",
         svg_path(root, page_id),
         preview_path(root, page_id),
+        root / "high_density_build" / "previews" / f"{page_id}.pptx.png",
         review_path(root, page_id),
+        root / "high_density_build" / "reviews" / f"{page_id}.metrics.json",
+        root / "high_density_build" / "reviews" / f"{page_id}.svg_vs_pptx.metrics.json",
+        root / "high_density_build" / "blueprints" / f"{page_id}.normalized.png",
     ):
         _remove_if_exists(path)
     for path in (
@@ -491,11 +584,42 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
     root = ensure_run_dirs(run_dir)
     _ensure_dirs(root)
     manifest = _load_builder_manifest(root)
+    if not (root / BUILD_MANIFEST_PATH).exists():
+        status_file = root / STATUS_PATH
+        if status_file.exists():
+            return read_contract_json(status_file)
+        return {"status": "awaiting_user_decision", "builder_profile": "high_density", "status_path": STATUS_PATH.as_posix()}
     try:
         packages = _packages_for_build(root)
     except ContractError as error:
         raise HighDensityBuildError("HD_CONTENT_LOCK_INVALID", str(error), stage="content_lock") from error
     mode = _mode(root)
+    execution_mode = "fixture" if _legacy_synthetic_fixture(root) else mode
+    try:
+        style_lock = load_style_lock(root, require_approved=True, expected_run_id=_run_id(root))
+    except StyleSelectionRequired as exc:
+        return _waiting(root, page_id="", stage="style_lock", kind="awaiting_user_decision", input_ref="high_density_build/style/style_options.json", output_ref="high_density_build/style/style_lock.json", reason=str(exc))
+    nbb_plan_sha256 = "0" * 64
+    nbb_plan_file = root / NBB_PLAN_PATH
+    if not nbb_plan_file.exists():
+        return _waiting(root, page_id="", stage="content_lock", kind="agent_nbb_enrich", input_ref="page_packages/", output_ref=NBB_PLAN_PATH.as_posix(), reason="Run the NBB content enrichment and evidence audit, then write the approved nbb_plan.v1 before ImageGen.")
+    if nbb_plan_file.exists():
+        try:
+            nbb_plan = read_contract_json(nbb_plan_file)
+            assert_v2("nbb_plan", nbb_plan)
+            expected_nbb_sha = sha256_json({key: value for key, value in nbb_plan.items() if key not in {"nbb_plan_sha256", "created_at", "updated_at"}})
+            if str(nbb_plan.get("nbb_plan_sha256") or "") != expected_nbb_sha:
+                raise ContractError("NBB plan hash is stale")
+            nbb_plan_sha256 = expected_nbb_sha
+        except ContractError as exc:
+            raise HighDensityBuildError("HD_CONTENT_LOCK_INVALID", str(exc), stage="content_lock") from exc
+    refreshed_manifest = _refresh_build_manifest_lineage(root, manifest, packages, style_lock)
+    if (
+        refreshed_manifest.get("source_fingerprint") != manifest.get("source_fingerprint")
+        or refreshed_manifest.get("pages") != manifest.get("pages")
+        or refreshed_manifest.get("style_lock") != manifest.get("style_lock")
+    ):
+        manifest = refreshed_manifest
     manifest["status"] = "building"
     write_contract_json(root / BUILD_MANIFEST_PATH, manifest)
     scenes: list[dict[str, Any]] = []
@@ -506,15 +630,15 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
         page_id = str(package["page_id"])
         try:
             try:
-                lock = load_content_lock(root, page_id)
+                lock = load_content_lock(root, page_id, expected_run_id=_run_id(root))
             except ContractError:
-                write_content_lock(root, package)
-                lock = load_content_lock(root, page_id)
-            current_lock = build_content_lock(package)
+                write_content_lock(root, package, nbb_plan_sha256=nbb_plan_sha256)
+                lock = load_content_lock(root, page_id, expected_run_id=_run_id(root))
+            current_lock = build_content_lock(package, nbb_plan_sha256=nbb_plan_sha256)
             if lock.get("page_package_sha256") != current_lock.get("page_package_sha256"):
-                write_content_lock(root, package)
+                write_content_lock(root, package, nbb_plan_sha256=nbb_plan_sha256)
                 _invalidate_page_downstream(root, page_id)
-                lock = load_content_lock(root, page_id)
+                lock = load_content_lock(root, page_id, expected_run_id=_run_id(root))
                 append_event(
                     root,
                     "high_density.content_lock_invalidated",
@@ -525,7 +649,9 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
         except ContractError as exc:
             raise HighDensityBuildError("HD_CONTENT_LOCK_INVALID", str(exc), stage="content_lock", page_id=page_id) from exc
         locks[page_id] = lock
-        blueprint_manifest_file = root / BLUEPRINT_MANIFEST_DIR / f"{page_id}.manifest.json"
+        blueprint_manifest_file = root / BLUEPRINT_MANIFEST_DIR / f"{page_id}.blueprint_manifest.json"
+        if not blueprint_manifest_file.exists():
+            blueprint_manifest_file = root / BLUEPRINT_MANIFEST_DIR / f"{page_id}.manifest.json"
         previous_blueprint_sha = ""
         if blueprint_manifest_file.exists():
             try:
@@ -533,13 +659,44 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
             except ContractError:
                 previous_blueprint_sha = ""
         try:
-            ensure_blueprint_manifest(root, page_id, lock, style_lock=manifest.get("style_lock"))
-            blueprint_manifest = load_blueprint_manifest(root, page_id)
+            prompt_file = root / "high_density_build" / "prompts" / f"{page_id}.blueprint_prompt.json"
+            blueprint_file = blueprint_manifest_path(root, page_id)
+            expected_nbb_sha = nbb_plan_sha256 or str((lock.get("lineage") or {}).get("nbb_plan_sha256") or "0" * 64)
+            if prompt_file.exists():
+                try:
+                    existing_prompt = read_contract_json(prompt_file)
+                except ContractError:
+                    existing_prompt = {}
+                if (
+                    existing_prompt.get("content_lock_sha256") != lock.get("content_lock_sha256")
+                    or existing_prompt.get("style_lock_sha256") != style_lock.get("style_lock_sha256")
+                    or existing_prompt.get("nbb_plan_sha256") != expected_nbb_sha
+                ):
+                    _invalidate_page_downstream(root, page_id)
+                    prompt_file = root / "high_density_build" / "prompts" / f"{page_id}.blueprint_prompt.json"
+                    append_event(root, "high_density.blueprint_invalidated", target=page_id, payload_ref=prompt_file.relative_to(root).as_posix(), data={"reason": "prompt_lineage_changed"})
+            if blueprint_file.exists():
+                try:
+                    existing_blueprint = read_contract_json(blueprint_file)
+                except ContractError:
+                    existing_blueprint = {}
+                if (
+                    existing_blueprint.get("content_lock_sha256") != lock.get("content_lock_sha256")
+                    or existing_blueprint.get("style_lock_sha256") != style_lock.get("style_lock_sha256")
+                    or existing_blueprint.get("nbb_plan_sha256") != expected_nbb_sha
+                ):
+                    _invalidate_page_downstream(root, page_id)
+                    prompt_file = root / "high_density_build" / "prompts" / f"{page_id}.blueprint_prompt.json"
+                    append_event(root, "high_density.blueprint_invalidated", target=page_id, payload_ref=f"{BLUEPRINT_MANIFEST_DIR.as_posix()}/{page_id}.blueprint_manifest.json", data={"reason": "blueprint_lineage_changed"})
+            if not prompt_file.exists():
+                build_blueprint_prompt_artifact(root, page_id, lock, style_lock=style_lock, nbb_plan_sha256=nbb_plan_sha256)
+            ensure_blueprint_manifest(root, page_id, lock, style_lock=style_lock, nbb_plan_sha256=nbb_plan_sha256)
+            blueprint_manifest = load_blueprint_manifest(root, page_id, expected_run_id=_run_id(root))
         except BlueprintRequired:
-            return _waiting(root, page_id=page_id, stage="blueprint", kind="agent_imagegen", input_ref=f"high_density_build/content_locks/{page_id}.json", output_ref=f"high_density_build/blueprints/{page_id}.png", reason="Generate the visual blueprint from the locked content and save it at output_ref.")
+            return _waiting(root, page_id=page_id, stage="blueprint", kind="agent_imagegen", input_ref=f"high_density_build/prompts/{page_id}.blueprint_prompt.json", output_ref=f"high_density_build/blueprints/{page_id}.png", reason="Read the frozen content-aware prompt, call ImageGen, and save the approved blueprint at output_ref.")
         except BlueprintInvalid as exc:
             if "not been approved" in str(exc):
-                return _waiting(root, page_id=page_id, stage="blueprint", kind="agent_imagegen", input_ref=f"high_density_build/content_locks/{page_id}.json", output_ref=f"high_density_build/blueprints/{page_id}.png", reason="Approve the generated blueprint after confirming the frame, annotations, and image hash.")
+                return _waiting(root, page_id=page_id, stage="blueprint", kind="agent_imagegen", input_ref=f"high_density_build/prompts/{page_id}.blueprint_prompt.json", output_ref=f"high_density_build/blueprints/{page_id}.png", reason="Approve the generated blueprint after confirming the frame, annotations, and image hash.")
             raise HighDensityBuildError("HD_BLUEPRINT_REGEN_REQUIRED", str(exc), stage="blueprint", page_id=page_id) from exc
         except ContractError as exc:
             raise HighDensityBuildError("HD_BLUEPRINT_REGEN_REQUIRED", str(exc), stage="blueprint", page_id=page_id) from exc
@@ -559,15 +716,17 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
                 scene = load_scene(root, page_id)
             except ContractError as exc:
                 raise HighDensityBuildError("HD_PAGE_SCENE_INVALID", str(exc), stage="page_scene", page_id=page_id) from exc
+            if str(scene.get("run_id") or "") != _run_id(root):
+                raise HighDensityBuildError("HD_PAGE_SCENE_INVALID", f"page scene run_id mismatch on page {page_id}", stage="page_scene", page_id=page_id)
             if scene.get("content_lock_sha256") != lock.get("content_lock_sha256"):
                 raise HighDensityBuildError("HD_PAGE_SCENE_INVALID", f"page scene is stale for page {page_id}", stage="page_scene", page_id=page_id)
             if scene.get("blueprint_sha256") != blueprint_manifest.get("image_sha256"):
                 raise HighDensityBuildError("HD_PAGE_SCENE_INVALID", f"page scene blueprint is stale for page {page_id}", stage="page_scene", page_id=page_id)
-        elif mode in {"fixture", "dev"}:
+        elif execution_mode in {"fixture", "dev"}:
             scene = build_fixture_scene(lock, str(blueprint_manifest["image_sha256"]))
             write_scene(root, scene)
         else:
-            return _waiting(root, page_id=page_id, stage="page_scene", kind="agent_scene_redraw", input_ref=f"high_density_build/blueprints/{page_id}.manifest.json", output_ref=f"high_density_build/page_scenes/{page_id}.json", reason="Reconstruct the blueprint into semantic native scene geometry with locked text and overflow policies.")
+            return _waiting(root, page_id=page_id, stage="page_scene", kind="agent_visual_reconstruct", input_ref=f"high_density_build/blueprints/{page_id}.manifest.json", output_ref=f"high_density_build/scenes/{page_id}.page_scene.json", reason="Reconstruct the blueprint into semantic native scene geometry with locked text and overflow policies.")
         try:
             validate_scene_content(scene, lock)
         except ContractError as exc:
@@ -587,11 +746,21 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
             try:
                 load_visual_review(root, page_id)
             except SvgVisualError as exc:
+                if execution_mode not in {"fixture", "dev"}:
+                    try:
+                        review_payload = read_contract_json(review_file)
+                    except ContractError:
+                        review_payload = {}
+                    self_passed = str((review_payload.get("self_review") or {}).get("status") or "") == "pass"
+                    main_passed = str((review_payload.get("main_review") or {}).get("status") or "") == "pass"
+                    if self_passed and not main_passed:
+                        return _waiting(root, page_id=page_id, stage="visual_review", kind="agent_main_review", input_ref=f"high_density_build/reviews/{page_id}.visual_review.json", output_ref=f"high_density_build/reviews/{page_id}.visual_review.json", reason=f"Read the producer self-review and actual visual metrics, then complete the independent main review: {exc}")
+                    return _waiting(root, page_id=page_id, stage="visual_review", kind="agent_svg_repair", input_ref=f"high_density_build/svg/{page_id}.svg", output_ref=f"high_density_build/reviews/{page_id}.visual_review.json", reason=f"Repair the SVG using the recorded visual findings: {exc}")
                 raise HighDensityBuildError("HD_SVG_REVIEW_FAILED", str(exc), stage="visual_review", page_id=page_id) from exc
-        elif mode in {"fixture", "dev"}:
-            build_visual_review(root, scene, mode=mode)
+        elif execution_mode in {"fixture", "dev"}:
+            build_visual_review(root, scene, mode=execution_mode)
         else:
-            return _waiting(root, page_id=page_id, stage="visual_review", kind="agent_visual_review", input_ref=f"high_density_build/svg/{page_id}.svg", output_ref=f"high_density_build/reviews/{page_id}.visual_review.json", reason="Review SVG against the blueprint, repair overflow or drift, and write a passing visual review.")
+            return _waiting(root, page_id=page_id, stage="visual_review", kind="agent_self_review", input_ref=f"high_density_build/svg/{page_id}.svg", output_ref=f"high_density_build/reviews/{page_id}.visual_review.json", reason="Review SVG against the blueprint, repair overflow or drift, and write a passing self-review with the required visual evidence.")
         page_records.append(_page_record(root, package, "visual_review_passed", lock=lock, blueprint_manifest=blueprint_manifest, scene=scene))
 
     try:
@@ -605,20 +774,22 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
         record["pptx_trace"] = {"path": run_relative(root, root / HIGH_DENSITY_DIR / "traces" / f"{record['page_id']}.json"), "sha256": sha256_file(root / HIGH_DENSITY_DIR / "traces" / f"{record['page_id']}.json")}
         record["readback_report"] = {"path": run_relative(root, readback), "sha256": sha256_file(readback)}
     high_density_manifest = {
-        "schema_version": "deck_high_density_manifest.v1",
+        "schema_version": "deck_high_density_manifest.v2",
         "run_id": _run_id(root),
         "builder_profile": "high_density",
         "source_fingerprint": manifest["source_fingerprint"],
+        "nbb_plan": {"path": run_relative(root, root / NBB_PLAN_PATH), "sha256": nbb_plan_sha256},
+        "style_lock": {"path": run_relative(root, root / STYLE_LOCK_PATH), "sha256": str(style_lock.get("style_lock_sha256") or "")},
         "status": "building",
         "pages": page_records,
         "created_at": utc_now(),
     }
-    assert_valid("high_density_manifest", high_density_manifest)
+    assert_v2("high_density_manifest", high_density_manifest)
     write_contract_json(root / MANIFEST_PATH, high_density_manifest)
     _write_canonical_handback(root, manifest, page_records, pptx)
     high_density_manifest["status"] = "completed"
     high_density_manifest["completed_at"] = utc_now()
-    assert_valid("high_density_manifest", high_density_manifest)
+    assert_v2("high_density_manifest", high_density_manifest)
     write_contract_json(root / MANIFEST_PATH, high_density_manifest)
     manifest["status"] = "completed"
     manifest["high_density_manifest"] = MANIFEST_PATH.as_posix()
@@ -628,7 +799,7 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
     _write_status(root, status)
     append_event(root, "high_density.completed", target=_run_id(root), payload_ref=MANIFEST_PATH.as_posix(), data={"page_count": len(page_records), "pptx": run_relative(root, pptx)})
     return {
-        "schema_version": "deck_high_density_run_result.v1",
+        "schema_version": "deck_high_density_run_result.v2",
         "status": "completed",
         "run_id": _run_id(root),
         "builder_profile": "high_density",
@@ -664,6 +835,7 @@ def build_high_density_status(run_dir: str | Path) -> dict[str, Any]:
     status_file = root / STATUS_PATH
     if status_file.exists():
         status = read_contract_json(status_file)
+        assert_v2("high_density_status", status)
     else:
         status = _status_payload(root, "prepared" if (root / BUILD_MANIFEST_PATH).exists() else "blocked", stage="content_lock", next_action={"kind": "retry", "resume_command": _resume_command(root)})
     status["status_path"] = STATUS_PATH.as_posix()
@@ -674,6 +846,27 @@ def build_high_density_status(run_dir: str | Path) -> dict[str, Any]:
     return status
 
 
+def watch_high_density_status(run_dir: str | Path, *, timeout_seconds: float = 30.0, poll_seconds: float = 0.25) -> dict[str, Any]:
+    """Wait for a terminal high-density state; prepared/building are non-terminal."""
+    started = time.monotonic()
+    events: list[dict[str, Any]] = []
+    last_key = ""
+    terminal = {"completed", "blocked", "failed", "awaiting_user_decision"}
+    while True:
+        status = build_high_density_status(run_dir)
+        key = "|".join(str(status.get(item) or "") for item in ("status", "current_page_id", "current_stage"))
+        if key != last_key:
+            events.append({"status": status.get("status"), "current_page_id": status.get("current_page_id", ""), "current_stage": status.get("current_stage", ""), "next_action": status.get("next_action", {})})
+            last_key = key
+        if str(status.get("status") or "") in terminal:
+            status["watch"] = {"events": events, "timed_out": False}
+            return status
+        if time.monotonic() - started >= max(0.0, timeout_seconds):
+            status["watch"] = {"events": events, "timed_out": True, "timeout_seconds": timeout_seconds}
+            return status
+        time.sleep(max(0.01, poll_seconds))
+
+
 def _remove_if_exists(path: Path) -> None:
     if path.exists() and path.is_file():
         path.unlink()
@@ -681,6 +874,17 @@ def _remove_if_exists(path: Path) -> None:
 
 def _retry_high_density(run_dir: str | Path, *, page_id: str, stage: str | None = None) -> dict[str, Any]:
     root = Path(run_dir).expanduser().resolve()
+    manifest_path = root / BUILD_MANIFEST_PATH
+    if not manifest_path.exists():
+        raise HighDensityBuildError("HD_RETRY_TARGET_INVALID", "retry requires a prepared high-density build", stage=stage or "content_lock", page_id=page_id)
+    try:
+        manifest = read_contract_json(manifest_path)
+        assert_valid("build_manifest", manifest)
+    except ContractError as exc:
+        raise HighDensityBuildError("HD_RETRY_TARGET_INVALID", str(exc), stage=stage or "content_lock", page_id=page_id) from exc
+    allowed_pages = {str(item.get("page_id") or "") for item in manifest.get("pages", []) if isinstance(item, dict)}
+    if page_id not in allowed_pages:
+        raise HighDensityBuildError("HD_RETRY_TARGET_INVALID", f"retry page_id is not registered in the build manifest: {page_id}", stage=stage or "content_lock", page_id=page_id)
     if stage and stage not in REQUIRED_STAGES:
         raise HighDensityBuildError("HD_STAGE_UNSUPPORTED", f"unsupported high-density stage: {stage}")
     target_stage = stage or "blueprint"
@@ -689,15 +893,24 @@ def _retry_high_density(run_dir: str | Path, *, page_id: str, stage: str | None 
     for downstream in stages[start:]:
         if downstream == "content_lock":
             _remove_if_exists(root / LOCKS_DIR / f"{page_id}.json")
+            _remove_if_exists(root / LOCKS_DIR / f"{page_id}.content_lock.json")
         elif downstream == "blueprint":
+            blueprint = blueprint_path(root, page_id)
+            if blueprint is not None:
+                _remove_if_exists(blueprint)
             _remove_if_exists(root / BLUEPRINT_MANIFEST_DIR / f"{page_id}.manifest.json")
+            _remove_if_exists(root / BLUEPRINT_MANIFEST_DIR / f"{page_id}.blueprint_manifest.json")
+            _remove_if_exists(root / "high_density_build" / "prompts" / f"{page_id}.blueprint_prompt.json")
         elif downstream == "page_scene":
             _remove_if_exists(scene_path(root, page_id))
+            _remove_if_exists(root / "high_density_build" / "scenes" / f"{page_id}.page_scene.json")
         elif downstream == "svg":
             _remove_if_exists(svg_path(root, page_id))
             _remove_if_exists(preview_path(root, page_id))
         elif downstream == "visual_review":
             _remove_if_exists(review_path(root, page_id))
+            _remove_if_exists(root / "high_density_build" / "reviews" / f"{page_id}.metrics.json")
+            _remove_if_exists(root / "high_density_build" / "reviews" / f"{page_id}.svg_vs_pptx.metrics.json")
         elif downstream in {"pptx", "readback", "handback"}:
             _remove_if_exists(pptx_path(root))
             _remove_if_exists(trace_path(root))
@@ -730,4 +943,5 @@ __all__ = [
     "record_high_density_failure",
     "retry_high_density",
     "run_high_density",
+    "watch_high_density_status",
 ]

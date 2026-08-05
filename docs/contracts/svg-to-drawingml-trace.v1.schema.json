@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/contracts/svg-to-drawingml-trace.v1.schema.json",
+  "title": "SVG to DrawingML Trace v1",
+  "type": "object",
+  "required": ["schema_version", "run_id", "page_id", "svg_sha256", "pptx_sha256", "elements", "coverage", "created_at"],
+  "properties": {
+    "schema_version": {"const": "deck_svg_to_drawingml_trace.v1"},
+    "run_id": {"type": "string"},
+    "page_id": {"type": "string"},
+    "svg_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "pptx_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "elements": {"type": "array", "items": {"type": "object"}},
+    "coverage": {"type": "object"},
+    "unsupported": {"type": "array", "items": {"type": "object"}},
+    "created_at": {"type": "string"}
+  },
+  "additionalProperties": true
+}

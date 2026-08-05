@@ -1,6 +1,6 @@
 ---
 name: deck-builder-high-density
-description: Build editable high-density PPTX decks from locked Page Packages through NBB enrichment, visual blueprints, native SVG, and DrawingML readback. Use for high-density consulting decks that need image-led composition with editable final output.
+description: Build editable high-density PPTX decks from locked Page Packages through CyberPPT-derived NBB enrichment, content-aware image blueprints, native SVG reconstruction, and SVG-to-DrawingML readback.
 triggers:
   - build high-density deck
   - editable high-density pptx
@@ -10,34 +10,47 @@ triggers:
 
 # High-Density Deck Builder
 
-Use this Skill when the run already has validated `page_packages/*.json` and the requested builder profile is `high-density`. The Skill owns the complete high-density route: content enrichment, blueprint generation, semantic scene reconstruction, native SVG, editable PPTX, readback, and canonical handback.
-
-The implementation is repository-owned. Do not compose this route by invoking CyberPPT, `native-svg-redraw`, PPT Master, or another Skill as a runtime stage.
-
-## Use When
-
-Use after the Producer has created validated Page Packages and the requested output is an editable, high-density PPTX. Use for dense consulting pages that need an ImageGen composition blueprint followed by native reconstruction and readback.
-
-## Do Not Use
-
-Do not use for ordinary standard builds, final quality approval, unsupported customer claims, or a run whose only input is `preview_manifest.json` in production mode.
+Use this Skill when the run has validated `page_packages/*.json` and the requested profile is `high-density`. This Skill owns the complete route inside Deck Master. CyberPPT, `native-svg-redraw`, Product Design `image-to-code`, PPT Master, and OfficeCLI are reference capabilities only. They are not runtime dependencies.
 
 ## First Checks
 
-- Page Packages exist and are ready for build.
-- The high-density capability is available.
-- The output profile is `production_pptx`.
-- The run has a 16:9 visual system lock or an explicit default lock.
+- Page Packages exist, are valid, unique, ready for build, and match the run ID.
+- The high-density capability reports all v2 schemas and visual renderers ready.
+- Production has an approved `deck_high_density_style_lock.v1`; missing lock enters style selection.
+- The output profile is `production_pptx` or an explicitly permitted fixture/dev profile.
+
+## Do Not Use
+
+- Use for standard-profile decks or direct office post-processing.
+- Use when the run has only an image or preview manifest and no validated Page Packages.
+- Use to treat blueprint text as factual source material.
 
 ## Forcing Questions
 
-- Are all key claims, numbers, caveats, and speaker notes locked to the Page Package?
-- Which page regions are P0/P1 and must pass exact text and geometry readback?
-- Has the blueprint been checked for ratio drift, page numbers, and internal annotations?
+- Which Page Package evidence supports each visible claim and numeric value?
+- Which fixed style lock is approved for this run?
+- Which elements must remain native and editable after handback?
 
 ## Runtime Ownership
 
-This Skill owns the high-density build profile inside the `deck-builder` stage: NBB enrichment, blueprint continuation, scene reconstruction, native SVG, editable PPTX, readback, and canonical handback. `deck-quality` owns final quality and delivery approval.
+Deck Master owns the v2 contracts, stage state, lineage, retries, compiler, readback, and canonical handback. Agent-owned actions return exact continuation artifacts and commands to this runtime.
+
+## Canonical Chain
+
+```text
+Page Package + evidence/narrative context
+-> CyberPPT-derived NBB plan
+-> content_lock.v2
+-> frozen content-aware blueprint_prompt.v1
+-> approved ImageGen blueprint
+-> page_scene.v2 + native SVG
+-> measured blueprint/SVG review
+-> SVG-to-DrawingML compiler
+-> editable PPTX + OOXML readback
+-> canonical handback -> deck-quality
+```
+
+Page Package remains the fact source. ImageGen provides composition evidence. The approved SVG provides the PPTX visual source. Scene is the semantic, measurement, text-reference, and acceptance sidecar.
 
 ## Allowed Commands
 
@@ -45,18 +58,66 @@ This Skill owns the high-density build profile inside the `deck-builder` stage: 
 deck-master suite-status --capability deck_master.build.high_density.v1 --output json
 deck-master build prepare --run-dir <run_dir> --profile high-density --output-profile production_pptx
 deck-master build run --run-dir <run_dir> --profile high-density
-deck-master build status --run-dir <run_dir> --profile high-density --watch
+deck-master build status --run-dir <run_dir> --profile high-density --watch --watch-timeout 30
 deck-master next-step --run-dir <run_dir>
 deck-master build retry --run-dir <run_dir> --profile high-density --page-id P001 --stage svg
 ```
 
+## Runtime Stages
+
+### A. NBB and Content Lock
+
+Write `high_density_build/nbb/nbb_plan.json` and `high_density_build/content_locks/<page_id>.content_lock.json` using `deck_nbb_plan.v1` and `deck_content_lock.v2`.
+
+Carry forward CyberPPT's NBB behavior: evidence ledger, storyline/SCR audit, conclusion, supporting arguments, caveat, SO WHAT, page material pool, density target, required component IDs, and required text refs. Every factual or numeric statement retains evidence lineage. Sparse pages, unsupported facts, missing components, and stale hashes block before blueprint generation.
+
+### B. Style Lock and ImageGen Blueprint
+
+The fixed CyberPPT-derived registry contains eight stable style IDs. Production must use an approved `high_density_build/style/style_lock.json`; fixture/dev may use the explicit deterministic default.
+
+Before ImageGen, write `high_density_build/prompts/<page_id>.blueprint_prompt.json` using `deck_blueprint_prompt.v1`. The prompt must contain the real title, conclusion, content summary, evidence IDs, required components, target language, style lock, and prohibited page numbers/internal labels. The prompt artifact must exist before the image.
+
+Write `high_density_build/blueprints/<page_id>.blueprint_manifest.json` using `deck_blueprint_manifest.v2`. Record prompt/content/style hashes, image hash, provider metadata, source canvas, contained 16:9 frame, and exact transform. Non-16:9 sources use an inscribed frame and never stretch.
+
+### C. Image to Native SVG
+
+Agent reads the actual blueprint and content lock, writes `page_scene.v2` plus approved native SVG, then uses the repository tools for validation and measurement. The canonical Scene path is `high_density_build/scenes/<page_id>.page_scene.json`; `page_scenes/<page_id>.json` is a compatibility mirror.
+
+Every visible element has a stable ID, component ID, role, priority, source/target bbox, z-order, text ref or asset ref, editability target, and overflow policy. P0/P1 text is exact content-lock text. Whole-page/near-full-page images, `foreignObject`, scripts, iframes, external CSS/resources, hidden text layers, and unregistered images are blocked. Registered images are limited to 35% per asset and 50% in aggregate, and cannot cover P0/P1 text.
+
+### D. Measured Visual QA
+
+Render normalized blueprint and SVG at the same `1672 x 941` canvas. Metrics are generated from actual files with Pillow + NumPy and `rsvg-convert`, then written to `high_density_build/reviews/<page_id>.metrics.json`. The v2 review must bind renderer, source hashes, mask hash, thresholds, text-masked SSIM, P0/P1 bbox deltas, color/layout findings, and component coverage.
+
+Initial gates: text-masked SSIM `>= 0.92`, P0 region SSIM `>= 0.92`, P0/P1 bbox edge delta `<= 2 px`, 100% P0/P1 text/component coverage, zero unresolved overflow/overlap/wrong-anchor findings. Production needs producer self-review and main review evidence.
+
+### E. SVG to DrawingML and Handback
+
+The compiler reads approved SVG DOM, `page_scene.v2` sidecar, content-lock notes/text refs, and registered asset map. Geometry, styles, visible text, and z-order come from SVG. The Scene cannot generate PPTX independently.
+
+Supported native output includes text/tspan, rect/circle/ellipse, line/polyline/polygon, supported paths, controlled opacity/fill/stroke, registered images, groups, and notes. Unsupported SVG elements fail with the element ID and a recovery action. Write `deck_svg_to_drawingml_trace.v1`, `deck_pptx_readback.v2`, and SVG/PPTX render parity evidence. PPTX parity requires text-masked SSIM `>= 0.97`, P0/P1 geometry `<= 0.75 pt`, exact P0 text, complete P1 text, and full trace coverage.
+
 ## Exit Artifacts
 
-`content_lock.v1`, blueprint manifest, `page_scene.v1`, native SVG, preview PNG, visual review evidence, native PPTX, PPTX trace, readback report, `high_density_manifest.v1`, `build_manifest.json`, `artifact_manifest.json`, and `render_result.json`.
+- `nbb/nbb_plan.json`
+- `style/style_options.json` and `style/style_lock.json`
+- `content_locks/<page_id>.content_lock.json`
+- `prompts/<page_id>.blueprint_prompt.json`
+- `blueprints/<page_id>.blueprint_manifest.json` and normalized preview
+- `scenes/<page_id>.page_scene.json`
+- native SVG, SVG preview, metrics, self-review, and main review
+- page PPTX trace, page/deck readback, and PPTX render parity
+- `high_density_manifest.v2`, `build_manifest.json`, `artifact_manifest.json`, and `render_result.json`
 
 ## Next Skill
 
-`deck-quality`
+`deck-quality` consumes the canonical handback after the high-density manifest and readback gates pass.
+
+## Agent Continuation
+
+When Agent work is required, return `awaiting_agent_build` with `run_id`, page/stage, `input_refs`, `output_refs`, `required_schema`, `acceptance_command`, `resume_command`, and reason. Supported actions are `agent_nbb_enrich`, `agent_imagegen`, `agent_visual_reconstruct`, `agent_svg_repair`, `agent_self_review`, and `agent_main_review`. Style selection uses `awaiting_user_decision`.
+
+`build status --watch` waits through `prepared`, `building`, and `awaiting_agent_build`; it exits only at `completed`, `blocked`, `failed`, `awaiting_user_decision`, or timeout.
 
 ## Stop Conditions
 
@@ -67,139 +128,13 @@ deck-master build retry --run-dir <run_dir> --profile high-density --page-id P00
 - `HD_PPTX_EDITABILITY_FAILED`
 - `HD_ASSET_POLICY_BLOCKED`
 - `HD_CONTRACT_HANDBACK_FAILED`
-- missing high-density capability
+- missing schema, Python package, SVG renderer, PPTX renderer, or approved style lock
 
 ## Safety Rules
 
-Keep internal production notes out of customer-visible content. Do not treat ImageGen text as a fact source. Do not emit page numbers or internal generation annotations. Do not wrap the main page in a whole-page image. Do not bypass P0/P1 overflow, visual review, readback, or `deck-quality`.
+- Keep all paths run-relative and reject traversal, cross-run packages, malformed contracts, and stale hashes.
+- Keep Page Package evidence as the factual source; every derived claim must retain evidence references.
+- Reject whole-page image wrappers, hidden text overlays, unregistered assets, unsupported SVG, and incomplete readback.
+- Keep private benchmark sources and provider payloads out of the repository; retain only sanitized evidence indexes and metrics summaries.
 
-## Contract And Entry
-
-Start by checking the capability and preparing the run:
-
-```bash
-deck-master suite-status --capability deck_master.build.high_density.v1 --output json
-deck-master build prepare --run-dir <run_dir> --profile high-density --output-profile production_pptx
-deck-master build run --run-dir <run_dir> --profile high-density
-```
-
-The input truth source is `page_packages/*.json`. `preview_manifest.json` may only be adapted in `fixture` or `dev` mode. Production runs must stop with `HD_CONTENT_LOCK_INVALID` when Page Packages are missing.
-
-## Workflow
-
-### 1. Content Lock And NBB Enrichment
-
-For every Page Package, write `high_density_build/content_locks/<page_id>.json` using `content_lock.v1`.
-
-- Preserve the exact customer-visible facts, numbers, claims, caveats, evidence bindings, and speaker notes.
-- Carry forward the NBB enrichment pattern: classify page role and density, expand explanatory structure, identify derived claims, reserve regions for key numbers and tables, and choose a multi-region composition for dense pages.
-- Treat ImageGen text as layout evidence only. It cannot add facts or replace locked text.
-- Exclude page numbers, generation notes, internal labels, production comments, and unsupported claims.
-- A Page Package hash change invalidates its lock and all downstream artifacts.
-
-### 2. Blueprint Generation
-
-When a visual blueprint is required, use the active Agent ImageGen capability with the prompt produced from the content lock, density analysis, style lock, and visual inventory. Save the image as:
-
-```text
-high_density_build/blueprints/<page_id>.png
-```
-
-The generated image is a composition blueprint, never the final PPTX content. The adjacent manifest must be `high_density_build/blueprints/<page_id>.manifest.json` and include:
-
-```json
-{
-  "schema_version": "deck_blueprint_manifest.v1",
-  "run_id": "<run_id>",
-  "page_id": "<page_id>",
-  "image_path": "high_density_build/blueprints/<page_id>.png",
-  "image_sha256": "<64hex>",
-  "prompt_sha256": "<64hex>",
-  "source_canvas": {"width": 1672, "height": 941, "unit": "px"},
-  "slide_frame": {"x": 0, "y": 0, "w": 1672, "h": 941},
-  "fit_mode": "approved_frame",
-  "internal_annotations": [],
-  "approved": true,
-  "created_at": "<date-time>"
-}
-```
-
-Before approval, inspect the blueprint for ratio drift, hidden annotations, page numbers, and internal production labels. Use one uniform frame transform; do not stretch a non-16:9 source.
-
-### 3. Scene Reconstruction
-
-Rebuild the blueprint into `high_density_build/page_scenes/<page_id>.json` using `page_scene.v1`.
-
-- Reuse visible text from the content lock through `text_ref`.
-- Give every element a stable `element_id`, role, priority, bbox, editability target, and asset policy.
-- Every text element declares preferred and minimum size, maximum lines, and an overflow policy.
-- P0 includes title, key claim, key numbers, SO WHAT, core table text, and sources. P1 includes major cards, connectors, chart labels, and explanatory text.
-- Preserve the canonical 1672 x 941 canvas and reject out-of-canvas geometry.
-- Add `evidence_refs` when the region depends on a locked evidence binding.
-
-### 4. Native SVG And Visual Review
-
-Compile the scene to `high_density_build/svg/<page_id>.svg` and render its preview to `high_density_build/previews/<page_id>.png`.
-
-- Use native text and shapes for all P0/P1 content.
-- Whole-page images, `foreignObject`, `script`, `iframe`, CSS `style`, external assets, and hidden overflow are blocked.
-- Compare the SVG preview to the blueprint at full-page and high-density regions. Check title, key numbers, tables, connectors, icons, annotations, and footer alignment.
-- Production runs require a passing `high_density_build/reviews/<page_id>.visual_review.json`. Fixture and dev runs may use the deterministic review adapter.
-- The review records the current SVG and blueprint hashes; a stale review is rejected before PPTX compilation.
-- The review must report `text_masked_ssim >= 0.92` and `bbox_max_delta_px <= 2.0`; PPTX readback allows at most `0.75 pt` per P0/P1 bbox edge.
-- Any P0/P1 overflow or unresolved visual drift blocks the page and returns a stage-specific retry command.
-
-### 5. Editable PPTX And Readback
-
-Compile all approved scenes into `high_density_build/pptx/deck_high_density.pptx`.
-
-- Keep text, rectangles, lines, supported paths, and registered assets as editable objects.
-- Registered assets must use a Page Package `asset_bindings` entry with `approved: true`, a run-relative PNG/JPEG path, and a matching SHA-256. Reference them from a scene with `asset_ref=<asset_id>` and `asset_policy=registered`.
-- Full-page image wrappers, external image URLs, unregistered assets, and stale asset hashes stop the build with `HD_ASSET_POLICY_BLOCKED`.
-- Preserve one documented px-to-slide-unit transform.
-- Write `high_density_build/traces/pptx_trace.json` and page traces so every output object maps to a scene element.
-- Run OOXML readback for slide count, speaker notes, P0/P1 text, geometry, and image relationships.
-- A failed readback blocks the build with `HD_PPTX_EDITABILITY_FAILED`.
-
-### 6. Canonical Handback
-
-On completion, write and validate:
-
-```text
-high_density_build/high_density_manifest.json
-build/build_manifest.json
-build/artifact_manifest.json
-render_results/render_result.json
-```
-
-`high_density_manifest.v1` carries internal lineage. The canonical artifact and render manifests carry only final PPTX and page preview artifacts and use run-relative paths. The next stage is `deck-quality`; high-density self-review does not approve final delivery.
-
-## Agent Continuation And Recovery
-
-When an Agent action is required, return `awaiting_agent_build` in `high_density_build/status.json` with the exact page, stage, input, output, and resume command. The canonical build manifest remains `building` during this state.
-
-Inspect progress with:
-
-```bash
-deck-master build status --run-dir <run_dir> --profile high-density --watch
-deck-master next-step --run-dir <run_dir>
-```
-
-Retry one page or stage after repairing its artifact:
-
-```bash
-deck-master build retry --run-dir <run_dir> --profile high-density --page-id P001 --stage svg
-```
-
-Use the stages `content_lock`, `blueprint`, `page_scene`, `svg`, `visual_review`, `pptx`, `readback`, and `handback`. Never route a high-density run through `awaiting_external_render` or `import-render-result`.
-
-## Completion Gate
-
-The run is complete only when all of these are true:
-
-- every Page Package has a current content lock;
-- every page has an approved blueprint, valid scene, native SVG, preview, passing visual review, and page trace;
-- P0/P1 text and geometry pass readback;
-- PPTX contains native editable objects and no whole-page image wrapper;
-- all four lineage and canonical handback contracts validate;
-- `deck-quality` can consume the canonical handback.
+Never use ImageGen text as facts. Never emit page numbers or internal generation annotations. Never bypass content coverage, visual metrics, review, readback, or `deck-quality`.

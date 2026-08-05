@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/contracts/visual-review.v2.schema.json",
+  "title": "Deck Visual Review v2",
+  "type": "object",
+  "required": ["schema_version", "run_id", "page_id", "review_mode", "metrics_ref", "metrics_sha256", "visual_status", "issues_found", "unresolved_issues", "verdict", "created_at"],
+  "properties": {
+    "schema_version": {"const": "deck_visual_review.v2"},
+    "run_id": {"type": "string"},
+    "page_id": {"type": "string"},
+    "review_mode": {"type": "string"},
+    "blueprint_sha256": {"type": "string"},
+    "svg_sha256": {"type": "string"},
+    "blueprint_preview_sha256": {"type": "string"},
+    "svg_preview_sha256": {"type": "string"},
+    "metrics_ref": {"type": "string"},
+    "metrics_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "full_page_checks": {"type": "object"},
+    "region_checks": {"type": "array", "items": {"type": "object"}},
+    "issues_found": {"type": "array", "items": {"type": "object"}},
+    "unresolved_issues": {"type": "array", "items": {"type": "object"}},
+    "self_review": {"type": "object"},
+    "main_review": {"type": "object"},
+    "visual_status": {"enum": ["pass", "failed", "needs_review"]},
+    "verdict": {"enum": ["pass", "fail", "needs_review"]},
+    "created_at": {"type": "string"}
+  },
+  "additionalProperties": true
+}

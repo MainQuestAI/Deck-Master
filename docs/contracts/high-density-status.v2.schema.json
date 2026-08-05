@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/contracts/high-density-status.v2.schema.json",
+  "title": "High-Density Status v2",
+  "type": "object",
+  "required": ["schema_version", "run_id", "builder_profile", "status", "current_stage", "next_action", "updated_at"],
+  "properties": {
+    "schema_version": {"const": "deck_high_density_status.v2"},
+    "run_id": {"type": "string"},
+    "builder_profile": {"const": "high_density"},
+    "status": {"enum": ["prepared", "building", "awaiting_agent_build", "awaiting_user_decision", "blocked", "failed", "completed"]},
+    "current_page_id": {"type": "string"},
+    "current_stage": {"type": "string"},
+    "next_action": {"type": "object"},
+    "error": {"type": "object"},
+    "updated_at": {"type": "string"}
+  },
+  "additionalProperties": true
+}

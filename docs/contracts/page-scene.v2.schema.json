@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/contracts/page-scene.v2.schema.json",
+  "title": "Deck Page Scene v2",
+  "type": "object",
+  "required": ["schema_version", "run_id", "page_id", "canvas", "blueprint", "content_lock_sha256", "blueprint_sha256", "component_signature", "required_component_ids", "required_text_refs", "elements", "overflow_policy", "created_at"],
+  "properties": {
+    "schema_version": {"const": "deck_page_scene.v2"},
+    "run_id": {"type": "string", "minLength": 1},
+    "page_id": {"type": "string", "minLength": 1},
+    "source": {"type": "string"},
+    "canvas": {"type": "object", "required": ["width", "height", "unit"]},
+    "blueprint": {"type": "object"},
+    "content_lock_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "blueprint_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "transform": {"type": "object"},
+    "component_signature": {"type": "array", "items": {"type": "object"}},
+    "required_component_ids": {"type": "array", "items": {"type": "string"}},
+    "required_text_refs": {"type": "array", "items": {"type": "object"}},
+    "elements": {"type": "array", "items": {"type": "object"}},
+    "background": {"type": "object"},
+    "text_fit_policy": {"type": "object"},
+    "overflow_policy": {"type": "object"},
+    "unresolved_visual_elements": {"type": "array", "items": {"type": "object"}},
+    "approved": {"type": "boolean"},
+    "created_at": {"type": "string"},
+    "updated_at": {"type": "string"}
+  },
+  "additionalProperties": true
+}

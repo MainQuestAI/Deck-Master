@@ -265,6 +265,7 @@ def _high_density_runtime() -> Any:
             prepare_high_density,
             retry_high_density,
             run_high_density,
+            watch_high_density_status,
         )
     except ImportError as exc:
         raise _HighDensityCliError(
@@ -277,6 +278,7 @@ def _high_density_runtime() -> Any:
         "prepare": prepare_high_density,
         "retry": retry_high_density,
         "run": run_high_density,
+        "watch": watch_high_density_status,
     }
 
 
@@ -2213,6 +2215,11 @@ def command_build_status(args: argparse.Namespace) -> dict[str, Any]:
     run_dir = resolve_run_dir(args)
     profile = _persist_build_options(run_dir, args, persist=False)
     if profile == "high_density":
+        if bool(getattr(args, "watch", False)):
+            return _high_density_runtime()["watch"](
+                run_dir,
+                timeout_seconds=float(getattr(args, "watch_timeout", 30.0) or 30.0),
+            )
         return _high_density_runtime()["build_status"](run_dir)
     return build_status(run_dir)
 
@@ -3422,6 +3429,7 @@ def build_parser() -> argparse.ArgumentParser:
     add_run_args(p_build_status)
     p_build_status.add_argument("--profile", choices=["standard", "high-density"], default=None)
     p_build_status.add_argument("--watch", action="store_true")
+    p_build_status.add_argument("--watch-timeout", type=float, default=30.0)
     p_build_status.set_defaults(func=command_build_status)
 
     p_build_retry = build_sub.add_parser("retry", help="Retry one high-density page or stage")

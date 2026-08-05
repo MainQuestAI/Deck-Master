@@ -1,8 +1,10 @@
 # Deck Master High-Density Builder Engineering Spec v1
 
 日期：2026-08-05
-状态：Engineering Spec 修订草案（完成首轮工程 Review 修正）
+状态：Superseded historical baseline
 适用范围：Deck Master 高密度 Builder 独立 Skill 的合同、命令、运行时、证据链和首版工程包
+
+> 本文件已被 `deck-master-high-density-builder-core-engineering-spec-v2.md` 替代。PR #15 只完成工程外壳，本文中的 P0/P1 完成口径和 First Engineering Acceptance 不再有效。后续实现、评审和验收统一以 v2 Spec 为准。
 
 ## 0. 结论
 

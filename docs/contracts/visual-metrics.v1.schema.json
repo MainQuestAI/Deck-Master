@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/contracts/visual-metrics.v1.schema.json",
+  "title": "Deck Visual Metrics v1",
+  "type": "object",
+  "required": ["schema_version", "run_id", "page_id", "comparison", "inputs", "thresholds", "status", "created_at"],
+  "properties": {
+    "schema_version": {"const": "deck_visual_metrics.v1"},
+    "run_id": {"type": "string"},
+    "page_id": {"type": "string"},
+    "comparison": {"type": "object"},
+    "inputs": {"type": "object"},
+    "thresholds": {"type": "object"},
+    "coverage": {"type": "object"},
+    "findings": {"type": "array", "items": {"type": "object"}},
+    "status": {"enum": ["pass", "failed", "needs_review"]},
+    "created_at": {"type": "string"}
+  },
+  "additionalProperties": true
+}

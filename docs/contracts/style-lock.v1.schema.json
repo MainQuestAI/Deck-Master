@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/contracts/style-lock.v1.schema.json",
+  "title": "High-Density Style Lock v1",
+  "type": "object",
+  "required": ["schema_version", "run_id", "style_id", "name", "palette", "grid", "typography", "density_rules", "prohibitions", "approved", "style_lock_sha256", "created_at"],
+  "properties": {
+    "schema_version": {"const": "deck_high_density_style_lock.v1"},
+    "run_id": {"type": "string", "minLength": 1},
+    "style_id": {"type": "string", "minLength": 1},
+    "name": {"type": "string", "minLength": 1},
+    "source": {"type": "string"},
+    "palette": {"type": "object"},
+    "grid": {"type": "object"},
+    "typography": {"type": "object"},
+    "chart_language": {"type": "object"},
+    "table_language": {"type": "object"},
+    "surface_system": {"type": "object"},
+    "density_rules": {"type": "object"},
+    "prohibitions": {"type": "array", "items": {"type": "string"}},
+    "approval": {"type": "object"},
+    "approved": {"type": "boolean"},
+    "style_lock_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "created_at": {"type": "string"},
+    "updated_at": {"type": "string"}
+  },
+  "additionalProperties": true
+}

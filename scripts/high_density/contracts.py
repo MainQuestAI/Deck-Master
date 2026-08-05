@@ -9,14 +9,29 @@ from typing import Any
 SCHEMA_DIR = Path(__file__).resolve().parents[2] / "docs" / "contracts"
 SCHEMA_FILES = {
     "page_package": "page-package.v1.schema.json",
+    "content_lock": "content-lock.v2.schema.json",
+    "blueprint_manifest": "blueprint-manifest.v2.schema.json",
+    "blueprint_prompt": "blueprint-prompt.v1.schema.json",
+    "page_scene": "page-scene.v2.schema.json",
+    "visual_metrics": "visual-metrics.v1.schema.json",
+    "visual_review": "visual-review.v2.schema.json",
+    "svg_to_drawingml_trace": "svg-to-drawingml-trace.v1.schema.json",
+    "pptx_readback": "pptx-readback.v2.schema.json",
+    "high_density_manifest": "high-density-manifest.v2.schema.json",
+    "high_density_status": "high-density-status.v2.schema.json",
+    "nbb_plan": "nbb-plan.v1.schema.json",
+    "style_lock": "style-lock.v1.schema.json",
+    "build_manifest": "build-manifest.v2.schema.json",
+    "artifact_manifest": "artifact-manifest.v1.schema.json",
+    "render_result": "render-result.v2.schema.json",
+}
+
+PREVIEW_SCHEMA_FILES = {
     "content_lock": "content-lock.v1.schema.json",
     "blueprint_manifest": "blueprint-manifest.v1.schema.json",
     "page_scene": "page-scene.v1.schema.json",
     "high_density_manifest": "high-density-manifest.v1.schema.json",
     "high_density_status": "high-density-status.v1.schema.json",
-    "build_manifest": "build-manifest.v2.schema.json",
-    "artifact_manifest": "artifact-manifest.v1.schema.json",
-    "render_result": "render-result.v2.schema.json",
 }
 
 
@@ -90,6 +105,10 @@ def safe_run_path(root: Path, value: str) -> Path:
 
 def validate_document(kind: str, document: dict[str, Any]) -> dict[str, Any]:
     schema_name = SCHEMA_FILES.get(kind)
+    if document.get("schema_version", "").endswith(".v1") and kind in PREVIEW_SCHEMA_FILES:
+        # v1 artifacts remain readable for migration/diagnostics. Production
+        # writers and handback validation always call the v2 schema above.
+        schema_name = PREVIEW_SCHEMA_FILES[kind]
     if not schema_name:
         raise ContractError(f"unknown contract kind: {kind}")
     schema_path = SCHEMA_DIR / schema_name
@@ -112,10 +131,37 @@ def assert_valid(kind: str, document: dict[str, Any]) -> None:
         raise ContractError(f"{kind} contract invalid: {'; '.join(result['errors'])}")
 
 
+def assert_v2(kind: str, document: dict[str, Any]) -> None:
+    """Validate a production document and reject preview-era v1 artifacts."""
+    expected = {
+        "content_lock": "deck_content_lock.v2",
+        "blueprint_manifest": "deck_blueprint_manifest.v2",
+        "blueprint_prompt": "deck_blueprint_prompt.v1",
+        "page_scene": "deck_page_scene.v2",
+        "visual_metrics": "deck_visual_metrics.v1",
+        "visual_review": "deck_visual_review.v2",
+        "svg_to_drawingml_trace": "deck_svg_to_drawingml_trace.v1",
+        "pptx_readback": "deck_pptx_readback.v2",
+        "high_density_manifest": "deck_high_density_manifest.v2",
+        "high_density_status": "deck_high_density_status.v2",
+        "nbb_plan": "deck_nbb_plan.v1",
+        "style_lock": "deck_high_density_style_lock.v1",
+    }.get(kind)
+    if expected and document.get("schema_version") != expected:
+        raise ContractError(f"{kind} production contract must use {expected}")
+    schema_name = SCHEMA_FILES.get(kind)
+    if not schema_name:
+        raise ContractError(f"unknown contract kind: {kind}")
+    result = validate_document(kind, document)
+    if not result["valid"]:
+        raise ContractError(f"{kind} contract invalid: {'; '.join(result['errors'])}")
+
+
 __all__ = [
     "ContractError",
     "SCHEMA_DIR",
     "assert_valid",
+    "assert_v2",
     "canonical_json",
     "read_json",
     "run_relative",
