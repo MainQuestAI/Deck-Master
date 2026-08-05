@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import json
+import inspect
 import sys
+import tempfile
+import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -153,3 +156,18 @@ def test_provider_smoke_evidence_requires_real_provider_metadata(tmp_path: Path)
     pptx.write_bytes(pptx.read_bytes() + b"mutation")
     with pytest.raises(ProviderSmokeError, match="PPTX lineage is stale"):
         build_provider_smoke_evidence(run, page_id="P001")
+
+
+def load_tests(loader: unittest.TestLoader, tests: unittest.TestSuite, pattern: str | None) -> unittest.TestSuite:
+    """Expose distinct acceptance functions to the unittest CI gate."""
+    suite = unittest.TestSuite()
+    for name, test_fn in sorted(globals().items()):
+        if not name.startswith("test_") or not callable(test_fn):
+            continue
+
+        def invoke(fn: object = test_fn) -> None:
+            with tempfile.TemporaryDirectory() as directory:
+                fn(Path(directory))
+
+        suite.addTest(unittest.FunctionTestCase(invoke, description=name))
+    return suite

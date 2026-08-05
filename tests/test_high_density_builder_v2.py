@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import json
+import inspect
 import shutil
 import sys
+import tempfile
 import threading
 import time
+import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -702,3 +705,24 @@ def test_svg_rejects_unsafe_event_attribute(tmp_path: Path) -> None:
 
     with pytest.raises(SvgVisualError, match="event attribute"):
         validate_svg(svg, page_id="P001")
+
+
+def load_tests(loader: unittest.TestLoader, tests: unittest.TestSuite, pattern: str | None) -> unittest.TestSuite:
+    """Expose fixture-compatible pytest functions to the unittest CI gate."""
+    suite = unittest.TestSuite()
+    for name, test_fn in sorted(globals().items()):
+        if not name.startswith("test_") or not callable(test_fn):
+            continue
+        if any(parameter not in {"tmp_path"} for parameter in inspect.signature(test_fn).parameters):
+            continue
+
+        def invoke(fn: object = test_fn) -> None:
+            parameters = inspect.signature(fn).parameters
+            with tempfile.TemporaryDirectory() as directory:
+                if "tmp_path" in parameters:
+                    fn(Path(directory))
+                else:
+                    fn()
+
+        suite.addTest(unittest.FunctionTestCase(invoke, description=name))
+    return suite
