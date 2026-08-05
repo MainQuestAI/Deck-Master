@@ -119,9 +119,9 @@ def test_production_waiting_state_is_resumable(tmp_path: Path) -> None:
     build_manifest = read_json(run / "build/build_manifest.json")
 
     assert waiting["status"] == "awaiting_agent_build"
-    assert waiting["current_stage"] == "blueprint"
+    assert waiting["current_stage"] == "content_lock"
     assert status["status"] == "awaiting_agent_build"
-    assert status["next_action"]["kind"] == "agent_imagegen"
+    assert status["next_action"]["kind"] == "agent_nbb_enrich"
     assert build_manifest["status"] == "building"
     assert next_step["status"] == "awaiting_agent_build"
     assert next_step["recommended_skill"] == "deck-builder-high-density"
@@ -133,7 +133,6 @@ def test_page_package_change_invalidates_downstream(tmp_path: Path) -> None:
     blueprint = _blueprint(run, "P001")
     prepare_high_density(run)
     first = run_high_density(run)
-    old_lock = read_json(run / "high_density_build/content_locks/P001.json")
     old_svg = (run / "high_density_build/svg/P001.svg").read_text(encoding="utf-8")
     old_source_fingerprint = read_json(run / "build/build_manifest.json")["source_fingerprint"]
     assert first["status"] == "completed"
@@ -143,14 +142,16 @@ def test_page_package_change_invalidates_downstream(tmp_path: Path) -> None:
     index.write(package)
     invalidated = run_high_density(run)
 
-    new_lock = read_json(run / "high_density_build/content_locks/P001.json")
     new_source_fingerprint = read_json(run / "build/build_manifest.json")["source_fingerprint"]
     assert invalidated["status"] == "awaiting_agent_build"
-    assert old_lock["content_lock_sha256"] != new_lock["content_lock_sha256"]
+    assert invalidated["current_stage"] == "content_lock"
+    assert invalidated["next_action"]["kind"] == "agent_nbb_enrich"
+    assert not (run / "high_density_build/content_locks/P001.json").exists()
     assert old_source_fingerprint != new_source_fingerprint
     assert not (run / "high_density_build/svg/P001.svg").exists()
     assert not (run / "high_density_build/pptx/deck_high_density.pptx").exists()
 
+    prepare_high_density(run)
     _blueprint(run, "P001", fill="#fff3e8")
     completed = run_high_density(run)
     new_svg = (run / "high_density_build/svg/P001.svg").read_text(encoding="utf-8")

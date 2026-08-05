@@ -60,6 +60,7 @@ deck-master build prepare --run-dir <run_dir> --profile high-density --output-pr
 deck-master build run --run-dir <run_dir> --profile high-density
 deck-master build status --run-dir <run_dir> --profile high-density --watch --watch-timeout 30
 deck-master next-step --run-dir <run_dir>
+deck-master build retry --run-dir <run_dir> --profile high-density --stage content_lock --storyline-id storyline.decision
 deck-master build retry --run-dir <run_dir> --profile high-density --page-id P001 --stage svg
 ```
 
@@ -67,15 +68,17 @@ deck-master build retry --run-dir <run_dir> --profile high-density --page-id P00
 
 ### A. NBB and Content Lock
 
-Write `high_density_build/nbb/nbb_plan.json` and `high_density_build/content_locks/<page_id>.content_lock.json` using `deck_nbb_plan.v1` and `deck_content_lock.v2`.
+Production first waits for `agent_nbb_enrich` to write a pending `high_density_build/nbb/nbb_plan.json` with two or three candidate storylines. The runtime returns `awaiting_user_decision` with candidate summaries and a recommended ID. Confirm one storyline with the deck-scoped `content_lock` retry; only the approved plan can create `high_density_build/content_locks/<page_id>.content_lock.json`.
 
-Carry forward CyberPPT's NBB behavior: evidence ledger, storyline/SCR audit, conclusion, supporting arguments, caveat, SO WHAT, page material pool, density target, required component IDs, and required text refs. Every factual or numeric statement retains evidence lineage. Sparse pages, unsupported facts, missing components, and stale hashes block before blueprint generation.
+Fixture/dev runs may auto-approve the deterministic decision-led candidate so the compiler regression remains reproducible. An approved plan can resume without another prompt until a Page Package or NBB plan hash changes.
+
+Carry forward CyberPPT's NBB behavior: evidence ledger with source position/period/unit/conflicts, two or three content-specific storyline candidates, issue/hypothesis tree, SCR audit, conclusion, supporting arguments, caveat, SO WHAT, page handoff, page material pool, density target, required component IDs, and required text refs. Every factual or numeric statement retains precise evidence lineage and a derivation note. Sparse pages, unsupported facts, missing components, unknown storyline IDs, unapproved selection, and stale hashes block before blueprint generation.
 
 ### B. Style Lock and ImageGen Blueprint
 
 The fixed CyberPPT-derived registry contains eight stable style IDs. Production must use an approved `high_density_build/style/style_lock.json`; fixture/dev may use the explicit deterministic default.
 
-Before ImageGen, write `high_density_build/prompts/<page_id>.blueprint_prompt.json` using `deck_blueprint_prompt.v1`. The prompt must contain the real title, conclusion, content summary, evidence IDs, required components, target language, style lock, and prohibited page numbers/internal labels. The prompt artifact must exist before the image.
+Before ImageGen, write `high_density_build/prompts/<page_id>.blueprint_prompt.json` using `deck_blueprint_prompt.v1`. The prompt must contain the selected storyline, real title, page conclusion, supporting arguments, caveats, SO WHAT, page handoff, material pool, precise evidence IDs, required components, target language, style lock, and prohibited page numbers/internal labels. The prompt artifact must exist before the image.
 
 Write `high_density_build/blueprints/<page_id>.blueprint_manifest.json` using `deck_blueprint_manifest.v2`. Record prompt/content/style hashes, image hash, provider metadata, source canvas, contained 16:9 frame, and exact transform. Non-16:9 sources use an inscribed frame and never stretch.
 

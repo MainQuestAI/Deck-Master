@@ -2231,8 +2231,9 @@ def command_build_retry(args: argparse.Namespace) -> dict[str, Any]:
         raise _HighDensityCliError("BUILD_PROFILE_UNSUPPORTED", "build retry currently requires --profile high-density")
     return _high_density_runtime()["retry"](
         run_dir,
-        page_id=str(args.page_id),
+        page_id=str(getattr(args, "page_id", "") or ""),
         stage=getattr(args, "stage", None),
+        storyline_id=str(getattr(args, "storyline_id", "") or ""),
     )
 
 
@@ -3432,10 +3433,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_build_status.add_argument("--watch-timeout", type=float, default=30.0)
     p_build_status.set_defaults(func=command_build_status)
 
-    p_build_retry = build_sub.add_parser("retry", help="Retry one high-density page or stage")
+    p_build_retry = build_sub.add_parser("retry", help="Retry one high-density page or a deck-scoped NBB stage")
     add_run_args(p_build_retry)
     p_build_retry.add_argument("--profile", choices=["high-density"], required=True)
-    p_build_retry.add_argument("--page-id", required=True)
+    p_build_retry.add_argument("--page-id", required=False)
+    p_build_retry.add_argument("--storyline-id", default="", help="Approve this NBB storyline when retrying the deck-scoped content_lock stage")
     p_build_retry.add_argument("--stage", choices=["content_lock", "blueprint", "page_scene", "svg", "visual_review", "pptx", "readback", "handback"], default=None)
     p_build_retry.set_defaults(func=command_build_retry)
 

@@ -3,18 +3,170 @@
   "$id": "https://deck-master.local/contracts/nbb-plan.v1.schema.json",
   "title": "NBB Plan v1",
   "type": "object",
-  "required": ["schema_version", "run_id", "page_count", "evidence_ledger", "storyline_audit", "scr", "pages", "nbb_plan_sha256", "created_at"],
+  "required": ["schema_version", "run_id", "page_count", "evidence_ledger", "storyline_candidates", "selection", "storyline_audit", "scr", "pages", "blocked_pages", "nbb_plan_sha256", "created_at"],
   "properties": {
     "schema_version": {"const": "deck_nbb_plan.v1"},
     "run_id": {"type": "string", "minLength": 1},
     "page_count": {"type": "integer", "minimum": 1},
-    "evidence_ledger": {"type": "array", "items": {"type": "object"}},
-    "storyline_audit": {"type": "object"},
-    "scr": {"type": "object"},
-    "pages": {"type": "array", "items": {"type": "object"}},
-    "blocked_pages": {"type": "array", "items": {"type": "object"}},
+    "evidence_ledger": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/evidence"}},
+    "storyline_candidates": {"type": "array", "minItems": 2, "maxItems": 3, "items": {"$ref": "#/$defs/storyline"}},
+    "selection": {"$ref": "#/$defs/selection"},
+    "storyline_audit": {"$ref": "#/$defs/storylineAudit"},
+    "scr": {"$ref": "#/$defs/scr"},
+    "pages": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/pagePlan"}},
+    "blocked_pages": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["page_id", "reason"], "properties": {"page_id": {"type": "string", "minLength": 1}, "reason": {"type": "string", "minLength": 1}}}},
     "nbb_plan_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
-    "created_at": {"type": "string"}
+    "created_at": {"type": "string", "minLength": 1},
+    "updated_at": {"type": "string", "minLength": 1}
   },
-  "additionalProperties": true
+  "additionalProperties": false,
+  "$defs": {
+    "evidence": {
+      "type": "object",
+      "required": ["evidence_id", "source_ref", "source_position", "period", "unit", "confidence", "conflicts", "caveat", "meaning", "implication", "recommended_visual"],
+      "properties": {
+        "evidence_id": {"type": "string", "minLength": 1},
+        "source_ref": {"type": "string", "minLength": 1},
+        "source_position": {"type": "string"},
+        "period": {"type": "string"},
+        "unit": {"type": "string"},
+        "confidence": {"type": "string", "minLength": 1},
+        "conflicts": {"type": "array", "items": {"type": "string"}},
+        "caveat": {"type": "string"},
+        "meaning": {"type": "string"},
+        "implication": {"type": "string"},
+        "recommended_visual": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "treeBranch": {
+      "type": "object",
+      "required": ["branch_id", "question", "hypothesis", "evidence_refs"],
+      "properties": {
+        "branch_id": {"type": "string", "minLength": 1},
+        "question": {"type": "string", "minLength": 1},
+        "hypothesis": {"type": "string", "minLength": 1},
+        "evidence_refs": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+      },
+      "additionalProperties": false
+    },
+    "storyline": {
+      "type": "object",
+      "required": ["storyline_id", "management_conclusion", "audience", "issue_hypothesis_tree", "evidence_refs", "caveat", "visual_potential", "not_recommended_because", "page_handoff", "density_target", "language"],
+      "properties": {
+        "storyline_id": {"type": "string", "minLength": 1},
+        "management_conclusion": {"type": "string", "minLength": 1},
+        "audience": {"type": "string", "minLength": 1},
+        "issue_hypothesis_tree": {"type": "object", "required": ["root", "branches"], "properties": {"root": {"type": "string", "minLength": 1}, "branches": {"type": "array", "minItems": 2, "items": {"$ref": "#/$defs/treeBranch"}}}, "additionalProperties": false},
+        "evidence_refs": {"type": "array", "minItems": 1, "maxItems": 8, "items": {"type": "string", "minLength": 1}},
+        "caveat": {"type": "string", "minLength": 1},
+        "visual_potential": {"type": "string", "minLength": 1},
+        "not_recommended_because": {"type": "string", "minLength": 1},
+        "page_handoff": {"type": "string", "minLength": 1},
+        "density_target": {"type": "object", "required": ["band", "information_regions"], "properties": {"band": {"enum": ["low", "medium", "high"]}, "information_regions": {"type": "integer", "minimum": 3}}, "additionalProperties": false},
+        "language": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "selection": {
+      "type": "object",
+      "required": ["status", "recommended_storyline_id", "selected_storyline_id", "approved_by", "approved_at"],
+      "properties": {
+        "status": {"enum": ["pending_user_decision", "approved"]},
+        "recommended_storyline_id": {"type": "string", "minLength": 1},
+        "selected_storyline_id": {"type": ["string", "null"]},
+        "approved_by": {"type": ["string", "null"]},
+        "approved_at": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false
+    },
+    "storylineAudit": {
+      "type": "object",
+      "required": ["source", "status", "candidate_count", "recommendation_id", "selected_id", "content_specific", "notes"],
+      "properties": {
+        "source": {"type": "string", "minLength": 1},
+        "status": {"enum": ["pending_user_decision", "approved"]},
+        "candidate_count": {"type": "integer", "minimum": 2, "maximum": 3},
+        "recommendation_id": {"type": "string", "minLength": 1},
+        "selected_id": {"type": ["string", "null"]},
+        "content_specific": {"const": true},
+        "notes": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "scr": {
+      "type": "object",
+      "required": ["situation", "complication", "resolution", "evidence_refs", "decision_implication"],
+      "properties": {
+        "situation": {"type": "string", "minLength": 1},
+        "complication": {"type": "string", "minLength": 1},
+        "resolution": {"type": "string", "minLength": 1},
+        "evidence_refs": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "decision_implication": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "component": {
+      "type": "object",
+      "required": ["component_id", "kind", "priority", "region"],
+      "properties": {
+        "component_id": {"type": "string", "minLength": 1},
+        "kind": {"type": "string", "minLength": 1},
+        "priority": {"enum": ["P0", "P1", "P2"]},
+        "region": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "textRef": {
+      "type": "object",
+      "required": ["ref", "priority", "required"],
+      "properties": {
+        "ref": {"type": "string", "minLength": 1},
+        "priority": {"enum": ["P0", "P1", "P2"]},
+        "required": {"const": true},
+        "structural": {"type": "boolean"},
+        "value": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "derivedClaim": {
+      "type": "object",
+      "required": ["claim_id", "origin", "evidence_refs", "derivation_note", "factual_value_added"],
+      "properties": {
+        "claim_id": {"type": "string", "minLength": 1},
+        "origin": {"enum": ["source", "derived", "structural_label"]},
+        "evidence_refs": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "derivation_note": {"type": "string", "minLength": 1},
+        "factual_value_added": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "pagePlan": {
+      "type": "object",
+      "required": ["page_id", "order", "page_package_sha256", "storyline_id", "role", "conclusion", "supporting_arguments", "evidence_refs", "caveat", "so_what", "handoff", "material_pool", "density_target", "components", "required_text_refs", "derived_claims", "status", "page_plan_sha256"],
+      "properties": {
+        "page_id": {"type": "string", "minLength": 1},
+        "order": {"type": "integer", "minimum": 1},
+        "page_package_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "storyline_id": {"type": "string", "minLength": 1},
+        "role": {"type": "string", "minLength": 1},
+        "conclusion": {"type": "string", "minLength": 1},
+        "supporting_arguments": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "evidence_refs": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "caveat": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "so_what": {"type": "string", "minLength": 1},
+        "handoff": {"type": "string", "minLength": 1},
+        "material_pool": {"type": "object"},
+        "density_target": {"type": "object", "required": ["score", "band", "information_regions"], "properties": {"score": {"type": "number", "minimum": 0}, "band": {"enum": ["low", "medium", "high"]}, "information_regions": {"type": "integer", "minimum": 3}}, "additionalProperties": false},
+        "components": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/component"}},
+        "required_text_refs": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/textRef"}},
+        "derived_claims": {"type": "array", "items": {"$ref": "#/$defs/derivedClaim"}},
+        "status": {"const": "ready"},
+        "page_plan_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "created_at": {"type": "string"},
+        "updated_at": {"type": "string"}
+      },
+      "additionalProperties": false
+    }
+  }
 }
