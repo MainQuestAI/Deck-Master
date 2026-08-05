@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from .blueprint import load_blueprint_manifest, safe_run_path
-from .contracts import ContractError, assert_valid, assert_v2, read_json, run_relative, sha256_bytes, sha256_file, utc_now, write_json
+from .contracts import ContractError, assert_valid, assert_v2, read_json, run_relative, sha256_bytes, sha256_file, sha256_json, utc_now, write_json
 
 
 class ProviderSmokeError(ContractError):
@@ -23,7 +23,10 @@ def _artifact_ref(root: Path, page: dict[str, Any], key: str) -> dict[str, str]:
     if not isinstance(value, dict):
         raise ProviderSmokeError(f"completed high-density page is missing artifact ref: {key}")
     path = safe_run_path(root, str(value.get("path") or ""))
-    return {"path": run_relative(root, path), "sha256": sha256_file(path)}
+    actual_sha = sha256_file(path)
+    if str(value.get("sha256") or "") != actual_sha:
+        raise ProviderSmokeError(f"completed high-density artifact hash is stale: {key}")
+    return {"path": run_relative(root, path), "sha256": actual_sha}
 
 
 def build_provider_smoke_evidence(run_dir: str | Path, *, page_id: str = "", output: str | Path | None = None) -> dict[str, Any]:
@@ -58,10 +61,30 @@ def build_provider_smoke_evidence(run_dir: str | Path, *, page_id: str = "", out
     review = read_json(root / review_ref["path"])
     if review.get("visual_status") != "pass" or review.get("verdict") != "pass":
         raise ProviderSmokeError(f"visual review has not passed on page {selected_page_id}")
-    content_lock = page.get("content_lock") or {}
-    content_lock_sha = str(content_lock.get("sha256") or "")
-    if len(content_lock_sha) != 64:
-        raise ProviderSmokeError(f"content lock lineage is missing on page {selected_page_id}")
+    content_lock_ref = _artifact_ref(root, page, "content_lock")
+    content_lock_payload = read_json(root / content_lock_ref["path"])
+    assert_v2("content_lock", content_lock_payload)
+    content_lock_sha = str(content_lock_payload.get("content_lock_sha256") or "")
+    expected_content_lock_sha = sha256_json({key: value for key, value in content_lock_payload.items() if key not in {"content_lock_sha256", "created_at", "updated_at"}})
+    if content_lock_sha != expected_content_lock_sha:
+        raise ProviderSmokeError(f"content lock hash is stale on page {selected_page_id}")
+    if str(blueprint.get("content_lock_sha256") or "") != content_lock_sha:
+        raise ProviderSmokeError(f"blueprint content lock lineage is stale on page {selected_page_id}")
+    svg_ref = _artifact_ref(root, page, "svg")
+    trace_ref = _artifact_ref(root, page, "pptx_trace")
+    trace_wrapper = read_json(root / trace_ref["path"])
+    trace = trace_wrapper.get("trace") if isinstance(trace_wrapper.get("trace"), dict) else {}
+    if str(trace.get("page_id") or "") != selected_page_id or str(trace.get("svg_sha256") or "") != svg_ref["sha256"]:
+        raise ProviderSmokeError(f"page trace lineage is stale on page {selected_page_id}")
+    deck_trace_path = root / "high_density_build" / "traces" / "pptx_trace.json"
+    deck_trace = read_json(deck_trace_path)
+    assert_v2("svg_to_drawingml_trace", deck_trace)
+    pptx_path = root / "high_density_build" / "pptx" / "deck_high_density.pptx"
+    if not pptx_path.is_file():
+        raise ProviderSmokeError(f"compiled PPTX is missing on page {selected_page_id}")
+    pptx_sha = sha256_file(pptx_path)
+    if str(deck_trace.get("pptx_sha256") or "") != pptx_sha or str(readback.get("pptx_sha256") or "") != pptx_sha:
+        raise ProviderSmokeError(f"PPTX lineage is stale on page {selected_page_id}")
     evidence = {
         "schema_version": "deck_high_density_provider_smoke.v1",
         "run_id_sha256": _hash_text(str(manifest.get("run_id") or "")),
@@ -77,8 +100,10 @@ def build_provider_smoke_evidence(run_dir: str | Path, *, page_id: str = "", out
         },
         "artifacts": {
             "blueprint": _artifact_ref(root, page, "blueprint"),
-            "svg": _artifact_ref(root, page, "svg"),
-            "pptx_trace": _artifact_ref(root, page, "pptx_trace"),
+            "svg": svg_ref,
+            "content_lock": content_lock_ref,
+            "pptx": {"path": run_relative(root, pptx_path), "sha256": pptx_sha},
+            "pptx_trace": trace_ref,
             "visual_review": review_ref,
             "readback": readback_ref,
         },

@@ -100,7 +100,10 @@ def test_seven_page_distinct_acceptance_has_independent_lineage(tmp_path: Path) 
     assert {str(scene["layout_id"]) for scene in scene_payloads} == set(LAYOUTS)
     assert len(set(svg_hashes)) == 7
     assert len(set(render_hashes)) == 7
-    assert read_json(run / "high_density_build/readback/readback_report.json")["status"] == "pass"
+    readback = read_json(run / "high_density_build/readback/readback_report.json")
+    assert readback["status"] == "pass"
+    assert readback["shape_readback"]["status"] == "pass"
+    assert readback["media_relationships"]["status"] == "pass"
 
 
 def test_blueprint_mutation_fails_old_visual_gate_before_fixture_rebuild(tmp_path: Path) -> None:
@@ -142,4 +145,11 @@ def test_provider_smoke_evidence_requires_real_provider_metadata(tmp_path: Path)
     evidence = build_provider_smoke_evidence(run, page_id="P001", output=run / "high_density_build/provider_smoke_evidence.json")
     assert evidence["status"] == "pass"
     assert evidence["raw_provider_payload_included"] is False
+    assert evidence["artifacts"]["pptx"]["path"] == "high_density_build/pptx/deck_high_density.pptx"
+    assert evidence["lineage"]["content_lock_sha256"] == read_json(run / "high_density_build/content_locks/P001.json")["content_lock_sha256"]
     assert "request-fixture-001" not in json.dumps(evidence)
+
+    pptx = run / "high_density_build/pptx/deck_high_density.pptx"
+    pptx.write_bytes(pptx.read_bytes() + b"mutation")
+    with pytest.raises(ProviderSmokeError, match="PPTX lineage is stale"):
+        build_provider_smoke_evidence(run, page_id="P001")

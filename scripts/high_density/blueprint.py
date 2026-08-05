@@ -103,7 +103,12 @@ def _default_slide_frame(width: int, height: int) -> dict[str, float]:
 def _content_summary(lock: dict[str, Any]) -> dict[str, Any]:
     visible = lock.get("customer_visible") or {}
     enrichment = lock.get("enrichment") or {}
+    storyline_context = enrichment.get("storyline_context") or {}
     blocks = visible.get("body_blocks") or []
+    caveats = list(enrichment.get("caveat") or [])
+    storyline_caveat = str(storyline_context.get("caveat") or "")
+    if storyline_caveat and storyline_caveat not in caveats:
+        caveats.append(storyline_caveat)
     return {
         "title": str(visible.get("title") or ""),
         "subtitle": str(visible.get("subtitle") or ""),
@@ -114,9 +119,10 @@ def _content_summary(lock: dict[str, Any]) -> dict[str, Any]:
         "required_components": list(lock.get("required_component_ids") or []),
         "storyline_id": str(enrichment.get("storyline_id") or (lock.get("lineage") or {}).get("selected_storyline_id") or ""),
         "handoff": str(enrichment.get("handoff") or ""),
-        "caveat": list(enrichment.get("caveat") or []),
+        "caveat": caveats,
         "material_pool": enrichment.get("material_pool") or {},
         "derived_claims": enrichment.get("derived_claims") or [],
+        "storyline_context": storyline_context,
         "target_language": str(lock.get("target_language") or "zh-CN"),
     }
 
@@ -132,6 +138,9 @@ def build_blueprint_prompt(lock: dict[str, Any], style_lock: dict[str, Any] | No
             f"Page conclusion: {summary['conclusion'] or summary['title']}",
             f"Management implication (SO WHAT): {summary['so_what']}",
             f"Selected NBB storyline: {summary['storyline_id'] or 'unavailable'}.",
+            f"Selected storyline conclusion: {summary['storyline_context'].get('management_conclusion') or 'unavailable'}.",
+            f"Selected storyline visual potential: {summary['storyline_context'].get('visual_potential') or 'unavailable'}.",
+            f"Selected storyline handoff: {summary['storyline_context'].get('page_handoff') or 'unavailable'}.",
             f"Supporting content: {' | '.join(summary['body'])}",
             f"Evidence IDs: {', '.join(summary['evidence_ids']) or 'none'}.",
             f"Caveats: {' | '.join(summary['caveat']) or 'none'}.",
@@ -294,6 +303,8 @@ def load_blueprint_manifest(root: Path, page_id: str, *, expected_run_id: str | 
             raise BlueprintInvalid(f"blueprint prompt {field} is stale on page {page_id}")
     if prompt.get("prompt_sha256") != manifest.get("prompt_sha256"):
         raise BlueprintInvalid(f"blueprint prompt hash is stale on page {page_id}")
+    if sha256_json(str(prompt.get("prompt_text") or "")) != str(prompt.get("prompt_sha256") or ""):
+        raise BlueprintInvalid(f"blueprint prompt content hash is stale on page {page_id}")
     if str(manifest.get("image_sha256") or "") != sha256_file(image):
         raise BlueprintInvalid(f"blueprint hash is stale on page {page_id}")
     dimensions = image_dimensions(image)

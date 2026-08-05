@@ -323,6 +323,17 @@ def _storyline_candidates(
     return candidates
 
 
+def _storyline_context(storyline: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "storyline_id": str(storyline.get("storyline_id") or ""),
+        "management_conclusion": str(storyline.get("management_conclusion") or ""),
+        "visual_potential": str(storyline.get("visual_potential") or ""),
+        "page_handoff": str(storyline.get("page_handoff") or ""),
+        "caveat": str(storyline.get("caveat") or ""),
+        "evidence_refs": [str(ref) for ref in storyline.get("evidence_refs") or []],
+    }
+
+
 def _page_plan(
     package: dict[str, Any],
     source_result: dict[str, Any],
@@ -357,6 +368,7 @@ def _page_plan(
         "order": int(package.get("order") or 0),
         "page_package_sha256": sha256_json(package),
         "storyline_id": str(storyline["storyline_id"]),
+        "storyline_context": _storyline_context(storyline),
         "role": str(analysis["page_role"]),
         "conclusion": conclusion,
         "supporting_arguments": arguments,
@@ -369,6 +381,10 @@ def _page_plan(
             "evidence_refs": evidence_refs,
             "recommended_visual": str((safe_package.get("visual_spec") or {}).get("page_type") or analysis["page_role"]),
             "numeric_values": list(analysis["numeric_tokens"]),
+            "storyline_id": str(storyline["storyline_id"]),
+            "storyline_visual_potential": str(storyline["visual_potential"]),
+            "storyline_page_handoff": str(storyline["page_handoff"]),
+            "storyline_caveat": str(storyline["caveat"]),
         },
         "density_target": {
             "score": analysis["content_density_score"],
@@ -439,7 +455,7 @@ def build_content_lock(
     package: dict[str, Any],
     page_plan: dict[str, Any] | None = None,
     *,
-    nbb_plan_sha256: str = "",
+    nbb_plan_sha256: str,
 ) -> dict[str, Any]:
     page_id = str(package.get("page_id") or "")
     run_id = str(package.get("run_id") or "")
@@ -454,6 +470,22 @@ def build_content_lock(
         raise ContractError(f"NBB page plan hash is stale on {page_id}")
     if str(page_plan.get("page_package_sha256") or "") != sha256_json(package):
         raise ContractError(f"NBB page plan is stale for Page Package {page_id}")
+    if not re.fullmatch(r"[a-f0-9]{64}", str(nbb_plan_sha256 or "")):
+        raise ContractError(f"NBB plan hash is required for content lock on {page_id}")
+    storyline_context = page_plan.get("storyline_context")
+    if not isinstance(storyline_context, dict) or str(storyline_context.get("storyline_id") or "") != str(page_plan.get("storyline_id") or ""):
+        raise ContractError(f"NBB page plan storyline context is missing on {page_id}")
+    material_pool = page_plan.get("material_pool") or {}
+    if any(
+        str(material_pool.get(field) or "") != str(storyline_context.get(context_field) or "")
+        for field, context_field in (
+            ("storyline_id", "storyline_id"),
+            ("storyline_visual_potential", "visual_potential"),
+            ("storyline_page_handoff", "page_handoff"),
+            ("storyline_caveat", "caveat"),
+        )
+    ):
+        raise ContractError(f"NBB page plan material pool storyline context is stale on {page_id}")
     result = build_nbb_page(package)
     safe_package = strip_internal(package)
     evidence_by_id = {str(item["evidence_id"]): item for item in result["evidence"]}
@@ -479,6 +511,7 @@ def build_content_lock(
         "framework": "nbb",
         "version": "cyber-ppt-nbb.v2",
         "storyline_id": str(page_plan.get("storyline_id") or ""),
+        "storyline_context": copy.deepcopy(storyline_context),
         "analysis": result["analysis"],
         "evidence_ledger": result["evidence"],
         "conclusion": str(page_plan.get("conclusion") or ""),
@@ -522,7 +555,7 @@ def build_content_lock(
         "effective_language": result["analysis"]["target_language"],
         "lineage": {
             "page_package_sha256": sha256_json(package),
-            "nbb_plan_sha256": nbb_plan_sha256 or "0" * 64,
+            "nbb_plan_sha256": nbb_plan_sha256,
             "selected_storyline_id": str(page_plan.get("storyline_id") or ""),
             "nbb_page_plan_sha256": str(page_plan.get("page_plan_sha256") or ""),
         },
@@ -634,6 +667,8 @@ def load_nbb_plan(
         raise ContractError("NBB plan hash is stale")
     candidates = plan.get("storyline_candidates") or []
     candidate_ids = {str(item.get("storyline_id") or "") for item in candidates if isinstance(item, dict)}
+    if len(candidate_ids) != len(candidates):
+        raise ContractError("NBB storyline candidate IDs must be unique")
     ledger_ids = {str(item.get("evidence_id") or "") for item in plan.get("evidence_ledger") or [] if isinstance(item, dict)}
     minimum_candidate_refs = min(5, len(ledger_ids))
     if len(candidates) < 2 or len(candidates) > 3:
@@ -650,6 +685,16 @@ def load_nbb_plan(
     selection = plan.get("selection") or {}
     selection_status = str(selection.get("status") or "")
     selected_id = str(selection.get("selected_storyline_id") or "")
+    audit = plan.get("storyline_audit") or {}
+    if (
+        str(audit.get("status") or "") != selection_status
+        or str(audit.get("recommendation_id") or "") != str(selection.get("recommended_storyline_id") or "")
+        or str(audit.get("selected_id") or "") != (selected_id or "")
+    ):
+        raise ContractError("NBB storyline audit is inconsistent with selection")
+    scr_refs = {str(ref) for ref in (plan.get("scr") or {}).get("evidence_refs") or []}
+    if not scr_refs or not scr_refs.issubset(ledger_ids):
+        raise ContractError("NBB SCR evidence refs are invalid")
     if selection_status not in {"pending_user_decision", "approved"}:
         raise ContractError("NBB plan selection status is invalid")
     if str(selection.get("recommended_storyline_id") or "") not in candidate_ids:
@@ -657,8 +702,11 @@ def load_nbb_plan(
     if selection_status == "approved":
         if selected_id not in candidate_ids or not str(selection.get("approved_by") or "") or not str(selection.get("approved_at") or ""):
             raise ContractError("approved NBB plan requires a known selection, approver, and approval time")
-    elif require_approved:
-        raise ContractError("NBB plan awaits user storyline confirmation")
+    else:
+        if selection.get("selected_storyline_id") is not None or selection.get("approved_by") is not None or selection.get("approved_at") is not None:
+            raise ContractError("pending NBB plan cannot contain approval fields")
+        if require_approved:
+            raise ContractError("NBB plan awaits user storyline confirmation")
     if plan.get("blocked_pages"):
         raise ContractError("NBB plan contains blocked pages")
     if packages is None:
@@ -679,6 +727,22 @@ def load_nbb_plan(
             raise ContractError(f"NBB plan Page Package hash is stale on {page_id}")
         if str(page.get("storyline_id") or "") not in candidate_ids:
             raise ContractError(f"NBB plan page storyline is unknown on {page_id}")
+        storyline = next(item for item in candidates if str(item.get("storyline_id") or "") == str(page.get("storyline_id") or ""))
+        context = page.get("storyline_context") or {}
+        if context != _storyline_context(storyline):
+            raise ContractError(f"NBB page storyline context is stale on {page_id}")
+        material_pool = page.get("material_pool") or {}
+        expected_context = _storyline_context(storyline)
+        if any(
+            str(material_pool.get(field) or "") != str(expected_context.get(context_field) or "")
+            for field, context_field in (
+                ("storyline_id", "storyline_id"),
+                ("storyline_visual_potential", "visual_potential"),
+                ("storyline_page_handoff", "page_handoff"),
+                ("storyline_caveat", "caveat"),
+            )
+        ):
+            raise ContractError(f"NBB plan material pool storyline context is stale on {page_id}")
         page_evidence = {str(ref) for ref in page.get("evidence_refs") or []}
         package_evidence = {str(ref.get("evidence_id") if isinstance(ref, dict) else ref) for ref in _evidence_ledger(package)}
         if not page_evidence or not page_evidence.issubset(ledger_ids) or not page_evidence.issubset(package_evidence):
@@ -735,11 +799,16 @@ def approve_nbb_plan(root: Path, storyline_id: str, *, approver: str = "user") -
         }
     )
     plan["scr"] = scr
+    packages_by_order = {int(package.get("order") or 0): package for package in packages}
     for page in plan.get("pages") or []:
         if not isinstance(page, dict):
             continue
-        page["storyline_id"] = storyline_id
-        page["page_plan_sha256"] = sha256_json({key: value for key, value in page.items() if key not in {"page_plan_sha256", "created_at", "updated_at"}})
+        package = next((item for item in packages if str(item.get("page_id") or "") == str(page.get("page_id") or "")), None)
+        if package is None:
+            raise ContractError(f"NBB plan page is missing its Page Package: {page.get('page_id')}")
+        refreshed = _page_plan(package, build_nbb_page(package), candidate, packages_by_order)
+        page.clear()
+        page.update(refreshed)
     plan["nbb_plan_sha256"] = sha256_json({key: value for key, value in plan.items() if key not in {"nbb_plan_sha256", "created_at", "updated_at"}})
     assert_v2("nbb_plan", plan)
     write_nbb_plan(root, plan)
@@ -757,7 +826,7 @@ def write_content_lock(
     package: dict[str, Any],
     page_plan: dict[str, Any],
     *,
-    nbb_plan_sha256: str = "",
+    nbb_plan_sha256: str,
 ) -> Path:
     lock = build_content_lock(package, page_plan, nbb_plan_sha256=nbb_plan_sha256)
     canonical = root / LOCKS_DIR / f"{package['page_id']}.content_lock.json"

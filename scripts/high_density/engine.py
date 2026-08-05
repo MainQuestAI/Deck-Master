@@ -381,12 +381,34 @@ def _prepare_high_density(run_dir: str | Path, *, output_profile: str = "product
     lock_paths: list[str] = []
     if mode in {"fixture", "dev"}:
         try:
-            nbb_plan = build_nbb_plan(
-                packages,
-                run_id=_run_id(root),
-                selected_storyline_id="storyline.decision",
-                approved_by="fixture",
-            )
+            existing_plan_path = root / NBB_PLAN_PATH
+            nbb_plan: dict[str, Any] | None = None
+            if existing_plan_path.exists():
+                try:
+                    candidate_plan = load_nbb_plan(
+                        root,
+                        packages=packages,
+                        expected_run_id=_run_id(root),
+                        require_approved=False,
+                    )
+                    if (
+                        str((candidate_plan.get("selection") or {}).get("status") or "") == "approved"
+                        and str((candidate_plan.get("selection") or {}).get("selected_storyline_id") or "") == "storyline.decision"
+                    ):
+                        nbb_plan = candidate_plan
+                    else:
+                        _invalidate_nbb_downstream(root, packages)
+                except ContractError:
+                    # A plan that no longer matches the Page Packages cannot
+                    # leave old locks, scenes, or compiled outputs reachable.
+                    _invalidate_nbb_downstream(root, packages)
+            if nbb_plan is None:
+                nbb_plan = build_nbb_plan(
+                    packages,
+                    run_id=_run_id(root),
+                    selected_storyline_id="storyline.decision",
+                    approved_by="fixture",
+                )
             write_nbb_plan(root, nbb_plan)
             nbb_plan_sha256 = str(nbb_plan["nbb_plan_sha256"])
             page_plans = {str(page["page_id"]): page for page in nbb_plan["pages"]}

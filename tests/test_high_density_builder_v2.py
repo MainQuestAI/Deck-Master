@@ -28,7 +28,7 @@ from high_density.engine import (
     watch_high_density_status,
 )
 from high_density.pptx import PptxEditabilityError, _render_pptx_page, compile_pptx, pptx_path, readback_pptx, trace_path
-from high_density.scene import build_fixture_scene, load_scene, validate_scene_content, write_scene
+from high_density.scene import _fixture_background, build_fixture_scene, load_scene, validate_scene_content, write_scene
 from high_density.style import write_style_lock
 from high_density.svg import SvgVisualError, compile_svg, load_visual_review, preview_path, render_preview, review_path, svg_path, validate_svg
 from production.page_package import PageContent, PagePackageIndex, build_page_package
@@ -297,6 +297,34 @@ def test_production_waits_for_storyline_confirmation_then_resumes(tmp_path: Path
     lock = read_json(run / "high_density_build/content_locks/P001.json")
     assert lock["lineage"]["selected_storyline_id"] == "storyline.risk"
     assert lock["lineage"]["nbb_page_plan_sha256"]
+    context = lock["enrichment"]["storyline_context"]
+    assert context["storyline_id"] == "storyline.risk"
+    assert context["management_conclusion"].startswith("Reduce the execution risk")
+    assert lock["enrichment"]["conclusion"].startswith("Synthetic framework page: Reduce the execution risk")
+    assert "risk route" in lock["enrichment"]["so_what"]
+    prompt = read_json(run / "high_density_build/prompts/P001.blueprint_prompt.json")
+    assert context["management_conclusion"] in prompt["prompt_text"]
+
+
+def test_prepare_invalidates_downstream_when_page_package_changes(tmp_path: Path) -> None:
+    run, index = _make_run(tmp_path)
+    _blueprint(run)
+    prepare_high_density(run)
+    assert run_high_density(run)["status"] == "completed"
+
+    package = read_json(run / "page_packages/P001.json")
+    package["customer_visible"]["title"] = "Changed after the completed build"
+    index.write(package)
+
+    prepared = prepare_high_density(run)
+
+    assert prepared["status"] == "prepared"
+    assert (run / "high_density_build/content_locks/P001.json").exists()
+    assert not (run / "high_density_build/blueprints/P001.svg").exists()
+    assert not (run / "high_density_build/page_scenes/P001.json").exists()
+    waiting = run_high_density(run)
+    assert waiting["status"] == "awaiting_agent_build"
+    assert waiting["current_stage"] == "blueprint"
 
 
 def test_nbb_plan_rejects_unknown_page_evidence_ref(tmp_path: Path) -> None:
@@ -322,6 +350,19 @@ def test_nbb_plan_rejects_missing_required_component(tmp_path: Path) -> None:
     write_nbb_plan(run, plan)
 
     with pytest.raises(ContractError, match="required components are incomplete"):
+        load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=True)
+
+
+def test_nbb_plan_rejects_stale_storyline_material_pool(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path)
+    packages = load_page_packages(run, expected_run_id=run.name)
+    plan = build_nbb_plan(packages, run_id=run.name, selected_storyline_id="storyline.decision", approved_by="test")
+    plan["pages"][0]["material_pool"]["storyline_id"] = "storyline.risk"
+    plan["pages"][0]["page_plan_sha256"] = sha256_json({key: value for key, value in plan["pages"][0].items() if key != "page_plan_sha256"})
+    plan["nbb_plan_sha256"] = sha256_json({key: value for key, value in plan.items() if key not in {"nbb_plan_sha256", "created_at", "updated_at"}})
+    write_nbb_plan(run, plan)
+
+    with pytest.raises(ContractError, match="material pool storyline context is stale"):
         load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=True)
 
 
@@ -388,7 +429,7 @@ def test_blueprint_manifest_requires_prompt_before_image(tmp_path: Path) -> None
     image = _blueprint(run)
     package = read_json(run / "page_packages/P001.json")
     _, page_plan = _approved_page_plan(package)
-    lock = build_content_lock(package, page_plan)
+    lock = build_content_lock(package, page_plan, nbb_plan_sha256="d" * 64)
 
     assert image.exists()
     with pytest.raises(BlueprintInvalid, match="prompt must be written"):
@@ -405,6 +446,13 @@ def test_distinct_blueprints_produce_distinct_svg(tmp_path: Path) -> None:
     compile_svg(second, second_path)
 
     assert first_path.read_text(encoding="utf-8") != second_path.read_text(encoding="utf-8")
+
+
+def test_fixture_background_ignores_malformed_rect_attributes(tmp_path: Path) -> None:
+    blueprint = tmp_path / "malformed.svg"
+    blueprint.write_text('<svg xmlns="http://www.w3.org/2000/svg"><rect x="invalid" y="0" width="1672" height="941" fill="#123456"/></svg>', encoding="utf-8")
+
+    assert _fixture_background(blueprint) == "#f7f9fb"
 
 
 def test_production_uses_agent_svg_without_overwriting_it(tmp_path: Path) -> None:

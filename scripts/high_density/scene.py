@@ -164,12 +164,16 @@ def _fixture_background(blueprint_path: Path | None) -> str:
     for node in root.iter():
         if node.tag.rsplit("}", 1)[-1] != "rect":
             continue
-        if (
-            float(node.get("x") or 0) == 0
-            and float(node.get("y") or 0) == 0
-            and float(node.get("width") or 0) >= CANVAS["width"]
-            and float(node.get("height") or 0) >= CANVAS["height"]
-        ):
+        try:
+            is_canvas = (
+                float(node.get("x") or 0) == 0
+                and float(node.get("y") or 0) == 0
+                and float(node.get("width") or 0) >= CANVAS["width"]
+                and float(node.get("height") or 0) >= CANVAS["height"]
+            )
+        except (TypeError, ValueError):
+            continue
+        if is_canvas:
             fill = str(node.get("fill") or "")
             if len(fill) == 7 and fill.startswith("#"):
                 return fill

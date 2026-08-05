@@ -686,6 +686,20 @@ def _drawingml_paint_inventory(presentation: Presentation) -> dict[str, Any]:
     return {"gradient_count": gradients, "gradient_stop_count": gradient_stops, "effect_count": effects, "effect_types": sorted(effect_types), "gradient_stop_alpha_values": alpha_values, "elements": elements}
 
 
+def _expected_shape_type(object_type: str) -> Any | None:
+    return {
+        "text": MSO_SHAPE_TYPE.TEXT_BOX,
+        "line": MSO_SHAPE_TYPE.LINE,
+        "freeform": MSO_SHAPE_TYPE.FREEFORM,
+        "registered_asset": MSO_SHAPE_TYPE.PICTURE,
+        "shape": MSO_SHAPE_TYPE.AUTO_SHAPE,
+    }.get(object_type)
+
+
+def _image_relationship_count(slide: Any) -> int:
+    return sum(1 for relationship in slide.part.rels.values() if str(relationship.reltype).endswith("/image"))
+
+
 def readback_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dict[str, Any]], output: Path) -> Path:
     for scene in scenes:
         try:
@@ -718,9 +732,14 @@ def readback_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dic
     text_mismatches: list[dict[str, str]] = []
     geometry_errors: list[str] = []
     geometry_mismatches: list[dict[str, Any]] = []
+    shape_type_mismatches: list[dict[str, str]] = []
+    z_order_mismatches: list[dict[str, Any]] = []
+    unexpected_elements: list[dict[str, str]] = []
     notes_count = 0
     expected_image_count = sum(1 for scene in scenes for element in scene.get("elements", []) if element.get("kind") == "image")
     actual_image_count = sum(1 for slide in presentation.slides for shape in slide.shapes if shape.shape_type == MSO_SHAPE_TYPE.PICTURE)
+    expected_media_relationships = expected_image_count
+    actual_media_relationships = sum(_image_relationship_count(slide) for slide in presentation.slides)
     expected_notes_count = sum(1 for scene in scenes if str((locks.get(str(scene["page_id"])) or {}).get("speaker_notes") or "").strip())
     pages: list[dict[str, Any]] = []
     pptx_geometries: dict[str, dict[str, dict[str, float]]] = {}
@@ -736,8 +755,17 @@ def readback_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dic
             continue
         expected_elements = {str(element.get("element_id")): element for element in scenes[slide_index].get("elements", [])}
         actual_elements = {str(shape.name): shape for shape in slide.shapes if shape.name}
+        expected_trace = {str(item.get("element_id") or ""): item for item in trace_pages.get(str(scenes[slide_index]["page_id"]), {}).get("elements", []) if isinstance(item, dict)}
+        expected_order = [str(item.get("element_id") or "") for item in trace_pages.get(str(scenes[slide_index]["page_id"]), {}).get("elements", []) if isinstance(item, dict)]
+        actual_order = [str(shape.name) for shape in slide.shapes if shape.name]
+        if expected_order != actual_order:
+            z_order_mismatches.append({"page_id": str(scenes[slide_index]["page_id"]), "expected": expected_order, "actual": actual_order})
+        for name in actual_order:
+            if name not in expected_elements:
+                unexpected_elements.append({"page_id": str(scenes[slide_index]["page_id"]), "element_id": name})
         page_missing: list[str] = []
         page_mismatch: list[dict[str, Any]] = []
+        page_shape_type_mismatches: list[dict[str, str]] = []
         page_geometry: dict[str, dict[str, float]] = {}
         for element_id, element in expected_elements.items():
             shape = actual_elements.get(element_id)
@@ -745,6 +773,11 @@ def readback_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dic
                 missing_elements.append(element_id)
                 page_missing.append(element_id)
                 continue
+            expected_type = _expected_shape_type(str((expected_trace.get(element_id) or {}).get("object_type") or ""))
+            if expected_type is not None and shape.shape_type != expected_type:
+                mismatch = {"element_id": element_id, "expected": str(expected_type), "actual": str(shape.shape_type)}
+                shape_type_mismatches.append(mismatch)
+                page_shape_type_mismatches.append(mismatch)
             if element.get("kind") == "text" and element.get("priority") in {"P0", "P1"}:
                 expected_text_value = str(element.get("text") or "")
                 actual_text_value = str(getattr(shape, "text", "") or "")
@@ -761,7 +794,7 @@ def readback_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dic
                 page_mismatch.append(entry)
         page_id = str(scenes[slide_index]["page_id"])
         pptx_geometries[page_id] = page_geometry
-        pages.append({"page_id": page_id, "missing_elements": page_missing, "geometry_mismatches": page_mismatch, "shape_count": len(slide.shapes), "shape_inventory": [{"name": str(shape.name or ""), "shape_type": str(shape.shape_type), "z_order": index} for index, shape in enumerate(slide.shapes)], "notes_present": bool(slide.notes_slide.notes_text_frame.text.strip())})
+        pages.append({"page_id": page_id, "missing_elements": page_missing, "geometry_mismatches": page_mismatch, "shape_type_mismatches": page_shape_type_mismatches, "shape_count": len(slide.shapes), "shape_inventory": [{"name": str(shape.name or ""), "shape_type": str(shape.shape_type), "z_order": index} for index, shape in enumerate(slide.shapes)], "media_relationship_count": _image_relationship_count(slide), "notes_present": bool(slide.notes_slide.notes_text_frame.text.strip())})
     normalized_actual = "\n".join(actual_text)
     missing_text = [item["expected"] for item in text_mismatches]
     traced_ids = {str(item.get("element_id") or "") for item in trace_payload.get("elements", []) if isinstance(item, dict)}
@@ -807,11 +840,13 @@ def readback_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dic
         "geometry": {"out_of_bounds": geometry_errors, "mismatches": geometry_mismatches},
         "trace_coverage": {"status": trace_status, "p0_p1": "pass" if not missing_trace_ids else "failed", "missing_element_ids": missing_trace_ids},
         "drawingml_paint": {**paint_inventory, "expected_gradient_count": expected_gradient_count, "expected_gradient_stop_count": expected_gradient_stop_count, "expected_effect_count": expected_effect_count, "expected_effect_types": expected_effect_types, "status": paint_status},
+        "shape_readback": {"shape_type_mismatches": shape_type_mismatches, "z_order_mismatches": z_order_mismatches, "unexpected_elements": unexpected_elements, "status": "pass" if not shape_type_mismatches and not z_order_mismatches and not unexpected_elements else "failed"},
+        "media_relationships": {"expected": expected_media_relationships, "actual": actual_media_relationships, "status": "pass" if expected_media_relationships == actual_media_relationships else "failed"},
         "visual_parity": visual_parity,
         "editable_object_count": sum(len(slide.shapes) for slide in presentation.slides),
         "image_shape_count": actual_image_count,
         "expected_image_count": expected_image_count,
-        "status": "pass" if len(presentation.slides) == len(scenes) and notes_count == expected_notes_count and actual_image_count == expected_image_count and not missing_text and not text_mismatches and not missing_elements and not geometry_errors and not geometry_mismatches and trace_status == "pass" and paint_status == "pass" and visual_parity["status"] == "pass" else "failed",
+        "status": "pass" if len(presentation.slides) == len(scenes) and notes_count == expected_notes_count and actual_image_count == expected_image_count and expected_media_relationships == actual_media_relationships and not missing_text and not text_mismatches and not missing_elements and not geometry_errors and not geometry_mismatches and not shape_type_mismatches and not z_order_mismatches and not unexpected_elements and trace_status == "pass" and paint_status == "pass" and visual_parity["status"] == "pass" else "failed",
         "created_at": utc_now(),
     }
     assert_v2("pptx_readback", report)

@@ -141,14 +141,28 @@
       },
       "additionalProperties": false
     },
+    "storylineContext": {
+      "type": "object",
+      "required": ["storyline_id", "management_conclusion", "visual_potential", "page_handoff", "caveat", "evidence_refs"],
+      "properties": {
+        "storyline_id": {"type": "string", "minLength": 1},
+        "management_conclusion": {"type": "string", "minLength": 1},
+        "visual_potential": {"type": "string", "minLength": 1},
+        "page_handoff": {"type": "string", "minLength": 1},
+        "caveat": {"type": "string", "minLength": 1},
+        "evidence_refs": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+      },
+      "additionalProperties": false
+    },
     "pagePlan": {
       "type": "object",
-      "required": ["page_id", "order", "page_package_sha256", "storyline_id", "role", "conclusion", "supporting_arguments", "evidence_refs", "caveat", "so_what", "handoff", "material_pool", "density_target", "components", "required_text_refs", "derived_claims", "status", "page_plan_sha256"],
+      "required": ["page_id", "order", "page_package_sha256", "storyline_id", "storyline_context", "role", "conclusion", "supporting_arguments", "evidence_refs", "caveat", "so_what", "handoff", "material_pool", "density_target", "components", "required_text_refs", "derived_claims", "status", "page_plan_sha256"],
       "properties": {
         "page_id": {"type": "string", "minLength": 1},
         "order": {"type": "integer", "minimum": 1},
         "page_package_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
         "storyline_id": {"type": "string", "minLength": 1},
+        "storyline_context": {"$ref": "#/$defs/storylineContext"},
         "role": {"type": "string", "minLength": 1},
         "conclusion": {"type": "string", "minLength": 1},
         "supporting_arguments": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
