@@ -38,7 +38,7 @@ jobs:
       - name: Install native SVG preview dependency
         run: |
           sudo apt-get update
-          sudo apt-get install --no-install-recommends -y librsvg2-bin
+          sudo apt-get install --no-install-recommends -y librsvg2-bin libreoffice poppler-utils
 
       - name: Check Python syntax
         run: python -m compileall scripts tests
