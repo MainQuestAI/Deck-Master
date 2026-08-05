@@ -24,6 +24,7 @@ SCHEMA_FILES = {
     "build_manifest": "build-manifest.v2.schema.json",
     "artifact_manifest": "artifact-manifest.v1.schema.json",
     "render_result": "render-result.v2.schema.json",
+    "provider_smoke": "high-density-provider-smoke.v1.schema.json",
 }
 
 PREVIEW_SCHEMA_FILES = {

@@ -13,6 +13,7 @@ from xml.etree import ElementTree
 from .blueprint import load_blueprint_manifest
 from .contracts import ContractError, assert_v2, read_json, safe_run_path, sha256_file, utc_now, write_json
 from .scene import load_scene
+from .svg_paint import SvgPaintError, parse_node_paint, parse_svg_paint
 from .visual import VisualMetricsError, _svg_geometry_bbox, compute_visual_metrics, normalize_blueprint, write_visual_metrics
 
 SVG_DIR = Path("high_density_build/svg")
@@ -22,7 +23,7 @@ COMPARISON_DIR = Path("high_density_build/comparisons")
 CANVAS_WIDTH = 1672
 CANVAS_HEIGHT = 941
 FORBIDDEN_TAGS = {"foreignObject", "script", "iframe", "style"}
-UNSUPPORTED_TAGS = {"linearGradient", "radialGradient", "filter", "mask", "clipPath", "pattern", "use"}
+UNSUPPORTED_TAGS = {"mask", "clipPath", "pattern", "use"}
 
 
 class SvgVisualError(ContractError):
@@ -289,6 +290,10 @@ def validate_svg(path: Path, *, page_id: str = "") -> dict[str, Any]:
         root = ElementTree.fromstring(path.read_text(encoding="utf-8"))
     except (OSError, ElementTree.ParseError) as exc:
         raise SvgVisualError(f"SVG parse failed: {exc}", page_id=page_id) from exc
+    try:
+        paint_registry = parse_svg_paint(root)
+    except SvgPaintError as exc:
+        raise SvgVisualError(str(exc), page_id=page_id, code=exc.code) from exc
     tags = {str(node.tag).split("}")[-1] for node in root.iter()}
     forbidden = sorted(tags & FORBIDDEN_TAGS)
     if forbidden:
@@ -319,14 +324,15 @@ def validate_svg(path: Path, *, page_id: str = "") -> dict[str, Any]:
             raise SvgVisualError("external CSS/style attributes are blocked", page_id=page_id)
         if node.get("transform"):
             raise SvgVisualError(f"per-element SVG transforms are unsupported: {node_id}", page_id=page_id, code="HD_SVG_UNSUPPORTED_ELEMENT")
-        if node.get("opacity") is not None:
+        definition_node = tag in {"defs", "linearGradient", "radialGradient", "filter", "stop", "feDropShadow", "feGaussianBlur"}
+        if node.get("opacity") is not None and not definition_node:
             try:
                 opacity = float(str(node.get("opacity")).removesuffix("px"))
             except (TypeError, ValueError) as exc:
                 raise SvgVisualError(f"SVG opacity is invalid: {node_id}", page_id=page_id) from exc
             if not math.isfinite(opacity) or opacity <= 0 or opacity > 1:
                 raise SvgVisualError(f"SVG opacity must be between 0 and 1: {node_id}", page_id=page_id)
-        for attribute in ("x", "y", "x1", "y1", "x2", "y2", "cx", "cy", "r", "rx", "ry", "width", "height", "stroke-width", "font-size"):
+        for attribute in () if definition_node else ("x", "y", "x1", "y1", "x2", "y2", "cx", "cy", "r", "rx", "ry", "width", "height", "stroke-width", "font-size"):
             if node.get(attribute) is None:
                 continue
             try:
@@ -335,10 +341,11 @@ def validate_svg(path: Path, *, page_id: str = "") -> dict[str, Any]:
                 raise SvgVisualError(f"SVG {attribute} is invalid: {node_id}", page_id=page_id) from exc
             if not math.isfinite(value) or (attribute in {"width", "height", "r", "rx", "ry", "stroke-width", "font-size"} and value < 0):
                 raise SvgVisualError(f"SVG {attribute} is out of range: {node_id}", page_id=page_id)
-        for paint in ("fill", "stroke"):
-            value = str(node.get(paint) or "").strip()
-            if value and value.lower() not in {"none", "transparent"} and not re.fullmatch(r"#[0-9a-fA-F]{6}", value):
-                raise SvgVisualError(f"SVG {paint} is outside the supported native palette: {node_id}", page_id=page_id, code="HD_SVG_UNSUPPORTED_STYLE")
+        if tag not in {"svg", "g", "defs", "linearGradient", "radialGradient", "filter", "stop", "feDropShadow", "feGaussianBlur", "tspan", "title", "desc", "metadata"}:
+            try:
+                parse_node_paint(node, paint_registry)
+            except SvgPaintError as exc:
+                raise SvgVisualError(str(exc), page_id=page_id, code=exc.code) from exc
         if node.get("opacity") is not None and str(node.get("opacity")) in {"0", "0.0"}:
             raise SvgVisualError(f"hidden SVG element is blocked: {node_id}", page_id=page_id)
         if tag in visible_tags:
@@ -368,7 +375,7 @@ def validate_svg(path: Path, *, page_id: str = "") -> dict[str, Any]:
             raise SvgVisualError("SVG registered image geometry is invalid", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED") from exc
         if x <= 0.01 and y <= 0.01 and width >= CANVAS_WIDTH - 0.01 and height >= CANVAS_HEIGHT - 0.01:
             raise SvgVisualError("whole-page image wrapper is blocked", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
-    return {"valid": True, "tags": sorted(tags), "forbidden": []}
+    return {"valid": True, "tags": sorted(tags), "forbidden": [], "paint": paint_registry}
 
 
 def render_preview(svg: Path, preview: Path) -> Path:

@@ -4,8 +4,9 @@ import hashlib
 import math
 from pathlib import Path
 from typing import Any
+from xml.etree import ElementTree
 
-from .contracts import ContractError, assert_v2, read_json, utc_now, write_json
+from .contracts import ContractError, assert_v2, read_json, sha256_json, utc_now, write_json
 
 CANVAS = {"width": 1672, "height": 941, "unit": "px"}
 SCENE_DIR = Path("high_density_build/page_scenes")
@@ -102,7 +103,80 @@ def _rect_element(*, element_id: str, role: str, priority: str, bbox: dict[str, 
     }
 
 
-def build_fixture_scene(lock: dict[str, Any], blueprint_sha256: str, blueprint_path: Path | None = None) -> dict[str, Any]:
+def _layout_boxes(layout_id: str, count: int) -> list[dict[str, float]]:
+    layouts: dict[str, list[dict[str, float]]] = {
+        "framework": [
+            {"x": 80, "y": 200, "w": 744, "h": 289},
+            {"x": 848, "y": 200, "w": 744, "h": 289},
+            {"x": 80, "y": 511, "w": 744, "h": 289},
+            {"x": 848, "y": 511, "w": 744, "h": 289},
+        ],
+        "process": [
+            {"x": 80, "y": 200, "w": 360, "h": 600},
+            {"x": 464, "y": 200, "w": 360, "h": 600},
+            {"x": 848, "y": 200, "w": 360, "h": 600},
+            {"x": 1232, "y": 200, "w": 360, "h": 600},
+        ],
+        "table": [
+            {"x": 80, "y": 200, "w": 1512, "h": 300},
+            {"x": 80, "y": 524, "w": 480, "h": 276},
+            {"x": 596, "y": 524, "w": 480, "h": 276},
+            {"x": 1112, "y": 524, "w": 480, "h": 276},
+        ],
+        "comparison": [
+            {"x": 80, "y": 220, "w": 700, "h": 260},
+            {"x": 892, "y": 220, "w": 700, "h": 260},
+            {"x": 80, "y": 520, "w": 700, "h": 280},
+            {"x": 892, "y": 520, "w": 700, "h": 280},
+        ],
+        "architecture": [
+            {"x": 621, "y": 200, "w": 430, "h": 230},
+            {"x": 80, "y": 500, "w": 430, "h": 300},
+            {"x": 621, "y": 500, "w": 430, "h": 300},
+            {"x": 1162, "y": 500, "w": 430, "h": 300},
+        ],
+        "data_story": [
+            {"x": 80, "y": 200, "w": 980, "h": 600},
+            {"x": 1084, "y": 200, "w": 508, "h": 180},
+            {"x": 1084, "y": 410, "w": 508, "h": 180},
+            {"x": 1084, "y": 620, "w": 508, "h": 180},
+        ],
+        "dense_narrative": [
+            {"x": 80, "y": 200, "w": 488, "h": 280},
+            {"x": 592, "y": 200, "w": 488, "h": 280},
+            {"x": 1104, "y": 200, "w": 488, "h": 280},
+            {"x": 80, "y": 520, "w": 1512, "h": 280},
+        ],
+    }
+    selected = layouts.get(layout_id) or layouts["framework"]
+    if count <= len(selected):
+        return selected[:count]
+    return selected + layouts["framework"][: max(0, count - len(selected))]
+
+
+def _fixture_background(blueprint_path: Path | None) -> str:
+    if blueprint_path is None or blueprint_path.suffix.lower() != ".svg":
+        return "#f7f9fb"
+    try:
+        root = ElementTree.fromstring(blueprint_path.read_text(encoding="utf-8"))
+    except (OSError, ElementTree.ParseError):
+        return "#f7f9fb"
+    for node in root.iter():
+        if node.tag.rsplit("}", 1)[-1] != "rect":
+            continue
+        if (
+            float(node.get("x") or 0) == 0
+            and float(node.get("y") or 0) == 0
+            and float(node.get("width") or 0) >= CANVAS["width"]
+            and float(node.get("height") or 0) >= CANVAS["height"]
+        ):
+            fill = str(node.get("fill") or "")
+            if len(fill) == 7 and fill.startswith("#"):
+                return fill
+    return "#f7f9fb"
+
+
+def build_fixture_scene(lock: dict[str, Any], blueprint_sha256: str, blueprint_path: Path | None = None, *, layout_id: str = "") -> dict[str, Any]:
     customer_visible = lock.get("customer_visible") or {}
     enrichment = lock.get("enrichment") or {}
     title = str(customer_visible.get("title") or lock["page_id"])
@@ -110,27 +184,23 @@ def build_fixture_scene(lock: dict[str, Any], blueprint_sha256: str, blueprint_p
     body_blocks = list(customer_visible.get("body_blocks") or [])
     labels = list(customer_visible.get("labels") or [])
     footnotes = list(customer_visible.get("footnotes") or [])
+    layout_id = layout_id or str((enrichment.get("material_pool") or {}).get("recommended_visual") or "framework")
+    background = _fixture_background(blueprint_path)
     elements: list[dict[str, Any]] = []
     digest = int(hashlib.sha256(blueprint_sha256.encode("ascii")).hexdigest()[:8], 16)
     accent = ("#" + f"{0x2D + digest % 80:02x}{0x75 + digest % 60:02x}{0xC5 + digest % 30:02x}")
-    elements.append(_rect_element(element_id="background", role="background", priority="P2", bbox={"x": 0, "y": 0, "w": 1672, "h": 941}, fill="#f7f9fb", stroke="#f7f9fb", radius=0, component_id="component.background", z_index=0))
+    elements.append(_rect_element(element_id="background", role="background", priority="P2", bbox={"x": 0, "y": 0, "w": 1672, "h": 941}, fill=background, stroke=background, radius=0, component_id="component.background", z_index=0))
     elements.append(_rect_element(element_id="header.rule", role="accent", priority="P2", bbox={"x": 80, "y": 156, "w": 1512, "h": 6}, fill=accent, stroke=accent, radius=3, component_id="component.header", z_index=2))
     elements.append(_text_element(element_id="title.main", role="title", priority="P0", bbox={"x": 80, "y": 56, "w": 1180, "h": 72}, text=title, text_ref="content_lock.customer_visible.title", preferred_size=42, min_size=30, max_lines=2, weight="700"))
     if subtitle:
         elements.append(_text_element(element_id="subtitle.main", role="subtitle", priority="P1", bbox={"x": 80, "y": 130, "w": 1350, "h": 32}, text=subtitle, text_ref="content_lock.customer_visible.subtitle", preferred_size=18, min_size=14, max_lines=1, color="#556474"))
 
     count = max(1, len(body_blocks))
-    columns = 3 if count > 4 else 2
-    rows = max(1, math.ceil(count / columns))
-    gap_x, gap_y = 24, 22
-    content_x, content_y, content_w, content_h = 80, 200, 1512, 600
-    card_w = (content_w - gap_x * (columns - 1)) / columns
-    card_h = (content_h - gap_y * (rows - 1)) / rows
+    layout_boxes = _layout_boxes(layout_id, count)
     palette = ["#ffffff", "#eef5fb", "#fff3e8", "#edf7f1", "#f3effa", "#f8f1ed"]
     for index, block in enumerate(body_blocks):
-        row, column = divmod(index, columns)
-        x = content_x + column * (card_w + gap_x)
-        y = content_y + row * (card_h + gap_y)
+        box = layout_boxes[index]
+        x, y, card_w, card_h = box["x"], box["y"], box["w"], box["h"]
         block_id = f"block.{index + 1:02d}"
         component_id = f"component.body.{index + 1:02d}"
         elements.append(_rect_element(element_id=block_id, role="content_card", priority="P1", bbox={"x": x, "y": y, "w": card_w, "h": card_h}, fill=palette[(index + digest) % len(palette)], component_id=component_id, z_index=3))
@@ -163,16 +233,18 @@ def build_fixture_scene(lock: dict[str, Any], blueprint_sha256: str, blueprint_p
         "source": "fixture_auto" if blueprint_path is None else "agent_reconstruction",
         "canvas": dict(CANVAS),
         "blueprint": {"source_canvas": dict(CANVAS), "slide_frame": {"x": 0, "y": 0, "w": 1672, "h": 941}, "source_to_scene_transform": {"scale": 1, "offset_x": 0, "offset_y": 0, "fit_mode": "approved_frame"}},
+        "layout_id": layout_id,
         "content_lock_sha256": str(lock["content_lock_sha256"]),
         "blueprint_sha256": blueprint_sha256,
         "transform": {"scale": 1, "offset_x": 0, "offset_y": 0, "fit_mode": "approved_frame"},
         "component_signature": [{"component_id": component_id, "present": any(item.get("component_id") == component_id for item in elements), "source": "content_lock"} for component_id in required_components],
+        "scene_signature": sha256_json([{"element_id": item["element_id"], "kind": item["kind"], "bbox": item["bbox"], "z_index": item.get("z_index", 0)} for item in elements]),
         "required_component_ids": required_components,
         "required_text_refs": list(lock.get("required_text_refs") or []),
         "text_fit_policy": {"font_fallback": "Arial", "minimum_p0_p1_px": 9, "overflow": "block"},
         "overflow_policy": {"mode": "block", "allowed_font_scale": {"min": 0.75, "max": 1.0}},
         "unresolved_visual_elements": [],
-        "background": {"fill": "#f7f9fb"},
+        "background": {"fill": background},
         "elements": elements,
         "approved": False,
         "created_at": utc_now(),

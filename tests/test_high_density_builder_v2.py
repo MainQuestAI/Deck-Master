@@ -7,6 +7,7 @@ import threading
 import time
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -26,7 +27,7 @@ from high_density.engine import (
     run_high_density,
     watch_high_density_status,
 )
-from high_density.pptx import PptxEditabilityError, _render_pptx_page, compile_pptx, pptx_path, trace_path
+from high_density.pptx import PptxEditabilityError, _render_pptx_page, compile_pptx, pptx_path, readback_pptx, trace_path
 from high_density.scene import build_fixture_scene, load_scene, validate_scene_content, write_scene
 from high_density.style import write_style_lock
 from high_density.svg import SvgVisualError, compile_svg, load_visual_review, preview_path, render_preview, review_path, svg_path, validate_svg
@@ -527,6 +528,64 @@ def test_svg_mutation_changes_pptx_trace_and_render(tmp_path: Path) -> None:
     assert sha256_file(pptx_path(run)) != original_pptx_hash
     assert new_trace["pages"][0]["svg_sha256"] != original_trace["pages"][0]["svg_sha256"]
     assert sha256_file(new_preview) != original_preview
+
+
+def test_svg_gradient_shadow_compile_to_drawingml_and_readback(tmp_path: Path) -> None:
+    run, lock, scene = _prepared_fixture(tmp_path)
+    svg = svg_path(run, "P001")
+    original = svg.read_text(encoding="utf-8")
+    defs = '<defs><linearGradient id="gradient.primary" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#fff3e8"/><stop offset="100%" stop-color="#fff3e8"/></linearGradient><filter id="effect.primary"><feDropShadow dx="0.5" dy="0.5" stdDeviation="0.5" flood-color="#102030" flood-opacity="0.02"/></filter></defs>'
+    mutated = original.replace('<g id="page.P001"', defs + '<g id="page.P001"', 1).replace('fill="#fff3e8"', 'fill="url(#gradient.primary)" filter="url(#effect.primary)"', 1)
+    svg.write_text(mutated, encoding="utf-8")
+    render_preview(svg, preview_path(run, "P001"))
+
+    compile_pptx(run, [scene], {"P001": lock})
+    trace = read_json(trace_path(run))
+    entry = next(item for item in trace["elements"] if item["element_id"] == "block.01")
+    assert entry["paint"]["fill"]["gradient_id"] == "gradient.primary"
+    assert entry["effect"]["effect_id"] == "effect.primary"
+    readback_pptx(run, [scene], {"P001": lock}, pptx_path(run))
+    report = read_json(run / "high_density_build/readback/readback_report.json")
+    assert report["drawingml_paint"]["expected_gradient_count"] == 1
+    assert report["drawingml_paint"]["expected_effect_count"] == 1
+    assert report["drawingml_paint"]["status"] == "pass"
+
+
+def test_svg_gradient_inheritance_is_blocked(tmp_path: Path) -> None:
+    run, _, _ = _prepared_fixture(tmp_path)
+    svg = svg_path(run, "P001")
+    original = svg.read_text(encoding="utf-8")
+    defs = '<defs><linearGradient id="gradient.bad" href="#gradient.other"><stop offset="0%" stop-color="#123456"/><stop offset="100%" stop-color="#abcdef"/></linearGradient></defs>'
+    svg.write_text(original.replace('<g id="page.P001"', defs + '<g id="page.P001"', 1), encoding="utf-8")
+
+    with pytest.raises(SvgVisualError, match="inheritance or transform"):
+        validate_svg(svg, page_id="P001")
+
+
+def test_readback_batches_full_deck_render(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    run, _ = _make_run(tmp_path, page_count=2)
+    _blueprint(run, "P001")
+    _blueprint(run, "P002")
+    prepare_high_density(run)
+    assert run_high_density(run)["status"] == "completed"
+    packages = load_page_packages(run, expected_run_id=run.name)
+    scenes = [load_scene(run, str(package["page_id"])) for package in packages]
+    locks = {str(package["page_id"]): read_json(run / f"high_density_build/content_locks/{package['page_id']}.json") for package in packages}
+
+    import high_density.pptx as pptx_module
+
+    original_run = pptx_module.subprocess.run
+    commands: list[list[str]] = []
+
+    def counted_run(command: list[str], *args: Any, **kwargs: Any) -> Any:
+        commands.append([str(item) for item in command])
+        return original_run(command, *args, **kwargs)
+
+    monkeypatch.setattr(pptx_module.subprocess, "run", counted_run)
+    readback_pptx(run, scenes, locks, pptx_path(run))
+
+    assert sum(command and command[0].endswith("soffice") for command in commands) == 1
+    assert sum(command and command[0].endswith("pdftoppm") for command in commands) == 1
 
 
 def test_scene_mutation_without_svg_change_does_not_change_pptx(tmp_path: Path) -> None:

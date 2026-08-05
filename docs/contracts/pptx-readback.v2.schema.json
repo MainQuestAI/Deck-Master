@@ -16,6 +16,7 @@
     "text_readback": {"type": "object"},
     "geometry": {"type": "object"},
     "trace_coverage": {"type": "object"},
+    "drawingml_paint": {"type": "object", "required": ["gradient_count", "gradient_stop_count", "effect_count", "gradient_stop_alpha_values", "status"], "properties": {"gradient_count": {"type": "integer", "minimum": 0}, "gradient_stop_count": {"type": "integer", "minimum": 0}, "effect_count": {"type": "integer", "minimum": 0}, "gradient_stop_alpha_values": {"type": "array", "items": {"type": "integer", "minimum": 0, "maximum": 100000}}, "status": {"enum": ["pass", "failed"]}}, "additionalProperties": true},
     "visual_parity": {"type": "object"},
     "editable_object_count": {"type": "integer"},
     "image_shape_count": {"type": "integer"},
