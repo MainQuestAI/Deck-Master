@@ -169,7 +169,7 @@ def _waiting(
         "output_ref": output_ref,
         "input_refs": [input_ref],
         "output_refs": resolved_output_refs,
-        "required_schema": {"content_lock": "deck_nbb_plan.v1" if kind == "agent_nbb_enrich" else "deck_high_density_status.v2", "blueprint": "deck_blueprint_manifest.v2", "page_scene": "deck_page_scene.v2", "svg": "native-svg"}.get(stage, "deck_high_density_status.v2"),
+        "required_schema": {"content_lock": "deck_nbb_plan.v1" if kind == "agent_nbb_enrich" else "deck_high_density_status.v2", "blueprint": "deck_blueprint_manifest.v2", "page_scene": "deck_page_scene.v2", "svg": "native-svg", "visual_review": "deck_visual_review.v2"}.get(stage, "deck_high_density_status.v2"),
         "acceptance_command": _resume_command(root),
         "resume_command": _resume_command(root),
         "reason": reason,
@@ -831,7 +831,7 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
                     main_passed = str((review_payload.get("main_review") or {}).get("status") or "") == "pass"
                     if self_passed and not main_passed:
                         return _waiting(root, page_id=page_id, stage="visual_review", kind="agent_main_review", input_ref=f"high_density_build/reviews/{page_id}.visual_review.json", output_ref=f"high_density_build/reviews/{page_id}.visual_review.json", reason=f"Read the producer self-review and actual visual metrics, then complete the independent main review: {exc}")
-                    return _waiting(root, page_id=page_id, stage="visual_review", kind="agent_svg_repair", input_ref=f"high_density_build/svg/{page_id}.svg", output_ref=f"high_density_build/reviews/{page_id}.visual_review.json", reason=f"Repair the SVG using the recorded visual findings: {exc}")
+                    return _waiting(root, page_id=page_id, stage="visual_review", kind="agent_svg_repair", input_ref=f"high_density_build/reviews/{page_id}.visual_review.json", output_ref=f"high_density_build/svg/{page_id}.svg", output_refs=[f"high_density_build/reviews/{page_id}.visual_review.json"], reason=f"Repair the approved SVG using the recorded visual findings, then write a refreshed passing visual review: {exc}")
                 raise HighDensityBuildError("HD_SVG_REVIEW_FAILED", str(exc), stage="visual_review", page_id=page_id) from exc
         elif execution_mode in {"fixture", "dev"}:
             try:
