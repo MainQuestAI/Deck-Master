@@ -8,6 +8,8 @@
   "prompt_request_image_svg_pptx_readback_lineage": "implemented",
   "historical_provider_smoke": "superseded_for_release_gate",
   "fresh_provider_smoke": "pass",
+  "deck_quality_render_gate": "pass",
+  "deck_quality_render_gate_evidence": "local provider smoke run; raw run and report are not committed",
   "fresh_provider_run_mode": "production",
   "fresh_provider_visual_metrics": {
     "text_masked_ssim": 0.9208257247475959,
@@ -18,5 +20,5 @@
     "svg_pptx_text_masked_ssim": 0.9848403072246478
   },
   "raw_provider_payload_committed": false,
-  "verification_command": ".venv/bin/pytest -q tests/test_high_density_distinct_acceptance.py::test_provider_challenge_lineage_cannot_use_stale_artifacts tests/test_high_density_distinct_acceptance.py::test_fixture_artifacts_cannot_be_relabelled_as_production_provider_smoke tests/test_high_density_distinct_acceptance.py::test_provider_smoke_evidence_requires_real_provider_metadata"
+  "verification_command": ".venv/bin/pytest -q tests/test_high_density_distinct_acceptance.py::test_provider_challenge_lineage_cannot_use_stale_artifacts tests/test_high_density_distinct_acceptance.py::test_fixture_artifacts_cannot_be_relabelled_as_production_provider_smoke tests/test_high_density_distinct_acceptance.py::test_provider_smoke_evidence_requires_real_provider_metadata; deck-master quality-gate render --run-dir <provider_smoke_run> --artifact <provider_smoke_pptx> --expected-pages 1"
 }

@@ -60,17 +60,19 @@ The source capability probe reports `ready` when schemas, Python packages, rende
 - Fresh production ImageGen lineage: `docs/qa/high-density-builder-v2/phase-4-provider-smoke-evidence.json`.
 - Provider challenge status: `docs/qa/high-density-builder-v2/phase-4-provider-challenge-status.json`.
 - External 73-page MVP index: `docs/qa/high-density-builder-v2/phase-4-73-page-external-mvp-index.json`.
+- Standard profile evidence: `docs/qa/high-density-builder-v2/phase-4-standard-profile-evidence.json`.
 - Final QA/Review result: `docs/qa/high-density-builder-v2/phase-4-final-qa-review.md`.
 
 Raw provider payloads, generated images, private 73-page source material, and local run directories are excluded from the repository.
 
 ## Validation
 
-- Full pytest: 1,361 passed and 105 subtests passed.
+- Full pytest: 1,363 passed and 105 subtests passed.
 - Coverage: 82%, with the 80% release floor enforced by `coverage report --fail-under=80`.
 - Local static checks: Ruff, compileall, and `git diff --check` pass.
-- The seven-page fixture and fresh production provider smoke pass their lineage, visual, DrawingML, readback, and handback gates.
-- GitHub Actions Python 3.11/3.12 CI, contract/schema checks, preview gate, release smoke, and CI RC gate pass on commit `ad8a2e4`.
+- The seven-page fixture and fresh production provider smoke pass their lineage, visual, DrawingML, readback, handback, and `deck-quality` render gates.
+- Standard profile prepare, run, and preview-gate evidence is recorded in `phase-4-standard-profile-evidence.json`.
+- GitHub Actions Python 3.11/3.12 CI, contract/schema checks, preview gate, release smoke, and CI RC gate pass on the prior code baseline; the current fix commit requires a new CI run.
 - Final independent review and QA remain required before changing PR #26 from Draft.
 - Seven-page canonical handback is consumed by `deck-quality`.
 - The fresh production provider page passes signed challenge/result lineage, blueprint/SVG and SVG/PPTX visual gates, independent review evidence, and readback lineage.

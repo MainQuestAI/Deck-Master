@@ -19,14 +19,16 @@ Page Package -> NBB selection/seal -> Content Lock -> ImageGen blueprint
 
 | Gate | Result | Evidence |
 | --- | --- | --- |
-| Full pytest | pass | `1,361 passed`, `105 subtests passed` |
+| Full pytest | pass | `1,363 passed`, `105 subtests passed` |
 | Coverage | pass | 82%, `--fail-under=80` |
-| Focused high-density tests | pass | `82 passed` in the builder and distinct-acceptance suites |
+| Focused high-density tests | pass | `84 passed` in the builder and distinct-acceptance suites |
 | Ruff | pass | high-density scripts and acceptance tests |
 | Compileall | pass | high-density scripts and acceptance tests |
 | Diff check | pass | `git diff --check` |
 | Seven-page E2E | pass | `phase-4-seven-page-e2e.json` |
 | Fresh provider smoke | pass | `phase-4-provider-smoke-evidence.json` |
+| Provider `deck-quality` render gate | pass | local fresh provider smoke run; raw report excluded |
+| Standard profile regression | pass | `phase-4-standard-profile-evidence.json` |
 | GitHub Actions CI | pass | Python 3.11/3.12 main tests, autoplan smoke, and CI-tier RC gate on `ad8a2e4` |
 | 73-page external MVP evidence | pass as external evidence | sanitized index only; raw material is excluded |
 
@@ -43,4 +45,4 @@ Page Package -> NBB selection/seal -> Content Lock -> ImageGen blueprint
 
 **Local acceptance: pass. Release readiness: pending.**
 
-The implementation, local evidence, and pushed CI satisfy the current v3 repair scope. PR #26 remains Draft until the final independent `$review` and `$qa` accept the candidate and the canonical `deck-quality` handback check is recorded. No release-ready claim is made yet.
+The implementation and local evidence satisfy the current v3 repair scope. PR #26 remains Draft until the fix commit's CI completes and the final independent `$review` and `$qa` accept the candidate. No release-ready claim is made yet.

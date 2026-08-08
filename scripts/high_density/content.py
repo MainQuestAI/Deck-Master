@@ -143,9 +143,12 @@ def _evidence_ledger(package: dict[str, Any]) -> list[dict[str, Any]]:
                 "implication": str((package.get("quality_intent") or {}).get("so_what") or ""),
                 "recommended_visual": "",
             }
-        if evidence_id and evidence_id not in seen:
-            seen.add(evidence_id)
-            evidence.append(record)
+        if not evidence_id:
+            raise ContractError(f"Page Package {package.get('page_id') or 'unknown'} contains an empty evidence_id")
+        if evidence_id in seen:
+            raise ContractError(f"Page Package {package.get('page_id') or 'unknown'} contains duplicate evidence_id: {evidence_id}")
+        seen.add(evidence_id)
+        evidence.append(record)
     if not evidence and package.get("legacy_inferred"):
         page_id = str(package.get("page_id") or "page")
         evidence.append(
@@ -1043,8 +1046,6 @@ def build_nbb_plan(
     packages: list[dict[str, Any]],
     *,
     run_id: str,
-    selected_storyline_id: str = "",
-    approved_by: str = "",
 ) -> dict[str, Any]:
     if not packages:
         raise ContractError("NBB plan requires at least one Page Package")
@@ -1064,14 +1065,17 @@ def build_nbb_plan(
         ledger.extend(result["evidence"])
     if blocked:
         raise ContractError(f"NBB plan blocked pages: {blocked}")
-    unique_ledger = {str(item["evidence_id"]): item for item in ledger}
-    evidence_ledger = [unique_ledger[key] for key in sorted(unique_ledger)]
+    evidence_by_id: dict[str, dict[str, Any]] = {}
+    for item in ledger:
+        evidence_id = str(item.get("evidence_id") or "")
+        if not evidence_id:
+            raise ContractError("NBB evidence ledger contains an empty evidence_id")
+        if evidence_id in evidence_by_id:
+            raise ContractError(f"NBB evidence_id must be globally unique across Page Packages: {evidence_id}")
+        evidence_by_id[evidence_id] = item
+    evidence_ledger = [evidence_by_id[key] for key in sorted(evidence_by_id)]
     candidates = _storyline_candidates(packages, evidence_ledger)
-    candidate_ids = {str(candidate["storyline_id"]) for candidate in candidates}
     recommended_id = str(candidates[0]["storyline_id"])
-    selected_id = str(selected_storyline_id or "")
-    if selected_id and selected_id not in candidate_ids:
-        raise ContractError(f"unknown NBB storyline_id: {selected_id}")
     plan = {
         "schema_version": "deck_nbb_plan.v1",
         "run_id": run_id,
@@ -1079,19 +1083,19 @@ def build_nbb_plan(
         "evidence_ledger": evidence_ledger,
         "storyline_candidates": candidates,
         "selection": {
-            "status": "selected_pending_enrichment" if selected_id else "pending_user_decision",
+            "status": "pending_user_decision",
             "recommended_storyline_id": recommended_id,
-            "selected_storyline_id": selected_id or None,
-            "selected_by": str(approved_by or "fixture") if selected_id else None,
-            "selected_at": utc_now() if selected_id else None,
+            "selected_storyline_id": None,
+            "selected_by": None,
+            "selected_at": None,
             "sealed_at": None,
         },
         "storyline_audit": {
             "source": "page_packages",
-            "status": "selected_pending_enrichment" if selected_id else "pending_user_decision",
+            "status": "pending_user_decision",
             "candidate_count": len(candidates),
             "recommendation_id": recommended_id,
-            "selected_id": selected_id or None,
+            "selected_id": None,
             "content_specific": True,
             "notes": "NBB candidates are derived from page titles, evidence refs, page roles, caveats, and visual requirements.",
         },
@@ -1100,8 +1104,6 @@ def build_nbb_plan(
         "blocked_pages": [],
         "created_at": utc_now(),
     }
-    if selected_id:
-        plan = enrich_selected_nbb_plan(plan, packages)
     plan["nbb_plan_sha256"] = sha256_json(
         {key: value for key, value in plan.items() if key not in {"nbb_plan_sha256", "created_at", "updated_at"}}
     )

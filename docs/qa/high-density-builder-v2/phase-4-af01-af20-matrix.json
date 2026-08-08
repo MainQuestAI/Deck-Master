@@ -5,7 +5,7 @@
   "test_session": {
     "command": ".venv/bin/pytest -q",
     "result": "pass",
-    "tests_passed": 1361,
+    "tests_passed": 1363,
     "subtests_passed": 105,
     "executed_at": "2026-08-08"
   },
@@ -22,7 +22,8 @@
       "tests": [
         "tests/test_high_density_builder_v2.py::test_nbb_rejects_unsupported_factual_claim",
         "tests/test_high_density_builder_v2.py::test_numeric_claim_must_exist_in_its_cited_evidence",
-        "tests/test_high_density_builder_v2.py::test_numeric_claim_uses_exact_token_match_in_cited_evidence"
+        "tests/test_high_density_builder_v2.py::test_numeric_claim_uses_exact_token_match_in_cited_evidence",
+        "tests/test_high_density_builder_v2.py::test_nbb_rejects_duplicate_evidence_ids_across_page_packages"
       ],
       "status": "pass"
     },
@@ -53,7 +54,10 @@
     {
       "id": "AF-07",
       "gate": "required components cannot be dropped",
-      "tests": ["tests/test_high_density_builder_v2.py::test_svg_rejects_missing_required_component"],
+      "tests": [
+        "tests/test_high_density_builder_v2.py::test_svg_rejects_missing_required_component",
+        "tests/test_high_density_builder_v2.py::test_svg_rejects_missing_scene_element"
+      ],
       "status": "pass"
     },
     {
@@ -147,6 +151,8 @@
     "tests/test_high_density_builder_v2.py::test_forged_nbb_runtime_seal_signature_is_rejected",
     "tests/test_high_density_builder_v2.py::test_runtime_seal_is_invalidated_when_approved_plan_changes",
     "tests/test_high_density_builder_v2.py::test_nbb_plan_blocks_agent_added_material_component_and_required_text",
+    "tests/test_high_density_builder_v2.py::test_nbb_rejects_duplicate_evidence_ids_across_page_packages",
+    "tests/test_high_density_builder_v2.py::test_svg_rejects_missing_scene_element",
     "tests/test_high_density_builder_v2.py::test_visible_tspan_text_cannot_hide_behind_declared_metadata",
     "tests/test_high_density_builder_v2.py::test_required_tspan_cannot_be_hidden_by_run_paint",
     "tests/test_high_density_builder_v2.py::test_visual_review_requires_independent_reviewer_ids",
@@ -159,6 +165,7 @@
     "fresh_provider_smoke": "docs/qa/high-density-builder-v2/phase-4-provider-smoke-evidence.json",
     "provider_challenge": "docs/qa/high-density-builder-v2/phase-4-provider-challenge-status.json",
     "external_73_page_mvp": "docs/qa/high-density-builder-v2/phase-4-73-page-external-mvp-index.json",
+    "standard_profile": "docs/qa/high-density-builder-v2/phase-4-standard-profile-evidence.json",
     "final_qa_review": "docs/qa/high-density-builder-v2/phase-4-final-qa-review.md"
   },
   "raw_private_artifacts_committed": false

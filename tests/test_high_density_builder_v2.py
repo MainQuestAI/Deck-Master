@@ -102,12 +102,17 @@ def _prepared_fixture(tmp_path: Path) -> tuple[Path, dict, dict]:
 
 
 def _approved_page_plan(package: dict) -> tuple[dict, dict]:
-    plan = build_nbb_plan(
-        [package],
-        run_id=str(package["run_id"]),
-        selected_storyline_id="storyline.decision",
-        approved_by="test",
+    plan = build_nbb_plan([package], run_id=str(package["run_id"]))
+    plan["selection"].update(
+        {
+            "status": "selected_pending_enrichment",
+            "selected_storyline_id": "storyline.decision",
+            "selected_by": "test",
+            "selected_at": "2026-01-01T00:00:00+00:00",
+        }
     )
+    plan["storyline_audit"].update({"status": "selected_pending_enrichment", "selected_id": "storyline.decision"})
+    plan = enrich_selected_nbb_plan(plan, [package])
     return plan, plan["pages"][0]
 
 
@@ -323,6 +328,17 @@ def test_nbb_plan_contains_content_specific_candidates_and_precise_page_refs(tmp
     assert load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)["nbb_plan_sha256"] == plan["nbb_plan_sha256"]
 
 
+def test_nbb_rejects_duplicate_evidence_ids_across_page_packages(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path, page_count=2)
+    packages = load_page_packages(run, expected_run_id=run.name)
+    packages[1]["evidence_bindings"] = [
+        {"evidence_id": "E001", "source_ref": "fixture.duplicate", "meaning": "Conflicting page evidence."}
+    ]
+
+    with pytest.raises(ContractError, match="globally unique across Page Packages"):
+        build_nbb_plan(packages, run_id=run.name)
+
+
 def test_content_lock_requires_approved_nbb_page_plan(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path)
     package = read_json(run / "page_packages/P001.json")
@@ -523,7 +539,17 @@ def test_agent_approved_nbb_plan_without_runtime_seal_is_rejected(tmp_path: Path
 def test_agent_selected_nbb_plan_without_runtime_receipt_is_rejected(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path)
     packages = load_page_packages(run, expected_run_id=run.name)
-    plan = build_nbb_plan(packages, run_id=run.name, selected_storyline_id="storyline.decision", approved_by="forged-agent")
+    plan = build_nbb_plan(packages, run_id=run.name)
+    plan["selection"].update(
+        {
+            "status": "selected_pending_enrichment",
+            "selected_storyline_id": "storyline.decision",
+            "selected_by": "forged-agent",
+            "selected_at": "2026-01-01T00:00:00+00:00",
+        }
+    )
+    plan["storyline_audit"].update({"status": "selected_pending_enrichment", "selected_id": "storyline.decision"})
+    plan = enrich_selected_nbb_plan(plan, packages)
     write_json(run / "high_density_build/nbb/nbb_plan.json", plan)
 
     with pytest.raises(ContractError, match="selection_receipt"):
@@ -952,6 +978,19 @@ def test_svg_rejects_missing_required_component(tmp_path: Path) -> None:
 
     with pytest.raises(SvgVisualError, match="missing required components"):
         compile_svg(scene, run / "high_density_build/svg/missing.svg")
+
+
+def test_svg_rejects_missing_scene_element(tmp_path: Path) -> None:
+    run, lock, scene = _prepared_fixture(tmp_path)
+    svg = svg_path(run, "P001")
+    document = ElementTree.parse(svg)
+    parents = {child: parent for parent in document.getroot().iter() for child in list(parent)}
+    missing = next(node for node in document.getroot().iter() if node.get("id") == "header.rule")
+    parents[missing].remove(missing)
+    document.write(svg, encoding="utf-8", xml_declaration=True)
+
+    with pytest.raises(SvgVisualError, match="missing scene element: header.rule"):
+        validate_approved_svg(svg, scene, lock)
 
 
 def test_visual_metrics_are_computed_from_artifacts(tmp_path: Path) -> None:

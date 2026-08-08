@@ -563,6 +563,14 @@ def validate_approved_svg(
     visible_nodes = [node for node in root.iter() if str(node.tag).split("}")[-1] in visible_tags]
     nodes = {str(node.get("id") or ""): node for node in visible_nodes}
     scene_elements = {str(element.get("element_id") or ""): element for element in scene.get("elements") or []}
+    for element_id, element in scene_elements.items():
+        node = nodes.get(element_id)
+        if node is None:
+            raise SvgVisualError(
+                f"approved SVG is missing scene element: {element_id}; recovery: deck-master build retry --run-dir <run_dir> --profile high-density --stage svg --page-id {page_id}",
+                page_id=page_id,
+                code="HD_SVG_CONTENT_DRIFT",
+            )
     required_components = set(str(value) for value in lock.get("required_component_ids") or [])
     present_components = {str(node.get("data-pptx-component") or "") for node in visible_nodes}
     missing_components = sorted(required_components - present_components)
