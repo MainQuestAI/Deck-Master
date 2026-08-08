@@ -22,10 +22,28 @@
     "forbidden_items": {"type": "array", "items": {"type": "string"}},
     "provider_challenge": {
       "type": "object",
-      "required": ["nonce", "issued_at"],
+      "required": ["nonce", "issued_at", "run_mode", "run_id", "page_id", "prompt_sha256", "content_lock_sha256", "nbb_plan_sha256", "style_lock_sha256", "integrity"],
       "properties": {
         "nonce": {"type": "string", "pattern": "^[a-f0-9]{32}$"},
-        "issued_at": {"type": "string", "format": "date-time"}
+        "issued_at": {"type": "string", "format": "date-time"},
+        "run_mode": {"enum": ["production", "benchmark", "fixture", "dev"]},
+        "run_id": {"type": "string", "minLength": 1},
+        "page_id": {"type": "string", "minLength": 1},
+        "prompt_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "content_lock_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "nbb_plan_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "style_lock_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "integrity": {
+          "type": "object",
+          "required": ["algorithm", "key_id", "payload_sha256", "signature"],
+          "properties": {
+            "algorithm": {"const": "hmac-sha256"},
+            "key_id": {"type": "string", "pattern": "^[a-f0-9]{16}$"},
+            "payload_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+            "signature": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+          },
+          "additionalProperties": false
+        }
       },
       "additionalProperties": false
     },

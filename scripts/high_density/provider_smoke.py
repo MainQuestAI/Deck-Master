@@ -7,7 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from .blueprint import load_blueprint_manifest, safe_run_path
+from .blueprint import load_blueprint_manifest, load_provider_runtime_receipt, provider_receipt_path, safe_run_path
 from .contracts import ContractError, assert_valid, assert_v2, read_json, run_relative, sha256_bytes, sha256_file, sha256_json, utc_now, write_json
 
 
@@ -65,6 +65,13 @@ def build_provider_smoke_evidence(run_dir: str | Path, *, page_id: str = "", out
     except ContractError as exc:
         raise ProviderSmokeError(str(exc)) from exc
     provider = blueprint.get("provider") or {}
+    try:
+        provider_receipt = load_provider_runtime_receipt(root, selected_page_id, blueprint)
+    except ContractError as exc:
+        raise ProviderSmokeError(str(exc)) from exc
+    signed_run_mode = str(provider_receipt.get("run_mode") or "")
+    if signed_run_mode != run_mode or signed_run_mode not in {"production", "benchmark"}:
+        raise ProviderSmokeError("fresh provider smoke requires a Runtime-signed production or benchmark challenge")
     tool = str(provider.get("tool") or "").strip()
     model = str(provider.get("model") or "").strip()
     request_id = str(provider.get("request_id") or "").strip()
@@ -133,7 +140,7 @@ def build_provider_smoke_evidence(run_dir: str | Path, *, page_id: str = "", out
             raise ProviderSmokeError(f"provider smoke timeline is stale on page {selected_page_id}: {current_name} precedes {previous_name}")
     evidence = {
         "schema_version": "deck_high_density_provider_smoke.v1",
-        "run_mode": run_mode,
+        "run_mode": signed_run_mode,
         "run_id_sha256": _hash_text(str(manifest.get("run_id") or "")),
         "page_id": selected_page_id,
         "status": "pass",
@@ -142,6 +149,7 @@ def build_provider_smoke_evidence(run_dir: str | Path, *, page_id: str = "", out
             "model": model,
             "request_id_sha256": _hash_text(request_id),
             "request_sha256": str(provider.get("request_sha256") or ""),
+            "runtime_receipt_sha256": sha256_file(provider_receipt_path(root, selected_page_id)),
             "challenge_nonce_sha256": _hash_text(str(challenge.get("nonce") or "")),
             "requested_at": str(provider.get("requested_at") or ""),
             "responded_at": str(provider.get("responded_at") or ""),
@@ -168,6 +176,10 @@ def build_provider_smoke_evidence(run_dir: str | Path, *, page_id: str = "", out
         "artifacts": {
             "prompt": {"path": run_relative(root, prompt_path), "sha256": sha256_file(prompt_path)},
             "blueprint": _artifact_ref(root, page, "blueprint"),
+            "provider_receipt": {
+                "path": run_relative(root, provider_receipt_path(root, selected_page_id)),
+                "sha256": sha256_file(provider_receipt_path(root, selected_page_id)),
+            },
             "page_scene": scene_ref,
             "svg": svg_ref,
             "content_lock": content_lock_ref,
@@ -181,6 +193,7 @@ def build_provider_smoke_evidence(run_dir: str | Path, *, page_id: str = "", out
             "visual_review": "pass",
             "readback": "pass",
             "svg_to_pptx": "pass",
+            "runtime_provider_receipt": "pass",
         },
         "raw_provider_payload_included": False,
         "created_at": utc_now(),

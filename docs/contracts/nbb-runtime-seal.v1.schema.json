@@ -3,19 +3,31 @@
   "$id": "https://deck-master.local/contracts/nbb-runtime-seal.v1.schema.json",
   "title": "NBB Runtime Seal v1",
   "type": "object",
-  "required": ["schema_version", "run_id", "selected_storyline_id", "nbb_plan_sha256", "page_package_sha256", "sealed_at"],
+  "required": ["schema_version", "run_id", "selected_storyline_id", "nbb_plan_sha256", "selection_receipt_sha256", "page_package_sha256", "sealed_at", "integrity"],
   "properties": {
     "schema_version": {"const": "deck_nbb_runtime_seal.v1"},
     "run_id": {"type": "string", "minLength": 1},
     "selected_storyline_id": {"type": "string", "minLength": 1},
     "nbb_plan_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "selection_receipt_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
     "page_package_sha256": {
       "type": "object",
       "minProperties": 1,
       "propertyNames": {"pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"},
       "additionalProperties": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
     },
-    "sealed_at": {"type": "string", "format": "date-time"}
+    "sealed_at": {"type": "string", "format": "date-time"},
+    "integrity": {
+      "type": "object",
+      "required": ["algorithm", "key_id", "payload_sha256", "signature"],
+      "properties": {
+        "algorithm": {"const": "hmac-sha256"},
+        "key_id": {"type": "string", "pattern": "^[a-f0-9]{16}$"},
+        "payload_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "signature": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      },
+      "additionalProperties": false
+    }
   },
   "additionalProperties": false
 }

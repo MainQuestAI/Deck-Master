@@ -22,8 +22,8 @@ CyberPPT, PPT Master, native-svg-redraw, image-to-code, and OfficeCLI remain ref
 
 | Capability | Acceptance evidence |
 | --- | --- |
-| CyberPPT-derived NBB content enrichment | Three-state NBB contract, claim bindings, evidence and numeric guards, selected-storyline seal tests |
-| Content-aware ImageGen blueprint | Full locked-content/style prompt, runtime challenge, explicit approval, fresh provider smoke |
+| CyberPPT-derived NBB content enrichment | Three-state NBB contract, full page registry, evidence and exact numeric guards, signed selection/seal tests |
+| Content-aware ImageGen blueprint | Full locked-content/style prompt, signed challenge/result receipts, explicit approval, fresh provider smoke |
 | Blueprint-to-native-SVG | Content Lock/Scene parity, production image and text gates, measured blueprint/SVG comparison |
 | SVG-to-DrawingML PPTX | SVG-authoritative compiler, conversion trace, batch render, OOXML readback, SVG/PPTX comparison |
 
@@ -34,11 +34,13 @@ The source capability probe reports `ready` when schemas, Python packages, rende
 | Artifact | Contract |
 | --- | --- |
 | NBB plan | `deck_nbb_plan.v1` |
+| NBB selection receipt | `deck_nbb_selection_receipt.v1` |
 | NBB Runtime seal | `deck_nbb_runtime_seal.v1` |
 | Content lock | `deck_content_lock.v2` |
 | Style lock | `deck_high_density_style_lock.v1` |
 | Blueprint prompt | `deck_blueprint_prompt.v1` |
 | Blueprint manifest | `deck_blueprint_manifest.v2` |
+| Provider Runtime receipt | `deck_provider_runtime_receipt.v1` |
 | Page Scene | `deck_page_scene.v2` |
 | Visual metrics | `deck_visual_metrics.v1` |
 | Visual review | `deck_visual_review.v2` |
@@ -61,11 +63,11 @@ Raw provider payloads, generated images, private 73-page source material, and lo
 
 ## Validation
 
-- Full pytest: 1,346 passed and 105 subtests passed.
+- Full pytest: 1,354 passed and 105 subtests passed.
 - Coverage: 89%, with an 80% release floor.
 - Python 3.11 and 3.12 CI, contract/schema checks, preview gate, release smoke, and CI RC gate pass on the candidate branch.
 - Seven-page canonical handback is consumed by `deck-quality`.
-- The fresh production provider page passes blueprint/SVG and SVG/PPTX visual gates plus readback lineage.
+- The fresh production provider page passes signed challenge/result lineage, blueprint/SVG and SVG/PPTX visual gates, independent review evidence, and readback lineage.
 
 ## Rollback
 

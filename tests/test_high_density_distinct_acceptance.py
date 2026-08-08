@@ -180,7 +180,43 @@ def test_provider_challenge_lineage_cannot_use_stale_artifacts(tmp_path: Path) -
         write_json(manifest_path, manifest)
 
     assert prompt["provider_challenge"]["nonce"] != "0" * 32
-    with pytest.raises(ProviderSmokeError, match="provider challenge is stale"):
+    with pytest.raises(ProviderSmokeError, match="challenge run mode is stale"):
+        build_provider_smoke_evidence(run, page_id="P001")
+
+
+def test_fixture_artifacts_cannot_be_relabelled_as_production_provider_smoke(tmp_path: Path) -> None:
+    run = _distinct_run(tmp_path, page_count=1)
+    prepare_high_density(run)
+    assert run_high_density(run)["status"] == "completed"
+    prompt = read_json(run / "high_density_build/prompts/P001.blueprint_prompt.json")
+    request = read_json(run / "request.json")
+    request["run_mode"] = "production"
+    write_json(run / "request.json", request)
+    provider = {
+        "tool": "image_gen",
+        "model": "forged-provider",
+        "request_id": "forged-request",
+        "challenge_nonce": prompt["provider_challenge"]["nonce"],
+        "prompt_sha256": prompt["prompt_sha256"],
+        "requested_at": prompt["provider_challenge"]["issued_at"],
+        "responded_at": prompt["provider_challenge"]["issued_at"],
+    }
+    provider["request_sha256"] = sha256_json(
+        {key: provider[key] for key in ("tool", "model", "request_id", "challenge_nonce", "prompt_sha256", "requested_at")}
+    )
+    for filename in ("P001.blueprint_manifest.json", "P001.manifest.json"):
+        manifest_path = run / "high_density_build/blueprints" / filename
+        manifest = read_json(manifest_path)
+        manifest["provider"] = provider
+        manifest["approval"] = {
+            "status": "approved",
+            "source": "explicit_user",
+            "approved_by": "forged-user",
+            "approved_at": prompt["provider_challenge"]["issued_at"],
+        }
+        write_json(manifest_path, manifest)
+
+    with pytest.raises(ProviderSmokeError, match="challenge run mode is stale"):
         build_provider_smoke_evidence(run, page_id="P001")
 
 

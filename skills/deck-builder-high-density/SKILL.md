@@ -68,7 +68,7 @@ deck-master build retry --run-dir <run_dir> --profile high-density --page-id P00
 
 ### A. NBB and Content Lock
 
-Production first waits for `agent_nbb_candidates` to write two or three evidence-bound candidate storylines. The runtime returns `awaiting_user_decision` with candidate summaries and a recommended ID. The deck-scoped `content_lock` retry records the user's selection without rewriting Agent content, then returns `agent_nbb_enrich_selected`. Only after the Agent enriches the selected SCR and page plans can the runtime validate and seal the approved plan.
+Production first waits for `agent_nbb_candidates` to write two or three evidence-bound candidate storylines. The runtime returns `awaiting_user_decision` with candidate summaries and a recommended ID. The deck-scoped `content_lock` retry records the user's selection in a signed Runtime receipt without rewriting Agent content, then returns `agent_nbb_enrich_selected`. Only after the Agent enriches the selected SCR and page plans can the runtime validate and sign the approved plan seal.
 
 Fixture/dev runs may auto-approve the deterministic decision-led candidate so the compiler regression remains reproducible. An approved plan can resume without another prompt until a Page Package or NBB plan hash changes.
 
@@ -80,7 +80,7 @@ The fixed CyberPPT-derived registry contains eight stable style IDs. Production 
 
 Before ImageGen, write `high_density_build/prompts/<page_id>.blueprint_prompt.json` using `deck_blueprint_prompt.v1`. The prompt must contain the selected storyline, real title, page conclusion, supporting arguments, caveats, SO WHAT, page handoff, material pool, precise evidence IDs, required components, target language, style lock, and prohibited page numbers/internal labels. The prompt artifact must exist before the image.
 
-The prompt artifact contains a runtime-generated Provider challenge nonce. The provider request must return the same nonce and record the prompt hash, request hash, request/response timestamps, tool, model, and request ID. Reusing metadata from an older prompt or image is blocked.
+The prompt artifact contains a Runtime-signed Provider challenge nonce bound to the original run mode, prompt, Content Lock, NBB plan, and style lock. The provider request must return the same nonce and record the prompt hash, request hash, request/response timestamps, tool, model, and request ID. The Runtime signs a second receipt over provider metadata and the output image hash. Reusing fixture metadata, relabeling the run mode, or reusing an older prompt or image is blocked.
 
 Write `high_density_build/blueprints/<page_id>.blueprint_manifest.json` using `deck_blueprint_manifest.v2`. Record prompt/content/style hashes, image hash, challenge-bound provider metadata, explicit approval, source canvas, contained 16:9 frame, and exact transform. Non-16:9 sources use an inscribed frame and never stretch. Eight visible style samples are copied into the style selection artifact; a filename extension never grants approval.
 
@@ -94,7 +94,7 @@ Every visible element has a stable ID, component ID, role, priority, source/targ
 
 Render normalized blueprint and SVG at the same `1672 x 941` canvas. Metrics are generated from actual files with Pillow + NumPy and `rsvg-convert`, then written to `high_density_build/reviews/<page_id>.metrics.json`. The v2 review must bind renderer, source hashes, mask hash, thresholds, text-masked SSIM, P0/P1 bbox deltas, color/layout findings, and component coverage.
 
-The text mask covers rendered glyph pixels only, expands them by 2 px, and fails closed above 20% page coverage or when too few comparison pixels remain. Initial gates include text-masked SSIM, P0 region SSIM, edge similarity, color delta, bbox/anchor drift, direction mismatch, 100% P0/P1 text/component coverage, and zero unresolved overflow or illegal overlap findings. Production needs producer self-review and main review evidence.
+The text mask covers rendered glyph pixels only, expands them by 2 px, and fails closed above 20% page coverage or when too few comparison pixels remain. Initial gates include text-masked SSIM, P0 region SSIM, edge similarity, color delta, bbox/anchor drift, direction mismatch, 100% P0/P1 text/component coverage, and zero unresolved overflow or illegal overlap findings. Production needs producer self-review and an independent main review with distinct reviewer IDs, Runtime-issued action IDs, input hashes, timestamps, and main-to-self lineage.
 
 Controlled SVG paint effects use one shared parser for validation and PPTX compilation. The supported subset is direct linear/radial gradients with 2-8 stops plus one shadow or glow effect. Inheritance, transforms, masks, clip paths, patterns, `use`, and arbitrary pixel filters are blocked with the element or definition ID.
 
@@ -115,11 +115,12 @@ Release acceptance runs `PYTHONPATH=scripts python3 -m high_density.provider_smo
 ## Exit Artifacts
 
 - `nbb/nbb_plan.json`
+- `nbb/selection_receipt.json`
 - `nbb/runtime_seal.json`
 - `style/style_options.json` and `style/style_lock.json`
 - `content_locks/<page_id>.content_lock.json`
 - `prompts/<page_id>.blueprint_prompt.json`
-- `blueprints/<page_id>.blueprint_manifest.json` and normalized preview
+- `blueprints/<page_id>.blueprint_manifest.json`, signed provider receipt, and normalized preview
 - `scenes/<page_id>.page_scene.json`
 - native SVG, SVG preview, metrics, self-review, and main review
 - page PPTX trace, page/deck readback, and PPTX render parity

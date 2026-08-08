@@ -194,7 +194,8 @@ Agent 不得自行写入通过指标，不得修改工具计算结果，不得�
 `deck-master build run --profile high-density` 在需要 Agent 行动时返回以下 action kind 之一：
 
 ```text
-agent_nbb_enrich
+agent_nbb_candidates
+agent_nbb_enrich_selected
 agent_imagegen
 agent_visual_reconstruct
 agent_svg_repair

@@ -33,9 +33,13 @@ Agent continuation uses two separate NBB actions:
 - `agent_nbb_candidates`
 - `agent_nbb_enrich_selected`
 
-The storyline selection action records user intent only. It does not create, refresh, or overwrite Agent-authored SCR or page plans.
+The storyline selection action records user intent only. It does not create, refresh, or overwrite Agent-authored SCR or page plans. The selection is valid only with `nbb/selection_receipt.json`, signed by the Runtime and bound to the candidate set, evidence ledger, selected storyline, and Page Package hashes.
 
-An approved NBB plan is valid only with the matching Runtime-owned `nbb/runtime_seal.json`. Editing the plan or changing any Page Package invalidates that seal and blocks Content Lock generation.
+An approved NBB plan is valid only with the matching signed `nbb/runtime_seal.json`. Editing the plan, selection receipt, or any Page Package invalidates that seal and blocks Content Lock generation.
+
+Blueprint prompts now contain a signed provider challenge that fixes the original run mode. A completed provider result requires a second signed receipt bound to the prompt, request metadata, approval, and image hash. Existing unsigned provider evidence must be regenerated from a fresh provider call.
+
+Production visual review now starts from a signed Runtime challenge. Producer self-review and main review must use separate action IDs and reviewer IDs, carry the current SVG/blueprint/metrics hashes, and preserve main-to-self review lineage.
 
 ## Invalidation
 

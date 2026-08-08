@@ -112,9 +112,17 @@ def _approved_page_plan(package: dict) -> tuple[dict, dict]:
 
 def _write_approved_nbb_plan(run: Path) -> dict:
     packages = load_page_packages(run, expected_run_id=run.name)
-    plan = build_nbb_plan(packages, run_id=run.name, selected_storyline_id="storyline.decision", approved_by="test")
-    write_nbb_plan(run, plan)
+    plan = _write_selected_enriched_nbb_plan(run, packages)
     return seal_nbb_plan(run)
+
+
+def _write_selected_enriched_nbb_plan(run: Path, packages: list[dict]) -> dict:
+    plan = build_nbb_plan(packages, run_id=run.name)
+    write_nbb_plan(run, plan)
+    plan = select_nbb_storyline(run, "storyline.decision", selected_by="test")
+    plan = enrich_selected_nbb_plan(plan, packages)
+    write_nbb_plan(run, plan)
+    return plan
 
 
 def _approve_blueprint(run: Path, page_id: str = "P001") -> None:
@@ -380,6 +388,7 @@ def test_storyline_selection_does_not_rewrite_agent_content(tmp_path: Path) -> N
     page["conclusion"] = "AGENT RICH CONCLUSION PRESERVE ME"
     page["supporting_arguments"][0] = "AGENT ARGUMENT PRESERVE ME"
     page["so_what"] = "AGENT SO WHAT PRESERVE ME"
+    next(item for item in page["required_text_refs"] if item["ref"] == "content_lock.enrichment.so_what")["value"] = page["so_what"]
     for binding in page["claim_bindings"]:
         if binding["target"] == "conclusion":
             binding["text_sha256"] = sha256_json(page["conclusion"])
@@ -388,6 +397,9 @@ def test_storyline_selection_does_not_rewrite_agent_content(tmp_path: Path) -> N
             binding["text_sha256"] = sha256_json(page["supporting_arguments"][0])
             binding["origin"] = "derived"
         elif binding["target"] == "so_what":
+            binding["text_sha256"] = sha256_json(page["so_what"])
+            binding["origin"] = "derived"
+        elif binding["target"].endswith(".value"):
             binding["text_sha256"] = sha256_json(page["so_what"])
             binding["origin"] = "derived"
     _rehash_page_and_plan(enriched, page)
@@ -418,7 +430,7 @@ def test_selected_storyline_requires_agent_enrichment_before_lock(tmp_path: Path
 def test_unbound_nbb_fact_and_numeric_claim_are_rejected(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path)
     packages = load_page_packages(run, expected_run_id=run.name)
-    plan = build_nbb_plan(packages, run_id=run.name, selected_storyline_id="storyline.decision", approved_by="test")
+    plan = _write_selected_enriched_nbb_plan(run, packages)
     page = plan["pages"][0]
     page["conclusion"] = "Revenue increased by 42% without source support."
     binding = next(item for item in page["claim_bindings"] if item["target"] == "conclusion")
@@ -441,7 +453,8 @@ def test_numeric_claim_must_exist_in_its_cited_evidence(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path)
     packages = load_page_packages(run, expected_run_id=run.name)
     packages[0]["speaker_notes"] += " An unrelated note mentions 42%."
-    plan = build_nbb_plan(packages, run_id=run.name, selected_storyline_id="storyline.decision", approved_by="test")
+    write_json(run / "page_packages/P001.json", packages[0])
+    plan = _write_selected_enriched_nbb_plan(run, packages)
     page = plan["pages"][0]
     page["conclusion"] = "Revenue increased by 42%."
     binding = next(item for item in page["claim_bindings"] if item["target"] == "conclusion")
@@ -457,7 +470,7 @@ def test_numeric_claim_must_exist_in_its_cited_evidence(tmp_path: Path) -> None:
 def test_agent_approved_nbb_plan_without_runtime_seal_is_rejected(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path)
     packages = load_page_packages(run, expected_run_id=run.name)
-    plan = build_nbb_plan(packages, run_id=run.name, selected_storyline_id="storyline.decision", approved_by="agent")
+    plan = _write_selected_enriched_nbb_plan(run, packages)
     plan["selection"]["status"] = "approved"
     plan["selection"]["sealed_at"] = "2026-01-01T00:00:00+00:00"
     plan["storyline_audit"]["status"] = "approved"
@@ -470,15 +483,57 @@ def test_agent_approved_nbb_plan_without_runtime_seal_is_rejected(tmp_path: Path
         load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=True)
 
 
+def test_agent_selected_nbb_plan_without_runtime_receipt_is_rejected(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path)
+    packages = load_page_packages(run, expected_run_id=run.name)
+    plan = build_nbb_plan(packages, run_id=run.name, selected_storyline_id="storyline.decision", approved_by="forged-agent")
+    write_json(run / "high_density_build/nbb/nbb_plan.json", plan)
+
+    with pytest.raises(ContractError, match="selection_receipt"):
+        load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
+
+
+def test_forged_nbb_runtime_seal_signature_is_rejected(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path)
+    packages = load_page_packages(run, expected_run_id=run.name)
+    plan = _write_selected_enriched_nbb_plan(run, packages)
+    plan["selection"]["status"] = "approved"
+    plan["selection"]["sealed_at"] = "2026-01-01T00:00:00+00:00"
+    plan["storyline_audit"]["status"] = "approved"
+    plan["nbb_plan_sha256"] = sha256_json(
+        {key: value for key, value in plan.items() if key not in {"nbb_plan_sha256", "created_at", "updated_at"}}
+    )
+    write_nbb_plan(run, plan)
+    receipt_path = run / "high_density_build/nbb/selection_receipt.json"
+    fake_seal = {
+        "schema_version": "deck_nbb_runtime_seal.v1",
+        "run_id": run.name,
+        "selected_storyline_id": "storyline.decision",
+        "nbb_plan_sha256": plan["nbb_plan_sha256"],
+        "selection_receipt_sha256": sha256_file(receipt_path),
+        "page_package_sha256": {package["page_id"]: sha256_json(package) for package in packages},
+        "sealed_at": plan["selection"]["sealed_at"],
+        "integrity": {
+            "algorithm": "hmac-sha256",
+            "key_id": "0" * 16,
+            "payload_sha256": "0" * 64,
+            "signature": "0" * 64,
+        },
+    }
+    write_json(run / "high_density_build/nbb/runtime_seal.json", fake_seal)
+
+    with pytest.raises(ContractError, match="Runtime integrity"):
+        load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=True)
+
+
 def test_runtime_seal_is_invalidated_when_approved_plan_changes(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path)
     packages = load_page_packages(run, expected_run_id=run.name)
-    plan = build_nbb_plan(packages, run_id=run.name, selected_storyline_id="storyline.decision", approved_by="test")
-    write_nbb_plan(run, plan)
+    plan = _write_selected_enriched_nbb_plan(run, packages)
     sealed = seal_nbb_plan(run)
     assert (run / "high_density_build/nbb/runtime_seal.json").is_file()
 
-    sealed["selection"]["selected_by"] = "mutated-after-seal"
+    sealed["storyline_audit"]["notes"] = "mutated-after-seal"
     sealed["nbb_plan_sha256"] = sha256_json(
         {key: value for key, value in sealed.items() if key not in {"nbb_plan_sha256", "created_at", "updated_at"}}
     )
@@ -487,6 +542,29 @@ def test_runtime_seal_is_invalidated_when_approved_plan_changes(tmp_path: Path) 
     assert not (run / "high_density_build/nbb/runtime_seal.json").exists()
     with pytest.raises(ContractError, match="missing its Runtime seal"):
         load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=True)
+
+
+def test_numeric_claim_uses_exact_token_match_in_cited_evidence(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path)
+    package = read_json(run / "page_packages/P001.json")
+    package["speaker_notes"] += " Source notes mention 42%."
+    package["evidence_bindings"] = []
+    package["citations"] = [
+        {"evidence_id": "E001", "source_ref": "fixture.metric", "meaning": "The cited metric is 142%."}
+    ]
+    write_json(run / "page_packages/P001.json", package)
+    packages = load_page_packages(run, expected_run_id=run.name)
+    plan = _write_selected_enriched_nbb_plan(run, packages)
+    page = plan["pages"][0]
+    page["conclusion"] = "The result is 42%."
+    binding = next(item for item in page["claim_bindings"] if item["target"] == "conclusion")
+    binding["text_sha256"] = sha256_json(page["conclusion"])
+    binding["origin"] = "derived"
+    _rehash_page_and_plan(plan, page)
+    write_nbb_plan(run, plan)
+
+    with pytest.raises(ContractError, match="unsupported factual values"):
+        load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
 
 
 def test_wide_and_tall_frames_remain_inside_source_canvas() -> None:
@@ -522,7 +600,7 @@ def test_prepare_invalidates_downstream_when_page_package_changes(tmp_path: Path
 def test_nbb_plan_rejects_unknown_page_evidence_ref(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path)
     packages = load_page_packages(run, expected_run_id=run.name)
-    plan = build_nbb_plan(packages, run_id=run.name, selected_storyline_id="storyline.decision", approved_by="test")
+    plan = _write_selected_enriched_nbb_plan(run, packages)
     plan["pages"][0]["evidence_refs"] = ["E999"]
     plan["pages"][0]["page_plan_sha256"] = sha256_json({key: value for key, value in plan["pages"][0].items() if key != "page_plan_sha256"})
     plan["nbb_plan_sha256"] = sha256_json({key: value for key, value in plan.items() if key not in {"nbb_plan_sha256", "created_at", "updated_at"}})
@@ -535,26 +613,44 @@ def test_nbb_plan_rejects_unknown_page_evidence_ref(tmp_path: Path) -> None:
 def test_nbb_plan_rejects_missing_required_component(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path)
     packages = load_page_packages(run, expected_run_id=run.name)
-    plan = build_nbb_plan(packages, run_id=run.name, selected_storyline_id="storyline.decision", approved_by="test")
+    plan = _write_selected_enriched_nbb_plan(run, packages)
     plan["pages"][0]["components"] = plan["pages"][0]["components"][1:]
     plan["pages"][0]["page_plan_sha256"] = sha256_json({key: value for key, value in plan["pages"][0].items() if key != "page_plan_sha256"})
     plan["nbb_plan_sha256"] = sha256_json({key: value for key, value in plan.items() if key not in {"nbb_plan_sha256", "created_at", "updated_at"}})
     write_nbb_plan(run, plan)
 
-    with pytest.raises(ContractError, match="required components are incomplete"):
+    with pytest.raises(ContractError, match="components are outside the Runtime registry"):
         load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
 
 
 def test_nbb_plan_rejects_stale_storyline_material_pool(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path)
     packages = load_page_packages(run, expected_run_id=run.name)
-    plan = build_nbb_plan(packages, run_id=run.name, selected_storyline_id="storyline.decision", approved_by="test")
+    plan = _write_selected_enriched_nbb_plan(run, packages)
     plan["pages"][0]["material_pool"]["storyline_id"] = "storyline.risk"
     plan["pages"][0]["page_plan_sha256"] = sha256_json({key: value for key, value in plan["pages"][0].items() if key != "page_plan_sha256"})
     plan["nbb_plan_sha256"] = sha256_json({key: value for key, value in plan.items() if key not in {"nbb_plan_sha256", "created_at", "updated_at"}})
     write_nbb_plan(run, plan)
 
-    with pytest.raises(ContractError, match="material pool storyline context is stale"):
+    with pytest.raises(ContractError, match="material pool is outside the Runtime registry"):
+        load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
+
+
+def test_nbb_plan_blocks_agent_added_material_component_and_required_text(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path)
+    packages = load_page_packages(run, expected_run_id=run.name)
+    plan = _write_selected_enriched_nbb_plan(run, packages)
+    page = plan["pages"][0]
+    page["components"].append(
+        {"component_id": "component.unverified", "kind": "callout", "priority": "P0", "region": "insight"}
+    )
+    page["required_text_refs"].append(
+        {"ref": "content_lock.enrichment.unverified", "priority": "P0", "required": True, "value": "Unverified growth reached 999%."}
+    )
+    _rehash_page_and_plan(plan, page)
+    write_nbb_plan(run, plan)
+
+    with pytest.raises(ContractError, match="components are outside the Runtime registry"):
         load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
 
 
@@ -787,7 +883,18 @@ def test_visual_review_rejects_handwritten_metrics(tmp_path: Path) -> None:
     review["metrics_sha256"] = sha256_file(metrics_file)
     write_json(review_file, review)
 
-    with pytest.raises(SvgVisualError, match="not tool-computed"):
+    with pytest.raises(SvgVisualError, match="Runtime challenge metrics_sha256 is stale"):
+        load_visual_review(run, "P001")
+
+
+def test_visual_review_requires_independent_reviewer_ids(tmp_path: Path) -> None:
+    run, _, _ = _prepared_fixture(tmp_path)
+    review_file = review_path(run, "P001")
+    review = read_json(review_file)
+    review["main_review"]["reviewer_id"] = review["self_review"]["reviewer_id"]
+    write_json(review_file, review)
+
+    with pytest.raises(SvgVisualError, match="independent reviewer IDs"):
         load_visual_review(run, "P001")
 
 
@@ -1057,6 +1164,16 @@ def test_visible_tspan_text_cannot_hide_behind_declared_metadata(tmp_path: Path)
         validate_approved_svg(svg, scene, lock)
     with pytest.raises(PptxEditabilityError, match="visible SVG text drift"):
         compile_pptx(run, [scene], {"P001": lock})
+
+
+@pytest.mark.parametrize("paint", ['fill="none"', 'fill-opacity="0"'])
+def test_required_tspan_cannot_be_hidden_by_run_paint(tmp_path: Path, paint: str) -> None:
+    run, lock, scene = _prepared_fixture(tmp_path)
+    svg = svg_path(run, "P001")
+    svg.write_text(svg.read_text(encoding="utf-8").replace("<tspan ", f"<tspan {paint} ", 1), encoding="utf-8")
+
+    with pytest.raises(SvgVisualError, match="hidden SVG tspan"):
+        validate_approved_svg(svg, scene, lock)
 
 
 def test_excessive_text_mask_fails_closed() -> None:

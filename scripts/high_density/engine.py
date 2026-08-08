@@ -18,13 +18,16 @@ from .blueprint import (
     build_blueprint_prompt_artifact,
     ensure_blueprint_manifest,
     load_blueprint_manifest,
+    provider_receipt_path,
 )
 from .content import (
     LOCKS_DIR,
     NBB_PLAN_PATH,
+    NBB_SELECTION_RECEIPT_PATH,
     NBB_SEAL_PATH,
     build_content_lock,
     build_nbb_plan,
+    enrich_selected_nbb_plan,
     load_content_lock,
     load_nbb_plan,
     load_page_packages,
@@ -406,12 +409,10 @@ def _prepare_high_density(run_dir: str | Path, *, output_profile: str = "product
                     # leave old locks, scenes, or compiled outputs reachable.
                     _invalidate_nbb_downstream(root, packages)
             if nbb_plan is None:
-                nbb_plan = build_nbb_plan(
-                    packages,
-                    run_id=_run_id(root),
-                    selected_storyline_id="storyline.decision",
-                    approved_by="fixture",
-                )
+                nbb_plan = build_nbb_plan(packages, run_id=_run_id(root))
+                write_nbb_plan(root, nbb_plan)
+                nbb_plan = select_nbb_storyline(root, "storyline.decision", selected_by="fixture")
+                nbb_plan = enrich_selected_nbb_plan(nbb_plan, packages)
                 write_nbb_plan(root, nbb_plan)
                 nbb_plan = seal_nbb_plan(root)
             else:
@@ -631,6 +632,7 @@ def _invalidate_page_downstream(root: Path, page_id: str) -> None:
         _remove_if_exists(blueprint)
     for manifest_name in (f"{page_id}.manifest.json", f"{page_id}.blueprint_manifest.json"):
         _remove_if_exists(root / BLUEPRINT_MANIFEST_DIR / manifest_name)
+    _remove_if_exists(provider_receipt_path(root, page_id))
     _remove_if_exists(root / "high_density_build" / "prompts" / f"{page_id}.blueprint_prompt.json")
     _invalidate_page_scene_downstream(root, page_id)
 
@@ -662,6 +664,7 @@ def _invalidate_page_scene_downstream(root: Path, page_id: str) -> None:
 def _invalidate_nbb_downstream(root: Path, packages: list[dict[str, Any]], *, remove_plan: bool = True) -> None:
     _remove_if_exists(root / NBB_SEAL_PATH)
     if remove_plan:
+        _remove_if_exists(root / NBB_SELECTION_RECEIPT_PATH)
         _remove_if_exists(root / NBB_PLAN_PATH)
     for package in packages:
         page_id = str(package.get("page_id") or "")
@@ -1002,7 +1005,11 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
                     except ContractError:
                         review_payload = {}
                     self_passed = str((review_payload.get("self_review") or {}).get("status") or "") == "pass"
+                    self_pending = str((review_payload.get("self_review") or {}).get("status") or "") == "pending"
                     main_passed = str((review_payload.get("main_review") or {}).get("status") or "") == "pass"
+                    main_pending = str((review_payload.get("main_review") or {}).get("status") or "") == "pending"
+                    if self_pending and main_pending:
+                        return _waiting(root, page_id=page_id, stage="visual_review", kind="agent_self_review", input_ref=f"high_density_build/reviews/{page_id}.visual_review.json", output_ref=f"high_density_build/reviews/{page_id}.visual_review.json", reason=f"Complete the producer self-review against the Runtime challenge and measured artifacts: {exc}")
                     if self_passed and not main_passed:
                         return _waiting(root, page_id=page_id, stage="visual_review", kind="agent_main_review", input_ref=f"high_density_build/reviews/{page_id}.visual_review.json", output_ref=f"high_density_build/reviews/{page_id}.visual_review.json", reason=f"Read the producer self-review and actual visual metrics, then complete the independent main review: {exc}")
                     return _waiting(root, page_id=page_id, stage="visual_review", kind="agent_svg_repair", input_ref=f"high_density_build/reviews/{page_id}.visual_review.json", output_ref=f"high_density_build/svg/{page_id}.svg", output_refs=[f"high_density_build/reviews/{page_id}.visual_review.json"], reason=f"Repair the approved SVG using the recorded visual findings, then write a refreshed passing visual review: {exc}")
@@ -1017,6 +1024,10 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
             except SvgVisualError as exc:
                 raise HighDensityBuildError("HD_SVG_REVIEW_FAILED", str(exc), stage="visual_review", page_id=page_id) from exc
         else:
+            try:
+                build_visual_review(root, scene, mode=execution_mode)
+            except SvgVisualError as exc:
+                raise HighDensityBuildError("HD_SVG_REVIEW_FAILED", str(exc), stage="visual_review", page_id=page_id) from exc
             return _waiting(root, page_id=page_id, stage="visual_review", kind="agent_self_review", input_ref=f"high_density_build/svg/{page_id}.svg", output_ref=f"high_density_build/reviews/{page_id}.visual_review.json", reason="Review SVG against the blueprint, repair overflow or drift, and write a passing self-review with the required visual evidence.")
         page_records.append(_page_record(root, package, "visual_review_passed", lock=lock, blueprint_manifest=blueprint_manifest, scene=scene))
 

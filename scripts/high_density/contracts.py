@@ -20,12 +20,14 @@ SCHEMA_FILES = {
     "high_density_manifest": "high-density-manifest.v2.schema.json",
     "high_density_status": "high-density-status.v2.schema.json",
     "nbb_plan": "nbb-plan.v1.schema.json",
+    "nbb_selection_receipt": "nbb-selection-receipt.v1.schema.json",
     "nbb_runtime_seal": "nbb-runtime-seal.v1.schema.json",
     "style_lock": "style-lock.v1.schema.json",
     "build_manifest": "build-manifest.v2.schema.json",
     "artifact_manifest": "artifact-manifest.v1.schema.json",
     "render_result": "render-result.v2.schema.json",
     "provider_smoke": "high-density-provider-smoke.v1.schema.json",
+    "provider_runtime_receipt": "provider-runtime-receipt.v1.schema.json",
 }
 
 PREVIEW_SCHEMA_FILES = {
@@ -148,8 +150,10 @@ def assert_v2(kind: str, document: dict[str, Any]) -> None:
         "high_density_manifest": "deck_high_density_manifest.v2",
         "high_density_status": "deck_high_density_status.v2",
         "nbb_plan": "deck_nbb_plan.v1",
+        "nbb_selection_receipt": "deck_nbb_selection_receipt.v1",
         "nbb_runtime_seal": "deck_nbb_runtime_seal.v1",
         "style_lock": "deck_high_density_style_lock.v1",
+        "provider_runtime_receipt": "deck_provider_runtime_receipt.v1",
     }.get(kind)
     if expected and document.get("schema_version") != expected:
         raise ContractError(f"{kind} production contract must use {expected}")

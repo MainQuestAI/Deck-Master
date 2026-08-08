@@ -6,14 +6,17 @@ import hashlib
 import html
 import math
 import re
+import secrets
 import shutil
 import subprocess
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 from xml.etree import ElementTree
 
 from .blueprint import load_blueprint_manifest
-from .contracts import ContractError, assert_v2, read_json, safe_run_path, sha256_file, utc_now, write_json
+from .contracts import ContractError, assert_v2, read_json, safe_run_path, sha256_file, sha256_json, utc_now, write_json
+from .integrity import sign_runtime_payload, verify_runtime_payload
 from .scene import load_scene
 from .svg_paint import SvgPaintError, parse_node_paint, parse_svg_paint
 from .visual import VisualMetricsError, _svg_geometry_bbox, compute_visual_metrics, normalize_blueprint, write_visual_metrics
@@ -469,6 +472,18 @@ def _validate_svg_text(node: Any, scene_element: dict[str, Any], page_id: str) -
                 code="HD_SVG_UNSUPPORTED_PROPERTY",
             )
         text = "".join(tspan.itertext())
+        tspan_fill = str(tspan.get("fill") or node.get("fill") or "").lower()
+        try:
+            tspan_opacity = (
+                float(node.get("opacity") or 1)
+                * float(node.get("fill-opacity") or 1)
+                * float(tspan.get("opacity") or 1)
+                * float(tspan.get("fill-opacity") or 1)
+            )
+        except ValueError as exc:
+            raise SvgVisualError(f"SVG tspan paint is invalid: {element_id}", page_id=page_id, code="HD_SVG_CONTENT_DRIFT") from exc
+        if tspan_fill in {"", "none", "transparent"} or tspan_opacity < 0.05:
+            raise SvgVisualError(f"hidden SVG tspan text is blocked: {element_id}", page_id=page_id, code="HD_SVG_CONTENT_DRIFT")
         family = str(tspan.get("font-family") or node.get("font-family") or "Arial")
         _font_path(family, page_id, element_id)
         try:
@@ -579,6 +594,84 @@ def render_preview(svg: Path, preview: Path) -> Path:
     return preview
 
 
+def _review_evidence(
+    *,
+    status: str,
+    source: str,
+    reviewer_id: str,
+    action_id: str,
+    reviewed_at: str | None,
+    svg_sha256: str,
+    blueprint_sha256: str,
+    metrics_sha256: str,
+) -> dict[str, Any]:
+    return {
+        "status": status,
+        "source": source,
+        "reviewer_id": reviewer_id,
+        "action_id": action_id,
+        "reviewed_at": reviewed_at,
+        "svg_sha256": svg_sha256,
+        "blueprint_sha256": blueprint_sha256,
+        "metrics_sha256": metrics_sha256,
+    }
+
+
+def _parse_review_time(value: Any, *, field: str, page_id: str) -> datetime:
+    try:
+        parsed = datetime.fromisoformat(str(value or "").replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise SvgVisualError(f"visual review {field} timestamp is invalid on page {page_id}", page_id=page_id) from exc
+    if parsed.tzinfo is None:
+        raise SvgVisualError(f"visual review {field} timestamp requires a timezone on page {page_id}", page_id=page_id)
+    return parsed
+
+
+def _validate_review_lineage(review: dict[str, Any], page_id: str) -> None:
+    challenge = review.get("runtime_challenge") or {}
+    challenge_payload = {key: value for key, value in challenge.items() if key != "integrity"}
+    verify_runtime_payload("visual_review_actions.v1", challenge_payload, challenge.get("integrity") or {})
+    expected_hashes = {
+        "svg_sha256": str(review.get("svg_sha256") or ""),
+        "blueprint_sha256": str(review.get("blueprint_sha256") or ""),
+        "metrics_sha256": str(review.get("metrics_sha256") or ""),
+    }
+    for field, expected in expected_hashes.items():
+        if str(challenge.get(field) or "") != expected:
+            raise SvgVisualError(f"visual review Runtime challenge {field} is stale on page {page_id}", page_id=page_id)
+    self_review = review.get("self_review") or {}
+    main_review = review.get("main_review") or {}
+    for name, evidence, action_field in (
+        ("self", self_review, "self_action_id"),
+        ("main", main_review, "main_action_id"),
+    ):
+        if str(evidence.get("action_id") or "") != str(challenge.get(action_field) or ""):
+            raise SvgVisualError(f"visual {name} review action is stale on page {page_id}", page_id=page_id)
+        for field, expected in expected_hashes.items():
+            if str(evidence.get(field) or "") != expected:
+                raise SvgVisualError(f"visual {name} review {field} is stale on page {page_id}", page_id=page_id)
+        status = str(evidence.get("status") or "")
+        source = str(evidence.get("source") or "")
+        reviewed_at = evidence.get("reviewed_at")
+        if status == "pending":
+            if source != "runtime_challenge" or reviewed_at is not None:
+                raise SvgVisualError(f"pending visual {name} review evidence is invalid on page {page_id}", page_id=page_id)
+        elif status == "pass":
+            allowed = {"agent_self_review", "fixture_self_review"} if name == "self" else {"agent_main_review", "fixture_main_review"}
+            if source not in allowed or not str(evidence.get("reviewer_id") or ""):
+                raise SvgVisualError(f"visual {name} review source is invalid on page {page_id}", page_id=page_id)
+            _parse_review_time(reviewed_at, field=f"{name} reviewed_at", page_id=page_id)
+    if str(main_review.get("self_review_sha256") or "") != sha256_json(self_review):
+        raise SvgVisualError(f"main visual review is stale for self review on page {page_id}", page_id=page_id)
+    if self_review.get("status") == "pass" and main_review.get("status") == "pass":
+        if str(self_review.get("reviewer_id") or "") == str(main_review.get("reviewer_id") or ""):
+            raise SvgVisualError(f"self and main visual reviews require independent reviewer IDs on page {page_id}", page_id=page_id)
+        self_time = _parse_review_time(self_review.get("reviewed_at"), field="self reviewed_at", page_id=page_id)
+        main_time = _parse_review_time(main_review.get("reviewed_at"), field="main reviewed_at", page_id=page_id)
+        if main_time < self_time:
+            raise SvgVisualError(f"main visual review precedes self review on page {page_id}", page_id=page_id)
+
+
 def build_visual_review(root: Path, scene: dict[str, Any], *, mode: str) -> Path:
     page_id = str(scene["page_id"])
     try:
@@ -591,26 +684,66 @@ def build_visual_review(root: Path, scene: dict[str, Any], *, mode: str) -> Path
         raise SvgVisualError(f"visual metrics could not be computed on page {page_id}: {exc}", page_id=page_id) from exc
     priorities = {element["priority"] for element in scene.get("elements", [])}
     passed_metrics = metrics.get("status") == "pass"
+    created_at = utc_now()
+    svg_sha = sha256_file(svg_path(root, page_id))
+    blueprint_sha = str(scene.get("blueprint_sha256") or "")
+    metrics_sha = sha256_file(metrics_file)
+    challenge_payload = {
+        "self_action_id": secrets.token_hex(16),
+        "main_action_id": secrets.token_hex(16),
+        "svg_sha256": svg_sha,
+        "blueprint_sha256": blueprint_sha,
+        "metrics_sha256": metrics_sha,
+        "issued_at": created_at,
+    }
+    fixture_review = passed_metrics and mode in {"fixture", "dev"}
+    self_review = _review_evidence(
+        status="pass" if fixture_review else "pending",
+        source="fixture_self_review" if fixture_review else "runtime_challenge",
+        reviewer_id="fixture-producer" if fixture_review else "pending",
+        action_id=challenge_payload["self_action_id"],
+        reviewed_at=created_at if fixture_review else None,
+        svg_sha256=svg_sha,
+        blueprint_sha256=blueprint_sha,
+        metrics_sha256=metrics_sha,
+    )
+    main_review = {
+        **_review_evidence(
+            status="pass" if fixture_review else "pending",
+            source="fixture_main_review" if fixture_review else "runtime_challenge",
+            reviewer_id="fixture-main-reviewer" if fixture_review else "pending",
+            action_id=challenge_payload["main_action_id"],
+            reviewed_at=created_at if fixture_review else None,
+            svg_sha256=svg_sha,
+            blueprint_sha256=blueprint_sha,
+            metrics_sha256=metrics_sha,
+        ),
+        "self_review_sha256": sha256_json(self_review),
+    }
     review = {
         "schema_version": "deck_visual_review.v2",
         "run_id": scene["run_id"],
         "page_id": page_id,
-        "svg_sha256": sha256_file(svg_path(root, page_id)),
-        "blueprint_sha256": str(scene.get("blueprint_sha256") or ""),
+        "svg_sha256": svg_sha,
+        "blueprint_sha256": blueprint_sha,
         "blueprint_preview_sha256": sha256_file(blueprint_preview),
         "svg_preview_sha256": sha256_file(svg_preview),
         "review_mode": "computed_fixture" if mode in {"fixture", "dev"} else "agent_main_review",
         "metrics_ref": str(metrics_file.relative_to(root).as_posix()),
-        "metrics_sha256": sha256_file(metrics_file),
-        "visual_status": "pass" if passed_metrics and mode in {"fixture", "dev"} else "needs_review",
+        "metrics_sha256": metrics_sha,
+        "runtime_challenge": {
+            **challenge_payload,
+            "integrity": sign_runtime_payload("visual_review_actions.v1", challenge_payload),
+        },
+        "visual_status": "pass" if fixture_review else "needs_review",
         "full_page_checks": {"canvas_ratio": "pass", "stable_ids": "pass", "p0_p1_geometry": "pass" if passed_metrics else "failed"},
         "region_checks": [],
         "issues_found": list(metrics.get("findings") or []),
         "unresolved_issues": [] if passed_metrics else list(metrics.get("findings") or []),
-        "self_review": {"status": "pass" if passed_metrics else "failed", "source": "tool_metrics"},
-        "main_review": {"status": "pass" if passed_metrics and mode in {"fixture", "dev"} else "pending", "source": "fixture_policy" if mode in {"fixture", "dev"} else "agent"},
-        "verdict": "pass" if passed_metrics and mode in {"fixture", "dev"} else "needs_review",
-        "created_at": utc_now(),
+        "self_review": self_review,
+        "main_review": main_review,
+        "verdict": "pass" if fixture_review else "needs_review",
+        "created_at": created_at,
     }
     assert_v2("visual_review", review)
     path = review_path(root, page_id)
@@ -627,6 +760,7 @@ def load_visual_review(root: Path, page_id: str) -> dict[str, Any]:
     if review.get("schema_version") != "deck_visual_review.v2" or review.get("page_id") != page_id:
         raise SvgVisualError(f"visual review contract is invalid on page {page_id}", page_id=page_id)
     assert_v2("visual_review", review)
+    _validate_review_lineage(review, page_id)
     if review.get("visual_status") != "pass" or review.get("verdict") != "pass" or review.get("unresolved_issues"):
         raise SvgVisualError(f"visual review has not passed on page {page_id}", page_id=page_id)
     if str((review.get("self_review") or {}).get("status") or "") != "pass" or str((review.get("main_review") or {}).get("status") or "") != "pass":

@@ -5,7 +5,7 @@
   "test_session": {
     "command": ".venv/bin/pytest -q",
     "result": "pass",
-    "tests_passed": 1346,
+    "tests_passed": 1354,
     "subtests_passed": 105,
     "executed_at": "2026-08-08"
   },
@@ -21,7 +21,8 @@
       "gate": "unsupported factual claims blocked",
       "tests": [
         "tests/test_high_density_builder_v2.py::test_nbb_rejects_unsupported_factual_claim",
-        "tests/test_high_density_builder_v2.py::test_numeric_claim_must_exist_in_its_cited_evidence"
+        "tests/test_high_density_builder_v2.py::test_numeric_claim_must_exist_in_its_cited_evidence",
+        "tests/test_high_density_builder_v2.py::test_numeric_claim_uses_exact_token_match_in_cited_evidence"
       ],
       "status": "pass"
     },
@@ -142,9 +143,15 @@
   ],
   "anti_fake_probes": [
     "tests/test_high_density_builder_v2.py::test_agent_approved_nbb_plan_without_runtime_seal_is_rejected",
+    "tests/test_high_density_builder_v2.py::test_agent_selected_nbb_plan_without_runtime_receipt_is_rejected",
+    "tests/test_high_density_builder_v2.py::test_forged_nbb_runtime_seal_signature_is_rejected",
     "tests/test_high_density_builder_v2.py::test_runtime_seal_is_invalidated_when_approved_plan_changes",
+    "tests/test_high_density_builder_v2.py::test_nbb_plan_blocks_agent_added_material_component_and_required_text",
     "tests/test_high_density_builder_v2.py::test_visible_tspan_text_cannot_hide_behind_declared_metadata",
+    "tests/test_high_density_builder_v2.py::test_required_tspan_cannot_be_hidden_by_run_paint",
+    "tests/test_high_density_builder_v2.py::test_visual_review_requires_independent_reviewer_ids",
     "tests/test_high_density_distinct_acceptance.py::test_provider_smoke_evidence_requires_real_provider_metadata",
+    "tests/test_high_density_distinct_acceptance.py::test_fixture_artifacts_cannot_be_relabelled_as_production_provider_smoke",
     "tests/test_high_density_distinct_acceptance.py::test_committed_73_page_evidence_has_sanitized_per_page_lineage"
   ],
   "release_evidence": {

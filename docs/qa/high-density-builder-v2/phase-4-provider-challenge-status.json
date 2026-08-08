@@ -2,18 +2,21 @@
   "schema_version": "deck_high_density_provider_challenge_status.v1",
   "status": "pass",
   "runtime_challenge": "pass",
+  "runtime_challenge_signature": "pass",
+  "runtime_provider_result_receipt": "pass",
   "stale_artifact_rejection": "pass",
   "prompt_request_image_svg_pptx_readback_lineage": "implemented",
   "historical_provider_smoke": "superseded_for_release_gate",
   "fresh_provider_smoke": "pass",
   "fresh_provider_run_mode": "production",
   "fresh_provider_visual_metrics": {
-    "text_masked_ssim": 0.9743142685386442,
-    "p0_region_ssim": 0.9903324682996341,
+    "text_masked_ssim": 0.9506632051745187,
+    "p0_region_ssim": 0.9843663262440662,
     "bbox_max_delta_px": 0.0,
     "component_coverage": 1.0,
-    "region_color_delta": 0.00520351824647131
+    "region_color_delta": 0.01274530247991736,
+    "svg_pptx_text_masked_ssim": 0.9832878614693136
   },
   "raw_provider_payload_committed": false,
-  "verification_command": ".venv/bin/pytest -q tests/test_high_density_distinct_acceptance.py::test_provider_challenge_lineage_cannot_use_stale_artifacts tests/test_high_density_distinct_acceptance.py::test_provider_smoke_evidence_requires_real_provider_metadata"
+  "verification_command": ".venv/bin/pytest -q tests/test_high_density_distinct_acceptance.py::test_provider_challenge_lineage_cannot_use_stale_artifacts tests/test_high_density_distinct_acceptance.py::test_fixture_artifacts_cannot_be_relabelled_as_production_provider_smoke tests/test_high_density_distinct_acceptance.py::test_provider_smoke_evidence_requires_real_provider_metadata"
 }

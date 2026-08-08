@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/contracts/provider-runtime-receipt.v1.schema.json",
+  "title": "ImageGen Provider Runtime Receipt v1",
+  "type": "object",
+  "required": ["schema_version", "run_id", "page_id", "run_mode", "challenge_payload_sha256", "prompt_sha256", "image_sha256", "provider_request_sha256", "provider_tool", "provider_model", "provider_request_id_sha256", "requested_at", "responded_at", "approval_source", "approved_at", "sealed_at", "integrity"],
+  "properties": {
+    "schema_version": {"const": "deck_provider_runtime_receipt.v1"},
+    "run_id": {"type": "string", "minLength": 1},
+    "page_id": {"type": "string", "minLength": 1},
+    "run_mode": {"enum": ["production", "benchmark", "fixture", "dev"]},
+    "challenge_payload_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "prompt_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "image_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "provider_request_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "provider_tool": {"type": "string", "minLength": 1},
+    "provider_model": {"type": "string", "minLength": 1},
+    "provider_request_id_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "requested_at": {"type": "string", "format": "date-time"},
+    "responded_at": {"type": "string", "format": "date-time"},
+    "approval_source": {"enum": ["explicit_user", "agent_review", "fixture_runtime"]},
+    "approved_at": {"type": "string", "format": "date-time"},
+    "sealed_at": {"type": "string", "format": "date-time"},
+    "integrity": {
+      "type": "object",
+      "required": ["algorithm", "key_id", "payload_sha256", "signature"],
+      "properties": {
+        "algorithm": {"const": "hmac-sha256"},
+        "key_id": {"type": "string", "pattern": "^[a-f0-9]{16}$"},
+        "payload_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "signature": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

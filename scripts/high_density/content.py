@@ -8,12 +8,14 @@ from typing import Any
 
 from production.page_package import strip_internal
 
-from .contracts import ContractError, assert_valid, assert_v2, read_json, sha256_json, utc_now, write_json
+from .contracts import ContractError, assert_valid, assert_v2, read_json, sha256_file, sha256_json, utc_now, write_json
+from .integrity import sign_runtime_payload, verify_runtime_payload
 
 PACKAGES_DIR = "page_packages"
 LOCKS_DIR = Path("high_density_build/content_locks")
 NBB_DIR = Path("high_density_build/nbb")
 NBB_PLAN_PATH = NBB_DIR / "nbb_plan.json"
+NBB_SELECTION_RECEIPT_PATH = NBB_DIR / "selection_receipt.json"
 NBB_SEAL_PATH = NBB_DIR / "runtime_seal.json"
 SAFE_PAGE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
 
@@ -154,6 +156,13 @@ def _numeric_tokens(text: str) -> list[str]:
     return re.findall(r"(?<![A-Za-z])[-+]?\d+(?:[.,]\d+)?(?:\s?[%％]|[A-Za-z]{1,5})?", text)
 
 
+def _normalized_numeric_tokens(text: str) -> set[str]:
+    return {
+        re.sub(r"\s+", "", token).replace("％", "%").replace(",", "").casefold()
+        for token in _numeric_tokens(text)
+    }
+
+
 def _density_analysis(customer_visible: dict[str, Any], package: dict[str, Any], evidence: list[dict[str, Any]]) -> dict[str, Any]:
     text = _flatten_customer_visible(customer_visible)
     body_blocks = customer_visible.get("body_blocks") or []
@@ -266,9 +275,23 @@ def _scr_claim_targets(_scr: dict[str, Any]) -> list[str]:
 
 
 def _page_claim_targets(page: dict[str, Any]) -> list[str]:
-    targets = ["conclusion", "so_what", "handoff"]
+    targets = [
+        "role",
+        "conclusion",
+        "so_what",
+        "handoff",
+        "material_pool.recommended_visual",
+        "material_pool.storyline_visual_potential",
+        "material_pool.storyline_page_handoff",
+        "material_pool.storyline_caveat",
+    ]
     targets.extend(f"supporting_arguments.{index}" for index, _value in enumerate(page.get("supporting_arguments") or []))
     targets.extend(f"caveat.{index}" for index, _value in enumerate(page.get("caveat") or []))
+    targets.extend(
+        f"required_text_refs.{index}.value"
+        for index, item in enumerate(page.get("required_text_refs") or [])
+        if isinstance(item, dict) and str(item.get("value") or "")
+    )
     return targets
 
 
@@ -337,8 +360,9 @@ def _validate_claim_bindings(
             raise ContractError(f"NBB claim binding origin is invalid for {context}:{target}")
         if not str(binding.get("derivation_note") or ""):
             raise ContractError(f"NBB claim binding derivation note is missing for {context}:{target}")
-        numeric_source = source_text if origin == "source" else " ".join(_text(evidence_by_id[ref]) for ref in refs)
-        unsupported_numbers = [token for token in _numeric_tokens(text) if token not in numeric_source]
+        numeric_source = " ".join(_text(evidence_by_id[ref]) for ref in refs)
+        supported_numbers = _normalized_numeric_tokens(numeric_source)
+        unsupported_numbers = [token for token in _numeric_tokens(text) if re.sub(r"\s+", "", token).replace("％", "%").replace(",", "").casefold() not in supported_numbers]
         if unsupported_numbers:
             raise ContractError(f"NBB claim binding adds unsupported factual values for {context}:{target}: {unsupported_numbers}")
 
@@ -456,6 +480,34 @@ def _storyline_context(storyline: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _material_pool(
+    package: dict[str, Any],
+    source_result: dict[str, Any],
+    storyline: dict[str, Any],
+) -> dict[str, Any]:
+    safe_package = strip_internal(package)
+    analysis = source_result["analysis"]
+    evidence_refs = [str(item["evidence_id"]) for item in source_result["evidence"]]
+    return {
+        "customer_visible": copy.deepcopy(source_result["customer_visible"]),
+        "evidence_refs": evidence_refs,
+        "recommended_visual": str((safe_package.get("visual_spec") or {}).get("page_type") or analysis["page_role"]),
+        "numeric_values": list(analysis["numeric_tokens"]),
+        "storyline_id": str(storyline["storyline_id"]),
+        "storyline_visual_potential": str(storyline["visual_potential"]),
+        "storyline_page_handoff": str(storyline["page_handoff"]),
+        "storyline_caveat": str(storyline["caveat"]),
+    }
+
+
+def _runtime_required_text_refs(source_result: dict[str, Any], so_what: str) -> list[dict[str, Any]]:
+    refs = copy.deepcopy(source_result["required_text_refs"])
+    for text_ref in refs:
+        if text_ref.get("ref") == "content_lock.enrichment.so_what":
+            text_ref["value"] = so_what
+    return refs
+
+
 def _page_plan(
     package: dict[str, Any],
     source_result: dict[str, Any],
@@ -481,10 +533,7 @@ def _page_plan(
     next_title = str((next_package or {}).get("customer_visible", {}).get("title") or "the next decision")
     handoff = f"Hand off the {title} conclusion to {next_title}."
     components = copy.deepcopy(source_result["components"])
-    required_text_refs = copy.deepcopy(source_result["required_text_refs"])
-    for text_ref in required_text_refs:
-        if text_ref.get("ref") == "content_lock.enrichment.so_what":
-            text_ref["value"] = so_what
+    required_text_refs = _runtime_required_text_refs(source_result, so_what)
     page_plan = {
         "page_id": str(package["page_id"]),
         "order": int(package.get("order") or 0),
@@ -498,16 +547,7 @@ def _page_plan(
         "caveat": caveat,
         "so_what": so_what,
         "handoff": handoff,
-        "material_pool": {
-            "customer_visible": copy.deepcopy(visible),
-            "evidence_refs": evidence_refs,
-            "recommended_visual": str((safe_package.get("visual_spec") or {}).get("page_type") or analysis["page_role"]),
-            "numeric_values": list(analysis["numeric_tokens"]),
-            "storyline_id": str(storyline["storyline_id"]),
-            "storyline_visual_potential": str(storyline["visual_potential"]),
-            "storyline_page_handoff": str(storyline["page_handoff"]),
-            "storyline_caveat": str(storyline["caveat"]),
-        },
+        "material_pool": _material_pool(package, source_result, storyline),
         "density_target": {
             "score": analysis["content_density_score"],
             "band": analysis["density_band"],
@@ -603,17 +643,6 @@ def build_content_lock(
     storyline_context = page_plan.get("storyline_context")
     if not isinstance(storyline_context, dict) or str(storyline_context.get("storyline_id") or "") != str(page_plan.get("storyline_id") or ""):
         raise ContractError(f"NBB page plan storyline context is missing on {page_id}")
-    material_pool = page_plan.get("material_pool") or {}
-    if any(
-        str(material_pool.get(field) or "") != str(storyline_context.get(context_field) or "")
-        for field, context_field in (
-            ("storyline_id", "storyline_id"),
-            ("storyline_visual_potential", "visual_potential"),
-            ("storyline_page_handoff", "page_handoff"),
-            ("storyline_caveat", "caveat"),
-        )
-    ):
-        raise ContractError(f"NBB page plan material pool storyline context is stale on {page_id}")
     result = build_nbb_page(package)
     safe_package = strip_internal(package)
     evidence_by_id = {str(item["evidence_id"]): item for item in result["evidence"]}
@@ -621,17 +650,17 @@ def build_content_lock(
     missing_evidence = sorted(set(evidence_refs) - set(evidence_by_id))
     if missing_evidence:
         raise ContractError(f"NBB page plan references unknown evidence on {page_id}: {missing_evidence}")
-    source_component_ids = {str(item["component_id"]) for item in result["components"]}
-    plan_component_ids = {str(item.get("component_id") or "") for item in page_plan.get("components") or [] if isinstance(item, dict)}
-    if not source_component_ids.issubset(plan_component_ids):
-        missing_components = sorted(source_component_ids - plan_component_ids)
-        raise ContractError(f"NBB page plan is missing required components on {page_id}: {missing_components}")
-    source_text_refs = {str(item["ref"]) for item in result["required_text_refs"]}
-    plan_text_refs = {str(item.get("ref") or "") for item in page_plan.get("required_text_refs") or [] if isinstance(item, dict)}
-    if not source_text_refs.issubset(plan_text_refs):
-        missing_text_refs = sorted(source_text_refs - plan_text_refs)
-        raise ContractError(f"NBB page plan is missing required text refs on {page_id}: {missing_text_refs}")
-    for claim in page_plan.get("derived_claims") or []:
+    if page_plan.get("material_pool") != _material_pool(package, result, storyline_context):
+        raise ContractError(f"NBB page plan material pool is outside the Runtime registry on {page_id}")
+    if page_plan.get("components") != result["components"]:
+        raise ContractError(f"NBB page plan components are outside the Runtime registry on {page_id}")
+    expected_text_refs = _runtime_required_text_refs(result, str(page_plan.get("so_what") or ""))
+    if page_plan.get("required_text_refs") != expected_text_refs:
+        raise ContractError(f"NBB page plan required text refs are outside the Runtime registry on {page_id}")
+    expected_derived_claims = _derived_claims(safe_package, result["evidence"])
+    if page_plan.get("derived_claims") != expected_derived_claims:
+        raise ContractError(f"NBB page plan derived claims are outside the Runtime registry on {page_id}")
+    for claim in expected_derived_claims:
         claim_refs = {str(ref) for ref in claim.get("evidence_refs") or []}
         if not claim_refs or not claim_refs.issubset(set(evidence_refs)) or not str(claim.get("derivation_note") or ""):
             raise ContractError(f"NBB derived claim evidence is imprecise on {page_id}")
@@ -683,8 +712,8 @@ def build_content_lock(
         "density_target": {
             "score": float((page_plan.get("density_target") or {}).get("score") or result["analysis"]["content_density_score"]),
             "band": str((page_plan.get("density_target") or {}).get("band") or result["analysis"]["density_band"]),
-            "information_regions": int((page_plan.get("density_target") or {}).get("information_regions") or max(3, len(plan_component_ids))),
-            "component_count": len(plan_component_ids),
+            "information_regions": int((page_plan.get("density_target") or {}).get("information_regions") or max(3, len(result["components"]))),
+            "component_count": len(result["components"]),
             "evidence_count": len(result["evidence"]),
             "numeric_count": result["analysis"]["numeric_token_count"],
         },
@@ -820,6 +849,61 @@ def build_nbb_plan(
     return plan
 
 
+def _selection_receipt_payload(
+    plan: dict[str, Any],
+    packages: list[dict[str, Any]],
+) -> dict[str, Any]:
+    selection = plan.get("selection") or {}
+    return {
+        "schema_version": "deck_nbb_selection_receipt.v1",
+        "run_id": str(plan.get("run_id") or ""),
+        "selected_storyline_id": str(selection.get("selected_storyline_id") or ""),
+        "recommended_storyline_id": str(selection.get("recommended_storyline_id") or ""),
+        "selected_by": str(selection.get("selected_by") or ""),
+        "selected_at": str(selection.get("selected_at") or ""),
+        "candidate_set_sha256": sha256_json(plan.get("storyline_candidates") or []),
+        "evidence_ledger_sha256": sha256_json(plan.get("evidence_ledger") or []),
+        "page_package_sha256": {
+            str(package.get("page_id") or ""): sha256_json(package)
+            for package in packages
+        },
+    }
+
+
+def _load_nbb_selection_receipt(
+    root: Path,
+    plan: dict[str, Any],
+    *,
+    packages: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    path = root / NBB_SELECTION_RECEIPT_PATH
+    receipt = read_json(path)
+    assert_v2("nbb_selection_receipt", receipt)
+    payload = {key: value for key, value in receipt.items() if key != "integrity"}
+    verify_runtime_payload("nbb_storyline_selection.v1", payload, receipt.get("integrity") or {})
+    selection = plan.get("selection") or {}
+    expected_fields = {
+        "run_id": str(plan.get("run_id") or ""),
+        "selected_storyline_id": str(selection.get("selected_storyline_id") or ""),
+        "recommended_storyline_id": str(selection.get("recommended_storyline_id") or ""),
+        "selected_by": str(selection.get("selected_by") or ""),
+        "selected_at": str(selection.get("selected_at") or ""),
+        "candidate_set_sha256": sha256_json(plan.get("storyline_candidates") or []),
+        "evidence_ledger_sha256": sha256_json(plan.get("evidence_ledger") or []),
+    }
+    for field, expected in expected_fields.items():
+        if str(receipt.get(field) or "") != expected:
+            raise ContractError(f"NBB Runtime selection receipt {field} is stale")
+    if packages is not None:
+        expected_package_hashes = {
+            str(package.get("page_id") or ""): sha256_json(package)
+            for package in packages
+        }
+        if receipt.get("page_package_sha256") != expected_package_hashes:
+            raise ContractError("NBB Runtime selection receipt Page Package lineage is stale")
+    return receipt
+
+
 def load_nbb_plan(
     root: Path,
     *,
@@ -897,6 +981,7 @@ def load_nbb_plan(
             raise ContractError("unsealed NBB plan cannot contain a seal time")
         if require_approved and selection_status != "approved":
             raise ContractError("NBB plan awaits selected-storyline enrichment")
+        _load_nbb_selection_receipt(root, plan, packages=packages)
     if plan.get("blocked_pages"):
         raise ContractError("NBB plan contains blocked pages")
     if packages is None:
@@ -941,32 +1026,22 @@ def load_nbb_plan(
         context = page.get("storyline_context") or {}
         if context != _storyline_context(storyline):
             raise ContractError(f"NBB page storyline context is stale on {page_id}")
-        material_pool = page.get("material_pool") or {}
-        expected_context = _storyline_context(storyline)
-        if any(
-            str(material_pool.get(field) or "") != str(expected_context.get(context_field) or "")
-            for field, context_field in (
-                ("storyline_id", "storyline_id"),
-                ("storyline_visual_potential", "visual_potential"),
-                ("storyline_page_handoff", "page_handoff"),
-                ("storyline_caveat", "caveat"),
-            )
-        ):
-            raise ContractError(f"NBB plan material pool storyline context is stale on {page_id}")
         page_evidence = {str(ref) for ref in page.get("evidence_refs") or []}
         package_evidence = {str(ref.get("evidence_id") if isinstance(ref, dict) else ref) for ref in _evidence_ledger(package)}
         if not page_evidence or not page_evidence.issubset(ledger_ids) or not page_evidence.issubset(package_evidence):
             raise ContractError(f"NBB plan evidence refs are invalid on {page_id}")
         source_result = build_nbb_page(package)
-        source_component_ids = {str(item["component_id"]) for item in source_result["components"]}
-        plan_component_ids = {str(item.get("component_id") or "") for item in page.get("components") or [] if isinstance(item, dict)}
-        if not source_component_ids.issubset(plan_component_ids):
-            raise ContractError(f"NBB plan required components are incomplete on {page_id}")
-        source_text_refs = {str(item["ref"]) for item in source_result["required_text_refs"]}
-        plan_text_refs = {str(item.get("ref") or "") for item in page.get("required_text_refs") or [] if isinstance(item, dict)}
-        if not source_text_refs.issubset(plan_text_refs):
-            raise ContractError(f"NBB plan required text refs are incomplete on {page_id}")
-        for claim in page.get("derived_claims") or []:
+        if page.get("material_pool") != _material_pool(package, source_result, storyline):
+            raise ContractError(f"NBB plan material pool is outside the Runtime registry on {page_id}")
+        if page.get("components") != source_result["components"]:
+            raise ContractError(f"NBB plan components are outside the Runtime registry on {page_id}")
+        expected_text_refs = _runtime_required_text_refs(source_result, str(page.get("so_what") or ""))
+        if page.get("required_text_refs") != expected_text_refs:
+            raise ContractError(f"NBB plan required text refs are outside the Runtime registry on {page_id}")
+        expected_derived_claims = _derived_claims(strip_internal(package), source_result["evidence"])
+        if page.get("derived_claims") != expected_derived_claims:
+            raise ContractError(f"NBB plan derived claims are outside the Runtime registry on {page_id}")
+        for claim in expected_derived_claims:
             claim_refs = {str(ref) for ref in claim.get("evidence_refs") or []}
             if not claim_refs or not claim_refs.issubset(page_evidence) or not str(claim.get("derivation_note") or ""):
                 raise ContractError(f"NBB plan derived claim evidence is imprecise on {page_id}")
@@ -999,12 +1074,17 @@ def _validate_nbb_runtime_seal(
         raise ContractError("approved NBB plan is missing its Runtime seal")
     seal = read_json(path)
     assert_v2("nbb_runtime_seal", seal)
+    seal_payload = {key: value for key, value in seal.items() if key != "integrity"}
+    verify_runtime_payload("nbb_plan_seal.v1", seal_payload, seal.get("integrity") or {})
     if str(seal.get("run_id") or "") != str(plan.get("run_id") or ""):
         raise ContractError("NBB Runtime seal run_id is stale")
     if str(seal.get("selected_storyline_id") or "") != str((plan.get("selection") or {}).get("selected_storyline_id") or ""):
         raise ContractError("NBB Runtime seal storyline is stale")
     if str(seal.get("nbb_plan_sha256") or "") != str(plan.get("nbb_plan_sha256") or ""):
         raise ContractError("NBB Runtime seal plan hash is stale")
+    _load_nbb_selection_receipt(root, plan, packages=packages)
+    if str(seal.get("selection_receipt_sha256") or "") != sha256_file(root / NBB_SELECTION_RECEIPT_PATH):
+        raise ContractError("NBB Runtime seal selection receipt is stale")
     if packages is not None:
         expected_package_hashes = {
             str(package.get("page_id") or ""): sha256_json(package)
@@ -1042,6 +1122,13 @@ def select_nbb_storyline(root: Path, storyline_id: str, *, selected_by: str = "u
     plan["nbb_plan_sha256"] = sha256_json({key: value for key, value in plan.items() if key not in {"nbb_plan_sha256", "created_at", "updated_at"}})
     assert_v2("nbb_plan", plan)
     write_nbb_plan(root, plan)
+    receipt_payload = _selection_receipt_payload(plan, packages)
+    receipt = {
+        **receipt_payload,
+        "integrity": sign_runtime_payload("nbb_storyline_selection.v1", receipt_payload),
+    }
+    assert_v2("nbb_selection_receipt", receipt)
+    write_json(root / NBB_SELECTION_RECEIPT_PATH, receipt)
     return plan
 
 
@@ -1064,16 +1151,22 @@ def seal_nbb_plan(root: Path) -> dict[str, Any]:
     )
     assert_v2("nbb_plan", plan)
     write_nbb_plan(root, plan)
-    seal = {
+    _load_nbb_selection_receipt(root, plan, packages=packages)
+    seal_payload = {
         "schema_version": "deck_nbb_runtime_seal.v1",
         "run_id": str(plan.get("run_id") or ""),
         "selected_storyline_id": str(selection.get("selected_storyline_id") or ""),
         "nbb_plan_sha256": str(plan.get("nbb_plan_sha256") or ""),
+        "selection_receipt_sha256": sha256_file(root / NBB_SELECTION_RECEIPT_PATH),
         "page_package_sha256": {
             str(package.get("page_id") or ""): sha256_json(package)
             for package in packages
         },
         "sealed_at": str(selection.get("sealed_at") or ""),
+    }
+    seal = {
+        **seal_payload,
+        "integrity": sign_runtime_payload("nbb_plan_seal.v1", seal_payload),
     }
     assert_v2("nbb_runtime_seal", seal)
     write_json(root / NBB_SEAL_PATH, seal)
@@ -1082,9 +1175,17 @@ def seal_nbb_plan(root: Path) -> dict[str, Any]:
 
 def write_nbb_plan(root: Path, plan: dict[str, Any]) -> Path:
     assert_v2("nbb_plan", plan)
+    selection_status = str((plan.get("selection") or {}).get("status") or "")
+    selection_receipt_path = root / NBB_SELECTION_RECEIPT_PATH
+    if selection_status == "pending_user_decision":
+        selection_receipt_path.unlink(missing_ok=True)
+    elif selection_receipt_path.exists():
+        try:
+            _load_nbb_selection_receipt(root, plan)
+        except (ContractError, OSError, json.JSONDecodeError):
+            selection_receipt_path.unlink(missing_ok=True)
     seal_path = root / NBB_SEAL_PATH
     if seal_path.exists():
-        selection_status = str((plan.get("selection") or {}).get("status") or "")
         try:
             seal = read_json(seal_path)
         except (ContractError, OSError, json.JSONDecodeError):
@@ -1134,6 +1235,7 @@ __all__ = [
     "LOCKS_DIR",
     "NBB_DIR",
     "NBB_PLAN_PATH",
+    "NBB_SELECTION_RECEIPT_PATH",
     "build_content_lock",
     "build_nbb_page",
     "build_nbb_plan",

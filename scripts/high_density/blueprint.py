@@ -8,7 +8,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from .contracts import ContractError, assert_v2, read_json, run_relative, sha256_file, sha256_json, utc_now, write_json
+from .contracts import ContractError, assert_v2, read_json, run_relative, sha256_bytes, sha256_file, sha256_json, utc_now, write_json
+from .integrity import sign_runtime_payload, verify_runtime_payload
 
 BLUEPRINT_DIR = Path("high_density_build/blueprints")
 PROMPT_DIR = Path("high_density_build/prompts")
@@ -98,6 +99,36 @@ def blueprint_manifest_path(root: Path, page_id: str) -> Path:
 def prompt_path(root: Path, page_id: str) -> Path:
     _assert_page_id(page_id)
     return root / PROMPT_DIR / f"{page_id}.blueprint_prompt.json"
+
+
+def provider_receipt_path(root: Path, page_id: str) -> Path:
+    _assert_page_id(page_id)
+    return root / BLUEPRINT_MANIFEST_DIR / f"{page_id}.provider_receipt.json"
+
+
+def _run_mode(root: Path) -> str:
+    mode = str(read_json(root / "request.json").get("run_mode") or "production").strip().lower()
+    return mode if mode in {"production", "benchmark", "fixture", "dev"} else "production"
+
+
+def _validate_provider_challenge(root: Path, prompt: dict[str, Any], page_id: str) -> dict[str, Any]:
+    challenge = prompt.get("provider_challenge") or {}
+    payload = {key: value for key, value in challenge.items() if key != "integrity"}
+    verify_runtime_payload("imagegen_provider_challenge.v1", payload, challenge.get("integrity") or {})
+    expected = {
+        "run_id": str(prompt.get("run_id") or ""),
+        "page_id": page_id,
+        "prompt_sha256": str(prompt.get("prompt_sha256") or ""),
+        "content_lock_sha256": str(prompt.get("content_lock_sha256") or ""),
+        "nbb_plan_sha256": str(prompt.get("nbb_plan_sha256") or ""),
+        "style_lock_sha256": str(prompt.get("style_lock_sha256") or ""),
+    }
+    for field, value in expected.items():
+        if str(challenge.get(field) or "") != value:
+            raise BlueprintInvalid(f"blueprint provider challenge {field} is stale on page {page_id}")
+    if str(challenge.get("run_mode") or "") != _run_mode(root):
+        raise BlueprintInvalid(f"blueprint provider challenge run mode is stale on page {page_id}")
+    return payload
 
 
 def _png_dimensions(path: Path) -> tuple[int, int] | None:
@@ -213,21 +244,36 @@ def build_blueprint_prompt(
 
 
 def build_blueprint_prompt_artifact(root: Path, page_id: str, lock: dict[str, Any], *, style_lock: dict[str, Any] | None = None, nbb_plan_sha256: str = "") -> Path:
-    challenge = {"nonce": secrets.token_hex(16), "issued_at": utc_now()}
+    challenge_seed = {"nonce": secrets.token_hex(16), "issued_at": utc_now()}
     prompt_text = build_blueprint_prompt(
         lock,
         style_lock,
         nbb_plan_sha256=nbb_plan_sha256,
-        provider_challenge_nonce=challenge["nonce"],
+        provider_challenge_nonce=challenge_seed["nonce"],
     )
     style_hash = str((style_lock or {}).get("style_lock_sha256") or "0" * 64)
+    prompt_sha256 = sha256_json(prompt_text)
+    challenge_payload = {
+        **challenge_seed,
+        "run_mode": _run_mode(root),
+        "run_id": str(lock["run_id"]),
+        "page_id": str(page_id),
+        "prompt_sha256": prompt_sha256,
+        "content_lock_sha256": str(lock["content_lock_sha256"]),
+        "nbb_plan_sha256": nbb_plan_sha256 or str((lock.get("lineage") or {}).get("nbb_plan_sha256") or "0" * 64),
+        "style_lock_sha256": style_hash,
+    }
+    challenge = {
+        **challenge_payload,
+        "integrity": sign_runtime_payload("imagegen_provider_challenge.v1", challenge_payload),
+    }
     artifact = {
         "schema_version": "deck_blueprint_prompt.v1",
         "run_id": str(lock["run_id"]),
         "page_id": str(page_id),
         "prompt_template_version": "cyber-ppt-high-density.v2",
         "prompt_text": prompt_text,
-        "prompt_sha256": sha256_json(prompt_text),
+        "prompt_sha256": prompt_sha256,
         "content_lock_ref": f"high_density_build/content_locks/{page_id}.content_lock.json",
         "content_lock_sha256": str(lock["content_lock_sha256"]),
         "nbb_plan_ref": "high_density_build/nbb/nbb_plan.json",
@@ -272,6 +318,74 @@ def _assert_manifest_mirror_consistent(root: Path, page_id: str, canonical: Path
         raise BlueprintInvalid(f"blueprint manifest mirror is stale on page {page_id}")
 
 
+def _provider_receipt_payload(
+    root: Path,
+    page_id: str,
+    prompt: dict[str, Any],
+    manifest: dict[str, Any],
+    *,
+    sealed_at: str,
+) -> dict[str, Any]:
+    challenge = _validate_provider_challenge(root, prompt, page_id)
+    provider = manifest.get("provider") or {}
+    approval = manifest.get("approval") or {}
+    return {
+        "schema_version": "deck_provider_runtime_receipt.v1",
+        "run_id": str(manifest.get("run_id") or ""),
+        "page_id": page_id,
+        "run_mode": str(challenge.get("run_mode") or ""),
+        "challenge_payload_sha256": sha256_json(challenge),
+        "prompt_sha256": str(manifest.get("prompt_sha256") or ""),
+        "image_sha256": str(manifest.get("image_sha256") or ""),
+        "provider_request_sha256": str(provider.get("request_sha256") or ""),
+        "provider_tool": str(provider.get("tool") or ""),
+        "provider_model": str(provider.get("model") or ""),
+        "provider_request_id_sha256": sha256_bytes(str(provider.get("request_id") or "").encode("utf-8")),
+        "requested_at": str(provider.get("requested_at") or ""),
+        "responded_at": str(provider.get("responded_at") or ""),
+        "approval_source": str(approval.get("source") or ""),
+        "approved_at": str(approval.get("approved_at") or ""),
+        "sealed_at": sealed_at,
+    }
+
+
+def _write_provider_runtime_receipt(
+    root: Path,
+    page_id: str,
+    prompt: dict[str, Any],
+    manifest: dict[str, Any],
+) -> Path:
+    payload = _provider_receipt_payload(root, page_id, prompt, manifest, sealed_at=utc_now())
+    receipt = {
+        **payload,
+        "integrity": sign_runtime_payload("imagegen_provider_result.v1", payload),
+    }
+    assert_v2("provider_runtime_receipt", receipt)
+    return write_json(provider_receipt_path(root, page_id), receipt)
+
+
+def load_provider_runtime_receipt(
+    root: Path,
+    page_id: str,
+    manifest: dict[str, Any],
+) -> dict[str, Any]:
+    receipt = read_json(provider_receipt_path(root, page_id))
+    assert_v2("provider_runtime_receipt", receipt)
+    payload = {key: value for key, value in receipt.items() if key != "integrity"}
+    verify_runtime_payload("imagegen_provider_result.v1", payload, receipt.get("integrity") or {})
+    prompt = read_json(safe_run_path(root, str(manifest.get("prompt_ref") or "")))
+    expected = _provider_receipt_payload(
+        root,
+        page_id,
+        prompt,
+        manifest,
+        sealed_at=str(receipt.get("sealed_at") or ""),
+    )
+    if payload != expected:
+        raise BlueprintInvalid(f"provider Runtime receipt is stale on page {page_id}")
+    return receipt
+
+
 def ensure_blueprint_manifest(
     root: Path,
     page_id: str,
@@ -290,6 +404,7 @@ def ensure_blueprint_manifest(
         raise BlueprintInvalid(f"blueprint prompt must be written before image generation on page {page_id}")
     prompt = read_json(prompt_file)
     assert_v2("blueprint_prompt", prompt)
+    _validate_provider_challenge(root, prompt, page_id)
     expected_nbb_sha = nbb_plan_sha256 or str((lock.get("lineage") or {}).get("nbb_plan_sha256") or "0" * 64)
     expected_style_sha = str((style_lock or {}).get("style_lock_sha256") or prompt.get("style_lock_sha256") or "0" * 64)
     if str(prompt.get("run_id") or "") != str(lock.get("run_id") or "") or str(prompt.get("page_id") or "") != page_id:
@@ -378,6 +493,7 @@ def ensure_blueprint_manifest(
     write_json(root / BLUEPRINT_MANIFEST_DIR / f"{page_id}.blueprint_manifest.json", manifest)
     # Compatibility mirror for existing callers; it carries the same v2 payload.
     write_json(root / BLUEPRINT_MANIFEST_DIR / f"{page_id}.manifest.json", manifest)
+    _write_provider_runtime_receipt(root, page_id, prompt, manifest)
     return root / BLUEPRINT_MANIFEST_DIR / f"{page_id}.blueprint_manifest.json"
 
 
@@ -401,6 +517,7 @@ def load_blueprint_manifest(root: Path, page_id: str, *, expected_run_id: str | 
         raise BlueprintInvalid(f"blueprint manifest image_path mismatch on page {page_id}")
     prompt = read_json(safe_run_path(root, str(manifest.get("prompt_ref") or "")))
     assert_v2("blueprint_prompt", prompt)
+    _validate_provider_challenge(root, prompt, page_id)
     if str(prompt.get("run_id") or "") != str(manifest.get("run_id") or "") or str(prompt.get("page_id") or "") != page_id:
         raise BlueprintInvalid(f"blueprint prompt identity is stale on page {page_id}")
     for field in ("content_lock_sha256", "nbb_plan_sha256", "style_lock_sha256"):
@@ -413,6 +530,7 @@ def load_blueprint_manifest(root: Path, page_id: str, *, expected_run_id: str | 
     if str(manifest.get("image_sha256") or "") != sha256_file(image):
         raise BlueprintInvalid(f"blueprint hash is stale on page {page_id}")
     _validate_provider_lineage(prompt, manifest.get("provider") or {}, page_id)
+    load_provider_runtime_receipt(root, page_id, manifest)
     dimensions = image_dimensions(image)
     source_canvas = manifest.get("source_canvas") or {}
     if (float(source_canvas.get("width") or 0), float(source_canvas.get("height") or 0)) != dimensions:
@@ -459,6 +577,8 @@ __all__ = [
     "ensure_blueprint_manifest",
     "image_dimensions",
     "load_blueprint_manifest",
+    "load_provider_runtime_receipt",
     "prompt_path",
+    "provider_receipt_path",
     "safe_image_path",
 ]
