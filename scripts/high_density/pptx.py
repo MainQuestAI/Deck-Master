@@ -18,7 +18,7 @@ from pptx.oxml.xmlchemy import OxmlElement
 from pptx.util import Inches, Pt
 
 from .contracts import ContractError, assert_v2, read_json, sha256_file, sha256_json, utc_now, write_json
-from .svg import svg_path, validate_svg, wrap_text, _estimated_width
+from .svg import svg_path, validate_approved_svg
 from .svg_paint import parse_node_paint, parse_svg_paint
 from .visual import VisualMetricsError, compute_visual_metrics, write_visual_metrics
 
@@ -189,23 +189,6 @@ def _remove_theme_effects(shape: Any) -> None:
         shape._element.remove(style)
 
 
-def _fit_text_size(element: dict[str, Any]) -> float:
-    bbox = element["bbox"]
-    fit = element.get("text_fit") or {}
-    size = float(fit.get("preferred_size_px") or 18)
-    min_size = float(fit.get("min_size_px") or max(9, size * 0.7))
-    max_lines = int(fit.get("max_lines") or 1)
-    line_height = float(fit.get("line_height") or 1.18)
-    text = str(element.get("text") or "")
-    lines = wrap_text(text, float(bbox["w"]), size)
-    while len(lines) > max_lines and size > min_size:
-        size = max(min_size, size - 1)
-        lines = wrap_text(text, float(bbox["w"]), size)
-    if len(lines) > max_lines or len(lines) * size * line_height > float(bbox["h"]) + 0.01 or any(_estimated_width(line, size) > float(bbox["w"]) + 0.01 for line in lines):
-        raise PptxEditabilityError(f"text does not fit in {element.get('element_id')}")
-    return size
-
-
 def _add_text(slide: Any, element: dict[str, Any], trace: list[dict[str, Any]]) -> None:
     bbox = element["bbox"]
     shape = slide.shapes.add_textbox(Inches(_inches(float(bbox["x"]), CANVAS_WIDTH)), Inches(_inches(float(bbox["y"]), CANVAS_HEIGHT)), Inches(_inches(float(bbox["w"]), CANVAS_WIDTH)), Inches(_inches(float(bbox["h"]), CANVAS_HEIGHT)))
@@ -214,30 +197,38 @@ def _add_text(slide: Any, element: dict[str, Any], trace: list[dict[str, Any]]) 
     frame.clear()
     frame.word_wrap = True
     frame.margin_left = frame.margin_right = frame.margin_top = frame.margin_bottom = Pt(0)
-    paragraph = frame.paragraphs[0]
-    run = paragraph.add_run()
-    run.text = str(element.get("text") or "")
     style = element.get("style") or {}
-    font = run.font
-    font.name = str(style.get("font_family") or "Arial")
-    # SVG coordinates use a 1672px canvas; convert its pixel typography into
-    # the physical slide width before LibreOffice renders it back to pixels.
     canvas_to_slide = (SLIDE_WIDTH_IN * 96) / CANVAS_WIDTH
-    font.size = Pt(_fit_text_size(element) * 72 / 96 * canvas_to_slide)
-    font.bold = str(style.get("font_weight") or "400") in {"600", "700", "bold", "Bold"}
-    font.color.rgb = _rgb(style.get("fill"), "18212b")
-    paragraph.space_after = Pt(0)
-    trace_entry = {"element_id": element["element_id"], "object_type": "text", "shape_name": shape.name, "bbox": bbox, "text": element.get("text", ""), "text_ref": element.get("text_ref", "")}
+    lines = element.get("_text_lines") or [[{"text": str(element.get("text") or ""), "style": style, "paint": element.get("_paint") or {}}]]
+    run_trace: list[dict[str, Any]] = []
+    for line_index, line in enumerate(lines):
+        paragraph = frame.paragraphs[0] if line_index == 0 else frame.add_paragraph()
+        paragraph.space_after = Pt(0)
+        for run_spec in line:
+            run = paragraph.add_run()
+            run.text = str(run_spec.get("text") or "")
+            run_style = run_spec.get("style") or style
+            font = run.font
+            font.name = str(run_style.get("font_family") or "Arial")
+            font_size = float(str(run_style.get("font_size") or style.get("font_size") or 16).removesuffix("px"))
+            font.size = Pt(font_size * 72 / 96 * canvas_to_slide)
+            font.bold = str(run_style.get("font_weight") or "400") in {"600", "700", "bold", "Bold"}
+            font.italic = str(run_style.get("font_style") or "normal").lower() == "italic"
+            font.color.rgb = _rgb(run_style.get("fill"), "18212b")
+            paint = run_spec.get("paint") or element.get("_paint") or {}
+            text_paint = paint.get("fill") or {"kind": "solid", "color": str(run_style.get("fill") or "#18212b"), "fidelity": "native"}
+            run_properties = run._r.get_or_add_rPr()
+            _remove_children(run_properties, {"solidFill", "gradFill", "noFill", "blipFill", "pattFill", "grpFill"})
+            if text_paint.get("kind") == "gradient":
+                _append_gradient(run_properties, text_paint, float(paint.get("opacity") or 1) * float(paint.get("fill_opacity") or 1))
+            elif text_paint.get("kind") == "solid":
+                solid = OxmlElement("a:solidFill")
+                _append_color(solid, str(text_paint.get("color") or "#18212b"), float(paint.get("opacity") or 1) * float(paint.get("fill_opacity") or 1))
+                run_properties.append(solid)
+            run_trace.append({"text": run.text, "font_family": font.name, "font_size_px": font_size, "font_weight": str(run_style.get("font_weight") or "400"), "font_style": str(run_style.get("font_style") or "normal"), "paint": _paint_trace(text_paint)})
+    trace_entry = {"element_id": element["element_id"], "object_type": "text", "shape_name": shape.name, "bbox": bbox, "text": element.get("text", ""), "text_ref": element.get("text_ref", ""), "priority": element.get("priority", ""), "component_id": element.get("component_id", ""), "z_order": element.get("z_index", 0), "runs": run_trace}
     paint = element.get("_paint") or {}
     text_paint = paint.get("fill") or {"kind": "solid", "color": str(style.get("fill") or "#18212b"), "fidelity": "native"}
-    run_properties = run._r.get_or_add_rPr()
-    _remove_children(run_properties, {"solidFill", "gradFill", "noFill", "blipFill", "pattFill", "grpFill"})
-    if text_paint.get("kind") == "gradient":
-        _append_gradient(run_properties, text_paint, float(paint.get("opacity") or 1) * float(paint.get("fill_opacity") or 1))
-    elif text_paint.get("kind") == "solid":
-        solid = OxmlElement("a:solidFill")
-        _append_color(solid, str(text_paint.get("color") or "#18212b"), float(paint.get("opacity") or 1) * float(paint.get("fill_opacity") or 1))
-        run_properties.append(solid)
     if paint.get("effect"):
         _remove_children(shape._element.spPr, {"effectLst"})
         _append_effect(shape._element.spPr, paint["effect"], float(paint.get("opacity") or 1))
@@ -254,7 +245,7 @@ def _add_rect(slide: Any, element: dict[str, Any], trace: list[dict[str, Any]]) 
     shape = slide.shapes.add_shape(shape_type, Inches(_inches(float(bbox["x"]), CANVAS_WIDTH)), Inches(_inches(float(bbox["y"]), CANVAS_HEIGHT)), Inches(_inches(float(bbox["w"]), CANVAS_WIDTH)), Inches(_inches(float(bbox["h"]), CANVAS_HEIGHT)))
     shape.name = str(element["element_id"])
     _remove_theme_effects(shape)
-    trace_entry = {"element_id": element["element_id"], "object_type": "shape", "shape_name": shape.name, "bbox": bbox}
+    trace_entry = {"element_id": element["element_id"], "object_type": "shape", "shape_name": shape.name, "bbox": bbox, "priority": element.get("priority", ""), "component_id": element.get("component_id", ""), "z_order": element.get("z_index", 0)}
     _set_shape_fill(shape, style, element.get("_paint"), trace_entry)
     trace.append(trace_entry)
 
@@ -265,7 +256,7 @@ def _add_line(slide: Any, element: dict[str, Any], trace: list[dict[str, Any]]) 
     shape.name = str(element["element_id"])
     _remove_theme_effects(shape)
     style = element.get("style") or {}
-    trace_entry = {"element_id": element["element_id"], "object_type": "line", "shape_name": shape.name, "bbox": bbox}
+    trace_entry = {"element_id": element["element_id"], "object_type": "line", "shape_name": shape.name, "bbox": bbox, "priority": element.get("priority", ""), "component_id": element.get("component_id", ""), "z_order": element.get("z_index", 0)}
     _set_shape_fill(shape, style, element.get("_paint"), trace_entry)
     shape.line.width = Pt(float(style.get("stroke_width") or 2))
     trace.append(trace_entry)
@@ -373,7 +364,7 @@ def _add_freeform(slide: Any, element: dict[str, Any], points: list[tuple[float,
     shape = builder.convert_to_shape()
     shape.name = str(element["element_id"])
     _remove_theme_effects(shape)
-    trace_entry = {"element_id": element["element_id"], "object_type": "freeform", "shape_name": shape.name, "bbox": element["bbox"], "closed": closed}
+    trace_entry = {"element_id": element["element_id"], "object_type": "freeform", "shape_name": shape.name, "bbox": element["bbox"], "closed": closed, "priority": element.get("priority", ""), "component_id": element.get("component_id", ""), "z_order": element.get("z_index", 0)}
     _set_shape_fill(shape, element.get("style") or {}, element.get("_paint"), trace_entry)
     trace.append(trace_entry)
 
@@ -395,7 +386,7 @@ def _add_ellipse(slide: Any, element: dict[str, Any], trace: list[dict[str, Any]
     shape = slide.shapes.add_shape(MSO_SHAPE.OVAL, Inches(_inches(float(bbox["x"]), CANVAS_WIDTH)), Inches(_inches(float(bbox["y"]), CANVAS_HEIGHT)), Inches(_inches(float(bbox["w"]), CANVAS_WIDTH)), Inches(_inches(float(bbox["h"]), CANVAS_HEIGHT)))
     shape.name = str(element["element_id"])
     _remove_theme_effects(shape)
-    trace_entry = {"element_id": element["element_id"], "object_type": "shape", "shape_name": shape.name, "bbox": bbox}
+    trace_entry = {"element_id": element["element_id"], "object_type": "shape", "shape_name": shape.name, "bbox": bbox, "priority": element.get("priority", ""), "component_id": element.get("component_id", ""), "z_order": element.get("z_index", 0)}
     _set_shape_fill(shape, element.get("style") or {}, element.get("_paint"), trace_entry)
     trace.append(trace_entry)
 
@@ -408,7 +399,7 @@ def _add_image(slide: Any, element: dict[str, Any], asset_paths: dict[str, Path]
     bbox = element["bbox"]
     shape = slide.shapes.add_picture(str(asset_path), Inches(_inches(float(bbox["x"]), CANVAS_WIDTH)), Inches(_inches(float(bbox["y"]), CANVAS_HEIGHT)), width=Inches(_inches(float(bbox["w"]), CANVAS_WIDTH)), height=Inches(_inches(float(bbox["h"]), CANVAS_HEIGHT)))
     shape.name = str(element["element_id"])
-    trace.append({"element_id": element["element_id"], "object_type": "registered_asset", "shape_name": shape.name, "asset_id": asset_id, "bbox": bbox})
+    trace.append({"element_id": element["element_id"], "object_type": "registered_asset", "shape_name": shape.name, "asset_id": asset_id, "bbox": bbox, "priority": element.get("priority", ""), "component_id": element.get("component_id", ""), "z_order": element.get("z_index", 0)})
 
 
 def _bounds(node: Any) -> dict[str, float]:
@@ -453,6 +444,67 @@ def _bounds(node: Any) -> dict[str, float]:
     raise PptxEditabilityError(f"SVG element has no geometry bounds: {node.get('id')}")
 
 
+def _svg_style(node: Any, parent: dict[str, Any] | None = None) -> dict[str, Any]:
+    style = dict(parent or {})
+    defaults = {
+        "fill": "#000000",
+        "stroke": "none",
+        "stroke_width": "0",
+        "opacity": "1",
+        "font_family": "Arial",
+        "font_size": "16px",
+        "font_weight": "400",
+        "font_style": "normal",
+        "radius": "0",
+    }
+    for key, value in defaults.items():
+        style.setdefault(key, value)
+    for attribute in ("fill", "stroke", "stroke-width", "opacity", "font-family", "font-size", "font-weight", "font-style", "rx"):
+        if node.get(attribute) is not None:
+            key = {"stroke-width": "stroke_width", "font-family": "font_family", "font-size": "font_size", "font-weight": "font_weight", "font-style": "font_style", "rx": "radius"}.get(attribute, attribute)
+            style[key] = str(node.get(attribute))
+    return style
+
+
+def _computed_run_paint(node: Any, parent: Any, registry: dict[str, Any]) -> dict[str, Any]:
+    inherited = {}
+    for attribute in ("fill", "stroke", "opacity", "fill-opacity", "stroke-opacity", "filter"):
+        value = node.get(attribute) if node.get(attribute) is not None else parent.get(attribute)
+        if value is not None:
+            inherited[attribute] = str(value)
+    synthetic = ElementTree.Element("tspan", inherited)
+    return parse_node_paint(synthetic, registry)
+
+
+def _svg_text_lines(node: Any, registry: dict[str, Any]) -> list[list[dict[str, Any]]]:
+    parent_style = _svg_style(node)
+    parent_paint = parse_node_paint(node, registry)
+    lines: list[list[dict[str, Any]]] = [[]]
+    direct_text = str(node.text or "")
+    if direct_text:
+        lines[0].append({"text": direct_text, "style": parent_style, "paint": parent_paint})
+    for child in list(node):
+        if str(child.tag).split("}")[-1] != "tspan":
+            continue
+        try:
+            dy = float(str(child.get("dy") or 0).removesuffix("px"))
+        except ValueError as exc:
+            raise PptxEditabilityError(f"invalid tspan line offset on {node.get('id')}") from exc
+        if lines[-1] and (child.get("y") is not None or abs(dy) > 0.01):
+            lines.append([])
+        lines[-1].append({"text": "".join(child.itertext()), "style": _svg_style(child, parent_style), "paint": _computed_run_paint(child, node, registry)})
+        if child.tail:
+            lines[-1].append({"text": str(child.tail), "style": parent_style, "paint": parent_paint})
+    declared = str(node.get("data-pptx-text") or "")
+    flattened = "".join(run["text"] for line in lines for run in line)
+    line_joined = "\n".join("".join(run["text"] for run in line) for line in lines)
+    if line_joined == declared:
+        return lines
+    if flattened == declared:
+        return [[run for line in lines for run in line]]
+    return [[{"text": declared, "style": parent_style, "paint": parent_paint}]]
+
+
 def _node_element(node: Any, scene_by_id: dict[str, dict[str, Any]]) -> dict[str, Any]:
     element_id = str(node.get("id") or "")
     tag = str(node.tag).split("}")[-1]
@@ -463,19 +515,21 @@ def _node_element(node: Any, scene_by_id: dict[str, dict[str, Any]]) -> dict[str
     if not element_id or element_id not in scene_by_id:
         raise PptxEditabilityError(f"SVG element is not registered in page_scene.v2: {element_id or '<anonymous>'}")
     source = scene_by_id[element_id]
-    element = dict(source)
-    element["kind"] = kind
-    element["bbox"] = _bounds(node)
-    style = dict(source.get("style") or {})
-    for key in ("fill", "stroke", "stroke-width", "opacity", "font-family", "font-size", "font-weight", "rx"):
-        if node.get(key) is not None:
-            style[key.replace("-", "_")] = node.get(key)
-    if "stroke_width" not in style and node.get("stroke-width") is not None:
-        style["stroke_width"] = node.get("stroke-width")
+    element = {
+        "element_id": element_id,
+        "component_id": str(source.get("component_id") or f"component.{element_id}"),
+        "priority": str(source.get("priority") or ""),
+        "role": str(source.get("role") or ""),
+        "text_ref": str(source.get("text_ref") or ""),
+        "asset_ref": str(source.get("asset_ref") or ""),
+        "asset_sha256": str(source.get("asset_sha256") or ""),
+        "kind": kind,
+        "bbox": _bounds(node),
+        "z_index": int(node.get("data-pptx-z") or 0),
+        "style": _svg_style(node),
+    }
     if tag == "text":
         element["text"] = str(node.get("data-pptx-text") or "".join(node.itertext()))
-        if node.get("x") is not None:
-            style["x"] = node.get("x")
     elif tag in {"path", "polyline"}:
         element["path"] = str(node.get("d") or "") if tag == "path" else "M " + " L ".join(str(point) for point in str(node.get("points") or "").split())
     elif tag == "polygon":
@@ -492,7 +546,6 @@ def _node_element(node: Any, scene_by_id: dict[str, dict[str, Any]]) -> dict[str
     elif tag == "ellipse":
         if any(node.get(name) is None for name in ("cx", "cy", "rx", "ry")):
             raise PptxEditabilityError(f"ellipse geometry is incomplete: {element_id}")
-    element["style"] = style
     return element
 
 
@@ -529,6 +582,8 @@ def _svg_elements(root: Path, scene: dict[str, Any], asset_paths: dict[str, Path
             element["_paint"] = parse_node_paint(node, paint_registry)
         except ContractError as exc:
             raise PptxEditabilityError(f"approved SVG paint is unsupported on {element['element_id']}: {exc}") from exc
+        if element.get("kind") == "text":
+            element["_text_lines"] = _svg_text_lines(node, paint_registry)
         elements.append(element)
     if not elements:
         raise PptxEditabilityError("approved SVG contains no visible elements")
@@ -566,13 +621,12 @@ def compile_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dict
         if not svg_file.exists():
             raise PptxEditabilityError(f"approved SVG is missing on page {page_id}")
         try:
-            validate_svg(svg_file, page_id=page_id)
+            validate_approved_svg(svg_file, scene, locks[page_id], (asset_paths_by_page or {}).get(page_id, {}))
         except ContractError as exc:
             raise PptxEditabilityError(f"approved SVG validation failed on page {page_id}: {exc}") from exc
         slide = presentation.slides.add_slide(blank_layout)
         trace: list[dict[str, Any]] = []
         elements = _svg_elements(svg_file, scene, (asset_paths_by_page or {}).get(page_id, {}))
-        allow_curves = str(scene.get("source") or "") != "fixture_auto"
         for element in elements:
             kind = element.get("kind")
             if kind == "text":
@@ -582,7 +636,7 @@ def compile_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dict
             elif kind == "line":
                 _add_line(slide, element, trace)
             elif kind == "path":
-                _add_path(slide, element, trace, allow_curves=allow_curves)
+                _add_path(slide, element, trace, allow_curves=True)
             elif kind == "polygon":
                 _add_polygon(slide, element, trace)
             elif kind == "ellipse":
@@ -745,9 +799,12 @@ def readback_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dic
     trace_pages = {str(page.get("page_id") or ""): page for page in trace_payload.get("pages", []) if isinstance(page, dict)}
     if set(trace_pages) != set(expected_svg_hashes) or any(trace_pages[page_id].get("svg_sha256") != svg_hash for page_id, svg_hash in expected_svg_hashes.items()):
         raise PptxEditabilityError("SVG-to-DrawingML trace page coverage is stale")
-    expected_text: list[str] = []
-    for scene in scenes:
-        expected_text.extend(str(element.get("text") or "") for element in scene.get("elements", []) if element.get("kind") == "text" and element.get("priority") in {"P0", "P1"})
+    expected_text = [
+        str(element.get("text") or "")
+        for page in trace_payload.get("pages", [])
+        for element in page.get("elements", [])
+        if element.get("object_type") == "text" and element.get("priority") in {"P0", "P1"}
+    ]
     actual_text: list[str] = []
     missing_elements: list[str] = []
     text_mismatches: list[dict[str, str]] = []
@@ -757,7 +814,7 @@ def readback_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dic
     z_order_mismatches: list[dict[str, Any]] = []
     unexpected_elements: list[dict[str, str]] = []
     notes_count = 0
-    expected_image_count = sum(1 for scene in scenes for element in scene.get("elements", []) if element.get("kind") == "image")
+    expected_image_count = sum(1 for element in trace_payload.get("elements", []) if element.get("object_type") == "registered_asset")
     actual_image_count = sum(1 for slide in presentation.slides for shape in slide.shapes if shape.shape_type == MSO_SHAPE_TYPE.PICTURE)
     expected_media_relationships = expected_image_count
     actual_media_relationships = sum(_image_relationship_count(slide) for slide in presentation.slides)
@@ -774,9 +831,12 @@ def readback_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dic
                 geometry_errors.append(name)
         if slide_index >= len(scenes):
             continue
-        expected_elements = {str(element.get("element_id")): element for element in scenes[slide_index].get("elements", [])}
+        expected_elements = {
+            str(element.get("element_id")): element
+            for element in trace_pages.get(str(scenes[slide_index]["page_id"]), {}).get("elements", [])
+            if isinstance(element, dict)
+        }
         actual_elements = {str(shape.name): shape for shape in slide.shapes if shape.name}
-        expected_trace = {str(item.get("element_id") or ""): item for item in trace_pages.get(str(scenes[slide_index]["page_id"]), {}).get("elements", []) if isinstance(item, dict)}
         expected_order = [str(item.get("element_id") or "") for item in trace_pages.get(str(scenes[slide_index]["page_id"]), {}).get("elements", []) if isinstance(item, dict)]
         # Include unnamed shapes in the order inventory so an unregistered
         # object cannot bypass the trace/readback gate.
@@ -796,12 +856,12 @@ def readback_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dic
                 missing_elements.append(element_id)
                 page_missing.append(element_id)
                 continue
-            expected_type = _expected_shape_type(str((expected_trace.get(element_id) or {}).get("object_type") or ""))
+            expected_type = _expected_shape_type(str(element.get("object_type") or ""))
             if expected_type is not None and shape.shape_type != expected_type:
                 mismatch = {"element_id": element_id, "expected": str(expected_type), "actual": str(shape.shape_type)}
                 shape_type_mismatches.append(mismatch)
                 page_shape_type_mismatches.append(mismatch)
-            if element.get("kind") == "text" and element.get("priority") in {"P0", "P1"}:
+            if element.get("object_type") == "text" and element.get("priority") in {"P0", "P1"}:
                 expected_text_value = str(element.get("text") or "")
                 actual_text_value = str(getattr(shape, "text", "") or "")
                 if actual_text_value != expected_text_value:

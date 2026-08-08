@@ -375,7 +375,7 @@ def test_stale_visual_review_blocks_before_pptx(tmp_path: Path) -> None:
     assert status["error"]["stage"] == "visual_review"
 
 
-def test_unsupported_curved_path_blocks_pptx_stage(tmp_path: Path) -> None:
+def test_supported_curved_path_compiles_as_native_freeform(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path, mode="fixture", page_count=1)
     _blueprint(run, "P001")
     prepare_high_density(run)
@@ -399,12 +399,12 @@ def test_unsupported_curved_path_blocks_pptx_stage(tmp_path: Path) -> None:
     write_scene(run, scene)
     (run / "high_density_build/reviews/P001.visual_review.json").unlink()
 
-    with pytest.raises(ValueError):
-        run_high_density(run)
+    result = run_high_density(run)
 
-    status = build_high_density_status(run)
-    assert status["error"]["code"] == "HD_PPTX_EDITABILITY_FAILED"
-    assert status["error"]["stage"] == "readback"
+    assert result["status"] == "completed"
+    trace = read_json(run / "high_density_build/traces/pptx_trace.json")
+    curve = next(element for element in trace["elements"] if element["element_id"] == "curve.path")
+    assert curve["object_type"] == "freeform"
 
 
 def test_high_density_contract_rejects_unsafe_lineage_path() -> None:

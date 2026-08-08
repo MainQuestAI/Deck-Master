@@ -8,9 +8,11 @@ import tempfile
 import threading
 import time
 import unittest
+import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+from xml.etree import ElementTree
 
 import pytest
 from pptx import Presentation
@@ -44,7 +46,7 @@ from high_density.engine import (
 from high_density.pptx import PptxEditabilityError, _render_pptx_page, compile_pptx, pptx_path, readback_pptx, trace_path
 from high_density.scene import _fixture_background, build_fixture_scene, load_scene, validate_scene_content, write_scene
 from high_density.style import write_style_lock
-from high_density.svg import SvgVisualError, compile_svg, load_visual_review, preview_path, render_preview, review_path, svg_path, validate_approved_svg, validate_svg
+from high_density.svg import SvgVisualError, _font_path, compile_svg, load_visual_review, preview_path, render_preview, review_path, svg_path, validate_approved_svg, validate_svg
 from production.page_package import PageContent, PagePackageIndex, build_page_package
 from runtime.run_state import create_run
 
@@ -804,6 +806,21 @@ def test_approved_svg_blocks_unresolvable_font_and_text_overflow(tmp_path: Path)
         validate_approved_svg(svg, scene, lock, {})
 
 
+def test_arial_accepts_metric_compatible_fontconfig_alias(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import high_density.svg as svg_module
+
+    font_file = tmp_path / "LiberationSans-Regular.ttf"
+    font_file.write_bytes(b"font-fixture")
+    monkeypatch.setattr(svg_module.shutil, "which", lambda name: "/usr/bin/fc-match" if name == "fc-match" else None)
+    monkeypatch.setattr(
+        svg_module.subprocess,
+        "run",
+        lambda *args, **kwargs: type("Result", (), {"returncode": 0, "stdout": f"Liberation Sans|{font_file}\n"})(),
+    )
+
+    assert _font_path("Arial", "P001", "title.main") == font_file
+
+
 def test_blueprint_geometry_mutation_changes_scene_svg_and_metrics(tmp_path: Path) -> None:
     run, lock, first_scene = _prepared_fixture(tmp_path)
     original_svg = svg_path(run, "P001")
@@ -923,13 +940,65 @@ def test_scene_mutation_without_svg_change_does_not_change_pptx(tmp_path: Path) 
     run, lock, scene = _prepared_fixture(tmp_path)
     original_svg_hash = sha256_file(svg_path(run, "P001"))
     original_pptx = _render_pptx_page(run, pptx_path(run), "P001", 0)
-    scene["review_note"] = "semantic-only mutation"
+    with zipfile.ZipFile(pptx_path(run)) as archive:
+        original_slide_xml = archive.read("ppt/slides/slide1.xml")
+    title = next(element for element in scene["elements"] if element["element_id"] == "title.main")
+    title["bbox"] = {"x": 160, "y": 80, "w": 700, "h": 120}
+    title["style"] = {"fill": "#ff0000", "font_family": "Arial", "font_weight": "400"}
+    title["text_fit"] = {"preferred_size_px": 12, "min_size_px": 9, "max_lines": 5, "line_height": 2.0}
+    title["z_index"] = 999
     write_scene(run, scene)
     compile_pptx(run, [scene], {"P001": lock})
     mutated_pptx = _render_pptx_page(run, pptx_path(run), "P001", 0)
+    readback_pptx(run, [scene], {"P001": lock}, pptx_path(run))
+    with zipfile.ZipFile(pptx_path(run)) as archive:
+        mutated_slide_xml = archive.read("ppt/slides/slide1.xml")
 
     assert sha256_file(svg_path(run, "P001")) == original_svg_hash
+    assert mutated_slide_xml == original_slide_xml
     assert sha256_file(mutated_pptx) == sha256_file(original_pptx)
+
+
+def test_tspan_runs_preserve_text_and_style(tmp_path: Path) -> None:
+    run, lock, scene = _prepared_fixture(tmp_path)
+    svg = svg_path(run, "P001")
+    document = ElementTree.fromstring(svg.read_text(encoding="utf-8"))
+    title = next(node for node in document.iter() if node.get("id") == "title.main")
+    for child in list(title):
+        title.remove(child)
+    title.text = None
+    namespace = str(title.tag).split("}")[0].removeprefix("{")
+    first = ElementTree.SubElement(title, f"{{{namespace}}}tspan", {"x": str(title.get("x")), "dy": "0", "fill": "#c65c42", "font-weight": "400"})
+    first.text = "Synthetic "
+    second = ElementTree.SubElement(title, f"{{{namespace}}}tspan", {"dy": "0", "fill": "#1f6fd1", "font-weight": "700"})
+    second.text = "framework page"
+    ElementTree.ElementTree(document).write(svg, encoding="utf-8", xml_declaration=True)
+    render_preview(svg, preview_path(run, "P001"))
+
+    compile_pptx(run, [scene], {"P001": lock})
+
+    presentation = Presentation(pptx_path(run))
+    shape = next(shape for shape in presentation.slides[0].shapes if shape.name == "title.main")
+    runs = list(shape.text_frame.paragraphs[0].runs)
+    trace = read_json(trace_path(run))
+    title_trace = next(element for element in trace["elements"] if element["element_id"] == "title.main")
+    assert "".join(run.text for run in runs) == lock["customer_visible"]["title"]
+    assert len(runs) == 2
+    assert runs[0].font.bold is False
+    assert runs[1].font.bold is True
+    assert [run["paint"]["color"] for run in title_trace["runs"]] == ["#c65c42", "#1f6fd1"]
+
+
+def test_excessive_text_mask_fails_closed() -> None:
+    import numpy as np
+    from PIL import Image
+    from high_density.visual import _ssim
+
+    image = Image.new("RGB", (64, 64), "white")
+    mask = np.ones((64, 64), dtype=bool)
+
+    with pytest.raises(ContractError, match="too few valid pixels"):
+        _ssim(image, image, mask)
 
 
 def test_svg_text_drift_blocks_drawingml_compile(tmp_path: Path) -> None:

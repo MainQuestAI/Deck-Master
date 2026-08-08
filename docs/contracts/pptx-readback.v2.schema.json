@@ -3,7 +3,7 @@
   "$id": "https://deck-master.local/contracts/pptx-readback.v2.schema.json",
   "title": "PPTX Readback v2",
   "type": "object",
-  "required": ["schema_version", "run_id", "slide_count", "expected_slide_count", "pages", "status", "created_at"],
+  "required": ["schema_version", "run_id", "pptx_sha256", "slide_count", "expected_slide_count", "speaker_notes_count", "expected_speaker_notes_count", "pages", "text_readback", "geometry", "trace_coverage", "drawingml_paint", "shape_readback", "media_relationships", "visual_parity", "editable_object_count", "image_shape_count", "expected_image_count", "status", "created_at"],
   "properties": {
     "schema_version": {"const": "deck_pptx_readback.v2"},
     "run_id": {"type": "string"},
@@ -17,6 +17,8 @@
     "geometry": {"type": "object"},
     "trace_coverage": {"type": "object"},
     "drawingml_paint": {"type": "object", "required": ["gradient_count", "gradient_stop_count", "effect_count", "gradient_stop_alpha_values", "status"], "properties": {"gradient_count": {"type": "integer", "minimum": 0}, "gradient_stop_count": {"type": "integer", "minimum": 0}, "effect_count": {"type": "integer", "minimum": 0}, "gradient_stop_alpha_values": {"type": "array", "items": {"type": "integer", "minimum": 0, "maximum": 100000}}, "status": {"enum": ["pass", "failed"]}}, "additionalProperties": true},
+    "shape_readback": {"type": "object"},
+    "media_relationships": {"type": "object"},
     "visual_parity": {"type": "object"},
     "editable_object_count": {"type": "integer"},
     "image_shape_count": {"type": "integer"},
@@ -24,5 +26,5 @@
     "status": {"enum": ["pass", "failed"]},
     "created_at": {"type": "string"}
   },
-  "additionalProperties": true
+  "additionalProperties": false
 }

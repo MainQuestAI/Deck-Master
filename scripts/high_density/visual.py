@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import copy
 import math
 import re
 import shutil
 import subprocess
+import tempfile
 from pathlib import Path
 from typing import Any
 from xml.etree import ElementTree
@@ -237,8 +239,8 @@ def _ssim(reference, candidate, mask=None) -> float:
         raise VisualMetricsError("visual comparison images must have the same dimensions")
     if mask is not None:
         valid = ~mask
-        if int(valid.sum()) < 100:
-            return 1.0
+        if int(valid.sum()) < 1000:
+            raise VisualMetricsError("visual mask leaves too few valid pixels")
         # Text is evaluated through content/readback contracts.  Replacing it
         # in the visual candidate makes the SSIM measure the surrounding
         # composition, edges, color, and spacing rather than font rasterizer
@@ -268,18 +270,74 @@ def _ssim(reference, candidate, mask=None) -> float:
     return max(0.0, min(1.0, float(np.mean(score))))
 
 
-def _text_mask(scene: dict[str, Any]):
+def _text_mask(svg_file: Path, page_id: str):
     import numpy as np
 
-    mask = np.zeros((CANVAS_HEIGHT, CANVAS_WIDTH), dtype=bool)
-    for element in scene.get("elements", []):
-        if element.get("kind") != "text":
-            continue
-        bbox = element.get("bbox") or {}
-        x, y = max(0, int(float(bbox.get("x") or 0))), max(0, int(float(bbox.get("y") or 0)))
-        w, h = max(0, int(float(bbox.get("w") or 0))), max(0, int(float(bbox.get("h") or 0)))
-        mask[y : min(CANVAS_HEIGHT, y + h), x : min(CANVAS_WIDTH, x + w)] = True
-    return mask
+    try:
+        document = ElementTree.fromstring(svg_file.read_text(encoding="utf-8"))
+    except (OSError, ElementTree.ParseError) as exc:
+        raise VisualMetricsError(f"cannot build text mask from SVG on page {page_id}") from exc
+    masked = copy.deepcopy(document)
+    visible_tags = {"text", "rect", "circle", "ellipse", "line", "path", "polyline", "polygon", "image"}
+    for node in masked.iter():
+        tag = str(node.tag).split("}")[-1]
+        if tag == "text" or tag == "tspan":
+            node.set("fill", "#000000")
+            node.set("stroke", "none")
+            node.set("opacity", "1")
+            node.attrib.pop("filter", None)
+        elif tag in visible_tags:
+            node.set("opacity", "0")
+    namespace = str(masked.tag).split("}")[0].removeprefix("{") if "}" in str(masked.tag) else "http://www.w3.org/2000/svg"
+    background = ElementTree.Element(f"{{{namespace}}}rect", {"x": "0", "y": "0", "width": str(CANVAS_WIDTH), "height": str(CANVAS_HEIGHT), "fill": "#ffffff"})
+    masked.insert(0, background)
+    with tempfile.TemporaryDirectory(prefix="deck-master-text-mask-") as directory:
+        temp_svg = Path(directory) / f"{page_id}.svg"
+        temp_png = Path(directory) / f"{page_id}.png"
+        ElementTree.ElementTree(masked).write(temp_svg, encoding="utf-8", xml_declaration=True)
+        _render_svg_to_png(temp_svg, temp_png, CANVAS_WIDTH, CANVAS_HEIGHT)
+        grayscale = np.asarray(_load_image(temp_png).convert("L"))
+    mask = grayscale < 250
+    expanded = mask.copy()
+    for dy in range(-2, 3):
+        for dx in range(-2, 3):
+            shifted = np.zeros_like(mask)
+            source_y = slice(max(0, -dy), min(CANVAS_HEIGHT, CANVAS_HEIGHT - dy))
+            source_x = slice(max(0, -dx), min(CANVAS_WIDTH, CANVAS_WIDTH - dx))
+            target_y = slice(max(0, dy), min(CANVAS_HEIGHT, CANVAS_HEIGHT + dy))
+            target_x = slice(max(0, dx), min(CANVAS_WIDTH, CANVAS_WIDTH + dx))
+            shifted[target_y, target_x] = mask[source_y, source_x]
+            expanded |= shifted
+    coverage = float(expanded.mean())
+    if coverage > 0.20:
+        raise VisualMetricsError(f"text mask coverage exceeds 20% on page {page_id}: {coverage:.4f}")
+    if int((~expanded).sum()) < 1000:
+        raise VisualMetricsError(f"text mask leaves too few valid pixels on page {page_id}")
+    return expanded
+
+
+def _edge_similarity(reference, candidate, mask) -> float:
+    import numpy as np
+
+    first = np.asarray(reference.convert("L"), dtype=np.int16)
+    second = np.asarray(candidate.convert("L"), dtype=np.int16)
+    first_edges = np.zeros_like(first, dtype=bool)
+    second_edges = np.zeros_like(second, dtype=bool)
+    first_edges[:, 1:] |= np.abs(first[:, 1:] - first[:, :-1]) > 20
+    first_edges[1:, :] |= np.abs(first[1:, :] - first[:-1, :]) > 20
+    second_edges[:, 1:] |= np.abs(second[:, 1:] - second[:, :-1]) > 20
+    second_edges[1:, :] |= np.abs(second[1:, :] - second[:-1, :]) > 20
+    valid = ~mask
+    first_edges &= valid
+    second_edges &= valid
+    denominator = int(first_edges.sum()) + int(second_edges.sum())
+    return 1.0 if denominator == 0 else 2.0 * float((first_edges & second_edges).sum()) / denominator
+
+
+def _overlap_area(first: dict[str, Any], second: dict[str, Any]) -> float:
+    width = max(0.0, min(float(first["x"]) + float(first["w"]), float(second["x"]) + float(second["w"])) - max(float(first["x"]), float(second["x"])))
+    height = max(0.0, min(float(first["y"]) + float(first["h"]), float(second["y"]) + float(second["h"])) - max(float(first["y"]), float(second["y"])))
+    return width * height
 
 
 def _color_delta(reference, candidate, mask=None) -> float:
@@ -289,8 +347,8 @@ def _color_delta(reference, candidate, mask=None) -> float:
     b = np.asarray(candidate, dtype=np.float64)
     if mask is not None:
         valid = ~mask
-        if int(valid.sum()) < 100:
-            return 0.0
+        if int(valid.sum()) < 1000:
+            raise VisualMetricsError("visual mask leaves too few valid pixels")
         a, b = a[valid], b[valid]
     return float(np.abs(a - b).mean() / 255.0)
 
@@ -332,19 +390,19 @@ def compute_visual_metrics(
         raise VisualMetricsError("NumPy is required for visual metrics") from exc
     reference = _load_image(blueprint_preview)
     candidate = _load_image(svg_preview)
-    mask = _text_mask(scene)
+    page_id = str(scene["page_id"])
+    svg_file = root / "high_density_build" / "svg" / f"{page_id}.svg"
+    mask = _text_mask(svg_file, page_id)
     import numpy as np
 
     ref_array = np.asarray(reference)
     candidate_array = np.asarray(candidate)
-    policy = {"text_masked_ssim": 0.92, "p0_region_ssim": 0.92, "bbox_max_delta_px": 2.0, "color_delta": 0.25}
+    policy = {"text_masked_ssim": 0.92, "p0_region_ssim": 0.92, "bbox_max_delta_px": 2.0, "color_delta": 0.25, "edge_similarity": 0.0}
     if comparison == "svg_vs_pptx":
-        policy.update({"text_masked_ssim": 0.97, "bbox_max_delta_px": 1.0})
+        policy.update({"text_masked_ssim": 0.97, "bbox_max_delta_px": 1.0, "edge_similarity": 0.45})
     if thresholds:
         policy.update({str(key): float(value) for key, value in thresholds.items()})
-    page_id = str(scene["page_id"])
     geometry_elements = {str(element.get("element_id") or "") for element in scene.get("elements", []) if element.get("priority") in {"P0", "P1"}}
-    svg_file = root / "high_density_build" / "svg" / f"{page_id}.svg"
     svg_geometry = _svg_element_bboxes(svg_file, page_id, geometry_elements)
     bbox_deltas: list[float] = []
     geometry_pairs: list[dict[str, Any]] = []
@@ -367,10 +425,22 @@ def compute_visual_metrics(
     present_components = _svg_component_ids(root, str(scene["page_id"]))
     missing_components = sorted(required_components - present_components)
     ssim = _ssim(reference, candidate, mask)
-    p0_regions = [element.get("bbox") or {} for element in scene.get("elements", []) if element.get("priority") == "P0"]
+    p0_regions = [svg_geometry[str(element.get("element_id") or "")] for element in scene.get("elements", []) if element.get("priority") == "P0"]
     p0_region_scores = [_region_ssim(reference, candidate, mask, bbox) for bbox in p0_regions]
     p0_region_ssim = min(p0_region_scores) if p0_region_scores else ssim
     color_delta = _color_delta(ref_array, candidate_array, mask)
+    edge_similarity = _edge_similarity(reference, candidate, mask)
+    anchor_max_delta = max((max(pair["delta"]["x"], pair["delta"]["y"]) for pair in geometry_pairs), default=0.0)
+    direction_mismatches = sum(
+        1
+        for pair in geometry_pairs
+        if (float(pair["source"].get("w") or 0) >= float(pair["source"].get("h") or 0))
+        != (float(pair["target"].get("w") or 0) >= float(pair["target"].get("h") or 0))
+    )
+    overflow_count = sum(1 for bbox in svg_geometry.values() if bbox["x"] < 0 or bbox["y"] < 0 or bbox["x"] + bbox["w"] > CANVAS_WIDTH or bbox["y"] + bbox["h"] > CANVAS_HEIGHT)
+    text_boxes = [svg_geometry[str(element.get("element_id") or "")] for element in scene.get("elements", []) if element.get("kind") == "text" and element.get("priority") in {"P0", "P1"}]
+    illegal_overlap_count = sum(1 for index, first in enumerate(text_boxes) for second in text_boxes[index + 1 :] if _overlap_area(first, second) > 1)
+    mask_coverage = float(mask.mean())
     findings: list[dict[str, Any]] = []
     if ssim < policy["text_masked_ssim"]:
         findings.append({"code": "visual_ssim_below_threshold", "value": ssim, "threshold": policy["text_masked_ssim"]})
@@ -382,14 +452,22 @@ def compute_visual_metrics(
         findings.append({"code": "missing_components", "component_ids": missing_components})
     if color_delta > policy["color_delta"]:
         findings.append({"code": "region_color_delta", "value": color_delta, "threshold": policy["color_delta"]})
+    if edge_similarity < policy["edge_similarity"]:
+        findings.append({"code": "edge_similarity_below_threshold", "value": edge_similarity, "threshold": policy["edge_similarity"]})
+    if overflow_count:
+        findings.append({"code": "visual_overflow", "count": overflow_count})
+    if illegal_overlap_count:
+        findings.append({"code": "illegal_text_overlap", "count": illegal_overlap_count})
+    if direction_mismatches:
+        findings.append({"code": "direction_mismatch", "count": direction_mismatches})
     metrics = {
         "schema_version": "deck_visual_metrics.v1",
         "run_id": str(scene["run_id"]),
         "page_id": str(scene["page_id"]),
         "comparison": {"kind": comparison, "renderer": "rsvg-convert + Pillow + NumPy", "canvas": {"width": CANVAS_WIDTH, "height": CANVAS_HEIGHT, "unit": "px"}},
-        "inputs": {"reference_path": str(blueprint_preview), "reference_sha256": sha256_file(blueprint_preview), "candidate_path": str(svg_preview), "candidate_sha256": sha256_file(svg_preview), "mask_sha256": sha256_json(mask.astype(bool).tolist()), "svg_geometry_sha256": sha256_json(svg_geometry), "candidate_geometry_sha256": sha256_json(candidate_geometry) if candidate_geometry is not None else ""},
+        "inputs": {"reference_path": str(blueprint_preview), "reference_sha256": sha256_file(blueprint_preview), "candidate_path": str(svg_preview), "candidate_sha256": sha256_file(svg_preview), "mask_sha256": sha256_json(mask.astype(bool).tolist()), "mask_coverage": mask_coverage, "svg_geometry_sha256": sha256_json(svg_geometry), "candidate_geometry_sha256": sha256_json(candidate_geometry) if candidate_geometry is not None else ""},
         "thresholds": policy,
-        "values": {"text_masked_ssim": ssim, "p0_region_ssim": p0_region_ssim, "bbox_max_delta_px": max(bbox_deltas) if bbox_deltas else 0.0, "region_color_delta": color_delta},
+        "values": {"text_masked_ssim": ssim, "p0_region_ssim": p0_region_ssim, "bbox_max_delta_px": max(bbox_deltas) if bbox_deltas else 0.0, "anchor_max_delta_px": anchor_max_delta, "region_color_delta": color_delta, "edge_similarity": edge_similarity, "mask_coverage": mask_coverage, "overflow_count": overflow_count, "illegal_overlap_count": illegal_overlap_count, "direction_mismatch_count": direction_mismatches},
         "geometry": {"source": "svg_dom_geometry" if comparison == "svg_vs_pptx" else "scene_blueprint_bbox", "target": "pptx_readback_geometry" if comparison == "svg_vs_pptx" else "svg_dom_geometry", "pairs": geometry_pairs},
         "coverage": {"required_components": len(required_components), "present_components": len(required_components - set(missing_components)), "component_coverage": 1.0 if not missing_components else (len(required_components) - len(missing_components)) / max(1, len(required_components)), "p0_p1_bbox_coverage": 1.0 if not bbox_deltas or max(bbox_deltas) <= policy["bbox_max_delta_px"] else 0.0},
         "findings": findings,
