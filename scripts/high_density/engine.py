@@ -46,6 +46,7 @@ from .svg import (
     render_preview,
     review_path,
     svg_path,
+    validate_approved_svg,
 )
 
 HIGH_DENSITY_DIR = Path("high_density_build")
@@ -971,10 +972,7 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
                     output_ref=f"high_density_build/svg/{page_id}.svg",
                     reason="Write the approved native SVG from the reconstructed page scene; the runtime will validate and compile this SVG without replacing it.",
                 )
-            else:
-                from .svg import validate_svg
-
-                validate_svg(svg_file, page_id=page_id)
+            validate_approved_svg(svg_file, scene, lock, asset_paths_by_page[page_id])
             render_preview(svg_path(root, page_id), preview_path(root, page_id))
         except SvgVisualError as exc:
             if execution_mode not in {"fixture", "dev"}:
