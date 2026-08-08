@@ -121,7 +121,7 @@ def test_production_waiting_state_is_resumable(tmp_path: Path) -> None:
     assert waiting["status"] == "awaiting_agent_build"
     assert waiting["current_stage"] == "content_lock"
     assert status["status"] == "awaiting_agent_build"
-    assert status["next_action"]["kind"] == "agent_nbb_enrich"
+    assert status["next_action"]["kind"] == "agent_nbb_candidates"
     assert build_manifest["status"] == "building"
     assert next_step["status"] == "awaiting_agent_build"
     assert next_step["recommended_skill"] == "deck-builder-high-density"
@@ -145,7 +145,7 @@ def test_page_package_change_invalidates_downstream(tmp_path: Path) -> None:
     new_source_fingerprint = read_json(run / "build/build_manifest.json")["source_fingerprint"]
     assert invalidated["status"] == "awaiting_agent_build"
     assert invalidated["current_stage"] == "content_lock"
-    assert invalidated["next_action"]["kind"] == "agent_nbb_enrich"
+    assert invalidated["next_action"]["kind"] == "agent_nbb_candidates"
     assert not (run / "high_density_build/content_locks/P001.json").exists()
     assert old_source_fingerprint != new_source_fingerprint
     assert not (run / "high_density_build/svg/P001.svg").exists()

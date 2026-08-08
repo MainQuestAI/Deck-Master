@@ -218,12 +218,124 @@ def _required_text_refs(customer_visible: dict[str, Any], *, so_what: str) -> li
         if isinstance(block, dict) and block.get("title"):
             refs.append({"ref": f"content_lock.customer_visible.body_blocks.{index}.title", "priority": "P1", "required": True})
         refs.append({"ref": f"content_lock.customer_visible.body_blocks.{index}", "priority": "P1", "required": True})
+    if customer_visible.get("callouts"):
+        refs.append({"ref": "content_lock.customer_visible.callouts", "priority": "P0", "required": True})
     if customer_visible.get("labels"):
         refs.append({"ref": "content_lock.customer_visible.labels", "priority": "P2", "required": True})
     if customer_visible.get("footnotes"):
         refs.append({"ref": "content_lock.customer_visible.footnotes", "priority": "P0", "required": True})
     refs.append({"ref": "content_lock.enrichment.so_what", "priority": "P0", "required": True, "structural": True, "value": so_what})
     return refs
+
+
+def _resolve_target(payload: dict[str, Any], target: str) -> Any:
+    value: Any = payload
+    for part in target.split("."):
+        if isinstance(value, dict) and part in value:
+            value = value[part]
+        elif isinstance(value, list) and part.isdigit() and int(part) < len(value):
+            value = value[int(part)]
+        else:
+            raise ContractError(f"NBB claim binding target cannot be resolved: {target}")
+    return value
+
+
+def _candidate_claim_targets(candidate: dict[str, Any]) -> list[str]:
+    targets = [
+        "management_conclusion",
+        "audience",
+        "issue_hypothesis_tree.root",
+        "caveat",
+        "visual_potential",
+        "not_recommended_because",
+        "page_handoff",
+    ]
+    for index, _branch in enumerate((candidate.get("issue_hypothesis_tree") or {}).get("branches") or []):
+        targets.extend(
+            [
+                f"issue_hypothesis_tree.branches.{index}.question",
+                f"issue_hypothesis_tree.branches.{index}.hypothesis",
+            ]
+        )
+    return targets
+
+
+def _scr_claim_targets(_scr: dict[str, Any]) -> list[str]:
+    return ["situation", "complication", "resolution", "decision_implication"]
+
+
+def _page_claim_targets(page: dict[str, Any]) -> list[str]:
+    targets = ["conclusion", "so_what", "handoff"]
+    targets.extend(f"supporting_arguments.{index}" for index, _value in enumerate(page.get("supporting_arguments") or []))
+    targets.extend(f"caveat.{index}" for index, _value in enumerate(page.get("caveat") or []))
+    return targets
+
+
+def _claim_bindings(
+    payload: dict[str, Any],
+    targets: list[str],
+    evidence_refs: list[str],
+    *,
+    source_text: str,
+) -> list[dict[str, Any]]:
+    bindings: list[dict[str, Any]] = []
+    for target in targets:
+        text = str(_resolve_target(payload, target) or "")
+        origin = "source" if text and text in source_text else "derived"
+        bindings.append(
+            {
+                "target": target,
+                "text_sha256": sha256_json(text),
+                "origin": origin,
+                "evidence_refs": list(evidence_refs),
+                "derivation_note": (
+                    "Exact Page Package projection."
+                    if origin == "source"
+                    else "Editorial synthesis grounded only in the referenced Page Package evidence."
+                ),
+            }
+        )
+    return bindings
+
+
+def _validate_claim_bindings(
+    payload: dict[str, Any],
+    *,
+    required_targets: list[str],
+    allowed_evidence_refs: set[str],
+    source_text: str,
+    context: str,
+) -> None:
+    bindings = payload.get("claim_bindings")
+    if not isinstance(bindings, list):
+        raise ContractError(f"NBB claim bindings are required for {context}")
+    by_target: dict[str, dict[str, Any]] = {}
+    for binding in bindings:
+        if not isinstance(binding, dict):
+            raise ContractError(f"NBB claim binding must be an object for {context}")
+        target = str(binding.get("target") or "")
+        if not target or target in by_target:
+            raise ContractError(f"NBB claim binding target is missing or duplicated for {context}: {target}")
+        by_target[target] = binding
+    if set(by_target) != set(required_targets):
+        missing = sorted(set(required_targets) - set(by_target))
+        extra = sorted(set(by_target) - set(required_targets))
+        raise ContractError(f"NBB claim binding coverage failed for {context}: missing={missing}, extra={extra}")
+    for target in required_targets:
+        binding = by_target[target]
+        text = str(_resolve_target(payload, target) or "")
+        if not text or str(binding.get("text_sha256") or "") != sha256_json(text):
+            raise ContractError(f"NBB claim binding text hash is stale for {context}:{target}")
+        refs = {str(ref) for ref in binding.get("evidence_refs") or []}
+        if not refs or not refs.issubset(allowed_evidence_refs):
+            raise ContractError(f"NBB claim binding evidence is invalid for {context}:{target}")
+        if str(binding.get("origin") or "") not in {"source", "derived", "structural_label"}:
+            raise ContractError(f"NBB claim binding origin is invalid for {context}:{target}")
+        if not str(binding.get("derivation_note") or ""):
+            raise ContractError(f"NBB claim binding derivation note is missing for {context}:{target}")
+        unsupported_numbers = [token for token in _numeric_tokens(text) if token not in source_text]
+        if unsupported_numbers:
+            raise ContractError(f"NBB claim binding adds unsupported factual values for {context}:{target}: {unsupported_numbers}")
 
 
 def _derived_claims(package: dict[str, Any], evidence: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -289,8 +401,7 @@ def _storyline_candidates(
     )
     candidates: list[dict[str, Any]] = []
     for storyline_id, conclusion, lens, visual_potential, rejection_reason in specs:
-        candidates.append(
-            {
+        candidate = {
                 "storyline_id": storyline_id,
                 "management_conclusion": conclusion,
                 "audience": audience,
@@ -319,7 +430,13 @@ def _storyline_candidates(
                 "density_target": {"band": "high", "information_regions": max(3, len(packages))},
                 "language": "zh-CN",
             }
+        candidate["claim_bindings"] = _claim_bindings(
+            candidate,
+            _candidate_claim_targets(candidate),
+            evidence_refs,
+            source_text=_text(packages),
         )
+        candidates.append(candidate)
     return candidates
 
 
@@ -396,6 +513,12 @@ def _page_plan(
         "derived_claims": _derived_claims(safe_package, evidence),
         "status": "ready",
     }
+    page_plan["claim_bindings"] = _claim_bindings(
+        page_plan,
+        _page_claim_targets(page_plan),
+        evidence_refs,
+        source_text=_text(safe_package),
+    )
     page_plan["page_plan_sha256"] = sha256_json(page_plan)
     return page_plan
 
@@ -507,6 +630,13 @@ def build_content_lock(
         claim_refs = {str(ref) for ref in claim.get("evidence_refs") or []}
         if not claim_refs or not claim_refs.issubset(set(evidence_refs)) or not str(claim.get("derivation_note") or ""):
             raise ContractError(f"NBB derived claim evidence is imprecise on {page_id}")
+    _validate_claim_bindings(
+        page_plan,
+        required_targets=_page_claim_targets(page_plan),
+        allowed_evidence_refs=set(evidence_refs),
+        source_text=_text(safe_package),
+        context=f"page {page_id}",
+    )
     enrichment = {
         "framework": "nbb",
         "version": "cyber-ppt-nbb.v2",
@@ -521,6 +651,7 @@ def build_content_lock(
         "handoff": str(page_plan.get("handoff") or ""),
         "material_pool": copy.deepcopy(page_plan.get("material_pool") or {}),
         "derived_claims": copy.deepcopy(page_plan.get("derived_claims") or []),
+        "claim_bindings": copy.deepcopy(page_plan.get("claim_bindings") or []),
         "structure_decisions": _structure_decisions(result["analysis"]),
         "component_plan": copy.deepcopy(page_plan.get("components") or []),
         "evidence_coverage": {
@@ -569,6 +700,50 @@ def build_content_lock(
     return lock
 
 
+def _build_scr(packages: list[dict[str, Any]], storyline: dict[str, Any]) -> dict[str, Any]:
+    first_title = str((packages[0].get("customer_visible") or {}).get("title") or packages[0].get("page_id") or "page")
+    scr = {
+        "situation": f"The deck contains evidence-backed material about {first_title} and related page decisions.",
+        "complication": f"Leadership must decide how to act on {first_title} while preserving evidence, caveats, and execution constraints.",
+        "resolution": str(storyline["management_conclusion"]),
+        "evidence_refs": list(storyline["evidence_refs"]),
+        "decision_implication": str(storyline["page_handoff"]),
+    }
+    scr["claim_bindings"] = _claim_bindings(
+        scr,
+        _scr_claim_targets(scr),
+        list(storyline["evidence_refs"]),
+        source_text=_text(packages),
+    )
+    return scr
+
+
+def enrich_selected_nbb_plan(plan: dict[str, Any], packages: list[dict[str, Any]]) -> dict[str, Any]:
+    enriched = copy.deepcopy(plan)
+    selection = enriched.get("selection") or {}
+    if str(selection.get("status") or "") not in {"selected_pending_enrichment", "approved"}:
+        raise ContractError("NBB storyline must be selected before page enrichment")
+    selected_id = str(selection.get("selected_storyline_id") or "")
+    storyline = next(
+        (item for item in enriched.get("storyline_candidates") or [] if str(item.get("storyline_id") or "") == selected_id),
+        None,
+    )
+    if storyline is None:
+        raise ContractError(f"unknown NBB storyline_id: {selected_id}")
+    source_results = {str(package["page_id"]): build_nbb_page(package) for package in packages}
+    packages_by_order = {int(package.get("order") or 0): package for package in packages}
+    enriched["scr"] = _build_scr(packages, storyline)
+    enriched["pages"] = [
+        _page_plan(package, source_results[str(package["page_id"])], storyline, packages_by_order)
+        for package in sorted(packages, key=lambda item: int(item.get("order") or 0))
+    ]
+    enriched["nbb_plan_sha256"] = sha256_json(
+        {key: value for key, value in enriched.items() if key not in {"nbb_plan_sha256", "created_at", "updated_at"}}
+    )
+    assert_v2("nbb_plan", enriched)
+    return enriched
+
+
 def build_nbb_plan(
     packages: list[dict[str, Any]],
     *,
@@ -602,49 +777,42 @@ def build_nbb_plan(
     selected_id = str(selected_storyline_id or "")
     if selected_id and selected_id not in candidate_ids:
         raise ContractError(f"unknown NBB storyline_id: {selected_id}")
-    approved = bool(selected_id)
-    chosen_storyline = next((item for item in candidates if item["storyline_id"] == (selected_id or recommended_id)), candidates[0])
-    packages_by_order = {int(package.get("order") or 0): package for package in packages}
-    pages = [
-        _page_plan(package, source_results[str(package["page_id"])], chosen_storyline, packages_by_order)
-        for package in sorted(packages, key=lambda item: int(item.get("order") or 0))
-    ]
-    first_title = str((packages[0].get("customer_visible") or {}).get("title") or packages[0].get("page_id") or "page")
-    scr = {
-        "situation": f"The deck contains evidence-backed material about {first_title} and related page decisions.",
-        "complication": f"Leadership must decide how to act on {first_title} while preserving evidence, caveats, and execution constraints.",
-        "resolution": str(chosen_storyline["management_conclusion"]),
-        "evidence_refs": list(chosen_storyline["evidence_refs"]),
-        "decision_implication": str(chosen_storyline["page_handoff"]),
-    }
     plan = {
         "schema_version": "deck_nbb_plan.v1",
         "run_id": run_id,
-        "page_count": len(pages),
+        "page_count": len(packages),
         "evidence_ledger": evidence_ledger,
         "storyline_candidates": candidates,
         "selection": {
-            "status": "approved" if approved else "pending_user_decision",
+            "status": "selected_pending_enrichment" if selected_id else "pending_user_decision",
             "recommended_storyline_id": recommended_id,
             "selected_storyline_id": selected_id or None,
-            "approved_by": str(approved_by) if approved else None,
-            "approved_at": utc_now() if approved else None,
+            "selected_by": str(approved_by or "fixture") if selected_id else None,
+            "selected_at": utc_now() if selected_id else None,
+            "sealed_at": None,
         },
         "storyline_audit": {
             "source": "page_packages",
-            "status": "approved" if approved else "pending_user_decision",
+            "status": "selected_pending_enrichment" if selected_id else "pending_user_decision",
             "candidate_count": len(candidates),
             "recommendation_id": recommended_id,
             "selected_id": selected_id or None,
             "content_specific": True,
             "notes": "NBB candidates are derived from page titles, evidence refs, page roles, caveats, and visual requirements.",
         },
-        "scr": scr,
-        "pages": pages,
+        "scr": None,
+        "pages": [],
         "blocked_pages": [],
         "created_at": utc_now(),
     }
-    plan["nbb_plan_sha256"] = sha256_json({key: value for key, value in plan.items() if key not in {"nbb_plan_sha256", "created_at", "updated_at"}})
+    if selected_id:
+        plan = enrich_selected_nbb_plan(plan, packages)
+        plan["selection"]["status"] = "approved"
+        plan["selection"]["sealed_at"] = utc_now()
+        plan["storyline_audit"]["status"] = "approved"
+    plan["nbb_plan_sha256"] = sha256_json(
+        {key: value for key, value in plan.items() if key not in {"nbb_plan_sha256", "created_at", "updated_at"}}
+    )
     assert_v2("nbb_plan", plan)
     return plan
 
@@ -673,6 +841,7 @@ def load_nbb_plan(
     minimum_candidate_refs = min(5, len(ledger_ids))
     if len(candidates) < 2 or len(candidates) > 3:
         raise ContractError("NBB plan must contain two or three storyline candidates")
+    source_text = _text(packages or plan.get("evidence_ledger") or [])
     for candidate in candidates:
         candidate_refs = {str(ref) for ref in candidate.get("evidence_refs") or []}
         if len(candidate_refs) < minimum_candidate_refs or not candidate_refs.issubset(ledger_ids):
@@ -682,6 +851,13 @@ def load_nbb_plan(
             branch_refs = {str(ref) for ref in branch.get("evidence_refs") or []}
             if not branch_refs or not branch_refs.issubset(ledger_ids):
                 raise ContractError(f"NBB issue/hypothesis evidence refs are invalid: {candidate.get('storyline_id')}")
+        _validate_claim_bindings(
+            candidate,
+            required_targets=_candidate_claim_targets(candidate),
+            allowed_evidence_refs=candidate_refs,
+            source_text=source_text,
+            context=f"storyline {candidate.get('storyline_id')}",
+        )
     selection = plan.get("selection") or {}
     selection_status = str(selection.get("status") or "")
     selected_id = str(selection.get("selected_storyline_id") or "")
@@ -692,21 +868,26 @@ def load_nbb_plan(
         or str(audit.get("selected_id") or "") != (selected_id or "")
     ):
         raise ContractError("NBB storyline audit is inconsistent with selection")
-    scr_refs = {str(ref) for ref in (plan.get("scr") or {}).get("evidence_refs") or []}
-    if not scr_refs or not scr_refs.issubset(ledger_ids):
-        raise ContractError("NBB SCR evidence refs are invalid")
-    if selection_status not in {"pending_user_decision", "approved"}:
+    if selection_status not in {"pending_user_decision", "selected_pending_enrichment", "approved"}:
         raise ContractError("NBB plan selection status is invalid")
     if str(selection.get("recommended_storyline_id") or "") not in candidate_ids:
         raise ContractError("NBB plan recommended storyline is unknown")
-    if selection_status == "approved":
-        if selected_id not in candidate_ids or not str(selection.get("approved_by") or "") or not str(selection.get("approved_at") or ""):
-            raise ContractError("approved NBB plan requires a known selection, approver, and approval time")
-    else:
-        if selection.get("selected_storyline_id") is not None or selection.get("approved_by") is not None or selection.get("approved_at") is not None:
-            raise ContractError("pending NBB plan cannot contain approval fields")
+    if selection_status == "pending_user_decision":
+        if any(selection.get(field) is not None for field in ("selected_storyline_id", "selected_by", "selected_at", "sealed_at")):
+            raise ContractError("pending NBB plan cannot contain selection or seal fields")
+        if plan.get("scr") is not None or plan.get("pages"):
+            raise ContractError("pending NBB plan must contain candidates only")
         if require_approved:
             raise ContractError("NBB plan awaits user storyline confirmation")
+    else:
+        if selected_id not in candidate_ids or not str(selection.get("selected_by") or "") or not str(selection.get("selected_at") or ""):
+            raise ContractError("selected NBB plan requires a known storyline, selector, and selection time")
+        if selection_status == "approved" and not str(selection.get("sealed_at") or ""):
+            raise ContractError("approved NBB plan requires a seal time")
+        if selection_status == "selected_pending_enrichment" and selection.get("sealed_at") is not None:
+            raise ContractError("unsealed NBB plan cannot contain a seal time")
+        if require_approved and selection_status != "approved":
+            raise ContractError("NBB plan awaits selected-storyline enrichment")
     if plan.get("blocked_pages"):
         raise ContractError("NBB plan contains blocked pages")
     if packages is None:
@@ -715,6 +896,23 @@ def load_nbb_plan(
     plan_pages = plan.get("pages")
     if not isinstance(plan_pages, list):
         raise ContractError("NBB plan pages must be an array")
+    if selection_status == "pending_user_decision":
+        return plan
+    if selection_status == "selected_pending_enrichment" and not plan_pages and plan.get("scr") is None:
+        return plan
+    if (not plan_pages) != (plan.get("scr") is None):
+        raise ContractError("selected NBB enrichment must contain both SCR and page plans")
+    scr = plan.get("scr") or {}
+    scr_refs = {str(ref) for ref in scr.get("evidence_refs") or []}
+    if not scr_refs or not scr_refs.issubset(ledger_ids):
+        raise ContractError("NBB SCR evidence refs are invalid")
+    _validate_claim_bindings(
+        scr,
+        required_targets=_scr_claim_targets(scr),
+        allowed_evidence_refs=scr_refs,
+        source_text=source_text,
+        context="SCR",
+    )
     actual_pages = {(str(page.get("page_id") or ""), int(page.get("order") or 0)) for page in plan_pages if isinstance(page, dict)}
     if int(plan.get("page_count") or 0) != len(expected_pages) or actual_pages != expected_pages:
         raise ContractError("NBB plan page coverage is stale for the current Page Packages")
@@ -760,59 +958,71 @@ def load_nbb_plan(
             claim_refs = {str(ref) for ref in claim.get("evidence_refs") or []}
             if not claim_refs or not claim_refs.issubset(page_evidence) or not str(claim.get("derivation_note") or ""):
                 raise ContractError(f"NBB plan derived claim evidence is imprecise on {page_id}")
+        _validate_claim_bindings(
+            page,
+            required_targets=_page_claim_targets(page),
+            allowed_evidence_refs=page_evidence,
+            source_text=_text(package),
+            context=f"page {page_id}",
+        )
         expected_page_hash = sha256_json({key: value for key, value in page.items() if key not in {"page_plan_sha256", "created_at", "updated_at"}})
         if str(page.get("page_plan_sha256") or "") != expected_page_hash:
             raise ContractError(f"NBB page plan hash is stale on {page_id}")
-        if selection_status == "approved" and str(page.get("storyline_id") or "") != selected_id:
-            raise ContractError(f"approved NBB page plan uses an unselected storyline on {page_id}")
+        if str(page.get("storyline_id") or "") != selected_id:
+            raise ContractError(f"NBB page plan uses an unselected storyline on {page_id}")
     return plan
 
 
-def approve_nbb_plan(root: Path, storyline_id: str, *, approver: str = "user") -> dict[str, Any]:
+def select_nbb_storyline(root: Path, storyline_id: str, *, selected_by: str = "user") -> dict[str, Any]:
     packages = load_page_packages(root, expected_run_id=str(read_json(root / "request.json").get("run_id") or root.name))
     if not packages:
         raise ContractError("cannot approve NBB plan without Page Packages")
     plan = load_nbb_plan(root, packages=packages, expected_run_id=str(packages[0].get("run_id") or ""), require_approved=False)
     selection = plan.get("selection") or {}
-    if str(selection.get("status") or "") == "approved" and str(selection.get("selected_storyline_id") or "") == storyline_id:
+    if str(selection.get("selected_storyline_id") or "") == storyline_id and str(selection.get("status") or "") in {"selected_pending_enrichment", "approved"}:
         return plan
+    if str(selection.get("status") or "") != "pending_user_decision":
+        raise ContractError("NBB storyline selection is already in progress; regenerate candidates before changing it")
     candidate_ids = {str(item.get("storyline_id") or "") for item in plan.get("storyline_candidates") or [] if isinstance(item, dict)}
     if storyline_id not in candidate_ids:
         raise ContractError(f"unknown NBB storyline_id: {storyline_id}")
-    candidate = next(item for item in plan["storyline_candidates"] if str(item.get("storyline_id") or "") == storyline_id)
     plan["selection"] = {
-        "status": "approved",
+        "status": "selected_pending_enrichment",
         "recommended_storyline_id": str((plan.get("selection") or {}).get("recommended_storyline_id") or storyline_id),
         "selected_storyline_id": storyline_id,
-        "approved_by": str(approver or "user"),
-        "approved_at": utc_now(),
+        "selected_by": str(selected_by or "user"),
+        "selected_at": utc_now(),
+        "sealed_at": None,
     }
     audit = plan.get("storyline_audit") or {}
-    audit.update({"status": "approved", "selected_id": storyline_id})
+    audit.update({"status": "selected_pending_enrichment", "selected_id": storyline_id})
     plan["storyline_audit"] = audit
-    scr = plan.get("scr") or {}
-    scr.update(
-        {
-            "resolution": str(candidate.get("management_conclusion") or scr.get("resolution") or ""),
-            "evidence_refs": list(candidate.get("evidence_refs") or scr.get("evidence_refs") or []),
-            "decision_implication": str(candidate.get("page_handoff") or scr.get("decision_implication") or ""),
-        }
-    )
-    plan["scr"] = scr
-    packages_by_order = {int(package.get("order") or 0): package for package in packages}
-    for page in plan.get("pages") or []:
-        if not isinstance(page, dict):
-            continue
-        package = next((item for item in packages if str(item.get("page_id") or "") == str(page.get("page_id") or "")), None)
-        if package is None:
-            raise ContractError(f"NBB plan page is missing its Page Package: {page.get('page_id')}")
-        refreshed = _page_plan(package, build_nbb_page(package), candidate, packages_by_order)
-        page.clear()
-        page.update(refreshed)
     plan["nbb_plan_sha256"] = sha256_json({key: value for key, value in plan.items() if key not in {"nbb_plan_sha256", "created_at", "updated_at"}})
     assert_v2("nbb_plan", plan)
     write_nbb_plan(root, plan)
     return plan
+
+
+def seal_nbb_plan(root: Path) -> dict[str, Any]:
+    packages = load_page_packages(root, expected_run_id=str(read_json(root / "request.json").get("run_id") or root.name))
+    plan = load_nbb_plan(root, packages=packages, expected_run_id=str(packages[0].get("run_id") or ""), require_approved=False)
+    selection = plan.get("selection") or {}
+    if str(selection.get("status") or "") == "approved":
+        return plan
+    if str(selection.get("status") or "") != "selected_pending_enrichment" or not plan.get("pages") or plan.get("scr") is None:
+        raise ContractError("selected NBB plan is not ready to seal")
+    selection["status"] = "approved"
+    selection["sealed_at"] = utc_now()
+    plan["selection"] = selection
+    audit = plan.get("storyline_audit") or {}
+    audit["status"] = "approved"
+    plan["storyline_audit"] = audit
+    plan["nbb_plan_sha256"] = sha256_json(
+        {key: value for key, value in plan.items() if key not in {"nbb_plan_sha256", "created_at", "updated_at"}}
+    )
+    assert_v2("nbb_plan", plan)
+    write_nbb_plan(root, plan)
+    return load_nbb_plan(root, packages=packages, expected_run_id=str(packages[0].get("run_id") or ""), require_approved=True)
 
 
 def write_nbb_plan(root: Path, plan: dict[str, Any]) -> Path:
@@ -859,13 +1069,15 @@ __all__ = [
     "LOCKS_DIR",
     "NBB_DIR",
     "NBB_PLAN_PATH",
-    "approve_nbb_plan",
     "build_content_lock",
     "build_nbb_page",
     "build_nbb_plan",
+    "enrich_selected_nbb_plan",
     "load_content_lock",
     "load_nbb_plan",
     "load_page_packages",
+    "seal_nbb_plan",
+    "select_nbb_storyline",
     "write_content_lock",
     "write_nbb_plan",
 ]

@@ -21,7 +21,7 @@
       "type": "object",
       "required": ["kind"],
       "properties": {
-        "kind": {"enum": ["none", "retry", "awaiting_user_decision", "agent_nbb_enrich", "agent_imagegen", "agent_visual_reconstruct", "agent_svg_repair", "agent_self_review", "agent_main_review"]},
+        "kind": {"enum": ["none", "retry", "awaiting_user_decision", "agent_nbb_candidates", "agent_nbb_enrich_selected", "agent_imagegen", "agent_visual_reconstruct", "agent_svg_repair", "agent_self_review", "agent_main_review"]},
         "run_id": {"type": "string"},
         "page_id": {"type": "string"},
         "stage": {"type": "string"},
@@ -34,6 +34,7 @@
         "resume_command": {"type": "string"},
         "reason": {"type": "string"},
         "recommended_storyline_id": {"type": "string"},
+        "selected_storyline_id": {"type": "string"},
         "storyline_candidates": {"type": "array", "items": {"type": "object"}},
         "approval_command": {"type": "string"}
       },
