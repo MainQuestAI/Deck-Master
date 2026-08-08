@@ -72,8 +72,8 @@ Raw provider payloads, generated images, private 73-page source material, and lo
 - Local static checks: Ruff, compileall, and `git diff --check` pass.
 - The seven-page fixture and fresh production provider smoke pass their lineage, visual, DrawingML, readback, handback, and `deck-quality` render gates.
 - Standard profile prepare, run, and preview-gate evidence is recorded in `phase-4-standard-profile-evidence.json`.
-- GitHub Actions Python 3.11/3.12 CI, contract/schema checks, preview gate, release smoke, and CI RC gate pass on source commit `4af2928b3a98ddeafba2abe49a890f3051458afc`.
-- Final independent review and QA remain required before changing PR #26 from Draft.
+- GitHub Actions Python 3.11/3.12 CI, contract/schema checks, preview gate, release smoke, and CI RC gate pass on final head `a6c4fda4c9a1dd9a1a891dc0176f394a86343cda`; source artifacts remain bound to code commit `4af2928b3a98ddeafba2abe49a890f3051458afc`.
+- Final independent review and QA passed on the final branch head; PR #26 remains Draft by delivery instruction.
 - Seven-page canonical handback is consumed by `deck-quality`.
 - The fresh production provider page passes signed challenge/result lineage, blueprint/SVG and SVG/PPTX visual gates, independent review evidence, and readback lineage.
 

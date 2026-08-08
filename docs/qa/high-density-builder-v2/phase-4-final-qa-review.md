@@ -29,7 +29,7 @@ Page Package -> NBB selection/seal -> Content Lock -> ImageGen blueprint
 | Fresh provider smoke | pass | `phase-4-provider-smoke-evidence.json` |
 | Provider `deck-quality` render gate | pass | local fresh provider smoke run; raw report excluded |
 | Standard profile regression | pass | `phase-4-standard-profile-evidence.json` |
-| GitHub Actions CI | pass | Python 3.11/3.12 main tests, autoplan smoke, and CI-tier RC gate on `4af2928` |
+| GitHub Actions CI | pass | Python 3.11/3.12 main tests, autoplan smoke, and CI-tier RC gate on final head `a6c4fda` |
 | 73-page external MVP evidence | pass as external evidence | sanitized index only; raw material is excluded |
 
 ## Findings
@@ -44,6 +44,6 @@ Page Package -> NBB selection/seal -> Content Lock -> ImageGen blueprint
 
 ## Release Decision
 
-**Local acceptance: pass. Release readiness: pending.**
+**Local acceptance: pass. CI/review/QA: pass.**
 
-The implementation and local evidence satisfy the current v3 repair scope. PR #26 remains Draft until the fix commit's CI completes and the final independent `$review` and `$qa` accept the candidate. No release-ready claim is made yet.
+The implementation and evidence satisfy the current v3 repair scope. PR #26 remains Draft by delivery instruction; this review does not change Ready-for-review or merge state.
