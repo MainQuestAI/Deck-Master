@@ -27,6 +27,7 @@ Page Package -> NBB selection/seal -> Content Lock -> ImageGen blueprint
 | Diff check | pass | `git diff --check` |
 | Seven-page E2E | pass | `phase-4-seven-page-e2e.json` |
 | Fresh provider smoke | pass | `phase-4-provider-smoke-evidence.json` |
+| GitHub Actions CI | pass | Python 3.11/3.12 main tests, autoplan smoke, and CI-tier RC gate on `ad8a2e4` |
 | 73-page external MVP evidence | pass as external evidence | sanitized index only; raw material is excluded |
 
 ## Findings
@@ -42,4 +43,4 @@ Page Package -> NBB selection/seal -> Content Lock -> ImageGen blueprint
 
 **Local acceptance: pass. Release readiness: pending.**
 
-The implementation and local evidence satisfy the current v3 repair scope. PR #26 remains Draft until the pushed candidate has passed Python 3.11/3.12 CI, contract/schema checks, preview/release/RC gates, the final independent `$review` and `$qa`, and the canonical `deck-quality` handback check. No release-ready claim is made from this local worktree alone.
+The implementation, local evidence, and pushed CI satisfy the current v3 repair scope. PR #26 remains Draft until the final independent `$review` and `$qa` accept the candidate and the canonical `deck-quality` handback check is recorded. No release-ready claim is made yet.

@@ -70,7 +70,8 @@ Raw provider payloads, generated images, private 73-page source material, and lo
 - Coverage: 82%, with the 80% release floor enforced by `coverage report --fail-under=80`.
 - Local static checks: Ruff, compileall, and `git diff --check` pass.
 - The seven-page fixture and fresh production provider smoke pass their lineage, visual, DrawingML, readback, and handback gates.
-- Python 3.11/3.12 CI, contract/schema checks, preview gate, release smoke, CI RC gate, and final independent review remain required on the pushed candidate commit.
+- GitHub Actions Python 3.11/3.12 CI, contract/schema checks, preview gate, release smoke, and CI RC gate pass on commit `ad8a2e4`.
+- Final independent review and QA remain required before changing PR #26 from Draft.
 - Seven-page canonical handback is consumed by `deck-quality`.
 - The fresh production provider page passes signed challenge/result lineage, blueprint/SVG and SVG/PPTX visual gates, independent review evidence, and readback lineage.
 
