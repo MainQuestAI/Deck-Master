@@ -44,7 +44,7 @@ from high_density.engine import (
 from high_density.pptx import PptxEditabilityError, _render_pptx_page, compile_pptx, pptx_path, readback_pptx, trace_path
 from high_density.scene import _fixture_background, build_fixture_scene, load_scene, validate_scene_content, write_scene
 from high_density.style import write_style_lock
-from high_density.svg import SvgVisualError, compile_svg, load_visual_review, preview_path, render_preview, review_path, svg_path, validate_svg
+from high_density.svg import SvgVisualError, compile_svg, load_visual_review, preview_path, render_preview, review_path, svg_path, validate_approved_svg, validate_svg
 from production.page_package import PageContent, PagePackageIndex, build_page_package
 from runtime.run_state import create_run
 
@@ -655,6 +655,30 @@ def test_scene_rejects_missing_required_content(tmp_path: Path) -> None:
         validate_scene_content(scene, lock)
 
 
+def test_scene_required_sets_match_content_lock(tmp_path: Path) -> None:
+    _, lock, scene = _prepared_fixture(tmp_path)
+    scene["required_component_ids"] = scene["required_component_ids"][:-1]
+    scene["required_text_refs"] = scene["required_text_refs"][:-1]
+
+    with pytest.raises(ContractError, match="does not exactly match content lock"):
+        validate_scene_content(scene, lock)
+
+
+def test_callout_removal_blocks_scene(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path)
+    package = read_json(run / "page_packages/P001.json")
+    package["customer_visible"]["callouts"] = [{"text": "Decision gate requires explicit evidence."}]
+    _, page_plan = _approved_page_plan(package)
+    lock = build_content_lock(package, page_plan, nbb_plan_sha256="c" * 64)
+    blueprint = _blueprint(run)
+    scene = build_fixture_scene(lock, sha256_file(blueprint), blueprint_path=blueprint)
+    assert "component.callouts" in scene["required_component_ids"]
+    scene["elements"] = [element for element in scene["elements"] if element.get("text_ref") != "content_lock.customer_visible.callouts"]
+
+    with pytest.raises(ContractError, match="missing required text refs"):
+        validate_scene_content(scene, lock)
+
+
 def test_svg_rejects_missing_required_component(tmp_path: Path) -> None:
     run, _, scene = _prepared_fixture(tmp_path)
     scene["required_component_ids"].append("component.missing")
@@ -721,8 +745,87 @@ def test_image_cannot_cover_p0_text(tmp_path: Path) -> None:
     run, _, scene = _prepared_fixture(tmp_path)
     scene["elements"].append({"element_id": "image.cover", "component_id": "component.proof", "kind": "image", "role": "proof", "priority": "P2", "z_index": 30, "bbox": {"x": 80, "y": 56, "w": 300, "h": 100}, "asset_ref": "proof", "asset_sha256": "a" * 64, "editability_target": "registered_asset", "asset_policy": "registered"})
 
-    with pytest.raises(SvgVisualError, match="covers P0 text"):
+    with pytest.raises(SvgVisualError, match="covers P0/P1 text"):
         compile_svg(scene, run / "high_density_build/svg/cover.svg")
+
+
+def test_production_svg_blocks_near_full_image_and_p0_p1_coverage(tmp_path: Path) -> None:
+    from PIL import Image
+
+    run, lock, scene = _prepared_fixture(tmp_path)
+    asset = run / "assets/proof.png"
+    asset.parent.mkdir(parents=True, exist_ok=True)
+    Image.new("RGB", (32, 32), "#419bfd").save(asset)
+    scene["elements"].append(
+        {
+            "element_id": "image.proof",
+            "component_id": "component.proof",
+            "kind": "image",
+            "role": "proof",
+            "priority": "P2",
+            "z_index": 30,
+            "bbox": {"x": 1400, "y": 866, "w": 120, "h": 24},
+            "asset_ref": "proof",
+            "asset_sha256": sha256_file(asset),
+            "editability_target": "registered_asset",
+            "asset_policy": "registered",
+        }
+    )
+    output = run / "high_density_build/svg/with-proof.svg"
+    compile_svg(scene, output, assets={"proof": asset})
+    validate_approved_svg(output, scene, lock, {"proof": asset})
+    source = output.read_text(encoding="utf-8")
+    near_full = source.replace('x="1400.00" y="866.00" width="120.00" height="24.00"', 'x="20.00" y="20.00" width="900.00" height="800.00"')
+    near_full = near_full.replace('data-pptx-bounds="1400.00,866.00,120.00,24.00"', 'data-pptx-bounds="20.00,20.00,900.00,800.00"')
+    output.write_text(near_full, encoding="utf-8")
+
+    with pytest.raises(SvgVisualError, match="exceeds 35%"):
+        validate_approved_svg(output, scene, lock, {"proof": asset})
+
+    coverage = source.replace('x="1400.00" y="866.00" width="120.00" height="24.00"', 'x="100.00" y="240.00" width="300.00" height="100.00"')
+    coverage = coverage.replace('data-pptx-bounds="1400.00,866.00,120.00,24.00"', 'data-pptx-bounds="100.00,240.00,300.00,100.00"')
+    output.write_text(coverage, encoding="utf-8")
+
+    with pytest.raises(SvgVisualError, match="covers P0/P1 text"):
+        validate_approved_svg(output, scene, lock, {"proof": asset})
+
+
+def test_approved_svg_blocks_unresolvable_font_and_text_overflow(tmp_path: Path) -> None:
+    run, lock, scene = _prepared_fixture(tmp_path)
+    svg = svg_path(run, "P001")
+    source = svg.read_text(encoding="utf-8")
+    svg.write_text(source.replace('font-family="Arial"', 'font-family="Definitely Missing Font 123"', 1), encoding="utf-8")
+
+    with pytest.raises(SvgVisualError, match="unresolvable SVG font"):
+        validate_approved_svg(svg, scene, lock, {})
+
+    svg.write_text(source.replace('font-size="42.00px"', 'font-size="200.00px"', 1), encoding="utf-8")
+    with pytest.raises(SvgVisualError, match="text overflow"):
+        validate_approved_svg(svg, scene, lock, {})
+
+
+def test_blueprint_geometry_mutation_changes_scene_svg_and_metrics(tmp_path: Path) -> None:
+    run, lock, first_scene = _prepared_fixture(tmp_path)
+    original_svg = svg_path(run, "P001")
+    original_svg_sha256 = sha256_file(original_svg)
+    original_preview = preview_path(run, "P001")
+    original_metrics = read_json(run / "high_density_build/reviews/P001.metrics.json")
+    blueprint = run / "high_density_build/blueprints/P001.svg"
+    mutated = blueprint.read_text(encoding="utf-8").replace('x="80" y="200" width="744"', 'x="120" y="200" width="704"', 1)
+    blueprint.write_text(mutated, encoding="utf-8")
+    second_scene = build_fixture_scene(lock, sha256_file(blueprint), blueprint_path=blueprint)
+    second_svg = run / "high_density_build/svg/P001.svg"
+    compile_svg(second_scene, second_svg)
+    second_preview = run / "high_density_build/previews/P001.mutated.png"
+    render_preview(second_svg, second_preview)
+    from high_density.visual import compute_visual_metrics
+
+    metrics = compute_visual_metrics(run, second_scene, original_preview, second_preview)
+
+    assert first_scene["scene_signature"] != second_scene["scene_signature"]
+    assert original_svg_sha256 != sha256_file(second_svg)
+    assert metrics["inputs"]["candidate_sha256"] != original_metrics["inputs"]["candidate_sha256"]
+    assert metrics["values"] != original_metrics["values"]
 
 
 def test_svg_mutation_changes_pptx_trace_and_render(tmp_path: Path) -> None:

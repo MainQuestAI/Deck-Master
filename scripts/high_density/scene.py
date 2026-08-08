@@ -180,6 +180,31 @@ def _fixture_background(blueprint_path: Path | None) -> str:
     return "#f7f9fb"
 
 
+def _fixture_blueprint_boxes(blueprint_path: Path | None, count: int) -> list[dict[str, float]]:
+    if blueprint_path is None or blueprint_path.suffix.lower() != ".svg":
+        return []
+    try:
+        root = ElementTree.fromstring(blueprint_path.read_text(encoding="utf-8"))
+    except (OSError, ElementTree.ParseError):
+        return []
+    boxes: list[dict[str, float]] = []
+    for node in root.iter():
+        if node.tag.rsplit("}", 1)[-1] != "rect":
+            continue
+        try:
+            box = {
+                "x": float(node.get("x") or 0),
+                "y": float(node.get("y") or 0),
+                "w": float(node.get("width") or 0),
+                "h": float(node.get("height") or 0),
+            }
+        except (TypeError, ValueError):
+            continue
+        if box["y"] >= 180 and box["y"] + box["h"] <= 810 and box["w"] >= 240 and box["h"] >= 120:
+            boxes.append(box)
+    return boxes[:count] if len(boxes) >= count else []
+
+
 def build_fixture_scene(lock: dict[str, Any], blueprint_sha256: str, blueprint_path: Path | None = None, *, layout_id: str = "") -> dict[str, Any]:
     customer_visible = lock.get("customer_visible") or {}
     enrichment = lock.get("enrichment") or {}
@@ -188,6 +213,7 @@ def build_fixture_scene(lock: dict[str, Any], blueprint_sha256: str, blueprint_p
     body_blocks = list(customer_visible.get("body_blocks") or [])
     labels = list(customer_visible.get("labels") or [])
     footnotes = list(customer_visible.get("footnotes") or [])
+    callouts = list(customer_visible.get("callouts") or [])
     layout_id = layout_id or str((enrichment.get("material_pool") or {}).get("recommended_visual") or "framework")
     background = _fixture_background(blueprint_path)
     elements: list[dict[str, Any]] = []
@@ -200,7 +226,7 @@ def build_fixture_scene(lock: dict[str, Any], blueprint_sha256: str, blueprint_p
         elements.append(_text_element(element_id="subtitle.main", role="subtitle", priority="P1", bbox={"x": 80, "y": 130, "w": 1350, "h": 32}, text=subtitle, text_ref="content_lock.customer_visible.subtitle", preferred_size=18, min_size=14, max_lines=1, color="#556474"))
 
     count = max(1, len(body_blocks))
-    layout_boxes = _layout_boxes(layout_id, count)
+    layout_boxes = _fixture_blueprint_boxes(blueprint_path, count) or _layout_boxes(layout_id, count)
     palette = ["#ffffff", "#eef5fb", "#fff3e8", "#edf7f1", "#f3effa", "#f8f1ed"]
     for index, block in enumerate(body_blocks):
         box = layout_boxes[index]
@@ -221,6 +247,10 @@ def build_fixture_scene(lock: dict[str, Any], blueprint_sha256: str, blueprint_p
             elements.append(_text_element(element_id=f"{block_id}.body", role="body", priority="P1", bbox={"x": x + 24, "y": y + body_y, "w": card_w - 48, "h": body_height}, text=body_text, text_ref=f"content_lock.customer_visible.body_blocks.{index}", preferred_size=18, min_size=13, max_lines=6, color="#364655", component_id=component_id))
 
     so_what = str(enrichment.get("so_what") or "")
+    if callouts:
+        callout_text = _reference_text(callouts, "callout")
+        elements.append(_rect_element(element_id="callouts.panel", role="callout", priority="P0", bbox={"x": 80, "y": 764, "w": 1512, "h": 40}, fill="#fff7e8", stroke="#e6c989", radius=6, component_id="component.callouts", z_index=4))
+        elements.append(_text_element(element_id="callouts.text", role="callout", priority="P0", bbox={"x": 100, "y": 771, "w": 1472, "h": 26}, text=callout_text, text_ref="content_lock.customer_visible.callouts", preferred_size=14, min_size=10, max_lines=1, color="#6d4e13", weight="700", component_id="component.callouts"))
     if so_what:
         elements.append(_rect_element(element_id="so_what.panel", role="so_what", priority="P0", bbox={"x": 80, "y": 820, "w": 1512, "h": 44}, fill="#eaf2fb", stroke="#c7d9ec", radius=6, component_id="component.so_what", z_index=4))
         elements.append(_text_element(element_id="so_what.text", role="so_what", priority="P0", bbox={"x": 100, "y": 828, "w": 1472, "h": 28}, text=so_what, text_ref="content_lock.enrichment.so_what", preferred_size=15, min_size=11, max_lines=1, color="#1f4f7d", weight="700", component_id="component.so_what"))
@@ -343,6 +373,21 @@ def _reference_text(value: Any, role: str) -> str:
 
 
 def validate_scene_content(scene: dict[str, Any], lock: dict[str, Any]) -> None:
+    lock_components = [str(value) for value in lock.get("required_component_ids") or []]
+    scene_components = [str(value) for value in scene.get("required_component_ids") or []]
+    if scene_components != lock_components:
+        raise ContractError("scene required component set does not exactly match content lock")
+    lock_text_requirements = list(lock.get("required_text_refs") or [])
+    scene_text_requirements = list(scene.get("required_text_refs") or [])
+    if scene_text_requirements != lock_text_requirements:
+        raise ContractError("scene required text set does not exactly match content lock")
+    signature = {
+        str(item.get("component_id") or ""): bool(item.get("present"))
+        for item in scene.get("component_signature") or []
+        if isinstance(item, dict)
+    }
+    if set(signature) != set(lock_components) or not all(signature.values()):
+        raise ContractError("scene component signature does not exactly cover content lock")
     actual_refs: set[str] = set()
     for element in scene.get("elements", []):
         if element.get("kind") != "text":
