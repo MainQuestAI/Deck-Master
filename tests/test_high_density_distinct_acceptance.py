@@ -1,10 +1,7 @@
 from __future__ import annotations
 
 import json
-import inspect
 import sys
-import tempfile
-import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -15,7 +12,7 @@ if str(ROOT / "scripts") not in sys.path:
     sys.path.insert(0, str(ROOT / "scripts"))
 
 from high_density.content import load_nbb_plan, load_page_packages
-from high_density.contracts import read_json, sha256_file
+from high_density.contracts import assert_valid, read_json, sha256_file, sha256_json, write_json
 from high_density.engine import prepare_high_density, run_high_density
 from high_density.provider_smoke import ProviderSmokeError, build_provider_smoke_evidence
 from high_density.scene import load_scene
@@ -134,15 +131,27 @@ def test_provider_smoke_evidence_requires_real_provider_metadata(tmp_path: Path)
     prepare_high_density(run)
     assert run_high_density(run)["status"] == "completed"
 
-    with pytest.raises(ProviderSmokeError, match="provider metadata"):
+    with pytest.raises(ProviderSmokeError, match="fresh provider metadata"):
         build_provider_smoke_evidence(run, page_id="P001")
 
-    from high_density.contracts import write_json
-
+    prompt = read_json(run / "high_density_build/prompts/P001.blueprint_prompt.json")
+    challenge = prompt["provider_challenge"]
+    provider = {
+        "tool": "image_gen",
+        "model": "fresh-provider-fixture",
+        "request_id": "request-fixture-001",
+        "challenge_nonce": challenge["nonce"],
+        "prompt_sha256": prompt["prompt_sha256"],
+        "requested_at": challenge["issued_at"],
+        "responded_at": challenge["issued_at"],
+    }
+    provider["request_sha256"] = sha256_json(
+        {key: provider[key] for key in ("tool", "model", "request_id", "challenge_nonce", "prompt_sha256", "requested_at")}
+    )
     for filename in ("P001.blueprint_manifest.json", "P001.manifest.json"):
         manifest_path = run / "high_density_build" / "blueprints" / filename
         manifest = read_json(manifest_path)
-        manifest["provider"] = {"tool": "image_gen", "model": "fresh-provider-fixture", "request_id": "request-fixture-001"}
+        manifest["provider"] = provider
         write_json(manifest_path, manifest)
 
     evidence = build_provider_smoke_evidence(run, page_id="P001", output=run / "high_density_build/provider_smoke_evidence.json")
@@ -158,16 +167,32 @@ def test_provider_smoke_evidence_requires_real_provider_metadata(tmp_path: Path)
         build_provider_smoke_evidence(run, page_id="P001")
 
 
-def load_tests(loader: unittest.TestLoader, tests: unittest.TestSuite, pattern: str | None) -> unittest.TestSuite:
-    """Expose distinct acceptance functions to the unittest CI gate."""
-    suite = unittest.TestSuite()
-    for name, test_fn in sorted(globals().items()):
-        if not name.startswith("test_") or not callable(test_fn):
-            continue
+def test_provider_challenge_lineage_cannot_use_stale_artifacts(tmp_path: Path) -> None:
+    run = _distinct_run(tmp_path, page_count=1)
+    prepare_high_density(run)
+    assert run_high_density(run)["status"] == "completed"
+    prompt = read_json(run / "high_density_build/prompts/P001.blueprint_prompt.json")
 
-        def invoke(fn: object = test_fn) -> None:
-            with tempfile.TemporaryDirectory() as directory:
-                fn(Path(directory))
+    for filename in ("P001.blueprint_manifest.json", "P001.manifest.json"):
+        manifest_path = run / "high_density_build" / "blueprints" / filename
+        manifest = read_json(manifest_path)
+        provider = manifest["provider"]
+        provider["challenge_nonce"] = "0" * 32
+        provider["request_sha256"] = sha256_json(
+            {key: provider[key] for key in ("tool", "model", "request_id", "challenge_nonce", "prompt_sha256", "requested_at")}
+        )
+        write_json(manifest_path, manifest)
 
-        suite.addTest(unittest.FunctionTestCase(invoke, description=name))
-    return suite
+    assert prompt["provider_challenge"]["nonce"] != "0" * 32
+    with pytest.raises(ProviderSmokeError, match="provider challenge is stale"):
+        build_provider_smoke_evidence(run, page_id="P001")
+
+
+def test_committed_provider_smoke_evidence_is_sanitized_and_valid() -> None:
+    evidence = read_json(ROOT / "docs/qa/high-density-builder-v2/phase-4-provider-smoke-evidence.json")
+
+    assert_valid("provider_smoke", evidence)
+    serialized = json.dumps(evidence, ensure_ascii=False)
+    assert "/Users/" not in serialized
+    assert "/private/" not in serialized
+    assert evidence["raw_provider_payload_included"] is False

@@ -2,14 +2,12 @@ from __future__ import annotations
 
 import base64
 import hashlib
-import inspect
 import json
 import sys
-import tempfile
-import unittest
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -23,6 +21,7 @@ from high_density.contracts import ContractError, assert_valid, read_json
 from production.page_package import PageContent, PagePackageIndex, build_page_package
 from runtime.next_step import resolve_next_step
 from runtime.run_state import create_run
+from deck_master import command_quality_gate
 
 
 FIXTURE_DIR = ROOT / "tests" / "fixtures" / "high_density"
@@ -103,6 +102,17 @@ def test_seven_page_fixture_completes_native_handback(tmp_path: Path) -> None:
     assert completed_next_step["recommended_skill"] == "deck-quality"
     assert completed_next_step["status"] == "needs_quality_review"
     assert "quality-gate render" in completed_next_step["next_command"]
+    quality = command_quality_gate(
+        SimpleNamespace(
+            run_dir=str(run),
+            gate="render",
+            artifact=str(run / "high_density_build/pptx/deck_high_density.pptx"),
+            expected_pages=7,
+            forbidden=[],
+        )
+    )
+    assert quality["status"] == "pass"
+    assert quality["blocks_delivery"] is False
     first_svg = next((run / "high_density_build/svg").glob("*.svg"))
     assert "<image" not in first_svg.read_text(encoding="utf-8").lower()
     with zipfile.ZipFile(run / "high_density_build/pptx/deck_high_density.pptx") as package:
@@ -429,22 +439,3 @@ def test_high_density_contract_rejects_unsafe_lineage_path() -> None:
     }
     with pytest.raises(ContractError):
         assert_valid("content_lock", payload)
-
-
-def load_tests(loader: unittest.TestLoader, tests: unittest.TestSuite, pattern: str | None) -> unittest.TestSuite:
-    """Expose pytest-style regression functions to the repository unittest gate."""
-    suite = unittest.TestSuite()
-    for name, test_fn in sorted(globals().items()):
-        if not name.startswith("test_") or not callable(test_fn):
-            continue
-
-        def invoke(fn: object = test_fn) -> None:
-            parameters = inspect.signature(fn).parameters
-            with tempfile.TemporaryDirectory() as directory:
-                if "tmp_path" in parameters:
-                    fn(Path(directory))
-                else:
-                    fn()
-
-        suite.addTest(unittest.FunctionTestCase(invoke, description=name))
-    return suite

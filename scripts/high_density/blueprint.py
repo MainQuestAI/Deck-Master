@@ -3,6 +3,8 @@ from __future__ import annotations
 import copy
 import json
 import re
+import secrets
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -27,6 +29,48 @@ class BlueprintRequired(ContractError):
 
 class BlueprintInvalid(ContractError):
     pass
+
+
+def _parse_timestamp(value: Any, *, field: str, page_id: str) -> datetime:
+    try:
+        parsed = datetime.fromisoformat(str(value or "").replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise BlueprintInvalid(f"blueprint {field} timestamp is invalid on page {page_id}") from exc
+    if parsed.tzinfo is None:
+        raise BlueprintInvalid(f"blueprint {field} timestamp must include a timezone on page {page_id}")
+    return parsed
+
+
+def _provider_request_sha256(provider: dict[str, Any]) -> str:
+    return sha256_json(
+        {
+            "tool": str(provider.get("tool") or ""),
+            "model": str(provider.get("model") or ""),
+            "request_id": str(provider.get("request_id") or ""),
+            "challenge_nonce": str(provider.get("challenge_nonce") or ""),
+            "prompt_sha256": str(provider.get("prompt_sha256") or ""),
+            "requested_at": str(provider.get("requested_at") or ""),
+        }
+    )
+
+
+def _validate_provider_lineage(prompt: dict[str, Any], provider: dict[str, Any], page_id: str) -> None:
+    challenge = prompt.get("provider_challenge") or {}
+    required = ("tool", "model", "request_id", "challenge_nonce", "prompt_sha256", "request_sha256", "requested_at", "responded_at")
+    missing = [field for field in required if not str(provider.get(field) or "")]
+    if missing:
+        raise BlueprintInvalid(f"blueprint provider lineage is incomplete on page {page_id}: {', '.join(missing)}")
+    if str(provider["challenge_nonce"]) != str(challenge.get("nonce") or ""):
+        raise BlueprintInvalid(f"blueprint provider challenge is stale on page {page_id}")
+    if str(provider["prompt_sha256"]) != str(prompt.get("prompt_sha256") or ""):
+        raise BlueprintInvalid(f"blueprint provider prompt hash is stale on page {page_id}")
+    if str(provider["request_sha256"]) != _provider_request_sha256(provider):
+        raise BlueprintInvalid(f"blueprint provider request hash is stale on page {page_id}")
+    issued_at = _parse_timestamp(challenge.get("issued_at"), field="challenge issued_at", page_id=page_id)
+    requested_at = _parse_timestamp(provider.get("requested_at"), field="provider requested_at", page_id=page_id)
+    responded_at = _parse_timestamp(provider.get("responded_at"), field="provider responded_at", page_id=page_id)
+    if requested_at < issued_at or responded_at < requested_at:
+        raise BlueprintInvalid(f"blueprint provider timestamp chain is stale on page {page_id}")
 
 
 def _assert_page_id(page_id: str) -> None:
@@ -129,7 +173,13 @@ def _content_summary(lock: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def build_blueprint_prompt(lock: dict[str, Any], style_lock: dict[str, Any] | None = None, *, nbb_plan_sha256: str = "") -> str:
+def build_blueprint_prompt(
+    lock: dict[str, Any],
+    style_lock: dict[str, Any] | None = None,
+    *,
+    nbb_plan_sha256: str = "",
+    provider_challenge_nonce: str = "",
+) -> str:
     style = style_lock or {"style_id": "unlocked", "palette": {}, "grid": {}, "typography": {}}
     summary = _content_summary(lock)
     style_name = str(style.get("name") or style.get("style_id") or "locked style")
@@ -154,6 +204,7 @@ def build_blueprint_prompt(lock: dict[str, Any], style_lock: dict[str, Any] | No
             f"Target language: {summary['target_language']}.",
             f"Locked visual style: {style_name}; palette={json.dumps(style.get('palette') or {}, ensure_ascii=False, sort_keys=True)}; grid={json.dumps(style.get('grid') or {}, ensure_ascii=False, sort_keys=True)}; typography={json.dumps(style.get('typography') or {}, ensure_ascii=False, sort_keys=True)}; chart_language={json.dumps(style.get('chart_language') or {}, ensure_ascii=False, sort_keys=True)}; table_language={json.dumps(style.get('table_language') or {}, ensure_ascii=False, sort_keys=True)}; surface_system={json.dumps(style.get('surface_system') or {}, ensure_ascii=False, sort_keys=True)}; density_rules={json.dumps(style.get('density_rules') or {}, ensure_ascii=False, sort_keys=True)}.",
             f"NBB plan lineage: {nbb_plan_sha256 or lock.get('lineage', {}).get('nbb_plan_sha256', 'unavailable')}.",
+            f"Provider challenge nonce: {provider_challenge_nonce}. Return this nonce in request metadata and never render it on the slide." if provider_challenge_nonce else "",
             "Use a contained 16:9 slide frame with dense but readable information regions, explicit hierarchy, evidence anchors, and a visible SO WHAT area.",
             "Treat all visible text as composition guidance. The native redraw will restore exact locked text from the content lock.",
             "Do not invent facts, numbers, logos, quotes, citations, page numbers, internal labels, prompt labels, wireframe labels, generation annotations, or hidden production notes.",
@@ -162,7 +213,13 @@ def build_blueprint_prompt(lock: dict[str, Any], style_lock: dict[str, Any] | No
 
 
 def build_blueprint_prompt_artifact(root: Path, page_id: str, lock: dict[str, Any], *, style_lock: dict[str, Any] | None = None, nbb_plan_sha256: str = "") -> Path:
-    prompt_text = build_blueprint_prompt(lock, style_lock, nbb_plan_sha256=nbb_plan_sha256)
+    challenge = {"nonce": secrets.token_hex(16), "issued_at": utc_now()}
+    prompt_text = build_blueprint_prompt(
+        lock,
+        style_lock,
+        nbb_plan_sha256=nbb_plan_sha256,
+        provider_challenge_nonce=challenge["nonce"],
+    )
     style_hash = str((style_lock or {}).get("style_lock_sha256") or "0" * 64)
     artifact = {
         "schema_version": "deck_blueprint_prompt.v1",
@@ -180,6 +237,7 @@ def build_blueprint_prompt_artifact(root: Path, page_id: str, lock: dict[str, An
         "content_summary": _content_summary(lock),
         "required_components": list(lock.get("required_component_ids") or []),
         "forbidden_items": ["page numbers", "internal labels", "prompt labels", "wireframe labels", "generation annotations", "hidden production notes"],
+        "provider_challenge": challenge,
         "created_at": utc_now(),
     }
     from .contracts import assert_v2
@@ -238,7 +296,16 @@ def ensure_blueprint_manifest(
         raise BlueprintInvalid(f"blueprint prompt identity is stale on page {page_id}")
     if str(prompt.get("nbb_plan_sha256") or "") != expected_nbb_sha or str(prompt.get("style_lock_sha256") or "") != expected_style_sha:
         raise BlueprintInvalid(f"blueprint prompt lineage is stale on page {page_id}")
-    expected_prompt = build_blueprint_prompt(lock, style_lock, nbb_plan_sha256=nbb_plan_sha256 or str((lock.get("lineage") or {}).get("nbb_plan_sha256") or "0" * 64))
+    challenge = prompt.get("provider_challenge") or {}
+    challenge_nonce = str(challenge.get("nonce") or "")
+    if not challenge_nonce:
+        raise BlueprintInvalid(f"blueprint provider challenge is missing on page {page_id}")
+    expected_prompt = build_blueprint_prompt(
+        lock,
+        style_lock,
+        nbb_plan_sha256=nbb_plan_sha256 or str((lock.get("lineage") or {}).get("nbb_plan_sha256") or "0" * 64),
+        provider_challenge_nonce=challenge_nonce,
+    )
     expected_prompt_sha = sha256_json(expected_prompt)
     if prompt.get("prompt_sha256") != expected_prompt_sha or prompt.get("content_lock_sha256") != lock.get("content_lock_sha256"):
         raise BlueprintInvalid(f"blueprint prompt is stale on page {page_id}")
@@ -271,6 +338,21 @@ def ensure_blueprint_manifest(
     internal_annotations = list(existing.get("internal_annotations") or [])
     if internal_annotations:
         raise BlueprintInvalid(f"blueprint contains internal annotations on page {page_id}")
+    provider = copy.deepcopy(existing.get("provider") or {})
+    placeholder_provider = not provider or any(str(provider.get(field) or "").lower() in {"", "unavailable", "unknown"} for field in ("tool", "model", "request_id"))
+    if placeholder_provider:
+        fixture_provider = str(approval_record.get("source") or "") == "fixture_runtime"
+        provider = {
+            "tool": "fixture_runtime" if fixture_provider else "agent_imagegen",
+            "model": "deterministic-svg-fixture" if fixture_provider else "unavailable",
+            "request_id": f"fixture-{page_id}-{expected_prompt_sha[:12]}" if fixture_provider else "unavailable",
+            "challenge_nonce": challenge_nonce,
+            "prompt_sha256": expected_prompt_sha,
+            "requested_at": str(challenge.get("issued_at") or utc_now()),
+            "responded_at": str(challenge.get("issued_at") or utc_now()),
+        }
+        provider["request_sha256"] = _provider_request_sha256(provider)
+    _validate_provider_lineage(prompt, provider, page_id)
     manifest = {
         "schema_version": "deck_blueprint_manifest.v2",
         "run_id": str(lock["run_id"]),
@@ -287,7 +369,7 @@ def ensure_blueprint_manifest(
         "source_to_scene_transform": transform,
         "fit_mode": "approved_frame" if existing.get("slide_frame") else "contain",
         "internal_annotations": internal_annotations,
-        "provider": existing.get("provider") or {"tool": "agent_imagegen", "model": "unavailable", "request_id": "unavailable"},
+        "provider": provider,
         "approval": approval_record,
         "approved": True,
         "created_at": str(existing.get("created_at") or utc_now()),
@@ -330,6 +412,7 @@ def load_blueprint_manifest(root: Path, page_id: str, *, expected_run_id: str | 
         raise BlueprintInvalid(f"blueprint prompt content hash is stale on page {page_id}")
     if str(manifest.get("image_sha256") or "") != sha256_file(image):
         raise BlueprintInvalid(f"blueprint hash is stale on page {page_id}")
+    _validate_provider_lineage(prompt, manifest.get("provider") or {}, page_id)
     dimensions = image_dimensions(image)
     source_canvas = manifest.get("source_canvas") or {}
     if (float(source_canvas.get("width") or 0), float(source_canvas.get("height") or 0)) != dimensions:

@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -16,6 +17,16 @@ class ProviderSmokeError(ContractError):
 
 def _hash_text(value: str) -> str:
     return sha256_bytes(value.encode("utf-8"))
+
+
+def _timestamp(value: Any, *, field: str, page_id: str) -> datetime:
+    try:
+        parsed = datetime.fromisoformat(str(value or "").replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise ProviderSmokeError(f"provider smoke {field} timestamp is invalid on page {page_id}") from exc
+    if parsed.tzinfo is None:
+        raise ProviderSmokeError(f"provider smoke {field} timestamp must include a timezone on page {page_id}")
+    return parsed
 
 
 def _artifact_ref(root: Path, page: dict[str, Any], key: str) -> dict[str, str]:
@@ -45,13 +56,29 @@ def build_provider_smoke_evidence(run_dir: str | Path, *, page_id: str = "", out
         raise ProviderSmokeError("provider smoke must target exactly one completed page")
     page = pages[0]
     selected_page_id = str(page.get("page_id") or "")
-    blueprint = load_blueprint_manifest(root, selected_page_id, expected_run_id=str(manifest.get("run_id") or ""))
+    try:
+        blueprint = load_blueprint_manifest(root, selected_page_id, expected_run_id=str(manifest.get("run_id") or ""))
+    except ContractError as exc:
+        raise ProviderSmokeError(str(exc)) from exc
     provider = blueprint.get("provider") or {}
     tool = str(provider.get("tool") or "").strip()
     model = str(provider.get("model") or "").strip()
     request_id = str(provider.get("request_id") or "").strip()
-    if not tool or not model or not request_id or any(value.lower() in {"unavailable", "unknown"} for value in (tool, model, request_id)):
-        raise ProviderSmokeError(f"provider metadata is missing or placeholder on page {selected_page_id}")
+    if (
+        not tool
+        or not model
+        or not request_id
+        or tool in {"fixture_runtime", "agent_imagegen"}
+        or any(value.lower() in {"unavailable", "unknown"} for value in (tool, model, request_id))
+    ):
+        raise ProviderSmokeError(f"fresh provider metadata is missing or placeholder on page {selected_page_id}")
+    prompt_path = safe_run_path(root, str(blueprint.get("prompt_ref") or ""))
+    prompt = read_json(prompt_path)
+    challenge = prompt.get("provider_challenge") or {}
+    if str(provider.get("challenge_nonce") or "") != str(challenge.get("nonce") or ""):
+        raise ProviderSmokeError(f"provider challenge lineage is stale on page {selected_page_id}")
+    if str(provider.get("prompt_sha256") or "") != str(prompt.get("prompt_sha256") or ""):
+        raise ProviderSmokeError(f"provider prompt lineage is stale on page {selected_page_id}")
 
     readback_ref = _artifact_ref(root, page, "readback_report")
     readback = read_json(root / readback_ref["path"])
@@ -71,6 +98,7 @@ def build_provider_smoke_evidence(run_dir: str | Path, *, page_id: str = "", out
     if str(blueprint.get("content_lock_sha256") or "") != content_lock_sha:
         raise ProviderSmokeError(f"blueprint content lock lineage is stale on page {selected_page_id}")
     svg_ref = _artifact_ref(root, page, "svg")
+    scene_ref = _artifact_ref(root, page, "page_scene")
     trace_ref = _artifact_ref(root, page, "pptx_trace")
     trace_wrapper = read_json(root / trace_ref["path"])
     trace = trace_wrapper.get("trace") if isinstance(trace_wrapper.get("trace"), dict) else {}
@@ -85,21 +113,55 @@ def build_provider_smoke_evidence(run_dir: str | Path, *, page_id: str = "", out
     pptx_sha = sha256_file(pptx_path)
     if str(deck_trace.get("pptx_sha256") or "") != pptx_sha or str(readback.get("pptx_sha256") or "") != pptx_sha:
         raise ProviderSmokeError(f"PPTX lineage is stale on page {selected_page_id}")
+    approval = blueprint.get("approval") or {}
+    timeline = [
+        ("challenge", _timestamp(challenge.get("issued_at"), field="challenge", page_id=selected_page_id)),
+        ("request", _timestamp(provider.get("requested_at"), field="request", page_id=selected_page_id)),
+        ("response", _timestamp(provider.get("responded_at"), field="response", page_id=selected_page_id)),
+        ("approval", _timestamp(approval.get("approved_at"), field="approval", page_id=selected_page_id)),
+        ("visual review", _timestamp(review.get("created_at"), field="visual review", page_id=selected_page_id)),
+        ("readback", _timestamp(readback.get("created_at"), field="readback", page_id=selected_page_id)),
+    ]
+    for (previous_name, previous), (current_name, current) in zip(timeline, timeline[1:], strict=False):
+        if current < previous:
+            raise ProviderSmokeError(f"provider smoke timeline is stale on page {selected_page_id}: {current_name} precedes {previous_name}")
     evidence = {
         "schema_version": "deck_high_density_provider_smoke.v1",
         "run_id_sha256": _hash_text(str(manifest.get("run_id") or "")),
         "page_id": selected_page_id,
         "status": "pass",
-        "provider": {"tool": tool, "model": model, "request_id_sha256": _hash_text(request_id)},
+        "provider": {
+            "tool": tool,
+            "model": model,
+            "request_id_sha256": _hash_text(request_id),
+            "request_sha256": str(provider.get("request_sha256") or ""),
+            "challenge_nonce_sha256": _hash_text(str(challenge.get("nonce") or "")),
+            "requested_at": str(provider.get("requested_at") or ""),
+            "responded_at": str(provider.get("responded_at") or ""),
+        },
         "lineage": {
             "prompt_sha256": str(blueprint.get("prompt_sha256") or ""),
             "image_sha256": str(blueprint.get("image_sha256") or ""),
+            "scene_sha256": scene_ref["sha256"],
+            "svg_sha256": svg_ref["sha256"],
+            "pptx_sha256": pptx_sha,
+            "readback_sha256": readback_ref["sha256"],
             "content_lock_sha256": content_lock_sha,
             "nbb_plan_sha256": str(blueprint.get("nbb_plan_sha256") or ""),
             "style_lock_sha256": str(blueprint.get("style_lock_sha256") or ""),
         },
+        "timeline": {
+            "challenge_issued_at": str(challenge.get("issued_at") or ""),
+            "requested_at": str(provider.get("requested_at") or ""),
+            "responded_at": str(provider.get("responded_at") or ""),
+            "approved_at": str(approval.get("approved_at") or ""),
+            "visual_reviewed_at": str(review.get("created_at") or ""),
+            "readback_at": str(readback.get("created_at") or ""),
+        },
         "artifacts": {
+            "prompt": {"path": run_relative(root, prompt_path), "sha256": sha256_file(prompt_path)},
             "blueprint": _artifact_ref(root, page, "blueprint"),
+            "page_scene": scene_ref,
             "svg": svg_ref,
             "content_lock": content_lock_ref,
             "pptx": {"path": run_relative(root, pptx_path), "sha256": pptx_sha},

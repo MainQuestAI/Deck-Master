@@ -1,0 +1,147 @@
+{
+  "schema_version": "deck_high_density_acceptance_matrix.v1",
+  "status": "pass",
+  "engineering_spec": "docs/specs/deck-master-high-density-builder-core-engineering-spec-v2.md",
+  "test_session": {
+    "command": ".venv/bin/pytest -q",
+    "result": "pass",
+    "tests_passed": 1341,
+    "subtests_passed": 105,
+    "executed_at": "2026-08-08"
+  },
+  "acceptance_functions": [
+    {
+      "id": "AF-01",
+      "gate": "evidenced NBB density",
+      "tests": ["tests/test_high_density_builder_v2.py::test_nbb_blocks_low_density_without_evidence"],
+      "status": "pass"
+    },
+    {
+      "id": "AF-02",
+      "gate": "unsupported factual claims blocked",
+      "tests": ["tests/test_high_density_builder_v2.py::test_nbb_rejects_unsupported_factual_claim"],
+      "status": "pass"
+    },
+    {
+      "id": "AF-03",
+      "gate": "content-aware prompt lineage",
+      "tests": ["tests/test_high_density_builder_v2.py::test_blueprint_prompt_changes_with_locked_content"],
+      "status": "pass"
+    },
+    {
+      "id": "AF-04",
+      "gate": "prompt precedes blueprint image",
+      "tests": ["tests/test_high_density_builder_v2.py::test_blueprint_manifest_requires_prompt_before_image"],
+      "status": "pass"
+    },
+    {
+      "id": "AF-05",
+      "gate": "blueprint geometry controls Scene, SVG, and metrics",
+      "tests": ["tests/test_high_density_builder_v2.py::test_blueprint_geometry_mutation_changes_scene_svg_and_metrics"],
+      "status": "pass"
+    },
+    {
+      "id": "AF-06",
+      "gate": "required callouts cannot be dropped",
+      "tests": ["tests/test_high_density_builder_v2.py::test_callout_removal_blocks_scene"],
+      "status": "pass"
+    },
+    {
+      "id": "AF-07",
+      "gate": "required components cannot be dropped",
+      "tests": ["tests/test_high_density_builder_v2.py::test_svg_rejects_missing_required_component"],
+      "status": "pass"
+    },
+    {
+      "id": "AF-08",
+      "gate": "visual metrics must be artifact-derived",
+      "tests": ["tests/test_high_density_builder_v2.py::test_visual_review_rejects_handwritten_metrics"],
+      "status": "pass"
+    },
+    {
+      "id": "AF-09",
+      "gate": "near-full-page images blocked",
+      "tests": [
+        "tests/test_high_density_builder_v2.py::test_near_full_image_is_blocked",
+        "tests/test_high_density_builder_v2.py::test_production_svg_blocks_near_full_image_and_p0_p1_coverage"
+      ],
+      "status": "pass"
+    },
+    {
+      "id": "AF-10",
+      "gate": "images cannot cover P0 or P1 content",
+      "tests": [
+        "tests/test_high_density_builder_v2.py::test_image_cannot_cover_p0_text",
+        "tests/test_high_density_builder_v2.py::test_production_svg_blocks_near_full_image_and_p0_p1_coverage"
+      ],
+      "status": "pass"
+    },
+    {
+      "id": "AF-11",
+      "gate": "visible SVG mutation changes trace, PPTX, and render",
+      "tests": ["tests/test_high_density_builder_v2.py::test_svg_mutation_changes_pptx_trace_and_render"],
+      "status": "pass"
+    },
+    {
+      "id": "AF-12",
+      "gate": "Scene visual mutation does not change PPTX authority output",
+      "tests": ["tests/test_high_density_builder_v2.py::test_scene_mutation_without_svg_change_does_not_change_pptx"],
+      "status": "pass"
+    },
+    {
+      "id": "AF-13",
+      "gate": "unsupported SVG fails closed",
+      "tests": ["tests/test_high_density_builder_v2.py::test_unsupported_svg_element_blocks_compile"],
+      "status": "pass"
+    },
+    {
+      "id": "AF-14",
+      "gate": "Page Package mutation invalidates downstream artifacts",
+      "tests": ["tests/test_high_density_builder_v2.py::test_prepare_invalidates_downstream_when_page_package_changes"],
+      "status": "pass"
+    },
+    {
+      "id": "AF-15",
+      "gate": "malformed Page Package rejected",
+      "tests": ["tests/test_high_density_builder_v2.py::test_prepare_rejects_malformed_page_package"],
+      "status": "pass"
+    },
+    {
+      "id": "AF-16",
+      "gate": "cross-run Page Package rejected",
+      "tests": ["tests/test_high_density_builder_v2.py::test_prepare_rejects_cross_run_page_package"],
+      "status": "pass"
+    },
+    {
+      "id": "AF-17",
+      "gate": "unsafe retry page identifiers rejected",
+      "tests": ["tests/test_high_density_builder_v2.py::test_retry_rejects_unknown_or_unsafe_page_id"],
+      "status": "pass"
+    },
+    {
+      "id": "AF-18",
+      "gate": "missing visual dependencies block capability readiness",
+      "tests": ["tests/test_high_density_builder_v2.py::test_capability_blocks_missing_visual_dependency"],
+      "status": "pass"
+    },
+    {
+      "id": "AF-19",
+      "gate": "watch waits for a stable terminal state",
+      "tests": ["tests/test_high_density_builder_v2.py::test_watch_waits_until_stable_end_state"],
+      "status": "pass"
+    },
+    {
+      "id": "AF-20",
+      "gate": "wide and tall source frames remain inside source canvas",
+      "tests": ["tests/test_high_density_builder_v2.py::test_wide_and_tall_frames_remain_inside_source_canvas"],
+      "status": "pass"
+    }
+  ],
+  "release_evidence": {
+    "seven_page_e2e": "docs/qa/high-density-builder-v2/phase-4-seven-page-e2e.json",
+    "fresh_provider_smoke": "docs/qa/high-density-builder-v2/phase-4-provider-smoke-evidence.json",
+    "provider_challenge": "docs/qa/high-density-builder-v2/phase-4-provider-challenge-status.json",
+    "external_73_page_mvp": "docs/qa/high-density-builder-v2/phase-4-73-page-external-mvp-index.json"
+  },
+  "raw_private_artifacts_committed": false
+}

@@ -3,7 +3,7 @@
   "$id": "https://deck-master.local/contracts/high-density-provider-smoke.v1.schema.json",
   "title": "High-Density Provider Smoke Evidence v1",
   "type": "object",
-  "required": ["schema_version", "run_id_sha256", "page_id", "status", "provider", "lineage", "artifacts", "gates", "created_at"],
+  "required": ["schema_version", "run_id_sha256", "page_id", "status", "provider", "lineage", "timeline", "artifacts", "gates", "created_at"],
   "properties": {
     "schema_version": {"const": "deck_high_density_provider_smoke.v1"},
     "run_id_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
@@ -11,23 +11,44 @@
     "status": {"const": "pass"},
     "provider": {
       "type": "object",
-      "required": ["tool", "model", "request_id_sha256"],
+      "required": ["tool", "model", "request_id_sha256", "request_sha256", "challenge_nonce_sha256", "requested_at", "responded_at"],
       "properties": {
         "tool": {"type": "string", "minLength": 1},
         "model": {"type": "string", "minLength": 1},
-        "request_id_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+        "request_id_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "request_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "challenge_nonce_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "requested_at": {"type": "string", "format": "date-time"},
+        "responded_at": {"type": "string", "format": "date-time"}
       },
       "additionalProperties": false
     },
     "lineage": {
       "type": "object",
-      "required": ["prompt_sha256", "image_sha256", "content_lock_sha256", "nbb_plan_sha256", "style_lock_sha256"],
+      "required": ["prompt_sha256", "image_sha256", "scene_sha256", "svg_sha256", "pptx_sha256", "readback_sha256", "content_lock_sha256", "nbb_plan_sha256", "style_lock_sha256"],
       "properties": {
         "prompt_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
         "image_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "scene_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "svg_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "pptx_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "readback_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
         "content_lock_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
         "nbb_plan_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
         "style_lock_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      },
+      "additionalProperties": false
+    },
+    "timeline": {
+      "type": "object",
+      "required": ["challenge_issued_at", "requested_at", "responded_at", "approved_at", "visual_reviewed_at", "readback_at"],
+      "properties": {
+        "challenge_issued_at": {"type": "string", "format": "date-time"},
+        "requested_at": {"type": "string", "format": "date-time"},
+        "responded_at": {"type": "string", "format": "date-time"},
+        "approved_at": {"type": "string", "format": "date-time"},
+        "visual_reviewed_at": {"type": "string", "format": "date-time"},
+        "readback_at": {"type": "string", "format": "date-time"}
       },
       "additionalProperties": false
     },

@@ -3,7 +3,7 @@
   "$id": "https://deck-master.local/contracts/blueprint-manifest.v2.schema.json",
   "title": "Deck Blueprint Manifest v2",
   "type": "object",
-  "required": ["schema_version", "run_id", "page_id", "image_path", "image_sha256", "prompt_ref", "prompt_sha256", "content_lock_sha256", "nbb_plan_sha256", "style_lock_sha256", "source_canvas", "slide_frame", "source_to_scene_transform", "fit_mode", "internal_annotations", "approval", "approved", "created_at"],
+  "required": ["schema_version", "run_id", "page_id", "image_path", "image_sha256", "prompt_ref", "prompt_sha256", "content_lock_sha256", "nbb_plan_sha256", "style_lock_sha256", "source_canvas", "slide_frame", "source_to_scene_transform", "fit_mode", "internal_annotations", "provider", "approval", "approved", "created_at"],
   "properties": {
     "schema_version": {"const": "deck_blueprint_manifest.v2"},
     "run_id": {"type": "string", "minLength": 1},
@@ -20,11 +20,25 @@
     "source_to_scene_transform": {"type": "object"},
     "fit_mode": {"enum": ["contain", "cover", "approved_frame"]},
     "internal_annotations": {"type": "array", "items": {"type": "string"}},
-    "provider": {"type": "object"},
+    "provider": {
+      "type": "object",
+      "required": ["tool", "model", "request_id", "challenge_nonce", "prompt_sha256", "request_sha256", "requested_at", "responded_at"],
+      "properties": {
+        "tool": {"type": "string", "minLength": 1},
+        "model": {"type": "string", "minLength": 1},
+        "request_id": {"type": "string", "minLength": 1},
+        "challenge_nonce": {"type": "string", "pattern": "^[a-f0-9]{32}$"},
+        "prompt_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "request_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "requested_at": {"type": "string", "format": "date-time"},
+        "responded_at": {"type": "string", "format": "date-time"}
+      },
+      "additionalProperties": false
+    },
     "approval": {"type": "object", "required": ["status", "source", "approved_by", "approved_at"], "properties": {"status": {"const": "approved"}, "source": {"enum": ["explicit_user", "agent_review", "fixture_runtime"]}, "approved_by": {"type": "string", "minLength": 1}, "approved_at": {"type": "string", "minLength": 1}}, "additionalProperties": false},
     "approved": {"const": true},
     "created_at": {"type": "string"},
     "updated_at": {"type": "string"}
   },
-  "additionalProperties": true
+  "additionalProperties": false
 }

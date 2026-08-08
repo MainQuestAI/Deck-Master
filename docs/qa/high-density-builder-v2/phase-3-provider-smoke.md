@@ -1,11 +1,16 @@
 # High-Density Builder v2 Provider Smoke
 
-Status: `pass`
+Status: `historical-pass`, superseded for the v3 release gate
 
 Date: 2026-08-05
 
 The smoke used one fresh sanitized ImageGen output and completed the full
 high-density chain on page `P001`:
+
+This evidence predates the runtime-generated Provider challenge. It remains
+useful as historical route evidence, but it cannot satisfy the current fresh
+provider release gate. The current gate requires a new request bound to the
+prompt nonce, request hash, timestamps, image, Scene, SVG, PPTX, and readback.
 
 ```text
 prompt -> blueprint -> native SVG -> DrawingML PPTX -> visual parity -> readback
