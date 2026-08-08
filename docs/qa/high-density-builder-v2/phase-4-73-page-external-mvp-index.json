@@ -1,9 +1,11 @@
 {
-  "schema_version": "deck_high_density_external_mvp_index.v1",
-  "status": "pass_external_mvp_evidence",
-  "source_basis": "verified_external_task_summary",
+  "schema_version": "deck_high_density_external_mvp_index.v2",
+  "status": "pass_external_image_to_svg_mvp_evidence",
+  "source_basis": "verified_external_artifact_snapshot",
   "source_task_id_sha256": "835cb6ed14b0772e97729d691681dd7ee8698dfdbd69b54243a3a5b4691935fd",
+  "source_snapshot_sha256": "150344544eb66d0e3331411e65fb616107c8167f8dd72a73752c4e03698f1c9c",
   "reported_page_count": 73,
+  "indexed_page_count": 73,
   "raw_sources_committed": false,
   "raw_blueprints_committed": false,
   "provider_payloads_committed": false,
@@ -15,6 +17,7 @@
     "blocked_pages": 0,
     "needs_revision_pages": 0,
     "artifact_completeness": {
+      "source_blueprint_hash": "73/73",
       "native_svg": "73/73",
       "preview": "73/73",
       "native_report": "73/73",
@@ -30,7 +33,16 @@
       "main_visual_review": "pass",
       "forbidden_embedded_page_image": "pass"
     },
-    "targeted_repair_page_count": 6,
+    "pages_with_recorded_revisions": 50,
+    "average_recorded_revision_count": 1.0274,
+    "targeted_final_repair_pages": [
+      "P06",
+      "P30",
+      "P46",
+      "P49",
+      "P50",
+      "P60"
+    ],
     "known_failure_classes": [
       "icon_semantic_mismatch",
       "color_and_hierarchy_drift",
@@ -38,17 +50,4100 @@
       "review_evidence_path_mismatch"
     ]
   },
-  "targeted_repair_categories": [
-    "responsibility_icon_evidence",
-    "card_color_and_hierarchy",
-    "puzzle_icon_semantics",
-    "governance_icon_semantics",
-    "content_return_folder_icon"
-  ],
   "unavailable_metrics": [
-    "average_repair_iterations",
     "legacy_p0_p1_numeric_coverage"
   ],
   "release_gate": "pass_as_external_image_to_svg_evidence",
-  "scope_note": "This evidence covers the completed 73-page image-to-native-SVG MVP. DrawingML PPTX and readback are covered by the repository seven-page E2E and fresh provider smoke."
+  "scope_note": "This index covers the completed 73-page image-to-native-SVG MVP. DrawingML PPTX and readback are covered by the repository seven-page E2E and fresh production provider smoke.",
+  "pages": [
+    {
+      "page_id": "P01",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "80c110aa60a81eb61f4501ce0b24e6afb21761f7ef9307f6f7f14e100a32b9ca",
+          "bytes": 1390419,
+          "modified_at": "2026-08-02T14:26:33.654917+00:00"
+        },
+        "native_svg": {
+          "sha256": "451eb98efd7eab6648f80a02ac36475f01776fc06a27b3836413e5aad702b833",
+          "bytes": 19281,
+          "modified_at": "2026-08-03T08:52:39.138831+00:00"
+        },
+        "preview": {
+          "sha256": "6cddc9545699204446be5762fba43a5a2367c440133c1dd76f9ea3e38770706b",
+          "bytes": 286338,
+          "modified_at": "2026-08-03T13:27:16.015335+00:00"
+        },
+        "native_report": {
+          "sha256": "0793f185f877a3e0b7f317170790d5450e075cbf31affe4ef66f6eb28c63ba34",
+          "bytes": 765,
+          "modified_at": "2026-08-03T13:27:16.017517+00:00"
+        },
+        "self_review": {
+          "sha256": "f503395d85c2165ee6f0aa95e637593feadcaf8a408f0126150ee4aec474ff0e",
+          "bytes": 9424,
+          "modified_at": "2026-08-03T11:28:33.904649+00:00"
+        },
+        "main_review": {
+          "sha256": "f694729ecf07351aeb7223285ad8552a1a4787a282507fcea95322f44226cdc2",
+          "bytes": 11359,
+          "modified_at": "2026-08-03T12:38:46.612096+00:00"
+        },
+        "comparison": {
+          "sha256": "528b1cff9d69c8848ac8864868598abdaf98e8e8cd201c55cbaae1d1d0e48c99",
+          "bytes": 1716309,
+          "modified_at": "2026-08-03T11:26:51.822810+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "d4521ada1187849a010dfefb91cbc2a0d82c6a97948846aec5ff7b9ae4e63af9",
+          "bytes": 159789,
+          "modified_at": "2026-08-03T11:26:51.848469+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 0,
+        "self_review_count": 1,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P02",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "0dbfb37500aedf22b0f93c299f4372933661e235aee9c1aff508fcffc2aa560f",
+          "bytes": 1746072,
+          "modified_at": "2026-08-02T14:29:01.537350+00:00"
+        },
+        "native_svg": {
+          "sha256": "0adfa68e5c9c87e3c0b44a3bcf503e249813bc76e8ad2be60c62069ace0590ac",
+          "bytes": 24300,
+          "modified_at": "2026-08-03T11:40:23.737558+00:00"
+        },
+        "preview": {
+          "sha256": "b6fff9b2776b51056e8bfc4a8be83a71849c144f480bd26cf3800e48b17bbe47",
+          "bytes": 457809,
+          "modified_at": "2026-08-03T13:27:16.282711+00:00"
+        },
+        "native_report": {
+          "sha256": "38b0832cd64865c5a0590a15dc883f7e40fc3d48accef8560682f419fac7699d",
+          "bytes": 768,
+          "modified_at": "2026-08-03T13:27:16.284949+00:00"
+        },
+        "self_review": {
+          "sha256": "f254675f6b34ac93f493ed980643392e15ea57f25e71fed124ea546e8f0d6b42",
+          "bytes": 16949,
+          "modified_at": "2026-08-03T11:43:17.898615+00:00"
+        },
+        "main_review": {
+          "sha256": "71e917cfbe75eb419fede153bf07c704ee9e259339c7ced41060067cec86fc91",
+          "bytes": 18549,
+          "modified_at": "2026-08-03T12:38:46.652487+00:00"
+        },
+        "comparison": {
+          "sha256": "7cd7132889b48318f28fb6667b9220abd014dac5122ab0371c7d83f5941b4ee1",
+          "bytes": 2233575,
+          "modified_at": "2026-08-03T11:40:43.484236+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "08d53cab59ba41e4cf286682a47736834a5ccaae0431314332f830ceb201b951",
+          "bytes": 165851,
+          "modified_at": "2026-08-03T11:40:43.569588+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 1,
+        "self_review_count": 2,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P03",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "6834bcacb719f225d9ee0bd1bbba9f28fc9d987198fe8709c314823a505e3ead",
+          "bytes": 1810643,
+          "modified_at": "2026-08-03T03:36:57.288238+00:00"
+        },
+        "native_svg": {
+          "sha256": "da055561916de4f31a48e8505771ec68ccbeb2793d92c7597a1f550d52c121c3",
+          "bytes": 28587,
+          "modified_at": "2026-08-03T11:39:20.451899+00:00"
+        },
+        "preview": {
+          "sha256": "cf630825fc2e7d2c13548d7be75fd88fa3935131e31edbbba80ce8f52ead7abe",
+          "bytes": 408200,
+          "modified_at": "2026-08-03T13:27:16.587191+00:00"
+        },
+        "native_report": {
+          "sha256": "1293b7d2e71aa753998a9244eda7cd1be189cee195b1df0cb0b082bf8b68bb5e",
+          "bytes": 783,
+          "modified_at": "2026-08-03T13:27:16.589697+00:00"
+        },
+        "self_review": {
+          "sha256": "125f9aa2c95851a3a6c23ce94452b6433e8276c68c28dcd045502f0f64e175d0",
+          "bytes": 7947,
+          "modified_at": "2026-08-03T11:40:58.328254+00:00"
+        },
+        "main_review": {
+          "sha256": "48ed0d8b63b14185ce0ebeca7b0e43a68316dccbadcc2e6b9280d1deb7c1a0ab",
+          "bytes": 8238,
+          "modified_at": "2026-08-03T12:38:46.691529+00:00"
+        },
+        "comparison": {
+          "sha256": "e05f61ac5e4f4ca8c0d6321418241cbe3e9376c39062025609cb1deb66b6fc8a",
+          "bytes": 807872,
+          "modified_at": "2026-08-03T11:39:45.910357+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "b4bcd6422dabfbd2e5e28ab9f2265201787b5403f473b12700a94596b87f4003",
+          "bytes": 4302792,
+          "modified_at": "2026-08-03T11:39:48.067136+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 2,
+        "self_review_count": 3,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P04",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "e33b3511643eb8308f6ea88b88663f54ea7148ca61462eada830b2ee8054d178",
+          "bytes": 1922524,
+          "modified_at": "2026-08-03T03:35:46.505944+00:00"
+        },
+        "native_svg": {
+          "sha256": "7e378a9bac7e8447cb1dedaf6dac1bb851169503a38fc72fa83a8d08776469ca",
+          "bytes": 36634,
+          "modified_at": "2026-08-03T10:00:56.804259+00:00"
+        },
+        "preview": {
+          "sha256": "21bc24369f1056d58e7036132696e114d8fd385a4cd471cf6095def18cde4ac0",
+          "bytes": 373626,
+          "modified_at": "2026-08-03T13:27:16.987242+00:00"
+        },
+        "native_report": {
+          "sha256": "7308e47eea47911b2d0f80d39945e1181c6f55a049256e477456d7e324b1caf9",
+          "bytes": 766,
+          "modified_at": "2026-08-03T13:27:16.989826+00:00"
+        },
+        "self_review": {
+          "sha256": "ca952e33d708fde789429f3417df16786174802daba132736d698117f83ff057",
+          "bytes": 6696,
+          "modified_at": "2026-08-03T11:28:55.724063+00:00"
+        },
+        "main_review": {
+          "sha256": "f5bbf3377c25c5e2eadfb4bda27749f911347cd77b26d3268ffe0fbeeaf45f22",
+          "bytes": 9950,
+          "modified_at": "2026-08-03T12:38:46.733871+00:00"
+        },
+        "comparison": {
+          "sha256": "aac9d2153ff28d46579d98981fcb9685bb27b8adf82f3f0dc552f289d7113bc0",
+          "bytes": 2338232,
+          "modified_at": "2026-08-03T11:26:37.524349+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "3f85881d0d93d3387ae12ba58225467a94e92488940848157f6cce0b1973175c",
+          "bytes": 394794,
+          "modified_at": "2026-08-03T11:27:30.470014+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 0,
+        "self_review_count": 2,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P05",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "c90323f3950015016c807d6da884c70daf835e99ad91c3fa32e108593fc9f3b7",
+          "bytes": 1864140,
+          "modified_at": "2026-08-03T03:39:53.273006+00:00"
+        },
+        "native_svg": {
+          "sha256": "f83ef362f86dcfb8ea323110167448a977fbec86e8e39ae56ac4981cfa95f190",
+          "bytes": 25138,
+          "modified_at": "2026-08-03T11:30:37.615506+00:00"
+        },
+        "preview": {
+          "sha256": "1305a82378e8c3fcb38bdaac2cd29a2f85564f09dd43c591009411d1b921ffa4",
+          "bytes": 488110,
+          "modified_at": "2026-08-03T13:27:17.287044+00:00"
+        },
+        "native_report": {
+          "sha256": "77422b6ce42ea10c30722344a696d0e93e4f539c49508fc17cbbc3ca9fa86dec",
+          "bytes": 783,
+          "modified_at": "2026-08-03T13:27:17.289306+00:00"
+        },
+        "self_review": {
+          "sha256": "71718e2cc064feeebed0bd651ce40309daaa38951a6461d02dd447b4293396de",
+          "bytes": 11021,
+          "modified_at": "2026-08-03T11:56:22.821456+00:00"
+        },
+        "main_review": {
+          "sha256": "7d1bc2ea2262fdf3388ca8737e599de917c2215460712d05283ecb7cadbc0001",
+          "bytes": 13646,
+          "modified_at": "2026-08-03T12:38:46.776763+00:00"
+        },
+        "comparison": {
+          "sha256": "0f5524e2bb5fbc43596db479c50121c0ba5623a446543dbb834e0dae9e9f50da",
+          "bytes": 2390712,
+          "modified_at": "2026-08-03T11:40:51.251517+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "2c90774a106045ee67dc6bbe5aa7cda739f5b7d0ca9e4efd65a926d3028ca1a8",
+          "bytes": 384448,
+          "modified_at": "2026-08-03T11:41:23.835352+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 1,
+        "self_review_count": 2,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P06",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "79eadfed9166712cf1479a18cc33e04197bfd40fc6cdb6e63fe014fb33bc3d9a",
+          "bytes": 2033996,
+          "modified_at": "2026-08-03T03:42:33.007467+00:00"
+        },
+        "native_svg": {
+          "sha256": "2937a9ded0801fa71ec5498abde9503a1fe3cbe6547e5a520bac621edd5f3716",
+          "bytes": 24857,
+          "modified_at": "2026-08-03T12:23:37.959810+00:00"
+        },
+        "preview": {
+          "sha256": "3b764f4821a7c4dc36f6d4699e9e217a8635903c4f066e769832bf9a3ca9835c",
+          "bytes": 509903,
+          "modified_at": "2026-08-03T13:27:17.589734+00:00"
+        },
+        "native_report": {
+          "sha256": "54a2f34c85aca98f63e82ae111c2d1474c1562a4c4ef53fb090e5058cc500946",
+          "bytes": 783,
+          "modified_at": "2026-08-03T13:27:17.592418+00:00"
+        },
+        "self_review": {
+          "sha256": "aaa705d3d6048c3d05b29f132e979f68c1cf0301b0ca241f0326518f2ef96faf",
+          "bytes": 11352,
+          "modified_at": "2026-08-03T12:30:00.830518+00:00"
+        },
+        "main_review": {
+          "sha256": "0afd3a765f0810543f56f811488d02a6b281f6155e36e575d462f3be9267630c",
+          "bytes": 12189,
+          "modified_at": "2026-08-03T12:38:46.816242+00:00"
+        },
+        "comparison": {
+          "sha256": "5ccb7d55d9dbf334c09112411a4ccf6085da03c25297a1295abd27866ecaed2a",
+          "bytes": 2590451,
+          "modified_at": "2026-08-03T12:24:26.229158+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "8ca0ab58b9bb98bf0e558353bf1ee50e14f48de36472867d4aaaf9f3dfa46366",
+          "bytes": 184157,
+          "modified_at": "2026-08-03T12:24:26.276650+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 1,
+        "self_review_count": 2,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P07",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "95722c79511088d277636104299822a1f5e99b819c031e06388167bab3ae3ef5",
+          "bytes": 1981229,
+          "modified_at": "2026-08-03T03:45:24.258859+00:00"
+        },
+        "native_svg": {
+          "sha256": "e121e43e49ba286f02e6861863499b97ee7b468cba00e82af2d4ea5a4b26f5d4",
+          "bytes": 23986,
+          "modified_at": "2026-08-03T09:59:34.465114+00:00"
+        },
+        "preview": {
+          "sha256": "45c77e906589354d28b75a8c7efd21243b737cd6a2a020890d5f8e678da721ed",
+          "bytes": 347742,
+          "modified_at": "2026-08-03T13:27:17.897468+00:00"
+        },
+        "native_report": {
+          "sha256": "b86a16283043f1c9ee24f00a69f58595e153df5fc690cf96d2c29582cb913bb3",
+          "bytes": 747,
+          "modified_at": "2026-08-03T13:27:17.899744+00:00"
+        },
+        "self_review": {
+          "sha256": "43fec20d5ef4571b470aaf66d8a0b801ec11991a3374356452d14dde60d9c5f5",
+          "bytes": 8727,
+          "modified_at": "2026-08-03T12:03:23.568583+00:00"
+        },
+        "main_review": {
+          "sha256": "211b66045c1c904bdd26635930a2e106c1c2922dbd385020783bfa2343f6aa48",
+          "bytes": 10170,
+          "modified_at": "2026-08-03T12:38:46.855897+00:00"
+        },
+        "comparison": {
+          "sha256": "32ab6c4b81696741d56772d8c21d2d39cf0151f8a7069c1332d16bc4d568cc92",
+          "bytes": 2373838,
+          "modified_at": "2026-08-03T12:01:29.838387+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "3d6d864a5b0e28ffb9ea14a0d18311836ebd4bd82baa2b03f0cf8a5e46bd4375",
+          "bytes": 139438,
+          "modified_at": "2026-08-03T12:01:30.366393+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 1,
+        "self_review_count": 2,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P08",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "307eca58c94463f14eee9d9606fbc5b34469fd48e8a39dd12452a4882dff8b5d",
+          "bytes": 1956096,
+          "modified_at": "2026-08-03T03:20:57.197627+00:00"
+        },
+        "native_svg": {
+          "sha256": "43798ca453eb44fd1a3194e9a748b647d182281c4a3f0699f27e67640f2e3a8d",
+          "bytes": 43183,
+          "modified_at": "2026-08-03T12:02:47.465240+00:00"
+        },
+        "preview": {
+          "sha256": "fb4050749d337faa08f8c3376d07b0557bfa3575126c075a4dbc8bf52577057b",
+          "bytes": 579203,
+          "modified_at": "2026-08-03T13:27:18.213043+00:00"
+        },
+        "native_report": {
+          "sha256": "d16aa8c36dff1395d5122d02e28bb920d847315fc45e5c836a561b865765aab7",
+          "bytes": 768,
+          "modified_at": "2026-08-03T13:27:18.215574+00:00"
+        },
+        "self_review": {
+          "sha256": "24098bbe20926f6f988d5845845ebb2a7d05014024c5e218c30bb0d0e36beaab",
+          "bytes": 11527,
+          "modified_at": "2026-08-03T12:05:42.432171+00:00"
+        },
+        "main_review": {
+          "sha256": "7dad46c62f9e4ec932057a38412944ed12c0e38b2a15a857351bb574985bd67e",
+          "bytes": 12247,
+          "modified_at": "2026-08-03T12:38:46.896841+00:00"
+        },
+        "comparison": {
+          "sha256": "c3b4323fb3fa80e5236ecd3f0ee388aee16b0f59a9fa44f07fd9f90b142dd155",
+          "bytes": 928179,
+          "modified_at": "2026-08-03T12:03:13.224927+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "88ad7ef15b0a6f911696ed05d06c15ecaccf0b7fbec72132d275581d2c20836a",
+          "bytes": 290854,
+          "modified_at": "2026-08-03T12:03:13.323559+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 3,
+        "self_review_count": 3,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P09",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "0697e14dce7ad1f2473e664beb8ea8eab4e3074ab541bcd4dfbc67c6c86000bb",
+          "bytes": 1593347,
+          "modified_at": "2026-08-02T14:45:12.783135+00:00"
+        },
+        "native_svg": {
+          "sha256": "c4786c71a990364f39291a53e3e0d327dcac365f96393f0c2b743203f8418a0a",
+          "bytes": 25025,
+          "modified_at": "2026-08-03T12:04:11.882170+00:00"
+        },
+        "preview": {
+          "sha256": "002c5bc44e24659e5082436849dcf2d082925f1a3f1bf3ace22a4f44ad14be24",
+          "bytes": 410179,
+          "modified_at": "2026-08-03T13:27:18.503473+00:00"
+        },
+        "native_report": {
+          "sha256": "739fa2e2eeafb8752ccc9b384e23599ed832198b60514258a8a4ee4b8425cfef",
+          "bytes": 783,
+          "modified_at": "2026-08-03T13:27:18.505596+00:00"
+        },
+        "self_review": {
+          "sha256": "1eea7988929a90beeaee33d75e147fdaeef3e8e723e3509203228ce64d9fc02f",
+          "bytes": 15218,
+          "modified_at": "2026-08-03T12:06:57.698813+00:00"
+        },
+        "main_review": {
+          "sha256": "3bdad7a15991d562218436bd8ba0541700164f781bb37a3382ace2fdc59dbedd",
+          "bytes": 15819,
+          "modified_at": "2026-08-03T12:38:46.937674+00:00"
+        },
+        "comparison": {
+          "sha256": "5ed255c6677f8acd8e98743c010378d296b1fc341ed337567c04e9919243a552",
+          "bytes": 1972791,
+          "modified_at": "2026-08-03T12:04:47.221439+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "28b277e7f22e58f0e2d2cb4bc07e6ca6f71ea20b2fb13200b4a3ced433137a80",
+          "bytes": 135689,
+          "modified_at": "2026-08-03T12:04:48.067672+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 1,
+        "self_review_count": 2,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P10",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "80fe315c927d0f31b0a77ae54c9d6d6a8c87c49c6dad01f2947630ba874ab8f7",
+          "bytes": 1952765,
+          "modified_at": "2026-08-02T14:45:12.787875+00:00"
+        },
+        "native_svg": {
+          "sha256": "3d783a30942c0a0bd063e262a13f5dfc0c040fce039aec9f460baad5b7fbe845",
+          "bytes": 30116,
+          "modified_at": "2026-08-03T11:16:37.239796+00:00"
+        },
+        "preview": {
+          "sha256": "9a4e4b824d8b26bdf3f9fc1f16a7dc2471421b29443a6897af06947c29d07e35",
+          "bytes": 506037,
+          "modified_at": "2026-08-03T13:27:18.797871+00:00"
+        },
+        "native_report": {
+          "sha256": "33730d5f25a3058745d6f24d30e949b52527371dfef2f6325f4cad16646ff714",
+          "bytes": 766,
+          "modified_at": "2026-08-03T13:27:18.799921+00:00"
+        },
+        "self_review": {
+          "sha256": "93f59d08ae20504af5413bf85565665b2e619860838d6b97f50fe5fa54b3648f",
+          "bytes": 5222,
+          "modified_at": "2026-08-03T11:18:39.788857+00:00"
+        },
+        "main_review": {
+          "sha256": "16ae9fb58c5287623f2472eb35a2ec133463a0dda076f9aebbe8b415eb36e862",
+          "bytes": 4426,
+          "modified_at": "2026-08-03T11:22:00.936958+00:00"
+        },
+        "comparison": {
+          "sha256": "213d6666f62f634fa98e73f352afb4b6f9abd0aff7fc34146632b7bfc625cced",
+          "bytes": 2492668,
+          "modified_at": "2026-08-03T11:17:44.949432+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "dd5c77f35794c5fd37861b1ce308e904d82d9a22ef3ee37f2aa499884c53911f",
+          "bytes": 648325,
+          "modified_at": "2026-08-03T11:17:45.609026+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 1,
+        "self_review_count": 2,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P11",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "a13cf4584778e8dedc7737d13cec8ae26953090a6dd846c39046a89ec697e239",
+          "bytes": 1874745,
+          "modified_at": "2026-08-02T14:50:16.146486+00:00"
+        },
+        "native_svg": {
+          "sha256": "f16e366305d6502b4281b5c4e7ddd87a3bc3891976013f47ebf0d0212f62c1b6",
+          "bytes": 30402,
+          "modified_at": "2026-08-03T11:15:57.060500+00:00"
+        },
+        "preview": {
+          "sha256": "107bf712211e289e05b3f131c46f3de3aefca9785eeece6d46c4e14092d29206",
+          "bytes": 564345,
+          "modified_at": "2026-08-03T13:27:19.116912+00:00"
+        },
+        "native_report": {
+          "sha256": "70b89b2af2685d3a3fb54d5672736960271bc317f5926afa1ddf2d37cc7245ae",
+          "bytes": 767,
+          "modified_at": "2026-08-03T13:27:19.119273+00:00"
+        },
+        "self_review": {
+          "sha256": "caf028aac6030131212a5a413e0aa1081e98ea094b9ecd608ca4e1fc37643b2c",
+          "bytes": 5994,
+          "modified_at": "2026-08-03T11:18:51.191180+00:00"
+        },
+        "main_review": {
+          "sha256": "b67cfa2c648c3ee7793cfdc027c5e3eb4e1a5637047793a5683f1d9ff3051413",
+          "bytes": 4380,
+          "modified_at": "2026-08-03T11:22:00.937198+00:00"
+        },
+        "comparison": {
+          "sha256": "37b562d33b7093ef974292d9f73b8d10d723d12c1ab38a62b442d0c6e6253f22",
+          "bytes": 2464467,
+          "modified_at": "2026-08-03T11:16:52.674723+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "c08c1092b9ba2b804a8173729be51c3f405444680b925bf59725ad9f07ee9b22",
+          "bytes": 119534,
+          "modified_at": "2026-08-03T11:17:26.959478+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 1,
+        "self_review_count": 2,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P12",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "b3a438a25e80fca4a8c17998365ac4c404d708d4c09f5f5a2745c8ad744e7d05",
+          "bytes": 1827925,
+          "modified_at": "2026-08-03T03:46:48.058131+00:00"
+        },
+        "native_svg": {
+          "sha256": "d55342b82b1db941736334a2c339b491018c3887fc083f3f38d2ab327a87d7e5",
+          "bytes": 26183,
+          "modified_at": "2026-08-03T11:20:00.542022+00:00"
+        },
+        "preview": {
+          "sha256": "1217032d8547650334f6524ccbb6676fd7af74a13e42b008a66d4ffab7902bdc",
+          "bytes": 493236,
+          "modified_at": "2026-08-03T13:27:19.422477+00:00"
+        },
+        "native_report": {
+          "sha256": "d8f65144df2f1e48cb051328374f74bb045c0173e7662a176eaa47708c70f1ff",
+          "bytes": 829,
+          "modified_at": "2026-08-03T13:27:19.424810+00:00"
+        },
+        "self_review": {
+          "sha256": "20faebe0acdb0543604d81a7fc3a4571143798558ec2f1a9bdd6cb5c8a95e006",
+          "bytes": 5372,
+          "modified_at": "2026-08-03T11:20:46.277102+00:00"
+        },
+        "main_review": {
+          "sha256": "db642169761e402a07821e711dba8487839332f8fea0fb477302810cab697b54",
+          "bytes": 4393,
+          "modified_at": "2026-08-03T11:24:04.883407+00:00"
+        },
+        "comparison": {
+          "sha256": "95bc37fa97d9c4dd2c66d17d4e3a7c1e1cf95b4efd2f58bf96bb11de1de5ca98",
+          "bytes": 2354896,
+          "modified_at": "2026-08-03T11:20:24.892441+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "bfce7f15d678519b772a6a090ded4c73f7c1d4d85109ee65486eaa43c54ae949",
+          "bytes": 51881,
+          "modified_at": "2026-08-03T11:20:24.898099+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 2,
+        "self_review_count": 3,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P13",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "081d790e76737cdabdfe24a03e18c6bfb291aa07e5b4138c46ed9e8ff8044ba5",
+          "bytes": 2038087,
+          "modified_at": "2026-08-03T03:50:04.610235+00:00"
+        },
+        "native_svg": {
+          "sha256": "90f7bee4f94e3cd1ef73a8f1e1c1054a31e3cfe4bf0ea9325f3800bdefb2bfe5",
+          "bytes": 23226,
+          "modified_at": "2026-08-03T11:18:52.185369+00:00"
+        },
+        "preview": {
+          "sha256": "8fb3d6d0d43b2b0a0a393ee26fc5b67409cbf443d2d2ce850ce00939600b45eb",
+          "bytes": 533464,
+          "modified_at": "2026-08-03T13:27:16.118413+00:00"
+        },
+        "native_report": {
+          "sha256": "9bc5e73daa8bd6c8648ef9236f46f5411014c01cdae8d6ec5b72fbcefa649b36",
+          "bytes": 783,
+          "modified_at": "2026-08-03T13:27:16.120954+00:00"
+        },
+        "self_review": {
+          "sha256": "632e275b6c9aca36383d63044c42e763176e2194e614de87423163ba695f7b56",
+          "bytes": 5646,
+          "modified_at": "2026-08-03T11:20:27.403868+00:00"
+        },
+        "main_review": {
+          "sha256": "d26341d67cbe6c02d05d56f7e2d81a3472e16cdf7498ce9acd5e08c56a3f41a4",
+          "bytes": 4422,
+          "modified_at": "2026-08-03T11:26:57.549572+00:00"
+        },
+        "comparison": {
+          "sha256": "783e9093af5c9a8421d9231d6c4fe3a294c1bf64b55c1bf82defd38b70132029",
+          "bytes": 2610859,
+          "modified_at": "2026-08-03T11:19:26.125827+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "99844d956b477c2a3643794b1fd7d76a0ce17779a2d50c4f2c72bbc7783f536e",
+          "bytes": 305423,
+          "modified_at": "2026-08-03T11:19:26.344165+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 2,
+        "self_review_count": 2,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P14",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "2be4a3934fae9f76cd28c24375dcd0a8b4915bda49e89d4cbe48b143e782e361",
+          "bytes": 1738314,
+          "modified_at": "2026-08-02T14:55:19.203427+00:00"
+        },
+        "native_svg": {
+          "sha256": "640adcf0ab3c5460f5382f01108296d596cde2ad577dcac77a49e1f55e458171",
+          "bytes": 35704,
+          "modified_at": "2026-08-03T11:18:02.268017+00:00"
+        },
+        "preview": {
+          "sha256": "dabad62ac0e1ae7cca4e1d297d30528084ee7e7c7119a0b60dec66c78e05065a",
+          "bytes": 478514,
+          "modified_at": "2026-08-03T13:27:16.420811+00:00"
+        },
+        "native_report": {
+          "sha256": "5da6f3933ce5e6721e07ca9ede3b3a4fca76097a90b4b88f70c0fe6716bd99f3",
+          "bytes": 784,
+          "modified_at": "2026-08-03T13:27:16.423424+00:00"
+        },
+        "self_review": {
+          "sha256": "2ccd3b322205e03274b430fb494d260d395dbab1ddc86daea2f9c82c36daebd4",
+          "bytes": 4883,
+          "modified_at": "2026-08-03T11:20:28.682580+00:00"
+        },
+        "main_review": {
+          "sha256": "53730cfebc51b3da29b2348c373254ef785c225169b20ed3037b3e00bc9e877a",
+          "bytes": 4349,
+          "modified_at": "2026-08-03T11:24:04.883617+00:00"
+        },
+        "comparison": {
+          "sha256": "b40461ce087e0fd665f44538a8aaa747bc962886067dc3e2b86d80ca1b85b88a",
+          "bytes": 2249526,
+          "modified_at": "2026-08-03T11:19:20.735604+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "c1d84c4592ed4841618ec15c90ed9a556c40bc2d85cb1a76b9e47ff2e9e39611",
+          "bytes": 373086,
+          "modified_at": "2026-08-03T11:19:20.754119+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 1,
+        "self_review_count": 2,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P15",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "4f3fdd028a7d047e4fab57be10bb2e33f526860ef78db55f630d20563bddebe2",
+          "bytes": 1851487,
+          "modified_at": "2026-08-03T03:51:23.523039+00:00"
+        },
+        "native_svg": {
+          "sha256": "fb48d3e00ee154285a35e0d76b73fce46c4a4843e9a579f7938597395e752b92",
+          "bytes": 30299,
+          "modified_at": "2026-08-03T11:20:00.724879+00:00"
+        },
+        "preview": {
+          "sha256": "8e527d4d178ea337e88cae050aeff00777d5ad9c538450540f1b293b14898fb4",
+          "bytes": 581882,
+          "modified_at": "2026-08-03T13:27:16.788018+00:00"
+        },
+        "native_report": {
+          "sha256": "5769de2160a421d7ddbfb3f9e71eb8f400f4e0f4b9d6c79631fb9cdf0a136963",
+          "bytes": 812,
+          "modified_at": "2026-08-03T13:27:16.790971+00:00"
+        },
+        "self_review": {
+          "sha256": "233cbd1338e8a87eec46207b8ed81ce574939371dc1be98b946cf5bd6e99ab06",
+          "bytes": 5441,
+          "modified_at": "2026-08-03T11:22:17.048007+00:00"
+        },
+        "main_review": {
+          "sha256": "74e0952c6d0e31eb13567150936709df69ba166088c9c87f0153c5bfd3dd8e45",
+          "bytes": 4483,
+          "modified_at": "2026-08-03T11:26:57.549828+00:00"
+        },
+        "comparison": {
+          "sha256": "5bf7f923cdc560b1f4fba54ea8aa52a1f870be45458575adb56ba32920b08254",
+          "bytes": 1659833,
+          "modified_at": "2026-08-03T11:21:39.038589+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "457794158286c493cc89defa36397b8cf7665dbc72fc767502715b1d485df29b",
+          "bytes": 523605,
+          "modified_at": "2026-08-03T11:21:39.080987+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 1,
+        "self_review_count": 2,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P16",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "afcb33f5a00269859bccbfdc6b7fefa16a893f3dc33101cd28789492778b6d97",
+          "bytes": 1639332,
+          "modified_at": "2026-08-02T14:55:19.208466+00:00"
+        },
+        "native_svg": {
+          "sha256": "4eab4d3823e56b9467e0861cbf5e4175936f7d9c5d2520d6f201eebb14c937a0",
+          "bytes": 38474,
+          "modified_at": "2026-08-03T11:55:16.235868+00:00"
+        },
+        "preview": {
+          "sha256": "0c39e2e7ffbf1540398420ac781afbb36214e56f3f039e39a3b69e2512671bb7",
+          "bytes": 382543,
+          "modified_at": "2026-08-03T13:27:17.129978+00:00"
+        },
+        "native_report": {
+          "sha256": "0f2c976dace757785384d2a124f34f04655ccfb9480c1c715ae8bbb8e715a9aa",
+          "bytes": 832,
+          "modified_at": "2026-08-03T13:27:17.132371+00:00"
+        },
+        "self_review": {
+          "sha256": "da1ba793d530847363a3f5cc258e05b72e3ae49f147c0dfb5e2f1a2c6c222253",
+          "bytes": 5512,
+          "modified_at": "2026-08-03T11:56:51.344000+00:00"
+        },
+        "main_review": {
+          "sha256": "af0777d09d1d10d47413e96fdf9fa5e33a46f79c24ec8261b2fa869abae8e9ec",
+          "bytes": 5807,
+          "modified_at": "2026-08-03T11:59:34.854990+00:00"
+        },
+        "comparison": {
+          "sha256": "597f50b1a5171e87bd9e65c064085389a6ace71b51cd3638a716400add582fad",
+          "bytes": 1979454,
+          "modified_at": "2026-08-03T11:56:04.457006+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "80c30400d3b9155eb946bb66e355a9afb64ba7a26396135335c9722cc9521718",
+          "bytes": 297205,
+          "modified_at": "2026-08-03T11:56:05.086383+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 1,
+        "self_review_count": 2,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P17",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "20284969b6ebaa155045d26d96e2a6a23dc009ca32ab167b6d3a1af849b83bc4",
+          "bytes": 1816996,
+          "modified_at": "2026-08-03T03:26:28.300078+00:00"
+        },
+        "native_svg": {
+          "sha256": "94c495e984cebf86ff6b13390d73a9e9137ec8ffb8b0a5ff191f9f29af2c6b2f",
+          "bytes": 39129,
+          "modified_at": "2026-08-03T11:52:25.377860+00:00"
+        },
+        "preview": {
+          "sha256": "2ee7aa84b0caf751da9215fb3a9904bd966150eede2326fa39bf3958ceedde30",
+          "bytes": 562431,
+          "modified_at": "2026-08-03T13:27:17.432956+00:00"
+        },
+        "native_report": {
+          "sha256": "edcea5b18dd1e35b8fdd5560b929c7b6e2ef5ae6f58e027e2e9e537feb30fa87",
+          "bytes": 812,
+          "modified_at": "2026-08-03T13:27:17.435265+00:00"
+        },
+        "self_review": {
+          "sha256": "ec524a24f6b2d0121edc61a12b1e576ba4d4e5603ef903259030eb656a03d7cd",
+          "bytes": 7918,
+          "modified_at": "2026-08-03T11:53:59.400941+00:00"
+        },
+        "main_review": {
+          "sha256": "a2d9ce49b7d2ee17e93a5bd88563c17e4f6820e24673f6afa0a413ebb2833a11",
+          "bytes": 7935,
+          "modified_at": "2026-08-03T11:57:45.400651+00:00"
+        },
+        "comparison": {
+          "sha256": "bc6210f9b323f919f8ad824f8c4599ec1e589d01c2fa647125f70f11b0d75c7f",
+          "bytes": 2417194,
+          "modified_at": "2026-08-03T11:52:47.580588+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "32670f820b1d2504664cd42d651b488e96c8626c41041b366a1ddd8b4964848c",
+          "bytes": 1042461,
+          "modified_at": "2026-08-03T11:52:47.639990+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 2,
+        "self_review_count": 2,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P18",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "4cbad883408aeae407a22e995a6d4726c9e3311b9ba6f2b5148f2b0be8018296",
+          "bytes": 1665859,
+          "modified_at": "2026-08-03T03:28:22.800513+00:00"
+        },
+        "native_svg": {
+          "sha256": "8fab0e504315b141c31ade0bacf886d44bd9f2438fd5d223ed6d0d0293ffac6a",
+          "bytes": 40112,
+          "modified_at": "2026-08-03T11:48:27.870275+00:00"
+        },
+        "preview": {
+          "sha256": "9156db6645c67ea03edfb14c327f26705fa957703edd28e421ab7eb6d9920661",
+          "bytes": 419527,
+          "modified_at": "2026-08-03T13:27:17.733984+00:00"
+        },
+        "native_report": {
+          "sha256": "c4d1b4d95b00d40e85473c95af60fb2d8afd0eaea7e6ed01aee1d949c6d6fb48",
+          "bytes": 765,
+          "modified_at": "2026-08-03T13:27:17.736081+00:00"
+        },
+        "self_review": {
+          "sha256": "8066c913c7e213e58e1ecceddaf7faca35ac9ab7ca2ac7b60f7a918656c3158b",
+          "bytes": 6000,
+          "modified_at": "2026-08-03T11:50:36.524870+00:00"
+        },
+        "main_review": {
+          "sha256": "9196bc8f6b7772d87b4cba657972478a325441f33c0c673ed3874d42c4bca8bd",
+          "bytes": 5726,
+          "modified_at": "2026-08-03T11:54:03.328425+00:00"
+        },
+        "comparison": {
+          "sha256": "ec73231d0e23b2a1c7ac1c5aef3cd1a51bbe38bc78fa62772c70810e644574d5",
+          "bytes": 2109763,
+          "modified_at": "2026-08-03T11:49:25.072265+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "d54683c2d4be3c0132a3edeb7a80668fc465fcf3c5967adf150b099c50274728",
+          "bytes": 592367,
+          "modified_at": "2026-08-03T11:49:25.167890+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 1,
+        "self_review_count": 2,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P19",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "672654c1df7c0b3667487e387bb2ce01658be7cf7a89d270457cf35585ef931a",
+          "bytes": 1841043,
+          "modified_at": "2026-08-03T03:31:49.812915+00:00"
+        },
+        "native_svg": {
+          "sha256": "ebd69d344ca4f1d6cfa187f0969e83bce921e8e372e4a956849fa57ada9b3540",
+          "bytes": 35956,
+          "modified_at": "2026-08-03T11:52:47.450435+00:00"
+        },
+        "preview": {
+          "sha256": "5fcdcf3891088d9259be31c701cfbad5e77ca5fd1e841a0d36a525da5bf2bb2d",
+          "bytes": 508349,
+          "modified_at": "2026-08-03T13:27:18.043088+00:00"
+        },
+        "native_report": {
+          "sha256": "dee38e0aee1dd70f51a58ffc66d1bbf3980586585da72eb270ea56e8078282c7",
+          "bytes": 767,
+          "modified_at": "2026-08-03T13:27:18.045476+00:00"
+        },
+        "self_review": {
+          "sha256": "32c26ff119e20bcaa6a9ce73a8652b1f4ad460e83f6f1e2f9dc290780a674020",
+          "bytes": 6970,
+          "modified_at": "2026-08-03T11:54:47.491051+00:00"
+        },
+        "main_review": {
+          "sha256": "8fbe01a9bd1f880608f3b897e00bc51b92d2fd3373b8b57a3806caa9c7468398",
+          "bytes": 7226,
+          "modified_at": "2026-08-03T11:57:45.446416+00:00"
+        },
+        "comparison": {
+          "sha256": "48d42f23bf5cf5ed726e3273d4dcff96c8270eb230e7a4f76c5077840ae64d3f",
+          "bytes": 2826028,
+          "modified_at": "2026-08-03T11:53:23.196912+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "800b4774b4e90548801a7593f0669a0b92999c966ef1f55f2f1b893dec107186",
+          "bytes": 60061,
+          "modified_at": "2026-08-03T11:53:23.055794+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 2,
+        "self_review_count": 3,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P20",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "120f944d52df051d9cdf4f7f21d88c337018d6ff7f6d1504380f4b339aa27589",
+          "bytes": 1893219,
+          "modified_at": "2026-08-03T03:34:56.563262+00:00"
+        },
+        "native_svg": {
+          "sha256": "ce273375138a4c40d26d61dcab80e1456b33d8ff4e6ad44344929a38d2445659",
+          "bytes": 40012,
+          "modified_at": "2026-08-03T11:53:45.763782+00:00"
+        },
+        "preview": {
+          "sha256": "9ed7587fe419932f35854ec51b14b207d90714996bd8463eeae3e7abf198f8c4",
+          "bytes": 527212,
+          "modified_at": "2026-08-03T13:27:18.361187+00:00"
+        },
+        "native_report": {
+          "sha256": "3fb7f37b0f1e3b03fba4c3395c35685cd9f747591cc65eba6e24e239342c3e08",
+          "bytes": 768,
+          "modified_at": "2026-08-03T13:27:18.363395+00:00"
+        },
+        "self_review": {
+          "sha256": "620aa30db546d30b92d828b473f87cf566fa1f2c6d827b283055009bbf5b4093",
+          "bytes": 6551,
+          "modified_at": "2026-08-03T11:57:01.113985+00:00"
+        },
+        "main_review": {
+          "sha256": "29d9393359677243d6668fbcd6122f88a1e0216dca142705daebe90d445e96bf",
+          "bytes": 6333,
+          "modified_at": "2026-08-03T12:02:17.252201+00:00"
+        },
+        "comparison": {
+          "sha256": "26d9b12c0371ef2aaebfc9d6424f1ab86dee28510cc58af0dd9e2f2f4a16f798",
+          "bytes": 2463876,
+          "modified_at": "2026-08-03T11:54:41.359568+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "cbeee6f98f8c7052b3385db6039b388846442c35778d5ce7ecf71805ad47ae91",
+          "bytes": 213230,
+          "modified_at": "2026-08-03T11:55:50.361700+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 2,
+        "self_review_count": 3,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P21",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "56b988e72f919c8174c61a7078d0921ad32e87b61e0c14f9fd4c09014adcd911",
+          "bytes": 1971577,
+          "modified_at": "2026-08-03T03:54:13.767658+00:00"
+        },
+        "native_svg": {
+          "sha256": "67c0674073c29a2715a6db787bf8f329d62a7c3d1c361e8869e1c16cbf12504f",
+          "bytes": 31229,
+          "modified_at": "2026-08-03T11:49:49.756835+00:00"
+        },
+        "preview": {
+          "sha256": "f77307ddbbeea66fc90437f0d415955eef76d038318c8f4a3f7c9c253a583fc1",
+          "bytes": 478643,
+          "modified_at": "2026-08-03T13:27:18.653086+00:00"
+        },
+        "native_report": {
+          "sha256": "8954838e53ab67302b951eebd3fa92c39f27743147374b0dbefa26ae5cb6659b",
+          "bytes": 794,
+          "modified_at": "2026-08-03T13:27:18.655237+00:00"
+        },
+        "self_review": {
+          "sha256": "1f96bb1554c5e5a6bab13d1c2e97971bf3bebb55e7f670b042c69ca23d2efaa2",
+          "bytes": 5702,
+          "modified_at": "2026-08-03T11:51:00.050399+00:00"
+        },
+        "main_review": {
+          "sha256": "d518a22492ea262d52d8498a93dbae18916b968df91d9bcce635eb19acf5498e",
+          "bytes": 6148,
+          "modified_at": "2026-08-03T12:04:27.467277+00:00"
+        },
+        "comparison": {
+          "sha256": "cea9d273b25a32891cc26196c00ba6ecb0476c911c3284f0e868332612a3f81e",
+          "bytes": 2433891,
+          "modified_at": "2026-08-03T11:50:12.118622+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "89b076d103c01e5b7cec3e2d0eb23bafc79b34e7adf28c731a6f5d5e5ba53e18",
+          "bytes": 204590,
+          "modified_at": "2026-08-03T11:50:12.185993+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 2,
+        "self_review_count": 2,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P22",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "1d46c2f659ddd9db8ca4fd14edda330c143bee1afd0ccdd9ee213b6eb8531102",
+          "bytes": 1772175,
+          "modified_at": "2026-08-02T15:09:19.919308+00:00"
+        },
+        "native_svg": {
+          "sha256": "85aabc313a5263cf46043a4cbc777d6ebe7e2360fe7422627231e0791a04a6b8",
+          "bytes": 25786,
+          "modified_at": "2026-08-03T12:16:07.284155+00:00"
+        },
+        "preview": {
+          "sha256": "4dd0f9620f121adcb30333f8f359777fb6cf66a5fe87bb256bdf226e81516b97",
+          "bytes": 389380,
+          "modified_at": "2026-08-03T13:27:18.951618+00:00"
+        },
+        "native_report": {
+          "sha256": "e3b0f743538319fb80fd333dea3acbebf2ca24752d1e8902acf35fd4ec9f0757",
+          "bytes": 732,
+          "modified_at": "2026-08-03T13:27:18.953883+00:00"
+        },
+        "self_review": {
+          "sha256": "7470485c9fc898136982d6ef7a6d19cdfbb1643cbf38de838101e043ad2a4aad",
+          "bytes": 4530,
+          "modified_at": "2026-08-03T12:18:02.792763+00:00"
+        },
+        "main_review": {
+          "sha256": "71ec3b63b57d409515c60dc686f2cee5dd02c3499ad1edbe9270681c7278a426",
+          "bytes": 4736,
+          "modified_at": "2026-08-03T12:35:27.310372+00:00"
+        },
+        "comparison": {
+          "sha256": "6a050a3cd2c033f84a641f517f26916b66606ef25ad62db1e39c7814bfcb0780",
+          "bytes": 2199463,
+          "modified_at": "2026-08-03T12:16:45.753397+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "2fa0fd1daee47fe1027ecce581372f76341541c4a9a631f737ec070eced57c2f",
+          "bytes": 454884,
+          "modified_at": "2026-08-03T12:16:45.831790+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 1,
+        "self_review_count": 2,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P23",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "561cd3323e168e309cbbf1d7b3c0d9649515f4bfbd00be2ff7713985562ac60f",
+          "bytes": 1755906,
+          "modified_at": "2026-08-03T03:38:11.699008+00:00"
+        },
+        "native_svg": {
+          "sha256": "43048204b027209264ead93371c8364658bfae3565d4be8a36694a9ba023ed56",
+          "bytes": 47744,
+          "modified_at": "2026-08-03T12:22:16.779032+00:00"
+        },
+        "preview": {
+          "sha256": "57b402775131e4d236683822e9e340d5e09449ac9a70734ca7c91a4d9b147e30",
+          "bytes": 448008,
+          "modified_at": "2026-08-03T13:27:19.233188+00:00"
+        },
+        "native_report": {
+          "sha256": "bfec0c20e6fda79cfe39657da1dd5825ea88ee029cfaa5439f92646bf4977311",
+          "bytes": 734,
+          "modified_at": "2026-08-03T13:27:19.235240+00:00"
+        },
+        "self_review": {
+          "sha256": "007bbbda874900515c3a50e91c3632d190c523aa34c2f338dec3ae734b331f29",
+          "bytes": 7963,
+          "modified_at": "2026-08-03T12:24:31.660645+00:00"
+        },
+        "main_review": {
+          "sha256": "bb5f8896dc1cb85a18e2603a861ce303a54b8eab967f313ef6b44db939c6b4c0",
+          "bytes": 7452,
+          "modified_at": "2026-08-03T12:33:13.401790+00:00"
+        },
+        "comparison": {
+          "sha256": "565aa6c9ad65715d99fb2af6393d2d25231f717a1e4033ef32b5475da2b768d3",
+          "bytes": 2241132,
+          "modified_at": "2026-08-03T12:22:50.215449+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "0079612587c1d2f2b84e7dc2410ee3a1bbfd3a60387cd3363a1e12cceeca9836",
+          "bytes": 457280,
+          "modified_at": "2026-08-03T12:22:50.324868+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 2,
+        "self_review_count": 3,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P24",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "7d0ac50fc7e204c9077dc92f328ef57f471b3f883487dbf04849b842e977367f",
+          "bytes": 1931461,
+          "modified_at": "2026-08-03T03:41:39.825510+00:00"
+        },
+        "native_svg": {
+          "sha256": "85db967275392b2e23efe8f70ef966bfb264345fde9c5701977eaf66916ae450",
+          "bytes": 39716,
+          "modified_at": "2026-08-03T12:21:10.869419+00:00"
+        },
+        "preview": {
+          "sha256": "55f0d77b86b6113a4f99b5991242ba3778dd9bb3f71590982b99fb919408ede6",
+          "bytes": 480366,
+          "modified_at": "2026-08-03T13:27:19.543478+00:00"
+        },
+        "native_report": {
+          "sha256": "8f95b96a344475bcb58a9146fa66dae70af997d4d60876cec178815526d47ca7",
+          "bytes": 781,
+          "modified_at": "2026-08-03T13:27:19.545750+00:00"
+        },
+        "self_review": {
+          "sha256": "4b778c1488515c5cdd95af7e8f49981cc58e03205f1c6ddec16dc58f517ffcfc",
+          "bytes": 5591,
+          "modified_at": "2026-08-03T12:23:19.043648+00:00"
+        },
+        "main_review": {
+          "sha256": "5c4cd6c4f61cec87edeec6a039a43b791d8ef33889f2edd3b3d87332e7708968",
+          "bytes": 6000,
+          "modified_at": "2026-08-03T12:33:13.442973+00:00"
+        },
+        "comparison": {
+          "sha256": "446cfd8a5d10ca70292c89e6c429660612823102a7c92bf6ab4c5020814d037e",
+          "bytes": 2441914,
+          "modified_at": "2026-08-03T12:21:58.629247+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "ff1782ad4fdd17799c4c444adcd69c31bebd2d156146e6d7bfecf03ef779dfc4",
+          "bytes": 848203,
+          "modified_at": "2026-08-03T12:21:58.670264+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 1,
+        "self_review_count": 2,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P25",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "d1511a84fb082bf7b760957aeeb40fea18f9c8676a116935e83610bd7203bb43",
+          "bytes": 1857504,
+          "modified_at": "2026-08-03T03:44:46.950369+00:00"
+        },
+        "native_svg": {
+          "sha256": "c2bc196feca0b9e7fd15a31d626f7aeef8d55b329d9247c22be71a263ddf2ff8",
+          "bytes": 37450,
+          "modified_at": "2026-08-03T12:20:19.582618+00:00"
+        },
+        "preview": {
+          "sha256": "e62514eb90f820de71dd70d1e846fe0b3a0f634b14dfce3ca9f9534a0f761042",
+          "bytes": 470179,
+          "modified_at": "2026-08-03T13:27:16.231968+00:00"
+        },
+        "native_report": {
+          "sha256": "f283e5669a02fcd4b07efaf2a3b425c28708d5a7f95b495ae61ead9d991e7fa5",
+          "bytes": 749,
+          "modified_at": "2026-08-03T13:27:16.234408+00:00"
+        },
+        "self_review": {
+          "sha256": "37ed1e6e98b1e44eb4d0feb81d5450443311cebcbb983808080c46da97b1a05c",
+          "bytes": 5080,
+          "modified_at": "2026-08-03T12:21:36.251625+00:00"
+        },
+        "main_review": {
+          "sha256": "670bdea5715e9c5578d8df894bed5680f55609a508f258dd8914f1c3de8737f9",
+          "bytes": 5472,
+          "modified_at": "2026-08-03T12:33:13.482336+00:00"
+        },
+        "comparison": {
+          "sha256": "a697dfc988713692011793788e473303a006cf46f17ee5f610a56b9bb2b6410b",
+          "bytes": 868641,
+          "modified_at": "2026-08-03T12:20:51.663056+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "f0a5baf742a88ecf21b274bab5e85e3b3434969b7293c718073f9b3bab53b5c8",
+          "bytes": 128043,
+          "modified_at": "2026-08-03T12:20:51.685050+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 2,
+        "self_review_count": 3,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P26",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "b9463785fb3996c82d97e1aab74b23a4d22de73fba0d37f28da00828082ad8be",
+          "bytes": 1999785,
+          "modified_at": "2026-08-03T03:48:13.296754+00:00"
+        },
+        "native_svg": {
+          "sha256": "75171432349bef838ce1bed938aa16c1efecc1f75c09dceba58ee2c540d31639",
+          "bytes": 46161,
+          "modified_at": "2026-08-03T12:21:31.932034+00:00"
+        },
+        "preview": {
+          "sha256": "c5b517d0a41894e3450efe784bea7087e73d0fd5bc3d89a7fca62edd1819e43b",
+          "bytes": 528735,
+          "modified_at": "2026-08-03T13:27:16.622561+00:00"
+        },
+        "native_report": {
+          "sha256": "124ee3a5d581ea11445209e1d99b576c975d0785faa3c84a2bdc1d0d33185255",
+          "bytes": 765,
+          "modified_at": "2026-08-03T13:27:16.625327+00:00"
+        },
+        "self_review": {
+          "sha256": "1194375e143048b7d61510d12c751489712daaa51bec592de72fff07fec97c4b",
+          "bytes": 4526,
+          "modified_at": "2026-08-03T12:22:59.584585+00:00"
+        },
+        "main_review": {
+          "sha256": "aab2e111e65a64271f1b3fd0cb68d80784062e33ddd6f0fea90d5a17232a7d28",
+          "bytes": 5098,
+          "modified_at": "2026-08-03T12:33:13.521863+00:00"
+        },
+        "comparison": {
+          "sha256": "b72750b634645df336a047b87c98aa981e57642ca269ed0640f5df9d49e7f23c",
+          "bytes": 2508864,
+          "modified_at": "2026-08-03T12:21:54.126655+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "a696e2b92922814b3266270751248b06ac15501d4ce671ab065b86193a2ee300",
+          "bytes": 116656,
+          "modified_at": "2026-08-03T12:21:54.154929+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 2,
+        "self_review_count": 3,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P27",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "02efa4c437e9fc995e1eb1180c480dca5ee8f60c51581b618d0c219f1ebb0b70",
+          "bytes": 1938574,
+          "modified_at": "2026-08-02T14:34:13.507946+00:00"
+        },
+        "native_svg": {
+          "sha256": "b881c51087719659a3443082bab1039f202ac0bd696af9da2967b48d204549ca",
+          "bytes": 21404,
+          "modified_at": "2026-08-03T12:17:02.062970+00:00"
+        },
+        "preview": {
+          "sha256": "fa0d99a8f6a9224d7f8f34631de23456a8f5a10bc1837331cdfe955d7635e685",
+          "bytes": 451975,
+          "modified_at": "2026-08-03T13:27:17.034777+00:00"
+        },
+        "native_report": {
+          "sha256": "55fd7eecbb3e75c45dfc5e1c1bd0dbc303cd2f7082fbe6078d089a57e8414b24",
+          "bytes": 735,
+          "modified_at": "2026-08-03T13:27:17.037298+00:00"
+        },
+        "self_review": {
+          "sha256": "01da865eebacc6ef7242423249423e5c2e5ff01a1701eb89925137f1139212a8",
+          "bytes": 6547,
+          "modified_at": "2026-08-03T12:19:23.073248+00:00"
+        },
+        "main_review": {
+          "sha256": "fb293f64e7c6b8bbf3e35645c92f45dd8d1749b50a5687d7c38495ce0ade9638",
+          "bytes": 6632,
+          "modified_at": "2026-08-03T12:33:13.567304+00:00"
+        },
+        "comparison": {
+          "sha256": "02420312b3a4b8a0de82460bc66c532c6a02b524c3104368fbba7690531a53c1",
+          "bytes": 2450405,
+          "modified_at": "2026-08-03T12:17:33.086990+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "fe6579fd129999e89c6c16e8ff15cc4cb72e63fce04d950283b70d72e75876c8",
+          "bytes": 652681,
+          "modified_at": "2026-08-03T12:17:33.199145+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 1,
+        "self_review_count": 3,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P28",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "06c364d999d88f51754bedaefe6bb63e0c1793652d90fa11dd3ba85e75e53d22",
+          "bytes": 1853742,
+          "modified_at": "2026-08-02T14:34:13.509860+00:00"
+        },
+        "native_svg": {
+          "sha256": "2b60bb97578daa2bec0a6e2fda41453bda1cdd62b996f2d59adcaecc696dcdd7",
+          "bytes": 27003,
+          "modified_at": "2026-08-03T11:27:32.149281+00:00"
+        },
+        "preview": {
+          "sha256": "32e6e9c072651a8f768eb366275f2ace9aacd0f6efc533b17e001249182ee075",
+          "bytes": 473395,
+          "modified_at": "2026-08-03T13:27:17.346698+00:00"
+        },
+        "native_report": {
+          "sha256": "acfa22f86b9173c62602839b2fbc726279be5e13ad9828c3215551385f3af8d2",
+          "bytes": 736,
+          "modified_at": "2026-08-03T13:27:17.348965+00:00"
+        },
+        "self_review": {
+          "sha256": "9d21119c6aa613956fb678fb9b6651f71dfbe9edd720c0269bff258cb1082bb0",
+          "bytes": 5953,
+          "modified_at": "2026-08-03T11:29:23.513763+00:00"
+        },
+        "main_review": {
+          "sha256": "d1e82d4c4424490f076f08d6d81ff6d8e8325cf640949cb0dfc3d9862fc2bfce",
+          "bytes": 3613,
+          "modified_at": "2026-08-03T11:40:17.837365+00:00"
+        },
+        "comparison": {
+          "sha256": "214f4a0eb8fe780d7c0f65cdbd7d49b60d4ddc480f4ae98db6ccb536336b6bbc",
+          "bytes": 2364693,
+          "modified_at": "2026-08-03T11:28:17.552113+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "ca05474d47b8f3615f622d1668716057f89b896385a56bfd8247346e162b0d6d",
+          "bytes": 266423,
+          "modified_at": "2026-08-03T11:28:17.570433+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 0,
+        "self_review_count": 1,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P29",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "e7fb4db25950fa1dad1744c2b08275d1f725a52d4b4191d1fc076700b7c42e74",
+          "bytes": 1836111,
+          "modified_at": "2026-08-03T03:23:35.547303+00:00"
+        },
+        "native_svg": {
+          "sha256": "9e4c9f5e01482a0201771da0abd4ff6ccc3a94c0d5e5ad5138f53f3bcc221723",
+          "bytes": 25065,
+          "modified_at": "2026-08-03T11:13:16.217091+00:00"
+        },
+        "preview": {
+          "sha256": "cb5872cf730cbbc1168bac3fde6cf56d527ee56e138ad69568fa6d6f1d50a3be",
+          "bytes": 465206,
+          "modified_at": "2026-08-03T13:27:17.650443+00:00"
+        },
+        "native_report": {
+          "sha256": "2a1683489d355e605fa64e50f7b69138c7f5406af49d093b487176b02a082d0f",
+          "bytes": 831,
+          "modified_at": "2026-08-03T13:27:17.652726+00:00"
+        },
+        "self_review": {
+          "sha256": "9c586510c7397c18b815ea1f21a2432cad5020cd5f3a9786490c03beb274b9d5",
+          "bytes": 5252,
+          "modified_at": "2026-08-03T11:15:36.535575+00:00"
+        },
+        "main_review": {
+          "sha256": "eb6cdef572812bbfec4830b353b9b273ad65626567ed3acad5d9807ce3e2abee",
+          "bytes": 5195,
+          "modified_at": "2026-08-03T11:27:27.328828+00:00"
+        },
+        "comparison": {
+          "sha256": "7021f0916775201fbfff916348ab693efbddcb9ec89e0e09eae407e6f4d544b9",
+          "bytes": 2345028,
+          "modified_at": "2026-08-03T11:13:35.562903+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "e7a64595851f885281a26819b812b105304aa12b475c90ba451f63642c0498bc",
+          "bytes": 547485,
+          "modified_at": "2026-08-03T11:13:35.632832+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 0,
+        "self_review_count": 1,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P30",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "bffa32c0cbd84bf0bc7daf208a2b5807037691faff8eb66d44af7f150d55060b",
+          "bytes": 1792882,
+          "modified_at": "2026-08-03T03:25:25.998120+00:00"
+        },
+        "native_svg": {
+          "sha256": "73a37bc68a51285187b19a3360ff3539360ee88f6d95b4cef1855b6c0cfbb82c",
+          "bytes": 31307,
+          "modified_at": "2026-08-03T11:56:06.037108+00:00"
+        },
+        "preview": {
+          "sha256": "c5c4a4f9cd47733b5b75f8471dd5baa10d31589017ddbe38e51217f37fa670a6",
+          "bytes": 473818,
+          "modified_at": "2026-08-03T13:27:17.966778+00:00"
+        },
+        "native_report": {
+          "sha256": "5d793ac14bf00281543b45165d0dde70a39ce5f57b690a258df4d7f576e42289",
+          "bytes": 812,
+          "modified_at": "2026-08-03T13:27:17.969150+00:00"
+        },
+        "self_review": {
+          "sha256": "e99170d584ad2b272d855670931e704934fc7978b3da403391aa4c3dde119ec7",
+          "bytes": 7705,
+          "modified_at": "2026-08-03T11:58:49.828169+00:00"
+        },
+        "main_review": {
+          "sha256": "6f185cde9c57ae1211f19e626cc58d14bd4e0b649d577b50dc2d882b16620725",
+          "bytes": 5607,
+          "modified_at": "2026-08-03T12:14:02.120849+00:00"
+        },
+        "comparison": {
+          "sha256": "2889e1cf23ee936883129694c8d7e6fe78b41b8fca8956407432687f66bdd64f",
+          "bytes": 2230899,
+          "modified_at": "2026-08-03T11:57:29.486781+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "6b320a835fcf997a48cb5b40368414c6a901de73eca4a30647fa3682481f2e0a",
+          "bytes": 616525,
+          "modified_at": "2026-08-03T11:17:50.493897+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 1,
+        "self_review_count": 1,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P31",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "2af5955219c2c83ec12caf75aad79a8b7adcef1f3566e0cca84d3b47084e0d20",
+          "bytes": 1745688,
+          "modified_at": "2026-08-03T03:27:15.070617+00:00"
+        },
+        "native_svg": {
+          "sha256": "949bb2e0f17f70a2599bb2f6a6a6ac73bb7ed2463eb8b5037dd9930325fbd1c9",
+          "bytes": 23122,
+          "modified_at": "2026-08-03T11:14:27.309087+00:00"
+        },
+        "preview": {
+          "sha256": "27355b24ca08652849055e5b607d475f9beae903edae329927505fdadc05a02e",
+          "bytes": 411029,
+          "modified_at": "2026-08-03T13:27:18.276771+00:00"
+        },
+        "native_report": {
+          "sha256": "bb2ae403e179b4c4f74a094eeea9129a41a564e00d429afbc55d0a6c7d4cb8b4",
+          "bytes": 785,
+          "modified_at": "2026-08-03T13:27:18.279203+00:00"
+        },
+        "self_review": {
+          "sha256": "e44a2c20fa4a03d8751ed6b1869e20717a1b613159aaa646aba40b5ce9006bbb",
+          "bytes": 6405,
+          "modified_at": "2026-08-03T11:17:13.410120+00:00"
+        },
+        "main_review": {
+          "sha256": "6c7ed1492991f5eb0e60d890dc3abcbb01be389badb680db7f099472e81a6308",
+          "bytes": 5153,
+          "modified_at": "2026-08-03T11:27:27.329215+00:00"
+        },
+        "comparison": {
+          "sha256": "d2bab0e60378d77265ed3811ba3e14651064a6f2004e1e63852f1509f14c328c",
+          "bytes": 739728,
+          "modified_at": "2026-08-03T11:14:55.278118+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "f829c88cef5648507968bb810842dda4e1d2aab199e998b965b4e35d05dde8e9",
+          "bytes": 562306,
+          "modified_at": "2026-08-03T11:14:55.870629+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 0,
+        "self_review_count": 1,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P32",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "c50c95863c7b0b6fb0b915508b4c0f67f5ae56c4c9c131cbafb8ae25a3781968",
+          "bytes": 1851978,
+          "modified_at": "2026-08-03T03:29:19.508014+00:00"
+        },
+        "native_svg": {
+          "sha256": "c681f4054b7d352d290a1c5bb52a44f27cb47be0385e2c0356c111b760828e90",
+          "bytes": 36498,
+          "modified_at": "2026-08-03T11:26:10.340804+00:00"
+        },
+        "preview": {
+          "sha256": "9aa03eed09e3afe6d688c0a13ffaf9c9980f6210fcda94840fdbc507e68f5607",
+          "bytes": 420605,
+          "modified_at": "2026-08-03T13:27:18.604022+00:00"
+        },
+        "native_report": {
+          "sha256": "2d246147465b9bef42b5d2e4c27f3845893c21589bb89023209b6a7bb5f841e0",
+          "bytes": 779,
+          "modified_at": "2026-08-03T13:27:18.606299+00:00"
+        },
+        "self_review": {
+          "sha256": "2d9e486a230c4a6cf1c496c8b9aa93669774c57fac4d6b6dce8d265430ffe0ea",
+          "bytes": 7491,
+          "modified_at": "2026-08-03T11:28:35.059460+00:00"
+        },
+        "main_review": {
+          "sha256": "3f2d59652f5d9b4d4372de1cc259034eceba41445bd90612e8b7edc3b3131f34",
+          "bytes": 5211,
+          "modified_at": "2026-08-03T11:42:42.883009+00:00"
+        },
+        "comparison": {
+          "sha256": "6d38c2ac0cce302f4c665e1d5469f46b6708ca41f63305e903a3d1d8468dfdc7",
+          "bytes": 2325785,
+          "modified_at": "2026-08-03T11:26:52.262479+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "39d2465bdc2427b08c06c9e17fc299bb552697b0ef4ddc7b416895aca0919d9d",
+          "bytes": 53773,
+          "modified_at": "2026-08-03T11:26:53.112282+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 0,
+        "self_review_count": 1,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P33",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "11c4732ade0e70f828629fcb167cc3ef5b9512dd12616759add971b810ce6d6b",
+          "bytes": 1573014,
+          "modified_at": "2026-08-02T14:55:00.463853+00:00"
+        },
+        "native_svg": {
+          "sha256": "f8b367707227bed8f577033c0fe8beac2c611f364b084ba86d3a9f4be46a9be2",
+          "bytes": 20395,
+          "modified_at": "2026-08-03T11:09:39.435950+00:00"
+        },
+        "preview": {
+          "sha256": "060f16163f3a4d852c0c323af3e586ab7a708e19e398b5eac9806a196bbeb2c3",
+          "bytes": 372477,
+          "modified_at": "2026-08-03T13:27:18.906018+00:00"
+        },
+        "native_report": {
+          "sha256": "e490c2214f8a6fdf1bc93337c70f79a13e81a19629d9a9421aa95153f8f96924",
+          "bytes": 794,
+          "modified_at": "2026-08-03T13:27:18.908458+00:00"
+        },
+        "self_review": {
+          "sha256": "8b7da7aa6d51a1e9df0a4c6db8c75c97405364d3de8147f33da4e062783fc2c9",
+          "bytes": 4808,
+          "modified_at": "2026-08-03T11:12:19.801737+00:00"
+        },
+        "main_review": {
+          "sha256": "ca62c4d26670676f26373f5f7a41990cc48bd0a1d93cec027d944ef5dcd53653",
+          "bytes": 4414,
+          "modified_at": "2026-08-03T11:19:52.867110+00:00"
+        },
+        "comparison": {
+          "sha256": "6445aef91f7db22f3cfdc51f5d23df45fd2d335f3d311d98f1febb39b5f4f338",
+          "bytes": 1972649,
+          "modified_at": "2026-08-03T11:10:24.812307+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "68acf1b6a3970cdc14210d1aaf74947678c0fab35de402ece49d935faf42aa02",
+          "bytes": 384286,
+          "modified_at": "2026-08-03T11:11:07.655733+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 0,
+        "self_review_count": 1,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P34",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "17d9bbc0ead07fa8c8882dda69fd373d55c67f18727ae25258eb2d0843c33173",
+          "bytes": 1878043,
+          "modified_at": "2026-08-02T14:50:25.884022+00:00"
+        },
+        "native_svg": {
+          "sha256": "4c659be44b687947a6e8541f2bc7622b79553ef9cadee43c609a95158f185156",
+          "bytes": 33322,
+          "modified_at": "2026-08-03T12:21:25.142322+00:00"
+        },
+        "preview": {
+          "sha256": "259f0d509a6e8e29e41faf5224fef129214180c04800840ff48060c7c9be2beb",
+          "bytes": 491007,
+          "modified_at": "2026-08-03T13:27:19.221276+00:00"
+        },
+        "native_report": {
+          "sha256": "b65d4439c3e0be6fa847da449de718806ddbdff4fbd6cbd00fb405a5d34d7775",
+          "bytes": 766,
+          "modified_at": "2026-08-03T13:27:19.223761+00:00"
+        },
+        "self_review": {
+          "sha256": "9f32dc081de19a7ef6c061320116062069dfa64064b81dfe8df596f8be36a7c8",
+          "bytes": 4532,
+          "modified_at": "2026-08-03T12:22:26.002536+00:00"
+        },
+        "main_review": {
+          "sha256": "0a02ec7d161234f920fb8dc726da10dfc150e726f2520e17b7b2a4e84c1cc71e",
+          "bytes": 4461,
+          "modified_at": "2026-08-03T12:25:38.369648+00:00"
+        },
+        "comparison": {
+          "sha256": "144bd51fd65da8d09eafcc5647d3b33caf3cd4d0aa34978db188f2887f5823ac",
+          "bytes": 2395923,
+          "modified_at": "2026-08-03T12:21:42.813849+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "dff09a4a080e285abe4acfb8d21140bff3d5d2cef0858b2be259df5ad30463d4",
+          "bytes": 13236,
+          "modified_at": "2026-08-03T12:21:42.816070+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 0,
+        "self_review_count": 1,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P35",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "6e573e909b1aa4f3c10b4c28d140688459382d8d99567d18e25ddc2855d5970c",
+          "bytes": 1779477,
+          "modified_at": "2026-08-03T03:31:12.313210+00:00"
+        },
+        "native_svg": {
+          "sha256": "7e6fa286d7e05077a4e26c96c0ee863958d92299dc08d8448c546aae36faa559",
+          "bytes": 33495,
+          "modified_at": "2026-08-03T12:20:53.866187+00:00"
+        },
+        "preview": {
+          "sha256": "9773c14489f1c771bde7ede49367aaf4534c7d1b36dd9b5fe27bc6276af07f2c",
+          "bytes": 449877,
+          "modified_at": "2026-08-03T13:27:19.544805+00:00"
+        },
+        "native_report": {
+          "sha256": "7f446a6a57ed3cc2b06d8632bc035ce88c5ba1f4b2069bdb34796c247ae97873",
+          "bytes": 717,
+          "modified_at": "2026-08-03T13:27:19.546872+00:00"
+        },
+        "self_review": {
+          "sha256": "74c6f122d0d2b7242e6e1d2c29375aba92537737e0c6f72fa8200f237592dee2",
+          "bytes": 4378,
+          "modified_at": "2026-08-03T12:22:57.120272+00:00"
+        },
+        "main_review": {
+          "sha256": "c37f3b78619951fe5d1b6c9bb4c05276a760eefd55eda38c1df10a3cf461fd7f",
+          "bytes": 4448,
+          "modified_at": "2026-08-03T12:32:55.176316+00:00"
+        },
+        "comparison": {
+          "sha256": "ebd93964fc94fbc606b16e21e74767a5b20ec6bb91abd980c8bbe72a17ddc80b",
+          "bytes": 2270866,
+          "modified_at": "2026-08-03T12:22:06.003408+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "37e8fd1b7d58da377c2fba1b4ace405e9e2853d105071b0b7a2ecd6bafbe578d",
+          "bytes": 54973,
+          "modified_at": "2026-08-03T12:22:06.021015+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 0,
+        "self_review_count": 1,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P36",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "68f34c663705b69fe38bcf50b81497b1cade0a342394cff367ca61ebc927dac0",
+          "bytes": 1908951,
+          "modified_at": "2026-08-03T03:33:04.676321+00:00"
+        },
+        "native_svg": {
+          "sha256": "7fbbc2d101959749b9c9cfeeb7c30b3a1bc446fe5621f9793b8e59b04d7accbd",
+          "bytes": 28907,
+          "modified_at": "2026-08-03T12:24:58.585115+00:00"
+        },
+        "preview": {
+          "sha256": "809ff3d0103507310c5be06e0bc43c7539c771bc8d7b6c6586e91c8e63a15d61",
+          "bytes": 560643,
+          "modified_at": "2026-08-03T13:27:19.868092+00:00"
+        },
+        "native_report": {
+          "sha256": "1762ed4e2c854fee35629fbfb13858fea2ca9c339758e4dd5a3e8e8d0abf0748",
+          "bytes": 733,
+          "modified_at": "2026-08-03T13:27:19.870690+00:00"
+        },
+        "self_review": {
+          "sha256": "94fb83b9542c5182368091f0020888523286a69f2e946deefe46df80376123aa",
+          "bytes": 5749,
+          "modified_at": "2026-08-03T12:26:13.557014+00:00"
+        },
+        "main_review": {
+          "sha256": "740777ff131fbf0945c2328ef195fdea48614b62c38acb5ba416155082423318",
+          "bytes": 6643,
+          "modified_at": "2026-08-03T12:32:55.176518+00:00"
+        },
+        "comparison": {
+          "sha256": "f65c663711911344227eba841326eee9a8ccf1d36a9d61a1ed7abc329d032c2c",
+          "bytes": 2511715,
+          "modified_at": "2026-08-03T12:25:22.352827+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "802e8ce26ffbb5ec20ccd0f673dc8eaaaddab99af020836659fc9ca073383c26",
+          "bytes": 311429,
+          "modified_at": "2026-08-03T12:25:22.377879+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 0,
+        "self_review_count": 1,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P37",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "3be5090c9bbd05ad925af28ea66f975ef9f7147af8a71bad6276cef43fd9bcad",
+          "bytes": 1888629,
+          "modified_at": "2026-08-03T03:36:14.402779+00:00"
+        },
+        "native_svg": {
+          "sha256": "a73c5c054388c0a677347204faf749746a13426a48158db9832a41cfbfb22e8f",
+          "bytes": 24096,
+          "modified_at": "2026-08-03T12:23:04.542934+00:00"
+        },
+        "preview": {
+          "sha256": "c70e5de32eaac06cc366687e25959694891aa7fc9c382d239b6fd4fa5c2eba9f",
+          "bytes": 596267,
+          "modified_at": "2026-08-03T13:27:16.389286+00:00"
+        },
+        "native_report": {
+          "sha256": "46d52b95215eab3c80ee6a790c08d6060d993e9813acee0fa219e376050c5f54",
+          "bytes": 734,
+          "modified_at": "2026-08-03T13:27:16.391834+00:00"
+        },
+        "self_review": {
+          "sha256": "62efaf6f0475d71807e23c14f36235695d1699b680b8bc71d9961c68f31b8655",
+          "bytes": 7691,
+          "modified_at": "2026-08-03T12:25:10.298028+00:00"
+        },
+        "main_review": {
+          "sha256": "a60e21e5e648b959801b49cca1b0f9c820c615fecd5b97edbd6f063e73538dda",
+          "bytes": 7409,
+          "modified_at": "2026-08-03T12:32:55.176714+00:00"
+        },
+        "comparison": {
+          "sha256": "9b0673a844a7a48df7a607043402a8a1cb2b0b6210a43b5fff4021b0dda29922",
+          "bytes": 2520027,
+          "modified_at": "2026-08-03T12:23:25.087536+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "10de095e9492df6e2636842d9a6d48a5ff5142a596611a0256fc65b9c537c84b",
+          "bytes": 383277,
+          "modified_at": "2026-08-03T12:23:25.170982+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 0,
+        "self_review_count": 1,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P38",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "77e513313040d9d537c36367ce00854fd39b8ea0db181eaf395dc2d158a85785",
+          "bytes": 2036614,
+          "modified_at": "2026-08-03T03:39:46.949338+00:00"
+        },
+        "native_svg": {
+          "sha256": "6822fd3c613dd0e0180175669ec7d3337326b7656a76b78f990c0d3bffa374b7",
+          "bytes": 29573,
+          "modified_at": "2026-08-03T12:21:58.978238+00:00"
+        },
+        "preview": {
+          "sha256": "9f6f5e76f3366c45146aee9e1df78ac5aec80ead452c34cf9cadc42ca24b0332",
+          "bytes": 578194,
+          "modified_at": "2026-08-03T13:27:16.770429+00:00"
+        },
+        "native_report": {
+          "sha256": "565a3ad543baba99f67104c6c049a1dde1959873071e312d289f83fad111d2b7",
+          "bytes": 715,
+          "modified_at": "2026-08-03T13:27:16.773216+00:00"
+        },
+        "self_review": {
+          "sha256": "69b25b7c0c0bdd11f7c2b2515dea2bd65b72bc4f797e80448c83e17b4e4747ff",
+          "bytes": 6124,
+          "modified_at": "2026-08-03T12:24:03.521044+00:00"
+        },
+        "main_review": {
+          "sha256": "f26f3ff892335cf6dfcf3812062ea33f11f8900dbb470d8259a495f77f5c71b6",
+          "bytes": 6703,
+          "modified_at": "2026-08-03T12:32:55.176948+00:00"
+        },
+        "comparison": {
+          "sha256": "55ea34f082628c8a8e5ee7b0a38eecea47c029df7cda909a01404be91dd7336c",
+          "bytes": 2659029,
+          "modified_at": "2026-08-03T12:22:53.647574+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "0213a6ae71aa1a7ee13c6fb8d4f923483ae27c71ee2c5234b4ef4f967792eedb",
+          "bytes": 645234,
+          "modified_at": "2026-08-03T12:22:53.718316+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 0,
+        "self_review_count": 1,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P39",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "2796cce1bbeb945569e9c0422c6004630e64081981ae23a2f1e234fd9c4380b7",
+          "bytes": 1791426,
+          "modified_at": "2026-08-02T15:13:11.718521+00:00"
+        },
+        "native_svg": {
+          "sha256": "e713d3d3f4a350926952414c747f7e6d177d345f719f10e7528af48f90922f3c",
+          "bytes": 24137,
+          "modified_at": "2026-08-03T12:23:43.697833+00:00"
+        },
+        "preview": {
+          "sha256": "9ee63954b08f63e96631253720792b3c9b653b276c9a1c66eeff660e6c9cc767",
+          "bytes": 452134,
+          "modified_at": "2026-08-03T13:27:17.148266+00:00"
+        },
+        "native_report": {
+          "sha256": "89b89ef45202278aa5f4856dfa5e36a289eac26ed741aba801bb7b0183e5c02e",
+          "bytes": 753,
+          "modified_at": "2026-08-03T13:27:17.150333+00:00"
+        },
+        "self_review": {
+          "sha256": "abc1d2915f0aa2d6ec9d4818809b4a73bdca6dc4c66912792cfc80ecff0839ba",
+          "bytes": 7279,
+          "modified_at": "2026-08-03T12:25:37.568163+00:00"
+        },
+        "main_review": {
+          "sha256": "5ed9d2a4b8757a5dbb472fc5ad0ee7ed4a98d52cea0771942f0f8a29d0b80bc7",
+          "bytes": 5858,
+          "modified_at": "2026-08-03T12:32:55.177114+00:00"
+        },
+        "comparison": {
+          "sha256": "1d9012118806080abba776d727b87c680aab0d1c5ee3b9d94cca0dfcb234ad8b",
+          "bytes": 835323,
+          "modified_at": "2026-08-03T12:24:12.126311+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "ec3ca7461ab1cfd612b2e8e53d2baee28945b03d9d3a3f58811ba1d106ebab4e",
+          "bytes": 200431,
+          "modified_at": "2026-08-03T12:24:12.236043+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 0,
+        "self_review_count": 1,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P40",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "0ab565855017b0b5040ded83e9365d22ea4ef5bd3d797ef3954a1f0ea0ae30b3",
+          "bytes": 1797639,
+          "modified_at": "2026-08-02T15:13:11.722617+00:00"
+        },
+        "native_svg": {
+          "sha256": "498b4a49723a6e4963665249c87441884568f78472d42fac350f178ead9829d3",
+          "bytes": 28750,
+          "modified_at": "2026-08-03T12:45:56.978314+00:00"
+        },
+        "preview": {
+          "sha256": "c7db7784c9392e2705b5b1237238c26dd506bfc05cbc5a35e76b84aeb30175c8",
+          "bytes": 463422,
+          "modified_at": "2026-08-03T13:27:17.446980+00:00"
+        },
+        "native_report": {
+          "sha256": "0b5c73331a17dd1bd663d1b59eed4662db800a9f50294aceb4ddba7d48111bbe",
+          "bytes": 735,
+          "modified_at": "2026-08-03T13:27:17.449376+00:00"
+        },
+        "self_review": {
+          "sha256": "9bf95978ff4889521073e7a0dafdf025681e6798639a02573e8c10bf2d4ddd39",
+          "bytes": 6407,
+          "modified_at": "2026-08-03T12:47:33.140110+00:00"
+        },
+        "main_review": {
+          "sha256": "8ca85f9eca398a758f22faf9534684287fe15c748ef92aa89370a95b9d0aa23f",
+          "bytes": 6047,
+          "modified_at": "2026-08-03T13:05:44.650237+00:00"
+        },
+        "comparison": {
+          "sha256": "1cc438ac99516b91c8ee90358e14f637e15fc6a4af6810548778b6012a539098",
+          "bytes": 2295236,
+          "modified_at": "2026-08-03T12:46:38.986220+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "ab8cb344134a8af3292468403aad787256074b16e22a1cd1fddcfb0260e72e72",
+          "bytes": 331017,
+          "modified_at": "2026-08-03T12:46:39.022822+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 0,
+        "self_review_count": 1,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P41",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "c567cd82c71e1540ab71b09291fa82f9c1b5b425f79086fa8fdc27f0b8e96c35",
+          "bytes": 1776912,
+          "modified_at": "2026-08-02T15:13:11.724574+00:00"
+        },
+        "native_svg": {
+          "sha256": "d381c59c123fa569c8a7d18c42c33d534e7473dff7a2e7a281716461d4059e90",
+          "bytes": 29487,
+          "modified_at": "2026-08-03T12:47:10.149053+00:00"
+        },
+        "preview": {
+          "sha256": "b01475ee65ab93a8e22fc07f87511b22ab4aa7e42f20192ba5749247d829204e",
+          "bytes": 478013,
+          "modified_at": "2026-08-03T13:27:17.768735+00:00"
+        },
+        "native_report": {
+          "sha256": "caec8bc401f44bab8446429ee5089976b1a1d6396a90df50119dd5ea98fd6d7c",
+          "bytes": 716,
+          "modified_at": "2026-08-03T13:27:17.771151+00:00"
+        },
+        "self_review": {
+          "sha256": "bdf3f4a7c9bf6bb557d379aec583f10f8c35e6233f928ca3ab57eabe01f2ebed",
+          "bytes": 5861,
+          "modified_at": "2026-08-03T12:48:56.596653+00:00"
+        },
+        "main_review": {
+          "sha256": "e718588a950627e98c68b01e490cc88923fa2c5d431fbf82a5d04a76734bb04f",
+          "bytes": 5140,
+          "modified_at": "2026-08-03T13:05:44.650667+00:00"
+        },
+        "comparison": {
+          "sha256": "a3a0975d329935c8354fe81997f4390a427cda2ec2a9cc963464ca5f29be38a1",
+          "bytes": 2297358,
+          "modified_at": "2026-08-03T12:47:55.009838+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "bcfe13a22eb2fb9ef08ddf5698a7c91c828b86b1e227fb1982128b3c5d2c7cd2",
+          "bytes": 280973,
+          "modified_at": "2026-08-03T12:47:55.046724+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 0,
+        "self_review_count": 1,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P42",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "aa4e952ceecb42ea48179fc383b3d313a547dcf9a9f269f891b57474d71cb261",
+          "bytes": 1646217,
+          "modified_at": "2026-08-02T15:19:59.600551+00:00"
+        },
+        "native_svg": {
+          "sha256": "ce0bde307ed14204b510117b0989f0ce6f9efe02f9ae7491bba65a7951e2266f",
+          "bytes": 24763,
+          "modified_at": "2026-08-03T12:45:47.309573+00:00"
+        },
+        "preview": {
+          "sha256": "4534c77894d5165947e5aea497e47982f0afc33331258adafe29ba8a0bec87d2",
+          "bytes": 447265,
+          "modified_at": "2026-08-03T13:27:18.071634+00:00"
+        },
+        "native_report": {
+          "sha256": "4484d2d7cbc91bc417e85eda157d463648ae0c50d013b52514fced3affb0baee",
+          "bytes": 762,
+          "modified_at": "2026-08-03T13:27:18.074014+00:00"
+        },
+        "self_review": {
+          "sha256": "a25d8214e2332ef009dbb695d88bf71e25ec50b322ef7330203d0724d0f7306b",
+          "bytes": 4948,
+          "modified_at": "2026-08-03T12:47:30.118795+00:00"
+        },
+        "main_review": {
+          "sha256": "c0b60ca865bf66089c1878951d91b1c83518b6426a54174c7d5cba41f71a2574",
+          "bytes": 4487,
+          "modified_at": "2026-08-03T12:51:17.481778+00:00"
+        },
+        "comparison": {
+          "sha256": "4d303f8437c90ed7b361a5c419380acd1692f047e21377413f8e1ae505278655",
+          "bytes": 2123116,
+          "modified_at": "2026-08-03T12:46:41.889549+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "547652d846c4650a94d77ca94d55937a54e2703c128116d29b1160b389d3e288",
+          "bytes": 68458,
+          "modified_at": "2026-08-03T12:46:41.899160+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 0,
+        "self_review_count": 1,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P43",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "dcfbdba88d91d162458cacb3406e54707f5c6957e97e14f06bb0f81fcd9ba861",
+          "bytes": 1828049,
+          "modified_at": "2026-08-02T15:19:59.602995+00:00"
+        },
+        "native_svg": {
+          "sha256": "1819f186465503c757b0973e73551f84ab197eb0c3aa27c0553c1653fb28dc3c",
+          "bytes": 21965,
+          "modified_at": "2026-08-03T12:49:09.695107+00:00"
+        },
+        "preview": {
+          "sha256": "f7f455d6c527112b8194d4a57bbaee80435620f556ed96a6724f995459df66b6",
+          "bytes": 541724,
+          "modified_at": "2026-08-03T13:27:18.377143+00:00"
+        },
+        "native_report": {
+          "sha256": "c2bb46bfd1091d55aeba3f95a8bcb368d6ec9eaaa4dc705facb9bf99ccd14533",
+          "bytes": 736,
+          "modified_at": "2026-08-03T13:27:18.379369+00:00"
+        },
+        "self_review": {
+          "sha256": "0b018e302fddc5516d3a6993c6faca3ad27aeaf31e95d1182241a44040990e0b",
+          "bytes": 8731,
+          "modified_at": "2026-08-03T12:51:20.140235+00:00"
+        },
+        "main_review": {
+          "sha256": "7f1b027af188a55aad86455c79cdba1996d9a15cda723c4f95e780a58d4b5111",
+          "bytes": 8153,
+          "modified_at": "2026-08-03T13:05:44.653203+00:00"
+        },
+        "comparison": {
+          "sha256": "c0564e30c51637863903d0ac97e166f7ab798f95361c15561d19abfd50d6f21e",
+          "bytes": 926782,
+          "modified_at": "2026-08-03T12:49:46.283665+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "7ea5bcd4b333c6514c231bca515d8e005dfae4a99b3da7f8eff7d7e477a53ac9",
+          "bytes": 139774,
+          "modified_at": "2026-08-03T12:49:46.300494+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 0,
+        "self_review_count": 1,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P44",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "fdc1167a82ffeb233c0d73dcadae1ab2b749814f746a91f214fd44d6498c2e54",
+          "bytes": 1846518,
+          "modified_at": "2026-08-02T15:19:59.605091+00:00"
+        },
+        "native_svg": {
+          "sha256": "e034714c2ab9dcc9a9394de2abdad6c16140187c44712b0d46cbe7f4a2a70c6d",
+          "bytes": 36071,
+          "modified_at": "2026-08-03T12:48:51.024171+00:00"
+        },
+        "preview": {
+          "sha256": "f6f6dc987b24566ba467443e8da093c761d98a2406e49c109f42fb16b22ad562",
+          "bytes": 506565,
+          "modified_at": "2026-08-03T13:27:18.689724+00:00"
+        },
+        "native_report": {
+          "sha256": "657d79aa8d1cf9cac60e59fb1de7d5216b50e3a4a70500cdaf6e2327e7a82c19",
+          "bytes": 782,
+          "modified_at": "2026-08-03T13:27:18.692227+00:00"
+        },
+        "self_review": {
+          "sha256": "ab1bb3c1b82c35acf512d2b02a9509c33cc0d4a62de81abfba5cc6d637924f97",
+          "bytes": 5298,
+          "modified_at": "2026-08-03T12:50:16.971768+00:00"
+        },
+        "main_review": {
+          "sha256": "0ac2c1a6755fc9eb5d5ffd7305bc5eb911b447f1a4e2e4933cc0fea2adbf6f55",
+          "bytes": 4504,
+          "modified_at": "2026-08-03T13:05:44.653550+00:00"
+        },
+        "comparison": {
+          "sha256": "d587643181e38d5cbb6fc58319c2676395cae80a1b6820088364fb319300c07e",
+          "bytes": 2397967,
+          "modified_at": "2026-08-03T12:49:23.755772+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "b9bb16ab3d38f848575067c82596074df9a644cfc7d6bf439e0c6c1243bba1b0",
+          "bytes": 956337,
+          "modified_at": "2026-08-03T12:49:23.821043+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 0,
+        "self_review_count": 1,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P45",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "d89d31349fa1a99047ab16c11c188cb8a4e07482fb5788f8eb8c29eabfaa04a6",
+          "bytes": 1709529,
+          "modified_at": "2026-08-02T15:25:43.528828+00:00"
+        },
+        "native_svg": {
+          "sha256": "4c06f08df8fb689558e6f80c94d5e08b2b3cde436727e71f08cd68d1fd840c82",
+          "bytes": 25074,
+          "modified_at": "2026-08-03T12:46:04.302879+00:00"
+        },
+        "preview": {
+          "sha256": "5235de99cad442e78b744faa296bc6cf89464fbc880b28c571baddc6a4feca40",
+          "bytes": 453871,
+          "modified_at": "2026-08-03T13:27:18.994483+00:00"
+        },
+        "native_report": {
+          "sha256": "3faddfa0add105e78dbd949fc9713c99285b1a11d2d5d563a9d0e106a4ea597b",
+          "bytes": 779,
+          "modified_at": "2026-08-03T13:27:18.996670+00:00"
+        },
+        "self_review": {
+          "sha256": "a5c778cd620b54e3fbdfbd548a1dad920ba6b3fbe1200fafa34728f947177b2a",
+          "bytes": 5495,
+          "modified_at": "2026-08-03T12:47:56.940535+00:00"
+        },
+        "main_review": {
+          "sha256": "cc4c7aa0ea3341f939abc77ece51710d3f51a7d678eaac7d65faef57320c91c1",
+          "bytes": 5296,
+          "modified_at": "2026-08-03T13:05:44.653948+00:00"
+        },
+        "comparison": {
+          "sha256": "c59b11e5a144f1a3bd321594d09262ac95e339bb3d7850d3a9d139b4d50de7ba",
+          "bytes": 2192256,
+          "modified_at": "2026-08-03T12:47:01.289428+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "7710abdc6a09470b0704951ab653e891b6d385d1006f91850b42cfc4f7296fb2",
+          "bytes": 899493,
+          "modified_at": "2026-08-03T12:47:01.387498+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 0,
+        "self_review_count": 1,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P46",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "2b85ed63066453c39820d55967c3068af45969effa1a63eec28724668e20c85f",
+          "bytes": 1889890,
+          "modified_at": "2026-08-02T15:25:43.531334+00:00"
+        },
+        "native_svg": {
+          "sha256": "de0132eff39bd9e0fdfa288eebb899066932cbc9d1e9d72f71832e9449afe824",
+          "bytes": 38117,
+          "modified_at": "2026-08-03T11:48:20.524431+00:00"
+        },
+        "preview": {
+          "sha256": "c4b5106955a3e4439723b7bf40774a7f709b7c621bd756b5b863a04370f43b6b",
+          "bytes": 596544,
+          "modified_at": "2026-08-03T13:27:19.309348+00:00"
+        },
+        "native_report": {
+          "sha256": "6c59df49921086068ba05cfb099f1d077244571d0d67461b07f3ec780a300afd",
+          "bytes": 766,
+          "modified_at": "2026-08-03T13:27:19.311507+00:00"
+        },
+        "self_review": {
+          "sha256": "c7ab77edcc1eed8ec0b49cc1532782bbe3553e1d195e552edcbd7ea2e55dc492",
+          "bytes": 16709,
+          "modified_at": "2026-08-03T11:49:32.856497+00:00"
+        },
+        "main_review": {
+          "sha256": "b7ec9294c598d89ac22d177f28bed5b92b86bdd470f16d5adcc5f7bced129386",
+          "bytes": 6299,
+          "modified_at": "2026-08-03T12:12:06.450504+00:00"
+        },
+        "comparison": {
+          "sha256": "31ce6ab006658598e42c68f2ca7b2942421bacf09ae4e07fc35944bedcedc629",
+          "bytes": 2521959,
+          "modified_at": "2026-08-03T11:49:03.909523+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "0e4f0465991c464a26574f3434ac48935143aca14b167853fb1eb5df41335941",
+          "bytes": 609701,
+          "modified_at": "2026-08-03T11:49:03.967930+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 2,
+        "self_review_count": 3,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P47",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "a097758c1ec705b878bae9780c9a465f92ecae02900b7f89a7a669b94fd7030f",
+          "bytes": 1991136,
+          "modified_at": "2026-08-02T15:31:05.543222+00:00"
+        },
+        "native_svg": {
+          "sha256": "7c33b481668858859a8c6c09d32a014160baa7742a5e4154b8843733b516ebec",
+          "bytes": 36176,
+          "modified_at": "2026-08-03T11:13:21.994763+00:00"
+        },
+        "preview": {
+          "sha256": "6b6ec8fb9764ce1ba48c0b73fe8f7b2cb26e220e362a7fd99690a050bcd5deb1",
+          "bytes": 595035,
+          "modified_at": "2026-08-03T13:27:19.638554+00:00"
+        },
+        "native_report": {
+          "sha256": "a56fd310a96eaa38972be27d6f04c1b14d207e062a5aab7a41d981508724ebec",
+          "bytes": 766,
+          "modified_at": "2026-08-03T13:27:19.640738+00:00"
+        },
+        "self_review": {
+          "sha256": "51529bdd7555582d712e836a9cacb64bfe4df4bee57d9f477ffb536646477a64",
+          "bytes": 5502,
+          "modified_at": "2026-08-03T11:15:41.400330+00:00"
+        },
+        "main_review": {
+          "sha256": "03856fa2ed6cba46a3a4c1f1e64f81a7eff9eb95b4aaffbe88ffb72ccaa74e46",
+          "bytes": 4982,
+          "modified_at": "2026-08-03T12:12:06.450683+00:00"
+        },
+        "comparison": {
+          "sha256": "d5d6cc074d342d51e79b3f4ef118467e013565c65e363d34969c46ef7ac6cb3e",
+          "bytes": 2626039,
+          "modified_at": "2026-08-03T11:14:12.115219+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "23a7ec02e312eae95546dfeaf0209d70f3b1893f7b1949887e4db894cfa58e7e",
+          "bytes": 425940,
+          "modified_at": "2026-08-03T11:14:12.143328+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 1,
+        "self_review_count": 2,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P48",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "74779a2244a7aa06c47ed1ef81b1d0ee39de19e7af49b5079769cd6c16781489",
+          "bytes": 1736636,
+          "modified_at": "2026-08-02T15:31:05.547756+00:00"
+        },
+        "native_svg": {
+          "sha256": "3fc617779715ce100fd212ad58871a108922ee4ec67b581e22e9f6986ed35e15",
+          "bytes": 32935,
+          "modified_at": "2026-08-03T11:12:46.019848+00:00"
+        },
+        "preview": {
+          "sha256": "43073e18ef64f265ecb29676226d3b6076f779eaf2c8f709c5880192b7d7ba58",
+          "bytes": 512396,
+          "modified_at": "2026-08-03T13:27:19.915140+00:00"
+        },
+        "native_report": {
+          "sha256": "607ef3d2847dc02373f77df65aa65f4a6a8b799a329cf2b2f1ad3451f0ff7284",
+          "bytes": 801,
+          "modified_at": "2026-08-03T13:27:19.917497+00:00"
+        },
+        "self_review": {
+          "sha256": "3fb7592abae8a523cc67d5b162ec938ce5dd1df6ee6d860923854889385c870a",
+          "bytes": 5136,
+          "modified_at": "2026-08-03T11:15:09.518407+00:00"
+        },
+        "main_review": {
+          "sha256": "4ff95587306cd68df42cc64f6f136f5fe9bb2eb28d7791ec8e6cc339f8d5904b",
+          "bytes": 4290,
+          "modified_at": "2026-08-03T12:12:06.450852+00:00"
+        },
+        "comparison": {
+          "sha256": "b42495bc47be8d764567dd601b94bc8f0bacc63c6722963f74179cee810100b3",
+          "bytes": 2264167,
+          "modified_at": "2026-08-03T11:13:35.611064+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "65db5a276b7b109a93c11c7c511b5c1377b1e29da6c38a2c73ad117ce9a951b3",
+          "bytes": 543622,
+          "modified_at": "2026-08-03T11:14:07.081510+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 1,
+        "self_review_count": 2,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P49",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "0d72eaf7f339a240202763a60f152a853bf38256a742fca77579c5e3a532c5d0",
+          "bytes": 1902760,
+          "modified_at": "2026-08-02T14:27:24.472954+00:00"
+        },
+        "native_svg": {
+          "sha256": "8c56f5d97673b0aa9251a47fc185defcd942cf49aeef2ed48d621732ea5a5e13",
+          "bytes": 30666,
+          "modified_at": "2026-08-03T11:56:34.398143+00:00"
+        },
+        "preview": {
+          "sha256": "8ee6a22e5041b00fb356c171b330711c444966ae77936740ea625d0dbe631cd2",
+          "bytes": 495650,
+          "modified_at": "2026-08-03T13:27:16.492081+00:00"
+        },
+        "native_report": {
+          "sha256": "979b048d26ab5a0ed88aa158f45b7eaf3ce8e9dfa333269b354099fa45ac14ba",
+          "bytes": 779,
+          "modified_at": "2026-08-03T13:27:16.496161+00:00"
+        },
+        "self_review": {
+          "sha256": "ab0022c28e1c0b3903cfadfa48644b10dbe302797eec3ba6d7b98409c180a114",
+          "bytes": 9591,
+          "modified_at": "2026-08-03T11:59:03.059669+00:00"
+        },
+        "main_review": {
+          "sha256": "520d26024181d190a64eb1dffd71d83a015f814ce5e7d45ed3232748512e7deb",
+          "bytes": 6991,
+          "modified_at": "2026-08-03T12:12:06.450989+00:00"
+        },
+        "comparison": {
+          "sha256": "7eec34f95ecab7836d93f16d36f2addcfa6467eabc459671a58eed64ec20e5be",
+          "bytes": 1279542,
+          "modified_at": "2026-08-03T11:58:37.648201+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "50deaeea6921f3ca9b4e467e37f8a819cec5b00fe150ff8260b96ae5b95eebb4",
+          "bytes": 98187,
+          "modified_at": "2026-08-03T11:58:37.662580+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 3,
+        "self_review_count": 4,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P50",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "5c2b79c8457aa94c82c205418125e20b7b2e26fa565d5803d4f36552a37ff2d9",
+          "bytes": 1785366,
+          "modified_at": "2026-08-02T14:33:03.559033+00:00"
+        },
+        "native_svg": {
+          "sha256": "ac67938ce3f2671eaaffc82a29be250b164ebe5f09be07a9b883e802bce9d25c",
+          "bytes": 34446,
+          "modified_at": "2026-08-03T11:48:44.761395+00:00"
+        },
+        "preview": {
+          "sha256": "3796e9427b01385b995ca73007aa627e6980d6bb3bd8fc93592de74371290977",
+          "bytes": 466905,
+          "modified_at": "2026-08-03T13:27:16.925608+00:00"
+        },
+        "native_report": {
+          "sha256": "2f22db6887d8d10795067bf2137812a99420d0b747586bdc3aeb143847e1b0ca",
+          "bytes": 778,
+          "modified_at": "2026-08-03T13:27:16.928537+00:00"
+        },
+        "self_review": {
+          "sha256": "cdfa9e79549d86417053314c1ad772354546fd5f4817ee6062356e37b6f398e7",
+          "bytes": 7085,
+          "modified_at": "2026-08-03T11:48:44.761789+00:00"
+        },
+        "main_review": {
+          "sha256": "645097022895d11d1229a9afd53f83e276869bcbbda7bd4228497519baad8a1b",
+          "bytes": 6065,
+          "modified_at": "2026-08-03T12:12:06.451512+00:00"
+        },
+        "comparison": {
+          "sha256": "953397d19710892b068645426d9386a3d4504a589a126caf644b3f0cec23d09e",
+          "bytes": 2211529,
+          "modified_at": "2026-08-03T11:49:08.264206+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "6d93a624b37affce5ef5c0ff5fc90a530dd9ecd5201c53912ee9d0d01d9fa0e5",
+          "bytes": 151746,
+          "modified_at": "2026-08-03T11:49:08.299773+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 2,
+        "self_review_count": 3,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P51",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "cc566b072b5cdaa9bc0082e53dee07c1b611ddf8564f07d9583e115aefb77d48",
+          "bytes": 1762647,
+          "modified_at": "2026-08-02T14:37:22.276804+00:00"
+        },
+        "native_svg": {
+          "sha256": "4a1c3d410b8a8a9908ac8525b816187c1096d8bd9ce97e133344604a5bc9fdef",
+          "bytes": 24643,
+          "modified_at": "2026-08-03T11:12:43.321490+00:00"
+        },
+        "preview": {
+          "sha256": "b6cc9984d51a512a172a3944027fb612adad0703b297ee7cb081898e46ae24b5",
+          "bytes": 420861,
+          "modified_at": "2026-08-03T13:27:17.235342+00:00"
+        },
+        "native_report": {
+          "sha256": "cbc295944d855ba8fd673b363945caf020ac8cc58650cf544e121bc9cf5ee834",
+          "bytes": 795,
+          "modified_at": "2026-08-03T13:27:17.237689+00:00"
+        },
+        "self_review": {
+          "sha256": "d8d2d36270000712fe475afddadce102026f419f8595afad6d48e29239b2f39d",
+          "bytes": 5653,
+          "modified_at": "2026-08-03T11:14:35.714558+00:00"
+        },
+        "main_review": {
+          "sha256": "d9dd5dc49a424e7fecaf63322173ed701e65bd268b0d6315261a7d7d340bc829",
+          "bytes": 5678,
+          "modified_at": "2026-08-03T12:12:06.451720+00:00"
+        },
+        "comparison": {
+          "sha256": "76653aa0b28b07e4651072a81187e2452e5e199a9adf7dda05bb682f0f318002",
+          "bytes": 2225432,
+          "modified_at": "2026-08-03T11:13:36.138005+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "870067bd375866bb02f05afaf781bcd1aab6cdc04b20383eb427cc96d06a4fe9",
+          "bytes": 671695,
+          "modified_at": "2026-08-03T11:13:36.204572+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 0,
+        "self_review_count": 1,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P52",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "f66477619605b0d2593100e49a971db63470da80024fca892ba0506ac05ab90c",
+          "bytes": 1769135,
+          "modified_at": "2026-08-02T14:33:03.564780+00:00"
+        },
+        "native_svg": {
+          "sha256": "0714d96a2bfd2702f545af2d7dca072432226ea1e696a45f21dd1d675fa9e8f9",
+          "bytes": 20812,
+          "modified_at": "2026-08-03T12:27:27.679236+00:00"
+        },
+        "preview": {
+          "sha256": "9e50d06bc738e5ca916a4d303247cc13c12665dbe3c55c671482e11c94b8be19",
+          "bytes": 436263,
+          "modified_at": "2026-08-03T13:27:17.529262+00:00"
+        },
+        "native_report": {
+          "sha256": "1f5a7bf3f64148dcfd46ebb1f7091107fe2d9eea7c8aa01574ad6d6a7d61f59c",
+          "bytes": 795,
+          "modified_at": "2026-08-03T13:27:17.531470+00:00"
+        },
+        "self_review": {
+          "sha256": "daa584ec47c26cf7d265001ae610ab8e224f3a9aec163a12b7c42bdb7cbbd082",
+          "bytes": 4785,
+          "modified_at": "2026-08-03T12:29:13.118627+00:00"
+        },
+        "main_review": {
+          "sha256": "6a9911c370683a68d82aa6a886f9a570e86c14bf3d38bb7198f38e016d9be730",
+          "bytes": 4234,
+          "modified_at": "2026-08-03T12:45:42.859408+00:00"
+        },
+        "comparison": {
+          "sha256": "bdfc01c24f3413ac783a614b5fd5d651c0d578a11f7cabb5bae157c279c4f29c",
+          "bytes": 2238688,
+          "modified_at": "2026-08-03T12:28:27.591336+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "9f36bfb8f36b2ec5617274982941801beb3f1aafa73470cab512671a1ce4b71f",
+          "bytes": 511149,
+          "modified_at": "2026-08-03T12:28:27.687134+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 1,
+        "self_review_count": 2,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P53",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "4f2adff2cbed3246c0634d7e5b8be91387b126858635a7868643e551b164a686",
+          "bytes": 1777081,
+          "modified_at": "2026-08-02T14:42:50.827224+00:00"
+        },
+        "native_svg": {
+          "sha256": "b38fc46312734254a93ca92fcb1f20eaf69fb5c0e8090872faecaa6691b8b9ab",
+          "bytes": 26647,
+          "modified_at": "2026-08-03T12:28:08.590330+00:00"
+        },
+        "preview": {
+          "sha256": "8d847b059375751563c10c34c60ca0a3af6303018ddc380c73b8f31600a1c7cb",
+          "bytes": 448239,
+          "modified_at": "2026-08-03T13:27:17.856522+00:00"
+        },
+        "native_report": {
+          "sha256": "782657fb7c6fab3f0a69ca5f31b70caee63fccc2fa455a54ccfe028f2941a6b6",
+          "bytes": 754,
+          "modified_at": "2026-08-03T13:27:17.858800+00:00"
+        },
+        "self_review": {
+          "sha256": "eeb8745e0550569dc73cf7bd8825e616d726e178333ca6303f5d7a9268bf3535",
+          "bytes": 5377,
+          "modified_at": "2026-08-03T12:29:18.055367+00:00"
+        },
+        "main_review": {
+          "sha256": "8a430e98703b14251dc8614572873da28ffbcbf17fff491210c3d3504e5a179b",
+          "bytes": 4423,
+          "modified_at": "2026-08-03T12:45:42.859700+00:00"
+        },
+        "comparison": {
+          "sha256": "ea65e6fba03e2d882dd13f545fe7f4cf4bada5916814981d54de6b354391d227",
+          "bytes": 2254912,
+          "modified_at": "2026-08-03T12:28:31.574046+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "01b996a61a71b7f32f41700a599b308e422ac04bfaa98304f62e3497e02c20ca",
+          "bytes": 271241,
+          "modified_at": "2026-08-03T12:28:31.606663+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 1,
+        "self_review_count": 2,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P54",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "9e2f4cd6bca85642ac824f51ceba0b60881fb0a7e5ef2a84a0d75844d0303287",
+          "bytes": 1775067,
+          "modified_at": "2026-08-02T14:42:50.830275+00:00"
+        },
+        "native_svg": {
+          "sha256": "a2a74ea7779d215f4e3dc0565dc875ee2688ab14e7738eba76847b7453beb150",
+          "bytes": 20714,
+          "modified_at": "2026-08-03T12:25:43.313906+00:00"
+        },
+        "preview": {
+          "sha256": "24bb50d5a4ec12afd6d24fcb1074279d876dcc125b49de47a89abdaeb43090a0",
+          "bytes": 470003,
+          "modified_at": "2026-08-03T13:27:18.162698+00:00"
+        },
+        "native_report": {
+          "sha256": "0442b42ac1b7bb31f5d2bfb9b210701f2e4945400e6fb699c294193db170e0dd",
+          "bytes": 732,
+          "modified_at": "2026-08-03T13:27:18.165025+00:00"
+        },
+        "self_review": {
+          "sha256": "a77db5265597d10f4f6ab003f6d87b6f61d111dad838404beb14ab5cdfeaff04",
+          "bytes": 6507,
+          "modified_at": "2026-08-03T12:27:34.242586+00:00"
+        },
+        "main_review": {
+          "sha256": "e5463d96a10755019917bf7c2a683029c9a4302228271cfc7d7a06d44f7ef481",
+          "bytes": 5013,
+          "modified_at": "2026-08-03T12:45:42.859849+00:00"
+        },
+        "comparison": {
+          "sha256": "2fe2652a3f08609c1fa9e72acf3453137ca5208d7708b120238f4de5f3d97673",
+          "bytes": 2284774,
+          "modified_at": "2026-08-03T12:26:20.637896+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "c9a8d53f9c6bbcbcffc0452ba2aca1ca9afeefca1eb9e4b3dc4e51fb5e0c9207",
+          "bytes": 1087559,
+          "modified_at": "2026-08-03T12:26:20.730277+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 1,
+        "self_review_count": 2,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P55",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "2502aea54f078102472b2e44fd898163008c57585343280f789f19f985d656f3",
+          "bytes": 2033876,
+          "modified_at": "2026-08-03T03:56:59.227991+00:00"
+        },
+        "native_svg": {
+          "sha256": "4dc9be4ae152dcc0e2ff6565d1df31ae87ac9ff4cca0c0c6fc4eda61cedf06d6",
+          "bytes": 26065,
+          "modified_at": "2026-08-03T12:27:32.759470+00:00"
+        },
+        "preview": {
+          "sha256": "e27f2f3d10984c1163e60767945c8646f9be6ee52f4257bc57d7bb40bcc57251",
+          "bytes": 580947,
+          "modified_at": "2026-08-03T13:27:18.499014+00:00"
+        },
+        "native_report": {
+          "sha256": "ac421777339fc346bc7f7e5ad825955a8283b6609029ac21c0f84f7bfe1b542d",
+          "bytes": 752,
+          "modified_at": "2026-08-03T13:27:18.501443+00:00"
+        },
+        "self_review": {
+          "sha256": "950e77db298a1355c6bd95510d1c852e9c7411553b51c23555eb665e2ef01291",
+          "bytes": 9914,
+          "modified_at": "2026-08-03T12:30:27.127270+00:00"
+        },
+        "main_review": {
+          "sha256": "9eebdfb8b30792bac3fa8d058a6a6babbac219880df75d0b4104a67d4215298d",
+          "bytes": 4517,
+          "modified_at": "2026-08-03T12:45:42.860006+00:00"
+        },
+        "comparison": {
+          "sha256": "f57de6634838b9ef7a67acad70273b8c9ecfb927b632e3362e656db6aba095cb",
+          "bytes": 989919,
+          "modified_at": "2026-08-03T12:27:59.989182+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "6c372a4c71ee2b4154fb3c90519fedee95bd55e2de32e7105c4f6639c94fdd0d",
+          "bytes": 248006,
+          "modified_at": "2026-08-03T12:28:45.209741+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 2,
+        "self_review_count": 3,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P56",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "1cbb05860a6dd70070313524372f6a8c29d1863b4036c2e1b9f422049f0fc69e",
+          "bytes": 1718621,
+          "modified_at": "2026-08-02T14:50:00.193345+00:00"
+        },
+        "native_svg": {
+          "sha256": "addcf3d97790929400d69d798431e45598e60ee6517246de90d7478c656f77ff",
+          "bytes": 25301,
+          "modified_at": "2026-08-03T12:29:57.411434+00:00"
+        },
+        "preview": {
+          "sha256": "122f01d250930947c69a38fe2b992b92385c232f94fd178790a7c78e0494c3c3",
+          "bytes": 442228,
+          "modified_at": "2026-08-03T13:27:18.796082+00:00"
+        },
+        "native_report": {
+          "sha256": "b652d65388ab660d7408771269074f455cd1d4c0d1952b670633bfd6faa35c26",
+          "bytes": 799,
+          "modified_at": "2026-08-03T13:27:18.798443+00:00"
+        },
+        "self_review": {
+          "sha256": "d092c936b73220a600b1c950f0bcb2cbb45932ed6d2a64be9176a490bd84b490",
+          "bytes": 6173,
+          "modified_at": "2026-08-03T12:30:47.067280+00:00"
+        },
+        "main_review": {
+          "sha256": "83a0fc998e445d49aeb3eb3149f0f5bee73d1e52535666827ff18c4a21ea3aa9",
+          "bytes": 4328,
+          "modified_at": "2026-08-03T12:47:02.819225+00:00"
+        },
+        "comparison": {
+          "sha256": "54387eb7b424360d4fdfa3f0f5a6fec0781657ea7e0acbb181b912a008bd0bf7",
+          "bytes": 817138,
+          "modified_at": "2026-08-03T12:30:29.260708+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "2ec2e07b0d7a1cbf4da6a5e29047ad292376834b8298b0cec647051154e096a6",
+          "bytes": 602103,
+          "modified_at": "2026-08-03T12:30:29.332868+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 2,
+        "self_review_count": 3,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P57",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "8d8518532d43febd04d7d57fefdef4c07d46a00ac2d095a7d1ac299ef17e8535",
+          "bytes": 1905073,
+          "modified_at": "2026-08-03T03:51:36.641690+00:00"
+        },
+        "native_svg": {
+          "sha256": "f33dd279532db967302a8b08271d213e74ee7dcaa36a1e80e4dd9e51fe56d53c",
+          "bytes": 27733,
+          "modified_at": "2026-08-03T12:25:08.390215+00:00"
+        },
+        "preview": {
+          "sha256": "aebbd6a274d7b41ca5bc34ed25b1f394903954d2f051346542c5e5e9d4bc50ca",
+          "bytes": 536779,
+          "modified_at": "2026-08-03T13:27:19.122315+00:00"
+        },
+        "native_report": {
+          "sha256": "d4762b6a95165270b84d5eb5c959f466fc67c2318c7ef201ae4523bf83d38e2f",
+          "bytes": 763,
+          "modified_at": "2026-08-03T13:27:19.124599+00:00"
+        },
+        "self_review": {
+          "sha256": "51ae849e3d1be1db9c47d320f94c214c68c67d7c1dc00b50b5588a5ec4f9ab87",
+          "bytes": 4923,
+          "modified_at": "2026-08-03T12:27:16.955605+00:00"
+        },
+        "main_review": {
+          "sha256": "49a0996373479c23db840ffc15ec9064d522cabb2854f424c45b3dde01d9aa3e",
+          "bytes": 4379,
+          "modified_at": "2026-08-03T12:47:02.819673+00:00"
+        },
+        "comparison": {
+          "sha256": "20e9bb0d2fa8b3b7276e322b6134084cc34b08b8ac1ba936b6b011316ce6dfdb",
+          "bytes": 2478367,
+          "modified_at": "2026-08-03T12:26:05.634929+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "8c34a1259dfa8e492a170e958bb0339bd02997223ec4204725a45fb5a6fcaf08",
+          "bytes": 709228,
+          "modified_at": "2026-08-03T12:26:05.742704+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 0,
+        "self_review_count": 1,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P58",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "0f9b8947eb7afd4abe131e384d2d95e8ad14d3593451299836072de914d4756b",
+          "bytes": 1887026,
+          "modified_at": "2026-08-03T03:55:02.706368+00:00"
+        },
+        "native_svg": {
+          "sha256": "6150e85eb3d1141f3ab8566bd4d7fe555bda637f46533f791cec41fdfcac4d70",
+          "bytes": 30609,
+          "modified_at": "2026-08-03T12:59:46.853367+00:00"
+        },
+        "preview": {
+          "sha256": "082a9a9dbb3daef37c61d8d8450fe681b3773d045391f8d8090e72947247954d",
+          "bytes": 531173,
+          "modified_at": "2026-08-03T13:27:19.462248+00:00"
+        },
+        "native_report": {
+          "sha256": "61743ac41755875c8acc928a850a39371e97646aef9b4cb667f8a791bdcd4e51",
+          "bytes": 747,
+          "modified_at": "2026-08-03T13:27:19.464501+00:00"
+        },
+        "self_review": {
+          "sha256": "8a8a7b6c3d86e3456454db95b03e6922ba8deeaa505fa9b00c0b03de0dff5a12",
+          "bytes": 6929,
+          "modified_at": "2026-08-03T13:01:02.787823+00:00"
+        },
+        "main_review": {
+          "sha256": "cbe4764058625702dbb544fa863786f367d1f28b09542f3f4bd49431d7b11a2b",
+          "bytes": 2964,
+          "modified_at": "2026-08-03T13:15:55.839836+00:00"
+        },
+        "comparison": {
+          "sha256": "893a9a56bce32c6faa7ff466e15ee67b501d251f889a46e94dc9d645c4a8d15f",
+          "bytes": 2448956,
+          "modified_at": "2026-08-03T13:00:06.663015+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "753febf44d8143d8b86a3d4b7448576bad3f718c36367c2b67c09268f8224c83",
+          "bytes": 437626,
+          "modified_at": "2026-08-03T13:00:06.682152+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 2,
+        "self_review_count": 3,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P59",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "6f2f96824fdfde4a5d16bf78ce5373cba19e384a62f1552d2cf8b9e47ee5b9c3",
+          "bytes": 1960534,
+          "modified_at": "2026-08-03T03:41:29.596812+00:00"
+        },
+        "native_svg": {
+          "sha256": "9f0f2803f7ba273544377693bc7e4a738830d4aac04f5d4dd9c7e448a7479651",
+          "bytes": 21487,
+          "modified_at": "2026-08-03T12:57:50.822021+00:00"
+        },
+        "preview": {
+          "sha256": "a0dd85a80e70cda4d0fc53192824a459a6c283d2063f7167bbd95d5763bff63c",
+          "bytes": 514047,
+          "modified_at": "2026-08-03T13:27:19.751788+00:00"
+        },
+        "native_report": {
+          "sha256": "500ae565d2821110aa569bf99cd1c12db398b86a35a6776cf3da32f72c838669",
+          "bytes": 810,
+          "modified_at": "2026-08-03T13:27:19.754967+00:00"
+        },
+        "self_review": {
+          "sha256": "19c4e41c077d9791e99b4b4b0109d8f7fac4d37c053f8ad256f1989c20d46992",
+          "bytes": 8918,
+          "modified_at": "2026-08-03T13:00:54.785024+00:00"
+        },
+        "main_review": {
+          "sha256": "2058c9a09421f9bdbf8addfe609caf81daad3cf97c298bdedb814e0103a28c2b",
+          "bytes": 3622,
+          "modified_at": "2026-08-03T13:16:46.239792+00:00"
+        },
+        "comparison": {
+          "sha256": "ec28d33169ae182892b8365cd8be5d0dafe8ccb443a1d832c086cb998792da08",
+          "bytes": 2519993,
+          "modified_at": "2026-08-03T12:58:34.940713+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "6413644562d683aa74d692630dd88f595d4069bfeb918681a0e160215524bda4",
+          "bytes": 126936,
+          "modified_at": "2026-08-03T12:58:34.945137+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 2,
+        "self_review_count": 3,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P60",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "ae3fd35e5b040ec2115ffc3bc808d90d183597506de46416792077615b2ba412",
+          "bytes": 1866419,
+          "modified_at": "2026-08-03T03:44:35.339207+00:00"
+        },
+        "native_svg": {
+          "sha256": "852da0e5851786ce98298ff21d0abf628eb582ff4e8caa2c80da8c07d39cf08b",
+          "bytes": 24583,
+          "modified_at": "2026-08-03T13:08:51.808397+00:00"
+        },
+        "preview": {
+          "sha256": "c2a1da2f534d2192168de918ffc747344f8fa188df2ef84fb6dcb40dd8904873",
+          "bytes": 471389,
+          "modified_at": "2026-08-03T13:27:20.040080+00:00"
+        },
+        "native_report": {
+          "sha256": "5f1ca1f5ffc7a88a85a86f73bb69b8d509990f12c0de605e01353584fc3e02ae",
+          "bytes": 762,
+          "modified_at": "2026-08-03T13:27:20.042619+00:00"
+        },
+        "self_review": {
+          "sha256": "538bd9392df60ba71752e580358f3e888a9d2a4db290b8d8b56db62966633531",
+          "bytes": 9152,
+          "modified_at": "2026-08-03T13:09:42.097533+00:00"
+        },
+        "main_review": {
+          "sha256": "b127eb7fcdb4ef41c98cd06bd64ba32f5063a988ed5c3ba51e5960f53dcd77db",
+          "bytes": 4973,
+          "modified_at": "2026-08-03T13:20:53.686518+00:00"
+        },
+        "comparison": {
+          "sha256": "324bf476ac7a997329434a8451ae4442e8224e4de4d16e0010b3d4e7d21ac152",
+          "bytes": 2377223,
+          "modified_at": "2026-08-03T13:09:17.363791+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "ad491e47e1b135a72bba933d0324c059a26d54fd6bb3cd99d577380d52c3174c",
+          "bytes": 653327,
+          "modified_at": "2026-08-03T13:09:17.477882+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 2,
+        "self_review_count": 3,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P61",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "580f320d100cac3643701f66dc423eba4b2f70b35b1abbe5482912b8291d4608",
+          "bytes": 2060068,
+          "modified_at": "2026-08-02T15:03:21.736271+00:00"
+        },
+        "native_svg": {
+          "sha256": "a927f0ccdef315a5721d88c52b697e4f1d9b46fdf8733e5786d11ae1bfeafd78",
+          "bytes": 29470,
+          "modified_at": "2026-08-03T13:00:11.081989+00:00"
+        },
+        "preview": {
+          "sha256": "4b7a3c0824020ac04b17f166898bfdd105323715121d3bcc4e85c68410a2f7fe",
+          "bytes": 650486,
+          "modified_at": "2026-08-03T13:27:16.615717+00:00"
+        },
+        "native_report": {
+          "sha256": "8e6181bca03dde96a2fceb94069f69d30dc8f97c724bc46d866fd53e71325ada",
+          "bytes": 778,
+          "modified_at": "2026-08-03T13:27:16.618017+00:00"
+        },
+        "self_review": {
+          "sha256": "2973be3a10315def098aba8020f28037aca144c38c897d29f2ab98c939142159",
+          "bytes": 11261,
+          "modified_at": "2026-08-03T13:02:50.874877+00:00"
+        },
+        "main_review": {
+          "sha256": "6bc12d5e6711dfbb26c24705b81a9223f07ac00c2dca87679b5a78d77f92e818",
+          "bytes": 3155,
+          "modified_at": "2026-08-03T13:15:55.840146+00:00"
+        },
+        "comparison": {
+          "sha256": "3f16ecc5ad43e9a1a2cf58716b7516c00e7eeec2a5f11b28594b0beb1fb9a657",
+          "bytes": 2660612,
+          "modified_at": "2026-08-03T13:00:53.809628+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "38907e571ae153b851f061d5c1e56d0603af07c418d78c73d524cf1ace5fee64",
+          "bytes": 238442,
+          "modified_at": "2026-08-03T13:00:53.818777+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 1,
+        "self_review_count": 2,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P62",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "59cfb1b5e2f5d2d66d01da5c763a5345ed37f86bb24be554bfb6b9a7f913b101",
+          "bytes": 2180175,
+          "modified_at": "2026-08-02T15:17:07.461787+00:00"
+        },
+        "native_svg": {
+          "sha256": "be611356944fc5222ff0bc0410269a336f2f2d6665b25b570c5755ab6c3437c0",
+          "bytes": 23442,
+          "modified_at": "2026-08-03T12:57:49.981753+00:00"
+        },
+        "preview": {
+          "sha256": "e343bd6bea33893504a005fef9ea95f0ca2cc4cb3f466cc676dc04f3dfb9c025",
+          "bytes": 619757,
+          "modified_at": "2026-08-03T13:27:17.035240+00:00"
+        },
+        "native_report": {
+          "sha256": "a26930fa53bad5c7587f5e96fe1bb757bbba82e977fbe53aac06dea03b4dc736",
+          "bytes": 716,
+          "modified_at": "2026-08-03T13:27:17.037301+00:00"
+        },
+        "self_review": {
+          "sha256": "f8c507c8389b10414825d2696088a8fe05ea933cce98429ee97f6823bc785c35",
+          "bytes": 6586,
+          "modified_at": "2026-08-03T13:00:39.560871+00:00"
+        },
+        "main_review": {
+          "sha256": "ced1e73839c05a2da5fb1e1c2055037bb404936f0ba3cbac7e5a75d5e0889894",
+          "bytes": 3709,
+          "modified_at": "2026-08-03T13:15:55.840287+00:00"
+        },
+        "comparison": {
+          "sha256": "357cc777803720272f56f44b4334fa837f4bad401e10025b7d25b1da2112c37b",
+          "bytes": 2831340,
+          "modified_at": "2026-08-03T12:58:36.710138+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "d3aa5f3735e441ec63595d53e72323173770f42a75f92dcece05eaca6a229445",
+          "bytes": 1883797,
+          "modified_at": "2026-08-03T12:58:36.768261+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 0,
+        "self_review_count": 1,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P63",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "09904fd278157138712e35407e431d59729ae4c7cc5555a9c513b819c6bbfdd5",
+          "bytes": 2235314,
+          "modified_at": "2026-08-02T15:17:07.467348+00:00"
+        },
+        "native_svg": {
+          "sha256": "6cb30f77514120ec2c239fbc9f6e61978c28066cdf95b6353b58bd2affdb9e88",
+          "bytes": 30790,
+          "modified_at": "2026-08-03T12:59:30.417775+00:00"
+        },
+        "preview": {
+          "sha256": "3be2e74710cf29a7c843f94acc9a9be8aa9cb0ca06de24fbf16f2ba1926990a9",
+          "bytes": 597894,
+          "modified_at": "2026-08-03T13:27:17.365617+00:00"
+        },
+        "native_report": {
+          "sha256": "51c9d26e9c5f1d5a5eed6cfb4e009b404c94f9069a7194c7b4791e206656da1e",
+          "bytes": 780,
+          "modified_at": "2026-08-03T13:27:17.368036+00:00"
+        },
+        "self_review": {
+          "sha256": "49fcb86b3aec95c2ff4b3188e69341ef6145b0a661b7e7621166ee527b9d61d4",
+          "bytes": 5930,
+          "modified_at": "2026-08-03T13:01:31.971648+00:00"
+        },
+        "main_review": {
+          "sha256": "217127560bfe157e744e5d114837f56895a78a3a8f1d71269eeb93e848180b4e",
+          "bytes": 3164,
+          "modified_at": "2026-08-03T13:15:55.840416+00:00"
+        },
+        "comparison": {
+          "sha256": "ed19f4c176bffebf2c82089666565eb37d4108473e74d7d985db726e6d6fd628",
+          "bytes": 2880148,
+          "modified_at": "2026-08-03T13:00:08.786611+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "392996ed61c8d0576d8dfb0d5aeb4cbae35ea628094ba01e3d5b4cd43c20439a",
+          "bytes": 131982,
+          "modified_at": "2026-08-03T13:00:35.564375+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 1,
+        "self_review_count": 2,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P64",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "45a2df5565f5b5ebec24af7e9e540e1c52b8c07288c529cdf7bc3422fef2eb1e",
+          "bytes": 1791385,
+          "modified_at": "2026-08-02T15:23:09.814917+00:00"
+        },
+        "native_svg": {
+          "sha256": "b1668060580efbac55317e6c3dfd005cec0962ccd224cd93c2c65bcb4106001c",
+          "bytes": 28228,
+          "modified_at": "2026-08-03T11:10:15.896589+00:00"
+        },
+        "preview": {
+          "sha256": "43562340ad35ac967c81ab23f2fb3832a579b8c254d24a89dec2f98c41424f34",
+          "bytes": 495442,
+          "modified_at": "2026-08-03T13:27:17.679088+00:00"
+        },
+        "native_report": {
+          "sha256": "31f18baf4720a5a3ec1b2812ff64ea35a4b4c6cad981c4df30ce15d8a9b7b79d",
+          "bytes": 783,
+          "modified_at": "2026-08-03T13:27:17.681543+00:00"
+        },
+        "self_review": {
+          "sha256": "0c2148966fe44fe1dd511988d78766b2a748f10d026074721837ff4f578ce93e",
+          "bytes": 3726,
+          "modified_at": "2026-08-03T11:12:50.802905+00:00"
+        },
+        "main_review": {
+          "sha256": "4efa391e7459b2e943e74ae59ac5580f974061db50cc90d3c5749d7b4b1cbe9c",
+          "bytes": 4371,
+          "modified_at": "2026-08-03T11:25:55.710479+00:00"
+        },
+        "comparison": {
+          "sha256": "a025db91f24e573bebf8e8c5dd43528cac2069696b617bbb8431eecc28ffe4a2",
+          "bytes": 2338619,
+          "modified_at": "2026-08-03T11:11:12.364810+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "566bec5ae5355c546a784785ff4388d91be2f4079e9a0f26869f42a7af8822fc",
+          "bytes": 234337,
+          "modified_at": "2026-08-03T11:11:27.199989+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 0,
+        "self_review_count": 1,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P65",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "c6a79c009d94635fc75a13da5494ee798595fc44bbdfc2800d41ad1e706e21c3",
+          "bytes": 1940536,
+          "modified_at": "2026-08-02T15:35:53.503318+00:00"
+        },
+        "native_svg": {
+          "sha256": "f4a527adc656ba7711db4de18da5159187d63107aee4f7ef71117f86ec6cd5de",
+          "bytes": 36845,
+          "modified_at": "2026-08-03T11:15:01.847399+00:00"
+        },
+        "preview": {
+          "sha256": "69490fa453bc07df6fcc32bfe94d75a6d3186950f7b4f4d5f2e40d0982c5f22b",
+          "bytes": 580910,
+          "modified_at": "2026-08-03T13:27:18.015820+00:00"
+        },
+        "native_report": {
+          "sha256": "c092fe5dfc5e306a4aecae6487a97c5eb2fe3898737bc73870267309f3e7ccdd",
+          "bytes": 780,
+          "modified_at": "2026-08-03T13:27:18.018026+00:00"
+        },
+        "self_review": {
+          "sha256": "c384c6e4a03b83ccad1af0413635ebff8d26e95bf308b53561d8f0e5875d7f6a",
+          "bytes": 6050,
+          "modified_at": "2026-08-03T11:16:46.157508+00:00"
+        },
+        "main_review": {
+          "sha256": "01fe8cb1dbe8d88371fbad89e8bdb33faa490efbc68a8449016d0dd71344c721",
+          "bytes": 5060,
+          "modified_at": "2026-08-03T11:25:55.710688+00:00"
+        },
+        "comparison": {
+          "sha256": "cafeb43caf18e71e1527a193da55fd3fac4cc00a9fa0d73098233ccfea10eef8",
+          "bytes": 2555200,
+          "modified_at": "2026-08-03T11:15:19.613233+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "3ecad35a4148787a7a7e41494878df743cd49faa3023bf3e8e55402fc639b792",
+          "bytes": 476397,
+          "modified_at": "2026-08-03T11:15:19.715423+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 2,
+        "self_review_count": 3,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P66",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "564b7d93818ee7f0a7a4fc811233e23defe8bcca41ea1bbfe84e8bbe5fd258cc",
+          "bytes": 1689836,
+          "modified_at": "2026-08-02T15:35:53.508278+00:00"
+        },
+        "native_svg": {
+          "sha256": "2aabef05ac515eae4b49ac04ad075d8d822d3bedbed575cb23588b557e597dda",
+          "bytes": 25127,
+          "modified_at": "2026-08-03T11:13:01.305406+00:00"
+        },
+        "preview": {
+          "sha256": "5cbde7b1621448641f85ae078f54d73959cf086e1a4fc4d7abd0d3f4d2e093e0",
+          "bytes": 516365,
+          "modified_at": "2026-08-03T13:27:18.309889+00:00"
+        },
+        "native_report": {
+          "sha256": "674f85bf7866f2de6f70a5723a7d7551e4ca3c2aeaf0f514d6a8d4e155be0e47",
+          "bytes": 761,
+          "modified_at": "2026-08-03T13:27:18.312169+00:00"
+        },
+        "self_review": {
+          "sha256": "f70c02ac3747f3ad1be7c586226d83c9486e86db7cdb77939ef19bf338418e5e",
+          "bytes": 5200,
+          "modified_at": "2026-08-03T11:14:05.390314+00:00"
+        },
+        "main_review": {
+          "sha256": "1c69a0cf2c2d0e934f61421e0933d6164eb7ba80edf1ad6be8fdcd7c5e6356e3",
+          "bytes": 5037,
+          "modified_at": "2026-08-03T11:25:55.710842+00:00"
+        },
+        "comparison": {
+          "sha256": "85fae1958fbf2b90c41b6ff4521e29f8676c2d184c7ff32843507dc7f2bb7fd1",
+          "bytes": 2253086,
+          "modified_at": "2026-08-03T11:13:22.748534+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "b0bd8eb9821c1bdb34c8837c0824363b4af875e8492054c2c5b2883dfb217e3f",
+          "bytes": 257494,
+          "modified_at": "2026-08-03T11:13:22.835419+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 1,
+        "self_review_count": 2,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P67",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "5fa963070e731bb583013c0e3ef586ec953d65be1359ae47778932214f4aac24",
+          "bytes": 1901450,
+          "modified_at": "2026-08-02T15:35:53.510570+00:00"
+        },
+        "native_svg": {
+          "sha256": "41f2f8d82301c9a87b18ad8a781eb94d83aa9d637d5bb51c2b9a77d2ceaa69b2",
+          "bytes": 41363,
+          "modified_at": "2026-08-03T11:13:57.013878+00:00"
+        },
+        "preview": {
+          "sha256": "d7910f0e7f2cb209151ea97cc47ba3f6183ec15a0cfb5705374a5c95e2a0762c",
+          "bytes": 536755,
+          "modified_at": "2026-08-03T13:27:18.631590+00:00"
+        },
+        "native_report": {
+          "sha256": "2f6a0e3a424b97dd439c111f0aec54b97ca3501a6cc06d9662bb1f801496e135",
+          "bytes": 782,
+          "modified_at": "2026-08-03T13:27:18.634046+00:00"
+        },
+        "self_review": {
+          "sha256": "aea7be33f973ef487f095322548a9ac6b07d8e446a26c61ef1ce55caaaed9727",
+          "bytes": 4465,
+          "modified_at": "2026-08-03T11:15:41.428679+00:00"
+        },
+        "main_review": {
+          "sha256": "7d5e7381b9ce8c12859d364e581b75436c15b1172210781281cb63a18814befb",
+          "bytes": 4410,
+          "modified_at": "2026-08-03T11:28:54.734478+00:00"
+        },
+        "comparison": {
+          "sha256": "83c94fe3becc4cd283f22889518a4c4e2b9f8d1fb02f048bab570ec178fc59ea",
+          "bytes": 2488973,
+          "modified_at": "2026-08-03T11:14:29.543474+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "a87963387a04605429dd538103f008ec9f6683dc6f7856cc73f481bd5407a10c",
+          "bytes": 622379,
+          "modified_at": "2026-08-03T11:14:29.645582+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 2,
+        "self_review_count": 3,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P68",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "9515c963a0224b2a63bed6c05cf10fff8ddb67d6dcef06abd8f6cb76596ba19d",
+          "bytes": 1890278,
+          "modified_at": "2026-08-02T15:44:09.480721+00:00"
+        },
+        "native_svg": {
+          "sha256": "b848aecaaf18a2c38ac304522f121167579a5042ba04f8318238d1835c8a0108",
+          "bytes": 31272,
+          "modified_at": "2026-08-03T11:13:26.431170+00:00"
+        },
+        "preview": {
+          "sha256": "89b2eedcc2bb6f21ea0ccef8d965fa69715b3315e3ca554dc2f538c89a7499b4",
+          "bytes": 525891,
+          "modified_at": "2026-08-03T13:27:18.946583+00:00"
+        },
+        "native_report": {
+          "sha256": "d448a1929802860c52da7e19cb14a82c30b31b5e2f6e1f15eb7b402bbb5e8a52",
+          "bytes": 778,
+          "modified_at": "2026-08-03T13:27:18.948925+00:00"
+        },
+        "self_review": {
+          "sha256": "b5172e1a63c3cacd8064e2bd9c9237614371a3e45475c8fcd566be2038dd7646",
+          "bytes": 5501,
+          "modified_at": "2026-08-03T11:14:23.048764+00:00"
+        },
+        "main_review": {
+          "sha256": "1a1ca0317f2385b964437834993a050f380140e10a9305c419dcca9978a3c64e",
+          "bytes": 5904,
+          "modified_at": "2026-08-03T11:39:59.269946+00:00"
+        },
+        "comparison": {
+          "sha256": "a677d3a0d0dd6ecef1268b7a34f95d1fa346d1e618cf24840e19502950e938d9",
+          "bytes": 2448450,
+          "modified_at": "2026-08-03T11:13:56.755982+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "2d68e2cbd65fc4fe5da35e18d83808c999e28591b6142d5561fd404792cd41a5",
+          "bytes": 165216,
+          "modified_at": "2026-08-03T11:15:17.565269+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 1,
+        "self_review_count": 2,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P69",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "102449cb65c6af5527e6a02670bd52f6f2c3cef7a597690ecc80b4b772ab170a",
+          "bytes": 1874972,
+          "modified_at": "2026-08-02T15:44:09.483826+00:00"
+        },
+        "native_svg": {
+          "sha256": "9a6cf46e9602722918bb9396a2dd90d50b26a73604cf87289e999d39027cb415",
+          "bytes": 31180,
+          "modified_at": "2026-08-03T11:11:19.540433+00:00"
+        },
+        "preview": {
+          "sha256": "452a7a577b6e00b280d8005d3d1f174e9c0962bd682483052366238d326baf7a",
+          "bytes": 577989,
+          "modified_at": "2026-08-03T13:27:19.261278+00:00"
+        },
+        "native_report": {
+          "sha256": "2979e042bc84bd1aa27e556a46d077c87005c81be31c5b447e466dc5525d0482",
+          "bytes": 800,
+          "modified_at": "2026-08-03T13:27:19.263724+00:00"
+        },
+        "self_review": {
+          "sha256": "67ff613d6eba08cf8a15b8e0bed0b79b52c376e2a5cf0bf0c349faf9f1c274d1",
+          "bytes": 6201,
+          "modified_at": "2026-08-03T11:13:28.772464+00:00"
+        },
+        "main_review": {
+          "sha256": "62c38a7399e8133846b03ad4ea37cfd4c865800bcfb3b61877f680704c75e1db",
+          "bytes": 5111,
+          "modified_at": "2026-08-03T11:39:59.412804+00:00"
+        },
+        "comparison": {
+          "sha256": "7972562195ba56a8c3ce42e692f40abd4739f71f66c717a4965e0f5712859d6b",
+          "bytes": 2492774,
+          "modified_at": "2026-08-03T11:12:21.802553+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "413b5dcfffdbd3729fad40de45718485d9a78f8403b376dc97290eb19e5a9864",
+          "bytes": 88252,
+          "modified_at": "2026-08-03T11:12:22.889323+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 1,
+        "self_review_count": 2,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P70",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "8f3c71c279ca46b67be028e98de5eeb045c68c35fd1c218f8d07809fd8fb5072",
+          "bytes": 1707139,
+          "modified_at": "2026-08-02T15:44:09.486442+00:00"
+        },
+        "native_svg": {
+          "sha256": "148a104127c865e5a27b37f0fb6056d2a83344ffe1103a95d3d2d0bbdf517394",
+          "bytes": 28876,
+          "modified_at": "2026-08-03T11:48:29.548903+00:00"
+        },
+        "preview": {
+          "sha256": "f548191804156caa560903b76b4263ec213f44b383e244cfc511996dae11069e",
+          "bytes": 437109,
+          "modified_at": "2026-08-03T13:27:19.551131+00:00"
+        },
+        "native_report": {
+          "sha256": "4e29210fea5406a5d70e6822b69dfcacef0af331df60b3772433b465fe4ff6dc",
+          "bytes": 800,
+          "modified_at": "2026-08-03T13:27:19.553328+00:00"
+        },
+        "self_review": {
+          "sha256": "b2064485d8e541b935c42a372fbc9f5dd692e2f9d950f689b39a0f47240450d6",
+          "bytes": 5645,
+          "modified_at": "2026-08-03T11:50:41.482754+00:00"
+        },
+        "main_review": {
+          "sha256": "bd92d73049089bc53c1cf7122aef2390ffcd75d16cb4374a8714ffcb883054fc",
+          "bytes": 5086,
+          "modified_at": "2026-08-03T12:07:28.178372+00:00"
+        },
+        "comparison": {
+          "sha256": "8699537971bbdf7e7acd3fcdfc8684d15d25002fe9b486f11d76651e7b81510e",
+          "bytes": 749097,
+          "modified_at": "2026-08-03T11:49:08.100540+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "8f736cab5dc98a19d54c82582ce0af71f59178822a676bdb5f93952d8c7f4ff2",
+          "bytes": 422724,
+          "modified_at": "2026-08-03T11:49:21.526586+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 1,
+        "self_review_count": 2,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P71",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "b28c34ad6905a550cf31f65dd4dee19a85c83a4855547ae80a272fb184c842b7",
+          "bytes": 1911659,
+          "modified_at": "2026-08-02T16:08:20.411829+00:00"
+        },
+        "native_svg": {
+          "sha256": "9b64bdd178a5c2a7bfab20e587644b3fed7194c79b6454c597991b84d163476b",
+          "bytes": 33166,
+          "modified_at": "2026-08-03T11:53:10.975353+00:00"
+        },
+        "preview": {
+          "sha256": "454488e0f74e61c18f9d18096f76c1c02f9f3ddbe4890fc877ef70ab0c83cd30",
+          "bytes": 524817,
+          "modified_at": "2026-08-03T13:27:19.835304+00:00"
+        },
+        "native_report": {
+          "sha256": "cc569b3e62a72db541867a759f5e2e36502961f26f19465bbfbd149f23915e59",
+          "bytes": 748,
+          "modified_at": "2026-08-03T13:27:19.837537+00:00"
+        },
+        "self_review": {
+          "sha256": "77a6aac161cf1528b4a79360b6b0759d4040779bb0f14b6c966faa2f5a6caee9",
+          "bytes": 4840,
+          "modified_at": "2026-08-03T11:54:14.887979+00:00"
+        },
+        "main_review": {
+          "sha256": "77e066b45d868a26a9ae6b08efbb8de689540bb173b973adb53b66a0d7c7a411",
+          "bytes": 5076,
+          "modified_at": "2026-08-03T12:07:28.178610+00:00"
+        },
+        "comparison": {
+          "sha256": "b6198a4e188ea3a33d7bd03659659c59a0eb6424c4fb8737c5a7276d65f23dd7",
+          "bytes": 2473606,
+          "modified_at": "2026-08-03T11:53:27.594558+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "ee1a1bb957bd8eb79c650456c765484b3f3123ecaa05361ed0ddf11b4b5537e4",
+          "bytes": 124689,
+          "modified_at": "2026-08-03T11:53:27.610355+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 2,
+        "self_review_count": 3,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P72",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "51d33cb4c65c0ca329b9545e9e31acfe6cbd45362f2f20accdeaece8b0e1e7b7",
+          "bytes": 1719181,
+          "modified_at": "2026-08-02T16:08:20.414914+00:00"
+        },
+        "native_svg": {
+          "sha256": "77159c6ca3236da5eeee9e48d7ec4b17e757c52513ba0319d9d6774fb81c0c2b",
+          "bytes": 29052,
+          "modified_at": "2026-08-03T11:50:10.755762+00:00"
+        },
+        "preview": {
+          "sha256": "40b68507407e2c1660d1fddb0ecf06d839a47c10508bb911eb49911cd2461674",
+          "bytes": 543201,
+          "modified_at": "2026-08-03T13:27:20.151164+00:00"
+        },
+        "native_report": {
+          "sha256": "8a98b8e4ccbc6e222b26f00f13b6c0f4d51d524dfe6add85513c73cda31b872a",
+          "bytes": 794,
+          "modified_at": "2026-08-03T13:27:20.153403+00:00"
+        },
+        "self_review": {
+          "sha256": "bc01a63f52d107983332878b04d26826b3dc249527988fc7b807f91f8aeec6f7",
+          "bytes": 4504,
+          "modified_at": "2026-08-03T11:51:19.460614+00:00"
+        },
+        "main_review": {
+          "sha256": "00480013f3740d26c9e090b256789187f2b3401ef92b8a3bfcb709c724c4cafd",
+          "bytes": 4383,
+          "modified_at": "2026-08-03T12:07:46.730053+00:00"
+        },
+        "comparison": {
+          "sha256": "f5d52716827eefafa25a450af95a68cf1d5c312ddd138d3e279bc88c7bbdd34c",
+          "bytes": 2303045,
+          "modified_at": "2026-08-03T11:50:31.507241+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "353888cae8ea3d0c38ff84272602ff2eb8b14e7340db8682071820b0ef8f4cbd",
+          "bytes": 137211,
+          "modified_at": "2026-08-03T11:50:31.515947+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 2,
+        "self_review_count": 3,
+        "unresolved_issue_count": 0
+      }
+    },
+    {
+      "page_id": "P73",
+      "status": "review_pass",
+      "artifacts": {
+        "source_blueprint": {
+          "sha256": "4f91d601f411ac25b4fc2851d90ba834fb803b8838587f6db4477ac41a37b3b8",
+          "bytes": 1873117,
+          "modified_at": "2026-08-02T16:08:20.418622+00:00"
+        },
+        "native_svg": {
+          "sha256": "4eb0af27d228275ab2225b3e771f673cff5c6b09a17b00fc1cf64d0bc2b4e713",
+          "bytes": 23195,
+          "modified_at": "2026-08-03T11:47:40.484468+00:00"
+        },
+        "preview": {
+          "sha256": "1502cd8fc2e23195f1cccb1f19497ec3b1ee21d86c521ab447420176b8ad7353",
+          "bytes": 606272,
+          "modified_at": "2026-08-03T13:27:16.770507+00:00"
+        },
+        "native_report": {
+          "sha256": "6a2bf8084c0d7d2d281948951bd0a82cdc045fd975dfb18b260809ff0df4e0d7",
+          "bytes": 798,
+          "modified_at": "2026-08-03T13:27:16.773259+00:00"
+        },
+        "self_review": {
+          "sha256": "fd1a745b53d35c42b02b4be180b378d498ec59af7b7a981420b36ba19c62934e",
+          "bytes": 7434,
+          "modified_at": "2026-08-03T11:51:15.645035+00:00"
+        },
+        "main_review": {
+          "sha256": "b095376f5b019afcdde735fe191fb7c4da78630b64a31a69e86c55e2a9168e57",
+          "bytes": 5114,
+          "modified_at": "2026-08-03T12:07:28.179370+00:00"
+        },
+        "comparison": {
+          "sha256": "6b74e9f228e32557bb03e385cadca31bb875541852428a70327a1fef29b680dd",
+          "bytes": 2517303,
+          "modified_at": "2026-08-03T11:48:45.949162+00:00"
+        },
+        "icon_comparison": {
+          "sha256": "b7d4a5903f7bc727450f655b0601a293550517ece1d097dcee569208e56ecb85",
+          "bytes": 89501,
+          "modified_at": "2026-08-03T11:48:45.957188+00:00"
+        }
+      },
+      "review": {
+        "native_report_status": "passed",
+        "native_error_count": 0,
+        "native_warning_count": 0,
+        "self_review_status": "self_pass",
+        "main_review_status": "review_pass",
+        "revision_count": 1,
+        "self_review_count": 2,
+        "unresolved_issue_count": 0
+      }
+    }
+  ],
+  "generated_at": "2026-08-08T05:54:31.124392+00:00"
 }

@@ -29,6 +29,7 @@ from high_density.content import (
     enrich_selected_nbb_plan,
     load_nbb_plan,
     load_page_packages,
+    seal_nbb_plan,
     select_nbb_storyline,
     write_nbb_plan,
 )
@@ -113,7 +114,7 @@ def _write_approved_nbb_plan(run: Path) -> dict:
     packages = load_page_packages(run, expected_run_id=run.name)
     plan = build_nbb_plan(packages, run_id=run.name, selected_storyline_id="storyline.decision", approved_by="test")
     write_nbb_plan(run, plan)
-    return plan
+    return seal_nbb_plan(run)
 
 
 def _approve_blueprint(run: Path, page_id: str = "P001") -> None:
@@ -382,10 +383,13 @@ def test_storyline_selection_does_not_rewrite_agent_content(tmp_path: Path) -> N
     for binding in page["claim_bindings"]:
         if binding["target"] == "conclusion":
             binding["text_sha256"] = sha256_json(page["conclusion"])
+            binding["origin"] = "derived"
         elif binding["target"] == "supporting_arguments.0":
             binding["text_sha256"] = sha256_json(page["supporting_arguments"][0])
+            binding["origin"] = "derived"
         elif binding["target"] == "so_what":
             binding["text_sha256"] = sha256_json(page["so_what"])
+            binding["origin"] = "derived"
     _rehash_page_and_plan(enriched, page)
     write_nbb_plan(run, enriched)
 
@@ -423,13 +427,65 @@ def test_unbound_nbb_fact_and_numeric_claim_are_rejected(tmp_path: Path) -> None
     write_nbb_plan(run, plan)
 
     with pytest.raises(ContractError, match="unsupported factual values"):
-        load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=True)
+        load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
 
     page["conclusion"] = "Evidence-bound editorial conclusion."
     page["claim_bindings"] = [item for item in page["claim_bindings"] if item["target"] != "conclusion"]
     _rehash_page_and_plan(plan, page)
     write_nbb_plan(run, plan)
     with pytest.raises(ContractError, match="claim binding coverage failed"):
+        load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
+
+
+def test_numeric_claim_must_exist_in_its_cited_evidence(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path)
+    packages = load_page_packages(run, expected_run_id=run.name)
+    packages[0]["speaker_notes"] += " An unrelated note mentions 42%."
+    plan = build_nbb_plan(packages, run_id=run.name, selected_storyline_id="storyline.decision", approved_by="test")
+    page = plan["pages"][0]
+    page["conclusion"] = "Revenue increased by 42%."
+    binding = next(item for item in page["claim_bindings"] if item["target"] == "conclusion")
+    binding["text_sha256"] = sha256_json(page["conclusion"])
+    binding["origin"] = "derived"
+    _rehash_page_and_plan(plan, page)
+    write_nbb_plan(run, plan)
+
+    with pytest.raises(ContractError, match="unsupported factual values"):
+        load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
+
+
+def test_agent_approved_nbb_plan_without_runtime_seal_is_rejected(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path)
+    packages = load_page_packages(run, expected_run_id=run.name)
+    plan = build_nbb_plan(packages, run_id=run.name, selected_storyline_id="storyline.decision", approved_by="agent")
+    plan["selection"]["status"] = "approved"
+    plan["selection"]["sealed_at"] = "2026-01-01T00:00:00+00:00"
+    plan["storyline_audit"]["status"] = "approved"
+    plan["nbb_plan_sha256"] = sha256_json(
+        {key: value for key, value in plan.items() if key not in {"nbb_plan_sha256", "created_at", "updated_at"}}
+    )
+    write_nbb_plan(run, plan)
+
+    with pytest.raises(ContractError, match="missing its Runtime seal"):
+        load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=True)
+
+
+def test_runtime_seal_is_invalidated_when_approved_plan_changes(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path)
+    packages = load_page_packages(run, expected_run_id=run.name)
+    plan = build_nbb_plan(packages, run_id=run.name, selected_storyline_id="storyline.decision", approved_by="test")
+    write_nbb_plan(run, plan)
+    sealed = seal_nbb_plan(run)
+    assert (run / "high_density_build/nbb/runtime_seal.json").is_file()
+
+    sealed["selection"]["selected_by"] = "mutated-after-seal"
+    sealed["nbb_plan_sha256"] = sha256_json(
+        {key: value for key, value in sealed.items() if key not in {"nbb_plan_sha256", "created_at", "updated_at"}}
+    )
+    write_nbb_plan(run, sealed)
+
+    assert not (run / "high_density_build/nbb/runtime_seal.json").exists()
+    with pytest.raises(ContractError, match="missing its Runtime seal"):
         load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=True)
 
 
@@ -473,7 +529,7 @@ def test_nbb_plan_rejects_unknown_page_evidence_ref(tmp_path: Path) -> None:
     write_nbb_plan(run, plan)
 
     with pytest.raises(ContractError, match="evidence refs are invalid"):
-        load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=True)
+        load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
 
 
 def test_nbb_plan_rejects_missing_required_component(tmp_path: Path) -> None:
@@ -486,7 +542,7 @@ def test_nbb_plan_rejects_missing_required_component(tmp_path: Path) -> None:
     write_nbb_plan(run, plan)
 
     with pytest.raises(ContractError, match="required components are incomplete"):
-        load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=True)
+        load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
 
 
 def test_nbb_plan_rejects_stale_storyline_material_pool(tmp_path: Path) -> None:
@@ -499,7 +555,7 @@ def test_nbb_plan_rejects_stale_storyline_material_pool(tmp_path: Path) -> None:
     write_nbb_plan(run, plan)
 
     with pytest.raises(ContractError, match="material pool storyline context is stale"):
-        load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=True)
+        load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
 
 
 def test_pending_nbb_plan_invalidates_previous_downstream(tmp_path: Path) -> None:
@@ -574,6 +630,9 @@ def test_blueprint_prompt_preserves_structured_content(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path)
     package = read_json(run / "page_packages/P001.json")
     package["customer_visible"]["body_blocks"][0] = {"title": "Metric table", "rows": [{"metric": "conversion", "value": "42%"}], "type": "table"}
+    package["evidence_bindings"] = [
+        {"evidence_id": "E001", "source_ref": "fixture.metric_table", "source_position": "row.conversion", "meaning": "conversion is 42%"}
+    ]
     _, page_plan = _approved_page_plan(package)
     lock = build_content_lock(package, page_plan, nbb_plan_sha256="c" * 64)
     style = {"style_id": "cyber-01", "name": "Ink Cobalt", "palette": {}, "grid": {}}
@@ -984,6 +1043,20 @@ def test_tspan_runs_preserve_text_and_style(tmp_path: Path) -> None:
     assert runs[0].font.bold is False
     assert runs[1].font.bold is True
     assert [run["paint"]["color"] for run in title_trace["runs"]] == ["#c65c42", "#1f6fd1"]
+
+
+def test_visible_tspan_text_cannot_hide_behind_declared_metadata(tmp_path: Path) -> None:
+    run, lock, scene = _prepared_fixture(tmp_path)
+    svg = svg_path(run, "P001")
+    document = ElementTree.fromstring(svg.read_text(encoding="utf-8"))
+    title = next(node for node in document.iter() if node.get("id") == "title.main")
+    title.text = "Visible drift"
+    ElementTree.ElementTree(document).write(svg, encoding="utf-8", xml_declaration=True)
+
+    with pytest.raises(SvgVisualError, match="visible SVG text drift"):
+        validate_approved_svg(svg, scene, lock)
+    with pytest.raises(PptxEditabilityError, match="visible SVG text drift"):
+        compile_pptx(run, [scene], {"P001": lock})
 
 
 def test_excessive_text_mask_fails_closed() -> None:

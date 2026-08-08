@@ -3,9 +3,10 @@
   "$id": "https://deck-master.local/contracts/high-density-provider-smoke.v1.schema.json",
   "title": "High-Density Provider Smoke Evidence v1",
   "type": "object",
-  "required": ["schema_version", "run_id_sha256", "page_id", "status", "provider", "lineage", "timeline", "artifacts", "gates", "created_at"],
+  "required": ["schema_version", "run_mode", "run_id_sha256", "page_id", "status", "provider", "lineage", "timeline", "artifacts", "gates", "created_at"],
   "properties": {
     "schema_version": {"const": "deck_high_density_provider_smoke.v1"},
+    "run_mode": {"enum": ["production", "benchmark"]},
     "run_id_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
     "page_id": {"type": "string", "minLength": 1},
     "status": {"const": "pass"},

@@ -22,8 +22,8 @@ Use this Skill when the run has validated `page_packages/*.json` and the request
 ## Do Not Use
 
 - Do not use for standard-profile decks or direct office post-processing.
-- Use when the run has only an image or preview manifest and no validated Page Packages.
-- Use to treat blueprint text as factual source material.
+- Do not use when the run has only an image or preview manifest and no validated Page Packages.
+- Do not use to treat blueprint text as factual source material.
 
 ## Forcing Questions
 
@@ -115,6 +115,7 @@ Release acceptance runs `PYTHONPATH=scripts python3 -m high_density.provider_smo
 ## Exit Artifacts
 
 - `nbb/nbb_plan.json`
+- `nbb/runtime_seal.json`
 - `style/style_options.json` and `style/style_lock.json`
 - `content_locks/<page_id>.content_lock.json`
 - `prompts/<page_id>.blueprint_prompt.json`

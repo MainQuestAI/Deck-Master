@@ -502,7 +502,9 @@ def _svg_text_lines(node: Any, registry: dict[str, Any]) -> list[list[dict[str, 
         return lines
     if flattened == declared:
         return [[run for line in lines for run in line]]
-    return [[{"text": declared, "style": parent_style, "paint": parent_paint}]]
+    if " ".join(line_joined.split()) == " ".join(declared.split()):
+        return lines
+    raise PptxEditabilityError(f"visible SVG text does not match data-pptx-text on {node.get('id')}")
 
 
 def _node_element(node: Any, scene_by_id: dict[str, dict[str, Any]]) -> dict[str, Any]:
@@ -864,7 +866,7 @@ def readback_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dic
             if element.get("object_type") == "text" and element.get("priority") in {"P0", "P1"}:
                 expected_text_value = str(element.get("text") or "")
                 actual_text_value = str(getattr(shape, "text", "") or "")
-                if actual_text_value != expected_text_value:
+                if " ".join(actual_text_value.split()) != " ".join(expected_text_value.split()):
                     text_mismatches.append({"element_id": element_id, "expected": expected_text_value, "actual": actual_text_value})
             expected = element["bbox"]
             actual = {"x": float(shape.left) / float(presentation.slide_width) * CANVAS_WIDTH, "y": float(shape.top) / float(presentation.slide_height) * CANVAS_HEIGHT, "w": float(shape.width) / float(presentation.slide_width) * CANVAS_WIDTH, "h": float(shape.height) / float(presentation.slide_height) * CANVAS_HEIGHT}

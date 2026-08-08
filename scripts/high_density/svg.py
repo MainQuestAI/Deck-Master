@@ -437,8 +437,7 @@ def _validate_svg_text(node: Any, scene_element: dict[str, Any], page_id: str) -
         raise SvgVisualError(f"SVG text style is incomplete on {element_id}: {', '.join(missing_attributes)}", page_id=page_id, code="HD_SVG_TEXT_OVERFLOW")
     expected_text = str(scene_element.get("text") or "")
     declared_text = str(node.get("data-pptx-text") or "")
-    actual_text = declared_text or "".join(node.itertext())
-    if actual_text != expected_text:
+    if declared_text != expected_text:
         raise SvgVisualError(f"SVG text drift on {element_id}", page_id=page_id, code="HD_SVG_CONTENT_DRIFT")
     if str(node.get("data-pptx-text-ref") or "") != str(scene_element.get("text_ref") or ""):
         raise SvgVisualError(f"SVG text ref drift on {element_id}", page_id=page_id, code="HD_SVG_CONTENT_DRIFT")
@@ -482,8 +481,12 @@ def _validate_svg_text(node: Any, scene_element: dict[str, Any], page_id: str) -
             line_steps.append(abs(dy))
         else:
             current += text
+        current += str(tspan.tail or "")
     if current or not lines:
         lines.append(current)
+    visible_text = " ".join(line.strip() for line in lines)
+    if " ".join(declared_text.split()) != " ".join(visible_text.split()):
+        raise SvgVisualError(f"visible SVG text drift on {element_id}", page_id=page_id, code="HD_SVG_CONTENT_DRIFT")
     if any(step < font_size * 0.7 or step > font_size * 2.5 for step in line_steps):
         raise SvgVisualError(f"SVG tspan line height is invalid: {element_id}", page_id=page_id, code="HD_SVG_TEXT_OVERFLOW")
     measured_width = max((float(font.getlength(line)) for line in lines), default=0.0)

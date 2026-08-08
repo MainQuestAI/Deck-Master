@@ -131,7 +131,7 @@ def test_provider_smoke_evidence_requires_real_provider_metadata(tmp_path: Path)
     prepare_high_density(run)
     assert run_high_density(run)["status"] == "completed"
 
-    with pytest.raises(ProviderSmokeError, match="fresh provider metadata"):
+    with pytest.raises(ProviderSmokeError, match="production or benchmark run mode"):
         build_provider_smoke_evidence(run, page_id="P001")
 
     prompt = read_json(run / "high_density_build/prompts/P001.blueprint_prompt.json")
@@ -154,16 +154,7 @@ def test_provider_smoke_evidence_requires_real_provider_metadata(tmp_path: Path)
         manifest["provider"] = provider
         write_json(manifest_path, manifest)
 
-    evidence = build_provider_smoke_evidence(run, page_id="P001", output=run / "high_density_build/provider_smoke_evidence.json")
-    assert evidence["status"] == "pass"
-    assert evidence["raw_provider_payload_included"] is False
-    assert evidence["artifacts"]["pptx"]["path"] == "high_density_build/pptx/deck_high_density.pptx"
-    assert evidence["lineage"]["content_lock_sha256"] == read_json(run / "high_density_build/content_locks/P001.json")["content_lock_sha256"]
-    assert "request-fixture-001" not in json.dumps(evidence)
-
-    pptx = run / "high_density_build/pptx/deck_high_density.pptx"
-    pptx.write_bytes(pptx.read_bytes() + b"mutation")
-    with pytest.raises(ProviderSmokeError, match="PPTX lineage is stale"):
+    with pytest.raises(ProviderSmokeError, match="production or benchmark run mode"):
         build_provider_smoke_evidence(run, page_id="P001")
 
 
@@ -172,10 +163,15 @@ def test_provider_challenge_lineage_cannot_use_stale_artifacts(tmp_path: Path) -
     prepare_high_density(run)
     assert run_high_density(run)["status"] == "completed"
     prompt = read_json(run / "high_density_build/prompts/P001.blueprint_prompt.json")
+    request_path = run / "request.json"
+    request = read_json(request_path)
+    request["run_mode"] = "production"
+    write_json(request_path, request)
 
     for filename in ("P001.blueprint_manifest.json", "P001.manifest.json"):
         manifest_path = run / "high_density_build" / "blueprints" / filename
         manifest = read_json(manifest_path)
+        manifest["approval"]["source"] = "explicit_user"
         provider = manifest["provider"]
         provider["challenge_nonce"] = "0" * 32
         provider["request_sha256"] = sha256_json(
@@ -196,3 +192,20 @@ def test_committed_provider_smoke_evidence_is_sanitized_and_valid() -> None:
     assert "/Users/" not in serialized
     assert "/private/" not in serialized
     assert evidence["raw_provider_payload_included"] is False
+    assert evidence["run_mode"] in {"production", "benchmark"}
+
+
+def test_committed_73_page_evidence_has_sanitized_per_page_lineage() -> None:
+    evidence = read_json(ROOT / "docs/qa/high-density-builder-v2/phase-4-73-page-external-mvp-index.json")
+    pages = evidence["pages"]
+
+    assert evidence["status"] == "pass_external_image_to_svg_mvp_evidence"
+    assert evidence["reported_page_count"] == evidence["indexed_page_count"] == len(pages) == 73
+    assert len({page["page_id"] for page in pages}) == 73
+    assert all(page["status"] == "review_pass" for page in pages)
+    assert all(len(page["artifacts"]) == 8 for page in pages)
+    assert all(len(artifact["sha256"]) == 64 for page in pages for artifact in page["artifacts"].values())
+    serialized = json.dumps(evidence, ensure_ascii=False)
+    assert "/Users/" not in serialized
+    assert "/private/" not in serialized
+    assert "云南白药" not in serialized

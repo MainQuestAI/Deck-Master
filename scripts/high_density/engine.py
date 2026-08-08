@@ -22,6 +22,7 @@ from .blueprint import (
 from .content import (
     LOCKS_DIR,
     NBB_PLAN_PATH,
+    NBB_SEAL_PATH,
     build_content_lock,
     build_nbb_plan,
     load_content_lock,
@@ -411,7 +412,10 @@ def _prepare_high_density(run_dir: str | Path, *, output_profile: str = "product
                     selected_storyline_id="storyline.decision",
                     approved_by="fixture",
                 )
-            write_nbb_plan(root, nbb_plan)
+                write_nbb_plan(root, nbb_plan)
+                nbb_plan = seal_nbb_plan(root)
+            else:
+                write_nbb_plan(root, nbb_plan)
             nbb_plan_sha256 = str(nbb_plan["nbb_plan_sha256"])
             page_plans = {str(page["page_id"]): page for page in nbb_plan["pages"]}
             for package in packages:
@@ -656,6 +660,7 @@ def _invalidate_page_scene_downstream(root: Path, page_id: str) -> None:
 
 
 def _invalidate_nbb_downstream(root: Path, packages: list[dict[str, Any]], *, remove_plan: bool = True) -> None:
+    _remove_if_exists(root / NBB_SEAL_PATH)
     if remove_plan:
         _remove_if_exists(root / NBB_PLAN_PATH)
     for package in packages:

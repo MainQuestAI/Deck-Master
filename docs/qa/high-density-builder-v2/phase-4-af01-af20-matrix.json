@@ -5,7 +5,7 @@
   "test_session": {
     "command": ".venv/bin/pytest -q",
     "result": "pass",
-    "tests_passed": 1341,
+    "tests_passed": 1346,
     "subtests_passed": 105,
     "executed_at": "2026-08-08"
   },
@@ -19,7 +19,10 @@
     {
       "id": "AF-02",
       "gate": "unsupported factual claims blocked",
-      "tests": ["tests/test_high_density_builder_v2.py::test_nbb_rejects_unsupported_factual_claim"],
+      "tests": [
+        "tests/test_high_density_builder_v2.py::test_nbb_rejects_unsupported_factual_claim",
+        "tests/test_high_density_builder_v2.py::test_numeric_claim_must_exist_in_its_cited_evidence"
+      ],
       "status": "pass"
     },
     {
@@ -136,6 +139,13 @@
       "tests": ["tests/test_high_density_builder_v2.py::test_wide_and_tall_frames_remain_inside_source_canvas"],
       "status": "pass"
     }
+  ],
+  "anti_fake_probes": [
+    "tests/test_high_density_builder_v2.py::test_agent_approved_nbb_plan_without_runtime_seal_is_rejected",
+    "tests/test_high_density_builder_v2.py::test_runtime_seal_is_invalidated_when_approved_plan_changes",
+    "tests/test_high_density_builder_v2.py::test_visible_tspan_text_cannot_hide_behind_declared_metadata",
+    "tests/test_high_density_distinct_acceptance.py::test_provider_smoke_evidence_requires_real_provider_metadata",
+    "tests/test_high_density_distinct_acceptance.py::test_committed_73_page_evidence_has_sanitized_per_page_lineage"
   ],
   "release_evidence": {
     "seven_page_e2e": "docs/qa/high-density-builder-v2/phase-4-seven-page-e2e.json",

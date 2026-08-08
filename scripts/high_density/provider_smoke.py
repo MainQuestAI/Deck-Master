@@ -42,6 +42,10 @@ def _artifact_ref(root: Path, page: dict[str, Any], key: str) -> dict[str, str]:
 
 def build_provider_smoke_evidence(run_dir: str | Path, *, page_id: str = "", output: str | Path | None = None) -> dict[str, Any]:
     root = Path(run_dir).expanduser().resolve()
+    request = read_json(root / "request.json")
+    run_mode = str(request.get("run_mode") or "")
+    if run_mode not in {"production", "benchmark"}:
+        raise ProviderSmokeError("fresh provider smoke requires production or benchmark run mode")
     manifest_path = root / "high_density_build" / "high_density_manifest.json"
     if not manifest_path.exists():
         raise ProviderSmokeError("provider smoke requires a completed high-density manifest")
@@ -114,6 +118,8 @@ def build_provider_smoke_evidence(run_dir: str | Path, *, page_id: str = "", out
     if str(deck_trace.get("pptx_sha256") or "") != pptx_sha or str(readback.get("pptx_sha256") or "") != pptx_sha:
         raise ProviderSmokeError(f"PPTX lineage is stale on page {selected_page_id}")
     approval = blueprint.get("approval") or {}
+    if str(approval.get("source") or "") not in {"explicit_user", "agent_review"}:
+        raise ProviderSmokeError(f"fresh provider smoke requires explicit blueprint approval on page {selected_page_id}")
     timeline = [
         ("challenge", _timestamp(challenge.get("issued_at"), field="challenge", page_id=selected_page_id)),
         ("request", _timestamp(provider.get("requested_at"), field="request", page_id=selected_page_id)),
@@ -127,6 +133,7 @@ def build_provider_smoke_evidence(run_dir: str | Path, *, page_id: str = "", out
             raise ProviderSmokeError(f"provider smoke timeline is stale on page {selected_page_id}: {current_name} precedes {previous_name}")
     evidence = {
         "schema_version": "deck_high_density_provider_smoke.v1",
+        "run_mode": run_mode,
         "run_id_sha256": _hash_text(str(manifest.get("run_id") or "")),
         "page_id": selected_page_id,
         "status": "pass",

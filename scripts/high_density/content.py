@@ -14,6 +14,7 @@ PACKAGES_DIR = "page_packages"
 LOCKS_DIR = Path("high_density_build/content_locks")
 NBB_DIR = Path("high_density_build/nbb")
 NBB_PLAN_PATH = NBB_DIR / "nbb_plan.json"
+NBB_SEAL_PATH = NBB_DIR / "runtime_seal.json"
 SAFE_PAGE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
 
 
@@ -303,6 +304,7 @@ def _validate_claim_bindings(
     *,
     required_targets: list[str],
     allowed_evidence_refs: set[str],
+    evidence_by_id: dict[str, dict[str, Any]],
     source_text: str,
     context: str,
 ) -> None:
@@ -329,11 +331,14 @@ def _validate_claim_bindings(
         refs = {str(ref) for ref in binding.get("evidence_refs") or []}
         if not refs or not refs.issubset(allowed_evidence_refs):
             raise ContractError(f"NBB claim binding evidence is invalid for {context}:{target}")
-        if str(binding.get("origin") or "") not in {"source", "derived", "structural_label"}:
+        origin = str(binding.get("origin") or "")
+        expected_origin = "source" if text in source_text else "derived"
+        if origin not in {"source", "derived", "structural_label"} or origin != expected_origin:
             raise ContractError(f"NBB claim binding origin is invalid for {context}:{target}")
         if not str(binding.get("derivation_note") or ""):
             raise ContractError(f"NBB claim binding derivation note is missing for {context}:{target}")
-        unsupported_numbers = [token for token in _numeric_tokens(text) if token not in source_text]
+        numeric_source = source_text if origin == "source" else " ".join(_text(evidence_by_id[ref]) for ref in refs)
+        unsupported_numbers = [token for token in _numeric_tokens(text) if token not in numeric_source]
         if unsupported_numbers:
             raise ContractError(f"NBB claim binding adds unsupported factual values for {context}:{target}: {unsupported_numbers}")
 
@@ -634,6 +639,7 @@ def build_content_lock(
         page_plan,
         required_targets=_page_claim_targets(page_plan),
         allowed_evidence_refs=set(evidence_refs),
+        evidence_by_id=evidence_by_id,
         source_text=_text(safe_package),
         context=f"page {page_id}",
     )
@@ -807,9 +813,6 @@ def build_nbb_plan(
     }
     if selected_id:
         plan = enrich_selected_nbb_plan(plan, packages)
-        plan["selection"]["status"] = "approved"
-        plan["selection"]["sealed_at"] = utc_now()
-        plan["storyline_audit"]["status"] = "approved"
     plan["nbb_plan_sha256"] = sha256_json(
         {key: value for key, value in plan.items() if key not in {"nbb_plan_sha256", "created_at", "updated_at"}}
     )
@@ -837,7 +840,12 @@ def load_nbb_plan(
     candidate_ids = {str(item.get("storyline_id") or "") for item in candidates if isinstance(item, dict)}
     if len(candidate_ids) != len(candidates):
         raise ContractError("NBB storyline candidate IDs must be unique")
-    ledger_ids = {str(item.get("evidence_id") or "") for item in plan.get("evidence_ledger") or [] if isinstance(item, dict)}
+    evidence_by_id = {
+        str(item.get("evidence_id") or ""): item
+        for item in plan.get("evidence_ledger") or []
+        if isinstance(item, dict) and str(item.get("evidence_id") or "")
+    }
+    ledger_ids = set(evidence_by_id)
     minimum_candidate_refs = min(5, len(ledger_ids))
     if len(candidates) < 2 or len(candidates) > 3:
         raise ContractError("NBB plan must contain two or three storyline candidates")
@@ -855,6 +863,7 @@ def load_nbb_plan(
             candidate,
             required_targets=_candidate_claim_targets(candidate),
             allowed_evidence_refs=candidate_refs,
+            evidence_by_id=evidence_by_id,
             source_text=source_text,
             context=f"storyline {candidate.get('storyline_id')}",
         )
@@ -891,6 +900,8 @@ def load_nbb_plan(
     if plan.get("blocked_pages"):
         raise ContractError("NBB plan contains blocked pages")
     if packages is None:
+        if selection_status == "approved":
+            _validate_nbb_runtime_seal(root, plan)
         return plan
     expected_pages = {(str(package.get("page_id") or ""), int(package.get("order") or 0)) for package in packages}
     plan_pages = plan.get("pages")
@@ -910,6 +921,7 @@ def load_nbb_plan(
         scr,
         required_targets=_scr_claim_targets(scr),
         allowed_evidence_refs=scr_refs,
+        evidence_by_id=evidence_by_id,
         source_text=source_text,
         context="SCR",
     )
@@ -962,6 +974,7 @@ def load_nbb_plan(
             page,
             required_targets=_page_claim_targets(page),
             allowed_evidence_refs=page_evidence,
+            evidence_by_id=evidence_by_id,
             source_text=_text(package),
             context=f"page {page_id}",
         )
@@ -970,7 +983,36 @@ def load_nbb_plan(
             raise ContractError(f"NBB page plan hash is stale on {page_id}")
         if str(page.get("storyline_id") or "") != selected_id:
             raise ContractError(f"NBB page plan uses an unselected storyline on {page_id}")
+    if selection_status == "approved":
+        _validate_nbb_runtime_seal(root, plan, packages=packages)
     return plan
+
+
+def _validate_nbb_runtime_seal(
+    root: Path,
+    plan: dict[str, Any],
+    *,
+    packages: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    path = root / NBB_SEAL_PATH
+    if not path.is_file():
+        raise ContractError("approved NBB plan is missing its Runtime seal")
+    seal = read_json(path)
+    assert_v2("nbb_runtime_seal", seal)
+    if str(seal.get("run_id") or "") != str(plan.get("run_id") or ""):
+        raise ContractError("NBB Runtime seal run_id is stale")
+    if str(seal.get("selected_storyline_id") or "") != str((plan.get("selection") or {}).get("selected_storyline_id") or ""):
+        raise ContractError("NBB Runtime seal storyline is stale")
+    if str(seal.get("nbb_plan_sha256") or "") != str(plan.get("nbb_plan_sha256") or ""):
+        raise ContractError("NBB Runtime seal plan hash is stale")
+    if packages is not None:
+        expected_package_hashes = {
+            str(package.get("page_id") or ""): sha256_json(package)
+            for package in packages
+        }
+        if seal.get("page_package_sha256") != expected_package_hashes:
+            raise ContractError("NBB Runtime seal Page Package lineage is stale")
+    return seal
 
 
 def select_nbb_storyline(root: Path, storyline_id: str, *, selected_by: str = "user") -> dict[str, Any]:
@@ -1022,11 +1064,34 @@ def seal_nbb_plan(root: Path) -> dict[str, Any]:
     )
     assert_v2("nbb_plan", plan)
     write_nbb_plan(root, plan)
+    seal = {
+        "schema_version": "deck_nbb_runtime_seal.v1",
+        "run_id": str(plan.get("run_id") or ""),
+        "selected_storyline_id": str(selection.get("selected_storyline_id") or ""),
+        "nbb_plan_sha256": str(plan.get("nbb_plan_sha256") or ""),
+        "page_package_sha256": {
+            str(package.get("page_id") or ""): sha256_json(package)
+            for package in packages
+        },
+        "sealed_at": str(selection.get("sealed_at") or ""),
+    }
+    assert_v2("nbb_runtime_seal", seal)
+    write_json(root / NBB_SEAL_PATH, seal)
     return load_nbb_plan(root, packages=packages, expected_run_id=str(packages[0].get("run_id") or ""), require_approved=True)
 
 
 def write_nbb_plan(root: Path, plan: dict[str, Any]) -> Path:
     assert_v2("nbb_plan", plan)
+    seal_path = root / NBB_SEAL_PATH
+    if seal_path.exists():
+        selection_status = str((plan.get("selection") or {}).get("status") or "")
+        try:
+            seal = read_json(seal_path)
+        except (ContractError, OSError, json.JSONDecodeError):
+            seal_path.unlink(missing_ok=True)
+        else:
+            if selection_status != "approved" or str(seal.get("nbb_plan_sha256") or "") != str(plan.get("nbb_plan_sha256") or ""):
+                seal_path.unlink(missing_ok=True)
     path = root / NBB_PLAN_PATH
     return write_json(path, plan)
 
