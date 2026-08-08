@@ -408,7 +408,12 @@ def _font_path(family: str, page_id: str, element_id: str) -> Path:
         matched_family, _, matched_file = result.stdout.strip().partition("|")
         generic = requested.lower() in {"sans-serif", "serif", "monospace"}
         names = {name.strip().lower() for name in matched_family.split(",")}
-        if result.returncode == 0 and matched_file and (generic or requested.lower() in names):
+        compatible_families = {
+            "arial": {"arial", "arimo", "liberation sans"},
+            "helvetica": {"helvetica", "arial", "arimo", "liberation sans"},
+        }
+        accepted_names = compatible_families.get(requested.lower(), {requested.lower()})
+        if result.returncode == 0 and matched_file and (generic or bool(names & accepted_names)):
             path = Path(matched_file)
             if path.is_file():
                 return path
@@ -426,6 +431,10 @@ def _validate_svg_text(node: Any, scene_element: dict[str, Any], page_id: str) -
     from PIL import ImageFont
 
     element_id = str(node.get("id") or "")
+    required_attributes = {"font-family", "font-size", "font-weight", "fill", "data-pptx-text", "data-pptx-text-ref"}
+    missing_attributes = sorted(attribute for attribute in required_attributes if node.get(attribute) is None)
+    if missing_attributes:
+        raise SvgVisualError(f"SVG text style is incomplete on {element_id}: {', '.join(missing_attributes)}", page_id=page_id, code="HD_SVG_TEXT_OVERFLOW")
     expected_text = str(scene_element.get("text") or "")
     declared_text = str(node.get("data-pptx-text") or "")
     actual_text = declared_text or "".join(node.itertext())
@@ -446,11 +455,23 @@ def _validate_svg_text(node: Any, scene_element: dict[str, Any], page_id: str) -
     bounds = _svg_geometry_bbox(node)
     font = ImageFont.truetype(str(_font_path(str(node.get("font-family") or "Arial"), page_id, element_id)), max(1, round(font_size)))
     tspans = [child for child in list(node) if str(child.tag).split("}")[-1] == "tspan"]
+    if len(tspans) != len(list(node)):
+        raise SvgVisualError(f"SVG text supports only direct tspan children: {element_id}", page_id=page_id, code="HD_SVG_UNSUPPORTED_ELEMENT")
     lines: list[str] = []
     current = str(node.text or "")
     line_steps: list[float] = []
     for tspan in tspans:
+        allowed = {"x", "y", "dx", "dy", "fill", "fill-opacity", "opacity", "font-family", "font-size", "font-weight", "font-style"}
+        unsupported = sorted(str(name).split("}")[-1] for name in tspan.attrib if str(name).split("}")[-1] not in allowed)
+        if unsupported:
+            raise SvgVisualError(
+                f"unsupported SVG property {unsupported[0]} on {element_id} tspan; recovery: deck-master build retry --run-dir <run_dir> --profile high-density --stage svg --page-id {page_id}",
+                page_id=page_id,
+                code="HD_SVG_UNSUPPORTED_PROPERTY",
+            )
         text = "".join(tspan.itertext())
+        family = str(tspan.get("font-family") or node.get("font-family") or "Arial")
+        _font_path(family, page_id, element_id)
         try:
             dy = float(str(tspan.get("dy") or 0).removesuffix("px"))
         except ValueError as exc:

@@ -3,18 +3,91 @@
   "$id": "https://deck-master.local/contracts/visual-metrics.v1.schema.json",
   "title": "Deck Visual Metrics v1",
   "type": "object",
-  "required": ["schema_version", "run_id", "page_id", "comparison", "inputs", "thresholds", "status", "created_at"],
+  "required": ["schema_version", "run_id", "page_id", "comparison", "inputs", "thresholds", "values", "coverage", "geometry", "findings", "status", "created_at"],
   "properties": {
     "schema_version": {"const": "deck_visual_metrics.v1"},
     "run_id": {"type": "string"},
     "page_id": {"type": "string"},
-    "comparison": {"type": "object"},
-    "inputs": {"type": "object"},
-    "thresholds": {"type": "object"},
-    "coverage": {"type": "object"},
-    "findings": {"type": "array", "items": {"type": "object"}},
+    "comparison": {
+      "type": "object",
+      "required": ["kind", "renderer", "canvas"],
+      "properties": {
+        "kind": {"enum": ["blueprint_vs_svg", "svg_vs_pptx"]},
+        "renderer": {"type": "string", "minLength": 1},
+        "canvas": {
+          "type": "object",
+          "required": ["width", "height", "unit"],
+          "properties": {
+            "width": {"type": "number", "minimum": 1},
+            "height": {"type": "number", "minimum": 1},
+            "unit": {"const": "px"}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "inputs": {
+      "type": "object",
+      "required": ["reference_path", "reference_sha256", "candidate_path", "candidate_sha256", "mask_sha256", "mask_coverage", "svg_geometry_sha256", "candidate_geometry_sha256"],
+      "properties": {
+        "reference_path": {"type": "string", "minLength": 1},
+        "reference_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "candidate_path": {"type": "string", "minLength": 1},
+        "candidate_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "mask_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "mask_coverage": {"type": "number", "minimum": 0, "maximum": 0.2},
+        "svg_geometry_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "candidate_geometry_sha256": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "thresholds": {
+      "type": "object",
+      "required": ["text_masked_ssim", "p0_region_ssim", "bbox_max_delta_px", "color_delta", "edge_similarity"],
+      "additionalProperties": {"type": "number"}
+    },
+    "values": {
+      "type": "object",
+      "required": ["text_masked_ssim", "p0_region_ssim", "bbox_max_delta_px", "anchor_max_delta_px", "region_color_delta", "edge_similarity", "mask_coverage", "overflow_count", "illegal_overlap_count", "direction_mismatch_count"],
+      "properties": {
+        "text_masked_ssim": {"type": "number", "minimum": 0, "maximum": 1},
+        "p0_region_ssim": {"type": "number", "minimum": 0, "maximum": 1},
+        "bbox_max_delta_px": {"type": "number", "minimum": 0},
+        "anchor_max_delta_px": {"type": "number", "minimum": 0},
+        "region_color_delta": {"type": "number", "minimum": 0},
+        "edge_similarity": {"type": "number", "minimum": 0, "maximum": 1},
+        "mask_coverage": {"type": "number", "minimum": 0, "maximum": 0.2},
+        "overflow_count": {"type": "integer", "minimum": 0},
+        "illegal_overlap_count": {"type": "integer", "minimum": 0},
+        "direction_mismatch_count": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "coverage": {
+      "type": "object",
+      "required": ["required_components", "present_components", "component_coverage", "p0_p1_bbox_coverage"],
+      "properties": {
+        "required_components": {"type": "integer", "minimum": 0},
+        "present_components": {"type": "integer", "minimum": 0},
+        "component_coverage": {"type": "number", "minimum": 0, "maximum": 1},
+        "p0_p1_bbox_coverage": {"type": "number", "minimum": 0, "maximum": 1}
+      },
+      "additionalProperties": false
+    },
+    "geometry": {
+      "type": "object",
+      "required": ["source", "target", "pairs"],
+      "properties": {
+        "source": {"type": "string", "minLength": 1},
+        "target": {"type": "string", "minLength": 1},
+        "pairs": {"type": "array", "items": {"type": "object", "required": ["element_id", "source", "target", "delta"]}}
+      },
+      "additionalProperties": false
+    },
+    "findings": {"type": "array", "items": {"type": "object", "required": ["code"]}},
     "status": {"enum": ["pass", "failed", "needs_review"]},
     "created_at": {"type": "string"}
   },
-  "additionalProperties": true
+  "additionalProperties": false
 }
