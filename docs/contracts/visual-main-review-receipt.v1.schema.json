@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/contracts/visual-main-review-receipt.v1.schema.json",
+  "title": "Visual Main Review Receipt v1",
+  "type": "object",
+  "required": ["schema_version", "run_id", "page_id", "review_sha256", "main_review_sha256", "runtime_challenge_sha256", "svg_sha256", "blueprint_sha256", "metrics_sha256", "main_action_id", "reviewer_id", "reviewed_at", "status", "full_page_check", "region_check_ids", "review_evidence_sha256", "attested_at", "integrity"],
+  "properties": {
+    "schema_version": {"const": "deck_visual_main_review_receipt.v1"},
+    "run_id": {"type": "string", "minLength": 1},
+    "page_id": {"type": "string", "minLength": 1},
+    "review_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "main_review_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "runtime_challenge_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "svg_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "blueprint_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "metrics_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "main_action_id": {"type": "string", "pattern": "^[a-f0-9]{32}$"},
+    "reviewer_id": {"type": "string", "minLength": 1},
+    "reviewed_at": {"type": "string", "format": "date-time"},
+    "status": {"const": "pass"},
+    "full_page_check": {"const": "pass"},
+    "region_check_ids": {"type": "array", "minItems": 4, "items": {"type": "string", "minLength": 1}},
+    "review_evidence_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "attested_at": {"type": "string", "format": "date-time"},
+    "integrity": {
+      "type": "object",
+      "required": ["algorithm", "key_id", "payload_sha256", "signature"],
+      "properties": {
+        "algorithm": {"const": "hmac-sha256"},
+        "key_id": {"type": "string", "pattern": "^[a-f0-9]{16}$"},
+        "payload_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "signature": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

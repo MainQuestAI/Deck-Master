@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/contracts/nbb-user-decision-receipt.v1.schema.json",
+  "title": "NBB External User Decision Receipt v1",
+  "type": "object",
+  "required": ["schema_version", "run_id", "selected_storyline_id", "attestor_id", "attested_at", "candidate_set_sha256", "evidence_ledger_sha256", "page_package_sha256", "integrity"],
+  "properties": {
+    "schema_version": {"const": "deck_nbb_user_decision_receipt.v1"},
+    "run_id": {"type": "string", "minLength": 1},
+    "selected_storyline_id": {"type": "string", "minLength": 1},
+    "attestor_id": {"type": "string", "minLength": 1},
+    "attested_at": {"type": "string", "format": "date-time"},
+    "candidate_set_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "evidence_ledger_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "page_package_sha256": {"type": "object", "minProperties": 1, "additionalProperties": {"type": "string", "pattern": "^[a-f0-9]{64}$"}},
+    "integrity": {"$ref": "#/$defs/integrity"}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "integrity": {
+      "type": "object",
+      "required": ["algorithm", "key_id", "payload_sha256", "signature"],
+      "properties": {
+        "algorithm": {"const": "hmac-sha256"},
+        "key_id": {"type": "string", "pattern": "^[a-f0-9]{16}$"},
+        "payload_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "signature": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      },
+      "additionalProperties": false
+    }
+  }
+}

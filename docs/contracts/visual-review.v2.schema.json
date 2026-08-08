@@ -15,8 +15,8 @@
     "svg_preview_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
     "metrics_ref": {"type": "string"},
     "metrics_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
-    "full_page_checks": {"type": "object", "required": ["canvas_ratio", "stable_ids", "p0_p1_geometry"], "additionalProperties": {"enum": ["pass", "failed"]}},
-    "region_checks": {"type": "array", "items": {"type": "object"}},
+    "full_page_checks": {"type": "object", "required": ["canvas_ratio", "stable_ids", "p0_p1_geometry", "layout", "mask_coverage"], "properties": {"canvas_ratio": {"enum": ["pass", "failed"]}, "stable_ids": {"enum": ["pass", "failed"]}, "p0_p1_geometry": {"enum": ["pass", "failed"]}, "layout": {"enum": ["pass", "failed"]}, "mask_coverage": {"type": "number", "minimum": 0, "maximum": 0.2}}, "additionalProperties": false},
+    "region_checks": {"type": "array", "minItems": 4, "items": {"$ref": "#/$defs/regionCheck"}},
     "issues_found": {"type": "array", "items": {"type": "object"}},
     "unresolved_issues": {"type": "array", "items": {"type": "object"}},
     "runtime_challenge": {
@@ -59,7 +59,7 @@
     },
     "reviewEvidence": {
       "type": "object",
-      "required": ["status", "source", "reviewer_id", "action_id", "reviewed_at", "svg_sha256", "blueprint_sha256", "metrics_sha256"],
+      "required": ["status", "source", "reviewer_id", "action_id", "reviewed_at", "svg_sha256", "blueprint_sha256", "metrics_sha256", "full_page_check", "region_check_ids", "issues_found", "revision_required", "evidence_sha256"],
       "properties": {
         "status": {"enum": ["pass", "failed", "pending"]},
         "source": {"type": "string", "minLength": 1},
@@ -69,7 +69,25 @@
         "svg_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
         "blueprint_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
         "metrics_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "full_page_check": {"enum": ["pass", "failed", "pending"]},
+        "region_check_ids": {"type": "array", "minItems": 4, "items": {"type": "string", "minLength": 1}},
+        "issues_found": {"type": "array", "items": {"type": "object"}},
+        "revision_required": {"type": "boolean"},
+        "evidence_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
         "self_review_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      },
+      "additionalProperties": false
+    },
+    "regionCheck": {
+      "type": "object",
+      "required": ["region_id", "status", "bbox", "issue_count", "notes", "evidence_sha256"],
+      "properties": {
+        "region_id": {"type": "string", "minLength": 1},
+        "status": {"enum": ["pass", "failed", "pending"]},
+        "bbox": {"type": "object", "required": ["x", "y", "w", "h"], "properties": {"x": {"type": "number"}, "y": {"type": "number"}, "w": {"type": "number", "minimum": 0}, "h": {"type": "number", "minimum": 0}}, "additionalProperties": false},
+        "issue_count": {"type": "integer", "minimum": 0},
+        "notes": {"type": "string"},
+        "evidence_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
       },
       "additionalProperties": false
     }

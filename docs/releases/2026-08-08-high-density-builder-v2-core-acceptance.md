@@ -34,6 +34,7 @@ The source capability probe reports `ready` when schemas, Python packages, rende
 | Artifact | Contract |
 | --- | --- |
 | NBB plan | `deck_nbb_plan.v1` |
+| NBB user decision receipt | `deck_nbb_user_decision_receipt.v1` |
 | NBB selection receipt | `deck_nbb_selection_receipt.v1` |
 | NBB Runtime seal | `deck_nbb_runtime_seal.v1` |
 | Content lock | `deck_content_lock.v2` |
@@ -41,9 +42,11 @@ The source capability probe reports `ready` when schemas, Python packages, rende
 | Blueprint prompt | `deck_blueprint_prompt.v1` |
 | Blueprint manifest | `deck_blueprint_manifest.v2` |
 | Provider Runtime receipt | `deck_provider_runtime_receipt.v1` |
+| Provider Host receipt | `deck_provider_host_receipt.v1` |
 | Page Scene | `deck_page_scene.v2` |
 | Visual metrics | `deck_visual_metrics.v1` |
 | Visual review | `deck_visual_review.v2` |
+| Visual main-review receipt | `deck_visual_main_review_receipt.v1` |
 | SVG-to-DrawingML trace | `deck_svg_to_drawingml_trace.v1` |
 | PPTX readback | `deck_pptx_readback.v2` |
 | High-density manifest | `deck_high_density_manifest.v2` |
@@ -63,9 +66,11 @@ Raw provider payloads, generated images, private 73-page source material, and lo
 
 ## Validation
 
-- Full pytest: 1,354 passed and 105 subtests passed.
-- Coverage: 89%, with an 80% release floor.
-- Python 3.11 and 3.12 CI, contract/schema checks, preview gate, release smoke, and CI RC gate pass on the candidate branch.
+- Full pytest: 1,361 passed and 105 subtests passed.
+- Coverage: 82%, with the 80% release floor enforced by `coverage report --fail-under=80`.
+- Local static checks: Ruff, compileall, and `git diff --check` pass.
+- The seven-page fixture and fresh production provider smoke pass their lineage, visual, DrawingML, readback, and handback gates.
+- Python 3.11/3.12 CI, contract/schema checks, preview gate, release smoke, CI RC gate, and final independent review remain required on the pushed candidate commit.
 - Seven-page canonical handback is consumed by `deck-quality`.
 - The fresh production provider page passes signed challenge/result lineage, blueprint/SVG and SVG/PPTX visual gates, independent review evidence, and readback lineage.
 

@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import copy
 import json
+import os
 import re
 import secrets
-from datetime import datetime
+import shutil
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -19,6 +21,7 @@ CANVAS_WIDTH = 1672
 CANVAS_HEIGHT = 941
 CANVAS_RATIO = CANVAS_WIDTH / CANVAS_HEIGHT
 SAFE_PAGE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
+PROVIDER_HOST_ROOTS_ENV = "DECK_MASTER_PROVIDER_RESULT_ROOTS"
 
 
 class BlueprintRequired(ContractError):
@@ -106,6 +109,53 @@ def provider_receipt_path(root: Path, page_id: str) -> Path:
     return root / BLUEPRINT_MANIFEST_DIR / f"{page_id}.provider_receipt.json"
 
 
+def provider_host_receipt_path(root: Path, page_id: str) -> Path:
+    _assert_page_id(page_id)
+    return root / BLUEPRINT_MANIFEST_DIR / f"{page_id}.provider_host_receipt.json"
+
+
+def _provider_source_roots() -> list[Path]:
+    configured = os.environ.get(PROVIDER_HOST_ROOTS_ENV, "")
+    values = [item for item in configured.split(os.pathsep) if item] if configured else ["~/.codex/generated_images"]
+    roots: list[Path] = []
+    for value in values:
+        path = Path(value).expanduser().resolve()
+        if path not in roots:
+            roots.append(path)
+    return roots
+
+
+def _provider_source_locator(source: Path) -> tuple[Path, str]:
+    resolved = source.expanduser().resolve()
+    for root in _provider_source_roots():
+        try:
+            return root, resolved.relative_to(root).as_posix()
+        except ValueError:
+            continue
+    raise BlueprintInvalid(f"provider image must come from a configured Host-managed ImageGen root: {source}")
+
+
+def _provider_source_path(receipt: dict[str, Any]) -> Path:
+    root_hash = str(receipt.get("source_root_sha256") or "")
+    relative = str(receipt.get("source_relative_path") or "")
+    for root in _provider_source_roots():
+        if sha256_bytes(str(root).encode("utf-8")) != root_hash:
+            continue
+        candidate = (root / relative).resolve()
+        try:
+            candidate.relative_to(root)
+        except ValueError as exc:
+            raise BlueprintInvalid("provider Host receipt source path escapes its configured root") from exc
+        return candidate
+    raise BlueprintInvalid("provider Host receipt source root is not configured")
+
+
+def _provider_source_created_at(source: Path) -> str:
+    stat = source.stat()
+    timestamp = getattr(stat, "st_birthtime", stat.st_mtime)
+    return datetime.fromtimestamp(timestamp, timezone.utc).isoformat()
+
+
 def _run_mode(root: Path) -> str:
     mode = str(read_json(root / "request.json").get("run_mode") or "production").strip().lower()
     return mode if mode in {"production", "benchmark", "fixture", "dev"} else "production"
@@ -129,6 +179,94 @@ def _validate_provider_challenge(root: Path, prompt: dict[str, Any], page_id: st
     if str(challenge.get("run_mode") or "") != _run_mode(root):
         raise BlueprintInvalid(f"blueprint provider challenge run mode is stale on page {page_id}")
     return payload
+
+
+def record_provider_host_result(root: Path, page_id: str, source_image: Path) -> Path:
+    """Import a host-managed ImageGen result before production manifest sealing."""
+    _assert_page_id(page_id)
+    prompt = read_json(prompt_path(root, page_id))
+    assert_v2("blueprint_prompt", prompt)
+    challenge = _validate_provider_challenge(root, prompt, page_id)
+    run_mode = _run_mode(root)
+    if run_mode not in {"production", "benchmark"}:
+        raise BlueprintInvalid("Host-managed provider receipt is only required for production or benchmark runs")
+    source = Path(source_image).expanduser().resolve()
+    if not source.is_file() or source.is_symlink() or source.suffix.lower() != ".png":
+        raise BlueprintInvalid("Host-managed provider result must be a regular PNG file")
+    root_path, relative = _provider_source_locator(source)
+    if not re.fullmatch(r"exec-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.png", source.name):
+        raise BlueprintInvalid("Host-managed provider result must use the ImageGen exec-UUID filename")
+    source_created_at = _provider_source_created_at(source)
+    if _parse_timestamp(source_created_at, field="provider source created_at", page_id=page_id) < _parse_timestamp(challenge.get("issued_at"), field="challenge issued_at", page_id=page_id):
+        raise BlueprintInvalid("Host-managed provider result predates the Runtime challenge")
+    destination = root / BLUEPRINT_DIR / f"{page_id}.png"
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(source, destination)
+    provider = {
+        "tool": "image_gen.imagegen",
+        "model": "provider-managed-imagegen",
+        "request_id": source.stem,
+        "challenge_nonce": str(challenge["nonce"]),
+        "prompt_sha256": str(prompt["prompt_sha256"]),
+        "requested_at": str(challenge["issued_at"]),
+        "responded_at": source_created_at,
+    }
+    provider["request_sha256"] = _provider_request_sha256(provider)
+    payload = {
+        "schema_version": "deck_provider_host_receipt.v1",
+        "run_id": str(prompt.get("run_id") or ""),
+        "page_id": page_id,
+        "run_mode": run_mode,
+        "challenge_payload_sha256": sha256_json(challenge),
+        "prompt_sha256": str(prompt["prompt_sha256"]),
+        "image_sha256": sha256_file(destination),
+        "provider_tool": provider["tool"],
+        "provider_model": provider["model"],
+        "provider_request_id": provider["request_id"],
+        "provider_request_sha256": provider["request_sha256"],
+        "requested_at": provider["requested_at"],
+        "responded_at": provider["responded_at"],
+        "source_root_sha256": sha256_bytes(str(root_path).encode("utf-8")),
+        "source_relative_path": relative,
+        "source_file_sha256": sha256_file(source),
+        "source_size_bytes": source.stat().st_size,
+        "source_created_at": source_created_at,
+        "recorded_at": utc_now(),
+    }
+    receipt = {**payload, "integrity": sign_runtime_payload("imagegen_host_result.v1", payload)}
+    assert_v2("provider_host_receipt", receipt)
+    write_json(provider_host_receipt_path(root, page_id), receipt)
+    return destination
+
+
+def load_provider_host_receipt(root: Path, page_id: str, prompt: dict[str, Any], image: Path) -> dict[str, Any]:
+    try:
+        receipt = read_json(provider_host_receipt_path(root, page_id))
+    except ContractError as exc:
+        raise BlueprintInvalid(f"Host-managed provider receipt is required on page {page_id}") from exc
+    assert_v2("provider_host_receipt", receipt)
+    payload = {key: value for key, value in receipt.items() if key != "integrity"}
+    verify_runtime_payload("imagegen_host_result.v1", payload, receipt.get("integrity") or {})
+    if str(receipt.get("run_id") or "") != str(prompt.get("run_id") or "") or str(receipt.get("page_id") or "") != page_id:
+        raise BlueprintInvalid(f"Host-managed provider receipt identity is stale on page {page_id}")
+    challenge = _validate_provider_challenge(root, prompt, page_id)
+    expected = {
+        "run_mode": _run_mode(root),
+        "challenge_payload_sha256": sha256_json(challenge),
+        "prompt_sha256": str(prompt.get("prompt_sha256") or ""),
+        "image_sha256": sha256_file(image),
+    }
+    for field, value in expected.items():
+        if str(receipt.get(field) or "") != value:
+            raise BlueprintInvalid(f"Host-managed provider receipt {field} is stale on page {page_id}")
+    source = _provider_source_path(receipt)
+    if not source.is_file() or source.is_symlink() or sha256_file(source) != str(receipt.get("source_file_sha256") or "") or source.stat().st_size != int(receipt.get("source_size_bytes") or 0):
+        raise BlueprintInvalid(f"Host-managed provider source is missing or stale on page {page_id}")
+    if sha256_file(source) != sha256_file(image):
+        raise BlueprintInvalid(f"Host-managed provider source does not match blueprint image on page {page_id}")
+    if _provider_source_created_at(source) != str(receipt.get("source_created_at") or ""):
+        raise BlueprintInvalid(f"Host-managed provider source timestamp is stale on page {page_id}")
+    return receipt
 
 
 def _png_dimensions(path: Path) -> tuple[int, int] | None:
@@ -190,7 +328,9 @@ def _content_summary(lock: dict[str, Any]) -> dict[str, Any]:
         "subtitle": str(visible.get("subtitle") or ""),
         "conclusion": str(enrichment.get("conclusion") or ""),
         "supporting_arguments": [str(value) for value in enrichment.get("supporting_arguments") or []],
+        "detailed_argument": str(enrichment.get("detailed_argument") or ""),
         "so_what": str(enrichment.get("so_what") or ""),
+        "business_implication": str(enrichment.get("business_implication") or ""),
         "body": [json.dumps(block, ensure_ascii=False, sort_keys=True) if isinstance(block, (dict, list)) else str(block) for block in blocks],
         "evidence_ids": [str(item.get("evidence_id") if isinstance(item, dict) else item) for item in lock.get("evidence_bindings") or []],
         "required_components": list(lock.get("required_component_ids") or []),
@@ -198,6 +338,9 @@ def _content_summary(lock: dict[str, Any]) -> dict[str, Any]:
         "handoff": str(enrichment.get("handoff") or ""),
         "caveat": caveats,
         "material_pool": enrichment.get("material_pool") or {},
+        "evidence_hierarchy": enrichment.get("evidence_hierarchy") or {},
+        "evidence_assessment": enrichment.get("evidence_assessment") or {},
+        "chart_plan": enrichment.get("chart_plan") or {},
         "derived_claims": enrichment.get("derived_claims") or [],
         "storyline_context": storyline_context,
         "target_language": str(lock.get("target_language") or "zh-CN"),
@@ -225,10 +368,15 @@ def build_blueprint_prompt(
             f"Selected storyline visual potential: {summary['storyline_context'].get('visual_potential') or 'unavailable'}.",
             f"Selected storyline handoff: {summary['storyline_context'].get('page_handoff') or 'unavailable'}.",
             f"Supporting arguments: {' | '.join(summary['supporting_arguments']) or 'none'}.",
+            f"Detailed argument: {summary['detailed_argument'] or 'none'}.",
             f"Locked source content: {' | '.join(summary['body'])}",
             f"Evidence IDs: {', '.join(summary['evidence_ids']) or 'none'}.",
             f"Caveats: {' | '.join(summary['caveat']) or 'none'}.",
             f"Page handoff: {summary['handoff'] or 'unavailable'}.",
+            f"Business implication: {summary['business_implication'] or summary['so_what'] or 'unavailable'}.",
+            f"Evidence hierarchy: {json.dumps(summary['evidence_hierarchy'], ensure_ascii=False, sort_keys=True)}.",
+            f"Evidence assessment: {json.dumps(summary['evidence_assessment'], ensure_ascii=False, sort_keys=True)}.",
+            f"Chart and visual plan: {json.dumps(summary['chart_plan'], ensure_ascii=False, sort_keys=True)}.",
             f"Material pool: {json.dumps(summary['material_pool'], ensure_ascii=False, sort_keys=True)}.",
             f"Derived claim lineage: {json.dumps(summary['derived_claims'], ensure_ascii=False, sort_keys=True)}.",
             f"Required visual components: {', '.join(summary['required_components'])}.",
@@ -238,6 +386,7 @@ def build_blueprint_prompt(
             f"Provider challenge nonce: {provider_challenge_nonce}. Return this nonce in request metadata and never render it on the slide." if provider_challenge_nonce else "",
             "Use a contained 16:9 slide frame with dense but readable information regions, explicit hierarchy, evidence anchors, and a visible SO WHAT area.",
             "Treat all visible text as composition guidance. The native redraw will restore exact locked text from the content lock.",
+            "Use abstract text blocks or iconographic marks instead of legible provider-rendered copy; the native SVG redraw must carry the exact locked wording.",
             "Do not invent facts, numbers, logos, quotes, citations, page numbers, internal labels, prompt labels, wireframe labels, generation annotations, or hidden production notes.",
         ]
     )
@@ -329,6 +478,10 @@ def _provider_receipt_payload(
     challenge = _validate_provider_challenge(root, prompt, page_id)
     provider = manifest.get("provider") or {}
     approval = manifest.get("approval") or {}
+    host_receipt_sha256 = "0" * 64
+    if str(challenge.get("run_mode") or "") in {"production", "benchmark"}:
+        load_provider_host_receipt(root, page_id, prompt, blueprint_path(root, page_id) or Path(""))
+        host_receipt_sha256 = sha256_file(provider_host_receipt_path(root, page_id))
     return {
         "schema_version": "deck_provider_runtime_receipt.v1",
         "run_id": str(manifest.get("run_id") or ""),
@@ -341,6 +494,7 @@ def _provider_receipt_payload(
         "provider_tool": str(provider.get("tool") or ""),
         "provider_model": str(provider.get("model") or ""),
         "provider_request_id_sha256": sha256_bytes(str(provider.get("request_id") or "").encode("utf-8")),
+        "provider_host_receipt_sha256": host_receipt_sha256,
         "requested_at": str(provider.get("requested_at") or ""),
         "responded_at": str(provider.get("responded_at") or ""),
         "approval_source": str(approval.get("source") or ""),
@@ -454,19 +608,32 @@ def ensure_blueprint_manifest(
     if internal_annotations:
         raise BlueprintInvalid(f"blueprint contains internal annotations on page {page_id}")
     provider = copy.deepcopy(existing.get("provider") or {})
-    placeholder_provider = not provider or any(str(provider.get(field) or "").lower() in {"", "unavailable", "unknown"} for field in ("tool", "model", "request_id"))
-    if placeholder_provider:
-        fixture_provider = str(approval_record.get("source") or "") == "fixture_runtime"
+    if _run_mode(root) in {"production", "benchmark"}:
+        host_receipt = load_provider_host_receipt(root, page_id, prompt, image)
         provider = {
-            "tool": "fixture_runtime" if fixture_provider else "agent_imagegen",
-            "model": "deterministic-svg-fixture" if fixture_provider else "unavailable",
-            "request_id": f"fixture-{page_id}-{expected_prompt_sha[:12]}" if fixture_provider else "unavailable",
+            "tool": str(host_receipt["provider_tool"]),
+            "model": str(host_receipt["provider_model"]),
+            "request_id": str(host_receipt["provider_request_id"]),
             "challenge_nonce": challenge_nonce,
             "prompt_sha256": expected_prompt_sha,
-            "requested_at": str(challenge.get("issued_at") or utc_now()),
-            "responded_at": str(challenge.get("issued_at") or utc_now()),
+            "requested_at": str(host_receipt["requested_at"]),
+            "responded_at": str(host_receipt["responded_at"]),
+            "request_sha256": str(host_receipt["provider_request_sha256"]),
         }
-        provider["request_sha256"] = _provider_request_sha256(provider)
+    else:
+        placeholder_provider = not provider or any(str(provider.get(field) or "").lower() in {"", "unavailable", "unknown"} for field in ("tool", "model", "request_id"))
+        if placeholder_provider:
+            fixture_provider = str(approval_record.get("source") or "") == "fixture_runtime"
+            provider = {
+                "tool": "fixture_runtime" if fixture_provider else "agent_imagegen",
+                "model": "deterministic-svg-fixture" if fixture_provider else "unavailable",
+                "request_id": f"fixture-{page_id}-{expected_prompt_sha[:12]}" if fixture_provider else "unavailable",
+                "challenge_nonce": challenge_nonce,
+                "prompt_sha256": expected_prompt_sha,
+                "requested_at": str(challenge.get("issued_at") or utc_now()),
+                "responded_at": str(challenge.get("issued_at") or utc_now()),
+            }
+            provider["request_sha256"] = _provider_request_sha256(provider)
     _validate_provider_lineage(prompt, provider, page_id)
     manifest = {
         "schema_version": "deck_blueprint_manifest.v2",
@@ -577,8 +744,11 @@ __all__ = [
     "ensure_blueprint_manifest",
     "image_dimensions",
     "load_blueprint_manifest",
+    "load_provider_host_receipt",
     "load_provider_runtime_receipt",
     "prompt_path",
+    "provider_host_receipt_path",
     "provider_receipt_path",
+    "record_provider_host_result",
     "safe_image_path",
 ]

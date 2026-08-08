@@ -16,10 +16,10 @@ from xml.etree import ElementTree
 
 from .blueprint import load_blueprint_manifest
 from .contracts import ContractError, assert_v2, read_json, safe_run_path, sha256_file, sha256_json, utc_now, write_json
-from .integrity import sign_runtime_payload, verify_runtime_payload
+from .integrity import sign_review_attestation, sign_runtime_payload, verify_review_attestation, verify_runtime_payload
 from .scene import load_scene
 from .svg_paint import SvgPaintError, parse_node_paint, parse_svg_paint
-from .visual import VisualMetricsError, _svg_geometry_bbox, compute_visual_metrics, normalize_blueprint, write_visual_metrics
+from .visual import VisualMetricsError, _svg_geometry_bbox, _text_contrast_metrics, compute_visual_metrics, normalize_blueprint, write_visual_metrics
 
 SVG_DIR = Path("high_density_build/svg")
 PREVIEW_DIR = Path("high_density_build/previews")
@@ -52,6 +52,18 @@ def review_path(root: Path, page_id: str) -> Path:
 
 def metrics_path(root: Path, page_id: str) -> Path:
     return root / REVIEW_DIR / f"{page_id}.metrics.json"
+
+
+def main_review_receipt_path(root: Path, page_id: str) -> Path:
+    return root / REVIEW_DIR / f"{page_id}.main_review_receipt.json"
+
+
+def _run_mode(root: Path) -> str:
+    try:
+        value = str(read_json(root / "request.json").get("run_mode") or "fixture").strip().lower()
+    except ContractError:
+        value = "fixture"
+    return value if value in {"fixture", "dev", "production", "benchmark"} else "production"
 
 
 def _estimated_width(text: str, size: float) -> float:
@@ -349,7 +361,7 @@ def validate_svg(path: Path, *, page_id: str = "") -> dict[str, Any]:
                 opacity = float(str(node.get("opacity")).removesuffix("px"))
             except (TypeError, ValueError) as exc:
                 raise SvgVisualError(f"SVG opacity is invalid: {node_id}", page_id=page_id) from exc
-            if not math.isfinite(opacity) or opacity <= 0 or opacity > 1:
+            if not math.isfinite(opacity) or opacity < 0 or opacity > 1:
                 raise SvgVisualError(f"SVG opacity must be between 0 and 1: {node_id}", page_id=page_id)
         for attribute in () if definition_node else ("x", "y", "x1", "y1", "x2", "y2", "cx", "cy", "r", "rx", "ry", "width", "height", "stroke-width", "font-size"):
             if node.get(attribute) is None:
@@ -366,7 +378,8 @@ def validate_svg(path: Path, *, page_id: str = "") -> dict[str, Any]:
             except SvgPaintError as exc:
                 raise SvgVisualError(str(exc), page_id=page_id, code=exc.code) from exc
         if node.get("opacity") is not None and str(node.get("opacity")) in {"0", "0.0"}:
-            raise SvgVisualError(f"hidden SVG element is blocked: {node_id}", page_id=page_id)
+            message = "hidden SVG ancestor group is blocked" if tag == "g" else "hidden SVG element is blocked"
+            raise SvgVisualError(f"{message}: {node_id}", page_id=page_id)
         if tag in visible_tags:
             if not node_id:
                 raise SvgVisualError(f"visible SVG element must have a stable element id: {tag}", page_id=page_id)
@@ -430,7 +443,7 @@ def _font_path(family: str, page_id: str, element_id: str) -> Path:
     raise SvgVisualError(f"unresolvable SVG font {requested} on {element_id}", page_id=page_id, code="HD_SVG_TEXT_OVERFLOW")
 
 
-def _validate_svg_text(node: Any, scene_element: dict[str, Any], page_id: str) -> None:
+def _validate_svg_text(node: Any, scene_element: dict[str, Any], page_id: str, ancestors: list[Any]) -> None:
     from PIL import ImageFont
 
     element_id = str(node.get("id") or "")
@@ -448,7 +461,12 @@ def _validate_svg_text(node: Any, scene_element: dict[str, Any], page_id: str) -
     if fill in {"", "none", "transparent"} or str(node.get("visibility") or "").lower() == "hidden" or str(node.get("display") or "").lower() == "none":
         raise SvgVisualError(f"hidden SVG text is blocked: {element_id}", page_id=page_id, code="HD_SVG_CONTENT_DRIFT")
     try:
-        opacity = float(node.get("opacity") or 1) * float(node.get("fill-opacity") or 1)
+        ancestor_opacity = 1.0
+        for ancestor in ancestors:
+            if str(ancestor.get("display") or "").lower() == "none" or str(ancestor.get("visibility") or "").lower() in {"hidden", "collapse"}:
+                raise SvgVisualError(f"hidden SVG text ancestor is blocked: {element_id}", page_id=page_id, code="HD_SVG_CONTENT_DRIFT")
+            ancestor_opacity *= float(ancestor.get("opacity") or 1) * float(ancestor.get("fill-opacity") or 1)
+        opacity = ancestor_opacity * float(node.get("opacity") or 1) * float(node.get("fill-opacity") or 1)
         font_size = float(str(node.get("font-size") or "").removesuffix("px"))
     except ValueError as exc:
         raise SvgVisualError(f"SVG text style is invalid: {element_id}", page_id=page_id, code="HD_SVG_TEXT_OVERFLOW") from exc
@@ -462,6 +480,10 @@ def _validate_svg_text(node: Any, scene_element: dict[str, Any], page_id: str) -
     lines: list[str] = []
     current = str(node.text or "")
     line_steps: list[float] = []
+    current_width = float(font.getlength(current))
+    current_max_size = font_size
+    line_widths: list[float] = []
+    line_sizes: list[float] = []
     for tspan in tspans:
         allowed = {"x", "y", "dx", "dy", "fill", "fill-opacity", "opacity", "font-family", "font-size", "font-weight", "font-style"}
         unsupported = sorted(str(name).split("}")[-1] for name in tspan.attrib if str(name).split("}")[-1] not in allowed)
@@ -475,7 +497,8 @@ def _validate_svg_text(node: Any, scene_element: dict[str, Any], page_id: str) -
         tspan_fill = str(tspan.get("fill") or node.get("fill") or "").lower()
         try:
             tspan_opacity = (
-                float(node.get("opacity") or 1)
+                ancestor_opacity
+                * float(node.get("opacity") or 1)
                 * float(node.get("fill-opacity") or 1)
                 * float(tspan.get("opacity") or 1)
                 * float(tspan.get("fill-opacity") or 1)
@@ -485,27 +508,40 @@ def _validate_svg_text(node: Any, scene_element: dict[str, Any], page_id: str) -
         if tspan_fill in {"", "none", "transparent"} or tspan_opacity < 0.05:
             raise SvgVisualError(f"hidden SVG tspan text is blocked: {element_id}", page_id=page_id, code="HD_SVG_CONTENT_DRIFT")
         family = str(tspan.get("font-family") or node.get("font-family") or "Arial")
-        _font_path(family, page_id, element_id)
         try:
+            tspan_size = float(str(tspan.get("font-size") or node.get("font-size") or "").removesuffix("px"))
             dy = float(str(tspan.get("dy") or 0).removesuffix("px"))
         except ValueError as exc:
-            raise SvgVisualError(f"SVG tspan line offset is invalid: {element_id}", page_id=page_id, code="HD_SVG_TEXT_OVERFLOW") from exc
+            raise SvgVisualError(f"SVG tspan size or line offset is invalid: {element_id}", page_id=page_id, code="HD_SVG_TEXT_OVERFLOW") from exc
+        if tspan_size <= 0:
+            raise SvgVisualError(f"SVG tspan font size is invalid: {element_id}", page_id=page_id, code="HD_SVG_TEXT_OVERFLOW")
+        tspan_font = ImageFont.truetype(str(_font_path(family, page_id, element_id)), max(1, round(tspan_size)))
         if current and (tspan.get("y") is not None or abs(dy) > 0.01):
             lines.append(current)
+            line_widths.append(current_width)
+            line_sizes.append(current_max_size)
             current = text
+            current_width = float(tspan_font.getlength(text))
+            current_max_size = tspan_size
             line_steps.append(abs(dy))
         else:
             current += text
-        current += str(tspan.tail or "")
+            current_width += float(tspan_font.getlength(text))
+            current_max_size = max(current_max_size, tspan_size)
+        tail = str(tspan.tail or "")
+        current += tail
+        current_width += float(font.getlength(tail))
     if current or not lines:
         lines.append(current)
+        line_widths.append(current_width)
+        line_sizes.append(current_max_size)
     visible_text = " ".join(line.strip() for line in lines)
     if " ".join(declared_text.split()) != " ".join(visible_text.split()):
         raise SvgVisualError(f"visible SVG text drift on {element_id}", page_id=page_id, code="HD_SVG_CONTENT_DRIFT")
     if any(step < font_size * 0.7 or step > font_size * 2.5 for step in line_steps):
         raise SvgVisualError(f"SVG tspan line height is invalid: {element_id}", page_id=page_id, code="HD_SVG_TEXT_OVERFLOW")
-    measured_width = max((float(font.getlength(line)) for line in lines), default=0.0)
-    measured_height = font_size + sum(line_steps or [font_size * 1.18] * max(0, len(lines) - 1))
+    measured_width = max(line_widths, default=0.0)
+    measured_height = max(sum(line_sizes), font_size + sum(line_steps or [font_size * 1.18] * max(0, len(lines) - 1)))
     if measured_width > bounds["w"] + 1 or measured_height > bounds["h"] + 1:
         raise SvgVisualError(f"SVG text overflow in {element_id}", page_id=page_id, code="HD_SVG_TEXT_OVERFLOW")
 
@@ -522,6 +558,7 @@ def validate_approved_svg(
     validate_scene_content(scene, lock)
     result = validate_svg(path, page_id=page_id)
     root = ElementTree.fromstring(path.read_text(encoding="utf-8"))
+    parents = {child: parent for parent in root.iter() for child in list(parent)}
     visible_tags = {"text", "rect", "circle", "ellipse", "line", "path", "polyline", "polygon", "image"}
     visible_nodes = [node for node in root.iter() if str(node.tag).split("}")[-1] in visible_tags]
     nodes = {str(node.get("id") or ""): node for node in visible_nodes}
@@ -537,7 +574,12 @@ def validate_approved_svg(
         node = nodes.get(element_id)
         if node is None or str(node.tag).split("}")[-1] != "text":
             raise SvgVisualError(f"approved SVG is missing required text element: {element_id}", page_id=page_id, code="HD_SVG_CONTENT_DRIFT")
-        _validate_svg_text(node, element, page_id)
+        ancestors: list[Any] = []
+        parent = parents.get(node)
+        while parent is not None:
+            ancestors.append(parent)
+            parent = parents.get(parent)
+        _validate_svg_text(node, element, page_id, ancestors)
     dom_order = {str(node.get("id") or ""): index for index, node in enumerate(visible_nodes)}
     previous_z = -10**9
     for node in visible_nodes:
@@ -580,6 +622,14 @@ def validate_approved_svg(
                 raise SvgVisualError(f"image asset covers P0/P1 text: {element_id} -> {text_id}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
     if image_area / canvas_area > 0.50:
         raise SvgVisualError("registered image assets exceed 50% of canvas", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
+    contrast = _text_contrast_metrics(path, scene)
+    low_contrast = [element_id for element_id, value in contrast["elements"].items() if float(value["contrast_ratio"]) < 3.0]
+    if low_contrast:
+        raise SvgVisualError(
+            f"P0/P1 SVG text contrast is below 3.0: {', '.join(low_contrast)}",
+            page_id=page_id,
+            code="HD_SVG_CONTENT_DRIFT",
+        )
     return result
 
 
@@ -604,6 +654,11 @@ def _review_evidence(
     svg_sha256: str,
     blueprint_sha256: str,
     metrics_sha256: str,
+    full_page_check: str,
+    region_check_ids: list[str],
+    issues_found: list[dict[str, Any]],
+    revision_required: bool,
+    evidence_sha256: str,
 ) -> dict[str, Any]:
     return {
         "status": status,
@@ -614,7 +669,59 @@ def _review_evidence(
         "svg_sha256": svg_sha256,
         "blueprint_sha256": blueprint_sha256,
         "metrics_sha256": metrics_sha256,
+        "full_page_check": full_page_check,
+        "region_check_ids": list(region_check_ids),
+        "issues_found": list(issues_found),
+        "revision_required": revision_required,
+        "evidence_sha256": evidence_sha256,
     }
+
+
+def _region_bbox(elements: list[dict[str, Any]]) -> dict[str, float]:
+    if not elements:
+        return {"x": 0.0, "y": 0.0, "w": float(CANVAS_WIDTH), "h": float(CANVAS_HEIGHT)}
+    left = min(float((element.get("bbox") or {}).get("x") or 0) for element in elements)
+    top = min(float((element.get("bbox") or {}).get("y") or 0) for element in elements)
+    right = max(float((element.get("bbox") or {}).get("x") or 0) + float((element.get("bbox") or {}).get("w") or 0) for element in elements)
+    bottom = max(float((element.get("bbox") or {}).get("y") or 0) + float((element.get("bbox") or {}).get("h") or 0) for element in elements)
+    return {"x": left, "y": top, "w": max(0.0, right - left), "h": max(0.0, bottom - top)}
+
+
+def _build_region_checks(scene: dict[str, Any], metrics: dict[str, Any]) -> list[dict[str, Any]]:
+    elements = [element for element in scene.get("elements") or [] if isinstance(element, dict)]
+    title = [element for element in elements if element.get("kind") == "text" and str(element.get("text_ref") or "").endswith(".title") and element.get("priority") == "P0"]
+    insight = [element for element in elements if "so_what" in str(element.get("component_id") or "") or "so_what" in str(element.get("text_ref") or "")]
+    footer = [element for element in elements if "source" in str(element.get("component_id") or "") or "footnotes" in str(element.get("text_ref") or "")]
+    main = [element for element in elements if element not in title and element not in insight and element not in footer]
+    groups = {
+        "title": title,
+        "main_visual": main,
+        "insight_or_so_what": insight,
+        "source_footer": footer,
+    }
+    findings = list(metrics.get("findings") or [])
+    checks: list[dict[str, Any]] = []
+    for region_id, region_elements in groups.items():
+        issues = [item for item in findings if region_id in str(item).lower() or (region_id == "main_visual" and item.get("code") in {"visual_ssim_below_threshold", "p0_region_ssim_below_threshold", "visual_overflow", "illegal_text_overlap", "direction_mismatch"})]
+        bbox = _region_bbox(region_elements)
+        optional_empty = region_id == "source_footer" and not region_elements
+        evidence = {
+            "region_id": region_id,
+            "bbox": bbox,
+            "element_ids": [str(element.get("element_id") or "") for element in region_elements],
+            "issues": issues,
+        }
+        checks.append(
+            {
+                "region_id": region_id,
+                "status": "pass" if (optional_empty or (region_elements and not issues and metrics.get("status") == "pass")) else "failed" if issues or not region_elements else "pending",
+                "bbox": bbox,
+                "issue_count": len(issues) + (0 if region_elements or optional_empty else 1),
+                "notes": "No source footer is required by the Content Lock." if optional_empty else "Measured from the current Scene and rendered visual metrics.",
+                "evidence_sha256": sha256_json(evidence),
+            }
+        )
+    return checks
 
 
 def _parse_review_time(value: Any, *, field: str, page_id: str) -> datetime:
@@ -661,6 +768,10 @@ def _validate_review_lineage(review: dict[str, Any], page_id: str) -> None:
             if source not in allowed or not str(evidence.get("reviewer_id") or ""):
                 raise SvgVisualError(f"visual {name} review source is invalid on page {page_id}", page_id=page_id)
             _parse_review_time(reviewed_at, field=f"{name} reviewed_at", page_id=page_id)
+            if evidence.get("full_page_check") != "pass" or bool(evidence.get("revision_required")):
+                raise SvgVisualError(f"passing visual {name} review lacks a passing full-page gate on page {page_id}", page_id=page_id)
+        if len(list(evidence.get("region_check_ids") or [])) < 4 or not str(evidence.get("evidence_sha256") or ""):
+            raise SvgVisualError(f"visual {name} review lacks complete region evidence on page {page_id}", page_id=page_id)
     if str(main_review.get("self_review_sha256") or "") != sha256_json(self_review):
         raise SvgVisualError(f"main visual review is stale for self review on page {page_id}", page_id=page_id)
     if self_review.get("status") == "pass" and main_review.get("status") == "pass":
@@ -670,6 +781,160 @@ def _validate_review_lineage(review: dict[str, Any], page_id: str) -> None:
         main_time = _parse_review_time(main_review.get("reviewed_at"), field="main reviewed_at", page_id=page_id)
         if main_time < self_time:
             raise SvgVisualError(f"main visual review precedes self review on page {page_id}", page_id=page_id)
+
+
+def _main_review_receipt_payload(review: dict[str, Any]) -> dict[str, Any]:
+    main_review = review.get("main_review") or {}
+    challenge = review.get("runtime_challenge") or {}
+    return {
+        "schema_version": "deck_visual_main_review_receipt.v1",
+        "run_id": str(review.get("run_id") or ""),
+        "page_id": str(review.get("page_id") or ""),
+        "review_sha256": sha256_json(review),
+        "main_review_sha256": sha256_json(main_review),
+        "runtime_challenge_sha256": sha256_json(challenge),
+        "svg_sha256": str(review.get("svg_sha256") or ""),
+        "blueprint_sha256": str(review.get("blueprint_sha256") or ""),
+        "metrics_sha256": str(review.get("metrics_sha256") or ""),
+        "main_action_id": str(main_review.get("action_id") or ""),
+        "reviewer_id": str(main_review.get("reviewer_id") or ""),
+        "reviewed_at": str(main_review.get("reviewed_at") or ""),
+        "status": str(main_review.get("status") or ""),
+        "full_page_check": str(main_review.get("full_page_check") or ""),
+        "region_check_ids": list(main_review.get("region_check_ids") or []),
+        "review_evidence_sha256": str(main_review.get("evidence_sha256") or ""),
+        "attested_at": utc_now(),
+    }
+
+
+def _load_main_review_receipt(root: Path, page_id: str, review: dict[str, Any]) -> dict[str, Any]:
+    try:
+        receipt = read_json(main_review_receipt_path(root, page_id))
+    except ContractError as exc:
+        raise SvgVisualError(
+            f"independent main visual review attestation is required on page {page_id}",
+            page_id=page_id,
+            code="HD_VISUAL_REVIEW_ATTESTATION_REQUIRED",
+        ) from exc
+    try:
+        assert_v2("visual_main_review_receipt", receipt)
+        payload = {key: value for key, value in receipt.items() if key != "integrity"}
+        verify_review_attestation(payload, receipt.get("integrity") or {})
+    except ContractError as exc:
+        raise SvgVisualError(f"independent main visual review attestation is invalid on page {page_id}: {exc}", page_id=page_id, code="HD_VISUAL_REVIEW_ATTESTATION_INVALID") from exc
+    expected = _main_review_receipt_payload(review)
+    for field, value in expected.items():
+        if field == "attested_at":
+            continue
+        if receipt.get(field) != value:
+            raise SvgVisualError(f"independent main visual review attestation {field} is stale on page {page_id}", page_id=page_id, code="HD_VISUAL_REVIEW_ATTESTATION_STALE")
+    if str(receipt.get("reviewer_id") or "") == str((review.get("self_review") or {}).get("reviewer_id") or ""):
+        raise SvgVisualError(f"independent main visual review attestation reuses the producer reviewer on page {page_id}", page_id=page_id, code="HD_VISUAL_REVIEW_ATTESTATION_INVALID")
+    return receipt
+
+
+def _review_pass_evidence(root: Path, page_id: str, review: dict[str, Any], *, reviewer_id: str, action_field: str, source: str) -> dict[str, Any]:
+    """Build a review conclusion from the current measured artifacts."""
+    if not str(reviewer_id or "").strip():
+        raise SvgVisualError(f"visual {source} reviewer_id is required on page {page_id}", page_id=page_id)
+    try:
+        scene = load_scene(root, page_id)
+        metrics_file = safe_run_path(root, str(review.get("metrics_ref") or ""))
+        metrics = read_json(metrics_file)
+    except ContractError as exc:
+        raise SvgVisualError(f"visual {source} inputs are invalid on page {page_id}", page_id=page_id) from exc
+    try:
+        assert_v2("visual_metrics", metrics)
+    except ContractError as exc:
+        raise SvgVisualError(f"visual {source} metrics contract is invalid on page {page_id}", page_id=page_id) from exc
+    if sha256_file(metrics_file) != str(review.get("metrics_sha256") or "") or metrics.get("status") != "pass":
+        raise SvgVisualError(f"visual {source} requires passing current metrics on page {page_id}", page_id=page_id)
+    expected_regions = _build_region_checks(scene, metrics)
+    if any(item.get("status") != "pass" for item in expected_regions):
+        raise SvgVisualError(f"visual {source} requires passing region checks on page {page_id}", page_id=page_id)
+    svg_sha = sha256_file(svg_path(root, page_id))
+    if svg_sha != str(review.get("svg_sha256") or ""):
+        raise SvgVisualError(f"visual {source} SVG hash is stale on page {page_id}", page_id=page_id)
+    blueprint_sha = str(review.get("blueprint_sha256") or "")
+    metrics_sha = str(review.get("metrics_sha256") or "")
+    evidence = {
+        "svg_sha256": svg_sha,
+        "blueprint_sha256": blueprint_sha,
+        "metrics_sha256": metrics_sha,
+        "region_checks": expected_regions,
+    }
+    challenge = review.get("runtime_challenge") or {}
+    action_id = str(challenge.get(action_field) or "")
+    if not re.fullmatch(r"[a-f0-9]{32}", action_id):
+        raise SvgVisualError(f"visual {source} Runtime action is invalid on page {page_id}", page_id=page_id)
+    return _review_evidence(
+        status="pass",
+        source=source,
+        reviewer_id=str(reviewer_id),
+        action_id=action_id,
+        reviewed_at=utc_now(),
+        svg_sha256=svg_sha,
+        blueprint_sha256=blueprint_sha,
+        metrics_sha256=metrics_sha,
+        full_page_check="pass",
+        region_check_ids=[str(item["region_id"]) for item in expected_regions],
+        issues_found=[],
+        revision_required=False,
+        evidence_sha256=sha256_json(evidence),
+    )
+
+
+def record_visual_self_review(root: Path, page_id: str, *, reviewer_id: str) -> Path:
+    """Record the producer's measured review conclusion before main review."""
+    review = read_json(review_path(root, page_id))
+    if review.get("schema_version") != "deck_visual_review.v2" or str(review.get("page_id") or "") != page_id:
+        raise SvgVisualError(f"visual review contract is invalid on page {page_id}", page_id=page_id)
+    if _run_mode(root) not in {"production", "benchmark"}:
+        raise SvgVisualError("external self review is only required for production or benchmark runs", page_id=page_id)
+    _validate_review_lineage(review, page_id)
+    self_review = _review_pass_evidence(root, page_id, review, reviewer_id=reviewer_id, action_field="self_action_id", source="agent_self_review")
+    main_review = dict(review.get("main_review") or {})
+    main_review["self_review_sha256"] = sha256_json(self_review)
+    review["self_review"] = self_review
+    review["main_review"] = main_review
+    review["visual_status"] = "needs_review"
+    review["verdict"] = "needs_review"
+    assert_v2("visual_review", review)
+    return write_json(review_path(root, page_id), review)
+
+
+def record_visual_main_review(root: Path, page_id: str, *, reviewer_id: str) -> Path:
+    """Record an independent main review and create its Host attestation receipt."""
+    review = read_json(review_path(root, page_id))
+    if review.get("schema_version") != "deck_visual_review.v2" or str(review.get("page_id") or "") != page_id:
+        raise SvgVisualError(f"visual review contract is invalid on page {page_id}", page_id=page_id)
+    if _run_mode(root) not in {"production", "benchmark"}:
+        raise SvgVisualError("external main visual review attestation is only required for production or benchmark runs", page_id=page_id)
+    if not str(reviewer_id or "").strip():
+        raise SvgVisualError(f"independent main visual reviewer_id is required on page {page_id}", page_id=page_id)
+    _validate_review_lineage(review, page_id)
+    self_review = review.get("self_review") or {}
+    if str(self_review.get("status") or "") != "pass":
+        raise SvgVisualError(f"producer self review must pass before main review on page {page_id}", page_id=page_id)
+    main_review = review.get("main_review") or {}
+    if str(self_review.get("reviewer_id") or "") == str(reviewer_id):
+        raise SvgVisualError(f"independent main visual review reuses the producer reviewer on page {page_id}", page_id=page_id)
+    if str(main_review.get("status") or "") != "pass":
+        main_review = _review_pass_evidence(root, page_id, review, reviewer_id=reviewer_id, action_field="main_action_id", source="agent_main_review")
+        main_review["self_review_sha256"] = sha256_json(self_review)
+        review["main_review"] = main_review
+        review["visual_status"] = "pass"
+        review["verdict"] = "pass"
+        assert_v2("visual_review", review)
+        write_json(review_path(root, page_id), review)
+        review = read_json(review_path(root, page_id))
+    elif str(main_review.get("reviewer_id") or "") != str(reviewer_id):
+        raise SvgVisualError(f"main visual reviewer_id does not match the attested reviewer on page {page_id}", page_id=page_id)
+    load_visual_review(root, page_id, require_external_receipt=False)
+    payload = _main_review_receipt_payload(review)
+    receipt = {**payload, "integrity": sign_review_attestation(payload)}
+    assert_v2("visual_main_review_receipt", receipt)
+    return write_json(main_review_receipt_path(root, page_id), receipt)
 
 
 def build_visual_review(root: Path, scene: dict[str, Any], *, mode: str) -> Path:
@@ -682,12 +947,23 @@ def build_visual_review(root: Path, scene: dict[str, Any], *, mode: str) -> Path
         metrics_file = write_visual_metrics(root, scene, metrics)
     except (ContractError, VisualMetricsError, OSError) as exc:
         raise SvgVisualError(f"visual metrics could not be computed on page {page_id}: {exc}", page_id=page_id) from exc
-    priorities = {element["priority"] for element in scene.get("elements", [])}
     passed_metrics = metrics.get("status") == "pass"
-    created_at = utc_now()
+    region_checks = _build_region_checks(scene, metrics)
+    region_check_ids = [str(item["region_id"]) for item in region_checks]
+    region_passed = all(item.get("status") == "pass" for item in region_checks)
+    review_issues = list(metrics.get("findings") or [])
+    full_page_check = "pass" if passed_metrics and region_passed else "failed"
     svg_sha = sha256_file(svg_path(root, page_id))
     blueprint_sha = str(scene.get("blueprint_sha256") or "")
     metrics_sha = sha256_file(metrics_file)
+    full_page_evidence = {
+        "svg_sha256": svg_sha,
+        "blueprint_sha256": blueprint_sha,
+        "metrics_sha256": metrics_sha,
+        "region_checks": region_checks,
+    }
+    review_evidence_sha = sha256_json(full_page_evidence)
+    created_at = utc_now()
     challenge_payload = {
         "self_action_id": secrets.token_hex(16),
         "main_action_id": secrets.token_hex(16),
@@ -706,6 +982,11 @@ def build_visual_review(root: Path, scene: dict[str, Any], *, mode: str) -> Path
         svg_sha256=svg_sha,
         blueprint_sha256=blueprint_sha,
         metrics_sha256=metrics_sha,
+        full_page_check=full_page_check if fixture_review else "pending",
+        region_check_ids=region_check_ids,
+        issues_found=review_issues,
+        revision_required=not passed_metrics,
+        evidence_sha256=review_evidence_sha,
     )
     main_review = {
         **_review_evidence(
@@ -717,6 +998,11 @@ def build_visual_review(root: Path, scene: dict[str, Any], *, mode: str) -> Path
             svg_sha256=svg_sha,
             blueprint_sha256=blueprint_sha,
             metrics_sha256=metrics_sha,
+            full_page_check=full_page_check if fixture_review else "pending",
+            region_check_ids=region_check_ids,
+            issues_found=review_issues,
+            revision_required=not passed_metrics,
+            evidence_sha256=review_evidence_sha,
         ),
         "self_review_sha256": sha256_json(self_review),
     }
@@ -736,10 +1022,10 @@ def build_visual_review(root: Path, scene: dict[str, Any], *, mode: str) -> Path
             "integrity": sign_runtime_payload("visual_review_actions.v1", challenge_payload),
         },
         "visual_status": "pass" if fixture_review else "needs_review",
-        "full_page_checks": {"canvas_ratio": "pass", "stable_ids": "pass", "p0_p1_geometry": "pass" if passed_metrics else "failed"},
-        "region_checks": [],
-        "issues_found": list(metrics.get("findings") or []),
-        "unresolved_issues": [] if passed_metrics else list(metrics.get("findings") or []),
+        "full_page_checks": {"canvas_ratio": "pass", "stable_ids": "pass", "p0_p1_geometry": "pass" if passed_metrics else "failed", "layout": "pass" if region_passed else "failed", "mask_coverage": float((metrics.get("values") or {}).get("mask_coverage") or 0)},
+        "region_checks": region_checks,
+        "issues_found": review_issues,
+        "unresolved_issues": [] if passed_metrics and region_passed else review_issues,
         "self_review": self_review,
         "main_review": main_review,
         "verdict": "pass" if fixture_review else "needs_review",
@@ -755,7 +1041,7 @@ def _metrics_projection(metrics: dict[str, Any]) -> dict[str, Any]:
     return {key: metrics.get(key) for key in ("schema_version", "comparison", "inputs", "thresholds", "values", "coverage", "geometry", "findings", "status")}
 
 
-def load_visual_review(root: Path, page_id: str) -> dict[str, Any]:
+def load_visual_review(root: Path, page_id: str, *, require_external_receipt: bool = True) -> dict[str, Any]:
     review = read_json(review_path(root, page_id))
     if review.get("schema_version") != "deck_visual_review.v2" or review.get("page_id") != page_id:
         raise SvgVisualError(f"visual review contract is invalid on page {page_id}", page_id=page_id)
@@ -804,9 +1090,27 @@ def load_visual_review(root: Path, page_id: str) -> dict[str, Any]:
         raise SvgVisualError(f"visual review metrics could not be recomputed on page {page_id}", page_id=page_id) from exc
     if _metrics_projection(metrics) != _metrics_projection(computed):
         raise SvgVisualError(f"visual review metrics are not tool-computed for current artifacts on page {page_id}", page_id=page_id)
+    expected_regions = _build_region_checks(scene, computed)
+    if review.get("region_checks") != expected_regions:
+        raise SvgVisualError(f"visual review region evidence is not tool-computed for current artifacts on page {page_id}", page_id=page_id)
+    expected_full_page_evidence = {
+        "svg_sha256": str(review.get("svg_sha256") or ""),
+        "blueprint_sha256": str(review.get("blueprint_sha256") or ""),
+        "metrics_sha256": str(review.get("metrics_sha256") or ""),
+        "region_checks": expected_regions,
+    }
+    expected_evidence_sha = sha256_json(expected_full_page_evidence)
+    for name in ("self_review", "main_review"):
+        if str((review.get(name) or {}).get("evidence_sha256") or "") != expected_evidence_sha:
+            raise SvgVisualError(f"visual {name} evidence is stale on page {page_id}", page_id=page_id)
+    expected_status = "pass" if computed.get("status") == "pass" and all(item.get("status") == "pass" for item in expected_regions) else "failed"
+    if expected_status == "pass" and (review.get("full_page_checks") or {}).get("layout") != "pass":
+        raise SvgVisualError(f"visual review full-page layout evidence failed on page {page_id}", page_id=page_id)
     values = computed.get("values") or {}
     if float(values.get("text_masked_ssim") or 0) < 0.92 or float(values.get("bbox_max_delta_px") or 0) > 2.0:
         raise SvgVisualError(f"visual review fidelity gate failed on page {page_id}", page_id=page_id)
+    if require_external_receipt and _run_mode(root) in {"production", "benchmark"}:
+        _load_main_review_receipt(root, page_id, review)
     return review
 
 
@@ -818,9 +1122,12 @@ __all__ = [
     "build_visual_review",
     "compile_svg",
     "load_visual_review",
+    "main_review_receipt_path",
     "metrics_path",
     "preview_path",
     "render_preview",
+    "record_visual_self_review",
+    "record_visual_main_review",
     "review_path",
     "svg_path",
     "validate_approved_svg",

@@ -23,7 +23,7 @@
   "$defs": {
     "evidence": {
       "type": "object",
-      "required": ["evidence_id", "source_ref", "source_position", "period", "unit", "confidence", "conflicts", "caveat", "meaning", "implication", "recommended_visual"],
+      "required": ["evidence_id", "source_ref", "source_position", "period", "unit", "confidence", "conflicts", "caveat", "source_context", "meaning", "implication", "recommended_visual"],
       "properties": {
         "evidence_id": {"type": "string", "minLength": 1},
         "source_ref": {"type": "string", "minLength": 1},
@@ -33,6 +33,7 @@
         "confidence": {"type": "string", "minLength": 1},
         "conflicts": {"type": "array", "items": {"type": "string"}},
         "caveat": {"type": "string"},
+        "source_context": {"type": "string", "minLength": 1},
         "meaning": {"type": "string"},
         "implication": {"type": "string"},
         "recommended_visual": {"type": "string"}
@@ -52,7 +53,7 @@
     },
     "storyline": {
       "type": "object",
-      "required": ["storyline_id", "management_conclusion", "audience", "issue_hypothesis_tree", "evidence_refs", "caveat", "visual_potential", "not_recommended_because", "page_handoff", "density_target", "language", "claim_bindings"],
+      "required": ["storyline_id", "management_conclusion", "audience", "issue_hypothesis_tree", "evidence_refs", "caveat", "visual_potential", "not_recommended_because", "page_handoff", "density_target", "language", "evidence_assessment", "chart_plan", "claim_bindings"],
       "properties": {
         "storyline_id": {"type": "string", "minLength": 1},
         "management_conclusion": {"type": "string", "minLength": 1},
@@ -65,6 +66,8 @@
         "page_handoff": {"type": "string", "minLength": 1},
         "density_target": {"type": "object", "required": ["band", "information_regions"], "properties": {"band": {"enum": ["low", "medium", "high"]}, "information_regions": {"type": "integer", "minimum": 3}}, "additionalProperties": false},
         "language": {"type": "string", "minLength": 1},
+        "evidence_assessment": {"$ref": "#/$defs/evidenceAssessment"},
+        "chart_plan": {"$ref": "#/$defs/chartPlan"},
         "claim_bindings": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/claimBinding"}}
       },
       "additionalProperties": false
@@ -98,13 +101,14 @@
     },
     "scr": {
       "type": "object",
-      "required": ["situation", "complication", "resolution", "evidence_refs", "decision_implication", "claim_bindings"],
+      "required": ["situation", "complication", "resolution", "evidence_refs", "decision_implication", "evidence_assessment", "claim_bindings"],
       "properties": {
         "situation": {"type": "string", "minLength": 1},
         "complication": {"type": "string", "minLength": 1},
         "resolution": {"type": "string", "minLength": 1},
         "evidence_refs": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
         "decision_implication": {"type": "string", "minLength": 1},
+        "evidence_assessment": {"$ref": "#/$defs/evidenceAssessment"},
         "claim_bindings": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/claimBinding"}}
       },
       "additionalProperties": false
@@ -146,13 +150,51 @@
     },
     "claimBinding": {
       "type": "object",
-      "required": ["target", "text_sha256", "origin", "evidence_refs", "derivation_note"],
+      "required": ["target", "text_sha256", "origin", "evidence_refs", "evidence_spans", "derivation_note"],
       "properties": {
         "target": {"type": "string", "minLength": 1},
         "text_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
         "origin": {"enum": ["source", "derived", "structural_label"]},
         "evidence_refs": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "evidence_spans": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["evidence_ref", "quote", "quote_sha256"],
+            "properties": {
+              "evidence_ref": {"type": "string", "minLength": 1},
+              "quote": {"type": "string", "minLength": 1},
+              "quote_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+            },
+            "additionalProperties": false
+          }
+        },
         "derivation_note": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "evidenceAssessment": {
+      "type": "object",
+      "required": ["strongest_evidence_refs", "evidence_strength", "contrary_evidence_refs", "missing_evidence", "conflicts", "synthesis"],
+      "properties": {
+        "strongest_evidence_refs": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "evidence_strength": {"type": "object", "additionalProperties": {"type": "string", "minLength": 1}},
+        "contrary_evidence_refs": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "missing_evidence": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "conflicts": {"type": "array", "items": {"type": "object", "required": ["evidence_id", "conflicts"], "properties": {"evidence_id": {"type": "string", "minLength": 1}, "conflicts": {"type": "array", "items": {"type": "string"}}}, "additionalProperties": false}},
+        "synthesis": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "chartPlan": {
+      "type": "object",
+      "required": ["visual_type", "metric_refs", "comparison_axis", "annotations", "source_refs"],
+      "properties": {
+        "visual_type": {"type": "string", "minLength": 1},
+        "metric_refs": {"type": "array", "items": {"type": "string"}},
+        "comparison_axis": {"type": "string", "minLength": 1},
+        "annotations": {"type": "array", "items": {"type": "string"}},
+        "source_refs": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
       },
       "additionalProperties": false
     },
@@ -171,7 +213,7 @@
     },
     "pagePlan": {
       "type": "object",
-      "required": ["page_id", "order", "page_package_sha256", "storyline_id", "storyline_context", "role", "conclusion", "supporting_arguments", "evidence_refs", "caveat", "so_what", "handoff", "material_pool", "density_target", "components", "required_text_refs", "derived_claims", "claim_bindings", "status", "page_plan_sha256"],
+      "required": ["page_id", "order", "page_package_sha256", "storyline_id", "storyline_context", "role", "conclusion", "supporting_arguments", "detailed_argument", "evidence_refs", "caveat", "so_what", "business_implication", "handoff", "evidence_hierarchy", "evidence_assessment", "chart_plan", "material_pool", "density_target", "components", "required_text_refs", "derived_claims", "claim_bindings", "status", "page_plan_sha256"],
       "properties": {
         "page_id": {"type": "string", "minLength": 1},
         "order": {"type": "integer", "minimum": 1},
@@ -181,13 +223,18 @@
         "role": {"type": "string", "minLength": 1},
         "conclusion": {"type": "string", "minLength": 1},
         "supporting_arguments": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "detailed_argument": {"type": "string", "minLength": 1},
         "evidence_refs": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
         "caveat": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
         "so_what": {"type": "string", "minLength": 1},
+        "business_implication": {"type": "string", "minLength": 1},
         "handoff": {"type": "string", "minLength": 1},
+        "evidence_hierarchy": {"type": "object", "required": ["primary", "supporting", "caveat"], "properties": {"primary": {"type": "array", "minItems": 1, "items": {"type": "string"}}, "supporting": {"type": "array", "items": {"type": "string"}}, "caveat": {"type": "array", "items": {"type": "string"}}}, "additionalProperties": false},
+        "evidence_assessment": {"$ref": "#/$defs/evidenceAssessment"},
+        "chart_plan": {"$ref": "#/$defs/chartPlan"},
         "material_pool": {
           "type": "object",
-          "required": ["customer_visible", "evidence_refs", "recommended_visual", "numeric_values", "storyline_id", "storyline_visual_potential", "storyline_page_handoff", "storyline_caveat"],
+          "required": ["customer_visible", "evidence_refs", "recommended_visual", "numeric_values", "storyline_id", "storyline_visual_potential", "storyline_page_handoff", "storyline_caveat", "comparisons", "rankings", "changes", "funnel_steps", "matrix_axes", "annotations", "legend", "microcharts", "area_count", "low_density_risk"],
           "properties": {
             "customer_visible": {"type": "object"},
             "evidence_refs": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
@@ -196,7 +243,17 @@
             "storyline_id": {"type": "string", "minLength": 1},
             "storyline_visual_potential": {"type": "string", "minLength": 1},
             "storyline_page_handoff": {"type": "string", "minLength": 1},
-            "storyline_caveat": {"type": "string", "minLength": 1}
+            "storyline_caveat": {"type": "string", "minLength": 1},
+            "comparisons": {"type": "array", "items": {"type": "string"}},
+            "rankings": {"type": "array", "items": {"type": "string"}},
+            "changes": {"type": "array", "items": {"type": "string"}},
+            "funnel_steps": {"type": "array", "items": {"type": "string"}},
+            "matrix_axes": {"type": "array", "items": {"type": "string"}},
+            "annotations": {"type": "array", "items": {"type": "string"}},
+            "legend": {"type": "array", "items": {"type": "string"}},
+            "microcharts": {"type": "array", "items": {"type": "string"}},
+            "area_count": {"type": "integer", "minimum": 3},
+            "low_density_risk": {"enum": ["high", "managed"]}
           },
           "additionalProperties": false
         },

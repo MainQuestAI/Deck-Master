@@ -44,12 +44,12 @@
     },
     "thresholds": {
       "type": "object",
-      "required": ["text_masked_ssim", "p0_region_ssim", "bbox_max_delta_px", "color_delta", "edge_similarity"],
+      "required": ["text_masked_ssim", "p0_region_ssim", "bbox_max_delta_px", "color_delta", "edge_similarity", "p0_p1_text_contrast_ratio"],
       "additionalProperties": {"type": "number"}
     },
     "values": {
       "type": "object",
-      "required": ["text_masked_ssim", "p0_region_ssim", "bbox_max_delta_px", "anchor_max_delta_px", "region_color_delta", "edge_similarity", "mask_coverage", "overflow_count", "illegal_overlap_count", "direction_mismatch_count"],
+      "required": ["text_masked_ssim", "p0_region_ssim", "bbox_max_delta_px", "anchor_max_delta_px", "region_color_delta", "edge_similarity", "p0_p1_min_text_contrast_ratio", "mask_coverage", "overflow_count", "illegal_overlap_count", "direction_mismatch_count"],
       "properties": {
         "text_masked_ssim": {"type": "number", "minimum": 0, "maximum": 1},
         "p0_region_ssim": {"type": "number", "minimum": 0, "maximum": 1},
@@ -57,6 +57,7 @@
         "anchor_max_delta_px": {"type": "number", "minimum": 0},
         "region_color_delta": {"type": "number", "minimum": 0},
         "edge_similarity": {"type": "number", "minimum": 0, "maximum": 1},
+        "p0_p1_min_text_contrast_ratio": {"type": "number", "minimum": 1, "maximum": 21},
         "mask_coverage": {"type": "number", "minimum": 0, "maximum": 0.2},
         "overflow_count": {"type": "integer", "minimum": 0},
         "illegal_overlap_count": {"type": "integer", "minimum": 0},
@@ -66,12 +67,13 @@
     },
     "coverage": {
       "type": "object",
-      "required": ["required_components", "present_components", "component_coverage", "p0_p1_bbox_coverage"],
+      "required": ["required_components", "present_components", "component_coverage", "p0_p1_bbox_coverage", "p0_p1_text_contrast"],
       "properties": {
         "required_components": {"type": "integer", "minimum": 0},
         "present_components": {"type": "integer", "minimum": 0},
         "component_coverage": {"type": "number", "minimum": 0, "maximum": 1},
-        "p0_p1_bbox_coverage": {"type": "number", "minimum": 0, "maximum": 1}
+        "p0_p1_bbox_coverage": {"type": "number", "minimum": 0, "maximum": 1},
+        "p0_p1_text_contrast": {"type": "object", "additionalProperties": {"type": "object", "required": ["priority", "contrast_ratio", "changed_pixels"], "properties": {"priority": {"enum": ["P0", "P1"]}, "contrast_ratio": {"type": "number", "minimum": 1, "maximum": 21}, "changed_pixels": {"type": "integer", "minimum": 0}}, "additionalProperties": false}}
       },
       "additionalProperties": false
     },

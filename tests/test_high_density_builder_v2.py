@@ -20,7 +20,7 @@ if str(ROOT / "scripts") not in sys.path:
     sys.path.insert(0, str(ROOT / "scripts"))
 
 from build.manifest import build_manifest_v2
-from high_density.blueprint import BlueprintInvalid, _default_slide_frame, build_blueprint_prompt, ensure_blueprint_manifest
+from high_density.blueprint import BlueprintInvalid, _default_slide_frame, build_blueprint_prompt, ensure_blueprint_manifest, record_provider_host_result
 from high_density.capability import inspect_high_density_capability
 from high_density.content import (
     build_content_lock,
@@ -29,6 +29,7 @@ from high_density.content import (
     enrich_selected_nbb_plan,
     load_nbb_plan,
     load_page_packages,
+    record_nbb_user_decision,
     seal_nbb_plan,
     select_nbb_storyline,
     write_nbb_plan,
@@ -119,6 +120,8 @@ def _write_approved_nbb_plan(run: Path) -> dict:
 def _write_selected_enriched_nbb_plan(run: Path, packages: list[dict]) -> dict:
     plan = build_nbb_plan(packages, run_id=run.name)
     write_nbb_plan(run, plan)
+    if str(read_json(run / "request.json").get("run_mode") or "") in {"production", "benchmark"}:
+        record_nbb_user_decision(run, "storyline.decision", attestor_id="test-user")
     plan = select_nbb_storyline(run, "storyline.decision", selected_by="test")
     plan = enrich_selected_nbb_plan(plan, packages)
     write_nbb_plan(run, plan)
@@ -328,7 +331,7 @@ def test_content_lock_requires_approved_nbb_page_plan(tmp_path: Path) -> None:
         build_content_lock(package, nbb_plan_sha256="a" * 64)
 
 
-def test_production_waits_for_storyline_confirmation_then_resumes(tmp_path: Path) -> None:
+def test_production_waits_for_storyline_confirmation_then_resumes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     run, _ = _make_run(tmp_path, mode="production", project_name="production nbb")
     write_style_lock(run, run.name, "cyber-01", approved=True, approver="test")
     prepare_high_density(run)
@@ -344,6 +347,12 @@ def test_production_waits_for_storyline_confirmation_then_resumes(tmp_path: Path
     assert waiting["next_action"]["recommended_storyline_id"] == "storyline.decision"
     assert len(waiting["next_action"]["storyline_candidates"]) == 3
 
+    selected = retry_high_density(run, page_id="", stage="content_lock", storyline_id="storyline.risk")
+
+    assert selected["status"] == "awaiting_user_decision"
+    assert selected["next_action"]["kind"] == "awaiting_user_decision"
+    monkeypatch.setenv("DECK_MASTER_USER_ATTESTATION_KEY", "11" * 32)
+    record_nbb_user_decision(run, "storyline.risk", attestor_id="test-user")
     selected = retry_high_density(run, page_id="", stage="content_lock", storyline_id="storyline.risk")
 
     assert selected["status"] == "awaiting_agent_build"
@@ -370,7 +379,7 @@ def test_production_waits_for_storyline_confirmation_then_resumes(tmp_path: Path
     assert context["management_conclusion"] in prompt["prompt_text"]
 
 
-def test_storyline_selection_does_not_rewrite_agent_content(tmp_path: Path) -> None:
+def test_storyline_selection_does_not_rewrite_agent_content(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     run, _ = _make_run(tmp_path, mode="production", project_name="agent content preservation")
     write_style_lock(run, run.name, "cyber-01", approved=True, approver="test")
     prepare_high_density(run)
@@ -378,6 +387,8 @@ def test_storyline_selection_does_not_rewrite_agent_content(tmp_path: Path) -> N
     write_nbb_plan(run, build_nbb_plan(packages, run_id=run.name))
 
     before = read_json(run / "high_density_build/nbb/nbb_plan.json")
+    monkeypatch.setenv("DECK_MASTER_USER_ATTESTATION_KEY", "11" * 32)
+    record_nbb_user_decision(run, "storyline.decision", attestor_id="test-user")
     selected = select_nbb_storyline(run, "storyline.decision", selected_by="user")
 
     assert selected["storyline_candidates"] == before["storyline_candidates"]
@@ -385,9 +396,9 @@ def test_storyline_selection_does_not_rewrite_agent_content(tmp_path: Path) -> N
     assert selected["pages"] == []
     enriched = enrich_selected_nbb_plan(selected, packages)
     page = enriched["pages"][0]
-    page["conclusion"] = "AGENT RICH CONCLUSION PRESERVE ME"
-    page["supporting_arguments"][0] = "AGENT ARGUMENT PRESERVE ME"
-    page["so_what"] = "AGENT SO WHAT PRESERVE ME"
+    page["conclusion"] = "AGENT RICH CONCLUSION PRESERVE ME for Synthetic framework page"
+    page["supporting_arguments"][0] = "AGENT ARGUMENT PRESERVE ME with Evidence, constraints, and decision context"
+    page["so_what"] = "AGENT SO WHAT PRESERVE ME for Synthetic framework page"
     next(item for item in page["required_text_refs"] if item["ref"] == "content_lock.enrichment.so_what")["value"] = page["so_what"]
     for binding in page["claim_bindings"]:
         if binding["target"] == "conclusion":
@@ -409,18 +420,23 @@ def test_storyline_selection_does_not_rewrite_agent_content(tmp_path: Path) -> N
 
     assert result["current_stage"] == "blueprint"
     lock = read_json(run / "high_density_build/content_locks/P001.json")
-    assert lock["enrichment"]["conclusion"] == "AGENT RICH CONCLUSION PRESERVE ME"
-    assert lock["enrichment"]["supporting_arguments"][0] == "AGENT ARGUMENT PRESERVE ME"
-    assert lock["enrichment"]["so_what"] == "AGENT SO WHAT PRESERVE ME"
+    assert lock["enrichment"]["conclusion"] == "AGENT RICH CONCLUSION PRESERVE ME for Synthetic framework page"
+    assert lock["enrichment"]["supporting_arguments"][0] == "AGENT ARGUMENT PRESERVE ME with Evidence, constraints, and decision context"
+    assert lock["enrichment"]["so_what"] == "AGENT SO WHAT PRESERVE ME for Synthetic framework page"
 
 
-def test_selected_storyline_requires_agent_enrichment_before_lock(tmp_path: Path) -> None:
+def test_selected_storyline_requires_agent_enrichment_before_lock(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     run, _ = _make_run(tmp_path, mode="production", project_name="selected enrichment gate")
     write_style_lock(run, run.name, "cyber-01", approved=True, approver="test")
     prepare_high_density(run)
     packages = load_page_packages(run, expected_run_id=run.name)
     write_nbb_plan(run, build_nbb_plan(packages, run_id=run.name))
 
+    waiting = retry_high_density(run, page_id="", stage="content_lock", storyline_id="storyline.decision")
+
+    assert waiting["next_action"]["kind"] == "awaiting_user_decision"
+    monkeypatch.setenv("DECK_MASTER_USER_ATTESTATION_KEY", "11" * 32)
+    record_nbb_user_decision(run, "storyline.decision", attestor_id="test-user")
     waiting = retry_high_density(run, page_id="", stage="content_lock", storyline_id="storyline.decision")
 
     assert waiting["next_action"]["kind"] == "agent_nbb_enrich_selected"
@@ -432,7 +448,7 @@ def test_unbound_nbb_fact_and_numeric_claim_are_rejected(tmp_path: Path) -> None
     packages = load_page_packages(run, expected_run_id=run.name)
     plan = _write_selected_enriched_nbb_plan(run, packages)
     page = plan["pages"][0]
-    page["conclusion"] = "Revenue increased by 42% without source support."
+    page["conclusion"] = "Synthetic framework page reports 42% without source support."
     binding = next(item for item in page["claim_bindings"] if item["target"] == "conclusion")
     binding["text_sha256"] = sha256_json(page["conclusion"])
     _rehash_page_and_plan(plan, page)
@@ -449,6 +465,27 @@ def test_unbound_nbb_fact_and_numeric_claim_are_rejected(tmp_path: Path) -> None
         load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
 
 
+def test_unrelated_nonnumeric_nbb_claim_is_rejected(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path)
+    packages = load_page_packages(run, expected_run_id=run.name)
+    packages[0]["evidence_bindings"] = []
+    packages[0]["citations"] = [
+        {"evidence_id": "E001", "source_ref": "fixture.metric", "meaning": "Evidence, constraints, and decision context."}
+    ]
+    write_json(run / "page_packages/P001.json", packages[0])
+    packages = load_page_packages(run, expected_run_id=run.name)
+    plan = _write_selected_enriched_nbb_plan(run, packages)
+    page = plan["pages"][0]
+    page["conclusion"] = "Synthetic framework page has dominant market share and guaranteed profitability."
+    binding = next(item for item in page["claim_bindings"] if item["target"] == "conclusion")
+    binding["text_sha256"] = sha256_json(page["conclusion"])
+    _rehash_page_and_plan(plan, page)
+    write_nbb_plan(run, plan)
+
+    with pytest.raises(ContractError, match="does not match evidence content"):
+        load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
+
+
 def test_numeric_claim_must_exist_in_its_cited_evidence(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path)
     packages = load_page_packages(run, expected_run_id=run.name)
@@ -456,7 +493,7 @@ def test_numeric_claim_must_exist_in_its_cited_evidence(tmp_path: Path) -> None:
     write_json(run / "page_packages/P001.json", packages[0])
     plan = _write_selected_enriched_nbb_plan(run, packages)
     page = plan["pages"][0]
-    page["conclusion"] = "Revenue increased by 42%."
+    page["conclusion"] = "Synthetic framework page records 42%."
     binding = next(item for item in page["claim_bindings"] if item["target"] == "conclusion")
     binding["text_sha256"] = sha256_json(page["conclusion"])
     binding["origin"] = "derived"
@@ -550,13 +587,13 @@ def test_numeric_claim_uses_exact_token_match_in_cited_evidence(tmp_path: Path) 
     package["speaker_notes"] += " Source notes mention 42%."
     package["evidence_bindings"] = []
     package["citations"] = [
-        {"evidence_id": "E001", "source_ref": "fixture.metric", "meaning": "The cited metric is 142%."}
+            {"evidence_id": "E001", "source_ref": "fixture.metric", "meaning": "Synthetic framework page has a cited metric of 142%."}
     ]
     write_json(run / "page_packages/P001.json", package)
     packages = load_page_packages(run, expected_run_id=run.name)
     plan = _write_selected_enriched_nbb_plan(run, packages)
     page = plan["pages"][0]
-    page["conclusion"] = "The result is 42%."
+    page["conclusion"] = "Synthetic framework page records 42%."
     binding = next(item for item in page["claim_bindings"] if item["target"] == "conclusion")
     binding["text_sha256"] = sha256_json(page["conclusion"])
     binding["origin"] = "derived"
@@ -652,6 +689,21 @@ def test_nbb_plan_blocks_agent_added_material_component_and_required_text(tmp_pa
 
     with pytest.raises(ContractError, match="components are outside the Runtime registry"):
         load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
+
+
+def test_nbb_claim_bindings_cover_components_and_required_text_registry(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path)
+    packages = load_page_packages(run, expected_run_id=run.name)
+    plan = _write_selected_enriched_nbb_plan(run, packages)
+    page = plan["pages"][0]
+    targets = {str(binding["target"]) for binding in page["claim_bindings"]}
+
+    for index, component in enumerate(page["components"]):
+        for field in component:
+            assert f"components.{index}.{field}" in targets
+    for index, text_ref in enumerate(page["required_text_refs"]):
+        for field in text_ref:
+            assert f"required_text_refs.{index}.{field}" in targets
 
 
 def test_pending_nbb_plan_invalidates_previous_downstream(tmp_path: Path) -> None:
@@ -751,6 +803,56 @@ def test_blueprint_manifest_requires_prompt_before_image(tmp_path: Path) -> None
         ensure_blueprint_manifest(run, "P001", lock)
 
 
+def test_production_blueprint_rejects_self_declared_provider_metadata(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    run, _ = _make_run(tmp_path, mode="production")
+    _blueprint(run)
+    prepare_high_density(run)
+    write_style_lock(run, run.name, "cyber-01", approved=True, approver="test")
+    packages = load_page_packages(run, expected_run_id=run.name)
+    monkeypatch.setenv("DECK_MASTER_USER_ATTESTATION_KEY", "11" * 32)
+    _write_selected_enriched_nbb_plan(run, packages)
+    plan = seal_nbb_plan(run)
+    waiting = run_high_density(run)
+
+    assert waiting["status"] == "awaiting_agent_build"
+    assert waiting["next_action"]["kind"] == "agent_imagegen"
+    prompt = read_json(run / "high_density_build/prompts/P001.blueprint_prompt.json")
+    challenge = prompt["provider_challenge"]
+    provider = {
+        "tool": "image_gen.imagegen",
+        "model": "self-declared-model",
+        "request_id": "self-declared-request",
+        "challenge_nonce": challenge["nonce"],
+        "prompt_sha256": prompt["prompt_sha256"],
+        "requested_at": challenge["issued_at"],
+        "responded_at": challenge["issued_at"],
+    }
+    provider["request_sha256"] = sha256_json(
+        {key: provider[key] for key in ("tool", "model", "request_id", "challenge_nonce", "prompt_sha256", "requested_at")}
+    )
+    write_json(
+        run / "high_density_build/blueprints/P001.blueprint_manifest.json",
+        {"schema_version": "deck_blueprint_manifest.v2", "provider": provider},
+    )
+    lock = read_json(run / "high_density_build/content_locks/P001.json")
+    style = read_json(run / "high_density_build/style/style_lock.json")
+
+    with pytest.raises(BlueprintInvalid, match="Host-managed provider receipt"):
+        ensure_blueprint_manifest(
+            run,
+            "P001",
+            lock,
+            style_lock=style,
+            nbb_plan_sha256=str(plan["nbb_plan_sha256"]),
+            approval={
+                "status": "approved",
+                "source": "explicit_user",
+                "approved_by": "test",
+                "approved_at": challenge["issued_at"],
+            },
+        )
+
+
 def test_distinct_blueprints_produce_distinct_svg(tmp_path: Path) -> None:
     run, lock, _ = _prepared_fixture(tmp_path)
     first = build_fixture_scene(lock, "1" * 64)
@@ -770,14 +872,24 @@ def test_fixture_background_ignores_malformed_rect_attributes(tmp_path: Path) ->
     assert _fixture_background(blueprint) == "#f7f9fb"
 
 
-def test_production_uses_agent_svg_without_overwriting_it(tmp_path: Path) -> None:
+def test_production_uses_agent_svg_without_overwriting_it(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     run, _ = _make_run(tmp_path, mode="production", project_name="production visual")
     write_style_lock(run, run.name, "cyber-01", approved=True, approver="test")
     _blueprint(run)
     prepare_high_density(run)
+    monkeypatch.setenv("DECK_MASTER_USER_ATTESTATION_KEY", "11" * 32)
     _write_approved_nbb_plan(run)
     waiting = run_high_density(run)
     assert waiting["current_stage"] == "blueprint"
+    from PIL import Image
+
+    provider_root = tmp_path / "provider-results"
+    provider_root.mkdir()
+    monkeypatch.setenv("DECK_MASTER_PROVIDER_RESULT_ROOTS", str(provider_root))
+    provider_image = provider_root / "exec-00000000-0000-0000-0000-000000000001.png"
+    Image.new("RGB", (1672, 941), "#f7f9fb").save(provider_image)
+    record_provider_host_result(run, "P001", provider_image)
+    (run / "high_density_build/blueprints/P001.svg").unlink()
     _approve_blueprint(run)
     assert run_high_density(run)["current_stage"] == "page_scene"
 
@@ -786,7 +898,7 @@ def test_production_uses_agent_svg_without_overwriting_it(tmp_path: Path) -> Non
     scene = build_fixture_scene(
         lock,
         str(blueprint_manifest["image_sha256"]),
-        blueprint_path=run / "high_density_build/blueprints/P001.svg",
+        blueprint_path=FIXTURE_DIR / "blueprint.svg",
     )
     write_scene(run, scene)
     svg_file = svg_path(run, "P001")
@@ -797,7 +909,8 @@ def test_production_uses_agent_svg_without_overwriting_it(tmp_path: Path) -> Non
     result = run_high_density(run)
 
     assert result["status"] == "awaiting_agent_build"
-    assert result["current_stage"] == "visual_review"
+    assert result["current_stage"] == "svg"
+    assert result["next_action"]["kind"] == "agent_svg_repair"
     assert "#123456" in svg_file.read_text(encoding="utf-8")
 
 
@@ -898,6 +1011,15 @@ def test_visual_review_requires_independent_reviewer_ids(tmp_path: Path) -> None
         load_visual_review(run, "P001")
 
 
+def test_main_review_requires_separate_host_attestation(tmp_path: Path) -> None:
+    run, _, _ = _prepared_fixture(tmp_path)
+    from high_density.svg import _load_main_review_receipt
+
+    review = read_json(review_path(run, "P001"))
+    with pytest.raises(SvgVisualError, match="independent main visual review attestation is required"):
+        _load_main_review_receipt(run, "P001", review)
+
+
 def test_near_full_image_is_blocked(tmp_path: Path) -> None:
     run, _, scene = _prepared_fixture(tmp_path)
     scene["elements"].append({"element_id": "image.near_full", "component_id": "component.proof", "kind": "image", "role": "proof", "priority": "P2", "bbox": {"x": 20, "y": 20, "w": 900, "h": 800}, "asset_ref": "proof", "asset_sha256": "a" * 64, "editability_target": "registered_asset", "asset_policy": "registered"})
@@ -969,6 +1091,26 @@ def test_approved_svg_blocks_unresolvable_font_and_text_overflow(tmp_path: Path)
         validate_approved_svg(svg, scene, lock, {})
 
 
+def test_required_text_same_as_rendered_background_fails_closed(tmp_path: Path) -> None:
+    run, lock, scene = _prepared_fixture(tmp_path)
+    svg = svg_path(run, "P001")
+    document = ElementTree.parse(svg)
+    title = next(node for node in document.getroot().iter() if node.get("id") == "title.main")
+    title.set("fill", "#f7f9fb")
+    document.write(svg, encoding="utf-8", xml_declaration=True)
+    render_preview(svg, preview_path(run, "P001"))
+
+    with pytest.raises(SvgVisualError, match="contrast"):
+        validate_approved_svg(svg, scene, lock, {})
+
+    from high_density.visual import compute_visual_metrics, normalize_blueprint
+
+    manifest = read_json(run / "high_density_build/blueprints/P001.blueprint_manifest.json")
+    metrics = compute_visual_metrics(run, scene, normalize_blueprint(run, manifest), preview_path(run, "P001"))
+    assert metrics["status"] == "failed"
+    assert any(finding["code"] == "p0_p1_text_contrast_below_threshold" for finding in metrics["findings"])
+
+
 def test_arial_accepts_metric_compatible_fontconfig_alias(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     import high_density.svg as svg_module
 
@@ -1030,13 +1172,13 @@ def test_svg_gradient_shadow_compile_to_drawingml_and_readback(tmp_path: Path) -
     svg = svg_path(run, "P001")
     original = svg.read_text(encoding="utf-8")
     defs = '<defs><linearGradient id="gradient.primary" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#fff3e8"/><stop offset="100%" stop-color="#fff3e8"/></linearGradient><filter id="effect.primary"><feDropShadow dx="0.5" dy="0.5" stdDeviation="0.5" flood-color="#102030" flood-opacity="0.02"/></filter></defs>'
-    mutated = original.replace('<g id="page.P001"', defs + '<g id="page.P001"', 1).replace('fill="#fff3e8"', 'fill="url(#gradient.primary)" filter="url(#effect.primary)"', 1)
+    mutated = original.replace('<g id="page.P001"', defs + '<g id="page.P001"', 1).replace('id="block.03" x="80.00" y="511.00" width="744.00" height="289.00" rx="0.00" fill="#fff3e8"', 'id="block.03" x="80.00" y="511.00" width="744.00" height="289.00" rx="0.00" fill="url(#gradient.primary)" filter="url(#effect.primary)"', 1)
     svg.write_text(mutated, encoding="utf-8")
     render_preview(svg, preview_path(run, "P001"))
 
     compile_pptx(run, [scene], {"P001": lock})
     trace = read_json(trace_path(run))
-    entry = next(item for item in trace["elements"] if item["element_id"] == "block.01")
+    entry = next(item for item in trace["elements"] if item["element_id"] == "block.03")
     assert entry["paint"]["fill"]["gradient_id"] == "gradient.primary"
     assert entry["effect"]["effect_id"] == "effect.primary"
     readback_pptx(run, [scene], {"P001": lock}, pptx_path(run))
@@ -1173,6 +1315,25 @@ def test_required_tspan_cannot_be_hidden_by_run_paint(tmp_path: Path, paint: str
     svg.write_text(svg.read_text(encoding="utf-8").replace("<tspan ", f"<tspan {paint} ", 1), encoding="utf-8")
 
     with pytest.raises(SvgVisualError, match="hidden SVG tspan"):
+        validate_approved_svg(svg, scene, lock)
+
+
+def test_required_text_cannot_be_hidden_by_ancestor_group(tmp_path: Path) -> None:
+    run, lock, scene = _prepared_fixture(tmp_path)
+    svg = svg_path(run, "P001")
+    source = svg.read_text(encoding="utf-8").replace('<g id="page.P001"', '<g id="page.P001" opacity="0"', 1)
+    svg.write_text(source, encoding="utf-8")
+
+    with pytest.raises(SvgVisualError, match="ancestor"):
+        validate_approved_svg(svg, scene, lock)
+
+
+def test_tspan_font_size_participates_in_overflow_measurement(tmp_path: Path) -> None:
+    run, lock, scene = _prepared_fixture(tmp_path)
+    svg = svg_path(run, "P001")
+    svg.write_text(svg.read_text(encoding="utf-8").replace("<tspan ", '<tspan font-size="200px" ', 1), encoding="utf-8")
+
+    with pytest.raises(SvgVisualError, match="text overflow"):
         validate_approved_svg(svg, scene, lock)
 
 

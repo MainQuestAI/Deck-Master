@@ -5,7 +5,7 @@
   "test_session": {
     "command": ".venv/bin/pytest -q",
     "result": "pass",
-    "tests_passed": 1354,
+    "tests_passed": 1361,
     "subtests_passed": 105,
     "executed_at": "2026-08-08"
   },
@@ -158,7 +158,8 @@
     "seven_page_e2e": "docs/qa/high-density-builder-v2/phase-4-seven-page-e2e.json",
     "fresh_provider_smoke": "docs/qa/high-density-builder-v2/phase-4-provider-smoke-evidence.json",
     "provider_challenge": "docs/qa/high-density-builder-v2/phase-4-provider-challenge-status.json",
-    "external_73_page_mvp": "docs/qa/high-density-builder-v2/phase-4-73-page-external-mvp-index.json"
+    "external_73_page_mvp": "docs/qa/high-density-builder-v2/phase-4-73-page-external-mvp-index.json",
+    "final_qa_review": "docs/qa/high-density-builder-v2/phase-4-final-qa-review.md"
   },
   "raw_private_artifacts_committed": false
 }

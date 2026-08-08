@@ -7,8 +7,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from .blueprint import load_blueprint_manifest, load_provider_runtime_receipt, provider_receipt_path, safe_run_path
+from .blueprint import load_blueprint_manifest, load_provider_host_receipt, load_provider_runtime_receipt, provider_host_receipt_path, provider_receipt_path, safe_run_path
 from .contracts import ContractError, assert_valid, assert_v2, read_json, run_relative, sha256_bytes, sha256_file, sha256_json, utc_now, write_json
+from .svg import load_visual_review, main_review_receipt_path
 
 
 class ProviderSmokeError(ContractError):
@@ -90,6 +91,11 @@ def build_provider_smoke_evidence(run_dir: str | Path, *, page_id: str = "", out
         raise ProviderSmokeError(f"provider challenge lineage is stale on page {selected_page_id}")
     if str(provider.get("prompt_sha256") or "") != str(prompt.get("prompt_sha256") or ""):
         raise ProviderSmokeError(f"provider prompt lineage is stale on page {selected_page_id}")
+    try:
+        image_path = safe_run_path(root, str(blueprint.get("image_path") or ""))
+        load_provider_host_receipt(root, selected_page_id, prompt, image_path)
+    except ContractError as exc:
+        raise ProviderSmokeError(f"fresh provider smoke requires Host-managed provider evidence: {exc}") from exc
 
     readback_ref = _artifact_ref(root, page, "readback_report")
     readback = read_json(root / readback_ref["path"])
@@ -99,9 +105,23 @@ def build_provider_smoke_evidence(run_dir: str | Path, *, page_id: str = "", out
     review = read_json(root / review_ref["path"])
     if review.get("visual_status") != "pass" or review.get("verdict") != "pass":
         raise ProviderSmokeError(f"visual review has not passed on page {selected_page_id}")
+    try:
+        load_visual_review(root, selected_page_id)
+    except ContractError as exc:
+        raise ProviderSmokeError(f"independent visual review evidence has not passed on page {selected_page_id}: {exc}") from exc
+    review_receipt = main_review_receipt_path(root, selected_page_id)
+    if not review_receipt.is_file():
+        raise ProviderSmokeError(f"independent main visual review receipt is missing on page {selected_page_id}")
     content_lock_ref = _artifact_ref(root, page, "content_lock")
     content_lock_payload = read_json(root / content_lock_ref["path"])
     assert_v2("content_lock", content_lock_payload)
+    package_path = safe_run_path(root, str(content_lock_payload.get("page_package_ref") or ""))
+    current_package = read_json(package_path)
+    assert_valid("page_package", current_package)
+    if str(current_package.get("run_id") or "") != str(manifest.get("run_id") or "") or str(current_package.get("page_id") or "") != selected_page_id:
+        raise ProviderSmokeError(f"current Page Package identity is stale on page {selected_page_id}")
+    if sha256_json(current_package) != str(content_lock_payload.get("page_package_sha256") or ""):
+        raise ProviderSmokeError(f"current Page Package no longer matches Content Lock on page {selected_page_id}")
     content_lock_sha = str(content_lock_payload.get("content_lock_sha256") or "")
     expected_content_lock_sha = sha256_json({key: value for key, value in content_lock_payload.items() if key not in {"content_lock_sha256", "created_at", "updated_at"}})
     if content_lock_sha != expected_content_lock_sha:
@@ -149,7 +169,8 @@ def build_provider_smoke_evidence(run_dir: str | Path, *, page_id: str = "", out
             "model": model,
             "request_id_sha256": _hash_text(request_id),
             "request_sha256": str(provider.get("request_sha256") or ""),
-            "runtime_receipt_sha256": sha256_file(provider_receipt_path(root, selected_page_id)),
+                "runtime_receipt_sha256": sha256_file(provider_receipt_path(root, selected_page_id)),
+                "host_receipt_sha256": sha256_file(provider_host_receipt_path(root, selected_page_id)),
             "challenge_nonce_sha256": _hash_text(str(challenge.get("nonce") or "")),
             "requested_at": str(provider.get("requested_at") or ""),
             "responded_at": str(provider.get("responded_at") or ""),
@@ -186,14 +207,17 @@ def build_provider_smoke_evidence(run_dir: str | Path, *, page_id: str = "", out
             "pptx": {"path": run_relative(root, pptx_path), "sha256": pptx_sha},
             "pptx_trace": trace_ref,
             "visual_review": review_ref,
+            "visual_main_review_receipt": {"path": run_relative(root, review_receipt), "sha256": sha256_file(review_receipt)},
             "readback": readback_ref,
         },
         "gates": {
             "high_density_manifest": "pass",
             "visual_review": "pass",
+            "main_review_attestation": "pass",
             "readback": "pass",
             "svg_to_pptx": "pass",
             "runtime_provider_receipt": "pass",
+            "host_provider_attestation": "pass",
         },
         "raw_provider_payload_included": False,
         "created_at": utc_now(),

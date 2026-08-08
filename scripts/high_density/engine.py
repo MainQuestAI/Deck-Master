@@ -18,6 +18,7 @@ from .blueprint import (
     build_blueprint_prompt_artifact,
     ensure_blueprint_manifest,
     load_blueprint_manifest,
+    provider_host_receipt_path,
     provider_receipt_path,
 )
 from .content import (
@@ -46,6 +47,7 @@ from .svg import (
     build_visual_review,
     compile_svg,
     load_visual_review,
+    main_review_receipt_path,
     preview_path,
     render_preview,
     review_path,
@@ -633,6 +635,7 @@ def _invalidate_page_downstream(root: Path, page_id: str) -> None:
     for manifest_name in (f"{page_id}.manifest.json", f"{page_id}.blueprint_manifest.json"):
         _remove_if_exists(root / BLUEPRINT_MANIFEST_DIR / manifest_name)
     _remove_if_exists(provider_receipt_path(root, page_id))
+    _remove_if_exists(provider_host_receipt_path(root, page_id))
     _remove_if_exists(root / "high_density_build" / "prompts" / f"{page_id}.blueprint_prompt.json")
     _invalidate_page_scene_downstream(root, page_id)
 
@@ -645,6 +648,7 @@ def _invalidate_page_scene_downstream(root: Path, page_id: str) -> None:
         preview_path(root, page_id),
         root / "high_density_build" / "previews" / f"{page_id}.pptx.png",
         review_path(root, page_id),
+        main_review_receipt_path(root, page_id),
         root / "high_density_build" / "reviews" / f"{page_id}.metrics.json",
         root / "high_density_build" / "reviews" / f"{page_id}.svg_vs_pptx.metrics.json",
         root / "high_density_build" / "blueprints" / f"{page_id}.normalized.png",
@@ -1010,8 +1014,8 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
                     main_pending = str((review_payload.get("main_review") or {}).get("status") or "") == "pending"
                     if self_pending and main_pending:
                         return _waiting(root, page_id=page_id, stage="visual_review", kind="agent_self_review", input_ref=f"high_density_build/reviews/{page_id}.visual_review.json", output_ref=f"high_density_build/reviews/{page_id}.visual_review.json", reason=f"Complete the producer self-review against the Runtime challenge and measured artifacts: {exc}")
-                    if self_passed and not main_passed:
-                        return _waiting(root, page_id=page_id, stage="visual_review", kind="agent_main_review", input_ref=f"high_density_build/reviews/{page_id}.visual_review.json", output_ref=f"high_density_build/reviews/{page_id}.visual_review.json", reason=f"Read the producer self-review and actual visual metrics, then complete the independent main review: {exc}")
+                    if self_passed and (not main_passed or "independent main visual review attestation" in str(exc)):
+                        return _waiting(root, page_id=page_id, stage="visual_review", kind="agent_main_review", input_ref=f"high_density_build/reviews/{page_id}.visual_review.json", output_ref=f"high_density_build/reviews/{page_id}.visual_review.json", output_refs=[f"high_density_build/reviews/{page_id}.visual_review.json", f"high_density_build/reviews/{page_id}.main_review_receipt.json"], reason=f"Read the producer self-review and actual visual metrics, then complete the independent main review and create the Host attestation receipt: {exc}", details={"attestation_env": "DECK_MASTER_REVIEW_ATTESTATION_KEY", "receipt_command": f"PYTHONPATH=scripts python3 -m high_density.main_review --run-dir {root} --page-id {page_id} --reviewer-id <independent-reviewer-id>"})
                     return _waiting(root, page_id=page_id, stage="visual_review", kind="agent_svg_repair", input_ref=f"high_density_build/reviews/{page_id}.visual_review.json", output_ref=f"high_density_build/svg/{page_id}.svg", output_refs=[f"high_density_build/reviews/{page_id}.visual_review.json"], reason=f"Repair the approved SVG using the recorded visual findings, then write a refreshed passing visual review: {exc}")
                 raise HighDensityBuildError("HD_SVG_REVIEW_FAILED", str(exc), stage="visual_review", page_id=page_id) from exc
         elif execution_mode in {"fixture", "dev"}:
@@ -1165,6 +1169,21 @@ def _retry_high_density(
             try:
                 select_nbb_storyline(root, storyline_id, selected_by="user")
             except ContractError as exc:
+                if "external user decision attestation" in str(exc):
+                    return _waiting(
+                        root,
+                        page_id="",
+                        stage="content_lock",
+                        kind="awaiting_user_decision",
+                        input_ref=NBB_PLAN_PATH.as_posix(),
+                        output_ref="high_density_build/nbb/user_decision_receipt.json",
+                        reason=str(exc),
+                        details={
+                            "selected_storyline_id": storyline_id,
+                            "receipt_ref": "high_density_build/nbb/user_decision_receipt.json",
+                            "attestation_env": "DECK_MASTER_USER_ATTESTATION_KEY",
+                        },
+                    )
                 raise HighDensityBuildError("HD_NBB_SELECTION_INVALID", str(exc), stage="content_lock") from exc
         elif not (root / NBB_PLAN_PATH).exists():
             raise HighDensityBuildError("HD_NBB_SELECTION_INVALID", "deck-scope content_lock retry requires an NBB plan and storyline_id", stage="content_lock")
@@ -1197,6 +1216,7 @@ def _retry_high_density(
                 _remove_if_exists(preview_path(root, target_page_id))
             elif downstream == "visual_review":
                 _remove_if_exists(review_path(root, target_page_id))
+                _remove_if_exists(main_review_receipt_path(root, target_page_id))
                 _remove_if_exists(root / "high_density_build" / "reviews" / f"{target_page_id}.metrics.json")
                 _remove_if_exists(root / "high_density_build" / "reviews" / f"{target_page_id}.svg_vs_pptx.metrics.json")
     if target_stage in {"content_lock", "blueprint", "page_scene", "svg", "visual_review", "pptx", "readback", "handback"}:

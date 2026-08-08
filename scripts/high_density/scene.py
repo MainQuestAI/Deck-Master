@@ -85,7 +85,7 @@ def _text_element(*, element_id: str, role: str, priority: str, bbox: dict[str, 
     }
 
 
-def _rect_element(*, element_id: str, role: str, priority: str, bbox: dict[str, float], fill: str, stroke: str = "#d5dde5", radius: float = 12, component_id: str = "", z_index: int = 1) -> dict[str, Any]:
+def _rect_element(*, element_id: str, role: str, priority: str, bbox: dict[str, float], fill: str, stroke: str = "#d5dde5", radius: float = 12, stroke_width: float = 1.5, component_id: str = "", z_index: int = 1) -> dict[str, Any]:
     return {
         "element_id": element_id,
         "component_id": component_id or _component_id_for(element_id, role),
@@ -99,7 +99,25 @@ def _rect_element(*, element_id: str, role: str, priority: str, bbox: dict[str, 
         "z_index": z_index,
         "editability_target": "native_shape",
         "asset_policy": "none",
-        "style": {"fill": fill, "stroke": stroke, "stroke_width": 1.5, "radius": radius},
+        "style": {"fill": fill, "stroke": stroke, "stroke_width": stroke_width, "radius": radius},
+    }
+
+
+def _line_element(*, element_id: str, role: str, bbox: dict[str, float], stroke: str, stroke_width: float, component_id: str, z_index: int = 2) -> dict[str, Any]:
+    return {
+        "element_id": element_id,
+        "component_id": component_id,
+        "kind": "line",
+        "role": role,
+        "priority": "P2",
+        "bbox": bbox,
+        "source_blueprint_bbox": dict(bbox),
+        "target_svg_bbox": dict(bbox),
+        "target_ppt_bbox": dict(bbox),
+        "z_index": z_index,
+        "editability_target": "native_shape",
+        "asset_policy": "none",
+        "style": {"stroke": stroke, "stroke_width": stroke_width, "opacity": 1},
     }
 
 
@@ -180,7 +198,18 @@ def _fixture_background(blueprint_path: Path | None) -> str:
     return "#f7f9fb"
 
 
-def _fixture_blueprint_boxes(blueprint_path: Path | None, count: int) -> list[dict[str, float]]:
+def _fixture_text_colors(background: str) -> tuple[str, str, str]:
+    try:
+        red, green, blue = (int(background[index : index + 2], 16) for index in (1, 3, 5))
+        luminance = (0.2126 * red + 0.7152 * green + 0.0722 * blue) / 255
+    except (TypeError, ValueError):
+        luminance = 1.0
+    if luminance < 0.42:
+        return "#f7f9fb", "#d8e5f2", "#d8e5f2"
+    return "#18212b", "#556474", "#697887"
+
+
+def _fixture_blueprint_boxes(blueprint_path: Path | None, count: int) -> list[dict[str, Any]]:
     if blueprint_path is None or blueprint_path.suffix.lower() != ".svg":
         return []
     try:
@@ -197,12 +226,64 @@ def _fixture_blueprint_boxes(blueprint_path: Path | None, count: int) -> list[di
                 "y": float(node.get("y") or 0),
                 "w": float(node.get("width") or 0),
                 "h": float(node.get("height") or 0),
+                "fill": str(node.get("fill") or "#ffffff"),
+                "stroke": str(node.get("stroke") or "#d5dde5"),
+                "radius": float(node.get("rx") or 0),
+                "stroke_width": float(node.get("stroke-width") or 1),
             }
         except (TypeError, ValueError):
             continue
         if box["y"] >= 180 and box["y"] + box["h"] <= 810 and box["w"] >= 240 and box["h"] >= 120:
             boxes.append(box)
     return boxes[:count] if len(boxes) >= count else []
+
+
+def _fixture_blueprint_rule(blueprint_path: Path | None) -> dict[str, Any] | None:
+    if blueprint_path is None or blueprint_path.suffix.lower() != ".svg":
+        return None
+    try:
+        root = ElementTree.fromstring(blueprint_path.read_text(encoding="utf-8"))
+    except (OSError, ElementTree.ParseError):
+        return None
+    for node in root.iter():
+        if node.tag.rsplit("}", 1)[-1] != "path" or str(node.get("d") or "").strip() != "M80 156 H1592":
+            continue
+        try:
+            stroke_width = float(node.get("stroke-width") or 6)
+        except (TypeError, ValueError):
+            stroke_width = 6
+        return {"stroke": str(node.get("stroke") or "#419bfd"), "stroke_width": stroke_width}
+    return None
+
+
+def _fixture_blueprint_decorations(blueprint_path: Path | None) -> list[dict[str, Any]]:
+    if blueprint_path is None or blueprint_path.suffix.lower() != ".svg":
+        return []
+    try:
+        root = ElementTree.fromstring(blueprint_path.read_text(encoding="utf-8"))
+    except (OSError, ElementTree.ParseError):
+        return []
+    decorations: list[dict[str, Any]] = []
+    index = 1
+    for node in root.iter():
+        if node.tag.rsplit("}", 1)[-1] != "path":
+            continue
+        path = str(node.get("d") or "").strip()
+        if path == "M80 156 H1592":
+            continue
+        if path not in {"M80 820 H1592", "M836 200 V800"}:
+            continue
+        try:
+            stroke_width = float(node.get("stroke-width") or 2)
+        except (TypeError, ValueError):
+            stroke_width = 2
+        if path == "M80 820 H1592":
+            bbox = {"x": 80, "y": 820, "w": 1512, "h": 0.01}
+        else:
+            bbox = {"x": 836, "y": 200, "w": 0.01, "h": 600}
+        decorations.append({"element_id": f"blueprint.decoration.{index:02d}", "bbox": bbox, "stroke": str(node.get("stroke") or "#d5dde5"), "stroke_width": stroke_width})
+        index += 1
+    return decorations
 
 
 def build_fixture_scene(lock: dict[str, Any], blueprint_sha256: str, blueprint_path: Path | None = None, *, layout_id: str = "") -> dict[str, Any]:
@@ -216,14 +297,27 @@ def build_fixture_scene(lock: dict[str, Any], blueprint_sha256: str, blueprint_p
     callouts = list(customer_visible.get("callouts") or [])
     layout_id = layout_id or str((enrichment.get("material_pool") or {}).get("recommended_visual") or "framework")
     background = _fixture_background(blueprint_path)
+    title_color, secondary_color, source_color = _fixture_text_colors(background)
     elements: list[dict[str, Any]] = []
     digest = int(hashlib.sha256(blueprint_sha256.encode("ascii")).hexdigest()[:8], 16)
     accent = ("#" + f"{0x2D + digest % 80:02x}{0x75 + digest % 60:02x}{0xC5 + digest % 30:02x}")
+    blueprint_rule = _fixture_blueprint_rule(blueprint_path)
+    if blueprint_rule:
+        accent = str(blueprint_rule["stroke"])
+        rule_width = float(blueprint_rule["stroke_width"])
+        rule_y = 156 - rule_width / 2
+        rule_height = rule_width
+        rule_stroke_width = 0
+    else:
+        rule_width = 1.5
+        rule_y = 156
+        rule_height = 6
+        rule_stroke_width = rule_width
     elements.append(_rect_element(element_id="background", role="background", priority="P2", bbox={"x": 0, "y": 0, "w": 1672, "h": 941}, fill=background, stroke=background, radius=0, component_id="component.background", z_index=0))
-    elements.append(_rect_element(element_id="header.rule", role="accent", priority="P2", bbox={"x": 80, "y": 156, "w": 1512, "h": 6}, fill=accent, stroke=accent, radius=3, component_id="component.header", z_index=2))
-    elements.append(_text_element(element_id="title.main", role="title", priority="P0", bbox={"x": 80, "y": 56, "w": 1180, "h": 72}, text=title, text_ref="content_lock.customer_visible.title", preferred_size=42, min_size=30, max_lines=2, weight="700"))
+    elements.append(_rect_element(element_id="header.rule", role="accent", priority="P2", bbox={"x": 80, "y": rule_y, "w": 1512, "h": rule_height}, fill=accent, stroke=accent, radius=0, stroke_width=rule_stroke_width, component_id="component.header", z_index=2))
+    elements.append(_text_element(element_id="title.main", role="title", priority="P0", bbox={"x": 80, "y": 56, "w": 1180, "h": 72}, text=title, text_ref="content_lock.customer_visible.title", preferred_size=42, min_size=30, max_lines=2, color=title_color, weight="700"))
     if subtitle:
-        elements.append(_text_element(element_id="subtitle.main", role="subtitle", priority="P1", bbox={"x": 80, "y": 130, "w": 1350, "h": 32}, text=subtitle, text_ref="content_lock.customer_visible.subtitle", preferred_size=18, min_size=14, max_lines=1, color="#556474"))
+        elements.append(_text_element(element_id="subtitle.main", role="subtitle", priority="P1", bbox={"x": 80, "y": 130, "w": 1350, "h": 32}, text=subtitle, text_ref="content_lock.customer_visible.subtitle", preferred_size=18, min_size=14, max_lines=1, color=secondary_color))
 
     count = max(1, len(body_blocks))
     layout_boxes = _fixture_blueprint_boxes(blueprint_path, count) or _layout_boxes(layout_id, count)
@@ -233,7 +327,20 @@ def build_fixture_scene(lock: dict[str, Any], blueprint_sha256: str, blueprint_p
         x, y, card_w, card_h = box["x"], box["y"], box["w"], box["h"]
         block_id = f"block.{index + 1:02d}"
         component_id = f"component.body.{index + 1:02d}"
-        elements.append(_rect_element(element_id=block_id, role="content_card", priority="P1", bbox={"x": x, "y": y, "w": card_w, "h": card_h}, fill=palette[(index + digest) % len(palette)], component_id=component_id, z_index=3))
+        elements.append(
+            _rect_element(
+                element_id=block_id,
+                role="content_card",
+                priority="P1",
+                bbox={"x": x, "y": y, "w": card_w, "h": card_h},
+                fill=str(box.get("fill") or palette[(index + digest) % len(palette)]),
+                stroke=str(box.get("stroke") or "#d5dde5"),
+                radius=float(box["radius"]) if "radius" in box else 12,
+                stroke_width=float(box.get("stroke_width") or 1.5),
+                component_id=component_id,
+                z_index=3,
+            )
+        )
         block_title = _block_title(block, index)
         body_text = _block_text(block)
         has_block_title = isinstance(block, dict) and any(block.get(key) for key in ("title", "label", "name", "heading"))
@@ -246,6 +353,19 @@ def build_fixture_scene(lock: dict[str, Any], blueprint_sha256: str, blueprint_p
             body_height = card_h - 96 if has_block_title else card_h - 44
             elements.append(_text_element(element_id=f"{block_id}.body", role="body", priority="P1", bbox={"x": x + 24, "y": y + body_y, "w": card_w - 48, "h": body_height}, text=body_text, text_ref=f"content_lock.customer_visible.body_blocks.{index}", preferred_size=18, min_size=13, max_lines=6, color="#364655", component_id=component_id))
 
+    for decoration in _fixture_blueprint_decorations(blueprint_path):
+        elements.append(
+            _line_element(
+                element_id=str(decoration["element_id"]),
+                role="blueprint_decoration",
+                bbox=dict(decoration["bbox"]),
+                stroke=str(decoration["stroke"]),
+                stroke_width=float(decoration["stroke_width"]),
+                component_id="component.blueprint.decoration",
+                z_index=2,
+            )
+        )
+
     so_what = str(enrichment.get("so_what") or "")
     if callouts:
         callout_text = _reference_text(callouts, "callout")
@@ -255,9 +375,9 @@ def build_fixture_scene(lock: dict[str, Any], blueprint_sha256: str, blueprint_p
         elements.append(_rect_element(element_id="so_what.panel", role="so_what", priority="P0", bbox={"x": 80, "y": 820, "w": 1512, "h": 44}, fill="#eaf2fb", stroke="#c7d9ec", radius=6, component_id="component.so_what", z_index=4))
         elements.append(_text_element(element_id="so_what.text", role="so_what", priority="P0", bbox={"x": 100, "y": 828, "w": 1472, "h": 28}, text=so_what, text_ref="content_lock.enrichment.so_what", preferred_size=15, min_size=11, max_lines=1, color="#1f4f7d", weight="700", component_id="component.so_what"))
     if labels:
-        elements.append(_text_element(element_id="labels.footer", role="label_row", priority="P2", bbox={"x": 80, "y": 866, "w": 1200, "h": 28}, text="  ·  ".join(str(label) for label in labels), text_ref="content_lock.customer_visible.labels", preferred_size=14, min_size=11, max_lines=1, color="#556474", component_id="component.labels"))
+        elements.append(_text_element(element_id="labels.footer", role="label_row", priority="P2", bbox={"x": 80, "y": 866, "w": 1200, "h": 28}, text="  ·  ".join(str(label) for label in labels), text_ref="content_lock.customer_visible.labels", preferred_size=14, min_size=11, max_lines=1, color=secondary_color, component_id="component.labels"))
     if footnotes:
-        elements.append(_text_element(element_id="sources.footer", role="sources", priority="P0", bbox={"x": 80, "y": 900, "w": 1512, "h": 24}, text="  ".join(str(note) for note in footnotes), text_ref="content_lock.customer_visible.footnotes", preferred_size=11, min_size=9, max_lines=1, color="#697887", component_id="component.sources"))
+        elements.append(_text_element(element_id="sources.footer", role="sources", priority="P0", bbox={"x": 80, "y": 900, "w": 1512, "h": 24}, text="  ".join(str(note) for note in footnotes), text_ref="content_lock.customer_visible.footnotes", preferred_size=11, min_size=9, max_lines=1, color=source_color, component_id="component.sources"))
 
     required_components = list(lock.get("required_component_ids") or [])
     scene = {

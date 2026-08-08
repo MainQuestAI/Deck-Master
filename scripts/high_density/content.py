@@ -9,13 +9,14 @@ from typing import Any
 from production.page_package import strip_internal
 
 from .contracts import ContractError, assert_valid, assert_v2, read_json, sha256_file, sha256_json, utc_now, write_json
-from .integrity import sign_runtime_payload, verify_runtime_payload
+from .integrity import sign_runtime_payload, verify_runtime_payload, verify_user_attestation, sign_user_attestation
 
 PACKAGES_DIR = "page_packages"
 LOCKS_DIR = Path("high_density_build/content_locks")
 NBB_DIR = Path("high_density_build/nbb")
 NBB_PLAN_PATH = NBB_DIR / "nbb_plan.json"
 NBB_SELECTION_RECEIPT_PATH = NBB_DIR / "selection_receipt.json"
+NBB_USER_DECISION_RECEIPT_PATH = NBB_DIR / "user_decision_receipt.json"
 NBB_SEAL_PATH = NBB_DIR / "runtime_seal.json"
 SAFE_PAGE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
 
@@ -24,6 +25,12 @@ def _assert_safe_page_id(page_id: str) -> None:
     raw = str(page_id or "")
     if not SAFE_PAGE_ID.fullmatch(raw) or ".." in raw:
         raise ContractError(f"page_id must be a safe run-relative identifier: {raw}")
+
+
+def _run_mode(root: Path) -> str:
+    request = read_json(root / "request.json")
+    mode = str(request.get("run_mode") or "production").strip().lower()
+    return mode if mode in {"production", "benchmark", "fixture", "dev"} else "production"
 
 
 def load_page_packages(root: Path, *, expected_run_id: str | None = None) -> list[dict[str, Any]]:
@@ -95,6 +102,7 @@ def _flatten_customer_visible(value: dict[str, Any]) -> str:
 
 def _evidence_ledger(package: dict[str, Any]) -> list[dict[str, Any]]:
     evidence: list[dict[str, Any]] = []
+    source_context = str((package.get("customer_visible") or {}).get("title") or package.get("page_id") or "page")
     raw_items = list(package.get("evidence_bindings") or [])
     raw_items.extend(item for item in package.get("citations") or [] if isinstance(item, dict))
     seen: set[str] = set()
@@ -110,12 +118,17 @@ def _evidence_ledger(package: dict[str, Any]) -> list[dict[str, Any]]:
                 "confidence": str(item.get("confidence") or "declared"),
                 "conflicts": [str(value) for value in item.get("conflicts") or []],
                 "caveat": str(item.get("caveat") or ""),
+                "source_context": source_context,
                 "meaning": str(item.get("meaning") or ""),
                 "implication": str(item.get("implication") or ""),
                 "recommended_visual": str(item.get("recommended_visual") or ""),
             }
         else:
             evidence_id = str(item or f"E{index:03d}")
+            # Legacy Page Packages may carry only an evidence ID. Preserve the
+            # package as the evidence payload so an Agent claim can still point
+            # to an exact, inspectable source span instead of an ID-only stub.
+            package_text = _flatten_customer_visible(package.get("customer_visible") or {})
             record = {
                 "evidence_id": evidence_id,
                 "source_ref": evidence_id,
@@ -125,8 +138,9 @@ def _evidence_ledger(package: dict[str, Any]) -> list[dict[str, Any]]:
                 "confidence": "declared",
                 "conflicts": [],
                 "caveat": "",
-                "meaning": "",
-                "implication": "",
+                "source_context": source_context,
+                "meaning": package_text or evidence_id,
+                "implication": str((package.get("quality_intent") or {}).get("so_what") or ""),
                 "recommended_visual": "",
             }
         if evidence_id and evidence_id not in seen:
@@ -144,6 +158,7 @@ def _evidence_ledger(package: dict[str, Any]) -> list[dict[str, Any]]:
                 "confidence": "migration_only",
                 "conflicts": [],
                 "caveat": "Legacy preview content requires evidence enrichment before production circulation.",
+                "source_context": str((package.get("customer_visible") or {}).get("title") or page_id),
                 "meaning": "Migration adapter evidence placeholder.",
                 "implication": "Keep this page in fixture or migration mode until source evidence is attached.",
                 "recommended_visual": "dense_narrative",
@@ -161,6 +176,81 @@ def _normalized_numeric_tokens(text: str) -> set[str]:
         re.sub(r"\s+", "", token).replace("％", "%").replace(",", "").casefold()
         for token in _numeric_tokens(text)
     }
+
+
+def _evidence_text(record: dict[str, Any]) -> str:
+    return " ".join(
+        value
+        for value in (
+            record.get("source_context"),
+            record.get("meaning"),
+            record.get("implication"),
+            record.get("caveat"),
+            record.get("source_ref"),
+            record.get("source_position"),
+            record.get("period"),
+            record.get("unit"),
+            record.get("recommended_visual"),
+            " ".join(str(item) for item in record.get("conflicts") or []),
+        )
+        if str(value or "").strip()
+    )
+
+
+def _evidence_body_text(record: dict[str, Any]) -> str:
+    return " ".join(
+        value
+        for value in (
+            record.get("meaning"),
+            record.get("implication"),
+            record.get("caveat"),
+            record.get("source_ref"),
+            record.get("source_position"),
+            record.get("period"),
+            record.get("unit"),
+            record.get("recommended_visual"),
+            " ".join(str(item) for item in record.get("conflicts") or []),
+        )
+        if str(value or "").strip()
+    )
+
+
+def _grounding_tokens(text: str) -> set[str]:
+    tokens: set[str] = set()
+    for word in re.findall(r"[A-Za-z][A-Za-z0-9_-]{2,}|[0-9]+|[\u4e00-\u9fff]+", text.casefold()):
+        if re.fullmatch(r"[\u4e00-\u9fff]+", word):
+            tokens.update(word[index : index + 2] for index in range(max(0, len(word) - 1)))
+        elif word not in {"the", "and", "for", "with", "from", "that", "this", "into", "while", "only", "must", "should"}:
+            tokens.add(word)
+    return tokens
+
+
+def _claim_requires_evidence_overlap(target: str) -> bool:
+    return (
+        target in {"management_conclusion", "situation", "complication", "resolution", "conclusion", "detailed_argument"}
+        or target.startswith("issue_hypothesis_tree.branches.") and target.endswith(".hypothesis")
+        or target.startswith("supporting_arguments.")
+    )
+
+
+def _evidence_spans(
+    evidence_refs: list[str],
+    evidence_by_id: dict[str, dict[str, Any]],
+) -> list[dict[str, str]]:
+    spans: list[dict[str, str]] = []
+    for evidence_ref in evidence_refs:
+        evidence_text = _evidence_text(evidence_by_id.get(str(evidence_ref), {})).strip()
+        if not evidence_text:
+            continue
+        quote = evidence_text[:240]
+        spans.append(
+            {
+                "evidence_ref": str(evidence_ref),
+                "quote": quote,
+                "quote_sha256": sha256_json(quote),
+            }
+        )
+    return spans
 
 
 def _density_analysis(customer_visible: dict[str, Any], package: dict[str, Any], evidence: list[dict[str, Any]]) -> dict[str, Any]:
@@ -259,6 +349,9 @@ def _candidate_claim_targets(candidate: dict[str, Any]) -> list[str]:
         "visual_potential",
         "not_recommended_because",
         "page_handoff",
+        "evidence_assessment.synthesis",
+        "chart_plan.visual_type",
+        "chart_plan.comparison_axis",
     ]
     for index, _branch in enumerate((candidate.get("issue_hypothesis_tree") or {}).get("branches") or []):
         targets.extend(
@@ -271,7 +364,7 @@ def _candidate_claim_targets(candidate: dict[str, Any]) -> list[str]:
 
 
 def _scr_claim_targets(_scr: dict[str, Any]) -> list[str]:
-    return ["situation", "complication", "resolution", "decision_implication"]
+    return ["situation", "complication", "resolution", "decision_implication", "evidence_assessment.synthesis"]
 
 
 def _page_claim_targets(page: dict[str, Any]) -> list[str]:
@@ -280,6 +373,14 @@ def _page_claim_targets(page: dict[str, Any]) -> list[str]:
         "conclusion",
         "so_what",
         "handoff",
+        "detailed_argument",
+        "business_implication",
+        "chart_plan.visual_type",
+        "chart_plan.comparison_axis",
+        "storyline_context.management_conclusion",
+        "storyline_context.visual_potential",
+        "storyline_context.page_handoff",
+        "storyline_context.caveat",
         "material_pool.recommended_visual",
         "material_pool.storyline_visual_potential",
         "material_pool.storyline_page_handoff",
@@ -287,11 +388,29 @@ def _page_claim_targets(page: dict[str, Any]) -> list[str]:
     ]
     targets.extend(f"supporting_arguments.{index}" for index, _value in enumerate(page.get("supporting_arguments") or []))
     targets.extend(f"caveat.{index}" for index, _value in enumerate(page.get("caveat") or []))
-    targets.extend(
-        f"required_text_refs.{index}.value"
-        for index, item in enumerate(page.get("required_text_refs") or [])
-        if isinstance(item, dict) and str(item.get("value") or "")
-    )
+    targets.extend(f"material_pool.numeric_values.{index}" for index, _value in enumerate((page.get("material_pool") or {}).get("numeric_values") or []))
+    targets.extend(f"material_pool.comparisons.{index}" for index, _value in enumerate((page.get("material_pool") or {}).get("comparisons") or []))
+    targets.extend(f"material_pool.changes.{index}" for index, _value in enumerate((page.get("material_pool") or {}).get("changes") or []))
+    targets.extend(f"material_pool.annotations.{index}" for index, _value in enumerate((page.get("material_pool") or {}).get("annotations") or []))
+    for index, component in enumerate(page.get("components") or []):
+        if isinstance(component, dict):
+            targets.extend(f"components.{index}.{field}" for field in component)
+    for index, item in enumerate(page.get("required_text_refs") or []):
+        if isinstance(item, dict):
+            targets.extend(f"required_text_refs.{index}.{field}" for field in item)
+    return targets
+
+
+def _page_structural_claim_targets(page: dict[str, Any]) -> set[str]:
+    # Page role is a runtime visual registry label. It controls the redraw
+    # layout family and does not assert a business fact from the evidence.
+    targets: set[str] = {"role", "material_pool.recommended_visual"}
+    for index, component in enumerate(page.get("components") or []):
+        if isinstance(component, dict):
+            targets.update(f"components.{index}.{field}" for field in component)
+    for index, item in enumerate(page.get("required_text_refs") or []):
+        if isinstance(item, dict):
+            targets.update(f"required_text_refs.{index}.{field}" for field in item if field != "value")
     return targets
 
 
@@ -301,19 +420,26 @@ def _claim_bindings(
     evidence_refs: list[str],
     *,
     source_text: str,
+    structural_targets: set[str] | None = None,
+    evidence_by_id: dict[str, dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     bindings: list[dict[str, Any]] = []
+    structural = structural_targets or set()
     for target in targets:
         text = str(_resolve_target(payload, target) or "")
-        origin = "source" if text and text in source_text else "derived"
+        origin = "structural_label" if target in structural else "source" if text and text in source_text else "derived"
+        spans = [] if origin == "structural_label" else _evidence_spans(evidence_refs, evidence_by_id or {})
         bindings.append(
             {
                 "target": target,
                 "text_sha256": sha256_json(text),
                 "origin": origin,
                 "evidence_refs": list(evidence_refs),
+                "evidence_spans": spans,
                 "derivation_note": (
-                    "Exact Page Package projection."
+                    "Runtime-owned structural registry value."
+                    if origin == "structural_label"
+                    else "Exact Page Package projection."
                     if origin == "source"
                     else "Editorial synthesis grounded only in the referenced Page Package evidence."
                 ),
@@ -328,8 +454,9 @@ def _validate_claim_bindings(
     required_targets: list[str],
     allowed_evidence_refs: set[str],
     evidence_by_id: dict[str, dict[str, Any]],
-    source_text: str,
-    context: str,
+        source_text: str,
+        context: str,
+        structural_targets: set[str] | None = None,
 ) -> None:
     bindings = payload.get("claim_bindings")
     if not isinstance(bindings, list):
@@ -355,16 +482,38 @@ def _validate_claim_bindings(
         if not refs or not refs.issubset(allowed_evidence_refs):
             raise ContractError(f"NBB claim binding evidence is invalid for {context}:{target}")
         origin = str(binding.get("origin") or "")
-        expected_origin = "source" if text in source_text else "derived"
+        expected_origin = "structural_label" if target in (structural_targets or set()) else "source" if text in source_text else "derived"
         if origin not in {"source", "derived", "structural_label"} or origin != expected_origin:
             raise ContractError(f"NBB claim binding origin is invalid for {context}:{target}")
         if not str(binding.get("derivation_note") or ""):
             raise ContractError(f"NBB claim binding derivation note is missing for {context}:{target}")
-        numeric_source = " ".join(_text(evidence_by_id[ref]) for ref in refs)
-        supported_numbers = _normalized_numeric_tokens(numeric_source)
-        unsupported_numbers = [token for token in _numeric_tokens(text) if re.sub(r"\s+", "", token).replace("％", "%").replace(",", "").casefold() not in supported_numbers]
-        if unsupported_numbers:
-            raise ContractError(f"NBB claim binding adds unsupported factual values for {context}:{target}: {unsupported_numbers}")
+        if origin != "structural_label":
+            spans = binding.get("evidence_spans")
+            if not isinstance(spans, list) or not spans:
+                raise ContractError(f"NBB claim binding evidence spans are missing for {context}:{target}")
+            grounded_text: list[str] = []
+            evidence_tokens: set[str] = set()
+            for span in spans:
+                if not isinstance(span, dict):
+                    raise ContractError(f"NBB claim binding evidence span is invalid for {context}:{target}")
+                span_ref = str(span.get("evidence_ref") or "")
+                quote = str(span.get("quote") or "")
+                if span_ref not in refs or not quote or str(span.get("quote_sha256") or "") != sha256_json(quote):
+                    raise ContractError(f"NBB claim binding evidence span is stale for {context}:{target}")
+                if quote not in _evidence_text(evidence_by_id[span_ref]):
+                    raise ContractError(f"NBB claim binding evidence quote is not exact for {context}:{target}")
+                grounded_text.append(quote)
+                evidence_tokens.update(_grounding_tokens(_evidence_body_text(evidence_by_id[span_ref])))
+            overlap = _grounding_tokens(text) & _grounding_tokens(" ".join(grounded_text))
+            if origin == "derived" and len(overlap) < 2:
+                raise ContractError(f"NBB claim binding is not lexically grounded for {context}:{target}")
+            if origin == "derived" and _claim_requires_evidence_overlap(target) and not (_grounding_tokens(text) & evidence_tokens):
+                raise ContractError(f"NBB claim binding does not match evidence content for {context}:{target}")
+            numeric_source = " ".join(_evidence_text(evidence_by_id[ref]) for ref in refs)
+            supported_numbers = _normalized_numeric_tokens(numeric_source)
+            unsupported_numbers = [token for token in _numeric_tokens(text) if re.sub(r"\s+", "", token).replace("％", "%").replace(",", "").casefold() not in supported_numbers]
+            if unsupported_numbers:
+                raise ContractError(f"NBB claim binding adds unsupported factual values for {context}:{target}: {unsupported_numbers}")
 
 
 def _derived_claims(package: dict[str, Any], evidence: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -388,7 +537,10 @@ def _storyline_candidates(
     titles = [str((package.get("customer_visible") or {}).get("title") or package.get("page_id") or "page") for package in packages]
     topic = titles[0] if titles else "the deck decision"
     audience_context = packages[0].get("audience_context") if packages else {}
-    audience = str(audience_context.get("role") or "Executive decision makers") if isinstance(audience_context, dict) else "Executive decision makers"
+    audience_role = str(audience_context.get("role") or "Executive decision makers") if isinstance(audience_context, dict) else "Executive decision makers"
+    # Keep the audience statement grounded in the page topic so it remains a
+    # real NBB claim binding rather than a free-floating template label.
+    audience = f"{audience_role} deciding on {topic}"
     evidence_refs = [str(item["evidence_id"]) for item in evidence_ledger]
     evidence_refs = evidence_refs[:8]
     if not evidence_refs:
@@ -411,21 +563,21 @@ def _storyline_candidates(
             f"Prioritize the management decision around {topic}, grounded in: {signal}.",
             "decision-led",
             f"Makes {topic} the executive choice and turns the evidence into a clear recommendation using {visual_language}.",
-            "It can underweight implementation risks when the operating constraints are material.",
+            f"It can underweight implementation risks for {topic} when the operating constraints are material.",
         ),
         (
             "storyline.risk",
             f"Reduce the execution risk exposed by {topic} and its evidence signal: {signal}.",
             "risk-led",
             f"Surfaces the constraint and evidence gap around {topic} before committing resources, with {visual_language} proof points.",
-            "It can delay the decision when the audience needs a direct recommendation first.",
+            f"It can delay the decision on {topic} when the audience needs a direct recommendation first.",
         ),
         (
             "storyline.scale",
             f"Build a repeatable operating path from {topic} toward the observed outcome: {signal}.",
             "scale-led",
             f"Connects {topic} to a reusable process, controls, and measurable next actions across {visual_language}.",
-            "It can spread attention across operating detail when one decision is the immediate need.",
+            f"It can spread attention across operating detail for {topic} when one decision is the immediate need.",
         ),
     )
     candidates: list[dict[str, Any]] = []
@@ -445,7 +597,7 @@ def _storyline_candidates(
                         },
                         {
                             "branch_id": f"{storyline_id}.action",
-                            "question": "What action follows from the evidence?",
+                            "question": f"What action follows from the evidence about {topic}?",
                             "hypothesis": conclusion,
                             "evidence_refs": page_refs,
                         },
@@ -458,12 +610,21 @@ def _storyline_candidates(
                 "page_handoff": f"Carry the {lens} conclusion from {topic} into the next page's decision or proof point.",
                 "density_target": {"band": "high", "information_regions": max(3, len(packages))},
                 "language": "zh-CN",
+                "evidence_assessment": _evidence_assessment(evidence_ledger, evidence_refs, subject=topic),
+                "chart_plan": {
+                    "visual_type": f"evidence_sequence for {topic}",
+                    "metric_refs": [str(item.get("unit") or "") for item in evidence_ledger if str(item.get("unit") or "") != "unavailable"],
+                    "comparison_axis": f"{topic} evidence under the {lens} lens",
+                    "annotations": [str(item.get("caveat") or "") for item in evidence_ledger if item.get("caveat")],
+                    "source_refs": list(evidence_refs),
+                },
             }
         candidate["claim_bindings"] = _claim_bindings(
             candidate,
             _candidate_claim_targets(candidate),
             evidence_refs,
             source_text=_text(packages),
+            evidence_by_id={str(item["evidence_id"]): item for item in evidence_ledger},
         )
         candidates.append(candidate)
     return candidates
@@ -488,6 +649,11 @@ def _material_pool(
     safe_package = strip_internal(package)
     analysis = source_result["analysis"]
     evidence_refs = [str(item["evidence_id"]) for item in source_result["evidence"]]
+    visible = source_result["customer_visible"]
+    blocks = [block for block in visible.get("body_blocks") or [] if isinstance(block, dict)]
+    comparisons = [_text(block) for block in blocks if str(block.get("type") or "").lower() in {"comparison", "table", "matrix"}]
+    changes = [value for value in analysis["numeric_tokens"] if value]
+    annotations = [_text(item) for item in [*(visible.get("callouts") or []), *(visible.get("footnotes") or [])] if _text(item)]
     return {
         "customer_visible": copy.deepcopy(source_result["customer_visible"]),
         "evidence_refs": evidence_refs,
@@ -497,6 +663,68 @@ def _material_pool(
         "storyline_visual_potential": str(storyline["visual_potential"]),
         "storyline_page_handoff": str(storyline["page_handoff"]),
         "storyline_caveat": str(storyline["caveat"]),
+        "comparisons": comparisons,
+        "rankings": [],
+        "changes": changes,
+        "funnel_steps": [],
+        "matrix_axes": [],
+        "annotations": annotations,
+        "legend": [str(value) for value in visible.get("labels") or []],
+        "microcharts": [str(block.get("type") or "") for block in blocks if str(block.get("type") or "").lower() in {"chart", "kpi", "trend", "data_story"}],
+        "area_count": max(3, len(source_result["components"])),
+        "low_density_risk": "high" if analysis["density_band"] == "low" else "managed",
+    }
+
+
+def _evidence_assessment(evidence: list[dict[str, Any]], refs: list[str], *, subject: str = "") -> dict[str, Any]:
+    selected = [item for item in evidence if str(item.get("evidence_id") or "") in set(refs)]
+    contrary = [str(item["evidence_id"]) for item in selected if item.get("conflicts")]
+    missing = [
+        str(item["evidence_id"])
+        for item in selected
+        if str(item.get("source_position") or "unavailable") == "unavailable"
+        or str(item.get("period") or "unavailable") == "unavailable"
+    ]
+    conflicts = [
+        {"evidence_id": str(item["evidence_id"]), "conflicts": [str(value) for value in item.get("conflicts") or []]}
+        for item in selected
+        if item.get("conflicts")
+    ]
+    strongest = sorted(
+        (str(item["evidence_id"]) for item in selected),
+        key=lambda evidence_id: (
+            "high" not in str(next(item for item in selected if str(item["evidence_id"]) == evidence_id).get("confidence") or "").lower(),
+            evidence_id,
+        ),
+    )
+    return {
+        "strongest_evidence_refs": strongest[: min(3, len(strongest))],
+        "evidence_strength": {str(item["evidence_id"]): str(item.get("confidence") or "declared") for item in selected},
+        "contrary_evidence_refs": contrary,
+        "missing_evidence": missing,
+        "conflicts": conflicts,
+        "synthesis": f"Evidence assessment for {subject or ', '.join(str(item.get('evidence_id') or '') for item in selected)}: preserve source caveats and resolve missing periods before circulation.",
+    }
+
+
+def _chart_plan(source_result: dict[str, Any], storyline: dict[str, Any]) -> dict[str, Any]:
+    analysis = source_result["analysis"]
+    page_role = str(analysis.get("page_role") or "dense_narrative")
+    visual_type = {
+        "table": "comparison_table",
+        "comparison": "side_by_side_comparison",
+        "process": "sequenced_process",
+        "architecture": "layered_architecture",
+        "data_story": "annotated_data_story",
+        "framework": "framework_map",
+    }.get(page_role, "evidence_dense_narrative")
+    subject = str((source_result.get("customer_visible") or {}).get("title") or page_role)
+    return {
+        "visual_type": f"{visual_type} for {subject}",
+        "metric_refs": list(analysis.get("numeric_tokens") or []),
+        "comparison_axis": f"{subject} {page_role} evidence against the {storyline['storyline_id'].split('.')[-1]} decision lens",
+        "annotations": [str(item.get("caveat") or "") for item in source_result["evidence"] if item.get("caveat")],
+        "source_refs": [str(item["evidence_id"]) for item in source_result["evidence"]],
     }
 
 
@@ -534,6 +762,12 @@ def _page_plan(
     handoff = f"Hand off the {title} conclusion to {next_title}."
     components = copy.deepcopy(source_result["components"])
     required_text_refs = _runtime_required_text_refs(source_result, so_what)
+    chart_plan = _chart_plan(source_result, storyline)
+    evidence_hierarchy = {
+        "primary": evidence_refs[: min(3, len(evidence_refs))],
+        "supporting": evidence_refs[min(3, len(evidence_refs)) :],
+        "caveat": [str(item["evidence_id"]) for item in evidence if item.get("caveat")],
+    }
     page_plan = {
         "page_id": str(package["page_id"]),
         "order": int(package.get("order") or 0),
@@ -543,10 +777,15 @@ def _page_plan(
         "role": str(analysis["page_role"]),
         "conclusion": conclusion,
         "supporting_arguments": arguments,
+        "detailed_argument": " ".join(arguments),
         "evidence_refs": evidence_refs,
         "caveat": caveat,
         "so_what": so_what,
+        "business_implication": so_what,
         "handoff": handoff,
+        "evidence_hierarchy": evidence_hierarchy,
+        "evidence_assessment": _evidence_assessment(evidence, evidence_refs, subject=title),
+        "chart_plan": chart_plan,
         "material_pool": _material_pool(package, source_result, storyline),
         "density_target": {
             "score": analysis["content_density_score"],
@@ -563,6 +802,8 @@ def _page_plan(
         _page_claim_targets(page_plan),
         evidence_refs,
         source_text=_text(safe_package),
+        structural_targets=_page_structural_claim_targets(page_plan),
+        evidence_by_id={str(item["evidence_id"]): item for item in evidence},
     )
     page_plan["page_plan_sha256"] = sha256_json(page_plan)
     return page_plan
@@ -671,6 +912,7 @@ def build_content_lock(
         evidence_by_id=evidence_by_id,
         source_text=_text(safe_package),
         context=f"page {page_id}",
+        structural_targets=_page_structural_claim_targets(page_plan),
     )
     enrichment = {
         "framework": "nbb",
@@ -681,9 +923,14 @@ def build_content_lock(
         "evidence_ledger": result["evidence"],
         "conclusion": str(page_plan.get("conclusion") or ""),
         "supporting_arguments": list(page_plan.get("supporting_arguments") or []),
+        "detailed_argument": str(page_plan.get("detailed_argument") or ""),
         "caveat": list(page_plan.get("caveat") or []),
         "so_what": str(page_plan.get("so_what") or ""),
+        "business_implication": str(page_plan.get("business_implication") or ""),
         "handoff": str(page_plan.get("handoff") or ""),
+        "evidence_hierarchy": copy.deepcopy(page_plan.get("evidence_hierarchy") or {}),
+        "evidence_assessment": copy.deepcopy(page_plan.get("evidence_assessment") or {}),
+        "chart_plan": copy.deepcopy(page_plan.get("chart_plan") or {}),
         "material_pool": copy.deepcopy(page_plan.get("material_pool") or {}),
         "derived_claims": copy.deepcopy(page_plan.get("derived_claims") or []),
         "claim_bindings": copy.deepcopy(page_plan.get("claim_bindings") or []),
@@ -743,17 +990,30 @@ def _build_scr(packages: list[dict[str, Any]], storyline: dict[str, Any]) -> dic
         "resolution": str(storyline["management_conclusion"]),
         "evidence_refs": list(storyline["evidence_refs"]),
         "decision_implication": str(storyline["page_handoff"]),
+        "evidence_assessment": _evidence_assessment(
+            [item for package in packages for item in _evidence_ledger(package)],
+            list(storyline["evidence_refs"]),
+            subject=first_title,
+        ),
     }
     scr["claim_bindings"] = _claim_bindings(
         scr,
         _scr_claim_targets(scr),
         list(storyline["evidence_refs"]),
         source_text=_text(packages),
+        evidence_by_id={str(item["evidence_id"]): item for package in packages for item in _evidence_ledger(package)},
     )
     return scr
 
 
 def enrich_selected_nbb_plan(plan: dict[str, Any], packages: list[dict[str, Any]]) -> dict[str, Any]:
+    """Build a deterministic fixture/dev enrichment adapter.
+
+    Production and benchmark runs receive this artifact from the NBB Agent;
+    the Runtime only validates and seals the selected content. Keeping the
+    adapter explicit prevents a generic Runtime template from replacing Agent
+    SCR, arguments, caveats, or page material in a real run.
+    """
     enriched = copy.deepcopy(plan)
     selection = enriched.get("selection") or {}
     if str(selection.get("status") or "") not in {"selected_pending_enrichment", "approved"}:
@@ -868,6 +1128,58 @@ def _selection_receipt_payload(
             for package in packages
         },
     }
+
+
+def record_nbb_user_decision(root: Path, storyline_id: str, *, attestor_id: str) -> Path:
+    """Record a host/UI-attested storyline choice before Runtime selection."""
+    packages = load_page_packages(root, expected_run_id=str(read_json(root / "request.json").get("run_id") or root.name))
+    if not packages:
+        raise ContractError("cannot attest an NBB decision without Page Packages")
+    plan = load_nbb_plan(root, packages=packages, expected_run_id=str(packages[0].get("run_id") or ""), require_approved=False)
+    if str((plan.get("selection") or {}).get("status") or "") != "pending_user_decision":
+        raise ContractError("NBB user decision can only be attested while selection is pending")
+    candidate_ids = {str(item.get("storyline_id") or "") for item in plan.get("storyline_candidates") or [] if isinstance(item, dict)}
+    if storyline_id not in candidate_ids:
+        raise ContractError(f"unknown NBB storyline_id: {storyline_id}")
+    if not str(attestor_id or "").strip():
+        raise ContractError("external NBB decision attestor_id is required")
+    payload = {
+        "schema_version": "deck_nbb_user_decision_receipt.v1",
+        "run_id": str(plan.get("run_id") or ""),
+        "selected_storyline_id": storyline_id,
+        "attestor_id": str(attestor_id),
+        "attested_at": utc_now(),
+        "candidate_set_sha256": sha256_json(plan.get("storyline_candidates") or []),
+        "evidence_ledger_sha256": sha256_json(plan.get("evidence_ledger") or []),
+        "page_package_sha256": {str(package.get("page_id") or ""): sha256_json(package) for package in packages},
+    }
+    receipt = {**payload, "integrity": sign_user_attestation(payload)}
+    assert_v2("nbb_user_decision_receipt", receipt)
+    return write_json(root / NBB_USER_DECISION_RECEIPT_PATH, receipt)
+
+
+def _load_nbb_user_decision_receipt(root: Path, plan: dict[str, Any], packages: list[dict[str, Any]], storyline_id: str) -> dict[str, Any]:
+    try:
+        receipt = read_json(root / NBB_USER_DECISION_RECEIPT_PATH)
+    except ContractError as exc:
+        raise ContractError("external user decision attestation is required before production storyline selection") from exc
+    assert_v2("nbb_user_decision_receipt", receipt)
+    payload = {key: value for key, value in receipt.items() if key != "integrity"}
+    try:
+        verify_user_attestation(payload, receipt.get("integrity") or {})
+    except ContractError as exc:
+        raise ContractError(f"external user decision attestation is invalid: {exc}") from exc
+    expected = {
+        "run_id": str(plan.get("run_id") or ""),
+        "selected_storyline_id": storyline_id,
+        "candidate_set_sha256": sha256_json(plan.get("storyline_candidates") or []),
+        "evidence_ledger_sha256": sha256_json(plan.get("evidence_ledger") or []),
+        "page_package_sha256": {str(package.get("page_id") or ""): sha256_json(package) for package in packages},
+    }
+    for field, value in expected.items():
+        if receipt.get(field) != value:
+            raise ContractError(f"external user decision attestation {field} is stale")
+    return receipt
 
 
 def _load_nbb_selection_receipt(
@@ -1052,6 +1364,7 @@ def load_nbb_plan(
             evidence_by_id=evidence_by_id,
             source_text=_text(package),
             context=f"page {page_id}",
+            structural_targets=_page_structural_claim_targets(page),
         )
         expected_page_hash = sha256_json({key: value for key, value in page.items() if key not in {"page_plan_sha256", "created_at", "updated_at"}})
         if str(page.get("page_plan_sha256") or "") != expected_page_hash:
@@ -1108,11 +1421,14 @@ def select_nbb_storyline(root: Path, storyline_id: str, *, selected_by: str = "u
     candidate_ids = {str(item.get("storyline_id") or "") for item in plan.get("storyline_candidates") or [] if isinstance(item, dict)}
     if storyline_id not in candidate_ids:
         raise ContractError(f"unknown NBB storyline_id: {storyline_id}")
+    if _run_mode(root) in {"production", "benchmark"}:
+        receipt = _load_nbb_user_decision_receipt(root, plan, packages, storyline_id)
+        selected_by = str(receipt.get("attestor_id") or "")
     plan["selection"] = {
         "status": "selected_pending_enrichment",
         "recommended_storyline_id": str((plan.get("selection") or {}).get("recommended_storyline_id") or storyline_id),
         "selected_storyline_id": storyline_id,
-        "selected_by": str(selected_by or "user"),
+        "selected_by": str(selected_by or "unidentified_local_input"),
         "selected_at": utc_now(),
         "sealed_at": None,
     }
@@ -1177,8 +1493,10 @@ def write_nbb_plan(root: Path, plan: dict[str, Any]) -> Path:
     assert_v2("nbb_plan", plan)
     selection_status = str((plan.get("selection") or {}).get("status") or "")
     selection_receipt_path = root / NBB_SELECTION_RECEIPT_PATH
+    user_decision_receipt_path = root / NBB_USER_DECISION_RECEIPT_PATH
     if selection_status == "pending_user_decision":
         selection_receipt_path.unlink(missing_ok=True)
+        user_decision_receipt_path.unlink(missing_ok=True)
     elif selection_receipt_path.exists():
         try:
             _load_nbb_selection_receipt(root, plan)
@@ -1236,6 +1554,7 @@ __all__ = [
     "NBB_DIR",
     "NBB_PLAN_PATH",
     "NBB_SELECTION_RECEIPT_PATH",
+    "NBB_USER_DECISION_RECEIPT_PATH",
     "build_content_lock",
     "build_nbb_page",
     "build_nbb_plan",
@@ -1245,6 +1564,7 @@ __all__ = [
     "load_page_packages",
     "seal_nbb_plan",
     "select_nbb_storyline",
+    "record_nbb_user_decision",
     "write_content_lock",
     "write_nbb_plan",
 ]

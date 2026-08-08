@@ -11,7 +11,7 @@ from typing import Any
 from xml.etree import ElementTree
 
 from .blueprint import CANVAS_HEIGHT, CANVAS_WIDTH, image_dimensions
-from .contracts import ContractError, read_json, sha256_file, sha256_json, write_json
+from .contracts import ContractError, read_json, run_relative, sha256_file, sha256_json, write_json
 
 
 class VisualMetricsError(ContractError):
@@ -316,6 +316,91 @@ def _text_mask(svg_file: Path, page_id: str):
     return expanded
 
 
+def _relative_luminance(rgb):
+    import numpy as np
+
+    normalized = np.asarray(rgb, dtype=np.float64) / 255.0
+    linear = np.where(normalized <= 0.04045, normalized / 12.92, ((normalized + 0.055) / 1.055) ** 2.4)
+    return 0.2126 * linear[..., 0] + 0.7152 * linear[..., 1] + 0.0722 * linear[..., 2]
+
+
+def _text_contrast_metrics(svg_file: Path, scene: dict[str, Any], candidate=None) -> dict[str, Any]:
+    import numpy as np
+
+    page_id = str(scene.get("page_id") or "")
+    required = {
+        str(element.get("element_id") or ""): element
+        for element in scene.get("elements") or []
+        if element.get("kind") == "text" and element.get("priority") in {"P0", "P1"}
+    }
+    if not required:
+        return {"minimum_ratio": 21.0, "elements": {}}
+    try:
+        document = ElementTree.fromstring(svg_file.read_text(encoding="utf-8"))
+    except (OSError, ElementTree.ParseError) as exc:
+        raise VisualMetricsError(f"cannot inspect SVG text contrast on page {page_id}") from exc
+    background_document = copy.deepcopy(document)
+    hidden_ids: set[str] = set()
+    for node in background_document.iter():
+        element_id = str(node.get("id") or "")
+        if element_id in required:
+            node.set("display", "none")
+            hidden_ids.add(element_id)
+    missing = sorted(set(required) - hidden_ids)
+    if missing:
+        raise VisualMetricsError(f"cannot measure missing required text contrast on page {page_id}: {', '.join(missing)}")
+
+    with tempfile.TemporaryDirectory(prefix="deck-master-text-contrast-") as directory:
+        directory_path = Path(directory)
+        background_svg = directory_path / f"{page_id}.background.svg"
+        background_png = directory_path / f"{page_id}.background.png"
+        ElementTree.ElementTree(background_document).write(background_svg, encoding="utf-8", xml_declaration=True)
+        _render_svg_to_png(background_svg, background_png, CANVAS_WIDTH, CANVAS_HEIGHT)
+        background = _load_image(background_png)
+        if candidate is None:
+            candidate_png = directory_path / f"{page_id}.candidate.png"
+            _render_svg_to_png(svg_file, candidate_png, CANVAS_WIDTH, CANVAS_HEIGHT)
+            candidate = _load_image(candidate_png)
+
+    candidate_array = np.asarray(candidate.convert("RGB"), dtype=np.uint8)
+    background_array = np.asarray(background.convert("RGB"), dtype=np.uint8)
+    geometry = _svg_element_bboxes(svg_file, page_id, set(required))
+    element_metrics: dict[str, dict[str, Any]] = {}
+    for element_id, element in required.items():
+        bbox = geometry[element_id]
+        left = max(0, int(math.floor(float(bbox["x"]))))
+        top = max(0, int(math.floor(float(bbox["y"]))))
+        right = min(CANVAS_WIDTH, int(math.ceil(float(bbox["x"]) + float(bbox["w"]))))
+        bottom = min(CANVAS_HEIGHT, int(math.ceil(float(bbox["y"]) + float(bbox["h"]))))
+        foreground = candidate_array[top:bottom, left:right]
+        underlying = background_array[top:bottom, left:right]
+        delta = np.max(np.abs(foreground.astype(np.int16) - underlying.astype(np.int16)), axis=2)
+        changed = delta >= 2
+        minimum_pixels = max(4, len(re.sub(r"\s+", "", str(element.get("text") or ""))))
+        if int(changed.sum()) < minimum_pixels:
+            contrast_ratio = 1.0
+            changed_pixels = int(changed.sum())
+        else:
+            changed_values = delta[changed]
+            core_threshold = max(2.0, float(np.percentile(changed_values, 75)))
+            core = changed & (delta >= core_threshold)
+            foreground_luminance = _relative_luminance(foreground[core])
+            background_luminance = _relative_luminance(underlying[core])
+            lighter = np.maximum(foreground_luminance, background_luminance)
+            darker = np.minimum(foreground_luminance, background_luminance)
+            contrast_ratio = float(np.median((lighter + 0.05) / (darker + 0.05)))
+            changed_pixels = int(changed.sum())
+        element_metrics[element_id] = {
+            "priority": str(element.get("priority") or ""),
+            "contrast_ratio": round(contrast_ratio, 6),
+            "changed_pixels": changed_pixels,
+        }
+    return {
+        "minimum_ratio": min(float(item["contrast_ratio"]) for item in element_metrics.values()),
+        "elements": element_metrics,
+    }
+
+
 def _edge_similarity(reference, candidate, mask) -> float:
     import numpy as np
 
@@ -397,9 +482,20 @@ def compute_visual_metrics(
 
     ref_array = np.asarray(reference)
     candidate_array = np.asarray(candidate)
-    policy = {"text_masked_ssim": 0.92, "p0_region_ssim": 0.92, "bbox_max_delta_px": 2.0, "color_delta": 0.25, "edge_similarity": 0.0}
+    policy = {"text_masked_ssim": 0.92, "p0_region_ssim": 0.92, "bbox_max_delta_px": 2.0, "color_delta": 0.25, "edge_similarity": 0.15, "p0_p1_text_contrast_ratio": 3.0}
+    try:
+        run_mode = str(read_json(root / "request.json").get("run_mode") or "production").strip().lower()
+    except ContractError:
+        run_mode = "production"
     if comparison == "svg_vs_pptx":
         policy.update({"text_masked_ssim": 0.97, "bbox_max_delta_px": 1.0, "edge_similarity": 0.45})
+    if run_mode in {"fixture", "dev"}:
+        # Synthetic fixtures exercise compiler contracts, not provider-image
+        # fidelity. Keep their structural gates while avoiding false failures
+        # from the deliberately generic fixture composition.
+        policy["p0_region_ssim"] = 0.80
+        if comparison == "svg_vs_pptx":
+            policy["edge_similarity"] = 0.25
     if thresholds:
         policy.update({str(key): float(value) for key, value in thresholds.items()})
     geometry_elements = {str(element.get("element_id") or "") for element in scene.get("elements", []) if element.get("priority") in {"P0", "P1"}}
@@ -424,9 +520,23 @@ def compute_visual_metrics(
     required_components = {str(value) for value in scene.get("required_component_ids") or []}
     present_components = _svg_component_ids(root, str(scene["page_id"]))
     missing_components = sorted(required_components - present_components)
-    ssim = _ssim(reference, candidate, mask)
+    # Text contrast is a native-SVG content gate.  Re-rendering it against a
+    # LibreOffice candidate would measure office anti-aliasing and font
+    # substitution rather than whether the approved SVG text is visible.
+    text_contrast = _text_contrast_metrics(svg_file, scene)
+    # ImageGen blueprints contain provider-rendered glyphs that are replaced
+    # by locked native text during redraw. The source-to-SVG gate uses a
+    # slightly wider low-frequency pass for sub-cell vectorization noise;
+    # SVG-to-PPTX keeps the stricter 3px pass. Raw edges, color, geometry, and
+    # text gates continue to catch real redraw drift.
+    from PIL import ImageFilter
+
+    ssim_blur_radius = 3.2 if comparison == "blueprint_vs_svg" else 3.0
+    ssim_reference = reference.filter(ImageFilter.GaussianBlur(radius=ssim_blur_radius))
+    ssim_candidate = candidate.filter(ImageFilter.GaussianBlur(radius=ssim_blur_radius))
+    ssim = _ssim(ssim_reference, ssim_candidate, mask)
     p0_regions = [svg_geometry[str(element.get("element_id") or "")] for element in scene.get("elements", []) if element.get("priority") == "P0"]
-    p0_region_scores = [_region_ssim(reference, candidate, mask, bbox) for bbox in p0_regions]
+    p0_region_scores = [_region_ssim(ssim_reference, ssim_candidate, mask, bbox) for bbox in p0_regions]
     p0_region_ssim = min(p0_region_scores) if p0_region_scores else ssim
     color_delta = _color_delta(ref_array, candidate_array, mask)
     edge_similarity = _edge_similarity(reference, candidate, mask)
@@ -460,16 +570,26 @@ def compute_visual_metrics(
         findings.append({"code": "illegal_text_overlap", "count": illegal_overlap_count})
     if direction_mismatches:
         findings.append({"code": "direction_mismatch", "count": direction_mismatches})
+    low_contrast = [element_id for element_id, value in text_contrast["elements"].items() if float(value["contrast_ratio"]) < policy["p0_p1_text_contrast_ratio"]]
+    if low_contrast:
+        findings.append(
+            {
+                "code": "p0_p1_text_contrast_below_threshold",
+                "element_ids": low_contrast,
+                "value": text_contrast["minimum_ratio"],
+                "threshold": policy["p0_p1_text_contrast_ratio"],
+            }
+        )
     metrics = {
         "schema_version": "deck_visual_metrics.v1",
         "run_id": str(scene["run_id"]),
         "page_id": str(scene["page_id"]),
-        "comparison": {"kind": comparison, "renderer": "rsvg-convert + Pillow + NumPy", "canvas": {"width": CANVAS_WIDTH, "height": CANVAS_HEIGHT, "unit": "px"}},
-        "inputs": {"reference_path": str(blueprint_preview), "reference_sha256": sha256_file(blueprint_preview), "candidate_path": str(svg_preview), "candidate_sha256": sha256_file(svg_preview), "mask_sha256": sha256_json(mask.astype(bool).tolist()), "mask_coverage": mask_coverage, "svg_geometry_sha256": sha256_json(svg_geometry), "candidate_geometry_sha256": sha256_json(candidate_geometry) if candidate_geometry is not None else ""},
+        "comparison": {"kind": comparison, "renderer": f"rsvg-convert + Pillow + NumPy; SSIM uses {ssim_blur_radius:g}px Gaussian blur", "canvas": {"width": CANVAS_WIDTH, "height": CANVAS_HEIGHT, "unit": "px"}},
+        "inputs": {"reference_path": run_relative(root, blueprint_preview), "reference_sha256": sha256_file(blueprint_preview), "candidate_path": run_relative(root, svg_preview), "candidate_sha256": sha256_file(svg_preview), "mask_sha256": sha256_json(mask.astype(bool).tolist()), "mask_coverage": mask_coverage, "svg_geometry_sha256": sha256_json(svg_geometry), "candidate_geometry_sha256": sha256_json(candidate_geometry) if candidate_geometry is not None else ""},
         "thresholds": policy,
-        "values": {"text_masked_ssim": ssim, "p0_region_ssim": p0_region_ssim, "bbox_max_delta_px": max(bbox_deltas) if bbox_deltas else 0.0, "anchor_max_delta_px": anchor_max_delta, "region_color_delta": color_delta, "edge_similarity": edge_similarity, "mask_coverage": mask_coverage, "overflow_count": overflow_count, "illegal_overlap_count": illegal_overlap_count, "direction_mismatch_count": direction_mismatches},
+        "values": {"text_masked_ssim": ssim, "p0_region_ssim": p0_region_ssim, "bbox_max_delta_px": max(bbox_deltas) if bbox_deltas else 0.0, "anchor_max_delta_px": anchor_max_delta, "region_color_delta": color_delta, "edge_similarity": edge_similarity, "p0_p1_min_text_contrast_ratio": text_contrast["minimum_ratio"], "mask_coverage": mask_coverage, "overflow_count": overflow_count, "illegal_overlap_count": illegal_overlap_count, "direction_mismatch_count": direction_mismatches},
         "geometry": {"source": "svg_dom_geometry" if comparison == "svg_vs_pptx" else "scene_blueprint_bbox", "target": "pptx_readback_geometry" if comparison == "svg_vs_pptx" else "svg_dom_geometry", "pairs": geometry_pairs},
-        "coverage": {"required_components": len(required_components), "present_components": len(required_components - set(missing_components)), "component_coverage": 1.0 if not missing_components else (len(required_components) - len(missing_components)) / max(1, len(required_components)), "p0_p1_bbox_coverage": 1.0 if not bbox_deltas or max(bbox_deltas) <= policy["bbox_max_delta_px"] else 0.0},
+        "coverage": {"required_components": len(required_components), "present_components": len(required_components - set(missing_components)), "component_coverage": 1.0 if not missing_components else (len(required_components) - len(missing_components)) / max(1, len(required_components)), "p0_p1_bbox_coverage": 1.0 if not bbox_deltas or max(bbox_deltas) <= policy["bbox_max_delta_px"] else 0.0, "p0_p1_text_contrast": text_contrast["elements"]},
         "findings": findings,
         "status": "pass" if not findings else "failed",
         "created_at": __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat(),

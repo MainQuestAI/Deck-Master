@@ -67,7 +67,7 @@
     },
     "enrichment": {
       "type": "object",
-      "required": ["framework", "version", "storyline_id", "storyline_context", "analysis", "evidence_ledger", "conclusion", "supporting_arguments", "caveat", "so_what", "handoff", "material_pool", "derived_claims", "claim_bindings", "structure_decisions", "component_plan", "evidence_coverage"],
+      "required": ["framework", "version", "storyline_id", "storyline_context", "analysis", "evidence_ledger", "conclusion", "supporting_arguments", "detailed_argument", "caveat", "so_what", "business_implication", "handoff", "evidence_hierarchy", "evidence_assessment", "chart_plan", "material_pool", "derived_claims", "claim_bindings", "structure_decisions", "component_plan", "evidence_coverage"],
       "properties": {
         "framework": {"const": "nbb"},
         "version": {"type": "string", "minLength": 1},
@@ -77,9 +77,14 @@
         "evidence_ledger": {"type": "array", "minItems": 1, "items": {"type": "object"}},
         "conclusion": {"type": "string", "minLength": 1},
         "supporting_arguments": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "detailed_argument": {"type": "string", "minLength": 1},
         "caveat": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
         "so_what": {"type": "string", "minLength": 1},
+        "business_implication": {"type": "string", "minLength": 1},
         "handoff": {"type": "string", "minLength": 1},
+        "evidence_hierarchy": {"type": "object"},
+        "evidence_assessment": {"type": "object"},
+        "chart_plan": {"type": "object"},
         "material_pool": {"type": "object"},
         "derived_claims": {"type": "array", "items": {"$ref": "#/$defs/derivedClaim"}},
         "claim_bindings": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/claimBinding"}},
@@ -91,12 +96,25 @@
     },
     "claimBinding": {
       "type": "object",
-      "required": ["target", "text_sha256", "origin", "evidence_refs", "derivation_note"],
+      "required": ["target", "text_sha256", "origin", "evidence_refs", "evidence_spans", "derivation_note"],
       "properties": {
         "target": {"type": "string", "minLength": 1},
         "text_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
         "origin": {"enum": ["source", "derived", "structural_label"]},
         "evidence_refs": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "evidence_spans": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["evidence_ref", "quote", "quote_sha256"],
+            "properties": {
+              "evidence_ref": {"type": "string", "minLength": 1},
+              "quote": {"type": "string", "minLength": 1},
+              "quote_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+            },
+            "additionalProperties": false
+          }
+        },
         "derivation_note": {"type": "string", "minLength": 1}
       },
       "additionalProperties": false

@@ -12,13 +12,14 @@
     "status": {"const": "pass"},
     "provider": {
       "type": "object",
-      "required": ["tool", "model", "request_id_sha256", "request_sha256", "runtime_receipt_sha256", "challenge_nonce_sha256", "requested_at", "responded_at"],
+      "required": ["tool", "model", "request_id_sha256", "request_sha256", "runtime_receipt_sha256", "host_receipt_sha256", "challenge_nonce_sha256", "requested_at", "responded_at"],
       "properties": {
         "tool": {"type": "string", "minLength": 1},
         "model": {"type": "string", "minLength": 1},
         "request_id_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
         "request_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
         "runtime_receipt_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "host_receipt_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
         "challenge_nonce_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
         "requested_at": {"type": "string", "format": "date-time"},
         "responded_at": {"type": "string", "format": "date-time"}
@@ -69,13 +70,15 @@
     },
     "gates": {
       "type": "object",
-      "required": ["high_density_manifest", "visual_review", "readback", "svg_to_pptx", "runtime_provider_receipt"],
+      "required": ["high_density_manifest", "visual_review", "main_review_attestation", "readback", "svg_to_pptx", "runtime_provider_receipt", "host_provider_attestation"],
       "properties": {
         "high_density_manifest": {"const": "pass"},
         "visual_review": {"const": "pass"},
+        "main_review_attestation": {"const": "pass"},
         "readback": {"const": "pass"},
         "svg_to_pptx": {"const": "pass"},
-        "runtime_provider_receipt": {"const": "pass"}
+        "runtime_provider_receipt": {"const": "pass"},
+        "host_provider_attestation": {"const": "pass"}
       },
       "additionalProperties": false
     },

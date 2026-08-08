@@ -150,16 +150,17 @@ def _set_shape_fill(shape: Any, style: dict[str, Any], paint: dict[str, Any] | N
     }
     overall_opacity = float(paint.get("opacity") or 1)
     fill = paint.get("fill") or {"kind": "none"}
-    if fill.get("kind") == "gradient":
-        shape.fill.background()
-        _remove_children(shape._element.spPr, {"solidFill", "gradFill", "noFill", "blipFill", "pattFill", "grpFill"})
-        _append_gradient(shape._element.spPr, fill, overall_opacity * float(paint.get("fill_opacity") or 1))
-    elif fill.get("kind") == "solid":
-        shape.fill.solid()
-        shape.fill.fore_color.rgb = _rgb(fill.get("color"), "18212b")
-        shape.fill.transparency = max(0, min(100, int((1 - overall_opacity * float(paint.get("fill_opacity") or 1)) * 100)))
-    else:
-        shape.fill.background()
+    if hasattr(shape, "fill"):
+        if fill.get("kind") == "gradient":
+            shape.fill.background()
+            _remove_children(shape._element.spPr, {"solidFill", "gradFill", "noFill", "blipFill", "pattFill", "grpFill"})
+            _append_gradient(shape._element.spPr, fill, overall_opacity * float(paint.get("fill_opacity") or 1))
+        elif fill.get("kind") == "solid":
+            shape.fill.solid()
+            shape.fill.fore_color.rgb = _rgb(fill.get("color"), "18212b")
+            shape.fill.transparency = max(0, min(100, int((1 - overall_opacity * float(paint.get("fill_opacity") or 1)) * 100)))
+        else:
+            shape.fill.background()
     stroke = paint.get("stroke") or {"kind": "none"}
     if stroke.get("kind") == "gradient":
         line = shape.line._get_or_add_ln()
@@ -193,6 +194,10 @@ def _add_text(slide: Any, element: dict[str, Any], trace: list[dict[str, Any]]) 
     bbox = element["bbox"]
     shape = slide.shapes.add_textbox(Inches(_inches(float(bbox["x"]), CANVAS_WIDTH)), Inches(_inches(float(bbox["y"]), CANVAS_HEIGHT)), Inches(_inches(float(bbox["w"]), CANVAS_WIDTH)), Inches(_inches(float(bbox["h"]), CANVAS_HEIGHT)))
     shape.name = str(element["element_id"])
+    # LibreOffice can materialize the theme's default text-box outline unless
+    # both the fill and line are explicitly disabled.
+    shape.fill.background()
+    shape.line.fill.background()
     frame = shape.text_frame
     frame.clear()
     frame.word_wrap = True
@@ -372,6 +377,25 @@ def _add_freeform(slide: Any, element: dict[str, Any], points: list[tuple[float,
 def _add_path(slide: Any, element: dict[str, Any], trace: list[dict[str, Any]], *, allow_curves: bool) -> None:
     points, closed = _path_points(str(element.get("path") or ""), allow_curves=allow_curves)
     _add_freeform(slide, element, points, closed=closed, trace=trace)
+
+
+def _rectangle_path_bbox(path_data: str) -> dict[str, float] | None:
+    """Return a rectangle bbox for the lossless SVG rectangle-path subset."""
+    try:
+        points, closed = _path_points(path_data, allow_curves=False)
+    except PptxEditabilityError:
+        return None
+    if not closed or len(points) != 4:
+        return None
+    xs = sorted({round(point[0], 6) for point in points})
+    ys = sorted({round(point[1], 6) for point in points})
+    if len(xs) != 2 or len(ys) != 2:
+        return None
+    expected = {(xs[0], ys[0]), (xs[1], ys[0]), (xs[1], ys[1]), (xs[0], ys[1])}
+    actual = {(round(point[0], 6), round(point[1], 6)) for point in points}
+    if actual != expected or xs[1] <= xs[0] or ys[1] <= ys[0]:
+        return None
+    return {"x": xs[0], "y": ys[0], "w": xs[1] - xs[0], "h": ys[1] - ys[0]}
 
 
 def _add_polygon(slide: Any, element: dict[str, Any], trace: list[dict[str, Any]]) -> None:
@@ -627,6 +651,10 @@ def compile_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dict
         except ContractError as exc:
             raise PptxEditabilityError(f"approved SVG validation failed on page {page_id}: {exc}") from exc
         slide = presentation.slides.add_slide(blank_layout)
+        # python-pptx otherwise rescans every existing XML id for each new
+        # shape. High-density SVG traces need the library's sequential-id
+        # cache to keep compilation linear in the number of elements.
+        slide.shapes._cached_max_shape_id = slide.shapes._spTree.max_shape_id
         trace: list[dict[str, Any]] = []
         elements = _svg_elements(svg_file, scene, (asset_paths_by_page or {}).get(page_id, {}))
         for element in elements:
@@ -638,7 +666,24 @@ def compile_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dict
             elif kind == "line":
                 _add_line(slide, element, trace)
             elif kind == "path":
-                _add_path(slide, element, trace, allow_curves=True)
+                rectangle_bbox = _rectangle_path_bbox(str(element.get("path") or ""))
+                if rectangle_bbox is not None:
+                    rectangle = dict(element)
+                    rectangle["kind"] = "rect"
+                    rectangle["bbox"] = rectangle_bbox
+                    if str(element.get("component_id") or "") == "component.blueprint_trace":
+                        # Adjacent raster-trace cells can expose a one-pixel
+                        # anti-alias seam in LibreOffice. A sub-pixel overlap
+                        # keeps the native vector trace visually continuous.
+                        bleed = 0.5
+                        left = max(0.0, float(rectangle_bbox["x"]) - bleed)
+                        top = max(0.0, float(rectangle_bbox["y"]) - bleed)
+                        right = min(CANVAS_WIDTH, float(rectangle_bbox["x"]) + float(rectangle_bbox["w"]) + bleed)
+                        bottom = min(CANVAS_HEIGHT, float(rectangle_bbox["y"]) + float(rectangle_bbox["h"]) + bleed)
+                        rectangle["bbox"] = {"x": left, "y": top, "w": right - left, "h": bottom - top}
+                    _add_rect(slide, rectangle, trace)
+                else:
+                    _add_path(slide, element, trace, allow_curves=True)
             elif kind == "polygon":
                 _add_polygon(slide, element, trace)
             elif kind == "ellipse":
