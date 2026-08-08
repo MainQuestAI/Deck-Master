@@ -339,6 +339,32 @@ def test_nbb_rejects_duplicate_evidence_ids_across_page_packages(tmp_path: Path)
         build_nbb_plan(packages, run_id=run.name)
 
 
+def test_nbb_loader_rejects_duplicate_evidence_ids_in_agent_plan(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path, page_count=2)
+    packages = load_page_packages(run, expected_run_id=run.name)
+    plan = build_nbb_plan(packages, run_id=run.name)
+    plan["evidence_ledger"].append(dict(plan["evidence_ledger"][0]))
+    plan["nbb_plan_sha256"] = sha256_json(
+        {key: value for key, value in plan.items() if key not in {"nbb_plan_sha256", "created_at", "updated_at"}}
+    )
+    write_nbb_plan(run, plan)
+
+    with pytest.raises(ContractError, match="globally unique across NBB plan"):
+        load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
+
+
+def test_build_nbb_plan_cannot_auto_enrich_selected_storyline() -> None:
+    package = _package("nbb-run", FIXTURE["pages"][0])
+
+    with pytest.raises(TypeError):
+        build_nbb_plan(
+            [package],
+            run_id="nbb-run",
+            selected_storyline_id="storyline.decision",
+            approved_by="runtime",
+        )
+
+
 def test_content_lock_requires_approved_nbb_page_plan(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path)
     package = read_json(run / "page_packages/P001.json")

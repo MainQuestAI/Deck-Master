@@ -1238,11 +1238,16 @@ def load_nbb_plan(
     candidate_ids = {str(item.get("storyline_id") or "") for item in candidates if isinstance(item, dict)}
     if len(candidate_ids) != len(candidates):
         raise ContractError("NBB storyline candidate IDs must be unique")
-    evidence_by_id = {
-        str(item.get("evidence_id") or ""): item
-        for item in plan.get("evidence_ledger") or []
-        if isinstance(item, dict) and str(item.get("evidence_id") or "")
-    }
+    evidence_by_id: dict[str, dict[str, Any]] = {}
+    for item in plan.get("evidence_ledger") or []:
+        if not isinstance(item, dict):
+            raise ContractError("NBB evidence ledger entries must be objects")
+        evidence_id = str(item.get("evidence_id") or "")
+        if not evidence_id:
+            raise ContractError("NBB evidence ledger contains an empty evidence_id")
+        if evidence_id in evidence_by_id:
+            raise ContractError(f"NBB evidence_id must be globally unique across NBB plan: {evidence_id}")
+        evidence_by_id[evidence_id] = item
     ledger_ids = set(evidence_by_id)
     minimum_candidate_refs = min(5, len(ledger_ids))
     if len(candidates) < 2 or len(candidates) > 3:

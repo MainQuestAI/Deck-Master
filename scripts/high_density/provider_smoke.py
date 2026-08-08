@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
+import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -14,6 +16,23 @@ from .svg import load_visual_review, main_review_receipt_path
 
 class ProviderSmokeError(ContractError):
     pass
+
+
+def _source_commit_sha(explicit: str | None = None) -> str:
+    value = str(explicit or "").strip()
+    if not value:
+        repo_root = Path(__file__).resolve().parents[2]
+        result = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=repo_root,
+            capture_output=True,
+            check=False,
+            text=True,
+        )
+        value = result.stdout.strip()
+    if not re.fullmatch(r"[0-9a-f]{40}", value):
+        raise ProviderSmokeError("provider smoke source_commit_sha must be a full Git commit SHA")
+    return value
 
 
 def _hash_text(value: str) -> str:
@@ -41,7 +60,13 @@ def _artifact_ref(root: Path, page: dict[str, Any], key: str) -> dict[str, str]:
     return {"path": run_relative(root, path), "sha256": actual_sha}
 
 
-def build_provider_smoke_evidence(run_dir: str | Path, *, page_id: str = "", output: str | Path | None = None) -> dict[str, Any]:
+def build_provider_smoke_evidence(
+    run_dir: str | Path,
+    *,
+    page_id: str = "",
+    output: str | Path | None = None,
+    source_commit_sha: str | None = None,
+) -> dict[str, Any]:
     root = Path(run_dir).expanduser().resolve()
     request = read_json(root / "request.json")
     run_mode = str(request.get("run_mode") or "")
@@ -160,6 +185,7 @@ def build_provider_smoke_evidence(run_dir: str | Path, *, page_id: str = "", out
             raise ProviderSmokeError(f"provider smoke timeline is stale on page {selected_page_id}: {current_name} precedes {previous_name}")
     evidence = {
         "schema_version": "deck_high_density_provider_smoke.v1",
+        "source_commit_sha": _source_commit_sha(source_commit_sha),
         "run_mode": signed_run_mode,
         "run_id_sha256": _hash_text(str(manifest.get("run_id") or "")),
         "page_id": selected_page_id,
@@ -233,9 +259,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--run-dir", required=True, type=Path)
     parser.add_argument("--page-id", default="")
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--source-commit-sha")
     args = parser.parse_args(argv)
     try:
-        evidence = build_provider_smoke_evidence(args.run_dir, page_id=args.page_id, output=args.output)
+        evidence = build_provider_smoke_evidence(
+            args.run_dir,
+            page_id=args.page_id,
+            output=args.output,
+            source_commit_sha=args.source_commit_sha,
+        )
     except (ContractError, OSError, json.JSONDecodeError) as exc:
         print(json.dumps({"status": "blocked", "error": str(exc)}, ensure_ascii=False))
         return 1
