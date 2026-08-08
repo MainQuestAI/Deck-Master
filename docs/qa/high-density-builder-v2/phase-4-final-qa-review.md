@@ -19,9 +19,9 @@ Page Package -> NBB selection/seal -> Content Lock -> ImageGen blueprint
 
 | Gate | Result | Evidence |
 | --- | --- | --- |
-| Full pytest | pass | `1,363 passed`, `105 subtests passed` |
+| Full pytest | pass | `1,365 passed`, `105 subtests passed` |
 | Coverage | pass | 82%, `--fail-under=80` |
-| Focused high-density tests | pass | `84 passed` in the builder and distinct-acceptance suites |
+| Focused high-density tests | pass | `86 passed` in the builder and distinct-acceptance suites |
 | Ruff | pass | high-density scripts and acceptance tests |
 | Compileall | pass | high-density scripts and acceptance tests |
 | Diff check | pass | `git diff --check` |
@@ -29,7 +29,7 @@ Page Package -> NBB selection/seal -> Content Lock -> ImageGen blueprint
 | Fresh provider smoke | pass | `phase-4-provider-smoke-evidence.json` |
 | Provider `deck-quality` render gate | pass | local fresh provider smoke run; raw report excluded |
 | Standard profile regression | pass | `phase-4-standard-profile-evidence.json` |
-| GitHub Actions CI | pass | Python 3.11/3.12 main tests, autoplan smoke, and CI-tier RC gate on `ad8a2e4` |
+| GitHub Actions CI | pass | Python 3.11/3.12 main tests, autoplan smoke, and CI-tier RC gate on `4af2928` |
 | 73-page external MVP evidence | pass as external evidence | sanitized index only; raw material is excluded |
 
 ## Findings
@@ -40,6 +40,7 @@ Page Package -> NBB selection/seal -> Content Lock -> ImageGen blueprint
 4. Native SVG validation and DrawingML compilation share the controlled SVG paint and content rules. Scene visual metadata cannot override SVG geometry or styles.
 5. Visual metrics are calculated from rendered artifacts. Text masks are glyph-based, bounded, and fail closed when coverage or usable comparison pixels are invalid.
 6. The seven-page fixture has independent blueprint, Scene, SVG, and PPTX render lineage. The current test suite includes the mutation probes required by AF-01 through AF-20.
+7. Provider smoke, seven-page E2E, standard-profile evidence, and the acceptance matrix are bound to source commit `4af2928b3a98ddeafba2abe49a890f3051458afc`.
 
 ## Release Decision
 

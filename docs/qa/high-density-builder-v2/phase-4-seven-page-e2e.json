@@ -1,5 +1,6 @@
 {
   "schema_version": "deck_high_density_seven_page_acceptance.v1",
+  "source_commit_sha": "4af2928b3a98ddeafba2abe49a890f3051458afc",
   "status": "pass",
   "fixture": "sanitized_distinct_high_density_v2",
   "page_count": 7,
