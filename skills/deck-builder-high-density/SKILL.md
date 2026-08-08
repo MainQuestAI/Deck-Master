@@ -21,7 +21,7 @@ Use this Skill when the run has validated `page_packages/*.json` and the request
 
 ## Do Not Use
 
-- Use for standard-profile decks or direct office post-processing.
+- Do not use for standard-profile decks or direct office post-processing.
 - Use when the run has only an image or preview manifest and no validated Page Packages.
 - Use to treat blueprint text as factual source material.
 
@@ -68,7 +68,7 @@ deck-master build retry --run-dir <run_dir> --profile high-density --page-id P00
 
 ### A. NBB and Content Lock
 
-Production first waits for `agent_nbb_enrich` to write a pending `high_density_build/nbb/nbb_plan.json` with two or three candidate storylines. The runtime returns `awaiting_user_decision` with candidate summaries and a recommended ID. Confirm one storyline with the deck-scoped `content_lock` retry; only the approved plan can create `high_density_build/content_locks/<page_id>.content_lock.json`.
+Production first waits for `agent_nbb_candidates` to write two or three evidence-bound candidate storylines. The runtime returns `awaiting_user_decision` with candidate summaries and a recommended ID. The deck-scoped `content_lock` retry records the user's selection without rewriting Agent content, then returns `agent_nbb_enrich_selected`. Only after the Agent enriches the selected SCR and page plans can the runtime validate and seal the approved plan.
 
 Fixture/dev runs may auto-approve the deterministic decision-led candidate so the compiler regression remains reproducible. An approved plan can resume without another prompt until a Page Package or NBB plan hash changes.
 
@@ -80,7 +80,9 @@ The fixed CyberPPT-derived registry contains eight stable style IDs. Production 
 
 Before ImageGen, write `high_density_build/prompts/<page_id>.blueprint_prompt.json` using `deck_blueprint_prompt.v1`. The prompt must contain the selected storyline, real title, page conclusion, supporting arguments, caveats, SO WHAT, page handoff, material pool, precise evidence IDs, required components, target language, style lock, and prohibited page numbers/internal labels. The prompt artifact must exist before the image.
 
-Write `high_density_build/blueprints/<page_id>.blueprint_manifest.json` using `deck_blueprint_manifest.v2`. Record prompt/content/style hashes, image hash, provider metadata, source canvas, contained 16:9 frame, and exact transform. Non-16:9 sources use an inscribed frame and never stretch.
+The prompt artifact contains a runtime-generated Provider challenge nonce. The provider request must return the same nonce and record the prompt hash, request hash, request/response timestamps, tool, model, and request ID. Reusing metadata from an older prompt or image is blocked.
+
+Write `high_density_build/blueprints/<page_id>.blueprint_manifest.json` using `deck_blueprint_manifest.v2`. Record prompt/content/style hashes, image hash, challenge-bound provider metadata, explicit approval, source canvas, contained 16:9 frame, and exact transform. Non-16:9 sources use an inscribed frame and never stretch. Eight visible style samples are copied into the style selection artifact; a filename extension never grants approval.
 
 ### C. Image to Native SVG
 
@@ -92,7 +94,7 @@ Every visible element has a stable ID, component ID, role, priority, source/targ
 
 Render normalized blueprint and SVG at the same `1672 x 941` canvas. Metrics are generated from actual files with Pillow + NumPy and `rsvg-convert`, then written to `high_density_build/reviews/<page_id>.metrics.json`. The v2 review must bind renderer, source hashes, mask hash, thresholds, text-masked SSIM, P0/P1 bbox deltas, color/layout findings, and component coverage.
 
-Initial gates: text-masked SSIM `>= 0.92`, P0 region SSIM `>= 0.92`, P0/P1 bbox edge delta `<= 2 px`, 100% P0/P1 text/component coverage, zero unresolved overflow/overlap/wrong-anchor findings. Production needs producer self-review and main review evidence.
+The text mask covers rendered glyph pixels only, expands them by 2 px, and fails closed above 20% page coverage or when too few comparison pixels remain. Initial gates include text-masked SSIM, P0 region SSIM, edge similarity, color delta, bbox/anchor drift, direction mismatch, 100% P0/P1 text/component coverage, and zero unresolved overflow or illegal overlap findings. Production needs producer self-review and main review evidence.
 
 Controlled SVG paint effects use one shared parser for validation and PPTX compilation. The supported subset is direct linear/radial gradients with 2-8 stops plus one shadow or glow effect. Inheritance, transforms, masks, clip paths, patterns, `use`, and arbitrary pixel filters are blocked with the element or definition ID.
 
@@ -108,7 +110,7 @@ Deck rendering is batched: one `soffice` conversion produces the complete PDF an
 
 The hermetic acceptance fixture contains seven independent blueprints and seven layout IDs: `framework`, `process`, `table`, `comparison`, `architecture`, `data_story`, and `dense_narrative`. The acceptance test requires distinct blueprint, scene, SVG, and PPTX render hashes, plus a metamorphic failure when an old blueprint is changed before redraw.
 
-Release acceptance may run `PYTHONPATH=scripts python3 -m high_density.provider_smoke --run-dir <run_dir> --page-id P001 --output <run_dir>/high_density_build/provider_smoke_evidence.json` after a fresh provider output completes the full chain. The evidence contains lineage hashes and gate results only; raw provider payloads and images stay outside the repository.
+Release acceptance runs `PYTHONPATH=scripts python3 -m high_density.provider_smoke --run-dir <run_dir> --page-id P001 --output <run_dir>/high_density_build/provider_smoke_evidence.json` after a fresh provider output completes the full chain. The evidence verifies the challenge, request, prompt, image, Scene, SVG, PPTX, visual review, and readback hash/timestamp chain. It stores only sanitized hashes and gate results; raw provider payloads and images stay outside the repository.
 
 ## Exit Artifacts
 
@@ -128,7 +130,7 @@ Release acceptance may run `PYTHONPATH=scripts python3 -m high_density.provider_
 
 ## Agent Continuation
 
-When Agent work is required, return `awaiting_agent_build` with `run_id`, page/stage, `input_refs`, `output_refs`, `required_schema`, `acceptance_command`, `resume_command`, and reason. Supported actions are `agent_nbb_enrich`, `agent_imagegen`, `agent_visual_reconstruct`, `agent_svg_repair`, `agent_self_review`, and `agent_main_review`. Style selection uses `awaiting_user_decision`.
+When Agent work is required, return `awaiting_agent_build` with `run_id`, page/stage, `input_refs`, `output_refs`, `required_schema`, `acceptance_command`, `resume_command`, and reason. Supported actions are `agent_nbb_candidates`, `agent_nbb_enrich_selected`, `agent_imagegen`, `agent_visual_reconstruct`, `agent_svg_repair`, `agent_self_review`, and `agent_main_review`. Storyline and style selection use `awaiting_user_decision`.
 
 `build status --watch` waits through `prepared`, `building`, and `awaiting_agent_build`; it exits only at `completed`, `blocked`, `failed`, `awaiting_user_decision`, or timeout.
 

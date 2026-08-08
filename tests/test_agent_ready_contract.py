@@ -106,6 +106,9 @@ class AgentReadyContractTests(unittest.TestCase):
 
         self.assertIn("python -m playwright install --with-deps chromium", workflow)
         self.assertIn("Run unit tests", workflow)
+        self.assertIn("python -m pytest -q", workflow)
+        self.assertIn("python -m coverage run -m pytest -q", workflow)
+        self.assertNotIn("unittest discover", workflow)
 
     def test_security_docs_describe_current_local_write_boundary(self) -> None:
         security = (ROOT / "SECURITY.md").read_text(encoding="utf-8")

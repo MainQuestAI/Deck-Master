@@ -1,0 +1,54 @@
+{
+  "schema_version": "deck_high_density_external_mvp_index.v1",
+  "status": "pass_external_mvp_evidence",
+  "source_basis": "verified_external_task_summary",
+  "source_task_id_sha256": "835cb6ed14b0772e97729d691681dd7ee8698dfdbd69b54243a3a5b4691935fd",
+  "reported_page_count": 73,
+  "raw_sources_committed": false,
+  "raw_blueprints_committed": false,
+  "provider_payloads_committed": false,
+  "available_summary": {
+    "workflow_completed": true,
+    "route": "image_blueprint_to_native_svg",
+    "review_pass_pages": 73,
+    "review_pass_rate": 1.0,
+    "blocked_pages": 0,
+    "needs_revision_pages": 0,
+    "artifact_completeness": {
+      "native_svg": "73/73",
+      "preview": "73/73",
+      "native_report": "73/73",
+      "self_review": "73/73",
+      "main_review": "73/73",
+      "comparison": "73/73",
+      "icon_comparison": "73/73"
+    },
+    "gates": {
+      "xml": "pass",
+      "native_svg": "pass",
+      "subagent_visual_review": "pass",
+      "main_visual_review": "pass",
+      "forbidden_embedded_page_image": "pass"
+    },
+    "targeted_repair_page_count": 6,
+    "known_failure_classes": [
+      "icon_semantic_mismatch",
+      "color_and_hierarchy_drift",
+      "missing_icon_evidence",
+      "review_evidence_path_mismatch"
+    ]
+  },
+  "targeted_repair_categories": [
+    "responsibility_icon_evidence",
+    "card_color_and_hierarchy",
+    "puzzle_icon_semantics",
+    "governance_icon_semantics",
+    "content_return_folder_icon"
+  ],
+  "unavailable_metrics": [
+    "average_repair_iterations",
+    "legacy_p0_p1_numeric_coverage"
+  ],
+  "release_gate": "pass_as_external_image_to_svg_evidence",
+  "scope_note": "This evidence covers the completed 73-page image-to-native-SVG MVP. DrawingML PPTX and readback are covered by the repository seven-page E2E and fresh provider smoke."
+}
