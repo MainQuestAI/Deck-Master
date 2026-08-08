@@ -21,9 +21,18 @@ if str(ROOT / "scripts") not in sys.path:
     sys.path.insert(0, str(ROOT / "scripts"))
 
 from build.manifest import build_manifest_v2
-from high_density.blueprint import BlueprintInvalid, build_blueprint_prompt, ensure_blueprint_manifest
+from high_density.blueprint import BlueprintInvalid, _default_slide_frame, build_blueprint_prompt, ensure_blueprint_manifest
 from high_density.capability import inspect_high_density_capability
-from high_density.content import build_content_lock, build_nbb_page, build_nbb_plan, load_nbb_plan, load_page_packages, write_nbb_plan
+from high_density.content import (
+    build_content_lock,
+    build_nbb_page,
+    build_nbb_plan,
+    enrich_selected_nbb_plan,
+    load_nbb_plan,
+    load_page_packages,
+    select_nbb_storyline,
+    write_nbb_plan,
+)
 from high_density.contracts import ContractError, assert_valid, read_json, sha256_file, sha256_json, write_json
 from high_density.engine import (
     build_high_density_status,
@@ -106,6 +115,34 @@ def _write_approved_nbb_plan(run: Path) -> dict:
     plan = build_nbb_plan(packages, run_id=run.name, selected_storyline_id="storyline.decision", approved_by="test")
     write_nbb_plan(run, plan)
     return plan
+
+
+def _approve_blueprint(run: Path, page_id: str = "P001") -> None:
+    lock = read_json(run / f"high_density_build/content_locks/{page_id}.json")
+    style_lock = read_json(run / "high_density_build/style/style_lock.json")
+    nbb_plan = read_json(run / "high_density_build/nbb/nbb_plan.json")
+    ensure_blueprint_manifest(
+        run,
+        page_id,
+        lock,
+        style_lock=style_lock,
+        nbb_plan_sha256=str(nbb_plan["nbb_plan_sha256"]),
+        approval={
+            "status": "approved",
+            "source": "explicit_user",
+            "approved_by": "test",
+            "approved_at": "2026-01-01T00:00:00+00:00",
+        },
+    )
+
+
+def _rehash_page_and_plan(plan: dict, page: dict) -> None:
+    page["page_plan_sha256"] = sha256_json(
+        {key: value for key, value in page.items() if key not in {"page_plan_sha256", "created_at", "updated_at"}}
+    )
+    plan["nbb_plan_sha256"] = sha256_json(
+        {key: value for key, value in plan.items() if key not in {"nbb_plan_sha256", "created_at", "updated_at"}}
+    )
 
 
 def test_prepare_rejects_malformed_page_package(tmp_path: Path) -> None:
@@ -216,6 +253,10 @@ def test_production_requires_approved_style_lock(tmp_path: Path) -> None:
     assert prepared["status"] == "awaiting_user_decision"
     assert build_high_density_status(run)["current_stage"] == "style_lock"
     assert (run / "high_density_build/style/style_options.json").exists()
+    style_options = read_json(run / "high_density_build/style/style_options.json")
+    assert len(style_options["styles"]) == 8
+    assert all((run / item["sample_ref"]).is_file() for item in style_options["styles"])
+    assert len({item["sample_sha256"] for item in style_options["styles"]}) == 8
     waiting = run_high_density(run)
     assert waiting["status"] == "awaiting_user_decision"
     watched = watch_high_density_status(run, timeout_seconds=0.01, poll_seconds=0.01)
@@ -265,9 +306,9 @@ def test_nbb_plan_contains_content_specific_candidates_and_precise_page_refs(tmp
     conclusions = {candidate["management_conclusion"] for candidate in plan["storyline_candidates"]}
     assert len(conclusions) == 3
     assert "Synthetic framework page" in plan["storyline_candidates"][0]["management_conclusion"]
-    assert plan["scr"]["evidence_refs"]
-    assert all(page["page_package_sha256"] == sha256_json(package) for page, package in zip(plan["pages"], packages, strict=True))
-    assert all(page["page_plan_sha256"] for page in plan["pages"])
+    assert plan["scr"] is None
+    assert plan["pages"] == []
+    assert all(candidate["claim_bindings"] for candidate in plan["storyline_candidates"])
     assert load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)["nbb_plan_sha256"] == plan["nbb_plan_sha256"]
 
 
@@ -283,7 +324,7 @@ def test_production_waits_for_storyline_confirmation_then_resumes(tmp_path: Path
     run, _ = _make_run(tmp_path, mode="production", project_name="production nbb")
     write_style_lock(run, run.name, "cyber-01", approved=True, approver="test")
     prepare_high_density(run)
-    assert run_high_density(run)["next_action"]["kind"] == "agent_nbb_enrich"
+    assert run_high_density(run)["next_action"]["kind"] == "agent_nbb_candidates"
 
     packages = load_page_packages(run, expected_run_id=run.name)
     pending = build_nbb_plan(packages, run_id=run.name)
@@ -295,7 +336,17 @@ def test_production_waits_for_storyline_confirmation_then_resumes(tmp_path: Path
     assert waiting["next_action"]["recommended_storyline_id"] == "storyline.decision"
     assert len(waiting["next_action"]["storyline_candidates"]) == 3
 
-    resumed = retry_high_density(run, page_id="", stage="content_lock", storyline_id="storyline.risk")
+    selected = retry_high_density(run, page_id="", stage="content_lock", storyline_id="storyline.risk")
+
+    assert selected["status"] == "awaiting_agent_build"
+    assert selected["next_action"]["kind"] == "agent_nbb_enrich_selected"
+    assert not (run / "high_density_build/content_locks/P001.json").exists()
+    selected_plan = load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
+    assert selected_plan["selection"]["status"] == "selected_pending_enrichment"
+    enriched = enrich_selected_nbb_plan(selected_plan, packages)
+    write_nbb_plan(run, enriched)
+
+    resumed = run_high_density(run)
 
     assert resumed["status"] == "awaiting_agent_build"
     assert resumed["current_stage"] == "blueprint"
@@ -309,6 +360,87 @@ def test_production_waits_for_storyline_confirmation_then_resumes(tmp_path: Path
     assert "risk route" in lock["enrichment"]["so_what"]
     prompt = read_json(run / "high_density_build/prompts/P001.blueprint_prompt.json")
     assert context["management_conclusion"] in prompt["prompt_text"]
+
+
+def test_storyline_selection_does_not_rewrite_agent_content(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path, mode="production", project_name="agent content preservation")
+    write_style_lock(run, run.name, "cyber-01", approved=True, approver="test")
+    prepare_high_density(run)
+    packages = load_page_packages(run, expected_run_id=run.name)
+    write_nbb_plan(run, build_nbb_plan(packages, run_id=run.name))
+
+    before = read_json(run / "high_density_build/nbb/nbb_plan.json")
+    selected = select_nbb_storyline(run, "storyline.decision", selected_by="user")
+
+    assert selected["storyline_candidates"] == before["storyline_candidates"]
+    assert selected["scr"] is None
+    assert selected["pages"] == []
+    enriched = enrich_selected_nbb_plan(selected, packages)
+    page = enriched["pages"][0]
+    page["conclusion"] = "AGENT RICH CONCLUSION PRESERVE ME"
+    page["supporting_arguments"][0] = "AGENT ARGUMENT PRESERVE ME"
+    page["so_what"] = "AGENT SO WHAT PRESERVE ME"
+    for binding in page["claim_bindings"]:
+        if binding["target"] == "conclusion":
+            binding["text_sha256"] = sha256_json(page["conclusion"])
+        elif binding["target"] == "supporting_arguments.0":
+            binding["text_sha256"] = sha256_json(page["supporting_arguments"][0])
+        elif binding["target"] == "so_what":
+            binding["text_sha256"] = sha256_json(page["so_what"])
+    _rehash_page_and_plan(enriched, page)
+    write_nbb_plan(run, enriched)
+
+    result = run_high_density(run)
+
+    assert result["current_stage"] == "blueprint"
+    lock = read_json(run / "high_density_build/content_locks/P001.json")
+    assert lock["enrichment"]["conclusion"] == "AGENT RICH CONCLUSION PRESERVE ME"
+    assert lock["enrichment"]["supporting_arguments"][0] == "AGENT ARGUMENT PRESERVE ME"
+    assert lock["enrichment"]["so_what"] == "AGENT SO WHAT PRESERVE ME"
+
+
+def test_selected_storyline_requires_agent_enrichment_before_lock(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path, mode="production", project_name="selected enrichment gate")
+    write_style_lock(run, run.name, "cyber-01", approved=True, approver="test")
+    prepare_high_density(run)
+    packages = load_page_packages(run, expected_run_id=run.name)
+    write_nbb_plan(run, build_nbb_plan(packages, run_id=run.name))
+
+    waiting = retry_high_density(run, page_id="", stage="content_lock", storyline_id="storyline.decision")
+
+    assert waiting["next_action"]["kind"] == "agent_nbb_enrich_selected"
+    assert not (run / "high_density_build/content_locks/P001.json").exists()
+
+
+def test_unbound_nbb_fact_and_numeric_claim_are_rejected(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path)
+    packages = load_page_packages(run, expected_run_id=run.name)
+    plan = build_nbb_plan(packages, run_id=run.name, selected_storyline_id="storyline.decision", approved_by="test")
+    page = plan["pages"][0]
+    page["conclusion"] = "Revenue increased by 42% without source support."
+    binding = next(item for item in page["claim_bindings"] if item["target"] == "conclusion")
+    binding["text_sha256"] = sha256_json(page["conclusion"])
+    _rehash_page_and_plan(plan, page)
+    write_nbb_plan(run, plan)
+
+    with pytest.raises(ContractError, match="unsupported factual values"):
+        load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=True)
+
+    page["conclusion"] = "Evidence-bound editorial conclusion."
+    page["claim_bindings"] = [item for item in page["claim_bindings"] if item["target"] != "conclusion"]
+    _rehash_page_and_plan(plan, page)
+    write_nbb_plan(run, plan)
+    with pytest.raises(ContractError, match="claim binding coverage failed"):
+        load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=True)
+
+
+def test_wide_and_tall_frames_remain_inside_source_canvas() -> None:
+    for width, height in ((2000, 1000), (1000, 2000)):
+        frame = _default_slide_frame(width, height)
+        assert frame["x"] >= 0 and frame["y"] >= 0
+        assert frame["x"] + frame["w"] <= width
+        assert frame["y"] + frame["h"] <= height
+        assert frame["w"] / frame["h"] == pytest.approx(1672 / 941, abs=0.02)
 
 
 def test_prepare_invalidates_downstream_when_page_package_changes(tmp_path: Path) -> None:
@@ -415,6 +547,30 @@ def test_blueprint_prompt_changes_with_locked_content(tmp_path: Path) -> None:
     assert "Changed locked title" in second
 
 
+def test_prompt_contains_full_nbb_and_style_lock(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path)
+    package = read_json(run / "page_packages/P001.json")
+    _, page_plan = _approved_page_plan(package)
+    lock = build_content_lock(package, page_plan, nbb_plan_sha256="b" * 64)
+    style = {
+        "style_id": "cyber-01",
+        "name": "Ink Cobalt",
+        "palette": {"primary": "#419BFD"},
+        "grid": {"system": "12-column"},
+        "typography": {"family": "Arial"},
+        "chart_language": {"axis": "hairline"},
+        "table_language": {"cell_padding_px": 14},
+        "surface_system": {"radius_px": 8},
+        "density_rules": {"minimum_information_regions": 3},
+    }
+
+    prompt = build_blueprint_prompt(lock, style, nbb_plan_sha256="b" * 64)
+
+    assert lock["enrichment"]["supporting_arguments"][0] in prompt
+    for key in ("typography", "chart_language", "table_language", "surface_system", "density_rules"):
+        assert f"{key}=" in prompt
+
+
 def test_blueprint_prompt_preserves_structured_content(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path)
     package = read_json(run / "page_packages/P001.json")
@@ -466,6 +622,9 @@ def test_production_uses_agent_svg_without_overwriting_it(tmp_path: Path) -> Non
     _blueprint(run)
     prepare_high_density(run)
     _write_approved_nbb_plan(run)
+    waiting = run_high_density(run)
+    assert waiting["current_stage"] == "blueprint"
+    _approve_blueprint(run)
     assert run_high_density(run)["current_stage"] == "page_scene"
 
     lock = read_json(run / "high_density_build/content_locks/P001.json")

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import json
 import re
 from pathlib import Path
@@ -94,10 +95,10 @@ def _default_slide_frame(width: int, height: int) -> dict[str, float]:
     if abs(ratio - CANVAS_RATIO) <= 0.02:
         return {"x": 0, "y": 0, "w": width, "h": height}
     if ratio > CANVAS_RATIO:
-        frame_height = width / CANVAS_RATIO
-        return {"x": 0, "y": (height - frame_height) / 2, "w": width, "h": frame_height}
-    frame_width = height * CANVAS_RATIO
-    return {"x": (width - frame_width) / 2, "y": 0, "w": frame_width, "h": height}
+        frame_width = height * CANVAS_RATIO
+        return {"x": (width - frame_width) / 2, "y": 0, "w": frame_width, "h": height}
+    frame_height = width / CANVAS_RATIO
+    return {"x": 0, "y": (height - frame_height) / 2, "w": width, "h": frame_height}
 
 
 def _content_summary(lock: dict[str, Any]) -> dict[str, Any]:
@@ -113,6 +114,7 @@ def _content_summary(lock: dict[str, Any]) -> dict[str, Any]:
         "title": str(visible.get("title") or ""),
         "subtitle": str(visible.get("subtitle") or ""),
         "conclusion": str(enrichment.get("conclusion") or ""),
+        "supporting_arguments": [str(value) for value in enrichment.get("supporting_arguments") or []],
         "so_what": str(enrichment.get("so_what") or ""),
         "body": [json.dumps(block, ensure_ascii=False, sort_keys=True) if isinstance(block, (dict, list)) else str(block) for block in blocks],
         "evidence_ids": [str(item.get("evidence_id") if isinstance(item, dict) else item) for item in lock.get("evidence_bindings") or []],
@@ -141,7 +143,8 @@ def build_blueprint_prompt(lock: dict[str, Any], style_lock: dict[str, Any] | No
             f"Selected storyline conclusion: {summary['storyline_context'].get('management_conclusion') or 'unavailable'}.",
             f"Selected storyline visual potential: {summary['storyline_context'].get('visual_potential') or 'unavailable'}.",
             f"Selected storyline handoff: {summary['storyline_context'].get('page_handoff') or 'unavailable'}.",
-            f"Supporting content: {' | '.join(summary['body'])}",
+            f"Supporting arguments: {' | '.join(summary['supporting_arguments']) or 'none'}.",
+            f"Locked source content: {' | '.join(summary['body'])}",
             f"Evidence IDs: {', '.join(summary['evidence_ids']) or 'none'}.",
             f"Caveats: {' | '.join(summary['caveat']) or 'none'}.",
             f"Page handoff: {summary['handoff'] or 'unavailable'}.",
@@ -149,7 +152,7 @@ def build_blueprint_prompt(lock: dict[str, Any], style_lock: dict[str, Any] | No
             f"Derived claim lineage: {json.dumps(summary['derived_claims'], ensure_ascii=False, sort_keys=True)}.",
             f"Required visual components: {', '.join(summary['required_components'])}.",
             f"Target language: {summary['target_language']}.",
-            f"Locked visual style: {style_name}; palette={json.dumps(style.get('palette') or {}, ensure_ascii=False, sort_keys=True)}; grid={json.dumps(style.get('grid') or {}, ensure_ascii=False, sort_keys=True)}.",
+            f"Locked visual style: {style_name}; palette={json.dumps(style.get('palette') or {}, ensure_ascii=False, sort_keys=True)}; grid={json.dumps(style.get('grid') or {}, ensure_ascii=False, sort_keys=True)}; typography={json.dumps(style.get('typography') or {}, ensure_ascii=False, sort_keys=True)}; chart_language={json.dumps(style.get('chart_language') or {}, ensure_ascii=False, sort_keys=True)}; table_language={json.dumps(style.get('table_language') or {}, ensure_ascii=False, sort_keys=True)}; surface_system={json.dumps(style.get('surface_system') or {}, ensure_ascii=False, sort_keys=True)}; density_rules={json.dumps(style.get('density_rules') or {}, ensure_ascii=False, sort_keys=True)}.",
             f"NBB plan lineage: {nbb_plan_sha256 or lock.get('lineage', {}).get('nbb_plan_sha256', 'unavailable')}.",
             "Use a contained 16:9 slide frame with dense but readable information regions, explicit hierarchy, evidence anchors, and a visible SO WHAT area.",
             "Treat all visible text as composition guidance. The native redraw will restore exact locked text from the content lock.",
@@ -211,7 +214,15 @@ def _assert_manifest_mirror_consistent(root: Path, page_id: str, canonical: Path
         raise BlueprintInvalid(f"blueprint manifest mirror is stale on page {page_id}")
 
 
-def ensure_blueprint_manifest(root: Path, page_id: str, lock: dict[str, Any], *, style_lock: dict[str, Any] | None = None, nbb_plan_sha256: str = "") -> Path:
+def ensure_blueprint_manifest(
+    root: Path,
+    page_id: str,
+    lock: dict[str, Any],
+    *,
+    style_lock: dict[str, Any] | None = None,
+    nbb_plan_sha256: str = "",
+    approval: dict[str, Any] | None = None,
+) -> Path:
     _assert_page_id(page_id)
     image = blueprint_path(root, page_id)
     if image is None:
@@ -252,6 +263,14 @@ def ensure_blueprint_manifest(root: Path, page_id: str, lock: dict[str, Any], *,
         "rounding_policy": "half_up_2dp",
     }
     style_hash = str((style_lock or {}).get("style_lock_sha256") or prompt.get("style_lock_sha256") or "0" * 64)
+    approval_record = copy.deepcopy(existing.get("approval") or approval or {})
+    if str(approval_record.get("status") or "") != "approved":
+        raise BlueprintInvalid(f"blueprint requires explicit approval on page {page_id}")
+    if not all(str(approval_record.get(field) or "") for field in ("source", "approved_by", "approved_at")):
+        raise BlueprintInvalid(f"blueprint approval evidence is incomplete on page {page_id}")
+    internal_annotations = list(existing.get("internal_annotations") or [])
+    if internal_annotations:
+        raise BlueprintInvalid(f"blueprint contains internal annotations on page {page_id}")
     manifest = {
         "schema_version": "deck_blueprint_manifest.v2",
         "run_id": str(lock["run_id"]),
@@ -267,13 +286,12 @@ def ensure_blueprint_manifest(root: Path, page_id: str, lock: dict[str, Any], *,
         "slide_frame": {"x": frame_x, "y": frame_y, "w": frame_width, "h": frame_height},
         "source_to_scene_transform": transform,
         "fit_mode": "approved_frame" if existing.get("slide_frame") else "contain",
-        "internal_annotations": [],
+        "internal_annotations": internal_annotations,
         "provider": existing.get("provider") or {"tool": "agent_imagegen", "model": "unavailable", "request_id": "unavailable"},
-        "approved": bool(existing.get("approved", False)) or image.suffix.lower() == ".svg",
+        "approval": approval_record,
+        "approved": True,
         "created_at": str(existing.get("created_at") or utc_now()),
     }
-    if manifest["internal_annotations"]:
-        raise BlueprintInvalid(f"blueprint contains internal annotations on page {page_id}")
     assert_v2("blueprint_manifest", manifest)
     write_json(root / BLUEPRINT_MANIFEST_DIR / f"{page_id}.blueprint_manifest.json", manifest)
     # Compatibility mirror for existing callers; it carries the same v2 payload.
@@ -286,6 +304,11 @@ def load_blueprint_manifest(root: Path, page_id: str, *, expected_run_id: str | 
     _assert_manifest_mirror_consistent(root, page_id, root / BLUEPRINT_MANIFEST_DIR / f"{page_id}.blueprint_manifest.json")
     manifest = read_json(path)
     assert_v2("blueprint_manifest", manifest)
+    approval = manifest.get("approval") or {}
+    if manifest.get("approved") is not True or str(approval.get("status") or "") != "approved":
+        raise BlueprintInvalid(f"blueprint is not explicitly approved on page {page_id}")
+    if not all(str(approval.get(field) or "") for field in ("source", "approved_by", "approved_at")):
+        raise BlueprintInvalid(f"blueprint approval evidence is incomplete on page {page_id}")
     if str(manifest.get("page_id") or "") != page_id:
         raise BlueprintInvalid(f"blueprint manifest page_id mismatch on page {page_id}")
     if expected_run_id and str(manifest.get("run_id") or "") != expected_run_id:

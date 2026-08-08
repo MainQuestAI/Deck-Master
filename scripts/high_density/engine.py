@@ -22,12 +22,13 @@ from .blueprint import (
 from .content import (
     LOCKS_DIR,
     NBB_PLAN_PATH,
-    approve_nbb_plan,
     build_content_lock,
     build_nbb_plan,
     load_content_lock,
     load_nbb_plan,
     load_page_packages,
+    seal_nbb_plan,
+    select_nbb_storyline,
     write_content_lock,
     write_nbb_plan,
 )
@@ -181,7 +182,7 @@ def _waiting(
         "output_ref": output_ref,
         "input_refs": [input_ref],
         "output_refs": resolved_output_refs,
-        "required_schema": {"content_lock": "deck_nbb_plan.v1" if kind == "agent_nbb_enrich" else "deck_high_density_status.v2", "blueprint": "deck_blueprint_manifest.v2", "page_scene": "deck_page_scene.v2", "svg": "native-svg", "visual_review": "deck_visual_review.v2"}.get(stage, "deck_high_density_status.v2"),
+        "required_schema": {"content_lock": "deck_nbb_plan.v1" if kind in {"agent_nbb_candidates", "agent_nbb_enrich_selected"} else "deck_high_density_status.v2", "blueprint": "deck_blueprint_manifest.v2", "page_scene": "deck_page_scene.v2", "svg": "native-svg", "visual_review": "deck_visual_review.v2"}.get(stage, "deck_high_density_status.v2"),
         "acceptance_command": _resume_command(root),
         "resume_command": _resume_command(root),
         "reason": reason,
@@ -701,7 +702,7 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
             root,
             page_id="",
             stage="content_lock",
-            kind="agent_nbb_enrich",
+            kind="agent_nbb_candidates",
             input_ref="page_packages/",
             output_ref=NBB_PLAN_PATH.as_posix(),
             reason="Run the content-specific NBB enrichment and evidence audit, then write a pending deck_nbb_plan.v1 with two or three candidate storylines.",
@@ -720,7 +721,7 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
                 root,
                 page_id="",
                 stage="content_lock",
-                kind="agent_nbb_enrich",
+                kind="agent_nbb_candidates",
                 input_ref="page_packages/",
                 output_ref=NBB_PLAN_PATH.as_posix(),
                 reason=f"The Page Packages changed, so the previous NBB plan and all downstream artifacts were invalidated: {message}",
@@ -730,13 +731,14 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
             root,
             page_id="",
             stage="content_lock",
-            kind="agent_nbb_enrich",
+            kind="agent_nbb_candidates",
             input_ref="page_packages/",
             output_ref=NBB_PLAN_PATH.as_posix(),
             reason=f"Regenerate the malformed or stale NBB plan before content locks can be created: {message}",
         )
     selection = pending_plan.get("selection") or {}
-    if str(selection.get("status") or "") != "approved":
+    selection_status = str(selection.get("status") or "")
+    if selection_status == "pending_user_decision":
         manifest = _reset_nbb_downstream(root, manifest, packages, style_lock)
         candidates = [
             {
@@ -764,6 +766,33 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
                 "approval_command": f"deck-master build retry --run-dir {root} --profile high-density --stage content_lock --storyline-id {recommended_id}",
             },
         )
+    if selection_status == "selected_pending_enrichment":
+        manifest = _reset_nbb_downstream(root, manifest, packages, style_lock)
+        if not pending_plan.get("pages") or pending_plan.get("scr") is None:
+            return _waiting(
+                root,
+                page_id="",
+                stage="content_lock",
+                kind="agent_nbb_enrich_selected",
+                input_ref=NBB_PLAN_PATH.as_posix(),
+                output_ref=NBB_PLAN_PATH.as_posix(),
+                reason="Enrich only the selected storyline with evidence-bound SCR and page plans, preserving the recorded user selection.",
+                details={"selected_storyline_id": str(selection.get("selected_storyline_id") or "")},
+            )
+        try:
+            pending_plan = seal_nbb_plan(root)
+            selection_status = "approved"
+        except ContractError as exc:
+            return _waiting(
+                root,
+                page_id="",
+                stage="content_lock",
+                kind="agent_nbb_enrich_selected",
+                input_ref=NBB_PLAN_PATH.as_posix(),
+                output_ref=NBB_PLAN_PATH.as_posix(),
+                reason=f"Repair the selected-storyline enrichment before the runtime can seal it: {exc}",
+                details={"selected_storyline_id": str(selection.get("selected_storyline_id") or "")},
+            )
     try:
         nbb_plan = load_nbb_plan(root, packages=packages, expected_run_id=_run_id(root), require_approved=True)
         nbb_plan_sha256 = str(nbb_plan["nbb_plan_sha256"])
@@ -855,12 +884,24 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
                     append_event(root, "high_density.blueprint_invalidated", target=page_id, payload_ref=f"{BLUEPRINT_MANIFEST_DIR.as_posix()}/{page_id}.blueprint_manifest.json", data={"reason": "blueprint_lineage_changed"})
             if not prompt_file.exists():
                 build_blueprint_prompt_artifact(root, page_id, lock, style_lock=style_lock, nbb_plan_sha256=nbb_plan_sha256)
-            ensure_blueprint_manifest(root, page_id, lock, style_lock=style_lock, nbb_plan_sha256=nbb_plan_sha256)
+            fixture_approval = (
+                {"status": "approved", "source": "fixture_runtime", "approved_by": execution_mode, "approved_at": utc_now()}
+                if execution_mode in {"fixture", "dev"}
+                else None
+            )
+            ensure_blueprint_manifest(
+                root,
+                page_id,
+                lock,
+                style_lock=style_lock,
+                nbb_plan_sha256=nbb_plan_sha256,
+                approval=fixture_approval,
+            )
             blueprint_manifest = load_blueprint_manifest(root, page_id, expected_run_id=_run_id(root))
         except BlueprintRequired:
             return _waiting(root, page_id=page_id, stage="blueprint", kind="agent_imagegen", input_ref=f"high_density_build/prompts/{page_id}.blueprint_prompt.json", output_ref=f"high_density_build/blueprints/{page_id}.png", reason="Read the frozen content-aware prompt, call ImageGen, and save the approved blueprint at output_ref.")
         except BlueprintInvalid as exc:
-            if "not been approved" in str(exc):
+            if "not been approved" in str(exc) or "requires explicit approval" in str(exc):
                 return _waiting(root, page_id=page_id, stage="blueprint", kind="agent_imagegen", input_ref=f"high_density_build/prompts/{page_id}.blueprint_prompt.json", output_ref=f"high_density_build/blueprints/{page_id}.png", reason="Approve the generated blueprint after confirming the frame, annotations, and image hash.")
             raise HighDensityBuildError("HD_BLUEPRINT_REGEN_REQUIRED", str(exc), stage="blueprint", page_id=page_id) from exc
         except ContractError as exc:
@@ -1108,7 +1149,7 @@ def _retry_high_density(
     if target_stage == "content_lock" and not page_id:
         if storyline_id:
             try:
-                approve_nbb_plan(root, storyline_id, approver="user")
+                select_nbb_storyline(root, storyline_id, selected_by="user")
             except ContractError as exc:
                 raise HighDensityBuildError("HD_NBB_SELECTION_INVALID", str(exc), stage="content_lock") from exc
         elif not (root / NBB_PLAN_PATH).exists():

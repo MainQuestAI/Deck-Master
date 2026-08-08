@@ -1,14 +1,17 @@
 from __future__ import annotations
 
 import copy
+import shutil
 from pathlib import Path
 from typing import Any
 
-from .contracts import ContractError, assert_v2, read_json, sha256_json, utc_now, write_json
+from .contracts import ContractError, assert_v2, read_json, sha256_file, sha256_json, utc_now, write_json
 
 STYLE_DIR = Path("high_density_build/style")
 STYLE_OPTIONS_PATH = STYLE_DIR / "style_options.json"
 STYLE_LOCK_PATH = STYLE_DIR / "style_lock.json"
+STYLE_SAMPLE_DIR = STYLE_DIR / "samples"
+STYLE_SAMPLE_SOURCE_DIR = Path(__file__).resolve().parents[2] / "skills" / "deck-builder-high-density" / "assets" / "styles"
 
 
 class StyleSelectionRequired(ContractError):
@@ -70,7 +73,19 @@ def style_options() -> list[dict[str, Any]]:
 
 def write_style_options(root: Path) -> Path:
     path = root / STYLE_OPTIONS_PATH
-    write_json(path, {"schema_version": "deck_style_options.v1", "styles": style_options(), "created_at": utc_now()})
+    samples_dir = root / STYLE_SAMPLE_DIR
+    samples_dir.mkdir(parents=True, exist_ok=True)
+    styles: list[dict[str, Any]] = []
+    for style in style_options():
+        source = STYLE_SAMPLE_SOURCE_DIR / f"{style['style_id']}.svg"
+        if not source.is_file():
+            raise ContractError(f"high-density style sample is missing: {source.name}")
+        target = samples_dir / source.name
+        shutil.copyfile(source, target)
+        style["sample_ref"] = target.relative_to(root).as_posix()
+        style["sample_sha256"] = sha256_file(target)
+        styles.append(style)
+    write_json(path, {"schema_version": "deck_style_options.v1", "styles": styles, "created_at": utc_now()})
     return path
 
 
