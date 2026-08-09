@@ -18,7 +18,7 @@ REQUIRED_SCHEMAS = (
     "pptx-readback.v2.schema.json",
     "high-density-manifest.v2.schema.json",
     "high-density-status.v2.schema.json",
-    "nbb-plan.v1.schema.json",
+    "mbb-plan.v1.schema.json",
     "style-lock.v1.schema.json",
 )
 

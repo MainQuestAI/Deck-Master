@@ -1,6 +1,6 @@
 ---
 name: deck-builder-high-density
-description: Build editable high-density PPTX decks from locked Page Packages through CyberPPT-derived NBB enrichment, content-aware image blueprints, native SVG reconstruction, and SVG-to-DrawingML readback.
+description: Build editable high-density PPTX decks from locked Page Packages through CyberPPT-derived MBB enrichment, content-aware image blueprints, native SVG reconstruction, and SVG-to-DrawingML readback.
 triggers:
   - build high-density deck
   - editable high-density pptx
@@ -39,7 +39,7 @@ Deck Master owns the v2 contracts, stage state, lineage, retries, compiler, read
 
 ```text
 Page Package + evidence/narrative context
--> CyberPPT-derived NBB plan
+-> CyberPPT-derived MBB plan
 -> content_lock.v2
 -> frozen content-aware blueprint_prompt.v1
 -> approved ImageGen blueprint
@@ -66,21 +66,21 @@ deck-master build retry --run-dir <run_dir> --profile high-density --page-id P00
 
 ## Runtime Stages
 
-### A. NBB and Content Lock
+### A. MBB and Content Lock
 
-Production first waits for `agent_nbb_candidates` to write two or three evidence-bound candidate storylines. The runtime returns `awaiting_user_decision` with candidate summaries and a recommended ID. The deck-scoped `content_lock` retry records the user's selection in a signed Runtime receipt without rewriting Agent content, then returns `agent_nbb_enrich_selected`. Only after the Agent enriches the selected SCR and page plans can the runtime validate and sign the approved plan seal.
+Production first waits for `agent_mbb_candidates` to write two or three evidence-bound candidate storylines. The runtime returns `awaiting_user_decision` with candidate summaries and a recommended ID. The deck-scoped `content_lock` retry records the user's selection in a signed Runtime receipt without rewriting Agent content, then returns `agent_mbb_enrich_selected`. Only after the Agent enriches the selected SCR and page plans can the runtime validate and sign the approved plan seal.
 
-Fixture/dev runs may auto-approve the deterministic decision-led candidate so the compiler regression remains reproducible. An approved plan can resume without another prompt until a Page Package or NBB plan hash changes.
+Fixture/dev runs may auto-approve the deterministic decision-led candidate so the compiler regression remains reproducible. An approved plan can resume without another prompt until a Page Package or MBB plan hash changes.
 
-The deterministic `enrich_selected_nbb_plan()` path is a fixture/dev adapter only. Production and benchmark runs must receive the Agent-authored SCR and page plans in `nbb/nbb_plan.json`; Runtime validation preserves those values and rejects missing claim bindings, evidence spans, unsupported numbers, or stale Page Package hashes.
+The deterministic `enrich_selected_mbb_plan()` path is a fixture/dev adapter only. Production and benchmark runs must receive the Agent-authored SCR and page plans in `mbb/mbb_plan.json`; Runtime validation preserves those values and rejects missing claim bindings, evidence spans, unsupported numbers, or stale Page Package hashes.
 
-Carry forward CyberPPT's NBB behavior: evidence ledger with source position/period/unit/conflicts, two or three content-specific storyline candidates, issue/hypothesis tree, SCR audit, conclusion, supporting arguments, caveat, SO WHAT, page handoff, page material pool, density target, required component IDs, and required text refs. Every factual or numeric statement retains precise evidence lineage and a derivation note. Sparse pages, unsupported facts, missing components, unknown storyline IDs, unapproved selection, and stale hashes block before blueprint generation.
+Carry forward CyberPPT's MBB behavior: evidence ledger with source position/period/unit/conflicts, two or three content-specific storyline candidates, issue/hypothesis tree, SCR audit, conclusion, supporting arguments, caveat, SO WHAT, page handoff, page material pool, density target, required component IDs, and required text refs. Every factual or numeric statement retains precise evidence lineage and a derivation note. Sparse pages, unsupported facts, missing components, unknown storyline IDs, unapproved selection, and stale hashes block before blueprint generation.
 
 ### B. Style Lock and ImageGen Blueprint
 
 The fixed CyberPPT-derived registry contains eight stable style IDs. Production must use an approved `high_density_build/style/style_lock.json`; fixture/dev may use the explicit deterministic default.
 
-Before ImageGen, write `high_density_build/prompts/<page_id>.blueprint_prompt.json` using `deck_blueprint_prompt.v1`. The prompt receives only the customer-visible projection: title, conclusion, supporting arguments, business implication, approved data/callouts, component plan, target language, and style lock. Evidence IDs, evidence hierarchy, derivation lineage, caveat labels, SCR/NBB labels, source metadata, and production annotations remain in Content Lock lineage and speaker notes.
+Before ImageGen, write `high_density_build/prompts/<page_id>.blueprint_prompt.json` using `deck_blueprint_prompt.v1`. The prompt receives only the customer-visible projection: title, conclusion, supporting arguments, business implication, approved data/callouts, component plan, target language, and style lock. Evidence IDs, evidence hierarchy, derivation lineage, caveat labels, SCR/MBB labels, source metadata, and production annotations remain in Content Lock lineage and speaker notes.
 
 Page numbers, page counters, runtime page IDs, source lines, evidence markers, methodology labels, explanatory labels, caveat labels, placeholders, and production annotations are prohibited in every generated image. After ImageGen, create `deck_blueprint_content_review.v1` with full-page, header, footer, and four-corner crops. A failed content review archives the failed attempt and requires `agent_imagegen_repair`; the third failed attempt blocks the page. There is no page-number override.
 
@@ -88,7 +88,7 @@ Page numbers, page counters, runtime page IDs, source lines, evidence markers, m
 PYTHONPATH=scripts python3 -m high_density.blueprint_content_review --run-dir <run_dir> --page-id P001 --findings-file <findings.json> --reviewer-id <reviewer-id> --action-id <action-id>
 ```
 
-The prompt artifact contains a Runtime-signed Provider challenge nonce bound to the original run mode, prompt, Content Lock, NBB plan, and style lock. The provider request must return the same nonce and record the prompt hash, request hash, request/response timestamps, tool, model, and request ID. The Runtime signs a second receipt over provider metadata and the output image hash. Reusing fixture metadata, relabeling the run mode, or reusing an older prompt or image is blocked.
+The prompt artifact contains a Runtime-signed Provider challenge nonce bound to the original run mode, prompt, Content Lock, MBB plan, and style lock. The provider request must return the same nonce and record the prompt hash, request hash, request/response timestamps, tool, model, and request ID. The Runtime signs a second receipt over provider metadata and the output image hash. Reusing fixture metadata, relabeling the run mode, or reusing an older prompt or image is blocked.
 
 Write `high_density_build/blueprints/<page_id>.blueprint_manifest.json` using `deck_blueprint_manifest.v2`. Record prompt/content/style hashes, image hash, challenge-bound provider metadata, explicit approval, source canvas, contained 16:9 frame, and exact transform. Non-16:9 sources use an inscribed frame and never stretch. Eight visible style samples are copied into the style selection artifact; a filename extension never grants approval.
 
@@ -140,9 +140,9 @@ Release acceptance runs `PYTHONPATH=scripts python3 -m high_density.provider_smo
 
 ## Exit Artifacts
 
-- `nbb/nbb_plan.json`
-- `nbb/selection_receipt.json`
-- `nbb/runtime_seal.json`
+- `mbb/mbb_plan.json`
+- `mbb/selection_receipt.json`
+- `mbb/runtime_seal.json`
 - `style/style_options.json` and `style/style_lock.json`
 - `content_locks/<page_id>.content_lock.json`
 - `prompts/<page_id>.blueprint_prompt.json`
@@ -158,7 +158,7 @@ Release acceptance runs `PYTHONPATH=scripts python3 -m high_density.provider_smo
 
 ## Agent Continuation
 
-When Agent work is required, return `awaiting_agent_build` with `run_id`, page/stage, `input_refs`, `output_refs`, `required_schema`, `acceptance_command`, `resume_command`, and reason. Supported actions are `agent_nbb_candidates`, `agent_nbb_enrich_selected`, `agent_imagegen`, `agent_blueprint_content_review`, `agent_imagegen_repair`, `agent_visual_reconstruct`, `agent_svg_repair`, `agent_self_review`, and `agent_main_review`. Storyline and style selection use `awaiting_user_decision`.
+When Agent work is required, return `awaiting_agent_build` with `run_id`, page/stage, `input_refs`, `output_refs`, `required_schema`, `acceptance_command`, `resume_command`, and reason. Supported actions are `agent_mbb_candidates`, `agent_mbb_enrich_selected`, `agent_imagegen`, `agent_blueprint_content_review`, `agent_imagegen_repair`, `agent_visual_reconstruct`, `agent_svg_repair`, `agent_self_review`, and `agent_main_review`. Storyline and style selection use `awaiting_user_decision`.
 
 `build status --watch` waits through `prepared`, `building`, and `awaiting_agent_build`; it exits only at `completed`, `blocked`, `failed`, `awaiting_user_decision`, or timeout.
 

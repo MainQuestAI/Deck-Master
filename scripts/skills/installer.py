@@ -301,7 +301,7 @@ SUITE_SKILLS: list[dict[str, Any]] = [
         "required_capabilities": ["deck_master.build.high_density.v1"],
         "optional_capabilities": [],
         "schema_versions": {
-            "nbb_plan": "deck_nbb_plan.v1",
+            "mbb_plan": "deck_mbb_plan.v1",
             "style_lock": "deck_high_density_style_lock.v1",
             "content_lock": "deck_content_lock.v2",
             "blueprint_prompt": "deck_blueprint_prompt.v1",

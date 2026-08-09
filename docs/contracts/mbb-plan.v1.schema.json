@@ -1,11 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://deck-master.local/contracts/nbb-plan.v1.schema.json",
-  "title": "NBB Plan v1",
+  "$id": "https://deck-master.local/contracts/mbb-plan.v1.schema.json",
+  "title": "MBB Plan v1",
   "type": "object",
-  "required": ["schema_version", "run_id", "page_count", "evidence_ledger", "storyline_candidates", "selection", "storyline_audit", "scr", "pages", "blocked_pages", "nbb_plan_sha256", "created_at"],
+  "required": ["schema_version", "run_id", "page_count", "evidence_ledger", "storyline_candidates", "selection", "storyline_audit", "scr", "pages", "blocked_pages", "mbb_plan_sha256", "created_at"],
   "properties": {
-    "schema_version": {"const": "deck_nbb_plan.v1"},
+    "schema_version": {"const": "deck_mbb_plan.v1"},
     "run_id": {"type": "string", "minLength": 1},
     "page_count": {"type": "integer", "minimum": 1},
     "evidence_ledger": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/evidence"}},
@@ -15,7 +15,7 @@
     "scr": {"oneOf": [{"$ref": "#/$defs/scr"}, {"type": "null"}]},
     "pages": {"type": "array", "items": {"$ref": "#/$defs/pagePlan"}},
     "blocked_pages": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["page_id", "reason"], "properties": {"page_id": {"type": "string", "minLength": 1}, "reason": {"type": "string", "minLength": 1}}}},
-    "nbb_plan_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "mbb_plan_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
     "created_at": {"type": "string", "minLength": 1},
     "updated_at": {"type": "string", "minLength": 1}
   },

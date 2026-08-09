@@ -227,7 +227,7 @@
         "render_result.v2"
       ],
       "backend_dependency": "",
-      "description": "Independent high-density build route from NBB content lock and ImageGen blueprint through native SVG, editable PPTX, readback, and canonical handback."
+      "description": "Independent high-density build route from MBB content lock and ImageGen blueprint through native SVG, editable PPTX, readback, and canonical handback."
     },
     {
       "name": "deck-quality",

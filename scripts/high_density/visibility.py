@@ -20,7 +20,7 @@ HIDDEN_BY_DEFAULT_CATEGORIES = (
 _LABEL_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("evidence_marker", re.compile(r"^(?:evidence(?:\s*id)?|证据(?:\s*id)?|证据占位)\s*[:：]?$", re.I)),
     ("source_marker", re.compile(r"^(?:source|来源|口径|日期|date)\s*[:：]?$", re.I)),
-    ("methodology_label", re.compile(r"^(?:swot|nbb|scr|so\s*what)\s*[:：/]?$", re.I)),
+    ("methodology_label", re.compile(r"^(?:swot|mbb|scr|so\s*what)\s*[:：/]?$", re.I)),
     ("explanatory_label", re.compile(r"^(?:说明|note|notes|explanation)\s*[:：]?$", re.I)),
     ("caveat_label", re.compile(r"^(?:caveat|注意事项|假设与边界)\s*[:：]?$", re.I)),
     ("placeholder", re.compile(r"^(?:待补充|占位|placeholder|tbd|todo)\s*[:：]?$", re.I)),

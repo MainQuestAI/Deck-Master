@@ -38,7 +38,7 @@
       "type": "object",
       "required": ["framework", "version", "analysis", "derived_claims", "structure_decisions"],
       "properties": {
-        "framework": {"const": "nbb"},
+        "framework": {"const": "mbb"},
         "version": {"type": "string", "minLength": 1},
         "analysis": {"type": "object"},
         "derived_claims": {"type": "array", "items": {"type": "object"}},

@@ -21,7 +21,7 @@
       "type": "object",
       "required": ["kind"],
       "properties": {
-        "kind": {"enum": ["none", "retry", "awaiting_user_decision", "agent_nbb_candidates", "agent_nbb_enrich_selected", "agent_imagegen", "agent_imagegen_repair", "agent_blueprint_content_review", "agent_visual_reconstruct", "agent_svg_repair", "agent_self_review", "agent_main_review"]},
+        "kind": {"enum": ["none", "retry", "awaiting_user_decision", "agent_mbb_candidates", "agent_mbb_enrich_selected", "agent_imagegen", "agent_imagegen_repair", "agent_blueprint_content_review", "agent_visual_reconstruct", "agent_svg_repair", "agent_self_review", "agent_main_review"]},
         "run_id": {"type": "string"},
         "page_id": {"type": "string"},
         "stage": {"type": "string"},

@@ -12,6 +12,7 @@ from typing import Any
 
 from .contracts import ContractError, assert_v2, read_json, run_relative, sha256_bytes, sha256_file, sha256_json, utc_now, write_json
 from .integrity import sign_runtime_payload, verify_runtime_payload
+from .migration import MIGRATION_REQUIRED_CODE, assert_current_mbb_artifact
 
 BLUEPRINT_DIR = Path("high_density_build/blueprints")
 PROMPT_DIR = Path("high_density_build/prompts")
@@ -170,7 +171,7 @@ def _validate_provider_challenge(root: Path, prompt: dict[str, Any], page_id: st
         "page_id": page_id,
         "prompt_sha256": str(prompt.get("prompt_sha256") or ""),
         "content_lock_sha256": str(prompt.get("content_lock_sha256") or ""),
-        "nbb_plan_sha256": str(prompt.get("nbb_plan_sha256") or ""),
+        "mbb_plan_sha256": str(prompt.get("mbb_plan_sha256") or ""),
         "style_lock_sha256": str(prompt.get("style_lock_sha256") or ""),
     }
     for field, value in expected.items():
@@ -242,7 +243,10 @@ def record_provider_host_result(root: Path, page_id: str, source_image: Path) ->
 def load_provider_host_receipt(root: Path, page_id: str, prompt: dict[str, Any], image: Path) -> dict[str, Any]:
     try:
         receipt = read_json(provider_host_receipt_path(root, page_id))
+        assert_current_mbb_artifact(root, receipt)
     except ContractError as exc:
+        if MIGRATION_REQUIRED_CODE in str(exc):
+            raise
         raise BlueprintInvalid(f"Host-managed provider receipt is required on page {page_id}") from exc
     assert_v2("provider_host_receipt", receipt)
     payload = {key: value for key, value in receipt.items() if key != "integrity"}
@@ -376,7 +380,7 @@ def build_blueprint_prompt(
     lock: dict[str, Any],
     style_lock: dict[str, Any] | None = None,
     *,
-    nbb_plan_sha256: str = "",
+    mbb_plan_sha256: str = "",
     provider_challenge_nonce: str = "",
     attempt_index: int = 1,
 ) -> str:
@@ -404,7 +408,8 @@ def build_blueprint_prompt(
     )
 
 
-def build_blueprint_prompt_artifact(root: Path, page_id: str, lock: dict[str, Any], *, style_lock: dict[str, Any] | None = None, nbb_plan_sha256: str = "") -> Path:
+def build_blueprint_prompt_artifact(root: Path, page_id: str, lock: dict[str, Any], *, style_lock: dict[str, Any] | None = None, mbb_plan_sha256: str = "") -> Path:
+    assert_current_mbb_artifact(root, lock)
     from .blueprint_content_review import next_attempt_index
 
     attempt_index = next_attempt_index(root, page_id)
@@ -412,7 +417,7 @@ def build_blueprint_prompt_artifact(root: Path, page_id: str, lock: dict[str, An
     prompt_text = build_blueprint_prompt(
         lock,
         style_lock,
-        nbb_plan_sha256=nbb_plan_sha256,
+        mbb_plan_sha256=mbb_plan_sha256,
         provider_challenge_nonce=challenge_seed["nonce"],
         attempt_index=attempt_index,
     )
@@ -425,7 +430,7 @@ def build_blueprint_prompt_artifact(root: Path, page_id: str, lock: dict[str, An
         "page_id": str(page_id),
         "prompt_sha256": prompt_sha256,
         "content_lock_sha256": str(lock["content_lock_sha256"]),
-        "nbb_plan_sha256": nbb_plan_sha256 or str((lock.get("lineage") or {}).get("nbb_plan_sha256") or "0" * 64),
+        "mbb_plan_sha256": mbb_plan_sha256 or str((lock.get("lineage") or {}).get("mbb_plan_sha256") or "0" * 64),
         "style_lock_sha256": style_hash,
     }
     challenge = {
@@ -441,8 +446,8 @@ def build_blueprint_prompt_artifact(root: Path, page_id: str, lock: dict[str, An
         "prompt_sha256": prompt_sha256,
         "content_lock_ref": f"high_density_build/content_locks/{page_id}.content_lock.json",
         "content_lock_sha256": str(lock["content_lock_sha256"]),
-        "nbb_plan_ref": "high_density_build/nbb/nbb_plan.json",
-        "nbb_plan_sha256": nbb_plan_sha256 or str((lock.get("lineage") or {}).get("nbb_plan_sha256") or "0" * 64),
+        "mbb_plan_ref": "high_density_build/mbb/mbb_plan.json",
+        "mbb_plan_sha256": mbb_plan_sha256 or str((lock.get("lineage") or {}).get("mbb_plan_sha256") or "0" * 64),
         "style_lock_ref": "high_density_build/style/style_lock.json",
         "style_lock_sha256": style_hash,
         "presentation_projection": _presentation_projection(lock),
@@ -543,10 +548,12 @@ def load_provider_runtime_receipt(
     manifest: dict[str, Any],
 ) -> dict[str, Any]:
     receipt = read_json(provider_receipt_path(root, page_id))
+    assert_current_mbb_artifact(root, receipt)
     assert_v2("provider_runtime_receipt", receipt)
     payload = {key: value for key, value in receipt.items() if key != "integrity"}
     verify_runtime_payload("imagegen_provider_result.v1", payload, receipt.get("integrity") or {})
     prompt = read_json(safe_run_path(root, str(manifest.get("prompt_ref") or "")))
+    assert_current_mbb_artifact(root, prompt)
     expected = _provider_receipt_payload(
         root,
         page_id,
@@ -565,7 +572,7 @@ def ensure_blueprint_manifest(
     lock: dict[str, Any],
     *,
     style_lock: dict[str, Any] | None = None,
-    nbb_plan_sha256: str = "",
+    mbb_plan_sha256: str = "",
     approval: dict[str, Any] | None = None,
 ) -> Path:
     _assert_page_id(page_id)
@@ -576,13 +583,14 @@ def ensure_blueprint_manifest(
     if not prompt_file.exists():
         raise BlueprintInvalid(f"blueprint prompt must be written before image generation on page {page_id}")
     prompt = read_json(prompt_file)
+    assert_current_mbb_artifact(root, prompt)
     assert_v2("blueprint_prompt", prompt)
     _validate_provider_challenge(root, prompt, page_id)
-    expected_nbb_sha = nbb_plan_sha256 or str((lock.get("lineage") or {}).get("nbb_plan_sha256") or "0" * 64)
+    expected_mbb_sha = mbb_plan_sha256 or str((lock.get("lineage") or {}).get("mbb_plan_sha256") or "0" * 64)
     expected_style_sha = str((style_lock or {}).get("style_lock_sha256") or prompt.get("style_lock_sha256") or "0" * 64)
     if str(prompt.get("run_id") or "") != str(lock.get("run_id") or "") or str(prompt.get("page_id") or "") != page_id:
         raise BlueprintInvalid(f"blueprint prompt identity is stale on page {page_id}")
-    if str(prompt.get("nbb_plan_sha256") or "") != expected_nbb_sha or str(prompt.get("style_lock_sha256") or "") != expected_style_sha:
+    if str(prompt.get("mbb_plan_sha256") or "") != expected_mbb_sha or str(prompt.get("style_lock_sha256") or "") != expected_style_sha:
         raise BlueprintInvalid(f"blueprint prompt lineage is stale on page {page_id}")
     challenge = prompt.get("provider_challenge") or {}
     challenge_nonce = str(challenge.get("nonce") or "")
@@ -591,7 +599,7 @@ def ensure_blueprint_manifest(
     expected_prompt = build_blueprint_prompt(
         lock,
         style_lock,
-        nbb_plan_sha256=nbb_plan_sha256 or str((lock.get("lineage") or {}).get("nbb_plan_sha256") or "0" * 64),
+        mbb_plan_sha256=mbb_plan_sha256 or str((lock.get("lineage") or {}).get("mbb_plan_sha256") or "0" * 64),
         provider_challenge_nonce=challenge_nonce,
         attempt_index=int(prompt.get("attempt_index") or 1),
     )
@@ -674,7 +682,7 @@ def ensure_blueprint_manifest(
         "prompt_ref": run_relative(root, prompt_file),
         "prompt_sha256": expected_prompt_sha,
         "content_lock_sha256": str(lock["content_lock_sha256"]),
-        "nbb_plan_sha256": nbb_plan_sha256 or str((lock.get("lineage") or {}).get("nbb_plan_sha256") or "0" * 64),
+        "mbb_plan_sha256": mbb_plan_sha256 or str((lock.get("lineage") or {}).get("mbb_plan_sha256") or "0" * 64),
         "style_lock_sha256": style_hash,
         "content_review_ref": run_relative(root, content_review_path(root, page_id)),
         "content_review_sha256": sha256_file(content_review_path(root, page_id)),
@@ -700,6 +708,7 @@ def load_blueprint_manifest(root: Path, page_id: str, *, expected_run_id: str | 
     path = blueprint_manifest_path(root, page_id)
     _assert_manifest_mirror_consistent(root, page_id, root / BLUEPRINT_MANIFEST_DIR / f"{page_id}.blueprint_manifest.json")
     manifest = read_json(path)
+    assert_current_mbb_artifact(root, manifest)
     assert_v2("blueprint_manifest", manifest)
     approval = manifest.get("approval") or {}
     if manifest.get("approved") is not True or str(approval.get("status") or "") != "approved":
@@ -715,11 +724,12 @@ def load_blueprint_manifest(root: Path, page_id: str, *, expected_run_id: str | 
     if expected_image is None or image.resolve() != expected_image.resolve():
         raise BlueprintInvalid(f"blueprint manifest image_path mismatch on page {page_id}")
     prompt = read_json(safe_run_path(root, str(manifest.get("prompt_ref") or "")))
+    assert_current_mbb_artifact(root, prompt)
     assert_v2("blueprint_prompt", prompt)
     _validate_provider_challenge(root, prompt, page_id)
     if str(prompt.get("run_id") or "") != str(manifest.get("run_id") or "") or str(prompt.get("page_id") or "") != page_id:
         raise BlueprintInvalid(f"blueprint prompt identity is stale on page {page_id}")
-    for field in ("content_lock_sha256", "nbb_plan_sha256", "style_lock_sha256"):
+    for field in ("content_lock_sha256", "mbb_plan_sha256", "style_lock_sha256"):
         if str(prompt.get(field) or "") != str(manifest.get(field) or ""):
             raise BlueprintInvalid(f"blueprint prompt {field} is stale on page {page_id}")
     if prompt.get("prompt_sha256") != manifest.get("prompt_sha256"):

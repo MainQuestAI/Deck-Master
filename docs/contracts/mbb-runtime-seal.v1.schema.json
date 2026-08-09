@@ -1,14 +1,14 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://deck-master.local/contracts/nbb-runtime-seal.v1.schema.json",
-  "title": "NBB Runtime Seal v1",
+  "$id": "https://deck-master.local/contracts/mbb-runtime-seal.v1.schema.json",
+  "title": "MBB Runtime Seal v1",
   "type": "object",
-  "required": ["schema_version", "run_id", "selected_storyline_id", "nbb_plan_sha256", "selection_receipt_sha256", "page_package_sha256", "sealed_at", "integrity"],
+  "required": ["schema_version", "run_id", "selected_storyline_id", "mbb_plan_sha256", "selection_receipt_sha256", "page_package_sha256", "sealed_at", "integrity"],
   "properties": {
-    "schema_version": {"const": "deck_nbb_runtime_seal.v1"},
+    "schema_version": {"const": "deck_mbb_runtime_seal.v1"},
     "run_id": {"type": "string", "minLength": 1},
     "selected_storyline_id": {"type": "string", "minLength": 1},
-    "nbb_plan_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "mbb_plan_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
     "selection_receipt_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
     "page_package_sha256": {
       "type": "object",

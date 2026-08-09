@@ -11,9 +11,10 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT / "scripts") not in sys.path:
     sys.path.insert(0, str(ROOT / "scripts"))
 
-from high_density.content import load_nbb_plan, load_page_packages
-from high_density.contracts import assert_valid, read_json, sha256_file, sha256_json, write_json
+from high_density.content import load_mbb_plan, load_page_packages
+from high_density.contracts import ContractError, read_json, sha256_file, sha256_json, write_json
 from high_density.engine import prepare_high_density, run_high_density
+from high_density.migration import MIGRATION_REQUIRED_CODE, assert_current_mbb_artifact
 from high_density.provider_smoke import ProviderSmokeError, build_provider_smoke_evidence
 from high_density.scene import load_scene
 from high_density.visual import compute_visual_metrics, normalize_blueprint
@@ -72,7 +73,7 @@ def test_seven_page_distinct_acceptance_has_independent_lineage(tmp_path: Path) 
 
     assert result["status"] == "completed"
     packages = load_page_packages(run, expected_run_id=run.name)
-    plan = load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=True)
+    plan = load_mbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=True)
     assert len(plan["storyline_candidates"]) == 3
     assert len({candidate["management_conclusion"] for candidate in plan["storyline_candidates"]}) == 3
     assert str(plan["scr"]["situation"]).startswith("The deck contains evidence-backed material about Synthetic")
@@ -220,15 +221,12 @@ def test_fixture_artifacts_cannot_be_relabelled_as_production_provider_smoke(tmp
         build_provider_smoke_evidence(run, page_id="P001")
 
 
-def test_committed_provider_smoke_evidence_is_sanitized_and_valid() -> None:
+def test_archived_provider_smoke_evidence_requires_mbb_regeneration() -> None:
     evidence = read_json(ROOT / "docs/qa/high-density-builder-v2/phase-4-provider-smoke-evidence.json")
 
-    assert_valid("provider_smoke", evidence)
-    serialized = json.dumps(evidence, ensure_ascii=False)
-    assert "/Users/" not in serialized
-    assert "/private/" not in serialized
-    assert evidence["raw_provider_payload_included"] is False
-    assert evidence["run_mode"] in {"production", "benchmark"}
+    with pytest.raises(ContractError) as captured:
+        assert_current_mbb_artifact(ROOT, evidence)
+    assert MIGRATION_REQUIRED_CODE in str(captured.value)
 
 
 def test_committed_73_page_evidence_has_sanitized_per_page_lineage() -> None:

@@ -25,15 +25,16 @@ from high_density.blueprint_content_review import BlueprintContentReviewRequired
 from high_density.capability import inspect_high_density_capability
 from high_density.content import (
     build_content_lock,
-    build_nbb_page,
-    build_nbb_plan,
-    enrich_selected_nbb_plan,
-    load_nbb_plan,
+    build_mbb_page,
+    build_mbb_plan,
+    enrich_selected_mbb_plan,
+    load_content_lock,
+    load_mbb_plan,
     load_page_packages,
-    record_nbb_user_decision,
-    seal_nbb_plan,
-    select_nbb_storyline,
-    write_nbb_plan,
+    record_mbb_user_decision,
+    seal_mbb_plan,
+    select_mbb_storyline,
+    write_mbb_plan,
 )
 from high_density.contracts import ContractError, assert_valid, read_json, sha256_file, sha256_json, write_json
 from high_density.engine import (
@@ -43,6 +44,7 @@ from high_density.engine import (
     run_high_density,
     watch_high_density_status,
 )
+from high_density.migration import MIGRATION_REQUIRED_CODE, assert_current_mbb_artifact, retired_method_token
 from high_density.pptx import PptxEditabilityError, _render_pptx_page, compile_pptx, pptx_path, readback_pptx, trace_path
 from high_density.scene import _fixture_background, build_fixture_scene, load_scene, validate_scene_content, write_scene
 from high_density.style import write_style_lock
@@ -104,7 +106,7 @@ def _prepared_fixture(tmp_path: Path) -> tuple[Path, dict, dict]:
 
 
 def _approved_page_plan(package: dict) -> tuple[dict, dict]:
-    plan = build_nbb_plan([package], run_id=str(package["run_id"]))
+    plan = build_mbb_plan([package], run_id=str(package["run_id"]))
     plan["selection"].update(
         {
             "status": "selected_pending_enrichment",
@@ -114,38 +116,137 @@ def _approved_page_plan(package: dict) -> tuple[dict, dict]:
         }
     )
     plan["storyline_audit"].update({"status": "selected_pending_enrichment", "selected_id": "storyline.decision"})
-    plan = enrich_selected_nbb_plan(plan, [package])
+    plan = enrich_selected_mbb_plan(plan, [package])
     return plan, plan["pages"][0]
 
 
-def _write_approved_nbb_plan(run: Path) -> dict:
+def test_retired_content_plan_requests_deck_rebuild_without_deleting_artifact(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path, mode="fixture")
+    retired_dir = run / "high_density_build" / retired_method_token()
+    retired_dir.mkdir(parents=True)
+    marker = retired_dir / "plan.json"
+    marker.write_text("{}\n", encoding="utf-8")
+
+    result = run_high_density(run)
+
+    assert result["status"] == "awaiting_agent_build"
+    assert result["current_stage"] == "content_lock"
+    assert result["next_action"]["kind"] == "agent_mbb_candidates"
+    assert result["next_action"]["rebuild_scope"] == "deck"
+    assert MIGRATION_REQUIRED_CODE in result["next_action"]["reason"]
+    assert marker.is_file()
+    assert not (run / "high_density_build/mbb/mbb_plan.json").exists()
+
+
+def test_retired_schema_in_current_artifact_requires_mbb_regeneration(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path, mode="fixture")
+    retired_schema = "deck_" + retired_method_token() + "_plan.v1"
+    write_json(
+        run / "high_density_build/mbb/mbb_plan.json",
+        {"schema_version": retired_schema, "run_id": run.name},
+    )
+
+    with pytest.raises(ContractError, match=MIGRATION_REQUIRED_CODE):
+        load_mbb_plan(run, expected_run_id=run.name, require_approved=False)
+
+
+def test_retired_content_lock_lineage_requires_mbb_regeneration(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path, mode="fixture")
+    retired_hash_field = retired_method_token() + "_plan_sha256"
+    write_json(
+        run / "high_density_build/content_locks/P001.content_lock.json",
+        {"schema_version": "deck_content_lock.v2", "page_id": "P001", retired_hash_field: "a" * 64},
+    )
+
+    with pytest.raises(ContractError, match=MIGRATION_REQUIRED_CODE):
+        load_content_lock(run, "P001", expected_run_id=run.name)
+
+
+@pytest.mark.parametrize(
+    ("relative_path", "payload"),
+    [
+        (
+            "high_density_build/mbb/selection_receipt.json",
+            {"schema_version": "deck_" + retired_method_token() + "_selection_receipt.v1"},
+        ),
+        (
+            "high_density_build/mbb/runtime_seal.json",
+            {"schema_version": "deck_" + retired_method_token() + "_runtime_seal.v1"},
+        ),
+        (
+            "high_density_build/prompts/P001.blueprint_prompt.json",
+            {retired_method_token() + "_plan_sha256": "a" * 64},
+        ),
+        (
+            "high_density_build/blueprints/P001.blueprint_manifest.json",
+            {retired_method_token() + "_plan_sha256": "a" * 64},
+        ),
+    ],
+)
+def test_retired_receipt_prompt_and_manifest_require_mbb_regeneration(
+    tmp_path: Path,
+    relative_path: str,
+    payload: dict[str, str],
+) -> None:
+    run, _ = _make_run(tmp_path, mode="fixture")
+    write_json(run / relative_path, payload)
+
+    with pytest.raises(ContractError, match=MIGRATION_REQUIRED_CODE):
+        assert_current_mbb_artifact(run)
+
+
+def test_active_high_density_surface_has_no_retired_content_plan_terminology() -> None:
+    active_roots = [
+        ROOT / "scripts" / "high_density",
+        ROOT / "scripts" / "deck_master.py",
+        ROOT / "scripts" / "skills",
+        ROOT / "docs" / "contracts",
+        ROOT / "skills" / "deck-builder-high-density",
+        ROOT / "skills" / "manifest.json",
+        ROOT / "tests",
+    ]
+    retired = retired_method_token()
+    forbidden = (retired, retired.upper(), retired + "_", "/" + retired + "/")
+    offenders: list[str] = []
+    for active_root in active_roots:
+        paths = [active_root] if active_root.is_file() else active_root.rglob("*")
+        for path in paths:
+            if not path.is_file() or path.suffix not in {".py", ".json", ".md"}:
+                continue
+            text = path.read_text(encoding="utf-8")
+            if any(token in text for token in forbidden):
+                offenders.append(str(path.relative_to(ROOT)))
+    assert offenders == []
+
+
+def _write_approved_mbb_plan(run: Path) -> dict:
     packages = load_page_packages(run, expected_run_id=run.name)
-    plan = _write_selected_enriched_nbb_plan(run, packages)
-    return seal_nbb_plan(run)
+    plan = _write_selected_enriched_mbb_plan(run, packages)
+    return seal_mbb_plan(run)
 
 
-def _write_selected_enriched_nbb_plan(run: Path, packages: list[dict]) -> dict:
-    plan = build_nbb_plan(packages, run_id=run.name)
-    write_nbb_plan(run, plan)
+def _write_selected_enriched_mbb_plan(run: Path, packages: list[dict]) -> dict:
+    plan = build_mbb_plan(packages, run_id=run.name)
+    write_mbb_plan(run, plan)
     if str(read_json(run / "request.json").get("run_mode") or "") in {"production", "benchmark"}:
-        record_nbb_user_decision(run, "storyline.decision", attestor_id="test-user")
-    plan = select_nbb_storyline(run, "storyline.decision", selected_by="test")
-    plan = enrich_selected_nbb_plan(plan, packages)
-    write_nbb_plan(run, plan)
+        record_mbb_user_decision(run, "storyline.decision", attestor_id="test-user")
+    plan = select_mbb_storyline(run, "storyline.decision", selected_by="test")
+    plan = enrich_selected_mbb_plan(plan, packages)
+    write_mbb_plan(run, plan)
     return plan
 
 
 def _approve_blueprint(run: Path, page_id: str = "P001") -> None:
     lock = read_json(run / f"high_density_build/content_locks/{page_id}.json")
     style_lock = read_json(run / "high_density_build/style/style_lock.json")
-    nbb_plan = read_json(run / "high_density_build/nbb/nbb_plan.json")
+    mbb_plan = read_json(run / "high_density_build/mbb/mbb_plan.json")
     write_blueprint_content_review(run, page_id, lock, findings=[], reviewer_id="test", action_id="test-content-review")
     ensure_blueprint_manifest(
         run,
         page_id,
         lock,
         style_lock=style_lock,
-        nbb_plan_sha256=str(nbb_plan["nbb_plan_sha256"]),
+        mbb_plan_sha256=str(mbb_plan["mbb_plan_sha256"]),
         approval={
             "status": "approved",
             "source": "explicit_user",
@@ -159,8 +260,8 @@ def _rehash_page_and_plan(plan: dict, page: dict) -> None:
     page["page_plan_sha256"] = sha256_json(
         {key: value for key, value in page.items() if key not in {"page_plan_sha256", "created_at", "updated_at"}}
     )
-    plan["nbb_plan_sha256"] = sha256_json(
-        {key: value for key, value in plan.items() if key not in {"nbb_plan_sha256", "created_at", "updated_at"}}
+    plan["mbb_plan_sha256"] = sha256_json(
+        {key: value for key, value in plan.items() if key not in {"mbb_plan_sha256", "created_at", "updated_at"}}
     )
 
 
@@ -294,31 +395,31 @@ def test_style_lock_change_invalidates_blueprints(tmp_path: Path) -> None:
     assert not (run / "high_density_build/blueprints/P001.blueprint_manifest.json").exists()
 
 
-def test_nbb_blocks_low_density_without_evidence() -> None:
-    package = _package("nbb-run", FIXTURE["pages"][0])
+def test_mbb_blocks_low_density_without_evidence() -> None:
+    package = _package("mbb-run", FIXTURE["pages"][0])
     package["customer_visible"]["body_blocks"] = [{"type": "text", "text": "One short point"}]
     package["customer_visible"]["callouts"] = []
     package["evidence_bindings"] = []
 
     with pytest.raises(ContractError, match="too sparse"):
-        build_nbb_page(package)
+        build_mbb_page(package)
 
 
-def test_nbb_rejects_unsupported_factual_claim() -> None:
-    package = _package("nbb-run", FIXTURE["pages"][0])
+def test_mbb_rejects_unsupported_factual_claim() -> None:
+    package = _package("mbb-run", FIXTURE["pages"][0])
     package["customer_visible"]["body_blocks"] = [{"type": "text", "text": "42% unsupported claim"} for _ in range(6)]
     package["evidence_bindings"] = []
 
     with pytest.raises(ContractError, match="unsupported factual values"):
-        build_nbb_page(package)
+        build_mbb_page(package)
 
 
-def test_nbb_plan_contains_content_specific_candidates_and_precise_page_refs(tmp_path: Path) -> None:
+def test_mbb_plan_contains_content_specific_candidates_and_precise_page_refs(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path, page_count=2)
     packages = load_page_packages(run, expected_run_id=run.name)
 
-    plan = build_nbb_plan(packages, run_id=run.name)
-    write_nbb_plan(run, plan)
+    plan = build_mbb_plan(packages, run_id=run.name)
+    write_mbb_plan(run, plan)
 
     assert plan["selection"]["status"] == "pending_user_decision"
     assert len(plan["storyline_candidates"]) == 3
@@ -328,10 +429,10 @@ def test_nbb_plan_contains_content_specific_candidates_and_precise_page_refs(tmp
     assert plan["scr"] is None
     assert plan["pages"] == []
     assert all(candidate["claim_bindings"] for candidate in plan["storyline_candidates"])
-    assert load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)["nbb_plan_sha256"] == plan["nbb_plan_sha256"]
+    assert load_mbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)["mbb_plan_sha256"] == plan["mbb_plan_sha256"]
 
 
-def test_nbb_rejects_duplicate_evidence_ids_across_page_packages(tmp_path: Path) -> None:
+def test_mbb_rejects_duplicate_evidence_ids_across_page_packages(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path, page_count=2)
     packages = load_page_packages(run, expected_run_id=run.name)
     packages[1]["evidence_bindings"] = [
@@ -339,52 +440,52 @@ def test_nbb_rejects_duplicate_evidence_ids_across_page_packages(tmp_path: Path)
     ]
 
     with pytest.raises(ContractError, match="globally unique across Page Packages"):
-        build_nbb_plan(packages, run_id=run.name)
+        build_mbb_plan(packages, run_id=run.name)
 
 
-def test_nbb_loader_rejects_duplicate_evidence_ids_in_agent_plan(tmp_path: Path) -> None:
+def test_mbb_loader_rejects_duplicate_evidence_ids_in_agent_plan(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path, page_count=2)
     packages = load_page_packages(run, expected_run_id=run.name)
-    plan = build_nbb_plan(packages, run_id=run.name)
+    plan = build_mbb_plan(packages, run_id=run.name)
     plan["evidence_ledger"].append(dict(plan["evidence_ledger"][0]))
-    plan["nbb_plan_sha256"] = sha256_json(
-        {key: value for key, value in plan.items() if key not in {"nbb_plan_sha256", "created_at", "updated_at"}}
+    plan["mbb_plan_sha256"] = sha256_json(
+        {key: value for key, value in plan.items() if key not in {"mbb_plan_sha256", "created_at", "updated_at"}}
     )
-    write_nbb_plan(run, plan)
+    write_mbb_plan(run, plan)
 
-    with pytest.raises(ContractError, match="globally unique across NBB plan"):
-        load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
+    with pytest.raises(ContractError, match="globally unique across MBB plan"):
+        load_mbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
 
 
-def test_build_nbb_plan_cannot_auto_enrich_selected_storyline() -> None:
-    package = _package("nbb-run", FIXTURE["pages"][0])
+def test_build_mbb_plan_cannot_auto_enrich_selected_storyline() -> None:
+    package = _package("mbb-run", FIXTURE["pages"][0])
 
     with pytest.raises(TypeError):
-        build_nbb_plan(
+        build_mbb_plan(
             [package],
-            run_id="nbb-run",
+            run_id="mbb-run",
             selected_storyline_id="storyline.decision",
             approved_by="runtime",
         )
 
 
-def test_content_lock_requires_approved_nbb_page_plan(tmp_path: Path) -> None:
+def test_content_lock_requires_approved_mbb_page_plan(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path)
     package = read_json(run / "page_packages/P001.json")
 
-    with pytest.raises(ContractError, match="approved NBB page plan is required"):
-        build_content_lock(package, nbb_plan_sha256="a" * 64)
+    with pytest.raises(ContractError, match="approved MBB page plan is required"):
+        build_content_lock(package, mbb_plan_sha256="a" * 64)
 
 
 def test_production_waits_for_storyline_confirmation_then_resumes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    run, _ = _make_run(tmp_path, mode="production", project_name="production nbb")
+    run, _ = _make_run(tmp_path, mode="production", project_name="production mbb")
     write_style_lock(run, run.name, "cyber-01", approved=True, approver="test")
     prepare_high_density(run)
-    assert run_high_density(run)["next_action"]["kind"] == "agent_nbb_candidates"
+    assert run_high_density(run)["next_action"]["kind"] == "agent_mbb_candidates"
 
     packages = load_page_packages(run, expected_run_id=run.name)
-    pending = build_nbb_plan(packages, run_id=run.name)
-    write_nbb_plan(run, pending)
+    pending = build_mbb_plan(packages, run_id=run.name)
+    write_mbb_plan(run, pending)
     waiting = run_high_density(run)
 
     assert waiting["status"] == "awaiting_user_decision"
@@ -397,16 +498,16 @@ def test_production_waits_for_storyline_confirmation_then_resumes(tmp_path: Path
     assert selected["status"] == "awaiting_user_decision"
     assert selected["next_action"]["kind"] == "awaiting_user_decision"
     monkeypatch.setenv("DECK_MASTER_USER_ATTESTATION_KEY", "11" * 32)
-    record_nbb_user_decision(run, "storyline.risk", attestor_id="test-user")
+    record_mbb_user_decision(run, "storyline.risk", attestor_id="test-user")
     selected = retry_high_density(run, page_id="", stage="content_lock", storyline_id="storyline.risk")
 
     assert selected["status"] == "awaiting_agent_build"
-    assert selected["next_action"]["kind"] == "agent_nbb_enrich_selected"
+    assert selected["next_action"]["kind"] == "agent_mbb_enrich_selected"
     assert not (run / "high_density_build/content_locks/P001.json").exists()
-    selected_plan = load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
+    selected_plan = load_mbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
     assert selected_plan["selection"]["status"] == "selected_pending_enrichment"
-    enriched = enrich_selected_nbb_plan(selected_plan, packages)
-    write_nbb_plan(run, enriched)
+    enriched = enrich_selected_mbb_plan(selected_plan, packages)
+    write_mbb_plan(run, enriched)
 
     resumed = run_high_density(run)
 
@@ -414,7 +515,7 @@ def test_production_waits_for_storyline_confirmation_then_resumes(tmp_path: Path
     assert resumed["current_stage"] == "blueprint"
     lock = read_json(run / "high_density_build/content_locks/P001.json")
     assert lock["lineage"]["selected_storyline_id"] == "storyline.risk"
-    assert lock["lineage"]["nbb_page_plan_sha256"]
+    assert lock["lineage"]["mbb_page_plan_sha256"]
     context = lock["enrichment"]["storyline_context"]
     assert context["storyline_id"] == "storyline.risk"
     assert context["management_conclusion"].startswith("Reduce the execution risk")
@@ -429,17 +530,17 @@ def test_storyline_selection_does_not_rewrite_agent_content(tmp_path: Path, monk
     write_style_lock(run, run.name, "cyber-01", approved=True, approver="test")
     prepare_high_density(run)
     packages = load_page_packages(run, expected_run_id=run.name)
-    write_nbb_plan(run, build_nbb_plan(packages, run_id=run.name))
+    write_mbb_plan(run, build_mbb_plan(packages, run_id=run.name))
 
-    before = read_json(run / "high_density_build/nbb/nbb_plan.json")
+    before = read_json(run / "high_density_build/mbb/mbb_plan.json")
     monkeypatch.setenv("DECK_MASTER_USER_ATTESTATION_KEY", "11" * 32)
-    record_nbb_user_decision(run, "storyline.decision", attestor_id="test-user")
-    selected = select_nbb_storyline(run, "storyline.decision", selected_by="user")
+    record_mbb_user_decision(run, "storyline.decision", attestor_id="test-user")
+    selected = select_mbb_storyline(run, "storyline.decision", selected_by="user")
 
     assert selected["storyline_candidates"] == before["storyline_candidates"]
     assert selected["scr"] is None
     assert selected["pages"] == []
-    enriched = enrich_selected_nbb_plan(selected, packages)
+    enriched = enrich_selected_mbb_plan(selected, packages)
     page = enriched["pages"][0]
     page["conclusion"] = "AGENT RICH CONCLUSION PRESERVE ME for Synthetic framework page"
     page["supporting_arguments"][0] = "AGENT ARGUMENT PRESERVE ME with Evidence, constraints, and decision context"
@@ -463,7 +564,7 @@ def test_storyline_selection_does_not_rewrite_agent_content(tmp_path: Path, monk
             binding["text_sha256"] = sha256_json(page["business_implication"])
             binding["origin"] = "derived"
     _rehash_page_and_plan(enriched, page)
-    write_nbb_plan(run, enriched)
+    write_mbb_plan(run, enriched)
 
     result = run_high_density(run)
 
@@ -479,42 +580,42 @@ def test_selected_storyline_requires_agent_enrichment_before_lock(tmp_path: Path
     write_style_lock(run, run.name, "cyber-01", approved=True, approver="test")
     prepare_high_density(run)
     packages = load_page_packages(run, expected_run_id=run.name)
-    write_nbb_plan(run, build_nbb_plan(packages, run_id=run.name))
+    write_mbb_plan(run, build_mbb_plan(packages, run_id=run.name))
 
     waiting = retry_high_density(run, page_id="", stage="content_lock", storyline_id="storyline.decision")
 
     assert waiting["next_action"]["kind"] == "awaiting_user_decision"
     monkeypatch.setenv("DECK_MASTER_USER_ATTESTATION_KEY", "11" * 32)
-    record_nbb_user_decision(run, "storyline.decision", attestor_id="test-user")
+    record_mbb_user_decision(run, "storyline.decision", attestor_id="test-user")
     waiting = retry_high_density(run, page_id="", stage="content_lock", storyline_id="storyline.decision")
 
-    assert waiting["next_action"]["kind"] == "agent_nbb_enrich_selected"
+    assert waiting["next_action"]["kind"] == "agent_mbb_enrich_selected"
     assert not (run / "high_density_build/content_locks/P001.json").exists()
 
 
-def test_unbound_nbb_fact_and_numeric_claim_are_rejected(tmp_path: Path) -> None:
+def test_unbound_mbb_fact_and_numeric_claim_are_rejected(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path)
     packages = load_page_packages(run, expected_run_id=run.name)
-    plan = _write_selected_enriched_nbb_plan(run, packages)
+    plan = _write_selected_enriched_mbb_plan(run, packages)
     page = plan["pages"][0]
     page["conclusion"] = "Synthetic framework page reports 42% without source support."
     binding = next(item for item in page["claim_bindings"] if item["target"] == "conclusion")
     binding["text_sha256"] = sha256_json(page["conclusion"])
     _rehash_page_and_plan(plan, page)
-    write_nbb_plan(run, plan)
+    write_mbb_plan(run, plan)
 
     with pytest.raises(ContractError, match="unsupported factual values"):
-        load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
+        load_mbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
 
     page["conclusion"] = "Evidence-bound editorial conclusion."
     page["claim_bindings"] = [item for item in page["claim_bindings"] if item["target"] != "conclusion"]
     _rehash_page_and_plan(plan, page)
-    write_nbb_plan(run, plan)
+    write_mbb_plan(run, plan)
     with pytest.raises(ContractError, match="claim binding coverage failed"):
-        load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
+        load_mbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
 
 
-def test_unrelated_nonnumeric_nbb_claim_is_rejected(tmp_path: Path) -> None:
+def test_unrelated_nonnumeric_mbb_claim_is_rejected(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path)
     packages = load_page_packages(run, expected_run_id=run.name)
     packages[0]["evidence_bindings"] = []
@@ -523,16 +624,16 @@ def test_unrelated_nonnumeric_nbb_claim_is_rejected(tmp_path: Path) -> None:
     ]
     write_json(run / "page_packages/P001.json", packages[0])
     packages = load_page_packages(run, expected_run_id=run.name)
-    plan = _write_selected_enriched_nbb_plan(run, packages)
+    plan = _write_selected_enriched_mbb_plan(run, packages)
     page = plan["pages"][0]
     page["conclusion"] = "Synthetic framework page has dominant market share and guaranteed profitability."
     binding = next(item for item in page["claim_bindings"] if item["target"] == "conclusion")
     binding["text_sha256"] = sha256_json(page["conclusion"])
     _rehash_page_and_plan(plan, page)
-    write_nbb_plan(run, plan)
+    write_mbb_plan(run, plan)
 
     with pytest.raises(ContractError, match="does not match evidence content"):
-        load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
+        load_mbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
 
 
 def test_numeric_claim_must_exist_in_its_cited_evidence(tmp_path: Path) -> None:
@@ -540,39 +641,39 @@ def test_numeric_claim_must_exist_in_its_cited_evidence(tmp_path: Path) -> None:
     packages = load_page_packages(run, expected_run_id=run.name)
     packages[0]["speaker_notes"] += " An unrelated note mentions 42%."
     write_json(run / "page_packages/P001.json", packages[0])
-    plan = _write_selected_enriched_nbb_plan(run, packages)
+    plan = _write_selected_enriched_mbb_plan(run, packages)
     page = plan["pages"][0]
     page["conclusion"] = "Synthetic framework page records 42%."
     binding = next(item for item in page["claim_bindings"] if item["target"] == "conclusion")
     binding["text_sha256"] = sha256_json(page["conclusion"])
     binding["origin"] = "derived"
     _rehash_page_and_plan(plan, page)
-    write_nbb_plan(run, plan)
+    write_mbb_plan(run, plan)
 
     with pytest.raises(ContractError, match="unsupported factual values"):
-        load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
+        load_mbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
 
 
-def test_agent_approved_nbb_plan_without_runtime_seal_is_rejected(tmp_path: Path) -> None:
+def test_agent_approved_mbb_plan_without_runtime_seal_is_rejected(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path)
     packages = load_page_packages(run, expected_run_id=run.name)
-    plan = _write_selected_enriched_nbb_plan(run, packages)
+    plan = _write_selected_enriched_mbb_plan(run, packages)
     plan["selection"]["status"] = "approved"
     plan["selection"]["sealed_at"] = "2026-01-01T00:00:00+00:00"
     plan["storyline_audit"]["status"] = "approved"
-    plan["nbb_plan_sha256"] = sha256_json(
-        {key: value for key, value in plan.items() if key not in {"nbb_plan_sha256", "created_at", "updated_at"}}
+    plan["mbb_plan_sha256"] = sha256_json(
+        {key: value for key, value in plan.items() if key not in {"mbb_plan_sha256", "created_at", "updated_at"}}
     )
-    write_nbb_plan(run, plan)
+    write_mbb_plan(run, plan)
 
     with pytest.raises(ContractError, match="missing its Runtime seal"):
-        load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=True)
+        load_mbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=True)
 
 
-def test_agent_selected_nbb_plan_without_runtime_receipt_is_rejected(tmp_path: Path) -> None:
+def test_agent_selected_mbb_plan_without_runtime_receipt_is_rejected(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path)
     packages = load_page_packages(run, expected_run_id=run.name)
-    plan = build_nbb_plan(packages, run_id=run.name)
+    plan = build_mbb_plan(packages, run_id=run.name)
     plan["selection"].update(
         {
             "status": "selected_pending_enrichment",
@@ -582,30 +683,30 @@ def test_agent_selected_nbb_plan_without_runtime_receipt_is_rejected(tmp_path: P
         }
     )
     plan["storyline_audit"].update({"status": "selected_pending_enrichment", "selected_id": "storyline.decision"})
-    plan = enrich_selected_nbb_plan(plan, packages)
-    write_json(run / "high_density_build/nbb/nbb_plan.json", plan)
+    plan = enrich_selected_mbb_plan(plan, packages)
+    write_json(run / "high_density_build/mbb/mbb_plan.json", plan)
 
     with pytest.raises(ContractError, match="selection_receipt"):
-        load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
+        load_mbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
 
 
-def test_forged_nbb_runtime_seal_signature_is_rejected(tmp_path: Path) -> None:
+def test_forged_mbb_runtime_seal_signature_is_rejected(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path)
     packages = load_page_packages(run, expected_run_id=run.name)
-    plan = _write_selected_enriched_nbb_plan(run, packages)
+    plan = _write_selected_enriched_mbb_plan(run, packages)
     plan["selection"]["status"] = "approved"
     plan["selection"]["sealed_at"] = "2026-01-01T00:00:00+00:00"
     plan["storyline_audit"]["status"] = "approved"
-    plan["nbb_plan_sha256"] = sha256_json(
-        {key: value for key, value in plan.items() if key not in {"nbb_plan_sha256", "created_at", "updated_at"}}
+    plan["mbb_plan_sha256"] = sha256_json(
+        {key: value for key, value in plan.items() if key not in {"mbb_plan_sha256", "created_at", "updated_at"}}
     )
-    write_nbb_plan(run, plan)
-    receipt_path = run / "high_density_build/nbb/selection_receipt.json"
+    write_mbb_plan(run, plan)
+    receipt_path = run / "high_density_build/mbb/selection_receipt.json"
     fake_seal = {
-        "schema_version": "deck_nbb_runtime_seal.v1",
+        "schema_version": "deck_mbb_runtime_seal.v1",
         "run_id": run.name,
         "selected_storyline_id": "storyline.decision",
-        "nbb_plan_sha256": plan["nbb_plan_sha256"],
+        "mbb_plan_sha256": plan["mbb_plan_sha256"],
         "selection_receipt_sha256": sha256_file(receipt_path),
         "page_package_sha256": {package["page_id"]: sha256_json(package) for package in packages},
         "sealed_at": plan["selection"]["sealed_at"],
@@ -616,28 +717,28 @@ def test_forged_nbb_runtime_seal_signature_is_rejected(tmp_path: Path) -> None:
             "signature": "0" * 64,
         },
     }
-    write_json(run / "high_density_build/nbb/runtime_seal.json", fake_seal)
+    write_json(run / "high_density_build/mbb/runtime_seal.json", fake_seal)
 
     with pytest.raises(ContractError, match="Runtime integrity"):
-        load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=True)
+        load_mbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=True)
 
 
 def test_runtime_seal_is_invalidated_when_approved_plan_changes(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path)
     packages = load_page_packages(run, expected_run_id=run.name)
-    plan = _write_selected_enriched_nbb_plan(run, packages)
-    sealed = seal_nbb_plan(run)
-    assert (run / "high_density_build/nbb/runtime_seal.json").is_file()
+    plan = _write_selected_enriched_mbb_plan(run, packages)
+    sealed = seal_mbb_plan(run)
+    assert (run / "high_density_build/mbb/runtime_seal.json").is_file()
 
     sealed["storyline_audit"]["notes"] = "mutated-after-seal"
-    sealed["nbb_plan_sha256"] = sha256_json(
-        {key: value for key, value in sealed.items() if key not in {"nbb_plan_sha256", "created_at", "updated_at"}}
+    sealed["mbb_plan_sha256"] = sha256_json(
+        {key: value for key, value in sealed.items() if key not in {"mbb_plan_sha256", "created_at", "updated_at"}}
     )
-    write_nbb_plan(run, sealed)
+    write_mbb_plan(run, sealed)
 
-    assert not (run / "high_density_build/nbb/runtime_seal.json").exists()
+    assert not (run / "high_density_build/mbb/runtime_seal.json").exists()
     with pytest.raises(ContractError, match="missing its Runtime seal"):
-        load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=True)
+        load_mbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=True)
 
 
 def test_numeric_claim_uses_exact_token_match_in_cited_evidence(tmp_path: Path) -> None:
@@ -650,17 +751,17 @@ def test_numeric_claim_uses_exact_token_match_in_cited_evidence(tmp_path: Path) 
     ]
     write_json(run / "page_packages/P001.json", package)
     packages = load_page_packages(run, expected_run_id=run.name)
-    plan = _write_selected_enriched_nbb_plan(run, packages)
+    plan = _write_selected_enriched_mbb_plan(run, packages)
     page = plan["pages"][0]
     page["conclusion"] = "Synthetic framework page records 42%."
     binding = next(item for item in page["claim_bindings"] if item["target"] == "conclusion")
     binding["text_sha256"] = sha256_json(page["conclusion"])
     binding["origin"] = "derived"
     _rehash_page_and_plan(plan, page)
-    write_nbb_plan(run, plan)
+    write_mbb_plan(run, plan)
 
     with pytest.raises(ContractError, match="unsupported factual values"):
-        load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
+        load_mbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
 
 
 def test_wide_and_tall_frames_remain_inside_source_canvas() -> None:
@@ -693,49 +794,49 @@ def test_prepare_invalidates_downstream_when_page_package_changes(tmp_path: Path
     assert waiting["current_stage"] == "blueprint"
 
 
-def test_nbb_plan_rejects_unknown_page_evidence_ref(tmp_path: Path) -> None:
+def test_mbb_plan_rejects_unknown_page_evidence_ref(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path)
     packages = load_page_packages(run, expected_run_id=run.name)
-    plan = _write_selected_enriched_nbb_plan(run, packages)
+    plan = _write_selected_enriched_mbb_plan(run, packages)
     plan["pages"][0]["evidence_refs"] = ["E999"]
     plan["pages"][0]["page_plan_sha256"] = sha256_json({key: value for key, value in plan["pages"][0].items() if key != "page_plan_sha256"})
-    plan["nbb_plan_sha256"] = sha256_json({key: value for key, value in plan.items() if key not in {"nbb_plan_sha256", "created_at", "updated_at"}})
-    write_nbb_plan(run, plan)
+    plan["mbb_plan_sha256"] = sha256_json({key: value for key, value in plan.items() if key not in {"mbb_plan_sha256", "created_at", "updated_at"}})
+    write_mbb_plan(run, plan)
 
     with pytest.raises(ContractError, match="evidence refs are invalid"):
-        load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
+        load_mbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
 
 
-def test_nbb_plan_rejects_missing_required_component(tmp_path: Path) -> None:
+def test_mbb_plan_rejects_missing_required_component(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path)
     packages = load_page_packages(run, expected_run_id=run.name)
-    plan = _write_selected_enriched_nbb_plan(run, packages)
+    plan = _write_selected_enriched_mbb_plan(run, packages)
     plan["pages"][0]["components"] = plan["pages"][0]["components"][1:]
     plan["pages"][0]["page_plan_sha256"] = sha256_json({key: value for key, value in plan["pages"][0].items() if key != "page_plan_sha256"})
-    plan["nbb_plan_sha256"] = sha256_json({key: value for key, value in plan.items() if key not in {"nbb_plan_sha256", "created_at", "updated_at"}})
-    write_nbb_plan(run, plan)
+    plan["mbb_plan_sha256"] = sha256_json({key: value for key, value in plan.items() if key not in {"mbb_plan_sha256", "created_at", "updated_at"}})
+    write_mbb_plan(run, plan)
 
     with pytest.raises(ContractError, match="components are outside the Runtime registry"):
-        load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
+        load_mbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
 
 
-def test_nbb_plan_rejects_stale_storyline_material_pool(tmp_path: Path) -> None:
+def test_mbb_plan_rejects_stale_storyline_material_pool(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path)
     packages = load_page_packages(run, expected_run_id=run.name)
-    plan = _write_selected_enriched_nbb_plan(run, packages)
+    plan = _write_selected_enriched_mbb_plan(run, packages)
     plan["pages"][0]["material_pool"]["storyline_id"] = "storyline.risk"
     plan["pages"][0]["page_plan_sha256"] = sha256_json({key: value for key, value in plan["pages"][0].items() if key != "page_plan_sha256"})
-    plan["nbb_plan_sha256"] = sha256_json({key: value for key, value in plan.items() if key not in {"nbb_plan_sha256", "created_at", "updated_at"}})
-    write_nbb_plan(run, plan)
+    plan["mbb_plan_sha256"] = sha256_json({key: value for key, value in plan.items() if key not in {"mbb_plan_sha256", "created_at", "updated_at"}})
+    write_mbb_plan(run, plan)
 
     with pytest.raises(ContractError, match="material pool is outside the Runtime registry"):
-        load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
+        load_mbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
 
 
-def test_nbb_plan_blocks_agent_added_material_component_and_required_text(tmp_path: Path) -> None:
+def test_mbb_plan_blocks_agent_added_material_component_and_required_text(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path)
     packages = load_page_packages(run, expected_run_id=run.name)
-    plan = _write_selected_enriched_nbb_plan(run, packages)
+    plan = _write_selected_enriched_mbb_plan(run, packages)
     page = plan["pages"][0]
     page["components"].append(
         {"component_id": "component.unverified", "kind": "callout", "priority": "P0", "region": "insight"}
@@ -744,16 +845,16 @@ def test_nbb_plan_blocks_agent_added_material_component_and_required_text(tmp_pa
         {"ref": "content_lock.enrichment.unverified", "priority": "P0", "required": True, "value": "Unverified growth reached 999%."}
     )
     _rehash_page_and_plan(plan, page)
-    write_nbb_plan(run, plan)
+    write_mbb_plan(run, plan)
 
     with pytest.raises(ContractError, match="components are outside the Runtime registry"):
-        load_nbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
+        load_mbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
 
 
-def test_nbb_claim_bindings_cover_components_and_required_text_registry(tmp_path: Path) -> None:
+def test_mbb_claim_bindings_cover_components_and_required_text_registry(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path)
     packages = load_page_packages(run, expected_run_id=run.name)
-    plan = _write_selected_enriched_nbb_plan(run, packages)
+    plan = _write_selected_enriched_mbb_plan(run, packages)
     page = plan["pages"][0]
     targets = {str(binding["target"]) for binding in page["claim_bindings"]}
 
@@ -765,15 +866,15 @@ def test_nbb_claim_bindings_cover_components_and_required_text_registry(tmp_path
             assert f"required_text_refs.{index}.{field}" in targets
 
 
-def test_pending_nbb_plan_invalidates_previous_downstream(tmp_path: Path) -> None:
+def test_pending_mbb_plan_invalidates_previous_downstream(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path)
     _blueprint(run)
     prepare_high_density(run)
     assert run_high_density(run)["status"] == "completed"
 
     packages = load_page_packages(run, expected_run_id=run.name)
-    pending = build_nbb_plan(packages, run_id=run.name)
-    write_nbb_plan(run, pending)
+    pending = build_mbb_plan(packages, run_id=run.name)
+    write_mbb_plan(run, pending)
     waiting = run_high_density(run)
 
     assert waiting["status"] == "awaiting_user_decision"
@@ -786,34 +887,34 @@ def test_content_lock_contains_required_components_and_text_refs(tmp_path: Path)
     run, _ = _make_run(tmp_path)
     package = read_json(run / "page_packages/P001.json")
     _, page_plan = _approved_page_plan(package)
-    lock = build_content_lock(package, page_plan, nbb_plan_sha256="a" * 64)
+    lock = build_content_lock(package, page_plan, mbb_plan_sha256="a" * 64)
 
     assert lock["schema_version"] == "deck_content_lock.v2"
     assert lock["required_component_ids"]
     assert {item["ref"] for item in lock["required_text_refs"]} >= {"content_lock.customer_visible.title", "content_lock.enrichment.business_implication"}
-    assert lock["lineage"]["nbb_plan_sha256"] == "a" * 64
+    assert lock["lineage"]["mbb_plan_sha256"] == "a" * 64
 
 
 def test_blueprint_prompt_changes_with_locked_content(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path)
     package = read_json(run / "page_packages/P001.json")
     _, page_plan = _approved_page_plan(package)
-    lock = build_content_lock(package, page_plan, nbb_plan_sha256="b" * 64)
+    lock = build_content_lock(package, page_plan, mbb_plan_sha256="b" * 64)
     style = {"style_id": "cyber-01", "name": "Ink Cobalt", "palette": {"primary": "#419BFD"}, "grid": {"system": "12-column"}}
     changed = json.loads(json.dumps(lock))
     changed["customer_visible"]["title"] = "Changed locked title"
 
-    first = build_blueprint_prompt(lock, style, nbb_plan_sha256="b" * 64)
-    second = build_blueprint_prompt(changed, style, nbb_plan_sha256="b" * 64)
+    first = build_blueprint_prompt(lock, style, mbb_plan_sha256="b" * 64)
+    second = build_blueprint_prompt(changed, style, mbb_plan_sha256="b" * 64)
     assert first != second
     assert "Changed locked title" in second
 
 
-def test_prompt_contains_full_nbb_and_style_lock(tmp_path: Path) -> None:
+def test_prompt_contains_full_mbb_and_style_lock(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path)
     package = read_json(run / "page_packages/P001.json")
     _, page_plan = _approved_page_plan(package)
-    lock = build_content_lock(package, page_plan, nbb_plan_sha256="b" * 64)
+    lock = build_content_lock(package, page_plan, mbb_plan_sha256="b" * 64)
     style = {
         "style_id": "cyber-01",
         "name": "Ink Cobalt",
@@ -826,7 +927,7 @@ def test_prompt_contains_full_nbb_and_style_lock(tmp_path: Path) -> None:
         "density_rules": {"minimum_information_regions": 3},
     }
 
-    prompt = build_blueprint_prompt(lock, style, nbb_plan_sha256="b" * 64)
+    prompt = build_blueprint_prompt(lock, style, mbb_plan_sha256="b" * 64)
 
     assert lock["enrichment"]["supporting_arguments"][0] in prompt
     for key in ("typography", "chart_language", "table_language", "surface_system", "density_rules"):
@@ -837,12 +938,12 @@ def test_prompt_excludes_internal_analysis_fields(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path)
     package = read_json(run / "page_packages/P001.json")
     _, page_plan = _approved_page_plan(package)
-    lock = build_content_lock(package, page_plan, nbb_plan_sha256="e" * 64)
-    prompt = build_blueprint_prompt(lock, {"style_id": "cyber-01", "name": "Ink Cobalt", "palette": {}, "grid": {}}, nbb_plan_sha256="e" * 64)
+    lock = build_content_lock(package, page_plan, mbb_plan_sha256="e" * 64)
+    prompt = build_blueprint_prompt(lock, {"style_id": "cyber-01", "name": "Ink Cobalt", "palette": {}, "grid": {}}, mbb_plan_sha256="e" * 64)
 
     assert lock["enrichment"]["conclusion"] in prompt
     assert lock["enrichment"]["supporting_arguments"][0] in prompt
-    for internal_field in ("Evidence ID", "Evidence hierarchy", "Evidence assessment", "Derived claim lineage", "SO WHAT", "Caveat", "NBB", "SCR"):
+    for internal_field in ("Evidence ID", "Evidence hierarchy", "Evidence assessment", "Derived claim lineage", "SO WHAT", "Caveat", "MBB", "SCR"):
         assert internal_field not in prompt
 
 
@@ -863,7 +964,7 @@ def test_blueprint_requires_content_review_before_approval(tmp_path: Path) -> No
     _blueprint(run)
     package = read_json(run / "page_packages/P001.json")
     _, page_plan = _approved_page_plan(package)
-    lock = build_content_lock(package, page_plan, nbb_plan_sha256="f" * 64)
+    lock = build_content_lock(package, page_plan, mbb_plan_sha256="f" * 64)
     build_blueprint_prompt_artifact(run, "P001", lock, style_lock={"style_lock_sha256": "0" * 64})
 
     with pytest.raises(BlueprintContentReviewRequired, match="content review is required"):
@@ -885,7 +986,7 @@ def test_rejected_blueprint_attempts_are_archived_and_counted(tmp_path: Path) ->
     run, _ = _make_run(tmp_path)
     package = read_json(run / "page_packages/P001.json")
     _, page_plan = _approved_page_plan(package)
-    lock = build_content_lock(package, page_plan, nbb_plan_sha256="a" * 64)
+    lock = build_content_lock(package, page_plan, mbb_plan_sha256="a" * 64)
     source = FIXTURE_DIR / "blueprint.svg"
     (run / "high_density_build/blueprints").mkdir(parents=True, exist_ok=True)
 
@@ -916,10 +1017,10 @@ def test_blueprint_prompt_preserves_structured_content(tmp_path: Path) -> None:
         {"evidence_id": "E001", "source_ref": "fixture.metric_table", "source_position": "row.conversion", "meaning": "conversion is 42%"}
     ]
     _, page_plan = _approved_page_plan(package)
-    lock = build_content_lock(package, page_plan, nbb_plan_sha256="c" * 64)
+    lock = build_content_lock(package, page_plan, mbb_plan_sha256="c" * 64)
     style = {"style_id": "cyber-01", "name": "Ink Cobalt", "palette": {}, "grid": {}}
 
-    prompt = build_blueprint_prompt(lock, style, nbb_plan_sha256="c" * 64)
+    prompt = build_blueprint_prompt(lock, style, mbb_plan_sha256="c" * 64)
 
     assert "conversion" in prompt
     assert "42%" in prompt
@@ -930,7 +1031,7 @@ def test_blueprint_manifest_requires_prompt_before_image(tmp_path: Path) -> None
     image = _blueprint(run)
     package = read_json(run / "page_packages/P001.json")
     _, page_plan = _approved_page_plan(package)
-    lock = build_content_lock(package, page_plan, nbb_plan_sha256="d" * 64)
+    lock = build_content_lock(package, page_plan, mbb_plan_sha256="d" * 64)
 
     assert image.exists()
     with pytest.raises(BlueprintInvalid, match="prompt must be written"):
@@ -944,8 +1045,8 @@ def test_production_blueprint_rejects_self_declared_provider_metadata(tmp_path: 
     write_style_lock(run, run.name, "cyber-01", approved=True, approver="test")
     packages = load_page_packages(run, expected_run_id=run.name)
     monkeypatch.setenv("DECK_MASTER_USER_ATTESTATION_KEY", "11" * 32)
-    _write_selected_enriched_nbb_plan(run, packages)
-    plan = seal_nbb_plan(run)
+    _write_selected_enriched_mbb_plan(run, packages)
+    plan = seal_mbb_plan(run)
     waiting = run_high_density(run)
 
     assert waiting["status"] == "awaiting_agent_build"
@@ -977,7 +1078,7 @@ def test_production_blueprint_rejects_self_declared_provider_metadata(tmp_path: 
             "P001",
             lock,
             style_lock=style,
-            nbb_plan_sha256=str(plan["nbb_plan_sha256"]),
+            mbb_plan_sha256=str(plan["mbb_plan_sha256"]),
             approval={
                 "status": "approved",
                 "source": "explicit_user",
@@ -1012,7 +1113,7 @@ def test_production_uses_agent_svg_without_overwriting_it(tmp_path: Path, monkey
     _blueprint(run)
     prepare_high_density(run)
     monkeypatch.setenv("DECK_MASTER_USER_ATTESTATION_KEY", "11" * 32)
-    _write_approved_nbb_plan(run)
+    _write_approved_mbb_plan(run)
     waiting = run_high_density(run)
     assert waiting["current_stage"] == "blueprint"
     from PIL import Image
@@ -1070,7 +1171,7 @@ def test_callout_removal_blocks_scene(tmp_path: Path) -> None:
     package = read_json(run / "page_packages/P001.json")
     package["customer_visible"]["callouts"] = [{"text": "Decision gate requires explicit evidence."}]
     _, page_plan = _approved_page_plan(package)
-    lock = build_content_lock(package, page_plan, nbb_plan_sha256="c" * 64)
+    lock = build_content_lock(package, page_plan, mbb_plan_sha256="c" * 64)
     blueprint = _blueprint(run)
     scene = build_fixture_scene(lock, sha256_file(blueprint), blueprint_path=blueprint)
     assert "component.callouts" in scene["required_component_ids"]

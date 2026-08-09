@@ -102,7 +102,7 @@ def verify_runtime_payload(purpose: str, payload: dict[str, Any], integrity: dic
 
 def sign_user_attestation(payload: dict[str, Any]) -> dict[str, str]:
     key = _user_attestation_key()
-    signed = {"purpose": "nbb_user_decision.v1", "payload": payload}
+    signed = {"purpose": "mbb_user_decision.v1", "payload": payload}
     return {
         "algorithm": "hmac-sha256",
         "key_id": sha256_bytes(key)[:16],
@@ -119,7 +119,7 @@ def verify_user_attestation(payload: dict[str, Any], integrity: dict[str, Any]) 
         "algorithm": "hmac-sha256",
         "key_id": sha256_bytes(key)[:16],
         "payload_sha256": sha256_json(payload),
-        "signature": hmac.new(key, canonical_json({"purpose": "nbb_user_decision.v1", "payload": payload}), hashlib.sha256).hexdigest(),
+        "signature": hmac.new(key, canonical_json({"purpose": "mbb_user_decision.v1", "payload": payload}), hashlib.sha256).hexdigest(),
     }
     for field in ("algorithm", "key_id", "payload_sha256"):
         if str(integrity.get(field) or "") != expected[field]:

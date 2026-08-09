@@ -11,6 +11,7 @@ from typing import Any
 
 from .blueprint import load_blueprint_manifest, load_provider_host_receipt, load_provider_runtime_receipt, provider_host_receipt_path, provider_receipt_path, safe_run_path
 from .contracts import ContractError, assert_valid, assert_v2, read_json, run_relative, sha256_bytes, sha256_file, sha256_json, utc_now, write_json
+from .migration import assert_current_mbb_artifact
 from .svg import load_visual_review, main_review_receipt_path
 
 
@@ -76,6 +77,7 @@ def build_provider_smoke_evidence(
     if not manifest_path.exists():
         raise ProviderSmokeError("provider smoke requires a completed high-density manifest")
     manifest = read_json(manifest_path)
+    assert_current_mbb_artifact(root, manifest)
     assert_v2("high_density_manifest", manifest)
     if manifest.get("status") != "completed":
         raise ProviderSmokeError("provider smoke requires high-density manifest status completed")
@@ -111,6 +113,7 @@ def build_provider_smoke_evidence(
         raise ProviderSmokeError(f"fresh provider metadata is missing or placeholder on page {selected_page_id}")
     prompt_path = safe_run_path(root, str(blueprint.get("prompt_ref") or ""))
     prompt = read_json(prompt_path)
+    assert_current_mbb_artifact(root, prompt)
     challenge = prompt.get("provider_challenge") or {}
     if str(provider.get("challenge_nonce") or "") != str(challenge.get("nonce") or ""):
         raise ProviderSmokeError(f"provider challenge lineage is stale on page {selected_page_id}")
@@ -139,6 +142,7 @@ def build_provider_smoke_evidence(
         raise ProviderSmokeError(f"independent main visual review receipt is missing on page {selected_page_id}")
     content_lock_ref = _artifact_ref(root, page, "content_lock")
     content_lock_payload = read_json(root / content_lock_ref["path"])
+    assert_current_mbb_artifact(root, content_lock_payload)
     assert_v2("content_lock", content_lock_payload)
     package_path = safe_run_path(root, str(content_lock_payload.get("page_package_ref") or ""))
     current_package = read_json(package_path)
@@ -209,7 +213,7 @@ def build_provider_smoke_evidence(
             "pptx_sha256": pptx_sha,
             "readback_sha256": readback_ref["sha256"],
             "content_lock_sha256": content_lock_sha,
-            "nbb_plan_sha256": str(blueprint.get("nbb_plan_sha256") or ""),
+            "mbb_plan_sha256": str(blueprint.get("mbb_plan_sha256") or ""),
             "style_lock_sha256": str(blueprint.get("style_lock_sha256") or ""),
         },
         "timeline": {

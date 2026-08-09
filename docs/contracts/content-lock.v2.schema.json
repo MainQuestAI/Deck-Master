@@ -70,7 +70,7 @@
       "type": "object",
       "required": ["framework", "version", "storyline_id", "storyline_context", "analysis", "evidence_ledger", "conclusion", "supporting_arguments", "detailed_argument", "caveat", "so_what", "business_implication", "handoff", "evidence_hierarchy", "evidence_assessment", "chart_plan", "material_pool", "derived_claims", "claim_bindings", "structure_decisions", "component_plan", "evidence_coverage"],
       "properties": {
-        "framework": {"const": "nbb"},
+        "framework": {"const": "mbb"},
         "version": {"type": "string", "minLength": 1},
         "storyline_id": {"type": "string", "minLength": 1},
         "storyline_context": {"$ref": "#/$defs/storylineContext"},
@@ -122,12 +122,12 @@
     },
     "lineage": {
       "type": "object",
-      "required": ["page_package_sha256", "nbb_plan_sha256", "selected_storyline_id", "nbb_page_plan_sha256"],
+      "required": ["page_package_sha256", "mbb_plan_sha256", "selected_storyline_id", "mbb_page_plan_sha256"],
       "properties": {
         "page_package_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
-        "nbb_plan_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "mbb_plan_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
         "selected_storyline_id": {"type": "string", "minLength": 1},
-        "nbb_page_plan_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+        "mbb_page_plan_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
       },
       "additionalProperties": false
     }

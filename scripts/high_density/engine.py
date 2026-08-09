@@ -23,21 +23,22 @@ from .blueprint import (
 )
 from .content import (
     LOCKS_DIR,
-    NBB_PLAN_PATH,
-    NBB_SELECTION_RECEIPT_PATH,
-    NBB_SEAL_PATH,
+    MBB_PLAN_PATH,
+    MBB_SELECTION_RECEIPT_PATH,
+    MBB_SEAL_PATH,
     build_content_lock,
-    build_nbb_plan,
-    enrich_selected_nbb_plan,
+    build_mbb_plan,
+    enrich_selected_mbb_plan,
     load_content_lock,
-    load_nbb_plan,
+    load_mbb_plan,
     load_page_packages,
-    seal_nbb_plan,
-    select_nbb_storyline,
+    seal_mbb_plan,
+    select_mbb_storyline,
     write_content_lock,
-    write_nbb_plan,
+    write_mbb_plan,
 )
 from .contracts import ContractError, assert_valid, assert_v2, read_json as read_contract_json, run_relative, safe_run_path, sha256_file, sha256_json, utc_now, write_json as write_contract_json
+from .migration import MIGRATION_REQUIRED_CODE, legacy_artifact_reason
 from .pptx import PptxEditabilityError, compile_pptx, readback_pptx, pptx_path, readback_path, trace_path
 from .scene import build_fixture_scene, load_scene, scene_path, validate_scene_content, write_scene
 from .style import STYLE_LOCK_PATH, StyleSelectionRequired, ensure_style_lock, load_style_lock, write_style_lock
@@ -192,7 +193,7 @@ def _waiting(
         "required_schema": (
             "deck_blueprint_content_review.v1"
             if kind == "agent_blueprint_content_review"
-            else {"content_lock": "deck_nbb_plan.v1" if kind in {"agent_nbb_candidates", "agent_nbb_enrich_selected"} else "deck_high_density_status.v2", "blueprint": "deck_blueprint_manifest.v2", "page_scene": "deck_page_scene.v2", "svg": "native-svg", "visual_review": "deck_visual_review.v2"}.get(stage, "deck_high_density_status.v2")
+            else {"content_lock": "deck_mbb_plan.v1" if kind in {"agent_mbb_candidates", "agent_mbb_enrich_selected"} else "deck_high_density_status.v2", "blueprint": "deck_blueprint_manifest.v2", "page_scene": "deck_page_scene.v2", "svg": "native-svg", "visual_review": "deck_visual_review.v2"}.get(stage, "deck_high_density_status.v2")
         ),
         "acceptance_command": _resume_command(root),
         "resume_command": _resume_command(root),
@@ -215,10 +216,23 @@ def _waiting(
     }
 
 
+def _migration_waiting(root: Path, reason: str) -> dict[str, Any]:
+    return _waiting(
+        root,
+        page_id="",
+        stage="content_lock",
+        kind="agent_mbb_candidates",
+        input_ref="page_packages/",
+        output_ref=MBB_PLAN_PATH.as_posix(),
+        reason=f"{MIGRATION_REQUIRED_CODE}: {reason}. Preserve the retired artifact and regenerate the MBB plan from Page Packages.",
+        details={"migration_required": True, "rebuild_scope": "deck"},
+    )
+
+
 def _ensure_dirs(root: Path) -> None:
     for directory in (
         root / HIGH_DENSITY_DIR / "content_locks",
-        root / HIGH_DENSITY_DIR / "nbb",
+        root / HIGH_DENSITY_DIR / "mbb",
         root / HIGH_DENSITY_DIR / "style",
         root / HIGH_DENSITY_DIR / "prompts",
         root / HIGH_DENSITY_DIR / "blueprints",
@@ -318,7 +332,7 @@ def _backend() -> dict[str, Any]:
         "contract_versions": [
             "deck_page_package.v1",
             "deck_build_manifest.v2",
-            "deck_nbb_plan.v1",
+            "deck_mbb_plan.v1",
             "deck_high_density_style_lock.v1",
             "deck_content_lock.v2",
             "deck_blueprint_manifest.v2",
@@ -333,24 +347,24 @@ def _backend() -> dict[str, Any]:
     }
 
 
-def _high_density_source_fingerprint(manifest: dict[str, Any], style_lock: dict[str, Any], nbb_plan_sha256: str) -> str:
+def _high_density_source_fingerprint(manifest: dict[str, Any], style_lock: dict[str, Any], mbb_plan_sha256: str) -> str:
     return sha256_json(
         {
             "base_source_fingerprint": str(manifest.get("source_fingerprint") or ""),
             "style_lock_sha256": str(style_lock.get("style_lock_sha256") or ""),
-            "nbb_plan_sha256": nbb_plan_sha256,
+            "mbb_plan_sha256": mbb_plan_sha256,
             "profile_version": HIGH_DENSITY_PROFILE_VERSION,
         }
     )
 
 
-def _validate_nbb_plan_lineage(root: Path, plan: dict[str, Any], packages: list[dict[str, Any]], run_id: str) -> None:
-    loaded = load_nbb_plan(root, packages=packages, expected_run_id=run_id, require_approved=True)
-    if loaded.get("nbb_plan_sha256") != plan.get("nbb_plan_sha256"):
-        raise ContractError("NBB plan changed while validating lineage")
+def _validate_mbb_plan_lineage(root: Path, plan: dict[str, Any], packages: list[dict[str, Any]], run_id: str) -> None:
+    loaded = load_mbb_plan(root, packages=packages, expected_run_id=run_id, require_approved=True)
+    if loaded.get("mbb_plan_sha256") != plan.get("mbb_plan_sha256"):
+        raise ContractError("MBB plan changed while validating lineage")
 
 
-def _refresh_build_manifest_lineage(root: Path, manifest: dict[str, Any], packages: list[dict[str, Any]], style_lock: dict[str, Any], nbb_plan_sha256: str) -> dict[str, Any]:
+def _refresh_build_manifest_lineage(root: Path, manifest: dict[str, Any], packages: list[dict[str, Any]], style_lock: dict[str, Any], mbb_plan_sha256: str) -> dict[str, Any]:
     refreshed = build_manifest_v2(
         run_id=_run_id(root),
         packages=packages,
@@ -363,7 +377,7 @@ def _refresh_build_manifest_lineage(root: Path, manifest: dict[str, Any], packag
         now=None,
     )
     refreshed["run_mode"] = _mode(root)
-    refreshed["source_fingerprint"] = _high_density_source_fingerprint(refreshed, style_lock, nbb_plan_sha256)
+    refreshed["source_fingerprint"] = _high_density_source_fingerprint(refreshed, style_lock, mbb_plan_sha256)
     refreshed["pages"] = [{**page, "page_package_path": f"page_packages/{page['page_id']}.json"} for page in refreshed["pages"]]
     assert_valid("build_manifest", refreshed)
     return refreshed
@@ -372,6 +386,9 @@ def _refresh_build_manifest_lineage(root: Path, manifest: dict[str, Any], packag
 def _prepare_high_density(run_dir: str | Path, *, output_profile: str = "production_pptx") -> dict[str, Any]:
     root = ensure_run_dirs(run_dir)
     _ensure_dirs(root)
+    migration_reason = legacy_artifact_reason(root)
+    if migration_reason:
+        return _migration_waiting(root, migration_reason)
     if output_profile not in {"production_pptx", "client_delivery"}:
         raise HighDensityBuildError("BUILD_PROFILE_UNSUPPORTED", f"high-density output profile is unsupported: {output_profile}")
     packages = _packages_for_build(root)
@@ -389,15 +406,15 @@ def _prepare_high_density(run_dir: str | Path, *, output_profile: str = "product
         style_selection_pending = True
         write_style_lock(root, _run_id(root), "cyber-01", approved=False)
         style_lock = load_style_lock(root, require_approved=False, expected_run_id=_run_id(root))
-    nbb_plan_sha256 = "0" * 64
+    mbb_plan_sha256 = "0" * 64
     lock_paths: list[str] = []
     if mode in {"fixture", "dev"}:
         try:
-            existing_plan_path = root / NBB_PLAN_PATH
-            nbb_plan: dict[str, Any] | None = None
+            existing_plan_path = root / MBB_PLAN_PATH
+            mbb_plan: dict[str, Any] | None = None
             if existing_plan_path.exists():
                 try:
-                    candidate_plan = load_nbb_plan(
+                    candidate_plan = load_mbb_plan(
                         root,
                         packages=packages,
                         expected_run_id=_run_id(root),
@@ -407,30 +424,30 @@ def _prepare_high_density(run_dir: str | Path, *, output_profile: str = "product
                         str((candidate_plan.get("selection") or {}).get("status") or "") == "approved"
                         and str((candidate_plan.get("selection") or {}).get("selected_storyline_id") or "") == "storyline.decision"
                     ):
-                        nbb_plan = candidate_plan
+                        mbb_plan = candidate_plan
                     else:
-                        _invalidate_nbb_downstream(root, packages)
+                        _invalidate_mbb_downstream(root, packages)
                 except ContractError:
                     # A plan that no longer matches the Page Packages cannot
                     # leave old locks, scenes, or compiled outputs reachable.
-                    _invalidate_nbb_downstream(root, packages)
-            if nbb_plan is None:
-                nbb_plan = build_nbb_plan(packages, run_id=_run_id(root))
-                write_nbb_plan(root, nbb_plan)
-                nbb_plan = select_nbb_storyline(root, "storyline.decision", selected_by="fixture")
-                nbb_plan = enrich_selected_nbb_plan(nbb_plan, packages)
-                write_nbb_plan(root, nbb_plan)
-                nbb_plan = seal_nbb_plan(root)
+                    _invalidate_mbb_downstream(root, packages)
+            if mbb_plan is None:
+                mbb_plan = build_mbb_plan(packages, run_id=_run_id(root))
+                write_mbb_plan(root, mbb_plan)
+                mbb_plan = select_mbb_storyline(root, "storyline.decision", selected_by="fixture")
+                mbb_plan = enrich_selected_mbb_plan(mbb_plan, packages)
+                write_mbb_plan(root, mbb_plan)
+                mbb_plan = seal_mbb_plan(root)
             else:
-                write_nbb_plan(root, nbb_plan)
-            nbb_plan_sha256 = str(nbb_plan["nbb_plan_sha256"])
-            page_plans = {str(page["page_id"]): page for page in nbb_plan["pages"]}
+                write_mbb_plan(root, mbb_plan)
+            mbb_plan_sha256 = str(mbb_plan["mbb_plan_sha256"])
+            page_plans = {str(page["page_id"]): page for page in mbb_plan["pages"]}
             for package in packages:
                 path = write_content_lock(
                     root,
                     package,
                     page_plans[str(package["page_id"])],
-                    nbb_plan_sha256=nbb_plan_sha256,
+                    mbb_plan_sha256=mbb_plan_sha256,
                 )
                 lock_paths.append(run_relative(root, path))
         except ContractError as exc:
@@ -453,7 +470,7 @@ def _prepare_high_density(run_dir: str | Path, *, output_profile: str = "product
         now=None,
     )
     builder_manifest["run_mode"] = _mode(root)
-    builder_manifest["source_fingerprint"] = _high_density_source_fingerprint(builder_manifest, style_lock, nbb_plan_sha256)
+    builder_manifest["source_fingerprint"] = _high_density_source_fingerprint(builder_manifest, style_lock, mbb_plan_sha256)
     builder_manifest["pages"] = [
         {
             **page,
@@ -678,11 +695,11 @@ def _invalidate_page_scene_downstream(root: Path, page_id: str) -> None:
         _remove_if_exists(path)
 
 
-def _invalidate_nbb_downstream(root: Path, packages: list[dict[str, Any]], *, remove_plan: bool = True) -> None:
-    _remove_if_exists(root / NBB_SEAL_PATH)
+def _invalidate_mbb_downstream(root: Path, packages: list[dict[str, Any]], *, remove_plan: bool = True) -> None:
+    _remove_if_exists(root / MBB_SEAL_PATH)
     if remove_plan:
-        _remove_if_exists(root / NBB_SELECTION_RECEIPT_PATH)
-        _remove_if_exists(root / NBB_PLAN_PATH)
+        _remove_if_exists(root / MBB_SELECTION_RECEIPT_PATH)
+        _remove_if_exists(root / MBB_PLAN_PATH)
     for package in packages:
         page_id = str(package.get("page_id") or "")
         _remove_if_exists(root / LOCKS_DIR / f"{page_id}.json")
@@ -690,9 +707,9 @@ def _invalidate_nbb_downstream(root: Path, packages: list[dict[str, Any]], *, re
         _invalidate_page_downstream(root, page_id)
 
 
-def _reset_nbb_downstream(root: Path, manifest: dict[str, Any], packages: list[dict[str, Any]], style_lock: dict[str, Any]) -> dict[str, Any]:
-    """Remove artifacts that could have been produced from an unapproved NBB state."""
-    _invalidate_nbb_downstream(root, packages, remove_plan=False)
+def _reset_mbb_downstream(root: Path, manifest: dict[str, Any], packages: list[dict[str, Any]], style_lock: dict[str, Any]) -> dict[str, Any]:
+    """Remove artifacts that could have been produced from an unapproved MBB state."""
+    _invalidate_mbb_downstream(root, packages, remove_plan=False)
     refreshed = _refresh_build_manifest_lineage(root, manifest, packages, style_lock, "0" * 64)
     refreshed["status"] = "building"
     write_contract_json(root / BUILD_MANIFEST_PATH, refreshed)
@@ -702,6 +719,9 @@ def _reset_nbb_downstream(root: Path, manifest: dict[str, Any], packages: list[d
 def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
     root = ensure_run_dirs(run_dir)
     _ensure_dirs(root)
+    migration_reason = legacy_artifact_reason(root)
+    if migration_reason:
+        return _migration_waiting(root, migration_reason)
     manifest = _load_builder_manifest(root)
     if not (root / BUILD_MANIFEST_PATH).exists():
         status_file = root / STATUS_PATH
@@ -720,52 +740,52 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
         return _waiting(root, page_id="", stage="style_lock", kind="awaiting_user_decision", input_ref="high_density_build/style/style_options.json", output_ref="high_density_build/style/style_lock.json", reason=str(exc))
     manifest["status"] = "building"
     write_contract_json(root / BUILD_MANIFEST_PATH, manifest)
-    nbb_plan_sha256 = "0" * 64
-    nbb_plan_file = root / NBB_PLAN_PATH
-    if not nbb_plan_file.exists():
-        manifest = _reset_nbb_downstream(root, manifest, packages, style_lock)
+    mbb_plan_sha256 = "0" * 64
+    mbb_plan_file = root / MBB_PLAN_PATH
+    if not mbb_plan_file.exists():
+        manifest = _reset_mbb_downstream(root, manifest, packages, style_lock)
         return _waiting(
             root,
             page_id="",
             stage="content_lock",
-            kind="agent_nbb_candidates",
+            kind="agent_mbb_candidates",
             input_ref="page_packages/",
-            output_ref=NBB_PLAN_PATH.as_posix(),
-            reason="Run the content-specific NBB enrichment and evidence audit, then write a pending deck_nbb_plan.v1 with two or three candidate storylines.",
+            output_ref=MBB_PLAN_PATH.as_posix(),
+            reason="Run the content-specific MBB enrichment and evidence audit, then write a pending deck_mbb_plan.v1 with two or three candidate storylines.",
         )
     try:
-        pending_plan = load_nbb_plan(root, packages=packages, expected_run_id=_run_id(root), require_approved=False)
+        pending_plan = load_mbb_plan(root, packages=packages, expected_run_id=_run_id(root), require_approved=False)
     except ContractError as exc:
         message = str(exc)
         if "Page Package hash is stale" in message or "page coverage is stale" in message:
-            _invalidate_nbb_downstream(root, packages)
+            _invalidate_mbb_downstream(root, packages)
             manifest = _refresh_build_manifest_lineage(root, manifest, packages, style_lock, "0" * 64)
             manifest["status"] = "building"
             write_contract_json(root / BUILD_MANIFEST_PATH, manifest)
-            append_event(root, "high_density.nbb_invalidated", target=_run_id(root), payload_ref=NBB_PLAN_PATH.as_posix(), data={"reason": "page_package_changed"})
+            append_event(root, "high_density.mbb_invalidated", target=_run_id(root), payload_ref=MBB_PLAN_PATH.as_posix(), data={"reason": "page_package_changed"})
             return _waiting(
                 root,
                 page_id="",
                 stage="content_lock",
-                kind="agent_nbb_candidates",
+                kind="agent_mbb_candidates",
                 input_ref="page_packages/",
-                output_ref=NBB_PLAN_PATH.as_posix(),
-                reason=f"The Page Packages changed, so the previous NBB plan and all downstream artifacts were invalidated: {message}",
+                output_ref=MBB_PLAN_PATH.as_posix(),
+                reason=f"The Page Packages changed, so the previous MBB plan and all downstream artifacts were invalidated: {message}",
             )
-        manifest = _reset_nbb_downstream(root, manifest, packages, style_lock)
+        manifest = _reset_mbb_downstream(root, manifest, packages, style_lock)
         return _waiting(
             root,
             page_id="",
             stage="content_lock",
-            kind="agent_nbb_candidates",
+            kind="agent_mbb_candidates",
             input_ref="page_packages/",
-            output_ref=NBB_PLAN_PATH.as_posix(),
-            reason=f"Regenerate the malformed or stale NBB plan before content locks can be created: {message}",
+            output_ref=MBB_PLAN_PATH.as_posix(),
+            reason=f"Regenerate the malformed or stale MBB plan before content locks can be created: {message}",
         )
     selection = pending_plan.get("selection") or {}
     selection_status = str(selection.get("status") or "")
     if selection_status == "pending_user_decision":
-        manifest = _reset_nbb_downstream(root, manifest, packages, style_lock)
+        manifest = _reset_mbb_downstream(root, manifest, packages, style_lock)
         candidates = [
             {
                 "storyline_id": str(item.get("storyline_id") or ""),
@@ -782,50 +802,50 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
             page_id="",
             stage="content_lock",
             kind="awaiting_user_decision",
-            input_ref=NBB_PLAN_PATH.as_posix(),
-            output_ref=NBB_PLAN_PATH.as_posix(),
-            reason="Select one NBB storyline candidate. The same approved plan can resume without asking again until the Page Packages change.",
+            input_ref=MBB_PLAN_PATH.as_posix(),
+            output_ref=MBB_PLAN_PATH.as_posix(),
+            reason="Select one MBB storyline candidate. The same approved plan can resume without asking again until the Page Packages change.",
             details={
-                "required_schema": "deck_nbb_plan.v1",
+                "required_schema": "deck_mbb_plan.v1",
                 "recommended_storyline_id": recommended_id,
                 "storyline_candidates": candidates,
                 "approval_command": f"deck-master build retry --run-dir {root} --profile high-density --stage content_lock --storyline-id {recommended_id}",
             },
         )
     if selection_status == "selected_pending_enrichment":
-        manifest = _reset_nbb_downstream(root, manifest, packages, style_lock)
+        manifest = _reset_mbb_downstream(root, manifest, packages, style_lock)
         if not pending_plan.get("pages") or pending_plan.get("scr") is None:
             return _waiting(
                 root,
                 page_id="",
                 stage="content_lock",
-                kind="agent_nbb_enrich_selected",
-                input_ref=NBB_PLAN_PATH.as_posix(),
-                output_ref=NBB_PLAN_PATH.as_posix(),
+                kind="agent_mbb_enrich_selected",
+                input_ref=MBB_PLAN_PATH.as_posix(),
+                output_ref=MBB_PLAN_PATH.as_posix(),
                 reason="Enrich only the selected storyline with evidence-bound SCR and page plans, preserving the recorded user selection.",
                 details={"selected_storyline_id": str(selection.get("selected_storyline_id") or "")},
             )
         try:
-            pending_plan = seal_nbb_plan(root)
+            pending_plan = seal_mbb_plan(root)
             selection_status = "approved"
         except ContractError as exc:
             return _waiting(
                 root,
                 page_id="",
                 stage="content_lock",
-                kind="agent_nbb_enrich_selected",
-                input_ref=NBB_PLAN_PATH.as_posix(),
-                output_ref=NBB_PLAN_PATH.as_posix(),
+                kind="agent_mbb_enrich_selected",
+                input_ref=MBB_PLAN_PATH.as_posix(),
+                output_ref=MBB_PLAN_PATH.as_posix(),
                 reason=f"Repair the selected-storyline enrichment before the runtime can seal it: {exc}",
                 details={"selected_storyline_id": str(selection.get("selected_storyline_id") or "")},
             )
     try:
-        nbb_plan = load_nbb_plan(root, packages=packages, expected_run_id=_run_id(root), require_approved=True)
-        nbb_plan_sha256 = str(nbb_plan["nbb_plan_sha256"])
+        mbb_plan = load_mbb_plan(root, packages=packages, expected_run_id=_run_id(root), require_approved=True)
+        mbb_plan_sha256 = str(mbb_plan["mbb_plan_sha256"])
     except ContractError as exc:
         raise HighDensityBuildError("HD_CONTENT_LOCK_INVALID", str(exc), stage="content_lock") from exc
-    page_plans = {str(page.get("page_id") or ""): page for page in nbb_plan.get("pages") or [] if isinstance(page, dict)}
-    refreshed_manifest = _refresh_build_manifest_lineage(root, manifest, packages, style_lock, nbb_plan_sha256)
+    page_plans = {str(page.get("page_id") or ""): page for page in mbb_plan.get("pages") or [] if isinstance(page, dict)}
+    refreshed_manifest = _refresh_build_manifest_lineage(root, manifest, packages, style_lock, mbb_plan_sha256)
     if (
         refreshed_manifest.get("source_fingerprint") != manifest.get("source_fingerprint")
         or refreshed_manifest.get("pages") != manifest.get("pages")
@@ -842,21 +862,21 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
         page_id = str(package["page_id"])
         page_plan = page_plans.get(page_id)
         if page_plan is None:
-            raise HighDensityBuildError("HD_CONTENT_LOCK_INVALID", f"NBB page plan is missing on page {page_id}", stage="content_lock", page_id=page_id)
+            raise HighDensityBuildError("HD_CONTENT_LOCK_INVALID", f"MBB page plan is missing on page {page_id}", stage="content_lock", page_id=page_id)
         try:
             try:
                 lock = load_content_lock(root, page_id, expected_run_id=_run_id(root))
             except ContractError:
-                write_content_lock(root, package, page_plan, nbb_plan_sha256=nbb_plan_sha256)
+                write_content_lock(root, package, page_plan, mbb_plan_sha256=mbb_plan_sha256)
                 lock = load_content_lock(root, page_id, expected_run_id=_run_id(root))
-            current_lock = build_content_lock(package, page_plan, nbb_plan_sha256=nbb_plan_sha256)
+            current_lock = build_content_lock(package, page_plan, mbb_plan_sha256=mbb_plan_sha256)
             lock_stale = (
                 lock.get("page_package_sha256") != current_lock.get("page_package_sha256")
                 or lock.get("content_lock_sha256") != current_lock.get("content_lock_sha256")
-                or str((lock.get("lineage") or {}).get("nbb_plan_sha256") or "") != nbb_plan_sha256
+                or str((lock.get("lineage") or {}).get("mbb_plan_sha256") or "") != mbb_plan_sha256
             )
             if lock_stale:
-                write_content_lock(root, package, page_plan, nbb_plan_sha256=nbb_plan_sha256)
+                write_content_lock(root, package, page_plan, mbb_plan_sha256=mbb_plan_sha256)
                 _invalidate_page_downstream(root, page_id)
                 lock = load_content_lock(root, page_id, expected_run_id=_run_id(root))
                 append_event(
@@ -881,7 +901,7 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
         try:
             prompt_file = root / "high_density_build" / "prompts" / f"{page_id}.blueprint_prompt.json"
             blueprint_file = blueprint_manifest_path(root, page_id)
-            expected_nbb_sha = nbb_plan_sha256 or str((lock.get("lineage") or {}).get("nbb_plan_sha256") or "0" * 64)
+            expected_mbb_sha = mbb_plan_sha256 or str((lock.get("lineage") or {}).get("mbb_plan_sha256") or "0" * 64)
             if prompt_file.exists():
                 try:
                     existing_prompt = read_contract_json(prompt_file)
@@ -890,7 +910,7 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
                 if (
                     existing_prompt.get("content_lock_sha256") != lock.get("content_lock_sha256")
                     or existing_prompt.get("style_lock_sha256") != style_lock.get("style_lock_sha256")
-                    or existing_prompt.get("nbb_plan_sha256") != expected_nbb_sha
+                    or existing_prompt.get("mbb_plan_sha256") != expected_mbb_sha
                 ):
                     _invalidate_page_downstream(root, page_id)
                     prompt_file = root / "high_density_build" / "prompts" / f"{page_id}.blueprint_prompt.json"
@@ -903,13 +923,13 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
                 if (
                     existing_blueprint.get("content_lock_sha256") != lock.get("content_lock_sha256")
                     or existing_blueprint.get("style_lock_sha256") != style_lock.get("style_lock_sha256")
-                    or existing_blueprint.get("nbb_plan_sha256") != expected_nbb_sha
+                    or existing_blueprint.get("mbb_plan_sha256") != expected_mbb_sha
                 ):
                     _invalidate_page_downstream(root, page_id)
                     prompt_file = root / "high_density_build" / "prompts" / f"{page_id}.blueprint_prompt.json"
                     append_event(root, "high_density.blueprint_invalidated", target=page_id, payload_ref=f"{BLUEPRINT_MANIFEST_DIR.as_posix()}/{page_id}.blueprint_manifest.json", data={"reason": "blueprint_lineage_changed"})
             if not prompt_file.exists():
-                build_blueprint_prompt_artifact(root, page_id, lock, style_lock=style_lock, nbb_plan_sha256=nbb_plan_sha256)
+                build_blueprint_prompt_artifact(root, page_id, lock, style_lock=style_lock, mbb_plan_sha256=mbb_plan_sha256)
             fixture_approval = (
                 {"status": "approved", "source": "fixture_runtime", "approved_by": execution_mode, "approved_at": utc_now()}
                 if execution_mode in {"fixture", "dev"}
@@ -920,7 +940,7 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
                 page_id,
                 lock,
                 style_lock=style_lock,
-                nbb_plan_sha256=nbb_plan_sha256,
+                mbb_plan_sha256=mbb_plan_sha256,
                 approval=fixture_approval,
             )
             blueprint_manifest = load_blueprint_manifest(root, page_id, expected_run_id=_run_id(root))
@@ -1091,7 +1111,7 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
         "run_id": _run_id(root),
         "builder_profile": "high_density",
         "source_fingerprint": manifest["source_fingerprint"],
-        "nbb_plan": {"path": run_relative(root, root / NBB_PLAN_PATH), "sha256": nbb_plan_sha256},
+        "mbb_plan": {"path": run_relative(root, root / MBB_PLAN_PATH), "sha256": mbb_plan_sha256},
         "style_lock": {"path": run_relative(root, root / STYLE_LOCK_PATH), "sha256": str(style_lock.get("style_lock_sha256") or "")},
         "status": "building",
         "pages": page_records,
@@ -1193,6 +1213,10 @@ def _retry_high_density(
     storyline_id: str = "",
 ) -> dict[str, Any]:
     root = Path(run_dir).expanduser().resolve()
+    migration_reason = legacy_artifact_reason(root)
+    if migration_reason:
+        _ensure_dirs(root)
+        return _migration_waiting(root, migration_reason)
     manifest_path = root / BUILD_MANIFEST_PATH
     if not manifest_path.exists():
         raise HighDensityBuildError("HD_RETRY_TARGET_INVALID", "retry requires a prepared high-density build", stage=stage or "content_lock", page_id=page_id)
@@ -1208,7 +1232,7 @@ def _retry_high_density(
     if target_stage == "content_lock" and not page_id:
         if storyline_id:
             try:
-                select_nbb_storyline(root, storyline_id, selected_by="user")
+                select_mbb_storyline(root, storyline_id, selected_by="user")
             except ContractError as exc:
                 if "external user decision attestation" in str(exc):
                     return _waiting(
@@ -1216,18 +1240,18 @@ def _retry_high_density(
                         page_id="",
                         stage="content_lock",
                         kind="awaiting_user_decision",
-                        input_ref=NBB_PLAN_PATH.as_posix(),
-                        output_ref="high_density_build/nbb/user_decision_receipt.json",
+                        input_ref=MBB_PLAN_PATH.as_posix(),
+                        output_ref="high_density_build/mbb/user_decision_receipt.json",
                         reason=str(exc),
                         details={
                             "selected_storyline_id": storyline_id,
-                            "receipt_ref": "high_density_build/nbb/user_decision_receipt.json",
+                            "receipt_ref": "high_density_build/mbb/user_decision_receipt.json",
                             "attestation_env": "DECK_MASTER_USER_ATTESTATION_KEY",
                         },
                     )
-                raise HighDensityBuildError("HD_NBB_SELECTION_INVALID", str(exc), stage="content_lock") from exc
-        elif not (root / NBB_PLAN_PATH).exists():
-            raise HighDensityBuildError("HD_NBB_SELECTION_INVALID", "deck-scope content_lock retry requires an NBB plan and storyline_id", stage="content_lock")
+                raise HighDensityBuildError("HD_MBB_SELECTION_INVALID", str(exc), stage="content_lock") from exc
+        elif not (root / MBB_PLAN_PATH).exists():
+            raise HighDensityBuildError("HD_MBB_SELECTION_INVALID", "deck-scope content_lock retry requires an MBB plan and storyline_id", stage="content_lock")
         target_page_ids = sorted(allowed_pages)
     else:
         if not page_id:

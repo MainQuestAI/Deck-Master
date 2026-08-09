@@ -9,7 +9,7 @@
     "run_id": {"type": "string"},
     "builder_profile": {"const": "high_density"},
     "source_fingerprint": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
-    "nbb_plan": {"type": "object"},
+    "mbb_plan": {"type": "object"},
     "style_lock": {"type": "object"},
     "status": {"enum": ["building", "completed", "blocked", "stale"]},
     "pages": {"type": "array", "items": {"type": "object"}},

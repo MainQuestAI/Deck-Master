@@ -29,7 +29,7 @@
     },
     "lineage": {
       "type": "object",
-      "required": ["prompt_sha256", "image_sha256", "scene_sha256", "svg_sha256", "pptx_sha256", "readback_sha256", "content_lock_sha256", "nbb_plan_sha256", "style_lock_sha256"],
+      "required": ["prompt_sha256", "image_sha256", "scene_sha256", "svg_sha256", "pptx_sha256", "readback_sha256", "content_lock_sha256", "mbb_plan_sha256", "style_lock_sha256"],
       "properties": {
         "prompt_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
         "image_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
@@ -38,7 +38,7 @@
         "pptx_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
         "readback_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
         "content_lock_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
-        "nbb_plan_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "mbb_plan_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
         "style_lock_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
       },
       "additionalProperties": false

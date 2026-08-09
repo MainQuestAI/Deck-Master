@@ -1,11 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://deck-master.local/contracts/nbb-user-decision-receipt.v1.schema.json",
-  "title": "NBB External User Decision Receipt v1",
+  "$id": "https://deck-master.local/contracts/mbb-user-decision-receipt.v1.schema.json",
+  "title": "MBB External User Decision Receipt v1",
   "type": "object",
   "required": ["schema_version", "run_id", "selected_storyline_id", "attestor_id", "attested_at", "candidate_set_sha256", "evidence_ledger_sha256", "page_package_sha256", "integrity"],
   "properties": {
-    "schema_version": {"const": "deck_nbb_user_decision_receipt.v1"},
+    "schema_version": {"const": "deck_mbb_user_decision_receipt.v1"},
     "run_id": {"type": "string", "minLength": 1},
     "selected_storyline_id": {"type": "string", "minLength": 1},
     "attestor_id": {"type": "string", "minLength": 1},

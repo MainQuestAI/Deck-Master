@@ -3,7 +3,7 @@
   "$id": "https://deck-master.local/contracts/blueprint-prompt.v1.schema.json",
   "title": "Blueprint Prompt v1",
   "type": "object",
-  "required": ["schema_version", "run_id", "page_id", "prompt_template_version", "prompt_text", "prompt_sha256", "content_lock_sha256", "nbb_plan_sha256", "style_lock_sha256", "presentation_projection", "visible_copy_allowlist", "forbidden_visible_categories", "attempt_index", "provider_challenge", "created_at"],
+  "required": ["schema_version", "run_id", "page_id", "prompt_template_version", "prompt_text", "prompt_sha256", "content_lock_sha256", "mbb_plan_sha256", "style_lock_sha256", "presentation_projection", "visible_copy_allowlist", "forbidden_visible_categories", "attempt_index", "provider_challenge", "created_at"],
   "properties": {
     "schema_version": {"const": "deck_blueprint_prompt.v1"},
     "run_id": {"type": "string", "minLength": 1},
@@ -13,8 +13,8 @@
     "prompt_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
     "content_lock_ref": {"type": "string"},
     "content_lock_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
-    "nbb_plan_ref": {"type": "string"},
-    "nbb_plan_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "mbb_plan_ref": {"type": "string"},
+    "mbb_plan_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
     "style_lock_ref": {"type": "string"},
     "style_lock_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
     "presentation_projection": {"type": "object"},
@@ -25,7 +25,7 @@
     "forbidden_items": {"type": "array", "items": {"type": "string"}},
     "provider_challenge": {
       "type": "object",
-      "required": ["nonce", "issued_at", "run_mode", "run_id", "page_id", "prompt_sha256", "content_lock_sha256", "nbb_plan_sha256", "style_lock_sha256", "integrity"],
+      "required": ["nonce", "issued_at", "run_mode", "run_id", "page_id", "prompt_sha256", "content_lock_sha256", "mbb_plan_sha256", "style_lock_sha256", "integrity"],
       "properties": {
         "nonce": {"type": "string", "pattern": "^[a-f0-9]{32}$"},
         "issued_at": {"type": "string", "format": "date-time"},
@@ -34,7 +34,7 @@
         "page_id": {"type": "string", "minLength": 1},
         "prompt_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
         "content_lock_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
-        "nbb_plan_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "mbb_plan_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
         "style_lock_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
         "integrity": {
           "type": "object",
