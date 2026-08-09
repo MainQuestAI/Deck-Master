@@ -1,25 +1,22 @@
 {
   "schema_version": "deck_high_density_provider_challenge_status.v1",
-  "source_commit_sha": "4af2928b3a98ddeafba2abe49a890f3051458afc",
-  "status": "pass",
+  "source_commit_sha": "9726ac22d5ad00529013c91e7a2031c3d02ab467",
+  "status": "blocked_requires_mbb_refresh",
   "runtime_challenge": "pass",
   "runtime_challenge_signature": "pass",
   "runtime_provider_result_receipt": "pass",
   "stale_artifact_rejection": "pass",
   "prompt_request_image_svg_pptx_readback_lineage": "implemented",
   "historical_provider_smoke": "superseded_for_release_gate",
-  "fresh_provider_smoke": "pass",
-  "deck_quality_render_gate": "pass",
-  "deck_quality_render_gate_evidence": "local provider smoke run; raw run and report are not committed",
+  "fresh_provider_smoke": "blocked_requires_regeneration",
+  "deck_quality_render_gate": "blocked_pending_fresh_provider",
+  "deck_quality_render_gate_evidence": "No current MBB provider run is committed; raw run and report remain local-only",
   "fresh_provider_run_mode": "production",
-  "fresh_provider_visual_metrics": {
-    "text_masked_ssim": 0.9208257247475959,
-    "p0_region_ssim": 0.9348264945291993,
-    "bbox_max_delta_px": 0.0,
-    "component_coverage": 1.0,
-    "region_color_delta": 0.0809492792898699,
-    "svg_pptx_text_masked_ssim": 0.9848403072246478
-  },
+  "fresh_provider_visual_metrics": null,
+  "blockers": [
+    "provider smoke evidence predates the MBB contract migration",
+    "six-page external icon artifacts are unavailable in the repository"
+  ],
   "raw_provider_payload_committed": false,
   "verification_command": ".venv/bin/pytest -q tests/test_high_density_distinct_acceptance.py::test_provider_challenge_lineage_cannot_use_stale_artifacts tests/test_high_density_distinct_acceptance.py::test_fixture_artifacts_cannot_be_relabelled_as_production_provider_smoke tests/test_high_density_distinct_acceptance.py::test_provider_smoke_evidence_requires_real_provider_metadata; deck-master quality-gate render --run-dir <provider_smoke_run> --artifact <provider_smoke_pptx> --expected-pages 1"
 }

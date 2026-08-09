@@ -12,7 +12,7 @@
 
 上一轮已经形成的 CLI、Skill 注册、合同骨架、状态文件、Canonical Handback 和基础 PPTX 读回可以保留。以下四项产品核心能力均未达到可验收状态，必须在本轮完整实现：
 
-1. CyberPPT 的 NBB 内容分析与内容丰富能力。
+1. CyberPPT 的 MBB 内容分析与内容丰富能力。
 2. 基于真实页面内容的 ImageGen 蓝图生成与可复现 lineage。
 3. 从蓝图图片到原生 SVG 的高保真重绘、溢出控制和视觉 QA。
 4. 以已批准 SVG 为真实输入的 SVG-to-DrawingML PPTX 编译和读回验证。
@@ -21,7 +21,7 @@
 
 ```text
 Page Package + upstream evidence/narrative context
--> NBB content enrichment
+-> MBB content enrichment
 -> content_lock.v2
 -> content-aware ImageGen prompt
 -> approved blueprint image
@@ -83,7 +83,7 @@ Page Package + upstream evidence/narrative context
 
 | Core Area | 当前实现 | 本轮目标 |
 | --- | --- | --- |
-| NBB | 只计算字符、数字和 block 数量 | 形成证据绑定、论证、caveat、SO WHAT、组件计划和低密度阻断 |
+| MBB | 只计算字符、数字和 block 数量 | 形成证据绑定、论证、caveat、SO WHAT、组件计划和低密度阻断 |
 | Blueprint prompt | 只有页面类型、密度、风格 | 写入页面结论、锁定内容、证据、组件、语言、视觉系统和禁止项 |
 | ImageGen lineage | 图片生成后补 prompt hash | 先冻结 prompt，再调用 ImageGen，记录可核验生成链 |
 | Image-to-SVG | fixture 使用固定卡片模板 | Agent 基于真实蓝图量测并原生重绘 |
@@ -100,7 +100,7 @@ Page Package + upstream evidence/narrative context
 
 | Capability | 当前验收状态 |
 | --- | --- |
-| NBB content enrichment | 未通过 |
+| MBB content enrichment | 未通过 |
 | Content-aware ImageGen | 未通过 |
 | Image-to-native-SVG | 未通过 |
 | SVG-to-DrawingML PPTX | 未通过 |
@@ -113,7 +113,7 @@ Page Package + upstream evidence/narrative context
 
 本轮完成后，用户应能从现有 Deck Master Page Packages 启动一次 High-density build，并得到：
 
-- 经过 NBB 方法增强且证据可追溯的逐页内容锁。
+- 经过 MBB 方法增强且证据可追溯的逐页内容锁。
 - 由真实页面内容驱动的高密度 ImageGen 蓝图。
 - 对蓝图进行原生 SVG 重绘后的可检查页面。
 - 关键文字、数字、表格、图表和关系可编辑的 PPTX。
@@ -145,7 +145,7 @@ Page Package + upstream evidence/narrative context
 ## 4. 不可妥协原则
 
 1. Page Package 是事实、数字和证据的唯一上游真相源。
-2. NBB 在本项目中指 CyberPPT MBB 级内容分析链的仓库内实现，禁止缩减成字符计数或模板填充。
+2. MBB 在本项目中指 CyberPPT 内容增强方法的仓库内实现，禁止缩减成字符计数或模板填充。
 3. ImageGen 只能提供视觉构图、层级、组件密度和设计语言，不能提供事实。
 4. 已批准蓝图是 Image-to-SVG 阶段的视觉基准。
 5. 已批准 SVG 是 PPTX 页面视觉和几何的真实编译输入。
@@ -163,7 +163,7 @@ Page Package + upstream evidence/narrative context
 
 独立 Skill 负责驱动 Agent 完成：
 
-- NBB 证据审计和内容丰富。
+- MBB 证据审计和内容丰富。
 - 逐页内容结构、caveat、SO WHAT 和组件规划。
 - 读取冻结 prompt 并调用 ImageGen。
 - 目视拆解真实蓝图。
@@ -194,8 +194,8 @@ Agent 不得自行写入通过指标，不得修改工具计算结果，不得�
 `deck-master build run --profile high-density` 在需要 Agent 行动时返回以下 action kind 之一：
 
 ```text
-agent_nbb_candidates
-agent_nbb_enrich_selected
+agent_mbb_candidates
+agent_mbb_enrich_selected
 agent_imagegen
 agent_visual_reconstruct
 agent_svg_repair
@@ -229,8 +229,8 @@ agent_main_review
     style/
       style_options.json
       style_lock.json
-    nbb/
-      nbb_plan.json
+    mbb/
+      mbb_plan.json
       evidence_coverage.json
     content_locks/
       P001.content_lock.json
@@ -286,7 +286,7 @@ agent_main_review
 | Contract | Scope | Purpose |
 | --- | --- | --- |
 | `deck_high_density_style_lock.v1` | deck | 固定视觉样式、色板、网格、字体、图表和页面表面系统 |
-| `deck_nbb_plan.v1` | deck | NBB 证据审计、故事线、SCR、页面物料池和密度计划 |
+| `deck_mbb_plan.v1` | deck | MBB 证据审计、故事线、SCR、页面物料池和密度计划 |
 | `deck_content_lock.v2` | page | 内容冻结、受控丰富、证据 lineage、组件和覆盖要求 |
 | `deck_blueprint_prompt.v1` | page | 完整 ImageGen prompt 和所有输入 hash |
 | `deck_blueprint_manifest.v2` | page | prompt-first 生成记录、图片、画布、frame、transform 和批准状态 |
@@ -303,11 +303,11 @@ agent_main_review
 - artifact hash 只覆盖稳定业务字段，不包含 `created_at`、`updated_at` 和绝对路径。
 - 所有路径必须是 run-relative path。
 - 每个 page artifact 同时绑定 `run_id`、`page_id` 和直接上游 hash。
-- deck fingerprint 由排序后的 Page Package hash、style lock hash、NBB plan hash 和 profile version 组成。
+- deck fingerprint 由排序后的 Page Package hash、style lock hash、MBB plan hash 和 profile version 组成。
 - 任一直接上游 hash 变化时，所有下游 artifact 必须删除或标记 stale。
 - stale artifact 永远不能被 handback 引用。
 
-## 8. Runtime Stage A：NBB 内容分析与内容锁
+## 8. Runtime Stage A：MBB 内容分析与内容锁
 
 ### 8.1 输入
 
@@ -316,7 +316,7 @@ agent_main_review
 - 可选的已批准 deck brief、narrative plan、SCR 或 evidence index。
 - style intent 仅用于组件建议，不能影响事实。
 
-### 8.2 `nbb_plan.v1` 必须产出
+### 8.2 `mbb_plan.v1` 必须产出
 
 - 证据底表和每条证据的来源、期间、单位、置信度、冲突、caveat、含义。
 - 已批准叙事存在时的叙事审计结果。
@@ -343,7 +343,7 @@ agent_main_review
 - 每条新增内容的 `origin`：`source`、`derived`、`structural_label`。
 - derived 内容的 evidence refs 和 derivation note。
 
-### 8.4 NBB 内容丰富规则
+### 8.4 MBB 内容丰富规则
 
 允许：
 
@@ -359,13 +359,13 @@ agent_main_review
 - 覆盖 Page Package 中已经批准的结论或数字。
 - 为达到密度目标重复同一观点。
 
-### 8.5 NBB 硬门
+### 8.5 MBB 硬门
 
 - 所有事实、数字和具体判断的 evidence coverage 为 100%。
 - 所有 derived factual claim 至少有一个 evidence ref。
 - 低密度页面在蓝图前阻断，返回缺失信息和可行动建议。
 - `required_component_ids` 为空时阻断。
-- Page Package、NBB plan 和 content lock 的 run/page/hash 必须一致。
+- Page Package、MBB plan 和 content lock 的 run/page/hash 必须一致。
 - 同一稳定输入重复运行得到同一稳定 hash。
 
 ## 9. Runtime Stage B：内容驱动的 ImageGen 蓝图
@@ -401,7 +401,7 @@ Style lock 只约束视觉表达，不能增加或修改事实。全 deck 默认
 - 完整 prompt text。
 - prompt template version。
 - content lock path/hash。
-- NBB plan path/hash。
+- MBB plan path/hash。
 - style lock path/hash。
 - 页面角色、结论和目标语言。
 - 必需组件和信息区数量。
@@ -717,8 +717,8 @@ PPTX 编译和 readback 完成后，每页生成 PPTX page render，并与同页
 
 | Changed input | Invalidated artifacts |
 | --- | --- |
-| Page Package | NBB plan、content lock 及该页全部下游 |
-| NBB plan | content lock、prompt、blueprint、scene、SVG、PPTX、handback |
+| Page Package | MBB plan、content lock 及该页全部下游 |
+| MBB plan | content lock、prompt、blueprint、scene、SVG、PPTX、handback |
 | Content lock | prompt 及该页全部下游 |
 | Style lock | prompt、blueprint、scene、SVG、PPTX、handback |
 | Prompt | blueprint 及全部下游 |
@@ -783,7 +783,7 @@ PPTX 编译和 readback 完成后，每页生成 PPTX page render，并与同页
 
 ### 15.1 Unit tests
 
-- NBB evidence and claim coverage。
+- MBB evidence and claim coverage。
 - content lock deterministic hash。
 - prompt serialization and content sensitivity。
 - slide frame and transform。
@@ -869,14 +869,14 @@ Release acceptance 必须运行一页 fresh ImageGen：
 - schema 版本和兼容策略未通过工程 Review。
 - 任一目录穿越或静默页面丢失仍可复现。
 
-### Phase 1：NBB + Content-aware ImageGen
+### Phase 1：MBB + Content-aware ImageGen
 
 目标：把 CyberPPT 的内容密度和生图核心真实迁入独立 Skill。
 
 开发项：
 
 - 实现固定 8 样式 registry、展示资产和 `style_lock.v1`。
-- 实现 `nbb_plan.v1` 和 `content_lock.v2`。
+- 实现 `mbb_plan.v1` 和 `content_lock.v2`。
 - 重写 `scripts/high_density/content.py`。
 - 重写 prompt builder 和 blueprint manifest。
 - 补 Agent action contract 和 Skill continuation。
@@ -894,7 +894,7 @@ Release acceptance 必须运行一页 fresh ImageGen：
 停止点：
 
 - Prompt 仍可在缺少页面真实内容时生成。
-- NBB 输出只有统计字段或泛化模板。
+- MBB 输出只有统计字段或泛化模板。
 - Agent action 需要用户手工拼接隐含参数。
 
 ### Phase 2：Image-to-native-SVG
@@ -958,7 +958,7 @@ Release acceptance 必须运行一页 fresh ImageGen：
 | HD2-002 | input/path/lineage hardening | `content.py`, `engine.py` | AF-14 至 AF-17 |
 | HD2-003 | watch 和 capability dependencies | `deck_master.py`, `installer.py` | AF-18、AF-19 |
 | HD2-100 | 8 样式 registry 和 style lock | Skill assets、contracts、engine | style selection gate |
-| HD2-101 | NBB plan 和 content lock | `content.py`, Skill instructions | AF-01、AF-02 |
+| HD2-101 | MBB plan 和 content lock | `content.py`, Skill instructions | AF-01、AF-02 |
 | HD2-102 | content-aware prompt 和 blueprint lineage | `blueprint.py` | AF-03、AF-04、AF-20 |
 | HD2-103 | Agent continuation | Skill、engine status/action | single invocation smoke |
 | HD2-201 | visual registry 和 scene v2 | `scene.py` | AF-05、AF-06 |
@@ -994,8 +994,8 @@ Phase 1 首批 failing tests：
 ```text
 test_production_requires_approved_style_lock
 test_style_lock_change_invalidates_blueprints
-test_nbb_blocks_low_density_without_evidence
-test_nbb_rejects_unsupported_factual_claim
+test_mbb_blocks_low_density_without_evidence
+test_mbb_rejects_unsupported_factual_claim
 test_content_lock_contains_required_components_and_text_refs
 test_blueprint_prompt_changes_with_locked_content
 test_blueprint_manifest_requires_prompt_before_image
@@ -1004,7 +1004,7 @@ test_blueprint_manifest_requires_prompt_before_image
 验证命令：
 
 ```bash
-.venv/bin/python -m pytest -q tests/test_high_density_nbb.py tests/test_high_density_blueprint.py
+.venv/bin/python -m pytest -q tests/test_high_density_mbb.py tests/test_high_density_blueprint.py
 ```
 
 Phase 2 首批 failing tests：
@@ -1054,7 +1054,7 @@ test_seven_page_high_density_end_to_end
 推荐 4 个主 PR，每个 PR 都能独立验证：
 
 1. `HD2-Phase0`: contracts、security、lineage、watch、capability。
-2. `HD2-Phase1`: NBB、content lock、prompt、ImageGen lineage、Agent continuation。
+2. `HD2-Phase1`: MBB、content lock、prompt、ImageGen lineage、Agent continuation。
 3. `HD2-Phase2`: visual registry、Scene、native SVG、measured visual QA。
 4. `HD2-Phase3`: SVG-to-DrawingML、readback、handback、完整 acceptance。
 
@@ -1117,7 +1117,7 @@ test_seven_page_high_density_end_to_end
 3. AF-01 至 AF-20 全部通过。
 4. 7 页 fixture 使用不同蓝图并完成端到端验证。
 5. 一页 fresh provider smoke 完成 prompt -> blueprint -> SVG -> PPTX。
-6. NBB 产出能证明内容结构和解释深度真实增加，所有事实保留证据 lineage。
+6. MBB 产出能证明内容结构和解释深度真实增加，所有事实保留证据 lineage。
 7. Blueprint 由页面真实内容驱动，prompt/image lineage 完整。
 8. SVG 由实际蓝图驱动，真实 metrics 和双角色 Review 通过。
 9. PPTX 由 approved SVG 编译，修改 SVG 会改变 PPTX。
@@ -1152,7 +1152,7 @@ test_seven_page_high_density_end_to_end
 - Active v2 Spec。
 - v2 contract schemas。
 - 更新后的独立 Skill instructions。
-- NBB/content lock implementation。
+- MBB/content lock implementation。
 - Prompt/ImageGen lineage implementation。
 - Image-to-SVG workflow and validators。
 - Measured visual QA implementation。
@@ -1172,7 +1172,7 @@ test_seven_page_high_density_end_to_end
 
 | Reference | 必须迁移的行为 | 新实现位置 | 禁止照搬的路径 |
 | --- | --- | --- | --- |
-| CyberPPT | MBB/NBB 证据表、故事线、SCR、页面物料池、密度与组件清单、8 样式、内容锁、内容驱动 ImageGen | Runtime Stage A/B、Skill instructions、style registry | hybrid Image-to-PPT 直接生产、ImageGen 事实化、低密度大纲 |
+| CyberPPT | MBB 证据表、故事线、SCR、页面物料池、密度与组件清单、8 样式、内容锁、内容驱动 ImageGen | Runtime Stage A/B、Skill instructions、style registry | hybrid Image-to-PPT 直接生产、ImageGen 事实化、低密度大纲 |
 | `native-svg-redraw` | 全元素登记、量测、原生 SVG、图标/曲线检查、self-review、main review、批次状态权限 | Runtime Stage C/D、visual contracts、review evidence | 运行时调用外部 Skill、只做 XML 检查、整页图片封装 |
 | Product Design `image-to-code` | 锁定唯一参考图、同尺寸实现、真实渲染、逐轮 design QA、参考图与结果同状态比较 | Blueprint normalization、comparison、metamorphic tests | 前端 DOM/CSS 实现方式、与 PPT 无关的交互和响应式逻辑 |
 | PPT Master | SVG 作为生成 PPTX 的输入、受控 SVG 子集、DrawingML/native object、trace、真实渲染和 package postflight | Runtime Stage E、仓库内 compiler/readback | 运行时依赖 PPT Master Skill、复制完整 pipeline、Scene 旁路编译 |
@@ -1194,7 +1194,7 @@ test_seven_page_high_density_end_to_end
 
 | User requirement | Spec coverage | Acceptance evidence |
 | --- | --- | --- |
-| 沿袭 CyberPPT NBB 内容丰富 | §8、§16 Phase 1 | AF-01/02、NBB fixture、provider smoke |
+| 沿袭 CyberPPT MBB 内容丰富 | §8、§16 Phase 1 | AF-01/02、MBB fixture、provider smoke |
 | 保留 CyberPPT 生图完成度 | §9、§23.1 | prompt/image lineage、8 style lock、fresh blueprint |
 | 图片到 SVG 高还原 | §10、§11 | AF-05 至 AF-10、真实 metrics、双角色 review |
 | 解决文字/视觉/比例漂移 | §9.4、§10.4-10.7、§11 | frame transform、overflow、bbox、SSIM |

@@ -1,6 +1,6 @@
 # High-Density Builder v2 Migration
 
-Date: 2026-08-08
+Date: 2026-08-09
 
 ## Migration Rule
 
@@ -14,7 +14,7 @@ The Page Package remains the fact source. Existing v1 content locks, blueprint m
 2. Verify every Page Package is valid, unique, `ready_for_build`, and bound to the current run ID.
 3. Run high-density prepare to create v2 build state and style-selection artifacts.
 4. Approve one of the eight fixed style locks for production.
-5. Let the Agent write two or three `deck_nbb_plan.v1` storyline candidates.
+5. Let the Agent write two or three `deck_mbb_plan.v1` storyline candidates.
 6. Record the user-selected storyline with `build retry --stage content_lock --storyline-id <id>`.
 7. Let the Agent enrich only the selected storyline; the runtime validates and seals it before writing `deck_content_lock.v2` artifacts.
 8. Regenerate prompt, blueprint, Scene, native SVG, PPTX, visual review, readback, and handback artifacts.
@@ -22,34 +22,36 @@ The Page Package remains the fact source. Existing v1 content locks, blueprint m
 
 ## State And Action Changes
 
-NBB selection uses three states:
+MBB selection uses three states:
 
 - `pending_user_decision`
 - `selected_pending_enrichment`
 - `approved`
 
-Agent continuation uses two separate NBB actions:
+Agent continuation uses two separate MBB actions:
 
-- `agent_nbb_candidates`
-- `agent_nbb_enrich_selected`
+- `agent_mbb_candidates`
+- `agent_mbb_enrich_selected`
 
-The storyline selection action records user intent only. It does not create, refresh, or overwrite Agent-authored SCR or page plans. The selection is valid only with `nbb/selection_receipt.json`, signed by the Runtime and bound to the candidate set, evidence ledger, selected storyline, and Page Package hashes.
+The storyline selection action records user intent only. It does not create, refresh, or overwrite Agent-authored SCR or page plans. The selection is valid only with `mbb/selection_receipt.json`, signed by the Runtime and bound to the candidate set, evidence ledger, selected storyline, and Page Package hashes.
 
-An approved NBB plan is valid only with the matching signed `nbb/runtime_seal.json`. Editing the plan, selection receipt, or any Page Package invalidates that seal and blocks Content Lock generation.
+An approved MBB plan is valid only with the matching signed `mbb/runtime_seal.json`. Editing the plan, selection receipt, or any Page Package invalidates that seal and blocks Content Lock generation.
 
 Blueprint prompts now contain a signed provider challenge that fixes the original run mode. A completed provider result requires a second signed receipt bound to the prompt, request metadata, approval, and image hash. Existing unsigned provider evidence must be regenerated from a fresh provider call.
 
 Production visual review now starts from a signed Runtime challenge. Producer self-review and main review must use separate action IDs and reviewer IDs, carry the current SVG/blueprint/metrics hashes, and preserve main-to-self review lineage.
 
+Retired content-planning artifacts cannot be restored into the current run. The Runtime returns `HD_MBB_MIGRATION_REQUIRED` and requires a fresh MBB plan from the Page Packages.
+
 ## Invalidation
 
-A Page Package change invalidates the deck-scoped NBB plan, all content locks, prompts, blueprints, scenes, SVGs, PPTX artifacts, visual reviews, traces, readback reports, and canonical handback artifacts.
+A Page Package change invalidates the deck-scoped MBB plan, all content locks, prompts, blueprints, scenes, SVGs, PPTX artifacts, visual reviews, traces, readback reports, and canonical handback artifacts.
 
 A style-lock change invalidates prompts and every downstream visual artifact. A visible SVG change invalidates DrawingML, trace, render comparison, readback, and handback. A Scene-only visual mutation cannot alter PPTX geometry or rendering.
 
 ## Failure Policy
 
-- Malformed or stale Agent NBB output returns the matching Agent recovery action and cannot create a content lock.
+- Malformed or stale Agent MBB output returns the matching Agent recovery action and cannot create a content lock.
 - Unknown storyline IDs keep the run in the user-decision state.
 - Unsupported SVG elements fail before compile with the element ID, unsupported property, and recovery command.
 - Missing renderers, Python packages, schemas, or fonts block capability readiness.
@@ -59,6 +61,6 @@ A style-lock change invalidates prompts and every downstream visual artifact. A 
 ## Compatibility
 
 - The standard profile retains its existing contracts and remains the default.
-- Fixture/dev may auto-select deterministic NBB and style inputs for reproducible tests.
+- Fixture/dev may auto-select deterministic MBB and style inputs for reproducible tests.
 - Production and benchmark modes cannot use fixture fallback or placeholder provider evidence.
 - OfficeCLI remains optional after the core PPTX has passed readback and visual gates.

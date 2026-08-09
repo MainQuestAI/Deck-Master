@@ -55,7 +55,7 @@
   - 历史目标：锁定独立 Skill、Agent-managed runtime 和首版合同外壳。
 - `deck-master-high-density-builder-core-engineering-spec-v2.md`
   - 状态：当前 active development spec。
-  - 目标：重新实现 NBB 内容增强、内容驱动 ImageGen、图片到原生 SVG、真实视觉 QA、SVG-to-DrawingML PPTX 和 73 页外部 benchmark，并以 20 项反伪实现探针作为核心验收门。
+  - 目标：重新实现 MBB 内容增强、内容驱动 ImageGen、图片到原生 SVG、真实视觉 QA、SVG-to-DrawingML PPTX 和 73 页外部 benchmark，并以 20 项反伪实现探针作为核心验收门。
 - `deck-master-high-density-builder-reference-migration-evidence.md`
   - 目标：记录 CyberPPT、native-svg-redraw、Product Design `image-to-code`、PPT Master 和 OfficeCLI 的参考证据、迁移行为、重写落点与冲突裁决。
 

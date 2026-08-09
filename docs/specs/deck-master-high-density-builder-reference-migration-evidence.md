@@ -15,7 +15,7 @@
 | --- | --- | --- | --- |
 | `/Users/dingcheng/.codex/skills/cyber-ppt/SKILL.md` | 内容先行、页面高密度、图片蓝图、禁止页码和内部生成标记、逐页生产 | `scripts/high_density/content.py`、`blueprint.py`、`style.py`、`skills/deck-builder-high-density/SKILL.md` | ImageGen 只提供构图证据，事实和文字回到 content lock |
 | `/Users/dingcheng/.codex/skills/cyber-ppt/references/source-analysis.md` | source inventory、证据整理、素材与页面意图分离 | `content_lock.v2` 的 evidence ledger、source fingerprint | Page Package 成为唯一事实源 |
-| `/Users/dingcheng/.codex/skills/cyber-ppt/references/storyline.md` | storyline、SCR、页面结论、论据、caveat、SO WHAT | `build_nbb_page()`、`nbb_plan.v1`、`content_lock.v2` | 由仓库内 NBB 实现确定性固化，禁止只保留字符计数 |
+| `/Users/dingcheng/.codex/skills/cyber-ppt/references/storyline.md` | storyline、SCR、页面结论、论据、caveat、SO WHAT | `build_mbb_page()`、`mbb_plan.v1`、`content_lock.v2` | 由仓库内 MBB 实现确定性固化，禁止只保留字符计数 |
 | `/Users/dingcheng/.codex/skills/cyber-ppt/references/visual-system.md` | 颜色、网格、排版、表格/图表语言和密度规则 | `CYBER_PPT_STYLES` 八套 registry、`style_lock.v1` | style lock 必须在生产 ImageGen 前批准 |
 | `/Users/dingcheng/.codex/skills/ppt-master/SKILL.md` | SVG 作为页面作者源、可编辑导出、真实渲染和质量复核 | `scripts/high_density/pptx.py`、`visual.py`、handback | 不运行外部 Skill，不复用其运行时 pipeline |
 | `/Users/dingcheng/.codex/skills/ppt-master/workflows/generate-pptx.md` | prompt/asset manifest 先于生成、SVG 逐页生产、渲染后检查、notes 与 package postflight | `blueprint_prompt.v1`、`svg_to_drawingml_trace.v1`、`pptx_readback.v2` | OfficeCLI 只保留给 deck-quality 之后的可选后处理 |
@@ -32,7 +32,7 @@
 
 ### 保留
 
-- CyberPPT 的 NBB 内容丰富框架：证据表、故事线/SCR、页面物料池、结论、论据、caveat、SO WHAT、组件计划和密度控制。
+- CyberPPT 的 MBB 内容丰富框架：证据表、故事线/SCR、页面物料池、结论、论据、caveat、SO WHAT、组件计划和密度控制。
 - CyberPPT 的高密度蓝图工作流：真实内容进入 prompt，prompt 先落盘，图片作为布局参考，禁止页码和内部标注。
 - `native-svg-redraw` 的原生元素合同、逐元素登记、溢出阻断、self-review/main-review 证据。
 - Product Design image-to-code 的同尺寸渲染比较和迭代 QA。
@@ -40,7 +40,7 @@
 
 ### 重写
 
-- 所有 NBB、style lock、prompt、Scene、SVG validator、视觉 metrics、DrawingML compiler 和 readback 都在本仓库实现。
+- 所有 MBB、style lock、prompt、Scene、SVG validator、视觉 metrics、DrawingML compiler 和 readback 都在本仓库实现。
 - 所有上游/下游 lineage 由 v2 contracts 和 hash 重新计算。
 - 所有 Agent continuation action 通过 Deck Master status/next-step 合同表达。
 
@@ -55,7 +55,7 @@
 ## 可验证证据
 
 - `tests/test_high_density_builder.py`：既有 14 个高密度回归。
-- `tests/test_high_density_builder_v2.py`：Phase 0 至 Phase 3 的 fail-closed、NBB、prompt、SVG、visual metrics、DrawingML 和 metamorphic 探针。
+- `tests/test_high_density_builder_v2.py`：Phase 0 至 Phase 3 的 fail-closed、MBB、prompt、SVG、visual metrics、DrawingML 和 metamorphic 探针。
 - `docs/contracts/*v2*.schema.json` 与 `contracts.py`：v2 生产合同和 v1 preview 识别边界。
 - `high_density_build/reviews/*.metrics.json`：实际渲染输入 hash、遮罩 hash、局部 SSIM、bbox、颜色和 coverage。
 - `high_density_build/traces/pptx_trace.json` 与 `readback/readback_report.json`：SVG 到 DrawingML 的逐元素 trace、文本、几何、notes、媒体和最终渲染读回。

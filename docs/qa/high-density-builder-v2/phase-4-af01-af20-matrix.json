@@ -1,30 +1,30 @@
 {
   "schema_version": "deck_high_density_acceptance_matrix.v1",
-  "status": "pass",
+  "status": "blocked_release_evidence_refresh",
   "engineering_spec": "docs/specs/deck-master-high-density-builder-core-engineering-spec-v2.md",
   "test_session": {
     "command": ".venv/bin/pytest -q",
-    "source_commit_sha": "4af2928b3a98ddeafba2abe49a890f3051458afc",
+    "source_commit_sha": "9726ac22d5ad00529013c91e7a2031c3d02ab467",
     "result": "pass",
-    "tests_passed": 1365,
+    "tests_passed": 1399,
     "subtests_passed": 105,
-    "executed_at": "2026-08-08"
+    "executed_at": "2026-08-09"
   },
   "acceptance_functions": [
     {
       "id": "AF-01",
-      "gate": "evidenced NBB density",
-      "tests": ["tests/test_high_density_builder_v2.py::test_nbb_blocks_low_density_without_evidence"],
+      "gate": "evidenced MBB density",
+      "tests": ["tests/test_high_density_builder_v2.py::test_mbb_blocks_low_density_without_evidence"],
       "status": "pass"
     },
     {
       "id": "AF-02",
       "gate": "unsupported factual claims blocked",
       "tests": [
-        "tests/test_high_density_builder_v2.py::test_nbb_rejects_unsupported_factual_claim",
+        "tests/test_high_density_builder_v2.py::test_mbb_rejects_unsupported_factual_claim",
         "tests/test_high_density_builder_v2.py::test_numeric_claim_must_exist_in_its_cited_evidence",
         "tests/test_high_density_builder_v2.py::test_numeric_claim_uses_exact_token_match_in_cited_evidence",
-        "tests/test_high_density_builder_v2.py::test_nbb_rejects_duplicate_evidence_ids_across_page_packages"
+        "tests/test_high_density_builder_v2.py::test_mbb_rejects_duplicate_evidence_ids_across_page_packages"
       ],
       "status": "pass"
     },
@@ -147,12 +147,12 @@
     }
   ],
   "anti_fake_probes": [
-    "tests/test_high_density_builder_v2.py::test_agent_approved_nbb_plan_without_runtime_seal_is_rejected",
-    "tests/test_high_density_builder_v2.py::test_agent_selected_nbb_plan_without_runtime_receipt_is_rejected",
-    "tests/test_high_density_builder_v2.py::test_forged_nbb_runtime_seal_signature_is_rejected",
+    "tests/test_high_density_builder_v2.py::test_agent_approved_mbb_plan_without_runtime_seal_is_rejected",
+    "tests/test_high_density_builder_v2.py::test_agent_selected_mbb_plan_without_runtime_receipt_is_rejected",
+    "tests/test_high_density_builder_v2.py::test_forged_mbb_runtime_seal_signature_is_rejected",
     "tests/test_high_density_builder_v2.py::test_runtime_seal_is_invalidated_when_approved_plan_changes",
-    "tests/test_high_density_builder_v2.py::test_nbb_plan_blocks_agent_added_material_component_and_required_text",
-    "tests/test_high_density_builder_v2.py::test_nbb_rejects_duplicate_evidence_ids_across_page_packages",
+    "tests/test_high_density_builder_v2.py::test_mbb_plan_blocks_agent_added_material_component_and_required_text",
+    "tests/test_high_density_builder_v2.py::test_mbb_rejects_duplicate_evidence_ids_across_page_packages",
     "tests/test_high_density_builder_v2.py::test_svg_rejects_missing_scene_element",
     "tests/test_high_density_builder_v2.py::test_visible_tspan_text_cannot_hide_behind_declared_metadata",
     "tests/test_high_density_builder_v2.py::test_required_tspan_cannot_be_hidden_by_run_paint",
@@ -165,6 +165,8 @@
     "seven_page_e2e": "docs/qa/high-density-builder-v2/phase-4-seven-page-e2e.json",
     "fresh_provider_smoke": "docs/qa/high-density-builder-v2/phase-4-provider-smoke-evidence.json",
     "provider_challenge": "docs/qa/high-density-builder-v2/phase-4-provider-challenge-status.json",
+    "six_page_icon_external": "docs/qa/high-density-builder-v2/phase-4-six-page-icon-external-acceptance.json",
+    "release_gate_status": "blocked_missing_fresh_mbb_provider_and_external_icon_evidence",
     "external_73_page_mvp": "docs/qa/high-density-builder-v2/phase-4-73-page-external-mvp-index.json",
     "standard_profile": "docs/qa/high-density-builder-v2/phase-4-standard-profile-evidence.json",
     "final_qa_review": "docs/qa/high-density-builder-v2/phase-4-final-qa-review.md"
