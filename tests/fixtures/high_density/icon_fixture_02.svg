@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1672" height="941" viewBox="0 0 1672 941">
+  <rect width="1672" height="941" fill="#f7f9fb"/>
+  <path d="M80 156 H1592" stroke="#419bfd" stroke-width="6"/>
+  <rect x="80" y="200" width="360" height="600" fill="#ffffff" stroke="#d5dde5"/>
+  <rect x="464" y="200" width="360" height="600" fill="#eef5fb" stroke="#d5dde5"/>
+  <rect x="848" y="200" width="360" height="600" fill="#fff3e8" stroke="#d5dde5"/>
+  <rect x="1232" y="200" width="360" height="600" fill="#edf7f1" stroke="#d5dde5"/>
+  <rect x="80" y="820" width="1512" height="44" rx="6" fill="#eaf2fb" stroke="#c7d9ec"/>
+  <defs><symbol id="icon.symbol.folder" viewBox="0 0 54 40"><path id="icon.symbol.folder.path" d="M0 0 L14 0 L20 6 L54 6 L54 40 L0 40 Z M0 14 L54 14"/></symbol></defs>
+  <use id="blueprint.icon.header.use" data-pptx-visual-id="icon.header" xlink:href="#icon.symbol.folder" x="1500" y="68" width="54" height="40" fill="none" stroke="#419bfd" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

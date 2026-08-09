@@ -1,0 +1,136 @@
+{
+  "schema_version": "deck_high_density_icon_external_acceptance.v1",
+  "source_index": {
+    "path": "docs/qa/high-density-builder-v2/phase-4-73-page-external-mvp-index.json",
+    "sha256": "06547051895d58b9d6a32066d896cf87c6d9a8187e0eb8eea4e4ce783902aaec"
+  },
+  "target_page_ids": [
+    "P06",
+    "P30",
+    "P46",
+    "P49",
+    "P50",
+    "P60"
+  ],
+  "status": "blocked_missing_local_benchmark_artifacts",
+  "raw_artifacts_included": false,
+  "pages": [
+    {
+      "page_id": "P06",
+      "status": "blocked",
+      "artifacts": {},
+      "object_check_count": 0,
+      "unresolved_icon_count": 0,
+      "blockers": [
+        "missing local artifact: source_blueprint",
+        "missing local artifact: native_svg",
+        "missing local artifact: svg_to_pptx_metrics",
+        "missing local artifact: pptx",
+        "missing local artifact: readback"
+      ]
+    },
+    {
+      "page_id": "P30",
+      "status": "blocked",
+      "artifacts": {},
+      "object_check_count": 0,
+      "unresolved_icon_count": 0,
+      "blockers": [
+        "missing local artifact: source_blueprint",
+        "missing local artifact: native_svg",
+        "missing local artifact: svg_to_pptx_metrics",
+        "missing local artifact: pptx",
+        "missing local artifact: readback"
+      ]
+    },
+    {
+      "page_id": "P46",
+      "status": "blocked",
+      "artifacts": {},
+      "object_check_count": 0,
+      "unresolved_icon_count": 0,
+      "blockers": [
+        "missing local artifact: source_blueprint",
+        "missing local artifact: native_svg",
+        "missing local artifact: svg_to_pptx_metrics",
+        "missing local artifact: pptx",
+        "missing local artifact: readback"
+      ]
+    },
+    {
+      "page_id": "P49",
+      "status": "blocked",
+      "artifacts": {},
+      "object_check_count": 0,
+      "unresolved_icon_count": 0,
+      "blockers": [
+        "missing local artifact: source_blueprint",
+        "missing local artifact: native_svg",
+        "missing local artifact: svg_to_pptx_metrics",
+        "missing local artifact: pptx",
+        "missing local artifact: readback"
+      ]
+    },
+    {
+      "page_id": "P50",
+      "status": "blocked",
+      "artifacts": {},
+      "object_check_count": 0,
+      "unresolved_icon_count": 0,
+      "blockers": [
+        "missing local artifact: source_blueprint",
+        "missing local artifact: native_svg",
+        "missing local artifact: svg_to_pptx_metrics",
+        "missing local artifact: pptx",
+        "missing local artifact: readback"
+      ]
+    },
+    {
+      "page_id": "P60",
+      "status": "blocked",
+      "artifacts": {},
+      "object_check_count": 0,
+      "unresolved_icon_count": 0,
+      "blockers": [
+        "missing local artifact: source_blueprint",
+        "missing local artifact: native_svg",
+        "missing local artifact: svg_to_pptx_metrics",
+        "missing local artifact: pptx",
+        "missing local artifact: readback"
+      ]
+    }
+  ],
+  "blockers": [
+    "P06: missing local artifact: source_blueprint",
+    "P06: missing local artifact: native_svg",
+    "P06: missing local artifact: svg_to_pptx_metrics",
+    "P06: missing local artifact: pptx",
+    "P06: missing local artifact: readback",
+    "P30: missing local artifact: source_blueprint",
+    "P30: missing local artifact: native_svg",
+    "P30: missing local artifact: svg_to_pptx_metrics",
+    "P30: missing local artifact: pptx",
+    "P30: missing local artifact: readback",
+    "P46: missing local artifact: source_blueprint",
+    "P46: missing local artifact: native_svg",
+    "P46: missing local artifact: svg_to_pptx_metrics",
+    "P46: missing local artifact: pptx",
+    "P46: missing local artifact: readback",
+    "P49: missing local artifact: source_blueprint",
+    "P49: missing local artifact: native_svg",
+    "P49: missing local artifact: svg_to_pptx_metrics",
+    "P49: missing local artifact: pptx",
+    "P49: missing local artifact: readback",
+    "P50: missing local artifact: source_blueprint",
+    "P50: missing local artifact: native_svg",
+    "P50: missing local artifact: svg_to_pptx_metrics",
+    "P50: missing local artifact: pptx",
+    "P50: missing local artifact: readback",
+    "P60: missing local artifact: source_blueprint",
+    "P60: missing local artifact: native_svg",
+    "P60: missing local artifact: svg_to_pptx_metrics",
+    "P60: missing local artifact: pptx",
+    "P60: missing local artifact: readback"
+  ],
+  "created_at": "2026-08-09T02:51:12.553460+00:00"
+}

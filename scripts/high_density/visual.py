@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 import math
+import platform
 import re
 import shutil
 import subprocess
@@ -16,6 +17,46 @@ from .contracts import ContractError, read_json, run_relative, sha256_file, sha2
 
 class VisualMetricsError(ContractError):
     pass
+
+
+VISUAL_QUALITY_POLICY: dict[str, Any] = {
+    "version": "visual-quality-policy.v1",
+    "crop": {
+        "padding": "max(4px,12%)",
+        "size_px": 256,
+        "minimum_object_size_px": 12,
+    },
+    "blueprint_vs_svg": {
+        "ssim_min": 0.80,
+        "edge_f1_min": 0.60,
+        "silhouette_iou_min": 0.65,
+        "color_delta_max": 0.20,
+        "bbox_delta_px_max": 3.0,
+        "occupancy_delta_max": 0.25,
+    },
+    "svg_vs_pptx": {
+        "ssim_min": 0.95,
+        "edge_f1_min": 0.90,
+        "silhouette_iou_min": 0.92,
+        "color_delta_max": 0.08,
+        "bbox_delta_px_max": 1.0,
+        "occupancy_delta_max": 0.12,
+    },
+    "renderer_tolerance": {
+        "alignment_radius_px": 4,
+        "local_match_blur_radius_px": 1.0,
+        "silhouette_luma_threshold": 225,
+        "edge_delta_threshold": 2,
+        "edge_dilation_kernel": 5,
+    },
+    "full_page": {
+        "text_mask_max_coverage": 0.20,
+        "p0_p1_bbox_delta_px_max": 2.0,
+        "p0_p1_text_contrast_ratio_min": 3.0,
+    },
+}
+VISUAL_QUALITY_POLICY_SHA256 = sha256_json(VISUAL_QUALITY_POLICY)
+_RENDERER_FINGERPRINT_CACHE: dict[str, Any] | None = None
 
 
 _PATH_TOKEN_RE = re.compile(r"([AaCcHhLlMmQqSsTtVvZz])|([-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)")
@@ -171,15 +212,22 @@ def _svg_geometry_bbox(node: Any) -> dict[str, float]:
 
 
 def _svg_element_bboxes(root: Path, page_id: str, element_ids: set[str]) -> dict[str, dict[str, float]]:
+    from .svg_native import SvgNativeError, parse_svg_native
+
     try:
         document = ElementTree.fromstring(root.read_text(encoding="utf-8"))
-    except (OSError, ElementTree.ParseError) as exc:
+        native = parse_svg_native(document)
+    except (OSError, ElementTree.ParseError, SvgNativeError, ContractError) as exc:
         raise VisualMetricsError(f"cannot inspect SVG geometry: {root}") from exc
-    nodes = {str(node.get("id")): node for node in document.iter() if node.get("id")}
-    missing = sorted(element_ids - set(nodes))
+    geometries = {
+        str(item.get("element_id") or ""): dict(item.get("bbox") or {})
+        for item in native.get("elements") or []
+        if item.get("element_id")
+    }
+    missing = sorted(element_ids - set(geometries))
     if missing:
         raise VisualMetricsError(f"SVG is missing geometry for page {page_id}: {', '.join(missing)}")
-    return {element_id: _svg_geometry_bbox(nodes[element_id]) for element_id in sorted(element_ids)}
+    return {element_id: geometries[element_id] for element_id in sorted(element_ids)}
 
 
 def _load_image(path: Path, *, size: tuple[int, int] = (CANVAS_WIDTH, CANVAS_HEIGHT)):
@@ -207,7 +255,7 @@ def _render_svg_to_png(svg: Path, output: Path, width: int, height: int) -> Path
 
 def normalize_blueprint(root: Path, manifest: dict[str, Any]) -> Path:
     """Crop the approved source frame into the canonical comparison canvas."""
-    from PIL import Image
+    from PIL import Image, ImageFilter
 
     source = root / str(manifest["image_path"])
     width, height = image_dimensions(source)
@@ -459,6 +507,270 @@ def _svg_component_ids(root: Path, page_id: str) -> set[str]:
     return {str(node.get("data-pptx-component") or "") for node in document.iter() if node.get("data-pptx-component")}
 
 
+def renderer_fingerprint() -> dict[str, Any]:
+    """Capture the actual render toolchain used by visual evidence."""
+    global _RENDERER_FINGERPRINT_CACHE
+    if _RENDERER_FINGERPRINT_CACHE is not None:
+        return copy.deepcopy(_RENDERER_FINGERPRINT_CACHE)
+    import numpy
+    from PIL import __version__ as pillow_version
+    from pptx import __version__ as pptx_version
+
+    def command_version(command: str, args: list[str]) -> str:
+        executable = shutil.which(command)
+        if not executable:
+            return "missing"
+        result = subprocess.run([executable, *args], capture_output=True, text=True)
+        text = (result.stdout or result.stderr).strip().splitlines()
+        return text[0][:240] if text else "unknown"
+
+    font_path = ""
+    matcher = shutil.which("fc-match")
+    if matcher:
+        result = subprocess.run([matcher, "Arial", "-f", "%{file}"], capture_output=True, text=True)
+        font_path = result.stdout.strip()
+    font_sha256 = ""
+    if font_path and Path(font_path).is_file():
+        font_sha256 = sha256_file(Path(font_path))
+    fingerprint = {
+        "python": platform.python_version(),
+        "platform": platform.platform(),
+        "pillow": str(pillow_version),
+        "numpy": str(numpy.__version__),
+        "python_pptx": str(pptx_version),
+        "librsvg": command_version("rsvg-convert", ["--version"]),
+        "libreoffice": command_version("soffice", ["--version"]),
+        "poppler": command_version("pdftoppm", ["-v"]),
+        "font": {"requested": "Arial", "path": font_path, "sha256": font_sha256},
+        "commands": {
+            "svg": {"executable": "rsvg-convert", "args": ["-w", "<width>", "-h", "<height>", "-o", "<output>", "<input>"]},
+            "pptx_to_pdf": {"executable": "soffice", "args": ["<profile>", "--headless", "--nologo", "--nodefault", "--nofirststartwizard", "--convert-to", "pdf", "--outdir", "<temp>", "<input.pptx>"]},
+            "pdf_to_png": {"executable": "pdftoppm", "args": ["-png", "-r", "144", "<input.pdf>", "<prefix>"]},
+        },
+    }
+    _RENDERER_FINGERPRINT_CACHE = copy.deepcopy(fingerprint)
+    return fingerprint
+
+
+def _safe_visual_filename(value: str) -> str:
+    return re.sub(r"[^A-Za-z0-9_.-]+", "_", value).strip("._") or "visual"
+
+
+def _crop_image(image: Any, bbox: dict[str, Any], output: Path) -> Path:
+    from PIL import Image
+
+    minimum_size = float(VISUAL_QUALITY_POLICY["crop"]["minimum_object_size_px"])
+    if float(bbox.get("w") or 0) < minimum_size or float(bbox.get("h") or 0) < minimum_size:
+        raise VisualMetricsError("visual registry object is smaller than 12x12px")
+    padding = max(4.0, max(float(bbox.get("w") or 0), float(bbox.get("h") or 0)) * 0.12)
+    left = max(0, int(math.floor(float(bbox.get("x") or 0) - padding)))
+    top = max(0, int(math.floor(float(bbox.get("y") or 0) - padding)))
+    right = min(CANVAS_WIDTH, int(math.ceil(float(bbox.get("x") or 0) + float(bbox.get("w") or 0) + padding)))
+    bottom = min(CANVAS_HEIGHT, int(math.ceil(float(bbox.get("y") or 0) + float(bbox.get("h") or 0) + padding)))
+    size = int(VISUAL_QUALITY_POLICY["crop"]["size_px"])
+    cropped = image.crop((left, top, right, bottom)).resize((size, size), Image.Resampling.LANCZOS)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    cropped.save(output, format="PNG")
+    return output
+
+
+def _silhouette_iou(reference: Any, candidate: Any) -> float:
+    import numpy as np
+
+    first = np.asarray(reference.convert("RGB"), dtype=np.int16)
+    second = np.asarray(candidate.convert("RGB"), dtype=np.int16)
+    # Ignore low-amplitude antialiasing halos. The crop still records the
+    # original hashes, while the metric evaluates the stable foreground.
+    threshold = int(VISUAL_QUALITY_POLICY["renderer_tolerance"]["silhouette_luma_threshold"])
+    first_mask = np.any(first < threshold, axis=2)
+    second_mask = np.any(second < threshold, axis=2)
+    union = int((first_mask | second_mask).sum())
+    return 1.0 if union == 0 else float((first_mask & second_mask).sum()) / union
+
+
+def _shift_crop(image: Any, dx: int, dy: int) -> Any:
+    from PIL import Image
+
+    width, height = image.size
+    shifted = Image.new("RGB", (width, height), image.getpixel((0, 0)))
+    source_left, source_top = max(0, -dx), max(0, -dy)
+    source_right, source_bottom = min(width, width - dx), min(height, height - dy)
+    target_left, target_top = max(0, dx), max(0, dy)
+    if source_right > source_left and source_bottom > source_top:
+        shifted.paste(image.crop((source_left, source_top, source_right, source_bottom)), (target_left, target_top))
+    return shifted
+
+
+def _best_local_alignment(reference: Any, candidate: Any, radius: int | None = None) -> tuple[Any, int, int]:
+    if radius is None:
+        radius = int(VISUAL_QUALITY_POLICY["renderer_tolerance"]["alignment_radius_px"])
+    best = (float("-inf"), candidate, 0, 0)
+    for dy in range(-radius, radius + 1):
+        for dx in range(-radius, radius + 1):
+            shifted = _shift_crop(candidate, dx, dy)
+            score = _ssim(reference, shifted)
+            if score > best[0] or (score == best[0] and abs(dx) + abs(dy) < abs(best[2]) + abs(best[3])):
+                best = (score, shifted, dx, dy)
+    return best[1], best[2], best[3]
+
+
+def _local_edge_f1(reference: Any, candidate: Any) -> float:
+    import numpy as np
+    from PIL import Image, ImageFilter
+
+    def edge_map(image: Any) -> Any:
+        values = np.asarray(image.convert("L"), dtype=np.int16)
+        edges = np.zeros_like(values, dtype=bool)
+        edges[:, 1:] |= np.abs(values[:, 1:] - values[:, :-1]) > 2
+        edges[1:, :] |= np.abs(values[1:, :] - values[:-1, :]) > 2
+        kernel = int(VISUAL_QUALITY_POLICY["renderer_tolerance"]["edge_dilation_kernel"])
+        if kernel % 2 == 0:
+            kernel += 1
+        return np.asarray(Image.fromarray((edges * 255).astype("uint8")).filter(ImageFilter.MaxFilter(kernel))) > 0
+
+    first_edges = edge_map(reference)
+    second_edges = edge_map(candidate)
+    denominator = int(first_edges.sum()) + int(second_edges.sum())
+    return 1.0 if denominator == 0 else 2.0 * float((first_edges & second_edges).sum()) / denominator
+
+
+def _visual_registry_bboxes(scene: dict[str, Any], svg_file: Path) -> dict[str, dict[str, Any]]:
+    from .svg_native import SvgNativeError, parse_svg_native
+
+    try:
+        document = ElementTree.fromstring(svg_file.read_text(encoding="utf-8"))
+        native = parse_svg_native(document)
+    except (OSError, ElementTree.ParseError, SvgNativeError) as exc:
+        raise VisualMetricsError(f"cannot inspect visual registry geometry: {svg_file}") from exc
+    by_group: dict[str, dict[str, float]] = {}
+    for group_id, group in (native.get("groups") or {}).items():
+        children = [item for item in native.get("elements") or [] if str(item.get("element_id") or "") in set(group.get("child_ids") or [])]
+        if children:
+            left = min(float(item["bbox"]["x"]) for item in children)
+            top = min(float(item["bbox"]["y"]) for item in children)
+            right = max(float(item["bbox"]["x"]) + float(item["bbox"]["w"]) for item in children)
+            bottom = max(float(item["bbox"]["y"]) + float(item["bbox"]["h"]) for item in children)
+            by_group[str(group_id)] = {"x": left, "y": top, "w": right - left, "h": bottom - top}
+    return {str(item.get("visual_id") or ""): {"blueprint": item.get("blueprint_bbox") or {}, "svg": by_group.get(str(item.get("svg_group_id") or item.get("visual_id") or "")), "registry": item} for item in scene.get("visual_registry") or [] if item.get("visual_id")}
+
+
+def _object_checks(root: Path, scene: dict[str, Any], reference: Any, candidate: Any, *, reference_path: Path, candidate_path: Path, comparison: str, candidate_geometry: dict[str, dict[str, float]] | None) -> list[dict[str, Any]]:
+    registries = list(scene.get("visual_registry") or [])
+    if not registries:
+        return []
+    from PIL import Image, ImageFilter
+
+    page_id = str(scene.get("page_id") or "page")
+    geometry = _visual_registry_bboxes(scene, root / "high_density_build" / "svg" / f"{page_id}.svg")
+    checks: list[dict[str, Any]] = []
+    blueprint_path = root / "high_density_build" / "blueprints" / f"{page_id}.normalized.png"
+    if not blueprint_path.exists() and comparison == "blueprint_vs_svg":
+        blueprint_path = reference_path
+    if comparison == "svg_vs_pptx" and not blueprint_path.exists():
+        raise VisualMetricsError(f"normalized blueprint is required for local visual checks on page {page_id}")
+    for visual in registries:
+        visual_id = str(visual.get("visual_id") or "")
+        entry = geometry.get(visual_id) or {"blueprint": visual.get("blueprint_bbox") or {}, "svg": None, "registry": visual}
+        blueprint_bbox = entry.get("blueprint") or {}
+        svg_bbox = entry.get("svg")
+        if comparison == "svg_vs_pptx":
+            source_bbox = svg_bbox or blueprint_bbox
+            group_id = str((entry.get("registry") or {}).get("svg_group_id") or visual_id)
+            target_bbox = (candidate_geometry or {}).get(group_id) or (candidate_geometry or {}).get(visual_id)
+            svg_image = reference
+            target_image = candidate
+        else:
+            source_bbox = blueprint_bbox
+            target_bbox = svg_bbox
+            svg_image = candidate
+            target_image = candidate
+        object_dir = root / "high_density_build" / "comparisons" / page_id / "objects"
+        prefix = _safe_visual_filename(visual_id)
+        if blueprint_path and blueprint_path.exists():
+            blueprint_image = _load_image(blueprint_path)
+        else:
+            blueprint_image = reference if comparison == "blueprint_vs_svg" else None
+        source_crop = _crop_image(blueprint_image, blueprint_bbox, object_dir / f"{prefix}.blueprint.png") if blueprint_image is not None else object_dir / f"{prefix}.blueprint.png"
+        if comparison == "svg_vs_pptx":
+            svg_crop = _crop_image(svg_image, source_bbox, object_dir / f"{prefix}.svg.png")
+            pptx_crop_path = object_dir / f"{prefix}.pptx.png"
+            if target_bbox:
+                pptx_crop = _crop_image(target_image, target_bbox, pptx_crop_path)
+            else:
+                Image.new("RGB", (256, 256), "white").save(pptx_crop_path, format="PNG")
+                pptx_crop = pptx_crop_path
+            comparison_source = svg_crop
+            comparison_target = pptx_crop
+        else:
+            svg_crop = _crop_image(svg_image, target_bbox or blueprint_bbox, object_dir / f"{prefix}.svg.png")
+            pptx_crop = None
+            comparison_source = source_crop
+            comparison_target = svg_crop
+        if target_bbox is None:
+            values = {"ssim": 0.0, "edge_f1": 0.0, "silhouette_iou": 0.0, "color_delta": 1.0, "bbox_delta_px": 999.0, "occupancy_delta": 1.0, "alignment_dx_px": 0, "alignment_dy_px": 0}
+            status = "failed"
+            finding = {"code": "missing_visual_registry_object", "visual_id": visual_id}
+        else:
+            source_image = Image.open(comparison_source).convert("RGB")
+            comparison_image = Image.open(comparison_target).convert("RGB")
+            # SVG and LibreOffice use different antialiasing kernels. Keep
+            # the raw crop hashes above, but compare a policy-controlled
+            # low-radius image for local stability metrics. Geometry,
+            # occupancy, silhouette and semantic registry checks remain
+            # independent gates.
+            local_blur = float(VISUAL_QUALITY_POLICY["renderer_tolerance"].get("local_match_blur_radius_px") or 0.0)
+            if local_blur > 0:
+                source_image = source_image.filter(ImageFilter.GaussianBlur(radius=local_blur))
+                comparison_image = comparison_image.filter(ImageFilter.GaussianBlur(radius=local_blur))
+            comparison_image, alignment_dx, alignment_dy = _best_local_alignment(source_image, comparison_image)
+            bbox_delta = max(abs(float(source_bbox.get(key) or 0) - float(target_bbox.get(key) or 0)) for key in ("x", "y", "w", "h"))
+            import numpy as np
+
+            first_mask = np.any(np.asarray(source_image) < 245, axis=2)
+            second_mask = np.any(np.asarray(comparison_image) < 245, axis=2)
+            occupancy_delta = abs(float(first_mask.mean()) - float(second_mask.mean()))
+            values = {
+                "ssim": _ssim(source_image, comparison_image),
+                "edge_f1": _local_edge_f1(source_image, comparison_image),
+                "silhouette_iou": _silhouette_iou(source_image, comparison_image),
+                "color_delta": _color_delta(source_image, comparison_image),
+                "bbox_delta_px": bbox_delta,
+                "occupancy_delta": occupancy_delta,
+                "alignment_dx_px": abs(alignment_dx),
+                "alignment_dy_px": abs(alignment_dy),
+            }
+            policy_thresholds = VISUAL_QUALITY_POLICY[comparison]
+            thresholds = {
+                "ssim": float(policy_thresholds["ssim_min"]),
+                "edge_f1": float(policy_thresholds["edge_f1_min"]),
+                "silhouette_iou": float(policy_thresholds["silhouette_iou_min"]),
+                "color_delta": float(policy_thresholds["color_delta_max"]),
+                "bbox_delta_px": float(policy_thresholds["bbox_delta_px_max"]),
+                "occupancy_delta": float(policy_thresholds["occupancy_delta_max"]),
+            }
+            failing = [key for key, limit in thresholds.items() if (values[key] < limit if key in {"ssim", "edge_f1", "silhouette_iou"} else values[key] > limit)]
+            status = "pass" if not failing else "failed"
+            finding = {"code": "visual_object_threshold_failed", "visual_id": visual_id, "metrics": failing} if failing else {}
+        check = {
+            "visual_id": visual_id,
+            "visual_type": str(visual.get("visual_type") or "complex_visual"),
+            "priority": str(visual.get("priority") or "P2"),
+            "source_crop_path": run_relative(root, source_crop) if source_crop.exists() else run_relative(root, svg_crop),
+            "source_crop_sha256": sha256_file(source_crop if source_crop.exists() else svg_crop),
+            "svg_crop_path": run_relative(root, svg_crop),
+            "svg_crop_sha256": sha256_file(svg_crop),
+            "pptx_crop_path": run_relative(root, pptx_crop) if pptx_crop else "",
+            "pptx_crop_sha256": sha256_file(pptx_crop) if pptx_crop else "",
+            "bbox": dict(blueprint_bbox),
+            "values": values,
+            "status": status,
+        }
+        if finding:
+            check["finding"] = finding
+        checks.append(check)
+    return checks
+
+
 def compute_visual_metrics(
     root: Path,
     scene: dict[str, Any],
@@ -551,6 +863,16 @@ def compute_visual_metrics(
     text_boxes = [svg_geometry[str(element.get("element_id") or "")] for element in scene.get("elements", []) if element.get("kind") == "text" and element.get("priority") in {"P0", "P1"}]
     illegal_overlap_count = sum(1 for index, first in enumerate(text_boxes) for second in text_boxes[index + 1 :] if _overlap_area(first, second) > 1)
     mask_coverage = float(mask.mean())
+    object_checks = _object_checks(
+        root,
+        scene,
+        reference,
+        candidate,
+        reference_path=blueprint_preview,
+        candidate_path=svg_preview,
+        comparison=comparison,
+        candidate_geometry=candidate_geometry,
+    )
     findings: list[dict[str, Any]] = []
     if ssim < policy["text_masked_ssim"]:
         findings.append({"code": "visual_ssim_below_threshold", "value": ssim, "threshold": policy["text_masked_ssim"]})
@@ -580,16 +902,22 @@ def compute_visual_metrics(
                 "threshold": policy["p0_p1_text_contrast_ratio"],
             }
         )
+    failed_objects = [item for item in object_checks if item.get("status") != "pass"]
+    if failed_objects:
+        findings.append({"code": "visual_object_checks_failed", "visual_ids": [str(item.get("visual_id") or "") for item in failed_objects]})
+    toolchain = renderer_fingerprint()
     metrics = {
         "schema_version": "deck_visual_metrics.v1",
         "run_id": str(scene["run_id"]),
         "page_id": str(scene["page_id"]),
-        "comparison": {"kind": comparison, "renderer": f"rsvg-convert + Pillow + NumPy; SSIM uses {ssim_blur_radius:g}px Gaussian blur", "canvas": {"width": CANVAS_WIDTH, "height": CANVAS_HEIGHT, "unit": "px"}},
+        "comparison": {"kind": comparison, "renderer": f"rsvg-convert + Pillow + NumPy; SSIM uses {ssim_blur_radius:g}px Gaussian blur", "toolchain": toolchain, "canvas": {"width": CANVAS_WIDTH, "height": CANVAS_HEIGHT, "unit": "px"}},
         "inputs": {"reference_path": run_relative(root, blueprint_preview), "reference_sha256": sha256_file(blueprint_preview), "candidate_path": run_relative(root, svg_preview), "candidate_sha256": sha256_file(svg_preview), "mask_sha256": sha256_json(mask.astype(bool).tolist()), "mask_coverage": mask_coverage, "svg_geometry_sha256": sha256_json(svg_geometry), "candidate_geometry_sha256": sha256_json(candidate_geometry) if candidate_geometry is not None else ""},
+        "policy": {"version": VISUAL_QUALITY_POLICY["version"], "sha256": VISUAL_QUALITY_POLICY_SHA256, "object": VISUAL_QUALITY_POLICY[comparison], "renderer_tolerance": VISUAL_QUALITY_POLICY["renderer_tolerance"]},
         "thresholds": policy,
         "values": {"text_masked_ssim": ssim, "p0_region_ssim": p0_region_ssim, "bbox_max_delta_px": max(bbox_deltas) if bbox_deltas else 0.0, "anchor_max_delta_px": anchor_max_delta, "region_color_delta": color_delta, "edge_similarity": edge_similarity, "p0_p1_min_text_contrast_ratio": text_contrast["minimum_ratio"], "mask_coverage": mask_coverage, "overflow_count": overflow_count, "illegal_overlap_count": illegal_overlap_count, "direction_mismatch_count": direction_mismatches},
         "geometry": {"source": "svg_dom_geometry" if comparison == "svg_vs_pptx" else "scene_blueprint_bbox", "target": "pptx_readback_geometry" if comparison == "svg_vs_pptx" else "svg_dom_geometry", "pairs": geometry_pairs},
-        "coverage": {"required_components": len(required_components), "present_components": len(required_components - set(missing_components)), "component_coverage": 1.0 if not missing_components else (len(required_components) - len(missing_components)) / max(1, len(required_components)), "p0_p1_bbox_coverage": 1.0 if not bbox_deltas or max(bbox_deltas) <= policy["bbox_max_delta_px"] else 0.0, "p0_p1_text_contrast": text_contrast["elements"]},
+        "coverage": {"required_components": len(required_components), "present_components": len(required_components - set(missing_components)), "component_coverage": 1.0 if not missing_components else (len(required_components) - len(missing_components)) / max(1, len(required_components)), "p0_p1_bbox_coverage": 1.0 if not bbox_deltas or max(bbox_deltas) <= policy["bbox_max_delta_px"] else 0.0, "p0_p1_text_contrast": text_contrast["elements"], "visual_registry_coverage": 1.0 if not object_checks else sum(1 for item in object_checks if item.get("status") == "pass") / len(object_checks)},
+        "object_checks": object_checks,
         "findings": findings,
         "status": "pass" if not findings else "failed",
         "created_at": __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat(),

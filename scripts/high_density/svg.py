@@ -19,6 +19,7 @@ from .contracts import ContractError, assert_v2, read_json, safe_run_path, sha25
 from .integrity import sign_review_attestation, sign_runtime_payload, verify_review_attestation, verify_runtime_payload
 from .scene import load_scene
 from .svg_paint import SvgPaintError, parse_node_paint, parse_svg_paint
+from .svg_native import SvgNativeError, format_svg_native_error, parse_svg_native, svg_recovery_command
 from .visual import VisualMetricsError, _svg_geometry_bbox, _text_contrast_metrics, compute_visual_metrics, normalize_blueprint, write_visual_metrics
 
 SVG_DIR = Path("high_density_build/svg")
@@ -28,7 +29,7 @@ COMPARISON_DIR = Path("high_density_build/comparisons")
 CANVAS_WIDTH = 1672
 CANVAS_HEIGHT = 941
 FORBIDDEN_TAGS = {"foreignObject", "script", "iframe", "style"}
-UNSUPPORTED_TAGS = {"mask", "clipPath", "pattern", "use"}
+UNSUPPORTED_TAGS = {"mask", "clipPath", "pattern"}
 
 
 class SvgVisualError(ContractError):
@@ -194,6 +195,13 @@ def _image_svg(element: dict[str, Any], asset: Path | None, page_id: str) -> str
     )
 
 
+def _wrap_visual_svg(element: dict[str, Any], rendered: str) -> str:
+    visual_id = str(element.get("visual_id") or "")
+    if not visual_id:
+        return rendered
+    return f'<g id="{html.escape(visual_id, quote=True)}" data-pptx-visual-id="{html.escape(visual_id, quote=True)}" data-pptx-group-id="{html.escape(visual_id, quote=True)}">{rendered}</g>'
+
+
 def compile_svg(scene: dict[str, Any], output: Path, *, assets: dict[str, Path] | None = None) -> Path:
     from .scene import validate_scene
 
@@ -222,14 +230,18 @@ def compile_svg(scene: dict[str, Any], output: Path, *, assets: dict[str, Path] 
                 raise SvgVisualError(f"image asset covers P0/P1 text: {element.get('element_id')} -> {text.get('element_id')}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
     if image_area / (CANVAS_WIDTH * CANVAS_HEIGHT) > 0.50:
         raise SvgVisualError("registered image assets exceed 50% of canvas", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
-    elements: list[str] = []
+    rendered_elements: list[tuple[str, str]] = []
+
+    def add_rendered(element: dict[str, Any], rendered: str) -> None:
+        rendered_elements.append((str(element.get("visual_id") or ""), rendered))
+
     ordered_elements = sorted(enumerate(scene_elements), key=lambda item: (int(item[1].get("z_index") or 0), item[0]))
     for _, element in ordered_elements:
         kind = element.get("kind")
         if kind == "text":
-            elements.append(_text_svg(element, page_id))
+            add_rendered(element, _text_svg(element, page_id))
         elif kind == "rect":
-            elements.append(_rect_svg(element))
+            add_rendered(element, _rect_svg(element))
         elif kind == "line":
             bbox = element["bbox"]
             style = element.get("style") or {}
@@ -246,7 +258,7 @@ def compile_svg(scene: dict[str, Any], output: Path, *, assets: dict[str, Path] 
                 "data-pptx-z": str(element.get("z_index") or 0),
                 "data-pptx-bounds": f"{float(bbox['x']):.2f},{float(bbox['y']):.2f},{float(bbox['w']):.2f},{float(bbox['h']):.2f}",
             }
-            elements.append(f"<line {_attrs(attrs)}/>")
+            add_rendered(element, f"<line {_attrs(attrs)}/>")
         elif kind in {"circle", "ellipse"}:
             bbox = element["bbox"]
             style = element.get("style") or {}
@@ -264,7 +276,7 @@ def compile_svg(scene: dict[str, Any], output: Path, *, assets: dict[str, Path] 
                 "data-pptx-z": str(element.get("z_index") or 0),
                 "data-pptx-bounds": f"{float(bbox['x']):.2f},{float(bbox['y']):.2f},{float(bbox['w']):.2f},{float(bbox['h']):.2f}",
             }
-            elements.append(f"<ellipse {_attrs(attrs)}/>")
+            add_rendered(element, f"<ellipse {_attrs(attrs)}/>")
         elif kind == "path":
             path_data = str(element.get("path") or "")
             if not path_data or re.search(r"[<>&]", path_data):
@@ -272,10 +284,12 @@ def compile_svg(scene: dict[str, Any], output: Path, *, assets: dict[str, Path] 
             style = element.get("style") or {}
             fill = _color(style.get("fill"), "none")
             stroke = _color(style.get("stroke"), "none")
-            elements.append(
+            add_rendered(element,
                 f'<path id="{html.escape(str(element["element_id"]), quote=True)}" '
                 f'd="{html.escape(path_data, quote=True)}" fill="{fill}" stroke="{stroke}" stroke-width="{style.get("stroke_width") or 0}" '
-                f'opacity="{style.get("opacity") or 1}" data-pptx-component="{html.escape(str(element.get("component_id") or ""), quote=True)}" data-pptx-z="{element.get("z_index") or 0}" data-pptx-bounds="{float(element["bbox"]["x"]):.2f},{float(element["bbox"]["y"]):.2f},{float(element["bbox"]["w"]):.2f},{float(element["bbox"]["h"]):.2f}"/>'
+                f'opacity="{style.get("opacity") or 1}" fill-opacity="{style.get("fill_opacity", style.get("fill-opacity", 1))}" stroke-opacity="{style.get("stroke_opacity", style.get("stroke-opacity", 1))}" '
+                f'stroke-linecap="{style.get("stroke-linecap", style.get("linecap", "butt"))}" stroke-linejoin="{style.get("stroke-linejoin", style.get("linejoin", "miter"))}" fill-rule="{style.get("fill-rule", style.get("fill_rule", "nonzero"))}" '
+                f'data-pptx-component="{html.escape(str(element.get("component_id") or ""), quote=True)}" data-pptx-z="{element.get("z_index") or 0}" data-pptx-bounds="{float(element["bbox"]["x"]):.2f},{float(element["bbox"]["y"]):.2f},{float(element["bbox"]["w"]):.2f},{float(element["bbox"]["h"]):.2f}"/>'
             )
         elif kind == "polygon":
             points = element.get("points") or []
@@ -283,16 +297,30 @@ def compile_svg(scene: dict[str, Any], output: Path, *, assets: dict[str, Path] 
                 raise SvgVisualError(f"polygon needs at least three points in {element['element_id']}", page_id=page_id)
             style = element.get("style") or {}
             point_text = " ".join(f"{float(point[0]):.2f},{float(point[1]):.2f}" for point in points)
-            elements.append(
+            add_rendered(element,
                 f'<polygon id="{html.escape(str(element["element_id"]), quote=True)}" '
                 f'points="{point_text}" fill="{_color(style.get("fill"), "none")}" '
-                f'stroke="{_color(style.get("stroke"), "none")}" stroke-width="{style.get("stroke_width") or 0}" opacity="{style.get("opacity") or 1}" '
+                f'stroke="{_color(style.get("stroke"), "none")}" stroke-width="{style.get("stroke_width") or 0}" opacity="{style.get("opacity") or 1}" fill-rule="{style.get("fill-rule", "nonzero")}" '
                 f'data-pptx-component="{html.escape(str(element.get("component_id") or ""), quote=True)}" data-pptx-z="{element.get("z_index") or 0}" data-pptx-bounds="{float(element["bbox"]["x"]):.2f},{float(element["bbox"]["y"]):.2f},{float(element["bbox"]["w"]):.2f},{float(element["bbox"]["h"]):.2f}"/>'
             )
         elif kind == "image":
-            elements.append(_image_svg(element, (assets or {}).get(str(element.get("asset_ref") or "")), page_id))
+            add_rendered(element, _image_svg(element, (assets or {}).get(str(element.get("asset_ref") or "")), page_id))
         else:
             raise SvgVisualError(f"unsupported scene element kind: {kind}", page_id=page_id)
+    elements: list[str] = []
+    index = 0
+    while index < len(rendered_elements):
+        visual_id, rendered = rendered_elements[index]
+        if not visual_id:
+            elements.append(rendered)
+            index += 1
+            continue
+        children = [rendered]
+        index += 1
+        while index < len(rendered_elements) and rendered_elements[index][0] == visual_id:
+            children.append(rendered_elements[index][1])
+            index += 1
+        elements.append(_wrap_visual_svg({"visual_id": visual_id}, "".join(children)))
     svg = (
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{CANVAS_WIDTH}" height="{CANVAS_HEIGHT}" '
         f'viewBox="0 0 {CANVAS_WIDTH} {CANVAS_HEIGHT}" data-pptx-page-role="content">'
@@ -314,7 +342,16 @@ def validate_svg(path: Path, *, page_id: str = "") -> dict[str, Any]:
     try:
         paint_registry = parse_svg_paint(root)
     except SvgPaintError as exc:
-        raise SvgVisualError(str(exc), page_id=page_id, code=exc.code) from exc
+        raise SvgVisualError(
+            f"visual_id=<none> element_id={exc.element_id or '<none>'} property=<unknown> code={exc.code} reason={exc}; recovery: {svg_recovery_command(page_id)}",
+            page_id=page_id,
+            code=exc.code,
+        ) from exc
+    try:
+        native_document = parse_svg_native(root)
+    except SvgNativeError as exc:
+        raise SvgVisualError(format_svg_native_error(exc, page_id=page_id), page_id=page_id, code=exc.code) from exc
+    native_geometry = {str(element.get("element_id") or ""): element.get("bbox") or {} for element in native_document.get("elements") or []}
     tags = {str(node.tag).split("}")[-1] for node in root.iter()}
     forbidden = sorted(tags & FORBIDDEN_TAGS)
     if forbidden:
@@ -341,7 +378,7 @@ def validate_svg(path: Path, *, page_id: str = "") -> dict[str, Any]:
             attr_name = str(raw_name).split("}")[-1].lower()
             if attr_name.startswith("on"):
                 raise SvgVisualError(f"SVG event attribute is blocked: {attr_name} on {node_id or tag}", page_id=page_id, code="HD_SVG_UNSAFE_ATTRIBUTE")
-            if attr_name in {"href", "xlink:href"} and tag != "image":
+            if attr_name in {"href", "xlink:href"} and tag not in {"image", "use"}:
                 raise SvgVisualError(f"external SVG href is blocked on {node_id or tag}", page_id=page_id, code="HD_SVG_UNSAFE_ATTRIBUTE")
         if node_id:
             if node_id in ids:
@@ -349,12 +386,6 @@ def validate_svg(path: Path, *, page_id: str = "") -> dict[str, Any]:
             ids.add(node_id)
         if node.get("style") or node.get("class"):
             raise SvgVisualError("external CSS/style attributes are blocked", page_id=page_id)
-        if node.get("transform"):
-            raise SvgVisualError(
-                f"unsupported SVG property transform on {node_id or tag}; recovery: deck-master build retry --run-dir <run_dir> --profile high-density --stage svg --page-id {page_id or '<page_id>'}",
-                page_id=page_id,
-                code="HD_SVG_UNSUPPORTED_ELEMENT",
-            )
         definition_node = tag in {"defs", "linearGradient", "radialGradient", "filter", "stop", "feDropShadow", "feGaussianBlur"}
         if node.get("opacity") is not None and not definition_node:
             try:
@@ -386,7 +417,7 @@ def validate_svg(path: Path, *, page_id: str = "") -> dict[str, Any]:
             if not str(node.get("data-pptx-bounds") or ""):
                 raise SvgVisualError(f"visible SVG element is missing data-pptx-bounds: {node_id}", page_id=page_id)
             try:
-                bbox = _svg_geometry_bbox(node)
+                bbox = native_geometry.get(node_id) or _svg_geometry_bbox(node)
             except VisualMetricsError as exc:
                 raise SvgVisualError(f"SVG element geometry is invalid: {node_id}", page_id=page_id) from exc
             if bbox["x"] < -0.01 or bbox["y"] < -0.01 or bbox["x"] + bbox["w"] > CANVAS_WIDTH + 0.01 or bbox["y"] + bbox["h"] > CANVAS_HEIGHT + 0.01:
@@ -558,6 +589,43 @@ def validate_approved_svg(
     validate_scene_content(scene, lock)
     result = validate_svg(path, page_id=page_id)
     root = ElementTree.fromstring(path.read_text(encoding="utf-8"))
+    try:
+        native_document = parse_svg_native(root)
+    except SvgNativeError as exc:
+        raise SvgVisualError(format_svg_native_error(exc, page_id=page_id), page_id=page_id, code=exc.code) from exc
+    native_elements = {str(item.get("element_id") or ""): item for item in native_document.get("elements") or []}
+    native_by_source = {str(item.get("source_element_id") or ""): item for item in native_document.get("elements") or []}
+    registered_group_ids = {str(visual.get("svg_group_id") or visual.get("visual_id") or "") for visual in scene.get("visual_registry") or []}
+    for group_id in native_document.get("groups") or {}:
+        if str(group_id) not in registered_group_ids:
+            raise SvgVisualError(
+                f"approved SVG contains an unregistered visual group {group_id}; recovery: deck-master build retry --run-dir <run_dir> --profile high-density --stage svg --page-id {page_id}",
+                page_id=page_id,
+                code="HD_SVG_VISUAL_REGISTRY_UNREGISTERED",
+            )
+    for visual in scene.get("visual_registry") or []:
+        if not isinstance(visual, dict):
+            continue
+        visual_id = str(visual.get("visual_id") or "")
+        group_id = str(visual.get("svg_group_id") or visual_id)
+        group = (native_document.get("groups") or {}).get(group_id)
+        if group is None:
+            raise SvgVisualError(f"approved SVG is missing registered visual group {visual_id}; recovery: deck-master build retry --run-dir <run_dir> --profile high-density --stage svg --page-id {page_id}", page_id=page_id, code="HD_SVG_VISUAL_REGISTRY_MISSING")
+        expected_children = {str(value) for value in visual.get("child_element_ids") or []}
+        actual_children = {str(value) for value in group.get("child_ids") or []}
+        if expected_children != actual_children:
+            missing_children = sorted(expected_children - actual_children)
+            extra_children = sorted(actual_children - expected_children)
+            details = []
+            if missing_children:
+                details.append(f"missing={','.join(missing_children)}")
+            if extra_children:
+                details.append(f"extra={','.join(extra_children)}")
+            raise SvgVisualError(
+                f"visual registry {visual_id} child set drift: {'; '.join(details)}; recovery: deck-master build retry --run-dir <run_dir> --profile high-density --stage svg --page-id {page_id}",
+                page_id=page_id,
+                code="HD_SVG_VISUAL_REGISTRY_MISSING",
+            )
     parents = {child: parent for parent in root.iter() for child in list(parent)}
     visible_tags = {"text", "rect", "circle", "ellipse", "line", "path", "polyline", "polygon", "image"}
     visible_nodes = [node for node in root.iter() if str(node.tag).split("}")[-1] in visible_tags]
@@ -565,7 +633,9 @@ def validate_approved_svg(
     scene_elements = {str(element.get("element_id") or ""): element for element in scene.get("elements") or []}
     for element_id, element in scene_elements.items():
         node = nodes.get(element_id)
-        if node is None:
+        if node is None and element_id not in native_elements and element_id in native_by_source:
+            node = native_by_source[element_id].get("node")
+        if node is None and element_id not in native_elements:
             raise SvgVisualError(
                 f"approved SVG is missing scene element: {element_id}; recovery: deck-master build retry --run-dir <run_dir> --profile high-density --stage svg --page-id {page_id}",
                 page_id=page_id,
@@ -573,6 +643,7 @@ def validate_approved_svg(
             )
     required_components = set(str(value) for value in lock.get("required_component_ids") or [])
     present_components = {str(node.get("data-pptx-component") or "") for node in visible_nodes}
+    present_components.update(str(item.get("node").get("data-pptx-component") or "") for item in native_elements.values() if item.get("node") is not None)
     missing_components = sorted(required_components - present_components)
     if missing_components:
         raise SvgVisualError(f"approved SVG is missing required components: {', '.join(missing_components)}", page_id=page_id, code="HD_SVG_CONTENT_DRIFT")
@@ -732,6 +803,30 @@ def _build_region_checks(scene: dict[str, Any], metrics: dict[str, Any]) -> list
     return checks
 
 
+def _build_visual_object_checks(scene: dict[str, Any], metrics: dict[str, Any], visual_type: str) -> list[dict[str, Any]]:
+    checks: list[dict[str, Any]] = []
+    for item in metrics.get("object_checks") or []:
+        if str(item.get("visual_type") or "") != visual_type:
+            continue
+        evidence = {
+            "visual_id": str(item.get("visual_id") or ""),
+            "visual_type": visual_type,
+            "status": str(item.get("status") or "failed"),
+            "source_crop_sha256": str(item.get("source_crop_sha256") or ""),
+            "svg_crop_sha256": str(item.get("svg_crop_sha256") or ""),
+            "pptx_crop_sha256": str(item.get("pptx_crop_sha256") or ""),
+            "values": item.get("values") or {},
+        }
+        checks.append({
+            "visual_id": str(item.get("visual_id") or ""),
+            "status": "pass" if item.get("status") == "pass" else "failed",
+            "evidence_sha256": sha256_json(evidence),
+            "notes": "Local crop metrics are computed from the current source and rendered artifacts.",
+            "values": item.get("values") or {},
+        })
+    return checks
+
+
 def _parse_review_time(value: Any, *, field: str, page_id: str) -> datetime:
     try:
         parsed = datetime.fromisoformat(str(value or "").replace("Z", "+00:00"))
@@ -858,7 +953,7 @@ def _review_pass_evidence(root: Path, page_id: str, review: dict[str, Any], *, r
     if sha256_file(metrics_file) != str(review.get("metrics_sha256") or "") or metrics.get("status") != "pass":
         raise SvgVisualError(f"visual {source} requires passing current metrics on page {page_id}", page_id=page_id)
     expected_regions = _build_region_checks(scene, metrics)
-    if any(item.get("status") != "pass" for item in expected_regions):
+    if any(item.get("status") != "pass" for item in expected_regions) or any(item.get("status") != "pass" for item in metrics.get("object_checks") or []):
         raise SvgVisualError(f"visual {source} requires passing region checks on page {page_id}", page_id=page_id)
     svg_sha = sha256_file(svg_path(root, page_id))
     if svg_sha != str(review.get("svg_sha256") or ""):
@@ -957,8 +1052,12 @@ def build_visual_review(root: Path, scene: dict[str, Any], *, mode: str) -> Path
         raise SvgVisualError(f"visual metrics could not be computed on page {page_id}: {exc}", page_id=page_id) from exc
     passed_metrics = metrics.get("status") == "pass"
     region_checks = _build_region_checks(scene, metrics)
+    icon_checks = _build_visual_object_checks(scene, metrics, "icon")
+    curve_checks = _build_visual_object_checks(scene, metrics, "curve")
+    table_checks = _build_visual_object_checks(scene, metrics, "table")
     region_check_ids = [str(item["region_id"]) for item in region_checks]
-    region_passed = all(item.get("status") == "pass" for item in region_checks)
+    object_checks_passed = all(item.get("status") == "pass" for item in icon_checks + curve_checks + table_checks)
+    region_passed = all(item.get("status") == "pass" for item in region_checks) and object_checks_passed
     review_issues = list(metrics.get("findings") or [])
     full_page_check = "pass" if passed_metrics and region_passed else "failed"
     svg_sha = sha256_file(svg_path(root, page_id))
@@ -1030,8 +1129,11 @@ def build_visual_review(root: Path, scene: dict[str, Any], *, mode: str) -> Path
             "integrity": sign_runtime_payload("visual_review_actions.v1", challenge_payload),
         },
         "visual_status": "pass" if fixture_review else "needs_review",
-        "full_page_checks": {"canvas_ratio": "pass", "stable_ids": "pass", "p0_p1_geometry": "pass" if passed_metrics else "failed", "layout": "pass" if region_passed else "failed", "mask_coverage": float((metrics.get("values") or {}).get("mask_coverage") or 0)},
+        "full_page_checks": {"canvas_ratio": "pass", "stable_ids": "pass", "p0_p1_geometry": "pass" if passed_metrics else "failed", "layout": "pass" if region_passed else "failed", "mask_coverage": float((metrics.get("values") or {}).get("mask_coverage") or 0), "icon_coverage": 1.0 if not icon_checks else sum(1 for item in icon_checks if item.get("status") == "pass") / len(icon_checks), "curve_coverage": 1.0 if not curve_checks else sum(1 for item in curve_checks if item.get("status") == "pass") / len(curve_checks), "table_coverage": 1.0 if not table_checks else sum(1 for item in table_checks if item.get("status") == "pass") / len(table_checks)},
         "region_checks": region_checks,
+        "icon_checks": icon_checks,
+        "curve_checks": curve_checks,
+        "table_checks": table_checks,
         "issues_found": review_issues,
         "unresolved_issues": [] if passed_metrics and region_passed else review_issues,
         "self_review": self_review,
@@ -1046,7 +1148,7 @@ def build_visual_review(root: Path, scene: dict[str, Any], *, mode: str) -> Path
 
 
 def _metrics_projection(metrics: dict[str, Any]) -> dict[str, Any]:
-    return {key: metrics.get(key) for key in ("schema_version", "comparison", "inputs", "thresholds", "values", "coverage", "geometry", "findings", "status")}
+    return {key: metrics.get(key) for key in ("schema_version", "comparison", "inputs", "thresholds", "values", "coverage", "geometry", "object_checks", "findings", "status")}
 
 
 def load_visual_review(root: Path, page_id: str, *, require_external_receipt: bool = True) -> dict[str, Any]:
@@ -1101,6 +1203,9 @@ def load_visual_review(root: Path, page_id: str, *, require_external_receipt: bo
     expected_regions = _build_region_checks(scene, computed)
     if review.get("region_checks") != expected_regions:
         raise SvgVisualError(f"visual review region evidence is not tool-computed for current artifacts on page {page_id}", page_id=page_id)
+    for field, visual_type in (("icon_checks", "icon"), ("curve_checks", "curve"), ("table_checks", "table")):
+        if review.get(field) != _build_visual_object_checks(scene, computed, visual_type):
+            raise SvgVisualError(f"visual review {field} evidence is not tool-computed for current artifacts on page {page_id}", page_id=page_id)
     expected_full_page_evidence = {
         "svg_sha256": str(review.get("svg_sha256") or ""),
         "blueprint_sha256": str(review.get("blueprint_sha256") or ""),
@@ -1111,7 +1216,7 @@ def load_visual_review(root: Path, page_id: str, *, require_external_receipt: bo
     for name in ("self_review", "main_review"):
         if str((review.get(name) or {}).get("evidence_sha256") or "") != expected_evidence_sha:
             raise SvgVisualError(f"visual {name} evidence is stale on page {page_id}", page_id=page_id)
-    expected_status = "pass" if computed.get("status") == "pass" and all(item.get("status") == "pass" for item in expected_regions) else "failed"
+    expected_status = "pass" if computed.get("status") == "pass" and all(item.get("status") == "pass" for item in expected_regions) and all(item.get("status") == "pass" for item in computed.get("object_checks") or []) else "failed"
     if expected_status == "pass" and (review.get("full_page_checks") or {}).get("layout") != "pass":
         raise SvgVisualError(f"visual review full-page layout evidence failed on page {page_id}", page_id=page_id)
     values = computed.get("values") or {}

@@ -17,7 +17,7 @@ class SvgPaintError(ContractError):
 
 _URL_RE = re.compile(r"^url\(#([A-Za-z_][A-Za-z0-9_.:-]*)\)$")
 _HEX_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
-_DEFINITION_TAGS = {"linearGradient", "radialGradient", "filter"}
+_DEFINITION_TAGS = {"linearGradient", "radialGradient", "filter", "symbol"}
 _PRIMITIVE_TAGS = {"feDropShadow", "feGaussianBlur"}
 
 
@@ -155,6 +155,10 @@ def parse_svg_paint(root: ElementTree.Element) -> dict[str, Any]:
             elif child_tag == "filter":
                 parsed = _effect(child)
                 effects[str(parsed["effect_id"])] = parsed
+            elif child_tag == "symbol":
+                # Symbols are semantic definitions. Their leaf paint is
+                # resolved by svg_native after local use expansion.
+                continue
             else:
                 raise SvgPaintError(f"unsupported direct defs element {child_tag}", code="HD_SVG_UNSUPPORTED_PROPERTY")
     for node in root.iter():

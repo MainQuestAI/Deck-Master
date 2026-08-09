@@ -1253,6 +1253,24 @@ def test_svg_gradient_shadow_compile_to_drawingml_and_readback(tmp_path: Path) -
     assert report["drawingml_paint"]["status"] == "pass"
 
 
+def test_svg_gradient_stroke_with_opacity_stays_gradient(tmp_path: Path) -> None:
+    run, lock, scene = _prepared_fixture(tmp_path)
+    svg = svg_path(run, "P001")
+    original = svg.read_text(encoding="utf-8")
+    defs = '<defs><linearGradient id="gradient.stroke" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#419bfd"/><stop offset="100%" stop-color="#ff8c42"/></linearGradient></defs>'
+    mutated = original.replace('<g id="page.P001"', defs + '<g id="page.P001"', 1).replace('id="block.03" x="80.00" y="511.00" width="744.00" height="289.00" rx="0.00" fill="#fff3e8" stroke="#d5dde5"', 'id="block.03" x="80.00" y="511.00" width="744.00" height="289.00" rx="0.00" fill="#fff3e8" stroke="url(#gradient.stroke)" stroke-opacity="0.5"', 1)
+    svg.write_text(mutated, encoding="utf-8")
+    render_preview(svg, preview_path(run, "P001"))
+
+    compile_pptx(run, [scene], {"P001": lock})
+    trace = read_json(trace_path(run))
+    entry = next(item for item in trace["elements"] if item["element_id"] == "block.03")
+    assert entry["paint"]["stroke"]["gradient_id"] == "gradient.stroke"
+    with zipfile.ZipFile(pptx_path(run)) as package:
+        slide_xml = package.read("ppt/slides/slide1.xml").decode("utf-8")
+    assert slide_xml.count("<a:gradFill") >= 1
+
+
 def test_svg_gradient_inheritance_is_blocked(tmp_path: Path) -> None:
     run, _, _ = _prepared_fixture(tmp_path)
     svg = svg_path(run, "P001")

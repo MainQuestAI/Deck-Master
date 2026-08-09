@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/contracts/high-density-icon-external-acceptance.v1.schema.json",
+  "title": "High-Density External Icon Acceptance v1",
+  "type": "object",
+  "required": ["schema_version", "source_index", "target_page_ids", "status", "raw_artifacts_included", "pages", "blockers", "created_at"],
+  "properties": {
+    "schema_version": {"const": "deck_high_density_icon_external_acceptance.v1"},
+    "source_index": {
+      "type": "object",
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      },
+      "additionalProperties": false
+    },
+    "target_page_ids": {
+      "type": "array",
+      "minItems": 6,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "status": {"enum": ["pass", "blocked_missing_local_benchmark_artifacts", "failed"]},
+    "raw_artifacts_included": {"const": false},
+    "pages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["page_id", "status", "artifacts", "blockers"],
+        "properties": {
+          "page_id": {"type": "string", "minLength": 1},
+          "status": {"enum": ["pass", "blocked", "failed"]},
+          "artifacts": {"type": "object"},
+          "object_check_count": {"type": "integer", "minimum": 0},
+          "unresolved_icon_count": {"type": "integer", "minimum": 0},
+          "blockers": {"type": "array", "items": {"type": "string"}}
+        },
+        "additionalProperties": false
+      }
+    },
+    "blockers": {"type": "array", "items": {"type": "string"}},
+    "created_at": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false
+}

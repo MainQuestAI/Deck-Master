@@ -3,7 +3,7 @@
   "$id": "https://deck-master.local/contracts/visual-review.v2.schema.json",
   "title": "Deck Visual Review v2",
   "type": "object",
-  "required": ["schema_version", "run_id", "page_id", "svg_sha256", "blueprint_sha256", "blueprint_preview_sha256", "svg_preview_sha256", "review_mode", "metrics_ref", "metrics_sha256", "runtime_challenge", "visual_status", "full_page_checks", "region_checks", "issues_found", "unresolved_issues", "self_review", "main_review", "verdict", "created_at"],
+  "required": ["schema_version", "run_id", "page_id", "svg_sha256", "blueprint_sha256", "blueprint_preview_sha256", "svg_preview_sha256", "review_mode", "metrics_ref", "metrics_sha256", "runtime_challenge", "visual_status", "full_page_checks", "region_checks", "icon_checks", "curve_checks", "table_checks", "issues_found", "unresolved_issues", "self_review", "main_review", "verdict", "created_at"],
   "properties": {
     "schema_version": {"const": "deck_visual_review.v2"},
     "run_id": {"type": "string"},
@@ -15,8 +15,11 @@
     "svg_preview_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
     "metrics_ref": {"type": "string"},
     "metrics_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
-    "full_page_checks": {"type": "object", "required": ["canvas_ratio", "stable_ids", "p0_p1_geometry", "layout", "mask_coverage"], "properties": {"canvas_ratio": {"enum": ["pass", "failed"]}, "stable_ids": {"enum": ["pass", "failed"]}, "p0_p1_geometry": {"enum": ["pass", "failed"]}, "layout": {"enum": ["pass", "failed"]}, "mask_coverage": {"type": "number", "minimum": 0, "maximum": 0.2}}, "additionalProperties": false},
+    "full_page_checks": {"type": "object", "required": ["canvas_ratio", "stable_ids", "p0_p1_geometry", "layout", "mask_coverage"], "properties": {"canvas_ratio": {"enum": ["pass", "failed"]}, "stable_ids": {"enum": ["pass", "failed"]}, "p0_p1_geometry": {"enum": ["pass", "failed"]}, "layout": {"enum": ["pass", "failed"]}, "mask_coverage": {"type": "number", "minimum": 0, "maximum": 0.2}, "icon_coverage": {"type": "number", "minimum": 0, "maximum": 1}, "curve_coverage": {"type": "number", "minimum": 0, "maximum": 1}, "table_coverage": {"type": "number", "minimum": 0, "maximum": 1}}, "additionalProperties": false},
     "region_checks": {"type": "array", "minItems": 4, "items": {"$ref": "#/$defs/regionCheck"}},
+    "icon_checks": {"type": "array", "items": {"$ref": "#/$defs/objectCheck"}},
+    "curve_checks": {"type": "array", "items": {"$ref": "#/$defs/objectCheck"}},
+    "table_checks": {"type": "array", "items": {"$ref": "#/$defs/objectCheck"}},
     "issues_found": {"type": "array", "items": {"type": "object"}},
     "unresolved_issues": {"type": "array", "items": {"type": "object"}},
     "runtime_challenge": {
@@ -90,6 +93,17 @@
         "evidence_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
       },
       "additionalProperties": false
+    },
+    "objectCheck": {
+      "type": "object",
+      "required": ["visual_id", "status", "evidence_sha256"],
+      "properties": {
+        "visual_id": {"type": "string", "minLength": 1},
+        "status": {"enum": ["pass", "failed", "pending"]},
+        "evidence_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "notes": {"type": "string"}
+      },
+      "additionalProperties": true
     }
   }
 }

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941">
+  <rect width="1672" height="941" fill="#f7f9fb"/>
+  <path d="M80 156 H1592" stroke="#419bfd" stroke-width="6"/>
+  <rect x="80" y="200" width="1512" height="300" fill="#ffffff" stroke="#d5dde5"/>
+  <rect x="80" y="524" width="480" height="276" fill="#eef5fb" stroke="#d5dde5"/>
+  <rect x="596" y="524" width="480" height="276" fill="#fff3e8" stroke="#d5dde5"/>
+  <rect x="1112" y="524" width="480" height="276" fill="#edf7f1" stroke="#d5dde5"/>
+  <rect x="80" y="820" width="1512" height="44" rx="6" fill="#eaf2fb" stroke="#c7d9ec"/>
+  <g id="blueprint.icon.header" data-pptx-visual-id="icon.header" fill="none" stroke="#419bfd" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path id="blueprint.icon.header.path" d="M1500 86 C1500 76 1510 68 1520 68 S1540 74 1540 82 Q1554 78 1554 90 T1536 108 L1516 108 C1507 108 1500 100 1500 92 Z M1508 114 Q1527 124 1546 114 T1580 114"/>
+  </g>
+</svg>

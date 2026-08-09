@@ -3,7 +3,7 @@
   "$id": "https://deck-master.local/contracts/visual-metrics.v1.schema.json",
   "title": "Deck Visual Metrics v1",
   "type": "object",
-  "required": ["schema_version", "run_id", "page_id", "comparison", "inputs", "thresholds", "values", "coverage", "geometry", "findings", "status", "created_at"],
+  "required": ["schema_version", "run_id", "page_id", "comparison", "inputs", "policy", "thresholds", "values", "coverage", "geometry", "object_checks", "findings", "status", "created_at"],
   "properties": {
     "schema_version": {"const": "deck_visual_metrics.v1"},
     "run_id": {"type": "string"},
@@ -14,6 +14,7 @@
       "properties": {
         "kind": {"enum": ["blueprint_vs_svg", "svg_vs_pptx"]},
         "renderer": {"type": "string", "minLength": 1},
+        "toolchain": {"type": "object"},
         "canvas": {
           "type": "object",
           "required": ["width", "height", "unit"],
@@ -39,6 +40,17 @@
         "mask_coverage": {"type": "number", "minimum": 0, "maximum": 0.2},
         "svg_geometry_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
         "candidate_geometry_sha256": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "policy": {
+      "type": "object",
+      "required": ["version", "sha256", "object", "renderer_tolerance"],
+      "properties": {
+        "version": {"const": "visual-quality-policy.v1"},
+        "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "object": {"type": "object", "required": ["ssim_min", "edge_f1_min", "silhouette_iou_min", "color_delta_max", "bbox_delta_px_max", "occupancy_delta_max"], "additionalProperties": {"type": "number"}},
+        "renderer_tolerance": {"type": "object", "required": ["alignment_radius_px", "local_match_blur_radius_px", "silhouette_luma_threshold", "edge_delta_threshold", "edge_dilation_kernel"], "additionalProperties": {"type": ["number", "integer"]}}
       },
       "additionalProperties": false
     },
@@ -73,7 +85,8 @@
         "present_components": {"type": "integer", "minimum": 0},
         "component_coverage": {"type": "number", "minimum": 0, "maximum": 1},
         "p0_p1_bbox_coverage": {"type": "number", "minimum": 0, "maximum": 1},
-        "p0_p1_text_contrast": {"type": "object", "additionalProperties": {"type": "object", "required": ["priority", "contrast_ratio", "changed_pixels"], "properties": {"priority": {"enum": ["P0", "P1"]}, "contrast_ratio": {"type": "number", "minimum": 1, "maximum": 21}, "changed_pixels": {"type": "integer", "minimum": 0}}, "additionalProperties": false}}
+        "p0_p1_text_contrast": {"type": "object", "additionalProperties": {"type": "object", "required": ["priority", "contrast_ratio", "changed_pixels"], "properties": {"priority": {"enum": ["P0", "P1"]}, "contrast_ratio": {"type": "number", "minimum": 1, "maximum": 21}, "changed_pixels": {"type": "integer", "minimum": 0}}, "additionalProperties": false}},
+        "visual_registry_coverage": {"type": "number", "minimum": 0, "maximum": 1}
       },
       "additionalProperties": false
     },
@@ -87,9 +100,35 @@
       },
       "additionalProperties": false
     },
+    "object_checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["visual_id", "visual_type", "priority", "source_crop_path", "source_crop_sha256", "svg_crop_path", "svg_crop_sha256", "pptx_crop_path", "pptx_crop_sha256", "bbox", "values", "status"],
+        "properties": {
+          "visual_id": {"type": "string", "minLength": 1},
+          "visual_type": {"enum": ["icon", "curve", "table", "complex_visual"]},
+          "priority": {"enum": ["P0", "P1", "P2"]},
+          "source_crop_path": {"type": "string", "minLength": 1},
+          "source_crop_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+          "svg_crop_path": {"type": "string", "minLength": 1},
+          "svg_crop_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+          "pptx_crop_path": {"type": "string"},
+          "pptx_crop_sha256": {"type": "string"},
+          "bbox": {"$ref": "#/$defs/bbox"},
+          "values": {"type": "object", "required": ["ssim", "edge_f1", "silhouette_iou", "color_delta", "bbox_delta_px", "occupancy_delta"], "properties": {"ssim": {"type": "number", "minimum": 0, "maximum": 1}, "edge_f1": {"type": "number", "minimum": 0, "maximum": 1}, "silhouette_iou": {"type": "number", "minimum": 0, "maximum": 1}, "color_delta": {"type": "number", "minimum": 0}, "bbox_delta_px": {"type": "number", "minimum": 0}, "occupancy_delta": {"type": "number", "minimum": 0}}, "additionalProperties": true},
+          "status": {"enum": ["pass", "failed"]},
+          "finding": {"type": "object"}
+        },
+        "additionalProperties": true
+      }
+    },
     "findings": {"type": "array", "items": {"type": "object", "required": ["code"]}},
     "status": {"enum": ["pass", "failed", "needs_review"]},
     "created_at": {"type": "string"}
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "$defs": {
+    "bbox": {"type": "object", "required": ["x", "y", "w", "h"], "properties": {"x": {"type": "number"}, "y": {"type": "number"}, "w": {"type": "number", "minimum": 0}, "h": {"type": "number", "minimum": 0}}, "additionalProperties": false}
+  }
 }

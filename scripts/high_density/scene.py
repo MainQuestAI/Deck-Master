@@ -121,6 +121,120 @@ def _line_element(*, element_id: str, role: str, bbox: dict[str, float], stroke:
     }
 
 
+def _fixture_icon_element(*, visual_id: str, bbox: dict[str, float], stroke: str) -> dict[str, Any]:
+    x, y = float(bbox["x"]), float(bbox["y"])
+    path = f"M {x:.2f} {y:.2f} L {x + 14:.2f} {y:.2f} L {x + 20:.2f} {y + 6:.2f} L {x + 54:.2f} {y + 6:.2f} L {x + 54:.2f} {y + 40:.2f} L {x:.2f} {y + 40:.2f} Z M {x:.2f} {y + 14:.2f} L {x + 54:.2f} {y + 14:.2f}"
+    return {
+        "element_id": f"{visual_id}.path",
+        "visual_id": visual_id,
+        "component_id": "component.icon.header",
+        "kind": "path",
+        "role": "icon",
+        "priority": "P2",
+        "bbox": dict(bbox),
+        "source_blueprint_bbox": dict(bbox),
+        "target_svg_bbox": dict(bbox),
+        "target_ppt_bbox": dict(bbox),
+        "z_index": 5,
+        "path": path,
+        "editability_target": "native_shape_group",
+        "asset_policy": "none",
+        "style": {"fill": "none", "stroke": stroke, "stroke_width": 3, "stroke-linecap": "round", "stroke-linejoin": "round", "fill-rule": "nonzero", "opacity": 1},
+    }
+
+
+def _fixture_icon_elements_from_blueprint(blueprint_path: Path | None, visual_id: str, fallback_bbox: dict[str, float]) -> tuple[list[dict[str, Any]], dict[str, float]]:
+    """Project the fixture's registered icon into the semantic Scene.
+
+    The fixture deliberately exercises the same source forms accepted by the
+    production parser: inherited groups, local symbol/use, multiple subpaths,
+    curves, holes, opacity and transforms. The Scene stores the normalized
+    native path commands so the later SVG and DrawingML stages consume the
+    same geometry.
+    """
+    fallback = [_fixture_icon_element(visual_id=visual_id, bbox=fallback_bbox, stroke="#419bfd")]
+    if blueprint_path is None or blueprint_path.suffix.lower() != ".svg":
+        return fallback, dict(fallback_bbox)
+    try:
+        from .svg_native import SvgNativeError, commands_to_svg_path, parse_svg_native
+
+        root = ElementTree.fromstring(blueprint_path.read_text(encoding="utf-8"))
+        native = parse_svg_native(root)
+    except (OSError, ElementTree.ParseError):
+        return fallback, dict(fallback_bbox)
+    except SvgNativeError as exc:
+        raise ContractError(f"fixture visual registry icon cannot be normalized: {exc}") from exc
+    groups = native.get("groups") or {}
+    group = next(
+        (
+            value
+            for value in groups.values()
+            if str(value.get("visual_id") or "") == "icon.header"
+            or str(value.get("group_id") or "") == "blueprint.icon.header"
+        ),
+        None,
+    )
+    if not group:
+        return fallback, dict(fallback_bbox)
+    native_by_id = {str(item.get("element_id") or ""): item for item in native.get("elements") or []}
+    children = [native_by_id[str(child_id)] for child_id in group.get("child_ids") or [] if str(child_id) in native_by_id]
+    if not children or any(not item.get("commands") for item in children):
+        return fallback, dict(fallback_bbox)
+    left = min(float(item["bbox"]["x"]) for item in children)
+    top = min(float(item["bbox"]["y"]) for item in children)
+    right = max(float(item["bbox"]["x"]) + float(item["bbox"]["w"]) for item in children)
+    bottom = max(float(item["bbox"]["y"]) + float(item["bbox"]["h"]) for item in children)
+    icon_bbox = {"x": left, "y": top, "w": right - left, "h": bottom - top}
+    projected: list[dict[str, Any]] = []
+    for index, item in enumerate(children, start=1):
+        style = item.get("style") or {}
+        element_id = f"{visual_id}.path" if len(children) == 1 else f"{visual_id}.path.{index:02d}"
+        projected.append(
+            {
+                "element_id": element_id,
+                "visual_id": visual_id,
+                "component_id": "component.icon.header",
+                "kind": "path",
+                "role": "icon",
+                "priority": "P2",
+                "bbox": dict(item["bbox"]),
+                "source_blueprint_bbox": dict(item["bbox"]),
+                "target_svg_bbox": dict(item["bbox"]),
+                "target_ppt_bbox": dict(item["bbox"]),
+                "z_index": 5,
+                "path": commands_to_svg_path(item["commands"]),
+                "editability_target": "native_shape_group",
+                "asset_policy": "none",
+                "style": {
+                    "fill": str(style.get("fill") or "none"),
+                    "stroke": str(style.get("stroke") or "none"),
+                    "stroke_width": float(style.get("stroke-width") or 0),
+                    "stroke-linecap": str(style.get("stroke-linecap") or "butt"),
+                    "stroke-linejoin": str(style.get("stroke-linejoin") or "miter"),
+                    "fill-rule": str(style.get("fill-rule") or "nonzero"),
+                    "opacity": float(style.get("opacity") or 1),
+                    "fill_opacity": float(style.get("fill-opacity") or 1),
+                    "stroke_opacity": float(style.get("stroke-opacity") or 1),
+                },
+            }
+        )
+    return projected, icon_bbox
+
+
+def _visual_style_type(elements: list[dict[str, Any]]) -> str:
+    fills = {str((element.get("style") or {}).get("fill") or "none").lower() for element in elements}
+    strokes = {str((element.get("style") or {}).get("stroke") or "none").lower() for element in elements}
+    has_fill = any(value not in {"none", "transparent"} for value in fills)
+    has_stroke = any(value not in {"none", "transparent"} for value in strokes)
+    if has_fill and has_stroke:
+        return "filled-outline"
+    if has_fill:
+        return "filled"
+    if any(str((element.get("style") or {}).get("stroke-linecap") or "").lower() == "round" for element in elements):
+        return "outline-rounded"
+    return "outline"
+
+
 def _layout_boxes(layout_id: str, count: int) -> list[dict[str, float]]:
     layouts: dict[str, list[dict[str, float]]] = {
         "framework": [
@@ -379,6 +493,11 @@ def build_fixture_scene(lock: dict[str, Any], blueprint_sha256: str, blueprint_p
     if footnotes:
         elements.append(_text_element(element_id="sources.footer", role="sources", priority="P0", bbox={"x": 80, "y": 900, "w": 1512, "h": 24}, text="  ".join(str(note) for note in footnotes), text_ref="content_lock.customer_visible.footnotes", preferred_size=11, min_size=9, max_lines=1, color=source_color, component_id="component.sources"))
 
+    icon_visual_id = f"icon.header.{lock['page_id']}"
+    fallback_icon_bbox = {"x": 1500, "y": 68, "w": 54, "h": 40}
+    icon_elements, icon_bbox = _fixture_icon_elements_from_blueprint(blueprint_path, icon_visual_id, fallback_icon_bbox)
+    elements.extend(icon_elements)
+
     required_components = list(lock.get("required_component_ids") or [])
     scene = {
         "schema_version": "deck_page_scene.v2",
@@ -392,9 +511,25 @@ def build_fixture_scene(lock: dict[str, Any], blueprint_sha256: str, blueprint_p
         "blueprint_sha256": blueprint_sha256,
         "transform": {"scale": 1, "offset_x": 0, "offset_y": 0, "fit_mode": "approved_frame"},
         "component_signature": [{"component_id": component_id, "present": any(item.get("component_id") == component_id for item in elements), "source": "content_lock"} for component_id in required_components],
-        "scene_signature": sha256_json([{"element_id": item["element_id"], "kind": item["kind"], "bbox": item["bbox"], "z_index": item.get("z_index", 0)} for item in elements]),
+        "scene_signature": sha256_json(
+            {
+                "blueprint_sha256": blueprint_sha256,
+                "elements": [
+                    {
+                        "element_id": item["element_id"],
+                        "kind": item["kind"],
+                        "bbox": item["bbox"],
+                        "z_index": item.get("z_index", 0),
+                        "path": item.get("path", ""),
+                        "style": item.get("style") or {},
+                    }
+                    for item in elements
+                ],
+            }
+        ),
         "required_component_ids": required_components,
         "required_text_refs": list(lock.get("required_text_refs") or []),
+        "visual_registry": [{"visual_id": icon_visual_id, "semantic_name": "folder process marker", "visual_type": "icon", "priority": "P2", "blueprint_bbox": dict(icon_bbox), "svg_group_id": icon_visual_id, "child_element_ids": [str(element["element_id"]) for element in icon_elements], "style_type": _visual_style_type(icon_elements), "acceptance_requirements": ["semantic identity", "negative space", "line width", "direction", "local crop metrics"]}],
         "text_fit_policy": {"font_fallback": "Arial", "minimum_p0_p1_px": 9, "overflow": "block"},
         "overflow_policy": {"mode": "block", "allowed_font_scale": {"min": 0.75, "max": 1.0}},
         "unresolved_visual_elements": [],
@@ -464,6 +599,24 @@ def validate_scene(scene: dict[str, Any]) -> None:
     missing = sorted(value for value in required if value not in present)
     if missing:
         raise ContractError(f"scene is missing required components: {', '.join(missing)}")
+    visual_ids: set[str] = set()
+    element_ids = {str(element.get("element_id") or "") for element in scene.get("elements", [])}
+    for visual in scene.get("visual_registry") or []:
+        visual_id = str(visual.get("visual_id") or "")
+        if not visual_id or visual_id in visual_ids:
+            raise ContractError(f"visual registry visual_id must be unique: {visual_id}")
+        visual_ids.add(visual_id)
+        group_id = str(visual.get("svg_group_id") or "")
+        if not group_id:
+            raise ContractError(f"visual registry requires svg_group_id: {visual_id}")
+        child_ids = {str(value) for value in visual.get("child_element_ids") or []}
+        missing_children = sorted(child_ids - element_ids)
+        if missing_children:
+            raise ContractError(f"visual registry {visual_id} references missing scene children: {', '.join(missing_children)}")
+        for child_id in child_ids:
+            child = next(element for element in scene.get("elements", []) if str(element.get("element_id") or "") == child_id)
+            if str(child.get("visual_id") or visual_id) != visual_id:
+                raise ContractError(f"scene visual child {child_id} is bound to the wrong visual_id")
 
 
 def _resolve_ref(document: Any, ref: str) -> Any:

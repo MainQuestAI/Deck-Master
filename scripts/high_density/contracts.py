@@ -31,6 +31,7 @@ SCHEMA_FILES = {
     "provider_host_receipt": "provider-host-receipt.v1.schema.json",
     "provider_runtime_receipt": "provider-runtime-receipt.v1.schema.json",
     "visual_main_review_receipt": "visual-main-review-receipt.v1.schema.json",
+    "icon_external_acceptance": "high-density-icon-external-acceptance.v1.schema.json",
 }
 
 PREVIEW_SCHEMA_FILES = {

@@ -3,7 +3,7 @@
   "$id": "https://deck-master.local/contracts/page-scene.v2.schema.json",
   "title": "Deck Page Scene v2",
   "type": "object",
-  "required": ["schema_version", "run_id", "page_id", "canvas", "blueprint", "content_lock_sha256", "blueprint_sha256", "component_signature", "required_component_ids", "required_text_refs", "elements", "overflow_policy", "created_at"],
+  "required": ["schema_version", "run_id", "page_id", "canvas", "blueprint", "content_lock_sha256", "blueprint_sha256", "component_signature", "required_component_ids", "required_text_refs", "visual_registry", "elements", "overflow_policy", "created_at"],
   "properties": {
     "schema_version": {"const": "deck_page_scene.v2"},
     "run_id": {"type": "string", "minLength": 1},
@@ -17,6 +17,25 @@
     "component_signature": {"type": "array", "items": {"type": "object"}},
     "required_component_ids": {"type": "array", "items": {"type": "string"}},
     "required_text_refs": {"type": "array", "items": {"type": "object"}},
+    "visual_registry": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["visual_id", "semantic_name", "visual_type", "priority", "blueprint_bbox", "svg_group_id", "child_element_ids", "style_type", "acceptance_requirements"],
+        "properties": {
+          "visual_id": {"type": "string", "minLength": 1},
+          "semantic_name": {"type": "string", "minLength": 1},
+          "visual_type": {"enum": ["icon", "curve", "table", "complex_visual"]},
+          "priority": {"enum": ["P0", "P1", "P2"]},
+          "blueprint_bbox": {"$ref": "#/$defs/bbox"},
+          "svg_group_id": {"type": "string", "minLength": 1},
+          "child_element_ids": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "style_type": {"type": "string", "minLength": 1},
+          "acceptance_requirements": {"type": "array", "items": {"type": "string", "minLength": 1}}
+        },
+        "additionalProperties": true
+      }
+    },
     "elements": {"type": "array", "items": {"type": "object"}},
     "background": {"type": "object"},
     "text_fit_policy": {"type": "object"},
@@ -26,5 +45,13 @@
     "created_at": {"type": "string"},
     "updated_at": {"type": "string"}
   },
-  "additionalProperties": true
+  "additionalProperties": true,
+  "$defs": {
+    "bbox": {
+      "type": "object",
+      "required": ["x", "y", "w", "h"],
+      "properties": {"x": {"type": "number"}, "y": {"type": "number"}, "w": {"type": "number", "exclusiveMinimum": 0}, "h": {"type": "number", "exclusiveMinimum": 0}},
+      "additionalProperties": false
+    }
+  }
 }
