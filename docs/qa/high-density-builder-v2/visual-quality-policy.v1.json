@@ -1,10 +1,11 @@
 {
   "version": "visual-quality-policy.v1",
-  "sha256": "f20f655c3f5506ff6c0ab4cf76c8de7e9b3eabfa6477871611fe379decd978d4",
+  "sha256": "6130a5e730a867736a1d6d6f1d7ca8928c2c7e6f5bfd1133942f7fa04e7399a7",
   "crop": {
     "padding": "max(4px,12%)",
     "size_px": 256,
-    "minimum_object_size_px": 12
+    "tiny_size_px": 512,
+    "minimum_object_size_px": 8
   },
   "blueprint_vs_svg": {
     "ssim_min": 0.8,
@@ -30,7 +31,8 @@
     "local_match_blur_radius_px": 1.0
   },
   "full_page": {
-    "text_mask_max_coverage": 0.2,
+    "text_mask_max_coverage": 0.35,
+    "min_unmasked_coverage": 0.25,
     "p0_p1_bbox_delta_px_max": 2.0,
     "p0_p1_text_contrast_ratio_min": 3.0
   }

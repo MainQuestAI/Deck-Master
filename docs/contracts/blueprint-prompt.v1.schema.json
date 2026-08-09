@@ -3,7 +3,7 @@
   "$id": "https://deck-master.local/contracts/blueprint-prompt.v1.schema.json",
   "title": "Blueprint Prompt v1",
   "type": "object",
-  "required": ["schema_version", "run_id", "page_id", "prompt_template_version", "prompt_text", "prompt_sha256", "content_lock_sha256", "nbb_plan_sha256", "style_lock_sha256", "provider_challenge", "created_at"],
+  "required": ["schema_version", "run_id", "page_id", "prompt_template_version", "prompt_text", "prompt_sha256", "content_lock_sha256", "nbb_plan_sha256", "style_lock_sha256", "presentation_projection", "visible_copy_allowlist", "forbidden_visible_categories", "attempt_index", "provider_challenge", "created_at"],
   "properties": {
     "schema_version": {"const": "deck_blueprint_prompt.v1"},
     "run_id": {"type": "string", "minLength": 1},
@@ -17,7 +17,10 @@
     "nbb_plan_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
     "style_lock_ref": {"type": "string"},
     "style_lock_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
-    "content_summary": {"type": "object"},
+    "presentation_projection": {"type": "object"},
+    "visible_copy_allowlist": {"type": "array", "items": {"type": "string"}},
+    "forbidden_visible_categories": {"type": "array", "items": {"type": "string"}},
+    "attempt_index": {"type": "integer", "minimum": 1, "maximum": 3},
     "required_components": {"type": "array", "items": {"type": "string"}},
     "forbidden_items": {"type": "array", "items": {"type": "string"}},
     "provider_challenge": {

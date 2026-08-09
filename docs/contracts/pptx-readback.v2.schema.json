@@ -13,7 +13,7 @@
     "speaker_notes_count": {"type": "integer"},
     "expected_speaker_notes_count": {"type": "integer"},
     "pages": {"type": "array", "items": {"type": "object"}},
-    "text_readback": {"type": "object"},
+    "text_readback": {"type": "object", "required": ["expected_p0_p1", "missing", "mismatches", "visibility_violations"], "properties": {"expected_p0_p1": {"type": "integer"}, "missing": {"type": "array"}, "mismatches": {"type": "array"}, "visibility_violations": {"type": "array"}}, "additionalProperties": true},
     "geometry": {"type": "object"},
     "trace_coverage": {"type": "object"},
     "drawingml_paint": {"type": "object", "required": ["gradient_count", "gradient_stop_count", "effect_count", "gradient_stop_alpha_values", "status"], "properties": {"gradient_count": {"type": "integer", "minimum": 0}, "gradient_stop_count": {"type": "integer", "minimum": 0}, "effect_count": {"type": "integer", "minimum": 0}, "gradient_stop_alpha_values": {"type": "array", "items": {"type": "integer", "minimum": 0, "maximum": 100000}}, "status": {"enum": ["pass", "failed"]}}, "additionalProperties": true},

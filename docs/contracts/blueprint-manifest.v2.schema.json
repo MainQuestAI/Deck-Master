@@ -3,7 +3,7 @@
   "$id": "https://deck-master.local/contracts/blueprint-manifest.v2.schema.json",
   "title": "Deck Blueprint Manifest v2",
   "type": "object",
-  "required": ["schema_version", "run_id", "page_id", "image_path", "image_sha256", "prompt_ref", "prompt_sha256", "content_lock_sha256", "nbb_plan_sha256", "style_lock_sha256", "source_canvas", "slide_frame", "source_to_scene_transform", "fit_mode", "internal_annotations", "provider", "approval", "approved", "created_at"],
+  "required": ["schema_version", "run_id", "page_id", "image_path", "image_sha256", "prompt_ref", "prompt_sha256", "content_lock_sha256", "nbb_plan_sha256", "style_lock_sha256", "content_review_ref", "content_review_sha256", "source_canvas", "slide_frame", "source_to_scene_transform", "fit_mode", "internal_annotations", "provider", "approval", "approved", "created_at"],
   "properties": {
     "schema_version": {"const": "deck_blueprint_manifest.v2"},
     "run_id": {"type": "string", "minLength": 1},
@@ -15,6 +15,8 @@
     "content_lock_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
     "nbb_plan_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
     "style_lock_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "content_review_ref": {"type": "string", "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+"},
+    "content_review_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
     "source_canvas": {"type": "object", "required": ["width", "height", "unit"], "properties": {"width": {"type": "number", "exclusiveMinimum": 0}, "height": {"type": "number", "exclusiveMinimum": 0}, "unit": {"const": "px"}}, "additionalProperties": true},
     "slide_frame": {"type": "object", "required": ["x", "y", "w", "h"], "properties": {"x": {"type": "number", "minimum": 0}, "y": {"type": "number", "minimum": 0}, "w": {"type": "number", "exclusiveMinimum": 0}, "h": {"type": "number", "exclusiveMinimum": 0}}, "additionalProperties": true},
     "source_to_scene_transform": {"type": "object"},

@@ -3,7 +3,7 @@
   "$id": "https://deck-master.local/contracts/content-lock.v2.schema.json",
   "title": "Deck Content Lock v2",
   "type": "object",
-  "required": ["schema_version", "run_id", "page_id", "page_package_ref", "page_package_sha256", "source_fingerprint", "customer_visible", "speaker_notes", "asset_bindings", "evidence_bindings", "enrichment", "required_component_ids", "required_text_refs", "density_target", "target_language", "effective_language", "lineage", "content_lock_sha256", "created_at"],
+  "required": ["schema_version", "run_id", "page_id", "page_package_ref", "page_package_sha256", "source_fingerprint", "customer_visible", "speaker_notes", "asset_bindings", "evidence_bindings", "enrichment", "required_component_ids", "required_text_refs", "density_target", "target_language", "effective_language", "visibility_policy", "lineage", "content_lock_sha256", "created_at"],
   "properties": {
     "schema_version": {"const": "deck_content_lock.v2"},
     "run_id": {"type": "string", "minLength": 1},
@@ -21,6 +21,7 @@
     "density_target": {"type": "object", "required": ["score", "band", "information_regions", "component_count", "evidence_count", "numeric_count"], "properties": {"score": {"type": "number", "minimum": 0}, "band": {"enum": ["low", "medium", "high"]}, "information_regions": {"type": "integer", "minimum": 3}, "component_count": {"type": "integer", "minimum": 1}, "evidence_count": {"type": "integer", "minimum": 1}, "numeric_count": {"type": "integer", "minimum": 0}}, "additionalProperties": false},
     "target_language": {"type": "string", "minLength": 1},
     "effective_language": {"type": "string", "minLength": 1},
+    "visibility_policy": {"$ref": "#/$defs/visibilityPolicy"},
     "lineage": {"$ref": "#/$defs/lineage"},
     "content_lock_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
     "created_at": {"type": "string", "minLength": 1},
@@ -127,6 +128,19 @@
         "nbb_plan_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
         "selected_storyline_id": {"type": "string", "minLength": 1},
         "nbb_page_plan_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      },
+      "additionalProperties": false
+    }
+    ,"visibilityPolicy": {
+      "type": "object",
+      "required": ["version", "page_id", "hard_forbidden", "hidden_by_default", "allowed_visible_terms", "visibility_policy_sha256"],
+      "properties": {
+        "version": {"const": "high-density-visible-content.v1"},
+        "page_id": {"type": "string", "minLength": 1},
+        "hard_forbidden": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "hidden_by_default": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "allowed_visible_terms": {"type": "array", "items": {"type": "object", "required": ["term", "content_ref", "approved_by", "reason"], "properties": {"term": {"type": "string", "minLength": 1}, "content_ref": {"type": "string", "minLength": 1}, "approved_by": {"type": "string", "minLength": 1}, "reason": {"type": "string", "minLength": 1}}, "additionalProperties": false}},
+        "visibility_policy_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
       },
       "additionalProperties": false
     }

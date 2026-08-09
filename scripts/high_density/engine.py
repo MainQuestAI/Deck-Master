@@ -189,7 +189,11 @@ def _waiting(
         "output_ref": output_ref,
         "input_refs": [input_ref],
         "output_refs": resolved_output_refs,
-        "required_schema": {"content_lock": "deck_nbb_plan.v1" if kind in {"agent_nbb_candidates", "agent_nbb_enrich_selected"} else "deck_high_density_status.v2", "blueprint": "deck_blueprint_manifest.v2", "page_scene": "deck_page_scene.v2", "svg": "native-svg", "visual_review": "deck_visual_review.v2"}.get(stage, "deck_high_density_status.v2"),
+        "required_schema": (
+            "deck_blueprint_content_review.v1"
+            if kind == "agent_blueprint_content_review"
+            else {"content_lock": "deck_nbb_plan.v1" if kind in {"agent_nbb_candidates", "agent_nbb_enrich_selected"} else "deck_high_density_status.v2", "blueprint": "deck_blueprint_manifest.v2", "page_scene": "deck_page_scene.v2", "svg": "native-svg", "visual_review": "deck_visual_review.v2"}.get(stage, "deck_high_density_status.v2")
+        ),
         "acceptance_command": _resume_command(root),
         "resume_command": _resume_command(root),
         "reason": reason,
@@ -629,6 +633,8 @@ def _write_canonical_handback(root: Path, manifest: dict[str, Any], pages: list[
 
 
 def _invalidate_page_downstream(root: Path, page_id: str) -> None:
+    from .blueprint_content_review import ZONE_DIR, review_path as blueprint_content_review_path
+
     blueprint = blueprint_path(root, page_id)
     if blueprint is not None:
         _remove_if_exists(blueprint)
@@ -637,6 +643,13 @@ def _invalidate_page_downstream(root: Path, page_id: str) -> None:
     _remove_if_exists(provider_receipt_path(root, page_id))
     _remove_if_exists(provider_host_receipt_path(root, page_id))
     _remove_if_exists(root / "high_density_build" / "prompts" / f"{page_id}.blueprint_prompt.json")
+    _remove_if_exists(blueprint_content_review_path(root, page_id))
+    _remove_if_exists(root / "high_density_build" / "blueprints" / "rejected" / page_id / "attempts.json")
+    zones = root / ZONE_DIR / page_id
+    if zones.is_dir():
+        import shutil
+
+        shutil.rmtree(zones)
     _invalidate_page_scene_downstream(root, page_id)
 
 
@@ -914,7 +927,35 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
         except BlueprintRequired:
             return _waiting(root, page_id=page_id, stage="blueprint", kind="agent_imagegen", input_ref=f"high_density_build/prompts/{page_id}.blueprint_prompt.json", output_ref=f"high_density_build/blueprints/{page_id}.png", reason="Read the frozen content-aware prompt, call ImageGen, and save the approved blueprint at output_ref.")
         except BlueprintInvalid as exc:
-            if "not been approved" in str(exc) or "requires explicit approval" in str(exc):
+            message = str(exc)
+            if "content review is required" in message or "content review image hash is stale" in message or "content review crop is stale" in message:
+                return _waiting(
+                    root,
+                    page_id=page_id,
+                    stage="blueprint",
+                    kind="agent_blueprint_content_review",
+                    input_ref=f"high_density_build/blueprints/{page_id}.png",
+                    output_ref=f"high_density_build/reviews/{page_id}.blueprint_content_review.json",
+                    output_refs=[f"high_density_build/reviews/blueprint_content/{page_id}/"],
+                    reason="Review the full page, header, footer, and all four corners for page numbers or internal annotations; write a content review before approval.",
+                )
+            if "content review requires regeneration" in message:
+                from .blueprint_content_review import archive_rejected_blueprint
+
+                attempt_index = archive_rejected_blueprint(root, page_id)
+                if attempt_index >= 3:
+                    raise HighDensityBuildError("HD_BLUEPRINT_CONTENT_UNSAFE", f"blueprint content review failed after {attempt_index} ImageGen attempts on page {page_id}", stage="blueprint", page_id=page_id) from exc
+                return _waiting(
+                    root,
+                    page_id=page_id,
+                    stage="blueprint",
+                    kind="agent_imagegen_repair",
+                    input_ref=f"high_density_build/blueprints/rejected/{page_id}/attempt-{attempt_index}/",
+                    output_ref=f"high_density_build/blueprints/{page_id}.png",
+                    reason=f"Regenerate ImageGen blueprint attempt {attempt_index + 1} of 3. The prior attempt contained forbidden visible content: {message}",
+                    details={"attempt_index": attempt_index + 1, "max_attempts": 3},
+                )
+            if "not been approved" in message or "requires explicit approval" in message:
                 return _waiting(root, page_id=page_id, stage="blueprint", kind="agent_imagegen", input_ref=f"high_density_build/prompts/{page_id}.blueprint_prompt.json", output_ref=f"high_density_build/blueprints/{page_id}.png", reason="Approve the generated blueprint after confirming the frame, annotations, and image hash.")
             raise HighDensityBuildError("HD_BLUEPRINT_REGEN_REQUIRED", str(exc), stage="blueprint", page_id=page_id) from exc
         except ContractError as exc:

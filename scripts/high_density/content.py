@@ -10,6 +10,7 @@ from production.page_package import strip_internal
 
 from .contracts import ContractError, assert_valid, assert_v2, read_json, sha256_file, sha256_json, utc_now, write_json
 from .integrity import sign_runtime_payload, verify_runtime_payload, verify_user_attestation, sign_user_attestation
+from .visibility import build_visibility_policy, validate_visibility_policy
 
 PACKAGES_DIR = "page_packages"
 LOCKS_DIR = Path("high_density_build/content_locks")
@@ -307,9 +308,7 @@ def _component_plan(customer_visible: dict[str, Any], analysis: dict[str, Any]) 
         components.append({"component_id": f"component.body.{index:02d}", "kind": kind, "priority": "P1", "region": f"body.{index:02d}"})
     if customer_visible.get("callouts"):
         components.append({"component_id": "component.callouts", "kind": "callout", "priority": "P0", "region": "insight"})
-    components.append({"component_id": "component.so_what", "kind": "so_what", "priority": "P0", "region": "implication"})
-    if customer_visible.get("footnotes"):
-        components.append({"component_id": "component.sources", "kind": "sources", "priority": "P0", "region": "footer"})
+    components.append({"component_id": "component.business_implication", "kind": "business_implication", "priority": "P0", "region": "implication"})
     return components
 
 
@@ -323,11 +322,7 @@ def _required_text_refs(customer_visible: dict[str, Any], *, so_what: str) -> li
         refs.append({"ref": f"content_lock.customer_visible.body_blocks.{index}", "priority": "P1", "required": True})
     if customer_visible.get("callouts"):
         refs.append({"ref": "content_lock.customer_visible.callouts", "priority": "P0", "required": True})
-    if customer_visible.get("labels"):
-        refs.append({"ref": "content_lock.customer_visible.labels", "priority": "P2", "required": True})
-    if customer_visible.get("footnotes"):
-        refs.append({"ref": "content_lock.customer_visible.footnotes", "priority": "P0", "required": True})
-    refs.append({"ref": "content_lock.enrichment.so_what", "priority": "P0", "required": True, "structural": True, "value": so_what})
+    refs.append({"ref": "content_lock.enrichment.business_implication", "priority": "P0", "required": True, "structural": True, "value": so_what})
     return refs
 
 
@@ -734,7 +729,7 @@ def _chart_plan(source_result: dict[str, Any], storyline: dict[str, Any]) -> dic
 def _runtime_required_text_refs(source_result: dict[str, Any], so_what: str) -> list[dict[str, Any]]:
     refs = copy.deepcopy(source_result["required_text_refs"])
     for text_ref in refs:
-        if text_ref.get("ref") == "content_lock.enrichment.so_what":
+        if text_ref.get("ref") == "content_lock.enrichment.business_implication":
             text_ref["value"] = so_what
     return refs
 
@@ -969,6 +964,7 @@ def build_content_lock(
         },
         "target_language": result["analysis"]["target_language"],
         "effective_language": result["analysis"]["target_language"],
+        "visibility_policy": build_visibility_policy(safe_package, page_id=page_id),
         "lineage": {
             "page_package_sha256": sha256_json(package),
             "nbb_plan_sha256": nbb_plan_sha256,
@@ -1553,6 +1549,7 @@ def load_content_lock(root: Path, page_id: str, *, expected_run_id: str | None =
     expected = sha256_json({key: value for key, value in lock.items() if key not in {"content_lock_sha256", "created_at", "updated_at"}})
     if lock.get("content_lock_sha256") != expected:
         raise ContractError(f"content lock hash is stale on page {page_id}")
+    validate_visibility_policy(lock.get("visibility_policy") or {}, page_id=page_id)
     return lock
 
 

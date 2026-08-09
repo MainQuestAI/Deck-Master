@@ -194,8 +194,15 @@ def test_native_failure_contains_recovery_context(tmp_path: Path) -> None:
 def test_tiny_visual_registry_object_fails_crop_gate(tmp_path: Path) -> None:
     from PIL import Image
 
-    with pytest.raises(VisualMetricsError, match="smaller than 12x12px"):
-        _crop_image(Image.new("RGB", (256, 256), "white"), {"x": 20, "y": 20, "w": 8, "h": 20}, tmp_path / "tiny.png")
+    with pytest.raises(VisualMetricsError, match="smaller than 8x8px"):
+        _crop_image(Image.new("RGB", (256, 256), "white"), {"x": 20, "y": 20, "w": 7, "h": 20}, tmp_path / "tiny.png")
+
+
+def test_small_visual_registry_object_uses_high_resolution_crop(tmp_path: Path) -> None:
+    from PIL import Image
+
+    output = _crop_image(Image.new("RGB", (256, 256), "white"), {"x": 20, "y": 20, "w": 8, "h": 12}, tmp_path / "small.png")
+    assert Image.open(output).size == (512, 512)
 
 
 def test_wrong_icon_same_bbox_fails_local_gate() -> None:

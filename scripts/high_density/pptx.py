@@ -21,6 +21,7 @@ from .contracts import ContractError, assert_v2, read_json, sha256_file, sha256_
 from .svg import svg_path, validate_approved_svg
 from .svg_paint import parse_node_paint, parse_svg_paint
 from .svg_native import SvgNativeError, commands_to_svg_path, format_svg_native_error, parse_svg_native
+from .visibility import validate_visibility_policy, visible_text_violation
 from .visual import VisualMetricsError, compute_visual_metrics, write_visual_metrics
 
 PPTX_DIR = Path("high_density_build/pptx")
@@ -1107,7 +1108,9 @@ def readback_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dic
     for scene in scenes:
         try:
             assert_v2("page_scene", scene)
-            assert_v2("content_lock", locks.get(str(scene.get("page_id") or ""), {}))
+            lock = locks.get(str(scene.get("page_id") or ""), {})
+            assert_v2("content_lock", lock)
+            validate_visibility_policy(lock.get("visibility_policy") or {}, page_id=str(scene.get("page_id") or ""))
         except ContractError as exc:
             raise PptxEditabilityError(f"PPTX readback input contract is invalid: {exc}") from exc
     presentation = Presentation(output)
@@ -1136,6 +1139,7 @@ def readback_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dic
     actual_text: list[str] = []
     missing_elements: list[str] = []
     text_mismatches: list[dict[str, str]] = []
+    visibility_violations: list[dict[str, str]] = []
     geometry_errors: list[str] = []
     geometry_mismatches: list[dict[str, Any]] = []
     shape_type_mismatches: list[dict[str, str]] = []
@@ -1154,6 +1158,14 @@ def readback_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dic
     for slide_index, slide in enumerate(presentation.slides):
         all_shapes = _flatten_shape_objects(slide.shapes)
         actual_text.extend(shape.text for shape in all_shapes if hasattr(shape, "text") and shape.text)
+        if slide_index < len(scenes):
+            page_id_for_visibility = str(scenes[slide_index].get("page_id") or "")
+            policy = (locks.get(page_id_for_visibility) or {}).get("visibility_policy") or {}
+            for shape in all_shapes:
+                value = str(getattr(shape, "text", "") or "")
+                violation = visible_text_violation(policy, value, page_id=page_id_for_visibility)
+                if violation:
+                    visibility_violations.append({"page_id": page_id_for_visibility, "element_id": str(shape.name or ""), "category": violation, "text": value})
         if slide.notes_slide.notes_text_frame.text.strip():
             notes_count += 1
         for shape in all_shapes:
@@ -1270,7 +1282,7 @@ def readback_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dic
         "speaker_notes_count": notes_count,
         "expected_speaker_notes_count": expected_notes_count,
         "pages": pages,
-        "text_readback": {"expected_p0_p1": len(expected_text), "missing": missing_text, "mismatches": text_mismatches},
+        "text_readback": {"expected_p0_p1": len(expected_text), "missing": missing_text, "mismatches": text_mismatches, "visibility_violations": visibility_violations},
         "geometry": {"out_of_bounds": geometry_errors, "mismatches": geometry_mismatches},
         "trace_coverage": {"status": trace_status, "p0_p1": "pass" if not missing_trace_ids else "failed", "missing_element_ids": missing_trace_ids},
         "drawingml_paint": {**paint_inventory, "expected_gradient_count": expected_gradient_count, "expected_gradient_stop_count": expected_gradient_stop_count, "expected_effect_count": expected_effect_count, "expected_effect_types": expected_effect_types, "status": paint_status},
@@ -1282,7 +1294,7 @@ def readback_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dic
         "editable_object_count": sum(len(slide.shapes) for slide in presentation.slides),
         "image_shape_count": actual_image_count,
         "expected_image_count": expected_image_count,
-        "status": "pass" if len(presentation.slides) == len(scenes) and notes_count == expected_notes_count and actual_image_count == expected_image_count and expected_media_relationships == actual_media_relationships and not missing_text and not text_mismatches and not missing_elements and not geometry_errors and not geometry_mismatches and not shape_type_mismatches and not z_order_mismatches and not unexpected_elements and trace_status == "pass" and paint_status == "pass" and group_readback["status"] == "pass" and visual_parity["status"] == "pass" else "failed",
+        "status": "pass" if len(presentation.slides) == len(scenes) and notes_count == expected_notes_count and actual_image_count == expected_image_count and expected_media_relationships == actual_media_relationships and not missing_text and not text_mismatches and not visibility_violations and not missing_elements and not geometry_errors and not geometry_mismatches and not shape_type_mismatches and not z_order_mismatches and not unexpected_elements and trace_status == "pass" and paint_status == "pass" and group_readback["status"] == "pass" and visual_parity["status"] == "pass" else "failed",
         "created_at": utc_now(),
     }
     assert_v2("pptx_readback", report)

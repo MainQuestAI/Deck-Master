@@ -29,7 +29,7 @@
           "priority": {"enum": ["P0", "P1", "P2"]},
           "blueprint_bbox": {"$ref": "#/$defs/bbox"},
           "svg_group_id": {"type": "string", "minLength": 1},
-          "child_element_ids": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "child_element_ids": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
           "style_type": {"type": "string", "minLength": 1},
           "acceptance_requirements": {"type": "array", "items": {"type": "string", "minLength": 1}}
         },

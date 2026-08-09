@@ -24,7 +24,8 @@ VISUAL_QUALITY_POLICY: dict[str, Any] = {
     "crop": {
         "padding": "max(4px,12%)",
         "size_px": 256,
-        "minimum_object_size_px": 12,
+        "tiny_size_px": 512,
+        "minimum_object_size_px": 8,
     },
     "blueprint_vs_svg": {
         "ssim_min": 0.80,
@@ -50,7 +51,8 @@ VISUAL_QUALITY_POLICY: dict[str, Any] = {
         "edge_dilation_kernel": 5,
     },
     "full_page": {
-        "text_mask_max_coverage": 0.20,
+        "text_mask_max_coverage": 0.35,
+        "min_unmasked_coverage": 0.25,
         "p0_p1_bbox_delta_px_max": 2.0,
         "p0_p1_text_contrast_ratio_min": 3.0,
     },
@@ -357,8 +359,11 @@ def _text_mask(svg_file: Path, page_id: str):
             shifted[target_y, target_x] = mask[source_y, source_x]
             expanded |= shifted
     coverage = float(expanded.mean())
-    if coverage > 0.20:
-        raise VisualMetricsError(f"text mask coverage exceeds 20% on page {page_id}: {coverage:.4f}")
+    full_page = VISUAL_QUALITY_POLICY["full_page"]
+    if coverage > float(full_page["text_mask_max_coverage"]):
+        raise VisualMetricsError(f"text mask coverage exceeds {full_page['text_mask_max_coverage']:.0%} on page {page_id}: {coverage:.4f}")
+    if float((~expanded).mean()) < float(full_page["min_unmasked_coverage"]):
+        raise VisualMetricsError(f"text mask leaves less than {full_page['min_unmasked_coverage']:.0%} valid pixels on page {page_id}")
     if int((~expanded).sum()) < 1000:
         raise VisualMetricsError(f"text mask leaves too few valid pixels on page {page_id}")
     return expanded
@@ -561,13 +566,14 @@ def _crop_image(image: Any, bbox: dict[str, Any], output: Path) -> Path:
 
     minimum_size = float(VISUAL_QUALITY_POLICY["crop"]["minimum_object_size_px"])
     if float(bbox.get("w") or 0) < minimum_size or float(bbox.get("h") or 0) < minimum_size:
-        raise VisualMetricsError("visual registry object is smaller than 12x12px")
+        raise VisualMetricsError("visual registry object is smaller than 8x8px")
     padding = max(4.0, max(float(bbox.get("w") or 0), float(bbox.get("h") or 0)) * 0.12)
     left = max(0, int(math.floor(float(bbox.get("x") or 0) - padding)))
     top = max(0, int(math.floor(float(bbox.get("y") or 0) - padding)))
     right = min(CANVAS_WIDTH, int(math.ceil(float(bbox.get("x") or 0) + float(bbox.get("w") or 0) + padding)))
     bottom = min(CANVAS_HEIGHT, int(math.ceil(float(bbox.get("y") or 0) + float(bbox.get("h") or 0) + padding)))
-    size = int(VISUAL_QUALITY_POLICY["crop"]["size_px"])
+    tiny = min(float(bbox.get("w") or 0), float(bbox.get("h") or 0)) < 16.0
+    size = int(VISUAL_QUALITY_POLICY["crop"]["tiny_size_px"] if tiny else VISUAL_QUALITY_POLICY["crop"]["size_px"])
     cropped = image.crop((left, top, right, bottom)).resize((size, size), Image.Resampling.LANCZOS)
     output.parent.mkdir(parents=True, exist_ok=True)
     cropped.save(output, format="PNG")

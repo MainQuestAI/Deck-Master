@@ -9,6 +9,7 @@ from typing import Any
 REQUIRED_SCHEMAS = (
     "content-lock.v2.schema.json",
     "blueprint-prompt.v1.schema.json",
+    "blueprint-content-review.v1.schema.json",
     "blueprint-manifest.v2.schema.json",
     "page-scene.v2.schema.json",
     "visual-metrics.v1.schema.json",

@@ -118,7 +118,7 @@
       "subtitle": "A high-density closing view with explicit next actions",
       "body_blocks": [
         {"title": "Context", "text": "The route starts from validated Page Packages and a locked narrative.", "type": "dense_narrative"},
-        {"title": "Evidence", "text": "Every visible region retains claim and evidence bindings.", "type": "dense_narrative"},
+        {"title": "Decision basis", "text": "Every visible region retains claim and evidence bindings.", "type": "dense_narrative"},
         {"title": "Action", "text": "Agent-owned stages return exact continuation commands when needed.", "type": "dense_narrative"},
         {"title": "Outcome", "text": "The final deck remains editable while visual intent stays traceable.", "type": "dense_narrative"}
       ],

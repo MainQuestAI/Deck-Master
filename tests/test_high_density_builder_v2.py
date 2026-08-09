@@ -20,7 +20,8 @@ if str(ROOT / "scripts") not in sys.path:
     sys.path.insert(0, str(ROOT / "scripts"))
 
 from build.manifest import build_manifest_v2
-from high_density.blueprint import BlueprintInvalid, _default_slide_frame, build_blueprint_prompt, ensure_blueprint_manifest, record_provider_host_result
+from high_density.blueprint import BlueprintInvalid, _default_slide_frame, build_blueprint_prompt, build_blueprint_prompt_artifact, ensure_blueprint_manifest, record_provider_host_result
+from high_density.blueprint_content_review import BlueprintContentReviewRequired, archive_rejected_blueprint, load_blueprint_content_review, next_attempt_index, write_blueprint_content_review
 from high_density.capability import inspect_high_density_capability
 from high_density.content import (
     build_content_lock,
@@ -46,6 +47,7 @@ from high_density.pptx import PptxEditabilityError, _render_pptx_page, compile_p
 from high_density.scene import _fixture_background, build_fixture_scene, load_scene, validate_scene_content, write_scene
 from high_density.style import write_style_lock
 from high_density.svg import SvgVisualError, _font_path, compile_svg, load_visual_review, preview_path, render_preview, review_path, svg_path, validate_approved_svg, validate_svg
+from high_density.visibility import build_visibility_policy, visible_text_violation
 from production.page_package import PageContent, PagePackageIndex, build_page_package
 from runtime.run_state import create_run
 
@@ -137,6 +139,7 @@ def _approve_blueprint(run: Path, page_id: str = "P001") -> None:
     lock = read_json(run / f"high_density_build/content_locks/{page_id}.json")
     style_lock = read_json(run / "high_density_build/style/style_lock.json")
     nbb_plan = read_json(run / "high_density_build/nbb/nbb_plan.json")
+    write_blueprint_content_review(run, page_id, lock, findings=[], reviewer_id="test", action_id="test-content-review")
     ensure_blueprint_manifest(
         run,
         page_id,
@@ -441,7 +444,8 @@ def test_storyline_selection_does_not_rewrite_agent_content(tmp_path: Path, monk
     page["conclusion"] = "AGENT RICH CONCLUSION PRESERVE ME for Synthetic framework page"
     page["supporting_arguments"][0] = "AGENT ARGUMENT PRESERVE ME with Evidence, constraints, and decision context"
     page["so_what"] = "AGENT SO WHAT PRESERVE ME for Synthetic framework page"
-    next(item for item in page["required_text_refs"] if item["ref"] == "content_lock.enrichment.so_what")["value"] = page["so_what"]
+    page["business_implication"] = page["so_what"]
+    next(item for item in page["required_text_refs"] if item["ref"] == "content_lock.enrichment.business_implication")["value"] = page["business_implication"]
     for binding in page["claim_bindings"]:
         if binding["target"] == "conclusion":
             binding["text_sha256"] = sha256_json(page["conclusion"])
@@ -452,8 +456,11 @@ def test_storyline_selection_does_not_rewrite_agent_content(tmp_path: Path, monk
         elif binding["target"] == "so_what":
             binding["text_sha256"] = sha256_json(page["so_what"])
             binding["origin"] = "derived"
+        elif binding["target"] == "business_implication":
+            binding["text_sha256"] = sha256_json(page["business_implication"])
+            binding["origin"] = "derived"
         elif binding["target"].endswith(".value"):
-            binding["text_sha256"] = sha256_json(page["so_what"])
+            binding["text_sha256"] = sha256_json(page["business_implication"])
             binding["origin"] = "derived"
     _rehash_page_and_plan(enriched, page)
     write_nbb_plan(run, enriched)
@@ -783,7 +790,7 @@ def test_content_lock_contains_required_components_and_text_refs(tmp_path: Path)
 
     assert lock["schema_version"] == "deck_content_lock.v2"
     assert lock["required_component_ids"]
-    assert {item["ref"] for item in lock["required_text_refs"]} >= {"content_lock.customer_visible.title", "content_lock.enrichment.so_what"}
+    assert {item["ref"] for item in lock["required_text_refs"]} >= {"content_lock.customer_visible.title", "content_lock.enrichment.business_implication"}
     assert lock["lineage"]["nbb_plan_sha256"] == "a" * 64
 
 
@@ -824,6 +831,81 @@ def test_prompt_contains_full_nbb_and_style_lock(tmp_path: Path) -> None:
     assert lock["enrichment"]["supporting_arguments"][0] in prompt
     for key in ("typography", "chart_language", "table_language", "surface_system", "density_rules"):
         assert f"{key}=" in prompt
+
+
+def test_prompt_excludes_internal_analysis_fields(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path)
+    package = read_json(run / "page_packages/P001.json")
+    _, page_plan = _approved_page_plan(package)
+    lock = build_content_lock(package, page_plan, nbb_plan_sha256="e" * 64)
+    prompt = build_blueprint_prompt(lock, {"style_id": "cyber-01", "name": "Ink Cobalt", "palette": {}, "grid": {}}, nbb_plan_sha256="e" * 64)
+
+    assert lock["enrichment"]["conclusion"] in prompt
+    assert lock["enrichment"]["supporting_arguments"][0] in prompt
+    for internal_field in ("Evidence ID", "Evidence hierarchy", "Evidence assessment", "Derived claim lineage", "SO WHAT", "Caveat", "NBB", "SCR"):
+        assert internal_field not in prompt
+
+
+def test_page_number_is_hard_forbidden_and_internal_labels_need_allowlist(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path)
+    package = read_json(run / "page_packages/P001.json")
+    policy = build_visibility_policy(package, page_id="P001")
+
+    assert visible_text_violation(policy, "1 / 12", page_id="P001") == "page_number"
+    assert visible_text_violation(policy, "P001", page_id="P001") == "page_number"
+    assert visible_text_violation(policy, "来源：", page_id="P001") == "source_marker"
+    policy["allowed_visible_terms"] = [{"term": "SWOT", "content_ref": "content_lock.customer_visible.body_blocks.0", "approved_by": "client", "reason": "client-facing framework"}]
+    assert visible_text_violation(policy, "SWOT", page_id="P001") is None
+
+
+def test_blueprint_requires_content_review_before_approval(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path)
+    _blueprint(run)
+    package = read_json(run / "page_packages/P001.json")
+    _, page_plan = _approved_page_plan(package)
+    lock = build_content_lock(package, page_plan, nbb_plan_sha256="f" * 64)
+    build_blueprint_prompt_artifact(run, "P001", lock, style_lock={"style_lock_sha256": "0" * 64})
+
+    with pytest.raises(BlueprintContentReviewRequired, match="content review is required"):
+        load_blueprint_content_review(run, "P001", lock)
+
+    write_blueprint_content_review(
+        run,
+        "P001",
+        lock,
+        findings=[{"category": "page_number", "bbox": {"x": 1600, "y": 900, "w": 20, "h": 20}, "description": "visible page number", "observed_text": "1", "disposition": "allowed", "allowlist_term": "1"}],
+        reviewer_id="test",
+        action_id="test-review",
+    )
+    with pytest.raises(BlueprintContentReviewRequired, match="requires regeneration"):
+        load_blueprint_content_review(run, "P001", lock)
+
+
+def test_rejected_blueprint_attempts_are_archived_and_counted(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path)
+    package = read_json(run / "page_packages/P001.json")
+    _, page_plan = _approved_page_plan(package)
+    lock = build_content_lock(package, page_plan, nbb_plan_sha256="a" * 64)
+    source = FIXTURE_DIR / "blueprint.svg"
+    (run / "high_density_build/blueprints").mkdir(parents=True, exist_ok=True)
+
+    for attempt in range(1, 4):
+        (run / "high_density_build/blueprints/P001.svg").write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+        build_blueprint_prompt_artifact(run, "P001", lock, style_lock={"style_lock_sha256": "0" * 64})
+        write_blueprint_content_review(
+            run,
+            "P001",
+            lock,
+            findings=[{"category": "page_number", "bbox": {"x": 1600, "y": 900, "w": 20, "h": 20}, "description": "visible page number", "observed_text": "1 / 3", "disposition": "blocked"}],
+            reviewer_id="test",
+            action_id=f"test-review-{attempt}",
+        )
+        assert archive_rejected_blueprint(run, "P001") == attempt
+        archive = run / f"high_density_build/blueprints/rejected/P001/attempt-{attempt}"
+        assert (archive / "P001.svg").is_file()
+        assert (archive / "P001.blueprint_content_review.json").is_file()
+
+    assert next_attempt_index(run, "P001") == 3
 
 
 def test_blueprint_prompt_preserves_structured_content(tmp_path: Path) -> None:

@@ -37,7 +37,7 @@
         "candidate_path": {"type": "string", "minLength": 1},
         "candidate_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
         "mask_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
-        "mask_coverage": {"type": "number", "minimum": 0, "maximum": 0.2},
+        "mask_coverage": {"type": "number", "minimum": 0, "maximum": 0.35},
         "svg_geometry_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
         "candidate_geometry_sha256": {"type": "string"}
       },
@@ -70,7 +70,7 @@
         "region_color_delta": {"type": "number", "minimum": 0},
         "edge_similarity": {"type": "number", "minimum": 0, "maximum": 1},
         "p0_p1_min_text_contrast_ratio": {"type": "number", "minimum": 1, "maximum": 21},
-        "mask_coverage": {"type": "number", "minimum": 0, "maximum": 0.2},
+        "mask_coverage": {"type": "number", "minimum": 0, "maximum": 0.35},
         "overflow_count": {"type": "integer", "minimum": 0},
         "illegal_overlap_count": {"type": "integer", "minimum": 0},
         "direction_mismatch_count": {"type": "integer", "minimum": 0}

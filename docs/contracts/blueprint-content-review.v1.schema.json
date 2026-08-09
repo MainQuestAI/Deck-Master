@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/contracts/blueprint-content-review.v1.schema.json",
+  "title": "Blueprint Content Review v1",
+  "type": "object",
+  "required": ["schema_version", "run_id", "page_id", "image_sha256", "prompt_sha256", "content_lock_sha256", "style_lock_sha256", "visibility_policy_sha256", "zones", "findings", "reviewer_id", "action_id", "status", "created_at"],
+  "properties": {
+    "schema_version": {"const": "deck_blueprint_content_review.v1"},
+    "run_id": {"type": "string", "minLength": 1},
+    "page_id": {"type": "string", "minLength": 1},
+    "image_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "prompt_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "content_lock_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "style_lock_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "visibility_policy_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "zones": {"type": "array", "minItems": 7, "items": {"type": "object", "required": ["zone_id", "path", "sha256"], "properties": {"zone_id": {"enum": ["full_page", "header", "footer", "top_left", "top_right", "bottom_left", "bottom_right"]}, "path": {"type": "string", "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+"}, "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}}, "additionalProperties": false}},
+    "findings": {"type": "array", "items": {"type": "object", "required": ["category", "bbox", "description", "disposition"], "properties": {"category": {"enum": ["page_number", "slide_counter", "page_id_badge", "evidence_marker", "source_marker", "methodology_label", "explanatory_label", "caveat_label", "placeholder", "production_annotation"]}, "bbox": {"type": "object", "required": ["x", "y", "w", "h"], "properties": {"x": {"type": "number"}, "y": {"type": "number"}, "w": {"type": "number", "minimum": 0}, "h": {"type": "number", "minimum": 0}}, "additionalProperties": false}, "observed_text": {"type": "string"}, "description": {"type": "string", "minLength": 1}, "allowlist_term": {"type": "string"}, "disposition": {"enum": ["blocked", "allowed"]}}, "additionalProperties": false}},
+    "reviewer_id": {"type": "string", "minLength": 1},
+    "action_id": {"type": "string", "minLength": 1},
+    "status": {"enum": ["pass", "needs_regeneration"]},
+    "created_at": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false
+}

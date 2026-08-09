@@ -7,6 +7,7 @@ from typing import Any
 from xml.etree import ElementTree
 
 from .contracts import ContractError, assert_v2, read_json, sha256_json, utc_now, write_json
+from .visibility import assert_visible_text_allowed, validate_visibility_policy
 
 CANVAS = {"width": 1672, "height": 941, "unit": "px"}
 SCENE_DIR = Path("high_density_build/page_scenes")
@@ -51,10 +52,8 @@ def _component_id_for(element_id: str, role: str) -> str:
         return "component.title"
     if element_id.startswith("block."):
         return f"component.body.{element_id.split('.')[1]}"
-    if element_id.startswith("so_what"):
-        return "component.so_what"
-    if element_id.startswith("sources"):
-        return "component.sources"
+    if element_id.startswith("business_implication"):
+        return "component.business_implication"
     if element_id.startswith("labels"):
         return "component.labels"
     return f"component.{role or element_id}"
@@ -406,12 +405,10 @@ def build_fixture_scene(lock: dict[str, Any], blueprint_sha256: str, blueprint_p
     title = str(customer_visible.get("title") or lock["page_id"])
     subtitle = str(customer_visible.get("subtitle") or "")
     body_blocks = list(customer_visible.get("body_blocks") or [])
-    labels = list(customer_visible.get("labels") or [])
-    footnotes = list(customer_visible.get("footnotes") or [])
     callouts = list(customer_visible.get("callouts") or [])
     layout_id = layout_id or str((enrichment.get("material_pool") or {}).get("recommended_visual") or "framework")
     background = _fixture_background(blueprint_path)
-    title_color, secondary_color, source_color = _fixture_text_colors(background)
+    title_color, secondary_color, _source_color = _fixture_text_colors(background)
     elements: list[dict[str, Any]] = []
     digest = int(hashlib.sha256(blueprint_sha256.encode("ascii")).hexdigest()[:8], 16)
     accent = ("#" + f"{0x2D + digest % 80:02x}{0x75 + digest % 60:02x}{0xC5 + digest % 30:02x}")
@@ -480,18 +477,14 @@ def build_fixture_scene(lock: dict[str, Any], blueprint_sha256: str, blueprint_p
             )
         )
 
-    so_what = str(enrichment.get("so_what") or "")
+    business_implication = str(enrichment.get("business_implication") or enrichment.get("so_what") or "")
     if callouts:
         callout_text = _reference_text(callouts, "callout")
         elements.append(_rect_element(element_id="callouts.panel", role="callout", priority="P0", bbox={"x": 80, "y": 764, "w": 1512, "h": 40}, fill="#fff7e8", stroke="#e6c989", radius=6, component_id="component.callouts", z_index=4))
         elements.append(_text_element(element_id="callouts.text", role="callout", priority="P0", bbox={"x": 100, "y": 771, "w": 1472, "h": 26}, text=callout_text, text_ref="content_lock.customer_visible.callouts", preferred_size=14, min_size=10, max_lines=1, color="#6d4e13", weight="700", component_id="component.callouts"))
-    if so_what:
-        elements.append(_rect_element(element_id="so_what.panel", role="so_what", priority="P0", bbox={"x": 80, "y": 820, "w": 1512, "h": 44}, fill="#eaf2fb", stroke="#c7d9ec", radius=6, component_id="component.so_what", z_index=4))
-        elements.append(_text_element(element_id="so_what.text", role="so_what", priority="P0", bbox={"x": 100, "y": 828, "w": 1472, "h": 28}, text=so_what, text_ref="content_lock.enrichment.so_what", preferred_size=15, min_size=11, max_lines=1, color="#1f4f7d", weight="700", component_id="component.so_what"))
-    if labels:
-        elements.append(_text_element(element_id="labels.footer", role="label_row", priority="P2", bbox={"x": 80, "y": 866, "w": 1200, "h": 28}, text="  ·  ".join(str(label) for label in labels), text_ref="content_lock.customer_visible.labels", preferred_size=14, min_size=11, max_lines=1, color=secondary_color, component_id="component.labels"))
-    if footnotes:
-        elements.append(_text_element(element_id="sources.footer", role="sources", priority="P0", bbox={"x": 80, "y": 900, "w": 1512, "h": 24}, text="  ".join(str(note) for note in footnotes), text_ref="content_lock.customer_visible.footnotes", preferred_size=11, min_size=9, max_lines=1, color=source_color, component_id="component.sources"))
+    if business_implication:
+        elements.append(_rect_element(element_id="business_implication.panel", role="business_implication", priority="P0", bbox={"x": 80, "y": 820, "w": 1512, "h": 44}, fill="#eaf2fb", stroke="#c7d9ec", radius=6, component_id="component.business_implication", z_index=4))
+        elements.append(_text_element(element_id="business_implication.text", role="business_implication", priority="P0", bbox={"x": 100, "y": 828, "w": 1472, "h": 28}, text=business_implication, text_ref="content_lock.enrichment.business_implication", preferred_size=15, min_size=11, max_lines=1, color="#1f4f7d", weight="700", component_id="component.business_implication"))
 
     icon_visual_id = f"icon.header.{lock['page_id']}"
     fallback_icon_bbox = {"x": 1500, "y": 68, "w": 54, "h": 40}
@@ -610,6 +603,8 @@ def validate_scene(scene: dict[str, Any]) -> None:
         if not group_id:
             raise ContractError(f"visual registry requires svg_group_id: {visual_id}")
         child_ids = {str(value) for value in visual.get("child_element_ids") or []}
+        if not child_ids:
+            raise ContractError(f"visual registry {visual_id} requires native child elements")
         missing_children = sorted(child_ids - element_ids)
         if missing_children:
             raise ContractError(f"visual registry {visual_id} references missing scene children: {', '.join(missing_children)}")
@@ -646,6 +641,8 @@ def _reference_text(value: Any, role: str) -> str:
 
 
 def validate_scene_content(scene: dict[str, Any], lock: dict[str, Any]) -> None:
+    policy = lock.get("visibility_policy") or {}
+    validate_visibility_policy(policy, page_id=str(lock.get("page_id") or ""))
     lock_components = [str(value) for value in lock.get("required_component_ids") or []]
     scene_components = [str(value) for value in scene.get("required_component_ids") or []]
     if scene_components != lock_components:
@@ -672,6 +669,7 @@ def validate_scene_content(scene: dict[str, Any], lock: dict[str, Any]) -> None:
         actual = str(element.get("text") or "")
         if actual != expected:
             raise ContractError(f"scene text drift in {element.get('element_id')}: expected locked text from {ref}")
+        assert_visible_text_allowed(policy, actual, page_id=str(lock.get("page_id") or ""), context=f"scene:{element.get('element_id')}")
     required_refs = {str(item.get("ref") or "") for item in lock.get("required_text_refs") or [] if isinstance(item, dict) and item.get("required", True)}
     missing = sorted(ref for ref in required_refs if ref not in actual_refs)
     if missing:

@@ -21,6 +21,7 @@ from .scene import load_scene
 from .svg_paint import SvgPaintError, parse_node_paint, parse_svg_paint
 from .svg_native import SvgNativeError, format_svg_native_error, parse_svg_native, svg_recovery_command
 from .visual import VisualMetricsError, _svg_geometry_bbox, _text_contrast_metrics, compute_visual_metrics, normalize_blueprint, write_visual_metrics
+from .visibility import assert_visible_text_allowed
 
 SVG_DIR = Path("high_density_build/svg")
 PREVIEW_DIR = Path("high_density_build/previews")
@@ -629,6 +630,14 @@ def validate_approved_svg(
     parents = {child: parent for parent in root.iter() for child in list(parent)}
     visible_tags = {"text", "rect", "circle", "ellipse", "line", "path", "polyline", "polygon", "image"}
     visible_nodes = [node for node in root.iter() if str(node.tag).split("}")[-1] in visible_tags]
+    for node in visible_nodes:
+        if str(node.tag).split("}")[-1] == "text":
+            assert_visible_text_allowed(
+                lock.get("visibility_policy") or {},
+                "".join(node.itertext()),
+                page_id=page_id,
+                context=f"svg:{node.get('id') or '<unnamed>'}",
+            )
     nodes = {str(node.get("id") or ""): node for node in visible_nodes}
     scene_elements = {str(element.get("element_id") or ""): element for element in scene.get("elements") or []}
     for element_id, element in scene_elements.items():
@@ -769,13 +778,13 @@ def _region_bbox(elements: list[dict[str, Any]]) -> dict[str, float]:
 def _build_region_checks(scene: dict[str, Any], metrics: dict[str, Any]) -> list[dict[str, Any]]:
     elements = [element for element in scene.get("elements") or [] if isinstance(element, dict)]
     title = [element for element in elements if element.get("kind") == "text" and str(element.get("text_ref") or "").endswith(".title") and element.get("priority") == "P0"]
-    insight = [element for element in elements if "so_what" in str(element.get("component_id") or "") or "so_what" in str(element.get("text_ref") or "")]
+    insight = [element for element in elements if "business_implication" in str(element.get("component_id") or "") or "business_implication" in str(element.get("text_ref") or "")]
     footer = [element for element in elements if "source" in str(element.get("component_id") or "") or "footnotes" in str(element.get("text_ref") or "")]
     main = [element for element in elements if element not in title and element not in insight and element not in footer]
     groups = {
         "title": title,
         "main_visual": main,
-        "insight_or_so_what": insight,
+        "business_implication": insight,
         "source_footer": footer,
     }
     findings = list(metrics.get("findings") or [])

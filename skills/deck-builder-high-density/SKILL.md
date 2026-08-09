@@ -80,7 +80,13 @@ Carry forward CyberPPT's NBB behavior: evidence ledger with source position/peri
 
 The fixed CyberPPT-derived registry contains eight stable style IDs. Production must use an approved `high_density_build/style/style_lock.json`; fixture/dev may use the explicit deterministic default.
 
-Before ImageGen, write `high_density_build/prompts/<page_id>.blueprint_prompt.json` using `deck_blueprint_prompt.v1`. The prompt must contain the selected storyline, real title, page conclusion, supporting arguments, caveats, SO WHAT, page handoff, material pool, precise evidence IDs, required components, target language, style lock, and prohibited page numbers/internal labels. The prompt artifact must exist before the image.
+Before ImageGen, write `high_density_build/prompts/<page_id>.blueprint_prompt.json` using `deck_blueprint_prompt.v1`. The prompt receives only the customer-visible projection: title, conclusion, supporting arguments, business implication, approved data/callouts, component plan, target language, and style lock. Evidence IDs, evidence hierarchy, derivation lineage, caveat labels, SCR/NBB labels, source metadata, and production annotations remain in Content Lock lineage and speaker notes.
+
+Page numbers, page counters, runtime page IDs, source lines, evidence markers, methodology labels, explanatory labels, caveat labels, placeholders, and production annotations are prohibited in every generated image. After ImageGen, create `deck_blueprint_content_review.v1` with full-page, header, footer, and four-corner crops. A failed content review archives the failed attempt and requires `agent_imagegen_repair`; the third failed attempt blocks the page. There is no page-number override.
+
+```bash
+PYTHONPATH=scripts python3 -m high_density.blueprint_content_review --run-dir <run_dir> --page-id P001 --findings-file <findings.json> --reviewer-id <reviewer-id> --action-id <action-id>
+```
 
 The prompt artifact contains a Runtime-signed Provider challenge nonce bound to the original run mode, prompt, Content Lock, NBB plan, and style lock. The provider request must return the same nonce and record the prompt hash, request hash, request/response timestamps, tool, model, and request ID. The Runtime signs a second receipt over provider metadata and the output image hash. Reusing fixture metadata, relabeling the run mode, or reusing an older prompt or image is blocked.
 
@@ -104,7 +110,7 @@ Every visible element has a stable ID, component ID, role, priority, source/targ
 
 Render normalized blueprint and SVG at the same `1672 x 941` canvas. Metrics are generated from actual files with Pillow + NumPy and `rsvg-convert`, then written to `high_density_build/reviews/<page_id>.metrics.json`. The v2 review must bind renderer, source hashes, mask hash, thresholds, text-masked SSIM, P0/P1 bbox deltas, color/layout findings, and component coverage.
 
-The text mask covers rendered glyph pixels only, expands them by 2 px, and fails closed above 20% page coverage or when too few comparison pixels remain. Initial gates include text-masked SSIM, P0 region SSIM, edge similarity, color delta, bbox/anchor drift, direction mismatch, 100% P0/P1 text/component coverage, and zero unresolved overflow or illegal overlap findings. Production needs producer self-review and an independent main review with distinct reviewer IDs, Runtime-issued action IDs, input hashes, timestamps, and main-to-self lineage. After the producer self-review passes, create the independent main review and its separate Host attestation receipt:
+The text mask covers rendered glyph pixels only, expands them by 2 px, and fails closed above 35% page coverage, below 25% remaining non-text pixels, or when too few comparison pixels remain. Icons below 8 px are rejected; 8–16 px icons use 512 px local crops with edge, silhouette, negative-space, direction, and occupancy checks. Initial gates include text-masked SSIM, P0 region SSIM, edge similarity, color delta, bbox/anchor drift, direction mismatch, 100% P0/P1 text/component coverage, and zero unresolved overflow or illegal overlap findings. Production needs producer self-review and an independent main review with distinct reviewer IDs, Runtime-issued action IDs, input hashes, timestamps, and main-to-self lineage. After the producer self-review passes, create the independent main review and its separate Host attestation receipt:
 
 ```bash
 PYTHONPATH=scripts python3 -m high_density.self_review --run-dir <run_dir> --page-id P001 --reviewer-id <producer-reviewer-id>
@@ -140,7 +146,7 @@ Release acceptance runs `PYTHONPATH=scripts python3 -m high_density.provider_smo
 - `style/style_options.json` and `style/style_lock.json`
 - `content_locks/<page_id>.content_lock.json`
 - `prompts/<page_id>.blueprint_prompt.json`
-- `blueprints/<page_id>.blueprint_manifest.json`, signed provider receipt, and normalized preview
+- `blueprints/<page_id>.blueprint_manifest.json`, signed provider receipt, content-review evidence, and normalized preview
 - `scenes/<page_id>.page_scene.json`
 - native SVG, SVG preview, metrics, self-review, and main review
 - page PPTX trace, page/deck readback, and PPTX render parity
@@ -152,7 +158,7 @@ Release acceptance runs `PYTHONPATH=scripts python3 -m high_density.provider_smo
 
 ## Agent Continuation
 
-When Agent work is required, return `awaiting_agent_build` with `run_id`, page/stage, `input_refs`, `output_refs`, `required_schema`, `acceptance_command`, `resume_command`, and reason. Supported actions are `agent_nbb_candidates`, `agent_nbb_enrich_selected`, `agent_imagegen`, `agent_visual_reconstruct`, `agent_svg_repair`, `agent_self_review`, and `agent_main_review`. Storyline and style selection use `awaiting_user_decision`.
+When Agent work is required, return `awaiting_agent_build` with `run_id`, page/stage, `input_refs`, `output_refs`, `required_schema`, `acceptance_command`, `resume_command`, and reason. Supported actions are `agent_nbb_candidates`, `agent_nbb_enrich_selected`, `agent_imagegen`, `agent_blueprint_content_review`, `agent_imagegen_repair`, `agent_visual_reconstruct`, `agent_svg_repair`, `agent_self_review`, and `agent_main_review`. Storyline and style selection use `awaiting_user_decision`.
 
 `build status --watch` waits through `prepared`, `building`, and `awaiting_agent_build`; it exits only at `completed`, `blocked`, `failed`, `awaiting_user_decision`, or timeout.
 

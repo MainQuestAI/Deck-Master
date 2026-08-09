@@ -347,58 +347,74 @@ def _content_summary(lock: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _presentation_projection(lock: dict[str, Any]) -> dict[str, Any]:
+    """Build the only content payload that may be shown to the image provider."""
+    visible = lock.get("customer_visible") or {}
+    enrichment = lock.get("enrichment") or {}
+    policy = lock.get("visibility_policy") or {}
+    chart_plan = dict(enrichment.get("chart_plan") or {})
+    chart_plan.pop("source_refs", None)
+    chart_plan.pop("annotations", None)
+    allowed = [str(item.get("term") or "") for item in policy.get("allowed_visible_terms") or [] if isinstance(item, dict)]
+    return {
+        "title": str(visible.get("title") or ""),
+        "subtitle": str(visible.get("subtitle") or ""),
+        "body_blocks": copy.deepcopy(visible.get("body_blocks") or []),
+        "callouts": copy.deepcopy(visible.get("callouts") or []),
+        "management_conclusion": str(enrichment.get("conclusion") or visible.get("title") or ""),
+        "supporting_arguments": [str(value) for value in enrichment.get("supporting_arguments") or []],
+        "business_implication": str(enrichment.get("business_implication") or enrichment.get("so_what") or ""),
+        "chart_plan": chart_plan,
+        "required_components": list(lock.get("required_component_ids") or []),
+        "density_target": copy.deepcopy(lock.get("density_target") or {}),
+        "target_language": str(lock.get("target_language") or "zh-CN"),
+        "allowed_visible_terms": [item for item in allowed if item],
+    }
+
+
 def build_blueprint_prompt(
     lock: dict[str, Any],
     style_lock: dict[str, Any] | None = None,
     *,
     nbb_plan_sha256: str = "",
     provider_challenge_nonce: str = "",
+    attempt_index: int = 1,
 ) -> str:
     style = style_lock or {"style_id": "unlocked", "palette": {}, "grid": {}, "typography": {}}
-    summary = _content_summary(lock)
+    projection = _presentation_projection(lock)
     style_name = str(style.get("name") or style.get("style_id") or "locked style")
     return "\n".join(
         [
             "Create a high-density consulting presentation slide blueprint for an editable native redraw.",
-            f"Page title: {summary['title']}",
-            f"Page conclusion: {summary['conclusion'] or summary['title']}",
-            f"Management implication (SO WHAT): {summary['so_what']}",
-            f"Selected NBB storyline: {summary['storyline_id'] or 'unavailable'}.",
-            f"Selected storyline conclusion: {summary['storyline_context'].get('management_conclusion') or 'unavailable'}.",
-            f"Selected storyline visual potential: {summary['storyline_context'].get('visual_potential') or 'unavailable'}.",
-            f"Selected storyline handoff: {summary['storyline_context'].get('page_handoff') or 'unavailable'}.",
-            f"Supporting arguments: {' | '.join(summary['supporting_arguments']) or 'none'}.",
-            f"Detailed argument: {summary['detailed_argument'] or 'none'}.",
-            f"Locked source content: {' | '.join(summary['body'])}",
-            f"Evidence IDs: {', '.join(summary['evidence_ids']) or 'none'}.",
-            f"Caveats: {' | '.join(summary['caveat']) or 'none'}.",
-            f"Page handoff: {summary['handoff'] or 'unavailable'}.",
-            f"Business implication: {summary['business_implication'] or summary['so_what'] or 'unavailable'}.",
-            f"Evidence hierarchy: {json.dumps(summary['evidence_hierarchy'], ensure_ascii=False, sort_keys=True)}.",
-            f"Evidence assessment: {json.dumps(summary['evidence_assessment'], ensure_ascii=False, sort_keys=True)}.",
-            f"Chart and visual plan: {json.dumps(summary['chart_plan'], ensure_ascii=False, sort_keys=True)}.",
-            f"Material pool: {json.dumps(summary['material_pool'], ensure_ascii=False, sort_keys=True)}.",
-            f"Derived claim lineage: {json.dumps(summary['derived_claims'], ensure_ascii=False, sort_keys=True)}.",
-            f"Required visual components: {', '.join(summary['required_components'])}.",
-            f"Target language: {summary['target_language']}.",
+            f"Visible title: {projection['title']}",
+            f"Visible conclusion: {projection['management_conclusion']}",
+            f"Express this management takeaway in customer-facing language without a label: {projection['business_implication']}",
+            f"Supporting arguments: {' | '.join(projection['supporting_arguments']) or 'none'}.",
+            f"Approved page content: {json.dumps(projection['body_blocks'], ensure_ascii=False, sort_keys=True)}.",
+            f"Visible callouts: {json.dumps(projection['callouts'], ensure_ascii=False, sort_keys=True)}.",
+            f"Use this intended visual form: {json.dumps(projection['chart_plan'], ensure_ascii=False, sort_keys=True)}.",
+            f"Include these required visual components: {', '.join(projection['required_components'])}.",
+            f"Target language: {projection['target_language']}.",
             f"Locked visual style: {style_name}; palette={json.dumps(style.get('palette') or {}, ensure_ascii=False, sort_keys=True)}; grid={json.dumps(style.get('grid') or {}, ensure_ascii=False, sort_keys=True)}; typography={json.dumps(style.get('typography') or {}, ensure_ascii=False, sort_keys=True)}; chart_language={json.dumps(style.get('chart_language') or {}, ensure_ascii=False, sort_keys=True)}; table_language={json.dumps(style.get('table_language') or {}, ensure_ascii=False, sort_keys=True)}; surface_system={json.dumps(style.get('surface_system') or {}, ensure_ascii=False, sort_keys=True)}; density_rules={json.dumps(style.get('density_rules') or {}, ensure_ascii=False, sort_keys=True)}.",
-            f"NBB plan lineage: {nbb_plan_sha256 or lock.get('lineage', {}).get('nbb_plan_sha256', 'unavailable')}.",
-            f"Provider challenge nonce: {provider_challenge_nonce}. Return this nonce in request metadata and never render it on the slide." if provider_challenge_nonce else "",
-            "Use a contained 16:9 slide frame with dense but readable information regions, explicit hierarchy, evidence anchors, and a visible SO WHAT area.",
-            "Treat all visible text as composition guidance. The native redraw will restore exact locked text from the content lock.",
-            "Use abstract text blocks or iconographic marks instead of legible provider-rendered copy; the native SVG redraw must carry the exact locked wording.",
-            "Do not invent facts, numbers, logos, quotes, citations, page numbers, internal labels, prompt labels, wireframe labels, generation annotations, or hidden production notes.",
+            f"Approved optional visible terms: {' | '.join(projection['allowed_visible_terms']) or 'none'}.",
+            "Use a contained 16:9 slide frame with dense but readable information regions and explicit business hierarchy.",
+            "Use only presentation-ready business language. Do not render field names, instructions, or metadata from this prompt. Do not add any footer, page number, page counter, source line, evidence marker, explanatory label, framework label, placeholder, prompt label, or production annotation.",
+            "Treat all visible text as composition guidance. The native redraw restores exact locked text from the content lock.",
         ]
     )
 
 
 def build_blueprint_prompt_artifact(root: Path, page_id: str, lock: dict[str, Any], *, style_lock: dict[str, Any] | None = None, nbb_plan_sha256: str = "") -> Path:
+    from .blueprint_content_review import next_attempt_index
+
+    attempt_index = next_attempt_index(root, page_id)
     challenge_seed = {"nonce": secrets.token_hex(16), "issued_at": utc_now()}
     prompt_text = build_blueprint_prompt(
         lock,
         style_lock,
         nbb_plan_sha256=nbb_plan_sha256,
         provider_challenge_nonce=challenge_seed["nonce"],
+        attempt_index=attempt_index,
     )
     style_hash = str((style_lock or {}).get("style_lock_sha256") or "0" * 64)
     prompt_sha256 = sha256_json(prompt_text)
@@ -420,7 +436,7 @@ def build_blueprint_prompt_artifact(root: Path, page_id: str, lock: dict[str, An
         "schema_version": "deck_blueprint_prompt.v1",
         "run_id": str(lock["run_id"]),
         "page_id": str(page_id),
-        "prompt_template_version": "cyber-ppt-high-density.v2",
+        "prompt_template_version": "cyber-ppt-high-density.v3",
         "prompt_text": prompt_text,
         "prompt_sha256": prompt_sha256,
         "content_lock_ref": f"high_density_build/content_locks/{page_id}.content_lock.json",
@@ -429,9 +445,12 @@ def build_blueprint_prompt_artifact(root: Path, page_id: str, lock: dict[str, An
         "nbb_plan_sha256": nbb_plan_sha256 or str((lock.get("lineage") or {}).get("nbb_plan_sha256") or "0" * 64),
         "style_lock_ref": "high_density_build/style/style_lock.json",
         "style_lock_sha256": style_hash,
-        "content_summary": _content_summary(lock),
+        "presentation_projection": _presentation_projection(lock),
+        "visible_copy_allowlist": [str(item.get("term") or "") for item in (lock.get("visibility_policy") or {}).get("allowed_visible_terms") or [] if isinstance(item, dict)],
+        "forbidden_visible_categories": list((lock.get("visibility_policy") or {}).get("hard_forbidden") or []) + list((lock.get("visibility_policy") or {}).get("hidden_by_default") or []),
+        "attempt_index": attempt_index,
         "required_components": list(lock.get("required_component_ids") or []),
-        "forbidden_items": ["page numbers", "internal labels", "prompt labels", "wireframe labels", "generation annotations", "hidden production notes"],
+        "forbidden_items": ["page numbers", "internal labels", "source metadata", "method labels", "prompt labels", "wireframe labels", "generation annotations", "hidden production notes"],
         "provider_challenge": challenge,
         "created_at": utc_now(),
     }
@@ -574,6 +593,7 @@ def ensure_blueprint_manifest(
         style_lock,
         nbb_plan_sha256=nbb_plan_sha256 or str((lock.get("lineage") or {}).get("nbb_plan_sha256") or "0" * 64),
         provider_challenge_nonce=challenge_nonce,
+        attempt_index=int(prompt.get("attempt_index") or 1),
     )
     expected_prompt_sha = sha256_json(expected_prompt)
     if prompt.get("prompt_sha256") != expected_prompt_sha or prompt.get("content_lock_sha256") != lock.get("content_lock_sha256"):
@@ -635,6 +655,16 @@ def ensure_blueprint_manifest(
             }
             provider["request_sha256"] = _provider_request_sha256(provider)
     _validate_provider_lineage(prompt, provider, page_id)
+    from .blueprint_content_review import BlueprintContentReviewRequired, ensure_fixture_blueprint_content_review, load_blueprint_content_review, review_path as content_review_path
+
+    try:
+        content_review = (
+            ensure_fixture_blueprint_content_review(root, page_id, lock)
+            if _run_mode(root) in {"fixture", "dev"}
+            else load_blueprint_content_review(root, page_id, lock)
+        )
+    except BlueprintContentReviewRequired as exc:
+        raise BlueprintInvalid(str(exc)) from exc
     manifest = {
         "schema_version": "deck_blueprint_manifest.v2",
         "run_id": str(lock["run_id"]),
@@ -646,6 +676,8 @@ def ensure_blueprint_manifest(
         "content_lock_sha256": str(lock["content_lock_sha256"]),
         "nbb_plan_sha256": nbb_plan_sha256 or str((lock.get("lineage") or {}).get("nbb_plan_sha256") or "0" * 64),
         "style_lock_sha256": style_hash,
+        "content_review_ref": run_relative(root, content_review_path(root, page_id)),
+        "content_review_sha256": sha256_file(content_review_path(root, page_id)),
         "source_canvas": {"width": dimensions[0], "height": dimensions[1], "unit": "px"},
         "slide_frame": {"x": frame_x, "y": frame_y, "w": frame_width, "h": frame_height},
         "source_to_scene_transform": transform,
@@ -696,6 +728,11 @@ def load_blueprint_manifest(root: Path, page_id: str, *, expected_run_id: str | 
         raise BlueprintInvalid(f"blueprint prompt content hash is stale on page {page_id}")
     if str(manifest.get("image_sha256") or "") != sha256_file(image):
         raise BlueprintInvalid(f"blueprint hash is stale on page {page_id}")
+    from .blueprint_content_review import load_blueprint_content_review, review_path as content_review_path
+
+    load_blueprint_content_review(root, page_id, read_json(safe_run_path(root, str(prompt.get("content_lock_ref") or ""))))
+    if str(manifest.get("content_review_ref") or "") != run_relative(root, content_review_path(root, page_id)) or str(manifest.get("content_review_sha256") or "") != sha256_file(content_review_path(root, page_id)):
+        raise BlueprintInvalid(f"blueprint content review is stale on page {page_id}")
     _validate_provider_lineage(prompt, manifest.get("provider") or {}, page_id)
     load_provider_runtime_receipt(root, page_id, manifest)
     dimensions = image_dimensions(image)

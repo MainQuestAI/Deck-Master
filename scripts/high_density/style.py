@@ -49,7 +49,7 @@ def _style(
         "typography": {"family": typography, "title_px": 42, "body_px": 18, "caption_px": 12, "numeric_px": 30, "line_height": 1.18},
         "chart_language": {"primary": accent, "secondary": secondary, "axis": "hairline", "labels": "native_text"},
         "table_language": {"header": accent, "row_rule": "hairline", "cell_padding_px": 14},
-        "surface_system": {"background": background, "card": surface, "header": ink, "footer": "muted", "radius_px": 8},
+        "surface_system": {"background": background, "card": surface, "header": ink, "footer": "none", "radius_px": 8},
         "density_rules": {"minimum_information_regions": 3, "minimum_required_components": 3, "avoid_empty_hero_space": True, "preserve_safe_area": True},
         "prohibitions": ["page numbers", "internal labels", "prompt labels", "wireframe labels", "generation annotations", "hidden production notes"],
     }
@@ -58,7 +58,7 @@ def _style(
 CYBER_PPT_STYLES: tuple[dict[str, Any], ...] = (
     _style("cyber-01", "Ink Cobalt", "#f7f9fb", "#18212b", "#419BFD", "#d96b3b", "#ffffff", grid="12-column consulting grid", typography="Arial"),
     _style("cyber-02", "Midnight Signal", "#101722", "#f7f9fb", "#66b7ff", "#ffb26b", "#1b2735", grid="dark editorial grid", typography="Arial"),
-    _style("cyber-03", "Paper Mint", "#f3f7f1", "#17332b", "#2f8f83", "#e28b4b", "#ffffff", grid="modular evidence grid", typography="Arial"),
+    _style("cyber-03", "Paper Mint", "#f3f7f1", "#17332b", "#2f8f83", "#e28b4b", "#ffffff", grid="modular consulting grid", typography="Arial"),
     _style("cyber-04", "Cobalt Ledger", "#eef5fb", "#17324d", "#1f6fd1", "#c65c42", "#ffffff", grid="comparison matrix grid", typography="Arial"),
     _style("cyber-05", "Copper Brief", "#fff7ef", "#3b2720", "#c65c42", "#3d91c9", "#ffffff", grid="storyline rail grid", typography="Arial"),
     _style("cyber-06", "Graphite Mint", "#edf2ef", "#202b2a", "#3d8f78", "#3c78b5", "#ffffff", grid="architecture flow grid", typography="Arial"),
