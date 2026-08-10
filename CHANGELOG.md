@@ -8,6 +8,28 @@
 - Package Skill OS registries and expand isolated release smoke coverage.
 - Require delivery-grade evidence before benchmark reports qualify for RC.
 
+## v0.9.14-preview.4
+
+Status: Technical Preview (agent-operable).
+
+Version mapping: GitHub release label `v0.9.14-preview.4` maps to Python
+package version `0.9.14a4`. Skill Suite contract version remains `1.1.0`.
+This patch preview supersedes `v0.9.14-preview.3` without changing the
+high-density content or rendering behavior.
+
+This patch fixes release-runtime packaging and capability discovery:
+
+- Installed releases discover v2 high-density contracts from the canonical
+  release `contracts/` directory as well as the source `docs/contracts/`
+  directory.
+- Python entrypoints inside the moved release virtual environment are
+  repaired to point at the active release path instead of the staging path.
+- Added regression coverage for installed contract discovery and moved
+  virtual-environment launchers.
+
+Validation includes the full release-runtime and high-density regression set:
+`110 passed`, `4 subtests passed`, Ruff, compile checks, and `git diff --check`.
+
 ## v0.9.14-preview.3
 
 Status: Technical Preview (agent-operable).

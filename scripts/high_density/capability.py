@@ -37,10 +37,18 @@ def _font_ready() -> tuple[bool, str]:
     return False, "no approved sans-serif font found"
 
 
+def _schema_directory(root: Path) -> Path:
+    candidates = (root / "docs" / "contracts", root / "contracts")
+    for directory in candidates:
+        if directory.is_dir() and all((directory / name).is_file() for name in REQUIRED_SCHEMAS):
+            return directory
+    return next((directory for directory in candidates if directory.is_dir()), candidates[0])
+
+
 def inspect_high_density_capability(repo_root: Path | None = None) -> dict[str, Any]:
     root = (repo_root or Path(__file__).resolve().parents[2]).resolve()
     checks: list[dict[str, Any]] = []
-    schema_dir = root / "docs" / "contracts"
+    schema_dir = _schema_directory(root)
     missing_schemas = [name for name in REQUIRED_SCHEMAS if not (schema_dir / name).is_file()]
     checks.append({"name": "v2_schemas", "ready": not missing_schemas, "missing": missing_schemas})
     packages = {}

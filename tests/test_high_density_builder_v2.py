@@ -22,7 +22,7 @@ if str(ROOT / "scripts") not in sys.path:
 from build.manifest import build_manifest_v2
 from high_density.blueprint import BlueprintInvalid, _default_slide_frame, build_blueprint_prompt, build_blueprint_prompt_artifact, ensure_blueprint_manifest, record_provider_host_result
 from high_density.blueprint_content_review import BlueprintContentReviewRequired, archive_rejected_blueprint, load_blueprint_content_review, next_attempt_index, write_blueprint_content_review
-from high_density.capability import inspect_high_density_capability
+from high_density.capability import REQUIRED_SCHEMAS, inspect_high_density_capability
 from high_density.content import (
     build_content_lock,
     build_mbb_page,
@@ -364,6 +364,24 @@ def test_capability_blocks_missing_visual_dependency(tmp_path: Path, monkeypatch
     assert report["status"] == "blocked_runtime_dependency"
     svg_check = next(item for item in report["checks"] if item["name"] == "renderers")
     assert svg_check["ready"] is False
+
+
+def test_capability_accepts_release_contract_directory(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import high_density.capability as capability
+
+    contract_dir = tmp_path / "contracts"
+    contract_dir.mkdir()
+    for name in REQUIRED_SCHEMAS:
+        shutil.copy2(ROOT / "docs" / "contracts" / name, contract_dir / name)
+    monkeypatch.setattr(capability.shutil, "which", lambda name: f"/usr/bin/{name}")
+    monkeypatch.setattr(capability, "_font_ready", lambda: (True, "fixture-font"))
+    monkeypatch.setattr(capability.importlib.util, "find_spec", lambda name: object())
+
+    report = inspect_high_density_capability(tmp_path)
+
+    schema_check = next(item for item in report["checks"] if item["name"] == "v2_schemas")
+    assert schema_check["ready"] is True
+    assert report["ready"] is True
 
 
 def test_production_requires_approved_style_lock(tmp_path: Path) -> None:

@@ -1200,6 +1200,26 @@ def _record_release_runtime(release_root: Path, version: str) -> None:
     _write_sha256sums(release_root)
 
 
+def _repair_runtime_launchers(release_root: Path) -> None:
+    """Rewrite Python entrypoint shebangs after moving a staged virtualenv."""
+    runtime_bin = release_root / ".venv" / "bin"
+    runtime_python = runtime_bin / "python"
+    if not runtime_bin.is_dir() or not runtime_python.exists():
+        return
+    for launcher in runtime_bin.iterdir():
+        if not launcher.is_file() or launcher.is_symlink():
+            continue
+        try:
+            content = launcher.read_bytes()
+            first_line, remainder = content.split(b"\n", 1)
+            shebang = first_line[2:].decode("utf-8") if first_line.startswith(b"#!") else ""
+        except (OSError, UnicodeDecodeError, ValueError):
+            continue
+        if "/.venv/bin/python" not in shebang:
+            continue
+        launcher.write_bytes(f"#!{runtime_python}\n".encode("utf-8") + remainder)
+
+
 def _run_runtime_setup(command: list[str], *, cwd: Path, failure: str) -> None:
     try:
         completed = subprocess.run(
@@ -1573,6 +1593,7 @@ def _activate_staged_release(staged_release: Path) -> dict[str, Any]:
             previous_path = str(previous)
         current.parent.mkdir(parents=True, exist_ok=True)
         shutil.move(str(staged_release), str(current))
+        _repair_runtime_launchers(current)
         activation = {
             "schema_version": "deck_master_release_activation.v1",
             "status": "activated",

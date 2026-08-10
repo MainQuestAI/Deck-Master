@@ -107,6 +107,30 @@ class ReleaseRuntimeTests(unittest.TestCase):
         self.assertTrue((legitimate_package / "__init__.py").exists())
         self.assertTrue(venv_metadata.exists())
 
+    def test_repair_runtime_launchers_rewrites_moved_python_shebangs(self) -> None:
+        release_root = self.temp_dir / "release"
+        runtime_bin = release_root / ".venv" / "bin"
+        runtime_bin.mkdir(parents=True)
+        runtime_python = runtime_bin / "python"
+        runtime_python.write_text("#!/bin/sh\n", encoding="utf-8")
+        runtime_python.chmod(0o755)
+        (runtime_bin / "pip").write_text(
+            "#!/tmp/deck-master/staging/release/.venv/bin/python3.12\nprint('pip')\n",
+            encoding="utf-8",
+        )
+        (runtime_bin / "deck-master").write_text(
+            "#!/tmp/deck-master/staging/release/.venv/bin/python\nprint('deck-master')\n",
+            encoding="utf-8",
+        )
+        (runtime_bin / "activate").write_text("#!/bin/sh\n", encoding="utf-8")
+
+        installer._repair_runtime_launchers(release_root)
+
+        pip_shebang = (runtime_bin / "pip").read_text(encoding="utf-8").split("\n", 1)[0]
+        self.assertEqual(f"#!{runtime_python}", pip_shebang)
+        self.assertTrue((runtime_bin / "deck-master").read_text(encoding="utf-8").startswith(f"#!{runtime_python}\n"))
+        self.assertEqual("#!/bin/sh\n", (runtime_bin / "activate").read_text(encoding="utf-8"))
+
     def test_runtime_python_override_takes_precedence_and_must_be_312(self) -> None:
         with mock.patch.dict(os.environ, {"DECK_MASTER_PYTHON": "/opt/python-override"}), mock.patch.object(
             installer.shutil,

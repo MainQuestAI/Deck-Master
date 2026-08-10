@@ -13,7 +13,7 @@ Python 3.12+. After installing with `python -m pip install -e ".[dev]"`,
 
 ## New Public Preview Run
 
-- Intent: generate the public fixture demo or verify v0.9.14-preview.3.
+- Intent: generate the public fixture demo or verify v0.9.14-preview.4.
 - Command:
 
 ```bash
