@@ -1,7 +1,7 @@
 # Deck Master Roadmap
 
 This roadmap tracks the path from the current public Technical Preview
-(`v0.9.14-preview.2`) to a `1.0.0` release. It is a living document; priorities
+(`v0.9.14-preview.3`) to a `1.0.0` release. It is a living document; priorities
 may shift. See `docs/releases/2026-07-09-1.0.0-iteration-plan.md` for the
 detailed sprint breakdown.
 

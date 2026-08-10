@@ -8,6 +8,35 @@
 - Package Skill OS registries and expand isolated release smoke coverage.
 - Require delivery-grade evidence before benchmark reports qualify for RC.
 
+## v0.9.14-preview.3
+
+Status: Technical Preview (agent-operable).
+
+Version mapping: GitHub release label `v0.9.14-preview.3` maps to Python
+package version `0.9.14a3`. Skill Suite contract version remains `1.1.0`.
+This preview does not claim production readiness.
+
+This preview adds the independently installable High-Density Builder route:
+
+- MBB content enrichment with storyline selection, evidence binding, SCR, and
+  page-level content planning.
+- Content-safe ImageGen blueprint generation with page-number and internal-label
+  prohibitions.
+- Native SVG reconstruction with controlled icon, curve, table, text, and
+  visual-registration gates.
+- SVG-authoritative DrawingML PPTX compilation, readback, trace, and visual
+  parity checks.
+- Fail-closed migration handling for retired content-planning artifacts and
+  release evidence that accurately reports unavailable private benchmarks.
+
+Validation for this preview includes `1399 passed` and `105 subtests passed`,
+Python 3.11/3.12 compile checks, Ruff, JSON contract validation, release smoke,
+and local installation verification.
+
+The fresh provider smoke, six-page external icon acceptance, and 73-page
+external benchmark remain release gates and are not represented as completed
+in this preview.
+
 ## v0.9.14-preview.2
 
 Status: Technical Preview (agent-operable).
