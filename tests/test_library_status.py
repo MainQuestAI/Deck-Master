@@ -24,7 +24,7 @@ import deck_master  # noqa: E402
 import runtime.library_status as library_status_module  # noqa: E402
 from runtime.library_status import inspect_library_status  # noqa: E402
 from runtime.setup_status import setup_status  # noqa: E402
-from skills.installer import inspect_suite_status  # noqa: E402
+from skills.installer import build_release_tree, inspect_suite_status  # noqa: E402
 
 
 EXPECTED_KEYS = {
@@ -329,6 +329,52 @@ def _runner(
 class LibraryStatusV2Tests(unittest.TestCase):
     def setUp(self) -> None:
         library_status_module._clear_library_status_cache()
+
+    def test_release_contract_layout_is_ready_and_detects_missing_schema(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "release"
+            build_release_tree(root)
+            ready, fingerprint = library_status_module._contract_state(root)
+            self.assertTrue(ready)
+            schema = root / "contracts" / "ppt-library-selection.v2.schema.json"
+            schema.unlink()
+            ready, changed_fingerprint = library_status_module._contract_state(root)
+            self.assertFalse(ready)
+            self.assertNotEqual(fingerprint, changed_fingerprint)
+
+    def test_release_selection_validator_uses_bundled_schema(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "release"
+            build_release_tree(root)
+            probe = """
+import json, sys
+sys.path.insert(0, sys.argv[1])
+from tools.ppt_library_client import _validate_selection_v2_contract
+from runtime.rc_gate import _artifact_matches_schema
+payload = {
+    'schema_version': 'deck_master_ppt_library_selection.v2',
+    'run_id': 'release-contract-test', 'status': 'library_gap',
+    'source': 'fixture', 'preview_degraded': True,
+    'selections': [], 'warnings': [], 'by_beat': {},
+}
+valid_errors = _validate_selection_v2_contract(payload)
+release_gate_valid = _artifact_matches_schema(payload, 'ppt-library-selection.v2.schema.json')
+payload['run_id'] = ''
+invalid_errors = _validate_selection_v2_contract(payload)
+release_gate_invalid = _artifact_matches_schema(payload, 'ppt-library-selection.v2.schema.json')
+print(json.dumps({'valid': valid_errors, 'invalid': invalid_errors,
+                  'release_gate_valid': release_gate_valid, 'release_gate_invalid': release_gate_invalid}))
+"""
+            result = subprocess.run(
+                [sys.executable, "-c", probe, str(root / "scripts")],
+                cwd=tmp, capture_output=True, text=True, check=True, timeout=30,
+            )
+            errors = json.loads(result.stdout)
+            self.assertEqual([], errors["valid"])
+            self.assertTrue(errors["invalid"])
+            self.assertIn("run_id", " ".join(errors["invalid"]))
+            self.assertTrue(errors["release_gate_valid"])
+            self.assertFalse(errors["release_gate_invalid"])
 
     def test_all_required_dimensions_ready_aggregates_to_ready(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

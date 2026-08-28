@@ -795,10 +795,13 @@ def _uat_copy_symlink_failure(run_dir: Path) -> str | None:
 
 
 def _artifact_matches_schema(payload: dict[str, Any], schema_name: str) -> bool:
+    contracts_root = REPO_ROOT / "docs" / "contracts"
+    if not contracts_root.is_dir():
+        contracts_root = REPO_ROOT / "contracts"
     try:
         import jsonschema  # type: ignore
 
-        schema = json.loads((REPO_ROOT / "docs" / "contracts" / schema_name).read_text(encoding="utf-8"))
+        schema = json.loads((contracts_root / schema_name).read_text(encoding="utf-8"))
     except (ImportError, OSError, json.JSONDecodeError):
         return False
     try:

@@ -274,18 +274,20 @@ def _legacy_selection_schemas_ready(
 
 
 def _contract_state(repo_root: Path) -> tuple[bool, str]:
+    capability_root = repo_root / "product_capabilities"
+    if not capability_root.is_dir():
+        capability_root = repo_root / "capabilities"
+    contracts_root = repo_root / "docs" / "contracts"
+    if not contracts_root.is_dir():
+        contracts_root = repo_root / "contracts"
     paths = (
-        repo_root / "product_capabilities" / "ppt-library" / "capability.json",
-        repo_root / "product_capabilities" / "ppt-library" / "capability.yaml",
-        repo_root
-        / "product_capabilities"
-        / "ppt-library"
-        / "contracts"
-        / "library-selection.v1.schema.json",
-        repo_root / "docs" / "contracts" / "ppt-library-selection.v1.schema.json",
-        repo_root / "docs" / "contracts" / "ppt-library-selection.v2.schema.json",
-        repo_root / "docs" / "contracts" / "ppt-library-bridge-plan.v1.schema.json",
-        repo_root / "docs" / "contracts" / "library-status.v2.schema.json",
+        capability_root / "ppt-library" / "capability.json",
+        capability_root / "ppt-library" / "capability.yaml",
+        capability_root / "ppt-library" / "contracts" / "library-selection.v1.schema.json",
+        contracts_root / "ppt-library-selection.v1.schema.json",
+        contracts_root / "ppt-library-selection.v2.schema.json",
+        contracts_root / "ppt-library-bridge-plan.v1.schema.json",
+        contracts_root / "library-status.v2.schema.json",
         repo_root / "scripts" / "tools" / "ppt_library_client.py",
         repo_root / "scripts" / "skills" / "installer.py",
     )

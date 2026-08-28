@@ -22,12 +22,10 @@ from runtime.run_state import (
 BRIDGE_PLAN_SCHEMA_VERSION = "deck_master_ppt_library_bridge_plan.v1"
 SELECTION_SCHEMA_VERSION_V1 = "deck_master_ppt_library_selection.v1"
 SELECTION_SCHEMA_VERSION = "deck_master_ppt_library_selection.v2"
-SELECTION_V2_SCHEMA_PATH = (
-    Path(__file__).resolve().parents[2]
-    / "docs"
-    / "contracts"
-    / "ppt-library-selection.v2.schema.json"
-)
+_CONTRACTS_ROOT = Path(__file__).resolve().parents[2] / "docs" / "contracts"
+if not _CONTRACTS_ROOT.is_dir():
+    _CONTRACTS_ROOT = Path(__file__).resolve().parents[2] / "contracts"
+SELECTION_V2_SCHEMA_PATH = _CONTRACTS_ROOT / "ppt-library-selection.v2.schema.json"
 LIBRARY_COMMAND_TIMEOUT_SECONDS = 60
 
 PASSTHROUGH_ROLES = {

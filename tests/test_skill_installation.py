@@ -744,8 +744,11 @@ class SkillInstallationTest(unittest.TestCase):
             json.dumps(
                 {
                     "schema_version": "deck_rc_gate_report.v1",
+                    "tier": "full",
                     "status": "pass",
                     "checks": [
+                        {"check_id": "benchmark_aggregate", "status": "pass", "required": True},
+                        {"check_id": "real_workflow_uat", "status": "pass", "required": True},
                         {
                             "check_id": "external_dependency_closure",
                             "status": "pass",
@@ -782,6 +785,33 @@ class SkillInstallationTest(unittest.TestCase):
         self.assertEqual("ready", result["task_readiness"]["client_delivery"])
         self.assertTrue(result["client_delivery_ready"])
         self.assertTrue(result["client_delivery_evidence"]["dependency_snapshot_matches"])
+
+    def test_client_delivery_rejects_ci_incomplete_and_failed_release_evidence(self) -> None:
+        dependency = {"name": "ppt-master", "binding_status": "bound_verified", "git_sha": "backend-sha", "verified": True}
+        snapshot = {key: dependency[key] for key in ("binding_status", "git_sha", "verified")}
+        full_report = {
+            "schema_version": "deck_rc_gate_report.v1", "tier": "full", "status": "pass",
+            "checks": [
+                {"check_id": "benchmark_aggregate", "status": "pass", "required": True},
+                {"check_id": "real_workflow_uat", "status": "pass", "required": True},
+                {"check_id": "external_dependency_closure", "status": "pass", "required": True,
+                 "details": {"dependencies": {"ppt-master": snapshot}}},
+            ],
+        }
+        variants = [
+            ("ci", {**full_report, "tier": "ci"}),
+            ("legacy", {key: value for key, value in full_report.items() if key != "tier"}),
+            ("missing_uat", {**full_report, "checks": [c for c in full_report["checks"] if c["check_id"] != "real_workflow_uat"]}),
+            ("failed_check", {**full_report, "checks": [*full_report["checks"], {"check_id": "release_smoke", "status": "fail", "required": True}]}),
+        ]
+        with mock.patch.object(installer_module, "_safe_read_rc_gate_report", return_value=full_report):
+            result = installer_module._client_delivery_evidence([dependency], render_runtime_trusted_for_rc=True)
+            self.assertTrue(result["rc_gate_passed"])
+        for name, report in variants:
+            with self.subTest(case=name), mock.patch.object(installer_module, "_safe_read_rc_gate_report", return_value=report):
+                result = installer_module._client_delivery_evidence([dependency], render_runtime_trusted_for_rc=True)
+                self.assertFalse(result["rc_gate_passed"])
+                self.assertTrue(result["missing"])
 
     def test_suite_status_blocks_client_delivery_for_env_runtime_override(self) -> None:
         def fake_inspect_skill_link(target: str, agent_skill_dir: str | None = None, source_skill_dir: str | None = None, *, skill_name: str = "deck-master", required: bool = True) -> dict[str, Any]:
@@ -1186,6 +1216,11 @@ class SkillInstallationTest(unittest.TestCase):
             result = inspect_suite_status(targets=["codex"], agent_skill_dir=str(self.agent_dir))
         self.assertEqual("blocked", result["task_readiness"]["library_sourcing"])
         self.assertEqual("blocked", result["status"])
+        self.assertTrue(result["full_suite_ready"])
+        self.assertEqual("deck-master library-status", result["next_command"])
+        self.assertNotIn("suite_installation_blocked", [item["code"] for item in result["blocking_summary"]])
+        self.assertEqual("ready", result["task_readiness"]["planning"])
+        self.assertEqual("ready", result["task_readiness"]["deck_builder"])
 
     def test_library_blocked_semantic_search_unavailable_propagates(self) -> None:
         with self._ready_skill_link_mock(), self._lib_blocked_mock(

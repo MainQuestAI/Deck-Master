@@ -2052,6 +2052,7 @@ def _client_delivery_evidence(
     report_path = _rc_gate_report_path()
     evidence: dict[str, Any] = {
         "rc_gate_report": str(report_path),
+        "rc_gate_tier": "",
         "rc_gate_passed": False,
         "external_dependency_closure_passed": False,
         "dependency_snapshot_matches": False,
@@ -2064,8 +2065,23 @@ def _client_delivery_evidence(
     if report is None:
         evidence["missing"].append("rc_gate_report")
         return evidence
-    evidence["rc_gate_passed"] = report.get("status") == "pass"
     checks = report.get("checks") if isinstance(report.get("checks"), list) else []
+    evidence["rc_gate_tier"] = str(report.get("tier") or "")
+    full_tier = evidence["rc_gate_tier"] == "full"
+    if not full_tier:
+        evidence["missing"].append("full_rc_gate")
+    full_check_ids = {"benchmark_aggregate", "real_workflow_uat", "external_dependency_closure"}
+    passed_check_ids = {check.get("check_id") for check in checks if isinstance(check, dict) and check.get("status") == "pass"}
+    failed_checks = sorted(full_check_ids - passed_check_ids)
+    failed_checks.extend(
+        str(check.get("check_id") or "unknown") for check in checks
+        if isinstance(check, dict) and check.get("required") and check.get("status") != "pass"
+    )
+    evidence["failed_or_missing_checks"] = sorted(set(failed_checks))
+    evidence["rc_gate_passed"] = bool(
+        report.get("schema_version") == "deck_rc_gate_report.v1"
+        and report.get("status") == "pass" and full_tier and not failed_checks
+    )
     closure = next(
         (
             check for check in checks
@@ -2073,7 +2089,7 @@ def _client_delivery_evidence(
         ),
         {},
     )
-    evidence["external_dependency_closure_passed"] = closure.get("status") == "pass"
+    evidence["external_dependency_closure_passed"] = full_tier and closure.get("status") == "pass"
     report_dependencies = (closure.get("details") or {}).get("dependencies") if isinstance(closure.get("details"), dict) else {}
     current_dependencies = _dependency_snapshot(external_dependency_status)
     evidence["current_dependencies"] = current_dependencies
@@ -2319,15 +2335,21 @@ def inspect_suite_status(
 
     next_command = ""
     next_agent_action = "Suite ready."
-    if status == "blocked":
+    if not deck_ready:
         next_command = "deck-master suite-repair --target codex --target claude-code"
         next_agent_action = "Repair Deck Master skill installation before creating or modifying production runs."
     elif not full_suite_ready:
         next_command = "deck-master suite-repair --target codex --target claude-code"
         next_agent_action = "Repair missing required Deck Master product capabilities before production work."
+    elif lib_blocked:
+        next_command = "deck-master library-status"
+        next_agent_action = "Inspect PPT Library readiness and repair its reported blocker; installed skills are ready."
+    elif not client_delivery_ready:
+        next_command = "deck-master rc-gate --tier full"
+        next_agent_action = "Installed skills are ready. Complete full-tier release evidence before client delivery."
 
     blocking_summary: list[dict[str, Any]] = []
-    if status == "blocked":
+    if not deck_ready:
         blocking_summary.append({
             "code": "suite_installation_blocked",
             "blocking_type": "installation",
@@ -2369,8 +2391,8 @@ def inspect_suite_status(
             "code": "client_delivery_blocked",
             "blocking_type": "delivery",
             "message": "客户版交付仍被阻断，当前 release 还未满足真实 render、外部依赖闭环和 RC gate 前提。" + missing_text,
-            "repair_owner": "backend",
-            "next_command": "",
+            "repair_owner": "release",
+            "next_command": "deck-master rc-gate --tier full",
         })
     if lib_blocked:
         lib_blockers = library_status.get("blocking_summary") or []
