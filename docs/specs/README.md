@@ -56,6 +56,9 @@
 - `deck-master-high-density-builder-core-engineering-spec-v2.md`
   - 状态：当前 active development spec。
   - 目标：重新实现 MBB 内容增强、内容驱动 ImageGen、图片到原生 SVG、真实视觉 QA、SVG-to-DrawingML PPTX 和 73 页外部 benchmark，并以 20 项反伪实现探针作为核心验收门。
+- `overdefense-governance-v1/`
+  - 状态：当前治理迭代 Spec。
+  - 目标：把 2026-09-01 审查出的 19 个活跃过度防御问题和 1 个历史残留，拆成 P0/P1/P2 可执行治理包，确保 PPT 生产链不再被不存在的密钥、不可操作审批、正常业务词误杀、历史报告永久 veto 和角色盲门禁卡死。
 - `deck-master-high-density-builder-reference-migration-evidence.md`
   - 目标：记录 CyberPPT、native-svg-redraw、Product Design `image-to-code`、PPT Master 和 OfficeCLI 的参考证据、迁移行为、重写落点与冲突裁决。
 
@@ -105,6 +108,10 @@ docs/specs/open-source-maturity-v1.0/tasks/T8-m2-rc-hardening.md
 docs/specs/deck-master-ppt-library-bridge-runtime-closure-spec-v1.md
 docs/specs/deck-master-high-density-builder-next-iteration-spec.md
 docs/specs/deck-master-high-density-builder-engineering-spec-v1.md
+docs/specs/overdefense-governance-v1/README.md
+docs/specs/overdefense-governance-v1/00-master-spec.md
+docs/specs/overdefense-governance-v1/implementation/development-plan.md
+docs/specs/overdefense-governance-v1/acceptance/acceptance-matrix.md
 docs/specs/skill-os-runtime-v1.1/README.md
 docs/specs/skill-os-runtime-v1.1/LOCAL_ADOPTION.md
 docs/specs/skill-os-runtime-v1.1/acceptance/decision-traceability.md
@@ -132,5 +139,6 @@ v0.9.5 Review Cockpit Frontend
 → PPT Library Bridge & Runtime Closure v1
 → High-Density Builder Next Iteration Spec
 → High-Density Builder Engineering Spec v1
+→ Overdefense Governance v1
 → v1.0.0 RC Real Benchmark Runs
 ```

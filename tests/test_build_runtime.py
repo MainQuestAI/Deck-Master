@@ -114,6 +114,27 @@ class BuildRuntimeTests(unittest.TestCase):
         self.assertEqual(3, status["page_count"])
         self.assertTrue(status["artifact_validation"]["valid"], status["artifact_validation"].get("errors"))
 
+    def test_production_pptx_output_profile_requires_only_pptx(self) -> None:
+        request = read_json(self.run_dir / "request.json")
+        request["output_profile"] = "production_pptx"
+        write_json(self.run_dir / "request.json", request)
+        self._write_preview(2)
+
+        result = run_build(self.run_dir)
+
+        manifest = read_json(self.run_dir / "build" / "build_manifest.json")
+        self.assertEqual("production_pptx", manifest["output_profile"])
+        self.assertEqual(["deck_pptx"], manifest["required_outputs"])
+        self.assertTrue((self.run_dir / "build" / "deck.pptx").exists())
+        self.assertFalse((self.run_dir / "build" / "deck.html").exists())
+        self.assertFalse((self.run_dir / "build" / "deck.pdf").exists())
+        self.assertFalse((self.run_dir / "build" / "pages").exists())
+        artifact_kinds = {artifact["kind"] for artifact in result["artifacts"]}
+        self.assertEqual({"deck_pptx"}, artifact_kinds)
+        render_result = read_json(self.run_dir / "render_results" / "render_result.json")
+        self.assertEqual("build/deck.pptx", render_result["artifact_path"])
+        self.assertEqual([], render_result["page_previews"])
+
     def test_build_status_detects_corrupt_artifacts(self) -> None:
         self._write_preview(1)
         run_build(self.run_dir)

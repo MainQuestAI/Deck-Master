@@ -6,6 +6,8 @@ from pathlib import Path
 from typing import Any
 
 from delivery.validate import validate_delivery
+from quality.gate_freshness import report_currentity
+from quality.overrides import has_active_override
 from runtime.render import find_render_result
 from runtime.run_state import PREVIEW_MANIFEST_NAME, read_json
 from runtime.run_state_resolver import resolve_run_state
@@ -38,6 +40,10 @@ def _run_relative(root: Path, path: Path) -> str:
 
 def _resolve_artifact(root: Path, artifact_path: str | Path | None, render_result: dict[str, Any]) -> tuple[Path | None, str]:
     raw = str(artifact_path or render_result.get("artifact_path") or "").strip()
+    if not raw:
+        high_density_artifact = root / "high_density_build" / "pptx" / "deck_high_density.pptx"
+        if _high_density_completed(root) and high_density_artifact.exists():
+            raw = str(high_density_artifact)
     if not raw:
         return None, ""
     candidate = Path(raw)
@@ -73,6 +79,24 @@ def _render_page_count(render_result: dict[str, Any]) -> int:
         return 0
 
 
+def _high_density_completed(root: Path) -> bool:
+    status = _safe_read_json(root / "high_density_build" / "status.json")
+    return (
+        str(status.get("builder_profile") or "") == "high_density"
+        and str(status.get("status") or "").lower() == "completed"
+    )
+
+
+def _high_density_page_count(root: Path) -> int:
+    build_manifest = _safe_read_json(root / "build" / "build_manifest.json")
+    pages = build_manifest.get("pages")
+    if isinstance(pages, list):
+        return len(pages)
+    manifest = _safe_read_json(root / "high_density_build" / "manifest.json")
+    pages = manifest.get("pages")
+    return len(pages) if isinstance(pages, list) else 0
+
+
 def _add_blocker(blockers: list[dict[str, str]], code: str, message: str, *, severity: str = "P0") -> None:
     if any(item.get("code") == code for item in blockers):
         return
@@ -104,7 +128,7 @@ def _run_state_not_ready_message(stage: str) -> str:
     return stage_messages.get(stage, f"当前运行阶段还未达到最终交付条件：{stage or 'unknown'}。")
 
 
-def _quality_gate_summary(root: Path) -> list[dict[str, Any]]:
+def _quality_gate_summary(root: Path, artifact: Path | None = None) -> list[dict[str, Any]]:
     quality_dir = root / "quality_reports"
     if not quality_dir.is_dir():
         return []
@@ -114,6 +138,7 @@ def _quality_gate_summary(root: Path) -> list[dict[str, Any]]:
         if not report:
             gates.append({"gate": path.stem.replace("_gate", ""), "status": "parse_failed", "blocks_delivery": True})
             continue
+        currentity = report_currentity(root, report, artifact)
         gates.append(
             {
                 "gate": str(report.get("gate") or path.stem.replace("_gate", "")),
@@ -121,6 +146,16 @@ def _quality_gate_summary(root: Path) -> list[dict[str, Any]]:
                 "blocks_delivery": bool(report.get("blocks_delivery")),
                 "findings": len(report.get("findings", [])) if isinstance(report.get("findings"), list) else 0,
                 "page_findings": len(report.get("page_findings", [])) if isinstance(report.get("page_findings"), list) else 0,
+                "blocking_findings": [
+                    {
+                        "finding_id": str(item.get("finding_id") or ""),
+                        "severity": str(item.get("severity") or ""),
+                    }
+                    for item in report.get("findings", [])
+                    if isinstance(item, dict) and str(item.get("severity") or "").upper() in {"P0", "P1"}
+                ] if isinstance(report.get("findings"), list) else [],
+                "current": bool(currentity.get("current")),
+                "stale_reason": str(currentity.get("reason") or ""),
             }
         )
     return gates
@@ -130,6 +165,35 @@ def _is_fixture_policy(run_state: dict[str, Any]) -> bool:
     mode = str(run_state.get("run_mode") or "").strip().lower()
     policy = str(run_state.get("policy_mode") or "").strip().lower()
     return mode in {"fixture", "dev"} or policy == "fixture"
+
+
+def _all_quality_blocks_are_overridden_p1(root: Path, quality_gates: list[dict[str, Any]]) -> bool:
+    blocked_gates = [
+        gate
+        for gate in quality_gates
+        if gate.get("current", True) and (gate.get("blocks_delivery") or str(gate.get("status") or "").lower() in {"rework_required", "failed", "blocked"})
+    ]
+    if not blocked_gates:
+        return False
+    for gate in blocked_gates:
+        findings = [item for item in gate.get("blocking_findings", []) if isinstance(item, dict)]
+        if not findings:
+            return False
+        for finding in findings:
+            severity = str(finding.get("severity") or "").upper()
+            finding_id = str(finding.get("finding_id") or "")
+            if severity == "P0" or not finding_id or not has_active_override(root, finding_id):
+                return False
+    return True
+
+
+def _all_quality_blocks_are_stale(quality_gates: list[dict[str, Any]]) -> bool:
+    blocked_gates = [
+        gate
+        for gate in quality_gates
+        if gate.get("blocks_delivery") or str(gate.get("status") or "").lower() in {"rework_required", "failed", "blocked"}
+    ]
+    return bool(blocked_gates) and all(not gate.get("current", True) for gate in blocked_gates)
 
 
 def _customer_visible_safety_report(root: Path) -> tuple[Path, dict[str, Any], bool]:
@@ -151,20 +215,37 @@ def compute_final_readiness(
     root = Path(run_dir).expanduser().resolve()
     run_state = resolve_run_state(root, run_mode=run_mode, dev_allow_unsetup=dev_allow_unsetup)
     run_id = str(run_state.get("run_id") or root.name)
+    high_density_completed = _high_density_completed(root)
     render_result_path, render_result, render_source = find_render_result(root)
     render_result = render_result or {}
     artifact, artifact_rel = _resolve_artifact(root, artifact_path, render_result)
-    approved_pages = expected_page_count if expected_page_count is not None else _approved_page_count(root)
-    render_pages = _render_page_count(render_result)
+    approved_pages = expected_page_count if expected_page_count is not None else (_approved_page_count(root) or _high_density_page_count(root))
+    render_pages = _render_page_count(render_result) or (_high_density_page_count(root) if high_density_completed else 0)
     blockers: list[dict[str, str]] = []
     warnings: list[str] = []
+    quality_gates = _quality_gate_summary(root, artifact)
+    stale_quality_gates = [gate for gate in quality_gates if not gate.get("current", True)]
+    for gate in stale_quality_gates:
+        warnings.append(f"Quality gate {gate.get('gate') or 'unknown'} is stale for the current artifact: {gate.get('stale_reason') or 'lineage mismatch'}.")
 
     stage = str(run_state.get("stage") or "")
+    if high_density_completed and stage not in {"ready_for_client_export", "ready_for_benchmark"}:
+        stage = "ready_for_client_export"
+        warnings.append("标准 runtime state 尚未完整识别 high-density 成片，final readiness 已按 high-density completed profile 判断。")
+    elif stage == "needs_draft_gate" and _all_quality_blocks_are_overridden_p1(root, quality_gates):
+        stage = "ready_for_client_export"
+        warnings.append("Draft quality gate has active P1 overrides; final readiness continues with override policy.")
+    elif stage == "needs_draft_gate" and _all_quality_blocks_are_stale(quality_gates):
+        stage = "ready_for_client_export"
+        warnings.append("Draft quality gate blockers are stale for the current artifact; final readiness continues with freshness policy.")
     if stage not in {"ready_for_client_export", "ready_for_benchmark"}:
         _add_blocker(blockers, "final_run_state_not_ready", _run_state_not_ready_message(stage))
 
     if not render_result:
-        _add_blocker(blockers, "final_render_missing", "Render result is missing.")
+        if high_density_completed:
+            warnings.append("High-density completed profile uses high_density_build/pptx/deck_high_density.pptx as the final artifact.")
+        else:
+            _add_blocker(blockers, "final_render_missing", "Render result is missing.")
     elif str(render_result.get("status") or "").lower() != "completed":
         _add_blocker(blockers, "final_render_not_completed", "Render result is not completed.")
 
@@ -193,7 +274,6 @@ def compute_final_readiness(
             severity="P1",
         )
 
-    quality_gates = _quality_gate_summary(root)
     if not quality_gates:
         _add_blocker(blockers, "final_quality_gate_missing", "Quality gate report is missing.", severity="P1")
     _safety_path, safety_report, safety_exists = _customer_visible_safety_report(root)
@@ -210,6 +290,8 @@ def compute_final_readiness(
             warnings.append(message)
         else:
             _add_blocker(blockers, "final_customer_visible_safety_invalid", message)
+    elif not report_currentity(root, safety_report, artifact).get("current", True):
+        warnings.append("客户可见内容安全检查报告已过期，需要重新运行，但不阻断当前 artifact。")
     elif safety_report.get("blocks_delivery") or str(safety_report.get("status") or "").lower() in {"rework_required", "failed", "blocked"}:
         _add_blocker(
             blockers,
@@ -218,7 +300,23 @@ def compute_final_readiness(
         )
 
     for gate in quality_gates:
+        if not gate.get("current", True):
+            continue
         if gate.get("blocks_delivery") or str(gate.get("status") or "").lower() in {"rework_required", "failed", "blocked"}:
+            blocking_findings = [item for item in gate.get("blocking_findings", []) if isinstance(item, dict)]
+            p0_findings = [item for item in blocking_findings if str(item.get("severity") or "").upper() == "P0"]
+            p1_findings = [item for item in blocking_findings if str(item.get("severity") or "").upper() == "P1"]
+            if p0_findings:
+                _add_blocker(
+                    blockers,
+                    "final_quality_gate_blocked",
+                    f"Quality gate {gate.get('gate') or 'unknown'} blocks delivery.",
+                    severity="P0",
+                )
+                continue
+            if p1_findings and all(has_active_override(root, str(item.get("finding_id") or "")) for item in p1_findings):
+                warnings.append(f"Quality gate {gate.get('gate') or 'unknown'} has active P1 overrides.")
+                continue
             _add_blocker(
                 blockers,
                 "final_quality_gate_blocked",

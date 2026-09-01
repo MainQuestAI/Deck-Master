@@ -31,7 +31,6 @@ from high_density.content import (
     load_content_lock,
     load_mbb_plan,
     load_page_packages,
-    record_mbb_user_decision,
     seal_mbb_plan,
     select_mbb_storyline,
     write_mbb_plan,
@@ -48,7 +47,7 @@ from high_density.migration import MIGRATION_REQUIRED_CODE, assert_current_mbb_a
 from high_density.pptx import PptxEditabilityError, _render_pptx_page, compile_pptx, pptx_path, readback_pptx, trace_path
 from high_density.scene import _fixture_background, build_fixture_scene, load_scene, validate_scene_content, write_scene
 from high_density.style import write_style_lock
-from high_density.svg import SvgVisualError, _font_path, compile_svg, load_visual_review, preview_path, render_preview, review_path, svg_path, validate_approved_svg, validate_svg
+from high_density.svg import SvgVisualError, _font_path, compile_svg, load_visual_review, main_review_receipt_path, preview_path, render_preview, review_path, svg_path, validate_approved_svg, validate_svg
 from high_density.visibility import build_visibility_policy, visible_text_violation
 from production.page_package import PageContent, PagePackageIndex, build_page_package
 from runtime.run_state import create_run
@@ -228,8 +227,6 @@ def _write_approved_mbb_plan(run: Path) -> dict:
 def _write_selected_enriched_mbb_plan(run: Path, packages: list[dict]) -> dict:
     plan = build_mbb_plan(packages, run_id=run.name)
     write_mbb_plan(run, plan)
-    if str(read_json(run / "request.json").get("run_mode") or "") in {"production", "benchmark"}:
-        record_mbb_user_decision(run, "storyline.decision", attestor_id="test-user")
     plan = select_mbb_storyline(run, "storyline.decision", selected_by="test")
     plan = enrich_selected_mbb_plan(plan, packages)
     write_mbb_plan(run, plan)
@@ -348,6 +345,30 @@ def test_watch_waits_until_stable_end_state(tmp_path: Path) -> None:
     assert len(watched["watch"]["events"]) >= 2
 
 
+def test_watch_returns_immediately_for_actionable_agent_state(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path)
+    status_path = run / "high_density_build/status.json"
+    write_json(
+        status_path,
+        {
+            "schema_version": "deck_high_density_status.v2",
+            "run_id": run.name,
+            "builder_profile": "high_density",
+            "status": "awaiting_agent_build",
+            "current_stage": "blueprint",
+            "next_action": {"kind": "agent_imagegen"},
+            "updated_at": "2026-01-01T00:00:00+00:00",
+        },
+    )
+
+    started = time.monotonic()
+    watched = watch_high_density_status(run, timeout_seconds=30, poll_seconds=1)
+
+    assert watched["status"] == "awaiting_agent_build"
+    assert watched["watch"]["timed_out"] is False
+    assert time.monotonic() - started < 1
+
+
 def test_cli_high_density_runtime_exposes_watch_action() -> None:
     from deck_master import _high_density_runtime
 
@@ -400,6 +421,24 @@ def test_production_requires_approved_style_lock(tmp_path: Path) -> None:
     watched = watch_high_density_status(run, timeout_seconds=0.01, poll_seconds=0.01)
     assert watched["status"] == "awaiting_user_decision"
     assert watched["watch"]["timed_out"] is False
+    assert "build select-style" in watched["next_action"]["approval_command"]
+
+
+def test_build_cli_exposes_style_blueprint_and_provider_commands() -> None:
+    import subprocess
+
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "scripts" / "deck_master.py"), "build", "--help"],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "select-style" in result.stdout
+    assert "approve-blueprint" in result.stdout
+    assert "import-provider-result" in result.stdout
 
 
 def test_style_lock_change_invalidates_blueprints(tmp_path: Path) -> None:
@@ -421,6 +460,20 @@ def test_mbb_blocks_low_density_without_evidence() -> None:
 
     with pytest.raises(ContractError, match="too sparse"):
         build_mbb_page(package)
+
+
+def test_structural_page_allows_low_density_without_business_evidence() -> None:
+    package = _package("mbb-run", FIXTURE["pages"][0])
+    package["visual_spec"]["page_type"] = "cover"
+    package["customer_visible"]["body_blocks"] = []
+    package["customer_visible"]["callouts"] = []
+    package["evidence_bindings"] = []
+    package["claim_bindings"] = []
+
+    result = build_mbb_page(package)
+
+    assert result["analysis"]["structural_page"] is True
+    assert result["analysis"]["page_role"] == "cover"
 
 
 def test_mbb_rejects_unsupported_factual_claim() -> None:
@@ -495,7 +548,7 @@ def test_content_lock_requires_approved_mbb_page_plan(tmp_path: Path) -> None:
         build_content_lock(package, mbb_plan_sha256="a" * 64)
 
 
-def test_production_waits_for_storyline_confirmation_then_resumes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_production_records_storyline_confirmation_without_host_key(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path, mode="production", project_name="production mbb")
     write_style_lock(run, run.name, "cyber-01", approved=True, approver="test")
     prepare_high_density(run)
@@ -513,14 +566,9 @@ def test_production_waits_for_storyline_confirmation_then_resumes(tmp_path: Path
 
     selected = retry_high_density(run, page_id="", stage="content_lock", storyline_id="storyline.risk")
 
-    assert selected["status"] == "awaiting_user_decision"
-    assert selected["next_action"]["kind"] == "awaiting_user_decision"
-    monkeypatch.setenv("DECK_MASTER_USER_ATTESTATION_KEY", "11" * 32)
-    record_mbb_user_decision(run, "storyline.risk", attestor_id="test-user")
-    selected = retry_high_density(run, page_id="", stage="content_lock", storyline_id="storyline.risk")
-
     assert selected["status"] == "awaiting_agent_build"
     assert selected["next_action"]["kind"] == "agent_mbb_enrich_selected"
+    assert not (run / "high_density_build/mbb/user_decision_receipt.json").exists()
     assert not (run / "high_density_build/content_locks/P001.json").exists()
     selected_plan = load_mbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
     assert selected_plan["selection"]["status"] == "selected_pending_enrichment"
@@ -543,7 +591,7 @@ def test_production_waits_for_storyline_confirmation_then_resumes(tmp_path: Path
     assert context["management_conclusion"] in prompt["prompt_text"]
 
 
-def test_storyline_selection_does_not_rewrite_agent_content(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_storyline_selection_does_not_rewrite_agent_content(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path, mode="production", project_name="agent content preservation")
     write_style_lock(run, run.name, "cyber-01", approved=True, approver="test")
     prepare_high_density(run)
@@ -551,8 +599,6 @@ def test_storyline_selection_does_not_rewrite_agent_content(tmp_path: Path, monk
     write_mbb_plan(run, build_mbb_plan(packages, run_id=run.name))
 
     before = read_json(run / "high_density_build/mbb/mbb_plan.json")
-    monkeypatch.setenv("DECK_MASTER_USER_ATTESTATION_KEY", "11" * 32)
-    record_mbb_user_decision(run, "storyline.decision", attestor_id="test-user")
     selected = select_mbb_storyline(run, "storyline.decision", selected_by="user")
 
     assert selected["storyline_candidates"] == before["storyline_candidates"]
@@ -593,18 +639,13 @@ def test_storyline_selection_does_not_rewrite_agent_content(tmp_path: Path, monk
     assert lock["enrichment"]["so_what"] == "AGENT SO WHAT PRESERVE ME for Synthetic framework page"
 
 
-def test_selected_storyline_requires_agent_enrichment_before_lock(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_selected_storyline_requires_agent_enrichment_before_lock(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path, mode="production", project_name="selected enrichment gate")
     write_style_lock(run, run.name, "cyber-01", approved=True, approver="test")
     prepare_high_density(run)
     packages = load_page_packages(run, expected_run_id=run.name)
     write_mbb_plan(run, build_mbb_plan(packages, run_id=run.name))
 
-    waiting = retry_high_density(run, page_id="", stage="content_lock", storyline_id="storyline.decision")
-
-    assert waiting["next_action"]["kind"] == "awaiting_user_decision"
-    monkeypatch.setenv("DECK_MASTER_USER_ATTESTATION_KEY", "11" * 32)
-    record_mbb_user_decision(run, "storyline.decision", attestor_id="test-user")
     waiting = retry_high_density(run, page_id="", stage="content_lock", storyline_id="storyline.decision")
 
     assert waiting["next_action"]["kind"] == "agent_mbb_enrich_selected"
@@ -1062,7 +1103,6 @@ def test_production_blueprint_rejects_self_declared_provider_metadata(tmp_path: 
     prepare_high_density(run)
     write_style_lock(run, run.name, "cyber-01", approved=True, approver="test")
     packages = load_page_packages(run, expected_run_id=run.name)
-    monkeypatch.setenv("DECK_MASTER_USER_ATTESTATION_KEY", "11" * 32)
     _write_selected_enriched_mbb_plan(run, packages)
     plan = seal_mbb_plan(run)
     waiting = run_high_density(run)
@@ -1130,7 +1170,6 @@ def test_production_uses_agent_svg_without_overwriting_it(tmp_path: Path, monkey
     write_style_lock(run, run.name, "cyber-01", approved=True, approver="test")
     _blueprint(run)
     prepare_high_density(run)
-    monkeypatch.setenv("DECK_MASTER_USER_ATTESTATION_KEY", "11" * 32)
     _write_approved_mbb_plan(run)
     waiting = run_high_density(run)
     assert waiting["current_stage"] == "blueprint"
@@ -1286,6 +1325,15 @@ def test_main_review_requires_separate_host_attestation(tmp_path: Path) -> None:
         _load_main_review_receipt(run, "P001", review)
 
 
+def test_default_production_visual_review_does_not_require_host_attestation(tmp_path: Path) -> None:
+    run, _, _ = _prepared_fixture(tmp_path)
+
+    review = load_visual_review(run, "P001", require_external_receipt=False)
+
+    assert review["visual_status"] == "pass"
+    assert not main_review_receipt_path(run, "P001").exists()
+
+
 def test_near_full_image_is_blocked(tmp_path: Path) -> None:
     run, _, scene = _prepared_fixture(tmp_path)
     scene["elements"].append({"element_id": "image.near_full", "component_id": "component.proof", "kind": "image", "role": "proof", "priority": "P2", "bbox": {"x": 20, "y": 20, "w": 900, "h": 800}, "asset_ref": "proof", "asset_sha256": "a" * 64, "editability_target": "registered_asset", "asset_policy": "registered"})
@@ -1341,6 +1389,57 @@ def test_production_svg_blocks_near_full_image_and_p0_p1_coverage(tmp_path: Path
 
     with pytest.raises(SvgVisualError, match="covers P0/P1 text"):
         validate_approved_svg(output, scene, lock, {"proof": asset})
+
+
+def test_image_heavy_page_role_allows_large_registered_image(tmp_path: Path) -> None:
+    from PIL import Image
+
+    run, lock, scene = _prepared_fixture(tmp_path)
+    scene["page_role"] = "visual"
+    lock["enrichment"]["analysis"]["page_role"] = "visual"
+    asset = run / "assets/visual.png"
+    asset.parent.mkdir(parents=True, exist_ok=True)
+    Image.new("RGB", (32, 32), "#419bfd").save(asset)
+    scene["elements"].append(
+        {
+            "element_id": "image.hero",
+            "component_id": "component.visual",
+            "kind": "image",
+            "role": "visual",
+            "priority": "P2",
+            "z_index": 2,
+            "bbox": {"x": 40, "y": 220, "w": 1100, "h": 720},
+            "asset_ref": "visual",
+            "asset_sha256": sha256_file(asset),
+            "editability_target": "registered_asset",
+            "asset_policy": "registered",
+        }
+    )
+
+    output = run / "high_density_build/svg/image-heavy.svg"
+    compile_svg(scene, output, assets={"visual": asset})
+
+    assert 'data-pptx-page-role="visual"' in output.read_text(encoding="utf-8")
+
+
+def test_explicit_provider_import_records_hash_without_host_root(tmp_path: Path) -> None:
+    from PIL import Image
+
+    run, _ = _make_run(tmp_path, mode="production", project_name="production provider import")
+    write_style_lock(run, run.name, "cyber-01", approved=True, approver="test")
+    _blueprint(run)
+    prepare_high_density(run)
+    _write_approved_mbb_plan(run)
+    waiting = run_high_density(run)
+    assert waiting["current_stage"] == "blueprint"
+    imported = tmp_path / "outside-provider.png"
+    Image.new("RGB", (1672, 941), "#f7f9fb").save(imported)
+
+    record_provider_host_result(run, "P001", imported, source_type="explicit_import")
+
+    receipt = read_json(run / "high_density_build/blueprints/P001.provider_host_receipt.json")
+    assert receipt["source_type"] == "explicit_import"
+    assert receipt["source_file_sha256"] == sha256_file(imported)
 
 
 def test_approved_svg_blocks_unresolvable_font_and_text_overflow(tmp_path: Path) -> None:

@@ -14,11 +14,11 @@
     "customer_visible": {"type": "object"},
     "speaker_notes": {"type": "string"},
     "asset_bindings": {"type": "array", "items": {"type": "object"}},
-    "evidence_bindings": {"type": "array", "minItems": 1, "items": {"type": "object"}},
+    "evidence_bindings": {"type": "array", "items": {"type": "object"}},
     "enrichment": {"$ref": "#/$defs/enrichment"},
     "required_component_ids": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
     "required_text_refs": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/textRef"}},
-    "density_target": {"type": "object", "required": ["score", "band", "information_regions", "component_count", "evidence_count", "numeric_count"], "properties": {"score": {"type": "number", "minimum": 0}, "band": {"enum": ["low", "medium", "high"]}, "information_regions": {"type": "integer", "minimum": 3}, "component_count": {"type": "integer", "minimum": 1}, "evidence_count": {"type": "integer", "minimum": 1}, "numeric_count": {"type": "integer", "minimum": 0}}, "additionalProperties": false},
+    "density_target": {"type": "object", "required": ["score", "band", "information_regions", "component_count", "evidence_count", "numeric_count"], "properties": {"score": {"type": "number", "minimum": 0}, "band": {"enum": ["low", "medium", "high"]}, "information_regions": {"type": "integer", "minimum": 1}, "component_count": {"type": "integer", "minimum": 1}, "evidence_count": {"type": "integer", "minimum": 0}, "numeric_count": {"type": "integer", "minimum": 0}}, "additionalProperties": false},
     "target_language": {"type": "string", "minLength": 1},
     "effective_language": {"type": "string", "minLength": 1},
     "visibility_policy": {"$ref": "#/$defs/visibilityPolicy"},
@@ -47,7 +47,7 @@
       "properties": {
         "claim_id": {"type": "string", "minLength": 1},
         "origin": {"enum": ["source", "derived", "structural_label"]},
-        "evidence_refs": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "evidence_refs": {"type": "array", "items": {"type": "string", "minLength": 1}},
         "derivation_note": {"type": "string", "minLength": 1},
         "factual_value_added": {"type": "boolean"}
       },
@@ -62,7 +62,7 @@
         "visual_potential": {"type": "string", "minLength": 1},
         "page_handoff": {"type": "string", "minLength": 1},
         "caveat": {"type": "string", "minLength": 1},
-        "evidence_refs": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+        "evidence_refs": {"type": "array", "items": {"type": "string", "minLength": 1}}
       },
       "additionalProperties": false
     },
@@ -75,11 +75,11 @@
         "storyline_id": {"type": "string", "minLength": 1},
         "storyline_context": {"$ref": "#/$defs/storylineContext"},
         "analysis": {"type": "object"},
-        "evidence_ledger": {"type": "array", "minItems": 1, "items": {"type": "object"}},
+        "evidence_ledger": {"type": "array", "items": {"type": "object"}},
         "conclusion": {"type": "string", "minLength": 1},
-        "supporting_arguments": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "supporting_arguments": {"type": "array", "items": {"type": "string", "minLength": 1}},
         "detailed_argument": {"type": "string", "minLength": 1},
-        "caveat": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "caveat": {"type": "array", "items": {"type": "string", "minLength": 1}},
         "so_what": {"type": "string", "minLength": 1},
         "business_implication": {"type": "string", "minLength": 1},
         "handoff": {"type": "string", "minLength": 1},
@@ -102,7 +102,7 @@
         "target": {"type": "string", "minLength": 1},
         "text_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
         "origin": {"enum": ["source", "derived", "structural_label"]},
-        "evidence_refs": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "evidence_refs": {"type": "array", "items": {"type": "string", "minLength": 1}},
         "evidence_spans": {
           "type": "array",
           "items": {

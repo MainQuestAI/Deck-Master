@@ -2237,6 +2237,41 @@ def command_build_retry(args: argparse.Namespace) -> dict[str, Any]:
     )
 
 
+def command_build_select_style(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = resolve_run_dir(args)
+    from high_density.style import load_style_lock, write_style_lock
+
+    write_style_lock(
+        run_dir,
+        run_dir.name,
+        str(args.style_id),
+        approved=True,
+        approver=str(args.approver),
+    )
+    return {"status": "approved", "style_lock": load_style_lock(run_dir, expected_run_id=run_dir.name)}
+
+
+def command_build_import_provider_result(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = resolve_run_dir(args)
+    from high_density.blueprint import record_provider_host_result
+
+    output = record_provider_host_result(
+        run_dir,
+        str(args.page_id),
+        Path(args.input).expanduser(),
+        source_type=str(getattr(args, "source_type", "host_managed") or "host_managed"),
+    )
+    return {"status": "imported", "page_id": str(args.page_id), "blueprint": str(output.relative_to(run_dir))}
+
+
+def command_build_approve_blueprint(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = resolve_run_dir(args)
+    from high_density.blueprint import approve_blueprint
+
+    output = approve_blueprint(run_dir, str(args.page_id), approved_by=str(args.approver))
+    return {"status": "approved", "page_id": str(args.page_id), "blueprint_manifest": str(output.relative_to(run_dir))}
+
+
 def _persist_build_options(
     run_dir: Path,
     args: argparse.Namespace,
@@ -3440,6 +3475,25 @@ def build_parser() -> argparse.ArgumentParser:
     p_build_retry.add_argument("--storyline-id", default="", help="Approve this MBB storyline when retrying the deck-scoped content_lock stage")
     p_build_retry.add_argument("--stage", choices=["content_lock", "blueprint", "page_scene", "svg", "visual_review", "pptx", "readback", "handback"], default=None)
     p_build_retry.set_defaults(func=command_build_retry)
+
+    p_build_select_style = build_sub.add_parser("select-style", help="Approve a high-density style lock")
+    add_run_args(p_build_select_style)
+    p_build_select_style.add_argument("--style-id", required=True)
+    p_build_select_style.add_argument("--approver", required=True)
+    p_build_select_style.set_defaults(func=command_build_select_style)
+
+    p_build_import_provider = build_sub.add_parser("import-provider-result", help="Import an explicit provider blueprint image")
+    add_run_args(p_build_import_provider)
+    p_build_import_provider.add_argument("--page-id", required=True)
+    p_build_import_provider.add_argument("--input", required=True, help="PNG image path")
+    p_build_import_provider.add_argument("--source-type", choices=["host_managed", "explicit_import"], default="host_managed")
+    p_build_import_provider.set_defaults(func=command_build_import_provider_result)
+
+    p_build_approve_blueprint = build_sub.add_parser("approve-blueprint", help="Approve an imported high-density blueprint")
+    add_run_args(p_build_approve_blueprint)
+    p_build_approve_blueprint.add_argument("--page-id", required=True)
+    p_build_approve_blueprint.add_argument("--approver", required=True)
+    p_build_approve_blueprint.set_defaults(func=command_build_approve_blueprint)
 
     p_render = sub.add_parser("render", help="Render a run through the bundled PPT Master path")
     add_run_args(p_render)

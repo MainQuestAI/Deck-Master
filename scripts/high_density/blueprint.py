@@ -126,17 +126,21 @@ def _provider_source_roots() -> list[Path]:
     return roots
 
 
-def _provider_source_locator(source: Path) -> tuple[Path, str]:
+def _provider_source_locator(source: Path, *, allow_explicit_import: bool = False) -> tuple[Path | None, str]:
     resolved = source.expanduser().resolve()
     for root in _provider_source_roots():
         try:
             return root, resolved.relative_to(root).as_posix()
         except ValueError:
             continue
+    if allow_explicit_import:
+        return None, resolved.name
     raise BlueprintInvalid(f"provider image must come from a configured Host-managed ImageGen root: {source}")
 
 
-def _provider_source_path(receipt: dict[str, Any]) -> Path:
+def _provider_source_path(receipt: dict[str, Any]) -> Path | None:
+    if str(receipt.get("source_type") or "host_managed") == "explicit_import":
+        return None
     root_hash = str(receipt.get("source_root_sha256") or "")
     relative = str(receipt.get("source_relative_path") or "")
     for root in _provider_source_roots():
@@ -182,7 +186,7 @@ def _validate_provider_challenge(root: Path, prompt: dict[str, Any], page_id: st
     return payload
 
 
-def record_provider_host_result(root: Path, page_id: str, source_image: Path) -> Path:
+def record_provider_host_result(root: Path, page_id: str, source_image: Path, *, source_type: str = "host_managed") -> Path:
     """Import a host-managed ImageGen result before production manifest sealing."""
     _assert_page_id(page_id)
     prompt = read_json(prompt_path(root, page_id))
@@ -192,10 +196,11 @@ def record_provider_host_result(root: Path, page_id: str, source_image: Path) ->
     if run_mode not in {"production", "benchmark"}:
         raise BlueprintInvalid("Host-managed provider receipt is only required for production or benchmark runs")
     source = Path(source_image).expanduser().resolve()
+    source_kind = source_type if source_type in {"host_managed", "explicit_import"} else "host_managed"
     if not source.is_file() or source.is_symlink() or source.suffix.lower() != ".png":
         raise BlueprintInvalid("Host-managed provider result must be a regular PNG file")
-    root_path, relative = _provider_source_locator(source)
-    if not re.fullmatch(r"exec-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.png", source.name):
+    root_path, relative = _provider_source_locator(source, allow_explicit_import=source_kind == "explicit_import")
+    if source_kind == "host_managed" and not re.fullmatch(r"exec-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.png", source.name):
         raise BlueprintInvalid("Host-managed provider result must use the ImageGen exec-UUID filename")
     source_created_at = _provider_source_created_at(source)
     if _parse_timestamp(source_created_at, field="provider source created_at", page_id=page_id) < _parse_timestamp(challenge.get("issued_at"), field="challenge issued_at", page_id=page_id):
@@ -206,7 +211,7 @@ def record_provider_host_result(root: Path, page_id: str, source_image: Path) ->
     provider = {
         "tool": "image_gen.imagegen",
         "model": "provider-managed-imagegen",
-        "request_id": source.stem,
+        "request_id": source.stem if source_kind == "host_managed" else f"explicit-import-{sha256_file(source)[:16]}",
         "challenge_nonce": str(challenge["nonce"]),
         "prompt_sha256": str(prompt["prompt_sha256"]),
         "requested_at": str(challenge["issued_at"]),
@@ -227,7 +232,8 @@ def record_provider_host_result(root: Path, page_id: str, source_image: Path) ->
         "provider_request_sha256": provider["request_sha256"],
         "requested_at": provider["requested_at"],
         "responded_at": provider["responded_at"],
-        "source_root_sha256": sha256_bytes(str(root_path).encode("utf-8")),
+        "source_type": source_kind,
+        "source_root_sha256": sha256_bytes(str(root_path).encode("utf-8")) if root_path is not None else "0" * 64,
         "source_relative_path": relative,
         "source_file_sha256": sha256_file(source),
         "source_size_bytes": source.stat().st_size,
@@ -264,6 +270,10 @@ def load_provider_host_receipt(root: Path, page_id: str, prompt: dict[str, Any],
         if str(receipt.get(field) or "") != value:
             raise BlueprintInvalid(f"Host-managed provider receipt {field} is stale on page {page_id}")
     source = _provider_source_path(receipt)
+    if source is None:
+        if str(receipt.get("source_file_sha256") or "") != sha256_file(image):
+            raise BlueprintInvalid(f"explicit provider import hash does not match blueprint image on page {page_id}")
+        return receipt
     if not source.is_file() or source.is_symlink() or sha256_file(source) != str(receipt.get("source_file_sha256") or "") or source.stat().st_size != int(receipt.get("source_size_bytes") or 0):
         raise BlueprintInvalid(f"Host-managed provider source is missing or stale on page {page_id}")
     if sha256_file(source) != sha256_file(image):
@@ -271,6 +281,22 @@ def load_provider_host_receipt(root: Path, page_id: str, prompt: dict[str, Any],
     if _provider_source_created_at(source) != str(receipt.get("source_created_at") or ""):
         raise BlueprintInvalid(f"Host-managed provider source timestamp is stale on page {page_id}")
     return receipt
+
+
+def approve_blueprint(root: Path, page_id: str, *, approved_by: str, source: str = "explicit_user") -> Path:
+    _assert_page_id(page_id)
+    lock = read_json(root / "high_density_build" / "content_locks" / f"{page_id}.json")
+    assert_v2("content_lock", lock)
+    style_lock = read_json(root / "high_density_build" / "style" / "style_lock.json")
+    assert_v2("style_lock", style_lock)
+    return ensure_blueprint_manifest(
+        root,
+        page_id,
+        lock,
+        style_lock=style_lock,
+        mbb_plan_sha256=str((lock.get("lineage") or {}).get("mbb_plan_sha256") or ""),
+        approval={"status": "approved", "source": source, "approved_by": approved_by, "approved_at": utc_now()},
+    )
 
 
 def _png_dimensions(path: Path) -> tuple[int, int] | None:
@@ -784,6 +810,7 @@ __all__ = [
     "CANVAS_HEIGHT",
     "CANVAS_WIDTH",
     "PROMPT_DIR",
+    "approve_blueprint",
     "build_blueprint_prompt",
     "build_blueprint_prompt_artifact",
     "blueprint_manifest_path",

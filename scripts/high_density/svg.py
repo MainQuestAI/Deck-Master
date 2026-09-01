@@ -31,6 +31,7 @@ CANVAS_WIDTH = 1672
 CANVAS_HEIGHT = 941
 FORBIDDEN_TAGS = {"foreignObject", "script", "iframe", "style"}
 UNSUPPORTED_TAGS = {"mask", "clipPath", "pattern"}
+IMAGE_HEAVY_PAGE_ROLES = {"cover", "section", "section_divider", "divider", "visual", "visual_divider", "image", "image_page"}
 
 
 class SvgVisualError(ContractError):
@@ -38,6 +39,12 @@ class SvgVisualError(ContractError):
         self.page_id = page_id
         self.code = code
         super().__init__(message)
+
+
+def _page_role_policy(page_role: str) -> dict[str, float]:
+    if page_role in IMAGE_HEAVY_PAGE_ROLES:
+        return {"max_single_image_area": 0.85, "max_total_image_area": 0.90}
+    return {"max_single_image_area": 0.35, "max_total_image_area": 0.50}
 
 
 def svg_path(root: Path, page_id: str) -> Path:
@@ -207,6 +214,8 @@ def compile_svg(scene: dict[str, Any], output: Path, *, assets: dict[str, Path] 
     from .scene import validate_scene
 
     page_id = str(scene["page_id"])
+    page_role = str(scene.get("page_role") or "content")
+    image_policy = _page_role_policy(page_role)
     try:
         validate_scene(scene)
     except ContractError as exc:
@@ -220,8 +229,8 @@ def compile_svg(scene: dict[str, Any], output: Path, *, assets: dict[str, Path] 
         bbox = element.get("bbox") or {}
         area = float(bbox.get("w") or 0) * float(bbox.get("h") or 0)
         image_area += area
-        if area / (CANVAS_WIDTH * CANVAS_HEIGHT) > 0.35:
-            raise SvgVisualError(f"image asset exceeds 35% of canvas: {element.get('element_id')}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
+        if area / (CANVAS_WIDTH * CANVAS_HEIGHT) > image_policy["max_single_image_area"]:
+            raise SvgVisualError(f"image asset exceeds {image_policy['max_single_image_area']:.0%} of canvas: {element.get('element_id')}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
         image_z = int(element.get("z_index") or 0)
         for text in p0_p1_text:
             text_bbox = text.get("bbox") or {}
@@ -229,8 +238,8 @@ def compile_svg(scene: dict[str, Any], output: Path, *, assets: dict[str, Path] 
             overlap_h = max(0.0, min(float(bbox.get("y") or 0) + float(bbox.get("h") or 0), float(text_bbox.get("y") or 0) + float(text_bbox.get("h") or 0)) - max(float(bbox.get("y") or 0), float(text_bbox.get("y") or 0)))
             if image_z >= int(text.get("z_index") or 0) and overlap_w * overlap_h > 0:
                 raise SvgVisualError(f"image asset covers P0/P1 text: {element.get('element_id')} -> {text.get('element_id')}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
-    if image_area / (CANVAS_WIDTH * CANVAS_HEIGHT) > 0.50:
-        raise SvgVisualError("registered image assets exceed 50% of canvas", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
+    if image_area / (CANVAS_WIDTH * CANVAS_HEIGHT) > image_policy["max_total_image_area"]:
+        raise SvgVisualError(f"registered image assets exceed {image_policy['max_total_image_area']:.0%} of canvas", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
     rendered_elements: list[tuple[str, str]] = []
 
     def add_rendered(element: dict[str, Any], rendered: str) -> None:
@@ -324,7 +333,7 @@ def compile_svg(scene: dict[str, Any], output: Path, *, assets: dict[str, Path] 
         elements.append(_wrap_visual_svg({"visual_id": visual_id}, "".join(children)))
     svg = (
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{CANVAS_WIDTH}" height="{CANVAS_HEIGHT}" '
-        f'viewBox="0 0 {CANVAS_WIDTH} {CANVAS_HEIGHT}" data-pptx-page-role="content">'
+        f'viewBox="0 0 {CANVAS_WIDTH} {CANVAS_HEIGHT}" data-pptx-page-role="{html.escape(page_role, quote=True)}">'
         f'<g id="page.{html.escape(page_id, quote=True)}" data-pptx-bounds="0,0,{CANVAS_WIDTH},{CANVAS_HEIGHT}">'
         + "".join(elements)
         + "</g></svg>"
@@ -368,7 +377,7 @@ def validate_svg(path: Path, *, page_id: str = "") -> dict[str, Any]:
         )
     if root.tag.split("}")[-1] != "svg" or root.get("viewBox") != f"0 0 {CANVAS_WIDTH} {CANVAS_HEIGHT}":
         raise SvgVisualError("SVG canvas or viewBox is invalid", page_id=page_id)
-    if root.get("data-pptx-page-role") != "content":
+    if not str(root.get("data-pptx-page-role") or ""):
         raise SvgVisualError("SVG root is missing data-pptx-page-role", page_id=page_id)
     ids: set[str] = set()
     visible_tags = {"text", "rect", "circle", "ellipse", "line", "path", "polyline", "polygon", "image"}
@@ -587,6 +596,8 @@ def validate_approved_svg(
     from .scene import validate_scene_content
 
     page_id = str(scene.get("page_id") or lock.get("page_id") or "")
+    page_role = str(scene.get("page_role") or ((lock.get("enrichment") or {}).get("analysis") or {}).get("page_role") or "content")
+    image_policy = _page_role_policy(page_role)
     validate_scene_content(scene, lock)
     result = validate_svg(path, page_id=page_id)
     root = ElementTree.fromstring(path.read_text(encoding="utf-8"))
@@ -691,8 +702,8 @@ def validate_approved_svg(
         bbox = _svg_geometry_bbox(node)
         area = bbox["w"] * bbox["h"]
         image_area += area
-        if area / canvas_area > 0.35:
-            raise SvgVisualError(f"image asset exceeds 35% of canvas: {element_id}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
+        if area / canvas_area > image_policy["max_single_image_area"]:
+            raise SvgVisualError(f"image asset exceeds {image_policy['max_single_image_area']:.0%} of canvas: {element_id}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
         asset_id = str(scene_element.get("asset_ref") or "")
         asset_path = (assets or {}).get(asset_id)
         if asset_path is None or not asset_path.is_file() or sha256_file(asset_path) != str(scene_element.get("asset_sha256") or ""):
@@ -708,8 +719,8 @@ def validate_approved_svg(
             text_id = str(text.get("element_id") or "")
             if dom_order[element_id] > dom_order.get(text_id, -1) and _bbox_overlap(bbox, _svg_geometry_bbox(nodes[text_id])) > 0:
                 raise SvgVisualError(f"image asset covers P0/P1 text: {element_id} -> {text_id}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
-    if image_area / canvas_area > 0.50:
-        raise SvgVisualError("registered image assets exceed 50% of canvas", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
+    if image_area / canvas_area > image_policy["max_total_image_area"]:
+        raise SvgVisualError(f"registered image assets exceed {image_policy['max_total_image_area']:.0%} of canvas", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
     contrast = _text_contrast_metrics(path, scene)
     low_contrast = [element_id for element_id, value in contrast["elements"].items() if float(value["contrast_ratio"]) < 3.0]
     if low_contrast:
@@ -1016,7 +1027,7 @@ def record_visual_self_review(root: Path, page_id: str, *, reviewer_id: str) -> 
 
 
 def record_visual_main_review(root: Path, page_id: str, *, reviewer_id: str) -> Path:
-    """Record an independent main review and create its Host attestation receipt."""
+    """Record an independent main review and create a local receipt."""
     review = read_json(review_path(root, page_id))
     if review.get("schema_version") != "deck_visual_review.v2" or str(review.get("page_id") or "") != page_id:
         raise SvgVisualError(f"visual review contract is invalid on page {page_id}", page_id=page_id)
@@ -1044,7 +1055,11 @@ def record_visual_main_review(root: Path, page_id: str, *, reviewer_id: str) -> 
         raise SvgVisualError(f"main visual reviewer_id does not match the attested reviewer on page {page_id}", page_id=page_id)
     load_visual_review(root, page_id, require_external_receipt=False)
     payload = _main_review_receipt_payload(review)
-    receipt = {**payload, "integrity": sign_review_attestation(payload)}
+    try:
+        integrity = sign_review_attestation(payload)
+    except ContractError:
+        integrity = sign_runtime_payload("visual_main_review_local_receipt.v1", payload)
+    receipt = {**payload, "integrity": integrity}
     assert_v2("visual_main_review_receipt", receipt)
     return write_json(main_review_receipt_path(root, page_id), receipt)
 

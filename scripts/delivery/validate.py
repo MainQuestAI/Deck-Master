@@ -7,6 +7,8 @@ import json
 import zipfile
 
 from runtime.artifact_validator import sha256_file, validate_artifact_descriptor, validate_artifact_manifest
+from quality.gate_freshness import report_currentity
+from quality.overrides import has_active_override
 
 SCHEMA_VERSION = "deck_delivery_validation.v1"
 LINEAGE_SCHEMA_VERSION = "deck_final_version_lineage.v1"
@@ -103,18 +105,44 @@ def validate_delivery(
             try:
                 report = json.loads(gate_file.read_text(encoding="utf-8"))
                 gate_name = gate_file.stem.replace("_gate", "")
+                currentity = report_currentity(run_dir, report, artifact)
                 gates_checked.append({
                     "gate": gate_name,
                     "status": report.get("status", ""),
                     "blocks_delivery": report.get("blocks_delivery", False),
+                    "current": bool(currentity.get("current")),
+                    "stale_reason": str(currentity.get("reason") or ""),
                 })
+                if not currentity.get("current", True):
+                    continue
                 if bool(report.get("blocks_delivery")) or str(report.get("status", "")).lower() in BLOCKING_STATUSES:
-                    findings.append({
-                        "finding_id": f"delivery_{gate_name}_gate_blocking",
-                        "severity": "P1",
-                        "message": f"{gate_name} gate blocks delivery.",
-                        "repair_instruction": "处理 gate blocking 项后再验证交付。",
-                    })
+                    gate_findings = [item for item in report.get("findings", []) if isinstance(item, dict)]
+                    p0_findings = [item for item in gate_findings if str(item.get("severity") or "").upper() == "P0"]
+                    p1_findings = [item for item in gate_findings if str(item.get("severity") or "").upper() == "P1"]
+                    for finding in p0_findings:
+                        findings.append({
+                            "finding_id": str(finding.get("finding_id") or f"delivery_{gate_name}_gate_blocking"),
+                            "severity": "P0",
+                            "message": str(finding.get("message") or f"{gate_name} gate blocks delivery."),
+                            "repair_instruction": str(finding.get("repair_instruction") or "处理 P0 blocking 项后再验证交付。"),
+                        })
+                    for finding in p1_findings:
+                        finding_id = str(finding.get("finding_id") or "")
+                        if finding_id and has_active_override(run_dir, finding_id):
+                            continue
+                        findings.append({
+                            "finding_id": finding_id or f"delivery_{gate_name}_gate_blocking",
+                            "severity": "P1",
+                            "message": str(finding.get("message") or f"{gate_name} gate blocks delivery."),
+                            "repair_instruction": str(finding.get("repair_instruction") or "处理 P1 blocking 项或创建 active override 后再验证交付。"),
+                        })
+                    if not gate_findings:
+                        findings.append({
+                            "finding_id": f"delivery_{gate_name}_gate_blocking",
+                            "severity": "P1",
+                            "message": f"{gate_name} gate blocks delivery.",
+                            "repair_instruction": "处理 gate blocking 项后再验证交付。",
+                        })
             except json.JSONDecodeError:
                 gates_checked.append({
                     "gate": gate_file.stem.replace("_gate", ""),

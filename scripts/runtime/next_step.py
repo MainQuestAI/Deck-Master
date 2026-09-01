@@ -100,6 +100,25 @@ def _counts_from_preview(run_dir: Path) -> tuple[int, int]:
     return approved, pending
 
 
+def _high_density_artifact(root: Path) -> Path:
+    return root / "high_density_build" / "pptx" / "deck_high_density.pptx"
+
+
+def _quality_gate_passed(root: Path) -> bool:
+    quality_dir = root / "quality_reports"
+    if not quality_dir.is_dir():
+        return False
+    for path in sorted(quality_dir.glob("*_gate.json")):
+        try:
+            report = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        status = str(report.get("status") or "").strip().lower()
+        if status in {"pass", "pass_with_warning", "pass_with_override"} and not bool(report.get("blocks_delivery")):
+            return True
+    return False
+
+
 def resolve_next_step(
     run_dir: str | Path,
     *,
@@ -133,27 +152,31 @@ def resolve_next_step(
                     except (OSError, ValueError):
                         build_manifest = {}
                 page_count = len(build_manifest.get("pages") or [])
-                artifact = root / "high_density_build" / "pptx" / "deck_high_density.pptx"
-                next_command = f"deck-master quality-gate render --run-dir {root} --artifact {artifact} --expected-pages {page_count}"
+                artifact = _high_density_artifact(root)
+                if artifact.exists() and _quality_gate_passed(root):
+                    next_command = f"deck-master final-readiness --run-dir {root} --artifact {artifact} --expected-pages {page_count}"
+                else:
+                    next_command = f"deck-master quality-gate render --run-dir {root} --artifact {artifact} --expected-pages {page_count}"
             route = {
                 "schema_version": "deck_skill_route.v1",
                 "source": "high_density_handback" if completed else "high_density_status",
-                "runtime_stage": "needs_quality_review" if completed else f"high_density:{stage}",
+                "runtime_stage": ("ready_for_final_readiness" if completed and "final-readiness" in next_command else "needs_quality_review") if completed else f"high_density:{stage}",
                 "input_type": "pptx_package" if completed else "high_density_build",
                 "recommended_skill": "deck-quality" if completed else "deck-builder-high-density",
-                "skill_stage": "quality" if completed else "high_density_build",
-                "skill_label": "Quality" if completed else "High-Density Builder",
-                "skill_reason": "high-density handback is complete; run the final quality gate" if completed else f"high-density status is {status} at {stage}",
+                "skill_stage": "final_readiness" if completed and "final-readiness" in next_command else ("quality" if completed else "high_density_build"),
+                "skill_label": "Final Readiness" if completed and "final-readiness" in next_command else ("Quality" if completed else "High-Density Builder"),
+                "skill_reason": ("high-density handback and quality gate are complete; run final readiness" if completed and "final-readiness" in next_command else "high-density handback is complete; run the final quality gate") if completed else f"high-density status is {status} at {stage}",
                 "next_skill_command": next_command,
                 "backend_dependency": "ppt-quality-gate" if completed else "",
                 "compat_skills": ["ppt-quality-gate"] if completed else [],
             }
+            result_status = "ready_for_final_readiness" if completed and "final-readiness" in next_command else ("needs_quality_review" if completed else status)
             result = {
                 "schema_version": SCHEMA_VERSION,
                 "run_id": str(high_density.get("run_id") or root.name),
-                "status": "needs_quality_review" if completed else status,
+                "status": result_status,
                 "next_command": next_command,
-                "runtime_stage": "needs_quality_review" if completed else f"high_density:{stage}",
+                "runtime_stage": route["runtime_stage"],
                 "missing_artifacts": missing,
                 "blocking_issues": [str((high_density.get("error") or {}).get("message"))] if isinstance(high_density.get("error"), dict) and high_density.get("error", {}).get("message") else [],
                 "run_mode": str((read_json(root / REQUEST_NAME).get("run_mode") if (root / REQUEST_NAME).exists() else "") or ""),

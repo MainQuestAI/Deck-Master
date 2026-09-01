@@ -25,7 +25,7 @@ class CustomerVisibleSafetyTests(unittest.TestCase):
         self.temp_dir = Path(tempfile.mkdtemp())
         self.addCleanup(lambda: shutil.rmtree(self.temp_dir, ignore_errors=True))
 
-    def test_pptx_audit_scans_visible_and_potentially_visible_package_text(self) -> None:
+    def test_pptx_audit_scans_customer_visible_package_text_only(self) -> None:
         pptx = self.temp_dir / "unsafe.pptx"
         _write_rich_pptx(pptx)
 
@@ -38,11 +38,11 @@ class CustomerVisibleSafetyTests(unittest.TestCase):
         scopes = {hit["scope"] for hit in audit["forbidden_hits"]}
         self.assertIn("slide", scopes)
         self.assertIn("notes", scopes)
-        self.assertIn("slide_master", scopes)
-        self.assertIn("slide_layout", scopes)
-        self.assertIn("chart", scopes)
         self.assertIn("doc_props", scopes)
-        self.assertTrue(any(hit["term"] == "关键图示" for hit in audit["forbidden_hits"]))
+        self.assertNotIn("slide_master", scopes)
+        self.assertNotIn("slide_layout", scopes)
+        self.assertNotIn("chart", scopes)
+        self.assertFalse(any(hit["term"] == "关键图示" for hit in audit["forbidden_hits"]))
 
     def test_customer_visible_safety_gate_blocks_with_structured_findings(self) -> None:
         pptx = self.temp_dir / "unsafe.pptx"
@@ -76,9 +76,39 @@ class CustomerVisibleSafetyTests(unittest.TestCase):
         terms = load_customer_visible_forbidden_terms(run_dir, extra_terms=["临时禁词"])
 
         self.assertIn("证书墙", terms)
+        for business_term in ("制作", "讲标", "投标", "评审", "评分", "内部", "Brief"):
+            self.assertNotIn(business_term, terms)
         self.assertIn("客户暗号", terms)
         self.assertIn("本轮禁词", terms)
         self.assertIn("临时禁词", terms)
+
+    def test_workspace_terms_can_tighten_business_language_when_needed(self) -> None:
+        run_dir = self.temp_dir / "run"
+        (run_dir / "quality").mkdir(parents=True)
+        (run_dir / "quality" / "forbidden_terms.md").write_text("讲标\n", encoding="utf-8")
+
+        terms = load_customer_visible_forbidden_terms(run_dir)
+
+        self.assertIn("讲标", terms)
+
+    def test_pptx_audit_allows_sparse_structural_page_roles(self) -> None:
+        pptx = self.temp_dir / "visual-role.pptx"
+        with zipfile.ZipFile(pptx, "w") as package:
+            package.writestr("[Content_Types].xml", "<Types/>")
+            package.writestr(
+                "ppt/slides/slide1.xml",
+                """
+<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld><p:spTree><p:pic/></p:spTree></p:cSld>
+</p:sld>
+""",
+            )
+
+        default = audit_pptx(pptx)
+        role_aware = audit_pptx(pptx, page_roles={1: "visual"})
+
+        self.assertEqual(1, len(default["possible_full_slide_images"]))
+        self.assertEqual([], role_aware["possible_full_slide_images"])
 
     def test_delivery_cli_writes_customer_visible_safety_gate(self) -> None:
         run_dir = self.temp_dir / "run-cli"

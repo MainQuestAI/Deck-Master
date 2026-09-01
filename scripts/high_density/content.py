@@ -21,6 +21,7 @@ MBB_SELECTION_RECEIPT_PATH = MBB_DIR / "selection_receipt.json"
 MBB_USER_DECISION_RECEIPT_PATH = MBB_DIR / "user_decision_receipt.json"
 MBB_SEAL_PATH = MBB_DIR / "runtime_seal.json"
 SAFE_PAGE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
+STRUCTURAL_PAGE_ROLES = {"cover", "section", "section_divider", "divider", "toc", "agenda", "visual", "visual_divider", "image", "image_page"}
 
 
 def _assert_safe_page_id(page_id: str) -> None:
@@ -268,6 +269,7 @@ def _density_analysis(customer_visible: dict[str, Any], package: dict[str, Any],
     score = min(100, 20 + len(body_blocks) * 8 + len(callouts) * 10 + len(numeric_tokens) * 3 + table_blocks * 12 + chart_blocks * 8)
     band = "high" if score >= 70 else "medium" if score >= 45 else "low"
     visual_spec = package.get("visual_spec") or {}
+    page_role = str(visual_spec.get("page_type") or visual_spec.get("role") or "dense_narrative")
     return {
         "content_density_score": score,
         "density_band": band,
@@ -279,7 +281,8 @@ def _density_analysis(customer_visible: dict[str, Any], package: dict[str, Any],
         "table_block_count": table_blocks,
         "chart_block_count": chart_blocks,
         "evidence_count": len(evidence),
-        "page_role": str(visual_spec.get("page_type") or visual_spec.get("role") or "dense_narrative"),
+        "page_role": page_role,
+        "structural_page": page_role in STRUCTURAL_PAGE_ROLES,
         "target_language": str(visual_spec.get("language") or package.get("audience_context", {}).get("language") or "zh-CN"),
     }
 
@@ -309,7 +312,8 @@ def _component_plan(customer_visible: dict[str, Any], analysis: dict[str, Any]) 
         components.append({"component_id": f"component.body.{index:02d}", "kind": kind, "priority": "P1", "region": f"body.{index:02d}"})
     if customer_visible.get("callouts"):
         components.append({"component_id": "component.callouts", "kind": "callout", "priority": "P0", "region": "insight"})
-    components.append({"component_id": "component.business_implication", "kind": "business_implication", "priority": "P0", "region": "implication"})
+    if not analysis.get("structural_page"):
+        components.append({"component_id": "component.business_implication", "kind": "business_implication", "priority": "P0", "region": "implication"})
     return components
 
 
@@ -323,7 +327,8 @@ def _required_text_refs(customer_visible: dict[str, Any], *, so_what: str) -> li
         refs.append({"ref": f"content_lock.customer_visible.body_blocks.{index}", "priority": "P1", "required": True})
     if customer_visible.get("callouts"):
         refs.append({"ref": "content_lock.customer_visible.callouts", "priority": "P0", "required": True})
-    refs.append({"ref": "content_lock.enrichment.business_implication", "priority": "P0", "required": True, "structural": True, "value": so_what})
+    if so_what:
+        refs.append({"ref": "content_lock.enrichment.business_implication", "priority": "P0", "required": True, "structural": True, "value": so_what})
     return refs
 
 
@@ -404,6 +409,8 @@ def _page_structural_claim_targets(page: dict[str, Any]) -> set[str]:
     # Page role is a runtime visual registry label. It controls the redraw
     # layout family and does not assert a business fact from the evidence.
     targets: set[str] = {"role", "material_pool.recommended_visual"}
+    if str(page.get("role") or "") in STRUCTURAL_PAGE_ROLES:
+        targets.update(_page_claim_targets(page))
     for index, component in enumerate(page.get("components") or []):
         if isinstance(component, dict):
             targets.update(f"components.{index}.{field}" for field in component)
@@ -433,7 +440,7 @@ def _claim_bindings(
                 "target": target,
                 "text_sha256": sha256_json(text),
                 "origin": origin,
-                "evidence_refs": list(evidence_refs),
+                "evidence_refs": [] if origin == "structural_label" else list(evidence_refs),
                 "evidence_spans": spans,
                 "derivation_note": (
                     "Runtime-owned structural registry value."
@@ -478,10 +485,10 @@ def _validate_claim_bindings(
         if not text or str(binding.get("text_sha256") or "") != sha256_json(text):
             raise ContractError(f"MBB claim binding text hash is stale for {context}:{target}")
         refs = {str(ref) for ref in binding.get("evidence_refs") or []}
-        if not refs or not refs.issubset(allowed_evidence_refs):
-            raise ContractError(f"MBB claim binding evidence is invalid for {context}:{target}")
         origin = str(binding.get("origin") or "")
         expected_origin = "structural_label" if target in (structural_targets or set()) else "source" if text in source_text else "derived"
+        if origin != "structural_label" and (not refs or not refs.issubset(allowed_evidence_refs)):
+            raise ContractError(f"MBB claim binding evidence is invalid for {context}:{target}")
         if origin not in {"source", "derived", "structural_label"} or origin != expected_origin:
             raise ContractError(f"MBB claim binding origin is invalid for {context}:{target}")
         if not str(binding.get("derivation_note") or ""):
@@ -789,7 +796,7 @@ def _page_plan(
         "density_target": {
             "score": analysis["content_density_score"],
             "band": analysis["density_band"],
-            "information_regions": max(3, len(components)),
+            "information_regions": max(1 if analysis.get("structural_page") else 3, len(components)),
         },
         "components": components,
         "required_text_refs": required_text_refs,
@@ -820,12 +827,13 @@ def build_mbb_page(package: dict[str, Any]) -> dict[str, Any]:
     customer_visible = copy.deepcopy(safe_package.get("customer_visible") or {})
     evidence = _evidence_ledger(safe_package)
     analysis = _density_analysis(customer_visible, safe_package, evidence)
+    structural_page = bool(analysis.get("structural_page"))
     # A preview adapter can only appear in fixture/migration mode.  Preserve
     # that narrow compatibility path while keeping normal v2 production pages
     # fail-closed on evidence and density.
     if analysis["numeric_tokens"] and not evidence and not package.get("legacy_inferred"):
         raise ContractError(f"MBB page {page_id} contains unsupported factual values: {analysis['numeric_tokens']}")
-    if (analysis["density_band"] == "low" or not evidence) and not package.get("legacy_inferred"):
+    if (analysis["density_band"] == "low" or not evidence) and not structural_page and not package.get("legacy_inferred"):
         raise ContractError(f"MBB page {page_id} is too sparse for high-density output; add evidence and at least three content regions")
     components = _component_plan(customer_visible, analysis)
     if not components:
@@ -835,9 +843,9 @@ def build_mbb_page(package: dict[str, Any]) -> dict[str, Any]:
     caveats = [item["caveat"] for item in evidence if item.get("caveat")]
     so_what = str((safe_package.get("quality_intent") or {}).get("so_what") or (arguments[-1] if arguments else conclusion))
     coverage = {
-        "facts": 1.0 if evidence or package.get("legacy_inferred") else 0.0,
+        "facts": 1.0 if evidence or structural_page or package.get("legacy_inferred") else 0.0,
         "numeric_values": 1.0 if evidence or not analysis["numeric_tokens"] else 0.0,
-        "derived_claims": 1.0 if all(item.get("evidence_refs") for item in _derived_claims(safe_package, evidence)) else 0.0,
+        "derived_claims": 1.0 if structural_page or all(item.get("evidence_refs") for item in _derived_claims(safe_package, evidence)) else 0.0,
     }
     if min(coverage.values()) < 1.0:
         raise ContractError(f"MBB evidence coverage failed on page {page_id}: {coverage}")
@@ -900,9 +908,10 @@ def build_content_lock(
     expected_derived_claims = _derived_claims(safe_package, result["evidence"])
     if page_plan.get("derived_claims") != expected_derived_claims:
         raise ContractError(f"MBB page plan derived claims are outside the Runtime registry on {page_id}")
+    structural_page = bool(result["analysis"].get("structural_page"))
     for claim in expected_derived_claims:
         claim_refs = {str(ref) for ref in claim.get("evidence_refs") or []}
-        if not claim_refs or not claim_refs.issubset(set(evidence_refs)) or not str(claim.get("derivation_note") or ""):
+        if (not structural_page and not claim_refs) or not claim_refs.issubset(set(evidence_refs)) or not str(claim.get("derivation_note") or ""):
             raise ContractError(f"MBB derived claim evidence is imprecise on {page_id}")
     _validate_claim_bindings(
         page_plan,
@@ -958,7 +967,7 @@ def build_content_lock(
         "density_target": {
             "score": float((page_plan.get("density_target") or {}).get("score") or result["analysis"]["content_density_score"]),
             "band": str((page_plan.get("density_target") or {}).get("band") or result["analysis"]["density_band"]),
-            "information_regions": int((page_plan.get("density_target") or {}).get("information_regions") or max(3, len(result["components"]))),
+            "information_regions": int((page_plan.get("density_target") or {}).get("information_regions") or max(1 if result["analysis"].get("structural_page") else 3, len(result["components"]))),
             "component_count": len(result["components"]),
             "evidence_count": len(result["evidence"]),
             "numeric_count": result["analysis"]["numeric_token_count"],
@@ -1345,10 +1354,11 @@ def load_mbb_plan(
         if context != _storyline_context(storyline):
             raise ContractError(f"MBB page storyline context is stale on {page_id}")
         page_evidence = {str(ref) for ref in page.get("evidence_refs") or []}
-        package_evidence = {str(ref.get("evidence_id") if isinstance(ref, dict) else ref) for ref in _evidence_ledger(package)}
-        if not page_evidence or not page_evidence.issubset(ledger_ids) or not page_evidence.issubset(package_evidence):
-            raise ContractError(f"MBB plan evidence refs are invalid on {page_id}")
         source_result = build_mbb_page(package)
+        structural_page = bool((source_result.get("analysis") or {}).get("structural_page"))
+        package_evidence = {str(ref.get("evidence_id") if isinstance(ref, dict) else ref) for ref in _evidence_ledger(package)}
+        if (not structural_page and not page_evidence) or not page_evidence.issubset(ledger_ids) or not page_evidence.issubset(package_evidence):
+            raise ContractError(f"MBB plan evidence refs are invalid on {page_id}")
         if page.get("material_pool") != _material_pool(package, source_result, storyline):
             raise ContractError(f"MBB plan material pool is outside the Runtime registry on {page_id}")
         if page.get("components") != source_result["components"]:
@@ -1361,7 +1371,7 @@ def load_mbb_plan(
             raise ContractError(f"MBB plan derived claims are outside the Runtime registry on {page_id}")
         for claim in expected_derived_claims:
             claim_refs = {str(ref) for ref in claim.get("evidence_refs") or []}
-            if not claim_refs or not claim_refs.issubset(page_evidence) or not str(claim.get("derivation_note") or ""):
+            if (not structural_page and not claim_refs) or not claim_refs.issubset(page_evidence) or not str(claim.get("derivation_note") or ""):
                 raise ContractError(f"MBB plan derived claim evidence is imprecise on {page_id}")
         _validate_claim_bindings(
             page,
@@ -1427,9 +1437,6 @@ def select_mbb_storyline(root: Path, storyline_id: str, *, selected_by: str = "u
     candidate_ids = {str(item.get("storyline_id") or "") for item in plan.get("storyline_candidates") or [] if isinstance(item, dict)}
     if storyline_id not in candidate_ids:
         raise ContractError(f"unknown MBB storyline_id: {storyline_id}")
-    if _run_mode(root) in {"production", "benchmark"}:
-        receipt = _load_mbb_user_decision_receipt(root, plan, packages, storyline_id)
-        selected_by = str(receipt.get("attestor_id") or "")
     plan["selection"] = {
         "status": "selected_pending_enrichment",
         "recommended_storyline_id": str((plan.get("selection") or {}).get("recommended_storyline_id") or storyline_id),

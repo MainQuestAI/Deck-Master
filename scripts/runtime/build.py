@@ -122,6 +122,17 @@ def _run_mode(request: dict[str, Any]) -> str:
     return mode if mode in {"production", "benchmark", "fixture", "dev"} else "production"
 
 
+def _output_profile(request: dict[str, Any]) -> str:
+    profile = str(request.get("output_profile") or "client_delivery").strip().lower()
+    return profile if profile in {"client_delivery", "production_pptx"} else "client_delivery"
+
+
+def _required_outputs_for_profile(output_profile: str) -> list[str]:
+    if output_profile == "production_pptx":
+        return ["deck_pptx"]
+    return ["deck_html", "deck_pdf", "page_png", "deck_pptx"]
+
+
 def _assert_builder_backend_available(request: dict[str, Any]) -> dict[str, Any]:
     status = builder_backend_status()
     if production_requires_builder_backend(_run_mode(request)) and not status.get("production_capable"):
@@ -210,13 +221,14 @@ def prepare_build(run_dir: str | Path) -> dict[str, Any]:
         "run_id": run_id,
         "status": "prepared",
         "run_mode": _run_mode(request),
+        "output_profile": _output_profile(request),
         "source_mode": CONTRACT_SMOKE_SOURCE_MODE,
         "non_client_deliverable": True,
         "builder_backend": backend,
         "source_fingerprint": build_source_fingerprint(root),
         "page_count": len(page_sources),
         "pages": page_sources,
-        "required_outputs": ["deck_html", "deck_pdf", "page_png", "deck_pptx"],
+        "required_outputs": _required_outputs_for_profile(_output_profile(request)),
         "warnings": warnings,
         "created_at": _utc_now(),
     }
@@ -418,18 +430,26 @@ def run_build(run_dir: str | Path) -> dict[str, Any]:
     result_dir = root / RENDER_RESULTS_DIR
     result_dir.mkdir(parents=True, exist_ok=True)
     session_id = "build-" + datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
+    required_outputs = set(manifest.get("required_outputs") or _required_outputs_for_profile("client_delivery"))
 
-    html_path = _write_html(root, manifest)
-    pdf_path = _write_pdf(root, manifest)
-    page_pngs = _write_page_pngs(root, manifest)
+    html_path = _write_html(root, manifest) if "deck_html" in required_outputs else None
+    pdf_path = _write_pdf(root, manifest) if "deck_pdf" in required_outputs else None
+    page_pngs = _write_page_pngs(root, manifest) if "page_png" in required_outputs else []
     pptx_path = _write_pptx(root, manifest)
-    _assert_required_outputs([html_path, pdf_path, pptx_path, *page_pngs])
+    required_paths = [pptx_path]
+    if html_path is not None:
+        required_paths.append(html_path)
+    if pdf_path is not None:
+        required_paths.append(pdf_path)
+    required_paths.extend(page_pngs)
+    _assert_required_outputs(required_paths)
 
-    artifacts = [
-        _artifact(root, artifact_id="deck_html", kind="deck_html", path=html_path, editability="native"),
-        _artifact(root, artifact_id="deck_pdf", kind="deck_pdf", path=pdf_path, editability="flat_image"),
-        _artifact(root, artifact_id="deck_pptx", kind="deck_pptx", path=pptx_path, editability="flat_image"),
-    ]
+    artifacts = []
+    if html_path is not None:
+        artifacts.append(_artifact(root, artifact_id="deck_html", kind="deck_html", path=html_path, editability="native"))
+    if pdf_path is not None:
+        artifacts.append(_artifact(root, artifact_id="deck_pdf", kind="deck_pdf", path=pdf_path, editability="flat_image"))
+    artifacts.append(_artifact(root, artifact_id="deck_pptx", kind="deck_pptx", path=pptx_path, editability="flat_image"))
     for page_path in page_pngs:
         artifacts.append(
             _artifact(
@@ -475,10 +495,11 @@ def run_build(run_dir: str | Path) -> dict[str, Any]:
         "tool": "ppt-master",
         "status": "completed",
         "run_mode": _run_mode(request),
+        "output_profile": str(manifest.get("output_profile") or "client_delivery"),
         "source_mode": CONTRACT_SMOKE_SOURCE_MODE,
         "non_client_deliverable": True,
         "builder_backend": backend,
-        "artifact_path": _run_relative(root, html_path),
+        "artifact_path": _run_relative(root, html_path or pptx_path),
         "preview_dir": f"{BUILD_DIR}/pages",
         "page_count": int(manifest.get("page_count") or 0),
         "source_fingerprint": manifest.get("source_fingerprint"),
@@ -514,7 +535,7 @@ def run_build(run_dir: str | Path) -> dict[str, Any]:
         "build_manifest": str((build_dir / BUILD_MANIFEST_NAME).relative_to(root)),
         "artifact_manifest": str(artifact_manifest_path.relative_to(root)),
         "render_result": str(render_result_path.relative_to(root)),
-        "artifact_path": str(html_path.relative_to(root)),
+        "artifact_path": str((html_path or pptx_path).relative_to(root)),
         "page_count": render_result["page_count"],
         "artifacts": artifacts,
         "warnings": render_result["warnings"],

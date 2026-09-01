@@ -29,6 +29,7 @@ from runtime.run_state import (
 VALID_ACTIONS = {
     "approve",
     "reject",
+    "needs_work",
     "request_evidence",
     "convert_to_generate",
     "replace_candidate",
@@ -327,6 +328,69 @@ def execute_review_action(
     )
 
     return result
+
+
+def execute_batch_review_action(
+    run_dir: str | Path,
+    action: str,
+    *,
+    page_ids: list[str] | None = None,
+    actor: str = "user",
+    reason: str = "",
+    note: str = "",
+) -> dict[str, Any]:
+    """Execute one review action across many pages without bypassing blockers."""
+    if action not in {"approve", "reject", "needs_work", "request_evidence"}:
+        raise WorkbenchError("Batch review supports approve, reject, needs_work, and request_evidence.")
+
+    root = Path(run_dir).expanduser().resolve()
+    page_tasks_path = root / PAGE_TASKS_NAME
+    if not page_tasks_path.exists():
+        page_tasks = _bootstrap_page_tasks(root, page_tasks_path)
+    else:
+        page_tasks = read_json(page_tasks_path)
+    tasks = page_tasks.get("tasks", [])
+    if not isinstance(tasks, list):
+        raise WorkbenchError("page_tasks.json tasks must be a list.")
+
+    selected = list(page_ids or [str(task.get("beat_id") or "") for task in tasks if isinstance(task, dict)])
+    if not selected:
+        raise WorkbenchError("Batch review requires at least one page.")
+
+    single_action = "request_evidence" if action == "needs_work" else action
+    applied: list[str] = []
+    blocked: list[dict[str, str]] = []
+    for page_id in selected:
+        try:
+            execute_review_action(
+                root,
+                page_id,
+                single_action,
+                actor=actor,
+                reason=reason,
+                note=note,
+            )
+        except WorkbenchError as exc:
+            blocked.append({"page_id": page_id, "reason": str(exc)})
+            continue
+        applied.append(page_id)
+
+    append_typed_event(
+        root,
+        "decision",
+        f"page_review.batch_{action}",
+        f"Batch review {action} by {actor}: {len(applied)} applied, {len(blocked)} blocked.",
+        refs=[PAGE_TASKS_NAME],
+        payload={"action": action, "actor": actor, "applied_pages": applied, "blocked_pages": blocked},
+    )
+    return {
+        "status": "ok" if not blocked else "completed_with_warnings",
+        "action": action,
+        "applied_pages": applied,
+        "blocked_pages": blocked,
+        "applied_count": len(applied),
+        "blocked_count": len(blocked),
+    }
 
 
 def _check_no_blocking_findings(run_dir: Path, page_id: str) -> None:

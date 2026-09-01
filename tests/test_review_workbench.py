@@ -16,7 +16,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from server import PreviewHandler, WRITE_TOKEN_HEADER  # noqa: E402
 from orchestrate.export_queue import export_queue  # noqa: E402
-from review.workbench import WorkbenchError, execute_review_action  # noqa: E402
+from review.workbench import WorkbenchError, execute_batch_review_action, execute_review_action  # noqa: E402
 from runtime.run_state import create_run, read_json, write_json  # noqa: E402
 from runtime.events import read_events  # noqa: E402
 from runtime.import_log import append_import_log  # noqa: E402
@@ -294,6 +294,32 @@ class WorkbenchDirectTest(unittest.TestCase):
         events = read_events(self.run_dir)
         wb_events = [e for e in events if "page_review" in str(e.get("step", ""))]
         self.assertTrue(len(wb_events) >= 1)
+
+    def test_batch_approve_all_unblocked_pages(self) -> None:
+        result = execute_batch_review_action(self.run_dir, "approve")
+
+        self.assertEqual(result["status"], "ok")
+        self.assertEqual(result["applied_pages"], ["beat_001", "beat_002"])
+        preview = read_json(self.run_dir / "preview_manifest.json")
+        self.assertEqual(
+            {page["page_id"]: page["review_status"] for page in preview["pages"]},
+            {"beat_001": "approved", "beat_002": "approved"},
+        )
+
+    def test_batch_approve_keeps_blocked_page_reason(self) -> None:
+        write_json(self.run_dir / "quality_reports" / "draft_gate.json", {
+            "gate": "draft",
+            "findings": [
+                {"finding_id": "p0_test", "severity": "P0", "page_id": "beat_002", "message": "P0 blocking"},
+            ],
+        })
+
+        result = execute_batch_review_action(self.run_dir, "approve")
+
+        self.assertEqual(result["status"], "completed_with_warnings")
+        self.assertEqual(result["applied_pages"], ["beat_001"])
+        self.assertEqual(result["blocked_pages"][0]["page_id"], "beat_002")
+        self.assertIn("P0", result["blocked_pages"][0]["reason"])
 
 
 class WorkbenchAPITest(unittest.TestCase):

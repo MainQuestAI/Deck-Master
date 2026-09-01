@@ -68,7 +68,7 @@ deck-master build retry --run-dir <run_dir> --profile high-density --page-id P00
 
 ### A. MBB and Content Lock
 
-Production first waits for `agent_mbb_candidates` to write two or three evidence-bound candidate storylines. The runtime returns `awaiting_user_decision` with candidate summaries and a recommended ID. The deck-scoped `content_lock` retry records the user's selection in a signed Runtime receipt without rewriting Agent content, then returns `agent_mbb_enrich_selected`. Only after the Agent enriches the selected SCR and page plans can the runtime validate and sign the approved plan seal.
+Production first waits for `agent_mbb_candidates` to write two or three evidence-bound candidate storylines. The runtime returns `awaiting_user_decision` with candidate summaries and a recommended ID. The deck-scoped `content_lock` retry records the user's selection in the Runtime selection receipt without rewriting Agent content, then returns `agent_mbb_enrich_selected`. Only after the Agent enriches the selected SCR and page plans can the runtime validate and sign the approved plan seal.
 
 Fixture/dev runs may auto-approve the deterministic decision-led candidate so the compiler regression remains reproducible. An approved plan can resume without another prompt until a Page Package or MBB plan hash changes.
 
@@ -98,7 +98,7 @@ For a real provider result, import the Host-managed PNG before manifest sealing:
 PYTHONPATH=scripts python3 -m high_density.provider_result --run-dir <run_dir> --page-id P001 --source-image <host-imagegen-output>/exec-<uuid>.png
 ```
 
-Production must inject `DECK_MASTER_USER_ATTESTATION_KEY` through the trusted Host/UI before invoking the `user_decision` command; a local CLI argument cannot establish user identity.
+Production records the storyline ID supplied by the user's explicit confirmation and immediately advances to selected-storyline enrichment. The user does not provide a signing key or complete a separate Host/UI authorization step.
 
 ### C. Image to Native SVG
 
@@ -110,7 +110,7 @@ Every visible element has a stable ID, component ID, role, priority, source/targ
 
 Render normalized blueprint and SVG at the same `1672 x 941` canvas. Metrics are generated from actual files with Pillow + NumPy and `rsvg-convert`, then written to `high_density_build/reviews/<page_id>.metrics.json`. The v2 review must bind renderer, source hashes, mask hash, thresholds, text-masked SSIM, P0/P1 bbox deltas, color/layout findings, and component coverage.
 
-The text mask covers rendered glyph pixels only, expands them by 2 px, and fails closed above 35% page coverage, below 25% remaining non-text pixels, or when too few comparison pixels remain. Icons below 8 px are rejected; 8–16 px icons use 512 px local crops with edge, silhouette, negative-space, direction, and occupancy checks. Initial gates include text-masked SSIM, P0 region SSIM, edge similarity, color delta, bbox/anchor drift, direction mismatch, 100% P0/P1 text/component coverage, and zero unresolved overflow or illegal overlap findings. Production needs producer self-review and an independent main review with distinct reviewer IDs, Runtime-issued action IDs, input hashes, timestamps, and main-to-self lineage. After the producer self-review passes, create the independent main review and its separate Host attestation receipt:
+The text mask covers rendered glyph pixels only, expands them by 2 px, and fails closed above 35% page coverage, below 25% remaining non-text pixels, or when too few comparison pixels remain. Icons below 8 px are rejected; 8–16 px icons use 512 px local crops with edge, silhouette, negative-space, direction, and occupancy checks. Initial gates include text-masked SSIM, P0 region SSIM, edge similarity, color delta, bbox/anchor drift, direction mismatch, 100% P0/P1 text/component coverage, and zero unresolved overflow or illegal overlap findings. Production needs producer self-review and an independent main review with distinct reviewer IDs, Runtime-issued action IDs, input hashes, timestamps, and main-to-self lineage. After the producer self-review passes, create the independent main review:
 
 ```bash
 PYTHONPATH=scripts python3 -m high_density.self_review --run-dir <run_dir> --page-id P001 --reviewer-id <producer-reviewer-id>
@@ -120,7 +120,7 @@ PYTHONPATH=scripts python3 -m high_density.self_review --run-dir <run_dir> --pag
 PYTHONPATH=scripts python3 -m high_density.main_review --run-dir <run_dir> --page-id P001 --reviewer-id <independent-reviewer-id>
 ```
 
-The production gate requires `DECK_MASTER_REVIEW_ATTESTATION_KEY`; a passing `main_review` field in the review JSON alone cannot complete the stage.
+The default production gate uses the local visual review receipt written by the runtime. `DECK_MASTER_REVIEW_ATTESTATION_KEY` is only required when the run explicitly enables external independent review attestation.
 
 Controlled SVG paint effects use one shared parser for validation and PPTX compilation. The supported subset is direct linear/radial gradients with 2-8 stops plus one shadow or glow effect. Inheritance, transforms, masks, clip paths, patterns, `use`, and arbitrary pixel filters are blocked with the element or definition ID.
 

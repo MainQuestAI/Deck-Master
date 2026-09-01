@@ -100,6 +100,7 @@ def _write_gate(
     *,
     status: str | None = None,
     blocks_delivery: bool | None = None,
+    extra: dict[str, Any] | None = None,
 ) -> None:
     quality_dir = run_dir / "quality_reports"
     quality_dir.mkdir(parents=True, exist_ok=True)
@@ -110,6 +111,8 @@ def _write_gate(
         "findings": findings,
         "page_findings": [],
     }
+    if extra:
+        report.update(extra)
     (quality_dir / f"{gate}_gate.json").write_text(
         json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8"
     )
@@ -422,6 +425,23 @@ class ExportQualityBlockingTests(unittest.TestCase):
         self.assertEqual(0, len(result["pages"]))
         self.assertEqual(1, result["blocked_count"])
         self.assertIn("F-RUN-P1", result["blocked_pages"][0]["quality_block_reason"])
+
+    def test_stale_p1_gate_does_not_block_client_queue(self) -> None:
+        page = _base_page("p1", decision="approved", review_status="approved")
+        _write_manifest(self.run_dir, _make_manifest([page]))
+        _write_gate(
+            self.run_dir,
+            "draft",
+            [{"severity": "P1", "finding_id": "F-OLD", "message": "old finding"}],
+            status="rework_required",
+            blocks_delivery=True,
+            extra={"artifact_path": "build/deck.pptx", "artifact_sha256": "0" * 64},
+        )
+
+        result = export_queue(self.run_dir, {"approved"}, queue_type="client")
+
+        self.assertEqual(1, len(result["pages"]))
+        self.assertEqual(0, result["blocked_count"])
 
     def test_draft_v2_claim_level_gap_blocks_all_pages(self) -> None:
         page = _base_page("p1", decision="approved", review_status="approved")

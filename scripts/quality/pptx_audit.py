@@ -15,7 +15,8 @@ COMMENT_RE = re.compile(r"ppt/comments/comment(\d+)\.xml$")
 CHART_RE = re.compile(r"ppt/charts/chart(\d+)\.xml$")
 DOC_PROPS_RE = re.compile(r"docProps/(?:core|app|custom)\.xml$")
 PRESENTATION_RE = re.compile(r"ppt/presentation\.xml$")
-TEXT_ATTRS = {"descr", "title", "name"}
+TEXT_ATTRS = {"descr", "title"}
+SPARSE_ALLOWED_ROLES = {"cover", "section", "section_divider", "divider", "toc", "agenda", "visual", "visual_divider", "image", "image_page"}
 
 
 def _local_name(tag: str) -> str:
@@ -48,7 +49,7 @@ def _scope_for_path(name: str) -> tuple[str, int | None]:
 
 def _is_scannable_xml(name: str) -> bool:
     scope, _number = _scope_for_path(name)
-    return bool(scope)
+    return scope in {"slide", "notes", "comment", "doc_props"}
 
 
 def _xml_text(root: ElementTree.Element) -> str:
@@ -94,6 +95,7 @@ def audit_pptx(
     pptx_path: str | Path,
     expected_pages: int | None = None,
     forbidden_terms: list[str] | None = None,
+    page_roles: dict[int, str] | list[str] | None = None,
 ) -> dict[str, Any]:
     path = Path(pptx_path).expanduser().resolve()
     forbidden = [term for term in (forbidden_terms or []) if term]
@@ -118,16 +120,25 @@ def audit_pptx(
                 text = _slide_text(root)
                 picture_count = _picture_count(root)
                 slide_hits = _term_hits(text, forbidden)
+                slide_number = _slide_number(name)
+                if isinstance(page_roles, dict):
+                    page_role = str(page_roles.get(slide_number) or "content")
+                elif isinstance(page_roles, list) and slide_number - 1 < len(page_roles):
+                    page_role = str(page_roles[slide_number - 1] or "content")
+                else:
+                    page_role = "content"
+                sparse_allowed = page_role in SPARSE_ALLOWED_ROLES
                 slides.append(
                     {
-                        "slide_number": _slide_number(name),
+                        "slide_number": slide_number,
                         "path": name,
+                        "page_role": page_role,
                         "title": text[:80],
                         "text_length": len(text),
                         "picture_count": picture_count,
                         "forbidden_terms": slide_hits,
-                        "is_sparse": len(text) < 80 and picture_count == 0,
-                        "possible_full_slide_image": picture_count == 1 and len(text) < 40,
+                        "is_sparse": (len(text) < 80 and picture_count == 0) and not sparse_allowed,
+                        "possible_full_slide_image": (picture_count == 1 and len(text) < 40) and not sparse_allowed,
                     }
                 )
             for name in sorted(name for name in names if _is_scannable_xml(name)):

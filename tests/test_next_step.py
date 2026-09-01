@@ -223,6 +223,34 @@ class NextStepResolverTest(unittest.TestCase):
         self.assertEqual("deck-builder", result["recommended_skill"])
         self.assertIn("build run", result["next_command"])
 
+    def test_completed_high_density_with_passed_gate_returns_final_readiness(self) -> None:
+        status_path = self.run_dir / "high_density_build" / "status.json"
+        status_path.parent.mkdir(parents=True)
+        self._write_json(REQUEST_NAME, {"run_id": "r1", "run_mode": "production"})
+        status_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "deck_high_density_status.v2",
+                    "run_id": "r1",
+                    "builder_profile": "high_density",
+                    "status": "completed",
+                    "current_stage": "pptx",
+                    "next_action": {"kind": "complete"},
+                }
+            ),
+            encoding="utf-8",
+        )
+        pptx_path = self.run_dir / "high_density_build" / "pptx" / "deck_high_density.pptx"
+        pptx_path.parent.mkdir(parents=True)
+        pptx_path.write_bytes(b"pptx")
+        self._write_gate("customer_visible_safety_gate.json")
+
+        result = self._resolve(run_mode="production")
+
+        self._assert_shape(result, "ready_for_final_readiness")
+        self.assertIn("final-readiness", result["next_command"])
+        self.assertNotIn("quality-gate render", result["next_command"])
+
     def test_result_always_contains_required_keys(self) -> None:
         # Verify across multiple states that the shape is stable.
         for setup_fn, _ in [

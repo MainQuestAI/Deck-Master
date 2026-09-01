@@ -14,12 +14,39 @@ sys.path.insert(0, str(PREVIEW_DIR))
 sys.path.insert(0, str(QUALITY_DIR))
 
 from manifest import DECISIONS, load_manifest
+from gate_freshness import report_currentity
 from overrides import has_active_override
 from runtime.final_readiness import final_readiness_clearance
 from runtime.final_approval import final_approval_clearance
 
 DRAFT_GATE_FILES = {"draft_gate.json", "draft_v2_gate.json"}
 BLOCKING_STATUSES = {"rework_required"}
+
+
+def _read_json(path: Path) -> dict[str, Any]:
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return {}
+    return value if isinstance(value, dict) else {}
+
+
+def _current_artifact(run_dir: Path) -> Path | None:
+    lineage = _read_json(run_dir / "delivery" / "final_version_lineage.json")
+    raw = str(lineage.get("artifact_run_relative") or lineage.get("artifact_path") or "")
+    if not raw:
+        readiness = _read_json(run_dir / "delivery" / "final_readiness.json")
+        final_artifact = readiness.get("final_artifact") if isinstance(readiness.get("final_artifact"), dict) else {}
+        raw = str(final_artifact.get("path") or final_artifact.get("absolute_path") or "")
+    if not raw:
+        render = _read_json(run_dir / "render_results" / "render_result.json")
+        raw = str(render.get("artifact_path") or "")
+    if not raw:
+        return None
+    path = Path(raw)
+    if not path.is_absolute():
+        path = run_dir / path
+    return path.expanduser().resolve()
 
 
 def _load_gate_reports(run_dir: Path) -> list[dict[str, Any]]:
@@ -84,7 +111,10 @@ def _get_blocking_findings(run_dir: Path, page_id: str) -> list[dict[str, Any]]:
     """Collect page-level and run-level blocking findings for a page."""
     findings: list[dict[str, Any]] = []
 
+    artifact = _current_artifact(run_dir)
     for report in _load_gate_reports(run_dir):
+        if not report_currentity(run_dir, report, artifact).get("current", True):
+            continue
         report_blocks = _report_blocks_delivery(report)
         report_findings = _report_findings(report)
         matched = False
@@ -118,7 +148,8 @@ def has_client_export_quality_clearance(
     allow_quality_override: bool = False,
 ) -> dict[str, Any]:
     """Return run-level quality clearance used by UI and export."""
-    reports = _load_gate_reports(run_dir)
+    artifact = _current_artifact(run_dir)
+    reports = [report for report in _load_gate_reports(run_dir) if report_currentity(run_dir, report, artifact).get("current", True)]
     if not _has_draft_gate_report(reports):
         return {
             "ready": False,

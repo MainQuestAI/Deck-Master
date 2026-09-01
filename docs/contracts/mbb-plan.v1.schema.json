@@ -106,7 +106,7 @@
         "situation": {"type": "string", "minLength": 1},
         "complication": {"type": "string", "minLength": 1},
         "resolution": {"type": "string", "minLength": 1},
-        "evidence_refs": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "evidence_refs": {"type": "array", "items": {"type": "string", "minLength": 1}},
         "decision_implication": {"type": "string", "minLength": 1},
         "evidence_assessment": {"$ref": "#/$defs/evidenceAssessment"},
         "claim_bindings": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/claimBinding"}}
@@ -142,7 +142,7 @@
       "properties": {
         "claim_id": {"type": "string", "minLength": 1},
         "origin": {"enum": ["source", "derived", "structural_label"]},
-        "evidence_refs": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "evidence_refs": {"type": "array", "items": {"type": "string", "minLength": 1}},
         "derivation_note": {"type": "string", "minLength": 1},
         "factual_value_added": {"type": "boolean"}
       },
@@ -155,7 +155,7 @@
         "target": {"type": "string", "minLength": 1},
         "text_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
         "origin": {"enum": ["source", "derived", "structural_label"]},
-        "evidence_refs": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "evidence_refs": {"type": "array", "items": {"type": "string", "minLength": 1}},
         "evidence_spans": {
           "type": "array",
           "items": {
