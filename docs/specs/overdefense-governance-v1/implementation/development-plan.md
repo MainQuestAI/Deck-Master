@@ -43,7 +43,7 @@ git diff --check
 | 文件 | 动作 |
 |---|---|
 | `scripts/high_density/integrity.py` | 将 review attestation key 调整为可配置增强门禁 |
-| `scripts/high_density/svg.py` | 默认 main review 使用本地 receipt，保留 hash 和 reviewer_id |
+| `scripts/high_density/svg.py` | 默认 producer review 使用本地 receipt；main review 仅在显式配置时要求 |
 | `scripts/high_density/engine.py` | 等待状态返回真实公开命令，移除默认密钥阻断 |
 | `scripts/high_density/style.py` | 支持显式风格选择写入 |
 | `scripts/deck_master.py` | 增加风格选择和蓝图批准相关 CLI |
@@ -68,13 +68,13 @@ git diff --check
 | 文件 | 动作 |
 |---|---|
 | `docs/contracts/content-lock.v2.schema.json` | 增加或放宽页面角色相关证据/密度规则 |
-| `scripts/high_density/content.py` | 对 cover/section/toc/visual 等角色放宽密度和 evidence 规则 |
+| `scripts/high_density/content.py` | 对 cover/section/toc/visual 等角色放宽密度和普通结构文案 evidence 规则，保留显式 claim 与数字校验 |
 | `scripts/high_density/svg.py` | 图片面积 caps 改为 role-aware policy |
 | `scripts/quality/pptx_audit.py` | sparse/full-image 检查读取页面角色 |
 | `scripts/review/workbench.py` | 增加批量 approve/reject/needs-work |
 | `scripts/review/readiness.py` | 批量审阅后正确计算 ready/needs_review |
-| `scripts/high_density/engine.py` | 单页 handoff 语义；阶段批量 handoff 与失败页 rework queue deferred follow-up |
-| `tests/test_high_density_builder_v2.py` | 角色化页面测试；批量 handoff deferred follow-up |
+| `scripts/high_density/engine.py` | 阶段批量 handoff；等待状态包含真实 `pending_pages`、`rework_queue`、`input_refs`、`output_refs` |
+| `tests/test_high_density_builder_v2.py` | 角色化页面测试；2 页和 64 页批量 handoff |
 | `tests/test_review_workbench.py` | 批量审阅测试 |
 
 退出命令：

@@ -552,7 +552,7 @@ def test_structural_page_allows_low_density_without_business_evidence() -> None:
     assert result["enrichment"]["evidence_assessment"]["synthesis"].startswith("Structural page metadata")
 
 
-def test_structural_factual_subtitle_requires_evidence() -> None:
+def test_structural_subtitle_keyword_does_not_require_evidence() -> None:
     package = _package("mbb-run", FIXTURE["pages"][0])
     package["visual_spec"]["page_type"] = "cover"
     package["customer_visible"]["subtitle"] = "Market leadership position"
@@ -562,8 +562,10 @@ def test_structural_factual_subtitle_requires_evidence() -> None:
     package["evidence_bindings"] = []
     package["claim_bindings"] = []
 
-    with pytest.raises(ContractError, match="structural factual text without evidence"):
-        build_mbb_page(package)
+    result = build_mbb_page(package)
+
+    assert result["analysis"]["structural_page"] is True
+    assert result["evidence"] == []
 
 
 def test_structural_numeric_claim_requires_matching_evidence() -> None:
@@ -661,9 +663,23 @@ def test_evidenced_structural_page_preserves_refs_for_derived_claims(tmp_path: P
     cover_plan = next(page for page in loaded["pages"] if page["page_id"] == cover["page_id"])
     assert cover_plan["evidence_refs"] == ["E001"]
     assert cover_plan["derived_claims"][0]["evidence_refs"] == ["E001"]
-    assert "material_pool.customer_visible.subtitle" in {binding["target"] for binding in cover_plan["claim_bindings"]}
+    assert "material_pool.customer_visible.subtitle" not in {binding["target"] for binding in cover_plan["claim_bindings"]}
     lock = build_content_lock(cover, cover_plan, mbb_plan_sha256=loaded["mbb_plan_sha256"])
     assert lock["enrichment"]["derived_claims"][0]["evidence_refs"] == ["E001"]
+
+
+def test_structural_explicit_fact_marker_still_requires_evidence() -> None:
+    package = _package("mbb-run", FIXTURE["pages"][0])
+    package["visual_spec"]["page_type"] = "cover"
+    package["customer_visible"]["subtitle"] = "客户大会"
+    package["customer_visible"]["body_blocks"] = [
+        {"type": "text", "text": "Explicit marked claim", "requires_evidence": True}
+    ]
+    package["evidence_bindings"] = []
+    package["claim_bindings"] = []
+
+    with pytest.raises(ContractError, match="structural factual text without evidence"):
+        build_mbb_page(package)
 
 
 def test_structural_claim_exemption_is_limited_to_metadata() -> None:
@@ -748,6 +764,23 @@ def test_structural_metadata_labels_can_pass_without_evidence() -> None:
         context="structural metadata",
         structural_targets=structural_targets,
     )
+
+
+def test_structural_titles_and_subtitles_do_not_use_keyword_fact_guessing() -> None:
+    package = _package("mbb-run", FIXTURE["pages"][0])
+    package["visual_spec"]["page_type"] = "cover"
+    package["customer_visible"]["title"] = "Market Leader Framework"
+    package["customer_visible"]["subtitle"] = "2026 Strategy Day"
+    package["customer_visible"]["body_blocks"] = []
+    package["customer_visible"]["callouts"] = []
+    package["customer_visible"]["footnotes"] = []
+    package["evidence_bindings"] = []
+    package["claim_bindings"] = []
+
+    result = build_mbb_page(package)
+
+    assert result["analysis"]["structural_page"] is True
+    assert result["evidence"] == []
 
 
 def test_mbb_rejects_unsupported_factual_claim() -> None:
@@ -1419,6 +1452,57 @@ def test_production_blueprint_rejects_self_declared_provider_metadata(tmp_path: 
                 "approved_at": challenge["issued_at"],
             },
         )
+
+
+def test_production_blueprint_waiting_prepares_real_stage_batch_inputs(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path, mode="production", page_count=2, project_name="stage batch probe")
+    prepare_high_density(run)
+    write_style_lock(run, run.name, "cyber-01", approved=True, approver="test")
+    _write_approved_mbb_plan(run)
+
+    waiting = run_high_density(run)
+
+    assert waiting["status"] == "awaiting_agent_build"
+    assert waiting["current_stage"] == "blueprint"
+    action = waiting["next_action"]
+    assert action["handoff_scope"] == "stage_batch"
+    assert action["pending_pages"] == ["P001", "P002"]
+    assert {item["page_id"] for item in action["rework_queue"]} == {"P001", "P002"}
+    assert all(item["kind"] == "agent_imagegen" for item in action["rework_queue"])
+    for ref in action["input_refs"]:
+        assert (run / ref).is_file()
+
+
+def test_production_blueprint_waiting_prepares_64_page_batch_inputs(tmp_path: Path) -> None:
+    run = create_run(
+        tmp_path / "runs",
+        {"project_name": "stage batch 64", "run_mode": "production"},
+        run_id="hd-batch-64",
+        force=True,
+    )
+    index = PagePackageIndex(run)
+    for order in range(1, 65):
+        source = dict(FIXTURE["pages"][(order - 1) % len(FIXTURE["pages"])])
+        source["page_id"] = f"P{order:03d}"
+        source["order"] = order
+        source["title"] = f"{source['title']} batch"
+        package = _package(run.name, source)
+        package["evidence_bindings"] = [f"{ref}-{order:03d}" for ref in package.get("evidence_bindings") or []]
+        package["claim_bindings"] = [f"{ref}-{order:03d}" for ref in package.get("claim_bindings") or []]
+        index.write(package)
+    prepare_high_density(run)
+    write_style_lock(run, run.name, "cyber-01", approved=True, approver="test")
+    _write_approved_mbb_plan(run)
+
+    waiting = run_high_density(run)
+
+    action = waiting["next_action"]
+    assert waiting["current_stage"] == "blueprint"
+    assert len(action["pending_pages"]) == 64
+    assert len(action["rework_queue"]) == 64
+    assert action["pending_pages"][0] == "P001"
+    assert action["pending_pages"][-1] == "P064"
+    assert all((run / ref).is_file() for ref in action["input_refs"])
 
 
 def test_distinct_blueprints_produce_distinct_svg(tmp_path: Path) -> None:

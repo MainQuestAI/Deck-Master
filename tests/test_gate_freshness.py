@@ -4,13 +4,14 @@ import shutil
 import sys
 import tempfile
 import unittest
+import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from quality.gate_freshness import artifact_identity, report_currentity
-from quality.gate_policy import resolve_required_gates
+from quality.gate_policy import current_artifact, resolve_required_gates
 from quality.overrides import create_override
 
 
@@ -83,6 +84,22 @@ class GateFreshnessTests(unittest.TestCase):
 
         self.assertTrue(result["current"])
         self.assertEqual("current", result["status"])
+
+    def test_current_artifact_prefers_render_result_over_old_delivery_lineage(self) -> None:
+        old_artifact = self.run_dir / "delivery" / "old.pptx"
+        old_artifact.parent.mkdir(exist_ok=True)
+        old_artifact.write_bytes(b"old")
+        (self.run_dir / "render_results").mkdir()
+        (self.run_dir / "render_results" / "render_result.json").write_text(
+            json.dumps({"status": "completed", "artifact_path": "build/deck.pptx"}),
+            encoding="utf-8",
+        )
+        (self.run_dir / "delivery" / "final_version_lineage.json").write_text(
+            json.dumps({"artifact_run_relative": "delivery/old.pptx"}),
+            encoding="utf-8",
+        )
+
+        self.assertEqual(self.artifact.resolve(), current_artifact(self.run_dir))
 
     def test_non_artifact_gate_does_not_require_artifact_identity(self) -> None:
         result = report_currentity(self.run_dir, {"gate": "draft", "status": "pass"}, self.artifact)

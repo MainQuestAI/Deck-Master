@@ -33,7 +33,12 @@ def run_relative(root: Path | str, path: Path | str) -> str:
 
 def is_artifact_bound_gate(report: dict[str, Any]) -> bool:
     gate = str(report.get("gate") or "").strip().lower().replace("-", "_")
-    return gate in ARTIFACT_BOUND_GATES
+    binding = report.get("artifact_binding")
+    has_identity = isinstance(binding, dict) or any(
+        str(report.get(key) or "").strip()
+        for key in ("artifact_run_relative", "artifact_path", "artifact", "artifact_sha256", "artifact_hash")
+    )
+    return gate in ARTIFACT_BOUND_GATES or has_identity
 
 
 def _read_manifest_metadata(root: Path) -> dict[str, str]:

@@ -32,15 +32,11 @@ def _read_json(path: Path) -> dict[str, Any]:
 
 
 def _current_artifact(run_dir: Path) -> Path | None:
-    lineage = _read_json(run_dir / "delivery" / "final_version_lineage.json")
-    raw = str(lineage.get("artifact_run_relative") or lineage.get("artifact_path") or "")
-    if not raw:
-        readiness = _read_json(run_dir / "delivery" / "final_readiness.json")
-        final_artifact = readiness.get("final_artifact") if isinstance(readiness.get("final_artifact"), dict) else {}
-        raw = str(final_artifact.get("path") or final_artifact.get("absolute_path") or "")
-    if not raw:
-        render = _read_json(run_dir / "render_results" / "render_result.json")
-        raw = str(render.get("artifact_path") or "")
+    artifact = current_artifact(run_dir)
+    if artifact is not None:
+        return artifact
+    render = _read_json(run_dir / "render_results" / "render_result.json")
+    raw = str(render.get("artifact_path") or "")
     if not raw:
         return None
     path = Path(raw)
@@ -139,7 +135,7 @@ def _report_findings(report: dict[str, Any]) -> list[dict[str, Any]]:
 def _get_blocking_findings(run_dir: Path, page_id: str) -> list[dict[str, Any]]:
     """Collect page-level and run-level blocking findings for a page."""
     reports = _load_gate_reports(run_dir)
-    artifact = current_artifact(run_dir) or _current_artifact(run_dir)
+    artifact = _current_artifact(run_dir)
     request = _read_json(run_dir / "request.json")
     build_manifest = _read_json(run_dir / "build" / "build_manifest.json")
     policy = resolve_required_gates(
@@ -196,7 +192,7 @@ def has_client_export_quality_clearance(
     allow_quality_override: bool = False,
 ) -> dict[str, Any]:
     """Return run-level quality clearance used by UI and export."""
-    artifact = current_artifact(run_dir) or _current_artifact(run_dir)
+    artifact = _current_artifact(run_dir)
     reports = _load_gate_reports(run_dir)
     request = _read_json(run_dir / "request.json")
     build_manifest = _read_json(run_dir / "build" / "build_manifest.json")

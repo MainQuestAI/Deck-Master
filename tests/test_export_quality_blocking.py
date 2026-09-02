@@ -63,6 +63,21 @@ def _write_final_readiness(run_dir: Path, *, ready: bool, reason: str = "") -> N
     artifact.parent.mkdir(parents=True, exist_ok=True)
     artifact.write_bytes(b"approved deck")
     artifact_hash = hashlib.sha256(artifact.read_bytes()).hexdigest()
+    render_dir = run_dir / "render_results"
+    render_dir.mkdir(parents=True, exist_ok=True)
+    (render_dir / "render_result.json").write_text(
+        json.dumps(
+            {
+                "schema_version": "deck_render_result.v2",
+                "run_id": run_dir.name,
+                "status": "completed",
+                "artifact_path": "build/deck.pptx",
+            },
+            ensure_ascii=False,
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
     payload = {
         "schema_version": "deck_final_readiness.v1",
         "run_id": run_dir.name,
