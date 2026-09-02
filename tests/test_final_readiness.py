@@ -359,10 +359,15 @@ class FinalReadinessTests(unittest.TestCase):
         self.assertEqual("deck_final_readiness.v1", readiness["schema_version"])
         json.dumps(readiness)
 
-    def test_high_density_completed_profile_skips_standard_preview_state_blocker(self) -> None:
+    def _write_high_density_completed_fixture(self, *, workspace: str = "") -> Path:
         run_dir = self.temp_dir / "hd-final"
         run_dir.mkdir()
-        write_json(run_dir / "request.json", {"run_id": "hd-final", "run_mode": "production"})
+        request = {"run_id": "hd-final", "run_mode": "production"}
+        if workspace:
+            request["workspace"] = workspace
+        write_json(run_dir / "request.json", request)
+        for name in ("context_manifest.json", "deck_brief.json", "claim_map.json", "narrative_plan.json", "page_tasks.json", "sourcing_plan.json"):
+            write_json(run_dir / name, {"run_id": "hd-final"})
         write_json(
             run_dir / "high_density_build" / "status.json",
             {
@@ -395,6 +400,10 @@ class FinalReadinessTests(unittest.TestCase):
                 "page_findings": [],
             },
         )
+        return run_dir
+
+    def test_high_density_completed_profile_skips_standard_preview_state_blocker(self) -> None:
+        run_dir = self._write_high_density_completed_fixture()
 
         readiness = compute_final_readiness(run_dir, run_mode="production", dev_allow_unsetup=True)
 
@@ -403,6 +412,15 @@ class FinalReadinessTests(unittest.TestCase):
         self.assertEqual("high_density_build/pptx/deck_high_density.pptx", readiness["final_artifact"]["path"])
         self.assertNotIn("final_run_state_not_ready", {item["code"] for item in readiness["blockers"]})
         self.assertIn("final_current_artifact_gate_missing", {item["code"] for item in readiness["blockers"]})
+
+    def test_high_density_completed_profile_keeps_workspace_blocker(self) -> None:
+        missing_workspace = self.temp_dir / "missing-workspace"
+        run_dir = self._write_high_density_completed_fixture(workspace=str(missing_workspace))
+
+        readiness = compute_final_readiness(run_dir, run_mode="production", dev_allow_unsetup=True)
+
+        self.assertEqual("blocked_workspace", readiness["run_state"]["stage"])
+        self.assertIn("final_run_state_not_ready", {item["code"] for item in readiness["blockers"]})
 
 
 if __name__ == "__main__":

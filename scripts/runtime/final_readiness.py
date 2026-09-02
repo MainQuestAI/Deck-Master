@@ -16,6 +16,14 @@ from runtime.run_state_resolver import resolve_run_state
 SCHEMA_VERSION = "deck_final_readiness.v1"
 FINAL_READINESS_PATH = Path("delivery") / "final_readiness.json"
 CUSTOMER_VISIBLE_SAFETY_GATE = Path("quality_reports") / "customer_visible_safety_gate.json"
+HIGH_DENSITY_STANDARD_STAGE_OVERRIDES = {
+    "needs_preview",
+    "needs_review",
+    "needs_draft_gate",
+    "needs_builder_backend",
+    "needs_build",
+    "needs_render",
+}
 
 
 def _utc_now() -> str:
@@ -253,7 +261,7 @@ def compute_final_readiness(
         warnings.append(f"Quality gate {gate.get('gate') or 'unknown'} is stale for the current artifact: {gate.get('stale_reason') or 'lineage mismatch'}.")
 
     stage = str(run_state.get("stage") or "")
-    if high_density_completed and stage not in {"ready_for_client_export", "ready_for_benchmark"}:
+    if high_density_completed and stage in HIGH_DENSITY_STANDARD_STAGE_OVERRIDES:
         stage = "ready_for_client_export"
         warnings.append("标准 runtime state 尚未完整识别 high-density 成片，final readiness 已按 high-density completed profile 判断。")
     elif stage == "needs_draft_gate" and _all_quality_blocks_are_overridden_p1(root, quality_gates):

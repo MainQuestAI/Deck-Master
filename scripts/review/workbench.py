@@ -410,6 +410,35 @@ def execute_batch_review_action(
     }
 
 
+def _page_order_aliases(*payloads: dict[str, Any]) -> dict[int, set[str]]:
+    aliases: dict[int, set[str]] = {}
+    for payload in payloads:
+        pages = payload.get("pages") if isinstance(payload, dict) else None
+        if not isinstance(pages, list):
+            continue
+        for page in pages:
+            if not isinstance(page, dict):
+                continue
+            try:
+                order = int(page.get("order") or 0)
+            except (TypeError, ValueError):
+                continue
+            page_id = str(page.get("page_id") or page.get("beat_id") or "")
+            if order > 0 and page_id:
+                aliases.setdefault(order, set()).add(page_id)
+    return aliases
+
+
+def _finding_page_aliases(finding_page_id: str, page_order_aliases: dict[int, set[str]]) -> set[str]:
+    if not finding_page_id.startswith("slide_"):
+        return {finding_page_id}
+    try:
+        slide_number = int(finding_page_id.removeprefix("slide_"))
+    except ValueError:
+        return set()
+    return set(page_order_aliases.get(slide_number, set()))
+
+
 def _check_no_blocking_findings(run_dir: Path, page_id: str) -> None:
     """Check current active quality findings for a page before approval."""
     artifact = current_artifact(run_dir)
@@ -437,6 +466,8 @@ def _check_no_blocking_findings(run_dir: Path, page_id: str) -> None:
     )
     preview = _safe_read(run_dir / "preview_manifest.json") or {}
     page_tasks_payload = _safe_read(run_dir / PAGE_TASKS_NAME) or {}
+    high_density_manifest = _safe_read(run_dir / "high_density_build" / "manifest.json") or {}
+    page_order_aliases = _page_order_aliases(preview, build_manifest, high_density_manifest, page_tasks_payload)
     known_page_ids = {
         str(item.get("page_id") or "")
         for item in preview.get("pages", [])
@@ -458,8 +489,10 @@ def _check_no_blocking_findings(run_dir: Path, page_id: str) -> None:
         if not isinstance(item, dict):
             continue
         finding_page_id = str(item.get("page_id") or "")
-        if finding_page_id and finding_page_id in known_page_ids and finding_page_id != page_id:
-            continue
+        if finding_page_id:
+            finding_page_aliases = _finding_page_aliases(finding_page_id, page_order_aliases)
+            if page_id not in finding_page_aliases and finding_page_aliases.intersection(known_page_ids):
+                continue
         active.append(item)
     if not active:
         return

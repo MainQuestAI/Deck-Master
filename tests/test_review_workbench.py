@@ -321,6 +321,20 @@ class WorkbenchDirectTest(unittest.TestCase):
         self.assertEqual(result["blocked_pages"][0]["page_id"], "beat_002")
         self.assertIn("P0", result["blocked_pages"][0]["reason"])
 
+    def test_batch_approve_maps_slide_number_finding_to_matching_page(self) -> None:
+        write_json(self.run_dir / "quality_reports" / "draft_gate.json", {
+            "gate": "draft",
+            "findings": [
+                {"finding_id": "slide_002_p0", "severity": "P0", "page_id": "slide_002", "message": "P0 blocking"},
+            ],
+        })
+
+        result = execute_batch_review_action(self.run_dir, "approve")
+
+        self.assertEqual(result["applied_pages"], ["beat_001"])
+        self.assertEqual(result["blocked_pages"][0]["page_id"], "beat_002")
+        self.assertIn("P0", result["blocked_pages"][0]["reason"])
+
 
 class WorkbenchAPITest(unittest.TestCase):
     """Test via HTTP handler."""
