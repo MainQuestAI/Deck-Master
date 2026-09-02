@@ -763,6 +763,7 @@ def test_production_records_storyline_confirmation_without_host_key(tmp_path: Pa
     assert "risk route" in lock["enrichment"]["so_what"]
     prompt = read_json(run / "high_density_build/prompts/P001.blueprint_prompt.json")
     assert context["management_conclusion"] in prompt["prompt_text"]
+    assert "--source-type explicit_import --approved-by <approver>" in resumed["next_action"]["import_command"]
 
 
 def test_storyline_selection_does_not_rewrite_agent_content(tmp_path: Path) -> None:

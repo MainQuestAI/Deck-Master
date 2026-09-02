@@ -269,7 +269,7 @@ def _waiting(
     if stage == "style_lock" and kind == "awaiting_user_decision":
         next_action["approval_command"] = f"deck-master build select-style --run-dir {root} --style-id <style_id> --approver <approver>"
     if stage == "blueprint" and kind in {"agent_imagegen", "agent_imagegen_repair"}:
-        next_action["import_command"] = f"deck-master build import-provider-result --run-dir {root} --page-id {page_id or '<page_id>'} --input <blueprint.png> --source-type explicit_import"
+        next_action["import_command"] = f"deck-master build import-provider-result --run-dir {root} --page-id {page_id or '<page_id>'} --input <blueprint.png> --source-type explicit_import --approved-by <approver>"
         next_action["approval_command"] = f"deck-master build approve-blueprint --run-dir {root} --page-id {page_id or '<page_id>'} --approver <approver>"
     if page_id and stage in {"blueprint", "page_scene", "svg", "visual_review"}:
         next_action.update(_stage_batch_details(root, stage, page_id, reason))
