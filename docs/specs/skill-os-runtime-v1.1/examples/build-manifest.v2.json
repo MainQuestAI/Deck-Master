@@ -16,6 +16,7 @@
     {
       "page_id": "page_001",
       "order": 1,
+      "page_role": "content",
       "page_package_path": "page_packages/page_001.json",
       "page_package_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
       "customer_payload_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",

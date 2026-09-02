@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://deck-master.local/contracts/build-manifest.v2.schema.json",
-  "title": "Deck Build Manifest v2",
+  "$id": "https://deck-master.local/contracts/build-manifest-legacy.v2.schema.json",
+  "title": "Legacy Deck Build Manifest v2",
   "type": "object",
   "required": [
     "schema_version",
@@ -30,6 +30,25 @@
         "failed",
         "stale"
       ]
+    },
+    "builder_profile": {
+      "enum": [
+        "standard",
+        "high_density"
+      ],
+      "default": "standard"
+    },
+    "run_mode": {
+      "enum": [
+        "production",
+        "fixture",
+        "dev",
+        "benchmark"
+      ]
+    },
+    "high_density_manifest": {
+      "type": "string",
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+"
     },
     "source_fingerprint": {
       "type": "string",
@@ -95,7 +114,6 @@
       "required": [
         "page_id",
         "order",
-        "page_role",
         "page_package_path",
         "page_package_sha256",
         "customer_payload_sha256",
@@ -108,9 +126,6 @@
         "order": {
           "type": "integer",
           "minimum": 1
-        },
-        "page_role": {
-          "enum": ["cover", "section", "section_divider", "divider", "toc", "agenda", "visual", "visual_divider", "image", "image_page", "dense_narrative", "content", "framework", "architecture", "comparison", "data_story", "process", "table"]
         },
         "page_package_path": {
           "type": "string"
@@ -140,5 +155,35 @@
       "additionalProperties": false
     }
   },
+  "allOf": [
+    {
+      "if": {
+        "required": ["high_density_manifest"]
+      },
+      "then": {
+        "required": ["builder_profile"],
+        "properties": {
+          "builder_profile": {"const": "high_density"}
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "builder_profile": {"const": "high_density"},
+          "status": {"const": "completed"}
+        },
+        "required": ["builder_profile", "status"]
+      },
+      "then": {"required": ["high_density_manifest"]}
+    },
+    {
+      "if": {
+        "properties": {"builder_profile": {"const": "standard"}},
+        "required": ["builder_profile"]
+      },
+      "then": {"not": {"required": ["high_density_manifest"]}}
+    }
+  ],
   "additionalProperties": false
 }

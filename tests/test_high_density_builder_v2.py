@@ -429,6 +429,40 @@ def test_production_requires_approved_style_lock(tmp_path: Path) -> None:
     assert "build select-style" in watched["next_action"]["approval_command"]
 
 
+def test_legacy_build_manifest_is_refreshed_on_resume(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path)
+    _blueprint(run)
+    prepare_high_density(run)
+    manifest_path = run / "build" / "build_manifest.json"
+    legacy_manifest = read_json(manifest_path)
+    for page in legacy_manifest["pages"]:
+        page.pop("page_role", None)
+    write_json(manifest_path, legacy_manifest)
+
+    result = run_high_density(run)
+
+    assert result["status"] == "completed"
+    refreshed = read_json(manifest_path)
+    assert refreshed["pages"][0]["page_role"] == FIXTURE["pages"][0]["page_class"]
+
+
+def test_legacy_build_manifest_is_loadable_for_retry(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path)
+    _blueprint(run)
+    prepare_high_density(run)
+    manifest_path = run / "build" / "build_manifest.json"
+    legacy_manifest = read_json(manifest_path)
+    for page in legacy_manifest["pages"]:
+        page.pop("page_role", None)
+    write_json(manifest_path, legacy_manifest)
+
+    result = retry_high_density(run, page_id="P001", stage="handback")
+
+    assert result["status"] == "completed"
+    refreshed = read_json(manifest_path)
+    assert refreshed["pages"][0]["page_role"] == FIXTURE["pages"][0]["page_class"]
+
+
 def test_build_cli_exposes_style_blueprint_and_provider_commands() -> None:
     import subprocess
 

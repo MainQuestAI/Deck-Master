@@ -36,6 +36,7 @@ SCHEMA_FILES = {
 }
 
 LEGACY_SCHEMA_FILES = {
+    "build_manifest": "build-manifest-legacy.v2.schema.json",
     "provider_host_receipt": "provider-host-receipt-legacy.v1.schema.json",
 }
 
@@ -116,6 +117,15 @@ def safe_run_path(root: Path, value: str) -> Path:
     return resolved
 
 
+def _is_legacy_build_manifest(document: dict[str, Any]) -> bool:
+    if document.get("schema_version") != "deck_build_manifest.v2":
+        return False
+    pages = document.get("pages")
+    return isinstance(pages, list) and bool(pages) and all(
+        isinstance(page, dict) and "page_role" not in page for page in pages
+    )
+
+
 def validate_document(kind: str, document: dict[str, Any]) -> dict[str, Any]:
     schema_name = SCHEMA_FILES.get(kind)
     schema_version = document.get("schema_version")
@@ -123,12 +133,17 @@ def validate_document(kind: str, document: dict[str, Any]) -> dict[str, Any]:
         # v1 artifacts remain readable for migration/diagnostics. Production
         # writers and handback validation always call the v2 schema above.
         schema_name = PREVIEW_SCHEMA_FILES[kind]
-    if kind in LEGACY_SCHEMA_FILES and not any(
+    if kind == "provider_host_receipt" and not any(
         field in document for field in ("imported_at", "declared_provider", "approved_by")
     ):
         # Provider host receipts kept the v1 version while their provenance
         # fields were extended. Preserve signed receipts written before that
         # extension without weakening validation for new receipts.
+        schema_name = LEGACY_SCHEMA_FILES[kind]
+    if kind == "build_manifest" and _is_legacy_build_manifest(document):
+        # Build Manifest v2 gained page_role after older runs had already
+        # persisted manifests. Validate those files with the legacy shape;
+        # the high-density resume path refreshes them before writing again.
         schema_name = LEGACY_SCHEMA_FILES[kind]
     if not schema_name:
         raise ContractError(f"unknown contract kind: {kind}")
