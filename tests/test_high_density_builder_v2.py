@@ -600,6 +600,31 @@ def test_mixed_structural_and_content_mbb_chain_preserves_page_specific_evidence
     assert lock["enrichment"]["storyline_context"]["evidence_refs"] == []
 
 
+def test_evidenced_structural_page_preserves_refs_for_derived_claims(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path, page_count=1)
+    cover = _package(run.name, FIXTURE["pages"][0])
+    cover["visual_spec"]["page_type"] = "cover"
+    cover["customer_visible"]["body_blocks"] = []
+    content = _package(run.name, FIXTURE["pages"][1])
+    PagePackageIndex(run).write(cover)
+    PagePackageIndex(run).write(content)
+    packages = load_page_packages(run, expected_run_id=run.name)
+
+    pending = build_mbb_plan(packages, run_id=run.name)
+    write_mbb_plan(run, pending)
+    selected = select_mbb_storyline(run, pending["selection"]["recommended_storyline_id"], selected_by="test")
+    enriched = enrich_selected_mbb_plan(selected, packages)
+    write_mbb_plan(run, enriched)
+    seal_mbb_plan(run)
+    loaded = load_mbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=True)
+
+    cover_plan = next(page for page in loaded["pages"] if page["page_id"] == cover["page_id"])
+    assert cover_plan["evidence_refs"] == ["E001"]
+    assert cover_plan["derived_claims"][0]["evidence_refs"] == ["E001"]
+    lock = build_content_lock(cover, cover_plan, mbb_plan_sha256=loaded["mbb_plan_sha256"])
+    assert lock["enrichment"]["derived_claims"][0]["evidence_refs"] == ["E001"]
+
+
 def test_structural_claim_exemption_is_limited_to_metadata() -> None:
     payload = {
         "role": "cover",

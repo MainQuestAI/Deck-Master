@@ -837,7 +837,11 @@ def _page_plan(
     analysis = source_result["analysis"]
     evidence = source_result["evidence"]
     structural_page = bool(analysis.get("structural_page"))
-    evidence_refs = [] if structural_page else [str(item["evidence_id"]) for item in evidence]
+    evidence_refs = [str(item["evidence_id"]) for item in evidence]
+    # Structural pages may omit evidence when they only carry layout metadata,
+    # but source claim bindings still need their supporting refs preserved.
+    if structural_page and not package.get("claim_bindings"):
+        evidence_refs = []
     quality_intent = safe_package.get("quality_intent") or {}
     title = str(visible.get("title") or package.get("page_id") or "page")
     conclusion = "" if structural_page else str(quality_intent.get("conclusion") or f"{title}: {storyline['management_conclusion']}")

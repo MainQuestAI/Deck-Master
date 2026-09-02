@@ -279,13 +279,13 @@
               "conclusion": {"const": ""},
               "supporting_arguments": {"maxItems": 0},
               "detailed_argument": {"const": ""},
-              "evidence_refs": {"maxItems": 0},
+              "evidence_refs": {"items": {"type": "string", "minLength": 1}},
               "caveat": {"maxItems": 0},
               "so_what": {"const": ""},
               "business_implication": {"const": ""},
               "handoff": {"const": ""},
               "storyline_context": {"properties": {"management_conclusion": {"const": ""}, "visual_potential": {"const": "structural layout"}, "page_handoff": {"const": ""}, "caveat": {"const": ""}, "evidence_refs": {"maxItems": 0}}},
-              "evidence_hierarchy": {"properties": {"primary": {"maxItems": 0}, "supporting": {"maxItems": 0}, "caveat": {"maxItems": 0}}},
+              "evidence_hierarchy": {"properties": {"primary": {"items": {"type": "string", "minLength": 1}}, "supporting": {"items": {"type": "string", "minLength": 1}}, "caveat": {"maxItems": 0}}},
               "chart_plan": {"properties": {"metric_refs": {"maxItems": 0}, "annotations": {"maxItems": 0}, "source_refs": {"maxItems": 0}}},
               "material_pool": {"properties": {"evidence_refs": {"maxItems": 0}, "numeric_values": {"maxItems": 0}, "comparisons": {"maxItems": 0}, "changes": {"maxItems": 0}, "annotations": {"maxItems": 0}, "storyline_page_handoff": {"const": ""}, "storyline_caveat": {"const": ""}}}
             }
