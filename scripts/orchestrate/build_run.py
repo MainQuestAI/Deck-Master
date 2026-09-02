@@ -9,6 +9,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from page_roles import page_role_with_warning
+
 PREVIEW_DIR = Path(__file__).resolve().parents[1] / "preview"
 sys.path.insert(0, str(PREVIEW_DIR))
 
@@ -86,6 +88,11 @@ def manifest_page(plan_path: Path, run_dir: Path, page: dict[str, Any], link_mod
         for key, value in page.items()
         if key not in {"preview_asset", "decision", "notes"}
     }
+    raw_page_role = page.get("page_role") or page.get("narrative_role") or page.get("role")
+    page_role, role_warning = page_role_with_warning(raw_page_role)
+    result["page_role"] = page_role
+    if role_warning:
+        result.setdefault("migration_warnings", []).append(role_warning)
     result["preview_path"] = f"links/{link_name}"
     result["decision"] = page.get("decision", "needs_review")
     result["notes"] = page.get("notes", "")

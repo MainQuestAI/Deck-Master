@@ -18,6 +18,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from page_roles import page_role_with_warning
+
 SCHEMA_VERSION = "deck_build_manifest.v2"
 
 # Whitelisted customer-safe fields the Builder is allowed to read from a page
@@ -43,6 +45,7 @@ CUSTOMER_WHITELIST = (
     "quality_intent",
     "provenance",
     "source_fingerprint",
+    "page_role",
 )
 
 REQUIRED_BACKEND_CONTRACTS = ("deck_page_package.v1",)
@@ -191,9 +194,17 @@ def build_manifest_v2(
     for pkg in sorted(packages, key=lambda p: p.get("order", 0)):
         payload = whitelist_project(pkg)
         assert_no_internal_in_payload(payload)  # defense-in-depth on the rendered payload
+        page_role, _role_warning = page_role_with_warning(
+            pkg.get("page_role")
+            or pkg.get("narrative_role")
+            or pkg.get("role")
+            or ((pkg.get("visual_spec") or {}).get("page_role") if isinstance(pkg.get("visual_spec"), dict) else "")
+            or ((pkg.get("visual_spec") or {}).get("page_type") if isinstance(pkg.get("visual_spec"), dict) else "")
+        )
         page_builds.append({
             "page_id": pkg["page_id"],
             "order": int(pkg.get("order", 0)),
+            "page_role": page_role,
             "page_package_path": f'page_packages/{pkg["page_id"]}.json',
             "page_package_sha256": package_sha256(pkg),
             "customer_payload_sha256": _sha_json(payload),

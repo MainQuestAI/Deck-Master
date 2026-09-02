@@ -227,6 +227,14 @@ def compute_final_readiness(
     blockers: list[dict[str, str]] = []
     warnings: list[str] = []
     quality_gates = _quality_gate_summary(root, artifact)
+    gate_policy = resolve_required_gates(
+        root,
+        artifact,
+        builder_profile="high_density" if high_density_completed else "",
+        output_profile="production_pptx" if str(artifact_rel).endswith(".pptx") else "",
+        run_mode=str(run_state.get("run_mode") or run_mode or ""),
+        include_non_required_blockers=True,
+    )
     stale_quality_gates = [gate for gate in quality_gates if not gate.get("current", True)]
     for gate in stale_quality_gates:
         warnings.append(f"Quality gate {gate.get('gate') or 'unknown'} is stale for the current artifact: {gate.get('stale_reason') or 'lineage mismatch'}.")
@@ -279,15 +287,8 @@ def compute_final_readiness(
 
     if not quality_gates:
         _add_blocker(blockers, "final_quality_gate_missing", "Quality gate report is missing.", severity="P1")
-    gate_policy = resolve_required_gates(
-        root,
-        artifact,
-        builder_profile="high_density" if high_density_completed else "",
-        output_profile="production_pptx" if str(artifact_rel).endswith(".pptx") else "",
-        run_mode=str(run_state.get("run_mode") or run_mode or ""),
-    )
-    if gate_policy.get("missing_gates"):
-        missing_text = ", ".join(str(gate) for gate in gate_policy.get("missing_gates") or [])
+    if gate_policy.get("missing_required_gates"):
+        missing_text = ", ".join(str(gate) for gate in gate_policy.get("missing_required_gates") or [])
         message = f"当前产物未检查：缺少当前有效质量门 {missing_text}。"
         if _is_fixture_policy(run_state):
             warnings.append(message)
@@ -328,30 +329,22 @@ def compute_final_readiness(
                 "最终文件包含内部制作语言或模板占位语，需要返修。",
             )
 
-    for gate in quality_gates:
-        if not gate.get("current", True):
-            continue
-        if gate.get("blocks_delivery") or str(gate.get("status") or "").lower() in {"rework_required", "failed", "blocked"}:
-            blocking_findings = [item for item in gate.get("blocking_findings", []) if isinstance(item, dict)]
-            p0_findings = [item for item in blocking_findings if str(item.get("severity") or "").upper() == "P0"]
-            p1_findings = [item for item in blocking_findings if str(item.get("severity") or "").upper() == "P1"]
-            if p0_findings:
-                _add_blocker(
-                    blockers,
-                    "final_quality_gate_blocked",
-                    f"Quality gate {gate.get('gate') or 'unknown'} blocks delivery.",
-                    severity="P0",
-                )
-                continue
-            if p1_findings and all(has_active_override(root, str(item.get("finding_id") or "")) for item in p1_findings):
-                warnings.append(f"Quality gate {gate.get('gate') or 'unknown'} has active P1 overrides.")
-                continue
-            _add_blocker(
-                blockers,
-                "final_quality_gate_blocked",
-                f"Quality gate {gate.get('gate') or 'unknown'} blocks delivery.",
-                severity="P1",
-            )
+    current_blockers = [item for item in gate_policy.get("current_blockers") or [] if isinstance(item, dict)]
+    overridden_p1 = [item for item in gate_policy.get("overridden_p1") or [] if isinstance(item, dict)]
+    if current_blockers:
+        p0_findings = [item for item in current_blockers if str(item.get("severity") or "").upper() == "P0"]
+        representative = (p0_findings or current_blockers)[0]
+        gate_name = str(representative.get("_gate_name") or "unknown")
+        message = str(representative.get("message") or f"Quality gate {gate_name} blocks delivery.")
+        _add_blocker(
+            blockers,
+            "final_quality_gate_blocked",
+            f"Quality gate {gate_name} blocks delivery: {message}",
+            severity="P0" if p0_findings else "P1",
+        )
+    for finding in overridden_p1:
+        gate_name = str(finding.get("_gate_name") or "unknown")
+        warnings.append(f"Quality gate {gate_name} has active P1 override for {finding.get('finding_id') or finding.get('code') or 'finding'}.")
 
     artifact_validation = (delivery_validation.get("lineage") or {}).get("artifact_validation") or {}
     artifact_manifest_validation = (delivery_validation.get("lineage") or {}).get("artifact_manifest_validation") or {}

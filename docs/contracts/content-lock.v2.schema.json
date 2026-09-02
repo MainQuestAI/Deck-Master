@@ -58,10 +58,10 @@
       "required": ["storyline_id", "management_conclusion", "visual_potential", "page_handoff", "caveat", "evidence_refs"],
       "properties": {
         "storyline_id": {"type": "string", "minLength": 1},
-        "management_conclusion": {"type": "string", "minLength": 1},
+        "management_conclusion": {"type": "string"},
         "visual_potential": {"type": "string", "minLength": 1},
-        "page_handoff": {"type": "string", "minLength": 1},
-        "caveat": {"type": "string", "minLength": 1},
+        "page_handoff": {"type": "string"},
+        "caveat": {"type": "string"},
         "evidence_refs": {"type": "array", "items": {"type": "string", "minLength": 1}}
       },
       "additionalProperties": false
@@ -76,13 +76,13 @@
         "storyline_context": {"$ref": "#/$defs/storylineContext"},
         "analysis": {"type": "object"},
         "evidence_ledger": {"type": "array", "items": {"type": "object"}},
-        "conclusion": {"type": "string", "minLength": 1},
+        "conclusion": {"type": "string"},
         "supporting_arguments": {"type": "array", "items": {"type": "string", "minLength": 1}},
-        "detailed_argument": {"type": "string", "minLength": 1},
+        "detailed_argument": {"type": "string"},
         "caveat": {"type": "array", "items": {"type": "string", "minLength": 1}},
-        "so_what": {"type": "string", "minLength": 1},
-        "business_implication": {"type": "string", "minLength": 1},
-        "handoff": {"type": "string", "minLength": 1},
+        "so_what": {"type": "string"},
+        "business_implication": {"type": "string"},
+        "handoff": {"type": "string"},
         "evidence_hierarchy": {"type": "object"},
         "evidence_assessment": {"type": "object"},
         "chart_plan": {"type": "object"},
@@ -93,7 +93,45 @@
         "component_plan": {"type": "array", "minItems": 1, "items": {"type": "object"}},
         "evidence_coverage": {"type": "object", "required": ["facts", "numeric_values", "derived_claims"], "properties": {"facts": {"type": "number", "minimum": 0, "maximum": 1}, "numeric_values": {"type": "number", "minimum": 0, "maximum": 1}, "derived_claims": {"type": "number", "minimum": 0, "maximum": 1}}, "additionalProperties": false}
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {"analysis": {"properties": {"structural_page": {"const": true}}, "required": ["structural_page"]}},
+            "required": ["analysis"]
+          },
+          "then": {
+            "properties": {
+              "conclusion": {"const": ""},
+              "supporting_arguments": {"maxItems": 0},
+              "detailed_argument": {"const": ""},
+              "caveat": {"maxItems": 0},
+              "so_what": {"const": ""},
+              "business_implication": {"const": ""},
+              "handoff": {"const": ""}
+              ,"storyline_context": {"properties": {"management_conclusion": {"const": ""}, "visual_potential": {"const": "structural layout"}, "page_handoff": {"const": ""}, "caveat": {"const": ""}, "evidence_refs": {"maxItems": 0}}}
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {"analysis": {"properties": {"structural_page": {"const": false}}, "required": ["structural_page"]}},
+            "required": ["analysis"]
+          },
+          "then": {
+            "properties": {
+              "conclusion": {"minLength": 1},
+              "supporting_arguments": {"minItems": 1},
+              "detailed_argument": {"minLength": 1},
+              "caveat": {"minItems": 1},
+              "so_what": {"minLength": 1},
+              "business_implication": {"minLength": 1},
+              "handoff": {"minLength": 1}
+              ,"storyline_context": {"properties": {"management_conclusion": {"minLength": 1}, "visual_potential": {"minLength": 1}, "page_handoff": {"minLength": 1}, "caveat": {"minLength": 1}, "evidence_refs": {"minItems": 1, "items": {"minLength": 1}}}}
+            }
+          }
+        }
+      ]
     },
     "claimBinding": {
       "type": "object",

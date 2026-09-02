@@ -114,6 +114,7 @@
       "required": [
         "page_id",
         "order",
+        "page_role",
         "page_package_path",
         "page_package_sha256",
         "customer_payload_sha256",
@@ -126,6 +127,9 @@
         "order": {
           "type": "integer",
           "minimum": 1
+        },
+        "page_role": {
+          "enum": ["cover", "section", "section_divider", "divider", "toc", "agenda", "visual", "visual_divider", "image", "image_page", "dense_narrative", "content", "framework", "architecture", "comparison", "data_story", "process", "table"]
         },
         "page_package_path": {
           "type": "string"

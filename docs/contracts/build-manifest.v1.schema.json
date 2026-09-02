@@ -89,6 +89,9 @@
           "type": "integer",
           "minimum": 1
         },
+        "page_role": {
+          "enum": ["cover", "section", "section_divider", "divider", "toc", "agenda", "visual", "visual_divider", "image", "image_page", "dense_narrative", "content", "framework", "architecture", "comparison", "data_story", "process", "table"]
+        },
         "title": {
           "type": "string"
         },

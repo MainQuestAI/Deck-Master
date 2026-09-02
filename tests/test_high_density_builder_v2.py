@@ -37,6 +37,7 @@ from high_density.content import (
     seal_mbb_plan,
     select_mbb_storyline,
     write_mbb_plan,
+    _storyline_context,
 )
 from high_density.contracts import ContractError, assert_valid, read_json, sha256_file, sha256_json, write_json
 from high_density.integrity import sign_runtime_payload
@@ -487,6 +488,65 @@ def test_structural_page_allows_low_density_without_business_evidence() -> None:
 
     assert result["analysis"]["structural_page"] is True
     assert result["analysis"]["page_role"] == "cover"
+    assert result["enrichment"]["conclusion"] == ""
+    assert result["enrichment"]["business_implication"] == ""
+    assert result["enrichment"]["handoff"] == ""
+    assert result["enrichment"]["evidence_assessment"]["synthesis"].startswith("Structural page metadata")
+
+
+def test_structural_storyline_context_does_not_project_business_claims() -> None:
+    context = _storyline_context(
+        {
+            "storyline_id": "storyline.decision",
+            "management_conclusion": "Choose the growth route.",
+            "visual_potential": "Evidence map",
+            "page_handoff": "Move to the next proof point.",
+            "caveat": "Validate the source period.",
+            "evidence_refs": ["E001"],
+        },
+        structural_page=True,
+    )
+
+    assert context == {
+        "storyline_id": "storyline.decision",
+        "management_conclusion": "",
+        "visual_potential": "structural layout",
+        "page_handoff": "",
+        "caveat": "",
+        "evidence_refs": [],
+    }
+
+
+def test_mixed_structural_and_content_mbb_chain_preserves_page_specific_evidence_rules(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path, page_count=1)
+    cover = _package(run.name, FIXTURE["pages"][0])
+    cover["visual_spec"]["page_type"] = "cover"
+    cover["customer_visible"]["body_blocks"] = []
+    cover["customer_visible"]["callouts"] = []
+    cover["evidence_bindings"] = []
+    cover["claim_bindings"] = []
+    content = _package(run.name, FIXTURE["pages"][1])
+    PagePackageIndex(run).write(cover)
+    PagePackageIndex(run).write(content)
+    packages = [cover, content]
+
+    pending = build_mbb_plan(packages, run_id=run.name)
+    write_mbb_plan(run, pending)
+    selected = select_mbb_storyline(run, pending["selection"]["recommended_storyline_id"], selected_by="test")
+    enriched = enrich_selected_mbb_plan(selected, packages)
+    write_mbb_plan(run, enriched)
+    sealed = seal_mbb_plan(run)
+    loaded = load_mbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=True)
+
+    cover_plan = next(page for page in loaded["pages"] if page["page_id"] == cover["page_id"])
+    content_plan = next(page for page in loaded["pages"] if page["page_id"] == content["page_id"])
+    assert cover_plan["storyline_context"]["management_conclusion"] == ""
+    assert cover_plan["storyline_context"]["page_handoff"] == ""
+    assert cover_plan["evidence_refs"] == []
+    assert content_plan["evidence_refs"]
+    lock = build_content_lock(cover, cover_plan, mbb_plan_sha256=sealed["mbb_plan_sha256"])
+    assert lock["enrichment"]["business_implication"] == ""
+    assert lock["enrichment"]["storyline_context"]["evidence_refs"] == []
 
 
 def test_structural_claim_exemption_is_limited_to_metadata() -> None:

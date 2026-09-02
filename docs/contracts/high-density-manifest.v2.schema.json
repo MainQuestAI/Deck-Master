@@ -12,7 +12,19 @@
     "mbb_plan": {"type": "object"},
     "style_lock": {"type": "object"},
     "status": {"enum": ["building", "completed", "blocked", "stale"]},
-    "pages": {"type": "array", "items": {"type": "object"}},
+    "pages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["page_id", "order", "page_role"],
+        "properties": {
+          "page_id": {"type": "string", "minLength": 1},
+          "order": {"type": "integer", "minimum": 1},
+          "page_role": {"enum": ["cover", "section", "section_divider", "divider", "toc", "agenda", "visual", "visual_divider", "image", "image_page", "dense_narrative", "content", "framework", "architecture", "comparison", "data_story", "process", "table"]}
+        },
+        "additionalProperties": true
+      }
+    },
     "created_at": {"type": "string"},
     "completed_at": {"type": "string"}
   },

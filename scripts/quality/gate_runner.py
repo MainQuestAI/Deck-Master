@@ -6,7 +6,7 @@ from typing import Any
 
 from quality.customer_visible_safety import DEFAULT_FORBIDDEN_TERMS
 from quality.pptx_audit import audit_pptx
-from quality.pptx_audit import load_page_roles
+from quality.pptx_audit import load_page_roles, requires_page_role_contract
 from quality.gate_freshness import artifact_identity
 from quality.rubric import (
     DIMENSION_LABELS,
@@ -183,6 +183,7 @@ def evaluate_render_gate(
         expected_pages=expected_pages,
         forbidden_terms=forbidden_terms,
         page_roles=page_roles,
+        strict_page_roles=requires_page_role_contract(run_dir),
     )
     scorecard = default_scorecard(4)
     findings: list[dict[str, Any]] = []
@@ -271,6 +272,7 @@ def evaluate_delivery_gate(
         expected_pages=expected_pages,
         forbidden_terms=terms,
         page_roles=page_roles,
+        strict_page_roles=requires_page_role_contract(run_dir),
     )
     scorecard = default_scorecard(4)
     findings: list[dict[str, Any]] = []

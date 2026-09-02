@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from quality.gate_freshness import report_currentity
+from quality.overrides import has_active_override
 
 PASSING_GATE_STATUSES = {"pass", "conditional_pass", "pass_with_warning", "pass_with_override"}
 BLOCKING_GATE_STATUSES = {"rework_required", "failed", "blocked"}
@@ -67,6 +68,66 @@ def _report_findings(report: dict[str, Any]) -> list[dict[str, Any]]:
     return findings
 
 
+def _finding_id(finding: dict[str, Any]) -> str:
+    return str(
+        finding.get("finding_id")
+        or finding.get("id")
+        or finding.get("code")
+        or finding.get("message")
+        or ""
+    )
+
+
+def _severity(finding: dict[str, Any]) -> str:
+    return str(finding.get("severity") or "P2").strip().upper()
+
+
+def current_artifact(root: Path | str) -> Path | None:
+    """Resolve the artifact selected by the run's current delivery lineage."""
+    run_dir = Path(root).expanduser().resolve()
+    candidates = (
+        (run_dir / "delivery" / "final_version_lineage.json", ("artifact_run_relative", "artifact_path", "artifact")),
+        (run_dir / "delivery" / "final_readiness.json", ("final_artifact",)),
+        (run_dir / "render_results" / "render_result.json", ("artifact_path", "artifact")),
+    )
+    for path, keys in candidates:
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if not isinstance(payload, dict):
+            continue
+        raw = ""
+        for key in keys:
+            value = payload.get(key)
+            if key == "final_artifact" and isinstance(value, dict):
+                raw = str(value.get("path") or value.get("absolute_path") or "")
+            elif value:
+                raw = str(value)
+            if raw:
+                break
+        if raw:
+            artifact = Path(raw).expanduser()
+            if not artifact.is_absolute():
+                artifact = run_dir / artifact
+            return artifact.resolve()
+    high_density_artifact = run_dir / "high_density_build" / "pptx" / "deck_high_density.pptx"
+    return high_density_artifact if high_density_artifact.exists() else None
+
+
+def _blocking_candidates(report: dict[str, Any], gate: str) -> list[dict[str, Any]]:
+    findings = _report_findings(report)
+    candidates = [item for item in findings if _severity(item) in {"P0", "P1"}]
+    if _report_blocks(report) and not candidates:
+        candidates = [{
+            "finding_id": f"{gate}_gate_blocking",
+            "severity": "P1",
+            "message": f"{gate} gate blocks delivery.",
+            "_gate_name": gate,
+        }]
+    return candidates
+
+
 def resolve_required_gates(
     root: Path | str,
     artifact: Path | str | None,
@@ -75,6 +136,7 @@ def resolve_required_gates(
     output_profile: str = "",
     run_mode: str = "",
     reports: list[dict[str, Any]] | None = None,
+    include_non_required_blockers: bool = False,
 ) -> dict[str, Any]:
     run_dir = Path(root).expanduser().resolve()
     required = required_gate_names(
@@ -96,22 +158,25 @@ def resolve_required_gates(
         }
         for gate in required
     }
-    blocking_findings: list[dict[str, Any]] = []
-    stale_gates: list[dict[str, Any]] = []
-    unbound_gates: list[dict[str, Any]] = []
+    current_blockers: list[dict[str, Any]] = []
+    overridden_p1: list[dict[str, Any]] = []
+    stale_reports: list[dict[str, Any]] = []
+    unbound_reports: list[dict[str, Any]] = []
+    current_candidates_by_gate: dict[str, list[dict[str, Any]]] = {}
+    current_blockers_by_gate: dict[str, list[dict[str, Any]]] = {}
 
     for report in available:
         gate = normalize_gate_name(str(report.get("gate") or report.get("_gate_name") or ""))
         if not gate:
             continue
-        currentity = report_currentity(run_dir, {**report, "gate": gate}, artifact, artifact_bound=(gate in required))
+        currentity = report_currentity(run_dir, {**report, "gate": gate}, artifact)
         currentity_status = str(currentity.get("status") or ("current" if currentity.get("current") else "stale"))
         status = normalize_gate_name(str(report.get("status") or ""))
         blocks = _report_blocks(report)
         summary = {
             "gate": gate,
             "required": gate in required,
-            "satisfied": bool(currentity.get("current")) and status in PASSING_GATE_STATUSES and not blocks,
+            "satisfied": False,
             "currentity": currentity_status,
             "status": status,
             "blocks_delivery": blocks,
@@ -121,20 +186,64 @@ def resolve_required_gates(
         if gate in gate_status and gate_status[gate]["currentity"] in {"missing", "stale", "unbound"}:
             gate_status[gate] = summary
         if currentity_status == "stale":
-            stale_gates.append(summary)
+            stale_reports.append(summary)
         elif currentity_status == "unbound":
-            unbound_gates.append(summary)
-        elif currentity.get("current") and blocks:
-            blocking_findings.extend(_report_findings(report))
+            unbound_reports.append(summary)
+        elif currentity.get("current"):
+            should_collect = gate in required or include_non_required_blockers
+            if should_collect:
+                candidates = _blocking_candidates(report, gate)
+                current_candidates_by_gate.setdefault(gate, []).extend(candidates)
+                for finding in candidates:
+                    item = {**finding, "_gate_name": gate}
+                    severity = _severity(item)
+                    if severity == "P0":
+                        current_blockers.append(item)
+                        current_blockers_by_gate.setdefault(gate, []).append(item)
+                    elif severity == "P1":
+                        finding_id = _finding_id(item)
+                        if finding_id and has_active_override(run_dir, finding_id):
+                            overridden_p1.append(item)
+                        else:
+                            current_blockers.append(item)
+                            current_blockers_by_gate.setdefault(gate, []).append(item)
+
+        if gate in gate_status and currentity.get("current"):
+            candidates = current_candidates_by_gate.get(gate, [])
+            unresolved = current_blockers_by_gate.get(gate, [])
+            all_candidates_overridden_p1 = bool(candidates) and all(
+                _severity(item) == "P1" and _finding_id(item) and has_active_override(run_dir, _finding_id(item))
+                for item in candidates
+            )
+            gate_status[gate]["satisfied"] = (
+                status in PASSING_GATE_STATUSES and not unresolved
+            ) or all_candidates_overridden_p1
 
     missing = [gate for gate, summary in gate_status.items() if not summary.get("satisfied")]
+    required_gate_satisfied = not missing
+    # A gate can carry a blocking status even when its report has no findings.
+    # The synthetic finding above keeps that status visible to all consumers.
+    satisfied = required_gate_satisfied and not current_blockers
+    if not required_gate_satisfied:
+        recommended_action = "run_required_quality_gate"
+    elif current_blockers:
+        recommended_action = "repair_current_quality_findings"
+    else:
+        recommended_action = "final_readiness"
     return {
         "required_gates": required,
         "gate_status": list(gate_status.values()),
         "current_pass_gates": [gate for gate, summary in gate_status.items() if summary.get("satisfied")],
         "missing_gates": missing,
-        "stale_gates": stale_gates,
-        "unbound_gates": unbound_gates,
-        "blocking_findings": blocking_findings,
-        "satisfied": not missing and not blocking_findings,
+        "missing_required_gates": missing,
+        "stale_gates": stale_reports,
+        "unbound_gates": unbound_reports,
+        "stale_reports": stale_reports,
+        "unbound_reports": unbound_reports,
+        "blocking_findings": current_blockers,
+        "current_blockers": current_blockers,
+        "overridden_p1": overridden_p1,
+        "required_gate_satisfied": required_gate_satisfied,
+        "recommended_action": recommended_action,
+        "satisfied": satisfied,
     }

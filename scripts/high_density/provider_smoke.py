@@ -134,7 +134,12 @@ def build_provider_smoke_evidence(
     if review.get("visual_status") != "pass" or review.get("verdict") != "pass":
         raise ProviderSmokeError(f"visual review has not passed on page {selected_page_id}")
     try:
-        load_visual_review(root, selected_page_id)
+        load_visual_review(
+            root,
+            selected_page_id,
+            review_depth="independent_main",
+            receipt_policy="local_traceable",
+        )
     except ContractError as exc:
         raise ProviderSmokeError(f"independent visual review evidence has not passed on page {selected_page_id}: {exc}") from exc
     review_receipt = main_review_receipt_path(root, selected_page_id)

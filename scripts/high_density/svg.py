@@ -17,6 +17,7 @@ from xml.etree import ElementTree
 from .blueprint import load_blueprint_manifest
 from .contracts import ContractError, assert_v2, read_json, safe_run_path, sha256_file, sha256_json, utc_now, write_json
 from .integrity import sign_review_attestation, sign_runtime_payload, verify_review_attestation, verify_runtime_payload
+from .review_policy import load_review_policy, resolve_review_policy
 from .scene import load_scene
 from .svg_paint import SvgPaintError, parse_node_paint, parse_svg_paint
 from .svg_native import SvgNativeError, format_svg_native_error, parse_svg_native, svg_recovery_command
@@ -1039,8 +1040,10 @@ def record_visual_self_review(root: Path, page_id: str, *, reviewer_id: str) -> 
     main_review["self_review_sha256"] = sha256_json(self_review)
     review["self_review"] = self_review
     review["main_review"] = main_review
-    review["visual_status"] = "needs_review"
-    review["verdict"] = "needs_review"
+    # Producer-only policy can complete from this evidence. Independent-main
+    # policy still observes the pending main review on the next load.
+    review["visual_status"] = "pass"
+    review["verdict"] = "pass"
     assert_v2("visual_review", review)
     return write_json(review_path(root, page_id), review)
 
@@ -1072,11 +1075,19 @@ def record_visual_main_review(root: Path, page_id: str, *, reviewer_id: str) -> 
         review = read_json(review_path(root, page_id))
     elif str(main_review.get("reviewer_id") or "") != str(reviewer_id):
         raise SvgVisualError(f"main visual reviewer_id does not match the attested reviewer on page {page_id}", page_id=page_id)
-    load_visual_review(root, page_id, require_external_receipt=False)
+    load_visual_review(root, page_id, review_depth="producer_only", receipt_policy="local_traceable")
     payload = _main_review_receipt_payload(review)
-    try:
-        integrity = sign_review_attestation(payload)
-    except ContractError:
+    policy = load_review_policy(root)
+    if policy["receipt_policy"] == "external_signed":
+        try:
+            integrity = sign_review_attestation(payload)
+        except ContractError as exc:
+            raise SvgVisualError(
+                f"external main visual review attestation cannot be issued on page {page_id}: {exc}",
+                page_id=page_id,
+                code="HD_VISUAL_REVIEW_ATTESTATION_REQUIRED",
+            ) from exc
+    else:
         integrity = sign_runtime_payload("visual_main_review_local_receipt.v1", payload)
     receipt = {**payload, "integrity": integrity}
     assert_v2("visual_main_review_receipt", receipt)
@@ -1194,16 +1205,41 @@ def _metrics_projection(metrics: dict[str, Any]) -> dict[str, Any]:
     return {key: metrics.get(key) for key in ("schema_version", "comparison", "inputs", "thresholds", "values", "coverage", "geometry", "object_checks", "findings", "status")}
 
 
-def load_visual_review(root: Path, page_id: str, *, require_external_receipt: bool = False) -> dict[str, Any]:
+def load_visual_review(
+    root: Path,
+    page_id: str,
+    *,
+    require_external_receipt: bool = False,
+    review_depth: str = "",
+    receipt_policy: str = "",
+) -> dict[str, Any]:
+    policy = resolve_review_policy(
+        {
+            "review_depth": review_depth,
+            "receipt_policy": receipt_policy,
+        }
+    )
+    if require_external_receipt:
+        policy = {**policy, "review_depth": "independent_main", "receipt_policy": "external_signed"}
+    require_main_review = policy["review_depth"] == "independent_main"
     review = read_json(review_path(root, page_id))
     if review.get("schema_version") != "deck_visual_review.v2" or review.get("page_id") != page_id:
         raise SvgVisualError(f"visual review contract is invalid on page {page_id}", page_id=page_id)
     assert_v2("visual_review", review)
     _validate_review_lineage(review, page_id)
-    if review.get("visual_status") != "pass" or review.get("verdict") != "pass" or review.get("unresolved_issues"):
-        raise SvgVisualError(f"visual review has not passed on page {page_id}", page_id=page_id)
-    if str((review.get("self_review") or {}).get("status") or "") != "pass" or str((review.get("main_review") or {}).get("status") or "") != "pass":
-        raise SvgVisualError(f"visual review requires passing self and main review evidence on page {page_id}", page_id=page_id)
+    self_status = str((review.get("self_review") or {}).get("status") or "")
+    main_status = str((review.get("main_review") or {}).get("status") or "")
+    if review.get("unresolved_issues"):
+        raise SvgVisualError(f"visual review has unresolved issues on page {page_id}", page_id=page_id)
+    if self_status != "pass":
+        raise SvgVisualError(f"visual review requires passing producer self-review evidence on page {page_id}", page_id=page_id)
+    if main_status == "failed" or main_status not in {"pass", "pending"}:
+        raise SvgVisualError(f"visual review main review evidence is invalid on page {page_id}", page_id=page_id)
+    if require_main_review and main_status != "pass":
+        raise SvgVisualError(f"visual review requires passing independent main review evidence on page {page_id}", page_id=page_id)
+    if review.get("visual_status") != "pass" or review.get("verdict") != "pass":
+        if not (not require_main_review and main_status == "pending" and review.get("visual_status") == "needs_review" and review.get("verdict") == "needs_review"):
+            raise SvgVisualError(f"visual review has not passed on page {page_id}", page_id=page_id)
     try:
         metrics_file = safe_run_path(root, str(review.get("metrics_ref") or ""))
     except ContractError as exc:
@@ -1265,11 +1301,17 @@ def load_visual_review(root: Path, page_id: str, *, require_external_receipt: bo
     values = computed.get("values") or {}
     if float(values.get("text_masked_ssim") or 0) < 0.92 or float(values.get("bbox_max_delta_px") or 0) > 2.0:
         raise SvgVisualError(f"visual review fidelity gate failed on page {page_id}", page_id=page_id)
-    if _run_mode(root) in {"production", "benchmark"}:
+    if _run_mode(root) in {"production", "benchmark"} and require_main_review:
         receipt_path = main_review_receipt_path(root, page_id)
-        if require_external_receipt:
+        if policy["receipt_policy"] == "external_signed":
             _load_main_review_receipt(root, page_id, review, require_external=True)
-        elif receipt_path.exists():
+        elif policy["receipt_policy"] == "local_traceable":
+            if not receipt_path.exists():
+                raise SvgVisualError(
+                    f"local main visual review receipt is required on page {page_id}",
+                    page_id=page_id,
+                    code="HD_VISUAL_REVIEW_ATTESTATION_REQUIRED",
+                )
             _load_main_review_receipt(root, page_id, review)
     return review
 

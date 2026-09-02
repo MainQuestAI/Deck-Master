@@ -8,6 +8,7 @@ from typing import Any
 from runtime.events import append_event
 from runtime.run_state import REQUEST_NAME, read_json
 from sourcing.reader import canonicalize_sourcing_plan
+from page_roles import page_role_with_warning
 
 ORCHESTRATE_DIR = Path(__file__).resolve().parent
 if str(ORCHESTRATE_DIR) not in sys.path:
@@ -221,6 +222,8 @@ def page_for_decision(run_dir: Path, decision: dict[str, Any], generation_tasks:
                 task = candidate
                 break
     source_decision = _source_decision(decision)
+    raw_page_role = decision.get("page_role") or decision.get("role") or decision.get("narrative_role")
+    page_role, role_warning = page_role_with_warning(raw_page_role)
     candidate_origin = str(selected.get("candidate_origin") or decision.get("candidate_origin") or "none")
     library_source = str(decision.get("library_source") or candidate_origin)
     page = {
@@ -234,7 +237,8 @@ def page_for_decision(run_dir: Path, decision: dict[str, Any], generation_tasks:
         "candidate_origin": candidate_origin,
         "source_decision": source_decision,
         "preview_asset": preview_asset_for(run_dir, decision),
-        "narrative_role": decision.get("role") or "",
+        "narrative_role": decision.get("role") or decision.get("narrative_role") or "",
+        "page_role": page_role,
         "decision_reason": decision.get("reason", ""),
         "reuse_reason": decision.get("reason", ""),
         "confidence": decision.get("confidence", 0),
@@ -254,6 +258,8 @@ def page_for_decision(run_dir: Path, decision: dict[str, Any], generation_tasks:
         "decision": "needs_review",
         "notes": "",
     }
+    if role_warning:
+        page["migration_warnings"] = [role_warning]
     return page
 
 

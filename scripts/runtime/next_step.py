@@ -116,7 +116,7 @@ def _required_gate_policy(root: Path, artifact: Path, page_count: int, run_mode:
 
 
 def _next_quality_gate_command(root: Path, artifact: Path, page_count: int, policy: dict[str, Any]) -> str:
-    missing = [str(gate) for gate in policy.get("missing_gates") or []]
+    missing = [str(gate) for gate in policy.get("missing_required_gates") or policy.get("missing_gates") or []]
     if "render" in missing:
         gate = "render"
     elif "delivery" in missing or "customer_visible_safety" in missing:
@@ -162,7 +162,7 @@ def resolve_next_step(
                 artifact = _high_density_artifact(root)
                 request_run_mode = str((read_json(root / REQUEST_NAME).get("run_mode") if (root / REQUEST_NAME).exists() else "") or run_mode or "")
                 gate_policy = _required_gate_policy(root, artifact, page_count, request_run_mode)
-                if artifact.exists() and gate_policy.get("satisfied"):
+                if artifact.exists() and gate_policy.get("required_gate_satisfied") and not gate_policy.get("current_blockers"):
                     next_command = f"deck-master final-readiness --run-dir {root} --artifact {artifact} --expected-pages {page_count}"
                 else:
                     next_command = _next_quality_gate_command(root, artifact, page_count, gate_policy)

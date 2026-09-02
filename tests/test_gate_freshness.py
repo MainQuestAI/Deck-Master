@@ -11,6 +11,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from quality.gate_freshness import artifact_identity, report_currentity
 from quality.gate_policy import resolve_required_gates
+from quality.overrides import create_override
 
 
 class GateFreshnessTests(unittest.TestCase):
@@ -31,8 +32,42 @@ class GateFreshnessTests(unittest.TestCase):
         )
 
         self.assertFalse(result["current"])
+        self.assertEqual("unbound", result["status"])
+        self.assertEqual("artifact SHA-256 binding is missing", result["reason"])
+
+    def test_path_only_binding_is_unbound_even_when_path_matches(self) -> None:
+        result = report_currentity(
+            self.run_dir,
+            {"gate": "render", "artifact_path": "build/deck.pptx"},
+            self.artifact,
+        )
+
+        self.assertFalse(result["current"])
+        self.assertEqual("unbound", result["status"])
+
+    def test_path_only_binding_is_unbound_when_path_is_wrong(self) -> None:
+        result = report_currentity(
+            self.run_dir,
+            {"gate": "render", "artifact_path": "build/old.pptx"},
+            self.artifact,
+        )
+
+        self.assertFalse(result["current"])
+        self.assertEqual("unbound", result["status"])
+
+    def test_wrong_sha_binding_is_stale(self) -> None:
+        result = report_currentity(
+            self.run_dir,
+            {
+                "gate": "render",
+                "artifact_path": "build/deck.pptx",
+                "artifact_sha256": "0" * 64,
+            },
+            self.artifact,
+        )
+
+        self.assertFalse(result["current"])
         self.assertEqual("stale", result["status"])
-        self.assertEqual("artifact is stale", result["reason"])
 
     def test_artifact_bound_gate_without_identity_is_not_current(self) -> None:
         result = report_currentity(self.run_dir, {"gate": "delivery", "status": "pass"}, self.artifact)
@@ -68,6 +103,25 @@ class GateFreshnessTests(unittest.TestCase):
         self.assertIn("render", result["missing_gates"])
         self.assertEqual("unbound", result["gate_status"][0]["currentity"])
 
+    def test_unbound_and_stale_findings_do_not_block_current_artifact(self) -> None:
+        result = resolve_required_gates(
+            self.run_dir,
+            self.artifact,
+            builder_profile="high_density",
+            output_profile="production_pptx",
+            run_mode="production",
+            reports=[
+                {"gate": "render", "status": "failed", "blocks_delivery": True, "findings": [{"finding_id": "old-p0", "severity": "P0"}], "artifact_path": "build/deck.pptx"},
+                {"gate": "delivery", "status": "failed", "blocks_delivery": True, "findings": [{"finding_id": "old-p0-delivery", "severity": "P0"}], "artifact_path": "build/deck.pptx", "artifact_sha256": "0" * 64},
+            ],
+        )
+
+        self.assertFalse(result["required_gate_satisfied"])
+        self.assertEqual([], result["current_blockers"])
+        self.assertEqual([], result["blocking_findings"])
+        self.assertTrue(result["unbound_reports"])
+        self.assertTrue(result["stale_reports"])
+
     def test_current_required_gates_satisfy_policy(self) -> None:
         identity = artifact_identity(self.run_dir, self.artifact)
         reports = [
@@ -86,6 +140,29 @@ class GateFreshnessTests(unittest.TestCase):
 
         self.assertTrue(result["satisfied"])
         self.assertEqual([], result["missing_gates"])
+
+    def test_active_p1_override_is_reported_separately_from_current_blockers(self) -> None:
+        create_override(self.run_dir, "draft-p1", "P1", "accepted for this run", "reviewer")
+
+        result = resolve_required_gates(
+            self.run_dir,
+            self.artifact,
+            builder_profile="high_density",
+            output_profile="production_pptx",
+            run_mode="production",
+            reports=[
+                {
+                    "gate": "draft",
+                    "status": "rework_required",
+                    "blocks_delivery": True,
+                    "findings": [{"finding_id": "draft-p1", "severity": "P1", "message": "draft issue"}],
+                }
+            ],
+            include_non_required_blockers=True,
+        )
+
+        assert result["current_blockers"] == []
+        assert [item["finding_id"] for item in result["overridden_p1"]] == ["draft-p1"]
 
 
 if __name__ == "__main__":

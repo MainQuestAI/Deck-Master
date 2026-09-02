@@ -207,6 +207,8 @@ def record_provider_host_result(
     source_kind = source_type if source_type in {"host_managed", "explicit_import"} else "host_managed"
     if not source.is_file() or source.is_symlink() or source.suffix.lower() != ".png":
         raise BlueprintInvalid("Host-managed provider result must be a regular PNG file")
+    if source_kind == "explicit_import" and not str(approved_by or "").strip():
+        raise BlueprintInvalid("explicit provider import requires approved_by")
     root_path, relative = _provider_source_locator(source, allow_explicit_import=source_kind == "explicit_import")
     if source_kind == "host_managed" and not re.fullmatch(r"exec-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.png", source.name):
         raise BlueprintInvalid("Host-managed provider result must use the ImageGen exec-UUID filename")

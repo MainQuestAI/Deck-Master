@@ -6,7 +6,7 @@ from typing import Any
 
 from quality.gate_freshness import artifact_identity
 from quality.pptx_audit import audit_pptx
-from quality.pptx_audit import load_page_roles
+from quality.pptx_audit import load_page_roles, requires_page_role_contract
 from runtime.run_state import read_json
 
 
@@ -135,14 +135,28 @@ def evaluate_customer_visible_safety_gate(
         expected_pages=expected_pages,
         forbidden_terms=terms,
         page_roles=page_roles,
+        strict_page_roles=requires_page_role_contract(run_dir),
     )
     findings = [
         _finding_for_hit(index, hit)
         for index, hit in enumerate(audit.get("forbidden_hits", []), start=1)
     ]
+    for slide_number in audit.get("missing_page_roles", []):
+        findings.append(
+            {
+                "finding_id": f"customer_visible_missing_page_role_{int(slide_number):03d}",
+                "severity": "P1",
+                "dimension": "page_role_contract",
+                "message": f"最终 PPT 第 {int(slide_number)} 页缺少 page_role 映射。",
+                "repair_instruction": "在 Standard Build Manifest 或 high-density page scene 中补齐 canonical page_role，并重新生成和扫描最终 PPTX。",
+                "slide_number": int(slide_number),
+                "page_id": f"slide_{int(slide_number):03d}",
+            }
+        )
     blocked = bool(findings)
     status = "rework_required" if blocked else "pass"
     p0_count = sum(1 for item in findings if item.get("severity") == "P0")
+    p1_count = sum(1 for item in findings if item.get("severity") == "P1")
     artifact_path = Path(str(audit.get("artifact") or artifact)).expanduser().resolve()
     identity_root = Path(run_dir).expanduser().resolve() if run_dir else artifact_path.parent
     return {
@@ -166,7 +180,7 @@ def evaluate_customer_visible_safety_gate(
             "forbidden_hits": len(audit.get("forbidden_hits", [])),
             "terms_loaded": len(terms),
             "p0_count": p0_count,
-            "p1_count": 0,
+            "p1_count": p1_count,
             "p2_count": 0,
             "findings": len(findings),
             "page_findings": sum(1 for item in findings if item.get("page_id")),

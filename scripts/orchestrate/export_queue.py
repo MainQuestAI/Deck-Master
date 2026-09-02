@@ -14,8 +14,7 @@ sys.path.insert(0, str(PREVIEW_DIR))
 sys.path.insert(0, str(QUALITY_DIR))
 
 from manifest import DECISIONS, load_manifest
-from gate_freshness import report_currentity
-from gate_policy import resolve_required_gates
+from gate_policy import current_artifact, resolve_required_gates
 from overrides import has_active_override
 from runtime.final_readiness import final_readiness_clearance
 from runtime.final_approval import final_approval_clearance
@@ -110,37 +109,39 @@ def _report_findings(report: dict[str, Any]) -> list[dict[str, Any]]:
 
 def _get_blocking_findings(run_dir: Path, page_id: str) -> list[dict[str, Any]]:
     """Collect page-level and run-level blocking findings for a page."""
+    reports = _load_gate_reports(run_dir)
+    artifact = current_artifact(run_dir) or _current_artifact(run_dir)
+    request = _read_json(run_dir / "request.json")
+    build_manifest = _read_json(run_dir / "build" / "build_manifest.json")
+    policy = resolve_required_gates(
+        run_dir,
+        artifact,
+        builder_profile=str(build_manifest.get("builder_profile") or ""),
+        output_profile=str(build_manifest.get("output_profile") or ("production_pptx" if artifact and artifact.suffix == ".pptx" else "")),
+        run_mode=str(request.get("run_mode") or ""),
+        reports=reports,
+        include_non_required_blockers=True,
+    )
+    manifest = _read_json(run_dir / "preview_manifest.json")
+    known_page_ids = {
+        str(item.get("page_id") or "")
+        for item in manifest.get("pages", [])
+        if isinstance(item, dict) and item.get("page_id")
+    }
+    build_page_manifest = build_manifest.get("pages") if isinstance(build_manifest.get("pages"), list) else []
+    known_page_ids.update(
+        str(item.get("page_id") or "")
+        for item in build_page_manifest
+        if isinstance(item, dict) and item.get("page_id")
+    )
     findings: list[dict[str, Any]] = []
-
-    artifact = _current_artifact(run_dir)
-    for report in _load_gate_reports(run_dir):
-        report_for_currentity = report if report.get("gate") else {**report, "gate": report.get("_gate_name", "")}
-        if not report_currentity(run_dir, report_for_currentity, artifact).get("current", True):
+    for finding in [*(policy.get("current_blockers") or []), *(policy.get("overridden_p1") or [])]:
+        if not isinstance(finding, dict):
             continue
-        report_blocks = _report_blocks_delivery(report)
-        report_findings = _report_findings(report)
-        matched = False
-
-        for finding in report_findings:
-            severity = str(finding.get("severity", "")).upper()
-            if severity not in {"P0", "P1"}:
-                continue
-            finding_page_id = finding.get("page_id")
-            if finding_page_id == page_id:
-                findings.append(finding)
-                matched = True
-            elif report_blocks:
-                findings.append(finding)
-
-        if report_blocks and not matched and not report_findings:
-            findings.append(
-                {
-                    "severity": "P1",
-                    "finding_id": f"{report.get('_gate_name', 'quality')}_gate_blocking",
-                    "message": f"{report.get('_gate_name', 'quality')} gate blocks delivery.",
-                    "_gate_name": report.get("_gate_name", ""),
-                }
-            )
+        finding_page_id = str(finding.get("page_id") or "")
+        if finding_page_id in known_page_ids and finding_page_id != page_id:
+            continue
+        findings.append(finding)
     return findings
 
 
@@ -150,27 +151,23 @@ def has_client_export_quality_clearance(
     allow_quality_override: bool = False,
 ) -> dict[str, Any]:
     """Return run-level quality clearance used by UI and export."""
-    artifact = _current_artifact(run_dir)
-    reports = [
-        report
-        for report in _load_gate_reports(run_dir)
-        if report_currentity(
-            run_dir,
-            report if report.get("gate") else {**report, "gate": report.get("_gate_name", "")},
-            artifact,
-        ).get("current", True)
-    ]
+    artifact = current_artifact(run_dir) or _current_artifact(run_dir)
+    reports = _load_gate_reports(run_dir)
+    request = _read_json(run_dir / "request.json")
+    build_manifest = _read_json(run_dir / "build" / "build_manifest.json")
     gate_policy = resolve_required_gates(
         run_dir,
         artifact,
-        builder_profile="high_density" if (run_dir / "high_density_build" / "status.json").exists() else "",
-        output_profile="production_pptx" if artifact and artifact.suffix == ".pptx" else "",
-        run_mode=str((_read_json(run_dir / "request.json")).get("run_mode") or ""),
+        builder_profile=str(build_manifest.get("builder_profile") or ("high_density" if (run_dir / "high_density_build" / "status.json").exists() else "")),
+        output_profile=str(build_manifest.get("output_profile") or ("production_pptx" if artifact and artifact.suffix == ".pptx" else "")),
+        run_mode=str(request.get("run_mode") or ""),
+        reports=reports,
+        include_non_required_blockers=True,
     )
-    if gate_policy.get("missing_gates"):
+    if gate_policy.get("missing_required_gates"):
         return {
             "ready": False,
-            "reason": f"Missing current required quality gates: {gate_policy['missing_gates']}",
+            "reason": f"Missing current required quality gates: {gate_policy['missing_required_gates']}",
             "blocking_findings": [],
             "required_gate_policy": gate_policy,
         }
@@ -182,26 +179,13 @@ def has_client_export_quality_clearance(
             "required_gate_policy": gate_policy,
         }
 
-    blocking_findings: list[dict[str, Any]] = []
-    for report in reports:
-        if not _report_blocks_delivery(report):
-            continue
-        report_findings = [
-            finding
-            for finding in _report_findings(report)
-            if str(finding.get("severity", "")).upper() in {"P0", "P1"}
-        ]
-        if report_findings:
-            blocking_findings.extend(report_findings)
-        else:
-            blocking_findings.append(
-                {
-                    "severity": "P1",
-                    "finding_id": f"{report.get('_gate_name', 'quality')}_gate_blocking",
-                    "message": f"{report.get('_gate_name', 'quality')} gate blocks delivery.",
-                    "_gate_name": report.get("_gate_name", ""),
-                }
-            )
+    blocking_findings: list[dict[str, Any]] = [
+        item for item in gate_policy.get("current_blockers") or [] if isinstance(item, dict)
+    ]
+    if not allow_quality_override:
+        blocking_findings.extend(
+            item for item in gate_policy.get("overridden_p1") or [] if isinstance(item, dict)
+        )
 
     p0_findings = [finding for finding in blocking_findings if str(finding.get("severity", "")).upper() == "P0"]
     if p0_findings:

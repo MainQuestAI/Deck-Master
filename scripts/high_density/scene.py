@@ -6,6 +6,8 @@ from pathlib import Path
 from typing import Any
 from xml.etree import ElementTree
 
+from page_roles import page_role_with_warning
+
 from .contracts import ContractError, assert_v2, read_json, sha256_json, utc_now, write_json
 from .visibility import assert_visible_text_allowed, validate_visibility_policy
 
@@ -407,7 +409,8 @@ def build_fixture_scene(lock: dict[str, Any], blueprint_sha256: str, blueprint_p
     body_blocks = list(customer_visible.get("body_blocks") or [])
     callouts = list(customer_visible.get("callouts") or [])
     layout_id = layout_id or str((enrichment.get("material_pool") or {}).get("recommended_visual") or "framework")
-    page_role = str((enrichment.get("analysis") or {}).get("page_role") or layout_id or "dense_narrative")
+    raw_page_role = (enrichment.get("analysis") or {}).get("page_role") or layout_id or "dense_narrative"
+    page_role, role_warning = page_role_with_warning(raw_page_role, default="content")
     background = _fixture_background(blueprint_path)
     title_color, secondary_color, _source_color = _fixture_text_colors(background)
     elements: list[dict[str, Any]] = []
@@ -502,6 +505,7 @@ def build_fixture_scene(lock: dict[str, Any], blueprint_sha256: str, blueprint_p
         "blueprint": {"source_canvas": dict(CANVAS), "slide_frame": {"x": 0, "y": 0, "w": 1672, "h": 941}, "source_to_scene_transform": {"scale": 1, "offset_x": 0, "offset_y": 0, "fit_mode": "approved_frame"}},
         "layout_id": layout_id,
         "page_role": page_role,
+        "migration_warnings": [role_warning] if role_warning else [],
         "content_lock_sha256": str(lock["content_lock_sha256"]),
         "blueprint_sha256": blueprint_sha256,
         "transform": {"scale": 1, "offset_x": 0, "offset_y": 0, "fit_mode": "approved_frame"},

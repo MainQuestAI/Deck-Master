@@ -15,6 +15,7 @@ from runtime.builder_backend import backend_render_runtime_ready, builder_backen
 from runtime.events import append_event
 from runtime.render_handoff import RENDER_REQUEST_NAME, write_render_request
 from runtime.run_state import PREVIEW_MANIFEST_NAME, ensure_run_dirs, load_request, read_json, write_json
+from page_roles import page_role_with_warning
 
 BUILD_MANIFEST_SCHEMA_VERSION = "deck_build_manifest.v1"
 ARTIFACT_MANIFEST_SCHEMA_VERSION = "deck_artifact_manifest.v1"
@@ -206,12 +207,17 @@ def prepare_build(run_dir: str | Path) -> dict[str, Any]:
         source_path, source_ref = _safe_source(root, page.get("preview_path") or page.get("source_preview_asset"))
         if source_ref and source_path is not None and not source_path.exists():
             warnings.append(f"page source missing: {source_ref}")
+        raw_page_role = page.get("page_role") or page.get("narrative_role") or page.get("role")
+        page_role, role_warning = page_role_with_warning(raw_page_role)
+        if role_warning:
+            warnings.append(f"page {page_id}: {role_warning}")
         page_sources.append(
             {
                 "page_id": page_id,
                 "beat_id": str(page.get("beat_id") or page_id),
                 "order": index,
                 "title": str(page.get("title") or page.get("narrative_role") or page_id),
+                "page_role": page_role,
                 "source_path": source_ref,
             }
         )

@@ -16,6 +16,7 @@ from quality.customer_visible_safety import (
     evaluate_customer_visible_safety_gate,
     load_customer_visible_forbidden_terms,
 )
+from quality.gate_runner import evaluate_render_gate
 from quality.pptx_audit import audit_pptx
 from runtime.run_state import write_json
 
@@ -242,6 +243,35 @@ class CustomerVisibleSafetyTests(unittest.TestCase):
         report = json.loads((run_dir / "quality_reports" / "render_gate.json").read_text(encoding="utf-8"))
         self.assertTrue(report["blocks_delivery"])
         self.assertIn(1, report["audit"]["missing_page_roles"])
+
+    def test_standard_fixture_without_page_role_does_not_block_role_contract(self) -> None:
+        run_dir = self.temp_dir / "run-standard-role-migration"
+        run_dir.mkdir()
+        write_json(run_dir / "request.json", {"run_id": "run-standard-role-migration", "run_mode": "fixture"})
+        pptx = run_dir / "standard.pptx"
+        with zipfile.ZipFile(pptx, "w") as package:
+            package.writestr("[Content_Types].xml", "<Types/>")
+            package.writestr(
+                "ppt/slides/slide1.xml",
+                """
+<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
+       xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+  <p:cSld><p:spTree>
+    <p:sp><p:txBody><a:p><a:r><a:t>Standard builder migration keeps this page on the existing content path without role metadata.</a:t></a:r></a:p></p:txBody></p:sp>
+  </p:spTree></p:cSld>
+</p:sld>
+""",
+            )
+
+        report = evaluate_render_gate(
+            "run-standard-role-migration",
+            pptx,
+            expected_pages=1,
+            run_dir=run_dir,
+        )
+
+        self.assertFalse(report["audit"]["missing_page_roles"])
+        self.assertFalse(any(item["finding_id"].endswith("page_role_missing") for item in report["findings"]))
 
 
 def _write_rich_pptx(path: Path) -> None:

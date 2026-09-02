@@ -2327,9 +2327,30 @@ def _persist_build_options(
     if persist and output_profile:
         request["output_profile"] = str(output_profile)
     review_policy = getattr(args, "review_policy", None)
+    review_depth = getattr(args, "review_depth", None)
+    receipt_policy = getattr(args, "receipt_policy", None)
+    canonical_legacy = str(review_policy or "").strip().lower().replace("-", "_")
+    canonical_depth = str(review_depth or "").strip().lower().replace("-", "_")
+    canonical_receipt = str(receipt_policy or "").strip().lower().replace("-", "_")
+    if canonical_legacy == "external_signed":
+        canonical_depth = "independent_main"
+        canonical_receipt = "external_signed"
+    elif canonical_legacy == "local_traceable":
+        canonical_depth = canonical_depth or "producer_only"
+        canonical_receipt = canonical_receipt or "local_traceable"
+    if canonical_receipt == "external_signed":
+        canonical_depth = "independent_main"
+    if canonical_depth and not canonical_receipt:
+        canonical_receipt = "local_traceable"
+    if canonical_receipt and not canonical_depth:
+        canonical_depth = "producer_only"
     if persist and review_policy:
-        request["review_policy"] = str(review_policy).replace("-", "_")
-    if persist and (requested_internal or output_profile or review_policy):
+        request["review_policy"] = canonical_legacy
+    if persist and canonical_depth:
+        request["review_depth"] = canonical_depth
+    if persist and canonical_receipt:
+        request["receipt_policy"] = canonical_receipt
+    if persist and (requested_internal or output_profile or review_policy or review_depth or receipt_policy):
         write_json(run_dir / REQUEST_NAME, request)
     return effective
 
@@ -3488,6 +3509,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_build_prepare.add_argument("--profile", choices=["standard", "high-density"], default=None)
     p_build_prepare.add_argument("--output-profile", choices=["production_pptx", "client_delivery"], default=None)
     p_build_prepare.add_argument("--review-policy", choices=["local_traceable", "external_signed", "local-traceable", "external-signed"], default=None)
+    p_build_prepare.add_argument("--review-depth", choices=["producer_only", "independent_main", "producer-only", "independent-main"], default=None)
+    p_build_prepare.add_argument("--receipt-policy", choices=["local_traceable", "external_signed", "local-traceable", "external-signed"], default=None)
     p_build_prepare.set_defaults(func=command_build_prepare)
 
     p_build_run = build_sub.add_parser("run", help="Build HTML/PDF/PNG/PPTX artifacts")
@@ -3495,6 +3518,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_build_run.add_argument("--profile", choices=["standard", "high-density"], default=None)
     p_build_run.add_argument("--output-profile", choices=["production_pptx", "client_delivery"], default=None)
     p_build_run.add_argument("--review-policy", choices=["local_traceable", "external_signed", "local-traceable", "external-signed"], default=None)
+    p_build_run.add_argument("--review-depth", choices=["producer_only", "independent_main", "producer-only", "independent-main"], default=None)
+    p_build_run.add_argument("--receipt-policy", choices=["local_traceable", "external_signed", "local-traceable", "external-signed"], default=None)
     p_build_run.set_defaults(func=command_build_run)
 
     p_build_status = build_sub.add_parser("status", help="Inspect production build artifacts")

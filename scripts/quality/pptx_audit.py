@@ -7,6 +7,8 @@ from pathlib import Path
 from typing import Any
 from xml.etree import ElementTree
 
+from page_roles import canonical_page_role
+
 
 SLIDE_RE = re.compile(r"ppt/slides/slide(\d+)\.xml$")
 NOTES_RE = re.compile(r"ppt/notesSlides/notesSlide(\d+)\.xml$")
@@ -29,17 +31,17 @@ def _read_optional_json(path: Path) -> dict[str, Any]:
 
 
 def _normalize_page_role(value: Any) -> str:
-    return str(value or "").strip().lower().replace("-", "_").replace(" ", "_")
+    return canonical_page_role(value, default="")
 
 
 def _page_role(page: dict[str, Any]) -> str:
-    for key in ("page_role", "role", "page_type"):
+    for key in ("page_role", "narrative_role", "role", "page_type"):
         value = _normalize_page_role(page.get(key))
         if value:
             return value
     visual_spec = page.get("visual_spec")
     if isinstance(visual_spec, dict):
-        for key in ("page_type", "role"):
+        for key in ("page_role", "narrative_role", "page_type", "role"):
             value = _normalize_page_role(visual_spec.get(key))
             if value:
                 return value
@@ -124,6 +126,27 @@ def load_page_roles(run_dir: str | Path | None) -> dict[int, str]:
     return roles
 
 
+def requires_page_role_contract(run_dir: str | Path | None) -> bool:
+    if run_dir is None:
+        return False
+    root = Path(run_dir).expanduser().resolve()
+    request = _read_optional_json(root / "request.json")
+    mode = str(request.get("run_mode") or "").strip().lower()
+    for path in (
+        root / "build" / "build_manifest.json",
+        root / "high_density_build" / "status.json",
+        root / "high_density_build" / "high_density_manifest.json",
+        root / "high_density_build" / "manifest.json",
+    ):
+        payload = _read_optional_json(path)
+        builder = str(payload.get("builder_profile") or "").strip().lower()
+        if builder in {"high_density", "high-density"}:
+            return True
+        if payload.get("run_mode"):
+            mode = str(payload.get("run_mode") or mode).strip().lower()
+    return mode in {"production", "benchmark"}
+
+
 def _local_name(tag: str) -> str:
     return tag.rsplit("}", 1)[-1]
 
@@ -201,6 +224,7 @@ def audit_pptx(
     expected_pages: int | None = None,
     forbidden_terms: list[str] | None = None,
     page_roles: dict[int, str] | list[str] | None = None,
+    strict_page_roles: bool = False,
 ) -> dict[str, Any]:
     path = Path(pptx_path).expanduser().resolve()
     forbidden = [term for term in (forbidden_terms or []) if term]
@@ -234,7 +258,7 @@ def audit_pptx(
                 else:
                     page_role = ""
                 if not page_role:
-                    if page_roles is not None:
+                    if strict_page_roles:
                         missing_page_roles.append(slide_number)
                     page_role = "content"
                 sparse_allowed = page_role in SPARSE_ALLOWED_ROLES
