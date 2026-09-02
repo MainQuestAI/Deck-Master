@@ -3,11 +3,12 @@
   "$id": "https://deck-master.local/contracts/page-scene.v2.schema.json",
   "title": "Deck Page Scene v2",
   "type": "object",
-  "required": ["schema_version", "run_id", "page_id", "canvas", "blueprint", "content_lock_sha256", "blueprint_sha256", "component_signature", "required_component_ids", "required_text_refs", "visual_registry", "elements", "overflow_policy", "created_at"],
+  "required": ["schema_version", "run_id", "page_id", "page_role", "canvas", "blueprint", "content_lock_sha256", "blueprint_sha256", "component_signature", "required_component_ids", "required_text_refs", "visual_registry", "elements", "overflow_policy", "created_at"],
   "properties": {
     "schema_version": {"const": "deck_page_scene.v2"},
     "run_id": {"type": "string", "minLength": 1},
     "page_id": {"type": "string", "minLength": 1},
+    "page_role": {"enum": ["cover", "section", "section_divider", "divider", "toc", "agenda", "visual", "visual_divider", "image", "image_page", "dense_narrative", "content", "framework", "architecture", "comparison", "data_story", "process", "table"]},
     "source": {"type": "string"},
     "canvas": {"type": "object", "required": ["width", "height", "unit"]},
     "blueprint": {"type": "object"},

@@ -24,6 +24,9 @@ from high_density.blueprint import BlueprintInvalid, _default_slide_frame, build
 from high_density.blueprint_content_review import BlueprintContentReviewRequired, archive_rejected_blueprint, load_blueprint_content_review, next_attempt_index, write_blueprint_content_review
 from high_density.capability import REQUIRED_SCHEMAS, inspect_high_density_capability
 from high_density.content import (
+    _claim_bindings,
+    _page_structural_claim_targets,
+    _validate_claim_bindings,
     build_content_lock,
     build_mbb_page,
     build_mbb_plan,
@@ -36,6 +39,7 @@ from high_density.content import (
     write_mbb_plan,
 )
 from high_density.contracts import ContractError, assert_valid, read_json, sha256_file, sha256_json, write_json
+from high_density.integrity import sign_runtime_payload
 from high_density.engine import (
     build_high_density_status,
     prepare_high_density,
@@ -47,7 +51,7 @@ from high_density.migration import MIGRATION_REQUIRED_CODE, assert_current_mbb_a
 from high_density.pptx import PptxEditabilityError, _render_pptx_page, compile_pptx, pptx_path, readback_pptx, trace_path
 from high_density.scene import _fixture_background, build_fixture_scene, load_scene, validate_scene_content, write_scene
 from high_density.style import write_style_lock
-from high_density.svg import SvgVisualError, _font_path, compile_svg, load_visual_review, main_review_receipt_path, preview_path, render_preview, review_path, svg_path, validate_approved_svg, validate_svg
+from high_density.svg import SvgVisualError, _font_path, _load_main_review_receipt, _main_review_receipt_payload, compile_svg, load_visual_review, main_review_receipt_path, preview_path, render_preview, review_path, svg_path, validate_approved_svg, validate_svg
 from high_density.visibility import build_visibility_policy, visible_text_violation
 from production.page_package import PageContent, PagePackageIndex, build_page_package
 from runtime.run_state import create_run
@@ -439,6 +443,15 @@ def test_build_cli_exposes_style_blueprint_and_provider_commands() -> None:
     assert "select-style" in result.stdout
     assert "approve-blueprint" in result.stdout
     assert "import-provider-result" in result.stdout
+    run_help = subprocess.run(
+        [sys.executable, str(ROOT / "scripts" / "deck_master.py"), "build", "run", "--help"],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert run_help.returncode == 0, run_help.stderr
+    assert "--review-policy" in run_help.stdout
 
 
 def test_style_lock_change_invalidates_blueprints(tmp_path: Path) -> None:
@@ -474,6 +487,90 @@ def test_structural_page_allows_low_density_without_business_evidence() -> None:
 
     assert result["analysis"]["structural_page"] is True
     assert result["analysis"]["page_role"] == "cover"
+
+
+def test_structural_claim_exemption_is_limited_to_metadata() -> None:
+    payload = {
+        "role": "cover",
+        "conclusion": "Management conclusion still needs evidence.",
+        "chart_plan": {"visual_type": "cover"},
+        "storyline_context": {
+            "visual_potential": "A visual opener",
+            "management_conclusion": "The business should act now.",
+        },
+        "material_pool": {
+            "recommended_visual": "cover",
+            "storyline_visual_potential": "A visual opener",
+        },
+    }
+    targets = [
+        "role",
+        "conclusion",
+        "chart_plan.visual_type",
+        "storyline_context.visual_potential",
+        "storyline_context.management_conclusion",
+        "material_pool.recommended_visual",
+        "material_pool.storyline_visual_potential",
+    ]
+    structural_targets = _page_structural_claim_targets(payload)
+
+    assert {"role", "chart_plan.visual_type", "storyline_context.visual_potential"}.issubset(structural_targets)
+    assert {"conclusion", "storyline_context.management_conclusion"}.isdisjoint(structural_targets)
+    payload["claim_bindings"] = _claim_bindings(
+        payload,
+        targets,
+        [],
+        source_text="",
+        structural_targets=structural_targets,
+        evidence_by_id={},
+    )
+    with pytest.raises(ContractError, match="claim binding evidence"):
+        _validate_claim_bindings(
+            payload,
+            required_targets=targets,
+            allowed_evidence_refs=set(),
+            evidence_by_id={},
+            source_text="",
+            context="structural page",
+            structural_targets=structural_targets,
+        )
+
+
+def test_structural_metadata_labels_can_pass_without_evidence() -> None:
+    payload = {
+        "role": "cover",
+        "chart_plan": {"visual_type": "cover"},
+        "storyline_context": {"visual_potential": "A visual opener"},
+        "material_pool": {
+            "recommended_visual": "cover",
+            "storyline_visual_potential": "A visual opener",
+        },
+    }
+    targets = [
+        "role",
+        "chart_plan.visual_type",
+        "storyline_context.visual_potential",
+        "material_pool.recommended_visual",
+        "material_pool.storyline_visual_potential",
+    ]
+    structural_targets = _page_structural_claim_targets(payload)
+    payload["claim_bindings"] = _claim_bindings(
+        payload,
+        targets,
+        [],
+        source_text="",
+        structural_targets=structural_targets,
+        evidence_by_id={},
+    )
+    _validate_claim_bindings(
+        payload,
+        required_targets=targets,
+        allowed_evidence_refs=set(),
+        evidence_by_id={},
+        source_text="",
+        context="structural metadata",
+        structural_targets=structural_targets,
+    )
 
 
 def test_mbb_rejects_unsupported_factual_claim() -> None:
@@ -1325,6 +1422,45 @@ def test_main_review_requires_separate_host_attestation(tmp_path: Path) -> None:
         _load_main_review_receipt(run, "P001", review)
 
 
+def test_local_main_review_receipt_is_accepted_without_external_key(tmp_path: Path, monkeypatch) -> None:
+    run, _, _ = _prepared_fixture(tmp_path)
+    review = read_json(review_path(run, "P001"))
+    payload = _main_review_receipt_payload(review)
+    receipt = {
+        **payload,
+        "integrity": sign_runtime_payload(
+            "visual_main_review_local_receipt.v1",
+            payload,
+        ),
+    }
+    write_json(main_review_receipt_path(run, "P001"), receipt)
+    monkeypatch.delenv("DECK_MASTER_REVIEW_ATTESTATION_KEY", raising=False)
+
+    loaded = _load_main_review_receipt(run, "P001", review)
+
+    assert loaded["reviewer_id"] == review["main_review"]["reviewer_id"]
+
+
+def test_external_main_review_mode_still_requires_external_key(tmp_path: Path, monkeypatch) -> None:
+    run, _, _ = _prepared_fixture(tmp_path)
+    review = read_json(review_path(run, "P001"))
+    payload = _main_review_receipt_payload(review)
+    write_json(
+        main_review_receipt_path(run, "P001"),
+        {
+            **payload,
+            "integrity": sign_runtime_payload(
+                "visual_main_review_local_receipt.v1",
+                payload,
+            ),
+        },
+    )
+    monkeypatch.delenv("DECK_MASTER_REVIEW_ATTESTATION_KEY", raising=False)
+
+    with pytest.raises(SvgVisualError, match="external main visual review attestation is invalid"):
+        _load_main_review_receipt(run, "P001", review, require_external=True)
+
+
 def test_default_production_visual_review_does_not_require_host_attestation(tmp_path: Path) -> None:
     run, _, _ = _prepared_fixture(tmp_path)
 
@@ -1435,10 +1571,14 @@ def test_explicit_provider_import_records_hash_without_host_root(tmp_path: Path)
     imported = tmp_path / "outside-provider.png"
     Image.new("RGB", (1672, 941), "#f7f9fb").save(imported)
 
-    record_provider_host_result(run, "P001", imported, source_type="explicit_import")
+    record_provider_host_result(run, "P001", imported, source_type="explicit_import", declared_provider="manual-upload", approved_by="tester")
 
     receipt = read_json(run / "high_density_build/blueprints/P001.provider_host_receipt.json")
     assert receipt["source_type"] == "explicit_import"
+    assert receipt["provider_tool"] == "external_or_unknown"
+    assert receipt["provider_model"] == "explicit_import"
+    assert receipt["declared_provider"] == "manual-upload"
+    assert receipt["approved_by"] == "tester"
     assert receipt["source_file_sha256"] == sha256_file(imported)
 
 

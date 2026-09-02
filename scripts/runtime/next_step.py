@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from quality.gate_policy import resolve_required_gates
 from runtime.run_state import (
     CLAIM_MAP_NAME,
     CONTEXT_MANIFEST_NAME,
@@ -104,19 +105,25 @@ def _high_density_artifact(root: Path) -> Path:
     return root / "high_density_build" / "pptx" / "deck_high_density.pptx"
 
 
-def _quality_gate_passed(root: Path) -> bool:
-    quality_dir = root / "quality_reports"
-    if not quality_dir.is_dir():
-        return False
-    for path in sorted(quality_dir.glob("*_gate.json")):
-        try:
-            report = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, ValueError):
-            continue
-        status = str(report.get("status") or "").strip().lower()
-        if status in {"pass", "pass_with_warning", "pass_with_override"} and not bool(report.get("blocks_delivery")):
-            return True
-    return False
+def _required_gate_policy(root: Path, artifact: Path, page_count: int, run_mode: str) -> dict[str, Any]:
+    return resolve_required_gates(
+        root,
+        artifact,
+        builder_profile="high_density",
+        output_profile="production_pptx",
+        run_mode=run_mode,
+    ) | {"expected_pages": page_count}
+
+
+def _next_quality_gate_command(root: Path, artifact: Path, page_count: int, policy: dict[str, Any]) -> str:
+    missing = [str(gate) for gate in policy.get("missing_gates") or []]
+    if "render" in missing:
+        gate = "render"
+    elif "delivery" in missing or "customer_visible_safety" in missing:
+        gate = "delivery"
+    else:
+        gate = "render"
+    return f"deck-master quality-gate {gate} --run-dir {root} --artifact {artifact} --expected-pages {page_count}"
 
 
 def resolve_next_step(
@@ -153,10 +160,12 @@ def resolve_next_step(
                         build_manifest = {}
                 page_count = len(build_manifest.get("pages") or [])
                 artifact = _high_density_artifact(root)
-                if artifact.exists() and _quality_gate_passed(root):
+                request_run_mode = str((read_json(root / REQUEST_NAME).get("run_mode") if (root / REQUEST_NAME).exists() else "") or run_mode or "")
+                gate_policy = _required_gate_policy(root, artifact, page_count, request_run_mode)
+                if artifact.exists() and gate_policy.get("satisfied"):
                     next_command = f"deck-master final-readiness --run-dir {root} --artifact {artifact} --expected-pages {page_count}"
                 else:
-                    next_command = f"deck-master quality-gate render --run-dir {root} --artifact {artifact} --expected-pages {page_count}"
+                    next_command = _next_quality_gate_command(root, artifact, page_count, gate_policy)
             route = {
                 "schema_version": "deck_skill_route.v1",
                 "source": "high_density_handback" if completed else "high_density_status",
@@ -181,10 +190,11 @@ def resolve_next_step(
                 "blocking_issues": [str((high_density.get("error") or {}).get("message"))] if isinstance(high_density.get("error"), dict) and high_density.get("error", {}).get("message") else [],
                 "run_mode": str((read_json(root / REQUEST_NAME).get("run_mode") if (root / REQUEST_NAME).exists() else "") or ""),
                 "recommended_skill": "deck-quality" if completed else "deck-builder-high-density",
-                "skill_stage": "quality" if completed else "high_density_build",
+                "skill_stage": route["skill_stage"],
                 "skill_reason": route["skill_reason"],
                 "next_skill_command": next_command,
                 "skill_route": route,
+                "required_gate_policy": gate_policy if completed else {},
             }
             if high_density.get("current_page_id"):
                 result["current_page_id"] = high_density["current_page_id"]

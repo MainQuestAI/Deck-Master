@@ -15,6 +15,7 @@ sys.path.insert(0, str(QUALITY_DIR))
 
 from manifest import DECISIONS, load_manifest
 from gate_freshness import report_currentity
+from gate_policy import resolve_required_gates
 from overrides import has_active_override
 from runtime.final_readiness import final_readiness_clearance
 from runtime.final_approval import final_approval_clearance
@@ -113,7 +114,8 @@ def _get_blocking_findings(run_dir: Path, page_id: str) -> list[dict[str, Any]]:
 
     artifact = _current_artifact(run_dir)
     for report in _load_gate_reports(run_dir):
-        if not report_currentity(run_dir, report, artifact).get("current", True):
+        report_for_currentity = report if report.get("gate") else {**report, "gate": report.get("_gate_name", "")}
+        if not report_currentity(run_dir, report_for_currentity, artifact).get("current", True):
             continue
         report_blocks = _report_blocks_delivery(report)
         report_findings = _report_findings(report)
@@ -149,12 +151,35 @@ def has_client_export_quality_clearance(
 ) -> dict[str, Any]:
     """Return run-level quality clearance used by UI and export."""
     artifact = _current_artifact(run_dir)
-    reports = [report for report in _load_gate_reports(run_dir) if report_currentity(run_dir, report, artifact).get("current", True)]
+    reports = [
+        report
+        for report in _load_gate_reports(run_dir)
+        if report_currentity(
+            run_dir,
+            report if report.get("gate") else {**report, "gate": report.get("_gate_name", "")},
+            artifact,
+        ).get("current", True)
+    ]
+    gate_policy = resolve_required_gates(
+        run_dir,
+        artifact,
+        builder_profile="high_density" if (run_dir / "high_density_build" / "status.json").exists() else "",
+        output_profile="production_pptx" if artifact and artifact.suffix == ".pptx" else "",
+        run_mode=str((_read_json(run_dir / "request.json")).get("run_mode") or ""),
+    )
+    if gate_policy.get("missing_gates"):
+        return {
+            "ready": False,
+            "reason": f"Missing current required quality gates: {gate_policy['missing_gates']}",
+            "blocking_findings": [],
+            "required_gate_policy": gate_policy,
+        }
     if not _has_draft_gate_report(reports):
         return {
             "ready": False,
             "reason": "Missing draft gate report: needs_draft_gate.",
             "blocking_findings": [],
+            "required_gate_policy": gate_policy,
         }
 
     blocking_findings: list[dict[str, Any]] = []
@@ -180,11 +205,12 @@ def has_client_export_quality_clearance(
 
     p0_findings = [finding for finding in blocking_findings if str(finding.get("severity", "")).upper() == "P0"]
     if p0_findings:
-        return {
-            "ready": False,
-            "reason": f"P0 quality findings block client export: {[_finding_id(f) for f in p0_findings]}",
-            "blocking_findings": blocking_findings,
-        }
+            return {
+                "ready": False,
+                "reason": f"P0 quality findings block client export: {[_finding_id(f) for f in p0_findings]}",
+                "blocking_findings": blocking_findings,
+                "required_gate_policy": gate_policy,
+            }
 
     p1_findings = [finding for finding in blocking_findings if str(finding.get("severity", "")).upper() == "P1"]
     if p1_findings:
@@ -194,13 +220,14 @@ def has_client_export_quality_clearance(
             if not allow_quality_override or not has_active_override(run_dir, _finding_id(finding))
         ]
         if missing_overrides:
-            return {
-                "ready": False,
-                "reason": f"P1 quality findings require active overrides: {[_finding_id(f) for f in missing_overrides]}",
-                "blocking_findings": blocking_findings,
-            }
+                return {
+                    "ready": False,
+                    "reason": f"P1 quality findings require active overrides: {[_finding_id(f) for f in missing_overrides]}",
+                    "blocking_findings": blocking_findings,
+                    "required_gate_policy": gate_policy,
+                }
 
-    return {"ready": True, "reason": "", "blocking_findings": blocking_findings}
+    return {"ready": True, "reason": "", "blocking_findings": blocking_findings, "required_gate_policy": gate_policy}
 
 
 def check_page_quality_blocking(

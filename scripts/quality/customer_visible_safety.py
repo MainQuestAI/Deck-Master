@@ -4,7 +4,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from quality.gate_freshness import artifact_identity
 from quality.pptx_audit import audit_pptx
+from quality.pptx_audit import load_page_roles
 from runtime.run_state import read_json
 
 
@@ -124,9 +126,16 @@ def evaluate_customer_visible_safety_gate(
     *,
     expected_pages: int | None = None,
     forbidden_terms: list[str] | None = None,
+    run_dir: str | Path | None = None,
 ) -> dict[str, Any]:
     terms = _dedupe(forbidden_terms or DEFAULT_FORBIDDEN_TERMS)
-    audit = audit_pptx(artifact, expected_pages=expected_pages, forbidden_terms=terms)
+    page_roles = load_page_roles(run_dir) if run_dir else None
+    audit = audit_pptx(
+        artifact,
+        expected_pages=expected_pages,
+        forbidden_terms=terms,
+        page_roles=page_roles,
+    )
     findings = [
         _finding_for_hit(index, hit)
         for index, hit in enumerate(audit.get("forbidden_hits", []), start=1)
@@ -134,6 +143,8 @@ def evaluate_customer_visible_safety_gate(
     blocked = bool(findings)
     status = "rework_required" if blocked else "pass"
     p0_count = sum(1 for item in findings if item.get("severity") == "P0")
+    artifact_path = Path(str(audit.get("artifact") or artifact)).expanduser().resolve()
+    identity_root = Path(run_dir).expanduser().resolve() if run_dir else artifact_path.parent
     return {
         "schema_version": SCHEMA_VERSION,
         "run_id": run_id,
@@ -141,6 +152,7 @@ def evaluate_customer_visible_safety_gate(
         "created_at": datetime.now(timezone.utc).isoformat(),
         "status": status,
         "artifact": str(audit.get("artifact") or ""),
+        **artifact_identity(identity_root, artifact_path),
         "scorecard": {
             "customer_visible_safety": 1 if blocked else 5,
             "delivery_readiness": 1 if blocked else 5,

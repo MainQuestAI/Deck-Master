@@ -1,9 +1,9 @@
 # Deck Master 过度防御治理 v1
 
-日期：2026-09-01  
-状态：Iteration Spec  
-主 Spec：[`00-master-spec.md`](./00-master-spec.md)  
-执行计划：[`implementation/development-plan.md`](./implementation/development-plan.md)  
+日期：2026-09-01
+状态：Iteration Spec
+主 Spec：[`00-master-spec.md`](./00-master-spec.md)
+执行计划：[`implementation/development-plan.md`](./implementation/development-plan.md)
 验收矩阵：[`acceptance/acceptance-matrix.md`](./acceptance/acceptance-matrix.md)
 
 ## 1. 本包定位

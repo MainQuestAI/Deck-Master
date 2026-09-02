@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import shutil
 import sys
@@ -138,10 +139,50 @@ class FinalReadinessTests(unittest.TestCase):
         codes = {item["code"] for item in readiness["blockers"]}
         self.assertIn("final_customer_visible_safety_missing", codes)
 
+    def test_stale_customer_visible_safety_is_warning_in_fixture(self) -> None:
+        self._write_baseline()
+        run_build(self.run_dir)
+        self._write_customer_visible_safety_gate(blocks=False)
+
+        readiness = compute_final_readiness(self.run_dir)
+
+        self.assertTrue(readiness["ready"])
+        self.assertTrue(any("需要重新扫描当前产物" in item for item in readiness["warnings"]))
+
+    def test_stale_customer_visible_safety_blocks_production(self) -> None:
+        self._write_baseline()
+        run_build(self.run_dir)
+        self._write_customer_visible_safety_gate(blocks=False)
+        write_json(self.run_dir / "request.json", {"run_id": "final-ready", "run_mode": "production"})
+
+        readiness = compute_final_readiness(
+            self.run_dir,
+            run_mode="production",
+            dev_allow_unsetup=True,
+        )
+
+        codes = {item["code"] for item in readiness["blockers"]}
+        self.assertIn("final_customer_visible_safety_stale", codes)
+        clearance = final_readiness_clearance(self.run_dir)
+        self.assertIn("重新扫描当前产物", clearance["reason"])
+
     def test_customer_visible_safety_blocker_is_user_facing_clearance_reason(self) -> None:
         self._write_baseline()
-        self._write_customer_visible_safety_gate(blocks=True)
         run_build(self.run_dir)
+        safety_path = self.run_dir / "quality_reports" / "customer_visible_safety_gate.json"
+        self._write_customer_visible_safety_gate(blocks=True)
+        safety_payload = json.loads(safety_path.read_text(encoding="utf-8"))
+        artifact = self.run_dir / "build" / "deck.html"
+        digest = hashlib.sha256(artifact.read_bytes()).hexdigest()
+        safety_payload.update(
+            {
+                "artifact": "build/deck.html",
+                "artifact_path": "build/deck.html",
+                "artifact_run_relative": "build/deck.html",
+                "artifact_sha256": digest,
+            }
+        )
+        safety_path.write_text(json.dumps(safety_payload), encoding="utf-8")
 
         readiness = compute_final_readiness(self.run_dir)
         clearance = final_readiness_clearance(self.run_dir)
@@ -209,6 +250,35 @@ class FinalReadinessTests(unittest.TestCase):
         self.assertTrue(any("stale for the current artifact" in item for item in readiness["warnings"]))
         gate_summary = next(item for item in readiness["quality_gates"] if item["gate"] == "draft")
         self.assertFalse(gate_summary["current"])
+
+    def test_stale_render_gate_does_not_count_as_current_in_production(self) -> None:
+        self._write_baseline()
+        run_build(self.run_dir)
+        quality_dir = self.run_dir / "quality_reports"
+        write_json(
+            quality_dir / "render_gate.json",
+            {
+                "gate": "render",
+                "status": "rework_required",
+                "blocks_delivery": True,
+                "artifact_path": "build/old-deck.pptx",
+                "artifact_run_relative": "build/old-deck.pptx",
+                "artifact_sha256": "0" * 64,
+                "findings": [],
+            },
+        )
+        write_json(self.run_dir / "request.json", {"run_id": "final-ready", "run_mode": "production"})
+
+        readiness = compute_final_readiness(
+            self.run_dir,
+            run_mode="production",
+            dev_allow_unsetup=True,
+        )
+
+        self.assertIn("final_current_artifact_gate_missing", {item["code"] for item in readiness["blockers"]})
+        render_gate = next(item for item in readiness["quality_gates"] if item["gate"] == "render")
+        self.assertFalse(render_gate["current"])
+        self.assertTrue(any("stale for the current artifact" in item for item in readiness["warnings"]))
 
     def test_page_count_mismatch_blocks_readiness(self) -> None:
         self._write_baseline(
@@ -296,10 +366,11 @@ class FinalReadinessTests(unittest.TestCase):
 
         readiness = compute_final_readiness(run_dir, run_mode="production", dev_allow_unsetup=True)
 
-        self.assertTrue(readiness["ready"])
-        self.assertEqual("ready", readiness["status"])
+        self.assertFalse(readiness["ready"])
+        self.assertEqual("blocked", readiness["status"])
         self.assertEqual("high_density_build/pptx/deck_high_density.pptx", readiness["final_artifact"]["path"])
         self.assertNotIn("final_run_state_not_ready", {item["code"] for item in readiness["blockers"]})
+        self.assertIn("final_current_artifact_gate_missing", {item["code"] for item in readiness["blockers"]})
 
 
 if __name__ == "__main__":

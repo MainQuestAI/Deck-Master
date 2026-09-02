@@ -149,6 +149,100 @@ class CustomerVisibleSafetyTests(unittest.TestCase):
         safety = json.loads(safety_path.read_text(encoding="utf-8"))
         self.assertTrue(safety["blocks_delivery"])
 
+    def test_render_cli_uses_manifest_page_role_for_visual_page(self) -> None:
+        run_dir = self.temp_dir / "run-role"
+        run_dir.mkdir()
+        write_json(run_dir / "request.json", {"run_id": "run-role", "run_mode": "fixture"})
+        write_json(
+            run_dir / "preview_manifest.json",
+            {"run_id": "run-role", "pages": [{"page_id": "p1", "order": 1, "page_role": "visual"}]},
+        )
+        pptx = run_dir / "visual.pptx"
+        with zipfile.ZipFile(pptx, "w") as package:
+            package.writestr("[Content_Types].xml", "<Types/>")
+            package.writestr(
+                "ppt/slides/slide1.xml",
+                """
+<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld><p:spTree><p:pic/></p:spTree></p:cSld>
+</p:sld>
+""",
+            )
+
+        completed = subprocess.run(
+            [
+                sys.executable,
+                str(ROOT / "scripts" / "deck_master.py"),
+                "quality-gate",
+                "--run-dir",
+                str(run_dir),
+                "--run-mode",
+                "fixture",
+                "--dev-allow-unsetup",
+                "render",
+                "--artifact",
+                str(pptx),
+            ],
+            cwd=ROOT,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
+        self.assertEqual(0, completed.returncode, completed.stderr)
+        report = json.loads((run_dir / "quality_reports" / "render_gate.json").read_text(encoding="utf-8"))
+        self.assertEqual([], report["audit"]["possible_full_slide_images"])
+        self.assertEqual("visual", report["audit"]["slides"][0]["page_role"])
+        self.assertEqual("visual.pptx", report["artifact_path"])
+        self.assertEqual("visual.pptx", report["artifact_run_relative"])
+        self.assertEqual(64, len(report["artifact_sha256"]))
+
+    def test_production_render_gate_blocks_missing_page_role_mapping(self) -> None:
+        run_dir = self.temp_dir / "run-missing-role"
+        run_dir.mkdir()
+        write_json(run_dir / "request.json", {"run_id": "run-missing-role", "run_mode": "production"})
+        pptx = run_dir / "missing-role.pptx"
+        with zipfile.ZipFile(pptx, "w") as package:
+            package.writestr("[Content_Types].xml", "<Types/>")
+            package.writestr(
+                "ppt/slides/slide1.xml",
+                """
+<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
+       xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+  <p:cSld><p:spTree>
+    <p:sp><p:txBody><a:p><a:r><a:t>Production page text without role metadata.</a:t></a:r></a:p></p:txBody></p:sp>
+  </p:spTree></p:cSld>
+</p:sld>
+""",
+            )
+
+        completed = subprocess.run(
+            [
+                sys.executable,
+                str(ROOT / "scripts" / "deck_master.py"),
+                "quality-gate",
+                "--run-dir",
+                str(run_dir),
+                "--run-mode",
+                "production",
+                "--dev-allow-unsetup",
+                "render",
+                "--artifact",
+                str(pptx),
+                "--expected-pages",
+                "1",
+            ],
+            cwd=ROOT,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
+        self.assertEqual(0, completed.returncode, completed.stderr)
+        report = json.loads((run_dir / "quality_reports" / "render_gate.json").read_text(encoding="utf-8"))
+        self.assertTrue(report["blocks_delivery"])
+        self.assertIn(1, report["audit"]["missing_page_roles"])
+
 
 def _write_rich_pptx(path: Path) -> None:
     with zipfile.ZipFile(path, "w") as pptx:

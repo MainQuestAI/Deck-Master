@@ -191,6 +191,23 @@ def execute_review_action(
         task["reviewed_by"] = actor
         task["rejection_reason"] = reason
 
+    elif action == "needs_work":
+        try:
+            update_page_review(
+                root,
+                page_id,
+                review_status="needs_work",
+                action_intent="needs_work",
+                notes=reason or note,
+            )
+        except ManifestError as exc:
+            raise WorkbenchError(f"Cannot mark page as needs_work: {exc}") from exc
+        task["review_status"] = "needs_work"
+        task["action_intent"] = "needs_work"
+        task["reviewed_at"] = _utc_now()
+        task["reviewed_by"] = actor
+        task["work_reason"] = reason or note
+
     elif action == "request_evidence":
         try:
             update_page_review(
@@ -357,7 +374,6 @@ def execute_batch_review_action(
     if not selected:
         raise WorkbenchError("Batch review requires at least one page.")
 
-    single_action = "request_evidence" if action == "needs_work" else action
     applied: list[str] = []
     blocked: list[dict[str, str]] = []
     for page_id in selected:
@@ -365,7 +381,7 @@ def execute_batch_review_action(
             execute_review_action(
                 root,
                 page_id,
-                single_action,
+                action,
                 actor=actor,
                 reason=reason,
                 note=note,

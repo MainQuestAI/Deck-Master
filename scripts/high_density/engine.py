@@ -85,6 +85,11 @@ def _run_id(root: Path) -> str:
     return str(load_request(root).get("run_id") or root.name)
 
 
+def _review_policy(root: Path) -> str:
+    value = str(load_request(root).get("review_policy") or "local_traceable").strip().lower().replace("-", "_")
+    return value if value in {"local_traceable", "external_signed"} else "local_traceable"
+
+
 def _legacy_synthetic_fixture(root: Path) -> bool:
     """Keep the historical synthetic regression fixture deterministic.
 
@@ -99,6 +104,61 @@ def _legacy_synthetic_fixture(root: Path) -> bool:
 
 def _resume_command(root: Path) -> str:
     return f"deck-master build run --run-dir {root} --profile high-density"
+
+
+def _stage_output_ref(page_id: str, stage: str) -> str:
+    return {
+        "blueprint": f"high_density_build/blueprints/{page_id}.png",
+        "page_scene": f"high_density_build/scenes/{page_id}.page_scene.json",
+        "svg": f"high_density_build/svg/{page_id}.svg",
+        "visual_review": f"high_density_build/reviews/{page_id}.visual_review.json",
+    }.get(stage, "")
+
+
+def _stage_input_ref(page_id: str, stage: str) -> str:
+    return {
+        "blueprint": f"high_density_build/prompts/{page_id}.blueprint_prompt.json",
+        "page_scene": f"high_density_build/blueprints/{page_id}.blueprint_manifest.json",
+        "svg": f"high_density_build/scenes/{page_id}.page_scene.json",
+        "visual_review": f"high_density_build/svg/{page_id}.svg",
+    }.get(stage, "")
+
+
+def _stage_batch_details(root: Path, stage: str, current_page_id: str, reason: str) -> dict[str, Any]:
+    if stage not in {"blueprint", "page_scene", "svg", "visual_review"}:
+        return {}
+    try:
+        packages = _packages_for_build(root)
+    except ContractError:
+        packages = []
+    pending_pages: list[str] = []
+    input_refs: list[str] = []
+    output_refs: list[str] = []
+    for package in packages:
+        page_id = str(package.get("page_id") or "")
+        if not page_id:
+            continue
+        output_ref = _stage_output_ref(page_id, stage)
+        if not output_ref:
+            continue
+        if not (root / output_ref).exists():
+            pending_pages.append(page_id)
+            input_ref = _stage_input_ref(page_id, stage)
+            if input_ref:
+                input_refs.append(input_ref)
+            output_refs.append(output_ref)
+    if current_page_id and current_page_id not in pending_pages:
+        pending_pages.insert(0, current_page_id)
+    return {
+        "handoff_scope": "stage_batch",
+        "pending_pages": pending_pages,
+        "rework_queue": [
+            {"page_id": page_id, "stage": stage, "reason": reason}
+            for page_id in pending_pages
+        ],
+        "input_refs": input_refs,
+        "output_refs": output_refs,
+    }
 
 
 def _status_payload(
@@ -205,8 +265,7 @@ def _waiting(
         next_action["import_command"] = f"deck-master build import-provider-result --run-dir {root} --page-id {page_id or '<page_id>'} --input <blueprint.png> --source-type explicit_import"
         next_action["approval_command"] = f"deck-master build approve-blueprint --run-dir {root} --page-id {page_id or '<page_id>'} --approver <approver>"
     if page_id and stage in {"blueprint", "page_scene", "svg", "visual_review"}:
-        next_action["handoff_scope"] = "stage_batch"
-        next_action["rework_queue"] = [{"page_id": page_id, "stage": stage, "reason": reason}]
+        next_action.update(_stage_batch_details(root, stage, page_id, reason))
     if details:
         next_action.update(details)
     payload = _status_payload(root, waiting_status, page_id=page_id, stage=stage, next_action=next_action)
@@ -566,6 +625,12 @@ def _page_record(root: Path, package: dict[str, Any], status: str, *, lock: dict
     return {
         "page_id": page_id,
         "order": int(package.get("order") or 0),
+        "page_role": str(
+            scene.get("page_role")
+            or ((lock.get("enrichment") or {}).get("analysis") or {}).get("page_role")
+            or ((package.get("visual_spec") or {}).get("page_type") if isinstance(package.get("visual_spec"), dict) else "")
+            or ""
+        ),
         "status": status,
         **{
             key: {"path": run_relative(root, path), "sha256": sha256_file(path)}
@@ -742,6 +807,7 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
         raise HighDensityBuildError("HD_CONTENT_LOCK_INVALID", str(error), stage="content_lock") from error
     mode = _mode(root)
     execution_mode = "fixture" if _legacy_synthetic_fixture(root) else mode
+    require_external_review = _review_policy(root) == "external_signed"
     try:
         style_lock = load_style_lock(root, require_approved=True, expected_run_id=_run_id(root))
     except StyleSelectionRequired as exc:
@@ -1070,7 +1136,7 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
         review_file = review_path(root, page_id)
         if review_file.exists():
             try:
-                load_visual_review(root, page_id, require_external_receipt=False)
+                load_visual_review(root, page_id, require_external_receipt=require_external_review)
             except SvgVisualError as exc:
                 if execution_mode not in {"fixture", "dev"}:
                     try:
@@ -1093,7 +1159,7 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
             except SvgVisualError as exc:
                 raise HighDensityBuildError("HD_SVG_REVIEW_FAILED", str(exc), stage="visual_review", page_id=page_id) from exc
             try:
-                load_visual_review(root, page_id, require_external_receipt=False)
+                load_visual_review(root, page_id, require_external_receipt=require_external_review)
             except SvgVisualError as exc:
                 raise HighDensityBuildError("HD_SVG_REVIEW_FAILED", str(exc), stage="visual_review", page_id=page_id) from exc
         else:

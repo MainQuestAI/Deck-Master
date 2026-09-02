@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import re
 import zipfile
 from pathlib import Path
@@ -17,6 +18,110 @@ DOC_PROPS_RE = re.compile(r"docProps/(?:core|app|custom)\.xml$")
 PRESENTATION_RE = re.compile(r"ppt/presentation\.xml$")
 TEXT_ATTRS = {"descr", "title"}
 SPARSE_ALLOWED_ROLES = {"cover", "section", "section_divider", "divider", "toc", "agenda", "visual", "visual_divider", "image", "image_page"}
+
+
+def _read_optional_json(path: Path) -> dict[str, Any]:
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return value if isinstance(value, dict) else {}
+
+
+def _normalize_page_role(value: Any) -> str:
+    return str(value or "").strip().lower().replace("-", "_").replace(" ", "_")
+
+
+def _page_role(page: dict[str, Any]) -> str:
+    for key in ("page_role", "role", "page_type"):
+        value = _normalize_page_role(page.get(key))
+        if value:
+            return value
+    visual_spec = page.get("visual_spec")
+    if isinstance(visual_spec, dict):
+        for key in ("page_type", "role"):
+            value = _normalize_page_role(visual_spec.get(key))
+            if value:
+                return value
+    enrichment = page.get("enrichment")
+    if isinstance(enrichment, dict):
+        analysis = enrichment.get("analysis")
+        if isinstance(analysis, dict):
+            value = _normalize_page_role(analysis.get("page_role"))
+            if value:
+                return value
+    return ""
+
+
+def _add_manifest_roles(roles: dict[int, str], payload: dict[str, Any], *, root: Path) -> None:
+    pages = payload.get("pages")
+    if not isinstance(pages, list):
+        return
+    for index, page in enumerate(pages, start=1):
+        if not isinstance(page, dict):
+            continue
+        try:
+            slide_number = int(page.get("order") or index)
+        except (TypeError, ValueError):
+            slide_number = index
+        role = _page_role(page)
+        scene_ref = str(page.get("page_scene") or "").strip()
+        if not role and isinstance(page.get("page_scene"), dict):
+            scene_ref = str((page.get("page_scene") or {}).get("path") or "").strip()
+        if not role and scene_ref:
+            scene = _read_optional_json(root / scene_ref)
+            role = _page_role(scene)
+        if not role:
+            package_ref = str(
+                page.get("page_package_path")
+                or page.get("page_package_ref")
+                or page.get("package_path")
+                or ""
+            ).strip()
+            if package_ref:
+                role = _page_role(_read_optional_json(root / package_ref))
+        if role:
+            roles[slide_number] = role
+
+
+def load_page_roles(run_dir: str | Path | None) -> dict[int, str]:
+    """Load optional slide roles while keeping unknown pages on content rules."""
+    if run_dir is None:
+        return {}
+    root = Path(run_dir).expanduser().resolve()
+    roles: dict[int, str] = {}
+    # Lower-confidence sources are loaded first; the high-density manifest wins.
+    for path in (
+        root / "preview_manifest.json",
+        root / "page_packages" / "index.json",
+        root / "build" / "build_manifest.json",
+        root / "high_density_build" / "manifest.json",
+        root / "high_density_build" / "high_density_manifest.json",
+    ):
+        payload = _read_optional_json(path)
+        if path.name == "index.json" and path.parent.name == "page_packages":
+            pages = payload.get("pages")
+            if isinstance(pages, list):
+                for index, item in enumerate(pages, start=1):
+                    if not isinstance(item, dict):
+                        continue
+                    package_path = str(item.get("path") or item.get("page_package_path") or "").strip()
+                    if not package_path and item.get("page_id"):
+                        package_path = f"page_packages/{item['page_id']}.json"
+                    if package_path:
+                        package = _read_optional_json(root / package_path)
+                        if package:
+                            item = {**item, **package}
+                    try:
+                        slide_number = int(item.get("order") or index)
+                    except (TypeError, ValueError):
+                        slide_number = index
+                    role = _page_role(item)
+                    if role:
+                        roles[slide_number] = role
+            continue
+        _add_manifest_roles(roles, payload, root=root)
+    return roles
 
 
 def _local_name(tag: str) -> str:
@@ -105,6 +210,7 @@ def audit_pptx(
     slides = []
     text_items: list[dict[str, Any]] = []
     forbidden_hits: list[dict[str, Any]] = []
+    missing_page_roles: list[int] = []
     media_files = []
     try:
         with zipfile.ZipFile(path) as archive:
@@ -122,10 +228,14 @@ def audit_pptx(
                 slide_hits = _term_hits(text, forbidden)
                 slide_number = _slide_number(name)
                 if isinstance(page_roles, dict):
-                    page_role = str(page_roles.get(slide_number) or "content")
+                    page_role = _normalize_page_role(page_roles.get(slide_number))
                 elif isinstance(page_roles, list) and slide_number - 1 < len(page_roles):
-                    page_role = str(page_roles[slide_number - 1] or "content")
+                    page_role = _normalize_page_role(page_roles[slide_number - 1])
                 else:
+                    page_role = ""
+                if not page_role:
+                    if page_roles is not None:
+                        missing_page_roles.append(slide_number)
                     page_role = "content"
                 sparse_allowed = page_role in SPARSE_ALLOWED_ROLES
                 slides.append(
@@ -180,6 +290,7 @@ def audit_pptx(
         "media_count": len(media_files),
         "media_files": media_files,
         "slides": slides,
+        "missing_page_roles": missing_page_roles,
         "text_items": text_items,
         "sparse_pages": [slide for slide in slides if slide["is_sparse"]],
         "possible_full_slide_images": [

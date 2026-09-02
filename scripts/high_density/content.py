@@ -406,11 +406,16 @@ def _page_claim_targets(page: dict[str, Any]) -> list[str]:
 
 
 def _page_structural_claim_targets(page: dict[str, Any]) -> set[str]:
-    # Page role is a runtime visual registry label. It controls the redraw
-    # layout family and does not assert a business fact from the evidence.
-    targets: set[str] = {"role", "material_pool.recommended_visual"}
-    if str(page.get("role") or "") in STRUCTURAL_PAGE_ROLES:
-        targets.update(_page_claim_targets(page))
+    # Structural exemptions are limited to visual/layout metadata. A page role
+    # does not make its conclusions, implications, caveats, or numbers
+    # evidence-free.
+    targets: set[str] = {
+        "role",
+        "chart_plan.visual_type",
+        "storyline_context.visual_potential",
+        "material_pool.recommended_visual",
+        "material_pool.storyline_visual_potential",
+    }
     for index, component in enumerate(page.get("components") or []):
         if isinstance(component, dict):
             targets.update(f"components.{index}.{field}" for field in component)

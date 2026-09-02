@@ -838,17 +838,30 @@ def command_quality_gate(args: argparse.Namespace) -> dict[str, Any]:
     elif args.gate == "render":
         if not args.artifact:
             raise RunStateError("--artifact is required for render gate.")
-        report = evaluate_render_gate(run_id, args.artifact, expected_pages=expected_pages, forbidden_terms=args.forbidden)
+        report = evaluate_render_gate(
+            run_id,
+            args.artifact,
+            expected_pages=expected_pages,
+            forbidden_terms=args.forbidden,
+            run_dir=run_dir,
+        )
     elif args.gate == "delivery":
         if not args.artifact:
             raise RunStateError("--artifact is required for delivery gate.")
         safety_terms = load_customer_visible_forbidden_terms(run_dir, extra_terms=args.forbidden)
-        report = evaluate_delivery_gate(run_id, args.artifact, expected_pages=expected_pages, forbidden_terms=safety_terms)
+        report = evaluate_delivery_gate(
+            run_id,
+            args.artifact,
+            expected_pages=expected_pages,
+            forbidden_terms=safety_terms,
+            run_dir=run_dir,
+        )
         safety_report = evaluate_customer_visible_safety_gate(
             run_id,
             args.artifact,
             expected_pages=expected_pages,
             forbidden_terms=safety_terms,
+            run_dir=run_dir,
         )
         safety_paths = write_gate_report(run_dir, "customer_visible_safety", safety_report)
         write_artifact(
@@ -870,6 +883,7 @@ def command_quality_gate(args: argparse.Namespace) -> dict[str, Any]:
             args.artifact,
             expected_pages=expected_pages,
             forbidden_terms=safety_terms,
+            run_dir=run_dir,
         )
     elif args.gate == "evidence":
         claim_map = read_optional_json(run_dir, CLAIM_MAP_NAME) or {"run_id": run_id, "claims": []}
@@ -2260,6 +2274,8 @@ def command_build_import_provider_result(args: argparse.Namespace) -> dict[str, 
         str(args.page_id),
         Path(args.input).expanduser(),
         source_type=str(getattr(args, "source_type", "host_managed") or "host_managed"),
+        declared_provider=str(getattr(args, "declared_provider", "") or ""),
+        approved_by=str(getattr(args, "approved_by", "") or ""),
     )
     return {"status": "imported", "page_id": str(args.page_id), "blueprint": str(output.relative_to(run_dir))}
 
@@ -2270,6 +2286,21 @@ def command_build_approve_blueprint(args: argparse.Namespace) -> dict[str, Any]:
 
     output = approve_blueprint(run_dir, str(args.page_id), approved_by=str(args.approver))
     return {"status": "approved", "page_id": str(args.page_id), "blueprint_manifest": str(output.relative_to(run_dir))}
+
+
+def command_review_batch_action(args: argparse.Namespace) -> dict[str, Any]:
+    run_dir = resolve_run_dir(args)
+    from review.workbench import execute_batch_review_action
+
+    action = str(args.review_batch_command).replace("batch-", "").replace("-", "_")
+    return execute_batch_review_action(
+        run_dir,
+        action,
+        page_ids=list(getattr(args, "page_id", []) or []) or None,
+        actor=str(getattr(args, "actor", "") or "user"),
+        reason=str(getattr(args, "reason", "") or ""),
+        note=str(getattr(args, "note", "") or ""),
+    )
 
 
 def _persist_build_options(
@@ -2295,7 +2326,10 @@ def _persist_build_options(
     output_profile = getattr(args, "output_profile", None)
     if persist and output_profile:
         request["output_profile"] = str(output_profile)
-    if persist and (requested_internal or output_profile):
+    review_policy = getattr(args, "review_policy", None)
+    if persist and review_policy:
+        request["review_policy"] = str(review_policy).replace("-", "_")
+    if persist and (requested_internal or output_profile or review_policy):
         write_json(run_dir / REQUEST_NAME, request)
     return effective
 
@@ -3453,12 +3487,14 @@ def build_parser() -> argparse.ArgumentParser:
     add_run_args(p_build_prepare)
     p_build_prepare.add_argument("--profile", choices=["standard", "high-density"], default=None)
     p_build_prepare.add_argument("--output-profile", choices=["production_pptx", "client_delivery"], default=None)
+    p_build_prepare.add_argument("--review-policy", choices=["local_traceable", "external_signed", "local-traceable", "external-signed"], default=None)
     p_build_prepare.set_defaults(func=command_build_prepare)
 
     p_build_run = build_sub.add_parser("run", help="Build HTML/PDF/PNG/PPTX artifacts")
     add_run_args(p_build_run)
     p_build_run.add_argument("--profile", choices=["standard", "high-density"], default=None)
     p_build_run.add_argument("--output-profile", choices=["production_pptx", "client_delivery"], default=None)
+    p_build_run.add_argument("--review-policy", choices=["local_traceable", "external_signed", "local-traceable", "external-signed"], default=None)
     p_build_run.set_defaults(func=command_build_run)
 
     p_build_status = build_sub.add_parser("status", help="Inspect production build artifacts")
@@ -3487,6 +3523,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_build_import_provider.add_argument("--page-id", required=True)
     p_build_import_provider.add_argument("--input", required=True, help="PNG image path")
     p_build_import_provider.add_argument("--source-type", choices=["host_managed", "explicit_import"], default="host_managed")
+    p_build_import_provider.add_argument("--declared-provider", default="", help="Optional provider label for explicit imports")
+    p_build_import_provider.add_argument("--approved-by", default="", help="Actor who approved this explicit import action")
     p_build_import_provider.set_defaults(func=command_build_import_provider_result)
 
     p_build_approve_blueprint = build_sub.add_parser("approve-blueprint", help="Approve an imported high-density blueprint")
@@ -3494,6 +3532,17 @@ def build_parser() -> argparse.ArgumentParser:
     p_build_approve_blueprint.add_argument("--page-id", required=True)
     p_build_approve_blueprint.add_argument("--approver", required=True)
     p_build_approve_blueprint.set_defaults(func=command_build_approve_blueprint)
+
+    p_review = sub.add_parser("review", help="Apply Review Workbench decisions")
+    review_sub = p_review.add_subparsers(dest="review_batch_command", required=True)
+    for command_name in ("batch-approve", "batch-reject", "batch-needs-work", "batch-request-evidence"):
+        p_review_batch = review_sub.add_parser(command_name, help=f"Run {command_name} across review pages")
+        add_run_args(p_review_batch)
+        p_review_batch.add_argument("--page-id", action="append", default=[], help="Page id to include. Repeat for multiple pages; omit for all pages.")
+        p_review_batch.add_argument("--actor", default="user")
+        p_review_batch.add_argument("--reason", default="")
+        p_review_batch.add_argument("--note", default="")
+        p_review_batch.set_defaults(func=command_review_batch_action)
 
     p_render = sub.add_parser("render", help="Render a run through the bundled PPT Master path")
     add_run_args(p_render)

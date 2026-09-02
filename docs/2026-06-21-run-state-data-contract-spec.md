@@ -53,6 +53,7 @@
 - `approve_approval`
 - `reject_approval`
 - `mark_delivered`
+- `batch_review`（`review_action`、可选 `page_ids`，沿用 `actor`、`reason`/`note`）
 
 ### 2.5 页面动作接口
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import shutil
 import sys
 import tempfile
@@ -61,8 +62,6 @@ def _write_final_readiness(run_dir: Path, *, ready: bool, reason: str = "") -> N
     artifact = run_dir / "build" / "deck.pptx"
     artifact.parent.mkdir(parents=True, exist_ok=True)
     artifact.write_bytes(b"approved deck")
-    import hashlib
-
     artifact_hash = hashlib.sha256(artifact.read_bytes()).hexdigest()
     payload = {
         "schema_version": "deck_final_readiness.v1",
@@ -111,6 +110,16 @@ def _write_gate(
         "findings": findings,
         "page_findings": [],
     }
+    if gate in {"render", "delivery", "customer_visible_safety"}:
+        artifact = run_dir / "build" / "deck.pptx"
+        report.update(
+            {
+                "artifact": "build/deck.pptx",
+                "artifact_path": "build/deck.pptx",
+                "artifact_run_relative": "build/deck.pptx",
+                "artifact_sha256": hashlib.sha256(artifact.read_bytes()).hexdigest(),
+            }
+        )
     if extra:
         report.update(extra)
     (quality_dir / f"{gate}_gate.json").write_text(

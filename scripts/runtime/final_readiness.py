@@ -7,6 +7,7 @@ from typing import Any
 
 from delivery.validate import validate_delivery
 from quality.gate_freshness import report_currentity
+from quality.gate_policy import resolve_required_gates
 from quality.overrides import has_active_override
 from runtime.render import find_render_result
 from runtime.run_state import PREVIEW_MANIFEST_NAME, read_json
@@ -138,10 +139,12 @@ def _quality_gate_summary(root: Path, artifact: Path | None = None) -> list[dict
         if not report:
             gates.append({"gate": path.stem.replace("_gate", ""), "status": "parse_failed", "blocks_delivery": True})
             continue
-        currentity = report_currentity(root, report, artifact)
+        gate_name = str(report.get("gate") or path.stem.replace("_gate", ""))
+        report_for_currentity = report if report.get("gate") else {**report, "gate": gate_name}
+        currentity = report_currentity(root, report_for_currentity, artifact)
         gates.append(
             {
-                "gate": str(report.get("gate") or path.stem.replace("_gate", "")),
+                "gate": gate_name,
                 "status": str(report.get("status") or ""),
                 "blocks_delivery": bool(report.get("blocks_delivery")),
                 "findings": len(report.get("findings", [])) if isinstance(report.get("findings"), list) else 0,
@@ -276,6 +279,20 @@ def compute_final_readiness(
 
     if not quality_gates:
         _add_blocker(blockers, "final_quality_gate_missing", "Quality gate report is missing.", severity="P1")
+    gate_policy = resolve_required_gates(
+        root,
+        artifact,
+        builder_profile="high_density" if high_density_completed else "",
+        output_profile="production_pptx" if str(artifact_rel).endswith(".pptx") else "",
+        run_mode=str(run_state.get("run_mode") or run_mode or ""),
+    )
+    if gate_policy.get("missing_gates"):
+        missing_text = ", ".join(str(gate) for gate in gate_policy.get("missing_gates") or [])
+        message = f"当前产物未检查：缺少当前有效质量门 {missing_text}。"
+        if _is_fixture_policy(run_state):
+            warnings.append(message)
+        else:
+            _add_blocker(blockers, "final_current_artifact_gate_missing", message, severity="P1")
     _safety_path, safety_report, safety_exists = _customer_visible_safety_report(root)
     safety_optional = _is_fixture_policy(run_state)
     if not safety_exists:
@@ -290,14 +307,26 @@ def compute_final_readiness(
             warnings.append(message)
         else:
             _add_blocker(blockers, "final_customer_visible_safety_invalid", message)
-    elif not report_currentity(root, safety_report, artifact).get("current", True):
-        warnings.append("客户可见内容安全检查报告已过期，需要重新运行，但不阻断当前 artifact。")
-    elif safety_report.get("blocks_delivery") or str(safety_report.get("status") or "").lower() in {"rework_required", "failed", "blocked"}:
-        _add_blocker(
-            blockers,
-            "final_customer_visible_safety_blocked",
-            "最终文件包含内部制作语言或模板占位语，需要返修。",
-        )
+    else:
+        safety_for_currentity = safety_report if safety_report.get("gate") else {**safety_report, "gate": "customer_visible_safety"}
+        safety_current = report_currentity(
+            root,
+            safety_for_currentity,
+            artifact,
+            artifact_bound=True,
+        ).get("current", True)
+        if not safety_current:
+            message = "客户可见内容安全检查报告已过期，需要重新扫描当前产物。"
+            if safety_optional:
+                warnings.append(message)
+            else:
+                _add_blocker(blockers, "final_customer_visible_safety_stale", message, severity="P1")
+        elif safety_report.get("blocks_delivery") or str(safety_report.get("status") or "").lower() in {"rework_required", "failed", "blocked"}:
+            _add_blocker(
+                blockers,
+                "final_customer_visible_safety_blocked",
+                "最终文件包含内部制作语言或模板占位语，需要返修。",
+            )
 
     for gate in quality_gates:
         if not gate.get("current", True):
@@ -375,6 +404,7 @@ def compute_final_readiness(
             "source_fingerprint": str(lineage.get("source_fingerprint") or ""),
         },
         "quality_gates": quality_gates,
+        "required_gate_policy": gate_policy,
         "customer_visible_safety": {
             "required": not safety_optional,
             "path": str(CUSTOMER_VISIBLE_SAFETY_GATE) if safety_exists else "",
@@ -422,6 +452,7 @@ def final_readiness_clearance(run_dir: str | Path) -> dict[str, Any]:
             "final_customer_visible_safety_blocked",
             "final_customer_visible_safety_missing",
             "final_customer_visible_safety_invalid",
+            "final_customer_visible_safety_stale",
         }
         for blocker in blockers:
             if (

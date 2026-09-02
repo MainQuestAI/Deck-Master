@@ -11,8 +11,8 @@ from typing import Any
 MANIFEST_NAME = "preview_manifest.json"
 SOURCE_TYPES = {"library_slide", "generated", "placeholder", "manual"}
 DECISIONS = {"needs_review", "keep", "replace", "approved", "rejected"}
-REVIEW_STATUSES = {"needs_review", "needs_evidence", "approved", "rejected"}
-ACTION_INTENTS = {"none", "reuse", "adapt", "generate", "manual_placeholder", "replace", "request_evidence"}
+REVIEW_STATUSES = {"needs_review", "needs_work", "needs_evidence", "approved", "rejected"}
+ACTION_INTENTS = {"none", "reuse", "adapt", "generate", "manual_placeholder", "replace", "needs_work", "request_evidence"}
 SOURCE_DECISIONS = {"reuse", "adapt", "generate", "manual_placeholder", "pending_replacement"}
 REQUIRED_PAGE_FIELDS = {
     "page_id",
@@ -40,6 +40,7 @@ REVIEW_TO_LEGACY: dict[tuple[str, str], str] = {
     ("approved", "none"): "approved",
     ("rejected", "none"): "rejected",
     ("needs_review", "replace"): "replace",
+    ("needs_work", "needs_work"): "needs_review",
     ("needs_review", "none"): "needs_review",
     ("needs_evidence", "request_evidence"): "needs_review",
     ("needs_evidence", "none"): "needs_review",

@@ -186,7 +186,15 @@ def _validate_provider_challenge(root: Path, prompt: dict[str, Any], page_id: st
     return payload
 
 
-def record_provider_host_result(root: Path, page_id: str, source_image: Path, *, source_type: str = "host_managed") -> Path:
+def record_provider_host_result(
+    root: Path,
+    page_id: str,
+    source_image: Path,
+    *,
+    source_type: str = "host_managed",
+    declared_provider: str = "",
+    approved_by: str = "",
+) -> Path:
     """Import a host-managed ImageGen result before production manifest sealing."""
     _assert_page_id(page_id)
     prompt = read_json(prompt_path(root, page_id))
@@ -203,19 +211,20 @@ def record_provider_host_result(root: Path, page_id: str, source_image: Path, *,
     if source_kind == "host_managed" and not re.fullmatch(r"exec-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.png", source.name):
         raise BlueprintInvalid("Host-managed provider result must use the ImageGen exec-UUID filename")
     source_created_at = _provider_source_created_at(source)
-    if _parse_timestamp(source_created_at, field="provider source created_at", page_id=page_id) < _parse_timestamp(challenge.get("issued_at"), field="challenge issued_at", page_id=page_id):
+    if source_kind == "host_managed" and _parse_timestamp(source_created_at, field="provider source created_at", page_id=page_id) < _parse_timestamp(challenge.get("issued_at"), field="challenge issued_at", page_id=page_id):
         raise BlueprintInvalid("Host-managed provider result predates the Runtime challenge")
     destination = root / BLUEPRINT_DIR / f"{page_id}.png"
     destination.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(source, destination)
+    imported_at = utc_now()
     provider = {
-        "tool": "image_gen.imagegen",
-        "model": "provider-managed-imagegen",
+        "tool": "image_gen.imagegen" if source_kind == "host_managed" else "external_or_unknown",
+        "model": "provider-managed-imagegen" if source_kind == "host_managed" else "explicit_import",
         "request_id": source.stem if source_kind == "host_managed" else f"explicit-import-{sha256_file(source)[:16]}",
         "challenge_nonce": str(challenge["nonce"]),
         "prompt_sha256": str(prompt["prompt_sha256"]),
         "requested_at": str(challenge["issued_at"]),
-        "responded_at": source_created_at,
+        "responded_at": source_created_at if source_kind == "host_managed" else imported_at,
     }
     provider["request_sha256"] = _provider_request_sha256(provider)
     payload = {
@@ -238,7 +247,10 @@ def record_provider_host_result(root: Path, page_id: str, source_image: Path, *,
         "source_file_sha256": sha256_file(source),
         "source_size_bytes": source.stat().st_size,
         "source_created_at": source_created_at,
-        "recorded_at": utc_now(),
+        "imported_at": imported_at,
+        "declared_provider": declared_provider,
+        "approved_by": approved_by or "unknown",
+        "recorded_at": imported_at,
     }
     receipt = {**payload, "integrity": sign_runtime_payload("imagegen_host_result.v1", payload)}
     assert_v2("provider_host_receipt", receipt)

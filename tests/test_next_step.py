@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import shutil
 import sys
@@ -45,6 +46,33 @@ class NextStepResolverTest(unittest.TestCase):
         quality_dir.mkdir(exist_ok=True)
         (quality_dir / name).write_text(
             json.dumps({"status": status, "blocks_delivery": blocks, "findings": []}),
+            encoding="utf-8",
+        )
+
+    def _write_bound_gate(self, gate: str, artifact: Path) -> None:
+        digest = hashlib.sha256(artifact.read_bytes()).hexdigest()
+        quality_dir = self.run_dir / "quality_reports"
+        quality_dir.mkdir(exist_ok=True)
+        rel = artifact.relative_to(self.run_dir).as_posix()
+        (quality_dir / f"{gate}_gate.json").write_text(
+            json.dumps(
+                {
+                    "gate": gate,
+                    "status": "pass",
+                    "blocks_delivery": False,
+                    "findings": [],
+                    "artifact_path": rel,
+                    "artifact_run_relative": rel,
+                    "artifact_sha256": digest,
+                    "artifact_binding": {
+                        "artifact_run_relative": rel,
+                        "artifact_sha256": digest,
+                        "source_fingerprint": "",
+                        "build_manifest_sha256": "",
+                        "artifact_manifest_sha256": "",
+                    },
+                }
+            ),
             encoding="utf-8",
         )
 
@@ -223,7 +251,7 @@ class NextStepResolverTest(unittest.TestCase):
         self.assertEqual("deck-builder", result["recommended_skill"])
         self.assertIn("build run", result["next_command"])
 
-    def test_completed_high_density_with_passed_gate_returns_final_readiness(self) -> None:
+    def test_completed_high_density_with_only_safety_gate_returns_render_gate(self) -> None:
         status_path = self.run_dir / "high_density_build" / "status.json"
         status_path.parent.mkdir(parents=True)
         self._write_json(REQUEST_NAME, {"run_id": "r1", "run_mode": "production"})
@@ -247,9 +275,37 @@ class NextStepResolverTest(unittest.TestCase):
 
         result = self._resolve(run_mode="production")
 
+        self._assert_shape(result, "needs_quality_review")
+        self.assertIn("quality-gate render", result["next_command"])
+
+    def test_completed_high_density_with_current_render_gate_returns_final_readiness(self) -> None:
+        status_path = self.run_dir / "high_density_build" / "status.json"
+        status_path.parent.mkdir(parents=True)
+        self._write_json(REQUEST_NAME, {"run_id": "r1", "run_mode": "production"})
+        status_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "deck_high_density_status.v2",
+                    "run_id": "r1",
+                    "builder_profile": "high_density",
+                    "status": "completed",
+                    "current_stage": "pptx",
+                    "next_action": {"kind": "complete"},
+                }
+            ),
+            encoding="utf-8",
+        )
+        pptx_path = self.run_dir / "high_density_build" / "pptx" / "deck_high_density.pptx"
+        pptx_path.parent.mkdir(parents=True)
+        pptx_path.write_bytes(b"pptx")
+        self._write_bound_gate("render", pptx_path)
+        self._write_bound_gate("delivery", pptx_path)
+        self._write_bound_gate("customer_visible_safety", pptx_path)
+
+        result = self._resolve(run_mode="production")
+
         self._assert_shape(result, "ready_for_final_readiness")
         self.assertIn("final-readiness", result["next_command"])
-        self.assertNotIn("quality-gate render", result["next_command"])
 
     def test_result_always_contains_required_keys(self) -> None:
         # Verify across multiple states that the shape is stable.

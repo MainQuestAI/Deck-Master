@@ -1,7 +1,7 @@
 # Deck Master 过度防御治理迭代 Spec v1
 
-日期：2026-09-01  
-状态：Ready for implementation planning  
+日期：2026-09-01
+状态：Ready for implementation planning
 适用范围：Deck Master PPT 生产生命周期中的过度防御问题，包括内容锁定、MBB 选择、蓝图生成、SVG/PPTX 构建、质量门禁、审阅、导出、最终放行和恢复重试。
 
 ## 1. 结论
@@ -24,8 +24,8 @@
 
 ## 3. 已验证当前状态
 
-验证日期：2026-09-01  
-当前仓：`main`，HEAD 与 `origin/main` 对齐。  
+验证日期：2026-09-01
+当前仓：`main`，HEAD 与 `origin/main` 对齐。
 当前已有未提交相关修复文件：`scripts/high_density/content.py`、`scripts/high_density/engine.py`、`skills/deck-builder-high-density/SKILL.md`、`tests/test_high_density_builder_v2.py`。
 
 当前 LVMH run 的 `next-step` 返回 `awaiting_agent_build`，下一步是继续执行高密度构建并生成 `high_density_build/mbb/mbb_plan.json`。这说明此前故事线密钥闭锁已局部止血，但后续质量、审阅、导出和最终放行仍存在同类过度防御风险。
@@ -208,4 +208,3 @@ git diff --check
 3. 接入新的外部 PPT 后端或新 Provider。
 4. 修复与过度防御无关的 UI、发布、安装或 benchmark 问题。
 5. 提交、推送、合并分支。
-

@@ -105,7 +105,8 @@ def validate_delivery(
             try:
                 report = json.loads(gate_file.read_text(encoding="utf-8"))
                 gate_name = gate_file.stem.replace("_gate", "")
-                currentity = report_currentity(run_dir, report, artifact)
+                report_for_currentity = report if report.get("gate") else {**report, "gate": gate_name}
+                currentity = report_currentity(run_dir, report_for_currentity, artifact)
                 gates_checked.append({
                     "gate": gate_name,
                     "status": report.get("status", ""),

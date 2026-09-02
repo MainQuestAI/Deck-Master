@@ -20,6 +20,10 @@
     "created_at": {"type": "string"},
     "status": {"type": "string", "enum": ["pass", "rework_required", "blocked"]},
     "artifact": {"type": "string"},
+    "artifact_path": {"type": "string"},
+    "artifact_run_relative": {"type": "string"},
+    "artifact_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "artifact_hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
     "summary": {
       "type": "object",
       "required": ["scanned_items", "forbidden_hits", "p0_count"],

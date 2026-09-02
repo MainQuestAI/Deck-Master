@@ -930,7 +930,13 @@ def _main_review_receipt_payload(review: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _load_main_review_receipt(root: Path, page_id: str, review: dict[str, Any]) -> dict[str, Any]:
+def _load_main_review_receipt(
+    root: Path,
+    page_id: str,
+    review: dict[str, Any],
+    *,
+    require_external: bool = False,
+) -> dict[str, Any]:
     try:
         receipt = read_json(main_review_receipt_path(root, page_id))
     except ContractError as exc:
@@ -942,9 +948,22 @@ def _load_main_review_receipt(root: Path, page_id: str, review: dict[str, Any]) 
     try:
         assert_v2("visual_main_review_receipt", receipt)
         payload = {key: value for key, value in receipt.items() if key != "integrity"}
-        verify_review_attestation(payload, receipt.get("integrity") or {})
+        integrity = receipt.get("integrity") or {}
+        if require_external:
+            verify_review_attestation(payload, integrity)
+        else:
+            try:
+                verify_runtime_payload("visual_main_review_local_receipt.v1", payload, integrity)
+            except ContractError as local_error:
+                try:
+                    verify_review_attestation(payload, integrity)
+                except ContractError as external_error:
+                    raise ContractError(
+                        f"local or external main visual review receipt verification failed: {external_error}"
+                    ) from local_error
     except ContractError as exc:
-        raise SvgVisualError(f"independent main visual review attestation is invalid on page {page_id}: {exc}", page_id=page_id, code="HD_VISUAL_REVIEW_ATTESTATION_INVALID") from exc
+        kind = "external main visual review attestation" if require_external else "main visual review receipt"
+        raise SvgVisualError(f"{kind} is invalid on page {page_id}: {exc}", page_id=page_id, code="HD_VISUAL_REVIEW_ATTESTATION_INVALID") from exc
     expected = _main_review_receipt_payload(review)
     for field, value in expected.items():
         if field == "attested_at":
@@ -1175,7 +1194,7 @@ def _metrics_projection(metrics: dict[str, Any]) -> dict[str, Any]:
     return {key: metrics.get(key) for key in ("schema_version", "comparison", "inputs", "thresholds", "values", "coverage", "geometry", "object_checks", "findings", "status")}
 
 
-def load_visual_review(root: Path, page_id: str, *, require_external_receipt: bool = True) -> dict[str, Any]:
+def load_visual_review(root: Path, page_id: str, *, require_external_receipt: bool = False) -> dict[str, Any]:
     review = read_json(review_path(root, page_id))
     if review.get("schema_version") != "deck_visual_review.v2" or review.get("page_id") != page_id:
         raise SvgVisualError(f"visual review contract is invalid on page {page_id}", page_id=page_id)
@@ -1246,8 +1265,12 @@ def load_visual_review(root: Path, page_id: str, *, require_external_receipt: bo
     values = computed.get("values") or {}
     if float(values.get("text_masked_ssim") or 0) < 0.92 or float(values.get("bbox_max_delta_px") or 0) > 2.0:
         raise SvgVisualError(f"visual review fidelity gate failed on page {page_id}", page_id=page_id)
-    if require_external_receipt and _run_mode(root) in {"production", "benchmark"}:
-        _load_main_review_receipt(root, page_id, review)
+    if _run_mode(root) in {"production", "benchmark"}:
+        receipt_path = main_review_receipt_path(root, page_id)
+        if require_external_receipt:
+            _load_main_review_receipt(root, page_id, review, require_external=True)
+        elif receipt_path.exists():
+            _load_main_review_receipt(root, page_id, review)
     return review
 
 

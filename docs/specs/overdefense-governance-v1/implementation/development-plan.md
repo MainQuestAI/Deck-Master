@@ -1,7 +1,7 @@
 # 过度防御治理 v1 开发计划
 
-日期：2026-09-01  
-主 Spec：[`../00-master-spec.md`](../00-master-spec.md)  
+日期：2026-09-01
+主 Spec：[`../00-master-spec.md`](../00-master-spec.md)
 建议分支：`codex/overdefense-governance-v1`
 
 ## 执行原则
@@ -73,8 +73,8 @@ git diff --check
 | `scripts/quality/pptx_audit.py` | sparse/full-image 检查读取页面角色 |
 | `scripts/review/workbench.py` | 增加批量 approve/reject/needs-work |
 | `scripts/review/readiness.py` | 批量审阅后正确计算 ready/needs_review |
-| `scripts/high_density/engine.py` | 批量 handoff 和失败页 rework queue |
-| `tests/test_high_density_builder_v2.py` | 角色化页面和批量 handoff 测试 |
+| `scripts/high_density/engine.py` | 单页 handoff 语义；阶段批量 handoff 与失败页 rework queue deferred follow-up |
+| `tests/test_high_density_builder_v2.py` | 角色化页面测试；批量 handoff deferred follow-up |
 | `tests/test_review_workbench.py` | 批量审阅测试 |
 
 退出命令：
@@ -120,4 +120,3 @@ git diff --check
 5. 高密度 completed 状态不会重复同一条 render gate。
 6. 所有新增/修改测试通过。
 7. `git diff --check` 通过。
-
