@@ -16,7 +16,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from server import PreviewHandler, WRITE_TOKEN_HEADER  # noqa: E402
 from orchestrate.export_queue import export_queue  # noqa: E402
-from review.workbench import WorkbenchError, execute_review_action  # noqa: E402
+from review.workbench import WorkbenchError, execute_batch_review_action, execute_review_action  # noqa: E402
 from runtime.run_state import create_run, read_json, write_json  # noqa: E402
 from runtime.events import read_events  # noqa: E402
 from runtime.import_log import append_import_log  # noqa: E402
@@ -295,6 +295,46 @@ class WorkbenchDirectTest(unittest.TestCase):
         wb_events = [e for e in events if "page_review" in str(e.get("step", ""))]
         self.assertTrue(len(wb_events) >= 1)
 
+    def test_batch_approve_all_unblocked_pages(self) -> None:
+        result = execute_batch_review_action(self.run_dir, "approve")
+
+        self.assertEqual(result["status"], "ok")
+        self.assertEqual(result["applied_pages"], ["beat_001", "beat_002"])
+        preview = read_json(self.run_dir / "preview_manifest.json")
+        self.assertEqual(
+            {page["page_id"]: page["review_status"] for page in preview["pages"]},
+            {"beat_001": "approved", "beat_002": "approved"},
+        )
+
+    def test_batch_approve_keeps_blocked_page_reason(self) -> None:
+        write_json(self.run_dir / "quality_reports" / "draft_gate.json", {
+            "gate": "draft",
+            "findings": [
+                {"finding_id": "p0_test", "severity": "P0", "page_id": "beat_002", "message": "P0 blocking"},
+            ],
+        })
+
+        result = execute_batch_review_action(self.run_dir, "approve")
+
+        self.assertEqual(result["status"], "completed_with_warnings")
+        self.assertEqual(result["applied_pages"], ["beat_001"])
+        self.assertEqual(result["blocked_pages"][0]["page_id"], "beat_002")
+        self.assertIn("P0", result["blocked_pages"][0]["reason"])
+
+    def test_batch_approve_maps_slide_number_finding_to_matching_page(self) -> None:
+        write_json(self.run_dir / "quality_reports" / "draft_gate.json", {
+            "gate": "draft",
+            "findings": [
+                {"finding_id": "slide_002_p0", "severity": "P0", "page_id": "slide_002", "message": "P0 blocking"},
+            ],
+        })
+
+        result = execute_batch_review_action(self.run_dir, "approve")
+
+        self.assertEqual(result["applied_pages"], ["beat_001"])
+        self.assertEqual(result["blocked_pages"][0]["page_id"], "beat_002")
+        self.assertIn("P0", result["blocked_pages"][0]["reason"])
+
 
 class WorkbenchAPITest(unittest.TestCase):
     """Test via HTTP handler."""
@@ -315,6 +355,73 @@ class WorkbenchAPITest(unittest.TestCase):
         )
         self.assertEqual(status, 200)
         self.assertEqual(data["status"], "ok")
+
+    def test_batch_review_action_api_applies_unblocked_pages(self) -> None:
+        status, data = self.handler.request(
+            "POST",
+            "/api/workspace/wb-test/actions",
+            body={"action": "batch_review", "review_action": "approve", "actor": "user"},
+        )
+
+        self.assertEqual(status, 200)
+        self.assertEqual(data["status"], "ok")
+        self.assertEqual(data["applied_pages"], ["beat_001", "beat_002"])
+        preview = read_json(self.run_dir / "preview_manifest.json")
+        self.assertEqual(
+            {page["page_id"]: page["review_status"] for page in preview["pages"]},
+            {"beat_001": "approved", "beat_002": "approved"},
+        )
+
+    def test_batch_review_action_api_keeps_blocked_page_reason(self) -> None:
+        write_json(self.run_dir / "quality_reports" / "draft_gate.json", {
+            "gate": "draft",
+            "findings": [
+                {"finding_id": "p0_test", "severity": "P0", "page_id": "beat_002", "message": "P0 blocking"},
+            ],
+        })
+
+        status, data = self.handler.request(
+            "POST",
+            "/api/workspace/wb-test/actions",
+            body={"action": "batch_review", "review_action": "approve", "actor": "user"},
+        )
+
+        self.assertEqual(status, 200)
+        self.assertEqual(data["status"], "completed_with_warnings")
+        self.assertEqual(data["applied_pages"], ["beat_001"])
+        self.assertEqual(data["blocked_pages"][0]["page_id"], "beat_002")
+        self.assertIn("P0", data["blocked_pages"][0]["reason"])
+
+    def test_review_batch_needs_work_cli_preserves_action_semantics(self) -> None:
+        import subprocess
+
+        completed = subprocess.run(
+            [
+                sys.executable,
+                str(ROOT / "scripts" / "deck_master.py"),
+                "review",
+                "batch-needs-work",
+                "--run-dir",
+                str(self.run_dir),
+                "--page-id",
+                "beat_001",
+                "--actor",
+                "user",
+                "--reason",
+                "visual hierarchy needs work",
+            ],
+            cwd=ROOT,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
+        self.assertEqual(0, completed.returncode, completed.stderr)
+        payload = json.loads(completed.stdout)
+        self.assertEqual(["beat_001"], payload["applied_pages"])
+        page_tasks = read_json(self.run_dir / "page_tasks.json")
+        task = next(item for item in page_tasks["tasks"] if item["beat_id"] == "beat_001")
+        self.assertEqual("needs_work", task["action_intent"])
 
     def test_review_action_add_note_updates_deck_api(self) -> None:
         status, data = self.handler.request(

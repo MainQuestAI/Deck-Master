@@ -8,6 +8,7 @@ from build.manifest import BuildManifestError, build_manifest_v2, legacy_preview
 from runtime.artifact_validator import validate_artifact_manifest
 from runtime.events import append_event
 from runtime.run_state import ensure_run_dirs, load_request, read_json
+from page_roles import canonical_page_role
 
 from .blueprint import (
     BLUEPRINT_MANIFEST_DIR,
@@ -40,6 +41,7 @@ from .content import (
 from .contracts import ContractError, assert_valid, assert_v2, read_json as read_contract_json, run_relative, safe_run_path, sha256_file, sha256_json, utc_now, write_json as write_contract_json
 from .migration import MIGRATION_REQUIRED_CODE, legacy_artifact_reason
 from .pptx import PptxEditabilityError, compile_pptx, readback_pptx, pptx_path, readback_path, trace_path
+from .review_policy import load_review_policy
 from .scene import build_fixture_scene, load_scene, scene_path, validate_scene_content, write_scene
 from .style import STYLE_LOCK_PATH, StyleSelectionRequired, ensure_style_lock, load_style_lock, write_style_lock
 from .svg import (
@@ -85,6 +87,10 @@ def _run_id(root: Path) -> str:
     return str(load_request(root).get("run_id") or root.name)
 
 
+def _review_policy(root: Path) -> dict[str, str]:
+    return load_review_policy(root)
+
+
 def _legacy_synthetic_fixture(root: Path) -> bool:
     """Keep the historical synthetic regression fixture deterministic.
 
@@ -99,6 +105,67 @@ def _legacy_synthetic_fixture(root: Path) -> bool:
 
 def _resume_command(root: Path) -> str:
     return f"deck-master build run --run-dir {root} --profile high-density"
+
+
+def _stage_output_ref(page_id: str, stage: str) -> str:
+    return {
+        "blueprint": f"high_density_build/blueprints/{page_id}.png",
+        "page_scene": f"high_density_build/scenes/{page_id}.page_scene.json",
+        "svg": f"high_density_build/svg/{page_id}.svg",
+        "visual_review": f"high_density_build/reviews/{page_id}.visual_review.json",
+    }.get(stage, "")
+
+
+def _stage_input_ref(page_id: str, stage: str) -> str:
+    return {
+        "blueprint": f"high_density_build/prompts/{page_id}.blueprint_prompt.json",
+        "page_scene": f"high_density_build/blueprints/{page_id}.blueprint_manifest.json",
+        "svg": f"high_density_build/scenes/{page_id}.page_scene.json",
+        "visual_review": f"high_density_build/svg/{page_id}.svg",
+    }.get(stage, "")
+
+
+def _stage_batch_details(root: Path, stage: str, current_page_id: str, reason: str) -> dict[str, Any]:
+    if stage not in {"blueprint", "page_scene", "svg", "visual_review"}:
+        return {}
+    try:
+        packages = _packages_for_build(root)
+    except ContractError:
+        packages = []
+    pending_pages: list[str] = []
+    input_refs: list[str] = []
+    output_refs: list[str] = []
+    for package in packages:
+        page_id = str(package.get("page_id") or "")
+        if not page_id:
+            continue
+        output_ref = _stage_output_ref(page_id, stage)
+        if not output_ref:
+            continue
+        if not (root / output_ref).exists() or page_id == current_page_id:
+            pending_pages.append(page_id)
+            input_ref = _stage_input_ref(page_id, stage)
+            if input_ref:
+                input_refs.append(input_ref)
+            output_refs.append(output_ref)
+    if current_page_id and current_page_id not in pending_pages:
+        pending_pages.insert(0, current_page_id)
+        input_ref = _stage_input_ref(current_page_id, stage)
+        output_ref = _stage_output_ref(current_page_id, stage)
+        if input_ref:
+            input_refs.insert(0, input_ref)
+        if output_ref:
+            output_refs.insert(0, output_ref)
+    return {
+        "handoff_scope": "stage_batch",
+        "pending_pages": pending_pages,
+        "rework_queue": [
+            {"page_id": page_id, "stage": stage, "reason": reason}
+            for page_id in pending_pages
+        ],
+        "input_refs": input_refs,
+        "output_refs": output_refs,
+    }
 
 
 def _status_payload(
@@ -199,6 +266,13 @@ def _waiting(
         "resume_command": _resume_command(root),
         "reason": reason,
     }
+    if stage == "style_lock" and kind == "awaiting_user_decision":
+        next_action["approval_command"] = f"deck-master build select-style --run-dir {root} --style-id <style_id> --approver <approver>"
+    if stage == "blueprint" and kind in {"agent_imagegen", "agent_imagegen_repair"}:
+        next_action["import_command"] = f"deck-master build import-provider-result --run-dir {root} --page-id {page_id or '<page_id>'} --input <blueprint.png> --source-type explicit_import --approved-by <approver>"
+        next_action["approval_command"] = f"deck-master build approve-blueprint --run-dir {root} --page-id {page_id or '<page_id>'} --approver <approver>"
+    if page_id and stage in {"blueprint", "page_scene", "svg", "visual_review"}:
+        next_action.update(_stage_batch_details(root, stage, page_id, reason))
     if details:
         next_action.update(details)
     payload = _status_payload(root, waiting_status, page_id=page_id, stage=stage, next_action=next_action)
@@ -558,6 +632,12 @@ def _page_record(root: Path, package: dict[str, Any], status: str, *, lock: dict
     return {
         "page_id": page_id,
         "order": int(package.get("order") or 0),
+        "page_role": canonical_page_role(
+            scene.get("page_role")
+            or ((lock.get("enrichment") or {}).get("analysis") or {}).get("page_role")
+            or ((package.get("visual_spec") or {}).get("page_type") if isinstance(package.get("visual_spec"), dict) else ""),
+            default="content",
+        ),
         "status": status,
         **{
             key: {"path": run_relative(root, path), "sha256": sha256_file(path)}
@@ -734,6 +814,7 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
         raise HighDensityBuildError("HD_CONTENT_LOCK_INVALID", str(error), stage="content_lock") from error
     mode = _mode(root)
     execution_mode = "fixture" if _legacy_synthetic_fixture(root) else mode
+    review_policy = _review_policy(root)
     try:
         style_lock = load_style_lock(root, require_approved=True, expected_run_id=_run_id(root))
     except StyleSelectionRequired as exc:
@@ -1062,7 +1143,12 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
         review_file = review_path(root, page_id)
         if review_file.exists():
             try:
-                load_visual_review(root, page_id)
+                load_visual_review(
+                    root,
+                    page_id,
+                    review_depth=review_policy["review_depth"],
+                    receipt_policy=review_policy["receipt_policy"],
+                )
             except SvgVisualError as exc:
                 if execution_mode not in {"fixture", "dev"}:
                     try:
@@ -1073,10 +1159,25 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
                     self_pending = str((review_payload.get("self_review") or {}).get("status") or "") == "pending"
                     main_passed = str((review_payload.get("main_review") or {}).get("status") or "") == "pass"
                     main_pending = str((review_payload.get("main_review") or {}).get("status") or "") == "pending"
+                    if exc.code.startswith("HD_VISUAL_REVIEW_ATTESTATION_"):
+                        return _waiting(
+                            root,
+                            page_id=page_id,
+                            stage="visual_review",
+                            kind="agent_review_attestation",
+                            input_ref=f"high_density_build/reviews/{page_id}.visual_review.json",
+                            output_ref=f"high_density_build/reviews/{page_id}.main_review_receipt.json",
+                            output_refs=[f"high_density_build/reviews/{page_id}.main_review_receipt.json"],
+                            reason=f"Resolve the configured visual review attestation policy: {exc}",
+                            details={
+                                "review_policy": review_policy,
+                                "attestation_command": f"DECK_MASTER_REVIEW_ATTESTATION_KEY=<64-hex-key> PYTHONPATH=scripts python3 -m high_density.main_review --run-dir {root} --page-id {page_id} --reviewer-id <independent-reviewer-id>",
+                            },
+                        )
                     if self_pending and main_pending:
                         return _waiting(root, page_id=page_id, stage="visual_review", kind="agent_self_review", input_ref=f"high_density_build/reviews/{page_id}.visual_review.json", output_ref=f"high_density_build/reviews/{page_id}.visual_review.json", reason=f"Complete the producer self-review against the Runtime challenge and measured artifacts: {exc}")
-                    if self_passed and (not main_passed or "independent main visual review attestation" in str(exc)):
-                        return _waiting(root, page_id=page_id, stage="visual_review", kind="agent_main_review", input_ref=f"high_density_build/reviews/{page_id}.visual_review.json", output_ref=f"high_density_build/reviews/{page_id}.visual_review.json", output_refs=[f"high_density_build/reviews/{page_id}.visual_review.json", f"high_density_build/reviews/{page_id}.main_review_receipt.json"], reason=f"Read the producer self-review and actual visual metrics, then complete the independent main review and create the Host attestation receipt: {exc}", details={"attestation_env": "DECK_MASTER_REVIEW_ATTESTATION_KEY", "receipt_command": f"PYTHONPATH=scripts python3 -m high_density.main_review --run-dir {root} --page-id {page_id} --reviewer-id <independent-reviewer-id>"})
+                    if self_passed and not main_passed:
+                        return _waiting(root, page_id=page_id, stage="visual_review", kind="agent_main_review", input_ref=f"high_density_build/reviews/{page_id}.visual_review.json", output_ref=f"high_density_build/reviews/{page_id}.visual_review.json", output_refs=[f"high_density_build/reviews/{page_id}.visual_review.json"], reason=f"Read the producer self-review and actual visual metrics, then complete the independent main review with a distinct reviewer ID: {exc}", details={"review_command": f"PYTHONPATH=scripts python3 -m high_density.main_review --run-dir {root} --page-id {page_id} --reviewer-id <independent-reviewer-id>"})
                     return _waiting(root, page_id=page_id, stage="visual_review", kind="agent_svg_repair", input_ref=f"high_density_build/reviews/{page_id}.visual_review.json", output_ref=f"high_density_build/svg/{page_id}.svg", output_refs=[f"high_density_build/reviews/{page_id}.visual_review.json"], reason=f"Repair the approved SVG using the recorded visual findings, then write a refreshed passing visual review: {exc}")
                 raise HighDensityBuildError("HD_SVG_REVIEW_FAILED", str(exc), stage="visual_review", page_id=page_id) from exc
         elif execution_mode in {"fixture", "dev"}:
@@ -1085,7 +1186,12 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
             except SvgVisualError as exc:
                 raise HighDensityBuildError("HD_SVG_REVIEW_FAILED", str(exc), stage="visual_review", page_id=page_id) from exc
             try:
-                load_visual_review(root, page_id)
+                load_visual_review(
+                    root,
+                    page_id,
+                    review_depth=review_policy["review_depth"],
+                    receipt_policy=review_policy["receipt_policy"],
+                )
             except SvgVisualError as exc:
                 raise HighDensityBuildError("HD_SVG_REVIEW_FAILED", str(exc), stage="visual_review", page_id=page_id) from exc
         else:
@@ -1184,7 +1290,13 @@ def watch_high_density_status(run_dir: str | Path, *, timeout_seconds: float = 3
     started = time.monotonic()
     events: list[dict[str, Any]] = []
     last_key = ""
-    terminal = {"completed", "blocked", "failed", "awaiting_user_decision"}
+    terminal = {
+        "completed",
+        "blocked",
+        "failed",
+        "awaiting_agent_build",
+        "awaiting_user_decision",
+    }
     while True:
         status = build_high_density_status(run_dir)
         key = "|".join(str(status.get(item) or "") for item in ("status", "current_page_id", "current_stage"))
@@ -1234,21 +1346,6 @@ def _retry_high_density(
             try:
                 select_mbb_storyline(root, storyline_id, selected_by="user")
             except ContractError as exc:
-                if "external user decision attestation" in str(exc):
-                    return _waiting(
-                        root,
-                        page_id="",
-                        stage="content_lock",
-                        kind="awaiting_user_decision",
-                        input_ref=MBB_PLAN_PATH.as_posix(),
-                        output_ref="high_density_build/mbb/user_decision_receipt.json",
-                        reason=str(exc),
-                        details={
-                            "selected_storyline_id": storyline_id,
-                            "receipt_ref": "high_density_build/mbb/user_decision_receipt.json",
-                            "attestation_env": "DECK_MASTER_USER_ATTESTATION_KEY",
-                        },
-                    )
                 raise HighDensityBuildError("HD_MBB_SELECTION_INVALID", str(exc), stage="content_lock") from exc
         elif not (root / MBB_PLAN_PATH).exists():
             raise HighDensityBuildError("HD_MBB_SELECTION_INVALID", "deck-scope content_lock retry requires an MBB plan and storyline_id", stage="content_lock")

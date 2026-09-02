@@ -16,6 +16,7 @@ from quality.customer_visible_safety import (
     evaluate_customer_visible_safety_gate,
     load_customer_visible_forbidden_terms,
 )
+from quality.gate_runner import evaluate_render_gate
 from quality.pptx_audit import audit_pptx
 from runtime.run_state import write_json
 
@@ -25,7 +26,7 @@ class CustomerVisibleSafetyTests(unittest.TestCase):
         self.temp_dir = Path(tempfile.mkdtemp())
         self.addCleanup(lambda: shutil.rmtree(self.temp_dir, ignore_errors=True))
 
-    def test_pptx_audit_scans_visible_and_potentially_visible_package_text(self) -> None:
+    def test_pptx_audit_scans_customer_visible_package_text_only(self) -> None:
         pptx = self.temp_dir / "unsafe.pptx"
         _write_rich_pptx(pptx)
 
@@ -38,11 +39,11 @@ class CustomerVisibleSafetyTests(unittest.TestCase):
         scopes = {hit["scope"] for hit in audit["forbidden_hits"]}
         self.assertIn("slide", scopes)
         self.assertIn("notes", scopes)
-        self.assertIn("slide_master", scopes)
-        self.assertIn("slide_layout", scopes)
-        self.assertIn("chart", scopes)
         self.assertIn("doc_props", scopes)
-        self.assertTrue(any(hit["term"] == "关键图示" for hit in audit["forbidden_hits"]))
+        self.assertNotIn("slide_master", scopes)
+        self.assertNotIn("slide_layout", scopes)
+        self.assertNotIn("chart", scopes)
+        self.assertFalse(any(hit["term"] == "关键图示" for hit in audit["forbidden_hits"]))
 
     def test_customer_visible_safety_gate_blocks_with_structured_findings(self) -> None:
         pptx = self.temp_dir / "unsafe.pptx"
@@ -76,9 +77,39 @@ class CustomerVisibleSafetyTests(unittest.TestCase):
         terms = load_customer_visible_forbidden_terms(run_dir, extra_terms=["临时禁词"])
 
         self.assertIn("证书墙", terms)
+        for business_term in ("制作", "讲标", "投标", "评审", "评分", "内部", "Brief"):
+            self.assertNotIn(business_term, terms)
         self.assertIn("客户暗号", terms)
         self.assertIn("本轮禁词", terms)
         self.assertIn("临时禁词", terms)
+
+    def test_workspace_terms_can_tighten_business_language_when_needed(self) -> None:
+        run_dir = self.temp_dir / "run"
+        (run_dir / "quality").mkdir(parents=True)
+        (run_dir / "quality" / "forbidden_terms.md").write_text("讲标\n", encoding="utf-8")
+
+        terms = load_customer_visible_forbidden_terms(run_dir)
+
+        self.assertIn("讲标", terms)
+
+    def test_pptx_audit_allows_sparse_structural_page_roles(self) -> None:
+        pptx = self.temp_dir / "visual-role.pptx"
+        with zipfile.ZipFile(pptx, "w") as package:
+            package.writestr("[Content_Types].xml", "<Types/>")
+            package.writestr(
+                "ppt/slides/slide1.xml",
+                """
+<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld><p:spTree><p:pic/></p:spTree></p:cSld>
+</p:sld>
+""",
+            )
+
+        default = audit_pptx(pptx)
+        role_aware = audit_pptx(pptx, page_roles={1: "visual"})
+
+        self.assertEqual(1, len(default["possible_full_slide_images"]))
+        self.assertEqual([], role_aware["possible_full_slide_images"])
 
     def test_delivery_cli_writes_customer_visible_safety_gate(self) -> None:
         run_dir = self.temp_dir / "run-cli"
@@ -118,6 +149,129 @@ class CustomerVisibleSafetyTests(unittest.TestCase):
         self.assertTrue(safety_path.exists())
         safety = json.loads(safety_path.read_text(encoding="utf-8"))
         self.assertTrue(safety["blocks_delivery"])
+
+    def test_render_cli_uses_manifest_page_role_for_visual_page(self) -> None:
+        run_dir = self.temp_dir / "run-role"
+        run_dir.mkdir()
+        write_json(run_dir / "request.json", {"run_id": "run-role", "run_mode": "fixture"})
+        write_json(
+            run_dir / "preview_manifest.json",
+            {"run_id": "run-role", "pages": [{"page_id": "p1", "order": 1, "page_role": "visual"}]},
+        )
+        pptx = run_dir / "visual.pptx"
+        with zipfile.ZipFile(pptx, "w") as package:
+            package.writestr("[Content_Types].xml", "<Types/>")
+            package.writestr(
+                "ppt/slides/slide1.xml",
+                """
+<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld><p:spTree><p:pic/></p:spTree></p:cSld>
+</p:sld>
+""",
+            )
+
+        completed = subprocess.run(
+            [
+                sys.executable,
+                str(ROOT / "scripts" / "deck_master.py"),
+                "quality-gate",
+                "--run-dir",
+                str(run_dir),
+                "--run-mode",
+                "fixture",
+                "--dev-allow-unsetup",
+                "render",
+                "--artifact",
+                str(pptx),
+            ],
+            cwd=ROOT,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
+        self.assertEqual(0, completed.returncode, completed.stderr)
+        report = json.loads((run_dir / "quality_reports" / "render_gate.json").read_text(encoding="utf-8"))
+        self.assertEqual([], report["audit"]["possible_full_slide_images"])
+        self.assertEqual("visual", report["audit"]["slides"][0]["page_role"])
+        self.assertEqual("visual.pptx", report["artifact_path"])
+        self.assertEqual("visual.pptx", report["artifact_run_relative"])
+        self.assertEqual(64, len(report["artifact_sha256"]))
+
+    def test_production_render_gate_blocks_missing_page_role_mapping(self) -> None:
+        run_dir = self.temp_dir / "run-missing-role"
+        run_dir.mkdir()
+        write_json(run_dir / "request.json", {"run_id": "run-missing-role", "run_mode": "production"})
+        pptx = run_dir / "missing-role.pptx"
+        with zipfile.ZipFile(pptx, "w") as package:
+            package.writestr("[Content_Types].xml", "<Types/>")
+            package.writestr(
+                "ppt/slides/slide1.xml",
+                """
+<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
+       xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+  <p:cSld><p:spTree>
+    <p:sp><p:txBody><a:p><a:r><a:t>Production page text without role metadata.</a:t></a:r></a:p></p:txBody></p:sp>
+  </p:spTree></p:cSld>
+</p:sld>
+""",
+            )
+
+        completed = subprocess.run(
+            [
+                sys.executable,
+                str(ROOT / "scripts" / "deck_master.py"),
+                "quality-gate",
+                "--run-dir",
+                str(run_dir),
+                "--run-mode",
+                "production",
+                "--dev-allow-unsetup",
+                "render",
+                "--artifact",
+                str(pptx),
+                "--expected-pages",
+                "1",
+            ],
+            cwd=ROOT,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
+        self.assertEqual(0, completed.returncode, completed.stderr)
+        report = json.loads((run_dir / "quality_reports" / "render_gate.json").read_text(encoding="utf-8"))
+        self.assertTrue(report["blocks_delivery"])
+        self.assertIn(1, report["audit"]["missing_page_roles"])
+
+    def test_standard_fixture_without_page_role_does_not_block_role_contract(self) -> None:
+        run_dir = self.temp_dir / "run-standard-role-migration"
+        run_dir.mkdir()
+        write_json(run_dir / "request.json", {"run_id": "run-standard-role-migration", "run_mode": "fixture"})
+        pptx = run_dir / "standard.pptx"
+        with zipfile.ZipFile(pptx, "w") as package:
+            package.writestr("[Content_Types].xml", "<Types/>")
+            package.writestr(
+                "ppt/slides/slide1.xml",
+                """
+<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
+       xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+  <p:cSld><p:spTree>
+    <p:sp><p:txBody><a:p><a:r><a:t>Standard builder migration keeps this page on the existing content path without role metadata.</a:t></a:r></a:p></p:txBody></p:sp>
+  </p:spTree></p:cSld>
+</p:sld>
+""",
+            )
+
+        report = evaluate_render_gate(
+            "run-standard-role-migration",
+            pptx,
+            expected_pages=1,
+            run_dir=run_dir,
+        )
+
+        self.assertFalse(report["audit"]["missing_page_roles"])
+        self.assertFalse(any(item["finding_id"].endswith("page_role_missing") for item in report["findings"]))
 
 
 def _write_rich_pptx(path: Path) -> None:

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+import hashlib
 import tempfile
 import unittest
 import zipfile
@@ -63,6 +64,10 @@ class DraftGateTests(unittest.TestCase):
                 expected_pages=3,
                 forbidden_terms=["内部", "Brief"],
             )
+            self.assertEqual(str(pptx.resolve()), report["artifact"])
+            self.assertEqual(pptx.name, report["artifact_path"])
+            self.assertEqual(pptx.name, report["artifact_run_relative"])
+            self.assertEqual(hashlib.sha256(pptx.read_bytes()).hexdigest(), report["artifact_sha256"])
 
         self.assertEqual("rework_required", report["status"])
         self.assertTrue(report["blocks_delivery"])

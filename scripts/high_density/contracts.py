@@ -35,6 +35,13 @@ SCHEMA_FILES = {
     "icon_external_acceptance": "high-density-icon-external-acceptance.v1.schema.json",
 }
 
+LEGACY_SCHEMA_FILES = {
+    "build_manifest": "build-manifest-legacy.v2.schema.json",
+    "high_density_manifest": "high-density-manifest-legacy.v2.schema.json",
+    "page_scene": "page-scene-legacy.v2.schema.json",
+    "provider_host_receipt": "provider-host-receipt-legacy.v1.schema.json",
+}
+
 PREVIEW_SCHEMA_FILES = {
     "content_lock": "content-lock.v1.schema.json",
     "blueprint_manifest": "blueprint-manifest.v1.schema.json",
@@ -112,6 +119,28 @@ def safe_run_path(root: Path, value: str) -> Path:
     return resolved
 
 
+def _is_legacy_build_manifest(document: dict[str, Any]) -> bool:
+    if document.get("schema_version") != "deck_build_manifest.v2":
+        return False
+    pages = document.get("pages")
+    return isinstance(pages, list) and bool(pages) and all(
+        isinstance(page, dict) and "page_role" not in page for page in pages
+    )
+
+
+def _is_legacy_page_scene(document: dict[str, Any]) -> bool:
+    return document.get("schema_version") == "deck_page_scene.v2" and "page_role" not in document
+
+
+def _is_legacy_high_density_manifest(document: dict[str, Any]) -> bool:
+    if document.get("schema_version") != "deck_high_density_manifest.v2":
+        return False
+    pages = document.get("pages")
+    return isinstance(pages, list) and bool(pages) and all(
+        isinstance(page, dict) and "page_role" not in page for page in pages
+    )
+
+
 def validate_document(kind: str, document: dict[str, Any]) -> dict[str, Any]:
     schema_name = SCHEMA_FILES.get(kind)
     schema_version = document.get("schema_version")
@@ -119,6 +148,28 @@ def validate_document(kind: str, document: dict[str, Any]) -> dict[str, Any]:
         # v1 artifacts remain readable for migration/diagnostics. Production
         # writers and handback validation always call the v2 schema above.
         schema_name = PREVIEW_SCHEMA_FILES[kind]
+    if kind == "provider_host_receipt" and not any(
+        field in document for field in ("imported_at", "declared_provider", "approved_by")
+    ):
+        # Provider host receipts kept the v1 version while their provenance
+        # fields were extended. Preserve signed receipts written before that
+        # extension without weakening validation for new receipts.
+        schema_name = LEGACY_SCHEMA_FILES[kind]
+    if kind == "build_manifest" and _is_legacy_build_manifest(document):
+        # Build Manifest v2 gained page_role after older runs had already
+        # persisted manifests. Validate those files with the legacy shape;
+        # the high-density resume path refreshes them before writing again.
+        schema_name = LEGACY_SCHEMA_FILES[kind]
+    if kind == "page_scene" and _is_legacy_page_scene(document):
+        # page_scene.v2 gained a required page_role after older scenes had
+        # already been persisted. The loader validates and migrates those
+        # scenes before handing them to the current production path.
+        schema_name = LEGACY_SCHEMA_FILES[kind]
+    if kind == "high_density_manifest" and _is_legacy_high_density_manifest(document):
+        # High-density manifest v2 gained page_role after completed runs had
+        # already been persisted. Provider smoke and resume diagnostics must
+        # still be able to read those manifests.
+        schema_name = LEGACY_SCHEMA_FILES[kind]
     if not schema_name:
         raise ContractError(f"unknown contract kind: {kind}")
     schema_path = SCHEMA_DIR / schema_name

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://deck-master.local/contracts/high-density-manifest.v2.schema.json",
-  "title": "High-Density Manifest v2",
+  "$id": "https://deck-master.local/contracts/high-density-manifest-legacy.v2.schema.json",
+  "title": "Legacy High-Density Manifest v2",
   "type": "object",
   "required": ["schema_version", "run_id", "builder_profile", "source_fingerprint", "status", "pages", "created_at"],
   "properties": {
@@ -16,11 +16,10 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["page_id", "order", "page_role"],
+        "required": ["page_id", "order"],
         "properties": {
           "page_id": {"type": "string", "minLength": 1},
-          "order": {"type": "integer", "minimum": 1},
-          "page_role": {"enum": ["cover", "section", "section_divider", "divider", "toc", "agenda", "visual", "visual_divider", "image", "image_page", "dense_narrative", "content", "framework", "architecture", "comparison", "data_story", "process", "table"]}
+          "order": {"type": "integer", "minimum": 1}
         },
         "additionalProperties": true
       }

@@ -6,6 +6,8 @@ from pathlib import Path
 from typing import Any
 from xml.etree import ElementTree
 
+from page_roles import page_role_with_warning
+
 from .contracts import ContractError, assert_v2, read_json, sha256_json, utc_now, write_json
 from .visibility import assert_visible_text_allowed, validate_visibility_policy
 
@@ -407,6 +409,8 @@ def build_fixture_scene(lock: dict[str, Any], blueprint_sha256: str, blueprint_p
     body_blocks = list(customer_visible.get("body_blocks") or [])
     callouts = list(customer_visible.get("callouts") or [])
     layout_id = layout_id or str((enrichment.get("material_pool") or {}).get("recommended_visual") or "framework")
+    raw_page_role = (enrichment.get("analysis") or {}).get("page_role") or layout_id or "dense_narrative"
+    page_role, role_warning = page_role_with_warning(raw_page_role, default="content")
     background = _fixture_background(blueprint_path)
     title_color, secondary_color, _source_color = _fixture_text_colors(background)
     elements: list[dict[str, Any]] = []
@@ -500,6 +504,8 @@ def build_fixture_scene(lock: dict[str, Any], blueprint_sha256: str, blueprint_p
         "canvas": dict(CANVAS),
         "blueprint": {"source_canvas": dict(CANVAS), "slide_frame": {"x": 0, "y": 0, "w": 1672, "h": 941}, "source_to_scene_transform": {"scale": 1, "offset_x": 0, "offset_y": 0, "fit_mode": "approved_frame"}},
         "layout_id": layout_id,
+        "page_role": page_role,
+        "migration_warnings": [role_warning] if role_warning else [],
         "content_lock_sha256": str(lock["content_lock_sha256"]),
         "blueprint_sha256": blueprint_sha256,
         "transform": {"scale": 1, "offset_x": 0, "offset_y": 0, "fit_mode": "approved_frame"},
@@ -676,6 +682,24 @@ def validate_scene_content(scene: dict[str, Any], lock: dict[str, Any]) -> None:
         raise ContractError(f"scene is missing required text refs: {', '.join(missing)}")
 
 
+def _migrate_legacy_page_role(scene: dict[str, Any]) -> dict[str, Any]:
+    if "page_role" in scene:
+        return scene
+    raw_role = scene.get("layout_id")
+    page_role, role_warning = page_role_with_warning(raw_role, default="content")
+    migration_warning = role_warning or (
+        f"legacy page scene page_role migrated from layout_id '{str(raw_role or 'unknown')}' "
+        f"to page_role '{page_role}'"
+    )
+    migrated = dict(scene)
+    migrated["page_role"] = page_role
+    warnings = list(migrated.get("migration_warnings") or [])
+    if migration_warning not in warnings:
+        warnings.append(migration_warning)
+    migrated["migration_warnings"] = warnings
+    return migrated
+
+
 def load_scene(root: Path, page_id: str) -> dict[str, Any]:
     canonical = canonical_scene_path(root, page_id)
     legacy = scene_path(root, page_id)
@@ -684,7 +708,10 @@ def load_scene(root: Path, page_id: str) -> dict[str, Any]:
     if canonical.exists() and legacy.exists() and read_json(legacy) != scene:
         raise ContractError(f"page scene mirror is stale on page {page_id}")
     validate_scene(scene)
-    return scene
+    migrated = _migrate_legacy_page_role(scene)
+    if migrated is not scene:
+        validate_scene(migrated)
+    return migrated
 
 
 def write_scene(root: Path, scene: dict[str, Any]) -> Path:

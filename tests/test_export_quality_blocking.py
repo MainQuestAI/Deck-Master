@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import shutil
 import sys
 import tempfile
@@ -61,8 +62,6 @@ def _write_final_readiness(run_dir: Path, *, ready: bool, reason: str = "") -> N
     artifact = run_dir / "build" / "deck.pptx"
     artifact.parent.mkdir(parents=True, exist_ok=True)
     artifact.write_bytes(b"approved deck")
-    import hashlib
-
     artifact_hash = hashlib.sha256(artifact.read_bytes()).hexdigest()
     payload = {
         "schema_version": "deck_final_readiness.v1",
@@ -100,6 +99,7 @@ def _write_gate(
     *,
     status: str | None = None,
     blocks_delivery: bool | None = None,
+    extra: dict[str, Any] | None = None,
 ) -> None:
     quality_dir = run_dir / "quality_reports"
     quality_dir.mkdir(parents=True, exist_ok=True)
@@ -110,6 +110,18 @@ def _write_gate(
         "findings": findings,
         "page_findings": [],
     }
+    if gate in {"render", "delivery", "customer_visible_safety"}:
+        artifact = run_dir / "build" / "deck.pptx"
+        report.update(
+            {
+                "artifact": "build/deck.pptx",
+                "artifact_path": "build/deck.pptx",
+                "artifact_run_relative": "build/deck.pptx",
+                "artifact_sha256": hashlib.sha256(artifact.read_bytes()).hexdigest(),
+            }
+        )
+    if extra:
+        report.update(extra)
     (quality_dir / f"{gate}_gate.json").write_text(
         json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8"
     )
@@ -422,6 +434,41 @@ class ExportQualityBlockingTests(unittest.TestCase):
         self.assertEqual(0, len(result["pages"]))
         self.assertEqual(1, result["blocked_count"])
         self.assertIn("F-RUN-P1", result["blocked_pages"][0]["quality_block_reason"])
+
+    def test_stale_p1_gate_does_not_block_client_queue(self) -> None:
+        page = _base_page("p1", decision="approved", review_status="approved")
+        _write_manifest(self.run_dir, _make_manifest([page]))
+        _write_gate(
+            self.run_dir,
+            "draft",
+            [{"severity": "P1", "finding_id": "F-OLD", "message": "old finding"}],
+            status="rework_required",
+            blocks_delivery=True,
+            extra={"artifact_path": "build/deck.pptx", "artifact_sha256": "0" * 64},
+        )
+
+        result = export_queue(self.run_dir, {"approved"}, queue_type="client")
+
+        self.assertEqual(1, len(result["pages"]))
+        self.assertEqual(0, result["blocked_count"])
+
+    def test_slide_number_finding_only_blocks_matching_export_page(self) -> None:
+        first = _base_page("p1", decision="approved", review_status="approved")
+        second = _base_page("p2", decision="approved", review_status="approved")
+        second["order"] = 2
+        _write_manifest(self.run_dir, _make_manifest([first, second]))
+        _write_gate(self.run_dir, "draft", [])
+        _write_gate(
+            self.run_dir,
+            "render",
+            [{"page_id": "slide_002", "severity": "P0", "finding_id": "F-SLIDE-2", "message": "page two"}],
+        )
+
+        result = export_queue(self.run_dir, {"approved"}, queue_type="client")
+
+        self.assertEqual(["p1"], [page["page_id"] for page in result["pages"]])
+        self.assertEqual(["p2"], [page["page_id"] for page in result["blocked_pages"]])
+        self.assertIn("F-SLIDE-2", result["blocked_pages"][0]["quality_block_reason"])
 
     def test_draft_v2_claim_level_gap_blocks_all_pages(self) -> None:
         page = _base_page("p1", decision="approved", review_status="approved")

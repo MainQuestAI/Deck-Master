@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from production.page_package import strip_internal
+from page_roles import STRUCTURAL_PAGE_ROLES, canonical_page_role
 
 from .contracts import ContractError, assert_valid, assert_v2, read_json, sha256_file, sha256_json, utc_now, write_json
 from .integrity import sign_runtime_payload, verify_runtime_payload, verify_user_attestation, sign_user_attestation
@@ -21,6 +22,89 @@ MBB_SELECTION_RECEIPT_PATH = MBB_DIR / "selection_receipt.json"
 MBB_USER_DECISION_RECEIPT_PATH = MBB_DIR / "user_decision_receipt.json"
 MBB_SEAL_PATH = MBB_DIR / "runtime_seal.json"
 SAFE_PAGE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
+STRUCTURAL_VISUAL_HINT_TERMS = (
+    "acceptance",
+    "agenda",
+    "chapter",
+    "contents",
+    "cover",
+    "divider",
+    "framework",
+    "introduction",
+    "intro",
+    "layout",
+    "opening",
+    "overview",
+    "roadmap",
+    "section",
+    "structure",
+    "table of contents",
+    "toc",
+    "验收",
+    "议程",
+    "章节",
+    "目录",
+    "封面",
+    "分隔",
+    "框架",
+    "导言",
+    "介绍",
+    "布局",
+    "开场",
+    "概览",
+    "路线图",
+    "结构",
+)
+STRUCTURAL_FACTUAL_ASSERTION_TERMS = (
+    "achieved",
+    "adoption",
+    "advantage",
+    "best",
+    "customer",
+    "decrease",
+    "delivered",
+    "dominant",
+    "fastest",
+    "first",
+    "growth",
+    "highest",
+    "improve",
+    "increase",
+    "leader",
+    "leadership",
+    "lowest",
+    "market",
+    "only",
+    "performance",
+    "profit",
+    "proven",
+    "ready",
+    "revenue",
+    "result",
+    "share",
+    "supports",
+    "users",
+    "value",
+    "领先",
+    "份额",
+    "增长",
+    "提升",
+    "降低",
+    "最高",
+    "最低",
+    "唯一",
+    "显著",
+    "实现",
+    "达到",
+    "证明",
+    "客户",
+    "收入",
+    "利润",
+    "效率",
+    "优势",
+    "规模",
+    "占比",
+)
 
 
 def _assert_safe_page_id(page_id: str) -> None:
@@ -176,6 +260,43 @@ def _numeric_tokens(text: str) -> list[str]:
     return re.findall(r"(?<![A-Za-z])[-+]?\d+(?:[.,]\d+)?(?:\s?[%％]|[A-Za-z]{1,5})?", text)
 
 
+def _unsupported_structural_numeric_tokens(
+    customer_visible: dict[str, Any],
+    tokens: list[str],
+    *,
+    evidence: list[dict[str, Any]] | None = None,
+) -> list[str]:
+    text = _flatten_customer_visible(customer_visible)
+    evidence_numbers = {
+        normalized
+        for record in evidence or []
+        if isinstance(record, dict)
+        for normalized in _normalized_numeric_tokens(_evidence_text(record))
+    }
+    date_spans = [
+        match.span()
+        for match in re.finditer(
+            r"(?:19|20)\d{2}\s*[-/.年]\s*\d{1,2}(?:\s*[-/.月]\s*\d{1,2})?",
+            text,
+        )
+    ]
+    unsupported: list[str] = []
+    for token in tokens:
+        normalized = re.sub(r"\s+", "", token)
+        if re.fullmatch(r"(?:19|20)\d{2}", normalized):
+            continue
+        occurrences = list(re.finditer(re.escape(token), text, flags=re.IGNORECASE))
+        if any(any(start <= match.start() and match.end() <= end for start, end in date_spans) for match in occurrences):
+            continue
+        page_pattern = r"(?:第\s*|page\s*|页码\s*|页\s*)" + re.escape(token)
+        if any(re.search(page_pattern, text[max(0, match.start() - 8) : match.end() + 8], flags=re.IGNORECASE) for match in occurrences):
+            continue
+        if normalized.replace("％", "%").replace(",", "").casefold() in evidence_numbers:
+            continue
+        unsupported.append(token)
+    return unsupported
+
+
 def _normalized_numeric_tokens(text: str) -> set[str]:
     return {
         re.sub(r"\s+", "", token).replace("％", "%").replace(",", "").casefold()
@@ -268,6 +389,13 @@ def _density_analysis(customer_visible: dict[str, Any], package: dict[str, Any],
     score = min(100, 20 + len(body_blocks) * 8 + len(callouts) * 10 + len(numeric_tokens) * 3 + table_blocks * 12 + chart_blocks * 8)
     band = "high" if score >= 70 else "medium" if score >= 45 else "low"
     visual_spec = package.get("visual_spec") or {}
+    page_role = canonical_page_role(
+        package.get("page_role")
+        or visual_spec.get("page_role")
+        or visual_spec.get("page_type")
+        or visual_spec.get("role"),
+        default="dense_narrative",
+    )
     return {
         "content_density_score": score,
         "density_band": band,
@@ -279,7 +407,8 @@ def _density_analysis(customer_visible: dict[str, Any], package: dict[str, Any],
         "table_block_count": table_blocks,
         "chart_block_count": chart_blocks,
         "evidence_count": len(evidence),
-        "page_role": str(visual_spec.get("page_type") or visual_spec.get("role") or "dense_narrative"),
+        "page_role": page_role,
+        "structural_page": page_role in STRUCTURAL_PAGE_ROLES,
         "target_language": str(visual_spec.get("language") or package.get("audience_context", {}).get("language") or "zh-CN"),
     }
 
@@ -288,8 +417,9 @@ def _structure_decisions(analysis: dict[str, Any]) -> list[dict[str, Any]]:
     decisions: list[dict[str, Any]] = [
         {"decision": "preserve_locked_text", "reason": "ImageGen output is layout evidence only"},
         {"decision": "use_native_text_for_p0_p1", "reason": "editable output requirement"},
-        {"decision": "reserve_so_what_region", "reason": "management implication must remain visible"},
     ]
+    if not analysis.get("structural_page"):
+        decisions.append({"decision": "reserve_so_what_region", "reason": "management implication must remain visible"})
     if analysis["table_block_count"]:
         decisions.append({"decision": "reserve_table_grid", "reason": "table-like block detected"})
     if analysis["chart_block_count"]:
@@ -309,7 +439,8 @@ def _component_plan(customer_visible: dict[str, Any], analysis: dict[str, Any]) 
         components.append({"component_id": f"component.body.{index:02d}", "kind": kind, "priority": "P1", "region": f"body.{index:02d}"})
     if customer_visible.get("callouts"):
         components.append({"component_id": "component.callouts", "kind": "callout", "priority": "P0", "region": "insight"})
-    components.append({"component_id": "component.business_implication", "kind": "business_implication", "priority": "P0", "region": "implication"})
+    if not analysis.get("structural_page"):
+        components.append({"component_id": "component.business_implication", "kind": "business_implication", "priority": "P0", "region": "implication"})
     return components
 
 
@@ -323,8 +454,46 @@ def _required_text_refs(customer_visible: dict[str, Any], *, so_what: str) -> li
         refs.append({"ref": f"content_lock.customer_visible.body_blocks.{index}", "priority": "P1", "required": True})
     if customer_visible.get("callouts"):
         refs.append({"ref": "content_lock.customer_visible.callouts", "priority": "P0", "required": True})
-    refs.append({"ref": "content_lock.enrichment.business_implication", "priority": "P0", "required": True, "structural": True, "value": so_what})
+    if so_what:
+        refs.append({"ref": "content_lock.enrichment.business_implication", "priority": "P0", "required": True, "structural": True, "value": so_what})
     return refs
+
+
+def _is_non_factual_structural_text(value: Any) -> bool:
+    normalized = re.sub(r"\s+", " ", str(value or "").casefold()).strip()
+    if not normalized:
+        return True
+    if any(term in normalized for term in STRUCTURAL_FACTUAL_ASSERTION_TERMS):
+        return False
+    return any(term in normalized for term in STRUCTURAL_VISUAL_HINT_TERMS)
+
+
+def _structural_factual_entries(customer_visible: dict[str, Any]) -> list[tuple[str, str]]:
+    entries: list[tuple[str, str]] = []
+    subtitle = str(customer_visible.get("subtitle") or "").strip()
+    if subtitle and not _is_non_factual_structural_text(subtitle):
+        entries.append(("material_pool.customer_visible.subtitle", subtitle))
+    for collection in ("body_blocks", "callouts"):
+        for index, item in enumerate(customer_visible.get(collection) or []):
+            prefix = f"material_pool.customer_visible.{collection}.{index}"
+            if isinstance(item, dict):
+                for field in ("text", "body", "description", "value"):
+                    text = _text(item.get(field)).strip()
+                    if text:
+                        entries.append((f"{prefix}.{field}", text))
+            else:
+                text = _text(item).strip()
+                if text:
+                    entries.append((prefix, text))
+    for index, item in enumerate(customer_visible.get("footnotes") or []):
+        text = _text(item).strip()
+        if text:
+            entries.append((f"material_pool.customer_visible.footnotes.{index}", text))
+    return entries
+
+
+def _structural_factual_texts(customer_visible: dict[str, Any]) -> list[str]:
+    return [text for _target, text in _structural_factual_entries(customer_visible)]
 
 
 def _resolve_target(payload: dict[str, Any], target: str) -> Any:
@@ -367,6 +536,18 @@ def _scr_claim_targets(_scr: dict[str, Any]) -> list[str]:
 
 
 def _page_claim_targets(page: dict[str, Any]) -> list[str]:
+    if bool((page.get("role") or "") in STRUCTURAL_PAGE_ROLES):
+        targets = [
+            "role",
+            "chart_plan.visual_type",
+            "storyline_context.visual_potential",
+            "material_pool.recommended_visual",
+            "material_pool.storyline_visual_potential",
+        ]
+        targets.extend(target for target, _text_value in _structural_factual_entries((page.get("material_pool") or {}).get("customer_visible") or {}))
+        targets.extend(f"components.{index}.{field}" for index, component in enumerate(page.get("components") or []) if isinstance(component, dict) for field in component)
+        targets.extend(f"required_text_refs.{index}.{field}" for index, item in enumerate(page.get("required_text_refs") or []) if isinstance(item, dict) for field in item if field != "value")
+        return targets
     targets = [
         "role",
         "conclusion",
@@ -401,9 +582,16 @@ def _page_claim_targets(page: dict[str, Any]) -> list[str]:
 
 
 def _page_structural_claim_targets(page: dict[str, Any]) -> set[str]:
-    # Page role is a runtime visual registry label. It controls the redraw
-    # layout family and does not assert a business fact from the evidence.
-    targets: set[str] = {"role", "material_pool.recommended_visual"}
+    # Structural exemptions are limited to visual/layout metadata. A page role
+    # does not make its conclusions, implications, caveats, or numbers
+    # evidence-free.
+    targets: set[str] = {
+        "role",
+        "chart_plan.visual_type",
+        "storyline_context.visual_potential",
+        "material_pool.recommended_visual",
+        "material_pool.storyline_visual_potential",
+    }
     for index, component in enumerate(page.get("components") or []):
         if isinstance(component, dict):
             targets.update(f"components.{index}.{field}" for field in component)
@@ -433,7 +621,7 @@ def _claim_bindings(
                 "target": target,
                 "text_sha256": sha256_json(text),
                 "origin": origin,
-                "evidence_refs": list(evidence_refs),
+                "evidence_refs": [] if origin == "structural_label" else list(evidence_refs),
                 "evidence_spans": spans,
                 "derivation_note": (
                     "Runtime-owned structural registry value."
@@ -478,10 +666,10 @@ def _validate_claim_bindings(
         if not text or str(binding.get("text_sha256") or "") != sha256_json(text):
             raise ContractError(f"MBB claim binding text hash is stale for {context}:{target}")
         refs = {str(ref) for ref in binding.get("evidence_refs") or []}
-        if not refs or not refs.issubset(allowed_evidence_refs):
-            raise ContractError(f"MBB claim binding evidence is invalid for {context}:{target}")
         origin = str(binding.get("origin") or "")
         expected_origin = "structural_label" if target in (structural_targets or set()) else "source" if text in source_text else "derived"
+        if origin != "structural_label" and (not refs or not refs.issubset(allowed_evidence_refs)):
+            raise ContractError(f"MBB claim binding evidence is invalid for {context}:{target}")
         if origin not in {"source", "derived", "structural_label"} or origin != expected_origin:
             raise ContractError(f"MBB claim binding origin is invalid for {context}:{target}")
         if not str(binding.get("derivation_note") or ""):
@@ -629,7 +817,16 @@ def _storyline_candidates(
     return candidates
 
 
-def _storyline_context(storyline: dict[str, Any]) -> dict[str, Any]:
+def _storyline_context(storyline: dict[str, Any], *, structural_page: bool = False) -> dict[str, Any]:
+    if structural_page:
+        return {
+            "storyline_id": str(storyline.get("storyline_id") or ""),
+            "management_conclusion": "",
+            "visual_potential": "structural layout",
+            "page_handoff": "",
+            "caveat": "",
+            "evidence_refs": [],
+        }
     return {
         "storyline_id": str(storyline.get("storyline_id") or ""),
         "management_conclusion": str(storyline.get("management_conclusion") or ""),
@@ -653,29 +850,41 @@ def _material_pool(
     comparisons = [_text(block) for block in blocks if str(block.get("type") or "").lower() in {"comparison", "table", "matrix"}]
     changes = [value for value in analysis["numeric_tokens"] if value]
     annotations = [_text(item) for item in [*(visible.get("callouts") or []), *(visible.get("footnotes") or [])] if _text(item)]
+    structural_page = bool(analysis.get("structural_page"))
     return {
         "customer_visible": copy.deepcopy(source_result["customer_visible"]),
-        "evidence_refs": evidence_refs,
-        "recommended_visual": str((safe_package.get("visual_spec") or {}).get("page_type") or analysis["page_role"]),
-        "numeric_values": list(analysis["numeric_tokens"]),
+        "evidence_refs": [] if structural_page else evidence_refs,
+        "recommended_visual": canonical_page_role(
+            (safe_package.get("visual_spec") or {}).get("page_type")
+            or (safe_package.get("visual_spec") or {}).get("page_role")
+            or analysis["page_role"],
+            default=analysis["page_role"],
+        ),
+        "numeric_values": [] if structural_page else list(analysis["numeric_tokens"]),
         "storyline_id": str(storyline["storyline_id"]),
-        "storyline_visual_potential": str(storyline["visual_potential"]),
-        "storyline_page_handoff": str(storyline["page_handoff"]),
-        "storyline_caveat": str(storyline["caveat"]),
-        "comparisons": comparisons,
+        "storyline_visual_potential": "structural layout" if structural_page else str(storyline["visual_potential"]),
+        "storyline_page_handoff": "" if structural_page else str(storyline["page_handoff"]),
+        "storyline_caveat": "" if structural_page else str(storyline["caveat"]),
+        "comparisons": [] if structural_page else comparisons,
         "rankings": [],
-        "changes": changes,
+        "changes": [] if structural_page else changes,
         "funnel_steps": [],
         "matrix_axes": [],
-        "annotations": annotations,
+        "annotations": [] if structural_page else annotations,
         "legend": [str(value) for value in visible.get("labels") or []],
-        "microcharts": [str(block.get("type") or "") for block in blocks if str(block.get("type") or "").lower() in {"chart", "kpi", "trend", "data_story"}],
+        "microcharts": [] if structural_page else [str(block.get("type") or "") for block in blocks if str(block.get("type") or "").lower() in {"chart", "kpi", "trend", "data_story"}],
         "area_count": max(3, len(source_result["components"])),
         "low_density_risk": "high" if analysis["density_band"] == "low" else "managed",
     }
 
 
-def _evidence_assessment(evidence: list[dict[str, Any]], refs: list[str], *, subject: str = "") -> dict[str, Any]:
+def _evidence_assessment(
+    evidence: list[dict[str, Any]],
+    refs: list[str],
+    *,
+    subject: str = "",
+    structural_page: bool = False,
+) -> dict[str, Any]:
     selected = [item for item in evidence if str(item.get("evidence_id") or "") in set(refs)]
     contrary = [str(item["evidence_id"]) for item in selected if item.get("conflicts")]
     missing = [
@@ -702,7 +911,11 @@ def _evidence_assessment(evidence: list[dict[str, Any]], refs: list[str], *, sub
         "contrary_evidence_refs": contrary,
         "missing_evidence": missing,
         "conflicts": conflicts,
-        "synthesis": f"Evidence assessment for {subject or ', '.join(str(item.get('evidence_id') or '') for item in selected)}: preserve source caveats and resolve missing periods before circulation.",
+        "synthesis": (
+            "Structural page metadata; no page-level business conclusion is asserted."
+            if structural_page
+            else f"Evidence assessment for {subject or ', '.join(str(item.get('evidence_id') or '') for item in selected)}: preserve source caveats and resolve missing periods before circulation."
+        ),
     }
 
 
@@ -718,12 +931,13 @@ def _chart_plan(source_result: dict[str, Any], storyline: dict[str, Any]) -> dic
         "framework": "framework_map",
     }.get(page_role, "evidence_dense_narrative")
     subject = str((source_result.get("customer_visible") or {}).get("title") or page_role)
+    structural_page = bool(analysis.get("structural_page"))
     return {
-        "visual_type": f"{visual_type} for {subject}",
-        "metric_refs": list(analysis.get("numeric_tokens") or []),
-        "comparison_axis": f"{subject} {page_role} evidence against the {storyline['storyline_id'].split('.')[-1]} decision lens",
-        "annotations": [str(item.get("caveat") or "") for item in source_result["evidence"] if item.get("caveat")],
-        "source_refs": [str(item["evidence_id"]) for item in source_result["evidence"]],
+        "visual_type": f"structural_layout for {subject}" if structural_page else f"{visual_type} for {subject}",
+        "metric_refs": [] if structural_page else list(analysis.get("numeric_tokens") or []),
+        "comparison_axis": f"{subject} structural layout" if structural_page else f"{subject} {page_role} evidence against the {storyline['storyline_id'].split('.')[-1]} decision lens",
+        "annotations": [] if structural_page else [str(item.get("caveat") or "") for item in source_result["evidence"] if item.get("caveat")],
+        "source_refs": [] if structural_page else [str(item["evidence_id"]) for item in source_result["evidence"]],
     }
 
 
@@ -745,34 +959,39 @@ def _page_plan(
     visible = source_result["customer_visible"]
     analysis = source_result["analysis"]
     evidence = source_result["evidence"]
+    structural_page = bool(analysis.get("structural_page"))
     evidence_refs = [str(item["evidence_id"]) for item in evidence]
+    # Structural pages may omit evidence when they only carry layout metadata,
+    # but source claim bindings still need their supporting refs preserved.
+    if structural_page and not package.get("claim_bindings") and not _structural_factual_entries(visible):
+        evidence_refs = []
     quality_intent = safe_package.get("quality_intent") or {}
     title = str(visible.get("title") or package.get("page_id") or "page")
-    conclusion = str(quality_intent.get("conclusion") or f"{title}: {storyline['management_conclusion']}")
-    arguments = [str(_text(block)) for block in visible.get("body_blocks") or [] if _text(block)]
-    if not arguments:
+    conclusion = "" if structural_page else str(quality_intent.get("conclusion") or f"{title}: {storyline['management_conclusion']}")
+    arguments = [] if structural_page else [str(_text(block)) for block in visible.get("body_blocks") or [] if _text(block)]
+    if not structural_page and not arguments:
         arguments = [f"Evidence-backed analysis for {title}."]
-    caveat = [item["caveat"] for item in evidence if item.get("caveat")]
-    if not caveat:
+    caveat = [] if structural_page else [item["caveat"] for item in evidence if item.get("caveat")]
+    if not structural_page and not caveat:
         caveat = [str(storyline["caveat"])]
-    so_what = str(quality_intent.get("so_what") or f"Therefore, leadership should act on {title} through the {storyline['storyline_id'].split('.')[-1]} route.")
+    so_what = "" if structural_page else str(quality_intent.get("so_what") or f"Therefore, leadership should act on {title} through the {storyline['storyline_id'].split('.')[-1]} route.")
     next_package = packages_by_order.get(int(package.get("order") or 0) + 1)
     next_title = str((next_package or {}).get("customer_visible", {}).get("title") or "the next decision")
-    handoff = f"Hand off the {title} conclusion to {next_title}."
+    handoff = "" if structural_page else f"Hand off the {title} conclusion to {next_title}."
     components = copy.deepcopy(source_result["components"])
     required_text_refs = _runtime_required_text_refs(source_result, so_what)
     chart_plan = _chart_plan(source_result, storyline)
     evidence_hierarchy = {
         "primary": evidence_refs[: min(3, len(evidence_refs))],
         "supporting": evidence_refs[min(3, len(evidence_refs)) :],
-        "caveat": [str(item["evidence_id"]) for item in evidence if item.get("caveat")],
+        "caveat": [] if structural_page else [str(item["evidence_id"]) for item in evidence if item.get("caveat")],
     }
     page_plan = {
         "page_id": str(package["page_id"]),
         "order": int(package.get("order") or 0),
         "page_package_sha256": sha256_json(package),
         "storyline_id": str(storyline["storyline_id"]),
-        "storyline_context": _storyline_context(storyline),
+        "storyline_context": _storyline_context(storyline, structural_page=structural_page),
         "role": str(analysis["page_role"]),
         "conclusion": conclusion,
         "supporting_arguments": arguments,
@@ -783,13 +1002,13 @@ def _page_plan(
         "business_implication": so_what,
         "handoff": handoff,
         "evidence_hierarchy": evidence_hierarchy,
-        "evidence_assessment": _evidence_assessment(evidence, evidence_refs, subject=title),
+        "evidence_assessment": _evidence_assessment(evidence, evidence_refs, subject=title, structural_page=structural_page),
         "chart_plan": chart_plan,
         "material_pool": _material_pool(package, source_result, storyline),
         "density_target": {
             "score": analysis["content_density_score"],
             "band": analysis["density_band"],
-            "information_regions": max(3, len(components)),
+            "information_regions": max(3 if structural_page else 3, len(components)),
         },
         "components": components,
         "required_text_refs": required_text_refs,
@@ -820,23 +1039,35 @@ def build_mbb_page(package: dict[str, Any]) -> dict[str, Any]:
     customer_visible = copy.deepcopy(safe_package.get("customer_visible") or {})
     evidence = _evidence_ledger(safe_package)
     analysis = _density_analysis(customer_visible, safe_package, evidence)
+    structural_page = bool(analysis.get("structural_page"))
     # A preview adapter can only appear in fixture/migration mode.  Preserve
     # that narrow compatibility path while keeping normal v2 production pages
     # fail-closed on evidence and density.
-    if analysis["numeric_tokens"] and not evidence and not package.get("legacy_inferred"):
-        raise ContractError(f"MBB page {page_id} contains unsupported factual values: {analysis['numeric_tokens']}")
-    if (analysis["density_band"] == "low" or not evidence) and not package.get("legacy_inferred"):
+    unsupported_numeric = (
+        _unsupported_structural_numeric_tokens(customer_visible, analysis["numeric_tokens"], evidence=evidence)
+        if structural_page
+        else analysis["numeric_tokens"]
+    )
+    structural_factual_texts = _structural_factual_texts(customer_visible) if structural_page else []
+    if structural_factual_texts and not evidence and not package.get("legacy_inferred"):
+        preview = ", ".join(repr(text[:80]) for text in structural_factual_texts[:3])
+        raise ContractError(f"MBB page {page_id} contains structural factual text without evidence: {preview}")
+    if unsupported_numeric and (structural_page or not evidence) and not package.get("legacy_inferred"):
+        raise ContractError(f"MBB page {page_id} contains unsupported factual values: {unsupported_numeric}")
+    if (analysis["density_band"] == "low" or not evidence) and not structural_page and not package.get("legacy_inferred"):
         raise ContractError(f"MBB page {page_id} is too sparse for high-density output; add evidence and at least three content regions")
     components = _component_plan(customer_visible, analysis)
     if not components:
         raise ContractError(f"MBB page {page_id} has no required components")
-    conclusion = str((safe_package.get("quality_intent") or {}).get("conclusion") or customer_visible.get("title") or "")
-    arguments = [str(_text(block)) for block in customer_visible.get("body_blocks") or [] if _text(block)]
-    caveats = [item["caveat"] for item in evidence if item.get("caveat")]
-    so_what = str((safe_package.get("quality_intent") or {}).get("so_what") or (arguments[-1] if arguments else conclusion))
+    conclusion = "" if structural_page else str((safe_package.get("quality_intent") or {}).get("conclusion") or customer_visible.get("title") or "")
+    arguments = [] if structural_page else [str(_text(block)) for block in customer_visible.get("body_blocks") or [] if _text(block)]
+    caveats = [] if structural_page else [item["caveat"] for item in evidence if item.get("caveat")]
+    so_what = "" if structural_page else str((safe_package.get("quality_intent") or {}).get("so_what") or (arguments[-1] if arguments else conclusion))
     coverage = {
-        "facts": 1.0 if evidence or package.get("legacy_inferred") else 0.0,
-        "numeric_values": 1.0 if evidence or not analysis["numeric_tokens"] else 0.0,
+        "facts": 1.0 if evidence or structural_page or package.get("legacy_inferred") else 0.0,
+        "numeric_values": 1.0
+        if (structural_page and not unsupported_numeric) or evidence or not analysis["numeric_tokens"]
+        else 0.0,
         "derived_claims": 1.0 if all(item.get("evidence_refs") for item in _derived_claims(safe_package, evidence)) else 0.0,
     }
     if min(coverage.values()) < 1.0:
@@ -848,9 +1079,24 @@ def build_mbb_page(package: dict[str, Any]) -> dict[str, Any]:
         "evidence_ledger": evidence,
         "conclusion": conclusion,
         "supporting_arguments": arguments,
+        "detailed_argument": " ".join(arguments),
         "caveat": caveats,
         "so_what": so_what,
-        "material_pool": {"facts": copy.deepcopy(customer_visible), "evidence_ids": [item["evidence_id"] for item in evidence], "numeric_values": analysis["numeric_tokens"]},
+        "business_implication": so_what,
+        "handoff": "" if structural_page else str((safe_package.get("quality_intent") or {}).get("handoff") or ""),
+        "evidence_hierarchy": {"primary": [item["evidence_id"] for item in evidence], "supporting": [], "caveat": []},
+        "evidence_assessment": _evidence_assessment(
+            evidence,
+            [item["evidence_id"] for item in evidence],
+            subject=str(customer_visible.get("title") or page_id),
+            structural_page=structural_page,
+        ),
+        "chart_plan": {"visual_type": "structural_layout" if structural_page else "evidence_dense_narrative", "metric_refs": [], "comparison_axis": "structural layout" if structural_page else "evidence", "annotations": [], "source_refs": [] if structural_page else [item["evidence_id"] for item in evidence]},
+        "material_pool": {
+            "facts": copy.deepcopy(customer_visible),
+            "evidence_ids": [item["evidence_id"] for item in evidence],
+            "numeric_values": [] if structural_page else analysis["numeric_tokens"],
+        },
         "derived_claims": _derived_claims(safe_package, evidence),
         "structure_decisions": _structure_decisions(analysis),
         "component_plan": components,
@@ -880,10 +1126,15 @@ def build_content_lock(
         raise ContractError(f"MBB page plan is stale for Page Package {page_id}")
     if not re.fullmatch(r"[a-f0-9]{64}", str(mbb_plan_sha256 or "")):
         raise ContractError(f"MBB plan hash is required for content lock on {page_id}")
-    storyline_context = page_plan.get("storyline_context")
-    if not isinstance(storyline_context, dict) or str(storyline_context.get("storyline_id") or "") != str(page_plan.get("storyline_id") or ""):
-        raise ContractError(f"MBB page plan storyline context is missing on {page_id}")
     result = build_mbb_page(package)
+    structural_page = bool(result["analysis"].get("structural_page"))
+    storyline_context = page_plan.get("storyline_context")
+    if (
+        not isinstance(storyline_context, dict)
+        or str(storyline_context.get("storyline_id") or "") != str(page_plan.get("storyline_id") or "")
+        or storyline_context != _storyline_context(storyline_context, structural_page=structural_page)
+    ):
+        raise ContractError(f"MBB page plan storyline context is missing or stale on {page_id}")
     safe_package = strip_internal(package)
     evidence_by_id = {str(item["evidence_id"]): item for item in result["evidence"]}
     evidence_refs = [str(ref) for ref in page_plan.get("evidence_refs") or []]
@@ -936,8 +1187,21 @@ def build_content_lock(
         "structure_decisions": _structure_decisions(result["analysis"]),
         "component_plan": copy.deepcopy(page_plan.get("components") or []),
         "evidence_coverage": {
-            "facts": 1.0 if evidence_refs else 0.0,
-            "numeric_values": 1.0 if result["evidence"] or not result["analysis"]["numeric_tokens"] else 0.0,
+            "facts": 1.0 if structural_page or evidence_refs else 0.0,
+            "numeric_values": 1.0
+            if (
+                (
+                    structural_page
+                    and not _unsupported_structural_numeric_tokens(
+                        result["customer_visible"],
+                        result["analysis"]["numeric_tokens"],
+                        evidence=result["evidence"],
+                    )
+                )
+                or result["evidence"]
+                or not result["analysis"]["numeric_tokens"]
+            )
+            else 0.0,
             "derived_claims": 1.0 if all(item.get("evidence_refs") and item.get("derivation_note") for item in page_plan.get("derived_claims") or []) else 0.0,
         },
     }
@@ -958,7 +1222,7 @@ def build_content_lock(
         "density_target": {
             "score": float((page_plan.get("density_target") or {}).get("score") or result["analysis"]["content_density_score"]),
             "band": str((page_plan.get("density_target") or {}).get("band") or result["analysis"]["density_band"]),
-            "information_regions": int((page_plan.get("density_target") or {}).get("information_regions") or max(3, len(result["components"]))),
+            "information_regions": int((page_plan.get("density_target") or {}).get("information_regions") or max(1 if result["analysis"].get("structural_page") else 3, len(result["components"]))),
             "component_count": len(result["components"]),
             "evidence_count": len(result["evidence"]),
             "numeric_count": result["analysis"]["numeric_token_count"],
@@ -1341,14 +1605,15 @@ def load_mbb_plan(
         if str(page.get("storyline_id") or "") not in candidate_ids:
             raise ContractError(f"MBB plan page storyline is unknown on {page_id}")
         storyline = next(item for item in candidates if str(item.get("storyline_id") or "") == str(page.get("storyline_id") or ""))
+        source_result = build_mbb_page(package)
+        structural_page = bool((source_result.get("analysis") or {}).get("structural_page"))
         context = page.get("storyline_context") or {}
-        if context != _storyline_context(storyline):
+        if context != _storyline_context(storyline, structural_page=structural_page):
             raise ContractError(f"MBB page storyline context is stale on {page_id}")
         page_evidence = {str(ref) for ref in page.get("evidence_refs") or []}
         package_evidence = {str(ref.get("evidence_id") if isinstance(ref, dict) else ref) for ref in _evidence_ledger(package)}
-        if not page_evidence or not page_evidence.issubset(ledger_ids) or not page_evidence.issubset(package_evidence):
+        if (not structural_page and not page_evidence) or not page_evidence.issubset(ledger_ids) or not page_evidence.issubset(package_evidence):
             raise ContractError(f"MBB plan evidence refs are invalid on {page_id}")
-        source_result = build_mbb_page(package)
         if page.get("material_pool") != _material_pool(package, source_result, storyline):
             raise ContractError(f"MBB plan material pool is outside the Runtime registry on {page_id}")
         if page.get("components") != source_result["components"]:
@@ -1427,9 +1692,6 @@ def select_mbb_storyline(root: Path, storyline_id: str, *, selected_by: str = "u
     candidate_ids = {str(item.get("storyline_id") or "") for item in plan.get("storyline_candidates") or [] if isinstance(item, dict)}
     if storyline_id not in candidate_ids:
         raise ContractError(f"unknown MBB storyline_id: {storyline_id}")
-    if _run_mode(root) in {"production", "benchmark"}:
-        receipt = _load_mbb_user_decision_receipt(root, plan, packages, storyline_id)
-        selected_by = str(receipt.get("attestor_id") or "")
     plan["selection"] = {
         "status": "selected_pending_enrichment",
         "recommended_storyline_id": str((plan.get("selection") or {}).get("recommended_storyline_id") or storyline_id),

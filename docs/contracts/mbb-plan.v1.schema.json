@@ -106,7 +106,7 @@
         "situation": {"type": "string", "minLength": 1},
         "complication": {"type": "string", "minLength": 1},
         "resolution": {"type": "string", "minLength": 1},
-        "evidence_refs": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "evidence_refs": {"type": "array", "items": {"type": "string", "minLength": 1}},
         "decision_implication": {"type": "string", "minLength": 1},
         "evidence_assessment": {"$ref": "#/$defs/evidenceAssessment"},
         "claim_bindings": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/claimBinding"}}
@@ -142,7 +142,7 @@
       "properties": {
         "claim_id": {"type": "string", "minLength": 1},
         "origin": {"enum": ["source", "derived", "structural_label"]},
-        "evidence_refs": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "evidence_refs": {"type": "array", "items": {"type": "string", "minLength": 1}},
         "derivation_note": {"type": "string", "minLength": 1},
         "factual_value_added": {"type": "boolean"}
       },
@@ -155,7 +155,7 @@
         "target": {"type": "string", "minLength": 1},
         "text_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
         "origin": {"enum": ["source", "derived", "structural_label"]},
-        "evidence_refs": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "evidence_refs": {"type": "array", "items": {"type": "string", "minLength": 1}},
         "evidence_spans": {
           "type": "array",
           "items": {
@@ -194,7 +194,7 @@
         "metric_refs": {"type": "array", "items": {"type": "string"}},
         "comparison_axis": {"type": "string", "minLength": 1},
         "annotations": {"type": "array", "items": {"type": "string"}},
-        "source_refs": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+        "source_refs": {"type": "array", "items": {"type": "string"}}
       },
       "additionalProperties": false
     },
@@ -203,11 +203,11 @@
       "required": ["storyline_id", "management_conclusion", "visual_potential", "page_handoff", "caveat", "evidence_refs"],
       "properties": {
         "storyline_id": {"type": "string", "minLength": 1},
-        "management_conclusion": {"type": "string", "minLength": 1},
+        "management_conclusion": {"type": "string"},
         "visual_potential": {"type": "string", "minLength": 1},
-        "page_handoff": {"type": "string", "minLength": 1},
-        "caveat": {"type": "string", "minLength": 1},
-        "evidence_refs": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+        "page_handoff": {"type": "string"},
+        "caveat": {"type": "string"},
+        "evidence_refs": {"type": "array", "items": {"type": "string", "minLength": 1}}
       },
       "additionalProperties": false
     },
@@ -221,15 +221,15 @@
         "storyline_id": {"type": "string", "minLength": 1},
         "storyline_context": {"$ref": "#/$defs/storylineContext"},
         "role": {"type": "string", "minLength": 1},
-        "conclusion": {"type": "string", "minLength": 1},
-        "supporting_arguments": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
-        "detailed_argument": {"type": "string", "minLength": 1},
-        "evidence_refs": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
-        "caveat": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
-        "so_what": {"type": "string", "minLength": 1},
-        "business_implication": {"type": "string", "minLength": 1},
-        "handoff": {"type": "string", "minLength": 1},
-        "evidence_hierarchy": {"type": "object", "required": ["primary", "supporting", "caveat"], "properties": {"primary": {"type": "array", "minItems": 1, "items": {"type": "string"}}, "supporting": {"type": "array", "items": {"type": "string"}}, "caveat": {"type": "array", "items": {"type": "string"}}}, "additionalProperties": false},
+        "conclusion": {"type": "string"},
+        "supporting_arguments": {"type": "array", "items": {"type": "string"}},
+        "detailed_argument": {"type": "string"},
+        "evidence_refs": {"type": "array", "items": {"type": "string"}},
+        "caveat": {"type": "array", "items": {"type": "string"}},
+        "so_what": {"type": "string"},
+        "business_implication": {"type": "string"},
+        "handoff": {"type": "string"},
+        "evidence_hierarchy": {"type": "object", "required": ["primary", "supporting", "caveat"], "properties": {"primary": {"type": "array", "items": {"type": "string"}}, "supporting": {"type": "array", "items": {"type": "string"}}, "caveat": {"type": "array", "items": {"type": "string"}}}, "additionalProperties": false},
         "evidence_assessment": {"$ref": "#/$defs/evidenceAssessment"},
         "chart_plan": {"$ref": "#/$defs/chartPlan"},
         "material_pool": {
@@ -237,13 +237,13 @@
           "required": ["customer_visible", "evidence_refs", "recommended_visual", "numeric_values", "storyline_id", "storyline_visual_potential", "storyline_page_handoff", "storyline_caveat", "comparisons", "rankings", "changes", "funnel_steps", "matrix_axes", "annotations", "legend", "microcharts", "area_count", "low_density_risk"],
           "properties": {
             "customer_visible": {"type": "object"},
-            "evidence_refs": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+            "evidence_refs": {"type": "array", "items": {"type": "string"}},
             "recommended_visual": {"type": "string", "minLength": 1},
             "numeric_values": {"type": "array", "items": {"type": "string"}},
             "storyline_id": {"type": "string", "minLength": 1},
             "storyline_visual_potential": {"type": "string", "minLength": 1},
-            "storyline_page_handoff": {"type": "string", "minLength": 1},
-            "storyline_caveat": {"type": "string", "minLength": 1},
+            "storyline_page_handoff": {"type": "string"},
+            "storyline_caveat": {"type": "string"},
             "comparisons": {"type": "array", "items": {"type": "string"}},
             "rankings": {"type": "array", "items": {"type": "string"}},
             "changes": {"type": "array", "items": {"type": "string"}},
@@ -267,7 +267,53 @@
         "created_at": {"type": "string"},
         "updated_at": {"type": "string"}
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {"role": {"enum": ["cover", "section", "section_divider", "divider", "toc", "agenda", "visual", "visual_divider", "image", "image_page"]}},
+            "required": ["role"]
+          },
+          "then": {
+            "properties": {
+              "conclusion": {"const": ""},
+              "supporting_arguments": {"maxItems": 0},
+              "detailed_argument": {"const": ""},
+              "evidence_refs": {"items": {"type": "string", "minLength": 1}},
+              "caveat": {"maxItems": 0},
+              "so_what": {"const": ""},
+              "business_implication": {"const": ""},
+              "handoff": {"const": ""},
+              "storyline_context": {"properties": {"management_conclusion": {"const": ""}, "visual_potential": {"const": "structural layout"}, "page_handoff": {"const": ""}, "caveat": {"const": ""}, "evidence_refs": {"maxItems": 0}}},
+              "evidence_hierarchy": {"properties": {"primary": {"items": {"type": "string", "minLength": 1}}, "supporting": {"items": {"type": "string", "minLength": 1}}, "caveat": {"maxItems": 0}}},
+              "chart_plan": {"properties": {"metric_refs": {"maxItems": 0}, "annotations": {"maxItems": 0}, "source_refs": {"maxItems": 0}}},
+              "material_pool": {"properties": {"evidence_refs": {"maxItems": 0}, "numeric_values": {"maxItems": 0}, "comparisons": {"maxItems": 0}, "changes": {"maxItems": 0}, "annotations": {"maxItems": 0}, "storyline_page_handoff": {"const": ""}, "storyline_caveat": {"const": ""}}}
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {"role": {"not": {"enum": ["cover", "section", "section_divider", "divider", "toc", "agenda", "visual", "visual_divider", "image", "image_page"]}}},
+            "required": ["role"]
+          },
+          "then": {
+            "properties": {
+              "conclusion": {"minLength": 1},
+              "supporting_arguments": {"minItems": 1, "items": {"minLength": 1}},
+              "detailed_argument": {"minLength": 1},
+              "evidence_refs": {"minItems": 1, "items": {"minLength": 1}},
+              "caveat": {"minItems": 1, "items": {"minLength": 1}},
+              "so_what": {"minLength": 1},
+              "business_implication": {"minLength": 1},
+              "handoff": {"minLength": 1},
+              "storyline_context": {"properties": {"management_conclusion": {"minLength": 1}, "visual_potential": {"minLength": 1}, "page_handoff": {"minLength": 1}, "caveat": {"minLength": 1}, "evidence_refs": {"minItems": 1, "items": {"minLength": 1}}}},
+              "evidence_hierarchy": {"properties": {"primary": {"minItems": 1}}},
+              "chart_plan": {"properties": {"source_refs": {"minItems": 1, "items": {"minLength": 1}}}},
+              "material_pool": {"properties": {"evidence_refs": {"minItems": 1, "items": {"minLength": 1}}, "storyline_page_handoff": {"minLength": 1}, "storyline_caveat": {"minLength": 1}}}
+            }
+          }
+        }
+      ]
     }
   }
 }

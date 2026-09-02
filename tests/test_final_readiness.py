@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import shutil
 import sys
 import tempfile
 import unittest
+import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -13,6 +15,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from runtime.build import run_build
 from runtime.final_readiness import compute_final_readiness, final_readiness_clearance, read_final_readiness
 from runtime.run_state import create_run, write_json
+from quality.overrides import create_override
 
 
 class FinalReadinessTests(unittest.TestCase):
@@ -136,16 +139,88 @@ class FinalReadinessTests(unittest.TestCase):
         codes = {item["code"] for item in readiness["blockers"]}
         self.assertIn("final_customer_visible_safety_missing", codes)
 
+    def test_stale_customer_visible_safety_is_warning_in_fixture(self) -> None:
+        self._write_baseline()
+        run_build(self.run_dir)
+        self._write_customer_visible_safety_gate(blocks=False)
+
+        readiness = compute_final_readiness(self.run_dir)
+
+        self.assertTrue(readiness["ready"])
+        self.assertTrue(any("需要重新扫描当前产物" in item for item in readiness["warnings"]))
+
+    def test_stale_customer_visible_safety_blocks_production(self) -> None:
+        self._write_baseline()
+        run_build(self.run_dir)
+        self._write_customer_visible_safety_gate(blocks=False)
+        write_json(self.run_dir / "request.json", {"run_id": "final-ready", "run_mode": "production"})
+
+        readiness = compute_final_readiness(
+            self.run_dir,
+            run_mode="production",
+            dev_allow_unsetup=True,
+        )
+
+        codes = {item["code"] for item in readiness["blockers"]}
+        self.assertIn("final_customer_visible_safety_stale", codes)
+        clearance = final_readiness_clearance(self.run_dir)
+        self.assertIn("重新扫描当前产物", clearance["reason"])
+
     def test_customer_visible_safety_blocker_is_user_facing_clearance_reason(self) -> None:
         self._write_baseline()
-        self._write_customer_visible_safety_gate(blocks=True)
         run_build(self.run_dir)
+        safety_path = self.run_dir / "quality_reports" / "customer_visible_safety_gate.json"
+        self._write_customer_visible_safety_gate(blocks=True)
+        safety_payload = json.loads(safety_path.read_text(encoding="utf-8"))
+        artifact = self.run_dir / "build" / "deck.html"
+        digest = hashlib.sha256(artifact.read_bytes()).hexdigest()
+        safety_payload.update(
+            {
+                "artifact": "build/deck.html",
+                "artifact_path": "build/deck.html",
+                "artifact_run_relative": "build/deck.html",
+                "artifact_sha256": digest,
+            }
+        )
+        safety_path.write_text(json.dumps(safety_payload), encoding="utf-8")
 
         readiness = compute_final_readiness(self.run_dir)
         clearance = final_readiness_clearance(self.run_dir)
 
         self.assertFalse(readiness["ready"])
         self.assertIn("内部制作语言", clearance["reason"])
+
+    def test_customer_visible_safety_p1_override_does_not_escalate_to_p0(self) -> None:
+        self._write_baseline()
+        run_build(self.run_dir)
+        safety_path = self.run_dir / "quality_reports" / "customer_visible_safety_gate.json"
+        self._write_customer_visible_safety_gate(blocks=True)
+        safety_payload = json.loads(safety_path.read_text(encoding="utf-8"))
+        safety_payload["findings"][0]["severity"] = "P1"
+        safety_payload["summary"].update({"p0_count": 0, "p1_count": 1})
+        artifact = self.run_dir / "build" / "deck.html"
+        digest = hashlib.sha256(artifact.read_bytes()).hexdigest()
+        safety_payload.update(
+            {
+                "artifact": "build/deck.html",
+                "artifact_path": "build/deck.html",
+                "artifact_run_relative": "build/deck.html",
+                "artifact_sha256": digest,
+            }
+        )
+        safety_path.write_text(json.dumps(safety_payload), encoding="utf-8")
+        create_override(
+            self.run_dir,
+            "customer_visible_forbidden_001",
+            "P1",
+            "Accepted for client export.",
+            "review-lead",
+        )
+
+        readiness = compute_final_readiness(self.run_dir)
+
+        self.assertTrue(readiness["ready"], readiness["blockers"])
+        self.assertNotIn("final_customer_visible_safety_blocked", {item["code"] for item in readiness["blockers"]})
 
     def test_missing_render_blocks_readiness(self) -> None:
         self._write_baseline()
@@ -175,6 +250,67 @@ class FinalReadinessTests(unittest.TestCase):
         self.assertIn("final_run_state_not_ready", codes)
         self.assertIn("final_quality_gate_blocked", codes)
         self.assertIn("final_delivery_validation_blocked", codes)
+
+    def test_p1_quality_gate_override_allows_final_readiness(self) -> None:
+        self._write_baseline(gate_blocks=True)
+        create_override(
+            self.run_dir,
+            "quality_block",
+            "P1",
+            "Accepted for client export.",
+            "review-lead",
+        )
+        run_build(self.run_dir)
+
+        readiness = compute_final_readiness(self.run_dir)
+
+        self.assertTrue(readiness["ready"], readiness["blockers"])
+        self.assertTrue(any("active P1 overrides" in item for item in readiness["warnings"]))
+
+    def test_stale_quality_gate_warns_without_blocking_current_artifact(self) -> None:
+        self._write_baseline(gate_blocks=True)
+        run_build(self.run_dir)
+        gate = self.run_dir / "quality_reports" / "draft_gate.json"
+        payload = json.loads(gate.read_text(encoding="utf-8"))
+        payload["artifact_path"] = "build/deck.pptx"
+        payload["artifact_sha256"] = "0" * 64
+        gate.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+
+        readiness = compute_final_readiness(self.run_dir)
+
+        self.assertTrue(readiness["ready"], readiness["blockers"])
+        self.assertTrue(any("stale for the current artifact" in item for item in readiness["warnings"]))
+        gate_summary = next(item for item in readiness["quality_gates"] if item["gate"] == "draft")
+        self.assertFalse(gate_summary["current"])
+
+    def test_stale_render_gate_does_not_count_as_current_in_production(self) -> None:
+        self._write_baseline()
+        run_build(self.run_dir)
+        quality_dir = self.run_dir / "quality_reports"
+        write_json(
+            quality_dir / "render_gate.json",
+            {
+                "gate": "render",
+                "status": "rework_required",
+                "blocks_delivery": True,
+                "artifact_path": "build/old-deck.pptx",
+                "artifact_run_relative": "build/old-deck.pptx",
+                "artifact_sha256": "0" * 64,
+                "findings": [],
+            },
+        )
+        write_json(self.run_dir / "request.json", {"run_id": "final-ready", "run_mode": "production"})
+
+        readiness = compute_final_readiness(
+            self.run_dir,
+            run_mode="production",
+            dev_allow_unsetup=True,
+        )
+
+        self.assertIn("final_current_artifact_gate_missing", {item["code"] for item in readiness["blockers"]})
+        render_gate = next(item for item in readiness["quality_gates"] if item["gate"] == "render")
+        self.assertFalse(render_gate["current"])
+        self.assertTrue(any("stale for the current artifact" in item for item in readiness["warnings"]))
 
     def test_page_count_mismatch_blocks_readiness(self) -> None:
         self._write_baseline(
@@ -222,6 +358,69 @@ class FinalReadinessTests(unittest.TestCase):
 
         self.assertEqual("deck_final_readiness.v1", readiness["schema_version"])
         json.dumps(readiness)
+
+    def _write_high_density_completed_fixture(self, *, workspace: str = "") -> Path:
+        run_dir = self.temp_dir / "hd-final"
+        run_dir.mkdir()
+        request = {"run_id": "hd-final", "run_mode": "production"}
+        if workspace:
+            request["workspace"] = workspace
+        write_json(run_dir / "request.json", request)
+        for name in ("context_manifest.json", "deck_brief.json", "claim_map.json", "narrative_plan.json", "page_tasks.json", "sourcing_plan.json"):
+            write_json(run_dir / name, {"run_id": "hd-final"})
+        write_json(
+            run_dir / "high_density_build" / "status.json",
+            {
+                "schema_version": "deck_high_density_status.v2",
+                "run_id": "hd-final",
+                "builder_profile": "high_density",
+                "status": "completed",
+                "current_stage": "pptx",
+                "next_action": {"kind": "complete"},
+            },
+        )
+        pptx = run_dir / "high_density_build" / "pptx" / "deck_high_density.pptx"
+        pptx.parent.mkdir(parents=True)
+        with zipfile.ZipFile(pptx, "w") as package:
+            package.writestr("[Content_Types].xml", "<Types/>")
+            package.writestr("ppt/presentation.xml", "<p:presentation xmlns:p=\"x\"/>")
+            package.writestr(
+                "ppt/slides/slide1.xml",
+                "<p:sld xmlns:p=\"x\" xmlns:a=\"x\"><p:cSld><p:spTree><p:sp><p:txBody><a:p><a:r><a:t>Final slide</a:t></a:r></a:p></p:txBody></p:sp></p:spTree></p:cSld></p:sld>",
+            )
+        write_json(
+            run_dir / "quality_reports" / "customer_visible_safety_gate.json",
+            {
+                "schema_version": "deck_customer_visible_safety_gate.v1",
+                "run_id": "hd-final",
+                "gate": "customer_visible_safety",
+                "status": "pass",
+                "blocks_delivery": False,
+                "findings": [],
+                "page_findings": [],
+            },
+        )
+        return run_dir
+
+    def test_high_density_completed_profile_skips_standard_preview_state_blocker(self) -> None:
+        run_dir = self._write_high_density_completed_fixture()
+
+        readiness = compute_final_readiness(run_dir, run_mode="production", dev_allow_unsetup=True)
+
+        self.assertFalse(readiness["ready"])
+        self.assertEqual("blocked", readiness["status"])
+        self.assertEqual("high_density_build/pptx/deck_high_density.pptx", readiness["final_artifact"]["path"])
+        self.assertNotIn("final_run_state_not_ready", {item["code"] for item in readiness["blockers"]})
+        self.assertIn("final_current_artifact_gate_missing", {item["code"] for item in readiness["blockers"]})
+
+    def test_high_density_completed_profile_keeps_workspace_blocker(self) -> None:
+        missing_workspace = self.temp_dir / "missing-workspace"
+        run_dir = self._write_high_density_completed_fixture(workspace=str(missing_workspace))
+
+        readiness = compute_final_readiness(run_dir, run_mode="production", dev_allow_unsetup=True)
+
+        self.assertEqual("blocked_workspace", readiness["run_state"]["stage"])
+        self.assertIn("final_run_state_not_ready", {item["code"] for item in readiness["blockers"]})
 
 
 if __name__ == "__main__":

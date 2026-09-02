@@ -6,6 +6,9 @@ from pathlib import Path
 from typing import Any
 
 from delivery.validate import validate_delivery
+from quality.gate_freshness import report_currentity
+from quality.gate_policy import resolve_required_gates
+from quality.overrides import has_active_override
 from runtime.render import find_render_result
 from runtime.run_state import PREVIEW_MANIFEST_NAME, read_json
 from runtime.run_state_resolver import resolve_run_state
@@ -13,6 +16,14 @@ from runtime.run_state_resolver import resolve_run_state
 SCHEMA_VERSION = "deck_final_readiness.v1"
 FINAL_READINESS_PATH = Path("delivery") / "final_readiness.json"
 CUSTOMER_VISIBLE_SAFETY_GATE = Path("quality_reports") / "customer_visible_safety_gate.json"
+HIGH_DENSITY_STANDARD_STAGE_OVERRIDES = {
+    "needs_preview",
+    "needs_review",
+    "needs_draft_gate",
+    "needs_builder_backend",
+    "needs_build",
+    "needs_render",
+}
 
 
 def _utc_now() -> str:
@@ -38,6 +49,10 @@ def _run_relative(root: Path, path: Path) -> str:
 
 def _resolve_artifact(root: Path, artifact_path: str | Path | None, render_result: dict[str, Any]) -> tuple[Path | None, str]:
     raw = str(artifact_path or render_result.get("artifact_path") or "").strip()
+    if not raw:
+        high_density_artifact = root / "high_density_build" / "pptx" / "deck_high_density.pptx"
+        if _high_density_completed(root) and high_density_artifact.exists():
+            raw = str(high_density_artifact)
     if not raw:
         return None, ""
     candidate = Path(raw)
@@ -73,6 +88,24 @@ def _render_page_count(render_result: dict[str, Any]) -> int:
         return 0
 
 
+def _high_density_completed(root: Path) -> bool:
+    status = _safe_read_json(root / "high_density_build" / "status.json")
+    return (
+        str(status.get("builder_profile") or "") == "high_density"
+        and str(status.get("status") or "").lower() == "completed"
+    )
+
+
+def _high_density_page_count(root: Path) -> int:
+    build_manifest = _safe_read_json(root / "build" / "build_manifest.json")
+    pages = build_manifest.get("pages")
+    if isinstance(pages, list):
+        return len(pages)
+    manifest = _safe_read_json(root / "high_density_build" / "manifest.json")
+    pages = manifest.get("pages")
+    return len(pages) if isinstance(pages, list) else 0
+
+
 def _add_blocker(blockers: list[dict[str, str]], code: str, message: str, *, severity: str = "P0") -> None:
     if any(item.get("code") == code for item in blockers):
         return
@@ -104,7 +137,7 @@ def _run_state_not_ready_message(stage: str) -> str:
     return stage_messages.get(stage, f"当前运行阶段还未达到最终交付条件：{stage or 'unknown'}。")
 
 
-def _quality_gate_summary(root: Path) -> list[dict[str, Any]]:
+def _quality_gate_summary(root: Path, artifact: Path | None = None) -> list[dict[str, Any]]:
     quality_dir = root / "quality_reports"
     if not quality_dir.is_dir():
         return []
@@ -114,13 +147,26 @@ def _quality_gate_summary(root: Path) -> list[dict[str, Any]]:
         if not report:
             gates.append({"gate": path.stem.replace("_gate", ""), "status": "parse_failed", "blocks_delivery": True})
             continue
+        gate_name = str(report.get("gate") or path.stem.replace("_gate", ""))
+        report_for_currentity = report if report.get("gate") else {**report, "gate": gate_name}
+        currentity = report_currentity(root, report_for_currentity, artifact)
         gates.append(
             {
-                "gate": str(report.get("gate") or path.stem.replace("_gate", "")),
+                "gate": gate_name,
                 "status": str(report.get("status") or ""),
                 "blocks_delivery": bool(report.get("blocks_delivery")),
                 "findings": len(report.get("findings", [])) if isinstance(report.get("findings"), list) else 0,
                 "page_findings": len(report.get("page_findings", [])) if isinstance(report.get("page_findings"), list) else 0,
+                "blocking_findings": [
+                    {
+                        "finding_id": str(item.get("finding_id") or ""),
+                        "severity": str(item.get("severity") or ""),
+                    }
+                    for item in report.get("findings", [])
+                    if isinstance(item, dict) and str(item.get("severity") or "").upper() in {"P0", "P1"}
+                ] if isinstance(report.get("findings"), list) else [],
+                "current": bool(currentity.get("current")),
+                "stale_reason": str(currentity.get("reason") or ""),
             }
         )
     return gates
@@ -130,6 +176,48 @@ def _is_fixture_policy(run_state: dict[str, Any]) -> bool:
     mode = str(run_state.get("run_mode") or "").strip().lower()
     policy = str(run_state.get("policy_mode") or "").strip().lower()
     return mode in {"fixture", "dev"} or policy == "fixture"
+
+
+def _all_quality_blocks_are_overridden_p1(root: Path, quality_gates: list[dict[str, Any]]) -> bool:
+    blocked_gates = [
+        gate
+        for gate in quality_gates
+        if gate.get("current", True) and (gate.get("blocks_delivery") or str(gate.get("status") or "").lower() in {"rework_required", "failed", "blocked"})
+    ]
+    if not blocked_gates:
+        return False
+    for gate in blocked_gates:
+        findings = [item for item in gate.get("blocking_findings", []) if isinstance(item, dict)]
+        if not findings:
+            return False
+        for finding in findings:
+            severity = str(finding.get("severity") or "").upper()
+            finding_id = str(finding.get("finding_id") or "")
+            if severity == "P0" or not finding_id or not has_active_override(root, finding_id):
+                return False
+    return True
+
+
+def _all_quality_blocks_are_stale(quality_gates: list[dict[str, Any]]) -> bool:
+    blocked_gates = [
+        gate
+        for gate in quality_gates
+        if gate.get("blocks_delivery") or str(gate.get("status") or "").lower() in {"rework_required", "failed", "blocked"}
+    ]
+    return bool(blocked_gates) and all(not gate.get("current", True) for gate in blocked_gates)
+
+
+def _safety_block_is_overridden_p1(root: Path, report: dict[str, Any]) -> bool:
+    findings = report.get("findings") if isinstance(report.get("findings"), list) else []
+    if not findings:
+        return False
+    return all(
+        isinstance(finding, dict)
+        and str(finding.get("severity") or "").upper() == "P1"
+        and bool(str(finding.get("finding_id") or ""))
+        and has_active_override(root, str(finding["finding_id"]))
+        for finding in findings
+    )
 
 
 def _customer_visible_safety_report(root: Path) -> tuple[Path, dict[str, Any], bool]:
@@ -151,20 +239,45 @@ def compute_final_readiness(
     root = Path(run_dir).expanduser().resolve()
     run_state = resolve_run_state(root, run_mode=run_mode, dev_allow_unsetup=dev_allow_unsetup)
     run_id = str(run_state.get("run_id") or root.name)
+    high_density_completed = _high_density_completed(root)
     render_result_path, render_result, render_source = find_render_result(root)
     render_result = render_result or {}
     artifact, artifact_rel = _resolve_artifact(root, artifact_path, render_result)
-    approved_pages = expected_page_count if expected_page_count is not None else _approved_page_count(root)
-    render_pages = _render_page_count(render_result)
+    approved_pages = expected_page_count if expected_page_count is not None else (_approved_page_count(root) or _high_density_page_count(root))
+    render_pages = _render_page_count(render_result) or (_high_density_page_count(root) if high_density_completed else 0)
     blockers: list[dict[str, str]] = []
     warnings: list[str] = []
+    quality_gates = _quality_gate_summary(root, artifact)
+    gate_policy = resolve_required_gates(
+        root,
+        artifact,
+        builder_profile="high_density" if high_density_completed else "",
+        output_profile="production_pptx" if str(artifact_rel).endswith(".pptx") else "",
+        run_mode=str(run_state.get("run_mode") or run_mode or ""),
+        include_non_required_blockers=True,
+    )
+    stale_quality_gates = [gate for gate in quality_gates if not gate.get("current", True)]
+    for gate in stale_quality_gates:
+        warnings.append(f"Quality gate {gate.get('gate') or 'unknown'} is stale for the current artifact: {gate.get('stale_reason') or 'lineage mismatch'}.")
 
     stage = str(run_state.get("stage") or "")
+    if high_density_completed and stage in HIGH_DENSITY_STANDARD_STAGE_OVERRIDES:
+        stage = "ready_for_client_export"
+        warnings.append("标准 runtime state 尚未完整识别 high-density 成片，final readiness 已按 high-density completed profile 判断。")
+    elif stage == "needs_draft_gate" and _all_quality_blocks_are_overridden_p1(root, quality_gates):
+        stage = "ready_for_client_export"
+        warnings.append("Draft quality gate has active P1 overrides; final readiness continues with override policy.")
+    elif stage == "needs_draft_gate" and _all_quality_blocks_are_stale(quality_gates):
+        stage = "ready_for_client_export"
+        warnings.append("Draft quality gate blockers are stale for the current artifact; final readiness continues with freshness policy.")
     if stage not in {"ready_for_client_export", "ready_for_benchmark"}:
         _add_blocker(blockers, "final_run_state_not_ready", _run_state_not_ready_message(stage))
 
     if not render_result:
-        _add_blocker(blockers, "final_render_missing", "Render result is missing.")
+        if high_density_completed:
+            warnings.append("High-density completed profile uses high_density_build/pptx/deck_high_density.pptx as the final artifact.")
+        else:
+            _add_blocker(blockers, "final_render_missing", "Render result is missing.")
     elif str(render_result.get("status") or "").lower() != "completed":
         _add_blocker(blockers, "final_render_not_completed", "Render result is not completed.")
 
@@ -193,9 +306,15 @@ def compute_final_readiness(
             severity="P1",
         )
 
-    quality_gates = _quality_gate_summary(root)
     if not quality_gates:
         _add_blocker(blockers, "final_quality_gate_missing", "Quality gate report is missing.", severity="P1")
+    if gate_policy.get("missing_required_gates"):
+        missing_text = ", ".join(str(gate) for gate in gate_policy.get("missing_required_gates") or [])
+        message = f"当前产物未检查：缺少当前有效质量门 {missing_text}。"
+        if _is_fixture_policy(run_state):
+            warnings.append(message)
+        else:
+            _add_blocker(blockers, "final_current_artifact_gate_missing", message, severity="P1")
     _safety_path, safety_report, safety_exists = _customer_visible_safety_report(root)
     safety_optional = _is_fixture_policy(run_state)
     if not safety_exists:
@@ -210,21 +329,46 @@ def compute_final_readiness(
             warnings.append(message)
         else:
             _add_blocker(blockers, "final_customer_visible_safety_invalid", message)
-    elif safety_report.get("blocks_delivery") or str(safety_report.get("status") or "").lower() in {"rework_required", "failed", "blocked"}:
-        _add_blocker(
-            blockers,
-            "final_customer_visible_safety_blocked",
-            "最终文件包含内部制作语言或模板占位语，需要返修。",
-        )
-
-    for gate in quality_gates:
-        if gate.get("blocks_delivery") or str(gate.get("status") or "").lower() in {"rework_required", "failed", "blocked"}:
+    else:
+        safety_for_currentity = safety_report if safety_report.get("gate") else {**safety_report, "gate": "customer_visible_safety"}
+        safety_current = report_currentity(
+            root,
+            safety_for_currentity,
+            artifact,
+            artifact_bound=True,
+        ).get("current", True)
+        if not safety_current:
+            message = "客户可见内容安全检查报告已过期，需要重新扫描当前产物。"
+            if safety_optional:
+                warnings.append(message)
+            else:
+                _add_blocker(blockers, "final_customer_visible_safety_stale", message, severity="P1")
+        elif (
+            safety_report.get("blocks_delivery")
+            or str(safety_report.get("status") or "").lower() in {"rework_required", "failed", "blocked"}
+        ) and not _safety_block_is_overridden_p1(root, safety_report):
             _add_blocker(
                 blockers,
-                "final_quality_gate_blocked",
-                f"Quality gate {gate.get('gate') or 'unknown'} blocks delivery.",
-                severity="P1",
+                "final_customer_visible_safety_blocked",
+                "最终文件包含内部制作语言或模板占位语，需要返修。",
             )
+
+    current_blockers = [item for item in gate_policy.get("current_blockers") or [] if isinstance(item, dict)]
+    overridden_p1 = [item for item in gate_policy.get("overridden_p1") or [] if isinstance(item, dict)]
+    if current_blockers:
+        p0_findings = [item for item in current_blockers if str(item.get("severity") or "").upper() == "P0"]
+        representative = (p0_findings or current_blockers)[0]
+        gate_name = str(representative.get("_gate_name") or "unknown")
+        message = str(representative.get("message") or f"Quality gate {gate_name} blocks delivery.")
+        _add_blocker(
+            blockers,
+            "final_quality_gate_blocked",
+            f"Quality gate {gate_name} blocks delivery: {message}",
+            severity="P0" if p0_findings else "P1",
+        )
+    for finding in overridden_p1:
+        gate_name = str(finding.get("_gate_name") or "unknown")
+        warnings.append(f"Quality gate {gate_name} has active P1 override for {finding.get('finding_id') or finding.get('code') or 'finding'}.")
 
     artifact_validation = (delivery_validation.get("lineage") or {}).get("artifact_validation") or {}
     artifact_manifest_validation = (delivery_validation.get("lineage") or {}).get("artifact_manifest_validation") or {}
@@ -277,6 +421,7 @@ def compute_final_readiness(
             "source_fingerprint": str(lineage.get("source_fingerprint") or ""),
         },
         "quality_gates": quality_gates,
+        "required_gate_policy": gate_policy,
         "customer_visible_safety": {
             "required": not safety_optional,
             "path": str(CUSTOMER_VISIBLE_SAFETY_GATE) if safety_exists else "",
@@ -324,6 +469,7 @@ def final_readiness_clearance(run_dir: str | Path) -> dict[str, Any]:
             "final_customer_visible_safety_blocked",
             "final_customer_visible_safety_missing",
             "final_customer_visible_safety_invalid",
+            "final_customer_visible_safety_stale",
         }
         for blocker in blockers:
             if (

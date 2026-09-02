@@ -10,7 +10,7 @@ from manifest import ManifestError, load_manifest, page_payload
 from orchestrate.export_queue import export_queue
 from quality.overrides import list_active_overrides
 from review.readiness import compute_claim_coverage, compute_deck_readiness, compute_next_actions
-from review.workbench import WorkbenchError, execute_review_action
+from review.workbench import WorkbenchError, execute_batch_review_action, execute_review_action
 from runtime.events import append_typed_event, read_events
 from runtime.final_readiness import final_readiness_clearance
 from runtime.render import CANONICAL_RENDER_RESULT, find_render_result
@@ -1283,6 +1283,27 @@ def handle_workspace_run_action(run_dir: str | Path, body: dict[str, Any]) -> di
     note = str(body.get("note") or body.get("reason") or "").strip()
     if not action:
         raise ValueError("action is required.")
+
+    if action == "batch_review":
+        review_action = str(body.get("review_action") or "").strip()
+        raw_page_ids = body.get("page_ids")
+        if raw_page_ids is None:
+            page_ids = None
+        elif isinstance(raw_page_ids, list):
+            page_ids = [str(page_id).strip() for page_id in raw_page_ids if str(page_id).strip()]
+        else:
+            raise ValueError("page_ids must be a list when provided.")
+        try:
+            return execute_batch_review_action(
+                root,
+                review_action,
+                page_ids=page_ids,
+                actor=actor,
+                reason=note,
+                note=note,
+            )
+        except WorkbenchError as exc:
+            raise ValueError(str(exc)) from exc
 
     if action == "submit_approval":
         return _create_approval_task(

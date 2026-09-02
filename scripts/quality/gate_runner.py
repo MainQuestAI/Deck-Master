@@ -6,6 +6,8 @@ from typing import Any
 
 from quality.customer_visible_safety import DEFAULT_FORBIDDEN_TERMS
 from quality.pptx_audit import audit_pptx
+from quality.pptx_audit import load_page_roles, requires_page_role_contract
+from quality.gate_freshness import artifact_identity
 from quality.rubric import (
     DIMENSION_LABELS,
     blocks_delivery,
@@ -55,6 +57,7 @@ def _report(
     findings: list[dict[str, Any]],
     summary: dict[str, Any],
     artifact: str = "",
+    artifact_root: str | Path | None = None,
 ) -> dict[str, Any]:
     status = decision_from(scorecard, findings)
     page_findings = [item for item in findings if item.get("page_id")]
@@ -63,7 +66,7 @@ def _report(
         for item in findings
         if item.get("severity") in {"P0", "P1", "P2"} and item.get("repair_instruction")
     ][:8]
-    return {
+    report = {
         "run_id": run_id,
         "gate": gate,
         "created_at": datetime.now(timezone.utc).isoformat(),
@@ -77,6 +80,11 @@ def _report(
         "repair_plan": repair_plan,
         "blocks_delivery": blocks_delivery(status, findings),
     }
+    if artifact:
+        artifact_path = Path(artifact).expanduser().resolve()
+        root = Path(artifact_root).expanduser().resolve() if artifact_root else artifact_path.parent
+        report.update(artifact_identity(root, artifact_path))
+    return report
 
 
 def evaluate_draft_gate(
@@ -166,8 +174,17 @@ def evaluate_render_gate(
     artifact: str | Path,
     expected_pages: int | None = None,
     forbidden_terms: list[str] | None = None,
+    *,
+    run_dir: str | Path | None = None,
 ) -> dict[str, Any]:
-    audit = audit_pptx(artifact, expected_pages=expected_pages, forbidden_terms=forbidden_terms)
+    page_roles = load_page_roles(run_dir) if run_dir else None
+    audit = audit_pptx(
+        artifact,
+        expected_pages=expected_pages,
+        forbidden_terms=forbidden_terms,
+        page_roles=page_roles,
+        strict_page_roles=requires_page_role_contract(run_dir),
+    )
     scorecard = default_scorecard(4)
     findings: list[dict[str, Any]] = []
 
@@ -211,6 +228,19 @@ def evaluate_render_gate(
                 page_id=f"slide_{slide['slide_number']:03d}",
             )
         )
+    for slide_number in audit.get("missing_page_roles") or []:
+        lower_score(scorecard, "visual_readiness", 2)
+        findings.append(
+            finding(
+                f"slide_{int(slide_number):03d}_page_role_missing",
+                "P1",
+                "visual_readiness",
+                "生产 PPTX 审计缺少页面角色映射，已按正文页规则处理。",
+                [str(audit["artifact"])],
+                "补齐 page_scene.v2 与 high-density manifest 中的 page_role 后重新运行 render gate。",
+                page_id=f"slide_{int(slide_number):03d}",
+            )
+        )
 
     return _report(
         run_id,
@@ -223,6 +253,7 @@ def evaluate_render_gate(
             "possible_full_slide_images": len(audit["possible_full_slide_images"]),
         },
         artifact=str(audit["artifact"]),
+        artifact_root=run_dir,
     ) | {"audit": audit}
 
 
@@ -231,9 +262,18 @@ def evaluate_delivery_gate(
     artifact: str | Path,
     expected_pages: int | None = None,
     forbidden_terms: list[str] | None = None,
+    *,
+    run_dir: str | Path | None = None,
 ) -> dict[str, Any]:
     terms = forbidden_terms if forbidden_terms is not None else DEFAULT_FORBIDDEN_TERMS
-    audit = audit_pptx(artifact, expected_pages=expected_pages, forbidden_terms=terms)
+    page_roles = load_page_roles(run_dir) if run_dir else None
+    audit = audit_pptx(
+        artifact,
+        expected_pages=expected_pages,
+        forbidden_terms=terms,
+        page_roles=page_roles,
+        strict_page_roles=requires_page_role_contract(run_dir),
+    )
     scorecard = default_scorecard(4)
     findings: list[dict[str, Any]] = []
 
@@ -285,6 +325,19 @@ def evaluate_delivery_gate(
                 "确认本稿是否应包含产品截图、客户证据图或案例图；如需要，补齐后重新导出。",
             )
         )
+    for slide_number in audit.get("missing_page_roles") or []:
+        lower_score(scorecard, "delivery_readiness", 2)
+        findings.append(
+            finding(
+                f"slide_{int(slide_number):03d}_page_role_missing",
+                "P1",
+                "delivery_readiness",
+                "交付审计缺少页面角色映射，不能证明结构页豁免正确应用。",
+                [str(audit["artifact"])],
+                "补齐 page_role 映射并重新运行 delivery gate。",
+                page_id=f"slide_{int(slide_number):03d}",
+            )
+        )
 
     return _report(
         run_id,
@@ -297,6 +350,7 @@ def evaluate_delivery_gate(
             "forbidden_hits": len(audit["forbidden_hits"]),
         },
         artifact=str(audit["artifact"]),
+        artifact_root=run_dir,
     ) | {"audit": audit}
 
 

@@ -19,6 +19,7 @@ from preview.manifest import (
     update_page_source_decision,
 )
 from runtime.events import append_typed_event
+from quality.gate_policy import current_artifact, resolve_required_gates
 from runtime.run_state import (
     PAGE_TASKS_NAME,
     RunStateError,
@@ -29,6 +30,7 @@ from runtime.run_state import (
 VALID_ACTIONS = {
     "approve",
     "reject",
+    "needs_work",
     "request_evidence",
     "convert_to_generate",
     "replace_candidate",
@@ -190,6 +192,23 @@ def execute_review_action(
         task["reviewed_by"] = actor
         task["rejection_reason"] = reason
 
+    elif action == "needs_work":
+        try:
+            update_page_review(
+                root,
+                page_id,
+                review_status="needs_work",
+                action_intent="needs_work",
+                notes=reason or note,
+            )
+        except ManifestError as exc:
+            raise WorkbenchError(f"Cannot mark page as needs_work: {exc}") from exc
+        task["review_status"] = "needs_work"
+        task["action_intent"] = "needs_work"
+        task["reviewed_at"] = _utc_now()
+        task["reviewed_by"] = actor
+        task["work_reason"] = reason or note
+
     elif action == "request_evidence":
         try:
             update_page_review(
@@ -329,22 +348,157 @@ def execute_review_action(
     return result
 
 
-def _check_no_blocking_findings(run_dir: Path, page_id: str) -> None:
-    """Check that no P0 quality findings block this page."""
-    quality_dir = run_dir / "quality_reports"
-    if not quality_dir.exists():
-        return
+def execute_batch_review_action(
+    run_dir: str | Path,
+    action: str,
+    *,
+    page_ids: list[str] | None = None,
+    actor: str = "user",
+    reason: str = "",
+    note: str = "",
+) -> dict[str, Any]:
+    """Execute one review action across many pages without bypassing blockers."""
+    if action not in {"approve", "reject", "needs_work", "request_evidence"}:
+        raise WorkbenchError("Batch review supports approve, reject, needs_work, and request_evidence.")
 
-    for gate_file in quality_dir.glob("*_gate.json"):
-        report = _safe_read(gate_file)
-        if not report:
+    root = Path(run_dir).expanduser().resolve()
+    page_tasks_path = root / PAGE_TASKS_NAME
+    if not page_tasks_path.exists():
+        page_tasks = _bootstrap_page_tasks(root, page_tasks_path)
+    else:
+        page_tasks = read_json(page_tasks_path)
+    tasks = page_tasks.get("tasks", [])
+    if not isinstance(tasks, list):
+        raise WorkbenchError("page_tasks.json tasks must be a list.")
+
+    selected = list(page_ids or [str(task.get("beat_id") or "") for task in tasks if isinstance(task, dict)])
+    if not selected:
+        raise WorkbenchError("Batch review requires at least one page.")
+
+    applied: list[str] = []
+    blocked: list[dict[str, str]] = []
+    for page_id in selected:
+        try:
+            execute_review_action(
+                root,
+                page_id,
+                action,
+                actor=actor,
+                reason=reason,
+                note=note,
+            )
+        except WorkbenchError as exc:
+            blocked.append({"page_id": page_id, "reason": str(exc)})
             continue
-        for f in report.get("findings", []):
-            if not isinstance(f, dict):
+        applied.append(page_id)
+
+    append_typed_event(
+        root,
+        "decision",
+        f"page_review.batch_{action}",
+        f"Batch review {action} by {actor}: {len(applied)} applied, {len(blocked)} blocked.",
+        refs=[PAGE_TASKS_NAME],
+        payload={"action": action, "actor": actor, "applied_pages": applied, "blocked_pages": blocked},
+    )
+    return {
+        "status": "ok" if not blocked else "completed_with_warnings",
+        "action": action,
+        "applied_pages": applied,
+        "blocked_pages": blocked,
+        "applied_count": len(applied),
+        "blocked_count": len(blocked),
+    }
+
+
+def _page_order_aliases(*payloads: dict[str, Any]) -> dict[int, set[str]]:
+    aliases: dict[int, set[str]] = {}
+    for payload in payloads:
+        pages = payload.get("pages") if isinstance(payload, dict) else None
+        if not isinstance(pages, list):
+            continue
+        for page in pages:
+            if not isinstance(page, dict):
                 continue
-            if f.get("severity") == "P0" and f.get("page_id") == page_id:
-                raise WorkbenchError(
-                    f"Page {page_id} has P0 finding '{f.get('finding_id', '')}'. "
-                    "Cannot approve while P0 findings are active. "
-                    "Create an override or repair the finding first."
-                )
+            try:
+                order = int(page.get("order") or 0)
+            except (TypeError, ValueError):
+                continue
+            page_id = str(page.get("page_id") or page.get("beat_id") or "")
+            if order > 0 and page_id:
+                aliases.setdefault(order, set()).add(page_id)
+    return aliases
+
+
+def _finding_page_aliases(finding_page_id: str, page_order_aliases: dict[int, set[str]]) -> set[str]:
+    if not finding_page_id.startswith("slide_"):
+        return {finding_page_id}
+    try:
+        slide_number = int(finding_page_id.removeprefix("slide_"))
+    except ValueError:
+        return set()
+    return set(page_order_aliases.get(slide_number, set()))
+
+
+def _check_no_blocking_findings(run_dir: Path, page_id: str) -> None:
+    """Check current active quality findings for a page before approval."""
+    artifact = current_artifact(run_dir)
+    request = _safe_read(run_dir / "request.json") or {}
+    build_manifest = _safe_read(run_dir / "build" / "build_manifest.json") or {}
+    quality_dir = run_dir / "quality_reports"
+    reports: list[dict[str, Any]] = []
+    if quality_dir.exists():
+        for gate_file in quality_dir.glob("*_gate.json"):
+            report = _safe_read(gate_file)
+            if report:
+                reports.append({
+                    **report,
+                    "_gate_name": str(report.get("gate") or gate_file.stem.removesuffix("_gate")),
+                    "_report_file": gate_file.name,
+                })
+    policy = resolve_required_gates(
+        run_dir,
+        artifact,
+        builder_profile=str(build_manifest.get("builder_profile") or ""),
+        output_profile=str(build_manifest.get("output_profile") or ""),
+        run_mode=str(request.get("run_mode") or ""),
+        reports=reports,
+        include_non_required_blockers=True,
+    )
+    preview = _safe_read(run_dir / "preview_manifest.json") or {}
+    page_tasks_payload = _safe_read(run_dir / PAGE_TASKS_NAME) or {}
+    high_density_manifest = _safe_read(run_dir / "high_density_build" / "manifest.json") or {}
+    page_order_aliases = _page_order_aliases(preview, build_manifest, high_density_manifest, page_tasks_payload)
+    known_page_ids = {
+        str(item.get("page_id") or "")
+        for item in preview.get("pages", [])
+        if isinstance(item, dict) and item.get("page_id")
+    }
+    known_page_ids.update(
+        str(item.get("page_id") or "")
+        for item in build_manifest.get("pages", [])
+        if isinstance(item, dict) and item.get("page_id")
+    )
+    known_page_ids.update(
+        str(item.get("beat_id") or "")
+        for item in page_tasks_payload.get("tasks", [])
+        if isinstance(item, dict) and item.get("beat_id")
+    )
+    known_page_ids.add(page_id)
+    active = []
+    for item in policy.get("current_blockers") or []:
+        if not isinstance(item, dict):
+            continue
+        finding_page_id = str(item.get("page_id") or "")
+        if finding_page_id:
+            finding_page_aliases = _finding_page_aliases(finding_page_id, page_order_aliases)
+            if page_id not in finding_page_aliases and finding_page_aliases.intersection(known_page_ids):
+                continue
+        active.append(item)
+    if not active:
+        return
+    p0 = next((item for item in active if str(item.get("severity") or "").upper() == "P0"), active[0])
+    raise WorkbenchError(
+        f"Page {page_id} has active quality finding '{p0.get('finding_id') or p0.get('code') or ''}' "
+        f"({str(p0.get('severity') or 'P1').upper()}). Cannot approve while it is active. "
+        "Create an override or repair the finding first."
+    )
