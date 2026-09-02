@@ -37,6 +37,7 @@ SCHEMA_FILES = {
 
 LEGACY_SCHEMA_FILES = {
     "build_manifest": "build-manifest-legacy.v2.schema.json",
+    "high_density_manifest": "high-density-manifest-legacy.v2.schema.json",
     "page_scene": "page-scene-legacy.v2.schema.json",
     "provider_host_receipt": "provider-host-receipt-legacy.v1.schema.json",
 }
@@ -131,6 +132,15 @@ def _is_legacy_page_scene(document: dict[str, Any]) -> bool:
     return document.get("schema_version") == "deck_page_scene.v2" and "page_role" not in document
 
 
+def _is_legacy_high_density_manifest(document: dict[str, Any]) -> bool:
+    if document.get("schema_version") != "deck_high_density_manifest.v2":
+        return False
+    pages = document.get("pages")
+    return isinstance(pages, list) and bool(pages) and all(
+        isinstance(page, dict) and "page_role" not in page for page in pages
+    )
+
+
 def validate_document(kind: str, document: dict[str, Any]) -> dict[str, Any]:
     schema_name = SCHEMA_FILES.get(kind)
     schema_version = document.get("schema_version")
@@ -154,6 +164,11 @@ def validate_document(kind: str, document: dict[str, Any]) -> dict[str, Any]:
         # page_scene.v2 gained a required page_role after older scenes had
         # already been persisted. The loader validates and migrates those
         # scenes before handing them to the current production path.
+        schema_name = LEGACY_SCHEMA_FILES[kind]
+    if kind == "high_density_manifest" and _is_legacy_high_density_manifest(document):
+        # High-density manifest v2 gained page_role after completed runs had
+        # already been persisted. Provider smoke and resume diagnostics must
+        # still be able to read those manifests.
         schema_name = LEGACY_SCHEMA_FILES[kind]
     if not schema_name:
         raise ContractError(f"unknown contract kind: {kind}")

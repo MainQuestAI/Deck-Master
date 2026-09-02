@@ -452,6 +452,24 @@ class ExportQualityBlockingTests(unittest.TestCase):
         self.assertEqual(1, len(result["pages"]))
         self.assertEqual(0, result["blocked_count"])
 
+    def test_slide_number_finding_only_blocks_matching_export_page(self) -> None:
+        first = _base_page("p1", decision="approved", review_status="approved")
+        second = _base_page("p2", decision="approved", review_status="approved")
+        second["order"] = 2
+        _write_manifest(self.run_dir, _make_manifest([first, second]))
+        _write_gate(self.run_dir, "draft", [])
+        _write_gate(
+            self.run_dir,
+            "render",
+            [{"page_id": "slide_002", "severity": "P0", "finding_id": "F-SLIDE-2", "message": "page two"}],
+        )
+
+        result = export_queue(self.run_dir, {"approved"}, queue_type="client")
+
+        self.assertEqual(["p1"], [page["page_id"] for page in result["pages"]])
+        self.assertEqual(["p2"], [page["page_id"] for page in result["blocked_pages"]])
+        self.assertIn("F-SLIDE-2", result["blocked_pages"][0]["quality_block_reason"])
+
     def test_draft_v2_claim_level_gap_blocks_all_pages(self) -> None:
         page = _base_page("p1", decision="approved", review_status="approved")
         _write_manifest(self.run_dir, _make_manifest([page]))

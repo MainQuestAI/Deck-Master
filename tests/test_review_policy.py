@@ -42,6 +42,7 @@ def test_external_receipt_promotes_producer_only_to_independent_main() -> None:
 
 def test_standard_page_roles_migrate_aliases_and_unknown_values() -> None:
     assert canonical_page_role("section-intro") == "section"
+    assert canonical_page_role("section_handoff") == "section_divider"
     role, warning = page_role_with_warning("unregistered_role")
 
     assert role == "content"

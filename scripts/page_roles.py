@@ -31,6 +31,7 @@ CANONICAL_PAGE_ROLES = frozenset(
 NARRATIVE_ROLE_ALIASES = {
     "opener": "cover",
     "section_intro": "section",
+    "section_handoff": "section_divider",
     "case": "content",
     "roi": "data_story",
 }

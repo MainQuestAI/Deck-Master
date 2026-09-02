@@ -476,6 +476,16 @@ def test_legacy_build_manifest_is_loadable_for_retry(tmp_path: Path) -> None:
     assert refreshed["pages"][0]["page_role"] == FIXTURE["pages"][0]["page_class"]
 
 
+def test_legacy_high_density_manifest_remains_loadable(tmp_path: Path) -> None:
+    run, _lock, _scene = _prepared_fixture(tmp_path)
+    manifest_path = run / "high_density_build/high_density_manifest.json"
+    legacy_manifest = read_json(manifest_path)
+    for page in legacy_manifest["pages"]:
+        page.pop("page_role", None)
+
+    assert_valid("high_density_manifest", legacy_manifest)
+
+
 def test_build_cli_exposes_style_blueprint_and_provider_commands() -> None:
     import subprocess
 
