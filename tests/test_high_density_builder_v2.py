@@ -42,6 +42,7 @@ from high_density.content import (
 from high_density.contracts import ContractError, assert_valid, read_json, sha256_file, sha256_json, write_json
 from high_density.integrity import sign_runtime_payload
 from high_density.engine import (
+    _stage_batch_details_from_candidates,
     build_high_density_status,
     prepare_high_density,
     retry_high_density,
@@ -1503,6 +1504,87 @@ def test_production_blueprint_waiting_prepares_64_page_batch_inputs(tmp_path: Pa
     assert action["pending_pages"][0] == "P001"
     assert action["pending_pages"][-1] == "P064"
     assert all((run / ref).is_file() for ref in action["input_refs"])
+
+
+def test_production_visual_review_batch_keeps_generated_pending_reviews(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    run, _ = _make_run(tmp_path, mode="production", page_count=2, project_name="stage review batch")
+    prepare_high_density(run)
+    write_style_lock(run, run.name, "cyber-01", approved=True, approver="test")
+    _write_approved_mbb_plan(run)
+    assert run_high_density(run)["current_stage"] == "blueprint"
+
+    from PIL import Image
+
+    provider_root = tmp_path / "provider-results"
+    provider_root.mkdir()
+    monkeypatch.setenv("DECK_MASTER_PROVIDER_RESULT_ROOTS", str(provider_root))
+    for page_id in ("P001", "P002"):
+        provider_image = provider_root / f"exec-00000000-0000-0000-0000-0000000000{page_id[-2:]}.png"
+        Image.new("RGB", (1672, 941), "#f7f9fb").save(provider_image)
+        record_provider_host_result(run, page_id, provider_image)
+        _approve_blueprint(run, page_id)
+
+    assert run_high_density(run)["current_stage"] == "page_scene"
+    for page_id in ("P001", "P002"):
+        lock = read_json(run / f"high_density_build/content_locks/{page_id}.json")
+        blueprint_manifest = read_json(run / f"high_density_build/blueprints/{page_id}.blueprint_manifest.json")
+        scene = build_fixture_scene(
+            lock,
+            str(blueprint_manifest["image_sha256"]),
+            blueprint_path=FIXTURE_DIR / "blueprint.svg",
+        )
+        write_scene(run, scene)
+        compile_svg(scene, svg_path(run, page_id))
+
+    waiting = run_high_density(run)
+
+    assert waiting["status"] == "awaiting_agent_build"
+    assert waiting["current_stage"] == "visual_review"
+    action = waiting["next_action"]
+    assert action["handoff_scope"] == "stage_batch"
+    assert action["pending_pages"] == ["P001", "P002"]
+    assert [item["kind"] for item in action["rework_queue"]] == ["agent_self_review", "agent_self_review"]
+    assert all((run / item["output_ref"]).is_file() for item in action["rework_queue"])
+
+
+def test_stage_batch_details_preserves_mixed_candidate_actions() -> None:
+    representative, details = _stage_batch_details_from_candidates(
+        [
+            {
+                "page_id": "P001",
+                "stage": "visual_review",
+                "kind": "agent_self_review",
+                "input_ref": "high_density_build/svg/P001.svg",
+                "output_ref": "high_density_build/reviews/P001.visual_review.json",
+                "reason": "self review pending",
+            },
+            {
+                "page_id": "P002",
+                "stage": "visual_review",
+                "kind": "agent_main_review",
+                "input_ref": "high_density_build/reviews/P002.visual_review.json",
+                "output_ref": "high_density_build/reviews/P002.visual_review.json",
+                "output_refs": ["high_density_build/reviews/P002.main_review_receipt.json"],
+                "reason": "main review pending",
+            },
+            {
+                "page_id": "P003",
+                "stage": "pptx",
+                "kind": "agent_pptx_readback",
+                "input_ref": "high_density_build/svg/",
+                "output_ref": "high_density_build/pptx/deck_high_density.pptx",
+                "reason": "later stage remains deferred",
+            },
+        ]
+    )
+
+    assert representative["page_id"] == "P001"
+    assert details["pending_pages"] == ["P001", "P002"]
+    assert [item["kind"] for item in details["rework_queue"]] == ["agent_self_review", "agent_main_review"]
+    assert "high_density_build/reviews/P002.main_review_receipt.json" in details["output_refs"]
 
 
 def test_distinct_blueprints_produce_distinct_svg(tmp_path: Path) -> None:
