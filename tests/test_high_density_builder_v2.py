@@ -20,7 +20,7 @@ if str(ROOT / "scripts") not in sys.path:
     sys.path.insert(0, str(ROOT / "scripts"))
 
 from build.manifest import build_manifest_v2
-from high_density.blueprint import BlueprintInvalid, _default_slide_frame, build_blueprint_prompt, build_blueprint_prompt_artifact, ensure_blueprint_manifest, record_provider_host_result
+from high_density.blueprint import BlueprintInvalid, _default_slide_frame, build_blueprint_prompt, build_blueprint_prompt_artifact, ensure_blueprint_manifest, load_provider_host_receipt, record_provider_host_result
 from high_density.blueprint_content_review import BlueprintContentReviewRequired, archive_rejected_blueprint, load_blueprint_content_review, next_attempt_index, write_blueprint_content_review
 from high_density.capability import REQUIRED_SCHEMAS, inspect_high_density_capability
 from high_density.content import (
@@ -492,6 +492,23 @@ def test_structural_page_allows_low_density_without_business_evidence() -> None:
     assert result["enrichment"]["business_implication"] == ""
     assert result["enrichment"]["handoff"] == ""
     assert result["enrichment"]["evidence_assessment"]["synthesis"].startswith("Structural page metadata")
+
+
+def test_structural_numeric_claim_requires_matching_evidence() -> None:
+    package = _package("mbb-run", FIXTURE["pages"][0])
+    package["visual_spec"]["page_type"] = "cover"
+    package["customer_visible"]["body_blocks"] = [{"type": "text", "text": "Revenue +37%"}]
+    package["customer_visible"]["callouts"] = []
+    package["evidence_bindings"] = [{"evidence_id": "E001", "meaning": "Revenue +12%"}]
+
+    with pytest.raises(ContractError, match="unsupported factual values"):
+        build_mbb_page(package)
+
+    package["evidence_bindings"][0]["meaning"] = "Revenue +37%"
+
+    result = build_mbb_page(package)
+
+    assert result["analysis"]["structural_page"] is True
 
 
 def test_structural_storyline_context_does_not_project_business_claims() -> None:
@@ -1361,6 +1378,44 @@ def test_production_uses_agent_svg_without_overwriting_it(tmp_path: Path, monkey
     assert result["current_stage"] == "svg"
     assert result["next_action"]["kind"] == "agent_svg_repair"
     assert "#123456" in svg_file.read_text(encoding="utf-8")
+
+
+def test_legacy_provider_host_receipt_remains_loadable(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    run, _ = _make_run(tmp_path, mode="production", project_name="legacy provider receipt")
+    write_style_lock(run, run.name, "cyber-01", approved=True, approver="test")
+    _blueprint(run)
+    prepare_high_density(run)
+    _write_approved_mbb_plan(run)
+    waiting = run_high_density(run)
+    assert waiting["current_stage"] == "blueprint"
+    from PIL import Image
+
+    provider_root = tmp_path / "provider-results"
+    provider_root.mkdir()
+    monkeypatch.setenv("DECK_MASTER_PROVIDER_RESULT_ROOTS", str(provider_root))
+    provider_image = provider_root / "exec-00000000-0000-0000-0000-000000000001.png"
+    Image.new("RGB", (1672, 941), "#f7f9fb").save(provider_image)
+    record_provider_host_result(run, "P001", provider_image)
+
+    receipt_path = run / "high_density_build/blueprints/P001.provider_host_receipt.json"
+    receipt = read_json(receipt_path)
+    legacy_payload = {
+        key: value
+        for key, value in receipt.items()
+        if key not in {"integrity", "source_type", "imported_at", "declared_provider", "approved_by"}
+    }
+    legacy_receipt = {
+        **legacy_payload,
+        "integrity": sign_runtime_payload("imagegen_host_result.v1", legacy_payload),
+    }
+    write_json(receipt_path, legacy_receipt)
+
+    prompt = read_json(run / "high_density_build/prompts/P001.blueprint_prompt.json")
+    image = run / "high_density_build/blueprints/P001.png"
+    loaded = load_provider_host_receipt(run, "P001", prompt, image)
+
+    assert loaded["schema_version"] == "deck_provider_host_receipt.v1"
+    assert "imported_at" not in loaded
 
 
 def test_scene_rejects_missing_required_content(tmp_path: Path) -> None:

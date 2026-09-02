@@ -190,6 +190,38 @@ class FinalReadinessTests(unittest.TestCase):
         self.assertFalse(readiness["ready"])
         self.assertIn("内部制作语言", clearance["reason"])
 
+    def test_customer_visible_safety_p1_override_does_not_escalate_to_p0(self) -> None:
+        self._write_baseline()
+        run_build(self.run_dir)
+        safety_path = self.run_dir / "quality_reports" / "customer_visible_safety_gate.json"
+        self._write_customer_visible_safety_gate(blocks=True)
+        safety_payload = json.loads(safety_path.read_text(encoding="utf-8"))
+        safety_payload["findings"][0]["severity"] = "P1"
+        safety_payload["summary"].update({"p0_count": 0, "p1_count": 1})
+        artifact = self.run_dir / "build" / "deck.html"
+        digest = hashlib.sha256(artifact.read_bytes()).hexdigest()
+        safety_payload.update(
+            {
+                "artifact": "build/deck.html",
+                "artifact_path": "build/deck.html",
+                "artifact_run_relative": "build/deck.html",
+                "artifact_sha256": digest,
+            }
+        )
+        safety_path.write_text(json.dumps(safety_payload), encoding="utf-8")
+        create_override(
+            self.run_dir,
+            "customer_visible_forbidden_001",
+            "P1",
+            "Accepted for client export.",
+            "review-lead",
+        )
+
+        readiness = compute_final_readiness(self.run_dir)
+
+        self.assertTrue(readiness["ready"], readiness["blockers"])
+        self.assertNotIn("final_customer_visible_safety_blocked", {item["code"] for item in readiness["blockers"]})
+
     def test_missing_render_blocks_readiness(self) -> None:
         self._write_baseline()
 

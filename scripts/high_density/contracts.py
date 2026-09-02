@@ -35,6 +35,10 @@ SCHEMA_FILES = {
     "icon_external_acceptance": "high-density-icon-external-acceptance.v1.schema.json",
 }
 
+LEGACY_SCHEMA_FILES = {
+    "provider_host_receipt": "provider-host-receipt-legacy.v1.schema.json",
+}
+
 PREVIEW_SCHEMA_FILES = {
     "content_lock": "content-lock.v1.schema.json",
     "blueprint_manifest": "blueprint-manifest.v1.schema.json",
@@ -119,6 +123,13 @@ def validate_document(kind: str, document: dict[str, Any]) -> dict[str, Any]:
         # v1 artifacts remain readable for migration/diagnostics. Production
         # writers and handback validation always call the v2 schema above.
         schema_name = PREVIEW_SCHEMA_FILES[kind]
+    if kind in LEGACY_SCHEMA_FILES and not any(
+        field in document for field in ("imported_at", "declared_provider", "approved_by")
+    ):
+        # Provider host receipts kept the v1 version while their provenance
+        # fields were extended. Preserve signed receipts written before that
+        # extension without weakening validation for new receipts.
+        schema_name = LEGACY_SCHEMA_FILES[kind]
     if not schema_name:
         raise ContractError(f"unknown contract kind: {kind}")
     schema_path = SCHEMA_DIR / schema_name

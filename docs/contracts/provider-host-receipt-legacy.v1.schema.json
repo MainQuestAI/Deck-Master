@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/contracts/provider-host-receipt-legacy.v1.schema.json",
+  "title": "ImageGen Host Result Receipt v1 legacy compatibility",
+  "type": "object",
+  "required": ["schema_version", "run_id", "page_id", "run_mode", "challenge_payload_sha256", "prompt_sha256", "image_sha256", "provider_tool", "provider_model", "provider_request_id", "provider_request_sha256", "requested_at", "responded_at", "source_root_sha256", "source_relative_path", "source_file_sha256", "source_size_bytes", "source_created_at", "recorded_at", "integrity"],
+  "properties": {
+    "schema_version": {"const": "deck_provider_host_receipt.v1"},
+    "run_id": {"type": "string", "minLength": 1},
+    "page_id": {"type": "string", "minLength": 1},
+    "run_mode": {"enum": ["production", "benchmark"]},
+    "challenge_payload_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "prompt_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "image_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "provider_tool": {"const": "image_gen.imagegen"},
+    "provider_model": {"const": "provider-managed-imagegen"},
+    "provider_request_id": {"type": "string", "minLength": 1},
+    "provider_request_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "requested_at": {"type": "string", "format": "date-time"},
+    "responded_at": {"type": "string", "format": "date-time"},
+    "source_type": {"enum": ["host_managed", "explicit_import"]},
+    "source_root_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "source_relative_path": {"type": "string", "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+"},
+    "source_file_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "source_size_bytes": {"type": "integer", "minimum": 1},
+    "source_created_at": {"type": "string", "format": "date-time"},
+    "recorded_at": {"type": "string", "format": "date-time"},
+    "integrity": {
+      "type": "object",
+      "required": ["algorithm", "key_id", "payload_sha256", "signature"],
+      "properties": {
+        "algorithm": {"const": "hmac-sha256"},
+        "key_id": {"type": "string", "pattern": "^[a-f0-9]{16}$"},
+        "payload_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "signature": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

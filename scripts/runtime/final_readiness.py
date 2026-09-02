@@ -199,6 +199,19 @@ def _all_quality_blocks_are_stale(quality_gates: list[dict[str, Any]]) -> bool:
     return bool(blocked_gates) and all(not gate.get("current", True) for gate in blocked_gates)
 
 
+def _safety_block_is_overridden_p1(root: Path, report: dict[str, Any]) -> bool:
+    findings = report.get("findings") if isinstance(report.get("findings"), list) else []
+    if not findings:
+        return False
+    return all(
+        isinstance(finding, dict)
+        and str(finding.get("severity") or "").upper() == "P1"
+        and bool(str(finding.get("finding_id") or ""))
+        and has_active_override(root, str(finding["finding_id"]))
+        for finding in findings
+    )
+
+
 def _customer_visible_safety_report(root: Path) -> tuple[Path, dict[str, Any], bool]:
     path = root / CUSTOMER_VISIBLE_SAFETY_GATE
     if not path.exists():
@@ -322,7 +335,10 @@ def compute_final_readiness(
                 warnings.append(message)
             else:
                 _add_blocker(blockers, "final_customer_visible_safety_stale", message, severity="P1")
-        elif safety_report.get("blocks_delivery") or str(safety_report.get("status") or "").lower() in {"rework_required", "failed", "blocked"}:
+        elif (
+            safety_report.get("blocks_delivery")
+            or str(safety_report.get("status") or "").lower() in {"rework_required", "failed", "blocked"}
+        ) and not _safety_block_is_overridden_p1(root, safety_report):
             _add_blocker(
                 blockers,
                 "final_customer_visible_safety_blocked",

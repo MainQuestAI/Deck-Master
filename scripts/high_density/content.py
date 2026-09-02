@@ -175,8 +175,19 @@ def _numeric_tokens(text: str) -> list[str]:
     return re.findall(r"(?<![A-Za-z])[-+]?\d+(?:[.,]\d+)?(?:\s?[%％]|[A-Za-z]{1,5})?", text)
 
 
-def _unsupported_structural_numeric_tokens(customer_visible: dict[str, Any], tokens: list[str]) -> list[str]:
+def _unsupported_structural_numeric_tokens(
+    customer_visible: dict[str, Any],
+    tokens: list[str],
+    *,
+    evidence: list[dict[str, Any]] | None = None,
+) -> list[str]:
     text = _flatten_customer_visible(customer_visible)
+    evidence_numbers = {
+        normalized
+        for record in evidence or []
+        if isinstance(record, dict)
+        for normalized in _normalized_numeric_tokens(_evidence_text(record))
+    }
     date_spans = [
         match.span()
         for match in re.finditer(
@@ -194,6 +205,8 @@ def _unsupported_structural_numeric_tokens(customer_visible: dict[str, Any], tok
             continue
         page_pattern = r"(?:第\s*|page\s*|页码\s*|页\s*)" + re.escape(token)
         if any(re.search(page_pattern, text[max(0, match.start() - 8) : match.end() + 8], flags=re.IGNORECASE) for match in occurrences):
+            continue
+        if normalized.replace("％", "%").replace(",", "").casefold() in evidence_numbers:
             continue
         unsupported.append(token)
     return unsupported
@@ -904,11 +917,11 @@ def build_mbb_page(package: dict[str, Any]) -> dict[str, Any]:
     # that narrow compatibility path while keeping normal v2 production pages
     # fail-closed on evidence and density.
     unsupported_numeric = (
-        _unsupported_structural_numeric_tokens(customer_visible, analysis["numeric_tokens"])
+        _unsupported_structural_numeric_tokens(customer_visible, analysis["numeric_tokens"], evidence=evidence)
         if structural_page
         else analysis["numeric_tokens"]
     )
-    if unsupported_numeric and not evidence and not package.get("legacy_inferred"):
+    if unsupported_numeric and (structural_page or not evidence) and not package.get("legacy_inferred"):
         raise ContractError(f"MBB page {page_id} contains unsupported factual values: {unsupported_numeric}")
     if (analysis["density_band"] == "low" or not evidence) and not structural_page and not package.get("legacy_inferred"):
         raise ContractError(f"MBB page {page_id} is too sparse for high-density output; add evidence and at least three content regions")
@@ -1046,7 +1059,14 @@ def build_content_lock(
             "facts": 1.0 if structural_page or evidence_refs else 0.0,
             "numeric_values": 1.0
             if (
-                (structural_page and not _unsupported_structural_numeric_tokens(result["customer_visible"], result["analysis"]["numeric_tokens"]))
+                (
+                    structural_page
+                    and not _unsupported_structural_numeric_tokens(
+                        result["customer_visible"],
+                        result["analysis"]["numeric_tokens"],
+                        evidence=result["evidence"],
+                    )
+                )
                 or result["evidence"]
                 or not result["analysis"]["numeric_tokens"]
             )
