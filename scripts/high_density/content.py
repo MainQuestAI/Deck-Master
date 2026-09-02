@@ -22,6 +22,91 @@ MBB_SELECTION_RECEIPT_PATH = MBB_DIR / "selection_receipt.json"
 MBB_USER_DECISION_RECEIPT_PATH = MBB_DIR / "user_decision_receipt.json"
 MBB_SEAL_PATH = MBB_DIR / "runtime_seal.json"
 SAFE_PAGE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
+STRUCTURAL_VISUAL_HINT_TERMS = (
+    "acceptance",
+    "agenda",
+    "chapter",
+    "contents",
+    "cover",
+    "divider",
+    "framework",
+    "introduction",
+    "intro",
+    "layout",
+    "opening",
+    "overview",
+    "roadmap",
+    "section",
+    "structure",
+    "table of contents",
+    "toc",
+    "验收",
+    "议程",
+    "章节",
+    "目录",
+    "封面",
+    "分隔",
+    "框架",
+    "导言",
+    "介绍",
+    "布局",
+    "开场",
+    "概览",
+    "路线图",
+    "结构",
+)
+STRUCTURAL_FACTUAL_ASSERTION_TERMS = (
+    "achieved",
+    "adoption",
+    "advantage",
+    "best",
+    "customer",
+    "decrease",
+    "delivered",
+    "dominant",
+    "fastest",
+    "first",
+    "growth",
+    "highest",
+    "improve",
+    "increase",
+    "leader",
+    "leadership",
+    "lowest",
+    "market",
+    "only",
+    "performance",
+    "profit",
+    "proven",
+    "ready",
+    "revenue",
+    "result",
+    "share",
+    "supports",
+    "users",
+    "value",
+    "领先",
+    "份额",
+    "增长",
+    "提升",
+    "降低",
+    "最高",
+    "最低",
+    "唯一",
+    "显著",
+    "实现",
+    "达到",
+    "证明",
+    "客户",
+    "收入",
+    "利润",
+    "效率",
+    "优势",
+    "规模",
+    "占比",
+)
+
+
 def _assert_safe_page_id(page_id: str) -> None:
     raw = str(page_id or "")
     if not SAFE_PAGE_ID.fullmatch(raw) or ".." in raw:
@@ -374,6 +459,43 @@ def _required_text_refs(customer_visible: dict[str, Any], *, so_what: str) -> li
     return refs
 
 
+def _is_non_factual_structural_text(value: Any) -> bool:
+    normalized = re.sub(r"\s+", " ", str(value or "").casefold()).strip()
+    if not normalized:
+        return True
+    if any(term in normalized for term in STRUCTURAL_FACTUAL_ASSERTION_TERMS):
+        return False
+    return any(term in normalized for term in STRUCTURAL_VISUAL_HINT_TERMS)
+
+
+def _structural_factual_entries(customer_visible: dict[str, Any]) -> list[tuple[str, str]]:
+    entries: list[tuple[str, str]] = []
+    subtitle = str(customer_visible.get("subtitle") or "").strip()
+    if subtitle and not _is_non_factual_structural_text(subtitle):
+        entries.append(("material_pool.customer_visible.subtitle", subtitle))
+    for collection in ("body_blocks", "callouts"):
+        for index, item in enumerate(customer_visible.get(collection) or []):
+            prefix = f"material_pool.customer_visible.{collection}.{index}"
+            if isinstance(item, dict):
+                for field in ("text", "body", "description", "value"):
+                    text = _text(item.get(field)).strip()
+                    if text:
+                        entries.append((f"{prefix}.{field}", text))
+            else:
+                text = _text(item).strip()
+                if text:
+                    entries.append((prefix, text))
+    for index, item in enumerate(customer_visible.get("footnotes") or []):
+        text = _text(item).strip()
+        if text:
+            entries.append((f"material_pool.customer_visible.footnotes.{index}", text))
+    return entries
+
+
+def _structural_factual_texts(customer_visible: dict[str, Any]) -> list[str]:
+    return [text for _target, text in _structural_factual_entries(customer_visible)]
+
+
 def _resolve_target(payload: dict[str, Any], target: str) -> Any:
     value: Any = payload
     for part in target.split("."):
@@ -422,6 +544,7 @@ def _page_claim_targets(page: dict[str, Any]) -> list[str]:
             "material_pool.recommended_visual",
             "material_pool.storyline_visual_potential",
         ]
+        targets.extend(target for target, _text_value in _structural_factual_entries((page.get("material_pool") or {}).get("customer_visible") or {}))
         targets.extend(f"components.{index}.{field}" for index, component in enumerate(page.get("components") or []) if isinstance(component, dict) for field in component)
         targets.extend(f"required_text_refs.{index}.{field}" for index, item in enumerate(page.get("required_text_refs") or []) if isinstance(item, dict) for field in item if field != "value")
         return targets
@@ -840,7 +963,7 @@ def _page_plan(
     evidence_refs = [str(item["evidence_id"]) for item in evidence]
     # Structural pages may omit evidence when they only carry layout metadata,
     # but source claim bindings still need their supporting refs preserved.
-    if structural_page and not package.get("claim_bindings"):
+    if structural_page and not package.get("claim_bindings") and not _structural_factual_entries(visible):
         evidence_refs = []
     quality_intent = safe_package.get("quality_intent") or {}
     title = str(visible.get("title") or package.get("page_id") or "page")
@@ -925,6 +1048,10 @@ def build_mbb_page(package: dict[str, Any]) -> dict[str, Any]:
         if structural_page
         else analysis["numeric_tokens"]
     )
+    structural_factual_texts = _structural_factual_texts(customer_visible) if structural_page else []
+    if structural_factual_texts and not evidence and not package.get("legacy_inferred"):
+        preview = ", ".join(repr(text[:80]) for text in structural_factual_texts[:3])
+        raise ContractError(f"MBB page {page_id} contains structural factual text without evidence: {preview}")
     if unsupported_numeric and (structural_page or not evidence) and not package.get("legacy_inferred"):
         raise ContractError(f"MBB page {page_id} contains unsupported factual values: {unsupported_numeric}")
     if (analysis["density_band"] == "low" or not evidence) and not structural_page and not package.get("legacy_inferred"):
@@ -941,7 +1068,7 @@ def build_mbb_page(package: dict[str, Any]) -> dict[str, Any]:
         "numeric_values": 1.0
         if (structural_page and not unsupported_numeric) or evidence or not analysis["numeric_tokens"]
         else 0.0,
-        "derived_claims": 1.0 if structural_page or all(item.get("evidence_refs") for item in _derived_claims(safe_package, evidence)) else 0.0,
+        "derived_claims": 1.0 if all(item.get("evidence_refs") for item in _derived_claims(safe_package, evidence)) else 0.0,
     }
     if min(coverage.values()) < 1.0:
         raise ContractError(f"MBB evidence coverage failed on page {page_id}: {coverage}")
@@ -1026,7 +1153,7 @@ def build_content_lock(
         raise ContractError(f"MBB page plan derived claims are outside the Runtime registry on {page_id}")
     for claim in expected_derived_claims:
         claim_refs = {str(ref) for ref in claim.get("evidence_refs") or []}
-        if (not structural_page and not claim_refs) or not claim_refs.issubset(set(evidence_refs)) or not str(claim.get("derivation_note") or ""):
+        if not claim_refs or not claim_refs.issubset(set(evidence_refs)) or not str(claim.get("derivation_note") or ""):
             raise ContractError(f"MBB derived claim evidence is imprecise on {page_id}")
     _validate_claim_bindings(
         page_plan,
@@ -1499,7 +1626,7 @@ def load_mbb_plan(
             raise ContractError(f"MBB plan derived claims are outside the Runtime registry on {page_id}")
         for claim in expected_derived_claims:
             claim_refs = {str(ref) for ref in claim.get("evidence_refs") or []}
-            if (not structural_page and not claim_refs) or not claim_refs.issubset(page_evidence) or not str(claim.get("derivation_note") or ""):
+            if not claim_refs or not claim_refs.issubset(page_evidence) or not str(claim.get("derivation_note") or ""):
                 raise ContractError(f"MBB plan derived claim evidence is imprecise on {page_id}")
         _validate_claim_bindings(
             page,

@@ -50,7 +50,7 @@ from high_density.engine import (
 )
 from high_density.migration import MIGRATION_REQUIRED_CODE, assert_current_mbb_artifact, retired_method_token
 from high_density.pptx import PptxEditabilityError, _render_pptx_page, compile_pptx, pptx_path, readback_pptx, trace_path
-from high_density.scene import _fixture_background, build_fixture_scene, load_scene, validate_scene_content, write_scene
+from high_density.scene import canonical_scene_path, scene_path, _fixture_background, build_fixture_scene, load_scene, validate_scene_content, write_scene
 from high_density.style import write_style_lock
 from high_density.svg import SvgVisualError, _font_path, _load_main_review_receipt, _main_review_receipt_payload, compile_svg, load_visual_review, main_review_receipt_path, preview_path, render_preview, review_path, svg_path, validate_approved_svg, validate_svg
 from high_density.visibility import build_visibility_policy, visible_text_violation
@@ -122,6 +122,19 @@ def _approved_page_plan(package: dict) -> tuple[dict, dict]:
     plan["storyline_audit"].update({"status": "selected_pending_enrichment", "selected_id": "storyline.decision"})
     plan = enrich_selected_mbb_plan(plan, [package])
     return plan, plan["pages"][0]
+
+
+def test_load_scene_migrates_legacy_v2_without_page_role(tmp_path: Path) -> None:
+    run, _lock, scene = _prepared_fixture(tmp_path)
+    legacy_scene = {key: value for key, value in scene.items() if key != "page_role"}
+    legacy_scene.pop("migration_warnings", None)
+    write_json(canonical_scene_path(run, "P001"), legacy_scene)
+    write_json(scene_path(run, "P001"), legacy_scene)
+
+    migrated = load_scene(run, "P001")
+
+    assert migrated["page_role"] == "framework"
+    assert any("legacy page scene page_role migrated" in warning for warning in migrated["migration_warnings"])
 
 
 def test_retired_content_plan_requests_deck_rebuild_without_deleting_artifact(tmp_path: Path) -> None:
@@ -515,6 +528,7 @@ def test_structural_page_allows_low_density_without_business_evidence() -> None:
     package["visual_spec"]["page_type"] = "cover"
     package["customer_visible"]["body_blocks"] = []
     package["customer_visible"]["callouts"] = []
+    package["customer_visible"]["footnotes"] = []
     package["evidence_bindings"] = []
     package["claim_bindings"] = []
 
@@ -526,6 +540,20 @@ def test_structural_page_allows_low_density_without_business_evidence() -> None:
     assert result["enrichment"]["business_implication"] == ""
     assert result["enrichment"]["handoff"] == ""
     assert result["enrichment"]["evidence_assessment"]["synthesis"].startswith("Structural page metadata")
+
+
+def test_structural_factual_subtitle_requires_evidence() -> None:
+    package = _package("mbb-run", FIXTURE["pages"][0])
+    package["visual_spec"]["page_type"] = "cover"
+    package["customer_visible"]["subtitle"] = "Market leadership position"
+    package["customer_visible"]["body_blocks"] = []
+    package["customer_visible"]["callouts"] = []
+    package["customer_visible"]["footnotes"] = []
+    package["evidence_bindings"] = []
+    package["claim_bindings"] = []
+
+    with pytest.raises(ContractError, match="structural factual text without evidence"):
+        build_mbb_page(package)
 
 
 def test_structural_numeric_claim_requires_matching_evidence() -> None:
@@ -574,6 +602,7 @@ def test_mixed_structural_and_content_mbb_chain_preserves_page_specific_evidence
     cover["visual_spec"]["page_type"] = "cover"
     cover["customer_visible"]["body_blocks"] = []
     cover["customer_visible"]["callouts"] = []
+    cover["customer_visible"]["footnotes"] = []
     cover["evidence_bindings"] = []
     cover["claim_bindings"] = []
     content = _package(run.name, FIXTURE["pages"][1])
@@ -605,6 +634,7 @@ def test_evidenced_structural_page_preserves_refs_for_derived_claims(tmp_path: P
     cover = _package(run.name, FIXTURE["pages"][0])
     cover["visual_spec"]["page_type"] = "cover"
     cover["customer_visible"]["body_blocks"] = []
+    cover["customer_visible"]["subtitle"] = "Market leadership position"
     content = _package(run.name, FIXTURE["pages"][1])
     PagePackageIndex(run).write(cover)
     PagePackageIndex(run).write(content)
@@ -621,6 +651,7 @@ def test_evidenced_structural_page_preserves_refs_for_derived_claims(tmp_path: P
     cover_plan = next(page for page in loaded["pages"] if page["page_id"] == cover["page_id"])
     assert cover_plan["evidence_refs"] == ["E001"]
     assert cover_plan["derived_claims"][0]["evidence_refs"] == ["E001"]
+    assert "material_pool.customer_visible.subtitle" in {binding["target"] for binding in cover_plan["claim_bindings"]}
     lock = build_content_lock(cover, cover_plan, mbb_plan_sha256=loaded["mbb_plan_sha256"])
     assert lock["enrichment"]["derived_claims"][0]["evidence_refs"] == ["E001"]
 

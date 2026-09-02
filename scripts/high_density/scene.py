@@ -682,6 +682,24 @@ def validate_scene_content(scene: dict[str, Any], lock: dict[str, Any]) -> None:
         raise ContractError(f"scene is missing required text refs: {', '.join(missing)}")
 
 
+def _migrate_legacy_page_role(scene: dict[str, Any]) -> dict[str, Any]:
+    if "page_role" in scene:
+        return scene
+    raw_role = scene.get("layout_id")
+    page_role, role_warning = page_role_with_warning(raw_role, default="content")
+    migration_warning = role_warning or (
+        f"legacy page scene page_role migrated from layout_id '{str(raw_role or 'unknown')}' "
+        f"to page_role '{page_role}'"
+    )
+    migrated = dict(scene)
+    migrated["page_role"] = page_role
+    warnings = list(migrated.get("migration_warnings") or [])
+    if migration_warning not in warnings:
+        warnings.append(migration_warning)
+    migrated["migration_warnings"] = warnings
+    return migrated
+
+
 def load_scene(root: Path, page_id: str) -> dict[str, Any]:
     canonical = canonical_scene_path(root, page_id)
     legacy = scene_path(root, page_id)
@@ -690,7 +708,10 @@ def load_scene(root: Path, page_id: str) -> dict[str, Any]:
     if canonical.exists() and legacy.exists() and read_json(legacy) != scene:
         raise ContractError(f"page scene mirror is stale on page {page_id}")
     validate_scene(scene)
-    return scene
+    migrated = _migrate_legacy_page_role(scene)
+    if migrated is not scene:
+        validate_scene(migrated)
+    return migrated
 
 
 def write_scene(root: Path, scene: dict[str, Any]) -> Path:
