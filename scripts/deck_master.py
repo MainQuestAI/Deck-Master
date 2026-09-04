@@ -2255,14 +2255,16 @@ def command_build_select_style(args: argparse.Namespace) -> dict[str, Any]:
     run_dir = resolve_run_dir(args)
     from high_density.style import load_style_lock, write_style_lock
 
+    request = load_request(run_dir)
+    run_id = str(request.get("run_id") or run_dir.name)
     write_style_lock(
         run_dir,
-        run_dir.name,
+        run_id,
         str(args.style_id),
         approved=True,
         approver=str(args.approver),
     )
-    return {"status": "approved", "style_lock": load_style_lock(run_dir, expected_run_id=run_dir.name)}
+    return {"status": "approved", "style_lock": load_style_lock(run_dir, expected_run_id=run_id)}
 
 
 def command_build_import_provider_result(args: argparse.Namespace) -> dict[str, Any]:
@@ -2332,24 +2334,34 @@ def _persist_build_options(
     canonical_legacy = str(review_policy or "").strip().lower().replace("-", "_")
     canonical_depth = str(review_depth or "").strip().lower().replace("-", "_")
     canonical_receipt = str(receipt_policy or "").strip().lower().replace("-", "_")
+    from high_density.review_policy import resolve_review_policy
+
+    existing_policy = resolve_review_policy(request)
+    effective_depth = existing_policy["review_depth"]
+    effective_receipt = existing_policy["receipt_policy"]
     if canonical_legacy == "external_signed":
-        canonical_depth = "independent_main"
-        canonical_receipt = "external_signed"
+        effective_depth = "independent_main"
+        effective_receipt = "external_signed"
     elif canonical_legacy == "local_traceable":
-        canonical_depth = canonical_depth or "producer_only"
-        canonical_receipt = canonical_receipt or "local_traceable"
-    if canonical_receipt == "external_signed":
-        canonical_depth = "independent_main"
-    if canonical_depth and not canonical_receipt:
-        canonical_receipt = "local_traceable"
-    if canonical_receipt and not canonical_depth:
-        canonical_depth = "producer_only"
-    if persist and review_policy:
-        request["review_policy"] = canonical_legacy
-    if persist and canonical_depth:
-        request["review_depth"] = canonical_depth
-    if persist and canonical_receipt:
-        request["receipt_policy"] = canonical_receipt
+        effective_depth = "producer_only"
+        effective_receipt = "local_traceable"
+    if canonical_depth:
+        effective_depth = canonical_depth
+    if canonical_receipt:
+        effective_receipt = canonical_receipt
+    if effective_receipt == "external_signed":
+        effective_depth = "independent_main"
+    review_options_changed = bool(review_policy or review_depth or receipt_policy)
+    if review_options_changed and effective_depth and not effective_receipt:
+        effective_receipt = "local_traceable"
+    if review_options_changed and effective_receipt and not effective_depth:
+        effective_depth = "producer_only"
+    if persist and review_options_changed and effective_receipt:
+        request["review_policy"] = "external_signed" if effective_receipt == "external_signed" else "local_traceable"
+    if persist and review_options_changed and effective_depth:
+        request["review_depth"] = effective_depth
+    if persist and review_options_changed and effective_receipt:
+        request["receipt_policy"] = effective_receipt
     if persist and (requested_internal or output_profile or review_policy or review_depth or receipt_policy):
         write_json(run_dir / REQUEST_NAME, request)
     return effective

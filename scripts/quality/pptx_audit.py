@@ -4,6 +4,7 @@ import json
 import re
 import zipfile
 from pathlib import Path
+from posixpath import normpath
 from typing import Any
 from xml.etree import ElementTree
 
@@ -156,6 +157,65 @@ def _slide_number(name: str) -> int:
     return int(match.group(1)) if match else 0
 
 
+def _relationship_id_key(attributes: dict[str, str]) -> str:
+    for key, value in attributes.items():
+        if _local_name(key) == "id" and str(value).startswith("rId"):
+            return value
+    return ""
+
+
+def _presentation_slide_order(archive: zipfile.ZipFile) -> list[str]:
+    try:
+        presentation = ElementTree.fromstring(archive.read("ppt/presentation.xml"))
+        rels = ElementTree.fromstring(archive.read("ppt/_rels/presentation.xml.rels"))
+    except (KeyError, ElementTree.ParseError):
+        return []
+    targets_by_id: dict[str, str] = {}
+    for rel in rels.iter():
+        if _local_name(rel.tag) != "Relationship":
+            continue
+        rel_id = str(rel.attrib.get("Id") or "")
+        target = str(rel.attrib.get("Target") or "")
+        if rel_id and target:
+            targets_by_id[rel_id] = _package_part_path("ppt/presentation.xml", target)
+    ordered: list[str] = []
+    for node in presentation.iter():
+        if _local_name(node.tag) != "sldId":
+            continue
+        rel_id = _relationship_id_key(node.attrib)
+        target = targets_by_id.get(rel_id, "")
+        if target and SLIDE_RE.match(target):
+            ordered.append(target)
+    return ordered
+
+
+def _package_part_path(source_part: str, target: str) -> str:
+    raw = str(target or "").strip()
+    if not raw:
+        return ""
+    if raw.startswith("/"):
+        return normpath(raw.lstrip("/"))
+    source_dir = source_part.rsplit("/", 1)[0] if "/" in source_part else ""
+    return normpath(f"{source_dir}/{raw}" if source_dir else raw)
+
+
+def _slide_chart_owners(archive: zipfile.ZipFile, slide_display_numbers: dict[str, int]) -> dict[str, int]:
+    chart_owners: dict[str, int] = {}
+    for slide_name, display_number in slide_display_numbers.items():
+        rels_name = slide_name.replace("ppt/slides/", "ppt/slides/_rels/") + ".rels"
+        try:
+            rels = ElementTree.fromstring(archive.read(rels_name))
+        except (KeyError, ElementTree.ParseError):
+            continue
+        for rel in rels.iter():
+            if _local_name(rel.tag) != "Relationship":
+                continue
+            target = _package_part_path(slide_name, str(rel.attrib.get("Target") or ""))
+            if target and CHART_RE.match(target):
+                chart_owners[target] = display_number
+    return chart_owners
+
+
 def _scope_for_path(name: str) -> tuple[str, int | None]:
     for scope, pattern in (
         ("slide", SLIDE_RE),
@@ -239,10 +299,17 @@ def audit_pptx(
     try:
         with zipfile.ZipFile(path) as archive:
             names = archive.namelist()
-            slide_names = sorted(
+            physical_slide_names = sorted(
                 [name for name in names if SLIDE_RE.match(name)],
                 key=_slide_number,
             )
+            slide_names = _presentation_slide_order(archive) or physical_slide_names
+            slide_display_numbers = {name: index for index, name in enumerate(slide_names, start=1)}
+            physical_to_display = {
+                _slide_number(name): display_number
+                for name, display_number in slide_display_numbers.items()
+            }
+            chart_slide_numbers = _slide_chart_owners(archive, slide_display_numbers)
             media_files = sorted(name for name in names if name.startswith("ppt/media/"))
             for name in slide_names:
                 xml = archive.read(name)
@@ -250,7 +317,7 @@ def audit_pptx(
                 text = _slide_text(root)
                 picture_count = _picture_count(root)
                 slide_hits = _term_hits(text, forbidden)
-                slide_number = _slide_number(name)
+                slide_number = slide_display_numbers.get(name, _slide_number(name))
                 if isinstance(page_roles, dict):
                     page_role = _normalize_page_role(page_roles.get(slide_number))
                 elif isinstance(page_roles, list) and slide_number - 1 < len(page_roles):
@@ -275,32 +342,44 @@ def audit_pptx(
                         "possible_full_slide_image": (picture_count == 1 and len(text) < 40) and not sparse_allowed,
                     }
                 )
-            for name in sorted(name for name in names if _is_scannable_xml(name)):
+            scannable = []
+            for name in sorted(names):
+                scope, number = _scope_for_path(name)
+                if _is_scannable_xml(name) or (scope == "chart" and name in chart_slide_numbers):
+                    scannable.append((name, scope, number))
+            for name, scope, number in scannable:
                 xml = archive.read(name)
                 root = ElementTree.fromstring(xml)
-                scope, number = _scope_for_path(name)
                 text = _xml_text(root)
                 if not text:
                     continue
+                slide_number = (
+                    chart_slide_numbers.get(name)
+                    if scope == "chart"
+                    else physical_to_display.get(number or 0, number)
+                )
                 item = {
                     "scope": scope,
                     "package_path": name,
-                    "slide_number": number,
+                    "slide_number": slide_number,
                     "text": text,
                     "text_length": len(text),
                 }
+                if scope == "chart":
+                    item["chart_number"] = number
                 text_items.append(item)
                 for term in _term_hits(text, forbidden):
-                    forbidden_hits.append(
-                        {
-                            "scope": scope,
-                            "package_path": name,
-                            "slide_number": number,
-                            "term": term,
-                            "terms": [term],
-                            "excerpt": _excerpt(text, term),
-                        }
-                    )
+                    finding = {
+                        "scope": scope,
+                        "package_path": name,
+                        "slide_number": slide_number,
+                        "term": term,
+                        "terms": [term],
+                        "excerpt": _excerpt(text, term),
+                    }
+                    if scope == "chart":
+                        finding["chart_number"] = number
+                    forbidden_hits.append(finding)
     except zipfile.BadZipFile as exc:
         raise ValueError(f"Invalid PPTX package: {path}") from exc
     except ElementTree.ParseError as exc:

@@ -13,7 +13,7 @@ import sys
 
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from deck_master import command_render  # noqa: E402
+from deck_master import _persist_build_options, command_build_select_style, command_render  # noqa: E402
 from runtime.build import BuildError, build_source_fingerprint, build_status, prepare_build, run_build  # noqa: E402
 from runtime.builder_backend import backend_render_runtime_ready, backend_render_runtime_status  # noqa: E402
 from runtime.run_state import RunStateError, create_run, read_json, write_json  # noqa: E402
@@ -113,6 +113,139 @@ class BuildRuntimeTests(unittest.TestCase):
         self.assertEqual("completed", status["status"])
         self.assertEqual(3, status["page_count"])
         self.assertTrue(status["artifact_validation"]["valid"], status["artifact_validation"].get("errors"))
+
+    def test_persist_build_options_preserves_unspecified_review_dimension(self) -> None:
+        request = read_json(self.run_dir / "request.json")
+        request.update({"review_depth": "independent_main", "receipt_policy": "external_signed"})
+        write_json(self.run_dir / "request.json", request)
+
+        _persist_build_options(
+            self.run_dir,
+            Namespace(
+                profile=None,
+                output_profile=None,
+                review_policy=None,
+                review_depth=None,
+                receipt_policy="local-traceable",
+            ),
+        )
+
+        updated = read_json(self.run_dir / "request.json")
+        self.assertEqual("independent_main", updated["review_depth"])
+        self.assertEqual("local_traceable", updated["receipt_policy"])
+
+    def test_persist_build_options_applies_review_policy_matrix(self) -> None:
+        cases = [
+            (
+                {"review_depth": "independent_main", "receipt_policy": "external_signed"},
+                {"review_policy": "local-traceable"},
+                ("local_traceable", "producer_only", "local_traceable"),
+            ),
+            (
+                {"review_depth": "independent_main", "receipt_policy": "external_signed"},
+                {"review_policy": "local-traceable", "review_depth": "independent-main"},
+                ("local_traceable", "independent_main", "local_traceable"),
+            ),
+            (
+                {"review_depth": "producer_only", "receipt_policy": "local_traceable"},
+                {"review_policy": "external-signed", "receipt_policy": "local-traceable"},
+                ("local_traceable", "independent_main", "local_traceable"),
+            ),
+            (
+                {"review_depth": "independent_main", "receipt_policy": "external_signed"},
+                {"receipt_policy": "local-traceable"},
+                ("local_traceable", "independent_main", "local_traceable"),
+            ),
+            (
+                {"review_depth": "producer_only", "receipt_policy": "local_traceable"},
+                {"review_depth": "independent-main"},
+                ("local_traceable", "independent_main", "local_traceable"),
+            ),
+        ]
+        for index, (existing, args, expected) in enumerate(cases):
+            with self.subTest(index=index):
+                request = read_json(self.run_dir / "request.json")
+                request.pop("review_policy", None)
+                request.update(existing)
+                write_json(self.run_dir / "request.json", request)
+
+                _persist_build_options(
+                    self.run_dir,
+                    Namespace(
+                        profile=None,
+                        output_profile=None,
+                        review_policy=args.get("review_policy"),
+                        review_depth=args.get("review_depth"),
+                        receipt_policy=args.get("receipt_policy"),
+                    ),
+                )
+
+                updated = read_json(self.run_dir / "request.json")
+                self.assertEqual(expected[0], updated["review_policy"])
+                self.assertEqual(expected[1], updated["review_depth"])
+                self.assertEqual(expected[2], updated["receipt_policy"])
+
+    def test_persist_build_options_parses_legacy_review_policy_before_partial_update(self) -> None:
+        cases = [
+            (
+                {"review_policy": "external_signed"},
+                {"receipt_policy": "local-traceable"},
+                ("local_traceable", "independent_main", "local_traceable"),
+            ),
+            (
+                {"review_policy": "external_signed"},
+                {"review_depth": "independent-main"},
+                ("external_signed", "independent_main", "external_signed"),
+            ),
+            (
+                {"review_policy": "local_traceable"},
+                {"review_depth": "independent-main"},
+                ("local_traceable", "independent_main", "local_traceable"),
+            ),
+            (
+                {"review_policy": "external_signed"},
+                {"review_policy": "local-traceable"},
+                ("local_traceable", "producer_only", "local_traceable"),
+            ),
+            (
+                {"review_policy": "local_traceable"},
+                {"review_policy": "external-signed"},
+                ("external_signed", "independent_main", "external_signed"),
+            ),
+        ]
+        for index, (existing, args, expected) in enumerate(cases):
+            with self.subTest(index=index):
+                request = read_json(self.run_dir / "request.json")
+                request.pop("review_depth", None)
+                request.pop("receipt_policy", None)
+                request.update(existing)
+                write_json(self.run_dir / "request.json", request)
+
+                _persist_build_options(
+                    self.run_dir,
+                    Namespace(
+                        profile=None,
+                        output_profile=None,
+                        review_policy=args.get("review_policy"),
+                        review_depth=args.get("review_depth"),
+                        receipt_policy=args.get("receipt_policy"),
+                    ),
+                )
+
+                updated = read_json(self.run_dir / "request.json")
+                self.assertEqual(expected[0], updated["review_policy"])
+                self.assertEqual(expected[1], updated["review_depth"])
+                self.assertEqual(expected[2], updated["receipt_policy"])
+
+    def test_select_style_uses_request_run_id_after_directory_move(self) -> None:
+        moved = self.run_dir.parent / "moved-directory"
+        self.run_dir.rename(moved)
+
+        result = command_build_select_style(
+            Namespace(run_dir=str(moved), style_id="cyber-01", approver="test")
+        )
+
+        self.assertEqual("build-run", result["style_lock"]["run_id"])
 
     def test_production_pptx_output_profile_requires_only_pptx(self) -> None:
         request = read_json(self.run_dir / "request.json")

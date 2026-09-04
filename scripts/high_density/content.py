@@ -22,89 +22,6 @@ MBB_SELECTION_RECEIPT_PATH = MBB_DIR / "selection_receipt.json"
 MBB_USER_DECISION_RECEIPT_PATH = MBB_DIR / "user_decision_receipt.json"
 MBB_SEAL_PATH = MBB_DIR / "runtime_seal.json"
 SAFE_PAGE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
-STRUCTURAL_VISUAL_HINT_TERMS = (
-    "acceptance",
-    "agenda",
-    "chapter",
-    "contents",
-    "cover",
-    "divider",
-    "framework",
-    "introduction",
-    "intro",
-    "layout",
-    "opening",
-    "overview",
-    "roadmap",
-    "section",
-    "structure",
-    "table of contents",
-    "toc",
-    "验收",
-    "议程",
-    "章节",
-    "目录",
-    "封面",
-    "分隔",
-    "框架",
-    "导言",
-    "介绍",
-    "布局",
-    "开场",
-    "概览",
-    "路线图",
-    "结构",
-)
-STRUCTURAL_FACTUAL_ASSERTION_TERMS = (
-    "achieved",
-    "adoption",
-    "advantage",
-    "best",
-    "customer",
-    "decrease",
-    "delivered",
-    "dominant",
-    "fastest",
-    "first",
-    "growth",
-    "highest",
-    "improve",
-    "increase",
-    "leader",
-    "leadership",
-    "lowest",
-    "market",
-    "only",
-    "performance",
-    "profit",
-    "proven",
-    "ready",
-    "revenue",
-    "result",
-    "share",
-    "supports",
-    "users",
-    "value",
-    "领先",
-    "份额",
-    "增长",
-    "提升",
-    "降低",
-    "最高",
-    "最低",
-    "唯一",
-    "显著",
-    "实现",
-    "达到",
-    "证明",
-    "客户",
-    "收入",
-    "利润",
-    "效率",
-    "优势",
-    "规模",
-    "占比",
-)
 
 
 def _assert_safe_page_id(page_id: str) -> None:
@@ -459,36 +376,24 @@ def _required_text_refs(customer_visible: dict[str, Any], *, so_what: str) -> li
     return refs
 
 
-def _is_non_factual_structural_text(value: Any) -> bool:
-    normalized = re.sub(r"\s+", " ", str(value or "").casefold()).strip()
-    if not normalized:
-        return True
-    if any(term in normalized for term in STRUCTURAL_FACTUAL_ASSERTION_TERMS):
-        return False
-    return any(term in normalized for term in STRUCTURAL_VISUAL_HINT_TERMS)
-
-
 def _structural_factual_entries(customer_visible: dict[str, Any]) -> list[tuple[str, str]]:
     entries: list[tuple[str, str]] = []
-    subtitle = str(customer_visible.get("subtitle") or "").strip()
-    if subtitle and not _is_non_factual_structural_text(subtitle):
-        entries.append(("material_pool.customer_visible.subtitle", subtitle))
     for collection in ("body_blocks", "callouts"):
         for index, item in enumerate(customer_visible.get(collection) or []):
             prefix = f"material_pool.customer_visible.{collection}.{index}"
             if isinstance(item, dict):
+                explicit_fact = bool(
+                    item.get("requires_evidence")
+                    or item.get("factual")
+                    or item.get("claim_binding")
+                    or item.get("claim_id")
+                )
+                if not explicit_fact:
+                    continue
                 for field in ("text", "body", "description", "value"):
                     text = _text(item.get(field)).strip()
                     if text:
                         entries.append((f"{prefix}.{field}", text))
-            else:
-                text = _text(item).strip()
-                if text:
-                    entries.append((prefix, text))
-    for index, item in enumerate(customer_visible.get("footnotes") or []):
-        text = _text(item).strip()
-        if text:
-            entries.append((f"material_pool.customer_visible.footnotes.{index}", text))
     return entries
 
 

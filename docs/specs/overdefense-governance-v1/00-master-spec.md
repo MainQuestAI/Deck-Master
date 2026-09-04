@@ -67,7 +67,7 @@
 | ODG-13 | P1 | P1 override 在导出和最终 readiness 中语义不一致 | `scripts/orchestrate/export_queue.py:150`、`scripts/runtime/final_readiness.py:220` | `has_active_override` 应被 delivery validation、export queue、final readiness 共用；P0 永远不可 override，P1 可显式 override |
 | ODG-14 | P1 | 图片面积 caps 全局固定，误杀角色化页面 | `scripts/high_density/svg.py:223`、`scripts/high_density/svg.py:232`、`scripts/high_density/svg.py:694`、`scripts/high_density/svg.py:711` | 图片策略按页面角色配置：封面/视觉页可高图像占比，正文页保持文本不被图片覆盖 |
 | ODG-15 | P1 | 每页都要求 evidence 和至少 3 个信息区域 | `docs/contracts/content-lock.v2.schema.json:17`、`docs/contracts/content-lock.v2.schema.json:21`、`scripts/high_density/content.py:826` | 证据和密度要求按页面角色执行；封面、目录、章节页、纯过渡页可使用结构性来源，不要求 3 个正文信息区域 |
-| ODG-16 | P1 | 页码、来源、日期、方法标签等结构标签被当作事实证据要求 | `docs/contracts/content-lock.v2.schema.json:49`、`scripts/high_density/content.py:840` | `structural_label` 不得要求业务 evidence；有事实含义的数字和判断仍需 evidence |
+| ODG-16 | P1 | 页码、来源、日期、方法标签等结构标签被当作事实证据要求 | `docs/contracts/content-lock.v2.schema.json:49`、`scripts/high_density/content.py:840` | 普通结构文案不要求业务 evidence；显式 claim 与业务数字仍需 evidence |
 | ODG-17 | P2 | `--watch` 在已可行动状态仍默认等 30 秒 | `scripts/high_density/engine.py:1182`、`scripts/deck_master.py:3432` | `awaiting_agent_build`、`awaiting_user_decision`、`needs_quality_review` 等可行动状态立即返回 |
 | ODG-18 | P2 | 标准 builder 忽略 requested output profile，强制 HTML/PDF/PNG/PPTX 全套 | `scripts/runtime/build.py:219`、`scripts/runtime/build.py:375` | `production_pptx` 只要求 PPTX 和必要 readback；`client_delivery` 再要求完整客户包 |
 | ODG-19 | P2 | Review Workbench 只有单页 approve，64 页成本过高 | `scripts/review/workbench.py:119`、`scripts/review/readiness.py:243` | 增加批量 approve/reject/needs-work，对无阻断页支持一次批准；有阻断页保留逐页原因 |

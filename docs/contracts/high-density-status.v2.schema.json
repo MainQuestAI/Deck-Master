@@ -29,6 +29,9 @@
         "output_ref": {"type": "string"},
         "input_refs": {"type": "array", "items": {"type": "string"}},
         "output_refs": {"type": "array", "items": {"type": "string"}},
+        "handoff_scope": {"enum": ["stage_batch"]},
+        "pending_pages": {"type": "array", "items": {"type": "string"}},
+        "rework_queue": {"type": "array", "items": {"$ref": "#/$defs/reworkItem"}},
         "required_schema": {"type": ["string", "object"]},
         "acceptance_command": {"type": "string"},
         "resume_command": {"type": "string"},
@@ -37,6 +40,21 @@
         "selected_storyline_id": {"type": "string"},
         "storyline_candidates": {"type": "array", "items": {"type": "object"}},
         "approval_command": {"type": "string"}
+      },
+      "additionalProperties": true
+    },
+    "reworkItem": {
+      "type": "object",
+      "required": ["page_id", "stage", "reason"],
+      "properties": {
+        "page_id": {"type": "string"},
+        "stage": {"type": "string"},
+        "kind": {"type": "string"},
+        "reason": {"type": "string"},
+        "input_ref": {"type": "string"},
+        "output_ref": {"type": "string"},
+        "input_refs": {"type": "array", "items": {"type": "string"}},
+        "output_refs": {"type": "array", "items": {"type": "string"}}
       },
       "additionalProperties": true
     }

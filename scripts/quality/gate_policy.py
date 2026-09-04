@@ -6,6 +6,7 @@ from typing import Any
 
 from quality.gate_freshness import report_currentity
 from quality.overrides import has_active_override
+from runtime.render import find_render_result
 
 PASSING_GATE_STATUSES = {"pass", "conditional_pass", "pass_with_warning", "pass_with_override"}
 BLOCKING_GATE_STATUSES = {"rework_required", "failed", "blocked"}
@@ -83,36 +84,30 @@ def _severity(finding: dict[str, Any]) -> str:
 
 
 def current_artifact(root: Path | str) -> Path | None:
-    """Resolve the artifact selected by the run's current delivery lineage."""
+    """Resolve the artifact selected by the current render/build state."""
     run_dir = Path(root).expanduser().resolve()
-    candidates = (
-        (run_dir / "delivery" / "final_version_lineage.json", ("artifact_run_relative", "artifact_path", "artifact")),
-        (run_dir / "delivery" / "final_readiness.json", ("final_artifact",)),
-        (run_dir / "render_results" / "render_result.json", ("artifact_path", "artifact")),
-    )
-    for path, keys in candidates:
-        try:
-            payload = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            continue
-        if not isinstance(payload, dict):
-            continue
-        raw = ""
-        for key in keys:
-            value = payload.get(key)
-            if key == "final_artifact" and isinstance(value, dict):
-                raw = str(value.get("path") or value.get("absolute_path") or "")
-            elif value:
-                raw = str(value)
-            if raw:
-                break
+    _render_path, render_result, _source = find_render_result(run_dir)
+    if isinstance(render_result, dict):
+        raw = str(render_result.get("artifact_path") or render_result.get("artifact") or "").strip()
         if raw:
             artifact = Path(raw).expanduser()
             if not artifact.is_absolute():
                 artifact = run_dir / artifact
             return artifact.resolve()
     high_density_artifact = run_dir / "high_density_build" / "pptx" / "deck_high_density.pptx"
-    return high_density_artifact if high_density_artifact.exists() else None
+    status_path = run_dir / "high_density_build" / "status.json"
+    try:
+        status = json.loads(status_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        status = {}
+    if (
+        isinstance(status, dict)
+        and str(status.get("builder_profile") or "") == "high_density"
+        and str(status.get("status") or "").lower() == "completed"
+        and high_density_artifact.exists()
+    ):
+        return high_density_artifact.resolve()
+    return None
 
 
 def _blocking_candidates(report: dict[str, Any], gate: str) -> list[dict[str, Any]]:

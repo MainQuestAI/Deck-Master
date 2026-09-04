@@ -40,10 +40,22 @@ class CustomerVisibleSafetyTests(unittest.TestCase):
         self.assertIn("slide", scopes)
         self.assertIn("notes", scopes)
         self.assertIn("doc_props", scopes)
+        self.assertIn("chart", scopes)
         self.assertNotIn("slide_master", scopes)
         self.assertNotIn("slide_layout", scopes)
-        self.assertNotIn("chart", scopes)
         self.assertFalse(any(hit["term"] == "关键图示" for hit in audit["forbidden_hits"]))
+        self.assertFalse(any(hit["term"] == "未使用图表" for hit in audit["forbidden_hits"]))
+        chart_hits = [hit for hit in audit["forbidden_hits"] if hit["scope"] == "chart"]
+        self.assertEqual([1], [hit["slide_number"] for hit in chart_hits])
+
+    def test_pptx_audit_uses_presentation_order_for_page_roles(self) -> None:
+        pptx = self.temp_dir / "reordered.pptx"
+        _write_reordered_pptx(pptx)
+
+        audit = audit_pptx(pptx, page_roles={1: "cover", 2: "content"})
+
+        self.assertEqual([], audit["sparse_pages"])
+        self.assertEqual([1, 2], [slide["slide_number"] for slide in audit["slides"]])
 
     def test_customer_visible_safety_gate_blocks_with_structured_findings(self) -> None:
         pptx = self.temp_dir / "unsafe.pptx"
@@ -53,7 +65,7 @@ class CustomerVisibleSafetyTests(unittest.TestCase):
             "run-unsafe",
             pptx,
             expected_pages=1,
-            forbidden_terms=["证书墙", "讲标", "缩略图", "左屏", "评分", "Brief", "关键图示"],
+            forbidden_terms=["证书墙", "讲标", "缩略图", "左屏", "评分", "Brief", "关键图示", "未使用图表"],
         )
 
         self.assertEqual("deck_customer_visible_safety_gate.v1", report["schema_version"])
@@ -295,6 +307,31 @@ def _write_rich_pptx(path: Path) -> None:
 """,
         )
         pptx.writestr(
+            "ppt/presentation.xml",
+            """
+<p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
+                xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <p:sldIdLst><p:sldId id="256" r:id="rId1"/></p:sldIdLst>
+</p:presentation>
+""",
+        )
+        pptx.writestr(
+            "ppt/_rels/presentation.xml.rels",
+            """
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide1.xml"/>
+</Relationships>
+""",
+        )
+        pptx.writestr(
+            "ppt/slides/_rels/slide1.xml.rels",
+            """
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rIdChart1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart" Target="../charts/chart1.xml"/>
+</Relationships>
+""",
+        )
+        pptx.writestr(
             "ppt/notesSlides/notesSlide1.xml",
             "<p:notes xmlns:p=\"x\" xmlns:a=\"x\"><a:t>内部讲标路径</a:t></p:notes>",
         )
@@ -309,6 +346,58 @@ def _write_rich_pptx(path: Path) -> None:
         pptx.writestr(
             "ppt/charts/chart1.xml",
             "<c:chartSpace xmlns:c=\"x\" xmlns:a=\"x\"><a:t>评分</a:t></c:chartSpace>",
+        )
+        pptx.writestr(
+            "ppt/charts/chart2.xml",
+            "<c:chartSpace xmlns:c=\"x\" xmlns:a=\"x\"><a:t>未使用图表</a:t></c:chartSpace>",
+        )
+
+
+def _write_reordered_pptx(path: Path) -> None:
+    with zipfile.ZipFile(path, "w") as pptx:
+        pptx.writestr("[Content_Types].xml", "<Types/>")
+        pptx.writestr(
+            "ppt/presentation.xml",
+            """
+<p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
+                xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <p:sldIdLst>
+    <p:sldId id="257" r:id="rId2"/>
+    <p:sldId id="256" r:id="rId1"/>
+  </p:sldIdLst>
+</p:presentation>
+""",
+        )
+        pptx.writestr(
+            "ppt/_rels/presentation.xml.rels",
+            """
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide1.xml"/>
+  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide2.xml"/>
+</Relationships>
+""",
+        )
+        pptx.writestr(
+            "ppt/slides/slide1.xml",
+            """
+<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
+       xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+  <p:cSld><p:spTree>
+    <p:sp><p:txBody><a:p><a:r><a:t>This content slide has enough visible words to avoid sparse detection when it is mapped to the second display page role.</a:t></a:r></a:p></p:txBody></p:sp>
+  </p:spTree></p:cSld>
+</p:sld>
+""",
+        )
+        pptx.writestr(
+            "ppt/slides/slide2.xml",
+            """
+<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
+       xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+  <p:cSld><p:spTree>
+    <p:sp><p:txBody><a:p><a:r><a:t>Project cover</a:t></a:r></a:p></p:txBody></p:sp>
+  </p:spTree></p:cSld>
+</p:sld>
+""",
         )
 
 

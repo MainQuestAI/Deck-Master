@@ -42,6 +42,8 @@ from high_density.content import (
 from high_density.contracts import ContractError, assert_valid, read_json, sha256_file, sha256_json, write_json
 from high_density.integrity import sign_runtime_payload
 from high_density.engine import (
+    HighDensityBuildError,
+    _stage_batch_details_from_candidates,
     build_high_density_status,
     prepare_high_density,
     retry_high_density,
@@ -552,7 +554,7 @@ def test_structural_page_allows_low_density_without_business_evidence() -> None:
     assert result["enrichment"]["evidence_assessment"]["synthesis"].startswith("Structural page metadata")
 
 
-def test_structural_factual_subtitle_requires_evidence() -> None:
+def test_structural_subtitle_keyword_does_not_require_evidence() -> None:
     package = _package("mbb-run", FIXTURE["pages"][0])
     package["visual_spec"]["page_type"] = "cover"
     package["customer_visible"]["subtitle"] = "Market leadership position"
@@ -562,8 +564,10 @@ def test_structural_factual_subtitle_requires_evidence() -> None:
     package["evidence_bindings"] = []
     package["claim_bindings"] = []
 
-    with pytest.raises(ContractError, match="structural factual text without evidence"):
-        build_mbb_page(package)
+    result = build_mbb_page(package)
+
+    assert result["analysis"]["structural_page"] is True
+    assert result["evidence"] == []
 
 
 def test_structural_numeric_claim_requires_matching_evidence() -> None:
@@ -661,9 +665,23 @@ def test_evidenced_structural_page_preserves_refs_for_derived_claims(tmp_path: P
     cover_plan = next(page for page in loaded["pages"] if page["page_id"] == cover["page_id"])
     assert cover_plan["evidence_refs"] == ["E001"]
     assert cover_plan["derived_claims"][0]["evidence_refs"] == ["E001"]
-    assert "material_pool.customer_visible.subtitle" in {binding["target"] for binding in cover_plan["claim_bindings"]}
+    assert "material_pool.customer_visible.subtitle" not in {binding["target"] for binding in cover_plan["claim_bindings"]}
     lock = build_content_lock(cover, cover_plan, mbb_plan_sha256=loaded["mbb_plan_sha256"])
     assert lock["enrichment"]["derived_claims"][0]["evidence_refs"] == ["E001"]
+
+
+def test_structural_explicit_fact_marker_still_requires_evidence() -> None:
+    package = _package("mbb-run", FIXTURE["pages"][0])
+    package["visual_spec"]["page_type"] = "cover"
+    package["customer_visible"]["subtitle"] = "客户大会"
+    package["customer_visible"]["body_blocks"] = [
+        {"type": "text", "text": "Explicit marked claim", "requires_evidence": True}
+    ]
+    package["evidence_bindings"] = []
+    package["claim_bindings"] = []
+
+    with pytest.raises(ContractError, match="structural factual text without evidence"):
+        build_mbb_page(package)
 
 
 def test_structural_claim_exemption_is_limited_to_metadata() -> None:
@@ -748,6 +766,23 @@ def test_structural_metadata_labels_can_pass_without_evidence() -> None:
         context="structural metadata",
         structural_targets=structural_targets,
     )
+
+
+def test_structural_titles_and_subtitles_do_not_use_keyword_fact_guessing() -> None:
+    package = _package("mbb-run", FIXTURE["pages"][0])
+    package["visual_spec"]["page_type"] = "cover"
+    package["customer_visible"]["title"] = "Market Leader Framework"
+    package["customer_visible"]["subtitle"] = "2026 Strategy Day"
+    package["customer_visible"]["body_blocks"] = []
+    package["customer_visible"]["callouts"] = []
+    package["customer_visible"]["footnotes"] = []
+    package["evidence_bindings"] = []
+    package["claim_bindings"] = []
+
+    result = build_mbb_page(package)
+
+    assert result["analysis"]["structural_page"] is True
+    assert result["evidence"] == []
 
 
 def test_mbb_rejects_unsupported_factual_claim() -> None:
@@ -1419,6 +1454,257 @@ def test_production_blueprint_rejects_self_declared_provider_metadata(tmp_path: 
                 "approved_at": challenge["issued_at"],
             },
         )
+
+
+def test_production_blueprint_waiting_prepares_real_stage_batch_inputs(tmp_path: Path) -> None:
+    run, _ = _make_run(tmp_path, mode="production", page_count=2, project_name="stage batch probe")
+    prepare_high_density(run)
+    write_style_lock(run, run.name, "cyber-01", approved=True, approver="test")
+    _write_approved_mbb_plan(run)
+
+    waiting = run_high_density(run)
+
+    assert waiting["status"] == "awaiting_agent_build"
+    assert waiting["current_stage"] == "blueprint"
+    action = waiting["next_action"]
+    assert action["handoff_scope"] == "stage_batch"
+    assert action["pending_pages"] == ["P001", "P002"]
+    assert {item["page_id"] for item in action["rework_queue"]} == {"P001", "P002"}
+    assert all(item["kind"] == "agent_imagegen" for item in action["rework_queue"])
+    for ref in action["input_refs"]:
+        assert (run / ref).is_file()
+
+
+def test_production_blueprint_waiting_prepares_64_page_batch_inputs(tmp_path: Path) -> None:
+    run = create_run(
+        tmp_path / "runs",
+        {"project_name": "stage batch 64", "run_mode": "production"},
+        run_id="hd-batch-64",
+        force=True,
+    )
+    index = PagePackageIndex(run)
+    for order in range(1, 65):
+        source = dict(FIXTURE["pages"][(order - 1) % len(FIXTURE["pages"])])
+        source["page_id"] = f"P{order:03d}"
+        source["order"] = order
+        source["title"] = f"{source['title']} batch"
+        package = _package(run.name, source)
+        package["evidence_bindings"] = [f"{ref}-{order:03d}" for ref in package.get("evidence_bindings") or []]
+        package["claim_bindings"] = [f"{ref}-{order:03d}" for ref in package.get("claim_bindings") or []]
+        index.write(package)
+    prepare_high_density(run)
+    write_style_lock(run, run.name, "cyber-01", approved=True, approver="test")
+    _write_approved_mbb_plan(run)
+
+    waiting = run_high_density(run)
+
+    action = waiting["next_action"]
+    assert waiting["current_stage"] == "blueprint"
+    assert len(action["pending_pages"]) == 64
+    assert len(action["rework_queue"]) == 64
+    assert action["pending_pages"][0] == "P001"
+    assert action["pending_pages"][-1] == "P064"
+    assert all((run / ref).is_file() for ref in action["input_refs"])
+
+
+def test_production_visual_review_batch_keeps_generated_pending_reviews(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    run, _ = _make_run(tmp_path, mode="production", page_count=2, project_name="stage review batch")
+    prepare_high_density(run)
+    write_style_lock(run, run.name, "cyber-01", approved=True, approver="test")
+    _write_approved_mbb_plan(run)
+    assert run_high_density(run)["current_stage"] == "blueprint"
+
+    from PIL import Image
+
+    provider_root = tmp_path / "provider-results"
+    provider_root.mkdir()
+    monkeypatch.setenv("DECK_MASTER_PROVIDER_RESULT_ROOTS", str(provider_root))
+    for page_id in ("P001", "P002"):
+        provider_image = provider_root / f"exec-00000000-0000-0000-0000-0000000000{page_id[-2:]}.png"
+        Image.new("RGB", (1672, 941), "#f7f9fb").save(provider_image)
+        record_provider_host_result(run, page_id, provider_image)
+        _approve_blueprint(run, page_id)
+
+    assert run_high_density(run)["current_stage"] == "page_scene"
+    for page_id in ("P001", "P002"):
+        lock = read_json(run / f"high_density_build/content_locks/{page_id}.json")
+        blueprint_manifest = read_json(run / f"high_density_build/blueprints/{page_id}.blueprint_manifest.json")
+        scene = build_fixture_scene(
+            lock,
+            str(blueprint_manifest["image_sha256"]),
+            blueprint_path=FIXTURE_DIR / "blueprint.svg",
+        )
+        write_scene(run, scene)
+        compile_svg(scene, svg_path(run, page_id))
+
+    waiting = run_high_density(run)
+
+    assert waiting["status"] == "awaiting_agent_build"
+    assert waiting["current_stage"] == "visual_review"
+    action = waiting["next_action"]
+    assert action["handoff_scope"] == "stage_batch"
+    assert action["pending_pages"] == ["P001", "P002"]
+    assert [item["kind"] for item in action["rework_queue"]] == ["agent_self_review", "agent_self_review"]
+    assert all((run / item["output_ref"]).is_file() for item in action["rework_queue"])
+
+
+def test_production_blueprint_waiting_precedes_later_stale_scene(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    run, _ = _make_run(tmp_path, mode="production", page_count=2, project_name="stage-major guard")
+    prepare_high_density(run)
+    write_style_lock(run, run.name, "cyber-01", approved=True, approver="test")
+    _write_approved_mbb_plan(run)
+    assert run_high_density(run)["current_stage"] == "blueprint"
+
+    from PIL import Image
+
+    provider_root = tmp_path / "provider-results"
+    provider_root.mkdir()
+    monkeypatch.setenv("DECK_MASTER_PROVIDER_RESULT_ROOTS", str(provider_root))
+    provider_image = provider_root / "exec-00000000-0000-0000-0000-000000000002.png"
+    Image.new("RGB", (1672, 941), "#f7f9fb").save(provider_image)
+    record_provider_host_result(run, "P002", provider_image)
+    _approve_blueprint(run, "P002")
+
+    lock = read_json(run / "high_density_build/content_locks/P002.json")
+    blueprint_manifest = read_json(run / "high_density_build/blueprints/P002.blueprint_manifest.json")
+    scene = build_fixture_scene(
+        lock,
+        str(blueprint_manifest["image_sha256"]),
+        blueprint_path=FIXTURE_DIR / "blueprint.svg",
+    )
+    scene["blueprint_sha256"] = "0" * 64
+    write_scene(run, scene)
+
+    waiting = run_high_density(run)
+
+    assert waiting["status"] == "awaiting_agent_build"
+    assert waiting["current_stage"] == "blueprint"
+    assert waiting["next_action"]["pending_pages"] == ["P001"]
+
+    provider_image = provider_root / "exec-00000000-0000-0000-0000-000000000001.png"
+    Image.new("RGB", (1672, 941), "#f7f9fb").save(provider_image)
+    record_provider_host_result(run, "P001", provider_image)
+    _approve_blueprint(run, "P001")
+
+    with pytest.raises(HighDensityBuildError, match="page scene blueprint is stale for page P002") as exc_info:
+        run_high_density(run)
+    assert exc_info.value.code == "HD_PAGE_SCENE_INVALID"
+    assert exc_info.value.stage == "page_scene"
+    assert exc_info.value.page_id == "P002"
+
+
+def test_production_scene_waiting_precedes_later_asset_policy_failure(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    run, index = _make_run(tmp_path, mode="production", page_count=2, project_name="scene asset stage guard")
+    package = read_json(run / "page_packages/P002.json")
+    package["asset_bindings"] = [{"asset_id": "proof", "path": "assets/proof.png", "sha256": "0" * 64, "approved": True}]
+    index.write(package)
+    prepare_high_density(run)
+    write_style_lock(run, run.name, "cyber-01", approved=True, approver="test")
+    _write_approved_mbb_plan(run)
+    assert run_high_density(run)["current_stage"] == "blueprint"
+
+    from PIL import Image
+
+    provider_root = tmp_path / "provider-results"
+    provider_root.mkdir()
+    monkeypatch.setenv("DECK_MASTER_PROVIDER_RESULT_ROOTS", str(provider_root))
+    for page_id in ("P001", "P002"):
+        provider_image = provider_root / f"exec-00000000-0000-0000-0000-0000000000{page_id[-2:]}.png"
+        Image.new("RGB", (1672, 941), "#f7f9fb").save(provider_image)
+        record_provider_host_result(run, page_id, provider_image)
+        _approve_blueprint(run, page_id)
+
+    lock = read_json(run / "high_density_build/content_locks/P002.json")
+    blueprint_manifest = read_json(run / "high_density_build/blueprints/P002.blueprint_manifest.json")
+    scene = build_fixture_scene(
+        lock,
+        str(blueprint_manifest["image_sha256"]),
+        blueprint_path=FIXTURE_DIR / "blueprint.svg",
+    )
+    scene["elements"].append(
+        {
+            "element_id": "image.proof",
+            "component_id": "component.proof",
+            "kind": "image",
+            "role": "proof",
+            "priority": "P2",
+            "bbox": {"x": 1400, "y": 866, "w": 120, "h": 24},
+            "asset_ref": "proof",
+            "asset_sha256": "0" * 64,
+            "editability_target": "registered_asset",
+            "asset_policy": "registered",
+        }
+    )
+    write_scene(run, scene)
+
+    waiting = run_high_density(run)
+
+    assert waiting["status"] == "awaiting_agent_build"
+    assert waiting["current_stage"] == "page_scene"
+    assert waiting["next_action"]["pending_pages"] == ["P001"]
+
+    p001_lock = read_json(run / "high_density_build/content_locks/P001.json")
+    p001_blueprint = read_json(run / "high_density_build/blueprints/P001.blueprint_manifest.json")
+    write_scene(
+        run,
+        build_fixture_scene(
+            p001_lock,
+            str(p001_blueprint["image_sha256"]),
+            blueprint_path=FIXTURE_DIR / "blueprint.svg",
+        ),
+    )
+
+    with pytest.raises(HighDensityBuildError, match="registered image asset is missing or unsupported") as exc_info:
+        run_high_density(run)
+    assert exc_info.value.code == "HD_ASSET_POLICY_BLOCKED"
+    assert exc_info.value.stage == "svg"
+    assert exc_info.value.page_id == "P002"
+
+
+def test_stage_batch_details_preserves_mixed_candidate_actions() -> None:
+    representative, details = _stage_batch_details_from_candidates(
+        [
+            {
+                "page_id": "P001",
+                "stage": "visual_review",
+                "kind": "agent_self_review",
+                "input_ref": "high_density_build/svg/P001.svg",
+                "output_ref": "high_density_build/reviews/P001.visual_review.json",
+                "reason": "self review pending",
+            },
+            {
+                "page_id": "P002",
+                "stage": "visual_review",
+                "kind": "agent_main_review",
+                "input_ref": "high_density_build/reviews/P002.visual_review.json",
+                "output_ref": "high_density_build/reviews/P002.visual_review.json",
+                "output_refs": ["high_density_build/reviews/P002.main_review_receipt.json"],
+                "reason": "main review pending",
+            },
+            {
+                "page_id": "P003",
+                "stage": "pptx",
+                "kind": "agent_pptx_readback",
+                "input_ref": "high_density_build/svg/",
+                "output_ref": "high_density_build/pptx/deck_high_density.pptx",
+                "reason": "later stage remains deferred",
+            },
+        ]
+    )
+
+    assert representative["page_id"] == "P001"
+    assert details["pending_pages"] == ["P001", "P002"]
+    assert [item["kind"] for item in details["rework_queue"]] == ["agent_self_review", "agent_main_review"]
+    assert "high_density_build/reviews/P002.main_review_receipt.json" in details["output_refs"]
 
 
 def test_distinct_blueprints_produce_distinct_svg(tmp_path: Path) -> None:
