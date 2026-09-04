@@ -210,6 +210,12 @@ def _stage_batch_details_from_candidates(candidates: list[dict[str, Any]]) -> tu
     }
 
 
+def _waiting_from_candidates(root: Path, candidates: list[dict[str, Any]]) -> dict[str, Any]:
+    waiting, batch_details = _stage_batch_details_from_candidates(candidates)
+    candidate_details = dict(waiting.pop("details", {}) or {})
+    return _waiting(root, **waiting, details={**candidate_details, **batch_details})
+
+
 def _stage_batch_details(root: Path, stage: str, current_page_id: str, reason: str, *, kind: str = "") -> dict[str, Any]:
     if stage not in {"blueprint", "page_scene", "svg", "visual_review"}:
         return {}
@@ -1043,11 +1049,9 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
         manifest = refreshed_manifest
     manifest["status"] = "building"
     write_contract_json(root / BUILD_MANIFEST_PATH, manifest)
-    scenes: list[dict[str, Any]] = []
+
+    page_contexts: list[dict[str, Any]] = []
     locks: dict[str, dict[str, Any]] = {}
-    asset_paths_by_page: dict[str, dict[str, Path]] = {}
-    page_records: list[dict[str, Any]] = []
-    deferred_waiting: list[dict[str, Any]] = []
     for package in packages:
         page_id = str(package["page_id"])
         page_plan = page_plans.get(page_id)
@@ -1079,6 +1083,14 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
         except ContractError as exc:
             raise HighDensityBuildError("HD_CONTENT_LOCK_INVALID", str(exc), stage="content_lock", page_id=page_id) from exc
         locks[page_id] = lock
+        page_contexts.append({"package": package, "page_id": page_id, "lock": lock})
+
+    blueprint_manifests: dict[str, dict[str, Any]] = {}
+    blueprint_waiting: list[dict[str, Any]] = []
+    for context in page_contexts:
+        package = context["package"]
+        page_id = str(context["page_id"])
+        lock = context["lock"]
         blueprint_manifest_file = root / BLUEPRINT_MANIFEST_DIR / f"{page_id}.blueprint_manifest.json"
         if not blueprint_manifest_file.exists():
             blueprint_manifest_file = root / BLUEPRINT_MANIFEST_DIR / f"{page_id}.manifest.json"
@@ -1135,7 +1147,7 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
             )
             blueprint_manifest = load_blueprint_manifest(root, page_id, expected_run_id=_run_id(root))
         except BlueprintRequired:
-            deferred_waiting.append(
+            blueprint_waiting.append(
                 _waiting_candidate(
                     page_id=page_id,
                     stage="blueprint",
@@ -1149,7 +1161,7 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
         except BlueprintInvalid as exc:
             message = str(exc)
             if "content review is required" in message or "content review image hash is stale" in message or "content review crop is stale" in message:
-                deferred_waiting.append(
+                blueprint_waiting.append(
                     _waiting_candidate(
                         page_id=page_id,
                         stage="blueprint",
@@ -1167,7 +1179,7 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
                 attempt_index = archive_rejected_blueprint(root, page_id)
                 if attempt_index >= 3:
                     raise HighDensityBuildError("HD_BLUEPRINT_CONTENT_UNSAFE", f"blueprint content review failed after {attempt_index} ImageGen attempts on page {page_id}", stage="blueprint", page_id=page_id) from exc
-                deferred_waiting.append(
+                blueprint_waiting.append(
                     _waiting_candidate(
                         page_id=page_id,
                         stage="blueprint",
@@ -1180,7 +1192,7 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
                 )
                 continue
             if "not been approved" in message or "requires explicit approval" in message:
-                deferred_waiting.append(
+                blueprint_waiting.append(
                     _waiting_candidate(
                         page_id=page_id,
                         stage="blueprint",
@@ -1203,7 +1215,19 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
                 payload_ref=blueprint_manifest_file.relative_to(root).as_posix(),
                 data={"reason": "blueprint_hash_changed"},
             )
+        blueprint_manifests[page_id] = blueprint_manifest
 
+    if blueprint_waiting:
+        return _waiting_from_candidates(root, blueprint_waiting)
+
+    scenes_by_page: dict[str, dict[str, Any]] = {}
+    asset_paths_by_page: dict[str, dict[str, Path]] = {}
+    scene_waiting: list[dict[str, Any]] = []
+    for context in page_contexts:
+        package = context["package"]
+        page_id = str(context["page_id"])
+        lock = context["lock"]
+        blueprint_manifest = blueprint_manifests[page_id]
         scene_file = scene_path(root, page_id)
         if scene_file.exists():
             try:
@@ -1226,7 +1250,7 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
             )
             write_scene(root, scene)
         else:
-            deferred_waiting.append(
+            scene_waiting.append(
                 _waiting_candidate(
                     page_id=page_id,
                     stage="page_scene",
@@ -1246,13 +1270,22 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
             asset_paths_by_page[page_id] = _validate_scene_assets(root, package, scene)
         except ContractError as exc:
             raise HighDensityBuildError("HD_ASSET_POLICY_BLOCKED", str(exc), stage="svg", page_id=page_id) from exc
-        scenes.append(scene)
+        scenes_by_page[page_id] = scene
+
+    if scene_waiting:
+        return _waiting_from_candidates(root, scene_waiting)
+
+    svg_waiting: list[dict[str, Any]] = []
+    for context in page_contexts:
+        page_id = str(context["page_id"])
+        lock = context["lock"]
+        scene = scenes_by_page[page_id]
         try:
             svg_file = svg_path(root, page_id)
             if execution_mode in {"fixture", "dev"}:
                 compile_svg(scene, svg_file, assets=asset_paths_by_page[page_id])
             elif not svg_file.exists():
-                deferred_waiting.append(
+                svg_waiting.append(
                     _waiting_candidate(
                         page_id=page_id,
                         stage="svg",
@@ -1267,7 +1300,7 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
             render_preview(svg_path(root, page_id), preview_path(root, page_id))
         except SvgVisualError as exc:
             if execution_mode not in {"fixture", "dev"}:
-                deferred_waiting.append(
+                svg_waiting.append(
                     _waiting_candidate(
                         page_id=page_id,
                         stage="svg",
@@ -1279,6 +1312,18 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
                 )
                 continue
             raise HighDensityBuildError(exc.code, str(exc), stage="svg", page_id=page_id) from exc
+
+    if svg_waiting:
+        return _waiting_from_candidates(root, svg_waiting)
+
+    page_records: list[dict[str, Any]] = []
+    review_waiting: list[dict[str, Any]] = []
+    for context in page_contexts:
+        package = context["package"]
+        page_id = str(context["page_id"])
+        lock = context["lock"]
+        scene = scenes_by_page[page_id]
+        blueprint_manifest = blueprint_manifests[page_id]
         review_file = review_path(root, page_id)
         if review_file.exists():
             try:
@@ -1299,7 +1344,7 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
                     main_passed = str((review_payload.get("main_review") or {}).get("status") or "") == "pass"
                     main_pending = str((review_payload.get("main_review") or {}).get("status") or "") == "pending"
                     if exc.code.startswith("HD_VISUAL_REVIEW_ATTESTATION_"):
-                        deferred_waiting.append(
+                        review_waiting.append(
                             _waiting_candidate(
                                 page_id=page_id,
                                 stage="visual_review",
@@ -1316,7 +1361,7 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
                         )
                         continue
                     if self_pending and main_pending:
-                        deferred_waiting.append(
+                        review_waiting.append(
                             _waiting_candidate(
                                 page_id=page_id,
                                 stage="visual_review",
@@ -1328,7 +1373,7 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
                         )
                         continue
                     if self_passed and not main_passed:
-                        deferred_waiting.append(
+                        review_waiting.append(
                             _waiting_candidate(
                                 page_id=page_id,
                                 stage="visual_review",
@@ -1341,7 +1386,7 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
                             ),
                         )
                         continue
-                    deferred_waiting.append(
+                    review_waiting.append(
                         _waiting_candidate(
                             page_id=page_id,
                             stage="visual_review",
@@ -1373,7 +1418,7 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
                 build_visual_review(root, scene, mode=execution_mode)
             except SvgVisualError as exc:
                 raise HighDensityBuildError("HD_SVG_REVIEW_FAILED", str(exc), stage="visual_review", page_id=page_id) from exc
-            deferred_waiting.append(
+            review_waiting.append(
                 _waiting_candidate(
                     page_id=page_id,
                     stage="visual_review",
@@ -1386,12 +1431,11 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
             continue
         page_records.append(_page_record(root, package, "visual_review_passed", lock=lock, blueprint_manifest=blueprint_manifest, scene=scene))
 
-    if deferred_waiting:
-        waiting, batch_details = _stage_batch_details_from_candidates(deferred_waiting)
-        candidate_details = dict(waiting.pop("details", {}) or {})
-        return _waiting(root, **waiting, details={**candidate_details, **batch_details})
+    if review_waiting:
+        return _waiting_from_candidates(root, review_waiting)
 
     try:
+        scenes = [scenes_by_page[str(context["page_id"])] for context in page_contexts]
         pptx, trace = compile_pptx(root, scenes, locks, asset_paths_by_page=asset_paths_by_page)
         _write_page_trace_files(root, scenes)
         readback = readback_pptx(root, scenes, locks, pptx)

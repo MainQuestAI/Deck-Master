@@ -42,6 +42,7 @@ from high_density.content import (
 from high_density.contracts import ContractError, assert_valid, read_json, sha256_file, sha256_json, write_json
 from high_density.integrity import sign_runtime_payload
 from high_density.engine import (
+    HighDensityBuildError,
     _stage_batch_details_from_candidates,
     build_high_density_status,
     prepare_high_density,
@@ -1548,6 +1549,54 @@ def test_production_visual_review_batch_keeps_generated_pending_reviews(
     assert action["pending_pages"] == ["P001", "P002"]
     assert [item["kind"] for item in action["rework_queue"]] == ["agent_self_review", "agent_self_review"]
     assert all((run / item["output_ref"]).is_file() for item in action["rework_queue"])
+
+
+def test_production_blueprint_waiting_precedes_later_stale_scene(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    run, _ = _make_run(tmp_path, mode="production", page_count=2, project_name="stage-major guard")
+    prepare_high_density(run)
+    write_style_lock(run, run.name, "cyber-01", approved=True, approver="test")
+    _write_approved_mbb_plan(run)
+    assert run_high_density(run)["current_stage"] == "blueprint"
+
+    from PIL import Image
+
+    provider_root = tmp_path / "provider-results"
+    provider_root.mkdir()
+    monkeypatch.setenv("DECK_MASTER_PROVIDER_RESULT_ROOTS", str(provider_root))
+    provider_image = provider_root / "exec-00000000-0000-0000-0000-000000000002.png"
+    Image.new("RGB", (1672, 941), "#f7f9fb").save(provider_image)
+    record_provider_host_result(run, "P002", provider_image)
+    _approve_blueprint(run, "P002")
+
+    lock = read_json(run / "high_density_build/content_locks/P002.json")
+    blueprint_manifest = read_json(run / "high_density_build/blueprints/P002.blueprint_manifest.json")
+    scene = build_fixture_scene(
+        lock,
+        str(blueprint_manifest["image_sha256"]),
+        blueprint_path=FIXTURE_DIR / "blueprint.svg",
+    )
+    scene["blueprint_sha256"] = "0" * 64
+    write_scene(run, scene)
+
+    waiting = run_high_density(run)
+
+    assert waiting["status"] == "awaiting_agent_build"
+    assert waiting["current_stage"] == "blueprint"
+    assert waiting["next_action"]["pending_pages"] == ["P001"]
+
+    provider_image = provider_root / "exec-00000000-0000-0000-0000-000000000001.png"
+    Image.new("RGB", (1672, 941), "#f7f9fb").save(provider_image)
+    record_provider_host_result(run, "P001", provider_image)
+    _approve_blueprint(run, "P001")
+
+    with pytest.raises(HighDensityBuildError, match="page scene blueprint is stale for page P002") as exc_info:
+        run_high_density(run)
+    assert exc_info.value.code == "HD_PAGE_SCENE_INVALID"
+    assert exc_info.value.stage == "page_scene"
+    assert exc_info.value.page_id == "P002"
 
 
 def test_stage_batch_details_preserves_mixed_candidate_actions() -> None:

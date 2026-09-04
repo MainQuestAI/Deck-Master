@@ -2346,23 +2346,24 @@ def _persist_build_options(
         effective_depth = "independent_main"
         effective_receipt = "external_signed"
     elif canonical_legacy == "local_traceable":
-        effective_depth = effective_depth or "producer_only"
-        effective_receipt = effective_receipt or "local_traceable"
+        effective_depth = "producer_only"
+        effective_receipt = "local_traceable"
     if canonical_depth:
         effective_depth = canonical_depth
     if canonical_receipt:
         effective_receipt = canonical_receipt
     if effective_receipt == "external_signed":
         effective_depth = "independent_main"
-    if (review_policy or review_depth or receipt_policy) and effective_depth and not effective_receipt:
+    review_options_changed = bool(review_policy or review_depth or receipt_policy)
+    if review_options_changed and effective_depth and not effective_receipt:
         effective_receipt = "local_traceable"
-    if (review_policy or review_depth or receipt_policy) and effective_receipt and not effective_depth:
+    if review_options_changed and effective_receipt and not effective_depth:
         effective_depth = "producer_only"
-    if persist and review_policy:
-        request["review_policy"] = canonical_legacy
-    if persist and (review_policy or review_depth or receipt_policy) and effective_depth:
+    if persist and review_options_changed and effective_receipt:
+        request["review_policy"] = "external_signed" if effective_receipt == "external_signed" else "local_traceable"
+    if persist and review_options_changed and effective_depth:
         request["review_depth"] = effective_depth
-    if persist and (review_policy or review_depth or receipt_policy) and effective_receipt:
+    if persist and review_options_changed and effective_receipt:
         request["receipt_policy"] = effective_receipt
     if persist and (requested_internal or output_profile or review_policy or review_depth or receipt_policy):
         write_json(run_dir / REQUEST_NAME, request)
