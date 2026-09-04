@@ -185,6 +185,58 @@ class BuildRuntimeTests(unittest.TestCase):
                 self.assertEqual(expected[1], updated["review_depth"])
                 self.assertEqual(expected[2], updated["receipt_policy"])
 
+    def test_persist_build_options_parses_legacy_review_policy_before_partial_update(self) -> None:
+        cases = [
+            (
+                {"review_policy": "external_signed"},
+                {"receipt_policy": "local-traceable"},
+                ("local_traceable", "independent_main", "local_traceable"),
+            ),
+            (
+                {"review_policy": "external_signed"},
+                {"review_depth": "independent-main"},
+                ("external_signed", "independent_main", "external_signed"),
+            ),
+            (
+                {"review_policy": "local_traceable"},
+                {"review_depth": "independent-main"},
+                ("local_traceable", "independent_main", "local_traceable"),
+            ),
+            (
+                {"review_policy": "external_signed"},
+                {"review_policy": "local-traceable"},
+                ("local_traceable", "producer_only", "local_traceable"),
+            ),
+            (
+                {"review_policy": "local_traceable"},
+                {"review_policy": "external-signed"},
+                ("external_signed", "independent_main", "external_signed"),
+            ),
+        ]
+        for index, (existing, args, expected) in enumerate(cases):
+            with self.subTest(index=index):
+                request = read_json(self.run_dir / "request.json")
+                request.pop("review_depth", None)
+                request.pop("receipt_policy", None)
+                request.update(existing)
+                write_json(self.run_dir / "request.json", request)
+
+                _persist_build_options(
+                    self.run_dir,
+                    Namespace(
+                        profile=None,
+                        output_profile=None,
+                        review_policy=args.get("review_policy"),
+                        review_depth=args.get("review_depth"),
+                        receipt_policy=args.get("receipt_policy"),
+                    ),
+                )
+
+                updated = read_json(self.run_dir / "request.json")
+                self.assertEqual(expected[0], updated["review_policy"])
+                self.assertEqual(expected[1], updated["review_depth"])
+                self.assertEqual(expected[2], updated["receipt_policy"])
+
     def test_select_style_uses_request_run_id_after_directory_move(self) -> None:
         moved = self.run_dir.parent / "moved-directory"
         self.run_dir.rename(moved)

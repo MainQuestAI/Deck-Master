@@ -2334,14 +2334,11 @@ def _persist_build_options(
     canonical_legacy = str(review_policy or "").strip().lower().replace("-", "_")
     canonical_depth = str(review_depth or "").strip().lower().replace("-", "_")
     canonical_receipt = str(receipt_policy or "").strip().lower().replace("-", "_")
-    existing_depth = str(request.get("review_depth") or "").strip().lower().replace("-", "_")
-    existing_receipt = str(request.get("receipt_policy") or "").strip().lower().replace("-", "_")
-    if existing_depth not in {"producer_only", "independent_main"}:
-        existing_depth = ""
-    if existing_receipt not in {"local_traceable", "external_signed"}:
-        existing_receipt = ""
-    effective_depth = existing_depth
-    effective_receipt = existing_receipt
+    from high_density.review_policy import resolve_review_policy
+
+    existing_policy = resolve_review_policy(request)
+    effective_depth = existing_policy["review_depth"]
+    effective_receipt = existing_policy["receipt_policy"]
     if canonical_legacy == "external_signed":
         effective_depth = "independent_main"
         effective_receipt = "external_signed"

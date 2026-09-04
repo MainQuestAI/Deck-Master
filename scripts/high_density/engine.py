@@ -1221,7 +1221,6 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
         return _waiting_from_candidates(root, blueprint_waiting)
 
     scenes_by_page: dict[str, dict[str, Any]] = {}
-    asset_paths_by_page: dict[str, dict[str, Path]] = {}
     scene_waiting: list[dict[str, Any]] = []
     for context in page_contexts:
         package = context["package"]
@@ -1266,21 +1265,20 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
             validate_scene_content(scene, lock)
         except ContractError as exc:
             raise HighDensityBuildError("HD_PAGE_SCENE_INVALID", str(exc), stage="page_scene", page_id=page_id) from exc
-        try:
-            asset_paths_by_page[page_id] = _validate_scene_assets(root, package, scene)
-        except ContractError as exc:
-            raise HighDensityBuildError("HD_ASSET_POLICY_BLOCKED", str(exc), stage="svg", page_id=page_id) from exc
         scenes_by_page[page_id] = scene
 
     if scene_waiting:
         return _waiting_from_candidates(root, scene_waiting)
 
+    asset_paths_by_page: dict[str, dict[str, Path]] = {}
     svg_waiting: list[dict[str, Any]] = []
     for context in page_contexts:
+        package = context["package"]
         page_id = str(context["page_id"])
         lock = context["lock"]
         scene = scenes_by_page[page_id]
         try:
+            asset_paths_by_page[page_id] = _validate_scene_assets(root, package, scene)
             svg_file = svg_path(root, page_id)
             if execution_mode in {"fixture", "dev"}:
                 compile_svg(scene, svg_file, assets=asset_paths_by_page[page_id])
@@ -1312,6 +1310,8 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
                 )
                 continue
             raise HighDensityBuildError(exc.code, str(exc), stage="svg", page_id=page_id) from exc
+        except ContractError as exc:
+            raise HighDensityBuildError("HD_ASSET_POLICY_BLOCKED", str(exc), stage="svg", page_id=page_id) from exc
 
     if svg_waiting:
         return _waiting_from_candidates(root, svg_waiting)

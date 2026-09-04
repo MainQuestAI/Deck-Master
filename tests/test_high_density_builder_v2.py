@@ -1599,6 +1599,77 @@ def test_production_blueprint_waiting_precedes_later_stale_scene(
     assert exc_info.value.page_id == "P002"
 
 
+def test_production_scene_waiting_precedes_later_asset_policy_failure(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    run, index = _make_run(tmp_path, mode="production", page_count=2, project_name="scene asset stage guard")
+    package = read_json(run / "page_packages/P002.json")
+    package["asset_bindings"] = [{"asset_id": "proof", "path": "assets/proof.png", "sha256": "0" * 64, "approved": True}]
+    index.write(package)
+    prepare_high_density(run)
+    write_style_lock(run, run.name, "cyber-01", approved=True, approver="test")
+    _write_approved_mbb_plan(run)
+    assert run_high_density(run)["current_stage"] == "blueprint"
+
+    from PIL import Image
+
+    provider_root = tmp_path / "provider-results"
+    provider_root.mkdir()
+    monkeypatch.setenv("DECK_MASTER_PROVIDER_RESULT_ROOTS", str(provider_root))
+    for page_id in ("P001", "P002"):
+        provider_image = provider_root / f"exec-00000000-0000-0000-0000-0000000000{page_id[-2:]}.png"
+        Image.new("RGB", (1672, 941), "#f7f9fb").save(provider_image)
+        record_provider_host_result(run, page_id, provider_image)
+        _approve_blueprint(run, page_id)
+
+    lock = read_json(run / "high_density_build/content_locks/P002.json")
+    blueprint_manifest = read_json(run / "high_density_build/blueprints/P002.blueprint_manifest.json")
+    scene = build_fixture_scene(
+        lock,
+        str(blueprint_manifest["image_sha256"]),
+        blueprint_path=FIXTURE_DIR / "blueprint.svg",
+    )
+    scene["elements"].append(
+        {
+            "element_id": "image.proof",
+            "component_id": "component.proof",
+            "kind": "image",
+            "role": "proof",
+            "priority": "P2",
+            "bbox": {"x": 1400, "y": 866, "w": 120, "h": 24},
+            "asset_ref": "proof",
+            "asset_sha256": "0" * 64,
+            "editability_target": "registered_asset",
+            "asset_policy": "registered",
+        }
+    )
+    write_scene(run, scene)
+
+    waiting = run_high_density(run)
+
+    assert waiting["status"] == "awaiting_agent_build"
+    assert waiting["current_stage"] == "page_scene"
+    assert waiting["next_action"]["pending_pages"] == ["P001"]
+
+    p001_lock = read_json(run / "high_density_build/content_locks/P001.json")
+    p001_blueprint = read_json(run / "high_density_build/blueprints/P001.blueprint_manifest.json")
+    write_scene(
+        run,
+        build_fixture_scene(
+            p001_lock,
+            str(p001_blueprint["image_sha256"]),
+            blueprint_path=FIXTURE_DIR / "blueprint.svg",
+        ),
+    )
+
+    with pytest.raises(HighDensityBuildError, match="registered image asset is missing or unsupported") as exc_info:
+        run_high_density(run)
+    assert exc_info.value.code == "HD_ASSET_POLICY_BLOCKED"
+    assert exc_info.value.stage == "svg"
+    assert exc_info.value.page_id == "P002"
+
+
 def test_stage_batch_details_preserves_mixed_candidate_actions() -> None:
     representative, details = _stage_batch_details_from_candidates(
         [
