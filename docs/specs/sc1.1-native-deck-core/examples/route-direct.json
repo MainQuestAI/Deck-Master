@@ -1,0 +1,10 @@
+{
+  "schema_version": "deck_build_route.v1",
+  "engine_id": "deck_native",
+  "authoring_mode": "direct_svg",
+  "density": "standard",
+  "library_mode": "none",
+  "origin_run_mode": "production",
+  "selection_origin": "user_explicit",
+  "selection_ref": "workflow/decisions/example.json"
+}

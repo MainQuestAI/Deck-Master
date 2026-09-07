@@ -1,0 +1,886 @@
+{
+  "schema_version": "sc1_supersession_map.v1",
+  "source": "Deck-Master_SC1_Development_Spec_Pack_20260907.zip / acceptance/cases.json",
+  "entries": [
+    {
+      "sc1_id": "A-01",
+      "sc1_title": "隔离全新安装",
+      "original_requirement": "完整套件与托管后端可诊断；无隐式旧目录读取",
+      "disposition": "clarify",
+      "reason": "完整安装改为内置原生能力；不要求外部整包",
+      "ndc_anchor": "IND-01",
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "A-02",
+      "sc1_title": "锁定版本可重现",
+      "original_requirement": "实际组件版本/分发哈希一致，禁止浮动分支替代",
+      "disposition": "clarify",
+      "reason": "固定内置引擎/基础依赖/可选组件版本，仍需可重复",
+      "ndc_anchor": "IND-07",
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "A-03",
+      "sc1_title": "标准真实 build/render",
+      "original_requirement": "有效PPTX、预期文字/页数、主要对象可编辑且可视渲染正确",
+      "disposition": "replace",
+      "reason": "以native真实构建/回读/编辑替代PPT Master身份",
+      "ndc_anchor": "UAT-01",
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "A-04",
+      "sc1_title": "不信任环境 ready 覆盖",
+      "original_requirement": "不能仅凭环境变量变成真实验证通过",
+      "disposition": "clarify",
+      "reason": "不信任env恒真要求保留，针对native probe",
+      "ndc_anchor": "IND-05",
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "A-05",
+      "sc1_title": "托管 Library 真检索",
+      "original_requirement": "使用锁定程序并返回与查询对应的真实结果",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "A-06",
+      "sc1_title": "索引数据隔离",
+      "original_requirement": "原始资料和索引保持；卸载不删除用户数据",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "A-07",
+      "sc1_title": "无历史库真实新建",
+      "original_requirement": "无检索调用/虚假 selection/fixture；每页有真实生产决定",
+      "disposition": "clarify",
+      "reason": "none必须真正贯通CLI与source决策；native默认",
+      "ndc_anchor": "IND-04",
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "A-08",
+      "sc1_title": "标准不强依赖 ImageGen",
+      "original_requirement": "本次不被无关高密度依赖阻断",
+      "disposition": "replace",
+      "reason": "仅显式direct_svg不要求ImageGen；默认图片模式必须真实工具",
+      "ndc_anchor": "IND-08",
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "A-09",
+      "sc1_title": "必需能力缺失不伪报",
+      "original_requirement": "task_ready=false，准确指出缺项与恢复动作",
+      "disposition": "clarify",
+      "reason": "所需能力以native/host/renderer为准",
+      "ndc_anchor": "IND-05",
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "A-10",
+      "sc1_title": "故障与无命中区分",
+      "original_requirement": "故障不伪装为无命中；合法无命中按授权新建",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "A-11",
+      "sc1_title": "组件来源与再分发",
+      "original_requirement": "未验证来源/缺关键方法不计内化完成",
+      "disposition": "clarify",
+      "reason": "只审实际分发的必要组件与方法；不要求引入完整后端",
+      "ndc_anchor": "GOV-02",
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "A-12",
+      "sc1_title": "兼容入口不依赖旧方法",
+      "original_requirement": "所有引用可读，实际方法可执行，不跳到外部缺失Skill",
+      "disposition": "clarify",
+      "reason": "deck-*方法自包含，不要求legacy ppt-*别名必须安装",
+      "ndc_anchor": "IND-07",
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "I-01",
+      "sc1_title": "后置关键约束",
+      "original_requirement": "末尾约束被定位并影响方案，不仅扩大截取长度",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "I-02",
+      "sc1_title": "混合资料接入",
+      "original_requirement": "全部相关范围有记录，同一Context接入；真实宿主补L2验证",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "I-03",
+      "sc1_title": "部分读取不可假完成",
+      "original_requirement": "状态partial/failed，关键缺口阻断且不标完整",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "I-04",
+      "sc1_title": "幂等导入",
+      "original_requirement": "不复制事实/证据，不改变有效批准状态",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "I-05",
+      "sc1_title": "证据ID消歧",
+      "original_requirement": "新版键正确；歧义旧ID不猜测对应",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "I-06",
+      "sc1_title": "精确定位与内容匹配",
+      "original_requirement": "识别不匹配，不给supported",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "I-07",
+      "sc1_title": "冲突不静默覆盖",
+      "original_requirement": "记录冲突和选择依据；关键未知才请用户裁决",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "R-01",
+      "sc1_title": "定向真实研究",
+      "original_requirement": "来源进入Context，说明影响哪项判断",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "R-02",
+      "sc1_title": "查询授权与脱敏",
+      "original_requirement": "仅发送批准公共投影，不外发原始客户内容",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "R-03",
+      "sc1_title": "反证和适用边界",
+      "original_requirement": "保留条件与反证检查，不泛化为所有场景",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "R-04",
+      "sc1_title": "无结果终态",
+      "original_requirement": "inconclusive；不凑数据或虚构引用",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "R-05",
+      "sc1_title": "无工具/无网终态",
+      "original_requirement": "capability_unavailable且不报已执行；关键缺口不被忽略",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "R-06",
+      "sc1_title": "研究预算与重启",
+      "original_requirement": "有限恢复/准确停止；不无限研究也不重做已完成内容",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "S-01",
+      "sc1_title": "无risk标记不自证",
+      "original_requirement": "unreviewed/insufficient，不计有充分支持",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "S-02",
+      "sc1_title": "目标不冒充根因",
+      "original_requirement": "形成待分析任务，不以字符串前缀当专业判断完成",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "S-03",
+      "sc1_title": "同数字不同口径",
+      "original_requirement": "不因同数字出现而通过；推导必须口径一致",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "S-04",
+      "sc1_title": "页面不得自证",
+      "original_requirement": "不把生成内容回填成原始source支持",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "S-05",
+      "sc1_title": "问题机制验收连通",
+      "original_requirement": "缺具体机制/验收的能力不通过",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "S-06",
+      "sc1_title": "现有与拟建区分",
+      "original_requirement": "现有需证据；拟建需需求理由，不能写成已存在",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "S-07",
+      "sc1_title": "方案备选有实质差异",
+      "original_requirement": "机制/范围/取舍有差异，不只是标题变化；L2/L3人工核验",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "S-08",
+      "sc1_title": "单一可行路径",
+      "original_requirement": "说明唯一可行原因，不为凑数制造备选",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "N-01",
+      "sc1_title": "公共主线非模板拼贴",
+      "original_requirement": "核心判断与机制随材料改变，不止替换名词",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "N-02",
+      "sc1_title": "无PagePackage循环依赖",
+      "original_requirement": "不要求先制造空的最终PagePackage",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "N-03",
+      "sc1_title": "已选主线不重复问",
+      "original_requirement": "复用相同决定，无重复主线访谈",
+      "disposition": "clarify",
+      "reason": "主线决定在公共层复用，native不再次MBB访谈",
+      "ndc_anchor": "CNT-04",
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "N-04",
+      "sc1_title": "MBB兼容单一写源",
+      "original_requirement": "MBB派生更新，不形成两套独立权威",
+      "disposition": "clarify",
+      "reason": "新native与旧HD适配的MBB均为公共主线派生",
+      "ndc_anchor": "CNT-04",
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "N-05",
+      "sc1_title": "旧高密度Run可读",
+      "original_requirement": "保持旧真相并明确迁移；不伪造新seal",
+      "disposition": "clarify",
+      "reason": "旧HD只读/adapter/显式迁移保留",
+      "ndc_anchor": "MIG-01",
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "P-01",
+      "sc1_title": "标准真实消费Package",
+      "original_requirement": "最终文件反映当前Package，不读旧preview冒充",
+      "disposition": "replace",
+      "reason": "实际native消费当前Package，不以外部backend身份验收",
+      "ndc_anchor": "CNT-02",
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "P-02",
+      "sc1_title": "无Placeholder完整生产",
+      "original_requirement": "每页有实质内容；无制作说明充当正文、无漏页",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "P-03",
+      "sc1_title": "两个Builder内容一致",
+      "original_requirement": "P0/P1文字/数字/限定一致；视觉方法可不同",
+      "disposition": "replace",
+      "reason": "同一内核image_blueprint/direct_svg的内容一致，不维护两套必需引擎",
+      "ndc_anchor": "CNT-02",
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "P-04",
+      "sc1_title": "高密度保护不降级",
+      "original_requirement": "保留原门禁；不能把native路径伪造为ImageGen",
+      "disposition": "clarify",
+      "reason": "HD保护上移公共内核，默认图片真实证据不得取消",
+      "ndc_anchor": "HST-01",
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "P-05",
+      "sc1_title": "可编辑性真实检查",
+      "original_requirement": "原生对象通过；套壳/隐藏文字层不通过",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "P-06",
+      "sc1_title": "客户文件全内容扫描",
+      "original_requirement": "检测/清除内部内容，同时保留必要业务限定",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "D-01",
+      "sc1_title": "四类视图表达",
+      "original_requirement": "模型引用、边界与表达一致，主要对象可编辑",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "D-02",
+      "sc1_title": "孤儿节点",
+      "original_requirement": "明确指出node/model_ref不匹配",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "D-03",
+      "sc1_title": "关系方向",
+      "original_requirement": "方向不符阻断，不能仅像素合格",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "D-04",
+      "sc1_title": "节点聚合映射",
+      "original_requirement": "保留被聚合对象和理由；边关系可追溯",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "D-05",
+      "sc1_title": "模型改变的影响集",
+      "original_requirement": "所有相关正文/图/阶段受影响；无关页不乱改",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "D-06",
+      "sc1_title": "图表口径一致",
+      "original_requirement": "识别差异；不以图形渲染成功当正确",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "W-01",
+      "sc1_title": "复用材料已给答案",
+      "original_requirement": "不重新问；记录具体来源和当前依赖",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "W-02",
+      "sc1_title": "Agent拥有专业问题",
+      "original_requirement": "派发Agent实质工作，不要求用户先写答案",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "W-03",
+      "sc1_title": "真实决定不能代填",
+      "original_requirement": "拒绝Agent冒充用户授权",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "W-04",
+      "sc1_title": "布尔否定有效",
+      "original_requirement": "接受合法否定；不套用全局模糊token拒绝",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "W-05",
+      "sc1_title": "决定精准失效",
+      "original_requirement": "业务目标/已选主线不被无谓失效",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "W-06",
+      "sc1_title": "阶段内继续执行",
+      "original_requirement": "宿主执行/接受/继续，不停在无意义继续点",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "W-07",
+      "sc1_title": "迟到结果拒绝",
+      "original_requirement": "SC_ACTION_STALE；旧结果不覆盖新版本",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "W-08",
+      "sc1_title": "幂等与冲突",
+      "original_requirement": "前者幂等，后者冲突可追溯，不静默覆盖",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "W-09",
+      "sc1_title": "跨文件中断恢复",
+      "original_requirement": "仅旧完整版本或新完整提交可见，无半完成状态",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "W-10",
+      "sc1_title": "局部权限与停止",
+      "original_requirement": "不越权推进；列出影响与待批准范围",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "Q-01",
+      "sc1_title": "空pass不代表审查",
+      "original_requirement": "拒绝，指出缺失维度/页面/输入",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "Q-02",
+      "sc1_title": "审查覆盖完整",
+      "original_requirement": "不满足正式内容审查",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "Q-03",
+      "sc1_title": "独立性不是改名",
+      "original_requirement": "不计独立审查；真实上下文轨迹另作L2",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "Q-04",
+      "sc1_title": "当前输入绑定",
+      "original_requirement": "旧审查失效，不接受新的pass声明顶替",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "Q-05",
+      "sc1_title": "发现结果压过summary",
+      "original_requirement": "仍为阻断；不能直接接受summary",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "Q-06",
+      "sc1_title": "具体返修动作",
+      "original_requirement": "包含对象/输入/范围/目标/重验，不只是增强说服力",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "Q-07",
+      "sc1_title": "修复预算耗尽",
+      "original_requirement": "准确报告未解项，不无限重试也不自动过门",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "Q-08",
+      "sc1_title": "修订后定向复审",
+      "original_requirement": "相关内容与产物重验；无关内容不全量重做",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "Q-09",
+      "sc1_title": "正式必需门一致",
+      "original_requirement": "统一要求当前语义/证据/工程门",
+      "disposition": "clarify",
+      "reason": "native与保留legacy产物遵守各明确合同，当前生产语义要求保留",
+      "ndc_anchor": "QA-01",
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "Q-10",
+      "sc1_title": "模式降级不可绕过",
+      "original_requirement": "拒绝非授权迁移，保留创建时模式与策略",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "Q-11",
+      "sc1_title": "批准绑定当前版本",
+      "original_requirement": "旧批准无效；旧已批准文件历史仍保留",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "Q-12",
+      "sc1_title": "P0与P1处理",
+      "original_requirement": "P0不可豁免；P1按当前版本显式政策且可见",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "L-01",
+      "sc1_title": "通过率口径",
+      "original_requirement": "acceptance_rate=0.09，交付数独立",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "L-02",
+      "sc1_title": "重复事件去重",
+      "original_requirement": "按最终审阅决定计一次，导出不抬接受率",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "L-03",
+      "sc1_title": "旧事件不猜测",
+      "original_requirement": "单列legacy_unknown，不制造精准统计",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "L-04",
+      "sc1_title": "经验适用边界",
+      "original_requirement": "有范围和来源；无反馈不伪造模式，不传播客户事实",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "E-01",
+      "sc1_title": "配对样本与条件",
+      "original_requirement": "输入/模型/预算可比，全部尝试有记录",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "E-02",
+      "sc1_title": "初稿冻结",
+      "original_requirement": "不可用修改后稿替换初稿",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "E-03",
+      "sc1_title": "用户主动投入",
+      "original_requirement": "主动时间与等待分开，新写字符/澄清/改页均记录",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "E-04",
+      "sc1_title": "缺失与失败不伪算",
+      "original_requirement": "不当0分/无限提升；标N/A或outcome_pending",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "E-05",
+      "sc1_title": "真实效果阈值",
+      "original_requirement": "达到投入/首稿/评分/个案底线；否则changes_required",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "E-06",
+      "sc1_title": "证据脱敏与完整性",
+      "original_requirement": "仅安全摘要/哈希，失败不被静默删除",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "M-01",
+      "sc1_title": "外部目录不被占有",
+      "original_requirement": "不覆盖；清楚列出拟操作/所有权/回滚",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "M-02",
+      "sc1_title": "只卸载自有入口",
+      "original_requirement": "只移除自有链接/软件，保留外部与数据",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "M-03",
+      "sc1_title": "升级失败原子回退",
+      "original_requirement": "旧current不变；失败版本不报已安装就绪",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "M-04",
+      "sc1_title": "旧Run无损映射",
+      "original_requirement": "原始记录保留；歧义不猜；不静默丢字段",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "M-05",
+      "sc1_title": "新策略不洗白旧结果",
+      "original_requirement": "补齐当前门与批准，不只改schema_version",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    },
+    {
+      "sc1_id": "M-06",
+      "sc1_title": "软件回滚与数据分离",
+      "original_requirement": "保留新数据；旧程序不能安全读写时明确拒绝",
+      "disposition": "retain",
+      "reason": "未与后端选择冲突，原要求继续生效；需要核验既有证据或补测",
+      "ndc_anchor": null,
+      "verification_status": "unverified",
+      "note": "映射不是通过结论；补充case不能替代原未冲突检查。"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "schema_version": "deck_build_route.v1",
+  "engine_id": "deck_native",
+  "authoring_mode": "image_blueprint",
+  "density": "standard",
+  "library_mode": "none",
+  "origin_run_mode": "production",
+  "selection_origin": "default_policy",
+  "selection_ref": null
+}

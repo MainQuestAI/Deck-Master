@@ -1,0 +1,33 @@
+{
+  "schema_version": "deck_native_compile_result.v1",
+  "run_id": "synthetic-run",
+  "build_revision": "r_example",
+  "engine_id": "deck_native",
+  "engine_version": "example-not-a-release",
+  "subset_version": "example-svg-subset",
+  "input_fingerprint": "0a2903855b4ed7b7978ef615d160bd51eb0f94721039d3040d67779ac8433c89",
+  "status": "compiled",
+  "outputs": {
+    "deck_pptx": {
+      "path": "build/revisions/r_example/deck.pptx",
+      "sha256": "d7ccd5b95d6cdfd57a99f45498698ae3cb88d2327dc5eee333b6818e7ad653e4"
+    },
+    "object_trace": {
+      "path": "build/revisions/r_example/trace.json",
+      "sha256": "dc032e44dd103c1074fbf515a2ce493efc6602dd41de279abde98742c26406db"
+    }
+  },
+  "pages": [
+    {
+      "page_id": "P001",
+      "order": 1,
+      "svg_sha256": "7a24f3aaa560f688603dab667a378a997af592fa8b6f6484f3cb65b31acfefc9",
+      "text_objects": 8,
+      "shape_objects": 12,
+      "image_objects": 0
+    }
+  ],
+  "warnings": [],
+  "errors": [],
+  "created_at": "2026-09-07T00:00:00Z"
+}

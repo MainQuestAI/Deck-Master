@@ -1,0 +1,36 @@
+{
+  "schema_version": "deck_task_readiness.v1",
+  "run_id": "synthetic-run",
+  "engine_id": "deck_native",
+  "task_kind": "image_blueprint_build",
+  "status": "blocked",
+  "required_missing": [
+    "host.imagegen"
+  ],
+  "required_unknown": [],
+  "optional_unavailable": [],
+  "components": [
+    {
+      "capability_id": "deck_native.compiler",
+      "requirement": "required",
+      "status": "verified",
+      "source": "bundled_probe",
+      "checked_at": "2026-09-07T00:00:00Z",
+      "evidence_refs": [
+        {
+          "path": "diagnostics/example_probe.json",
+          "sha256": "db8f68c1b186187c6b16a076821c3d928c33622791cd03d839e7d4aed9b91b69"
+        }
+      ]
+    },
+    {
+      "capability_id": "host.imagegen",
+      "requirement": "required",
+      "status": "missing",
+      "source": "host_observed",
+      "checked_at": "2026-09-07T00:00:00Z",
+      "evidence_refs": []
+    }
+  ],
+  "next_action": "Report missing ImageGen; do not silently change authoring mode."
+}
