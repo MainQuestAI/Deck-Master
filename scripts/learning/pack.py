@@ -57,12 +57,21 @@ def _find_run_dirs(workspace_dir: Path) -> list[Path]:
 
 
 def _aggregate_feedback(workspace_dir: Path) -> dict[str, Any]:
-    """Aggregate asset feedback from workspace."""
+    """Aggregate asset feedback by reviewed revision (SC-1 C4/F01).
+
+    The statistical unit is (asset, run, reviewed revision); the final
+    review decision of that unit is what counts — an earlier approve that is
+    explicitly superseded by a later reject is not double counted. Events
+    without a revision identity go to ``legacy_unknown`` and are NOT folded
+    into the acceptance rate. Delivery counting stays independent of the
+    outcome; repeated exports do not lift the rate.
+    """
+
     feedback_path = workspace_dir / "assets" / "asset_feedback.jsonl"
     entries = _safe_read_jsonl(feedback_path)
 
-    approval_counter: Counter[str] = Counter()
-    rejection_counter: Counter[str] = Counter()
+    final_decisions: dict[tuple[str, str, str], str] = {}
+    legacy_unknown = 0
     delivered_counter: Counter[str] = Counter()
 
     for entry in entries:
@@ -72,17 +81,70 @@ def _aggregate_feedback(workspace_dir: Path) -> dict[str, Any]:
         slide_id = entry.get("canonical_slide_id", "")
         if not slide_id:
             continue
-        if event in ("preview_approved", "exported_client", "exported_internal"):
-            approval_counter[slide_id] += 1
-        elif event == "preview_rejected":
-            rejection_counter[slide_id] += 1
-        elif event in ("delivered", "delivery_positive_signal"):
+        if event in ("delivered", "delivery_positive_signal", "exported_client", "exported_internal"):
+            # delivery signals stay independent of the review outcome
             delivered_counter[slide_id] += 1
+        if event not in ("preview_approved", "preview_rejected", "exported_client", "exported_internal"):
+            continue
+        outcome = "accepted" if event in ("preview_approved", "exported_client", "exported_internal") else "rejected"
+        payload = entry.get("payload") if isinstance(entry.get("payload"), dict) else {}
+        run_id = str(entry.get("run_id") or payload.get("run_id") or "")
+        revision = str(entry.get("reviewed_revision") or payload.get("reviewed_revision") or "").strip()
+        if not run_id and not revision:
+            # Legacy event without any dedup key: recorded separately, never
+            # guessed into a review group.
+            legacy_unknown += 1
+            continue
+        key = (slide_id, run_id, revision)
+        # Later events in the file supersede earlier ones for the same unit.
+        final_decisions[key] = outcome
+
+    per_slide: dict[str, dict[str, int]] = defaultdict(lambda: {"accepted": 0, "rejected": 0})
+    for (slide_id, _run, _rev), outcome in final_decisions.items():
+        per_slide[slide_id][outcome] += 1
 
     return {
-        "approval_counter": dict(approval_counter),
-        "rejection_counter": dict(rejection_counter),
+        "final_decisions": final_decisions,
+        "per_slide": dict(per_slide),
+        "legacy_unknown": legacy_unknown,
         "delivered_counter": dict(delivered_counter),
+    }
+
+
+def _aggregate_strong_assets(workspace_dir: Path) -> dict[str, Any]:
+    """Acceptance rate = accepted / (accepted + rejected) over final review
+    decisions, deduped by reviewed revision. Delivery count is display-only."""
+
+    fb = _aggregate_feedback(workspace_dir)
+    per_slide = fb["per_slide"]
+    delivered = fb["delivered_counter"]
+
+    assets: list[dict[str, Any]] = []
+    for slide_id, counts in per_slide.items():
+        accepted = counts["accepted"]
+        rejected = counts["rejected"]
+        review_total = accepted + rejected
+        if review_total == 0:
+            continue
+        acceptance_rate = accepted / review_total
+        assets.append({
+            "canonical_slide_id": slide_id,
+            # Kept for schema compatibility; the acceptance rate now counts
+            # rejections — the legacy "approved/(approved+delivered)" value
+            # no longer feeds any ranking.
+            "approval_rate": round(acceptance_rate, 4),
+            "acceptance_rate": round(acceptance_rate, 4),
+            "accepted_count": accepted,
+            "rejected_count": rejected,
+            "reviewed_count": review_total,
+            "delivered_count": delivered.get(slide_id, 0),
+        })
+
+    # Outcome first: repeated exports must not lift an asset's rank.
+    assets.sort(key=lambda a: (a["acceptance_rate"], a["reviewed_count"], a["delivered_count"]), reverse=True)
+    return {
+        "assets": assets[:10],
+        "legacy_unknown": fb["legacy_unknown"],
     }
 
 
@@ -120,35 +182,6 @@ def _aggregate_failure_modes(workspace_dir: Path) -> list[dict[str, Any]]:
     return result
 
 
-def _aggregate_strong_assets(workspace_dir: Path) -> list[dict[str, Any]]:
-    """Identify strong assets from feedback and delivery data."""
-    fb = _aggregate_feedback(workspace_dir)
-    approval = fb["approval_counter"]
-    delivered = fb["delivered_counter"]
-
-    # Combine approval and delivery counts.
-    all_slides = set(approval.keys()) | set(delivered.keys())
-    assets: list[dict[str, Any]] = []
-
-    for slide_id in all_slides:
-        app_count = approval.get(slide_id, 0)
-        del_count = delivered.get(slide_id, 0)
-        total = app_count + del_count
-        if total == 0:
-            continue
-        approval_rate = app_count / total if total > 0 else 0.0
-        assets.append({
-            "canonical_slide_id": slide_id,
-            "approval_rate": round(approval_rate, 2),
-            "delivered_count": del_count,
-            "approved_count": app_count,
-        })
-
-    # Sort by delivered_count desc, then approval_rate desc.
-    assets.sort(key=lambda a: (a["delivered_count"], a["approval_rate"]), reverse=True)
-    return assets[:10]
-
-
 def _build_agent_guidance(failure_modes: list[dict[str, Any]], strong_assets: list[dict[str, Any]]) -> list[str]:
     """Build agent guidance from failure modes and strong assets."""
     guidance: list[str] = []
@@ -162,10 +195,61 @@ def _build_agent_guidance(failure_modes: list[dict[str, Any]], strong_assets: li
 
     for asset in strong_assets[:2]:
         sid = asset.get("canonical_slide_id", "")
-        if asset.get("approval_rate", 0) >= 0.8:
-            guidance.append(f"优先使用高通过率资产 {sid}（approval rate {asset['approval_rate']:.0%}）。")
+        rate = asset.get("acceptance_rate", asset.get("approval_rate", 0))
+        reviewed = asset.get("reviewed_count", 0)
+        if rate >= 0.8:
+            # Small samples show counts, never generalize from one acceptance.
+            sample_note = f"（n={reviewed}，样本量小，仅作参考）" if reviewed < 5 else f"（n={reviewed}）"
+            guidance.append(f"优先考虑高接受率资产 {sid}（acceptance rate {rate:.0%} {sample_note}）。")
 
     return guidance
+
+
+def _build_experience_cards(workspace_dir: Path) -> list[dict[str, Any]]:
+    """SC-1 C4: limited experience cards, built ONLY from real feedback.
+
+    Minimal record: the applicable problem, the adopted structure/mechanism,
+    why the user modified or kept it, the evidence source category, the
+    applicable/not-applicable scope, and the source run reference with its
+    approval scope. Customer facts never become cross-project knowledge
+    automatically — cards carry source refs, not copied material.
+    """
+
+    feedback_path = workspace_dir / "assets" / "asset_feedback.jsonl"
+    entries = _safe_read_jsonl(feedback_path)
+    cards: list[dict[str, Any]] = []
+    seen: set[tuple[str, str, str]] = set()
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        payload = entry.get("payload") if isinstance(entry.get("payload"), dict) else {}
+        slide_id = str(entry.get("canonical_slide_id") or "")
+        run_id = str(entry.get("run_id") or payload.get("run_id") or "")
+        revision = str(entry.get("reviewed_revision") or payload.get("reviewed_revision") or "").strip()
+        key = (slide_id, run_id, revision)
+        if not slide_id or key in seen:
+            continue
+        seen.add(key)
+        event = str(entry.get("event_type") or "")
+        notes = str(entry.get("notes") or payload.get("notes") or "").strip()
+        if not notes:
+            continue
+        cards.append(
+            {
+                "card_id": f"exp_{len(cards) + 1:03d}",
+                "applicable_problem": slide_id,
+                "adopted_structure": str(payload.get("adopted_structure") or ""),
+                "user_reason": notes[:300],
+                "kept_or_modified": "modified" if event == "preview_rejected" else "kept",
+                "evidence_source_category": str(payload.get("evidence_source_category") or "run_feedback"),
+                "applicable_scope": str(payload.get("applicable_scope") or ""),
+                "not_applicable_scope": str(payload.get("not_applicable_scope") or ""),
+                "source_run_ref": run_id,
+                "approval_scope": str(payload.get("approval_scope") or "workspace_feedback"),
+                "recorded_at": str(entry.get("timestamp") or ""),
+            }
+        )
+    return cards[:20]
 
 
 # --------------------------------------------------------------------------- #
@@ -178,8 +262,10 @@ def build_learning_pack(workspace_dir: str | Path) -> dict[str, Any]:
     ws = Path(workspace_dir).expanduser().resolve()
 
     failure_modes = _aggregate_failure_modes(ws)
-    strong_assets = _aggregate_strong_assets(ws)
+    assets_result = _aggregate_strong_assets(ws)
+    strong_assets = assets_result["assets"]
     guidance = _build_agent_guidance(failure_modes, strong_assets)
+    experience_cards = _build_experience_cards(ws)
 
     pack: dict[str, Any] = {
         "schema_version": SCHEMA_VERSION,
@@ -189,6 +275,10 @@ def build_learning_pack(workspace_dir: str | Path) -> dict[str, Any]:
         "frequent_failure_modes": failure_modes,
         "strong_assets": strong_assets,
         "agent_guidance": guidance,
+        # SC-1 C4: legacy events without a dedup key are counted, never
+        # folded into acceptance stats.
+        "legacy_feedback_unknown": assets_result["legacy_unknown"],
+        "experience_cards": experience_cards,
     }
 
     # Write to workspace.
