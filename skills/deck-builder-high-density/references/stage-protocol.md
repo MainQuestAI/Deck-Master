@@ -1,0 +1,117 @@
+# High-Density Stage Protocol
+
+### A. MBB and Content Lock
+
+Production first waits for `agent_mbb_candidates` to write two or three evidence-bound candidate storylines. The runtime returns `awaiting_user_decision` with candidate summaries and a recommended ID. The deck-scoped `content_lock` retry records the user's selection in the Runtime selection receipt without rewriting Agent content, then returns `agent_mbb_enrich_selected`. Only after the Agent enriches the selected SCR and page plans can the runtime validate and sign the approved plan seal.
+
+Fixture/dev runs may auto-approve the deterministic decision-led candidate so the compiler regression remains reproducible. An approved plan can resume without another prompt until a Page Package or MBB plan hash changes.
+
+The deterministic `enrich_selected_mbb_plan()` path is a fixture/dev adapter only. Production and benchmark runs must receive the Agent-authored SCR and page plans in `mbb/mbb_plan.json`; Runtime validation preserves those values and rejects missing claim bindings, evidence spans, unsupported numbers, or stale Page Package hashes.
+
+Carry forward CyberPPT's MBB behavior: evidence ledger with source position/period/unit/conflicts, two or three content-specific storyline candidates, issue/hypothesis tree, SCR audit, conclusion, supporting arguments, caveat, SO WHAT, page handoff, page material pool, density target, required component IDs, and required text refs. Every factual or numeric statement retains precise evidence lineage and a derivation note. Sparse pages, unsupported facts, missing components, unknown storyline IDs, unapproved selection, and stale hashes block before blueprint generation.
+
+### B. Style Lock and ImageGen Blueprint
+
+The fixed CyberPPT-derived registry contains eight stable style IDs. Production must use an approved `high_density_build/style/style_lock.json`; fixture/dev may use the explicit deterministic default.
+
+Before ImageGen, write `high_density_build/prompts/<page_id>.blueprint_prompt.json` using `deck_blueprint_prompt.v1`. The prompt receives only the customer-visible projection: title, conclusion, supporting arguments, business implication, approved data/callouts, component plan, target language, and style lock. Evidence IDs, evidence hierarchy, derivation lineage, caveat labels, SCR/MBB labels, source metadata, and production annotations remain in Content Lock lineage and speaker notes.
+
+Page numbers, page counters, runtime page IDs, source lines, evidence markers, methodology labels, explanatory labels, caveat labels, placeholders, and production annotations are prohibited in every generated image. After ImageGen, create `deck_blueprint_content_review.v1` with full-page, header, footer, and four-corner crops. A failed content review archives the failed attempt and requires `agent_imagegen_repair`; the third failed attempt blocks the page. There is no page-number override.
+
+```bash
+PYTHONPATH=scripts python3 -m high_density.blueprint_content_review --run-dir <run_dir> --page-id P001 --findings-file <findings.json> --reviewer-id <reviewer-id> --action-id <action-id>
+```
+
+The prompt artifact contains a Runtime-signed Provider challenge nonce bound to the original run mode, prompt, Content Lock, MBB plan, and style lock. The provider request must return the same nonce and record the prompt hash, request hash, request/response timestamps, tool, model, and request ID. The Runtime signs a second receipt over provider metadata and the output image hash. Reusing fixture metadata, relabeling the run mode, or reusing an older prompt or image is blocked.
+
+Write `high_density_build/blueprints/<page_id>.blueprint_manifest.json` using `deck_blueprint_manifest.v2`. Record prompt/content/style hashes, image hash, challenge-bound provider metadata, explicit approval, source canvas, contained 16:9 frame, and exact transform. Non-16:9 sources use an inscribed frame and never stretch. Eight visible style samples are copied into the style selection artifact; a filename extension never grants approval.
+
+For a real provider result, import the Host-managed PNG before manifest sealing:
+
+```bash
+PYTHONPATH=scripts python3 -m high_density.provider_result --run-dir <run_dir> --page-id P001 --source-image <host-imagegen-output>/exec-<uuid>.png
+```
+
+Production records the storyline ID supplied by the user's explicit confirmation and immediately advances to selected-storyline enrichment. The user does not provide a signing key or complete a separate Host/UI authorization step.
+
+### C. Image to Native SVG
+
+Agent reads the actual blueprint and content lock, writes `page_scene.v2` plus approved native SVG, then uses the repository tools for validation and measurement. The canonical Scene path is `high_density_build/scenes/<page_id>.page_scene.json`; `page_scenes/<page_id>.json` is a compatibility mirror.
+
+Every visible element has a stable ID, component ID, role, priority, source/target bbox, z-order, text ref or asset ref, editability target, and overflow policy. P0/P1 text is exact content-lock text. Whole-page/near-full-page images, `foreignObject`, scripts, iframes, external CSS/resources, hidden text layers, and unregistered images are blocked. Registered images are limited to 35% per asset and 50% in aggregate, and cannot cover P0/P1 text.
+
+### D. Measured Visual QA
+
+Render normalized blueprint and SVG at the same `1672 x 941` canvas. Metrics are generated from actual files with Pillow + NumPy and `rsvg-convert`, then written to `high_density_build/reviews/<page_id>.metrics.json`. The v2 review must bind renderer, source hashes, mask hash, thresholds, text-masked SSIM, P0/P1 bbox deltas, color/layout findings, and component coverage.
+
+The text mask covers rendered glyph pixels only, expands them by 2 px, and fails closed above 35% page coverage, below 25% remaining non-text pixels, or when too few comparison pixels remain. Icons below 8 px are rejected; 8–16 px icons use 512 px local crops with edge, silhouette, negative-space, direction, and occupancy checks. Initial gates include text-masked SSIM, P0 region SSIM, edge similarity, color delta, bbox/anchor drift, direction mismatch, 100% P0/P1 text/component coverage, and zero unresolved overflow or illegal overlap findings. Default production review uses measured metrics plus producer self-review with a local Runtime receipt. Runs configured with `review_depth=independent_main` require an independent main review with distinct reviewer IDs, Runtime-issued action IDs, input hashes, timestamps, and main-to-self lineage. After the producer self-review passes, create the independent main review when that depth is configured:
+
+```bash
+PYTHONPATH=scripts python3 -m high_density.self_review --run-dir <run_dir> --page-id P001 --reviewer-id <producer-reviewer-id>
+```
+
+```bash
+PYTHONPATH=scripts python3 -m high_density.main_review --run-dir <run_dir> --page-id P001 --reviewer-id <independent-reviewer-id>
+```
+
+The default production gate uses the local visual review receipt written by the runtime. `DECK_MASTER_REVIEW_ATTESTATION_KEY` is only required when the run explicitly enables external independent review attestation.
+
+Controlled SVG paint effects use one shared parser for validation and PPTX compilation. The supported subset is direct linear/radial gradients with 2-8 stops plus one shadow or glow effect. Inheritance, transforms, masks, clip paths, patterns, `use`, and arbitrary pixel filters are blocked with the element or definition ID.
+
+### E. SVG to DrawingML and Handback
+
+The compiler reads approved SVG DOM, `page_scene.v2` sidecar, content-lock notes/text refs, and registered asset map. Geometry, styles, visible text, and z-order come from SVG. The Scene cannot generate PPTX independently.
+
+Supported native output includes text/tspan, rect/circle/ellipse, line/polyline/polygon, supported paths, controlled opacity/fill/stroke, registered images, groups, and notes. Unsupported SVG elements fail with the element ID and a recovery action. Write `deck_svg_to_drawingml_trace.v1`, `deck_pptx_readback.v2`, and SVG/PPTX render parity evidence. PPTX parity requires text-masked SSIM `>= 0.97`, P0/P1 geometry `<= 0.75 pt`, exact P0 text, complete P1 text, and full trace coverage.
+
+Deck rendering is batched: one `soffice` conversion produces the complete PDF and one `pdftoppm` invocation produces all page previews. Readback checks gradient fills, effect lists, stop alpha, trace coverage, and the final SVG/PPTX visual gate.
+
+### F. Acceptance Evidence
+
+The hermetic acceptance fixture contains seven independent blueprints and seven layout IDs: `framework`, `process`, `table`, `comparison`, `architecture`, `data_story`, and `dense_narrative`. The acceptance test requires distinct blueprint, scene, SVG, and PPTX render hashes, plus a metamorphic failure when an old blueprint is changed before redraw.
+
+Release acceptance runs `PYTHONPATH=scripts python3 -m high_density.provider_smoke --run-dir <run_dir> --page-id P001 --output <run_dir>/high_density_build/provider_smoke_evidence.json` after a fresh provider output completes the full chain. The evidence verifies the challenge, request, prompt, image, Scene, SVG, PPTX, visual review, and readback hash/timestamp chain. It stores only sanitized hashes and gate results; raw provider payloads and images stay outside the repository.
+
+## Exit Artifacts
+
+- `mbb/mbb_plan.json`
+- `mbb/selection_receipt.json`
+- `mbb/runtime_seal.json`
+- `style/style_options.json` and `style/style_lock.json`
+- `content_locks/<page_id>.content_lock.json`
+- `prompts/<page_id>.blueprint_prompt.json`
+- `blueprints/<page_id>.blueprint_manifest.json`, signed provider receipt, content-review evidence, and normalized preview
+- `scenes/<page_id>.page_scene.json`
+- native SVG, SVG preview, metrics, self-review, and main review
+- page PPTX trace, page/deck readback, and PPTX render parity
+- `high_density_manifest.v2`, `build_manifest.json`, `artifact_manifest.json`, and `render_result.json`
+
+## Next Skill
+
+`deck-quality` consumes the canonical handback after the high-density manifest and readback gates pass.
+
+## Agent Continuation
+
+When Agent work is required, return `awaiting_agent_build` with `run_id`, page/stage, `input_refs`, `output_refs`, `required_schema`, `acceptance_command`, `resume_command`, and reason. Page stages use `handoff_scope=stage_batch` when multiple pages are waiting in the same stage; `pending_pages` lists page IDs, and `rework_queue` carries per-page `kind`, refs, and reason. Supported actions are `agent_mbb_candidates`, `agent_mbb_enrich_selected`, `agent_imagegen`, `agent_blueprint_content_review`, `agent_imagegen_repair`, `agent_visual_reconstruct`, `agent_svg_repair`, `agent_self_review`, and `agent_main_review`. Storyline and style selection use `awaiting_user_decision`.
+
+`build status --watch` waits through `prepared`, `building`, and `awaiting_agent_build`; it exits only at `completed`, `blocked`, `failed`, `awaiting_user_decision`, or timeout.
+
+## Stop Conditions
+
+- `HD_CONTENT_LOCK_INVALID`
+- `HD_BLUEPRINT_REGEN_REQUIRED`
+- `HD_PAGE_SCENE_INVALID`
+- `HD_SVG_REVIEW_FAILED`
+- `HD_PPTX_EDITABILITY_FAILED`
+- `HD_ASSET_POLICY_BLOCKED`
+- `HD_CONTRACT_HANDBACK_FAILED`
+- missing schema, Python package, SVG renderer, PPTX renderer, or approved style lock
+
+## Safety Rules
+
+- Keep all paths run-relative and reject traversal, cross-run packages, malformed contracts, and stale hashes.
+- Keep Page Package evidence as the factual source; every derived claim must retain evidence references.
+- Reject whole-page image wrappers, hidden text overlays, unregistered assets, unsupported SVG, and incomplete readback.
+- Keep private benchmark sources and provider payloads out of the repository; retain only sanitized evidence indexes and metrics summaries.
+
+Never use ImageGen text as facts. Never emit page numbers or internal generation annotations. Never bypass content coverage, visual metrics, review, readback, or `deck-quality`.

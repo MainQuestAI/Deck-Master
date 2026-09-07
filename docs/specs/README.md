@@ -26,6 +26,9 @@
 
 产品架构补充：
 
+- [Astra Skill 与项目安装适配](astra-skill-adaptation/README.md)
+  - 精简 suite 入口，区分新建、局部修改和诊断；支持中央 release 配合项目 `.agents/skills` 及兼容安装检查。
+
 - `deck-master-skill-system-product-architecture.md`
   - 目标：定义 Deck Master 作为独立开源产品时的 Skill 体系，区分 Core Skills、Product Capability Skills 和 Reference Packs，为 v0.9.13+ 的 packaging / migration / setup 设计提供前置依据。
 - `deck-master-v1.0-skill-suite-interaction-spec.md`

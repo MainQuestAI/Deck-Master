@@ -3,6 +3,11 @@
 End-to-end playbook for producing a client Solution Deck from customer context
 through to an approved export queue.
 
+This route is for a new deck. Selected-page revisions use [local edits](local-edits.md).
+Reuse supplied decisions and existing authorization. The commands below are a
+task sequence, not a requirement to repeat already-completed steps or ask for
+confirmation at every stage.
+
 ## Prerequisites
 
 - Deck Master skill installed (`validate-skill --target codex`).
@@ -13,7 +18,7 @@ through to an approved export queue.
 
 ### 1. Read Workspace Learning Pack
 
-If `workspace/learning/workspace_learning_pack.json` exists, read it. Pay
+If the task needs prior project guidance and `workspace/learning/workspace_learning_pack.json` exists, read the relevant entries. Pay
 attention to `frequent_failure_modes` and `agent_guidance` before proceeding.
 
 ```bash
@@ -79,6 +84,8 @@ python3 scripts/deck_master.py build-preview --run-id <run_id>
 
 ### 7. Request Narrative Advice
 
+Use when the narrative needs a separate review; skip when existing review is sufficient.
+
 ```bash
 python3 scripts/deck_master.py prepare-narrative-advice --run-id <run_id>
 ```
@@ -120,7 +127,7 @@ If quality gates block export, run the repair playbook:
 
 ## Post-Run
 
-After export, build a learning pack so the next run benefits:
+When feedback capture was requested, build a learning pack after export:
 
 ```bash
 python3 scripts/deck_master.py build-learning-pack --workspace <workspace>

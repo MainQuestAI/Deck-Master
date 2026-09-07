@@ -583,6 +583,13 @@ def _resolve_target_dir(target: str, agent_skill_dir: str | None) -> Path:
         raise SkillInstallError(
             "Target 'custom' requires --agent-skill-dir to be set explicitly."
         )
+    if target == "codex":
+        cwd = Path.cwd().resolve()
+        for parent in (cwd, *cwd.parents):
+            candidate = parent / ".agents" / "skills"
+            entry = candidate / SKILL_NAME
+            if entry.exists() or entry.is_symlink():
+                return candidate
     default = DEFAULT_AGENT_SKILL_DIRS.get(target)
     if not default:
         raise SkillInstallError(
@@ -590,6 +597,42 @@ def _resolve_target_dir(target: str, agent_skill_dir: str | None) -> Path:
             + ", ".join(sorted(SUPPORTED_TARGETS))
         )
     return Path(default).expanduser().resolve()
+
+
+def resolve_install_directory(
+    target: str, *, scope: str = "auto", project_root: str | None = None,
+    agent_skill_dir: str | None = None,
+) -> Path:
+    """Resolve CLI scope before mutation; lower-level callers also discover projects."""
+    if scope not in {"auto", "global", "project"}:
+        raise SkillInstallError(f"Unknown installation scope: {scope}")
+    if agent_skill_dir:
+        if project_root or scope != "auto":
+            raise SkillInstallError("Use --agent-skill-dir or --scope/--project-root, not both.")
+        return _resolve_target_dir(target, agent_skill_dir)
+    if project_root or scope == "project":
+        if scope == "global" or target != "codex":
+            raise SkillInstallError("Project .agents/skills installation requires target codex and project scope.")
+        root = Path(project_root).expanduser().resolve() if project_root else Path.cwd().resolve()
+        if not root.is_dir():
+            raise SkillInstallError(f"Project root is not a directory: {root}")
+        return root / ".agents" / "skills"
+    if scope == "global":
+        default = DEFAULT_AGENT_SKILL_DIRS.get(target)
+        if not default:
+            raise SkillInstallError(f"No global skill directory for target: {target}")
+        return Path(default).expanduser().resolve()
+    return _resolve_target_dir(target, None)
+
+
+def _installation_location(target: str, directory: Path) -> dict[str, str]:
+    if directory.name == "skills" and directory.parent.name == ".agents":
+        scope = "project"
+    elif directory == Path(DEFAULT_AGENT_SKILL_DIRS.get(target, "")).expanduser().resolve():
+        scope = "global"
+    else:
+        scope = "custom"
+    return {"scope": scope, "agent_skill_dir": str(directory), "release_root": str(INSTALL_LOG_DIR / "current")}
 
 
 def _link_path(target_dir: Path, skill_name: str = SKILL_NAME) -> Path:
@@ -781,7 +824,25 @@ def inspect_skill_link(
         "expected_source": str(source),
         "status": optional_status,
         "skill_md_exists": False,
+        **_installation_location(target, target_dir),
     }
+
+    # Project discovery exposes deck-builder; the same-named standalone skill
+    # is outside the suite. Its bundled compatibility document stays central.
+    if skill_name == "ppt-master" and result["scope"] == "project":
+        package_error = _skill_package_error(source, expected_name=skill_name)
+        result.update({
+            "valid": package_error is None,
+            "status": "ready" if package_error is None else "source_missing",
+            "source_type": "bundled_compatibility",
+            "resolved": str(source),
+            "skill_md_exists": (source / "SKILL.md").exists(),
+            "discovery_entry_required": False,
+            "public_entry": "deck-builder",
+        })
+        if package_error:
+            result["error"] = package_error
+        return result
 
     backend_override = os.environ.get("DECK_MASTER_PPT_MASTER_BACKEND", "").strip()
     if skill_name == "ppt-master" and backend_override:
@@ -819,6 +880,8 @@ def inspect_skill_link(
                 "resolved": str(link.resolve()),
                 "skill_md_exists": True,
                 "source_type": "external_full_package",
+                "ownership": "external",
+                "suite_compatibility_source": str(source),
                 "backend_type": "external_full_package" if skill_name == "ppt-master" else "",
                 "production_capable": bool(backend.get("production_capable")) if backend else None,
                 "backend_status": backend,
@@ -2410,6 +2473,10 @@ def inspect_suite_status(
         "suite_name": SUITE_NAME,
         "suite_version": suite_version,
         "status": status,
+        "installations": {
+            target: _installation_location(target, _resolve_target_dir(target, agent_skill_dir))
+            for target in resolved_targets
+        },
         "full_suite_ready": full_suite_ready,
         "production_backend_ready": production_backend_ready,
         "render_runtime_ready": render_runtime_ready,
@@ -2438,9 +2505,20 @@ def suite_install(
     include_optional: bool = False,
     repair: bool = False,
     agent_skill_dir: str | None = None,
+    links_only: bool = False,
 ) -> dict[str, Any]:
     resolved_targets = targets or ["codex"]
-    release_install = install_release_tree()
+    # Link a previously verified central release without activating another
+    # release when adding a project entrypoint.
+    if links_only:
+        verification = verify_release_tree(INSTALL_LOG_DIR / "current", run_smoke=False)
+        release_install = {
+            "status": "installed" if verification["valid"] else "blocked",
+            "activated": False,
+            "verification": verification,
+        }
+    else:
+        release_install = install_release_tree()
     if release_install["status"] != "installed":
         return {
             "schema_version": "deck_master_suite_install.v1",
@@ -2459,6 +2537,10 @@ def suite_install(
     for target in resolved_targets:
         for spec in _suite_specs(include_optional=include_optional):
             name = str(spec["name"])
+            location = _installation_location(target, _resolve_target_dir(target, agent_skill_dir))
+            if name == "ppt-master" and location["scope"] == "project":
+                results.append({"target": target, "skill": name, "status": "central_compatibility_only", **location})
+                continue
             source = _resolve_source_dir(skill_name=name)
             if not source.exists():
                 results.append({
@@ -2490,6 +2572,10 @@ def suite_install(
         "schema_version": "deck_master_suite_install.v1",
         "status": status,
         "manifest_path": str(manifest_path),
+        "installations": {
+            target: _installation_location(target, _resolve_target_dir(target, agent_skill_dir))
+            for target in resolved_targets
+        },
         "release_install": release_install,
         "results": results,
         "suite_status": inspect_suite_status(
@@ -2505,12 +2591,14 @@ def suite_repair(
     targets: list[str] | None = None,
     include_optional: bool = False,
     agent_skill_dir: str | None = None,
+    links_only: bool = False,
 ) -> dict[str, Any]:
     return suite_install(
         targets=targets,
         include_optional=include_optional,
         repair=True,
         agent_skill_dir=agent_skill_dir,
+        links_only=links_only,
     )
 
 
@@ -2701,6 +2789,8 @@ def uninstall_skill(
     target: str,
     agent_skill_dir: str | None = None,
     source_skill_dir: str | None = None,
+    *,
+    skill_name: str = SKILL_NAME,
 ) -> dict[str, Any]:
     """Remove the symlink created by Deck Master.
 
@@ -2714,8 +2804,8 @@ def uninstall_skill(
         )
 
     target_dir = _resolve_target_dir(target, agent_skill_dir)
-    link = _link_path(target_dir)
-    source = _resolve_source_dir(source_skill_dir)
+    link = _link_path(target_dir, skill_name)
+    source = _resolve_source_dir(source_skill_dir, skill_name=skill_name)
     canonical_source = source.resolve() if source.exists() else source
 
     if not link.exists() and not link.is_symlink():
@@ -2760,4 +2850,26 @@ def uninstall_skill(
     return {
         "status": "uninstalled",
         "link": str(link),
+    }
+
+
+def suite_uninstall(target: str, agent_skill_dir: str | None = None) -> dict[str, Any]:
+    directory = _resolve_target_dir(target, agent_skill_dir)
+    results = []
+    for spec in _suite_specs(include_optional=True):
+        name = str(spec["name"])
+        link = directory / name
+        if link.exists() and not link.is_symlink():
+            results.append({"skill": name, "status": "external_preserved", "link": str(link)})
+            continue
+        try:
+            result = uninstall_skill(target, str(directory), skill_name=name)
+        except SkillInstallError as exc:
+            result = {"status": "blocked", "error": str(exc), "link": str(link)}
+        results.append({"skill": name, **result})
+    return {
+        "status": "blocked" if any(r["status"] == "blocked" for r in results) else "uninstalled",
+        "target": target,
+        **_installation_location(target, directory),
+        "results": results,
     }

@@ -1,36 +1,8 @@
 ---
 name: ppt-quality-gate
-description: Deck Master bundled quality governance capability for fixture-safe quality findings, quality report import, and delivery blocking review.
-triggers:
-  - run deck quality review
-  - import quality findings
-  - check delivery blockers
-  - ppt quality gate
+description: Legacy Deck Master quality-findings adapter; use deck-quality for gate execution.
 ---
 
-# PPT Quality Gate Compatibility Entry
+# ppt-quality-gate Compatibility Entry
 
-This compatibility entry is kept for existing prompts and local installs.
-For new Deck Master workflows, prefer `deck-quality`.
-
-Use it for structured quality review inside Deck Master. Active run findings
-must be imported into Deck Master quality reports.
-
-## First Checks
-
-```bash
-~/.deck-master/bin/deck-master setup-status --include-suite --output json
-~/.deck-master/bin/deck-master run-state --run-dir <run_dir> --run-id <run_id>
-```
-
-## Allowed Commands
-
-```bash
-~/.deck-master/bin/deck-master quality-gate draft --run-dir <run_dir> --run-id <run_id>
-~/.deck-master/bin/deck-master import-quality-findings --run-dir <run_dir> --run-id <run_id> --input <findings.json>
-```
-
-
-<!-- skill-os-contract:v1 -->
-## Public Stage
-Maps to public stage: deck-quality. This is a compatibility wrapper; prefer the public `deck-quality` skill for new runs.
+Maps to public stage: deck-quality. Read [deck-quality](../deck-quality/SKILL.md) for this task. Import results through Deck Master with current run and artifact bindings.

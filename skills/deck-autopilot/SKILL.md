@@ -1,17 +1,9 @@
 ---
 name: deck-autopilot
-description: Deck Master workflow autopilot for advancing a run across init, brief, planning, sourcing, production, build, quality, review, and delivery checkpoints.
-triggers:
-  - run deck autopilot
-  - continue deck workflow
-  - make ppt from materials
-  - deck autopilot
+description: Continue an authorized Deck Master workflow until completion or a concrete blocker.
 ---
 
 # Deck Autopilot
-
-Use this skill when the user wants Deck Master to keep advancing the workflow
-until a real blocker appears.
 
 <!-- skill-os-contract:v1 -->
 
@@ -19,20 +11,23 @@ until a real blocker appears.
 Continuous workflow advancement across setup, planning, sourcing, production, build, quality, review, and delivery checkpoints.
 
 ## Do Not Use
-Do not use outside its lane in the Skill OS workflow. Do not treat a successful command return code as stage completion.
+For other tasks, use the task route in [deck-master](../deck-master/SKILL.md).
+
+Advance within the user's existing authorization. Report meaningful results or blockers without fixed role announcements. Local edits use [local edits](../deck-master/playbooks/local-edits.md); read-only diagnosis uses deck-doctor.
 
 ## First Checks
+Use current run state and available results; inspect only missing or affected inputs.
 - n/a (operations/orchestrator lane)
 
 ## Forcing Questions
-- n/a (no production forcing questions)
+Reuse confirmed answers and design decisions. Ask only for a missing decision that changes this task. Record existing authorization through the runtime when needed.
 
 ## Runtime Ownership
-Skill OS operations/orchestrator; not a production stage. Reads workflow state and routes to the responsible production skill.
+Deck Master owns run state; this skill operates only the requested task.
 
 ## Allowed Commands
 ```bash
-deck-master workflow autopilot --mode quick --run-dir <run_dir>
+deck-master workflow autopilot --mode preauthorized --run-dir <run_dir>
 deck-master workflow autopilot --mode repair --run-dir <run_dir>
 deck-master workflow autopilot --mode review-only --run-dir <run_dir>
 deck-master workflow status --run-dir <run_dir>
@@ -49,9 +44,9 @@ workflow_report, run_state, next_step
 - user-initiated stop
 - material_missing
 - setup_blocked
-- awaiting_agent_execution
+- required handoff cannot be completed with available tools or authorization
 - approval_required
 - final_export_requires_approval
 
 ## Safety Rules
-Keep internal-only production notes out of customer-visible content. Never bypass the final client export approval. Obey the stage contract's transition policy.
+Keep internal notes out of customer-visible artifacts. Reuse current validation; rerun checks affected by changes. Client export requires approval for the current version.

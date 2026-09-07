@@ -116,6 +116,8 @@ from skills.installer import (
     validate_product_capability_manifest,
     validate_skill,
     uninstall_skill,
+    suite_uninstall,
+    resolve_install_directory,
 )
 from runtime.run_state import (
     CLAIM_MAP_NAME,
@@ -134,7 +136,7 @@ from runtime.run_state import (
     write_json,
 )
 from runtime.next_step import resolve_next_step
-from runtime.skill_route import route_for_input_type, route_for_stage
+from runtime.skill_route import route_for_input_type, route_for_stage, route_for_task
 from runtime.import_log import append_import_log
 from runtime.orchestration import import_plan, import_render_result, orchestration_check
 from runtime.build import build_status, prepare_build, run_build
@@ -1287,6 +1289,14 @@ def command_start(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def command_route_skill(args: argparse.Namespace) -> dict[str, Any]:
+    input_type = str(getattr(args, "input_type", "") or "").strip().lower().replace("-", "_")
+    if input_type in {"new_deck", "local_edit", "diagnosis", "client_delivery", "software_release"}:
+        profile = "standard"
+        if input_type == "local_edit" and (getattr(args, "run_dir", None) or getattr(args, "run_id", None)):
+            request_path = resolve_run_dir(args) / REQUEST_NAME
+            if request_path.exists():
+                profile = str(read_json(request_path).get("builder_profile") or "standard").replace("_", "-")
+        return route_for_task(input_type, build_profile=profile)
     if getattr(args, "run_dir", None) or getattr(args, "run_id", None):
         run_state = resolve_run_state(
             resolve_run_dir(args),
@@ -2005,13 +2015,15 @@ def command_install_skill(args: argparse.Namespace) -> dict[str, Any]:
         return suite_install(
             targets=getattr(args, "target", None),
             include_optional=bool(getattr(args, "include_optional", False)),
+            agent_skill_dir=_skill_directory(args),
+            links_only=bool(getattr(args, "links_only", False)),
         )
     target = getattr(args, "target", None)
     if isinstance(target, list):
         target = target[-1] if target else None
     return install_skill(
         target=target,
-        agent_skill_dir=getattr(args, "agent_skill_dir", None),
+        agent_skill_dir=_skill_directory(args),
         force=getattr(args, "force", False),
         source_skill_dir=getattr(args, "source_skill_dir", None),
     )
@@ -2021,6 +2033,7 @@ def command_suite_status(args: argparse.Namespace) -> dict[str, Any]:
     payload = inspect_suite_status(
         targets=getattr(args, "target", None),
         include_optional=True,
+        agent_skill_dir=_skill_directory(args),
     )
     next_agent_action = str(payload.get("next_agent_action") or "")
     capability = str(getattr(args, "capability", "") or "").strip()
@@ -2117,6 +2130,8 @@ def command_suite_install(args: argparse.Namespace) -> dict[str, Any]:
     return suite_install(
         targets=getattr(args, "target", None),
         include_optional=bool(getattr(args, "include_optional", False)),
+        agent_skill_dir=_skill_directory(args),
+        links_only=bool(getattr(args, "links_only", False)),
     )
 
 
@@ -2124,6 +2139,8 @@ def command_suite_repair(args: argparse.Namespace) -> dict[str, Any]:
     return suite_repair(
         targets=getattr(args, "target", None),
         include_optional=bool(getattr(args, "include_optional", False)),
+        agent_skill_dir=_skill_directory(args),
+        links_only=bool(getattr(args, "links_only", False)),
     )
 
 
@@ -2157,17 +2174,42 @@ def command_suite_migrate_legacy_skills(args: argparse.Namespace) -> dict[str, A
 def command_validate_skill(args: argparse.Namespace) -> dict[str, Any]:
     return validate_skill(
         target=args.target,
-        agent_skill_dir=getattr(args, "agent_skill_dir", None),
+        agent_skill_dir=_skill_directory(args),
         source_skill_dir=getattr(args, "source_skill_dir", None),
+        write_log=False,
     )
 
 
 def command_uninstall_skill(args: argparse.Namespace) -> dict[str, Any]:
+    if bool(getattr(args, "suite", False)):
+        return suite_uninstall(args.target, _skill_directory(args))
     return uninstall_skill(
         target=args.target,
-        agent_skill_dir=getattr(args, "agent_skill_dir", None),
+        agent_skill_dir=_skill_directory(args),
         source_skill_dir=getattr(args, "source_skill_dir", None),
     )
+
+
+def _skill_directory(args: argparse.Namespace) -> str | None:
+    scope = getattr(args, "scope", "auto")
+    project_root = getattr(args, "project_root", None)
+    directory = getattr(args, "agent_skill_dir", None)
+    if scope == "auto" and not project_root and not directory:
+        return None
+    targets = getattr(args, "target", None) or ["codex"]
+    if isinstance(targets, str):
+        targets = [targets]
+    paths = [resolve_install_directory(t, scope=scope, project_root=project_root, agent_skill_dir=directory) for t in targets]
+    if len(set(paths)) != 1:
+        raise ValueError("Use one --target at a time when selecting an explicit installation scope.")
+    return str(paths[0])
+
+
+def _add_skill_scope_args(parser: argparse.ArgumentParser, *, directory: bool = True) -> None:
+    parser.add_argument("--scope", choices=["auto", "global", "project"], default="auto", help="Default: nearest project suite, otherwise global")
+    parser.add_argument("--project-root", default=None, help="Codex project root; uses .agents/skills")
+    if directory:
+        parser.add_argument("--agent-skill-dir", default=None, help="Explicit skill discovery directory")
 
 
 def command_orchestration_check(args: argparse.Namespace) -> dict[str, Any]:
@@ -3039,6 +3081,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_suite_status.add_argument("--capability", default=None, help="Filter readiness output to one capability")
     p_suite_status.add_argument("--output", choices=["json"], default="json")
     p_suite_status.set_defaults(func=command_suite_status)
+    _add_skill_scope_args(p_suite_status)
 
     p_product_manifest = sub.add_parser("product-capability-manifest", help="Print Deck Master product capability manifest")
     p_product_manifest.add_argument("--output", choices=["json"], default="json")
@@ -3076,11 +3119,15 @@ def build_parser() -> argparse.ArgumentParser:
     p_suite_install.add_argument("--target", action="append", default=[], choices=["codex", "claude-code", "hermes"])
     p_suite_install.add_argument("--include-optional", action="store_true")
     p_suite_install.set_defaults(func=command_suite_install)
+    _add_skill_scope_args(p_suite_install)
+    p_suite_install.add_argument("--links-only", action="store_true", help="Link the verified central release without rebuilding or activating it")
 
     p_suite_repair = sub.add_parser("suite-repair", help="Repair Deck Master suite symlinks without overwriting real directories")
     p_suite_repair.add_argument("--target", action="append", default=[], choices=["codex", "claude-code", "hermes"])
     p_suite_repair.add_argument("--include-optional", action="store_true")
     p_suite_repair.set_defaults(func=command_suite_repair)
+    _add_skill_scope_args(p_suite_repair)
+    p_suite_repair.add_argument("--links-only", action="store_true")
 
     p_backend = sub.add_parser("backend", help="Manage external backend binding")
     backend_cmds = p_backend.add_subparsers(dest="backend_command", required=True)
@@ -3494,18 +3541,23 @@ def build_parser() -> argparse.ArgumentParser:
     p_install.add_argument("--suite", action="store_true", help="Install suite skill links")
     p_install.add_argument("--include-optional", action="store_true", help="Include optional companion skills when using --suite")
     p_install.set_defaults(func=command_install_skill)
+    _add_skill_scope_args(p_install, directory=False)
+    p_install.add_argument("--links-only", action="store_true", help="With --suite, link the existing central release")
 
     p_validate_skill = sub.add_parser("validate-skill", help="Validate Deck Master skill symlink")
     p_validate_skill.add_argument("--target", required=True, choices=["codex", "claude-code", "hermes", "custom"])
     p_validate_skill.add_argument("--agent-skill-dir", default=None)
     p_validate_skill.add_argument("--source-skill-dir", default=None)
     p_validate_skill.set_defaults(func=command_validate_skill)
+    _add_skill_scope_args(p_validate_skill, directory=False)
 
     p_uninstall = sub.add_parser("uninstall-skill", help="Remove Deck Master skill symlink")
     p_uninstall.add_argument("--target", required=True, choices=["codex", "claude-code", "hermes", "custom"])
     p_uninstall.add_argument("--agent-skill-dir", default=None)
     p_uninstall.add_argument("--source-skill-dir", default=None)
     p_uninstall.set_defaults(func=command_uninstall_skill)
+    _add_skill_scope_args(p_uninstall, directory=False)
+    p_uninstall.add_argument("--suite", action="store_true", help="Remove suite-owned links in this scope, preserving external packages")
 
     p_import_plan = sub.add_parser("import-plan", help="Import a human or Agent plan override into a run")
     add_run_args(p_import_plan)

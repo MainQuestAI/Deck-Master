@@ -22,7 +22,7 @@
         "next_step",
         "review_workspace"
       ],
-      "description": "Top-level Deck Master run orchestration and review cockpit operations."
+      "description": "Route Deck Master tasks for new decks, selected-page edits, read-only diagnostics, and approved delivery."
     },
     {
       "name": "deck-setup",
@@ -38,7 +38,7 @@
         "setup_status",
         "suite_status"
       ],
-      "description": "First-run setup, suite install, workspace binding, and readiness repair."
+      "description": "Install Deck Master skills, select global or project scope, and repair installation."
     },
     {
       "name": "deck-upgrade",
@@ -49,14 +49,15 @@
       "input_types": [
         "upgrade",
         "rollback",
-        "release_tree"
+        "release_tree",
+        "software_release"
       ],
       "exit_artifacts": [
         "release_manifest",
         "capability_lock",
         "sha256sums"
       ],
-      "description": "Self-contained release tree upgrade, verification, activation, and rollback."
+      "description": "Upgrade or roll back the central Deck Master release while preserving skill entrypoints."
     },
     {
       "name": "deck-doctor",
@@ -67,14 +68,15 @@
       "input_types": [
         "setup_issue",
         "suite_issue",
-        "run_issue"
+        "run_issue",
+        "diagnosis"
       ],
       "exit_artifacts": [
         "doctor_report",
         "setup_status",
         "run_state"
       ],
-      "description": "Diagnostics for setup, suite readiness, workspace validity, and run blockers."
+      "description": "Diagnose Deck Master setup or run blockers using read-only status commands."
     },
     {
       "name": "deck-init",
@@ -96,7 +98,7 @@
         "workspace_policy",
         "run_bindings"
       ],
-      "description": "Project workspace initialization with material, reference, process, delivery, and metadata directories."
+      "description": "Initialize a new Deck Master workspace and material inventory."
     },
     {
       "name": "deck-brief",
@@ -110,13 +112,14 @@
       "input_types": [
         "raw_materials",
         "deep_research_report",
-        "meeting_notes"
+        "meeting_notes",
+        "new_deck"
       ],
       "exit_artifacts": [
         "deck_brief",
         "claim_map_seed"
       ],
-      "description": "Turn raw material and research into deck brief inputs."
+      "description": "Extract audience, objectives, claims, and evidence from source material for a new Deck Master brief."
     },
     {
       "name": "deck-planner",
@@ -137,7 +140,7 @@
         "page_tasks",
         "sourcing_intent"
       ],
-      "description": "Planning workflow for claim map, narrative plan, page tasks, and sourcing intent."
+      "description": "Plan a Deck Master narrative and page structure when creating a deck or changing its direction."
     },
     {
       "name": "deck-sourcing",
@@ -158,7 +161,7 @@
         "sourcing_plan",
         "asset_feedback"
       ],
-      "description": "Historical asset sourcing and page sourcing decisions."
+      "description": "Find and select reusable slides or evidence assets for Deck Master page tasks."
     },
     {
       "name": "deck-producer",
@@ -172,13 +175,14 @@
       "input_types": [
         "generation_session",
         "page_tasks",
-        "dispatch_package"
+        "dispatch_package",
+        "local_edit"
       ],
       "exit_artifacts": [
         "deck_generation_result.v2",
         "preview_refresh"
       ],
-      "description": "Generation sessions, dispatch packages, and canonical generation result import."
+      "description": "Produce or revise selected Deck Master pages and import generation results."
     },
     {
       "name": "deck-builder",
@@ -202,7 +206,7 @@
         "final_artifacts"
       ],
       "backend_dependency": "ppt-master",
-      "description": "Public build entry for HTML, PDF, PNG, PPTX, artifact manifest, render result, and editability metadata."
+      "description": "Render standard-profile Deck Master runs and rebuild artifacts after page edits."
     },
     {
       "name": "deck-builder-high-density",
@@ -227,7 +231,7 @@
         "render_result.v2"
       ],
       "backend_dependency": "",
-      "description": "Independent high-density build route from MBB content lock and ImageGen blueprint through native SVG, editable PPTX, readback, and canonical handback."
+      "description": "Build or revise editable high-density Deck Master pages from locked page packages and approved SVG."
     },
     {
       "name": "deck-quality",
@@ -249,7 +253,7 @@
         "customer_visible_safety_gate",
         "delivery_gate"
       ],
-      "description": "Quality gates, customer-visible safety, evidence, confidentiality, and delivery blockers."
+      "description": "Run the relevant Deck Master quality gates on current artifacts or import quality findings."
     },
     {
       "name": "deck-review",
@@ -264,14 +268,15 @@
       "input_types": [
         "quality_report",
         "final_readiness",
-        "review_workspace"
+        "review_workspace",
+        "client_delivery"
       ],
       "exit_artifacts": [
         "export_queue",
         "final_readiness",
         "delivery_validation"
       ],
-      "description": "Review, repair, export readiness, and delivery checks."
+      "description": "Assess Deck Master delivery readiness and export an approved version when requested."
     },
     {
       "name": "deck-learn",
@@ -292,7 +297,7 @@
         "workspace_learning_pack",
         "feedback_queue"
       ],
-      "description": "Delivery outcomes, reusable asset feedback, benchmark results, and workspace learning packs."
+      "description": "Record requested Deck Master delivery feedback and build reusable learning packs."
     },
     {
       "name": "deck-autopilot",
@@ -313,7 +318,7 @@
         "run_state",
         "next_step"
       ],
-      "description": "Continuous workflow advancement across setup, planning, sourcing, production, build, quality, review, and delivery checkpoints."
+      "description": "Continue an authorized Deck Master workflow until completion or a concrete blocker."
     },
     {
       "name": "ppt-library",
@@ -321,7 +326,7 @@
       "role": "compatibility_alias",
       "public": false,
       "public_name": "deck-sourcing",
-      "description": "Compatibility entry for historical slide retrieval and library selection."
+      "description": "Legacy Deck Master asset-selection adapter; use deck-sourcing for new requests."
     },
     {
       "name": "ppt-deck-pro-max",
@@ -329,7 +334,7 @@
       "role": "compatibility_alias",
       "public": false,
       "public_name": "deck-producer",
-      "description": "Compatibility entry for generation-session production."
+      "description": "Legacy Deck Master generation-result adapter; use deck-producer for page production."
     },
     {
       "name": "ppt-master",
@@ -337,7 +342,7 @@
       "role": "compatibility_backend",
       "public": false,
       "public_name": "deck-builder",
-      "description": "Full PPT Master backend dependency for Deck Builder."
+      "description": "Legacy Deck Master render handback adapter for deck-builder; separate from standalone PPT Master."
     },
     {
       "name": "ppt-quality-gate",
@@ -345,7 +350,7 @@
       "role": "compatibility_alias",
       "public": false,
       "public_name": "deck-quality",
-      "description": "Compatibility entry for structured quality governance."
+      "description": "Legacy Deck Master quality-findings adapter; use deck-quality for gate execution."
     }
   ]
 }

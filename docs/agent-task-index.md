@@ -3,6 +3,34 @@
 This index routes user intent to the safest Agent command path. Prefer these
 entries over guessing file locations or reading historical specs.
 
+## Task Scope
+
+Choose the request before loading a production playbook. Existing directions,
+page selections, and authorization remain usable; only ask about a missing
+decision that affects this task.
+
+| Intent | Routing command | Detail to read |
+| --- | --- | --- |
+| New deck from material | `route-skill --input-type new_deck` | `skills/deck-master/playbooks/codex-run-solution-deck.md` |
+| Selected-page revision | `route-skill --input-type local_edit --run-dir <run_dir>` | `skills/deck-master/playbooks/local-edits.md` |
+| Read-only diagnosis | `route-skill --input-type diagnosis --run-dir <run_dir>` | Reported error and deck-doctor |
+| Client delivery | `route-skill --input-type client_delivery` | Current final-readiness and approval |
+| Software installation/upgrade | `route-skill --input-type software_release` | `skills/deck-master/references/installation.md` |
+
+Explicit task routes preserve the edit/diagnosis scope even when a run's
+whole-deck workflow has upstream gaps. They report the applicable skill and
+references without changing run state or granting stage/export approval.
+Selected-page edits reuse confirmed design and valid unaffected artifacts.
+
+## Project Skill Installation
+
+After the central release is installed, attach Codex project entries with
+`suite-install --target codex --scope project --project-root <project> --links-only --include-optional`.
+Use the same project arguments with `suite-status` and `uninstall-skill --suite`.
+From inside that project, default discovery uses the nearest suite entry;
+`--scope global` explicitly selects global links. See
+`skills/deck-master/references/installation.md` for upgrade/rollback and migration.
+
 ## Source Checkout Command Form
 
 Use `python3 scripts/deck_master.py ...` before installation. For test and

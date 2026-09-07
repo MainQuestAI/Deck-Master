@@ -21,34 +21,18 @@ the work as complete.
 
 ## Before You Start
 
-1. Confirm the skill is installed:
-   ```bash
-   ~/.deck-master/bin/deck-master setup-status --include-suite --output json
-   ~/.deck-master/bin/deck-master suite-status --target codex --output json
-   ```
+Choose the task route in [the entrypoint](../SKILL.md). For an existing run,
+reuse known state and inspect only the missing or affected inputs. New runs
+need workspace/setup readiness; run setup only when installation or workspace
+binding needs repair, using the intended target and scope from
+[installation](installation.md). Read a learning pack only when relevant to
+the requested content or a demonstrated failure.
 
-2. If setup is not ready, run first-run setup:
-   ```bash
-   ~/.deck-master/bin/deck-master setup \
-     --workspace <workspace> \
-     --repair-workspace \
-     --target codex \
-     --target claude-code \
-     --install-suite
-   ```
-
-   If the workspace is unknown, ask the user for the active workspace first.
-   Do not create a production run until setup is ready.
-
-3. Check workspace health:
-   ```bash
-   ~/.deck-master/bin/deck-master validate-workspace --workspace <path>
-   ```
-
-4. If a workspace learning pack exists, read it first:
-   ```bash
-   ~/.deck-master/bin/deck-master show-learning-pack --workspace <path>
-   ```
+Selected-page edits follow [local edits](../playbooks/local-edits.md), preserving
+the approved direction and unaffected pages. Prior answers and authorization
+remain usable; record them through the runtime where required. Do not repeat a
+whole-deck interview or add role announcements. Complete necessary checks and
+repairs, then finish the requested task.
 
 ## Typical Run Flow
 
