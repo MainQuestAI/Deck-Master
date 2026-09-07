@@ -18,6 +18,17 @@ Version mapping for this preview:
 
 Deck Master is built for solution architects and proposal builders who need a repeatable way to decide which pages should be generated, which pages should be reused, and which pages are ready for review or delivery.
 
+## SC-1.1: Built-in Native Deck Core
+
+As of SC-1.1, the default build engine is the **built-in `deck_native`
+compiler** (SVG subset -> native PPTX with real traces and readback) —
+no external PPT Master install, binding or repository is required for
+default production. Legacy `legacy-ppt-master` is an explicit
+compatibility route only. Runs without an image-generation host tool
+report `awaiting_agent_imagegen` honestly; the built-in kernel and the
+default route are probed for real capability evidence, never from env
+flags.
+
 ## The Full SC-1 Chain
 
 Provide raw material + business goal + authorized host tools; Deck Master

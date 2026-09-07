@@ -159,7 +159,7 @@ def compile_svg_deck(request: NativeCompileRequest) -> NativeCompileResult:
 def readback_pptx(result: NativeCompileResult, scenes: list[dict[str, Any]], locks: dict[str, dict[str, Any]]) -> dict[str, Any]:
     """Readback the compiled deck against its scenes/locks (trace-verified)."""
 
-    root = result.pptx_path.parent.parent
+    root = result.pptx_path.parent.parent.parent  # run root (high_density_build/pptx/<file> -> run)
     try:
         report_path = _readback_impl(root, scenes, locks, result.pptx_path)
     except PptxEditabilityError as exc:

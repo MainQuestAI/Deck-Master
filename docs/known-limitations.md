@@ -60,3 +60,22 @@ NOT close:
    registered as an open deviation.
 
 Engineering state and evidence: `docs/specs/sc1-solution-core-independence/implementation/`.
+
+
+## SC-1.1 Native Deck Core (2026-09-07)
+
+Landed: the built-in native compile kernel (single implementation extracted
+from the high-density builder), default native routing, library_mode=none as
+a first-class mode, a real native runtime probe, the native engine adapter
+(real two-page compile+readback through native_pptx), precise semantic-gate
+matching, and atomic revision commits with failure-budget accounting.
+
+Still open (honest state `in_progress`):
+
+1. Manifest/release required-policy change (ppt-* out of the default
+   required set) is registered but not yet landed.
+2. Real host-tool cases (ImageGen/visual reconstruction/desktop editing)
+   were NOT executed — this environment has no image tools; HST/UAT
+   cases stay not_run, never faked.
+3. Old-run migration CLI (MIG group) and the dedicated seven-class
+   differential matrix are pending.

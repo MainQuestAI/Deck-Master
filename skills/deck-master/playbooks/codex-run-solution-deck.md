@@ -118,8 +118,9 @@ production build.
 
 ### 9. Build and Render
 
-Standard PPT Master is the default backend (managed install; a missing
-backend blocks honestly instead of degrading):
+SC-1.1: the default build engine is the built-in `deck_native` compiler
+(managed route; no external PPT Master install or binding required).
+`legacy-ppt-master` is an explicit compatibility route only:
 
 ```bash
 python3 scripts/deck_master.py build prepare --run-id <run_id>
