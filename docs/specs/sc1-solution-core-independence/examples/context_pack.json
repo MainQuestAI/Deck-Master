@@ -1,0 +1,178 @@
+{
+  "schema_version": "deck_context_pack.v2",
+  "run_id": "synthetic_sc1",
+  "run_mode": "fixture",
+  "based_on": {
+    "input_fingerprint": "1b71f8474c21a56e94be4d79097fdc8096039022d59d5f575d8a060b3d776198",
+    "input_refs": [
+      {
+        "ref": "materials/meeting_notes.txt",
+        "sha256": "cd8be5fc473e6c78a3c9981ce67118e953a40c9c080e5360fb0e22742b446f12"
+      },
+      {
+        "ref": "materials/product_constraints.txt",
+        "sha256": "292100e55cd72503d215913bea30a0901783961ea26b1bef2396a6301cbe2848"
+      }
+    ]
+  },
+  "sources": [
+    {
+      "source_id": "S-MEET",
+      "title": "合成会议记录",
+      "source_type": "text",
+      "origin_type": "authorized_local",
+      "origin_ref": "materials/meeting_notes.txt",
+      "file_sha256": "cd8be5fc473e6c78a3c9981ce67118e953a40c9c080e5360fb0e22742b446f12",
+      "summary": "人工编写的合成材料摘要，仅验证契约。",
+      "extraction": {
+        "method": "synthetic_exact_lines",
+        "tool_ref": "spec_pack_generator",
+        "read_units": 4,
+        "total_units": 4,
+        "unread_regions": [],
+        "status": "complete",
+        "snapshot_ref": "materials/meeting_notes.txt"
+      },
+      "evidence_candidates": [
+        {
+          "evidence_id": "E001",
+          "statement": "当前销售顾问在客户交流结束后，将需求手工录入现有业务系统。",
+          "source_position": {
+            "unit_type": "line",
+            "start": 2,
+            "end": 2,
+            "detail": "合成源文件的精确行"
+          },
+          "quote": "当前销售顾问在客户交流结束后，将需求手工录入现有业务系统。",
+          "quote_sha256": "4c23fc8f671fc40f8b9d86fb865a431c2940a478b3006325a3bec356d05d6246",
+          "publication_status": "safe_to_use",
+          "sensitivity": "normal",
+          "claim_kind": "user_reported_fact",
+          "period": "",
+          "unit": "",
+          "applicability": "仅用于本合成案例，不可当作真实客户事实",
+          "review_status": "unreviewed",
+          "review_ref": ""
+        },
+        {
+          "evidence_id": "E002",
+          "statement": "同一需求在总结材料与业务系统中重复录入。",
+          "source_position": {
+            "unit_type": "line",
+            "start": 3,
+            "end": 3,
+            "detail": "合成源文件的精确行"
+          },
+          "quote": "同一需求在总结材料与业务系统中重复录入。",
+          "quote_sha256": "3309fd53123f8f4a8b73696f2e51c80a5889f79642a7535033d80059420a0a3d",
+          "publication_status": "safe_to_use",
+          "sensitivity": "normal",
+          "claim_kind": "user_reported_fact",
+          "period": "",
+          "unit": "",
+          "applicability": "仅用于本合成案例，不可当作真实客户事实",
+          "review_status": "unreviewed",
+          "review_ref": ""
+        }
+      ],
+      "sensitivity": "normal",
+      "publication_status": "safe_to_use"
+    },
+    {
+      "source_id": "S-SCOPE",
+      "title": "合成范围约束",
+      "source_type": "text",
+      "origin_type": "authorized_local",
+      "origin_ref": "materials/product_constraints.txt",
+      "file_sha256": "292100e55cd72503d215913bea30a0901783961ea26b1bef2396a6301cbe2848",
+      "summary": "人工编写的合成材料摘要，仅验证契约。",
+      "extraction": {
+        "method": "synthetic_exact_lines",
+        "tool_ref": "spec_pack_generator",
+        "read_units": 5,
+        "total_units": 5,
+        "unread_regions": [],
+        "status": "complete",
+        "snapshot_ref": "materials/product_constraints.txt"
+      },
+      "evidence_candidates": [
+        {
+          "evidence_id": "E001",
+          "statement": "现有业务系统保留，不替换。",
+          "source_position": {
+            "unit_type": "line",
+            "start": 2,
+            "end": 2,
+            "detail": "合成源文件的精确行"
+          },
+          "quote": "现有业务系统保留，不替换。",
+          "quote_sha256": "9cc3137bd29bd2dc899011f6b9b741fb54ba336e69bff1f4460035ad42f534ca",
+          "publication_status": "safe_to_use",
+          "sensitivity": "normal",
+          "claim_kind": "constraint",
+          "period": "",
+          "unit": "",
+          "applicability": "仅用于本合成案例，不可当作真实客户事实",
+          "review_status": "unreviewed",
+          "review_ref": ""
+        },
+        {
+          "evidence_id": "E002",
+          "statement": "拟建助手只生成建议与可审核的结构化记录，最终保存由业务人员确认。",
+          "source_position": {
+            "unit_type": "line",
+            "start": 3,
+            "end": 3,
+            "detail": "合成源文件的精确行"
+          },
+          "quote": "拟建助手只生成建议与可审核的结构化记录，最终保存由业务人员确认。",
+          "quote_sha256": "0021341d4eed428aa0a7ef7278be9751d8973fcea0f66599964125ef84487533",
+          "publication_status": "safe_to_use",
+          "sensitivity": "normal",
+          "claim_kind": "constraint",
+          "period": "",
+          "unit": "",
+          "applicability": "仅用于本合成案例，不可当作真实客户事实",
+          "review_status": "unreviewed",
+          "review_ref": ""
+        },
+        {
+          "evidence_id": "E003",
+          "statement": "接口接入方式需要在试点前核对，本材料不证明接口已经可用。",
+          "source_position": {
+            "unit_type": "line",
+            "start": 5,
+            "end": 5,
+            "detail": "合成源文件的精确行"
+          },
+          "quote": "接口接入方式需要在试点前核对，本材料不证明接口已经可用。",
+          "quote_sha256": "a1d7420c420d47dd1875d76dabb71181da7c6aa4d1fb8407d7779dd3afbcee6f",
+          "publication_status": "safe_to_use",
+          "sensitivity": "normal",
+          "claim_kind": "constraint",
+          "period": "",
+          "unit": "",
+          "applicability": "仅用于本合成案例，不可当作真实客户事实",
+          "review_status": "unreviewed",
+          "review_ref": ""
+        }
+      ],
+      "sensitivity": "normal",
+      "publication_status": "safe_to_use"
+    }
+  ],
+  "global_constraints": [
+    "保留现有业务系统",
+    "写回必须经业务人员确认"
+  ],
+  "conflicts": [],
+  "research_meta": {
+    "task_id": "RESEARCH-NONE",
+    "status": "not_requested",
+    "execution_refs": [],
+    "summary": "本合成导入尚未执行 Web 研究。",
+    "open_questions": [
+      "接口接入方式待核对"
+    ]
+  }
+}

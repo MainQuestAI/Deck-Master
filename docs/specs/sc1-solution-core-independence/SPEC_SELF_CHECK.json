@@ -1,0 +1,89 @@
+{
+  "scope": "spec_pack_only_not_product_tests",
+  "schemas_validated": 6,
+  "synthetic_positive_samples_passed": 6,
+  "selected_counterexamples_rejected": 18,
+  "counterexamples": [
+    {
+      "id": "wrong_boolean_type",
+      "rejected_by": "ValidationError"
+    },
+    {
+      "id": "false_task_ready",
+      "rejected_by": "ValueError"
+    },
+    {
+      "id": "duplicate_source",
+      "rejected_by": "ValueError"
+    },
+    {
+      "id": "supported_without_review",
+      "rejected_by": "ValidationError"
+    },
+    {
+      "id": "quote_tampering",
+      "rejected_by": "ValueError"
+    },
+    {
+      "id": "false_complete_read",
+      "rejected_by": "ValueError"
+    },
+    {
+      "id": "zero_research_budget",
+      "rejected_by": "ValidationError"
+    },
+    {
+      "id": "existing_without_evidence",
+      "rejected_by": "ValidationError"
+    },
+    {
+      "id": "orphan_problem_ref",
+      "rejected_by": "ValueError"
+    },
+    {
+      "id": "dangling_model_relation",
+      "rejected_by": "ValueError"
+    },
+    {
+      "id": "cyclic_phase_dependency",
+      "rejected_by": "ValueError"
+    },
+    {
+      "id": "view_direction_mismatch",
+      "rejected_by": "ValueError"
+    },
+    {
+      "id": "stale_model_hash",
+      "rejected_by": "ValueError"
+    },
+    {
+      "id": "empty_review_observations",
+      "rejected_by": "ValidationError"
+    },
+    {
+      "id": "summary_hides_blocker",
+      "rejected_by": "ValueError"
+    },
+    {
+      "id": "same_independent_session",
+      "rejected_by": "ValueError"
+    },
+    {
+      "id": "unsafe_input_path",
+      "rejected_by": "ValueError"
+    },
+    {
+      "id": "stale_action_input",
+      "rejected_by": "ValueError"
+    }
+  ],
+  "planned_product_acceptance_cases": 88,
+  "product_tests_executed": false,
+  "real_uat_executed": false,
+  "status": "passed",
+  "limitations": [
+    "Structural/sample consistency checks do not prove current repository support.",
+    "Distinct reviewer IDs do not prove real independent host execution.",
+    "This script does not verify real provider receipts or objective factual support."
+  ]
+}

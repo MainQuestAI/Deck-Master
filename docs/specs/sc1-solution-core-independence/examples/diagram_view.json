@@ -1,0 +1,53 @@
+{
+  "schema_version": "deck_diagram_view.v1",
+  "run_id": "synthetic_sc1",
+  "run_mode": "fixture",
+  "based_on": {
+    "input_fingerprint": "65ae25acb7572aaf0c54c71a601905a3681f48f14179a7a15ed1dfd23b209dc5",
+    "input_refs": [
+      {
+        "ref": "solution_model.json",
+        "sha256": "8e170e13ea2d195e4ff8176de341bbe58ef77b20b9f78ca42930520757f89ab4"
+      }
+    ]
+  },
+  "view_id": "VIEW-01",
+  "page_id": "P002",
+  "view_type": "data_flow",
+  "model_ref": "solution_model.json",
+  "model_sha256": "8e170e13ea2d195e4ff8176de341bbe58ef77b20b9f78ca42930520757f89ab4",
+  "title": "建议生成与人工确认写回的拟建流程",
+  "scope_note": "设计建议；接入方式尚待核对",
+  "nodes": [
+    {
+      "id": "NODE-01",
+      "model_refs": [
+        "COMP-ASSISTANT"
+      ],
+      "label": "拟建建议助手",
+      "aggregation_reason": ""
+    },
+    {
+      "id": "NODE-02",
+      "model_refs": [
+        "COMP-SYSTEM"
+      ],
+      "label": "现有业务系统",
+      "aggregation_reason": ""
+    }
+  ],
+  "edges": [
+    {
+      "id": "EDGE-01",
+      "from_node_id": "NODE-01",
+      "to_node_id": "NODE-02",
+      "relation_ref": "REL-01",
+      "label": "人工确认后的结构化记录"
+    }
+  ],
+  "layout": {
+    "strategy": "left_to_right",
+    "aspect_ratio": "16:9",
+    "editability_target": "native_shapes"
+  }
+}

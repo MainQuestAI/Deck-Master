@@ -1,0 +1,142 @@
+{
+  "schema_version": "deck_solution_model.v1",
+  "run_id": "synthetic_sc1",
+  "run_mode": "fixture",
+  "based_on": {
+    "input_fingerprint": "596be42fc37bef765341e4e8352e80c48a1b416e7076c03884cd34a8c5ca94d9",
+    "input_refs": [
+      {
+        "ref": "context_pack.json",
+        "sha256": "2528f9c0159cd2998d1c5c3aa6bab2502bb6352170eecfa90473a97c56e797e9"
+      }
+    ]
+  },
+  "model_id": "SOLUTION-01",
+  "revision": 1,
+  "decision_object": "是否按建议流程开展小范围试点验证",
+  "problems": [
+    {
+      "id": "PROBLEM-01",
+      "statement": "交流总结与业务系统录入重复",
+      "evidence_refs": [
+        "S-MEET#E001",
+        "S-MEET#E002"
+      ],
+      "impact": "业务人员需要重复整理同一需求"
+    }
+  ],
+  "capabilities": [
+    {
+      "id": "CAP-01",
+      "name": "建议生成与人工确认写回",
+      "problem_refs": [
+        "PROBLEM-01"
+      ],
+      "mechanism": "从交流材料提取结构化建议，经业务人员确认后再按核实的接口方式写回。",
+      "actors": [
+        "销售顾问"
+      ],
+      "inputs": [
+        "授权交流材料"
+      ],
+      "outputs": [
+        "待确认结构化记录",
+        "可追踪写回结果"
+      ],
+      "owner": "业务人员确认，系统执行受控写回",
+      "acceptance": [
+        "记录字段可核对",
+        "未确认的建议不得写回",
+        "写回结果可追踪"
+      ]
+    }
+  ],
+  "components": [
+    {
+      "id": "COMP-ASSISTANT",
+      "name": "拟建建议助手",
+      "status": "proposed",
+      "responsibility": "生成并展示待确认记录",
+      "requirement_refs": [
+        "PROBLEM-01",
+        "S-SCOPE#E002"
+      ],
+      "evidence_refs": [],
+      "rationale": "以人工确认保留业务责任边界"
+    },
+    {
+      "id": "COMP-SYSTEM",
+      "name": "现有业务系统",
+      "status": "existing",
+      "responsibility": "保留原有业务记录系统",
+      "requirement_refs": [
+        "S-SCOPE#E001"
+      ],
+      "evidence_refs": [
+        "S-SCOPE#E001"
+      ],
+      "rationale": "范围约束要求保留，不假定任何接口已可用"
+    }
+  ],
+  "relations": [
+    {
+      "id": "REL-01",
+      "from_id": "COMP-ASSISTANT",
+      "to_id": "COMP-SYSTEM",
+      "type": "data_flow",
+      "status": "proposed",
+      "payload": "人工确认后的结构化记录",
+      "evidence_refs": [
+        "S-SCOPE#E002"
+      ],
+      "rationale": "写回方式在接口核对后确定"
+    }
+  ],
+  "implementation_phases": [
+    {
+      "id": "PHASE-01",
+      "name": "流程与接口试点验证",
+      "component_refs": [
+        "COMP-ASSISTANT",
+        "COMP-SYSTEM"
+      ],
+      "depends_on": [],
+      "deliverables": [
+        "建议确认流程",
+        "接口核对结果",
+        "可追踪写回样例"
+      ],
+      "acceptance": [
+        "人工确认与写回顺序正确",
+        "字段与原始资料可核对"
+      ],
+      "owner": "建议由业务代表与集成负责人共同验收"
+    }
+  ],
+  "alternatives": [
+    {
+      "id": "ALT-01",
+      "name": "保留原系统的小范围试点",
+      "approach": "先验证建议、确认和写回，再讨论扩展",
+      "tradeoffs": [
+        "不承诺尚未验证的收益和接口能力"
+      ],
+      "rationale": "与保留既有系统的明确约束一致"
+    }
+  ],
+  "recommended_alternative_id": "ALT-01",
+  "single_viable_reason": "此合成案例限定保留既有系统；样例不制造无材料支撑的替代选项。",
+  "assumptions": [
+    {
+      "id": "ASSUMPTION-01",
+      "statement": "接口接入方式尚需核对",
+      "affected_refs": [
+        "REL-01",
+        "PHASE-01"
+      ],
+      "recheck_trigger": "取得接口文档或完成接入核对",
+      "status": "working",
+      "decision_ref": ""
+    }
+  ]
+}

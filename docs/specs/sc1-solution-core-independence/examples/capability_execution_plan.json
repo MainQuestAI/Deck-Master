@@ -1,0 +1,51 @@
+{
+  "schema_version": "deck_capability_execution_plan.v1",
+  "run_id": "synthetic_sc1",
+  "run_mode": "fixture",
+  "based_on": {
+    "input_fingerprint": "0f2073338d6db6b7d7583ff4fcdeadb0245dd468303a00307934cc8b4f402e8d",
+    "input_refs": [
+      {
+        "ref": "request.json",
+        "sha256": "2c85d698a2c3f2986eeeb457b976ec72b16fbcc8d7ab029c7156926d2525f81b"
+      }
+    ]
+  },
+  "task_type": "new_solution",
+  "library_mode": "none",
+  "build_profile": "standard",
+  "research_policy": "if_needed",
+  "suite_summary": {
+    "installation_complete": false,
+    "managed_runtimes_verified": false
+  },
+  "capabilities": [
+    {
+      "capability_id": "ppt-master",
+      "kind": "product_runtime",
+      "required": true,
+      "status": "unverified",
+      "source_kind": "managed",
+      "reason": "合成契约样例没有执行真实安装",
+      "verification_ref": ""
+    },
+    {
+      "capability_id": "historical-corpus",
+      "kind": "data_resource",
+      "required": false,
+      "status": "not_required",
+      "source_kind": "workspace",
+      "reason": "本任务明确 library_mode=none",
+      "verification_ref": ""
+    }
+  ],
+  "blockers": [
+    {
+      "code": "SC_CAPABILITY_MISSING",
+      "capability_id": "ppt-master",
+      "reason": "此样例没有真实验证后端",
+      "recovery_action": "实际产品中由托管安装和真实 smoke 验证；此样例不能证明可用。"
+    }
+  ],
+  "task_ready": false
+}

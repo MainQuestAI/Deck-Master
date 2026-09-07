@@ -1,0 +1,241 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:deck-master:sc1:deck_capability_execution_plan.v1",
+  "title": "deck_capability_execution_plan.v1",
+  "description": "SC-1 target contract draft; not installed in the current repository. Structural validation is not runtime or semantic verification.",
+  "x-spec-status": "target-draft",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "deck_capability_execution_plan.v1"
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "run_mode": {
+      "type": "string",
+      "enum": [
+        "production",
+        "benchmark",
+        "fixture",
+        "dev"
+      ]
+    },
+    "based_on": {
+      "type": "object",
+      "properties": {
+        "input_fingerprint": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "input_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "ref": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "required": [
+              "ref",
+              "sha256"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "input_fingerprint",
+        "input_refs"
+      ],
+      "additionalProperties": false
+    },
+    "task_type": {
+      "type": "string",
+      "enum": [
+        "new_solution",
+        "local_edit",
+        "diagnosis",
+        "export"
+      ]
+    },
+    "library_mode": {
+      "type": "string",
+      "enum": [
+        "none",
+        "real"
+      ]
+    },
+    "build_profile": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "high_density"
+      ]
+    },
+    "research_policy": {
+      "type": "string",
+      "enum": [
+        "if_needed",
+        "off"
+      ]
+    },
+    "suite_summary": {
+      "type": "object",
+      "properties": {
+        "installation_complete": {
+          "type": "boolean"
+        },
+        "managed_runtimes_verified": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "installation_complete",
+        "managed_runtimes_verified"
+      ],
+      "additionalProperties": false
+    },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "capability_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "method",
+              "product_runtime",
+              "host_tool",
+              "system_tool",
+              "data_resource"
+            ]
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "verified",
+              "missing",
+              "unverified",
+              "not_required"
+            ]
+          },
+          "source_kind": {
+            "type": "string",
+            "enum": [
+              "bundled",
+              "managed",
+              "host",
+              "system",
+              "workspace",
+              "external_override"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "verification_ref": {
+            "type": "string",
+            "minLength": 0
+          }
+        },
+        "required": [
+          "capability_id",
+          "kind",
+          "required",
+          "status",
+          "source_kind",
+          "reason",
+          "verification_ref"
+        ],
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "verified"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "verification_ref": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        ]
+      },
+      "minItems": 1
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+          },
+          "capability_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "recovery_action": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "code",
+          "capability_id",
+          "reason",
+          "recovery_action"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0
+    },
+    "task_ready": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "schema_version",
+    "run_id",
+    "run_mode",
+    "based_on",
+    "task_type",
+    "library_mode",
+    "build_profile",
+    "research_policy",
+    "suite_summary",
+    "capabilities",
+    "blockers",
+    "task_ready"
+  ],
+  "additionalProperties": false
+}

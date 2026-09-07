@@ -1,0 +1,45 @@
+{
+  "schema_version": "deck_research_task.v1",
+  "run_id": "synthetic_sc1",
+  "run_mode": "fixture",
+  "based_on": {
+    "input_fingerprint": "596be42fc37bef765341e4e8352e80c48a1b416e7076c03884cd34a8c5ca94d9",
+    "input_refs": [
+      {
+        "ref": "context_pack.json",
+        "sha256": "2528f9c0159cd2998d1c5c3aa6bab2502bb6352170eecfa90473a97c56e797e9"
+      }
+    ]
+  },
+  "task_id": "RESEARCH-001",
+  "stage_id": "deck-brief",
+  "status": "prepared",
+  "questions": [
+    {
+      "question_id": "RQ-001",
+      "question": "企业系统集成通常如何组织人工确认与写回反馈？",
+      "decision_purpose": "为拟建流程设计提供参考，不据此认定客户接口已可用",
+      "affected_refs": [
+        "PROBLEM-01"
+      ],
+      "preferred_source_types": [
+        "产品官方文档",
+        "公开技术规范"
+      ],
+      "freshness_requirement": "核对拟引用文档的版本与适用条件",
+      "counter_check": "检查是否存在不支持人工确认或回写的条件",
+      "stop_when": "获得足够明确的公开设计参考或达到预算；客户接口事实仍需私有资料核验"
+    }
+  ],
+  "public_query_context": "通用企业系统集成设计；不包含客户资料。",
+  "authorization_ref": "synthetic-authorization-example-not-a-real-receipt",
+  "allowed_sources": [
+    "公开官方文档"
+  ],
+  "limits": {
+    "max_rounds_per_question": 2,
+    "max_candidate_sources_per_round": 6,
+    "max_tool_actions": 12
+  },
+  "expected_output_schema": "deck_context_pack.v2"
+}

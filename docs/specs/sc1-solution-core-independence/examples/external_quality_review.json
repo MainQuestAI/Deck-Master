@@ -1,0 +1,167 @@
+{
+  "schema_version": "deck_external_quality_review.v2",
+  "run_id": "synthetic_sc1",
+  "run_mode": "fixture",
+  "based_on": {
+    "input_fingerprint": "7ddb9f9fb4b04738d7147e896d500eb4bb3e3507ee3ba729ed2e2d89eef62790",
+    "input_refs": [
+      {
+        "ref": "pages/P001.md",
+        "sha256": "2aab23f161b4180edc64fa9cc52bafa32c2790edd404ee9faa2315b8e0c089ea"
+      },
+      {
+        "ref": "pages/P002.md",
+        "sha256": "480906e7bdf63dae89ea8b7d0d7e867b3760290b35e1d7533ccbe1e902b1b80e"
+      },
+      {
+        "ref": "solution_model.json",
+        "sha256": "8e170e13ea2d195e4ff8176de341bbe58ef77b20b9f78ca42930520757f89ab4"
+      }
+    ]
+  },
+  "review_action_id": "REVIEW-001",
+  "scope": "semantic",
+  "review_kind": "independent",
+  "reviewer_session_id": "FIXTURE-REVIEWER",
+  "producer_session_id": "FIXTURE-PRODUCER",
+  "host_execution_ref": "synthetic-example-no-real-host-execution",
+  "reviewed_inputs": [
+    {
+      "ref": "pages/P001.md",
+      "sha256": "2aab23f161b4180edc64fa9cc52bafa32c2790edd404ee9faa2315b8e0c089ea"
+    },
+    {
+      "ref": "pages/P002.md",
+      "sha256": "480906e7bdf63dae89ea8b7d0d7e867b3760290b35e1d7533ccbe1e902b1b80e"
+    },
+    {
+      "ref": "solution_model.json",
+      "sha256": "8e170e13ea2d195e4ff8176de341bbe58ef77b20b9f78ca42930520757f89ab4"
+    }
+  ],
+  "coverage": {
+    "required_page_ids": [
+      "P001",
+      "P002"
+    ],
+    "reviewed_page_ids": [
+      "P001",
+      "P002"
+    ],
+    "claim_refs": [],
+    "skipped": []
+  },
+  "dimension_scores": {
+    "customer_specificity": 3,
+    "solution_validity": 3,
+    "evidence_quality": 2,
+    "decision_logic": 3,
+    "implementation_specificity": 3,
+    "expression_quality": 3
+  },
+  "observations": [
+    {
+      "dimension": "customer_specificity",
+      "object_refs": [
+        "P001",
+        "P002"
+      ],
+      "verdict": "pass",
+      "rationale": "本条仅展示具体对象与检查依据的契约写法，不是产品质量实测。",
+      "evidence_refs": [
+        "S-SCOPE#E003"
+      ],
+      "check_method": "synthetic_contract_demonstration"
+    },
+    {
+      "dimension": "solution_validity",
+      "object_refs": [
+        "P001",
+        "P002"
+      ],
+      "verdict": "pass",
+      "rationale": "本条仅展示具体对象与检查依据的契约写法，不是产品质量实测。",
+      "evidence_refs": [
+        "S-SCOPE#E003"
+      ],
+      "check_method": "synthetic_contract_demonstration"
+    },
+    {
+      "dimension": "evidence_quality",
+      "object_refs": [
+        "P001",
+        "P002"
+      ],
+      "verdict": "fail",
+      "rationale": "P002 将尚待核对的接口写成已确认，须纠正。",
+      "evidence_refs": [
+        "S-SCOPE#E003"
+      ],
+      "check_method": "synthetic_contract_demonstration"
+    },
+    {
+      "dimension": "decision_logic",
+      "object_refs": [
+        "P001",
+        "P002"
+      ],
+      "verdict": "pass",
+      "rationale": "本条仅展示具体对象与检查依据的契约写法，不是产品质量实测。",
+      "evidence_refs": [
+        "S-SCOPE#E003"
+      ],
+      "check_method": "synthetic_contract_demonstration"
+    },
+    {
+      "dimension": "implementation_specificity",
+      "object_refs": [
+        "P001",
+        "P002"
+      ],
+      "verdict": "pass",
+      "rationale": "本条仅展示具体对象与检查依据的契约写法，不是产品质量实测。",
+      "evidence_refs": [
+        "S-SCOPE#E003"
+      ],
+      "check_method": "synthetic_contract_demonstration"
+    },
+    {
+      "dimension": "expression_quality",
+      "object_refs": [
+        "P001",
+        "P002"
+      ],
+      "verdict": "pass",
+      "rationale": "本条仅展示具体对象与检查依据的契约写法，不是产品质量实测。",
+      "evidence_refs": [
+        "S-SCOPE#E003"
+      ],
+      "check_method": "synthetic_contract_demonstration"
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "F-001",
+      "severity": "P1",
+      "dimension": "evidence_quality",
+      "object_refs": [
+        "P002",
+        "ASSUMPTION-01"
+      ],
+      "message": "接口可用性尚待核对，页面却宣称已确认。",
+      "evidence_refs": [
+        "S-SCOPE#E003"
+      ],
+      "repair_action": "revise_claim",
+      "repair_instruction": "改为设计建议并保留接口核对前提，不虚构外部佐证。",
+      "recheck": "复核P002与模型假设一致，且当前产物没有已确认可用的断言。",
+      "allowed_scope_refs": [
+        "P002"
+      ]
+    }
+  ],
+  "summary": {
+    "reported_status": "rework_required",
+    "conclusion": "合成缺陷应返修；不能作为真实独立审查或交付证据。"
+  }
+}
