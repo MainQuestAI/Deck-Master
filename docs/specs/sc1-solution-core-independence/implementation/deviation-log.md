@@ -21,4 +21,6 @@
 | 2026-09-07 | PR-07/C4 | acceptance_rate 兼容字段 | strong_assets 保留 `approval_rate` 字段（值=新口径 acceptance_rate），新增 accepted_count/rejected_count/reviewed_count；排序改为接受率优先 | 避免 learning pack 消费方（agent_guidance、markdown、既有读取器）schema 断裂 | 旧口径值不再参与任何计算或排序 | L-01、L-02 | 否 | closed |
 | 2026-09-07 | PR-06 收口 | W-02—W-04 typed trigger 全量表 | 本轮以 action envelope（W-06—W-10）+ 既有 authority 守卫（W-01/W-05）+ F03 语义统一覆盖 C2 主验收；stage-contracts forcing question 的 typed trigger/answer_schema 结构化改造延后（31 个问题 × 15 类目的共享表改动需与 autopilot/handoff 联调，独立提交） | 共享文件单点收口 + 避免 mask 测试风险；现有 trigger 字符串语义未变 | W-02（Agent 编写反方疑问）/W-03（精确决定依赖）仍 open；authority/材料自答/等待语义已生效 | W-02、W-03 | 否 | open（PR-07 前收口） |
 
+| 2026-09-07 | PR-08/C6 | 真实 UAT 与真实后端 smoke | 全部八轮 PR 的工程交付完成；未闭环项保持如实登记：真实标准后端 smoke（A-03/P-01）、三类真实样本配对 UAT（E-02—E-06）、typed trigger 表、W-02/W-03——达成后整轮才可报 engineering_complete/outcome_pending，不得标 accepted | 规格 §0.5 最终完成定义；README/known-limitations 已按真实支持范围写明 | 整轮状态保持 in_progress（工程主线落地，效果验收待真实环境） | 全表 | 真实素材与后端授权需用户提供，属既有 outcome_pending 通道 | open |
+
 > 本表仅登记普通实现偏差；标准后端取消、真实研究删减、用户工作量目标弱化、语义审查降级、范围扩大不属于可自行登记的偏差（包内模板约束）。
