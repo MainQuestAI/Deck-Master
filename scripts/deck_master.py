@@ -653,9 +653,21 @@ def command_build_brief(args: argparse.Namespace) -> dict[str, Any]:
     request = load_request(run_dir)
     context_manifest = read_json(run_dir / CONTEXT_MANIFEST_NAME)
     conversation = read_json(run_dir / CONVERSATION_SESSION_NAME)
-    deck_brief = compile_deck_brief(request, context_manifest, conversation)
+    agent_extract_path = getattr(args, "agent_extract", None)
+    agent_extract = None
+    if agent_extract_path:
+        from runtime.run_state import read_json as _read_json
+
+        agent_extract = _read_json(Path(agent_extract_path).expanduser().resolve())
+    deck_brief = compile_deck_brief(request, context_manifest, conversation, agent_extract=agent_extract)
     write_artifact(run_dir, DECK_BRIEF_NAME, deck_brief, action="deck_brief.created")
-    return {"run_id": request["run_id"], "run_dir": str(run_dir), "status": "brief_ready", "core_points": len(deck_brief["core_points"])}
+    return {
+        "run_id": request["run_id"],
+        "run_dir": str(run_dir),
+        "status": "brief_ready",
+        "core_points": len(deck_brief["core_points"]),
+        "brief_mode": deck_brief.get("brief_mode", ""),
+    }
 
 
 def command_build_claim_map(args: argparse.Namespace) -> dict[str, Any]:
@@ -3199,6 +3211,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_brief = sub.add_parser("build-brief", help="Compile deck_brief.json from context and conversation")
     add_run_args(p_brief)
+    p_brief.add_argument(
+        "--agent-extract",
+        default=None,
+        help="Path to the Agent's structured brief extraction JSON (production path; omit for fixture/degraded rules)",
+    )
     p_brief.set_defaults(func=command_build_brief)
 
     p_claim = sub.add_parser("build-claim-map", help="Compile claim_map.json from deck_brief.json")

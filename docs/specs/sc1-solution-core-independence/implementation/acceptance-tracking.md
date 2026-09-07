@@ -9,9 +9,9 @@
 | 组 | 数量 | 当前状态 | 说明 |
 |---|---|---|---|
 | A（安装/托管/就绪） | 13 | A-01/A-02/A-04/A-05/A-06/A-11/A-12 部分（工程测试通过，真实环境证据待补）；A-03 blocked（后端 unbound）；A-07—A-10 部分（P-02 测试覆盖）；A-08/A-09/A-10 待评估 | 证据：`tests/test_capability_lock_and_managed_backend.py`、更新后的 `test_build_runtime.py`/`test_open_source_preview_gate.py` |
-| I（材料/Context Pack） | 8 | not_started ×8 | PR-03 |
-| R（研究） | 6 | not_started ×6 | PR-03；R 组含"无网络真实报告"分支 |
-| S（方案/Brief/判断） | 8 | not_started ×8 | PR-03/04 |
+| I（材料/Context Pack） | 8 | I-01/I-02/I-05 工程测试通过；I-03/I-04/I-06/I-07 随 PR-04/05 集成验证；I-08 待评估 | 证据：`tests/test_sc1_intake_research_brief.py` |
+| R（研究） | 6 | R-01—R-04 工程测试通过（构建/脱敏门/执行前置/回写同一 manifest）；R-05/R-06 需宿主真实研究执行，deferred_to_uat 候选 | 同上 |
+| S（方案/Brief/判断） | 8 | S-01/S-02 工程测试通过（agent_extract 标注、未审引用不记支持）；S-03/S-04 随 PR-04 | 同上 |
 | N（叙事/双路径） | 5 | not_started ×5 | PR-04/05 |
 | P（页面生产/构建） | 6 | P-02 工程测试通过；P-01 blocked（真实标准 build/render 需后端绑定） | PR-05 继续 |
 | D（架构视图/图形） | 6 | not_started ×6 | PR-05 |

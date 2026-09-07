@@ -82,10 +82,12 @@ def build_judgments(
 
 
 def _judge_business_problem(business_goal: str, claims: list, sources: list) -> dict:
-    """判断核心业务问题是否清晰。"""
-    has_evidence = bool(sources)
-    confidence = 0.7 if has_evidence else 0.4
-    risk_flags = [] if has_evidence else ["needs_customer_evidence"]
+    """判断核心业务问题是否清晰。来源存在只说明有候选材料，不等于问题已被证实。"""
+    has_sources = bool(sources)
+    confidence = 0.7 if has_sources else 0.4
+    risk_flags = [] if has_sources else ["needs_customer_evidence"]
+    if has_sources:
+        risk_flags.append("evidence_unreviewed")
 
     statement = f"客户核心问题是{business_goal[:80]}。" if business_goal else "核心业务问题尚未明确。"
 
@@ -93,9 +95,13 @@ def _judge_business_problem(business_goal: str, claims: list, sources: list) -> 
         "judgment_id": "judgment_business_problem",
         "topic": "business_problem",
         "statement": statement,
-        "rationale": "会议转写和 brief 指向核心业务问题。" if has_evidence else "缺少客户直接输入，业务问题基于推断。",
+        "rationale": (
+            "会议转写和 brief 指向核心业务问题；来源证据尚未逐条审核。"
+            if has_sources
+            else "缺少客户直接输入，业务问题基于推断。"
+        ),
         "confidence": confidence,
-        "source_refs": ["context_manifest.json"] if has_evidence else [],
+        "source_refs": ["context_manifest.json"] if has_sources else [],
         "risk_flags": risk_flags,
     }
 
@@ -117,19 +123,82 @@ def _judge_solution_approach(core_points: list, claims: list, business_goal: str
     }
 
 
+REVIEWED_EVIDENCE_STATUSES = {"reviewed", "supported"}
+
+
+def _claim_evidence_states(claims: list, valid_source_ids: set[str]) -> dict[str, int]:
+    """Classify claim evidence without treating "no risk flag" as support.
+
+    SC-1 F02: evidence is either explicitly reviewed/supported (per-evidence
+    ``evidence_status``) or unreviewed — a bare ``evidence_refs`` list is a
+    pointer, never proof. Claims without any resolvable reference are
+    unsupported.
+    """
+
+    states = {"supported": 0, "referenced_unreviewed": 0, "unsupported": 0}
+    for claim in claims:
+        if not isinstance(claim, dict):
+            continue
+        evidence = claim.get("evidence") if isinstance(claim.get("evidence"), list) else []
+        supported = 0
+        referenced = 0
+        for item in evidence:
+            if not isinstance(item, dict):
+                continue
+            ref = str(item.get("source_id") or item.get("source_ref") or "").strip()
+            if not ref or (valid_source_ids and ref not in valid_source_ids):
+                continue
+            status = str(item.get("evidence_status") or "unreviewed").strip().lower()
+            if status in REVIEWED_EVIDENCE_STATUSES:
+                supported += 1
+            else:
+                referenced += 1
+        refs = claim.get("evidence_refs") if isinstance(claim.get("evidence_refs"), list) else []
+        resolvable_refs = [
+            str(ref)
+            for ref in refs
+            if str(ref).strip() and (not valid_source_ids or str(ref).strip() in valid_source_ids)
+        ]
+        if supported:
+            states["supported"] += 1
+        elif referenced or resolvable_refs:
+            states["referenced_unreviewed"] += 1
+        else:
+            states["unsupported"] += 1
+    return states
+
+
 def _judge_evidence_sufficiency(claims: list, sources: list) -> dict:
-    """判断证据是否充分。"""
+    """判断证据是否充分：只有已审证据计入支持；未审即未审。"""
+    valid_source_ids = {
+        str(source.get("source_id") or "").strip()
+        for source in sources
+        if isinstance(source, dict) and str(source.get("source_id") or "").strip()
+    }
     total_claims = len(claims)
-    claims_with_evidence = sum(1 for c in claims if not c.get("risk_flags"))
-    ratio = claims_with_evidence / max(total_claims, 1)
-    confidence = round(min(0.9, ratio * 0.8 + 0.1), 2)
-    risk_flags = [] if ratio >= 0.7 else ["needs_customer_evidence"]
+    states = _claim_evidence_states(claims, valid_source_ids)
+    supported_ratio = states["supported"] / max(total_claims, 1)
+    confidence = round(min(0.9, supported_ratio * 0.8 + 0.1), 2)
+    risk_flags: list[str] = []
+    if supported_ratio < 0.7:
+        risk_flags.append("needs_customer_evidence")
+    if states["referenced_unreviewed"]:
+        risk_flags.append("evidence_unreviewed")
+    statement = (
+        f"{states['supported']}/{total_claims} 个论点有已审证据支撑，"
+        f"{states['referenced_unreviewed']} 个仅有未审引用，{states['unsupported']} 个无证据引用。"
+    )
+    rationale = (
+        f"已审证据覆盖率 {supported_ratio:.0%}。"
+        + ("达到最低标准。" if supported_ratio >= 0.7 else "需要补充更多证据。")
+        + ("存在未审证据引用，不能视作已支撑。" if states["referenced_unreviewed"] else "")
+    )
 
     return {
         "judgment_id": "judgment_evidence_sufficiency",
         "topic": "evidence_sufficiency",
-        "statement": f"{claims_with_evidence}/{total_claims} 个论点有充分证据支撑。",
-        "rationale": f"证据覆盖率 {ratio:.0%}。{'达到最低标准。' if ratio >= 0.7 else '需要补充更多证据。'}",
+        "statement": statement,
+        "rationale": rationale,
         "confidence": confidence,
         "source_refs": ["claim_map.json", "context_manifest.json"],
         "risk_flags": risk_flags,

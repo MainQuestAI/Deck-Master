@@ -30,8 +30,12 @@ def build_claim_map(deck_brief: dict[str, Any], context_manifest: dict[str, Any]
         text = str(point).strip()
         if not text:
             continue
-        has_evidence = bool(fragments)
-        risk_flags = [] if has_evidence else ["evidence_gap"]
+        # SC-1 F02: a resolvable reference is not reviewed evidence. Claims
+        # with candidate fragments carry evidence_unreviewed, not a clean bill.
+        if fragments:
+            risk_flags = ["evidence_unreviewed"]
+        else:
+            risk_flags = ["evidence_gap"]
         claims.append(
             {
                 "claim_id": f"claim_{index:02d}",
