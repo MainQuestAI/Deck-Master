@@ -83,9 +83,13 @@ def action_applied(root: Path | str, action_id: str) -> dict[str, Any] | None:
     if not path.exists():
         return None
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return {"action_id": action_id, "status": "applied_marker_unreadable"}
+        marker = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ActionEnvelopeError(f"applied marker for action {action_id} is unreadable: {exc}") from exc
+    if str(marker.get("status") or "applied") != "applied":
+        # a recorded failure must not block a retry of the same action id
+        return None
+    return marker
 
 
 def stage_action_result(
@@ -129,6 +133,29 @@ def commit_action_result(
     """
 
     root = Path(root).expanduser().resolve()
+    # SC-1.1 spec 05 section 5.5: the whole compare-validate-commit-pointer
+    # cycle runs under a per-run write lock.
+    lock = _acquire_run_lock(root)
+    try:
+        return _commit_locked(
+            root,
+            envelope,
+            current_input_fingerprint=current_input_fingerprint,
+            targets=targets,
+            expected_revision=expected_revision,
+        )
+    finally:
+        _release_run_lock(lock)
+
+
+def _commit_locked(
+    root: Path,
+    envelope: dict[str, Any],
+    *,
+    current_input_fingerprint: str,
+    targets: dict[str, Path],
+    expected_revision: str | None,
+) -> dict[str, Any]:
     action_id = str(envelope.get("action_id") or "")
     applied = action_applied(root, action_id)
     if applied:
@@ -312,3 +339,33 @@ def commit_revision_pointer(root: Path, action_id: str, targets: dict[str, Path]
     tmp.write_text(json.dumps({"revision_id": revision_id, "action_id": action_id, "applied_files": applied_files}, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     tmp.replace(pointer)
     return {"revision_id": revision_id}
+
+
+def _run_lock_path(root: Path) -> Path:
+    return root / "build" / ".action_commit.lock"
+
+
+def _acquire_run_lock(root: Path):
+    lock_path = _run_lock_path(root)
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    handle = lock_path.open("a+")
+    held = False
+    try:
+        import fcntl
+
+        fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+        held = True
+    except ImportError:  # pragma: no cover - non-POSIX best-effort fallback
+        pass
+    handle._deck_lock_held = held  # type: ignore[attr-defined]
+    return handle
+
+
+def _release_run_lock(handle) -> None:
+    try:
+        import fcntl
+
+        if getattr(handle, "_deck_lock_held", False):
+            fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+    finally:
+        handle.close()

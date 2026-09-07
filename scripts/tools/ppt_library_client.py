@@ -1161,9 +1161,7 @@ def run_library_selection(
         # SC-1.1 F-N07/IND-04: none is a real production decision — no Library
         # call, no fixture candidates; every beat returns a generate decision.
         selections: list[dict[str, Any]] = []
-        beats_by_id = {str(item.get("beat_id")): item for item in narrative_plan.get("beats", []) if isinstance(item, dict)}
         for bridge_request in bridge_plan["requests"]:
-            beat = beats_by_id.get(str(bridge_request["beat_id"]), {})
             selections.append(
                 {
                     "beat_id": str(bridge_request["beat_id"]),

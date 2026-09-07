@@ -8,8 +8,6 @@ external PPT Master product; result objects carry compile status only —
 """
 
 from __future__ import annotations
-
-import json
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable

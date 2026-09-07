@@ -174,41 +174,6 @@ def run_native_compile(run_dir: str | Path, *, run_mode: str = "production") -> 
     }
 
 
-def _scene_from_package(package: dict[str, Any]) -> dict[str, Any]:
-    """Project an approved package into a v2 page scene for the compiler.
-
-    The compiler contract requires deck_page_scene.v2; the scene is derived
-    from the SAME approved content (single source of truth) — text entries
-    carry the package body blocks and labels, never blueprint text.
-    """
-
-    visible = package.get("customer_visible") or {}
-    elements: list[dict[str, Any]] = []
-    order = 0
-    title = str(visible.get("title") or "")
-    if title:
-        order += 1
-        elements.append({"element_id": f"title_{order:02d}", "kind": "text", "text": title, "size": 28, "weight": "bold", "x": 80, "y": 90, "w": 900, "h": 60})
-    for block in visible.get("body_blocks", []):
-        if not isinstance(block, dict):
-            continue
-        text_value = str(block.get("text") or "")
-        if not text_value:
-            continue
-        order += 1
-        elements.append({"element_id": f"body_{order:02d}", "kind": "text", "text": text_value, "size": 16, "weight": "normal", "x": 80, "y": 180 + order * 60, "w": 1200, "h": 48})
-    for label in visible.get("labels", []):
-        order += 1
-        elements.append({"element_id": f"label_{order:02d}", "kind": "text", "text": str(label), "size": 12, "weight": "normal", "x": 80, "y": 900 - order * 30, "w": 400, "h": 24})
-    return {
-        "schema_version": "deck_page_scene.v2",
-        "page_id": str(package.get("page_id") or ""),
-        "page_role": str((package.get("visual_spec") or {}).get("page_role") or "content"),
-        "title": title,
-        "elements": elements,
-    }
-
-
 
 def write_json_native_run(root: Path, payload: dict[str, Any]) -> None:
     path = root / "build" / "native_compile_result.json"
