@@ -1,0 +1,377 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:deck-master:sc1:deck_narrative_plan.v3",
+  "title": "deck_narrative_plan.v3",
+  "description": "SC-1 target contract draft; not installed in the current repository. Structural validation is not runtime or semantic verification. Field semantics follow contracts/EXTENSION_DELTAS.md (Narrative Plan 目标 v3); conflicts resolve to that table during Q0 freeze.",
+  "x-spec-status": "target-draft",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "deck_narrative_plan.v3"
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "run_mode": {
+      "type": "string",
+      "enum": [
+        "production",
+        "benchmark",
+        "fixture",
+        "dev"
+      ]
+    },
+    "based_on": {
+      "type": "object",
+      "properties": {
+        "input_fingerprint": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "input_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "ref": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "required": [
+              "ref",
+              "sha256"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "input_fingerprint",
+        "input_refs"
+      ],
+      "additionalProperties": false
+    },
+    "plan_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "solution_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "solution_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+          },
+          "core_thesis": {
+            "type": "string",
+            "minLength": 1
+          },
+          "decision_intent": {
+            "type": "string",
+            "minLength": 1
+          },
+          "argument_sequence": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
+          },
+          "tradeoffs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
+          },
+          "recommendation_reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "id",
+          "core_thesis",
+          "decision_intent",
+          "argument_sequence",
+          "evidence_refs",
+          "tradeoffs",
+          "recommendation_reason"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "recommended_candidate_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "selected_candidate_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "selection_decision_ref": {
+      "type": "string",
+      "minLength": 0
+    },
+    "issue_tree": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+          },
+          "question": {
+            "type": "string",
+            "minLength": 1
+          },
+          "hypothesis": {
+            "type": "string",
+            "minLength": 1
+          },
+          "claim_refs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 0
+          },
+          "parent_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+          }
+        },
+        "required": [
+          "id",
+          "question",
+          "hypothesis",
+          "claim_refs"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "beats": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "beat_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+          },
+          "order": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "role": {
+            "type": "string",
+            "minLength": 1
+          },
+          "page_job": {
+            "type": "string",
+            "minLength": 1
+          },
+          "conclusion": {
+            "type": "string",
+            "minLength": 1
+          },
+          "claim_refs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
+          },
+          "solution_refs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 0
+          },
+          "business_implication": {
+            "type": "string",
+            "minLength": 1
+          },
+          "required_components": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 0
+          },
+          "content_budget": {
+            "type": "string",
+            "minLength": 1
+          },
+          "visual_intent": {
+            "type": "string",
+            "minLength": 1
+          },
+          "dependencies": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 0
+          }
+        },
+        "required": [
+          "beat_id",
+          "order",
+          "role",
+          "page_job",
+          "conclusion",
+          "claim_refs",
+          "evidence_refs",
+          "solution_refs",
+          "business_implication",
+          "required_components",
+          "content_budget",
+          "visual_intent",
+          "dependencies"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "coverage": {
+      "type": "object",
+      "properties": {
+        "required_objectives": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "covered_objectives": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "omitted_with_reason": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "objective": {
+                "type": "string",
+                "minLength": 1
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "objective",
+              "reason"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0
+        }
+      },
+      "required": [
+        "required_objectives",
+        "covered_objectives",
+        "omitted_with_reason"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schema_version",
+    "run_id",
+    "run_mode",
+    "based_on",
+    "plan_id",
+    "revision",
+    "solution_ref",
+    "solution_sha256",
+    "candidates",
+    "recommended_candidate_id",
+    "selected_candidate_id",
+    "selection_decision_ref",
+    "issue_tree",
+    "beats",
+    "coverage"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "selected_candidate_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "selected_candidate_id"
+        ]
+      },
+      "then": {
+        "properties": {
+          "selection_decision_ref": {
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ]
+}

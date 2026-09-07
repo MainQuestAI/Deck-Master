@@ -43,6 +43,8 @@
 
 A1 输出 `capability-migration-matrix.md`，逐条列出“原方法/程序 → 内置位置 → 调用入口 → 回归案例”。没有实际源码或方法包时标记未知，需要 Codex 核验；不能把一个转发 SKILL.md 当作全部能力已迁入。
 
+PPT-Deck-Pro-Max 桥接显式退役：`scripts/runtime/builder_backend.py` 中钉在第三方非默认分支（`codex/deck-pro-max-bridge` 分支固定 SHA）的 `DECK_MASTER_PPT_DECK_PRO_MAX_BRIDGE` 绑定是最脆弱的外部依赖；A1/A3 完成方法内化后必须移除该绑定路径与“HEAD 等于固定 SHA 才算 verified”的逻辑，production 生成只走 Agent 派发。退役前先确认无其他调用方。
+
 ## 3.4 安装事务和所有权
 
 安装顺序：解析锁定组件 → 准備暂存 release → 验证包哈希与来源 → 创建目标环境 → 组件真实 smoke → suite 校验 → 原子激活 current → 安装归属明确的宿主入口。

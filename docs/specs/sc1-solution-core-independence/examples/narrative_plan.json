@@ -1,0 +1,181 @@
+{
+  "schema_version": "deck_narrative_plan.v3",
+  "run_id": "synthetic_sc1",
+  "run_mode": "fixture",
+  "based_on": {
+    "input_fingerprint": "6564b8e6156cbdb3c1663567df46445233c3f30c60dd4039956ae0da1c06471a",
+    "input_refs": [
+      {
+        "ref": "context_pack.json",
+        "sha256": "2528f9c0159cd2998d1c5c3aa6bab2502bb6352170eecfa90473a97c56e797e9"
+      },
+      {
+        "ref": "solution_model.json",
+        "sha256": "8e170e13ea2d195e4ff8176de341bbe58ef77b20b9f78ca42930520757f89ab4"
+      }
+    ]
+  },
+  "plan_id": "NARR-01",
+  "revision": 1,
+  "solution_ref": "solution_model.json",
+  "solution_sha256": "8e170e13ea2d195e4ff8176de341bbe58ef77b20b9f78ca42930520757f89ab4",
+  "candidates": [
+    {
+      "id": "NAR-01",
+      "core_thesis": "先在小范围试点验证人工确认后的写回流程，保留现有业务系统，再决定扩展范围。",
+      "decision_intent": "推动客户批准启动小范围试点，而不是立即全量替换或扩大范围。",
+      "argument_sequence": [
+        "重复录入是当前可定位的效率损失",
+        "拟建助手只生成建议与可审核记录，最终保存由业务人员确认",
+        "试点验收检查记录完整性、人工确认执行与写回可追踪",
+        "接口接入方式在试点前核对，不预先承诺可用"
+      ],
+      "evidence_refs": [
+        "S-MEET#E002",
+        "S-SCOPE#E001",
+        "S-SCOPE#E002"
+      ],
+      "tradeoffs": [
+        "试点范围小，短期不覆盖全流程",
+        "接口核对前置增加准备时间"
+      ],
+      "recommendation_reason": "直接验证拟建助手机制与人工确认边界，试点可按材料中的验收标准检验。"
+    },
+    {
+      "id": "NAR-02",
+      "core_thesis": "先统一录入规范并消除重复录入，规范稳定后再评估助手介入点。",
+      "decision_intent": "推动客户先接受一次流程规范调整，把助手建设推迟到规范验证之后。",
+      "argument_sequence": [
+        "重复录入源于录入规范缺失",
+        "先以最小改动统一规范",
+        "人工执行稳定后再引入助手自动化"
+      ],
+      "evidence_refs": [
+        "S-MEET#E001",
+        "S-MEET#E002"
+      ],
+      "tradeoffs": [
+        "不引入新工具，验证周期内自动化收益不可见",
+        "规范统一本身缺少材料中的先行依据"
+      ],
+      "recommendation_reason": "与材料中已声明的目标一致，但把助手价值验证推迟，未利用已有验收标准。"
+    }
+  ],
+  "recommended_candidate_id": "NAR-01",
+  "selected_candidate_id": "NAR-01",
+  "selection_decision_ref": "decision:planning-primary-direction-accepted",
+  "issue_tree": [
+    {
+      "id": "ISSUE-01",
+      "question": "同一需求重复录入是否构成当前主要效率损失？",
+      "hypothesis": "消除重复录入即可在试点范围内度量收益。",
+      "claim_refs": [
+        "CLM-DUP-ENTRY"
+      ]
+    },
+    {
+      "id": "ISSUE-02",
+      "question": "人工确认环节能否保证记录可审计？",
+      "hypothesis": "助手生成建议加人工确认写回可保证可追踪。",
+      "claim_refs": [
+        "CLM-AUDIT-BOUNDARY"
+      ],
+      "parent_id": "ISSUE-01"
+    },
+    {
+      "id": "ISSUE-03",
+      "question": "是否启动小范围试点？",
+      "hypothesis": "按现有系统保留边界启动试点风险可控。",
+      "claim_refs": [
+        "CLM-PILOT-GO"
+      ],
+      "parent_id": "ISSUE-01"
+    },
+    {
+      "id": "ISSUE-04",
+      "question": "接口接入方式是否已证明可用？",
+      "hypothesis": "未证明；需在试点前核对，不能作为既成事实写入交付。",
+      "claim_refs": [
+        "CLM-IFACE-UNPROVEN"
+      ],
+      "parent_id": "ISSUE-03"
+    }
+  ],
+  "beats": [
+    {
+      "beat_id": "P001",
+      "order": 1,
+      "role": "decision_request",
+      "page_job": "给出试点建议与所需决策，说明保留现有系统的边界。",
+      "conclusion": "建议先验证人工确认后的写回流程，保留现有业务系统。",
+      "claim_refs": [
+        "CLM-DUP-ENTRY",
+        "CLM-PILOT-GO"
+      ],
+      "evidence_refs": [
+        "S-MEET#E002",
+        "S-SCOPE#E001",
+        "S-SCOPE#E002"
+      ],
+      "solution_refs": [
+        "PROBLEM-01",
+        "CAP-01",
+        "COMP-ASSISTANT",
+        "COMP-SYSTEM",
+        "ALT-01"
+      ],
+      "business_implication": "决策通过后可启动小范围试点，不承诺接口或全量改造。",
+      "required_components": [
+        "COMP-ASSISTANT",
+        "COMP-SYSTEM"
+      ],
+      "content_budget": "120-160字正文，加一组现状与试点流程对比。",
+      "visual_intent": "左侧现状重复录入流程，右侧试点写回闭环，人工确认节点高亮。",
+      "dependencies": []
+    },
+    {
+      "beat_id": "P002",
+      "order": 2,
+      "role": "boundary_check",
+      "page_job": "说明试点前置核对与方案边界，不承诺接口可用。",
+      "conclusion": "接口接入方式需在试点前核对；本方案不宣称接口已经可用。",
+      "claim_refs": [
+        "CLM-IFACE-UNPROVEN"
+      ],
+      "evidence_refs": [
+        "S-SCOPE#E003"
+      ],
+      "solution_refs": [
+        "COMP-SYSTEM",
+        "ASSUMPTION-01"
+      ],
+      "business_implication": "避免把未验证接口当作既成事实交付给客户。",
+      "required_components": [
+        "COMP-SYSTEM"
+      ],
+      "content_budget": "80-120字正文，加前置核对清单。",
+      "visual_intent": "前置核对清单卡片，不使用暗示已接通的连接图。",
+      "dependencies": [
+        "P001"
+      ]
+    }
+  ],
+  "coverage": {
+    "required_objectives": [
+      "现状与问题",
+      "试点机制与边界",
+      "验收与前置核对"
+    ],
+    "covered_objectives": [
+      "现状与问题",
+      "试点机制与边界",
+      "验收与前置核对"
+    ],
+    "omitted_with_reason": [
+      {
+        "objective": "公司介绍与资质",
+        "reason": "合成任务目标为试点决策简报；短决策简报按 specs/05 §5.6 允许省略非必需章节。"
+      }
+    ]
+  }
+}

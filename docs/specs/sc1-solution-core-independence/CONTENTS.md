@@ -61,6 +61,7 @@
 - [contracts/context-pack.v2.schema.json](contracts/context-pack.v2.schema.json)
 - [contracts/diagram-view.v1.schema.json](contracts/diagram-view.v1.schema.json)
 - [contracts/external-quality-review.v2.schema.json](contracts/external-quality-review.v2.schema.json)
+- [contracts/narrative-plan.v3.schema.json](contracts/narrative-plan.v3.schema.json)
 - [contracts/research-task.v1.schema.json](contracts/research-task.v1.schema.json)
 - [contracts/solution-model.v1.schema.json](contracts/solution-model.v1.schema.json)
 
@@ -70,6 +71,7 @@
 - [examples/context_pack.json](examples/context_pack.json)
 - [examples/diagram_view.json](examples/diagram_view.json)
 - [examples/external_quality_review.json](examples/external_quality_review.json)
+- [examples/narrative_plan.json](examples/narrative_plan.json)
 - [examples/request.json](examples/request.json)
 - [examples/research_task.json](examples/research_task.json)
 - [examples/solution_model.json](examples/solution_model.json)
@@ -78,5 +80,6 @@
 
 - [tools/validate_spec_pack.py](tools/validate_spec_pack.py)
 
-- [88 项计划验收 cases.json](acceptance/cases.json)
+- [91 项计划验收 cases.json](acceptance/cases.json)
 - [规格包自检结果（不是产品测试）](SPEC_SELF_CHECK.json)
+- [落库修订记录](AMENDMENTS.md)

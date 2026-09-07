@@ -15,7 +15,7 @@
 依赖：Q0。
 涉及：`scripts/skills/installer.py`、产品 capability manifest、`product_capabilities/`、release/lock 相关模块。
 实现：固定来源/包 hash/版本、契约、环境、许可证与所有权；对四项能力逐条做方法/代码/参考资料映射；扩展 release 分发。
-验收：不能接受浮动 latest、开发机绝对路径或只复制 SKILL.md；同一 lock 可重复安装；公开报告脱敏。
+验收：不能接受浮动 latest、开发机绝对路径或只复制 SKILL.md；同一 lock 可重复安装；公开报告脱敏；PPT-Deck-Pro-Max 第三方分支 SHA 桥接（`DECK_MASTER_PPT_DECK_PRO_MAX_BRIDGE`）退役后生产生成不再依赖该仓库分支存在。
 测试：A-01、A-02、A-11。
 
 ## A2 PPT Master 标准后端托管

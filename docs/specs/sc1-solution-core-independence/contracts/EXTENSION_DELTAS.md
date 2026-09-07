@@ -4,6 +4,8 @@
 
 ## Narrative Plan 目标 v3
 
+结构草案见 `narrative-plan.v3.schema.json`（含合成样例 `examples/narrative_plan.json` 与自检反例）；与本表冲突时以本表语义为准，Q0 冻结时统一。
+
 | 字段 | 类型/约束 | 语义 |
 |---|---|---|
 | schema_version | 固定目标版本 | 与读写适配一起升级 |

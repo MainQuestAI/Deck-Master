@@ -33,13 +33,14 @@
 
 - `specs/`：产品范围、代码复用、架构、各模块行为、契约、迁移与验收。
 - `tasks/`：建议 PR 顺序、任务卡、文件所有权、依赖和逐包完成标准。
-- `contracts/`：六份目标 JSON Schema；既有对象的扩展约束见 `specs/09-contracts-and-cli.md`。
+- `contracts/`：七份目标 JSON Schema；既有对象的扩展约束见 `specs/09-contracts-and-cli.md`。
 - `methods/`：五份可内置到现有 Skill 的具体专业方法参考稿，不新增公开入口。
-- `examples/`：六份有效契约样例与合成原始材料；全部标记为合成数据。
-- `acceptance/`：可追踪验收案例、评分量规和真实 UAT 操作规程。
+- `examples/`：七份有效契约样例与合成原始材料；全部标记为合成数据。
+- `acceptance/`：可追踪验收案例（91 项，含 spec_ref 回指治理章节）、评分量规和真实 UAT 操作规程。
 - `agent/`：总控、实现、评审 Agent 的执行说明。
 - `sources/`：固定提交来源清单，明确源码事实、设计决策与待核验项。
 - `tools/validate_spec_pack.py`：只校验本规格包，不是 Deck Master 产品测试。
+- `AMENDMENTS.md`：落库后的审查修订记录；与原件差异以该文件为准。
 
 ## 最终完成定义
 

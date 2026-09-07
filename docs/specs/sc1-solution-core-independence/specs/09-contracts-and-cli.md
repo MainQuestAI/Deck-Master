@@ -6,7 +6,7 @@
 
 所有新对象具备 schema_version 与 run_id；有内容结果的对象绑定输入版本。路径必须是 Run 内安全相对路径，或在内部来源注册表中的受控句柄。公开报告不得包含未脱敏源目录。
 
-## 9.2 本包提供的六份 Schema
+## 9.2 本包提供的七份 Schema
 
 | Schema | 文件/用途 | 权威地位 |
 |---|---|---|
@@ -14,6 +14,7 @@
 | `deck_context_pack.v2` | 导入结果，规范化到 context_manifest | 原始来源、精确片段、覆盖和研究承接 |
 | `deck_research_task.v1` | 阶段内研究任务 | 操作任务，结果仍回 Context Pack |
 | `deck_solution_model.v1` | `solution_model.json` | 唯一方案结构与设计依据对象 |
+| `deck_narrative_plan.v3` | `narrative_plan.json` | 公共论证主线与页面任务投影；字段语义以 `EXTENSION_DELTAS.md` 为准 |
 | `deck_diagram_view.v1` | `diagram_views/<view_id>.json` | 方案模型的派生视图 |
 | `deck_external_quality_review.v2` | 既有审查结果导入 | 当前内容的专业审查记录 |
 
@@ -70,3 +71,7 @@ Q0 必须把所有 exact version、别名和读写路径冻结到实现对照表
 `SC_CAPABILITY_MISSING`：缺本次必需能力；`SC_SOURCE_PARTIALLY_READ`：关键区域未读；`SC_SOURCE_CONFLICT`：关键材料冲突；`SC_RESEARCH_UNAVAILABLE`：必需研究未执行；`SC_EVIDENCE_UNSUPPORTED`：关键事实未获支持；`SC_SOLUTION_INCOMPLETE`：问题/机制/验收关系不完整；`SC_VIEW_MODEL_MISMATCH`：视图与方案不一致；`SC_ACTION_STALE`：旧结果；`SC_ACTION_SCOPE_EXCEEDED`：越权范围；`SC_REVIEW_COVERAGE_MISSING`：审查缺页/缺维度；`SC_REPAIR_BUDGET_EXHAUSTED`：预算耗尽；`SC_APPROVAL_STALE`：批准非当前版本。
 
 错误结果必须包含相关 ref、原因、可执行恢复动作和是否确实需要用户。不得返回“请完善所有资料”这类不可操作的统一提示。
+
+## 9.7 验收
+
+新参数/新命令在 `--help`、文档、Skill 与测试中一致，且与现有命令的承接关系明确区分；旧对象扩展不悄悄丢字段（additionalProperties、dataclass 与 validator 同步升级，必要时正式升版）。证据键 `source_id#evidence_id` 的消歧规则在 context/claim/model/narrative 全对象一致；裸 ID 歧义时阻断而非猜测。v1/v2 兼容读入不自动当作 v2 通过（旧报告、旧 schema、旧 MBB 均如此）。action import 按 expected_schema 选择适配器、输出路径由 Runtime 决定，越权路径被拒绝。公共错误码映射到既有代码，错误结果含 ref、原因、恢复动作；不出现不可操作的统一提示。本包样例与生产输入分离：样例通过不作为任何产品验收证据。

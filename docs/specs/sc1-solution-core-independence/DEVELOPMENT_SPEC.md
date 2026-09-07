@@ -3,7 +3,7 @@
 
 规格版本：SC-1 v1.0｜编制日期：2026-09-07｜固定源码基线：`4199a6a8cc17ac522e074fee95bc114d4e274849`。
 
-本说明书由拆分规格、任务卡、方法参考稿与验收规程合并而成。六份可机器校验的目标 JSON Schema、六份合成样例、88 项计划验收 JSON 和规格包自检工具见同目录对应子文件。本文不是实现完成报告；本地源码状态、安装、运行、测试和客户效果需要 Codex 核验。
+本说明书由拆分规格、任务卡、方法参考稿与验收规程合并而成。七份可机器校验的目标 JSON Schema、七份合成样例、91 项计划验收 JSON 和规格包自检工具见同目录对应子文件。本文不是实现完成报告；本地源码状态、安装、运行、测试和客户效果需要 Codex 核验。
 
 **迭代组织：一个业务目标、三个工作包、八个建议 PR；工程实现与真实效果同时验收。**
 
@@ -16,6 +16,7 @@
 - 验收矩阵与真实效果规程：[SC-1 验收矩阵](acceptance/MATRIX.md)；[专业质量 1—5 分量规](acceptance/rubric.md)；[真实 UAT 操作规程](acceptance/UAT_PROTOCOL.md)
 - Agent 执行与评审：[Spec 偏差登记](agent/DEVIATION_LOG_TEMPLATE.md)；[给独立评审 Agent 的说明](agent/REVIEW_PR.md)；[给 Codex 的开工说明](agent/START_HERE.md)
 - 来源与本地核验边界：[源码来源与证据边界](sources/README.md)；[需要 Codex 核验的工程参数](sources/LOCAL_VERIFICATION_REQUIRED.md)
+- 落库修订记录：[SC-1 落库修订记录](AMENDMENTS.md)
 
 ---
 
@@ -126,6 +127,13 @@ Q0 还须验证：Page Package 在标准后端是否被真实消费；高密度 
 | F03 | AGENTS 停在外部等待与新 Skill 可继续存在冲突 | A5 统一 docs/registry/QuestionResolver/next-step 实际行为 |
 | F04 | 主新建 Playbook 没有显式完整展开生成/构建/交付 | C6 改为真正可执行的全链路指导 |
 | F05 | 资料头部截取可能遗漏后置约束 | B1 完整覆盖率与后置约束回归；不得只扩展字符上限 |
+| F06 | `narrative_planner` 生产模式仍输出硬编码 beat 标题；`_is_restricted_sample` 在生产模式也按零售样例主题词过滤 | B4 生产叙事由方案与证据驱动，模板仅作结构建议；移除生产模式误伤过滤 |
+| F07 | `runtime/render.py` 仓库内 fixture 渲染在 render_session/render_result 记 `tool: ppt-master`，来源失真 | B5/A2 修正来源记录，与实际渲染路径一致 |
+| F08 | `generation_result.schema.json` 为 v1，运行时 handback 强制 v2 且无 v2 schema；`ppt-library-handoff.md` 引用不存在的 `ppt_library_candidate.schema.json` | Q0 冻结版本对照表；A1 统一 schema 落库并修复悬空引用 |
+| F09 | `skills/RESOLVER.md` 将页面生产/审查路由到非公开 `ppt-*` 兼容别名，与 manifest 公开策略矛盾 | A1/A6 路由数据收敛到单一权威源并同步 |
+| F10 | `skills/deck-planner/agents/openai.yaml`、`deck-review/agents/openai.yaml` 版本停留 0.9.13，与 manifest 0.9.14a4 漂移 | A1/A6 版本元数据随 release 单点更新 |
+| F11 | Review Desk 逐页 approve/reject 未写回 workspace `asset_feedback.jsonl`，最富信号的学习数据流失 | C4 补齐采集；统计按最终审阅决定去重 |
+| F12 | `runtime/render_handoff.py` `render_handoff_contract_ready()` 恒真，`runtime_ready` 可经环境变量自报 | A2 以真实 smoke 证据替代自报探针；A-04 回归 |
 
 以上需要 Codex 编写最小复现并核验；本包不声称已复现或修复。
 
@@ -243,6 +251,8 @@ Deck Master = 方法与契约 + 确定性 Runtime + 托管生产工具 + 当前 
 | PPT Quality Gate | 适用的语义/证据/视觉审查方法和结果协议 | 独立产品的全部 UI/命令 |
 
 A1 输出 `capability-migration-matrix.md`，逐条列出“原方法/程序 → 内置位置 → 调用入口 → 回归案例”。没有实际源码或方法包时标记未知，需要 Codex 核验；不能把一个转发 SKILL.md 当作全部能力已迁入。
+
+PPT-Deck-Pro-Max 桥接显式退役：`scripts/runtime/builder_backend.py` 中钉在第三方非默认分支（`codex/deck-pro-max-bridge` 分支固定 SHA）的 `DECK_MASTER_PPT_DECK_PRO_MAX_BRIDGE` 绑定是最脆弱的外部依赖；A1/A3 完成方法内化后必须移除该绑定路径与“HEAD 等于固定 SHA 才算 verified”的逻辑，production 生成只走 Agent 派发。退役前先确认无其他调用方。
 
 ## 3.4 安装事务和所有权
 
@@ -575,6 +585,10 @@ Runtime 无内置模型：命令返回 Agent 动作后，宿主读取当前任�
 
 CLI、Skill 与 Review Desk 必须读取相同状态投影。read-only diagnosis 不写生产文件、不导入结果、不自动发起研究。
 
+## 8.8 验收
+
+材料已有答案的问题不再向用户重复提问；user_only 决定被 Agent 代填时被拒绝；agent_proposed 答案带依据并通过内容检查后可推进。布尔/集合否定回答按 answer_schema 有效，不被全局 vague 规则误杀。决定只按 dependency_refs 精准失效：重渲染或单页样式变化不触发业务问题重问。可执行 Agent 动作返回后宿主可继续，不要求用户说“继续”；迟到结果被拒绝且不覆盖新决定；跨文件半写入中断保留旧版本可恢复；局部授权未静默扩展为整套重写。CLI、Skill 与 Review Desk 展示同一状态投影；停止只发生在 8.6 允许的条件下。
+
 <!-- source: specs/09-contracts-and-cli.md -->
 # 09｜目标数据契约、接口与迁移规则
 
@@ -584,7 +598,7 @@ CLI、Skill 与 Review Desk 必须读取相同状态投影。read-only diagnosis
 
 所有新对象具备 schema_version 与 run_id；有内容结果的对象绑定输入版本。路径必须是 Run 内安全相对路径，或在内部来源注册表中的受控句柄。公开报告不得包含未脱敏源目录。
 
-## 9.2 本包提供的六份 Schema
+## 9.2 本包提供的七份 Schema
 
 | Schema | 文件/用途 | 权威地位 |
 |---|---|---|
@@ -592,6 +606,7 @@ CLI、Skill 与 Review Desk 必须读取相同状态投影。read-only diagnosis
 | `deck_context_pack.v2` | 导入结果，规范化到 context_manifest | 原始来源、精确片段、覆盖和研究承接 |
 | `deck_research_task.v1` | 阶段内研究任务 | 操作任务，结果仍回 Context Pack |
 | `deck_solution_model.v1` | `solution_model.json` | 唯一方案结构与设计依据对象 |
+| `deck_narrative_plan.v3` | `narrative_plan.json` | 公共论证主线与页面任务投影；字段语义以 `EXTENSION_DELTAS.md` 为准 |
 | `deck_diagram_view.v1` | `diagram_views/<view_id>.json` | 方案模型的派生视图 |
 | `deck_external_quality_review.v2` | 既有审查结果导入 | 当前内容的专业审查记录 |
 
@@ -648,6 +663,10 @@ Q0 必须把所有 exact version、别名和读写路径冻结到实现对照表
 `SC_CAPABILITY_MISSING`：缺本次必需能力；`SC_SOURCE_PARTIALLY_READ`：关键区域未读；`SC_SOURCE_CONFLICT`：关键材料冲突；`SC_RESEARCH_UNAVAILABLE`：必需研究未执行；`SC_EVIDENCE_UNSUPPORTED`：关键事实未获支持；`SC_SOLUTION_INCOMPLETE`：问题/机制/验收关系不完整；`SC_VIEW_MODEL_MISMATCH`：视图与方案不一致；`SC_ACTION_STALE`：旧结果；`SC_ACTION_SCOPE_EXCEEDED`：越权范围；`SC_REVIEW_COVERAGE_MISSING`：审查缺页/缺维度；`SC_REPAIR_BUDGET_EXHAUSTED`：预算耗尽；`SC_APPROVAL_STALE`：批准非当前版本。
 
 错误结果必须包含相关 ref、原因、可执行恢复动作和是否确实需要用户。不得返回“请完善所有资料”这类不可操作的统一提示。
+
+## 9.7 验收
+
+新参数/新命令在 `--help`、文档、Skill 与测试中一致，且与现有命令的承接关系明确区分；旧对象扩展不悄悄丢字段（additionalProperties、dataclass 与 validator 同步升级，必要时正式升版）。证据键 `source_id#evidence_id` 的消歧规则在 context/claim/model/narrative 全对象一致；裸 ID 歧义时阻断而非猜测。v1/v2 兼容读入不自动当作 v2 通过（旧报告、旧 schema、旧 MBB 均如此）。action import 按 expected_schema 选择适配器、输出路径由 Runtime 决定，越权路径被拒绝。公共错误码映射到既有代码，错误结果含 ref、原因、恢复动作；不出现不可操作的统一提示。本包样例与生产输入分离：样例通过不作为任何产品验收证据。
 
 <!-- source: specs/10-migration.md -->
 # 10｜迁移、回滚与发布收口
@@ -825,7 +844,7 @@ A 的组件封装与 B 的方法/契约设计可并行；公共 narrative 定稿
 依赖：Q0。
 涉及：`scripts/skills/installer.py`、产品 capability manifest、`product_capabilities/`、release/lock 相关模块。
 实现：固定来源/包 hash/版本、契约、环境、许可证与所有权；对四项能力逐条做方法/代码/参考资料映射；扩展 release 分发。
-验收：不能接受浮动 latest、开发机绝对路径或只复制 SKILL.md；同一 lock 可重复安装；公开报告脱敏。
+验收：不能接受浮动 latest、开发机绝对路径或只复制 SKILL.md；同一 lock 可重复安装；公开报告脱敏；PPT-Deck-Pro-Max 第三方分支 SHA 桥接（`DECK_MASTER_PPT_DECK_PRO_MAX_BRIDGE`）退役后生产生成不再依赖该仓库分支存在。
 测试：A-01、A-02、A-11。
 
 ## A2 PPT Master 标准后端托管
@@ -927,10 +946,10 @@ A 的组件封装与 B 的方法/契约设计可并行；公共 narrative 定稿
 ## C1 语义审查 v2 与量规
 
 依赖：B4/B5；量规在 Q0 即冻结。
-涉及：`quality/external_review.py`、既有 review tasks、contracts、Skill 方法包。
-实现：输入版本、覆盖、逐维观察、独立性证据、具体 findings；报告状态由 Runtime 校验，不接受空 pass；语义检查前移。
-验收：仅存在 reviewer 字符串不算独立；来源匹配与语义支持区分；每个关键页面/论点均有覆盖。
-测试：Q-01—Q-05。
+涉及：`quality/external_review.py`、既有 review tasks、contracts、Skill 方法包、`skills/deck-master/prompts/quality_reviewer.prompt.md`。
+实现：输入版本、覆盖、逐维观察、独立性证据、具体 findings；报告状态由 Runtime 校验，不接受空 pass；语义检查前移。同步将 `quality_reviewer.prompt.md` 从 v1 五维英文输出升级到 v2 六维量规（维度枚举与 `deck_external_quality_review.v2` 一致），并核对 `narrative_advisor`、`source_decision_reviewer` 的维度词表未漂移；旧 v1 报告仅按 v1 语义读取。
+验收：仅存在 reviewer 字符串不算独立；来源匹配与语义支持区分；每个关键页面/论点均有覆盖；prompt 产出的维度与 v2 schema 枚举一致。
+测试：Q-01—Q-05、Q-13。
 
 ## C2 阶段内动作与定向修复
 
@@ -981,7 +1000,7 @@ A 的组件封装与 B 的方法/契约设计可并行；公共 narrative 定稿
 <!-- source: contracts/README.md -->
 # SC-1 目标契约
 
-六份 JSON Schema 均为 Draft 2020-12 的目标草案，与当前仓库已有契约版本不是同一状态。Codex 必须先做对应 validator/adapter/旧输入兼容，再启用新生产模式。
+七份 JSON Schema 均为 Draft 2020-12 的目标草案，与当前仓库已有契约版本不是同一状态。Codex 必须先做对应 validator/adapter/旧输入兼容，再启用新生产模式。
 
 共同 envelope：schema_version、run_id、run_mode、based_on。based_on 至少包含输入引用+SHA-256和集合指纹；生产/benchmark 对照已创建 Run 的模式，不信任回传自行改模式。input fingerprint 对所需实际输入计算，不接受 Agent 自称“当前”。
 
@@ -993,6 +1012,7 @@ A 的组件封装与 B 的方法/契约设计可并行；公共 narrative 定稿
 | context pack | 来源文件/页/片段真实存在、读取覆盖、引文/片段指纹、跨源ID消歧、授权与支持状态不同、冲突可追溯 |
 | research task/result | 查询投影已获授权、宿主真实执行与预算、任务结果关联同一输入，不把未知网络状态当成功 |
 | solution model | 引用可解析、问题—能力—验收连通、现有事实有来源、拟建设计有理由、阶段无依赖环 |
+| narrative plan | solution hash 当前、候选/选择可解析、issue tree 与 beat 依赖无环、beat 证据/方案引用可解析、selected 需决定引用 |
 | diagram view | model hash当前，节点成员可解析，关系端点/方向正确，聚合可解释，图文一致 |
 | external review | 当前文件实际覆盖、独立执行轨迹、具体观察、关键问题压过summary、旧输入报告不得当当前 |
 
@@ -1008,7 +1028,7 @@ line/page/slide/paragraph 使用1起始闭区间；character 使用0起始半开
 
 `specs/09-contracts-and-cli.md` 与 `EXTENSION_DELTAS.md` 定义既有对象的目标扩展。新的完整 Schema 与已有源码出现命名/版本冲突时，按 Q0 映射递增版本，不削弱语义约束。
 
-运行 `python tools/validate_spec_pack.py` 只验证本包六份合成样例及选定反例，不验证仓库实现、真实模型、真实后端、授权或UAT。
+运行 `python tools/validate_spec_pack.py` 只验证本包七份合成样例及选定反例，不验证仓库实现、真实模型、真实后端、授权或UAT。
 
 <!-- source: contracts/EXTENSION_DELTAS.md -->
 # 既有对象的精确扩展输入
@@ -1016,6 +1036,8 @@ line/page/slide/paragraph 使用1起始闭区间；character 使用0起始半开
 本文件是对现有对象的字段增量设计，不是独立的另一套事实库。具体已有 Schema 的版本/额外字段规则需要 Codex 核验；禁止跳过迁移直接覆盖旧文件。
 
 ## Narrative Plan 目标 v3
+
+结构草案见 `narrative-plan.v3.schema.json`（含合成样例 `examples/narrative_plan.json` 与自检反例）；与本表冲突时以本表语义为准，Q0 冻结时统一。
 
 | 字段 | 类型/约束 | 语义 |
 |---|---|---|
@@ -1251,7 +1273,7 @@ learning统计以asset/run/reviewed_revision最终决定去重；accepted_count�
 <!-- source: acceptance/MATRIX.md -->
 # SC-1 验收矩阵
 
-共 88 项预定义验收案例。全部初始为 `not_run`；这不是产品测试通过清单。L1/L2/L3 按主证据层标记，必要时补多层验证。
+共 91 项预定义验收案例。每项主治理章节见 acceptance/cases.json 的 spec_ref 字段。全部初始为 `not_run`；这不是产品测试通过清单。L1/L2/L3 按主证据层标记，必要时补多层验证。
 
 每项实际执行后填写代码SHA、命令、环境、输入指纹、结果、未覆盖条件和安全证据引用。不要将本包Schema自检结果填入本表作为产品验收。
 
@@ -1269,6 +1291,7 @@ learning统计以asset/run/reviewed_revision最终决定去重；accepted_count�
 | A-10 故障与无命中区分 | WP-A | L2 | real library 程序故障与合法0命中两组输入；执行 sourcing | 故障不伪装为无命中；合法无命中按授权新建 |
 | A-11 组件来源与再分发 | WP-A | L2 | 四项能力来源、方法、脚本、模板清单；核对license/固定包/方法迁移矩阵 | 未验证来源/缺关键方法不计内化完成 |
 | A-12 兼容入口不依赖旧方法 | WP-A | L2 | 托管方法包已装，旧专业Skill隔离；由deck-*进行页面制作与审查 | 所有引用可读，实际方法可执行，不跳到外部缺失Skill |
+| A-13 分层就绪状态可读 | WP-A | L1 | 部分组件缺失、旧readiness字段与新task_ready并存；查询execution plan与suite状态 | 分层展示安装完整/组件可用/本次任务就绪与缺项，当前版本状态可读且不互相矛盾 |
 | I-01 后置关键约束 | B1 | L1 | 约束在长材料末尾，前部无此信息；抽取Context并形成Brief | 末尾约束被定位并影响方案，不仅扩大截取长度 |
 | I-02 混合资料接入 | B1 | L1 | 同一任务包含PDF/DOCX/PPTX/图片；通过解析或宿主任务读取 | 全部相关范围有记录，同一Context接入；真实宿主补L2验证 |
 | I-03 部分读取不可假完成 | B1 | L1 | 某页或图片读取失败；导入抽取结果 | 状态partial/failed，关键缺口阻断且不标完整 |
@@ -1276,6 +1299,7 @@ learning统计以asset/run/reviewed_revision最终决定去重；accepted_count�
 | I-05 证据ID消歧 | B1 | L1 | 不同source都存在E001；导入旧裸ID或新版键 | 新版键正确；歧义旧ID不猜测对应 |
 | I-06 精确定位与内容匹配 | B1 | L1 | 引用页/行和短引文可核对；改变位置或引文 | 识别不匹配，不给supported |
 | I-07 冲突不静默覆盖 | B1 | L1 | 两个材料对同一对象给出互斥约束；编译Brief | 记录冲突和选择依据；关键未知才请用户裁决 |
+| I-08 高风险假设不冒充客户事实 | B1/B3 | L1 | 关键判断仅有工作假设支撑、来源无对应事实；编译Brief与claim graph | 保留假设/未支持状态与重检条件，不标为客户事实或supported |
 | R-01 定向真实研究 | B2 | L2 | 存在可公开核实的设计/证据缺口；宿主执行研究任务并回传 | 来源进入Context，说明影响哪项判断 |
 | R-02 查询授权与脱敏 | B2 | L2 | 任务含私有名称/内部接口，但只授权公开研究；产生实际查询输入 | 仅发送批准公共投影，不外发原始客户内容 |
 | R-03 反证和适用边界 | B2 | L2 | 来源仅在特定条件下成立；形成研究结论 | 保留条件与反证检查，不泛化为所有场景 |
@@ -1329,6 +1353,7 @@ learning统计以asset/run/reviewed_revision最终决定去重；accepted_count�
 | Q-10 模式降级不可绕过 | C1/C2/C3 | L1 | 新SC1 Run试图改成legacy/dev以交付；接受动作/最终导出 | 拒绝非授权迁移，保留创建时模式与策略 |
 | Q-11 批准绑定当前版本 | C1/C2/C3 | L1 | 批准后改变文字/图形/页序；导出新版 | 旧批准无效；旧已批准文件历史仍保留 |
 | Q-12 P0与P1处理 | C1/C2/C3 | L1 | 存在P0或有明确P1 override；汇总全部门 | P0不可豁免；P1按当前版本显式政策且可见 |
+| Q-13 无来源支持的数字被发现 | C1 | L1 | 页面出现收益数字，引用段落仅含相同数字字符串而非支持关系；语义与证据审查 | 该数字列为finding并阻断交付；数字出现不等于主张获得支持 |
 | L-01 通过率口径 | C4 | L1 | 9个最终accepted和91个rejected；聚合资产反馈 | acceptance_rate=0.09，交付数独立 |
 | L-02 重复事件去重 | C4 | L1 | 同asset/run/revision多次批准/导出；聚合 | 按最终审阅决定计一次，导出不抬接受率 |
 | L-03 旧事件不猜测 | C4 | L1 | 旧记录缺run/revision；构建新learning pack | 单列legacy_unknown，不制造精准统计 |
@@ -1514,4 +1539,47 @@ Q0 输出固定到本地/仓库适当文档位置：baseline-audit、reuse-map�
 | 真实案例与用户投入日志 | 经授权本地使用，预登记和现场记录 | 伪造客户数据、用合成样例当真实 UAT |
 | 当前独立审查能力 | 核对宿主分离上下文/动作轨迹 | 换 reviewer 字符串代替真实独立过程 |
 | 发布版本与状态 | 依据实际通过证据、仓库规则决定 | 用 SC-1 文档编号冒充正式 1.0 |
+
+
+---
+
+# 落库修订记录
+
+<!-- source: AMENDMENTS.md -->
+# SC-1 落库修订记录
+
+| 项 | 内容 |
+|---|---|
+| 修订日期 | 2026-09-07 |
+| 修订来源 | 仓库侧对规格包的落地审查（对照基线 `4199a6a` 的代码核验） |
+| 原件版本 | SC-1 Spec v1.0（原件以独立 commit 落库，其 SHA256SUMS 在该提交上仍然可独立验证） |
+| 修订范围 | 只修订规格包文档与自检工具；不声称任何产品能力已实现 |
+
+原件的事实声明经逐项核验（F01—F05、复用映射 R1—R8 全部属实）；本修订只补审查中发现的缺口，不改变 D01—D12 裁定与三个工作包的范围。
+
+## 修订一：验收追溯补全
+
+- `acceptance/cases.json` 全部用例新增 `spec_ref` 字段，回指 `specs/` 主治理章节；总数 88 → 91。
+- 新增三个此前无专属用例的验收项：A-13 分层就绪状态可读（specs/03）、I-08 高风险假设不冒充客户事实（specs/04）、Q-13 无来源支持的数字被发现（specs/07）。
+- `specs/08`、`specs/09` 补齐缺失的验收节（§8.8、§9.7）；`acceptance/MATRIX.md` 同步至 91 项。
+
+## 修订二：审查提示词升级显式化
+
+`tasks/WP-C.md` C1 显式写入 `skills/deck-master/prompts/quality_reviewer.prompt.md` 的 v1（五维英文）→ v2（六维量规）升级，并要求核对 `narrative_advisor`、`source_decision_reviewer` 维度词表；此前该集成步骤仅有隐含要求，存在被遗漏后语义审查跑在旧词表上的风险。
+
+## 修订三：Q0 基线清单扩充
+
+`specs/01` §1.4 追加 F06—F12 七项已核实的静态缺陷（生产叙事模板化与样例过滤误伤、fixture 渲染来源失真、generation_result v1/v2 schema 断代与悬空引用、RESOLVER 路由错位、agents 元数据版本漂移、Review Desk 审批不回写反馈、render_handoff 恒真探针），全部进入 Q0 最小复现与核验范围。
+
+## 修订四：Narrative Plan v3 结构草案
+
+新增 `contracts/narrative-plan.v3.schema.json` 与合成样例 `examples/narrative_plan.json`，字段语义严格对齐 `EXTENSION_DELTAS.md` 的 Narrative Plan 目标 v3 字段表（此前该中心对象是六份 schema 中唯一只有文字描述的对象）。`tools/validate_spec_pack.py` 扩展至 7 份 schema / 7 份样例 / 21 个反例（新增 stale model hash、未知 selected candidate、cyclic beat dependency 三个反例）。样例与既有 solution_model/context_pack 样例的 ID 生态交叉一致。
+
+## 修订五：PPT-Deck-Pro-Max 桥接退役显式化
+
+`specs/03` §3.3 与 `tasks/WP-A.md` A1 显式点名：`scripts/runtime/builder_backend.py` 中钉在第三方非默认分支固定 SHA 的 `DECK_MASTER_PPT_DECK_PRO_MAX_BRIDGE` 绑定为最脆弱外部依赖，方法内化完成后必须退役，production 生成只走 Agent 派发。
+
+## 完整性再生
+
+本修订同步再生：`DEVELOPMENT_SPEC.md`（按拆分文件重新拼接，头部计数更新）、`SPEC_SELF_CHECK.json`（自检脚本实跑结果）、`PACK_MANIFEST.json` 与 `SHA256SUMS`（含新增文件）。`tools/validate_spec_pack.py` 结果为 passed（7 schema / 7 样例 / 21 反例全拒 / 91 用例）；该结果仍然只是规格包结构自检，不是产品测试。
 

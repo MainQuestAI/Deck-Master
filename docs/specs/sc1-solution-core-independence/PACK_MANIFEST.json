@@ -4,41 +4,47 @@
   "date": "2026-09-07",
   "repository_baseline": "4199a6a8cc17ac522e074fee95bc114d4e274849",
   "status": "development_spec_not_implemented",
+  "amendments": "2026-09-07 落库修订；逐项见 AMENDMENTS.md",
   "source_fact_boundary": "Remote source reads only; local state and all product tests require Codex verification.",
   "counts": {
     "core_specs": 12,
     "work_packages": 3,
     "suggested_prs": 8,
     "method_drafts": 5,
-    "target_schemas": 6,
-    "synthetic_contract_examples": 6,
-    "planned_acceptance_cases": 88
+    "target_schemas": 7,
+    "synthetic_contract_examples": 7,
+    "planned_acceptance_cases": 91
   },
   "files": [
     {
+      "path": "AMENDMENTS.md",
+      "bytes": 3182,
+      "sha256": "e74890baf427558f0ebdfa3dcaed08d77be10fbeed9773b9153326443d6ea3cf"
+    },
+    {
       "path": "CONTENTS.md",
-      "bytes": 3419,
-      "sha256": "39ec38a860a9fcfcb678993bc8236aae1e6328369bd5567e239d1d01eade8f06"
+      "bytes": 3605,
+      "sha256": "cc64ded6ee4c88c5470ebbaa398b621f90170e99d7b5bd9fedfffc243f51482c"
     },
     {
       "path": "DEVELOPMENT_SPEC.md",
-      "bytes": 138064,
-      "sha256": "2a1cb764f2bfae264d4326266f3978e44340a0b549cf89ceb7cdc78319b10782"
+      "bytes": 146550,
+      "sha256": "44364a185286bce622e98465a94def971166c4b8965fff4fdd668c479df3a50b"
     },
     {
       "path": "README.md",
-      "bytes": 3816,
-      "sha256": "cff4de0b2d0936f4e2e55c00bfe33debefeb1353c88443b7768b67f3e2fce842"
+      "bytes": 3952,
+      "sha256": "29cf3e064f88fffa1e3df1a9567b815b912f0f2d0545f890fe613f105ead9822"
     },
     {
       "path": "SPEC_SELF_CHECK.json",
-      "bytes": 2108,
-      "sha256": "e74acfe8bb8c5d155aff9a8d68274ddf6347b7f9fb4b3a178ae4806d6cc0cfc7"
+      "bytes": 2381,
+      "sha256": "b3f6a6438e711331fdf626933c7ef12763a892875ae9bc4e9271814cee9fbd24"
     },
     {
       "path": "acceptance/MATRIX.md",
-      "bytes": 15004,
-      "sha256": "edf9e204562b9bab5ed6c8babdb901d105f047c924a3bf51e7b9e1977b1dee09"
+      "bytes": 15811,
+      "sha256": "4bdd84934ca5c3ce2778b370ca168ffe62b38f424bb5217c11a691cb848dbea6"
     },
     {
       "path": "acceptance/UAT_PROTOCOL.md",
@@ -47,8 +53,8 @@
     },
     {
       "path": "acceptance/cases.json",
-      "bytes": 35922,
-      "sha256": "5de6860a228f5c3f3216c416ed361f94219a91de9e23b3071b5aedce1d838506"
+      "bytes": 40605,
+      "sha256": "d8deda93cd195816be04f4d5606ab99b326bd53d7910e284d2ff07bc4ab289f5"
     },
     {
       "path": "acceptance/rubric.md",
@@ -72,13 +78,13 @@
     },
     {
       "path": "contracts/EXTENSION_DELTAS.md",
-      "bytes": 4463,
-      "sha256": "f95a402ae4770a92d51ecb614c434f7feaf2a24c93b6f5ab7d128f07bbd1ebd7"
+      "bytes": 4646,
+      "sha256": "757554264e4251edf8a0e7e7b5560c584b6edd7a094b7b49c80be8eb1df80cc7"
     },
     {
       "path": "contracts/README.md",
-      "bytes": 2833,
-      "sha256": "3d91117e619f0e20179aa0cd289c0d81a9835cb4f0b0cf197397954fcc3aee09"
+      "bytes": 2998,
+      "sha256": "afc6d79e223ae0ce6b9c064bbc3d488f59868fe18f081fcb5ab95ff33d828540"
     },
     {
       "path": "contracts/capability-execution-plan.v1.schema.json",
@@ -99,6 +105,11 @@
       "path": "contracts/external-quality-review.v2.schema.json",
       "bytes": 9770,
       "sha256": "13edf50c996cb0f7f085039ab89b0019c6268f677c33640483ea54621bb78e5f"
+    },
+    {
+      "path": "contracts/narrative-plan.v3.schema.json",
+      "bytes": 8905,
+      "sha256": "750e4bdf4bb095bc22a28eae0bcb7c7e299f1428ae63e4c84e9399021d26af40"
     },
     {
       "path": "contracts/research-task.v1.schema.json",
@@ -149,6 +160,11 @@
       "path": "examples/materials/product_constraints.txt",
       "bytes": 374,
       "sha256": "292100e55cd72503d215913bea30a0901783961ea26b1bef2396a6301cbe2848"
+    },
+    {
+      "path": "examples/narrative_plan.json",
+      "bytes": 6172,
+      "sha256": "e09de6cd6d01e9d6a3bf4a8bbb8f15064f6d791e4546368100a6d726b53b2ac7"
     },
     {
       "path": "examples/pages/P001.md",
@@ -222,8 +238,8 @@
     },
     {
       "path": "specs/01-baseline-and-reuse.md",
-      "bytes": 5309,
-      "sha256": "b32dc257794d05430d8bd4c3e875ab5606692905e3fe7695697338dc4a68181b"
+      "bytes": 6719,
+      "sha256": "4c7a7a0a70c0eddd27022d1175acda942796ec91eb8af2f3fd8da1d8cd6fe54d"
     },
     {
       "path": "specs/02-architecture.md",
@@ -232,8 +248,8 @@
     },
     {
       "path": "specs/03-managed-installation.md",
-      "bytes": 6458,
-      "sha256": "f4a11a35c6ad712641ba9039cc79db5769fa810eb6fed94f11f7ee2ca1a1bc9b"
+      "bytes": 6886,
+      "sha256": "a3a524ed42859bd39b94f393daf9a5204aa4eaf76d993b7f98807168e011181f"
     },
     {
       "path": "specs/04-intake-and-research.md",
@@ -257,13 +273,13 @@
     },
     {
       "path": "specs/08-workflow-and-decisions.md",
-      "bytes": 4910,
-      "sha256": "c01cdbf5d9771094f199ea14f4e46c644f72b1486906a0de8fbdf09fc61ba450"
+      "bytes": 5609,
+      "sha256": "778c3880be223f37235175a071a47c7874e7cc098be64d6426157c5cc08acd04"
     },
     {
       "path": "specs/09-contracts-and-cli.md",
-      "bytes": 7154,
-      "sha256": "07851c79cc0e603ec5f738688aad60c0d9648700ab2c1360ad2089611ca4b736"
+      "bytes": 8105,
+      "sha256": "4e97ffb3912942eea76d62c74d59eb39442d61335ff76026e234f451c9b59bec"
     },
     {
       "path": "specs/10-migration.md",
@@ -282,8 +298,8 @@
     },
     {
       "path": "tasks/WP-A.md",
-      "bytes": 3963,
-      "sha256": "cbedc278cdb7e46f5f23dc0da39bea73784d61e62c4bb6ac1108a2a24ba8fb16"
+      "bytes": 4106,
+      "sha256": "6ef3aeb269f9ed773f4be85a2a2e0fcee5e906242d479c5ad86363136fe0a8da"
     },
     {
       "path": "tasks/WP-B.md",
@@ -292,13 +308,13 @@
     },
     {
       "path": "tasks/WP-C.md",
-      "bytes": 3732,
-      "sha256": "1e9b51a8de680f6dd9ec779d35158534a0fe7c97a29c9d2bc63d7ed9795f8672"
+      "bytes": 4126,
+      "sha256": "340fa69ec82349fc1c095827425d1af7dcef340b571967f57daf69b81263b303"
     },
     {
       "path": "tools/validate_spec_pack.py",
-      "bytes": 14011,
-      "sha256": "54c4ad765972aec0686444051c0208f468865cecc932a569150bd883ac8e7a2e"
+      "bytes": 17236,
+      "sha256": "a4aacdf74088112b6c43f9bf95db21266501f0904cd9d914cfb745a4ccdbc8a1"
     }
   ]
 }

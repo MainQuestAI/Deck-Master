@@ -1,8 +1,8 @@
 {
   "scope": "spec_pack_only_not_product_tests",
-  "schemas_validated": 6,
-  "synthetic_positive_samples_passed": 6,
-  "selected_counterexamples_rejected": 18,
+  "schemas_validated": 7,
+  "synthetic_positive_samples_passed": 7,
+  "selected_counterexamples_rejected": 21,
   "counterexamples": [
     {
       "id": "wrong_boolean_type",
@@ -75,9 +75,21 @@
     {
       "id": "stale_action_input",
       "rejected_by": "ValueError"
+    },
+    {
+      "id": "narrative_stale_model_hash",
+      "rejected_by": "ValueError"
+    },
+    {
+      "id": "narrative_unknown_selected_candidate",
+      "rejected_by": "ValueError"
+    },
+    {
+      "id": "cyclic_beat_dependency",
+      "rejected_by": "ValueError"
     }
   ],
-  "planned_product_acceptance_cases": 88,
+  "planned_product_acceptance_cases": 91,
   "product_tests_executed": false,
   "real_uat_executed": false,
   "status": "passed",

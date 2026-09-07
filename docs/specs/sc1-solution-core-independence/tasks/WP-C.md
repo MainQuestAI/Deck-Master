@@ -3,10 +3,10 @@
 ## C1 语义审查 v2 与量规
 
 依赖：B4/B5；量规在 Q0 即冻结。
-涉及：`quality/external_review.py`、既有 review tasks、contracts、Skill 方法包。
-实现：输入版本、覆盖、逐维观察、独立性证据、具体 findings；报告状态由 Runtime 校验，不接受空 pass；语义检查前移。
-验收：仅存在 reviewer 字符串不算独立；来源匹配与语义支持区分；每个关键页面/论点均有覆盖。
-测试：Q-01—Q-05。
+涉及：`quality/external_review.py`、既有 review tasks、contracts、Skill 方法包、`skills/deck-master/prompts/quality_reviewer.prompt.md`。
+实现：输入版本、覆盖、逐维观察、独立性证据、具体 findings；报告状态由 Runtime 校验，不接受空 pass；语义检查前移。同步将 `quality_reviewer.prompt.md` 从 v1 五维英文输出升级到 v2 六维量规（维度枚举与 `deck_external_quality_review.v2` 一致），并核对 `narrative_advisor`、`source_decision_reviewer` 的维度词表未漂移；旧 v1 报告仅按 v1 语义读取。
+验收：仅存在 reviewer 字符串不算独立；来源匹配与语义支持区分；每个关键页面/论点均有覆盖；prompt 产出的维度与 v2 schema 枚举一致。
+测试：Q-01—Q-05、Q-13。
 
 ## C2 阶段内动作与定向修复
 

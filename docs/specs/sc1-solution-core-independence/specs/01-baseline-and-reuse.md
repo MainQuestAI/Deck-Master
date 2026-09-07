@@ -46,5 +46,12 @@ Q0 还须验证：Page Package 在标准后端是否被真实消费；高密度 
 | F03 | AGENTS 停在外部等待与新 Skill 可继续存在冲突 | A5 统一 docs/registry/QuestionResolver/next-step 实际行为 |
 | F04 | 主新建 Playbook 没有显式完整展开生成/构建/交付 | C6 改为真正可执行的全链路指导 |
 | F05 | 资料头部截取可能遗漏后置约束 | B1 完整覆盖率与后置约束回归；不得只扩展字符上限 |
+| F06 | `narrative_planner` 生产模式仍输出硬编码 beat 标题；`_is_restricted_sample` 在生产模式也按零售样例主题词过滤 | B4 生产叙事由方案与证据驱动，模板仅作结构建议；移除生产模式误伤过滤 |
+| F07 | `runtime/render.py` 仓库内 fixture 渲染在 render_session/render_result 记 `tool: ppt-master`，来源失真 | B5/A2 修正来源记录，与实际渲染路径一致 |
+| F08 | `generation_result.schema.json` 为 v1，运行时 handback 强制 v2 且无 v2 schema；`ppt-library-handoff.md` 引用不存在的 `ppt_library_candidate.schema.json` | Q0 冻结版本对照表；A1 统一 schema 落库并修复悬空引用 |
+| F09 | `skills/RESOLVER.md` 将页面生产/审查路由到非公开 `ppt-*` 兼容别名，与 manifest 公开策略矛盾 | A1/A6 路由数据收敛到单一权威源并同步 |
+| F10 | `skills/deck-planner/agents/openai.yaml`、`deck-review/agents/openai.yaml` 版本停留 0.9.13，与 manifest 0.9.14a4 漂移 | A1/A6 版本元数据随 release 单点更新 |
+| F11 | Review Desk 逐页 approve/reject 未写回 workspace `asset_feedback.jsonl`，最富信号的学习数据流失 | C4 补齐采集；统计按最终审阅决定去重 |
+| F12 | `runtime/render_handoff.py` `render_handoff_contract_ready()` 恒真，`runtime_ready` 可经环境变量自报 | A2 以真实 smoke 证据替代自报探针；A-04 回归 |
 
 以上需要 Codex 编写最小复现并核验；本包不声称已复现或修复。
