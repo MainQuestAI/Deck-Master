@@ -51,6 +51,24 @@ class BuildRuntimeTests(unittest.TestCase):
             )
         write_json(self.run_dir / "preview_manifest.json", {"run_id": "build-run", "pages": pages})
 
+    def _write_page_packages(self, page_count: int) -> None:
+        # SC-1 B5: production builds consume approved page packages.
+        from production.page_package import PageContent, PagePackageIndex, build_page_package
+
+        index = PagePackageIndex(self.run_dir)
+        for i in range(1, page_count + 1):
+            package = build_page_package(
+                run_id="build-run",
+                content=PageContent(
+                    page_id=f"beat_{i:03d}",
+                    order=i,
+                    title=f"页面 {i}",
+                    body_blocks=[{"type": "conclusion", "text": f"第{i}页结论：内容已由 Producer 写成。"}],
+                ),
+                status="ready",
+            )
+            index.write(package)
+
     def test_prepare_build_writes_manifest_with_fingerprint_and_ordered_pages(self) -> None:
         self._write_preview(3)
 
@@ -375,6 +393,7 @@ class BuildRuntimeTests(unittest.TestCase):
 
     def test_run_build_writes_production_render_request_handoff(self) -> None:
         self._write_preview(2)
+        self._write_page_packages(2)
         request = read_json(self.run_dir / "request.json")
         request["run_mode"] = "production"
         write_json(self.run_dir / "request.json", request)

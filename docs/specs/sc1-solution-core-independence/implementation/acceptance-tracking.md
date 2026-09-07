@@ -13,8 +13,8 @@
 | R（研究） | 6 | R-01—R-04 工程测试通过（构建/脱敏门/执行前置/回写同一 manifest）；R-05/R-06 需宿主真实研究执行，deferred_to_uat 候选 | 同上 |
 | S（方案/Brief/判断） | 8 | S-01/S-02 工程测试通过（agent_extract 标注、未审引用不记支持）；S-05/S-06/S-07/S-08 工程测试通过（solution model 校验、方案驱动叙事、差异化材料不同叙事、关键词过滤移除）；S-03/S-04 随 PR-05 | `tests/test_sc1_solution_narrative.py` |
 | N（叙事/双路径） | 5 | N-01 工程测试通过（candidates/recommended/selected + single_viable_path 不造伪备选）；N-02—N-05 随 PR-05 | 同上 |
-| P（页面生产/构建） | 6 | P-02 工程测试通过；P-01 blocked（真实标准 build/render 需后端绑定） | PR-05 继续 |
-| D（架构视图/图形） | 6 | not_started ×6 | PR-05 |
+| P（页面生产/构建） | 6 | P-02 工程测试通过；P-04/P-05/P-01（工程面）通过：生产写入方逐 beat 全覆盖、制作要求不得进正文、无证据/设计依据保持 draft、标准构建真实消费 Page Package（hash 锚定 + 正文渲染 + 生产 gate）；P-01 真实两页 PPTX 生成 blocked（需后端绑定）；P-03/P-06 随 PR-06 | `tests/test_sc1_page_packages_views.py`、`test_build_runtime.py` |
+| D（架构视图/图形） | 6 | D-01/D-02/D-03 工程测试通过（四类视图构建、模型一致性拒绝未知节点/关系、组件变更影响投影）；D-04—D-06 随 PR-06（客户扫描/回读门） | `tests/test_sc1_page_packages_views.py` |
 | W（工作流/问题/动作） | 10 | W-01/W-05 工程测试通过（材料自答、交付批准用户保留）；F03 文档语义统一已落地；W-02—W-04/W-06—W-10 随 PR-06 | `tests/test_sc1_question_authority.py` |
 | Q（语义审查/质量门） | 13 | not_started ×13 | PR-06；Q 量规按规格在 Q0 冻结（见 §2） |
 | L（学习/反馈口径） | 4 | not_started ×4 | PR-07 |

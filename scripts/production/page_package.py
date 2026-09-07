@@ -48,6 +48,13 @@ INTERNAL_ONLY_FIELDS = (
     "unresolved_questions",
     "private_source_refs",
     "review_notes",
+    # SC-1 B5 additive extensions (spec 06 §6.1 [R15]: validators and schema
+    # updated together; all optional, v1 readers unaffected).
+    "page_job",
+    "evidence_state",
+    "design_basis_ref",
+    "sourcing",
+    "transition",
 )
 
 
