@@ -30,6 +30,14 @@ class QuestionGap:
     challenge_round: int = 0
     stale: bool = False
     trigger: str = ""
+    material_answer_available: bool = False
+    user_reserved: bool = False
+
+
+# SC-1 A5/W-05: these decisions are the user's alone — the host Agent may
+# draft, recommend, or prepare the question, but never fill the answer.
+USER_RESERVED_CATEGORIES = {"delivery"}
+AGENT_ANSWER_SOURCES = {"agent", "runtime", "host_agent"}
 
 
 @dataclass
@@ -92,9 +100,65 @@ class QuestionResolver:
                     challenge_round=challenge_round,
                     stale=answer_status == "stale",
                     trigger=q.get("trigger", ""),
+                    material_answer_available=bool(self.material_answer_candidates(root, q).get("answer")),
+                    user_reserved=str(q.get("category") or "") in USER_RESERVED_CATEGORIES,
                 )
             )
         return gaps
+
+    def material_answer_candidates(self, root: Path, question: dict[str, Any]) -> dict[str, Any]:
+        """SC-1 A5/W-01: find answers the材料 already contains.
+
+        Scans registered constraint candidates (full-text, including the tail
+        region) and source navigation text for keyword overlap with the
+        question prompt. The candidate carries its evidence refs so the
+        runtime can record a material-sourced answer instead of re-asking the
+        user for information the材料 already answers.
+        """
+
+        manifest_path = root / "context_manifest.json"
+        if not manifest_path.exists():
+            return {"answer": "", "evidence_refs": []}
+        try:
+            import json as _json
+
+            manifest = _json.loads(manifest_path.read_text(encoding="utf-8"))
+        except (OSError, _json.JSONDecodeError):  # type: ignore[attr-defined]
+            return {"answer": "", "evidence_refs": []}
+        prompt = str(question.get("prompt") or "")
+        keywords = [token for token in _extract_keywords(prompt) if len(token) >= 2]
+        if not keywords:
+            return {"answer": "", "evidence_refs": []}
+        best: dict[str, Any] = {"answer": "", "evidence_refs": []}
+        for candidate in manifest.get("tail_constraint_candidates", []) or []:
+            text = str(candidate.get("text") or "")
+            if sum(1 for token in keywords if token in text) >= min(2, len(keywords)):
+                best = {
+                    "answer": text,
+                    "evidence_refs": [f"context_manifest.json#{candidate.get('source_id', '')}"],
+                    "region": candidate.get("region", "tail"),
+                }
+                break
+        if not best["answer"]:
+            for source in manifest.get("sources", []) or []:
+                text = f"{source.get('name', '')} {source.get('summary', '')} {source.get('excerpt', '')}"
+                if sum(1 for token in keywords if token in text) >= min(2, len(keywords)):
+                    best = {
+                        "answer": str(source.get("excerpt") or source.get("summary") or "")[:400],
+                        "evidence_refs": [f"context_manifest.json#{source.get('source_id', '')}"],
+                        "region": "source",
+                    }
+                    break
+        return best
+
+    def validate_answer_authority(self, question: dict[str, Any], answered_by: str) -> None:
+        """SC-1 W-05: the Agent can never fill user-reserved answers."""
+
+        category = str(question.get("category") or "")
+        if category in USER_RESERVED_CATEGORIES and str(answered_by or "").strip().lower() in AGENT_ANSWER_SOURCES:
+            raise ValueError(
+                f"question category '{category}' is reserved for the user; the {answered_by} cannot record this answer"
+            )
 
     def blocking(self, run_dir: str | Path, stage_id: str) -> list[QuestionGap]:
         return [g for g in self.gaps(run_dir, stage_id) if g.required]
@@ -180,4 +244,20 @@ class QuestionResolver:
         return False
 
 
-__all__ = ["QuestionResolver", "QuestionGap", "ExitValidation"]
+def _extract_keywords(prompt: str) -> list[str]:
+    """Latin words + CJK character bigrams, so Chinese prompts match material text."""
+
+    import re
+
+    tokens: list[str] = []
+    for word in re.findall(r"[A-Za-z0-9_]+", str(prompt or "")):
+        tokens.append(word.lower())
+    for run in re.findall(r"[\u4e00-\u9fff]+", str(prompt or "")):
+        if len(run) == 1:
+            tokens.append(run)
+        else:
+            tokens.extend(run[i : i + 2] for i in range(len(run) - 1))
+    return tokens
+
+
+__all__ = ["QuestionResolver", "QuestionGap", "ExitValidation", "USER_RESERVED_CATEGORIES"]

@@ -190,15 +190,10 @@ def _template_filter(
     request: dict[str, Any],
     templates: list[tuple[str, str, str]],
 ) -> list[tuple[str, str, str]]:
-    if planner_mode != "production_narrative":
-        return templates
-    if not _is_restricted_sample(request):
-        return templates
-    return [
-        template
-        for template in templates
-        if "库存可视化" not in template[1] and "最后一公里配送" not in template[1]
-    ]
+    # SC-1 F06: production narrative is driven by the solution model and
+    # evidence. Keyword-based retail-sample filtering of template titles was
+    # removed — templates are only a structural hint in every mode.
+    return templates
 
 
 def _mentions_retail_specific_path(
@@ -331,12 +326,124 @@ def _find_claim_ids_for_beat(
     return matched
 
 
+def _solution_model_beats(
+    solution_model: dict[str, Any],
+    page_count: int,
+    density: str,
+    request: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """SC-1 B4: production narrative driven by the approved solution model.
+
+    Page jobs come from problems/capabilities/components/phases — never from
+    generic template titles. Customer-facing conclusions carry no internal
+    SCR/MBB labels (spec 05 §5.3).
+    """
+
+    beats: list[dict[str, Any]] = []
+    business_goal = str(request.get("business_goal") or "")
+    problems = [item for item in solution_model.get("problems", []) if isinstance(item, dict)]
+    capabilities = [item for item in solution_model.get("capabilities", []) if isinstance(item, dict)]
+    components = {str(item.get("component_id") or ""): item for item in solution_model.get("components", []) if isinstance(item, dict)}
+    phases = [item for item in solution_model.get("phases", []) if isinstance(item, dict)]
+
+    def _page(
+        role: str,
+        title: str,
+        conclusion: str,
+        page_job: str,
+        *,
+        claim_refs: list[str] | None = None,
+        required_components: list[str] | None = None,
+        expected_visual: str = "文字+结构化图形",
+    ) -> dict[str, Any]:
+        order = len(beats) + 1
+        return {
+            "beat_id": f"beat_{order:02d}_{role}",
+            "order": order,
+            "page_title": title,
+            "role": role,
+            "page_job": page_job,
+            "conclusion": conclusion,
+            "brief": page_job,
+            "content_goal": conclusion,
+            "claim_refs": claim_refs or [],
+            "required_components": required_components or [],
+            "expected_visual": expected_visual,
+            "content_budget": "standard",
+            "transition": "",
+            "evidence_need": "客户材料证据或明确设计依据",
+            "visual_need": expected_visual,
+            "density": density,
+            "generation_brief": f"围绕“{conclusion}”组织本页论证与材料。",
+            "approval_required": role in {"case", "roi", "architecture"},
+            "customer_specificity_level": "customer_specific",
+        }
+
+    if business_goal or problems:
+        first_problem = problems[0] if problems else {}
+        beats.append(
+            _page(
+                "opener",
+                str(first_problem.get("title") or "核心问题与目标"),
+                str(first_problem.get("statement") or business_goal or ""),
+                "对齐客户要做的决策与衡量标准",
+            )
+        )
+    for problem in problems[1 : max(0, page_count - 3)]:
+        beats.append(
+            _page(
+                "problem",
+                str(problem.get("title") or "关键问题"),
+                str(problem.get("statement") or ""),
+                f"说明该问题的影响与依据（{', '.join(str(x) for x in problem.get('evidence_refs', [])) or '待补证据'}）",
+            )
+        )
+    for capability in capabilities:
+        if len(beats) >= page_count - 2:
+            break
+        required = [str(ref) for ref in (capability.get("component_ids") or []) if str(ref) in components]
+        beats.append(
+            _page(
+                "solution",
+                str(capability.get("title") or capability.get("capability_id") or "能力机制"),
+                str(capability.get("mechanism") or ""),
+                f"说明能力如何改变问题，可检查结果：{capability.get('checkable_result', '')}",
+                required_components=required,
+            )
+        )
+    if any(str(item.get("component_id") or "") for item in components.values()) and len(beats) < page_count - 1:
+        beats.append(
+            _page(
+                "architecture",
+                "架构与组件边界",
+                "组件职责、关系与实施边界与方案一致",
+                "对齐业务架构、应用/数据流视图的组件与边界",
+                required_components=[cid for cid in components if cid],
+                expected_visual="架构视图（业务/应用/数据）",
+            )
+        )
+    for phase in phases:
+        if len(beats) >= page_count:
+            break
+        beats.append(
+            _page(
+                "roi" if phase.get("exit_criteria") else "solution",
+                str(phase.get("title") or phase.get("phase_id") or "实施阶段"),
+                str(phase.get("goal") or ""),
+                f"阶段产出与退出标准：{phase.get('exit_criteria', '待明确')}",
+            )
+        )
+    return beats[:page_count]
+
+
 def plan_narrative(
     request: dict[str, Any],
     judgments: dict[str, Any] | None = None,
     claim_graph: dict[str, Any] | None = None,
     workspace_archetypes: dict[str, Any] | None = None,
     planner_mode: str = "production_narrative",
+    solution_model: dict[str, Any] | None = None,
+    narrative_candidates: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     page_count = resolve_page_count(str(request.get("target_pages") or "auto"), str(request.get("audience") or "client"))
     gaps = identify_gaps(request)
@@ -347,10 +454,20 @@ def plan_narrative(
     )
     adjusted_page_count = len(templates)
     density = density_for(adjusted_page_count)
-    beats: list[dict[str, Any]] = []
+
+    solution_driven = planner_mode == "production_narrative" and isinstance(solution_model, dict) and bool(solution_model.get("capabilities"))
+    if solution_driven:
+        solution_density = density_for(page_count)
+        beats = _solution_model_beats(solution_model, page_count, solution_density, request)
+        adjusted_page_count = len(beats)
+    else:
+        beats = []
     fallback_reason = _planner_fallback_reason(planner_mode, request, workspace_archetypes, judgments)
     input_sources = _planner_input_sources(planner_mode, workspace_archetypes)
-    for index, (role, title, goal) in enumerate(templates, start=1):
+    if solution_driven:
+        input_sources = list(dict.fromkeys(input_sources + ["solution_model"]))
+        fallback_reason = ""
+    for index, (role, title, goal) in enumerate([] if solution_driven else templates, start=1):
         beat_id = f"beat_{index:02d}_{role}"
         evidence_need = "历史方案页或通用方法论"
         if role == "case":
@@ -431,6 +548,36 @@ def plan_narrative(
 
     module_coverage = build_required_modules_status(beats)
 
+    # SC-1 B4: narrative-plan v3 candidate structure. When explicit
+    # candidates are supplied they pass through; otherwise a single candidate
+    # derived from the chosen storyline is recorded with a
+    # single_viable_path selection reason — no fabricated pseudo-options.
+    candidates: list[dict[str, Any]] = []
+    selected_id = ""
+    recommended_id = ""
+    selection_reason = ""
+    if solution_driven:
+        if narrative_candidates:
+            candidates = [dict(item) for item in narrative_candidates if isinstance(item, dict)]
+            recommended = next((item for item in candidates if item.get("recommended")), candidates[0] if candidates else None)
+            recommended_id = str((recommended or {}).get("candidate_id") or "")
+            selected_id = str((recommended or {}).get("candidate_id") or "")
+            selection_reason = str((recommended or {}).get("recommendation_reason") or "recommended candidate")
+        else:
+            selected_id = "candidate_single_viable_path"
+            recommended_id = selected_id
+            selection_reason = "single_viable_path: one coherent storyline derivable from the solution model; no fabricated alternatives"
+            candidates = [
+                {
+                    "candidate_id": selected_id,
+                    "title": str(request.get("project_name") or "方案主线"),
+                    "storyline": [beat.get("conclusion") or beat.get("page_title", "") for beat in beats],
+                    "recommended": True,
+                    "recommendation_reason": selection_reason,
+                    "beat_ids": [beat["beat_id"] for beat in beats],
+                }
+            ]
+
     return {
         "run_id": request.get("run_id", ""),
         "title": request.get("project_name", "Deck Master Run"),
@@ -444,6 +591,10 @@ def plan_narrative(
         "roles": [beat["role"] for beat in beats],
         "gaps": gaps,
         "beats": beats,
+        "candidates": candidates,
+        "recommended_candidate_id": recommended_id,
+        "selected_candidate_id": selected_id,
+        "selection_reason": selection_reason,
         "coverage_matrix": module_coverage["coverage_matrix"],
         "required_modules_status": module_coverage["required_modules_status"],
         "missing_modules": module_coverage["missing_modules"],

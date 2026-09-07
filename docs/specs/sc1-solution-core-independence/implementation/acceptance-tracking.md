@@ -11,11 +11,11 @@
 | A（安装/托管/就绪） | 13 | A-01/A-02/A-04/A-05/A-06/A-11/A-12 部分（工程测试通过，真实环境证据待补）；A-03 blocked（后端 unbound）；A-07—A-10 部分（P-02 测试覆盖）；A-08/A-09/A-10 待评估 | 证据：`tests/test_capability_lock_and_managed_backend.py`、更新后的 `test_build_runtime.py`/`test_open_source_preview_gate.py` |
 | I（材料/Context Pack） | 8 | I-01/I-02/I-05 工程测试通过；I-03/I-04/I-06/I-07 随 PR-04/05 集成验证；I-08 待评估 | 证据：`tests/test_sc1_intake_research_brief.py` |
 | R（研究） | 6 | R-01—R-04 工程测试通过（构建/脱敏门/执行前置/回写同一 manifest）；R-05/R-06 需宿主真实研究执行，deferred_to_uat 候选 | 同上 |
-| S（方案/Brief/判断） | 8 | S-01/S-02 工程测试通过（agent_extract 标注、未审引用不记支持）；S-03/S-04 随 PR-04 | 同上 |
-| N（叙事/双路径） | 5 | not_started ×5 | PR-04/05 |
+| S（方案/Brief/判断） | 8 | S-01/S-02 工程测试通过（agent_extract 标注、未审引用不记支持）；S-05/S-06/S-07/S-08 工程测试通过（solution model 校验、方案驱动叙事、差异化材料不同叙事、关键词过滤移除）；S-03/S-04 随 PR-05 | `tests/test_sc1_solution_narrative.py` |
+| N（叙事/双路径） | 5 | N-01 工程测试通过（candidates/recommended/selected + single_viable_path 不造伪备选）；N-02—N-05 随 PR-05 | 同上 |
 | P（页面生产/构建） | 6 | P-02 工程测试通过；P-01 blocked（真实标准 build/render 需后端绑定） | PR-05 继续 |
 | D（架构视图/图形） | 6 | not_started ×6 | PR-05 |
-| W（工作流/问题/动作） | 10 | not_started ×10 | PR-04/06 |
+| W（工作流/问题/动作） | 10 | W-01/W-05 工程测试通过（材料自答、交付批准用户保留）；F03 文档语义统一已落地；W-02—W-04/W-06—W-10 随 PR-06 | `tests/test_sc1_question_authority.py` |
 | Q（语义审查/质量门） | 13 | not_started ×13 | PR-06；Q 量规按规格在 Q0 冻结（见 §2） |
 | L（学习/反馈口径） | 4 | not_started ×4 | PR-07 |
 | E（对照/UAT） | 6 | not_started ×6 | **deferred_to_uat 候选**：需 ≥3 类真实样本 ×2 配对运行，仓库现无真实素材 |

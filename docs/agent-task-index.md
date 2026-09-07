@@ -111,6 +111,10 @@ python3 scripts/deck_master.py agent-doctor --mode production --run-dir <run_dir
 - Expected output: `runtime_stage`, `blocking_issues`, `errors`,
   `next_agent_action`.
 - If the next action needs external backend or handoff output, stop and report.
+- Distinguish the two waiting states (SC-1 A5/F03): `awaiting_agent_execution`
+  (e.g. `needs_generation_execution`) is executable by you in this session —
+  do not stop; only states that genuinely need the user (approval, authorization)
+  or an external backend are stop-and-report conditions.
 
 ## High-Density Build
 
