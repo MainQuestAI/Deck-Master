@@ -1343,7 +1343,7 @@ def _autopilot_args(args: argparse.Namespace, **overrides: Any) -> argparse.Name
     values = vars(args).copy()
     defaults = {
         "library_mode": "auto",
-        "ppt_lib_command": "ppt-lib",
+        "ppt_lib_command": None,
         "allow_fixture_library_fallback": False,
         "planning_mode": "classic",
         "planner_mode": None,
@@ -3050,7 +3050,7 @@ def add_run_args(parser: argparse.ArgumentParser) -> None:
 
 def add_library_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--library-mode", choices=["auto", "real", "fixture"], default="auto")
-    parser.add_argument("--ppt-lib-command", default="ppt-lib")
+    parser.add_argument("--ppt-lib-command", default=None, help="Explicit ppt-lib command; omit to resolve the managed install first, then PATH")
     parser.add_argument("--allow-fixture-library-fallback", action="store_true")
 
 

@@ -2163,12 +2163,12 @@ def _render_runtime_status_for_ready(render_runtime_ready: bool) -> dict[str, An
     status = backend_render_runtime_status()
     if bool(status.get("runtime_ready")) == bool(render_runtime_ready):
         return status
-    ready = bool(render_runtime_ready)
-    return {
-        "runtime_ready": ready,
-        "runtime_ready_source": "external_backend_smoke" if ready else "contract_probe",
-        "runtime_ready_trusted_for_rc": ready,
-    }
+    # SC-1 A-04/F12: an injected bool must never fabricate smoke-based trust.
+    # The real smoke-evidence status stays authoritative; the disagreement is
+    # surfaced instead of silently overriding it.
+    annotated = dict(status)
+    annotated["injected_ready_disagreement"] = bool(render_runtime_ready)
+    return annotated
 
 
 def _client_delivery_evidence(
