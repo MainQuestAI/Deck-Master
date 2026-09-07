@@ -251,6 +251,51 @@ class NextStepResolverTest(unittest.TestCase):
         self.assertEqual("deck-builder", result["recommended_skill"])
         self.assertIn("build run", result["next_command"])
 
+    def test_completed_high_density_with_only_semantic_gate_missing_returns_review_action(self) -> None:
+        # SC-1.1 F-N06 regression: only semantic_review missing -> the next
+        # action is preparing the v2 review, not a render gate.
+        status_path = self.run_dir / "high_density_build" / "status.json"
+        status_path.parent.mkdir(parents=True)
+        self._write_json(REQUEST_NAME, {"run_id": "r1", "run_mode": "production"})
+        status_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "deck_high_density_status.v2",
+                    "run_id": "r1",
+                    "builder_profile": "high_density",
+                    "status": "completed",
+                    "current_stage": "pptx",
+                    "next_action": {"kind": "complete"},
+                }
+            ),
+            encoding="utf-8",
+        )
+        pptx_path = self.run_dir / "high_density_build" / "pptx" / "deck_high_density.pptx"
+        pptx_path.parent.mkdir(parents=True)
+        pptx_path.write_bytes(b"pptx")
+        (self.run_dir / "quality_reports").mkdir(exist_ok=True)
+        for gate in ("render_gate.json", "delivery_gate.json", "customer_visible_safety_gate.json"):
+            digest = hashlib.sha256(pptx_path.read_bytes()).hexdigest()
+            rel = pptx_path.relative_to(self.run_dir).as_posix()
+            (self.run_dir / "quality_reports" / gate).write_text(
+                json.dumps(
+                    {
+                        "gate": gate.removesuffix("_gate.json"),
+                        "status": "pass",
+                        "blocks_delivery": False,
+                        "findings": [],
+                        "artifact_path": rel,
+                        "artifact_sha256": digest,
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+        result = self._resolve(run_mode="production")
+
+        self._assert_shape(result, "needs_quality_review")
+        self.assertIn("prepare-quality-review", result["next_command"])
+
     def test_completed_high_density_with_only_safety_gate_returns_render_gate(self) -> None:
         status_path = self.run_dir / "high_density_build" / "status.json"
         status_path.parent.mkdir(parents=True)

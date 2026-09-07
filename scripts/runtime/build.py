@@ -135,12 +135,27 @@ def _required_outputs_for_profile(output_profile: str) -> list[str]:
 
 
 def _assert_builder_backend_available(request: dict[str, Any]) -> dict[str, Any]:
+    """SC-1.1 ND-02 (F-N02): the build route resolves BEFORE any external
+    backend status query. Native-route runs never touch the external PPT
+    Master binding; only an explicit legacy_ppt_master route does."""
+
+    route = build_route(request)
+    if route.get("engine_id") == "deck_native":
+        return {"backend_name": "deck_native", "production_capable": True, "engine_route": route}
     status = builder_backend_status()
     if production_requires_builder_backend(_run_mode(request)) and not status.get("production_capable"):
         raise BuildError("needs_builder_backend: " + str(status.get("blocking_reason") or "PPT Master backend is not ready."))
     if production_requires_builder_backend(_run_mode(request)) and not backend_render_runtime_ready():
         raise BuildError("needs_builder_backend: PPT Master backend is certified but Deck Master render runtime is not wired to the external backend yet.")
     return status
+
+
+def build_route(request: dict[str, Any]) -> dict[str, Any]:
+    try:
+        from build.build_route import resolve_build_route
+    except ModuleNotFoundError:  # pragma: no cover - exercised by package-import test path.
+        from scripts.build.build_route import resolve_build_route
+    return resolve_build_route(request)
 
 
 def build_source_fingerprint(run_dir: str | Path) -> str:
@@ -208,12 +223,13 @@ def _page_sources_from_packages(root: Path, packages: list[dict[str, Any]], *, p
     for index, package in enumerate(ordered, start=1):
         page_id = str(package.get("page_id") or f"page_{index:03d}")
         status = str(package.get("status") or "draft")
-        if production and status != "ready":
+        approved = status in {"ready_for_build", "ready"}  # legacy "ready" mapped (F-N08)
+        if production and not approved:
             raise BuildError(
                 f"page package {page_id} is not approved for production build (status={status}); "
                 "resolve evidence/design basis and approve the package first"
             )
-        if status != "ready":
+        if not approved:
             warnings.append(f"page {page_id}: package status {status} (non-production build)")
         payload = whitelist_project(package)
         customer_visible = payload.get("customer_visible") or {}
@@ -320,12 +336,21 @@ def _prepare_build_from_packages(
 def prepare_build(run_dir: str | Path) -> dict[str, Any]:
     root = ensure_run_dirs(run_dir)
     request = load_request(root)
-    backend = builder_backend_status()
+    # SC-1.1 F-N02: native route resolves before any external status query.
+    if build_route(request).get("engine_id") == "deck_native":
+        backend = {"backend_name": "deck_native", "production_capable": True, "engine_route": build_route(request)}
+    else:
+        backend = builder_backend_status()
     run_id = str(request.get("run_id") or root.name)
     packages_index = root / "page_packages" / "index.json"
     production = production_requires_builder_backend(_run_mode(request))
     if packages_index.exists():
         return _prepare_build_from_packages(root, request, backend, run_id, production=production)
+    if production and build_route(request).get("engine_id") == "deck_native":
+        raise BuildError(
+            "native production build requires approved page_packages/ (run the producer first); "
+            "preview_manifest is not a production input"
+        )
     if production:
         # SC-1 B5: production builds consume approved page packages; the raw
         # preview manifest is no longer a production input.

@@ -61,7 +61,7 @@ MISSING_BY_STAGE = {
     "generation_failed": ["generation_session.json"],
     "needs_generation_import": ["generation_session.json"],
     "needs_preview_refresh": [PREVIEW_MANIFEST_NAME],
-    "needs_builder_backend": ["ppt-master production backend"],
+    "needs_builder_backend": ["the build route's production engine (legacy-ppt-master runs bind ppt-master; native runs need no binding)"],
     "needs_build": ["build/build_manifest.json"],
     "needs_render": ["render_results/render_result.json"],
 }
@@ -117,6 +117,15 @@ def _required_gate_policy(root: Path, artifact: Path, page_count: int, run_mode:
 
 def _next_quality_gate_command(root: Path, artifact: Path, page_count: int, policy: dict[str, Any]) -> str:
     missing = [str(gate) for gate in policy.get("missing_required_gates") or policy.get("missing_gates") or []]
+    if "render" not in missing and "semantic_review" in missing:
+        # SC-1.1 F-N06: when ONLY the semantic review is missing, the next
+        # action is preparing/importing the review — not another render gate.
+        return (
+            "deck-master prepare-quality-review --run-dir "
+            + str(root)
+            + "  # then execute the v2 review with the host agent and import it: "
+            "deck-master import-quality-review --run-dir <run_dir> --input <report.json>"
+        )
     if "render" in missing:
         gate = "render"
     elif "delivery" in missing or "customer_visible_safety" in missing:

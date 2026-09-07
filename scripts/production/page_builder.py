@@ -159,7 +159,8 @@ def build_packages_from_narrative(
             "sourcing": sourcing,
             "transition": str(beat.get("transition") or ""),
         }
-        status = "draft" if evidence_state == "insufficient" else "ready"
+        # SC-1.1 F-N08: write the schema status value, not a "ready" literal.
+        status = "draft" if evidence_state == "insufficient" else "ready_for_build"
 
         content = PageContent(
             page_id=page_id,

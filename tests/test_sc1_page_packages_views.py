@@ -87,12 +87,12 @@ class PagePackageWriterTests(unittest.TestCase):
         opener, solution = packages
         self.assertIn("conclusion", opener["customer_visible"]["body_blocks"][0]["type"])
         self.assertEqual("solution_model#capability:C1", solution["internal_only"]["design_basis_ref"])
-        self.assertEqual("ready", solution["status"])
+        self.assertEqual("ready_for_build", solution["status"])
 
     def test_resolvable_evidence_makes_page_referenced(self) -> None:
         packages = build_packages_from_narrative(run_id="run-pp", narrative_plan=_narrative(), context_manifest=_manifest())
         self.assertEqual("referenced", packages[0]["internal_only"]["evidence_state"])
-        self.assertEqual("ready", packages[0]["status"])
+        self.assertEqual("ready_for_build", packages[0]["status"])
 
     def test_missing_evidence_and_design_basis_stays_draft(self) -> None:
         packages = build_packages_from_narrative(run_id="run-pp", narrative_plan=_narrative(with_evidence=False))
