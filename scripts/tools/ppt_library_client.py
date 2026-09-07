@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -570,6 +571,7 @@ def write_library_results(
     source: str,
     status: str | None = None,
     warnings: list[str] | None = None,
+    command_source: str = "",
 ) -> dict[str, Any]:
     root = run_dir / "library_results"
     by_beat_dir = root / "by_beat"
@@ -582,6 +584,7 @@ def write_library_results(
         "run_id": run_id,
         "status": aggregate_status,
         "source": normalized_source,
+        "command_source": command_source,
         "preview_degraded": any(item["preview_degraded"] for item in selections),
         "selections": selections,
         "warnings": list(dict.fromkeys(warnings or [])),
@@ -1089,6 +1092,28 @@ def _write_early_blocked_result(
     )
 
 
+def resolve_library_command() -> tuple[str, str]:
+    """SC-1 A3: resolve the PPT Library executable.
+
+    Managed install under ``~/.deck-master/backends/ppt-library/current`` wins
+    over PATH so the product controls the pinned version; PATH remains a
+    fallback so an existing local install keeps working. Never fabricates a
+    command: with neither source available the default name is returned with
+    source ``missing`` and real runs report unavailability honestly.
+    """
+
+    managed = Path.home() / ".deck-master" / "backends" / "ppt-library" / "current" / "bin" / "ppt-lib"
+    if managed.is_file() and os.access(managed, os.X_OK):
+        return str(managed), "managed"
+    found = shutil.which(DEFAULT_LIBRARY_COMMAND)
+    if found:
+        return found, "path"
+    return DEFAULT_LIBRARY_COMMAND, "missing"
+
+
+DEFAULT_LIBRARY_COMMAND = "ppt-lib"
+
+
 def run_library_selection(
     *,
     narrative_plan: dict[str, Any],
@@ -1096,11 +1121,15 @@ def run_library_selection(
     request: dict[str, Any],
     run_dir: Path,
     mode: str = "auto",
-    command: str = "ppt-lib",
+    command: str | None = None,
     allow_fixture_fallback: bool = False,
 ) -> dict[str, Any]:
     if mode not in {"auto", "real", "fixture"}:
         raise PPTLibraryClientError("mode must be auto, real, or fixture.")
+    resolved_command, command_source = resolve_library_command()
+    if command is not None:
+        resolved_command, command_source = command, "explicit"
+    command = resolved_command
     root = ensure_run_dirs(run_dir)
     run_id = str(request.get("run_id") or narrative_plan.get("run_id") or root.name)
     run_mode = str(request.get("run_mode") or "dev").strip().lower()
@@ -1254,4 +1283,5 @@ def run_library_selection(
         selections=selections,
         source="ppt_library",
         warnings=warnings,
+        command_source=command_source,
     )

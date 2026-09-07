@@ -517,6 +517,16 @@ def _utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def _augment_lock(capability_lock: dict[str, Any], release_root: Path) -> dict[str, Any]:
+    # Lazy import: capability_lock imports helpers from this module, so a
+    # module-level import here would create a cycle.
+    try:
+        from skills.capability_lock import augment_capability_lock
+    except ModuleNotFoundError:  # pragma: no cover - exercised by package-import test path.
+        from scripts.skills.capability_lock import augment_capability_lock
+    return augment_capability_lock(capability_lock, release_root)
+
+
 def _repo_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
@@ -1395,6 +1405,60 @@ def _verify_disposable_release(root: Path, *, include_rc_gate: bool = False) -> 
         return verification
 
 
+def install_managed_backend(source: str | Path) -> dict[str, Any]:
+    """SC-1 A2: install a PPT Master backend package into the managed root.
+
+    The source must pass the real backend smoke check before it is accepted;
+    installing the same content twice is idempotent.
+    """
+
+    try:
+        from skills.capability_lock import install_managed_component
+    except ModuleNotFoundError:  # pragma: no cover - exercised by package-import test path.
+        from scripts.skills.capability_lock import install_managed_component
+
+    package = inspect_builder_backend_package(source)
+    if not package.get("full_package"):
+        return {
+            "status": "blocked",
+            "component": "ppt-master",
+            "reasons": list(package.get("reasons") or []),
+            "summary": "Source does not contain a full PPT Master backend package; nothing was installed.",
+        }
+    record = install_managed_component("ppt-master", source)
+    return {
+        "status": "installed",
+        **record,
+        "production_capable": bool(package.get("production_capable")),
+        "note": "Run `deck-master backend bind` against the managed path to record version-bound smoke evidence.",
+    }
+
+
+def install_managed_library_cli(source: str | Path) -> dict[str, Any]:
+    """SC-1 A3: install the PPT Library CLI into the managed root.
+
+    The source directory must contain ``bin/ppt-lib`` (executable). The asset
+    database stays outside the release tree and is never touched here.
+    """
+
+    try:
+        from skills.capability_lock import install_managed_component
+    except ModuleNotFoundError:  # pragma: no cover - exercised by package-import test path.
+        from scripts.skills.capability_lock import install_managed_component
+
+    source_dir = Path(source).expanduser().resolve()
+    executable = source_dir / "bin" / "ppt-lib"
+    if not executable.is_file() or not os.access(executable, os.X_OK):
+        return {
+            "status": "blocked",
+            "component": "ppt-library",
+            "reasons": [f"expected executable missing: bin/ppt-lib under {source_dir}"],
+            "summary": "Source does not contain an executable bin/ppt-lib; nothing was installed.",
+        }
+    record = install_managed_component("ppt-library", source_dir)
+    return {"status": "installed", **record}
+
+
 def verify_release_tree(
     release_root: str | Path | None = None,
     *,
@@ -1958,7 +2022,7 @@ def build_release_tree(
         "contracts": _contract_lock_entries(release_root),
     }
     (release_root / CAPABILITY_LOCK_NAME).write_text(
-        json.dumps(capability_lock, ensure_ascii=False, indent=2) + "\n",
+        json.dumps(_augment_lock(capability_lock, release_root), ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
     release_manifest = {
@@ -2376,6 +2440,13 @@ def inspect_suite_status(
             "blocked" if (not ready("deck-sourcing", "ppt-library") or lib_blocked)
             else ("degraded_ready" if lib_degraded else "ready")
         ),
+        # SC-1 A4: library_mode=none is a first-class production path — it needs
+        # deck-sourcing only, never the PPT Library runtime.
+        "library_none_sourcing": "ready" if ready("deck-sourcing") else "blocked",
+        # SC-1 A4: the standard build path needs the ppt-master backend only;
+        # a missing ImageGen host capability must not block it.
+        "standard_build": "ready" if (ready("deck-builder") and production_backend_ready) else "blocked",
+        "imagegen_host": "ready" if ready("deck-builder-high-density") else "optional",
         "deck_producer": "ready" if ready("deck-producer") else "blocked",
         "new_generation": "ready" if ready("deck-producer", "ppt-deck-pro-max") else "blocked",
         "deck_builder_adapter": "ready" if ready("deck-builder") else "blocked",

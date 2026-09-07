@@ -382,7 +382,7 @@ class BuildRuntimeTests(unittest.TestCase):
         with mock.patch(
             "runtime.build.builder_backend_status",
             return_value={"production_capable": True, "backend_name": "ppt-master", "status": "ready"},
-        ):
+        ), mock.patch("runtime.build.backend_render_runtime_ready", return_value=True):
             result = run_build(self.run_dir)
 
         self.assertEqual("awaiting_external_render", result["status"])
@@ -423,26 +423,25 @@ class BuildRuntimeTests(unittest.TestCase):
 
         self.assertIn("render runtime is not wired", str(ctx.exception))
 
-    def test_backend_render_runtime_ready_defaults_to_handoff_contract(self) -> None:
-        with mock.patch.dict("os.environ", {}, clear=True), mock.patch(
-            "runtime.builder_backend.render_handoff_contract_ready",
-            return_value=True,
-        ):
-            self.assertTrue(backend_render_runtime_ready())
+    def test_backend_render_runtime_ready_requires_real_smoke_evidence(self) -> None:
+        # SC-1 A-04: the always-true contract probe is retired; without real
+        # backend smoke evidence the runtime reports not-ready.
+        with mock.patch.dict("os.environ", {}, clear=True):
+            self.assertFalse(backend_render_runtime_ready())
             status = backend_render_runtime_status()
-            self.assertEqual("contract_probe", status["runtime_ready_source"])
-            self.assertTrue(status["runtime_ready_trusted_for_rc"])
+            self.assertEqual("smoke_evidence_missing", status["runtime_ready_source"])
+            self.assertFalse(status["runtime_ready_trusted_for_rc"])
         with mock.patch.dict("os.environ", {"DECK_MASTER_PPT_MASTER_RUNTIME_WIRED": "0"}):
             self.assertFalse(backend_render_runtime_ready())
             status = backend_render_runtime_status()
             self.assertEqual("env_override", status["runtime_ready_source"])
             self.assertFalse(status["runtime_ready_trusted_for_rc"])
 
-    def test_backend_render_runtime_env_true_is_not_trusted_for_rc(self) -> None:
+    def test_backend_render_runtime_env_true_cannot_fake_ready(self) -> None:
         with mock.patch.dict("os.environ", {"DECK_MASTER_PPT_MASTER_RUNTIME_WIRED": "1"}):
             status = backend_render_runtime_status()
 
-        self.assertTrue(status["runtime_ready"])
+        self.assertFalse(status["runtime_ready"])
         self.assertEqual("env_override", status["runtime_ready_source"])
         self.assertFalse(status["runtime_ready_trusted_for_rc"])
 

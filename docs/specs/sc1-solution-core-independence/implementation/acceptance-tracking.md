@@ -4,22 +4,27 @@
 
 状态口径：`not_started / blocked（注明前置缺失）/ in_progress / pass / fail / deferred_to_uat`。
 
-## 总览（2026-09-07，Q0 后）
+## 总览（2026-09-07，PR-02 后）
 
 | 组 | 数量 | 当前状态 | 说明 |
 |---|---|---|---|
-| A（安装/托管/就绪） | 13 | not_started ×13 | A-03/A-04 前置：真实 PPT Master 绑定（本机现为 unbound） |
+| A（安装/托管/就绪） | 13 | A-01/A-02/A-04/A-05/A-06/A-11/A-12 部分（工程测试通过，真实环境证据待补）；A-03 blocked（后端 unbound）；A-07—A-10 部分（P-02 测试覆盖）；A-08/A-09/A-10 待评估 | 证据：`tests/test_capability_lock_and_managed_backend.py`、更新后的 `test_build_runtime.py`/`test_open_source_preview_gate.py` |
 | I（材料/Context Pack） | 8 | not_started ×8 | PR-03 |
 | R（研究） | 6 | not_started ×6 | PR-03；R 组含"无网络真实报告"分支 |
 | S（方案/Brief/判断） | 8 | not_started ×8 | PR-03/04 |
 | N（叙事/双路径） | 5 | not_started ×5 | PR-04/05 |
-| P（页面生产/构建） | 6 | not_started ×6 | P-01 前置：标准后端真实 build/render |
+| P（页面生产/构建） | 6 | P-02 工程测试通过；P-01 blocked（真实标准 build/render 需后端绑定） | PR-05 继续 |
 | D（架构视图/图形） | 6 | not_started ×6 | PR-05 |
 | W（工作流/问题/动作） | 10 | not_started ×10 | PR-04/06 |
 | Q（语义审查/质量门） | 13 | not_started ×13 | PR-06；Q 量规按规格在 Q0 冻结（见 §2） |
 | L（学习/反馈口径） | 4 | not_started ×4 | PR-07 |
 | E（对照/UAT） | 6 | not_started ×6 | **deferred_to_uat 候选**：需 ≥3 类真实样本 ×2 配对运行，仓库现无真实素材 |
 | M（迁移/回滚） | 6 | not_started ×6 | PR-08；本机失效 symlink 与空 release 树为真实迁移场景 |
+
+### PR-02 证据边界（真实 vs 工程）
+
+- **工程测试证明**：lock 组件固定/hash 校验/漂移检测/重复安装幂等（A-01/A-02 工程面）；env 不能伪报 ready、smoke 证据驱动 ready（A-04）；桥接退役（A-11）；托管优先命令解析与缺失如实上报（A-05/A-06 解析面）；none 决策全量 generate、无 fixture 候选（A-07/P-02 断言）。
+- **待真实环境补证**：A-01 公开报告脱敏与真实 release 安装（依赖 suite-repair，A6）；A-05 真实 `ppt-lib` 托管安装后的真实检索（本机仅 PATH 2.0.1.dev0，未装托管副本）；A-03/A-04 的真实两页可编辑 PPTX 生成与渲染（需真实 PPT Master 绑定）；A-12 真实旧库保护（当前仅保证安装器不触碰 asset db 路径）。
 
 ## 已知前置条件与阻塞（Q0 实测）
 

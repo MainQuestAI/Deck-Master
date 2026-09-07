@@ -102,6 +102,8 @@ from skills.installer import (
     backend_unbind,
     backend_verify,
     build_release_tree,
+    install_managed_backend,
+    install_managed_library_cli,
     install_release_tree,
     install_skill,
     rollback_release_tree,
@@ -2160,6 +2162,12 @@ def command_backend_unbind(args: argparse.Namespace) -> dict[str, Any]:
     return backend_unbind(name=str(args.name))
 
 
+def command_backend_install_managed(args: argparse.Namespace) -> dict[str, Any]:
+    if str(args.component) == "ppt-master":
+        return install_managed_backend(str(args.source))
+    return install_managed_library_cli(str(args.source))
+
+
 def command_suite_migrate_legacy_skills(args: argparse.Namespace) -> dict[str, Any]:
     if bool(getattr(args, "rollback", False)):
         return suite_migration_rollback(str(getattr(args, "rollback_id", "")))
@@ -3143,6 +3151,17 @@ def build_parser() -> argparse.ArgumentParser:
     p_backend_unbind = backend_cmds.add_parser("unbind", help="Unbind a backend dependency")
     p_backend_unbind.add_argument("name", choices=["ppt-master"])
     p_backend_unbind.set_defaults(func=command_backend_unbind)
+    p_backend_install = backend_cmds.add_parser(
+        "install-managed",
+        help="Install a managed production component (ppt-master backend or ppt-library CLI) into the managed root",
+    )
+    p_backend_install.add_argument("component", choices=["ppt-master", "ppt-library"])
+    p_backend_install.add_argument(
+        "--source",
+        required=True,
+        help="Component source directory (backend skill package, or a directory containing bin/ppt-lib)",
+    )
+    p_backend_install.set_defaults(func=command_backend_install_managed)
 
     p_suite_migrate = sub.add_parser("suite-migrate-legacy-skills", help="Plan, apply, or rollback legacy skill directory migration")
     p_suite_migrate.add_argument("--target", action="append", default=[], choices=["codex", "claude-code", "hermes"])

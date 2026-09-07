@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 from datetime import datetime, timezone
 import shlex
@@ -48,6 +49,10 @@ GENERATION_BRIDGE_CAPABILITIES = (
 )
 RUNTIME_READY_TRUE_VALUES = {"1", "true", "on", "yes", "enabled"}
 RUNTIME_READY_FALSE_VALUES = {"0", "false", "off", "no", "disabled"}
+MANAGED_BACKEND_ROOT = Path.home() / ".deck-master" / "backends" / "ppt-master"
+MANAGED_BACKEND_POINTER = "current"
+RUNTIME_READY_SOURCE_SMOKE = "external_backend_smoke"
+RUNTIME_READY_SOURCE_SMOKE_MISSING = "smoke_evidence_missing"
 
 
 def _utc_now() -> str:
@@ -59,25 +64,41 @@ def production_requires_builder_backend(run_mode: str | None) -> bool:
 
 
 def backend_render_runtime_status() -> dict[str, Any]:
+    """Runtime readiness comes from recorded real backend smoke evidence.
+
+    The environment variable may only block readiness; it can never fake it
+    (SC-1 A-04). The legacy always-true contract probe is no longer trusted:
+    without smoke evidence the runtime reports not-ready.
+    """
+
     flag = os.environ.get(RUNTIME_READY_ENV, "").strip().lower()
-    if flag in RUNTIME_READY_FALSE_VALUES:
+    if flag in RUNTIME_READY_FALSE_VALUES or flag in RUNTIME_READY_TRUE_VALUES:
         return {
             "runtime_ready": False,
             "runtime_ready_source": "env_override",
             "runtime_ready_trusted_for_rc": False,
         }
-    if flag in RUNTIME_READY_TRUE_VALUES:
+    if binding_smoke_evidence_ready():
         return {
             "runtime_ready": True,
-            "runtime_ready_source": "env_override",
-            "runtime_ready_trusted_for_rc": False,
+            "runtime_ready_source": RUNTIME_READY_SOURCE_SMOKE,
+            "runtime_ready_trusted_for_rc": True,
         }
-    ready = bool(render_handoff_contract_ready())
     return {
-        "runtime_ready": ready,
-        "runtime_ready_source": "contract_probe",
-        "runtime_ready_trusted_for_rc": ready,
+        "runtime_ready": False,
+        "runtime_ready_source": RUNTIME_READY_SOURCE_SMOKE_MISSING,
+        "runtime_ready_trusted_for_rc": False,
     }
+
+
+def binding_smoke_evidence_ready() -> bool:
+    binding = _find_backend_binding(BACKEND_NAME)
+    if not binding or not binding.get("verified"):
+        return False
+    evidence = binding.get("smoke_evidence")
+    if not isinstance(evidence, dict):
+        return False
+    return bool(evidence.get("passed")) and bool(str(evidence.get("recorded_at") or "").strip())
 
 
 def backend_render_runtime_ready() -> bool:
@@ -90,7 +111,7 @@ def _runtime_status_from_ready(render_runtime_ready: bool | None = None) -> dict
     ready = bool(render_runtime_ready)
     return {
         "runtime_ready": ready,
-        "runtime_ready_source": "external_backend_smoke" if ready else "contract_probe",
+        "runtime_ready_source": RUNTIME_READY_SOURCE_SMOKE if ready else RUNTIME_READY_SOURCE_SMOKE_MISSING,
         "runtime_ready_trusted_for_rc": ready,
     }
 
@@ -199,6 +220,7 @@ def _short_sha(value: str | None) -> str:
 
 
 def _normalize_backend_record(raw: dict[str, Any]) -> dict[str, Any]:
+    smoke_evidence = raw.get("smoke_evidence")
     return {
         "name": str(raw.get("name") or "").strip(),
         "repo_path": str(raw.get("repo_path") or "").strip(),
@@ -213,6 +235,23 @@ def _normalize_backend_record(raw: dict[str, Any]) -> dict[str, Any]:
         "validated_capabilities": list(raw.get("validated_capabilities") or []),
         "repo_label": str(raw.get("repo_label") or "").strip(),
         "dependency_kind": str(raw.get("dependency_kind") or DEPENDENCY_KIND_EXTERNAL_REPO).strip() or DEPENDENCY_KIND_EXTERNAL_REPO,
+        "smoke_evidence": dict(smoke_evidence) if isinstance(smoke_evidence, dict) else {},
+    }
+
+
+def _smoke_evidence_from_package(package: dict[str, Any]) -> dict[str, Any]:
+    """Version-bound smoke evidence extracted from a real backend smoke run."""
+
+    if not package.get("production_capable"):
+        return {}
+    smoke_check = package.get("smoke_check") if isinstance(package.get("smoke_check"), dict) else {}
+    return {
+        "passed": True,
+        "recorded_at": _utc_now(),
+        "smoke_command": str(package.get("smoke_command") or ""),
+        "backend_content_sha256": str(package.get("backend_content_sha256") or ""),
+        "render_result_sha256": str(smoke_check.get("render_result_sha256") or ""),
+        "smoke_output_status": str(smoke_check.get("status") or "pass"),
     }
 
 
@@ -224,6 +263,7 @@ def _merge_backend_record(
     verified: bool,
     verified_at: str,
     validated_capabilities: list[str] | None = None,
+    smoke_evidence: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     metadata = _read_git_metadata(repo_path)
     result = _normalize_backend_record(current)
@@ -244,6 +284,8 @@ def _merge_backend_record(
             "validated_capabilities": list(validated_capabilities or []),
         }
     )
+    if smoke_evidence is not None:
+        result["smoke_evidence"] = smoke_evidence
     return result
 
 
@@ -297,6 +339,7 @@ def bind_backend_dependency(repo_path: str, name: str = BACKEND_NAME) -> dict[st
         verified=bool(package.get("production_capable")),
         verified_at=_utc_now(),
         validated_capabilities=list(package.get("operations") or []),
+        smoke_evidence=_smoke_evidence_from_package(package),
     )
     record["repo_label"] = metadata.get("repo_label")
     record["git_branch"] = metadata.get("git_branch")
@@ -329,6 +372,7 @@ def verify_backend_dependency(name: str = BACKEND_NAME) -> dict[str, Any]:
         verified=bool(package.get("production_capable")),
         verified_at=_utc_now(),
         validated_capabilities=list(package.get("operations") or []),
+        smoke_evidence=_smoke_evidence_from_package(package),
     )
     record["repo_label"] = metadata.get("repo_label")
     record["git_branch"] = metadata.get("git_branch")
@@ -455,13 +499,16 @@ def _binding_status_for_name(
 
 
 def _generation_bridge_status() -> dict[str, Any]:
-    configured_path = os.environ.get(GENERATION_BRIDGE_REPO_PATH_ENV, "").strip()
-    base = {
+    """Retired in SC-1: production generation dispatches via the Agent task
+    protocol, so the pinned third-party branch bridge is no longer a
+    dependency. Kept as a status shim so existing reports keep working."""
+
+    return {
         "name": GENERATION_BRIDGE_NAME,
         "dependency_kind": DEPENDENCY_KIND_GENERATION_BRIDGE,
         "repo": GENERATION_BRIDGE_REPO,
         "repo_label": _repo_label_from_remote(GENERATION_BRIDGE_REPO),
-        "repo_path": configured_path,
+        "repo_path": "",
         "skill_path": "",
         "git_remote": "",
         "git_sha": "",
@@ -472,45 +519,10 @@ def _generation_bridge_status() -> dict[str, Any]:
         "verified_at": "",
         "validated_capabilities": [],
         "source": GENERATION_BRIDGE_REPO,
-    }
-    if not configured_path:
-        return {
-            **base,
-            "binding_status": "not_configured",
-            "summary": (
-                "PPT Deck Pro Max generation bridge is not configured. "
-                f"Set {GENERATION_BRIDGE_REPO_PATH_ENV} to a local open-source checkout for production generation."
-            ),
-        }
-
-    repo_path = Path(configured_path).expanduser()
-    if not repo_path.exists() or _git_command(repo_path, ["rev-parse", "--is-inside-work-tree"]) != "true":
-        return {
-            **base,
-            "binding_status": "invalid",
-            "summary": "Configured PPT Deck Pro Max generation bridge path is not a git worktree.",
-        }
-
-    metadata = _read_git_metadata(repo_path)
-    current_sha = str(metadata.get("git_sha") or "")
-    verified = bool(current_sha and current_sha == GENERATION_BRIDGE_SHA)
-    status = "bound_verified" if verified else "configured_unverified"
-    return {
-        **base,
-        "binding_status": status,
-        "repo_path": str(repo_path.resolve()),
-        "git_remote": str(metadata.get("git_remote") or ""),
-        "git_sha": current_sha,
-        "short_sha": _short_sha(current_sha),
-        "git_branch": str(metadata.get("git_branch") or ""),
-        "worktree_dirty": bool(metadata.get("worktree_dirty")),
-        "verified": verified,
-        "verified_at": GENERATION_BRIDGE_VERIFIED_AT if verified else "",
-        "validated_capabilities": list(GENERATION_BRIDGE_CAPABILITIES) if verified else [],
+        "binding_status": "retired",
         "summary": (
-            "PPT Deck Pro Max generation bridge is pinned and verified."
-            if verified
-            else "PPT Deck Pro Max generation bridge is configured but not pinned to the expected release SHA."
+            "PPT Deck Pro Max generation bridge is retired: production "
+            "generation no longer depends on this repository or branch."
         ),
     }
 
@@ -550,6 +562,9 @@ def external_dependency_statuses(
 
 def _candidate_paths() -> list[Path]:
     paths: list[Path] = []
+    managed_current = MANAGED_BACKEND_ROOT / MANAGED_BACKEND_POINTER
+    if managed_current.exists():
+        paths.append(managed_current)
     env_path = os.environ.get("DECK_MASTER_PPT_MASTER_BACKEND")
     if env_path:
         paths.append(Path(env_path).expanduser())
@@ -719,7 +734,23 @@ def _run_smoke_check(root: Path, smoke_command: str | None) -> tuple[dict[str, A
         validation = validate_render_result(render_payload)
         if not validation.get("valid"):
             return payload, ["backend smoke render_result failed validation: " + "; ".join(validation.get("errors", []))]
+        payload["render_result_sha256"] = hashlib.sha256(render_result.read_bytes()).hexdigest()
         return payload, []
+
+
+def _backend_content_sha256(root: Path) -> str:
+    digest = hashlib.sha256()
+    base = root.resolve()
+    entries: list[Path] = []
+    for dirpath, dirnames, filenames in os.walk(base):
+        dirnames.sort()
+        for filename in filenames:
+            entries.append(Path(dirpath) / filename)
+    for path in sorted(entries, key=lambda item: item.relative_to(base).as_posix()):
+        digest.update(path.relative_to(base).as_posix().encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(hashlib.sha256(path.read_bytes()).digest())
+    return digest.hexdigest()
 
 
 def inspect_builder_backend_package(path: str | Path) -> dict[str, Any]:
@@ -810,6 +841,7 @@ def inspect_builder_backend_package(path: str | Path) -> dict[str, Any]:
     if smoke_check_errors:
         result["reasons"].extend(smoke_check_errors)
     result["smoke_check"] = smoke_check or {}
+    result["backend_content_sha256"] = _backend_content_sha256(root) if root.exists() else ""
 
     missing_ops = sorted(REQUIRED_PRODUCTION_OPERATIONS - operations)
     if missing_ops:
