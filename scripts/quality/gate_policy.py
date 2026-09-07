@@ -11,6 +11,10 @@ from runtime.render import find_render_result
 PASSING_GATE_STATUSES = {"pass", "conditional_pass", "pass_with_warning", "pass_with_override"}
 BLOCKING_GATE_STATUSES = {"rework_required", "failed", "blocked"}
 ARTIFACT_REQUIRED_GATES = ("render", "delivery", "customer_visible_safety")
+# SC-1 C3: production delivery also requires an imported, current semantic
+# review (the external quality review report — v1 or v2 semantics).
+SEMANTIC_REVIEW_GATE = "semantic_review"
+_SEMANTIC_REVIEW_PREFIXES = ("external_", "semantic_review")
 
 
 def normalize_gate_name(value: str) -> str:
@@ -29,8 +33,33 @@ def required_gate_names(
     if mode in {"fixture", "dev"}:
         return ["render"]
     if builder == "high_density" or output == "production_pptx" or mode in {"production", "benchmark"}:
-        return list(ARTIFACT_REQUIRED_GATES)
+        return [*ARTIFACT_REQUIRED_GATES, SEMANTIC_REVIEW_GATE]
     return ["render", "delivery"]
+
+
+def _semantic_review_input_current(run_dir: Path, report: dict[str, Any]) -> bool:
+    """SC-1 C3: a semantic review bound to a page-package snapshot is stale
+    as soon as the packages change. Reports without a binding (v1-style) fall
+    back to the regular freshness rules."""
+
+    based_on = report.get("based_on") if isinstance(report.get("based_on"), dict) else {}
+    sha = str(based_on.get("page_packages_index_sha256") or report.get("based_on_sha256") or "").strip()
+    if not sha:
+        return True
+    index = run_dir / "page_packages" / "index.json"
+    if not index.exists():
+        return False
+    import hashlib
+
+    return hashlib.sha256(index.read_bytes()).hexdigest() == sha
+
+
+def _report_satisfies_gate(gate: str, report_gate: str) -> bool:
+    if report_gate == gate:
+        return True
+    if gate == SEMANTIC_REVIEW_GATE:
+        return any(report_gate.startswith(prefix) for prefix in _SEMANTIC_REVIEW_PREFIXES)
+    return False
 
 
 def load_gate_reports(root: Path | str) -> list[dict[str, Any]]:
@@ -178,14 +207,16 @@ def resolve_required_gates(
             "report_file": str(report.get("_report_file") or ""),
             "reason": str(currentity.get("reason") or ""),
         }
-        if gate in gate_status and gate_status[gate]["currentity"] in {"missing", "stale", "unbound"}:
-            gate_status[gate] = summary
+        required_gate = next((item for item in gate_status if _report_satisfies_gate(item, gate)), None)
+        if required_gate and gate_status[required_gate]["currentity"] in {"missing", "stale", "unbound"}:
+            summary["gate"] = required_gate
+            gate_status[required_gate] = summary
         if currentity_status == "stale":
             stale_reports.append(summary)
         elif currentity_status == "unbound":
             unbound_reports.append(summary)
         elif currentity.get("current"):
-            should_collect = gate in required or include_non_required_blockers
+            should_collect = required_gate is not None or include_non_required_blockers
             if should_collect:
                 candidates = _blocking_candidates(report, gate)
                 current_candidates_by_gate.setdefault(gate, []).extend(candidates)
@@ -203,16 +234,20 @@ def resolve_required_gates(
                             current_blockers.append(item)
                             current_blockers_by_gate.setdefault(gate, []).append(item)
 
-        if gate in gate_status and currentity.get("current"):
+        if required_gate and currentity.get("current"):
             candidates = current_candidates_by_gate.get(gate, [])
             unresolved = current_blockers_by_gate.get(gate, [])
             all_candidates_overridden_p1 = bool(candidates) and all(
                 _severity(item) == "P1" and _finding_id(item) and has_active_override(run_dir, _finding_id(item))
                 for item in candidates
             )
-            gate_status[gate]["satisfied"] = (
+            satisfied = (
                 status in PASSING_GATE_STATUSES and not unresolved
             ) or all_candidates_overridden_p1
+            if satisfied and required_gate == SEMANTIC_REVIEW_GATE and not _semantic_review_input_current(run_dir, report):
+                satisfied = False
+                summary["reason"] = "semantic review was bound to an older page-package set"
+            gate_status[required_gate]["satisfied"] = satisfied
 
     missing = [gate for gate, summary in gate_status.items() if not summary.get("satisfied")]
     required_gate_satisfied = not missing

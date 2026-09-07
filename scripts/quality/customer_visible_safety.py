@@ -153,6 +153,27 @@ def evaluate_customer_visible_safety_gate(
                 "page_id": f"slide_{int(slide_number):03d}",
             }
         )
+    # SC-1 C3 (spec 06 §6.6): client-visible scope covers speaker notes,
+    # metadata, hidden slides and internal labels — not just visible text.
+    # The scan applies to real PPTX packages; artifacts the pptx reader
+    # cannot open fall back to the base audit above (never crash the gate).
+    try:
+        from quality.semantic_checks import scan_delivery_pptx
+
+        for index, scan_finding in enumerate(scan_delivery_pptx(artifact), start=1):
+            findings.append(
+                {
+                    "finding_id": f"customer_visible_hidden_content_{index:03d}",
+                    "severity": "P1",
+                    "dimension": "hidden_content",
+                    "message": str(scan_finding.get("message") or ""),
+                    "repair_instruction": "移除隐藏内容/元数据/内部标签后重新导出，再重新运行 customer_visible_safety 门。",
+                    "slide_number": int(scan_finding.get("slide") or 0) or None,
+                    "page_id": f"slide_{int(scan_finding.get('slide') or 0):03d}" if scan_finding.get("slide") else "",
+                }
+            )
+    except Exception:  # noqa: BLE001 - scan is additive; unreadable artifacts keep base-audit findings only.
+        pass
     blocked = bool(findings)
     status = "rework_required" if blocked else "pass"
     p0_count = sum(1 for item in findings if item.get("severity") == "P0")

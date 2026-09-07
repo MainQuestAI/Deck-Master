@@ -15,6 +15,15 @@ from quality.gate_policy import current_artifact, resolve_required_gates
 from quality.overrides import create_override
 
 
+def _page_packages_sha(run_dir: Path) -> str:
+    index = Path(run_dir) / "page_packages" / "index.json"
+    if not index.exists():
+        index.parent.mkdir(parents=True, exist_ok=True)
+        index.write_text("{}\n", encoding="utf-8")
+    import hashlib
+    return hashlib.sha256(index.read_bytes()).hexdigest()
+
+
 class GateFreshnessTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temp_dir = Path(tempfile.mkdtemp(prefix="deck_gate_freshness_"))
@@ -145,6 +154,17 @@ class GateFreshnessTests(unittest.TestCase):
             {"gate": gate, "status": "pass", "blocks_delivery": False, "findings": [], **identity}
             for gate in ("render", "delivery", "customer_visible_safety")
         ]
+        # SC-1 C3: production additionally requires a current semantic review.
+        reports.append(
+            {
+                "gate": "external_semantic",
+                "status": "pass",
+                "blocks_delivery": False,
+                "findings": [],
+                "based_on_sha256": _page_packages_sha(self.run_dir),
+                **identity,
+            }
+        )
 
         result = resolve_required_gates(
             self.run_dir,

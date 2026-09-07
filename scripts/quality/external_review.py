@@ -447,8 +447,14 @@ def import_external_review(
     *,
     replace: bool = False,
 ) -> dict[str, Any]:
-    """Import external quality review as a quality gate report."""
-    validation = validate_external_review(result)
+    """Import external quality review (v1 or v2) as a quality gate report."""
+    schema_version = str(result.get("schema_version") or "")
+    if schema_version == RESULT_SCHEMA_VERSION_V2:
+        validation = validate_external_review_v2(result)
+        reviewer = str(result.get("reviewer_session_id") or "")
+    else:
+        validation = validate_external_review(result)
+        reviewer = str(result.get("reviewer") or "")
     if not validation["valid"]:
         raise ExternalReviewError(
             "Invalid external review: " + "; ".join(validation["errors"])
@@ -464,7 +470,6 @@ def import_external_review(
     except RunStateError as exc:
         raise ExternalReviewError(str(exc)) from exc
     scope = str(result.get("scope", ""))
-    reviewer = str(result.get("reviewer", ""))
 
     quality_dir = root / "quality_reports"
     quality_dir.mkdir(parents=True, exist_ok=True)
@@ -524,7 +529,7 @@ def import_external_review(
                 "page_id": f.get("page_id", ""),
                 "dimension": f.get("dimension", ""),
                 "message": f.get("message", ""),
-                "repair_instruction": f.get("repair_instruction", ""),
+                "repair_instruction": str(f.get("repair_instruction") or f.get("suggested_repair") or ""),
                 "refs": f.get("refs", []),
                 "source": "external_review",
                 "reviewer": reviewer,
@@ -532,6 +537,11 @@ def import_external_review(
             for f in findings
         ],
     }
+    if schema_version == RESULT_SCHEMA_VERSION_V2:
+        based_on = result.get("based_on") if isinstance(result.get("based_on"), dict) else {}
+        gate_report["based_on_sha256"] = str(based_on.get("page_packages_index_sha256") or "")
+        gate_report["review_kind"] = str(result.get("review_kind") or "")
+        gate_report["reviewer_session_id"] = str(result.get("reviewer_session_id") or "")
 
     write_json(gate_path, gate_report)
 
