@@ -16,7 +16,7 @@
 | P（页面生产/构建） | 6 | P-02 工程测试通过；P-04/P-05/P-01（工程面）通过：生产写入方逐 beat 全覆盖、制作要求不得进正文、无证据/设计依据保持 draft、标准构建真实消费 Page Package（hash 锚定 + 正文渲染 + 生产 gate）；P-01 真实两页 PPTX 生成 blocked（需后端绑定）；P-03/P-06 随 PR-06 | `tests/test_sc1_page_packages_views.py`、`test_build_runtime.py` |
 | D（架构视图/图形） | 6 | D-01/D-02/D-03 工程测试通过（四类视图构建、模型一致性拒绝未知节点/关系、组件变更影响投影）；D-04—D-06 随 PR-06（客户扫描/回读门） | `tests/test_sc1_page_packages_views.py` |
 | W（工作流/问题/动作） | 10 | W-01/W-05 工程测试通过（材料自答、交付批准用户保留）；F03 文档语义统一已落地；W-02—W-04/W-06—W-10 随 PR-06 | `tests/test_sc1_question_authority.py` |
-| Q（语义审查/质量门） | 13 | not_started ×13 | PR-06；Q 量规按规格在 Q0 冻结（见 §2） |
+| Q（语义审查/质量门） | 13 | Q-01/Q-04/Q-05/Q-13 工程测试通过（v2 失败封闭校验、独立性、输入版本绑定、无来源数字/内部标签扫描、交付 PPTX notes/元数据/隐藏页扫描）；审查 prompt 已升级 v2 六维（与 schema 枚举一致）；Q-02/Q-03/Q-06—Q-12 随 C2/C3 剩余工作 | `tests/test_sc1_external_review_v2.py` |
 | L（学习/反馈口径） | 4 | not_started ×4 | PR-07 |
 | E（对照/UAT） | 6 | not_started ×6 | **deferred_to_uat 候选**：需 ≥3 类真实样本 ×2 配对运行，仓库现无真实素材 |
 | M（迁移/回滚） | 6 | not_started ×6 | PR-08；本机失效 symlink 与空 release 树为真实迁移场景 |

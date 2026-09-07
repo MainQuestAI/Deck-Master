@@ -1,0 +1,415 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:deck-master:sc1:deck_external_quality_review.v2",
+  "title": "deck_external_quality_review.v2",
+  "description": "SC-1 target contract draft; not installed in the current repository. Structural validation is not runtime or semantic verification.",
+  "x-spec-status": "target-draft",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "deck_external_quality_review.v2"
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "run_mode": {
+      "type": "string",
+      "enum": [
+        "production",
+        "benchmark",
+        "fixture",
+        "dev"
+      ]
+    },
+    "based_on": {
+      "type": "object",
+      "properties": {
+        "input_fingerprint": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "input_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "ref": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "required": [
+              "ref",
+              "sha256"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "input_fingerprint",
+        "input_refs"
+      ],
+      "additionalProperties": false
+    },
+    "review_action_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "scope": {
+      "type": "string",
+      "enum": [
+        "semantic",
+        "visual",
+        "evidence",
+        "client-readiness"
+      ]
+    },
+    "review_kind": {
+      "type": "string",
+      "enum": [
+        "producer_self",
+        "independent"
+      ]
+    },
+    "reviewer_session_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "producer_session_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "host_execution_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reviewed_inputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "ref": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        },
+        "required": [
+          "ref",
+          "sha256"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "coverage": {
+      "type": "object",
+      "properties": {
+        "required_page_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+          },
+          "minItems": 1
+        },
+        "reviewed_page_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+          },
+          "minItems": 1
+        },
+        "claim_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0
+        },
+        "skipped": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "ref": {
+                "type": "string",
+                "minLength": 1
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "ref",
+              "reason"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0
+        }
+      },
+      "required": [
+        "required_page_ids",
+        "reviewed_page_ids",
+        "claim_refs",
+        "skipped"
+      ],
+      "additionalProperties": false
+    },
+    "dimension_scores": {
+      "type": "object",
+      "properties": {
+        "customer_specificity": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "solution_validity": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "evidence_quality": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "decision_logic": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "implementation_specificity": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "expression_quality": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 5
+        }
+      },
+      "required": [
+        "customer_specificity",
+        "solution_validity",
+        "evidence_quality",
+        "decision_logic",
+        "implementation_specificity",
+        "expression_quality"
+      ],
+      "additionalProperties": false
+    },
+    "observations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "dimension": {
+            "type": "string",
+            "enum": [
+              "customer_specificity",
+              "solution_validity",
+              "evidence_quality",
+              "decision_logic",
+              "implementation_specificity",
+              "expression_quality"
+            ]
+          },
+          "object_refs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
+          },
+          "verdict": {
+            "type": "string",
+            "enum": [
+              "pass",
+              "fail",
+              "not_applicable"
+            ]
+          },
+          "rationale": {
+            "type": "string",
+            "minLength": 1
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 0
+          },
+          "check_method": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "dimension",
+          "object_refs",
+          "verdict",
+          "rationale",
+          "evidence_refs",
+          "check_method"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 6
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "finding_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "P0",
+              "P1",
+              "P2"
+            ]
+          },
+          "dimension": {
+            "type": "string",
+            "enum": [
+              "customer_specificity",
+              "solution_validity",
+              "evidence_quality",
+              "decision_logic",
+              "implementation_specificity",
+              "expression_quality"
+            ]
+          },
+          "object_refs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 0
+          },
+          "repair_action": {
+            "type": "string",
+            "enum": [
+              "read_source",
+              "research",
+              "revise_claim",
+              "recalculate",
+              "revise_mechanism",
+              "revise_view",
+              "rewrite_page",
+              "remove_nonessential_assertion",
+              "ask_user"
+            ]
+          },
+          "repair_instruction": {
+            "type": "string",
+            "minLength": 1
+          },
+          "recheck": {
+            "type": "string",
+            "minLength": 1
+          },
+          "allowed_scope_refs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
+          }
+        },
+        "required": [
+          "finding_id",
+          "severity",
+          "dimension",
+          "object_refs",
+          "message",
+          "evidence_refs",
+          "repair_action",
+          "repair_instruction",
+          "recheck",
+          "allowed_scope_refs"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0
+    },
+    "summary": {
+      "type": "object",
+      "properties": {
+        "reported_status": {
+          "type": "string",
+          "enum": [
+            "pass",
+            "conditional_pass",
+            "rework_required"
+          ]
+        },
+        "conclusion": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "reported_status",
+        "conclusion"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schema_version",
+    "run_id",
+    "run_mode",
+    "based_on",
+    "review_action_id",
+    "scope",
+    "review_kind",
+    "reviewer_session_id",
+    "producer_session_id",
+    "host_execution_ref",
+    "reviewed_inputs",
+    "coverage",
+    "dimension_scores",
+    "observations",
+    "findings",
+    "summary"
+  ],
+  "additionalProperties": false
+}

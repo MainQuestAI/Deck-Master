@@ -8,6 +8,7 @@ Implements:
 
 from __future__ import annotations
 
+import hashlib
 import shutil
 from datetime import datetime, timezone
 from pathlib import Path
@@ -27,7 +28,19 @@ from runtime.run_state import (
 
 TASK_SCHEMA_VERSION = "deck_external_quality_review_task.v1"
 RESULT_SCHEMA_VERSION = "deck_external_quality_review.v1"
+RESULT_SCHEMA_VERSION_V2 = "deck_external_quality_review.v2"
 QUALITY_FINDINGS_SCHEMA_VERSION = "deck_master_quality_findings.v1"
+
+# SC-1 C1: the v2 six-dimension rubric (external-quality-review.v2 schema).
+REVIEW_DIMENSIONS_V2 = (
+    "customer_specificity",
+    "solution_validity",
+    "evidence_quality",
+    "decision_logic",
+    "implementation_specificity",
+    "expression_quality",
+)
+VALID_REPORTED_STATUS_V2 = {"pass", "conditional_pass", "rework_required"}
 
 TASK_DIR = "quality_review_tasks"
 VALID_SCOPES = {"semantic", "visual", "evidence", "client-readiness"}
@@ -200,6 +213,142 @@ def validate_external_review(result: dict[str, Any]) -> dict[str, Any]:
         "errors": errors if errors else [],
         "warnings": [],
     }
+
+
+# --------------------------------------------------------------------------- #
+# v2 (SC-1 C1): six-dimension rubric, coverage, independence
+# --------------------------------------------------------------------------- #
+
+
+def validate_external_review_v2(result: dict[str, Any]) -> dict[str, Any]:
+    """Fail-closed validation of a deck_external_quality_review.v2 report.
+
+    A reviewer string alone is not independence; coverage must be complete or
+    explicitly skipped with reasons; every dimension needs an observation; a
+    ``pass`` with empty findings is only accepted when coverage is complete
+    and all six dimensions were actually observed.
+    """
+
+    errors: list[str] = []
+    if not isinstance(result, dict):
+        return {"valid": False, "errors": ["Result must be a JSON object."], "warnings": []}
+    if result.get("schema_version") != RESULT_SCHEMA_VERSION_V2:
+        errors.append(f"schema_version must be '{RESULT_SCHEMA_VERSION_V2}', got '{result.get('schema_version')}'.")
+        return {"valid": False, "errors": errors, "warnings": []}
+
+    for field in ("run_id", "scope", "based_on", "review_action_id", "review_kind", "host_execution_ref"):
+        if not str(result.get(field) or "").strip():
+            errors.append(f"{field} is required.")
+    reviewer_session = str(result.get("reviewer_session_id") or "").strip()
+    producer_session = str(result.get("producer_session_id") or "").strip()
+    if not reviewer_session:
+        errors.append("reviewer_session_id is required.")
+    if not producer_session:
+        errors.append("producer_session_id is required.")
+    if reviewer_session and producer_session and reviewer_session == producer_session:
+        errors.append("reviewer_session_id must differ from producer_session_id (independence).")
+
+    reviewed_inputs = result.get("reviewed_inputs")
+    if not isinstance(reviewed_inputs, dict) or not reviewed_inputs:
+        errors.append("reviewed_inputs must record the input artifacts and versions.")
+
+    coverage = result.get("coverage") if isinstance(result.get("coverage"), dict) else {}
+    required_ids = [str(item) for item in (coverage.get("required_page_ids") or [])]
+    reviewed_ids = set(str(item) for item in (coverage.get("reviewed_page_ids") or []))
+    skipped = {str(item.get("ref") or ""): str(item.get("reason") or "") for item in (coverage.get("skipped") or []) if isinstance(item, dict)}
+    if not required_ids:
+        errors.append("coverage.required_page_ids must not be empty.")
+    missing = [page_id for page_id in required_ids if page_id not in reviewed_ids and page_id not in skipped]
+    if missing:
+        errors.append(f"coverage incomplete; pages neither reviewed nor explicitly skipped: {missing}")
+    for ref, reason in skipped.items():
+        if ref and not reason:
+            errors.append(f"coverage skip of '{ref}' requires a reason.")
+
+    dimension_scores = result.get("dimension_scores") if isinstance(result.get("dimension_scores"), dict) else {}
+    observations = result.get("observations") if isinstance(result.get("observations"), list) else []
+    observed_dims = {str(item.get("dimension") or "") for item in observations if isinstance(item, dict)}
+    for dimension in REVIEW_DIMENSIONS_V2:
+        if dimension not in observed_dims:
+            errors.append(f"dimension '{dimension}' has no observation; unreviewed content stays unreviewed (no empty pass).")
+        score = dimension_scores.get(dimension)
+        if not isinstance(score, (int, float)) or not 1 <= float(score) <= 5:
+            errors.append(f"dimension_scores.{dimension} must be a number between 1 and 5.")
+    unknown_dims = observed_dims - set(REVIEW_DIMENSIONS_V2)
+    if unknown_dims:
+        errors.append(f"observations carry unknown dimensions: {sorted(unknown_dims)}")
+    for index, item in enumerate(observations):
+        if not isinstance(item, dict):
+            continue
+        if not str(item.get("observation") or item.get("message") or "").strip():
+            errors.append(f"observations[{index}] needs concrete observation text.")
+
+    findings = result.get("findings")
+    if not isinstance(findings, list):
+        errors.append("findings must be an array.")
+    summary = result.get("summary") if isinstance(result.get("summary"), dict) else {}
+    reported_status = str(summary.get("reported_status") or "")
+    if reported_status not in VALID_REPORTED_STATUS_V2:
+        errors.append(f"summary.reported_status must be one of {sorted(VALID_REPORTED_STATUS_V2)}.")
+    if reported_status == "pass" and findings:
+        errors.append("summary.reported_status 'pass' cannot carry open findings; use conditional_pass or rework_required.")
+    if reported_status in {"pass", "conditional_pass"} and missing:
+        errors.append("cannot report pass with incomplete coverage.")
+
+    return {"valid": len(errors) == 0, "errors": errors, "warnings": []}
+
+
+def prepare_quality_review_v2(
+    run_dir: str | Path,
+    *,
+    scope: str,
+    required_page_ids: list[str],
+    review_kind: str = "full_deck",
+    run_mode: str = "production",
+) -> dict[str, Any]:
+    """Emit a v2 review task bound to current input versions (page packages)."""
+
+    root = Path(run_dir).expanduser().resolve()
+    if scope not in VALID_SCOPES:
+        raise ValueError(f"scope must be one of {sorted(VALID_SCOPES)}")
+    task_dir = root / TASK_DIR
+    task_dir.mkdir(parents=True, exist_ok=True)
+    package_index = root / "page_packages" / "index.json"
+    input_version = ""
+    if package_index.exists():
+        input_version = hashlib.sha256(package_index.read_bytes()).hexdigest()
+    task = {
+        "schema_version": RESULT_SCHEMA_VERSION_V2,
+        "run_id": str(root.name),
+        "run_mode": run_mode,
+        "task_id": f"{scope.replace('-', '_')}_review_v2_{root.name or 'unknown'}",
+        "scope": scope,
+        "review_kind": review_kind,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "based_on": {
+            "page_packages_index_sha256": input_version,
+            "note": "review binds to the current package set; content changes invalidate this review",
+        },
+        "reviewed_inputs": {
+            "page_packages": "page_packages/",
+            "claim_evidence_graph": "claim_evidence_graph.json",
+            "context_manifest": "context_manifest.json",
+        },
+        "coverage": {"required_page_ids": [str(item) for item in required_page_ids], "reviewed_page_ids": [], "skipped": []},
+        "review_dimensions": list(REVIEW_DIMENSIONS_V2),
+        "output_schema": RESULT_SCHEMA_VERSION_V2,
+    }
+    write_json(task_dir / _scope_to_task_filename(scope), task)
+    append_typed_event(
+        root,
+        "artifact_written",
+        "quality_review_task.prepared_v2",
+        f"External quality review v2 task prepared for scope: {scope}.",
+        run_id=task["run_id"],
+        refs=[f"{TASK_DIR}/{_scope_to_task_filename(scope)}"],
+        payload={"scope": scope, "required_page_ids": required_page_ids},
+    )
+    return task
 
 
 def _map_quality_severity(value: Any, finding: dict[str, Any]) -> str:
