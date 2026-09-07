@@ -19,7 +19,7 @@
 | Q（语义审查/质量门） | 13 | Q-01/Q-04/Q-05/Q-13 工程测试通过（v2 失败封闭校验、独立性、输入版本绑定、无来源数字/内部标签扫描、交付 PPTX notes/元数据/隐藏页扫描）；审查 prompt 已升级 v2 六维（与 schema 枚举一致）；**Q-08 通过**（生产必需门含 semantic_review、external_* 报告满足之、packages 变更即审查过期）；P0 永不 override、隐藏内容扫描接入 customer_visible_safety；Q-02/Q-03/Q-06/Q-07/Q-09—Q-12 随 final_readiness 集成验证 | `tests/test_sc1_external_review_v2.py`、`test_sc1_actions_and_gates.py` |
 | L（学习/反馈口径） | 4 | L-01—L-04 工程测试通过（9/100 复现 9%、supersession 去重、重复导出不抬分不升序、legacy_unknown 隔离、经验卡仅来自真实反馈）；F11 Review Desk 回写带 revision 落地 | `tests/test_sc1_feedback_metrics.py`、更新 `test_workspace_learning_pack.py` |
 | E（对照/UAT） | 6 | E-01/E-04 元数据层通过（pairing 校验、manual_effort 全量记录透传）；E-02/E-03/E-05/E-06 需三类真实样本 ×2 配对真实执行，deferred_to_uat | `tests/test_sc1_benchmark_pairing.py` |
-| M（迁移/回滚） | 6 | not_started ×6 | PR-08；本机失效 symlink 与空 release 树为真实迁移场景 |
+| M（迁移/回滚） | 6 | M-05/M-06 工程测试通过（回滚不删新旧用户数据、未知宿主拒绝不虚报）；M-01—M-04 由既有迁移/回滚测试继续覆盖；真实环境迁移证据待 A6 实机执行 | `tests/test_sc1_migration_safety.py`、既有 `test_skill_installation.py`/`test_release_runtime.py` |
 
 ### PR-02 证据边界（真实 vs 工程）
 

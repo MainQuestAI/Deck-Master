@@ -18,6 +18,34 @@ Version mapping for this preview:
 
 Deck Master is built for solution architects and proposal builders who need a repeatable way to decide which pages should be generated, which pages should be reused, and which pages are ready for review or delivery.
 
+## The Full SC-1 Chain
+
+Provide raw material + business goal + authorized host tools; Deck Master
+carries the rest of the chain in one workflow — you do not write page drafts,
+invoke external named skills, or know backend paths:
+
+1. `start-conversation` ingests your raw material (full-text reading with
+   coverage registration; PDF/DOCX/PPTX/images via host extraction tasks).
+2. `build-brief` + research tasks: gaps are either filled from the material
+   itself, turned into bounded research tasks (redaction-guarded), or surfaced
+   as precise decisions — the material's tail constraints are never truncated
+   away.
+3. `autoplan` builds the solution model and narrative from the material, with
+   candidate storylines and an explicit recommendation (or a truthful
+   single-viable-path note).
+4. The producer writes complete Page Packages (conclusion, business
+   implication, evidence bindings) — production instructions never enter page
+   text; pages without evidence or design basis stay draft.
+5. Standard builds consume the approved Page Packages directly (PPT Master is
+   the default, managed backend; high-density remains an opt-in profile).
+6. Semantic review v2 (six dimensions) is a required production gate; a
+   content change stales its binding; P0 findings cannot be overridden.
+7. Export requires current final readiness + hash-bound delivery approval.
+   Hidden notes/metadata in the client PPTX are scanned and block delivery.
+
+Status and honest limits: see [Known Limitations](docs/known-limitations.md).
+Engineering evidence: `docs/specs/sc1-solution-core-independence/implementation/`.
+
 ## Install
 
 Use Python 3.12 by default for the Technical Preview. Deck Master preview

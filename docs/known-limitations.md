@@ -35,3 +35,28 @@ Before formal RC, Deck Master must also close:
 2. Review Desk full design-system alignment.
 3. Release tree install, verification, and rollback evidence.
 4. Production deployment hardening beyond the local Review Desk write guard.
+
+## SC-1 Solution Core Iteration (2026-09-07)
+
+The SC-1 iteration landed the managed capability lock, hosted backend/library
+resolution, full material reading, gap-driven research, the solution model and
+public narrative, Page Package production and standard-build consumption,
+diagram views, semantic review v2 (six-dimension rubric) as a required
+production gate, action envelopes, and the acceptance-rate metric fix. It did
+NOT close:
+
+1. **Real standard backend smoke** — the managed PPT Master install exists
+   (`backend install-managed`), but until a real backend is bound and verified,
+   real two-page PPTX build/render acceptance (A-03/P-01) stays blocked. No
+   fixture substitution is performed.
+2. **Real paired UAT** — the three-sample × two-run paired comparison (E-02 to
+   E-06) requires real customer samples, which are not stored in the repo.
+   Pairing metadata and manual-effort records are accepted by the harness, but
+   no outcome claim is made.
+3. **Host capability wording** — only codex / claude-code / hermes / custom
+   targets are supported; unknown hosts are rejected rather than claimed.
+4. **Typed question triggers** — the stage-contracts forcing-question table
+   still uses string triggers; typed trigger/answer_schema refactor is
+   registered as an open deviation.
+
+Engineering state and evidence: `docs/specs/sc1-solution-core-independence/implementation/`.
