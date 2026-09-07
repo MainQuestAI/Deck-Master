@@ -1,0 +1,190 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:deck-master:sc1:deck_research_task.v1",
+  "title": "deck_research_task.v1",
+  "description": "SC-1 target contract draft; not installed in the current repository. Structural validation is not runtime or semantic verification.",
+  "x-spec-status": "target-draft",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "deck_research_task.v1"
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "run_mode": {
+      "type": "string",
+      "enum": [
+        "production",
+        "benchmark",
+        "fixture",
+        "dev"
+      ]
+    },
+    "based_on": {
+      "type": "object",
+      "properties": {
+        "input_fingerprint": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "input_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "ref": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "required": [
+              "ref",
+              "sha256"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "input_fingerprint",
+        "input_refs"
+      ],
+      "additionalProperties": false
+    },
+    "task_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "stage_id": {
+      "const": "deck-brief"
+    },
+    "status": {
+      "const": "prepared"
+    },
+    "questions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "question_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+          },
+          "question": {
+            "type": "string",
+            "minLength": 1
+          },
+          "decision_purpose": {
+            "type": "string",
+            "minLength": 1
+          },
+          "affected_refs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
+          },
+          "preferred_source_types": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
+          },
+          "freshness_requirement": {
+            "type": "string",
+            "minLength": 1
+          },
+          "counter_check": {
+            "type": "string",
+            "minLength": 1
+          },
+          "stop_when": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "question_id",
+          "question",
+          "decision_purpose",
+          "affected_refs",
+          "preferred_source_types",
+          "freshness_requirement",
+          "counter_check",
+          "stop_when"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "public_query_context": {
+      "type": "string",
+      "minLength": 1
+    },
+    "authorization_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "allowed_sources": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "limits": {
+      "type": "object",
+      "properties": {
+        "max_rounds_per_question": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_candidate_sources_per_round": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_tool_actions": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "max_rounds_per_question",
+        "max_candidate_sources_per_round",
+        "max_tool_actions"
+      ],
+      "additionalProperties": false
+    },
+    "expected_output_schema": {
+      "const": "deck_context_pack.v2"
+    }
+  },
+  "required": [
+    "schema_version",
+    "run_id",
+    "run_mode",
+    "based_on",
+    "task_id",
+    "stage_id",
+    "status",
+    "questions",
+    "public_query_context",
+    "authorization_ref",
+    "allowed_sources",
+    "limits",
+    "expected_output_schema"
+  ],
+  "additionalProperties": false
+}

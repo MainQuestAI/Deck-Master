@@ -699,7 +699,16 @@ class SkillInstallationTest(unittest.TestCase):
         ), mock.patch(
             "scripts.skills.installer.backend_dependency_statuses",
             return_value=[verified_backend],
-        ), mock.patch("scripts.skills.installer.backend_render_runtime_ready", return_value=True), mock.patch(
+        ), mock.patch(
+            "scripts.skills.installer.backend_render_runtime_ready", return_value=True
+        ), mock.patch(
+            "scripts.skills.installer.backend_render_runtime_status",
+            return_value={
+                "runtime_ready": True,
+                "runtime_ready_source": "external_backend_smoke",
+                "runtime_ready_trusted_for_rc": True,
+            },
+        ), mock.patch(
             "scripts.skills.installer.inspect_skill_link",
             side_effect=fake_inspect_skill_link,
         ), mock.patch.dict(
@@ -774,7 +783,16 @@ class SkillInstallationTest(unittest.TestCase):
         ), mock.patch(
             "scripts.skills.installer.backend_dependency_statuses",
             return_value=[verified_backend],
-        ), mock.patch("scripts.skills.installer.backend_render_runtime_ready", return_value=True), mock.patch(
+        ), mock.patch(
+            "scripts.skills.installer.backend_render_runtime_ready", return_value=True
+        ), mock.patch(
+            "scripts.skills.installer.backend_render_runtime_status",
+            return_value={
+                "runtime_ready": True,
+                "runtime_ready_source": "external_backend_smoke",
+                "runtime_ready_trusted_for_rc": True,
+            },
+        ), mock.patch(
             "scripts.skills.installer.inspect_skill_link",
             side_effect=fake_inspect_skill_link,
         ), mock.patch.dict(os.environ, {"DECK_MASTER_RC_GATE_REPORT": str(report_path)}, clear=False):

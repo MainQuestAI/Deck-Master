@@ -27,6 +27,25 @@ from runtime.run_state import (
     write_json,
 )
 
+
+def fingerprint_payload(payload: Any) -> str:
+    import hashlib
+    import json as _json
+
+    blob = _json.dumps(payload, sort_keys=True, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(blob).hexdigest()
+
+
+def _workspace_for_run(run_dir: Path) -> Path | None:
+    request_path = run_dir / "request.json"
+    if not request_path.exists():
+        return None
+    request = _safe_read(request_path)
+    workspace = str((request or {}).get("workspace") or "").strip()
+    if not workspace:
+        return None
+    return Path(workspace).expanduser().resolve()
+
 VALID_ACTIONS = {
     "approve",
     "reject",
@@ -147,6 +166,11 @@ def execute_review_action(
         page_tasks = _bootstrap_page_tasks(root, page_tasks_path)
     else:
         page_tasks = read_json(page_tasks_path)
+
+    # SC-1 C4/F11: the reviewed input revision — the dedup key for learning
+    # stats. Captured before any mutation so the decision binds to the exact
+    # reviewed task version.
+    input_revision = fingerprint_payload(page_tasks)[:16]
 
     tasks = page_tasks.get("tasks", [])
     idx = _find_task_index(tasks, page_id)
@@ -344,6 +368,32 @@ def execute_review_action(
         refs=[PAGE_TASKS_NAME],
         payload={"page_id": page_id, "action": action, "actor": actor, "reason": reason},
     )
+
+    # SC-1 C4/F11: Review Desk approve/reject decisions are the richest
+    # learning signal — write them back to the workspace feedback ledger
+    # with the reviewed revision so stats can dedup by final decision.
+    if action in {"approve", "reject"}:
+        workspace = _workspace_for_run(root)
+        if workspace is not None and str(workspace) != str(root):
+            try:
+                from assets.feedback import append_feedback
+
+                append_feedback(
+                    workspace,
+                    "preview_approved" if action == "approve" else "preview_rejected",
+                    canonical_slide_id=page_id,
+                    run_id=run_id,
+                    page_id=page_id,
+                    notes=note or reason,
+                    payload={
+                        "actor": actor,
+                        "reviewed_revision": input_revision,
+                        "source": "review_desk",
+                    },
+                )
+                result["feedback_recorded"] = True
+            except (ValueError, OSError) as exc:
+                result["feedback_error"] = str(exc)
 
     return result
 

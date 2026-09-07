@@ -56,13 +56,15 @@ class OpenSourcePreviewGateTests(unittest.TestCase):
         self.assertIn(backend["binding_status"], {"unbound", "bound_verified", "bound_verified_runtime_blocked"})
 
     def test_pdpm_status_is_generation_bridge_not_external_backend(self) -> None:
+        # SC-1 A-11: the bridge is retired; env config is ignored and the
+        # status reports retired instead of a configurable dependency.
         with mock.patch.dict(os.environ, {"DECK_MASTER_PPT_DECK_PRO_MAX_BRIDGE": ""}, clear=False):
             status = generation_bridge_status()
             external = external_dependency_statuses(render_runtime_ready=False)
 
         self.assertEqual("ppt-deck-pro-max", status["name"])
         self.assertEqual("generation_bridge", status["dependency_kind"])
-        self.assertEqual("not_configured", status["binding_status"])
+        self.assertEqual("retired", status["binding_status"])
         self.assertNotIn("ppt-deck-pro-max", {item["name"] for item in external})
 
     def test_product_capability_manifest_separates_pdpm_from_production_backend(self) -> None:

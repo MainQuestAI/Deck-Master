@@ -151,6 +151,10 @@ def build_source_fingerprint(run_dir: str | Path) -> str:
         Path("page_tasks.json"),
         Path("generation_tasks") / "index.json",
     ]
+    packages_index = root / "page_packages" / "index.json"
+    if packages_index.exists():
+        refs.append(packages_index)
+        refs.extend(sorted((root / "page_packages").glob("*.json")))
     results_dir = root / "generation_results"
     if results_dir.is_dir():
         refs.extend(path.relative_to(root) for path in sorted(results_dir.glob("*.json")) if path.is_file())
@@ -185,11 +189,150 @@ def _ordered_pages(preview: dict[str, Any]) -> list[dict[str, Any]]:
     return sorted(pages, key=_page_order)
 
 
+def _page_sources_from_packages(root: Path, packages: list[dict[str, Any]], *, production: bool) -> tuple[list[dict[str, Any]], list[str]]:
+    """SC-1 B5: standard build consumes the current Page Package content.
+
+    Titles, roles and body content come from the packages; each page entry
+    binds the package sha and the exact customer payload sha so downstream
+    artifacts are anchored to approved content.
+    """
+
+    try:
+        from build.manifest import build_manifest_v2, customer_payload_sha256, package_sha256, whitelist_project
+    except ModuleNotFoundError:  # pragma: no cover - exercised by package-import test path.
+        from scripts.build.manifest import build_manifest_v2, customer_payload_sha256, package_sha256, whitelist_project
+
+    warnings: list[str] = []
+    page_sources: list[dict[str, Any]] = []
+    ordered = sorted(packages, key=lambda pkg: int(pkg.get("order") or 0))
+    for index, package in enumerate(ordered, start=1):
+        page_id = str(package.get("page_id") or f"page_{index:03d}")
+        status = str(package.get("status") or "draft")
+        if production and status != "ready":
+            raise BuildError(
+                f"page package {page_id} is not approved for production build (status={status}); "
+                "resolve evidence/design basis and approve the package first"
+            )
+        if status != "ready":
+            warnings.append(f"page {page_id}: package status {status} (non-production build)")
+        payload = whitelist_project(package)
+        customer_visible = payload.get("customer_visible") or {}
+        raw_role = (package.get("visual_spec") or {}).get("page_role") if isinstance(package.get("visual_spec"), dict) else ""
+        page_role, role_warning = page_role_with_warning(raw_role)
+        if role_warning:
+            warnings.append(f"page {page_id}: {role_warning}")
+        page_sources.append(
+            {
+                "page_id": page_id,
+                "beat_id": str(package.get("beat_id") or page_id),
+                "order": index,
+                "title": str(customer_visible.get("title") or page_id),
+                "page_role": page_role,
+                "source_path": f"page_packages/{page_id}.json",
+                "body_blocks": list(customer_visible.get("body_blocks") or []),
+                "callouts": list(customer_visible.get("callouts") or []),
+                "footnotes": list(customer_visible.get("footnotes") or []),
+                "page_package_sha256": package_sha256(package),
+                "customer_payload_sha256": customer_payload_sha256(package),
+            }
+        )
+    return page_sources, warnings
+
+
+def _prepare_build_from_packages(
+    root: Path,
+    request: dict[str, Any],
+    backend: dict[str, Any],
+    run_id: str,
+    *,
+    production: bool,
+) -> dict[str, Any]:
+    """SC-1 B5: standard build prepared directly from approved Page Packages."""
+
+    try:
+        from build.manifest import build_manifest_v2
+        from production.page_package import PagePackageIndex
+    except ModuleNotFoundError:  # pragma: no cover - exercised by package-import test path.
+        from scripts.build.manifest import build_manifest_v2
+        from scripts.production.page_package import PagePackageIndex
+
+    packages = PagePackageIndex(root).list_packages()
+    if not packages:
+        raise BuildError("page_packages/index.json exists but no packages were found.")
+    page_sources, warnings = _page_sources_from_packages(root, packages, production=production)
+
+    build_dir = root / BUILD_DIR
+    build_dir.mkdir(parents=True, exist_ok=True)
+    manifest = {
+        "schema_version": BUILD_MANIFEST_SCHEMA_VERSION,
+        "run_id": run_id,
+        "status": "prepared",
+        "run_mode": _run_mode(request),
+        "output_profile": _output_profile(request),
+        "source_mode": "page_packages",
+        "non_client_deliverable": True,
+        "builder_backend": backend,
+        "source_fingerprint": build_source_fingerprint(root),
+        "page_count": len(page_sources),
+        "pages": page_sources,
+        "required_outputs": _required_outputs_for_profile(_output_profile(request)),
+        "warnings": warnings,
+        "created_at": _utc_now(),
+    }
+    write_json(build_dir / BUILD_MANIFEST_NAME, manifest)
+
+    # Production runs additionally record the v2 build manifest — the
+    # page-package-anchored contract consumed by content locks and readback.
+    if production and backend.get("production_capable"):
+        manifest_v2 = build_manifest_v2(
+            run_id=run_id,
+            packages=packages,
+            builder_backend={
+                "name": str(backend.get("backend_name") or backend.get("name") or "ppt-master"),
+                "production_capable": True,
+                "contract_versions": ["deck_page_package.v1", RENDER_RESULT_SCHEMA_VERSION],
+            },
+            output_profile=_output_profile(request),
+            required_page_ids=[str(entry["page_id"]) for entry in page_sources],
+            required_outputs=manifest["required_outputs"],
+            builder_profile="standard",
+        )
+        write_json(build_dir / "build_manifest.v2.json", manifest_v2)
+
+    append_event(
+        root,
+        "build.prepared",
+        target=run_id,
+        payload_ref=f"{BUILD_DIR}/{BUILD_MANIFEST_NAME}",
+        data={"page_count": len(page_sources), "warning_count": len(warnings), "source_mode": "page_packages"},
+    )
+    return {
+        "schema_version": "deck_build_prepare_result.v1",
+        "status": "prepared",
+        "run_id": run_id,
+        "build_manifest": f"{BUILD_DIR}/{BUILD_MANIFEST_NAME}",
+        "page_count": len(page_sources),
+        "source_mode": "page_packages",
+        "warnings": warnings,
+    }
+
+
 def prepare_build(run_dir: str | Path) -> dict[str, Any]:
     root = ensure_run_dirs(run_dir)
     request = load_request(root)
     backend = builder_backend_status()
     run_id = str(request.get("run_id") or root.name)
+    packages_index = root / "page_packages" / "index.json"
+    production = production_requires_builder_backend(_run_mode(request))
+    if packages_index.exists():
+        return _prepare_build_from_packages(root, request, backend, run_id, production=production)
+    if production:
+        # SC-1 B5: production builds consume approved page packages; the raw
+        # preview manifest is no longer a production input.
+        raise BuildError(
+            "production build requires approved page_packages/ (run the producer first); "
+            "preview_manifest is not a production input"
+        )
     preview_path = root / PREVIEW_MANIFEST_NAME
     if not preview_path.exists():
         raise BuildError("preview_manifest.json is required before build.")
@@ -271,12 +414,22 @@ def _write_html(root: Path, manifest: dict[str, Any]) -> Path:
             continue
         source = str(page.get("source_path") or "")
         source_note = f"<p class=\"source\">{escape(source)}</p>" if source else ""
+        body_html = ""
+        for block in page.get("body_blocks") or []:
+            if not isinstance(block, dict):
+                continue
+            text = str(block.get("text") or "")
+            if not text:
+                continue
+            kind = str(block.get("type") or "text")
+            body_html += f"<p class=\"block-{escape(kind)}\">{escape(text)}</p>"
         sections.append(
             "<section class=\"page\" data-page-id=\""
             + escape(str(page.get("page_id") or ""))
             + "\">"
             + f"<h2>{escape(str(page.get('order') or ''))}. {escape(str(page.get('title') or 'Untitled'))}</h2>"
             + source_note
+            + body_html
             + "</section>"
         )
     html = (

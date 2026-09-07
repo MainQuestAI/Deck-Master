@@ -403,6 +403,10 @@ def build_benchmark_report(
             "industry": case.data.get("industry", ""),
             "audience": case.data.get("audience", ""),
             "target_pages": case.data.get("target_pages"),
+            # SC-1 C5: paired-run linkage and full manual-effort records are
+            # carried through so aggregates cannot silently drop failures.
+            "pairing": case.data.get("pairing"),
+            "manual_effort": case.data.get("manual_effort"),
         },
         "readiness": {
             "overall": "needs_review" if status != "completed" else "report_ready",

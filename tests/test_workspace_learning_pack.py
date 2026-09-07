@@ -79,18 +79,28 @@ class FeedbackAggregationTest(unittest.TestCase):
         shutil.rmtree(self._tmp, ignore_errors=True)
 
     def test_strong_assets_from_feedback(self) -> None:
+        # SC-1 C4: events WITH a reviewed revision produce deduped acceptance
+        # stats; legacy events without a dedup key land in legacy_unknown.
         _add_feedback(self.ws, [
-            {"event_type": "preview_approved", "canonical_slide_id": "slide_aaa"},
-            {"event_type": "preview_approved", "canonical_slide_id": "slide_aaa"},
+            {"event_type": "preview_approved", "canonical_slide_id": "slide_aaa", "run_id": "r1", "payload": {"reviewed_revision": "rev1"}},
+            {"event_type": "preview_rejected", "canonical_slide_id": "slide_aaa", "run_id": "r1", "payload": {"reviewed_revision": "rev1"}},
             {"event_type": "delivered", "canonical_slide_id": "slide_aaa"},
             {"event_type": "preview_rejected", "canonical_slide_id": "slide_bbb"},
         ])
         pack = build_learning_pack(self.ws)
+        # The rejected legacy event has no revision identity — counted in
+        # legacy_feedback_unknown, not in the acceptance rate; the approved +
+        # rejected pair with revision identity forms one deduped unit.
+        self.assertEqual(1, pack["legacy_feedback_unknown"])
         assets = pack["strong_assets"]
-        self.assertTrue(len(assets) >= 1)
+        self.assertEqual(1, len(assets))
         top = assets[0]
-        self.assertEqual(top["canonical_slide_id"], "slide_aaa")
-        self.assertEqual(top["delivered_count"], 1)
+        self.assertEqual("slide_aaa", top["canonical_slide_id"])
+        # final decision of the (run, rev) unit: the later reject supersedes
+        self.assertAlmostEqual(0.0, top["acceptance_rate"])
+        self.assertEqual(0, top["accepted_count"])
+        self.assertEqual(1, top["rejected_count"])
+        self.assertEqual(1, top["delivered_count"])
 
 
 class QualityFindingAggregationTest(unittest.TestCase):

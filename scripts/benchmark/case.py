@@ -133,6 +133,37 @@ def validate_benchmark_case(data: dict[str, Any]) -> list[str]:
             if abs(total - 1.0) > 0.001:
                 warnings.append(f"scoring.weights sum is {total:.4f}; expected approximately 1.0.")
 
+    # SC-1 C5 (E-01): paired-run metadata — which version produced this run
+    # and against which counterpart, so blind scoring and pairing analysis
+    # can only ever see real recorded runs.
+    pairing = data.get("pairing")
+    if pairing is not None:
+        pairing_obj = _require_object(pairing, "pairing")
+        for field in ("pairing_id", "baseline_version", "upgraded_version"):
+            _require_non_empty_string(pairing_obj.get(field), f"pairing.{field}")
+        if pairing_obj.get("run_order") not in {"baseline", "upgraded"}:
+            raise BenchmarkCaseError('pairing.run_order must be "baseline" or "upgrade".')
+        hosts = pairing_obj.get("host_tool_versions")
+        if hosts is not None and not isinstance(hosts, dict):
+            raise BenchmarkCaseError("pairing.host_tool_versions must be an object when provided.")
+
+    # SC-1 C5 (E-04): manual effort must be recorded in full — active input
+    # time and every failure/retry, not just the best attempt.
+    manual_effort = data.get("manual_effort")
+    if manual_effort is not None:
+        if not isinstance(manual_effort, list):
+            raise BenchmarkCaseError("manual_effort must be a list when provided.")
+        for index, entry in enumerate(manual_effort):
+            if not isinstance(entry, dict):
+                raise BenchmarkCaseError(f"manual_effort[{index}] must be an object.")
+            _require_non_empty_string(entry.get("phase"), f"manual_effort[{index}].phase")
+            minutes = entry.get("minutes")
+            if not _is_number(minutes) or minutes < 0:
+                raise BenchmarkCaseError(f"manual_effort[{index}].minutes must be a non-negative number.")
+            failures = entry.get("failures", 0)
+            if not isinstance(failures, int) or isinstance(failures, bool) or failures < 0:
+                raise BenchmarkCaseError(f"manual_effort[{index}].failures must be a non-negative integer.")
+
     return warnings
 
 

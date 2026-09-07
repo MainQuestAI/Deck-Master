@@ -301,6 +301,21 @@ class NextStepResolverTest(unittest.TestCase):
         self._write_bound_gate("render", pptx_path)
         self._write_bound_gate("delivery", pptx_path)
         self._write_bound_gate("customer_visible_safety", pptx_path)
+        # SC-1 C3: production additionally requires a current semantic review.
+        digest = hashlib.sha256(pptx_path.read_bytes()).hexdigest()
+        (self.run_dir / "quality_reports" / "external_semantic_gate.json").write_text(
+            json.dumps(
+                {
+                    "gate": "external_semantic",
+                    "status": "pass",
+                    "blocks_delivery": False,
+                    "findings": [],
+                    "artifact_path": pptx_path.relative_to(self.run_dir).as_posix(),
+                    "artifact_sha256": digest,
+                }
+            ),
+            encoding="utf-8",
+        )
 
         result = self._resolve(run_mode="production")
 

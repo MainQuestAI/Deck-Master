@@ -102,6 +102,8 @@ from skills.installer import (
     backend_unbind,
     backend_verify,
     build_release_tree,
+    install_managed_backend,
+    install_managed_library_cli,
     install_release_tree,
     install_skill,
     rollback_release_tree,
@@ -651,9 +653,21 @@ def command_build_brief(args: argparse.Namespace) -> dict[str, Any]:
     request = load_request(run_dir)
     context_manifest = read_json(run_dir / CONTEXT_MANIFEST_NAME)
     conversation = read_json(run_dir / CONVERSATION_SESSION_NAME)
-    deck_brief = compile_deck_brief(request, context_manifest, conversation)
+    agent_extract_path = getattr(args, "agent_extract", None)
+    agent_extract = None
+    if agent_extract_path:
+        from runtime.run_state import read_json as _read_json
+
+        agent_extract = _read_json(Path(agent_extract_path).expanduser().resolve())
+    deck_brief = compile_deck_brief(request, context_manifest, conversation, agent_extract=agent_extract)
     write_artifact(run_dir, DECK_BRIEF_NAME, deck_brief, action="deck_brief.created")
-    return {"run_id": request["run_id"], "run_dir": str(run_dir), "status": "brief_ready", "core_points": len(deck_brief["core_points"])}
+    return {
+        "run_id": request["run_id"],
+        "run_dir": str(run_dir),
+        "status": "brief_ready",
+        "core_points": len(deck_brief["core_points"]),
+        "brief_mode": deck_brief.get("brief_mode", ""),
+    }
 
 
 def command_build_claim_map(args: argparse.Namespace) -> dict[str, Any]:
@@ -1329,7 +1343,7 @@ def _autopilot_args(args: argparse.Namespace, **overrides: Any) -> argparse.Name
     values = vars(args).copy()
     defaults = {
         "library_mode": "auto",
-        "ppt_lib_command": "ppt-lib",
+        "ppt_lib_command": None,
         "allow_fixture_library_fallback": False,
         "planning_mode": "classic",
         "planner_mode": None,
@@ -2158,6 +2172,12 @@ def command_backend_verify(args: argparse.Namespace) -> dict[str, Any]:
 
 def command_backend_unbind(args: argparse.Namespace) -> dict[str, Any]:
     return backend_unbind(name=str(args.name))
+
+
+def command_backend_install_managed(args: argparse.Namespace) -> dict[str, Any]:
+    if str(args.component) == "ppt-master":
+        return install_managed_backend(str(args.source))
+    return install_managed_library_cli(str(args.source))
 
 
 def command_suite_migrate_legacy_skills(args: argparse.Namespace) -> dict[str, Any]:
@@ -3030,7 +3050,7 @@ def add_run_args(parser: argparse.ArgumentParser) -> None:
 
 def add_library_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--library-mode", choices=["auto", "real", "fixture"], default="auto")
-    parser.add_argument("--ppt-lib-command", default="ppt-lib")
+    parser.add_argument("--ppt-lib-command", default=None, help="Explicit ppt-lib command; omit to resolve the managed install first, then PATH")
     parser.add_argument("--allow-fixture-library-fallback", action="store_true")
 
 
@@ -3143,6 +3163,17 @@ def build_parser() -> argparse.ArgumentParser:
     p_backend_unbind = backend_cmds.add_parser("unbind", help="Unbind a backend dependency")
     p_backend_unbind.add_argument("name", choices=["ppt-master"])
     p_backend_unbind.set_defaults(func=command_backend_unbind)
+    p_backend_install = backend_cmds.add_parser(
+        "install-managed",
+        help="Install a managed production component (ppt-master backend or ppt-library CLI) into the managed root",
+    )
+    p_backend_install.add_argument("component", choices=["ppt-master", "ppt-library"])
+    p_backend_install.add_argument(
+        "--source",
+        required=True,
+        help="Component source directory (backend skill package, or a directory containing bin/ppt-lib)",
+    )
+    p_backend_install.set_defaults(func=command_backend_install_managed)
 
     p_suite_migrate = sub.add_parser("suite-migrate-legacy-skills", help="Plan, apply, or rollback legacy skill directory migration")
     p_suite_migrate.add_argument("--target", action="append", default=[], choices=["codex", "claude-code", "hermes"])
@@ -3180,6 +3211,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_brief = sub.add_parser("build-brief", help="Compile deck_brief.json from context and conversation")
     add_run_args(p_brief)
+    p_brief.add_argument(
+        "--agent-extract",
+        default=None,
+        help="Path to the Agent's structured brief extraction JSON (production path; omit for fixture/degraded rules)",
+    )
     p_brief.set_defaults(func=command_build_brief)
 
     p_claim = sub.add_parser("build-claim-map", help="Compile claim_map.json from deck_brief.json")
