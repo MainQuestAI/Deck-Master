@@ -12,9 +12,11 @@ PASSING_GATE_STATUSES = {"pass", "conditional_pass", "pass_with_warning", "pass_
 BLOCKING_GATE_STATUSES = {"rework_required", "failed", "blocked"}
 ARTIFACT_REQUIRED_GATES = ("render", "delivery", "customer_visible_safety")
 # SC-1 C3: production delivery also requires an imported, current semantic
-# review (the external quality review report — v1 or v2 semantics).
+# review. SC-1.1 F-N09: the match is precise — only scope=semantic reports
+# (or a dedicated semantic_review gate) satisfy it; external_visual /
+# external_evidence must never pass through a loose prefix match.
 SEMANTIC_REVIEW_GATE = "semantic_review"
-_SEMANTIC_REVIEW_PREFIXES = ("external_", "semantic_review")
+_SEMANTIC_REVIEW_ALLOWED_PREFIXES = ("external_semantic", "semantic_review")
 
 
 def normalize_gate_name(value: str) -> str:
@@ -58,7 +60,7 @@ def _report_satisfies_gate(gate: str, report_gate: str) -> bool:
     if report_gate == gate:
         return True
     if gate == SEMANTIC_REVIEW_GATE:
-        return any(report_gate.startswith(prefix) for prefix in _SEMANTIC_REVIEW_PREFIXES)
+        return any(report_gate.startswith(prefix) for prefix in _SEMANTIC_REVIEW_ALLOWED_PREFIXES)
     return False
 
 

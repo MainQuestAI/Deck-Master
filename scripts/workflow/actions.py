@@ -117,6 +117,7 @@ def commit_action_result(
     *,
     current_input_fingerprint: str,
     targets: dict[str, Path],
+    expected_revision: str | None = None,
 ) -> dict[str, Any]:
     """Commit staged outputs to their live targets — version-guarded, idempotent.
 
@@ -133,6 +134,7 @@ def commit_action_result(
     if applied:
         return {**applied, "status": "already_applied"}
 
+    _check_action_revision_cas(root, expected_revision)
     if str(envelope.get("input_fingerprint") or "") != str(current_input_fingerprint or ""):
         raise ActionStaleError(
             f"action {action_id} was produced against input {envelope.get('input_fingerprint')!r} "
@@ -168,6 +170,8 @@ def commit_action_result(
         "input_fingerprint": str(envelope.get("input_fingerprint") or ""),
         "status": "applied",
     }
+    revision_info = commit_revision_pointer(root, action_id, targets, applied_files)
+    marker["revision_id"] = revision_info["revision_id"]
     marker_path = _applied_marker(root, action_id)
     marker_path.parent.mkdir(parents=True, exist_ok=True)
     marker_path.write_text(json.dumps(marker, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -187,7 +191,8 @@ def check_action_budget(root: Path | str, task_id: str, *, max_actions: int) -> 
                 marker = json.loads(path.read_text(encoding="utf-8"))
             except (OSError, json.JSONDecodeError):
                 continue
-            if str(marker.get("task_id") or "") == str(task_id):
+            if str(marker.get("task_id") or "") == str(task_id) and str(marker.get("status") or "applied") in {"applied", "failed"}:
+                # SC-1.1 F-N10: failed attempts consume the budget too.
                 count += 1
     remaining = max(0, max(1, int(max_actions)) - count)
     return {
@@ -230,3 +235,80 @@ def record_targeted_repair(
     repairs_dir.mkdir(parents=True, exist_ok=True)
     (repairs_dir / f"{repair_id}.json").write_text(json.dumps(repair, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return repair
+
+
+def revision_pointer_path(root: Path) -> Path:
+    return root / "build" / "current_revision.json"
+
+
+def read_current_revision(root: Path | str) -> dict[str, Any]:
+    path = revision_pointer_path(Path(root).expanduser().resolve())
+    if not path.exists():
+        return {"revision_id": ""}
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {"revision_id": ""}
+
+
+def record_action_failure(root: Path | str, *, action_id: str, task_id: str, reason: str) -> dict[str, Any]:
+    """Record a failed action attempt — failures consume the task budget."""
+
+    root = Path(root).expanduser().resolve()
+    marker = {
+        "action_id": str(action_id),
+        "task_id": str(task_id),
+        "status": "failed",
+        "reason": str(reason or ""),
+        "recorded_at": _utc_now(),
+    }
+    marker_path = _actions_root(root) / "applied" / f"{action_id}.json"
+    marker_path.parent.mkdir(parents=True, exist_ok=True)
+    marker_path.write_text(json.dumps(marker, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return marker
+
+
+def _check_action_revision_cas(root: Path, expected_revision: str | None) -> None:
+    if expected_revision is None:
+        return
+    current = read_current_revision(root).get("revision_id", "")
+    if str(expected_revision) != current:
+        raise ActionStaleError(
+            f"expected revision {expected_revision!r} but the current committed revision is {current!r}; "
+            "the action was produced against a superseded revision"
+        )
+
+
+def commit_revision_pointer(root: Path, action_id: str, targets: dict[str, Path], applied_files: list[str]) -> dict[str, Any]:
+    """Write the immutable revision snapshot + atomically swap the pointer."""
+
+    import hashlib
+    import shutil as _shutil
+
+    staging = _actions_root(root) / "staging" / action_id
+    payload_hash = hashlib.sha256()
+    for relative in sorted(targets):
+        payload_hash.update(relative.encode("utf-8"))
+        payload_hash.update(hashlib.sha256((staging / relative).read_bytes()).digest())
+    revision_id = payload_hash.hexdigest()[:16]
+    revisions_dir = root / "build" / "revisions" / revision_id
+    if not revisions_dir.exists():
+        revisions_dir.mkdir(parents=True)
+        for relative in targets:
+            destination = revisions_dir / relative
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            _shutil.copy2(staging / relative, destination)
+        manifest = {
+            "schema_version": "deck_build_revision.v1",
+            "revision_id": revision_id,
+            "action_id": action_id,
+            "files": {relative: hashlib.sha256((staging / relative).read_bytes()).hexdigest() for relative in targets},
+            "committed_at": _utc_now(),
+        }
+        (revisions_dir / "revision_manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    pointer = revision_pointer_path(root)
+    pointer.parent.mkdir(parents=True, exist_ok=True)
+    tmp = pointer.with_suffix(".tmp")
+    tmp.write_text(json.dumps({"revision_id": revision_id, "action_id": action_id, "applied_files": applied_files}, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    tmp.replace(pointer)
+    return {"revision_id": revision_id}
