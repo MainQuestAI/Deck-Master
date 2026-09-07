@@ -87,6 +87,13 @@ def test_good_doc_passes(tmp_path):
     assert rep.ok, [v.detail for v in rep.violations]
 
 
+def test_standard_codex_frontmatter_without_custom_triggers(tmp_path):
+    doc = tmp_path / "deck-brief" / "SKILL.md"
+    _write(doc, GOOD_DOC.replace("triggers:\n  - create deck brief\n", ""))
+    report = validate_skill_doc("deck-brief", doc, REGISTRY, known_commands=KNOWN_COMMANDS)
+    assert report.ok, report.violations
+
+
 def test_missing_section_fails(tmp_path):
     bad = GOOD_DOC.replace("## Stop Conditions\n- blocking question\n- fatal evidence gap\n", "")
     doc = tmp_path / "deck-brief" / "SKILL.md"

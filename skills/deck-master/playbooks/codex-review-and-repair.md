@@ -3,6 +3,10 @@
 Use when quality gates block export or when you want to systematically address
 findings before delivery.
 
+For a selected-page edit without a delivery request, use [local edits](local-edits.md).
+Reuse confirmed direction and current checks. Only request external review when
+the finding requires it and the configured review policy calls for it.
+
 ## Steps
 
 ### 1. Identify Blocking Findings
@@ -63,4 +67,6 @@ python3 scripts/deck_master.py override create \
 python3 scripts/deck_master.py next-step --run-id <run_id>
 ```
 
-Repeat until no blocking actions remain, then export.
+Repair within the authorized scope until the affected checks pass. Export only
+when requested and approved for the current version; otherwise return the
+corrected artifacts and remaining findings.

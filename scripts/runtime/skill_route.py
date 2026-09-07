@@ -125,6 +125,11 @@ STAGE_TO_SKILL = {
 }
 
 INPUT_TYPE_TO_SKILL = {
+    "new_deck": "deck-brief",
+    "local_edit": "deck-producer",
+    "diagnosis": "deck-doctor",
+    "client_delivery": "deck-review",
+    "software_release": "deck-upgrade",
     "first_run_setup": "deck-setup",
     "suite_install": "deck-setup",
     "deck_workflow": "deck-master",
@@ -217,6 +222,26 @@ def route_for_input_type(input_type: str, *, reason: str = "", next_command: str
         source="input_type",
         input_type=normalized,
     )
+
+
+def route_for_task(input_type: str, *, build_profile: str = "standard") -> dict[str, Any]:
+    payload = route_for_input_type(input_type)
+    references = {
+        "new_deck": "skills/deck-master/playbooks/codex-run-solution-deck.md",
+        "local_edit": "skills/deck-master/playbooks/local-edits.md",
+        "diagnosis": "skills/deck-doctor/SKILL.md",
+        "client_delivery": "skills/deck-review/SKILL.md",
+        "software_release": "skills/deck-master/references/installation.md",
+    }
+    if input_type == "local_edit" and build_profile == "high-density":
+        payload = _route_payload(
+            skill="deck-builder-high-density", reason="selected-page edit in the existing high-density profile",
+            source="input_type", input_type=input_type,
+        )
+    payload["task_scope"] = input_type
+    payload["read_refs"] = [references[input_type]]
+    payload["read_only"] = input_type == "diagnosis"
+    return payload
 
 
 def _registry():

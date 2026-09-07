@@ -1,32 +1,9 @@
 ---
 name: deck-producer
-description: Deck Master production entry for generation sessions, Agent dispatch packages, page production, and deck_generation_result.v2 import.
-triggers:
-  - produce deck pages
-  - start generation session
-  - import generation result
-  - deck producer
+description: Produce or revise selected Deck Master pages and import generation results.
 ---
 
 # Deck Producer
-
-Use this skill when sourcing decides pages need new production or adaptation.
-
-## Allowed Commands
-
-```bash
-~/.deck-master/bin/deck-master generation-session create --run-dir <run_dir>
-~/.deck-master/bin/deck-master run-generation --run-dir <run_dir>
-~/.deck-master/bin/deck-master generation-session dispatch --run-dir <run_dir>
-~/.deck-master/bin/deck-master generation-session import-results --run-dir <run_dir> --input <result.json>
-~/.deck-master/bin/deck-master refresh-preview-from-generation --run-dir <run_dir>
-```
-
-## Output Rule
-
-Production results must return as canonical `deck_generation_result.v2` with
-run/session binding, safe paths, checksums, and real artifacts.
-
 
 <!-- skill-os-contract:v1 -->
 
@@ -34,21 +11,21 @@ run/session binding, safe paths, checksums, and real artifacts.
 Generation sessions, dispatch packages, and canonical generation result import.
 
 ## Do Not Use
-Do not use outside its lane in the Skill OS workflow. Do not treat a successful command return code as stage completion.
+For other tasks, use the task route in [deck-master](../deck-master/SKILL.md).
+
+For a selected-page edit, read [local edits](../deck-master/playbooks/local-edits.md). Preserve other pages and confirmed style; do not restart the whole-deck brief or planning interview.
 
 ## First Checks
+Use current run state and available results; inspect only missing or affected inputs.
 - sourcing handoff accepted
 - sourcing plan fresh
 - required page set known
 
 ## Forcing Questions
-- producer.page_claim: 每页要表达的核心主张是什么？
-- producer.public_evidence: 证据是否可对客户公开？
-- producer.visual_lead: 每页的视觉主角是什么？
-- producer.internal_client_boundary: 内部制作说明与客户可见内容的边界如何界定？
+Reuse confirmed answers and design decisions. Ask only for a missing decision that changes this task. Record existing authorization through the runtime when needed.
 
 ## Runtime Ownership
-Skill OS workflow runtime; stage `deck-producer`. Stage completion is validated by the contract entry/exit validator and handoff/approval runtime, not by command return code.
+Deck Master stage `deck-producer`; commands preserve its artifact and approval contracts.
 
 ## Allowed Commands
 ```bash
@@ -75,4 +52,4 @@ deck-builder
 - missing_required_page_package
 
 ## Safety Rules
-Keep internal-only production notes out of customer-visible content. Never bypass the final client export approval. Obey the stage contract's transition policy.
+Keep internal notes out of customer-visible artifacts. Reuse current validation; rerun checks affected by changes. Client export requires approval for the current version.

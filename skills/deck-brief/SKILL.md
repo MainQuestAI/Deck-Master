@@ -1,31 +1,9 @@
 ---
 name: deck-brief
-description: Deck Master briefing entry for turning raw materials, deep research reports, and meeting notes into customer-visible deck brief inputs.
-triggers:
-  - create deck brief
-  - summarize deck materials
-  - turn research into ppt brief
-  - deck brief
+description: Extract audience, objectives, claims, and evidence from source material for a new Deck Master brief.
 ---
 
 # Deck Brief
-
-Use this skill when the user provides source material and wants Deck Master to
-extract the business problem, audience, claims, evidence, and deck intent.
-
-## Allowed Commands
-
-```bash
-~/.deck-master/bin/deck-master import-context-pack --run-dir <run_dir> --input <context_pack.json>
-~/.deck-master/bin/deck-master build-brief --run-dir <run_dir>
-~/.deck-master/bin/deck-master build-claim-map --run-dir <run_dir>
-```
-
-## Boundary
-
-Keep internal production notes out of customer-visible content. Production notes
-belong in source metadata, speaker notes, or internal planning fields.
-
 
 <!-- skill-os-contract:v1 -->
 
@@ -33,22 +11,19 @@ belong in source metadata, speaker notes, or internal planning fields.
 Turn raw material and research into deck brief inputs.
 
 ## Do Not Use
-Do not use outside its lane in the Skill OS workflow. Do not treat a successful command return code as stage completion.
+For other tasks, use the task route in [deck-master](../deck-master/SKILL.md).
 
 ## First Checks
+Use current run state and available results; inspect only missing or affected inputs.
 - init handoff accepted
 - context manifest available
 - material inventory fresh
 
 ## Forcing Questions
-- brief.decision_object: 这次沟通要让受众做出什么决策？
-- brief.success_criteria: 成功标准是什么？怎么算赢？
-- brief.non_negotiable_constraints: 有哪些不可谈判的约束？
-- brief.forbidden_claims: 有哪些主张是明确禁用的？
-- brief.evidence_gap: 当前证据存在哪些缺口？
+Reuse confirmed answers and design decisions. Ask only for a missing decision that changes this task. Record existing authorization through the runtime when needed.
 
 ## Runtime Ownership
-Skill OS workflow runtime; stage `deck-brief`. Stage completion is validated by the contract entry/exit validator and handoff/approval runtime, not by command return code.
+Deck Master stage `deck-brief`; commands preserve its artifact and approval contracts.
 
 ## Allowed Commands
 ```bash
@@ -69,4 +44,4 @@ deck-planner
 - fatal_evidence_gap
 
 ## Safety Rules
-Keep internal-only production notes out of customer-visible content. Never bypass the final client export approval. Obey the stage contract's transition policy.
+Keep internal notes out of customer-visible artifacts. Reuse current validation; rerun checks affected by changes. Client export requires approval for the current version.

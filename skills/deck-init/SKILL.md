@@ -1,31 +1,9 @@
 ---
 name: deck-init
-description: Deck Master project workspace initialization entry for creating customer material, reference material, AI process, delivery, quality, and .deck-master metadata directories.
-triggers:
-  - init deck project
-  - initialize deck workspace
-  - create deck workspace folders
-  - deck init
+description: Initialize a new Deck Master workspace and material inventory.
 ---
 
 # Deck Init
-
-Use this skill when the user starts a new deck project from raw material,
-research reports, meeting notes, or an empty workspace.
-
-## Allowed Commands
-
-```bash
-~/.deck-master/bin/deck-master init-project --workspace <workspace> --name <project_name>
-~/.deck-master/bin/deck-master validate-workspace --workspace <workspace>
-```
-
-## Output Rule
-
-Do not overwrite user files. A successful init creates project folders,
-`.deck-master/deck_project.json`, `material_inventory.json`,
-`workspace_policy.json`, and `run_bindings.json`.
-
 
 <!-- skill-os-contract:v1 -->
 
@@ -33,20 +11,19 @@ Do not overwrite user files. A successful init creates project folders,
 Project workspace initialization with material, reference, process, delivery, and metadata directories.
 
 ## Do Not Use
-Do not use outside its lane in the Skill OS workflow. Do not treat a successful command return code as stage completion.
+For other tasks, use the task route in [deck-master](../deck-master/SKILL.md).
 
 ## First Checks
+Use current run state and available results; inspect only missing or affected inputs.
 - workspace root exists and is writable
 - raw material roots are reachable
 - workspace policy available
 
 ## Forcing Questions
-- init.scan_scope: 本轮要扫描和纳入的材料范围是什么？
-- init.privacy_boundary: 哪些内容属于客户隐私边界，不得进入产出？
-- init.customer_visible_forbidden: 是否存在客户可见禁词或禁用主张清单？
+Reuse confirmed answers and design decisions. Ask only for a missing decision that changes this task. Record existing authorization through the runtime when needed.
 
 ## Runtime Ownership
-Skill OS workflow runtime; stage `deck-init`. Stage completion is validated by the contract entry/exit validator and handoff/approval runtime, not by command return code.
+Deck Master stage `deck-init`; commands preserve its artifact and approval contracts.
 
 ## Allowed Commands
 ```bash
@@ -68,4 +45,4 @@ deck-brief
 - unresolvable_privacy_boundary
 
 ## Safety Rules
-Keep internal-only production notes out of customer-visible content. Never bypass the final client export approval. Obey the stage contract's transition policy.
+Keep internal notes out of customer-visible artifacts. Reuse current validation; rerun checks affected by changes. Client export requires approval for the current version.

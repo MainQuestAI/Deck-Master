@@ -1,16 +1,9 @@
 ---
 name: deck-sourcing
-description: Deck Master sourcing entry for deciding which pages need historical assets, new production, evidence screenshots, or project-specific reference material.
-triggers:
-  - source deck assets
-  - find reusable slides
-  - search ppt library
-  - decide page sourcing
+description: Find and select reusable slides or evidence assets for Deck Master page tasks.
 ---
 
 # Deck Sourcing
-
-Use this skill after page tasks exist and before new page production starts.
 
 <!-- skill-os-contract:v1 -->
 
@@ -18,22 +11,19 @@ Use this skill after page tasks exist and before new page production starts.
 Historical asset sourcing and page sourcing decisions.
 
 ## Do Not Use
-Do not use outside its lane in the Skill OS workflow. Do not treat a successful command return code as stage completion.
+For other tasks, use the task route in [deck-master](../deck-master/SKILL.md).
 
 ## First Checks
+Use current run state and available results; inspect only missing or affected inputs.
 - planner handoff accepted
 - page tasks fresh
 - sourcing roots available
 
 ## Forcing Questions
-- sourcing.source_authority: 每个关键主张的来源权威性是否足够？
-- sourcing.reuse_license: 复用的历史资产是否取得了使用许可？
-- sourcing.freshness: 引用数据或案例是否在可接受时效内？
-- sourcing.screenshot_consent: 截图或客户素材是否获得展示授权？
-- sourcing.generation_strategy: 缺失资产采用检索复用还是新生产？
+Reuse confirmed answers and design decisions. Ask only for a missing decision that changes this task. Record existing authorization through the runtime when needed.
 
 ## Runtime Ownership
-Skill OS workflow runtime; stage `deck-sourcing`. Stage completion is validated by the contract entry/exit validator and handoff/approval runtime, not by command return code.
+Deck Master stage `deck-sourcing`; commands preserve its artifact and approval contracts.
 
 ## Allowed Commands
 ```bash
@@ -57,4 +47,4 @@ deck-producer
 - missing_generation_strategy
 
 ## Safety Rules
-Keep internal-only production notes out of customer-visible content. Never bypass the final client export approval. Obey the stage contract's transition policy.
+Keep internal notes out of customer-visible artifacts. Reuse current validation; rerun checks affected by changes. Client export requires approval for the current version.

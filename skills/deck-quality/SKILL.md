@@ -1,32 +1,9 @@
 ---
 name: deck-quality
-description: Deck Master quality entry for draft, render, delivery, customer-visible safety, evidence, confidentiality, and brand gates.
-triggers:
-  - run deck quality gate
-  - check customer visible safety
-  - check delivery blockers
-  - deck quality
+description: Run the relevant Deck Master quality gates on current artifacts or import quality findings.
 ---
 
 # Deck Quality
-
-Use this skill before client export or whenever a deck may contain internal
-language, placeholder text, stale artifacts, or evidence issues.
-
-## Allowed Commands
-
-```bash
-~/.deck-master/bin/deck-master quality-gate draft --run-dir <run_dir>
-~/.deck-master/bin/deck-master quality-gate customer-visible-safety --run-dir <run_dir> --artifact <pptx>
-~/.deck-master/bin/deck-master quality-gate delivery --run-dir <run_dir> --artifact <pptx>
-~/.deck-master/bin/deck-master import-quality-findings --run-dir <run_dir> --input <findings.json>
-```
-
-## Blocking Rule
-
-P0 findings block client export. Internal export may be used only for repair and
-must stay marked degraded.
-
 
 <!-- skill-os-contract:v1 -->
 
@@ -34,18 +11,19 @@ must stay marked degraded.
 Quality gates, customer-visible safety, evidence, confidentiality, and delivery blockers.
 
 ## Do Not Use
-Do not use outside its lane in the Skill OS workflow. Do not treat a successful command return code as stage completion.
+For other tasks, use the task route in [deck-master](../deck-master/SKILL.md).
 
 ## First Checks
+Use current run state and available results; inspect only missing or affected inputs.
 - builder handoff accepted
 - render artifacts present
 - quality rules loaded
 
 ## Forcing Questions
-- quality.rule_conflict: 是否存在规则冲突或需人工判断项？
+Reuse confirmed answers and design decisions. Ask only for a missing decision that changes this task. Record existing authorization through the runtime when needed.
 
 ## Runtime Ownership
-Skill OS workflow runtime; stage `deck-quality`. Stage completion is validated by the contract entry/exit validator and handoff/approval runtime, not by command return code.
+Deck Master stage `deck-quality`; commands preserve its artifact and approval contracts.
 
 ## Allowed Commands
 ```bash
@@ -68,4 +46,4 @@ deck-review
 - customer_visible_safety_blocked
 
 ## Safety Rules
-Keep internal-only production notes out of customer-visible content. Never bypass the final client export approval. Obey the stage contract's transition policy.
+Keep internal notes out of customer-visible artifacts. Reuse current validation; rerun checks affected by changes. Client export requires approval for the current version.

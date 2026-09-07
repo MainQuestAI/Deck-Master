@@ -220,8 +220,6 @@ def validate_skill_doc(
         report.violations.append(DocViolation(skill_name, str(doc_path), "frontmatter", "missing name"))
     if not fm.get("description"):
         report.violations.append(DocViolation(skill_name, str(doc_path), "frontmatter", "missing description"))
-    if not fm.get("triggers"):
-        report.violations.append(DocViolation(skill_name, str(doc_path), "frontmatter", "missing triggers"))
 
     # compat wrapper must point to a public stage
     skill = registry.skills_by_name.get(skill_name)

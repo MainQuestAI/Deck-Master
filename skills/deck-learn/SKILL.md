@@ -1,36 +1,28 @@
 ---
 name: deck-learn
-description: Deck Master learning entry for delivery outcomes, reusable asset feedback, benchmark results, and workspace learning packs.
-triggers:
-  - record deck feedback
-  - build learning pack
-  - record delivery outcome
-  - deck learn
+description: Record requested Deck Master delivery feedback and build reusable learning packs.
 ---
 
 # Deck Learn
 
-Use this optional skill after review, delivery, or benchmark completion.
-
 <!-- skill-os-contract:v1 -->
 
 ## Use When
-Delivery outcomes, reusable asset feedback, benchmark results, and workspace learning packs.
+Use only when feedback capture or learning was requested. Delivery outcomes, reusable asset feedback, benchmark results, and workspace learning packs.
 
 ## Do Not Use
-Do not use outside its lane in the Skill OS workflow. Do not treat a successful command return code as stage completion.
+For other tasks, use the task route in [deck-master](../deck-master/SKILL.md).
 
 ## First Checks
+Use current run state and available results; inspect only missing or affected inputs.
 - delivery outcome recorded
 - feedback events available
 
 ## Forcing Questions
-- learn.desensitization: 沉淀前是否完成脱敏？
-- learn.reuse_scope: 可复用范围是什么？
-- learn.win_loss_reason: 本轮胜负的核心原因是什么？
+Reuse confirmed answers and design decisions. Ask only for a missing decision that changes this task. Record existing authorization through the runtime when needed.
 
 ## Runtime Ownership
-Skill OS workflow runtime; stage `deck-learn`. Stage completion is validated by the contract entry/exit validator and handoff/approval runtime, not by command return code.
+Deck Master stage `deck-learn`; commands preserve its artifact and approval contracts.
 
 ## Allowed Commands
 ```bash
@@ -53,4 +45,4 @@ workspace_learning_pack, feedback_queue
 - delivery_not_recorded
 
 ## Safety Rules
-Keep internal-only production notes out of customer-visible content. Never bypass the final client export approval. Obey the stage contract's transition policy.
+Keep internal notes out of customer-visible artifacts. Reuse current validation; rerun checks affected by changes. Client export requires approval for the current version.
