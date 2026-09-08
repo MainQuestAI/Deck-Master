@@ -1504,6 +1504,8 @@ def command_workflow_autopilot(args: argparse.Namespace) -> dict[str, Any]:
         "recommended_skill": str(final_state.get("recommended_skill") or ""),
         "next_command": str(final_state.get("next_command") or ""),
         "skill_route": final_state.get("skill_route") or {},
+        "host_task": final_state.get("host_task") or {},
+        "blocking_issues": final_state.get("blocking_issues") or [],
     }
     write_json(run_dir / "workflow_autopilot_report.json", report)
     return report
