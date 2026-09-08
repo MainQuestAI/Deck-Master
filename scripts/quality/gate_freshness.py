@@ -114,6 +114,35 @@ def report_currentity(
     artifact_bound: bool | None = None,
 ) -> dict[str, Any]:
     root = Path(root).expanduser().resolve()
+    # External review currentity is about actual reviewed input bytes, not the
+    # latest task id: reissuing a task cannot erase a still-applicable finding.
+    gate = str(report.get("gate") or "").lower().replace("-", "_")
+    canonical = report.get("canonical_review")
+    if isinstance(canonical, dict):
+        from quality.external_review import (
+            validate_external_review_v2, _review_input_refs, _actual_review_pages,
+            ExternalReviewError,
+        )
+        if not validate_external_review_v2(canonical)["valid"]:
+            return {"status": "unbound", "current": False, "reason": "canonical review is invalid", "checks": ["canonical_review"]}
+        from workflow.actions import revision_read
+        try:
+            with revision_read(root):
+                current_refs = _review_input_refs(root)
+                current_pages = _actual_review_pages(root)
+            if canonical["based_on"]["input_refs"] != current_refs or canonical["coverage"]["required_page_ids"] != current_pages:
+                return {"status": "stale", "current": False, "reason": "canonical review inputs changed", "checks": ["canonical_review.based_on.input_refs", "canonical_review.coverage.required_page_ids"]}
+        except (ExternalReviewError, OSError, ValueError, KeyError) as exc:
+            return {"status": "unbound", "current": False, "reason": f"canonical review inputs unavailable: {exc}", "checks": ["canonical_review.based_on.input_refs"]}
+    elif gate.startswith("external_") or gate == "semantic_review":
+        from build.build_route import resolve_build_route, is_native
+        try:
+            request = json.loads((root / "request.json").read_text(encoding="utf-8"))
+            native = is_native(resolve_build_route(request, run_dir=root))
+        except (OSError, ValueError):
+            native = False
+        if native:
+            return {"status": "unbound", "current": False, "reason": "native external review lacks canonical input binding", "checks": ["canonical_review"]}
     bound = is_artifact_bound_gate(report) if artifact_bound is None else artifact_bound
     if artifact is None:
         if bound:
