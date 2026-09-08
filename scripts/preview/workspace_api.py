@@ -1014,7 +1014,12 @@ def build_workspace_payload(run_dir: str | Path) -> dict[str, Any]:
         cards = []
         stage = _workspace_stage_without_manifest(root, run_state_summary=run_state_summary)
         claim_summary = _empty_claim_summary()
-        queue = {"pages": [], "blocked_pages": [], "blocked_count": 0}
+        from build.build_route import load_persisted_route
+        queue = (
+            export_queue(root, {"approved"}, queue_type="client", allow_quality_override=False)
+            if load_persisted_route(root).get("engine_id") == "deck_native"
+            else {"pages": [], "blocked_pages": [], "blocked_count": 0}
+        )
         metrics = readiness["counts"]
         blocking = [stage["blocking_reason"]] if stage["blocking_reason"] else []
         title = str(request.get("project_name") or request.get("business_goal") or root.name)
