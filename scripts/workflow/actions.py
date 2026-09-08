@@ -194,7 +194,7 @@ def _validate_target(root: Path, target: Path, envelope: dict) -> str:
         raise ActionEnvelopeError(f"target outside run: {target}") from exc
     _safe_path(root, relative)
     if envelope.get("permission") == "agent":
-        if relative.startswith(("approvals/", "workflow/", "sources/", "build/revisions/")) or relative in {"request.json", "build/route.json", "build/current_revision.json"}:
+        if relative.startswith(("approvals/", "workflow/", "sources/", "build/", "quality_reports/", "render_results/")) or relative in {"request.json", "final_artifact_approval.json", "final_approval.json", "final_readiness.json"}:
             raise ActionEnvelopeError("agent output cannot modify runtime policy or approval")
         for prefix in ("page_packages/", "high_density_build/svg/", "high_density_build/page_scenes/", "high_density_build/content_locks/", "high_density_build/blueprints/"):
             if relative.startswith(prefix):
