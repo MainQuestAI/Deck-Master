@@ -2535,11 +2535,24 @@ def inspect_suite_status(
     elif not full_suite_ready:
         next_command = "deck-master suite-repair --target codex --target claude-code"
         next_agent_action = "Repair missing required Deck Master product capabilities before production work."
+    elif not native_workflow_ready:
+        # Required native runtime failures take precedence over optional Library.
+        repairs = []
+        for check_name, guidance in (
+            ("compile_smoke", "Repair the installed native compiler runtime/dependencies in the active release"),
+            ("render_smoke", "Install or repair soffice and pdftoppm, and expose their executables on the launcher's PATH"),
+            ("fonts", "Install a readable Noto Sans SC font; correct DECK_MASTER_NATIVE_FONTS_DIR if set, otherwise the fontconfig font mapping"),
+            ("rsvg_convert", "Install or repair rsvg-convert and expose its executable on the launcher's PATH"),
+        ):
+            check = native_checks.get(check_name) or {}
+            if check.get("status") != "verified":
+                detail = str(check.get("error") or check.get("reason") or check.get("status") or "not observed")
+                repairs.append(f"{guidance} ({detail}).")
+        next_command = "deck-master agent-doctor --mode production --output json"
+        next_agent_action = " ".join(repairs) + " Then run next_command to verify recovery; it diagnoses and does not install dependencies. Content workspace access remains available."
     elif lib_blocked:
         next_command = "deck-master library-status"
         next_agent_action = "Inspect PPT Library readiness and repair its reported blocker; installed skills are ready."
-    elif not native_workflow_ready:
-        next_agent_action = "Repair the reported native compiler, renderer, or Noto Sans SC font capability and rerun setup-status. Content workspace access remains available."
     elif not client_delivery_ready:
         next_command = "deck-master rc-gate --tier full"
         next_agent_action = "Installed skills are ready. Complete full-tier release evidence before client delivery."

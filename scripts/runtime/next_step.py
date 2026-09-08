@@ -149,6 +149,9 @@ def resolve_next_step(
         stage = native["stage"]
         command = native["next_command"]
         route = route_for_stage(stage, reason=native["reason"], next_command=command)
+        # Native host/compile/review work uses bundled methods, not legacy products.
+        route["backend_dependency"] = ""
+        route["compat_skills"] = []
         return {
             "schema_version": SCHEMA_VERSION, "run_id": root.name,
             "status": STAGE_STATUS_MAP.get(stage, stage), "runtime_stage": stage,
