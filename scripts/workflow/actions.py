@@ -255,7 +255,7 @@ def _commit_locked(root: Path, envelope: dict, *, current_input_fingerprint, tar
     receipts = dict(_manifest(root, parent).get("receipts", {})) if parent else {}
     receipts[action] = marker
     manifest = {"schema_version": "deck_build_revision.v2", "revision_id": revision, "parent_revision_id": parent, "files": hashes, "receipts": receipts, "full_snapshot": True, "committed_at": _utc_now()}
-    directory = root / "build/revisions"
+    directory = _safe_path(root, "build/revisions")
     directory.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix=".staging-", dir=directory) as temp:
         temp_root = Path(temp)
@@ -394,7 +394,7 @@ def record_targeted_repair(
 
 
 def revision_pointer_path(root: Path) -> Path:
-    return root / "build" / "current_revision.json"
+    return _safe_path(root, "build/current_revision.json")
 
 
 def read_current_revision(root: Path | str) -> dict[str, Any]:
@@ -520,7 +520,7 @@ def read_revision_state(root: Path | str, revision: str | None = None) -> dict[s
     files = {}
     for revision_id, manifest in reversed(chain):
         for relative, expected in manifest.get("files", {}).items():
-            data = _safe_path(root / "build/revisions" / revision_id, relative).read_bytes()
+            data = _safe_path(_safe_path(root, f"build/revisions/{revision_id}"), relative).read_bytes()
             if hashlib.sha256(data).hexdigest() != expected:
                 raise ActionEnvelopeError(f"revision file hash mismatch: {relative}")
             files[relative] = data
@@ -554,7 +554,7 @@ def revision_input_path(root: Path | str, path: Path | str) -> Path:
     revision = _READ_REVISION.get().get(str(root))
     if revision is None or not revision:
         return _safe_path(root, relative)
-    return _safe_path(root / "build/revisions" / revision, relative)
+    return _safe_path(_safe_path(root, f"build/revisions/{revision}"), relative)
 
 
 def active_input_path(path: Path) -> Path:
