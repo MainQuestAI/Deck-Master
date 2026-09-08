@@ -1856,7 +1856,10 @@ def command_agent_doctor(args: argparse.Namespace) -> dict[str, Any]:
 
     run_dir_raw = str(getattr(args, "run_dir", "") or "").strip()
     run_dir = Path(run_dir_raw).expanduser().resolve() if run_dir_raw else Path("/tmp/deck-master-demo/oss-demo")
-    if run_dir.exists():
+    if mode != "preview":
+        # Fixture preview requirements do not describe a production run.
+        pass
+    elif run_dir.exists():
         try:
             preview_payload = command_preview_gate(
                 argparse.Namespace(run_dir=str(run_dir), expect_unconfigured_backend_ok=True)
@@ -1949,7 +1952,7 @@ def command_agent_doctor(args: argparse.Namespace) -> dict[str, Any]:
         "production_backend",
         "pass" if production_dependencies_ready else "blocked",
         (
-            "Production backend dependencies are bound, verified, and pinned."
+            "All backend dependencies required by the selected policy are available."
             if production_dependencies_ready
             else "Production backend dependencies are missing, unverified, or not pinned."
         ),
@@ -1959,6 +1962,15 @@ def command_agent_doctor(args: argparse.Namespace) -> dict[str, Any]:
         },
         evidence_paths=["product-capability-manifest.json", "docs/agent-recovery-playbook.md"],
     )
+
+    if run_dir_raw:
+        from build.build_route import load_persisted_route
+        if load_persisted_route(run_dir).get("engine_id") == "deck_native":
+            from native_pptx.probe import probe_native_runtime
+            probe = probe_native_runtime()
+            _agent_doctor_add_check(checks, "native_runtime", "pass" if probe.get("status") == "ready" else "blocked",
+                                    "Actual native compiler, renderer and font probe; host tool availability is evaluated per task.",
+                                    details=probe, evidence_paths=[run_dir / "build/task_readiness.json"])
 
     release_root_raw = str(getattr(args, "release_root", "") or "").strip()
     release_root = Path(release_root_raw).expanduser().resolve() if release_root_raw else Path.home() / ".deck-master" / "current"

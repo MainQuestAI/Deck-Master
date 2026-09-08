@@ -172,6 +172,7 @@ class AgentReadyContractTests(unittest.TestCase):
         # SC-1.1: production backend readiness comes from the native probe —
         # an unbound external PPT Master no longer blocks it.
         self.assertEqual("pass", checks["production_backend"]["status"])
+        self.assertNotIn("preview_gate", checks, "production diagnostics must not apply fixture preview gates")
 
     def test_key_blocked_outputs_include_next_agent_action(self) -> None:
         bad_run = self.write_demo_run(page_count=3)
