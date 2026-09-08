@@ -4,6 +4,14 @@ from typing import Any
 
 
 def native_continuation(root: Path) -> dict[str, Any] | None:
+    from conversation.brief_compiler import run_brief_conflict_blockers
+    blockers = run_brief_conflict_blockers(root)
+    if blockers:
+        return {'stage':'blocked_source_conflicts', 'reason':'Declared source conflicts require evidence-based Brief resolution',
+                'next_command':'', 'build_status':{'status':'blocked'}, 'blocking_issues':blockers,
+                'host_task':{'kind':'resolve_declared_source_conflicts', 'blockers':blockers,
+                             'inputs':['context_manifest.json','deck_brief.json'],
+                             'resume_command':f'deck-master build-brief --run-dir {root} --agent-extract <resolved-extraction.json>'}}
     from context_intake.research_runtime import research_continuation
     research = research_continuation(root)
     if research:

@@ -43,6 +43,14 @@ def _utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def _assert_brief_conflicts_resolved(root: Path) -> None:
+    from conversation.brief_compiler import run_brief_conflict_blockers
+    blockers = run_brief_conflict_blockers(root)
+    if blockers:
+        raise NativeEngineError("Unresolved declared source conflict: " + ", ".join(b["conflict_id"] for b in blockers),
+                                code="NDC_SOURCE_CONFLICT", recovery="Resolve the declared conflict from original evidence and rebuild the Brief.")
+
+
 def _approved_packages(root: Path) -> list[dict[str, Any]]:
     """Validate the COMPLETE buildable page set (review P1-05).
 
@@ -50,6 +58,7 @@ def _approved_packages(root: Path) -> list[dict[str, Any]]:
     blocked/missing/draft page blocks the WHOLE deck build with the page
     list, instead of silently compiling a subset.
     """
+    _assert_brief_conflicts_resolved(root)
 
     from workflow.actions import revision_input_path
 
@@ -151,6 +160,7 @@ def prepare_native_run(run_dir: str | Path) -> dict[str, Any]:
     """
 
     root = Path(run_dir).expanduser().resolve()
+    _assert_brief_conflicts_resolved(root)
     request_path = root / "request.json"
     request = json.loads(request_path.read_text(encoding="utf-8")) if request_path.exists() else {}
     route = resolve_build_route(request, run_dir=root)
@@ -257,6 +267,7 @@ def _submit_approved_svg_revision(run_dir, page_id, svg_text, *, action_id, task
     from native_pptx.contracts import sha256_json
 
     root = Path(run_dir).expanduser().resolve()
+    _assert_brief_conflicts_resolved(root)
     if produced_against is None:
         raise NativeEngineError("submit requires the dispatch-time input fingerprint", code="NDC_MISSING_INPUT_FINGERPRINT")
     output_sha = hashlib.sha256(svg_text.encode("utf-8")).hexdigest()

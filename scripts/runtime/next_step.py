@@ -152,7 +152,7 @@ def resolve_next_step(
         return {
             "schema_version": SCHEMA_VERSION, "run_id": root.name,
             "status": STAGE_STATUS_MAP.get(stage, stage), "runtime_stage": stage,
-            "next_command": command, "missing_artifacts": [], "blocking_issues": [],
+            "next_command": command, "missing_artifacts": [], "blocking_issues": native.get("blocking_issues", []),
             "run_mode": read_json(root / REQUEST_NAME).get("run_mode", "production"),
             "recommended_skill": route["recommended_skill"], "skill_stage": route["skill_stage"],
             "skill_reason": native["reason"], "next_skill_command": command, "skill_route": route,

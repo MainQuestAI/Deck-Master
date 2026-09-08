@@ -187,6 +187,8 @@ def current_task_fingerprint(
 
     from workflow.actions import revision_read
     with revision_read(root, fresh=True):
+        from build.native_engine import _assert_brief_conflicts_resolved
+        _assert_brief_conflicts_resolved(root)
         issued_task(root, action_id, page_id, produced_against, allowed_kinds=allowed_kinds)
         return _svg_input_fingerprint(root, page_id)
 
@@ -233,6 +235,8 @@ def submit_blueprint(
     import hashlib
 
     root = Path(run_dir).expanduser().resolve()
+    from build.native_engine import _assert_brief_conflicts_resolved
+    _assert_brief_conflicts_resolved(root)
     source = Path(image_path).expanduser().resolve()
     data = source.read_bytes()
     digest = hashlib.sha256(data).hexdigest()

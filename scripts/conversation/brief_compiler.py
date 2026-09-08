@@ -159,3 +159,18 @@ def compile_deck_brief(request, context_manifest, conversation, agent_extract=No
     brief["conflict_blockers"] = blockers
     brief["status"] = "blocked" if blockers else "brief_ready"
     return brief
+
+
+def run_brief_conflict_blockers(run_dir):
+    """Read one revision; old approved-package runs need not contain a Brief."""
+    from runtime.run_state import read_json
+    from workflow.actions import revision_read, revision_input_path
+    root = Path(run_dir).expanduser().resolve()
+    with revision_read(root):
+        context_path = revision_input_path(root, root / 'context_manifest.json')
+        brief_path = revision_input_path(root, root / 'deck_brief.json')
+        context = read_json(context_path) if context_path.is_file() else {}
+        brief = read_json(brief_path) if brief_path.is_file() else {}
+        if not context.get('conflicts') and not brief.get('source_conflicts'):
+            return []
+        return brief_conflict_blockers(brief, context, run_dir=root)

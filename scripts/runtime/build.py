@@ -348,6 +348,8 @@ def prepare_build(run_dir: str | Path) -> dict[str, Any]:
     request = load_request(root)
     # SC-1.1 F-N02: native route resolves before any external status query.
     if build_route(request, run_dir=root).get("engine_id") == "deck_native":
+        from build.native_engine import _assert_brief_conflicts_resolved
+        _assert_brief_conflicts_resolved(root)
         backend = {"backend_name": "deck_native", "production_capable": True, "engine_route": build_route(request)}
     else:
         backend = builder_backend_status()
