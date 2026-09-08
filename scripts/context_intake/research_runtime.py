@@ -56,7 +56,7 @@ def _persist(root: Path, parent: str, state: dict, *, context: dict | None = Non
 
 def _status(state: dict) -> dict:
     task = state['task']
-    return {'task_id':task['task_id'],'status':state['status'],'actions_used':len(state['actions']), 'max_tool_actions':task['limits']['max_tool_actions'], 'pending_action':state.get('pending_action'), 'affected_refs':[ref for q in task['questions'] for ref in q['affected_refs']], 'open_questions':state.get('result',{}).get('open_questions',[])}
+    return {'task_id':task['task_id'],'status':state['status'],'actions_used':len(state['actions']), 'max_tool_actions':task['limits']['max_tool_actions'], 'pending_action':state.get('pending_action'), 'affected_refs':[ref for q in task['questions'] for ref in q['affected_refs']], 'open_questions':state.get('result',{}).get('open_questions',[]), 'questions':copy.deepcopy(task['questions'])}
 
 
 def _authorize(root: Path, task: dict) -> None:
@@ -122,13 +122,23 @@ def research_status(run_dir: str | Path, task_id: str) -> dict:
 
 
 def research_continuation(run_dir: str | Path) -> dict | None:
-    """Expose durable pending research to the common continuation router."""
+    """Keep unresolved research visible without issuing another tool action."""
     import shlex
     root = Path(run_dir).resolve()
     with revision_read(root):
         directory = revision_input_path(root, root / 'research/tasks')
-        for path in sorted(directory.glob('*.json')):
-            state = json.loads(path.read_text())
+        states = [json.loads(path.read_text()) for path in sorted(directory.glob('*.json'))]
+        gaps = [_status(state) for state in states if state['status'] in {'inconclusive', 'capability_unavailable'}]
+        if gaps:
+            issues = []
+            for gap in gaps:
+                questions = gap['open_questions'] or [q['question'] for q in gap['questions']]
+                issues.append(f"Research {gap['task_id']} remains {gap['status']}; affected refs: {', '.join(gap['affected_refs'])}; unresolved: {'; '.join(questions)}")
+            return {'stage': 'blocked_research_gap', 'reason': '; '.join(issues),
+                    'next_command': '', 'blocking_issues': issues,
+                    'host_task': {'kind': 'resolve_research_gap', 'research_status': gaps[0], 'research_gaps': gaps},
+                    'build_status': {'status': 'blocked'}}
+        for state in states:
             if state['status'] != 'pending':
                 continue
             status = _status(state)

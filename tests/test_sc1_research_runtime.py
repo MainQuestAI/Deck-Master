@@ -77,7 +77,7 @@ def test_next_step_discovers_durable_research_and_is_read_only(tmp_path):
  assert resolve_next_step(root)['host_task']['research_status']['pending_action']['action_id']==a['action_id']
  submit_research(root,outcome(task,a,'inconclusive'))
  from context_intake.research_runtime import research_continuation
- assert research_continuation(root) is None
+ assert research_continuation(root)['stage']=='blocked_research_gap'
  assert research_status(root,'r1')['status']=='inconclusive'
 
 def test_authorization_below_defaults_is_still_a_hard_ceiling(tmp_path):
