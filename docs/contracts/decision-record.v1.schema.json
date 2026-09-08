@@ -65,6 +65,10 @@
     "created_at": {
       "type": "string",
       "format": "date-time"
+    },
+    "input_dependency_fingerprint": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
     }
   },
   "additionalProperties": false

@@ -81,8 +81,12 @@ class QuestionResolver:
             if not required and not include_optional:
                 continue
             decision = self.decisions.latest(root, stage_id, q["question_id"])
+            effective_decision, effective_fp = decision, current_fp
+            if decision and decision.get("input_dependency_fingerprint") and q.get("input_dependencies"):
+                effective_fp = fp.fingerprint_question_inputs(root, q["input_dependencies"])
+                effective_decision = {**decision, "input_fingerprint": decision["input_dependency_fingerprint"]}
             answer_status, challenge_round = self._answer_status(
-                root, stage_id, q["question_id"], decision, current_fp, question=q
+                root, stage_id, q["question_id"], effective_decision, effective_fp, question=q
             )
             answered = answer_status == "answered"
             if answered:

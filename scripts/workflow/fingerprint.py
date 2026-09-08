@@ -115,3 +115,30 @@ def _min(a: datetime | None, b: datetime | None) -> datetime | None:
     if b is None:
         return a
     return a if a <= b else b
+
+
+def fingerprint_question_inputs(root: Path, dependencies: list[dict]) -> str:
+    """Hash explicit top-level JSON fields, including dependency definitions.
+
+    Missing and invalid inputs are distinct from empty values; no keyword
+    inference or arbitrary path access is involved.
+    """
+    import re
+    projected = []
+    for dependency in dependencies:
+        name = dependency["path"]
+        if not re.fullmatch(r"[A-Za-z0-9_-]+\.json", name):
+            raise ValueError("question input dependency must be a run-root JSON file")
+        path = root / name
+        if not path.exists():
+            state = {"missing_file": True}
+        else:
+            try:
+                payload = json.loads(path.read_text(encoding="utf-8"))
+                if not isinstance(payload, dict):
+                    raise ValueError("expected object")
+                state = {field: {"present": field in payload, "value": payload.get(field)} for field in dependency["fields"]}
+            except (ValueError, UnicodeError):
+                state = {"invalid_input_sha256": _file_hash(path)}
+        projected.append({"dependency": dependency, "state": state})
+    return hashlib.sha256(json.dumps(projected, sort_keys=True, ensure_ascii=False).encode()).hexdigest()

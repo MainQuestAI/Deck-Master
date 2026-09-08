@@ -78,6 +78,21 @@ class DecisionLog:
             "input_fingerprint": str(input_fingerprint),
             "created_at": _utc(self._clock()),
         }
+        # New answers may bind explicit question inputs. Never upgrade an
+        # already stale result or rewrite old records to current inputs.
+        from skills.manifest import load_registry
+        from workflow.questions import QuestionResolver
+        from workflow.fingerprint import fingerprint_question_inputs
+        registry = load_registry()
+        try:
+            contract = registry.contract(stage_id)
+        except (KeyError, ValueError):
+            contract = None
+        if contract is not None:
+            question = next((q for q in contract.forcing_questions if q["question_id"] == question_id), {})
+            dependencies = question.get("input_dependencies")
+            if dependencies and input_fingerprint == QuestionResolver(registry).input_fingerprint(contract, root):
+                decision["input_dependency_fingerprint"] = fingerprint_question_inputs(root, dependencies)
         root.joinpath("workflow").mkdir(parents=True, exist_ok=True)
         with self._log_path(root).open("a", encoding="utf-8") as fh:
             fh.write(json.dumps(decision, ensure_ascii=False) + "\n")
