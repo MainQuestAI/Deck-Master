@@ -346,11 +346,15 @@ def _prepare_build_from_packages(
 def prepare_build(run_dir: str | Path) -> dict[str, Any]:
     root = ensure_run_dirs(run_dir)
     request = load_request(root)
-    # SC-1.1 F-N02: native route resolves before any external status query.
-    if build_route(request, run_dir=root).get("engine_id") == "deck_native":
+    # Resolve historical evidence before creating any output, then retain the
+    # first selection through the shared route lock/CAS transaction. Otherwise
+    # our fresh manifest would be mistaken for an unidentified historical run.
+    from build.build_route import persist_route
+    route = persist_route(root, build_route(request, run_dir=root))
+    if route.get("engine_id") == "deck_native":
         from build.native_engine import _assert_brief_conflicts_resolved
         _assert_brief_conflicts_resolved(root)
-        backend = {"backend_name": "deck_native", "production_capable": True, "engine_route": build_route(request)}
+        backend = {"backend_name": "deck_native", "production_capable": True, "engine_route": route}
     else:
         backend = builder_backend_status()
     run_id = str(request.get("run_id") or root.name)
@@ -358,7 +362,7 @@ def prepare_build(run_dir: str | Path) -> dict[str, Any]:
     production = production_requires_builder_backend(_run_mode(request))
     if packages_index.exists():
         return _prepare_build_from_packages(root, request, backend, run_id, production=production)
-    if production and build_route(request).get("engine_id") == "deck_native":
+    if production and route.get("engine_id") == "deck_native":
         raise BuildError(
             "native production build requires approved page_packages/ (run the producer first); "
             "preview_manifest is not a production input"
