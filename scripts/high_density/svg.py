@@ -11,7 +11,7 @@ import shutil
 import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 from xml.etree import ElementTree
 
 from .blueprint import load_blueprint_manifest
@@ -70,7 +70,7 @@ def _estimated_width(text: str, size: float) -> float:
     return width
 
 
-def wrap_text(text: str, width: float, size: float) -> list[str]:
+def wrap_text(text: str, width: float, size: float, *, measure: Callable[[str], float] | None = None) -> list[str]:
     if not text:
         return [""]
     if width <= 0:
@@ -80,7 +80,7 @@ def wrap_text(text: str, width: float, size: float) -> list[str]:
     tokens = list(text) if any(ord(char) > 127 for char in text) else re.split(r"(\s+)", text)
     for token in tokens:
         candidate = current + token
-        if current and _estimated_width(candidate, size) > width:
+        if current and (measure(candidate) if measure else _estimated_width(candidate, size)) > width:
             lines.append(current.rstrip())
             current = token.lstrip()
         else:
@@ -100,6 +100,8 @@ def _attrs(items: dict[str, Any]) -> str:
 
 
 def _text_svg(element: dict[str, Any], page_id: str) -> str:
+    from PIL import ImageFont
+
     bbox = element["bbox"]
     fit = element["text_fit"]
     text = str(element.get("text") or "")
@@ -107,17 +109,22 @@ def _text_svg(element: dict[str, Any], page_id: str) -> str:
     min_size = float(fit.get("min_size_px") or max(9, size * 0.7))
     max_lines = int(fit.get("max_lines") or 1)
     line_height = float(fit.get("line_height") or 1.18)
-    lines = wrap_text(text, float(bbox["w"]), size)
-    while len(lines) > max_lines and size > min_size:
-        size = max(min_size, size - 1)
-        lines = wrap_text(text, float(bbox["w"]), size)
-    if (
-        len(lines) > max_lines
-        or len(lines) * size * line_height > float(bbox["h"]) + 0.01
-        or any(_estimated_width(line, size) > float(bbox["w"]) + 0.01 for line in lines)
-    ):
-        raise SvgVisualError(f"P0/P1 text overflow in {element['element_id']}", page_id=page_id)
     style = element.get("style") or {}
+    font_path = _font_path(str(style.get("font_family") or "Arial"), page_id, str(element["element_id"]))
+    while True:
+        # Match submission validation's font resolution and pixel-size rounding.
+        font = ImageFont.truetype(str(font_path), max(1, round(size)))
+        lines = wrap_text(text, float(bbox["w"]), size, measure=font.getlength)
+        overflow = (
+            len(lines) > max_lines
+            or len(lines) * size * line_height > float(bbox["h"]) + 0.01
+            or any(font.getlength(line) > float(bbox["w"]) + 0.01 for line in lines)
+        )
+        if not overflow or size <= min_size:
+            break
+        size = max(min_size, size - 1)
+    if overflow:
+        raise SvgVisualError(f"P0/P1 text overflow in {element['element_id']}", page_id=page_id)
     x = float(bbox["x"])
     y = float(bbox["y"])
     attrs = {
