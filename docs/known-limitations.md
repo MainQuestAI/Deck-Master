@@ -16,13 +16,13 @@ available.
 
 ## M1 Technical Preview
 
-M1 guarantees a local fixture demo and Review Desk preview path. It does not guarantee a full production deck build unless production companion backends are configured and verified.
+M1 guarantees a local fixture demo and Review Desk preview path. SC-1.1 adds a built-in native production route; actual task readiness and final delivery gates remain required.
 
 Current M1 boundaries:
 
 1. Fixture demo is the default first-run path.
 2. Production backend status must be checked through `setup-status`, `suite-status`, `agent-doctor`, or `backend status`.
-3. If the `ppt-master` production backend is not configured and verified, production export commands should block instead of reporting ready. `ppt-deck-pro-max` is a page-production Skill in the suite, not a separately bound production backend.
+3. For an existing or explicitly selected legacy route, a missing `ppt-master` backend blocks that route. Native runs do not require that binding. `ppt-deck-pro-max` is a page-production Skill in the suite, not a separately bound production backend.
 4. Review Desk write operations use a local write token plus same-origin guard. Non-loopback preview hosts are disabled by default and require explicit `--allow-remote-preview`.
 5. Browser smoke depends on local Playwright/browser availability.
 6. The public demo uses synthetic retail transformation content.
@@ -45,7 +45,7 @@ diagram views, semantic review v2 (six-dimension rubric) as a required
 production gate, action envelopes, and the acceptance-rate metric fix. It did
 NOT close:
 
-1. **Real standard backend smoke** — the managed PPT Master install exists
+1. **Legacy standard backend smoke (superseded for the default by SC-1.1)** — the managed PPT Master install exists
    (`backend install-managed`), but until a real backend is bound and verified,
    real two-page PPTX build/render acceptance (A-03/P-01) stays blocked. No
    fixture substitution is performed.
@@ -70,12 +70,21 @@ a first-class mode, a real native runtime probe, the native engine adapter
 (real two-page compile+readback through native_pptx), precise semantic-gate
 matching, and atomic revision commits with failure-budget accounting.
 
-Still open (honest state `in_progress`):
+Current engineering state remains `in_progress`:
 
-1. Manifest/release required-policy change (ppt-* out of the default
-   required set) is registered but not yet landed.
-2. Real host-tool cases (ImageGen/visual reconstruction/desktop editing)
-   were NOT executed — this environment has no image tools; HST/UAT
-   cases stay not_run, never faked.
-3. Old-run migration CLI (MIG group) and the dedicated seven-class
-   differential matrix are pending.
+- Real host ImageGen outputs, ten-page native compilation/render/readback,
+  seven-class SVG/PPTX parity, explicit run migration and isolated installation
+  have been exercised during PR31. Their evidence must be bound to the final
+  candidate; earlier successful runs are not final-SHA acceptance.
+- Human visual review and final-file approval remain pending. Auxiliary model
+  scores do not replace that review. An exhausted page repair budget requires
+  an explicit increase before further attempts.
+- Desktop editing has been exercised, but its saved result still requires
+  the final visual check. No cross-platform PowerPoint compatibility is inferred
+  from LibreOffice results.
+- Real customer paired outcomes are excluded from this engineering round and
+  remain `outcome_pending`. No `accepted` claim is made.
+
+The formal installed launcher protects newer run formats after software rollback.
+Directly executing an old source checkout bypasses that launcher; it is not a
+supported way to write newer run data.

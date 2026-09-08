@@ -110,7 +110,7 @@ def _text_svg(element: dict[str, Any], page_id: str) -> str:
     max_lines = int(fit.get("max_lines") or 1)
     line_height = float(fit.get("line_height") or 1.18)
     style = element.get("style") or {}
-    font_path = _font_path(str(style.get("font_family") or "Arial"), page_id, str(element["element_id"]))
+    font_path = _font_path(str(style.get("font_family") or "Arial"), page_id, str(element["element_id"]), str(style.get("font_weight") or "400"))
     while True:
         # Match submission validation's font resolution and pixel-size rounding.
         font = ImageFont.truetype(str(font_path), max(1, round(size)))
@@ -346,11 +346,13 @@ def _bbox_overlap(first: dict[str, float], second: dict[str, float]) -> float:
     return width * height
 
 
-def _font_path(family: str, page_id: str, element_id: str) -> Path:
+def _font_path(family: str, page_id: str, element_id: str, weight: str = "400") -> Path:
     requested = family.strip().strip("'\"") or "Arial"
     matcher = shutil.which("fc-match")
     if matcher:
-        result = subprocess.run([matcher, requested, "-f", "%{family}|%{file}\n"], capture_output=True, text=True)
+        bold = str(weight).lower() in {"bold", "bolder", "600", "700", "800", "900"}
+        pattern = requested + (":weight=bold" if bold else "")
+        result = subprocess.run([matcher, pattern, "-f", "%{family}|%{file}\n"], capture_output=True, text=True)
         matched_family, _, matched_file = result.stdout.strip().partition("|")
         generic = requested.lower() in {"sans-serif", "serif", "monospace"}
         names = {name.strip().lower() for name in matched_family.split(",")}
@@ -403,7 +405,7 @@ def _validate_svg_text(node: Any, scene_element: dict[str, Any], page_id: str, a
     if opacity < 0.05 or font_size <= 0:
         raise SvgVisualError(f"hidden or invalid SVG text is blocked: {element_id}", page_id=page_id, code="HD_SVG_CONTENT_DRIFT")
     bounds = _svg_geometry_bbox(node)
-    font = ImageFont.truetype(str(_font_path(str(node.get("font-family") or "Arial"), page_id, element_id)), max(1, round(font_size)))
+    font = ImageFont.truetype(str(_font_path(str(node.get("font-family") or "Arial"), page_id, element_id, str(node.get("font-weight") or "400"))), max(1, round(font_size)))
     tspans = [child for child in list(node) if str(child.tag).split("}")[-1] == "tspan"]
     if len(tspans) != len(list(node)):
         raise SvgVisualError(f"SVG text supports only direct tspan children: {element_id}", page_id=page_id, code="HD_SVG_UNSUPPORTED_ELEMENT")
@@ -445,7 +447,7 @@ def _validate_svg_text(node: Any, scene_element: dict[str, Any], page_id: str, a
             raise SvgVisualError(f"SVG tspan size or line offset is invalid: {element_id}", page_id=page_id, code="HD_SVG_TEXT_OVERFLOW") from exc
         if tspan_size <= 0:
             raise SvgVisualError(f"SVG tspan font size is invalid: {element_id}", page_id=page_id, code="HD_SVG_TEXT_OVERFLOW")
-        tspan_font = ImageFont.truetype(str(_font_path(family, page_id, element_id)), max(1, round(tspan_size)))
+        tspan_font = ImageFont.truetype(str(_font_path(family, page_id, element_id, str(tspan.get("font-weight") or node.get("font-weight") or "400"))), max(1, round(tspan_size)))
         if current and (tspan.get("y") is not None or abs(dy) > 0.01):
             lines.append(current)
             line_widths.append(current_width)

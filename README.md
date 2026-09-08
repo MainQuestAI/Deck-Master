@@ -29,6 +29,18 @@ report `awaiting_agent_imagegen` honestly; the built-in kernel and the
 default route are probed for real capability evidence, never from env
 flags.
 
+Real rendering uses LibreOffice → PDF → `pdftoppm` PNG with an isolated LibreOffice
+profile. Compiler, renderer, fonts and host tools have separate readiness evidence.
+A completed build is not final approval. SC-1.1 engineering acceptance remains
+`in_progress` until the required evidence and human visual review are complete.
+
+For page repair, use `build retry --run-dir <run> --page-id P001 --stage svg`.
+The host returns both SVG and Scene with the issued action identity; default
+budgets allow three attempts per page/action kind, including failures.
+Migration is explicit: `build migrate --dry-run --output <plan.json>`, then
+`--apply --plan <plan.json>`, `--verify --migration-id <id>` or
+`--rollback --migration-id <id>` (all with `--run-dir <run>`).
+
 ## The Full SC-1 Chain
 
 Provide raw material + business goal + authorized host tools; Deck Master
@@ -47,8 +59,9 @@ invoke external named skills, or know backend paths:
 4. The producer writes complete Page Packages (conclusion, business
    implication, evidence bindings) — production instructions never enter page
    text; pages without evidence or design basis stay draft.
-5. Standard builds consume the approved Page Packages directly (PPT Master is
-   the default, managed backend; high-density remains an opt-in profile).
+5. New builds consume approved Page Packages through `deck_native`. The default
+   `image_blueprint` path requests actual host images and SVG + Scene reconstruction;
+   explicit `direct_svg` skips image generation. Existing legacy routes are preserved.
 6. Semantic review v2 (six dimensions) is a required production gate; a
    content change stales its binding; P0 findings cannot be overridden.
 7. Export requires current final readiness + hash-bound delivery approval.

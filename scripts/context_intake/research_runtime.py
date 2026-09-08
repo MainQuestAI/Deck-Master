@@ -66,8 +66,12 @@ def _authorize(root: Path, task: dict) -> None:
     if auth.get('public_query_context') != task['public_query_context'] or auth.get('allowed_sources') != task['allowed_sources']:
         raise ValueError('research query or sources differ from the authorized public projection')
     limits = task['limits']
-    if (limits['max_rounds_per_question'] > 2 or limits['max_tool_actions'] > 2 or limits['max_candidate_sources_per_round'] > 6) and auth.get('limits') != limits:
-        raise ValueError('raising the research budget requires an explicit matching authorization')
+    defaults = {'max_rounds_per_question': 2, 'max_tool_actions': 2, 'max_candidate_sources_per_round': 6}
+    authorized_limits = auth.get('limits') or {}
+    for name, default in defaults.items():
+        ceiling = authorized_limits.get(name, default)
+        if not isinstance(ceiling, int) or isinstance(ceiling, bool) or ceiling < 1 or limits[name] > ceiling:
+            raise ValueError('research budget exceeds explicit matching authorization or default limits: '+name)
     problems = redaction_problems([task['public_query_context']])
     if problems:
         raise ValueError('unredacted public query: ' + '; '.join(problems))

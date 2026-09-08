@@ -531,10 +531,10 @@ _READ_REVISION: ContextVar[dict] = ContextVar("deck_revision", default={})
 
 
 @contextmanager
-def revision_read(root: Path | str):
+def revision_read(root: Path | str, *, fresh: bool = False):
     root = Path(root).expanduser().resolve()
     active = _READ_REVISION.get()
-    if str(root) in active:
+    if str(root) in active and not fresh:
         yield active[str(root)]
         return
     revision = read_current_revision(root).get("revision_id", "")

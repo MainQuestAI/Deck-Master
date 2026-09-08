@@ -163,7 +163,12 @@ def test_late_blueprint_cannot_replace_new_content(tmp_path):
     root = new_run(tmp_path)
     task = run_build(root)["pages"][0]
     package = root / "page_packages/P001.json"
-    package.write_text(package.read_text() + "\n")
+    from workflow.actions import create_action_envelope, stage_action_result, commit_action_result
+    updated = json.loads(package.read_text())
+    updated['customer_visible']['title'] = 'Updated approved scope'
+    envelope = create_action_envelope(action_id='new_content', task_id='content_change', scope_pages=['P001'], permission='runtime', input_fingerprint='approved-change')
+    stage_action_result(root, envelope, {'package': json.dumps(updated)})
+    commit_action_result(root, envelope, current_input_fingerprint='approved-change', targets={'package':package})
     image = tmp_path / "host.png"
     Image.new("RGB", (1672, 941), "white").save(image)
     with pytest.raises(Exception, match="stale"):

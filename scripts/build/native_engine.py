@@ -183,6 +183,12 @@ def prepare_native_run(run_dir: str | Path) -> dict[str, Any]:
 
 
 def _svg_input_fingerprint(root: Path, page_id: str, *, include_blueprint: bool = True) -> str:
+    from workflow.actions import revision_read
+    with revision_read(root):
+        return _svg_revision_fingerprint(root, page_id, include_blueprint=include_blueprint)
+
+
+def _svg_revision_fingerprint(root: Path, page_id: str, *, include_blueprint: bool = True) -> str:
     """Recomputed INSIDE the commit lock: the current page package content +
     content lock sha + page id. A late host result produced against older
     inputs can never overwrite newer SVGs (review P1-04)."""
@@ -206,7 +212,7 @@ def _svg_input_fingerprint(root: Path, page_id: str, *, include_blueprint: bool 
     from high_density.blueprint import blueprint_path
 
     blueprint = blueprint_path(root, page_id)
-    receipt = root / "high_density_build/blueprints" / f"{page_id}.blueprint.json"
+    receipt = active_input_path(root / "high_density_build/blueprints" / f"{page_id}.blueprint.json")
     if receipt.exists():
         from native_pptx.contracts import safe_run_path
 
@@ -229,6 +235,13 @@ def submit_approved_svg(
     produced_against: str | None = None,
     scene: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
+    from workflow.actions import revision_read
+    with revision_read(run_dir, fresh=True):
+        return _submit_approved_svg_revision(run_dir, page_id, svg_text, action_id=action_id,
+            task_id=task_id, expected_revision=expected_revision, produced_against=produced_against, scene=scene)
+
+
+def _submit_approved_svg_revision(run_dir, page_id, svg_text, *, action_id, task_id, expected_revision, produced_against, scene):
     """Validate and atomically commit the host's SVG and matching Scene.
 
     The issued task, not caller-supplied budgets/scope, is authoritative.
@@ -375,6 +388,21 @@ def native_build_fingerprint(run_dir: str | Path) -> str:
         for binary in ("soffice", "pdftoppm", "rsvg-convert"):
             executable = shutil.which(binary)
             tools[binary] = sha256_file(Path(executable).resolve()) if executable else "unavailable"
+        # Font files are real build inputs too. Installing a missing weight
+        # must invalidate earlier render/readback evidence.
+        from high_density.svg import _font_path
+        from xml.etree import ElementTree
+        for page in pages:
+            document = ElementTree.parse(revision_input_path(root, root / "high_density_build/svg" / f"{page}.svg"))
+            for node in document.getroot().iter():
+                if node.tag.split("}")[-1] != "text":
+                    continue
+                for span in [node, *list(node)]:
+                    family = str(span.get("font-family") or node.get("font-family") or "Arial")
+                    weight = str(span.get("font-weight") or node.get("font-weight") or "400")
+                    key = "font:" + family + ":" + weight
+                    if key not in tools:
+                        tools[key] = sha256_file(_font_path(family, page, str(node.get("id") or "text"), weight))
         return sha256_json(
             {
                 "pages": pages,

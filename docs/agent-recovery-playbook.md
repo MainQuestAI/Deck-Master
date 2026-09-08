@@ -119,3 +119,31 @@ python3 scripts/deck_master.py build run --run-dir <run_dir> --profile high-dens
 python3 scripts/deck_master.py build status --run-dir <run_dir> --profile high-density
 python3 scripts/deck_master.py final-readiness --run-dir <run_dir> --no-write
 ```
+
+## Native Build and Research Recovery
+
+Use `next-step --run-dir <run>` and `build status --run-dir <run>` first.
+The persisted route and immutable current revision take precedence over legacy
+compatibility projections. Do not repair a native run by editing fixed SVG or
+Scene projections: submit both files using its Runtime-issued action.
+
+- `awaiting_agent_imagegen`: execute the issued host image task and submit the
+  real image plus observation receipt. A missing provider request ID stays null.
+- `awaiting_agent_reconstruct` / `awaiting_svg_authoring`: return SVG and Scene
+  for the same Lock and input fingerprint. Explicit page repair uses
+  `build retry --page-id <page> --stage svg`; valid other pages are retained.
+- Exhausted action budget: preserve the run and report its used/remaining budget.
+  Do not create a different action ID or run merely to evade the limit.
+- `migration_required`: keep historical files read-only; create a specific
+  `build migrate --dry-run --output <plan>` and apply only that unchanged plan.
+  `--verify` and `--rollback` require the returned migration ID.
+- Interrupted commit: recover projections from the authoritative revision and
+  replay the original action. A published revision includes its durable receipt;
+  a complete orphan snapshot before pointer publication can be safely reused.
+- Pending research: follow the returned `research dispatch` command. Restart
+  reuses its pending action. `inconclusive` and `capability_unavailable` retain
+  the affected decisions and open questions; they do not establish customer facts.
+
+Native file quality checks use the current artifact without requiring a legacy
+backend setup. Recompile/render and rerun affected gates after changes; a new
+PPTX always needs its own final artifact approval.

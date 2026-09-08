@@ -79,3 +79,15 @@ def test_next_step_discovers_durable_research_and_is_read_only(tmp_path):
  from context_intake.research_runtime import research_continuation
  assert research_continuation(root) is None
  assert research_status(root,'r1')['status']=='inconclusive'
+
+def test_authorization_below_defaults_is_still_a_hard_ceiling(tmp_path):
+ root,task=setup(tmp_path)
+ auth=json.loads((root/'authorization.json').read_text())
+ auth['limits']={'max_tool_actions':1,'max_rounds_per_question':1,'max_candidate_sources_per_round':2}
+ # Create a separate authorized input run, not a mutation of a pinned snapshot.
+ other=tmp_path/'limited';other.mkdir()
+ (other/'request.json').write_text((root/'request.json').read_text())
+ (other/'authorization.json').write_text(json.dumps(auth))
+ with pytest.raises(ValueError,match='budget exceeds'):
+  prepare_research(other,task)
+ assert not (other/'research/tasks/r1.json').exists()

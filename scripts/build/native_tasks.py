@@ -40,7 +40,14 @@ def dispatch_native_task(root: Path, stage: str, packages: list[dict[str, Any]])
     root = Path(root).expanduser().resolve()
     lock = _acquire_run_lock(root)
     try:
-        return _dispatch_native_task_locked(root, stage, packages)
+        from workflow.actions import revision_read
+        with revision_read(root, fresh=True):
+            from build.native_engine import _approved_packages
+            ids = {p["page_id"] for p in packages}
+            current = [p for p in _approved_packages(root) if p["page_id"] in ids]
+            if {p["page_id"] for p in current} != ids:
+                raise ContractError("native dispatch page is outside the approved run")
+            return _dispatch_native_task_locked(root, stage, current)
     finally:
         _release_run_lock(lock)
 
@@ -48,6 +55,7 @@ def dispatch_native_task(root: Path, stage: str, packages: list[dict[str, Any]])
 def _dispatch_native_task_locked(root: Path, stage: str, packages: list[dict[str, Any]]) -> dict[str, Any]:
     from build.native_engine import _svg_input_fingerprint
     from high_density.content import load_content_lock
+    from workflow.actions import revision_input_path
 
     if stage not in STAGE_STATUS:
         raise ContractError(f"unknown native stage: {stage}")
@@ -96,10 +104,10 @@ def _dispatch_native_task_locked(root: Path, stage: str, packages: list[dict[str
                 "produced_against": fingerprint,
                 "input_fingerprint": fingerprint,
                 "input_refs": [
-                    {"ref": f"page_packages/{page_id}.json", "sha256": sha256_file(root / "page_packages" / f"{page_id}.json")},
+                    {"ref": f"page_packages/{page_id}.json", "sha256": sha256_file(revision_input_path(root, root / "page_packages" / f"{page_id}.json"))},
                     {
                         "ref": f"high_density_build/content_locks/{page_id}.content_lock.json",
-                        "sha256": sha256_file(root / "high_density_build/content_locks" / f"{page_id}.content_lock.json"),
+                        "sha256": sha256_file(revision_input_path(root, root / "high_density_build/content_locks" / f"{page_id}.content_lock.json")),
                     },
                 ],
                 "content_lock": lock,
@@ -177,8 +185,10 @@ def current_task_fingerprint(
     """
     from build.native_engine import _svg_input_fingerprint
 
-    issued_task(root, action_id, page_id, produced_against, allowed_kinds=allowed_kinds)
-    return _svg_input_fingerprint(root, page_id)
+    from workflow.actions import revision_read
+    with revision_read(root, fresh=True):
+        issued_task(root, action_id, page_id, produced_against, allowed_kinds=allowed_kinds)
+        return _svg_input_fingerprint(root, page_id)
 
 
 def approved_blueprint(root: Path, page_id: str) -> Path | None:
