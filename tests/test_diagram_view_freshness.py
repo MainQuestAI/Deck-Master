@@ -1,5 +1,9 @@
 """An in-place formal view edit invalidates actual compile and semantic inputs."""
 import json
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from build.native_engine import native_build_fingerprint, submit_approved_svg
 from high_density.content import load_content_lock

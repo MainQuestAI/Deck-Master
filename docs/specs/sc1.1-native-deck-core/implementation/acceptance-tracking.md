@@ -1,6 +1,6 @@
 # SC-1.1 验收追踪
 
-当前总状态：`in_progress`。最终候选 SHA 的产品验收尚未集中执行，所有产品 case 起始为 `not_run`。旧文中的“工程通过”仅表示历史局部测试信息，缺少同一候选 SHA、真实命令、环境和证据哈希时，不转录成产品 case 的 passed。
+当前总状态：`in_progress`。已执行真实工具验收与逐项证据核对；下方缺口表保留初始清单，当前进展见 [PR31 修复验证记录](pr31-validation-progress.md)。最终候选的全量回归及独立复审仍在收敛，不能将局部证据视为全部通过。旧文中的“工程通过”仅表示历史局部测试信息，缺少同一候选 SHA、真实命令、环境和证据哈希时，不转录成产品 case 的 passed。
 
 ## 数据源与缺口
 
@@ -27,6 +27,6 @@ python3 scripts/uat/sc1_1_engineering_matrix.py summary --matrix /tmp/sc1-1-cand
 
 - `tests/test_sc1_1_migration_apply.py`：迁移机制反例与事务测试；其中编译 stub 明确不计真实迁移验收。
 - `tests/test_sc1_1_engineering_matrix.py`：矩阵防误报测试；不计任何产品 case 通过。
-- `examples/sc1_1_uat/raw_materials.json`：公开合成零售资料、10 页目标、研究缺口和未知客户事实，无逐页稿。真实内容规划、研究、ImageGen、重建和桌面编辑待执行并登记。
+- `examples/sc1_1_uat/raw_materials.json`：公开合成零售资料、10 页目标、研究缺口和未知客户事实，无逐页稿。已用于真实内容规划、公开研究、ImageGen、SVG/Scene、PPTX、渲染与桌面编辑。另有从原材料经正式 CLI 内容回传的冷启动十页运行；两套内容的语义返修和用户批准仍待收口。
 
 只有同一候选的全部必需工程证据通过，且用户完成视觉复核和最终批准，才可标记 `engineering_complete / outcome_pending`。当前不能标记完成或 accepted。
