@@ -44,3 +44,34 @@ def test_scope_mismatch_cannot_authorize_client_export(tmp_path):
     _artifact(tmp_path)
     create_override(tmp_path,'f','P1','synthetic internal only','test',scope='internal_review')
     assert not has_active_override(tmp_path,'f')
+
+
+import pytest
+
+@pytest.mark.parametrize("relative", ["narrative_plan.json", "deck_brief.json", "context_manifest.json", "solution_model.json", "sources/raw.txt", "diagram_views/P001.json"])
+def test_draft_override_binds_actual_public_inputs(tmp_path, relative):
+    source = tmp_path / relative
+    source.parent.mkdir(parents=True, exist_ok=True)
+    source.write_text('synthetic A')
+    create_override(tmp_path, 'f', 'P1', 'synthetic input A only', 'test')
+    assert has_active_override(tmp_path, 'f')
+    source.write_text('synthetic B')
+    assert not has_active_override(tmp_path, 'f')
+
+
+def test_native_unbound_override_cannot_use_missing_route_projection(tmp_path):
+    from build.build_route import persist_route, resolve_build_route, load_persisted_route
+    from workflow.actions import create_action_envelope, stage_action_result, commit_action_result
+    request = {'run_mode': 'production', 'profile': 'direct-svg'}
+    (tmp_path / 'request.json').write_text(json.dumps(request))
+    persist_route(tmp_path, resolve_build_route(request, run_dir=tmp_path))
+    envelope = create_action_envelope(action_id='baseline', task_id='baseline', scope_pages=['P001'], permission='runtime', input_fingerprint='baseline')
+    stage_action_result(tmp_path, envelope, {'narrative_plan.json': '{}'})
+    commit_action_result(tmp_path, envelope, current_input_fingerprint='baseline', targets={'narrative_plan.json': tmp_path / 'narrative_plan.json'})
+    quality = tmp_path / 'quality_reports'
+    quality.mkdir(exist_ok=True)
+    (quality / 'overrides.json').write_text(json.dumps([{'target_id': 'f', 'severity': 'P1', 'status': 'active', 'scope': 'client_export'}]))
+    assert not has_active_override(tmp_path, 'f')
+    (tmp_path / 'build/route.json').unlink()
+    assert load_persisted_route(tmp_path)['engine_id'] == 'deck_native'
+    assert not has_active_override(tmp_path, 'f')

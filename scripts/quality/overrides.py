@@ -171,7 +171,6 @@ def _selected_artifact(root: Path) -> Path | None:
 
 def _current_binding(root: Path, artifact: Path | str | None = None) -> dict[str, Any]:
     """Bind the bytes being waived; draft authorization cannot transfer to PPTX."""
-    from workflow.actions import active_input_path
     root = root.expanduser().resolve()
     selected = Path(artifact) if artifact is not None else _selected_artifact(root)
     if selected is not None:
@@ -185,15 +184,31 @@ def _current_binding(root: Path, artifact: Path | str | None = None) -> dict[str
         if not selected.is_file():
             return {"kind": "invalid"}
         return {"kind": "artifact", "path": relative, "sha256": hashlib.sha256(selected.read_bytes()).hexdigest()}
+    # Capture one revision, including the real public filenames and source bytes.
+    # Fixed-path compatibility projections must not change the waived snapshot.
+    from workflow.actions import revision_read, revision_input_path
+    files = ("request.json", "deck_brief.json", "context_manifest.json",
+             "narrative_plan.json", "solution_model.json", "diagram_views.json",
+             "claim_map.json", "page_tasks.json", "sourcing_plan.json", "style_lock.json",
+             "brief.json", "context_pack.json", "narrative.json")
+    directories = ("page_packages", "sources", "assets", "diagram_views",
+                   "high_density_build/content_locks", "high_density_build/svg",
+                   "high_density_build/page_scenes", "high_density_build/blueprints")
     digest = hashlib.sha256()
-    for relative in ("request.json", "brief.json", "context_pack.json", "narrative.json"):
-        path = active_input_path(root / relative)
-        if path.is_file():
-            digest.update(relative.encode()); digest.update(hashlib.sha256(path.read_bytes()).digest())
-    package_dir = active_input_path(root / "page_packages")
-    for path in sorted(package_dir.glob("*.json")):
-        digest.update(path.name.encode()); digest.update(hashlib.sha256(path.read_bytes()).digest())
+    with revision_read(root):
+        inputs = [(relative, revision_input_path(root, relative)) for relative in files]
+        for relative in directories:
+            directory = revision_input_path(root, relative)
+            inputs.extend((relative + "/" + path.relative_to(directory).as_posix(), path)
+                          for path in directory.rglob("*") if path.is_file())
+        for relative, path in sorted(inputs):
+            if path.is_symlink():
+                return {"kind": "invalid"}
+            if path.is_file():
+                digest.update(relative.encode()); digest.update(b"\0")
+                digest.update(hashlib.sha256(path.read_bytes()).digest())
     return {"kind": "draft", "source_sha256": digest.hexdigest()}
+
 
 
 def has_active_override(run_dir: str | Path, finding_id: str, *, artifact: Path | str | None = None, scope: str = "client_export") -> bool:
@@ -207,6 +222,12 @@ def has_active_override(run_dir: str | Path, finding_id: str, *, artifact: Path 
             return True
         # Old unbound records remain readable, but cannot authorize an artifact
         # or native Run. Legacy draft-only records retain their previous scope.
-        if not override.get("binding") and current.get("kind") == "draft" and not (root / "build" / "route.json").exists():
-            return True
+        if not override.get("binding") and current.get("kind") == "draft":
+            from build.build_route import load_persisted_route
+            try:
+                route = load_persisted_route(root)
+            except (ValueError, OSError):
+                return False
+            if not route:
+                return True
     return False
