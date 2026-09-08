@@ -30,3 +30,11 @@ def test_reverse_absolute_x_keeps_declared_position_instead_of_tab_reflow():
     shape,trace=emit(reverse=True)
     assert shape.shapes[1].left/12700==pytest.approx(120*960/1672,abs=.001)
     assert shape.shapes[0].left > shape.shapes[1].left
+
+
+def test_logical_group_keeps_declared_container_without_scaling_children():
+    shape,trace=emit()
+    assert [shape.left/12700,shape.top/12700,shape.width/12700,shape.height/12700]==pytest.approx([v*960/1672 for v in [100,312,1460,70]],abs=.001)
+    xfrm=shape._element.grpSpPr.xfrm
+    assert (xfrm.off.x,xfrm.off.y,xfrm.ext.cx,xfrm.ext.cy)==(xfrm.chOff.x,xfrm.chOff.y,xfrm.chExt.cx,xfrm.chExt.cy)
+    assert trace[0]['bbox']=={'x':100,'y':312,'w':1460,'h':70}

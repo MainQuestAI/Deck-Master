@@ -283,9 +283,21 @@ def _add_text(slide: Any, element: dict[str, Any], trace: list[dict[str, Any]]) 
                     raise PptxEditabilityError("positioned text chunk is outside its declared bounds")
                 child["bbox"] = {"x": x, "y": y, "w": width, "h": height}
             _add_text(group, child, children)
-        group._element.recalculate_extents()
+        # Preserve the SVG logical text container without scaling its children.
+        # Group extents normally shrink to child bounds; matching the child
+        # coordinate system to the declared container is an identity mapping.
+        bbox = element["bbox"]
+        xfrm = group._element.grpSpPr.xfrm
+        left = Inches(_inches(float(bbox["x"]), CANVAS_WIDTH))
+        top = Inches(_inches(float(bbox["y"]), CANVAS_HEIGHT))
+        width = Inches(_inches(float(bbox["w"]), CANVAS_WIDTH))
+        height = Inches(_inches(float(bbox["h"]), CANVAS_HEIGHT))
+        xfrm.off.x = xfrm.chOff.x = left
+        xfrm.off.y = xfrm.chOff.y = top
+        xfrm.ext.cx = xfrm.chExt.cx = width
+        xfrm.ext.cy = xfrm.chExt.cy = height
         trace.append({"element_id": element["element_id"], "object_type": "group",
-                      "shape_name": group.name, "bbox": _trace_bbox(children),
+                      "shape_name": group.name, "bbox": dict(bbox),
                       "priority": element.get("priority", ""), "component_id": element.get("component_id", ""),
                       "z_order": element.get("z_index", 0), "children": children,
                       "child_element_ids": [child["element_id"] for child in children],
