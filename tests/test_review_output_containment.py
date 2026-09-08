@@ -24,16 +24,29 @@ def test_task_directory_symlink_cannot_write_outside(tmp_path):
     with pytest.raises(ExternalReviewError):prepare_quality_review_v2(root,scope='semantic',required_page_ids=['P001','P002'])
     assert not list(outside.iterdir())
 
-def test_archive_target_symlink_cannot_overwrite_external_file(tmp_path):
-    from datetime import datetime,timezone,timedelta
+def test_archive_target_symlink_cannot_overwrite_external_file(tmp_path, monkeypatch):
+    from datetime import datetime, timezone
+    from uuid import UUID
+    import quality.external_review as external_review
     root=run(tmp_path);report=canonical_report(root);result=import_external_review(root,report)
+    gate = root / 'quality_reports' / result['gate_report']
+    original_gate = gate.read_bytes()
     outside=tmp_path/'protected';outside.write_text('keep');archive=root/'quality_reports/archive';archive.mkdir()
-    for delta in range(120):
-        stamp=(datetime.now(timezone.utc)+timedelta(seconds=delta)).strftime('%Y%m%d%H%M%S')
-        target=archive/(stamp+'_'+result['gate_report'])
-        if not target.exists():target.symlink_to(outside)
-    with pytest.raises(ExternalReviewError):import_external_review(root,report,replace=True)
-    assert outside.read_text()=='keep'
+    fixed = datetime(2026, 9, 9, 12, 0, 0, 123456, tzinfo=timezone.utc)
+    identity = UUID('01234567-89ab-cdef-0123-456789abcdef')
+    class FixedDatetime(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return fixed
+    monkeypatch.setattr(external_review, 'datetime', FixedDatetime)
+    monkeypatch.setattr(external_review.uuid, 'uuid4', lambda: identity)
+    target = archive / (fixed.strftime('%Y%m%d%H%M%S%f') + '_' + identity.hex + '_' + result['gate_report'])
+    target.symlink_to(outside)
+    with pytest.raises(ExternalReviewError, match='archive target escapes'):
+        import_external_review(root,report,replace=True)
+    assert outside.read_bytes() == b'keep'
+    assert target.is_symlink()
+    assert gate.read_bytes() == original_gate
 
 def test_task_file_symlink_cannot_write_outside(tmp_path):
     from quality.external_review import prepare_quality_review_v2,TASK_DIR

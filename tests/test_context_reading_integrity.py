@@ -41,15 +41,44 @@ def test_replay_does_not_invalidate_synthetic_stage_approval(tmp_path):
     pack={'schema_version':'deck_context_pack.v1','run_id':'r','sources':[{'source_id':'s','summary':'Synthetic test source','origin_path':str(source),'sha256':hashlib.sha256(source.read_bytes()).hexdigest(),'reading':{'method':'direct_text','coverage':'full','read_ranges':[{'start_char':0,'end_char':21}],'unread_ranges':[],'failures':[]}}]}
     import_context_pack(root,pack)
     # Explicitly synthetic test approval, never imported into a real production run.
-    _seed_brief(root)
+    from workflow.actions import (read_revision_state, read_current_revision,
+                                  create_action_envelope, stage_action_result,
+                                  commit_action_result)
+    # Seed outside the live projection, then publish the answers and their
+    # dependencies together. DecisionLog deliberately reads the current snapshot.
+    seed = tmp_path / 'synthetic-seed'
+    seed.mkdir()
+    original = read_revision_state(root)
+    for relative, data in original.items():
+        target = seed / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(data)
+    _seed_brief(seed)
+    files = {p.relative_to(seed).as_posix(): p.read_bytes()
+             for p in seed.rglob('*') if p.is_file()
+             and original.get(p.relative_to(seed).as_posix()) != p.read_bytes()}
+    parent = read_current_revision(root)['revision_id']
+    envelope = create_action_envelope(action_id='synthetic-brief-seed',
+        task_id='synthetic-brief-seed', scope_pages=['workflow_questions'],
+        permission='runtime', input_fingerprint=parent)
+    stage_action_result(root, envelope, files)
+    commit_action_result(root, envelope, current_input_fingerprint=parent,
+        expected_revision=parent, targets={name: root / name for name in files})
+    snapshot = read_revision_state(root)
+    assert snapshot['workflow/decision_log.jsonl'] == files['workflow/decision_log.jsonl']
+    assert snapshot['context_manifest.json'] == original['context_manifest.json']
     actor={'id':'synthetic-approval-fixture','role':'approver'}
     ap=ApprovalRuntime(registry=REGISTRY); hid=_brief_handoff(root)
     record=ap.request(root,hid,run_id='r',actor=actor)
     ap.approve(root,record['approval_id'],actor=actor)
     assert ap.is_transition_cleared(root,'deck-brief',run_id='r')[0]
     current=(root/'build/current_revision.json').read_bytes()
+    approval_path = root / 'workflow/approvals' / (record['approval_id'] + '.json')
+    approved_bytes = approval_path.read_bytes()
     assert import_context_pack(root,pack,merge=True)['status']=='idempotent'
     assert (root/'build/current_revision.json').read_bytes()==current
+    assert approval_path.read_bytes() == approved_bytes
+    assert read_revision_state(root) == snapshot
     assert ap.is_transition_cleared(root,'deck-brief',run_id='r')[0]
 
 def test_real_cli_next_step_exposes_unread_ranges(tmp_path):
