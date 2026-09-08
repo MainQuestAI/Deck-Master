@@ -23,6 +23,7 @@ def test_restart_reuses_pending_action_and_exact_result_is_idempotent(tmp_path):
  state=research_status(root,'r1');assert state['status']=='executed';assert state['actions_used']==1
  context=json.loads((root/'context_manifest.json').read_text());assert len(context['research_meta'])==1
  assert context['sources'][0]['provenance']['fact_kind']=='externally_verified_candidate'
+ assert context['sources'][0]['reading']['coverage']=='partial'
  assert context['research_meta'][0]['affects']==['solution.inventory']
  with pytest.raises(ValueError):submit_research(root,{**result,'result_summary':'changed'})
 
