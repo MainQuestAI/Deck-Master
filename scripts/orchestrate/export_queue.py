@@ -394,6 +394,7 @@ def _native_export_manifest(run_dir: Path, revision: str) -> dict[str, Any] | No
     return {
         "run_id": run_dir.name, "title": run_dir.name,
         "_native": True, "_binding_block": reason,
+        "_artifact_binding": {"path": str(render.get("artifact_path") or ""), "sha256": actual_hash if not reason else ""},
         "_source_manifest": "page_packages/index.json",
         "pages": [{"page_id": p["page_id"], "order": p["order"],
                    "title": p.get("customer_visible", {}).get("title", p["page_id"]),
@@ -403,6 +404,35 @@ def _native_export_manifest(run_dir: Path, revision: str) -> dict[str, Any] | No
                    "source_pptx": render.get("artifact_path", ""), "source_slide_index": i + 1}
                   for i, p in enumerate(packages)],
     }
+
+
+
+def _native_client_clearance(run_dir: Path, manifest: dict[str, Any], readiness: dict, approval: dict) -> str:
+    """Historical clearance is valid only for the artifact being selected now."""
+    selected = manifest.get("_artifact_binding") or {}
+    final = (readiness.get("readiness") or {}).get("final_artifact") or {}
+    approved = (approval.get("approval") or {}).get("final_artifact") or {}
+    def same_artifact(binding: dict, hash_key: str) -> bool:
+        if not binding.get("path") or binding.get(hash_key) != selected.get("sha256"):
+            return False
+        try:
+            path = (run_dir / binding["path"]).resolve()
+            path.relative_to(run_dir)
+            return path == (run_dir / selected["path"]).resolve()
+        except (TypeError, ValueError):
+            return False
+    if not same_artifact(final, "hash") or not same_artifact(approved, "sha256"):
+        return "Final readiness and approval do not bind the selected native artifact."
+    from build.run_policy import enforce_origin_mode
+    from native_pptx.contracts import read_json
+    policy = resolve_required_gates(
+        run_dir, run_dir / selected["path"], builder_profile="standard",
+        output_profile="production_pptx", run_mode=enforce_origin_mode(run_dir, read_json(run_dir / "request.json")),
+        include_non_required_blockers=True,
+    )
+    if not policy.get("required_gate_satisfied"):
+        return "Missing current required quality gates for selected native artifact: " + str(policy.get("missing_required_gates") or [])
+    return ""
 
 
 def export_queue(run_dir: Path, decisions: set[str], *, queue_type: str = "client",
@@ -445,6 +475,9 @@ def _export_queue(
     blocked_pages: list[dict[str, Any]] = []
     final_readiness = final_readiness_clearance(run_dir)
     final_approval = final_approval_clearance(run_dir)
+    if (manifest.get("_native") and queue_type == "client" and not manifest.get("_binding_block")
+            and final_readiness.get("ready") and final_approval.get("ready")):
+        manifest["_binding_block"] = _native_client_clearance(run_dir, manifest, final_readiness, final_approval)
     final_readiness_blocks_client = (
         queue_type == "client"
         and enforce_final_readiness
