@@ -181,7 +181,7 @@ def _asset_data_uri(path: Path) -> str:
 
 def _image_svg(element: dict[str, Any], asset: Path | None, page_id: str) -> str:
     if asset is None or not asset.is_file():
-        raise SvgVisualError(f"registered image asset is unavailable for {element['element_id']}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
+        raise SvgVisualError(f"registered image asset is unavailable for {element['element_id']}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED", element_id=str(element.get("element_id") or ""))
     bbox = element["bbox"]
     if float(bbox["x"]) <= 0.01 and float(bbox["y"]) <= 0.01 and float(bbox["w"]) >= CANVAS_WIDTH - 0.01 and float(bbox["h"]) >= CANVAS_HEIGHT - 0.01:
         raise SvgVisualError("whole-page image wrapper is blocked", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
@@ -225,14 +225,14 @@ def compile_svg(scene: dict[str, Any], output: Path, *, assets: dict[str, Path] 
         area = float(bbox.get("w") or 0) * float(bbox.get("h") or 0)
         image_area += area
         if area / (CANVAS_WIDTH * CANVAS_HEIGHT) > image_policy["max_single_image_area"]:
-            raise SvgVisualError(f"image asset exceeds {image_policy['max_single_image_area']:.0%} of canvas: {element.get('element_id')}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
+            raise SvgVisualError(f"image asset exceeds {image_policy['max_single_image_area']:.0%} of canvas: {element.get('element_id')}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED", element_id=str(element.get("element_id") or ""))
         image_z = int(element.get("z_index") or 0)
         for text in p0_p1_text:
             text_bbox = text.get("bbox") or {}
             overlap_w = max(0.0, min(float(bbox.get("x") or 0) + float(bbox.get("w") or 0), float(text_bbox.get("x") or 0) + float(text_bbox.get("w") or 0)) - max(float(bbox.get("x") or 0), float(text_bbox.get("x") or 0)))
             overlap_h = max(0.0, min(float(bbox.get("y") or 0) + float(bbox.get("h") or 0), float(text_bbox.get("y") or 0) + float(text_bbox.get("h") or 0)) - max(float(bbox.get("y") or 0), float(text_bbox.get("y") or 0)))
             if image_z >= int(text.get("z_index") or 0) and overlap_w * overlap_h > 0:
-                raise SvgVisualError(f"image asset covers P0/P1 text: {element.get('element_id')} -> {text.get('element_id')}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
+                raise SvgVisualError(f"image asset covers P0/P1 text: {element.get('element_id')} -> {text.get('element_id')}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED", element_id=str(element.get("element_id") or ""))
     if image_area / (CANVAS_WIDTH * CANVAS_HEIGHT) > image_policy["max_total_image_area"]:
         raise SvgVisualError(f"registered image assets exceed {image_policy['max_total_image_area']:.0%} of canvas", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
     rendered_elements: list[tuple[str, str]] = []
@@ -601,27 +601,27 @@ def validate_approved_svg(
         element_id = str(node.get("id") or "")
         scene_element = scene_elements.get(element_id)
         if not scene_element or scene_element.get("kind") != "image":
-            raise SvgVisualError(f"SVG image is not registered in Scene: {element_id}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
+            raise SvgVisualError(f"SVG image is not registered in Scene: {element_id}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED", element_id=element_id)
         bbox = _svg_geometry_bbox(node)
         area = bbox["w"] * bbox["h"]
         image_area += area
         if area / canvas_area > image_policy["max_single_image_area"]:
-            raise SvgVisualError(f"image asset exceeds {image_policy['max_single_image_area']:.0%} of canvas: {element_id}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
+            raise SvgVisualError(f"image asset exceeds {image_policy['max_single_image_area']:.0%} of canvas: {element_id}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED", element_id=element_id)
         asset_id = str(scene_element.get("asset_ref") or "")
         asset_path = (assets or {}).get(asset_id)
         if asset_path is None or not asset_path.is_file() or sha256_file(asset_path) != str(scene_element.get("asset_sha256") or ""):
-            raise SvgVisualError(f"registered image asset hash mismatch: {asset_id or element_id}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
+            raise SvgVisualError(f"registered image asset hash mismatch: {asset_id or element_id}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED", element_id=element_id)
         href = str(node.get("href") or node.get("{http://www.w3.org/1999/xlink}href") or "")
         try:
             embedded = base64.b64decode(href.split(",", 1)[1], validate=True)
         except (IndexError, ValueError, binascii.Error) as exc:
-            raise SvgVisualError(f"embedded image payload is invalid: {element_id}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED") from exc
+            raise SvgVisualError(f"embedded image payload is invalid: {element_id}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED", element_id=element_id) from exc
         if hashlib.sha256(embedded).hexdigest() != sha256_file(asset_path) or str(node.get("data-pptx-asset-id") or "") != asset_id:
-            raise SvgVisualError(f"embedded image asset lineage mismatch: {element_id}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
+            raise SvgVisualError(f"embedded image asset lineage mismatch: {element_id}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED", element_id=element_id)
         for text in p0_p1_text:
             text_id = str(text.get("element_id") or "")
             if dom_order[element_id] > dom_order.get(text_id, -1) and _bbox_overlap(bbox, _svg_geometry_bbox(nodes[text_id])) > 0:
-                raise SvgVisualError(f"image asset covers P0/P1 text: {element_id} -> {text_id}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
+                raise SvgVisualError(f"image asset covers P0/P1 text: {element_id} -> {text_id}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED", element_id=element_id)
     if image_area / canvas_area > image_policy["max_total_image_area"]:
         raise SvgVisualError(f"registered image assets exceed {image_policy['max_total_image_area']:.0%} of canvas", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
     contrast = _text_contrast_metrics(path, scene)

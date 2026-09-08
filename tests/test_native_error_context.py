@@ -14,6 +14,8 @@ def sample(tmp_path_factory):
     return root,lock,scene,svg_path(root,'P001').read_text()
 
 @pytest.mark.parametrize('element,extra,code',[
+ ('bad.image','<image id="bad.image" data-pptx-bounds="1,1,10,10" x="1" y="1" width="10" height="10" href="https://example.invalid/a.png"/>','NDC_ASSET_UNREGISTERED'),
+ ('bad.embedded','<image id="bad.embedded" data-pptx-asset="registered" data-pptx-bounds="1,1,10,10" x="1" y="1" width="10" height="10" href="https://example.invalid/a.png"/>','NDC_ASSET_UNREGISTERED'),
  ('bad.script','<script id="bad.script">alert(1)</script>','NDC_SVG_UNSUPPORTED'),
  ('bad.use','<use id="bad.use" href="https://example.invalid/file.svg#x"/>','NDC_COMPILE_FAILED'),
  ('bad.filter','<defs><filter id="bad.filter"><feTurbulence/></filter></defs>','NDC_COMPILE_FAILED'),
@@ -32,7 +34,11 @@ def test_real_compile_keeps_typed_cause_fields(sample,element,extra,code):
     assert error.recovery
 
 
-def test_real_cli_reports_compile_context_and_valid_failed_result(sample,tmp_path):
+@pytest.mark.parametrize('element,extra,code',[
+ ('bad.cli.script','<script id="bad.cli.script">alert(1)</script>','NDC_SVG_UNSUPPORTED'),
+ ('bad.cli.image','<image id="bad.cli.image" data-pptx-bounds="1,1,10,10" x="1" y="1" width="10" height="10" href="https://example.invalid/a.png"/>','NDC_ASSET_UNREGISTERED'),
+])
+def test_real_cli_reports_compile_context_and_valid_failed_result(sample,tmp_path,element,extra,code):
     import json
     import shutil
     import subprocess
@@ -40,17 +46,17 @@ def test_real_cli_reports_compile_context_and_valid_failed_result(sample,tmp_pat
     source,lock,scene,original=sample
     root=tmp_path/source.name;shutil.copytree(source,root)
     svg=svg_path(root,'P001');pos=original.rfind('</')
-    svg.write_text(original[:pos]+'<script id="bad.cli.script">alert(1)</script>'+original[pos:])
+    svg.write_text(original[:pos]+extra+original[pos:])
     result=subprocess.run([sys.executable,str(Path(__file__).resolve().parents[1]/'scripts/deck_master.py'),'build','run','--profile','native','--run-dir',str(root)],capture_output=True,text=True)
     assert result.returncode==2,result.stdout+result.stderr
     assert not result.stderr,result.stderr
     payload=json.loads(result.stdout)
     assert payload['status']=='blocked'
-    assert payload['code']=='NDC_SVG_UNSUPPORTED'
-    assert payload['page_id']=='P001' and payload['element_id']=='bad.cli.script'
+    assert payload['code']==code
+    assert payload['page_id']=='P001' and payload['element_id']==element
     assert payload['input_sha256']==hashlib.sha256(svg.read_bytes()).hexdigest()
     schema=json.loads((Path(__file__).resolve().parents[1]/'docs/contracts/native-compile-result.v1.schema.json').read_text())
     failed=json.loads((root/'build/native_compile_result.json').read_text())
     jsonschema.Draft202012Validator(schema).validate(failed)
     assert failed['status']=='failed'
-    assert failed['errors'][0]['element_id']=='bad.cli.script'
+    assert failed['errors'][0]['element_id']==element

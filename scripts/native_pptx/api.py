@@ -181,6 +181,7 @@ def compile_svg_deck(request: NativeCompileRequest) -> NativeCompileResult:
             seen.add(id(cause))
             if isinstance(cause, SvgVisualError):
                 page_id = cause.page_id or page_id
+                element_id = cause.element_id or element_id
                 source_code = cause.code or source_code
             if isinstance(cause, (SvgNativeError, SvgPaintError)):
                 element_id = cause.element_id or element_id

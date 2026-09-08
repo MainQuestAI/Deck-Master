@@ -29,8 +29,9 @@ UNSUPPORTED_TAGS = {"mask", "clipPath", "pattern"}
 
 
 class SvgVisualError(ContractError):
-    def __init__(self, message: str, *, page_id: str = "", code: str = "HD_SVG_REVIEW_FAILED") -> None:
+    def __init__(self, message: str, *, page_id: str = "", code: str = "HD_SVG_REVIEW_FAILED", element_id: str = "") -> None:
         self.page_id = page_id
+        self.element_id = element_id
         self.code = code
         super().__init__(message)
 
@@ -167,17 +168,17 @@ def validate_svg(path: Path, *, page_id: str = "") -> dict[str, Any]:
         if tag != "image":
             continue
         if node.get("data-pptx-asset") != "registered":
-            raise SvgVisualError("SVG image is missing registered asset marker", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
+            raise SvgVisualError("SVG image is missing registered asset marker", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED", element_id=node_id)
         href = node.get("href") or node.get("{http://www.w3.org/1999/xlink}href") or ""
         if not href.startswith("data:image/"):
-            raise SvgVisualError("SVG image must be an embedded registered asset", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
+            raise SvgVisualError("SVG image must be an embedded registered asset", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED", element_id=node_id)
         try:
             x = float(node.get("x") or 0)
             y = float(node.get("y") or 0)
             width = float(node.get("width") or 0)
             height = float(node.get("height") or 0)
         except ValueError as exc:
-            raise SvgVisualError("SVG registered image geometry is invalid", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED") from exc
+            raise SvgVisualError("SVG registered image geometry is invalid", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED", element_id=node_id) from exc
         if x <= canvas_x + 0.01 and y <= canvas_y + 0.01 and width >= canvas_width - 0.01 and height >= canvas_height - 0.01:
-            raise SvgVisualError("whole-page image wrapper is blocked", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
+            raise SvgVisualError("whole-page image wrapper is blocked", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED", element_id=node_id)
     return {"valid": True, "tags": sorted(tags), "forbidden": [], "paint": paint_registry}
