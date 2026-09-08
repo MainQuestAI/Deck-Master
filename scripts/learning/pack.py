@@ -219,7 +219,7 @@ def _build_experience_cards(workspace_dir: Path) -> list[dict[str, Any]]:
     entries = _safe_read_jsonl(feedback_path)
     cards: list[dict[str, Any]] = []
     seen: set[tuple[str, str, str]] = set()
-    for entry in entries:
+    for entry in reversed(entries):
         if not isinstance(entry, dict):
             continue
         payload = entry.get("payload") if isinstance(entry.get("payload"), dict) else {}
@@ -227,13 +227,17 @@ def _build_experience_cards(workspace_dir: Path) -> list[dict[str, Any]]:
         run_id = str(entry.get("run_id") or payload.get("run_id") or "")
         revision = str(entry.get("reviewed_revision") or payload.get("reviewed_revision") or "").strip()
         key = (slide_id, run_id, revision)
-        if not slide_id or key in seen:
+        event = str(entry.get("event_type") or "")
+        if event not in {"preview_approved", "preview_rejected"} or not slide_id or not run_id or not revision or key in seen:
             continue
         seen.add(key)
-        event = str(entry.get("event_type") or "")
-        notes = str(entry.get("notes") or payload.get("notes") or "").strip()
-        if not notes:
+        # Raw customer comments remain in their original feedback record. Only
+        # explicitly authored, scoped abstractions enter a reusable Agent pack.
+        required = ("adopted_structure", "reusable_reason", "evidence_source_category",
+                    "applicable_scope", "not_applicable_scope", "approval_scope")
+        if any(not str(payload.get(field) or "").strip() for field in required):
             continue
+        notes = str(payload["reusable_reason"]).strip()
         cards.append(
             {
                 "card_id": f"exp_{len(cards) + 1:03d}",
@@ -245,6 +249,8 @@ def _build_experience_cards(workspace_dir: Path) -> list[dict[str, Any]]:
                 "applicable_scope": str(payload.get("applicable_scope") or ""),
                 "not_applicable_scope": str(payload.get("not_applicable_scope") or ""),
                 "source_run_ref": run_id,
+                "reviewed_revision": revision,
+                "source_feedback_ref": "assets/asset_feedback.jsonl",
                 "approval_scope": str(payload.get("approval_scope") or "workspace_feedback"),
                 "recorded_at": str(entry.get("timestamp") or ""),
             }

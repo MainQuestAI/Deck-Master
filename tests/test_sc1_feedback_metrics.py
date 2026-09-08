@@ -126,6 +126,10 @@ class AcceptanceRateTests(unittest.TestCase):
                             notes="ROI 数字没有来源，客户要求改为区间表述",
                             evidence_source_category="meeting_transcript",
                             applicable_scope="制造业续费方案",
+                            not_applicable_scope="已具备可追溯测量的收益结论",
+                            adopted_structure="区分测量结果与方案假设",
+                            reusable_reason="无测量收益应改为区间表述并注明假设",
+                            approval_scope="workspace_feedback",
                         )
                     )
                     + "\n"
