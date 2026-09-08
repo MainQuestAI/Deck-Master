@@ -495,7 +495,8 @@ def _build_judgments_if_possible(
     if not deck_brief or not claim_map:
         return None
     context_manifest = read_optional_json(run_dir, CONTEXT_MANIFEST_NAME) or {}
-    judgments = build_judgments(request, deck_brief, claim_map, context_manifest)
+    judgments = build_judgments(request, deck_brief, claim_map, context_manifest,
+                                narrative_plan=read_optional_json(run_dir, NARRATIVE_PLAN_NAME))
     write_artifact(run_dir, "consulting_judgments.json", judgments, action="judgments.created")
     return judgments
 
@@ -1147,16 +1148,21 @@ def command_next_step(args: argparse.Namespace) -> dict[str, Any]:
 
 def command_build_judgments(args: argparse.Namespace) -> dict[str, Any]:
     run_dir = resolve_run_dir(args)
-    request = load_request(run_dir)
-    deck_brief = read_json(run_dir / DECK_BRIEF_NAME)
-    claim_map = read_json(run_dir / CLAIM_MAP_NAME)
-    context_manifest = read_optional_json(run_dir, CONTEXT_MANIFEST_NAME) or {}
-    judgments = build_judgments(request, deck_brief, claim_map, context_manifest)
+    from workflow.actions import revision_read
+    with revision_read(run_dir):
+        request = load_request(run_dir)
+        deck_brief = read_json(run_dir / DECK_BRIEF_NAME)
+        claim_map = read_json(run_dir / CLAIM_MAP_NAME)
+        context_manifest = read_optional_json(run_dir, CONTEXT_MANIFEST_NAME) or {}
+        judgments = build_judgments(request, deck_brief, claim_map, context_manifest,
+                                    narrative_plan=read_optional_json(run_dir, NARRATIVE_PLAN_NAME))
     write_artifact(run_dir, "consulting_judgments.json", judgments, action="judgments.created")
     return {
         "run_id": request.get("run_id", run_dir.name),
         "run_dir": str(run_dir),
-        "status": "judgments_ready",
+        "status": judgments["status"],
+        "agent_tasks": judgments.get("agent_tasks", []),
+        "open_questions": judgments.get("open_questions", []),
         "judgments": len(judgments["judgments"]),
     }
 
