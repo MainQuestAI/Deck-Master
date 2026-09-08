@@ -30,6 +30,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Managed-release rollback probes use 3.12 even in the preview 3.11 job.
+      # A system interpreter with no project dependencies is not a ready runtime.
+      - name: Set up managed runtime Python
+        if: matrix.python-version == '3.11'
+        id: managed-python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install managed runtime dependencies
+        if: matrix.python-version == '3.11'
+        run: |
+          python -m pip install --quiet .
+          echo "DECK_MASTER_PYTHON=${{ steps.managed-python.outputs.python-path }}" >> "$GITHUB_ENV"
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
