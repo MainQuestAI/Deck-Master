@@ -85,6 +85,21 @@ def _scope_to_gate_filename(scope: str) -> str:
     return f"external_{scope.replace('-', '_')}_gate.json"
 
 
+def _review_task_output(root: Path, scope: str) -> Path:
+    folder = root / TASK_DIR
+    for parent in (folder, *folder.parents):
+        if parent == root:
+            break
+        if parent.is_symlink():
+            raise ExternalReviewError("Review task directory cannot be a symlink")
+    if not folder.resolve().is_relative_to(root.resolve()):
+        raise ExternalReviewError("Review task directory escapes run")
+    path = folder / _scope_to_task_filename(scope)
+    if path.is_symlink():
+        raise ExternalReviewError("Review task target cannot be a symlink")
+    return path
+
+
 def prepare_quality_review(
     run_dir: str | Path,
     scopes: list[str] | None = None,
@@ -116,6 +131,7 @@ def prepare_quality_review(
         )
 
     task_dir = root / TASK_DIR
+    _review_task_output(root, scopes[0])
     task_dir.mkdir(parents=True, exist_ok=True)
 
     created: list[str] = []
@@ -142,7 +158,7 @@ def prepare_quality_review(
             ],
             "output_schema": RESULT_SCHEMA_VERSION,
         }
-        write_json(task_dir / _scope_to_task_filename(scope), task)
+        write_json(_review_task_output(root, scope), task)
         created.append(scope)
 
     append_typed_event(
@@ -334,7 +350,7 @@ def prepare_quality_review_v2(
         errors = _validate_schema(task, "external-quality-review-task.v2.schema.json")
         if errors:
             raise ExternalReviewError("Invalid review task: " + "; ".join(errors))
-        write_json(root / TASK_DIR / _scope_to_task_filename(scope), task)
+        write_json(_review_task_output(root, scope), task)
     append_typed_event(root, "artifact_written", "quality_review_task.prepared_v2",
                        f"External quality review task prepared for {scope}.", run_id=task["run_id"],
                        refs=[f"{TASK_DIR}/{_scope_to_task_filename(scope)}"], payload={"review_action_id": task["review_action_id"]})
@@ -509,6 +525,8 @@ def import_external_review(
         archive_dir.mkdir(parents=True, exist_ok=True)
         stamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
         archived = archive_dir / f"{stamp}_{gate_name}"
+        if archived.is_symlink() or archived.parent.resolve() != archive_dir.resolve():
+            raise ExternalReviewError("Quality report archive target escapes managed output scope")
         shutil.copy2(gate_path, archived)
 
     # Build quality gate report.
