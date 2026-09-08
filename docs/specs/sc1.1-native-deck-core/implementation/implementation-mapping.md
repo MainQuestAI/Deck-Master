@@ -21,3 +21,9 @@
 当前验收工具为 `scripts/uat/sc1_1_engineering_matrix.py`，汇集 64 项新 case、88 项映射及原 SC1 新增的 3 项；全部默认 not_run。完整清单见 `engineering-gap-inventory.md`。10 页合成 UAT 原材料位于 `examples/sc1_1_uat/raw_materials.json`，不含逐页稿。
 
 路由、渲染、manifest 和指纹修复由本轮各工作包整合；最终产品证据应绑定同一候选 SHA。真实宿主能力需现场核验，不继承旧笔记的缺工具结论。七类差分、默认两页、完整10页、桌面编辑、隔离安装与用户批准目前均不因实现完成而自动通过。
+
+## Native 输入与就绪合同产物
+
+`build/native_contracts.py` 在新 `native_narrative` 编译前写 `build/native_compile_request.json`：绑定当前修订、实际版本、页序、SVG/Scene/Lock/资产与已提交宿主结果的哈希引用。`approval_ref` 是输入接纳的修订收据，不是最终文件的用户批准。宿主未被观察时，`build/task_readiness.json` 将该能力列为 unknown；compiler/render/fonts/SVG renderer 来自实际落盘探针。awaiting 不等于工具 missing。
+
+旧 HD 继续使用原输入协议与旧坐标映射，不伪标为新合同的 contain。显式迁移若仍沿用旧画布，转换到 contain 需要后续真实迁移验证，本次合同补齐不改变旧渲染行为。新合同产出测试是工程验证，不自动将验收矩阵标为 passed。

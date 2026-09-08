@@ -153,11 +153,14 @@ def prepare_native_run(run_dir: str | Path) -> dict[str, Any]:
     from build.native_content import ensure_native_content
 
     ensure_native_content(root, approved)
+    from build.native_contracts import write_task_readiness
+    task_readiness = write_task_readiness(root, probe, task_kind="direct_svg_build" if route["authoring_mode"] == "direct_svg" else "image_blueprint_build")
     response: dict[str, Any] = {
         "run_id": str(root.name),
         "engine_id": route["engine_id"],
         "authoring_mode": route["authoring_mode"],
         "runtime_probe": {"status": probe["status"], "probe_id": probe["probe_id"]},
+        "task_readiness": task_readiness,
         "pages": [str(pkg.get("page_id") or "") for pkg in approved],
         "status": "prepared",
     }
@@ -406,6 +409,15 @@ def _compile_revision(root: Path, *, run_mode: str, revision: str) -> dict[str, 
     hashes = {page: sha256_file(path) for page, path in svg_paths.items()}
     fingerprint = native_build_fingerprint(root)
     native_content = all(lock.get("enrichment", {}).get("framework") == "native_narrative" for lock in locks.values())
+    from build.native_contracts import write_compile_request, write_task_readiness
+    resolved_assets = _resolve_asset_paths(root, approved)
+    if native_content:
+        write_compile_request(root, revision=revision, fingerprint=fingerprint, packages=approved,
+                              scenes=scenes, locks=locks, svg_paths=svg_paths, assets=resolved_assets,
+                              native_canvas=True)
+    # Legacy HD retains its original input protocol and canvas mapping; never
+    # label its anisotropic mapping as the new native contain contract.
+    write_task_readiness(root, probe_native_runtime(), task_kind="compile_approved_svg")
     output_root = root / "build/native_outputs" / f"{revision}_{uuid.uuid4().hex[:12]}" if native_content else None
     base_result = {
         "schema_version": "deck_native_compile_result.v1",
@@ -426,7 +438,7 @@ def _compile_revision(root: Path, *, run_mode: str, revision: str) -> dict[str, 
                 root=root,
                 scenes=scenes,
                 locks=locks,
-                asset_paths_by_page=_resolve_asset_paths(root, approved),
+                asset_paths_by_page=resolved_assets,
                 validate_approved=validate_approved_svg,
                 expected_sha256=hashes,
                 svg_paths=svg_paths,
