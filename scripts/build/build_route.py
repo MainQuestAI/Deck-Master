@@ -1,22 +1,11 @@
-"""SC-1.1 ND-02: build route resolution and persistence.
-
-A fixed, request-bound route record (spec 02 §2.2): engine_id,
-authoring_mode, density, library_mode and origin_run_mode are decided ONCE
-per run and persisted at `build/route.json` (deck_build_route.v1). Later
-request changes (stale profile flags) never re-route an existing run. New
-runs default to the built-in native engine; legacy profiles map with
-explicit compatibility notes; only an explicit legacy-ppt-master route (or
-an old run's recorded traces) ever consults the external backend binding.
-"""
-
+"""Request-bound native routing, with explicit legacy continuation."""
 from __future__ import annotations
-
 import json
 from pathlib import Path
 from typing import Any
 
 ROUTE_SCHEMA_VERSION = "deck_build_route.v1"
-ROUTE_PATH = Path("build") / "route.json"
+ROUTE_PATH = Path("build/route.json")
 ENGINES = {"deck_native", "legacy_ppt_master"}
 AUTHORING_MODES = {"image_blueprint", "direct_svg"}
 DENSITIES = {"standard", "high"}
@@ -26,94 +15,95 @@ def _normalize(value: str) -> str:
     return str(value or "").strip().lower().replace("-", "_")
 
 
-def load_persisted_route(run_dir: str | Path) -> dict[str, Any]:
-    """Return the persisted route record, or {} when none exists."""
+def validate_route(route: dict) -> dict:
+    from jsonschema import Draft202012Validator
+    from native_pptx.contracts import SCHEMA_DIR
+    schema = SCHEMA_DIR / "build-route.v1.schema.json"
+    Draft202012Validator(json.loads(schema.read_text())).validate(route)
+    return route
 
-    path = Path(run_dir).expanduser().resolve() / ROUTE_PATH
-    if not path.exists():
-        return {}
-    try:
+
+def load_persisted_route(run_dir: str | Path) -> dict[str, Any]:
+    from workflow.actions import read_current_revision, read_revision_state
+    root = Path(run_dir).expanduser().resolve()
+    if read_current_revision(root).get("revision_id"):
+        raw = read_revision_state(root).get(ROUTE_PATH.as_posix())
+        if raw is None:
+            return {}
+        payload = json.loads(raw)
+    else:
+        path = root / ROUTE_PATH
+        if not path.exists():
+            return {}
         payload = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return {}
-    if not isinstance(payload, dict) or payload.get("schema_version") != ROUTE_SCHEMA_VERSION:
-        return {}
-    return payload
+    # Older PR31 route records are readable; never manufacture selection approval.
+    if payload.get("schema_version") != ROUTE_SCHEMA_VERSION:
+        raise ValueError("migration_required: unrecognized persisted build route")
+    if "selection_origin" not in payload:
+        payload = {**payload, "selection_origin": "existing_run", "selection_ref": "build/route.json"}
+        payload.pop("compatibility_note", None)
+        if payload.get("engine_id") == "legacy_ppt_master":
+            payload["authoring_mode"] = "legacy_external"
+    return validate_route(payload)
 
 
 def persist_route(run_dir: str | Path, route: dict[str, Any]) -> dict[str, Any]:
-    """Persist the fixed route for a run. First write wins: an existing
-    persisted route is returned unchanged (never silently re-routed)."""
-
+    from workflow.actions import _acquire_run_lock, _release_run_lock, _atomic_json
     root = Path(run_dir).expanduser().resolve()
-    existing = load_persisted_route(root)
-    if existing:
-        return existing
-    payload = dict(route)
-    payload["schema_version"] = ROUTE_SCHEMA_VERSION
-    path = root / ROUTE_PATH
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(".tmp")
-    tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    tmp.replace(path)
-    return payload
+    lock = _acquire_run_lock(root)
+    try:
+        existing = load_persisted_route(root)
+        if existing:
+            return existing
+        validate_route(route)
+        _atomic_json(root / ROUTE_PATH, route)
+        return route
+    finally:
+        _release_run_lock(lock)
 
 
 def _derive_route(request: dict[str, Any], run_dir: Path | None) -> dict[str, Any]:
-    profile = _normalize((request or {}).get("profile")).replace("_", "-")
-    route: dict[str, Any] = {
-        "schema_version": ROUTE_SCHEMA_VERSION,
-        "engine_id": "deck_native",
-        "authoring_mode": "image_blueprint",
-        "density": "standard",
-        "library_mode": str((request or {}).get("library_mode") or "auto"),
-        "origin_run_mode": str((request or {}).get("run_mode") or "production"),
-    }
-    authoring = _normalize((request or {}).get("authoring_mode"))
+    profile = _normalize(request.get("profile")).replace("_", "-")
+    authoring = _normalize(request.get("authoring_mode"))
+    explicit = bool(profile in {"native", "direct-svg", "legacy-ppt-master"} or authoring)
+    route = {"schema_version": ROUTE_SCHEMA_VERSION, "engine_id": "deck_native", "authoring_mode": "image_blueprint", "density": "high" if profile == "high-density" else "standard", "library_mode": str(request.get("library_mode") or "auto"), "origin_run_mode": str(request.get("origin_run_mode") or request.get("run_mode") or "production"), "selection_origin": "user_explicit" if explicit else "default_policy", "selection_ref": "request.json" if explicit else None}
+    if profile not in {"", "native", "standard", "high-density", "direct-svg", "legacy-ppt-master"}:
+        raise ValueError(f"unknown build profile: {profile!r}")
+    if authoring and authoring not in AUTHORING_MODES:
+        raise ValueError(f"unknown authoring_mode: {authoring!r}")
     if authoring:
-        if authoring not in AUTHORING_MODES:
-            raise ValueError(f"unknown authoring_mode: {authoring!r}")
         route["authoring_mode"] = authoring
-
-    if profile == "legacy-ppt-master":
-        route["engine_id"] = "legacy_ppt_master"
-        return route
-    if profile == "high-density":
-        route["density"] = "high"
-        return route
-    if profile == "standard":
-        route["compatibility_note"] = (
-            "profile 'standard' now maps to the built-in deck_native engine; "
-            "the external PPT Master default backend was retired by SC-1.1"
-        )
-        return route
-    if profile in {"", "native"}:
-        # Old-run continuation: no persisted route + HD traces -> the run
-        # keeps its density profile on the same native kernel.
-        if run_dir is not None and (run_dir / "high_density_build" / "status.json").exists():
-            route["density"] = "high"
-        return route
     if profile == "direct-svg":
+        if authoring and authoring != "direct_svg":
+            raise ValueError("authoring mode conflicts with direct-svg profile")
         route["authoring_mode"] = "direct_svg"
-        return route
-    raise ValueError(f"unknown build profile: {profile!r}")
+    if profile == "legacy-ppt-master":
+        if authoring:
+            raise ValueError("legacy profile does not accept native authoring mode")
+        route.update(engine_id="legacy_ppt_master", authoring_mode="legacy_external")
+    if run_dir and not explicit:
+        if (run_dir / "build/render_request.json").exists():
+            route.update(engine_id="legacy_ppt_master", authoring_mode="legacy_external", selection_origin="existing_run", selection_ref="build/render_request.json")
+        elif (run_dir / "high_density_build/status.json").exists():
+            route.update(density="high", selection_origin="existing_run", selection_ref="high_density_build/status.json")
+        elif (run_dir / "render_results/render_result.json").exists():
+            result = json.loads((run_dir / "render_results/render_result.json").read_text())
+            tool = str(result.get("tool") or result.get("builder_backend", {}).get("backend_name") or "")
+            if tool in {"ppt-master", "ppt_master", "legacy_ppt_master"}:
+                route.update(engine_id="legacy_ppt_master", authoring_mode="legacy_external", selection_origin="existing_run", selection_ref="render_results/render_result.json")
+            elif tool != "deck_native":
+                raise ValueError("migration_required: existing render engine cannot be identified")
+    return validate_route(route)
 
 
 def resolve_build_route(request: dict[str, Any], *, run_dir: str | Path | None = None) -> dict[str, Any]:
-    """Resolve the engine route for a run.
-
-    The persisted route (if any) wins — the route is fixed once per run.
-    Otherwise it is derived from the request (new runs default to
-    deck_native + image_blueprint) and may be persisted by the caller.
-    """
-
     root = Path(run_dir).expanduser().resolve() if run_dir is not None else None
     if root is not None:
         persisted = load_persisted_route(root)
         if persisted:
             return persisted
-    return _derive_route(request, root)
+    return _derive_route(request or {}, root)
 
 
 def is_native(route: dict[str, Any]) -> bool:
-    return str(route.get("engine_id") or "") == "deck_native"
+    return route.get("engine_id") == "deck_native"

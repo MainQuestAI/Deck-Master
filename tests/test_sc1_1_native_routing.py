@@ -75,7 +75,8 @@ class BuildRouteTests(unittest.TestCase):
     def test_standard_profile_maps_to_native_with_note(self) -> None:
         route = resolve_build_route({"profile": "standard"})
         self.assertEqual("deck_native", route["engine_id"])
-        self.assertTrue(route.get("compatibility_note"))
+        self.assertEqual("default_policy", route["selection_origin"])
+        self.assertNotIn("compatibility_note", route)
 
     def test_high_density_profile_maps_native_density_high(self) -> None:
         route = resolve_build_route({"profile": "high-density"})

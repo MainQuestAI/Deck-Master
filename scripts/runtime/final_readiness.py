@@ -247,6 +247,12 @@ def compute_final_readiness(
     render_pages = _render_page_count(render_result) or (_high_density_page_count(root) if high_density_completed else 0)
     blockers: list[dict[str, str]] = []
     warnings: list[str] = []
+    from build.build_route import load_persisted_route
+    if load_persisted_route(root).get("engine_id") == "deck_native":
+        from runtime.build import build_status
+        native_build = build_status(root)
+        if native_build["status"] != "completed":
+            _add_blocker(blockers, "final_native_build_not_current", "Native build, render and artifact evidence must match the current revision and inputs.")
     quality_gates = _quality_gate_summary(root, artifact)
     gate_policy = resolve_required_gates(
         root,

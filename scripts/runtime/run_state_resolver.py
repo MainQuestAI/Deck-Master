@@ -413,6 +413,11 @@ def _resolve_stage(root: Path, run_mode: str) -> tuple[str, list[dict[str, str]]
             "missing request.json",
         )
 
+    from build.native_state import native_continuation
+    native = native_continuation(root)
+    if native:
+        return native["stage"], [], native["reason"]
+
     if not (root / CONTEXT_MANIFEST_NAME).exists():
         return (
             "needs_context",
@@ -714,6 +719,10 @@ def resolve_run_state(
 
     readiness = _run_readiness_summary(root, request, setup_payload, workspace, review_status)
     next_command = _next_command(stage, root, run_id)
+    from build.native_state import native_continuation
+    native = native_continuation(root)
+    if native and stage == native["stage"]:
+        next_command = native["next_command"]
     first_reason = reason
     for item in blocked_actions:
         if item.get("reason"):

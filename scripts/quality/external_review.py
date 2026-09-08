@@ -450,15 +450,27 @@ def _page_packages_content_fingerprint(root: Path) -> str:
     """Hash over every page package FILE's content (not just the index) —
     editing a package without touching index.json still stales the review."""
 
+    from workflow.actions import revision_read, revision_input_path
     import hashlib
-
     digest = hashlib.sha256()
-    packages_dir = root / "page_packages"
-    if not packages_dir.is_dir():
-        return ""
-    for package_file in sorted(packages_dir.glob("*.json")):
-        digest.update(package_file.name.encode("utf-8"))
-        digest.update(hashlib.sha256(package_file.read_bytes()).digest())
+    with revision_read(root):
+        packages_dir = revision_input_path(root, root / "page_packages")
+        if not packages_dir.is_dir():
+            return ""
+        for package_file in sorted(packages_dir.glob("*.json")):
+            digest.update(package_file.name.encode("utf-8"))
+            digest.update(hashlib.sha256(package_file.read_bytes()).digest())
+        for name in ("narrative_plan.json", "solution_model.json", "solution_spec.json", "diagram_views.json", "diagram_spec.json", "source_manifest.json", "evidence_graph.json"):
+            path = revision_input_path(root, root / name)
+            if path.is_file():
+                digest.update(name.encode())
+                digest.update(hashlib.sha256(path.read_bytes()).digest())
+        sources = revision_input_path(root, root / "sources")
+        if sources.is_dir():
+            for path in sorted(sources.rglob("*")):
+                if path.is_file():
+                    digest.update(path.relative_to(sources).as_posix().encode())
+                    digest.update(hashlib.sha256(path.read_bytes()).digest())
     return digest.hexdigest()
 
 

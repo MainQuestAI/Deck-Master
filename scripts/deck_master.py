@@ -2277,13 +2277,36 @@ def command_build_prepare(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def command_build_migrate(args: argparse.Namespace) -> dict[str, Any]:
-    try:
-        from build.migrate import build_migration_plan
-    except ModuleNotFoundError:  # pragma: no cover - package-import path
-        from scripts.build.migrate import build_migration_plan
-    if not bool(getattr(args, "dry_run", False)):
-        raise ValueError("only --dry-run is supported in this iteration; apply/rollback are out of scope")
-    return build_migration_plan(resolve_run_dir(args))
+    from build.migrate import build_migration_plan, apply_migration, verify_migration, rollback_migration
+    root = resolve_run_dir(args)
+    if getattr(args, "apply", False):
+        if not args.plan:
+            raise ValueError("--apply requires --plan <migration-plan.json>")
+        return apply_migration(root, args.plan)
+    if getattr(args, "verify", False) or getattr(args, "rollback", False):
+        if not args.migration_id:
+            raise ValueError("--verify/--rollback requires --migration-id")
+        return (rollback_migration if args.rollback else verify_migration)(root, args.migration_id)
+    result = build_migration_plan(root)
+    if args.output:
+        write_json(Path(args.output), result)
+    return result
+
+
+def command_build_submit(args: argparse.Namespace) -> dict[str, Any]:
+    from build.native_engine import submit_approved_svg
+    from build.native_tasks import submit_blueprint
+    root = resolve_run_dir(args)
+    if args.blueprint:
+        if args.svg or args.scene or not args.observation:
+            raise ValueError("blueprint submission requires --observation and cannot include SVG/Scene")
+        return submit_blueprint(root, args.page_id, image_path=args.blueprint, action_id=args.action_id,
+                                produced_against=args.produced_against, observation=read_json(args.observation), expected_revision=args.expected_revision)
+    if not args.svg or not args.scene:
+        raise ValueError("SVG submission requires both --svg and --scene")
+    return submit_approved_svg(root, args.page_id, Path(args.svg).read_text(encoding="utf-8"),
+                               action_id=args.action_id, produced_against=args.produced_against,
+                               expected_revision=args.expected_revision, scene=read_json(args.scene))
 
 
 def command_build_run(args: argparse.Namespace) -> dict[str, Any]:
@@ -2311,7 +2334,18 @@ def command_build_retry(args: argparse.Namespace) -> dict[str, Any]:
     run_dir = resolve_run_dir(args)
     profile = _persist_build_options(run_dir, args)
     if profile != "high_density":
-        raise _HighDensityCliError("BUILD_PROFILE_UNSUPPORTED", "build retry currently requires --profile high-density")
+        from build.build_route import resolve_build_route
+        route = resolve_build_route(load_request(run_dir), run_dir=run_dir)
+        if route.get("engine_id") != "deck_native":
+            return run_build(run_dir)
+        page_id = str(getattr(args, "page_id", "") or "")
+        if page_id:
+            from build.native_engine import _approved_packages
+            if page_id not in {str(p["page_id"]) for p in _approved_packages(run_dir)}:
+                raise ValueError("retry page does not belong to this run")
+        # Runtime dispatch regenerates only failed/stale page tasks and keeps
+        # valid committed pages. Polling itself consumes no retry budget.
+        return run_build(run_dir)
     return _high_density_runtime()["retry"](
         run_dir,
         page_id=str(getattr(args, "page_id", "") or ""),
@@ -2381,19 +2415,31 @@ def _persist_build_options(
     persist: bool = True,
 ) -> str:
     request = load_request(run_dir)
+    from build.build_route import _derive_route, load_persisted_route, persist_route
     requested = getattr(args, "profile", None)
-    requested_internal = "high_density" if requested == "high-density" else ("standard" if requested == "standard" else "")
+    authoring = getattr(args, "authoring_mode", None)
     existing = str(request.get("builder_profile") or "").strip()
+    requested_internal = "high_density" if requested == "high-density" else ("standard" if requested else "")
     if requested_internal and existing and existing != requested_internal:
-        raise _HighDensityCliError(
-            "BUILDER_PROFILE_MISMATCH",
-            f"requested profile {requested_internal} conflicts with existing profile {existing}"
-        )
+        raise _HighDensityCliError("BUILDER_PROFILE_MISMATCH", f"requested profile {requested_internal} conflicts with existing profile {existing}")
+    proposed = {**request}
+    if requested:
+        proposed["profile"] = requested
+    if authoring:
+        proposed["authoring_mode"] = str(authoring).replace("-", "_")
+    fixed = load_persisted_route(run_dir)
+    if fixed and (requested or authoring):
+        desired = _derive_route(proposed, None)
+        if any(desired[k] != fixed[k] for k in ("engine_id", "authoring_mode", "density")):
+            raise ValueError("build route conflict: migrate explicitly instead of changing the fixed route")
     effective = requested_internal or existing or "standard"
     if effective not in {"standard", "high_density"}:
         raise _HighDensityCliError("BUILD_PROFILE_UNSUPPORTED", f"unsupported builder profile: {effective}")
-    if persist and requested_internal:
+    if persist and (requested or authoring):
+        request.update(proposed)
         request["builder_profile"] = effective
+        request.setdefault("origin_run_mode", request.get("run_mode", "production"))
+        persist_route(run_dir, fixed or _derive_route(request, run_dir))
     output_profile = getattr(args, "output_profile", None)
     if persist and output_profile:
         request["output_profile"] = str(output_profile)
@@ -2431,7 +2477,7 @@ def _persist_build_options(
         request["review_depth"] = effective_depth
     if persist and review_options_changed and effective_receipt:
         request["receipt_policy"] = effective_receipt
-    if persist and (requested_internal or output_profile or review_policy or review_depth or receipt_policy):
+    if persist and (requested_internal or authoring or output_profile or review_policy or review_depth or receipt_policy):
         write_json(run_dir / REQUEST_NAME, request)
     return effective
 
@@ -3613,40 +3659,63 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_build_prepare = build_sub.add_parser("prepare", help="Write build manifest from current preview manifest")
     add_run_args(p_build_prepare)
-    p_build_prepare.add_argument("--profile", choices=["standard", "high-density"], default=None)
+    p_build_prepare.add_argument("--profile", choices=["standard", "high-density", "native", "direct-svg", "legacy-ppt-master"], default=None)
     p_build_prepare.add_argument("--output-profile", choices=["production_pptx", "client_delivery"], default=None)
     p_build_prepare.add_argument("--review-policy", choices=["local_traceable", "external_signed", "local-traceable", "external-signed"], default=None)
     p_build_prepare.add_argument("--review-depth", choices=["producer_only", "independent_main", "producer-only", "independent-main"], default=None)
     p_build_prepare.add_argument("--receipt-policy", choices=["local_traceable", "external_signed", "local-traceable", "external-signed"], default=None)
+    p_build_prepare.add_argument("--authoring-mode", choices=["image_blueprint", "direct_svg", "image-blueprint", "direct-svg"], default=None)
     p_build_prepare.set_defaults(func=command_build_prepare)
 
-    p_build_migrate = build_sub.add_parser("migrate", help="Plan an old run's migration to the native engine (dry-run only)")
+    p_build_migrate = build_sub.add_parser("migrate", help="Plan, apply, verify or roll back an old run migration")
     add_run_args(p_build_migrate)
-    p_build_migrate.add_argument("--dry-run", action="store_true", help="produce the migration plan without mutating anything (required)")
+    migration_mode = p_build_migrate.add_mutually_exclusive_group()
+    migration_mode.add_argument("--dry-run", action="store_true")
+    migration_mode.add_argument("--apply", action="store_true")
+    migration_mode.add_argument("--verify", action="store_true")
+    migration_mode.add_argument("--rollback", action="store_true")
+    p_build_migrate.add_argument("--plan", default=None)
+    p_build_migrate.add_argument("--migration-id", default=None)
+    p_build_migrate.add_argument("--output", default=None)
     p_build_migrate.set_defaults(func=command_build_migrate)
+
+    p_build_submit = build_sub.add_parser("submit", help="Validate and commit a Runtime-issued host result")
+    add_run_args(p_build_submit)
+    p_build_submit.add_argument("--page-id", required=True)
+    p_build_submit.add_argument("--action-id", required=True)
+    p_build_submit.add_argument("--produced-against", required=True)
+    p_build_submit.add_argument("--expected-revision", default=None)
+    p_build_submit.add_argument("--svg", default=None)
+    p_build_submit.add_argument("--scene", default=None)
+    p_build_submit.add_argument("--blueprint", default=None)
+    p_build_submit.add_argument("--observation", default=None)
+    p_build_submit.set_defaults(func=command_build_submit)
 
     p_build_run = build_sub.add_parser("run", help="Build HTML/PDF/PNG/PPTX artifacts")
     add_run_args(p_build_run)
-    p_build_run.add_argument("--profile", choices=["standard", "high-density"], default=None)
+    p_build_run.add_argument("--profile", choices=["standard", "high-density", "native", "direct-svg", "legacy-ppt-master"], default=None)
     p_build_run.add_argument("--output-profile", choices=["production_pptx", "client_delivery"], default=None)
     p_build_run.add_argument("--review-policy", choices=["local_traceable", "external_signed", "local-traceable", "external-signed"], default=None)
     p_build_run.add_argument("--review-depth", choices=["producer_only", "independent_main", "producer-only", "independent-main"], default=None)
     p_build_run.add_argument("--receipt-policy", choices=["local_traceable", "external_signed", "local-traceable", "external-signed"], default=None)
+    p_build_run.add_argument("--authoring-mode", choices=["image_blueprint", "direct_svg", "image-blueprint", "direct-svg"], default=None)
     p_build_run.set_defaults(func=command_build_run)
 
     p_build_status = build_sub.add_parser("status", help="Inspect production build artifacts")
     add_run_args(p_build_status)
-    p_build_status.add_argument("--profile", choices=["standard", "high-density"], default=None)
+    p_build_status.add_argument("--profile", choices=["standard", "high-density", "native", "direct-svg", "legacy-ppt-master"], default=None)
     p_build_status.add_argument("--watch", action="store_true")
     p_build_status.add_argument("--watch-timeout", type=float, default=30.0)
+    p_build_status.add_argument("--authoring-mode", choices=["image_blueprint", "direct_svg", "image-blueprint", "direct-svg"], default=None)
     p_build_status.set_defaults(func=command_build_status)
 
     p_build_retry = build_sub.add_parser("retry", help="Retry one high-density page or a deck-scoped MBB stage")
     add_run_args(p_build_retry)
-    p_build_retry.add_argument("--profile", choices=["high-density"], required=True)
+    p_build_retry.add_argument("--profile", choices=["standard", "high-density", "native", "direct-svg", "legacy-ppt-master"], default=None)
     p_build_retry.add_argument("--page-id", required=False)
     p_build_retry.add_argument("--storyline-id", default="", help="Approve this MBB storyline when retrying the deck-scoped content_lock stage")
     p_build_retry.add_argument("--stage", choices=["content_lock", "blueprint", "page_scene", "svg", "visual_review", "pptx", "readback", "handback"], default=None)
+    p_build_retry.add_argument("--authoring-mode", choices=["image_blueprint", "direct_svg", "image-blueprint", "direct-svg"], default=None)
     p_build_retry.set_defaults(func=command_build_retry)
 
     p_build_select_style = build_sub.add_parser("select-style", help="Approve a high-density style lock")

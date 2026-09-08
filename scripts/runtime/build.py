@@ -963,6 +963,23 @@ def build_status(run_dir: str | Path) -> dict[str, Any]:
         status = "prepared" if manifest_path.exists() else "missing"
     if artifact_validation and not artifact_validation.get("valid"):
         status = "invalid"
+    if build_manifest.get("build_revision"):
+        from workflow.actions import read_current_revision
+        current_revision = read_current_revision(root).get("revision_id") or "initial"
+        if any(record.get("build_revision") != current_revision for record in (build_manifest, render_result, artifact_manifest)):
+            status = "stale"
+            artifact_validation = {**artifact_validation, "valid": False, "stale_revision": True}
+    if build_manifest.get("build_revision") and status == "completed":
+        from build.native_engine import native_build_fingerprint
+        try:
+            current_fingerprint = native_build_fingerprint(root)
+        except (ValueError, RuntimeError, OSError) as exc:
+            status = "invalid"
+            artifact_validation = {**artifact_validation, "valid": False, "input_error": str(exc)}
+        else:
+            if any(record.get("source_fingerprint") != current_fingerprint for record in (build_manifest, render_result, artifact_manifest)):
+                status = "stale"
+                artifact_validation = {**artifact_validation, "valid": False, "stale_inputs": True}
     request_pages = ((render_request.get("inputs") or {}).get("pages") or []) if isinstance(render_request.get("inputs"), dict) else []
     page_count = (
         render_result.get("page_count")
@@ -971,9 +988,17 @@ def build_status(run_dir: str | Path) -> dict[str, Any]:
         or build_manifest.get("page_count")
         or 0
     )
+    host_task_path = root / "build/host_imagegen_task.json"
+    host_task = read_json(host_task_path) if host_task_path.exists() else {}
+    if status in {"missing", "prepared"} and host_task:
+        from workflow.actions import action_applied
+        pending = [page for page in host_task.get("pages", []) if not action_applied(root, page["action_id"])]
+        if pending:
+            status = str(host_task.get("status") or "awaiting_agent_execution")
     warnings = render_result.get("warnings") or render_request.get("warnings") or build_manifest.get("warnings") or []
     return {
         "schema_version": "deck_build_status.v1",
+        "host_task": host_task,
         "run_dir": str(root),
         "status": status,
         "build_manifest": str(manifest_path) if manifest_path.exists() else "",

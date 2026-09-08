@@ -143,6 +143,21 @@ def resolve_next_step(
     dev_allow_unsetup: bool = False,
 ) -> dict[str, Any]:
     root = Path(run_dir).expanduser().resolve()
+    from build.native_state import native_continuation
+    native = native_continuation(root)
+    if native:
+        stage = native["stage"]
+        command = native["next_command"]
+        route = route_for_stage(stage, reason=native["reason"], next_command=command)
+        return {
+            "schema_version": SCHEMA_VERSION, "run_id": root.name,
+            "status": STAGE_STATUS_MAP.get(stage, stage), "runtime_stage": stage,
+            "next_command": command, "missing_artifacts": [], "blocking_issues": [],
+            "run_mode": read_json(root / REQUEST_NAME).get("run_mode", "production"),
+            "recommended_skill": route["recommended_skill"], "skill_stage": route["skill_stage"],
+            "skill_reason": native["reason"], "next_skill_command": command, "skill_route": route,
+            "host_task": native["host_task"],
+        }
     high_density_status_path = root / "high_density_build" / "status.json"
     if high_density_status_path.exists():
         try:

@@ -52,21 +52,8 @@ def _semantic_review_input_current(run_dir: Path, report: dict[str, Any]) -> boo
         # SC-1.1 review round 2: a v2 report without a dispatch-time content
         # fingerprint is not current for the native gate (only audit value).
         return False
-    import hashlib
-
-    if fingerprint:
-        digest = hashlib.sha256()
-        packages_dir = run_dir / "page_packages"
-        if not packages_dir.is_dir():
-            return False
-        for package_file in sorted(packages_dir.glob("*.json")):
-            digest.update(package_file.name.encode("utf-8"))
-            digest.update(hashlib.sha256(package_file.read_bytes()).digest())
-        return digest.hexdigest() == fingerprint
-    index = run_dir / "page_packages" / "index.json"
-    if not index.exists():
-        return False
-    return hashlib.sha256(index.read_bytes()).hexdigest() == sha
+    from quality.external_review import _page_packages_content_fingerprint
+    return fingerprint == _page_packages_content_fingerprint(run_dir)
 
 
 def _report_is_legacy_v1(report: dict[str, Any]) -> bool:
@@ -80,7 +67,7 @@ def _report_satisfies_gate(gate: str, report_gate: str) -> bool:
     if report_gate == gate:
         return True
     if gate == SEMANTIC_REVIEW_GATE:
-        return any(report_gate.startswith(prefix) for prefix in _SEMANTIC_REVIEW_ALLOWED_PREFIXES)
+        return report_gate in _SEMANTIC_REVIEW_ALLOWED_PREFIXES
     return False
 
 
