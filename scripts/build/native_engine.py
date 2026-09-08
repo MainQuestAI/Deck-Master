@@ -466,7 +466,11 @@ def _compile_revision(root: Path, *, run_mode: str, revision: str) -> dict[str, 
                               native_canvas=True)
     # Legacy HD retains its original input protocol and canvas mapping; never
     # label its anisotropic mapping as the new native contain contract.
-    write_task_readiness(root, probe_native_runtime(), task_kind="compile_approved_svg")
+    readiness = write_task_readiness(root, probe_native_runtime(), task_kind="compile_approved_svg")
+    if readiness["status"] != "ready":
+        unavailable = readiness["required_missing"] + readiness["required_unknown"]
+        raise NativeEngineError("Required native runtime capabilities unavailable: " + ", ".join(unavailable),
+                                code="NDC_RUNTIME_UNAVAILABLE", recovery=str(readiness["next_action"]))
     output_root = root / "build/native_outputs" / f"{revision}_{uuid.uuid4().hex[:12]}" if native_content else None
     base_result = {
         "schema_version": "deck_native_compile_result.v1",

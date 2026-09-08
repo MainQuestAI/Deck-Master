@@ -441,7 +441,9 @@ class SkillInstallationTest(unittest.TestCase):
         self.assertTrue(suite["full_suite_ready"])
         self.assertTrue(suite["target_readiness"]["codex"]["required_ready"])
         self.assertTrue(suite["target_readiness"]["claude-code"]["required_ready"])
-        self.assertEqual("ready", suite["task_readiness"]["full_deck_workflow"])
+        # Installed targets do not establish the native font/render capability.
+        native_ready = all(suite["task_readiness"][key] == "ready" for key in ("native_compile", "native_render", "native_fonts"))
+        self.assertEqual("ready" if native_ready else "blocked", suite["task_readiness"]["full_deck_workflow"])
 
     def test_suite_status_multi_target_missing_required_blocks_full_ready(self) -> None:
         codex_dir = Path(self._tmp) / "codex_skills"
@@ -471,7 +473,8 @@ class SkillInstallationTest(unittest.TestCase):
 
         self.assertTrue(result["full_suite_ready"])
         self.assertTrue(result["target_readiness"]["codex"]["required_ready"])
-        self.assertEqual("ready", result["task_readiness"]["full_deck_workflow"])
+        native_ready = all(result["task_readiness"][key] == "ready" for key in ("native_compile", "native_render", "native_fonts"))
+        self.assertEqual("ready" if native_ready else "blocked", result["task_readiness"]["full_deck_workflow"])
         self.assertEqual("ready", result["task_readiness"]["deck_builder_adapter"])
         # SC-1.1: the optional ppt-master compatibility adapter is not
         # installed by a required-only install — its task stays blocked
@@ -1208,9 +1211,9 @@ class SkillInstallationTest(unittest.TestCase):
            }):
             result = inspect_suite_status(targets=["codex"], agent_skill_dir=str(self.agent_dir))
 
-        # SC-1.1: the native engine is ready without any external binding;
-        # the env override stays diagnostic-only and never fakes readiness.
-        self.assertEqual("ready", result["status"])
+        # The external override cannot rescue missing native font/render evidence.
+        native_ready = all(result["task_readiness"][key] == "ready" for key in ("native_compile", "native_render", "native_fonts"))
+        self.assertEqual("ready" if native_ready else "degraded_ready", result["status"])
         # SC-1.1: ppt-master is an optional compatibility skill — it no longer
         # appears in blocked_required; the env flag stays diagnostic-only.
         self.assertNotIn("ppt-master", result["target_readiness"]["codex"]["blocked_required"])

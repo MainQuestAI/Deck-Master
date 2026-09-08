@@ -2455,7 +2455,8 @@ def inspect_suite_status(
     native_checks = native_probe.get("checks") or {}
     render_ready = native_engine_active and (native_checks.get("render_smoke") or {}).get("status") == "verified"
     fonts_ready = (native_checks.get("fonts") or {}).get("status") == "verified"
-    required_external_dependencies_ready = native_engine_active
+    native_workflow_ready = native_engine_active and render_ready and fonts_ready
+    required_external_dependencies_ready = native_workflow_ready
     # The suite reports the new default route. An optional legacy binding
     # cannot rescue a failed native compile/render/font probe.
     client_delivery_evidence = _client_delivery_evidence(
@@ -2468,7 +2469,7 @@ def inspect_suite_status(
         and client_delivery_evidence.get("dependency_snapshot_matches")
     )
     task_readiness = {
-        "full_deck_workflow": "ready" if full_suite_ready else ("blocked" if not deck_ready else "degraded_ready"),
+        "full_deck_workflow": "ready" if full_suite_ready and native_workflow_ready else ("blocked" if not deck_ready or not native_workflow_ready else "degraded_ready"),
         "setup": "ready" if ready("deck-setup") else "blocked",
         "upgrade": "ready" if ready("deck-upgrade") else "blocked",
         "diagnostics": "ready" if ready("deck-doctor") else "blocked",
@@ -2505,11 +2506,11 @@ def inspect_suite_status(
         "standalone_audit": "ready" if ready("deck-quality", "ppt-quality-gate") else "blocked",
         "learning": "ready" if by_name.get("deck-learn") == "ready" else "optional",
         "workflow_autopilot": "ready" if ready("deck-autopilot") else "blocked",
-        "delivery": "ready" if full_suite_ready else "blocked",
+        "delivery": "ready" if full_suite_ready and native_workflow_ready else "blocked",
         "client_delivery": "ready" if client_delivery_ready else "blocked",
     }
 
-    status = "ready" if full_suite_ready else "degraded_ready"
+    status = "ready" if full_suite_ready and native_workflow_ready else "degraded_ready"
     if not deck_ready or lib_blocked:
         status = "blocked"
 
@@ -2524,6 +2525,8 @@ def inspect_suite_status(
     elif lib_blocked:
         next_command = "deck-master library-status"
         next_agent_action = "Inspect PPT Library readiness and repair its reported blocker; installed skills are ready."
+    elif not native_workflow_ready:
+        next_agent_action = "Repair the reported native compiler, renderer, or Noto Sans SC font capability and rerun setup-status. Content workspace access remains available."
     elif not client_delivery_ready:
         next_command = "deck-master rc-gate --tier full"
         next_agent_action = "Installed skills are ready. Complete full-tier release evidence before client delivery."
@@ -2563,6 +2566,12 @@ def inspect_suite_status(
             "message": "内置编译已就绪，但真实渲染探针未通过；检查 soffice / pdftoppm 及渲染失败证据。",
             "repair_owner": "runtime",
             "next_command": "",
+        })
+    if not fonts_ready:
+        blocking_summary.append({
+            "code": "native_fonts_unverified", "blocking_type": "runtime",
+            "message": "中文字体探针未通过；安装可读取的 Noto Sans SC 字体，或修复 DECK_MASTER_NATIVE_FONTS_DIR 后重试。",
+            "repair_owner": "runtime", "next_command": "",
         })
     if not client_delivery_ready:
         missing = client_delivery_evidence.get("missing") if isinstance(client_delivery_evidence.get("missing"), list) else []

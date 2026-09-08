@@ -389,6 +389,7 @@ def setup_status(
         external_dependency_status = external_dependency_statuses()
     production_backend_ready = bool(suite_projection.get("production_backend_ready"))
     client_delivery_ready = bool(suite_projection.get("client_delivery_ready"))
+    production_ready = production_ready and (suite_projection.get("task_readiness") or {}).get("full_deck_workflow") == "ready"
 
     result = {
         "schema_version": SETUP_STATUS_SCHEMA_VERSION,
