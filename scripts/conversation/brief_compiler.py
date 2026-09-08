@@ -133,8 +133,8 @@ def _reconcile_conflicts(context_manifest, extraction, *, run_dir=None):
                 reasons.append("resolved constraint must be explicit in Brief constraints")
             if len(candidates) != 1 or not source_quote_matches(*candidates[0], run_dir=run_dir):
                 reasons.append("resolution decision_ref must identify a verified original source span")
-            elif resolution not in str(candidates[0][1].get("quote") or ""):
-                reasons.append("selected constraint must be present in the verified resolution quote")
+            elif resolution != str(candidates[0][1].get("quote") or ""):
+                reasons.append("selected constraint must equal the complete verified resolution quote; do not omit negation or conditions")
             if not reasons:
                 record.update(status="resolved", resolution=resolution, decision_ref=decision_ref)
         else:

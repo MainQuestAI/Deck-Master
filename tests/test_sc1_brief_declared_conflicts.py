@@ -24,7 +24,7 @@ def test_agent_omission_preserves_declared_conflict_and_blocks(tmp_path):
 
 def test_resolved_conflict_requires_real_source_and_selected_constraint(tmp_path):
     context,extract=inputs(tmp_path)
-    resolution='Use the local database.'
+    resolution=context['sources'][1]['evidence_candidates'][0]['quote']
     extract['source_conflicts']=[{**context['conflicts'][0],'status':'resolved','resolution':resolution,'decision_ref':'revision::E1'}]
     extract['constraints']=[resolution]
     brief=compile_deck_brief({'run_id':'test'},context,{},agent_extract=extract,run_dir=tmp_path)
@@ -59,3 +59,37 @@ def test_real_quote_cannot_support_opposite_selected_constraint(tmp_path):
     extract['source_conflicts']=[{**context['conflicts'][0],'status':'resolved','resolution':'Use a cloud database.','decision_ref':'revision::E1'}]
     brief=compile_deck_brief({'run_id':'test'},context,{},agent_extract=extract,run_dir=tmp_path)
     assert brief['status']=='blocked'
+
+@pytest.mark.parametrize(('text','resolution'),[
+    ('Do not use a cloud database. Use the local database.','use a cloud database.'),
+    ('禁止使用云数据库。应使用本地数据库。','使用云数据库。'),
+    ('Use the cloud database only after security approval.','Use the cloud database'),
+])
+def test_resolution_cannot_strip_negation_or_conditions_from_verified_quote(tmp_path,text,resolution):
+    context,extract=inputs(tmp_path)
+    (tmp_path/'revision.txt').write_text(text)
+    source=context['sources'][1]
+    source['file_sha256']=hashlib.sha256(text.encode()).hexdigest()
+    source['evidence_candidates'][0].update(quote=text,quote_sha256=hashlib.sha256(text.encode()).hexdigest())
+    extract['source_conflicts']=[{**context['conflicts'][0],'status':'resolved','resolution':resolution,'decision_ref':'revision::E1'}]
+    extract['constraints']=[resolution]
+    brief=compile_deck_brief({'run_id':'test'},context,{},agent_extract=extract,run_dir=tmp_path)
+    assert brief['status']=='blocked'
+    assert brief['source_conflicts'][0]['status']=='open'
+    with pytest.raises(ValueError,match='source conflict'):
+        build_claim_map(brief,context,run_dir=tmp_path)
+
+
+def test_full_negated_decision_quote_can_resolve_conflict(tmp_path):
+    context,extract=inputs(tmp_path)
+    text='Do not use a cloud database. Use the local database.'
+    (tmp_path/'revision.txt').write_text(text)
+    source=context['sources'][1]
+    source['file_sha256']=hashlib.sha256(text.encode()).hexdigest()
+    source['evidence_candidates'][0].update(quote=text,quote_sha256=hashlib.sha256(text.encode()).hexdigest())
+    extract['source_conflicts']=[{**context['conflicts'][0],'status':'resolved','resolution':text,'decision_ref':'revision::E1'}]
+    extract['constraints']=[text]
+    brief=compile_deck_brief({'run_id':'test'},context,{},agent_extract=extract,run_dir=tmp_path)
+    assert brief['status']=='brief_ready'
+    assert brief['constraints']==[text]
+    assert build_claim_map(brief,context,run_dir=tmp_path)['claims']
