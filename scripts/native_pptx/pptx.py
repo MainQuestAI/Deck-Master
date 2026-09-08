@@ -103,7 +103,7 @@ def _append_gradient(parent: Any, gradient: dict[str, Any], alpha: float) -> Non
     for stop in gradient.get("stops") or []:
         stop_node = OxmlElement("a:gs")
         stop_node.set("pos", str(max(0, min(100000, int(round(float(stop["offset"]) * 100000))))))
-        _append_color(stop_node, str(stop["color"]), alpha * float(stop.get("opacity") or 1))
+        _append_color(stop_node, str(stop["color"]), alpha * float(stop.get("opacity", 1)))
         stop_list.append(stop_node)
     gradient_fill.append(stop_list)
     if gradient.get("gradient_type") == "linear":
@@ -193,35 +193,40 @@ def _set_shape_fill(shape: Any, style: dict[str, Any], paint: dict[str, Any] | N
     paint = paint or {
         "fill": {"kind": "solid", "color": str(style.get("fill") or "#18212b")} if str(style.get("fill") or "").lower() not in {"", "none", "transparent"} else {"kind": "none"},
         "stroke": {"kind": "solid", "color": str(style.get("stroke") or "#d5dde5")} if str(style.get("stroke") or "").lower() not in {"", "none", "transparent"} else {"kind": "none"},
-        "opacity": float(style.get("opacity") or 1),
+        "opacity": float(style.get("opacity", 1)),
         "fill_opacity": 1.0,
         "stroke_opacity": 1.0,
         "effect": None,
     }
-    overall_opacity = float(paint.get("opacity") or 1)
+    overall_opacity = float(paint.get("opacity", 1))
     fill = paint.get("fill") or {"kind": "none"}
     if hasattr(shape, "fill"):
         if fill.get("kind") == "gradient":
             shape.fill.background()
             _remove_children(shape._element.spPr, {"solidFill", "gradFill", "noFill", "blipFill", "pattFill", "grpFill"})
-            _append_gradient(shape._element.spPr, fill, overall_opacity * float(paint.get("fill_opacity") or 1))
+            _append_gradient(shape._element.spPr, fill, overall_opacity * float(paint.get("fill_opacity", 1)))
         elif fill.get("kind") == "solid":
             shape.fill.solid()
-            shape.fill.fore_color.rgb = _rgb(fill.get("color"), "18212b")
-            shape.fill.transparency = max(0, min(100, int((1 - overall_opacity * float(paint.get("fill_opacity") or 1)) * 100)))
+            solid_fill = shape._element.spPr.find(qn("a:solidFill"))
+            for child in list(solid_fill):
+                solid_fill.remove(child)
+            _append_color(solid_fill, str(fill.get("color") or "#18212b"),
+                          overall_opacity * float(paint.get("fill_opacity", 1)))
         else:
             shape.fill.background()
     stroke = paint.get("stroke") or {"kind": "none"}
+    if float(style.get("stroke_width", 1)) == 0:
+        stroke = {"kind": "none"}
     if stroke.get("kind") == "gradient":
         line = shape.line._get_or_add_ln()
         _remove_children(line, {"solidFill", "gradFill", "noFill", "pattFill", "grpFill"})
-        _append_gradient(line, stroke, overall_opacity * float(paint.get("stroke_opacity") or 1))
-        shape.line.width = _canvas_points(float(style.get("stroke_width") or 1))
-        _apply_line_style(shape, style, overall_opacity * float(paint.get("stroke_opacity") or 1))
+        _append_gradient(line, stroke, overall_opacity * float(paint.get("stroke_opacity", 1)))
+        shape.line.width = _canvas_points(float(style.get("stroke_width", 1)))
+        _apply_line_style(shape, style, overall_opacity * float(paint.get("stroke_opacity", 1)))
     elif stroke.get("kind") == "solid":
         shape.line.color.rgb = _rgb(stroke.get("color"), "d5dde5")
-        shape.line.width = _canvas_points(float(style.get("stroke_width") or 1))
-        _apply_line_style(shape, {**style, "stroke": stroke.get("color")}, overall_opacity * float(paint.get("stroke_opacity") or 1))
+        shape.line.width = _canvas_points(float(style.get("stroke_width", 1)))
+        _apply_line_style(shape, {**style, "stroke": stroke.get("color")}, overall_opacity * float(paint.get("stroke_opacity", 1)))
     else:
         shape.line.fill.background()
     effect = paint.get("effect")
@@ -233,7 +238,7 @@ def _set_shape_fill(shape: Any, style: dict[str, Any], paint: dict[str, Any] | N
         trace_entry["paint"] = {"fill": _paint_trace(fill), "stroke": _paint_trace(stroke)}
         trace_entry["stroke_linecap"] = _line_cap_value(style)
         trace_entry["stroke_linejoin"] = _line_join_value(style)
-        trace_entry["stroke_opacity"] = overall_opacity * float(paint.get("stroke_opacity") or 1)
+        trace_entry["stroke_opacity"] = overall_opacity * float(paint.get("stroke_opacity", 1))
         trace_entry["fill_rule"] = str(style.get("fill-rule", style.get("fill_rule", "nonzero")) or "nonzero")
         if effect:
             trace_entry["effect"] = {"type": str(effect.get("kind") or ""), **{key: value for key, value in effect.items() if key not in {"kind"}}}
@@ -314,10 +319,10 @@ def _add_text(slide: Any, element: dict[str, Any], trace: list[dict[str, Any]]) 
             run_properties = run._r.get_or_add_rPr()
             _remove_children(run_properties, {"solidFill", "gradFill", "noFill", "blipFill", "pattFill", "grpFill"})
             if text_paint.get("kind") == "gradient":
-                _append_gradient(run_properties, text_paint, float(paint.get("opacity") or 1) * float(paint.get("fill_opacity") or 1))
+                _append_gradient(run_properties, text_paint, float(paint.get("opacity", 1)) * float(paint.get("fill_opacity", 1)))
             elif text_paint.get("kind") == "solid":
                 solid = OxmlElement("a:solidFill")
-                _append_color(solid, str(text_paint.get("color") or "#18212b"), float(paint.get("opacity") or 1) * float(paint.get("fill_opacity") or 1))
+                _append_color(solid, str(text_paint.get("color") or "#18212b"), float(paint.get("opacity", 1)) * float(paint.get("fill_opacity", 1)))
                 run_properties.append(solid)
             run_trace.append({"text": run.text, "font_family": font.name, "font_size_px": font_size, "font_weight": str(run_style.get("font_weight") or "400"), "font_style": str(run_style.get("font_style") or "normal"), "paint": _paint_trace(text_paint)})
     trace_entry = {"element_id": element["element_id"], "object_type": "text", "shape_name": shape.name, "bbox": bbox, "text": element.get("text", ""), "text_ref": element.get("text_ref", ""), "priority": element.get("priority", ""), "component_id": element.get("component_id", ""), "z_order": element.get("z_index", 0), "runs": run_trace}
@@ -325,7 +330,7 @@ def _add_text(slide: Any, element: dict[str, Any], trace: list[dict[str, Any]]) 
     text_paint = paint.get("fill") or {"kind": "solid", "color": str(style.get("fill") or "#18212b"), "fidelity": "native"}
     if paint.get("effect"):
         _remove_children(shape._element.spPr, {"effectLst"})
-        _append_effect(shape._element.spPr, paint["effect"], float(paint.get("opacity") or 1))
+        _append_effect(shape._element.spPr, paint["effect"], float(paint.get("opacity", 1)))
     trace_entry["paint"] = {"fill": _paint_trace(text_paint), "stroke": _paint_trace(paint.get("stroke") or {"kind": "none"})}
     if paint.get("effect"):
         trace_entry["effect"] = {"type": str(paint["effect"].get("kind") or ""), **{key: value for key, value in paint["effect"].items() if key not in {"kind"}}}

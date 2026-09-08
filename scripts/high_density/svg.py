@@ -135,7 +135,7 @@ def _text_svg(element: dict[str, Any], page_id: str) -> str:
         "font-family": str(style.get("font_family") or "Arial"),
         "font-size": f"{size:.2f}px",
         "font-weight": str(style.get("font_weight") or "400"),
-        "opacity": str(style.get("opacity") or 1),
+        "opacity": str(style.get("opacity", 1)),
         "data-pptx-component": str(element.get("component_id") or ""),
         "data-pptx-z": str(element.get("z_index") or 0),
         "data-pptx-bounds": f"{x:.2f},{float(bbox['y']):.2f},{float(bbox['w']):.2f},{float(bbox['h']):.2f}",
@@ -163,7 +163,7 @@ def _rect_svg(element: dict[str, Any]) -> str:
         "fill": _color(style.get("fill"), "none"),
         "stroke": _color(style.get("stroke"), "none"),
         "stroke-width": str(style.get("stroke_width") or 0),
-        "opacity": str(style.get("opacity") or 1),
+        "opacity": str(style.get("opacity", 1)),
         "data-pptx-component": str(element.get("component_id") or ""),
         "data-pptx-z": str(element.get("z_index") or 0),
         "data-pptx-bounds": f"{float(bbox['x']):.2f},{float(bbox['y']):.2f},{float(bbox['w']):.2f},{float(bbox['h']):.2f}",
@@ -258,7 +258,7 @@ def compile_svg(scene: dict[str, Any], output: Path, *, assets: dict[str, Path] 
                 "y2": f"{float(bbox['y']) + float(bbox['h']):.2f}",
                 "stroke": _color(style.get("stroke"), "#657485"),
                 "stroke-width": str(style.get("stroke_width") or 2),
-                "opacity": str(style.get("opacity") or 1),
+                "opacity": str(style.get("opacity", 1)),
                 "data-pptx-component": str(element.get("component_id") or ""),
                 "data-pptx-z": str(element.get("z_index") or 0),
                 "data-pptx-bounds": f"{float(bbox['x']):.2f},{float(bbox['y']):.2f},{float(bbox['w']):.2f},{float(bbox['h']):.2f}",
@@ -276,7 +276,7 @@ def compile_svg(scene: dict[str, Any], output: Path, *, assets: dict[str, Path] 
                 "fill": _color(style.get("fill"), "none"),
                 "stroke": _color(style.get("stroke"), "none"),
                 "stroke-width": str(style.get("stroke_width") or 0),
-                "opacity": str(style.get("opacity") or 1),
+                "opacity": str(style.get("opacity", 1)),
                 "data-pptx-component": str(element.get("component_id") or ""),
                 "data-pptx-z": str(element.get("z_index") or 0),
                 "data-pptx-bounds": f"{float(bbox['x']):.2f},{float(bbox['y']):.2f},{float(bbox['w']):.2f},{float(bbox['h']):.2f}",
@@ -292,7 +292,7 @@ def compile_svg(scene: dict[str, Any], output: Path, *, assets: dict[str, Path] 
             add_rendered(element,
                 f'<path id="{html.escape(str(element["element_id"]), quote=True)}" '
                 f'd="{html.escape(path_data, quote=True)}" fill="{fill}" stroke="{stroke}" stroke-width="{style.get("stroke_width") or 0}" '
-                f'opacity="{style.get("opacity") or 1}" fill-opacity="{style.get("fill_opacity", style.get("fill-opacity", 1))}" stroke-opacity="{style.get("stroke_opacity", style.get("stroke-opacity", 1))}" '
+                f'opacity="{style.get("opacity", 1)}" fill-opacity="{style.get("fill_opacity", style.get("fill-opacity", 1))}" stroke-opacity="{style.get("stroke_opacity", style.get("stroke-opacity", 1))}" '
                 f'stroke-linecap="{style.get("stroke-linecap", style.get("linecap", "butt"))}" stroke-linejoin="{style.get("stroke-linejoin", style.get("linejoin", "miter"))}" fill-rule="{style.get("fill-rule", style.get("fill_rule", "nonzero"))}" '
                 f'data-pptx-component="{html.escape(str(element.get("component_id") or ""), quote=True)}" data-pptx-z="{element.get("z_index") or 0}" data-pptx-bounds="{float(element["bbox"]["x"]):.2f},{float(element["bbox"]["y"]):.2f},{float(element["bbox"]["w"]):.2f},{float(element["bbox"]["h"]):.2f}"/>'
             )
@@ -305,7 +305,7 @@ def compile_svg(scene: dict[str, Any], output: Path, *, assets: dict[str, Path] 
             add_rendered(element,
                 f'<polygon id="{html.escape(str(element["element_id"]), quote=True)}" '
                 f'points="{point_text}" fill="{_color(style.get("fill"), "none")}" '
-                f'stroke="{_color(style.get("stroke"), "none")}" stroke-width="{style.get("stroke_width") or 0}" opacity="{style.get("opacity") or 1}" fill-rule="{style.get("fill-rule", "nonzero")}" '
+                f'stroke="{_color(style.get("stroke"), "none")}" stroke-width="{style.get("stroke_width") or 0}" opacity="{style.get("opacity", 1)}" fill-rule="{style.get("fill-rule", "nonzero")}" '
                 f'data-pptx-component="{html.escape(str(element.get("component_id") or ""), quote=True)}" data-pptx-z="{element.get("z_index") or 0}" data-pptx-bounds="{float(element["bbox"]["x"]):.2f},{float(element["bbox"]["y"]):.2f},{float(element["bbox"]["w"]):.2f},{float(element["bbox"]["h"]):.2f}"/>'
             )
         elif kind == "image":
@@ -397,8 +397,8 @@ def _validate_svg_text(node: Any, scene_element: dict[str, Any], page_id: str, a
         for ancestor in ancestors:
             if str(ancestor.get("display") or "").lower() == "none" or str(ancestor.get("visibility") or "").lower() in {"hidden", "collapse"}:
                 raise SvgVisualError(f"hidden SVG text ancestor is blocked: {element_id}", page_id=page_id, code="HD_SVG_CONTENT_DRIFT")
-            ancestor_opacity *= float(ancestor.get("opacity") or 1) * float(ancestor.get("fill-opacity") or 1)
-        opacity = ancestor_opacity * float(node.get("opacity") or 1) * float(node.get("fill-opacity") or 1)
+            ancestor_opacity *= float(ancestor.get("opacity", 1)) * float(ancestor.get("fill-opacity", 1))
+        opacity = ancestor_opacity * float(node.get("opacity", 1)) * float(node.get("fill-opacity", 1))
         font_size = float(str(node.get("font-size") or "").removesuffix("px"))
     except ValueError as exc:
         raise SvgVisualError(f"SVG text style is invalid: {element_id}", page_id=page_id, code="HD_SVG_TEXT_OVERFLOW") from exc
@@ -430,10 +430,10 @@ def _validate_svg_text(node: Any, scene_element: dict[str, Any], page_id: str, a
         try:
             tspan_opacity = (
                 ancestor_opacity
-                * float(node.get("opacity") or 1)
-                * float(node.get("fill-opacity") or 1)
-                * float(tspan.get("opacity") or 1)
-                * float(tspan.get("fill-opacity") or 1)
+                * float(node.get("opacity", 1))
+                * float(node.get("fill-opacity", 1))
+                * float(tspan.get("opacity", 1))
+                * float(tspan.get("fill-opacity", 1))
             )
         except ValueError as exc:
             raise SvgVisualError(f"SVG tspan paint is invalid: {element_id}", page_id=page_id, code="HD_SVG_CONTENT_DRIFT") from exc

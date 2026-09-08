@@ -144,9 +144,15 @@ def validate_svg(path: Path, *, page_id: str = "") -> dict[str, Any]:
                 parse_node_paint(node, paint_registry)
             except SvgPaintError as exc:
                 raise SvgVisualError(str(exc), page_id=page_id, code=exc.code) from exc
-        if node.get("opacity") is not None and str(node.get("opacity")) in {"0", "0.0"}:
-            message = "hidden SVG ancestor group is blocked" if tag == "g" else "hidden SVG element is blocked"
-            raise SvgVisualError(f"{message}: {node_id}", page_id=page_id)
+        if node.get("opacity") is not None and float(node.get("opacity")) == 0:
+            # Transparent decorative geometry is a supported SVG boundary.
+            # Hidden text (including alternate numeric spellings) cannot satisfy
+            # the content lock or editability gate.
+            hides_text = tag in {"text", "tspan"} or (tag == "g" and any(
+                child.tag.rsplit("}", 1)[-1] in {"text", "tspan"} for child in node.iter()))
+            if hides_text:
+                message = "hidden SVG ancestor group is blocked" if tag == "g" else "hidden SVG element is blocked"
+                raise SvgVisualError(f"{message}: {node_id}", page_id=page_id)
         if tag in visible_tags:
             if not node_id:
                 raise SvgVisualError(f"visible SVG element must have a stable element id: {tag}", page_id=page_id)
