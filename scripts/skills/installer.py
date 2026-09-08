@@ -16,6 +16,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from .run_compatibility import SUPPORTED_RUN_FORMATS
+
 try:  # Supports both `python scripts/deck_master.py` and package imports in tests.
     from runtime.builder_backend import (
         backend_render_runtime_ready,
@@ -1348,13 +1350,20 @@ def _global_launcher_text() -> str:
         "#!/usr/bin/env sh\n"
         'DECK_MASTER_HOME="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"\n'
         'exec "$DECK_MASTER_HOME/current/.venv/bin/python" '
-        '"$DECK_MASTER_HOME/current/scripts/deck_master.py" "$@"\n'
+        '"$DECK_MASTER_HOME/bin/run-compatibility.py" '
+        '"$DECK_MASTER_HOME/current" "$@"\n'
     )
 
 
 def _write_global_launcher() -> Path:
     launcher = INSTALL_LOG_DIR / "bin" / "deck-master"
     launcher.parent.mkdir(parents=True, exist_ok=True)
+    # Keep the compatibility guard outside current/previous so rollback cannot
+    # restore an old writer that silently rewrites newer Run formats.
+    guard = launcher.parent / "run-compatibility.py"
+    guard_tmp = guard.with_suffix(".tmp")
+    guard_tmp.write_bytes(Path(__file__).with_name("run_compatibility.py").read_bytes())
+    guard_tmp.replace(guard)
     tmp = launcher.with_suffix(".tmp")
     tmp.write_text(_global_launcher_text(), encoding="utf-8")
     tmp.chmod(0o755)
@@ -2026,6 +2035,7 @@ def build_release_tree(
     )
     release_manifest = {
         "schema_version": "deck_master_release_manifest.v1",
+        "supported_run_formats": list(SUPPORTED_RUN_FORMATS),
         "suite_name": SUITE_NAME,
         "suite_version": suite_version,
         "built_at": _utc_now(),

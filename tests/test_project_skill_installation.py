@@ -1,5 +1,7 @@
 """Project skill discovery and ownership using real links and release files."""
 from pathlib import Path
+import os
+import shlex
 import sys
 
 import pytest
@@ -78,16 +80,21 @@ def test_project_links_survive_central_activation_and_rollback(central, tmp_path
     runtime_version = installer._probe_python_version(runtime_python)
     if not installer._is_python_312(runtime_version):
         runtime_python, runtime_version = installer._resolve_runtime_python()
+        # Preserve a configured venv entrypoint; resolving its symlink loses
+        # its dependencies when this test runs under a 3.11 interpreter.
+        runtime_python = os.environ.get("DECK_MASTER_PYTHON") or runtime_python
     release = central / "current"
     python = release / installer.RELEASE_PYTHON_RELATIVE
     python.parent.mkdir(parents=True, exist_ok=True)
-    python.symlink_to(runtime_python)
+    python.write_text(f'#!/bin/sh\nexec {shlex.quote(runtime_python)} "$@"\n')
+    python.chmod(0o755)
     installer._record_release_runtime(release, runtime_version)
     stage = central / "staging/new"
     installer.build_release_tree(stage)
     python = stage / installer.RELEASE_PYTHON_RELATIVE
     python.parent.mkdir(parents=True, exist_ok=True)
-    python.symlink_to(runtime_python)
+    python.write_text(f'#!/bin/sh\nexec {shlex.quote(runtime_python)} "$@"\n')
+    python.chmod(0o755)
     # An auxiliary marker demonstrates that every link follows activation.
     (stage / "upgrade-marker").write_text("new")
     installer._record_release_runtime(stage, runtime_version)
