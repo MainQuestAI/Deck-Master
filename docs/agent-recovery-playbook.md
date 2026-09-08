@@ -162,7 +162,14 @@ PPTX always needs its own final artifact approval.
   --run-dir <run> --input <pack.json> --merge`. A full extraction must identify the
   actual source SHA, preserved extraction snapshot and complete coverage; never
   turn a partial read into full by changing a status label. Changed source bytes
-  require registration of that version. Exact result replay is idempotent.
+  require registration of that version. For an existing partial web research
+  excerpt, a complete capture of the same authorized URL may instead supply
+  `capture_supersedes_sha256` with the current excerpt hash, the exact `origin_ref`,
+  and `file_sha256` matching the actual complete `extraction.snapshot_ref` file.
+  Record the real tool and complete read-unit coverage. The Runtime preserves the
+  old excerpt and research provenance, without issuing a new research action.
+  This exception cannot replace local sources or use an excerpt as a full capture.
+  Exact result replay is idempotent; the changed source invalidates prior reviews.
 - `needs_agent_analysis` from `build-judgments`: author a source-referenced public
   problem and solution mechanism through the existing content handoff. Existing
   Narrative proposals remain unscored proposals. Preserve working assumptions,
