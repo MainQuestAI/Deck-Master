@@ -60,3 +60,81 @@ def test_native_unbound_external_pass_cannot_be_current(tmp_path):
     unbound={'gate':'external_semantic','status':'pass','blocks_delivery':False,'findings':[],'legacy_v1':True}
     assert report_currentity(tmp_path,unbound)['status']=='unbound'
     assert not policy(tmp_path,[unbound])['satisfied']
+
+@pytest.mark.parametrize('scope',['semantic','client-readiness'])
+def test_real_replace_cannot_remove_current_p1(tmp_path,scope):
+    from quality_review_v2_helpers import canonical_report
+    from quality.external_review import import_external_review, prepare_quality_review_v2, ExternalReviewError
+    seed=canonical_gate(tmp_path)
+    a=blocked(seed,scope.replace('-','_'))['canonical_review']
+    task=prepare_quality_review_v2(tmp_path,scope=scope,required_page_ids=['P001'])
+    a['review_action_id']=task['review_action_id']
+    imported=import_external_review(tmp_path,a,replace=True)
+    original=(tmp_path/'quality_reports'/imported['gate_report']).read_bytes()
+    b=copy.deepcopy(a);b['findings']=[];b['summary']['reported_status']='pass'
+    b['review_action_id']=prepare_quality_review_v2(tmp_path,scope=scope,required_page_ids=['P001'])['review_action_id']
+    with pytest.raises(ExternalReviewError,match='current blocking findings'):
+        import_external_review(tmp_path,b,replace=True)
+    assert (tmp_path/'quality_reports'/imported['gate_report']).read_bytes()==original
+    from quality.gate_policy import load_gate_reports
+    assert not policy(tmp_path,load_gate_reports(tmp_path))['satisfied']
+
+
+def test_real_replace_after_input_change_keeps_stale_history(tmp_path):
+    from quality_review_v2_helpers import canonical_report
+    from quality.external_review import import_external_review
+    from quality.gate_policy import load_gate_reports
+    a=blocked(canonical_gate(tmp_path),'semantic')['canonical_review']
+    import_external_review(tmp_path,a,replace=True)
+    (tmp_path/'page_packages/P001.json').write_text('{"page_id":"P001","title":"corrected"}')
+    b=canonical_report(tmp_path,['P001'])
+    import_external_review(tmp_path,b,replace=True)
+    assert list((tmp_path/'quality_reports/archive').glob('*.json'))
+    assert policy(tmp_path,load_gate_reports(tmp_path))['satisfied']
+
+
+def test_existing_archived_current_blocker_is_consumed_even_with_explicit_reports(tmp_path):
+    from quality.external_review import import_external_review
+    from quality.gate_policy import load_gate_reports
+    seed=canonical_gate(tmp_path)
+    imported=import_external_review(tmp_path,blocked(seed,'semantic')['canonical_review'],replace=True)
+    gate=tmp_path/'quality_reports'/imported['gate_report']
+    # Reproduce a run archived by the previous implementation; keep exact bytes.
+    archive=tmp_path/'quality_reports/archive/previous_external_semantic_gate.json'
+    archive.write_bytes(gate.read_bytes())
+    gate.unlink()
+    current=canonical_gate(tmp_path)
+    assert not policy(tmp_path,[current])['satisfied']
+    assert not policy(tmp_path,load_gate_reports(tmp_path))['satisfied']
+
+@pytest.mark.parametrize('bad_kind',['invalid_json','symlink'])
+def test_archive_cannot_silently_ignore_unreadable_evidence(tmp_path,bad_kind):
+    from quality.gate_policy import load_gate_reports
+    canonical_gate(tmp_path)
+    archive=tmp_path/'quality_reports/archive';archive.mkdir(exist_ok=True)
+    path=archive/'bad_gate.json'
+    if bad_kind=='invalid_json':
+        path.write_text('{')
+    else:
+        target=tmp_path/'outside.json';target.write_text('{}');path.symlink_to(target)
+    with pytest.raises(ValueError):
+        load_gate_reports(tmp_path)
+
+
+def test_archived_unbound_report_cannot_satisfy_native_gate(tmp_path):
+    from quality.gate_policy import load_gate_reports
+    canonical_gate(tmp_path)
+    for p in (tmp_path/'quality_reports').glob('*_gate.json'):p.unlink()
+    archive=tmp_path/'quality_reports/archive';archive.mkdir(exist_ok=True)
+    (archive/'legacy_gate.json').write_text(json.dumps({'gate':'external_semantic','status':'pass','findings':[]}))
+    assert not policy(tmp_path,load_gate_reports(tmp_path))['satisfied']
+
+
+def test_rapid_replace_preserves_every_archive(tmp_path):
+    from quality.external_review import import_external_review
+    a=blocked(canonical_gate(tmp_path),'semantic')['canonical_review']
+    archive=tmp_path/'quality_reports/archive'
+    for _ in range(3):import_external_review(tmp_path,a,replace=True)
+    files=list(archive.glob('*_gate.json'))
+    assert len(files)==3
+    assert sum(bool(json.loads(p.read_text())['findings']) for p in files)==2

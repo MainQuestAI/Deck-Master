@@ -82,9 +82,26 @@ def _report_satisfies_gate(gate: str, report_gate: str) -> bool:
     return False
 
 
+def _archived_external_blockers(root: Path) -> list[dict[str, Any]]:
+    """Retain applicable findings archived by earlier replacement behavior."""
+    archive = root / "quality_reports" / "archive"
+    if not archive.exists():
+        return []
+    if archive.is_symlink() or not archive.resolve().is_relative_to(root.resolve()):
+        raise ValueError("Quality review archive escapes run scope")
+    reports = []
+    for path in sorted(archive.glob("*_gate.json")):
+        if path.is_symlink() or not path.resolve().is_relative_to(archive.resolve()):
+            raise ValueError("Quality review archive entry escapes archive scope")
+        report = json.loads(path.read_text(encoding="utf-8"))
+        if isinstance(report, dict) and isinstance(report.get("canonical_review"), dict) and _report_blocks(report):
+            reports.append({**report, "_gate_name": normalize_gate_name(str(report.get("gate") or "")), "_report_file": "archive/" + path.name})
+    return reports
+
+
 def load_gate_reports(root: Path | str) -> list[dict[str, Any]]:
     run_dir = Path(root).expanduser().resolve()
-    reports: list[dict[str, Any]] = []
+    reports: list[dict[str, Any]] = _archived_external_blockers(run_dir)
     quality_dir = run_dir / "quality_reports"
     if not quality_dir.is_dir():
         return reports
@@ -188,7 +205,11 @@ def resolve_required_gates(
         output_profile=output_profile,
         run_mode=run_mode,
     )
-    available = reports if reports is not None else load_gate_reports(run_dir)
+    available = list(reports) if reports is not None else load_gate_reports(run_dir)
+    if reports is not None:
+        # Delivery passes its own top-level report list; it must also see history.
+        known = {json.dumps(r.get("canonical_review"), sort_keys=True) for r in available}
+        available = [r for r in _archived_external_blockers(run_dir) if json.dumps(r.get("canonical_review"), sort_keys=True) not in known] + available
     gate_status: dict[str, dict[str, Any]] = {
         gate: {
             "gate": gate,

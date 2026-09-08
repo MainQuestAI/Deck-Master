@@ -522,9 +522,17 @@ def import_external_review(
                 f"Report {gate_name} already exists. Use --replace to overwrite. "
                 "Old report preserved in archive."
             )
+        previous = json.loads(gate_path.read_text(encoding="utf-8"))
+        from quality.gate_freshness import report_currentity
+        if report_currentity(root, previous).get("current"):
+            previous_blockers = {f["finding_id"]: f["severity"] for f in previous.get("findings", []) if f.get("severity") in {"P0", "P1"}}
+            incoming = {f["finding_id"]: f["severity"] for f in result.get("findings", [])}
+            ranks = {"P0": 0, "P1": 1, "P2": 2}
+            if any(ranks.get(incoming.get(fid), 99) > ranks[severity] for fid, severity in previous_blockers.items()):
+                raise ExternalReviewError("Replacement cannot remove or downgrade current blocking findings; retain findings and use the explicit authorized override policy for eligible P1 findings")
         archive_dir.mkdir(parents=True, exist_ok=True)
-        stamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
-        archived = archive_dir / f"{stamp}_{gate_name}"
+        stamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S%f")
+        archived = archive_dir / f"{stamp}_{uuid.uuid4().hex}_{gate_name}"
         if archived.is_symlink() or archived.parent.resolve() != archive_dir.resolve():
             raise ExternalReviewError("Quality report archive target escapes managed output scope")
         shutil.copy2(gate_path, archived)
