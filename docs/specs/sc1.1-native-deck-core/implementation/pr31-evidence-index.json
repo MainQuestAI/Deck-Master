@@ -6,9 +6,9 @@
   "final_file_approval": "pending",
   "case_count": 147,
   "historical_predicate_counts": {
-    "verified_pass": 128,
-    "partial": 17,
-    "human_pending": 2
+    "verified_pass": 141,
+    "partial": 5,
+    "human_pending": 1
   },
   "notice": "Historical predicate evidence retains its original source SHA. This index is not final same-candidate acceptance. Local raw evidence is not distributed.",
   "cases": [
@@ -76,7 +76,8 @@
           "source_sha": null,
           "evidence_hashes": [
             "a3c6bfa94711e346deacc4dcc30d0e742d12ae1a7dc7e54c791e44db855c8be8"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         }
       ]
     },
@@ -174,7 +175,7 @@
       "case": "SC1.1:IND-03",
       "title": "默认入口一致",
       "tier": "L2",
-      "predicate_assessment": "partial",
+      "predicate_assessment": "verified_pass",
       "final_candidate_revalidation": "pending",
       "evidence": [
         {
@@ -182,6 +183,18 @@
           "source_sha": "593ef14f41122aeaca97b709df7b720f24b6e9dd",
           "evidence_hashes": [
             "9c9b6dc37cb20ec4c24069989b810833bf65592f702f07a5ddbd7a223f345001"
+          ]
+        },
+        {
+          "group": "installed7a8_SC1.1_IND-03",
+          "source_sha": "7a8f753ad9a897ae8cc0918631cd05684b158514",
+          "evidence_hashes": [
+            "0473be4725067c0e02d594b19a3a3ae9955524eb71f0cd58486bf4bd2fe66d64",
+            "1fa5c407ca7dc23ae3e7d2c53a20f63a98a12d331b35b1a95557a3d9275e880f",
+            "29d4a951bcb1c7dd5518748c7ea8cabde9f21e7ea7f9cb6418a24af399c97117",
+            "fe4293dc99d0d996678601b91258ef35c3f063e3f8698dc35ac05911d146a8f5",
+            "7030ef4cda52a6cccf0ad9e2f3685fed4cb77b4d5e3b3edb4853ab27b340fc83",
+            "288598bfa2c6a13f48b9f30a80618c4bd72cde18285ed19329f255dbc521fd51"
           ]
         }
       ]
@@ -201,7 +214,8 @@
             "a2152b9d7b2ec7c107c02963a0423de8a0069a9af29cff2ec491ec312486e760",
             "6681a872dee3c9d1f735e753cacaca08f5440406b9cf517d54fb77e269c8fefa",
             "0128e437a2c9f6e2b32d9ed2c97aaaa1ec52a244660fd4652fd19aa72682d28d"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         },
         {
           "group": "cold_quoted_cli",
@@ -267,7 +281,8 @@
         {
           "group": "native_mode_actual_matrix",
           "source_sha": null,
-          "evidence_hashes": []
+          "evidence_hashes": [],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         }
       ]
     },
@@ -315,7 +330,8 @@
         {
           "group": "native_mode_actual_matrix",
           "source_sha": null,
-          "evidence_hashes": []
+          "evidence_hashes": [],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         }
       ]
     },
@@ -352,7 +368,8 @@
             "a2152b9d7b2ec7c107c02963a0423de8a0069a9af29cff2ec491ec312486e760",
             "6681a872dee3c9d1f735e753cacaca08f5440406b9cf517d54fb77e269c8fefa",
             "0128e437a2c9f6e2b32d9ed2c97aaaa1ec52a244660fd4652fd19aa72682d28d"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         }
       ]
     },
@@ -494,7 +511,8 @@
             "a2152b9d7b2ec7c107c02963a0423de8a0069a9af29cff2ec491ec312486e760",
             "6681a872dee3c9d1f735e753cacaca08f5440406b9cf517d54fb77e269c8fefa",
             "0128e437a2c9f6e2b32d9ed2c97aaaa1ec52a244660fd4652fd19aa72682d28d"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         },
         {
           "group": "formal_views",
@@ -519,7 +537,8 @@
             "e62a72cdc9298b1737c51ad71e58a2fe240420e585e5508bf1c068009c45bbed",
             "4f4bec9b04ba6f9b03aefbd9c8c646df0f2aa27e5e27025201861e03afa39ccb",
             "fa20e300701f9d461150a89c8ad80d1025550e61a66f4738dafad434bb63343f"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         },
         {
           "group": "cold_quoted_cli",
@@ -559,7 +578,8 @@
             "aab41b5c41b12709ed382d594c3b08e5ba0029531195f7b9dd3f470fc8c2d75f",
             "c7898f642b8319b05d8b93e9f6b0b62e301aa9fcce5cbbc0506af51a0b83b9e3",
             "2514283e2d86dbb1dbb1e1e1f85d37f29cfedb85bf91be3db20333751f5b1b87"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         },
         {
           "group": "kernel_SC1.1_CMP-01",
@@ -599,7 +619,8 @@
             "aab41b5c41b12709ed382d594c3b08e5ba0029531195f7b9dd3f470fc8c2d75f",
             "c7898f642b8319b05d8b93e9f6b0b62e301aa9fcce5cbbc0506af51a0b83b9e3",
             "2514283e2d86dbb1dbb1e1e1f85d37f29cfedb85bf91be3db20333751f5b1b87"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         }
       ]
     },
@@ -625,7 +646,8 @@
             "aab41b5c41b12709ed382d594c3b08e5ba0029531195f7b9dd3f470fc8c2d75f",
             "c7898f642b8319b05d8b93e9f6b0b62e301aa9fcce5cbbc0506af51a0b83b9e3",
             "2514283e2d86dbb1dbb1e1e1f85d37f29cfedb85bf91be3db20333751f5b1b87"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         }
       ]
     },
@@ -651,7 +673,8 @@
             "aab41b5c41b12709ed382d594c3b08e5ba0029531195f7b9dd3f470fc8c2d75f",
             "c7898f642b8319b05d8b93e9f6b0b62e301aa9fcce5cbbc0506af51a0b83b9e3",
             "2514283e2d86dbb1dbb1e1e1f85d37f29cfedb85bf91be3db20333751f5b1b87"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         }
       ]
     },
@@ -736,12 +759,14 @@
             "aab41b5c41b12709ed382d594c3b08e5ba0029531195f7b9dd3f470fc8c2d75f",
             "c7898f642b8319b05d8b93e9f6b0b62e301aa9fcce5cbbc0506af51a0b83b9e3",
             "2514283e2d86dbb1dbb1e1e1f85d37f29cfedb85bf91be3db20333751f5b1b87"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         },
         {
           "group": "root_incremental_actual_validation",
           "source_sha": null,
-          "evidence_hashes": []
+          "evidence_hashes": [],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         }
       ]
     },
@@ -772,7 +797,8 @@
         {
           "group": "root_incremental_actual_validation",
           "source_sha": null,
-          "evidence_hashes": []
+          "evidence_hashes": [],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         }
       ]
     },
@@ -798,12 +824,14 @@
             "aab41b5c41b12709ed382d594c3b08e5ba0029531195f7b9dd3f470fc8c2d75f",
             "c7898f642b8319b05d8b93e9f6b0b62e301aa9fcce5cbbc0506af51a0b83b9e3",
             "2514283e2d86dbb1dbb1e1e1f85d37f29cfedb85bf91be3db20333751f5b1b87"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         },
         {
           "group": "root_incremental_actual_validation",
           "source_sha": null,
-          "evidence_hashes": []
+          "evidence_hashes": [],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         }
       ]
     },
@@ -834,7 +862,8 @@
         {
           "group": "root_incremental_actual_validation",
           "source_sha": null,
-          "evidence_hashes": []
+          "evidence_hashes": [],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         }
       ]
     },
@@ -853,7 +882,8 @@
             "a2152b9d7b2ec7c107c02963a0423de8a0069a9af29cff2ec491ec312486e760",
             "6681a872dee3c9d1f735e753cacaca08f5440406b9cf517d54fb77e269c8fefa",
             "0128e437a2c9f6e2b32d9ed2c97aaaa1ec52a244660fd4652fd19aa72682d28d"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         }
       ]
     },
@@ -872,7 +902,8 @@
             "a2152b9d7b2ec7c107c02963a0423de8a0069a9af29cff2ec491ec312486e760",
             "6681a872dee3c9d1f735e753cacaca08f5440406b9cf517d54fb77e269c8fefa",
             "0128e437a2c9f6e2b32d9ed2c97aaaa1ec52a244660fd4652fd19aa72682d28d"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         }
       ]
     },
@@ -891,7 +922,8 @@
             "a2152b9d7b2ec7c107c02963a0423de8a0069a9af29cff2ec491ec312486e760",
             "6681a872dee3c9d1f735e753cacaca08f5440406b9cf517d54fb77e269c8fefa",
             "0128e437a2c9f6e2b32d9ed2c97aaaa1ec52a244660fd4652fd19aa72682d28d"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         },
         {
           "group": "blueprint_boundary_SC1.1_HST-03",
@@ -908,7 +940,7 @@
       "case": "SC1.1:HST-04",
       "title": "图片与SVG实际比较",
       "tier": "L2",
-      "predicate_assessment": "partial",
+      "predicate_assessment": "verified_pass",
       "final_candidate_revalidation": "pending",
       "evidence": [
         {
@@ -919,6 +951,23 @@
             "efad56e85ecad42b8b9cb95150e658bd04ce0df66aa46e4f0467fe9256cf64a5",
             "2db0cefb7625dc523cebb41a23f6e96f7f6ec207471c14ce1fe07730bcdb28d0",
             "fffe37f808acf4b8f801c3913cd2bc785dd7503947dfc81fbb94246dfe9d5621"
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
+        },
+        {
+          "group": "host_scope_SC1.1_HST-04",
+          "source_sha": "848134bbee1596efef3008bcedadcffd536162fe",
+          "evidence_hashes": [
+            "a4a750f9aa886380006464746ab6e54e31da61d94be9880d41556065a6dae2ea",
+            "b056e85d9d86a4c92dffd3e03c3cd636b2f3f7c4acf8f502dea89b6b11c8e3d4",
+            "6fc15c55f8f3b11efb544046ee2d8606ef9f73330b897c217ce2c8732351a808",
+            "e8464dd90396f9966dafff11d2da61d1e5e14968168580a88a9fe2c3e1c6d428",
+            "5b7544ed8fa42fa7c46965973ae778f57bc5aef4296962eed2040610f891bf12",
+            "478c68685598a72255ca6771d98f635c813b4c8d15ecf5e6e934f6e3ed2bcf0d",
+            "b662ba1b541c043eefc78a9c45a57fe08dc747d7b53c44d1d3aeeaba8f6f38f8",
+            "29e04218bc708883f0a34209ce6168b2a50070ebe259b531ecdfd0555aedb2cf",
+            "4251c5689dc0b3af0dfe1f89b5dc291aa4f773ae45c67e4fd3bcba00b3d88fa4",
+            "07bdef525b9287f48aab946996227d3e641f1157864823f8ff37f2570571df34"
           ]
         }
       ]
@@ -927,7 +976,7 @@
       "case": "SC1.1:HST-05",
       "title": "代表页与批量继续",
       "tier": "L2",
-      "predicate_assessment": "partial",
+      "predicate_assessment": "verified_pass",
       "final_candidate_revalidation": "pending",
       "evidence": [
         {
@@ -945,6 +994,23 @@
             "a2152b9d7b2ec7c107c02963a0423de8a0069a9af29cff2ec491ec312486e760",
             "6681a872dee3c9d1f735e753cacaca08f5440406b9cf517d54fb77e269c8fefa",
             "0128e437a2c9f6e2b32d9ed2c97aaaa1ec52a244660fd4652fd19aa72682d28d"
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
+        },
+        {
+          "group": "host_scope_SC1.1_HST-05",
+          "source_sha": "848134bbee1596efef3008bcedadcffd536162fe",
+          "evidence_hashes": [
+            "55108cf65d723343a041493e072f8d1ac5a7b466c0e94a230651268541cce1b6",
+            "9c76c0cd788032774441a300e9da7ce6c323b0adaa3898451d24c3f1334da6f4",
+            "492c6229993caf7bb6eea19c3d89ee758621abad6a23dc2d466837d90ade2463",
+            "ea4c68d9e8889e00b0b616969d9c42e57b9380187b0cbd11e79fa93252d3b5cb",
+            "2091fbfc7bc4e8c09ffc806c80ae6755728ee0e71b6eab452bb6753da8146c31",
+            "d82047b6c567453e59fecda2f4955a446087194ce8c02fcbfd84f9683d3fb3cc",
+            "a44f6428cc15780b8e1e561323c4ef8fbee87c5aa17600a917469ebed9bca7af",
+            "f0b31bd13d1b41ec9bed8de268acec8f66757a7852179a1f1b6eaedbd0435ff6",
+            "44215f0d1a2d0122bff039279d72db35c26f5a7f4b650a04d6822b4bc92fe6af",
+            "ed2c1c9215c682d39e5b96a6d51fd7d7e3efd29f6414a1f5b3125781951b1248"
           ]
         }
       ]
@@ -974,7 +1040,8 @@
             "a2152b9d7b2ec7c107c02963a0423de8a0069a9af29cff2ec491ec312486e760",
             "6681a872dee3c9d1f735e753cacaca08f5440406b9cf517d54fb77e269c8fefa",
             "0128e437a2c9f6e2b32d9ed2c97aaaa1ec52a244660fd4652fd19aa72682d28d"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         }
       ]
     },
@@ -1054,7 +1121,8 @@
             "e62a72cdc9298b1737c51ad71e58a2fe240420e585e5508bf1c068009c45bbed",
             "4f4bec9b04ba6f9b03aefbd9c8c646df0f2aa27e5e27025201861e03afa39ccb",
             "fa20e300701f9d461150a89c8ad80d1025550e61a66f4738dafad434bb63343f"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         },
         {
           "group": "actual_numeric_repair",
@@ -1066,7 +1134,8 @@
             "920eb0966cbd7d2354336d1eea8722cd7a5a6b7c1d2c701917440b381d0cc5af",
             "423cc4bd7760a802f9a5e04f392142d7b56226d82cd5f69f503d5f0f9a4c22fc",
             "6f0a709b1ab0004389486a71f45190f39b9060ac2ef0ef500e1d7ca8f4bff27c"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         },
         {
           "group": "actual_review_dispatch_and_unrepaired_rejection",
@@ -1082,7 +1151,7 @@
       "case": "SC1.1:WF-03",
       "title": "Agent专业动作真接线",
       "tier": "L2",
-      "predicate_assessment": "partial",
+      "predicate_assessment": "verified_pass",
       "final_candidate_revalidation": "pending",
       "evidence": [
         {
@@ -1105,7 +1174,8 @@
             "e62a72cdc9298b1737c51ad71e58a2fe240420e585e5508bf1c068009c45bbed",
             "4f4bec9b04ba6f9b03aefbd9c8c646df0f2aa27e5e27025201861e03afa39ccb",
             "fa20e300701f9d461150a89c8ad80d1025550e61a66f4738dafad434bb63343f"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         },
         {
           "group": "actual_numeric_repair",
@@ -1117,6 +1187,14 @@
             "920eb0966cbd7d2354336d1eea8722cd7a5a6b7c1d2c701917440b381d0cc5af",
             "423cc4bd7760a802f9a5e04f392142d7b56226d82cd5f69f503d5f0f9a4c22fc",
             "6f0a709b1ab0004389486a71f45190f39b9060ac2ef0ef500e1d7ca8f4bff27c"
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
+        },
+        {
+          "group": "workflow_real_cli_completion",
+          "source_sha": "73399fc72e429733f20aa7b9f3653bbc38ea000c",
+          "evidence_hashes": [
+            "3b8af442c4f6e4b224e300bffdb6894161ae350c4c657e23a4166482bb7019d3"
           ]
         }
       ]
@@ -1162,7 +1240,8 @@
           "evidence_hashes": [
             "9fe17b0188270dee55574f487842bfdc85861c7dca5c4c925b90b1f6bf41702f",
             "f45f868d8aa06b206a57b1222c20fe0f56111900750d0ced0adc003a189e65c2"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         }
       ]
     },
@@ -1222,7 +1301,7 @@
       "case": "SC1.1:WF-08",
       "title": "精准失效与局部修改",
       "tier": "L2",
-      "predicate_assessment": "partial",
+      "predicate_assessment": "verified_pass",
       "final_candidate_revalidation": "pending",
       "evidence": [
         {
@@ -1252,7 +1331,8 @@
             "920eb0966cbd7d2354336d1eea8722cd7a5a6b7c1d2c701917440b381d0cc5af",
             "423cc4bd7760a802f9a5e04f392142d7b56226d82cd5f69f503d5f0f9a4c22fc",
             "6f0a709b1ab0004389486a71f45190f39b9060ac2ef0ef500e1d7ca8f4bff27c"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         },
         {
           "group": "formal_revision_updated",
@@ -1260,6 +1340,17 @@
           "evidence_hashes": [
             "c05a56fb14504f1801f8b8d6c7c655e51935fe1397f3aacf2fba6bbcfd843444",
             "3e7f026e92946052372974ee1d59fcc8e081b78f8057435064310383a930520f"
+          ]
+        },
+        {
+          "group": "color_and_cross_decisions",
+          "source_sha": "848134bbee1596efef3008bcedadcffd536162fe",
+          "evidence_hashes": [
+            "dc7aca7693b316a27328265ef5130350ac9ae41503a132a6ef74c35e131fe8fb",
+            "b78d813d7ccc6a4d4c18ed3d3a2ffb318a7c97c4df88c409b5200e4f45ee7630",
+            "a960a00bc00519470651ccbb3c95408a7272cb650118645e5d49feaaed451525",
+            "6a2725530960b2e5270766786d21dd29c045a9b3ddddb77647866be5d4a569a5",
+            "1322b6fdf93043eb32652ca55bb518c24ea98f8dd83e1cd656cce86eac542fe3"
           ]
         }
       ]
@@ -1398,7 +1489,8 @@
             "6232156b5175cf1189ca43994b32faeec55ce076a232ef63c0a998c9deb28e0b",
             "252b14c3d922040add51039a014721970b24d05be57dc3666b0b597dc464fc30",
             "9f8afe75e5a7dd2d651b3f47c54eec85a686bd442db6252bce31bacd2ef7cbb4"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         }
       ]
     },
@@ -1419,7 +1511,8 @@
             "6232156b5175cf1189ca43994b32faeec55ce076a232ef63c0a998c9deb28e0b",
             "252b14c3d922040add51039a014721970b24d05be57dc3666b0b597dc464fc30",
             "9f8afe75e5a7dd2d651b3f47c54eec85a686bd442db6252bce31bacd2ef7cbb4"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         }
       ]
     },
@@ -1440,7 +1533,8 @@
             "6232156b5175cf1189ca43994b32faeec55ce076a232ef63c0a998c9deb28e0b",
             "252b14c3d922040add51039a014721970b24d05be57dc3666b0b597dc464fc30",
             "9f8afe75e5a7dd2d651b3f47c54eec85a686bd442db6252bce31bacd2ef7cbb4"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         },
         {
           "group": "actual_numeric_repair",
@@ -1452,7 +1546,8 @@
             "920eb0966cbd7d2354336d1eea8722cd7a5a6b7c1d2c701917440b381d0cc5af",
             "423cc4bd7760a802f9a5e04f392142d7b56226d82cd5f69f503d5f0f9a4c22fc",
             "6f0a709b1ab0004389486a71f45190f39b9060ac2ef0ef500e1d7ca8f4bff27c"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         },
         {
           "group": "actual_review_dispatch_and_unrepaired_rejection",
@@ -1506,7 +1601,8 @@
           "evidence_hashes": [
             "2aa407f906320917ac335401f4f164d9d61f86bb0867889fdfb1d7c4864fba2c",
             "5e0b792432f2264aea34f5d994da8a7fba40cb76a560a9b61745f4cdd303a82d"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         },
         {
           "group": "migration_848_SC1.1_MIG-02",
@@ -1541,7 +1637,8 @@
         {
           "group": "root_incremental_actual_validation",
           "source_sha": null,
-          "evidence_hashes": []
+          "evidence_hashes": [],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         }
       ]
     },
@@ -1562,7 +1659,8 @@
         {
           "group": "root_incremental_actual_validation",
           "source_sha": null,
-          "evidence_hashes": []
+          "evidence_hashes": [],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         }
       ]
     },
@@ -1588,7 +1686,8 @@
           "evidence_hashes": [
             "0bb53c45fbc294678be98d35bd46276344417b89c1de606977c724b9df10ac48",
             "64381f16758283f733c9138f7a2ab7f4af294bbb6d284aab1814f174fcedaa34"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         }
       ]
     },
@@ -1614,7 +1713,8 @@
           "evidence_hashes": [
             "0bb53c45fbc294678be98d35bd46276344417b89c1de606977c724b9df10ac48",
             "64381f16758283f733c9138f7a2ab7f4af294bbb6d284aab1814f174fcedaa34"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         }
       ]
     },
@@ -1633,7 +1733,8 @@
             "a2152b9d7b2ec7c107c02963a0423de8a0069a9af29cff2ec491ec312486e760",
             "6681a872dee3c9d1f735e753cacaca08f5440406b9cf517d54fb77e269c8fefa",
             "0128e437a2c9f6e2b32d9ed2c97aaaa1ec52a244660fd4652fd19aa72682d28d"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         }
       ]
     },
@@ -1641,7 +1742,7 @@
       "case": "SC1.1:UAT-02",
       "title": "真实七类页面与编辑",
       "tier": "L2",
-      "predicate_assessment": "human_pending",
+      "predicate_assessment": "partial",
       "final_candidate_revalidation": "pending",
       "evidence": [
         {
@@ -1652,7 +1753,8 @@
             "efad56e85ecad42b8b9cb95150e658bd04ce0df66aa46e4f0467fe9256cf64a5",
             "2db0cefb7625dc523cebb41a23f6e96f7f6ec207471c14ce1fe07730bcdb28d0",
             "fffe37f808acf4b8f801c3913cd2bc785dd7503947dfc81fbb94246dfe9d5621"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         },
         {
           "group": "desktop_edit",
@@ -1661,9 +1763,18 @@
             "aab41b5c41b12709ed382d594c3b08e5ba0029531195f7b9dd3f470fc8c2d75f",
             "c7898f642b8319b05d8b93e9f6b0b62e301aa9fcce5cbbc0506af51a0b83b9e3",
             "2514283e2d86dbb1dbb1e1e1f85d37f29cfedb85bf91be3db20333751f5b1b87"
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
+        },
+        {
+          "group": "current_seven_fail",
+          "source_sha": "4e23e5724e3e9a054c03620bc2db72120a3a6012",
+          "evidence_hashes": [
+            "6c381d9ba0b1a1957fdd196c18e9f4fee624a2db2b22d1f31013f7cc58182df3"
           ]
         }
-      ]
+      ],
+      "current_blocker": "Independent current render score mean3.8857; P0062.6. Reconstruction budget extension and visual repair pending."
     },
     {
       "case": "SC1.1:UAT-03",
@@ -1680,7 +1791,8 @@
             "a2152b9d7b2ec7c107c02963a0423de8a0069a9af29cff2ec491ec312486e760",
             "6681a872dee3c9d1f735e753cacaca08f5440406b9cf517d54fb77e269c8fefa",
             "0128e437a2c9f6e2b32d9ed2c97aaaa1ec52a244660fd4652fd19aa72682d28d"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         },
         {
           "group": "formal_views",
@@ -1705,7 +1817,8 @@
             "e62a72cdc9298b1737c51ad71e58a2fe240420e585e5508bf1c068009c45bbed",
             "4f4bec9b04ba6f9b03aefbd9c8c646df0f2aa27e5e27025201861e03afa39ccb",
             "fa20e300701f9d461150a89c8ad80d1025550e61a66f4738dafad434bb63343f"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         }
       ]
     },
@@ -1743,7 +1856,8 @@
             "920eb0966cbd7d2354336d1eea8722cd7a5a6b7c1d2c701917440b381d0cc5af",
             "423cc4bd7760a802f9a5e04f392142d7b56226d82cd5f69f503d5f0f9a4c22fc",
             "6f0a709b1ab0004389486a71f45190f39b9060ac2ef0ef500e1d7ca8f4bff27c"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         },
         {
           "group": "formal_revision_updated",
@@ -1820,7 +1934,7 @@
       "case": "SC1:A-03",
       "title": "标准真实 build/render",
       "tier": "L2",
-      "predicate_assessment": "partial",
+      "predicate_assessment": "verified_pass",
       "final_candidate_revalidation": "pending",
       "evidence": [
         {
@@ -1831,6 +1945,23 @@
             "a2152b9d7b2ec7c107c02963a0423de8a0069a9af29cff2ec491ec312486e760",
             "6681a872dee3c9d1f735e753cacaca08f5440406b9cf517d54fb77e269c8fefa",
             "0128e437a2c9f6e2b32d9ed2c97aaaa1ec52a244660fd4652fd19aa72682d28d"
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
+        },
+        {
+          "group": "installed7a8_SC1_A-12",
+          "source_sha": "7a8f753ad9a897ae8cc0918631cd05684b158514",
+          "evidence_hashes": [
+            "b9df7216d61048d636eb95746f579ed529519e4e60285d3636cd0031475e3259",
+            "56b17b46086a6b652affb84a28709f28df112c4c566fbae6ae3270626265603c",
+            "08b9a216f05cf8fb7bcb33f64f69f9ed26e69e1308f6f9533633a65f2e5aa4cb",
+            "c28d1cc506a0724d6ed60476b55f45651d3a662839bad29faf34122f9408f45b",
+            "ab89639f95c37045f03c1d296f6db9b9a121c74c00ce1ba0aa360d67d753346a",
+            "755e623cff171df30984709e3739b11c8ad79dc665f68ac91482b19421111e21",
+            "1fa5c407ca7dc23ae3e7d2c53a20f63a98a12d331b35b1a95557a3d9275e880f",
+            "59e57f5d899abbf85d55e4f701f38dd9a42894026a537a4f594b5e938f85fe5f",
+            "4e521f758f7ade6b6161f4ad0ba3125cc0ed763dfb52a867793ec66887378aa2",
+            "1448c267b61b5f1f91e6103ac6c85e066a2dac60ea61b168ef4eef5448116b72"
           ]
         }
       ]
@@ -1839,7 +1970,7 @@
       "case": "SC1:A-04",
       "title": "不信任环境 ready 覆盖",
       "tier": "L2",
-      "predicate_assessment": "partial",
+      "predicate_assessment": "verified_pass",
       "final_candidate_revalidation": "pending",
       "evidence": [
         {
@@ -1847,6 +1978,15 @@
           "source_sha": "593ef14f41122aeaca97b709df7b720f24b6e9dd",
           "evidence_hashes": [
             "9c9b6dc37cb20ec4c24069989b810833bf65592f702f07a5ddbd7a223f345001"
+          ]
+        },
+        {
+          "group": "installed7a8_SC1_A-04",
+          "source_sha": "7a8f753ad9a897ae8cc0918631cd05684b158514",
+          "evidence_hashes": [
+            "cc921dfb66334a6d70758b93cf19ba1fe23868cfd9877a466b50f513e629d3dd",
+            "610f98c5f4b8949462edee48657c464132a97e2488d323ea8d349445968298ce",
+            "5f3fa8688e204387f9ce507d3e906e759371301a5fab92abf74fe6dd31e7c96a"
           ]
         }
       ]
@@ -1863,7 +2003,8 @@
           "source_sha": null,
           "evidence_hashes": [
             "9b0b70ff6c100b9b7bbe045fa2873b26faf6b89a27310956035ad95be962dd34"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         },
         {
           "group": "library_actual_updated",
@@ -1896,7 +2037,8 @@
         {
           "group": "root_incremental_actual_validation",
           "source_sha": null,
-          "evidence_hashes": []
+          "evidence_hashes": [],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         }
       ]
     },
@@ -1915,7 +2057,8 @@
             "a2152b9d7b2ec7c107c02963a0423de8a0069a9af29cff2ec491ec312486e760",
             "6681a872dee3c9d1f735e753cacaca08f5440406b9cf517d54fb77e269c8fefa",
             "0128e437a2c9f6e2b32d9ed2c97aaaa1ec52a244660fd4652fd19aa72682d28d"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         },
         {
           "group": "cold_quoted_cli",
@@ -1950,7 +2093,8 @@
         {
           "group": "native_mode_actual_matrix",
           "source_sha": null,
-          "evidence_hashes": []
+          "evidence_hashes": [],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         }
       ]
     },
@@ -1958,7 +2102,7 @@
       "case": "SC1:A-09",
       "title": "必需能力缺失不伪报",
       "tier": "L2",
-      "predicate_assessment": "partial",
+      "predicate_assessment": "verified_pass",
       "final_candidate_revalidation": "pending",
       "evidence": [
         {
@@ -1966,6 +2110,15 @@
           "source_sha": "593ef14f41122aeaca97b709df7b720f24b6e9dd",
           "evidence_hashes": [
             "9c9b6dc37cb20ec4c24069989b810833bf65592f702f07a5ddbd7a223f345001"
+          ]
+        },
+        {
+          "group": "installed7a8_SC1_A-09",
+          "source_sha": "7a8f753ad9a897ae8cc0918631cd05684b158514",
+          "evidence_hashes": [
+            "7489d4e4bebdeedf525aeffe90c7f3d06cdda1abd6802830cfec130187aa32d9",
+            "f0771a31dc3aec271c449a92ebf305afdba60062bc83832eb27437e4ef2334ad",
+            "5f3fa8688e204387f9ce507d3e906e759371301a5fab92abf74fe6dd31e7c96a"
           ]
         }
       ]
@@ -1982,7 +2135,8 @@
           "source_sha": null,
           "evidence_hashes": [
             "9b0b70ff6c100b9b7bbe045fa2873b26faf6b89a27310956035ad95be962dd34"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         },
         {
           "group": "library_sourcing_edges",
@@ -2026,7 +2180,7 @@
       "case": "SC1:A-12",
       "title": "兼容入口不依赖旧方法",
       "tier": "L2",
-      "predicate_assessment": "partial",
+      "predicate_assessment": "verified_pass",
       "final_candidate_revalidation": "pending",
       "evidence": [
         {
@@ -2035,6 +2189,22 @@
           "evidence_hashes": [
             "a358730d0a4832e3b20f6dfba090820798e90cfeb6d418c746ee085362e04c2b"
           ]
+        },
+        {
+          "group": "installed7a8_SC1_A-12",
+          "source_sha": "7a8f753ad9a897ae8cc0918631cd05684b158514",
+          "evidence_hashes": [
+            "b9df7216d61048d636eb95746f579ed529519e4e60285d3636cd0031475e3259",
+            "56b17b46086a6b652affb84a28709f28df112c4c566fbae6ae3270626265603c",
+            "08b9a216f05cf8fb7bcb33f64f69f9ed26e69e1308f6f9533633a65f2e5aa4cb",
+            "c28d1cc506a0724d6ed60476b55f45651d3a662839bad29faf34122f9408f45b",
+            "ab89639f95c37045f03c1d296f6db9b9a121c74c00ce1ba0aa360d67d753346a",
+            "755e623cff171df30984709e3739b11c8ad79dc665f68ac91482b19421111e21",
+            "1fa5c407ca7dc23ae3e7d2c53a20f63a98a12d331b35b1a95557a3d9275e880f",
+            "59e57f5d899abbf85d55e4f701f38dd9a42894026a537a4f594b5e938f85fe5f",
+            "4e521f758f7ade6b6161f4ad0ba3125cc0ed763dfb52a867793ec66887378aa2",
+            "1448c267b61b5f1f91e6103ac6c85e066a2dac60ea61b168ef4eef5448116b72"
+          ]
         }
       ]
     },
@@ -2042,7 +2212,7 @@
       "case": "SC1:A-13",
       "title": "分层就绪状态可读",
       "tier": "L1",
-      "predicate_assessment": "partial",
+      "predicate_assessment": "verified_pass",
       "final_candidate_revalidation": "pending",
       "evidence": [
         {
@@ -2050,7 +2220,8 @@
           "source_sha": null,
           "evidence_hashes": [
             "9b0b70ff6c100b9b7bbe045fa2873b26faf6b89a27310956035ad95be962dd34"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         },
         {
           "group": "compiler_boundaries",
@@ -2059,6 +2230,16 @@
             "2d0bfe886d3e041a2c7dc49bcc93852497e449bd38afa763cfdac1c55222e387",
             "befa32d10d49d2ec642b3564916d3275fe231eeb5d4a2850e488909b1425a913",
             "1c6ea67c22ecbdb6cee5b0c19fcecfa834805f54699b1fec629e10713de35409"
+          ]
+        },
+        {
+          "group": "installed7a8_SC1_A-13",
+          "source_sha": "7a8f753ad9a897ae8cc0918631cd05684b158514",
+          "evidence_hashes": [
+            "c7052e9a78026dd61637eead079290365aedc3d1704af120107ccb278990d9a4",
+            "d87cc8995231a87dfe960b31d2012f0a2a271073ae1cb303a85d1cdeafc0ce9f",
+            "7489d4e4bebdeedf525aeffe90c7f3d06cdda1abd6802830cfec130187aa32d9",
+            "288598bfa2c6a13f48b9f30a80618c4bd72cde18285ed19329f255dbc521fd51"
           ]
         }
       ]
@@ -2245,7 +2426,8 @@
             "8e544c5ed260f16815cc3beed65354057f5f4372654a49d8e4e61e500cf531a4",
             "00dece14358cdd6ffdcd30b3e6484e57a83c0bef22b437bedf912af0dd4bae53",
             "7cbbc0d36697a197f4c57f76a4b438485da6ec12d3f42bd604f6da401ec7456b"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         },
         {
           "group": "update_specific_nodes",
@@ -2303,7 +2485,8 @@
             "e62a72cdc9298b1737c51ad71e58a2fe240420e585e5508bf1c068009c45bbed",
             "4f4bec9b04ba6f9b03aefbd9c8c646df0f2aa27e5e27025201861e03afa39ccb",
             "fa20e300701f9d461150a89c8ad80d1025550e61a66f4738dafad434bb63343f"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         }
       ]
     },
@@ -2327,7 +2510,8 @@
             "e62a72cdc9298b1737c51ad71e58a2fe240420e585e5508bf1c068009c45bbed",
             "4f4bec9b04ba6f9b03aefbd9c8c646df0f2aa27e5e27025201861e03afa39ccb",
             "fa20e300701f9d461150a89c8ad80d1025550e61a66f4738dafad434bb63343f"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         }
       ]
     },
@@ -2351,7 +2535,8 @@
             "e62a72cdc9298b1737c51ad71e58a2fe240420e585e5508bf1c068009c45bbed",
             "4f4bec9b04ba6f9b03aefbd9c8c646df0f2aa27e5e27025201861e03afa39ccb",
             "fa20e300701f9d461150a89c8ad80d1025550e61a66f4738dafad434bb63343f"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         }
       ]
     },
@@ -2375,7 +2560,8 @@
             "e62a72cdc9298b1737c51ad71e58a2fe240420e585e5508bf1c068009c45bbed",
             "4f4bec9b04ba6f9b03aefbd9c8c646df0f2aa27e5e27025201861e03afa39ccb",
             "fa20e300701f9d461150a89c8ad80d1025550e61a66f4738dafad434bb63343f"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         }
       ]
     },
@@ -2399,12 +2585,14 @@
             "e62a72cdc9298b1737c51ad71e58a2fe240420e585e5508bf1c068009c45bbed",
             "4f4bec9b04ba6f9b03aefbd9c8c646df0f2aa27e5e27025201861e03afa39ccb",
             "fa20e300701f9d461150a89c8ad80d1025550e61a66f4738dafad434bb63343f"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         },
         {
           "group": "root_incremental_actual_validation",
           "source_sha": null,
-          "evidence_hashes": []
+          "evidence_hashes": [],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         }
       ]
     },
@@ -2428,12 +2616,14 @@
             "e62a72cdc9298b1737c51ad71e58a2fe240420e585e5508bf1c068009c45bbed",
             "4f4bec9b04ba6f9b03aefbd9c8c646df0f2aa27e5e27025201861e03afa39ccb",
             "fa20e300701f9d461150a89c8ad80d1025550e61a66f4738dafad434bb63343f"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         },
         {
           "group": "root_incremental_actual_validation",
           "source_sha": null,
-          "evidence_hashes": []
+          "evidence_hashes": [],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         }
       ]
     },
@@ -2499,7 +2689,8 @@
             "920eb0966cbd7d2354336d1eea8722cd7a5a6b7c1d2c701917440b381d0cc5af",
             "423cc4bd7760a802f9a5e04f392142d7b56226d82cd5f69f503d5f0f9a4c22fc",
             "6f0a709b1ab0004389486a71f45190f39b9060ac2ef0ef500e1d7ca8f4bff27c"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         },
         {
           "group": "l1_case_execution",
@@ -2642,7 +2833,8 @@
             "a2152b9d7b2ec7c107c02963a0423de8a0069a9af29cff2ec491ec312486e760",
             "6681a872dee3c9d1f735e753cacaca08f5440406b9cf517d54fb77e269c8fefa",
             "0128e437a2c9f6e2b32d9ed2c97aaaa1ec52a244660fd4652fd19aa72682d28d"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         },
         {
           "group": "formal_views",
@@ -2667,7 +2859,8 @@
             "e62a72cdc9298b1737c51ad71e58a2fe240420e585e5508bf1c068009c45bbed",
             "4f4bec9b04ba6f9b03aefbd9c8c646df0f2aa27e5e27025201861e03afa39ccb",
             "fa20e300701f9d461150a89c8ad80d1025550e61a66f4738dafad434bb63343f"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         },
         {
           "group": "independent_content_pairing",
@@ -2694,7 +2887,8 @@
             "a2152b9d7b2ec7c107c02963a0423de8a0069a9af29cff2ec491ec312486e760",
             "6681a872dee3c9d1f735e753cacaca08f5440406b9cf517d54fb77e269c8fefa",
             "0128e437a2c9f6e2b32d9ed2c97aaaa1ec52a244660fd4652fd19aa72682d28d"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         },
         {
           "group": "formal_views",
@@ -2719,7 +2913,8 @@
             "e62a72cdc9298b1737c51ad71e58a2fe240420e585e5508bf1c068009c45bbed",
             "4f4bec9b04ba6f9b03aefbd9c8c646df0f2aa27e5e27025201861e03afa39ccb",
             "fa20e300701f9d461150a89c8ad80d1025550e61a66f4738dafad434bb63343f"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         },
         {
           "group": "cold_quoted_cli",
@@ -2832,7 +3027,8 @@
             "a2152b9d7b2ec7c107c02963a0423de8a0069a9af29cff2ec491ec312486e760",
             "6681a872dee3c9d1f735e753cacaca08f5440406b9cf517d54fb77e269c8fefa",
             "0128e437a2c9f6e2b32d9ed2c97aaaa1ec52a244660fd4652fd19aa72682d28d"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         }
       ]
     },
@@ -2851,7 +3047,8 @@
             "a2152b9d7b2ec7c107c02963a0423de8a0069a9af29cff2ec491ec312486e760",
             "6681a872dee3c9d1f735e753cacaca08f5440406b9cf517d54fb77e269c8fefa",
             "0128e437a2c9f6e2b32d9ed2c97aaaa1ec52a244660fd4652fd19aa72682d28d"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         },
         {
           "group": "visual_auxiliary",
@@ -2861,7 +3058,8 @@
             "efad56e85ecad42b8b9cb95150e658bd04ce0df66aa46e4f0467fe9256cf64a5",
             "2db0cefb7625dc523cebb41a23f6e96f7f6ec207471c14ce1fe07730bcdb28d0",
             "fffe37f808acf4b8f801c3913cd2bc785dd7503947dfc81fbb94246dfe9d5621"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         },
         {
           "group": "cold_ten_review",
@@ -2872,7 +3070,8 @@
             "c17e711bc8396265480126cf5fdd10114b11e22b99ed20f8e4a8ca77713b6984",
             "c69119a3ad792f43b1b95ae6185d3865c34bb8b0f1b9b7cd8f91681010eba19c",
             "e5faba6e110fe88d001d57cf272a2b8e4125aa222c5a4e49d61fb3290a476d6d"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         },
         {
           "group": "cold_quoted_cli",
@@ -2905,7 +3104,8 @@
             "a2152b9d7b2ec7c107c02963a0423de8a0069a9af29cff2ec491ec312486e760",
             "6681a872dee3c9d1f735e753cacaca08f5440406b9cf517d54fb77e269c8fefa",
             "0128e437a2c9f6e2b32d9ed2c97aaaa1ec52a244660fd4652fd19aa72682d28d"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         },
         {
           "group": "dual_authoring_actual",
@@ -2923,7 +3123,7 @@
       "case": "SC1:P-04",
       "title": "高密度保护不降级",
       "tier": "L2",
-      "predicate_assessment": "partial",
+      "predicate_assessment": "verified_pass",
       "final_candidate_revalidation": "pending",
       "evidence": [
         {
@@ -2934,6 +3134,17 @@
             "a2152b9d7b2ec7c107c02963a0423de8a0069a9af29cff2ec491ec312486e760",
             "6681a872dee3c9d1f735e753cacaca08f5440406b9cf517d54fb77e269c8fefa",
             "0128e437a2c9f6e2b32d9ed2c97aaaa1ec52a244660fd4652fd19aa72682d28d"
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
+        },
+        {
+          "group": "legacy_gate_SC1_P-04",
+          "source_sha": "c036d7a3960a7f47437a647a0ca2c0fc32b4dab6",
+          "evidence_hashes": [
+            "f2689e06a303ca58aee90452349d2ff53d9533b8d89c23167cf9d09299c5d9d2",
+            "d82f6c57d3c5d5089af2ead3eed08b72b7786ad2d5bb62a0a8511bf02fee2e39",
+            "c89c30bfb5daf93457dee1e1a1ee1d54a20c169b6608a5b8598d36a19831d77f",
+            "a7208b802635493d596b16407842e1f26d971adf937f3fb56bff41ec284b6be6"
           ]
         }
       ]
@@ -2952,7 +3163,8 @@
             "aab41b5c41b12709ed382d594c3b08e5ba0029531195f7b9dd3f470fc8c2d75f",
             "c7898f642b8319b05d8b93e9f6b0b62e301aa9fcce5cbbc0506af51a0b83b9e3",
             "2514283e2d86dbb1dbb1e1e1f85d37f29cfedb85bf91be3db20333751f5b1b87"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         },
         {
           "group": "parity",
@@ -2989,7 +3201,8 @@
             "6232156b5175cf1189ca43994b32faeec55ce076a232ef63c0a998c9deb28e0b",
             "252b14c3d922040add51039a014721970b24d05be57dc3666b0b597dc464fc30",
             "9f8afe75e5a7dd2d651b3f47c54eec85a686bd442db6252bce31bacd2ef7cbb4"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         }
       ]
     },
@@ -3080,7 +3293,7 @@
       "case": "SC1:D-05",
       "title": "模型改变的影响集",
       "tier": "L2",
-      "predicate_assessment": "partial",
+      "predicate_assessment": "verified_pass",
       "final_candidate_revalidation": "pending",
       "evidence": [
         {
@@ -3110,7 +3323,8 @@
             "920eb0966cbd7d2354336d1eea8722cd7a5a6b7c1d2c701917440b381d0cc5af",
             "423cc4bd7760a802f9a5e04f392142d7b56226d82cd5f69f503d5f0f9a4c22fc",
             "6f0a709b1ab0004389486a71f45190f39b9060ac2ef0ef500e1d7ca8f4bff27c"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         },
         {
           "group": "formal_revision_updated",
@@ -3118,6 +3332,15 @@
           "evidence_hashes": [
             "c05a56fb14504f1801f8b8d6c7c655e51935fe1397f3aacf2fba6bbcfd843444",
             "3e7f026e92946052372974ee1d59fcc8e081b78f8057435064310383a930520f"
+          ]
+        },
+        {
+          "group": "cross_component_precise",
+          "source_sha": "73b4ece14715df5d984bc548479c261c11be1ea9",
+          "evidence_hashes": [
+            "7016d11d6f6a9a248afdeeeca3030245b5e32d41c8ad73a7000e10ff699a9f3d",
+            "3e7f026e92946052372974ee1d59fcc8e081b78f8057435064310383a930520f",
+            "0be9cc51dbc097d91e7e8bcb534dd6a4eae8c803c884c9b8dedfdc9570089be3"
           ]
         }
       ]
@@ -3337,7 +3560,8 @@
           "evidence_hashes": [
             "9fe17b0188270dee55574f487842bfdc85861c7dca5c4c925b90b1f6bf41702f",
             "f45f868d8aa06b206a57b1222c20fe0f56111900750d0ced0adc003a189e65c2"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         }
       ]
     },
@@ -3439,7 +3663,8 @@
         {
           "group": "root_incremental_actual_validation",
           "source_sha": null,
-          "evidence_hashes": []
+          "evidence_hashes": [],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         }
       ]
     },
@@ -3540,7 +3765,8 @@
             "6232156b5175cf1189ca43994b32faeec55ce076a232ef63c0a998c9deb28e0b",
             "252b14c3d922040add51039a014721970b24d05be57dc3666b0b597dc464fc30",
             "9f8afe75e5a7dd2d651b3f47c54eec85a686bd442db6252bce31bacd2ef7cbb4"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         },
         {
           "group": "actual_numeric_repair",
@@ -3552,7 +3778,8 @@
             "920eb0966cbd7d2354336d1eea8722cd7a5a6b7c1d2c701917440b381d0cc5af",
             "423cc4bd7760a802f9a5e04f392142d7b56226d82cd5f69f503d5f0f9a4c22fc",
             "6f0a709b1ab0004389486a71f45190f39b9060ac2ef0ef500e1d7ca8f4bff27c"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         },
         {
           "group": "actual_targeted_repair_history",
@@ -3568,7 +3795,7 @@
       "case": "SC1:Q-09",
       "title": "正式必需门一致",
       "tier": "L1",
-      "predicate_assessment": "partial",
+      "predicate_assessment": "verified_pass",
       "final_candidate_revalidation": "pending",
       "evidence": [
         {
@@ -3578,6 +3805,18 @@
             "d67c7526b2d2e44cc1a5ab3c10f05fa04b34102ba9970427e46d9cadfec076b9",
             "0485acddf508d17eee751296e201c99d53f2fea59c0ca9efd4f3c0f029c13969",
             "ff012b2f6e496eae32ea6059c3402dcd1b46ca15e7224d1d0aea59165383d738"
+          ]
+        },
+        {
+          "group": "legacy_gate_SC1_Q-09",
+          "source_sha": "c036d7a3960a7f47437a647a0ca2c0fc32b4dab6",
+          "evidence_hashes": [
+            "f2689e06a303ca58aee90452349d2ff53d9533b8d89c23167cf9d09299c5d9d2",
+            "d82f6c57d3c5d5089af2ead3eed08b72b7786ad2d5bb62a0a8511bf02fee2e39",
+            "aa3cdb36ffafa476aa0a3aa7ae4d0ac3805adef1efd6a877d7606d91fcf6e41e",
+            "bdde9c03adc494739d2db698b4440f3cfb262c24c0769dfa6e64dcb240ffe9cd",
+            "af2f6cac084c956568bce86ed5bbffafa219f1c341a3c1dd852284bfc86cbc1b",
+            "f4c77b58e2280613a49ba18da1c4a02d440e862c49a6c8fe5daaf277333ff99d"
           ]
         }
       ]
@@ -3671,7 +3910,8 @@
             "920eb0966cbd7d2354336d1eea8722cd7a5a6b7c1d2c701917440b381d0cc5af",
             "423cc4bd7760a802f9a5e04f392142d7b56226d82cd5f69f503d5f0f9a4c22fc",
             "6f0a709b1ab0004389486a71f45190f39b9060ac2ef0ef500e1d7ca8f4bff27c"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         },
         {
           "group": "l1_case_execution",
@@ -3786,7 +4026,8 @@
           "evidence_hashes": [
             "0bb53c45fbc294678be98d35bd46276344417b89c1de606977c724b9df10ac48",
             "64381f16758283f733c9138f7a2ab7f4af294bbb6d284aab1814f174fcedaa34"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         }
       ]
     },
@@ -3812,7 +4053,8 @@
           "evidence_hashes": [
             "0bb53c45fbc294678be98d35bd46276344417b89c1de606977c724b9df10ac48",
             "64381f16758283f733c9138f7a2ab7f4af294bbb6d284aab1814f174fcedaa34"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         }
       ]
     },
@@ -3838,7 +4080,8 @@
           "evidence_hashes": [
             "0bb53c45fbc294678be98d35bd46276344417b89c1de606977c724b9df10ac48",
             "64381f16758283f733c9138f7a2ab7f4af294bbb6d284aab1814f174fcedaa34"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         }
       ]
     },
@@ -3948,7 +4191,8 @@
           "evidence_hashes": [
             "0bb53c45fbc294678be98d35bd46276344417b89c1de606977c724b9df10ac48",
             "64381f16758283f733c9138f7a2ab7f4af294bbb6d284aab1814f174fcedaa34"
-          ]
+          ],
+          "source_binding": "historical source SHA not independently pinned; requires final revalidation"
         }
       ]
     }
