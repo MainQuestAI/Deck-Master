@@ -244,7 +244,7 @@ def _add_text(slide: Any, element: dict[str, Any], trace: list[dict[str, Any]]) 
     shape.line.fill.background()
     frame = shape.text_frame
     frame.clear()
-    frame.word_wrap = True
+    frame.word_wrap = not (_NATIVE_CANVAS.get() and element.get("_text_lines"))
     frame.margin_left = frame.margin_right = frame.margin_top = frame.margin_bottom = Pt(0)
     style = element.get("style") or {}
     canvas_to_slide = (_slide_width() * 96) / CANVAS_WIDTH
@@ -253,6 +253,34 @@ def _add_text(slide: Any, element: dict[str, Any], trace: list[dict[str, Any]]) 
     for line_index, line in enumerate(lines):
         paragraph = frame.paragraphs[0] if line_index == 0 else frame.add_paragraph()
         paragraph.space_after = Pt(0)
+        if _NATIVE_CANVAS.get() and line and line[0].get("position"):
+            position = line[0]["position"]
+            left = float(position["x"]) - float(bbox["x"])
+            width = float(bbox["w"])
+            anchor = position["anchor"]
+            ppr = paragraph._p.get_or_add_pPr()
+            unit = 72 / 96 * canvas_to_slide
+            if anchor == "middle":
+                ppr.set("algn", "ctr")
+                ppr.set("marL", str(round(max(0, 2 * left - width) * unit * 12700)))
+                ppr.set("marR", str(round(max(0, width - 2 * left) * unit * 12700)))
+            elif anchor == "end":
+                ppr.set("algn", "r")
+                ppr.set("marR", str(round(max(0, width - left) * unit * 12700)))
+            elif anchor == "start":
+                ppr.set("algn", "l")
+                ppr.set("marL", str(round(max(0, left) * unit * 12700)))
+                ppr.set("indent", str(round(min(0, left) * unit * 12700)))
+            else:
+                raise PptxEditabilityError(f"unsupported SVG text-anchor: {anchor}")
+            if line_index == 0:
+                size = float(str(line[0]["style"].get("font_size") or 16).removesuffix("px"))
+                frame.margin_top = Pt(max(0, float(position["y"]) - size - float(bbox["y"])) * unit)
+            if line_index + 1 < len(lines) and lines[line_index + 1][0].get("position"):
+                step = float(lines[line_index + 1][0]["position"]["y"]) - float(position["y"])
+                if step <= 0:
+                    raise PptxEditabilityError("SVG text lines must have increasing baselines")
+                paragraph.line_spacing = Pt(step * unit)
         for run_spec in line:
             run = paragraph.add_run()
             run.text = str(run_spec.get("text") or "")
@@ -653,13 +681,16 @@ def _computed_run_paint(node: Any, parent: Any, registry: dict[str, Any]) -> dic
     return parse_node_paint(synthetic, registry)
 
 
-def _svg_text_lines(node: Any, registry: dict[str, Any]) -> list[list[dict[str, Any]]]:
+def _svg_text_lines(node: Any, registry: dict[str, Any], *, preserve_positions: bool = True) -> list[list[dict[str, Any]]]:
     parent_style = _svg_style(node)
     parent_paint = parse_node_paint(node, registry)
     lines: list[list[dict[str, Any]]] = [[]]
+    current_x = float(node.get("x") or 0)
+    current_y = float(node.get("y") or 0)
+    anchor = str(node.get("text-anchor") or "start")
     direct_text = str(node.text or "")
     if direct_text:
-        lines[0].append({"text": direct_text, "style": parent_style, "paint": parent_paint})
+        lines[0].append({"text": direct_text, "style": parent_style, "paint": parent_paint, "position": {"x": current_x, "y": current_y, "anchor": anchor}})
     for child in list(node):
         if str(child.tag).split("}")[-1] != "tspan":
             continue
@@ -669,7 +700,10 @@ def _svg_text_lines(node: Any, registry: dict[str, Any]) -> list[list[dict[str, 
             raise PptxEditabilityError(f"invalid tspan line offset on {node.get('id')}") from exc
         if lines[-1] and (child.get("y") is not None or abs(dy) > 0.01):
             lines.append([])
-        lines[-1].append({"text": "".join(child.itertext()), "style": _svg_style(child, parent_style), "paint": _computed_run_paint(child, node, registry)})
+        current_x = float(child.get("x") if child.get("x") is not None else current_x) + float(child.get("dx") or 0)
+        current_y = float(child.get("y") if child.get("y") is not None else current_y) + dy
+        position = {"x": current_x, "y": current_y, "anchor": str(child.get("text-anchor") or anchor)}
+        lines[-1].append({"text": "".join(child.itertext()), "style": _svg_style(child, parent_style), "paint": _computed_run_paint(child, node, registry), "position": position})
         if child.tail:
             lines[-1].append({"text": str(child.tail), "style": parent_style, "paint": parent_paint})
     declared = str(node.get("data-pptx-text") or "")
@@ -678,7 +712,8 @@ def _svg_text_lines(node: Any, registry: dict[str, Any]) -> list[list[dict[str, 
     if line_joined == declared:
         return lines
     if flattened == declared:
-        return [[run for line in lines for run in line]]
+        # The lock binds characters; SVG tspans bind visual line breaks.
+        return lines if preserve_positions else [[run for line in lines for run in line]]
     if " ".join(line_joined.split()) == " ".join(declared.split()):
         return lines
     raise PptxEditabilityError(f"visible SVG text does not match data-pptx-text on {node.get('id')}")
@@ -811,7 +846,7 @@ def _svg_elements(root: Path, scene: dict[str, Any], asset_paths: dict[str, Path
             element["text"] = svg_text
             if native.get("node") is not None and native.get("node").get("font-size") is not None and native.get("node").get("fill") is not None:
                 try:
-                    element["_text_lines"] = _svg_text_lines(native.get("node"), {"gradients": {}, "effects": {}})
+                    element["_text_lines"] = _svg_text_lines(native.get("node"), {"gradients": {}, "effects": {}}, preserve_positions=_NATIVE_CANVAS.get())
                 except (ContractError, ValueError):
                     element["_text_lines"] = [[{"text": svg_text, "style": element["style"], "paint": element["_paint"]}]]
             else:
@@ -931,6 +966,9 @@ def _contain_elements(elements: list[dict[str, Any]], svg_file: Path) -> list[di
         for line in element.get("_text_lines") or []:
             for run in line:
                 scale_style(run.get("style") or {})
+                if run.get("position"):
+                    run["position"]["x"] = float(run["position"]["x"]) * scale + dx
+                    run["position"]["y"] = float(run["position"]["y"]) * scale + dy
         for command in element.get("_native_commands") or []:
             for key in ("x", "x1", "x2", "y", "y1", "y2"):
                 if key in command:
