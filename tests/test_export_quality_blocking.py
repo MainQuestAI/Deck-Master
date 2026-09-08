@@ -16,6 +16,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from export_queue import check_page_quality_blocking, export_queue
 from runtime.final_approval import write_final_artifact_approval
+from quality.overrides import create_override
 
 
 def _make_manifest(pages: list[dict[str, Any]]) -> dict[str, Any]:
@@ -286,21 +287,8 @@ class ExportQualityBlockingTests(unittest.TestCase):
         )
         # 写入 active override（target_id 必须匹配 finding_id）
         quality_dir = self.run_dir / "quality_reports"
-        overrides = [
-            {
-                "schema_version": "deck_quality_override.v1",
-                "override_id": "override_001",
-                "target_id": "F-P1-2",
-                "severity": "P1",
-                "status": "active",
-                "expires_at": "2099-12-31T00:00:00+00:00",
-                "reason": "approved",
-                "approver": "qa",
-            }
-        ]
-        (quality_dir / "overrides.json").write_text(
-            json.dumps(overrides), encoding="utf-8"
-        )
+        # Synthetic authorized exception bound to the current test artifact.
+        create_override(self.run_dir, "F-P1-2", "P1", "synthetic acceptance", "test reviewer")
 
         result = export_queue(
             self.run_dir,
@@ -535,20 +523,8 @@ class ExportQualityBlockingTests(unittest.TestCase):
 
         # allow_override=True 需要 active override 匹配 finding_id 才能放行
         quality_dir = self.run_dir / "quality_reports"
-        overrides = [
-            {
-                "override_id": "override_001",
-                "target_id": "F-D-1",
-                "severity": "P1",
-                "status": "active",
-                "expires_at": "2099-12-31T00:00:00+00:00",
-                "reason": "ok",
-                "approver": "qa",
-            }
-        ]
-        (quality_dir / "overrides.json").write_text(
-            json.dumps(overrides), encoding="utf-8"
-        )
+        # Synthetic authorized exception bound to the current test artifact.
+        create_override(self.run_dir, "F-D-1", "P1", "synthetic acceptance", "test reviewer")
 
         allowed = check_page_quality_blocking(
             self.run_dir, page, queue_type="client", allow_override=True

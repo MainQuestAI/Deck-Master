@@ -248,7 +248,7 @@ def resolve_required_gates(
                         current_blockers_by_gate.setdefault(gate, []).append(item)
                     elif severity == "P1":
                         finding_id = _finding_id(item)
-                        if finding_id and has_active_override(run_dir, finding_id):
+                        if finding_id and has_active_override(run_dir, finding_id, artifact=artifact):
                             overridden_p1.append(item)
                         else:
                             current_blockers.append(item)
@@ -258,7 +258,7 @@ def resolve_required_gates(
             candidates = current_candidates_by_gate.get(gate, [])
             unresolved = current_blockers_by_gate.get(gate, [])
             all_candidates_overridden_p1 = bool(candidates) and all(
-                _severity(item) == "P1" and _finding_id(item) and has_active_override(run_dir, _finding_id(item))
+                _severity(item) == "P1" and _finding_id(item) and has_active_override(run_dir, _finding_id(item), artifact=artifact)
                 for item in candidates
             )
             satisfied = (
