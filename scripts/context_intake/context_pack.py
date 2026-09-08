@@ -1,6 +1,12 @@
 """Context Pack import for Deck Master v0.9.
 
-Implements the ``deck_context_pack.v1`` Agent handoff contract.
+Accepts legacy ``deck_context_pack.v1`` and version-bound ``deck_context_pack.v2``.
+For v2, based_on.input_fingerprint is SHA256 of UTF-8 bytes from
+json.dumps(based_on.input_refs, sort_keys=True) (Python default separators and
+ASCII escaping). Each source origin/hash must occur in that ordered refs list.
+A full extraction requires real source bytes and a nonempty host snapshot;
+the snapshot is copied into the same immutable revision as the manifest.
+Legacy imports lacking attested coverage remain legacy_unknown, never full.
 External Agents produce a Context Pack JSON; Deck Master validates and
 imports it into a run's ``context_manifest.json``.
 """
@@ -52,8 +58,9 @@ def validate_context_pack(pack: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(pack, dict):
         return {"valid": False, "errors": ["Pack must be a JSON object."], "warnings": []}
 
+    from context_intake.reading import reading_errors
     schema = pack.get("schema_version")
-    if schema != SCHEMA_VERSION:
+    if schema not in (SCHEMA_VERSION, "deck_context_pack.v2"):
         errors.append(
             f"schema_version must be '{SCHEMA_VERSION}', got '{schema}'."
         )
@@ -62,6 +69,20 @@ def validate_context_pack(pack: dict[str, Any]) -> dict[str, Any]:
     if not run_id or not isinstance(run_id, str):
         errors.append("run_id is required and must be a non-empty string.")
 
+    if schema == "deck_context_pack.v2":
+        import jsonschema
+        from native_pptx.contracts import SCHEMA_DIR
+        contract = json.loads((SCHEMA_DIR / "context-pack.v2.schema.json").read_text())
+        errors.extend(error.message for error in jsonschema.Draft202012Validator(contract).iter_errors(pack))
+    if schema == "deck_context_pack.v2" and not errors:
+        import hashlib
+        refs = pack["based_on"]["input_refs"]
+        expected = hashlib.sha256(json.dumps(refs, sort_keys=True).encode()).hexdigest()
+        if pack["based_on"]["input_fingerprint"] != expected:
+            errors.append("based_on input fingerprint does not match ordered input refs")
+        for source in pack["sources"]:
+            if {"ref":source["origin_ref"], "sha256":source["file_sha256"]} not in refs:
+                errors.append("source is not bound by based_on input refs")
     sources = pack.get("sources")
     if not isinstance(sources, list):
         errors.append("sources must be an array.")
@@ -73,6 +94,7 @@ def validate_context_pack(pack: dict[str, Any]) -> dict[str, Any]:
             errors.append(f"sources[{i}] must be an object.")
             continue
 
+        errors.extend(f"sources[{i}]: {error}" for error in reading_errors(source))
         sid = source.get("source_id")
         if not sid or not isinstance(sid, str):
             errors.append(f"sources[{i}].source_id is required.")
@@ -160,6 +182,7 @@ def _pack_id(pack: dict[str, Any]) -> str:
 
 def _source_to_manifest_entry(source: dict[str, Any]) -> dict[str, Any]:
     """Convert a context pack source into a context_manifest source entry."""
+    from context_intake.reading import preserved_reading
     candidates = source.get("evidence_candidates", [])
     # Aggregate publication status: if any candidate is needs_redaction or
     # internal_only, mark the source accordingly.
@@ -183,10 +206,12 @@ def _source_to_manifest_entry(source: dict[str, Any]) -> dict[str, Any]:
     )
 
     return {
+        "reading": preserved_reading(source),
+        **{key: source[key] for key in ("sha256", "file_sha256", "extraction", "critical") if key in source},
         "source_id": source.get("source_id", ""),
         "source_type": source.get("source_type", ""),
         "origin_type": source.get("origin_type", ""),
-        "origin_path": source.get("origin_path", ""),
+        "origin_path": source.get("origin_path", source.get("origin_ref", "")),
         "title": source.get("title", ""),
         "summary": source.get("summary", ""),
         "kind": source.get("source_type", "external_agent"),
@@ -265,23 +290,27 @@ def import_context_pack(
 
     manifest_path = root / CONTEXT_MANIFEST_NAME
 
-    # Load existing manifest or start fresh.
-    if manifest_path.exists():
-        try:
-            manifest = read_json(manifest_path)
-        except RunStateError as exc:
-            raise ContextPackError(
-                f"Cannot read existing context_manifest.json: {exc}. "
-                "Import aborted — existing data preserved."
-            ) from exc
-    else:
-        manifest = {
-            "schema_version": "deck_context_manifest.v1",
-            "sources": [],
-            "summary": "",
-            "constraints": [],
-        }
+    from workflow.actions import revision_read, revision_input_path
+    with revision_read(root, fresh=True) as expected_revision:
+        input_manifest_path = revision_input_path(root, manifest_path)
+        # Load existing manifest or start fresh.
+        if input_manifest_path.exists():
+            try:
+                manifest = read_json(input_manifest_path)
+            except RunStateError as exc:
+                raise ContextPackError(
+                    f"Cannot read existing context_manifest.json: {exc}. "
+                    "Import aborted — existing data preserved."
+                ) from exc
+        else:
+            manifest = {
+                "schema_version": "deck_context_manifest.v1",
+                "sources": [],
+                "summary": "",
+                "constraints": [],
+            }
 
+    original_manifest = json.dumps(manifest, sort_keys=True)
     existing_sources: dict[str, int] = {
         s.get("source_id"): i
         for i, s in enumerate(manifest.get("sources", []))
@@ -289,13 +318,35 @@ def import_context_pack(
     }
 
     pack_sources = pack.get("sources", [])
+    extraction_outputs = {}
+    extraction_inputs = {}
     added: list[str] = []
     updated: list[str] = []
     rejected: list[str] = []
 
     for source in pack_sources:
         sid = str(source.get("source_id", ""))
+        from context_intake.reading import verify_source_bytes
+        existing = manifest["sources"][existing_sources[sid]] if sid in existing_sources else None
+        verify_source_bytes(source, existing)
         entry = _source_to_manifest_entry(source)
+        if source.get("extraction"):
+            import hashlib
+            snapshot = Path(source["extraction"]["snapshot_ref"]).expanduser()
+            data = snapshot.read_bytes()
+            sha = hashlib.sha256(data).hexdigest()
+            managed = f"context_packs/extractions/{sha}.snapshot"
+            extraction_outputs[managed] = data
+            extraction_inputs[str(snapshot)] = sha
+            entry["extraction"] = {**entry["extraction"], "snapshot_ref":managed}
+            entry["reading"]["snapshot_sha256"] = sha
+            for reading_range in entry["reading"]["read_ranges"]:
+                reading_range["snapshot_ref"] = managed
+        if existing:
+            # Retain local registration identity and its authorized file path.
+            entry = {**existing, **entry}
+        if existing == entry and merge:
+            continue
 
         if sid in existing_sources:
             if not merge:
@@ -317,15 +368,48 @@ def import_context_pack(
         if c not in existing_constraints:
             existing_constraints.append(c)
     manifest["constraints"] = existing_constraints
+    if pack.get("conflicts"):
+        conflicts = {item["conflict_id"]:item for item in manifest.get("conflicts", []) if isinstance(item,dict) and item.get("conflict_id")}
+        conflicts.update({item["conflict_id"]:item for item in pack["conflicts"]})
+        manifest["conflicts"] = list(conflicts.values())
 
-    # Write context_manifest.json (atomic via write_json).
-    write_json(manifest_path, manifest)
-
-    # Write pack copy.
+    if json.dumps(manifest, sort_keys=True) == original_manifest:
+        return {"status":"idempotent" if not rejected else "imported", "added":[], "updated":[], "rejected":rejected,
+                "total_sources":len(manifest["sources"]), "warnings":validation.get("warnings", [])}
+    from context_intake.reading import reading_blockers
+    manifest["reading_coverage"] = {
+        "sources_total":len(manifest["sources"]),
+        "sources_full":sum(s.get("reading",{}).get("coverage")=="full" for s in manifest["sources"]),
+        "unread_sources":reading_blockers(manifest),
+    }
+    manifest["host_extract_tasks"] = [task for task in manifest.get("host_extract_tasks", [])
+                                      if any(s.get("source_id")==task.get("source_id") and s.get("reading",{}).get("coverage")!="full" for s in manifest["sources"])]
+    # Commit the new Context and its source handback as one immutable revision.
+    # The expected parent prevents a concurrent import from overwriting another.
+    import hashlib
+    from workflow.actions import create_action_envelope, stage_action_result, commit_action_result
     pack_id = _pack_id(pack)
-    packs_dir = root / "context_packs"
-    packs_dir.mkdir(parents=True, exist_ok=True)
-    write_json(packs_dir / f"{pack_id}.json", pack)
+    pack_relative = f"context_packs/{pack_id}.json"
+    fingerprint = hashlib.sha256(original_manifest.encode()).hexdigest()
+    action = "context_" + hashlib.sha256((fingerprint + json.dumps(pack, sort_keys=True)).encode()).hexdigest()[:32]
+    envelope = create_action_envelope(action_id=action, task_id=action, scope_pages=["context"],
+                                     permission="runtime", input_fingerprint=fingerprint)
+    stage_action_result(root, envelope, {
+        **extraction_outputs,
+        CONTEXT_MANIFEST_NAME: json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
+        pack_relative: json.dumps(pack, ensure_ascii=False, indent=2) + "\n",
+    })
+    def current_fingerprint():
+        for path, expected in extraction_inputs.items():
+            if hashlib.sha256(Path(path).read_bytes()).hexdigest()!=expected:
+                raise ContextPackError("Extraction snapshot changed before commit")
+        for source in pack_sources:
+            existing = next((s for s in manifest["sources"] if s.get("source_id")==source.get("source_id")), None)
+            verify_source_bytes(source, existing)
+        return fingerprint
+    commit_action_result(root, envelope, expected_revision=expected_revision,
+                         current_input_fingerprint=current_fingerprint,
+                         targets={CONTEXT_MANIFEST_NAME:manifest_path, pack_relative:root/pack_relative, **{name:root/name for name in extraction_outputs}})
 
     # Write typed event.
     run_id = str(pack.get("run_id", ""))

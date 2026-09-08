@@ -6,6 +6,12 @@ from typing import Any
 def native_continuation(root: Path) -> dict[str, Any] | None:
     from conversation.brief_compiler import run_brief_conflict_blockers
     blockers = run_brief_conflict_blockers(root)
+    if blockers and any(isinstance(b,dict) and b.get('code')=='context_reading_incomplete' for b in blockers):
+        return {'stage':'blocked_context_reading', 'reason':'Required source ranges have not been read',
+                'next_command':'', 'build_status':{'status':'blocked'}, 'blocking_issues':blockers,
+                'host_task':{'kind':'extract_context_sources','blockers':blockers,
+                             'inputs':['context_manifest.json'],
+                             'resume_command':f'deck-master import-context-pack --run-dir {root} --input <extraction.json> --merge'}}
     if blockers:
         return {'stage':'blocked_source_conflicts', 'reason':'Declared source conflicts require evidence-based Brief resolution',
                 'next_command':'', 'build_status':{'status':'blocked'}, 'blocking_issues':blockers,

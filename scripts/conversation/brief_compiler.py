@@ -76,6 +76,7 @@ def _compile_deck_brief_content(
             "constraints": [str(item) for item in (agent_extract.get("constraints") or []) if str(item).strip()],
             "non_goals": [str(item) for item in (agent_extract.get("non_goals") or []) if str(item).strip()],
             "acceptance": [str(item) for item in (agent_extract.get("acceptance") or []) if str(item).strip()],
+            "working_assumptions": [dict(item) for item in (agent_extract.get("working_assumptions") or []) if isinstance(item, dict)],
             "source_conflicts": [dict(item) for item in (agent_extract.get("source_conflicts") or []) if isinstance(item, dict)],
             "gaps": [str(item) for item in (agent_extract.get("gaps") or []) if str(item).strip()],
             "brief_mode": "agent_extract",
@@ -149,12 +150,15 @@ def _reconcile_conflicts(context_manifest, extraction, *, run_dir=None):
 
 def brief_conflict_blockers(brief, context_manifest, *, run_dir=None):
     """Recheck current declared conflicts rather than trusting stored ready flags."""
-    return _reconcile_conflicts(context_manifest, brief, run_dir=run_dir)[1]
+    from context_intake.reading import reading_blockers
+    return _reconcile_conflicts(context_manifest, brief, run_dir=run_dir)[1] + reading_blockers(context_manifest)
 
 
 def compile_deck_brief(request, context_manifest, conversation, agent_extract=None, *, run_dir: str | Path | None = None):
     brief = _compile_deck_brief_content(request, context_manifest, conversation, agent_extract=agent_extract)
     conflicts, blockers = _reconcile_conflicts(context_manifest, agent_extract or {}, run_dir=run_dir)
+    from context_intake.reading import reading_blockers
+    blockers.extend(reading_blockers(context_manifest))
     brief["source_conflicts"] = conflicts
     brief["conflict_blockers"] = blockers
     brief["status"] = "blocked" if blockers else "brief_ready"
@@ -171,6 +175,4 @@ def run_brief_conflict_blockers(run_dir):
         brief_path = revision_input_path(root, root / 'deck_brief.json')
         context = read_json(context_path) if context_path.is_file() else {}
         brief = read_json(brief_path) if brief_path.is_file() else {}
-        if not context.get('conflicts') and not brief.get('source_conflicts'):
-            return []
         return brief_conflict_blockers(brief, context, run_dir=root)
