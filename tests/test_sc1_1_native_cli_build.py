@@ -59,16 +59,24 @@ class NativeCliBuildTests(unittest.TestCase):
             status = build_status(run)
             self.assertEqual("completed", status["status"])
 
-    def test_production_native_gate_blocks_fixture_grade_content(self) -> None:
-        # production thresholds are stricter (edge_similarity >= 0.45 vs
-        # fixture 0.25); fixture-authored content must NOT pass as production
+    def test_production_native_gate_blocks_unapproved_content(self) -> None:
+        # Synthetic sample appearance is not inherently below the production
+        # threshold. A deterministic locked-content violation must be blocked
+        # even as compiler fidelity improves.
         with tempfile.TemporaryDirectory() as tmp:
             run = _native_run(Path(tmp), run_mode="production")
-            try:
+            from high_density.svg import svg_path
+            from xml.etree import ElementTree
+            svg = svg_path(run, "P001")
+            document = ElementTree.fromstring(svg.read_text())
+            title = next(node for node in document.iter() if node.get("id") == "title.main")
+            for child in list(title):
+                title.remove(child)
+            title.text = "Unapproved replacement of the locked title"
+            svg.write_text(ElementTree.tostring(document, encoding="unicode"))
+            with self.assertRaises(Exception) as failure:
                 run_build(run)
-                self.fail("fixture-grade content must not complete a production native build")
-            except Exception as exc:  # noqa: BLE001
-                self.assertIn("readback", str(exc).lower())
+            self.assertRegex(str(failure.exception), "title.main|text drift")
 
     def test_image_blueprint_state_machine_advances(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
