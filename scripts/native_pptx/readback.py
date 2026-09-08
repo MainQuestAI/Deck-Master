@@ -81,8 +81,8 @@ def readback_native(result: Any, scenes: list[dict[str, Any]], locks: dict[str, 
         if slide.notes_slide.notes_text_frame.text.strip() != str(lock.get('speaker_notes') or '').strip():
             errors.append(f'{page_id}: speaker notes mismatch')
         pages.append({'page_id': page_id, 'text_objects': sum(entry['object_type'] == 'text' for entry in entries),
-                      'image_objects': sum(entry['object_type'] == 'image' for entry in entries),
-                      'shape_objects': sum(entry['object_type'] not in {'text', 'image', 'group'} for entry in entries),
+                      'image_objects': sum(entry['object_type'] == 'registered_asset' for entry in entries),
+                      'shape_objects': sum(entry['object_type'] not in {'text', 'registered_asset', 'group'} for entry in entries),
                       'group_objects': sum(entry['object_type'] == 'group' for entry in entries)})
     inventory = _drawingml_paint_inventory(deck)
     entries = trace['elements']
