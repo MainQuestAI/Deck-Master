@@ -602,10 +602,24 @@ def _run_native_build(root: Path, request: dict[str, Any], run_id: str) -> dict[
             backend = {"backend_name": "deck_native", "production_capable": True, "engine_route": route}
             return _finalize_native_build(root, request, result, backend, run_id)
 
-        blueprints_present = all(
-            any((root / "high_density_build" / "blueprints").glob(f"{page_id}.*")) for page_id in approved_pages
-        ) if (root / "high_density_build" / "blueprints").is_dir() else False
+        blueprints_dir = root / "high_density_build" / "blueprints"
+        blueprints_present = bool(
+            approved_pages
+            and blueprints_dir.is_dir()
+            and all((blueprints_dir / f"{page_id}.svg").exists() for page_id in approved_pages)
+        )
         if blueprints_present:
+            # SC-1.1 review round 3 (P1-04): the reconstruct host task carries
+            # the same contract as imagegen — action ids, input fingerprints
+            # bound to the current packages/locks, and an output contract.
+            task = native_engine.dispatch_imagegen_task(root)
+            task["status"] = "awaiting_agent_reconstruct"
+            task["stage"] = "awaiting_agent_reconstruct"
+            for page_entry in task.get("pages", []):
+                page_entry["output_contract"] = {
+                    "kind": "svg_reconstruction",
+                    "submit": "build run --run-dir <run> (host writes approved SVG to high_density_build/svg/<page_id>.svg)",
+                }
             return {
                 "schema_version": "deck_build_run_result.v1",
                 "status": "awaiting_agent_reconstruct",
@@ -614,7 +628,7 @@ def _run_native_build(root: Path, request: dict[str, Any], run_id: str) -> dict[
                 "engine_id": "deck_native",
                 "authoring_mode": authoring,
                 "host_task": "build/host_imagegen_task.json",
-                "pages": approved_pages,
+                "pages": task.get("pages", []),
                 "runtime_probe": prepared.get("runtime_probe", {}),
                 "resume_command": f"deck-master build run --run-dir {root}",
                 "note": "blueprints received; host SVG reconstruction per page, then resume",

@@ -185,25 +185,29 @@ def _commit_locked(
         if not (staging / relative).is_file():
             raise ActionEnvelopeError(f"staged file missing for action {action_id}: {relative}")
 
-    # SC-1.1 P1-03: build the COMPLETE immutable revision FIRST (with parent
-    # inheritance), then write projections WITH ROLLBACK — on any failure,
-    # every touched live file is restored from the pre-commit bytes so
-    # fixed-path readers see the complete OLD version, never a mixture.
+    # SC-1.1 review round 3 (P1-02): activation order is revision snapshot +
+    # pointer FIRST, live projections SECOND. Production readers resolve via
+    # the committed revision (complete old or complete new, never mixed);
+    # fixed paths are compatibility projections with best-effort rollback.
     applied_files: list[str] = []
-    touched: list[Path] = []
+    for relative, target in targets.items():
+        target = Path(target)
+        applied_files.append(str(target.relative_to(root)) if target.is_relative_to(root) else str(target))
+
     parent_revision = read_current_revision(root).get("revision_id", "")
+    revision_info = commit_revision_pointer(root, action_id, targets, applied_files, parent_revision=parent_revision)
+    revision_id = revision_info["revision_id"]
+
     _PROJECTION_BACKUP.clear()
     try:
         for relative, target in targets.items():
             source = staging / relative
             target = Path(target)
             _PROJECTION_BACKUP[target] = target.read_bytes() if target.exists() else None
-            touched.append(target)
             target.parent.mkdir(parents=True, exist_ok=True)
             tmp = target.with_suffix(target.suffix + ".action-tmp")
             shutil.copy2(source, tmp)
             tmp.replace(target)
-            applied_files.append(str(target.relative_to(root)) if target.is_relative_to(root) else str(target))
     except Exception:
         _rollback_projections(root)
         raise
@@ -213,13 +217,12 @@ def _commit_locked(
         "task_id": str(envelope.get("task_id") or ""),
         "scope_pages": list(envelope.get("scope_pages") or []),
         "applied_files": applied_files,
+        "revision_id": revision_id,
+        "parent_revision_id": revision_info.get("parent_revision_id", ""),
         "committed_at": _utc_now(),
         "input_fingerprint": str(envelope.get("input_fingerprint") or ""),
         "status": "applied",
     }
-    revision_info = commit_revision_pointer(root, action_id, targets, applied_files, parent_revision=parent_revision)
-    marker["revision_id"] = revision_info["revision_id"]
-    marker["parent_revision_id"] = revision_info.get("parent_revision_id", "")
     marker_path = _applied_marker(root, action_id)
     marker_path.parent.mkdir(parents=True, exist_ok=True)
     marker_path.write_text(json.dumps(marker, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -347,6 +350,14 @@ def _check_action_revision_cas(root: Path, expected_revision: str | None) -> Non
         )
 
 
+def _target_run_relative(root: Path, staging_key: str, target: Path) -> str:
+    target = Path(target)
+    try:
+        return str(target.resolve().relative_to(root))
+    except ValueError:
+        return str(target)
+
+
 def commit_revision_pointer(
     root: Path,
     action_id: str,
@@ -377,7 +388,9 @@ def commit_revision_pointer(
     if not revisions_dir.exists():
         revisions_dir.mkdir(parents=True)
         for relative in targets:
-            destination = revisions_dir / relative
+            # snapshot copies land at the TARGET run-relative path (matching
+            # the manifest keys), not the staging key
+            destination = revisions_dir / _target_run_relative(root, relative, targets[relative])
             destination.parent.mkdir(parents=True, exist_ok=True)
             _shutil.copy2(staging / relative, destination)
         manifest = {
@@ -385,7 +398,10 @@ def commit_revision_pointer(
             "revision_id": revision_id,
             "action_id": action_id,
             "parent_revision_id": str(parent_revision),
-            "files": {relative: hashlib.sha256((staging / relative).read_bytes()).hexdigest() for relative in targets},
+            "files": {
+                _target_run_relative(root, relative, targets[relative]): hashlib.sha256((staging / relative).read_bytes()).hexdigest()
+                for relative in targets
+            },
             # files NOT touched by this action inherit from the parent chain
             "inherits": [str(applied) for applied in applied_files],
             "committed_at": _utc_now(),
@@ -470,19 +486,26 @@ def read_revision_state(root: Path | str) -> dict[str, bytes]:
     if not current:
         return {}
     revisions_dir = root / "build" / "revisions"
-    files: dict[str, bytes] = {}
+    # SC-1.1 review round 3 (P1-03): walk the parent chain OLDEST-FIRST and
+    # let each CHILD overwrite its parents — the current revision's files
+    # must win. Files are keyed by final run-relative target paths.
+    chain: list[str] = []
     revision_id = current
     hops = 0
     while revision_id and hops < 32:
         manifest_path = revisions_dir / revision_id / "revision_manifest.json"
         if not manifest_path.exists():
             break
+        chain.append(revision_id)
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        revision_id = str(manifest.get("parent_revision_id") or "")
+        hops += 1
+    files: dict[str, bytes] = {}
+    for revision_id in reversed(chain):  # oldest first, child last (wins)
         rev_dir = revisions_dir / revision_id
+        manifest = json.loads((revisions_dir / revision_id / "revision_manifest.json").read_text(encoding="utf-8"))
         for relative in manifest.get("files", {}):
             file_path = rev_dir / relative
             if file_path.exists():
                 files[str(relative)] = file_path.read_bytes()
-        revision_id = str(manifest.get("parent_revision_id") or "")
-        hops += 1
     return files

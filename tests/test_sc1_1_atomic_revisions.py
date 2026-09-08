@@ -75,22 +75,25 @@ class AtomicCommitOrderTests(unittest.TestCase):
                     commit_action_result(root, env2, current_input_fingerprint="fp-1", targets={"a.json": target_a, "b.json": target_b})
                 except OSError:
                     pass
-            # readers resolve via the pointer: complete OLD revision
-            self.assertEqual(old_revision, read_current_revision(root)["revision_id"])
-            # SC-1.1 review round 2: the LIVE files themselves must be
-            # complete old content — a production reader on fixed paths
-            # must never see a mixed new/old set after the injected failure
-            self.assertEqual("v1-a", target_a.read_text(encoding="utf-8"), "live a.json must be rolled back")
-            self.assertEqual("v1-b", target_b.read_text(encoding="utf-8"), "live b.json must be restored")
-            revisions_dir = root / "build" / "revisions" / old_revision
-            self.assertEqual("v1-a", (revisions_dir / "a.json").read_text(encoding="utf-8"))
-            self.assertEqual("v1-b", (revisions_dir / "b.json").read_text(encoding="utf-8"))
-            # revision-state resolver: full state via parent chain
+            # SC-1.1 review round 3: activation is pointer-first. After the
+            # projection failure the pointer is at the NEW revision (its
+            # immutable snapshot is complete), and live projections were
+            # rolled back to the complete OLD content. EVERY reader sees a
+            # complete version — never a mixture.
+            new_revision = read_current_revision(root)["revision_id"]
+            self.assertNotEqual(old_revision, new_revision)
+            # production reader via revision state: complete NEW
             from workflow.actions import read_revision_state
 
             state = read_revision_state(root)
-            self.assertEqual(b"v1-a", state["a.json"])
-            self.assertEqual(b"v1-b", state["b.json"])
+            self.assertEqual(b"v2-a", state["artifacts/a.json"])
+            self.assertEqual(b"v2-b", state["artifacts/b.json"])
+            # fixed-path reader: complete OLD (rolled back)
+            self.assertEqual("v1-a", target_a.read_text(encoding="utf-8"), "live a.json must be rolled back")
+            self.assertEqual("v1-b", target_b.read_text(encoding="utf-8"), "live b.json must be restored")
+            revisions_dir = root / "build" / "revisions" / new_revision
+            self.assertEqual("v2-a", (revisions_dir / "artifacts" / "a.json").read_text(encoding="utf-8"))
+            self.assertEqual("v2-b", (revisions_dir / "artifacts" / "b.json").read_text(encoding="utf-8"))
 
     def test_revision_identity_includes_target_paths(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

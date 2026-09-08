@@ -203,7 +203,7 @@ def submit_approved_svg(
     """
 
     root = Path(run_dir).expanduser().resolve()
-    from workflow.actions import action_applied, commit_action_result, stage_action_result
+    from workflow.actions import action_applied, commit_action_result, read_current_revision, stage_action_result
 
     # conflict check: same action id with a DIFFERENT output must not pass
     import hashlib
@@ -334,20 +334,32 @@ def dispatch_imagegen_task(run_dir: str | Path) -> dict[str, Any]:
     """
 
     root = Path(run_dir).expanduser().resolve()
+    from workflow.actions import read_current_revision
+
     approved = _approved_packages(root)
+    route = resolve_build_route(_load_request_safe(root), run_dir=root)
     payload = {
         "schema_version": "deck_host_imagegen_task.v1",
         "run_id": str(root.name),
         "stage": "prepare_blueprint",
         "status": "awaiting_agent_imagegen",
+        "engine_id": "deck_native",
+        "authoring_mode": "image_blueprint",
         "pages": [
             {
                 "page_id": str(pkg.get("page_id") or ""),
+                "action_id": f"blueprint_{pkg.get('page_id', 'page')}_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S%f')}",
+                "produced_against": _svg_input_fingerprint(root, str(pkg.get("page_id") or "")),
+                "current_revision": read_current_revision(root).get("revision_id", ""),
                 "blueprint_brief": {
                     "title": (pkg.get("customer_visible") or {}).get("title", ""),
                     "body": [str(block.get("text") or "") for block in (pkg.get("customer_visible") or {}).get("body_blocks", []) if isinstance(block, dict)],
                     "visual_intent": (pkg.get("visual_spec") or {}).get("expected_visual", ""),
                     "page_role": (pkg.get("visual_spec") or {}).get("page_role", ""),
+                },
+                "output_contract": {
+                    "kind": "blueprint_image",
+                    "submit": "deck-master build run --run-dir <run> (host writes the image to high_density_build/blueprints/<page_id>.<ext>)",
                 },
             }
             for pkg in approved
@@ -391,3 +403,13 @@ def _approved_svg_hashes(root: Path, page_ids: list[str]) -> dict[str, str]:
         if svg.exists():
             hashes[page_id] = hashlib.sha256(svg.read_bytes()).hexdigest()
     return hashes
+
+
+def _load_request_safe(root: Path) -> dict[str, Any]:
+    request_path = root / "request.json"
+    if not request_path.exists():
+        return {}
+    try:
+        return json.loads(request_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}

@@ -1100,10 +1100,36 @@ def _external_dependency_closure_check(benchmark_report: dict[str, Any]) -> dict
     failures: list[str] = []
     backend = _dependency_by_name(dependencies, "ppt-master")
 
-    if backend.get("binding_status") not in {"bound_verified", "bound_verified_runtime_blocked"} or not backend.get("verified"):
-        failures.append("ppt-master is not bound_verified")
-    if not str(backend.get("git_sha") or ""):
-        failures.append("ppt-master git_sha is missing")
+    # SC-1.1 review round 3 (P1-01): the external-backend closure rule applies
+    # ONLY to explicit legacy_ppt_master routes. Native runs verify the built-in
+    # kernel with the real runtime probe — an unbound PPT Master never blocks
+    # the default engine's delivery closure.
+    route_engine = "native"
+    run_dir_value = os.environ.get("DECK_MASTER_RC_RUN_DIR", "").strip()
+    if run_dir_value:
+        try:
+            from build.build_route import load_persisted_route
+
+            persisted = load_persisted_route(Path(run_dir_value))
+            engine = str(persisted.get("engine_id") or "native")
+            route_engine = "legacy" if engine == "legacy_ppt_master" else "native"
+        except Exception:  # noqa: BLE001 - route read failure keeps native default
+            route_engine = "native"
+    if route_engine == "native":
+        try:
+            from native_pptx.probe import native_runtime_ready, probe_native_runtime
+
+            if not native_runtime_ready(probe_native_runtime()):
+                failures.append("native runtime kernel is not verified (probe failed)")
+        except Exception as exc:  # noqa: BLE001
+            failures.append(f"native runtime probe failed: {exc}")
+    else:
+        if backend.get("binding_status") not in {
+            "bound_verified", "bound_verified_runtime_blocked"
+        } or not backend.get("verified"):
+            failures.append("ppt-master is not bound_verified")
+        if not str(backend.get("git_sha") or ""):
+            failures.append("ppt-master git_sha is missing")
     if benchmark_report.get("status") != "report_ready":
         failures.append("benchmark aggregate is not report_ready")
 
