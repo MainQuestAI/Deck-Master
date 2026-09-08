@@ -48,18 +48,49 @@ def load_persisted_route(run_dir: str | Path) -> dict[str, Any]:
 
 
 def persist_route(run_dir: str | Path, route: dict[str, Any]) -> dict[str, Any]:
-    from workflow.actions import _acquire_run_lock, _release_run_lock, _atomic_json
+    from uuid import uuid4
+    from workflow.actions import (
+        ActionStaleError, _acquire_run_lock, _release_run_lock, _atomic_json,
+        read_current_revision, create_action_envelope, stage_action_result,
+        commit_action_result,
+    )
     root = Path(run_dir).expanduser().resolve()
-    lock = _acquire_run_lock(root)
-    try:
-        existing = load_persisted_route(root)
-        if existing:
-            return existing
-        validate_route(route)
-        _atomic_json(root / ROUTE_PATH, route)
-        return route
-    finally:
-        _release_run_lock(lock)
+    validate_route(route)
+    identity = ("engine_id", "authoring_mode", "density", "library_mode", "origin_run_mode")
+    # Rebase only over unrelated concurrent work. A winning route is immutable,
+    # including its original selection provenance; a competing choice is an error.
+    for _ in range(5):
+        lock = _acquire_run_lock(root)
+        try:
+            existing = load_persisted_route(root)
+            if existing:
+                if any(existing.get(key) != route.get(key) for key in identity):
+                    raise ValueError("build route conflicts with the first persisted selection")
+                return existing
+            revision = read_current_revision(root).get("revision_id", "")
+            if not revision:
+                # Legacy runs without snapshots retain their compatibility path.
+                # The shared lock ensures a later baseline includes this route.
+                _atomic_json(root / ROUTE_PATH, route)
+                return route
+        finally:
+            _release_run_lock(lock)
+        action = "route_" + uuid4().hex
+        envelope = create_action_envelope(
+            action_id=action, task_id=action, scope_pages=["route"],
+            permission="runtime", input_fingerprint="route_absent",
+        )
+        stage_action_result(root, envelope, {ROUTE_PATH.as_posix(): json.dumps(route, ensure_ascii=False, indent=2) + "\n"})
+        try:
+            commit_action_result(
+                root, envelope, expected_revision=revision,
+                current_input_fingerprint=lambda: "route_present" if load_persisted_route(root) else "route_absent",
+                targets={ROUTE_PATH.as_posix(): root / ROUTE_PATH},
+            )
+            return route
+        except ActionStaleError:
+            continue
+    raise ValueError("build route persistence conflicted with concurrent revisions; retry")
 
 
 def _derive_route(request: dict[str, Any], run_dir: Path | None) -> dict[str, Any]:
