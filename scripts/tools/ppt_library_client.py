@@ -308,7 +308,7 @@ def _is_safe_screenshot_source(source: Path, run_dir: Path) -> bool:
         in_run_dir = True
     except ValueError:
         pass
-    library_home = Path.home() / ".ppt-library"
+    library_home = Path(os.environ.get("PPT_LIB_HOME_DIR") or Path.home() / ".ppt-library").expanduser().resolve()
     in_library = False
     try:
         source.relative_to(library_home)

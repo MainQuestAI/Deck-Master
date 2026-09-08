@@ -24,3 +24,12 @@ def test_component_version_comes_from_real_cli_version_response(tmp_path):
     assert result['version']=='2.7.3'
     import json
     assert json.loads((Path(result['installed_path'])/'managed_component_manifest.json').read_text())['version']=='2.7.3'
+
+
+def test_preview_copy_honors_explicit_library_home_but_rejects_other_roots(tmp_path):
+    from tools.ppt_library_client import _is_safe_screenshot_source
+    library=tmp_path/'library';library.mkdir();image=library/'page.png';image.write_bytes(b'\x89PNG\r\n\x1a\n')
+    outside=tmp_path/'outside.png';outside.write_bytes(image.read_bytes())
+    with patch.dict('os.environ',{'PPT_LIB_HOME_DIR':str(library)}):
+        assert _is_safe_screenshot_source(image,tmp_path/'run')
+        assert not _is_safe_screenshot_source(outside,tmp_path/'run')
