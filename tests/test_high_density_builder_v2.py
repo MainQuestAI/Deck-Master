@@ -2339,8 +2339,10 @@ def test_required_tspan_cannot_be_hidden_by_run_paint(tmp_path: Path, paint: str
     svg = svg_path(run, "P001")
     svg.write_text(svg.read_text(encoding="utf-8").replace("<tspan ", f"<tspan {paint} ", 1), encoding="utf-8")
 
-    with pytest.raises(SvgVisualError, match="hidden SVG tspan"):
+    with pytest.raises(SvgVisualError, match=r"hidden SVG text in tspan is blocked: title\.main") as caught:
         validate_approved_svg(svg, scene, lock)
+    assert caught.value.code == "HD_SVG_CONTENT_DRIFT"
+    assert caught.value.page_id == "P001"
 
 
 def test_required_text_cannot_be_hidden_by_ancestor_group(tmp_path: Path) -> None:
