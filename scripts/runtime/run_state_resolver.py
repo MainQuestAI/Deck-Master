@@ -682,7 +682,8 @@ def resolve_run_state(
 ) -> dict[str, Any]:
     root = Path(run_dir).expanduser().resolve()
     request = _safe_read(root / REQUEST_NAME) or {}
-    resolved_mode = str(run_mode or request.get("run_mode") or "production")
+    from build.run_policy import enforce_origin_mode
+    resolved_mode = enforce_origin_mode(root, request, requested=run_mode)
 
     workspace = resolve_workspace_for_run(
         run_dir=root,

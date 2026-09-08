@@ -816,9 +816,29 @@ def command_autoplan(args: argparse.Namespace) -> dict[str, Any]:
     args.run_dir = str(run_dir)
     command_search_library(args)
     command_decide_sourcing(args)
+    request = load_request(run_dir)
+    from build.build_route import resolve_build_route, persist_route
+    route = resolve_build_route(request, run_dir=run_dir)
+    if request.get("run_mode") in {"production", "benchmark"} and route["engine_id"] == "deck_native":
+        from production.content_handoff import prepare_content
+        persist_route(run_dir, route)
+        task = prepare_content(run_dir)
+        return {"run_dir": str(run_dir), "status": task["status"], "pages": len(task["page_ids"]), "host_task": task}
     command_create_generation_tasks(args)
     preview_result = command_build_preview(args)
     return preview_result | {"status": "autoplan_preview_ready"}
+
+
+def command_page_content(args: argparse.Namespace) -> dict[str, Any]:
+    from production.content_handoff import prepare_content, content_status, submit_content
+    root = resolve_run_dir(args)
+    if args.page_content_command == "prepare":
+        return prepare_content(root)
+    if args.page_content_command == "status":
+        return content_status(root)
+    result = submit_content(root, json.loads(Path(args.input).read_text(encoding="utf-8")))
+    from runtime.build import run_build
+    return {**result, "build": run_build(root)}
 
 
 def command_quality_gate(args: argparse.Namespace) -> dict[str, Any]:
@@ -911,7 +931,7 @@ def command_quality_gate(args: argparse.Namespace) -> dict[str, Any]:
         with revision_read(run_dir):
             packages = PagePackageIndex(run_dir).list_packages() if (run_dir / "page_packages/index.json").is_file() else []
             context_manifest = read_optional_json(run_dir, "context_manifest.json") or {}
-            report = evaluate_evidence_gate(run_id, claim_map, page_tasks, ceg, sourcing_plan, packages=packages, context_manifest=context_manifest)
+            report = evaluate_evidence_gate(run_id, claim_map, page_tasks, ceg, sourcing_plan, packages=packages, context_manifest=context_manifest, run_dir=run_dir)
     elif args.gate == "context-conflict":
         sourcing_plan = read_optional_json(run_dir, SOURCING_PLAN_NAME) or {"run_id": run_id, "decisions": []}
         ws_dir = request.get("workspace", "")
@@ -3904,6 +3924,15 @@ def build_parser() -> argparse.ArgumentParser:
     add_run_args(p_rpg)
     p_rpg.set_defaults(func=command_refresh_preview_from_generation)
 
+    p_content = sub.add_parser("page-content", help="Author and review source-bound page content")
+    content_sub = p_content.add_subparsers(dest="page_content_command", required=True)
+    for operation in ("prepare", "status", "submit"):
+        content_parser = content_sub.add_parser(operation)
+        add_run_args(content_parser)
+        if operation == "submit":
+            content_parser.add_argument("--input", required=True)
+        content_parser.set_defaults(func=command_page_content)
+
     p_gs = sub.add_parser("generation-session", help="Manage generation sessions")
     gs_sub = p_gs.add_subparsers(dest="generation_session_command", required=True)
 
@@ -4160,6 +4189,9 @@ def main() -> None:
         NativeEngineError,
         ValueError,
     ) as exc:
+        if str(exc).startswith("RUN_MODE_CONFLICT"):
+            print_json({"status": "blocked", "code": "RUN_MODE_CONFLICT", "message": str(exc)})
+            raise SystemExit(2) from exc
         if getattr(exc, "code", ""):
             code = str(getattr(exc, "code"))
             page_id = str(getattr(exc, "page_id", "") or "")

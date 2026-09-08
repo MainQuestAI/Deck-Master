@@ -8,6 +8,10 @@ def native_continuation(root: Path) -> dict[str, Any] | None:
     research = research_continuation(root)
     if research:
         return research
+    from production.content_handoff import content_continuation
+    content = content_continuation(root)
+    if content:
+        return content
     from build.build_route import load_persisted_route
     from native_pptx.contracts import read_json
     from workflow.actions import action_applied
@@ -28,7 +32,8 @@ def native_continuation(root: Path) -> dict[str, Any] | None:
         if not artifact.is_relative_to(root.resolve()):
             raise ValueError('native artifact escapes run')
         request = read_json(root / 'request.json')
-        policy = resolve_required_gates(root, artifact, builder_profile='standard', output_profile='production_pptx', run_mode=request.get('run_mode', 'production'))
+        from build.run_policy import enforce_origin_mode
+        policy = resolve_required_gates(root, artifact, builder_profile='standard', output_profile='production_pptx', run_mode=enforce_origin_mode(root, request))
         if policy.get('required_gate_satisfied') and not policy.get('current_blockers'):
             stage, reason = 'ready_for_client_export', 'native build and required quality gates are current'
             command = f'deck-master final-readiness --run-dir {root} --artifact {artifact} --expected-pages {status["page_count"]}'

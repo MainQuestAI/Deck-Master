@@ -56,7 +56,7 @@ class RunStateResolverAcceptanceTests(unittest.TestCase):
         (self.run_dir / filename).write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
 
     def _write_full_pipeline(self, include_preview: bool = False) -> None:
-        self._write_json(REQUEST_NAME, {"run_id": "r1", "run_mode": "production", "workspace": ""})
+        self._write_json(REQUEST_NAME, {"run_id": "r1", "run_mode": "fixture", "workspace": ""})
         self._write_json(CONTEXT_MANIFEST_NAME, {"run_id": "r1"})
         self._write_json(DECK_BRIEF_NAME, {"run_id": "r1"})
         self._write_json(CLAIM_MAP_NAME, {"run_id": "r1", "claims": []})
