@@ -151,6 +151,19 @@ class RunStateResolverAcceptanceTests(unittest.TestCase):
         self.assertEqual("needs_generation_session", state["stage"])
         self.assertIn("generation-session create", state["next_command"])
 
+    def test_created_generation_dispatches_but_running_generation_is_polled(self) -> None:
+        self._write_full_pipeline()
+        directory = self.run_dir / "generation_tasks"
+        directory.mkdir()
+        (directory / "index.json").write_text(json.dumps({"tasks": [{"id": "task-1"}]}))
+        for status, operation in [("created", "dispatch"), ("running", "status")]:
+            with self.subTest(status=status):
+                self._write_json("generation_session.json", {"run_id": "r1", "status": status})
+                before = (self.run_dir / "generation_session.json").read_bytes()
+                state = resolve_run_state(self.run_dir, run_mode="fixture")
+                self.assertIn(f"generation-session {operation}", state["next_command"])
+                self.assertEqual(before, (self.run_dir / "generation_session.json").read_bytes())
+
     def test_mixed_review_pages_require_review(self) -> None:
         self._write_full_pipeline(include_preview=True)
         self._write_json(

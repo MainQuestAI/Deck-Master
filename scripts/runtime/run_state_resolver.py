@@ -604,7 +604,9 @@ def _next_command(stage: str, root: Path, run_id: str) -> str:
     if stage == "needs_generation_session":
         return f"deck-master generation-session create --run-dir {root} --run-id {run_id}"
     if stage == "generation_running":
-        return f"deck-master generation-session status --run-dir {root} --run-id {run_id}"
+        generation_status, _session = _read_generation_status(root)
+        operation = "dispatch" if generation_status == "created" else "status"
+        return f"deck-master generation-session {operation} --run-dir {root} --run-id {run_id}"
     if stage == "awaiting_agent_execution":
         return f"deck-master generation-session status --run-dir {root} --run-id {run_id}"
     if stage in {"generation_failed", "needs_generation_import"}:
