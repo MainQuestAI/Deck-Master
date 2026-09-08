@@ -375,6 +375,15 @@ def _font_path(family: str, page_id: str, element_id: str, weight: str = "400") 
     raise SvgVisualError(f"unresolvable SVG font {requested} on {element_id}", page_id=page_id, code="HD_SVG_TEXT_OVERFLOW")
 
 
+def _inherited_fill_opacity(node: Any, ancestors: list[Any]) -> float:
+    # fill-opacity is inherited, not composited: a child's explicit value
+    # replaces the closest ancestor value. `ancestors` is nearest-first.
+    for candidate in [node, *ancestors]:
+        if candidate.get("fill-opacity") is not None:
+            return float(candidate.get("fill-opacity"))
+    return 1.0
+
+
 def _validate_svg_text(node: Any, scene_element: dict[str, Any], page_id: str, ancestors: list[Any]) -> None:
     from PIL import ImageFont
 
@@ -390,19 +399,20 @@ def _validate_svg_text(node: Any, scene_element: dict[str, Any], page_id: str, a
     if str(node.get("data-pptx-text-ref") or "") != str(scene_element.get("text_ref") or ""):
         raise SvgVisualError(f"SVG text ref drift on {element_id}", page_id=page_id, code="HD_SVG_CONTENT_DRIFT")
     fill = str(node.get("fill") or "").lower()
-    if fill in {"", "none", "transparent"} or str(node.get("visibility") or "").lower() == "hidden" or str(node.get("display") or "").lower() == "none":
+    direct_text = str(node.text or "") + "".join(str(child.tail or "") for child in node)
+    if (direct_text.strip() and fill in {"", "none", "transparent"}) or str(node.get("visibility") or "").lower() == "hidden" or str(node.get("display") or "").lower() == "none":
         raise SvgVisualError(f"hidden SVG text is blocked: {element_id}", page_id=page_id, code="HD_SVG_CONTENT_DRIFT")
     try:
         ancestor_opacity = 1.0
         for ancestor in ancestors:
             if str(ancestor.get("display") or "").lower() == "none" or str(ancestor.get("visibility") or "").lower() in {"hidden", "collapse"}:
                 raise SvgVisualError(f"hidden SVG text ancestor is blocked: {element_id}", page_id=page_id, code="HD_SVG_CONTENT_DRIFT")
-            ancestor_opacity *= float(ancestor.get("opacity", 1)) * float(ancestor.get("fill-opacity", 1))
-        opacity = ancestor_opacity * float(node.get("opacity", 1)) * float(node.get("fill-opacity", 1))
+            ancestor_opacity *= float(ancestor.get("opacity", 1))
+        opacity = ancestor_opacity * float(node.get("opacity", 1)) * _inherited_fill_opacity(node, ancestors)
         font_size = float(str(node.get("font-size") or "").removesuffix("px"))
     except ValueError as exc:
         raise SvgVisualError(f"SVG text style is invalid: {element_id}", page_id=page_id, code="HD_SVG_TEXT_OVERFLOW") from exc
-    if opacity < 0.05 or font_size <= 0:
+    if (direct_text.strip() and opacity < 0.05) or font_size <= 0:
         raise SvgVisualError(f"hidden or invalid SVG text is blocked: {element_id}", page_id=page_id, code="HD_SVG_CONTENT_DRIFT")
     bounds = _svg_geometry_bbox(node)
     font = ImageFont.truetype(str(_font_path(str(node.get("font-family") or "Arial"), page_id, element_id, str(node.get("font-weight") or "400"))), max(1, round(font_size)))
@@ -431,14 +441,13 @@ def _validate_svg_text(node: Any, scene_element: dict[str, Any], page_id: str, a
             tspan_opacity = (
                 ancestor_opacity
                 * float(node.get("opacity", 1))
-                * float(node.get("fill-opacity", 1))
                 * float(tspan.get("opacity", 1))
-                * float(tspan.get("fill-opacity", 1))
+                * _inherited_fill_opacity(tspan, [node, *ancestors])
             )
         except ValueError as exc:
             raise SvgVisualError(f"SVG tspan paint is invalid: {element_id}", page_id=page_id, code="HD_SVG_CONTENT_DRIFT") from exc
         if tspan_fill in {"", "none", "transparent"} or tspan_opacity < 0.05:
-            raise SvgVisualError(f"hidden SVG tspan text is blocked: {element_id}", page_id=page_id, code="HD_SVG_CONTENT_DRIFT")
+            raise SvgVisualError(f"hidden SVG text in tspan is blocked: {element_id}", page_id=page_id, code="HD_SVG_CONTENT_DRIFT")
         family = str(tspan.get("font-family") or node.get("font-family") or "Arial")
         try:
             tspan_size = float(str(tspan.get("font-size") or node.get("font-size") or "").removesuffix("px"))
