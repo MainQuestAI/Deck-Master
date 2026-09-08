@@ -659,12 +659,13 @@ def command_build_brief(args: argparse.Namespace) -> dict[str, Any]:
         from runtime.run_state import read_json as _read_json
 
         agent_extract = _read_json(Path(agent_extract_path).expanduser().resolve())
-    deck_brief = compile_deck_brief(request, context_manifest, conversation, agent_extract=agent_extract)
+    deck_brief = compile_deck_brief(request, context_manifest, conversation, agent_extract=agent_extract, run_dir=run_dir)
     write_artifact(run_dir, DECK_BRIEF_NAME, deck_brief, action="deck_brief.created")
     return {
         "run_id": request["run_id"],
         "run_dir": str(run_dir),
-        "status": "brief_ready",
+        "status": deck_brief["status"],
+        "conflict_blockers": deck_brief["conflict_blockers"],
         "core_points": len(deck_brief["core_points"]),
         "brief_mode": deck_brief.get("brief_mode", ""),
     }
@@ -674,7 +675,7 @@ def command_build_claim_map(args: argparse.Namespace) -> dict[str, Any]:
     run_dir = resolve_run_dir(args)
     deck_brief = read_json(run_dir / DECK_BRIEF_NAME)
     context_manifest = read_json(run_dir / CONTEXT_MANIFEST_NAME)
-    claim_map = build_claim_map(deck_brief, context_manifest)
+    claim_map = build_claim_map(deck_brief, context_manifest, run_dir=run_dir)
     write_artifact(run_dir, CLAIM_MAP_NAME, claim_map, action="claim_map.created")
     if artifact_exists(run_dir, NARRATIVE_PLAN_NAME):
         narrative_plan = read_json(run_dir / NARRATIVE_PLAN_NAME)

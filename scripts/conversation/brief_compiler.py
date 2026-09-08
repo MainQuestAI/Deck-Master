@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import re
+import copy
+from pathlib import Path
 from typing import Any
 
 
@@ -39,7 +41,7 @@ def _agent_extract_complete(agent_extract: dict[str, Any]) -> bool:
     )
 
 
-def compile_deck_brief(
+def _compile_deck_brief_content(
     request: dict[str, Any],
     context_manifest: dict[str, Any],
     conversation: dict[str, Any],
@@ -103,3 +105,57 @@ def compile_deck_brief(
             "上下文只做运行时引用，不写入长期知识库。",
         ],
     }
+
+
+def _reconcile_conflicts(context_manifest, extraction, *, run_dir=None):
+    """Preserve declared conflicts; this does not infer natural-language conflicts."""
+    from quality.source_binding import evidence_index, source_quote_matches
+    declared = [copy.deepcopy(c) for c in context_manifest.get("conflicts", []) if isinstance(c, dict)]
+    proposals = {str(c.get("conflict_id") or ""): c for c in extraction.get("source_conflicts", []) if isinstance(c, dict)}
+    seen = {str(c.get("conflict_id") or "") for c in declared}
+    declared.extend(copy.deepcopy(c) for key, c in proposals.items() if key not in seen)
+    index = evidence_index(context_manifest)
+    resolved_records, issues = [], []
+    for original in declared:
+        conflict_id = str(original.get("conflict_id") or "")
+        proposed = proposals.get(conflict_id, original)
+        record = copy.deepcopy(original)
+        reasons = []
+        if not conflict_id or len(original.get("evidence_refs", [])) < 2:
+            reasons.append("declared conflict lacks identity or opposing evidence refs")
+        if proposed.get("description") != original.get("description") or proposed.get("evidence_refs") != original.get("evidence_refs"):
+            reasons.append("resolution must preserve the original conflicting statements and evidence refs")
+        if proposed.get("status") == "resolved":
+            resolution = str(proposed.get("resolution") or "").strip()
+            decision_ref = str(proposed.get("decision_ref") or "").strip()
+            candidates = index.get(decision_ref, [])
+            if not resolution or resolution not in extraction.get("constraints", []):
+                reasons.append("resolved constraint must be explicit in Brief constraints")
+            if len(candidates) != 1 or not source_quote_matches(*candidates[0], run_dir=run_dir):
+                reasons.append("resolution decision_ref must identify a verified original source span")
+            elif resolution not in str(candidates[0][1].get("quote") or ""):
+                reasons.append("selected constraint must be present in the verified resolution quote")
+            if not reasons:
+                record.update(status="resolved", resolution=resolution, decision_ref=decision_ref)
+        else:
+            reasons.append("declared source conflict remains open")
+        if reasons:
+            record["status"] = "open"
+            issues.append({"conflict_id": conflict_id, "code": "declared_source_conflict", "reasons": reasons,
+                           "next_action": "review_source_conflict", "question_policy": "Ask the user only if the material cannot resolve an important decision."})
+        resolved_records.append(record)
+    return resolved_records, issues
+
+
+def brief_conflict_blockers(brief, context_manifest, *, run_dir=None):
+    """Recheck current declared conflicts rather than trusting stored ready flags."""
+    return _reconcile_conflicts(context_manifest, brief, run_dir=run_dir)[1]
+
+
+def compile_deck_brief(request, context_manifest, conversation, agent_extract=None, *, run_dir: str | Path | None = None):
+    brief = _compile_deck_brief_content(request, context_manifest, conversation, agent_extract=agent_extract)
+    conflicts, blockers = _reconcile_conflicts(context_manifest, agent_extract or {}, run_dir=run_dir)
+    brief["source_conflicts"] = conflicts
+    brief["conflict_blockers"] = blockers
+    brief["status"] = "blocked" if blockers else "brief_ready"
+    return brief

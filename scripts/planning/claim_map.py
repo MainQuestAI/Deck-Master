@@ -23,7 +23,11 @@ def evidence_fragments(context_manifest: dict[str, Any]) -> list[dict[str, str]]
     return fragments
 
 
-def build_claim_map(deck_brief: dict[str, Any], context_manifest: dict[str, Any]) -> dict[str, Any]:
+def build_claim_map(deck_brief: dict[str, Any], context_manifest: dict[str, Any], *, run_dir=None) -> dict[str, Any]:
+    from conversation.brief_compiler import brief_conflict_blockers
+    blockers = brief_conflict_blockers(deck_brief, context_manifest, run_dir=run_dir)
+    if blockers:
+        raise ValueError("Unresolved declared source conflict blocks claim compilation: " + ", ".join(b["conflict_id"] for b in blockers))
     fragments = evidence_fragments(context_manifest)
     claims = []
     for index, point in enumerate(deck_brief.get("core_points", []), start=1):
