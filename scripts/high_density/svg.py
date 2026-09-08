@@ -459,7 +459,19 @@ def _validate_svg_text(node: Any, scene_element: dict[str, Any], page_id: str, a
         line_widths.append(current_width)
         line_sizes.append(current_max_size)
     visible_text = " ".join(line.strip() for line in lines)
-    if " ".join(declared_text.split()) != " ".join(visible_text.split()):
+    # CJK wraps introduce no word separator. Only remove a visual line boundary
+    # between CJK characters/punctuation; preserve real whitespace and require
+    # exact source characters, so English word boundaries cannot disappear.
+    cjk_boundary = re.compile(r"[\u2e80-\ua4cf\uf900-\ufaff\uff00-\uffef]")
+    cjk_visible = lines[0] if lines else ""
+    for previous, following in zip(lines, lines[1:]):
+        joiner = "" if (
+            previous and following
+            and cjk_boundary.fullmatch(previous[-1])
+            and cjk_boundary.fullmatch(following[0])
+        ) else " "
+        cjk_visible += joiner + following
+    if " ".join(declared_text.split()) != " ".join(visible_text.split()) and declared_text != cjk_visible:
         raise SvgVisualError(f"visible SVG text drift on {element_id}", page_id=page_id, code="HD_SVG_CONTENT_DRIFT")
     if any(step < font_size * 0.7 or step > font_size * 2.5 for step in line_steps):
         raise SvgVisualError(f"SVG tspan line height is invalid: {element_id}", page_id=page_id, code="HD_SVG_TEXT_OVERFLOW")
