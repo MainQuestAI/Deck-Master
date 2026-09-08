@@ -97,6 +97,11 @@
             "type": "string",
             "minLength": 1
           },
+          "capture_supersedes_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "description": "Explicit upgrade of the same research URL from its current partial excerpt to a complete observed capture; not a local source version override."
+          },
           "file_sha256": {
             "type": "string",
             "pattern": "^[a-f0-9]{64}$"

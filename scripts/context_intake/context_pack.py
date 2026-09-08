@@ -7,6 +7,9 @@ ASCII escaping). Each source origin/hash must occur in that ordered refs list.
 A full extraction requires real source bytes and a nonempty host snapshot;
 the snapshot is copied into the same immutable revision as the manifest.
 Legacy imports lacking attested coverage remain legacy_unknown, never full.
+A partial web research excerpt may be upgraded using capture_supersedes_sha256,
+the exact original URL and a complete actual host capture. The original excerpt
+and provenance remain in research_excerpt_capture; this does not repeat research.
 External Agents produce a Context Pack JSON; Deck Master validates and
 imports it into a run's ``context_manifest.json``.
 """
@@ -317,6 +320,7 @@ def import_context_pack(
         if isinstance(s, dict)
     }
 
+    validation_sources = json.loads(original_manifest).get("sources", [])
     pack_sources = pack.get("sources", [])
     extraction_outputs = {}
     extraction_inputs = {}
@@ -342,6 +346,12 @@ def import_context_pack(
             entry["reading"]["snapshot_sha256"] = sha
             for reading_range in entry["reading"]["read_ranges"]:
                 reading_range["snapshot_ref"] = managed
+        if existing and source.get("capture_supersedes_sha256"):
+            entry["sha256"] = source["file_sha256"]
+            entry["kind"] = existing["kind"]
+            entry["research_excerpt_capture"] = existing.get("research_excerpt_capture") or {
+                key: existing[key] for key in ("sha256", "excerpt", "reading", "provenance") if key in existing
+            }
         if existing:
             # Retain local registration identity and its authorized file path.
             entry = {**existing, **entry}
@@ -404,7 +414,7 @@ def import_context_pack(
             if hashlib.sha256(Path(path).read_bytes()).hexdigest()!=expected:
                 raise ContextPackError("Extraction snapshot changed before commit")
         for source in pack_sources:
-            existing = next((s for s in manifest["sources"] if s.get("source_id")==source.get("source_id")), None)
+            existing = next((s for s in validation_sources if s.get("source_id")==source.get("source_id")), None)
             verify_source_bytes(source, existing)
         return fingerprint
     commit_action_result(root, envelope, expected_revision=expected_revision,

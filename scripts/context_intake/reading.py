@@ -49,6 +49,24 @@ def preserved_reading(source):
 def verify_source_bytes(source, existing=None):
     """Only inspect the source explicitly authorized by registration or this pack."""
     sha=source.get('file_sha256',source.get('sha256'))
+    upgrade = source.get('capture_supersedes_sha256')
+    if upgrade:
+        old = existing or {}
+        provenance = old.get('provenance') or {}
+        extraction = source.get('extraction') or {}
+        prior = old.get('research_excerpt_capture') or {}
+        replay = old.get('sha256') == sha and prior.get('sha256') == upgrade
+        if (old.get('kind') != 'research' or old.get('media_type') != 'web'
+                or not provenance.get('task_id')
+                or source.get('origin_ref') != provenance.get('url')
+                or not str(provenance.get('url','')).startswith('https://')
+                or (not replay and (old.get('reading',{}).get('coverage') != 'partial' or old.get('sha256') != upgrade))):
+            raise ValueError('Research capture upgrade must bind the current partial excerpt and exact authorized URL')
+        if (extraction.get('status') != 'complete' or not extraction.get('tool_ref')
+                or extraction.get('read_units',0) <= 0
+                or extraction.get('read_units') != extraction.get('total_units')
+                or extraction.get('unread_regions') or sha == upgrade):
+            raise ValueError('Research capture requires a complete observed source; excerpt is not full capture')
     path=str((existing or {}).get('path') or (existing or {}).get('origin_path') or source.get('origin_path') or source.get('origin_ref') or '')
     if not sha:
         return
@@ -65,7 +83,7 @@ def verify_source_bytes(source, existing=None):
     if hashlib.sha256(target.read_bytes()).hexdigest()!=sha:
         raise ValueError('Context source SHA256 differs from actual source bytes')
     oldsha=(existing or {}).get('sha256',(existing or {}).get('file_sha256'))
-    if oldsha and oldsha!=sha:
+    if oldsha and oldsha!=sha and not upgrade:
         raise ValueError('Registered context source version changed; register the new source version first')
 
 
