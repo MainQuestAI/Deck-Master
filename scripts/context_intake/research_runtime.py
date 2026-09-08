@@ -117,6 +117,23 @@ def research_status(run_dir: str | Path, task_id: str) -> dict:
         return _status(state)
 
 
+def research_continuation(run_dir: str | Path) -> dict | None:
+    """Expose durable pending research to the common continuation router."""
+    import shlex
+    root = Path(run_dir).resolve()
+    with revision_read(root):
+        directory = revision_input_path(root, root / 'research/tasks')
+        for path in sorted(directory.glob('*.json')):
+            state = json.loads(path.read_text())
+            if state['status'] != 'pending':
+                continue
+            status = _status(state)
+            command = f'deck-master research dispatch --run-dir {shlex.quote(str(root))} --task-id {shlex.quote(status["task_id"])}'
+            return {'stage':'awaiting_agent_execution', 'reason':'pending public research; affected refs: '+', '.join(status['affected_refs']),
+                    'next_command':command, 'host_task':{'kind':'research','research_status':status}, 'build_status':{}}
+    return None
+
+
 def dispatch_research(run_dir: str | Path, task_id: str) -> dict:
     root = Path(run_dir).resolve()
     with revision_read(root) as parent:

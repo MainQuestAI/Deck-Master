@@ -46,3 +46,12 @@ def test_cli_explicit_native_cannot_skip_legacy_migration(tmp_path):
     with pytest.raises(ValueError,match='migrate'):
         _persist_build_options(tmp_path,argparse.Namespace(profile='native',authoring_mode=None))
     assert not (tmp_path/'build/route.json').exists()
+
+def test_only_persisted_native_file_quality_avoids_legacy_setup(tmp_path):
+    from deck_master import _native_file_quality_command
+    args = build_parser().parse_args(['prepare-quality-review', '--run-dir', str(tmp_path)])
+    assert not _native_file_quality_command(args)
+    persist_route(tmp_path, resolve_build_route({'profile':'native'}))
+    assert _native_file_quality_command(args)
+    args.command = 'export'
+    assert not _native_file_quality_command(args)

@@ -195,6 +195,10 @@ def test_new_native_build_emits_real_complete_artifact_chain(tmp_path):
     submit_approved_svg(root, "P001", svg, action_id=task["action_id"], produced_against=task["produced_against"], scene=scene)
     result = run_build(root)
     assert result["status"] == "completed"
+    from pptx import Presentation
+    deck = Presentation(root / result["artifact_path"])
+    assert deck.core_properties.last_modified_by == ""
+    assert deck.core_properties.comments == ""
     payload = json.loads((root / "build/native_compile_result.json").read_text())
     schema = json.loads(
         (

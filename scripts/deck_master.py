@@ -4085,11 +4085,21 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _native_file_quality_command(args: argparse.Namespace) -> bool:
+    """File-based native QA does not consume legacy workspace/backend services."""
+    if args.command not in {"quality-gate", "prepare-quality-review", "import-quality-review", "import-quality-findings"}:
+        return False
+    if not getattr(args, "run_dir", None):
+        return False
+    from build.build_route import load_persisted_route
+    return load_persisted_route(Path(args.run_dir).expanduser().resolve()).get("engine_id") == "deck_native"
+
+
 def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
     try:
-        if args.command in PROTECTED_COMMANDS:
+        if args.command in PROTECTED_COMMANDS and not _native_file_quality_command(args):
             require_setup_ready(
                 dev_allow_unsetup=_dev_allow_unsetup(args),
                 workspace=_workspace_for_setup_guard(args),

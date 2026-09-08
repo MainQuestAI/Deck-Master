@@ -61,3 +61,20 @@ def test_budget_increase_requires_separate_explicit_authorization(tmp_path):
  changed={**task,'task_id':'r2','limits':{**task['limits'],'max_tool_actions':99}}
  with pytest.raises(ValueError,match='explicit matching authorization'):
   prepare_research(root,changed)
+
+def test_next_step_discovers_durable_research_and_is_read_only(tmp_path):
+ from runtime.next_step import resolve_next_step
+ from workflow.actions import read_current_revision
+ root,task=setup(tmp_path)
+ before=read_current_revision(root)
+ result=resolve_next_step(root)
+ assert result['runtime_stage']=='awaiting_agent_execution'
+ assert 'research dispatch' in result['next_command']
+ assert result['host_task']['research_status']['affected_refs']==['solution.inventory']
+ assert read_current_revision(root)==before
+ a=dispatch_research(root,'r1')
+ assert resolve_next_step(root)['host_task']['research_status']['pending_action']['action_id']==a['action_id']
+ submit_research(root,outcome(task,a,'inconclusive'))
+ from context_intake.research_runtime import research_continuation
+ assert research_continuation(root) is None
+ assert research_status(root,'r1')['status']=='inconclusive'

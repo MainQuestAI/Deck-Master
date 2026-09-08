@@ -4,6 +4,10 @@ from typing import Any
 
 
 def native_continuation(root: Path) -> dict[str, Any] | None:
+    from context_intake.research_runtime import research_continuation
+    research = research_continuation(root)
+    if research:
+        return research
     from build.build_route import load_persisted_route
     from native_pptx.contracts import read_json
     from workflow.actions import action_applied

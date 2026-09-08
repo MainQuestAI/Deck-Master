@@ -959,6 +959,11 @@ def _compile_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dic
         if str(lock.get("run_id") or "") != run_id or str(lock.get("page_id") or "") != page_id:
             raise PptxEditabilityError(f"PPTX compiler content lock identity is inconsistent on page {page_id}")
     presentation = Presentation()
+    # python-pptx's bundled template contains its author's metadata. It is
+    # neither customer content nor evidence about who approved this deck.
+    presentation.core_properties.author = ""
+    presentation.core_properties.last_modified_by = ""
+    presentation.core_properties.comments = ""
     presentation.slide_width = Inches(_slide_width())
     presentation.slide_height = Inches(SLIDE_HEIGHT_IN)
     blank_layout = presentation.slide_layouts[6]
