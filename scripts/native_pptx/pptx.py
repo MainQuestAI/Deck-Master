@@ -291,8 +291,10 @@ def _add_text(slide: Any, element: dict[str, Any], trace: list[dict[str, Any]]) 
             if line_index == 0:
                 size = float(str(line[0]["style"].get("font_size") or 16).removesuffix("px"))
                 frame.margin_top = Pt(max(0, float(position["y"]) - size - float(bbox["y"])) * unit)
-            if line_index + 1 < len(lines) and lines[line_index + 1][0].get("position"):
-                step = float(lines[line_index + 1][0]["position"]["y"]) - float(position["y"])
+            if line_index > 0 and lines[line_index - 1][0].get("position"):
+                # Paragraph spacing positions this paragraph relative to the
+                # preceding baseline, not the following paragraph.
+                step = float(position["y"]) - float(lines[line_index - 1][0]["position"]["y"])
                 if step <= 0:
                     raise PptxEditabilityError("SVG text lines must have increasing baselines")
                 paragraph.line_spacing = Pt(step * unit)

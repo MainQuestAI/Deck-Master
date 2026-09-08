@@ -31,7 +31,8 @@ def test_anchor_and_explicit_baseline_survive_uniform_mapping(tmp_path,anchor,x,
     assert paragraphs[0]._p.pPr.get('algn')==alignment
     key='marR' if anchor=='end' else 'marL'
     assert int(paragraphs[0]._p.pPr.get(key))==pytest.approx(margin*scale*960/1672*12700,abs=1)
-    assert paragraphs[0].line_spacing.pt==pytest.approx(30*scale*960/1672,abs=.01)
+    assert paragraphs[0].line_spacing is None
+    assert paragraphs[1].line_spacing.pt==pytest.approx(30*scale*960/1672,abs=.01)
 
 def test_legacy_character_flattening_is_unchanged():
     node=ET.fromstring('<text id="legacy" font-size="20" fill="#000000" data-pptx-text="甲乙"><tspan dy="0">甲</tspan><tspan dy="30">乙</tspan></text>')

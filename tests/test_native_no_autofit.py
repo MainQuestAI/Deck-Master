@@ -20,6 +20,8 @@ def test_explicit_native_lines_disable_template_shape_autofit(native):
   assert body.xpath('./a:noAutofit')
   assert not body.xpath('./a:spAutoFit')
   assert [p.text for p in shape.text_frame.paragraphs]==['现有ERP与WMS：','提供库存事实']
+  assert shape.text_frame.paragraphs[0].line_spacing is None
+  assert shape.text_frame.paragraphs[1].line_spacing.pt==pytest.approx(56*960/1672,abs=.01)
  else:
   assert body.get('wrap')=='square'
   assert body.xpath('./a:spAutoFit')
