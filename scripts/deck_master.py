@@ -4145,8 +4145,8 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def _native_file_quality_command(args: argparse.Namespace) -> bool:
-    """File-based native QA does not consume legacy workspace/backend services."""
-    if args.command not in {"quality-gate", "prepare-quality-review", "import-quality-review", "import-quality-findings"}:
+    """Native file QA/export uses current artifact gates, not legacy services."""
+    if args.command not in {"quality-gate", "prepare-quality-review", "import-quality-review", "import-quality-findings", "export"}:
         return False
     if not getattr(args, "run_dir", None):
         return False

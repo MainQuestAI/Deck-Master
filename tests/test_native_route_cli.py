@@ -54,6 +54,8 @@ def test_only_persisted_native_file_quality_avoids_legacy_setup(tmp_path):
     persist_route(tmp_path, resolve_build_route({'profile':'native'}))
     assert _native_file_quality_command(args)
     args.command = 'export'
+    assert _native_file_quality_command(args)
+    args.run_dir = str(tmp_path / 'unrouted')
     assert not _native_file_quality_command(args)
 
 def test_unidentified_historical_artifact_cannot_default_to_native(tmp_path):
