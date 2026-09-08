@@ -17,16 +17,24 @@ helpers. Installed distributions retain their own license files and notices.
 | [NumPy](https://github.com/numpy/numpy) | Pixel and geometry measurements | BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0 |
 | [jsonschema](https://github.com/python-jsonschema/jsonschema) | Runtime input/output contract validation | MIT |
 
-The inspected `0cfbe54` macOS Python 3.12 release additionally resolved these
-transitive dependencies: lxml (BSD-3-Clause), XlsxWriter (BSD-2-Clause),
-typing_extensions (PSF-2.0), attrs, referencing, jsonschema-specifications and
-rpds-py (MIT). Platform wheels may include further native libraries; their
-bundled license files remain authoritative. These labels are an inventory,
-not a replacement for those notices or a claim about an uninspected wheel.
+The production release installs the exact versions and verified wheel hashes in
+`requirements/runtime.lock` and `requirements/build.lock`, including transitive
+and build dependencies. Its `.venv/dependency-install.json` records the actual
+platform wheel filename, SHA-256, installed version and locally built project
+wheel hash. Source development dependency ranges do not override these locks.
 
-Release verification records actual installed versions and license-file
-hashes. This historical inventory does not pin future dependency resolution;
-use the installed release's metadata and lock evidence for its exact versions.
+The locked runtime also includes lxml (BSD-3-Clause), XlsxWriter (BSD-2-Clause),
+typing_extensions (PSF-2.0), attrs, referencing, jsonschema-specifications and
+rpds-py (MIT). The build environment includes pip and setuptools (MIT), and
+wheel with its bundled notices. NumPy and other binary wheels can carry
+additional native-library notices. Installed license files remain authoritative;
+the summary license labels do not replace them.
+
+`docs/specs/sc1.1-native-deck-core/implementation/dependency-provenance.json`
+records the inspected macOS arm64 Python 3.12 distributions and the hashes of
+their retained license files. This inventory identifies a tested distribution,
+not a claim about untested wheel platforms. Reinstall verification compares
+the actual selected distribution hashes independently on Python 3.11 and 3.12.
 
 ## Host tools and separately installed components
 
