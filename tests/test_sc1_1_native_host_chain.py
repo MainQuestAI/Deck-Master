@@ -289,18 +289,69 @@ def test_partial_imagegen_resume_only_dispatches_missing_pages(tmp_path):
 
 def test_approved_content_can_return_to_an_earlier_version(tmp_path):
     from workflow.actions import read_current_revision
-    root = new_run(tmp_path, 'direct_svg')
-    package = root / 'page_packages/P001.json'
+
+    root = new_run(tmp_path, "direct_svg")
+    package = root / "page_packages/P001.json"
     original = json.loads(package.read_text())
     run_build(root)
-    initial = read_current_revision(root)['revision_id']
+    initial = read_current_revision(root)["revision_id"]
     changed = json.loads(package.read_text())
-    changed['customer_visible']['title'] = 'Interim approved title'
+    changed["customer_visible"]["title"] = "Interim approved title"
     write_json(package, changed)
     run_build(root)
-    interim = read_current_revision(root)['revision_id']
+    interim = read_current_revision(root)["revision_id"]
     write_json(package, original)
     run_build(root)
-    reverted = read_current_revision(root)['revision_id']
+    reverted = read_current_revision(root)["revision_id"]
     assert len({initial, interim, reverted}) == 3
-    assert load_content_lock(root, 'P001')['customer_visible']['title'] == original['customer_visible']['title']
+    assert load_content_lock(root, "P001")["customer_visible"]["title"] == original["customer_visible"]["title"]
+
+
+def test_cancelled_task_is_not_reused_and_superseded_task_is_rejected(tmp_path):
+    from build.native_tasks import issued_task
+    from workflow.actions import record_action_failure
+
+    root = new_run(tmp_path, "direct_svg")
+    first = run_build(root)["pages"][0]
+    cancelled = root / "workflow/actions/cancelled" / f"{first['action_id']}.json"
+    cancelled.parent.mkdir(parents=True, exist_ok=True)
+    cancelled.write_text("{}")
+    second = run_build(root)["pages"][0]
+    assert second["action_id"] != first["action_id"]
+    with pytest.raises(Exception, match="cancelled|superseded"):
+        issued_task(root, first["action_id"], "P001", first["produced_against"])
+    record_action_failure(root, action_id=second["action_id"], task_id=second["task_id"], reason="host timeout")
+    third = run_build(root)["pages"][0]
+    assert third["action_id"] != second["action_id"]
+    assert third["produced_against"] == second["produced_against"]
+    with pytest.raises(Exception, match="superseded"):
+        issued_task(root, second["action_id"], "P001", second["produced_against"])
+
+
+@pytest.mark.parametrize("change", ["cancelled", "superseded"])
+def test_submit_rechecks_host_action_inside_commit_lock(tmp_path, monkeypatch, change):
+    from build.native_engine import submit_approved_svg
+    from build.native_tasks import dispatch_native_task
+    from high_density.svg import compile_svg
+    from workflow import actions
+
+    root = new_run(tmp_path, "direct_svg")
+    task = run_build(root)["pages"][0]
+    scene = host_scene(root, load_content_lock(root, "P001"))
+    svg = compile_svg(scene, tmp_path / "host.svg").read_text()
+    original_commit = actions.commit_action_result
+
+    def delayed_commit(*args, **kwargs):
+        if change == "cancelled":
+            path = root / "workflow/actions/cancelled" / f"{task['action_id']}.json"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("{}")
+        else:
+            actions.record_action_failure(root, action_id=task["action_id"], task_id=task["task_id"], reason="expired during validation")
+            dispatch_native_task(root, "svg", PagePackageIndex(root).list_packages())
+        return original_commit(*args, **kwargs)
+
+    monkeypatch.setattr(actions, "commit_action_result", delayed_commit)
+    with pytest.raises(Exception, match="cancelled|superseded"):
+        submit_approved_svg(root, "P001", svg, action_id=task["action_id"], produced_against=task["produced_against"], scene=scene)
+    assert not (root / "high_density_build/svg/P001.svg").exists()

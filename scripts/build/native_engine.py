@@ -225,7 +225,7 @@ def submit_approved_svg(
     import hashlib
     import tempfile
     from workflow.actions import action_applied, commit_action_result, stage_action_result, record_action_failure, check_action_budget
-    from build.native_tasks import issued_task
+    from build.native_tasks import issued_task, current_task_fingerprint
     from high_density.content import load_content_lock
     from high_density.scene import validate_scene, validate_scene_content
     from high_density.svg import validate_approved_svg
@@ -234,15 +234,20 @@ def submit_approved_svg(
     root = Path(run_dir).expanduser().resolve()
     if produced_against is None:
         raise NativeEngineError("submit requires the dispatch-time input fingerprint", code="NDC_MISSING_INPUT_FINGERPRINT")
-    task = issued_task(root, str(action_id), page_id, str(produced_against))
-    task_id = task["task_id"]
     output_sha = hashlib.sha256(svg_text.encode("utf-8")).hexdigest()
     scene_sha = sha256_json(scene)
     applied = action_applied(root, str(action_id))
     if applied:
-        if applied.get("output_sha256") != output_sha or applied.get("scene_sha256") != scene_sha:
+        if (
+            applied.get("scope_pages") != [page_id]
+            or applied.get("input_fingerprint") != produced_against
+            or applied.get("output_sha256") != output_sha
+            or applied.get("scene_sha256") != scene_sha
+        ):
             raise NativeEngineError("action already applied with different SVG/Scene", code="NDC_ACTION_CONFLICT")
         return {"status": "already_applied", "page_id": page_id, "action_id": action_id, "revision_id": applied["revision_id"]}
+    task = issued_task(root, str(action_id), page_id, str(produced_against))
+    task_id = task["task_id"]
     budget = check_action_budget(root, task_id, max_actions=int(task["budget"]["max_actions"]))
     if budget["exhausted"]:
         raise NativeEngineError("native host action budget exhausted", code="NDC_BUDGET_EXHAUSTED")
@@ -283,7 +288,7 @@ def submit_approved_svg(
         marker = commit_action_result(
             root,
             envelope,
-            current_input_fingerprint=lambda: _svg_input_fingerprint(root, page_id),
+            current_input_fingerprint=lambda: current_task_fingerprint(root, action_id, page_id, str(produced_against)),
             targets={
                 "svg": root / "high_density_build/svg" / f"{page_id}.svg",
                 "scene": canonical_scene_path(root, page_id),
@@ -504,6 +509,7 @@ def write_json_native_run(root: Path, payload: dict[str, Any]) -> None:
     import jsonschema
 
     from native_pptx.contracts import SCHEMA_DIR
+
     schema_path = SCHEMA_DIR / "native-compile-result.v1.schema.json"
     jsonschema.Draft202012Validator(
         json.loads(schema_path.read_text(encoding="utf-8")), format_checker=jsonschema.FormatChecker()

@@ -13,6 +13,17 @@ STAGE_STATUS = {"imagegen": "awaiting_agent_imagegen", "reconstruct": "awaiting_
 
 
 def dispatch_native_task(root: Path, stage: str, packages: list[dict[str, Any]]) -> dict[str, Any]:
+    from workflow.actions import _acquire_run_lock, _release_run_lock
+
+    root = Path(root).expanduser().resolve()
+    lock = _acquire_run_lock(root)
+    try:
+        return _dispatch_native_task_locked(root, stage, packages)
+    finally:
+        _release_run_lock(lock)
+
+
+def _dispatch_native_task_locked(root: Path, stage: str, packages: list[dict[str, Any]]) -> dict[str, Any]:
     from build.native_engine import _svg_input_fingerprint
     from high_density.content import load_content_lock
 
@@ -39,7 +50,12 @@ def dispatch_native_task(root: Path, stage: str, packages: list[dict[str, Any]])
 
         attempts = _actions_root(root) / "attempts" / action_id
         reuse = bool(
-            action_id and prior.get("produced_against") == fingerprint and not action_applied(root, action_id) and not attempts.exists()
+            action_id
+            and prior.get("produced_against") == fingerprint
+            and prior.get("status") not in {"cancelled", "superseded"}
+            and not (_actions_root(root) / "cancelled" / f"{action_id}.json").exists()
+            and not action_applied(root, action_id)
+            and not attempts.exists()
         )
         if reuse:
             entry = prior
@@ -116,7 +132,31 @@ def issued_task(
         raise ContractError("native action scope or output kind mismatch")
     if task.get("produced_against") != produced_against:
         raise ContractError("native action dispatch fingerprint mismatch")
+    from workflow.actions import _actions_root
+
+    if task.get("status") in {"cancelled", "superseded"} or (_actions_root(root) / "cancelled" / f"{action_id}.json").exists():
+        raise ContractError("native action is cancelled or superseded")
+    task_id = str(task.get("task_id") or "")
+    if not re.fullmatch(r"[A-Za-z0-9_-]+", task_id):
+        raise ContractError("unsafe native task_id")
+    current_path = root / "build/native_tasks" / f"{task_id}.json"
+    current = read_json(current_path) if current_path.exists() else {}
+    if current.get("action_id") != action_id or current.get("status") in {"cancelled", "superseded"}:
+        raise ContractError("native action is superseded; use the current task")
     return task
+
+
+def current_task_fingerprint(
+    root: Path, action_id: str, page_id: str, produced_against: str, *, allowed_kinds: set[str] | None = None
+) -> str:
+    """Called by commit_action_result under the same lock as dispatch.
+
+    Equal content hashes do not authorize a cancelled or replaced action.
+    """
+    from build.native_engine import _svg_input_fingerprint
+
+    issued_task(root, action_id, page_id, produced_against, allowed_kinds=allowed_kinds)
+    return _svg_input_fingerprint(root, page_id)
 
 
 def approved_blueprint(root: Path, page_id: str) -> Path | None:
@@ -161,15 +201,20 @@ def submit_blueprint(
     import hashlib
 
     root = Path(run_dir).expanduser().resolve()
-    task = issued_task(root, action_id, page_id, produced_against, allowed_kinds={"imagegen"})
     source = Path(image_path).expanduser().resolve()
     data = source.read_bytes()
     digest = hashlib.sha256(data).hexdigest()
     existing = action_applied(root, action_id)
     if existing:
-        if existing.get("blueprint_sha256") != digest or existing.get("observation_sha256") != sha256_json(observation):
+        if (
+            existing.get("scope_pages") != [page_id]
+            or existing.get("input_fingerprint") != produced_against
+            or existing.get("blueprint_sha256") != digest
+            or existing.get("observation_sha256") != sha256_json(observation)
+        ):
             raise ContractError("blueprint replay has different image or observation")
         return {"status": "already_applied", "revision_id": existing["revision_id"], "page_id": page_id}
+    task = issued_task(root, action_id, page_id, produced_against, allowed_kinds={"imagegen"})
     budget = check_action_budget(root, task["task_id"], max_actions=task["budget"]["max_actions"])
     if budget["exhausted"]:
         raise ContractError("native imagegen task budget exhausted")
@@ -234,7 +279,9 @@ def submit_blueprint(
         marker = commit_action_result(
             root,
             envelope,
-            current_input_fingerprint=lambda: _svg_input_fingerprint(root, page_id),
+            current_input_fingerprint=lambda: current_task_fingerprint(
+                root, action_id, page_id, produced_against, allowed_kinds={"imagegen"}
+            ),
             targets={"image": root / receipt["image_ref"], "receipt": root / "high_density_build/blueprints" / f"{page_id}.blueprint.json"},
             expected_revision=expected_revision,
             receipt_data={"blueprint_sha256": digest, "observation_sha256": sha256_json(observation)},
