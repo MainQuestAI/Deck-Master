@@ -1,6 +1,11 @@
 """Visual CJK line breaks preserve exact locked content."""
+from pathlib import Path
+import sys
 from xml.etree import ElementTree as ET
 import pytest
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+
 from high_density.svg import _validate_svg_text, SvgVisualError
 
 

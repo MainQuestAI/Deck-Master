@@ -1,7 +1,12 @@
 """Host SVG layout uses the same font metrics as submission validation."""
+from pathlib import Path
+import sys
 from xml.etree import ElementTree as ET
 from PIL import ImageFont
 import pytest
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+
 from high_density.svg import _font_path, _text_svg, _validate_svg_text, SvgVisualError
 
 
