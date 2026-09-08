@@ -650,20 +650,7 @@ def _geometry(node: Any, tag: str, matrix: tuple[float, float, float, float, flo
     if tag == "image":
         x, y = _finite(node.get("x") or 0, label="x", element_id=element_id, visual_id=visual_id), _finite(node.get("y") or 0, label="y", element_id=element_id, visual_id=visual_id)
         width, height = _finite(node.get("width"), label="width", element_id=element_id, visual_id=visual_id), _finite(node.get("height"), label="height", element_id=element_id, visual_id=visual_id)
-        rx = _finite(node.get("rx") if node.get("rx") is not None else (node.get("ry") or 0), label="rx", element_id=element_id, visual_id=visual_id)
-        ry = _finite(node.get("ry") if node.get("ry") is not None else (node.get("rx") or 0), label="ry", element_id=element_id, visual_id=visual_id)
-        if rx < 0 or ry < 0:
-            raise SvgNativeError("rect radii must be non-negative", element_id=element_id, property_name="rx/ry")
-        rx, ry = min(rx, width / 2), min(ry, height / 2)
-        if rx > 0 and ry > 0:
-            # Explicit elliptical arcs preserve SVG radii; Office's roundRect
-            # preset uses an unrelated default adjustment.
-            d = (f"M {x+rx} {y} L {x+width-rx} {y} A {rx} {ry} 0 0 1 {x+width} {y+ry} "
-                 f"L {x+width} {y+height-ry} A {rx} {ry} 0 0 1 {x+width-rx} {y+height} "
-                 f"L {x+rx} {y+height} A {rx} {ry} 0 0 1 {x} {y+height-ry} "
-                 f"L {x} {y+ry} A {rx} {ry} 0 0 1 {x+rx} {y} Z")
-            commands = _transform_commands(_parse_path(d, element_id=element_id, visual_id=visual_id), matrix)
-            return "path", _path_bbox(commands), commands
+        # rx/ry describe rect/ellipse geometry, not SVG image clipping.
         points = [_apply_matrix(matrix, point) for point in ((x, y), (x + width, y), (x + width, y + height), (x, y + height))]
         return "image", _bbox(points), None
     if tag == "text":

@@ -1,6 +1,8 @@
 """Native readback must classify real registered picture objects consistently."""
 import sys
 from pathlib import Path
+from xml.etree import ElementTree
+import pytest
 from PIL import Image
 from pptx import Presentation
 from pptx.enum.shapes import MSO_SHAPE_TYPE
@@ -16,7 +18,8 @@ from native_pptx.contracts import sha256_file
 from native_pptx.pptx import _flatten_shape_objects
 
 
-def test_registered_picture_is_counted_as_image_not_shape(tmp_path):
+@pytest.mark.parametrize('extra_attributes', [{}, {'rx': '10', 'ry': '10'}])
+def test_registered_picture_is_counted_as_image_not_shape(tmp_path, extra_attributes):
     run, _ = fixtures._make_run(tmp_path, mode='fixture', page_count=1)
     fixtures._blueprint(run, 'P001')
     fixtures.prepare_high_density(run)
@@ -31,6 +34,11 @@ def test_registered_picture_is_counted_as_image_not_shape(tmp_path):
     })
     svg = run/'registered.svg'
     compile_svg(scene, svg, assets={'proof':asset})
+    document = ElementTree.parse(svg)
+    for node in document.getroot().iter():
+        if node.tag.rsplit('}', 1)[-1] == 'image':
+            node.attrib.update(extra_attributes)
+    document.write(svg, encoding='unicode')
     result = compile_svg_deck(NativeCompileRequest(root=run, scenes=[scene], locks={'P001':lock},
         asset_paths_by_page={'P001':{'proof':asset}}, validate_approved=validate_approved_svg,
         svg_paths={'P001':svg}, expected_sha256={'P001':sha256_file(svg)},
