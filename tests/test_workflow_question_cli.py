@@ -50,3 +50,16 @@ def test_answer_rechecks_changed_inputs_at_commit_without_partial_record(tmp_pat
         commands.answer_question(run,stage_id='deck-init',question_id='init.customer_visible_forbidden',answer=False,source_type='user',actor={'id':'synthetic','role':'user'},input_fingerprint=token)
     assert not (run/'workflow/decision_log.jsonl').exists()
     assert not (run/'build/current_revision.json').exists()
+
+def test_pre_revision_explicit_question_dependency_changes_token(tmp_path):
+    run=seed(tmp_path)
+    for name in ['deck_project.json','material_inventory.json','workspace_policy.json']:
+        (run/name).write_text('{}')
+    (run/'deck_brief.json').write_text('{"constraints":["No cloud"]}')
+    before=json.loads(cli(run,'questions').stdout);assert before['stage_id']=='deck-brief'
+    (run/'deck_brief.json').write_text('{"constraints":["Only on-prem; additional condition"]}')
+    after=json.loads(cli(run,'questions').stdout)
+    assert before['input_fingerprint']!=after['input_fingerprint']
+    result=answer(run,before['input_fingerprint'],stage_id='deck-brief',question_id='brief.non_negotiable_constraints',answer_json='"No cloud"')
+    assert result.returncode!=0
+    assert not (run/'workflow/decision_log.jsonl').exists()

@@ -11,6 +11,7 @@ import uuid
 
 from workflow.actions import revision_read, revision_input_path, stage_action_result, commit_action_result
 from workflow.decisions import DecisionLog
+from workflow.fingerprint import fingerprint_question_inputs
 from workflow.questions import QuestionResolver
 from workflow.state import resolve_workflow_state
 
@@ -27,8 +28,14 @@ def _current(root):
         for name in ['request.json', 'workflow/decision_log.jsonl']:
             path = view/name
             files[name] = hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None
-        # The revision pins every input, including explicit question dependencies.
-        token = hashlib.sha256(json.dumps([revision, stage, stage_fp, files], sort_keys=True).encode()).hexdigest()
+        # Before the first revision, declared question inputs may not be stage
+        # entry artifacts. Bind those dependencies explicitly on every read and
+        # on the commit-lock recheck; never attach an old answer to new inputs.
+        dependencies = {
+            q['question_id']: fingerprint_question_inputs(view, q['input_dependencies'])
+            for q in contract.forcing_questions if q.get('input_dependencies')
+        }
+        token = hashlib.sha256(json.dumps([revision, stage, stage_fp, files, dependencies], sort_keys=True).encode()).hexdigest()
         return {'stage_id':stage, 'input_fingerprint':token, 'questions':questions}, view, resolver, contract, stage_fp, revision
 
 
