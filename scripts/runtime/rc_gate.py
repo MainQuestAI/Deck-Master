@@ -1112,7 +1112,7 @@ def _external_dependency_closure_check(benchmark_report: dict[str, Any]) -> dict
 
             persisted = load_persisted_route(Path(run_dir_value))
             engine = str(persisted.get("engine_id") or "native")
-            route_engine = "legacy" if engine == "legacy_ppt_master" else "native"
+            route_engine = "fixture" if engine == "fixture_html" else ("legacy" if engine == "legacy_ppt_master" else "native")
         except Exception:  # noqa: BLE001 - route read failure keeps native default
             route_engine = "native"
     if route_engine == "native":
@@ -1123,6 +1123,8 @@ def _external_dependency_closure_check(benchmark_report: dict[str, Any]) -> dict
                 failures.append("native runtime kernel is not verified (probe failed)")
         except Exception as exc:  # noqa: BLE001
             failures.append(f"native runtime probe failed: {exc}")
+    elif route_engine == "fixture":
+        failures.append("fixture HTML preview cannot satisfy production dependency closure")
     else:
         if backend.get("binding_status") not in {
             "bound_verified", "bound_verified_runtime_blocked"

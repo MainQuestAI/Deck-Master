@@ -6,7 +6,7 @@ from typing import Any
 
 ROUTE_SCHEMA_VERSION = "deck_build_route.v1"
 ROUTE_PATH = Path("build/route.json")
-ENGINES = {"deck_native", "legacy_ppt_master"}
+ENGINES = {"deck_native", "legacy_ppt_master", "fixture_html"}
 AUTHORING_MODES = {"image_blueprint", "direct_svg"}
 DENSITIES = {"standard", "high"}
 
@@ -112,6 +112,11 @@ def _derive_route(request: dict[str, Any], run_dir: Path | None) -> dict[str, An
         if authoring:
             raise ValueError("legacy profile does not accept native authoring mode")
         route.update(engine_id="legacy_ppt_master", authoring_mode="legacy_external")
+    # Unprofiled fixture/dev runs keep the built-in HTML preview lifecycle.
+    # Persist a truthful route so repeated prepares cannot turn this into native.
+    if not profile and not authoring and route["origin_run_mode"] in {"fixture", "dev"}:
+        route.update(engine_id="fixture_html", authoring_mode="fixture_preview")
+        return validate_route(route)
     if run_dir and not explicit:
         if (run_dir / "build/render_request.json").exists():
             route.update(engine_id="legacy_ppt_master", authoring_mode="legacy_external", selection_origin="existing_run", selection_ref="build/render_request.json")

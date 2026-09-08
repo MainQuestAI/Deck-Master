@@ -144,6 +144,8 @@ def _assert_builder_backend_available(request: dict[str, Any], *, root: Path | N
     route = build_route(request, run_dir=root)
     if route.get("engine_id") == "deck_native":
         return {"backend_name": "deck_native", "production_capable": True, "engine_route": route}
+    if route.get("engine_id") == "fixture_html":
+        return {"backend_name": "fixture_html", "production_capable": False, "engine_route": route}
     status = builder_backend_status()
     if production_requires_builder_backend(_run_mode(request)) and not status.get("production_capable"):
         raise BuildError("needs_builder_backend: " + str(status.get("blocking_reason") or "PPT Master backend is not ready."))
@@ -357,6 +359,8 @@ def prepare_build(run_dir: str | Path) -> dict[str, Any]:
         from build.narrative_mbb import refresh_requested_projection
         refresh_requested_projection(root)
         backend = {"backend_name": "deck_native", "production_capable": True, "engine_route": route}
+    elif route.get("engine_id") == "fixture_html":
+        backend = {"backend_name": "fixture_html", "production_capable": False, "engine_route": route}
     else:
         backend = builder_backend_status()
     run_id = str(request.get("run_id") or root.name)
@@ -792,12 +796,9 @@ def run_build(run_dir: str | Path) -> dict[str, Any]:
     # SC-1.1 P1-01: the native route drives the built-in engine BEFORE any
     # external-render handoff; only legacy routes reach the old request path.
     route = build_route(request, run_dir=root)
-    explicit_native = str((request or {}).get("profile") or "").strip().lower().replace("_", "-") in {"native", "direct-svg"} or (
-        root / "build" / "route.json"
-    ).exists() and (load_persisted_route_local(root).get("engine_id") == "deck_native")
-    if route.get("engine_id") == "deck_native" and (production_requires_builder_backend(_run_mode(request)) or explicit_native):
-        # SC-1.1: every entry (production, or an explicit native/direct-svg
-        # profile, or a persisted native route) drives the same engine.
+    if route.get("engine_id") == "deck_native":
+        # Fixture HTML has its own route; every explicit native selection now
+        # drives the same native engine even before a manifest exists.
         return _run_native_build(root, request, run_id)
     manifest = _load_or_prepare_manifest(root)
     build_dir = root / BUILD_DIR
@@ -902,7 +903,7 @@ def run_build(run_dir: str | Path) -> dict[str, Any]:
         "schema_version": RENDER_RESULT_SCHEMA_VERSION,
         "run_id": run_id,
         "session_id": session_id,
-        "tool": "ppt-master",
+        "tool": "fixture_html" if route.get("engine_id") == "fixture_html" else "ppt-master",
         "status": "completed",
         "run_mode": _run_mode(request),
         "output_profile": str(manifest.get("output_profile") or "client_delivery"),

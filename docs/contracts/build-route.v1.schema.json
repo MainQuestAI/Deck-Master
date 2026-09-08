@@ -20,14 +20,16 @@
     "engine_id": {
       "enum": [
         "deck_native",
-        "legacy_ppt_master"
+        "legacy_ppt_master",
+        "fixture_html"
       ]
     },
     "authoring_mode": {
       "enum": [
         "image_blueprint",
         "direct_svg",
-        "legacy_external"
+        "legacy_external",
+        "fixture_preview"
       ]
     },
     "density": {
@@ -159,6 +161,50 @@
               "auto",
               "real"
             ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "engine_id": {
+            "const": "fixture_html"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "authoring_mode": {
+            "const": "fixture_preview"
+          },
+          "origin_run_mode": {
+            "enum": [
+              "fixture",
+              "dev"
+            ]
+          },
+          "selection_origin": {
+            "enum": [
+              "default_policy",
+              "existing_run"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "authoring_mode": {
+            "const": "fixture_preview"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "engine_id": {
+            "const": "fixture_html"
           }
         }
       }
