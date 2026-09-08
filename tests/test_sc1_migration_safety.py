@@ -28,12 +28,16 @@ from skills.installer import (  # noqa: E402
 
 def _fake_release_runtime(release_root: Path) -> dict[str, str]:
     import sys as _sys
+    import shlex
 
     from skills import installer as installer_module
 
     runtime_python = release_root / installer_module.RELEASE_PYTHON_RELATIVE
     runtime_python.parent.mkdir(parents=True, exist_ok=True)
-    runtime_python.symlink_to(_sys.executable)
+    # A symlink under the fake .venv loses the real interpreter's installed
+    # dependencies. Execute the original venv without bypassing the smoke.
+    runtime_python.write_text(f'#!/bin/sh\nexec {shlex.quote(_sys.executable)} "$@"\n')
+    runtime_python.chmod(0o755)
     installer_module._record_release_runtime(release_root, "3.12.8")
     return {
         "python_requirement": installer_module.RUNTIME_PYTHON_REQUIREMENT,
