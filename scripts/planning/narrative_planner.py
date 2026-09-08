@@ -444,6 +444,8 @@ def plan_narrative(
     planner_mode: str = "production_narrative",
     solution_model: dict[str, Any] | None = None,
     narrative_candidates: list[dict[str, Any]] | None = None,
+    selected_candidate_id: str | None = None,
+    selection_decision_ref: str | None = None,
 ) -> dict[str, Any]:
     page_count = resolve_page_count(str(request.get("target_pages") or "auto"), str(request.get("audience") or "client"))
     gaps = identify_gaps(request)
@@ -553,7 +555,8 @@ def plan_narrative(
     # derived from the chosen storyline is recorded with a
     # single_viable_path selection reason — no fabricated pseudo-options.
     candidates: list[dict[str, Any]] = []
-    selected_id = ""
+    selected_id = None
+    decision_ref = str(selection_decision_ref or request.get("selection_decision_ref") or "")
     recommended_id = ""
     selection_reason = ""
     if solution_driven:
@@ -561,15 +564,12 @@ def plan_narrative(
             candidates = [dict(item) for item in narrative_candidates if isinstance(item, dict)]
             recommended = next((item for item in candidates if item.get("recommended")), candidates[0] if candidates else None)
             recommended_id = str((recommended or {}).get("candidate_id") or "")
-            selected_id = str((recommended or {}).get("candidate_id") or "")
-            selection_reason = str((recommended or {}).get("recommendation_reason") or "recommended candidate")
         else:
-            selected_id = "candidate_single_viable_path"
-            recommended_id = selected_id
+            recommended_id = "candidate_single_viable_path"
             selection_reason = "single_viable_path: one coherent storyline derivable from the solution model; no fabricated alternatives"
             candidates = [
                 {
-                    "candidate_id": selected_id,
+                    "candidate_id": recommended_id,
                     "title": str(request.get("project_name") or "方案主线"),
                     "storyline": [beat.get("conclusion") or beat.get("page_title", "") for beat in beats],
                     "recommended": True,
@@ -577,6 +577,17 @@ def plan_narrative(
                     "beat_ids": [beat["beat_id"] for beat in beats],
                 }
             ]
+
+        supplied_selection = selected_candidate_id or request.get("selected_candidate_id")
+        if supplied_selection:
+            if str(supplied_selection) not in {str(c.get("candidate_id")) for c in candidates}:
+                raise ValueError("selected narrative candidate is not in current candidates")
+            if not decision_ref.strip():
+                raise ValueError("selected narrative candidate requires selection_decision_ref")
+            selected_id = str(supplied_selection)
+            selection_reason = "explicit selection recorded in " + decision_ref
+        elif len(candidates) > 1:
+            gaps.append({"field": "narrative_selection", "message": "多个真实主线候选尚无明确选择；推荐不代表用户决定。"})
 
     return {
         "run_id": request.get("run_id", ""),
@@ -594,6 +605,7 @@ def plan_narrative(
         "candidates": candidates,
         "recommended_candidate_id": recommended_id,
         "selected_candidate_id": selected_id,
+        "selection_decision_ref": decision_ref if selected_id else "",
         "selection_reason": selection_reason,
         "coverage_matrix": module_coverage["coverage_matrix"],
         "required_modules_status": module_coverage["required_modules_status"],
