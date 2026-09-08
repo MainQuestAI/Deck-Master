@@ -45,3 +45,35 @@ def test_production_content_cannot_be_downgraded(handoff):
         with pytest.raises(ValueError,match='RUN_MODE_CONFLICT'):
             operation()
     assert not (root/'page_packages/index.json').exists()
+
+def test_source_references_are_design_provenance_not_fact_support(handoff):
+    root,result=handoff
+    submit_content(root,result)
+    page=json.loads((root/'page_packages/P0.json').read_text())
+    assert page['provenance']['source_refs']==['meeting']
+    assert page['provenance']['fact_kind']=='design_suggestion'
+    assert page['evidence_bindings']==[]
+    assert page['internal_only']['evidence_state']=='design_basis'
+
+def test_customer_fact_without_quote_is_rejected(handoff):
+    root,result=handoff;result['pages'][0]['fact_kind']='customer_fact'
+    with pytest.raises(ValueError,match='verified quote'):
+        submit_content(root,result)
+
+@pytest.mark.parametrize('tamper',[False,True])
+def test_quote_returns_require_actual_bytes_and_locator(tmp_path,tamper):
+    import hashlib
+    raw=tmp_path.parent/(tmp_path.name+'-source.txt');raw.write_text('库存状态不可视。')
+    source={'source_id':'s','path':str(raw),'sha256':hashlib.sha256(raw.read_bytes()).hexdigest()}
+    for name,data in {'request':{'run_id':'r','run_mode':'production'},'context_manifest':{'sources':[source]},'narrative_plan':{'run_id':'r','beats':[{'beat_id':'P1','role':'problem'}]}}.items():
+        (tmp_path/f'{name}.json').write_text(json.dumps(data))
+    task=prepare_content(tmp_path);quote=raw.read_text()
+    result={'schema_version':'deck_page_content_result.v1','run_id':'r','task_id':task['task_id'],'source_fingerprint':task['based_on']['input_fingerprint'],'evidence_quotes':[{'source_id':'s','evidence_id':'e1','quote':quote,'quote_sha256':hashlib.sha256(quote.encode()).hexdigest(),'source_position':{'unit_type':'character','start':1 if tamper else 0,'end':len(quote)}}],'pages':[{'page_id':'P1','page_title':'业务问题','conclusion':quote,'business_implication':'需要业务核实库存异常。','source_refs':['s'],'evidence_bindings':['s::e1'],'fact_kind':'customer_fact'}],'content_review':{'status':'approved_for_build','reviewer':'host','basis':'reviewed exact source statement'}}
+    if tamper:
+        with pytest.raises(ValueError,match='original source'):submit_content(tmp_path,result)
+        assert not (tmp_path/'page_packages/index.json').exists()
+    else:
+        assert submit_content(tmp_path,result)['page_count']==1
+        page=json.loads((tmp_path/'page_packages/P1.json').read_text())
+        assert page['evidence_bindings']==['s::e1']
+        assert page['internal_only']['evidence_state']=='referenced'

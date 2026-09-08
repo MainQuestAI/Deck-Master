@@ -62,7 +62,7 @@ def prepare_content(run_dir):
                 'task_id':'content_'+based_on['input_fingerprint'][:24],'status':'awaiting_agent_content',
                 'based_on':based_on,'page_ids':ids,'pages':beats,
                 'output_contract':{'schema_version':'deck_page_content_result.v1','required':['run_id','task_id','source_fingerprint','pages','content_review'],
-                    'page_fields':['page_id','page_title','conclusion','business_implication','evidence_refs','fact_kind'],
+                    'page_fields':['page_id','page_title','conclusion','business_implication','source_refs','evidence_bindings','fact_kind'],
                     'content_review':{'status':'approved_for_build','reviewer':'actual host reviewer identity','basis':'actual content review rationale'},
                     'boundary':'Write finished customer-visible copy and source bindings. Do not submit layout instructions or claim final delivery approval.'},
                 'submit_command':f'deck-master page-content submit --run-dir {shlex.quote(str(root))} --input <host-content.json>'}
@@ -113,6 +113,26 @@ def submit_content(run_dir, result):
         if not isinstance(review,dict) or review.get('status')!='approved_for_build' or not str(review.get('reviewer') or '').strip() or not str(review.get('basis') or '').strip():
             raise ValueError('content result requires explicit host content review for building, not delivery approval')
         context=_read(root,'context_manifest.json',{})
+        from quality.source_binding import source_quote_matches, evidence_index
+        source_map={str(s.get('source_id')):s for s in context.get('sources',[]) if isinstance(s,dict)}
+        quotes=result.get('evidence_quotes',[])
+        if not isinstance(quotes,list):
+            raise ValueError('evidence_quotes must be a list')
+        for quote in quotes:
+            if not isinstance(quote,dict) or str(quote.get('source_id')) not in source_map:
+                raise ValueError('quote must identify an existing Context source')
+            source=source_map[str(quote['source_id'])]
+            if not source_quote_matches(source,quote,run_dir=root):
+                raise ValueError('quote must exactly match original source bytes and position')
+            if not str(quote.get('evidence_id') or '').strip() or '::' in quote['evidence_id']:
+                raise ValueError('quote evidence_id must be a nonempty local identity')
+            evidence={key:copy.deepcopy(value) for key,value in quote.items() if key!='source_id'}
+            existing=source.setdefault('evidence_candidates',[])
+            same=[item for item in existing if item.get('evidence_id')==evidence['evidence_id']]
+            if same and same != [evidence]:
+                raise ValueError('quote identity conflicts with an existing Context evidence')
+            if not same:
+                existing.append(evidence)
         sources={str(s.get('source_id')) for s in context.get('sources',[]) if isinstance(s,dict)}
         narrative=copy.deepcopy(_read(root,'narrative_plan.json'))
         for beat,page in zip(narrative['beats'],pages):
@@ -123,16 +143,24 @@ def submit_content(run_dir, result):
             from production.page_builder import assert_no_production_instructions
             for key in ('page_title', 'conclusion', 'business_implication'):
                 assert_no_production_instructions(page[key], page_id=page['page_id'])
-            refs=page.get('evidence_refs')
+            refs=page.get('source_refs',page.get('evidence_refs'))
             if not isinstance(refs,list) or not refs or any(not isinstance(ref,str) or ref not in sources for ref in refs):
                 raise ValueError('each page must bind actual Context source ids')
             # Only authored visible content crosses this boundary; identities,
             # order, role and model references remain owned by the narrative.
-            beat.update({key:copy.deepcopy(page[key]) for key in ('page_title','conclusion','business_implication','evidence_refs','fact_kind')})
+            beat.update({key:copy.deepcopy(page[key]) for key in ('page_title','conclusion','business_implication','fact_kind')})
+            beat['source_refs']=refs
+            beat['evidence_bindings']=copy.deepcopy(page.get('evidence_bindings') or [])
+            for binding in beat['evidence_bindings']:
+                matches=evidence_index(context).get(str(binding),[])
+                if '::' not in str(binding) or len(matches)!=1 or not source_quote_matches(*matches[0],run_dir=root):
+                    raise ValueError('every evidence binding requires a source-qualified, verified original quote')
+            if page['fact_kind']=='customer_fact' and not beat['evidence_bindings']:
+                raise ValueError('customer facts require verified quote evidence bindings, not source ids')
             beat['page_id']=page['page_id']
         with tempfile.TemporaryDirectory(prefix='deck-page-content-') as temp:
             candidate=Path(temp)
-            report=write_page_packages(candidate,narrative_plan=narrative,context_manifest=context,solution_model=_read(root,'solution_model.json',{}),sourcing_plan=_read(root,'sourcing_plan.json',{}))
+            report=write_page_packages(candidate,narrative_plan=narrative,context_manifest=context,solution_model=_read(root,'solution_model.json',{}),sourcing_plan=_read(root,'sourcing_plan.json',{}),source_run_dir=root)
             if report['page_count']!=len(pages) or report['insufficient_pages']:
                 raise ValueError('content handoff did not produce a complete source-bound page set')
             packages=[json.loads(p.read_text()) for p in (candidate/'page_packages').glob('*.json') if p.name!='index.json']
@@ -141,13 +169,17 @@ def submit_content(run_dir, result):
             if findings:
                 raise ValueError('content review blocked: '+findings[0]['message'])
             narrative_json = json.dumps(narrative,ensure_ascii=False,indent=2)
+            context_json = json.dumps(context,ensure_ascii=False,indent=2)
             completed_refs = copy.deepcopy(task['based_on']['input_refs'])
             for ref in completed_refs:
+                if ref['ref'] == 'context_manifest.json':
+                    ref['sha256'] = hashlib.sha256(context_json.encode()).hexdigest()
                 if ref['ref'] == 'narrative_plan.json':
                     ref['sha256'] = hashlib.sha256(narrative_json.encode()).hexdigest()
             task.update(status='content_ready',result_sha256=digest,content_review=review,
                         completed_based_on={'input_refs':completed_refs,'input_fingerprint':fingerprint_payload(completed_refs)})
             files={str(path.relative_to(candidate)):path.read_text() for path in (candidate/'page_packages').glob('*.json')}
+            files['context_manifest.json']=context_json
             files.update({'narrative_plan.json':json.dumps(narrative,ensure_ascii=False,indent=2),TASK_REF:json.dumps(task,ensure_ascii=False,indent=2)})
             receipt=_commit(root,parent,files,task['task_id'])
         return {'status':'content_ready','page_count':len(pages),'revision_id':receipt['revision_id'],'content_review':review,'delivery_approved':False}
