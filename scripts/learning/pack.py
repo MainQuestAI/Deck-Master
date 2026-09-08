@@ -149,37 +149,27 @@ def _aggregate_strong_assets(workspace_dir: Path) -> dict[str, Any]:
 
 
 def _aggregate_failure_modes(workspace_dir: Path) -> list[dict[str, Any]]:
-    """Aggregate quality failure modes from run quality reports."""
-    message_counter: Counter[str] = Counter()
-    message_repair: dict[str, str] = {}
-
+    """Count severity without promoting customer-specific findings to advice."""
+    counts: Counter[str] = Counter()
+    sources: dict[str, set[str]] = defaultdict(set)
     for run_dir in _find_run_dirs(workspace_dir):
-        quality_dir = run_dir / "quality_reports"
-        if not quality_dir.exists():
-            continue
-        for gate_file in quality_dir.glob("*_gate.json"):
-            report = _safe_read(gate_file)
-            if not report:
-                continue
-            for f in report.get("findings", []):
-                if not isinstance(f, dict):
+        for gate_file in (run_dir / "quality_reports").glob("*_gate.json"):
+            report = _safe_read(gate_file) or {}
+            for finding in report.get("findings", []):
+                if not isinstance(finding, dict):
                     continue
-                msg = f.get("message", "")[:80]
-                if msg:
-                    message_counter[msg] += 1
-                    repair = f.get("repair_instruction", "")
-                    if repair:
-                        message_repair[msg] = repair
-
-    result: list[dict[str, Any]] = []
-    for i, (msg, count) in enumerate(message_counter.most_common(10), start=1):
-        result.append({
-            "failure_id": f"failure_{i:03d}",
-            "description": msg,
-            "count": count,
-            "repair_instruction": message_repair.get(msg, ""),
-        })
-    return result
+                severity = str(finding.get("severity") or "unknown")
+                if severity not in {"P0", "P1", "P2", "P3"}:
+                    severity = "unknown"
+                counts[severity] += 1
+                sources[severity].add(gate_file.relative_to(workspace_dir).as_posix())
+    return [{"failure_id": "failure_" + severity,
+             "description": severity + " quality findings; details remain in the original run",
+             "count": count, "repair_instruction": "",
+             "source_refs": sorted(sources[severity]),
+             "applicable_scope": "Original source runs only; inspect their evidence before reuse",
+             "not_applicable_scope": "Customer facts or repair instructions for another project"}
+            for severity, count in counts.most_common(10)]
 
 
 def _build_agent_guidance(failure_modes: list[dict[str, Any]], strong_assets: list[dict[str, Any]]) -> list[str]:

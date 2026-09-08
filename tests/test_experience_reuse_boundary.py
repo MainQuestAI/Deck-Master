@@ -31,3 +31,13 @@ def test_explicit_bounded_abstraction_excludes_customer_notes(tmp_path):
     assert cards[0]['user_reason']==payload['reusable_reason']
     assert '123456' not in json.dumps(cards)
     assert cards[0]['not_applicable_scope']==payload['not_applicable_scope']
+
+
+def test_quality_gate_details_remain_in_source_run(tmp_path):
+    report=tmp_path/'runs/syntheticA/quality_reports/draft_gate.json';report.parent.mkdir(parents=True)
+    report.write_text(json.dumps({'findings':[{'severity':'P1','message':'Private customer marker 123456','repair_instruction':'Repeat private marker 123456'}]}))
+    pack=build_learning_pack(tmp_path)
+    assert '123456' not in json.dumps(pack)
+    assert '123456' not in (tmp_path/'learning/agent_context_summary.md').read_text()
+    assert pack['frequent_failure_modes'][0]['count']==1
+    assert pack['frequent_failure_modes'][0]['source_refs']==['runs/syntheticA/quality_reports/draft_gate.json']
