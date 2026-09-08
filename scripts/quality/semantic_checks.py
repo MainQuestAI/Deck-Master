@@ -40,6 +40,7 @@ def find_unsupported_numbers(
     packages: list[dict[str, Any]],
     *,
     context_manifest: dict[str, Any] | None = None,
+    run_dir: str | Path | None = None,
 ) -> list[dict[str, Any]]:
     """Require reviewed support for each exact numeric claim, not a page citation.
 
@@ -48,13 +49,8 @@ def find_unsupported_numbers(
     the statement, captured quote hash, applicability and review provenance.
     A reviewer establishes the support relation; number-string overlap cannot.
     """
-    evidence: dict[str, list[dict]] = {}
-    for source in (context_manifest or {}).get("sources") or []:
-        if not isinstance(source, dict):
-            continue
-        for item in source.get("evidence_candidates") or []:
-            if isinstance(item, dict) and item.get("evidence_id"):
-                evidence.setdefault(str(item["evidence_id"]), []).append(item)
+    from quality.source_binding import evidence_index
+    evidence = evidence_index(context_manifest)
     findings: list[dict[str, Any]] = []
     for package in packages:
         page_id = str(package.get("page_id") or "")
@@ -70,10 +66,12 @@ def find_unsupported_numbers(
                     candidates = evidence.get(str(citation.get("evidence_id") or ""), [])
                     if citation.get("claim_text") != claim or citation.get("evidence_id") not in bound or len(candidates) != 1:
                         continue
-                    candidate = candidates[0]
+                    source, candidate = candidates[0]
+                    from quality.source_binding import source_quote_matches
                     quote = str(candidate.get("quote") or "")
                     if (
-                        candidate.get("statement") == claim
+                        source_quote_matches(source, candidate, run_dir=run_dir)
+                        and candidate.get("statement") == claim
                         and candidate.get("review_status") == "supported"
                         and str(candidate.get("review_ref") or "").strip()
                         and candidate.get("publication_status") == "safe_to_use"

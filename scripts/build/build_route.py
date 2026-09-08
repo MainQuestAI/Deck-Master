@@ -103,6 +103,8 @@ def resolve_build_route(request: dict[str, Any], *, run_dir: str | Path | None =
     if root is not None:
         persisted = load_persisted_route(root)
         if persisted:
+            from build.run_policy import enforce_origin_mode
+            enforce_origin_mode(root, request or {})
             return persisted
     return _derive_route(request or {}, root)
 

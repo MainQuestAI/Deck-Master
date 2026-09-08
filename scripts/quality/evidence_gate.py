@@ -14,6 +14,7 @@ def evaluate_evidence_gate(
     *,
     packages: list[dict[str, Any]] | None = None,
     context_manifest: dict[str, Any] | None = None,
+    run_dir: str | Path | None = None,
 ) -> dict[str, Any]:
     """检查 claim 与 required evidence。
 
@@ -96,7 +97,7 @@ def evaluate_evidence_gate(
 
     if packages:
         from quality.semantic_checks import find_unsupported_numbers
-        for index, finding in enumerate(find_unsupported_numbers(packages, context_manifest=context_manifest), 1):
+        for index, finding in enumerate(find_unsupported_numbers(packages, context_manifest=context_manifest, run_dir=run_dir), 1):
             findings.append({
                 **finding,
                 "finding_id": f"evidence_numeric_{index:03d}",
@@ -105,6 +106,11 @@ def evaluate_evidence_gate(
                 "refs": ["page_packages/", "context_manifest.json"],
                 "repair_instruction": "Remove or qualify the unsupported number, or bind this exact claim to reviewed source evidence with matching unit and period.",
             })
+
+    if packages:
+        from quality.source_binding import find_invalid_source_bindings
+        for index, finding in enumerate(find_invalid_source_bindings(packages, context_manifest, run_dir=run_dir), 1):
+            findings.append({**finding, "finding_id": f"evidence_source_span_{index:03d}", "severity": "P1", "dimension": "source_binding", "refs": ["context_manifest.json"], "repair_instruction": "Read the original source, correct the source-qualified reference and exact quoted range, or remove the unsupported assertion."})
 
     if packages:
         from quality.metric_checks import find_metric_scope_conflicts
