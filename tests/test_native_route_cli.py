@@ -55,3 +55,8 @@ def test_only_persisted_native_file_quality_avoids_legacy_setup(tmp_path):
     assert _native_file_quality_command(args)
     args.command = 'export'
     assert not _native_file_quality_command(args)
+
+def test_unidentified_historical_artifact_cannot_default_to_native(tmp_path):
+    (tmp_path / 'historical.pptx').write_bytes(b'historical output is not a new run')
+    with pytest.raises(ValueError, match='migration_required'):
+        resolve_build_route({'builder_profile':'standard'},run_dir=tmp_path)

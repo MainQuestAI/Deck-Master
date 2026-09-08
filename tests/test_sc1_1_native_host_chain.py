@@ -381,3 +381,13 @@ def test_explicit_svg_retry_waits_for_host_without_discarding_approved_page(tmp_
     assert revision_input_path(root, root / "high_density_build/svg/P001.svg").read_text() == svg
     assert run_build(root)["pages"][0]["action_id"] == retry["pages"][0]["action_id"]
     assert build_status(root)["status"] == "awaiting_svg_authoring"
+
+def test_new_run_cannot_promote_legacy_ready_without_approved_lock(tmp_path):
+    from build.native_engine import _approved_packages
+    root = new_run(tmp_path, 'direct_svg')
+    path = root / 'page_packages/P001.json'
+    package = json.loads(path.read_text())
+    package['status'] = 'ready'
+    path.write_text(json.dumps(package))
+    with pytest.raises(Exception, match='legacy ready'):
+        _approved_packages(root)

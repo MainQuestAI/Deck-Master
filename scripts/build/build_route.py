@@ -93,6 +93,8 @@ def _derive_route(request: dict[str, Any], run_dir: Path | None) -> dict[str, An
                 route.update(engine_id="legacy_ppt_master", authoring_mode="legacy_external", selection_origin="existing_run", selection_ref="render_results/render_result.json")
             elif tool != "deck_native":
                 raise ValueError("migration_required: existing render engine cannot be identified")
+        elif any((run_dir / name).exists() for name in ("build/build_manifest.json", "build/artifact_manifest.json", "final_approval.json")) or any(run_dir.glob("*.pptx")):
+            raise ValueError("migration_required: historical output exists without an identifiable engine; preserve it read-only")
     return validate_route(route)
 
 

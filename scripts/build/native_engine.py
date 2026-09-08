@@ -71,6 +71,15 @@ def _approved_packages(root: Path) -> list[dict[str, Any]]:
 
     seen_ids, seen_orders = set(), set()
     for package in packages:
+        if package.get("status") == "ready":
+            from native_pptx.contracts import sha256_json
+            from high_density.content import load_content_lock
+            try:
+                legacy_lock = load_content_lock(root, str(package["page_id"]), expected_run_id=root.name)
+            except (ValueError, RuntimeError, OSError, KeyError):
+                legacy_lock = {}
+            if legacy_lock.get("page_package_sha256") != sha256_json(package):
+                raise NativeEngineError("legacy ready requires a matching approved Content Lock; use ready_for_build for newly approved packages", code="NDC_PACKAGE_APPROVAL")
         candidate = {**package, "status": "ready_for_build"} if package.get("status") == "ready" else package
         assert_valid("page_package", candidate)
         page_id, order = str(package["page_id"]), int(package["order"])
