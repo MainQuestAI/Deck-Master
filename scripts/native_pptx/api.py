@@ -169,20 +169,33 @@ def compile_svg_deck(request: NativeCompileRequest) -> NativeCompileResult:
             output_root=request.output_root,
             canvas_mode=request.canvas_mode,
         )
-    except PptxEditabilityError as exc:
-        raise NativeCompileError(str(exc), code=NDC_COMPILE_FAILED, recovery="repair the page and recompile") from exc
-    except SvgVisualError as exc:
-        page_id = str(getattr(exc, "page_id", "") or "")
-        svg_file = request._svg(page_id)
+    except (PptxEditabilityError, SvgVisualError, ContractError) as exc:
+        # The adapter and compiler wrap validation errors with explicit causes.
+        # Preserve typed context rather than guessing IDs from message text.
+        from .svg_native import SvgNativeError
+        from .svg_paint import SvgPaintError
+        page_id = element_id = source_code = ""
+        cause: BaseException | None = exc
+        seen: set[int] = set()
+        while cause is not None and id(cause) not in seen:
+            seen.add(id(cause))
+            if isinstance(cause, SvgVisualError):
+                page_id = cause.page_id or page_id
+                source_code = cause.code or source_code
+            if isinstance(cause, (SvgNativeError, SvgPaintError)):
+                element_id = cause.element_id or element_id
+                source_code = cause.code or source_code
+            cause = cause.__cause__
+        input_sha256 = ""
+        if page_id in {str(scene.get("page_id")) for scene in request.scenes}:
+            svg_file = request._svg(page_id)
+            if svg_file.is_file():
+                input_sha256 = sha256_file(svg_file)
         raise NativeCompileError(
-            str(exc),
-            code=NDC_ERROR_MAP.get(str(getattr(exc, "code", "")), NDC_COMPILE_FAILED),
-            page_id=page_id,
-            input_sha256=sha256_file(svg_file) if svg_file.exists() else "",
-            recovery="fix the SVG subset violation on the page and re-approve it",
+            str(exc), code=NDC_ERROR_MAP.get(source_code, NDC_COMPILE_FAILED),
+            page_id=page_id, element_id=element_id, input_sha256=input_sha256,
+            recovery="fix the SVG subset violation on the page and re-approve it" if source_code else "repair the page and recompile",
         ) from exc
-    except ContractError as exc:
-        raise NativeCompileError(str(exc), code=NDC_COMPILE_FAILED) from exc
     input_sha = {
         str(scene.get("page_id") or ""): sha256_file(request._svg(str(scene.get("page_id") or "")))
         for scene in request.scenes

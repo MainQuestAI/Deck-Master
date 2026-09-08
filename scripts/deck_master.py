@@ -4162,6 +4162,7 @@ def _native_file_quality_command(args: argparse.Namespace) -> bool:
 
 def main() -> None:
     from build.native_engine import NativeEngineError
+    from native_pptx.api import NativeCompileError
     parser = build_parser()
     args = parser.parse_args()
     try:
@@ -4196,6 +4197,7 @@ def main() -> None:
         ApprovalError,
         PolicyError,
         NativeEngineError,
+        NativeCompileError,
         ValueError,
     ) as exc:
         if str(exc).startswith("RUN_MODE_CONFLICT"):
@@ -4207,6 +4209,8 @@ def main() -> None:
             stage = str(getattr(exc, "stage", "") or "")
             if code.startswith("NDC_"):
                 print_json({"code": code, "message": str(exc), "status": "blocked",
+                            "page_id": page_id, "element_id": str(getattr(exc, "element_id", "") or ""),
+                            "input_sha256": str(getattr(exc, "input_sha256", "") or ""),
                             "fix": str(getattr(exc, "recovery", "") or "Repair the native input and retry."),
                             "next_command": "deck-master build status --run-dir <run_dir>"})
                 raise SystemExit(2) from exc
