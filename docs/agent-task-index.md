@@ -196,3 +196,36 @@ For compatibility evidence, optionally repeat the same command set on Python
 
 - Success state: all tests pass and `agent-doctor` returns `ready` or explains
   only expected preview warnings.
+
+## Bounded public research
+
+Use `research prepare --run-dir <run> --input <task.json>` with the formal
+`research-task.v1.schema.json` contract. Each task contains one concrete
+question; create separate task IDs for independent questions. `based_on`
+records the SHA-256 of each input and the canonical JSON fingerprint of that
+reference list. The run-relative `authorization_ref` points to a record with
+`scope: public_research`, an explicit `authorization_basis`, and exactly the
+approved `public_query_context` and `allowed_sources` (HTTPS hostnames).
+Internal questions and private context are not included in the dispatched
+query. Raising the default two actions/two rounds/six sources requires matching
+`limits` in that authorization record.
+
+`research dispatch --run-dir <run> --task-id <id>` durably reserves one host
+action before the tool call. On restart it returns the same pending action ID;
+inspect the host's existing tool observation before deciding whether execution
+is still needed. `research status` is read-only. The host executes the approved
+query and calls `research submit --run-dir <run> --input <result.json>` with
+`task_id`, the issued `action_id`, `status`, one `query_log` entry containing
+`tool`, the exact `query`, and the actual `observation`, plus `sources`,
+`result_summary`, `counter_evidence`, and `open_questions`.
+
+Accepted terminal statuses are `executed`, `inconclusive`, and
+`capability_unavailable`; `retryable_error` allows another action within the
+remaining budget and becomes `inconclusive` at exhaustion. Executed results
+require consulted HTTPS sources within the authorization, captured `excerpt`,
+`applicability_bounds`, and a counter-evidence check. The runtime records host
+observations; it does not independently attest that the external tool ran.
+Terminal results atomically update the existing Context Manifest with affected
+judgments, unresolved questions, and `externally_verified_candidate` sources.
+They never establish unknown customer facts or approve delivery. Exact result
+replay is idempotent; conflicting replay and unissued actions are rejected.

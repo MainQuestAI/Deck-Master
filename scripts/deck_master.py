@@ -3836,13 +3836,13 @@ def build_parser() -> argparse.ArgumentParser:
     p_research = sub.add_parser("research", help="Prepare, dispatch and record authorized public host research")
     research_sub = p_research.add_subparsers(dest="research_operation", required=True)
     for operation in ("prepare", "dispatch", "submit", "status"):
-        parser = research_sub.add_parser(operation)
-        add_run_args(parser)
+        p_operation = research_sub.add_parser(operation)
+        add_run_args(p_operation)
         if operation in {"prepare", "submit"}:
-            parser.add_argument("--input", required=True, help="Research task or issued-action result JSON")
+            p_operation.add_argument("--input", required=True, help="Research task or issued-action result JSON")
         else:
-            parser.add_argument("--task-id", required=True)
-        parser.set_defaults(func=command_research)
+            p_operation.add_argument("--task-id", required=True)
+        p_operation.set_defaults(func=command_research)
 
     # ---- external quality review ----
     p_pqr = sub.add_parser("prepare-quality-review", help="Generate external quality review task for an Agent")
