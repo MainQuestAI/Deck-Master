@@ -252,6 +252,45 @@ def _remove_theme_effects(shape: Any) -> None:
 
 
 def _add_text(slide: Any, element: dict[str, Any], trace: list[dict[str, Any]]) -> None:
+    lines = element.get("_text_lines") or []
+    if _NATIVE_CANVAS.get() and any(run.get("absolute_x") for line in lines for run in line[1:]):
+        # A text frame cannot position independent SVG text chunks horizontally.
+        # Keep the logical element as an editable group and emit each positioned
+        # chunk as a text object. In particular, LO ignores custom tab positions.
+        group = slide.shapes.add_group_shape()
+        group.name = str(element["element_id"])
+        children: list[dict[str, Any]] = []
+        chunks: list[list[dict[str, Any]]] = []
+        for line in lines:
+            for run in line:
+                if not chunks or run is line[0] or run.get("absolute_x"):
+                    chunks.append([])
+                chunks[-1].append(run)
+        for index, chunk in enumerate(chunks):
+            child = dict(element)
+            child["element_id"] = f"{element['element_id']}.text_chunk_{index}"
+            child["text"] = "".join(run["text"] for run in chunk)
+            child["_text_lines"] = [chunk]
+            position = chunk[0].get("position") or {}
+            if position.get("anchor") == "start":
+                bbox = element["bbox"]
+                x = float(position["x"])
+                size = float(str(chunk[0]["style"].get("font_size") or 16).removesuffix("px"))
+                y = float(position["y"]) - size
+                width = float(bbox["x"]) + float(bbox["w"]) - x
+                height = float(bbox["y"]) + float(bbox["h"]) - y
+                if width <= 0 or height <= 0:
+                    raise PptxEditabilityError("positioned text chunk is outside its declared bounds")
+                child["bbox"] = {"x": x, "y": y, "w": width, "h": height}
+            _add_text(group, child, children)
+        group._element.recalculate_extents()
+        trace.append({"element_id": element["element_id"], "object_type": "group",
+                      "shape_name": group.name, "bbox": _trace_bbox(children),
+                      "priority": element.get("priority", ""), "component_id": element.get("component_id", ""),
+                      "z_order": element.get("z_index", 0), "children": children,
+                      "child_element_ids": [child["element_id"] for child in children],
+                      "fidelity": "native_group"})
+        return
     bbox = element["bbox"]
     shape = slide.shapes.add_textbox(Inches(_inches(float(bbox["x"]), CANVAS_WIDTH)), Inches(_inches(float(bbox["y"]), CANVAS_HEIGHT)), Inches(_inches(float(bbox["w"]), CANVAS_WIDTH)), Inches(_inches(float(bbox["h"]), CANVAS_HEIGHT)))
     shape.name = str(element["element_id"])
@@ -725,7 +764,7 @@ def _svg_text_lines(node: Any, registry: dict[str, Any], *, preserve_positions: 
         current_x = float(child.get("x") if child.get("x") is not None else current_x) + float(child.get("dx") or 0)
         current_y = float(child.get("y") if child.get("y") is not None else current_y) + dy
         position = {"x": current_x, "y": current_y, "anchor": str(child.get("text-anchor") or anchor)}
-        lines[-1].append({"text": "".join(child.itertext()), "style": _svg_style(child, parent_style), "paint": _computed_run_paint(child, node, registry), "position": position})
+        lines[-1].append({"text": "".join(child.itertext()), "style": _svg_style(child, parent_style), "paint": _computed_run_paint(child, node, registry), "position": position, "absolute_x": child.get("x") is not None})
         if child.tail:
             lines[-1].append({"text": str(child.tail), "style": parent_style, "paint": parent_paint})
     declared = str(node.get("data-pptx-text") or "")
