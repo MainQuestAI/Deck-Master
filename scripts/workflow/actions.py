@@ -14,6 +14,7 @@ from __future__ import annotations
 import hashlib
 import json
 import shutil
+from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -119,7 +120,7 @@ def commit_action_result(
     root: Path | str,
     envelope: dict[str, Any],
     *,
-    current_input_fingerprint: str,
+    current_input_fingerprint: "str | Callable[[], str]",
     targets: dict[str, Path],
     expected_revision: str | None = None,
 ) -> dict[str, Any]:
@@ -152,16 +153,22 @@ def _commit_locked(
     root: Path,
     envelope: dict[str, Any],
     *,
-    current_input_fingerprint: str,
+    current_input_fingerprint: "str | Callable[[], str]",
     targets: dict[str, Path],
     expected_revision: str | None,
 ) -> dict[str, Any]:
+    # SC-1.1 P1-04: when the caller provides a callable, the fingerprint is
+    # recomputed HERE (inside the run lock) — a caller-provided string is
+    # never trusted as the current input version.
+    if callable(current_input_fingerprint):
+        current_input_fingerprint = current_input_fingerprint()
     action_id = str(envelope.get("action_id") or "")
     applied = action_applied(root, action_id)
     if applied:
         return {**applied, "status": "already_applied"}
 
     _check_action_revision_cas(root, expected_revision)
+    _enforce_task_budget(root, envelope)
     if str(envelope.get("input_fingerprint") or "") != str(current_input_fingerprint or ""):
         raise ActionStaleError(
             f"action {action_id} was produced against input {envelope.get('input_fingerprint')!r} "
@@ -218,9 +225,23 @@ def check_action_budget(root: Path | str, task_id: str, *, max_actions: int) -> 
                 marker = json.loads(path.read_text(encoding="utf-8"))
             except (OSError, json.JSONDecodeError):
                 continue
-            if str(marker.get("task_id") or "") == str(task_id) and str(marker.get("status") or "applied") in {"applied", "failed"}:
-                # SC-1.1 F-N10: failed attempts consume the budget too.
+            if str(marker.get("task_id") or "") == str(task_id) and str(marker.get("status") or "applied") == "applied":
+                # successes count from applied markers; failures are counted
+                # solely from the append-only attempt ledger below (no
+                # double counting of the overwritten summary marker).
                 count += 1
+    attempts_root = _actions_root(root) / "attempts"
+    if attempts_root.is_dir():
+        for attempt_dir in attempts_root.iterdir():
+            if not attempt_dir.is_dir():
+                continue
+            for attempt_file in attempt_dir.glob("*.json"):
+                try:
+                    entry = json.loads(attempt_file.read_text(encoding="utf-8"))
+                except (OSError, json.JSONDecodeError):
+                    continue
+                if str(entry.get("task_id") or "") == str(task_id):
+                    count += 1
     remaining = max(0, max(1, int(max_actions)) - count)
     return {
         "task_id": str(task_id),
@@ -289,6 +310,12 @@ def record_action_failure(root: Path | str, *, action_id: str, task_id: str, rea
         "reason": str(reason or ""),
         "recorded_at": _utc_now(),
     }
+    # SC-1.1 P1-03: append-only attempt ledger — repeated failures each
+    # consume budget; nothing is overwritten.
+    attempts_dir = _actions_root(root) / "attempts" / str(action_id)
+    attempts_dir.mkdir(parents=True, exist_ok=True)
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S%f")
+    (attempts_dir / f"{stamp}.json").write_text(json.dumps(marker, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     marker_path = _actions_root(root) / "applied" / f"{action_id}.json"
     marker_path.parent.mkdir(parents=True, exist_ok=True)
     marker_path.write_text(json.dumps(marker, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -315,7 +342,14 @@ def commit_revision_pointer(root: Path, action_id: str, targets: dict[str, Path]
     staging = _actions_root(root) / "staging" / action_id
     payload_hash = hashlib.sha256()
     for relative in sorted(targets):
-        payload_hash.update(relative.encode("utf-8"))
+        target = Path(targets[relative])
+        try:
+            target_rel = str(target.resolve().relative_to(root))
+        except ValueError:
+            target_rel = str(target)
+        # SC-1.1 P1-03: identity binds (target path, content) — the same
+        # content written to different pages is a DIFFERENT revision.
+        payload_hash.update(target_rel.encode("utf-8"))
         payload_hash.update(hashlib.sha256((staging / relative).read_bytes()).digest())
     revision_id = payload_hash.hexdigest()[:16]
     revisions_dir = root / "build" / "revisions" / revision_id
@@ -369,3 +403,19 @@ def _release_run_lock(handle) -> None:
             fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
     finally:
         handle.close()
+
+
+def _enforce_task_budget(root: Path, envelope: dict[str, Any]) -> None:
+    """SC-1.1 P1-03: the commit path enforces the task budget (committed
+    attempts AND failures both count); exhaustion blocks the commit."""
+
+    budget = envelope.get("budget") if isinstance(envelope.get("budget"), dict) else {}
+    max_actions = budget.get("max_actions")
+    if not max_actions:
+        return
+    usage = check_action_budget(root, str(envelope.get("task_id") or ""), max_actions=int(max_actions))
+    if usage["exhausted"]:
+        raise ActionBudgetExhaustedError(
+            f"task {envelope.get('task_id')!r} budget exhausted "
+            f"({usage['used']}/{usage['max_actions']} attempts including failures); the commit is blocked"
+        )
