@@ -20,7 +20,7 @@ Deck Master is built for solution architects and proposal builders who need a re
 
 ## SC-1.1: Built-in Native Deck Core
 
-As of SC-1.1, the default build engine is the **built-in `deck_native`
+As of SC-1.1, the default production build engine is the **built-in `deck_native`
 compiler** (SVG subset -> native PPTX with real traces and readback) —
 no external PPT Master install, binding or repository is required for
 default production. Legacy `legacy-ppt-master` is an explicit
@@ -36,7 +36,19 @@ A completed build is not final approval. SC-1.1 engineering acceptance remains
 
 For page repair, use `build retry --run-dir <run> --page-id P001 --stage svg`.
 The host returns both SVG and Scene with the issued action identity; default
-budgets allow three attempts per page/action kind, including failures.
+budgets allow three attempts per page/action kind, including failures and cancelled
+issued work. `build cancel --run-dir <run> --action-id <issued-action> --reason
+"<reason>"` stops that action; polling and `build run` cannot silently restart it.
+Only an explicit page/stage retry resumes within the remaining budget.
+Unprofiled fixture/dev previews retain their `fixture_html` route. They cannot
+be relabeled production by changing the request mode.
+
+Published runtime installation uses exact wheel hashes in `requirements/`;
+compiler, rendering and font probes still execute against the actual host.
+Source extraction must retain file hashes and read/unread ranges. A critical
+unread range blocks the Brief and continuation until a complete, version-bound
+Context Pack is imported. Business goals alone produce pending professional
+analysis tasks, not completed causal judgments.
 Migration is explicit: `build migrate --dry-run --output <plan.json>`, then
 `--apply --plan <plan.json>`, `--verify --migration-id <id>` or
 `--rollback --migration-id <id>` (all with `--run-dir <run>`).

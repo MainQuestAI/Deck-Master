@@ -148,3 +148,28 @@ Scene projections: submit both files using its Runtime-issued action.
 Native file quality checks use the current artifact without requiring a legacy
 backend setup. Recompile/render and rerun affected gates after changes; a new
 PPTX always needs its own final artifact approval.
+
+### Native cancellation and incomplete source reading
+
+- `stopped`: preserve the cancellation receipt and any completed page outputs.
+  A stopped issued action is one consumed attempt, not a way to reset the budget.
+  Use `build cancel --run-dir <run> --action-id <issued-action> --reason "<reason>"`
+  to stop current host work. Only explicit `build retry --run-dir <run>
+  --page-id <page> --stage <cancelled-stage>` resumes. Late output for the cancelled
+  action is rejected; cancellation cannot revoke an already committed revision.
+- `blocked_context_reading`: execute the returned extraction task for missing
+  source ranges. Import the version-bound result with `import-context-pack
+  --run-dir <run> --input <pack.json> --merge`. A full extraction must identify the
+  actual source SHA, preserved extraction snapshot and complete coverage; never
+  turn a partial read into full by changing a status label. Changed source bytes
+  require registration of that version. Exact result replay is idempotent.
+- `needs_agent_analysis` from `build-judgments`: author a source-referenced public
+  problem and solution mechanism through the existing content handoff. Existing
+  Narrative proposals remain unscored proposals. Preserve working assumptions,
+  risk and recheck conditions; a general source reference is not factual support.
+
+Quality overrides bind the actual selected artifact or public draft inputs and
+scope. Changed bytes require a new explicit decision. Page output actions cannot
+replace quality reports, build evidence or final approval files. Workspace learning
+keeps raw customer feedback and finding details in their source runs; reusable
+cards require an explicitly authored abstraction with source and scope limits.
