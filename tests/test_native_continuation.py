@@ -38,3 +38,15 @@ def test_native_quality_path_is_resolved_against_run(tmp_path,monkeypatch):
     result=native_continuation(root)
     assert seen==[artifact.resolve()]
     assert str(artifact.resolve()) in result['next_command']
+
+def test_native_semantic_review_prepares_v2_from_packages_without_hd_brief(tmp_path):
+    from deck_master import build_parser, command_prepare_quality_review
+    root=new_run(tmp_path,'direct_svg');run_build(root)
+    assert not (root/'deck_brief.json').exists()
+    args=build_parser().parse_args(['prepare-quality-review','--run-dir',str(root)])
+    result=command_prepare_quality_review(args)
+    task=result['tasks'][0]
+    assert task['schema_version']=='deck_external_quality_review.v2'
+    assert task['coverage']['required_page_ids']==['P001']
+    assert task['based_on']['content_fingerprint']
+    assert len(task['review_dimensions'])==6

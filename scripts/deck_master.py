@@ -2596,6 +2596,16 @@ def command_prepare_quality_review(args: argparse.Namespace) -> dict[str, Any]:
     run_dir = resolve_run_dir(args)
     scope_str = getattr(args, "scope", "semantic") or "semantic"
     scopes = [s.strip() for s in scope_str.split(",") if s.strip()]
+    from build.build_route import load_persisted_route
+    if load_persisted_route(run_dir).get("engine_id") == "deck_native":
+        from build.native_engine import _approved_packages
+        from quality.external_review import prepare_quality_review_v2
+        from workflow.actions import revision_read
+        with revision_read(run_dir):
+            page_ids = [p["page_id"] for p in _approved_packages(run_dir)]
+            mode = load_request(run_dir).get("run_mode", "production")
+            tasks = [prepare_quality_review_v2(run_dir, scope=scope, required_page_ids=page_ids, run_mode=mode) for scope in scopes]
+        return {"status": "prepared", "scopes": scopes, "run_id": run_dir.name, "tasks": tasks}
     return prepare_quality_review(run_dir, scopes=scopes)
 
 

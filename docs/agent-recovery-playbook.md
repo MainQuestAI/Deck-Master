@@ -5,11 +5,12 @@ unexpected runtime stage. Do not repair by editing random artifacts.
 
 ## Backend Missing
 
-- Detect by: `agent-doctor --mode production` check `production_backend` or
-  `suite-status.external_dependency_status` for `ppt-master`.
-- Auto action: none for production. Fixture preview may continue.
-- Stop when the `ppt-master` production backend is not `bound_verified` with a
-  verified git SHA.
+- First read the persisted build route. Only `legacy_ppt_master` requires the
+  `ppt-master` dependency to be `bound_verified` with a verified git SHA.
+- For that legacy route, detect missing dependencies with `agent-doctor` or
+  `suite-status.external_dependency_status`; stop that route until repaired.
+- For `deck_native`, inspect actual compiler/renderer/font and host task
+  readiness instead. An unbound optional legacy backend does not block native.
 - Verify with:
 
 ```bash
