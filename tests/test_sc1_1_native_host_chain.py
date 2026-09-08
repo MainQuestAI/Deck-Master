@@ -285,3 +285,22 @@ def test_partial_imagegen_resume_only_dispatches_missing_pages(tmp_path):
     pending = run_build(root)
     assert pending["status"] == "awaiting_agent_imagegen"
     assert [page["page_id"] for page in pending["pages"]] == ["P002"]
+
+
+def test_approved_content_can_return_to_an_earlier_version(tmp_path):
+    from workflow.actions import read_current_revision
+    root = new_run(tmp_path, 'direct_svg')
+    package = root / 'page_packages/P001.json'
+    original = json.loads(package.read_text())
+    run_build(root)
+    initial = read_current_revision(root)['revision_id']
+    changed = json.loads(package.read_text())
+    changed['customer_visible']['title'] = 'Interim approved title'
+    write_json(package, changed)
+    run_build(root)
+    interim = read_current_revision(root)['revision_id']
+    write_json(package, original)
+    run_build(root)
+    reverted = read_current_revision(root)['revision_id']
+    assert len({initial, interim, reverted}) == 3
+    assert load_content_lock(root, 'P001')['customer_visible']['title'] == original['customer_visible']['title']

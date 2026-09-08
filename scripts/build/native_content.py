@@ -133,12 +133,14 @@ def ensure_native_content(root: Path, packages: list[dict[str, Any]]) -> None:
     if narrative is not None:
         pending["narrative"] = narrative_path.read_bytes()
         targets["narrative"] = narrative_path
-    from workflow.actions import stage_action_result, commit_action_result
+    from workflow.actions import stage_action_result, commit_action_result, read_current_revision
 
     fingerprint = sha256_json({"packages": packages, "narrative": narrative})
+    parent_revision = read_current_revision(root).get("revision_id", "")
+    action_identity = sha256_json({"parent_revision": parent_revision, "inputs": fingerprint})
     envelope = {
         "schema_version": "deck_stage_action.v1",
-        "action_id": "native_content_" + fingerprint[:32],
+        "action_id": "native_content_" + action_identity[:32],
         "task_id": "native_content",
         "scope_pages": [str(p["page_id"]) for p in packages],
         "permission": "runtime",
@@ -155,4 +157,5 @@ def ensure_native_content(root: Path, packages: list[dict[str, Any]]) -> None:
             }
         ),
         targets=targets,
+        expected_revision=parent_revision,
     )
