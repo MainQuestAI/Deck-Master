@@ -298,7 +298,7 @@ def _review_input_refs(root: Path) -> list[dict]:
     from workflow.actions import revision_read, revision_input_path
     refs = []
     with revision_read(root):
-        for directory in ("page_packages", "sources", "diagram_views"):
+        for directory in ("page_packages", "sources", "diagram_views", "high_density_build/content_locks", "high_density_build/svg", "high_density_build/page_scenes", "high_density_build/scenes", "high_density_build/blueprints"):
             folder = revision_input_path(root, root / directory)
             if folder.is_dir():
                 for path in sorted(folder.rglob("*")):
@@ -310,7 +310,70 @@ def _review_input_refs(root: Path) -> list[dict]:
             path = revision_input_path(root, root / name)
             if path.is_file():
                 refs.append({"ref": name, "sha256": hashlib.sha256(path.read_bytes()).hexdigest()})
-    return sorted(refs, key=lambda item: item["ref"])
+        # Registered asset paths may live outside a conventional assets folder.
+        packages = revision_input_path(root, root / "page_packages")
+        for package_path in packages.glob("*.json"):
+            package = json.loads(package_path.read_text(encoding="utf-8"))
+            for binding in package.get("asset_bindings", []) or []:
+                if binding.get("approved") is not True:
+                    continue
+                relative = str(binding.get("path") or "")
+                if not relative or Path(relative).is_absolute() or ".." in Path(relative).parts:
+                    raise ExternalReviewError("review registered asset path is invalid")
+                asset = revision_input_path(root, root / relative)
+                base = revision_input_path(root, root / "request.json").parent
+                if not asset.resolve().is_relative_to(base.resolve()) or not asset.is_file():
+                    raise ExternalReviewError("review registered asset is missing or escapes input scope")
+                refs.append({"ref": Path(relative).as_posix(), "sha256": hashlib.sha256(asset.read_bytes()).hexdigest()})
+    # Render/build outputs are a live selected artifact, not input projections.
+    # Freeze their actual bytes at dispatch; later import/currentity recomputes
+    # the same set, so a rebuilt PPTX or changed preview requires another review.
+    refs.extend(_review_render_refs(root))
+    return sorted({item["ref"]: item for item in refs}.values(), key=lambda item: item["ref"])
+
+
+def _review_render_refs(root: Path) -> list[dict]:
+    from runtime.render import CANONICAL_RENDER_RESULT, LEGACY_RENDER_RESULTS
+    root = root.resolve()
+    refs = {}
+    def add(value):
+        path = Path(str(value)).expanduser()
+        if not path.is_absolute():
+            path = root / path
+        if not path.resolve().is_relative_to(root) or not path.is_file():
+            raise ExternalReviewError("review render output is missing or escapes run scope")
+        relative = path.resolve().relative_to(root).as_posix()
+        content = path.read_bytes()
+        refs[relative] = {"ref": relative, "sha256": hashlib.sha256(content).hexdigest()}
+        return content
+    for relative in (CANONICAL_RENDER_RESULT, *LEGACY_RENDER_RESULTS):
+        path = root / relative
+        if not path.exists():
+            continue
+        selection_bytes = add(relative)
+        render = json.loads(selection_bytes)
+        artifact = render.get("artifact_path") or render.get("artifact")
+        if artifact:
+            add(artifact)
+        if render.get("preview_dir"):
+            folder = Path(render["preview_dir"])
+            if not folder.is_absolute():
+                folder = root / folder
+            if not folder.resolve().is_relative_to(root) or not folder.is_dir():
+                raise ExternalReviewError("review preview directory is missing or escapes run scope")
+            for preview in sorted(folder.iterdir()):
+                if preview.suffix.lower() in {".png", ".jpg", ".jpeg"}:
+                    add(preview)
+        for item in render.get("artifacts", []) or []:
+            if item.get("path"):
+                add(item["path"])
+        for item in (render.get("page_previews", []) or []) + (render.get("pages", []) or []):
+            if item.get("preview_path"):
+                add(item["preview_path"])
+        if path.read_bytes() != selection_bytes:
+            raise ExternalReviewError("render selection changed during review input capture")
+        break
+    return list(refs.values())
 
 
 def _actual_review_pages(root: Path) -> list[str]:
