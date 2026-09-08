@@ -80,7 +80,7 @@ class SemanticGatePrecisionTests(unittest.TestCase):
                 for g in ("render", "delivery", "customer_visible_safety")
             ]
             reports.append(
-                {"gate": "external_semantic", "status": "pass", "blocks_delivery": False, "findings": [], "based_on_sha256": packages_sha, "content_fingerprint": content_fp.hexdigest()}
+                __import__("quality_review_v2_helpers").canonical_gate(root)
             )
             result = resolve_required_gates(root, artifact, run_mode="production", reports=reports)
             self.assertNotIn("semantic_review", result["missing_required_gates"])

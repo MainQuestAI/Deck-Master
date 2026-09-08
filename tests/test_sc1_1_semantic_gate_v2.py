@@ -83,28 +83,8 @@ class ContentFingerprintTests(unittest.TestCase):
 
 
 def _v2_report(root: Path) -> dict:
-    from quality.external_review import RESULT_SCHEMA_VERSION_V2, REVIEW_DIMENSIONS_V2, _page_packages_content_fingerprint
-
-    packages_sha = hashlib.sha256((root / "page_packages" / "index.json").read_bytes()).hexdigest()
-    content_fingerprint = _page_packages_content_fingerprint(root)
-    return {
-        "schema_version": RESULT_SCHEMA_VERSION_V2,
-        "run_id": "run-sem",
-        "run_mode": "production",
-        "based_on": {"page_packages_index_sha256": packages_sha, "content_fingerprint": content_fingerprint},
-        "review_action_id": "review-1",
-        "scope": "semantic",
-        "review_kind": "full_deck",
-        "reviewer_session_id": "session-reviewer",
-        "producer_session_id": "session-producer",
-        "host_execution_ref": "host-1",
-        "reviewed_inputs": {"page_packages": "page_packages/"},
-        "coverage": {"required_page_ids": ["P001"], "reviewed_page_ids": ["P001"], "skipped": []},
-        "dimension_scores": {dim: 4 for dim in REVIEW_DIMENSIONS_V2},
-        "observations": [{"dimension": dim, "page_id": "P001", "observation": f"obs {dim}"} for dim in REVIEW_DIMENSIONS_V2],
-        "findings": [],
-        "summary": {"reported_status": "pass", "conclusion": "clean"},
-    }
+    from quality_review_v2_helpers import canonical_report
+    return canonical_report(root, ["P001"])
 
 
 if __name__ == "__main__":

@@ -163,19 +163,8 @@ class GateFreshnessTests(unittest.TestCase):
             for gate in ("render", "delivery", "customer_visible_safety")
         ]
         # SC-1 C3: production additionally requires a current semantic review.
-        reports.append(
-            {
-                "gate": "external_semantic",
-                "status": "pass",
-                "blocks_delivery": False,
-                "findings": [],
-                "based_on_sha256": _page_packages_sha(self.run_dir),
-                # index-only runs: content fingerprint equals the index sha so
-                # the P1-06 fingerprint rule can be satisfied in this fixture
-                "content_fingerprint": _page_packages_sha(self.run_dir),
-                **identity,
-            }
-        )
+        from quality_review_v2_helpers import canonical_gate
+        reports.append({**canonical_gate(self.run_dir), **identity})
 
         result = resolve_required_gates(
             self.run_dir,

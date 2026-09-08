@@ -9,6 +9,8 @@ Implements:
 from __future__ import annotations
 
 import hashlib
+import json
+import uuid
 import shutil
 from datetime import datetime, timezone
 from pathlib import Path
@@ -163,6 +165,8 @@ def prepare_quality_review(
 
 def validate_external_review(result: dict[str, Any]) -> dict[str, Any]:
     """Validate external quality review result."""
+    if isinstance(result, dict) and result.get("schema_version") == RESULT_SCHEMA_VERSION_V2:
+        return validate_external_review_v2(result)
     errors: list[str] = []
 
     if not isinstance(result, dict):
@@ -220,139 +224,120 @@ def validate_external_review(result: dict[str, Any]) -> dict[str, Any]:
 # --------------------------------------------------------------------------- #
 
 
+def _validate_schema(payload: dict, filename: str) -> list[str]:
+    from jsonschema import Draft202012Validator
+    from native_pptx.contracts import SCHEMA_DIR
+    schema = json.loads((SCHEMA_DIR / filename).read_text(encoding="utf-8"))
+    return [f"{'.'.join(map(str, error.absolute_path))}: {error.message}"
+            for error in Draft202012Validator(schema).iter_errors(payload)]
+
+
+def _refs_fingerprint(refs: list[dict]) -> str:
+    return hashlib.sha256(json.dumps(refs, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+
+
 def validate_external_review_v2(result: dict[str, Any]) -> dict[str, Any]:
-    """Fail-closed validation of a deck_external_quality_review.v2 report.
-
-    A reviewer string alone is not independence; coverage must be complete or
-    explicitly skipped with reasons; every dimension needs an observation; a
-    ``pass`` with empty findings is only accepted when coverage is complete
-    and all six dimensions were actually observed.
-    """
-
-    errors: list[str] = []
-    if not isinstance(result, dict):
-        return {"valid": False, "errors": ["Result must be a JSON object."], "warnings": []}
-    if result.get("schema_version") != RESULT_SCHEMA_VERSION_V2:
-        errors.append(f"schema_version must be '{RESULT_SCHEMA_VERSION_V2}', got '{result.get('schema_version')}'.")
+    """Validate the canonical result schema, then cross-field review truth."""
+    errors = _validate_schema(result, "external-quality-review.v2.schema.json")
+    if errors:
         return {"valid": False, "errors": errors, "warnings": []}
-
-    for field in ("run_id", "scope", "based_on", "review_action_id", "review_kind", "host_execution_ref"):
-        if not str(result.get(field) or "").strip():
-            errors.append(f"{field} is required.")
-    reviewer_session = str(result.get("reviewer_session_id") or "").strip()
-    producer_session = str(result.get("producer_session_id") or "").strip()
-    if not reviewer_session:
-        errors.append("reviewer_session_id is required.")
-    if not producer_session:
-        errors.append("producer_session_id is required.")
-    if reviewer_session and producer_session and reviewer_session == producer_session:
-        errors.append("reviewer_session_id must differ from producer_session_id (independence).")
-
-    reviewed_inputs = result.get("reviewed_inputs")
-    if not isinstance(reviewed_inputs, dict) or not reviewed_inputs:
-        errors.append("reviewed_inputs must record the input artifacts and versions.")
-
-    coverage = result.get("coverage") if isinstance(result.get("coverage"), dict) else {}
-    required_ids = [str(item) for item in (coverage.get("required_page_ids") or [])]
-    reviewed_ids = set(str(item) for item in (coverage.get("reviewed_page_ids") or []))
-    skipped = {str(item.get("ref") or ""): str(item.get("reason") or "") for item in (coverage.get("skipped") or []) if isinstance(item, dict)}
-    if not required_ids:
-        errors.append("coverage.required_page_ids must not be empty.")
-    missing = [page_id for page_id in required_ids if page_id not in reviewed_ids and page_id not in skipped]
-    if missing:
-        errors.append(f"coverage incomplete; pages neither reviewed nor explicitly skipped: {missing}")
-    for ref, reason in skipped.items():
-        if ref and not reason:
-            errors.append(f"coverage skip of '{ref}' requires a reason.")
-
-    dimension_scores = result.get("dimension_scores") if isinstance(result.get("dimension_scores"), dict) else {}
-    observations = result.get("observations") if isinstance(result.get("observations"), list) else []
-    observed_dims = {str(item.get("dimension") or "") for item in observations if isinstance(item, dict)}
+    if result["review_kind"] != "independent" or result["reviewer_session_id"] == result["producer_session_id"]:
+        errors.append("independence requires a separate reviewer session and independent review kind")
+    refs = result["based_on"]["input_refs"]
+    if len({r["ref"] for r in refs}) != len(refs):
+        errors.append("based_on.input_refs contains duplicate refs")
+    if result["based_on"]["input_fingerprint"] != _refs_fingerprint(refs):
+        errors.append("based_on.input_fingerprint does not match input_refs")
+    if result["reviewed_inputs"] != refs:
+        errors.append("reviewed_inputs must match every dispatched input ref and hash")
+    coverage = result["coverage"]
+    required, reviewed = coverage["required_page_ids"], coverage["reviewed_page_ids"]
+    skipped = coverage["skipped"]
+    if len(set(required)) != len(required) or len(set(reviewed)) != len(reviewed):
+        errors.append("coverage page IDs must be unique")
+    if set(reviewed) - set(required):
+        errors.append("reviewed pages are outside required coverage")
+    missing = set(required) - set(reviewed)
+    if missing or skipped:
+        # Partial observations may be retained as a rework report, never a
+        # passing review. Required pages cannot be waived by a skip reason.
+        if result["summary"]["reported_status"] != "rework_required":
+            errors.append("coverage incomplete: required pages were skipped or not reviewed")
+    dims = {item["dimension"] for item in result["observations"]}
     for dimension in REVIEW_DIMENSIONS_V2:
-        if dimension not in observed_dims:
-            errors.append(f"dimension '{dimension}' has no observation; unreviewed content stays unreviewed (no empty pass).")
-        score = dimension_scores.get(dimension)
-        if not isinstance(score, (int, float)) or not 1 <= float(score) <= 5:
-            errors.append(f"dimension_scores.{dimension} must be a number between 1 and 5.")
-    unknown_dims = observed_dims - set(REVIEW_DIMENSIONS_V2)
-    if unknown_dims:
-        errors.append(f"observations carry unknown dimensions: {sorted(unknown_dims)}")
-    for index, item in enumerate(observations):
-        if not isinstance(item, dict):
-            continue
-        if not str(item.get("observation") or item.get("message") or "").strip():
-            errors.append(f"observations[{index}] needs concrete observation text.")
+        if dimension not in dims:
+            errors.append(f"dimension '{dimension}' has no observation")
+    observed_objects = {ref.split("#", 1)[0] for item in result["observations"] for ref in item["object_refs"]}
+    for page in reviewed:
+        if page not in observed_objects and f"page_packages/{page}.json" not in observed_objects:
+            errors.append(f"reviewed page {page} has no object observation")
+    if result["summary"]["reported_status"] == "pass" and result["findings"]:
+        errors.append("summary pass cannot carry open findings")
+    if result["summary"]["reported_status"] == "pass" and any(o["verdict"] == "fail" for o in result["observations"]):
+        errors.append("summary pass conflicts with failed observations")
+    return {"valid": not errors, "errors": errors, "warnings": []}
 
-    findings = result.get("findings")
-    if not isinstance(findings, list):
-        errors.append("findings must be an array.")
-    summary = result.get("summary") if isinstance(result.get("summary"), dict) else {}
-    reported_status = str(summary.get("reported_status") or "")
-    if reported_status not in VALID_REPORTED_STATUS_V2:
-        errors.append(f"summary.reported_status must be one of {sorted(VALID_REPORTED_STATUS_V2)}.")
-    if reported_status == "pass" and findings:
-        errors.append("summary.reported_status 'pass' cannot carry open findings; use conditional_pass or rework_required.")
-    if reported_status in {"pass", "conditional_pass"} and missing:
-        errors.append("cannot report pass with incomplete coverage.")
 
-    return {"valid": len(errors) == 0, "errors": errors, "warnings": []}
+def _review_input_refs(root: Path) -> list[dict]:
+    from workflow.actions import revision_read, revision_input_path
+    refs = []
+    with revision_read(root):
+        for directory in ("page_packages", "sources", "diagram_views"):
+            folder = revision_input_path(root, root / directory)
+            if folder.is_dir():
+                for path in sorted(folder.rglob("*")):
+                    if path.is_file():
+                        if not path.resolve().is_relative_to(folder.resolve()):
+                            raise ExternalReviewError("review input escapes its input directory")
+                        refs.append({"ref": directory + "/" + path.relative_to(folder).as_posix(), "sha256": hashlib.sha256(path.read_bytes()).hexdigest()})
+        for name in ("request.json", "deck_brief.json", "context_manifest.json", "claim_map.json", "claim_evidence_graph.json", "narrative_plan.json", "solution_model.json", "solution_spec.json", "diagram_views.json", "diagram_spec.json", "source_manifest.json", "evidence_graph.json"):
+            path = revision_input_path(root, root / name)
+            if path.is_file():
+                refs.append({"ref": name, "sha256": hashlib.sha256(path.read_bytes()).hexdigest()})
+    return sorted(refs, key=lambda item: item["ref"])
+
+
+def _actual_review_pages(root: Path) -> list[str]:
+    from workflow.actions import revision_read, revision_input_path
+    with revision_read(root):
+        folder = revision_input_path(root, root / "page_packages")
+        return sorted({str(read_json(p).get("page_id") or p.stem) for p in folder.glob("*.json") if p.name != "index.json"})
 
 
 def prepare_quality_review_v2(
-    run_dir: str | Path,
-    *,
-    scope: str,
-    required_page_ids: list[str],
-    review_kind: str = "full_deck",
-    run_mode: str = "production",
+    run_dir: str | Path, *, scope: str, required_page_ids: list[str],
+    review_kind: str = "independent", run_mode: str = "production",
 ) -> dict[str, Any]:
-    """Emit a v2 review task bound to current input versions (page packages)."""
-
+    """Dispatch a task, never a pre-filled review result or approval."""
+    from workflow.actions import revision_read
     root = Path(run_dir).expanduser().resolve()
-    if scope not in VALID_SCOPES:
-        raise ValueError(f"scope must be one of {sorted(VALID_SCOPES)}")
-    task_dir = root / TASK_DIR
-    task_dir.mkdir(parents=True, exist_ok=True)
-    package_index = root / "page_packages" / "index.json"
-    input_version = ""
-    if package_index.exists():
-        input_version = hashlib.sha256(package_index.read_bytes()).hexdigest()
-    try:
-        content_fingerprint = _page_packages_content_fingerprint(root)
-    except Exception:  # noqa: BLE001
-        content_fingerprint = ""
-    task = {
-        "schema_version": RESULT_SCHEMA_VERSION_V2,
-        "run_id": str(root.name),
-        "run_mode": run_mode,
-        "task_id": f"{scope.replace('-', '_')}_review_v2_{root.name or 'unknown'}",
-        "scope": scope,
-        "review_kind": review_kind,
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "based_on": {
-            "page_packages_index_sha256": input_version,
-            "content_fingerprint": content_fingerprint,
-            "note": "review binds to the current package set; content changes invalidate this review",
-        },
-        "reviewed_inputs": {
-            "page_packages": "page_packages/",
-            "claim_evidence_graph": "claim_evidence_graph.json",
-            "context_manifest": "context_manifest.json",
-        },
-        "coverage": {"required_page_ids": [str(item) for item in required_page_ids], "reviewed_page_ids": [], "skipped": []},
-        "review_dimensions": list(REVIEW_DIMENSIONS_V2),
-        "output_schema": RESULT_SCHEMA_VERSION_V2,
-    }
-    write_json(task_dir / _scope_to_task_filename(scope), task)
-    append_typed_event(
-        root,
-        "artifact_written",
-        "quality_review_task.prepared_v2",
-        f"External quality review v2 task prepared for scope: {scope}.",
-        run_id=task["run_id"],
-        refs=[f"{TASK_DIR}/{_scope_to_task_filename(scope)}"],
-        payload={"scope": scope, "required_page_ids": required_page_ids},
-    )
+    if scope not in VALID_SCOPES or review_kind != "independent":
+        raise ExternalReviewError("scope and independent review kind are required")
+    with revision_read(root):
+        pages = _actual_review_pages(root)
+        if not pages or sorted(required_page_ids) != pages:
+            raise ExternalReviewError("required_page_ids must match every actual Page Package")
+        refs = _review_input_refs(root)
+        request = read_json(root / "request.json") if (root / "request.json").exists() else {}
+        task = {
+            "schema_version": "deck_external_quality_review_task.v2",
+            "run_id": str(request.get("run_id") or root.name),
+            "run_mode": str(request.get("run_mode") or run_mode),
+            "task_id": f"{scope.replace('-', '_')}_review_v2_{root.name}",
+            "review_action_id": "review_" + uuid.uuid4().hex,
+            "scope": scope, "review_kind": "independent",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "based_on": {"input_fingerprint": _refs_fingerprint(refs), "input_refs": refs},
+            "required_page_ids": pages, "review_dimensions": list(REVIEW_DIMENSIONS_V2),
+            "output_schema": RESULT_SCHEMA_VERSION_V2,
+        }
+        errors = _validate_schema(task, "external-quality-review-task.v2.schema.json")
+        if errors:
+            raise ExternalReviewError("Invalid review task: " + "; ".join(errors))
+        write_json(root / TASK_DIR / _scope_to_task_filename(scope), task)
+    append_typed_event(root, "artifact_written", "quality_review_task.prepared_v2",
+                       f"External quality review task prepared for {scope}.", run_id=task["run_id"],
+                       refs=[f"{TASK_DIR}/{_scope_to_task_filename(scope)}"], payload={"review_action_id": task["review_action_id"]})
     return task
 
 
@@ -447,32 +432,25 @@ def _gate_filename(scope: str, reviewer: str) -> str:
 
 
 def _page_packages_content_fingerprint(root: Path) -> str:
-    """Hash over every page package FILE's content (not just the index) —
-    editing a package without touching index.json still stales the review."""
+    """Current canonical review inputs; old ad-hoc v2 hashes become stale."""
+    return _refs_fingerprint(_review_input_refs(root))
 
-    from workflow.actions import revision_read, revision_input_path
-    import hashlib
-    digest = hashlib.sha256()
+
+def validate_review_binding(root: Path, result: dict[str, Any]) -> None:
+    """Require the current issued task, source hashes and actual page set."""
+    scope = result["scope"]
+    from workflow.actions import revision_read
     with revision_read(root):
-        packages_dir = revision_input_path(root, root / "page_packages")
-        if not packages_dir.is_dir():
-            return ""
-        for package_file in sorted(packages_dir.glob("*.json")):
-            digest.update(package_file.name.encode("utf-8"))
-            digest.update(hashlib.sha256(package_file.read_bytes()).digest())
-        for name in ("narrative_plan.json", "solution_model.json", "solution_spec.json", "diagram_views.json", "diagram_spec.json", "source_manifest.json", "evidence_graph.json"):
-            path = revision_input_path(root, root / name)
-            if path.is_file():
-                digest.update(name.encode())
-                digest.update(hashlib.sha256(path.read_bytes()).digest())
-        for directory in ("sources", "diagram_views"):
-            sources = revision_input_path(root, root / directory)
-            if sources.is_dir():
-                for path in sorted(sources.rglob("*")):
-                    if path.is_file():
-                        digest.update((directory + "/" + path.relative_to(sources).as_posix()).encode())
-                        digest.update(hashlib.sha256(path.read_bytes()).digest())
-    return digest.hexdigest()
+        task_path = root / TASK_DIR / _scope_to_task_filename(scope)
+        task = read_json(task_path) if task_path.is_file() else {}
+        if task.get("schema_version") != "deck_external_quality_review_task.v2" or task.get("review_action_id") != result["review_action_id"]:
+            raise ExternalReviewError("Review result does not match an issued current v2 task")
+        if task["based_on"] != result["based_on"] or result["based_on"]["input_refs"] != _review_input_refs(root):
+            raise ExternalReviewError("Review inputs changed or do not match dispatched hashes")
+        if result["coverage"]["required_page_ids"] != task["required_page_ids"] or task["required_page_ids"] != _actual_review_pages(root):
+            raise ExternalReviewError("Review coverage does not match the actual dispatched pages")
+        if result["run_mode"] != task["run_mode"]:
+            raise ExternalReviewError("Review run mode differs from dispatched task")
 
 
 def import_external_review(
@@ -504,6 +482,8 @@ def import_external_review(
     except RunStateError as exc:
         raise ExternalReviewError(str(exc)) from exc
     scope = str(result.get("scope", ""))
+    if schema_version == RESULT_SCHEMA_VERSION_V2:
+        validate_review_binding(root, result)
 
     quality_dir = root / "quality_reports"
     quality_dir.mkdir(parents=True, exist_ok=True)
@@ -543,6 +523,14 @@ def import_external_review(
         status = "pass"
         blocks_delivery = False
 
+    reported_status = str((result.get("summary") or {}).get("reported_status" if schema_version == RESULT_SCHEMA_VERSION_V2 else "status") or "")
+    if reported_status == "rework_required":
+        status, blocks_delivery = "rework_required", True
+    elif reported_status == "conditional_pass" and not blocks_delivery:
+        status = "conditional_pass"
+    if schema_version == RESULT_SCHEMA_VERSION_V2 and (result["coverage"]["skipped"] or set(result["coverage"]["required_page_ids"]) != set(result["coverage"]["reviewed_page_ids"]) or any(o["verdict"] == "fail" for o in result["observations"])):
+        status, blocks_delivery = "rework_required", True
+
     gate_report: dict[str, Any] = {
         "schema_version": "deck_quality_report.v1",
         "gate": f"external_{scope.replace('-', '_')}",
@@ -564,7 +552,10 @@ def import_external_review(
                 "dimension": f.get("dimension", ""),
                 "message": f.get("message", ""),
                 "repair_instruction": str(f.get("repair_instruction") or f.get("suggested_repair") or ""),
-                "refs": f.get("refs", []),
+                "refs": f.get("object_refs", f.get("refs", [])),
+                "repair_action": f.get("repair_action", ""),
+                "allowed_scope_refs": f.get("allowed_scope_refs", []),
+                "recheck": f.get("recheck", ""),
                 "source": "external_review",
                 "reviewer": reviewer,
             }
@@ -573,14 +564,15 @@ def import_external_review(
     }
     if schema_version == RESULT_SCHEMA_VERSION_V2:
         based_on = result.get("based_on") if isinstance(result.get("based_on"), dict) else {}
-        gate_report["based_on_sha256"] = str(based_on.get("page_packages_index_sha256") or "")
+        gate_report["based_on_sha256"] = next((r["sha256"] for r in based_on["input_refs"] if r["ref"] == "page_packages/index.json"), "")
         # SC-1.1 review round 2 (P1-06): the content fingerprint comes from
         # the REPORT's declared binding (fixed at review dispatch/read time).
         # The importer NEVER recomputes the current value for an arriving
         # report — a stale result cannot be re-bound to current content.
-        gate_report["content_fingerprint"] = str(based_on.get("content_fingerprint") or "").strip()
+        gate_report["content_fingerprint"] = str(based_on["input_fingerprint"])
         gate_report["review_kind"] = str(result.get("review_kind") or "")
         gate_report["reviewer_session_id"] = str(result.get("reviewer_session_id") or "")
+        gate_report["canonical_review"] = result
     else:
         # SC-1.1 P1-06: v1 reports stay readable as history but are marked
         # legacy — they can never satisfy the native production gate.

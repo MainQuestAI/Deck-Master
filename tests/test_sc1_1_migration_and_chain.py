@@ -87,34 +87,10 @@ class FullChainTests(unittest.TestCase):
             status = build_status(run)
             self.assertEqual("completed", status["status"])
 
-            # import a v2 semantic review bound to the current packages
-            import hashlib
-
-            from quality.external_review import RESULT_SCHEMA_VERSION_V2, REVIEW_DIMENSIONS_V2, import_external_review
-
-            packages_digest = hashlib.sha256()
-            for package_file in sorted((run / "page_packages").glob("*.json")):
-                packages_digest.update(package_file.name.encode("utf-8"))
-                packages_digest.update(hashlib.sha256(package_file.read_bytes()).digest())
-            index_sha = hashlib.sha256((run / "page_packages" / "index.json").read_bytes()).hexdigest()
-            review = {
-                "schema_version": RESULT_SCHEMA_VERSION_V2,
-                "run_id": run.name,
-                "run_mode": "fixture",
-                "based_on": {"page_packages_index_sha256": index_sha},
-                "review_action_id": "review-1",
-                "scope": "semantic",
-                "review_kind": "full_deck",
-                "reviewer_session_id": "s-r",
-                "producer_session_id": "s-p",
-                "host_execution_ref": "host-1",
-                "reviewed_inputs": {"page_packages": "page_packages/"},
-                "coverage": {"required_page_ids": ["P001", "P002"], "reviewed_page_ids": ["P001", "P002"], "skipped": []},
-                "dimension_scores": {dim: 4 for dim in REVIEW_DIMENSIONS_V2},
-                "observations": [{"dimension": dim, "page_id": "P001", "observation": "ok"} for dim in REVIEW_DIMENSIONS_V2],
-                "findings": [],
-                "summary": {"reported_status": "pass", "conclusion": "clean"},
-            }
+            # The review result is canonical and bound to an issued task.
+            from quality_review_v2_helpers import canonical_report
+            from quality.external_review import import_external_review
+            review = canonical_report(run, ["P001", "P002"])
             imported = import_external_review(run, review, replace=True)
             self.assertFalse(imported["gate_report_legacy"] if "gate_report_legacy" in imported else True or False) if False else None
             gate = json.loads((run / "quality_reports" / imported["gate_report"]).read_text(encoding="utf-8"))

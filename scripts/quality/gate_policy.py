@@ -45,15 +45,26 @@ def _semantic_review_input_current(run_dir: Path, report: dict[str, Any]) -> boo
     packages — editing a package without touching index.json stales it.
     Reports without any binding are not current for the native gate."""
 
-    based_on = report.get("based_on") if isinstance(report.get("based_on"), dict) else {}
-    sha = str(based_on.get("page_packages_index_sha256") or report.get("based_on_sha256") or "").strip()
-    fingerprint = str(report.get("content_fingerprint") or "").strip()
-    if not fingerprint:
-        # SC-1.1 review round 2: a v2 report without a dispatch-time content
-        # fingerprint is not current for the native gate (only audit value).
+    from quality.external_review import validate_external_review_v2, validate_review_binding, ExternalReviewError
+    canonical = report.get("canonical_review")
+    if not isinstance(canonical, dict) or not validate_external_review_v2(canonical)["valid"]:
         return False
-    from quality.external_review import _page_packages_content_fingerprint
-    return fingerprint == _page_packages_content_fingerprint(run_dir)
+    if canonical.get("scope") != "semantic" or canonical["based_on"]["input_fingerprint"] != report.get("content_fingerprint"):
+        return False
+    if canonical["coverage"]["skipped"]:
+        return False
+    expected_findings = {(f["finding_id"], f["severity"]) for f in canonical["findings"]}
+    if expected_findings != {(f.get("finding_id"), f.get("severity")) for f in report.get("findings", [])}:
+        return False
+    # Existing policy evaluates authorized P1 overrides. An unexplained
+    # rework/failed observation with no actionable findings cannot be waived.
+    if not expected_findings and (canonical["summary"]["reported_status"] == "rework_required" or any(o["verdict"] == "fail" for o in canonical["observations"])):
+        return False
+    try:
+        validate_review_binding(run_dir, canonical)
+    except (ExternalReviewError, KeyError, ValueError, OSError):
+        return False
+    return True
 
 
 def _report_is_legacy_v1(report: dict[str, Any]) -> bool:

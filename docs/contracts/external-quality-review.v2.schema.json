@@ -2,8 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:deck-master:sc1:deck_external_quality_review.v2",
   "title": "deck_external_quality_review.v2",
-  "description": "SC-1 target contract draft; not installed in the current repository. Structural validation is not runtime or semantic verification.",
-  "x-spec-status": "target-draft",
+  "description": "Canonical external review result. Runtime additionally verifies input hashes, issued action, page coverage and reviewer independence.",
   "type": "object",
   "properties": {
     "schema_version": {
@@ -121,7 +120,8 @@
             "type": "string",
             "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
           },
-          "minItems": 1
+          "minItems": 1,
+          "uniqueItems": true
         },
         "reviewed_page_ids": {
           "type": "array",
@@ -129,7 +129,8 @@
             "type": "string",
             "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
           },
-          "minItems": 1
+          "minItems": 1,
+          "uniqueItems": true
         },
         "claim_refs": {
           "type": "array",
