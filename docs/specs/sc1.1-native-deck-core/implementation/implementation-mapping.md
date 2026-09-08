@@ -14,6 +14,10 @@
 | ND-04 门禁/修订 | gate_policy 语义门精确匹配（F-N09：external_visual + 有效哈希仍拒绝）；workflow/actions revision 指针 + expected_revision CAS + 失败计入预算（F-N10） | `tests/test_sc1_1_gates_and_revisions.py` |
 | ND-05 收口 | 本文件 + acceptance-tracking + deviation-log；主 Playbook/README/known-limitations 的 native 默认更新 | 见下 |
 
-## 未完成（下一增量，见 deviation-log）
+## 本轮收口补充
 
-manifest/release required 策略、旧 Run 迁移 CLI（MIG 组）、七类差分矩阵专项用例、HST 真实工具用例（宿主无 ImageGen）、UAT-01/02、QA-03 逐页内容指纹深度。
+迁移实现位于 `scripts/build/migrate.py`，提供计划、候选构建、apply、verify、rollback；定向事务测试位于 `tests/test_sc1_1_migration_apply.py`。实际产品验收尚未统一执行，不将事务 stub 当作真实迁移通过。
+
+当前验收工具为 `scripts/uat/sc1_1_engineering_matrix.py`，汇集 64 项新 case、88 项映射及原 SC1 新增的 3 项；全部默认 not_run。完整清单见 `engineering-gap-inventory.md`。10 页合成 UAT 原材料位于 `examples/sc1_1_uat/raw_materials.json`，不含逐页稿。
+
+路由、渲染、manifest 和指纹修复由本轮各工作包整合；最终产品证据应绑定同一候选 SHA。真实宿主能力需现场核验，不继承旧笔记的缺工具结论。七类差分、默认两页、完整10页、桌面编辑、隔离安装与用户批准目前均不因实现完成而自动通过。

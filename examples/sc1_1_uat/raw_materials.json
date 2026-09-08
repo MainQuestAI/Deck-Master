@@ -1,0 +1,73 @@
+{
+  "schema_version": "sc1_1_synthetic_uat_materials.v1",
+  "classification": "public_synthetic_test_only",
+  "goal": {
+    "audience": "零售企业管理层与业务负责人",
+    "deliverable": "10页可编辑解决方案演示文稿",
+    "page_count": 10,
+    "library_mode": "none",
+    "authoring_mode": "image_blueprint",
+    "language": "zh-CN",
+    "scope": "全渠道库存可视化、门店和电商协同、最后一公里履约；解释业务价值、目标架构、实施安排与风险"
+  },
+  "sources": [
+    {
+      "id": "retail_digital_transformation",
+      "path": "examples/briefs/retail_digital_transformation.txt",
+      "sha256": "1c362bb69a3c5c21cb3794f261026cc04f881ef450deedfe5bcfb7cf8410e94e",
+      "text": "零售客户数字化转型方案，关注全渠道、库存可视化、最后一公里配送。目标是形成一份可给客户高层审阅的解决方案草案，既要复用历史方案页，也要对缺口页面生成新页面任务。\n"
+    },
+    {
+      "id": "retail_meeting_transcript",
+      "path": "examples/context/retail_meeting_transcript.txt",
+      "sha256": "780a0c6f9b3f74fcfa1faa4edfdc317515765b998dc4c142c5b8f0f72f6c83a6",
+      "text": "客户希望围绕零售数字化升级做一份方案汇报。\n会议中反复提到三个业务问题：全渠道库存不可视、门店和电商库存割裂、最后一公里配送体验不稳定。\n客户更关心业务团队能否看到库存状态、履约状态和异常原因，而不是单纯建设一个系统。\n可引用证据包括：门店缺货场景、仓配协同截图、履约时效指标、会员复购和库存周转数据。\n方案需要说明目标架构、业务价值、实施路线和相似案例。\n"
+    }
+  ],
+  "simulation_boundaries": [
+    "全部内容用于合成验收，不代表任何真实客户经营数据。",
+    "原材料未提供收入、门店数、预算、库存周转率或目标提升幅度，不能自行生成客户事实。",
+    "仅授权基于公开通用查询开展研究，不向外发送整包原材料；本文件不含逐页标题、布局或脚本。",
+    "Agent自行提炼方案、研究、建模、叙事与页面；用户只负责最后视觉复核和文件批准。"
+  ],
+  "meeting_addendum": {
+    "kind": "synthetic_stakeholder_constraints",
+    "text": "业务负责人要求先打通库存与订单异常可见性，再讨论自动补货。门店运营不能因试点中断交易。架构需要区分库存事实、渠道可售量与履约承诺；短期通过适配现有接口接入，不能假定要替换全部ERP。每项建议应说明依赖、责任角色与需要验证的数据。"
+  },
+  "research_gaps": [
+    {
+      "id": "RG01",
+      "question": "公开权威资料如何定义全渠道库存一致性与可承诺量，哪些限制影响门店即时履约？",
+      "query_scope": "公开标准或供应商官方技术文档；通用术语查询，不使用客户标识",
+      "expected_use": "约束目标架构中的库存同步、预占与异常处理，不作为客户当前能力证明"
+    },
+    {
+      "id": "RG02",
+      "question": "公开案例中门店履约试点如何设定履约时效、取消率和缺货指标，哪些方法可复用？",
+      "query_scope": "公开原始案例或官方实践资料",
+      "expected_use": "说明试点评估方法；公开案例数值不得移植为本客户承诺"
+    }
+  ],
+  "unknown_customer_facts": [
+    {
+      "id": "UC01",
+      "question": "现有ERP/WMS/OMS产品、接口与同步周期",
+      "handling": "保留待确认，架构使用通用系统角色，不猜测品牌版本"
+    },
+    {
+      "id": "UC02",
+      "question": "门店规模、SKU量、库存准确率及履约成本基线",
+      "handling": "不填数字，形成试点基线采集要求"
+    },
+    {
+      "id": "UC03",
+      "question": "预算、上线截止日期与数据出境限制",
+      "handling": "作为待确认约束；路线图采用阶段和退出条件，不给未经授权日期或金额"
+    }
+  ],
+  "evaluation_triggers": {
+    "late_constraint": "试点期间不得中断门店交易，方案必须在风险和迁移安排中体现。",
+    "single_page_revision": "在初版批准后，要求将库存异常处置的责任角色改为门店值班经理，并保持其他无关页不变。",
+    "cross_page_revision": "在初版批准后，明确可售量计算归属库存服务而非订单服务；检查所有受影响的架构关系与说明。"
+  }
+}
