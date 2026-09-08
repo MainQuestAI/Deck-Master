@@ -503,7 +503,8 @@ def _compile_revision(root: Path, *, run_mode: str, revision: str) -> dict[str, 
 def write_json_native_run(root: Path, payload: dict[str, Any]) -> None:
     import jsonschema
 
-    schema_path = Path(__file__).resolve().parents[2] / "docs/specs/sc1.1-native-deck-core/contracts/native-compile-result.v1.schema.json"
+    from native_pptx.contracts import SCHEMA_DIR
+    schema_path = SCHEMA_DIR / "native-compile-result.v1.schema.json"
     jsonschema.Draft202012Validator(
         json.loads(schema_path.read_text(encoding="utf-8")), format_checker=jsonschema.FormatChecker()
     ).validate(payload)
