@@ -134,7 +134,7 @@ class UnsupportedNumberTests(unittest.TestCase):
         findings = find_unsupported_numbers([package])
         self.assertTrue(any(item["page_id"] == "P001" and "45%" in item["message"] for item in findings))
 
-    def test_supported_page_is_clean(self) -> None:
+    def test_source_id_alone_does_not_support_numeric_claim(self) -> None:
         package = {
             "page_id": "P001",
             "evidence_bindings": ["src_meeting"],
@@ -142,16 +142,16 @@ class UnsupportedNumberTests(unittest.TestCase):
             "customer_visible": {"body_blocks": [{"type": "conclusion", "text": "审批周期可缩短 45%。"}], "labels": []},
         }
         manifest = {"sources": [{"source_id": "src_meeting"}]}
-        self.assertEqual([], find_unsupported_numbers([package], context_manifest=manifest))
+        self.assertTrue(find_unsupported_numbers([package], context_manifest=manifest))
 
-    def test_design_basis_counts_as_support(self) -> None:
+    def test_design_basis_alone_does_not_support_numeric_claim(self) -> None:
         package = {
             "page_id": "P002",
             "evidence_bindings": [],
             "internal_only": {"design_basis_ref": "solution_model#capability:C1"},
             "customer_visible": {"body_blocks": [{"type": "conclusion", "text": "并行后 20 天内完成。"}], "labels": []},
         }
-        self.assertEqual([], find_unsupported_numbers([package]))
+        self.assertTrue(find_unsupported_numbers([package]))
 
     def test_internal_label_leak_found(self) -> None:
         package = {

@@ -906,7 +906,12 @@ def command_quality_gate(args: argparse.Namespace) -> dict[str, Any]:
         page_tasks = read_optional_json(run_dir, PAGE_TASKS_NAME) or {"run_id": run_id, "tasks": []}
         ceg = read_optional_json(run_dir, "claim_evidence_graph.json") or {"run_id": run_id, "claims": [], "evidence": [], "gaps": []}
         sourcing_plan = read_optional_json(run_dir, SOURCING_PLAN_NAME) or {"run_id": run_id, "decisions": []}
-        report = evaluate_evidence_gate(run_id, claim_map, page_tasks, ceg, sourcing_plan)
+        from production.page_package import PagePackageIndex
+        from workflow.actions import revision_read
+        with revision_read(run_dir):
+            packages = PagePackageIndex(run_dir).list_packages() if (run_dir / "page_packages/index.json").is_file() else []
+            context_manifest = read_optional_json(run_dir, "context_manifest.json") or {}
+            report = evaluate_evidence_gate(run_id, claim_map, page_tasks, ceg, sourcing_plan, packages=packages, context_manifest=context_manifest)
     elif args.gate == "context-conflict":
         sourcing_plan = read_optional_json(run_dir, SOURCING_PLAN_NAME) or {"run_id": run_id, "decisions": []}
         ws_dir = request.get("workspace", "")
@@ -4096,6 +4101,7 @@ def _native_file_quality_command(args: argparse.Namespace) -> bool:
 
 
 def main() -> None:
+    from build.native_engine import NativeEngineError
     parser = build_parser()
     args = parser.parse_args()
     try:
@@ -4129,12 +4135,18 @@ def main() -> None:
         HandoffError,
         ApprovalError,
         PolicyError,
+        NativeEngineError,
         ValueError,
     ) as exc:
         if getattr(exc, "code", ""):
             code = str(getattr(exc, "code"))
             page_id = str(getattr(exc, "page_id", "") or "")
             stage = str(getattr(exc, "stage", "") or "")
+            if code.startswith("NDC_"):
+                print_json({"code": code, "message": str(exc), "status": "blocked",
+                            "fix": str(getattr(exc, "recovery", "") or "Repair the native input and retry."),
+                            "next_command": "deck-master build status --run-dir <run_dir>"})
+                raise SystemExit(2) from exc
             if code == "HIGH_DENSITY_CAPABILITY_MISSING":
                 next_command = "deck-master suite-status --capability deck_master.build.high_density.v1 --output json"
             elif page_id:

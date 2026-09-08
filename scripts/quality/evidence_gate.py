@@ -11,6 +11,9 @@ def evaluate_evidence_gate(
     page_tasks: dict[str, Any],
     claim_evidence_graph: dict[str, Any] | None = None,
     sourcing_plan: dict[str, Any] | None = None,
+    *,
+    packages: list[dict[str, Any]] | None = None,
+    context_manifest: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """检查 claim 与 required evidence。
 
@@ -90,6 +93,18 @@ def evaluate_evidence_gate(
                     "repair_instruction": "更换为 safe_to_use 证据或改为 generate。",
                     "page_id": decision.get("beat_id", ""),
                 })
+
+    if packages:
+        from quality.semantic_checks import find_unsupported_numbers
+        for index, finding in enumerate(find_unsupported_numbers(packages, context_manifest=context_manifest), 1):
+            findings.append({
+                **finding,
+                "finding_id": f"evidence_numeric_{index:03d}",
+                "severity": "P1",
+                "dimension": "numeric_evidence",
+                "refs": ["page_packages/", "context_manifest.json"],
+                "repair_instruction": "Remove or qualify the unsupported number, or bind this exact claim to reviewed source evidence with matching unit and period.",
+            })
 
     has_p0 = any(f["severity"] == "P0" for f in findings)
     has_p1 = any(f["severity"] == "P1" for f in findings)
