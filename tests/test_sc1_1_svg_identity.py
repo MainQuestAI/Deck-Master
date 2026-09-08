@@ -6,6 +6,7 @@ from build.native_tasks import dispatch_native_task
 from high_density.content import load_content_lock
 from high_density.svg import compile_svg
 from production.page_package import PagePackageIndex
+from workflow import actions
 from runtime.build import run_build
 from test_sc1_1_native_host_chain import new_run, host_scene
 
@@ -25,14 +26,26 @@ def submit(root, task, scene, svg):
 def test_fingerprint_changes_with_package_content(tmp_path):
     root, task, _, _ = prepared(tmp_path)
     package = root / "page_packages/P001.json"
-    package.write_text(package.read_text() + "\n")
+    envelope = actions.create_action_envelope(
+        action_id="update_package", task_id="update_package", scope_pages=["P001"],
+        input_fingerprint="approved-package-change", permission="runtime",
+    )
+    actions.stage_action_result(root, envelope, {"page_packages/P001.json": package.read_text() + "\n"})
+    actions.commit_action_result(root, envelope, current_input_fingerprint="approved-package-change",
+                                 targets={"page_packages/P001.json": package})
     assert task["produced_against"] != _svg_input_fingerprint(root, "P001")
 
 
 def test_late_result_rejected_when_inputs_moved_on(tmp_path):
     root, task, scene, svg = prepared(tmp_path)
     package = root / "page_packages/P001.json"
-    package.write_text(package.read_text() + "\n")
+    envelope = actions.create_action_envelope(
+        action_id="update_package", task_id="update_package", scope_pages=["P001"],
+        input_fingerprint="approved-package-change", permission="runtime",
+    )
+    actions.stage_action_result(root, envelope, {"page_packages/P001.json": package.read_text() + "\n"})
+    actions.commit_action_result(root, envelope, current_input_fingerprint="approved-package-change",
+                                 targets={"page_packages/P001.json": package})
     with pytest.raises(NativeEngineError, match="input fingerprint is stale"):
         submit(root, task, scene, svg)
     assert not (root / "high_density_build/svg/P001.svg").exists()
@@ -62,3 +75,10 @@ def test_replay_after_other_action_does_not_misreport(tmp_path):
     submit(root, next_task, scene, svg + "\n")
     assert submit(root, task, scene, svg)["status"] == "already_applied"
     assert (root / "high_density_build/svg/P001.svg").read_text() == svg + "\n"
+
+
+def test_compatibility_projection_does_not_replace_committed_input(tmp_path):
+    root, task, _, _ = prepared(tmp_path)
+    package = root / "page_packages/P001.json"
+    package.write_text(package.read_text() + "\n")
+    assert task["produced_against"] == _svg_input_fingerprint(root, "P001")
