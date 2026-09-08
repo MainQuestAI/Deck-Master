@@ -1,5 +1,6 @@
-# Deck Master dependencies
-# python-pptx is optional — used by workspace/foundation.py, quality/brand_gate.py,
-# delivery/validate.py for slide count and text extraction. Missing import triggers
-# graceful degradation (page count checks skipped, reference_ppt_pages set to null).
+# Source-checkout runtime dependencies; keep aligned with pyproject.toml.
+# Native compile/render/readback and runtime contract validation require these.
+jsonschema>=4.23,<5
 python-pptx>=0.6.21
+Pillow>=10,<13
+numpy>=1.26,<3
