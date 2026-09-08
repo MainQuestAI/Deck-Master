@@ -21,6 +21,8 @@ import hashlib
 import json
 import os
 import shutil
+import subprocess
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -214,6 +216,27 @@ def verify_capability_lock(release_root: Path) -> dict[str, Any]:
     return result
 
 
+def _source_version(name: str, source: Path) -> str:
+    if name == "ppt-library":
+        try:
+            result = subprocess.run([str(source / "bin/ppt-lib"), "--version"], capture_output=True, text=True, timeout=15)
+            match = re.fullmatch(r"ppt-lib\s+(\S+)", result.stdout.strip())
+            if result.returncode == 0 and match:
+                return match.group(1)
+        except (OSError, subprocess.TimeoutExpired):
+            pass
+    for filename in ("managed_component_manifest.json", "package.json", "capability.json"):
+        path = source / filename
+        if path.is_file():
+            try:
+                value = json.loads(path.read_text()).get("version")
+                if isinstance(value, str) and value.strip():
+                    return value.strip()
+            except (OSError, ValueError):
+                pass
+    return "unknown"
+
+
 def install_managed_component(name: str, source_dir: str | Path) -> dict[str, Any]:
     """Install a component copy under the managed root and flip the current pointer.
 
@@ -228,6 +251,7 @@ def install_managed_component(name: str, source_dir: str | Path) -> dict[str, An
     if not source.is_dir():
         raise ValueError(f"Managed component source is not a directory: {source}")
     content_sha = component_content_sha256(source)
+    component_version = _source_version(name, source)
     target_root = managed_component_root(name)
     target = target_root / content_sha
     if not target.exists():
@@ -241,7 +265,7 @@ def install_managed_component(name: str, source_dir: str | Path) -> dict[str, An
                 {
                     "schema_version": "deck_managed_component_manifest.v1",
                     "name": name,
-                    "version": _suite_version(),
+                    "version": component_version,
                     "content_sha256": content_sha,
                     "source_kind": "managed_release",
                     "ownership": COMPONENT_OWNERSHIP,
@@ -255,6 +279,14 @@ def install_managed_component(name: str, source_dir: str | Path) -> dict[str, An
             encoding="utf-8",
         )
         staging.rename(target)
+    # Correct metadata from earlier installers that recorded the suite version.
+    manifest_path = target / "managed_component_manifest.json"
+    manifest = json.loads(manifest_path.read_text())
+    if manifest.get("version") != component_version:
+        manifest["version"] = component_version
+        replacement = target / ".managed_component_manifest.json.tmp"
+        replacement.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n")
+        os.replace(replacement, manifest_path)
     pointer = target_root / MANAGED_POINTER_NAME
     if pointer.is_symlink() or pointer.exists():
         pointer.unlink()
@@ -263,5 +295,5 @@ def install_managed_component(name: str, source_dir: str | Path) -> dict[str, An
         "name": name,
         "installed_path": str(target),
         "content_sha256": content_sha,
-        "version": _suite_version(),
+        "version": component_version,
     }
