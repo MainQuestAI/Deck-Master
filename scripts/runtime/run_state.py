@@ -35,7 +35,8 @@ def make_run_id(title: str) -> str:
 
 
 def read_json(path: str | Path) -> dict[str, Any]:
-    target = Path(path).expanduser().resolve()
+    from workflow.actions import active_input_path
+    target = active_input_path(Path(path).expanduser().resolve())
     try:
         data = json.loads(target.read_text(encoding="utf-8"))
     except FileNotFoundError as exc:

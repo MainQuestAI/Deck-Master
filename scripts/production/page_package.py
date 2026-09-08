@@ -232,10 +232,12 @@ class PagePackageIndex:
         return path
 
     def list_packages(self) -> list[dict[str, Any]]:
-        if not self.dir.is_dir():
+        from workflow.actions import active_input_path
+        directory = active_input_path(self.dir)
+        if not directory.is_dir():
             return []
         out: list[dict[str, Any]] = []
-        for p in sorted(self.dir.glob("*.json")):
+        for p in sorted(directory.glob("*.json")):
             if p.name == INDEX_NAME:
                 continue
             try:

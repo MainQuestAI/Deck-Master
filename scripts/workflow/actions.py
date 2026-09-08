@@ -14,6 +14,11 @@ from __future__ import annotations
 import hashlib
 import json
 import shutil
+import re
+import os
+import tempfile
+from contextlib import contextmanager
+from contextvars import ContextVar
 from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
@@ -59,8 +64,10 @@ def create_action_envelope(
     input_fingerprint: str,
     budget: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    if not str(action_id or "").strip():
-        raise ValueError("action_id is required")
+    validate_identifier(action_id, "action_id")
+    validate_identifier(task_id, "task_id")
+    for page in scope_pages:
+        validate_identifier(page, "page_id")
     if not scope_pages:
         raise ValueError("an action envelope must declare its page scope; unscoped actions are not accepted")
     return {
@@ -79,155 +86,225 @@ def _applied_marker(root: Path, action_id: str) -> Path:
     return _actions_root(root) / "applied" / f"{action_id}.json"
 
 
+def validate_identifier(value: str, label: str = "identifier") -> str:
+    value = str(value or "")
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,159}", value):
+        raise ActionEnvelopeError(f"unsafe {label}: {value!r}")
+    return value
+
+
+def _safe_path(root: Path, relative: str) -> Path:
+    raw = Path(relative)
+    if raw.is_absolute() or ".." in raw.parts or not relative or relative == ".":
+        raise ActionEnvelopeError(f"path escapes run: {relative}")
+    result = root / raw
+    if not result.resolve().is_relative_to(root.resolve()):
+        raise ActionEnvelopeError(f"symlink escapes run: {relative}")
+    return result
+
+
+def _atomic_json(path: Path, payload: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(mode="w", dir=path.parent, prefix=".write-", delete=False, encoding="utf-8") as handle:
+        tmp = Path(handle.name)
+        json.dump(payload, handle, ensure_ascii=False, indent=2)
+        handle.write("\n")
+        handle.flush()
+        os.fsync(handle.fileno())
+    try:
+        tmp.replace(path)
+    finally:
+        tmp.unlink(missing_ok=True)
+
+
+def _manifest(root: Path, revision: str) -> dict:
+    validate_identifier(revision, "revision_id")
+    try:
+        value = json.loads(_safe_path(root, f"build/revisions/{revision}/revision_manifest.json").read_text())
+    except (OSError, ValueError) as exc:
+        raise ActionEnvelopeError(f"unreadable revision {revision}: {exc}") from exc
+    return value
+
+
 def action_applied(root: Path | str, action_id: str) -> dict[str, Any] | None:
-    path = _applied_marker(Path(root).expanduser().resolve(), str(action_id))
+    root = Path(root).expanduser().resolve()
+    validate_identifier(action_id, "action_id")
+    revision = read_current_revision(root).get("revision_id", "")
+    if revision:
+        receipt = _manifest(root, revision).get("receipts", {}).get(action_id)
+        if receipt:
+            return receipt
+    path = _applied_marker(root, action_id)
     if not path.exists():
         return None
     try:
         marker = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise ActionEnvelopeError(f"applied marker for action {action_id} is unreadable: {exc}") from exc
-    if str(marker.get("status") or "applied") != "applied":
-        # a recorded failure must not block a retry of the same action id
-        return None
-    return marker
+    return marker if marker.get("status", "applied") == "applied" else None
 
 
-def stage_action_result(
-    root: Path | str,
-    envelope: dict[str, Any],
-    result_files: dict[str, str],
-) -> Path:
-    """Write action outputs into a staging directory (never the live paths)."""
+def _validate_envelope(root: Path, envelope: dict) -> str:
+    action = validate_identifier(envelope.get("action_id"), "action_id")
+    validate_identifier(envelope.get("task_id"), "task_id")
+    if not envelope.get("scope_pages"):
+        raise ActionEnvelopeError("action must declare page scope")
+    for page in envelope["scope_pages"]:
+        validate_identifier(page, "page_id")
+    if envelope.get("run_id", root.name) != root.name:
+        raise ActionEnvelopeError("action run identity mismatch")
+    if envelope.get("permission") not in {"agent", "migration", "runtime", "user"}:
+        raise ActionEnvelopeError("unknown action permission")
+    if envelope.get("status") in {"cancelled", "superseded"} or (_actions_root(root) / "cancelled" / f"{action}.json").exists():
+        raise ActionStaleError("action is cancelled or superseded")
+    return action
 
+
+def stage_action_result(root: Path | str, envelope: dict[str, Any], result_files: dict[str, str | bytes]) -> Path:
     root = Path(root).expanduser().resolve()
-    action_id = str(envelope.get("action_id") or "")
-    staging = _actions_root(root) / "staging" / action_id
-    if staging.exists():
-        shutil.rmtree(staging)
-    staging.mkdir(parents=True)
-    for relative, content in result_files.items():
-        target = staging / relative
-        if not str(relative).strip() or ".." in Path(relative).parts or Path(relative).is_absolute():
-            raise ActionEnvelopeError(f"staging path escapes the action staging dir: {relative}")
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(content, encoding="utf-8")
-    (staging / "envelope.json").write_text(json.dumps(envelope, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    return staging
-
-
-def commit_action_result(
-    root: Path | str,
-    envelope: dict[str, Any],
-    *,
-    current_input_fingerprint: "str | Callable[[], str]",
-    targets: dict[str, Path],
-    expected_revision: str | None = None,
-) -> dict[str, Any]:
-    """Commit staged outputs to their live targets — version-guarded, idempotent.
-
-    - stale: the envelope's input fingerprint differs from the current input
-      version → the result is rejected (old input cannot overwrite new versions);
-    - idempotent: committing the same action_id twice returns the first result;
-    - atomic per file: staging copies land next to the target and rename, so
-      an interrupted commit leaves the previous version intact.
-    """
-
-    root = Path(root).expanduser().resolve()
-    # SC-1.1 spec 05 section 5.5: the whole compare-validate-commit-pointer
-    # cycle runs under a per-run write lock.
+    action = _validate_envelope(root, envelope)
+    staging = _safe_path(root, f"workflow/actions/staging/{action}")
+    for relative in result_files:
+        _safe_path(staging, relative)
     lock = _acquire_run_lock(root)
     try:
-        return _commit_locked(
-            root,
-            envelope,
-            current_input_fingerprint=current_input_fingerprint,
-            targets=targets,
-            expected_revision=expected_revision,
-        )
+        if staging.exists():
+            previous = json.loads((staging / "envelope.json").read_text())
+            if previous != envelope or any(not (staging / rel).exists() or (staging / rel).read_bytes() != (data.encode() if isinstance(data, str) else data) for rel, data in result_files.items()):
+                raise ActionEnvelopeError("action staging conflicts with an existing result")
+            return staging
+        staging.mkdir(parents=True)
+        for relative, data in result_files.items():
+            target = _safe_path(staging, relative)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(data.encode("utf-8") if isinstance(data, str) else data)
+        _atomic_json(staging / "envelope.json", envelope)
+        return staging
     finally:
         _release_run_lock(lock)
 
 
-def _commit_locked(
-    root: Path,
-    envelope: dict[str, Any],
-    *,
-    current_input_fingerprint: "str | Callable[[], str]",
-    targets: dict[str, Path],
-    expected_revision: str | None,
-) -> dict[str, Any]:
-    # SC-1.1 P1-04: when the caller provides a callable, the fingerprint is
-    # recomputed HERE (inside the run lock) — a caller-provided string is
-    # never trusted as the current input version.
-    if callable(current_input_fingerprint):
-        current_input_fingerprint = current_input_fingerprint()
-    action_id = str(envelope.get("action_id") or "")
-    applied = action_applied(root, action_id)
-    if applied:
-        return {**applied, "status": "already_applied"}
+def _validate_target(root: Path, target: Path, envelope: dict) -> str:
+    if ".." in Path(target).parts:
+        raise ActionEnvelopeError("target contains traversal")
+    target = Path(target).resolve()
+    try:
+        relative = target.relative_to(root).as_posix()
+    except ValueError as exc:
+        raise ActionEnvelopeError(f"target outside run: {target}") from exc
+    _safe_path(root, relative)
+    if envelope.get("permission") == "agent":
+        if relative.startswith(("approvals/", "workflow/", "sources/", "build/revisions/")) or relative in {"request.json", "build/route.json", "build/current_revision.json"}:
+            raise ActionEnvelopeError("agent output cannot modify runtime policy or approval")
+        for prefix in ("page_packages/", "high_density_build/svg/", "high_density_build/page_scenes/", "high_density_build/content_locks/", "high_density_build/blueprints/"):
+            if relative.startswith(prefix):
+                name = Path(relative).name
+                if not any(name == page + ext for page in envelope["scope_pages"] for ext in (".json", ".svg", ".png", ".jpg", ".jpeg", ".scene.json", ".content_lock.json", ".blueprint.json")):
+                    raise ActionEnvelopeError("target page is outside action scope")
+    return relative
 
+
+def commit_action_result(root: Path | str, envelope: dict[str, Any], *, current_input_fingerprint: str | Callable[[], str], targets: dict[str, Path], expected_revision: str | None = None, receipt_data: dict | None = None) -> dict[str, Any]:
+    root = Path(root).expanduser().resolve()
+    _validate_envelope(root, envelope)
+    for target in targets.values():
+        _validate_target(root, target, envelope)
+    lock = _acquire_run_lock(root)
+    try:
+        return _commit_locked(root, envelope, current_input_fingerprint=current_input_fingerprint, targets=targets, expected_revision=expected_revision, receipt_data=receipt_data)
+    finally:
+        _release_run_lock(lock)
+
+
+def _commit_locked(root: Path, envelope: dict, *, current_input_fingerprint, targets: dict[str, Path], expected_revision: str | None, receipt_data: dict | None = None) -> dict:
+    action = _validate_envelope(root, envelope)
+    staging = _safe_path(root, f"workflow/actions/staging/{action}")
+    applied = action_applied(root, action)
+    if applied:
+        if applied.get("input_fingerprint") != envelope.get("input_fingerprint") or applied.get("task_id") != envelope.get("task_id"):
+            raise ActionEnvelopeError("action already applied with different input identity")
+        if staging.exists() and applied.get("output_hashes"):
+            for relative, target in targets.items():
+                key = _validate_target(root, target, envelope)
+                source = _safe_path(staging, relative)
+                if not source.is_file() or hashlib.sha256(source.read_bytes()).hexdigest() != applied["output_hashes"].get(key):
+                    raise ActionEnvelopeError("action already applied with different output")
+        return {**applied, "status": "already_applied"}
     _check_action_revision_cas(root, expected_revision)
     _enforce_task_budget(root, envelope)
-    if str(envelope.get("input_fingerprint") or "") != str(current_input_fingerprint or ""):
-        raise ActionStaleError(
-            f"action {action_id} was produced against input {envelope.get('input_fingerprint')!r} "
-            f"but the current input is {current_input_fingerprint!r}; refresh the task instead of overwriting"
-        )
-
-    staging = _actions_root(root) / "staging" / action_id
+    current = current_input_fingerprint() if callable(current_input_fingerprint) else current_input_fingerprint
+    if envelope.get("input_fingerprint") != current:
+        raise ActionStaleError("action input fingerprint is stale; refresh the task")
     if not staging.is_dir():
-        raise ActionEnvelopeError(f"no staged result for action {action_id}; stage before commit")
-
-    # Validate every declared target first: an interrupted or partial staging
-    # must keep the previous live versions untouched (all-or-nothing).
-    for relative in targets:
-        if not (staging / relative).is_file():
-            raise ActionEnvelopeError(f"staged file missing for action {action_id}: {relative}")
-
-    # SC-1.1 review round 3 (P1-02): activation order is revision snapshot +
-    # pointer FIRST, live projections SECOND. Production readers resolve via
-    # the committed revision (complete old or complete new, never mixed);
-    # fixed paths are compatibility projections with best-effort rollback.
-    applied_files: list[str] = []
+        raise ActionEnvelopeError(f"no staged result for action {action}")
+    staged_envelope = json.loads((staging / "envelope.json").read_text())
+    if staged_envelope != envelope:
+        raise ActionEnvelopeError("staged envelope identity mismatch")
+    files = {}
     for relative, target in targets.items():
-        target = Path(target)
-        applied_files.append(str(target.relative_to(root)) if target.is_relative_to(root) else str(target))
-
-    parent_revision = read_current_revision(root).get("revision_id", "")
-    revision_info = commit_revision_pointer(root, action_id, targets, applied_files, parent_revision=parent_revision)
-    revision_id = revision_info["revision_id"]
-
-    _PROJECTION_BACKUP.clear()
+        source = _safe_path(staging, relative)
+        if not source.is_file():
+            raise ActionEnvelopeError(f"staged file missing for action {action}: {relative}")
+        files[_validate_target(root, target, envelope)] = source.read_bytes()
+    parent = read_current_revision(root).get("revision_id", "")
+    state = read_revision_state(root) if parent else _baseline_state(root)
+    state.update(files)
+    hashes = {name: hashlib.sha256(data).hexdigest() for name, data in sorted(state.items())}
+    revision = fingerprint_payload({"parent": parent, "action": action, "files": hashes})[:32]
+    marker = {**(receipt_data or {}), "action_id": action, "task_id": envelope["task_id"], "scope_pages": envelope["scope_pages"], "applied_files": list(files), "revision_id": revision, "parent_revision_id": parent, "input_fingerprint": current, "output_hashes": {name: hashes[name] for name in files}, "committed_at": _utc_now(), "status": "applied"}
+    receipts = dict(_manifest(root, parent).get("receipts", {})) if parent else {}
+    receipts[action] = marker
+    manifest = {"schema_version": "deck_build_revision.v2", "revision_id": revision, "parent_revision_id": parent, "files": hashes, "receipts": receipts, "full_snapshot": True, "committed_at": _utc_now()}
+    directory = root / "build/revisions"
+    directory.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix=".staging-", dir=directory) as temp:
+        temp_root = Path(temp)
+        for relative, data in state.items():
+            path = _safe_path(temp_root, relative)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(data)
+        _atomic_json(temp_root / "revision_manifest.json", manifest)
+        destination = directory / revision
+        if destination.exists():
+            if _manifest(root, revision) != manifest:
+                raise ActionEnvelopeError("revision identity conflict")
+        else:
+            # directory rename exposes only complete snapshots
+            os.rename(temp_root, destination)
+    _atomic_json(revision_pointer_path(root), {"revision_id": revision, "action_id": action, "applied_files": list(files)})
+    # Commit point passed. Readers and replay use the durable snapshot receipt.
+    backup = {}
     try:
-        for relative, target in targets.items():
-            source = staging / relative
-            target = Path(target)
-            _PROJECTION_BACKUP[target] = target.read_bytes() if target.exists() else None
+        for relative, data in files.items():
+            target = _safe_path(root, relative)
+            backup[target] = target.read_bytes() if target.exists() else None
             target.parent.mkdir(parents=True, exist_ok=True)
             tmp = target.with_suffix(target.suffix + ".action-tmp")
-            shutil.copy2(source, tmp)
+            tmp.write_bytes(data)
             tmp.replace(target)
+        _atomic_json(_applied_marker(root, action), marker)
     except Exception:
-        _rollback_projections(root)
+        for target, data in backup.items():
+            if data is None:
+                target.unlink(missing_ok=True)
+            else:
+                target.write_bytes(data)
         raise
-
-    marker = {
-        "action_id": action_id,
-        "task_id": str(envelope.get("task_id") or ""),
-        "scope_pages": list(envelope.get("scope_pages") or []),
-        "applied_files": applied_files,
-        "revision_id": revision_id,
-        "parent_revision_id": revision_info.get("parent_revision_id", ""),
-        "committed_at": _utc_now(),
-        "input_fingerprint": str(envelope.get("input_fingerprint") or ""),
-        "status": "applied",
-    }
-    marker_path = _applied_marker(root, action_id)
-    marker_path.parent.mkdir(parents=True, exist_ok=True)
-    marker_path.write_text(json.dumps(marker, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     shutil.rmtree(staging, ignore_errors=True)
     return marker
+
+
+def _baseline_state(root: Path) -> dict[str, bytes]:
+    state = {}
+    for path in root.rglob("*"):
+        rel = path.relative_to(root).as_posix()
+        if rel.startswith(("build/revisions/", "build/migrations/", "workflow/actions/")) or rel in {"build/current_revision.json", "build/.action_commit.lock"} or path.is_dir():
+            continue
+        if path.is_symlink():
+            raise ActionEnvelopeError(f"snapshot input is a symlink: {rel}")
+        if path.is_file():
+            state[rel] = path.read_bytes()
+    return state
 
 
 def check_action_budget(root: Path | str, task_id: str, *, max_actions: int) -> dict[str, Any]:
@@ -235,7 +312,10 @@ def check_action_budget(root: Path | str, task_id: str, *, max_actions: int) -> 
 
     root = Path(root).expanduser().resolve()
     applied_dir = _actions_root(root) / "applied"
-    count = 0
+    successes = set()
+    revision = read_current_revision(root).get("revision_id", "")
+    if revision:
+        successes.update(action for action, receipt in _manifest(root, revision).get("receipts", {}).items() if receipt.get("task_id") == task_id)
     if applied_dir.is_dir():
         for path in applied_dir.glob("*.json"):
             try:
@@ -246,7 +326,8 @@ def check_action_budget(root: Path | str, task_id: str, *, max_actions: int) -> 
                 # successes count from applied markers; failures are counted
                 # solely from the append-only attempt ledger below (no
                 # double counting of the overwritten summary marker).
-                count += 1
+                successes.add(str(marker.get("action_id") or path.stem))
+    count = len(successes)
     attempts_root = _actions_root(root) / "attempts"
     if attempts_root.is_dir():
         for attempt_dir in attempts_root.iterdir():
@@ -312,14 +393,19 @@ def read_current_revision(root: Path | str) -> dict[str, Any]:
         return {"revision_id": ""}
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return {"revision_id": ""}
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ActionEnvelopeError("current revision pointer is unreadable") from exc
 
 
 def record_action_failure(root: Path | str, *, action_id: str, task_id: str, reason: str) -> dict[str, Any]:
     """Record a failed action attempt — failures consume the task budget."""
 
     root = Path(root).expanduser().resolve()
+    validate_identifier(action_id, "action_id")
+    validate_identifier(task_id, "task_id")
+    applied = action_applied(root, action_id)
+    if applied:
+        return applied
     marker = {
         "action_id": str(action_id),
         "task_id": str(task_id),
@@ -348,71 +434,6 @@ def _check_action_revision_cas(root: Path, expected_revision: str | None) -> Non
             f"expected revision {expected_revision!r} but the current committed revision is {current!r}; "
             "the action was produced against a superseded revision"
         )
-
-
-def _target_run_relative(root: Path, staging_key: str, target: Path) -> str:
-    target = Path(target)
-    try:
-        return str(target.resolve().relative_to(root))
-    except ValueError:
-        return str(target)
-
-
-def commit_revision_pointer(
-    root: Path,
-    action_id: str,
-    targets: dict[str, Path],
-    applied_files: list[str],
-    *,
-    parent_revision: str = "",
-) -> dict[str, Any]:
-    """Write the immutable revision snapshot + atomically swap the pointer."""
-
-    import hashlib
-    import shutil as _shutil
-
-    staging = _actions_root(root) / "staging" / action_id
-    payload_hash = hashlib.sha256()
-    for relative in sorted(targets):
-        target = Path(targets[relative])
-        try:
-            target_rel = str(target.resolve().relative_to(root))
-        except ValueError:
-            target_rel = str(target)
-        # SC-1.1 P1-03: identity binds (target path, content) — the same
-        # content written to different pages is a DIFFERENT revision.
-        payload_hash.update(target_rel.encode("utf-8"))
-        payload_hash.update(hashlib.sha256((staging / relative).read_bytes()).digest())
-    revision_id = payload_hash.hexdigest()[:16]
-    revisions_dir = root / "build" / "revisions" / revision_id
-    if not revisions_dir.exists():
-        revisions_dir.mkdir(parents=True)
-        for relative in targets:
-            # snapshot copies land at the TARGET run-relative path (matching
-            # the manifest keys), not the staging key
-            destination = revisions_dir / _target_run_relative(root, relative, targets[relative])
-            destination.parent.mkdir(parents=True, exist_ok=True)
-            _shutil.copy2(staging / relative, destination)
-        manifest = {
-            "schema_version": "deck_build_revision.v1",
-            "revision_id": revision_id,
-            "action_id": action_id,
-            "parent_revision_id": str(parent_revision),
-            "files": {
-                _target_run_relative(root, relative, targets[relative]): hashlib.sha256((staging / relative).read_bytes()).hexdigest()
-                for relative in targets
-            },
-            # files NOT touched by this action inherit from the parent chain
-            "inherits": [str(applied) for applied in applied_files],
-            "committed_at": _utc_now(),
-        }
-        (revisions_dir / "revision_manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    pointer = revision_pointer_path(root)
-    pointer.parent.mkdir(parents=True, exist_ok=True)
-    tmp = pointer.with_suffix(".tmp")
-    tmp.write_text(json.dumps({"revision_id": revision_id, "action_id": action_id, "applied_files": applied_files}, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    tmp.replace(pointer)
-    return {"revision_id": revision_id}
 
 
 def _run_lock_path(root: Path) -> Path:
@@ -461,51 +482,99 @@ def _enforce_task_budget(root: Path, envelope: dict[str, Any]) -> None:
         )
 
 
-_PROJECTION_BACKUP: dict[Path, bytes | None] = {}
-
-
-def _rollback_projections(root: Path) -> None:
-    """Restore every live projection touched by a failed commit to its
-    pre-commit bytes (SC-1.1 P1-03: never leave mixed versions on disk)."""
-
-    for target, data in list(_PROJECTION_BACKUP.items()):
-        if data is None:
-            target.unlink(missing_ok=True)
-        else:
-            target.write_bytes(data)
-    _PROJECTION_BACKUP.clear()
-
-
-def read_revision_state(root: Path | str) -> dict[str, bytes]:
-    """Resolve the FULL revision state for readers: current revision files
-    overlaid onto the parent chain (files absent from the current revision
-    inherit from parents)."""
-
+def read_revision_state(root: Path | str, revision: str | None = None) -> dict[str, bytes]:
     root = Path(root).expanduser().resolve()
-    current = read_current_revision(root).get("revision_id", "")
+    current = read_current_revision(root).get("revision_id", "") if revision is None else revision
     if not current:
         return {}
-    revisions_dir = root / "build" / "revisions"
-    # SC-1.1 review round 3 (P1-03): walk the parent chain OLDEST-FIRST and
-    # let each CHILD overwrite its parents — the current revision's files
-    # must win. Files are keyed by final run-relative target paths.
-    chain: list[str] = []
-    revision_id = current
-    hops = 0
-    while revision_id and hops < 32:
-        manifest_path = revisions_dir / revision_id / "revision_manifest.json"
-        if not manifest_path.exists():
+    chain, seen = [], set()
+    while current:
+        if current in seen:
+            raise ActionEnvelopeError("revision parent cycle")
+        seen.add(current)
+        manifest = _manifest(root, current)
+        chain.append((current, manifest))
+        if manifest.get("full_snapshot"):
             break
-        chain.append(revision_id)
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        revision_id = str(manifest.get("parent_revision_id") or "")
-        hops += 1
-    files: dict[str, bytes] = {}
-    for revision_id in reversed(chain):  # oldest first, child last (wins)
-        rev_dir = revisions_dir / revision_id
-        manifest = json.loads((revisions_dir / revision_id / "revision_manifest.json").read_text(encoding="utf-8"))
-        for relative in manifest.get("files", {}):
-            file_path = rev_dir / relative
-            if file_path.exists():
-                files[str(relative)] = file_path.read_bytes()
+        current = manifest.get("parent_revision_id", "")
+    files = {}
+    for revision_id, manifest in reversed(chain):
+        for relative, expected in manifest.get("files", {}).items():
+            data = _safe_path(root / "build/revisions" / revision_id, relative).read_bytes()
+            if hashlib.sha256(data).hexdigest() != expected:
+                raise ActionEnvelopeError(f"revision file hash mismatch: {relative}")
+            files[relative] = data
     return files
+
+
+_READ_REVISION: ContextVar[dict] = ContextVar("deck_revision", default={})
+
+
+@contextmanager
+def revision_read(root: Path | str):
+    root = Path(root).expanduser().resolve()
+    active = _READ_REVISION.get()
+    if str(root) in active:
+        yield active[str(root)]
+        return
+    revision = read_current_revision(root).get("revision_id", "")
+    token = _READ_REVISION.set({**active, str(root): revision})
+    try:
+        yield revision
+    finally:
+        _READ_REVISION.reset(token)
+
+
+def revision_input_path(root: Path | str, path: Path | str) -> Path:
+    root = Path(root).expanduser().resolve()
+    path = Path(path)
+    if not path.is_absolute():
+        path = root / path
+    relative = path.resolve().relative_to(root).as_posix()
+    revision = _READ_REVISION.get().get(str(root))
+    if revision is None or not revision:
+        return _safe_path(root, relative)
+    return _safe_path(root / "build/revisions" / revision, relative)
+
+
+def active_input_path(path: Path) -> Path:
+    """Read-only loader hook; only redirects within an explicitly pinned scope."""
+    for root in _READ_REVISION.get():
+        if path.resolve().is_relative_to(Path(root)):
+            relative = path.resolve().relative_to(Path(root)).as_posix()
+            inputs = ("page_packages", "assets", "high_density_build/svg", "high_density_build/content_locks", "high_density_build/page_scenes", "high_density_build/blueprints")
+            if relative in {"request.json", "narrative_plan.json", "solution_model.json", "diagram_views.json", "style_lock.json", "context_manifest.json", "page_tasks.json"} or any(relative == prefix or relative.startswith(prefix + "/") for prefix in inputs):
+                return revision_input_path(root, path)
+    return path
+
+
+def recover_projections(root: Path | str) -> dict:
+    root = Path(root).expanduser().resolve()
+    lock = _acquire_run_lock(root)
+    try:
+        revision = read_current_revision(root).get("revision_id", "")
+        for relative, data in read_revision_state(root).items():
+            target = _safe_path(root, relative)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            tmp = target.with_suffix(target.suffix + ".recover-tmp")
+            tmp.write_bytes(data)
+            tmp.replace(target)
+        if revision:
+            for action, receipt in _manifest(root, revision).get("receipts", {}).items():
+                _atomic_json(_applied_marker(root, validate_identifier(action)), receipt)
+        return {"status": "recovered", "revision_id": revision}
+    finally:
+        _release_run_lock(lock)
+
+
+def restore_revision(root: Path | str, *, expected_revision: str, revision_id: str) -> dict:
+    root = Path(root).expanduser().resolve()
+    lock = _acquire_run_lock(root)
+    try:
+        _check_action_revision_cas(root, expected_revision)
+        if revision_id:
+            read_revision_state(root, revision_id)  # verify complete content before activation
+        _atomic_json(revision_pointer_path(root), {"revision_id": revision_id})
+        return {"status": "restored", "revision_id": revision_id}
+    finally:
+        _release_run_lock(lock)

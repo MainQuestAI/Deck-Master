@@ -105,6 +105,7 @@ class AtomicCommitOrderTests(unittest.TestCase):
                 targets={"svg": root / "high_density_build" / "svg" / "P001.svg"},
             )
             env_p2 = _envelope("act-p2")
+            env_p2["scope_pages"] = ["P002"]
             stage_action_result(root, env_p2, {"svg": "<svg>P</svg>"})
             marker2 = commit_action_result(
                 root, env_p2, current_input_fingerprint="fp-1",
