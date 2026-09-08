@@ -743,6 +743,8 @@ def resolve_run_state(
         "readiness": readiness,
         "allowed_actions": allowed_actions,
         "blocked_actions": blocked_actions,
+        "host_task": (native or {}).get("host_task") or {},
+        "blocking_issues": (native or {}).get("blocking_issues") or [],
         "next_command": next_command,
         "recommended_skill": skill_route["recommended_skill"],
         "skill_stage": skill_route["skill_stage"],
