@@ -1106,6 +1106,18 @@ def product_capability_manifest() -> dict[str, Any]:
             "legacy_real_dir_requires_migration_plan": True,
             "full_external_capability_directory_must_be_preserved": True,
         },
+        "build_runtime": {
+            'default_engine': 'deck_native',
+            'default_authoring_mode': 'image_blueprint',
+            'authoring_modes': ['image_blueprint', 'direct_svg'],
+            'legacy_engine': 'legacy_ppt_master',
+            'route_precedence': 'persisted_revision',
+            'renderer': 'libreoffice_pdf_pdftoppm',
+            'host_capabilities': 'observed_per_task',
+            'final_approval': 'required_for_current_artifact',
+            'engineering_acceptance': 'in_progress',
+            'customer_outcome': 'outcome_pending',
+        },
         "release_tree": {
             "skills_path": "skills",
             "capabilities_path": "capabilities",
@@ -1147,9 +1159,16 @@ def product_capability_manifest_path() -> Path:
 def write_companion_manifest() -> Path:
     path = companion_manifest_path()
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(path.suffix + ".tmp")
-    tmp.write_text(json.dumps(companion_manifest(), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    tmp.replace(path)
+    # A unique sibling temporary file keeps simultaneous setup processes
+    # from replacing/removing one another's in-flight manifest.
+    descriptor, temporary = tempfile.mkstemp(prefix=path.name + ".", suffix=".tmp", dir=path.parent)
+    tmp = Path(temporary)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+            handle.write(json.dumps(companion_manifest(), ensure_ascii=False, indent=2) + "\n")
+        tmp.replace(path)
+    finally:
+        tmp.unlink(missing_ok=True)
     return path
 
 

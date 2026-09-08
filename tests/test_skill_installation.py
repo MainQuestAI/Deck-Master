@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import shutil
+import shlex
 import subprocess
 import tempfile
 import sys
@@ -89,7 +90,8 @@ class SkillInstallationTest(unittest.TestCase):
     def _install_fake_release_runtime(self, release_root: Path) -> dict[str, str]:
         runtime_python = release_root / installer_module.RELEASE_PYTHON_RELATIVE
         runtime_python.parent.mkdir(parents=True, exist_ok=True)
-        runtime_python.symlink_to(sys.executable)
+        runtime_python.write_text("#!/bin/sh\nexec " + shlex.quote(sys.executable) + ' "$@"\n', encoding="utf-8")
+        runtime_python.chmod(0o755)
         installer_module._record_release_runtime(release_root, "3.12.8")
         return {
             "python_requirement": installer_module.RUNTIME_PYTHON_REQUIREMENT,

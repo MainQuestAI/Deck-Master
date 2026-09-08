@@ -949,11 +949,14 @@ class StudioServerTests(unittest.TestCase):
 
         self.skill_installer = skill_installer
         self.original_skill_dir = skill_installer.INSTALLED_SKILL_DIR
+        self.original_install_log_dir = skill_installer.INSTALL_LOG_DIR
+        skill_installer.INSTALL_LOG_DIR = self.home_dir / ".deck-master"
         self.handler = MockHandler(run_dir=None, runs_dir=self.runs_dir)
 
     def tearDown(self) -> None:
         shutil.rmtree(self.temp_dir, ignore_errors=True)
         self.skill_installer.INSTALLED_SKILL_DIR = self.original_skill_dir
+        self.skill_installer.INSTALL_LOG_DIR = self.original_install_log_dir
         if self.original_home is None:
             os.environ.pop("HOME", None)
         else:
