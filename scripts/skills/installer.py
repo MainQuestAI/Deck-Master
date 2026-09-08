@@ -1347,11 +1347,11 @@ def _install_release_runtime(release_root: Path) -> dict[str, str]:
         failure="Deck Master release runtime creation failed",
     )
     runtime_python = release_root / RELEASE_PYTHON_RELATIVE
-    _run_runtime_setup(
-        [str(runtime_python), "-m", "pip", "install", str(release_root)],
-        cwd=release_root,
-        failure="Deck Master release runtime installation failed",
-    )
+    from .runtime_dependencies import install_locked_runtime
+    try:
+        install_locked_runtime(release_root, runtime_python)
+    except (ValueError, OSError, subprocess.SubprocessError) as exc:
+        raise SkillInstallError(str(exc)) from exc
     _clean_runtime_build_artifacts(release_root)
     runtime_version = _probe_python_version(runtime_python)
     if not _is_python_312(runtime_version):
@@ -1527,6 +1527,12 @@ def verify_release_tree(
         path = root / rel
         if not path.exists():
             add_error("missing_required_file", rel)
+
+    try:
+        from .runtime_dependencies import verify_lock_files
+        verify_lock_files(root)
+    except (ValueError, OSError) as exc:
+        add_error("invalid_dependency_lock", "requirements", str(exc))
 
     product_manifest: dict[str, Any] | None = None
     product_manifest_path = root / PRODUCT_CAPABILITY_MANIFEST_NAME
@@ -1975,6 +1981,9 @@ def build_release_tree(
     )
     for source_name, target_name in (
         ("pyproject.toml", "pyproject.toml"),
+        ("requirements/README.md", "requirements/README.md"),
+        ("requirements/build.lock", "requirements/build.lock"),
+        ("requirements/runtime.lock", "requirements/runtime.lock"),
         ("AGENTS.md", "AGENTS.md"),
         ("README.md", "README.md"),
         ("LICENSE", "LICENSE"),
@@ -2047,6 +2056,10 @@ def build_release_tree(
             for name in release_capabilities
         ],
         "contracts": _contract_lock_entries(release_root),
+        "python_dependency_locks": [
+            {"path": path, "sha256": _sha256_file(release_root / path)}
+            for path in ("requirements/build.lock", "requirements/runtime.lock")
+        ],
     }
     (release_root / CAPABILITY_LOCK_NAME).write_text(
         json.dumps(_augment_lock(capability_lock, release_root), ensure_ascii=False, indent=2) + "\n",
