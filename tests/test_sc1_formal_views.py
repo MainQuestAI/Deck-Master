@@ -52,3 +52,16 @@ def test_model_rejects_broken_refs_and_missing_source(tmp_path):
  m=formal(tmp_path);payload=design();payload['relations'][0]['to_id']='ghost'
  with pytest.raises(ValueError,match='ghost'):build_solution_model(tmp_path,payload,source_refs=['sources/raw.txt'])
  with pytest.raises(ValueError,match='source'):build_solution_model(tmp_path,design(),source_refs=['sources/missing.txt'])
+
+
+def test_formal_view_binds_actual_pretty_model_bytes(tmp_path):
+ import hashlib
+ m=formal(tmp_path);source=tmp_path/'solution_model.json';source.write_text(json.dumps(m,ensure_ascii=False,indent=2))
+ old=view(m)
+ v=build_diagram_view(view_id='v_file',view_type='data_flow',solution_model=m,target_page_id='P004',nodes=old['nodes'],edges=old['edges'],model_source_path=source)
+ assert v['based_on']['input_refs'][0]['sha256']==hashlib.sha256(source.read_bytes()).hexdigest()
+ assert v['based_on']['input_refs'][0]['sha256']!=v['model_sha256']
+ assert old['model_ref'].startswith('urn:')
+ source.write_text('{}')
+ with pytest.raises(ValueError,match='do not match'):
+  build_diagram_view(view_id='v_file',view_type='data_flow',solution_model=m,target_page_id='P004',nodes=old['nodes'],edges=old['edges'],model_source_path=source)

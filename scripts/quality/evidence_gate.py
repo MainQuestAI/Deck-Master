@@ -106,6 +106,11 @@ def evaluate_evidence_gate(
                 "repair_instruction": "Remove or qualify the unsupported number, or bind this exact claim to reviewed source evidence with matching unit and period.",
             })
 
+    if packages:
+        from quality.metric_checks import find_metric_scope_conflicts
+        for index, finding in enumerate(find_metric_scope_conflicts(packages), 1):
+            findings.append({**finding, 'finding_id': f'evidence_metric_scope_{index:03d}'})
+
     has_p0 = any(f["severity"] == "P0" for f in findings)
     has_p1 = any(f["severity"] == "P1" for f in findings)
 

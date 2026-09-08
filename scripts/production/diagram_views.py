@@ -46,6 +46,7 @@ def build_diagram_view(
     visible_to: str = "internal",
     layout: str = "layered",
     label_source: str = "solution_model",
+    model_source_path=None,
 ) -> dict[str, Any]:
     if solution_model.get('model_id'):
         from planning.solution_model import validate_formal_solution_model
@@ -55,10 +56,20 @@ def build_diagram_view(
         if errors:
             raise ValueError('formal solution model invalid: ' + '; '.join(errors))
         model_hash = _model_sha256(solution_model)
+        model_ref = 'urn:deck-master:solution-model:sha256:' + model_hash
+        source_hash = model_hash
+        if model_source_path is not None:
+            from pathlib import Path
+            source = Path(model_source_path)
+            source_bytes = source.read_bytes()
+            if json.loads(source_bytes) != solution_model:
+                raise ValueError('model source bytes do not match the supplied solution model')
+            source_hash = hashlib.sha256(source_bytes).hexdigest()
+            model_ref = source.name
         result = dict(schema_version=SCHEMA_VERSION, run_id=solution_model['run_id'], run_mode=solution_model['run_mode'],
-                      based_on={'input_fingerprint': model_hash, 'input_refs': [{'ref': 'solution_model.json', 'sha256': model_hash}]},
+                      based_on={'input_fingerprint': model_hash, 'input_refs': [{'ref': model_ref, 'sha256': source_hash}]},
                       view_id=view_id, page_id=target_page_id, view_type=view_type,
-                      model_ref='solution_model.json', model_sha256=model_hash,
+                      model_ref=model_ref, model_sha256=model_hash,
                       title=view_id, scope_note='Derived view of the referenced solution model; no new customer facts.',
                       nodes=[dict(n) for n in nodes], edges=[dict(e) for e in edges],
                       layout={'strategy': layout, 'aspect_ratio': '16:9', 'editability_target': 'native_shapes'})

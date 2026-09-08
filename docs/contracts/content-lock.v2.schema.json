@@ -44,8 +44,22 @@
         "source": {"const": "approved_page_package"},
         "page_package_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
         "narrative_ref": {"const": "narrative_plan.json"},
-        "narrative_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
-      }, "dependentRequired": {"narrative_ref": ["narrative_sha256"], "narrative_sha256": ["narrative_ref"]},
+        "narrative_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "narrative_page_projection_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "narrative_projection_version": {"const": 1}
+      },
+      "dependentRequired": {
+        "narrative_sha256": ["narrative_ref"],
+        "narrative_page_projection_sha256": ["narrative_ref", "narrative_projection_version"],
+        "narrative_projection_version": ["narrative_ref", "narrative_page_projection_sha256"]
+      },
+      "allOf": [{
+        "if": {"required": ["narrative_ref"]},
+        "then": {"oneOf": [
+          {"required": ["narrative_sha256"]},
+          {"required": ["narrative_page_projection_sha256", "narrative_projection_version"]}
+        ]}
+      }],
       "additionalProperties": false
     },
     "textRef": {
