@@ -35,3 +35,14 @@ def test_cli_conflict_is_not_silent(tmp_path):
     args = build_parser().parse_args(['build', 'run', '--run-dir', str(tmp_path), '--profile', 'legacy-ppt-master'])
     with pytest.raises(ValueError, match='conflict'):
         _persist_build_options(tmp_path, args)
+
+
+def test_cli_explicit_native_cannot_skip_legacy_migration(tmp_path):
+    import argparse,json
+    from deck_master import _persist_build_options
+    (tmp_path/'build').mkdir()
+    (tmp_path/'request.json').write_text(json.dumps({'run_id':tmp_path.name,'run_mode':'production','builder_profile':'standard'}))
+    (tmp_path/'build/render_request.json').write_text('{}')
+    with pytest.raises(ValueError,match='migrate'):
+        _persist_build_options(tmp_path,argparse.Namespace(profile='native',authoring_mode=None))
+    assert not (tmp_path/'build/route.json').exists()

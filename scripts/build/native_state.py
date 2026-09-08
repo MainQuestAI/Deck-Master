@@ -20,6 +20,9 @@ def native_continuation(root: Path) -> dict[str, Any] | None:
     if status['status'] == 'completed':
         from quality.gate_policy import resolve_required_gates
         artifact = Path(status['artifact_path'])
+        artifact = (artifact if artifact.is_absolute() else root / artifact).resolve()
+        if not artifact.is_relative_to(root.resolve()):
+            raise ValueError('native artifact escapes run')
         request = read_json(root / 'request.json')
         policy = resolve_required_gates(root, artifact, builder_profile='standard', output_profile='production_pptx', run_mode=request.get('run_mode', 'production'))
         if policy.get('required_gate_satisfied') and not policy.get('current_blockers'):

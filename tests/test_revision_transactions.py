@@ -110,3 +110,13 @@ def test_real_package_reader_reads_complete_committed_snapshot(tmp_path):
     assert json.loads((tmp_path/'page_packages/P001.json').read_text()) == old
     with revision_read(tmp_path):
         assert PagePackageIndex(tmp_path).list_packages()[0]['customer_visible']['title'] == 'new'
+
+
+def test_failure_ledger_rejects_symlink_escape(tmp_path):
+    from workflow.actions import record_action_failure
+    outside=tmp_path/'outside'; outside.mkdir()
+    root=tmp_path/'run'; (root/'workflow').mkdir(parents=True)
+    (root/'workflow/actions').symlink_to(outside, target_is_directory=True)
+    with pytest.raises(ActionEnvelopeError,match='symlink'):
+        record_action_failure(root,action_id='a',task_id='t',reason='bad result')
+    assert not list(outside.iterdir())

@@ -2428,6 +2428,10 @@ def _persist_build_options(
     if authoring:
         proposed["authoring_mode"] = str(authoring).replace("-", "_")
     fixed = load_persisted_route(run_dir)
+    if not fixed:
+        original_route = _derive_route(request, run_dir)
+        if original_route.get("selection_origin") == "existing_run":
+            fixed = original_route
     if fixed and (requested or authoring):
         desired = _derive_route(proposed, None)
         if any(desired[k] != fixed[k] for k in ("engine_id", "authoring_mode", "density")):

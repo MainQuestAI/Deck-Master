@@ -44,7 +44,7 @@ def _utc_now() -> str:
 
 
 def _actions_root(root: Path) -> Path:
-    return root / "workflow" / "actions"
+    return _safe_path(root, "workflow/actions")
 
 
 def fingerprint_payload(payload: dict[str, Any] | list[Any] | str) -> str:
@@ -83,7 +83,7 @@ def create_action_envelope(
 
 
 def _applied_marker(root: Path, action_id: str) -> Path:
-    return _actions_root(root) / "applied" / f"{action_id}.json"
+    return _safe_path(root, f"workflow/actions/applied/{action_id}.json")
 
 
 def validate_identifier(value: str, label: str = "identifier") -> str:
@@ -311,7 +311,7 @@ def check_action_budget(root: Path | str, task_id: str, *, max_actions: int) -> 
     """Count committed actions for a task; exhausting the budget blocks."""
 
     root = Path(root).expanduser().resolve()
-    applied_dir = _actions_root(root) / "applied"
+    applied_dir = _safe_path(root, "workflow/actions/applied")
     successes = set()
     revision = read_current_revision(root).get("revision_id", "")
     if revision:
@@ -328,7 +328,7 @@ def check_action_budget(root: Path | str, task_id: str, *, max_actions: int) -> 
                 # double counting of the overwritten summary marker).
                 successes.add(str(marker.get("action_id") or path.stem))
     count = len(successes)
-    attempts_root = _actions_root(root) / "attempts"
+    attempts_root = _safe_path(root, "workflow/actions/attempts")
     if attempts_root.is_dir():
         for attempt_dir in attempts_root.iterdir():
             if not attempt_dir.is_dir():
@@ -398,6 +398,16 @@ def read_current_revision(root: Path | str) -> dict[str, Any]:
 
 
 def record_action_failure(root: Path | str, *, action_id: str, task_id: str, reason: str) -> dict[str, Any]:
+    root = Path(root).expanduser().resolve()
+    _actions_root(root)
+    lock = _acquire_run_lock(root)
+    try:
+        return _record_action_failure_locked(root, action_id=action_id, task_id=task_id, reason=reason)
+    finally:
+        _release_run_lock(lock)
+
+
+def _record_action_failure_locked(root: Path | str, *, action_id: str, task_id: str, reason: str) -> dict[str, Any]:
     """Record a failed action attempt — failures consume the task budget."""
 
     root = Path(root).expanduser().resolve()
@@ -415,11 +425,11 @@ def record_action_failure(root: Path | str, *, action_id: str, task_id: str, rea
     }
     # SC-1.1 P1-03: append-only attempt ledger — repeated failures each
     # consume budget; nothing is overwritten.
-    attempts_dir = _actions_root(root) / "attempts" / str(action_id)
+    attempts_dir = _safe_path(root, f"workflow/actions/attempts/{action_id}")
     attempts_dir.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S%f")
     (attempts_dir / f"{stamp}.json").write_text(json.dumps(marker, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    marker_path = _actions_root(root) / "applied" / f"{action_id}.json"
+    marker_path = _safe_path(root, f"workflow/actions/applied/{action_id}.json")
     marker_path.parent.mkdir(parents=True, exist_ok=True)
     marker_path.write_text(json.dumps(marker, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return marker
@@ -437,7 +447,7 @@ def _check_action_revision_cas(root: Path, expected_revision: str | None) -> Non
 
 
 def _run_lock_path(root: Path) -> Path:
-    return root / "build" / ".action_commit.lock"
+    return _safe_path(root, "build/.action_commit.lock")
 
 
 def _acquire_run_lock(root: Path):

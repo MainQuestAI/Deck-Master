@@ -963,13 +963,15 @@ def build_status(run_dir: str | Path) -> dict[str, Any]:
         status = "prepared" if manifest_path.exists() else "missing"
     if artifact_validation and not artifact_validation.get("valid"):
         status = "invalid"
-    if build_manifest.get("build_revision"):
+    from build.build_route import load_persisted_route
+    native_route = load_persisted_route(root).get("engine_id") == "deck_native"
+    if native_route and (build_manifest or render_result or artifact_manifest):
         from workflow.actions import read_current_revision
         current_revision = read_current_revision(root).get("revision_id") or "initial"
         if any(record.get("build_revision") != current_revision for record in (build_manifest, render_result, artifact_manifest)):
             status = "stale"
             artifact_validation = {**artifact_validation, "valid": False, "stale_revision": True}
-    if build_manifest.get("build_revision") and status == "completed":
+    if native_route and status == "completed":
         from build.native_engine import native_build_fingerprint
         try:
             current_fingerprint = native_build_fingerprint(root)

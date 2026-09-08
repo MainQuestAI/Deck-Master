@@ -12,3 +12,29 @@ def test_native_next_step_uses_issued_task_without_old_hd_workflow(tmp_path):
     assert result['host_task']['pages'][0]['action_id'] == first['pages'][0]['action_id']
     assert _resolve_stage(root, 'production')[0] == result['runtime_stage']
     assert resolve_next_step(root) == result
+
+
+def test_native_old_manifest_without_revision_is_not_complete(tmp_path):
+    from runtime.run_state import write_json
+    from runtime.build import build_status
+    root=new_run(tmp_path,'direct_svg')
+    run_build(root)
+    write_json(root/'build/build_manifest.json',{'pages':[]})
+    write_json(root/'render_results/render_result.json',{'status':'completed','artifact_path':'old.pptx'})
+    assert build_status(root)['status']=='stale'
+
+
+def test_native_quality_path_is_resolved_against_run(tmp_path,monkeypatch):
+    from build.native_state import native_continuation
+    import runtime.build, quality.gate_policy
+    root=new_run(tmp_path,'direct_svg');run_build(root)
+    artifact=root/'build/result.pptx';artifact.write_bytes(b'not a pptx; mocked policy boundary')
+    monkeypatch.setattr(runtime.build,'build_status',lambda root:{'status':'completed','artifact_path':'build/result.pptx','page_count':1})
+    seen=[]
+    def policy(root,path,**kwargs):
+        seen.append(path)
+        return {'required_gate_satisfied':True,'current_blockers':[]}
+    monkeypatch.setattr(quality.gate_policy,'resolve_required_gates',policy)
+    result=native_continuation(root)
+    assert seen==[artifact.resolve()]
+    assert str(artifact.resolve()) in result['next_command']
