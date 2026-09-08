@@ -22,6 +22,23 @@ whole-deck workflow has upstream gaps. They report the applicable skill and
 references without changing run state or granting stage/export approval.
 Selected-page edits reuse confirmed design and valid unaffected artifacts.
 
+## Answer a Current Workflow Question
+
+Run `workflow questions --run-dir <run_dir>` to read the current forcing questions
+and `input_fingerprint`. Submit an explicit answer with `workflow answer --run-dir
+<run_dir> --stage-id <stage> --question-id <id> --answer-json '"否"' --source-type
+user --actor-id <local_actor> --actor-role user --input-fingerprint <token>`.
+Use this negative answer only for an actual yes/no question. Re-read after each
+write; stale tokens, unknown/resolved questions and non-current stages are rejected.
+
+The actor is a local caller declaration, not authenticated identity or a grant of
+final user approval. Never label an Agent inference as a user answer. Agent
+assumptions require `--source-type agent_assumption --actor-role agent`, an
+assumption-permitting question, and must not answer user-reserved questions.
+Plain answers cannot satisfy evidence-required questions. Existing DecisionLog
+records are written through the revision transaction; no second decision model
+or UI is introduced. See [the CLI contract](contracts/workflow-question-cli.md).
+
 ## Project Skill Installation
 
 After the central release is installed, attach Codex project entries with

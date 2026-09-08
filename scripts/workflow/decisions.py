@@ -60,6 +60,7 @@ class DecisionLog:
         source_type: str = SOURCE_USER,
         evidence_refs: list[str] | None = None,
         category: str = "",
+        persist: bool = True,
     ) -> dict[str, Any]:
         root = Path(run_dir).expanduser().resolve()
         decision = {
@@ -93,6 +94,8 @@ class DecisionLog:
             dependencies = question.get("input_dependencies")
             if dependencies and input_fingerprint == QuestionResolver(registry).input_fingerprint(contract, root):
                 decision["input_dependency_fingerprint"] = fingerprint_question_inputs(root, dependencies)
+        if not persist:
+            return decision
         root.joinpath("workflow").mkdir(parents=True, exist_ok=True)
         with self._log_path(root).open("a", encoding="utf-8") as fh:
             fh.write(json.dumps(decision, ensure_ascii=False) + "\n")
@@ -101,7 +104,9 @@ class DecisionLog:
     # --- read ---
     def list(self, run_dir: str | Path, *, stage_id: str | None = None) -> list[dict[str, Any]]:
         root = Path(run_dir).expanduser().resolve()
-        path = self._log_path(root)
+        from workflow.actions import revision_read, revision_input_path
+        with revision_read(root):
+            path = revision_input_path(root, self._log_path(root))
         if not path.exists():
             return []
         out: list[dict[str, Any]] = []

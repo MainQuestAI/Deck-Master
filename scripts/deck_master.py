@@ -1583,6 +1583,18 @@ def command_workflow_status(args: argparse.Namespace) -> dict[str, Any]:
     return payload
 
 
+def command_workflow_questions(args: argparse.Namespace) -> dict[str, Any]:
+    from workflow.question_commands import read_questions
+    return read_questions(resolve_run_dir(args))
+
+
+def command_workflow_answer(args: argparse.Namespace) -> dict[str, Any]:
+    from workflow.question_commands import answer_question
+    return answer_question(resolve_run_dir(args), stage_id=args.stage_id, question_id=args.question_id,
+        answer=json.loads(args.answer_json), source_type=args.source_type,
+        actor=_actor_from_args(args), input_fingerprint=args.input_fingerprint)
+
+
 def command_workflow_stages(args: argparse.Namespace) -> dict[str, Any]:
     state = _wf_state(args)
     return {"run_id": state.get("run_id"), "stages": state.get("stages", [])}
@@ -3493,6 +3505,15 @@ def build_parser() -> argparse.ArgumentParser:
     p_wf_stages = wf_sub.add_parser("stages", help="List per-stage contract status")
     add_run_args(p_wf_stages)
     p_wf_stages.set_defaults(func=command_workflow_stages)
+
+    p_wf_q = wf_sub.add_parser("questions", help="Read current forcing questions and input token")
+    add_run_args(p_wf_q)
+    p_wf_q.set_defaults(func=command_workflow_questions)
+    p_wf_a = wf_sub.add_parser("answer", help="Record an explicit local actor answer (caller declaration, not authenticated user identity)")
+    add_run_args(p_wf_a)
+    for name in ("stage-id", "question-id", "answer-json", "source-type", "actor-id", "actor-role", "input-fingerprint"):
+        p_wf_a.add_argument("--" + name, required=True)
+    p_wf_a.set_defaults(func=command_workflow_answer)
 
     # handoff
     p_wf_h = wf_sub.add_parser("handoff", help="Stage handoff runtime")
