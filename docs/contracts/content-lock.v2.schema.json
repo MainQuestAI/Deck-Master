@@ -15,20 +15,39 @@
     "speaker_notes": {"type": "string"},
     "asset_bindings": {"type": "array", "items": {"type": "object"}},
     "evidence_bindings": {"type": "array", "items": {"type": "object"}},
-    "enrichment": {"$ref": "#/$defs/enrichment"},
+    "enrichment": {"oneOf": [{"$ref": "#/$defs/enrichment"}, {"$ref": "#/$defs/nativeEnrichment"}]},
     "required_component_ids": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
     "required_text_refs": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/textRef"}},
     "density_target": {"type": "object", "required": ["score", "band", "information_regions", "component_count", "evidence_count", "numeric_count"], "properties": {"score": {"type": "number", "minimum": 0}, "band": {"enum": ["low", "medium", "high"]}, "information_regions": {"type": "integer", "minimum": 1}, "component_count": {"type": "integer", "minimum": 1}, "evidence_count": {"type": "integer", "minimum": 0}, "numeric_count": {"type": "integer", "minimum": 0}}, "additionalProperties": false},
     "target_language": {"type": "string", "minLength": 1},
     "effective_language": {"type": "string", "minLength": 1},
     "visibility_policy": {"$ref": "#/$defs/visibilityPolicy"},
-    "lineage": {"$ref": "#/$defs/lineage"},
+    "lineage": {"oneOf": [{"$ref": "#/$defs/lineage"}, {"$ref": "#/$defs/nativeLineage"}]},
     "content_lock_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
     "created_at": {"type": "string", "minLength": 1},
     "updated_at": {"type": "string"}
   },
   "additionalProperties": false,
+  "allOf": [{"if": {"properties": {"enrichment": {"properties": {"framework": {"const": "native_narrative"}}}}}, "then": {"properties": {"lineage": {"$ref": "#/$defs/nativeLineage"}}}, "else": {"properties": {"lineage": {"$ref": "#/$defs/lineage"}}}}],
   "$defs": {
+    "nativeEnrichment": {
+      "type": "object", "required": ["framework", "version", "analysis", "component_plan", "claim_bindings"],
+      "properties": {
+        "framework": {"const": "native_narrative"}, "version": {"const": "native_narrative/1"},
+        "analysis": {"type": "object"}, "component_plan": {"type": "array", "minItems": 1, "items": {"type": "object"}},
+        "claim_bindings": {"type": "array"}
+      }, "additionalProperties": false
+    },
+    "nativeLineage": {
+      "type": "object", "required": ["source", "page_package_sha256"],
+      "properties": {
+        "source": {"const": "approved_page_package"},
+        "page_package_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "narrative_ref": {"const": "narrative_plan.json"},
+        "narrative_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      }, "dependentRequired": {"narrative_ref": ["narrative_sha256"], "narrative_sha256": ["narrative_ref"]},
+      "additionalProperties": false
+    },
     "textRef": {
       "type": "object",
       "required": ["ref", "priority", "required"],

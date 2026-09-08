@@ -587,6 +587,7 @@ def _run_native_build(root: Path, request: dict[str, Any], run_id: str) -> dict[
     except ModuleNotFoundError:  # pragma: no cover - exercised by package-import test path.
         from scripts.build import native_engine
 
+    from build.native_tasks import approved_svg
     prepared = native_engine.prepare_native_run(root)
     route = native_engine.resolve_build_route(request, run_dir=root)
     authoring = str(route.get("authoring_mode") or "image_blueprint")
@@ -595,77 +596,37 @@ def _run_native_build(root: Path, request: dict[str, Any], run_id: str) -> dict[
         # SC-1.1 review round 2 (P1-1): state-machine resume — advance by
         # what ALREADY exists instead of re-dispatching forever.
         approved_pages = [str(page) for page in prepared.get("pages", [])]
-        svg_dir = root / "high_density_build" / "svg"
-        missing_svgs = [page_id for page_id in approved_pages if not (svg_dir / f"{page_id}.svg").exists()]
+        missing_svgs = [page_id for page_id in approved_pages if not approved_svg(root, page_id)]
         if not missing_svgs:
             result = native_engine.run_native_compile(root, run_mode=_run_mode(request))
             backend = {"backend_name": "deck_native", "production_capable": True, "engine_route": route}
             return _finalize_native_build(root, request, result, backend, run_id)
 
-        blueprints_dir = root / "high_density_build" / "blueprints"
-        blueprints_present = bool(
-            approved_pages
-            and blueprints_dir.is_dir()
-            and all((blueprints_dir / f"{page_id}.svg").exists() for page_id in approved_pages)
-        )
-        if blueprints_present:
-            # SC-1.1 review round 3 (P1-04): the reconstruct host task carries
-            # the same contract as imagegen — action ids, input fingerprints
-            # bound to the current packages/locks, and an output contract.
-            task = native_engine.dispatch_imagegen_task(root)
-            task["status"] = "awaiting_agent_reconstruct"
-            task["stage"] = "awaiting_agent_reconstruct"
-            for page_entry in task.get("pages", []):
-                page_entry["output_contract"] = {
-                    "kind": "svg_reconstruction",
-                    "submit": "build run --run-dir <run> (host writes approved SVG to high_density_build/svg/<page_id>.svg)",
-                }
-            return {
-                "schema_version": "deck_build_run_result.v1",
-                "status": "awaiting_agent_reconstruct",
-                "run_id": run_id,
-                "run_dir": str(root),
-                "engine_id": "deck_native",
-                "authoring_mode": authoring,
-                "host_task": "build/host_imagegen_task.json",
-                "pages": task.get("pages", []),
-                "runtime_probe": prepared.get("runtime_probe", {}),
-                "resume_command": f"deck-master build run --run-dir {root}",
-                "note": "blueprints received; host SVG reconstruction per page, then resume",
-            }
-        task = native_engine.dispatch_imagegen_task(root)
+        from build.native_tasks import dispatch_native_task, approved_blueprint
+        stage = "reconstruct" if all(approved_blueprint(root, page) is not None for page in approved_pages) else "imagegen"
+        pending = [pkg for pkg in native_engine._approved_packages(root)
+                   if (approved_blueprint(root, pkg["page_id"]) is None if stage == "imagegen" else pkg["page_id"] in missing_svgs)]
+        task = dispatch_native_task(root, stage, pending)
         return {
-            "schema_version": "deck_build_run_result.v1",
-            "status": "awaiting_agent_imagegen",
-            "run_id": run_id,
-            "run_dir": str(root),
-            "engine_id": "deck_native",
-            "authoring_mode": authoring,
-            "host_task": "build/host_imagegen_task.json",
-            "pages": task.get("pages", []),
-            "runtime_probe": prepared.get("runtime_probe", {}),
-            "resume_command": f"deck-master build run --run-dir {root}",
-            "note": task.get("note", ""),
+            "schema_version": "deck_build_run_result.v1", "status": task["status"],
+            "run_id": run_id, "run_dir": str(root), "engine_id": "deck_native", "authoring_mode": authoring,
+            "host_task": "build/host_imagegen_task.json", "pages": task["pages"],
+            "runtime_probe": prepared.get("runtime_probe", {}), "resume_command": f"deck-master build run --run-dir {root}",
         }
 
-    # direct_svg: compile when every approved page has an approved SVG
     approved_pages = [str(page) for page in prepared.get("pages", [])]
-    missing_svgs = [
-        page_id
-        for page_id in approved_pages
-        if not (root / "high_density_build" / "svg" / f"{page_id}.svg").exists()
-    ]
-    if missing_svgs:
+    missing_svgs = [page_id for page_id in approved_pages if not approved_svg(root, page_id)]
+    missing_scenes = [page_id for page_id in approved_pages if not (root / "high_density_build" / "page_scenes" / f"{page_id}.json").exists() and not (root / "high_density_build" / "page_scenes" / f"{page_id}.page_scene.json").exists()]
+    if missing_svgs or missing_scenes:
+        from build.native_tasks import dispatch_native_task
+        pending = [pkg for pkg in native_engine._approved_packages(root) if pkg["page_id"] in set(missing_svgs + missing_scenes)]
+        task = dispatch_native_task(root, "svg", pending)
         return {
-            "schema_version": "deck_build_run_result.v1",
-            "status": "awaiting_svg_authoring",
-            "run_id": run_id,
-            "run_dir": str(root),
-            "engine_id": "deck_native",
-            "authoring_mode": authoring,
-            "missing_approved_svgs": missing_svgs,
-            "runtime_probe": prepared.get("runtime_probe", {}),
-            "resume_command": f"deck-master build run --run-dir {root}",
+            "schema_version": "deck_build_run_result.v1", "status": "awaiting_svg_authoring", "run_id": run_id,
+            "run_dir": str(root), "engine_id": "deck_native", "authoring_mode": authoring,
+            "missing_approved_svgs": missing_svgs, "missing_scenes": missing_scenes,
+            "host_task": "build/host_imagegen_task.json", "pages": task["pages"],
+            "runtime_probe": prepared.get("runtime_probe", {}), "resume_command": f"deck-master build run --run-dir {root}",
         }
 
     result = native_engine.run_native_compile(root, run_mode=_run_mode(request))
@@ -673,7 +634,18 @@ def _run_native_build(root: Path, request: dict[str, Any], run_id: str) -> dict[
     return _finalize_native_build(root, request, result, backend, run_id)
 
 
-def _finalize_native_build(
+def _finalize_native_build(root: Path, request: dict[str, Any], result: dict[str, Any], backend: dict[str, Any], run_id: str) -> dict[str, Any]:
+    from workflow.actions import _acquire_run_lock, _release_run_lock, read_current_revision
+    lock = _acquire_run_lock(root)
+    try:
+        if (read_current_revision(root).get("revision_id") or "initial") != result["build_revision"]:
+            raise BuildError("native build revision changed during compilation; resume the current revision")
+        return _finalize_native_build_locked(root, request, result, backend, run_id)
+    finally:
+        _release_run_lock(lock)
+
+
+def _finalize_native_build_locked(
     root: Path,
     request: dict[str, Any],
     result: dict[str, Any],
@@ -683,8 +655,16 @@ def _finalize_native_build(
     """Write the standard build artifacts for a native compile so downstream
     consumers (build status, gates, delivery) read ONE chain of record."""
 
-    prepare_build(root)  # package-anchored build manifest (native route)
-    manifest = read_json(root / BUILD_DIR / BUILD_MANIFEST_NAME)
+    packages = result["packages"]
+    page_sources, warnings = _page_sources_from_packages(root, packages, production=production_requires_builder_backend(_run_mode(request)))
+    manifest = {
+        "schema_version": BUILD_MANIFEST_SCHEMA_VERSION, "run_id": run_id, "status": "prepared", "run_mode": _run_mode(request),
+        "output_profile": _output_profile(request), "source_mode": "page_packages", "non_client_deliverable": True,
+        "builder_backend": backend, "source_fingerprint": result["input_fingerprint"], "build_revision": result["build_revision"],
+        "page_count": result["page_count"], "pages": page_sources, "required_outputs": _required_outputs_for_profile(_output_profile(request)),
+        "warnings": warnings, "created_at": _utc_now(),
+    }
+    write_json(root / BUILD_DIR / BUILD_MANIFEST_NAME, manifest)
     build_dir = root / BUILD_DIR
     pptx_path = Path(str(result["pptx_path"])).expanduser().resolve()
     # SC-1.1 review round 2 (P1-2): a REAL native compile writes a REAL
@@ -701,6 +681,18 @@ def _finalize_native_build(
             non_client_deliverable=False,
         ),
     ]
+    rendered = result.get("render") or {}
+    page_previews = []
+    if rendered.get("status") == "rendered":
+        pdf_path = Path(rendered["pdf_path"])
+        artifacts.append(_artifact(root, artifact_id="deck_pdf", kind="deck_pdf", path=pdf_path, editability="raster", source_mode="native_compile", non_client_deliverable=False))
+        for page in rendered["pages"]:
+            page_path = Path(page["path"])
+            artifacts.append(_artifact(root, artifact_id=f"page_png_{page['page_id']}", kind="page_png", path=page_path, page_id=page["page_id"], editability="raster", source_mode="native_compile", non_client_deliverable=False))
+            page_previews.append({"page_id":page["page_id"],"preview_path":_run_relative(root,page_path)})
+        html_path = pdf_path.parent / "index.html"
+        html_path.write_text('<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>Presentation</title><style>body{margin:0;background:#202124}img{display:block;width:100%;max-width:1600px;margin:0 auto 16px}</style>' + ''.join(f'<section data-page-id="{escape(page["page_id"], quote=True)}"><img src="{escape(Path(page["path"]).name, quote=True)}" alt="Page {index}"></section>' for index,page in enumerate(rendered["pages"],1)) + '</html>', encoding="utf-8")
+        artifacts.append(_artifact(root,artifact_id="deck_html",kind="deck_html",path=html_path,editability="raster",source_mode="native_compile",non_client_deliverable=False))
     artifact_manifest = {
         "schema_version": ARTIFACT_MANIFEST_SCHEMA_VERSION,
         "run_id": run_id,
@@ -709,6 +701,7 @@ def _finalize_native_build(
         "non_client_deliverable": False,
         "builder_backend": backend,
         "source_fingerprint": manifest.get("source_fingerprint"),
+        "build_revision": result["build_revision"],
         "page_count": manifest.get("page_count"),
         "artifacts": artifacts,
         "warnings": manifest.get("warnings", []),
@@ -741,10 +734,11 @@ def _finalize_native_build(
         "preview_dir": f"{BUILD_DIR}/pages",
         "page_count": int(manifest.get("page_count") or 0),
         "source_fingerprint": manifest.get("source_fingerprint"),
+        "build_revision": result["build_revision"],
         "build_manifest": f"{BUILD_DIR}/{BUILD_MANIFEST_NAME}",
         "artifact_manifest": f"{BUILD_DIR}/{ARTIFACT_MANIFEST_NAME}",
         "artifacts": artifacts,
-        "page_previews": [],
+        "page_previews": page_previews,
         "warnings": manifest.get("warnings", []),
         "created_at": _utc_now(),
     }

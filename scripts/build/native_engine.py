@@ -17,13 +17,12 @@ The adapter owns Run-layout resolution and hash pinning; the compiler
 from __future__ import annotations
 
 import json
-import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 try:
-    from build.build_route import is_native, resolve_build_route
+    from build.build_route import resolve_build_route
     from native_pptx.api import (
         NativeCompileError,
         NativeCompileRequest,
@@ -32,14 +31,9 @@ try:
     )
     from native_pptx.probe import probe_native_runtime
 except ModuleNotFoundError:  # pragma: no cover - exercised by package-import test path.
-    from scripts.build.build_route import is_native, resolve_build_route
-    from scripts.native_pptx.api import NativeCompileError, NativeCompileRequest, compile_svg_deck
+    from scripts.build.build_route import resolve_build_route
+    from scripts.native_pptx.api import NativeCompileError, NativeCompileRequest, compile_svg_deck, readback_pptx as api_readback
     from scripts.native_pptx.probe import probe_native_runtime
-
-try:
-    from production.page_package import PagePackageIndex
-except ModuleNotFoundError:  # pragma: no cover
-    from scripts.production.page_package import PagePackageIndex
 
 SVG_SUBSET_STAGE_DIR = "build/native_svg"
 NATIVE_ENGINE_VERSION = "native_engine/1.0"
@@ -57,7 +51,9 @@ def _approved_packages(root: Path) -> list[dict[str, Any]]:
     list, instead of silently compiling a subset.
     """
 
-    packages_dir = root / "page_packages"
+    from workflow.actions import revision_input_path
+
+    packages_dir = revision_input_path(root, root / "page_packages")
     if packages_dir.is_dir():
         for package_file in sorted(packages_dir.glob("*.json")):
             if package_file.name == "index.json":
@@ -70,7 +66,22 @@ def _approved_packages(root: Path) -> list[dict[str, Any]]:
                     code="NDC_PACKAGE_CORRUPT",
                     recovery=f"repair or regenerate {package_file.name} before building",
                 ) from exc
-    packages = PagePackageIndex(root).list_packages()
+    packages = [json.loads(path.read_text(encoding="utf-8")) for path in sorted(packages_dir.glob("*.json")) if path.name != "index.json"]
+    from native_pptx.contracts import assert_valid
+
+    seen_ids, seen_orders = set(), set()
+    for package in packages:
+        candidate = {**package, "status": "ready_for_build"} if package.get("status") == "ready" else package
+        assert_valid("page_package", candidate)
+        page_id, order = str(package["page_id"]), int(package["order"])
+        if page_id in seen_ids or order in seen_orders or package["run_id"] != root.name:
+            raise NativeEngineError("duplicate page identity/order or cross-run package", code="NDC_PAGE_SCOPE")
+        from high_density.content import _assert_safe_page_id
+
+        _assert_safe_page_id(page_id)
+        seen_ids.add(page_id)
+        seen_orders.add(order)
+    packages.sort(key=lambda pkg: int(pkg.get("order") or 0))
     approved = [pkg for pkg in packages if str(pkg.get("status") or "") in {"ready_for_build", "ready"}]
     if not approved:
         raise NativeEngineError(
@@ -93,7 +104,9 @@ def _approved_packages(root: Path) -> list[dict[str, Any]]:
 
 def _required_page_ids(root: Path) -> list[str]:
     for name in ("narrative_plan.json", "page_tasks.json"):
-        path = root / name
+        from workflow.actions import revision_input_path
+
+        path = revision_input_path(root, root / name)
         if not path.exists():
             continue
         try:
@@ -105,7 +118,10 @@ def _required_page_ids(root: Path) -> list[str]:
         if ids:
             return [item for item in ids if item]
     # no narrative/page tasks recorded: the approved set is the page set
-    return [str(pkg.get("page_id") or "") for pkg in PagePackageIndex(root).list_packages()]
+    from workflow.actions import revision_input_path
+
+    folder = revision_input_path(root, root / "page_packages")
+    return [str(json.loads(path.read_text()).get("page_id") or "") for path in sorted(folder.glob("*.json")) if path.name != "index.json"]
 
 
 class NativeEngineError(RuntimeError):
@@ -134,6 +150,9 @@ def prepare_native_run(run_dir: str | Path) -> dict[str, Any]:
     persist_route(root, route)  # the route is fixed once per run
     probe = probe_native_runtime()
     approved = _approved_packages(root)
+    from build.native_content import ensure_native_content
+
+    ensure_native_content(root, approved)
     response: dict[str, Any] = {
         "run_id": str(root.name),
         "engine_id": route["engine_id"],
@@ -151,7 +170,7 @@ def prepare_native_run(run_dir: str | Path) -> dict[str, Any]:
     return {**response, "status": "awaiting_svg_authoring" if route["authoring_mode"] == "direct_svg" else "awaiting_agent_imagegen"}
 
 
-def _svg_input_fingerprint(root: Path, page_id: str) -> str:
+def _svg_input_fingerprint(root: Path, page_id: str, *, include_blueprint: bool = True) -> str:
     """Recomputed INSIDE the commit lock: the current page package content +
     content lock sha + page id. A late host result produced against older
     inputs can never overwrite newer SVGs (review P1-04)."""
@@ -160,15 +179,30 @@ def _svg_input_fingerprint(root: Path, page_id: str) -> str:
 
     digest = hashlib.sha256()
     digest.update(str(page_id).encode("utf-8"))
-    package_file = root / "page_packages" / f"{page_id}.json"
+    from workflow.actions import active_input_path
+
+    package_file = active_input_path(root / "page_packages" / f"{page_id}.json")
     if package_file.exists():
         digest.update(hashlib.sha256(package_file.read_bytes()).digest())
     lock_file = root / "high_density_build" / "content_locks" / f"{page_id}.json"
     canonical_lock = root / "high_density_build" / "content_locks" / f"{page_id}.content_lock.json"
     for candidate in (canonical_lock, lock_file):
+        candidate = active_input_path(candidate)
         if candidate.exists():
             digest.update(hashlib.sha256(candidate.read_bytes()).digest())
             break
+    from high_density.blueprint import blueprint_path
+
+    blueprint = blueprint_path(root, page_id)
+    receipt = root / "high_density_build/blueprints" / f"{page_id}.blueprint.json"
+    if receipt.exists():
+        from native_pptx.contracts import safe_run_path
+
+        blueprint = safe_run_path(root, json.loads(receipt.read_text()).get("image_ref", ""))
+    if include_blueprint and blueprint is not None:
+        blueprint = active_input_path(blueprint)
+        if blueprint.is_file():
+            digest.update(hashlib.sha256(blueprint.read_bytes()).digest())
     return digest.hexdigest()
 
 
@@ -181,195 +215,312 @@ def submit_approved_svg(
     task_id: str = "native-svg",
     expected_revision: str | None = None,
     produced_against: str | None = None,
+    scene: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """SC-1.1 review round 2 (P1-05): ``produced_against`` is REQUIRED — a
-    host result without its dispatch-time input fingerprint is rejected,
-    never auto-bound to current content."""
+    """Validate and atomically commit the host's SVG and matching Scene.
 
-    if produced_against is None:
-        raise NativeEngineError(
-            "submit_approved_svg requires produced_against (the input fingerprint "
-            "the host result was produced against); refusing to auto-bind current content",
-            code="NDC_MISSING_INPUT_FINGERPRINT",
-            recovery="pass the fingerprint from the dispatch envelope",
-        )
-    """Stage one host-authored SVG for approval-checked compilation.
-
-    SC-1.1 P1-04: the CALLER's action_id is authoritative (Runtime-issued);
-    the input fingerprint is recomputed under the commit lock from the
-    current package + lock — never a constant. Optional expected_revision
-    gives compare-and-swap semantics; a replay of the same action with the
-    same output is idempotent, a different output conflicts.
+    The issued task, not caller-supplied budgets/scope, is authoritative.
+    Failed validations consume the same finite per-page stage budget.
     """
+    import hashlib
+    import tempfile
+    from workflow.actions import action_applied, commit_action_result, stage_action_result, record_action_failure, check_action_budget
+    from build.native_tasks import issued_task
+    from high_density.content import load_content_lock
+    from high_density.scene import validate_scene, validate_scene_content
+    from high_density.svg import validate_approved_svg
+    from native_pptx.contracts import sha256_json
 
     root = Path(run_dir).expanduser().resolve()
-    from workflow.actions import action_applied, commit_action_result, read_current_revision, stage_action_result
-
-    # conflict check: same action id with a DIFFERENT output must not pass
-    import hashlib
-
+    if produced_against is None:
+        raise NativeEngineError("submit requires the dispatch-time input fingerprint", code="NDC_MISSING_INPUT_FINGERPRINT")
+    task = issued_task(root, str(action_id), page_id, str(produced_against))
+    task_id = task["task_id"]
+    output_sha = hashlib.sha256(svg_text.encode("utf-8")).hexdigest()
+    scene_sha = sha256_json(scene)
     applied = action_applied(root, str(action_id))
     if applied:
-        # SC-1.1 review round 2: idempotency compares the RECEIPT's recorded
-        # output hash (this action's own committed result), never the
-        # CURRENT live file (which other actions may have since modified).
-        recorded_output = str(applied.get("output_sha256") or "")
-        svg_hash = hashlib.sha256(svg_text.encode("utf-8")).hexdigest()
-        if recorded_files := [item for item in (applied.get("applied_files") or []) if str(item).endswith(f"svg/{page_id}.svg")]:
-            if svg_hash != str(applied.get("output_sha256") or ""):
-                raise NativeEngineError(
-                    f"action {action_id} already applied with different output on page {page_id}; conflict rejected",
-                    code="NDC_ACTION_CONFLICT",
-                    recovery="issue a new action id for the revised SVG",
-                )
-        return {"status": "already_applied", "page_id": page_id, "revision_id": applied.get("revision_id", ""), "action_id": str(action_id)}
+        if applied.get("output_sha256") != output_sha or applied.get("scene_sha256") != scene_sha:
+            raise NativeEngineError("action already applied with different SVG/Scene", code="NDC_ACTION_CONFLICT")
+        return {"status": "already_applied", "page_id": page_id, "action_id": action_id, "revision_id": applied["revision_id"]}
+    budget = check_action_budget(root, task_id, max_actions=int(task["budget"]["max_actions"]))
+    if budget["exhausted"]:
+        raise NativeEngineError("native host action budget exhausted", code="NDC_BUDGET_EXHAUSTED")
+    try:
+        if str(produced_against) != _svg_input_fingerprint(root, page_id):
+            raise NativeEngineError("host result input fingerprint is stale", code="NDC_STALE_INPUT")
+        if not isinstance(scene, dict):
+            raise NativeEngineError("host result requires both SVG and Scene", code="NDC_SCENE_REQUIRED")
+        lock = load_content_lock(root, page_id, expected_run_id=root.name)
+        if (
+            scene.get("page_id") != page_id
+            or scene.get("run_id") != root.name
+            or scene.get("content_lock_sha256") != lock["content_lock_sha256"]
+        ):
+            raise NativeEngineError("host Scene identity or content-lock hash mismatch", code="NDC_SCENE_IDENTITY")
+        if task.get("blueprint_sha256") and scene.get("blueprint_sha256") != task["blueprint_sha256"]:
+            raise NativeEngineError("host Scene blueprint hash mismatch", code="NDC_SCENE_IDENTITY")
+        validate_scene(scene)
+        validate_scene_content(scene, lock)
+        assets = _resolve_asset_paths_for_scene(root, page_id, scene)
+        with tempfile.TemporaryDirectory(prefix="native-svg-validate-") as tmp:
+            candidate = Path(tmp) / "page.svg"
+            candidate.write_text(svg_text, encoding="utf-8")
+            validate_approved_svg(candidate, scene, lock, assets)
+        envelope = {
+            "schema_version": "deck_stage_action.v1",
+            "action_id": action_id,
+            "task_id": task_id,
+            "scope_pages": [page_id],
+            "permission": "agent",
+            "input_fingerprint": produced_against,
+            "budget": task["budget"],
+        }
+        scene_text = json.dumps(scene, ensure_ascii=False, indent=2) + "\n"
+        stage_action_result(root, envelope, {"svg": svg_text, "scene": scene_text, "scene_mirror": scene_text})
+        from high_density.scene import canonical_scene_path, scene_path
 
-    # the envelope binds the fingerprint the host result was PRODUCED
-    # against (dispatch time); the commit recomputes the current one inside
-    # the lock — a late result against moved-on inputs is rejected.
-    envelope = {
-        "schema_version": "deck_stage_action.v1",
-        "action_id": str(action_id),
-        "task_id": str(task_id),
-        "scope_pages": [page_id],
-        "permission": "agent",
-        "input_fingerprint": str(produced_against),
-    }
-    import hashlib
+        marker = commit_action_result(
+            root,
+            envelope,
+            current_input_fingerprint=lambda: _svg_input_fingerprint(root, page_id),
+            targets={
+                "svg": root / "high_density_build/svg" / f"{page_id}.svg",
+                "scene": canonical_scene_path(root, page_id),
+                "scene_mirror": scene_path(root, page_id),
+            },
+            expected_revision=expected_revision,
+            receipt_data={"output_sha256": output_sha, "scene_sha256": scene_sha},
+        )
+    except Exception as exc:
+        record_action_failure(root, action_id=action_id, task_id=task_id, reason=str(exc))
+        raise
+    return {"status": "svg_staged", "page_id": page_id, "action_id": action_id, "revision_id": marker["revision_id"]}
 
-    output_sha = hashlib.sha256(svg_text.encode("utf-8")).hexdigest()
-    stage_action_result(root, envelope, {"svg": svg_text})
-    marker = commit_action_result(
-        root,
-        envelope,
-        current_input_fingerprint=lambda: _svg_input_fingerprint(root, page_id),
-        targets={"svg": root / "high_density_build" / "svg" / f"{page_id}.svg"},
-        expected_revision=expected_revision,
-    )
-    marker["output_sha256"] = output_sha
-    # persist the receipt with the output hash so idempotency checks compare
-    # against THIS action's committed result, not the current live file
-    from workflow.actions import _applied_marker, _actions_root
 
-    marker_path = _applied_marker(root, str(action_id))
-    persisted = json.loads(marker_path.read_text(encoding="utf-8"))
-    persisted["output_sha256"] = output_sha
-    persisted["input_fingerprint"] = str(produced_against)
-    marker_path.write_text(json.dumps(persisted, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    marker_path = _applied_marker(root, str(action_id))
-    persisted = json.loads(marker_path.read_text(encoding="utf-8"))
-    persisted["output_sha256"] = output_sha
-    persisted["input_fingerprint"] = str(produced_against)
-    marker_path.write_text(json.dumps(persisted, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    return {"status": "svg_staged", "page_id": page_id, "revision_id": marker.get("revision_id", ""), "action_id": str(action_id)}
+def _resolve_asset_paths_for_scene(root: Path, page_id: str, scene: dict[str, Any]) -> dict[str, Path]:
+    from high_density.engine import _validate_scene_assets
+
+    package = next((p for p in _approved_packages(root) if p["page_id"] == page_id), None)
+    if package is None:
+        raise NativeEngineError("submitted page is outside the approved page set", code="NDC_PAGE_SCOPE")
+    return _validate_scene_assets(root, package, scene) if package.get("asset_bindings") else {}
+
+
+def native_build_fingerprint(run_dir: str | Path) -> str:
+    """Fingerprint the fixed revision and actual compile dependencies."""
+    import importlib.metadata
+    import shutil
+    from workflow.actions import revision_read, revision_input_path
+    from high_density.content import load_content_lock
+    from high_density.scene import load_scene
+    from native_pptx.contracts import sha256_file, sha256_json
+
+    root = Path(run_dir).expanduser().resolve()
+    with revision_read(root):
+        packages = _approved_packages(root)
+        pages = [p["page_id"] for p in packages]
+        locks = {page: load_content_lock(root, page) for page in pages}
+        scenes = [load_scene(root, page) for page in pages]
+        hashes = {page: sha256_file(revision_input_path(root, root / "high_density_build/svg" / f"{page}.svg")) for page in pages}
+        dependencies = {}
+        for name in (
+            "request.json",
+            "narrative_plan.json",
+            "solution_spec.json",
+            "solution_model.json",
+            "diagram_spec.json",
+            "diagram_views.json",
+            "style_lock.json",
+            "context_pack.json",
+            "context_manifest.json",
+            "page_tasks.json",
+            "source_manifest.json",
+            "evidence_graph.json",
+        ):
+            path = revision_input_path(root, root / name)
+            if path.is_file():
+                dependencies[name] = sha256_file(path)
+        source_dir = revision_input_path(root, root / "sources")
+        if source_dir.is_dir():
+            for path in sorted(source_dir.rglob("*")):
+                if path.is_file():
+                    dependencies["sources/" + path.relative_to(source_dir).as_posix()] = sha256_file(path)
+        assets = _resolve_asset_paths(root, packages)
+        for page, bindings in assets.items():
+            for asset, path in bindings.items():
+                dependencies[f"asset:{page}:{asset}"] = sha256_file(revision_input_path(root, path))
+        from native_pptx.probe import _engine_fingerprint
+
+        tools = {"native_pptx": _engine_fingerprint()}
+        for distribution in ("python-pptx", "Pillow", "numpy"):
+            tools[distribution] = importlib.metadata.version(distribution)
+        for binary in ("soffice", "pdftoppm", "rsvg-convert"):
+            executable = shutil.which(binary)
+            tools[binary] = sha256_file(Path(executable).resolve()) if executable else "unavailable"
+        return sha256_json(
+            {
+                "pages": pages,
+                "packages": packages,
+                "locks": locks,
+                "scenes": scenes,
+                "svg": hashes,
+                "dependencies": dependencies,
+                "tools": tools,
+            }
+        )
 
 
 def run_native_compile(run_dir: str | Path, *, run_mode: str = "production") -> dict[str, Any]:
-    """Compile + readback the approved SVGs through the native kernel.
-
-    Business validation stays with the adapter (HD validate_approved_svg);
-    the compile result carries engine/subset identity and per-input hashes —
-    never client_delivery_ready.
-    """
+    from workflow.actions import revision_read
 
     root = Path(run_dir).expanduser().resolve()
-    try:
-        from native_pptx.svg_pipeline import validate_svg
-    except ModuleNotFoundError:  # pragma: no cover
-        from scripts.native_pptx.svg_pipeline import validate_svg
+    with revision_read(root) as revision:
+        return _compile_revision(root, run_mode=run_mode, revision=revision or "initial")
 
-    from high_density.svg import validate_approved_svg  # adapter seam (single implementation via shim)
+
+def _compile_revision(root: Path, *, run_mode: str, revision: str) -> dict[str, Any]:
+    import uuid
+    from high_density.svg import validate_approved_svg
+    from high_density.scene import load_scene, validate_scene
+    from high_density.content import load_content_lock
+    from native_pptx.contracts import sha256_file, sha256_json, read_json
+    from native_pptx.api import render_pptx
+    from workflow.actions import revision_input_path
 
     approved = _approved_packages(root)
-    # Single source of truth: the run's existing v2 scenes and content locks
-    # (produced by the approved content pipeline) — the engine never projects
-    # a second copy of page truth.
-    from high_density.scene import load_scene
-    from high_density.content import load_content_lock
-
-    page_ids = [str(pkg.get("page_id") or "") for pkg in approved]
-    scenes = [load_scene(root, page_id) for page_id in page_ids]
-    locks = {page_id: load_content_lock(root, page_id) for page_id in page_ids}
-    # SC-1.1 P1-05: resolve registered assets from the approved packages
-    # (reuse the HD validator) and pin every approved SVG's hash.
-    asset_paths_by_page = _resolve_asset_paths(root, approved)
-    expected_sha256 = _approved_svg_hashes(root, page_ids)
-    result = compile_svg_deck(
-        NativeCompileRequest(
-            root=root,
-            scenes=scenes,
-            locks=locks,
-            asset_paths_by_page=asset_paths_by_page,
-            validate_approved=validate_approved_svg,
-            expected_sha256=expected_sha256,
-        )
-    )
-    readback = api_readback(result, scenes, locks)
-    write_json_native_run(root, {"compile": {"engine_version": result.engine_version, "input_sha256": result.input_sha256}, "readback": readback})
-    return {
-        "status": "compiled",
-        "run_id": str(root.name),
-        "pptx_path": str(result.pptx_path),
-        "trace_path": str(result.trace_path),
-        "readback": readback,
-        "engine_version": result.engine_version,
-        "svg_subset_version": result.svg_subset_version,
+    page_ids = [str(pkg["page_id"]) for pkg in approved]
+    scenes = [load_scene(root, page) for page in page_ids]
+    locks = {page: load_content_lock(root, page, expected_run_id=root.name) for page in page_ids}
+    for package, scene in zip(approved, scenes):
+        lock = locks[package["page_id"]]
+        if lock["page_package_sha256"] != sha256_json(package) or scene.get("content_lock_sha256") != lock["content_lock_sha256"]:
+            raise NativeEngineError("native compile inputs are stale", code="NDC_STALE_INPUT")
+        validate_scene(scene)
+    svg_paths = {page: revision_input_path(root, root / "high_density_build/svg" / f"{page}.svg") for page in page_ids}
+    hashes = {page: sha256_file(path) for page, path in svg_paths.items()}
+    fingerprint = native_build_fingerprint(root)
+    native_content = all(lock.get("enrichment", {}).get("framework") == "native_narrative" for lock in locks.values())
+    output_root = root / "build/native_outputs" / f"{revision}_{uuid.uuid4().hex[:12]}" if native_content else None
+    base_result = {
+        "schema_version": "deck_native_compile_result.v1",
+        "run_id": root.name,
+        "build_revision": revision,
+        "engine_id": "deck_native",
+        "engine_version": "native_pptx/1.0",
+        "subset_version": "hd-svg-subset/1",
+        "input_fingerprint": fingerprint,
+        "pages": [],
+        "warnings": [],
+        "errors": [],
+        "created_at": _utc_now(),
     }
+    try:
+        result = compile_svg_deck(
+            NativeCompileRequest(
+                root=root,
+                scenes=scenes,
+                locks=locks,
+                asset_paths_by_page=_resolve_asset_paths(root, approved),
+                validate_approved=validate_approved_svg,
+                expected_sha256=hashes,
+                svg_paths=svg_paths,
+                output_root=output_root,
+                canvas_mode="native" if native_content else "legacy",
+            )
+        )
+        readback = api_readback(result, scenes, locks)
+        trace = read_json(result.trace_path)
+        pages = []
 
+        def flatten(entries):
+            for item in entries:
+                yield item
+                yield from flatten(item.get("children") or [])
+
+        for index, page in enumerate(page_ids, 1):
+            entry = next(p for p in trace["pages"] if p["page_id"] == page)
+            elements = list(flatten(entry.get("elements") or []))
+            pages.append(
+                {
+                    "page_id": page,
+                    "order": index,
+                    "svg_sha256": hashes[page],
+                    "text_objects": sum(e.get("object_type") == "text" for e in elements),
+                    "image_objects": sum(e.get("object_type") == "registered_asset" for e in elements),
+                    "shape_objects": sum(e.get("object_type") not in {"text", "registered_asset", "group"} for e in elements),
+                }
+            )
+        payload = {
+            **base_result,
+            "status": "compiled",
+            "engine_version": result.engine_version,
+            "subset_version": result.svg_subset_version,
+            "pages": pages,
+            "outputs": {
+                "deck_pptx": {"path": result.pptx_path.relative_to(root).as_posix(), "sha256": sha256_file(result.pptx_path)},
+                "object_trace": {"path": result.trace_path.relative_to(root).as_posix(), "sha256": sha256_file(result.trace_path)},
+            },
+        }
+        write_json_native_run(root, payload)
+        rendered = render_pptx(result) if native_content else {}
+        return {
+            "status": "compiled",
+            "run_id": root.name,
+            "pptx_path": str(result.pptx_path),
+            "trace_path": str(result.trace_path),
+            "readback": readback,
+            "render": rendered,
+            "build_revision": revision,
+            "input_fingerprint": fingerprint,
+            "packages": approved,
+            "page_count": len(page_ids),
+            "engine_version": result.engine_version,
+            "svg_subset_version": result.svg_subset_version,
+        }
+    except Exception as exc:
+        # A renderer failure does not falsify successful compilation; the
+        # failed build is still blocked and carries an explicit renderer code.
+        if not isinstance(exc, NativeCompileError) or exc.code not in {"NDC_RENDERER_UNAVAILABLE", "NDC_RENDER_FAILED"}:
+            write_json_native_run(
+                root,
+                {
+                    **base_result,
+                    "status": "failed",
+                    "errors": [
+                        {
+                            "code": str(getattr(exc, "code", "NDC_COMPILE_FAILED")),
+                            "message": str(exc),
+                            "page_id": getattr(exc, "page_id", None),
+                            "element_id": getattr(exc, "element_id", None),
+                        }
+                    ],
+                },
+            )
+        raise
 
 
 def write_json_native_run(root: Path, payload: dict[str, Any]) -> None:
+    import jsonschema
+
+    schema_path = Path(__file__).resolve().parents[2] / "docs/specs/sc1.1-native-deck-core/contracts/native-compile-result.v1.schema.json"
+    jsonschema.Draft202012Validator(
+        json.loads(schema_path.read_text(encoding="utf-8")), format_checker=jsonschema.FormatChecker()
+    ).validate(payload)
     path = root / "build" / "native_compile_result.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
 def dispatch_imagegen_task(run_dir: str | Path) -> dict[str, Any]:
-    """Emit the awaiting_agent_imagegen host task envelope (image_blueprint).
-
-    The task carries the approved customer-visible projection as blueprint
-    input; ImageGen content is a VISUAL source only (spec ND-D06) — facts
-    come from the Content Lock. With no real host image tool, the run stays
-    awaiting and nothing is faked.
-    """
+    """Compatibility entry: issue the same durable native host task."""
+    from build.native_content import ensure_native_content
+    from build.native_tasks import dispatch_native_task
 
     root = Path(run_dir).expanduser().resolve()
-    from workflow.actions import read_current_revision
-
-    approved = _approved_packages(root)
-    route = resolve_build_route(_load_request_safe(root), run_dir=root)
-    payload = {
-        "schema_version": "deck_host_imagegen_task.v1",
-        "run_id": str(root.name),
-        "stage": "prepare_blueprint",
-        "status": "awaiting_agent_imagegen",
-        "engine_id": "deck_native",
-        "authoring_mode": "image_blueprint",
-        "pages": [
-            {
-                "page_id": str(pkg.get("page_id") or ""),
-                "action_id": f"blueprint_{pkg.get('page_id', 'page')}_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S%f')}",
-                "produced_against": _svg_input_fingerprint(root, str(pkg.get("page_id") or "")),
-                "current_revision": read_current_revision(root).get("revision_id", ""),
-                "blueprint_brief": {
-                    "title": (pkg.get("customer_visible") or {}).get("title", ""),
-                    "body": [str(block.get("text") or "") for block in (pkg.get("customer_visible") or {}).get("body_blocks", []) if isinstance(block, dict)],
-                    "visual_intent": (pkg.get("visual_spec") or {}).get("expected_visual", ""),
-                    "page_role": (pkg.get("visual_spec") or {}).get("page_role", ""),
-                },
-                "output_contract": {
-                    "kind": "blueprint_image",
-                    "submit": "deck-master build run --run-dir <run> (host writes the image to high_density_build/blueprints/<page_id>.<ext>)",
-                },
-            }
-            for pkg in approved
-        ],
-        "note": "no image generation tool detected on this host; the run cannot proceed honestly until the host provides one",
-    }
-    path = root / "build" / "host_imagegen_task.json"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    return payload
+    packages = _approved_packages(root)
+    ensure_native_content(root, packages)
+    return dispatch_native_task(root, "imagegen", packages)
 
 
 def _resolve_asset_paths(root: Path, packages: list[dict[str, Any]]) -> dict[str, dict[str, Path]]:

@@ -1,107 +1,64 @@
-"""SC-1.1 batch-2.2 tests (failing-first): SVG result identity.
+"""Issued host actions bind validated SVG/Scene pairs to current inputs."""
 
-Acceptance mapping (review P1-04 / spec 05 section 5.5):
-- The caller's action_id is authoritative — the applied record keeps it.
-- The input fingerprint is REAL (page package + lock + page id), recomputed
-  at commit: a late result produced against older inputs is rejected, not
-  silently overwriting the newer SVG.
-- Replay of the same action with the same output is idempotent; the same
-  action with a DIFFERENT output is a conflict.
-"""
-
-from __future__ import annotations
-
-import sys
-import tempfile
-import unittest
-from pathlib import Path
-
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "scripts"))
-sys.path.insert(0, str(ROOT / "tests"))
-
-import test_high_density_builder as hd_helpers  # noqa: E402
-from build.native_engine import _svg_input_fingerprint, submit_approved_svg  # noqa: E402
-from runtime.run_state import write_json  # noqa: E402
+import pytest
+from build.native_engine import NativeEngineError, _svg_input_fingerprint, submit_approved_svg
+from build.native_tasks import dispatch_native_task
+from high_density.content import load_content_lock
+from high_density.svg import compile_svg
+from production.page_package import PagePackageIndex
+from runtime.build import run_build
+from test_sc1_1_native_host_chain import new_run, host_scene
 
 
-def _run(tmp: Path) -> Path:
-    run, _ = hd_helpers._make_run(tmp, mode="fixture", page_count=1)
-    hd_helpers._blueprint(run, "P001")
-    hd_helpers.prepare_high_density(run)
-    hd_helpers.run_high_density(run)
-    write_json(run / "request.json", {"run_id": run.name, "run_mode": "fixture", "profile": "native", "authoring_mode": "direct_svg"})
-    return run
+def prepared(tmp_path):
+    root = new_run(tmp_path, "direct_svg")
+    task = run_build(root)["pages"][0]
+    scene = host_scene(root, load_content_lock(root, "P001"))
+    svg = compile_svg(scene, tmp_path / "host.svg").read_text()
+    return root, task, scene, svg
 
 
-class SvgIdentityTests(unittest.TestCase):
-    def test_fingerprint_changes_with_package_content(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            run = _run(Path(tmp))
-            before = _svg_input_fingerprint(run, "P001")
-            package = run / "page_packages" / "P001.json"
-            package.write_text(package.read_text(encoding="utf-8").replace("P001", "P001-edited"), encoding="utf-8")
-            after = _svg_input_fingerprint(run, "P001")
-            self.assertNotEqual(before, after, "the fingerprint must bind current package content")
-
-    def test_late_result_rejected_when_inputs_moved_on(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            run = _run(Path(tmp))
-            svg_path = run / "high_density_build" / "svg" / "P001.svg"
-            original = svg_path.read_text(encoding="utf-8")
-            # host result produced against the OLD inputs
-            submit_approved_svg(run, "P001", original, action_id="act-svg-1", produced_against=_svg_input_fingerprint(run, "P001"))
-            # inputs move on (package edited)
-            package = run / "page_packages" / "P001.json"
-            old_fingerprint = _svg_input_fingerprint(run, "P001")
-            package.write_text(package.read_text(encoding="utf-8") + "\n", encoding="utf-8")
-            with self.assertRaises(Exception) as ctx:
-                submit_approved_svg(run, "P001", "<svg>late</svg>", action_id="act-svg-late", produced_against=old_fingerprint)
-            self.assertIn("input", str(ctx.exception).lower() + str(getattr(ctx.exception, "code", "")))
-
-    def test_replay_same_output_idempotent_conflict_rejected(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            run = _run(Path(tmp))
-            svg_path = run / "high_density_build" / "svg" / "P001.svg"
-            original = svg_path.read_text(encoding="utf-8")
-            first = submit_approved_svg(run, "P001", original, action_id="act-svg-r", produced_against=_svg_input_fingerprint(run, "P001"))
-            self.assertEqual("svg_staged", first["status"])
-            self.assertEqual("act-svg-r", first["action_id"], "the caller action id must be preserved")
-            replay = submit_approved_svg(run, "P001", original, action_id="act-svg-r", produced_against=_svg_input_fingerprint(run, "P001"))
-            self.assertEqual("already_applied", replay["status"])
-            from build.native_engine import NativeEngineError
-
-            with self.assertRaises(NativeEngineError) as ctx:
-                submit_approved_svg(run, "P001", "<svg>different</svg>", action_id="act-svg-r", produced_against=_svg_input_fingerprint(run, "P001"))
-            self.assertEqual("NDC_ACTION_CONFLICT", ctx.exception.code)
+def submit(root, task, scene, svg):
+    return submit_approved_svg(root, "P001", svg, action_id=task["action_id"], produced_against=task["produced_against"], scene=scene)
 
 
-
-    def test_missing_produced_against_rejected(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            run = _run(Path(tmp))
-            svg_path = run / "high_density_build" / "svg" / "P001.svg"
-            from build.native_engine import NativeEngineError
-
-            with self.assertRaises(NativeEngineError) as ctx:
-                submit_approved_svg(run, "P001", svg_path.read_text(encoding="utf-8"), action_id="act-no-fp")
-            self.assertEqual("NDC_MISSING_INPUT_FINGERPRINT", ctx.exception.code)
-
-    def test_replay_after_other_action_does_not_misreport(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            run = _run(Path(tmp))
-            svg_path = run / "high_density_build" / "svg" / "P001.svg"
-            original = svg_path.read_text(encoding="utf-8")
-            fingerprint = _svg_input_fingerprint(run, "P001")
-            first = submit_approved_svg(run, "P001", original, action_id="act-a", produced_against=fingerprint)
-            self.assertEqual("svg_staged", first["status"])
-            # a LATER action modifies the live SVG (different action id)
-            submit_approved_svg(run, "P001", "<svg>newer</svg>", action_id="act-b", produced_against=_svg_input_fingerprint(run, "P001"))
-            # replaying the FIRST action's own committed output must be
-            # idempotent (receipt-based), not a false conflict
-            replay = submit_approved_svg(run, "P001", original, action_id="act-a", produced_against=fingerprint)
-            self.assertEqual("already_applied", replay["status"])
+def test_fingerprint_changes_with_package_content(tmp_path):
+    root, task, _, _ = prepared(tmp_path)
+    package = root / "page_packages/P001.json"
+    package.write_text(package.read_text() + "\n")
+    assert task["produced_against"] != _svg_input_fingerprint(root, "P001")
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_late_result_rejected_when_inputs_moved_on(tmp_path):
+    root, task, scene, svg = prepared(tmp_path)
+    package = root / "page_packages/P001.json"
+    package.write_text(package.read_text() + "\n")
+    with pytest.raises(NativeEngineError, match="input fingerprint is stale"):
+        submit(root, task, scene, svg)
+    assert not (root / "high_density_build/svg/P001.svg").exists()
+
+
+def test_replay_same_output_idempotent_conflict_rejected(tmp_path):
+    root, task, scene, svg = prepared(tmp_path)
+    assert submit(root, task, scene, svg)["status"] == "svg_staged"
+    assert submit(root, task, scene, svg)["status"] == "already_applied"
+    with pytest.raises(NativeEngineError) as result:
+        submit(root, task, scene, svg + "\n")
+    assert result.value.code == "NDC_ACTION_CONFLICT"
+
+
+def test_missing_produced_against_rejected(tmp_path):
+    root, task, scene, svg = prepared(tmp_path)
+    with pytest.raises(NativeEngineError) as result:
+        submit_approved_svg(root, "P001", svg, action_id=task["action_id"], scene=scene)
+    assert result.value.code == "NDC_MISSING_INPUT_FINGERPRINT"
+
+
+def test_replay_after_other_action_does_not_misreport(tmp_path):
+    root, task, scene, svg = prepared(tmp_path)
+    submit(root, task, scene, svg)
+    next_task = dispatch_native_task(root, "svg", PagePackageIndex(root).list_packages())["pages"][0]
+    assert next_task["action_id"] != task["action_id"]
+    submit(root, next_task, scene, svg + "\n")
+    assert submit(root, task, scene, svg)["status"] == "already_applied"
+    assert (root / "high_density_build/svg/P001.svg").read_text() == svg + "\n"

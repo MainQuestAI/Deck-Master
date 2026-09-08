@@ -1711,7 +1711,8 @@ def load_content_lock(root: Path, page_id: str, *, expected_run_id: str | None =
     legacy = root / LOCKS_DIR / f"{page_id}.json"
     selected = canonical if canonical.exists() else legacy
     lock = read_json(selected)
-    assert_current_mbb_artifact(root, lock)
+    if (lock.get("enrichment") or {}).get("framework") != "native_narrative":
+        assert_current_mbb_artifact(root, lock)
     if canonical.exists() and legacy.exists() and read_json(legacy) != lock:
         raise ContractError(f"content lock mirror is stale on page {page_id}")
     assert_v2("content_lock", lock)
