@@ -151,17 +151,21 @@ python3 scripts/deck_master.py suite-status --target codex --output json
 python3 scripts/deck_master.py agent-doctor --mode production --output json
 ```
 
-5. Bind and verify a production PPT Master backend before treating build or
-   export commands as delivery-ready:
+5. Use the persisted build route. New runs default to the native engine and
+   `image_blueprint`; `direct_svg` shares the native compile/render chain.
+   Verify real compiler, renderer and font capabilities before production:
 
 ```bash
-python3 scripts/deck_master.py backend status
-python3 scripts/deck_master.py backend bind ppt-master --repo <ppt-master-backend>
-python3 scripts/deck_master.py backend verify ppt-master
+python3 scripts/deck_master.py agent-doctor --mode production --run-dir <run_dir> --output json
+python3 scripts/deck_master.py build status --run-dir <run_dir>
+python3 scripts/deck_master.py final-readiness --run-dir <run_dir> --no-write
 ```
 
-If production readiness is blocked, keep the run in fixture/demo mode or stop
-and repair the reported blocker.
+Only an explicitly selected `legacy-ppt-master` run needs `backend bind` and
+`backend verify ppt-master`. The former global PPT Master prerequisite is
+superseded by [SC-1.1 routing](docs/specs/sc1.1-native-deck-core/DEVELOPMENT_SPEC.md).
+If production readiness is blocked, repair the reported blocker. A production
+run cannot be relabelled fixture/dev to bypass its original delivery policy.
 
 ## Core Commands
 

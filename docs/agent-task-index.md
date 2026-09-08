@@ -39,6 +39,21 @@ supported for preview commands; real PPT Library v2 integration requires
 Python 3.12+. After installing with `python -m pip install -e ".[dev]"`,
 `deck-master ...` is equivalent.
 
+## New Native Production Run
+
+SC-1.1 supersedes the former unconditional PPT Master prerequisite. Preserve
+all source authorization, evidence, revision and final approval requirements.
+Start from materials with `start-conversation`, submit the Agent extraction to
+`build-brief`, then follow `next-step`. Native `autoplan` dispatches a
+`page-content` task: submit complete Agent-authored page content through
+`page-content submit`, which atomically creates PagePackages and dispatches
+ImageGen or SVG tasks. No HD fixture run or legacy generation artifact is a
+prerequisite. See [content handoff](contracts/page-content-handoff.md).
+
+Existing runs keep their persisted route. Use documented `build migrate`
+operations for explicit conversion; an unidentified historical run remains
+`migration_required`. Never change the run mode to weaken delivery gates.
+
 ## New Public Preview Run
 
 - Intent: generate the public fixture demo or verify v0.9.14-preview.4.
