@@ -427,7 +427,8 @@ def quality_findings_to_external_review(payload: dict[str, Any]) -> dict[str, An
 def _gate_filename(scope: str, reviewer: str) -> str:
     """Build gate filename: external_<scope>_<reviewer>_gate.json."""
     safe_scope = scope.replace("-", "_")
-    safe_reviewer = reviewer.replace("-", "_").replace(" ", "_")[:20]
+    # v1 reviewer names are free text; never use their path syntax.
+    safe_reviewer = "".join(c if c.isascii() and (c.isalnum() or c == "_") else "_" for c in reviewer)[:20]
     return f"external_{safe_scope}_{safe_reviewer}_gate.json"
 
 
@@ -486,11 +487,17 @@ def import_external_review(
         validate_review_binding(root, result)
 
     quality_dir = root / "quality_reports"
+    if quality_dir.is_symlink() or not quality_dir.resolve().is_relative_to(root.resolve()):
+        raise ExternalReviewError("Quality report directory escapes managed output scope")
     quality_dir.mkdir(parents=True, exist_ok=True)
     archive_dir = quality_dir / "archive"
+    if archive_dir.is_symlink():
+        raise ExternalReviewError("Quality report archive cannot be a symlink")
 
     gate_name = _gate_filename(scope, reviewer)
     gate_path = quality_dir / gate_name
+    if gate_path.is_symlink() or gate_path.parent.resolve() != quality_dir.resolve():
+        raise ExternalReviewError("Quality report target escapes managed output scope")
 
     # Archive existing if replacing.
     if gate_path.exists():
