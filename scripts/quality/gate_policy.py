@@ -48,7 +48,9 @@ def _semantic_review_input_current(run_dir: Path, report: dict[str, Any]) -> boo
     based_on = report.get("based_on") if isinstance(report.get("based_on"), dict) else {}
     sha = str(based_on.get("page_packages_index_sha256") or report.get("based_on_sha256") or "").strip()
     fingerprint = str(report.get("content_fingerprint") or "").strip()
-    if not fingerprint and not sha:
+    if not fingerprint:
+        # SC-1.1 review round 2: a v2 report without a dispatch-time content
+        # fingerprint is not current for the native gate (only audit value).
         return False
     import hashlib
 

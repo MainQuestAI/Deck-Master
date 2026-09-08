@@ -70,13 +70,27 @@ class NativeCliBuildTests(unittest.TestCase):
             except Exception as exc:  # noqa: BLE001
                 self.assertIn("readback", str(exc).lower())
 
-    def test_image_blueprint_returns_awaiting_agent_imagegen(self) -> None:
+    def test_image_blueprint_state_machine_advances(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            run = _native_run(Path(tmp), authoring="image_blueprint")
+            run = _native_run(Path(tmp), authoring="image_blueprint", run_mode="fixture")
+            # host results already present (HD fixture authoring): the state
+            # machine must ADVANCE to the compile leg, not re-dispatch.
             result = run_build(run)
-            self.assertEqual("awaiting_agent_imagegen", result["status"])
+            self.assertEqual("completed", result["status"])
+            # remove approved SVGs only: state advances to reconstruct
+            for svg in (run / "high_density_build" / "svg").glob("P*.svg"):
+                svg.unlink()
+            r1 = run_build(run)
+            self.assertEqual("awaiting_agent_reconstruct", r1["status"])
+            # remove blueprints as well: state falls back to imagegen dispatch
+            for blueprint in (run / "high_density_build" / "blueprints").glob("P*"):
+                blueprint.unlink()
+            r2 = run_build(run)
+            self.assertEqual("awaiting_agent_imagegen", r2["status"])
+            self.assertFalse((run / "build" / "render_request.json").exists(), "image_blueprint never writes an external render request")
             self.assertTrue((run / "build" / "host_imagegen_task.json").exists())
-            self.assertIn("resume_command", result)
+            self.assertIn("resume_command", r1)  # awaiting states carry the resume command
+            self.assertIn("resume_command", r2)
             self.assertFalse((run / "build" / "render_request.json").exists())
 
     def test_direct_svg_missing_svgs_returns_awaiting_authoring(self) -> None:

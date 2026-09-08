@@ -16,12 +16,20 @@ from quality.overrides import create_override
 
 
 def _page_packages_sha(run_dir: Path) -> str:
+    """SC-1.1 P1-06: full content fingerprint over every package file (the
+    gate compares this value, not just the index sha)."""
+
     index = Path(run_dir) / "page_packages" / "index.json"
     if not index.exists():
         index.parent.mkdir(parents=True, exist_ok=True)
         index.write_text("{}\n", encoding="utf-8")
     import hashlib
-    return hashlib.sha256(index.read_bytes()).hexdigest()
+
+    digest = hashlib.sha256()
+    for package_file in sorted((Path(run_dir) / "page_packages").glob("*.json")):
+        digest.update(package_file.name.encode("utf-8"))
+        digest.update(hashlib.sha256(package_file.read_bytes()).digest())
+    return digest.hexdigest()
 
 
 class GateFreshnessTests(unittest.TestCase):
@@ -162,6 +170,9 @@ class GateFreshnessTests(unittest.TestCase):
                 "blocks_delivery": False,
                 "findings": [],
                 "based_on_sha256": _page_packages_sha(self.run_dir),
+                # index-only runs: content fingerprint equals the index sha so
+                # the P1-06 fingerprint rule can be satisfied in this fixture
+                "content_fingerprint": _page_packages_sha(self.run_dir),
                 **identity,
             }
         )

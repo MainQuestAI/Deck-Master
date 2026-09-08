@@ -71,12 +71,16 @@ class SemanticGatePrecisionTests(unittest.TestCase):
 
             identity = artifact_identity(root, artifact)
             packages_sha = hashlib.sha256((root / "page_packages" / "index.json").read_bytes()).hexdigest()
+            content_fp = hashlib.sha256()
+            for package_file in sorted((root / "page_packages").glob("*.json")):
+                content_fp.update(package_file.name.encode("utf-8"))
+                content_fp.update(hashlib.sha256(package_file.read_bytes()).digest())
             reports = [
                 {"gate": g, "status": "pass", "blocks_delivery": False, "findings": [], **identity}
                 for g in ("render", "delivery", "customer_visible_safety")
             ]
             reports.append(
-                {"gate": "external_semantic", "status": "pass", "blocks_delivery": False, "findings": [], "based_on_sha256": packages_sha}
+                {"gate": "external_semantic", "status": "pass", "blocks_delivery": False, "findings": [], "based_on_sha256": packages_sha, "content_fingerprint": content_fp.hexdigest()}
             )
             result = resolve_required_gates(root, artifact, run_mode="production", reports=reports)
             self.assertNotIn("semantic_review", result["missing_required_gates"])

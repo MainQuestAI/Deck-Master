@@ -667,9 +667,12 @@ class SkillInstallationTest(unittest.TestCase):
         # SC-1.1: an externally bound PPT Master is ready for LEGACY runs
         # only; it never becomes the default engine's readiness source.
         self.assertEqual("legacy_only", result["task_readiness"]["ppt_master_backend"])
+        self.assertEqual("ready", result["task_readiness"]["render"])
+        # SC-1.1: the ppt-master capability projection keeps its own legacy
+        # block state, but the DEFAULT render/delivery path is native-driven.
         self.assertEqual("blocked_runtime_not_wired", result["capabilities"]["ppt_master.render.v1"])
         self.assertEqual("blocked_runtime_not_wired", result["capabilities"]["ppt_master.handback.v1"])
-        self.assertEqual("blocked", result["task_readiness"]["render"])
+        self.assertEqual("ready", result["task_readiness"]["render"])
         self.assertEqual("blocked", result["task_readiness"]["client_delivery"])
         self.assertFalse(result["client_delivery_ready"])
 
@@ -1526,7 +1529,9 @@ class SkillInstallationTest(unittest.TestCase):
         self.assertFalse(full_package.is_symlink())
         self.assertTrue((full_package / "references" / "marker.txt").exists())
         self.assertEqual("ready", result["suite_status"]["task_readiness"]["ppt_master_adapter"])
-        self.assertEqual("blocked", result["suite_status"]["task_readiness"]["render"])
+        # SC-1.1: with the built-in native engine ready, render readiness no
+        # longer depends on the external PPT Master adapter state
+        self.assertEqual("ready", result["suite_status"]["task_readiness"]["render"])
 
     def test_suite_migration_plan_preserves_full_external_ppt_master_real_dir(self) -> None:
         full_package = self._write_full_ppt_master_skill()

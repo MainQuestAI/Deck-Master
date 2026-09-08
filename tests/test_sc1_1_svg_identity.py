@@ -50,7 +50,7 @@ class SvgIdentityTests(unittest.TestCase):
             svg_path = run / "high_density_build" / "svg" / "P001.svg"
             original = svg_path.read_text(encoding="utf-8")
             # host result produced against the OLD inputs
-            submit_approved_svg(run, "P001", original, action_id="act-svg-1")
+            submit_approved_svg(run, "P001", original, action_id="act-svg-1", produced_against=_svg_input_fingerprint(run, "P001"))
             # inputs move on (package edited)
             package = run / "page_packages" / "P001.json"
             old_fingerprint = _svg_input_fingerprint(run, "P001")
@@ -64,16 +64,43 @@ class SvgIdentityTests(unittest.TestCase):
             run = _run(Path(tmp))
             svg_path = run / "high_density_build" / "svg" / "P001.svg"
             original = svg_path.read_text(encoding="utf-8")
-            first = submit_approved_svg(run, "P001", original, action_id="act-svg-r")
+            first = submit_approved_svg(run, "P001", original, action_id="act-svg-r", produced_against=_svg_input_fingerprint(run, "P001"))
             self.assertEqual("svg_staged", first["status"])
             self.assertEqual("act-svg-r", first["action_id"], "the caller action id must be preserved")
-            replay = submit_approved_svg(run, "P001", original, action_id="act-svg-r")
+            replay = submit_approved_svg(run, "P001", original, action_id="act-svg-r", produced_against=_svg_input_fingerprint(run, "P001"))
             self.assertEqual("already_applied", replay["status"])
             from build.native_engine import NativeEngineError
 
             with self.assertRaises(NativeEngineError) as ctx:
-                submit_approved_svg(run, "P001", "<svg>different</svg>", action_id="act-svg-r")
+                submit_approved_svg(run, "P001", "<svg>different</svg>", action_id="act-svg-r", produced_against=_svg_input_fingerprint(run, "P001"))
             self.assertEqual("NDC_ACTION_CONFLICT", ctx.exception.code)
+
+
+
+    def test_missing_produced_against_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run = _run(Path(tmp))
+            svg_path = run / "high_density_build" / "svg" / "P001.svg"
+            from build.native_engine import NativeEngineError
+
+            with self.assertRaises(NativeEngineError) as ctx:
+                submit_approved_svg(run, "P001", svg_path.read_text(encoding="utf-8"), action_id="act-no-fp")
+            self.assertEqual("NDC_MISSING_INPUT_FINGERPRINT", ctx.exception.code)
+
+    def test_replay_after_other_action_does_not_misreport(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run = _run(Path(tmp))
+            svg_path = run / "high_density_build" / "svg" / "P001.svg"
+            original = svg_path.read_text(encoding="utf-8")
+            fingerprint = _svg_input_fingerprint(run, "P001")
+            first = submit_approved_svg(run, "P001", original, action_id="act-a", produced_against=fingerprint)
+            self.assertEqual("svg_staged", first["status"])
+            # a LATER action modifies the live SVG (different action id)
+            submit_approved_svg(run, "P001", "<svg>newer</svg>", action_id="act-b", produced_against=_svg_input_fingerprint(run, "P001"))
+            # replaying the FIRST action's own committed output must be
+            # idempotent (receipt-based), not a false conflict
+            replay = submit_approved_svg(run, "P001", original, action_id="act-a", produced_against=fingerprint)
+            self.assertEqual("already_applied", replay["status"])
 
 
 if __name__ == "__main__":

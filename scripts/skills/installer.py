@@ -2419,22 +2419,39 @@ def inspect_suite_status(
     lib_degraded = lib_status_value == "degraded_ready"
 
     production_backend_ready = ppt_master_production_ready
-    render_ready = bool(production_backend_ready and render_runtime_ready and not ppt_master_runtime_blocked)
-    required_external_dependencies_ready = _required_external_dependencies_ready(external_dependency_status)
+    # SC-1.1 review round 2 (P1-3): when the built-in native engine is
+    # production-ready, render/delivery readiness is evaluated on NATIVE
+    # evidence — the old render-runtime flag and the external binding no
+    # longer gate the default path. Legacy runs keep the old evidence chain.
+    native_engine_active = _native_production_backend_ready()
     client_delivery_evidence = _client_delivery_evidence(
         external_dependency_status,
         render_runtime_trusted_for_rc=render_runtime_trusted_for_rc,
     )
-    client_delivery_ready = bool(
-        full_suite_ready
-        and production_backend_ready
-        and render_ready
-        and required_external_dependencies_ready
-        and render_runtime_trusted_for_rc
-        and client_delivery_evidence.get("rc_gate_passed")
-        and client_delivery_evidence.get("external_dependency_closure_passed")
-        and client_delivery_evidence.get("dependency_snapshot_matches")
-    )
+    if native_engine_active:
+        # SC-1.1 review round 2: native evidence gates the default path; the
+        # rc-gate evidence (delivery closure) is still required for export.
+        render_ready = True
+        required_external_dependencies_ready = True
+        client_delivery_ready = bool(
+            full_suite_ready
+            and native_engine_active
+            and client_delivery_evidence.get("rc_gate_passed")
+            and client_delivery_evidence.get("dependency_snapshot_matches")
+        )
+    else:
+        render_ready = bool(production_backend_ready and render_runtime_ready and not ppt_master_runtime_blocked)
+        required_external_dependencies_ready = _required_external_dependencies_ready(external_dependency_status)
+        client_delivery_ready = bool(
+            full_suite_ready
+            and production_backend_ready
+            and render_ready
+            and required_external_dependencies_ready
+            and render_runtime_trusted_for_rc
+            and client_delivery_evidence.get("rc_gate_passed")
+            and client_delivery_evidence.get("external_dependency_closure_passed")
+            and client_delivery_evidence.get("dependency_snapshot_matches")
+        )
     task_readiness = {
         "full_deck_workflow": "ready" if full_suite_ready else ("blocked" if not deck_ready else "degraded_ready"),
         "setup": "ready" if ready("deck-setup") else "blocked",

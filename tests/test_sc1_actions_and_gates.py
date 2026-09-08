@@ -38,6 +38,17 @@ from workflow.actions import (  # noqa: E402
 )
 
 
+
+
+def packages_content_fp(root: Path) -> str:
+    import hashlib
+
+    digest = hashlib.sha256()
+    for package_file in sorted((Path(root) / "page_packages").glob("*.json")):
+        digest.update(package_file.name.encode("utf-8"))
+        digest.update(hashlib.sha256(package_file.read_bytes()).digest())
+    return digest.hexdigest()
+
 class ActionEnvelopeTests(unittest.TestCase):
     def _root(self, tmp: Path) -> Path:
         root = tmp / "run-a"
@@ -155,7 +166,7 @@ class SemanticReviewGateTests(unittest.TestCase):
                 for gate in ("render", "delivery", "customer_visible_safety")
             ]
             reports.append(
-                {"gate": "external_semantic", "status": "pass", "blocks_delivery": False, "findings": [], "based_on_sha256": packages_sha}
+                {"gate": "external_semantic", "status": "pass", "blocks_delivery": False, "findings": [], "based_on_sha256": packages_sha, "content_fingerprint": packages_content_fp(root)}
             )
             result = resolve_required_gates(root, artifact, run_mode="production", reports=reports)
             self.assertEqual([], result["missing_required_gates"])

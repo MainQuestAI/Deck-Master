@@ -77,9 +77,20 @@ class AtomicCommitOrderTests(unittest.TestCase):
                     pass
             # readers resolve via the pointer: complete OLD revision
             self.assertEqual(old_revision, read_current_revision(root)["revision_id"])
+            # SC-1.1 review round 2: the LIVE files themselves must be
+            # complete old content — a production reader on fixed paths
+            # must never see a mixed new/old set after the injected failure
+            self.assertEqual("v1-a", target_a.read_text(encoding="utf-8"), "live a.json must be rolled back")
+            self.assertEqual("v1-b", target_b.read_text(encoding="utf-8"), "live b.json must be restored")
             revisions_dir = root / "build" / "revisions" / old_revision
             self.assertEqual("v1-a", (revisions_dir / "a.json").read_text(encoding="utf-8"))
             self.assertEqual("v1-b", (revisions_dir / "b.json").read_text(encoding="utf-8"))
+            # revision-state resolver: full state via parent chain
+            from workflow.actions import read_revision_state
+
+            state = read_revision_state(root)
+            self.assertEqual(b"v1-a", state["a.json"])
+            self.assertEqual(b"v1-b", state["b.json"])
 
     def test_revision_identity_includes_target_paths(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

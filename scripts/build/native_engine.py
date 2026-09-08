@@ -182,6 +182,17 @@ def submit_approved_svg(
     expected_revision: str | None = None,
     produced_against: str | None = None,
 ) -> dict[str, Any]:
+    """SC-1.1 review round 2 (P1-05): ``produced_against`` is REQUIRED — a
+    host result without its dispatch-time input fingerprint is rejected,
+    never auto-bound to current content."""
+
+    if produced_against is None:
+        raise NativeEngineError(
+            "submit_approved_svg requires produced_against (the input fingerprint "
+            "the host result was produced against); refusing to auto-bind current content",
+            code="NDC_MISSING_INPUT_FINGERPRINT",
+            recovery="pass the fingerprint from the dispatch envelope",
+        )
     """Stage one host-authored SVG for approval-checked compilation.
 
     SC-1.1 P1-04: the CALLER's action_id is authoritative (Runtime-issued);
@@ -195,16 +206,17 @@ def submit_approved_svg(
     from workflow.actions import action_applied, commit_action_result, stage_action_result
 
     # conflict check: same action id with a DIFFERENT output must not pass
+    import hashlib
+
     applied = action_applied(root, str(action_id))
     if applied:
-        import hashlib
-
-        recorded_files = applied.get("applied_files") or []
-        target_rel = f"high_density_build/svg/{page_id}.svg"
-        if target_rel in [str(item) for item in recorded_files]:
-            # idempotent replay: compare output content via staged text
-            current_target = root / "high_density_build" / "svg" / f"{page_id}.svg"
-            if current_target.exists() and hashlib.sha256(svg_text.encode("utf-8")).digest() != hashlib.sha256(current_target.read_bytes()).digest():
+        # SC-1.1 review round 2: idempotency compares the RECEIPT's recorded
+        # output hash (this action's own committed result), never the
+        # CURRENT live file (which other actions may have since modified).
+        recorded_output = str(applied.get("output_sha256") or "")
+        svg_hash = hashlib.sha256(svg_text.encode("utf-8")).hexdigest()
+        if recorded_files := [item for item in (applied.get("applied_files") or []) if str(item).endswith(f"svg/{page_id}.svg")]:
+            if svg_hash != str(applied.get("output_sha256") or ""):
                 raise NativeEngineError(
                     f"action {action_id} already applied with different output on page {page_id}; conflict rejected",
                     code="NDC_ACTION_CONFLICT",
@@ -221,8 +233,11 @@ def submit_approved_svg(
         "task_id": str(task_id),
         "scope_pages": [page_id],
         "permission": "agent",
-        "input_fingerprint": str(produced_against if produced_against is not None else _svg_input_fingerprint(root, page_id)),
+        "input_fingerprint": str(produced_against),
     }
+    import hashlib
+
+    output_sha = hashlib.sha256(svg_text.encode("utf-8")).hexdigest()
     stage_action_result(root, envelope, {"svg": svg_text})
     marker = commit_action_result(
         root,
@@ -231,6 +246,21 @@ def submit_approved_svg(
         targets={"svg": root / "high_density_build" / "svg" / f"{page_id}.svg"},
         expected_revision=expected_revision,
     )
+    marker["output_sha256"] = output_sha
+    # persist the receipt with the output hash so idempotency checks compare
+    # against THIS action's committed result, not the current live file
+    from workflow.actions import _applied_marker, _actions_root
+
+    marker_path = _applied_marker(root, str(action_id))
+    persisted = json.loads(marker_path.read_text(encoding="utf-8"))
+    persisted["output_sha256"] = output_sha
+    persisted["input_fingerprint"] = str(produced_against)
+    marker_path.write_text(json.dumps(persisted, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    marker_path = _applied_marker(root, str(action_id))
+    persisted = json.loads(marker_path.read_text(encoding="utf-8"))
+    persisted["output_sha256"] = output_sha
+    persisted["input_fingerprint"] = str(produced_against)
+    marker_path.write_text(json.dumps(persisted, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return {"status": "svg_staged", "page_id": page_id, "revision_id": marker.get("revision_id", ""), "action_id": str(action_id)}
 
 

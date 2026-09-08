@@ -83,14 +83,15 @@ class ContentFingerprintTests(unittest.TestCase):
 
 
 def _v2_report(root: Path) -> dict:
-    from quality.external_review import RESULT_SCHEMA_VERSION_V2, REVIEW_DIMENSIONS_V2
+    from quality.external_review import RESULT_SCHEMA_VERSION_V2, REVIEW_DIMENSIONS_V2, _page_packages_content_fingerprint
 
     packages_sha = hashlib.sha256((root / "page_packages" / "index.json").read_bytes()).hexdigest()
+    content_fingerprint = _page_packages_content_fingerprint(root)
     return {
         "schema_version": RESULT_SCHEMA_VERSION_V2,
         "run_id": "run-sem",
         "run_mode": "production",
-        "based_on": {"page_packages_index_sha256": packages_sha},
+        "based_on": {"page_packages_index_sha256": packages_sha, "content_fingerprint": content_fingerprint},
         "review_action_id": "review-1",
         "scope": "semantic",
         "review_kind": "full_deck",

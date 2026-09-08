@@ -317,6 +317,10 @@ def prepare_quality_review_v2(
     input_version = ""
     if package_index.exists():
         input_version = hashlib.sha256(package_index.read_bytes()).hexdigest()
+    try:
+        content_fingerprint = _page_packages_content_fingerprint(root)
+    except Exception:  # noqa: BLE001
+        content_fingerprint = ""
     task = {
         "schema_version": RESULT_SCHEMA_VERSION_V2,
         "run_id": str(root.name),
@@ -327,6 +331,7 @@ def prepare_quality_review_v2(
         "created_at": datetime.now(timezone.utc).isoformat(),
         "based_on": {
             "page_packages_index_sha256": input_version,
+            "content_fingerprint": content_fingerprint,
             "note": "review binds to the current package set; content changes invalidate this review",
         },
         "reviewed_inputs": {
@@ -556,7 +561,11 @@ def import_external_review(
     if schema_version == RESULT_SCHEMA_VERSION_V2:
         based_on = result.get("based_on") if isinstance(result.get("based_on"), dict) else {}
         gate_report["based_on_sha256"] = str(based_on.get("page_packages_index_sha256") or "")
-        gate_report["content_fingerprint"] = _page_packages_content_fingerprint(root)
+        # SC-1.1 review round 2 (P1-06): the content fingerprint comes from
+        # the REPORT's declared binding (fixed at review dispatch/read time).
+        # The importer NEVER recomputes the current value for an arriving
+        # report — a stale result cannot be re-bound to current content.
+        gate_report["content_fingerprint"] = str(based_on.get("content_fingerprint") or "").strip()
         gate_report["review_kind"] = str(result.get("review_kind") or "")
         gate_report["reviewer_session_id"] = str(result.get("reviewer_session_id") or "")
     else:

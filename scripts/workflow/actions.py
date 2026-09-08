@@ -185,15 +185,28 @@ def _commit_locked(
         if not (staging / relative).is_file():
             raise ActionEnvelopeError(f"staged file missing for action {action_id}: {relative}")
 
+    # SC-1.1 P1-03: build the COMPLETE immutable revision FIRST (with parent
+    # inheritance), then write projections WITH ROLLBACK — on any failure,
+    # every touched live file is restored from the pre-commit bytes so
+    # fixed-path readers see the complete OLD version, never a mixture.
     applied_files: list[str] = []
-    for relative, target in targets.items():
-        source = staging / relative
-        target = Path(target)
-        target.parent.mkdir(parents=True, exist_ok=True)
-        tmp = target.with_suffix(target.suffix + ".action-tmp")
-        shutil.copy2(source, tmp)
-        tmp.replace(target)
-        applied_files.append(str(target.relative_to(root)) if target.is_relative_to(root) else str(target))
+    touched: list[Path] = []
+    parent_revision = read_current_revision(root).get("revision_id", "")
+    _PROJECTION_BACKUP.clear()
+    try:
+        for relative, target in targets.items():
+            source = staging / relative
+            target = Path(target)
+            _PROJECTION_BACKUP[target] = target.read_bytes() if target.exists() else None
+            touched.append(target)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            tmp = target.with_suffix(target.suffix + ".action-tmp")
+            shutil.copy2(source, tmp)
+            tmp.replace(target)
+            applied_files.append(str(target.relative_to(root)) if target.is_relative_to(root) else str(target))
+    except Exception:
+        _rollback_projections(root)
+        raise
 
     marker = {
         "action_id": action_id,
@@ -204,8 +217,9 @@ def _commit_locked(
         "input_fingerprint": str(envelope.get("input_fingerprint") or ""),
         "status": "applied",
     }
-    revision_info = commit_revision_pointer(root, action_id, targets, applied_files)
+    revision_info = commit_revision_pointer(root, action_id, targets, applied_files, parent_revision=parent_revision)
     marker["revision_id"] = revision_info["revision_id"]
+    marker["parent_revision_id"] = revision_info.get("parent_revision_id", "")
     marker_path = _applied_marker(root, action_id)
     marker_path.parent.mkdir(parents=True, exist_ok=True)
     marker_path.write_text(json.dumps(marker, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -333,7 +347,14 @@ def _check_action_revision_cas(root: Path, expected_revision: str | None) -> Non
         )
 
 
-def commit_revision_pointer(root: Path, action_id: str, targets: dict[str, Path], applied_files: list[str]) -> dict[str, Any]:
+def commit_revision_pointer(
+    root: Path,
+    action_id: str,
+    targets: dict[str, Path],
+    applied_files: list[str],
+    *,
+    parent_revision: str = "",
+) -> dict[str, Any]:
     """Write the immutable revision snapshot + atomically swap the pointer."""
 
     import hashlib
@@ -363,7 +384,10 @@ def commit_revision_pointer(root: Path, action_id: str, targets: dict[str, Path]
             "schema_version": "deck_build_revision.v1",
             "revision_id": revision_id,
             "action_id": action_id,
+            "parent_revision_id": str(parent_revision),
             "files": {relative: hashlib.sha256((staging / relative).read_bytes()).hexdigest() for relative in targets},
+            # files NOT touched by this action inherit from the parent chain
+            "inherits": [str(applied) for applied in applied_files],
             "committed_at": _utc_now(),
         }
         (revisions_dir / "revision_manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -419,3 +443,46 @@ def _enforce_task_budget(root: Path, envelope: dict[str, Any]) -> None:
             f"task {envelope.get('task_id')!r} budget exhausted "
             f"({usage['used']}/{usage['max_actions']} attempts including failures); the commit is blocked"
         )
+
+
+_PROJECTION_BACKUP: dict[Path, bytes | None] = {}
+
+
+def _rollback_projections(root: Path) -> None:
+    """Restore every live projection touched by a failed commit to its
+    pre-commit bytes (SC-1.1 P1-03: never leave mixed versions on disk)."""
+
+    for target, data in list(_PROJECTION_BACKUP.items()):
+        if data is None:
+            target.unlink(missing_ok=True)
+        else:
+            target.write_bytes(data)
+    _PROJECTION_BACKUP.clear()
+
+
+def read_revision_state(root: Path | str) -> dict[str, bytes]:
+    """Resolve the FULL revision state for readers: current revision files
+    overlaid onto the parent chain (files absent from the current revision
+    inherit from parents)."""
+
+    root = Path(root).expanduser().resolve()
+    current = read_current_revision(root).get("revision_id", "")
+    if not current:
+        return {}
+    revisions_dir = root / "build" / "revisions"
+    files: dict[str, bytes] = {}
+    revision_id = current
+    hops = 0
+    while revision_id and hops < 32:
+        manifest_path = revisions_dir / revision_id / "revision_manifest.json"
+        if not manifest_path.exists():
+            break
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        rev_dir = revisions_dir / revision_id
+        for relative in manifest.get("files", {}):
+            file_path = rev_dir / relative
+            if file_path.exists():
+                files[str(relative)] = file_path.read_bytes()
+        revision_id = str(manifest.get("parent_revision_id") or "")
+        hops += 1
+    return files
