@@ -77,7 +77,10 @@ def prepare_native_run(run_dir: str | Path) -> dict[str, Any]:
     root = Path(run_dir).expanduser().resolve()
     request_path = root / "request.json"
     request = json.loads(request_path.read_text(encoding="utf-8")) if request_path.exists() else {}
-    route = resolve_build_route(request)
+    route = resolve_build_route(request, run_dir=root)
+    from build.build_route import persist_route
+
+    persist_route(root, route)  # the route is fixed once per run
     probe = probe_native_runtime()
     approved = _approved_packages(root)
     response: dict[str, Any] = {

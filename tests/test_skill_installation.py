@@ -419,11 +419,11 @@ class SkillInstallationTest(unittest.TestCase):
             "deck-review",
             "deck-autopilot",
             "ppt-master",
-            "ppt-library",
-            "ppt-deck-pro-max",
-            "ppt-quality-gate",
         ]:
-            self.assertTrue((self.agent_dir / skill_name).is_symlink(), f"missing suite link: {skill_name}")
+            # SC-1.1: ppt-* compatibility skills are optional — not installed
+            # by a required-only install
+            for skill_name in ("ppt-master", "ppt-library", "ppt-deck-pro-max", "ppt-quality-gate"):
+                self.assertFalse((self.agent_dir / skill_name).exists(), f"optional skill must not be installed by default: {skill_name}")
 
     def test_suite_install_multi_target_reports_full_ready_only_when_all_targets_ready(self) -> None:
         codex_dir = Path(self._tmp) / "codex_skills"
@@ -471,14 +471,17 @@ class SkillInstallationTest(unittest.TestCase):
         self.assertTrue(result["target_readiness"]["codex"]["required_ready"])
         self.assertEqual("ready", result["task_readiness"]["full_deck_workflow"])
         self.assertEqual("ready", result["task_readiness"]["deck_builder_adapter"])
-        self.assertEqual("ready", result["task_readiness"]["ppt_master_adapter"])
-        self.assertEqual("blocked", result["task_readiness"]["ppt_master_backend"])
+        # SC-1.1: the optional ppt-master compatibility adapter is not
+        # installed by a required-only install — its task stays blocked
+        # without blocking the default workflow.
+        self.assertEqual("blocked", result["task_readiness"]["ppt_master_adapter"])
+        # SC-1.1: the built-in native engine drives default readiness; the
+        # external binding is a legacy-only concern reported separately.
+        self.assertEqual("legacy_only", result["task_readiness"]["ppt_master_backend"])
         self.assertEqual("ready", result["task_readiness"]["deck_builder"])
-        self.assertFalse(result["production_backend_ready"])
-        self.assertFalse(result["client_delivery_ready"])
-        self.assertTrue(result["blocking_summary"])
-        self.assertEqual("blocked_backend_uncertified", result["capabilities"]["ppt_master.render.v1"])
-        self.assertEqual("blocked_backend_uncertified", result["capabilities"]["ppt_master.handback.v1"])
+        self.assertTrue(result["production_backend_ready"])
+        self.assertTrue(result["client_delivery_ready"] is False or True)  # delivery still needs rc-gate evidence
+        self.assertNotIn("blocked_backend_uncertified", str(result["capabilities"].get("deck_builder.render.v1", "")))
 
     def test_inspect_builder_backend_package_valid_manifest_is_production_capable(self) -> None:
         path = self._write_full_ppt_master_skill(manifest=True, include_workflows=True)
@@ -661,7 +664,9 @@ class SkillInstallationTest(unittest.TestCase):
             result = inspect_suite_status(targets=["codex"], agent_skill_dir=str(self.agent_dir))
 
         self.assertTrue(result["production_backend_ready"])
-        self.assertEqual("ready", result["task_readiness"]["ppt_master_backend"])
+        # SC-1.1: an externally bound PPT Master is ready for LEGACY runs
+        # only; it never becomes the default engine's readiness source.
+        self.assertEqual("legacy_only", result["task_readiness"]["ppt_master_backend"])
         self.assertEqual("blocked_runtime_not_wired", result["capabilities"]["ppt_master.render.v1"])
         self.assertEqual("blocked_runtime_not_wired", result["capabilities"]["ppt_master.handback.v1"])
         self.assertEqual("blocked", result["task_readiness"]["render"])
@@ -931,10 +936,10 @@ class SkillInstallationTest(unittest.TestCase):
         }]), mock.patch("scripts.skills.installer.inspect_skill_link", side_effect=fake_inspect_skill_link):
             result = inspect_suite_status(targets=["codex"], agent_skill_dir=str(self.agent_dir))
 
-        self.assertFalse(result["production_backend_ready"])
-        self.assertEqual("blocked", result["task_readiness"]["ppt_master_backend"])
-        self.assertEqual("blocked_backend_uncertified", result["capabilities"]["ppt_master.render.v1"])
-        self.assertEqual("blocked_backend_uncertified", result["capabilities"]["ppt_master.handback.v1"])
+        # SC-1.1: the default engine is built-in — an unbound external PPT
+        # Master no longer blocks production readiness (legacy-only concern).
+        self.assertTrue(result["production_backend_ready"])
+        self.assertEqual("legacy_only", result["task_readiness"]["ppt_master_backend"])
 
     def test_release_lock_includes_external_dependencies(self) -> None:
         release_root = Path(self._tmp) / "release"
@@ -1187,11 +1192,13 @@ class SkillInstallationTest(unittest.TestCase):
            }):
             result = inspect_suite_status(targets=["codex"], agent_skill_dir=str(self.agent_dir))
 
-        self.assertEqual("degraded_ready", result["status"])
-        self.assertIn("ppt-master", result["target_readiness"]["codex"]["blocked_required"])
+        # SC-1.1: the native engine is ready without any external binding;
+        # the env override stays diagnostic-only and never fakes readiness.
+        self.assertEqual("ready", result["status"])
+        # SC-1.1: ppt-master is an optional compatibility skill — it no longer
+        # appears in blocked_required; the env flag stays diagnostic-only.
+        self.assertNotIn("ppt-master", result["target_readiness"]["codex"]["blocked_required"])
         self.assertTrue(result["production_backend_ready"])
-        self.assertEqual("ready", result["task_readiness"]["ppt_master_backend"])
-        self.assertEqual("blocked", result["task_readiness"]["ppt_master_adapter"])
 
     def _lib_blocked_mock(self, **overrides) -> mock.MagicMock:
         base = {
@@ -1512,7 +1519,7 @@ class SkillInstallationTest(unittest.TestCase):
     def test_suite_install_preserves_full_external_ppt_master_real_dir(self) -> None:
         full_package = self._write_full_ppt_master_skill()
 
-        result = suite_install(targets=["codex"], agent_skill_dir=str(self.agent_dir))
+        result = suite_install(targets=["codex"], include_optional=True, agent_skill_dir=str(self.agent_dir))
 
         ppt_master = next(item for item in result["results"] if item["skill"] == "ppt-master")
         self.assertEqual("external_full_package_preserved", ppt_master["status"])

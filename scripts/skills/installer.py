@@ -394,7 +394,7 @@ SUITE_SKILLS: list[dict[str, Any]] = [
     },
     {
         "name": "ppt-master",
-        "required": True,
+        "required": False,
         "role": "compatibility_backend",
         "public_name": "deck-builder",
         "compat_aliases": [],
@@ -415,7 +415,7 @@ SUITE_SKILLS: list[dict[str, Any]] = [
     },
     {
         "name": "ppt-library",
-        "required": True,
+        "required": False,
         "role": "compatibility_alias",
         "public_name": "deck-sourcing",
         "compat_aliases": [],
@@ -460,7 +460,7 @@ SUITE_SKILLS: list[dict[str, Any]] = [
     },
     {
         "name": "ppt-deck-pro-max",
-        "required": True,
+        "required": False,
         "role": "compatibility_alias",
         "public_name": "deck-producer",
         "compat_aliases": [],
@@ -484,7 +484,7 @@ SUITE_SKILLS: list[dict[str, Any]] = [
     },
     {
         "name": "ppt-quality-gate",
-        "required": True,
+        "required": False,
         "role": "compatibility_alias",
         "public_name": "deck-quality",
         "compat_aliases": [],
@@ -1061,11 +1061,10 @@ def product_capability_manifest() -> dict[str, Any]:
         for spec in SUITE_SKILLS
         if spec.get("backend_dependency")
     }
-    backend_dependencies = {
-        name: dependency
-        for name, dependency in raw_backend_dependencies.items()
-        if dependency == "ppt-master"
-    }
+    # SC-1.1 P1-02: the default build engine is built-in (deck_native); no
+    # external product is a backend dependency. Legacy ppt-master is an
+    # explicit compatibility route, never a default required dependency.
+    backend_dependencies: dict[str, str] = {}
     suite_skill_dependencies = {
         name: dependency
         for name, dependency in raw_backend_dependencies.items()
@@ -2123,12 +2122,22 @@ def _production_backend_ready_from_status(status: dict[str, Any]) -> bool:
     )
 
 
+def _native_production_backend_ready() -> bool:
+    """SC-1.1 P1-02: the default engine is built-in — readiness comes from
+    the REAL native runtime probe (imports + kernel evidence), never from an
+    env flag or a constant. PPT Master binding is irrelevant to native runs."""
+
+    try:
+        from native_pptx.probe import native_runtime_ready, probe_native_runtime
+    except ModuleNotFoundError:  # pragma: no cover - exercised by package-import test path.
+        from scripts.native_pptx.probe import native_runtime_ready, probe_native_runtime
+    return native_runtime_ready(probe_native_runtime())
+
+
 def _required_external_dependencies_ready(items: list[dict[str, Any]]) -> bool:
-    item = _dependency_by_name(items, "ppt-master")
-    return (
-        str(item.get("binding_status") or "") in {"bound_verified", "bound_verified_runtime_blocked"}
-        and bool(item.get("verified"))
-    )
+    # SC-1.1: no external product is a default required dependency; the
+    # built-in native kernel readiness replaces the old ppt-master binding.
+    return _native_production_backend_ready()
 
 
 def _rc_gate_report_path() -> Path:
@@ -2310,7 +2319,7 @@ def inspect_suite_status(
         str(backend_truth.get("binding_status")) in {"bound_verified", "bound_verified_runtime_blocked"}
         and bool(backend_truth.get("verified"))
     )
-    ppt_master_production_ready = _production_backend_ready_from_status(backend_truth)
+    ppt_master_production_ready = _native_production_backend_ready() or _production_backend_ready_from_status(backend_truth)
     ppt_master_runtime_blocked = str(backend_truth.get("binding_status")) == "bound_verified_runtime_blocked"
     for target in resolved_targets:
         reports: list[dict[str, Any]] = []
@@ -2446,12 +2455,14 @@ def inspect_suite_status(
         # SC-1 A4: the standard build path needs the ppt-master backend only;
         # a missing ImageGen host capability must not block it.
         "standard_build": "ready" if (ready("deck-builder") and production_backend_ready) else "blocked",
+        "ppt_master_backend": (
+            "legacy_only" if _native_production_backend_ready() else ("ready" if _production_backend_ready_from_status(backend_truth) else "blocked")
+        ),
         "imagegen_host": "ready" if ready("deck-builder-high-density") else "optional",
         "deck_producer": "ready" if ready("deck-producer") else "blocked",
         "new_generation": "ready" if ready("deck-producer", "ppt-deck-pro-max") else "blocked",
         "deck_builder_adapter": "ready" if ready("deck-builder") else "blocked",
         "ppt_master_adapter": "ready" if ready("ppt-master") else "blocked",
-        "ppt_master_backend": "ready" if production_backend_ready else "blocked",
         "deck_builder": "ready" if ready("deck-builder") else "blocked",
         "deck_builder_high_density": "ready" if high_density_capability.get("ready") else "blocked",
         "render": "ready" if render_ready else "blocked",
@@ -2710,7 +2721,10 @@ def suite_migration_plan(
     actions: list[dict[str, Any]] = []
     for target in resolved_targets:
         target_dir = _resolve_target_dir(target, agent_skill_dir)
-        for spec in _suite_specs(include_optional=False):
+        # SC-1.1: migration covers ALL suite skills — legacy directories of
+        # now-optional compatibility skills still exist and must be handled
+        # explicitly (spec 07 section 7.1), never silently ignored.
+        for spec in _suite_specs(include_optional=True):
             skill = str(spec["name"])
             link = _link_path(target_dir, skill)
             target_link = release_root / "skills" / skill

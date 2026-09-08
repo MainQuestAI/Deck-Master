@@ -1185,7 +1185,9 @@ class StudioServerTests(unittest.TestCase):
         self.assertIn("suite_blocking_summary", payload)
         self.assertIn("client_delivery_blocking_summary", payload)
         self.assertIn("readiness_layers", payload)
-        self.assertFalse(payload["production_backend_ready"])
+        # SC-1.1: the built-in native engine is production-ready without an
+        # external binding; client delivery still needs rc-gate evidence.
+        self.assertTrue(payload["production_backend_ready"])
         self.assertFalse(payload["client_delivery_ready"])
 
     def test_setup_status_api_payload_matches_v2_schema(self) -> None:

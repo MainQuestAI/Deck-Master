@@ -1742,27 +1742,24 @@ def _agent_doctor_path_check(
 
 
 def _production_dependency_report(suite_payload: dict[str, Any]) -> tuple[bool, list[str], list[dict[str, Any]]]:
+    """SC-1.1 P1-02: the default engine is built-in — production readiness
+    comes from the real native runtime probe. The external PPT Master binding
+    is reported as legacy-only status and never blocks the default engine."""
+
     dependencies = suite_payload.get("external_dependency_status")
     if not isinstance(dependencies, list):
         dependencies = []
-    required = {"ppt-master"}
-    by_name = {
-        str(item.get("name") or ""): item
-        for item in dependencies
-        if isinstance(item, dict)
-    }
-    missing: list[str] = []
-    for name in sorted(required):
-        item = by_name.get(name)
-        if not item:
-            missing.append(name)
-            continue
-        binding_status = str(item.get("binding_status") or "")
-        verified = bool(item.get("verified"))
-        git_sha = str(item.get("git_sha") or "").strip()
-        if binding_status != "bound_verified" or not verified or not git_sha:
-            missing.append(name)
-    return not missing, missing, [item for item in dependencies if isinstance(item, dict) and item.get("name") in required]
+    try:
+        from native_pptx.probe import native_runtime_ready, probe_native_runtime
+    except ModuleNotFoundError:  # pragma: no cover - package-import path
+        from scripts.native_pptx.probe import native_runtime_ready, probe_native_runtime
+    probe = probe_native_runtime()
+    if native_runtime_ready(probe):
+        legacy = [item for item in dependencies if isinstance(item, dict) and str(item.get("name") or "") == "ppt-master"]
+        return True, [], legacy
+    # native kernel unavailable is a hard block — an external binding cannot
+    # substitute for the built-in default engine.
+    return False, [f"native_runtime_probe:{probe.get('status', '')}"], []
 
 
 def _agent_doctor_result(mode: str, checks: list[dict[str, Any]]) -> dict[str, Any]:

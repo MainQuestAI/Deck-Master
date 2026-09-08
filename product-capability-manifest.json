@@ -18,11 +18,7 @@
     "deck-builder",
     "deck-quality",
     "deck-review",
-    "deck-autopilot",
-    "ppt-master",
-    "ppt-library",
-    "ppt-deck-pro-max",
-    "ppt-quality-gate"
+    "deck-autopilot"
   ],
   "optional_capabilities": [
     "deck-learn",
@@ -74,9 +70,7 @@
     "ppt-deck-pro-max",
     "ppt-quality-gate"
   ],
-  "backend_dependencies": {
-    "deck-builder": "ppt-master"
-  },
+  "backend_dependencies": {},
   "suite_skill_dependencies": {
     "deck-sourcing": "ppt-library",
     "deck-producer": "ppt-deck-pro-max",
