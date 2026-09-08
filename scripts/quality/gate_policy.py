@@ -40,20 +40,38 @@ def required_gate_names(
 
 
 def _semantic_review_input_current(run_dir: Path, report: dict[str, Any]) -> bool:
-    """SC-1 C3: a semantic review bound to a page-package snapshot is stale
-    as soon as the packages change. Reports without a binding (v1-style) fall
-    back to the regular freshness rules."""
+    """SC-1.1 C3 + P1-06: a semantic review is current only when its CONTENT
+    fingerprint (hashed over every page-package FILE) matches the current
+    packages — editing a package without touching index.json stales it.
+    Reports without any binding are not current for the native gate."""
 
     based_on = report.get("based_on") if isinstance(report.get("based_on"), dict) else {}
     sha = str(based_on.get("page_packages_index_sha256") or report.get("based_on_sha256") or "").strip()
-    if not sha:
-        return True
-    index = run_dir / "page_packages" / "index.json"
-    if not index.exists():
+    fingerprint = str(report.get("content_fingerprint") or "").strip()
+    if not fingerprint and not sha:
         return False
     import hashlib
 
+    if fingerprint:
+        digest = hashlib.sha256()
+        packages_dir = run_dir / "page_packages"
+        if not packages_dir.is_dir():
+            return False
+        for package_file in sorted(packages_dir.glob("*.json")):
+            digest.update(package_file.name.encode("utf-8"))
+            digest.update(hashlib.sha256(package_file.read_bytes()).digest())
+        return digest.hexdigest() == fingerprint
+    index = run_dir / "page_packages" / "index.json"
+    if not index.exists():
+        return False
     return hashlib.sha256(index.read_bytes()).hexdigest() == sha
+
+
+def _report_is_legacy_v1(report: dict[str, Any]) -> bool:
+    """SC-1.1 P1-06: legacy v1 reviews never satisfy the native production
+    semantic gate (readable history only)."""
+
+    return bool(report.get("legacy_v1")) or str(report.get("schema_version") or "") == "deck_external_quality_review.v1"
 
 
 def _report_satisfies_gate(gate: str, report_gate: str) -> bool:
@@ -246,9 +264,13 @@ def resolve_required_gates(
             satisfied = (
                 status in PASSING_GATE_STATUSES and not unresolved
             ) or all_candidates_overridden_p1
-            if satisfied and required_gate == SEMANTIC_REVIEW_GATE and not _semantic_review_input_current(run_dir, report):
-                satisfied = False
-                summary["reason"] = "semantic review was bound to an older page-package set"
+            if satisfied and required_gate == SEMANTIC_REVIEW_GATE:
+                if _report_is_legacy_v1(report):
+                    satisfied = False
+                    summary["reason"] = "legacy v1 review cannot satisfy the native production semantic gate"
+                elif not _semantic_review_input_current(run_dir, report):
+                    satisfied = False
+                    summary["reason"] = "semantic review was bound to an older page-package set"
             gate_status[required_gate]["satisfied"] = satisfied
 
     missing = [gate for gate, summary in gate_status.items() if not summary.get("satisfied")]

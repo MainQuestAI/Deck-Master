@@ -64,16 +64,38 @@ def probe_native_runtime() -> dict[str, Any]:
 
     fonts_value = str(__import__("os").environ.get(FONTS_ENV, "")).strip()
     fonts_dir = Path(fonts_value) if fonts_value else None
-    if fonts_dir is not None and fonts_dir.is_dir() and any(fonts_dir.iterdir()):
-        checks["fonts"] = {"status": "verified", "source": str(FONTS_ENV), "count": sum(1 for _ in fonts_dir.iterdir())}
+    font_verified = False
+    font_detail: dict[str, Any] = {"status": "unverified", "source": str(FONTS_ENV) if fonts_value else "system"}
+    if fonts_dir is not None and fonts_dir.is_dir():
+        for font_file in sorted(list(fonts_dir.glob("*.ttf")) + list(fonts_dir.glob("*.otf")) + list(fonts_dir.glob("*.ttc"))):
+            try:
+                from PIL import ImageFont
+
+                ImageFont.truetype(str(font_file), 12)
+                font_verified = True
+                font_detail = {"status": "verified", "source": str(FONTS_ENV), "font": font_file.name}
+                break
+            except Exception:  # noqa: BLE001 - try the next font file
+                continue
+    if font_verified:
+        checks["fonts"] = font_detail
     else:
-        # system font dirs are a soft probe: compile may still work for the
-        # declared subset, but readback text fidelity must record it.
-        checks["fonts"] = {"status": "unverified", "source": "system"}
-        failures.append("fonts unverified: no DECK_MASTER_NATIVE_FONTS_DIR and no system font probe in this environment")
+        # A non-empty directory is NOT font evidence — a real font file must
+        # load. Unverified fonts degrade (readback text fidelity) but do not
+        # block compilation.
+        checks["fonts"] = font_detail
+        failures.append("fonts unverified: no loadable font file found (truetype load required)")
+
+    # SC-1.1 review: "verified" needs real evidence, not import success.
+    # compilable: run a minimal SVG->PPTX compile through the kernel.
+    compilable_check = _probe_compilable()
+    checks["compile_smoke"] = compilable_check
+    if compilable_check["status"] != "verified":
+        failures.append("native compile smoke failed: " + str(compilable_check.get("error", "")))
 
     engine_version = engine_fp
-    status = "ready" if not failures else ("blocked" if any("python-pptx" in f or "failed to import" in f for f in failures) else "degraded_ready")
+    hard_failures = [f for f in failures if "failed to import" in f or "python-pptx" in f or "compile smoke failed" in f]
+    status = "ready" if not failures else ("blocked" if hard_failures else "degraded_ready")
     return {
         "schema_version": PROBE_SCHEMA_VERSION,
         "probe_id": f"native_probe_{engine_fp}",
@@ -106,3 +128,46 @@ def public_probe_summary(probe: dict[str, Any]) -> dict[str, Any]:
         "optional_unavailable": list(probe.get("optional_unavailable") or []),
         "renderer": probe.get("renderer", {}),
     }
+
+
+def _probe_compilable() -> dict[str, Any]:
+    """Real kernel evidence beyond imports (SC-1.1 review: import !=
+    verified). Generates a subset-constrained SVG and drives it through the
+    kernel's validate + native-parse + paint-parse pipeline. Full PPTX
+    emission requires the run's scene/lock contracts and stays with the
+    engine adapter; this probe verifies the kernel parsing core."""
+
+    import tempfile
+
+    try:
+        with tempfile.TemporaryDirectory(prefix="native_probe_") as tmp:
+            root = Path(tmp)
+            from .svg_pipeline import CANVAS_HEIGHT, CANVAS_WIDTH, validate_svg
+
+            svg_path = root / "probe.svg"
+            svg_path.write_text(
+                f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {CANVAS_WIDTH} {CANVAS_HEIGHT}" '
+                'data-pptx-page-role="content" width="1672" height="941">'
+                '<rect id="p.bg" x="0" y="0" width="1672" height="941" fill="#ffffff" stroke="none" '
+                'stroke-width="0" data-pptx-bounds="0,0,1672,941"/>'
+                '<text id="p.t" x="80" y="120" font-family="Arial" font-size="28" font-weight="bold" '
+                'fill="#18212b" data-pptx-bounds="80,90,400,50" data-pptx-text="Probe" data-pptx-text-ref="p.t">Probe</text>'
+                "</svg>",
+                encoding="utf-8",
+            )
+            result = validate_svg(svg_path, page_id="PROBE")
+            if not result.get("valid"):
+                return {"status": "blocked", "error": "kernel validate_svg rejected the probe SVG"}
+            from xml.etree import ElementTree
+
+            from .svg_native import parse_svg_native
+            from .svg_paint import parse_svg_paint
+
+            document = ElementTree.fromstring(svg_path.read_text(encoding="utf-8"))
+            native = parse_svg_native(document)
+            paint = parse_svg_paint(document)
+            if not native.get("elements") or not paint:
+                return {"status": "blocked", "error": "kernel parse returned no elements/paint"}
+            return {"status": "verified", "elements": len(native.get("elements") or []), "paint_entries": len(paint)}
+    except Exception as exc:  # noqa: BLE001 - probe reports the failure
+        return {"status": "blocked", "error": str(exc)}

@@ -10,4 +10,7 @@
 | 2026-09-07 | ND-05 | 旧 Run 迁移 | 本轮**未触碰**旧 Run 执行路径（HD 薄 shim 保持行为等价，回归全绿）；build migrate CLI、MIG 组、七类差分矩阵专项用例、8—12 页真实全链（需真实工具）未实现，如实 not_started/not_run | 上下文预算；禁止以 fixture 顶替真实工具测试 | 旧 Run 兼容零破坏；完整迁移收口待下一增量 | MIG-01—06、UAT-01/02 | 否 | open |
 | 2026-09-07 | 全轮 | 整轮完成定义 | 本轮为**增量工程交付**：主链默认路由/内核/none/门禁精度/原子修订可用并有测试；"默认真实内置生产全链真实工具验收"未完成 → 状态 `in_progress`，不得标 engineering_complete | spec 00 §0.5 完成标准第 1/2 条未满足 | 无 | 全表 | 否 | open |
 
+| 2026-09-08 | PR31 评审修复 | 评审六项 P1 | 批次 1—3 已落地：P1-01 native 接入 run_build + 标准产物回写；P1-02 required 策略统一（manifest/installer/agent-doctor native 探针驱动，ppt-* 全转 optional，迁移覆盖全部套件技能）；P1-03 revision 先建快照后指针切换 + 身份含目标路径 + 尝试账本 + 预算锁内强制；P1-04 调用方 action_id + 派发时指纹 + 锁内重算（可调用）+ 冲突拒绝；P1-05 完整页集覆盖 + 资产解析 + SVG hash pinning + 坏包阻断；P1-06 v1 仅历史可读（legacy 标记 + 门拒绝）+ 逐包文件内容指纹 | PR31 评审（2e5340a）逐项复现确认 | HST 真实工具用例仍 not_run（宿主无 ImageGen）；render_pptx 渲染器接线与 MIG apply/rollback 仍 open | 全表 | 否 | closed（工程面） |
+| 2026-09-08 | PR31 评审修复 | 次要三项 | 路由持久化（build/route.json，首写固化，旧 HD Run 密度延续）；失败预算按尝试计数（追加账本）；探针分级（kernel smoke 实测 validate+parse，fonts 需真实 truetype 加载，整体 degraded_ready 如实） | 同上 | renderable 级探针待渲染器接线 | IND-05 | 否 | closed（工程面） |
+
 > 与 SC-1 偏差表的关系：SC-1 open 项（W-02—W-04 typed triggers、envelope autopilot 接线、真实后端 smoke/UAT）按 supersession map 继续有效；PPT Master 绑定前置已由本包 ND-D01 替换为 native 探针（A-03/A-08 处置见 SUPERSESSION_MAP）。

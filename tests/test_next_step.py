@@ -346,8 +346,16 @@ class NextStepResolverTest(unittest.TestCase):
         self._write_bound_gate("render", pptx_path)
         self._write_bound_gate("delivery", pptx_path)
         self._write_bound_gate("customer_visible_safety", pptx_path)
-        # SC-1 C3: production additionally requires a current semantic review.
+        # SC-1 C3: production additionally requires a current semantic review
+        # (SC-1.1 P1-06: bound to the run's page-package content fingerprint).
         digest = hashlib.sha256(pptx_path.read_bytes()).hexdigest()
+        packages_dir = self.run_dir / "page_packages"
+        packages_dir.mkdir(exist_ok=True)
+        (packages_dir / "index.json").write_text("{}\n", encoding="utf-8")
+        packages_digest = hashlib.sha256()
+        for package_file in sorted(packages_dir.glob("*.json")):
+            packages_digest.update(package_file.name.encode("utf-8"))
+            packages_digest.update(hashlib.sha256(package_file.read_bytes()).digest())
         (self.run_dir / "quality_reports" / "external_semantic_gate.json").write_text(
             json.dumps(
                 {
@@ -357,6 +365,7 @@ class NextStepResolverTest(unittest.TestCase):
                     "findings": [],
                     "artifact_path": pptx_path.relative_to(self.run_dir).as_posix(),
                     "artifact_sha256": digest,
+                    "content_fingerprint": packages_digest.hexdigest(),
                 }
             ),
             encoding="utf-8",

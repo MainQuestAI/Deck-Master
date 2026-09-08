@@ -160,5 +160,3 @@ def validate_svg(path: Path, *, page_id: str = "") -> dict[str, Any]:
         if x <= 0.01 and y <= 0.01 and width >= CANVAS_WIDTH - 0.01 and height >= CANVAS_HEIGHT - 0.01:
             raise SvgVisualError("whole-page image wrapper is blocked", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
     return {"valid": True, "tags": sorted(tags), "forbidden": [], "paint": paint_registry}
-
-

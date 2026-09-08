@@ -441,6 +441,22 @@ def _gate_filename(scope: str, reviewer: str) -> str:
     return f"external_{safe_scope}_{safe_reviewer}_gate.json"
 
 
+def _page_packages_content_fingerprint(root: Path) -> str:
+    """Hash over every page package FILE's content (not just the index) —
+    editing a package without touching index.json still stales the review."""
+
+    import hashlib
+
+    digest = hashlib.sha256()
+    packages_dir = root / "page_packages"
+    if not packages_dir.is_dir():
+        return ""
+    for package_file in sorted(packages_dir.glob("*.json")):
+        digest.update(package_file.name.encode("utf-8"))
+        digest.update(hashlib.sha256(package_file.read_bytes()).digest())
+    return digest.hexdigest()
+
+
 def import_external_review(
     run_dir: str | Path,
     result: dict[str, Any],
@@ -540,8 +556,13 @@ def import_external_review(
     if schema_version == RESULT_SCHEMA_VERSION_V2:
         based_on = result.get("based_on") if isinstance(result.get("based_on"), dict) else {}
         gate_report["based_on_sha256"] = str(based_on.get("page_packages_index_sha256") or "")
+        gate_report["content_fingerprint"] = _page_packages_content_fingerprint(root)
         gate_report["review_kind"] = str(result.get("review_kind") or "")
         gate_report["reviewer_session_id"] = str(result.get("reviewer_session_id") or "")
+    else:
+        # SC-1.1 P1-06: v1 reports stay readable as history but are marked
+        # legacy — they can never satisfy the native production gate.
+        gate_report["legacy_v1"] = True
 
     write_json(gate_path, gate_report)
 

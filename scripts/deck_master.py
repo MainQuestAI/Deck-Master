@@ -2276,6 +2276,16 @@ def command_build_prepare(args: argparse.Namespace) -> dict[str, Any]:
     return prepare_build(run_dir)
 
 
+def command_build_migrate(args: argparse.Namespace) -> dict[str, Any]:
+    try:
+        from build.migrate import build_migration_plan
+    except ModuleNotFoundError:  # pragma: no cover - package-import path
+        from scripts.build.migrate import build_migration_plan
+    if not bool(getattr(args, "dry_run", False)):
+        raise ValueError("only --dry-run is supported in this iteration; apply/rollback are out of scope")
+    return build_migration_plan(resolve_run_dir(args))
+
+
 def command_build_run(args: argparse.Namespace) -> dict[str, Any]:
     run_dir = resolve_run_dir(args)
     profile = _persist_build_options(run_dir, args)
@@ -3609,6 +3619,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_build_prepare.add_argument("--review-depth", choices=["producer_only", "independent_main", "producer-only", "independent-main"], default=None)
     p_build_prepare.add_argument("--receipt-policy", choices=["local_traceable", "external_signed", "local-traceable", "external-signed"], default=None)
     p_build_prepare.set_defaults(func=command_build_prepare)
+
+    p_build_migrate = build_sub.add_parser("migrate", help="Plan an old run's migration to the native engine (dry-run only)")
+    add_run_args(p_build_migrate)
+    p_build_migrate.add_argument("--dry-run", action="store_true", help="produce the migration plan without mutating anything (required)")
+    p_build_migrate.set_defaults(func=command_build_migrate)
 
     p_build_run = build_sub.add_parser("run", help="Build HTML/PDF/PNG/PPTX artifacts")
     add_run_args(p_build_run)
