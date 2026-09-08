@@ -14,6 +14,7 @@ from xml.etree import ElementTree
 
 from pptx import Presentation
 from pptx.enum.shapes import MSO_CONNECTOR, MSO_SHAPE, MSO_SHAPE_TYPE
+from pptx.enum.text import MSO_AUTO_SIZE
 from pptx.dml.color import RGBColor
 from pptx.oxml.ns import qn
 from pptx.oxml.xmlchemy import OxmlElement
@@ -245,6 +246,9 @@ def _add_text(slide: Any, element: dict[str, Any], trace: list[dict[str, Any]]) 
     frame = shape.text_frame
     frame.clear()
     frame.word_wrap = not (_NATIVE_CANVAS.get() and element.get("_text_lines"))
+    if _NATIVE_CANVAS.get() and element.get("_text_lines"):
+        # The template spAutoFit makes LibreOffice reflow even wrap=none.
+        frame.auto_size = MSO_AUTO_SIZE.NONE
     frame.margin_left = frame.margin_right = frame.margin_top = frame.margin_bottom = Pt(0)
     style = element.get("style") or {}
     canvas_to_slide = (_slide_width() * 96) / CANVAS_WIDTH
