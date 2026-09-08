@@ -58,6 +58,8 @@ _STYLE_ATTRS = {
     "stroke-width",
     "stroke-linecap",
     "stroke-linejoin",
+    "stroke-dasharray",
+    "stroke-dashoffset",
     "fill-rule",
     "filter",
     "color",
@@ -582,6 +584,13 @@ def _computed_style(node: Any, parent: dict[str, Any]) -> dict[str, Any]:
         style["stroke"] = style.get("color", "#000000")
     for key in ("opacity", "fill-opacity", "stroke-opacity", "stroke-width", "font-size"):
         style[key] = _finite(style.get(key), label=key, element_id=str(node.get("id") or _tag(node))) if key not in {"font-size"} or style.get(key) is not None else style[key]
+    dash = str(style.get("stroke-dasharray") or "none")
+    if dash != "none":
+        values = [_finite(v, label="stroke-dasharray", element_id=str(node.get("id") or _tag(node))) for v in re.split(r"[\s,]+", dash.strip())]
+        if not values or any(v < 0 for v in values):
+            raise SvgNativeError("stroke-dasharray must contain non-negative lengths", property_name="stroke-dasharray")
+    if _finite(style.get("stroke-dashoffset") or 0, label="stroke-dashoffset", element_id=str(node.get("id") or _tag(node))) != 0:
+        raise SvgNativeError("nonzero stroke-dashoffset is unsupported", property_name="stroke-dashoffset", code="HD_SVG_UNSUPPORTED_PROPERTY")
     return style
 
 
@@ -613,6 +622,20 @@ def _geometry(node: Any, tag: str, matrix: tuple[float, float, float, float, flo
     if tag == "rect":
         x, y = _finite(node.get("x") or 0, label="x", element_id=element_id, visual_id=visual_id), _finite(node.get("y") or 0, label="y", element_id=element_id, visual_id=visual_id)
         width, height = _finite(node.get("width"), label="width", element_id=element_id, visual_id=visual_id), _finite(node.get("height"), label="height", element_id=element_id, visual_id=visual_id)
+        rx = _finite(node.get("rx") if node.get("rx") is not None else (node.get("ry") or 0), label="rx", element_id=element_id, visual_id=visual_id)
+        ry = _finite(node.get("ry") if node.get("ry") is not None else (node.get("rx") or 0), label="ry", element_id=element_id, visual_id=visual_id)
+        if rx < 0 or ry < 0:
+            raise SvgNativeError("rect radii must be non-negative", element_id=element_id, property_name="rx/ry")
+        rx, ry = min(rx, width / 2), min(ry, height / 2)
+        if rx > 0 and ry > 0:
+            # Explicit elliptical arcs preserve SVG radii; Office's roundRect
+            # preset uses an unrelated default adjustment.
+            d = (f"M {x+rx} {y} L {x+width-rx} {y} A {rx} {ry} 0 0 1 {x+width} {y+ry} "
+                 f"L {x+width} {y+height-ry} A {rx} {ry} 0 0 1 {x+width-rx} {y+height} "
+                 f"L {x+rx} {y+height} A {rx} {ry} 0 0 1 {x} {y+height-ry} "
+                 f"L {x} {y+ry} A {rx} {ry} 0 0 1 {x+rx} {y} Z")
+            commands = _transform_commands(_parse_path(d, element_id=element_id, visual_id=visual_id), matrix)
+            return "path", _path_bbox(commands), commands
         points = [_apply_matrix(matrix, point) for point in ((x, y), (x + width, y), (x + width, y + height), (x, y + height))]
         if matrix != _IDENTITY:
             commands = [{"op": "M", "x": points[0][0], "y": points[0][1]}] + [{"op": "L", "x": point[0], "y": point[1]} for point in points[1:]] + [{"op": "Z"}]
@@ -627,6 +650,20 @@ def _geometry(node: Any, tag: str, matrix: tuple[float, float, float, float, flo
     if tag == "image":
         x, y = _finite(node.get("x") or 0, label="x", element_id=element_id, visual_id=visual_id), _finite(node.get("y") or 0, label="y", element_id=element_id, visual_id=visual_id)
         width, height = _finite(node.get("width"), label="width", element_id=element_id, visual_id=visual_id), _finite(node.get("height"), label="height", element_id=element_id, visual_id=visual_id)
+        rx = _finite(node.get("rx") if node.get("rx") is not None else (node.get("ry") or 0), label="rx", element_id=element_id, visual_id=visual_id)
+        ry = _finite(node.get("ry") if node.get("ry") is not None else (node.get("rx") or 0), label="ry", element_id=element_id, visual_id=visual_id)
+        if rx < 0 or ry < 0:
+            raise SvgNativeError("rect radii must be non-negative", element_id=element_id, property_name="rx/ry")
+        rx, ry = min(rx, width / 2), min(ry, height / 2)
+        if rx > 0 and ry > 0:
+            # Explicit elliptical arcs preserve SVG radii; Office's roundRect
+            # preset uses an unrelated default adjustment.
+            d = (f"M {x+rx} {y} L {x+width-rx} {y} A {rx} {ry} 0 0 1 {x+width} {y+ry} "
+                 f"L {x+width} {y+height-ry} A {rx} {ry} 0 0 1 {x+width-rx} {y+height} "
+                 f"L {x+rx} {y+height} A {rx} {ry} 0 0 1 {x} {y+height-ry} "
+                 f"L {x} {y+ry} A {rx} {ry} 0 0 1 {x+rx} {y} Z")
+            commands = _transform_commands(_parse_path(d, element_id=element_id, visual_id=visual_id), matrix)
+            return "path", _path_bbox(commands), commands
         points = [_apply_matrix(matrix, point) for point in ((x, y), (x + width, y), (x + width, y + height), (x, y + height))]
         return "image", _bbox(points), None
     if tag == "text":

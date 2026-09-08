@@ -170,6 +170,17 @@ def _apply_line_style(shape: Any, style: dict[str, Any], stroke_opacity: float =
     line.set("cap", {"butt": "flat", "round": "rnd", "square": "sq"}[_line_cap_value(style)])
     _remove_children(line, {"round", "bevel", "miter"})
     line.append(OxmlElement(f"a:{_line_join_value(style)}"))
+    pairs = style.get("stroke_dash_pairs") or []
+    if pairs:
+        _remove_children(line, {"prstDash", "custDash"})
+        dash = OxmlElement("a:custDash")
+        for length, gap in pairs:
+            stop = OxmlElement("a:ds")
+            stop.set("d", str(round(length * 100000)))
+            stop.set("sp", str(round(gap * 100000)))
+            dash.append(stop)
+        join = next(child for child in line if str(child.tag).split("}")[-1] in {"round", "bevel", "miter"})
+        line.insert(list(line).index(join), dash)
     has_gradient_fill = any(str(child.tag).split("}")[-1] == "gradFill" for child in line)
     if stroke_opacity < 1.0 and not has_gradient_fill:
         solid_fill = OxmlElement("a:solidFill")
@@ -775,6 +786,16 @@ def _native_style(style: dict[str, Any]) -> dict[str, Any]:
         result["font_size"] = f"{float(result['font_size']):g}px"
     if "stroke_width" in result:
         result["stroke_width"] = float(result["stroke_width"])
+    raw_dash = str(result.get("stroke_dasharray") or "none")
+    if raw_dash != "none":
+        lengths = [float(v.removesuffix("px")) for v in re.split(r"[\s,]+", raw_dash.strip())]
+        if len(lengths) % 2:
+            lengths *= 2
+        width = float(result.get("stroke_width") or 1)
+        # DrawingML custom dash lengths are percentages of the line width.
+        # Ratios remain invariant under subsequent uniform canvas scaling.
+        if sum(lengths) > 0 and width > 0:
+            result["stroke_dash_pairs"] = [(lengths[i] / width, lengths[i + 1] / width) for i in range(0, len(lengths), 2)]
     if "radius" not in result:
         result["radius"] = 0
     return result
