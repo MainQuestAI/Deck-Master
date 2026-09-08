@@ -34,6 +34,7 @@ SCHEMA_FILES = {
     "high_density_manifest": "high-density-manifest.v2.schema.json",
     "high_density_status": "high-density-status.v2.schema.json",
     "mbb_plan": "mbb-plan.v1.schema.json",
+    "mbb_projection": "mbb-projection.v1.schema.json",
     "mbb_selection_receipt": "mbb-selection-receipt.v1.schema.json",
     "mbb_user_decision_receipt": "mbb-user-decision-receipt.v1.schema.json",
     "mbb_runtime_seal": "mbb-runtime-seal.v1.schema.json",

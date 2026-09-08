@@ -354,6 +354,8 @@ def prepare_build(run_dir: str | Path) -> dict[str, Any]:
     if route.get("engine_id") == "deck_native":
         from build.native_engine import _assert_brief_conflicts_resolved
         _assert_brief_conflicts_resolved(root)
+        from build.narrative_mbb import refresh_requested_projection
+        refresh_requested_projection(root)
         backend = {"backend_name": "deck_native", "production_capable": True, "engine_route": route}
     else:
         backend = builder_backend_status()

@@ -154,6 +154,12 @@ def build_native_content_lock(package: dict[str, Any], narrative: dict[str, Any]
 
 
 def ensure_native_content(root: Path, packages: list[dict[str, Any]]) -> None:
+    _ensure_native_content(root, packages)
+    from build.narrative_mbb import refresh_requested_projection
+    refresh_requested_projection(root)
+
+
+def _ensure_native_content(root: Path, packages: list[dict[str, Any]]) -> None:
     from high_density.content import load_content_lock
 
     narrative_path = root / "narrative_plan.json"
