@@ -9,6 +9,8 @@ external PPT Master product; result objects carry compile status only —
 
 from __future__ import annotations
 from dataclasses import dataclass, field
+import json
+import re
 from pathlib import Path
 from typing import Any, Callable
 
@@ -17,7 +19,7 @@ from .pptx import PptxEditabilityError, compile_pptx, readback_pptx as _readback
 from .svg_pipeline import SvgVisualError
 
 ENGINE_ID = "deck_native"
-ENGINE_VERSION = "native_pptx/1.0"
+ENGINE_VERSION = "native_pptx/1.1"
 SVG_SUBSET_VERSION = "hd-svg-subset/1"
 
 # NDC_* error codes (spec 03 §3.7) mapped from the existing error surfaces.
@@ -67,10 +69,34 @@ class NativeCompileRequest:
     validate_approved: Callable[[Path, dict[str, Any], dict[str, Any], dict[str, Path]], None] | None = None
     expected_sha256: dict[str, str] = field(default_factory=dict)  # page_id -> pinned approved-SVG sha
 
+    svg_paths: dict[str, Path] = field(default_factory=dict)
+    output_root: Path | None = None
+    canvas_mode: str = "legacy"
+
     def _svg(self, page_id: str) -> Path:
-        return self.root.expanduser().resolve() / "high_density_build" / "svg" / f"{page_id}.svg"
+        path = self.svg_paths.get(page_id)
+        if path is None:
+            path = self.root / "high_density_build" / "svg" / f"{page_id}.svg"
+        elif not Path(path).is_absolute():
+            path = self.root / path
+        resolved = Path(path).expanduser().resolve()
+        if not resolved.is_relative_to(self.root.expanduser().resolve()):
+            raise NativeCompileError("SVG input escapes the request root", code="NDC_INPUT_PATH_INVALID", page_id=page_id)
+        return resolved
 
     def validated(self) -> "NativeCompileRequest":
+        if self.canvas_mode not in {"native", "legacy"}:
+            raise NativeCompileError("unknown canvas_mode")
+        page_ids = [str(scene.get("page_id") or "") for scene in self.scenes]
+        if len(set(page_ids)) != len(page_ids) or any(not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]*", page_id) for page_id in page_ids):
+            raise NativeCompileError("duplicate or unsafe compile page ids")
+        root = self.root.expanduser().resolve()
+        for assets in self.asset_paths_by_page.values():
+            for path in assets.values():
+                if not Path(path).resolve().is_relative_to(root):
+                    raise NativeCompileError("asset input escapes the request root", code="NDC_INPUT_PATH_INVALID")
+        if self.canvas_mode == "native" and any(not self.expected_sha256.get(page_id) for page_id in page_ids):
+            raise NativeCompileError("native compile requires an approved SVG hash for every page", code="NDC_INPUT_HASH_MISSING")
         for scene in self.scenes:
             page_id = str(scene.get("page_id") or "")
             svg = self._svg(page_id)
@@ -99,6 +125,9 @@ class NativeCompileRequest:
             asset_paths_by_page=self.asset_paths_by_page,
             validate_approved=self.validate_approved,
             expected_sha256=dict(self.expected_sha256),
+            svg_paths={page_id: self._svg(page_id) for page_id in page_ids},
+            output_root=self.output_root,
+            canvas_mode=self.canvas_mode,
         )
 
 
@@ -111,6 +140,11 @@ class NativeCompileResult:
     engine_version: str = ENGINE_VERSION
     svg_subset_version: str = SVG_SUBSET_VERSION
     input_sha256: dict[str, str] = field(default_factory=dict)
+    root: Path | None = None
+    output_root: Path | None = None
+    page_ids: list[str] = field(default_factory=list)
+    canvas_mode: str = "legacy"
+    svg_paths: dict[str, Path] = field(default_factory=dict)
 
 
 def compile_svg_deck(request: NativeCompileRequest) -> NativeCompileResult:
@@ -131,12 +165,15 @@ def compile_svg_deck(request: NativeCompileRequest) -> NativeCompileResult:
             request.locks,
             asset_paths_by_page=request.asset_paths_by_page,
             validate_approved=request.validate_approved,
+            svg_paths=request.svg_paths,
+            output_root=request.output_root,
+            canvas_mode=request.canvas_mode,
         )
     except PptxEditabilityError as exc:
         raise NativeCompileError(str(exc), code=NDC_COMPILE_FAILED, recovery="repair the page and recompile") from exc
     except SvgVisualError as exc:
         page_id = str(getattr(exc, "page_id", "") or "")
-        svg_file = root / "high_density_build" / "svg" / f"{page_id}.svg"
+        svg_file = request._svg(page_id)
         raise NativeCompileError(
             str(exc),
             code=NDC_ERROR_MAP.get(str(getattr(exc, "code", "")), NDC_COMPILE_FAILED),
@@ -147,17 +184,25 @@ def compile_svg_deck(request: NativeCompileRequest) -> NativeCompileResult:
     except ContractError as exc:
         raise NativeCompileError(str(exc), code=NDC_COMPILE_FAILED) from exc
     input_sha = {
-        str(scene.get("page_id") or ""): sha256_file(root / "high_density_build" / "svg" / f"{scene.get('page_id')}.svg")
+        str(scene.get("page_id") or ""): sha256_file(request._svg(str(scene.get("page_id") or "")))
         for scene in request.scenes
         if str(scene.get("page_id") or "")
     }
-    return NativeCompileResult(status="compiled", pptx_path=pptx, trace_path=trace, input_sha256=input_sha)
+    if any(input_sha.get(page_id) != expected for page_id, expected in request.expected_sha256.items()):
+        raise NativeCompileError("approved SVG changed during compilation", code=NDC_READBACK_FAILED,
+                                 recovery="retry from the committed input revision")
+    return NativeCompileResult(status="compiled", pptx_path=pptx, trace_path=trace, input_sha256=input_sha,
+                               root=root, output_root=request.output_root, page_ids=list(input_sha), canvas_mode=request.canvas_mode,
+                               svg_paths=request.svg_paths, svg_subset_version="native-svg-subset/1" if request.canvas_mode == "native" else SVG_SUBSET_VERSION)
 
 
 def readback_pptx(result: NativeCompileResult, scenes: list[dict[str, Any]], locks: dict[str, dict[str, Any]]) -> dict[str, Any]:
     """Readback the compiled deck against its scenes/locks (trace-verified)."""
 
-    root = result.pptx_path.parent.parent.parent  # run root (high_density_build/pptx/<file> -> run)
+    if result.canvas_mode == "native" or result.output_root is not None:
+        from .readback import readback_native
+        return readback_native(result, scenes, locks)
+    root = result.root or result.pptx_path.parent.parent.parent  # legacy callers only
     try:
         report_path = _readback_impl(root, scenes, locks, result.pptx_path)
     except PptxEditabilityError as exc:
@@ -166,11 +211,21 @@ def readback_pptx(result: NativeCompileResult, scenes: list[dict[str, Any]], loc
 
 
 def render_pptx(result: NativeCompileResult, renderer: dict[str, Any] | None = None) -> dict[str, Any]:
-    """Render pages of a compiled deck; the renderer wiring lands with the
-    engine adapter (ND-02/ND-03). Until then this fails closed."""
+    """Render a compiled deck into a fresh output root; never grants approval."""
+    from .render import RenderError, render_deck
 
-    raise NativeCompileError(
-        "NDC_RENDERER_UNAVAILABLE: no renderer is wired for this environment",
-        code=NDC_RENDERER_UNAVAILABLE,
-        recovery="configure the local renderer or run visual checks via the host",
-    )
+    config = renderer or {}
+    if result.status != "compiled":
+        raise NativeCompileError("cannot render an uncompiled result")
+    page_ids = result.page_ids
+    if not page_ids:
+        try:
+            page_ids = [str(page.get("page_id") or "") for page in json.loads(result.trace_path.read_text(encoding="utf-8")).get("pages", [])]
+        except (OSError, ValueError, TypeError, AttributeError) as exc:
+            raise NativeCompileError("render trace is missing or invalid", code="NDC_RENDER_FAILED") from exc
+    output = Path(config.get("output_root") or (result.output_root or result.pptx_path.parent) / "rendered")
+    try:
+        return render_deck(result.pptx_path, page_ids, output,
+                           timeout_seconds=float(config.get("timeout_seconds", 120)), dpi=int(config.get("dpi", 144)))
+    except RenderError as exc:
+        raise NativeCompileError(str(exc), code=exc.code, recovery="repair the renderer and retry in a fresh revision") from exc

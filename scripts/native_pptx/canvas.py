@@ -8,6 +8,7 @@ verbatim from high_density/blueprint.py — one implementation.
 from __future__ import annotations
 
 import re
+from contextvars import ContextVar
 from pathlib import Path
 from typing import Any
 
@@ -17,6 +18,8 @@ from .contracts import ContractError
 CANVAS_WIDTH = 1672
 CANVAS_HEIGHT = 941
 CANVAS_RATIO = CANVAS_WIDTH / CANVAS_HEIGHT
+# Per-call canvas policy; concurrent native and legacy compiles stay isolated.
+NATIVE_CANVAS = ContextVar("native_pptx_canvas", default=False)
 
 
 class BlueprintInvalid(ContractError):

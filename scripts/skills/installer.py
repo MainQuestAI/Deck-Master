@@ -2122,16 +2122,18 @@ def _production_backend_ready_from_status(status: dict[str, Any]) -> bool:
     )
 
 
-def _native_production_backend_ready() -> bool:
-    """SC-1.1 P1-02: the default engine is built-in — readiness comes from
-    the REAL native runtime probe (imports + kernel evidence), never from an
-    env flag or a constant. PPT Master binding is irrelevant to native runs."""
-
+def _native_runtime_probe() -> dict[str, Any]:
     try:
-        from native_pptx.probe import native_runtime_ready, probe_native_runtime
-    except ModuleNotFoundError:  # pragma: no cover - exercised by package-import test path.
-        from scripts.native_pptx.probe import native_runtime_ready, probe_native_runtime
-    return native_runtime_ready(probe_native_runtime())
+        from native_pptx.probe import probe_native_runtime
+    except ModuleNotFoundError:  # pragma: no cover
+        from scripts.native_pptx.probe import probe_native_runtime
+    return probe_native_runtime()
+
+
+def _native_production_backend_ready(probe: dict[str, Any] | None = None) -> bool:
+    """Compilation readiness is independent of rendering and font evidence."""
+    value = probe if probe is not None else _native_runtime_probe()
+    return (value.get("checks", {}).get("compile_smoke") or {}).get("status") == "verified" and value.get("status") != "blocked"
 
 
 def _required_external_dependencies_ready(items: list[dict[str, Any]]) -> bool:
@@ -2295,6 +2297,8 @@ def inspect_suite_status(
     agent_skill_dir: str | None = None,
 ) -> dict[str, Any]:
     """Pure-read suite readiness inspection."""
+    native_probe = _native_runtime_probe()  # one observation per inspection
+    native_engine_active = _native_production_backend_ready(native_probe)
     library_status = inspect_library_status()
     suite_version = _suite_version()
     resolved_targets = targets or ["codex"]
@@ -2319,7 +2323,7 @@ def inspect_suite_status(
         str(backend_truth.get("binding_status")) in {"bound_verified", "bound_verified_runtime_blocked"}
         and bool(backend_truth.get("verified"))
     )
-    ppt_master_production_ready = _native_production_backend_ready() or _production_backend_ready_from_status(backend_truth)
+    ppt_master_production_ready = native_engine_active
     ppt_master_runtime_blocked = str(backend_truth.get("binding_status")) == "bound_verified_runtime_blocked"
     for target in resolved_targets:
         reports: list[dict[str, Any]] = []
@@ -2419,39 +2423,21 @@ def inspect_suite_status(
     lib_degraded = lib_status_value == "degraded_ready"
 
     production_backend_ready = ppt_master_production_ready
-    # SC-1.1 review round 2 (P1-3): when the built-in native engine is
-    # production-ready, render/delivery readiness is evaluated on NATIVE
-    # evidence — the old render-runtime flag and the external binding no
-    # longer gate the default path. Legacy runs keep the old evidence chain.
-    native_engine_active = _native_production_backend_ready()
+    native_checks = native_probe.get("checks") or {}
+    render_ready = native_engine_active and (native_checks.get("render_smoke") or {}).get("status") == "verified"
+    fonts_ready = (native_checks.get("fonts") or {}).get("status") == "verified"
+    required_external_dependencies_ready = native_engine_active
+    # The suite reports the new default route. An optional legacy binding
+    # cannot rescue a failed native compile/render/font probe.
     client_delivery_evidence = _client_delivery_evidence(
         external_dependency_status,
-        render_runtime_trusted_for_rc=render_runtime_trusted_for_rc,
+        render_runtime_trusted_for_rc=render_ready,
     )
-    if native_engine_active:
-        # SC-1.1 review round 2: native evidence gates the default path; the
-        # rc-gate evidence (delivery closure) is still required for export.
-        render_ready = True
-        required_external_dependencies_ready = True
-        client_delivery_ready = bool(
-            full_suite_ready
-            and native_engine_active
-            and client_delivery_evidence.get("rc_gate_passed")
-            and client_delivery_evidence.get("dependency_snapshot_matches")
-        )
-    else:
-        render_ready = bool(production_backend_ready and render_runtime_ready and not ppt_master_runtime_blocked)
-        required_external_dependencies_ready = _required_external_dependencies_ready(external_dependency_status)
-        client_delivery_ready = bool(
-            full_suite_ready
-            and production_backend_ready
-            and render_ready
-            and required_external_dependencies_ready
-            and render_runtime_trusted_for_rc
-            and client_delivery_evidence.get("rc_gate_passed")
-            and client_delivery_evidence.get("external_dependency_closure_passed")
-            and client_delivery_evidence.get("dependency_snapshot_matches")
-        )
+    client_delivery_ready = bool(
+        full_suite_ready and native_engine_active and render_ready and fonts_ready
+        and client_delivery_evidence.get("rc_gate_passed")
+        and client_delivery_evidence.get("dependency_snapshot_matches")
+    )
     task_readiness = {
         "full_deck_workflow": "ready" if full_suite_ready else ("blocked" if not deck_ready else "degraded_ready"),
         "setup": "ready" if ready("deck-setup") else "blocked",
@@ -2473,7 +2459,7 @@ def inspect_suite_status(
         # a missing ImageGen host capability must not block it.
         "standard_build": "ready" if (ready("deck-builder") and production_backend_ready) else "blocked",
         "ppt_master_backend": (
-            "legacy_only" if _native_production_backend_ready() else ("ready" if _production_backend_ready_from_status(backend_truth) else "blocked")
+            "legacy_only" if native_engine_active else ("ready" if _production_backend_ready_from_status(backend_truth) else "blocked")
         ),
         "imagegen_host": "ready" if ready("deck-builder-high-density") else "optional",
         "deck_producer": "ready" if ready("deck-producer") else "blocked",
@@ -2483,6 +2469,9 @@ def inspect_suite_status(
         "deck_builder": "ready" if ready("deck-builder") else "blocked",
         "deck_builder_high_density": "ready" if high_density_capability.get("ready") else "blocked",
         "render": "ready" if render_ready else "blocked",
+        "native_compile": "ready" if native_engine_active else "blocked",
+        "native_render": "ready" if render_ready else "blocked",
+        "native_fonts": "ready" if fonts_ready else "blocked",
         "deck_quality": "ready" if ready("deck-quality") else "blocked",
         "standalone_audit": "ready" if ready("deck-quality", "ppt-quality-gate") else "blocked",
         "learning": "ready" if by_name.get("deck-learn") == "ready" else "optional",
@@ -2534,7 +2523,7 @@ def inspect_suite_status(
         blocking_summary.append({
             "code": "production_backend_uncertified",
             "blocking_type": "backend",
-            "message": f"PPT Master 外部生产后端未认证：{reason}",
+            "message": "内置原生编译探针未通过；检查 native_compile 能力明细。",
             "repair_owner": "backend",
             "next_command": "",
         })
@@ -2542,7 +2531,7 @@ def inspect_suite_status(
         blocking_summary.append({
             "code": "render_runtime_not_wired",
             "blocking_type": "runtime",
-            "message": "后端已认证，但 Deck Master 运行时仍走内部 contract_smoke 路径，render 尚未闭环到外部后端。",
+            "message": "内置编译已就绪，但真实渲染探针未通过；检查 soffice / pdftoppm 及渲染失败证据。",
             "repair_owner": "runtime",
             "next_command": "",
         })
@@ -2578,9 +2567,10 @@ def inspect_suite_status(
         },
         "full_suite_ready": full_suite_ready,
         "production_backend_ready": production_backend_ready,
-        "render_runtime_ready": render_runtime_ready,
-        "runtime_ready_source": str(render_runtime_status["runtime_ready_source"]),
-        "runtime_ready_trusted_for_rc": render_runtime_trusted_for_rc,
+        "render_runtime_ready": render_ready,
+        "runtime_ready_source": "native_runtime_probe",
+        "runtime_ready_trusted_for_rc": render_ready,
+        "native_runtime_probe": native_probe,
         "client_delivery_ready": client_delivery_ready,
         "client_delivery_evidence": client_delivery_evidence,
         "external_dependency_status": external_dependency_status,

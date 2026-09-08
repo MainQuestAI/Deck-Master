@@ -31,8 +31,10 @@ class ProbeTests(unittest.TestCase):
             "shutil.which", return_value=None
         ):
             probe = probe_native_runtime()
-        self.assertIn(probe["status"], {"ready", "degraded_ready"})
-        self.assertEqual([], probe["required_missing"], "kernel modules import in a clean environment")
+        self.assertEqual("blocked", probe["status"])
+        self.assertEqual("verified", probe["checks"]["compile_smoke"]["status"])
+        self.assertEqual("blocked", probe["checks"]["rsvg_convert"]["status"])
+        self.assertTrue(any("rsvg-convert" in item for item in probe["required_missing"]))
         self.assertEqual("unverified", probe["checks"]["fonts"]["status"])
         self.assertFalse(probe["renderer"]["configured"], "renderer must not be faked as configured")
 

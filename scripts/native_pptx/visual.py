@@ -249,7 +249,10 @@ def _render_svg_to_png(svg: Path, output: Path, width: int, height: int) -> Path
     if not converter:
         raise VisualMetricsError("rsvg-convert is required for blueprint normalization")
     output.parent.mkdir(parents=True, exist_ok=True)
-    result = subprocess.run([converter, "-w", str(width), "-h", str(height), "-o", str(output), str(svg)], capture_output=True, text=True)
+    try:
+        result = subprocess.run([converter, "-w", str(width), "-h", str(height), "-o", str(output), str(svg)], capture_output=True, text=True, timeout=30)
+    except subprocess.TimeoutExpired as exc:
+        raise VisualMetricsError("SVG rasterization timed out after 30 seconds") from exc
     if result.returncode != 0 or not output.exists() or output.stat().st_size == 0:
         raise VisualMetricsError(result.stderr.strip() or "SVG renderer failed")
     return output
@@ -392,6 +395,15 @@ def _text_contrast_metrics(svg_file: Path, scene: dict[str, Any], candidate=None
         document = ElementTree.fromstring(svg_file.read_text(encoding="utf-8"))
     except (OSError, ElementTree.ParseError) as exc:
         raise VisualMetricsError(f"cannot inspect SVG text contrast on page {page_id}") from exc
+    from .canvas import NATIVE_CANVAS
+    render_width, render_height = CANVAS_WIDTH, CANVAS_HEIGHT
+    source_x, source_y, source_scale = 0.0, 0.0, 1.0
+    if NATIVE_CANVAS.get():
+        source_x, source_y, source_width, source_height = [float(value) for value in re.split(r"[\s,]+", document.get("viewBox", "").strip())]
+        source_scale = min(1.0, 4096 / max(source_width, source_height))
+        render_width, render_height = max(1, round(source_width * source_scale)), max(1, round(source_height * source_scale))
+        document.set("width", str(source_width))
+        document.set("height", str(source_height))
     background_document = copy.deepcopy(document)
     hidden_ids: set[str] = set()
     for node in background_document.iter():
@@ -408,23 +420,28 @@ def _text_contrast_metrics(svg_file: Path, scene: dict[str, Any], candidate=None
         background_svg = directory_path / f"{page_id}.background.svg"
         background_png = directory_path / f"{page_id}.background.png"
         ElementTree.ElementTree(background_document).write(background_svg, encoding="utf-8", xml_declaration=True)
-        _render_svg_to_png(background_svg, background_png, CANVAS_WIDTH, CANVAS_HEIGHT)
-        background = _load_image(background_png)
+        _render_svg_to_png(background_svg, background_png, render_width, render_height)
+        background = _load_image(background_png, size=(render_width, render_height))
         if candidate is None:
             candidate_png = directory_path / f"{page_id}.candidate.png"
-            _render_svg_to_png(svg_file, candidate_png, CANVAS_WIDTH, CANVAS_HEIGHT)
-            candidate = _load_image(candidate_png)
+            candidate_svg = directory_path / f"{page_id}.candidate.svg"
+            ElementTree.ElementTree(document).write(candidate_svg, encoding="utf-8", xml_declaration=True)
+            _render_svg_to_png(candidate_svg, candidate_png, render_width, render_height)
+            candidate = _load_image(candidate_png, size=(render_width, render_height))
 
     candidate_array = np.asarray(candidate.convert("RGB"), dtype=np.uint8)
     background_array = np.asarray(background.convert("RGB"), dtype=np.uint8)
     geometry = _svg_element_bboxes(svg_file, page_id, set(required))
     element_metrics: dict[str, dict[str, Any]] = {}
     for element_id, element in required.items():
-        bbox = geometry[element_id]
+        source_bbox = geometry[element_id]
+        bbox = {"x": (float(source_bbox["x"]) - source_x) * source_scale,
+                "y": (float(source_bbox["y"]) - source_y) * source_scale,
+                "w": float(source_bbox["w"]) * source_scale, "h": float(source_bbox["h"]) * source_scale}
         left = max(0, int(math.floor(float(bbox["x"]))))
         top = max(0, int(math.floor(float(bbox["y"]))))
-        right = min(CANVAS_WIDTH, int(math.ceil(float(bbox["x"]) + float(bbox["w"]))))
-        bottom = min(CANVAS_HEIGHT, int(math.ceil(float(bbox["y"]) + float(bbox["h"]))))
+        right = min(render_width, int(math.ceil(float(bbox["x"]) + float(bbox["w"]))))
+        bottom = min(render_height, int(math.ceil(float(bbox["y"]) + float(bbox["h"]))))
         foreground = candidate_array[top:bottom, left:right]
         underlying = background_array[top:bottom, left:right]
         delta = np.max(np.abs(foreground.astype(np.int16) - underlying.astype(np.int16)), axis=2)

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import copy
 import math
 import re
 import shutil
@@ -18,6 +19,7 @@ from pptx.oxml.ns import qn
 from pptx.oxml.xmlchemy import OxmlElement
 from pptx.util import Inches, Pt
 
+from .canvas import NATIVE_CANVAS as _NATIVE_CANVAS
 from .contracts import ContractError, assert_v2, read_json, sha256_file, sha256_json, utc_now, write_json
 from .svg_pipeline import svg_path
 from .svg_paint import parse_node_paint, parse_svg_paint
@@ -35,6 +37,10 @@ SLIDE_WIDTH_IN = 13.333333
 SLIDE_HEIGHT_IN = 7.5
 PPTX_BBOX_TOLERANCE_PT = 0.75
 SVG_NS = "http://www.w3.org/2000/svg"
+
+
+def _slide_width() -> float:
+    return 40 / 3 if _NATIVE_CANVAS.get() else SLIDE_WIDTH_IN
 
 
 class PptxEditabilityError(ContractError):
@@ -65,11 +71,13 @@ def _rgb(value: Any, default: str = "18212b") -> RGBColor:
 
 
 def _inches(value: float, total: float) -> float:
+    if _NATIVE_CANVAS.get():
+        return float(value) / CANVAS_WIDTH * (40 / 3)
     return float(value) / total * (SLIDE_WIDTH_IN if total == CANVAS_WIDTH else SLIDE_HEIGHT_IN)
 
 
 def _canvas_points(value: float) -> Pt:
-    return Pt(float(value) * SLIDE_WIDTH_IN * 72 / CANVAS_WIDTH)
+    return Pt(float(value) * _slide_width() * 72 / CANVAS_WIDTH)
 
 
 def _remove_children(parent: Any, names: set[str]) -> None:
@@ -123,15 +131,15 @@ def _append_effect(parent: Any, effect: dict[str, Any], alpha: float) -> None:
     std_deviation = float(effect.get("std_deviation") or 0)
     if effect.get("kind") == "shadow":
         shadow = OxmlElement("a:outerShdw")
-        shadow.set("blurRad", str(int(round(std_deviation * 12700))))
+        shadow.set("blurRad", str(int(round(_canvas_points(std_deviation) if _NATIVE_CANVAS.get() else std_deviation * 12700))))
         distance = math.hypot(float(effect.get("dx") or 0), float(effect.get("dy") or 0))
-        shadow.set("dist", str(int(round(distance * 12700))))
+        shadow.set("dist", str(int(round(_canvas_points(distance) if _NATIVE_CANVAS.get() else distance * 12700))))
         shadow.set("dir", str(int(round(math.degrees(math.atan2(float(effect.get("dy") or 0), float(effect.get("dx") or 0))) % 360 * 60000))))
         _append_color(shadow, color, opacity)
         effects.append(shadow)
     else:
         glow = OxmlElement("a:glow")
-        glow.set("rad", str(int(round(std_deviation * 12700))))
+        glow.set("rad", str(int(round(_canvas_points(std_deviation) if _NATIVE_CANVAS.get() else std_deviation * 12700))))
         _append_color(glow, color, opacity)
         effects.append(glow)
     parent.append(effects)
@@ -239,7 +247,7 @@ def _add_text(slide: Any, element: dict[str, Any], trace: list[dict[str, Any]]) 
     frame.word_wrap = True
     frame.margin_left = frame.margin_right = frame.margin_top = frame.margin_bottom = Pt(0)
     style = element.get("style") or {}
-    canvas_to_slide = (SLIDE_WIDTH_IN * 96) / CANVAS_WIDTH
+    canvas_to_slide = (_slide_width() * 96) / CANVAS_WIDTH
     lines = element.get("_text_lines") or [[{"text": str(element.get("text") or ""), "style": style, "paint": element.get("_paint") or {}}]]
     run_trace: list[dict[str, Any]] = []
     for line_index, line in enumerate(lines):
@@ -276,6 +284,8 @@ def _add_text(slide: Any, element: dict[str, Any], trace: list[dict[str, Any]]) 
     trace_entry["paint"] = {"fill": _paint_trace(text_paint), "stroke": _paint_trace(paint.get("stroke") or {"kind": "none"})}
     if paint.get("effect"):
         trace_entry["effect"] = {"type": str(paint["effect"].get("kind") or ""), **{key: value for key, value in paint["effect"].items() if key not in {"kind"}}}
+    if _NATIVE_CANVAS.get():
+        trace_entry["text"] = shape.text  # trace records declared SVG paragraph wraps
     trace.append(trace_entry)
 
 
@@ -397,8 +407,8 @@ def _path_points(path_data: str, *, allow_curves: bool = True) -> tuple[list[tup
 
 
 def _add_freeform(slide: Any, element: dict[str, Any], points: list[tuple[float, float]], *, closed: bool, trace: list[dict[str, Any]]) -> None:
-    x_scale = float(Inches(SLIDE_WIDTH_IN)) / CANVAS_WIDTH
-    y_scale = float(Inches(SLIDE_HEIGHT_IN)) / CANVAS_HEIGHT
+    x_scale = float(Inches(_slide_width())) / CANVAS_WIDTH
+    y_scale = x_scale if _NATIVE_CANVAS.get() else float(Inches(SLIDE_HEIGHT_IN)) / CANVAS_HEIGHT
     emu_points = [(x * x_scale, y * y_scale) for x, y in points]
     builder = slide.shapes.build_freeform(start_x=emu_points[0][0], start_y=emu_points[0][1], scale=1.0)
     builder.add_line_segments(emu_points[1:], close=closed)
@@ -478,8 +488,8 @@ def _add_native_path(slide: Any, element: dict[str, Any], commands: list[dict[st
     points = _path_command_points(commands)
     if not points:
         raise PptxEditabilityError(f"native SVG path has no endpoints: {element.get('element_id')}")
-    x_scale = float(Inches(SLIDE_WIDTH_IN)) / CANVAS_WIDTH
-    y_scale = float(Inches(SLIDE_HEIGHT_IN)) / CANVAS_HEIGHT
+    x_scale = float(Inches(_slide_width())) / CANVAS_WIDTH
+    y_scale = x_scale if _NATIVE_CANVAS.get() else float(Inches(SLIDE_HEIGHT_IN)) / CANVAS_HEIGHT
     emu_points = [(x * x_scale, y * y_scale) for x, y in points]
     builder = slide.shapes.build_freeform(start_x=emu_points[0][0], start_y=emu_points[0][1], scale=1.0)
     if len(emu_points) > 1:
@@ -874,7 +884,65 @@ def _flatten_trace_entries(entries: list[dict[str, Any]]) -> list[dict[str, Any]
     return flattened
 
 
-def compile_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dict[str, Any]], *, asset_paths_by_page: dict[str, dict[str, Path]] | None = None, validate_approved: Callable[[Path, dict[str, Any], dict[str, Any], dict[str, Path]], None] | None = None) -> tuple[Path, Path]:
+def compile_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dict[str, Any]], *, asset_paths_by_page: dict[str, dict[str, Path]] | None = None, validate_approved: Callable[[Path, dict[str, Any], dict[str, Any], dict[str, Path]], None] | None = None, svg_paths: dict[str, Path] | None = None, output_root: Path | None = None, canvas_mode: str = "legacy") -> tuple[Path, Path]:
+    """Compile with an isolated per-call canvas policy; legacy callers keep their mapping."""
+    if canvas_mode not in {"native", "legacy"}:
+        raise PptxEditabilityError("unknown compiler canvas mode")
+    token = _NATIVE_CANVAS.set(canvas_mode == "native")
+    try:
+        return _compile_pptx(root, scenes, locks, asset_paths_by_page=asset_paths_by_page,
+                             validate_approved=validate_approved, svg_paths=svg_paths, output_root=output_root)
+    finally:
+        _NATIVE_CANVAS.reset(token)
+
+
+def _contain_elements(elements: list[dict[str, Any]], svg_file: Path) -> list[dict[str, Any]]:
+    """Map SVG viewBox uniformly into a strict 16:9 drawing plane.
+
+    The normalized plane keeps the legacy horizontal unit for the existing
+    shape emitters, but uses 1672*9/16 vertically. Geometry, paths, fonts,
+    strokes and effects share one source-to-slide scale.
+    """
+    document = ElementTree.parse(svg_file).getroot()
+    try:
+        x, y, width, height = [float(value) for value in re.split(r"[\s,]+", str(document.get("viewBox") or "").strip())]
+    except ValueError as exc:
+        raise PptxEditabilityError("native SVG requires a four-number viewBox") from exc
+    if not all(math.isfinite(value) for value in (x, y, width, height)) or width <= 0 or height <= 0:
+        raise PptxEditabilityError("native SVG viewBox dimensions must be positive and finite")
+    target_height = CANVAS_WIDTH * 9 / 16
+    scale = min(CANVAS_WIDTH / width, target_height / height)
+    dx, dy = (CANVAS_WIDTH - width * scale) / 2 - x * scale, (target_height - height * scale) / 2 - y * scale
+    mapped = copy.deepcopy(elements)
+    scaled_styles: set[int] = set()
+    def scale_style(style: dict[str, Any]) -> None:
+        if id(style) in scaled_styles:
+            return
+        scaled_styles.add(id(style))
+        for key in ("font_size", "stroke_width", "radius"):
+            if key in style:
+                value = float(str(style[key]).removesuffix("px")) * scale
+                style[key] = f"{value:g}px" if key == "font_size" else value
+    for element in mapped:
+        bbox = element["bbox"]
+        element["bbox"] = {"x": float(bbox["x"]) * scale + dx, "y": float(bbox["y"]) * scale + dy,
+                           "w": float(bbox["w"]) * scale, "h": float(bbox["h"]) * scale}
+        scale_style(element.get("style") or {})
+        for line in element.get("_text_lines") or []:
+            for run in line:
+                scale_style(run.get("style") or {})
+        for command in element.get("_native_commands") or []:
+            for key in ("x", "x1", "x2", "y", "y1", "y2"):
+                if key in command:
+                    command[key] = float(command[key]) * scale + (dx if key.startswith("x") else dy)
+        effect = (element.get("_paint") or {}).get("effect") or {}
+        for key in ("std_deviation", "dx", "dy", "radius"):
+            if key in effect:
+                effect[key] = float(effect[key]) * scale
+    return mapped
+
+
+def _compile_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dict[str, Any]], *, asset_paths_by_page: dict[str, dict[str, Path]] | None = None, validate_approved: Callable | None = None, svg_paths: dict[str, Path] | None = None, output_root: Path | None = None) -> tuple[Path, Path]:
     if not scenes:
         raise PptxEditabilityError("cannot compile an empty high-density deck")
     run_id = str(scenes[0].get("run_id") or "")
@@ -891,13 +959,13 @@ def compile_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dict
         if str(lock.get("run_id") or "") != run_id or str(lock.get("page_id") or "") != page_id:
             raise PptxEditabilityError(f"PPTX compiler content lock identity is inconsistent on page {page_id}")
     presentation = Presentation()
-    presentation.slide_width = Inches(SLIDE_WIDTH_IN)
+    presentation.slide_width = Inches(_slide_width())
     presentation.slide_height = Inches(SLIDE_HEIGHT_IN)
     blank_layout = presentation.slide_layouts[6]
     trace_pages: list[dict[str, Any]] = []
     for scene in scenes:
         page_id = str(scene["page_id"])
-        svg_file = svg_path(root, page_id)
+        svg_file = (svg_paths or {}).get(page_id) or svg_path(root, page_id)
         if not svg_file.exists():
             raise PptxEditabilityError(f"approved SVG is missing on page {page_id}")
         # SC-1.1 ND-01: business-level validation is injected by the adapter
@@ -918,6 +986,8 @@ def compile_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dict
         slide.shapes._cached_max_shape_id = slide.shapes._spTree.max_shape_id
         trace: list[dict[str, Any]] = []
         elements = _svg_elements(svg_file, scene, (asset_paths_by_page or {}).get(page_id, {}))
+        if _NATIVE_CANVAS.get():
+            elements = _contain_elements(elements, svg_file)
         index = 0
         while index < len(elements):
             group_id = str(elements[index].get("group_id") or "")
@@ -938,6 +1008,8 @@ def compile_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dict
             child_trace: list[dict[str, Any]] = []
             for element in group_items:
                 _emit_element(group, element, child_trace)
+            if _NATIVE_CANVAS.get():
+                group._element.recalculate_extents()
             group_entry = {
                 "element_id": group_id,
                 "object_type": "group",
@@ -957,10 +1029,10 @@ def compile_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dict
         if notes:
             slide.notes_slide.notes_text_frame.text = notes
         trace_pages.append({"page_id": page_id, "svg_sha256": sha256_file(svg_file), "elements": trace, "speaker_notes_present": bool(notes)})
-    output = pptx_path(root)
+    output = Path(output_root) / "deck.pptx" if output_root is not None else pptx_path(root)
     output.parent.mkdir(parents=True, exist_ok=True)
     presentation.save(output)
-    trace_file = trace_path(root)
+    trace_file = Path(output_root) / "pptx_trace.json" if output_root is not None else trace_path(root)
     svg_hashes = {str(page["page_id"]): str(page["svg_sha256"]) for page in trace_pages}
     trace_payload = {
         "schema_version": "deck_svg_to_drawingml_trace.v1",
@@ -979,53 +1051,24 @@ def compile_pptx(root: Path, scenes: list[dict[str, Any]], locks: dict[str, dict
 
 
 def _render_pptx_pages(root: Path, pptx: Path, pages: list[tuple[str, int]]) -> dict[str, Path]:
-    soffice = shutil.which("soffice")
-    pdftoppm = shutil.which("pdftoppm")
-    if not soffice or not pdftoppm:
-        raise PptxEditabilityError("soffice and pdftoppm are required for PPTX render parity")
+    """Legacy preview projection over the shared bounded native renderer."""
+    from .render import RenderError, render_deck
+    from PIL import Image
+
     if not pages:
         return {}
+    page_count = len(Presentation(pptx).slides)
+    if any(index < 0 or index >= page_count for _, index in pages):
+        raise PptxEditabilityError("requested render page is outside the PPTX page set")
     with tempfile.TemporaryDirectory(prefix="deck-master-pptx-render-") as directory:
-        temp = Path(directory)
-        # Isolate the headless profile so adjacent readback runs cannot race
-        # on LibreOffice's shared user installation.
-        profile = temp / "lo-profile"
-        profile.mkdir()
-        result = subprocess.run(
-            [
-                soffice,
-                f"-env:UserInstallation={profile.as_uri()}",
-                "--headless",
-                "--nologo",
-                "--nodefault",
-                "--nofirststartwizard",
-                "--convert-to",
-                "pdf",
-                "--outdir",
-                str(temp),
-                str(pptx),
-            ],
-            capture_output=True,
-            text=True,
-        )
-        pdf = temp / f"{pptx.stem}.pdf"
-        if result.returncode != 0 or not pdf.exists():
-            detail = result.stderr.strip() or result.stdout.strip() or "LibreOffice failed to render PPTX"
-            raise PptxEditabilityError(detail)
-        prefix = temp / "page"
-        result = subprocess.run([pdftoppm, "-png", "-r", "144", str(pdf), str(prefix)], capture_output=True, text=True)
-        if result.returncode != 0:
-            raise PptxEditabilityError(result.stderr.strip() or "pdftoppm failed to render PPTX")
-        from PIL import Image
-
+        temporary_output = Path(directory) / "render"
+        try:
+            rendered = render_deck(pptx, [f"SLIDE_{index + 1:04d}" for index in range(page_count)], temporary_output)
+        except RenderError as exc:
+            raise PptxEditabilityError(str(exc)) from exc
         outputs: dict[str, Path] = {}
         for page_id, page_index in pages:
-            source = temp / f"page-{page_index + 1}.png"
-            if not source.exists():
-                candidates = sorted(temp.glob(f"page-{page_index + 1}*.png"))
-                source = candidates[0] if candidates else source
-            if not source.exists():
-                raise PptxEditabilityError(f"pdftoppm did not produce page {page_index + 1}")
+            source = Path(rendered["pages"][page_index]["path"])
             output = pptx_preview_path(root, page_id)
             output.parent.mkdir(parents=True, exist_ok=True)
             with Image.open(source) as image:

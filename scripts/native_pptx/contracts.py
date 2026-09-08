@@ -6,8 +6,21 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-SCHEMA_DIR = Path(__file__).resolve().parents[2] / "docs" / "contracts"
+def _schema_directory() -> Path:
+    # Source checkout and standalone release use different resource layouts.
+    for parent in Path(__file__).resolve().parents:
+        for candidate in (parent / "docs/contracts", parent / "contracts"):
+            if (candidate / "content-lock.v2.schema.json").is_file():
+                return candidate
+    raise RuntimeError("runtime contracts directory is missing")
+
+
+SCHEMA_DIR = _schema_directory()
 SCHEMA_FILES = {
+    "build_route": "build-route.v1.schema.json",
+    "native_compile_request": "native-compile-request.v1.schema.json",
+    "native_compile_result": "native-compile-result.v1.schema.json",
+    "task_readiness": "task-readiness.v1.schema.json",
     "page_package": "page-package.v1.schema.json",
     "content_lock": "content-lock.v2.schema.json",
     "blueprint_manifest": "blueprint-manifest.v2.schema.json",
@@ -80,6 +93,9 @@ def sha256_file(path: Path) -> str:
 
 
 def read_json(path: Path) -> dict[str, Any]:
+    from workflow.actions import active_input_path
+
+    path = active_input_path(path)
     try:
         value = json.loads(path.read_text(encoding="utf-8"))
     except FileNotFoundError as exc:

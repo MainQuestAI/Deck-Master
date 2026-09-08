@@ -785,7 +785,12 @@ class SkillInstallationTest(unittest.TestCase):
             encoding="utf-8",
         )
 
-        with mock.patch(
+        with mock.patch("scripts.skills.installer._native_runtime_probe", return_value={
+            "status": "ready", "checks": {
+                "compile_smoke": {"status": "verified"}, "render_smoke": {"status": "verified"},
+                "fonts": {"status": "verified"},
+            },
+        }), mock.patch(
             "scripts.skills.installer.external_dependency_statuses",
             return_value=[verified_backend],
         ), mock.patch(
@@ -890,7 +895,12 @@ class SkillInstallationTest(unittest.TestCase):
             encoding="utf-8",
         )
 
-        with mock.patch(
+        with mock.patch("scripts.skills.installer._native_runtime_probe", return_value={
+            "status": "degraded_ready", "checks": {
+                "compile_smoke": {"status": "verified"}, "render_smoke": {"status": "blocked"},
+                "fonts": {"status": "verified"},
+            },
+        }), mock.patch(
             "scripts.skills.installer.external_dependency_statuses",
             return_value=[verified_backend],
         ), mock.patch(
@@ -906,7 +916,8 @@ class SkillInstallationTest(unittest.TestCase):
         ):
             result = inspect_suite_status(targets=["codex"], agent_skill_dir=str(self.agent_dir))
 
-        self.assertEqual("env_override", result["runtime_ready_source"])
+        self.assertEqual("native_runtime_probe", result["runtime_ready_source"])
+        self.assertEqual("blocked", result["task_readiness"]["render"])
         self.assertFalse(result["runtime_ready_trusted_for_rc"])
         self.assertFalse(result["client_delivery_ready"])
         self.assertEqual("blocked", result["task_readiness"]["client_delivery"])

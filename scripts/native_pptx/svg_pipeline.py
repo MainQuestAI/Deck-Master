@@ -8,6 +8,7 @@ high-density svg module re-imports these names.
 from __future__ import annotations
 
 import math
+import re
 from pathlib import Path
 from typing import Any
 from xml.etree import ElementTree
@@ -36,7 +37,9 @@ class SvgVisualError(ContractError):
 
 
 def svg_path(root: Path, page_id: str) -> Path:
-    return root / SVG_DIR / f"{page_id}.svg"
+    from workflow.actions import active_input_path
+
+    return active_input_path(root / SVG_DIR / f"{page_id}.svg")
 
 
 def preview_path(root: Path, page_id: str) -> Path:
@@ -86,8 +89,20 @@ def validate_svg(path: Path, *, page_id: str = "") -> dict[str, Any]:
             page_id=page_id,
             code="HD_SVG_UNSUPPORTED_ELEMENT",
         )
-    if root.tag.split("}")[-1] != "svg" or root.get("viewBox") != f"0 0 {CANVAS_WIDTH} {CANVAS_HEIGHT}":
+    from .canvas import NATIVE_CANVAS
+
+    canvas_x, canvas_y, canvas_width, canvas_height = 0.0, 0.0, float(CANVAS_WIDTH), float(CANVAS_HEIGHT)
+    if NATIVE_CANVAS.get():
+        try:
+            canvas_x, canvas_y, canvas_width, canvas_height = [float(value) for value in re.split(r"[\s,]+", str(root.get("viewBox") or "").strip())]
+        except ValueError as exc:
+            raise SvgVisualError("SVG viewBox requires four numbers", page_id=page_id) from exc
+        if not all(math.isfinite(value) for value in (canvas_x, canvas_y, canvas_width, canvas_height)) or min(canvas_width, canvas_height) <= 0:
+            raise SvgVisualError("SVG viewBox dimensions must be finite and positive", page_id=page_id)
+    elif root.get("viewBox") != f"0 0 {CANVAS_WIDTH} {CANVAS_HEIGHT}":
         raise SvgVisualError("SVG canvas or viewBox is invalid", page_id=page_id)
+    if root.tag.split("}")[-1] != "svg":
+        raise SvgVisualError("SVG root must be svg", page_id=page_id)
     if not str(root.get("data-pptx-page-role") or ""):
         raise SvgVisualError("SVG root is missing data-pptx-page-role", page_id=page_id)
     ids: set[str] = set()
@@ -141,7 +156,7 @@ def validate_svg(path: Path, *, page_id: str = "") -> dict[str, Any]:
                 bbox = native_geometry.get(node_id) or _svg_geometry_bbox(node)
             except VisualMetricsError as exc:
                 raise SvgVisualError(f"SVG element geometry is invalid: {node_id}", page_id=page_id) from exc
-            if bbox["x"] < -0.01 or bbox["y"] < -0.01 or bbox["x"] + bbox["w"] > CANVAS_WIDTH + 0.01 or bbox["y"] + bbox["h"] > CANVAS_HEIGHT + 0.01:
+            if bbox["x"] < canvas_x - 0.01 or bbox["y"] < canvas_y - 0.01 or bbox["x"] + bbox["w"] > canvas_x + canvas_width + 0.01 or bbox["y"] + bbox["h"] > canvas_y + canvas_height + 0.01:
                 raise SvgVisualError(f"SVG element overflows the canvas: {node_id}", page_id=page_id)
         if tag != "image":
             continue
@@ -157,6 +172,6 @@ def validate_svg(path: Path, *, page_id: str = "") -> dict[str, Any]:
             height = float(node.get("height") or 0)
         except ValueError as exc:
             raise SvgVisualError("SVG registered image geometry is invalid", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED") from exc
-        if x <= 0.01 and y <= 0.01 and width >= CANVAS_WIDTH - 0.01 and height >= CANVAS_HEIGHT - 0.01:
+        if x <= canvas_x + 0.01 and y <= canvas_y + 0.01 and width >= canvas_width - 0.01 and height >= canvas_height - 0.01:
             raise SvgVisualError("whole-page image wrapper is blocked", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
     return {"valid": True, "tags": sorted(tags), "forbidden": [], "paint": paint_registry}
