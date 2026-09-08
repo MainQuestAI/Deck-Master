@@ -2339,10 +2339,19 @@ def command_build_retry(args: argparse.Namespace) -> dict[str, Any]:
         if route.get("engine_id") != "deck_native":
             return run_build(run_dir)
         page_id = str(getattr(args, "page_id", "") or "")
-        if page_id:
+        stage = str(getattr(args, "stage", "") or "")
+        if page_id or stage in {"blueprint", "page_scene", "svg", "visual_review"}:
             from build.native_engine import _approved_packages
-            if page_id not in {str(p["page_id"]) for p in _approved_packages(run_dir)}:
+            packages = _approved_packages(run_dir)
+            if not page_id or page_id not in {str(p["page_id"]) for p in packages}:
                 raise ValueError("retry page does not belong to this run")
+            if stage in {"", "blueprint", "page_scene", "svg", "visual_review"}:
+                from build.native_tasks import dispatch_native_task
+                authoring = route.get("authoring_mode")
+                if stage == "blueprint" and authoring != "image_blueprint":
+                    raise ValueError("direct_svg has no blueprint stage")
+                kind = "imagegen" if stage == "blueprint" else ("reconstruct" if authoring == "image_blueprint" else "svg")
+                return dispatch_native_task(run_dir, kind, [p for p in packages if p["page_id"] == page_id])
         # Runtime dispatch regenerates only failed/stale page tasks and keeps
         # valid committed pages. Polling itself consumes no retry budget.
         return run_build(run_dir)
@@ -2553,6 +2562,17 @@ def command_apply_narrative_advice(args: argparse.Namespace) -> dict[str, Any]:
     if raw:
         apply_sections = [s.strip() for s in raw.split(",") if s.strip()]
     return apply_narrative_advice(run_dir, result, dry_run=dry_run, apply_sections=apply_sections)
+
+
+def command_research(args: argparse.Namespace) -> dict[str, Any]:
+    from context_intake.research_runtime import prepare_research, dispatch_research, submit_research, research_status
+
+    root = resolve_run_dir(args)
+    operation = args.research_operation
+    if operation in {"prepare", "submit"}:
+        payload = json.loads(Path(args.input).expanduser().read_text(encoding="utf-8"))
+        return (prepare_research if operation == "prepare" else submit_research)(root, payload)
+    return (dispatch_research if operation == "dispatch" else research_status)(root, args.task_id)
 
 
 def command_prepare_quality_review(args: argparse.Namespace) -> dict[str, Any]:
@@ -3811,6 +3831,18 @@ def build_parser() -> argparse.ArgumentParser:
     p_ana.add_argument("--dry-run", action="store_true", help="Generate diff only, do not modify artifacts")
     p_ana.add_argument("--apply", default=None, help="Comma-separated sections: core-thesis,page-recommendations,risks")
     p_ana.set_defaults(func=command_apply_narrative_advice)
+
+    # ---- bounded host research ----
+    p_research = sub.add_parser("research", help="Prepare, dispatch and record authorized public host research")
+    research_sub = p_research.add_subparsers(dest="research_operation", required=True)
+    for operation in ("prepare", "dispatch", "submit", "status"):
+        parser = research_sub.add_parser(operation)
+        add_run_args(parser)
+        if operation in {"prepare", "submit"}:
+            parser.add_argument("--input", required=True, help="Research task or issued-action result JSON")
+        else:
+            parser.add_argument("--task-id", required=True)
+        parser.set_defaults(func=command_research)
 
     # ---- external quality review ----
     p_pqr = sub.add_parser("prepare-quality-review", help="Generate external quality review task for an Agent")

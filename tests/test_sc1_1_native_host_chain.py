@@ -355,3 +355,25 @@ def test_submit_rechecks_host_action_inside_commit_lock(tmp_path, monkeypatch, c
     with pytest.raises(Exception, match="cancelled|superseded"):
         submit_approved_svg(root, "P001", svg, action_id=task["action_id"], produced_against=task["produced_against"], scene=scene)
     assert not (root / "high_density_build/svg/P001.svg").exists()
+
+
+def test_explicit_svg_retry_waits_for_host_without_discarding_approved_page(tmp_path):
+    from deck_master import build_parser, command_build_retry
+    from build.native_engine import submit_approved_svg
+    from high_density.svg import compile_svg
+    from runtime.build import build_status
+    from workflow.actions import read_current_revision, revision_input_path
+    root = new_run(tmp_path, "direct_svg")
+    task = run_build(root)["pages"][0]
+    scene = host_scene(root, load_content_lock(root, "P001"))
+    svg = compile_svg(scene, tmp_path / "host.svg").read_text()
+    submit_approved_svg(root, "P001", svg, action_id=task["action_id"], produced_against=task["produced_against"], scene=scene)
+    before = read_current_revision(root)
+    args = build_parser().parse_args(["build", "retry", "--run-dir", str(root), "--page-id", "P001", "--stage", "svg"])
+    retry = command_build_retry(args)
+    assert retry["status"] == "awaiting_svg_authoring"
+    assert retry["pages"][0]["action_id"] != task["action_id"]
+    assert read_current_revision(root) == before
+    assert revision_input_path(root, root / "high_density_build/svg/P001.svg").read_text() == svg
+    assert run_build(root)["pages"][0]["action_id"] == retry["pages"][0]["action_id"]
+    assert build_status(root)["status"] == "awaiting_svg_authoring"

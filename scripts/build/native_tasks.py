@@ -12,6 +12,28 @@ from workflow.actions import action_applied, check_action_budget, read_current_r
 STAGE_STATUS = {"imagegen": "awaiting_agent_imagegen", "reconstruct": "awaiting_agent_reconstruct", "svg": "awaiting_svg_authoring"}
 
 
+def pending_native_task(root: Path) -> dict[str, Any] | None:
+    """Return current, fresh host work, including explicitly requested repairs."""
+    from build.native_engine import _svg_input_fingerprint
+    pages = []
+    for path in sorted((root / "build/native_tasks").glob("native_*.json")):
+        page = read_json(path)
+        if action_applied(root, page["action_id"]):
+            continue
+        try:
+            issued_task(root, page["action_id"], page["page_id"], page["produced_against"], allowed_kinds=set(STAGE_STATUS))
+        except ContractError:
+            continue
+        if page["produced_against"] == _svg_input_fingerprint(root, page["page_id"]):
+            pages.append(page)
+    if not pages:
+        return None
+    stage = next(kind for kind in STAGE_STATUS if any(page["kind"] == kind for page in pages))
+    return {"schema_version": "deck_host_native_task.v1", "run_id": root.name,
+            "engine_id": "deck_native", "stage": stage, "status": STAGE_STATUS[stage],
+            "pages": [page for page in pages if page["kind"] == stage]}
+
+
 def dispatch_native_task(root: Path, stage: str, packages: list[dict[str, Any]]) -> dict[str, Any]:
     from workflow.actions import _acquire_run_lock, _release_run_lock
 

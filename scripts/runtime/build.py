@@ -592,6 +592,16 @@ def _run_native_build(root: Path, request: dict[str, Any], run_id: str) -> dict[
     route = native_engine.resolve_build_route(request, run_dir=root)
     authoring = str(route.get("authoring_mode") or "image_blueprint")
 
+    from build.native_tasks import pending_native_task, dispatch_native_task
+    pending_task = pending_native_task(root)
+    if pending_task:
+        pending_ids = {p["page_id"] for p in pending_task["pages"]}
+        task = dispatch_native_task(root, pending_task["stage"], [p for p in native_engine._approved_packages(root) if p["page_id"] in pending_ids])
+        return {"schema_version": "deck_build_run_result.v1", "status": task["status"],
+                "run_id": run_id, "run_dir": str(root), "engine_id": "deck_native", "authoring_mode": authoring,
+                "host_task": "build/host_imagegen_task.json", "pages": task["pages"],
+                "resume_command": f"deck-master build run --run-dir {root}"}
+
     if authoring == "image_blueprint":
         # SC-1.1 review round 2 (P1-1): state-machine resume — advance by
         # what ALREADY exists instead of re-dispatching forever.
@@ -992,6 +1002,12 @@ def build_status(run_dir: str | Path) -> dict[str, Any]:
     )
     host_task_path = root / "build/host_imagegen_task.json"
     host_task = read_json(host_task_path) if host_task_path.exists() else {}
+    if native_route:
+        from build.native_tasks import pending_native_task
+        pending_task = pending_native_task(root)
+        if pending_task and status not in {"stale", "invalid"}:
+            status = pending_task["status"]
+            host_task = pending_task
     if status in {"missing", "prepared"} and host_task:
         from workflow.actions import action_applied
         pending = [page for page in host_task.get("pages", []) if not action_applied(root, page["action_id"])]

@@ -14,9 +14,9 @@ def native_continuation(root: Path) -> dict[str, Any] | None:
     status = build_status(root)
     command = f'deck-master build run --run-dir {root}'
     stage, reason = 'needs_build', 'native build is not current'
-    task_path = root / 'build/host_imagegen_task.json'
-    task = read_json(task_path) if task_path.exists() else {}
-    pending = [page for page in task.get('pages', []) if not action_applied(root, page['action_id'])]
+    from build.native_tasks import pending_native_task
+    task = pending_native_task(root) or {}
+    pending = task.get('pages', [])
     if status['status'] == 'completed':
         from quality.gate_policy import resolve_required_gates
         artifact = Path(status['artifact_path'])

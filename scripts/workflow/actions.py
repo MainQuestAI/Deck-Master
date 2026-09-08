@@ -266,8 +266,18 @@ def _commit_locked(root: Path, envelope: dict, *, current_input_fingerprint, tar
         _atomic_json(temp_root / "revision_manifest.json", manifest)
         destination = directory / revision
         if destination.exists():
-            if _manifest(root, revision) != manifest:
+            # A process can die after the snapshot rename, before publishing
+            # its pointer. Reuse that complete immutable snapshot on retry;
+            # wall-clock timestamps are not part of the revision identity.
+            existing = _manifest(root, revision)
+            comparison = json.loads(json.dumps(existing))
+            comparison["committed_at"] = manifest["committed_at"]
+            if action in comparison.get("receipts", {}):
+                comparison["receipts"][action]["committed_at"] = marker["committed_at"]
+            if comparison != manifest or read_revision_state(root, revision) != state:
                 raise ActionEnvelopeError("revision identity conflict")
+            manifest = existing
+            marker = existing["receipts"][action]
         else:
             # directory rename exposes only complete snapshots
             os.rename(temp_root, destination)
