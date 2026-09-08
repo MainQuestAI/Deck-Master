@@ -18,6 +18,9 @@ def source_quote_matches(source, evidence, *, run_dir=None):
         path = Path(run_dir) / path
     if any(part in {'page_packages', 'native_outputs', 'page_scenes', 'quality_reports'} for part in path.parts):
         return False
+    if run_dir is not None and path.resolve().is_relative_to(Path(run_dir).resolve()):
+        from workflow.actions import revision_input_path
+        path = revision_input_path(run_dir, path)
     try:
         data = path.read_bytes()
         if hashlib.sha256(data).hexdigest() != expected:
