@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any
+import copy
 
 
 EVIDENCE_KEYWORDS = ("案例", "截图", "数据", "指标", "证明", "结果", "转写", "会议", "原话")
@@ -30,6 +31,7 @@ def build_claim_map(deck_brief: dict[str, Any], context_manifest: dict[str, Any]
         raise ValueError("Unresolved declared source conflict blocks claim compilation: " + ", ".join(b["conflict_id"] for b in blockers))
     fragments = evidence_fragments(context_manifest)
     claims = []
+    assumptions = [copy.deepcopy(a) for a in deck_brief.get("working_assumptions", []) if isinstance(a, dict)]
     for index, point in enumerate(deck_brief.get("core_points", []), start=1):
         text = str(point).strip()
         if not text:
@@ -40,6 +42,7 @@ def build_claim_map(deck_brief: dict[str, Any], context_manifest: dict[str, Any]
             risk_flags = ["evidence_unreviewed"]
         else:
             risk_flags = ["evidence_gap"]
+        bound_assumptions = [a for a in assumptions if str(a.get("statement") or "").strip() in (text, text.removeprefix("工作假设：").strip()) or f"claim_{index:02d}" in a.get("claim_refs", [])]
         claims.append(
             {
                 "claim_id": f"claim_{index:02d}",
@@ -52,6 +55,9 @@ def build_claim_map(deck_brief: dict[str, Any], context_manifest: dict[str, Any]
                 "evidence_needed": ["客户案例、产品截图、业务数据或会议原话"],
                 "evidence_refs": [fragment["source_id"] for fragment in fragments[:3]],
                 "risk_flags": risk_flags,
+                "working_assumptions": bound_assumptions,
+                "fact_kind": "working_assumption" if bound_assumptions else "analysis_judgment",
+                "support_status": "unsupported",
             }
         )
     if not claims:
@@ -70,6 +76,7 @@ def build_claim_map(deck_brief: dict[str, Any], context_manifest: dict[str, Any]
         "run_id": deck_brief.get("run_id", ""),
         "title": deck_brief.get("project_name", "Deck Master Run"),
         "claims": claims,
+        "working_assumptions": assumptions,
         "source_refs": deck_brief.get("source_refs", []),
         "risk_flags": sorted({flag for claim in claims for flag in claim.get("risk_flags", [])}),
     }
