@@ -562,7 +562,7 @@ def active_input_path(path: Path) -> Path:
     for root in _READ_REVISION.get():
         if path.resolve().is_relative_to(Path(root)):
             relative = path.resolve().relative_to(Path(root)).as_posix()
-            inputs = ("page_packages", "assets", "high_density_build/svg", "high_density_build/content_locks", "high_density_build/page_scenes", "high_density_build/blueprints")
+            inputs = ("page_packages", "assets", "sources", "diagram_views", "high_density_build/svg", "high_density_build/content_locks", "high_density_build/page_scenes", "high_density_build/blueprints")
             if relative in {"request.json", "narrative_plan.json", "solution_model.json", "diagram_views.json", "style_lock.json", "context_manifest.json", "page_tasks.json"} or any(relative == prefix or relative.startswith(prefix + "/") for prefix in inputs):
                 return revision_input_path(root, path)
     return path

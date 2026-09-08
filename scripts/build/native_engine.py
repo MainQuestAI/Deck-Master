@@ -371,11 +371,12 @@ def native_build_fingerprint(run_dir: str | Path) -> str:
             path = revision_input_path(root, root / name)
             if path.is_file():
                 dependencies[name] = sha256_file(path)
-        source_dir = revision_input_path(root, root / "sources")
-        if source_dir.is_dir():
-            for path in sorted(source_dir.rglob("*")):
-                if path.is_file():
-                    dependencies["sources/" + path.relative_to(source_dir).as_posix()] = sha256_file(path)
+        for directory in ("sources", "diagram_views"):
+            source_dir = revision_input_path(root, root / directory)
+            if source_dir.is_dir():
+                for path in sorted(source_dir.rglob("*")):
+                    if path.is_file():
+                        dependencies[directory + "/" + path.relative_to(source_dir).as_posix()] = sha256_file(path)
         assets = _resolve_asset_paths(root, packages)
         for page, bindings in assets.items():
             for asset, path in bindings.items():

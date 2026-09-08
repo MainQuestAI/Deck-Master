@@ -465,12 +465,13 @@ def _page_packages_content_fingerprint(root: Path) -> str:
             if path.is_file():
                 digest.update(name.encode())
                 digest.update(hashlib.sha256(path.read_bytes()).digest())
-        sources = revision_input_path(root, root / "sources")
-        if sources.is_dir():
-            for path in sorted(sources.rglob("*")):
-                if path.is_file():
-                    digest.update(path.relative_to(sources).as_posix().encode())
-                    digest.update(hashlib.sha256(path.read_bytes()).digest())
+        for directory in ("sources", "diagram_views"):
+            sources = revision_input_path(root, root / directory)
+            if sources.is_dir():
+                for path in sorted(sources.rglob("*")):
+                    if path.is_file():
+                        digest.update((directory + "/" + path.relative_to(sources).as_posix()).encode())
+                        digest.update(hashlib.sha256(path.read_bytes()).digest())
     return digest.hexdigest()
 
 
