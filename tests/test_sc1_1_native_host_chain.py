@@ -325,10 +325,11 @@ def test_cancelled_task_is_not_reused_and_superseded_task_is_rejected(tmp_path):
 
     root = new_run(tmp_path, "direct_svg")
     first = run_build(root)["pages"][0]
-    cancelled = root / "workflow/actions/cancelled" / f"{first['action_id']}.json"
-    cancelled.parent.mkdir(parents=True, exist_ok=True)
-    cancelled.write_text("{}")
-    second = run_build(root)["pages"][0]
+    from build.native_tasks import cancel_native_action, dispatch_native_task
+    from build.native_engine import _approved_packages
+    cancel_native_action(root, first["action_id"], reason="Synthetic user stop")
+    assert run_build(root)["status"] == "stopped"
+    second = dispatch_native_task(root, "svg", _approved_packages(root), resume_cancelled=True)["pages"][0]
     assert second["action_id"] != first["action_id"]
     with pytest.raises(Exception, match="cancelled|superseded"):
         issued_task(root, first["action_id"], "P001", first["produced_against"])

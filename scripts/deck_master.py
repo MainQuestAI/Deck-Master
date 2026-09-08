@@ -2376,6 +2376,11 @@ def command_build_status(args: argparse.Namespace) -> dict[str, Any]:
     return build_status(run_dir)
 
 
+def command_build_cancel(args: argparse.Namespace) -> dict[str, Any]:
+    from build.native_tasks import cancel_native_action
+    return cancel_native_action(resolve_run_dir(args), str(args.action_id), reason=str(args.reason))
+
+
 def command_build_retry(args: argparse.Namespace) -> dict[str, Any]:
     run_dir = resolve_run_dir(args)
     profile = _persist_build_options(run_dir, args)
@@ -2397,7 +2402,11 @@ def command_build_retry(args: argparse.Namespace) -> dict[str, Any]:
                 if stage == "blueprint" and authoring != "image_blueprint":
                     raise ValueError("direct_svg has no blueprint stage")
                 kind = "imagegen" if stage == "blueprint" else ("reconstruct" if authoring == "image_blueprint" else "svg")
-                return dispatch_native_task(run_dir, kind, [p for p in packages if p["page_id"] == page_id])
+                from build.native_tasks import stopped_native_tasks
+                stopped=[task for task in stopped_native_tasks(run_dir) if task['page_id']==page_id]
+                if stopped and not stage:
+                    kind=stopped[0]['kind']
+                return dispatch_native_task(run_dir, kind, [p for p in packages if p["page_id"] == page_id], resume_cancelled=True)
         # Runtime dispatch regenerates only failed/stale page tasks and keeps
         # valid committed pages. Polling itself consumes no retry budget.
         return run_build(run_dir)
@@ -3788,6 +3797,12 @@ def build_parser() -> argparse.ArgumentParser:
     p_build_status.add_argument("--watch-timeout", type=float, default=30.0)
     p_build_status.add_argument("--authoring-mode", choices=["image_blueprint", "direct_svg", "image-blueprint", "direct-svg"], default=None)
     p_build_status.set_defaults(func=command_build_status)
+
+    p_build_cancel = build_sub.add_parser("cancel", help="Stop a current Runtime-issued native host action")
+    add_run_args(p_build_cancel)
+    p_build_cancel.add_argument("--action-id", required=True)
+    p_build_cancel.add_argument("--reason", required=True)
+    p_build_cancel.set_defaults(func=command_build_cancel)
 
     p_build_retry = build_sub.add_parser("retry", help="Retry one high-density page or a deck-scoped MBB stage")
     add_run_args(p_build_retry)

@@ -12,6 +12,71 @@ from workflow.actions import action_applied, check_action_budget, read_current_r
 STAGE_STATUS = {"imagegen": "awaiting_agent_imagegen", "reconstruct": "awaiting_agent_reconstruct", "svg": "awaiting_svg_authoring"}
 
 
+def record_native_failure(root: Path, *, action_id: str, task_id: str, reason: str):
+    """A result losing the cancellation race is the same terminated attempt."""
+    from workflow.actions import _acquire_run_lock, _release_run_lock, _safe_path, _record_action_failure_locked
+    root=Path(root).expanduser().resolve()
+    lock=_acquire_run_lock(root)
+    try:
+        cancelled=_safe_path(root, f"workflow/actions/cancelled/{action_id}.json")
+        if cancelled.is_file():
+            return read_json(cancelled)
+        return _record_action_failure_locked(root, action_id=action_id, task_id=task_id, reason=reason)
+    finally:
+        _release_run_lock(lock)
+
+
+def stopped_native_tasks(root: Path) -> list[dict[str, Any]]:
+    from workflow.actions import _safe_path
+    root=Path(root).expanduser().resolve()
+    stopped=[]
+    for path in sorted((root / "build/native_tasks").glob("native_*.json")):
+        task=read_json(path)
+        marker=_safe_path(root, f"workflow/actions/cancelled/{task['action_id']}.json")
+        if marker.is_file() and not action_applied(root, task['action_id']):
+            stopped.append({**read_json(marker), 'status':'stopped',
+                            **{key:task[key] for key in ('action_id','task_id','page_id','run_id','kind')}})
+    return stopped
+
+
+def cancel_native_action(root: Path, action_id: str, *, reason: str) -> dict[str, Any]:
+    """Serialize user stop with result commit; never erase its budget evidence."""
+    from workflow.actions import _acquire_run_lock, _release_run_lock, _safe_path, _atomic_json, validate_identifier
+    from datetime import datetime, timezone
+    root=Path(root).expanduser().resolve()
+    validate_identifier(action_id, "action_id")
+    if not str(reason).strip():
+        raise ContractError("native cancellation requires a reason")
+    lock=_acquire_run_lock(root)
+    try:
+        issued=_safe_path(root, f"build/native_tasks/issued/{action_id}.json")
+        if not issued.is_file():
+            raise ContractError("cancel requires a Runtime-issued action")
+        task=read_json(issued)
+        task_id=validate_identifier(task.get('task_id'), 'task_id')
+        page_id=validate_identifier(task.get('page_id'), 'page_id')
+        current=_safe_path(root, f"build/native_tasks/{task_id}.json")
+        if task.get('action_id')!=action_id or task.get('run_id')!=root.name or task.get('scope_pages')!=[page_id] or task.get('kind') not in STAGE_STATUS:
+            raise ContractError("cancel action does not belong to this run/page")
+        if action_applied(root, action_id):
+            raise ContractError("committed action cannot be cancelled")
+        marker_path=_safe_path(root, f"workflow/actions/cancelled/{action_id}.json")
+        if marker_path.is_file():
+            return {**read_json(marker_path), 'idempotent':True}
+        if not current.is_file() or read_json(current).get('action_id')!=action_id:
+            raise ContractError("only the current issued action can be cancelled")
+        marker={'status':'stopped','action_id':action_id,'task_id':task_id,'run_id':root.name,
+                'page_id':page_id,'kind':task['kind'],'reason':str(reason).strip(),
+                'recorded_at':datetime.now(timezone.utc).isoformat()}
+        attempts=_safe_path(root, f"workflow/actions/attempts/{action_id}")
+        if not attempts.exists() or not any(attempts.glob('*.json')):
+            _atomic_json(_safe_path(root, f"workflow/actions/attempts/{action_id}/cancelled.json"), marker)
+        _atomic_json(marker_path,marker)
+        return marker
+    finally:
+        _release_run_lock(lock)
+
+
 def pending_native_task(root: Path) -> dict[str, Any] | None:
     """Return current, fresh host work, including explicitly requested repairs."""
     from build.native_engine import _svg_input_fingerprint
@@ -34,7 +99,7 @@ def pending_native_task(root: Path) -> dict[str, Any] | None:
             "pages": [page for page in pages if page["kind"] == stage]}
 
 
-def dispatch_native_task(root: Path, stage: str, packages: list[dict[str, Any]]) -> dict[str, Any]:
+def dispatch_native_task(root: Path, stage: str, packages: list[dict[str, Any]], *, resume_cancelled: bool = False) -> dict[str, Any]:
     from workflow.actions import _acquire_run_lock, _release_run_lock
 
     root = Path(root).expanduser().resolve()
@@ -47,6 +112,9 @@ def dispatch_native_task(root: Path, stage: str, packages: list[dict[str, Any]])
             current = [p for p in _approved_packages(root) if p["page_id"] in ids]
             if {p["page_id"] for p in current} != ids:
                 raise ContractError("native dispatch page is outside the approved run")
+            stopped=[task for task in stopped_native_tasks(root) if task['page_id'] in ids]
+            if stopped and (not resume_cancelled or not any(task['kind']==stage for task in stopped)):
+                raise ContractError("native page is stopped; explicitly retry its cancelled stage")
             return _dispatch_native_task_locked(root, stage, current)
     finally:
         _release_run_lock(lock)
@@ -229,7 +297,7 @@ def submit_blueprint(
     expected_revision: str | None = None,
 ) -> dict[str, Any]:
     from build.native_engine import _svg_input_fingerprint
-    from workflow.actions import stage_action_result, commit_action_result, record_action_failure
+    from workflow.actions import stage_action_result, commit_action_result
     from native_pptx.contracts import sha256_json
     from PIL import Image
     import hashlib
@@ -323,7 +391,7 @@ def submit_blueprint(
             receipt_data={"blueprint_sha256": digest, "observation_sha256": sha256_json(observation)},
         )
     except Exception as exc:
-        record_action_failure(root, action_id=action_id, task_id=task["task_id"], reason=str(exc))
+        record_native_failure(root, action_id=action_id, task_id=task["task_id"], reason=str(exc))
         raise
     return {"status": "blueprint_staged", "page_id": page_id, "revision_id": marker["revision_id"], "action_id": action_id}
 

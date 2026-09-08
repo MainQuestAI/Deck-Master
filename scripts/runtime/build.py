@@ -599,7 +599,11 @@ def _run_native_build(root: Path, request: dict[str, Any], run_id: str) -> dict[
     except ModuleNotFoundError:  # pragma: no cover - exercised by package-import test path.
         from scripts.build import native_engine
 
-    from build.native_tasks import approved_svg
+    from build.native_tasks import approved_svg, stopped_native_tasks
+    stopped=stopped_native_tasks(root)
+    if stopped:
+        return {'schema_version':'deck_build_run_result.v1','status':'stopped','engine_id':'deck_native',
+                'run_id':run_id,'run_dir':str(root),'actions':stopped,'resume_command':'Explicit build retry of the cancelled page/stage is required'}
     prepared = native_engine.prepare_native_run(root)
     route = native_engine.resolve_build_route(request, run_dir=root)
     authoring = str(route.get("authoring_mode") or "image_blueprint")

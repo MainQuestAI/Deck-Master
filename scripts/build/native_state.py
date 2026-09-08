@@ -4,6 +4,12 @@ from typing import Any
 
 
 def native_continuation(root: Path) -> dict[str, Any] | None:
+    from build.native_tasks import stopped_native_tasks
+    stopped=stopped_native_tasks(root)
+    if stopped:
+        return {'stage':'stopped', 'reason':'Native host action cancelled by user; explicit build retry required',
+                'next_command':'', 'build_status':{'status':'stopped'}, 'blocking_issues':stopped,
+                'host_task':{'kind':'native_stopped', 'actions':stopped}}
     from conversation.brief_compiler import run_brief_conflict_blockers
     blockers = run_brief_conflict_blockers(root)
     if blockers and any(isinstance(b,dict) and b.get('code')=='context_reading_incomplete' for b in blockers):

@@ -259,7 +259,8 @@ def _submit_approved_svg_revision(run_dir, page_id, svg_text, *, action_id, task
     """
     import hashlib
     import tempfile
-    from workflow.actions import action_applied, commit_action_result, stage_action_result, record_action_failure, check_action_budget
+    from workflow.actions import action_applied, commit_action_result, stage_action_result, check_action_budget
+    from build.native_tasks import record_native_failure as record_action_failure
     from build.native_tasks import issued_task, current_task_fingerprint
     from high_density.content import load_content_lock
     from high_density.scene import validate_scene, validate_scene_content
