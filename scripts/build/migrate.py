@@ -139,7 +139,7 @@ def apply_migration(run_dir: str | Path, plan: dict[str, Any] | str | Path) -> d
         return {'status': 'blocked', 'code': 'migration_required',
                 'missing_evidence': plan['missing_evidence'], 'plan_id': plan['plan_id']}
     directory = _migration_dir(root, plan['plan_id'])
-    candidate = directory / 'candidate'
+    candidate = directory / 'candidate' / root.name
     if directory.exists():
         if _recover_result(root, directory):
             raise ValueError('migration_already_applied')

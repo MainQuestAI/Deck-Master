@@ -69,6 +69,7 @@ def test_candidate_build_failure_keeps_old_version(tmp_path, monkeypatch):
     import runtime.build
     def fail(candidate):
         assert candidate != root
+        assert candidate.name == root.name
         raise RuntimeError('renderer unavailable')
     monkeypatch.setattr(runtime.build, 'run_build', fail)
     with pytest.raises(RuntimeError, match='renderer unavailable'):
