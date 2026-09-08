@@ -743,7 +743,7 @@ def _finalize_native_build_locked(
         "non_client_deliverable": False,
         "builder_backend": backend,
         "artifact_path": _run_relative(root, pptx_path),
-        "preview_dir": f"{BUILD_DIR}/pages",
+        "preview_dir": _run_relative(root, Path(rendered["pdf_path"]).parent) if rendered.get("status") == "rendered" else "",
         "page_count": int(manifest.get("page_count") or 0),
         "source_fingerprint": manifest.get("source_fingerprint"),
         "build_revision": result["build_revision"],

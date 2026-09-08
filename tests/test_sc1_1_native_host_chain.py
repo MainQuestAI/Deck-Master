@@ -216,6 +216,9 @@ def test_new_native_build_emits_real_complete_artifact_chain(tmp_path):
     artifacts = json.loads((root / "build/artifact_manifest.json").read_text())
     assert {item["kind"] for item in artifacts["artifacts"]} == {"deck_pptx", "deck_pdf", "page_png", "deck_html"}
     assert all((root / item["path"]).is_file() for item in artifacts["artifacts"])
+    render_report = json.loads((root / "render_results/render_result.json").read_text())
+    assert (root / render_report["preview_dir"]).is_dir()
+    assert all((root / page["preview_path"]).parent == root / render_report["preview_dir"] for page in render_report["page_previews"])
     # downstream status must not reject the native input-fingerprint contract
     assert build_status(root)["status"] == "completed"
 
