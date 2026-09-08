@@ -1,0 +1,3956 @@
+{
+  "status": "in_progress",
+  "engineering_complete": false,
+  "outcome": "pending",
+  "human_visual_review": "pending",
+  "final_file_approval": "pending",
+  "case_count": 147,
+  "historical_predicate_counts": {
+    "verified_pass": 128,
+    "partial": 17,
+    "human_pending": 2
+  },
+  "notice": "Historical predicate evidence retains its original source SHA. This index is not final same-candidate acceptance. Local raw evidence is not distributed.",
+  "cases": [
+    {
+      "case": "SC1.1:GOV-01",
+      "title": "旧约束正式替换",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "governance_current",
+          "source_sha": "b165d45d5a992ef9ea2a5555ed8d5b3b42019a05",
+          "evidence_hashes": [
+            "b929c76950bf98c6737b001e04b9c7c0a787e5135b4e74fff728add585a6e627"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:GOV-02",
+      "title": "没有整库换名内置",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "installation_migration",
+          "source_sha": "c3003badcd09fe7462677ae911446b2f07da42c6",
+          "evidence_hashes": [
+            "a358730d0a4832e3b20f6dfba090820798e90cfeb6d418c746ee085362e04c2b"
+          ]
+        },
+        {
+          "group": "managed_install",
+          "source_sha": "86b76a7ebc91d3547a9def4c758ca8aace4bb88e",
+          "evidence_hashes": [
+            "86cd59365d314ef0b4914f9963462e5141f7f1675b154c6377401629ffa9e5aa",
+            "0bb53c45fbc294678be98d35bd46276344417b89c1de606977c724b9df10ac48",
+            "64381f16758283f733c9138f7a2ab7f4af294bbb6d284aab1814f174fcedaa34"
+          ]
+        },
+        {
+          "group": "isolated_release_4a",
+          "source_sha": "4a808c5241c04771de20de9a1d47b41dca3a1dfa",
+          "evidence_hashes": [
+            "afa89ff4062c72409d57e06671985135b01d5c1fcff69ecde7c3fdec05090f7d",
+            "a260272d1be366a9e8c4e44599335eca22777c99fee0051dbf76b3d940ede3db",
+            "fefd12e3d0a60fad71f0f5940c902a5efea8bd9c89dd86c14f279c6e2bcf1c7f",
+            "c32cc289a5564245a6005a728d8212ae851ef83bcc397eadf7259dddb29e7d5b",
+            "f76a72d55de0b57f344f534a67a71d81b09b54c9bc17bccaa91233644364f1cb"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:GOV-03",
+      "title": "PR30基线保护",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "baseline_readonly",
+          "source_sha": null,
+          "evidence_hashes": [
+            "a3c6bfa94711e346deacc4dcc30d0e742d12ae1a7dc7e54c791e44db855c8be8"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:GOV-04",
+      "title": "工程与效果状态分离",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "l1_extra_execution",
+          "source_sha": "dd436bc4cb7196a44c85344fad89b683d5b47a48",
+          "evidence_hashes": [
+            "0e1ef3bd6bc33d6f90902d45462b8ce9dc2876aaee8af3ff403cfc31c7bf513f",
+            "78664b9a2393eafc22a0532c8a49efe2967c59bcf00448e61cfa7130221580f7",
+            "8a055b7c9750afd8e3b98e11e30cc17243c92b80c5a3c3b168b8d46be947b76f"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:IND-01",
+      "title": "隔离默认安装真编译",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "installation_migration",
+          "source_sha": "c3003badcd09fe7462677ae911446b2f07da42c6",
+          "evidence_hashes": [
+            "a358730d0a4832e3b20f6dfba090820798e90cfeb6d418c746ee085362e04c2b"
+          ]
+        },
+        {
+          "group": "managed_install",
+          "source_sha": "86b76a7ebc91d3547a9def4c758ca8aace4bb88e",
+          "evidence_hashes": [
+            "86cd59365d314ef0b4914f9963462e5141f7f1675b154c6377401629ffa9e5aa",
+            "0bb53c45fbc294678be98d35bd46276344417b89c1de606977c724b9df10ac48",
+            "64381f16758283f733c9138f7a2ab7f4af294bbb6d284aab1814f174fcedaa34"
+          ]
+        },
+        {
+          "group": "isolated_release_4a",
+          "source_sha": "4a808c5241c04771de20de9a1d47b41dca3a1dfa",
+          "evidence_hashes": [
+            "afa89ff4062c72409d57e06671985135b01d5c1fcff69ecde7c3fdec05090f7d",
+            "a260272d1be366a9e8c4e44599335eca22777c99fee0051dbf76b3d940ede3db",
+            "fefd12e3d0a60fad71f0f5940c902a5efea8bd9c89dd86c14f279c6e2bcf1c7f",
+            "c32cc289a5564245a6005a728d8212ae851ef83bcc397eadf7259dddb29e7d5b",
+            "f76a72d55de0b57f344f534a67a71d81b09b54c9bc17bccaa91233644364f1cb"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:IND-02",
+      "title": "不隐式克隆或调用外部产品",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "installation_migration",
+          "source_sha": "c3003badcd09fe7462677ae911446b2f07da42c6",
+          "evidence_hashes": [
+            "a358730d0a4832e3b20f6dfba090820798e90cfeb6d418c746ee085362e04c2b"
+          ]
+        },
+        {
+          "group": "managed_install",
+          "source_sha": "86b76a7ebc91d3547a9def4c758ca8aace4bb88e",
+          "evidence_hashes": [
+            "86cd59365d314ef0b4914f9963462e5141f7f1675b154c6377401629ffa9e5aa",
+            "0bb53c45fbc294678be98d35bd46276344417b89c1de606977c724b9df10ac48",
+            "64381f16758283f733c9138f7a2ab7f4af294bbb6d284aab1814f174fcedaa34"
+          ]
+        },
+        {
+          "group": "isolated_release_4a",
+          "source_sha": "4a808c5241c04771de20de9a1d47b41dca3a1dfa",
+          "evidence_hashes": [
+            "afa89ff4062c72409d57e06671985135b01d5c1fcff69ecde7c3fdec05090f7d",
+            "a260272d1be366a9e8c4e44599335eca22777c99fee0051dbf76b3d940ede3db",
+            "fefd12e3d0a60fad71f0f5940c902a5efea8bd9c89dd86c14f279c6e2bcf1c7f",
+            "c32cc289a5564245a6005a728d8212ae851ef83bcc397eadf7259dddb29e7d5b",
+            "f76a72d55de0b57f344f534a67a71d81b09b54c9bc17bccaa91233644364f1cb"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:IND-03",
+      "title": "默认入口一致",
+      "tier": "L2",
+      "predicate_assessment": "partial",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "current_runtime",
+          "source_sha": "593ef14f41122aeaca97b709df7b720f24b6e9dd",
+          "evidence_hashes": [
+            "9c9b6dc37cb20ec4c24069989b810833bf65592f702f07a5ddbd7a223f345001"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:IND-04",
+      "title": "library none真入口",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "ten_page",
+          "source_sha": null,
+          "evidence_hashes": [
+            "4b0cec70f0a6bca301f37cfd1e5bce6edebe446dc3558e3059f07e1c0c11f862",
+            "a2152b9d7b2ec7c107c02963a0423de8a0069a9af29cff2ec491ec312486e760",
+            "6681a872dee3c9d1f735e753cacaca08f5440406b9cf517d54fb77e269c8fefa",
+            "0128e437a2c9f6e2b32d9ed2c97aaaa1ec52a244660fd4652fd19aa72682d28d"
+          ]
+        },
+        {
+          "group": "cold_quoted_cli",
+          "source_sha": "4a808c5 content implementation; see historical per-command source context",
+          "evidence_hashes": [
+            "888b4a44dd82e6a468034192fd0ea6fea5d77506a30823e026601a2197bb931d",
+            "986850aede67962047a98fbfb7f736094267dc11f38a4a2436c23a1cce190c24",
+            "8804a370ffac47a8c9b1743812a08b74ac1cf4040acdbf9dacd8124c5cd23db5",
+            "973ef93d0e62596d5618634c969858dafc08d286e492ebcf84dd553bae6936ed",
+            "9e4be8cf69ed5d3f38a064236770e89ef76350097bf503b795bfaf14289674b1",
+            "0b2f029e7a7c5bc04bbb54183ac151d6ee08003b66d82d347393b582f08fcaf2",
+            "ae01714263f2103a18531833296b05e652286d2f4b80b253361a41fea91f9b51",
+            "5f18e2163ef6ce261e005aacea92c2e572358cc563ac95e3735d272228adc4bd"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:IND-05",
+      "title": "宿主未知不伪报就绪",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "current_runtime",
+          "source_sha": "593ef14f41122aeaca97b709df7b720f24b6e9dd",
+          "evidence_hashes": [
+            "9c9b6dc37cb20ec4c24069989b810833bf65592f702f07a5ddbd7a223f345001"
+          ]
+        },
+        {
+          "group": "update_specific_nodes",
+          "source_sha": "b165d45d5a992ef9ea2a5555ed8d5b3b42019a05",
+          "evidence_hashes": [
+            "99d75ce66e371ac770364f04a321422c349a3d3dfa579ba388c05a1c2caa3ff7",
+            "a4609c0b7942da7778ce2b40190f1c0aaa608ed667d296e7281192b206b069b4"
+          ]
+        },
+        {
+          "group": "current_runtime",
+          "source_sha": "593ef14f41122aeaca97b709df7b720f24b6e9dd",
+          "evidence_hashes": [
+            "9c9b6dc37cb20ec4c24069989b810833bf65592f702f07a5ddbd7a223f345001"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:IND-06",
+      "title": "可选依赖不污染任务",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "current_runtime",
+          "source_sha": "593ef14f41122aeaca97b709df7b720f24b6e9dd",
+          "evidence_hashes": [
+            "9c9b6dc37cb20ec4c24069989b810833bf65592f702f07a5ddbd7a223f345001"
+          ]
+        },
+        {
+          "group": "native_mode_actual_matrix",
+          "source_sha": null,
+          "evidence_hashes": []
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:IND-07",
+      "title": "安装产物可脱离源码目录",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "installation_migration",
+          "source_sha": "c3003badcd09fe7462677ae911446b2f07da42c6",
+          "evidence_hashes": [
+            "a358730d0a4832e3b20f6dfba090820798e90cfeb6d418c746ee085362e04c2b"
+          ]
+        },
+        {
+          "group": "isolated_release_4a",
+          "source_sha": "4a808c5241c04771de20de9a1d47b41dca3a1dfa",
+          "evidence_hashes": [
+            "afa89ff4062c72409d57e06671985135b01d5c1fcff69ecde7c3fdec05090f7d",
+            "a260272d1be366a9e8c4e44599335eca22777c99fee0051dbf76b3d940ede3db",
+            "fefd12e3d0a60fad71f0f5940c902a5efea8bd9c89dd86c14f279c6e2bcf1c7f",
+            "c32cc289a5564245a6005a728d8212ae851ef83bcc397eadf7259dddb29e7d5b",
+            "f76a72d55de0b57f344f534a67a71d81b09b54c9bc17bccaa91233644364f1cb"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:IND-08",
+      "title": "显式direct与禁止静默fallback",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "current_runtime",
+          "source_sha": "593ef14f41122aeaca97b709df7b720f24b6e9dd",
+          "evidence_hashes": [
+            "9c9b6dc37cb20ec4c24069989b810833bf65592f702f07a5ddbd7a223f345001"
+          ]
+        },
+        {
+          "group": "native_mode_actual_matrix",
+          "source_sha": null,
+          "evidence_hashes": []
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:CNT-01",
+      "title": "Package状态规范",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "l1_case_execution",
+          "source_sha": "df9207bf5056581a819ca03e4e91fe445ec954e9",
+          "evidence_hashes": [
+            "d67c7526b2d2e44cc1a5ab3c10f05fa04b34102ba9970427e46d9cadfec076b9",
+            "0485acddf508d17eee751296e201c99d53f2fea59c0ca9efd4f3c0f029c13969",
+            "ff012b2f6e496eae32ea6059c3402dcd1b46ca15e7224d1d0aea59165383d738"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:CNT-02",
+      "title": "消费当前真实内容",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "ten_page",
+          "source_sha": null,
+          "evidence_hashes": [
+            "4b0cec70f0a6bca301f37cfd1e5bce6edebe446dc3558e3059f07e1c0c11f862",
+            "a2152b9d7b2ec7c107c02963a0423de8a0069a9af29cff2ec491ec312486e760",
+            "6681a872dee3c9d1f735e753cacaca08f5440406b9cf517d54fb77e269c8fefa",
+            "0128e437a2c9f6e2b32d9ed2c97aaaa1ec52a244660fd4652fd19aa72682d28d"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:CNT-03",
+      "title": "内容锁只由公共内容产生",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "current_runtime",
+          "source_sha": "593ef14f41122aeaca97b709df7b720f24b6e9dd",
+          "evidence_hashes": [
+            "9c9b6dc37cb20ec4c24069989b810833bf65592f702f07a5ddbd7a223f345001"
+          ]
+        },
+        {
+          "group": "blueprint_boundary_SC1.1_CNT-03",
+          "source_sha": "38fbe121f841a7968400a50d4a9d36a6f278f07e",
+          "evidence_hashes": [
+            "28eb94d2b4affc2007d84cd7a24f521bada54a82881268a66213f554fcedf15d",
+            "4c870d9407b997d9378fba464b96d2c96c48e56eb478a4ccf3e6a59fcdd0c6c2",
+            "3214449c20b87ab6c66e92383b9c21f3692a193850beea8faf426296533ffeae"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:CNT-04",
+      "title": "MBB单向投影",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "current_runtime",
+          "source_sha": "593ef14f41122aeaca97b709df7b720f24b6e9dd",
+          "evidence_hashes": [
+            "9c9b6dc37cb20ec4c24069989b810833bf65592f702f07a5ddbd7a223f345001"
+          ]
+        },
+        {
+          "group": "public_narrative_projection_actual",
+          "source_sha": "52a2bd1",
+          "evidence_hashes": [
+            "71ee2d3c9ee0a3493276bbf606be47ac83ad2aca0d67492ee335c27110df08fe",
+            "37e53e4fe3cabd28f688a0b80e077d2defa5cadf4b0a39bfdd6cd9d170d71a83",
+            "a7fc2d438e46c476c8e730bb5716a6fd9fe2b2a56b4d929df6fc855bc528cbba",
+            "4a78939e5d9a3bd01b0dd7b20cfdff4da16694ad49eb1e8d21bcce7e104ade40"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:CNT-05",
+      "title": "推荐不等于选择",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "choice_negative_fixes",
+          "source_sha": "0146d71",
+          "evidence_hashes": [
+            "1b7ab3ed88e5cec9bf9c25abd46723747ddb3c1302de100b74f9153ce35f9886",
+            "28939ed949a6762b8e1be3e3ef622a23ccd0602843415ddc4a3c48b48edad8df",
+            "94988b9bbc007799f4197f7bba99b6cc3a9347570b9f2d93896d59ca6c97a4e3",
+            "6f70e5c22a1964dfaa22d484b5bb41b306d401bf2bd61acf751e1b3656bcfc1e",
+            "d47be0310980f314338e812ea3156e066b6fb7969dc90c24aa319311381835df"
+          ]
+        },
+        {
+          "group": "public_narrative_projection_actual",
+          "source_sha": "52a2bd1",
+          "evidence_hashes": [
+            "71ee2d3c9ee0a3493276bbf606be47ac83ad2aca0d67492ee335c27110df08fe",
+            "37e53e4fe3cabd28f688a0b80e077d2defa5cadf4b0a39bfdd6cd9d170d71a83",
+            "a7fc2d438e46c476c8e730bb5716a6fd9fe2b2a56b4d929df6fc855bc528cbba",
+            "4a78939e5d9a3bd01b0dd7b20cfdff4da16694ad49eb1e8d21bcce7e104ade40"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:CNT-06",
+      "title": "架构和数字跨视图一致",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "formal_views",
+          "source_sha": "86b76a7ebc91d3547a9def4c758ca8aace4bb88e",
+          "evidence_hashes": [
+            "05fc8d77e1df9c7111a9eb86c88527e96cffe531afd71b3c4efc0f163777a34c",
+            "57ec69c52fabb7fd35753294163f0070a6c1219afc8c694a7e67da35737cde31",
+            "cb2051af85e95c79b7c3f31cced03abf93ac5f67c54de150343daf03d3406da2",
+            "ac87210dfb356c1ff2e458e623a4eb687e2ff222f599bdb083972807bcb689fe"
+          ]
+        },
+        {
+          "group": "metric_scope_cli",
+          "source_sha": "dd436bc4cb7196a44c85344fad89b683d5b47a48",
+          "evidence_hashes": [
+            "3b4a3cc30f86bc2b7a0bb78b0ffd5608339d72b82c2b9dca5be7c187064a982e"
+          ]
+        },
+        {
+          "group": "formal_revision",
+          "source_sha": "73b4ece14715df5d984bc548479c261c11be1ea9",
+          "evidence_hashes": [
+            "3e7f026e92946052372974ee1d59fcc8e081b78f8057435064310383a930520f"
+          ]
+        },
+        {
+          "group": "unit_direction_boundary",
+          "source_sha": "fa089eb8c172393e51cc752754a14a54faf568b7",
+          "evidence_hashes": [
+            "987f3a5dfa31fa1891b7c066f99fca3b1e9382f29148ef2f2db6f49588ecf636",
+            "f5b81a17c402339fc28b0e0ecc1b75e26d3a590b704053e297535e2ef12d7b06",
+            "c5b7c27ffd6d02f10b01abd4021b6ed93886966e3879fe60817957d384176a18"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:CNT-07",
+      "title": "原材料冷启动无循环",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "ten_page",
+          "source_sha": null,
+          "evidence_hashes": [
+            "4b0cec70f0a6bca301f37cfd1e5bce6edebe446dc3558e3059f07e1c0c11f862",
+            "a2152b9d7b2ec7c107c02963a0423de8a0069a9af29cff2ec491ec312486e760",
+            "6681a872dee3c9d1f735e753cacaca08f5440406b9cf517d54fb77e269c8fefa",
+            "0128e437a2c9f6e2b32d9ed2c97aaaa1ec52a244660fd4652fd19aa72682d28d"
+          ]
+        },
+        {
+          "group": "formal_views",
+          "source_sha": "86b76a7ebc91d3547a9def4c758ca8aace4bb88e",
+          "evidence_hashes": [
+            "05fc8d77e1df9c7111a9eb86c88527e96cffe531afd71b3c4efc0f163777a34c",
+            "57ec69c52fabb7fd35753294163f0070a6c1219afc8c694a7e67da35737cde31",
+            "cb2051af85e95c79b7c3f31cced03abf93ac5f67c54de150343daf03d3406da2",
+            "ac87210dfb356c1ff2e458e623a4eb687e2ff222f599bdb083972807bcb689fe"
+          ]
+        },
+        {
+          "group": "actual_research",
+          "source_sha": null,
+          "evidence_hashes": [
+            "53611cf8b60d2e7c4ffd7977a241300144d229926f7c47fa7026190338ad6eaf",
+            "ebf9e8e2319e079d591454638607834e2f68a9ceec331a8764932fb47a79b7e3",
+            "7486b83bb8ecaf4f61f4ebe1664783ab2d9c54e4b16ebd3984eebe447d102d67",
+            "ec8ce06c7c4ace2ad8cadd21d140dac7cd2a6c2d952ed2079974b96b43b84b94",
+            "e3792a6ef32ba923ce782d90924b234b1bea368cd35f5d9ab67572c5631e3179",
+            "1048ddaf93c0dfa7b1304db3ffef722f4a37db0018ad2c63d0062118c5d92b42",
+            "e62a72cdc9298b1737c51ad71e58a2fe240420e585e5508bf1c068009c45bbed",
+            "4f4bec9b04ba6f9b03aefbd9c8c646df0f2aa27e5e27025201861e03afa39ccb",
+            "fa20e300701f9d461150a89c8ad80d1025550e61a66f4738dafad434bb63343f"
+          ]
+        },
+        {
+          "group": "cold_quoted_cli",
+          "source_sha": "4a808c5 content implementation; see historical per-command source context",
+          "evidence_hashes": [
+            "888b4a44dd82e6a468034192fd0ea6fea5d77506a30823e026601a2197bb931d",
+            "986850aede67962047a98fbfb7f736094267dc11f38a4a2436c23a1cce190c24",
+            "8804a370ffac47a8c9b1743812a08b74ac1cf4040acdbf9dacd8124c5cd23db5",
+            "973ef93d0e62596d5618634c969858dafc08d286e492ebcf84dd553bae6936ed",
+            "9e4be8cf69ed5d3f38a064236770e89ef76350097bf503b795bfaf14289674b1",
+            "0b2f029e7a7c5bc04bbb54183ac151d6ee08003b66d82d347393b582f08fcaf2",
+            "ae01714263f2103a18531833296b05e652286d2f4b80b253361a41fea91f9b51",
+            "5f18e2163ef6ce261e005aacea92c2e572358cc563ac95e3735d272228adc4bd"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:CMP-01",
+      "title": "单内核提取差分",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "parity",
+          "source_sha": "ac8c9ad88cfd3c0390f57e679c165f0e10b18849",
+          "evidence_hashes": [
+            "fc6406c4c0fc5ae660006ee121c1e7a68432890c1344f754b6130946ed4dd1cb",
+            "06ea0d13e7f396d13e7aa94229ade94f235abc930021abae26d75050b419d12e"
+          ]
+        },
+        {
+          "group": "desktop_edit",
+          "source_sha": null,
+          "evidence_hashes": [
+            "aab41b5c41b12709ed382d594c3b08e5ba0029531195f7b9dd3f470fc8c2d75f",
+            "c7898f642b8319b05d8b93e9f6b0b62e301aa9fcce5cbbc0506af51a0b83b9e3",
+            "2514283e2d86dbb1dbb1e1e1f85d37f29cfedb85bf91be3db20333751f5b1b87"
+          ]
+        },
+        {
+          "group": "kernel_SC1.1_CMP-01",
+          "source_sha": "f426486072c523d9adbb09c266432b32ad5de6fd",
+          "evidence_hashes": [
+            "b53b15c0cb63fd88c1bc7af08fde72caa85de1db5bd90671c1c2fda431f5b4e7",
+            "603490071ee92a846655cdf7ba9a0860c711552dd80a4f90615f69a718486090",
+            "65d517b39622e4f5574fb7f5d57e4c9a09f2332ae98b71e940483f7b1437a1bd",
+            "1a817ed5b7cdacca717dd0a33a07c7032749bfb63b0f3bb8ea97018131d6cfd9",
+            "1350e574098fc0c0891ff5ce2813d75a41ad767299defd376298ba5efce5fdca",
+            "f8ab9ab7c27eb57f295e280e09bf9e6d6dc27458308615136a2ce73374a3ce69",
+            "2adea5c74e3157eb5214629721ebb0dd902ade278611999080f0062857883c44",
+            "55cd87476a10c3db25d8b865549f564a9d73ac381a2bc3015dc08ca8b753088a"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:CMP-02",
+      "title": "文字真正原生",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "parity",
+          "source_sha": "ac8c9ad88cfd3c0390f57e679c165f0e10b18849",
+          "evidence_hashes": [
+            "fc6406c4c0fc5ae660006ee121c1e7a68432890c1344f754b6130946ed4dd1cb",
+            "06ea0d13e7f396d13e7aa94229ade94f235abc930021abae26d75050b419d12e"
+          ]
+        },
+        {
+          "group": "desktop_edit",
+          "source_sha": null,
+          "evidence_hashes": [
+            "aab41b5c41b12709ed382d594c3b08e5ba0029531195f7b9dd3f470fc8c2d75f",
+            "c7898f642b8319b05d8b93e9f6b0b62e301aa9fcce5cbbc0506af51a0b83b9e3",
+            "2514283e2d86dbb1dbb1e1e1f85d37f29cfedb85bf91be3db20333751f5b1b87"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:CMP-03",
+      "title": "主要形状路径原生",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "parity",
+          "source_sha": "ac8c9ad88cfd3c0390f57e679c165f0e10b18849",
+          "evidence_hashes": [
+            "fc6406c4c0fc5ae660006ee121c1e7a68432890c1344f754b6130946ed4dd1cb",
+            "06ea0d13e7f396d13e7aa94229ade94f235abc930021abae26d75050b419d12e"
+          ]
+        },
+        {
+          "group": "desktop_edit",
+          "source_sha": null,
+          "evidence_hashes": [
+            "aab41b5c41b12709ed382d594c3b08e5ba0029531195f7b9dd3f470fc8c2d75f",
+            "c7898f642b8319b05d8b93e9f6b0b62e301aa9fcce5cbbc0506af51a0b83b9e3",
+            "2514283e2d86dbb1dbb1e1e1f85d37f29cfedb85bf91be3db20333751f5b1b87"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:CMP-04",
+      "title": "分组与层序",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "parity",
+          "source_sha": "ac8c9ad88cfd3c0390f57e679c165f0e10b18849",
+          "evidence_hashes": [
+            "fc6406c4c0fc5ae660006ee121c1e7a68432890c1344f754b6130946ed4dd1cb",
+            "06ea0d13e7f396d13e7aa94229ade94f235abc930021abae26d75050b419d12e"
+          ]
+        },
+        {
+          "group": "desktop_edit",
+          "source_sha": null,
+          "evidence_hashes": [
+            "aab41b5c41b12709ed382d594c3b08e5ba0029531195f7b9dd3f470fc8c2d75f",
+            "c7898f642b8319b05d8b93e9f6b0b62e301aa9fcce5cbbc0506af51a0b83b9e3",
+            "2514283e2d86dbb1dbb1e1e1f85d37f29cfedb85bf91be3db20333751f5b1b87"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:CMP-05",
+      "title": "零透明度等边界",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "parity",
+          "source_sha": "ac8c9ad88cfd3c0390f57e679c165f0e10b18849",
+          "evidence_hashes": [
+            "fc6406c4c0fc5ae660006ee121c1e7a68432890c1344f754b6130946ed4dd1cb",
+            "06ea0d13e7f396d13e7aa94229ade94f235abc930021abae26d75050b419d12e"
+          ]
+        },
+        {
+          "group": "zero_alpha_shared_semantics",
+          "source_sha": "8271950",
+          "evidence_hashes": [
+            "603490071ee92a846655cdf7ba9a0860c711552dd80a4f90615f69a718486090",
+            "70ca018303da6932940b41d6fdc900f470b467e3108f901f03b4537f9a1f92eb",
+            "403c928aad75e79aa034950d58a8031500ca7da838e6bc90e1a220ad2938dffd"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:CMP-06",
+      "title": "支持矩阵与unsupported",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "parity",
+          "source_sha": "ac8c9ad88cfd3c0390f57e679c165f0e10b18849",
+          "evidence_hashes": [
+            "fc6406c4c0fc5ae660006ee121c1e7a68432890c1344f754b6130946ed4dd1cb",
+            "06ea0d13e7f396d13e7aa94229ade94f235abc930021abae26d75050b419d12e"
+          ]
+        },
+        {
+          "group": "kernel_SC1.1_CMP-06",
+          "source_sha": "f426486072c523d9adbb09c266432b32ad5de6fd",
+          "evidence_hashes": [
+            "b53b15c0cb63fd88c1bc7af08fde72caa85de1db5bd90671c1c2fda431f5b4e7",
+            "603490071ee92a846655cdf7ba9a0860c711552dd80a4f90615f69a718486090",
+            "9dccbda0ed675cf4be8a020eef019c8c0a3b94ec30fdd6007caf4613c5298866",
+            "716a74e3ba8b86808a231756c2f31cb5a08fe0bba61b9b34306766d670a7e1e4",
+            "e6470ace0bae49ae804cb4ce0788994b8d174ce0c1a56f0e3e058ae43c3b5d42",
+            "b48e8751a81a3aea9b614d0b4fdf821585cdf7c09b14344ab1b681abd15cc321",
+            "d4f4ea014e16aecb8f2dba611b5896805359262d459bc26809129ce35393b2ac",
+            "835b94e0b389a2ea34edd60b667a6d058c7e47fdfd3c6670c4b42f4ddbc9c541",
+            "b40cdd28423da9213d2e269684d94d6c980ad1e2d102d5fe96f430bc3ac48b90",
+            "2e8156299a6526e2ef533cbc94c38ff2c7951ec3e4d259b9eb22a15edc58a110"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:CMP-07",
+      "title": "坐标和非16比9源",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "parity",
+          "source_sha": "ac8c9ad88cfd3c0390f57e679c165f0e10b18849",
+          "evidence_hashes": [
+            "fc6406c4c0fc5ae660006ee121c1e7a68432890c1344f754b6130946ed4dd1cb",
+            "06ea0d13e7f396d13e7aa94229ade94f235abc930021abae26d75050b419d12e"
+          ]
+        },
+        {
+          "group": "desktop_edit",
+          "source_sha": null,
+          "evidence_hashes": [
+            "aab41b5c41b12709ed382d594c3b08e5ba0029531195f7b9dd3f470fc8c2d75f",
+            "c7898f642b8319b05d8b93e9f6b0b62e301aa9fcce5cbbc0506af51a0b83b9e3",
+            "2514283e2d86dbb1dbb1e1e1f85d37f29cfedb85bf91be3db20333751f5b1b87"
+          ]
+        },
+        {
+          "group": "root_incremental_actual_validation",
+          "source_sha": null,
+          "evidence_hashes": []
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:CMP-08",
+      "title": "资产和路径边界",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "compiler_boundaries",
+          "source_sha": "0146d717032dae1374fc5df86e3d0cf281e150c8",
+          "evidence_hashes": [
+            "2d0bfe886d3e041a2c7dc49bcc93852497e449bd38afa763cfdac1c55222e387",
+            "befa32d10d49d2ec642b3564916d3275fe231eeb5d4a2850e488909b1425a913",
+            "1c6ea67c22ecbdb6cee5b0c19fcecfa834805f54699b1fec629e10713de35409"
+          ]
+        },
+        {
+          "group": "parity",
+          "source_sha": "ac8c9ad88cfd3c0390f57e679c165f0e10b18849",
+          "evidence_hashes": [
+            "fc6406c4c0fc5ae660006ee121c1e7a68432890c1344f754b6130946ed4dd1cb",
+            "06ea0d13e7f396d13e7aa94229ade94f235abc930021abae26d75050b419d12e"
+          ]
+        },
+        {
+          "group": "root_incremental_actual_validation",
+          "source_sha": null,
+          "evidence_hashes": []
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:CMP-09",
+      "title": "无整页套壳",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "parity",
+          "source_sha": "ac8c9ad88cfd3c0390f57e679c165f0e10b18849",
+          "evidence_hashes": [
+            "fc6406c4c0fc5ae660006ee121c1e7a68432890c1344f754b6130946ed4dd1cb",
+            "06ea0d13e7f396d13e7aa94229ade94f235abc930021abae26d75050b419d12e"
+          ]
+        },
+        {
+          "group": "desktop_edit",
+          "source_sha": null,
+          "evidence_hashes": [
+            "aab41b5c41b12709ed382d594c3b08e5ba0029531195f7b9dd3f470fc8c2d75f",
+            "c7898f642b8319b05d8b93e9f6b0b62e301aa9fcce5cbbc0506af51a0b83b9e3",
+            "2514283e2d86dbb1dbb1e1e1f85d37f29cfedb85bf91be3db20333751f5b1b87"
+          ]
+        },
+        {
+          "group": "root_incremental_actual_validation",
+          "source_sha": null,
+          "evidence_hashes": []
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:CMP-10",
+      "title": "编译与回读错误不伪完成",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "compiler_boundaries",
+          "source_sha": "0146d717032dae1374fc5df86e3d0cf281e150c8",
+          "evidence_hashes": [
+            "2d0bfe886d3e041a2c7dc49bcc93852497e449bd38afa763cfdac1c55222e387",
+            "befa32d10d49d2ec642b3564916d3275fe231eeb5d4a2850e488909b1425a913",
+            "1c6ea67c22ecbdb6cee5b0c19fcecfa834805f54699b1fec629e10713de35409"
+          ]
+        },
+        {
+          "group": "parity",
+          "source_sha": "ac8c9ad88cfd3c0390f57e679c165f0e10b18849",
+          "evidence_hashes": [
+            "fc6406c4c0fc5ae660006ee121c1e7a68432890c1344f754b6130946ed4dd1cb",
+            "06ea0d13e7f396d13e7aa94229ade94f235abc930021abae26d75050b419d12e"
+          ]
+        },
+        {
+          "group": "root_incremental_actual_validation",
+          "source_sha": null,
+          "evidence_hashes": []
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:HST-01",
+      "title": "新图片真实生成",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "ten_page",
+          "source_sha": null,
+          "evidence_hashes": [
+            "4b0cec70f0a6bca301f37cfd1e5bce6edebe446dc3558e3059f07e1c0c11f862",
+            "a2152b9d7b2ec7c107c02963a0423de8a0069a9af29cff2ec491ec312486e760",
+            "6681a872dee3c9d1f735e753cacaca08f5440406b9cf517d54fb77e269c8fefa",
+            "0128e437a2c9f6e2b32d9ed2c97aaaa1ec52a244660fd4652fd19aa72682d28d"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:HST-02",
+      "title": "不伪造服务元数据",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "ten_page",
+          "source_sha": null,
+          "evidence_hashes": [
+            "4b0cec70f0a6bca301f37cfd1e5bce6edebe446dc3558e3059f07e1c0c11f862",
+            "a2152b9d7b2ec7c107c02963a0423de8a0069a9af29cff2ec491ec312486e760",
+            "6681a872dee3c9d1f735e753cacaca08f5440406b9cf517d54fb77e269c8fefa",
+            "0128e437a2c9f6e2b32d9ed2c97aaaa1ec52a244660fd4652fd19aa72682d28d"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:HST-03",
+      "title": "锁定内容与蓝图隔离",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "ten_page",
+          "source_sha": null,
+          "evidence_hashes": [
+            "4b0cec70f0a6bca301f37cfd1e5bce6edebe446dc3558e3059f07e1c0c11f862",
+            "a2152b9d7b2ec7c107c02963a0423de8a0069a9af29cff2ec491ec312486e760",
+            "6681a872dee3c9d1f735e753cacaca08f5440406b9cf517d54fb77e269c8fefa",
+            "0128e437a2c9f6e2b32d9ed2c97aaaa1ec52a244660fd4652fd19aa72682d28d"
+          ]
+        },
+        {
+          "group": "blueprint_boundary_SC1.1_HST-03",
+          "source_sha": "38fbe121f841a7968400a50d4a9d36a6f278f07e",
+          "evidence_hashes": [
+            "28eb94d2b4affc2007d84cd7a24f521bada54a82881268a66213f554fcedf15d",
+            "4c870d9407b997d9378fba464b96d2c96c48e56eb478a4ccf3e6a59fcdd0c6c2",
+            "3214449c20b87ab6c66e92383b9c21f3692a193850beea8faf426296533ffeae"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:HST-04",
+      "title": "图片与SVG实际比较",
+      "tier": "L2",
+      "predicate_assessment": "partial",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "visual_auxiliary",
+          "source_sha": null,
+          "evidence_hashes": [
+            "5b971d2bcdcad5c52391a30a85560c32f1057fcb5e1e2de5a34e3076d908f8f1",
+            "efad56e85ecad42b8b9cb95150e658bd04ce0df66aa46e4f0467fe9256cf64a5",
+            "2db0cefb7625dc523cebb41a23f6e96f7f6ec207471c14ce1fe07730bcdb28d0",
+            "fffe37f808acf4b8f801c3913cd2bc785dd7503947dfc81fbb94246dfe9d5621"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:HST-05",
+      "title": "代表页与批量继续",
+      "tier": "L2",
+      "predicate_assessment": "partial",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "current_runtime",
+          "source_sha": "593ef14f41122aeaca97b709df7b720f24b6e9dd",
+          "evidence_hashes": [
+            "9c9b6dc37cb20ec4c24069989b810833bf65592f702f07a5ddbd7a223f345001"
+          ]
+        },
+        {
+          "group": "ten_page",
+          "source_sha": null,
+          "evidence_hashes": [
+            "4b0cec70f0a6bca301f37cfd1e5bce6edebe446dc3558e3059f07e1c0c11f862",
+            "a2152b9d7b2ec7c107c02963a0423de8a0069a9af29cff2ec491ec312486e760",
+            "6681a872dee3c9d1f735e753cacaca08f5440406b9cf517d54fb77e269c8fefa",
+            "0128e437a2c9f6e2b32d9ed2c97aaaa1ec52a244660fd4652fd19aa72682d28d"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:HST-06",
+      "title": "已有SVG编译不要求新ImageGen",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "formal_views",
+          "source_sha": "86b76a7ebc91d3547a9def4c758ca8aace4bb88e",
+          "evidence_hashes": [
+            "05fc8d77e1df9c7111a9eb86c88527e96cffe531afd71b3c4efc0f163777a34c",
+            "57ec69c52fabb7fd35753294163f0070a6c1219afc8c694a7e67da35737cde31",
+            "cb2051af85e95c79b7c3f31cced03abf93ac5f67c54de150343daf03d3406da2",
+            "ac87210dfb356c1ff2e458e623a4eb687e2ff222f599bdb083972807bcb689fe"
+          ]
+        },
+        {
+          "group": "ten_page",
+          "source_sha": null,
+          "evidence_hashes": [
+            "4b0cec70f0a6bca301f37cfd1e5bce6edebe446dc3558e3059f07e1c0c11f862",
+            "a2152b9d7b2ec7c107c02963a0423de8a0069a9af29cff2ec491ec312486e760",
+            "6681a872dee3c9d1f735e753cacaca08f5440406b9cf517d54fb77e269c8fefa",
+            "0128e437a2c9f6e2b32d9ed2c97aaaa1ec52a244660fd4652fd19aa72682d28d"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:HST-07",
+      "title": "有限图片修复",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "current_runtime",
+          "source_sha": "593ef14f41122aeaca97b709df7b720f24b6e9dd",
+          "evidence_hashes": [
+            "9c9b6dc37cb20ec4c24069989b810833bf65592f702f07a5ddbd7a223f345001"
+          ]
+        },
+        {
+          "group": "finite_actual_host_attempts",
+          "source_sha": "2901c55",
+          "evidence_hashes": [
+            "190f5e83bb305348d5be5f4ba9a2bd1bb900422a3be0d464b7710383de2c0702",
+            "0606527b4a9e146a473178cb10edd4141bafbdfc133f32c5cd1afce3364115cc"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:WF-01",
+      "title": "固定route优先",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "current_runtime",
+          "source_sha": "593ef14f41122aeaca97b709df7b720f24b6e9dd",
+          "evidence_hashes": [
+            "9c9b6dc37cb20ec4c24069989b810833bf65592f702f07a5ddbd7a223f345001"
+          ]
+        },
+        {
+          "group": "route_mode_closure",
+          "source_sha": "7381e04d35245c80f0189274d49a571def386f74",
+          "evidence_hashes": [
+            "751ef6ab20dd8e4b81c69284fe3b673b2f68cd414d5d9c0599f03188090cabf9",
+            "66ecfd90b686db6419913f6c70947830fc4383009b556bb2cd80eb56ffe62752",
+            "1cce3ba4edbd626a3afe9b79c68de56d985784bdc8b31bee3c1ee66bccaef9b9"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:WF-02",
+      "title": "缺语义门正确动作",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "current_runtime",
+          "source_sha": "593ef14f41122aeaca97b709df7b720f24b6e9dd",
+          "evidence_hashes": [
+            "9c9b6dc37cb20ec4c24069989b810833bf65592f702f07a5ddbd7a223f345001"
+          ]
+        },
+        {
+          "group": "actual_research",
+          "source_sha": null,
+          "evidence_hashes": [
+            "53611cf8b60d2e7c4ffd7977a241300144d229926f7c47fa7026190338ad6eaf",
+            "ebf9e8e2319e079d591454638607834e2f68a9ceec331a8764932fb47a79b7e3",
+            "7486b83bb8ecaf4f61f4ebe1664783ab2d9c54e4b16ebd3984eebe447d102d67",
+            "ec8ce06c7c4ace2ad8cadd21d140dac7cd2a6c2d952ed2079974b96b43b84b94",
+            "e3792a6ef32ba923ce782d90924b234b1bea368cd35f5d9ab67572c5631e3179",
+            "1048ddaf93c0dfa7b1304db3ffef722f4a37db0018ad2c63d0062118c5d92b42",
+            "e62a72cdc9298b1737c51ad71e58a2fe240420e585e5508bf1c068009c45bbed",
+            "4f4bec9b04ba6f9b03aefbd9c8c646df0f2aa27e5e27025201861e03afa39ccb",
+            "fa20e300701f9d461150a89c8ad80d1025550e61a66f4738dafad434bb63343f"
+          ]
+        },
+        {
+          "group": "actual_numeric_repair",
+          "source_sha": null,
+          "evidence_hashes": [
+            "461bb5c389c2633a4dbe76de9991eea1f87879e0e0807dfe4d312a0989e8d83a",
+            "ed97064948b0357a49392732b158fc00619c87d814d8f238b1a4e478a1ab8932",
+            "5849268f1d1a32c123f46902372a7b9e5f7dbd23bb4de131638974fa7880b377",
+            "920eb0966cbd7d2354336d1eea8722cd7a5a6b7c1d2c701917440b381d0cc5af",
+            "423cc4bd7760a802f9a5e04f392142d7b56226d82cd5f69f503d5f0f9a4c22fc",
+            "6f0a709b1ab0004389486a71f45190f39b9060ac2ef0ef500e1d7ca8f4bff27c"
+          ]
+        },
+        {
+          "group": "actual_review_dispatch_and_unrepaired_rejection",
+          "source_sha": "09b7587",
+          "evidence_hashes": [
+            "696cf33cfdf8e7b3b35a42aff7b3dfd2f0d05980eae9526fad63d860de790be5",
+            "d49fe46ed2c1073b8f398cfa9ce226e9942f1ac0812579e77f3d2a35148e4b5f"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:WF-03",
+      "title": "Agent专业动作真接线",
+      "tier": "L2",
+      "predicate_assessment": "partial",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "current_runtime",
+          "source_sha": "593ef14f41122aeaca97b709df7b720f24b6e9dd",
+          "evidence_hashes": [
+            "9c9b6dc37cb20ec4c24069989b810833bf65592f702f07a5ddbd7a223f345001"
+          ]
+        },
+        {
+          "group": "actual_research",
+          "source_sha": null,
+          "evidence_hashes": [
+            "53611cf8b60d2e7c4ffd7977a241300144d229926f7c47fa7026190338ad6eaf",
+            "ebf9e8e2319e079d591454638607834e2f68a9ceec331a8764932fb47a79b7e3",
+            "7486b83bb8ecaf4f61f4ebe1664783ab2d9c54e4b16ebd3984eebe447d102d67",
+            "ec8ce06c7c4ace2ad8cadd21d140dac7cd2a6c2d952ed2079974b96b43b84b94",
+            "e3792a6ef32ba923ce782d90924b234b1bea368cd35f5d9ab67572c5631e3179",
+            "1048ddaf93c0dfa7b1304db3ffef722f4a37db0018ad2c63d0062118c5d92b42",
+            "e62a72cdc9298b1737c51ad71e58a2fe240420e585e5508bf1c068009c45bbed",
+            "4f4bec9b04ba6f9b03aefbd9c8c646df0f2aa27e5e27025201861e03afa39ccb",
+            "fa20e300701f9d461150a89c8ad80d1025550e61a66f4738dafad434bb63343f"
+          ]
+        },
+        {
+          "group": "actual_numeric_repair",
+          "source_sha": null,
+          "evidence_hashes": [
+            "461bb5c389c2633a4dbe76de9991eea1f87879e0e0807dfe4d312a0989e8d83a",
+            "ed97064948b0357a49392732b158fc00619c87d814d8f238b1a4e478a1ab8932",
+            "5849268f1d1a32c123f46902372a7b9e5f7dbd23bb4de131638974fa7880b377",
+            "920eb0966cbd7d2354336d1eea8722cd7a5a6b7c1d2c701917440b381d0cc5af",
+            "423cc4bd7760a802f9a5e04f392142d7b56226d82cd5f69f503d5f0f9a4c22fc",
+            "6f0a709b1ab0004389486a71f45190f39b9060ac2ef0ef500e1d7ca8f4bff27c"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:WF-04",
+      "title": "迟到及同ID冲突",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "l1_case_execution",
+          "source_sha": "df9207bf5056581a819ca03e4e91fe445ec954e9",
+          "evidence_hashes": [
+            "d67c7526b2d2e44cc1a5ab3c10f05fa04b34102ba9970427e46d9cadfec076b9",
+            "0485acddf508d17eee751296e201c99d53f2fea59c0ca9efd4f3c0f029c13969",
+            "ff012b2f6e496eae32ea6059c3402dcd1b46ca15e7224d1d0aea59165383d738"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:WF-05",
+      "title": "第二文件中断整批一致",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "process_kill",
+          "source_sha": "86b76a7ebc91d3547a9def4c758ca8aace4bb88e",
+          "evidence_hashes": [
+            "82426241ebe628256013e6740e5c89bb5726660434ca80ae6e8d7482cabf6d86",
+            "4ca4f7033e12dece3a1d45cf243c388215a7ac91dc9a1c8670a59029922d8dd8",
+            "9fe17b0188270dee55574f487842bfdc85861c7dca5c4c925b90b1f6bf41702f",
+            "f45f868d8aa06b206a57b1222c20fe0f56111900750d0ced0adc003a189e65c2"
+          ]
+        },
+        {
+          "group": "process_real_updated",
+          "source_sha": null,
+          "evidence_hashes": [
+            "9fe17b0188270dee55574f487842bfdc85861c7dca5c4c925b90b1f6bf41702f",
+            "f45f868d8aa06b206a57b1222c20fe0f56111900750d0ced0adc003a189e65c2"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:WF-06",
+      "title": "权限和停止有效",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "current_runtime",
+          "source_sha": "593ef14f41122aeaca97b709df7b720f24b6e9dd",
+          "evidence_hashes": [
+            "9c9b6dc37cb20ec4c24069989b810833bf65592f702f07a5ddbd7a223f345001"
+          ]
+        },
+        {
+          "group": "six_findings",
+          "source_sha": "593ef14f41122aeaca97b709df7b720f24b6e9dd",
+          "evidence_hashes": [
+            "6a800eb91131b6936ee930d425c56ae7534b7ebb6abfb1d8596618f2840eb4ed"
+          ]
+        },
+        {
+          "group": "stop_permission_final",
+          "source_sha": "848134bbee1596efef3008bcedadcffd536162fe",
+          "evidence_hashes": [
+            "2f3ac202d2346df6d1a16ed9565df5990cda2e79be437f2248ad02f973e84cc1",
+            "d6209f58d8f098e3d6b5a9c9ee50c4c6ed3fe7b9399d615788fa5a809eb183a2",
+            "d0a7dcf99a948bde2b20b5ac2ef55290812372934b97082ccc08f8897e540414",
+            "5e38a9226a3b1e3972b6f4f20b528965393f55595e7e739ab235d453856a205b",
+            "b9eebda9e9aa2c04989728d9054b153f9012e476b855780c113a3ee9643a15fb"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:WF-07",
+      "title": "预算包含失败",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "l1_case_execution",
+          "source_sha": "df9207bf5056581a819ca03e4e91fe445ec954e9",
+          "evidence_hashes": [
+            "d67c7526b2d2e44cc1a5ab3c10f05fa04b34102ba9970427e46d9cadfec076b9",
+            "0485acddf508d17eee751296e201c99d53f2fea59c0ca9efd4f3c0f029c13969",
+            "ff012b2f6e496eae32ea6059c3402dcd1b46ca15e7224d1d0aea59165383d738"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:WF-08",
+      "title": "精准失效与局部修改",
+      "tier": "L2",
+      "predicate_assessment": "partial",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "formal_revision",
+          "source_sha": "73b4ece14715df5d984bc548479c261c11be1ea9",
+          "evidence_hashes": [
+            "3e7f026e92946052372974ee1d59fcc8e081b78f8057435064310383a930520f"
+          ]
+        },
+        {
+          "group": "independent_latest",
+          "source_sha": "dd436bc4cb7196a44c85344fad89b683d5b47a48",
+          "evidence_hashes": [
+            "3c35e692b5f68896f1d571e20a8586a47cde2022d2c5fccbfbdb83f9212e04e6",
+            "5e1334b3967754d7c5f37a032927a62b05528145dcee03940dd0a4852cf8f4ab",
+            "cbb96350cd2cec9a0fd0f4c1a64500eb400e6b917f8e3ab917fb195a53c8cf97",
+            "31876c180e5cb30483fe886f5f9cb117bbad7ed8e011e45c71f224d4c5af1490"
+          ]
+        },
+        {
+          "group": "actual_numeric_repair",
+          "source_sha": null,
+          "evidence_hashes": [
+            "461bb5c389c2633a4dbe76de9991eea1f87879e0e0807dfe4d312a0989e8d83a",
+            "ed97064948b0357a49392732b158fc00619c87d814d8f238b1a4e478a1ab8932",
+            "5849268f1d1a32c123f46902372a7b9e5f7dbd23bb4de131638974fa7880b377",
+            "920eb0966cbd7d2354336d1eea8722cd7a5a6b7c1d2c701917440b381d0cc5af",
+            "423cc4bd7760a802f9a5e04f392142d7b56226d82cd5f69f503d5f0f9a4c22fc",
+            "6f0a709b1ab0004389486a71f45190f39b9060ac2ef0ef500e1d7ca8f4bff27c"
+          ]
+        },
+        {
+          "group": "formal_revision_updated",
+          "source_sha": "73b4ece14715df5d984bc548479c261c11be1ea9 dirty",
+          "evidence_hashes": [
+            "c05a56fb14504f1801f8b8d6c7c655e51935fe1397f3aacf2fba6bbcfd843444",
+            "3e7f026e92946052372974ee1d59fcc8e081b78f8057435064310383a930520f"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:QA-01",
+      "title": "语义门精确匹配",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "canonical_qa_contract",
+          "source_sha": "7ef7947",
+          "evidence_hashes": [
+            "deb9482de79bf5f9b456b934d08deaa77e5b3478fc8c6a962cc0e4cabd27348d",
+            "b003bfe3372d70ad873b150988320048af4817a09574fabd9944fd333058df05",
+            "6fcb9b2a0269888af73eb03c203004f3948b70cd88f8607d8e5eccd2283a0510",
+            "480918ca49ff1aea7961fc13e3c7254328c1fca98d9ff586952b1c88003d3ae4",
+            "f9a104257160dab9a503cb7c4b9845b47d8d3020ab5cd90ea8ade25662ef7c59",
+            "2c20b709340a6ed4b9c8e0c12380df328e10cc92967a124320c5e36fd7aea4fa"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:QA-02",
+      "title": "Package改而index不变",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "canonical_qa_contract",
+          "source_sha": "7ef7947",
+          "evidence_hashes": [
+            "deb9482de79bf5f9b456b934d08deaa77e5b3478fc8c6a962cc0e4cabd27348d",
+            "b003bfe3372d70ad873b150988320048af4817a09574fabd9944fd333058df05",
+            "6fcb9b2a0269888af73eb03c203004f3948b70cd88f8607d8e5eccd2283a0510",
+            "480918ca49ff1aea7961fc13e3c7254328c1fca98d9ff586952b1c88003d3ae4",
+            "f9a104257160dab9a503cb7c4b9845b47d8d3020ab5cd90ea8ade25662ef7c59",
+            "2c20b709340a6ed4b9c8e0c12380df328e10cc92967a124320c5e36fd7aea4fa"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:QA-03",
+      "title": "空pass和漏页拒绝",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "canonical_qa_contract",
+          "source_sha": "7ef7947",
+          "evidence_hashes": [
+            "deb9482de79bf5f9b456b934d08deaa77e5b3478fc8c6a962cc0e4cabd27348d",
+            "b003bfe3372d70ad873b150988320048af4817a09574fabd9944fd333058df05",
+            "6fcb9b2a0269888af73eb03c203004f3948b70cd88f8607d8e5eccd2283a0510",
+            "480918ca49ff1aea7961fc13e3c7254328c1fca98d9ff586952b1c88003d3ae4",
+            "f9a104257160dab9a503cb7c4b9845b47d8d3020ab5cd90ea8ade25662ef7c59",
+            "2c20b709340a6ed4b9c8e0c12380df328e10cc92967a124320c5e36fd7aea4fa"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:QA-04",
+      "title": "严重问题压过summary",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "l1_extra_execution",
+          "source_sha": "dd436bc4cb7196a44c85344fad89b683d5b47a48",
+          "evidence_hashes": [
+            "0e1ef3bd6bc33d6f90902d45462b8ce9dc2876aaee8af3ff403cfc31c7bf513f",
+            "78664b9a2393eafc22a0532c8a49efe2967c59bcf00448e61cfa7130221580f7",
+            "8a055b7c9750afd8e3b98e11e30cc17243c92b80c5a3c3b168b8d46be947b76f"
+          ]
+        },
+        {
+          "group": "version_scoped_p1_policy",
+          "source_sha": "1f9f9b9",
+          "evidence_hashes": [
+            "f0b3f8f440dd546eac28fa5e47ffce76c6417aa0adfba33a4c734d68f399853b",
+            "af81b94348dcab42f912286d46ed3b12ce0ff5dd74e1bf96810afda6bf427a79",
+            "b83a65950bf25ca907c2dbb86dbe1a217d8ce9dc42c482f3294223da3700b660",
+            "83b863db8e5fa2ed2556e9770c401e675b3cd7227f4fdc536a3483ac22c192a9"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:QA-05",
+      "title": "视觉与编译证明分层",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "parity",
+          "source_sha": "ac8c9ad88cfd3c0390f57e679c165f0e10b18849",
+          "evidence_hashes": [
+            "fc6406c4c0fc5ae660006ee121c1e7a68432890c1344f754b6130946ed4dd1cb",
+            "06ea0d13e7f396d13e7aa94229ade94f235abc930021abae26d75050b419d12e"
+          ]
+        },
+        {
+          "group": "blueprint_boundary_SC1.1_QA-05",
+          "source_sha": "38fbe121f841a7968400a50d4a9d36a6f278f07e",
+          "evidence_hashes": [
+            "28eb94d2b4affc2007d84cd7a24f521bada54a82881268a66213f554fcedf15d",
+            "4c870d9407b997d9378fba464b96d2c96c48e56eb478a4ccf3e6a59fcdd0c6c2",
+            "3214449c20b87ab6c66e92383b9c21f3692a193850beea8faf426296533ffeae"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:QA-06",
+      "title": "正式文件完整扫描",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "actual_file_repair",
+          "source_sha": null,
+          "evidence_hashes": [
+            "07c9b2a8651af478648b277ac713a50fc8f451f6bd95ff13dae26158443af5fb",
+            "9200ea2cfe144db34e57ad05eb360e6a8c7094f6a457da5a6f50f598d8de2268",
+            "6511232c533ce0b916f9c653677b82cbdfe1dfd7ca593fe59dc7ff29687084e1",
+            "6232156b5175cf1189ca43994b32faeec55ce076a232ef63c0a998c9deb28e0b",
+            "252b14c3d922040add51039a014721970b24d05be57dc3666b0b597dc464fc30",
+            "9f8afe75e5a7dd2d651b3f47c54eec85a686bd442db6252bce31bacd2ef7cbb4"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:QA-07",
+      "title": "批准绑定实际新版",
+      "tier": "L2",
+      "predicate_assessment": "human_pending",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "actual_file_repair",
+          "source_sha": null,
+          "evidence_hashes": [
+            "07c9b2a8651af478648b277ac713a50fc8f451f6bd95ff13dae26158443af5fb",
+            "9200ea2cfe144db34e57ad05eb360e6a8c7094f6a457da5a6f50f598d8de2268",
+            "6511232c533ce0b916f9c653677b82cbdfe1dfd7ca593fe59dc7ff29687084e1",
+            "6232156b5175cf1189ca43994b32faeec55ce076a232ef63c0a998c9deb28e0b",
+            "252b14c3d922040add51039a014721970b24d05be57dc3666b0b597dc464fc30",
+            "9f8afe75e5a7dd2d651b3f47c54eec85a686bd442db6252bce31bacd2ef7cbb4"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:QA-08",
+      "title": "修复后复审闭环",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "actual_file_repair",
+          "source_sha": null,
+          "evidence_hashes": [
+            "07c9b2a8651af478648b277ac713a50fc8f451f6bd95ff13dae26158443af5fb",
+            "9200ea2cfe144db34e57ad05eb360e6a8c7094f6a457da5a6f50f598d8de2268",
+            "6511232c533ce0b916f9c653677b82cbdfe1dfd7ca593fe59dc7ff29687084e1",
+            "6232156b5175cf1189ca43994b32faeec55ce076a232ef63c0a998c9deb28e0b",
+            "252b14c3d922040add51039a014721970b24d05be57dc3666b0b597dc464fc30",
+            "9f8afe75e5a7dd2d651b3f47c54eec85a686bd442db6252bce31bacd2ef7cbb4"
+          ]
+        },
+        {
+          "group": "actual_numeric_repair",
+          "source_sha": null,
+          "evidence_hashes": [
+            "461bb5c389c2633a4dbe76de9991eea1f87879e0e0807dfe4d312a0989e8d83a",
+            "ed97064948b0357a49392732b158fc00619c87d814d8f238b1a4e478a1ab8932",
+            "5849268f1d1a32c123f46902372a7b9e5f7dbd23bb4de131638974fa7880b377",
+            "920eb0966cbd7d2354336d1eea8722cd7a5a6b7c1d2c701917440b381d0cc5af",
+            "423cc4bd7760a802f9a5e04f392142d7b56226d82cd5f69f503d5f0f9a4c22fc",
+            "6f0a709b1ab0004389486a71f45190f39b9060ac2ef0ef500e1d7ca8f4bff27c"
+          ]
+        },
+        {
+          "group": "actual_review_dispatch_and_unrepaired_rejection",
+          "source_sha": "09b7587",
+          "evidence_hashes": [
+            "696cf33cfdf8e7b3b35a42aff7b3dfd2f0d05980eae9526fad63d860de790be5",
+            "d49fe46ed2c1073b8f398cfa9ce226e9942f1ac0812579e77f3d2a35148e4b5f"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:MIG-01",
+      "title": "旧HD可读与同核复用",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "installation_migration",
+          "source_sha": "c3003badcd09fe7462677ae911446b2f07da42c6",
+          "evidence_hashes": [
+            "a358730d0a4832e3b20f6dfba090820798e90cfeb6d418c746ee085362e04c2b"
+          ]
+        },
+        {
+          "group": "migration_848_SC1.1_MIG-01",
+          "source_sha": "848134bbee1596efef3008bcedadcffd536162fe",
+          "evidence_hashes": [
+            "b94672aee24148ca2dce9e34307d83cd37d6e4faa09b720b2dd3c8cc104aa18d",
+            "c79d3ec441e2b557bdbb0b4832e87be53ddaba8c3ae8c27a19eef19102404387",
+            "a6164f9d3b5d31991e2b425336a57e0727cd310e3eb65c5c754d9f19f206bd43",
+            "5dfd0693489517f954c0c24e2321f3dcf8049f08a06ba503dcbe8c053b6f7217",
+            "940fa93cde022fc1048029cfe0d0029cdda5663ce448c48238f93296fca6be16",
+            "c4235e07deaf6aecf5b404aa3e6f961132327faa9abcaa3974f3d70f5240d07a",
+            "bcab1062ff47d70659171235ed019e093e80b7e46c7c24af2d6e8455cd7024fb"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:MIG-02",
+      "title": "旧standard隔离",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "readonly_migration",
+          "source_sha": null,
+          "evidence_hashes": [
+            "2aa407f906320917ac335401f4f164d9d61f86bb0867889fdfb1d7c4864fba2c",
+            "5e0b792432f2264aea34f5d994da8a7fba40cb76a560a9b61745f4cdd303a82d"
+          ]
+        },
+        {
+          "group": "migration_848_SC1.1_MIG-02",
+          "source_sha": "848134bbee1596efef3008bcedadcffd536162fe",
+          "evidence_hashes": [
+            "70107e2382e25249c5357316764e8c1c6913664233d7566319ca5030b2e49713",
+            "f505e561f19215944161e0b8f9d634851e18d66cc8e6314cf1a14af055ccdde6",
+            "a8215256c26ebf37e420efca3049382717e9e8e16c2d49aac2ec3656de34a325",
+            "a8d3d04b577ea63c28672099fed35dead72aa13a8db1974b98581b1b1b0cd908",
+            "6e1c85404e16b5af3901f06faba94e0f987f26b611b278e3bcc4f1660e469b07",
+            "2999581c33e7b89c96516ee598a767ad3b209878ce51c32918fc00ce32f7db3e",
+            "13fb7d4f81672c6b7d201a16304711021745c834cd6ea3bc9a74eb3480ad8a06",
+            "bcab1062ff47d70659171235ed019e093e80b7e46c7c24af2d6e8455cd7024fb"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:MIG-03",
+      "title": "迁移输入改变",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "current_runtime",
+          "source_sha": "593ef14f41122aeaca97b709df7b720f24b6e9dd",
+          "evidence_hashes": [
+            "9c9b6dc37cb20ec4c24069989b810833bf65592f702f07a5ddbd7a223f345001"
+          ]
+        },
+        {
+          "group": "root_incremental_actual_validation",
+          "source_sha": null,
+          "evidence_hashes": []
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:MIG-04",
+      "title": "迁移故障回滚",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "installation_migration",
+          "source_sha": "c3003badcd09fe7462677ae911446b2f07da42c6",
+          "evidence_hashes": [
+            "a358730d0a4832e3b20f6dfba090820798e90cfeb6d418c746ee085362e04c2b"
+          ]
+        },
+        {
+          "group": "root_incremental_actual_validation",
+          "source_sha": null,
+          "evidence_hashes": []
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:MIG-05",
+      "title": "安装所有权与数据保护",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "managed_install",
+          "source_sha": "86b76a7ebc91d3547a9def4c758ca8aace4bb88e",
+          "evidence_hashes": [
+            "86cd59365d314ef0b4914f9963462e5141f7f1675b154c6377401629ffa9e5aa",
+            "0bb53c45fbc294678be98d35bd46276344417b89c1de606977c724b9df10ac48",
+            "64381f16758283f733c9138f7a2ab7f4af294bbb6d284aab1814f174fcedaa34"
+          ]
+        },
+        {
+          "group": "install_ownership_updated",
+          "source_sha": null,
+          "evidence_hashes": [
+            "0bb53c45fbc294678be98d35bd46276344417b89c1de606977c724b9df10ac48",
+            "64381f16758283f733c9138f7a2ab7f4af294bbb6d284aab1814f174fcedaa34"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:MIG-06",
+      "title": "软件回滚不改新数据",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "managed_install",
+          "source_sha": "86b76a7ebc91d3547a9def4c758ca8aace4bb88e",
+          "evidence_hashes": [
+            "86cd59365d314ef0b4914f9963462e5141f7f1675b154c6377401629ffa9e5aa",
+            "0bb53c45fbc294678be98d35bd46276344417b89c1de606977c724b9df10ac48",
+            "64381f16758283f733c9138f7a2ab7f4af294bbb6d284aab1814f174fcedaa34"
+          ]
+        },
+        {
+          "group": "install_ownership_updated",
+          "source_sha": null,
+          "evidence_hashes": [
+            "0bb53c45fbc294678be98d35bd46276344417b89c1de606977c724b9df10ac48",
+            "64381f16758283f733c9138f7a2ab7f4af294bbb6d284aab1814f174fcedaa34"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:UAT-01",
+      "title": "真实默认两页冷启动",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "ten_page",
+          "source_sha": null,
+          "evidence_hashes": [
+            "4b0cec70f0a6bca301f37cfd1e5bce6edebe446dc3558e3059f07e1c0c11f862",
+            "a2152b9d7b2ec7c107c02963a0423de8a0069a9af29cff2ec491ec312486e760",
+            "6681a872dee3c9d1f735e753cacaca08f5440406b9cf517d54fb77e269c8fefa",
+            "0128e437a2c9f6e2b32d9ed2c97aaaa1ec52a244660fd4652fd19aa72682d28d"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:UAT-02",
+      "title": "真实七类页面与编辑",
+      "tier": "L2",
+      "predicate_assessment": "human_pending",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "visual_auxiliary",
+          "source_sha": null,
+          "evidence_hashes": [
+            "5b971d2bcdcad5c52391a30a85560c32f1057fcb5e1e2de5a34e3076d908f8f1",
+            "efad56e85ecad42b8b9cb95150e658bd04ce0df66aa46e4f0467fe9256cf64a5",
+            "2db0cefb7625dc523cebb41a23f6e96f7f6ec207471c14ce1fe07730bcdb28d0",
+            "fffe37f808acf4b8f801c3913cd2bc785dd7503947dfc81fbb94246dfe9d5621"
+          ]
+        },
+        {
+          "group": "desktop_edit",
+          "source_sha": null,
+          "evidence_hashes": [
+            "aab41b5c41b12709ed382d594c3b08e5ba0029531195f7b9dd3f470fc8c2d75f",
+            "c7898f642b8319b05d8b93e9f6b0b62e301aa9fcce5cbbc0506af51a0b83b9e3",
+            "2514283e2d86dbb1dbb1e1e1f85d37f29cfedb85bf91be3db20333751f5b1b87"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:UAT-03",
+      "title": "原材料完整Solution Deck",
+      "tier": "L2",
+      "predicate_assessment": "partial",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "ten_page",
+          "source_sha": null,
+          "evidence_hashes": [
+            "4b0cec70f0a6bca301f37cfd1e5bce6edebe446dc3558e3059f07e1c0c11f862",
+            "a2152b9d7b2ec7c107c02963a0423de8a0069a9af29cff2ec491ec312486e760",
+            "6681a872dee3c9d1f735e753cacaca08f5440406b9cf517d54fb77e269c8fefa",
+            "0128e437a2c9f6e2b32d9ed2c97aaaa1ec52a244660fd4652fd19aa72682d28d"
+          ]
+        },
+        {
+          "group": "formal_views",
+          "source_sha": "86b76a7ebc91d3547a9def4c758ca8aace4bb88e",
+          "evidence_hashes": [
+            "05fc8d77e1df9c7111a9eb86c88527e96cffe531afd71b3c4efc0f163777a34c",
+            "57ec69c52fabb7fd35753294163f0070a6c1219afc8c694a7e67da35737cde31",
+            "cb2051af85e95c79b7c3f31cced03abf93ac5f67c54de150343daf03d3406da2",
+            "ac87210dfb356c1ff2e458e623a4eb687e2ff222f599bdb083972807bcb689fe"
+          ]
+        },
+        {
+          "group": "actual_research",
+          "source_sha": null,
+          "evidence_hashes": [
+            "53611cf8b60d2e7c4ffd7977a241300144d229926f7c47fa7026190338ad6eaf",
+            "ebf9e8e2319e079d591454638607834e2f68a9ceec331a8764932fb47a79b7e3",
+            "7486b83bb8ecaf4f61f4ebe1664783ab2d9c54e4b16ebd3984eebe447d102d67",
+            "ec8ce06c7c4ace2ad8cadd21d140dac7cd2a6c2d952ed2079974b96b43b84b94",
+            "e3792a6ef32ba923ce782d90924b234b1bea368cd35f5d9ab67572c5631e3179",
+            "1048ddaf93c0dfa7b1304db3ffef722f4a37db0018ad2c63d0062118c5d92b42",
+            "e62a72cdc9298b1737c51ad71e58a2fe240420e585e5508bf1c068009c45bbed",
+            "4f4bec9b04ba6f9b03aefbd9c8c646df0f2aa27e5e27025201861e03afa39ccb",
+            "fa20e300701f9d461150a89c8ad80d1025550e61a66f4738dafad434bb63343f"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1.1:UAT-04",
+      "title": "局部修改端到端",
+      "tier": "L2",
+      "predicate_assessment": "partial",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "formal_revision",
+          "source_sha": "73b4ece14715df5d984bc548479c261c11be1ea9",
+          "evidence_hashes": [
+            "3e7f026e92946052372974ee1d59fcc8e081b78f8057435064310383a930520f"
+          ]
+        },
+        {
+          "group": "independent_latest",
+          "source_sha": "dd436bc4cb7196a44c85344fad89b683d5b47a48",
+          "evidence_hashes": [
+            "3c35e692b5f68896f1d571e20a8586a47cde2022d2c5fccbfbdb83f9212e04e6",
+            "5e1334b3967754d7c5f37a032927a62b05528145dcee03940dd0a4852cf8f4ab",
+            "cbb96350cd2cec9a0fd0f4c1a64500eb400e6b917f8e3ab917fb195a53c8cf97",
+            "31876c180e5cb30483fe886f5f9cb117bbad7ed8e011e45c71f224d4c5af1490"
+          ]
+        },
+        {
+          "group": "actual_numeric_repair",
+          "source_sha": null,
+          "evidence_hashes": [
+            "461bb5c389c2633a4dbe76de9991eea1f87879e0e0807dfe4d312a0989e8d83a",
+            "ed97064948b0357a49392732b158fc00619c87d814d8f238b1a4e478a1ab8932",
+            "5849268f1d1a32c123f46902372a7b9e5f7dbd23bb4de131638974fa7880b377",
+            "920eb0966cbd7d2354336d1eea8722cd7a5a6b7c1d2c701917440b381d0cc5af",
+            "423cc4bd7760a802f9a5e04f392142d7b56226d82cd5f69f503d5f0f9a4c22fc",
+            "6f0a709b1ab0004389486a71f45190f39b9060ac2ef0ef500e1d7ca8f4bff27c"
+          ]
+        },
+        {
+          "group": "formal_revision_updated",
+          "source_sha": "73b4ece14715df5d984bc548479c261c11be1ea9 dirty",
+          "evidence_hashes": [
+            "c05a56fb14504f1801f8b8d6c7c655e51935fe1397f3aacf2fba6bbcfd843444",
+            "3e7f026e92946052372974ee1d59fcc8e081b78f8057435064310383a930520f"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:A-01",
+      "title": "隔离全新安装",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "installation_migration",
+          "source_sha": "c3003badcd09fe7462677ae911446b2f07da42c6",
+          "evidence_hashes": [
+            "a358730d0a4832e3b20f6dfba090820798e90cfeb6d418c746ee085362e04c2b"
+          ]
+        },
+        {
+          "group": "managed_install",
+          "source_sha": "86b76a7ebc91d3547a9def4c758ca8aace4bb88e",
+          "evidence_hashes": [
+            "86cd59365d314ef0b4914f9963462e5141f7f1675b154c6377401629ffa9e5aa",
+            "0bb53c45fbc294678be98d35bd46276344417b89c1de606977c724b9df10ac48",
+            "64381f16758283f733c9138f7a2ab7f4af294bbb6d284aab1814f174fcedaa34"
+          ]
+        },
+        {
+          "group": "isolated_release_4a",
+          "source_sha": "4a808c5241c04771de20de9a1d47b41dca3a1dfa",
+          "evidence_hashes": [
+            "afa89ff4062c72409d57e06671985135b01d5c1fcff69ecde7c3fdec05090f7d",
+            "a260272d1be366a9e8c4e44599335eca22777c99fee0051dbf76b3d940ede3db",
+            "fefd12e3d0a60fad71f0f5940c902a5efea8bd9c89dd86c14f279c6e2bcf1c7f",
+            "c32cc289a5564245a6005a728d8212ae851ef83bcc397eadf7259dddb29e7d5b",
+            "f76a72d55de0b57f344f534a67a71d81b09b54c9bc17bccaa91233644364f1cb"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:A-02",
+      "title": "锁定版本可重现",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "installation_migration",
+          "source_sha": "c3003badcd09fe7462677ae911446b2f07da42c6",
+          "evidence_hashes": [
+            "a358730d0a4832e3b20f6dfba090820798e90cfeb6d418c746ee085362e04c2b"
+          ]
+        },
+        {
+          "group": "locked_dependency_double_install",
+          "source_sha": "2f7d1ad; frozen release09b7587",
+          "evidence_hashes": [
+            "dad73010adfb93f0a631150e669d277ffc734c634a8210c55b5d819f7c6dad53",
+            "9e9d6a211a61096483b45d1d564c943a2689e8f08a79758f786fd71e116fce1e",
+            "976c5b109e1cc53f84dee736a340e21c71b5692fe4216ab42a1fc546b4ac97e7"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:A-03",
+      "title": "标准真实 build/render",
+      "tier": "L2",
+      "predicate_assessment": "partial",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "ten_page",
+          "source_sha": null,
+          "evidence_hashes": [
+            "4b0cec70f0a6bca301f37cfd1e5bce6edebe446dc3558e3059f07e1c0c11f862",
+            "a2152b9d7b2ec7c107c02963a0423de8a0069a9af29cff2ec491ec312486e760",
+            "6681a872dee3c9d1f735e753cacaca08f5440406b9cf517d54fb77e269c8fefa",
+            "0128e437a2c9f6e2b32d9ed2c97aaaa1ec52a244660fd4652fd19aa72682d28d"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:A-04",
+      "title": "不信任环境 ready 覆盖",
+      "tier": "L2",
+      "predicate_assessment": "partial",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "current_runtime",
+          "source_sha": "593ef14f41122aeaca97b709df7b720f24b6e9dd",
+          "evidence_hashes": [
+            "9c9b6dc37cb20ec4c24069989b810833bf65592f702f07a5ddbd7a223f345001"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:A-05",
+      "title": "托管 Library 真检索",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "current_suite_query",
+          "source_sha": null,
+          "evidence_hashes": [
+            "9b0b70ff6c100b9b7bbe045fa2873b26faf6b89a27310956035ad95be962dd34"
+          ]
+        },
+        {
+          "group": "library_actual_updated",
+          "source_sha": "6681000 + 922fe53 recorded fixes; actual program2.0.1.dev0",
+          "evidence_hashes": [
+            "bc2d0752a545b264b9f0ec8dfd23848568f26c589fca31a28d23cd686ddd4d30",
+            "4775fc446af722e389bca3160f86a98fbc2dc46a6c8bbf5036fc32343681e643",
+            "c43ef7c727a87caefcf0201855a55ba6ee2fd072c054295dde2cc1be530c1b13",
+            "b564a54b37cae29c7e15361378460e57974ca63be92305311f9711bbf17341ca"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:A-06",
+      "title": "索引数据隔离",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "managed_install",
+          "source_sha": "86b76a7ebc91d3547a9def4c758ca8aace4bb88e",
+          "evidence_hashes": [
+            "86cd59365d314ef0b4914f9963462e5141f7f1675b154c6377401629ffa9e5aa",
+            "0bb53c45fbc294678be98d35bd46276344417b89c1de606977c724b9df10ac48",
+            "64381f16758283f733c9138f7a2ab7f4af294bbb6d284aab1814f174fcedaa34"
+          ]
+        },
+        {
+          "group": "root_incremental_actual_validation",
+          "source_sha": null,
+          "evidence_hashes": []
+        }
+      ]
+    },
+    {
+      "case": "SC1:A-07",
+      "title": "无历史库真实新建",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "ten_page",
+          "source_sha": null,
+          "evidence_hashes": [
+            "4b0cec70f0a6bca301f37cfd1e5bce6edebe446dc3558e3059f07e1c0c11f862",
+            "a2152b9d7b2ec7c107c02963a0423de8a0069a9af29cff2ec491ec312486e760",
+            "6681a872dee3c9d1f735e753cacaca08f5440406b9cf517d54fb77e269c8fefa",
+            "0128e437a2c9f6e2b32d9ed2c97aaaa1ec52a244660fd4652fd19aa72682d28d"
+          ]
+        },
+        {
+          "group": "cold_quoted_cli",
+          "source_sha": "4a808c5 content implementation; see historical per-command source context",
+          "evidence_hashes": [
+            "888b4a44dd82e6a468034192fd0ea6fea5d77506a30823e026601a2197bb931d",
+            "986850aede67962047a98fbfb7f736094267dc11f38a4a2436c23a1cce190c24",
+            "8804a370ffac47a8c9b1743812a08b74ac1cf4040acdbf9dacd8124c5cd23db5",
+            "973ef93d0e62596d5618634c969858dafc08d286e492ebcf84dd553bae6936ed",
+            "9e4be8cf69ed5d3f38a064236770e89ef76350097bf503b795bfaf14289674b1",
+            "0b2f029e7a7c5bc04bbb54183ac151d6ee08003b66d82d347393b582f08fcaf2",
+            "ae01714263f2103a18531833296b05e652286d2f4b80b253361a41fea91f9b51",
+            "5f18e2163ef6ce261e005aacea92c2e572358cc563ac95e3735d272228adc4bd"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:A-08",
+      "title": "标准不强依赖 ImageGen",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "current_runtime",
+          "source_sha": "593ef14f41122aeaca97b709df7b720f24b6e9dd",
+          "evidence_hashes": [
+            "9c9b6dc37cb20ec4c24069989b810833bf65592f702f07a5ddbd7a223f345001"
+          ]
+        },
+        {
+          "group": "native_mode_actual_matrix",
+          "source_sha": null,
+          "evidence_hashes": []
+        }
+      ]
+    },
+    {
+      "case": "SC1:A-09",
+      "title": "必需能力缺失不伪报",
+      "tier": "L2",
+      "predicate_assessment": "partial",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "current_runtime",
+          "source_sha": "593ef14f41122aeaca97b709df7b720f24b6e9dd",
+          "evidence_hashes": [
+            "9c9b6dc37cb20ec4c24069989b810833bf65592f702f07a5ddbd7a223f345001"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:A-10",
+      "title": "故障与无命中区分",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "current_suite_query",
+          "source_sha": null,
+          "evidence_hashes": [
+            "9b0b70ff6c100b9b7bbe045fa2873b26faf6b89a27310956035ad95be962dd34"
+          ]
+        },
+        {
+          "group": "library_sourcing_edges",
+          "source_sha": "b165d45d5a992ef9ea2a5555ed8d5b3b42019a05",
+          "evidence_hashes": [
+            "8723707ba9a8fe239d4bd5dcbb74f4191aaa08d85d7c602bc9c3f6afeb7d5b8a",
+            "103d20b73dc1b03ae85dcaecdd07e4e24083fb35697f4ad6d1df37fab831a442",
+            "e4440d0907bee91cb57f8279bad309c2ebadbaa4d138cdc77a8ce17d782236f5",
+            "c786e64ce05e4c55d3a0455bfbf7080265f16136d92865fb4840f9aeff0f34c7",
+            "4a2fb999cf3f9544990c116e01a5226d13a7c36055c73a3389fee7b55e424ba2",
+            "31b941f10e4f74cae71ddc033a149471e65c281e1329c228b480690e4d327f08"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:A-11",
+      "title": "组件来源与再分发",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "installation_migration",
+          "source_sha": "c3003badcd09fe7462677ae911446b2f07da42c6",
+          "evidence_hashes": [
+            "a358730d0a4832e3b20f6dfba090820798e90cfeb6d418c746ee085362e04c2b"
+          ]
+        },
+        {
+          "group": "locked_distribution_notices",
+          "source_sha": "09b7587",
+          "evidence_hashes": [
+            "7571a40c8d3db2bee5ae92092368281869a3035a6d3a9867e37e6f48fe26f305",
+            "ac23aed68a8204d899b96b067cd0972cddc22f156939efdcb171546a1e778228"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:A-12",
+      "title": "兼容入口不依赖旧方法",
+      "tier": "L2",
+      "predicate_assessment": "partial",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "installation_migration",
+          "source_sha": "c3003badcd09fe7462677ae911446b2f07da42c6",
+          "evidence_hashes": [
+            "a358730d0a4832e3b20f6dfba090820798e90cfeb6d418c746ee085362e04c2b"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:A-13",
+      "title": "分层就绪状态可读",
+      "tier": "L1",
+      "predicate_assessment": "partial",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "current_suite_query",
+          "source_sha": null,
+          "evidence_hashes": [
+            "9b0b70ff6c100b9b7bbe045fa2873b26faf6b89a27310956035ad95be962dd34"
+          ]
+        },
+        {
+          "group": "compiler_boundaries",
+          "source_sha": "0146d717032dae1374fc5df86e3d0cf281e150c8",
+          "evidence_hashes": [
+            "2d0bfe886d3e041a2c7dc49bcc93852497e449bd38afa763cfdac1c55222e387",
+            "befa32d10d49d2ec642b3564916d3275fe231eeb5d4a2850e488909b1425a913",
+            "1c6ea67c22ecbdb6cee5b0c19fcecfa834805f54699b1fec629e10713de35409"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:I-01",
+      "title": "后置关键约束",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "l1_case_execution",
+          "source_sha": "df9207bf5056581a819ca03e4e91fe445ec954e9",
+          "evidence_hashes": [
+            "d67c7526b2d2e44cc1a5ab3c10f05fa04b34102ba9970427e46d9cadfec076b9",
+            "0485acddf508d17eee751296e201c99d53f2fea59c0ca9efd4f3c0f029c13969",
+            "ff012b2f6e496eae32ea6059c3402dcd1b46ca15e7224d1d0aea59165383d738"
+          ]
+        },
+        {
+          "group": "mixed_source_coverage_and_idempotence",
+          "source_sha": "3d3ad43",
+          "evidence_hashes": [
+            "7e17e2e792e3c3546e2de0337a1d32ff06d516811525d249c1a76fe51a28ed2f",
+            "a81beee0b7aae7274098d8868485138066fbabde977bc1e3eaec514935aa7653",
+            "d2620768144f3958d931cc5d67697d07b62f3357621200c072a4783e42f80473"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:I-02",
+      "title": "混合资料接入",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "l1_case_execution",
+          "source_sha": "df9207bf5056581a819ca03e4e91fe445ec954e9",
+          "evidence_hashes": [
+            "d67c7526b2d2e44cc1a5ab3c10f05fa04b34102ba9970427e46d9cadfec076b9",
+            "0485acddf508d17eee751296e201c99d53f2fea59c0ca9efd4f3c0f029c13969",
+            "ff012b2f6e496eae32ea6059c3402dcd1b46ca15e7224d1d0aea59165383d738"
+          ]
+        },
+        {
+          "group": "mixed_source_coverage_and_idempotence",
+          "source_sha": "3d3ad43",
+          "evidence_hashes": [
+            "7e17e2e792e3c3546e2de0337a1d32ff06d516811525d249c1a76fe51a28ed2f",
+            "a81beee0b7aae7274098d8868485138066fbabde977bc1e3eaec514935aa7653",
+            "d2620768144f3958d931cc5d67697d07b62f3357621200c072a4783e42f80473"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:I-03",
+      "title": "部分读取不可假完成",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "l1_case_execution",
+          "source_sha": "df9207bf5056581a819ca03e4e91fe445ec954e9",
+          "evidence_hashes": [
+            "d67c7526b2d2e44cc1a5ab3c10f05fa04b34102ba9970427e46d9cadfec076b9",
+            "0485acddf508d17eee751296e201c99d53f2fea59c0ca9efd4f3c0f029c13969",
+            "ff012b2f6e496eae32ea6059c3402dcd1b46ca15e7224d1d0aea59165383d738"
+          ]
+        },
+        {
+          "group": "mixed_source_coverage_and_idempotence",
+          "source_sha": "3d3ad43",
+          "evidence_hashes": [
+            "7e17e2e792e3c3546e2de0337a1d32ff06d516811525d249c1a76fe51a28ed2f",
+            "a81beee0b7aae7274098d8868485138066fbabde977bc1e3eaec514935aa7653",
+            "d2620768144f3958d931cc5d67697d07b62f3357621200c072a4783e42f80473"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:I-04",
+      "title": "幂等导入",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "l1_extra_execution",
+          "source_sha": "dd436bc4cb7196a44c85344fad89b683d5b47a48",
+          "evidence_hashes": [
+            "0e1ef3bd6bc33d6f90902d45462b8ce9dc2876aaee8af3ff403cfc31c7bf513f",
+            "78664b9a2393eafc22a0532c8a49efe2967c59bcf00448e61cfa7130221580f7",
+            "8a055b7c9750afd8e3b98e11e30cc17243c92b80c5a3c3b168b8d46be947b76f"
+          ]
+        },
+        {
+          "group": "mixed_source_coverage_and_idempotence",
+          "source_sha": "3d3ad43",
+          "evidence_hashes": [
+            "7e17e2e792e3c3546e2de0337a1d32ff06d516811525d249c1a76fe51a28ed2f",
+            "a81beee0b7aae7274098d8868485138066fbabde977bc1e3eaec514935aa7653",
+            "d2620768144f3958d931cc5d67697d07b62f3357621200c072a4783e42f80473"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:I-05",
+      "title": "证据ID消歧",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "choice_negative_fixes",
+          "source_sha": "0146d71",
+          "evidence_hashes": [
+            "1b7ab3ed88e5cec9bf9c25abd46723747ddb3c1302de100b74f9153ce35f9886",
+            "28939ed949a6762b8e1be3e3ef622a23ccd0602843415ddc4a3c48b48edad8df",
+            "94988b9bbc007799f4197f7bba99b6cc3a9347570b9f2d93896d59ca6c97a4e3",
+            "6f70e5c22a1964dfaa22d484b5bb41b306d401bf2bd61acf751e1b3656bcfc1e",
+            "d47be0310980f314338e812ea3156e066b6fb7969dc90c24aa319311381835df"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:I-06",
+      "title": "精确定位与内容匹配",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "update_specific_nodes",
+          "source_sha": "b165d45d5a992ef9ea2a5555ed8d5b3b42019a05",
+          "evidence_hashes": [
+            "99d75ce66e371ac770364f04a321422c349a3d3dfa579ba388c05a1c2caa3ff7",
+            "a4609c0b7942da7778ce2b40190f1c0aaa608ed667d296e7281192b206b069b4"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:I-07",
+      "title": "冲突不静默覆盖",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "declared_conflict_cli",
+          "source_sha": "5471519",
+          "evidence_hashes": [
+            "d742e68ba841e21d77f4b61064b1c47eb4ee117132b209b78c2215f4d07c00d9",
+            "d1e10e3f26677536301606c069b3085913d598b57e74f90a3392b087b300734f",
+            "e0f23931ed3572ea53f08b3eda4a7e0ab92cfff306d6e5b31fed76fc4fcb16b5",
+            "9e534aaa541cb11f2dbf1a524c9be695d24a4acc8cad9444e21b89714ded0c6d",
+            "337da6927f9117e8fa18ea504081761b73f2b8a730ff4d57e8ed75184dff8a97",
+            "e5fb318dc374b676a45c2f185d62deeb353ff59d90c1cda491f468c1c324a3ed",
+            "06be8c539a92ffbd071018ca1658c641c0d976a15657cfe084252929edf7900a",
+            "850dd6ad7eeda6e3558f59a93bb65ee3e705e8bf82d6cb6a6ca212f87ca1370a"
+          ]
+        },
+        {
+          "group": "native_conflict_hooks",
+          "source_sha": "81b0fb2",
+          "evidence_hashes": [
+            "68b0a57f67eed5816dc3da45606d220b5974d29e2d16e4c2e10e6f48d8eaf979",
+            "dc5b84fb2470adca32f3147d35c3b81bc788379fbbf907bd0ce5eaaca36b2cc0",
+            "45af240999eab6ce55fa1c7d3398041af34f8db468a332b2551b5df782fd0653"
+          ]
+        },
+        {
+          "group": "cross_review_final",
+          "source_sha": null,
+          "evidence_hashes": [
+            "8e544c5ed260f16815cc3beed65354057f5f4372654a49d8e4e61e500cf531a4",
+            "00dece14358cdd6ffdcd30b3e6484e57a83c0bef22b437bedf912af0dd4bae53",
+            "7cbbc0d36697a197f4c57f76a4b438485da6ec12d3f42bd604f6da401ec7456b"
+          ]
+        },
+        {
+          "group": "update_specific_nodes",
+          "source_sha": "b165d45d5a992ef9ea2a5555ed8d5b3b42019a05",
+          "evidence_hashes": [
+            "99d75ce66e371ac770364f04a321422c349a3d3dfa579ba388c05a1c2caa3ff7",
+            "a4609c0b7942da7778ce2b40190f1c0aaa608ed667d296e7281192b206b069b4"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:I-08",
+      "title": "高风险假设不冒充客户事实",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "l1_extra_execution",
+          "source_sha": "dd436bc4cb7196a44c85344fad89b683d5b47a48",
+          "evidence_hashes": [
+            "0e1ef3bd6bc33d6f90902d45462b8ce9dc2876aaee8af3ff403cfc31c7bf513f",
+            "78664b9a2393eafc22a0532c8a49efe2967c59bcf00448e61cfa7130221580f7",
+            "8a055b7c9750afd8e3b98e11e30cc17243c92b80c5a3c3b168b8d46be947b76f"
+          ]
+        },
+        {
+          "group": "high_risk_assumption_chain",
+          "source_sha": "e2064d3 + 3d3ad43",
+          "evidence_hashes": [
+            "4c36d4bbae801d1223c36e0c5021d6bd4dce79c7bed9aee34e386b88543f8394",
+            "6551c620aeb230c5f2f7de26b23d1f8b1056f4ca077260d645db4ef215ca43a8"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:R-01",
+      "title": "定向真实研究",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "actual_research",
+          "source_sha": null,
+          "evidence_hashes": [
+            "53611cf8b60d2e7c4ffd7977a241300144d229926f7c47fa7026190338ad6eaf",
+            "ebf9e8e2319e079d591454638607834e2f68a9ceec331a8764932fb47a79b7e3",
+            "7486b83bb8ecaf4f61f4ebe1664783ab2d9c54e4b16ebd3984eebe447d102d67",
+            "ec8ce06c7c4ace2ad8cadd21d140dac7cd2a6c2d952ed2079974b96b43b84b94",
+            "e3792a6ef32ba923ce782d90924b234b1bea368cd35f5d9ab67572c5631e3179",
+            "1048ddaf93c0dfa7b1304db3ffef722f4a37db0018ad2c63d0062118c5d92b42",
+            "e62a72cdc9298b1737c51ad71e58a2fe240420e585e5508bf1c068009c45bbed",
+            "4f4bec9b04ba6f9b03aefbd9c8c646df0f2aa27e5e27025201861e03afa39ccb",
+            "fa20e300701f9d461150a89c8ad80d1025550e61a66f4738dafad434bb63343f"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:R-02",
+      "title": "查询授权与脱敏",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "actual_research",
+          "source_sha": null,
+          "evidence_hashes": [
+            "53611cf8b60d2e7c4ffd7977a241300144d229926f7c47fa7026190338ad6eaf",
+            "ebf9e8e2319e079d591454638607834e2f68a9ceec331a8764932fb47a79b7e3",
+            "7486b83bb8ecaf4f61f4ebe1664783ab2d9c54e4b16ebd3984eebe447d102d67",
+            "ec8ce06c7c4ace2ad8cadd21d140dac7cd2a6c2d952ed2079974b96b43b84b94",
+            "e3792a6ef32ba923ce782d90924b234b1bea368cd35f5d9ab67572c5631e3179",
+            "1048ddaf93c0dfa7b1304db3ffef722f4a37db0018ad2c63d0062118c5d92b42",
+            "e62a72cdc9298b1737c51ad71e58a2fe240420e585e5508bf1c068009c45bbed",
+            "4f4bec9b04ba6f9b03aefbd9c8c646df0f2aa27e5e27025201861e03afa39ccb",
+            "fa20e300701f9d461150a89c8ad80d1025550e61a66f4738dafad434bb63343f"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:R-03",
+      "title": "反证和适用边界",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "actual_research",
+          "source_sha": null,
+          "evidence_hashes": [
+            "53611cf8b60d2e7c4ffd7977a241300144d229926f7c47fa7026190338ad6eaf",
+            "ebf9e8e2319e079d591454638607834e2f68a9ceec331a8764932fb47a79b7e3",
+            "7486b83bb8ecaf4f61f4ebe1664783ab2d9c54e4b16ebd3984eebe447d102d67",
+            "ec8ce06c7c4ace2ad8cadd21d140dac7cd2a6c2d952ed2079974b96b43b84b94",
+            "e3792a6ef32ba923ce782d90924b234b1bea368cd35f5d9ab67572c5631e3179",
+            "1048ddaf93c0dfa7b1304db3ffef722f4a37db0018ad2c63d0062118c5d92b42",
+            "e62a72cdc9298b1737c51ad71e58a2fe240420e585e5508bf1c068009c45bbed",
+            "4f4bec9b04ba6f9b03aefbd9c8c646df0f2aa27e5e27025201861e03afa39ccb",
+            "fa20e300701f9d461150a89c8ad80d1025550e61a66f4738dafad434bb63343f"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:R-04",
+      "title": "无结果终态",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "actual_research",
+          "source_sha": null,
+          "evidence_hashes": [
+            "53611cf8b60d2e7c4ffd7977a241300144d229926f7c47fa7026190338ad6eaf",
+            "ebf9e8e2319e079d591454638607834e2f68a9ceec331a8764932fb47a79b7e3",
+            "7486b83bb8ecaf4f61f4ebe1664783ab2d9c54e4b16ebd3984eebe447d102d67",
+            "ec8ce06c7c4ace2ad8cadd21d140dac7cd2a6c2d952ed2079974b96b43b84b94",
+            "e3792a6ef32ba923ce782d90924b234b1bea368cd35f5d9ab67572c5631e3179",
+            "1048ddaf93c0dfa7b1304db3ffef722f4a37db0018ad2c63d0062118c5d92b42",
+            "e62a72cdc9298b1737c51ad71e58a2fe240420e585e5508bf1c068009c45bbed",
+            "4f4bec9b04ba6f9b03aefbd9c8c646df0f2aa27e5e27025201861e03afa39ccb",
+            "fa20e300701f9d461150a89c8ad80d1025550e61a66f4738dafad434bb63343f"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:R-05",
+      "title": "无工具/无网终态",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "actual_research",
+          "source_sha": null,
+          "evidence_hashes": [
+            "53611cf8b60d2e7c4ffd7977a241300144d229926f7c47fa7026190338ad6eaf",
+            "ebf9e8e2319e079d591454638607834e2f68a9ceec331a8764932fb47a79b7e3",
+            "7486b83bb8ecaf4f61f4ebe1664783ab2d9c54e4b16ebd3984eebe447d102d67",
+            "ec8ce06c7c4ace2ad8cadd21d140dac7cd2a6c2d952ed2079974b96b43b84b94",
+            "e3792a6ef32ba923ce782d90924b234b1bea368cd35f5d9ab67572c5631e3179",
+            "1048ddaf93c0dfa7b1304db3ffef722f4a37db0018ad2c63d0062118c5d92b42",
+            "e62a72cdc9298b1737c51ad71e58a2fe240420e585e5508bf1c068009c45bbed",
+            "4f4bec9b04ba6f9b03aefbd9c8c646df0f2aa27e5e27025201861e03afa39ccb",
+            "fa20e300701f9d461150a89c8ad80d1025550e61a66f4738dafad434bb63343f"
+          ]
+        },
+        {
+          "group": "root_incremental_actual_validation",
+          "source_sha": null,
+          "evidence_hashes": []
+        }
+      ]
+    },
+    {
+      "case": "SC1:R-06",
+      "title": "研究预算与重启",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "actual_research",
+          "source_sha": null,
+          "evidence_hashes": [
+            "53611cf8b60d2e7c4ffd7977a241300144d229926f7c47fa7026190338ad6eaf",
+            "ebf9e8e2319e079d591454638607834e2f68a9ceec331a8764932fb47a79b7e3",
+            "7486b83bb8ecaf4f61f4ebe1664783ab2d9c54e4b16ebd3984eebe447d102d67",
+            "ec8ce06c7c4ace2ad8cadd21d140dac7cd2a6c2d952ed2079974b96b43b84b94",
+            "e3792a6ef32ba923ce782d90924b234b1bea368cd35f5d9ab67572c5631e3179",
+            "1048ddaf93c0dfa7b1304db3ffef722f4a37db0018ad2c63d0062118c5d92b42",
+            "e62a72cdc9298b1737c51ad71e58a2fe240420e585e5508bf1c068009c45bbed",
+            "4f4bec9b04ba6f9b03aefbd9c8c646df0f2aa27e5e27025201861e03afa39ccb",
+            "fa20e300701f9d461150a89c8ad80d1025550e61a66f4738dafad434bb63343f"
+          ]
+        },
+        {
+          "group": "root_incremental_actual_validation",
+          "source_sha": null,
+          "evidence_hashes": []
+        }
+      ]
+    },
+    {
+      "case": "SC1:S-01",
+      "title": "无risk标记不自证",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "l1_case_execution",
+          "source_sha": "df9207bf5056581a819ca03e4e91fe445ec954e9",
+          "evidence_hashes": [
+            "d67c7526b2d2e44cc1a5ab3c10f05fa04b34102ba9970427e46d9cadfec076b9",
+            "0485acddf508d17eee751296e201c99d53f2fea59c0ca9efd4f3c0f029c13969",
+            "ff012b2f6e496eae32ea6059c3402dcd1b46ca15e7224d1d0aea59165383d738"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:S-02",
+      "title": "目标不冒充根因",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "l1_case_execution",
+          "source_sha": "df9207bf5056581a819ca03e4e91fe445ec954e9",
+          "evidence_hashes": [
+            "d67c7526b2d2e44cc1a5ab3c10f05fa04b34102ba9970427e46d9cadfec076b9",
+            "0485acddf508d17eee751296e201c99d53f2fea59c0ca9efd4f3c0f029c13969",
+            "ff012b2f6e496eae32ea6059c3402dcd1b46ca15e7224d1d0aea59165383d738"
+          ]
+        },
+        {
+          "group": "goal_only_judgment_pending",
+          "source_sha": "2f991ba",
+          "evidence_hashes": [
+            "563bcc12a283e71f273da452ae4a811c23f6de0e11087241a9475d0873a4b553",
+            "7598e66fad6842173a2f7bf45d5a9dfe2cdf0608d90103445a756bf56959921f",
+            "858fa18d34193c1819ac3794fbbc4eb5236774c1a7b4836153f6e30c89c2e030"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:S-03",
+      "title": "同数字不同口径",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "actual_numeric_repair",
+          "source_sha": null,
+          "evidence_hashes": [
+            "461bb5c389c2633a4dbe76de9991eea1f87879e0e0807dfe4d312a0989e8d83a",
+            "ed97064948b0357a49392732b158fc00619c87d814d8f238b1a4e478a1ab8932",
+            "5849268f1d1a32c123f46902372a7b9e5f7dbd23bb4de131638974fa7880b377",
+            "920eb0966cbd7d2354336d1eea8722cd7a5a6b7c1d2c701917440b381d0cc5af",
+            "423cc4bd7760a802f9a5e04f392142d7b56226d82cd5f69f503d5f0f9a4c22fc",
+            "6f0a709b1ab0004389486a71f45190f39b9060ac2ef0ef500e1d7ca8f4bff27c"
+          ]
+        },
+        {
+          "group": "l1_case_execution",
+          "source_sha": "df9207bf5056581a819ca03e4e91fe445ec954e9",
+          "evidence_hashes": [
+            "d67c7526b2d2e44cc1a5ab3c10f05fa04b34102ba9970427e46d9cadfec076b9",
+            "0485acddf508d17eee751296e201c99d53f2fea59c0ca9efd4f3c0f029c13969",
+            "ff012b2f6e496eae32ea6059c3402dcd1b46ca15e7224d1d0aea59165383d738"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:S-04",
+      "title": "页面不得自证",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "update_specific_nodes",
+          "source_sha": "b165d45d5a992ef9ea2a5555ed8d5b3b42019a05",
+          "evidence_hashes": [
+            "99d75ce66e371ac770364f04a321422c349a3d3dfa579ba388c05a1c2caa3ff7",
+            "a4609c0b7942da7778ce2b40190f1c0aaa608ed667d296e7281192b206b069b4"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:S-05",
+      "title": "问题机制验收连通",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "l1_case_execution",
+          "source_sha": "df9207bf5056581a819ca03e4e91fe445ec954e9",
+          "evidence_hashes": [
+            "d67c7526b2d2e44cc1a5ab3c10f05fa04b34102ba9970427e46d9cadfec076b9",
+            "0485acddf508d17eee751296e201c99d53f2fea59c0ca9efd4f3c0f029c13969",
+            "ff012b2f6e496eae32ea6059c3402dcd1b46ca15e7224d1d0aea59165383d738"
+          ]
+        },
+        {
+          "group": "substantive_model_controls",
+          "source_sha": "e2064d3; Brief dependency 3d3ad43",
+          "evidence_hashes": [
+            "62110927a484b70e2d6c3a8a5fa798e5f9f3a0c25b1cdac06bf1d9ba800941c0",
+            "cbc4db205ecc1393d14beea2b90754f07485c24ca27a79a140af9a176ffbae1a",
+            "3aa0410a3413c5956ebe345e802962c1f2340e1728ab4d5926d31d8ebd3c7f45"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:S-06",
+      "title": "现有与拟建区分",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "l1_case_execution",
+          "source_sha": "df9207bf5056581a819ca03e4e91fe445ec954e9",
+          "evidence_hashes": [
+            "d67c7526b2d2e44cc1a5ab3c10f05fa04b34102ba9970427e46d9cadfec076b9",
+            "0485acddf508d17eee751296e201c99d53f2fea59c0ca9efd4f3c0f029c13969",
+            "ff012b2f6e496eae32ea6059c3402dcd1b46ca15e7224d1d0aea59165383d738"
+          ]
+        },
+        {
+          "group": "existing_fact_semantic_rejection",
+          "source_sha": "see recorded issued inputs",
+          "evidence_hashes": [
+            "244505668c396a5307f1ecb1ab97e5043c6bc906fda7d26450ed6b9420116ae1",
+            "46ea9688a2e7c0e2a71f52f01417fac62a00f16f7699a2347b9fbec74758890b"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:S-07",
+      "title": "方案备选有实质差异",
+      "tier": "L1",
+      "predicate_assessment": "partial",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "l1_case_execution",
+          "source_sha": "df9207bf5056581a819ca03e4e91fe445ec954e9",
+          "evidence_hashes": [
+            "d67c7526b2d2e44cc1a5ab3c10f05fa04b34102ba9970427e46d9cadfec076b9",
+            "0485acddf508d17eee751296e201c99d53f2fea59c0ca9efd4f3c0f029c13969",
+            "ff012b2f6e496eae32ea6059c3402dcd1b46ca15e7224d1d0aea59165383d738"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:S-08",
+      "title": "单一可行路径",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "l1_case_execution",
+          "source_sha": "df9207bf5056581a819ca03e4e91fe445ec954e9",
+          "evidence_hashes": [
+            "d67c7526b2d2e44cc1a5ab3c10f05fa04b34102ba9970427e46d9cadfec076b9",
+            "0485acddf508d17eee751296e201c99d53f2fea59c0ca9efd4f3c0f029c13969",
+            "ff012b2f6e496eae32ea6059c3402dcd1b46ca15e7224d1d0aea59165383d738"
+          ]
+        },
+        {
+          "group": "substantive_model_controls",
+          "source_sha": "e2064d3; Brief dependency 3d3ad43",
+          "evidence_hashes": [
+            "62110927a484b70e2d6c3a8a5fa798e5f9f3a0c25b1cdac06bf1d9ba800941c0",
+            "cbc4db205ecc1393d14beea2b90754f07485c24ca27a79a140af9a176ffbae1a",
+            "3aa0410a3413c5956ebe345e802962c1f2340e1728ab4d5926d31d8ebd3c7f45"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:N-01",
+      "title": "公共主线非模板拼贴",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "ten_page",
+          "source_sha": null,
+          "evidence_hashes": [
+            "4b0cec70f0a6bca301f37cfd1e5bce6edebe446dc3558e3059f07e1c0c11f862",
+            "a2152b9d7b2ec7c107c02963a0423de8a0069a9af29cff2ec491ec312486e760",
+            "6681a872dee3c9d1f735e753cacaca08f5440406b9cf517d54fb77e269c8fefa",
+            "0128e437a2c9f6e2b32d9ed2c97aaaa1ec52a244660fd4652fd19aa72682d28d"
+          ]
+        },
+        {
+          "group": "formal_views",
+          "source_sha": "86b76a7ebc91d3547a9def4c758ca8aace4bb88e",
+          "evidence_hashes": [
+            "05fc8d77e1df9c7111a9eb86c88527e96cffe531afd71b3c4efc0f163777a34c",
+            "57ec69c52fabb7fd35753294163f0070a6c1219afc8c694a7e67da35737cde31",
+            "cb2051af85e95c79b7c3f31cced03abf93ac5f67c54de150343daf03d3406da2",
+            "ac87210dfb356c1ff2e458e623a4eb687e2ff222f599bdb083972807bcb689fe"
+          ]
+        },
+        {
+          "group": "actual_research",
+          "source_sha": null,
+          "evidence_hashes": [
+            "53611cf8b60d2e7c4ffd7977a241300144d229926f7c47fa7026190338ad6eaf",
+            "ebf9e8e2319e079d591454638607834e2f68a9ceec331a8764932fb47a79b7e3",
+            "7486b83bb8ecaf4f61f4ebe1664783ab2d9c54e4b16ebd3984eebe447d102d67",
+            "ec8ce06c7c4ace2ad8cadd21d140dac7cd2a6c2d952ed2079974b96b43b84b94",
+            "e3792a6ef32ba923ce782d90924b234b1bea368cd35f5d9ab67572c5631e3179",
+            "1048ddaf93c0dfa7b1304db3ffef722f4a37db0018ad2c63d0062118c5d92b42",
+            "e62a72cdc9298b1737c51ad71e58a2fe240420e585e5508bf1c068009c45bbed",
+            "4f4bec9b04ba6f9b03aefbd9c8c646df0f2aa27e5e27025201861e03afa39ccb",
+            "fa20e300701f9d461150a89c8ad80d1025550e61a66f4738dafad434bb63343f"
+          ]
+        },
+        {
+          "group": "independent_content_pairing",
+          "source_sha": "2f991ba",
+          "evidence_hashes": [
+            "a19cbea26f5b4423d40b1b644b7f42c58fb6791d9ba76b67283103cfbf75f187",
+            "858fa18d34193c1819ac3794fbbc4eb5236774c1a7b4836153f6e30c89c2e030"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:N-02",
+      "title": "无PagePackage循环依赖",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "ten_page",
+          "source_sha": null,
+          "evidence_hashes": [
+            "4b0cec70f0a6bca301f37cfd1e5bce6edebe446dc3558e3059f07e1c0c11f862",
+            "a2152b9d7b2ec7c107c02963a0423de8a0069a9af29cff2ec491ec312486e760",
+            "6681a872dee3c9d1f735e753cacaca08f5440406b9cf517d54fb77e269c8fefa",
+            "0128e437a2c9f6e2b32d9ed2c97aaaa1ec52a244660fd4652fd19aa72682d28d"
+          ]
+        },
+        {
+          "group": "formal_views",
+          "source_sha": "86b76a7ebc91d3547a9def4c758ca8aace4bb88e",
+          "evidence_hashes": [
+            "05fc8d77e1df9c7111a9eb86c88527e96cffe531afd71b3c4efc0f163777a34c",
+            "57ec69c52fabb7fd35753294163f0070a6c1219afc8c694a7e67da35737cde31",
+            "cb2051af85e95c79b7c3f31cced03abf93ac5f67c54de150343daf03d3406da2",
+            "ac87210dfb356c1ff2e458e623a4eb687e2ff222f599bdb083972807bcb689fe"
+          ]
+        },
+        {
+          "group": "actual_research",
+          "source_sha": null,
+          "evidence_hashes": [
+            "53611cf8b60d2e7c4ffd7977a241300144d229926f7c47fa7026190338ad6eaf",
+            "ebf9e8e2319e079d591454638607834e2f68a9ceec331a8764932fb47a79b7e3",
+            "7486b83bb8ecaf4f61f4ebe1664783ab2d9c54e4b16ebd3984eebe447d102d67",
+            "ec8ce06c7c4ace2ad8cadd21d140dac7cd2a6c2d952ed2079974b96b43b84b94",
+            "e3792a6ef32ba923ce782d90924b234b1bea368cd35f5d9ab67572c5631e3179",
+            "1048ddaf93c0dfa7b1304db3ffef722f4a37db0018ad2c63d0062118c5d92b42",
+            "e62a72cdc9298b1737c51ad71e58a2fe240420e585e5508bf1c068009c45bbed",
+            "4f4bec9b04ba6f9b03aefbd9c8c646df0f2aa27e5e27025201861e03afa39ccb",
+            "fa20e300701f9d461150a89c8ad80d1025550e61a66f4738dafad434bb63343f"
+          ]
+        },
+        {
+          "group": "cold_quoted_cli",
+          "source_sha": "4a808c5 content implementation; see historical per-command source context",
+          "evidence_hashes": [
+            "888b4a44dd82e6a468034192fd0ea6fea5d77506a30823e026601a2197bb931d",
+            "986850aede67962047a98fbfb7f736094267dc11f38a4a2436c23a1cce190c24",
+            "8804a370ffac47a8c9b1743812a08b74ac1cf4040acdbf9dacd8124c5cd23db5",
+            "973ef93d0e62596d5618634c969858dafc08d286e492ebcf84dd553bae6936ed",
+            "9e4be8cf69ed5d3f38a064236770e89ef76350097bf503b795bfaf14289674b1",
+            "0b2f029e7a7c5bc04bbb54183ac151d6ee08003b66d82d347393b582f08fcaf2",
+            "ae01714263f2103a18531833296b05e652286d2f4b80b253361a41fea91f9b51",
+            "5f18e2163ef6ce261e005aacea92c2e572358cc563ac95e3735d272228adc4bd"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:N-03",
+      "title": "已选主线不重复问",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "current_runtime",
+          "source_sha": "593ef14f41122aeaca97b709df7b720f24b6e9dd",
+          "evidence_hashes": [
+            "9c9b6dc37cb20ec4c24069989b810833bf65592f702f07a5ddbd7a223f345001"
+          ]
+        },
+        {
+          "group": "public_narrative_projection_actual",
+          "source_sha": "52a2bd1",
+          "evidence_hashes": [
+            "71ee2d3c9ee0a3493276bbf606be47ac83ad2aca0d67492ee335c27110df08fe",
+            "37e53e4fe3cabd28f688a0b80e077d2defa5cadf4b0a39bfdd6cd9d170d71a83",
+            "a7fc2d438e46c476c8e730bb5716a6fd9fe2b2a56b4d929df6fc855bc528cbba",
+            "4a78939e5d9a3bd01b0dd7b20cfdff4da16694ad49eb1e8d21bcce7e104ade40"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:N-04",
+      "title": "MBB兼容单一写源",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "current_runtime",
+          "source_sha": "593ef14f41122aeaca97b709df7b720f24b6e9dd",
+          "evidence_hashes": [
+            "9c9b6dc37cb20ec4c24069989b810833bf65592f702f07a5ddbd7a223f345001"
+          ]
+        },
+        {
+          "group": "public_narrative_projection_actual",
+          "source_sha": "52a2bd1",
+          "evidence_hashes": [
+            "71ee2d3c9ee0a3493276bbf606be47ac83ad2aca0d67492ee335c27110df08fe",
+            "37e53e4fe3cabd28f688a0b80e077d2defa5cadf4b0a39bfdd6cd9d170d71a83",
+            "a7fc2d438e46c476c8e730bb5716a6fd9fe2b2a56b4d929df6fc855bc528cbba",
+            "4a78939e5d9a3bd01b0dd7b20cfdff4da16694ad49eb1e8d21bcce7e104ade40"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:N-05",
+      "title": "旧高密度Run可读",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "installation_migration",
+          "source_sha": "c3003badcd09fe7462677ae911446b2f07da42c6",
+          "evidence_hashes": [
+            "a358730d0a4832e3b20f6dfba090820798e90cfeb6d418c746ee085362e04c2b"
+          ]
+        },
+        {
+          "group": "migration_848_SC1_N-05",
+          "source_sha": "848134bbee1596efef3008bcedadcffd536162fe",
+          "evidence_hashes": [
+            "b94672aee24148ca2dce9e34307d83cd37d6e4faa09b720b2dd3c8cc104aa18d",
+            "c79d3ec441e2b557bdbb0b4832e87be53ddaba8c3ae8c27a19eef19102404387",
+            "a6164f9d3b5d31991e2b425336a57e0727cd310e3eb65c5c754d9f19f206bd43",
+            "940fa93cde022fc1048029cfe0d0029cdda5663ce448c48238f93296fca6be16",
+            "5dfd0693489517f954c0c24e2321f3dcf8049f08a06ba503dcbe8c053b6f7217",
+            "bcab1062ff47d70659171235ed019e093e80b7e46c7c24af2d6e8455cd7024fb"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:P-01",
+      "title": "标准真实消费Package",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "ten_page",
+          "source_sha": null,
+          "evidence_hashes": [
+            "4b0cec70f0a6bca301f37cfd1e5bce6edebe446dc3558e3059f07e1c0c11f862",
+            "a2152b9d7b2ec7c107c02963a0423de8a0069a9af29cff2ec491ec312486e760",
+            "6681a872dee3c9d1f735e753cacaca08f5440406b9cf517d54fb77e269c8fefa",
+            "0128e437a2c9f6e2b32d9ed2c97aaaa1ec52a244660fd4652fd19aa72682d28d"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:P-02",
+      "title": "无Placeholder完整生产",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "ten_page",
+          "source_sha": null,
+          "evidence_hashes": [
+            "4b0cec70f0a6bca301f37cfd1e5bce6edebe446dc3558e3059f07e1c0c11f862",
+            "a2152b9d7b2ec7c107c02963a0423de8a0069a9af29cff2ec491ec312486e760",
+            "6681a872dee3c9d1f735e753cacaca08f5440406b9cf517d54fb77e269c8fefa",
+            "0128e437a2c9f6e2b32d9ed2c97aaaa1ec52a244660fd4652fd19aa72682d28d"
+          ]
+        },
+        {
+          "group": "visual_auxiliary",
+          "source_sha": null,
+          "evidence_hashes": [
+            "5b971d2bcdcad5c52391a30a85560c32f1057fcb5e1e2de5a34e3076d908f8f1",
+            "efad56e85ecad42b8b9cb95150e658bd04ce0df66aa46e4f0467fe9256cf64a5",
+            "2db0cefb7625dc523cebb41a23f6e96f7f6ec207471c14ce1fe07730bcdb28d0",
+            "fffe37f808acf4b8f801c3913cd2bc785dd7503947dfc81fbb94246dfe9d5621"
+          ]
+        },
+        {
+          "group": "cold_ten_review",
+          "source_sha": null,
+          "evidence_hashes": [
+            "172632963bda1332f6ba48e0796c483bcf2020f7890742deb7cbe3f8c2d95ee9",
+            "c89c30bfb5daf93457dee1e1a1ee1d54a20c169b6608a5b8598d36a19831d77f",
+            "c17e711bc8396265480126cf5fdd10114b11e22b99ed20f8e4a8ca77713b6984",
+            "c69119a3ad792f43b1b95ae6185d3865c34bb8b0f1b9b7cd8f91681010eba19c",
+            "e5faba6e110fe88d001d57cf272a2b8e4125aa222c5a4e49d61fb3290a476d6d"
+          ]
+        },
+        {
+          "group": "cold_quoted_cli",
+          "source_sha": "4a808c5 content implementation; see historical per-command source context",
+          "evidence_hashes": [
+            "888b4a44dd82e6a468034192fd0ea6fea5d77506a30823e026601a2197bb931d",
+            "986850aede67962047a98fbfb7f736094267dc11f38a4a2436c23a1cce190c24",
+            "8804a370ffac47a8c9b1743812a08b74ac1cf4040acdbf9dacd8124c5cd23db5",
+            "973ef93d0e62596d5618634c969858dafc08d286e492ebcf84dd553bae6936ed",
+            "9e4be8cf69ed5d3f38a064236770e89ef76350097bf503b795bfaf14289674b1",
+            "0b2f029e7a7c5bc04bbb54183ac151d6ee08003b66d82d347393b582f08fcaf2",
+            "ae01714263f2103a18531833296b05e652286d2f4b80b253361a41fea91f9b51",
+            "5f18e2163ef6ce261e005aacea92c2e572358cc563ac95e3735d272228adc4bd"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:P-03",
+      "title": "两个Builder内容一致",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "ten_page",
+          "source_sha": null,
+          "evidence_hashes": [
+            "4b0cec70f0a6bca301f37cfd1e5bce6edebe446dc3558e3059f07e1c0c11f862",
+            "a2152b9d7b2ec7c107c02963a0423de8a0069a9af29cff2ec491ec312486e760",
+            "6681a872dee3c9d1f735e753cacaca08f5440406b9cf517d54fb77e269c8fefa",
+            "0128e437a2c9f6e2b32d9ed2c97aaaa1ec52a244660fd4652fd19aa72682d28d"
+          ]
+        },
+        {
+          "group": "dual_authoring_actual",
+          "source_sha": "848134bbee1596efef3008bcedadcffd536162fe",
+          "evidence_hashes": [
+            "ff41c3baa82304b4eaf61ddaa1a1de2a0f88b03b7b3106f20e1f88e6681dc17f",
+            "acc544dc98e9ce86348d9dd374f9053c7590f6c7cb038887f4d2f5939144942a",
+            "8544ae0969cf75aaa4950ae5fdf86d226f12510c548f859750b49af7bc3907fb",
+            "c26de83abdc9496cd1301470918ec39ecca1cf389ef0ae1c6504da1800d1c431"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:P-04",
+      "title": "高密度保护不降级",
+      "tier": "L2",
+      "predicate_assessment": "partial",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "ten_page",
+          "source_sha": null,
+          "evidence_hashes": [
+            "4b0cec70f0a6bca301f37cfd1e5bce6edebe446dc3558e3059f07e1c0c11f862",
+            "a2152b9d7b2ec7c107c02963a0423de8a0069a9af29cff2ec491ec312486e760",
+            "6681a872dee3c9d1f735e753cacaca08f5440406b9cf517d54fb77e269c8fefa",
+            "0128e437a2c9f6e2b32d9ed2c97aaaa1ec52a244660fd4652fd19aa72682d28d"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:P-05",
+      "title": "可编辑性真实检查",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "desktop_edit",
+          "source_sha": null,
+          "evidence_hashes": [
+            "aab41b5c41b12709ed382d594c3b08e5ba0029531195f7b9dd3f470fc8c2d75f",
+            "c7898f642b8319b05d8b93e9f6b0b62e301aa9fcce5cbbc0506af51a0b83b9e3",
+            "2514283e2d86dbb1dbb1e1e1f85d37f29cfedb85bf91be3db20333751f5b1b87"
+          ]
+        },
+        {
+          "group": "parity",
+          "source_sha": "ac8c9ad88cfd3c0390f57e679c165f0e10b18849",
+          "evidence_hashes": [
+            "fc6406c4c0fc5ae660006ee121c1e7a68432890c1344f754b6130946ed4dd1cb",
+            "06ea0d13e7f396d13e7aa94229ade94f235abc930021abae26d75050b419d12e"
+          ]
+        },
+        {
+          "group": "native_editability_two_sides",
+          "source_sha": "0cfbe54eb0ba07adcea276aee3170ff44d8517f9",
+          "evidence_hashes": [
+            "7e0b02cef80faa2dd1184aa7d99d0bbe8e724bb45b94a82412d8da3b63a9b623",
+            "cef0b412a0cf1475a5131e645505e182aa6e4e26e1915cffb3c6bf9181ab4649"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:P-06",
+      "title": "客户文件全内容扫描",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "actual_file_repair",
+          "source_sha": null,
+          "evidence_hashes": [
+            "07c9b2a8651af478648b277ac713a50fc8f451f6bd95ff13dae26158443af5fb",
+            "9200ea2cfe144db34e57ad05eb360e6a8c7094f6a457da5a6f50f598d8de2268",
+            "6511232c533ce0b916f9c653677b82cbdfe1dfd7ca593fe59dc7ff29687084e1",
+            "6232156b5175cf1189ca43994b32faeec55ce076a232ef63c0a998c9deb28e0b",
+            "252b14c3d922040add51039a014721970b24d05be57dc3666b0b597dc464fc30",
+            "9f8afe75e5a7dd2d651b3f47c54eec85a686bd442db6252bce31bacd2ef7cbb4"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:D-01",
+      "title": "四类视图表达",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "formal_views",
+          "source_sha": "86b76a7ebc91d3547a9def4c758ca8aace4bb88e",
+          "evidence_hashes": [
+            "05fc8d77e1df9c7111a9eb86c88527e96cffe531afd71b3c4efc0f163777a34c",
+            "57ec69c52fabb7fd35753294163f0070a6c1219afc8c694a7e67da35737cde31",
+            "cb2051af85e95c79b7c3f31cced03abf93ac5f67c54de150343daf03d3406da2",
+            "ac87210dfb356c1ff2e458e623a4eb687e2ff222f599bdb083972807bcb689fe"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:D-02",
+      "title": "孤儿节点",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "formal_views",
+          "source_sha": "86b76a7ebc91d3547a9def4c758ca8aace4bb88e",
+          "evidence_hashes": [
+            "05fc8d77e1df9c7111a9eb86c88527e96cffe531afd71b3c4efc0f163777a34c",
+            "57ec69c52fabb7fd35753294163f0070a6c1219afc8c694a7e67da35737cde31",
+            "cb2051af85e95c79b7c3f31cced03abf93ac5f67c54de150343daf03d3406da2",
+            "ac87210dfb356c1ff2e458e623a4eb687e2ff222f599bdb083972807bcb689fe"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:D-03",
+      "title": "关系方向",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "formal_views",
+          "source_sha": "86b76a7ebc91d3547a9def4c758ca8aace4bb88e",
+          "evidence_hashes": [
+            "05fc8d77e1df9c7111a9eb86c88527e96cffe531afd71b3c4efc0f163777a34c",
+            "57ec69c52fabb7fd35753294163f0070a6c1219afc8c694a7e67da35737cde31",
+            "cb2051af85e95c79b7c3f31cced03abf93ac5f67c54de150343daf03d3406da2",
+            "ac87210dfb356c1ff2e458e623a4eb687e2ff222f599bdb083972807bcb689fe"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:D-04",
+      "title": "节点聚合映射",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "formal_views",
+          "source_sha": "86b76a7ebc91d3547a9def4c758ca8aace4bb88e",
+          "evidence_hashes": [
+            "05fc8d77e1df9c7111a9eb86c88527e96cffe531afd71b3c4efc0f163777a34c",
+            "57ec69c52fabb7fd35753294163f0070a6c1219afc8c694a7e67da35737cde31",
+            "cb2051af85e95c79b7c3f31cced03abf93ac5f67c54de150343daf03d3406da2",
+            "ac87210dfb356c1ff2e458e623a4eb687e2ff222f599bdb083972807bcb689fe"
+          ]
+        },
+        {
+          "group": "formal_revision",
+          "source_sha": "73b4ece14715df5d984bc548479c261c11be1ea9",
+          "evidence_hashes": [
+            "3e7f026e92946052372974ee1d59fcc8e081b78f8057435064310383a930520f"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:D-05",
+      "title": "模型改变的影响集",
+      "tier": "L2",
+      "predicate_assessment": "partial",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "formal_revision",
+          "source_sha": "73b4ece14715df5d984bc548479c261c11be1ea9",
+          "evidence_hashes": [
+            "3e7f026e92946052372974ee1d59fcc8e081b78f8057435064310383a930520f"
+          ]
+        },
+        {
+          "group": "independent_latest",
+          "source_sha": "dd436bc4cb7196a44c85344fad89b683d5b47a48",
+          "evidence_hashes": [
+            "3c35e692b5f68896f1d571e20a8586a47cde2022d2c5fccbfbdb83f9212e04e6",
+            "5e1334b3967754d7c5f37a032927a62b05528145dcee03940dd0a4852cf8f4ab",
+            "cbb96350cd2cec9a0fd0f4c1a64500eb400e6b917f8e3ab917fb195a53c8cf97",
+            "31876c180e5cb30483fe886f5f9cb117bbad7ed8e011e45c71f224d4c5af1490"
+          ]
+        },
+        {
+          "group": "actual_numeric_repair",
+          "source_sha": null,
+          "evidence_hashes": [
+            "461bb5c389c2633a4dbe76de9991eea1f87879e0e0807dfe4d312a0989e8d83a",
+            "ed97064948b0357a49392732b158fc00619c87d814d8f238b1a4e478a1ab8932",
+            "5849268f1d1a32c123f46902372a7b9e5f7dbd23bb4de131638974fa7880b377",
+            "920eb0966cbd7d2354336d1eea8722cd7a5a6b7c1d2c701917440b381d0cc5af",
+            "423cc4bd7760a802f9a5e04f392142d7b56226d82cd5f69f503d5f0f9a4c22fc",
+            "6f0a709b1ab0004389486a71f45190f39b9060ac2ef0ef500e1d7ca8f4bff27c"
+          ]
+        },
+        {
+          "group": "formal_revision_updated",
+          "source_sha": "73b4ece14715df5d984bc548479c261c11be1ea9 dirty",
+          "evidence_hashes": [
+            "c05a56fb14504f1801f8b8d6c7c655e51935fe1397f3aacf2fba6bbcfd843444",
+            "3e7f026e92946052372974ee1d59fcc8e081b78f8057435064310383a930520f"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:D-06",
+      "title": "图表口径一致",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "metric_scope_cli",
+          "source_sha": "dd436bc4cb7196a44c85344fad89b683d5b47a48",
+          "evidence_hashes": [
+            "3b4a3cc30f86bc2b7a0bb78b0ffd5608339d72b82c2b9dca5be7c187064a982e"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:W-01",
+      "title": "复用材料已给答案",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "l1_case_execution",
+          "source_sha": "df9207bf5056581a819ca03e4e91fe445ec954e9",
+          "evidence_hashes": [
+            "d67c7526b2d2e44cc1a5ab3c10f05fa04b34102ba9970427e46d9cadfec076b9",
+            "0485acddf508d17eee751296e201c99d53f2fea59c0ca9efd4f3c0f029c13969",
+            "ff012b2f6e496eae32ea6059c3402dcd1b46ca15e7224d1d0aea59165383d738"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:W-02",
+      "title": "Agent拥有专业问题",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "l1_case_execution",
+          "source_sha": "df9207bf5056581a819ca03e4e91fe445ec954e9",
+          "evidence_hashes": [
+            "d67c7526b2d2e44cc1a5ab3c10f05fa04b34102ba9970427e46d9cadfec076b9",
+            "0485acddf508d17eee751296e201c99d53f2fea59c0ca9efd4f3c0f029c13969",
+            "ff012b2f6e496eae32ea6059c3402dcd1b46ca15e7224d1d0aea59165383d738"
+          ]
+        },
+        {
+          "group": "cold_quoted_cli",
+          "source_sha": "4a808c5 content implementation; see historical per-command source context",
+          "evidence_hashes": [
+            "888b4a44dd82e6a468034192fd0ea6fea5d77506a30823e026601a2197bb931d",
+            "986850aede67962047a98fbfb7f736094267dc11f38a4a2436c23a1cce190c24",
+            "8804a370ffac47a8c9b1743812a08b74ac1cf4040acdbf9dacd8124c5cd23db5",
+            "973ef93d0e62596d5618634c969858dafc08d286e492ebcf84dd553bae6936ed",
+            "9e4be8cf69ed5d3f38a064236770e89ef76350097bf503b795bfaf14289674b1",
+            "0b2f029e7a7c5bc04bbb54183ac151d6ee08003b66d82d347393b582f08fcaf2",
+            "ae01714263f2103a18531833296b05e652286d2f4b80b253361a41fea91f9b51",
+            "5f18e2163ef6ce261e005aacea92c2e572358cc563ac95e3735d272228adc4bd"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:W-03",
+      "title": "真实决定不能代填",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "l1_case_execution",
+          "source_sha": "df9207bf5056581a819ca03e4e91fe445ec954e9",
+          "evidence_hashes": [
+            "d67c7526b2d2e44cc1a5ab3c10f05fa04b34102ba9970427e46d9cadfec076b9",
+            "0485acddf508d17eee751296e201c99d53f2fea59c0ca9efd4f3c0f029c13969",
+            "ff012b2f6e496eae32ea6059c3402dcd1b46ca15e7224d1d0aea59165383d738"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:W-04",
+      "title": "布尔否定有效",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "choice_negative_fixes",
+          "source_sha": "0146d71",
+          "evidence_hashes": [
+            "1b7ab3ed88e5cec9bf9c25abd46723747ddb3c1302de100b74f9153ce35f9886",
+            "28939ed949a6762b8e1be3e3ef622a23ccd0602843415ddc4a3c48b48edad8df",
+            "94988b9bbc007799f4197f7bba99b6cc3a9347570b9f2d93896d59ca6c97a4e3",
+            "6f70e5c22a1964dfaa22d484b5bb41b306d401bf2bd61acf751e1b3656bcfc1e",
+            "d47be0310980f314338e812ea3156e066b6fb7969dc90c24aa319311381835df"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:W-05",
+      "title": "决定精准失效",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "question_scope_fix",
+          "source_sha": "20d87fb",
+          "evidence_hashes": [
+            "6dfbdb420b4ba450ba3faf179e5aeb064b3d9d02065243650af9e7c0bb863e7b",
+            "a4042df4620ff1172360131c5205d48df7807d62b8bfdb3556d5487e55f74391",
+            "34c2ae84c68c9ca6d821d57fbd1b7e7028f425962bd27c7821806131c5b9dc99",
+            "c97aefa4077a28d16696b400ca68c85c857360a0b65908ea3f46bbfdecc377db",
+            "dda84caad1a64a799eec0c3513d888b967653e7f80f37ee5c1cefac0e7887c28"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:W-06",
+      "title": "阶段内继续执行",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "l1_case_execution",
+          "source_sha": "df9207bf5056581a819ca03e4e91fe445ec954e9",
+          "evidence_hashes": [
+            "d67c7526b2d2e44cc1a5ab3c10f05fa04b34102ba9970427e46d9cadfec076b9",
+            "0485acddf508d17eee751296e201c99d53f2fea59c0ca9efd4f3c0f029c13969",
+            "ff012b2f6e496eae32ea6059c3402dcd1b46ca15e7224d1d0aea59165383d738"
+          ]
+        },
+        {
+          "group": "cold_quoted_cli",
+          "source_sha": "4a808c5 content implementation; see historical per-command source context",
+          "evidence_hashes": [
+            "888b4a44dd82e6a468034192fd0ea6fea5d77506a30823e026601a2197bb931d",
+            "986850aede67962047a98fbfb7f736094267dc11f38a4a2436c23a1cce190c24",
+            "8804a370ffac47a8c9b1743812a08b74ac1cf4040acdbf9dacd8124c5cd23db5",
+            "973ef93d0e62596d5618634c969858dafc08d286e492ebcf84dd553bae6936ed",
+            "9e4be8cf69ed5d3f38a064236770e89ef76350097bf503b795bfaf14289674b1",
+            "0b2f029e7a7c5bc04bbb54183ac151d6ee08003b66d82d347393b582f08fcaf2",
+            "ae01714263f2103a18531833296b05e652286d2f4b80b253361a41fea91f9b51",
+            "5f18e2163ef6ce261e005aacea92c2e572358cc563ac95e3735d272228adc4bd"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:W-07",
+      "title": "迟到结果拒绝",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "l1_case_execution",
+          "source_sha": "df9207bf5056581a819ca03e4e91fe445ec954e9",
+          "evidence_hashes": [
+            "d67c7526b2d2e44cc1a5ab3c10f05fa04b34102ba9970427e46d9cadfec076b9",
+            "0485acddf508d17eee751296e201c99d53f2fea59c0ca9efd4f3c0f029c13969",
+            "ff012b2f6e496eae32ea6059c3402dcd1b46ca15e7224d1d0aea59165383d738"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:W-08",
+      "title": "幂等与冲突",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "l1_case_execution",
+          "source_sha": "df9207bf5056581a819ca03e4e91fe445ec954e9",
+          "evidence_hashes": [
+            "d67c7526b2d2e44cc1a5ab3c10f05fa04b34102ba9970427e46d9cadfec076b9",
+            "0485acddf508d17eee751296e201c99d53f2fea59c0ca9efd4f3c0f029c13969",
+            "ff012b2f6e496eae32ea6059c3402dcd1b46ca15e7224d1d0aea59165383d738"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:W-09",
+      "title": "跨文件中断恢复",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "process_kill",
+          "source_sha": "86b76a7ebc91d3547a9def4c758ca8aace4bb88e",
+          "evidence_hashes": [
+            "82426241ebe628256013e6740e5c89bb5726660434ca80ae6e8d7482cabf6d86",
+            "4ca4f7033e12dece3a1d45cf243c388215a7ac91dc9a1c8670a59029922d8dd8",
+            "9fe17b0188270dee55574f487842bfdc85861c7dca5c4c925b90b1f6bf41702f",
+            "f45f868d8aa06b206a57b1222c20fe0f56111900750d0ced0adc003a189e65c2"
+          ]
+        },
+        {
+          "group": "process_real_updated",
+          "source_sha": null,
+          "evidence_hashes": [
+            "9fe17b0188270dee55574f487842bfdc85861c7dca5c4c925b90b1f6bf41702f",
+            "f45f868d8aa06b206a57b1222c20fe0f56111900750d0ced0adc003a189e65c2"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:W-10",
+      "title": "局部权限与停止",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "current_runtime",
+          "source_sha": "593ef14f41122aeaca97b709df7b720f24b6e9dd",
+          "evidence_hashes": [
+            "9c9b6dc37cb20ec4c24069989b810833bf65592f702f07a5ddbd7a223f345001"
+          ]
+        },
+        {
+          "group": "six_findings",
+          "source_sha": "593ef14f41122aeaca97b709df7b720f24b6e9dd",
+          "evidence_hashes": [
+            "6a800eb91131b6936ee930d425c56ae7534b7ebb6abfb1d8596618f2840eb4ed"
+          ]
+        },
+        {
+          "group": "stop_permission_final",
+          "source_sha": "848134bbee1596efef3008bcedadcffd536162fe",
+          "evidence_hashes": [
+            "2f3ac202d2346df6d1a16ed9565df5990cda2e79be437f2248ad02f973e84cc1",
+            "d6209f58d8f098e3d6b5a9c9ee50c4c6ed3fe7b9399d615788fa5a809eb183a2",
+            "d0a7dcf99a948bde2b20b5ac2ef55290812372934b97082ccc08f8897e540414",
+            "5e38a9226a3b1e3972b6f4f20b528965393f55595e7e739ab235d453856a205b",
+            "b9eebda9e9aa2c04989728d9054b153f9012e476b855780c113a3ee9643a15fb"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:Q-01",
+      "title": "空pass不代表审查",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "canonical_qa_contract",
+          "source_sha": "7ef7947",
+          "evidence_hashes": [
+            "deb9482de79bf5f9b456b934d08deaa77e5b3478fc8c6a962cc0e4cabd27348d",
+            "b003bfe3372d70ad873b150988320048af4817a09574fabd9944fd333058df05",
+            "6fcb9b2a0269888af73eb03c203004f3948b70cd88f8607d8e5eccd2283a0510",
+            "480918ca49ff1aea7961fc13e3c7254328c1fca98d9ff586952b1c88003d3ae4",
+            "f9a104257160dab9a503cb7c4b9845b47d8d3020ab5cd90ea8ade25662ef7c59",
+            "2c20b709340a6ed4b9c8e0c12380df328e10cc92967a124320c5e36fd7aea4fa"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:Q-02",
+      "title": "审查覆盖完整",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "canonical_qa_contract",
+          "source_sha": "7ef7947",
+          "evidence_hashes": [
+            "deb9482de79bf5f9b456b934d08deaa77e5b3478fc8c6a962cc0e4cabd27348d",
+            "b003bfe3372d70ad873b150988320048af4817a09574fabd9944fd333058df05",
+            "6fcb9b2a0269888af73eb03c203004f3948b70cd88f8607d8e5eccd2283a0510",
+            "480918ca49ff1aea7961fc13e3c7254328c1fca98d9ff586952b1c88003d3ae4",
+            "f9a104257160dab9a503cb7c4b9845b47d8d3020ab5cd90ea8ade25662ef7c59",
+            "2c20b709340a6ed4b9c8e0c12380df328e10cc92967a124320c5e36fd7aea4fa"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:Q-03",
+      "title": "独立性不是改名",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "canonical_qa_contract",
+          "source_sha": "7ef7947",
+          "evidence_hashes": [
+            "deb9482de79bf5f9b456b934d08deaa77e5b3478fc8c6a962cc0e4cabd27348d",
+            "b003bfe3372d70ad873b150988320048af4817a09574fabd9944fd333058df05",
+            "6fcb9b2a0269888af73eb03c203004f3948b70cd88f8607d8e5eccd2283a0510",
+            "480918ca49ff1aea7961fc13e3c7254328c1fca98d9ff586952b1c88003d3ae4",
+            "f9a104257160dab9a503cb7c4b9845b47d8d3020ab5cd90ea8ade25662ef7c59",
+            "2c20b709340a6ed4b9c8e0c12380df328e10cc92967a124320c5e36fd7aea4fa"
+          ]
+        },
+        {
+          "group": "root_incremental_actual_validation",
+          "source_sha": null,
+          "evidence_hashes": []
+        }
+      ]
+    },
+    {
+      "case": "SC1:Q-04",
+      "title": "当前输入绑定",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "l1_case_execution",
+          "source_sha": "df9207bf5056581a819ca03e4e91fe445ec954e9",
+          "evidence_hashes": [
+            "d67c7526b2d2e44cc1a5ab3c10f05fa04b34102ba9970427e46d9cadfec076b9",
+            "0485acddf508d17eee751296e201c99d53f2fea59c0ca9efd4f3c0f029c13969",
+            "ff012b2f6e496eae32ea6059c3402dcd1b46ca15e7224d1d0aea59165383d738"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:Q-05",
+      "title": "发现结果压过summary",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "l1_extra_execution",
+          "source_sha": "dd436bc4cb7196a44c85344fad89b683d5b47a48",
+          "evidence_hashes": [
+            "0e1ef3bd6bc33d6f90902d45462b8ce9dc2876aaee8af3ff403cfc31c7bf513f",
+            "78664b9a2393eafc22a0532c8a49efe2967c59bcf00448e61cfa7130221580f7",
+            "8a055b7c9750afd8e3b98e11e30cc17243c92b80c5a3c3b168b8d46be947b76f"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:Q-06",
+      "title": "具体返修动作",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "l1_case_execution",
+          "source_sha": "df9207bf5056581a819ca03e4e91fe445ec954e9",
+          "evidence_hashes": [
+            "d67c7526b2d2e44cc1a5ab3c10f05fa04b34102ba9970427e46d9cadfec076b9",
+            "0485acddf508d17eee751296e201c99d53f2fea59c0ca9efd4f3c0f029c13969",
+            "ff012b2f6e496eae32ea6059c3402dcd1b46ca15e7224d1d0aea59165383d738"
+          ]
+        },
+        {
+          "group": "actual_targeted_repair_history",
+          "source_sha": "0cfbe54",
+          "evidence_hashes": [
+            "19b75438918a766d95190a2ed3164d13dd1c735d57c34cd0e5c27d902b286848",
+            "957b0b289be0ed681304f43b8efc55069cc612e960d0d92bdb61352699a6bbca"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:Q-07",
+      "title": "修复预算耗尽",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "l1_case_execution",
+          "source_sha": "df9207bf5056581a819ca03e4e91fe445ec954e9",
+          "evidence_hashes": [
+            "d67c7526b2d2e44cc1a5ab3c10f05fa04b34102ba9970427e46d9cadfec076b9",
+            "0485acddf508d17eee751296e201c99d53f2fea59c0ca9efd4f3c0f029c13969",
+            "ff012b2f6e496eae32ea6059c3402dcd1b46ca15e7224d1d0aea59165383d738"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:Q-08",
+      "title": "修订后定向复审",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "actual_file_repair",
+          "source_sha": null,
+          "evidence_hashes": [
+            "07c9b2a8651af478648b277ac713a50fc8f451f6bd95ff13dae26158443af5fb",
+            "9200ea2cfe144db34e57ad05eb360e6a8c7094f6a457da5a6f50f598d8de2268",
+            "6511232c533ce0b916f9c653677b82cbdfe1dfd7ca593fe59dc7ff29687084e1",
+            "6232156b5175cf1189ca43994b32faeec55ce076a232ef63c0a998c9deb28e0b",
+            "252b14c3d922040add51039a014721970b24d05be57dc3666b0b597dc464fc30",
+            "9f8afe75e5a7dd2d651b3f47c54eec85a686bd442db6252bce31bacd2ef7cbb4"
+          ]
+        },
+        {
+          "group": "actual_numeric_repair",
+          "source_sha": null,
+          "evidence_hashes": [
+            "461bb5c389c2633a4dbe76de9991eea1f87879e0e0807dfe4d312a0989e8d83a",
+            "ed97064948b0357a49392732b158fc00619c87d814d8f238b1a4e478a1ab8932",
+            "5849268f1d1a32c123f46902372a7b9e5f7dbd23bb4de131638974fa7880b377",
+            "920eb0966cbd7d2354336d1eea8722cd7a5a6b7c1d2c701917440b381d0cc5af",
+            "423cc4bd7760a802f9a5e04f392142d7b56226d82cd5f69f503d5f0f9a4c22fc",
+            "6f0a709b1ab0004389486a71f45190f39b9060ac2ef0ef500e1d7ca8f4bff27c"
+          ]
+        },
+        {
+          "group": "actual_targeted_repair_history",
+          "source_sha": "0cfbe54",
+          "evidence_hashes": [
+            "19b75438918a766d95190a2ed3164d13dd1c735d57c34cd0e5c27d902b286848",
+            "957b0b289be0ed681304f43b8efc55069cc612e960d0d92bdb61352699a6bbca"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:Q-09",
+      "title": "正式必需门一致",
+      "tier": "L1",
+      "predicate_assessment": "partial",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "l1_case_execution",
+          "source_sha": "df9207bf5056581a819ca03e4e91fe445ec954e9",
+          "evidence_hashes": [
+            "d67c7526b2d2e44cc1a5ab3c10f05fa04b34102ba9970427e46d9cadfec076b9",
+            "0485acddf508d17eee751296e201c99d53f2fea59c0ca9efd4f3c0f029c13969",
+            "ff012b2f6e496eae32ea6059c3402dcd1b46ca15e7224d1d0aea59165383d738"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:Q-10",
+      "title": "模式降级不可绕过",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "update_specific_nodes",
+          "source_sha": "b165d45d5a992ef9ea2a5555ed8d5b3b42019a05",
+          "evidence_hashes": [
+            "99d75ce66e371ac770364f04a321422c349a3d3dfa579ba388c05a1c2caa3ff7",
+            "a4609c0b7942da7778ce2b40190f1c0aaa608ed667d296e7281192b206b069b4"
+          ]
+        },
+        {
+          "group": "route_mode_closure",
+          "source_sha": "7381e04d35245c80f0189274d49a571def386f74",
+          "evidence_hashes": [
+            "751ef6ab20dd8e4b81c69284fe3b673b2f68cd414d5d9c0599f03188090cabf9",
+            "66ecfd90b686db6419913f6c70947830fc4383009b556bb2cd80eb56ffe62752",
+            "1cce3ba4edbd626a3afe9b79c68de56d985784bdc8b31bee3c1ee66bccaef9b9"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:Q-11",
+      "title": "批准绑定当前版本",
+      "tier": "L1",
+      "predicate_assessment": "partial",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "l1_extra_execution",
+          "source_sha": "dd436bc4cb7196a44c85344fad89b683d5b47a48",
+          "evidence_hashes": [
+            "0e1ef3bd6bc33d6f90902d45462b8ce9dc2876aaee8af3ff403cfc31c7bf513f",
+            "78664b9a2393eafc22a0532c8a49efe2967c59bcf00448e61cfa7130221580f7",
+            "8a055b7c9750afd8e3b98e11e30cc17243c92b80c5a3c3b168b8d46be947b76f"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:Q-12",
+      "title": "P0与P1处理",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "l1_case_execution",
+          "source_sha": "df9207bf5056581a819ca03e4e91fe445ec954e9",
+          "evidence_hashes": [
+            "d67c7526b2d2e44cc1a5ab3c10f05fa04b34102ba9970427e46d9cadfec076b9",
+            "0485acddf508d17eee751296e201c99d53f2fea59c0ca9efd4f3c0f029c13969",
+            "ff012b2f6e496eae32ea6059c3402dcd1b46ca15e7224d1d0aea59165383d738"
+          ]
+        },
+        {
+          "group": "version_scoped_p1_policy",
+          "source_sha": "1f9f9b9",
+          "evidence_hashes": [
+            "f0b3f8f440dd546eac28fa5e47ffce76c6417aa0adfba33a4c734d68f399853b",
+            "af81b94348dcab42f912286d46ed3b12ce0ff5dd74e1bf96810afda6bf427a79",
+            "b83a65950bf25ca907c2dbb86dbe1a217d8ce9dc42c482f3294223da3700b660",
+            "83b863db8e5fa2ed2556e9770c401e675b3cd7227f4fdc536a3483ac22c192a9"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:Q-13",
+      "title": "无来源支持的数字被发现",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "actual_numeric_repair",
+          "source_sha": null,
+          "evidence_hashes": [
+            "461bb5c389c2633a4dbe76de9991eea1f87879e0e0807dfe4d312a0989e8d83a",
+            "ed97064948b0357a49392732b158fc00619c87d814d8f238b1a4e478a1ab8932",
+            "5849268f1d1a32c123f46902372a7b9e5f7dbd23bb4de131638974fa7880b377",
+            "920eb0966cbd7d2354336d1eea8722cd7a5a6b7c1d2c701917440b381d0cc5af",
+            "423cc4bd7760a802f9a5e04f392142d7b56226d82cd5f69f503d5f0f9a4c22fc",
+            "6f0a709b1ab0004389486a71f45190f39b9060ac2ef0ef500e1d7ca8f4bff27c"
+          ]
+        },
+        {
+          "group": "l1_case_execution",
+          "source_sha": "df9207bf5056581a819ca03e4e91fe445ec954e9",
+          "evidence_hashes": [
+            "d67c7526b2d2e44cc1a5ab3c10f05fa04b34102ba9970427e46d9cadfec076b9",
+            "0485acddf508d17eee751296e201c99d53f2fea59c0ca9efd4f3c0f029c13969",
+            "ff012b2f6e496eae32ea6059c3402dcd1b46ca15e7224d1d0aea59165383d738"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:L-01",
+      "title": "通过率口径",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "l1_case_execution",
+          "source_sha": "df9207bf5056581a819ca03e4e91fe445ec954e9",
+          "evidence_hashes": [
+            "d67c7526b2d2e44cc1a5ab3c10f05fa04b34102ba9970427e46d9cadfec076b9",
+            "0485acddf508d17eee751296e201c99d53f2fea59c0ca9efd4f3c0f029c13969",
+            "ff012b2f6e496eae32ea6059c3402dcd1b46ca15e7224d1d0aea59165383d738"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:L-02",
+      "title": "重复事件去重",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "l1_case_execution",
+          "source_sha": "df9207bf5056581a819ca03e4e91fe445ec954e9",
+          "evidence_hashes": [
+            "d67c7526b2d2e44cc1a5ab3c10f05fa04b34102ba9970427e46d9cadfec076b9",
+            "0485acddf508d17eee751296e201c99d53f2fea59c0ca9efd4f3c0f029c13969",
+            "ff012b2f6e496eae32ea6059c3402dcd1b46ca15e7224d1d0aea59165383d738"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:L-03",
+      "title": "旧事件不猜测",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "l1_case_execution",
+          "source_sha": "df9207bf5056581a819ca03e4e91fe445ec954e9",
+          "evidence_hashes": [
+            "d67c7526b2d2e44cc1a5ab3c10f05fa04b34102ba9970427e46d9cadfec076b9",
+            "0485acddf508d17eee751296e201c99d53f2fea59c0ca9efd4f3c0f029c13969",
+            "ff012b2f6e496eae32ea6059c3402dcd1b46ca15e7224d1d0aea59165383d738"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:L-04",
+      "title": "经验适用边界",
+      "tier": "L1",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "l1_case_execution",
+          "source_sha": "df9207bf5056581a819ca03e4e91fe445ec954e9",
+          "evidence_hashes": [
+            "d67c7526b2d2e44cc1a5ab3c10f05fa04b34102ba9970427e46d9cadfec076b9",
+            "0485acddf508d17eee751296e201c99d53f2fea59c0ca9efd4f3c0f029c13969",
+            "ff012b2f6e496eae32ea6059c3402dcd1b46ca15e7224d1d0aea59165383d738"
+          ]
+        },
+        {
+          "group": "bounded_experience_and_source_quality",
+          "source_sha": "6885ca2",
+          "evidence_hashes": [
+            "d63eb66544cd7a1b37b5631d689a31f63ceba4dc4ac8a29b0159d9a5810c268f",
+            "f36e1e392d59bef8578ffcad22a6c77bd2c42ec802b5034c3ddf93f7cf774009"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:M-01",
+      "title": "外部目录不被占有",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "managed_install",
+          "source_sha": "86b76a7ebc91d3547a9def4c758ca8aace4bb88e",
+          "evidence_hashes": [
+            "86cd59365d314ef0b4914f9963462e5141f7f1675b154c6377401629ffa9e5aa",
+            "0bb53c45fbc294678be98d35bd46276344417b89c1de606977c724b9df10ac48",
+            "64381f16758283f733c9138f7a2ab7f4af294bbb6d284aab1814f174fcedaa34"
+          ]
+        },
+        {
+          "group": "install_ownership_updated",
+          "source_sha": null,
+          "evidence_hashes": [
+            "0bb53c45fbc294678be98d35bd46276344417b89c1de606977c724b9df10ac48",
+            "64381f16758283f733c9138f7a2ab7f4af294bbb6d284aab1814f174fcedaa34"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:M-02",
+      "title": "只卸载自有入口",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "managed_install",
+          "source_sha": "86b76a7ebc91d3547a9def4c758ca8aace4bb88e",
+          "evidence_hashes": [
+            "86cd59365d314ef0b4914f9963462e5141f7f1675b154c6377401629ffa9e5aa",
+            "0bb53c45fbc294678be98d35bd46276344417b89c1de606977c724b9df10ac48",
+            "64381f16758283f733c9138f7a2ab7f4af294bbb6d284aab1814f174fcedaa34"
+          ]
+        },
+        {
+          "group": "install_ownership_updated",
+          "source_sha": null,
+          "evidence_hashes": [
+            "0bb53c45fbc294678be98d35bd46276344417b89c1de606977c724b9df10ac48",
+            "64381f16758283f733c9138f7a2ab7f4af294bbb6d284aab1814f174fcedaa34"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:M-03",
+      "title": "升级失败原子回退",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "managed_install",
+          "source_sha": "86b76a7ebc91d3547a9def4c758ca8aace4bb88e",
+          "evidence_hashes": [
+            "86cd59365d314ef0b4914f9963462e5141f7f1675b154c6377401629ffa9e5aa",
+            "0bb53c45fbc294678be98d35bd46276344417b89c1de606977c724b9df10ac48",
+            "64381f16758283f733c9138f7a2ab7f4af294bbb6d284aab1814f174fcedaa34"
+          ]
+        },
+        {
+          "group": "install_ownership_updated",
+          "source_sha": null,
+          "evidence_hashes": [
+            "0bb53c45fbc294678be98d35bd46276344417b89c1de606977c724b9df10ac48",
+            "64381f16758283f733c9138f7a2ab7f4af294bbb6d284aab1814f174fcedaa34"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:M-04",
+      "title": "旧Run无损映射",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "migration_fields_actual",
+          "source_sha": "4a808c5241c04771de20de9a1d47b41dca3a1dfa",
+          "evidence_hashes": [
+            "8eebf5c5f980580ebc8891dcfc0607e0f5406e06c4a41d8d61c4c69464ec8db5",
+            "809f67b747f54e91eec1e8c424cf039702775610be79f7ca19e41a231d26b322",
+            "89f08f14b3cee0a01356dec49a3e02b03bea073086ea1bc2fa1434ae547d5c66",
+            "054952090f8559636edefbc33155e94c7643eb8ee7fbe03f7cac444ba013de0a",
+            "4a8b583dc57721b7fec11a6e51f73056729d75405ae649c58015c3e9461cb1ab",
+            "4fba491c9d08a645af6259921f9824e5c379b515583f27ca9587126b657d34b2",
+            "82d2e061c4e900c3aad8b2a063f725c5db8c71cef38cbdae026b1a164f28ca8f",
+            "b04410c4cbf3df4ecd87a148f6bdbb1bd7189ce22ab1b12dc064b18d7fd3b22d",
+            "4953c74802a1a98cda210d8f2c56085c3b6719bf4e5c403801b851a4608e4c58"
+          ]
+        },
+        {
+          "group": "migration_848_SC1_M-04",
+          "source_sha": "848134bbee1596efef3008bcedadcffd536162fe",
+          "evidence_hashes": [
+            "e56a4c43f970fbb0a90a43f83509a5f9a03a6d581643f2be9120152869579f94",
+            "940fa93cde022fc1048029cfe0d0029cdda5663ce448c48238f93296fca6be16",
+            "c79d3ec441e2b557bdbb0b4832e87be53ddaba8c3ae8c27a19eef19102404387",
+            "5dfd0693489517f954c0c24e2321f3dcf8049f08a06ba503dcbe8c053b6f7217",
+            "a6164f9d3b5d31991e2b425336a57e0727cd310e3eb65c5c754d9f19f206bd43",
+            "bcab1062ff47d70659171235ed019e093e80b7e46c7c24af2d6e8455cd7024fb"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:M-05",
+      "title": "新策略不洗白旧结果",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "migration_fields_actual",
+          "source_sha": "4a808c5241c04771de20de9a1d47b41dca3a1dfa",
+          "evidence_hashes": [
+            "8eebf5c5f980580ebc8891dcfc0607e0f5406e06c4a41d8d61c4c69464ec8db5",
+            "809f67b747f54e91eec1e8c424cf039702775610be79f7ca19e41a231d26b322",
+            "89f08f14b3cee0a01356dec49a3e02b03bea073086ea1bc2fa1434ae547d5c66",
+            "054952090f8559636edefbc33155e94c7643eb8ee7fbe03f7cac444ba013de0a",
+            "4a8b583dc57721b7fec11a6e51f73056729d75405ae649c58015c3e9461cb1ab",
+            "4fba491c9d08a645af6259921f9824e5c379b515583f27ca9587126b657d34b2",
+            "82d2e061c4e900c3aad8b2a063f725c5db8c71cef38cbdae026b1a164f28ca8f",
+            "b04410c4cbf3df4ecd87a148f6bdbb1bd7189ce22ab1b12dc064b18d7fd3b22d",
+            "4953c74802a1a98cda210d8f2c56085c3b6719bf4e5c403801b851a4608e4c58"
+          ]
+        },
+        {
+          "group": "canonical_qa_contract",
+          "source_sha": "7ef7947",
+          "evidence_hashes": [
+            "deb9482de79bf5f9b456b934d08deaa77e5b3478fc8c6a962cc0e4cabd27348d",
+            "b003bfe3372d70ad873b150988320048af4817a09574fabd9944fd333058df05",
+            "6fcb9b2a0269888af73eb03c203004f3948b70cd88f8607d8e5eccd2283a0510",
+            "480918ca49ff1aea7961fc13e3c7254328c1fca98d9ff586952b1c88003d3ae4",
+            "f9a104257160dab9a503cb7c4b9845b47d8d3020ab5cd90ea8ade25662ef7c59",
+            "2c20b709340a6ed4b9c8e0c12380df328e10cc92967a124320c5e36fd7aea4fa"
+          ]
+        },
+        {
+          "group": "migration_848_SC1_M-05",
+          "source_sha": "848134bbee1596efef3008bcedadcffd536162fe",
+          "evidence_hashes": [
+            "b77b9f23c06b25b9682d13fb9597d2bc6929aeb45204b666f228179251283569",
+            "d3b179b67b5297c42f191688c856a6a8388c50b1dcc7674719be635f7a26f5e1",
+            "4570217f5108d349eba0f15e23a4e26382a91dc88d1253d19f78ef59f2119469",
+            "c0e0424d43315b756e5d6b697997fb9f17d0e7d322482c41fdfe32bfc087bfde",
+            "13fb7d4f81672c6b7d201a16304711021745c834cd6ea3bc9a74eb3480ad8a06",
+            "bcab1062ff47d70659171235ed019e093e80b7e46c7c24af2d6e8455cd7024fb"
+          ]
+        }
+      ]
+    },
+    {
+      "case": "SC1:M-06",
+      "title": "软件回滚与数据分离",
+      "tier": "L2",
+      "predicate_assessment": "verified_pass",
+      "final_candidate_revalidation": "pending",
+      "evidence": [
+        {
+          "group": "managed_install",
+          "source_sha": "86b76a7ebc91d3547a9def4c758ca8aace4bb88e",
+          "evidence_hashes": [
+            "86cd59365d314ef0b4914f9963462e5141f7f1675b154c6377401629ffa9e5aa",
+            "0bb53c45fbc294678be98d35bd46276344417b89c1de606977c724b9df10ac48",
+            "64381f16758283f733c9138f7a2ab7f4af294bbb6d284aab1814f174fcedaa34"
+          ]
+        },
+        {
+          "group": "install_ownership_updated",
+          "source_sha": null,
+          "evidence_hashes": [
+            "0bb53c45fbc294678be98d35bd46276344417b89c1de606977c724b9df10ac48",
+            "64381f16758283f733c9138f7a2ab7f4af294bbb6d284aab1814f174fcedaa34"
+          ]
+        }
+      ]
+    }
+  ]
+}

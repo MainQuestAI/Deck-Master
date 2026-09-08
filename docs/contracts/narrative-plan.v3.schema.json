@@ -2,8 +2,8 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:deck-master:sc1:deck_narrative_plan.v3",
   "title": "deck_narrative_plan.v3",
-  "description": "SC-1 target contract draft; not installed in the current repository. Structural validation is not runtime or semantic verification. Field semantics follow contracts/EXTENSION_DELTAS.md (Narrative Plan 目标 v3); conflicts resolve to that table during Q0 freeze.",
-  "x-spec-status": "target-draft",
+  "description": "SC-1 runtime contract. Structural validation is not runtime or semantic verification. Field semantics follow contracts/EXTENSION_DELTAS.md (Narrative Plan 目标 v3); conflicts resolve to that table during Q0 freeze.",
+  "x-spec-status": "runtime",
   "type": "object",
   "properties": {
     "schema_version": {
