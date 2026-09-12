@@ -159,6 +159,8 @@ class AgentReadyContractTests(unittest.TestCase):
         # SC-1.1: the built-in native engine is production-capable without
         # any external binding — the preview projection passes on the probe.
         self.assertEqual("pass", checks["production_backend_projection"]["status"])
+        self.assertIn("legacy backend binding is optional", checks["production_backend_projection"]["summary"])
+        self.assertNotIn("fully bound", checks["production_backend_projection"]["summary"])
 
     def test_agent_doctor_production_blocks_without_backend_binding(self) -> None:
         completed = self.run_cli("agent-doctor", "--mode", "production", "--output", "json")

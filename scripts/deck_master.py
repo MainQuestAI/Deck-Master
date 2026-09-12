@@ -1960,7 +1960,7 @@ def command_agent_doctor(args: argparse.Namespace) -> dict[str, Any]:
             "production_backend_projection",
             "pass" if production_dependencies_ready else "warn",
             (
-                "Production backend is fully bound."
+                "Built-in native compilation is available; legacy backend binding is optional. Rendering and fonts have separate readiness checks."
                 if production_dependencies_ready
                 else "Production backend is not ready; preview must stay in fixture mode."
             ),
@@ -2490,8 +2490,12 @@ def _persist_build_options(
     *,
     persist: bool = True,
 ) -> str:
-    request = load_request(run_dir)
-    from build.build_route import _derive_route, load_persisted_route, persist_route
+    from build.build_route import _derive_route, load_persisted_route
+    from workflow.actions import revision_read
+    with revision_read(run_dir, fresh=True) as expected_revision:
+        request = load_request(run_dir)
+        fixed = load_persisted_route(run_dir)
+    original_request = dict(request)
     requested = getattr(args, "profile", None)
     authoring = getattr(args, "authoring_mode", None)
     existing = str(request.get("builder_profile") or "").strip()
@@ -2503,7 +2507,6 @@ def _persist_build_options(
         proposed["profile"] = requested
     if authoring:
         proposed["authoring_mode"] = str(authoring).replace("-", "_")
-    fixed = load_persisted_route(run_dir)
     if not fixed:
         original_route = _derive_route(request, run_dir)
         if original_route.get("selection_origin") == "existing_run":
@@ -2519,7 +2522,6 @@ def _persist_build_options(
         request.update(proposed)
         request["builder_profile"] = effective
         request.setdefault("origin_run_mode", request.get("run_mode", "production"))
-        persist_route(run_dir, fixed or _derive_route(request, run_dir))
     output_profile = getattr(args, "output_profile", None)
     if persist and output_profile:
         request["output_profile"] = str(output_profile)
@@ -2558,8 +2560,59 @@ def _persist_build_options(
     if persist and review_options_changed and effective_receipt:
         request["receipt_policy"] = effective_receipt
     if persist and (requested_internal or authoring or output_profile or review_policy or review_depth or receipt_policy):
-        write_json(run_dir / REQUEST_NAME, request)
+        route = (fixed or _derive_route(request, run_dir)) if requested or authoring else fixed
+        _commit_build_options(run_dir, original_request, request, route, expected_revision)
     return effective
+
+
+def _commit_build_options(run_dir: Path, original: dict, request: dict, route: dict, expected_revision: str) -> None:
+    """Publish requested options with their route through the current revision."""
+    from build.build_route import load_persisted_route, validate_route
+    from workflow.actions import (
+        ActionStaleError, _acquire_run_lock, _release_run_lock, _atomic_json,
+        read_current_revision, create_action_envelope, stage_action_result, commit_action_result,
+    )
+    from uuid import uuid4
+
+    if route:
+        validate_route(route)
+    if expected_revision:
+        from workflow.actions import read_revision_state
+        state = read_revision_state(run_dir, expected_revision)
+        outputs = {REQUEST_NAME: json.dumps(request, ensure_ascii=False, indent=2) + "\n"}
+        if route and "build/route.json" not in state:
+            outputs["build/route.json"] = json.dumps(route, ensure_ascii=False, indent=2) + "\n"
+        if request == original and len(outputs) == 1:
+            return
+        action_id = "build-options-" + uuid4().hex
+        envelope = create_action_envelope(
+            action_id=action_id, task_id=action_id, scope_pages=["build-options"],
+            permission="runtime", input_fingerprint=expected_revision,
+        )
+        stage_action_result(run_dir, envelope, outputs)
+        commit_action_result(
+            run_dir, envelope, expected_revision=expected_revision,
+            current_input_fingerprint=lambda: read_current_revision(run_dir).get("revision_id", ""),
+            targets={name: run_dir / name for name in outputs},
+        )
+        return
+    # Runs which have not entered revision management keep their legacy writers.
+    # Recheck under the shared lock so a concurrently created baseline cannot
+    # turn this write into an untracked compatibility projection.
+    lock = _acquire_run_lock(run_dir)
+    try:
+        if read_current_revision(run_dir).get("revision_id") or load_request(run_dir) != original:
+            raise ActionStaleError("build options changed concurrently; retry against the current revision")
+        existing = load_persisted_route(run_dir)
+        if route and existing and any(existing.get(key) != route.get(key) for key in (
+            "engine_id", "authoring_mode", "density", "library_mode", "origin_run_mode",
+        )):
+            raise ActionStaleError("build route changed concurrently; retry against the current selection")
+        if route and not existing:
+            _atomic_json(run_dir / "build/route.json", route)
+        write_json(run_dir / REQUEST_NAME, request)
+    finally:
+        _release_run_lock(lock)
 
 
 def command_bind_workspace(args: argparse.Namespace) -> dict[str, Any]:
@@ -4199,6 +4252,7 @@ def _native_file_quality_command(args: argparse.Namespace) -> bool:
 def main() -> None:
     from build.native_engine import NativeEngineError
     from native_pptx.api import NativeCompileError
+    from workflow.actions import ActionStaleError
     parser = build_parser()
     args = parser.parse_args()
     try:
@@ -4234,8 +4288,13 @@ def main() -> None:
         PolicyError,
         NativeEngineError,
         NativeCompileError,
+        ActionStaleError,
         ValueError,
     ) as exc:
+        if isinstance(exc, ActionStaleError):
+            print_json({"status": "blocked", "code": "ACTION_STALE", "message": str(exc),
+                        "next_command": "deck-master next-step --run-dir <run_dir>"})
+            raise SystemExit(2) from exc
         if str(exc).startswith("RUN_MODE_CONFLICT"):
             print_json({"status": "blocked", "code": "RUN_MODE_CONFLICT", "message": str(exc)})
             raise SystemExit(2) from exc
