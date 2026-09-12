@@ -84,15 +84,14 @@ def _aggregate_feedback(workspace_dir: Path) -> dict[str, Any]:
         if event in ("delivered", "delivery_positive_signal", "exported_client", "exported_internal"):
             # delivery signals stay independent of the review outcome
             delivered_counter[slide_id] += 1
-        if event not in ("preview_approved", "preview_rejected", "exported_client", "exported_internal"):
+        if event not in ("preview_approved", "preview_rejected"):
             continue
-        outcome = "accepted" if event in ("preview_approved", "exported_client", "exported_internal") else "rejected"
+        outcome = "accepted" if event == "preview_approved" else "rejected"
         payload = entry.get("payload") if isinstance(entry.get("payload"), dict) else {}
-        run_id = str(entry.get("run_id") or payload.get("run_id") or "")
+        run_id = str(entry.get("run_id") or payload.get("run_id") or "").strip()
         revision = str(entry.get("reviewed_revision") or payload.get("reviewed_revision") or "").strip()
-        if not run_id and not revision:
-            # Legacy event without any dedup key: recorded separately, never
-            # guessed into a review group.
+        if not run_id or not revision:
+            # Both identities are needed to distinguish reviewed units.
             legacy_unknown += 1
             continue
         key = (slide_id, run_id, revision)
@@ -141,7 +140,7 @@ def _aggregate_strong_assets(workspace_dir: Path) -> dict[str, Any]:
         })
 
     # Outcome first: repeated exports must not lift an asset's rank.
-    assets.sort(key=lambda a: (a["acceptance_rate"], a["reviewed_count"], a["delivered_count"]), reverse=True)
+    assets.sort(key=lambda a: (a["acceptance_rate"], a["reviewed_count"]), reverse=True)
     return {
         "assets": assets[:10],
         "legacy_unknown": fb["legacy_unknown"],
