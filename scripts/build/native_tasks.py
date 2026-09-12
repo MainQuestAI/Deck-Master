@@ -127,18 +127,17 @@ def _dispatch_native_task_locked(root: Path, stage: str, packages: list[dict[str
 
     if stage not in STAGE_STATUS:
         raise ContractError(f"unknown native stage: {stage}")
-    request = read_json(root / "request.json")
-    limit = int(request.get("native_max_actions", 3))
-    if limit < 1 or limit > 20:
-        raise ContractError("native_max_actions must be between 1 and 20")
+    from build.native_budget import native_task_budget_limit
+    request = read_json(revision_input_path(root, root / "request.json"))
     pages = []
     for package in packages:
         page_id = str(package["page_id"])
         fingerprint = _svg_input_fingerprint(root, page_id)
         task_id = f"native_{stage}_{page_id}"
+        limit = native_task_budget_limit(request, task_id)
         budget = check_action_budget(root, task_id, max_actions=limit)
         if budget["exhausted"]:
-            raise ContractError(f"native task {task_id} budget exhausted; repair inputs or explicitly increase native_max_actions")
+            raise ContractError(f"native task {task_id} budget exhausted; explicitly authorize a higher ceiling for this task")
         task_file = root / "build/native_tasks" / f"{task_id}.json"
         prior = read_json(task_file) if task_file.exists() else {}
         action_id = str(prior.get("action_id") or "")
