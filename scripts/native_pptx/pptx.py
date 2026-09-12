@@ -22,7 +22,7 @@ from pptx.util import Inches, Pt
 
 from .canvas import NATIVE_CANVAS as _NATIVE_CANVAS
 from .contracts import ContractError, assert_v2, read_json, sha256_file, sha256_json, utc_now, write_json
-from .svg_pipeline import svg_path
+from .svg_pipeline import svg_path, join_cjk_text_lines
 from .svg_paint import parse_node_paint, parse_svg_paint
 from .svg_native import SvgNativeError, commands_to_svg_path, format_svg_native_error, parse_svg_native
 from .visibility import validate_visibility_policy, visible_text_violation
@@ -253,7 +253,12 @@ def _remove_theme_effects(shape: Any) -> None:
 
 def _add_text(slide: Any, element: dict[str, Any], trace: list[dict[str, Any]]) -> None:
     lines = element.get("_text_lines") or []
-    if _NATIVE_CANVAS.get() and any(run.get("absolute_x") for line in lines for run in line[1:]):
+    reversed_baselines = any(
+        previous and following and previous[0].get("position") and following[0].get("position")
+        and float(following[0]["position"]["y"]) <= float(previous[0]["position"]["y"])
+        for previous, following in zip(lines, lines[1:])
+    )
+    if _NATIVE_CANVAS.get() and (reversed_baselines or any(run.get("absolute_x") for line in lines for run in line[1:])):
         # A text frame cannot position independent SVG text chunks horizontally.
         # Keep the logical element as an editable group and emit each positioned
         # chunk as a text object. In particular, LO ignores custom tab positions.
@@ -789,6 +794,8 @@ def _svg_text_lines(node: Any, registry: dict[str, Any], *, preserve_positions: 
         return lines if preserve_positions else [[run for line in lines for run in line]]
     if " ".join(line_joined.split()) == " ".join(declared.split()):
         return lines
+    if join_cjk_text_lines(line_joined.splitlines()) == join_cjk_text_lines(declared.splitlines()):
+        return lines
     raise PptxEditabilityError(f"visible SVG text does not match data-pptx-text on {node.get('id')}")
 
 
@@ -931,6 +938,10 @@ def _svg_elements(root: Path, scene: dict[str, Any], asset_paths: dict[str, Path
                 try:
                     element["_text_lines"] = _svg_text_lines(native.get("node"), {"gradients": {}, "effects": {}}, preserve_positions=_NATIVE_CANVAS.get())
                 except (ContractError, ValueError):
+                    if _NATIVE_CANVAS.get():
+                        # Replacing rejected positioned runs with declared copy
+                        # silently loses both geometry and style in production.
+                        raise
                     element["_text_lines"] = [[{"text": svg_text, "style": element["style"], "paint": element["_paint"]}]]
             else:
                 element["_text_lines"] = [[{"text": svg_text, "style": element["style"], "paint": element["_paint"]}]]

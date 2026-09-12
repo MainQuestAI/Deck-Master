@@ -37,6 +37,7 @@ from native_pptx.svg_pipeline import (  # SC-1.1 ND-01: single implementation in
     review_path,
     svg_path,
     validate_svg,
+    join_cjk_text_lines,
 )
 COMPARISON_DIR = Path("high_density_build/comparisons")
 from native_pptx.canvas import CANVAS_HEIGHT, CANVAS_WIDTH, CANVAS_RATIO  # noqa: F401
@@ -488,24 +489,11 @@ def _validate_svg_text(node: Any, scene_element: dict[str, Any], page_id: str, a
     # CJK wraps introduce no word separator. Only remove a visual line boundary
     # between CJK characters/punctuation; preserve real whitespace and require
     # exact source characters, so English word boundaries cannot disappear.
-    cjk_boundary = re.compile(r"[\u2e80-\ua4cf\uf900-\ufaff\uff00-\uffef]")
-
-    def join_cjk_lines(parts: list[str]) -> str:
-        joined = parts[0] if parts else ""
-        for previous, following in zip(parts, parts[1:]):
-            joiner = "" if (
-                previous and following
-                and cjk_boundary.fullmatch(previous[-1])
-                and cjk_boundary.fullmatch(following[0])
-            ) else " "
-            joined += joiner + following
-        return joined
-
     # A Lock can already contain logical newlines. Apply the same line-boundary
     # rule to both sides so additional physical CJK wraps do not invent drift.
     # Spaces inside each line and every non-whitespace character stay intact.
-    cjk_declared = join_cjk_lines(declared_text.splitlines())
-    cjk_visible = join_cjk_lines(lines)
+    cjk_declared = join_cjk_text_lines(declared_text.splitlines())
+    cjk_visible = join_cjk_text_lines(lines)
     if " ".join(declared_text.split()) != " ".join(visible_text.split()) and cjk_declared != cjk_visible:
         raise SvgVisualError(f"visible SVG text drift on {element_id}", page_id=page_id, code="HD_SVG_CONTENT_DRIFT")
     if any(step < font_size * 0.7 or step > font_size * 2.5 for step in line_steps):

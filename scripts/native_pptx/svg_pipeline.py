@@ -28,6 +28,17 @@ FORBIDDEN_TAGS = {"foreignObject", "script", "iframe", "style"}
 UNSUPPORTED_TAGS = {"mask", "clipPath", "pattern"}
 
 
+def join_cjk_text_lines(parts: list[str]) -> str:
+    """Normalize line boundaries only; retain characters and in-line spaces."""
+    boundary = re.compile(r"[\u2e80-\ua4cf\uf900-\ufaff\uff00-\uffef]")
+    joined = parts[0] if parts else ""
+    for previous, following in zip(parts, parts[1:]):
+        joiner = "" if (previous and following and boundary.fullmatch(previous[-1])
+                        and boundary.fullmatch(following[0])) else " "
+        joined += joiner + following
+    return joined
+
+
 class SvgVisualError(ContractError):
     def __init__(self, message: str, *, page_id: str = "", code: str = "HD_SVG_REVIEW_FAILED", element_id: str = "") -> None:
         self.page_id = page_id
