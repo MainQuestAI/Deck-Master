@@ -243,6 +243,10 @@ def verify_migration(run_dir: str | Path, migration_id: str) -> dict[str, Any]:
         artifact = root / result['artifact']
         if not artifact.is_file() or hashlib.sha256(artifact.read_bytes()).hexdigest() != result['artifact_sha256']:
             blockers.append('migration_artifact_changed')
+    elif result.get('status') == 'rolled_back':
+        from workflow.actions import read_current_revision
+        if read_current_revision(root).get('revision_id') != result.get('rollback_revision'):
+            blockers.append('current_revision_changed')
     return {'status': 'blocked' if blockers else 'verified', 'plan_id': migration_id,
             'blockers': blockers, 'approval_status': 'pending'}
 
@@ -252,20 +256,41 @@ def rollback_migration(run_dir: str | Path, migration_id: str) -> dict[str, Any]
     directory = _migration_dir(root, migration_id)
     plan = _json(directory / 'plan.json')
     result = _recover_result(root, directory)
-    if not plan or result.get('status') != 'applied':
+    if not plan or result.get('status') not in {'applied', 'rolled_back'}:
         raise ValueError('migration_not_applied')
-    from workflow.actions import restore_revision
-    restore_revision(root, expected_revision=result['revision_id'],
-                     revision_id=result['rollback_revision'])
-    from workflow.actions import recover_projections
+    from workflow.actions import restore_revision, read_current_revision, recover_projections
+    if result['status'] == 'rolled_back':
+        from workflow.actions import ActionStaleError
+        if read_current_revision(root).get('revision_id') != result['rollback_revision']:
+            raise ActionStaleError('migration rollback was completed, but the current revision has changed')
+        return {'status': 'rolled_back', 'plan_id': migration_id, 'approval_status': 'pending'}
+    intent = {'plan_id': migration_id, 'from_revision': result['revision_id'],
+              'to_revision': result['rollback_revision']}
+    pending_path = directory / 'rollback_pending.json'
+    pending = _json(pending_path)
+    if pending and pending != intent:
+        raise ValueError('migration_rollback_intent_changed')
+    # The pointer is the commit boundary. Retain its intent before switching,
+    # so a lost projection/result write can resume without reapplying the CAS.
+    already_restored = pending == intent and read_current_revision(root).get('revision_id') == intent['to_revision']
+    if not already_restored:
+        _write(pending_path, intent)
+        restore_revision(root, expected_revision=intent['from_revision'], revision_id=intent['to_revision'])
     recover_projections(root)
-    # This route was introduced by migration; removing only its compatibility
-    # projection exposes the original trace-based route. New artifacts stay.
-    route_path = root / 'build/route.json'
-    if not plan['source_route'] and route_path.exists() and _json(route_path) == plan['target_route']:
-        route_path.unlink()
-    result['status'] = 'rolled_back'
-    _write(directory / 'result.json', result)
+    from workflow.actions import _acquire_run_lock, _release_run_lock, ActionStaleError
+    lock = _acquire_run_lock(root)
+    try:
+        if read_current_revision(root).get('revision_id') != intent['to_revision']:
+            raise ActionStaleError('migration rollback revision changed during projection recovery')
+        # This route was introduced by migration; removing only its compatibility
+        # projection exposes the original trace-based route. New artifacts stay.
+        route_path = root / 'build/route.json'
+        if not plan['source_route'] and route_path.exists() and _json(route_path) == plan['target_route']:
+            route_path.unlink()
+        result['status'] = 'rolled_back'
+        _write(directory / 'result.json', result)
+    finally:
+        _release_run_lock(lock)
     return {'status': 'rolled_back', 'plan_id': migration_id, 'approval_status': 'pending'}
 
 
