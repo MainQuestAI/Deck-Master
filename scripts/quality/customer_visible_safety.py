@@ -159,8 +159,10 @@ def evaluate_customer_visible_safety_gate(
     # cannot open fall back to the base audit above (never crash the gate).
     try:
         from quality.semantic_checks import scan_delivery_pptx
+        from quality.native_notes import current_native_notes
 
-        for index, scan_finding in enumerate(scan_delivery_pptx(artifact), start=1):
+        for index, scan_finding in enumerate(scan_delivery_pptx(
+                artifact, expected_notes=current_native_notes(run_dir, artifact), forbidden_terms=terms), start=1):
             findings.append(
                 {
                     "finding_id": f"customer_visible_hidden_content_{index:03d}",

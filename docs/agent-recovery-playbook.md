@@ -71,6 +71,12 @@ python3 scripts/deck_master.py final-readiness --run-dir <run_dir> --no-write
   validation, lineage, quality gates, customer-visible safety.
 - Stop when: production backend, external artifact, or human approval is
   missing.
+- Native business speaker notes are retained only when they exactly match the
+  current immutable approved Package/Content Lock and selected compile artifact.
+  They still undergo internal-label, local-path, command and forbidden-term
+  checks. Unbound notes, additional note bodies/shapes and stale or changed
+  artifacts remain blocked. Do not delete necessary business conditions merely
+  to clear a hidden-content finding; repair the content or its current binding.
 - Verify with:
 
 ```bash
