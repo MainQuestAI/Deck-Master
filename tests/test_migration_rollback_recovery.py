@@ -7,12 +7,12 @@ import sys
 
 import pytest
 
+ROOT = Path(__file__).resolve().parents[1]
+sys.path[:0] = [str(ROOT / "scripts"), str(ROOT / "tests")]
+
 from build import migrate
 from test_sc1_1_migration_apply import old_run
 import workflow.actions as actions
-
-ROOT = Path(__file__).resolve().parents[1]
-
 
 @pytest.mark.parametrize("interruption", ["projection", "receipt", "response_lost", "process_exit", "projection_then_later_commit"])
 def test_cli_rollback_resumes_after_pointer_switch(tmp_path, monkeypatch, interruption):
@@ -44,12 +44,18 @@ def test_cli_rollback_resumes_after_pointer_switch(tmp_path, monkeypatch, interr
 
     if interruption == "process_exit":
         code = """import os, sys
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
 from build import migrate
 import workflow.actions as actions
+assert Path(migrate.__file__).resolve() == Path(sys.argv[1]).resolve() / "build/migrate.py"
 actions.recover_projections = lambda root: os._exit(73)
-migrate.rollback_migration(sys.argv[1], sys.argv[2])
+migrate.rollback_migration(sys.argv[2], sys.argv[3])
 """
-        stopped = subprocess.run([sys.executable, "-c", code, str(root), plan["plan_id"]], cwd=ROOT)
+        stopped = subprocess.run(
+            [sys.executable, "-I", "-c", code, str(ROOT / "scripts"), str(root), plan["plan_id"]],
+            cwd=tmp_path,
+        )
         assert stopped.returncode == 73
     else:
         with monkeypatch.context() as fault:

@@ -10,15 +10,15 @@ from threading import Barrier
 
 import pytest
 
+ROOT = Path(__file__).resolve().parents[1]
+sys.path[:0] = [str(ROOT / "scripts"), str(ROOT / "tests")]
+
 from build.build_route import persist_route, resolve_build_route
 from test_sc1_1_native_host_chain import new_run
 from workflow.actions import (
     commit_action_result, create_action_envelope, read_current_revision,
     read_revision_state, recover_projections, stage_action_result,
 )
-
-ROOT = Path(__file__).resolve().parents[1]
-
 
 def versioned_run(tmp_path):
     root = new_run(tmp_path, "direct_svg")
