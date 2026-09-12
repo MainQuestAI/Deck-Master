@@ -235,3 +235,27 @@ def test_junit_counts_require_actual_nonnegative_execution(tmp_path, counters, r
     result = next(item for item in verify(root, run)["checks"] if item["key"] == "python312:result")
     assert result["status"] == status
     assert result["reason"] == reason
+
+
+@pytest.mark.parametrize("attributes, cases, status, reason", [
+    ({}, '<testcase name="one"><failure message="failed"/></testcase>', "failed", "test_failure_recorded"),
+    ({"tests": "0"}, '<testcase name="one"><error message="crashed"/></testcase>', "failed", "test_failure_recorded"),
+    ({}, '<testcase name="one"><skipped/></testcase>', "stale", "junit_testcase_counters_disagree"),
+    ({"tests": "2"}, '<testcase name="one"/>', "stale", "junit_testcase_counters_disagree"),
+    ({"skipped": "1"}, '<testcase name="one"><skipped/></testcase>', "missing", "no_executed_tests"),
+    ({}, '<testcase name="one"/>', "passed", ""),
+    ({"tests": "2", "skipped": "1"}, '<testcase name="one"/><testcase name="two"><skipped/></testcase>', "passed", ""),
+])
+def test_junit_testcase_details_cannot_be_hidden_by_summary_counters(tmp_path, attributes, cases, status, reason):
+    root, run = bundle(tmp_path)
+    path = root / "python312-results.xml"
+    attributes = {"tests": "1", "failures": "0", "errors": "0", "skipped": "0", **attributes}
+    path.write_text("<testsuites><testsuite " + " ".join(f'{key}="{value}"' for key, value in attributes.items())
+                    + ">" + cases + "</testsuite></testsuites>")
+    validation = json.loads((root / "validation.json").read_text())
+    validation["tests"][0].update(junit_sha256=digest(path), tests=attributes["tests"])
+    write(root / "validation.json", validation)
+    index(root)
+    result = next(item for item in verify(root, run)["checks"] if item["key"] == "python312:result")
+    assert result["status"] == status
+    assert result["reason"] == reason

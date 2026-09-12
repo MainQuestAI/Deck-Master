@@ -46,6 +46,7 @@ verify_evidence_bundle(
 
 - `durable-evidence-manifest.json` 使用已有 `source_sha`、`file_count`、`files[{path, sha256}]` 结构。引用必须是包内相对路径；拒绝绝对路径、路径穿越及软链接，包括中间目录软链接。
 - manifest 应包含 release 和 parity 的 summary/证据，以及 `ci.json` 与各 Python 的 metadata。缺这些哈希会显示 missing。JUnit 和日志同时核对 validation 中的独立哈希。
+- JUnit 含 testcase 明细时，failure/error 直接记为 failed，总数或 skipped 与汇总矛盾记为 stale；旧版仅有 testsuite 汇总的记录仍可核对非负计数及执行结果，但不据此声称已验证逐项执行明细。
 - 根 manifest 和 validation 由调用者选择作为核验入口；哈希检查不能独立证明外部工具实际执行，也不是来源签名。该能力不替代 `release-smoke`、真实渲染、视觉复核或独立代码审查。
 - native parity 复核现有记录中的 SSIM ≥ 0.97、几何误差 ≤ 0.75pt 和 P0/P1 标记；不会重新计算图像，也不会采用记录中放宽的阈值。当前运行的 SVG、Scene、最终 PPTX、页预览和页集合必须匹配。图片→SVG 内容/视觉评分仍由既有独立评审流程处理。
 - 检查结束前再次核对已读文件。核验期间发生变化则返回 stale，要求调用者重新读取；不在本工具中修复状态。

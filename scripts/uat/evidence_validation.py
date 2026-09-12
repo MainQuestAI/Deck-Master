@@ -148,6 +148,13 @@ def _tests(checks: _Checks, root: Path, validation: dict, refs: dict) -> None:
             try:
                 document = ElementTree.parse(xml).getroot()
                 suites = [document] if document.tag == "testsuite" else document.findall("testsuite")
+                case_groups = [list(suite.iter("testcase")) for suite in suites]
+                cases = [case for group in case_groups for case in group]
+                if any(case.find("failure") is not None or case.find("error") is not None for case in cases):
+                    detail_skipped = sum(case.find("skipped") is not None for case in cases)
+                    checks.add(prefix + ":result", "failed", "test_failure_recorded",
+                               tests=len(cases), skipped=detail_skipped, executed=len(cases) - detail_skipped)
+                    continue
                 counters = [{name: int(suite.get(name, "0")) for name in ("tests", "skipped", "failures", "errors")} for suite in suites]
                 if any(any(value < 0 for value in row.values()) or row["skipped"] > row["tests"] for row in counters):
                     raise ValueError("invalid_junit_counters")
@@ -156,10 +163,14 @@ def _tests(checks: _Checks, root: Path, validation: dict, refs: dict) -> None:
                 failures = sum(counter["failures"] + counter["errors"] for counter in counters)
                 executed = total - skipped
                 observed = {"tests": total, "skipped": skipped, "executed": executed}
-                if executed <= 0:
-                    checks.add(prefix + ":result", "missing", "no_executed_tests", **observed)
-                elif failures or row.get("status") == "failed":
+                if failures or row.get("status") == "failed":
                     checks.add(prefix + ":result", "failed", "test_failure_recorded", **observed)
+                elif any(group and (len(group) != counter["tests"]
+                                   or sum(case.find("skipped") is not None for case in group) != counter["skipped"])
+                         for group, counter in zip(case_groups, counters)):
+                    checks.add(prefix + ":result", "stale", "junit_testcase_counters_disagree", **observed)
+                elif executed <= 0:
+                    checks.add(prefix + ":result", "missing", "no_executed_tests", **observed)
                 elif row.get("status") != "passed":
                     checks.add(prefix + ":result", "missing", "test_execution_incomplete", **observed)
                 elif int(row.get("tests", -1)) != total:
