@@ -44,19 +44,43 @@ def _policy(request: dict) -> tuple[int, dict, list]:
         if not any(task_id.startswith(f"native_{kind}_") for kind in KINDS):
             raise ContractError("native task budget key is not a native task")
         _limit(value)
-    if any(not isinstance(record, dict) for record in history):
-        raise ContractError("invalid native budget authorization history")
     authorized = {}
+    seen_ids, seen_actions = set(), set()
+    if history:
+        from jsonschema import Draft202012Validator, FormatChecker, ValidationError
+        validator = Draft202012Validator(
+            read_json(SCHEMA_DIR / "native-task-budget-authorization.v1.schema.json"),
+            format_checker=FormatChecker(),
+        )
     for record in history:
-        if (record.get("schema_version") != "deck_native_task_budget_authorization.v1"
-                or record.get("actor_authenticated") is not False
-                or not isinstance(record.get("changes"), list)):
-            raise ContractError("invalid native budget authorization history")
+        try:
+            validator.validate(record)
+        except ValidationError as exc:
+            raise ContractError("invalid native budget authorization history schema") from exc
+        identity = {key: record[key] for key in ("source_revision", "requested_limits", "reason", "actor")}
+        expected_id = "native_budget_" + fingerprint_payload(identity)[:32]
+        if (record["run_id"] != request.get("run_id") or record["authorization_id"] != expected_id
+                or record["authorization_id"] in seen_ids or record["action_id"] in seen_actions
+                or not record["reason"].strip() or not record["actor"]["id"].strip()):
+            raise ContractError("invalid native budget authorization history identity")
+        seen_ids.add(record["authorization_id"])
+        seen_actions.add(record["action_id"])
+        prior_default = _limit(record["default_max_actions"])
+        changed_ids = set()
         for change in record["changes"]:
-            if not isinstance(change, dict) or not isinstance(change.get("task_id"), str):
-                raise ContractError("invalid native budget authorization change")
-            authorized[change["task_id"]] = _limit(change.get("max_actions"))
-    if any(authorized.get(task_id) != limit for task_id, limit in limits.items()):
+            task_id = change["task_id"]
+            target = _limit(change["max_actions"])
+            previous = _limit(change["previous_max_actions"])
+            if (task_id in changed_ids or task_id != f"native_{change['kind']}_{change['page_id']}"
+                    or record["requested_limits"].get(task_id) != target
+                    or previous != authorized.get(task_id, prior_default) or target <= previous):
+                raise ContractError("invalid native budget authorization history changes")
+            changed_ids.add(task_id)
+            authorized[task_id] = target
+        for task_id, target in record["requested_limits"].items():
+            if _limit(target) != authorized.get(task_id, prior_default):
+                raise ContractError("invalid native budget authorization history requested limits")
+    if authorized != limits:
         raise ContractError("native task budget limit lacks matching authorization history")
     return default, limits, history
 

@@ -248,6 +248,45 @@ def test_raw_override_cannot_skip_authorization_history(tmp_path):
         run_build(root)
 
 
+def test_incomplete_authorization_history_cannot_raise_dispatch_budget(tmp_path):
+    root = new_run(tmp_path, "direct_svg")
+    path = root / "request.json"
+    value = json.loads(path.read_text())
+    value["native_task_budget_limits"] = {"native_svg_P001": 20}
+    value["native_task_budget_authorizations"] = [{
+        "schema_version": "deck_native_task_budget_authorization.v1", "actor_authenticated": False,
+        "changes": [{"task_id": "native_svg_P001", "max_actions": 20}],
+    }]
+    path.write_text(json.dumps(value))
+    with pytest.raises(ContractError, match="authorization history"):
+        run_build(root)
+    assert not list((root / "build/native_tasks/issued").glob("*.json"))
+
+
+@pytest.mark.parametrize("changed", ["run", "requested", "page", "previous", "identity"])
+def test_schema_valid_but_inconsistent_authorization_history_is_rejected(tmp_path, changed):
+    from build.native_budget import native_task_budget_limit
+    root, (task,) = setup_run(tmp_path)
+    set_native_task_budgets(root, **authorization(root, {task["task_id"]: 4}))
+    value = request(root)
+    record = value["native_task_budget_authorizations"][0]
+    if changed == "run":
+        record["run_id"] = "another-run"
+    elif changed == "requested":
+        record["requested_limits"][task["task_id"]] = 20
+        from workflow.actions import fingerprint_payload
+        identity = {key: record[key] for key in ("source_revision", "requested_limits", "reason", "actor")}
+        record["authorization_id"] = "native_budget_" + fingerprint_payload(identity)[:32]
+    elif changed == "page":
+        record["changes"][0]["page_id"] = "P002"
+    elif changed == "previous":
+        record["changes"][0]["previous_max_actions"] = 2
+    else:
+        record["authorization_id"] = "native_budget_wrong"
+    with pytest.raises(ContractError, match="authorization history"):
+        native_task_budget_limit(value, task["task_id"])
+
+
 def test_committed_budget_survives_projection_failure_and_dispatch_uses_snapshot(tmp_path):
     root, (task,) = setup_run(tmp_path)
     args = authorization(root, {task["task_id"]: 4})
