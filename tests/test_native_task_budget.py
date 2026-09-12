@@ -102,6 +102,26 @@ def test_batch_replay_is_noop_and_stale_new_authorization_is_rejected(tmp_path):
         set_native_task_budgets(root, **authorization(root, {tasks[0]["task_id"]: 3}))
 
 
+def test_mixed_increase_and_unchanged_default_remains_readable_and_replayable(tmp_path):
+    root, tasks = setup_run(tmp_path, two_pages=True)
+    first, other = tasks
+    args = authorization(root, {first["task_id"]: 4, other["task_id"]: 3})
+    issued = {p: p.read_bytes() for p in (root / "build/native_tasks/issued").glob("*.json")}
+    result = set_native_task_budgets(root, **args)
+    assert result["status"] == "applied"
+    assert request(root)["native_task_budget_limits"] == {first["task_id"]: 4}
+    assert result["authorization"]["requested_limits"] == args["limits"]
+    assert [change["task_id"] for change in result["authorization"]["changes"]] == [first["task_id"]]
+    statuses = read_native_task_budgets(root, task_ids=list(args["limits"]))["tasks"]
+    assert [(item["max_actions"], item["issued_max_actions"], item["used"]) for item in statuses] == [(4, 3, 0), (3, 3, 0)]
+    revision = read_current_revision(root)
+    replay = set_native_task_budgets(root, **args)
+    assert replay["status"] == "already_applied" and replay["receipt"] == result["receipt"]
+    assert read_current_revision(root) == revision
+    assert all(path.read_bytes() == contents for path, contents in issued.items())
+    assert run_build(root)["pages"] == tasks
+
+
 @pytest.mark.parametrize("value", [True, False, 0, 21, -1, 4.0, "4", None])
 def test_only_integer_bounded_ceilings_allowed(tmp_path, value):
     root, (task,) = setup_run(tmp_path)

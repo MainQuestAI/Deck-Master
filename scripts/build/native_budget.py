@@ -194,7 +194,9 @@ def set_native_task_budgets(
     }
     schema = read_json(SCHEMA_DIR / "native-task-budget-authorization.v1.schema.json")
     Draft202012Validator(schema, format_checker=FormatChecker()).validate(authorization)
-    updated = {**request, LIMITS_FIELD: {**current_limits, **limits}, AUTHORIZATIONS_FIELD: [*history, authorization]}
+    changed_limits = {change["task_id"]: change["max_actions"] for change in changes}
+    updated = {**request, LIMITS_FIELD: {**current_limits, **changed_limits}, AUTHORIZATIONS_FIELD: [*history, authorization]}
+    _policy(updated)
     token = fingerprint_payload({"revision": revision, "request": request, "tasks": before["tasks"]})
     envelope = create_action_envelope(
         action_id=action_id, task_id="native_budget_authorization", permission="runtime",
