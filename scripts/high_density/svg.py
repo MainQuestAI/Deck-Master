@@ -73,6 +73,9 @@ def _estimated_width(text: str, size: float) -> float:
 def wrap_text(text: str, width: float, size: float, *, measure: Callable[[str], float] | None = None) -> list[str]:
     if not text:
         return [""]
+    if "\n" in text or "\r" in text:
+        return [line for paragraph in re.split(r"\r\n|\r|\n", text)
+                for line in wrap_text(paragraph, width, size, measure=measure)]
     if width <= 0:
         return [text]
     lines: list[str] = []
@@ -96,7 +99,12 @@ def _color(value: Any, default: str = "#18212b") -> str:
 
 
 def _attrs(items: dict[str, Any]) -> str:
-    return " ".join(f'{key}="{html.escape(str(value), quote=True)}"' for key, value in items.items())
+    def attribute(value: Any) -> str:
+        # Literal XML attribute whitespace is normalized to spaces by parsers.
+        # Character references preserve the exact text pinned by the Scene/Lock.
+        return (html.escape(str(value), quote=True).replace("\r", "&#13;")
+                .replace("\n", "&#10;").replace("\t", "&#9;"))
+    return " ".join(f'{key}="{attribute(value)}"' for key, value in items.items())
 
 
 def _text_svg(element: dict[str, Any], page_id: str) -> str:
@@ -481,15 +489,24 @@ def _validate_svg_text(node: Any, scene_element: dict[str, Any], page_id: str, a
     # between CJK characters/punctuation; preserve real whitespace and require
     # exact source characters, so English word boundaries cannot disappear.
     cjk_boundary = re.compile(r"[\u2e80-\ua4cf\uf900-\ufaff\uff00-\uffef]")
-    cjk_visible = lines[0] if lines else ""
-    for previous, following in zip(lines, lines[1:]):
-        joiner = "" if (
-            previous and following
-            and cjk_boundary.fullmatch(previous[-1])
-            and cjk_boundary.fullmatch(following[0])
-        ) else " "
-        cjk_visible += joiner + following
-    if " ".join(declared_text.split()) != " ".join(visible_text.split()) and declared_text != cjk_visible:
+
+    def join_cjk_lines(parts: list[str]) -> str:
+        joined = parts[0] if parts else ""
+        for previous, following in zip(parts, parts[1:]):
+            joiner = "" if (
+                previous and following
+                and cjk_boundary.fullmatch(previous[-1])
+                and cjk_boundary.fullmatch(following[0])
+            ) else " "
+            joined += joiner + following
+        return joined
+
+    # A Lock can already contain logical newlines. Apply the same line-boundary
+    # rule to both sides so additional physical CJK wraps do not invent drift.
+    # Spaces inside each line and every non-whitespace character stay intact.
+    cjk_declared = join_cjk_lines(declared_text.splitlines())
+    cjk_visible = join_cjk_lines(lines)
+    if " ".join(declared_text.split()) != " ".join(visible_text.split()) and cjk_declared != cjk_visible:
         raise SvgVisualError(f"visible SVG text drift on {element_id}", page_id=page_id, code="HD_SVG_CONTENT_DRIFT")
     if any(step < font_size * 0.7 or step > font_size * 2.5 for step in line_steps):
         raise SvgVisualError(f"SVG tspan line height is invalid: {element_id}", page_id=page_id, code="HD_SVG_TEXT_OVERFLOW")
