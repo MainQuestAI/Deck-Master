@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:deck-master:deck_external_quality_review_task.v2",
+  "title": "External review dispatch task v2",
+  "type": "object",
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "run_mode": {
+      "type": "string",
+      "enum": [
+        "production",
+        "benchmark",
+        "fixture",
+        "dev"
+      ]
+    },
+    "based_on": {
+      "type": "object",
+      "properties": {
+        "input_fingerprint": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "input_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "ref": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "required": [
+              "ref",
+              "sha256"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "input_fingerprint",
+        "input_refs"
+      ],
+      "additionalProperties": false
+    },
+    "review_action_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "scope": {
+      "type": "string",
+      "enum": [
+        "semantic",
+        "visual",
+        "evidence",
+        "client-readiness"
+      ]
+    },
+    "review_kind": {
+      "type": "string",
+      "enum": [
+        "producer_self",
+        "independent"
+      ]
+    },
+    "schema_version": {
+      "const": "deck_external_quality_review_task.v2"
+    },
+    "task_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "required_page_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "review_dimensions": {
+      "const": [
+        "customer_specificity",
+        "solution_validity",
+        "evidence_quality",
+        "decision_logic",
+        "implementation_specificity",
+        "expression_quality"
+      ]
+    },
+    "output_schema": {
+      "const": "deck_external_quality_review.v2"
+    }
+  },
+  "required": [
+    "run_id",
+    "run_mode",
+    "based_on",
+    "review_action_id",
+    "scope",
+    "review_kind",
+    "schema_version",
+    "task_id",
+    "created_at",
+    "required_page_ids",
+    "review_dimensions",
+    "output_schema"
+  ],
+  "additionalProperties": false
+}

@@ -81,8 +81,12 @@ class QuestionResolver:
             if not required and not include_optional:
                 continue
             decision = self.decisions.latest(root, stage_id, q["question_id"])
+            effective_decision, effective_fp = decision, current_fp
+            if decision and decision.get("input_dependency_fingerprint") and q.get("input_dependencies"):
+                effective_fp = fp.fingerprint_question_inputs(root, q["input_dependencies"])
+                effective_decision = {**decision, "input_fingerprint": decision["input_dependency_fingerprint"]}
             answer_status, challenge_round = self._answer_status(
-                root, stage_id, q["question_id"], decision, current_fp
+                root, stage_id, q["question_id"], effective_decision, effective_fp, question=q
             )
             answered = answer_status == "answered"
             if answered:
@@ -205,13 +209,14 @@ class QuestionResolver:
         question_id: str,
         decision: dict[str, Any] | None,
         current_input_fingerprint: str,
+        *, question: dict[str, Any] | None = None,
     ) -> tuple[str, int]:
         attempts = self._attempt_count(root, stage_id, question_id)
         if decision is None:
             return "missing", 0
         if DecisionLog.is_stale(decision, current_input_fingerprint):
             return "stale", min(attempts, 2)
-        if self._is_vague_answer(decision.get("answer")):
+        if self._is_vague_answer(decision.get("answer"), question=question):
             if attempts >= 2:
                 return "needs_human_judgment", 2
             return "needs_follow_up", max(1, attempts)
@@ -224,13 +229,23 @@ class QuestionResolver:
                 attempts += 1
         return attempts
 
-    def _is_vague_answer(self, answer: Any) -> bool:
+    def _is_vague_answer(self, answer: Any, *, question: dict[str, Any] | None = None) -> bool:
         if answer is None:
             return True
         if isinstance(answer, str):
             text = answer.strip().lower()
             if not text:
                 return True
+            # Only a typed boolean or an explicitly yes/no question makes a
+            # bare affirmation/negation informative. Open questions retain
+            # their follow-up behaviour.
+            question = question or {}
+            schema = question.get("answer_schema") or {}
+            boolean_question = (
+                isinstance(schema, dict) and schema.get("type") == "boolean"
+            ) or str(question.get("prompt") or "").strip().startswith(("是否", "有无", "有没有"))
+            if boolean_question and text in {"yes", "no", "true", "false", "有", "没有", "是", "否"}:
+                return False
             vague_tokens = {
                 "tbd", "n/a", "na", "none", "unknown", "ok", "yes", "no",
                 "不知道", "不清楚", "待定", "暂定", "都可以", "看情况", "后面再说",

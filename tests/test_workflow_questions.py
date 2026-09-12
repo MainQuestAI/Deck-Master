@@ -109,12 +109,11 @@ def test_stale_answer_resurfaces_as_gap(tmp_path):
                 required=True, input_fingerprint=fp0,
             )
     assert qr.gaps(tmp_path, "deck-brief") == []
-    # upstream change: modify an INPUT artifact of deck-brief
+    # A changed business field reopens its dependent question only.
     time.sleep(0.02)
-    (tmp_path / "material_inventory.json").write_text(json.dumps({"changed": True}), encoding="utf-8")
+    (tmp_path / "deck_brief.json").write_text(json.dumps({"business_goal": "New decision"}), encoding="utf-8")
     gaps = qr.gaps(tmp_path, "deck-brief")
-    assert len(gaps) >= 1
-    assert all(g.stale for g in gaps)  # all resurfaced gaps are stale
+    assert [(g.question_id, g.stale) for g in gaps] == [("brief.decision_object", True)]
 
 
 def test_decision_log_append_only(tmp_path):

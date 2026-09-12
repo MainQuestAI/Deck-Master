@@ -16,12 +16,20 @@ from quality.overrides import create_override
 
 
 def _page_packages_sha(run_dir: Path) -> str:
+    """SC-1.1 P1-06: full content fingerprint over every package file (the
+    gate compares this value, not just the index sha)."""
+
     index = Path(run_dir) / "page_packages" / "index.json"
     if not index.exists():
         index.parent.mkdir(parents=True, exist_ok=True)
         index.write_text("{}\n", encoding="utf-8")
     import hashlib
-    return hashlib.sha256(index.read_bytes()).hexdigest()
+
+    digest = hashlib.sha256()
+    for package_file in sorted((Path(run_dir) / "page_packages").glob("*.json")):
+        digest.update(package_file.name.encode("utf-8"))
+        digest.update(hashlib.sha256(package_file.read_bytes()).digest())
+    return digest.hexdigest()
 
 
 class GateFreshnessTests(unittest.TestCase):
@@ -155,16 +163,8 @@ class GateFreshnessTests(unittest.TestCase):
             for gate in ("render", "delivery", "customer_visible_safety")
         ]
         # SC-1 C3: production additionally requires a current semantic review.
-        reports.append(
-            {
-                "gate": "external_semantic",
-                "status": "pass",
-                "blocks_delivery": False,
-                "findings": [],
-                "based_on_sha256": _page_packages_sha(self.run_dir),
-                **identity,
-            }
-        )
+        from quality_review_v2_helpers import canonical_gate
+        reports.append({**canonical_gate(self.run_dir), **identity})
 
         result = resolve_required_gates(
             self.run_dir,

@@ -100,6 +100,8 @@ def _artifact(
     path: Path,
     editability: str,
     page_id: str = "",
+    source_mode: str = CONTRACT_SMOKE_SOURCE_MODE,
+    non_client_deliverable: bool = True,
 ) -> dict[str, Any]:
     rel = _run_relative(root, path)
     return {
@@ -111,8 +113,8 @@ def _artifact(
         "bytes": path.stat().st_size,
         "validation_status": "validated",
         "editability": editability,
-        "source_mode": CONTRACT_SMOKE_SOURCE_MODE,
-        "non_client_deliverable": True,
+        "source_mode": source_mode,
+        "non_client_deliverable": non_client_deliverable,
         "page_id": page_id,
         "created_at": _utc_now(),
     }
@@ -134,13 +136,38 @@ def _required_outputs_for_profile(output_profile: str) -> list[str]:
     return ["deck_html", "deck_pdf", "page_png", "deck_pptx"]
 
 
-def _assert_builder_backend_available(request: dict[str, Any]) -> dict[str, Any]:
+def _assert_builder_backend_available(request: dict[str, Any], *, root: Path | None = None) -> dict[str, Any]:
+    """SC-1.1 ND-02 (F-N02): the build route resolves BEFORE any external
+    backend status query. Native-route runs never touch the external PPT
+    Master binding; only an explicit legacy_ppt_master route does."""
+
+    route = build_route(request, run_dir=root)
+    if route.get("engine_id") == "deck_native":
+        return {"backend_name": "deck_native", "production_capable": True, "engine_route": route}
+    if route.get("engine_id") == "fixture_html":
+        return {"backend_name": "fixture_html", "production_capable": False, "engine_route": route}
     status = builder_backend_status()
     if production_requires_builder_backend(_run_mode(request)) and not status.get("production_capable"):
         raise BuildError("needs_builder_backend: " + str(status.get("blocking_reason") or "PPT Master backend is not ready."))
     if production_requires_builder_backend(_run_mode(request)) and not backend_render_runtime_ready():
         raise BuildError("needs_builder_backend: PPT Master backend is certified but Deck Master render runtime is not wired to the external backend yet.")
     return status
+
+
+def load_persisted_route_local(root: Path) -> dict[str, Any]:
+    try:
+        from build.build_route import load_persisted_route
+    except ModuleNotFoundError:  # pragma: no cover - exercised by package-import test path.
+        from scripts.build.build_route import load_persisted_route
+    return load_persisted_route(root)
+
+
+def build_route(request: dict[str, Any], *, run_dir: Path | None = None) -> dict[str, Any]:
+    try:
+        from build.build_route import resolve_build_route
+    except ModuleNotFoundError:  # pragma: no cover - exercised by package-import test path.
+        from scripts.build.build_route import resolve_build_route
+    return resolve_build_route(request, run_dir=run_dir)
 
 
 def build_source_fingerprint(run_dir: str | Path) -> str:
@@ -208,12 +235,13 @@ def _page_sources_from_packages(root: Path, packages: list[dict[str, Any]], *, p
     for index, package in enumerate(ordered, start=1):
         page_id = str(package.get("page_id") or f"page_{index:03d}")
         status = str(package.get("status") or "draft")
-        if production and status != "ready":
+        approved = status in {"ready_for_build", "ready"}  # legacy "ready" mapped (F-N08)
+        if production and not approved:
             raise BuildError(
                 f"page package {page_id} is not approved for production build (status={status}); "
                 "resolve evidence/design basis and approve the package first"
             )
-        if status != "ready":
+        if not approved:
             warnings.append(f"page {page_id}: package status {status} (non-production build)")
         payload = whitelist_project(package)
         customer_visible = payload.get("customer_visible") or {}
@@ -320,12 +348,31 @@ def _prepare_build_from_packages(
 def prepare_build(run_dir: str | Path) -> dict[str, Any]:
     root = ensure_run_dirs(run_dir)
     request = load_request(root)
-    backend = builder_backend_status()
+    # Resolve historical evidence before creating any output, then retain the
+    # first selection through the shared route lock/CAS transaction. Otherwise
+    # our fresh manifest would be mistaken for an unidentified historical run.
+    from build.build_route import persist_route
+    route = persist_route(root, build_route(request, run_dir=root))
+    if route.get("engine_id") == "deck_native":
+        from build.native_engine import _assert_brief_conflicts_resolved
+        _assert_brief_conflicts_resolved(root)
+        from build.narrative_mbb import refresh_requested_projection
+        refresh_requested_projection(root)
+        backend = {"backend_name": "deck_native", "production_capable": True, "engine_route": route}
+    elif route.get("engine_id") == "fixture_html":
+        backend = {"backend_name": "fixture_html", "production_capable": False, "engine_route": route}
+    else:
+        backend = builder_backend_status()
     run_id = str(request.get("run_id") or root.name)
     packages_index = root / "page_packages" / "index.json"
     production = production_requires_builder_backend(_run_mode(request))
     if packages_index.exists():
         return _prepare_build_from_packages(root, request, backend, run_id, production=production)
+    if production and route.get("engine_id") == "deck_native":
+        raise BuildError(
+            "native production build requires approved page_packages/ (run the producer first); "
+            "preview_manifest is not a production input"
+        )
     if production:
         # SC-1 B5: production builds consume approved page packages; the raw
         # preview manifest is no longer a production input.
@@ -543,11 +590,220 @@ def _assert_required_outputs(paths: list[Path]) -> None:
         raise BuildError(f"required build outputs missing or empty: {', '.join(missing)}")
 
 
+def _run_native_build(root: Path, request: dict[str, Any], run_id: str) -> dict[str, Any]:
+    """SC-1.1 P1-01: the native route drives the built-in engine — it never
+    writes an external render request or returns awaiting_external_render."""
+
+    try:
+        from build import native_engine
+    except ModuleNotFoundError:  # pragma: no cover - exercised by package-import test path.
+        from scripts.build import native_engine
+
+    from build.native_tasks import approved_svg, stopped_native_tasks
+    stopped=stopped_native_tasks(root)
+    if stopped:
+        return {'schema_version':'deck_build_run_result.v1','status':'stopped','engine_id':'deck_native',
+                'run_id':run_id,'run_dir':str(root),'actions':stopped,'resume_command':'Explicit build retry of the cancelled page/stage is required'}
+    prepared = native_engine.prepare_native_run(root)
+    route = native_engine.resolve_build_route(request, run_dir=root)
+    authoring = str(route.get("authoring_mode") or "image_blueprint")
+
+    from build.native_tasks import pending_native_task, dispatch_native_task
+    pending_task = pending_native_task(root)
+    if pending_task:
+        pending_ids = {p["page_id"] for p in pending_task["pages"]}
+        task = dispatch_native_task(root, pending_task["stage"], [p for p in native_engine._approved_packages(root) if p["page_id"] in pending_ids])
+        return {"schema_version": "deck_build_run_result.v1", "status": task["status"],
+                "run_id": run_id, "run_dir": str(root), "engine_id": "deck_native", "authoring_mode": authoring,
+                "host_task": "build/host_imagegen_task.json", "pages": task["pages"],
+                "resume_command": f"deck-master build run --run-dir {root}"}
+
+    if authoring == "image_blueprint":
+        # SC-1.1 review round 2 (P1-1): state-machine resume — advance by
+        # what ALREADY exists instead of re-dispatching forever.
+        approved_pages = [str(page) for page in prepared.get("pages", [])]
+        missing_svgs = [page_id for page_id in approved_pages if not approved_svg(root, page_id)]
+        if not missing_svgs:
+            result = native_engine.run_native_compile(root, run_mode=_run_mode(request))
+            backend = {"backend_name": "deck_native", "production_capable": True, "engine_route": route}
+            return _finalize_native_build(root, request, result, backend, run_id)
+
+        from build.native_tasks import dispatch_native_task, approved_blueprint
+        stage = "reconstruct" if all(approved_blueprint(root, page) is not None for page in approved_pages) else "imagegen"
+        pending = [pkg for pkg in native_engine._approved_packages(root)
+                   if (approved_blueprint(root, pkg["page_id"]) is None if stage == "imagegen" else pkg["page_id"] in missing_svgs)]
+        task = dispatch_native_task(root, stage, pending)
+        return {
+            "schema_version": "deck_build_run_result.v1", "status": task["status"],
+            "run_id": run_id, "run_dir": str(root), "engine_id": "deck_native", "authoring_mode": authoring,
+            "host_task": "build/host_imagegen_task.json", "pages": task["pages"],
+            "runtime_probe": prepared.get("runtime_probe", {}), "resume_command": f"deck-master build run --run-dir {root}",
+        }
+
+    approved_pages = [str(page) for page in prepared.get("pages", [])]
+    missing_svgs = [page_id for page_id in approved_pages if not approved_svg(root, page_id)]
+    missing_scenes = [page_id for page_id in approved_pages if not (root / "high_density_build" / "page_scenes" / f"{page_id}.json").exists() and not (root / "high_density_build" / "page_scenes" / f"{page_id}.page_scene.json").exists()]
+    if missing_svgs or missing_scenes:
+        from build.native_tasks import dispatch_native_task
+        pending = [pkg for pkg in native_engine._approved_packages(root) if pkg["page_id"] in set(missing_svgs + missing_scenes)]
+        task = dispatch_native_task(root, "svg", pending)
+        return {
+            "schema_version": "deck_build_run_result.v1", "status": "awaiting_svg_authoring", "run_id": run_id,
+            "run_dir": str(root), "engine_id": "deck_native", "authoring_mode": authoring,
+            "missing_approved_svgs": missing_svgs, "missing_scenes": missing_scenes,
+            "host_task": "build/host_imagegen_task.json", "pages": task["pages"],
+            "runtime_probe": prepared.get("runtime_probe", {}), "resume_command": f"deck-master build run --run-dir {root}",
+        }
+
+    result = native_engine.run_native_compile(root, run_mode=_run_mode(request))
+    backend = {"backend_name": "deck_native", "production_capable": True, "engine_route": route}
+    return _finalize_native_build(root, request, result, backend, run_id)
+
+
+def _finalize_native_build(root: Path, request: dict[str, Any], result: dict[str, Any], backend: dict[str, Any], run_id: str) -> dict[str, Any]:
+    from workflow.actions import _acquire_run_lock, _release_run_lock, read_current_revision
+    lock = _acquire_run_lock(root)
+    try:
+        if (read_current_revision(root).get("revision_id") or "initial") != result["build_revision"]:
+            raise BuildError("native build revision changed during compilation; resume the current revision")
+        return _finalize_native_build_locked(root, request, result, backend, run_id)
+    finally:
+        _release_run_lock(lock)
+
+
+def _finalize_native_build_locked(
+    root: Path,
+    request: dict[str, Any],
+    result: dict[str, Any],
+    backend: dict[str, Any],
+    run_id: str,
+) -> dict[str, Any]:
+    """Write the standard build artifacts for a native compile so downstream
+    consumers (build status, gates, delivery) read ONE chain of record."""
+
+    packages = result["packages"]
+    page_sources, warnings = _page_sources_from_packages(root, packages, production=production_requires_builder_backend(_run_mode(request)))
+    manifest = {
+        "schema_version": BUILD_MANIFEST_SCHEMA_VERSION, "run_id": run_id, "status": "prepared", "run_mode": _run_mode(request),
+        "output_profile": _output_profile(request), "source_mode": "page_packages", "non_client_deliverable": True,
+        "builder_backend": backend, "source_fingerprint": result["input_fingerprint"], "build_revision": result["build_revision"],
+        "page_count": result["page_count"], "pages": page_sources, "required_outputs": _required_outputs_for_profile(_output_profile(request)),
+        "warnings": warnings, "created_at": _utc_now(),
+    }
+    write_json(root / BUILD_DIR / BUILD_MANIFEST_NAME, manifest)
+    build_dir = root / BUILD_DIR
+    pptx_path = Path(str(result["pptx_path"])).expanduser().resolve()
+    # SC-1.1 review round 2 (P1-2): a REAL native compile writes a REAL
+    # client-deliverable identity — never the contract-smoke markers. The
+    # validator runs in production mode (no smoke/deliverable waivers).
+    artifacts = [
+        _artifact(
+            root,
+            artifact_id="deck_pptx",
+            kind="deck_pptx",
+            path=pptx_path,
+            editability="native_shapes",
+            source_mode="native_compile",
+            non_client_deliverable=False,
+        ),
+    ]
+    rendered = result.get("render") or {}
+    page_previews = []
+    if rendered.get("status") == "rendered":
+        pdf_path = Path(rendered["pdf_path"])
+        artifacts.append(_artifact(root, artifact_id="deck_pdf", kind="deck_pdf", path=pdf_path, editability="raster", source_mode="native_compile", non_client_deliverable=False))
+        for page in rendered["pages"]:
+            page_path = Path(page["path"])
+            artifacts.append(_artifact(root, artifact_id=f"page_png_{page['page_id']}", kind="page_png", path=page_path, page_id=page["page_id"], editability="raster", source_mode="native_compile", non_client_deliverable=False))
+            page_previews.append({"page_id":page["page_id"],"preview_path":_run_relative(root,page_path)})
+        html_path = pdf_path.parent / "index.html"
+        html_path.write_text('<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>Presentation</title><style>body{margin:0;background:#202124}img{display:block;width:100%;max-width:1600px;margin:0 auto 16px}</style>' + ''.join(f'<section data-page-id="{escape(page["page_id"], quote=True)}"><img src="{escape(Path(page["path"]).name, quote=True)}" alt="Page {index}"></section>' for index,page in enumerate(rendered["pages"],1)) + '</html>', encoding="utf-8")
+        artifacts.append(_artifact(root,artifact_id="deck_html",kind="deck_html",path=html_path,editability="raster",source_mode="native_compile",non_client_deliverable=False))
+    artifact_manifest = {
+        "schema_version": ARTIFACT_MANIFEST_SCHEMA_VERSION,
+        "run_id": run_id,
+        "run_mode": _run_mode(request),
+        "source_mode": "native_compile",
+        "non_client_deliverable": False,
+        "builder_backend": backend,
+        "source_fingerprint": manifest.get("source_fingerprint"),
+        "build_revision": result["build_revision"],
+        "page_count": manifest.get("page_count"),
+        "artifacts": artifacts,
+        "warnings": manifest.get("warnings", []),
+        "created_at": _utc_now(),
+    }
+    artifact_validation = validate_artifact_manifest(
+        root,
+        artifact_manifest,
+        expected_source_fingerprint=str(manifest.get("source_fingerprint") or ""),
+        allow_contract_smoke=False,
+        allow_non_client_deliverable=False,
+    )
+    artifact_manifest["validation"] = artifact_validation
+    if not artifact_validation.get("valid"):
+        raise BuildError("native artifact validation failed: " + "; ".join(artifact_validation.get("errors", [])))
+    write_json(build_dir / ARTIFACT_MANIFEST_NAME, artifact_manifest)
+
+    render_result = {
+        "schema_version": RENDER_RESULT_SCHEMA_VERSION,
+        "run_id": run_id,
+        "session_id": "native-" + datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S"),
+        "tool": "deck_native",
+        "status": "completed",
+        "run_mode": _run_mode(request),
+        "output_profile": str(manifest.get("output_profile") or "client_delivery"),
+        "source_mode": "native_compile",
+        "non_client_deliverable": False,
+        "builder_backend": backend,
+        "artifact_path": _run_relative(root, pptx_path),
+        "preview_dir": _run_relative(root, Path(rendered["pdf_path"]).parent) if rendered.get("status") == "rendered" else "",
+        "page_count": int(manifest.get("page_count") or 0),
+        "source_fingerprint": manifest.get("source_fingerprint"),
+        "build_revision": result["build_revision"],
+        "build_manifest": f"{BUILD_DIR}/{BUILD_MANIFEST_NAME}",
+        "artifact_manifest": f"{BUILD_DIR}/{ARTIFACT_MANIFEST_NAME}",
+        "artifacts": artifacts,
+        "page_previews": page_previews,
+        "warnings": manifest.get("warnings", []),
+        "created_at": _utc_now(),
+    }
+    result_dir = root / RENDER_RESULTS_DIR
+    result_dir.mkdir(parents=True, exist_ok=True)
+    write_json(result_dir / RENDER_RESULT_NAME, render_result)
+    append_event(
+        root,
+        "build.native_completed",
+        target=run_id,
+        payload_ref=f"{RENDER_RESULTS_DIR}/{RENDER_RESULT_NAME}",
+        data={"engine_version": result.get("engine_version", ""), "page_count": render_result["page_count"]},
+    )
+    return {
+        "schema_version": "deck_build_run_result.v1",
+        "status": "completed",
+        "run_id": run_id,
+        "run_dir": str(root),
+        "engine_id": "deck_native",
+        "build_manifest": f"{BUILD_DIR}/{BUILD_MANIFEST_NAME}",
+        "render_result": f"{RENDER_RESULTS_DIR}/{RENDER_RESULT_NAME}",
+        "artifact_path": render_result["artifact_path"],
+        "page_count": render_result["page_count"],
+        "engine_version": result.get("engine_version", ""),
+    }
+
+
 def run_build(run_dir: str | Path) -> dict[str, Any]:
     root = ensure_run_dirs(run_dir)
     request = load_request(root)
-    backend = _assert_builder_backend_available(request)
+    backend = _assert_builder_backend_available(request, root=root)
     run_id = str(request.get("run_id") or root.name)
+    # SC-1.1 P1-01: the native route drives the built-in engine BEFORE any
+    # external-render handoff; only legacy routes reach the old request path.
+    route = build_route(request, run_dir=root)
+    if route.get("engine_id") == "deck_native":
+        # Fixture HTML has its own route; every explicit native selection now
+        # drives the same native engine even before a manifest exists.
+        return _run_native_build(root, request, run_id)
     manifest = _load_or_prepare_manifest(root)
     build_dir = root / BUILD_DIR
     build_dir.mkdir(parents=True, exist_ok=True)
@@ -651,7 +907,7 @@ def run_build(run_dir: str | Path) -> dict[str, Any]:
         "schema_version": RENDER_RESULT_SCHEMA_VERSION,
         "run_id": run_id,
         "session_id": session_id,
-        "tool": "ppt-master",
+        "tool": "fixture_html" if route.get("engine_id") == "fixture_html" else "ppt-master",
         "status": "completed",
         "run_mode": _run_mode(request),
         "output_profile": str(manifest.get("output_profile") or "client_delivery"),
@@ -730,6 +986,25 @@ def build_status(run_dir: str | Path) -> dict[str, Any]:
         status = "prepared" if manifest_path.exists() else "missing"
     if artifact_validation and not artifact_validation.get("valid"):
         status = "invalid"
+    from build.build_route import load_persisted_route
+    native_route = load_persisted_route(root).get("engine_id") == "deck_native"
+    if native_route and (build_manifest or render_result or artifact_manifest):
+        from workflow.actions import read_current_revision
+        current_revision = read_current_revision(root).get("revision_id") or "initial"
+        if any(record.get("build_revision") != current_revision for record in (build_manifest, render_result, artifact_manifest)):
+            status = "stale"
+            artifact_validation = {**artifact_validation, "valid": False, "stale_revision": True}
+    if native_route and status == "completed":
+        from build.native_engine import native_build_fingerprint
+        try:
+            current_fingerprint = native_build_fingerprint(root)
+        except (ValueError, RuntimeError, OSError) as exc:
+            status = "invalid"
+            artifact_validation = {**artifact_validation, "valid": False, "input_error": str(exc)}
+        else:
+            if any(record.get("source_fingerprint") != current_fingerprint for record in (build_manifest, render_result, artifact_manifest)):
+                status = "stale"
+                artifact_validation = {**artifact_validation, "valid": False, "stale_inputs": True}
     request_pages = ((render_request.get("inputs") or {}).get("pages") or []) if isinstance(render_request.get("inputs"), dict) else []
     page_count = (
         render_result.get("page_count")
@@ -738,9 +1013,23 @@ def build_status(run_dir: str | Path) -> dict[str, Any]:
         or build_manifest.get("page_count")
         or 0
     )
+    host_task_path = root / "build/host_imagegen_task.json"
+    host_task = read_json(host_task_path) if host_task_path.exists() else {}
+    if native_route:
+        from build.native_tasks import pending_native_task
+        pending_task = pending_native_task(root)
+        if pending_task and status not in {"stale", "invalid"}:
+            status = pending_task["status"]
+            host_task = pending_task
+    if status in {"missing", "prepared"} and host_task:
+        from workflow.actions import action_applied
+        pending = [page for page in host_task.get("pages", []) if not action_applied(root, page["action_id"])]
+        if pending:
+            status = str(host_task.get("status") or "awaiting_agent_execution")
     warnings = render_result.get("warnings") or render_request.get("warnings") or build_manifest.get("warnings") or []
     return {
         "schema_version": "deck_build_status.v1",
+        "host_task": host_task,
         "run_dir": str(root),
         "status": status,
         "build_manifest": str(manifest_path) if manifest_path.exists() else "",

@@ -413,6 +413,11 @@ def _resolve_stage(root: Path, run_mode: str) -> tuple[str, list[dict[str, str]]
             "missing request.json",
         )
 
+    from build.native_state import native_continuation
+    native = native_continuation(root)
+    if native:
+        return native["stage"], [], native["reason"]
+
     if not (root / CONTEXT_MANIFEST_NAME).exists():
         return (
             "needs_context",
@@ -599,7 +604,9 @@ def _next_command(stage: str, root: Path, run_id: str) -> str:
     if stage == "needs_generation_session":
         return f"deck-master generation-session create --run-dir {root} --run-id {run_id}"
     if stage == "generation_running":
-        return f"deck-master generation-session status --run-dir {root} --run-id {run_id}"
+        generation_status, _session = _read_generation_status(root)
+        operation = "dispatch" if generation_status == "created" else "status"
+        return f"deck-master generation-session {operation} --run-dir {root} --run-id {run_id}"
     if stage == "awaiting_agent_execution":
         return f"deck-master generation-session status --run-dir {root} --run-id {run_id}"
     if stage in {"generation_failed", "needs_generation_import"}:
@@ -675,7 +682,8 @@ def resolve_run_state(
 ) -> dict[str, Any]:
     root = Path(run_dir).expanduser().resolve()
     request = _safe_read(root / REQUEST_NAME) or {}
-    resolved_mode = str(run_mode or request.get("run_mode") or "production")
+    from build.run_policy import enforce_origin_mode
+    resolved_mode = enforce_origin_mode(root, request, requested=run_mode)
 
     workspace = resolve_workspace_for_run(
         run_dir=root,
@@ -714,6 +722,10 @@ def resolve_run_state(
 
     readiness = _run_readiness_summary(root, request, setup_payload, workspace, review_status)
     next_command = _next_command(stage, root, run_id)
+    from build.native_state import native_continuation
+    native = native_continuation(root)
+    if native and stage == native["stage"]:
+        next_command = native["next_command"]
     first_reason = reason
     for item in blocked_actions:
         if item.get("reason"):
@@ -731,6 +743,8 @@ def resolve_run_state(
         "readiness": readiness,
         "allowed_actions": allowed_actions,
         "blocked_actions": blocked_actions,
+        "host_task": (native or {}).get("host_task") or {},
+        "blocking_issues": (native or {}).get("blocking_issues") or [],
         "next_command": next_command,
         "recommended_skill": skill_route["recommended_skill"],
         "skill_stage": skill_route["skill_stage"],

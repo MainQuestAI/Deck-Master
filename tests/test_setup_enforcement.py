@@ -115,7 +115,9 @@ class SetupEnforcementTests(unittest.TestCase):
         start = self.run_cli("start", "--workspace", str(workspace))
         start_payload = json.loads(start.stdout)
         self.assertEqual("ready", start_payload["setup_status"]["status"])
-        self.assertTrue(start_payload["production_ready"])
+        # A valid workspace with only the primary skill is not a full production runtime.
+        self.assertTrue(start_payload["setup_status"]["workspace_entry_ready"])
+        self.assertFalse(start_payload["production_ready"])
         self.assertFalse(start_payload["full_suite_ready"])
         self.assertTrue(start_payload["blocked_capabilities"])
         self.assertIn("suite-repair", start_payload["next_command"])

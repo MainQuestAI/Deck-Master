@@ -1,0 +1,286 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/spec/sc1.1/task-readiness.v1.schema.json",
+  "title": "task-readiness.v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "engine_id",
+    "task_kind",
+    "status",
+    "required_missing",
+    "required_unknown",
+    "optional_unavailable",
+    "components",
+    "next_action"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "deck_task_readiness.v1"
+    },
+    "run_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "engine_id": {
+      "enum": [
+        "deck_native",
+        "legacy_ppt_master"
+      ]
+    },
+    "task_kind": {
+      "enum": [
+        "intake",
+        "image_blueprint_build",
+        "direct_svg_build",
+        "compile_approved_svg",
+        "render",
+        "export_existing",
+        "legacy_resume",
+        "library_search"
+      ]
+    },
+    "status": {
+      "enum": [
+        "ready",
+        "blocked",
+        "unknown"
+      ]
+    },
+    "required_missing": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 0
+    },
+    "required_unknown": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 0
+    },
+    "optional_unavailable": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 0
+    },
+    "components": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "capability_id",
+          "requirement",
+          "status",
+          "source",
+          "checked_at",
+          "evidence_refs"
+        ],
+        "properties": {
+          "capability_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "requirement": {
+            "enum": [
+              "required",
+              "optional",
+              "not_used"
+            ]
+          },
+          "status": {
+            "enum": [
+              "verified",
+              "missing",
+              "unknown",
+              "declared"
+            ]
+          },
+          "source": {
+            "enum": [
+              "bundled_probe",
+              "system_probe",
+              "host_observed",
+              "legacy_binding",
+              "manifest_only",
+              "not_checked"
+            ]
+          },
+          "checked_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "path",
+                "sha256"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\)(?![A-Za-z]:)[A-Za-z0-9_./-]+$"
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              },
+              "additionalProperties": false
+            },
+            "minItems": 0
+          }
+        },
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "next_action": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "ready"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "required_missing": {
+            "maxItems": 0
+          },
+          "required_unknown": {
+            "maxItems": 0
+          },
+          "components": {
+            "items": {
+              "if": {
+                "properties": {
+                  "requirement": {
+                    "const": "required"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "status": {
+                    "const": "verified"
+                  },
+                  "evidence_refs": {
+                    "minItems": 1
+                  },
+                  "source": {
+                    "enum": [
+                      "bundled_probe",
+                      "system_probe",
+                      "host_observed",
+                      "legacy_binding"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "blocked"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "required_missing": {
+            "minItems": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "unknown"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "required_unknown": {
+            "minItems": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "engine_id": {
+            "const": "deck_native"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "components": {
+            "items": {
+              "properties": {
+                "source": {
+                  "not": {
+                    "const": "legacy_binding"
+                  }
+                },
+                "capability_id": {
+                  "not": {
+                    "pattern": "ppt[_-]master"
+                  }
+                }
+              }
+            }
+          },
+          "required_missing": {
+            "items": {
+              "not": {
+                "pattern": "ppt[_-]master"
+              }
+            }
+          },
+          "required_unknown": {
+            "items": {
+              "not": {
+                "pattern": "ppt[_-]master"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

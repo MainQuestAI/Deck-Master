@@ -2165,7 +2165,7 @@ def test_svg_mutation_changes_pptx_trace_and_render(tmp_path: Path) -> None:
     svg = svg_path(run, "P001")
     svg.write_text(svg.read_text(encoding="utf-8").replace("#f7f9fb", "#fff3e8", 1), encoding="utf-8")
     render_preview(svg, preview_path(run, "P001"))
-    compile_pptx(run, [scene], {"P001": lock})
+    compile_pptx(run, [scene], {"P001": lock}, validate_approved=validate_approved_svg)
     new_preview = _render_pptx_page(run, pptx_path(run), "P001", 0)
     new_trace = read_json(trace_path(run))
 
@@ -2183,7 +2183,7 @@ def test_svg_gradient_shadow_compile_to_drawingml_and_readback(tmp_path: Path) -
     svg.write_text(mutated, encoding="utf-8")
     render_preview(svg, preview_path(run, "P001"))
 
-    compile_pptx(run, [scene], {"P001": lock})
+    compile_pptx(run, [scene], {"P001": lock}, validate_approved=validate_approved_svg)
     trace = read_json(trace_path(run))
     entry = next(item for item in trace["elements"] if item["element_id"] == "block.03")
     assert entry["paint"]["fill"]["gradient_id"] == "gradient.primary"
@@ -2204,7 +2204,7 @@ def test_svg_gradient_stroke_with_opacity_stays_gradient(tmp_path: Path) -> None
     svg.write_text(mutated, encoding="utf-8")
     render_preview(svg, preview_path(run, "P001"))
 
-    compile_pptx(run, [scene], {"P001": lock})
+    compile_pptx(run, [scene], {"P001": lock}, validate_approved=validate_approved_svg)
     trace = read_json(trace_path(run))
     entry = next(item for item in trace["elements"] if item["element_id"] == "block.03")
     assert entry["paint"]["stroke"]["gradient_id"] == "gradient.stroke"
@@ -2278,7 +2278,7 @@ def test_scene_mutation_without_svg_change_does_not_change_pptx(tmp_path: Path) 
     title["text_fit"] = {"preferred_size_px": 12, "min_size_px": 9, "max_lines": 5, "line_height": 2.0}
     title["z_index"] = 999
     write_scene(run, scene)
-    compile_pptx(run, [scene], {"P001": lock})
+    compile_pptx(run, [scene], {"P001": lock}, validate_approved=validate_approved_svg)
     mutated_pptx = _render_pptx_page(run, pptx_path(run), "P001", 0)
     readback_pptx(run, [scene], {"P001": lock}, pptx_path(run))
     with zipfile.ZipFile(pptx_path(run)) as archive:
@@ -2305,7 +2305,7 @@ def test_tspan_runs_preserve_text_and_style(tmp_path: Path) -> None:
     ElementTree.ElementTree(document).write(svg, encoding="utf-8", xml_declaration=True)
     render_preview(svg, preview_path(run, "P001"))
 
-    compile_pptx(run, [scene], {"P001": lock})
+    compile_pptx(run, [scene], {"P001": lock}, validate_approved=validate_approved_svg)
 
     presentation = Presentation(pptx_path(run))
     shape = next(shape for shape in presentation.slides[0].shapes if shape.name == "title.main")
@@ -2330,7 +2330,7 @@ def test_visible_tspan_text_cannot_hide_behind_declared_metadata(tmp_path: Path)
     with pytest.raises(SvgVisualError, match="visible SVG text drift"):
         validate_approved_svg(svg, scene, lock)
     with pytest.raises(PptxEditabilityError, match="visible SVG text drift"):
-        compile_pptx(run, [scene], {"P001": lock})
+        compile_pptx(run, [scene], {"P001": lock}, validate_approved=validate_approved_svg)
 
 
 @pytest.mark.parametrize("paint", ['fill="none"', 'fill-opacity="0"'])
@@ -2339,8 +2339,10 @@ def test_required_tspan_cannot_be_hidden_by_run_paint(tmp_path: Path, paint: str
     svg = svg_path(run, "P001")
     svg.write_text(svg.read_text(encoding="utf-8").replace("<tspan ", f"<tspan {paint} ", 1), encoding="utf-8")
 
-    with pytest.raises(SvgVisualError, match="hidden SVG tspan"):
+    with pytest.raises(SvgVisualError, match=r"hidden SVG text in tspan is blocked: title\.main") as caught:
         validate_approved_svg(svg, scene, lock)
+    assert caught.value.code == "HD_SVG_CONTENT_DRIFT"
+    assert caught.value.page_id == "P001"
 
 
 def test_required_text_cannot_be_hidden_by_ancestor_group(tmp_path: Path) -> None:
@@ -2381,7 +2383,7 @@ def test_svg_text_drift_blocks_drawingml_compile(tmp_path: Path) -> None:
     svg.write_text(svg.read_text(encoding="utf-8").replace(title, "drifted text"), encoding="utf-8")
 
     with pytest.raises(PptxEditabilityError, match="SVG text drift"):
-        compile_pptx(run, [scene], {"P001": lock})
+        compile_pptx(run, [scene], {"P001": lock}, validate_approved=validate_approved_svg)
 
 
 def test_circle_is_compiled_as_native_shape(tmp_path: Path) -> None:
@@ -2417,7 +2419,7 @@ def test_unsupported_svg_element_blocks_compile(tmp_path: Path) -> None:
     svg.write_text(original.replace("</g></svg>", '<mask id="unsupported.mask"><rect x="0" y="0" width="10" height="10" /></mask></g></svg>'), encoding="utf-8")
 
     with pytest.raises(PptxEditabilityError, match="unsupported SVG element mask"):
-        compile_pptx(run, [scene], {"P001": lock})
+        compile_pptx(run, [scene], {"P001": lock}, validate_approved=validate_approved_svg)
 
 
 def test_svg_rejects_unsafe_event_attribute(tmp_path: Path) -> None:

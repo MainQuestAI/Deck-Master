@@ -35,6 +35,8 @@ def empty_solution_model(run_id: str = "") -> dict[str, Any]:
 def validate_solution_model(model: dict[str, Any]) -> list[str]:
     """Structural + content rules from spec 05 §5.1. Fail-closed."""
 
+    if 'model_id' in model or 'based_on' in model:
+        return validate_formal_solution_model(model)
     errors: list[str] = []
     if str(model.get("schema_version") or "") != SCHEMA_VERSION:
         errors.append(f"schema_version must be '{SCHEMA_VERSION}'")
@@ -104,3 +106,75 @@ def validate_solution_model(model: dict[str, Any]) -> list[str]:
             if not str(alt.get("why_rejected") or "").strip() and not alt.get("recommended"):
                 errors.append(f"alternative {alt.get('alternative_id','')} lacks a why_rejected rationale")
     return errors
+
+
+def validate_formal_solution_model(model: dict[str, Any]) -> list[str]:
+    """Validate the public contract and references without certifying evidence truth."""
+    import json
+    from jsonschema import Draft202012Validator
+    from native_pptx.contracts import SCHEMA_DIR
+    schema = json.loads((SCHEMA_DIR / 'solution-model.v1.schema.json').read_text())
+    errors = [f"{'.'.join(map(str, e.path))}: {e.message}" for e in Draft202012Validator(schema).iter_errors(model)]
+    if errors:
+        return errors
+    sections = ('problems', 'capabilities', 'components', 'relations', 'implementation_phases', 'alternatives', 'assumptions')
+    index = {s: {i['id']: i for i in model[s]} for s in sections}
+    all_ids = set()
+    for section in sections:
+        for item in model[section]:
+            if item['id'] in all_ids:
+                errors.append(f"duplicate model object {item['id']}")
+            all_ids.add(item['id'])
+    object_ids = set(index['problems']) | set(index['capabilities']) | set(index['components'])
+    for item in model['capabilities']:
+        for ref in item['problem_refs']:
+            if ref not in index['problems']:
+                errors.append(f"capability {item['id']} references missing problem {ref}")
+    for item in model['relations']:
+        for key in ('from_id', 'to_id'):
+            if item[key] not in object_ids:
+                errors.append(f"relation {item['id']} references missing object {item[key]}")
+        if item['status'] == 'existing' and not item['evidence_refs']:
+            errors.append(f"existing relation {item['id']} requires evidence")
+    for item in model['implementation_phases']:
+        for ref in item['component_refs']:
+            if ref not in index['components']:
+                errors.append(f"phase {item['id']} references missing component {ref}")
+        for ref in item['depends_on']:
+            if ref not in index['implementation_phases'] or ref == item['id']:
+                errors.append(f"phase {item['id']} has invalid dependency {ref}")
+    if model['recommended_alternative_id'] not in index['alternatives']:
+        errors.append('recommended alternative does not exist')
+    if len(model['alternatives']) == 1 and not model['single_viable_reason'].strip():
+        errors.append('single alternative requires a single_viable_reason')
+    for item in model['assumptions']:
+        for ref in item['affected_refs']:
+            if ref not in all_ids:
+                errors.append(f"assumption {item['id']} references missing object {ref}")
+    return errors
+
+
+def build_solution_model(run_dir, design: dict[str, Any], *, source_refs: list[str]) -> dict[str, Any]:
+    """Bind Agent-authored design to actual public source bytes; never invent a design."""
+    import copy
+    import hashlib
+    import json
+    from pathlib import Path
+    root = Path(run_dir).resolve()
+    request = json.loads((root / 'request.json').read_text())
+    refs = []
+    for ref in source_refs:
+        relative = Path(ref)
+        path = root / relative
+        if relative.is_absolute() or '..' in relative.parts or not path.resolve().is_relative_to(root) or not path.is_file():
+            raise ValueError(f'invalid or missing source: {ref}')
+        refs.append({'ref': relative.as_posix(), 'sha256': hashlib.sha256(path.read_bytes()).hexdigest()})
+    if not refs:
+        raise ValueError('at least one actual source is required')
+    payload = copy.deepcopy(design)
+    payload.update(schema_version=SCHEMA_VERSION, run_id=root.name, run_mode=request.get('origin_run_mode', request.get('run_mode', 'production')),
+                   based_on={'input_fingerprint': hashlib.sha256(json.dumps(refs, sort_keys=True).encode()).hexdigest(), 'input_refs': refs})
+    errors = validate_formal_solution_model(payload)
+    if errors:
+        raise ValueError('solution model invalid: ' + '; '.join(errors))
+    return payload

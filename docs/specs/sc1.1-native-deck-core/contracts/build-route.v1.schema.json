@@ -1,0 +1,213 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/spec/sc1.1/build-route.v1.schema.json",
+  "title": "build-route.v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "engine_id",
+    "authoring_mode",
+    "density",
+    "library_mode",
+    "origin_run_mode",
+    "selection_origin",
+    "selection_ref"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "deck_build_route.v1"
+    },
+    "engine_id": {
+      "enum": [
+        "deck_native",
+        "legacy_ppt_master",
+        "fixture_html"
+      ]
+    },
+    "authoring_mode": {
+      "enum": [
+        "image_blueprint",
+        "direct_svg",
+        "legacy_external",
+        "fixture_preview"
+      ]
+    },
+    "density": {
+      "enum": [
+        "standard",
+        "high"
+      ]
+    },
+    "library_mode": {
+      "enum": [
+        "none",
+        "auto",
+        "real",
+        "fixture"
+      ]
+    },
+    "origin_run_mode": {
+      "enum": [
+        "production",
+        "benchmark",
+        "fixture",
+        "dev"
+      ]
+    },
+    "selection_origin": {
+      "enum": [
+        "default_policy",
+        "user_explicit",
+        "user_policy",
+        "legacy_migration",
+        "existing_run"
+      ]
+    },
+    "selection_ref": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "engine_id": {
+            "const": "deck_native"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "authoring_mode": {
+            "enum": [
+              "image_blueprint",
+              "direct_svg"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "engine_id": {
+            "const": "legacy_ppt_master"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "authoring_mode": {
+            "const": "legacy_external"
+          },
+          "selection_origin": {
+            "enum": [
+              "user_explicit",
+              "existing_run"
+            ]
+          },
+          "selection_ref": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "authoring_mode": {
+            "const": "direct_svg"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "selection_origin": {
+            "enum": [
+              "user_explicit",
+              "user_policy",
+              "legacy_migration",
+              "existing_run"
+            ]
+          },
+          "selection_ref": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "origin_run_mode": {
+            "enum": [
+              "production",
+              "benchmark"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "library_mode": {
+            "enum": [
+              "none",
+              "auto",
+              "real"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "engine_id": {
+            "const": "fixture_html"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "authoring_mode": {
+            "const": "fixture_preview"
+          },
+          "origin_run_mode": {
+            "enum": [
+              "fixture",
+              "dev"
+            ]
+          },
+          "selection_origin": {
+            "enum": [
+              "default_policy",
+              "existing_run"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "authoring_mode": {
+            "const": "fixture_preview"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "engine_id": {
+            "const": "fixture_html"
+          }
+        }
+      }
+    }
+  ]
+}

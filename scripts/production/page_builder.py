@@ -74,14 +74,19 @@ def _sourcing_for_page(sourcing_plan: dict[str, Any] | None, beat_id: str) -> di
     return {"strategy": "generate", "decision": "", "reason": "", "selected_source_count": 0}
 
 
-def _evidence_state(beat: dict[str, Any], valid_source_ids: set[str], design_basis: str) -> str:
-    evidence_refs = [str(ref) for ref in (beat.get("evidence_refs") or beat.get("claim_refs") or [])]
-    resolvable = [ref for ref in evidence_refs if ref in valid_source_ids]
-    if resolvable:
-        return "referenced"
-    if design_basis:
-        return "design_basis"
-    return "insufficient"
+def _page_evidence(beat, context, *, run_dir=None):
+    from quality.source_binding import evidence_index, source_quote_matches
+    source_ids = {str(s.get("source_id")) for s in (context or {}).get("sources", [])}
+    refs = list(beat.get("evidence_refs") or [])
+    source_refs = [str(ref) for ref in (beat.get("source_refs") or refs) if str(ref) in source_ids]
+    index = evidence_index(context)
+    bound = []
+    for ref in (beat.get("evidence_bindings") or refs):
+        candidates = index.get(str(ref), [])
+        if len(candidates) == 1 and source_quote_matches(*candidates[0], run_dir=run_dir):
+            source, evidence = candidates[0]
+            bound.append(str(source["source_id"]) + "::" + str(evidence["evidence_id"]))
+    return source_refs, list(dict.fromkeys(bound))
 
 
 def build_packages_from_narrative(
@@ -92,6 +97,7 @@ def build_packages_from_narrative(
     solution_model: dict[str, Any] | None = None,
     sourcing_plan: dict[str, Any] | None = None,
     now: datetime | None = None,
+    source_run_dir: str | Path | None = None,
 ) -> list[dict[str, Any]]:
     """Create one complete page package per narrative beat. No silent gaps."""
 
@@ -150,7 +156,16 @@ def build_packages_from_narrative(
             # The page job is the producer's task description, kept internal.
             pass
 
-        evidence_state = _evidence_state(beat, valid_source_ids, design_basis)
+        source_refs, evidence_bindings = _page_evidence(beat, context_manifest, run_dir=source_run_dir)
+        fact_kind = str(beat.get("fact_kind") or "unclassified")
+        if evidence_bindings:
+            evidence_state = "referenced"
+        elif fact_kind == "customer_fact":
+            evidence_state = "insufficient"
+        elif design_basis or source_refs:
+            evidence_state = "design_basis"
+        else:
+            evidence_state = "insufficient"
         sourcing = _sourcing_for_page(sourcing_plan, page_id)
         internal_only = {
             "page_job": page_job,
@@ -159,7 +174,8 @@ def build_packages_from_narrative(
             "sourcing": sourcing,
             "transition": str(beat.get("transition") or ""),
         }
-        status = "draft" if evidence_state == "insufficient" else "ready"
+        # SC-1.1 F-N08: write the schema status value, not a "ready" literal.
+        status = "draft" if evidence_state == "insufficient" else "ready_for_build"
 
         content = PageContent(
             page_id=page_id,
@@ -173,7 +189,7 @@ def build_packages_from_narrative(
                 for ref in required_components
             ],
             claim_bindings=claim_bindings,
-            evidence_bindings=[str(ref) for ref in beat.get("evidence_refs", []) if str(ref).strip()],
+            evidence_bindings=evidence_bindings,
             visual_spec={
                 "page_role": str(beat.get("role") or ""),
                 "expected_visual": str(beat.get("expected_visual") or "文字+结构化图形"),
@@ -190,6 +206,8 @@ def build_packages_from_narrative(
             now=now,
             provenance={
                 "writer": "page_builder.build_packages_from_narrative",
+                "source_refs": source_refs,
+                "fact_kind": fact_kind,
                 "narrative_beat_id": beat_id,
                 "sourcing_strategy": sourcing["strategy"],
                 "recorded_at": _utc_now(),
@@ -207,6 +225,7 @@ def write_page_packages(
     solution_model: dict[str, Any] | None = None,
     sourcing_plan: dict[str, Any] | None = None,
     now: datetime | None = None,
+    source_run_dir: str | Path | None = None,
 ) -> dict[str, Any]:
     """Write the full page package set + index; report coverage honestly."""
 
@@ -219,6 +238,7 @@ def write_page_packages(
         solution_model=solution_model,
         sourcing_plan=sourcing_plan,
         now=now,
+        source_run_dir=source_run_dir or root,
     )
     index = PagePackageIndex(root)
     for package in packages:

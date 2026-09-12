@@ -1,0 +1,211 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deck-master.local/spec/sc1.1/native-compile-request.v1.schema.json",
+  "title": "native-compile-request.v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "build_revision",
+    "engine_id",
+    "engine_version",
+    "subset_version",
+    "input_fingerprint",
+    "canvas",
+    "font_families",
+    "pages"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "deck_native_compile_request.v1"
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$"
+    },
+    "build_revision": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$"
+    },
+    "engine_id": {
+      "const": "deck_native"
+    },
+    "engine_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "subset_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "input_fingerprint": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "canvas": {
+      "type": "object",
+      "required": [
+        "viewbox_width",
+        "viewbox_height",
+        "slide_width_pt",
+        "slide_height_pt",
+        "mapping"
+      ],
+      "properties": {
+        "viewbox_width": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "viewbox_height": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "slide_width_pt": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "slide_height_pt": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "mapping": {
+          "const": "contain"
+        }
+      },
+      "additionalProperties": false
+    },
+    "font_families": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "pages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "page_id",
+          "order",
+          "svg_ref",
+          "scene_ref",
+          "content_lock_ref",
+          "asset_manifest_ref",
+          "approval_ref"
+        ],
+        "properties": {
+          "page_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$"
+          },
+          "order": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "svg_ref": {
+            "type": "object",
+            "required": [
+              "path",
+              "sha256"
+            ],
+            "properties": {
+              "path": {
+                "allOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\)(?![A-Za-z]:)[A-Za-z0-9_./-]+$"
+                  },
+                  {
+                    "pattern": "\\.svg$"
+                  }
+                ]
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "additionalProperties": false
+          },
+          "scene_ref": {
+            "type": "object",
+            "required": [
+              "path",
+              "sha256"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\)(?![A-Za-z]:)[A-Za-z0-9_./-]+$"
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "additionalProperties": false
+          },
+          "content_lock_ref": {
+            "type": "object",
+            "required": [
+              "path",
+              "sha256"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\)(?![A-Za-z]:)[A-Za-z0-9_./-]+$"
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "additionalProperties": false
+          },
+          "asset_manifest_ref": {
+            "type": "object",
+            "required": [
+              "path",
+              "sha256"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\)(?![A-Za-z]:)[A-Za-z0-9_./-]+$"
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "additionalProperties": false
+          },
+          "approval_ref": {
+            "type": "object",
+            "required": [
+              "path",
+              "sha256"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\)(?![A-Za-z]:)[A-Za-z0-9_./-]+$"
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "minItems": 1
+    }
+  },
+  "additionalProperties": false
+}

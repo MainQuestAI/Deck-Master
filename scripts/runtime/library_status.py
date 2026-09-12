@@ -6,6 +6,7 @@ import ast
 import copy
 import hashlib
 import json
+import os
 import re
 import shutil
 import sqlite3
@@ -585,9 +586,12 @@ def inspect_library_status(
     source_home = (
         Path(library_home).expanduser().resolve()
         if library_home is not None
-        else Path.home() / ".ppt-library"
+        else Path(os.environ.get("PPT_LIB_HOME_DIR") or Path.home() / ".ppt-library").expanduser().resolve()
     )
     contract_ready, contract_fingerprint = _contract_state(root)
+    if command == "ppt-lib" and which is shutil.which:
+        from tools.ppt_library_client import resolve_library_command
+        command, _ = resolve_library_command()
     cli_path = which(command)
     source_signature = _source_signature(source_home) if cli_path else None
     cache_key = (

@@ -495,7 +495,8 @@ def _build_judgments_if_possible(
     if not deck_brief or not claim_map:
         return None
     context_manifest = read_optional_json(run_dir, CONTEXT_MANIFEST_NAME) or {}
-    judgments = build_judgments(request, deck_brief, claim_map, context_manifest)
+    judgments = build_judgments(request, deck_brief, claim_map, context_manifest,
+                                narrative_plan=read_optional_json(run_dir, NARRATIVE_PLAN_NAME))
     write_artifact(run_dir, "consulting_judgments.json", judgments, action="judgments.created")
     return judgments
 
@@ -659,12 +660,13 @@ def command_build_brief(args: argparse.Namespace) -> dict[str, Any]:
         from runtime.run_state import read_json as _read_json
 
         agent_extract = _read_json(Path(agent_extract_path).expanduser().resolve())
-    deck_brief = compile_deck_brief(request, context_manifest, conversation, agent_extract=agent_extract)
+    deck_brief = compile_deck_brief(request, context_manifest, conversation, agent_extract=agent_extract, run_dir=run_dir)
     write_artifact(run_dir, DECK_BRIEF_NAME, deck_brief, action="deck_brief.created")
     return {
         "run_id": request["run_id"],
         "run_dir": str(run_dir),
-        "status": "brief_ready",
+        "status": deck_brief["status"],
+        "conflict_blockers": deck_brief["conflict_blockers"],
         "core_points": len(deck_brief["core_points"]),
         "brief_mode": deck_brief.get("brief_mode", ""),
     }
@@ -674,7 +676,7 @@ def command_build_claim_map(args: argparse.Namespace) -> dict[str, Any]:
     run_dir = resolve_run_dir(args)
     deck_brief = read_json(run_dir / DECK_BRIEF_NAME)
     context_manifest = read_json(run_dir / CONTEXT_MANIFEST_NAME)
-    claim_map = build_claim_map(deck_brief, context_manifest)
+    claim_map = build_claim_map(deck_brief, context_manifest, run_dir=run_dir)
     write_artifact(run_dir, CLAIM_MAP_NAME, claim_map, action="claim_map.created")
     if artifact_exists(run_dir, NARRATIVE_PLAN_NAME):
         narrative_plan = read_json(run_dir / NARRATIVE_PLAN_NAME)
@@ -816,9 +818,29 @@ def command_autoplan(args: argparse.Namespace) -> dict[str, Any]:
     args.run_dir = str(run_dir)
     command_search_library(args)
     command_decide_sourcing(args)
+    request = load_request(run_dir)
+    from build.build_route import resolve_build_route, persist_route
+    route = resolve_build_route(request, run_dir=run_dir)
+    if request.get("run_mode") in {"production", "benchmark"} and route["engine_id"] == "deck_native":
+        from production.content_handoff import prepare_content
+        persist_route(run_dir, route)
+        task = prepare_content(run_dir)
+        return {"run_dir": str(run_dir), "status": task["status"], "pages": len(task["page_ids"]), "host_task": task}
     command_create_generation_tasks(args)
     preview_result = command_build_preview(args)
     return preview_result | {"status": "autoplan_preview_ready"}
+
+
+def command_page_content(args: argparse.Namespace) -> dict[str, Any]:
+    from production.content_handoff import prepare_content, content_status, submit_content
+    root = resolve_run_dir(args)
+    if args.page_content_command == "prepare":
+        return prepare_content(root)
+    if args.page_content_command == "status":
+        return content_status(root)
+    result = submit_content(root, json.loads(Path(args.input).read_text(encoding="utf-8")))
+    from runtime.build import run_build
+    return {**result, "build": run_build(root)}
 
 
 def command_quality_gate(args: argparse.Namespace) -> dict[str, Any]:
@@ -906,7 +928,12 @@ def command_quality_gate(args: argparse.Namespace) -> dict[str, Any]:
         page_tasks = read_optional_json(run_dir, PAGE_TASKS_NAME) or {"run_id": run_id, "tasks": []}
         ceg = read_optional_json(run_dir, "claim_evidence_graph.json") or {"run_id": run_id, "claims": [], "evidence": [], "gaps": []}
         sourcing_plan = read_optional_json(run_dir, SOURCING_PLAN_NAME) or {"run_id": run_id, "decisions": []}
-        report = evaluate_evidence_gate(run_id, claim_map, page_tasks, ceg, sourcing_plan)
+        from production.page_package import PagePackageIndex
+        from workflow.actions import revision_read
+        with revision_read(run_dir):
+            packages = PagePackageIndex(run_dir).list_packages() if (run_dir / "page_packages/index.json").is_file() else []
+            context_manifest = read_optional_json(run_dir, "context_manifest.json") or {}
+            report = evaluate_evidence_gate(run_id, claim_map, page_tasks, ceg, sourcing_plan, packages=packages, context_manifest=context_manifest, run_dir=run_dir)
     elif args.gate == "context-conflict":
         sourcing_plan = read_optional_json(run_dir, SOURCING_PLAN_NAME) or {"run_id": run_id, "decisions": []}
         ws_dir = request.get("workspace", "")
@@ -1121,16 +1148,21 @@ def command_next_step(args: argparse.Namespace) -> dict[str, Any]:
 
 def command_build_judgments(args: argparse.Namespace) -> dict[str, Any]:
     run_dir = resolve_run_dir(args)
-    request = load_request(run_dir)
-    deck_brief = read_json(run_dir / DECK_BRIEF_NAME)
-    claim_map = read_json(run_dir / CLAIM_MAP_NAME)
-    context_manifest = read_optional_json(run_dir, CONTEXT_MANIFEST_NAME) or {}
-    judgments = build_judgments(request, deck_brief, claim_map, context_manifest)
+    from workflow.actions import revision_read
+    with revision_read(run_dir):
+        request = load_request(run_dir)
+        deck_brief = read_json(run_dir / DECK_BRIEF_NAME)
+        claim_map = read_json(run_dir / CLAIM_MAP_NAME)
+        context_manifest = read_optional_json(run_dir, CONTEXT_MANIFEST_NAME) or {}
+        judgments = build_judgments(request, deck_brief, claim_map, context_manifest,
+                                    narrative_plan=read_optional_json(run_dir, NARRATIVE_PLAN_NAME))
     write_artifact(run_dir, "consulting_judgments.json", judgments, action="judgments.created")
     return {
         "run_id": request.get("run_id", run_dir.name),
         "run_dir": str(run_dir),
-        "status": "judgments_ready",
+        "status": judgments["status"],
+        "agent_tasks": judgments.get("agent_tasks", []),
+        "open_questions": judgments.get("open_questions", []),
         "judgments": len(judgments["judgments"]),
     }
 
@@ -1478,6 +1510,8 @@ def command_workflow_autopilot(args: argparse.Namespace) -> dict[str, Any]:
         "recommended_skill": str(final_state.get("recommended_skill") or ""),
         "next_command": str(final_state.get("next_command") or ""),
         "skill_route": final_state.get("skill_route") or {},
+        "host_task": final_state.get("host_task") or {},
+        "blocking_issues": final_state.get("blocking_issues") or [],
     }
     write_json(run_dir / "workflow_autopilot_report.json", report)
     return report
@@ -1547,6 +1581,18 @@ def command_workflow_status(args: argparse.Namespace) -> dict[str, Any]:
     except Exception:
         pass
     return payload
+
+
+def command_workflow_questions(args: argparse.Namespace) -> dict[str, Any]:
+    from workflow.question_commands import read_questions
+    return read_questions(resolve_run_dir(args))
+
+
+def command_workflow_answer(args: argparse.Namespace) -> dict[str, Any]:
+    from workflow.question_commands import answer_question
+    return answer_question(resolve_run_dir(args), stage_id=args.stage_id, question_id=args.question_id,
+        answer=json.loads(args.answer_json), source_type=args.source_type,
+        actor=_actor_from_args(args), input_fingerprint=args.input_fingerprint)
 
 
 def command_workflow_stages(args: argparse.Namespace) -> dict[str, Any]:
@@ -1742,27 +1788,24 @@ def _agent_doctor_path_check(
 
 
 def _production_dependency_report(suite_payload: dict[str, Any]) -> tuple[bool, list[str], list[dict[str, Any]]]:
+    """SC-1.1 P1-02: the default engine is built-in — production readiness
+    comes from the real native runtime probe. The external PPT Master binding
+    is reported as legacy-only status and never blocks the default engine."""
+
     dependencies = suite_payload.get("external_dependency_status")
     if not isinstance(dependencies, list):
         dependencies = []
-    required = {"ppt-master"}
-    by_name = {
-        str(item.get("name") or ""): item
-        for item in dependencies
-        if isinstance(item, dict)
-    }
-    missing: list[str] = []
-    for name in sorted(required):
-        item = by_name.get(name)
-        if not item:
-            missing.append(name)
-            continue
-        binding_status = str(item.get("binding_status") or "")
-        verified = bool(item.get("verified"))
-        git_sha = str(item.get("git_sha") or "").strip()
-        if binding_status != "bound_verified" or not verified or not git_sha:
-            missing.append(name)
-    return not missing, missing, [item for item in dependencies if isinstance(item, dict) and item.get("name") in required]
+    try:
+        from native_pptx.probe import native_runtime_ready, probe_native_runtime
+    except ModuleNotFoundError:  # pragma: no cover - package-import path
+        from scripts.native_pptx.probe import native_runtime_ready, probe_native_runtime
+    probe = probe_native_runtime()
+    if native_runtime_ready(probe):
+        legacy = [item for item in dependencies if isinstance(item, dict) and str(item.get("name") or "") == "ppt-master"]
+        return True, [], legacy
+    # native kernel unavailable is a hard block — an external binding cannot
+    # substitute for the built-in default engine.
+    return False, [f"native_runtime_probe:{probe.get('status', '')}"], []
 
 
 def _agent_doctor_result(mode: str, checks: list[dict[str, Any]]) -> dict[str, Any]:
@@ -1854,7 +1897,10 @@ def command_agent_doctor(args: argparse.Namespace) -> dict[str, Any]:
 
     run_dir_raw = str(getattr(args, "run_dir", "") or "").strip()
     run_dir = Path(run_dir_raw).expanduser().resolve() if run_dir_raw else Path("/tmp/deck-master-demo/oss-demo")
-    if run_dir.exists():
+    if mode != "preview":
+        # Fixture preview requirements do not describe a production run.
+        pass
+    elif run_dir.exists():
         try:
             preview_payload = command_preview_gate(
                 argparse.Namespace(run_dir=str(run_dir), expect_unconfigured_backend_ok=True)
@@ -1914,7 +1960,7 @@ def command_agent_doctor(args: argparse.Namespace) -> dict[str, Any]:
             "production_backend_projection",
             "pass" if production_dependencies_ready else "warn",
             (
-                "Production backend is fully bound."
+                "Built-in native compilation is available; legacy backend binding is optional. Rendering and fonts have separate readiness checks."
                 if production_dependencies_ready
                 else "Production backend is not ready; preview must stay in fixture mode."
             ),
@@ -1947,7 +1993,7 @@ def command_agent_doctor(args: argparse.Namespace) -> dict[str, Any]:
         "production_backend",
         "pass" if production_dependencies_ready else "blocked",
         (
-            "Production backend dependencies are bound, verified, and pinned."
+            "All backend dependencies required by the selected policy are available."
             if production_dependencies_ready
             else "Production backend dependencies are missing, unverified, or not pinned."
         ),
@@ -1957,6 +2003,15 @@ def command_agent_doctor(args: argparse.Namespace) -> dict[str, Any]:
         },
         evidence_paths=["product-capability-manifest.json", "docs/agent-recovery-playbook.md"],
     )
+
+    if run_dir_raw:
+        from build.build_route import load_persisted_route
+        if load_persisted_route(run_dir).get("engine_id") == "deck_native":
+            from native_pptx.probe import probe_native_runtime
+            probe = probe_native_runtime()
+            _agent_doctor_add_check(checks, "native_runtime", "pass" if probe.get("status") == "ready" else "blocked",
+                                    "Actual native compiler, renderer and font probe; host tool availability is evaluated per task.",
+                                    details=probe, evidence_paths=[run_dir / "build/task_readiness.json"])
 
     release_root_raw = str(getattr(args, "release_root", "") or "").strip()
     release_root = Path(release_root_raw).expanduser().resolve() if release_root_raw else Path.home() / ".deck-master" / "current"
@@ -2279,6 +2334,72 @@ def command_build_prepare(args: argparse.Namespace) -> dict[str, Any]:
     return prepare_build(run_dir)
 
 
+def command_build_migrate(args: argparse.Namespace) -> dict[str, Any]:
+    from build.migrate import build_migration_plan, apply_migration, verify_migration, rollback_migration
+    root = resolve_run_dir(args)
+    if getattr(args, "apply", False):
+        if not args.plan:
+            raise ValueError("--apply requires --plan <migration-plan.json>")
+        return apply_migration(root, args.plan)
+    if getattr(args, "verify", False) or getattr(args, "rollback", False):
+        if not args.migration_id:
+            raise ValueError("--verify/--rollback requires --migration-id")
+        return (rollback_migration if args.rollback else verify_migration)(root, args.migration_id)
+    result = build_migration_plan(root)
+    if args.output:
+        write_json(Path(args.output), result)
+    return result
+
+
+def command_build_submit(args: argparse.Namespace) -> dict[str, Any]:
+    from build.native_engine import submit_approved_svg
+    from build.native_tasks import submit_blueprint
+    root = resolve_run_dir(args)
+    if args.blueprint:
+        if args.svg or args.scene or not args.observation:
+            raise ValueError("blueprint submission requires --observation and cannot include SVG/Scene")
+        return submit_blueprint(root, args.page_id, image_path=args.blueprint, action_id=args.action_id,
+                                produced_against=args.produced_against, observation=read_json(args.observation), expected_revision=args.expected_revision)
+    if not args.svg or not args.scene:
+        raise ValueError("SVG submission requires both --svg and --scene")
+    return submit_approved_svg(root, args.page_id, Path(args.svg).read_text(encoding="utf-8"),
+                               action_id=args.action_id, produced_against=args.produced_against,
+                               expected_revision=args.expected_revision, scene=read_json(args.scene))
+
+
+def command_build_budget(args: argparse.Namespace) -> dict[str, Any]:
+    from build.native_budget import read_native_task_budgets, set_native_task_budgets
+
+    root = resolve_run_dir(args)
+    if args.budget_command == "status":
+        return read_native_task_budgets(root, task_ids=args.task_id)
+    limits = {}
+    for item in args.limit:
+        task_id, separator, value = item.partition("=")
+        if not separator or not task_id or task_id in limits:
+            raise ValueError("--limit requires unique TASK_ID=MAX_ACTIONS entries")
+        try:
+            limits[task_id] = int(value)
+        except ValueError as exc:
+            raise ValueError("--limit MAX_ACTIONS must be an integer") from exc
+    return set_native_task_budgets(
+        root, limits=limits, expected_revision=args.expected_revision,
+        reason=args.reason, actor={"id": args.actor_id, "role": args.actor_role},
+    )
+
+
+def command_verify_evidence(args: argparse.Namespace) -> dict[str, Any]:
+    from uat.evidence_validation import verify_evidence_bundle
+
+    runs = {}
+    for item in args.run:
+        label, separator, directory = item.partition("=")
+        if not separator or not label or not directory or label in runs:
+            raise ValueError("--run requires unique LABEL=RUN_DIR mappings")
+        runs[label] = Path(directory)
+    return verify_evidence_bundle(args.evidence_root, args.candidate_sha, run_dirs=runs)
+
+
 def command_build_run(args: argparse.Namespace) -> dict[str, Any]:
     run_dir = resolve_run_dir(args)
     profile = _persist_build_options(run_dir, args)
@@ -2300,11 +2421,40 @@ def command_build_status(args: argparse.Namespace) -> dict[str, Any]:
     return build_status(run_dir)
 
 
+def command_build_cancel(args: argparse.Namespace) -> dict[str, Any]:
+    from build.native_tasks import cancel_native_action
+    return cancel_native_action(resolve_run_dir(args), str(args.action_id), reason=str(args.reason))
+
+
 def command_build_retry(args: argparse.Namespace) -> dict[str, Any]:
     run_dir = resolve_run_dir(args)
     profile = _persist_build_options(run_dir, args)
     if profile != "high_density":
-        raise _HighDensityCliError("BUILD_PROFILE_UNSUPPORTED", "build retry currently requires --profile high-density")
+        from build.build_route import resolve_build_route
+        route = resolve_build_route(load_request(run_dir), run_dir=run_dir)
+        if route.get("engine_id") != "deck_native":
+            return run_build(run_dir)
+        page_id = str(getattr(args, "page_id", "") or "")
+        stage = str(getattr(args, "stage", "") or "")
+        if page_id or stage in {"blueprint", "page_scene", "svg", "visual_review"}:
+            from build.native_engine import _approved_packages
+            packages = _approved_packages(run_dir)
+            if not page_id or page_id not in {str(p["page_id"]) for p in packages}:
+                raise ValueError("retry page does not belong to this run")
+            if stage in {"", "blueprint", "page_scene", "svg", "visual_review"}:
+                from build.native_tasks import dispatch_native_task
+                authoring = route.get("authoring_mode")
+                if stage == "blueprint" and authoring != "image_blueprint":
+                    raise ValueError("direct_svg has no blueprint stage")
+                kind = "imagegen" if stage == "blueprint" else ("reconstruct" if authoring == "image_blueprint" else "svg")
+                from build.native_tasks import stopped_native_tasks
+                stopped=[task for task in stopped_native_tasks(run_dir) if task['page_id']==page_id]
+                if stopped and not stage:
+                    kind=stopped[0]['kind']
+                return dispatch_native_task(run_dir, kind, [p for p in packages if p["page_id"] == page_id], resume_cancelled=True)
+        # Runtime dispatch regenerates only failed/stale page tasks and keeps
+        # valid committed pages. Polling itself consumes no retry budget.
+        return run_build(run_dir)
     return _high_density_runtime()["retry"](
         run_dir,
         page_id=str(getattr(args, "page_id", "") or ""),
@@ -2373,20 +2523,38 @@ def _persist_build_options(
     *,
     persist: bool = True,
 ) -> str:
-    request = load_request(run_dir)
+    from build.build_route import _derive_route, load_persisted_route
+    from workflow.actions import revision_read
+    with revision_read(run_dir, fresh=True) as expected_revision:
+        request = load_request(run_dir)
+        fixed = load_persisted_route(run_dir)
+    original_request = dict(request)
     requested = getattr(args, "profile", None)
-    requested_internal = "high_density" if requested == "high-density" else ("standard" if requested == "standard" else "")
+    authoring = getattr(args, "authoring_mode", None)
     existing = str(request.get("builder_profile") or "").strip()
+    requested_internal = "high_density" if requested == "high-density" else ("standard" if requested else "")
     if requested_internal and existing and existing != requested_internal:
-        raise _HighDensityCliError(
-            "BUILDER_PROFILE_MISMATCH",
-            f"requested profile {requested_internal} conflicts with existing profile {existing}"
-        )
+        raise _HighDensityCliError("BUILDER_PROFILE_MISMATCH", f"requested profile {requested_internal} conflicts with existing profile {existing}")
+    proposed = {**request}
+    if requested:
+        proposed["profile"] = requested
+    if authoring:
+        proposed["authoring_mode"] = str(authoring).replace("-", "_")
+    if not fixed:
+        original_route = _derive_route(request, run_dir)
+        if original_route.get("selection_origin") == "existing_run":
+            fixed = original_route
+    if fixed and (requested or authoring):
+        desired = _derive_route(proposed, None)
+        if any(desired[k] != fixed[k] for k in ("engine_id", "authoring_mode", "density")):
+            raise ValueError("build route conflict: migrate explicitly instead of changing the fixed route")
     effective = requested_internal or existing or "standard"
     if effective not in {"standard", "high_density"}:
         raise _HighDensityCliError("BUILD_PROFILE_UNSUPPORTED", f"unsupported builder profile: {effective}")
-    if persist and requested_internal:
+    if persist and (requested or authoring):
+        request.update(proposed)
         request["builder_profile"] = effective
+        request.setdefault("origin_run_mode", request.get("run_mode", "production"))
     output_profile = getattr(args, "output_profile", None)
     if persist and output_profile:
         request["output_profile"] = str(output_profile)
@@ -2424,9 +2592,60 @@ def _persist_build_options(
         request["review_depth"] = effective_depth
     if persist and review_options_changed and effective_receipt:
         request["receipt_policy"] = effective_receipt
-    if persist and (requested_internal or output_profile or review_policy or review_depth or receipt_policy):
-        write_json(run_dir / REQUEST_NAME, request)
+    if persist and (requested_internal or authoring or output_profile or review_policy or review_depth or receipt_policy):
+        route = (fixed or _derive_route(request, run_dir)) if requested or authoring else fixed
+        _commit_build_options(run_dir, original_request, request, route, expected_revision)
     return effective
+
+
+def _commit_build_options(run_dir: Path, original: dict, request: dict, route: dict, expected_revision: str) -> None:
+    """Publish requested options with their route through the current revision."""
+    from build.build_route import load_persisted_route, validate_route
+    from workflow.actions import (
+        ActionStaleError, _acquire_run_lock, _release_run_lock, _atomic_json,
+        read_current_revision, create_action_envelope, stage_action_result, commit_action_result,
+    )
+    from uuid import uuid4
+
+    if route:
+        validate_route(route)
+    if expected_revision:
+        from workflow.actions import read_revision_state
+        state = read_revision_state(run_dir, expected_revision)
+        outputs = {REQUEST_NAME: json.dumps(request, ensure_ascii=False, indent=2) + "\n"}
+        if route and "build/route.json" not in state:
+            outputs["build/route.json"] = json.dumps(route, ensure_ascii=False, indent=2) + "\n"
+        if request == original and len(outputs) == 1:
+            return
+        action_id = "build-options-" + uuid4().hex
+        envelope = create_action_envelope(
+            action_id=action_id, task_id=action_id, scope_pages=["build-options"],
+            permission="runtime", input_fingerprint=expected_revision,
+        )
+        stage_action_result(run_dir, envelope, outputs)
+        commit_action_result(
+            run_dir, envelope, expected_revision=expected_revision,
+            current_input_fingerprint=lambda: read_current_revision(run_dir).get("revision_id", ""),
+            targets={name: run_dir / name for name in outputs},
+        )
+        return
+    # Runs which have not entered revision management keep their legacy writers.
+    # Recheck under the shared lock so a concurrently created baseline cannot
+    # turn this write into an untracked compatibility projection.
+    lock = _acquire_run_lock(run_dir)
+    try:
+        if read_current_revision(run_dir).get("revision_id") or load_request(run_dir) != original:
+            raise ActionStaleError("build options changed concurrently; retry against the current revision")
+        existing = load_persisted_route(run_dir)
+        if route and existing and any(existing.get(key) != route.get(key) for key in (
+            "engine_id", "authoring_mode", "density", "library_mode", "origin_run_mode",
+        )):
+            raise ActionStaleError("build route changed concurrently; retry against the current selection")
+        if route and not existing:
+            _atomic_json(run_dir / "build/route.json", route)
+        write_json(run_dir / REQUEST_NAME, request)
+    finally:
+        _release_run_lock(lock)
 
 
 def command_bind_workspace(args: argparse.Namespace) -> dict[str, Any]:
@@ -2498,10 +2717,31 @@ def command_apply_narrative_advice(args: argparse.Namespace) -> dict[str, Any]:
     return apply_narrative_advice(run_dir, result, dry_run=dry_run, apply_sections=apply_sections)
 
 
+def command_research(args: argparse.Namespace) -> dict[str, Any]:
+    from context_intake.research_runtime import prepare_research, dispatch_research, submit_research, research_status
+
+    root = resolve_run_dir(args)
+    operation = args.research_operation
+    if operation in {"prepare", "submit"}:
+        payload = json.loads(Path(args.input).expanduser().read_text(encoding="utf-8"))
+        return (prepare_research if operation == "prepare" else submit_research)(root, payload)
+    return (dispatch_research if operation == "dispatch" else research_status)(root, args.task_id)
+
+
 def command_prepare_quality_review(args: argparse.Namespace) -> dict[str, Any]:
     run_dir = resolve_run_dir(args)
     scope_str = getattr(args, "scope", "semantic") or "semantic"
     scopes = [s.strip() for s in scope_str.split(",") if s.strip()]
+    from build.build_route import load_persisted_route
+    if load_persisted_route(run_dir).get("engine_id") == "deck_native":
+        from build.native_engine import _approved_packages
+        from quality.external_review import prepare_quality_review_v2
+        from workflow.actions import revision_read
+        with revision_read(run_dir):
+            page_ids = [p["page_id"] for p in _approved_packages(run_dir)]
+            mode = load_request(run_dir).get("run_mode", "production")
+            tasks = [prepare_quality_review_v2(run_dir, scope=scope, required_page_ids=page_ids, run_mode=mode) for scope in scopes]
+        return {"status": "prepared", "scopes": scopes, "run_id": run_dir.name, "tasks": tasks}
     return prepare_quality_review(run_dir, scopes=scopes)
 
 
@@ -3049,7 +3289,7 @@ def add_run_args(parser: argparse.ArgumentParser) -> None:
 
 
 def add_library_args(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("--library-mode", choices=["auto", "real", "fixture"], default="auto")
+    parser.add_argument("--library-mode", choices=["auto", "real", "fixture", "none"], default="auto")
     parser.add_argument("--ppt-lib-command", default=None, help="Explicit ppt-lib command; omit to resolve the managed install first, then PATH")
     parser.add_argument("--allow-fixture-library-fallback", action="store_true")
 
@@ -3352,6 +3592,15 @@ def build_parser() -> argparse.ArgumentParser:
     add_run_args(p_wf_stages)
     p_wf_stages.set_defaults(func=command_workflow_stages)
 
+    p_wf_q = wf_sub.add_parser("questions", help="Read current forcing questions and input token")
+    add_run_args(p_wf_q)
+    p_wf_q.set_defaults(func=command_workflow_questions)
+    p_wf_a = wf_sub.add_parser("answer", help="Record an explicit local actor answer (caller declaration, not authenticated user identity)")
+    add_run_args(p_wf_a)
+    for name in ("stage-id", "question-id", "answer-json", "source-type", "actor-id", "actor-role", "input-fingerprint"):
+        p_wf_a.add_argument("--" + name, required=True)
+    p_wf_a.set_defaults(func=command_workflow_answer)
+
     # handoff
     p_wf_h = wf_sub.add_parser("handoff", help="Stage handoff runtime")
     h_sub = p_wf_h.add_subparsers(dest="handoff_command", required=True)
@@ -3606,35 +3855,84 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_build_prepare = build_sub.add_parser("prepare", help="Write build manifest from current preview manifest")
     add_run_args(p_build_prepare)
-    p_build_prepare.add_argument("--profile", choices=["standard", "high-density"], default=None)
+    p_build_prepare.add_argument("--profile", choices=["standard", "high-density", "native", "direct-svg", "legacy-ppt-master"], default=None)
     p_build_prepare.add_argument("--output-profile", choices=["production_pptx", "client_delivery"], default=None)
     p_build_prepare.add_argument("--review-policy", choices=["local_traceable", "external_signed", "local-traceable", "external-signed"], default=None)
     p_build_prepare.add_argument("--review-depth", choices=["producer_only", "independent_main", "producer-only", "independent-main"], default=None)
     p_build_prepare.add_argument("--receipt-policy", choices=["local_traceable", "external_signed", "local-traceable", "external-signed"], default=None)
+    p_build_prepare.add_argument("--authoring-mode", choices=["image_blueprint", "direct_svg", "image-blueprint", "direct-svg"], default=None)
     p_build_prepare.set_defaults(func=command_build_prepare)
+
+    p_build_migrate = build_sub.add_parser("migrate", help="Plan, apply, verify or roll back an old run migration")
+    add_run_args(p_build_migrate)
+    migration_mode = p_build_migrate.add_mutually_exclusive_group()
+    migration_mode.add_argument("--dry-run", action="store_true")
+    migration_mode.add_argument("--apply", action="store_true")
+    migration_mode.add_argument("--verify", action="store_true")
+    migration_mode.add_argument("--rollback", action="store_true")
+    p_build_migrate.add_argument("--plan", default=None)
+    p_build_migrate.add_argument("--migration-id", default=None)
+    p_build_migrate.add_argument("--output", default=None)
+    p_build_migrate.set_defaults(func=command_build_migrate)
+
+    p_build_submit = build_sub.add_parser("submit", help="Validate and commit a Runtime-issued host result")
+    add_run_args(p_build_submit)
+    p_build_submit.add_argument("--page-id", required=True)
+    p_build_submit.add_argument("--action-id", required=True)
+    p_build_submit.add_argument("--produced-against", required=True)
+    p_build_submit.add_argument("--expected-revision", default=None)
+    p_build_submit.add_argument("--svg", default=None)
+    p_build_submit.add_argument("--scene", default=None)
+    p_build_submit.add_argument("--blueprint", default=None)
+    p_build_submit.add_argument("--observation", default=None)
+    p_build_submit.set_defaults(func=command_build_submit)
 
     p_build_run = build_sub.add_parser("run", help="Build HTML/PDF/PNG/PPTX artifacts")
     add_run_args(p_build_run)
-    p_build_run.add_argument("--profile", choices=["standard", "high-density"], default=None)
+    p_build_run.add_argument("--profile", choices=["standard", "high-density", "native", "direct-svg", "legacy-ppt-master"], default=None)
     p_build_run.add_argument("--output-profile", choices=["production_pptx", "client_delivery"], default=None)
     p_build_run.add_argument("--review-policy", choices=["local_traceable", "external_signed", "local-traceable", "external-signed"], default=None)
     p_build_run.add_argument("--review-depth", choices=["producer_only", "independent_main", "producer-only", "independent-main"], default=None)
     p_build_run.add_argument("--receipt-policy", choices=["local_traceable", "external_signed", "local-traceable", "external-signed"], default=None)
+    p_build_run.add_argument("--authoring-mode", choices=["image_blueprint", "direct_svg", "image-blueprint", "direct-svg"], default=None)
     p_build_run.set_defaults(func=command_build_run)
 
     p_build_status = build_sub.add_parser("status", help="Inspect production build artifacts")
     add_run_args(p_build_status)
-    p_build_status.add_argument("--profile", choices=["standard", "high-density"], default=None)
+    p_build_status.add_argument("--profile", choices=["standard", "high-density", "native", "direct-svg", "legacy-ppt-master"], default=None)
     p_build_status.add_argument("--watch", action="store_true")
     p_build_status.add_argument("--watch-timeout", type=float, default=30.0)
+    p_build_status.add_argument("--authoring-mode", choices=["image_blueprint", "direct_svg", "image-blueprint", "direct-svg"], default=None)
     p_build_status.set_defaults(func=command_build_status)
+
+    p_build_cancel = build_sub.add_parser("cancel", help="Stop a current Runtime-issued native host action")
+    add_run_args(p_build_cancel)
+    p_build_cancel.add_argument("--action-id", required=True)
+    p_build_cancel.add_argument("--reason", required=True)
+    p_build_cancel.set_defaults(func=command_build_cancel)
+
+    p_build_budget = build_sub.add_parser("budget", help="Inspect or explicitly increase selected native task limits")
+    budget_sub = p_build_budget.add_subparsers(dest="budget_command", required=True)
+    p_budget_status = budget_sub.add_parser("status", help="Read used and remaining attempts without changing the run")
+    add_run_args(p_budget_status)
+    p_budget_status.add_argument("--task-id", action="append", required=True)
+    p_budget_status.set_defaults(func=command_build_budget)
+    p_budget_set = budget_sub.add_parser("set", help="Record an explicit task-scoped budget authorization")
+    add_run_args(p_budget_set)
+    p_budget_set.add_argument("--limit", action="append", required=True, metavar="TASK_ID=MAX_ACTIONS")
+    p_budget_set.add_argument("--expected-revision", required=True)
+    p_budget_set.add_argument("--reason", required=True)
+    p_budget_set.add_argument("--actor-id", required=True, help="Local caller declaration; not authenticated identity")
+    p_budget_set.add_argument("--actor-role", choices=["user"], required=True)
+    p_budget_set.set_defaults(func=command_build_budget)
 
     p_build_retry = build_sub.add_parser("retry", help="Retry one high-density page or a deck-scoped MBB stage")
     add_run_args(p_build_retry)
-    p_build_retry.add_argument("--profile", choices=["high-density"], required=True)
+    p_build_retry.add_argument("--profile", choices=["standard", "high-density", "native", "direct-svg", "legacy-ppt-master"], default=None)
     p_build_retry.add_argument("--page-id", required=False)
     p_build_retry.add_argument("--storyline-id", default="", help="Approve this MBB storyline when retrying the deck-scoped content_lock stage")
     p_build_retry.add_argument("--stage", choices=["content_lock", "blueprint", "page_scene", "svg", "visual_review", "pptx", "readback", "handback"], default=None)
+    p_build_retry.add_argument("--authoring-mode", choices=["image_blueprint", "direct_svg", "image-blueprint", "direct-svg"], default=None)
     p_build_retry.set_defaults(func=command_build_retry)
 
     p_build_select_style = build_sub.add_parser("select-style", help="Approve a high-density style lock")
@@ -3727,6 +4025,18 @@ def build_parser() -> argparse.ArgumentParser:
     p_ana.add_argument("--apply", default=None, help="Comma-separated sections: core-thesis,page-recommendations,risks")
     p_ana.set_defaults(func=command_apply_narrative_advice)
 
+    # ---- bounded host research ----
+    p_research = sub.add_parser("research", help="Prepare, dispatch and record authorized public host research")
+    research_sub = p_research.add_subparsers(dest="research_operation", required=True)
+    for operation in ("prepare", "dispatch", "submit", "status"):
+        p_operation = research_sub.add_parser(operation)
+        add_run_args(p_operation)
+        if operation in {"prepare", "submit"}:
+            p_operation.add_argument("--input", required=True, help="Research task or issued-action result JSON")
+        else:
+            p_operation.add_argument("--task-id", required=True)
+        p_operation.set_defaults(func=command_research)
+
     # ---- external quality review ----
     p_pqr = sub.add_parser("prepare-quality-review", help="Generate external quality review task for an Agent")
     add_run_args(p_pqr)
@@ -3759,6 +4069,15 @@ def build_parser() -> argparse.ArgumentParser:
     p_rpg = sub.add_parser("refresh-preview-from-generation", help="Update preview manifest from generation results")
     add_run_args(p_rpg)
     p_rpg.set_defaults(func=command_refresh_preview_from_generation)
+
+    p_content = sub.add_parser("page-content", help="Author and review source-bound page content")
+    content_sub = p_content.add_subparsers(dest="page_content_command", required=True)
+    for operation in ("prepare", "status", "submit"):
+        content_parser = content_sub.add_parser(operation)
+        add_run_args(content_parser)
+        if operation == "submit":
+            content_parser.add_argument("--input", required=True)
+        content_parser.set_defaults(func=command_page_content)
 
     p_gs = sub.add_parser("generation-session", help="Manage generation sessions")
     gs_sub = p_gs.add_subparsers(dest="generation_session_command", required=True)
@@ -3965,14 +4284,33 @@ def build_parser() -> argparse.ArgumentParser:
     p_preview_gate.add_argument("--expect-unconfigured-backend-ok", action="store_true")
     p_preview_gate.set_defaults(func=command_preview_gate)
 
+    p_verify_evidence = sub.add_parser("verify-evidence", help="Read-only verification of candidate and current-run evidence")
+    p_verify_evidence.add_argument("--evidence-root", required=True)
+    p_verify_evidence.add_argument("--candidate-sha", required=True)
+    p_verify_evidence.add_argument("--run", action="append", default=[], metavar="LABEL=RUN_DIR")
+    p_verify_evidence.set_defaults(func=command_verify_evidence)
+
     return parser
 
 
+def _native_file_quality_command(args: argparse.Namespace) -> bool:
+    """Native file QA/export uses current artifact gates, not legacy services."""
+    if args.command not in {"quality-gate", "prepare-quality-review", "import-quality-review", "import-quality-findings", "export"}:
+        return False
+    if not getattr(args, "run_dir", None):
+        return False
+    from build.build_route import load_persisted_route
+    return load_persisted_route(Path(args.run_dir).expanduser().resolve()).get("engine_id") == "deck_native"
+
+
 def main() -> None:
+    from build.native_engine import NativeEngineError
+    from native_pptx.api import NativeCompileError
+    from workflow.actions import ActionStaleError
     parser = build_parser()
     args = parser.parse_args()
     try:
-        if args.command in PROTECTED_COMMANDS:
+        if args.command in PROTECTED_COMMANDS and not _native_file_quality_command(args):
             require_setup_ready(
                 dev_allow_unsetup=_dev_allow_unsetup(args),
                 workspace=_workspace_for_setup_guard(args),
@@ -3981,6 +4319,8 @@ def main() -> None:
         result = args.func(args)
         print_json(result)
         if args.command in {"preview-gate", "rc-gate"} and isinstance(result, dict) and result.get("status") != "pass":
+            raise SystemExit(2)
+        if args.command == "verify-evidence" and result.get("status") not in {"passed", "human_pending"}:
             raise SystemExit(2)
     except (
         RunStateError,
@@ -4002,12 +4342,29 @@ def main() -> None:
         HandoffError,
         ApprovalError,
         PolicyError,
+        NativeEngineError,
+        NativeCompileError,
+        ActionStaleError,
         ValueError,
     ) as exc:
+        if isinstance(exc, ActionStaleError):
+            print_json({"status": "blocked", "code": "ACTION_STALE", "message": str(exc),
+                        "next_command": "deck-master next-step --run-dir <run_dir>"})
+            raise SystemExit(2) from exc
+        if str(exc).startswith("RUN_MODE_CONFLICT"):
+            print_json({"status": "blocked", "code": "RUN_MODE_CONFLICT", "message": str(exc)})
+            raise SystemExit(2) from exc
         if getattr(exc, "code", ""):
             code = str(getattr(exc, "code"))
             page_id = str(getattr(exc, "page_id", "") or "")
             stage = str(getattr(exc, "stage", "") or "")
+            if code.startswith("NDC_"):
+                print_json({"code": code, "message": str(exc), "status": "blocked",
+                            "page_id": page_id, "element_id": str(getattr(exc, "element_id", "") or ""),
+                            "input_sha256": str(getattr(exc, "input_sha256", "") or ""),
+                            "fix": str(getattr(exc, "recovery", "") or "Repair the native input and retry."),
+                            "next_command": "deck-master build status --run-dir <run_dir>"})
+                raise SystemExit(2) from exc
             if code == "HIGH_DENSITY_CAPABILITY_MISSING":
                 next_command = "deck-master suite-status --capability deck_master.build.high_density.v1 --output json"
             elif page_id:

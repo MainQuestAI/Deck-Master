@@ -30,6 +30,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Managed-release rollback probes use 3.12 even in the preview 3.11 job.
+      # A system interpreter with no project dependencies is not a ready runtime.
+      - name: Set up managed runtime Python
+        if: matrix.python-version == '3.11'
+        id: managed-python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install managed runtime dependencies
+        if: matrix.python-version == '3.11'
+        run: |
+          python -m pip install --quiet .
+          echo "DECK_MASTER_PYTHON=${{ steps.managed-python.outputs.python-path }}" >> "$GITHUB_ENV"
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -38,7 +53,25 @@ jobs:
       - name: Install native SVG preview dependency
         run: |
           sudo apt-get update
-          sudo apt-get install --no-install-recommends -y librsvg2-bin libreoffice poppler-utils
+          sudo apt-get install --no-install-recommends -y librsvg2-bin libreoffice poppler-utils fontconfig
+
+      - name: Install verified native CJK fonts
+        run: |
+          set -euo pipefail
+          FONT_STAGE="$(mktemp -d)"
+          cd "$FONT_STAGE"
+          FONT_SOURCE="https://raw.githubusercontent.com/notofonts/noto-cjk/f8d157532fbfaeda587e826d4cd5b21a49186f7c/Sans/SubsetOTF/SC"
+          curl --fail --location "$FONT_SOURCE/NotoSansSC-Regular.otf" --output NotoSansSC-Regular.otf
+          curl --fail --location "$FONT_SOURCE/NotoSansSC-Bold.otf" --output NotoSansSC-Bold.otf
+          sha256sum --check <<'HASHES'
+          faa6c9df652116dde789d351359f3d7e5d2285a2b2a1f04a2d7244df706d5ea9  NotoSansSC-Regular.otf
+          c6cb5a93abaa9edc8ee7463b7ebb7f42d618d40e6ed2f7a5371c97b0b64767c0  NotoSansSC-Bold.otf
+          HASHES
+          sudo mkdir -p /usr/local/share/fonts/deck-master
+          sudo install -m 644 NotoSansSC-*.otf /usr/local/share/fonts/deck-master/
+          fc-cache -f
+          fc-match 'Noto Sans SC:style=Regular'
+          fc-match 'Noto Sans SC:style=Bold'
 
       - name: Check Python syntax
         run: python -m compileall scripts tests
@@ -50,12 +83,13 @@ jobs:
         run: python -m playwright install --with-deps chromium
 
       - name: Run unit tests
+        if: matrix.python-version == '3.11'
         run: python -m pytest -q
 
       - name: Run static correctness checks
         run: python -m ruff check scripts tests
 
-      - name: Enforce coverage floor
+      - name: Run unit tests with coverage and enforce floor
         if: matrix.python-version == '3.12'
         run: |
           python -m coverage run -m pytest -q

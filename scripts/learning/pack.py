@@ -84,15 +84,14 @@ def _aggregate_feedback(workspace_dir: Path) -> dict[str, Any]:
         if event in ("delivered", "delivery_positive_signal", "exported_client", "exported_internal"):
             # delivery signals stay independent of the review outcome
             delivered_counter[slide_id] += 1
-        if event not in ("preview_approved", "preview_rejected", "exported_client", "exported_internal"):
+        if event not in ("preview_approved", "preview_rejected"):
             continue
-        outcome = "accepted" if event in ("preview_approved", "exported_client", "exported_internal") else "rejected"
+        outcome = "accepted" if event == "preview_approved" else "rejected"
         payload = entry.get("payload") if isinstance(entry.get("payload"), dict) else {}
-        run_id = str(entry.get("run_id") or payload.get("run_id") or "")
+        run_id = str(entry.get("run_id") or payload.get("run_id") or "").strip()
         revision = str(entry.get("reviewed_revision") or payload.get("reviewed_revision") or "").strip()
-        if not run_id and not revision:
-            # Legacy event without any dedup key: recorded separately, never
-            # guessed into a review group.
+        if not run_id or not revision:
+            # Both identities are needed to distinguish reviewed units.
             legacy_unknown += 1
             continue
         key = (slide_id, run_id, revision)
@@ -141,7 +140,7 @@ def _aggregate_strong_assets(workspace_dir: Path) -> dict[str, Any]:
         })
 
     # Outcome first: repeated exports must not lift an asset's rank.
-    assets.sort(key=lambda a: (a["acceptance_rate"], a["reviewed_count"], a["delivered_count"]), reverse=True)
+    assets.sort(key=lambda a: (a["acceptance_rate"], a["reviewed_count"]), reverse=True)
     return {
         "assets": assets[:10],
         "legacy_unknown": fb["legacy_unknown"],
@@ -149,37 +148,27 @@ def _aggregate_strong_assets(workspace_dir: Path) -> dict[str, Any]:
 
 
 def _aggregate_failure_modes(workspace_dir: Path) -> list[dict[str, Any]]:
-    """Aggregate quality failure modes from run quality reports."""
-    message_counter: Counter[str] = Counter()
-    message_repair: dict[str, str] = {}
-
+    """Count severity without promoting customer-specific findings to advice."""
+    counts: Counter[str] = Counter()
+    sources: dict[str, set[str]] = defaultdict(set)
     for run_dir in _find_run_dirs(workspace_dir):
-        quality_dir = run_dir / "quality_reports"
-        if not quality_dir.exists():
-            continue
-        for gate_file in quality_dir.glob("*_gate.json"):
-            report = _safe_read(gate_file)
-            if not report:
-                continue
-            for f in report.get("findings", []):
-                if not isinstance(f, dict):
+        for gate_file in (run_dir / "quality_reports").glob("*_gate.json"):
+            report = _safe_read(gate_file) or {}
+            for finding in report.get("findings", []):
+                if not isinstance(finding, dict):
                     continue
-                msg = f.get("message", "")[:80]
-                if msg:
-                    message_counter[msg] += 1
-                    repair = f.get("repair_instruction", "")
-                    if repair:
-                        message_repair[msg] = repair
-
-    result: list[dict[str, Any]] = []
-    for i, (msg, count) in enumerate(message_counter.most_common(10), start=1):
-        result.append({
-            "failure_id": f"failure_{i:03d}",
-            "description": msg,
-            "count": count,
-            "repair_instruction": message_repair.get(msg, ""),
-        })
-    return result
+                severity = str(finding.get("severity") or "unknown")
+                if severity not in {"P0", "P1", "P2", "P3"}:
+                    severity = "unknown"
+                counts[severity] += 1
+                sources[severity].add(gate_file.relative_to(workspace_dir).as_posix())
+    return [{"failure_id": "failure_" + severity,
+             "description": severity + " quality findings; details remain in the original run",
+             "count": count, "repair_instruction": "",
+             "source_refs": sorted(sources[severity]),
+             "applicable_scope": "Original source runs only; inspect their evidence before reuse",
+             "not_applicable_scope": "Customer facts or repair instructions for another project"}
+            for severity, count in counts.most_common(10)]
 
 
 def _build_agent_guidance(failure_modes: list[dict[str, Any]], strong_assets: list[dict[str, Any]]) -> list[str]:
@@ -219,7 +208,7 @@ def _build_experience_cards(workspace_dir: Path) -> list[dict[str, Any]]:
     entries = _safe_read_jsonl(feedback_path)
     cards: list[dict[str, Any]] = []
     seen: set[tuple[str, str, str]] = set()
-    for entry in entries:
+    for entry in reversed(entries):
         if not isinstance(entry, dict):
             continue
         payload = entry.get("payload") if isinstance(entry.get("payload"), dict) else {}
@@ -227,13 +216,17 @@ def _build_experience_cards(workspace_dir: Path) -> list[dict[str, Any]]:
         run_id = str(entry.get("run_id") or payload.get("run_id") or "")
         revision = str(entry.get("reviewed_revision") or payload.get("reviewed_revision") or "").strip()
         key = (slide_id, run_id, revision)
-        if not slide_id or key in seen:
+        event = str(entry.get("event_type") or "")
+        if event not in {"preview_approved", "preview_rejected"} or not slide_id or not run_id or not revision or key in seen:
             continue
         seen.add(key)
-        event = str(entry.get("event_type") or "")
-        notes = str(entry.get("notes") or payload.get("notes") or "").strip()
-        if not notes:
+        # Raw customer comments remain in their original feedback record. Only
+        # explicitly authored, scoped abstractions enter a reusable Agent pack.
+        required = ("adopted_structure", "reusable_reason", "evidence_source_category",
+                    "applicable_scope", "not_applicable_scope", "approval_scope")
+        if any(not str(payload.get(field) or "").strip() for field in required):
             continue
+        notes = str(payload["reusable_reason"]).strip()
         cards.append(
             {
                 "card_id": f"exp_{len(cards) + 1:03d}",
@@ -245,6 +238,8 @@ def _build_experience_cards(workspace_dir: Path) -> list[dict[str, Any]]:
                 "applicable_scope": str(payload.get("applicable_scope") or ""),
                 "not_applicable_scope": str(payload.get("not_applicable_scope") or ""),
                 "source_run_ref": run_id,
+                "reviewed_revision": revision,
+                "source_feedback_ref": "assets/asset_feedback.jsonl",
                 "approval_scope": str(payload.get("approval_scope") or "workspace_feedback"),
                 "recorded_at": str(entry.get("timestamp") or ""),
             }

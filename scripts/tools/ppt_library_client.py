@@ -308,7 +308,7 @@ def _is_safe_screenshot_source(source: Path, run_dir: Path) -> bool:
         in_run_dir = True
     except ValueError:
         pass
-    library_home = Path.home() / ".ppt-library"
+    library_home = Path(os.environ.get("PPT_LIB_HOME_DIR") or Path.home() / ".ppt-library").expanduser().resolve()
     in_library = False
     try:
         source.relative_to(library_home)
@@ -1124,8 +1124,8 @@ def run_library_selection(
     command: str | None = None,
     allow_fixture_fallback: bool = False,
 ) -> dict[str, Any]:
-    if mode not in {"auto", "real", "fixture"}:
-        raise PPTLibraryClientError("mode must be auto, real, or fixture.")
+    if mode not in {"auto", "real", "fixture", "none"}:
+        raise PPTLibraryClientError("mode must be auto, real, fixture, or none.")
     resolved_command, command_source = resolve_library_command()
     if command is not None:
         resolved_command, command_source = command, "explicit"
@@ -1156,6 +1156,36 @@ def run_library_selection(
         append_event(root, "ppt_library.bridge.blocked", status="error", error=str(exc))
         raise
     write_json(private_root / "bridge_plan.v1.json", bridge_plan)
+
+    if mode == "none":
+        # SC-1.1 F-N07/IND-04: none is a real production decision — no Library
+        # call, no fixture candidates; every beat returns a generate decision.
+        selections: list[dict[str, Any]] = []
+        for bridge_request in bridge_plan["requests"]:
+            selections.append(
+                {
+                    "beat_id": str(bridge_request["beat_id"]),
+                    "candidates": [],
+                    "preview_degraded": False,
+                    "candidate_origin": "none",
+                    "preview_status": "absent",
+                    "decision": "generate",
+                    "decision_reason": "LIBRARY_NONE_GENERATE",
+                    "retrieval_method": "none",
+                    "fallback_reason": "LIBRARY_MODE_NONE",
+                    "warnings": [],
+                }
+            )
+        append_event(root, "ppt_library.none.completed", status="ok")
+        return write_library_results(
+            root,
+            run_id=run_id,
+            selections=selections,
+            source="none",
+            status="none",
+            warnings=list(bridge_plan["warnings"]),
+            command_source="none",
+        )
 
     fallback_message = "PPT Library fixture fallback is blocked for production and benchmark runs."
     if strict_mode and (mode == "fixture" or allow_fixture_fallback):

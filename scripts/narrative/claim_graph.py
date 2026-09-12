@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import Any
+import copy
 
 SCHEMA_VERSION = "deck_claim_evidence_graph.v1"
 
@@ -63,7 +64,8 @@ def build_claim_evidence_graph(
     # 建立 source evidence
     evidence_counter = 0
     source_evidence_map: dict[str, str] = {}  # source_id -> evidence_id
-    candidate_evidence_map: dict[str, str] = {}  # candidate evidence_id -> graph evidence_id
+    candidate_evidence_map: dict[str, list[str]] = {}  # bare ID may be ambiguous
+    qualified_evidence_map: dict[str, list[str]] = {}
     for source in sources:
         if not isinstance(source, dict):
             continue
@@ -96,7 +98,8 @@ def build_claim_evidence_graph(
                     continue
                 evidence_counter += 1
                 cand_eid = f"evidence_{evidence_counter:03d}"
-                candidate_evidence_map[cand_id] = cand_eid
+                candidate_evidence_map.setdefault(cand_id, []).append(cand_eid)
+                qualified_evidence_map.setdefault(f"{source_id}::{cand_id}", []).append(cand_eid)
                 cand_type = _infer_evidence_type(str(candidate.get("evidence_type", kind)))
                 cand_pub = str(candidate.get("publication_status", pub_status))
                 all_evidence.append({
@@ -114,13 +117,22 @@ def build_claim_evidence_graph(
     for index, claim in enumerate(raw_claims, start=1):
         claim_id = claim.get("claim_id", f"claim_{index:02d}")
 
+        declared_assumptions = [copy.deepcopy(a) for a in claim.get("working_assumptions", []) if isinstance(a, dict)]
+        unreviewed = bool(declared_assumptions) or "evidence_unreviewed" in claim.get("risk_flags", []) or claim.get("support_status") == "unsupported"
+        # Candidate source matches are not reviewed support, especially for typed assumptions.
         # 关联 evidence
         supporting_evidence: list[str] = []
-        for ref in claim.get("evidence_refs", []):
-            if ref in source_evidence_map:
-                supporting_evidence.append(source_evidence_map[ref])
-            elif ref in candidate_evidence_map:
-                supporting_evidence.append(candidate_evidence_map[ref])
+        for ref in ([] if unreviewed else claim.get("evidence_refs", [])):
+            candidates_for_ref = qualified_evidence_map.get(ref)
+            if candidates_for_ref is None:
+                candidates_for_ref = list(candidate_evidence_map.get(ref, []))
+                if ref in source_evidence_map:
+                    candidates_for_ref.append(source_evidence_map[ref])
+            if len(candidates_for_ref) == 1:
+                supporting_evidence.append(candidates_for_ref[0])
+            elif len(candidates_for_ref) > 1:
+                gaps.append({"claim_id": claim_id, "reason": "ambiguous_evidence_ref", "evidence_ref": ref,
+                             "message": "Use source_id::evidence_id; legacy bare ID matches multiple records."})
 
         # 关联 pages
         claim_pages: list[str] = []
@@ -135,7 +147,15 @@ def build_claim_evidence_graph(
 
         # 构建 assumptions
         claim_assumptions: list[str] = []
-        if not supporting_evidence:
+        if declared_assumptions:
+            for assumption_index, assumption in enumerate(declared_assumptions, start=1):
+                assumption["assumption_id"] = assumption.get("assumption_id") or f"working_{claim_id}_{assumption_index}"
+                assumption["claim_id"] = claim_id
+                assumption["fact_kind"] = "working_assumption"
+                assumption["support_status"] = "unsupported"
+                all_assumptions.append(assumption)
+                claim_assumptions.append(assumption["assumption_id"])
+        elif not supporting_evidence:
             assumption_id = f"assumption_{len(all_assumptions) + 1:03d}"
             all_assumptions.append({
                 "assumption_id": assumption_id,
@@ -180,12 +200,23 @@ def build_claim_evidence_graph(
             "claim_id": claim_id,
             "type": claim_type,
             "statement": claim.get("claim", ""),
+            "fact_kind": "working_assumption" if declared_assumptions else claim.get("fact_kind", "analysis_judgment"),
+            "support_status": "unsupported" if not supporting_evidence else "referenced",
             "supporting_evidence": supporting_evidence,
             "assumptions": claim_assumptions,
             "risks": claim_risks,
             "required_evidence": required_evidence,
             "page_refs": claim_pages,
         })
+
+    # Preserve unbound typed assumptions too; absence of a generated claim is not resolution.
+    carried_ids = {a["assumption_id"] for a in all_assumptions}
+    for original in claim_map.get("working_assumptions", []):
+        if isinstance(original, dict) and original.get("assumption_id") not in carried_ids:
+            assumption = copy.deepcopy(original)
+            assumption.update(fact_kind="working_assumption", support_status="unsupported")
+            all_assumptions.append(assumption)
+            carried_ids.add(assumption.get("assumption_id"))
 
     return {
         "schema_version": SCHEMA_VERSION,

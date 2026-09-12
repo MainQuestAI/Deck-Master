@@ -219,6 +219,13 @@ def _sourcing_checks(root: Path) -> StageCheckResult:
 
 def evaluate_stage_checks(run_dir: str | Path, stage_id: str) -> StageCheckResult:
     root = Path(run_dir).expanduser().resolve()
+    if stage_id == "deck-brief":
+        from conversation.brief_compiler import brief_conflict_blockers
+        blockers = brief_conflict_blockers(_safe_read_json(root / "deck_brief.json"), _safe_read_json(root / "context_manifest.json"), run_dir=root)
+        if blockers:
+            return StageCheckResult(valid=False, checks=[{"check": "declared_source_conflicts", "status": "fail", "conflicts": blockers}],
+                blocking=["source_conflict:" + b["conflict_id"] for b in blockers],
+                blocking_summary=blockers, safe_next_action="Resolve the declared source conflict from original evidence before continuing.", repair_owner="deck-brief")
     if stage_id == "deck-planner":
         return _planner_checks(root)
     if stage_id == "deck-sourcing":

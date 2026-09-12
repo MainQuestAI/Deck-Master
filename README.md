@@ -18,6 +18,41 @@ Version mapping for this preview:
 
 Deck Master is built for solution architects and proposal builders who need a repeatable way to decide which pages should be generated, which pages should be reused, and which pages are ready for review or delivery.
 
+## SC-1.1: Built-in Native Deck Core
+
+As of SC-1.1, the default production build engine is the **built-in `deck_native`
+compiler** (SVG subset -> native PPTX with real traces and readback) —
+no external PPT Master install, binding or repository is required for
+default production. Legacy `legacy-ppt-master` is an explicit
+compatibility route only. Runs without an image-generation host tool
+report `awaiting_agent_imagegen` honestly; the built-in kernel and the
+default route are probed for real capability evidence, never from env
+flags.
+
+Real rendering uses LibreOffice → PDF → `pdftoppm` PNG with an isolated LibreOffice
+profile. Compiler, renderer, fonts and host tools have separate readiness evidence.
+A completed build is not final approval. SC-1.1 engineering acceptance remains
+`in_progress` until the required evidence and human visual review are complete.
+
+For page repair, use `build retry --run-dir <run> --page-id P001 --stage svg`.
+The host returns both SVG and Scene with the issued action identity; default
+budgets allow three attempts per page/action kind, including failures and cancelled
+issued work. `build cancel --run-dir <run> --action-id <issued-action> --reason
+"<reason>"` stops that action; polling and `build run` cannot silently restart it.
+Only an explicit page/stage retry resumes within the remaining budget.
+Unprofiled fixture/dev previews retain their `fixture_html` route. They cannot
+be relabeled production by changing the request mode.
+
+Published runtime installation uses exact wheel hashes in `requirements/`;
+compiler, rendering and font probes still execute against the actual host.
+Source extraction must retain file hashes and read/unread ranges. A critical
+unread range blocks the Brief and continuation until a complete, version-bound
+Context Pack is imported. Business goals alone produce pending professional
+analysis tasks, not completed causal judgments.
+Migration is explicit: `build migrate --dry-run --output <plan.json>`, then
+`--apply --plan <plan.json>`, `--verify --migration-id <id>` or
+`--rollback --migration-id <id>` (all with `--run-dir <run>`).
+
 ## The Full SC-1 Chain
 
 Provide raw material + business goal + authorized host tools; Deck Master
@@ -36,15 +71,16 @@ invoke external named skills, or know backend paths:
 4. The producer writes complete Page Packages (conclusion, business
    implication, evidence bindings) — production instructions never enter page
    text; pages without evidence or design basis stay draft.
-5. Standard builds consume the approved Page Packages directly (PPT Master is
-   the default, managed backend; high-density remains an opt-in profile).
+5. New builds consume approved Page Packages through `deck_native`. The default
+   `image_blueprint` path requests actual host images and SVG + Scene reconstruction;
+   explicit `direct_svg` skips image generation. Existing legacy routes are preserved.
 6. Semantic review v2 (six dimensions) is a required production gate; a
    content change stales its binding; P0 findings cannot be overridden.
 7. Export requires current final readiness + hash-bound delivery approval.
    Hidden notes/metadata in the client PPTX are scanned and block delivery.
 
 Status and honest limits: see [Known Limitations](docs/known-limitations.md).
-Engineering evidence: `docs/specs/sc1-solution-core-independence/implementation/`.
+Engineering evidence: [SC-1.1 validation progress](docs/specs/sc1.1-native-deck-core/implementation/pr31-validation-progress.md).
 
 ## Install
 
@@ -82,7 +118,7 @@ The demo uses fixture mode and synthetic retail transformation content. It is th
 
 ## Review Desk
 
-Review Desk is the local browser interface for inspecting the generated page queue, checking page status, and approving work before export. M1 focuses on a public fixture demo and Review Desk preview. M2 will close the full production backend and release-candidate gates.
+Review Desk is the local browser interface for inspecting the generated page queue, checking page status, and approving work before export. The public preview covers the fixture path. Native production and release-candidate acceptance have separate tool, quality and approval gates.
 
 ![Review Desk](docs/assets/review-desk.png)
 
@@ -92,21 +128,21 @@ For the full user path (install, demo, Review Desk, production configuration), s
 
 ## Capability Boundaries
 
-Current M1 guarantees:
+Available preview capabilities:
 
 1. Fixture demo from a public brief.
 2. Review Desk preview for that demo.
 3. Backend readiness transparency through `setup-status`, `suite-status`, and `backend status`.
 4. `preview-gate` that works without a configured production backend.
 
-Current M1 limits:
+Production boundaries:
 
-1. Production backend companions must be configured and verified before production commands can be treated as ready.
-2. A missing `ppt-master` production backend must not be reported as `bound_verified`.
+1. Native production requires actual compiler, renderer, fonts and the host tools requested by the selected authoring mode. An installed module alone is not readiness evidence.
+2. Only a persisted or explicitly selected `legacy-ppt-master` route requires that external binding. An optional unbound legacy backend is not a native failure and must not be described as verified.
 3. `ppt-deck-pro-max` is a Deck Master suite Skill for page production, not a separately bound production backend.
 4. Browser smoke depends on local Playwright/browser availability.
 
-See [Known Limitations](docs/known-limitations.md).
+See [Known Limitations](docs/known-limitations.md) and [the roadmap](ROADMAP.md) for the remaining engineering, usability and customer-outcome milestones.
 
 ## Before Real Production Use
 
@@ -127,17 +163,21 @@ python3 scripts/deck_master.py suite-status --target codex --output json
 python3 scripts/deck_master.py agent-doctor --mode production --output json
 ```
 
-5. Bind and verify a production PPT Master backend before treating build or
-   export commands as delivery-ready:
+5. Use the persisted build route. New runs default to the native engine and
+   `image_blueprint`; `direct_svg` shares the native compile/render chain.
+   Verify real compiler, renderer and font capabilities before production:
 
 ```bash
-python3 scripts/deck_master.py backend status
-python3 scripts/deck_master.py backend bind ppt-master --repo <ppt-master-backend>
-python3 scripts/deck_master.py backend verify ppt-master
+python3 scripts/deck_master.py agent-doctor --mode production --run-dir <run_dir> --output json
+python3 scripts/deck_master.py build status --run-dir <run_dir>
+python3 scripts/deck_master.py final-readiness --run-dir <run_dir> --no-write
 ```
 
-If production readiness is blocked, keep the run in fixture/demo mode or stop
-and repair the reported blocker.
+Only an explicitly selected `legacy-ppt-master` run needs `backend bind` and
+`backend verify ppt-master`. The former global PPT Master prerequisite is
+superseded by [SC-1.1 routing](docs/specs/sc1.1-native-deck-core/DEVELOPMENT_SPEC.md).
+If production readiness is blocked, repair the reported blocker. A production
+run cannot be relabelled fixture/dev to bypass its original delivery policy.
 
 ## Core Commands
 

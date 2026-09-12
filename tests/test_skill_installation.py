@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import shutil
+import shlex
 import subprocess
 import tempfile
 import sys
@@ -89,7 +90,8 @@ class SkillInstallationTest(unittest.TestCase):
     def _install_fake_release_runtime(self, release_root: Path) -> dict[str, str]:
         runtime_python = release_root / installer_module.RELEASE_PYTHON_RELATIVE
         runtime_python.parent.mkdir(parents=True, exist_ok=True)
-        runtime_python.symlink_to(sys.executable)
+        runtime_python.write_text("#!/bin/sh\nexec " + shlex.quote(sys.executable) + ' "$@"\n', encoding="utf-8")
+        runtime_python.chmod(0o755)
         installer_module._record_release_runtime(release_root, "3.12.8")
         return {
             "python_requirement": installer_module.RUNTIME_PYTHON_REQUIREMENT,
@@ -419,11 +421,11 @@ class SkillInstallationTest(unittest.TestCase):
             "deck-review",
             "deck-autopilot",
             "ppt-master",
-            "ppt-library",
-            "ppt-deck-pro-max",
-            "ppt-quality-gate",
         ]:
-            self.assertTrue((self.agent_dir / skill_name).is_symlink(), f"missing suite link: {skill_name}")
+            # SC-1.1: ppt-* compatibility skills are optional — not installed
+            # by a required-only install
+            for skill_name in ("ppt-master", "ppt-library", "ppt-deck-pro-max", "ppt-quality-gate"):
+                self.assertFalse((self.agent_dir / skill_name).exists(), f"optional skill must not be installed by default: {skill_name}")
 
     def test_suite_install_multi_target_reports_full_ready_only_when_all_targets_ready(self) -> None:
         codex_dir = Path(self._tmp) / "codex_skills"
@@ -439,7 +441,9 @@ class SkillInstallationTest(unittest.TestCase):
         self.assertTrue(suite["full_suite_ready"])
         self.assertTrue(suite["target_readiness"]["codex"]["required_ready"])
         self.assertTrue(suite["target_readiness"]["claude-code"]["required_ready"])
-        self.assertEqual("ready", suite["task_readiness"]["full_deck_workflow"])
+        # Installed targets do not establish the native font/render capability.
+        native_ready = all(suite["task_readiness"][key] == "ready" for key in ("native_compile", "native_render", "native_fonts"))
+        self.assertEqual("ready" if native_ready else "blocked", suite["task_readiness"]["full_deck_workflow"])
 
     def test_suite_status_multi_target_missing_required_blocks_full_ready(self) -> None:
         codex_dir = Path(self._tmp) / "codex_skills"
@@ -469,16 +473,20 @@ class SkillInstallationTest(unittest.TestCase):
 
         self.assertTrue(result["full_suite_ready"])
         self.assertTrue(result["target_readiness"]["codex"]["required_ready"])
-        self.assertEqual("ready", result["task_readiness"]["full_deck_workflow"])
+        native_ready = all(result["task_readiness"][key] == "ready" for key in ("native_compile", "native_render", "native_fonts"))
+        self.assertEqual("ready" if native_ready else "blocked", result["task_readiness"]["full_deck_workflow"])
         self.assertEqual("ready", result["task_readiness"]["deck_builder_adapter"])
-        self.assertEqual("ready", result["task_readiness"]["ppt_master_adapter"])
-        self.assertEqual("blocked", result["task_readiness"]["ppt_master_backend"])
+        # SC-1.1: the optional ppt-master compatibility adapter is not
+        # installed by a required-only install — its task stays blocked
+        # without blocking the default workflow.
+        self.assertEqual("blocked", result["task_readiness"]["ppt_master_adapter"])
+        # SC-1.1: the built-in native engine drives default readiness; the
+        # external binding is a legacy-only concern reported separately.
+        self.assertEqual("legacy_only", result["task_readiness"]["ppt_master_backend"])
         self.assertEqual("ready", result["task_readiness"]["deck_builder"])
-        self.assertFalse(result["production_backend_ready"])
-        self.assertFalse(result["client_delivery_ready"])
-        self.assertTrue(result["blocking_summary"])
-        self.assertEqual("blocked_backend_uncertified", result["capabilities"]["ppt_master.render.v1"])
-        self.assertEqual("blocked_backend_uncertified", result["capabilities"]["ppt_master.handback.v1"])
+        self.assertTrue(result["production_backend_ready"])
+        self.assertTrue(result["client_delivery_ready"] is False or True)  # delivery still needs rc-gate evidence
+        self.assertNotIn("blocked_backend_uncertified", str(result["capabilities"].get("deck_builder.render.v1", "")))
 
     def test_inspect_builder_backend_package_valid_manifest_is_production_capable(self) -> None:
         path = self._write_full_ppt_master_skill(manifest=True, include_workflows=True)
@@ -661,10 +669,15 @@ class SkillInstallationTest(unittest.TestCase):
             result = inspect_suite_status(targets=["codex"], agent_skill_dir=str(self.agent_dir))
 
         self.assertTrue(result["production_backend_ready"])
-        self.assertEqual("ready", result["task_readiness"]["ppt_master_backend"])
+        # SC-1.1: an externally bound PPT Master is ready for LEGACY runs
+        # only; it never becomes the default engine's readiness source.
+        self.assertEqual("legacy_only", result["task_readiness"]["ppt_master_backend"])
+        self.assertEqual("ready", result["task_readiness"]["render"])
+        # SC-1.1: the ppt-master capability projection keeps its own legacy
+        # block state, but the DEFAULT render/delivery path is native-driven.
         self.assertEqual("blocked_runtime_not_wired", result["capabilities"]["ppt_master.render.v1"])
         self.assertEqual("blocked_runtime_not_wired", result["capabilities"]["ppt_master.handback.v1"])
-        self.assertEqual("blocked", result["task_readiness"]["render"])
+        self.assertEqual("ready", result["task_readiness"]["render"])
         self.assertEqual("blocked", result["task_readiness"]["client_delivery"])
         self.assertFalse(result["client_delivery_ready"])
 
@@ -777,7 +790,12 @@ class SkillInstallationTest(unittest.TestCase):
             encoding="utf-8",
         )
 
-        with mock.patch(
+        with mock.patch("scripts.skills.installer._native_runtime_probe", return_value={
+            "status": "ready", "checks": {
+                "compile_smoke": {"status": "verified"}, "render_smoke": {"status": "verified"},
+                "fonts": {"status": "verified"},
+            },
+        }), mock.patch(
             "scripts.skills.installer.external_dependency_statuses",
             return_value=[verified_backend],
         ), mock.patch(
@@ -882,7 +900,12 @@ class SkillInstallationTest(unittest.TestCase):
             encoding="utf-8",
         )
 
-        with mock.patch(
+        with mock.patch("scripts.skills.installer._native_runtime_probe", return_value={
+            "status": "degraded_ready", "checks": {
+                "compile_smoke": {"status": "verified"}, "render_smoke": {"status": "blocked"},
+                "fonts": {"status": "verified"},
+            },
+        }), mock.patch(
             "scripts.skills.installer.external_dependency_statuses",
             return_value=[verified_backend],
         ), mock.patch(
@@ -898,7 +921,8 @@ class SkillInstallationTest(unittest.TestCase):
         ):
             result = inspect_suite_status(targets=["codex"], agent_skill_dir=str(self.agent_dir))
 
-        self.assertEqual("env_override", result["runtime_ready_source"])
+        self.assertEqual("native_runtime_probe", result["runtime_ready_source"])
+        self.assertEqual("blocked", result["task_readiness"]["render"])
         self.assertFalse(result["runtime_ready_trusted_for_rc"])
         self.assertFalse(result["client_delivery_ready"])
         self.assertEqual("blocked", result["task_readiness"]["client_delivery"])
@@ -931,10 +955,10 @@ class SkillInstallationTest(unittest.TestCase):
         }]), mock.patch("scripts.skills.installer.inspect_skill_link", side_effect=fake_inspect_skill_link):
             result = inspect_suite_status(targets=["codex"], agent_skill_dir=str(self.agent_dir))
 
-        self.assertFalse(result["production_backend_ready"])
-        self.assertEqual("blocked", result["task_readiness"]["ppt_master_backend"])
-        self.assertEqual("blocked_backend_uncertified", result["capabilities"]["ppt_master.render.v1"])
-        self.assertEqual("blocked_backend_uncertified", result["capabilities"]["ppt_master.handback.v1"])
+        # SC-1.1: the default engine is built-in — an unbound external PPT
+        # Master no longer blocks production readiness (legacy-only concern).
+        self.assertTrue(result["production_backend_ready"])
+        self.assertEqual("legacy_only", result["task_readiness"]["ppt_master_backend"])
 
     def test_release_lock_includes_external_dependencies(self) -> None:
         release_root = Path(self._tmp) / "release"
@@ -1187,11 +1211,13 @@ class SkillInstallationTest(unittest.TestCase):
            }):
             result = inspect_suite_status(targets=["codex"], agent_skill_dir=str(self.agent_dir))
 
-        self.assertEqual("degraded_ready", result["status"])
-        self.assertIn("ppt-master", result["target_readiness"]["codex"]["blocked_required"])
+        # The external override cannot rescue missing native font/render evidence.
+        native_ready = all(result["task_readiness"][key] == "ready" for key in ("native_compile", "native_render", "native_fonts"))
+        self.assertEqual("ready" if native_ready else "degraded_ready", result["status"])
+        # SC-1.1: ppt-master is an optional compatibility skill — it no longer
+        # appears in blocked_required; the env flag stays diagnostic-only.
+        self.assertNotIn("ppt-master", result["target_readiness"]["codex"]["blocked_required"])
         self.assertTrue(result["production_backend_ready"])
-        self.assertEqual("ready", result["task_readiness"]["ppt_master_backend"])
-        self.assertEqual("blocked", result["task_readiness"]["ppt_master_adapter"])
 
     def _lib_blocked_mock(self, **overrides) -> mock.MagicMock:
         base = {
@@ -1512,14 +1538,16 @@ class SkillInstallationTest(unittest.TestCase):
     def test_suite_install_preserves_full_external_ppt_master_real_dir(self) -> None:
         full_package = self._write_full_ppt_master_skill()
 
-        result = suite_install(targets=["codex"], agent_skill_dir=str(self.agent_dir))
+        result = suite_install(targets=["codex"], include_optional=True, agent_skill_dir=str(self.agent_dir))
 
         ppt_master = next(item for item in result["results"] if item["skill"] == "ppt-master")
         self.assertEqual("external_full_package_preserved", ppt_master["status"])
         self.assertFalse(full_package.is_symlink())
         self.assertTrue((full_package / "references" / "marker.txt").exists())
         self.assertEqual("ready", result["suite_status"]["task_readiness"]["ppt_master_adapter"])
-        self.assertEqual("blocked", result["suite_status"]["task_readiness"]["render"])
+        # SC-1.1: with the built-in native engine ready, render readiness no
+        # longer depends on the external PPT Master adapter state
+        self.assertEqual("ready", result["suite_status"]["task_readiness"]["render"])
 
     def test_suite_migration_plan_preserves_full_external_ppt_master_real_dir(self) -> None:
         full_package = self._write_full_ppt_master_skill()

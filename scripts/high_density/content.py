@@ -1300,6 +1300,8 @@ def _selection_receipt_payload(
 
 def record_mbb_user_decision(root: Path, storyline_id: str, *, attestor_id: str) -> Path:
     """Record a host/UI-attested storyline choice before Runtime selection."""
+    from build.narrative_mbb import reject_compatibility_write
+    reject_compatibility_write(root)
     packages = load_page_packages(root, expected_run_id=str(read_json(root / "request.json").get("run_id") or root.name))
     if not packages:
         raise ContractError("cannot attest an MBB decision without Page Packages")
@@ -1391,6 +1393,15 @@ def load_mbb_plan(
     expected_run_id: str | None = None,
     require_approved: bool = True,
 ) -> dict[str, Any]:
+    from build.narrative_mbb import native_authority, project_narrative_mbb
+    from workflow.actions import active_input_path
+    # Migrated legacy runs without a public Narrative retain their old,
+    # schema-validated MBB record. No legacy record is promoted to public truth.
+    if native_authority(root) and (active_input_path(root / "narrative_plan.json").exists() or not (root / MBB_PLAN_PATH).exists()):
+        projection = project_narrative_mbb(root)
+        if expected_run_id and projection["run_id"] != expected_run_id:
+            raise ContractError("MBB projection belongs to another run")
+        return projection
     assert_current_mbb_artifact(root)
     path = root / MBB_PLAN_PATH
     plan = read_json(path)
@@ -1585,6 +1596,8 @@ def _validate_mbb_runtime_seal(
 
 
 def select_mbb_storyline(root: Path, storyline_id: str, *, selected_by: str = "user") -> dict[str, Any]:
+    from build.narrative_mbb import reject_compatibility_write
+    reject_compatibility_write(root)
     packages = load_page_packages(root, expected_run_id=str(read_json(root / "request.json").get("run_id") or root.name))
     if not packages:
         raise ContractError("cannot approve MBB plan without Page Packages")
@@ -1622,6 +1635,8 @@ def select_mbb_storyline(root: Path, storyline_id: str, *, selected_by: str = "u
 
 
 def seal_mbb_plan(root: Path) -> dict[str, Any]:
+    from build.narrative_mbb import reject_compatibility_write
+    reject_compatibility_write(root)
     packages = load_page_packages(root, expected_run_id=str(read_json(root / "request.json").get("run_id") or root.name))
     plan = load_mbb_plan(root, packages=packages, expected_run_id=str(packages[0].get("run_id") or ""), require_approved=False)
     selection = plan.get("selection") or {}
@@ -1663,6 +1678,8 @@ def seal_mbb_plan(root: Path) -> dict[str, Any]:
 
 
 def write_mbb_plan(root: Path, plan: dict[str, Any]) -> Path:
+    from build.narrative_mbb import reject_compatibility_write
+    reject_compatibility_write(root)
     assert_current_mbb_artifact(root, plan)
     assert_v2("mbb_plan", plan)
     selection_status = str((plan.get("selection") or {}).get("status") or "")
@@ -1711,7 +1728,8 @@ def load_content_lock(root: Path, page_id: str, *, expected_run_id: str | None =
     legacy = root / LOCKS_DIR / f"{page_id}.json"
     selected = canonical if canonical.exists() else legacy
     lock = read_json(selected)
-    assert_current_mbb_artifact(root, lock)
+    if (lock.get("enrichment") or {}).get("framework") != "native_narrative":
+        assert_current_mbb_artifact(root, lock)
     if canonical.exists() and legacy.exists() and read_json(legacy) != lock:
         raise ContractError(f"content lock mirror is stale on page {page_id}")
     assert_v2("content_lock", lock)

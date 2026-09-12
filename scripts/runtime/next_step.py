@@ -61,7 +61,7 @@ MISSING_BY_STAGE = {
     "generation_failed": ["generation_session.json"],
     "needs_generation_import": ["generation_session.json"],
     "needs_preview_refresh": [PREVIEW_MANIFEST_NAME],
-    "needs_builder_backend": ["ppt-master production backend"],
+    "needs_builder_backend": ["the build route's production engine (legacy-ppt-master runs bind ppt-master; native runs need no binding)"],
     "needs_build": ["build/build_manifest.json"],
     "needs_render": ["render_results/render_result.json"],
 }
@@ -117,6 +117,15 @@ def _required_gate_policy(root: Path, artifact: Path, page_count: int, run_mode:
 
 def _next_quality_gate_command(root: Path, artifact: Path, page_count: int, policy: dict[str, Any]) -> str:
     missing = [str(gate) for gate in policy.get("missing_required_gates") or policy.get("missing_gates") or []]
+    if "render" not in missing and "semantic_review" in missing:
+        # SC-1.1 F-N06: when ONLY the semantic review is missing, the next
+        # action is preparing/importing the review — not another render gate.
+        return (
+            "deck-master prepare-quality-review --run-dir "
+            + str(root)
+            + "  # then execute the v2 review with the host agent and import it: "
+            "deck-master import-quality-review --run-dir <run_dir> --input <report.json>"
+        )
     if "render" in missing:
         gate = "render"
     elif "delivery" in missing or "customer_visible_safety" in missing:
@@ -134,6 +143,24 @@ def resolve_next_step(
     dev_allow_unsetup: bool = False,
 ) -> dict[str, Any]:
     root = Path(run_dir).expanduser().resolve()
+    from build.native_state import native_continuation
+    native = native_continuation(root)
+    if native:
+        stage = native["stage"]
+        command = native["next_command"]
+        route = route_for_stage(stage, reason=native["reason"], next_command=command)
+        # Native host/compile/review work uses bundled methods, not legacy products.
+        route["backend_dependency"] = ""
+        route["compat_skills"] = []
+        return {
+            "schema_version": SCHEMA_VERSION, "run_id": root.name,
+            "status": STAGE_STATUS_MAP.get(stage, stage), "runtime_stage": stage,
+            "next_command": command, "missing_artifacts": [], "blocking_issues": native.get("blocking_issues", []),
+            "run_mode": read_json(root / REQUEST_NAME).get("run_mode", "production"),
+            "recommended_skill": route["recommended_skill"], "skill_stage": route["skill_stage"],
+            "skill_reason": native["reason"], "next_skill_command": command, "skill_route": route,
+            "host_task": native["host_task"],
+        }
     high_density_status_path = root / "high_density_build" / "status.json"
     if high_density_status_path.exists():
         try:

@@ -87,12 +87,14 @@ class PagePackageWriterTests(unittest.TestCase):
         opener, solution = packages
         self.assertIn("conclusion", opener["customer_visible"]["body_blocks"][0]["type"])
         self.assertEqual("solution_model#capability:C1", solution["internal_only"]["design_basis_ref"])
-        self.assertEqual("ready", solution["status"])
+        self.assertEqual("ready_for_build", solution["status"])
 
-    def test_resolvable_evidence_makes_page_referenced(self) -> None:
+    def test_source_reference_is_design_provenance_not_verified_evidence(self) -> None:
         packages = build_packages_from_narrative(run_id="run-pp", narrative_plan=_narrative(), context_manifest=_manifest())
-        self.assertEqual("referenced", packages[0]["internal_only"]["evidence_state"])
-        self.assertEqual("ready", packages[0]["status"])
+        self.assertEqual("design_basis", packages[0]["internal_only"]["evidence_state"])
+        self.assertEqual([], packages[0]["evidence_bindings"])
+        self.assertTrue(packages[0]["provenance"]["source_refs"])
+        self.assertEqual("ready_for_build", packages[0]["status"])
 
     def test_missing_evidence_and_design_basis_stays_draft(self) -> None:
         packages = build_packages_from_narrative(run_id="run-pp", narrative_plan=_narrative(with_evidence=False))

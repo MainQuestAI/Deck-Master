@@ -125,19 +125,14 @@ class FinalReadinessTests(unittest.TestCase):
         self.assertEqual(readiness["run_id"], read_final_readiness(self.run_dir)["run_id"])
         self.assertTrue(any("客户可见内容安全检查" in item for item in readiness["warnings"]))
 
-    def test_production_missing_customer_visible_safety_gate_blocks_readiness(self) -> None:
+    def test_fixture_cannot_be_relabelled_production_with_missing_safety(self) -> None:
         self._write_baseline()
         run_build(self.run_dir)
         write_json(self.run_dir / "request.json", {"run_id": "final-ready", "run_mode": "production"})
 
-        readiness = compute_final_readiness(
-            self.run_dir,
-            run_mode="production",
-            dev_allow_unsetup=True,
-        )
-
-        codes = {item["code"] for item in readiness["blockers"]}
-        self.assertIn("final_customer_visible_safety_missing", codes)
+        # The completed fixture artifact cannot be relabelled as production.
+        with self.assertRaisesRegex(ValueError, "RUN_MODE_CONFLICT"):
+            compute_final_readiness(self.run_dir, run_mode="production", dev_allow_unsetup=True)
 
     def test_stale_customer_visible_safety_is_warning_in_fixture(self) -> None:
         self._write_baseline()
@@ -149,22 +144,15 @@ class FinalReadinessTests(unittest.TestCase):
         self.assertTrue(readiness["ready"])
         self.assertTrue(any("需要重新扫描当前产物" in item for item in readiness["warnings"]))
 
-    def test_stale_customer_visible_safety_blocks_production(self) -> None:
+    def test_fixture_cannot_be_relabelled_production_with_stale_safety(self) -> None:
         self._write_baseline()
         run_build(self.run_dir)
         self._write_customer_visible_safety_gate(blocks=False)
         write_json(self.run_dir / "request.json", {"run_id": "final-ready", "run_mode": "production"})
 
-        readiness = compute_final_readiness(
-            self.run_dir,
-            run_mode="production",
-            dev_allow_unsetup=True,
-        )
-
-        codes = {item["code"] for item in readiness["blockers"]}
-        self.assertIn("final_customer_visible_safety_stale", codes)
-        clearance = final_readiness_clearance(self.run_dir)
-        self.assertIn("重新扫描当前产物", clearance["reason"])
+        # The completed fixture artifact cannot be relabelled as production.
+        with self.assertRaisesRegex(ValueError, "RUN_MODE_CONFLICT"):
+            compute_final_readiness(self.run_dir, run_mode="production", dev_allow_unsetup=True)
 
     def test_customer_visible_safety_blocker_is_user_facing_clearance_reason(self) -> None:
         self._write_baseline()
@@ -253,6 +241,8 @@ class FinalReadinessTests(unittest.TestCase):
 
     def test_p1_quality_gate_override_allows_final_readiness(self) -> None:
         self._write_baseline(gate_blocks=True)
+        run_build(self.run_dir)
+        # Explicit synthetic approval of the current finished HTML artifact.
         create_override(
             self.run_dir,
             "quality_block",
@@ -260,7 +250,6 @@ class FinalReadinessTests(unittest.TestCase):
             "Accepted for client export.",
             "review-lead",
         )
-        run_build(self.run_dir)
 
         readiness = compute_final_readiness(self.run_dir)
 
@@ -283,7 +272,7 @@ class FinalReadinessTests(unittest.TestCase):
         gate_summary = next(item for item in readiness["quality_gates"] if item["gate"] == "draft")
         self.assertFalse(gate_summary["current"])
 
-    def test_stale_render_gate_does_not_count_as_current_in_production(self) -> None:
+    def test_fixture_cannot_be_relabelled_production_with_stale_render(self) -> None:
         self._write_baseline()
         run_build(self.run_dir)
         quality_dir = self.run_dir / "quality_reports"
@@ -301,16 +290,9 @@ class FinalReadinessTests(unittest.TestCase):
         )
         write_json(self.run_dir / "request.json", {"run_id": "final-ready", "run_mode": "production"})
 
-        readiness = compute_final_readiness(
-            self.run_dir,
-            run_mode="production",
-            dev_allow_unsetup=True,
-        )
-
-        self.assertIn("final_current_artifact_gate_missing", {item["code"] for item in readiness["blockers"]})
-        render_gate = next(item for item in readiness["quality_gates"] if item["gate"] == "render")
-        self.assertFalse(render_gate["current"])
-        self.assertTrue(any("stale for the current artifact" in item for item in readiness["warnings"]))
+        # The completed fixture artifact cannot be relabelled as production.
+        with self.assertRaisesRegex(ValueError, "RUN_MODE_CONFLICT"):
+            compute_final_readiness(self.run_dir, run_mode="production", dev_allow_unsetup=True)
 
     def test_page_count_mismatch_blocks_readiness(self) -> None:
         self._write_baseline(

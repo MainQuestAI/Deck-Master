@@ -308,7 +308,11 @@ def test_basic_path_compiles_to_editable_freeform(tmp_path: Path) -> None:
     result = run_high_density(run)
     assert result["status"] == "completed"
     trace = read_json(run / "high_density_build/traces/P001.json")
-    assert sum(item.get("object_type") == "freeform" for item in trace["trace"]["elements"]) == 2
+    # Rounded panels now also preserve their exact geometry as freeforms.
+    # Assert the two submitted objects, rather than excluding valid other paths.
+    entries = {item["element_id"]: item for item in trace["trace"]["elements"]}
+    for element_id in ("connector.path", "arrow.polygon"):
+        assert entries[element_id]["object_type"] == "freeform"
 
 
 def test_failed_build_persists_blocked_status(tmp_path: Path) -> None:

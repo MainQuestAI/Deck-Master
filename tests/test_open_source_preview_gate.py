@@ -70,7 +70,9 @@ class OpenSourcePreviewGateTests(unittest.TestCase):
     def test_product_capability_manifest_separates_pdpm_from_production_backend(self) -> None:
         manifest = json.loads((ROOT / "product-capability-manifest.json").read_text(encoding="utf-8"))
 
-        self.assertEqual({"deck-builder": "ppt-master"}, manifest["backend_dependencies"])
+        # SC-1.1: the built-in deck_native engine has NO external backend
+        # dependency; legacy ppt-master is an explicit compatibility route.
+        self.assertEqual({}, manifest["backend_dependencies"])
         self.assertEqual("ppt-deck-pro-max", manifest["suite_skill_dependencies"]["deck-producer"])
         self.assertIn("ppt-deck-pro-max", manifest["compatibility_skills"])
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import pytest
 import sys
 from argparse import Namespace
 from pathlib import Path
@@ -37,12 +38,15 @@ def test_state_commands_inherit_fixture_mode_from_request(tmp_path: Path) -> Non
     assert run_state["run_mode"] == "fixture"
 
 
-def test_explicit_run_mode_overrides_request(tmp_path: Path) -> None:
+def test_explicit_run_mode_cannot_override_creation_mode(tmp_path: Path) -> None:
     (tmp_path / "request.json").write_text(
         json.dumps({"run_id": tmp_path.name, "run_mode": "fixture"}),
         encoding="utf-8",
     )
 
-    run_state = command_run_state(_args(tmp_path, "production"))
-
-    assert run_state["run_mode"] == "production"
+    before=(tmp_path / "request.json").read_bytes()
+    for command in (command_run_state, command_next_step):
+        with pytest.raises(ValueError, match="RUN_MODE_CONFLICT"):
+            command(_args(tmp_path, "production"))
+    assert (tmp_path / "request.json").read_bytes() == before
+    assert command_run_state(_args(tmp_path, "fixture"))["run_mode"] == "fixture"

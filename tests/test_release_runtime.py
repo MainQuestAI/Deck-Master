@@ -260,7 +260,9 @@ class ReleaseRuntimeTests(unittest.TestCase):
         shim_text = shim.read_text(encoding="utf-8")
         self.assertTrue(os.access(shim, os.X_OK))
         self.assertIn('exec "$DECK_MASTER_HOME/current/.venv/bin/python"', shim_text)
-        self.assertIn('"$DECK_MASTER_HOME/current/scripts/deck_master.py"', shim_text)
+        self.assertIn('"$DECK_MASTER_HOME/bin/run-compatibility.py"', shim_text)
+        self.assertTrue((shim.parent / 'run-compatibility.py').is_file())
+        self.assertIn('deck_build_revision.v2', manifest['supported_run_formats'])
 
     def test_release_install_activation_failure_does_not_leave_first_install_shim(self) -> None:
         with mock.patch.object(installer, "_install_release_runtime", side_effect=self._fake_runtime_install), mock.patch.object(

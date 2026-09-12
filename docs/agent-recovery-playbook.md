@@ -5,11 +5,12 @@ unexpected runtime stage. Do not repair by editing random artifacts.
 
 ## Backend Missing
 
-- Detect by: `agent-doctor --mode production` check `production_backend` or
-  `suite-status.external_dependency_status` for `ppt-master`.
-- Auto action: none for production. Fixture preview may continue.
-- Stop when the `ppt-master` production backend is not `bound_verified` with a
-  verified git SHA.
+- First read the persisted build route. Only `legacy_ppt_master` requires the
+  `ppt-master` dependency to be `bound_verified` with a verified git SHA.
+- For that legacy route, detect missing dependencies with `agent-doctor` or
+  `suite-status.external_dependency_status`; stop that route until repaired.
+- For `deck_native`, inspect actual compiler/renderer/font and host task
+  readiness instead. An unbound optional legacy backend does not block native.
 - Verify with:
 
 ```bash
@@ -70,6 +71,12 @@ python3 scripts/deck_master.py final-readiness --run-dir <run_dir> --no-write
   validation, lineage, quality gates, customer-visible safety.
 - Stop when: production backend, external artifact, or human approval is
   missing.
+- Native business speaker notes are retained only when they exactly match the
+  current immutable approved Package/Content Lock and selected compile artifact.
+  They still undergo internal-label, local-path, command and forbidden-term
+  checks. Unbound notes, additional note bodies/shapes and stale or changed
+  artifacts remain blocked. Do not delete necessary business conditions merely
+  to clear a hidden-content finding; repair the content or its current binding.
 - Verify with:
 
 ```bash
@@ -119,3 +126,69 @@ python3 scripts/deck_master.py build run --run-dir <run_dir> --profile high-dens
 python3 scripts/deck_master.py build status --run-dir <run_dir> --profile high-density
 python3 scripts/deck_master.py final-readiness --run-dir <run_dir> --no-write
 ```
+
+## Native Build and Research Recovery
+
+Use `next-step --run-dir <run>` and `build status --run-dir <run>` first.
+The persisted route and immutable current revision take precedence over legacy
+compatibility projections. Do not repair a native run by editing fixed SVG or
+Scene projections: submit both files using its Runtime-issued action.
+
+- `awaiting_agent_imagegen`: execute the issued host image task and submit the
+  real image plus observation receipt. A missing provider request ID stays null.
+- `awaiting_agent_reconstruct` / `awaiting_svg_authoring`: return SVG and Scene
+  for the same Lock and input fingerprint. Explicit page repair uses
+  `build retry --page-id <page> --stage svg`; valid other pages are retained.
+- Exhausted action budget: preserve the run and report its used/remaining budget.
+  Do not create a different action ID or run merely to evade the limit.
+  Read the exact task with `build budget status --run-dir <run> --task-id
+  <returned-task-id>`. If the user has authorized an additional attempt, apply
+  the exact new ceiling using `build budget set` with the returned source revision,
+  authorization reason and local user declaration. Then resume the affected
+  task through its normal retry entry. See [task budget contract](contracts/native-task-budgets.md).
+  Do not raise unrelated tasks or transfer the new ceiling to an old issued action.
+- `migration_required`: keep historical files read-only; create a specific
+  `build migrate --dry-run --output <plan>` and apply only that unchanged plan.
+  `--verify` and `--rollback` require the returned migration ID.
+- Interrupted commit: recover projections from the authoritative revision and
+  replay the original action. A published revision includes its durable receipt;
+  a complete orphan snapshot before pointer publication can be safely reused.
+- Pending research: follow the returned `research dispatch` command. Restart
+  reuses its pending action. `inconclusive` and `capability_unavailable` retain
+  the affected decisions and open questions; they do not establish customer facts.
+
+Native file quality checks use the current artifact without requiring a legacy
+backend setup. Recompile/render and rerun affected gates after changes; a new
+PPTX always needs its own final artifact approval.
+
+### Native cancellation and incomplete source reading
+
+- `stopped`: preserve the cancellation receipt and any completed page outputs.
+  A stopped issued action is one consumed attempt, not a way to reset the budget.
+  Use `build cancel --run-dir <run> --action-id <issued-action> --reason "<reason>"`
+  to stop current host work. Only explicit `build retry --run-dir <run>
+  --page-id <page> --stage <cancelled-stage>` resumes. Late output for the cancelled
+  action is rejected; cancellation cannot revoke an already committed revision.
+- `blocked_context_reading`: execute the returned extraction task for missing
+  source ranges. Import the version-bound result with `import-context-pack
+  --run-dir <run> --input <pack.json> --merge`. A full extraction must identify the
+  actual source SHA, preserved extraction snapshot and complete coverage; never
+  turn a partial read into full by changing a status label. Changed source bytes
+  require registration of that version. For an existing partial web research
+  excerpt, a complete capture of the same authorized URL may instead supply
+  `capture_supersedes_sha256` with the current excerpt hash, the exact `origin_ref`,
+  and `file_sha256` matching the actual complete `extraction.snapshot_ref` file.
+  Record the real tool and complete read-unit coverage. The Runtime preserves the
+  old excerpt and research provenance, without issuing a new research action.
+  This exception cannot replace local sources or use an excerpt as a full capture.
+  Exact result replay is idempotent; the changed source invalidates prior reviews.
+- `needs_agent_analysis` from `build-judgments`: author a source-referenced public
+  problem and solution mechanism through the existing content handoff. Existing
+  Narrative proposals remain unscored proposals. Preserve working assumptions,
+  risk and recheck conditions; a general source reference is not factual support.
+
+Quality overrides bind the actual selected artifact or public draft inputs and
+scope. Changed bytes require a new explicit decision. Page output actions cannot
+replace quality reports, build evidence or final approval files. Workspace learning
+keeps raw customer feedback and finding details in their source runs; reusable
+cards require an explicitly authored abstraction with source and scope limits.

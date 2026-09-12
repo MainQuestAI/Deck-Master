@@ -189,7 +189,7 @@ class SolutionDrivenNarrativeTests(unittest.TestCase):
     def test_candidates_structure_with_single_viable_path(self) -> None:
         plan = plan_narrative(_request(), planner_mode="production_narrative", solution_model=_solution_model_retail())
         self.assertEqual(1, len(plan["candidates"]))
-        self.assertEqual(plan["recommended_candidate_id"], plan["selected_candidate_id"])
+        self.assertIsNone(plan["selected_candidate_id"])
         self.assertIn("single_viable_path", plan["selection_reason"])
 
     def test_explicit_candidates_pass_through_with_recommendation(self) -> None:
@@ -204,7 +204,8 @@ class SolutionDrivenNarrativeTests(unittest.TestCase):
             narrative_candidates=candidates,
         )
         self.assertEqual(2, len(plan["candidates"]))
-        self.assertEqual("ALT_A", plan["selected_candidate_id"])
+        self.assertEqual("ALT_A", plan["recommended_candidate_id"])
+        self.assertIsNone(plan["selected_candidate_id"])
 
     def test_restricted_sample_keywords_no_longer_filter_production(self) -> None:
         # F06 regression: retail-flavoured template titles must survive

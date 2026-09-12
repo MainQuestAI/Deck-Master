@@ -90,8 +90,10 @@ write token is not a network authentication boundary.
 
 ## 4. Understand the production path
 
-The fixture demo does not exercise the production backend. Production deck
-production requires companion backends to be configured and verified.
+The fixture demo does not establish production readiness. New production runs
+use the built-in native compiler and require the renderer/fonts and host tools
+for their selected task. Only existing or explicitly selected legacy routes
+require the PPT Master backend.
 
 Check backend and suite state (these never claim ready unless the JSON says so):
 
@@ -112,9 +114,9 @@ The full production workflow is:
 brief / context intake
   -> deck brief / claim map
   -> narrative plan / page tasks
-  -> PPT Library sourcing
+  -> optional PPT Library sourcing (or explicit library_mode=none)
   -> generation / production
-  -> PPT Master build / render
+  -> native SVG + Scene / PPTX compile / LibreOffice render
   -> quality gates
   -> Review Desk approval
   -> final-readiness pass

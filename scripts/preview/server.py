@@ -1421,7 +1421,9 @@ class PreviewHandler(BaseHTTPRequestHandler):
             "true",
             "yes",
         }
-        if not self.preview_manifest_exists(run_dir):
+        from build.build_route import load_persisted_route
+        native = load_persisted_route(run_dir).get("engine_id") == "deck_native"
+        if not self.preview_manifest_exists(run_dir) and not native:
             invalid = decisions - DECISIONS
             if invalid:
                 self.send_error_json(HTTPStatus.BAD_REQUEST, f"Invalid decisions: {', '.join(sorted(invalid))}")

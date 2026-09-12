@@ -11,7 +11,7 @@ import shutil
 import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 from xml.etree import ElementTree
 
 from .blueprint import load_blueprint_manifest
@@ -24,22 +24,25 @@ from .svg_native import SvgNativeError, format_svg_native_error, parse_svg_nativ
 from .visual import VisualMetricsError, _svg_geometry_bbox, _text_contrast_metrics, compute_visual_metrics, normalize_blueprint, write_visual_metrics
 from .visibility import assert_visible_text_allowed
 
-SVG_DIR = Path("high_density_build/svg")
-PREVIEW_DIR = Path("high_density_build/previews")
-REVIEW_DIR = Path("high_density_build/reviews")
+from native_pptx.svg_pipeline import (  # SC-1.1 ND-01: single implementation in native_pptx
+    FORBIDDEN_TAGS,
+    PREVIEW_DIR,
+    REVIEW_DIR,
+    SVG_DIR,
+    UNSUPPORTED_TAGS,
+    SvgVisualError,
+    main_review_receipt_path,
+    metrics_path,
+    preview_path,
+    review_path,
+    svg_path,
+    validate_svg,
+    join_cjk_text_lines,
+)
 COMPARISON_DIR = Path("high_density_build/comparisons")
-CANVAS_WIDTH = 1672
-CANVAS_HEIGHT = 941
-FORBIDDEN_TAGS = {"foreignObject", "script", "iframe", "style"}
-UNSUPPORTED_TAGS = {"mask", "clipPath", "pattern"}
+from native_pptx.canvas import CANVAS_HEIGHT, CANVAS_WIDTH, CANVAS_RATIO  # noqa: F401
 IMAGE_HEAVY_PAGE_ROLES = {"cover", "section", "section_divider", "divider", "visual", "visual_divider", "image", "image_page"}
 
-
-class SvgVisualError(ContractError):
-    def __init__(self, message: str, *, page_id: str = "", code: str = "HD_SVG_REVIEW_FAILED") -> None:
-        self.page_id = page_id
-        self.code = code
-        super().__init__(message)
 
 
 def _page_role_policy(page_role: str) -> dict[str, float]:
@@ -48,24 +51,9 @@ def _page_role_policy(page_role: str) -> dict[str, float]:
     return {"max_single_image_area": 0.35, "max_total_image_area": 0.50}
 
 
-def svg_path(root: Path, page_id: str) -> Path:
-    return root / SVG_DIR / f"{page_id}.svg"
 
 
-def preview_path(root: Path, page_id: str) -> Path:
-    return root / PREVIEW_DIR / f"{page_id}.png"
 
-
-def review_path(root: Path, page_id: str) -> Path:
-    return root / REVIEW_DIR / f"{page_id}.visual_review.json"
-
-
-def metrics_path(root: Path, page_id: str) -> Path:
-    return root / REVIEW_DIR / f"{page_id}.metrics.json"
-
-
-def main_review_receipt_path(root: Path, page_id: str) -> Path:
-    return root / REVIEW_DIR / f"{page_id}.main_review_receipt.json"
 
 
 def _run_mode(root: Path) -> str:
@@ -83,9 +71,12 @@ def _estimated_width(text: str, size: float) -> float:
     return width
 
 
-def wrap_text(text: str, width: float, size: float) -> list[str]:
+def wrap_text(text: str, width: float, size: float, *, measure: Callable[[str], float] | None = None) -> list[str]:
     if not text:
         return [""]
+    if "\n" in text or "\r" in text:
+        return [line for paragraph in re.split(r"\r\n|\r|\n", text)
+                for line in wrap_text(paragraph, width, size, measure=measure)]
     if width <= 0:
         return [text]
     lines: list[str] = []
@@ -93,7 +84,7 @@ def wrap_text(text: str, width: float, size: float) -> list[str]:
     tokens = list(text) if any(ord(char) > 127 for char in text) else re.split(r"(\s+)", text)
     for token in tokens:
         candidate = current + token
-        if current and _estimated_width(candidate, size) > width:
+        if current and (measure(candidate) if measure else _estimated_width(candidate, size)) > width:
             lines.append(current.rstrip())
             current = token.lstrip()
         else:
@@ -109,10 +100,17 @@ def _color(value: Any, default: str = "#18212b") -> str:
 
 
 def _attrs(items: dict[str, Any]) -> str:
-    return " ".join(f'{key}="{html.escape(str(value), quote=True)}"' for key, value in items.items())
+    def attribute(value: Any) -> str:
+        # Literal XML attribute whitespace is normalized to spaces by parsers.
+        # Character references preserve the exact text pinned by the Scene/Lock.
+        return (html.escape(str(value), quote=True).replace("\r", "&#13;")
+                .replace("\n", "&#10;").replace("\t", "&#9;"))
+    return " ".join(f'{key}="{attribute(value)}"' for key, value in items.items())
 
 
 def _text_svg(element: dict[str, Any], page_id: str) -> str:
+    from PIL import ImageFont
+
     bbox = element["bbox"]
     fit = element["text_fit"]
     text = str(element.get("text") or "")
@@ -120,17 +118,22 @@ def _text_svg(element: dict[str, Any], page_id: str) -> str:
     min_size = float(fit.get("min_size_px") or max(9, size * 0.7))
     max_lines = int(fit.get("max_lines") or 1)
     line_height = float(fit.get("line_height") or 1.18)
-    lines = wrap_text(text, float(bbox["w"]), size)
-    while len(lines) > max_lines and size > min_size:
-        size = max(min_size, size - 1)
-        lines = wrap_text(text, float(bbox["w"]), size)
-    if (
-        len(lines) > max_lines
-        or len(lines) * size * line_height > float(bbox["h"]) + 0.01
-        or any(_estimated_width(line, size) > float(bbox["w"]) + 0.01 for line in lines)
-    ):
-        raise SvgVisualError(f"P0/P1 text overflow in {element['element_id']}", page_id=page_id)
     style = element.get("style") or {}
+    font_path = _font_path(str(style.get("font_family") or "Arial"), page_id, str(element["element_id"]), str(style.get("font_weight") or "400"))
+    while True:
+        # Match submission validation's font resolution and pixel-size rounding.
+        font = ImageFont.truetype(str(font_path), max(1, round(size)))
+        lines = wrap_text(text, float(bbox["w"]), size, measure=font.getlength)
+        overflow = (
+            len(lines) > max_lines
+            or len(lines) * size * line_height > float(bbox["h"]) + 0.01
+            or any(font.getlength(line) > float(bbox["w"]) + 0.01 for line in lines)
+        )
+        if not overflow or size <= min_size:
+            break
+        size = max(min_size, size - 1)
+    if overflow:
+        raise SvgVisualError(f"P0/P1 text overflow in {element['element_id']}", page_id=page_id)
     x = float(bbox["x"])
     y = float(bbox["y"])
     attrs = {
@@ -141,7 +144,7 @@ def _text_svg(element: dict[str, Any], page_id: str) -> str:
         "font-family": str(style.get("font_family") or "Arial"),
         "font-size": f"{size:.2f}px",
         "font-weight": str(style.get("font_weight") or "400"),
-        "opacity": str(style.get("opacity") or 1),
+        "opacity": str(style.get("opacity", 1)),
         "data-pptx-component": str(element.get("component_id") or ""),
         "data-pptx-z": str(element.get("z_index") or 0),
         "data-pptx-bounds": f"{x:.2f},{float(bbox['y']):.2f},{float(bbox['w']):.2f},{float(bbox['h']):.2f}",
@@ -169,7 +172,7 @@ def _rect_svg(element: dict[str, Any]) -> str:
         "fill": _color(style.get("fill"), "none"),
         "stroke": _color(style.get("stroke"), "none"),
         "stroke-width": str(style.get("stroke_width") or 0),
-        "opacity": str(style.get("opacity") or 1),
+        "opacity": str(style.get("opacity", 1)),
         "data-pptx-component": str(element.get("component_id") or ""),
         "data-pptx-z": str(element.get("z_index") or 0),
         "data-pptx-bounds": f"{float(bbox['x']):.2f},{float(bbox['y']):.2f},{float(bbox['w']):.2f},{float(bbox['h']):.2f}",
@@ -187,7 +190,7 @@ def _asset_data_uri(path: Path) -> str:
 
 def _image_svg(element: dict[str, Any], asset: Path | None, page_id: str) -> str:
     if asset is None or not asset.is_file():
-        raise SvgVisualError(f"registered image asset is unavailable for {element['element_id']}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
+        raise SvgVisualError(f"registered image asset is unavailable for {element['element_id']}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED", element_id=str(element.get("element_id") or ""))
     bbox = element["bbox"]
     if float(bbox["x"]) <= 0.01 and float(bbox["y"]) <= 0.01 and float(bbox["w"]) >= CANVAS_WIDTH - 0.01 and float(bbox["h"]) >= CANVAS_HEIGHT - 0.01:
         raise SvgVisualError("whole-page image wrapper is blocked", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
@@ -231,14 +234,14 @@ def compile_svg(scene: dict[str, Any], output: Path, *, assets: dict[str, Path] 
         area = float(bbox.get("w") or 0) * float(bbox.get("h") or 0)
         image_area += area
         if area / (CANVAS_WIDTH * CANVAS_HEIGHT) > image_policy["max_single_image_area"]:
-            raise SvgVisualError(f"image asset exceeds {image_policy['max_single_image_area']:.0%} of canvas: {element.get('element_id')}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
+            raise SvgVisualError(f"image asset exceeds {image_policy['max_single_image_area']:.0%} of canvas: {element.get('element_id')}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED", element_id=str(element.get("element_id") or ""))
         image_z = int(element.get("z_index") or 0)
         for text in p0_p1_text:
             text_bbox = text.get("bbox") or {}
             overlap_w = max(0.0, min(float(bbox.get("x") or 0) + float(bbox.get("w") or 0), float(text_bbox.get("x") or 0) + float(text_bbox.get("w") or 0)) - max(float(bbox.get("x") or 0), float(text_bbox.get("x") or 0)))
             overlap_h = max(0.0, min(float(bbox.get("y") or 0) + float(bbox.get("h") or 0), float(text_bbox.get("y") or 0) + float(text_bbox.get("h") or 0)) - max(float(bbox.get("y") or 0), float(text_bbox.get("y") or 0)))
             if image_z >= int(text.get("z_index") or 0) and overlap_w * overlap_h > 0:
-                raise SvgVisualError(f"image asset covers P0/P1 text: {element.get('element_id')} -> {text.get('element_id')}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
+                raise SvgVisualError(f"image asset covers P0/P1 text: {element.get('element_id')} -> {text.get('element_id')}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED", element_id=str(element.get("element_id") or ""))
     if image_area / (CANVAS_WIDTH * CANVAS_HEIGHT) > image_policy["max_total_image_area"]:
         raise SvgVisualError(f"registered image assets exceed {image_policy['max_total_image_area']:.0%} of canvas", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
     rendered_elements: list[tuple[str, str]] = []
@@ -264,7 +267,7 @@ def compile_svg(scene: dict[str, Any], output: Path, *, assets: dict[str, Path] 
                 "y2": f"{float(bbox['y']) + float(bbox['h']):.2f}",
                 "stroke": _color(style.get("stroke"), "#657485"),
                 "stroke-width": str(style.get("stroke_width") or 2),
-                "opacity": str(style.get("opacity") or 1),
+                "opacity": str(style.get("opacity", 1)),
                 "data-pptx-component": str(element.get("component_id") or ""),
                 "data-pptx-z": str(element.get("z_index") or 0),
                 "data-pptx-bounds": f"{float(bbox['x']):.2f},{float(bbox['y']):.2f},{float(bbox['w']):.2f},{float(bbox['h']):.2f}",
@@ -282,7 +285,7 @@ def compile_svg(scene: dict[str, Any], output: Path, *, assets: dict[str, Path] 
                 "fill": _color(style.get("fill"), "none"),
                 "stroke": _color(style.get("stroke"), "none"),
                 "stroke-width": str(style.get("stroke_width") or 0),
-                "opacity": str(style.get("opacity") or 1),
+                "opacity": str(style.get("opacity", 1)),
                 "data-pptx-component": str(element.get("component_id") or ""),
                 "data-pptx-z": str(element.get("z_index") or 0),
                 "data-pptx-bounds": f"{float(bbox['x']):.2f},{float(bbox['y']):.2f},{float(bbox['w']):.2f},{float(bbox['h']):.2f}",
@@ -298,7 +301,7 @@ def compile_svg(scene: dict[str, Any], output: Path, *, assets: dict[str, Path] 
             add_rendered(element,
                 f'<path id="{html.escape(str(element["element_id"]), quote=True)}" '
                 f'd="{html.escape(path_data, quote=True)}" fill="{fill}" stroke="{stroke}" stroke-width="{style.get("stroke_width") or 0}" '
-                f'opacity="{style.get("opacity") or 1}" fill-opacity="{style.get("fill_opacity", style.get("fill-opacity", 1))}" stroke-opacity="{style.get("stroke_opacity", style.get("stroke-opacity", 1))}" '
+                f'opacity="{style.get("opacity", 1)}" fill-opacity="{style.get("fill_opacity", style.get("fill-opacity", 1))}" stroke-opacity="{style.get("stroke_opacity", style.get("stroke-opacity", 1))}" '
                 f'stroke-linecap="{style.get("stroke-linecap", style.get("linecap", "butt"))}" stroke-linejoin="{style.get("stroke-linejoin", style.get("linejoin", "miter"))}" fill-rule="{style.get("fill-rule", style.get("fill_rule", "nonzero"))}" '
                 f'data-pptx-component="{html.escape(str(element.get("component_id") or ""), quote=True)}" data-pptx-z="{element.get("z_index") or 0}" data-pptx-bounds="{float(element["bbox"]["x"]):.2f},{float(element["bbox"]["y"]):.2f},{float(element["bbox"]["w"]):.2f},{float(element["bbox"]["h"]):.2f}"/>'
             )
@@ -311,7 +314,7 @@ def compile_svg(scene: dict[str, Any], output: Path, *, assets: dict[str, Path] 
             add_rendered(element,
                 f'<polygon id="{html.escape(str(element["element_id"]), quote=True)}" '
                 f'points="{point_text}" fill="{_color(style.get("fill"), "none")}" '
-                f'stroke="{_color(style.get("stroke"), "none")}" stroke-width="{style.get("stroke_width") or 0}" opacity="{style.get("opacity") or 1}" fill-rule="{style.get("fill-rule", "nonzero")}" '
+                f'stroke="{_color(style.get("stroke"), "none")}" stroke-width="{style.get("stroke_width") or 0}" opacity="{style.get("opacity", 1)}" fill-rule="{style.get("fill-rule", "nonzero")}" '
                 f'data-pptx-component="{html.escape(str(element.get("component_id") or ""), quote=True)}" data-pptx-z="{element.get("z_index") or 0}" data-pptx-bounds="{float(element["bbox"]["x"]):.2f},{float(element["bbox"]["y"]):.2f},{float(element["bbox"]["w"]):.2f},{float(element["bbox"]["h"]):.2f}"/>'
             )
         elif kind == "image":
@@ -345,112 +348,6 @@ def compile_svg(scene: dict[str, Any], output: Path, *, assets: dict[str, Path] 
     return output
 
 
-def validate_svg(path: Path, *, page_id: str = "") -> dict[str, Any]:
-    try:
-        root = ElementTree.fromstring(path.read_text(encoding="utf-8"))
-    except (OSError, ElementTree.ParseError) as exc:
-        raise SvgVisualError(f"SVG parse failed: {exc}", page_id=page_id) from exc
-    try:
-        paint_registry = parse_svg_paint(root)
-    except SvgPaintError as exc:
-        raise SvgVisualError(
-            f"visual_id=<none> element_id={exc.element_id or '<none>'} property=<unknown> code={exc.code} reason={exc}; recovery: {svg_recovery_command(page_id)}",
-            page_id=page_id,
-            code=exc.code,
-        ) from exc
-    try:
-        native_document = parse_svg_native(root)
-    except SvgNativeError as exc:
-        raise SvgVisualError(format_svg_native_error(exc, page_id=page_id), page_id=page_id, code=exc.code) from exc
-    native_geometry = {str(element.get("element_id") or ""): element.get("bbox") or {} for element in native_document.get("elements") or []}
-    tags = {str(node.tag).split("}")[-1] for node in root.iter()}
-    forbidden = sorted(tags & FORBIDDEN_TAGS)
-    if forbidden:
-        raise SvgVisualError(f"forbidden SVG elements: {', '.join(forbidden)}", page_id=page_id)
-    unsupported = sorted(tags & UNSUPPORTED_TAGS)
-    if unsupported:
-        offending = next(node for node in root.iter() if str(node.tag).split("}")[-1] in unsupported)
-        element_id = str(offending.get("id") or "<anonymous>")
-        raise SvgVisualError(
-            f"unsupported SVG element {unsupported[0]} on {element_id}; recovery: deck-master build retry --run-dir <run_dir> --profile high-density --stage svg --page-id {page_id or '<page_id>'}",
-            page_id=page_id,
-            code="HD_SVG_UNSUPPORTED_ELEMENT",
-        )
-    if root.tag.split("}")[-1] != "svg" or root.get("viewBox") != f"0 0 {CANVAS_WIDTH} {CANVAS_HEIGHT}":
-        raise SvgVisualError("SVG canvas or viewBox is invalid", page_id=page_id)
-    if not str(root.get("data-pptx-page-role") or ""):
-        raise SvgVisualError("SVG root is missing data-pptx-page-role", page_id=page_id)
-    ids: set[str] = set()
-    visible_tags = {"text", "rect", "circle", "ellipse", "line", "path", "polyline", "polygon", "image"}
-    for node in root.iter():
-        tag = str(node.tag).split("}")[-1]
-        node_id = str(node.get("id") or "")
-        for raw_name in node.attrib:
-            attr_name = str(raw_name).split("}")[-1].lower()
-            if attr_name.startswith("on"):
-                raise SvgVisualError(f"SVG event attribute is blocked: {attr_name} on {node_id or tag}", page_id=page_id, code="HD_SVG_UNSAFE_ATTRIBUTE")
-            if attr_name in {"href", "xlink:href"} and tag not in {"image", "use"}:
-                raise SvgVisualError(f"external SVG href is blocked on {node_id or tag}", page_id=page_id, code="HD_SVG_UNSAFE_ATTRIBUTE")
-        if node_id:
-            if node_id in ids:
-                raise SvgVisualError(f"duplicate SVG element id: {node_id}", page_id=page_id)
-            ids.add(node_id)
-        if node.get("style") or node.get("class"):
-            raise SvgVisualError("external CSS/style attributes are blocked", page_id=page_id)
-        definition_node = tag in {"defs", "linearGradient", "radialGradient", "filter", "stop", "feDropShadow", "feGaussianBlur"}
-        if node.get("opacity") is not None and not definition_node:
-            try:
-                opacity = float(str(node.get("opacity")).removesuffix("px"))
-            except (TypeError, ValueError) as exc:
-                raise SvgVisualError(f"SVG opacity is invalid: {node_id}", page_id=page_id) from exc
-            if not math.isfinite(opacity) or opacity < 0 or opacity > 1:
-                raise SvgVisualError(f"SVG opacity must be between 0 and 1: {node_id}", page_id=page_id)
-        for attribute in () if definition_node else ("x", "y", "x1", "y1", "x2", "y2", "cx", "cy", "r", "rx", "ry", "width", "height", "stroke-width", "font-size"):
-            if node.get(attribute) is None:
-                continue
-            try:
-                value = float(str(node.get(attribute)).removesuffix("px"))
-            except (TypeError, ValueError) as exc:
-                raise SvgVisualError(f"SVG {attribute} is invalid: {node_id}", page_id=page_id) from exc
-            if not math.isfinite(value) or (attribute in {"width", "height", "r", "rx", "ry", "stroke-width", "font-size"} and value < 0):
-                raise SvgVisualError(f"SVG {attribute} is out of range: {node_id}", page_id=page_id)
-        if tag not in {"svg", "g", "defs", "linearGradient", "radialGradient", "filter", "stop", "feDropShadow", "feGaussianBlur", "tspan", "title", "desc", "metadata"}:
-            try:
-                parse_node_paint(node, paint_registry)
-            except SvgPaintError as exc:
-                raise SvgVisualError(str(exc), page_id=page_id, code=exc.code) from exc
-        if node.get("opacity") is not None and str(node.get("opacity")) in {"0", "0.0"}:
-            message = "hidden SVG ancestor group is blocked" if tag == "g" else "hidden SVG element is blocked"
-            raise SvgVisualError(f"{message}: {node_id}", page_id=page_id)
-        if tag in visible_tags:
-            if not node_id:
-                raise SvgVisualError(f"visible SVG element must have a stable element id: {tag}", page_id=page_id)
-            if not str(node.get("data-pptx-bounds") or ""):
-                raise SvgVisualError(f"visible SVG element is missing data-pptx-bounds: {node_id}", page_id=page_id)
-            try:
-                bbox = native_geometry.get(node_id) or _svg_geometry_bbox(node)
-            except VisualMetricsError as exc:
-                raise SvgVisualError(f"SVG element geometry is invalid: {node_id}", page_id=page_id) from exc
-            if bbox["x"] < -0.01 or bbox["y"] < -0.01 or bbox["x"] + bbox["w"] > CANVAS_WIDTH + 0.01 or bbox["y"] + bbox["h"] > CANVAS_HEIGHT + 0.01:
-                raise SvgVisualError(f"SVG element overflows the canvas: {node_id}", page_id=page_id)
-        if tag != "image":
-            continue
-        if node.get("data-pptx-asset") != "registered":
-            raise SvgVisualError("SVG image is missing registered asset marker", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
-        href = node.get("href") or node.get("{http://www.w3.org/1999/xlink}href") or ""
-        if not href.startswith("data:image/"):
-            raise SvgVisualError("SVG image must be an embedded registered asset", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
-        try:
-            x = float(node.get("x") or 0)
-            y = float(node.get("y") or 0)
-            width = float(node.get("width") or 0)
-            height = float(node.get("height") or 0)
-        except ValueError as exc:
-            raise SvgVisualError("SVG registered image geometry is invalid", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED") from exc
-        if x <= 0.01 and y <= 0.01 and width >= CANVAS_WIDTH - 0.01 and height >= CANVAS_HEIGHT - 0.01:
-            raise SvgVisualError("whole-page image wrapper is blocked", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
-    return {"valid": True, "tags": sorted(tags), "forbidden": [], "paint": paint_registry}
-
 
 def _bbox_overlap(first: dict[str, float], second: dict[str, float]) -> float:
     width = max(0.0, min(first["x"] + first["w"], second["x"] + second["w"]) - max(first["x"], second["x"]))
@@ -458,11 +355,13 @@ def _bbox_overlap(first: dict[str, float], second: dict[str, float]) -> float:
     return width * height
 
 
-def _font_path(family: str, page_id: str, element_id: str) -> Path:
+def _font_path(family: str, page_id: str, element_id: str, weight: str = "400") -> Path:
     requested = family.strip().strip("'\"") or "Arial"
     matcher = shutil.which("fc-match")
     if matcher:
-        result = subprocess.run([matcher, requested, "-f", "%{family}|%{file}\n"], capture_output=True, text=True)
+        bold = str(weight).lower() in {"bold", "bolder", "600", "700", "800", "900"}
+        pattern = requested + (":weight=bold" if bold else "")
+        result = subprocess.run([matcher, pattern, "-f", "%{family}|%{file}\n"], capture_output=True, text=True)
         matched_family, _, matched_file = result.stdout.strip().partition("|")
         generic = requested.lower() in {"sans-serif", "serif", "monospace"}
         names = {name.strip().lower() for name in matched_family.split(",")}
@@ -485,6 +384,15 @@ def _font_path(family: str, page_id: str, element_id: str) -> Path:
     raise SvgVisualError(f"unresolvable SVG font {requested} on {element_id}", page_id=page_id, code="HD_SVG_TEXT_OVERFLOW")
 
 
+def _inherited_fill_opacity(node: Any, ancestors: list[Any]) -> float:
+    # fill-opacity is inherited, not composited: a child's explicit value
+    # replaces the closest ancestor value. `ancestors` is nearest-first.
+    for candidate in [node, *ancestors]:
+        if candidate.get("fill-opacity") is not None:
+            return float(candidate.get("fill-opacity"))
+    return 1.0
+
+
 def _validate_svg_text(node: Any, scene_element: dict[str, Any], page_id: str, ancestors: list[Any]) -> None:
     from PIL import ImageFont
 
@@ -500,22 +408,23 @@ def _validate_svg_text(node: Any, scene_element: dict[str, Any], page_id: str, a
     if str(node.get("data-pptx-text-ref") or "") != str(scene_element.get("text_ref") or ""):
         raise SvgVisualError(f"SVG text ref drift on {element_id}", page_id=page_id, code="HD_SVG_CONTENT_DRIFT")
     fill = str(node.get("fill") or "").lower()
-    if fill in {"", "none", "transparent"} or str(node.get("visibility") or "").lower() == "hidden" or str(node.get("display") or "").lower() == "none":
+    direct_text = str(node.text or "") + "".join(str(child.tail or "") for child in node)
+    if (direct_text.strip() and fill in {"", "none", "transparent"}) or str(node.get("visibility") or "").lower() == "hidden" or str(node.get("display") or "").lower() == "none":
         raise SvgVisualError(f"hidden SVG text is blocked: {element_id}", page_id=page_id, code="HD_SVG_CONTENT_DRIFT")
     try:
         ancestor_opacity = 1.0
         for ancestor in ancestors:
             if str(ancestor.get("display") or "").lower() == "none" or str(ancestor.get("visibility") or "").lower() in {"hidden", "collapse"}:
                 raise SvgVisualError(f"hidden SVG text ancestor is blocked: {element_id}", page_id=page_id, code="HD_SVG_CONTENT_DRIFT")
-            ancestor_opacity *= float(ancestor.get("opacity") or 1) * float(ancestor.get("fill-opacity") or 1)
-        opacity = ancestor_opacity * float(node.get("opacity") or 1) * float(node.get("fill-opacity") or 1)
+            ancestor_opacity *= float(ancestor.get("opacity", 1))
+        opacity = ancestor_opacity * float(node.get("opacity", 1)) * _inherited_fill_opacity(node, ancestors)
         font_size = float(str(node.get("font-size") or "").removesuffix("px"))
     except ValueError as exc:
         raise SvgVisualError(f"SVG text style is invalid: {element_id}", page_id=page_id, code="HD_SVG_TEXT_OVERFLOW") from exc
-    if opacity < 0.05 or font_size <= 0:
+    if (direct_text.strip() and opacity < 0.05) or font_size <= 0:
         raise SvgVisualError(f"hidden or invalid SVG text is blocked: {element_id}", page_id=page_id, code="HD_SVG_CONTENT_DRIFT")
     bounds = _svg_geometry_bbox(node)
-    font = ImageFont.truetype(str(_font_path(str(node.get("font-family") or "Arial"), page_id, element_id)), max(1, round(font_size)))
+    font = ImageFont.truetype(str(_font_path(str(node.get("font-family") or "Arial"), page_id, element_id, str(node.get("font-weight") or "400"))), max(1, round(font_size)))
     tspans = [child for child in list(node) if str(child.tag).split("}")[-1] == "tspan"]
     if len(tspans) != len(list(node)):
         raise SvgVisualError(f"SVG text supports only direct tspan children: {element_id}", page_id=page_id, code="HD_SVG_UNSUPPORTED_ELEMENT")
@@ -540,15 +449,14 @@ def _validate_svg_text(node: Any, scene_element: dict[str, Any], page_id: str, a
         try:
             tspan_opacity = (
                 ancestor_opacity
-                * float(node.get("opacity") or 1)
-                * float(node.get("fill-opacity") or 1)
-                * float(tspan.get("opacity") or 1)
-                * float(tspan.get("fill-opacity") or 1)
+                * float(node.get("opacity", 1))
+                * float(tspan.get("opacity", 1))
+                * _inherited_fill_opacity(tspan, [node, *ancestors])
             )
         except ValueError as exc:
             raise SvgVisualError(f"SVG tspan paint is invalid: {element_id}", page_id=page_id, code="HD_SVG_CONTENT_DRIFT") from exc
         if tspan_fill in {"", "none", "transparent"} or tspan_opacity < 0.05:
-            raise SvgVisualError(f"hidden SVG tspan text is blocked: {element_id}", page_id=page_id, code="HD_SVG_CONTENT_DRIFT")
+            raise SvgVisualError(f"hidden SVG text in tspan is blocked: {element_id}", page_id=page_id, code="HD_SVG_CONTENT_DRIFT")
         family = str(tspan.get("font-family") or node.get("font-family") or "Arial")
         try:
             tspan_size = float(str(tspan.get("font-size") or node.get("font-size") or "").removesuffix("px"))
@@ -557,7 +465,7 @@ def _validate_svg_text(node: Any, scene_element: dict[str, Any], page_id: str, a
             raise SvgVisualError(f"SVG tspan size or line offset is invalid: {element_id}", page_id=page_id, code="HD_SVG_TEXT_OVERFLOW") from exc
         if tspan_size <= 0:
             raise SvgVisualError(f"SVG tspan font size is invalid: {element_id}", page_id=page_id, code="HD_SVG_TEXT_OVERFLOW")
-        tspan_font = ImageFont.truetype(str(_font_path(family, page_id, element_id)), max(1, round(tspan_size)))
+        tspan_font = ImageFont.truetype(str(_font_path(family, page_id, element_id, str(tspan.get("font-weight") or node.get("font-weight") or "400"))), max(1, round(tspan_size)))
         if current and (tspan.get("y") is not None or abs(dy) > 0.01):
             lines.append(current)
             line_widths.append(current_width)
@@ -578,7 +486,15 @@ def _validate_svg_text(node: Any, scene_element: dict[str, Any], page_id: str, a
         line_widths.append(current_width)
         line_sizes.append(current_max_size)
     visible_text = " ".join(line.strip() for line in lines)
-    if " ".join(declared_text.split()) != " ".join(visible_text.split()):
+    # CJK wraps introduce no word separator. Only remove a visual line boundary
+    # between CJK characters/punctuation; preserve real whitespace and require
+    # exact source characters, so English word boundaries cannot disappear.
+    # A Lock can already contain logical newlines. Apply the same line-boundary
+    # rule to both sides so additional physical CJK wraps do not invent drift.
+    # Spaces inside each line and every non-whitespace character stay intact.
+    cjk_declared = join_cjk_text_lines(declared_text.splitlines())
+    cjk_visible = join_cjk_text_lines(lines)
+    if " ".join(declared_text.split()) != " ".join(visible_text.split()) and cjk_declared != cjk_visible:
         raise SvgVisualError(f"visible SVG text drift on {element_id}", page_id=page_id, code="HD_SVG_CONTENT_DRIFT")
     if any(step < font_size * 0.7 or step > font_size * 2.5 for step in line_steps):
         raise SvgVisualError(f"SVG tspan line height is invalid: {element_id}", page_id=page_id, code="HD_SVG_TEXT_OVERFLOW")
@@ -699,27 +615,27 @@ def validate_approved_svg(
         element_id = str(node.get("id") or "")
         scene_element = scene_elements.get(element_id)
         if not scene_element or scene_element.get("kind") != "image":
-            raise SvgVisualError(f"SVG image is not registered in Scene: {element_id}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
+            raise SvgVisualError(f"SVG image is not registered in Scene: {element_id}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED", element_id=element_id)
         bbox = _svg_geometry_bbox(node)
         area = bbox["w"] * bbox["h"]
         image_area += area
         if area / canvas_area > image_policy["max_single_image_area"]:
-            raise SvgVisualError(f"image asset exceeds {image_policy['max_single_image_area']:.0%} of canvas: {element_id}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
+            raise SvgVisualError(f"image asset exceeds {image_policy['max_single_image_area']:.0%} of canvas: {element_id}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED", element_id=element_id)
         asset_id = str(scene_element.get("asset_ref") or "")
         asset_path = (assets or {}).get(asset_id)
         if asset_path is None or not asset_path.is_file() or sha256_file(asset_path) != str(scene_element.get("asset_sha256") or ""):
-            raise SvgVisualError(f"registered image asset hash mismatch: {asset_id or element_id}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
+            raise SvgVisualError(f"registered image asset hash mismatch: {asset_id or element_id}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED", element_id=element_id)
         href = str(node.get("href") or node.get("{http://www.w3.org/1999/xlink}href") or "")
         try:
             embedded = base64.b64decode(href.split(",", 1)[1], validate=True)
         except (IndexError, ValueError, binascii.Error) as exc:
-            raise SvgVisualError(f"embedded image payload is invalid: {element_id}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED") from exc
+            raise SvgVisualError(f"embedded image payload is invalid: {element_id}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED", element_id=element_id) from exc
         if hashlib.sha256(embedded).hexdigest() != sha256_file(asset_path) or str(node.get("data-pptx-asset-id") or "") != asset_id:
-            raise SvgVisualError(f"embedded image asset lineage mismatch: {element_id}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
+            raise SvgVisualError(f"embedded image asset lineage mismatch: {element_id}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED", element_id=element_id)
         for text in p0_p1_text:
             text_id = str(text.get("element_id") or "")
             if dom_order[element_id] > dom_order.get(text_id, -1) and _bbox_overlap(bbox, _svg_geometry_bbox(nodes[text_id])) > 0:
-                raise SvgVisualError(f"image asset covers P0/P1 text: {element_id} -> {text_id}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
+                raise SvgVisualError(f"image asset covers P0/P1 text: {element_id} -> {text_id}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED", element_id=element_id)
     if image_area / canvas_area > image_policy["max_total_image_area"]:
         raise SvgVisualError(f"registered image assets exceed {image_policy['max_total_image_area']:.0%} of canvas", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
     contrast = _text_contrast_metrics(path, scene)

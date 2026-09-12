@@ -5,6 +5,7 @@ import shutil
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 from argparse import Namespace
 from pathlib import Path
 
@@ -26,6 +27,24 @@ from runtime.run_state import (  # noqa: E402
 
 
 class WorkflowAutopilotTest(unittest.TestCase):
+    def test_autopilot_preserves_unresolved_research_diagnostics(self) -> None:
+        self._write_json(REQUEST_NAME, {"run_id": "run-1", "run_mode": "fixture"})
+        task = {"kind": "resolve_research_gap", "research_status": "inconclusive",
+                "research_gaps": [{"affected_refs": ["RG-02"], "questions": ["Which case supports this claim?"]}]}
+        state = {"stage": "blocked_research_gap", "next_command": "",
+                 "host_task": task, "blocking_issues": ["RG-02 remains unresolved"]}
+        args = Namespace(run_dir=str(self.run_dir), run_id=None, runs_dir=None,
+                         workspace="", run_mode="fixture", dev_allow_unsetup=True,
+                         mode="quick", max_steps=2)
+        with patch("deck_master.resolve_run_state", return_value=state), patch("deck_master._autopilot_action", return_value=("", None)) as action:
+            result = command_workflow_autopilot(args)
+        self.assertEqual(result["host_task"], task)
+        self.assertEqual(result["blocking_issues"], state["blocking_issues"])
+        self.assertEqual(result["steps"], [])
+        self.assertEqual(result["next_command"], "")
+        action.assert_called_once()
+        self.assertEqual(json.loads((self.run_dir / "workflow_autopilot_report.json").read_text()), result)
+
     def setUp(self) -> None:
         self.tmp_root = Path(tempfile.mkdtemp(prefix="dm_autopilot_"))
         self.run_dir = self.tmp_root / "run-1"

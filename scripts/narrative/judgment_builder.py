@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any
+import copy
 
 
 SCHEMA_VERSION = "deck_consulting_judgments.v1"
@@ -21,6 +22,7 @@ def build_judgments(
     deck_brief: dict[str, Any],
     claim_map: dict[str, Any],
     context_manifest: dict[str, Any] | None = None,
+    *, narrative_plan: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """从输入 artifacts 生成 consulting judgments。
 
@@ -41,12 +43,15 @@ def build_judgments(
     audience = request.get("audience", "client")
     sources = (context_manifest or {}).get("sources", [])
 
-    # Judgment 1: business_problem
-    business_problem = _judge_business_problem(business_goal, claims, sources)
+    production = request.get("run_mode", "production") != "fixture"
+    # Production goals and source counts cannot establish a cause or mechanism.
+    business_problem = (_public_judgment("business_problem", narrative_plan, sources, run_id)
+                        if production else _judge_business_problem(business_goal, claims, sources))
     judgments.append(business_problem)
 
     # Judgment 2: solution_approach
-    solution = _judge_solution_approach(core_points, claims, business_goal)
+    solution = (_public_judgment("solution_approach", narrative_plan, sources, run_id)
+                if production else _judge_solution_approach(core_points, claims, business_goal))
     judgments.append(solution)
 
     # Judgment 3: evidence_sufficiency
@@ -73,12 +78,50 @@ def build_judgments(
                 "risk_flags": list(claim.get("risk_flags", [])),
             })
 
+    pending = [j for j in judgments[:2] if j.get("status") == "needs_agent_analysis"]
+    if production:
+        open_questions.extend(j["rationale"] for j in pending)
+        open_questions.extend(str(g.get("message") or g) if isinstance(g, dict) else str(g)
+                              for g in (narrative_plan or {}).get("gaps", []))
     return {
+        "status": ("needs_agent_analysis" if pending else "proposed_from_narrative") if production else "judgments_ready",
+        "agent_tasks": [{"kind":"professional_judgment", "topic":j["topic"],
+                         "required_input":"Author a source-referenced public problem or mechanism with business implications through the existing page-content handoff; do not restate the goal.",
+                         "inputs":["deck_brief.json", "claim_map.json", "context_manifest.json", "narrative_plan.json"]} for j in pending],
         "schema_version": SCHEMA_VERSION,
         "run_id": run_id,
         "judgments": judgments,
         "open_questions": open_questions,
     }
+
+
+def _public_judgment(topic: str, narrative: dict | None, sources: list, run_id: str) -> dict:
+    """Reuse authored public content as a proposal, never infer client causality."""
+    narrative = narrative or {}
+    source_ids = {str(s.get("source_id")) for s in sources if isinstance(s, dict)}
+    beats = narrative.get("beats", []) if narrative.get("run_id") == run_id else []
+    roles = {"problem"} if topic == "business_problem" else {"architecture"}
+    if topic == "solution_approach" and not any(b.get("role") == "architecture" for b in beats):
+        roles = {"solution"}
+    public = []
+    for beat in beats:
+        refs = beat.get("source_refs") or []
+        if (beat.get("role") not in roles or not str(beat.get("conclusion") or "").strip()
+                or not str(beat.get("business_implication") or "").strip()
+                or beat.get("fact_kind") not in {"customer_fact", "analysis_judgment", "design_suggestion", "working_assumption"}
+                or not refs or any(ref not in source_ids for ref in refs)):
+            continue
+        public.append({key: copy.deepcopy(beat.get(key)) for key in
+                       ("beat_id", "conclusion", "business_implication", "fact_kind", "source_refs", "evidence_bindings")})
+    return {"judgment_id": "judgment_" + topic, "topic": topic,
+            "status": "proposed_from_narrative" if public else "needs_agent_analysis",
+            "statement": "；".join(b["conclusion"] for b in public) if public else "待专业 Agent 分析业务问题。" if topic == "business_problem" else "待专业 Agent 提出并比较解决机制。",
+            "rationale": "复用公共主线中的现有提案；未据此验证客户因果关系。" if public else "目标、材料存在和论点数量均不足以证明问题或机制；需提供有来源的公共判断及业务影响。",
+            "confidence": 0.0, "confidence_basis": "not_scored",
+            "source_refs": ["narrative_plan.json#" + str(b["beat_id"]) for b in public],
+            "risk_flags": ["proposal_not_independently_verified"] if public else ["professional_analysis_pending"],
+            "deck_implication": "；".join(b["business_implication"] for b in public) if public else "保持待分析，不以业务目标或模板替代专业判断。",
+            "public_inputs": public}
 
 
 def _judge_business_problem(business_goal: str, claims: list, sources: list) -> dict:

@@ -140,9 +140,9 @@ def ingest_research_result(context_manifest: dict[str, Any], result: dict[str, A
             "excerpt": excerpt,
             "reading": {
                 "method": "host_web_research",
-                "coverage": "full" if excerpt else "failed",
-                "read_ranges": [],
-                "unread_ranges": [] if excerpt else [{"description": "no content captured"}],
+                "coverage": "partial" if excerpt else "failed",
+                "read_ranges": [{"description": "captured research excerpt"}] if excerpt else [],
+                "unread_ranges": [{"description": "content beyond the captured excerpt was not attested"}] if excerpt else [{"description": "no content captured"}],
                 "failures": [] if excerpt else ["no content captured"],
             },
             "provenance": {

@@ -1,0 +1,103 @@
+{
+  "baseline_sha": "4977f89573d18a282c605360dc55f751443a2b21",
+  "sources": [
+    {
+      "id": "R01",
+      "title": "PR #30 metadata",
+      "url": "https://github.com/MainQuestAI/Deck-Master/pull/30",
+      "supports": "本次在线读取HEAD=4977f89573d18a282c605360dc55f751443a2b21；open/unmerged，base=bcb5b37；PR正文中间HEAD和作者测试数字不作本次实测。",
+      "evidence_level": "本次连接器读取"
+    },
+    {
+      "id": "R02",
+      "title": "scripts/skills/installer.py",
+      "url": "https://github.com/MainQuestAI/Deck-Master/blob/4977f89573d18a282c605360dc55f751443a2b21/scripts/skills/installer.py#L1408-L1436",
+      "supports": "install_managed_backend仍接受完整源包并提示backend bind。",
+      "evidence_level": "本次连接器固定SHA读取"
+    },
+    {
+      "id": "R03",
+      "title": "scripts/runtime/build.py",
+      "url": "https://github.com/MainQuestAI/Deck-Master/blob/4977f89573d18a282c605360dc55f751443a2b21/scripts/runtime/build.py",
+      "supports": "生产路径仍关联外部builder_backend；Package消费者要求ready，准备manifest与当前source fingerprint。",
+      "evidence_level": "本次连接器固定SHA读取"
+    },
+    {
+      "id": "R04",
+      "title": "scripts/high_density/pptx.py compile_pptx",
+      "url": "https://github.com/MainQuestAI/Deck-Master/blob/4977f89573d18a282c605360dc55f751443a2b21/scripts/high_density/pptx.py",
+      "supports": "编译函数以本地SVG/Scene/ContentLock生成原生Presentation及trace；路径提取和整体运行仍需Codex核验。",
+      "evidence_level": "同对话上一轮已读取同SHA；本次补读同文件回读部分"
+    },
+    {
+      "id": "R05",
+      "title": "scripts/high_density/pptx.py readback/render",
+      "url": "https://github.com/MainQuestAI/Deck-Master/blob/4977f89573d18a282c605360dc55f751443a2b21/scripts/high_density/pptx.py#L990-L1175",
+      "supports": "实际soffice/pdftoppm渲染调用、对象类型/文字/trace/几何和hash回读。",
+      "evidence_level": "本次连接器固定SHA读取"
+    },
+    {
+      "id": "R06",
+      "title": "skills/deck-builder-high-density/references/stage-protocol.md",
+      "url": "https://github.com/MainQuestAI/Deck-Master/blob/4977f89573d18a282c605360dc55f751443a2b21/skills/deck-builder-high-density/references/stage-protocol.md",
+      "supports": "既有MBB/ImageGen/Scene/SVG/PPTX阶段、原生对象/视觉指标与真实工具要求；不是已通过的效果报告。",
+      "evidence_level": "本次连接器固定SHA读取"
+    },
+    {
+      "id": "R07",
+      "title": "scripts/runtime/next_step.py",
+      "url": "https://github.com/MainQuestAI/Deck-Master/blob/4977f89573d18a282c605360dc55f751443a2b21/scripts/runtime/next_step.py#L1-L235",
+      "supports": "HD目录优先分支、ppt-master missing项、缺semantic时quality command选择。",
+      "evidence_level": "本次连接器固定SHA读取"
+    },
+    {
+      "id": "R08",
+      "title": "scripts/deck_master.py library args",
+      "url": "https://github.com/MainQuestAI/Deck-Master/blob/4977f89573d18a282c605360dc55f751443a2b21/scripts/deck_master.py#L3045-L3070",
+      "supports": "共享library choices当前只有auto/real/fixture。",
+      "evidence_level": "本次连接器固定SHA读取"
+    },
+    {
+      "id": "R09",
+      "title": "docs/contracts/page-package.v1.schema.json",
+      "url": "https://github.com/MainQuestAI/Deck-Master/blob/4977f89573d18a282c605360dc55f751443a2b21/docs/contracts/page-package.v1.schema.json#L1-L150",
+      "supports": "status枚举含ready_for_build而非ready；实际消费者差异需用调用链复现。",
+      "evidence_level": "本次连接器固定SHA读取"
+    },
+    {
+      "id": "R10",
+      "title": "scripts/quality/gate_policy.py",
+      "url": "https://github.com/MainQuestAI/Deck-Master/blob/4977f89573d18a282c605360dc55f751443a2b21/scripts/quality/gate_policy.py#L1-L130",
+      "supports": "semantic gate接受external_*前缀；语义input_current检查index hash。",
+      "evidence_level": "本次连接器固定SHA读取"
+    },
+    {
+      "id": "R11",
+      "title": "SC-1 implementation/deviation-log.md",
+      "url": "https://github.com/MainQuestAI/Deck-Master/blob/4977f89573d18a282c605360dc55f751443a2b21/docs/specs/sc1-solution-core-independence/implementation/deviation-log.md",
+      "supports": "HD公共投影、问题类型和action调用方接线等偏差记录；状态以实际代码/测试为准。",
+      "evidence_level": "同对话上一轮已读取同SHA；本次PR metadata再次提及欠项"
+    },
+    {
+      "id": "R12",
+      "title": "scripts/workflow/actions.py",
+      "url": "https://github.com/MainQuestAI/Deck-Master/blob/4977f89573d18a282c605360dc55f751443a2b21/scripts/workflow/actions.py#L1-L265",
+      "supports": "staging后逐文件rename、applied marker、scope声明与预算计已提交；不能仅靠docstring证明批次原子。",
+      "evidence_level": "本次连接器固定SHA读取"
+    },
+    {
+      "id": "R13",
+      "title": "scripts/high_density/svg_native.py",
+      "url": "https://github.com/MainQuestAI/Deck-Master/blob/4977f89573d18a282c605360dc55f751443a2b21/scripts/high_density/svg_native.py",
+      "supports": "已有共享SVG parser、path/transform/use支持子集；与旧prose存在需核对范围。",
+      "evidence_level": "同对话上一轮已读取同SHA"
+    },
+    {
+      "id": "L01",
+      "title": "用户提供SC-1完整Spec与88项验收",
+      "url": "provided:Deck-Master_SC1_Development_Spec_Pack_20260907.zip",
+      "supports": "读取原规格D04/D05/任务与原88项JSON；继承效果阈值并逐项映射，不使用过时P2—P5材料替代。",
+      "evidence_level": "本次从附件本地读取"
+    }
+  ]
+}

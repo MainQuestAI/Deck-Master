@@ -126,7 +126,9 @@ class QualityFindingAggregationTest(unittest.TestCase):
         self.assertTrue(len(fms) >= 1)
         top = fms[0]
         self.assertEqual(top["count"], 2)
-        self.assertIn("ROI", top["description"])
+        self.assertIn("P1", top["description"])
+        self.assertNotIn("ROI", json.dumps(pack, ensure_ascii=False))
+        self.assertEqual(len(top["source_refs"]), 2)
 
     def test_agent_guidance_from_failures(self) -> None:
         _add_run_with_quality(self.ws, "run_01", [

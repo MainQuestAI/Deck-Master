@@ -1,3 +1,5 @@
+> **历史规格适用范围更新（SC-1.1 superseded）**：下文保留 SC-1 历史正文。默认外部 PPT Master 后端及标准／高密度双引擎要求，已由 [SC-1.1 正式替换裁决](../sc1.1-native-deck-core/specs/00-decisions-and-supersession.md#02-正式替换旧裁决)替换为默认内置 `deck_native`，旧运行按明确兼容／迁移规则处理；并非废弃整份 SC-1。研究、公共内容、真实编译／渲染／回读、质量、数据保护与当前批准等未冲突要求继续有效。逐项工程范围见 [SC-1 验收替换映射](../sc1.1-native-deck-core/acceptance/SC1_SUPERSESSION_MAP.json)；映射不代表验收通过。
+
 # Deck Master SC-1 完整开发说明书
 ## 独立运行与 Solution Deck 质量升级
 

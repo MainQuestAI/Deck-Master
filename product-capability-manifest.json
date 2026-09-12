@@ -18,11 +18,7 @@
     "deck-builder",
     "deck-quality",
     "deck-review",
-    "deck-autopilot",
-    "ppt-master",
-    "ppt-library",
-    "ppt-deck-pro-max",
-    "ppt-quality-gate"
+    "deck-autopilot"
   ],
   "optional_capabilities": [
     "deck-learn",
@@ -74,9 +70,7 @@
     "ppt-deck-pro-max",
     "ppt-quality-gate"
   ],
-  "backend_dependencies": {
-    "deck-builder": "ppt-master"
-  },
+  "backend_dependencies": {},
   "suite_skill_dependencies": {
     "deck-sourcing": "ppt-library",
     "deck-producer": "ppt-deck-pro-max",
@@ -414,5 +408,20 @@
     "capabilities_path": "capabilities",
     "contracts_path": "contracts",
     "reference_packs_path": "reference-packs"
+  },
+  "build_runtime": {
+    "default_engine": "deck_native",
+    "default_authoring_mode": "image_blueprint",
+    "authoring_modes": [
+      "image_blueprint",
+      "direct_svg"
+    ],
+    "legacy_engine": "legacy_ppt_master",
+    "route_precedence": "persisted_revision",
+    "renderer": "libreoffice_pdf_pdftoppm",
+    "host_capabilities": "observed_per_task",
+    "final_approval": "required_for_current_artifact",
+    "engineering_acceptance": "in_progress",
+    "customer_outcome": "outcome_pending"
   }
 }

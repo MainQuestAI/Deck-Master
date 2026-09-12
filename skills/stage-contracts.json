@@ -120,6 +120,22 @@
           "required": true,
           "assumption_allowed": false,
           "evidence_required": false,
+          "input_dependencies": [
+            {
+              "path": "request.json",
+              "fields": [
+                "business_goal",
+                "audience"
+              ]
+            },
+            {
+              "path": "deck_brief.json",
+              "fields": [
+                "business_goal",
+                "audience"
+              ]
+            }
+          ],
           "trigger": "missing_decision_object"
         },
         {
@@ -129,6 +145,22 @@
           "required": true,
           "assumption_allowed": false,
           "evidence_required": false,
+          "input_dependencies": [
+            {
+              "path": "request.json",
+              "fields": [
+                "acceptance",
+                "success_criteria"
+              ]
+            },
+            {
+              "path": "deck_brief.json",
+              "fields": [
+                "acceptance",
+                "success_criteria"
+              ]
+            }
+          ],
           "trigger": "missing_success_criteria"
         },
         {
@@ -138,6 +170,23 @@
           "required": true,
           "assumption_allowed": true,
           "evidence_required": false,
+          "input_dependencies": [
+            {
+              "path": "request.json",
+              "fields": [
+                "constraints",
+                "non_goals"
+              ]
+            },
+            {
+              "path": "deck_brief.json",
+              "fields": [
+                "constraints",
+                "non_goals",
+                "source_conflicts"
+              ]
+            }
+          ],
           "trigger": "missing_constraints"
         },
         {
@@ -147,6 +196,26 @@
           "required": false,
           "assumption_allowed": true,
           "evidence_required": false,
+          "input_dependencies": [
+            {
+              "path": "request.json",
+              "fields": [
+                "forbidden_claims"
+              ]
+            },
+            {
+              "path": "deck_brief.json",
+              "fields": [
+                "forbidden_claims"
+              ]
+            },
+            {
+              "path": "workspace_policy.json",
+              "fields": [
+                "forbidden_claims"
+              ]
+            }
+          ],
           "trigger": "missing_forbidden_claims"
         },
         {
@@ -156,6 +225,27 @@
           "required": true,
           "assumption_allowed": true,
           "evidence_required": false,
+          "input_dependencies": [
+            {
+              "path": "claim_map.json",
+              "fields": [
+                "claims"
+              ]
+            },
+            {
+              "path": "deck_brief.json",
+              "fields": [
+                "gaps"
+              ]
+            },
+            {
+              "path": "material_inventory.json",
+              "fields": [
+                "sources",
+                "items"
+              ]
+            }
+          ],
           "trigger": "missing_evidence_gap"
         }
       ],

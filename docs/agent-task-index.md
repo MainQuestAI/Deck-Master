@@ -22,6 +22,23 @@ whole-deck workflow has upstream gaps. They report the applicable skill and
 references without changing run state or granting stage/export approval.
 Selected-page edits reuse confirmed design and valid unaffected artifacts.
 
+## Answer a Current Workflow Question
+
+Run `workflow questions --run-dir <run_dir>` to read the current forcing questions
+and `input_fingerprint`. Submit an explicit answer with `workflow answer --run-dir
+<run_dir> --stage-id <stage> --question-id <id> --answer-json '"否"' --source-type
+user --actor-id <local_actor> --actor-role user --input-fingerprint <token>`.
+Use this negative answer only for an actual yes/no question. Re-read after each
+write; stale tokens, unknown/resolved questions and non-current stages are rejected.
+
+The actor is a local caller declaration, not authenticated identity or a grant of
+final user approval. Never label an Agent inference as a user answer. Agent
+assumptions require `--source-type agent_assumption --actor-role agent`, an
+assumption-permitting question, and must not answer user-reserved questions.
+Plain answers cannot satisfy evidence-required questions. Existing DecisionLog
+records are written through the revision transaction; no second decision model
+or UI is introduced. See [the CLI contract](contracts/workflow-question-cli.md).
+
 ## Project Skill Installation
 
 After the central release is installed, attach Codex project entries with
@@ -38,6 +55,21 @@ editable-install work, use Python 3.12 by default. Python 3.11 and 3.12 are
 supported for preview commands; real PPT Library v2 integration requires
 Python 3.12+. After installing with `python -m pip install -e ".[dev]"`,
 `deck-master ...` is equivalent.
+
+## New Native Production Run
+
+SC-1.1 supersedes the former unconditional PPT Master prerequisite. Preserve
+all source authorization, evidence, revision and final approval requirements.
+Start from materials with `start-conversation`, submit the Agent extraction to
+`build-brief`, then follow `next-step`. Native `autoplan` dispatches a
+`page-content` task: submit complete Agent-authored page content through
+`page-content submit`, which atomically creates PagePackages and dispatches
+ImageGen or SVG tasks. No HD fixture run or legacy generation artifact is a
+prerequisite. See [content handoff](contracts/page-content-handoff.md).
+
+Existing runs keep their persisted route. Use documented `build migrate`
+operations for explicit conversion; an unidentified historical run remains
+`migration_required`. Never change the run mode to weaken delivery gates.
 
 ## New Public Preview Run
 
@@ -159,6 +191,12 @@ python3 scripts/deck_master.py build retry --run-dir <run_dir> --profile high-de
 
 ## Build And Verify Release
 
+For an existing candidate evidence bundle, use `verify-evidence --evidence-root
+<evidence_dir> --candidate-sha <full_sha> --run main=<run_dir>`; repeat `--run`
+for additional runs. This reads recorded evidence and current input identities
+without writing approvals. `human_pending` is not final delivery approval.
+See [evidence verification](acceptance-evidence-verification.md).
+
 - Intent: create a self-contained release tree and verify it.
 - Commands:
 
@@ -196,3 +234,36 @@ For compatibility evidence, optionally repeat the same command set on Python
 
 - Success state: all tests pass and `agent-doctor` returns `ready` or explains
   only expected preview warnings.
+
+## Bounded public research
+
+Use `research prepare --run-dir <run> --input <task.json>` with the formal
+`research-task.v1.schema.json` contract. Each task contains one concrete
+question; create separate task IDs for independent questions. `based_on`
+records the SHA-256 of each input and the canonical JSON fingerprint of that
+reference list. The run-relative `authorization_ref` points to a record with
+`scope: public_research`, an explicit `authorization_basis`, and exactly the
+approved `public_query_context` and `allowed_sources` (HTTPS hostnames).
+Internal questions and private context are not included in the dispatched
+query. Raising the default two actions/two rounds/six sources requires matching
+`limits` in that authorization record.
+
+`research dispatch --run-dir <run> --task-id <id>` durably reserves one host
+action before the tool call. On restart it returns the same pending action ID;
+inspect the host's existing tool observation before deciding whether execution
+is still needed. `research status` is read-only. The host executes the approved
+query and calls `research submit --run-dir <run> --input <result.json>` with
+`task_id`, the issued `action_id`, `status`, one `query_log` entry containing
+`tool`, the exact `query`, and the actual `observation`, plus `sources`,
+`result_summary`, `counter_evidence`, and `open_questions`.
+
+Accepted terminal statuses are `executed`, `inconclusive`, and
+`capability_unavailable`; `retryable_error` allows another action within the
+remaining budget and becomes `inconclusive` at exhaustion. Executed results
+require consulted HTTPS sources within the authorization, captured `excerpt`,
+`applicability_bounds`, and a counter-evidence check. The runtime records host
+observations; it does not independently attest that the external tool ran.
+Terminal results atomically update the existing Context Manifest with affected
+judgments, unresolved questions, and `externally_verified_candidate` sources.
+They never establish unknown customer facts or approve delivery. Exact result
+replay is idempotent; conflicting replay and unissued actions are rejected.

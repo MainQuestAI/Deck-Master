@@ -1,0 +1,12 @@
+{
+  "validation_scope": "specification structure only; no product tests or runtime probes executed",
+  "status": "passed",
+  "schema_count": 4,
+  "synthetic_examples_validated": 6,
+  "selected_schema_counterexamples_rejected": 22,
+  "planned_product_cases": 64,
+  "inherited_mapping_count": 88,
+  "local_markdown_links_checked": 37,
+  "product_test_status": "not_run",
+  "errors": []
+}

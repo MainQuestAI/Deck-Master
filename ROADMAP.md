@@ -1,26 +1,24 @@
 # Deck Master Roadmap
 
-This roadmap tracks the path from the current public Technical Preview
-(`v0.9.14-preview.4`) to a `1.0.0` release. It is a living document; priorities
-may shift. See `docs/releases/2026-07-09-1.0.0-iteration-plan.md` for the
-detailed sprint breakdown.
+当前公开版本保持 `v0.9.14-preview.4` / Technical Preview。本路线图更新于
+2026-09-12，替代七月迭代计划的优先级；旧计划保留为历史记录。功能实现、工程
+验收、用户文件批准和客户效果分别判断，不以历史测试数或验收项数推算产品完成百分比。
 
 ## Status
 
-Deck Master is a public **Technical Preview** (agent-operable). The fixture
-demo, Review Desk preview, backend readiness transparency, and `preview-gate`
-are available. Production readiness is **not** claimed. The runtime is
-verified locally (suite ready, rc-gate green on a maintainer machine) but the
-1.0.0 gap is reproducible/traceable evidence + CI enforcement + governance,
-not new functionality.
+材料读取、研究、方案叙事、Page Package、宿主图片/SVG 任务、原生可编辑 PPTX、
+实际渲染回读、审查和受控导出已有正式路径。两套实际十页已通过编译保真验证，
+证明生产主链已执行；它不等于图片重建质量、最终工程验收或客户效果已通过。
+
+当前适合熟悉 Agent 和方案制作的操作者监督使用，尚不能宣称稳定生产就绪。
+最新证据边界见 [SC-1.1 验证记录](docs/specs/sc1.1-native-deck-core/implementation/pr31-validation-progress.md)。
 
 ## 1.0.0 — definition
 
-Deck Master 1.0.0 is installable in a clean environment, can produce at least
-3 real benchmark cases end-to-end with public/configurable backends, and passes
-`rc-gate` (full tier), `final-readiness`, Review Desk browser smoke, and
-release-tree install/rollback, with open-source governance and security
-boundaries in place.
+在干净环境可安装，独立操作者可按公开入口完成生产、修改、审查和交付；至少三组
+真实样本具备完整配对证据；所声明平台通过完整 release gate、实际编辑/渲染和
+升级回滚。用户批准对应当前最终文件。原生路线不依赖 PPT Master；只有显式或
+历史 legacy 路线验证该外部依赖。达到条件后才能提出 RC/正式版本发布。
 
 ## Milestones
 
@@ -31,37 +29,59 @@ boundaries in place.
 - Backend readiness transparency (`suite-status`, `agent-doctor`, `backend status`).
 - `preview-gate` and `release-build`/`release-smoke`.
 
-### M2 — Release-candidate closure (in progress)
+### 阶段一：完成当前 SC-1.1 工程与成品收口
 
-- Two-tier `rc-gate`: CI-reproducible subset in CI (`--tier ci`), full tier
-  locally / at release.
-- Real benchmark closure: ≥3 real metadata cases with complete report pairs,
-  aggregate `report_ready` (local-only evidence, archived as such).
-- PPT Master production backend closure: reproducible clean-environment bind
-  pinned to a tagged release + SHA.
-- Review Desk full design-system alignment (`DESIGN.md`) and product polish.
-- Release-tree install/verify/rollback evidence.
-- GitHub community entry (issue/PR templates, CODEOWNERS, dependabot, ROADMAP).
+修完已确认缺陷和受影响页面，固定候选后执行双 Python 回归、CI、真实生产、
+迁移/回滚和隔离发布安装。把候选 SHA、内容修订、工具版本、文件哈希和人工待定项
+汇入同一复核包，保留旧批准文件和失败证据。
 
-### 1.0.0-rc.1
+退出条件：没有阻断发现；SVG→PPTX 文字屏蔽 SSIM ≥0.97，P0/P1 几何误差 ≤0.75pt；
+图片→SVG 七类均分 ≥4.0、每页 ≥3.5，关键事实/文字/关系错误独立阻断；用户完成
+视觉复核与最终文件批准。只有全部条件通过，才标 `engineering_complete / outcome_pending`。
+合并和发布激活仍需用户明确决定。
 
-- Freeze features, fix blockers only.
-- Full CI matrix (Python 3.11 + 3.12) green.
-- rc-gate (full) green; benchmark aggregate `report_ready`.
-- Release tree install/rollback green; `docs/releases/v1.0.0.md` published.
-- External user can go from `0` to a working demo via README, and understands
-  production configuration.
+### 阶段二：证明独立操作者能稳定使用
 
-### 1.0.0
+沿用 `next-step`、现有 CLI 和 Review Desk，收窄首用入口到材料开始、继续运行、
+指定页修改、审阅交付和安装诊断。统一下一步、阻断原因、当前文件和修改影响的表达。
 
-- RC stable for a burn-in period with no blockers.
-- Tag `v1.0.0` and publish the release tree.
+建议新增验收：至少三名未参与开发的操作者各完成一份十页方案，合计覆盖缺资料、
+明确选择 direct_svg、进程中断恢复和单页返修。无需维护者手改运行 JSON；已有决定
+不重复索取；未受影响页面保持；能区分可审阅稿和已批准最终稿。记录真实介入和返工，
+任何维护者补救都作为改进证据保留。
+
+执行入口：[独立首用协议](docs/planning/independent-first-use-acceptance.md)与空记录模板；真人执行和 Agent 排练分别记录。
+
+### 阶段三：验证真实客户价值
+
+按保留的三类案例、每类 baseline 与 candidate 各两次设计（至少十二次运行），使用另外授权的真实材料。运行前锁定评价口径，
+对比事实、论证、方案机制、架构关系、可读性、编辑返工和实际采用。人工工时单独记录；
+文件时间戳、生成完成和导出次数都不能替代人力或客户接受率。
+
+退出条件：基线/候选材料版本、审查记录、人工工时、最终文件和采用决定齐全，达到既定
+L3 标准；同时公开脱敏的失败和无改善结果。未达标时修改生产方法或收窄适用场景，
+不在看完结果后放宽指标。当前工程轮不代做客户效果批准。
+
+执行入口：[客户配对评估协议与空记录](docs/planning/customer-paired-evaluation.md)。材料与真人评审未登记前不创建虚构结果。
+
+### 阶段四：发布并维护已经证实的支持范围
+
+先在现有平台完成候选安装、升级回滚、真实生产和完整 release gate，再提出 RC。
+把已验证的本地验收脚本收进仓库的统一证据命令，避免最后收口依赖临时目录和人工拼表。
+
+现有 `verify-evidence` 提供只读候选、输入修订和文件哈希核验；它不会代做真实工具验收或用户批准。见[契约与用法](docs/acceptance-evidence-verification.md)。
+接口稳定后逐步拆分 CLI/安装适配层，共用修订和质量判定，保持旧运行兼容。
+
+退出条件：所声明平台均有干净安装、编译、渲染、中文编辑后保存重开、局部修订与回滚
+证明，RC 观察期无阻断。当前 macOS LibreOffice 证据不外推 Windows/PowerPoint；
+新平台按实际需求独立验收。打标签、发布和激活均需明确授权。
 
 ## Out of scope for 1.0.0
 
-- Splitting the large `scripts/deck_master.py` CLI module (tracked as a
-  follow-up refactor on its own branch).
-- Multi-quarter rewrites or unrelated migrations.
+- 不在当前收口阶段重写 runtime、重建前端或新增另一套审批/状态模型。
+- 远程多人协作、更多渲染平台、跨行业模板扩展按实际客户需求单独立项。
+- 社区模板、双 Python CI、release-build/release-smoke、修订/迁移、反馈和 benchmark
+  已存在；后续重点是可靠使用和真实证据，不再次列为从零开发。
 
 ## How to contribute
 

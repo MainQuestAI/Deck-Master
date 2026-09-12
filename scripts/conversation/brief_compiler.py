@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import re
+import copy
+from pathlib import Path
 from typing import Any
 
 
@@ -39,7 +41,7 @@ def _agent_extract_complete(agent_extract: dict[str, Any]) -> bool:
     )
 
 
-def compile_deck_brief(
+def _compile_deck_brief_content(
     request: dict[str, Any],
     context_manifest: dict[str, Any],
     conversation: dict[str, Any],
@@ -74,6 +76,7 @@ def compile_deck_brief(
             "constraints": [str(item) for item in (agent_extract.get("constraints") or []) if str(item).strip()],
             "non_goals": [str(item) for item in (agent_extract.get("non_goals") or []) if str(item).strip()],
             "acceptance": [str(item) for item in (agent_extract.get("acceptance") or []) if str(item).strip()],
+            "working_assumptions": [dict(item) for item in (agent_extract.get("working_assumptions") or []) if isinstance(item, dict)],
             "source_conflicts": [dict(item) for item in (agent_extract.get("source_conflicts") or []) if isinstance(item, dict)],
             "gaps": [str(item) for item in (agent_extract.get("gaps") or []) if str(item).strip()],
             "brief_mode": "agent_extract",
@@ -103,3 +106,73 @@ def compile_deck_brief(
             "上下文只做运行时引用，不写入长期知识库。",
         ],
     }
+
+
+def _reconcile_conflicts(context_manifest, extraction, *, run_dir=None):
+    """Preserve declared conflicts; this does not infer natural-language conflicts."""
+    from quality.source_binding import evidence_index, source_quote_matches
+    declared = [copy.deepcopy(c) for c in context_manifest.get("conflicts", []) if isinstance(c, dict)]
+    proposals = {str(c.get("conflict_id") or ""): c for c in extraction.get("source_conflicts", []) if isinstance(c, dict)}
+    seen = {str(c.get("conflict_id") or "") for c in declared}
+    declared.extend(copy.deepcopy(c) for key, c in proposals.items() if key not in seen)
+    index = evidence_index(context_manifest)
+    resolved_records, issues = [], []
+    for original in declared:
+        conflict_id = str(original.get("conflict_id") or "")
+        proposed = proposals.get(conflict_id, original)
+        record = copy.deepcopy(original)
+        reasons = []
+        if not conflict_id or len(original.get("evidence_refs", [])) < 2:
+            reasons.append("declared conflict lacks identity or opposing evidence refs")
+        if proposed.get("description") != original.get("description") or proposed.get("evidence_refs") != original.get("evidence_refs"):
+            reasons.append("resolution must preserve the original conflicting statements and evidence refs")
+        if proposed.get("status") == "resolved":
+            resolution = str(proposed.get("resolution") or "").strip()
+            decision_ref = str(proposed.get("decision_ref") or "").strip()
+            candidates = index.get(decision_ref, [])
+            if not resolution or resolution not in extraction.get("constraints", []):
+                reasons.append("resolved constraint must be explicit in Brief constraints")
+            if len(candidates) != 1 or not source_quote_matches(*candidates[0], run_dir=run_dir):
+                reasons.append("resolution decision_ref must identify a verified original source span")
+            elif resolution != str(candidates[0][1].get("quote") or ""):
+                reasons.append("selected constraint must equal the complete verified resolution quote; do not omit negation or conditions")
+            if not reasons:
+                record.update(status="resolved", resolution=resolution, decision_ref=decision_ref)
+        else:
+            reasons.append("declared source conflict remains open")
+        if reasons:
+            record["status"] = "open"
+            issues.append({"conflict_id": conflict_id, "code": "declared_source_conflict", "reasons": reasons,
+                           "next_action": "review_source_conflict", "question_policy": "Ask the user only if the material cannot resolve an important decision."})
+        resolved_records.append(record)
+    return resolved_records, issues
+
+
+def brief_conflict_blockers(brief, context_manifest, *, run_dir=None):
+    """Recheck current declared conflicts rather than trusting stored ready flags."""
+    from context_intake.reading import reading_blockers
+    return _reconcile_conflicts(context_manifest, brief, run_dir=run_dir)[1] + reading_blockers(context_manifest)
+
+
+def compile_deck_brief(request, context_manifest, conversation, agent_extract=None, *, run_dir: str | Path | None = None):
+    brief = _compile_deck_brief_content(request, context_manifest, conversation, agent_extract=agent_extract)
+    conflicts, blockers = _reconcile_conflicts(context_manifest, agent_extract or {}, run_dir=run_dir)
+    from context_intake.reading import reading_blockers
+    blockers.extend(reading_blockers(context_manifest))
+    brief["source_conflicts"] = conflicts
+    brief["conflict_blockers"] = blockers
+    brief["status"] = "blocked" if blockers else "brief_ready"
+    return brief
+
+
+def run_brief_conflict_blockers(run_dir):
+    """Read one revision; old approved-package runs need not contain a Brief."""
+    from runtime.run_state import read_json
+    from workflow.actions import revision_read, revision_input_path
+    root = Path(run_dir).expanduser().resolve()
+    with revision_read(root):
+        context_path = revision_input_path(root, root / 'context_manifest.json')
+        brief_path = revision_input_path(root, root / 'deck_brief.json')
+        context = read_json(context_path) if context_path.is_file() else {}
+        brief = read_json(brief_path) if brief_path.is_file() else {}
+        return brief_conflict_blockers(brief, context, run_dir=root)

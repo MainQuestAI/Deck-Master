@@ -16,6 +16,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from .run_compatibility import SUPPORTED_RUN_FORMATS
+
 try:  # Supports both `python scripts/deck_master.py` and package imports in tests.
     from runtime.builder_backend import (
         backend_render_runtime_ready,
@@ -394,7 +396,7 @@ SUITE_SKILLS: list[dict[str, Any]] = [
     },
     {
         "name": "ppt-master",
-        "required": True,
+        "required": False,
         "role": "compatibility_backend",
         "public_name": "deck-builder",
         "compat_aliases": [],
@@ -415,7 +417,7 @@ SUITE_SKILLS: list[dict[str, Any]] = [
     },
     {
         "name": "ppt-library",
-        "required": True,
+        "required": False,
         "role": "compatibility_alias",
         "public_name": "deck-sourcing",
         "compat_aliases": [],
@@ -460,7 +462,7 @@ SUITE_SKILLS: list[dict[str, Any]] = [
     },
     {
         "name": "ppt-deck-pro-max",
-        "required": True,
+        "required": False,
         "role": "compatibility_alias",
         "public_name": "deck-producer",
         "compat_aliases": [],
@@ -484,7 +486,7 @@ SUITE_SKILLS: list[dict[str, Any]] = [
     },
     {
         "name": "ppt-quality-gate",
-        "required": True,
+        "required": False,
         "role": "compatibility_alias",
         "public_name": "deck-quality",
         "compat_aliases": [],
@@ -1061,11 +1063,10 @@ def product_capability_manifest() -> dict[str, Any]:
         for spec in SUITE_SKILLS
         if spec.get("backend_dependency")
     }
-    backend_dependencies = {
-        name: dependency
-        for name, dependency in raw_backend_dependencies.items()
-        if dependency == "ppt-master"
-    }
+    # SC-1.1 P1-02: the default build engine is built-in (deck_native); no
+    # external product is a backend dependency. Legacy ppt-master is an
+    # explicit compatibility route, never a default required dependency.
+    backend_dependencies: dict[str, str] = {}
     suite_skill_dependencies = {
         name: dependency
         for name, dependency in raw_backend_dependencies.items()
@@ -1104,6 +1105,18 @@ def product_capability_manifest() -> dict[str, Any]:
             "external_override_allowed": True,
             "legacy_real_dir_requires_migration_plan": True,
             "full_external_capability_directory_must_be_preserved": True,
+        },
+        "build_runtime": {
+            'default_engine': 'deck_native',
+            'default_authoring_mode': 'image_blueprint',
+            'authoring_modes': ['image_blueprint', 'direct_svg'],
+            'legacy_engine': 'legacy_ppt_master',
+            'route_precedence': 'persisted_revision',
+            'renderer': 'libreoffice_pdf_pdftoppm',
+            'host_capabilities': 'observed_per_task',
+            'final_approval': 'required_for_current_artifact',
+            'engineering_acceptance': 'in_progress',
+            'customer_outcome': 'outcome_pending',
         },
         "release_tree": {
             "skills_path": "skills",
@@ -1146,9 +1159,16 @@ def product_capability_manifest_path() -> Path:
 def write_companion_manifest() -> Path:
     path = companion_manifest_path()
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(path.suffix + ".tmp")
-    tmp.write_text(json.dumps(companion_manifest(), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    tmp.replace(path)
+    # A unique sibling temporary file keeps simultaneous setup processes
+    # from replacing/removing one another's in-flight manifest.
+    descriptor, temporary = tempfile.mkstemp(prefix=path.name + ".", suffix=".tmp", dir=path.parent)
+    tmp = Path(temporary)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+            handle.write(json.dumps(companion_manifest(), ensure_ascii=False, indent=2) + "\n")
+        tmp.replace(path)
+    finally:
+        tmp.unlink(missing_ok=True)
     return path
 
 
@@ -1327,11 +1347,11 @@ def _install_release_runtime(release_root: Path) -> dict[str, str]:
         failure="Deck Master release runtime creation failed",
     )
     runtime_python = release_root / RELEASE_PYTHON_RELATIVE
-    _run_runtime_setup(
-        [str(runtime_python), "-m", "pip", "install", str(release_root)],
-        cwd=release_root,
-        failure="Deck Master release runtime installation failed",
-    )
+    from .runtime_dependencies import install_locked_runtime
+    try:
+        install_locked_runtime(release_root, runtime_python)
+    except (ValueError, OSError, subprocess.SubprocessError) as exc:
+        raise SkillInstallError(str(exc)) from exc
     _clean_runtime_build_artifacts(release_root)
     runtime_version = _probe_python_version(runtime_python)
     if not _is_python_312(runtime_version):
@@ -1349,13 +1369,20 @@ def _global_launcher_text() -> str:
         "#!/usr/bin/env sh\n"
         'DECK_MASTER_HOME="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"\n'
         'exec "$DECK_MASTER_HOME/current/.venv/bin/python" '
-        '"$DECK_MASTER_HOME/current/scripts/deck_master.py" "$@"\n'
+        '"$DECK_MASTER_HOME/bin/run-compatibility.py" '
+        '"$DECK_MASTER_HOME/current" "$@"\n'
     )
 
 
 def _write_global_launcher() -> Path:
     launcher = INSTALL_LOG_DIR / "bin" / "deck-master"
     launcher.parent.mkdir(parents=True, exist_ok=True)
+    # Keep the compatibility guard outside current/previous so rollback cannot
+    # restore an old writer that silently rewrites newer Run formats.
+    guard = launcher.parent / "run-compatibility.py"
+    guard_tmp = guard.with_suffix(".tmp")
+    guard_tmp.write_bytes(Path(__file__).with_name("run_compatibility.py").read_bytes())
+    guard_tmp.replace(guard)
     tmp = launcher.with_suffix(".tmp")
     tmp.write_text(_global_launcher_text(), encoding="utf-8")
     tmp.chmod(0o755)
@@ -1500,6 +1527,12 @@ def verify_release_tree(
         path = root / rel
         if not path.exists():
             add_error("missing_required_file", rel)
+
+    try:
+        from .runtime_dependencies import verify_lock_files
+        verify_lock_files(root)
+    except (ValueError, OSError) as exc:
+        add_error("invalid_dependency_lock", "requirements", str(exc))
 
     product_manifest: dict[str, Any] | None = None
     product_manifest_path = root / PRODUCT_CAPABILITY_MANIFEST_NAME
@@ -1948,6 +1981,9 @@ def build_release_tree(
     )
     for source_name, target_name in (
         ("pyproject.toml", "pyproject.toml"),
+        ("requirements/README.md", "requirements/README.md"),
+        ("requirements/build.lock", "requirements/build.lock"),
+        ("requirements/runtime.lock", "requirements/runtime.lock"),
         ("AGENTS.md", "AGENTS.md"),
         ("README.md", "README.md"),
         ("LICENSE", "LICENSE"),
@@ -2020,6 +2056,10 @@ def build_release_tree(
             for name in release_capabilities
         ],
         "contracts": _contract_lock_entries(release_root),
+        "python_dependency_locks": [
+            {"path": path, "sha256": _sha256_file(release_root / path)}
+            for path in ("requirements/build.lock", "requirements/runtime.lock")
+        ],
     }
     (release_root / CAPABILITY_LOCK_NAME).write_text(
         json.dumps(_augment_lock(capability_lock, release_root), ensure_ascii=False, indent=2) + "\n",
@@ -2027,6 +2067,7 @@ def build_release_tree(
     )
     release_manifest = {
         "schema_version": "deck_master_release_manifest.v1",
+        "supported_run_formats": list(SUPPORTED_RUN_FORMATS),
         "suite_name": SUITE_NAME,
         "suite_version": suite_version,
         "built_at": _utc_now(),
@@ -2123,12 +2164,24 @@ def _production_backend_ready_from_status(status: dict[str, Any]) -> bool:
     )
 
 
+def _native_runtime_probe() -> dict[str, Any]:
+    try:
+        from native_pptx.probe import probe_native_runtime
+    except ModuleNotFoundError:  # pragma: no cover
+        from scripts.native_pptx.probe import probe_native_runtime
+    return probe_native_runtime()
+
+
+def _native_production_backend_ready(probe: dict[str, Any] | None = None) -> bool:
+    """Compilation readiness is independent of rendering and font evidence."""
+    value = probe if probe is not None else _native_runtime_probe()
+    return (value.get("checks", {}).get("compile_smoke") or {}).get("status") == "verified" and value.get("status") != "blocked"
+
+
 def _required_external_dependencies_ready(items: list[dict[str, Any]]) -> bool:
-    item = _dependency_by_name(items, "ppt-master")
-    return (
-        str(item.get("binding_status") or "") in {"bound_verified", "bound_verified_runtime_blocked"}
-        and bool(item.get("verified"))
-    )
+    # SC-1.1: no external product is a default required dependency; the
+    # built-in native kernel readiness replaces the old ppt-master binding.
+    return _native_production_backend_ready()
 
 
 def _rc_gate_report_path() -> Path:
@@ -2286,6 +2339,8 @@ def inspect_suite_status(
     agent_skill_dir: str | None = None,
 ) -> dict[str, Any]:
     """Pure-read suite readiness inspection."""
+    native_probe = _native_runtime_probe()  # one observation per inspection
+    native_engine_active = _native_production_backend_ready(native_probe)
     library_status = inspect_library_status()
     suite_version = _suite_version()
     resolved_targets = targets or ["codex"]
@@ -2310,7 +2365,7 @@ def inspect_suite_status(
         str(backend_truth.get("binding_status")) in {"bound_verified", "bound_verified_runtime_blocked"}
         and bool(backend_truth.get("verified"))
     )
-    ppt_master_production_ready = _production_backend_ready_from_status(backend_truth)
+    ppt_master_production_ready = native_engine_active
     ppt_master_runtime_blocked = str(backend_truth.get("binding_status")) == "bound_verified_runtime_blocked"
     for target in resolved_targets:
         reports: list[dict[str, Any]] = []
@@ -2410,24 +2465,24 @@ def inspect_suite_status(
     lib_degraded = lib_status_value == "degraded_ready"
 
     production_backend_ready = ppt_master_production_ready
-    render_ready = bool(production_backend_ready and render_runtime_ready and not ppt_master_runtime_blocked)
-    required_external_dependencies_ready = _required_external_dependencies_ready(external_dependency_status)
+    native_checks = native_probe.get("checks") or {}
+    render_ready = native_engine_active and (native_checks.get("render_smoke") or {}).get("status") == "verified"
+    fonts_ready = (native_checks.get("fonts") or {}).get("status") == "verified"
+    native_workflow_ready = native_engine_active and render_ready and fonts_ready
+    required_external_dependencies_ready = native_workflow_ready
+    # The suite reports the new default route. An optional legacy binding
+    # cannot rescue a failed native compile/render/font probe.
     client_delivery_evidence = _client_delivery_evidence(
         external_dependency_status,
-        render_runtime_trusted_for_rc=render_runtime_trusted_for_rc,
+        render_runtime_trusted_for_rc=render_ready,
     )
     client_delivery_ready = bool(
-        full_suite_ready
-        and production_backend_ready
-        and render_ready
-        and required_external_dependencies_ready
-        and render_runtime_trusted_for_rc
+        full_suite_ready and native_engine_active and render_ready and fonts_ready
         and client_delivery_evidence.get("rc_gate_passed")
-        and client_delivery_evidence.get("external_dependency_closure_passed")
         and client_delivery_evidence.get("dependency_snapshot_matches")
     )
     task_readiness = {
-        "full_deck_workflow": "ready" if full_suite_ready else ("blocked" if not deck_ready else "degraded_ready"),
+        "full_deck_workflow": "ready" if full_suite_ready and native_workflow_ready else ("blocked" if not deck_ready or not native_workflow_ready else "degraded_ready"),
         "setup": "ready" if ready("deck-setup") else "blocked",
         "upgrade": "ready" if ready("deck-upgrade") else "blocked",
         "diagnostics": "ready" if ready("deck-doctor") else "blocked",
@@ -2446,24 +2501,29 @@ def inspect_suite_status(
         # SC-1 A4: the standard build path needs the ppt-master backend only;
         # a missing ImageGen host capability must not block it.
         "standard_build": "ready" if (ready("deck-builder") and production_backend_ready) else "blocked",
+        "ppt_master_backend": (
+            "legacy_only" if native_engine_active else ("ready" if _production_backend_ready_from_status(backend_truth) else "blocked")
+        ),
         "imagegen_host": "ready" if ready("deck-builder-high-density") else "optional",
         "deck_producer": "ready" if ready("deck-producer") else "blocked",
         "new_generation": "ready" if ready("deck-producer", "ppt-deck-pro-max") else "blocked",
         "deck_builder_adapter": "ready" if ready("deck-builder") else "blocked",
         "ppt_master_adapter": "ready" if ready("ppt-master") else "blocked",
-        "ppt_master_backend": "ready" if production_backend_ready else "blocked",
         "deck_builder": "ready" if ready("deck-builder") else "blocked",
         "deck_builder_high_density": "ready" if high_density_capability.get("ready") else "blocked",
         "render": "ready" if render_ready else "blocked",
+        "native_compile": "ready" if native_engine_active else "blocked",
+        "native_render": "ready" if render_ready else "blocked",
+        "native_fonts": "ready" if fonts_ready else "blocked",
         "deck_quality": "ready" if ready("deck-quality") else "blocked",
         "standalone_audit": "ready" if ready("deck-quality", "ppt-quality-gate") else "blocked",
         "learning": "ready" if by_name.get("deck-learn") == "ready" else "optional",
         "workflow_autopilot": "ready" if ready("deck-autopilot") else "blocked",
-        "delivery": "ready" if full_suite_ready else "blocked",
+        "delivery": "ready" if full_suite_ready and native_workflow_ready else "blocked",
         "client_delivery": "ready" if client_delivery_ready else "blocked",
     }
 
-    status = "ready" if full_suite_ready else "degraded_ready"
+    status = "ready" if full_suite_ready and native_workflow_ready else "degraded_ready"
     if not deck_ready or lib_blocked:
         status = "blocked"
 
@@ -2475,6 +2535,21 @@ def inspect_suite_status(
     elif not full_suite_ready:
         next_command = "deck-master suite-repair --target codex --target claude-code"
         next_agent_action = "Repair missing required Deck Master product capabilities before production work."
+    elif not native_workflow_ready:
+        # Required native runtime failures take precedence over optional Library.
+        repairs = []
+        for check_name, guidance in (
+            ("compile_smoke", "Repair the installed native compiler runtime/dependencies in the active release"),
+            ("render_smoke", "Install or repair soffice and pdftoppm, and expose their executables on the launcher's PATH"),
+            ("fonts", "Install a readable Noto Sans SC font; correct DECK_MASTER_NATIVE_FONTS_DIR if set, otherwise the fontconfig font mapping"),
+            ("rsvg_convert", "Install or repair rsvg-convert and expose its executable on the launcher's PATH"),
+        ):
+            check = native_checks.get(check_name) or {}
+            if check.get("status") != "verified":
+                detail = str(check.get("error") or check.get("reason") or check.get("status") or "not observed")
+                repairs.append(f"{guidance} ({detail}).")
+        next_command = "deck-master agent-doctor --mode production --output json"
+        next_agent_action = " ".join(repairs) + " Then run next_command to verify recovery; it diagnoses and does not install dependencies. Content workspace access remains available."
     elif lib_blocked:
         next_command = "deck-master library-status"
         next_agent_action = "Inspect PPT Library readiness and repair its reported blocker; installed skills are ready."
@@ -2506,7 +2581,7 @@ def inspect_suite_status(
         blocking_summary.append({
             "code": "production_backend_uncertified",
             "blocking_type": "backend",
-            "message": f"PPT Master 外部生产后端未认证：{reason}",
+            "message": "内置原生编译探针未通过；检查 native_compile 能力明细。",
             "repair_owner": "backend",
             "next_command": "",
         })
@@ -2514,9 +2589,15 @@ def inspect_suite_status(
         blocking_summary.append({
             "code": "render_runtime_not_wired",
             "blocking_type": "runtime",
-            "message": "后端已认证，但 Deck Master 运行时仍走内部 contract_smoke 路径，render 尚未闭环到外部后端。",
+            "message": "内置编译已就绪，但真实渲染探针未通过；检查 soffice / pdftoppm 及渲染失败证据。",
             "repair_owner": "runtime",
             "next_command": "",
+        })
+    if not fonts_ready:
+        blocking_summary.append({
+            "code": "native_fonts_unverified", "blocking_type": "runtime",
+            "message": "中文字体探针未通过；安装可读取的 Noto Sans SC 字体，或修复 DECK_MASTER_NATIVE_FONTS_DIR 后重试。",
+            "repair_owner": "runtime", "next_command": "",
         })
     if not client_delivery_ready:
         missing = client_delivery_evidence.get("missing") if isinstance(client_delivery_evidence.get("missing"), list) else []
@@ -2550,9 +2631,10 @@ def inspect_suite_status(
         },
         "full_suite_ready": full_suite_ready,
         "production_backend_ready": production_backend_ready,
-        "render_runtime_ready": render_runtime_ready,
-        "runtime_ready_source": str(render_runtime_status["runtime_ready_source"]),
-        "runtime_ready_trusted_for_rc": render_runtime_trusted_for_rc,
+        "render_runtime_ready": render_ready,
+        "runtime_ready_source": "native_runtime_probe",
+        "runtime_ready_trusted_for_rc": render_ready,
+        "native_runtime_probe": native_probe,
         "client_delivery_ready": client_delivery_ready,
         "client_delivery_evidence": client_delivery_evidence,
         "external_dependency_status": external_dependency_status,
@@ -2710,7 +2792,10 @@ def suite_migration_plan(
     actions: list[dict[str, Any]] = []
     for target in resolved_targets:
         target_dir = _resolve_target_dir(target, agent_skill_dir)
-        for spec in _suite_specs(include_optional=False):
+        # SC-1.1: migration covers ALL suite skills — legacy directories of
+        # now-optional compatibility skills still exist and must be handled
+        # explicitly (spec 07 section 7.1), never silently ignored.
+        for spec in _suite_specs(include_optional=True):
             skill = str(spec["name"])
             link = _link_path(target_dir, skill)
             target_link = release_root / "skills" / skill

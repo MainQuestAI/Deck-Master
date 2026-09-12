@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:deck-master:deck_native_task_budget_authorization.v1",
+  "title": "Local authorization for exact native task budget ceilings",
+  "type": "object",
+  "additionalProperties": false,
+  "$defs": {
+    "identifier": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,159}$"},
+    "limit": {"type": "integer", "minimum": 1, "maximum": 20},
+    "task": {"type": "string", "pattern": "^native_(imagegen|reconstruct|svg)_[A-Za-z0-9][A-Za-z0-9_.-]*$"}
+  },
+  "properties": {
+    "schema_version": {"const": "deck_native_task_budget_authorization.v1"},
+    "run_id": {"$ref": "#/$defs/identifier"},
+    "authorization_id": {"$ref": "#/$defs/identifier"},
+    "action_id": {"$ref": "#/$defs/identifier"},
+    "source_revision": {"type": "string", "pattern": "^([A-Za-z0-9][A-Za-z0-9_.-]{0,159})?$"},
+    "requested_limits": {
+      "type": "object", "minProperties": 1,
+      "propertyNames": {"$ref": "#/$defs/task"},
+      "additionalProperties": {"$ref": "#/$defs/limit"}
+    },
+    "actor": {
+      "type": "object", "additionalProperties": false,
+      "properties": {"id": {"type": "string", "minLength": 1}, "role": {"const": "user"}},
+      "required": ["id", "role"]
+    },
+    "actor_authenticated": {"const": false},
+    "reason": {"type": "string", "minLength": 1},
+    "default_max_actions": {"$ref": "#/$defs/limit"},
+    "created_at": {"type": "string", "format": "date-time"},
+    "changes": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "properties": {
+          "task_id": {"$ref": "#/$defs/task"}, "page_id": {"$ref": "#/$defs/identifier"},
+          "kind": {"enum": ["imagegen", "reconstruct", "svg"]},
+          "previous_max_actions": {"$ref": "#/$defs/limit"}, "max_actions": {"$ref": "#/$defs/limit"},
+          "used_at_authorization": {"type": "integer", "minimum": 0}
+        },
+        "required": ["task_id", "page_id", "kind", "previous_max_actions", "max_actions", "used_at_authorization"]
+      }
+    }
+  },
+  "required": ["schema_version", "run_id", "authorization_id", "action_id", "source_revision", "requested_limits", "actor", "actor_authenticated", "reason", "default_max_actions", "created_at", "changes"]
+}

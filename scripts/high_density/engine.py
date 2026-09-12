@@ -1436,7 +1436,9 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
 
     try:
         scenes = [scenes_by_page[str(context["page_id"])] for context in page_contexts]
-        pptx, trace = compile_pptx(root, scenes, locks, asset_paths_by_page=asset_paths_by_page)
+        pptx, trace = compile_pptx(
+            root, scenes, locks, asset_paths_by_page=asset_paths_by_page, validate_approved=validate_approved_svg
+        )
         _write_page_trace_files(root, scenes)
         readback = readback_pptx(root, scenes, locks, pptx)
     except PptxEditabilityError as exc:

@@ -302,6 +302,7 @@ class BuildRuntimeTests(unittest.TestCase):
         self._write_preview(1)
         request = read_json(self.run_dir / "request.json")
         request["run_mode"] = "production"
+        request["profile"] = "legacy-ppt-master"  # SC-1.1: external-backend gate now only applies to legacy runs
         write_json(self.run_dir / "request.json", request)
 
         with mock.patch(
@@ -380,6 +381,7 @@ class BuildRuntimeTests(unittest.TestCase):
         self._write_preview(1)
         request = read_json(self.run_dir / "request.json")
         request["run_mode"] = "production"
+        request["profile"] = "legacy-ppt-master"  # SC-1.1: external-backend gate now only applies to legacy runs
         write_json(self.run_dir / "request.json", request)
 
         with mock.patch(
@@ -396,6 +398,7 @@ class BuildRuntimeTests(unittest.TestCase):
         self._write_page_packages(2)
         request = read_json(self.run_dir / "request.json")
         request["run_mode"] = "production"
+        request["profile"] = "legacy-ppt-master"  # SC-1.1: legacy route keeps the external handoff identity
         write_json(self.run_dir / "request.json", request)
 
         with mock.patch(
@@ -431,6 +434,7 @@ class BuildRuntimeTests(unittest.TestCase):
         self._write_preview(1)
         request = read_json(self.run_dir / "request.json")
         request["run_mode"] = "production"
+        request["profile"] = "legacy-ppt-master"  # SC-1.1: external-backend gate now only applies to legacy runs
         write_json(self.run_dir / "request.json", request)
 
         with mock.patch(

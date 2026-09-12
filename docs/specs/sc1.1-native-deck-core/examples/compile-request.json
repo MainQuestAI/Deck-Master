@@ -1,0 +1,45 @@
+{
+  "schema_version": "deck_native_compile_request.v1",
+  "run_id": "synthetic-run",
+  "build_revision": "r_example",
+  "engine_id": "deck_native",
+  "engine_version": "example-not-a-release",
+  "subset_version": "example-svg-subset",
+  "input_fingerprint": "0a2903855b4ed7b7978ef615d160bd51eb0f94721039d3040d67779ac8433c89",
+  "canvas": {
+    "viewbox_width": 1600,
+    "viewbox_height": 900,
+    "slide_width_pt": 960,
+    "slide_height_pt": 540,
+    "mapping": "contain"
+  },
+  "font_families": [
+    "Example Font (must be verified locally)"
+  ],
+  "pages": [
+    {
+      "page_id": "P001",
+      "order": 1,
+      "svg_ref": {
+        "path": "build/revisions/r_example/svg/P001.svg",
+        "sha256": "7a24f3aaa560f688603dab667a378a997af592fa8b6f6484f3cb65b31acfefc9"
+      },
+      "scene_ref": {
+        "path": "build/revisions/r_example/scenes/P001.json",
+        "sha256": "3827f6028f946e20f180d5d93fb0fc10f16d1b23213fa7c5db740a30a8f49a05"
+      },
+      "content_lock_ref": {
+        "path": "build/revisions/r_example/content_locks/P001.json",
+        "sha256": "c27fa436d9ff8e49e7269bfc294bfc2a9ac73788585df4eabf32c494c6ecac08"
+      },
+      "asset_manifest_ref": {
+        "path": "build/revisions/r_example/assets/index.json",
+        "sha256": "70e10a7fe434d0718e7bf6f2f5d812f188b4f13247057a96b0bc255b6ff08d30"
+      },
+      "approval_ref": {
+        "path": "workflow/approvals/example_content.json",
+        "sha256": "630276e79066eae6a8f4e1afc3c827c84c4633beecb1387e71b15911b04752ce"
+      }
+    }
+  ]
+}

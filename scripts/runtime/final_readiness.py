@@ -236,6 +236,46 @@ def compute_final_readiness(
     run_mode: str | None = None,
     dev_allow_unsetup: bool = False,
 ) -> dict[str, Any]:
+    from workflow.actions import (
+        _acquire_run_lock, _release_run_lock, read_current_revision, revision_read,
+    )
+
+    root = Path(run_dir).expanduser().resolve()
+    with revision_read(root) as revision:
+        payload = _compute_final_readiness(
+            root, artifact_path=artifact_path, expected_page_count=expected_page_count,
+            run_mode=run_mode, dev_allow_unsetup=dev_allow_unsetup,
+        )
+    # Checks may take time; commits remain possible until this short final
+    # section. Never publish a ready result for inputs superseded mid-check.
+    lock = _acquire_run_lock(root)
+    try:
+        if read_current_revision(root).get("revision_id", "") != revision:
+            _add_blocker(
+                payload["blockers"], "final_revision_changed",
+                "Run revision changed during final readiness checks; check the current revision again.",
+            )
+            payload["ready"] = False
+            payload["status"] = "blocked"
+        if write:
+            output_path = root / FINAL_READINESS_PATH
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            tmp_path = output_path.with_suffix(".json.tmp")
+            tmp_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+            tmp_path.replace(output_path)
+    finally:
+        _release_run_lock(lock)
+    return payload
+
+
+def _compute_final_readiness(
+    run_dir: str | Path,
+    *,
+    artifact_path: str | Path | None = None,
+    expected_page_count: int | None = None,
+    run_mode: str | None = None,
+    dev_allow_unsetup: bool = False,
+) -> dict[str, Any]:
     root = Path(run_dir).expanduser().resolve()
     run_state = resolve_run_state(root, run_mode=run_mode, dev_allow_unsetup=dev_allow_unsetup)
     run_id = str(run_state.get("run_id") or root.name)
@@ -247,6 +287,12 @@ def compute_final_readiness(
     render_pages = _render_page_count(render_result) or (_high_density_page_count(root) if high_density_completed else 0)
     blockers: list[dict[str, str]] = []
     warnings: list[str] = []
+    from build.build_route import load_persisted_route
+    if load_persisted_route(root).get("engine_id") == "deck_native":
+        from runtime.build import build_status
+        native_build = build_status(root)
+        if native_build["status"] != "completed":
+            _add_blocker(blockers, "final_native_build_not_current", "Native build, render and artifact evidence must match the current revision and inputs.")
     quality_gates = _quality_gate_summary(root, artifact)
     gate_policy = resolve_required_gates(
         root,
@@ -432,13 +478,6 @@ def compute_final_readiness(
         "blockers": blockers,
         "warnings": warnings,
     }
-
-    if write:
-        output_path = root / FINAL_READINESS_PATH
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        tmp_path = output_path.with_suffix(".json.tmp")
-        tmp_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-        tmp_path.replace(output_path)
 
     return payload
 

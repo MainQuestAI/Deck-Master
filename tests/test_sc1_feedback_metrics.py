@@ -80,7 +80,7 @@ class AcceptanceRateTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             ws, fb_path = _workspace(Path(tmp))
             with fb_path.open("a", encoding="utf-8") as fh:
-                # the same reviewed revision exported 5 times = ONE accepted unit
+                # Export is delivery evidence, never a review decision.
                 for _ in range(5):
                     fh.write(json.dumps(_event("exported_client", "slide_y", "run-e", "rev-e")) + "\n")
                 fh.write(json.dumps(_event("preview_rejected", "slide_y", "run-r", "rev-r")) + "\n")
@@ -88,9 +88,9 @@ class AcceptanceRateTests(unittest.TestCase):
                     fh.write(json.dumps(_event("preview_approved", "slide_x", f"run-a{index}", f"rev-a{index}")) + "\n")
             pack = build_learning_pack(ws)
             by_id = {a["canonical_slide_id"]: a for a in pack["strong_assets"]}
-            # 5 exports of the same unit dedupe to one acceptance; not 5/6
-            self.assertAlmostEqual(0.5, by_id["slide_y"]["acceptance_rate"])
-            self.assertEqual(1, by_id["slide_y"]["accepted_count"], "repeated exports of one unit must not lift the rate")
+            # Only the explicit rejection belongs in the outcome denominator.
+            self.assertAlmostEqual(0.0, by_id["slide_y"]["acceptance_rate"])
+            self.assertEqual(0, by_id["slide_y"]["accepted_count"], "exports must not invent an acceptance")
             self.assertEqual(5, by_id["slide_y"]["delivered_count"], "delivery counting stays independent of outcome")
             # ranking is outcome-first despite slide_y's higher delivery count
             self.assertEqual("slide_x", pack["strong_assets"][0]["canonical_slide_id"])
@@ -126,6 +126,10 @@ class AcceptanceRateTests(unittest.TestCase):
                             notes="ROI 数字没有来源，客户要求改为区间表述",
                             evidence_source_category="meeting_transcript",
                             applicable_scope="制造业续费方案",
+                            not_applicable_scope="已具备可追溯测量的收益结论",
+                            adopted_structure="区分测量结果与方案假设",
+                            reusable_reason="无测量收益应改为区间表述并注明假设",
+                            approval_scope="workspace_feedback",
                         )
                     )
                     + "\n"

@@ -1,0 +1,1054 @@
+{
+  "schema_version": "deck_page_scene.v2",
+  "run_id": "native-imagegen-2",
+  "page_id": "P004",
+  "page_role": "architecture",
+  "canvas": {
+    "width": 1672,
+    "height": 941,
+    "unit": "px"
+  },
+  "blueprint": {
+    "path": "high_density_build/blueprints/P004.png"
+  },
+  "blueprint_sha256": "29ee2fc3697c0ceb9096020aaea398007734c0bd9ad848e2e15cdd759c8c93f5",
+  "content_lock_sha256": "d76e05dc7c8cc3111ede3bd1b231b9eb9fe59593c37567f729eb6a6f50691465",
+  "required_component_ids": [
+    "P004.content"
+  ],
+  "required_text_refs": [
+    {
+      "ref": "content_lock.customer_visible.title",
+      "priority": "P0",
+      "required": true,
+      "value": "库存服务负责可售量，订单服务负责履约编排"
+    },
+    {
+      "ref": "content_lock.customer_visible.subtitle",
+      "priority": "P1",
+      "required": true,
+      "value": "通用目标架构；现有产品、接口和同步周期待确认"
+    },
+    {
+      "ref": "content_lock.customer_visible.body_blocks.0.text",
+      "priority": "P1",
+      "required": true,
+      "value": "现有ERP与WMS：提供库存事实"
+    },
+    {
+      "ref": "content_lock.customer_visible.body_blocks.1.text",
+      "priority": "P1",
+      "required": true,
+      "value": "库存服务：可售量计算与预占"
+    },
+    {
+      "ref": "content_lock.customer_visible.body_blocks.2.text",
+      "priority": "P1",
+      "required": true,
+      "value": "订单服务：承诺校验与履约编排"
+    },
+    {
+      "ref": "content_lock.customer_visible.body_blocks.3.text",
+      "priority": "P1",
+      "required": true,
+      "value": "门店与配送：执行回传与异常处理"
+    },
+    {
+      "ref": "content_lock.customer_visible.footnotes.0",
+      "priority": "P1",
+      "required": true,
+      "value": "合成业务场景｜建议方案，客户事实待确认"
+    }
+  ],
+  "component_signature": [
+    {
+      "component_id": "P004.content",
+      "present": true
+    }
+  ],
+  "visual_registry": [
+    {
+      "visual_id": "P004.inventory_facts",
+      "semantic_name": "inventory_facts",
+      "visual_type": "icon",
+      "priority": "P1",
+      "blueprint_bbox": {
+        "x": 126,
+        "y": 382,
+        "w": 202,
+        "h": 182
+      },
+      "svg_group_id": "P004.inventory_facts",
+      "child_element_ids": [
+        "P004.database_top",
+        "P004.database",
+        "P004.small_top",
+        "P004.small_db"
+      ],
+      "style_type": "outline",
+      "acceptance_requirements": [
+        "semantic identity",
+        "editable vector geometry",
+        "line width",
+        "direction"
+      ]
+    },
+    {
+      "visual_id": "P004.availability_reservation",
+      "semantic_name": "availability_reservation",
+      "visual_type": "icon",
+      "priority": "P1",
+      "blueprint_bbox": {
+        "x": 558,
+        "y": 374,
+        "w": 150,
+        "h": 197
+      },
+      "svg_group_id": "P004.availability_reservation",
+      "child_element_ids": [
+        "P004.clipboard",
+        "P004.clip",
+        "P004.clipdot",
+        "P004.check0",
+        "P004.line0",
+        "P004.check1",
+        "P004.line1",
+        "P004.check2",
+        "P004.line2"
+      ],
+      "style_type": "outline",
+      "acceptance_requirements": [
+        "semantic identity",
+        "editable vector geometry",
+        "line width",
+        "direction"
+      ]
+    },
+    {
+      "visual_id": "P004.order_orchestration",
+      "semantic_name": "order_orchestration",
+      "visual_type": "icon",
+      "priority": "P1",
+      "blueprint_bbox": {
+        "x": 949,
+        "y": 386,
+        "w": 182,
+        "h": 182
+      },
+      "svg_group_id": "P004.order_orchestration",
+      "child_element_ids": [
+        "P004.gear",
+        "P004.gear_center"
+      ],
+      "style_type": "outline",
+      "acceptance_requirements": [
+        "semantic identity",
+        "editable vector geometry",
+        "line width",
+        "direction"
+      ]
+    },
+    {
+      "visual_id": "P004.store_delivery",
+      "semantic_name": "store_delivery",
+      "visual_type": "icon",
+      "priority": "P1",
+      "blueprint_bbox": {
+        "x": 1313,
+        "y": 383,
+        "w": 285,
+        "h": 202
+      },
+      "svg_group_id": "P004.store_delivery",
+      "child_element_ids": [
+        "P004.store",
+        "P004.store_door",
+        "P004.truck",
+        "P004.wheel_left",
+        "P004.wheel_right"
+      ],
+      "style_type": "outline",
+      "acceptance_requirements": [
+        "semantic identity",
+        "editable vector geometry",
+        "line width",
+        "direction"
+      ]
+    }
+  ],
+  "elements": [
+    {
+      "element_id": "P004.background",
+      "kind": "rect",
+      "role": "background",
+      "priority": "P1",
+      "component_id": "P004.content",
+      "bbox": {
+        "x": 0,
+        "y": 0,
+        "w": 1672,
+        "h": 941
+      },
+      "z_index": 0,
+      "style": {
+        "fill": "#ffffff",
+        "stroke": "none",
+        "stroke_width": 0,
+        "radius": 0
+      },
+      "asset_policy": "none",
+      "editability_target": "native_shape"
+    },
+    {
+      "element_id": "P004.title",
+      "kind": "text",
+      "role": "title",
+      "priority": "P1",
+      "component_id": "P004.content",
+      "bbox": {
+        "x": 62,
+        "y": 80,
+        "w": 1550,
+        "h": 104
+      },
+      "z_index": 1,
+      "style": {
+        "fill": "#06163e",
+        "font_family": "Noto Sans SC",
+        "font_size": 63,
+        "font_weight": "700"
+      },
+      "asset_policy": "none",
+      "editability_target": "native_text",
+      "text": "库存服务负责可售量，订单服务负责履约编排",
+      "text_ref": "content_lock.customer_visible.title",
+      "text_fit": {
+        "preferred_size_px": 63,
+        "min_size_px": 63,
+        "max_lines": 10,
+        "line_height": 1.35
+      }
+    },
+    {
+      "element_id": "P004.subtitle",
+      "kind": "text",
+      "role": "subtitle",
+      "priority": "P1",
+      "component_id": "P004.content",
+      "bbox": {
+        "x": 62,
+        "y": 194,
+        "w": 1545,
+        "h": 76
+      },
+      "z_index": 2,
+      "style": {
+        "fill": "#06163e",
+        "font_family": "Noto Sans SC",
+        "font_size": 41,
+        "font_weight": "700"
+      },
+      "asset_policy": "none",
+      "editability_target": "native_text",
+      "text": "通用目标架构；现有产品、接口和同步周期待确认",
+      "text_ref": "content_lock.customer_visible.subtitle",
+      "text_fit": {
+        "preferred_size_px": 41,
+        "min_size_px": 41,
+        "max_lines": 10,
+        "line_height": 1.35
+      }
+    },
+    {
+      "element_id": "P004.panel0",
+      "kind": "rect",
+      "role": "panel0",
+      "priority": "P1",
+      "component_id": "P004.content",
+      "bbox": {
+        "x": 50,
+        "y": 322,
+        "w": 352,
+        "h": 438
+      },
+      "z_index": 3,
+      "style": {
+        "fill": "#ffffff",
+        "stroke": "#041e42",
+        "stroke_width": 3,
+        "radius": 4
+      },
+      "asset_policy": "none",
+      "editability_target": "native_shape"
+    },
+    {
+      "element_id": "P004.panel1",
+      "kind": "rect",
+      "role": "panel1",
+      "priority": "P1",
+      "component_id": "P004.content",
+      "bbox": {
+        "x": 458,
+        "y": 322,
+        "w": 352,
+        "h": 438
+      },
+      "z_index": 4,
+      "style": {
+        "fill": "#ffffff",
+        "stroke": "#041e42",
+        "stroke_width": 3,
+        "radius": 4
+      },
+      "asset_policy": "none",
+      "editability_target": "native_shape"
+    },
+    {
+      "element_id": "P004.panel2",
+      "kind": "rect",
+      "role": "panel2",
+      "priority": "P1",
+      "component_id": "P004.content",
+      "bbox": {
+        "x": 863,
+        "y": 322,
+        "w": 352,
+        "h": 438
+      },
+      "z_index": 5,
+      "style": {
+        "fill": "#ffffff",
+        "stroke": "#041e42",
+        "stroke_width": 3,
+        "radius": 4
+      },
+      "asset_policy": "none",
+      "editability_target": "native_shape"
+    },
+    {
+      "element_id": "P004.panel3",
+      "kind": "rect",
+      "role": "panel3",
+      "priority": "P1",
+      "component_id": "P004.content",
+      "bbox": {
+        "x": 1272,
+        "y": 322,
+        "w": 352,
+        "h": 438
+      },
+      "z_index": 6,
+      "style": {
+        "fill": "#ffffff",
+        "stroke": "#041e42",
+        "stroke_width": 3,
+        "radius": 4
+      },
+      "asset_policy": "none",
+      "editability_target": "native_shape"
+    },
+    {
+      "element_id": "P004.database_top",
+      "kind": "ellipse",
+      "role": "database_top",
+      "priority": "P1",
+      "component_id": "P004.content",
+      "bbox": {
+        "x": 126,
+        "y": 382,
+        "w": 146,
+        "h": 53
+      },
+      "z_index": 7,
+      "style": {
+        "fill": "none",
+        "stroke": "#041e42",
+        "stroke_width": 7
+      },
+      "asset_policy": "none",
+      "editability_target": "native_shape",
+      "visual_id": "P004.inventory_facts"
+    },
+    {
+      "element_id": "P004.database",
+      "kind": "path",
+      "role": "database",
+      "priority": "P1",
+      "component_id": "P004.content",
+      "bbox": {
+        "x": 126,
+        "y": 409,
+        "w": 146,
+        "h": 146
+      },
+      "z_index": 8,
+      "style": {
+        "fill": "none",
+        "stroke": "#041e42",
+        "stroke_width": 7,
+        "linecap": "round",
+        "linejoin": "round"
+      },
+      "asset_policy": "none",
+      "editability_target": "native_shape",
+      "path": "M126 409 L126 528 C126 546 161 557 213 555 M272 409 L272 451 M126 459 C145 478 179 480 213 476 M126 501 C145 519 182 521 213 518",
+      "visual_id": "P004.inventory_facts"
+    },
+    {
+      "element_id": "P004.small_top",
+      "kind": "ellipse",
+      "role": "small_top",
+      "priority": "P1",
+      "component_id": "P004.content",
+      "bbox": {
+        "x": 226,
+        "y": 466,
+        "w": 102,
+        "h": 36
+      },
+      "z_index": 9,
+      "style": {
+        "fill": "#ffffff",
+        "stroke": "#041e42",
+        "stroke_width": 7
+      },
+      "asset_policy": "none",
+      "editability_target": "native_shape",
+      "visual_id": "P004.inventory_facts"
+    },
+    {
+      "element_id": "P004.small_db",
+      "kind": "path",
+      "role": "small_db",
+      "priority": "P1",
+      "component_id": "P004.content",
+      "bbox": {
+        "x": 226,
+        "y": 484,
+        "w": 102,
+        "h": 80
+      },
+      "z_index": 10,
+      "style": {
+        "fill": "none",
+        "stroke": "#041e42",
+        "stroke_width": 7,
+        "linecap": "round",
+        "linejoin": "round"
+      },
+      "asset_policy": "none",
+      "editability_target": "native_shape",
+      "path": "M226 484 L226 545 C226 568 328 568 328 545 L328 484 M226 518 C242 534 310 534 328 518",
+      "visual_id": "P004.inventory_facts"
+    },
+    {
+      "element_id": "P004.clipboard",
+      "kind": "rect",
+      "role": "clipboard",
+      "priority": "P1",
+      "component_id": "P004.content",
+      "bbox": {
+        "x": 558,
+        "y": 400,
+        "w": 150,
+        "h": 171
+      },
+      "z_index": 11,
+      "style": {
+        "fill": "none",
+        "stroke": "#041e42",
+        "stroke_width": 7,
+        "radius": 10
+      },
+      "asset_policy": "none",
+      "editability_target": "native_shape",
+      "visual_id": "P004.availability_reservation"
+    },
+    {
+      "element_id": "P004.clip",
+      "kind": "path",
+      "role": "clip",
+      "priority": "P1",
+      "component_id": "P004.content",
+      "bbox": {
+        "x": 593,
+        "y": 374,
+        "w": 79,
+        "h": 42
+      },
+      "z_index": 12,
+      "style": {
+        "fill": "#ffffff",
+        "stroke": "#041e42",
+        "stroke_width": 7,
+        "linecap": "round",
+        "linejoin": "round"
+      },
+      "asset_policy": "none",
+      "editability_target": "native_shape",
+      "path": "M593 416 L593 392 L611 392 C611 367 647 367 649 392 L672 392 L672 416 Z",
+      "visual_id": "P004.availability_reservation"
+    },
+    {
+      "element_id": "P004.clipdot",
+      "kind": "ellipse",
+      "role": "clipdot",
+      "priority": "P1",
+      "component_id": "P004.content",
+      "bbox": {
+        "x": 629,
+        "y": 388,
+        "w": 6,
+        "h": 6
+      },
+      "z_index": 13,
+      "style": {
+        "fill": "#041e42",
+        "stroke": "none",
+        "stroke_width": 0
+      },
+      "asset_policy": "none",
+      "editability_target": "native_shape",
+      "visual_id": "P004.availability_reservation"
+    },
+    {
+      "element_id": "P004.check0",
+      "kind": "path",
+      "role": "check0",
+      "priority": "P1",
+      "component_id": "P004.content",
+      "bbox": {
+        "x": 582,
+        "y": 443,
+        "w": 24,
+        "h": 18
+      },
+      "z_index": 14,
+      "style": {
+        "fill": "none",
+        "stroke": "#041e42",
+        "stroke_width": 8,
+        "linecap": "round",
+        "linejoin": "round"
+      },
+      "asset_policy": "none",
+      "editability_target": "native_shape",
+      "path": "M582 452 L591 461 L606 443",
+      "visual_id": "P004.availability_reservation"
+    },
+    {
+      "element_id": "P004.line0",
+      "kind": "path",
+      "role": "line0",
+      "priority": "P1",
+      "component_id": "P004.content",
+      "bbox": {
+        "x": 627,
+        "y": 452,
+        "w": 53,
+        "h": 1
+      },
+      "z_index": 15,
+      "style": {
+        "fill": "none",
+        "stroke": "#041e42",
+        "stroke_width": 8,
+        "linecap": "round",
+        "linejoin": "round"
+      },
+      "asset_policy": "none",
+      "editability_target": "native_shape",
+      "path": "M627 452 L680 452",
+      "visual_id": "P004.availability_reservation"
+    },
+    {
+      "element_id": "P004.check1",
+      "kind": "path",
+      "role": "check1",
+      "priority": "P1",
+      "component_id": "P004.content",
+      "bbox": {
+        "x": 582,
+        "y": 482,
+        "w": 24,
+        "h": 18
+      },
+      "z_index": 16,
+      "style": {
+        "fill": "none",
+        "stroke": "#041e42",
+        "stroke_width": 8,
+        "linecap": "round",
+        "linejoin": "round"
+      },
+      "asset_policy": "none",
+      "editability_target": "native_shape",
+      "path": "M582 491 L591 500 L606 482",
+      "visual_id": "P004.availability_reservation"
+    },
+    {
+      "element_id": "P004.line1",
+      "kind": "path",
+      "role": "line1",
+      "priority": "P1",
+      "component_id": "P004.content",
+      "bbox": {
+        "x": 627,
+        "y": 491,
+        "w": 53,
+        "h": 1
+      },
+      "z_index": 17,
+      "style": {
+        "fill": "none",
+        "stroke": "#041e42",
+        "stroke_width": 8,
+        "linecap": "round",
+        "linejoin": "round"
+      },
+      "asset_policy": "none",
+      "editability_target": "native_shape",
+      "path": "M627 491 L680 491",
+      "visual_id": "P004.availability_reservation"
+    },
+    {
+      "element_id": "P004.check2",
+      "kind": "path",
+      "role": "check2",
+      "priority": "P1",
+      "component_id": "P004.content",
+      "bbox": {
+        "x": 582,
+        "y": 523,
+        "w": 24,
+        "h": 18
+      },
+      "z_index": 18,
+      "style": {
+        "fill": "none",
+        "stroke": "#041e42",
+        "stroke_width": 8,
+        "linecap": "round",
+        "linejoin": "round"
+      },
+      "asset_policy": "none",
+      "editability_target": "native_shape",
+      "path": "M582 532 L591 541 L606 523",
+      "visual_id": "P004.availability_reservation"
+    },
+    {
+      "element_id": "P004.line2",
+      "kind": "path",
+      "role": "line2",
+      "priority": "P1",
+      "component_id": "P004.content",
+      "bbox": {
+        "x": 627,
+        "y": 532,
+        "w": 53,
+        "h": 1
+      },
+      "z_index": 19,
+      "style": {
+        "fill": "none",
+        "stroke": "#041e42",
+        "stroke_width": 8,
+        "linecap": "round",
+        "linejoin": "round"
+      },
+      "asset_policy": "none",
+      "editability_target": "native_shape",
+      "path": "M627 532 L680 532",
+      "visual_id": "P004.availability_reservation"
+    },
+    {
+      "element_id": "P004.gear",
+      "kind": "path",
+      "role": "gear",
+      "priority": "P1",
+      "component_id": "P004.content",
+      "bbox": {
+        "x": 949,
+        "y": 386,
+        "w": 182,
+        "h": 182
+      },
+      "z_index": 20,
+      "style": {
+        "fill": "none",
+        "stroke": "#041e42",
+        "stroke_width": 7,
+        "linecap": "round",
+        "linejoin": "round"
+      },
+      "asset_policy": "none",
+      "editability_target": "native_shape",
+      "path": "M1040.00 386.00 L1051.88 386.78 L1063.55 389.10 L1066.41 413.25 L1074.50 417.24 L1082.00 422.26 L1104.35 412.65 L1112.20 421.60 L1118.81 431.50 L1103.75 450.59 L1106.65 459.14 L1108.41 467.99 L1131.00 477.00 L1130.22 488.88 L1127.90 500.55 L1103.75 503.41 L1099.76 511.50 L1094.74 519.00 L1104.35 541.35 L1095.40 549.20 L1085.50 555.81 L1066.41 540.75 L1057.86 543.65 L1049.01 545.41 L1040.00 568.00 L1028.12 567.22 L1016.45 564.90 L1013.59 540.75 L1005.50 536.76 L998.00 531.74 L975.65 541.35 L967.80 532.40 L961.19 522.50 L976.25 503.41 L973.35 494.86 L971.59 486.01 L949.00 477.00 L949.78 465.12 L952.10 453.45 L976.25 450.59 L980.24 442.50 L985.26 435.00 L975.65 412.65 L984.60 404.80 L994.50 398.19 L1013.59 413.25 L1022.14 410.35 L1030.99 408.59 Z",
+      "visual_id": "P004.order_orchestration"
+    },
+    {
+      "element_id": "P004.gear_center",
+      "kind": "ellipse",
+      "role": "gear_center",
+      "priority": "P1",
+      "component_id": "P004.content",
+      "bbox": {
+        "x": 1003,
+        "y": 440,
+        "w": 75,
+        "h": 75
+      },
+      "z_index": 21,
+      "style": {
+        "fill": "none",
+        "stroke": "#041e42",
+        "stroke_width": 7
+      },
+      "asset_policy": "none",
+      "editability_target": "native_shape",
+      "visual_id": "P004.order_orchestration"
+    },
+    {
+      "element_id": "P004.store",
+      "kind": "path",
+      "role": "store",
+      "priority": "P1",
+      "component_id": "P004.content",
+      "bbox": {
+        "x": 1313,
+        "y": 383,
+        "w": 166,
+        "h": 141
+      },
+      "z_index": 22,
+      "style": {
+        "fill": "none",
+        "stroke": "#041e42",
+        "stroke_width": 7,
+        "linecap": "round",
+        "linejoin": "round"
+      },
+      "asset_policy": "none",
+      "editability_target": "native_shape",
+      "path": "M1313 422 L1332 383 L1461 383 L1479 423 C1479 451 1438 451 1437 424 C1437 451 1398 451 1398 424 C1398 451 1356 451 1357 424 C1356 451 1311 451 1313 422 M1363 383 L1357 424 M1395 383 L1398 424 M1428 383 L1437 424 M1325 444 L1325 524 L1395 524 M1468 444 L1468 465",
+      "visual_id": "P004.store_delivery"
+    },
+    {
+      "element_id": "P004.store_door",
+      "kind": "rect",
+      "role": "store_door",
+      "priority": "P1",
+      "component_id": "P004.content",
+      "bbox": {
+        "x": 1356,
+        "y": 467,
+        "w": 38,
+        "h": 57
+      },
+      "z_index": 23,
+      "style": {
+        "fill": "none",
+        "stroke": "#041e42",
+        "stroke_width": 7,
+        "radius": 0
+      },
+      "asset_policy": "none",
+      "editability_target": "native_shape",
+      "visual_id": "P004.store_delivery"
+    },
+    {
+      "element_id": "P004.truck",
+      "kind": "path",
+      "role": "truck",
+      "priority": "P1",
+      "component_id": "P004.content",
+      "bbox": {
+        "x": 1420,
+        "y": 481,
+        "w": 178,
+        "h": 87
+      },
+      "z_index": 24,
+      "style": {
+        "fill": "none",
+        "stroke": "#041e42",
+        "stroke_width": 7,
+        "linecap": "round",
+        "linejoin": "round"
+      },
+      "asset_policy": "none",
+      "editability_target": "native_shape",
+      "path": "M1449 499 L1449 488 C1449 481 1454 481 1462 481 L1541 481 C1549 481 1552 486 1552 493 L1552 568 L1449 568 L1449 548 M1552 502 L1581 502 L1598 532 L1598 568 L1552 568 M1552 532 L1598 532 M1428 513 L1465 513 M1420 532 L1457 532",
+      "visual_id": "P004.store_delivery"
+    },
+    {
+      "element_id": "P004.wheel_left",
+      "kind": "ellipse",
+      "role": "wheel_left",
+      "priority": "P1",
+      "component_id": "P004.content",
+      "bbox": {
+        "x": 1465,
+        "y": 552,
+        "w": 33,
+        "h": 33
+      },
+      "z_index": 25,
+      "style": {
+        "fill": "#ffffff",
+        "stroke": "#041e42",
+        "stroke_width": 7
+      },
+      "asset_policy": "none",
+      "editability_target": "native_shape",
+      "visual_id": "P004.store_delivery"
+    },
+    {
+      "element_id": "P004.wheel_right",
+      "kind": "ellipse",
+      "role": "wheel_right",
+      "priority": "P1",
+      "component_id": "P004.content",
+      "bbox": {
+        "x": 1552,
+        "y": 552,
+        "w": 33,
+        "h": 33
+      },
+      "z_index": 26,
+      "style": {
+        "fill": "#ffffff",
+        "stroke": "#041e42",
+        "stroke_width": 7
+      },
+      "asset_policy": "none",
+      "editability_target": "native_shape",
+      "visual_id": "P004.store_delivery"
+    },
+    {
+      "element_id": "P004.arrow0",
+      "kind": "path",
+      "role": "arrow0",
+      "priority": "P1",
+      "component_id": "P004.content",
+      "bbox": {
+        "x": 391,
+        "y": 468,
+        "w": 70,
+        "h": 59
+      },
+      "z_index": 27,
+      "style": {
+        "fill": "#00a4a8",
+        "stroke": "#00a4a8",
+        "stroke_width": 1,
+        "linecap": "round",
+        "linejoin": "round"
+      },
+      "asset_policy": "none",
+      "editability_target": "native_shape",
+      "path": "M391 483 L430 483 L430 468 L461 497 L430 527 L430 512 L391 512 Z"
+    },
+    {
+      "element_id": "P004.arrow1",
+      "kind": "path",
+      "role": "arrow1",
+      "priority": "P1",
+      "component_id": "P004.content",
+      "bbox": {
+        "x": 797,
+        "y": 468,
+        "w": 70,
+        "h": 59
+      },
+      "z_index": 28,
+      "style": {
+        "fill": "#00a4a8",
+        "stroke": "#00a4a8",
+        "stroke_width": 1,
+        "linecap": "round",
+        "linejoin": "round"
+      },
+      "asset_policy": "none",
+      "editability_target": "native_shape",
+      "path": "M797 483 L836 483 L836 468 L867 497 L836 527 L836 512 L797 512 Z"
+    },
+    {
+      "element_id": "P004.arrow2",
+      "kind": "path",
+      "role": "arrow2",
+      "priority": "P1",
+      "component_id": "P004.content",
+      "bbox": {
+        "x": 1206,
+        "y": 468,
+        "w": 70,
+        "h": 59
+      },
+      "z_index": 29,
+      "style": {
+        "fill": "#00a4a8",
+        "stroke": "#00a4a8",
+        "stroke_width": 1,
+        "linecap": "round",
+        "linejoin": "round"
+      },
+      "asset_policy": "none",
+      "editability_target": "native_shape",
+      "path": "M1206 483 L1245 483 L1245 468 L1276 497 L1245 527 L1245 512 L1206 512 Z"
+    },
+    {
+      "element_id": "P004.body0",
+      "kind": "text",
+      "role": "body0",
+      "priority": "P1",
+      "component_id": "P004.content",
+      "bbox": {
+        "x": 63,
+        "y": 620,
+        "w": 326,
+        "h": 118
+      },
+      "z_index": 30,
+      "style": {
+        "fill": "#06163e",
+        "font_family": "Noto Sans SC",
+        "font_size": 33,
+        "font_weight": "700"
+      },
+      "asset_policy": "none",
+      "editability_target": "native_text",
+      "text": "现有ERP与WMS：提供库存事实",
+      "text_ref": "content_lock.customer_visible.body_blocks.0.text",
+      "text_fit": {
+        "preferred_size_px": 33,
+        "min_size_px": 33,
+        "max_lines": 10,
+        "line_height": 1.35
+      }
+    },
+    {
+      "element_id": "P004.body1",
+      "kind": "text",
+      "role": "body1",
+      "priority": "P1",
+      "component_id": "P004.content",
+      "bbox": {
+        "x": 471,
+        "y": 620,
+        "w": 326,
+        "h": 118
+      },
+      "z_index": 31,
+      "style": {
+        "fill": "#06163e",
+        "font_family": "Noto Sans SC",
+        "font_size": 33,
+        "font_weight": "700"
+      },
+      "asset_policy": "none",
+      "editability_target": "native_text",
+      "text": "库存服务：可售量计算与预占",
+      "text_ref": "content_lock.customer_visible.body_blocks.1.text",
+      "text_fit": {
+        "preferred_size_px": 33,
+        "min_size_px": 33,
+        "max_lines": 10,
+        "line_height": 1.35
+      }
+    },
+    {
+      "element_id": "P004.body2",
+      "kind": "text",
+      "role": "body2",
+      "priority": "P1",
+      "component_id": "P004.content",
+      "bbox": {
+        "x": 876,
+        "y": 620,
+        "w": 326,
+        "h": 118
+      },
+      "z_index": 32,
+      "style": {
+        "fill": "#06163e",
+        "font_family": "Noto Sans SC",
+        "font_size": 33,
+        "font_weight": "700"
+      },
+      "asset_policy": "none",
+      "editability_target": "native_text",
+      "text": "订单服务：承诺校验与履约编排",
+      "text_ref": "content_lock.customer_visible.body_blocks.2.text",
+      "text_fit": {
+        "preferred_size_px": 33,
+        "min_size_px": 33,
+        "max_lines": 10,
+        "line_height": 1.35
+      }
+    },
+    {
+      "element_id": "P004.body3",
+      "kind": "text",
+      "role": "body3",
+      "priority": "P1",
+      "component_id": "P004.content",
+      "bbox": {
+        "x": 1285,
+        "y": 620,
+        "w": 326,
+        "h": 118
+      },
+      "z_index": 33,
+      "style": {
+        "fill": "#06163e",
+        "font_family": "Noto Sans SC",
+        "font_size": 33,
+        "font_weight": "700"
+      },
+      "asset_policy": "none",
+      "editability_target": "native_text",
+      "text": "门店与配送：执行回传与异常处理",
+      "text_ref": "content_lock.customer_visible.body_blocks.3.text",
+      "text_fit": {
+        "preferred_size_px": 33,
+        "min_size_px": 33,
+        "max_lines": 10,
+        "line_height": 1.35
+      }
+    },
+    {
+      "element_id": "P004.footer",
+      "kind": "text",
+      "role": "footer",
+      "priority": "P1",
+      "component_id": "P004.content",
+      "bbox": {
+        "x": 61,
+        "y": 846,
+        "w": 1510,
+        "h": 58
+      },
+      "z_index": 34,
+      "style": {
+        "fill": "#06163e",
+        "font_family": "Noto Sans SC",
+        "font_size": 29,
+        "font_weight": "500"
+      },
+      "asset_policy": "none",
+      "editability_target": "native_text",
+      "text": "合成业务场景｜建议方案，客户事实待确认",
+      "text_ref": "content_lock.customer_visible.footnotes.0",
+      "text_fit": {
+        "preferred_size_px": 29,
+        "min_size_px": 29,
+        "max_lines": 10,
+        "line_height": 1.35
+      }
+    }
+  ],
+  "overflow_policy": {},
+  "created_at": "2026-09-08T18:58:58.960058+00:00",
+  "source": "Manual reconstruction from inspected Runtime-submitted actual ImageGen blueprint"
+}

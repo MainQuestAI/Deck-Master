@@ -7,7 +7,7 @@ from typing import Any
 
 
 TEXT_EXTENSIONS = {".md", ".markdown", ".txt", ".json", ".csv", ".tsv"}
-HOST_EXTRACT_EXTENSIONS = {".pdf", ".docx", ".pptx", ".png", ".jpg", ".jpeg", ".webp", ".gif"}
+HOST_EXTRACT_EXTENSIONS = {".pdf", ".docx", ".pptx", ".xlsx", ".png", ".jpg", ".jpeg", ".webp", ".gif"}
 SUMMARY_LIMIT = 260
 EXCERPT_LIMIT = 900
 
@@ -165,8 +165,12 @@ def host_extract_task(source: dict[str, Any]) -> dict[str, Any] | None:
         "source_id": source["source_id"],
         "path": source["path"],
         "media_type": suffix.lstrip("."),
+        "submission_contract": "deck_context_pack.v2",
+        "source_binding": {"source_id":source["source_id"], "file_sha256":source["sha256"], "origin_ref":source["path"]},
+        "required_extraction_fields": ["method", "tool_ref", "read_units", "total_units", "unread_regions", "status", "snapshot_ref"],
         "expected_output": {
             "source_id": source["source_id"],
+            "file_sha256": source["sha256"],
             "pages_or_sections": [
                 {
                     "locator": "page/section identifier",

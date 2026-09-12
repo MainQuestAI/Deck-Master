@@ -41,27 +41,8 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def _v2_report(**overrides) -> dict:
-    report = {
-        "schema_version": RESULT_SCHEMA_VERSION_V2,
-        "run_id": "run-q",
-        "run_mode": "production",
-        "based_on": {"page_packages_index_sha256": "a" * 64},
-        "review_action_id": "review-1",
-        "scope": "semantic",
-        "review_kind": "full_deck",
-        "reviewer_session_id": "session-reviewer",
-        "producer_session_id": "session-producer",
-        "host_execution_ref": "host-ref-1",
-        "reviewed_inputs": {"page_packages": "page_packages/"},
-        "coverage": {"required_page_ids": ["P001", "P002"], "reviewed_page_ids": ["P001", "P002"], "skipped": []},
-        "dimension_scores": {dim: 4 for dim in REVIEW_DIMENSIONS_V2},
-        "observations": [
-            {"dimension": dim, "page_id": "P001", "observation": f"observation for {dim}"}
-            for dim in REVIEW_DIMENSIONS_V2
-        ],
-        "findings": [],
-        "summary": {"reported_status": "pass", "conclusion": "clean"},
-    }
+    from quality_review_v2_helpers import canonical_report
+    report = canonical_report()
     report.update(overrides)
     return report
 
@@ -82,25 +63,25 @@ class ExternalReviewV2Tests(unittest.TestCase):
         report["observations"] = report["observations"][:-1]
         result = validate_external_review_v2(report)
         self.assertFalse(result["valid"])
-        self.assertTrue(any("no observation" in item for item in result["errors"]))
+        self.assertTrue(any("observation" in item or "too short" in item for item in result["errors"]))
 
     def test_incomplete_coverage_needs_skip_reason(self) -> None:
         report = _v2_report()
         report["coverage"]["reviewed_page_ids"] = ["P001"]
         result = validate_external_review_v2(report)
         self.assertFalse(result["valid"])
-        self.assertTrue(any("neither reviewed nor explicitly skipped" in item for item in result["errors"]))
+        self.assertTrue(any("coverage incomplete" in item for item in result["errors"]))
         report["coverage"]["skipped"] = [{"ref": "P002"}]
         result = validate_external_review_v2(report)
         self.assertFalse(result["valid"])
-        self.assertTrue(any("requires a reason" in item for item in result["errors"]))
+        self.assertTrue(any("reason" in item for item in result["errors"]))
 
     def test_pass_with_findings_rejected(self) -> None:
         report = _v2_report()
         report["findings"] = [{"finding_id": "f1", "severity": "P1", "page_id": "P001", "message": "weak evidence"}]
         result = validate_external_review_v2(report)
         self.assertFalse(result["valid"])
-        self.assertTrue(any("cannot carry open findings" in item for item in result["errors"]))
+        self.assertTrue(any("findings" in item for item in result["errors"]))
 
     def test_v1_reports_still_validate_under_v1_semantics(self) -> None:
         v1 = {
@@ -118,8 +99,9 @@ class ExternalReviewV2Tests(unittest.TestCase):
             root = Path(tmp) / "run-q"
             (root / "page_packages").mkdir(parents=True)
             (root / "page_packages" / "index.json").write_text("{}\n", encoding="utf-8")
+            (root / "page_packages" / "P001.json").write_text('{"page_id":"P001"}')
             task = prepare_quality_review_v2(root, scope="semantic", required_page_ids=["P001"])
-            self.assertEqual(64, len(task["based_on"]["page_packages_index_sha256"]))
+            self.assertEqual(64, len(task["based_on"]["input_fingerprint"]))
             self.assertEqual(REVIEW_DIMENSIONS_V2, tuple(task["review_dimensions"]))
 
 
@@ -134,7 +116,7 @@ class UnsupportedNumberTests(unittest.TestCase):
         findings = find_unsupported_numbers([package])
         self.assertTrue(any(item["page_id"] == "P001" and "45%" in item["message"] for item in findings))
 
-    def test_supported_page_is_clean(self) -> None:
+    def test_source_id_alone_does_not_support_numeric_claim(self) -> None:
         package = {
             "page_id": "P001",
             "evidence_bindings": ["src_meeting"],
@@ -142,16 +124,16 @@ class UnsupportedNumberTests(unittest.TestCase):
             "customer_visible": {"body_blocks": [{"type": "conclusion", "text": "审批周期可缩短 45%。"}], "labels": []},
         }
         manifest = {"sources": [{"source_id": "src_meeting"}]}
-        self.assertEqual([], find_unsupported_numbers([package], context_manifest=manifest))
+        self.assertTrue(find_unsupported_numbers([package], context_manifest=manifest))
 
-    def test_design_basis_counts_as_support(self) -> None:
+    def test_design_basis_alone_does_not_support_numeric_claim(self) -> None:
         package = {
             "page_id": "P002",
             "evidence_bindings": [],
             "internal_only": {"design_basis_ref": "solution_model#capability:C1"},
             "customer_visible": {"body_blocks": [{"type": "conclusion", "text": "并行后 20 天内完成。"}], "labels": []},
         }
-        self.assertEqual([], find_unsupported_numbers([package]))
+        self.assertTrue(find_unsupported_numbers([package]))
 
     def test_internal_label_leak_found(self) -> None:
         package = {

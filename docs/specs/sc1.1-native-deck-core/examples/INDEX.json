@@ -1,0 +1,35 @@
+{
+  "purpose": "Synthetic schema-only examples; hashes, paths and reported states are not product execution evidence.",
+  "examples": [
+    {
+      "file": "route-image.json",
+      "schema": "../contracts/build-route.v1.schema.json",
+      "synthetic": true
+    },
+    {
+      "file": "route-direct.json",
+      "schema": "../contracts/build-route.v1.schema.json",
+      "synthetic": true
+    },
+    {
+      "file": "compile-request.json",
+      "schema": "../contracts/native-compile-request.v1.schema.json",
+      "synthetic": true
+    },
+    {
+      "file": "compile-result.json",
+      "schema": "../contracts/native-compile-result.v1.schema.json",
+      "synthetic": true
+    },
+    {
+      "file": "readiness-ready.json",
+      "schema": "../contracts/task-readiness.v1.schema.json",
+      "synthetic": true
+    },
+    {
+      "file": "readiness-blocked.json",
+      "schema": "../contracts/task-readiness.v1.schema.json",
+      "synthetic": true
+    }
+  ]
+}

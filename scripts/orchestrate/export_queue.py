@@ -297,7 +297,7 @@ def check_page_quality_blocking(
         }
 
     reports = _load_gate_reports(run_dir)
-    if not _has_draft_gate_report(reports):
+    if not page.get("_native") and not _has_draft_gate_report(reports):
         return {
             "blocked": True,
             "reason": "Missing draft gate report: needs_draft_gate.",
@@ -356,13 +356,105 @@ def check_page_quality_blocking(
     }
 
 
-def export_queue(
+def _native_export_manifest(run_dir: Path, revision: str) -> dict[str, Any] | None:
+    """Project the current approved packages onto the verified compiled page set."""
+    import hashlib
+    from build.build_route import load_persisted_route
+    from build.native_engine import _approved_packages
+
+    if load_persisted_route(run_dir).get("engine_id") != "deck_native":
+        return None
+    packages = _approved_packages(run_dir)
+    render = _read_json(run_dir / "render_results/render_result.json")
+    ids = [p["page_id"] for p in packages]
+    reason = ""
+    def verified_path(raw: str) -> Path:
+        path = (run_dir / raw).resolve()
+        path.relative_to(run_dir.resolve())
+        return path
+    try:
+        artifact = verified_path(str(render.get("artifact_path") or ""))
+        actual_hash = hashlib.sha256(artifact.read_bytes()).hexdigest()
+        readback = _read_json(artifact.parent / "native_readback.json")
+        previews = render.get("page_previews", [])
+        if (render.get("build_revision") != revision
+                or render.get("page_count") != len(ids)
+                or readback.get("status") != "pass"
+                or readback.get("pptx_sha256") != actual_hash
+                or [p.get("page_id") for p in readback.get("pages", [])] != ids
+                or [p.get("page_id") for p in previews] != ids):
+            raise ValueError("native render/readback does not match current revision and page order")
+        bindings = {a.get("path"): a for a in render.get("artifacts", [])}
+        for raw in [render["artifact_path"], *[p["preview_path"] for p in previews]]:
+            if hashlib.sha256(verified_path(raw).read_bytes()).hexdigest() != bindings.get(raw, {}).get("sha256"):
+                raise ValueError("native artifact or preview hash mismatch")
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        reason = f"Native export evidence is not current: {exc}"
+    preview_by_id = {p.get("page_id"): p.get("preview_path", "") for p in render.get("page_previews", [])}
+    return {
+        "run_id": run_dir.name, "title": run_dir.name,
+        "_native": True, "_binding_block": reason,
+        "_artifact_binding": {"path": str(render.get("artifact_path") or ""), "sha256": actual_hash if not reason else ""},
+        "_source_manifest": "page_packages/index.json",
+        "pages": [{"page_id": p["page_id"], "order": p["order"],
+                   "title": p.get("customer_visible", {}).get("title", p["page_id"]),
+                   "source_type": "native_compile", "decision": "approved",
+                   "review_status": "approved", "_native": True,
+                   "preview_path": preview_by_id.get(p["page_id"], ""),
+                   "source_pptx": render.get("artifact_path", ""), "source_slide_index": i + 1}
+                  for i, p in enumerate(packages)],
+    }
+
+
+
+def _native_client_clearance(run_dir: Path, manifest: dict[str, Any], readiness: dict, approval: dict) -> str:
+    """Historical clearance is valid only for the artifact being selected now."""
+    selected = manifest.get("_artifact_binding") or {}
+    final = (readiness.get("readiness") or {}).get("final_artifact") or {}
+    approved = (approval.get("approval") or {}).get("final_artifact") or {}
+    def same_artifact(binding: dict, hash_key: str) -> bool:
+        if not binding.get("path") or binding.get(hash_key) != selected.get("sha256"):
+            return False
+        try:
+            path = (run_dir / binding["path"]).resolve()
+            path.relative_to(run_dir)
+            return path == (run_dir / selected["path"]).resolve()
+        except (TypeError, ValueError):
+            return False
+    if not same_artifact(final, "hash") or not same_artifact(approved, "sha256"):
+        return "Final readiness and approval do not bind the selected native artifact."
+    from build.run_policy import enforce_origin_mode
+    from native_pptx.contracts import read_json
+    policy = resolve_required_gates(
+        run_dir, run_dir / selected["path"], builder_profile="standard",
+        output_profile="production_pptx", run_mode=enforce_origin_mode(run_dir, read_json(run_dir / "request.json")),
+        include_non_required_blockers=True,
+    )
+    if not policy.get("required_gate_satisfied"):
+        return "Missing current required quality gates for selected native artifact: " + str(policy.get("missing_required_gates") or [])
+    return ""
+
+
+def export_queue(run_dir: Path, decisions: set[str], *, queue_type: str = "client",
+                 allow_quality_override: bool = False, enforce_final_readiness: bool = True) -> dict[str, Any]:
+    from workflow.actions import revision_read
+    run_dir = Path(run_dir).expanduser().resolve()
+    with revision_read(run_dir) as revision:
+        native = _native_export_manifest(run_dir, revision)
+        return _export_queue(run_dir, decisions, queue_type=queue_type,
+                             allow_quality_override=allow_quality_override,
+                             enforce_final_readiness=True if native else enforce_final_readiness,
+                             native_manifest=native)
+
+
+def _export_queue(
     run_dir: Path,
     decisions: set[str],
     *,
     queue_type: str = "client",
     allow_quality_override: bool = False,
     enforce_final_readiness: bool = True,
+    native_manifest: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """导出审查后的页面队列。
 
@@ -378,11 +470,14 @@ def export_queue(
     if invalid:
         raise ValueError(f"Invalid decisions: {', '.join(sorted(invalid))}")
 
-    manifest = load_manifest(run_dir)
+    manifest = native_manifest if native_manifest is not None else load_manifest(run_dir)
     pages: list[dict[str, Any]] = []
     blocked_pages: list[dict[str, Any]] = []
     final_readiness = final_readiness_clearance(run_dir)
     final_approval = final_approval_clearance(run_dir)
+    if (manifest.get("_native") and queue_type == "client" and not manifest.get("_binding_block")
+            and final_readiness.get("ready") and final_approval.get("ready")):
+        manifest["_binding_block"] = _native_client_clearance(run_dir, manifest, final_readiness, final_approval)
     final_readiness_blocks_client = (
         queue_type == "client"
         and enforce_final_readiness
@@ -425,7 +520,11 @@ def export_queue(
             "notes": page.get("notes", ""),
         }
 
-        if blocking["blocked"]:
+        if manifest.get("_binding_block"):
+            page_entry["quality_blocked"] = True
+            page_entry["quality_block_reason"] = manifest["_binding_block"]
+            blocked_pages.append(page_entry)
+        elif blocking["blocked"]:
             page_entry["quality_blocked"] = True
             page_entry["quality_block_reason"] = blocking["reason"]
             blocked_pages.append(page_entry)
@@ -447,7 +546,7 @@ def export_queue(
     return {
         "run_id": manifest["run_id"],
         "title": manifest["title"],
-        "source_manifest": str((run_dir / "preview_manifest.json").resolve()),
+        "source_manifest": str((run_dir / manifest.get("_source_manifest", "preview_manifest.json")).resolve()),
         "decisions": sorted(decisions),
         "queue_type": queue_type,
         "final_readiness": {
