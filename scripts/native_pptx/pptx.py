@@ -936,7 +936,7 @@ def _svg_elements(root: Path, scene: dict[str, Any], asset_paths: dict[str, Path
             element["text"] = svg_text
             if native.get("node") is not None and native.get("node").get("font-size") is not None and native.get("node").get("fill") is not None:
                 try:
-                    element["_text_lines"] = _svg_text_lines(native.get("node"), {"gradients": {}, "effects": {}}, preserve_positions=_NATIVE_CANVAS.get())
+                    element["_text_lines"] = _svg_text_lines(native.get("node"), native_document.get("paint") or {"gradients": {}, "effects": {}}, preserve_positions=_NATIVE_CANVAS.get())
                 except (ContractError, ValueError):
                     if _NATIVE_CANVAS.get():
                         # Replacing rejected positioned runs with declared copy

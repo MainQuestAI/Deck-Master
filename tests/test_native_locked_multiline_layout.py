@@ -68,3 +68,22 @@ def test_native_consumer_never_silently_replaces_invalid_positioned_text(tmp_pat
             _svg_elements(path, scene)
     finally:
         _NATIVE_CANVAS.reset(token)
+
+
+def test_native_positioned_text_retains_its_parsed_gradient_registry(tmp_path):
+    _, path, scene = example(tmp_path)
+    document = ET.parse(path)
+    root = document.getroot()
+    defs = ET.SubElement(root, 'defs')
+    gradient = ET.SubElement(defs, 'linearGradient', {'id': 'ink', 'x1': '0%', 'y1': '0%', 'x2': '100%', 'y2': '0%'})
+    ET.SubElement(gradient, 'stop', {'offset': '0%', 'stop-color': '#071f45'})
+    ET.SubElement(gradient, 'stop', {'offset': '100%', 'stop-color': '#00a0b0'})
+    root.find('text').set('fill', 'url(#ink)')
+    document.write(path, encoding='unicode')
+    token = _NATIVE_CANVAS.set(True)
+    try:
+        element = _svg_elements(path, scene)[0]
+        assert len(element['_text_lines']) == 3
+        assert all(run['paint']['fill']['kind'] == 'gradient' for line in element['_text_lines'] for run in line)
+    finally:
+        _NATIVE_CANVAS.reset(token)
