@@ -9,10 +9,10 @@ Version mapping:
 - Suite / Skill OS contract version: `1.1.0` (from `skills/stage-contracts.json`, tracked in `docs/releases/v1.1.0-release-notes.md`). This is a separate axis from the package version: it tracks the skill/handoff contract maturity, not the installable release. `docs/releases/v1.1.0-release-notes.md` documents that contract release, not a package 1.1.0.
 - Production readiness: not claimed
 
-The high-density builder is included as an installable preview capability. Its
-fresh provider smoke and six-page external icon evidence remain release gates;
-the repository keeps those gates fail-closed when private artifacts are not
-available.
+The high-density builder remains a compatibility capability. Its historical
+provider smoke and external icon gates apply to that route; they do not make
+PPT Master a prerequisite for the default native engine. Native production has
+its own actual tool, artifact, quality and approval checks.
 
 ## M1 Technical Preview
 
@@ -31,10 +31,12 @@ Current M1 boundaries:
 
 Before formal RC, Deck Master must also close:
 
-1. Production external dependency handling.
-2. Review Desk full design-system alignment.
-3. Release tree install, verification, and rollback evidence.
-4. Production deployment hardening beyond the local Review Desk write guard.
+1. Bind native compile/render/readback, run migration and isolated install evidence to one release candidate; verify legacy dependencies only when that route is selected.
+2. Complete representative visual quality and final-file review, preserving existing thresholds and user approval boundaries.
+3. Demonstrate the complete first-run, page-repair and recovery path with an independent user on a clean supported installation.
+4. Complete full release gates and real paired outcome evidence. The local Review Desk is not a remotely authenticated team service; such a service would require separate scope and acceptance.
+
+The current sequence and exit criteria are in [ROADMAP.md](../ROADMAP.md).
 
 ## SC-1 Solution Core Iteration (2026-09-07)
 

@@ -80,7 +80,7 @@ invoke external named skills, or know backend paths:
    Hidden notes/metadata in the client PPTX are scanned and block delivery.
 
 Status and honest limits: see [Known Limitations](docs/known-limitations.md).
-Engineering evidence: `docs/specs/sc1-solution-core-independence/implementation/`.
+Engineering evidence: [SC-1.1 validation progress](docs/specs/sc1.1-native-deck-core/implementation/pr31-validation-progress.md).
 
 ## Install
 
@@ -118,7 +118,7 @@ The demo uses fixture mode and synthetic retail transformation content. It is th
 
 ## Review Desk
 
-Review Desk is the local browser interface for inspecting the generated page queue, checking page status, and approving work before export. M1 focuses on a public fixture demo and Review Desk preview. M2 will close the full production backend and release-candidate gates.
+Review Desk is the local browser interface for inspecting the generated page queue, checking page status, and approving work before export. The public preview covers the fixture path. Native production and release-candidate acceptance have separate tool, quality and approval gates.
 
 ![Review Desk](docs/assets/review-desk.png)
 
@@ -128,21 +128,21 @@ For the full user path (install, demo, Review Desk, production configuration), s
 
 ## Capability Boundaries
 
-Current M1 guarantees:
+Available preview capabilities:
 
 1. Fixture demo from a public brief.
 2. Review Desk preview for that demo.
 3. Backend readiness transparency through `setup-status`, `suite-status`, and `backend status`.
 4. `preview-gate` that works without a configured production backend.
 
-Current M1 limits:
+Production boundaries:
 
-1. Production backend companions must be configured and verified before production commands can be treated as ready.
-2. A missing `ppt-master` production backend must not be reported as `bound_verified`.
+1. Native production requires actual compiler, renderer, fonts and the host tools requested by the selected authoring mode. An installed module alone is not readiness evidence.
+2. Only a persisted or explicitly selected `legacy-ppt-master` route requires that external binding. An optional unbound legacy backend is not a native failure and must not be described as verified.
 3. `ppt-deck-pro-max` is a Deck Master suite Skill for page production, not a separately bound production backend.
 4. Browser smoke depends on local Playwright/browser availability.
 
-See [Known Limitations](docs/known-limitations.md).
+See [Known Limitations](docs/known-limitations.md) and [the roadmap](ROADMAP.md) for the remaining engineering, usability and customer-outcome milestones.
 
 ## Before Real Production Use
 
