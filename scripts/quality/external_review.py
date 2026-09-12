@@ -297,7 +297,7 @@ def validate_external_review_v2(result: dict[str, Any]) -> dict[str, Any]:
 def _review_input_refs(root: Path) -> list[dict]:
     from workflow.actions import revision_read, revision_input_path
     refs = []
-    with revision_read(root):
+    with revision_read(root) as revision:
         for directory in ("page_packages", "sources", "diagram_views", "high_density_build/content_locks", "high_density_build/svg", "high_density_build/page_scenes", "high_density_build/scenes", "high_density_build/blueprints"):
             folder = revision_input_path(root, root / directory)
             if folder.is_dir():
@@ -325,15 +325,15 @@ def _review_input_refs(root: Path) -> list[dict]:
                 if not asset.resolve().is_relative_to(base.resolve()) or not asset.is_file():
                     raise ExternalReviewError("review registered asset is missing or escapes input scope")
                 refs.append({"ref": Path(relative).as_posix(), "sha256": hashlib.sha256(asset.read_bytes()).hexdigest()})
-    # Render/build outputs are a live selected artifact, not input projections.
-    # Freeze their actual bytes at dispatch; later import/currentity recomputes
-    # the same set, so a rebuilt PPTX or changed preview requires another review.
-    refs.extend(_review_render_refs(root))
+        # Render/build outputs are a live selected artifact, not input projections.
+        # Keep the source revision pinned while binding those output bytes.
+        refs.extend(_review_render_refs(root, revision=revision or "initial"))
     return sorted({item["ref"]: item for item in refs}.values(), key=lambda item: item["ref"])
 
 
-def _review_render_refs(root: Path) -> list[dict]:
+def _review_render_refs(root: Path, *, revision: str) -> list[dict]:
     from runtime.render import CANONICAL_RENDER_RESULT, LEGACY_RENDER_RESULTS
+    from build.build_route import load_persisted_route
     root = root.resolve()
     refs = {}
     def add(value):
@@ -352,6 +352,16 @@ def _review_render_refs(root: Path) -> list[dict]:
             continue
         selection_bytes = add(relative)
         render = json.loads(selection_bytes)
+        native = (
+            load_persisted_route(root).get("engine_id") == "deck_native"
+            or render.get("tool") == "deck_native"
+            or (render.get("builder_backend") or {}).get("backend_name") == "deck_native"
+        )
+        if native and render.get("build_revision") != revision:
+            raise ExternalReviewError(
+                "native render revision does not match captured review inputs; "
+                "rebuild the current revision before reviewing the selected artifact"
+            )
         artifact = render.get("artifact_path") or render.get("artifact")
         if artifact:
             add(artifact)
