@@ -148,18 +148,24 @@ def _tests(checks: _Checks, root: Path, validation: dict, refs: dict) -> None:
             try:
                 document = ElementTree.parse(xml).getroot()
                 suites = [document] if document.tag == "testsuite" else document.findall("testsuite")
-                total = sum(int(suite.get("tests", "0")) for suite in suites)
-                failures = sum(int(suite.get("failures", "0")) + int(suite.get("errors", "0")) for suite in suites)
-                if total <= 0:
-                    checks.add(prefix + ":result", "missing", "no_executed_tests")
+                counters = [{name: int(suite.get(name, "0")) for name in ("tests", "skipped", "failures", "errors")} for suite in suites]
+                if any(any(value < 0 for value in row.values()) or row["skipped"] > row["tests"] for row in counters):
+                    raise ValueError("invalid_junit_counters")
+                total = sum(counter["tests"] for counter in counters)
+                skipped = sum(counter["skipped"] for counter in counters)
+                failures = sum(counter["failures"] + counter["errors"] for counter in counters)
+                executed = total - skipped
+                observed = {"tests": total, "skipped": skipped, "executed": executed}
+                if executed <= 0:
+                    checks.add(prefix + ":result", "missing", "no_executed_tests", **observed)
                 elif failures or row.get("status") == "failed":
-                    checks.add(prefix + ":result", "failed", "test_failure_recorded")
+                    checks.add(prefix + ":result", "failed", "test_failure_recorded", **observed)
                 elif row.get("status") != "passed":
-                    checks.add(prefix + ":result", "missing", "test_execution_incomplete")
+                    checks.add(prefix + ":result", "missing", "test_execution_incomplete", **observed)
                 elif int(row.get("tests", -1)) != total:
-                    checks.add(prefix + ":result", "stale", "test_count_disagrees_with_junit")
+                    checks.add(prefix + ":result", "stale", "test_count_disagrees_with_junit", **observed)
                 else:
-                    checks.add(prefix + ":result", "passed")
+                    checks.add(prefix + ":result", "passed", **observed)
             except (OSError, ValueError, TypeError, ElementTree.ParseError):
                 checks.add(prefix + ":result", "stale", "invalid_junit_result")
 

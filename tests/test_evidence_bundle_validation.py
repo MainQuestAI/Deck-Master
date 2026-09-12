@@ -209,3 +209,29 @@ def test_artifact_changed_during_verification_invalidates_observation(tmp_path, 
     result = verify(root, run)
     assert result["status"] == "stale"
     assert "evidence_changed_during_verification" in reasons(result)
+
+
+@pytest.mark.parametrize("counters, recorded_status, status, reason", [
+    ({"tests": "1", "skipped": "1"}, "passed", "missing", "no_executed_tests"),
+    ({"tests": "2", "skipped": "1"}, "passed", "passed", ""),
+    ({"tests": "2", "skipped": "1"}, "failed", "failed", "test_failure_recorded"),
+    ({"tests": "2", "skipped": "1", "failures": "1"}, "passed", "failed", "test_failure_recorded"),
+    ({"tests": "-1"}, "passed", "stale", "invalid_junit_result"),
+    ({"tests": "NaN"}, "passed", "stale", "invalid_junit_result"),
+    ({"tests": "1", "skipped": "-1"}, "passed", "stale", "invalid_junit_result"),
+    ({"tests": "1", "skipped": "NaN"}, "passed", "stale", "invalid_junit_result"),
+    ({"tests": "1", "failures": "-1"}, "passed", "stale", "invalid_junit_result"),
+    ({"tests": "1", "errors": "-1"}, "passed", "stale", "invalid_junit_result"),
+])
+def test_junit_counts_require_actual_nonnegative_execution(tmp_path, counters, recorded_status, status, reason):
+    root, run = bundle(tmp_path)
+    path = root / "python312-results.xml"
+    attributes = {"tests": "1", "failures": "0", "errors": "0", "skipped": "0", **counters}
+    path.write_text("<testsuite " + " ".join(f'{key}="{value}"' for key, value in attributes.items()) + "/>")
+    validation = json.loads((root / "validation.json").read_text())
+    validation["tests"][0].update(junit_sha256=digest(path), status=recorded_status, tests=counters["tests"])
+    write(root / "validation.json", validation)
+    index(root)
+    result = next(item for item in verify(root, run)["checks"] if item["key"] == "python312:result")
+    assert result["status"] == status
+    assert result["reason"] == reason
