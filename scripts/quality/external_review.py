@@ -550,6 +550,22 @@ def import_external_review(
     replace: bool = False,
 ) -> dict[str, Any]:
     """Import external quality review (v1 or v2) as a quality gate report."""
+    from workflow.actions import _acquire_run_lock, _release_run_lock
+
+    root = ensure_run_dirs(run_dir)
+    lock = _acquire_run_lock(root)
+    try:
+        # Validate inputs and existing findings under the same lock as revision
+        # commits and competing imports. A later pass cannot race past a P0/P1
+        # replacement check and erase an already imported blocker.
+        return _import_external_review_locked(root, result, replace=replace)
+    finally:
+        _release_run_lock(lock)
+
+
+def _import_external_review_locked(
+    root: Path, result: dict[str, Any], *, replace: bool,
+) -> dict[str, Any]:
     schema_version = str(result.get("schema_version") or "")
     if schema_version == RESULT_SCHEMA_VERSION_V2:
         validation = validate_external_review_v2(result)
@@ -562,7 +578,6 @@ def import_external_review(
             "Invalid external review: " + "; ".join(validation["errors"])
         )
 
-    root = ensure_run_dirs(run_dir)
     try:
         run_id = assert_external_result_matches_run(
             root,
