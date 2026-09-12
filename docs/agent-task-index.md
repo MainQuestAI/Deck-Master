@@ -191,6 +191,12 @@ python3 scripts/deck_master.py build retry --run-dir <run_dir> --profile high-de
 
 ## Build And Verify Release
 
+For an existing candidate evidence bundle, use `verify-evidence --evidence-root
+<evidence_dir> --candidate-sha <full_sha> --run main=<run_dir>`; repeat `--run`
+for additional runs. This reads recorded evidence and current input identities
+without writing approvals. `human_pending` is not final delivery approval.
+See [evidence verification](acceptance-evidence-verification.md).
+
 - Intent: create a self-contained release tree and verify it.
 - Commands:
 

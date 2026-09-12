@@ -135,6 +135,12 @@ Scene projections: submit both files using its Runtime-issued action.
   `build retry --page-id <page> --stage svg`; valid other pages are retained.
 - Exhausted action budget: preserve the run and report its used/remaining budget.
   Do not create a different action ID or run merely to evade the limit.
+  Read the exact task with `build budget status --run-dir <run> --task-id
+  <returned-task-id>`. If the user has authorized an additional attempt, apply
+  the exact new ceiling using `build budget set` with the returned source revision,
+  authorization reason and local user declaration. Then resume the affected
+  task through its normal retry entry. See [task budget contract](contracts/native-task-budgets.md).
+  Do not raise unrelated tasks or transfer the new ceiling to an old issued action.
 - `migration_required`: keep historical files read-only; create a specific
   `build migrate --dry-run --output <plan>` and apply only that unchanged plan.
   `--verify` and `--rollback` require the returned migration ID.

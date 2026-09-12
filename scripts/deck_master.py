@@ -2367,6 +2367,39 @@ def command_build_submit(args: argparse.Namespace) -> dict[str, Any]:
                                expected_revision=args.expected_revision, scene=read_json(args.scene))
 
 
+def command_build_budget(args: argparse.Namespace) -> dict[str, Any]:
+    from build.native_budget import read_native_task_budgets, set_native_task_budgets
+
+    root = resolve_run_dir(args)
+    if args.budget_command == "status":
+        return read_native_task_budgets(root, task_ids=args.task_id)
+    limits = {}
+    for item in args.limit:
+        task_id, separator, value = item.partition("=")
+        if not separator or not task_id or task_id in limits:
+            raise ValueError("--limit requires unique TASK_ID=MAX_ACTIONS entries")
+        try:
+            limits[task_id] = int(value)
+        except ValueError as exc:
+            raise ValueError("--limit MAX_ACTIONS must be an integer") from exc
+    return set_native_task_budgets(
+        root, limits=limits, expected_revision=args.expected_revision,
+        reason=args.reason, actor={"id": args.actor_id, "role": args.actor_role},
+    )
+
+
+def command_verify_evidence(args: argparse.Namespace) -> dict[str, Any]:
+    from uat.evidence_validation import verify_evidence_bundle
+
+    runs = {}
+    for item in args.run:
+        label, separator, directory = item.partition("=")
+        if not separator or not label or not directory or label in runs:
+            raise ValueError("--run requires unique LABEL=RUN_DIR mappings")
+        runs[label] = Path(directory)
+    return verify_evidence_bundle(args.evidence_root, args.candidate_sha, run_dirs=runs)
+
+
 def command_build_run(args: argparse.Namespace) -> dict[str, Any]:
     run_dir = resolve_run_dir(args)
     profile = _persist_build_options(run_dir, args)
@@ -3878,6 +3911,21 @@ def build_parser() -> argparse.ArgumentParser:
     p_build_cancel.add_argument("--reason", required=True)
     p_build_cancel.set_defaults(func=command_build_cancel)
 
+    p_build_budget = build_sub.add_parser("budget", help="Inspect or explicitly increase selected native task limits")
+    budget_sub = p_build_budget.add_subparsers(dest="budget_command", required=True)
+    p_budget_status = budget_sub.add_parser("status", help="Read used and remaining attempts without changing the run")
+    add_run_args(p_budget_status)
+    p_budget_status.add_argument("--task-id", action="append", required=True)
+    p_budget_status.set_defaults(func=command_build_budget)
+    p_budget_set = budget_sub.add_parser("set", help="Record an explicit task-scoped budget authorization")
+    add_run_args(p_budget_set)
+    p_budget_set.add_argument("--limit", action="append", required=True, metavar="TASK_ID=MAX_ACTIONS")
+    p_budget_set.add_argument("--expected-revision", required=True)
+    p_budget_set.add_argument("--reason", required=True)
+    p_budget_set.add_argument("--actor-id", required=True, help="Local caller declaration; not authenticated identity")
+    p_budget_set.add_argument("--actor-role", choices=["user"], required=True)
+    p_budget_set.set_defaults(func=command_build_budget)
+
     p_build_retry = build_sub.add_parser("retry", help="Retry one high-density page or a deck-scoped MBB stage")
     add_run_args(p_build_retry)
     p_build_retry.add_argument("--profile", choices=["standard", "high-density", "native", "direct-svg", "legacy-ppt-master"], default=None)
@@ -4236,6 +4284,12 @@ def build_parser() -> argparse.ArgumentParser:
     p_preview_gate.add_argument("--expect-unconfigured-backend-ok", action="store_true")
     p_preview_gate.set_defaults(func=command_preview_gate)
 
+    p_verify_evidence = sub.add_parser("verify-evidence", help="Read-only verification of candidate and current-run evidence")
+    p_verify_evidence.add_argument("--evidence-root", required=True)
+    p_verify_evidence.add_argument("--candidate-sha", required=True)
+    p_verify_evidence.add_argument("--run", action="append", default=[], metavar="LABEL=RUN_DIR")
+    p_verify_evidence.set_defaults(func=command_verify_evidence)
+
     return parser
 
 
@@ -4265,6 +4319,8 @@ def main() -> None:
         result = args.func(args)
         print_json(result)
         if args.command in {"preview-gate", "rc-gate"} and isinstance(result, dict) and result.get("status") != "pass":
+            raise SystemExit(2)
+        if args.command == "verify-evidence" and result.get("status") not in {"passed", "human_pending"}:
             raise SystemExit(2)
     except (
         RunStateError,

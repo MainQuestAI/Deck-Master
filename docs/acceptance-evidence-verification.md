@@ -5,7 +5,7 @@
 源码 checkout 中运行：
 
 ```bash
-python3 -m scripts.uat.evidence_validation \
+python3 scripts/deck_master.py verify-evidence \
   --evidence-root <evidence_dir> \
   --candidate-sha <full_git_sha> \
   --run main=<current_run_dir> \
@@ -13,6 +13,8 @@ python3 -m scripts.uat.evidence_validation \
 ```
 
 CLI 仅输出 JSON。核验无工程证据问题时退出 0，仍可能有 `human_pending`；存在 `stale`、`missing` 或 `failed` 时退出 2。退出 0 不等于工程验收完成或可交付。
+
+独立模块入口 `python3 -m scripts.uat.evidence_validation` 接受相同参数，适用于无需加载主 CLI 的只读核验。
 
 供正式 CLI 集成的函数：
 
