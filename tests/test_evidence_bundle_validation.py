@@ -259,3 +259,54 @@ def test_junit_testcase_details_cannot_be_hidden_by_summary_counters(tmp_path, a
     result = next(item for item in verify(root, run)["checks"] if item["key"] == "python312:result")
     assert result["status"] == status
     assert result["reason"] == reason
+
+
+@pytest.mark.parametrize("outcome, expected", [("pass", "passed"), ("skip", "passed"), ("failure", "failed")])
+def test_real_pytest_subtest_junit_counts_are_reconciled_with_bound_log(tmp_path, outcome, expected):
+    from xml.etree import ElementTree
+    root, run = bundle(tmp_path)
+    test_path = tmp_path / "test_real_subtests.py"
+    test_path.write_text(
+        "import unittest\n"
+        "class TestActualSubtests(unittest.TestCase):\n"
+        "    def test_subtests(self):\n"
+        "        for number in range(2):\n"
+        "            with self.subTest(number=number):\n"
+        f"                if number == 1 and {outcome!r} == 'skip': self.skipTest('controlled skip')\n"
+        f"                if {outcome!r} == 'failure': self.assertEqual(number, 0)\n"
+        "                else: self.assertGreaterEqual(number, 0)\n"
+    )
+    path = root / "python312-results.xml"
+    env = dict(os.environ)
+    env.pop("PYTHONPATH", None)
+    actual = subprocess.run([sys.executable, "-m", "pytest", str(test_path), "-q", "--junitxml=" + str(path)],
+                            cwd=tmp_path, env=env, capture_output=True, text=True)
+    assert actual.returncode == (1 if outcome == "failure" else 0), actual.stderr
+    (root / "python312-pytest.log").write_text(actual.stdout)
+    suite = ElementTree.parse(path).getroot().find("testsuite")
+    assert int(suite.get("tests")) > len(suite.findall("testcase"))
+    validation = json.loads((root / "validation.json").read_text())
+    validation["tests"][0].update(junit_sha256=digest(path), tests=suite.get("tests"),
+                                   log_sha256=digest(root / "python312-pytest.log"))
+    write(root / "validation.json", validation)
+    index(root)
+    result = next(item for item in verify(root, run)["checks"] if item["key"] == "python312:result")
+    assert result["status"] == expected
+
+
+@pytest.mark.parametrize("mismatch", ["total", "skipped"])
+def test_subtest_log_cannot_hide_junit_counter_conflicts(tmp_path, mismatch):
+    root, run = bundle(tmp_path)
+    path = root / "python312-results.xml"
+    skipped = 1 if mismatch == "skipped" else 0
+    path.write_text(f'<testsuites name="pytest tests"><testsuite tests="3" skipped="{skipped}" failures="0" errors="0">'
+                    '<testcase name="one"/></testsuite></testsuites>')
+    log = root / "python312-pytest.log"
+    log.write_text("1 passed, " + ("1 skipped, " if skipped else "") + "1 subtests passed in 0.01s\n")
+    validation = json.loads((root / "validation.json").read_text())
+    validation["tests"][0].update(junit_sha256=digest(path), log_sha256=digest(log), tests="3")
+    write(root / "validation.json", validation)
+    index(root)
+    result = next(item for item in verify(root, run)["checks"] if item["key"] == "python312:result")
+    assert result["status"] == "stale"
+    assert result["reason"] == "junit_testcase_counters_disagree"

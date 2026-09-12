@@ -123,6 +123,32 @@ class _Checks:
                 "note": "Evidence verification only. This does not mark engineering_complete or accepted, attest external execution, or approve delivery."}
 
 
+def _pytest_subtests_explain_count(document: ElementTree.Element, log: Path | None, counter: dict, case_count: int) -> bool:
+    """Pytest counts passed subtests without emitting their own testcase nodes."""
+    if document.get("name") != "pytest tests" or log is None:
+        return False
+    try:
+        lines = [line.strip("= ") for line in log.read_text(encoding="utf-8").splitlines() if line.strip()]
+    except (OSError, UnicodeError):
+        return False
+    summary = re.fullmatch(r"(.+?) in [0-9]+(?:\.[0-9]+)?s(?: \([^)]*\))?", lines[-1]) if lines else None
+    if summary is None:
+        return False
+    counts = {}
+    for item in summary[1].split(", "):
+        field = re.fullmatch(r"([0-9]+) (passed|skipped|xfailed|xpassed|subtests passed|warnings?)", item)
+        if field is None or field[2] in counts:
+            return False
+        counts[field[2]] = int(field[1])
+    subtests = counts.get("subtests passed", 0)
+    passed = counts.get("passed", 0) + counts.get("xpassed", 0)
+    skipped = counts.get("skipped", 0) + counts.get("xfailed", 0)
+    # A skipped subtest shares its parent's testcase node, while a skipped
+    # ordinary test has its own. Its skipped child is checked separately below.
+    return (subtests > 0 and counter["tests"] == passed + skipped + subtests
+            and counter["skipped"] == skipped and passed <= case_count <= passed + skipped)
+
+
 def _tests(checks: _Checks, root: Path, validation: dict, refs: dict) -> None:
     rows = validation.get("tests")
     if not isinstance(rows, list) or not rows:
@@ -143,7 +169,7 @@ def _tests(checks: _Checks, root: Path, validation: dict, refs: dict) -> None:
         metadata = checks.document(root, metadata_ref, refs.get(metadata_ref))
         checks.candidate(prefix + ":candidate", metadata.get("sha"))
         xml = checks.file(root, prefix + "-results.xml", row.get("junit_sha256"))
-        checks.file(root, prefix + "-pytest.log", row.get("log_sha256"))
+        log = checks.file(root, prefix + "-pytest.log", row.get("log_sha256"))
         if xml is not None:
             try:
                 document = ElementTree.parse(xml).getroot()
@@ -165,8 +191,9 @@ def _tests(checks: _Checks, root: Path, validation: dict, refs: dict) -> None:
                 observed = {"tests": total, "skipped": skipped, "executed": executed}
                 if failures or row.get("status") == "failed":
                     checks.add(prefix + ":result", "failed", "test_failure_recorded", **observed)
-                elif any(group and (len(group) != counter["tests"]
-                                   or sum(case.find("skipped") is not None for case in group) != counter["skipped"])
+                elif any(group and ((len(group) != counter["tests"]
+                                     and not (len(suites) == 1 and _pytest_subtests_explain_count(document, log, counter, len(group))))
+                                   or sum(len(case.findall("skipped")) for case in group) != counter["skipped"])
                          for group, counter in zip(case_groups, counters)):
                     checks.add(prefix + ":result", "stale", "junit_testcase_counters_disagree", **observed)
                 elif executed <= 0:
