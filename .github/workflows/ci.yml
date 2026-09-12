@@ -83,12 +83,13 @@ jobs:
         run: python -m playwright install --with-deps chromium
 
       - name: Run unit tests
+        if: matrix.python-version == '3.11'
         run: python -m pytest -q
 
       - name: Run static correctness checks
         run: python -m ruff check scripts tests
 
-      - name: Enforce coverage floor
+      - name: Run unit tests with coverage and enforce floor
         if: matrix.python-version == '3.12'
         run: |
           python -m coverage run -m pytest -q
