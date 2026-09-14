@@ -65,16 +65,15 @@ python3 scripts/deck_master.py import-context-pack \
 ```bash
 python3 scripts/deck_master.py autoplan \
   --run-id <run_id> \
-  --library-mode auto \
   --planning-mode narrative_v2
 ```
 
 Creating a deck without a PPT Library is the normal path: `--library-mode
-auto` searches only when a library command is actually available, and the run
-continues with generate decisions when it is not. Explicitly request the
-library with `--library-mode real` when the task needs historical slides — it
-then keeps its real dependency failure if unavailable. Fixture candidates are
-only for demo/dev runs (`--library-mode fixture`); never use
+none` is the default for a new run, performs no search, and ignores stale
+selection caches. Explicitly request discovery with `--library-mode auto` or
+require a real historical library with `--library-mode real`; the latter keeps
+its real dependency failure if unavailable. Fixture candidates are only for
+demo/dev runs (`--library-mode fixture`); never use
 `--allow-fixture-library-fallback` to mask a production dependency.
 
 ### 6b. Full-Draft Import (complete draft already written)
@@ -97,6 +96,16 @@ draft, pages continue production from their packages: `next-step` drives
 straight to `build prepare --profile high-density`, and later updates go
 through the same import (add/delete/reorder pages, change body text) with the
 previous state backed up under `overrides/`.
+
+Before the first high-density build, check its installed capability:
+
+```bash
+deck-master suite-status --capability deck_master.build.high_density.v1 --output json
+```
+
+This route does not require the standard external `ppt-master` backend. A
+blocked standard backend remains a limitation of the standard profile and
+full product release; it must not redirect a high-density run to fixture mode.
 
 For the high-density route, citations carry their meaning: each citation
 entry should state `meaning` (what the cited source supports for this page,

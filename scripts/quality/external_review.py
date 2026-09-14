@@ -8,6 +8,8 @@ Implements:
 
 from __future__ import annotations
 
+import hashlib
+import json
 import shutil
 from datetime import datetime, timezone
 from pathlib import Path
@@ -70,6 +72,117 @@ def _scope_to_gate_filename(scope: str) -> str:
     return f"external_{scope.replace('-', '_')}_gate.json"
 
 
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _safe_run_file(root: Path, value: Any) -> Path | None:
+    text = str(value or "").strip()
+    if not text:
+        return None
+    candidate = Path(text).expanduser()
+    if not candidate.is_absolute():
+        candidate = root / candidate
+    try:
+        resolved = candidate.resolve()
+        resolved.relative_to(root.resolve())
+    except (OSError, ValueError):
+        return None
+    return resolved if resolved.is_file() else None
+
+
+def _review_input_binding(root: Path, scope: str) -> dict[str, Any]:
+    candidates: set[Path] = set()
+    for relative in (
+        "request.json",
+        "context_manifest.json",
+        DECK_BRIEF_NAME,
+        "claim_map.json",
+        "claim_evidence_graph.json",
+        "narrative_plan.json",
+        PAGE_TASKS_NAME,
+        "preview_manifest.json",
+        "render_results/render_result.json",
+        "high_density_build/readback/readback_report.json",
+    ):
+        path = root / relative
+        if path.is_file():
+            candidates.add(path.resolve())
+    for pattern in (
+        "page_packages/*.json",
+        "high_density_build/content_locks/*.json",
+        "high_density_build/scenes/*.json",
+        "high_density_build/page_scenes/*.json",
+        "high_density_build/svg/*.svg",
+        "high_density_build/pptx/*.pptx",
+    ):
+        candidates.update(path.resolve() for path in root.glob(pattern) if path.is_file())
+
+    render_result_path = root / "render_results" / "render_result.json"
+    render_result = read_json(render_result_path) if render_result_path.is_file() else {}
+    artifact = _safe_run_file(root, render_result.get("artifact_path"))
+    if artifact is not None:
+        candidates.add(artifact)
+
+    files = [
+        {
+            "path": path.relative_to(root.resolve()).as_posix(),
+            "sha256": _sha256_file(path),
+        }
+        for path in sorted(candidates, key=lambda item: item.as_posix())
+    ]
+    encoded = json.dumps(
+        {"scope": scope, "files": files},
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    artifact_record = next(
+        (item for item in files if item["path"] == artifact.relative_to(root.resolve()).as_posix()),
+        None,
+    ) if artifact is not None else None
+    semantic_targets = [
+        item["path"]
+        for item in files
+        if item["path"] == "preview_manifest.json"
+        or item["path"].startswith("page_packages/")
+        or item["path"].startswith("high_density_build/content_locks/")
+        or item["path"].startswith("high_density_build/scenes/")
+        or item["path"].startswith("high_density_build/page_scenes/")
+        or item["path"].startswith("high_density_build/svg/")
+        or item["path"].endswith(".pptx")
+    ]
+    visual_targets = [
+        path
+        for path in semantic_targets
+        if path.startswith("high_density_build/svg/") or path.endswith(".pptx")
+    ]
+    evidence_targets = [
+        item["path"]
+        for item in files
+        if item["path"] in {"context_manifest.json", "claim_map.json", "claim_evidence_graph.json"}
+    ]
+    if scope == "visual":
+        review_targets = visual_targets
+    elif scope == "evidence":
+        review_targets = evidence_targets
+    elif scope == "client-readiness":
+        review_targets = [path for path in semantic_targets if path.endswith(".pptx")]
+    else:
+        review_targets = semantic_targets
+    return {
+        "scope": scope,
+        "input_fingerprint": hashlib.sha256(encoded).hexdigest(),
+        "files": files,
+        "artifact": artifact_record or {},
+        "review_targets": review_targets,
+    }
+
+
 def prepare_quality_review(
     run_dir: str | Path,
     scopes: list[str] | None = None,
@@ -105,6 +218,11 @@ def prepare_quality_review(
 
     created: list[str] = []
     for scope in scopes:
+        input_binding = _review_input_binding(root, scope)
+        if not input_binding["review_targets"]:
+            raise ExternalReviewError(
+                f"Cannot prepare {scope} review: no current review target exists for that scope."
+            )
         task: dict[str, Any] = {
             "schema_version": TASK_SCHEMA_VERSION,
             "run_id": run_id,
@@ -115,8 +233,16 @@ def prepare_quality_review(
                 "deck_brief": DECK_BRIEF_NAME,
                 "claim_evidence_graph": "claim_evidence_graph.json",
                 "page_tasks": PAGE_TASKS_NAME,
+                "page_packages": "page_packages/",
                 "preview_manifest": "preview_manifest.json",
-                "quality_reports": "quality_reports/",
+                "render_result": "render_results/render_result.json",
+                "high_density_visible_outputs": "high_density_build/",
+            },
+            "input_binding": input_binding,
+            "result_requirements": {
+                "echo_input_fingerprint": input_binding["input_fingerprint"],
+                "inspect_review_targets": input_binding["review_targets"],
+                "inspect_actual_visible_output": scope in {"semantic", "visual", "client-readiness"},
             },
             "review_dimensions": [
                 "claim_evidence_alignment",
@@ -274,6 +400,7 @@ def quality_findings_to_external_review(payload: dict[str, Any]) -> dict[str, An
         "run_id": payload.get("run_id", ""),
         "reviewer": payload.get("reviewer", "ppt-quality-gate"),
         "scope": gate_class,
+        "input_fingerprint": payload.get("input_fingerprint", ""),
         "created_at": payload.get("created_at", datetime.now(timezone.utc).isoformat()),
         "summary": {"status": "rework_required" if any(f["severity"] in {"P0", "P1"} for f in findings) else "pass"},
         "findings": findings,
@@ -316,6 +443,22 @@ def import_external_review(
         raise ExternalReviewError(str(exc)) from exc
     scope = str(result.get("scope", ""))
     reviewer = str(result.get("reviewer", ""))
+
+    task_path = root / TASK_DIR / _scope_to_task_filename(scope)
+    review_binding: dict[str, Any] = {}
+    if task_path.is_file():
+        task = read_json(task_path)
+        expected_binding = task.get("input_binding") if isinstance(task.get("input_binding"), dict) else {}
+        expected_fingerprint = str(expected_binding.get("input_fingerprint") or "")
+        supplied_fingerprint = str(result.get("input_fingerprint") or "")
+        current_binding = _review_input_binding(root, scope)
+        if not expected_fingerprint:
+            raise ExternalReviewError("Prepared review task has no input fingerprint; prepare a fresh review task.")
+        if supplied_fingerprint != expected_fingerprint:
+            raise ExternalReviewError("External review does not match the prepared task input fingerprint.")
+        if current_binding["input_fingerprint"] != expected_fingerprint:
+            raise ExternalReviewError("External review task is stale because its input files changed; prepare a fresh review task.")
+        review_binding = current_binding
 
     quality_dir = root / "quality_reports"
     quality_dir.mkdir(parents=True, exist_ok=True)
@@ -363,6 +506,8 @@ def import_external_review(
         "scope": scope,
         "status": status,
         "blocks_delivery": blocks_delivery,
+        "input_fingerprint": str(review_binding.get("input_fingerprint") or result.get("input_fingerprint") or ""),
+        "review_input_binding": review_binding,
         "summary": {
             "p0_count": p0_count,
             "p1_count": p1_count,
@@ -383,6 +528,12 @@ def import_external_review(
             for f in findings
         ],
     }
+    artifact_binding = review_binding.get("artifact") if isinstance(review_binding.get("artifact"), dict) else {}
+    if artifact_binding.get("path") and artifact_binding.get("sha256"):
+        gate_report["artifact_binding"] = {
+            "artifact_run_relative": artifact_binding["path"],
+            "artifact_sha256": artifact_binding["sha256"],
+        }
 
     write_json(gate_path, gate_report)
 

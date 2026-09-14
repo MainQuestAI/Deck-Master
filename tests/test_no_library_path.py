@@ -16,11 +16,12 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from deck_master import command_decide_sourcing  # noqa: E402
+from deck_master import command_decide_sourcing, command_search_library  # noqa: E402
 from planning.brief_intake import build_request  # noqa: E402
 from planning.narrative_planner import plan_narrative  # noqa: E402
 from tools.ppt_library_client import PPTLibraryClientError, run_library_selection  # noqa: E402
@@ -32,7 +33,7 @@ class NoLibraryPathTests(unittest.TestCase):
         self.temp_dir = Path(tempfile.mkdtemp())
         self.addCleanup(lambda: shutil.rmtree(self.temp_dir, ignore_errors=True))
 
-    def test_autoplan_without_library_completes_and_records_skip(self) -> None:
+    def test_new_autoplan_defaults_to_explicit_no_library_mode(self) -> None:
         completed = subprocess.run(
             [
                 sys.executable,
@@ -64,13 +65,69 @@ class NoLibraryPathTests(unittest.TestCase):
         self.assertEqual("autoplan_preview_ready", payload["status"])
         self.assertFalse((run_dir / "library_results" / "selection.json").exists())
         events = (run_dir / "events.jsonl").read_text(encoding="utf-8")
-        self.assertIn("ppt_library.skipped_unavailable", events)
-        self.assertIn("sourcing.library_results_absent", events)
+        self.assertIn("ppt_library.skipped_disabled", events)
+        self.assertIn("sourcing.library_results_disabled", events)
+        self.assertEqual("none", read_json(run_dir / "request.json")["library_mode"])
         sourcing = read_json(run_dir / "sourcing_plan.json")
         decisions = {page["decision"] for page in sourcing["pages"]}
         self.assertEqual({"generate"}, decisions)
         manifest = read_json(run_dir / "preview_manifest.json")
         self.assertGreaterEqual(len(manifest["pages"]), 10)
+
+    def test_disabled_library_ignores_stale_selection(self) -> None:
+        run_dir = create_run(
+            self.temp_dir,
+            {
+                "run_id": "nolib-stale",
+                "project_name": "No Lib",
+                "business_goal": "goal",
+                "library_mode": "none",
+            },
+            run_id="nolib-stale",
+        )
+        request = build_request(brief="零售方案，关注全渠道和库存可视化", industry="retail")
+        plan = plan_narrative(request)
+        from planning.page_tasks import build_page_tasks
+
+        write_json(run_dir / "page_tasks.json", build_page_tasks(plan, {"run_id": "nolib-stale", "claims": []}))
+        selection_dir = run_dir / "library_results"
+        selection_dir.mkdir(exist_ok=True)
+        write_json(
+            selection_dir / "selection.json",
+            {"status": "selected", "selections": [{"page_id": "stale", "candidate_id": "old-slide"}]},
+        )
+
+        command_decide_sourcing(argparse.Namespace(run_dir=str(run_dir), run_id="nolib-stale"))
+
+        sourcing = read_json(run_dir / "sourcing_plan.json")
+        self.assertTrue(all(page["decision"] == "generate" for page in sourcing["pages"]))
+        events = (run_dir / "events.jsonl").read_text(encoding="utf-8")
+        self.assertIn("sourcing.library_results_disabled", events)
+
+    def test_direct_search_is_explicit_even_when_run_default_is_none(self) -> None:
+        run_dir = create_run(
+            self.temp_dir,
+            {"run_id": "explicit-search", "project_name": "Search", "library_mode": "none"},
+            run_id="explicit-search",
+        )
+        write_json(run_dir / "narrative_plan.json", {"run_id": "explicit-search", "beats": []})
+
+        with patch(
+            "deck_master.run_library_selection",
+            return_value={"status": "selected", "source": "real", "selections": []},
+        ) as selection:
+            result = command_search_library(
+                argparse.Namespace(
+                    run_dir=str(run_dir),
+                    run_id="explicit-search",
+                    library_mode=None,
+                    ppt_lib_command="ppt-lib",
+                    allow_fixture_library_fallback=False,
+                )
+            )
+
+        self.assertEqual("selected", result["status"])
+        self.assertEqual("auto", selection.call_args.kwargs["mode"])
 
     def test_decide_sourcing_tolerates_missing_selection(self) -> None:
         run_dir = create_run(

@@ -30,6 +30,8 @@ Deck Master stage `deck-quality`; commands preserve its artifact and approval co
 deck-master quality-gate draft --run-dir <run_dir>
 deck-master quality-gate customer-visible-safety --run-dir <run_dir> --artifact <pptx>
 deck-master quality-gate delivery --run-dir <run_dir> --artifact <pptx>
+deck-master prepare-quality-review --run-dir <run_dir> --scope semantic
+deck-master import-quality-review --run-dir <run_dir> --input <external_quality_review.json>
 deck-master workflow status --run-dir <run_dir>
 deck-master run-state --run-dir <run_dir>
 ```
@@ -47,3 +49,4 @@ deck-review
 
 ## Safety Rules
 Keep internal notes out of customer-visible artifacts. Reuse current validation; rerun checks affected by changes. Client export requires approval for the current version.
+External review results must echo the prepared task's `input_fingerprint` and inspect every path in `input_binding.review_targets`. Prepare a fresh task after any target changes; never reuse a stale report for a rebuilt deck.

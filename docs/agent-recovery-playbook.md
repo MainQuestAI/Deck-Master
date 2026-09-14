@@ -8,8 +8,12 @@ unexpected runtime stage. Do not repair by editing random artifacts.
 - Detect by: `agent-doctor --mode production` check `production_backend` or
   `suite-status.external_dependency_status` for `ppt-master`.
 - Auto action: none for production. Fixture preview may continue.
-- Stop when the `ppt-master` production backend is not `bound_verified` with a
-  verified git SHA.
+- This blocker applies to the standard builder profile. A run already bound to
+  `builder_profile=high_density` checks
+  `deck_master.build.high_density.v1` and follows the High-Density Builder
+  section below; it does not require the external standard backend.
+- Stop a standard-profile run when the `ppt-master` production backend is not
+  `bound_verified` with a verified git SHA.
 - Verify with:
 
 ```bash

@@ -18,6 +18,7 @@ if str(REPO_ROOT / "scripts") not in sys.path:
     sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
 from build.manifest import build_manifest_v2  # noqa: E402
+from narrative.judgment_builder import build_judgments  # noqa: E402
 from runtime.orchestration import import_plan  # noqa: E402
 from runtime.run_state import create_run, read_json, write_json  # noqa: E402
 from runtime.run_state_resolver import resolve_run_state  # noqa: E402
@@ -167,6 +168,19 @@ def test_unknown_beat_and_incomplete_body_rejected(tmp_path: Path) -> None:
     with pytest.raises(Exception, match="no complete customer-visible content"):
         import_plan(run_dir, _write_input(tmp_path, no_title), source="agent")
 
+    metadata_only = _full_draft(
+        beats2,
+        [
+            {
+                "beat_id": "beat_01_opener",
+                "customer_visible": {"title": "开场标题", "body_blocks": [{"type": "text", "text": ""}]},
+            },
+            *packages[1:],
+        ],
+    )
+    with pytest.raises(Exception, match="no complete customer-visible content"):
+        import_plan(run_dir, _write_input(tmp_path, metadata_only, name="metadata-only.json"), source="agent")
+
     assert not (run_dir / "page_packages").is_dir()
 
 
@@ -185,6 +199,10 @@ def test_citations_get_globally_unique_evidence_ids(tmp_path: Path) -> None:
     """Pages citing sources without ids must not collide on the builder's
     cross-page evidence ledger (found by the fixture build exercise)."""
     run_dir = _make_run(tmp_path)
+    write_json(
+        run_dir / "context_manifest.json",
+        {"schema_version": "deck_context_manifest.v1", "sources": [{"source_id": "material.md", "path": "material.md"}]},
+    )
     beats, packages = _draft_v1()
     for package in packages:
         package["citations"] = [{"source": "material.md"}]
@@ -197,6 +215,45 @@ def test_citations_get_globally_unique_evidence_ids(tmp_path: Path) -> None:
         assert citations and citations[0]["evidence_id"]
         ids.add(citations[0]["evidence_id"])
     assert len(ids) == 3
+
+
+def test_citations_require_exact_registered_source_identity(tmp_path: Path) -> None:
+    run_dir = _make_run(tmp_path)
+    write_json(
+        run_dir / "context_manifest.json",
+        {"schema_version": "deck_context_manifest.v1", "sources": [{"source_id": "src_10", "path": "materials/source-10.md"}]},
+    )
+    beats, packages = _draft_v1()
+    packages[0]["citations"] = [{"source_id": "src_1"}]
+
+    with pytest.raises(Exception, match="citation#1"):
+        import_plan(run_dir, _write_input(tmp_path, _full_draft(beats, packages)), source="agent")
+
+
+def test_evidence_judgment_rejects_prefix_and_ambiguous_source_refs() -> None:
+    base = {
+        "request": {"run_id": "r1", "business_goal": "提高转化"},
+        "deck_brief": {"run_id": "r1", "core_points": ["方案"]},
+    }
+    claim_map = {"claims": [{"claim_id": "c1", "claim": "结论", "evidence_refs": ["src_1"]}]}
+
+    prefix = build_judgments(
+        base["request"],
+        base["deck_brief"],
+        claim_map,
+        {"sources": [{"source_id": "src_10"}]},
+    )
+    prefix_evidence = next(item for item in prefix["judgments"] if item["judgment_id"] == "judgment_evidence_sufficiency")
+    assert prefix_evidence["statement"].startswith("0/1")
+
+    ambiguous = build_judgments(
+        base["request"],
+        base["deck_brief"],
+        claim_map,
+        {"sources": [{"source_id": "src_1"}, {"source_id": "src_1"}]},
+    )
+    ambiguous_evidence = next(item for item in ambiguous["judgments"] if item["judgment_id"] == "judgment_evidence_sufficiency")
+    assert ambiguous_evidence["statement"].startswith("0/1")
 
 
 def test_add_delete_reorder_roundtrip(tmp_path: Path) -> None:
@@ -320,11 +377,99 @@ def test_downstream_pruned_on_delete_and_change(tmp_path: Path) -> None:
     result = import_plan(run_dir, _write_input(tmp_path, _full_draft(v2_beats, v2_packages), name="v2.json"), source="agent")
 
     assert result["changed_pages"] == ["beat_03_solution"]
-    assert result["downstream"].get("sourcing_plan.json") == "pruned"
-    sourcing = read_json(run_dir / "sourcing_plan.json")
-    assert [page["page_id"] for page in sourcing["pages"]] == ["beat_01_opener"]
-    preview = read_json(run_dir / "preview_manifest.json")
-    assert [page["page_id"] for page in preview["pages"]] == ["beat_01_opener"]
+    assert result["downstream"].get("sourcing_plan.json") == "invalidated"
+    assert not (run_dir / "sourcing_plan.json").exists()
+    assert not (run_dir / "preview_manifest.json").exists()
+
+
+def test_material_change_ignores_spoofed_source_fingerprint_and_invalidates_build(tmp_path: Path) -> None:
+    run_dir = _make_run(tmp_path)
+    beats, packages = _draft_v1()
+    import_plan(run_dir, _write_input(tmp_path, _full_draft(beats, packages), name="v1.json"), source="agent")
+    old = read_json(run_dir / "page_packages" / "beat_03_solution.json")
+    (run_dir / "build").mkdir(exist_ok=True)
+    write_json(run_dir / "build" / "build_manifest.json", {"status": "completed"})
+    (run_dir / "render_results").mkdir(exist_ok=True)
+    write_json(run_dir / "render_results" / "render_result.json", {"status": "completed"})
+
+    changed = _package("beat_03_solution", "方案标题", "已经改变的正文")
+    changed["source_fingerprint"] = old["source_fingerprint"]
+    v2 = [packages[0], packages[1], changed]
+    result = import_plan(run_dir, _write_input(tmp_path, _full_draft(beats, v2), name="v2.json"), source="agent")
+
+    assert result["changed_pages"] == ["beat_03_solution"]
+    assert not (run_dir / "build").exists()
+    assert not (run_dir / "render_results").exists()
+
+
+def test_visual_spec_change_invalidates_derived_output(tmp_path: Path) -> None:
+    run_dir = _make_run(tmp_path)
+    beats, packages = _draft_v1()
+    import_plan(run_dir, _write_input(tmp_path, _full_draft(beats, packages), name="v1.json"), source="agent")
+    (run_dir / "high_density_build").mkdir(exist_ok=True)
+    write_json(run_dir / "high_density_build" / "status.json", {"status": "completed"})
+
+    v2 = [dict(item) for item in packages]
+    v2[2] = dict(v2[2])
+    v2[2]["visual_spec"] = {"diagram": "three-stage operating model"}
+    result = import_plan(run_dir, _write_input(tmp_path, _full_draft(beats, v2), name="visual-v2.json"), source="agent")
+
+    assert result["changed_pages"] == ["beat_03_solution"]
+    assert not (run_dir / "high_density_build").exists()
+
+
+def test_downstream_invalidation_failure_rolls_back_entire_import(tmp_path: Path, monkeypatch) -> None:
+    run_dir = _make_run(tmp_path)
+    beats, packages = _draft_v1()
+    import_plan(run_dir, _write_input(tmp_path, _full_draft(beats, packages), name="v1.json"), source="agent")
+    old_package = read_json(run_dir / "page_packages" / "beat_03_solution.json")
+    (run_dir / "build").mkdir(exist_ok=True)
+    write_json(run_dir / "build" / "build_manifest.json", {"status": "completed"})
+    (run_dir / "generation_tasks").mkdir(exist_ok=True)
+    write_json(run_dir / "generation_tasks" / "index.json", {"tasks": [{"page_id": "beat_03_solution"}]})
+    (run_dir / "generation_tasks" / "agent-note.txt").write_text("preserve me", encoding="utf-8")
+
+    import runtime.orchestration as orchestration_module
+
+    real_remove = orchestration_module._remove_path
+
+    def fail_once(path: Path) -> None:
+        if Path(path).name == "build" and not getattr(fail_once, "failed", False):
+            fail_once.failed = True
+            raise OSError("simulated invalidation failure")
+        real_remove(path)
+
+    monkeypatch.setattr(orchestration_module, "_remove_path", fail_once)
+    changed = [packages[0], packages[1], _package("beat_03_solution", "新标题", "新正文")]
+
+    with pytest.raises(OSError, match="simulated invalidation failure"):
+        import_plan(run_dir, _write_input(tmp_path, _full_draft(beats, changed), name="v2.json"), source="agent")
+
+    assert read_json(run_dir / "page_packages" / "beat_03_solution.json") == old_package
+    assert read_json(run_dir / "build" / "build_manifest.json")["status"] == "completed"
+    assert (run_dir / "generation_tasks" / "agent-note.txt").read_text(encoding="utf-8") == "preserve me"
+    assert not (run_dir / "overrides" / "plan_import_in_progress.json").exists()
+
+
+def test_reorder_invalidates_deck_level_downstream_state(tmp_path: Path) -> None:
+    run_dir = _make_run(tmp_path)
+    beats, packages = _draft_v1()
+    import_plan(run_dir, _write_input(tmp_path, _full_draft(beats, packages), name="v1.json"), source="agent")
+    write_json(run_dir / "sourcing_plan.json", {"pages": [{"page_id": item["beat_id"]} for item in beats]})
+    (run_dir / "quality_reports").mkdir(exist_ok=True)
+    write_json(run_dir / "quality_reports" / "old.json", {"status": "pass"})
+
+    order = [beats[2], beats[0], beats[1]]
+    by_beat = {item["beat_id"]: item for item in packages}
+    result = import_plan(
+        run_dir,
+        _write_input(tmp_path, _full_draft(order, [by_beat[item["beat_id"]] for item in order]), name="reordered.json"),
+        source="agent",
+    )
+
+    assert result["reordered"] is True
+    assert not (run_dir / "sourcing_plan.json").exists()
+    assert not (run_dir / "quality_reports").exists()
 
 
 def test_stage_fast_path_drives_package_run_to_build(tmp_path: Path) -> None:
@@ -347,6 +492,52 @@ def test_stage_fast_path_drives_package_run_to_build(tmp_path: Path) -> None:
     assert "re-import the full draft" in blocked["next_command"] or any(
         "page packages are missing" in entry.get("reason", "") for entry in blocked["blocked_actions"]
     )
+
+
+def test_completed_high_density_package_run_is_ready_without_external_standard_backend(
+    tmp_path: Path, monkeypatch
+) -> None:
+    run_dir = _make_run(tmp_path)
+    request = read_json(run_dir / "request.json")
+    request.update({"run_mode": "production", "builder_profile": "high_density"})
+    write_json(run_dir / "request.json", request)
+    for name in ("context_manifest.json", "deck_brief.json", "claim_map.json"):
+        write_json(run_dir / name, {})
+    beats, packages = _draft_v1()
+    import_plan(run_dir, _write_input(tmp_path, _full_draft(beats, packages)), source="agent")
+    (run_dir / "build").mkdir(exist_ok=True)
+    write_json(run_dir / "build" / "build_manifest.json", {"schema_version": "deck_build_manifest.v2", "pages": []})
+    (run_dir / "render_results").mkdir(exist_ok=True)
+    write_json(
+        run_dir / "render_results" / "render_result.json",
+        {"schema_version": "deck_render_result.v2", "source_mode": "production", "artifact_path": "deck.pptx"},
+    )
+    monkeypatch.setattr("runtime.run_state_resolver.builder_backend_status", lambda: {"production_capable": False})
+    monkeypatch.setattr(
+        "runtime.run_state_resolver.resolve_workspace_for_run",
+        lambda **_kwargs: {
+            "blocked": False,
+            "reasons": [],
+            "workspace_required": True,
+            "workspace_valid": True,
+            "resolved_workspace": str(tmp_path),
+        },
+    )
+
+    state = resolve_run_state(run_dir, run_mode="production")
+
+    assert state["stage"] == "ready_for_client_export"
+
+
+def test_incomplete_import_marker_blocks_until_retry(tmp_path: Path) -> None:
+    run_dir = _make_run(tmp_path)
+    marker = run_dir / "overrides" / "plan_import_in_progress.json"
+    write_json(marker, {"status": "writing", "backup_dir": str(run_dir / "overrides" / "missing")})
+
+    state = resolve_run_state(run_dir, run_mode="fixture")
+
+    assert state["stage"] == "blocked_packages"
+    assert "import-plan" in state["next_command"]
 
 
 def test_legacy_pipeline_unaffected_without_packages(tmp_path: Path) -> None:

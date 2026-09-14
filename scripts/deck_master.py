@@ -674,6 +674,25 @@ def command_build_claim_map(args: argparse.Namespace) -> dict[str, Any]:
 def command_search_library(args: argparse.Namespace) -> dict[str, Any]:
     run_dir = resolve_run_dir(args)
     request = load_request(run_dir)
+    # Calling search-library is itself an explicit request to use the Library.
+    # Autoplan always passes its resolved per-run mode, including "none".
+    library_mode = str(getattr(args, "library_mode", None) or "auto").strip().lower()
+    if library_mode == "none":
+        append_event(
+            run_dir,
+            "ppt_library.skipped_disabled",
+            target=str(request.get("run_id") or run_dir.name),
+            payload_ref="",
+            data={"reason": "PPT Library is disabled for this run", "library_mode": "none"},
+        )
+        return {
+            "run_id": request["run_id"],
+            "run_dir": str(run_dir),
+            "status": "library_disabled",
+            "source": "none",
+            "preview_degraded": False,
+            "selection_count": 0,
+        }
     narrative_plan_path = run_dir / NARRATIVE_PLAN_NAME
     narrative_plan = read_json(narrative_plan_path)
     results = run_library_selection(
@@ -681,7 +700,7 @@ def command_search_library(args: argparse.Namespace) -> dict[str, Any]:
         narrative_plan_path=narrative_plan_path,
         request=request,
         run_dir=run_dir,
-        mode=args.library_mode,
+        mode=library_mode,
         command=args.ppt_lib_command,
         allow_fixture_fallback=bool(getattr(args, "allow_fixture_library_fallback", False)),
     )
@@ -706,9 +725,11 @@ def command_import_library_selection(args: argparse.Namespace) -> dict[str, Any]
 
 def command_decide_sourcing(args: argparse.Namespace) -> dict[str, Any]:
     run_dir = resolve_run_dir(args)
+    request = load_request(run_dir)
     page_tasks = read_json(run_dir / PAGE_TASKS_NAME)
     selection_path = run_dir / "library_results" / "selection.json"
-    if selection_path.exists():
+    library_disabled = str(request.get("library_mode") or "").strip().lower() == "none"
+    if selection_path.exists() and not library_disabled:
         library_results = read_json(selection_path)
     else:
         # A run without library results is a normal no-library path, not a
@@ -717,10 +738,16 @@ def command_decide_sourcing(args: argparse.Namespace) -> dict[str, Any]:
         library_results = None
         append_event(
             run_dir,
-            "sourcing.library_results_absent",
+            "sourcing.library_results_disabled" if library_disabled else "sourcing.library_results_absent",
             target=str(page_tasks.get("run_id") or run_dir.name),
             payload_ref="",
-            data={"reason": "library_results/selection.json is absent; continuing without library candidates"},
+            data={
+                "reason": (
+                    "PPT Library is disabled for this run; cached selections are ignored"
+                    if library_disabled
+                    else "library_results/selection.json is absent; continuing without library candidates"
+                )
+            },
         )
     sourcing_plan = build_sourcing_plan_v2(
         run_id=str(page_tasks.get("run_id") or run_dir.name),
@@ -816,13 +843,35 @@ def command_autoplan(args: argparse.Namespace) -> dict[str, Any]:
         plan_result = command_plan(args)
         run_dir = Path(plan_result["run_dir"])
     args.run_dir = str(run_dir)
-    library_mode = str(getattr(args, "library_mode", "auto") or "auto")
+    request = load_request(run_dir)
+    requested_library_mode = str(getattr(args, "library_mode", None) or "").strip().lower()
+    recorded_library_mode = str(request.get("library_mode") or "").strip().lower()
+    if requested_library_mode:
+        library_mode = requested_library_mode
+    elif recorded_library_mode:
+        library_mode = recorded_library_mode
+    elif existing_run:
+        # Runs created before library_mode was persisted retain the historical
+        # auto-discovery behavior when resumed.
+        library_mode = "auto"
+    else:
+        library_mode = "none"
+    request["library_mode"] = library_mode
+    write_json(run_dir / REQUEST_NAME, request)
+    args.library_mode = library_mode
     ppt_lib_command = str(getattr(args, "ppt_lib_command", "ppt-lib") or "ppt-lib")
-    if library_mode == "auto" and not shutil.which(ppt_lib_command):
+    if library_mode == "none":
+        append_event(
+            run_dir,
+            "ppt_library.skipped_disabled",
+            target=str(request.get("run_id") or run_dir.name),
+            payload_ref="",
+            data={"reason": "PPT Library is disabled for this run", "library_mode": "none"},
+        )
+    elif library_mode == "auto" and not shutil.which(ppt_lib_command):
         # No PPT Library installed/configured is a normal creation path: auto
         # searches only when a library is actually available. Explicit real
         # keeps its real dependency failure; fixture fallback stays explicit.
-        request = load_request(run_dir)
         append_event(
             run_dir,
             "ppt_library.skipped_unavailable",
@@ -1362,7 +1411,7 @@ def command_route_skill(args: argparse.Namespace) -> dict[str, Any]:
 def _autopilot_args(args: argparse.Namespace, **overrides: Any) -> argparse.Namespace:
     values = vars(args).copy()
     defaults = {
-        "library_mode": "auto",
+        "library_mode": None,
         "ppt_lib_command": "ppt-lib",
         "allow_fixture_library_fallback": False,
         "planning_mode": "classic",
@@ -3063,7 +3112,7 @@ def add_run_args(parser: argparse.ArgumentParser) -> None:
 
 
 def add_library_args(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("--library-mode", choices=["auto", "real", "fixture"], default="auto")
+    parser.add_argument("--library-mode", choices=["none", "auto", "real", "fixture"], default=None)
     parser.add_argument("--ppt-lib-command", default="ppt-lib")
     parser.add_argument("--allow-fixture-library-fallback", action="store_true")
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import shutil
@@ -35,6 +36,13 @@ from validators.companion_tools import validate_render_result
 SCHEMA_VERSION = "deck_orchestration_check.v1"
 PLAN_IMPORT_SCHEMA = "deck_plan_import.v1"
 PAGE_PACKAGES_DIR = "page_packages"
+PLAN_IMPORT_MARKER = "plan_import_in_progress.json"
+DERIVED_OUTPUTS = (
+    "build",
+    "render_results",
+    "high_density_build",
+    "quality_reports",
+)
 REQUIRED_SEQUENCE = [
     REQUEST_NAME,
     CONTEXT_MANIFEST_NAME,
@@ -48,7 +56,7 @@ REQUIRED_SEQUENCE = [
 
 
 def _utc_stamp() -> str:
-    return datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
+    return datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
 
 
 def _quality_reports(root: Path) -> list[str]:
@@ -150,6 +158,7 @@ def import_plan(run_dir: str | Path, input_path: str | Path, *, source: str) -> 
     input_file = Path(input_path).expanduser().resolve()
     if not input_file.is_file():
         raise RunStateError(f"Plan input not found: {input_file}")
+    _recover_incomplete_plan_import(root)
 
     request = load_request(root)
     run_id = str(request.get("run_id") or root.name)
@@ -167,13 +176,24 @@ def import_plan(run_dir: str | Path, input_path: str | Path, *, source: str) -> 
         mode = "plan"
 
     backup_dir = root / "overrides" / f"plan_{_utc_stamp()}"
-    backup_dir.mkdir(parents=True, exist_ok=True)
+    backup_dir.mkdir(parents=True, exist_ok=False)
     for name in (NARRATIVE_PLAN_NAME, PAGE_TASKS_NAME):
         current = root / name
         if current.exists():
             shutil.copy2(current, backup_dir / name)
     if page_packages is not None:
         _backup_downstream_for_import(root, backup_dir)
+    marker_path = root / "overrides" / PLAN_IMPORT_MARKER
+    write_json(
+        marker_path,
+        {
+            "schema_version": "deck_plan_import_transaction.v1",
+            "status": "writing",
+            "backup_dir": str(backup_dir),
+            "input": str(input_file),
+            "source": source,
+        },
+    )
 
     removed_pages: list[str] = []
     new_pages: list[str] = []
@@ -185,13 +205,38 @@ def import_plan(run_dir: str | Path, input_path: str | Path, *, source: str) -> 
             removed_pages, new_pages, changed_pages, reordered = _write_full_draft_packages(root, page_packages)
             write_json(root / PAGE_TASKS_NAME, page_tasks)
             write_json(root / NARRATIVE_PLAN_NAME, narrative_plan)
-            downstream = _prune_downstream_pages(root, removed_pages, changed_pages)
+            downstream = _prune_downstream_pages(
+                root,
+                removed_pages,
+                new_pages,
+                changed_pages,
+                reordered=reordered,
+            )
         else:
             write_json(root / NARRATIVE_PLAN_NAME, narrative_plan)
             write_json(root / PAGE_TASKS_NAME, page_tasks)
-    except Exception:
-        _restore_plan_backup(root, backup_dir)
+    except Exception as exc:
+        try:
+            _restore_plan_backup(root, backup_dir)
+        except Exception as restore_exc:
+            write_json(
+                marker_path,
+                {
+                    "schema_version": "deck_plan_import_transaction.v1",
+                    "status": "recovery_failed",
+                    "backup_dir": str(backup_dir),
+                    "input": str(input_file),
+                    "source": source,
+                    "error": str(exc),
+                    "recovery_error": str(restore_exc),
+                },
+            )
+            raise RunStateError(
+                f"plan import failed and automatic recovery failed; restore from {backup_dir}: {restore_exc}"
+            ) from exc
+        marker_path.unlink(missing_ok=True)
         raise
+    marker_path.unlink(missing_ok=True)
 
     append_event(
         root,
@@ -555,12 +600,36 @@ def _has_body_text(customer_visible: dict[str, Any]) -> bool:
     blocks = customer_visible.get("body_blocks")
     if not isinstance(blocks, list) or not blocks:
         return False
-    for block in blocks:
-        if isinstance(block, dict):
-            if any(str(value).strip() for value in block.values() if isinstance(value, (str, int, float))):
-                return True
-        elif isinstance(block, str) and block.strip():
-            return True
+    return any(_has_visible_value(block) for block in blocks)
+
+
+_NON_CONTENT_KEYS = {
+    "type",
+    "kind",
+    "id",
+    "block_id",
+    "role",
+    "style",
+    "variant",
+    "layout",
+    "level",
+    "order",
+    "position",
+}
+
+
+def _has_visible_value(value: Any) -> bool:
+    if isinstance(value, str):
+        return bool(value.strip())
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        return True
+    if isinstance(value, list):
+        return any(_has_visible_value(item) for item in value)
+    if isinstance(value, dict):
+        return any(
+            key not in _NON_CONTENT_KEYS and _has_visible_value(item)
+            for key, item in value.items()
+        )
     return False
 
 
@@ -602,24 +671,29 @@ def _assert_page_package_contract(package: dict[str, Any]) -> None:
 def _check_citations_against_sources(root: Path, packages: list[dict[str, Any]]) -> None:
     """Every citation must resolve to a source the run actually has.
 
-    Citations are free-form objects; any string value that matches a manifest
-    source name/path/fingerprint (substring either way) counts as resolved.
-    A citation that references nothing identifiable is reported, not skipped.
+    Only explicit source identity fields are considered, and they must match a
+    registered source exactly after path/case normalization. A citation that
+    references nothing identifiable is reported, not skipped.
     """
+    citations = [
+        (str(package.get("page_id") or ""), index, citation)
+        for package in packages
+        for index, citation in enumerate(package.get("citations") or [], start=1)
+        if isinstance(citation, dict)
+    ]
+    if not citations:
+        return
     manifest = _safe_read_context_manifest(root)
     if manifest is None:
-        return
+        raise RunStateError("citations require a valid context_manifest.json with registered sources")
     source_identities = _context_source_identities(manifest)
     if not source_identities:
-        return
+        raise RunStateError("citations require at least one registered source in context_manifest.json")
     unknown: list[str] = []
-    for package in packages:
-        for index, citation in enumerate(package.get("citations") or [], start=1):
-            if not isinstance(citation, dict):
-                continue
-            values = [str(value) for value in citation.values() if isinstance(value, (str, int, float))]
-            if not any(_matches_identity(str(value), source_identities) for value in values):
-                unknown.append(f"{package.get('page_id')} citation#{index}")
+    for page_id, index, citation in citations:
+        values = _citation_source_values(citation)
+        if not any(_matches_identity(value, source_identities) for value in values):
+            unknown.append(f"{page_id} citation#{index}")
     if unknown:
         raise RunStateError(
             "citations reference sources missing from context_manifest.json: " + ", ".join(unknown)
@@ -649,17 +723,51 @@ def _context_source_identities(manifest: dict[str, Any]) -> set[str]:
             for field in ("name", "path", "sha256", "source_id", "id", "title"):
                 value = str(entry.get(field) or "").strip()
                 if value:
-                    identities.add(value)
+                    identities.add(_normalize_source_identity(value))
     return identities
 
 
 def _matches_identity(value: str, identities: set[str]) -> bool:
-    if not value.strip():
-        return False
-    for identity in identities:
-        if identity in value or value in identity:
-            return True
-    return False
+    normalized = _normalize_source_identity(value)
+    return bool(normalized and normalized in identities)
+
+
+def _normalize_source_identity(value: Any) -> str:
+    normalized = str(value or "").strip().replace("\\", "/")
+    while normalized.startswith("./"):
+        normalized = normalized[2:]
+    return normalized.casefold()
+
+
+def _citation_source_values(citation: dict[str, Any]) -> list[str]:
+    values: list[str] = []
+    for field in ("source_id", "source_ref", "ref", "source", "path", "sha256", "name", "title"):
+        value = citation.get(field)
+        if isinstance(value, (str, int, float)) and str(value).strip():
+            values.append(str(value))
+    return values
+
+
+_PACKAGE_CHANGE_FIELDS = (
+    "customer_visible",
+    "speaker_notes",
+    "audience_context",
+    "visual_spec",
+    "asset_bindings",
+    "citations",
+    "claim_bindings",
+    "evidence_bindings",
+    "style_refs",
+    "build_requirements",
+    "quality_intent",
+    "page_role",
+)
+
+
+def _package_change_fingerprint(package: dict[str, Any]) -> str:
+    payload = {key: package.get(key) for key in _PACKAGE_CHANGE_FIELDS if key in package}
+    blob = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(blob.encode("utf-8")).hexdigest()
 
 
 def _write_full_draft_packages(
@@ -702,7 +810,7 @@ def _write_full_draft_packages(
         str(new_by_beat[beat_id].get("page_id") or beat_id)
         for beat_id in new_by_beat
         if beat_id in old_by_beat
-        and old_by_beat[beat_id].get("source_fingerprint") != new_by_beat[beat_id].get("source_fingerprint")
+        and _package_change_fingerprint(old_by_beat[beat_id]) != _package_change_fingerprint(new_by_beat[beat_id])
     )
     reordered = any(
         beat_id in old_orders and old_orders[beat_id] != int(new_by_beat[beat_id].get("order") or 0)
@@ -726,38 +834,67 @@ def _backup_downstream_for_import(root: Path, backup_dir: Path) -> None:
     packages_dir = root / PAGE_PACKAGES_DIR
     if packages_dir.is_dir():
         shutil.copytree(packages_dir, backup_dir / PAGE_PACKAGES_DIR, dirs_exist_ok=True)
-    generation_index = root / "generation_tasks" / "index.json"
-    if generation_index.exists():
-        (backup_dir / "generation_tasks").mkdir(exist_ok=True)
-        shutil.copy2(generation_index, backup_dir / "generation_tasks" / "index.json")
+    generation_tasks = root / "generation_tasks"
+    if generation_tasks.is_dir():
+        shutil.copytree(generation_tasks, backup_dir / "generation_tasks", dirs_exist_ok=True)
+    for name in DERIVED_OUTPUTS:
+        current = root / name
+        if current.is_dir():
+            shutil.copytree(current, backup_dir / name, dirs_exist_ok=True)
+        elif current.is_file():
+            shutil.copy2(current, backup_dir / name)
 
 
 def _restore_plan_backup(root: Path, backup_dir: Path) -> None:
-    """Best-effort rollback so an interrupted import never looks like current state."""
-    watched = (NARRATIVE_PLAN_NAME, PAGE_TASKS_NAME, SOURCING_PLAN_NAME, PREVIEW_MANIFEST_NAME, PAGE_PACKAGES_DIR)
+    """Restore the last complete state; recovery failures remain visible."""
+    watched = (
+        NARRATIVE_PLAN_NAME,
+        PAGE_TASKS_NAME,
+        SOURCING_PLAN_NAME,
+        PREVIEW_MANIFEST_NAME,
+        PAGE_PACKAGES_DIR,
+        "generation_session.json",
+        "generation_tasks",
+        *DERIVED_OUTPUTS,
+    )
     backed_up = {item.name for item in backup_dir.iterdir()}
     for name in watched:
         if name in backed_up:
             continue
         path = root / name
-        if path.is_dir():
-            shutil.rmtree(path, ignore_errors=True)
-        elif path.exists():
-            path.unlink()
+        if path.exists() or path.is_symlink():
+            _remove_path(path)
     for item in backup_dir.iterdir():
         target = root / item.name
-        try:
-            if item.is_dir():
-                if target.exists():
-                    shutil.rmtree(target)
-                shutil.copytree(item, target)
-            else:
-                shutil.copy2(item, target)
-        except Exception:
-            continue
+        if item.is_dir():
+            if target.exists():
+                shutil.rmtree(target)
+            shutil.copytree(item, target)
+        else:
+            shutil.copy2(item, target)
 
 
-def _prune_downstream_pages(root: Path, removed_pages: list[str], changed_pages: list[str]) -> dict[str, Any]:
+def _recover_incomplete_plan_import(root: Path) -> None:
+    marker_path = root / "overrides" / PLAN_IMPORT_MARKER
+    if not marker_path.exists():
+        return
+    marker = read_json(marker_path)
+    backup_dir = Path(str(marker.get("backup_dir") or "")).expanduser().resolve()
+    overrides = (root / "overrides").resolve()
+    if backup_dir.parent != overrides or not backup_dir.is_dir():
+        raise RunStateError(f"incomplete plan import has no valid recovery backup: {backup_dir}")
+    _restore_plan_backup(root, backup_dir)
+    marker_path.unlink()
+
+
+def _prune_downstream_pages(
+    root: Path,
+    removed_pages: list[str],
+    new_pages: list[str],
+    changed_pages: list[str],
+    *,
+    reordered: bool,
+) -> dict[str, Any]:
     """Drop removed/content-changed pages from derived downstream artifacts.
 
     Unaffected pages keep their decisions and previews. Derived artifacts are
@@ -767,73 +904,91 @@ def _prune_downstream_pages(root: Path, removed_pages: list[str], changed_pages:
     affected: set[str] = set()
     for value in list(removed_pages) + list(changed_pages):
         affected.add(str(value))
-    if not affected:
+    deck_changed = bool(affected or new_pages or reordered)
+    if not deck_changed:
         return {}
     summary: dict[str, Any] = {}
-    summary.update(_prune_pages_in_artifact(root / SOURCING_PLAN_NAME, "pages", affected))
-    summary.update(_prune_pages_in_artifact(root / PREVIEW_MANIFEST_NAME, "pages", affected))
-    summary.update(_prune_generation_tasks(root, affected))
+    if new_pages or reordered:
+        for name in (SOURCING_PLAN_NAME, PREVIEW_MANIFEST_NAME, "generation_session.json"):
+            path = root / name
+            if path.exists():
+                _remove_path(path)
+                summary[name] = "invalidated"
+        generation_tasks = root / "generation_tasks"
+        if generation_tasks.exists():
+            _remove_path(generation_tasks)
+            summary["generation_tasks"] = "invalidated"
+    else:
+        summary.update(_prune_pages_in_artifact(root / SOURCING_PLAN_NAME, "pages", affected))
+        summary.update(_prune_pages_in_artifact(root / PREVIEW_MANIFEST_NAME, "pages", affected))
+        summary.update(_prune_generation_tasks(root, affected))
+    for name in DERIVED_OUTPUTS:
+        path = root / name
+        if path.exists():
+            _remove_path(path)
+            summary[name] = "invalidated"
     return {key: value for key, value in summary.items() if value}
+
+
+def _remove_path(path: Path) -> None:
+    if path.is_dir() and not path.is_symlink():
+        shutil.rmtree(path)
+    else:
+        path.unlink()
 
 
 def _prune_pages_in_artifact(path: Path, key: str, affected: set[str]) -> dict[str, str]:
     if not path.exists():
         return {}
-    try:
-        payload = read_json(path)
-        pages = payload.get(key)
-        if not isinstance(pages, list):
-            return {}
-        kept = [
-            page
-            for page in pages
-            if not (isinstance(page, dict) and ({str(page.get("page_id") or ""), str(page.get("beat_id") or "")} & affected))
-        ]
-        if len(kept) == len(pages):
-            return {}
-        if kept:
-            payload[key] = kept
-            write_json(path, payload)
-        else:
-            path.unlink()
-        return {path.name: "pruned"}
-    except Exception:
-        return {path.name: "prune_failed"}
+    payload = read_json(path)
+    pages = payload.get(key)
+    if not isinstance(pages, list):
+        return {}
+    kept = [
+        page
+        for page in pages
+        if not (isinstance(page, dict) and ({str(page.get("page_id") or ""), str(page.get("beat_id") or "")} & affected))
+    ]
+    if len(kept) == len(pages):
+        return {}
+    if kept:
+        payload[key] = kept
+        write_json(path, payload)
+    else:
+        path.unlink()
+    return {path.name: "pruned"}
 
 
 def _prune_generation_tasks(root: Path, affected: set[str]) -> dict[str, str]:
     index_path = root / "generation_tasks" / "index.json"
     if not index_path.exists():
         return {}
-    try:
-        payload = read_json(index_path)
-        tasks = payload.get("tasks")
-        if not isinstance(tasks, list):
-            return {}
-        kept = [
-            task
-            for task in tasks
-            if not (
-                isinstance(task, dict)
-                and (
-                    {str(task.get("page_id") or ""), str(task.get("beat_id") or ""), str(task.get("page_task_id") or "")}
-                    & affected
-                )
+    payload = read_json(index_path)
+    tasks = payload.get("tasks")
+    if not isinstance(tasks, list):
+        return {}
+    kept = [
+        task
+        for task in tasks
+        if not (
+            isinstance(task, dict)
+            and (
+                {str(task.get("page_id") or ""), str(task.get("beat_id") or ""), str(task.get("page_task_id") or "")}
+                & affected
             )
-        ]
-        if len(kept) == len(tasks):
-            return {}
-        if kept:
-            payload["tasks"] = kept
-            write_json(index_path, payload)
-        else:
-            index_path.unlink()
-            session = root / "generation_session.json"
-            if session.exists():
-                session.unlink()
-        return {"generation_tasks/index.json": "pruned"}
-    except Exception:
-        return {"generation_tasks/index.json": "prune_failed"}
+        )
+    ]
+    if len(kept) == len(tasks):
+        return {}
+    if kept:
+        payload["tasks"] = kept
+        write_json(index_path, payload)
+    else:
+        index_path.unlink()
+        session = root / "generation_session.json"
+        if session.exists():
+            session.unlink()
+    return {"generation_tasks/index.json": "pruned"}
 
 
 def _load_markdown_plan(input_file: Path, *, run_id: str, title: str) -> tuple[dict[str, Any], dict[str, Any]]:

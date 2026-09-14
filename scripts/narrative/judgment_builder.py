@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import Counter
 from typing import Any
 
 
@@ -124,22 +125,24 @@ def _judge_evidence_sufficiency(claims: list, sources: list) -> dict:
     path/sha256）。引用存在不代表证据语义上充分，语义支撑由主编/编辑判断，
     不做"未标风险即充分"的推断。
     """
-    source_keys: set[str] = set()
+    source_key_counts: Counter[str] = Counter()
     for source in sources:
         if not isinstance(source, dict):
             continue
+        source_keys: set[str] = set()
         for field in ("source_id", "name", "path", "sha256"):
-            value = str(source.get(field) or "").strip()
+            value = _normalize_source_identity(source.get(field))
             if value:
                 source_keys.add(value)
+        source_key_counts.update(source_keys)
 
     def _has_resolvable_evidence(claim: dict) -> bool:
         refs = claim.get("evidence_refs") if isinstance(claim.get("evidence_refs"), list) else []
         for ref in refs:
-            ref_text = str(ref or "").strip()
+            ref_text = _normalize_source_identity(ref)
             if not ref_text:
                 continue
-            if any(ref_text == key or ref_text in key or key in ref_text for key in source_keys):
+            if source_key_counts[ref_text] == 1:
                 return True
         return False
 
@@ -170,6 +173,13 @@ def _judge_evidence_sufficiency(claims: list, sources: list) -> dict:
         "source_refs": ["claim_map.json", "context_manifest.json"],
         "risk_flags": risk_flags,
     }
+
+
+def _normalize_source_identity(value: Any) -> str:
+    normalized = str(value or "").strip().replace("\\", "/")
+    while normalized.startswith("./"):
+        normalized = normalized[2:]
+    return normalized.casefold()
 
 
 def _judge_audience_alignment(audience: str, core_points: list, business_goal: str) -> dict:

@@ -21,6 +21,7 @@ from scripts.quality.external_review import (
     prepare_quality_review,
     validate_external_review,
 )
+from scripts.quality.gate_freshness import report_currentity
 from scripts.runtime.import_log import read_import_log
 from scripts.runtime.run_state import create_run, read_json, write_json
 
@@ -31,6 +32,15 @@ def _setup_run(tmp: Path) -> Path:
     run_dir = create_run(runs_dir, {"project_name": "ExtReview"}, run_id="ext-review")
     write_json(run_dir / "deck_brief.json", {"run_id": "ext-review", "objective": "Test"})
     write_json(run_dir / "page_tasks.json", {"tasks": [{"beat_id": "beat_001"}]})
+    packages = run_dir / "page_packages"
+    packages.mkdir()
+    write_json(
+        packages / "beat_001.json",
+        {"page_id": "beat_001", "customer_visible": {"title": "标题", "body_blocks": [{"text": "正文"}]}},
+    )
+    svg_dir = run_dir / "high_density_build" / "svg"
+    svg_dir.mkdir(parents=True)
+    (svg_dir / "beat_001.svg").write_text("<svg><text>正文</text></svg>", encoding="utf-8")
     return run_dir
 
 
@@ -138,6 +148,11 @@ class ExternalReviewPrepareTest(unittest.TestCase):
         self.assertEqual(result["scopes"], ["semantic"])
         task_path = self.run_dir / "quality_review_tasks" / "semantic_review_task.json"
         self.assertTrue(task_path.exists())
+        task = read_json(task_path)
+        self.assertTrue(task["input_binding"]["input_fingerprint"])
+        self.assertIn("page_packages", task["inputs"])
+        self.assertTrue(task["result_requirements"]["inspect_actual_visible_output"])
+        self.assertIn("page_packages/beat_001.json", task["input_binding"]["review_targets"])
 
     def test_prepare_multiple_scopes(self) -> None:
         result = prepare_quality_review(self.run_dir, scopes=["semantic", "visual"])
@@ -166,6 +181,43 @@ class ExternalReviewImportTest(unittest.TestCase):
         # Gate report should exist.
         gate_files = list((self.run_dir / "quality_reports").glob("external_semantic_codex_gate.json"))
         self.assertEqual(len(gate_files), 1)
+
+    def test_prepared_review_requires_matching_current_input_fingerprint(self) -> None:
+        prepare_quality_review(self.run_dir, scopes=["semantic"])
+        task = read_json(self.run_dir / "quality_review_tasks" / "semantic_review_task.json")
+        fingerprint = task["input_binding"]["input_fingerprint"]
+
+        with self.assertRaisesRegex(ExternalReviewError, "input fingerprint"):
+            import_external_review(self.run_dir, _valid_review())
+
+        changed_tasks = read_json(self.run_dir / "page_tasks.json")
+        changed_tasks["tasks"].append({"beat_id": "beat_002"})
+        write_json(self.run_dir / "page_tasks.json", changed_tasks)
+        with self.assertRaisesRegex(ExternalReviewError, "stale"):
+            import_external_review(self.run_dir, _valid_review(input_fingerprint=fingerprint))
+
+    def test_semantic_gate_binds_actual_pptx_and_becomes_stale_after_edit(self) -> None:
+        pptx = self.run_dir / "high_density_build" / "pptx" / "deck.pptx"
+        pptx.parent.mkdir(parents=True)
+        pptx.write_bytes(b"pptx-v1")
+        render_dir = self.run_dir / "render_results"
+        render_dir.mkdir()
+        write_json(render_dir / "render_result.json", {"artifact_path": "high_density_build/pptx/deck.pptx"})
+        prepare_quality_review(self.run_dir, scopes=["semantic"])
+        task = read_json(self.run_dir / "quality_review_tasks" / "semantic_review_task.json")
+
+        import_external_review(
+            self.run_dir,
+            _valid_review(input_fingerprint=task["input_binding"]["input_fingerprint"]),
+        )
+        gate = read_json(self.run_dir / "quality_reports" / "external_semantic_codex_gate.json")
+        self.assertEqual("high_density_build/pptx/deck.pptx", gate["artifact_binding"]["artifact_run_relative"])
+        self.assertTrue(report_currentity(self.run_dir, gate, pptx)["current"])
+
+        pptx.write_bytes(b"pptx-v2")
+        currentity = report_currentity(self.run_dir, gate, pptx)
+        self.assertFalse(currentity["current"])
+        self.assertEqual("stale", currentity["status"])
 
     def test_import_invalid_raises(self) -> None:
         with self.assertRaises(ExternalReviewError):

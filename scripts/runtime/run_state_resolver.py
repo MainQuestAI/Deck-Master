@@ -30,6 +30,7 @@ GENERATION_TASK_INDEX = Path("generation_tasks") / "index.json"
 QUALITY_DIR = "quality_reports"
 BUILD_MANIFEST = Path("build") / "build_manifest.json"
 ARTIFACT_MANIFEST = Path("build") / "artifact_manifest.json"
+PLAN_IMPORT_MARKER = Path("overrides") / "plan_import_in_progress.json"
 
 
 
@@ -486,6 +487,11 @@ def _resolve_stage(root: Path, run_mode: str) -> tuple[str, list[dict[str, str]]
             "missing request.json",
         )
 
+    import_marker = _safe_read(root / PLAN_IMPORT_MARKER)
+    if import_marker:
+        reason = "a plan import was interrupted; retry import-plan to restore the previous state and apply the draft again"
+        return "blocked_packages", [{"action": "import_plan", "reason": reason}], reason
+
     if not (root / CONTEXT_MANIFEST_NAME).exists():
         return (
             "needs_context",
@@ -528,14 +534,23 @@ def _resolve_stage(root: Path, run_mode: str) -> tuple[str, list[dict[str, str]]
             str(package_state["reason"]),
         )
     if package_state["state"] == "complete":
+        builder_profile = _builder_profile_for_root(root)
         backend = builder_backend_status()
-        if production_requires_builder_backend(run_mode) and not backend.get("production_capable"):
+        if (
+            builder_profile != "high_density"
+            and production_requires_builder_backend(run_mode)
+            and not backend.get("production_capable")
+        ):
             return (
                 "needs_builder_backend",
                 [{"action": "builder_backend", "reason": str(backend.get("blocking_reason") or "PPT Master backend is not ready")}],
                 str(backend.get("blocking_reason") or "PPT Master backend is not ready"),
             )
-        if production_requires_builder_backend(run_mode) and not backend_render_runtime_ready():
+        if (
+            builder_profile != "high_density"
+            and production_requires_builder_backend(run_mode)
+            and not backend_render_runtime_ready()
+        ):
             return (
                 "needs_builder_backend",
                 [{"action": "builder_backend", "reason": "PPT Master backend is certified but Deck Master render runtime is not wired to the external backend yet."}],
@@ -569,6 +584,9 @@ def _resolve_stage(root: Path, run_mode: str) -> tuple[str, list[dict[str, str]]
                 [{"action": "render", "reason": "render result is missing after build"}],
                 "render result is missing after build",
             )
+        if run_mode == "benchmark":
+            return "ready_for_benchmark", [], "ready for benchmark"
+        return "ready_for_client_export", [], "ready for export"
 
     if not (root / SOURCING_PLAN_NAME).exists():
         return (
@@ -734,6 +752,8 @@ def _next_command(stage: str, root: Path, run_id: str) -> str:
         return f"deck-master build-claim-map --run-dir {root} --run-id {run_id}"
     if stage == "needs_narrative_plan":
         return f"deck-master autoplan --run-dir {root} --run-id {run_id}"
+    if stage == "blocked_packages":
+        return f"deck-master import-plan --run-dir {root} --run-id {run_id} --input <draft.json> --source agent"
     if stage in {"needs_page_tasks", "needs_sourcing"}:
         return f"deck-master decide-sourcing --run-dir {root} --run-id {run_id}"
     if stage == "needs_generation_session":

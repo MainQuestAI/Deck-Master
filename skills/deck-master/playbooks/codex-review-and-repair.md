@@ -33,6 +33,11 @@ python3 scripts/deck_master.py import-quality-review \
   --run-id <run_id> --input external_quality_review.json
 ```
 
+The result must copy `input_binding.input_fingerprint` from the prepared task
+into its top-level `input_fingerprint` and inspect every file listed in
+`input_binding.review_targets`. If any target changes, prepare a fresh task;
+the runtime rejects results created from stale inputs.
+
 ### 3. Repair Pages
 
 For each P1 finding:
