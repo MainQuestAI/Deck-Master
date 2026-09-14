@@ -27,8 +27,8 @@ install-dev: ## Create .venv (Python 3.12) and install dev dependencies
 browser-deps: ## Install Playwright Chromium browsers
 	$(PY) -m playwright install --with-deps chromium
 
-test: ## Run the full unit test suite
-	$(PY) -m unittest discover -s tests
+test: ## Run the full unit test suite (pytest is the single test entry)
+	$(PY) -m pytest -q tests
 
 smoke: ## Run the fixture autoplan + preview gate smoke
 	$(RUN) autoplan \

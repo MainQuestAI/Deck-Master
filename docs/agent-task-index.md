@@ -178,7 +178,6 @@ python3 scripts/deck_master.py release-smoke --release-root /tmp/deck-master-0.9
 python3.12 -m venv .venv
 . .venv/bin/activate
 python -m pip install -e ".[dev]"
-python3 -m unittest discover -s tests
 python3 -m pytest -q
 python3 scripts/deck_master.py agent-doctor --mode preview --output json
 ```

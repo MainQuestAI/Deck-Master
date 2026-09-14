@@ -15,7 +15,7 @@ python -m pip install -e ".[dev]"
 Run the focused checks for your change:
 
 ```bash
-python -m unittest discover -s tests
+python -m pytest -q
 python -m pytest tests/test_skill_manifest.py tests/test_workflow_cli.py tests/test_skill_doc_contract.py tests/test_skill_os_release_contract.py -q
 ```
 
