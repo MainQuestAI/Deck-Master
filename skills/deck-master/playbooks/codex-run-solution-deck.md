@@ -69,9 +69,34 @@ python3 scripts/deck_master.py autoplan \
   --planning-mode narrative_v2
 ```
 
-For production runs, auto mode must use real PPT Library results. If the
-library is unavailable, repair the suite or explicitly confirm
-`--allow-fixture-library-fallback` for a demo downgrade.
+Creating a deck without a PPT Library is the normal path: `--library-mode
+auto` searches only when a library command is actually available, and the run
+continues with generate decisions when it is not. Explicitly request the
+library with `--library-mode real` when the task needs historical slides — it
+then keeps its real dependency failure if unavailable. Fixture candidates are
+only for demo/dev runs (`--library-mode fixture`); never use
+`--allow-fixture-library-fallback` to mask a production dependency.
+
+### 6b. Full-Draft Import (complete draft already written)
+
+When you have already written the complete draft (titles, customer-visible
+body, speaker notes, visual intent, citations), import it as-is instead of
+regenerating content from the planning scaffold:
+
+```bash
+python3 scripts/deck_master.py import-plan --run-id <run_id> --source agent --input full_draft.json
+```
+
+`full_draft.json` carries `narrative_plan.beats` (the page set and order),
+optional `page_tasks`, and a `page_packages` array — one Page Package
+(`docs/contracts/page-package.v1.schema.json`) per beat with `customer_visible`
+content. The import validates the whole draft before writing (page set
+consistency, unique identity, complete body, citations resolvable against
+`context_manifest.json`); a rejected import changes nothing. After a received
+draft, pages continue production from their packages: `next-step` drives
+straight to `build prepare --profile high-density`, and later updates go
+through the same import (add/delete/reorder pages, change body text) with the
+previous state backed up under `overrides/`.
 
 Or step-by-step:
 

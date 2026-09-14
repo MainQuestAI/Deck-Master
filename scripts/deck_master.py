@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shutil
 import sys
 from pathlib import Path
 from typing import Any
@@ -137,6 +138,7 @@ from runtime.run_state import (
 )
 from runtime.next_step import resolve_next_step
 from runtime.skill_route import route_for_input_type, route_for_stage, route_for_task
+from runtime.events import append_event
 from runtime.import_log import append_import_log
 from runtime.orchestration import import_plan, import_render_result, orchestration_check
 from runtime.build import build_status, prepare_build, run_build
@@ -705,7 +707,21 @@ def command_import_library_selection(args: argparse.Namespace) -> dict[str, Any]
 def command_decide_sourcing(args: argparse.Namespace) -> dict[str, Any]:
     run_dir = resolve_run_dir(args)
     page_tasks = read_json(run_dir / PAGE_TASKS_NAME)
-    library_results = read_json(run_dir / "library_results" / "selection.json")
+    selection_path = run_dir / "library_results" / "selection.json"
+    if selection_path.exists():
+        library_results = read_json(selection_path)
+    else:
+        # A run without library results is a normal no-library path, not a
+        # missing prerequisite: the sourcing plan records NO_CANDIDATE
+        # decisions instead of blocking on the absent selection file.
+        library_results = None
+        append_event(
+            run_dir,
+            "sourcing.library_results_absent",
+            target=str(page_tasks.get("run_id") or run_dir.name),
+            payload_ref="",
+            data={"reason": "library_results/selection.json is absent; continuing without library candidates"},
+        )
     sourcing_plan = build_sourcing_plan_v2(
         run_id=str(page_tasks.get("run_id") or run_dir.name),
         page_tasks=page_tasks,
@@ -800,7 +816,25 @@ def command_autoplan(args: argparse.Namespace) -> dict[str, Any]:
         plan_result = command_plan(args)
         run_dir = Path(plan_result["run_dir"])
     args.run_dir = str(run_dir)
-    command_search_library(args)
+    library_mode = str(getattr(args, "library_mode", "auto") or "auto")
+    ppt_lib_command = str(getattr(args, "ppt_lib_command", "ppt-lib") or "ppt-lib")
+    if library_mode == "auto" and not shutil.which(ppt_lib_command):
+        # No PPT Library installed/configured is a normal creation path: auto
+        # searches only when a library is actually available. Explicit real
+        # keeps its real dependency failure; fixture fallback stays explicit.
+        request = load_request(run_dir)
+        append_event(
+            run_dir,
+            "ppt_library.skipped_unavailable",
+            target=str(request.get("run_id") or run_dir.name),
+            payload_ref="",
+            data={
+                "reason": f"{ppt_lib_command} command not found on PATH",
+                "library_mode": "auto",
+            },
+        )
+    else:
+        command_search_library(args)
     command_decide_sourcing(args)
     command_create_generation_tasks(args)
     preview_result = command_build_preview(args)
