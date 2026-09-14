@@ -53,7 +53,7 @@ sync code walk for them requires an explicit `--allow-reclone` opt-in.
 - Post-deploy health check: http://127.0.0.1:5050/api/runs
 
 ### Custom deploy hooks
-- Pre-merge: python3 -m unittest discover -s tests
+- Pre-merge: python3 -m pytest -q tests
 - Deploy trigger: install Deck Master skill, then bootstrap local launchd service
 - Deploy status: launchctl print gui/$(id -u)/com.mainquest.deck-master.preview
 - Health check: curl -sf http://127.0.0.1:5050/api/runs
