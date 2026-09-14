@@ -128,6 +128,46 @@ class TestBuildJudgments(unittest.TestCase):
         self.assertIn("judgments", result)
         self.assertGreaterEqual(len(result["judgments"]), 3)
 
+    def test_uncited_claims_not_counted_as_evidenced(self):
+        # 回归（迭代方案附录 judgment_builder.py:120）：旧逻辑把"没有
+        # risk_flags"直接当作"有充分证据"。无引用论点必须不计入证据覆盖。
+        claims = [
+            {"claim_id": "c1", "claim": "无引用论点", "risk_flags": [], "evidence_refs": []},
+            {"claim_id": "c2", "claim": "另一个无引用论点", "risk_flags": [], "evidence_refs": []},
+        ]
+        request = _make_request()
+        deck_brief = _make_deck_brief()
+        result = build_judgments(request, deck_brief, {"claims": claims}, context_manifest={"sources": []})
+        evidence = next(j for j in result["judgments"] if j["topic"] == "evidence_sufficiency" and j["judgment_id"] == "judgment_evidence_sufficiency")
+        self.assertIn("0/2", evidence["statement"])
+        self.assertTrue(evidence["risk_flags"])
+        self.assertIn("0/2 个论点的证据引用能与当前材料核对", evidence["statement"])
+
+    def test_citations_resolved_against_current_sources(self):
+        claims = [
+            {"claim_id": "c1", "claim": "有引用论点", "risk_flags": [], "evidence_refs": ["transcript.md"]},
+        ]
+        request = _make_request()
+        deck_brief = _make_deck_brief()
+        sources = [{"source_id": "s1", "name": "transcript.md", "summary": "会议转写"}]
+        result = build_judgments(request, deck_brief, {"claims": claims}, context_manifest={"sources": sources})
+        evidence = next(j for j in result["judgments"] if j["judgment_id"] == "judgment_evidence_sufficiency")
+        self.assertIn("1/1", evidence["statement"])
+        self.assertEqual([], evidence["risk_flags"])
+        self.assertIn("语义支撑需由主编/编辑判断", evidence["rationale"])
+
+    def test_stale_citation_not_counted_as_evidenced(self):
+        claims = [
+            {"claim_id": "c1", "claim": "引用失效的论点", "risk_flags": [], "evidence_refs": ["deleted-source.md"]},
+        ]
+        request = _make_request()
+        deck_brief = _make_deck_brief()
+        sources = [{"source_id": "s1", "name": "current-source.md"}]
+        result = build_judgments(request, deck_brief, {"claims": claims}, context_manifest={"sources": sources})
+        evidence = next(j for j in result["judgments"] if j["judgment_id"] == "judgment_evidence_sufficiency")
+        self.assertIn("0/1", evidence["statement"])
+        self.assertTrue(evidence["risk_flags"])
+
 
 if __name__ == "__main__":
     unittest.main()

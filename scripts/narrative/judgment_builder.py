@@ -118,18 +118,54 @@ def _judge_solution_approach(core_points: list, claims: list, business_goal: str
 
 
 def _judge_evidence_sufficiency(claims: list, sources: list) -> dict:
-    """判断证据是否充分。"""
+    """核对每个论点的证据引用是否真实对应到当前材料。
+
+    这里只做代码层核对：引用存在且能匹配到当前来源清单（source_id/name/
+    path/sha256）。引用存在不代表证据语义上充分，语义支撑由主编/编辑判断，
+    不做"未标风险即充分"的推断。
+    """
+    source_keys: set[str] = set()
+    for source in sources:
+        if not isinstance(source, dict):
+            continue
+        for field in ("source_id", "name", "path", "sha256"):
+            value = str(source.get(field) or "").strip()
+            if value:
+                source_keys.add(value)
+
+    def _has_resolvable_evidence(claim: dict) -> bool:
+        refs = claim.get("evidence_refs") if isinstance(claim.get("evidence_refs"), list) else []
+        for ref in refs:
+            ref_text = str(ref or "").strip()
+            if not ref_text:
+                continue
+            if any(ref_text == key or ref_text in key or key in ref_text for key in source_keys):
+                return True
+        return False
+
     total_claims = len(claims)
-    claims_with_evidence = sum(1 for c in claims if not c.get("risk_flags"))
+    claims_with_evidence = sum(1 for claim in claims if isinstance(claim, dict) and _has_resolvable_evidence(claim))
     ratio = claims_with_evidence / max(total_claims, 1)
     confidence = round(min(0.9, ratio * 0.8 + 0.1), 2)
     risk_flags = [] if ratio >= 0.7 else ["needs_customer_evidence"]
 
+    if total_claims and claims_with_evidence:
+        statement = f"{claims_with_evidence}/{total_claims} 个论点的证据引用与当前材料核对一致。"
+        rationale = (
+            f"证据引用核对率 {ratio:.0%}。引用存在不代表证据语义上充分，语义支撑需由主编/编辑判断。"
+        )
+    elif total_claims:
+        statement = f"0/{total_claims} 个论点的证据引用能与当前材料核对。"
+        rationale = "没有论点的证据引用匹配到当前来源清单，需要补充可核对的证据。"
+    else:
+        statement = "没有可核对的论点。"
+        rationale = "claim_map 为空，无法进行证据引用核对。"
+
     return {
         "judgment_id": "judgment_evidence_sufficiency",
         "topic": "evidence_sufficiency",
-        "statement": f"{claims_with_evidence}/{total_claims} 个论点有充分证据支撑。",
-        "rationale": f"证据覆盖率 {ratio:.0%}。{'达到最低标准。' if ratio >= 0.7 else '需要补充更多证据。'}",
+        "statement": statement,
+        "rationale": rationale,
         "confidence": confidence,
         "source_refs": ["claim_map.json", "context_manifest.json"],
         "risk_flags": risk_flags,

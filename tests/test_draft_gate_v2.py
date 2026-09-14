@@ -276,29 +276,24 @@ class TestEvidenceReadiness(unittest.TestCase):
         self.assertEqual(graph_findings[0]["severity"], "P1")
 
 
-class TestArgumentFlow(unittest.TestCase):
-    """argument_flow 维度检查。"""
+class TestArgumentFlowRemoved(unittest.TestCase):
+    """固定目录类规则已按迭代方案移除（执行方案 §4/附录）：页数与 opener
+    不再作为普遍内容质量依据，由主编按任务决定结构。"""
 
-    def test_too_few_pages_produces_p2(self) -> None:
+    def test_short_deck_without_opener_passes(self) -> None:
         page_tasks = _minimal_page_tasks(tasks=[
-            {"beat_id": "b1", "planning": {"role": "opener", "core_claim": "开场"}},
+            {"beat_id": "b1", "planning": {"role": "body", "claim_ref": "c1", "core_claim": "内容1"}},
             {"beat_id": "b2", "planning": {"role": "closing", "core_claim": "收尾"}},
         ])
         result = evaluate_draft_gate_v2(_minimal_brief(), _minimal_claim_map(), page_tasks)
-        flow_findings = [f for f in result["findings"] if f["finding_id"] == "v2_flow_too_few_pages"]
-        self.assertEqual(len(flow_findings), 1)
-        self.assertEqual(flow_findings[0]["severity"], "P2")
-
-    def test_no_opener_produces_p2(self) -> None:
-        page_tasks = _minimal_page_tasks(tasks=[
-            {"beat_id": "b1", "planning": {"role": "body", "claim_ref": "c1", "core_claim": "内容1"}},
-            {"beat_id": "b2", "planning": {"role": "body", "claim_ref": "c1", "core_claim": "内容2"}},
-            {"beat_id": "b3", "planning": {"role": "closing", "core_claim": "收尾"}},
-        ])
-        result = evaluate_draft_gate_v2(_minimal_brief(), _minimal_claim_map(), page_tasks)
-        opener_findings = [f for f in result["findings"] if f["finding_id"] == "v2_flow_no_opener"]
-        self.assertEqual(len(opener_findings), 1)
-        self.assertEqual(opener_findings[0]["severity"], "P2")
+        flow_findings = [
+            f
+            for f in result["findings"]
+            if f["finding_id"] in {"v2_flow_too_few_pages", "v2_flow_no_opener"}
+        ]
+        self.assertEqual(len(flow_findings), 0)
+        self.assertNotIn("argument_flow", result["dimension_scores"])
+        self.assertEqual(result["status"], "pass")
 
 
 class TestAudienceFit(unittest.TestCase):
@@ -368,21 +363,24 @@ class TestBlocksDelivery(unittest.TestCase):
         self.assertEqual(result["status"], "rework_required")
         self.assertTrue(result["blocks_delivery"])
 
-    def test_blocks_delivery_false_on_conditional_pass(self) -> None:
-        # 触发 P2 但不触发 P1/P0 → conditional_pass
-        page_tasks = _minimal_page_tasks(tasks=[
-            {"beat_id": "b1", "planning": {"role": "body", "core_claim": "内容1"}},
-            {"beat_id": "b2", "planning": {"role": "body", "core_claim": "内容2"}},
-            {"beat_id": "b3", "planning": {"role": "closing", "core_claim": "收尾"}},
-        ])
+    def test_p2_findings_are_advisory_and_do_not_block(self) -> None:
+        # P2（exec 页数过多）只作建议记录；claim 覆盖由 claim_ref 满足，
+        # 门禁保持 pass 且不阻断交付。
+        tasks = [
+            {"beat_id": "b0", "planning": {"role": "body", "claim_ref": "c1", "core_claim": "方案可降低 30% 运营成本"}},
+        ] + [
+            {"beat_id": f"b{i}", "planning": {"role": "body", "core_claim": f"内容{i}"}}
+            for i in range(1, 25)
+        ]
+        page_tasks = _minimal_page_tasks(tasks=tasks)
         result = evaluate_draft_gate_v2(
-            _minimal_brief(),
+            _minimal_brief(audience="exec"),
             _minimal_claim_map(),
             page_tasks,
         )
-        # 无 opener → P2 → conditional_pass（或 pass 如果分数 > 2）
-        if result["status"] == "conditional_pass":
-            self.assertFalse(result["blocks_delivery"])
+        self.assertEqual(result["status"], "pass")
+        self.assertFalse(result["blocks_delivery"])
+        self.assertTrue(any(f["finding_id"] == "v2_audience_exec_too_many" for f in result["findings"]))
 
     def test_blocks_delivery_false_on_pass(self) -> None:
         result = evaluate_draft_gate_v2(

@@ -11,7 +11,6 @@ DIMENSIONS = [
     "thesis_clarity",        # 没有核心主张
     "claim_coverage",        # 核心 claim 无页面承载
     "evidence_readiness",    # required evidence 缺失
-    "argument_flow",         # 页面顺序无法形成证明链
     "audience_fit",          # 受众和表达密度不匹配
     "specificity",           # 客户专属页缺客户证据
     "risk_visibility",       # 风险未暴露
@@ -34,7 +33,6 @@ def evaluate_draft_gate_v2(
     - thesis_clarity: 核心主张是否清晰
     - claim_coverage: 核心 claim 是否有页面承载
     - evidence_readiness: required evidence 是否就绪
-    - argument_flow: 页面顺序能否形成证明链
     - audience_fit: 受众和表达密度是否匹配
     - specificity: 客户专属页是否有客户证据
     - risk_visibility: 风险是否被暴露和标记
@@ -63,16 +61,13 @@ def evaluate_draft_gate_v2(
     # 3. evidence_readiness: 检查证据就绪状态
     _check_evidence_readiness(claim_map, page_tasks, claim_evidence_graph, findings, dimension_scores)
 
-    # 4. argument_flow: 检查论证流程
-    _check_argument_flow(page_tasks, findings, dimension_scores)
-
-    # 5. audience_fit: 检查受众匹配
+    # 4. audience_fit: 检查受众匹配
     _check_audience_fit(deck_brief, page_tasks, findings, dimension_scores)
 
-    # 6. specificity: 检查客户专属
+    # 5. specificity: 检查客户专属
     _check_specificity(deck_brief, claim_map, page_tasks, findings, dimension_scores)
 
-    # 7. risk_visibility: 检查风险暴露
+    # 6. risk_visibility: 检查风险暴露
     _check_risk_visibility(claim_map, consulting_judgments, findings, dimension_scores)
 
     # 计算整体状态
@@ -258,42 +253,6 @@ def _check_evidence_readiness(
                 ["claim_evidence_graph.json"],
                 gap.get("repair_instruction", "补充缺失证据。"),
             ))
-
-
-def _check_argument_flow(
-    page_tasks: dict[str, Any],
-    findings: list[dict[str, Any]],
-    scores: dict[str, int],
-) -> None:
-    """检查页面顺序能否形成证明链。"""
-    tasks = page_tasks.get("tasks", [])
-    if len(tasks) < 3:
-        scores["argument_flow"] -= 1
-        findings.append(_make_finding(
-            "v2_flow_too_few_pages",
-            "P2",
-            "argument_flow",
-            f"页面数量（{len(tasks)}）过少，可能无法形成完整论证链。",
-            ["page_tasks.json"],
-            "考虑增加问题定义、解决路径、证据和总结页面。",
-        ))
-
-    # 检查是否有 opener
-    roles: list[str] = []
-    for task in tasks:
-        planning = task.get("planning", {}) if isinstance(task.get("planning"), dict) else {}
-        roles.append(planning.get("role", ""))
-
-    if roles and "opener" not in roles:
-        scores["argument_flow"] -= 1
-        findings.append(_make_finding(
-            "v2_flow_no_opener",
-            "P2",
-            "argument_flow",
-            "没有 opener 页面来建立问题框架。",
-            ["page_tasks.json"],
-            "在 narrative plan 开头增加问题框架页面。",
-        ))
 
 
 def _check_audience_fit(
