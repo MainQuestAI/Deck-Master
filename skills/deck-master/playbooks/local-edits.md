@@ -24,6 +24,18 @@ style unless the user changes them.
    for a requested client delivery and honor its current-version approval.
    For an edit-only request, finish with the corrected artifact and verification.
 
+Content edits in a full-draft run: substantive text, source, visual-relation
+or customer-visible analysis changes go into the page's Page Package first
+(`customer_visible`, `speaker_notes`, `citations`), then re-import the draft
+via `import-plan` (see the full-draft import section in
+[codex-run-solution-deck.md](codex-run-solution-deck.md)) so downstream
+artifacts refresh and the deleted/changed pages leave the active set. Never
+edit only the rendered artifact or a stale preview copy. A cross-page fact or
+design change updates every page referencing it, not just the page the user
+named; unaffected pages keep their content and approvals. Method guidance for
+judging what a good revision looks like: [content-methods.md](../references/content-methods.md)
+(method 7, 实际编辑).
+
 ```bash
 deck-master build retry --run-dir <run_dir> --profile high-density --page-id P001 --stage svg
 deck-master build run --run-dir <run_dir> --profile high-density

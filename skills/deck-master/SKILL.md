@@ -11,6 +11,7 @@ Operate a Deck Master run. Choose the task before loading production instruction
 | Task | Route | Read when needed |
 | --- | --- | --- |
 | New deck from material | deck-brief, then deck-planner | [New deck](playbooks/codex-run-solution-deck.md) |
+| Complete draft already written | deck-planner for import, then the existing build profile | [New deck, full-draft import](playbooks/codex-run-solution-deck.md) and [content methods](references/content-methods.md) |
 | Change selected pages with confirmed direction | deck-producer or the existing build profile | [Local edits](playbooks/local-edits.md) |
 | Explain a blocker or inspect readiness | deck-doctor | The reported error in [recovery](../../docs/agent-recovery-playbook.md) |
 | Check or perform client delivery | deck-review | Current final-readiness and approval |
