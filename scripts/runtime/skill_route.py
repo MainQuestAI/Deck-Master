@@ -120,6 +120,7 @@ STAGE_TO_SKILL = {
     "needs_build": "deck-builder",
     "needs_render": "deck-builder",
     "needs_review": "deck-review",
+    "blocked_packages": "deck-master",
     "ready_for_client_export": "deck-review",
     "ready_for_benchmark": "deck-review",
 }

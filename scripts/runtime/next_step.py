@@ -41,6 +41,7 @@ STAGE_STATUS_MAP = {
     "needs_build": "needs_build",
     "needs_render": "needs_render",
     "needs_review": "needs_page_review",
+    "blocked_packages": "needs_packages_repair",
     "ready_for_client_export": "ready_to_export",
     "ready_for_benchmark": "ready_to_export",
     "blocked_workspace": "needs_workspace",
@@ -64,6 +65,7 @@ MISSING_BY_STAGE = {
     "needs_builder_backend": ["ppt-master production backend"],
     "needs_build": ["build/build_manifest.json"],
     "needs_render": ["render_results/render_result.json"],
+    "blocked_packages": ["page_packages consistent with narrative_plan.json"],
 }
 
 

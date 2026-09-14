@@ -6,7 +6,17 @@ from .page_package import (  # noqa: F401
     PagePackageError,
     PagePackageIndex,
     build_page_package,
+    content_fingerprint,
+    normalize_package_for_import,
     strip_internal,
 )
 
-__all__ = ["PageContent", "PagePackageError", "PagePackageIndex", "build_page_package", "strip_internal"]
+__all__ = [
+    "PageContent",
+    "PagePackageError",
+    "PagePackageIndex",
+    "build_page_package",
+    "content_fingerprint",
+    "normalize_package_for_import",
+    "strip_internal",
+]

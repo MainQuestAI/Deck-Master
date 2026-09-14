@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -403,6 +404,78 @@ def _run_readiness_summary(
     }
 
 
+def _package_build_state(root: Path) -> dict[str, Any]:
+    """Classify how the on-disk page packages relate to the narrative plan.
+
+    - absent:    no import-written packages exist; the legacy pipeline applies.
+    - mismatch:  package set and narrative beats disagree; the run must not
+                 continue producing (deleted pages could be silently rebuilt
+                 into the deliverable).
+    - complete:  every beat has a ready_for_build package; the run can go
+                 straight to the builder.
+    - partial:   packages map to the beats but some are not build-ready yet;
+                 the legacy pipeline applies until they are.
+    """
+    index_path = root / "page_packages" / "index.json"
+    if not index_path.exists():
+        return {"state": "absent"}
+    narrative = _safe_read(root / NARRATIVE_PLAN_NAME) or {}
+    beats = narrative.get("beats")
+    if not isinstance(beats, list) or not beats:
+        return {"state": "absent"}
+    beat_ids = [str(beat.get("beat_id") or "") for beat in beats if isinstance(beat, dict)]
+    if not beat_ids:
+        return {"state": "absent"}
+
+    packages: list[dict[str, Any]] = []
+    for path in sorted((root / "page_packages").glob("*.json")):
+        if path.name == "index.json":
+            continue
+        try:
+            package = json.loads(path.read_text(encoding="utf-8"))
+        except Exception:
+            return {
+                "state": "mismatch",
+                "reason": f"page package file cannot be read: {path.name}; restore from overrides/ or re-import the full draft",
+            }
+        if not isinstance(package, dict):
+            continue
+        if package.get("legacy_inferred"):
+            # Legacy preview adapter output is not an imported full draft.
+            continue
+        packages.append(package)
+    if not packages:
+        return {"state": "absent"}
+
+    mapped: dict[str, dict[str, Any]] = {}
+    for package in packages:
+        beat_id = str(package.get("beat_id") or "")
+        page_id = str(package.get("page_id") or "")
+        key = beat_id or page_id
+        if not key or key in mapped or key not in beat_ids:
+            return {
+                "state": "mismatch",
+                "reason": (
+                    f"page package {page_id or key} does not map to a narrative beat; "
+                    "restore from overrides/ or re-import the full draft"
+                ),
+            }
+        mapped[key] = package
+    missing = [beat_id for beat_id in beat_ids if beat_id not in mapped]
+    if missing:
+        return {
+            "state": "mismatch",
+            "reason": (
+                f"page packages are missing for beats: {missing}; "
+                "restore from overrides/ or re-import the full draft"
+            ),
+        }
+    not_ready = sorted(key for key, package in mapped.items() if str(package.get("status") or "") != "ready_for_build")
+    if not_ready:
+        return {"state": "partial", "not_ready": not_ready}
+    return {"state": "complete", "pages": [mapped[beat_id]["page_id"] for beat_id in beat_ids]}
+
+
 def _resolve_stage(root: Path, run_mode: str) -> tuple[str, list[dict[str, str]], str]:
     request = _safe_read(root / REQUEST_NAME) or {}
 
@@ -443,6 +516,60 @@ def _resolve_stage(root: Path, run_mode: str) -> tuple[str, list[dict[str, str]]
             [{"action": "page_tasks", "reason": "page tasks are missing"}],
             "page tasks are missing",
         )
+
+    # Full-draft fast path: a run whose every beat has a ready page package
+    # continues production from the received draft instead of being pushed
+    # back through sourcing/generation/preview.
+    package_state = _package_build_state(root)
+    if package_state["state"] == "mismatch":
+        return (
+            "blocked_packages",
+            [{"action": "import_plan", "reason": str(package_state["reason"])}],
+            str(package_state["reason"]),
+        )
+    if package_state["state"] == "complete":
+        backend = builder_backend_status()
+        if production_requires_builder_backend(run_mode) and not backend.get("production_capable"):
+            return (
+                "needs_builder_backend",
+                [{"action": "builder_backend", "reason": str(backend.get("blocking_reason") or "PPT Master backend is not ready")}],
+                str(backend.get("blocking_reason") or "PPT Master backend is not ready"),
+            )
+        if production_requires_builder_backend(run_mode) and not backend_render_runtime_ready():
+            return (
+                "needs_builder_backend",
+                [{"action": "builder_backend", "reason": "PPT Master backend is certified but Deck Master render runtime is not wired to the external backend yet."}],
+                "PPT Master backend is certified but Deck Master render runtime is not wired to the external backend yet.",
+            )
+        build_status = _build_status(root)
+        if build_status.get("invalid_artifacts"):
+            return (
+                "needs_render",
+                [{"action": "render", "reason": "artifact manifest contains invalid artifacts"}],
+                "artifact manifest contains invalid artifacts",
+            )
+        if production_requires_builder_backend(run_mode):
+            render_result_path, render_result, _render_source = _read_render_result(root)
+            invalid_reason = _invalid_production_render_reason(render_result)
+            if invalid_reason:
+                return (
+                    "needs_render",
+                    [{"action": "render", "reason": invalid_reason}],
+                    invalid_reason,
+                )
+        if not _render_result_present(root):
+            if not build_status.get("build_manifest"):
+                return (
+                    "needs_build",
+                    [{"action": "build", "reason": "build manifest is missing; prepare the build from the received page packages"}],
+                    "build manifest is missing; prepare the build from the received page packages",
+                )
+            return (
+                "needs_render",
+                [{"action": "render", "reason": "render result is missing after build"}],
+                "render result is missing after build",
+            )
+
     if not (root / SOURCING_PLAN_NAME).exists():
         return (
             "needs_sourcing",
@@ -583,6 +710,19 @@ def _resolve_stage(root: Path, run_mode: str) -> tuple[str, list[dict[str, str]]
     return "ready_for_client_export", [], "ready for export"
 
 
+def _builder_profile_for_root(root: Path) -> str:
+    request = _safe_read(root / REQUEST_NAME) or {}
+    profile = str(request.get("builder_profile") or "").strip()
+    if profile in {"standard", "high_density"}:
+        return profile
+    # Page packages are only consumed by the high-density builder, so a
+    # package-complete run suggests that profile even before build prepare
+    # persists it into request.json.
+    if _package_build_state(root).get("state") == "complete":
+        return "high_density"
+    return ""
+
+
 def _next_command(stage: str, root: Path, run_id: str) -> str:
     if stage == "needs_request":
         return f"deck-master start --run-dir {root} --run-id {run_id}"
@@ -613,9 +753,13 @@ def _next_command(stage: str, root: Path, run_id: str) -> str:
     if stage == "needs_builder_backend":
         return "deck-master suite-status --target codex --output json"
     if stage == "needs_build":
-        return f"deck-master build prepare --run-dir {root} --run-id {run_id}"
+        profile = _builder_profile_for_root(root)
+        suffix = " --profile high-density" if profile == "high_density" else ""
+        return f"deck-master build prepare --run-dir {root} --run-id {run_id}{suffix}"
     if stage == "needs_render":
-        return f"deck-master build run --run-dir {root} --run-id {run_id}"
+        profile = _builder_profile_for_root(root)
+        suffix = " --profile high-density" if profile == "high_density" else ""
+        return f"deck-master build run --run-dir {root} --run-id {run_id}{suffix}"
     if stage == "needs_review":
         return f"deck-master run-state --run-dir {root} --run-id {run_id}"
     if stage in {"ready_for_benchmark", "ready_for_client_export"}:
@@ -646,6 +790,7 @@ def _allowed_blocking(stage: str, reason: str, run_mode: str) -> tuple[list[str]
         "needs_builder_backend",
         "needs_build",
         "needs_render",
+        "blocked_packages",
     }:
         blocked_actions.append({"action": "client_export", "reason": reason})
 

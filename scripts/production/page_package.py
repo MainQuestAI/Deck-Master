@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -198,6 +199,64 @@ def _block_text(block: Any) -> list[str]:
     return []
 
 
+def content_fingerprint(customer_visible: dict[str, Any]) -> str:
+    """Stable fingerprint of a page's customer-visible content."""
+    return _sha(customer_visible)
+
+
+def normalize_package_for_import(
+    package: dict[str, Any],
+    *,
+    run_id: str,
+    beat_id: str,
+    page_id: str,
+    order: int,
+    status: str = STATUS_READY,
+    input_artifacts: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    """Normalize an externally authored package for full-draft import.
+
+    Identity fields (run_id / beat_id / page_id / order / status) are forced by
+    the importer so the narrative plan stays the single source of page identity
+    and order. ``provenance`` and ``source_fingerprint`` get honest defaults
+    when the author omitted them. Raises InternalLeakError when internal-only
+    content is duplicated into customer-visible fields.
+    """
+    normalized = json.loads(json.dumps(package))
+    normalized["schema_version"] = SCHEMA_VERSION
+    normalized["run_id"] = run_id
+    normalized["beat_id"] = beat_id
+    normalized["page_id"] = page_id
+    normalized["order"] = int(order)
+    normalized["status"] = status
+    # Structural containers the contract requires; an author who has no
+    # citations/assets yet gets honest empty defaults, not a rejected import.
+    if not isinstance(normalized.get("visual_spec"), dict):
+        normalized["visual_spec"] = {}
+    if not isinstance(normalized.get("asset_bindings"), list):
+        normalized["asset_bindings"] = []
+    if not isinstance(normalized.get("citations"), list):
+        normalized["citations"] = []
+    if not isinstance(normalized.get("internal_only"), dict):
+        normalized["internal_only"] = {}
+    normalized["internal_only"] = _sanitize_internal(normalized["internal_only"])
+    customer_visible = normalized.get("customer_visible")
+    fingerprint = content_fingerprint(customer_visible) if isinstance(customer_visible, dict) else ""
+    if not re.fullmatch(r"[0-9a-f]{64}", str(normalized.get("source_fingerprint") or "")):
+        normalized["source_fingerprint"] = fingerprint
+    prov = normalized.get("provenance") if isinstance(normalized.get("provenance"), dict) else {}
+    filled = {
+        "producer": str(prov.get("producer") or "").strip() or "host-agent",
+        "created_at": str(prov.get("created_at") or "").strip() or _utc(_now()),
+        "input_artifacts": list(prov.get("input_artifacts") or []) or list(input_artifacts or []),
+    }
+    for key, value in prov.items():
+        filled.setdefault(key, value)
+    normalized["provenance"] = filled
+    assert_no_internal_leak(normalized)
+    return normalized
+
+
 def strip_internal(package: dict[str, Any]) -> dict[str, Any]:
     """Return a customer-safe copy with ``internal_only`` removed.
 
@@ -223,6 +282,21 @@ class PagePackageIndex:
         path.write_text(json.dumps(package, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         self._write_index()
         return path
+
+    def remove(self, page_id: str) -> bool:
+        """Remove a package file from the active set and rewrite the index.
+
+        Deletion must go through here so the index can never report a page
+        whose file is gone (a bare required_page_ids shrink is not enough).
+        """
+        if not self.dir.is_dir():
+            return False
+        path = self.dir / f"{page_id}.json"
+        if not path.is_file():
+            return False
+        path.unlink()
+        self._write_index()
+        return True
 
     def list_packages(self) -> list[dict[str, Any]]:
         if not self.dir.is_dir():
@@ -297,6 +371,8 @@ __all__ = [
     "InternalLeakError",
     "PagePackageIndex",
     "build_page_package",
+    "content_fingerprint",
+    "normalize_package_for_import",
     "strip_internal",
     "assert_no_internal_leak",
     "generation_result_reference",
