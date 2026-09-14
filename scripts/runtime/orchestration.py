@@ -448,10 +448,56 @@ def _prepare_full_draft_packages(
     if missing:
         raise RunStateError(f"full draft is missing page packages for beats: {missing}")
 
+    _assign_evidence_ids(packages)
     for package in packages:
         _assert_page_package_contract(package)
     _check_citations_against_sources(root, packages)
     return packages
+
+
+def _assign_evidence_ids(packages: list[dict[str, Any]]) -> None:
+    """Give every imported citation a globally unique evidence_id.
+
+    The builder's evidence ledger references evidence ids across pages, so a
+    draft whose pages cite sources without ids would collide on the per-page
+    E001 fallback at build time. Authors who supplied explicit ids keep them;
+    collisions after assignment are reported, not silently renumbered.
+    """
+    assigned: dict[str, str] = {}
+    for package in packages:
+        page_id = str(package.get("page_id") or "")
+        order = int(package.get("order") or 0)
+        page_ids: set[str] = {
+            str(item.get("evidence_id") or item.get("citation_id") or item.get("id") or "").strip()
+            for key in ("evidence_bindings", "citations")
+            for item in (package.get(key) or [])
+            if isinstance(item, dict)
+        }
+        page_ids.discard("")
+        counter = 0
+        for key in ("evidence_bindings", "citations"):
+            items = package.get(key)
+            if not isinstance(items, list):
+                continue
+            for item in items:
+                if not isinstance(item, dict):
+                    continue
+                evidence_id = str(
+                    item.get("evidence_id") or item.get("citation_id") or item.get("id") or ""
+                ).strip()
+                if not evidence_id:
+                    counter += 1
+                    while f"E{order:02d}{counter:02d}" in page_ids:
+                        counter += 1
+                    evidence_id = f"E{order:02d}{counter:02d}"
+                    page_ids.add(evidence_id)
+                    item["evidence_id"] = evidence_id
+                if evidence_id in assigned and assigned[evidence_id] != page_id:
+                    raise RunStateError(
+                        f"duplicate evidence_id {evidence_id} on pages {assigned[evidence_id]} and {page_id}; "
+                        "evidence ids must be globally unique across the draft."
+                    )
+                assigned[evidence_id] = page_id
 
 
 def _full_draft_page_tasks(

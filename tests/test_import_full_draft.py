@@ -181,6 +181,24 @@ def test_duplicate_beat_package_rejected(tmp_path: Path) -> None:
     assert not (run_dir / "page_packages").is_dir()
 
 
+def test_citations_get_globally_unique_evidence_ids(tmp_path: Path) -> None:
+    """Pages citing sources without ids must not collide on the builder's
+    cross-page evidence ledger (found by the fixture build exercise)."""
+    run_dir = _make_run(tmp_path)
+    beats, packages = _draft_v1()
+    for package in packages:
+        package["citations"] = [{"source": "material.md"}]
+    import_plan(run_dir, _write_input(tmp_path, _full_draft(beats, packages)), source="agent")
+
+    ids: set[str] = set()
+    for name in sorted(_package_files(run_dir)):
+        package = read_json(run_dir / "page_packages" / name)
+        citations = package["citations"]
+        assert citations and citations[0]["evidence_id"]
+        ids.add(citations[0]["evidence_id"])
+    assert len(ids) == 3
+
+
 def test_add_delete_reorder_roundtrip(tmp_path: Path) -> None:
     run_dir = _make_run(tmp_path)
     beats, packages = _draft_v1()

@@ -98,6 +98,14 @@ straight to `build prepare --profile high-density`, and later updates go
 through the same import (add/delete/reorder pages, change body text) with the
 previous state backed up under `overrides/`.
 
+For the high-density route, citations carry their meaning: each citation
+entry should state `meaning` (what the cited source supports for this page,
+sharing the page's key terms and the deck's main line), plus
+`source_position` when the span matters. The builder verifies that page
+claims are grounded in these citations and that numeric values trace to
+them; pages below the high-density density floor are asked to add content
+regions. Ids are assigned automatically, so cite sources, not evidence ids.
+
 Or step-by-step:
 
 ```bash
