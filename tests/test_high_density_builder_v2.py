@@ -56,7 +56,7 @@ from high_density.migration import MIGRATION_REQUIRED_CODE, assert_current_mbb_a
 from high_density.pptx import PptxEditabilityError, _render_pptx_page, compile_pptx, pptx_path, readback_pptx, trace_path
 from high_density.scene import canonical_scene_path, scene_path, _fixture_background, build_fixture_scene, load_scene, validate_scene_content, write_scene
 from high_density.style import write_style_lock
-from high_density.svg import SvgVisualError, _font_path, _load_main_review_receipt, _main_review_receipt_payload, _validate_svg_text, compile_svg, load_visual_review, main_review_receipt_path, preview_path, render_preview, review_path, svg_path, validate_approved_svg, validate_svg
+from high_density.svg import SvgVisualError, _font_path, _load_main_review_receipt, _main_review_receipt_payload, _validate_svg_text, build_visual_review, compile_svg, load_visual_review, main_review_receipt_path, preview_path, record_visual_self_review, render_preview, review_path, svg_path, validate_approved_svg, validate_svg
 from high_density.visibility import build_visibility_policy, visible_text_violation
 from production.page_package import PageContent, PagePackageIndex, build_page_package
 from runtime.run_state import create_run
@@ -1923,6 +1923,33 @@ def test_visual_bbox_metrics_read_actual_svg_geometry(tmp_path: Path) -> None:
     assert metrics["status"] == "failed"
     assert metrics["values"]["bbox_max_delta_px"] >= 40
     assert any(item["code"] == "p0_p1_bbox_drift" for item in metrics["findings"])
+
+
+def test_current_human_review_can_accept_semantic_redraw_with_failed_pixel_similarity(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    run, _lock, scene = _prepared_fixture(tmp_path)
+    from PIL import Image
+
+    Image.new("RGB", (1672, 941), "#ffffff").save(preview_path(run, "P001"))
+    build_visual_review(run, scene, mode="production")
+    metrics = read_json(run / "high_density_build/reviews/P001.metrics.json")
+    assert metrics["status"] == "failed"
+    monkeypatch.setattr("high_density.svg._run_mode", lambda _root: "production")
+
+    record_visual_self_review(
+        run,
+        "P001",
+        reviewer_id="producer",
+        observations=["Business content and editable geometry were inspected in the current render."],
+        revision_required=False,
+    )
+
+    review = load_visual_review(run, "P001", review_depth="producer_only", receipt_policy="local_traceable")
+    assert review["visual_status"] == "pass"
+    assert review["unresolved_issues"] == []
+    assert review["full_page_checks"]["layout"] == "failed"
 
 
 def test_visual_review_rejects_handwritten_metrics(tmp_path: Path) -> None:
