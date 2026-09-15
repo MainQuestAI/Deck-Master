@@ -6,7 +6,15 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-_RUNTIME_ROOT = Path(__file__).resolve().parents[2]
+def _find_runtime_root(module_path: Path) -> Path:
+    resolved = module_path.resolve()
+    for candidate in resolved.parents:
+        if (candidate / "docs" / "contracts").is_dir() or (candidate / "contracts").is_dir():
+            return candidate
+    return resolved.parents[2]
+
+
+_RUNTIME_ROOT = _find_runtime_root(Path(__file__))
 SCHEMA_DIR = _RUNTIME_ROOT / "docs" / "contracts"
 if not SCHEMA_DIR.is_dir():
     # Self-contained releases keep public runtime contracts at /contracts.

@@ -41,7 +41,7 @@ from high_density.content import (
     write_mbb_plan,
     _storyline_context,
 )
-from high_density.contracts import ContractError, assert_valid, read_json, sha256_file, sha256_json, write_json
+from high_density.contracts import ContractError, _find_runtime_root, assert_valid, read_json, sha256_file, sha256_json, write_json
 from high_density.integrity import sign_runtime_payload
 from high_density.engine import (
     HighDensityBuildError,
@@ -541,6 +541,17 @@ def test_public_blueprint_approval_reads_canonical_page_package_lock(
     assert observed["page_id"] == "P001"
     assert observed["lock"] == load_content_lock(run, "P001")
     assert (observed["kwargs"] or {})["approval"]["approved_by"] == "reviewer"
+
+
+def test_installed_high_density_module_finds_release_contracts(tmp_path: Path) -> None:
+    release = tmp_path / "release"
+    contracts = release / "contracts"
+    contracts.mkdir(parents=True)
+    module = release / ".venv/lib/python3.12/site-packages/high_density/contracts.py"
+    module.parent.mkdir(parents=True)
+    module.write_text("", encoding="utf-8")
+
+    assert _find_runtime_root(module) == release
 
 
 def test_style_lock_change_invalidates_blueprints(tmp_path: Path) -> None:

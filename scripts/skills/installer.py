@@ -1609,7 +1609,7 @@ def verify_release_tree(
                     [
                         str(runtime_python),
                         "-c",
-                        "import high_density.blueprint_content_review, page_roles",
+                        "from high_density.contracts import SCHEMA_DIR; import high_density.blueprint_content_review, page_roles; assert (SCHEMA_DIR / 'content-lock.v2.schema.json').is_file()",
                     ],
                     [str(bin_path), "--help"],
                     [str(bin_path), "suite-status", "--output", "json"],
