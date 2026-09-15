@@ -31,8 +31,8 @@ DIMENSION_LABELS = {
 BLOCKING_SEVERITIES = {"P0", "P1"}
 
 
-def default_scorecard(score: int = 4) -> dict[str, int]:
-    return {dimension: score for dimension in DIMENSIONS}
+def default_scorecard(score: int | None = None) -> dict[str, int]:
+    return {} if score is None else {dimension: score for dimension in DIMENSIONS}
 
 
 def clamp_score(value: int) -> int:
@@ -40,15 +40,16 @@ def clamp_score(value: int) -> int:
 
 
 def lower_score(scorecard: dict[str, int], dimension: str, score: int) -> None:
-    if dimension not in scorecard:
-        return
-    scorecard[dimension] = min(scorecard[dimension], clamp_score(score))
+    value = clamp_score(score)
+    scorecard[dimension] = min(scorecard.get(dimension, value), value)
 
 
 def decision_from(scorecard: dict[str, int], findings: list[dict[str, Any]]) -> str:
     scores = list(scorecard.values())
     if any(finding.get("severity") in {"P0", "P1"} for finding in findings):
         return "rework_required"
+    if not scores:
+        return "conditional_pass" if findings else "pass"
     if any(score <= 2 for score in scores):
         return "rework_required"
     if scores and mean(scores) >= 3.5 and all(score >= 3 for score in scores):

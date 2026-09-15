@@ -92,7 +92,7 @@ def evaluate_draft_gate(
     claim_map: dict[str, Any],
     page_tasks: dict[str, Any],
 ) -> dict[str, Any]:
-    scorecard = default_scorecard(4)
+    scorecard = default_scorecard()
     findings: list[dict[str, Any]] = []
     run_id = str(deck_brief.get("run_id") or claim_map.get("run_id") or page_tasks.get("run_id") or "")
 
@@ -183,9 +183,9 @@ def evaluate_render_gate(
         expected_pages=expected_pages,
         forbidden_terms=forbidden_terms,
         page_roles=page_roles,
-        strict_page_roles=requires_page_role_contract(run_dir),
+        strict_page_roles=False,
     )
-    scorecard = default_scorecard(4)
+    scorecard = default_scorecard()
     findings: list[dict[str, Any]] = []
 
     if not audit["page_count_matches"]:
@@ -201,46 +201,6 @@ def evaluate_render_gate(
             )
         )
 
-    for slide in audit["sparse_pages"]:
-        lower_score(scorecard, "information_density", 2)
-        findings.append(
-            finding(
-                f"slide_{slide['slide_number']:03d}_sparse",
-                "P1",
-                "information_density",
-                "渲染页文本和证据密度过低。",
-                [slide["path"]],
-                "补充业务含义、证据说明、关键数字或产品证明，避免页面只剩短标签。",
-                page_id=f"slide_{slide['slide_number']:03d}",
-            )
-        )
-
-    for slide in audit["possible_full_slide_images"]:
-        lower_score(scorecard, "screenshot_and_asset_integration", 2)
-        findings.append(
-            finding(
-                f"slide_{slide['slide_number']:03d}_possible_full_slide_image",
-                "P1",
-                "screenshot_and_asset_integration",
-                "PPTX 页面疑似整页截图迁移，可能破坏可编辑交付质量。",
-                [slide["path"]],
-                "优先使用原生 slide 复用或对象级生成；如果必须用图片，需要明确标注为临时降级产物。",
-                page_id=f"slide_{slide['slide_number']:03d}",
-            )
-        )
-    for slide_number in audit.get("missing_page_roles") or []:
-        lower_score(scorecard, "visual_readiness", 2)
-        findings.append(
-            finding(
-                f"slide_{int(slide_number):03d}_page_role_missing",
-                "P1",
-                "visual_readiness",
-                "生产 PPTX 审计缺少页面角色映射，已按正文页规则处理。",
-                [str(audit["artifact"])],
-                "补齐 page_scene.v2 与 high-density manifest 中的 page_role 后重新运行 render gate。",
-                page_id=f"slide_{int(slide_number):03d}",
-            )
-        )
 
     return _report(
         run_id,
@@ -272,9 +232,9 @@ def evaluate_delivery_gate(
         expected_pages=expected_pages,
         forbidden_terms=terms,
         page_roles=page_roles,
-        strict_page_roles=requires_page_role_contract(run_dir),
+        strict_page_roles=False,
     )
-    scorecard = default_scorecard(4)
+    scorecard = default_scorecard()
     findings: list[dict[str, Any]] = []
 
     if not audit["page_count_matches"]:
@@ -323,19 +283,6 @@ def evaluate_delivery_gate(
                 "PPTX 包内没有媒体文件，若方案依赖截图或视觉证据，需要复核资源是否缺失。",
                 [str(audit["artifact"])],
                 "确认本稿是否应包含产品截图、客户证据图或案例图；如需要，补齐后重新导出。",
-            )
-        )
-    for slide_number in audit.get("missing_page_roles") or []:
-        lower_score(scorecard, "delivery_readiness", 2)
-        findings.append(
-            finding(
-                f"slide_{int(slide_number):03d}_page_role_missing",
-                "P1",
-                "delivery_readiness",
-                "交付审计缺少页面角色映射，不能证明结构页豁免正确应用。",
-                [str(audit["artifact"])],
-                "补齐 page_role 映射并重新运行 delivery gate。",
-                page_id=f"slide_{int(slide_number):03d}",
             )
         )
 

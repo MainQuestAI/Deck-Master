@@ -210,6 +210,7 @@ def import_plan(run_dir: str | Path, input_path: str | Path, *, source: str) -> 
                 removed_pages,
                 new_pages,
                 changed_pages,
+                active_order=[str(item.get("page_id") or item.get("beat_id") or "") for item in page_packages],
                 reordered=reordered,
             )
         else:
@@ -893,6 +894,7 @@ def _prune_downstream_pages(
     new_pages: list[str],
     changed_pages: list[str],
     *,
+    active_order: list[str],
     reordered: bool,
 ) -> dict[str, Any]:
     """Drop removed/content-changed pages from derived downstream artifacts.
@@ -908,26 +910,64 @@ def _prune_downstream_pages(
     if not deck_changed:
         return {}
     summary: dict[str, Any] = {}
-    if new_pages or reordered:
-        for name in (SOURCING_PLAN_NAME, PREVIEW_MANIFEST_NAME, "generation_session.json"):
-            path = root / name
-            if path.exists():
-                _remove_path(path)
-                summary[name] = "invalidated"
-        generation_tasks = root / "generation_tasks"
-        if generation_tasks.exists():
-            _remove_path(generation_tasks)
-            summary["generation_tasks"] = "invalidated"
-    else:
-        summary.update(_prune_pages_in_artifact(root / SOURCING_PLAN_NAME, "pages", affected))
-        summary.update(_prune_pages_in_artifact(root / PREVIEW_MANIFEST_NAME, "pages", affected))
-        summary.update(_prune_generation_tasks(root, affected))
-    for name in DERIVED_OUTPUTS:
+    summary.update(_prune_pages_in_artifact(root / SOURCING_PLAN_NAME, "pages", set(removed_pages), active_order=active_order))
+    summary.update(_prune_pages_in_artifact(root / PREVIEW_MANIFEST_NAME, "pages", affected))
+    summary.update(_prune_generation_tasks(root, affected))
+    summary.update(_prune_high_density_pages(root, affected))
+    # The assembled deck and file-level reports change for content edits,
+    # additions, removals, and pure reordering. Per-page assets remain valid
+    # unless their own business content or visual input changed.
+    for name in ("build", "render_results", "quality_reports"):
         path = root / name
         if path.exists():
             _remove_path(path)
             summary[name] = "invalidated"
     return {key: value for key, value in summary.items() if value}
+
+
+def _prune_high_density_pages(root: Path, affected: set[str]) -> dict[str, str]:
+    directory = root / "high_density_build"
+    if not directory.is_dir():
+        return {}
+    page_patterns = (
+        "content_locks/{page_id}.json",
+        "content_locks/{page_id}.content_lock.json",
+        "prompts/{page_id}.blueprint_prompt.json",
+        "blueprints/{page_id}.png",
+        "blueprints/{page_id}.svg",
+        "blueprints/{page_id}.manifest.json",
+        "blueprints/{page_id}.blueprint_manifest.json",
+        "blueprints/{page_id}.provider_receipt.json",
+        "blueprints/{page_id}.provider_host_receipt.json",
+        "scenes/{page_id}.page_scene.json",
+        "page_scenes/{page_id}.json",
+        "svg/{page_id}.svg",
+        "previews/{page_id}.png",
+        "reviews/{page_id}.visual_review.json",
+        "reviews/{page_id}.main_review_receipt.json",
+        "reviews/{page_id}.blueprint_content_review.json",
+        "reviews/{page_id}.metrics.json",
+        "reviews/{page_id}.svg_vs_pptx.metrics.json",
+        "traces/{page_id}.json",
+    )
+    removed = 0
+    for page_id in affected:
+        for pattern in page_patterns:
+            path = directory / pattern.format(page_id=page_id)
+            if path.exists():
+                _remove_path(path)
+                removed += 1
+    for relative in (
+        "high_density_manifest.json",
+        "status.json",
+        "pptx/deck_high_density.pptx",
+        "pptx/pptx_trace.json",
+        "pptx/readback_report.json",
+    ):
+        path = directory / relative
+        if path.exists():
+            _remove_path(path)
+    return {"high_density_build": f"pruned:{removed}" if removed else "reassemble_only"}
 
 
 def _remove_path(path: Path) -> None:
@@ -937,7 +977,7 @@ def _remove_path(path: Path) -> None:
         path.unlink()
 
 
-def _prune_pages_in_artifact(path: Path, key: str, affected: set[str]) -> dict[str, str]:
+def _prune_pages_in_artifact(path: Path, key: str, affected: set[str], *, active_order: list[str] | None = None) -> dict[str, str]:
     if not path.exists():
         return {}
     payload = read_json(path)
@@ -949,7 +989,10 @@ def _prune_pages_in_artifact(path: Path, key: str, affected: set[str]) -> dict[s
         for page in pages
         if not (isinstance(page, dict) and ({str(page.get("page_id") or ""), str(page.get("beat_id") or "")} & affected))
     ]
-    if len(kept) == len(pages):
+    if active_order:
+        order = {page_id: index for index, page_id in enumerate(active_order)}
+        kept.sort(key=lambda page: order.get(str(page.get("page_id") or page.get("beat_id") or ""), len(order)))
+    if kept == pages:
         return {}
     if kept:
         payload[key] = kept

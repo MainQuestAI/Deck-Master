@@ -360,6 +360,7 @@ def _binding_status_for_name(
     *,
     render_runtime_ready: bool,
     render_runtime_status: dict[str, Any] | None = None,
+    inspected_package: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     runtime_status = render_runtime_status or _runtime_status_from_ready(render_runtime_ready)
     if name != BACKEND_NAME:
@@ -411,7 +412,7 @@ def _binding_status_for_name(
 
     repo_path = Path(binding.get("repo_path") or "")
     skill_path = Path(binding.get("skill_path") or "")
-    package = inspect_builder_backend_package(skill_path) if skill_path else {}
+    package = inspected_package if inspected_package is not None else (inspect_builder_backend_package(skill_path) if skill_path else {})
     capabilities = binding.get("validated_capabilities")
     if not isinstance(capabilities, list):
         capabilities = list(package.get("operations") or [])
@@ -722,7 +723,7 @@ def _run_smoke_check(root: Path, smoke_command: str | None) -> tuple[dict[str, A
         return payload, []
 
 
-def inspect_builder_backend_package(path: str | Path) -> dict[str, Any]:
+def inspect_builder_backend_package(path: str | Path, *, run_smoke: bool = True) -> dict[str, Any]:
     root = Path(path).expanduser()
     resolved = root.resolve() if root.exists() else root
     result: dict[str, Any] = {
@@ -806,10 +807,13 @@ def inspect_builder_backend_package(path: str | Path) -> dict[str, Any]:
     if smoke_errors:
         result["reasons"].extend(smoke_errors)
     result["smoke_command"] = smoke_command
-    smoke_check, smoke_check_errors = _run_smoke_check(root, smoke_command)
-    if smoke_check_errors:
-        result["reasons"].extend(smoke_check_errors)
-    result["smoke_check"] = smoke_check or {}
+    smoke_check: dict[str, Any] | None = None
+    smoke_check_errors: list[str] = []
+    if run_smoke:
+        smoke_check, smoke_check_errors = _run_smoke_check(root, smoke_command)
+        if smoke_check_errors:
+            result["reasons"].extend(smoke_check_errors)
+        result["smoke_check"] = smoke_check or {}
 
     missing_ops = sorted(REQUIRED_PRODUCTION_OPERATIONS - operations)
     if missing_ops:
@@ -833,18 +837,28 @@ def inspect_builder_backend_package(path: str | Path) -> dict[str, Any]:
 def builder_backend_status() -> dict[str, Any]:
     runtime_status = backend_render_runtime_status()
     render_runtime_ready = bool(runtime_status["runtime_ready"])
+    bound = _find_backend_binding(BACKEND_NAME)
+    bound_path = Path(str(bound.get("skill_path") or "")).expanduser() if bound and bound.get("skill_path") else None
+    cache: dict[str, dict[str, Any]] = {}
+
+    def inspect_once(path: Path) -> dict[str, Any]:
+        key = str(path.expanduser().resolve()) if path.exists() else str(path.expanduser())
+        if key not in cache:
+            cache[key] = inspect_builder_backend_package(path, run_smoke=False)
+        return cache[key]
+
+    bound_package = inspect_once(bound_path) if bound_path is not None and bound_path.exists() else None
     dependency_status = _binding_status_for_name(
         BACKEND_NAME,
         render_runtime_ready=render_runtime_ready,
         render_runtime_status=runtime_status,
+        inspected_package=bound_package,
     )
-    candidates = [inspect_builder_backend_package(path) for path in _candidate_paths()]
-    bound = _find_backend_binding(BACKEND_NAME)
+    candidates = [inspect_once(path) for path in _candidate_paths()]
     selected = candidates[0] if candidates else {}
     if bound:
-        bound_path = Path(str(bound.get("skill_path") or "")).expanduser() if bound.get("skill_path") else None
         if bound_path is not None and bound_path.exists():
-            selected = inspect_builder_backend_package(bound_path)
+            selected = inspect_once(bound_path)
     binding_verified = dependency_status.get("binding_status") in {"bound_verified", "bound_verified_runtime_blocked"}
     runtime_ready = bool(render_runtime_ready)
     if dependency_status.get("binding_status") == "bound_verified_runtime_blocked":

@@ -31,10 +31,10 @@ def evaluate_context_conflict_gate(
         candidate_client = candidate.get("client_name", candidate.get("metadata", {}).get("client_name", ""))
 
         # 行业冲突
-        if current_industry and candidate_industry and current_industry != candidate_industry:
+        if current_industry and candidate_industry and current_industry != candidate_industry and decision.get("source_decision") == "reuse":
             findings.append({
                 "finding_id": f"conflict_industry_{beat_id}",
-                "severity": "P1",
+                "severity": "P2",
                 "dimension": "industry_conflict",
                 "message": f"历史页行业 '{candidate_industry}' 与当前行业 '{current_industry}' 冲突。",
                 "page_id": beat_id,
@@ -44,7 +44,7 @@ def evaluate_context_conflict_gate(
             })
 
         # 客户名残留
-        if candidate_client and current_client and candidate_client != current_client:
+        if candidate_client and current_client and candidate_client != current_client and decision.get("source_decision") == "reuse":
             findings.append({
                 "finding_id": f"conflict_client_{beat_id}",
                 "severity": "P1",

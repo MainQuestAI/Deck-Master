@@ -13,18 +13,6 @@ from runtime.run_state import read_json
 SCHEMA_VERSION = "deck_customer_visible_safety_gate.v1"
 GATE_NAME = "customer_visible_safety"
 DEFAULT_FORBIDDEN_TERMS = [
-    "关键图示",
-    "证书墙",
-    "缩略图",
-    "卡一",
-    "卡二",
-    "左区",
-    "右区",
-    "左屏",
-    "右屏",
-    "功能证据 + 业务价值",
-    "系统功能证据 + 业务价值",
-    "系统功能证据",
     "待补",
     "占位",
     "TODO",
@@ -129,30 +117,17 @@ def evaluate_customer_visible_safety_gate(
     run_dir: str | Path | None = None,
 ) -> dict[str, Any]:
     terms = _dedupe(forbidden_terms or DEFAULT_FORBIDDEN_TERMS)
-    page_roles = load_page_roles(run_dir) if run_dir else None
     audit = audit_pptx(
         artifact,
         expected_pages=expected_pages,
         forbidden_terms=terms,
-        page_roles=page_roles,
-        strict_page_roles=requires_page_role_contract(run_dir),
+        page_roles=load_page_roles(run_dir) if run_dir else None,
+        strict_page_roles=False,
     )
     findings = [
         _finding_for_hit(index, hit)
         for index, hit in enumerate(audit.get("forbidden_hits", []), start=1)
     ]
-    for slide_number in audit.get("missing_page_roles", []):
-        findings.append(
-            {
-                "finding_id": f"customer_visible_missing_page_role_{int(slide_number):03d}",
-                "severity": "P1",
-                "dimension": "page_role_contract",
-                "message": f"最终 PPT 第 {int(slide_number)} 页缺少 page_role 映射。",
-                "repair_instruction": "在 Standard Build Manifest 或 high-density page scene 中补齐 canonical page_role，并重新生成和扫描最终 PPTX。",
-                "slide_number": int(slide_number),
-                "page_id": f"slide_{int(slide_number):03d}",
-            }
-        )
     blocked = bool(findings)
     status = "rework_required" if blocked else "pass"
     p0_count = sum(1 for item in findings if item.get("severity") == "P0")

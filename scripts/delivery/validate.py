@@ -8,7 +8,7 @@ import zipfile
 
 from runtime.artifact_validator import sha256_file, validate_artifact_descriptor, validate_artifact_manifest
 from quality.gate_freshness import artifact_identity, report_currentity
-from quality.gate_policy import resolve_required_gates
+from quality.gate_policy import required_gate_names, resolve_required_gates
 
 SCHEMA_VERSION = "deck_delivery_validation.v1"
 LINEAGE_SCHEMA_VERSION = "deck_final_version_lineage.v1"
@@ -111,6 +111,7 @@ def validate_delivery(
     quality_dir = run_dir / "quality_reports"
     gates_checked: list[dict[str, Any]] = []
     quality_reports: list[dict[str, Any]] = []
+    required_gates = set(required_gate_names(builder_profile=builder_profile, output_profile=output_profile, run_mode=run_mode))
     if quality_dir.exists():
         for gate_file in quality_dir.glob("*_gate.json"):
             try:
@@ -136,12 +137,14 @@ def validate_delivery(
                     "current": False,
                     "currentity": "missing",
                 })
-                findings.append({
-                    "finding_id": "delivery_gate_parse_failed",
-                    "severity": "P1",
-                    "message": f"Quality gate JSON parse failed: {gate_file}",
-                    "repair_instruction": "修复 quality gate JSON 后再验证交付。",
-                })
+                gate_name = gate_file.stem.replace("_gate", "")
+                if gate_name in required_gates:
+                    findings.append({
+                        "finding_id": f"delivery_gate_parse_failed_{gate_name}",
+                        "severity": "P1",
+                        "message": f"Required quality gate JSON parse failed: {gate_file}",
+                        "repair_instruction": "重新运行当前交付所需的质量检查。",
+                    })
 
     governance_policy: dict[str, Any] = {}
     if governance_enabled:
@@ -157,7 +160,7 @@ def validate_delivery(
             output_profile=output_profile or ("production_pptx" if artifact.suffix.lower() == ".pptx" else ""),
             run_mode=run_mode,
             reports=policy_reports,
-            include_non_required_blockers=True,
+            include_non_required_blockers=False,
         )
         existing_ids = {str(item.get("finding_id") or "") for item in findings if isinstance(item, dict)}
         for gate in governance_policy.get("missing_required_gates") or []:

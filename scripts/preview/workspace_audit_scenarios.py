@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import shutil
 from datetime import datetime, timezone
@@ -393,7 +394,9 @@ def _seed_delivery_preview(run_dir: Path, project_title: str, scenario_state: st
   </body>
 </html>
 """
-    (rendered_dir / "index.html").write_text(html, encoding="utf-8")
+    artifact = rendered_dir / "index.html"
+    artifact.write_text(html, encoding="utf-8")
+    artifact_hash = hashlib.sha256(artifact.read_bytes()).hexdigest()
     _write_json(
         run_dir / "render_results" / "render_result.json",
         {
@@ -416,6 +419,21 @@ def _seed_delivery_preview(run_dir: Path, project_title: str, scenario_state: st
             "blockers": [],
         },
     )
+    for gate in ("render", "delivery"):
+        _write_json(
+            run_dir / "quality_reports" / f"{gate}_gate.json",
+            {
+                "schema_version": "deck_quality_report.v1",
+                "gate": gate,
+                "status": "pass",
+                "blocks_delivery": False,
+                "artifact_path": "rendered/index.html",
+                "artifact_sha256": artifact_hash,
+                "summary": {"p0_count": 0, "p1_count": 0, "p2_count": 0},
+                "findings": [],
+                "page_findings": [],
+            },
+        )
 
 
 def _seed_common_artifacts(run_dir: Path, project_title: str) -> None:

@@ -10,8 +10,8 @@ Design notes:
   not by handoff/approval facts (those land in A3/A4). When exit artifacts are
   present but the transition is approval-required, the stage is reported as
   ``awaiting_approval``.
-* Stale propagation: a stage is ``stale`` when any of its
-  ``staleness_dependencies`` was modified after its own outputs.
+* Stale propagation is handled by content-bound contracts and import/build
+  invalidation. Filesystem mtimes are not business content identity.
 * Deterministic & rebuildable: given identical on-disk state, two resolutions
   of the same run yield byte-identical snapshots (apart from ``generated_at``).
 """
@@ -197,31 +197,7 @@ class WorkflowStateResolver:
         return out
 
     def _is_stale(self, contract, root: Path, outputs: list[Path]) -> bool:
-        if not outputs:
-            return False
-        own_outputs = {p.resolve() for p in outputs}
-        dep_files: list[Path] = []
-        for d in contract.staleness_dependencies:
-            # skip this stage's own workflow bookkeeping (decision log, handoffs,
-            # approvals): those are naturally written while the stage runs, so
-            # their mtime advancing past the stage's outputs is NOT an upstream
-            # change. Staleness tracks upstream *content* artifacts only.
-            if d.startswith("workflow/"):
-                continue
-            resolved = _resolve_dependency(root, d)
-            if not resolved:
-                continue
-            for p in resolved:
-                if p.resolve() in own_outputs:
-                    continue
-                dep_files.append(p)
-        if not dep_files:
-            return False
-        dep_latest = fp.latest_mtime(dep_files)
-        out_earliest = fp.earliest_mtime(outputs)
-        if dep_latest is None or out_earliest is None:
-            return False
-        return dep_latest > out_earliest
+        return False
 
     def _stale_artifacts(self, root: Path, stages: list[StageState]) -> list[str]:
         out: list[str] = []

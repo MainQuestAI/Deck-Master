@@ -21,6 +21,7 @@ from runtime.run_state import (
 from runtime.render import CANONICAL_RENDER_RESULT, LEGACY_RENDER_RESULTS
 from runtime.run_state_resolver import _draft_gate_blocks, _fresh_draft_gate_for_generation, _pick_first_draft_gate
 from sourcing.reader import read_sourcing_plan
+from quality.gate_policy import current_artifact, resolve_required_gates
 
 
 def _safe_read(path: Path) -> dict[str, Any] | None:
@@ -196,6 +197,19 @@ def compute_deck_readiness(run_dir: Path) -> dict[str, Any]:
                     p1_total += 1
                 elif sev == "P2" and summary.get("p2_count") is None:
                     p2_total += 1
+    artifact = current_artifact(run_dir)
+    policy = resolve_required_gates(
+        run_dir,
+        artifact,
+        builder_profile="high_density" if (run_dir / "high_density_build" / "status.json").exists() else "",
+        output_profile="production_pptx" if artifact and artifact.suffix.lower() == ".pptx" else "",
+        run_mode=str((_safe_read(run_dir / "request.json") or {}).get("run_mode") or ""),
+        include_non_required_blockers=False,
+    )
+    current_blockers = [item for item in policy.get("current_blockers") or [] if isinstance(item, dict)]
+    p0_total = sum(str(item.get("severity") or "").upper() == "P0" for item in current_blockers)
+    p1_total = sum(str(item.get("severity") or "").upper() == "P1" for item in current_blockers)
+    quality_blocks_delivery = bool(current_blockers or policy.get("missing_required_gates"))
 
     # Readiness dimensions.
     narrative = "pass" if (run_dir / "deck_brief.json").exists() else "pending"

@@ -36,21 +36,20 @@ def evaluate_brand_gate(
             "blocks_delivery": False,
         }
 
-    # 检查 workspace visual-system
-    has_visual_system = False
+    brand_requirements: list[Path] = []
     if workspace_dir:
         vs_dir = Path(workspace_dir) / "visual-system"
-        if vs_dir.exists():
-            has_visual_system = any(vs_dir.iterdir())
+        if vs_dir.is_dir():
+            brand_requirements = [path for path in vs_dir.iterdir() if path.is_file() and path.stat().st_size > 0]
 
-    if not has_visual_system:
+    if brand_requirements:
         findings.append({
-            "finding_id": "brand_no_visual_system",
+            "finding_id": "brand_review_not_performed",
             "severity": "P2",
             "dimension": "visual_consistency",
-            "message": "Workspace 缺少 visual-system 配置。",
-            "refs": [],
-            "repair_instruction": "在 workspace 中创建 visual-system/ 目录并添加 design_spec.md。",
+            "message": "已发现品牌要求，但本检查没有对成品颜色、字体和素材进行实际品牌审阅。",
+            "refs": [str(path) for path in brand_requirements],
+            "repair_instruction": "对照品牌要求审阅当前成品，并记录具体观察与修订。",
         })
 
     # 检查页数（简化：用 python-pptx 如果可用）
@@ -83,7 +82,7 @@ def evaluate_brand_gate(
     elif findings:
         status = "conditional_pass"
     else:
-        status = "pass"
+        status = "not_applicable"
 
     return {
         "schema_version": SCHEMA_VERSION,

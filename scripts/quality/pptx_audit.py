@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import re
 import zipfile
+from copy import deepcopy
 from pathlib import Path
 from posixpath import normpath
 from typing import Any
@@ -21,6 +22,7 @@ DOC_PROPS_RE = re.compile(r"docProps/(?:core|app|custom)\.xml$")
 PRESENTATION_RE = re.compile(r"ppt/presentation\.xml$")
 TEXT_ATTRS = {"descr", "title"}
 SPARSE_ALLOWED_ROLES = {"cover", "section", "section_divider", "divider", "toc", "agenda", "visual", "visual_divider", "image", "image_page"}
+_AUDIT_CACHE: dict[tuple[Any, ...], dict[str, Any]] = {}
 
 
 def _read_optional_json(path: Path) -> dict[str, Any]:
@@ -290,6 +292,20 @@ def audit_pptx(
     forbidden = [term for term in (forbidden_terms or []) if term]
     if not path.exists():
         raise ValueError(f"PPTX not found: {path}")
+    stat = path.stat()
+    role_key = json.dumps(page_roles, ensure_ascii=False, sort_keys=True)
+    cache_key = (
+        str(path),
+        stat.st_size,
+        stat.st_mtime_ns,
+        expected_pages,
+        tuple(forbidden),
+        role_key,
+        strict_page_roles,
+    )
+    cached = _AUDIT_CACHE.get(cache_key)
+    if cached is not None:
+        return deepcopy(cached)
 
     slides = []
     text_items: list[dict[str, Any]] = []
@@ -385,7 +401,7 @@ def audit_pptx(
     except ElementTree.ParseError as exc:
         raise ValueError(f"Invalid PPTX slide XML in {path}: {exc}") from exc
 
-    return {
+    result = {
         "artifact": str(path),
         "slide_count": len(slides),
         "expected_pages": expected_pages,
@@ -401,3 +417,9 @@ def audit_pptx(
         ],
         "forbidden_hits": forbidden_hits,
     }
+    # A process may ask render, delivery, and safety questions about the same
+    # immutable artifact. Reuse that exact extraction while keeping policy
+    # inputs in the key; any file or policy change forces a fresh audit.
+    _AUDIT_CACHE.clear()
+    _AUDIT_CACHE[cache_key] = deepcopy(result)
+    return result

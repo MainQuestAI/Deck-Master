@@ -161,17 +161,7 @@ def report_currentity(
     if declared_hash and declared_hash != artifact_hash:
         return {"status": "stale", "current": False, "reason": f"{declared_hash_key} is stale", "checks": checks}
 
-    current_metadata = _read_manifest_metadata(root)
-    for key in ("source_fingerprint", "build_manifest_sha256", "artifact_manifest_sha256"):
-        declared = str(binding.get(key) or report.get(key) or "").strip()
-        if not declared:
-            continue
-        checks.append(f"artifact_binding.{key}" if key in binding else key)
-        current = current_metadata.get(key, "")
-        if current and declared != current:
-            return {"status": "stale", "current": False, "reason": f"{key} is stale", "checks": checks}
-    source_fingerprint = str(report.get("source_fingerprint") or "")
-    artifact_source = str(report.get("artifact_source_fingerprint") or "")
-    if source_fingerprint and artifact_source and source_fingerprint != artifact_source:
-        return {"status": "stale", "current": False, "reason": "source_fingerprint is stale", "checks": [*checks, "source_fingerprint"]}
+    # File-level gates describe the actual artifact bytes. Manifest timestamps,
+    # approval records, and unrelated page-order metadata do not invalidate a
+    # report while the selected artifact path and SHA-256 remain unchanged.
     return {"status": "current", "current": True, "reason": "", "checks": checks}

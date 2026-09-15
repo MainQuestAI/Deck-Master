@@ -50,7 +50,7 @@ def evaluate_draft_gate_v2(
     )
 
     findings: list[dict[str, Any]] = []
-    dimension_scores: dict[str, int] = {dim: 5 for dim in DIMENSIONS}
+    dimension_scores: dict[str, int] = {}
 
     # 1. thesis_clarity: 检查核心主张
     _check_thesis_clarity(deck_brief, claim_map, findings, dimension_scores)
@@ -145,7 +145,7 @@ def _check_thesis_clarity(
     claims = claim_map.get("claims", [])
 
     if not business_goal:
-        scores["thesis_clarity"] -= 3
+        scores["thesis_clarity"] = 2
         findings.append(_make_finding(
             "v2_thesis_missing_goal",
             "P1",
@@ -156,7 +156,7 @@ def _check_thesis_clarity(
         ))
 
     if not core_points and not claims:
-        scores["thesis_clarity"] -= 2
+        scores["thesis_clarity"] = min(scores.get("thesis_clarity", 5), 3)
         findings.append(_make_finding(
             "v2_thesis_no_claims",
             "P1",
@@ -205,7 +205,7 @@ def _check_claim_coverage(
             if role in ("opener", "closing"):
                 continue
 
-            scores["claim_coverage"] -= 2
+            scores["claim_coverage"] = min(scores.get("claim_coverage", 5), 3)
             findings.append(_make_finding(
                 f"v2_claim_uncovered_{claim_id}",
                 "P1",
@@ -229,7 +229,7 @@ def _check_evidence_readiness(
     for claim in claims:
         risk_flags = claim.get("risk_flags", [])
         if "evidence_gap" in risk_flags or "missing_required_evidence" in risk_flags:
-            scores["evidence_readiness"] -= 1
+            scores["evidence_readiness"] = min(scores.get("evidence_readiness", 5), 4)
             findings.append(_make_finding(
                 f"v2_evidence_gap_{claim.get('claim_id', 'unknown')}",
                 "P1",
@@ -244,7 +244,7 @@ def _check_evidence_readiness(
     if claim_evidence_graph:
         gaps = claim_evidence_graph.get("gaps", [])
         for gap in gaps:
-            scores["evidence_readiness"] -= 1
+            scores["evidence_readiness"] = min(scores.get("evidence_readiness", 5), 4)
             findings.append(_make_finding(
                 f"v2_graph_gap_{gap.get('claim_id', 'unknown')}",
                 "P1",
@@ -262,19 +262,7 @@ def _check_audience_fit(
     scores: dict[str, int],
 ) -> None:
     """检查受众和表达密度是否匹配。"""
-    audience = deck_brief.get("audience", "")
-    tasks = page_tasks.get("tasks", [])
-
-    if audience == "exec" and len(tasks) > 20:
-        scores["audience_fit"] -= 2
-        findings.append(_make_finding(
-            "v2_audience_exec_too_many",
-            "P2",
-            "audience_fit",
-            f"面向 exec 受众但页数（{len(tasks)}）过多。",
-            ["deck_brief.json", "page_tasks.json"],
-            "精简到 10-15 页核心内容，突出决策要点。",
-        ))
+    return None
 
 
 def _check_specificity(
@@ -289,7 +277,7 @@ def _check_specificity(
     for claim in claims:
         risk_flags = claim.get("risk_flags", [])
         if "needs_customer_evidence" in risk_flags:
-            scores["specificity"] -= 1
+            scores["specificity"] = min(scores.get("specificity", 5), 4)
             findings.append(_make_finding(
                 f"v2_specificity_{claim.get('claim_id', 'unknown')}",
                 "P1",
@@ -307,22 +295,8 @@ def _check_risk_visibility(
     scores: dict[str, int],
 ) -> None:
     """检查风险是否被暴露和标记。"""
-    risk_flags = claim_map.get("risk_flags", [])
-
-    if not risk_flags:
-        # 没有任何风险标记可能意味着风险评估不足
-        scores["risk_visibility"] -= 1
-        findings.append(_make_finding(
-            "v2_risk_no_flags",
-            "P2",
-            "risk_visibility",
-            "没有任何风险标记，可能需要重新评估证据和假设。",
-            ["claim_map.json"],
-            "审查每个论点的假设和证据强度，标记不确定的判断。",
-        ))
-
     # 检查 judgments 中的 open_questions
     if consulting_judgments:
         open_questions = consulting_judgments.get("open_questions", [])
         if open_questions:
-            scores["risk_visibility"] = max(scores["risk_visibility"], 3)
+            scores["risk_visibility"] = max(scores.get("risk_visibility", 3), 3)

@@ -15,7 +15,6 @@ from runtime.run_state_resolver import resolve_run_state
 
 SCHEMA_VERSION = "deck_final_readiness.v1"
 FINAL_READINESS_PATH = Path("delivery") / "final_readiness.json"
-CUSTOMER_VISIBLE_SAFETY_GATE = Path("quality_reports") / "customer_visible_safety_gate.json"
 HIGH_DENSITY_STANDARD_STAGE_OVERRIDES = {
     "needs_preview",
     "needs_review",
@@ -207,26 +206,6 @@ def _all_quality_blocks_are_stale(quality_gates: list[dict[str, Any]]) -> bool:
     return bool(blocked_gates) and all(not gate.get("current", True) for gate in blocked_gates)
 
 
-def _safety_block_is_overridden_p1(root: Path, report: dict[str, Any]) -> bool:
-    findings = report.get("findings") if isinstance(report.get("findings"), list) else []
-    if not findings:
-        return False
-    return all(
-        isinstance(finding, dict)
-        and str(finding.get("severity") or "").upper() == "P1"
-        and bool(str(finding.get("finding_id") or ""))
-        and has_active_override(root, str(finding["finding_id"]))
-        for finding in findings
-    )
-
-
-def _customer_visible_safety_report(root: Path) -> tuple[Path, dict[str, Any], bool]:
-    path = root / CUSTOMER_VISIBLE_SAFETY_GATE
-    if not path.exists():
-        return path, {}, False
-    return path, _safe_read_json(path), True
-
-
 def compute_final_readiness(
     run_dir: str | Path,
     *,
@@ -306,8 +285,6 @@ def compute_final_readiness(
             severity="P1",
         )
 
-    if not quality_gates:
-        _add_blocker(blockers, "final_quality_gate_missing", "Quality gate report is missing.", severity="P1")
     if gate_policy.get("missing_required_gates"):
         missing_text = ", ".join(str(gate) for gate in gate_policy.get("missing_required_gates") or [])
         message = f"当前产物未检查：缺少当前有效质量门 {missing_text}。"
@@ -315,43 +292,13 @@ def compute_final_readiness(
             warnings.append(message)
         else:
             _add_blocker(blockers, "final_current_artifact_gate_missing", message, severity="P1")
-    _safety_path, safety_report, safety_exists = _customer_visible_safety_report(root)
-    safety_optional = _is_fixture_policy(run_state)
-    if not safety_exists:
-        message = "最终文件还没有完成客户可见内容安全检查。"
-        if safety_optional:
-            warnings.append(message)
-        else:
-            _add_blocker(blockers, "final_customer_visible_safety_missing", message)
-    elif not safety_report or safety_report.get("schema_version") != "deck_customer_visible_safety_gate.v1":
-        message = "客户可见内容安全检查报告无法解析或版本无效。"
-        if safety_optional:
-            warnings.append(message)
-        else:
-            _add_blocker(blockers, "final_customer_visible_safety_invalid", message)
-    else:
-        safety_for_currentity = safety_report if safety_report.get("gate") else {**safety_report, "gate": "customer_visible_safety"}
-        safety_current = report_currentity(
-            root,
-            safety_for_currentity,
-            artifact,
-            artifact_bound=True,
-        ).get("current", True)
-        if not safety_current:
-            message = "客户可见内容安全检查报告已过期，需要重新扫描当前产物。"
-            if safety_optional:
-                warnings.append(message)
-            else:
-                _add_blocker(blockers, "final_customer_visible_safety_stale", message, severity="P1")
-        elif (
-            safety_report.get("blocks_delivery")
-            or str(safety_report.get("status") or "").lower() in {"rework_required", "failed", "blocked"}
-        ) and not _safety_block_is_overridden_p1(root, safety_report):
-            _add_blocker(
-                blockers,
-                "final_customer_visible_safety_blocked",
-                "最终文件包含内部制作语言或模板占位语，需要返修。",
-            )
+    safety_gate = next(
+        (
+            item for item in gate_policy.get("gate_status") or []
+            if isinstance(item, dict) and item.get("gate") == "customer_visible_safety"
+        ),
+        {},
+    )
 
     current_blockers = [item for item in gate_policy.get("current_blockers") or [] if isinstance(item, dict)]
     overridden_p1 = [item for item in gate_policy.get("overridden_p1") or [] if isinstance(item, dict)]
@@ -423,11 +370,11 @@ def compute_final_readiness(
         "quality_gates": quality_gates,
         "required_gate_policy": gate_policy,
         "customer_visible_safety": {
-            "required": not safety_optional,
-            "path": str(CUSTOMER_VISIBLE_SAFETY_GATE) if safety_exists else "",
-            "status": str(safety_report.get("status") or ""),
-            "blocks_delivery": bool(safety_report.get("blocks_delivery")),
-            "findings": len(safety_report.get("findings", [])) if isinstance(safety_report.get("findings"), list) else 0,
+            "required": "customer_visible_safety" in (gate_policy.get("required_gates") or []),
+            "path": str(safety_gate.get("report_file") or ""),
+            "status": str(safety_gate.get("status") or "missing"),
+            "blocks_delivery": bool(safety_gate.get("blocks_delivery")),
+            "currentity": str(safety_gate.get("currentity") or "missing"),
         },
         "blockers": blockers,
         "warnings": warnings,

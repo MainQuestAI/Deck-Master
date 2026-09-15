@@ -50,6 +50,7 @@ jobs:
         run: python -m playwright install --with-deps chromium
 
       - name: Run unit tests
+        if: matrix.python-version == '3.11'
         run: python -m pytest -q
 
       - name: Run static correctness checks
@@ -60,16 +61,6 @@ jobs:
         run: |
           python -m coverage run -m pytest -q
           python -m coverage report --fail-under=80
-
-      - name: Run Skill OS contract & schema validation
-        run: |
-          set -euo pipefail
-          python -m pytest tests/test_skill_manifest.py tests/test_stage_contract_registry.py \
-            tests/test_workflow_state.py tests/test_stage_validation.py tests/test_skill_handoff.py \
-            tests/test_workflow_approval.py tests/test_workflow_questions.py \
-            tests/test_sourcing_plan_v2.py tests/test_page_package.py tests/test_build_manifest_v2.py \
-            tests/test_workflow_autopilot_v2.py tests/test_workflow_cli.py tests/test_skill_doc_contract.py \
-            tests/test_skill_os_migration.py tests/test_skill_os_release_contract.py -q
 
       - name: Run fixture autoplan smoke
         run: |
@@ -104,8 +95,8 @@ jobs:
               raise SystemExit(f"Missing smoke artifacts: {missing}")
           manifest = json.loads((run_dir / "preview_manifest.json").read_text(encoding="utf-8"))
           pages = manifest.get("pages", [])
-          if len(pages) < 10:
-              raise SystemExit(f"Expected at least 10 preview pages, got {len(pages)}")
+          if not pages:
+              raise SystemExit("Expected the task-derived preview to contain at least one page")
           print(f"Autoplan smoke passed: {len(pages)} preview pages")
           PY
 

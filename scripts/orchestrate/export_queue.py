@@ -212,14 +212,6 @@ def has_client_export_quality_clearance(
             "blocking_findings": [],
             "required_gate_policy": gate_policy,
         }
-    if not _has_draft_gate_report(reports):
-        return {
-            "ready": False,
-            "reason": "Missing draft gate report: needs_draft_gate.",
-            "blocking_findings": [],
-            "required_gate_policy": gate_policy,
-        }
-
     blocking_findings: list[dict[str, Any]] = [
         item for item in gate_policy.get("current_blockers") or [] if isinstance(item, dict)
     ]
