@@ -20,7 +20,7 @@ if str(ROOT / "scripts") not in sys.path:
     sys.path.insert(0, str(ROOT / "scripts"))
 
 from build.manifest import build_manifest_v2
-from high_density.blueprint import BlueprintInvalid, _default_slide_frame, build_blueprint_prompt, build_blueprint_prompt_artifact, ensure_blueprint_manifest, load_provider_host_receipt, record_provider_host_result
+from high_density.blueprint import BlueprintInvalid, _default_slide_frame, approve_blueprint, build_blueprint_prompt, build_blueprint_prompt_artifact, ensure_blueprint_manifest, load_provider_host_receipt, record_provider_host_result
 from high_density.blueprint_content_review import BlueprintContentReviewRequired, archive_rejected_blueprint, load_blueprint_content_review, next_attempt_index, write_blueprint_content_review
 from high_density.capability import REQUIRED_SCHEMAS, inspect_high_density_capability
 from high_density.content import (
@@ -37,6 +37,7 @@ from high_density.content import (
     load_page_packages,
     seal_mbb_plan,
     select_mbb_storyline,
+    write_page_package_content_lock,
     write_mbb_plan,
     _storyline_context,
 )
@@ -514,6 +515,32 @@ def test_build_cli_exposes_style_blueprint_and_provider_commands() -> None:
     )
     assert run_help.returncode == 0, run_help.stderr
     assert "--review-policy" in run_help.stdout
+
+
+def test_public_blueprint_approval_reads_canonical_page_package_lock(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    run, _ = _make_run(tmp_path)
+    package = load_page_packages(run, expected_run_id=run.name)[0]
+    canonical = write_page_package_content_lock(run, package)
+    assert canonical.name == "P001.content_lock.json"
+    assert not (canonical.parent / "P001.json").exists()
+    write_style_lock(run, run.name, "cyber-01", approved=True, approver="test")
+    observed: dict[str, object] = {}
+
+    def fake_ensure(root: Path, page_id: str, lock: dict, **kwargs: object) -> Path:
+        observed.update(root=root, page_id=page_id, lock=lock, kwargs=kwargs)
+        return root / "high_density_build/blueprints/P001.blueprint_manifest.json"
+
+    monkeypatch.setattr("high_density.blueprint.ensure_blueprint_manifest", fake_ensure)
+
+    result = approve_blueprint(run, "P001", approved_by="reviewer")
+
+    assert result.name == "P001.blueprint_manifest.json"
+    assert observed["page_id"] == "P001"
+    assert observed["lock"] == load_content_lock(run, "P001")
+    assert (observed["kwargs"] or {})["approval"]["approved_by"] == "reviewer"
 
 
 def test_style_lock_change_invalidates_blueprints(tmp_path: Path) -> None:

@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from .contracts import ContractError, assert_v2, read_json, run_relative, sha256_bytes, sha256_file, sha256_json, utc_now, write_json
+from .content import load_content_lock
 from .integrity import sign_runtime_payload, verify_runtime_payload
 from .migration import MIGRATION_REQUIRED_CODE, assert_current_mbb_artifact
 
@@ -290,8 +291,7 @@ def load_provider_host_receipt(root: Path, page_id: str, prompt: dict[str, Any],
 
 def approve_blueprint(root: Path, page_id: str, *, approved_by: str, source: str = "explicit_user") -> Path:
     _assert_page_id(page_id)
-    lock = read_json(root / "high_density_build" / "content_locks" / f"{page_id}.json")
-    assert_v2("content_lock", lock)
+    lock = load_content_lock(root, page_id)
     style_lock = read_json(root / "high_density_build" / "style" / "style_lock.json")
     assert_v2("style_lock", style_lock)
     return ensure_blueprint_manifest(
