@@ -100,6 +100,18 @@ def test_symbol_use_applies_viewbox_scaling() -> None:
     assert icon["bbox"] == {"x": 100.0, "y": 200.0, "w": 108.0, "h": 80.0}
 
 
+def test_transformed_rounded_rect_keeps_curved_native_geometry() -> None:
+    source = ElementTree.fromstring(
+        '<svg xmlns="http://www.w3.org/2000/svg"><g id="icon" data-pptx-visual-id="icon.robot" transform="translate(10,20) scale(2)" stroke="#ffffff" stroke-width="2.3"><rect id="robot.head" x="8" y="9" width="26" height="24" rx="6"/></g></svg>'
+    )
+    native = parse_svg_native(source)
+    head = next(item for item in native["elements"] if item["element_id"] == "robot.head")
+    assert head["normalized_tag"] == "path"
+    assert [item["op"] for item in head["commands"]].count("C") == 4
+    assert head["bbox"] == {"x": 26.0, "y": 38.0, "w": 52.0, "h": 48.0}
+    assert head["style"]["stroke-width"] == pytest.approx(4.6)
+
+
 def test_nested_group_opacity_is_composed() -> None:
     source = ElementTree.fromstring(
         '<svg xmlns="http://www.w3.org/2000/svg"><g id="outer" opacity="0.5"><g id="icon" data-pptx-visual-id="icon.opacity" opacity="0.8"><path id="path" d="M0 0 L20 0 L20 20 Z" fill="#419bfd"/></g></g></svg>'

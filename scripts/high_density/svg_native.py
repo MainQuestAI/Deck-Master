@@ -615,6 +615,28 @@ def _geometry(node: Any, tag: str, matrix: tuple[float, float, float, float, flo
         width, height = _finite(node.get("width"), label="width", element_id=element_id, visual_id=visual_id), _finite(node.get("height"), label="height", element_id=element_id, visual_id=visual_id)
         points = [_apply_matrix(matrix, point) for point in ((x, y), (x + width, y), (x + width, y + height), (x, y + height))]
         if matrix != _IDENTITY:
+            raw_rx, raw_ry = node.get("rx"), node.get("ry")
+            rx = _finite(raw_rx if raw_rx is not None else raw_ry or 0, label="rx", element_id=element_id, visual_id=visual_id)
+            ry = _finite(raw_ry if raw_ry is not None else raw_rx or 0, label="ry", element_id=element_id, visual_id=visual_id)
+            if rx < 0 or ry < 0:
+                raise SvgNativeError(f"SVG rect radius is negative on {element_id}", element_id=element_id, visual_id=visual_id)
+            rx, ry = min(rx, width / 2), min(ry, height / 2)
+            if rx > 0 and ry > 0:
+                k = 0.5522847498307936
+                rounded = [
+                    {"op": "M", "x": x + rx, "y": y},
+                    {"op": "L", "x": x + width - rx, "y": y},
+                    {"op": "C", "x1": x + width - rx + k * rx, "y1": y, "x2": x + width, "y2": y + ry - k * ry, "x": x + width, "y": y + ry},
+                    {"op": "L", "x": x + width, "y": y + height - ry},
+                    {"op": "C", "x1": x + width, "y1": y + height - ry + k * ry, "x2": x + width - rx + k * rx, "y2": y + height, "x": x + width - rx, "y": y + height},
+                    {"op": "L", "x": x + rx, "y": y + height},
+                    {"op": "C", "x1": x + rx - k * rx, "y1": y + height, "x2": x, "y2": y + height - ry + k * ry, "x": x, "y": y + height - ry},
+                    {"op": "L", "x": x, "y": y + ry},
+                    {"op": "C", "x1": x, "y1": y + ry - k * ry, "x2": x + rx - k * rx, "y2": y, "x": x + rx, "y": y},
+                    {"op": "Z"},
+                ]
+                commands = _transform_commands(rounded, matrix)
+                return "path", _path_bbox(commands), commands
             commands = [{"op": "M", "x": points[0][0], "y": points[0][1]}] + [{"op": "L", "x": point[0], "y": point[1]} for point in points[1:]] + [{"op": "Z"}]
             return "path", _bbox(points), commands
         return "rect", _bbox(points), None
@@ -754,6 +776,12 @@ def parse_svg_native(root: ElementTree.Element) -> dict[str, Any]:
         if not local_id:
             raise SvgNativeError(f"visible SVG element must have a stable id: {tag}", element_id=node_id, visual_id=visual_id)
         normalized_tag, bbox, commands = _geometry(node, tag, matrix, element_id=local_id, visual_id=visual_id)
+        if matrix != _IDENTITY and str(style.get("stroke") or "none").lower() != "none":
+            # SVG scales strokes with the group's geometry. Native DrawingML
+            # receives transformed coordinates, so it also needs the effective
+            # stroke width instead of the unscaled child attribute.
+            a, b, c, d, _, _ = matrix
+            style["stroke-width"] = float(style["stroke-width"]) * math.sqrt(abs(a * d - b * c))
         if tag == "path":
             fill_rule = str(style.get("fill-rule") or "nonzero").lower()
             if fill_rule not in {"nonzero", "evenodd"}:
