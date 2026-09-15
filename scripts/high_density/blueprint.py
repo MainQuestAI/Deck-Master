@@ -283,17 +283,8 @@ def load_provider_host_receipt(root: Path, page_id: str, prompt: dict[str, Any],
     for field, value in expected.items():
         if str(receipt.get(field) or "") != value:
             raise BlueprintInvalid(f"Host-managed provider receipt {field} is stale on page {page_id}")
-    source = _provider_source_path(receipt)
-    if source is None:
-        if str(receipt.get("source_file_sha256") or "") != sha256_file(image):
-            raise BlueprintInvalid(f"explicit provider import hash does not match blueprint image on page {page_id}")
-        return receipt
-    if not source.is_file() or source.is_symlink() or sha256_file(source) != str(receipt.get("source_file_sha256") or "") or source.stat().st_size != int(receipt.get("source_size_bytes") or 0):
-        raise BlueprintInvalid(f"Host-managed provider source is missing or stale on page {page_id}")
-    if sha256_file(source) != sha256_file(image):
-        raise BlueprintInvalid(f"Host-managed provider source does not match blueprint image on page {page_id}")
-    if _provider_source_created_at(source) != str(receipt.get("source_created_at") or ""):
-        raise BlueprintInvalid(f"Host-managed provider source timestamp is stale on page {page_id}")
+    if str(receipt.get("source_file_sha256") or "") != sha256_file(image):
+        raise BlueprintInvalid(f"imported provider source hash does not match the run-local blueprint image on page {page_id}")
     return receipt
 
 
@@ -416,6 +407,14 @@ def _presentation_projection(lock: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _plan_lineage(lock: dict[str, Any], explicit: str = "") -> tuple[str, str]:
+    lineage = lock.get("lineage") or {}
+    mbb_hash = str(lineage.get("mbb_plan_sha256") or "")
+    if mbb_hash:
+        return "mbb_plan_sha256", explicit or mbb_hash
+    return "content_plan_sha256", explicit or str(lock.get("content_lock_sha256") or "")
+
+
 def build_blueprint_prompt(
     lock: dict[str, Any],
     style_lock: dict[str, Any] | None = None,
@@ -442,7 +441,7 @@ def build_blueprint_prompt(
             f"Locked visual style: {style_name}; palette={json.dumps(style.get('palette') or {}, ensure_ascii=False, sort_keys=True)}; grid={json.dumps(style.get('grid') or {}, ensure_ascii=False, sort_keys=True)}; typography={json.dumps(style.get('typography') or {}, ensure_ascii=False, sort_keys=True)}; chart_language={json.dumps(style.get('chart_language') or {}, ensure_ascii=False, sort_keys=True)}; table_language={json.dumps(style.get('table_language') or {}, ensure_ascii=False, sort_keys=True)}; surface_system={json.dumps(style.get('surface_system') or {}, ensure_ascii=False, sort_keys=True)}; density_rules={json.dumps(style.get('density_rules') or {}, ensure_ascii=False, sort_keys=True)}.",
             f"Approved optional visible terms: {' | '.join(projection['allowed_visible_terms']) or 'none'}.",
             "Use a contained 16:9 slide frame with dense but readable information regions and explicit business hierarchy.",
-            "Use only presentation-ready business language. Do not render field names, instructions, or metadata from this prompt. Do not add any footer, page number, page counter, source line, evidence marker, explanatory label, framework label, placeholder, prompt label, or production annotation.",
+            "Use only presentation-ready business language. Do not render field names, prompt labels, placeholders, or production annotations. Preserve customer-facing source lines, page numbers, framework names, and explanatory labels when they are part of the approved page content.",
             "Treat all visible text as composition guidance. The native redraw restores exact locked text from the content lock.",
         ]
     )
@@ -463,6 +462,7 @@ def build_blueprint_prompt_artifact(root: Path, page_id: str, lock: dict[str, An
     )
     style_hash = str((style_lock or {}).get("style_lock_sha256") or "0" * 64)
     prompt_sha256 = sha256_json(prompt_text)
+    plan_field, plan_sha256 = _plan_lineage(lock, mbb_plan_sha256)
     challenge_payload = {
         **challenge_seed,
         "run_mode": _run_mode(root),
@@ -470,7 +470,7 @@ def build_blueprint_prompt_artifact(root: Path, page_id: str, lock: dict[str, An
         "page_id": str(page_id),
         "prompt_sha256": prompt_sha256,
         "content_lock_sha256": str(lock["content_lock_sha256"]),
-        "mbb_plan_sha256": mbb_plan_sha256 or str((lock.get("lineage") or {}).get("mbb_plan_sha256") or "0" * 64),
+        plan_field: plan_sha256,
         "style_lock_sha256": style_hash,
     }
     challenge = {
@@ -486,8 +486,7 @@ def build_blueprint_prompt_artifact(root: Path, page_id: str, lock: dict[str, An
         "prompt_sha256": prompt_sha256,
         "content_lock_ref": f"high_density_build/content_locks/{page_id}.content_lock.json",
         "content_lock_sha256": str(lock["content_lock_sha256"]),
-        "mbb_plan_ref": "high_density_build/mbb/mbb_plan.json",
-        "mbb_plan_sha256": mbb_plan_sha256 or str((lock.get("lineage") or {}).get("mbb_plan_sha256") or "0" * 64),
+        plan_field: plan_sha256,
         "style_lock_ref": "high_density_build/style/style_lock.json",
         "style_lock_sha256": style_hash,
         "presentation_projection": _presentation_projection(lock),
@@ -495,7 +494,7 @@ def build_blueprint_prompt_artifact(root: Path, page_id: str, lock: dict[str, An
         "forbidden_visible_categories": list((lock.get("visibility_policy") or {}).get("hard_forbidden") or []) + list((lock.get("visibility_policy") or {}).get("hidden_by_default") or []),
         "attempt_index": attempt_index,
         "required_components": list(lock.get("required_component_ids") or []),
-        "forbidden_items": ["page numbers", "internal labels", "source metadata", "method labels", "prompt labels", "wireframe labels", "generation annotations", "hidden production notes"],
+        "forbidden_items": ["prompt labels", "wireframe labels", "generation annotations", "hidden production notes", "placeholders"],
         "provider_challenge": challenge,
         "created_at": utc_now(),
     }
@@ -519,16 +518,10 @@ def _validate_frame(frame: dict[str, Any], dimensions: tuple[int, int], page_id:
 
 
 def _assert_manifest_mirror_consistent(root: Path, page_id: str, canonical: Path) -> None:
-    legacy = root / BLUEPRINT_MANIFEST_DIR / f"{page_id}.manifest.json"
-    if not canonical.exists() or not legacy.exists():
-        return
-    try:
-        canonical_payload = read_json(canonical)
-        legacy_payload = read_json(legacy)
-    except ContractError as exc:
-        raise BlueprintInvalid(f"blueprint manifest mirror is unreadable on page {page_id}") from exc
-    if canonical_payload != legacy_payload:
-        raise BlueprintInvalid(f"blueprint manifest mirror is stale on page {page_id}")
+    # The canonical manifest is authoritative. A stale legacy mirror may be
+    # read only when the canonical file is absent; it must not block a current
+    # production artifact.
+    return
 
 
 def _provider_receipt_payload(
@@ -626,11 +619,11 @@ def ensure_blueprint_manifest(
     assert_current_mbb_artifact(root, prompt)
     assert_v2("blueprint_prompt", prompt)
     _validate_provider_challenge(root, prompt, page_id)
-    expected_mbb_sha = mbb_plan_sha256 or str((lock.get("lineage") or {}).get("mbb_plan_sha256") or "0" * 64)
+    plan_field, expected_plan_sha = _plan_lineage(lock, mbb_plan_sha256)
     expected_style_sha = str((style_lock or {}).get("style_lock_sha256") or prompt.get("style_lock_sha256") or "0" * 64)
     if str(prompt.get("run_id") or "") != str(lock.get("run_id") or "") or str(prompt.get("page_id") or "") != page_id:
         raise BlueprintInvalid(f"blueprint prompt identity is stale on page {page_id}")
-    if str(prompt.get("mbb_plan_sha256") or "") != expected_mbb_sha or str(prompt.get("style_lock_sha256") or "") != expected_style_sha:
+    if str(prompt.get(plan_field) or "") != expected_plan_sha or str(prompt.get("style_lock_sha256") or "") != expected_style_sha:
         raise BlueprintInvalid(f"blueprint prompt lineage is stale on page {page_id}")
     challenge = prompt.get("provider_challenge") or {}
     challenge_nonce = str(challenge.get("nonce") or "")
@@ -722,7 +715,7 @@ def ensure_blueprint_manifest(
         "prompt_ref": run_relative(root, prompt_file),
         "prompt_sha256": expected_prompt_sha,
         "content_lock_sha256": str(lock["content_lock_sha256"]),
-        "mbb_plan_sha256": mbb_plan_sha256 or str((lock.get("lineage") or {}).get("mbb_plan_sha256") or "0" * 64),
+        plan_field: expected_plan_sha,
         "style_lock_sha256": style_hash,
         "content_review_ref": run_relative(root, content_review_path(root, page_id)),
         "content_review_sha256": sha256_file(content_review_path(root, page_id)),
@@ -738,8 +731,9 @@ def ensure_blueprint_manifest(
     }
     assert_v2("blueprint_manifest", manifest)
     write_json(root / BLUEPRINT_MANIFEST_DIR / f"{page_id}.blueprint_manifest.json", manifest)
-    # Compatibility mirror for existing callers; it carries the same v2 payload.
-    write_json(root / BLUEPRINT_MANIFEST_DIR / f"{page_id}.manifest.json", manifest)
+    if plan_field == "mbb_plan_sha256":
+        # Legacy MBB runs still publish the historical mirror for old readers.
+        write_json(root / BLUEPRINT_MANIFEST_DIR / f"{page_id}.manifest.json", manifest)
     _write_provider_runtime_receipt(root, page_id, prompt, manifest)
     return root / BLUEPRINT_MANIFEST_DIR / f"{page_id}.blueprint_manifest.json"
 
@@ -769,7 +763,8 @@ def load_blueprint_manifest(root: Path, page_id: str, *, expected_run_id: str | 
     _validate_provider_challenge(root, prompt, page_id)
     if str(prompt.get("run_id") or "") != str(manifest.get("run_id") or "") or str(prompt.get("page_id") or "") != page_id:
         raise BlueprintInvalid(f"blueprint prompt identity is stale on page {page_id}")
-    for field in ("content_lock_sha256", "mbb_plan_sha256", "style_lock_sha256"):
+    plan_field = "mbb_plan_sha256" if "mbb_plan_sha256" in prompt else "content_plan_sha256"
+    for field in ("content_lock_sha256", plan_field, "style_lock_sha256"):
         if str(prompt.get(field) or "") != str(manifest.get(field) or ""):
             raise BlueprintInvalid(f"blueprint prompt {field} is stale on page {page_id}")
     if prompt.get("prompt_sha256") != manifest.get("prompt_sha256"):

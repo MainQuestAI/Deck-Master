@@ -62,7 +62,7 @@
     },
     "reviewEvidence": {
       "type": "object",
-      "required": ["status", "source", "reviewer_id", "action_id", "reviewed_at", "svg_sha256", "blueprint_sha256", "metrics_sha256", "full_page_check", "region_check_ids", "issues_found", "revision_required", "evidence_sha256"],
+      "required": ["status", "source", "reviewer_id", "action_id", "reviewed_at", "svg_sha256", "blueprint_sha256", "metrics_sha256", "full_page_check", "region_check_ids", "observations", "issues_found", "revision_required", "evidence_sha256"],
       "properties": {
         "status": {"enum": ["pass", "failed", "pending"]},
         "source": {"type": "string", "minLength": 1},
@@ -74,6 +74,7 @@
         "metrics_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
         "full_page_check": {"enum": ["pass", "failed", "pending"]},
         "region_check_ids": {"type": "array", "minItems": 4, "items": {"type": "string", "minLength": 1}},
+        "observations": {"type": "array", "items": {"type": "string", "minLength": 1}},
         "issues_found": {"type": "array", "items": {"type": "object"}},
         "revision_required": {"type": "boolean"},
         "evidence_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},

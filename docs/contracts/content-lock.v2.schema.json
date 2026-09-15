@@ -15,14 +15,14 @@
     "speaker_notes": {"type": "string"},
     "asset_bindings": {"type": "array", "items": {"type": "object"}},
     "evidence_bindings": {"type": "array", "items": {"type": "object"}},
-    "enrichment": {"$ref": "#/$defs/enrichment"},
+    "enrichment": {"oneOf": [{"$ref": "#/$defs/mbbEnrichment"}, {"$ref": "#/$defs/pagePackageEnrichment"}]},
     "required_component_ids": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
     "required_text_refs": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/textRef"}},
     "density_target": {"type": "object", "required": ["score", "band", "information_regions", "component_count", "evidence_count", "numeric_count"], "properties": {"score": {"type": "number", "minimum": 0}, "band": {"enum": ["low", "medium", "high"]}, "information_regions": {"type": "integer", "minimum": 1}, "component_count": {"type": "integer", "minimum": 1}, "evidence_count": {"type": "integer", "minimum": 0}, "numeric_count": {"type": "integer", "minimum": 0}}, "additionalProperties": false},
     "target_language": {"type": "string", "minLength": 1},
     "effective_language": {"type": "string", "minLength": 1},
     "visibility_policy": {"$ref": "#/$defs/visibilityPolicy"},
-    "lineage": {"$ref": "#/$defs/lineage"},
+    "lineage": {"oneOf": [{"$ref": "#/$defs/mbbLineage"}, {"$ref": "#/$defs/pagePackageLineage"}]},
     "content_lock_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
     "created_at": {"type": "string", "minLength": 1},
     "updated_at": {"type": "string"}
@@ -66,7 +66,7 @@
       },
       "additionalProperties": false
     },
-    "enrichment": {
+    "mbbEnrichment": {
       "type": "object",
       "required": ["framework", "version", "storyline_id", "storyline_context", "analysis", "evidence_ledger", "conclusion", "supporting_arguments", "detailed_argument", "caveat", "so_what", "business_implication", "handoff", "evidence_hierarchy", "evidence_assessment", "chart_plan", "material_pool", "derived_claims", "claim_bindings", "structure_decisions", "component_plan", "evidence_coverage"],
       "properties": {
@@ -158,7 +158,20 @@
       },
       "additionalProperties": false
     },
-    "lineage": {
+    "pagePackageEnrichment": {
+      "type": "object",
+      "required": ["framework", "version", "analysis", "visual_spec", "component_plan", "claim_bindings"],
+      "properties": {
+        "framework": {"const": "page_package"},
+        "version": {"const": "page_package/1"},
+        "analysis": {"type": "object"},
+        "visual_spec": {"type": "object"},
+        "component_plan": {"type": "array", "minItems": 1, "items": {"type": "object"}},
+        "claim_bindings": {"type": "array"}
+      },
+      "additionalProperties": false
+    },
+    "mbbLineage": {
       "type": "object",
       "required": ["page_package_sha256", "mbb_plan_sha256", "selected_storyline_id", "mbb_page_plan_sha256"],
       "properties": {
@@ -166,6 +179,17 @@
         "mbb_plan_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
         "selected_storyline_id": {"type": "string", "minLength": 1},
         "mbb_page_plan_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      },
+      "additionalProperties": false
+    },
+    "pagePackageLineage": {
+      "type": "object",
+      "required": ["source", "page_package_sha256", "page_production_sha256", "narrative_page_projection_sha256"],
+      "properties": {
+        "source": {"const": "approved_page_package"},
+        "page_package_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "page_production_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "narrative_page_projection_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
       },
       "additionalProperties": false
     }

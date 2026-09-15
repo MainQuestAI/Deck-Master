@@ -6,25 +6,12 @@ from typing import Any
 from .contracts import ContractError, sha256_json
 
 
-HARD_FORBIDDEN_CATEGORIES = ("page_number", "slide_counter", "page_id_badge")
-HIDDEN_BY_DEFAULT_CATEGORIES = (
-    "evidence_marker",
-    "source_marker",
-    "methodology_label",
-    "explanatory_label",
-    "caveat_label",
-    "placeholder",
-    "production_annotation",
-)
+HARD_FORBIDDEN_CATEGORIES = ("production_annotation",)
+HIDDEN_BY_DEFAULT_CATEGORIES = ("placeholder",)
 
 _LABEL_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
-    ("evidence_marker", re.compile(r"^(?:evidence(?:\s*id)?|证据(?:\s*id)?|证据占位)\s*[:：]?$", re.I)),
-    ("source_marker", re.compile(r"^(?:source|来源|口径|日期|date)\s*[:：]?$", re.I)),
-    ("methodology_label", re.compile(r"^(?:swot|mbb|scr|so\s*what)\s*[:：/]?$", re.I)),
-    ("explanatory_label", re.compile(r"^(?:说明|note|notes|explanation)\s*[:：]?$", re.I)),
-    ("caveat_label", re.compile(r"^(?:caveat|注意事项|假设与边界)\s*[:：]?$", re.I)),
     ("placeholder", re.compile(r"^(?:待补充|占位|placeholder|tbd|todo)\s*[:：]?$", re.I)),
-    ("production_annotation", re.compile(r"^(?:prompt|wireframe|generation|internal|生产标注)\s*[:：]?$", re.I)),
+    ("production_annotation", re.compile(r"^(?:生成提示|prompt|wireframe|generation|internal|生产标注)\s*[:：](?:\s*.*)?$", re.I)),
 )
 
 
@@ -61,7 +48,7 @@ def validate_visibility_policy(policy: dict[str, Any], *, page_id: str) -> None:
     if str(policy.get("visibility_policy_sha256") or "") != expected:
         raise ContractError(f"visibility policy hash is stale on {page_id}")
     if list(policy.get("hard_forbidden") or []) != list(HARD_FORBIDDEN_CATEGORIES):
-        raise ContractError("visibility policy cannot relax page-number protections")
+        raise ContractError("visibility policy does not match the current production-language policy")
     allowed = policy.get("allowed_visible_terms") or []
     if not isinstance(allowed, list) or any(not isinstance(item, dict) for item in allowed):
         raise ContractError("visibility policy allowlist is invalid")
@@ -74,9 +61,6 @@ def visible_text_violation(policy: dict[str, Any], text: str, *, page_id: str) -
     allowed = {str(item.get("term") or "").strip() for item in policy.get("allowed_visible_terms") or [] if isinstance(item, dict)}
     if value in allowed:
         return None
-    compact = re.sub(r"\s+", "", value)
-    if compact.casefold() == page_id.casefold() or re.fullmatch(r"(?:page|p|页码|第)\s*\d+|\d+\s*/\s*\d+", value, re.I):
-        return "page_number"
     for category, pattern in _LABEL_PATTERNS:
         if pattern.fullmatch(value):
             return category

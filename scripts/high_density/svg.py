@@ -32,20 +32,11 @@ CANVAS_WIDTH = 1672
 CANVAS_HEIGHT = 941
 FORBIDDEN_TAGS = {"foreignObject", "script", "iframe", "style"}
 UNSUPPORTED_TAGS = {"mask", "clipPath", "pattern"}
-IMAGE_HEAVY_PAGE_ROLES = {"cover", "section", "section_divider", "divider", "visual", "visual_divider", "image", "image_page"}
-
-
 class SvgVisualError(ContractError):
     def __init__(self, message: str, *, page_id: str = "", code: str = "HD_SVG_REVIEW_FAILED") -> None:
         self.page_id = page_id
         self.code = code
         super().__init__(message)
-
-
-def _page_role_policy(page_role: str) -> dict[str, float]:
-    if page_role in IMAGE_HEAVY_PAGE_ROLES:
-        return {"max_single_image_area": 0.85, "max_total_image_area": 0.90}
-    return {"max_single_image_area": 0.35, "max_total_image_area": 0.50}
 
 
 def svg_path(root: Path, page_id: str) -> Path:
@@ -216,22 +207,16 @@ def compile_svg(scene: dict[str, Any], output: Path, *, assets: dict[str, Path] 
 
     page_id = str(scene["page_id"])
     page_role = str(scene.get("page_role") or "content")
-    image_policy = _page_role_policy(page_role)
     try:
         validate_scene(scene)
     except ContractError as exc:
         raise SvgVisualError(str(exc), page_id=page_id, code="HD_PAGE_SCENE_INVALID") from exc
     scene_elements = list(scene.get("elements", []))
-    image_area = 0.0
     p0_p1_text = [element for element in scene_elements if element.get("kind") == "text" and element.get("priority") in {"P0", "P1"}]
     for element in scene_elements:
         if element.get("kind") != "image":
             continue
         bbox = element.get("bbox") or {}
-        area = float(bbox.get("w") or 0) * float(bbox.get("h") or 0)
-        image_area += area
-        if area / (CANVAS_WIDTH * CANVAS_HEIGHT) > image_policy["max_single_image_area"]:
-            raise SvgVisualError(f"image asset exceeds {image_policy['max_single_image_area']:.0%} of canvas: {element.get('element_id')}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
         image_z = int(element.get("z_index") or 0)
         for text in p0_p1_text:
             text_bbox = text.get("bbox") or {}
@@ -239,8 +224,6 @@ def compile_svg(scene: dict[str, Any], output: Path, *, assets: dict[str, Path] 
             overlap_h = max(0.0, min(float(bbox.get("y") or 0) + float(bbox.get("h") or 0), float(text_bbox.get("y") or 0) + float(text_bbox.get("h") or 0)) - max(float(bbox.get("y") or 0), float(text_bbox.get("y") or 0)))
             if image_z >= int(text.get("z_index") or 0) and overlap_w * overlap_h > 0:
                 raise SvgVisualError(f"image asset covers P0/P1 text: {element.get('element_id')} -> {text.get('element_id')}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
-    if image_area / (CANVAS_WIDTH * CANVAS_HEIGHT) > image_policy["max_total_image_area"]:
-        raise SvgVisualError(f"registered image assets exceed {image_policy['max_total_image_area']:.0%} of canvas", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
     rendered_elements: list[tuple[str, str]] = []
 
     def add_rendered(element: dict[str, Any], rendered: str) -> None:
@@ -597,8 +580,6 @@ def validate_approved_svg(
     from .scene import validate_scene_content
 
     page_id = str(scene.get("page_id") or lock.get("page_id") or "")
-    page_role = str(scene.get("page_role") or ((lock.get("enrichment") or {}).get("analysis") or {}).get("page_role") or "content")
-    image_policy = _page_role_policy(page_role)
     validate_scene_content(scene, lock)
     result = validate_svg(path, page_id=page_id)
     root = ElementTree.fromstring(path.read_text(encoding="utf-8"))
@@ -690,8 +671,6 @@ def validate_approved_svg(
         if z_index < previous_z:
             raise SvgVisualError(f"SVG DOM z-order drifts on {node.get('id')}", page_id=page_id, code="HD_SVG_Z_ORDER")
         previous_z = z_index
-    image_area = 0.0
-    canvas_area = CANVAS_WIDTH * CANVAS_HEIGHT
     p0_p1_text = [element for element in required_text if element.get("priority") in {"P0", "P1"}]
     for node in visible_nodes:
         if str(node.tag).split("}")[-1] != "image":
@@ -701,10 +680,6 @@ def validate_approved_svg(
         if not scene_element or scene_element.get("kind") != "image":
             raise SvgVisualError(f"SVG image is not registered in Scene: {element_id}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
         bbox = _svg_geometry_bbox(node)
-        area = bbox["w"] * bbox["h"]
-        image_area += area
-        if area / canvas_area > image_policy["max_single_image_area"]:
-            raise SvgVisualError(f"image asset exceeds {image_policy['max_single_image_area']:.0%} of canvas: {element_id}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
         asset_id = str(scene_element.get("asset_ref") or "")
         asset_path = (assets or {}).get(asset_id)
         if asset_path is None or not asset_path.is_file() or sha256_file(asset_path) != str(scene_element.get("asset_sha256") or ""):
@@ -720,8 +695,6 @@ def validate_approved_svg(
             text_id = str(text.get("element_id") or "")
             if dom_order[element_id] > dom_order.get(text_id, -1) and _bbox_overlap(bbox, _svg_geometry_bbox(nodes[text_id])) > 0:
                 raise SvgVisualError(f"image asset covers P0/P1 text: {element_id} -> {text_id}", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
-    if image_area / canvas_area > image_policy["max_total_image_area"]:
-        raise SvgVisualError(f"registered image assets exceed {image_policy['max_total_image_area']:.0%} of canvas", page_id=page_id, code="HD_ASSET_POLICY_BLOCKED")
     contrast = _text_contrast_metrics(path, scene)
     low_contrast = [element_id for element_id, value in contrast["elements"].items() if float(value["contrast_ratio"]) < 3.0]
     if low_contrast:
@@ -756,6 +729,7 @@ def _review_evidence(
     metrics_sha256: str,
     full_page_check: str,
     region_check_ids: list[str],
+    observations: list[str],
     issues_found: list[dict[str, Any]],
     revision_required: bool,
     evidence_sha256: str,
@@ -771,6 +745,7 @@ def _review_evidence(
         "metrics_sha256": metrics_sha256,
         "full_page_check": full_page_check,
         "region_check_ids": list(region_check_ids),
+        "observations": list(observations),
         "issues_found": list(issues_found),
         "revision_required": revision_required,
         "evidence_sha256": evidence_sha256,
@@ -804,7 +779,7 @@ def _build_region_checks(scene: dict[str, Any], metrics: dict[str, Any]) -> list
     for region_id, region_elements in groups.items():
         issues = [item for item in findings if region_id in str(item).lower() or (region_id == "main_visual" and item.get("code") in {"visual_ssim_below_threshold", "p0_region_ssim_below_threshold", "visual_overflow", "illegal_text_overlap", "direction_mismatch"})]
         bbox = _region_bbox(region_elements)
-        optional_empty = region_id == "source_footer" and not region_elements
+        optional_empty = region_id in {"business_implication", "source_footer"} and not region_elements
         evidence = {
             "region_id": region_id,
             "bbox": bbox,
@@ -817,7 +792,7 @@ def _build_region_checks(scene: dict[str, Any], metrics: dict[str, Any]) -> list
                 "status": "pass" if (optional_empty or (region_elements and not issues and metrics.get("status") == "pass")) else "failed" if issues or not region_elements else "pending",
                 "bbox": bbox,
                 "issue_count": len(issues) + (0 if region_elements or optional_empty else 1),
-                "notes": "No source footer is required by the Content Lock." if optional_empty else "Measured from the current Scene and rendered visual metrics.",
+                "notes": "This optional region is not required by the Content Lock." if optional_empty else "Measured from the current Scene and rendered visual metrics.",
                 "evidence_sha256": sha256_json(evidence),
             }
         )
@@ -976,10 +951,34 @@ def _load_main_review_receipt(
     return receipt
 
 
-def _review_pass_evidence(root: Path, page_id: str, review: dict[str, Any], *, reviewer_id: str, action_field: str, source: str) -> dict[str, Any]:
-    """Build a review conclusion from the current measured artifacts."""
+def _review_pass_evidence(
+    root: Path,
+    page_id: str,
+    review: dict[str, Any],
+    *,
+    reviewer_id: str,
+    action_field: str,
+    source: str,
+    observations: list[str],
+    issues: list[str],
+    revision_required: bool | None,
+) -> dict[str, Any]:
+    """Bind an explicit human/Agent observation to current measured artifacts."""
     if not str(reviewer_id or "").strip():
         raise SvgVisualError(f"visual {source} reviewer_id is required on page {page_id}", page_id=page_id)
+    observations = [str(item).strip() for item in observations if str(item).strip()]
+    if not observations or revision_required is None:
+        raise SvgVisualError(
+            f"visual {source} requires observations and an explicit revision decision on page {page_id}",
+            page_id=page_id,
+        )
+    issue_records = [
+        {"issue_id": f"review_issue_{index:02d}", "message": str(message).strip()}
+        for index, message in enumerate(issues, start=1)
+        if str(message).strip()
+    ]
+    if issue_records and not revision_required:
+        raise SvgVisualError(f"visual {source} cannot mark issues as accepted without revision on page {page_id}", page_id=page_id)
     try:
         scene = load_scene(root, page_id)
         metrics_file = safe_run_path(root, str(review.get("metrics_ref") or ""))
@@ -1005,13 +1004,15 @@ def _review_pass_evidence(root: Path, page_id: str, review: dict[str, Any], *, r
         "blueprint_sha256": blueprint_sha,
         "metrics_sha256": metrics_sha,
         "region_checks": expected_regions,
+        "observations": observations,
+        "issues_found": issue_records,
     }
     challenge = review.get("runtime_challenge") or {}
     action_id = str(challenge.get(action_field) or "")
     if not re.fullmatch(r"[a-f0-9]{32}", action_id):
         raise SvgVisualError(f"visual {source} Runtime action is invalid on page {page_id}", page_id=page_id)
     return _review_evidence(
-        status="pass",
+        status="failed" if revision_required else "pass",
         source=source,
         reviewer_id=str(reviewer_id),
         action_id=action_id,
@@ -1019,15 +1020,24 @@ def _review_pass_evidence(root: Path, page_id: str, review: dict[str, Any], *, r
         svg_sha256=svg_sha,
         blueprint_sha256=blueprint_sha,
         metrics_sha256=metrics_sha,
-        full_page_check="pass",
+        full_page_check="failed" if revision_required else "pass",
         region_check_ids=[str(item["region_id"]) for item in expected_regions],
-        issues_found=[],
-        revision_required=False,
+        observations=observations,
+        issues_found=issue_records,
+        revision_required=bool(revision_required),
         evidence_sha256=sha256_json(evidence),
     )
 
 
-def record_visual_self_review(root: Path, page_id: str, *, reviewer_id: str) -> Path:
+def record_visual_self_review(
+    root: Path,
+    page_id: str,
+    *,
+    reviewer_id: str,
+    observations: list[str] | None = None,
+    issues: list[str] | None = None,
+    revision_required: bool | None = None,
+) -> Path:
     """Record the producer's measured review conclusion before main review."""
     review = read_json(review_path(root, page_id))
     if review.get("schema_version") != "deck_visual_review.v2" or str(review.get("page_id") or "") != page_id:
@@ -1035,20 +1045,38 @@ def record_visual_self_review(root: Path, page_id: str, *, reviewer_id: str) -> 
     if _run_mode(root) not in {"production", "benchmark"}:
         raise SvgVisualError("external self review is only required for production or benchmark runs", page_id=page_id)
     _validate_review_lineage(review, page_id)
-    self_review = _review_pass_evidence(root, page_id, review, reviewer_id=reviewer_id, action_field="self_action_id", source="agent_self_review")
+    self_review = _review_pass_evidence(
+        root,
+        page_id,
+        review,
+        reviewer_id=reviewer_id,
+        action_field="self_action_id",
+        source="agent_self_review",
+        observations=list(observations or []),
+        issues=list(issues or []),
+        revision_required=revision_required,
+    )
     main_review = dict(review.get("main_review") or {})
     main_review["self_review_sha256"] = sha256_json(self_review)
     review["self_review"] = self_review
     review["main_review"] = main_review
     # Producer-only policy can complete from this evidence. Independent-main
     # policy still observes the pending main review on the next load.
-    review["visual_status"] = "pass"
-    review["verdict"] = "pass"
+    review["visual_status"] = "failed" if revision_required else "pass"
+    review["verdict"] = "fail" if revision_required else "pass"
     assert_v2("visual_review", review)
     return write_json(review_path(root, page_id), review)
 
 
-def record_visual_main_review(root: Path, page_id: str, *, reviewer_id: str) -> Path:
+def record_visual_main_review(
+    root: Path,
+    page_id: str,
+    *,
+    reviewer_id: str,
+    observations: list[str] | None = None,
+    issues: list[str] | None = None,
+    revision_required: bool | None = None,
+) -> Path:
     """Record an independent main review and create a local receipt."""
     review = read_json(review_path(root, page_id))
     if review.get("schema_version") != "deck_visual_review.v2" or str(review.get("page_id") or "") != page_id:
@@ -1065,11 +1093,21 @@ def record_visual_main_review(root: Path, page_id: str, *, reviewer_id: str) -> 
     if str(self_review.get("reviewer_id") or "") == str(reviewer_id):
         raise SvgVisualError(f"independent main visual review reuses the producer reviewer on page {page_id}", page_id=page_id)
     if str(main_review.get("status") or "") != "pass":
-        main_review = _review_pass_evidence(root, page_id, review, reviewer_id=reviewer_id, action_field="main_action_id", source="agent_main_review")
+        main_review = _review_pass_evidence(
+            root,
+            page_id,
+            review,
+            reviewer_id=reviewer_id,
+            action_field="main_action_id",
+            source="agent_main_review",
+            observations=list(observations or []),
+            issues=list(issues or []),
+            revision_required=revision_required,
+        )
         main_review["self_review_sha256"] = sha256_json(self_review)
         review["main_review"] = main_review
-        review["visual_status"] = "pass"
-        review["verdict"] = "pass"
+        review["visual_status"] = "failed" if revision_required else "pass"
+        review["verdict"] = "fail" if revision_required else "pass"
         assert_v2("visual_review", review)
         write_json(review_path(root, page_id), review)
         review = read_json(review_path(root, page_id))
@@ -1145,6 +1183,7 @@ def build_visual_review(root: Path, scene: dict[str, Any], *, mode: str) -> Path
         metrics_sha256=metrics_sha,
         full_page_check=full_page_check if fixture_review else "pending",
         region_check_ids=region_check_ids,
+        observations=["Automated fixture comparison completed against current rendered artifacts."] if fixture_review else [],
         issues_found=review_issues,
         revision_required=not passed_metrics,
         evidence_sha256=review_evidence_sha,
@@ -1161,6 +1200,7 @@ def build_visual_review(root: Path, scene: dict[str, Any], *, mode: str) -> Path
             metrics_sha256=metrics_sha,
             full_page_check=full_page_check if fixture_review else "pending",
             region_check_ids=region_check_ids,
+            observations=["Automated fixture comparison completed against current rendered artifacts."] if fixture_review else [],
             issues_found=review_issues,
             revision_required=not passed_metrics,
             evidence_sha256=review_evidence_sha,

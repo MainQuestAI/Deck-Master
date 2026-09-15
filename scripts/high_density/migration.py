@@ -18,17 +18,18 @@ def legacy_method_dir(root: Path) -> Path:
 
 def _contains_retired_token(value: Any) -> bool:
     if isinstance(value, dict):
-        return any(_contains_retired_token(key) or _contains_retired_token(item) for key, item in value.items())
+        schema = str(value.get("schema_version") or "").casefold()
+        framework = str((value.get("enrichment") or {}).get("framework") or value.get("framework") or "").casefold()
+        explicit_lineage = _LEGACY_METHOD + "_plan_sha256" in value
+        return schema.startswith(_LEGACY_SCHEMA_PREFIX) or framework == _LEGACY_METHOD or explicit_lineage or any(
+            _contains_retired_token(item) for key, item in value.items() if key in {"lineage", "content_plan", "schema"}
+        )
     if isinstance(value, list):
         return any(_contains_retired_token(item) for item in value)
     if not isinstance(value, str):
         return False
     lowered = value.casefold()
-    return (
-        _LEGACY_METHOD in lowered
-        or _LEGACY_SCHEMA_PREFIX in lowered
-        or ("high_density_build/" + _LEGACY_METHOD) in lowered
-    )
+    return lowered.startswith(_LEGACY_SCHEMA_PREFIX) or lowered == _LEGACY_METHOD
 
 
 def legacy_artifact_reason(root: Path, payload: Any | None = None) -> str | None:
@@ -39,15 +40,6 @@ def legacy_artifact_reason(root: Path, payload: Any | None = None) -> str | None
         return "retired content-plan directory detected"
     if payload is not None and _contains_retired_token(payload):
         return "retired content-plan schema or lineage detected"
-    build_root = root / "high_density_build"
-    if build_root.is_dir():
-        for path in sorted(build_root.rglob("*.json")):
-            try:
-                text = path.read_text(encoding="utf-8").casefold()
-            except OSError:
-                return "unable to inspect high-density artifacts for migration"
-            if _LEGACY_METHOD in text or _LEGACY_SCHEMA_PREFIX in text:
-                return "retired content-plan lineage detected in a high-density artifact"
     return None
 
 

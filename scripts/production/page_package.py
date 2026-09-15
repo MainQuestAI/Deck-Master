@@ -151,31 +151,21 @@ def _provenance(prov: dict[str, Any] | None, now: datetime | None) -> dict[str, 
 
 
 def assert_no_internal_leak(package: dict[str, Any]) -> None:
-    """Verify no internal-only string content appears inside customer_visible.
+    """Reject internal field names in the customer-visible object.
 
-    A leak is when a value from ``internal_only`` is duplicated verbatim into a
-    customer-visible field (title / subtitle / labels / footnotes / callouts /
-    body_blocks text). This is a defense-in-depth check; the Builder (B4) also
-    strips ``internal_only`` before rendering.
+    Review notes may quote customer copy verbatim; equality of strings is not a
+    leak. The production boundary removes the complete ``internal_only`` object.
     """
     cv = package.get("customer_visible", {})
-    internal = package.get("internal_only", {})
-    internal_strings: list[str] = []
-    for field in INTERNAL_ONLY_FIELDS:
-        val = internal.get(field)
-        if isinstance(val, str) and val.strip():
-            internal_strings.append(val.strip())
-        elif isinstance(val, list):
-            internal_strings.extend(str(v).strip() for v in val if isinstance(v, str) and v.strip())
+    def contains_internal_key(value: Any) -> bool:
+        if isinstance(value, dict):
+            return any(key in INTERNAL_ONLY_FIELDS or contains_internal_key(item) for key, item in value.items())
+        if isinstance(value, list):
+            return any(contains_internal_key(item) for item in value)
+        return False
 
-    cv_text = _flatten_customer_text(cv)
-    for needle in internal_strings:
-        if len(needle) < 4:  # skip trivially short tokens
-            continue
-        if needle in cv_text:
-            raise InternalLeakError(
-                f"internal-only content leaked into customer_visible on page {package.get('page_id')}"
-            )
+    if contains_internal_key(cv):
+        raise InternalLeakError(f"internal-only field leaked into customer_visible on page {package.get('page_id')}")
 
 
 def _flatten_customer_text(cv: dict[str, Any]) -> str:

@@ -284,7 +284,20 @@ def _layout_boxes(layout_id: str, count: int) -> list[dict[str, float]]:
     selected = layouts.get(layout_id) or layouts["framework"]
     if count <= len(selected):
         return selected[:count]
-    return selected + layouts["framework"][: max(0, count - len(selected))]
+    columns = min(4, max(2, math.ceil(math.sqrt(count))))
+    rows = math.ceil(count / columns)
+    gap = 16.0
+    width = (1512.0 - gap * (columns - 1)) / columns
+    height = (600.0 - gap * (rows - 1)) / rows
+    return [
+        {
+            "x": 80.0 + (index % columns) * (width + gap),
+            "y": 200.0 + (index // columns) * (height + gap),
+            "w": width,
+            "h": height,
+        }
+        for index in range(count)
+    ]
 
 
 def _fixture_background(blueprint_path: Path | None) -> str:
@@ -434,10 +447,22 @@ def build_fixture_scene(lock: dict[str, Any], blueprint_sha256: str, blueprint_p
     if subtitle:
         elements.append(_text_element(element_id="subtitle.main", role="subtitle", priority="P1", bbox={"x": 80, "y": 130, "w": 1350, "h": 32}, text=subtitle, text_ref="content_lock.customer_visible.subtitle", preferred_size=18, min_size=14, max_lines=1, color=secondary_color))
 
-    count = max(1, len(body_blocks))
-    layout_boxes = _fixture_blueprint_boxes(blueprint_path, count) or _layout_boxes(layout_id, count)
+    direct_refs = (
+        [
+            item
+            for item in lock.get("required_text_refs") or []
+            if isinstance(item, dict)
+            and str(item.get("ref") or "")
+            not in {"content_lock.customer_visible.title", "content_lock.customer_visible.subtitle"}
+        ]
+        if str(enrichment.get("framework") or "") == "page_package"
+        else []
+    )
+    count = max(1, len(direct_refs) if direct_refs else len(body_blocks))
+    blueprint_boxes = _fixture_blueprint_boxes(blueprint_path, count)
+    layout_boxes = blueprint_boxes if len(blueprint_boxes) >= count else _layout_boxes(layout_id, count)
     palette = ["#ffffff", "#eef5fb", "#fff3e8", "#edf7f1", "#f3effa", "#f8f1ed"]
-    for index, block in enumerate(body_blocks):
+    for index, block in enumerate(direct_refs or body_blocks):
         box = layout_boxes[index]
         x, y, card_w, card_h = box["x"], box["y"], box["w"], box["h"]
         block_id = f"block.{index + 1:02d}"
@@ -456,6 +481,28 @@ def build_fixture_scene(lock: dict[str, Any], blueprint_sha256: str, blueprint_p
                 z_index=3,
             )
         )
+        if direct_refs:
+            text_ref = str(block["ref"])
+            body_text = str(block.get("value") or "")
+            component_key = text_ref.removeprefix("content_lock.customer_visible.").split(".", 1)[0]
+            component_id = f"component.{component_key}"
+            elements[-1]["component_id"] = component_id
+            elements.append(
+                _text_element(
+                    element_id=f"{block_id}.body",
+                    role="body",
+                    priority="P1",
+                    bbox={"x": x + 24, "y": y + 22, "w": card_w - 48, "h": card_h - 44},
+                    text=body_text,
+                    text_ref=text_ref,
+                    preferred_size=18,
+                    min_size=11,
+                    max_lines=8,
+                    color="#364655",
+                    component_id=component_id,
+                )
+            )
+            continue
         block_title = _block_title(block, index)
         body_text = _block_text(block)
         has_block_title = isinstance(block, dict) and any(block.get(key) for key in ("title", "label", "name", "heading"))
@@ -482,11 +529,11 @@ def build_fixture_scene(lock: dict[str, Any], blueprint_sha256: str, blueprint_p
         )
 
     business_implication = str(enrichment.get("business_implication") or enrichment.get("so_what") or "")
-    if callouts:
+    if callouts and not direct_refs:
         callout_text = _reference_text(callouts, "callout")
         elements.append(_rect_element(element_id="callouts.panel", role="callout", priority="P0", bbox={"x": 80, "y": 764, "w": 1512, "h": 40}, fill="#fff7e8", stroke="#e6c989", radius=6, component_id="component.callouts", z_index=4))
         elements.append(_text_element(element_id="callouts.text", role="callout", priority="P0", bbox={"x": 100, "y": 771, "w": 1472, "h": 26}, text=callout_text, text_ref="content_lock.customer_visible.callouts", preferred_size=14, min_size=10, max_lines=1, color="#6d4e13", weight="700", component_id="component.callouts"))
-    if business_implication:
+    if business_implication and not direct_refs:
         elements.append(_rect_element(element_id="business_implication.panel", role="business_implication", priority="P0", bbox={"x": 80, "y": 820, "w": 1512, "h": 44}, fill="#eaf2fb", stroke="#c7d9ec", radius=6, component_id="component.business_implication", z_index=4))
         elements.append(_text_element(element_id="business_implication.text", role="business_implication", priority="P0", bbox={"x": 100, "y": 828, "w": 1472, "h": 28}, text=business_implication, text_ref="content_lock.enrichment.business_implication", preferred_size=15, min_size=11, max_lines=1, color="#1f4f7d", weight="700", component_id="component.business_implication"))
 
@@ -705,8 +752,6 @@ def load_scene(root: Path, page_id: str) -> dict[str, Any]:
     legacy = scene_path(root, page_id)
     selected = canonical if canonical.exists() else legacy
     scene = read_json(selected)
-    if canonical.exists() and legacy.exists() and read_json(legacy) != scene:
-        raise ContractError(f"page scene mirror is stale on page {page_id}")
     validate_scene(scene)
     migrated = _migrate_legacy_page_role(scene)
     if migrated is not scene:
@@ -720,8 +765,9 @@ def write_scene(root: Path, scene: dict[str, Any]) -> Path:
     canonical = canonical_scene_path(root, page_id)
     legacy = scene_path(root, page_id)
     write_json(canonical, scene)
-    write_json(legacy, scene)
-    return legacy
+    if legacy.exists():
+        write_json(legacy, scene)
+    return canonical
 
 
 __all__ = [

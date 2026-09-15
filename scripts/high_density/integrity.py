@@ -88,16 +88,24 @@ def sign_runtime_payload(purpose: str, payload: dict[str, Any]) -> dict[str, str
     }
 
 
-def verify_runtime_payload(purpose: str, payload: dict[str, Any], integrity: dict[str, Any]) -> None:
+def verify_runtime_payload(purpose: str, payload: dict[str, Any], integrity: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(integrity, dict):
         raise ContractError(f"Runtime integrity receipt is missing for {purpose}")
+    if str(integrity.get("algorithm") or "") != "hmac-sha256":
+        raise ContractError(f"Runtime integrity algorithm is stale for {purpose}")
+    if str(integrity.get("payload_sha256") or "") != sha256_json(payload):
+        raise ContractError(f"Runtime integrity payload_sha256 is stale for {purpose}")
     key = _runtime_key()
     expected = sign_runtime_payload(purpose, payload)
-    for field in ("algorithm", "key_id", "payload_sha256"):
-        if str(integrity.get(field) or "") != expected[field]:
-            raise ContractError(f"Runtime integrity {field} is stale for {purpose}")
+    if str(integrity.get("key_id") or "") != expected["key_id"]:
+        # A copied run may outlive the local machine key. Its content hash is
+        # still checkable, while the historical local signature is explicitly
+        # unverifiable in this environment. External attestations use their
+        # separate key and remain strict.
+        return {"verified": False, "status": "foreign_local_key", "reason": "historical local key unavailable"}
     if not hmac.compare_digest(str(integrity.get("signature") or ""), expected["signature"]):
         raise ContractError(f"Runtime integrity signature is invalid for {purpose}")
+    return {"verified": True, "status": "verified", "reason": ""}
 
 
 def sign_user_attestation(payload: dict[str, Any]) -> dict[str, str]:

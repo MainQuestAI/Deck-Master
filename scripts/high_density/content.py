@@ -103,7 +103,84 @@ def _flatten_customer_visible(value: dict[str, Any]) -> str:
     return _text(value)
 
 
-def _evidence_ledger(package: dict[str, Any]) -> list[dict[str, Any]]:
+_NON_VISIBLE_KEYS = {
+    "id",
+    "block_id",
+    "type",
+    "kind",
+    "origin",
+    "layout",
+    "layout_id",
+    "evidence_refs",
+    "claim_refs",
+    "asset_ref",
+}
+
+
+def visible_text_refs(value: Any, path: str = "customer_visible") -> list[dict[str, Any]]:
+    """Return every customer-visible text leaf without promoting JSON metadata.
+
+    A leaf is the unit the Scene must preserve.  Keeping leaves separate lets a
+    renderer split a table, architecture responsibility, or footnote across
+    editable text boxes without flattening the whole object into one string.
+    """
+    if isinstance(value, str):
+        text = value.strip()
+        if not text:
+            return []
+        return [{
+            "ref": f"content_lock.{path}",
+            "priority": "P0" if path == "customer_visible.title" else "P1",
+            "required": True,
+            "value": value,
+        }]
+    if isinstance(value, list):
+        return [ref for index, item in enumerate(value) for ref in visible_text_refs(item, f"{path}.{index}")]
+    if isinstance(value, dict):
+        return [
+            ref
+            for key, item in value.items()
+            if key not in _NON_VISIBLE_KEYS
+            for ref in visible_text_refs(item, f"{path}.{key}")
+        ]
+    return []
+
+
+def narrative_page_projection(narrative: dict[str, Any] | None, page_id: str) -> Any:
+    """Keep only the narrative fields that can affect one page's production."""
+    if narrative is None:
+        return None
+    page_keys = [key for key in ("pages", "beats") if key in narrative]
+    if len(page_keys) != 1 or not isinstance(narrative[page_keys[0]], list):
+        return {"version": 1, "conservative_full_narrative": narrative}
+    key = page_keys[0]
+    entries = narrative[key]
+    ids = [str(item.get("page_id") or item.get("beat_id") or "") if isinstance(item, dict) else "" for item in entries]
+    if not all(ids) or len(set(ids)) != len(ids) or page_id not in ids:
+        return {"version": 1, "conservative_full_narrative": narrative}
+    global_fields = {name: value for name, value in narrative.items() if name not in {key, "revision", "created_at", "updated_at"}}
+    page = dict(entries[ids.index(page_id)])
+    page.pop("order", None)
+    return {"version": 1, "global": global_fields, "page": page}
+
+
+def _page_production_input(package: dict[str, Any]) -> dict[str, Any]:
+    return {
+        key: copy.deepcopy(value)
+        for key, value in package.items()
+        if key not in {"order", "source_fingerprint", "provenance"}
+    }
+
+
+def _content_lock_hash(lock: dict[str, Any]) -> str:
+    payload = {key: copy.deepcopy(value) for key, value in lock.items() if key not in {"content_lock_sha256", "created_at", "updated_at"}}
+    if (payload.get("enrichment") or {}).get("framework") == "page_package":
+        payload.pop("page_package_sha256", None)
+        (payload.get("lineage") or {}).pop("page_package_sha256", None)
+    return sha256_json(payload)
+
+
+def _evidence_ledger(package: dict[str, Any], *, legacy_mbb_compat: bool = False) -> list[dict[str, Any]]:
     evidence: list[dict[str, Any]] = []
     source_context = str((package.get("customer_visible") or {}).get("title") or package.get("page_id") or "page")
     raw_items = list(package.get("evidence_bindings") or [])
@@ -128,10 +205,7 @@ def _evidence_ledger(package: dict[str, Any]) -> list[dict[str, Any]]:
             }
         else:
             evidence_id = str(item or f"E{index:03d}")
-            # Legacy Page Packages may carry only an evidence ID. Preserve the
-            # package as the evidence payload so an Agent claim can still point
-            # to an exact, inspectable source span instead of an ID-only stub.
-            package_text = _flatten_customer_visible(package.get("customer_visible") or {})
+            legacy_body = _flatten_customer_visible(package.get("customer_visible") or {}) if legacy_mbb_compat else ""
             record = {
                 "evidence_id": evidence_id,
                 "source_ref": evidence_id,
@@ -142,8 +216,8 @@ def _evidence_ledger(package: dict[str, Any]) -> list[dict[str, Any]]:
                 "conflicts": [],
                 "caveat": "",
                 "source_context": source_context,
-                "meaning": package_text or evidence_id,
-                "implication": str((package.get("quality_intent") or {}).get("so_what") or ""),
+                "meaning": legacy_body,
+                "implication": "",
                 "recommended_visual": "",
             }
         if not evidence_id:
@@ -171,6 +245,73 @@ def _evidence_ledger(package: dict[str, Any]) -> list[dict[str, Any]]:
             }
         )
     return evidence
+
+
+def build_page_package_content_lock(
+    package: dict[str, Any],
+    narrative: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Project an approved Page Package without a second storyline process."""
+    if str(package.get("status") or "") != "ready_for_build":
+        raise ContractError("page-package content lock requires ready_for_build input")
+    safe_package = strip_internal(package)
+    page_id = str(package.get("page_id") or "")
+    _assert_safe_page_id(page_id)
+    customer_visible = copy.deepcopy(safe_package.get("customer_visible") or {})
+    refs = visible_text_refs(customer_visible)
+    if not refs:
+        raise ContractError(f"Page Package {page_id} has no customer-visible text")
+    evidence = _evidence_ledger(safe_package)
+    component_ids = sorted({
+        "component." + ref["ref"].removeprefix("content_lock.customer_visible.").split(".", 1)[0]
+        for ref in refs
+    })
+    projection = narrative_page_projection(narrative, page_id)
+    visual_spec = copy.deepcopy(safe_package.get("visual_spec") or {})
+    target_language = str((safe_package.get("build_requirements") or {}).get("target_language") or "zh-CN")
+    lock = {
+        "schema_version": "deck_content_lock.v2",
+        "run_id": str(package.get("run_id") or ""),
+        "page_id": page_id,
+        "page_package_ref": f"{PACKAGES_DIR}/{page_id}.json",
+        "page_package_sha256": sha256_json(package),
+        "source_fingerprint": sha256_json({"package": _page_production_input(package), "narrative_page_projection": projection}),
+        "customer_visible": customer_visible,
+        "speaker_notes": str(safe_package.get("speaker_notes") or ""),
+        "asset_bindings": copy.deepcopy(safe_package.get("asset_bindings") or []),
+        "evidence_bindings": evidence,
+        "enrichment": {
+            "framework": "page_package",
+            "version": "page_package/1",
+            "analysis": {"page_role": str(visual_spec.get("page_role") or "content")},
+            "visual_spec": visual_spec,
+            "component_plan": [{"component_id": component_id} for component_id in component_ids],
+            "claim_bindings": copy.deepcopy(safe_package.get("claim_bindings") or []),
+        },
+        "required_component_ids": component_ids,
+        "required_text_refs": refs,
+        "density_target": {
+            "score": 0,
+            "band": "low",
+            "information_regions": max(1, len(customer_visible.get("body_blocks") or [])),
+            "component_count": len(component_ids),
+            "evidence_count": len(evidence),
+            "numeric_count": 0,
+        },
+        "target_language": target_language,
+        "effective_language": target_language,
+        "visibility_policy": build_visibility_policy(safe_package, page_id=page_id),
+        "lineage": {
+            "source": "approved_page_package",
+            "page_package_sha256": sha256_json(package),
+            "page_production_sha256": sha256_json(_page_production_input(package)),
+            "narrative_page_projection_sha256": sha256_json(projection),
+        },
+        "created_at": utc_now(),
+    }
+    lock["content_lock_sha256"] = _content_lock_hash(lock)
+    assert_v2("content_lock", lock)
+    return lock
 
 
 def _numeric_tokens(text: str) -> list[str]:
@@ -942,7 +1083,7 @@ def build_mbb_page(package: dict[str, Any]) -> dict[str, Any]:
         raise ContractError(f"page package {page_id} is not buildable: {package.get('status')}")
     safe_package = strip_internal(package)
     customer_visible = copy.deepcopy(safe_package.get("customer_visible") or {})
-    evidence = _evidence_ledger(safe_package)
+    evidence = _evidence_ledger(safe_package, legacy_mbb_compat=True)
     analysis = _density_analysis(customer_visible, safe_package, evidence)
     structural_page = bool(analysis.get("structural_page"))
     # A preview adapter can only appear in fixture/migration mode.  Preserve
@@ -1160,7 +1301,7 @@ def _build_scr(packages: list[dict[str, Any]], storyline: dict[str, Any]) -> dic
         "evidence_refs": list(storyline["evidence_refs"]),
         "decision_implication": str(storyline["page_handoff"]),
         "evidence_assessment": _evidence_assessment(
-            [item for package in packages for item in _evidence_ledger(package)],
+            [item for package in packages for item in _evidence_ledger(package, legacy_mbb_compat=True)],
             list(storyline["evidence_refs"]),
             subject=first_title,
         ),
@@ -1170,7 +1311,7 @@ def _build_scr(packages: list[dict[str, Any]], storyline: dict[str, Any]) -> dic
         _scr_claim_targets(scr),
         list(storyline["evidence_refs"]),
         source_text=_text(packages),
-        evidence_by_id={str(item["evidence_id"]): item for package in packages for item in _evidence_ledger(package)},
+        evidence_by_id={str(item["evidence_id"]): item for package in packages for item in _evidence_ledger(package, legacy_mbb_compat=True)},
     )
     return scr
 
@@ -1516,7 +1657,7 @@ def load_mbb_plan(
         if context != _storyline_context(storyline, structural_page=structural_page):
             raise ContractError(f"MBB page storyline context is stale on {page_id}")
         page_evidence = {str(ref) for ref in page.get("evidence_refs") or []}
-        package_evidence = {str(ref.get("evidence_id") if isinstance(ref, dict) else ref) for ref in _evidence_ledger(package)}
+        package_evidence = {str(ref.get("evidence_id") if isinstance(ref, dict) else ref) for ref in _evidence_ledger(package, legacy_mbb_compat=True)}
         if (not structural_page and not page_evidence) or not page_evidence.issubset(ledger_ids) or not page_evidence.issubset(package_evidence):
             raise ContractError(f"MBB plan evidence refs are invalid on {page_id}")
         if page.get("material_pool") != _material_pool(package, source_result, storyline):
@@ -1705,6 +1846,17 @@ def write_content_lock(
     return canonical
 
 
+def write_page_package_content_lock(
+    root: Path,
+    package: dict[str, Any],
+    narrative: dict[str, Any] | None = None,
+) -> Path:
+    lock = build_page_package_content_lock(package, narrative)
+    canonical = root / LOCKS_DIR / f"{package['page_id']}.content_lock.json"
+    write_json(canonical, lock)
+    return canonical
+
+
 def load_content_lock(root: Path, page_id: str, *, expected_run_id: str | None = None) -> dict[str, Any]:
     _assert_safe_page_id(page_id)
     canonical = root / LOCKS_DIR / f"{page_id}.content_lock.json"
@@ -1712,14 +1864,12 @@ def load_content_lock(root: Path, page_id: str, *, expected_run_id: str | None =
     selected = canonical if canonical.exists() else legacy
     lock = read_json(selected)
     assert_current_mbb_artifact(root, lock)
-    if canonical.exists() and legacy.exists() and read_json(legacy) != lock:
-        raise ContractError(f"content lock mirror is stale on page {page_id}")
     assert_v2("content_lock", lock)
     if str(lock.get("page_id") or "") != page_id:
         raise ContractError(f"content lock page_id mismatch: {page_id}")
     if expected_run_id and str(lock.get("run_id") or "") != expected_run_id:
         raise ContractError(f"content lock run_id mismatch on page {page_id}: expected {expected_run_id}")
-    expected = sha256_json({key: value for key, value in lock.items() if key not in {"content_lock_sha256", "created_at", "updated_at"}})
+    expected = _content_lock_hash(lock)
     if lock.get("content_lock_sha256") != expected:
         raise ContractError(f"content lock hash is stale on page {page_id}")
     validate_visibility_policy(lock.get("visibility_policy") or {}, page_id=page_id)
@@ -1733,6 +1883,7 @@ __all__ = [
     "MBB_SELECTION_RECEIPT_PATH",
     "MBB_USER_DECISION_RECEIPT_PATH",
     "build_content_lock",
+    "build_page_package_content_lock",
     "build_mbb_page",
     "build_mbb_plan",
     "enrich_selected_mbb_plan",
@@ -1743,5 +1894,6 @@ __all__ = [
     "select_mbb_storyline",
     "record_mbb_user_decision",
     "write_content_lock",
+    "write_page_package_content_lock",
     "write_mbb_plan",
 ]
