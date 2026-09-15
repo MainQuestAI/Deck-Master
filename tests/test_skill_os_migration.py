@@ -35,11 +35,11 @@ def test_legacy_bootstrap_does_not_forge_approval(tmp_path):
     _legacy_run_with_brief(tmp_path)
     bs = LegacyBootstrap(registry=REGISTRY, now=NOW)
     state = bs.infer_run(tmp_path)
-    # brief has artifacts -> exit_valid, but approval_required -> awaiting_approval
+    # brief has artifacts and continues without manufacturing an approval.
     brief = next(s for s in state["stages"] if s["stage_id"] == "deck-brief")
     assert brief["exit_valid"] is True
-    assert brief["status"] == "awaiting_approval"
-    assert state["approval_required"] is True
+    assert brief["status"] == "completed"
+    assert state["approval_required"] is False
     # invariant: no forged approvals
     assert state.get("approval_status") != "approved"
 
@@ -51,7 +51,7 @@ def test_bootstrap_writes_marker_and_snapshot(tmp_path):
     marker = json.loads((tmp_path / "workflow/legacy_bootstrap.json").read_text())
     assert marker["schema_version"] == "deck_legacy_bootstrap.v1"
     assert marker["forged_approvals"] == 0
-    assert "deck-brief" in marker["high_impact_awaiting"]
+    assert "deck-brief" not in marker["high_impact_awaiting"]
     assert (tmp_path / "workflow/workflow_state.json").exists()
     assert record["rollback_possible"] is True
 
@@ -86,8 +86,8 @@ def test_inference_report(tmp_path):
     _legacy_run_with_brief(tmp_path)
     rep = LegacyBootstrap(registry=REGISTRY, now=NOW).inference_report(tmp_path)
     assert rep["forged_approvals"] == 0
-    assert "deck-brief" in rep["high_impact_awaiting"]
-    assert rep["current_skill_stage"] == "deck-brief"
+    assert "deck-brief" not in rep["high_impact_awaiting"]
+    assert rep["current_skill_stage"] == "deck-planner"
 
 
 def test_empty_legacy_run_bootstraps_to_init(tmp_path):
@@ -97,7 +97,7 @@ def test_empty_legacy_run_bootstraps_to_init(tmp_path):
     assert init["status"] in {"ready", "in_progress"}
 
 
-def test_legacy_run_through_sourcing_all_high_impact_awaiting(tmp_path):
+def test_legacy_run_through_sourcing_continues_without_forged_approval(tmp_path):
     # artifacts through sourcing present, no approvals anywhere
     for f in ("deck_project.json", "material_inventory.json", "workspace_policy.json",
               "deck_brief.json", "claim_map.json", "narrative_plan.json", "page_tasks.json",
@@ -105,6 +105,6 @@ def test_legacy_run_through_sourcing_all_high_impact_awaiting(tmp_path):
         _touch(tmp_path / f)
     state = LegacyBootstrap(registry=REGISTRY, now=NOW).infer_run(tmp_path)
     stages = {s["stage_id"]: s for s in state["stages"]}
-    # brief/planner/sourcing all have exit artifacts but must be awaiting_approval
+    # Existing authoring output remains usable without manufacturing approvals.
     for sid in ("deck-brief", "deck-planner", "deck-sourcing"):
-        assert stages[sid]["status"] == "awaiting_approval", sid
+        assert stages[sid]["status"] == "completed", sid

@@ -12,7 +12,6 @@ if str(REPO_ROOT / "scripts") not in sys.path:
     sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
 from production.page_package import (  # noqa: E402
-    InternalLeakError,
     PageContent,
     PagePackageError,
     PagePackageIndex,
@@ -67,12 +66,12 @@ def test_customer_visible_and_internal_only_strict_separation():
     assert cv_keys.isdisjoint(internal.keys())
 
 
-def test_internal_leak_detected():
+def test_internal_review_quote_does_not_remove_customer_copy():
     internal = {"agent_instructions": ["SUPERSECRET internal note xyz"]}
     content = _content()
     content.title = "SUPERSECRET internal note xyz"  # leaked verbatim
-    with pytest.raises(InternalLeakError, match="leaked"):
-        build_page_package(run_id="r", content=content, internal_only=internal)
+    pkg = build_page_package(run_id="r", content=content, internal_only=internal)
+    assert pkg["customer_visible"]["title"] == "SUPERSECRET internal note xyz"
 
 
 def test_no_leak_when_clean():

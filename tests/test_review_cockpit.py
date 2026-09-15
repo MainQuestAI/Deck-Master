@@ -243,7 +243,9 @@ class ReviewSummaryAPITest(unittest.TestCase):
         status, data = self.handler.request("GET", "/api/review-summary/review-test")
         counts = data["counts"]
         self.assertEqual(counts["pages"], 3)
-        self.assertEqual(counts["p1"], 1)
+        # A legacy draft report without current-artifact binding is not counted
+        # as a current delivery defect.
+        self.assertEqual(counts["p1"], 0)
 
     def test_deck_readiness_uses_preview_and_sourcing_plan(self) -> None:
         write_json(self.run_dir / "preview_manifest.json", {
@@ -469,7 +471,8 @@ class ReviewCockpitDirectTest(unittest.TestCase):
         write_json(render_dir / "render_result.json", {"status": "rendered", "artifact_path": "rendered/index.html"})
         ready = compute_deck_readiness(self.run_dir)
         self.assertEqual("ready", ready["deck_readiness"]["render"])
-        self.assertEqual("ready", ready["deck_readiness"]["export"])
+        self.assertEqual("blocked", ready["deck_readiness"]["export"])
+        self.assertIn("quality gate blocks delivery", ready["deck_readiness"]["blocking_reasons"])
 
 
 class FrontendContractAPITest(unittest.TestCase):

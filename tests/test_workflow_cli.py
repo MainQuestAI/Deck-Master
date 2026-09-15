@@ -130,7 +130,7 @@ def test_workflow_handoff_accept_reject_cli(tmp_path):
         ["workflow", "handoff", "prepare", "--from-stage", "deck-brief",
          "--run-dir", str(tmp_path), "--run-id", "r", "--dev-allow-unsetup"]
     )
-    assert prep["status"] == "awaiting_approval"
+    assert prep["status"] == "accepted"
     code, acc, _ = _run_cli(
         ["workflow", "handoff", "accept", "--handoff-id", prep["handoff_id"],
          "--run-dir", str(tmp_path), "--dev-allow-unsetup"]

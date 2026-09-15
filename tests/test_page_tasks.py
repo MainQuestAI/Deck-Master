@@ -147,7 +147,7 @@ class PageTasksTests(unittest.TestCase):
 
     def test_backward_compat_with_claim_map_only(self) -> None:
         """build_page_tasks with claim_map but no claim_graph/judgments."""
-        request = build_request(brief="零售方案", industry="retail", target_pages="auto")
+        request = build_request(brief="零售方案", industry="retail", target_pages="12")
         plan = plan_narrative(request)
         claim_map = {
             "claims": [
@@ -164,7 +164,7 @@ class PageTasksTests(unittest.TestCase):
 
     def test_enhanced_fields_present_in_tasks(self) -> None:
         """Tasks include decision_intent, argument_chain, evidence_policy when judgments provided."""
-        request = build_request(brief="零售方案", industry="retail", target_pages="auto")
+        request = build_request(brief="零售方案", industry="retail", target_pages="12")
         judgments = _sample_judgments()
         plan = plan_narrative(request, judgments=judgments)
         result = build_page_tasks(plan, judgments=judgments)
@@ -188,7 +188,7 @@ class PageTasksTests(unittest.TestCase):
 
     def test_claim_graph_associates_claim_ids(self) -> None:
         """When claim_graph is provided, tasks get claim_ids from page_refs."""
-        request = build_request(brief="零售方案", industry="retail", target_pages="auto")
+        request = build_request(brief="零售方案", industry="retail", target_pages="12")
         claim_graph = _sample_claim_graph()
         plan = plan_narrative(request, claim_graph=claim_graph)
         result = build_page_tasks(plan, claim_graph=claim_graph)
@@ -206,7 +206,7 @@ class PageTasksTests(unittest.TestCase):
 
     def test_claim_graph_provides_evidence_info(self) -> None:
         """claim_graph enriches tasks with available_evidence and evidence_gaps."""
-        request = build_request(brief="零售方案", industry="retail", target_pages="auto")
+        request = build_request(brief="零售方案", industry="retail", target_pages="12")
         claim_graph = _sample_claim_graph()
         plan = plan_narrative(request, claim_graph=claim_graph)
         result = build_page_tasks(plan, claim_graph=claim_graph)
@@ -232,7 +232,7 @@ class PageTasksTests(unittest.TestCase):
         request = build_request(
             brief="零售客户数字化转型方案，关注全渠道、库存可视化、最后一公里配送",
             industry="retail",
-            target_pages="auto",
+            target_pages="12",
         )
         judgments = _sample_judgments()
         claim_graph = _sample_claim_graph()

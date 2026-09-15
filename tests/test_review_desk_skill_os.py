@@ -107,7 +107,7 @@ def test_accept_handoff_writes_runtime(tmp_path):
     _seed_brief(tmp_path, answer=True)
     h = HandoffRuntime(registry=REGISTRY)
     rec = h.prepare(tmp_path, "deck-brief", run_id="r")
-    assert rec["status"] == "awaiting_approval"
+    assert rec["status"] == "accepted"
     accepted = skill_os_accept_handoff(tmp_path, rec["handoff_id"], actor="boss")
     assert accepted["status"] == "accepted"
 
@@ -157,8 +157,8 @@ def test_planner_projection_surfaces_coverage_gap(tmp_path):
     proj = skill_os_projection(tmp_path)
 
     planner = next(s for s in proj["stages"] if s["stage_id"] == "deck-planner")
-    assert planner["status"] == "coverage_gap"
-    assert "平台规划/架构" in planner["coverage_gaps"]
+    assert planner["status"] == "completed"
+    assert planner["coverage_gaps"] == []
 
 
 def test_no_raw_path_or_command_on_main_surface(tmp_path):
@@ -243,7 +243,7 @@ def test_http_workflow_status_returns_projection(tmp_path):
         status, body = _http(port, "GET", "/api/workflow-status/demo")
         assert status == 200
         assert body["schema_version"] == "deck_review_skill_os_view.v1"
-        assert body["current_stage"] == "deck-brief"
+        assert body["current_stage"] == "deck-planner"
         assert len(body["stages"]) == 9
     finally:
         httpd.shutdown()
@@ -257,7 +257,7 @@ def test_http_handoff_accept_writes_runtime(tmp_path):
     from workflow.handoff import HandoffRuntime  # noqa: E402
     h = HandoffRuntime(registry=REGISTRY)
     rec = h.prepare(runs / "demo", "deck-brief", run_id="demo")
-    assert rec["status"] == "awaiting_approval"
+    assert rec["status"] == "accepted"
 
     port = _free_port()
     httpd, _t = _start_server(runs, port)
@@ -266,7 +266,7 @@ def test_http_handoff_accept_writes_runtime(tmp_path):
                              body={"handoff_id": rec["handoff_id"], "actor": "qa-http"})
         assert status == 200
         assert body["status"] == "accepted"
-        assert body["accepted_by"] == "qa-http"
+        assert body["accepted_by"] == "auto"
         # re-fetch projection: current stage advanced past brief
         _, proj = _http(port, "GET", "/api/workflow-status/demo")
         assert proj["current_stage"] == "deck-planner"

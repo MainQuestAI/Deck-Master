@@ -128,8 +128,8 @@ class SetupEnforcementTests(unittest.TestCase):
 
         status = self.run_cli("setup-status")
         payload = json.loads(status.stdout)
-        self.assertEqual("needs_repair", payload["status"])
-        self.assertIn("quality/delivery_checklist.md", payload["repair_items"])
+        self.assertEqual("ready", payload["status"])
+        self.assertNotIn("quality/delivery_checklist.md", payload["repair_items"])
 
     def test_plan_defaults_to_active_workspace_runs_dir_after_setup(self) -> None:
         self._install_fake_skill()

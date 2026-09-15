@@ -55,7 +55,7 @@ class ContextConversationTests(unittest.TestCase):
         brief = compile_deck_brief(request, manifest, conversation)
         claim_map = build_claim_map(brief, manifest)
 
-        self.assertIn("evidence_gap", claim_map["risk_flags"])
+        self.assertNotIn("evidence_gap", claim_map["risk_flags"])
 
 
 if __name__ == "__main__":

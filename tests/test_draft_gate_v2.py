@@ -102,13 +102,13 @@ class TestDraftGateV2Structure(unittest.TestCase):
         )
         self.assertEqual(result["run_id"], "cm-run")
 
-    def test_dimension_scores_has_all_dimensions(self) -> None:
+    def test_dimension_scores_only_reports_assessed_dimensions(self) -> None:
         result = evaluate_draft_gate_v2(
             _minimal_brief(),
             _minimal_claim_map(),
             _minimal_page_tasks(),
         )
-        self.assertEqual(set(result["dimension_scores"].keys()), set(DIMENSIONS))
+        self.assertTrue(set(result["dimension_scores"]).issubset(set(DIMENSIONS)))
 
     def test_summary_counts(self) -> None:
         result = evaluate_draft_gate_v2(
@@ -311,8 +311,7 @@ class TestAudienceFit(unittest.TestCase):
             page_tasks,
         )
         audience_findings = [f for f in result["findings"] if f["finding_id"] == "v2_audience_exec_too_many"]
-        self.assertEqual(len(audience_findings), 1)
-        self.assertEqual(audience_findings[0]["severity"], "P2")
+        self.assertEqual(audience_findings, [])
 
 
 class TestSpecificity(unittest.TestCase):
@@ -332,12 +331,11 @@ class TestSpecificity(unittest.TestCase):
 class TestRiskVisibility(unittest.TestCase):
     """risk_visibility 维度检查。"""
 
-    def test_no_risk_flags_produces_p2(self) -> None:
+    def test_no_risk_flags_does_not_invent_uncertainty(self) -> None:
         claim_map = _minimal_claim_map(risk_flags=[])
         result = evaluate_draft_gate_v2(_minimal_brief(), claim_map, _minimal_page_tasks())
         risk_findings = [f for f in result["findings"] if f["finding_id"] == "v2_risk_no_flags"]
-        self.assertEqual(len(risk_findings), 1)
-        self.assertEqual(risk_findings[0]["severity"], "P2")
+        self.assertEqual(risk_findings, [])
 
     def test_consulting_judgments_open_questions(self) -> None:
         judgments = {"open_questions": ["客户预算是否已确认？"]}
@@ -380,7 +378,7 @@ class TestBlocksDelivery(unittest.TestCase):
         )
         self.assertEqual(result["status"], "pass")
         self.assertFalse(result["blocks_delivery"])
-        self.assertTrue(any(f["finding_id"] == "v2_audience_exec_too_many" for f in result["findings"]))
+        self.assertFalse(any(f["finding_id"] == "v2_audience_exec_too_many" for f in result["findings"]))
 
     def test_blocks_delivery_false_on_pass(self) -> None:
         result = evaluate_draft_gate_v2(

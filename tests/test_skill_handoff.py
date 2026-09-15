@@ -84,12 +84,12 @@ def test_prepare_creates_handoff_for_init(tmp_path):
     assert (tmp_path / "workflow/handoffs" / f'{rec["handoff_id"]}.json').exists()
 
 
-def test_prepare_brief_is_awaiting_approval(tmp_path):
+def test_prepare_brief_is_accepted_without_segmented_approval(tmp_path):
     rt = HandoffRuntime(registry=REGISTRY)
     _seed_brief(tmp_path)
     rec = rt.prepare(tmp_path, "deck-brief", run_id="r")
-    assert rec["status"] == AWAITING_APPROVAL
-    assert rec["approval_policy"]["required"] is True
+    assert rec["status"] == ACCEPTED
+    assert rec["approval_policy"]["required"] is False
 
 
 def test_prepare_brief_blocks_when_forcing_questions_unanswered(tmp_path):
@@ -130,10 +130,10 @@ def test_accept_consume_lifecycle(tmp_path):
     rt = HandoffRuntime(registry=REGISTRY)
     _seed_brief(tmp_path)
     rec = rt.prepare(tmp_path, "deck-brief", run_id="r")
-    assert rec["status"] == AWAITING_APPROVAL
+    assert rec["status"] == ACCEPTED
     accepted = rt.accept(tmp_path, rec["handoff_id"], actor="boss")
     assert accepted["status"] == ACCEPTED
-    assert accepted["accepted_by"] == "boss"
+    assert accepted["accepted_by"] == "auto"
     consumed = rt.consume(tmp_path, rec["handoff_id"])
     assert consumed["status"] == CONSUMED
 
@@ -150,14 +150,12 @@ def test_reject_carries_repair_owner(tmp_path):
     assert rejected["rejected_reason"] == "narrative wrong"
 
 
-def test_accept_rejects_invalid_transition(tmp_path):
+def test_accept_is_idempotent_for_automatic_transition(tmp_path):
     rt = HandoffRuntime(registry=REGISTRY)
     _seed_brief(tmp_path)
     rec = rt.prepare(tmp_path, "deck-brief", run_id="r")
     rt.accept(tmp_path, rec["handoff_id"], actor="x")
-    # cannot accept again from ACCEPTED
-    with pytest.raises(HandoffError):
-        rt.accept(tmp_path, rec["handoff_id"], actor="x")
+    assert rt.accept(tmp_path, rec["handoff_id"], actor="x")["status"] == ACCEPTED
 
 
 def test_current_is_projection_only(tmp_path):

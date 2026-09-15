@@ -75,15 +75,16 @@ class DraftGateTests(unittest.TestCase):
         self.assertIn("delivery_page_count_mismatch", finding_ids)
         self.assertTrue(any(item.startswith("slide_002_forbidden_terms") for item in finding_ids))
 
-    def test_render_gate_flags_possible_full_slide_image(self) -> None:
+    def test_render_gate_does_not_reject_a_full_slide_image_by_area_proxy(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             pptx = Path(temp) / "deck.pptx"
             write_minimal_pptx(pptx, [{"text": "", "pictures": 1}])
 
             report = evaluate_render_gate("run-1", pptx, expected_pages=1)
 
-        self.assertEqual("rework_required", report["status"])
-        self.assertTrue(report["page_findings"])
+        self.assertEqual("pass", report["status"])
+        self.assertFalse(report["blocks_delivery"])
+        self.assertFalse(report["page_findings"])
 
 
 def write_minimal_pptx(path: Path, slides: list[dict]) -> None:

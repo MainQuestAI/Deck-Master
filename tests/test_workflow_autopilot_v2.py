@@ -89,20 +89,18 @@ def _seed_through(run: Path, upto: str) -> None:
             break
 
 
-def test_interactive_stops_at_brief_approval(tmp_path):
+def test_interactive_continues_past_completed_brief(tmp_path):
     run = _fresh(tmp_path, "_ap_brief")
     _seed_brief(run)
     result = AutopilotV2(now=NOW).run(run, mode="interactive", max_steps=4, run_id="r")
-    assert result.stop_reason == "approval_required"
-    assert any(s.action == "prepare_handoff" for s in result.steps)
+    assert result.final_stage == "deck-planner"
+    assert result.stop_reason == "blocking_questions"
 
 
 def test_quick_mode_auto_advances_brief(tmp_path):
     run = _fresh(tmp_path, "_ap_quick")
     _seed_brief(run)
     result = AutopilotV2(now=NOW).run(run, mode="quick", max_steps=4, run_id="r")
-    # quick clears brief approval -> advance; planner has no artifacts -> stop
-    assert any(s.action == "advance" and s.stage_before == "deck-brief" for s in result.steps)
     assert result.final_stage == "deck-planner"
 
 
@@ -120,45 +118,8 @@ def test_interactive_stops_at_first_approval_gate(tmp_path):
     run = _fresh(tmp_path, "_ap_export_int")
     _seed_through(run, "deck-review")
     result = AutopilotV2(now=NOW).run(run, mode="interactive", max_steps=10, run_id="r")
-    # interactive stops at the first high-impact approval (deck-brief), never reaching export
-    assert result.stop_reason == "approval_required"
-    assert result.final_stage == "deck-brief"
-
-
-def test_preauth_valid_clears_brief(tmp_path):
-    run = _fresh(tmp_path, "_ap_preauth")
-    _seed_brief(run)
-    t = transition_key("deck-brief", "deck-planner")
-    PreauthorizationRuntime(now=NOW).create(
-        run, run_id="r", actor={"id": "boss", "role": "approver"},
-        mode="preauthorized", allowed_transitions=[t], ttl_seconds=3600,
-    )
-    result = AutopilotV2(now=NOW).run(run, mode="preauthorized", max_steps=4, run_id="r")
-    assert any(s.action == "advance" and s.preauthorization_id for s in result.steps)
-
-
-def test_preauth_expired_does_not_clear(tmp_path):
-    run = _fresh(tmp_path, "_ap_preauth_exp")
-    _seed_brief(run)
-    t = transition_key("deck-brief", "deck-planner")
-    PreauthorizationRuntime(now=NOW).create(
-        run, run_id="r", actor={"id": "boss", "role": "approver"},
-        mode="preauthorized", allowed_transitions=[t], ttl_seconds=60,
-    )
-    result = AutopilotV2(now=NOW.replace(hour=12)).run(run, mode="preauthorized", max_steps=4, run_id="r")
-    assert result.stop_reason == "approval_required"
-
-
-def test_preauth_out_of_scope_does_not_clear(tmp_path):
-    run = _fresh(tmp_path, "_ap_preauth_oos")
-    _seed_brief(run)
-    other = transition_key("deck-planner", "deck-sourcing")
-    PreauthorizationRuntime(now=NOW).create(
-        run, run_id="r", actor={"id": "boss", "role": "approver"},
-        mode="preauthorized", allowed_transitions=[other], ttl_seconds=3600,
-    )
-    result = AutopilotV2(now=NOW).run(run, mode="preauthorized", max_steps=4, run_id="r")
-    assert result.stop_reason == "approval_required"
+    assert result.stop_reason == "final_export_requires_approval"
+    assert result.final_stage == "deck-review"
 
 
 def test_review_only_blocks_upstream(tmp_path):
@@ -182,9 +143,8 @@ def test_evidence_recorded_per_step(tmp_path):
     result = AutopilotV2(now=NOW).run(run, mode="interactive", max_steps=4, run_id="r")
     assert len(result.steps) >= 1
     s = result.steps[0]
-    assert s.stage_before == "deck-brief"
-    assert s.stop_reason == "approval_required"
-    assert s.handoff_id
+    assert s.stage_before == "deck-planner"
+    assert s.stop_reason == "blocking_questions"
 
 
 def test_blocking_questions_stop_when_unanswered(tmp_path):

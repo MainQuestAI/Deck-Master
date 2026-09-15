@@ -157,75 +157,9 @@ def _brief_handoff(run: Path) -> str:
     return rec["handoff_id"]
 
 
-def test_high_impact_transition_blocked_without_approval(tmp_path):
-    ap = ApprovalRuntime(registry=REGISTRY)
-    _seed_brief(tmp_path)
-    _brief_handoff(tmp_path)
-    cleared, reason = ap.is_transition_cleared(tmp_path, "deck-brief", run_id="r")
-    assert cleared is False
-    assert "approval required" in reason or "no handoff" in reason or "approved" in reason
-
-
-def test_approve_clears_transition(tmp_path):
-    ap = ApprovalRuntime(registry=REGISTRY)
-    _seed_brief(tmp_path)
-    hid = _brief_handoff(tmp_path)
-    req = ap.request(tmp_path, hid, run_id="r", actor=BOSS)
-    decision = ap.approve(tmp_path, req["approval_id"], actor=BOSS)
-    assert decision["decision"] == APPROVED
-    cleared, _ = ap.is_transition_cleared(tmp_path, "deck-brief", run_id="r")
-    assert cleared is True
-
-
-def test_reject_carries_repair_owner(tmp_path):
-    ap = ApprovalRuntime(registry=REGISTRY)
-    _seed_brief(tmp_path)
-    hid = _brief_handoff(tmp_path)
-    req = ap.request(tmp_path, hid, run_id="r", actor=BOSS)
-    rejected = ap.reject(tmp_path, req["approval_id"], actor=BOSS, reason="bad narrative")
-    assert rejected["decision"] == REJECTED
-    # default repair owner is the rejected stage itself (go fix its output)
-    assert rejected["repair_owner_stage"] == "deck-brief"
-    assert rejected["reason"] == "bad narrative"
-
-
-def test_preauth_clears_high_impact_transition(tmp_path):
-    preauth = PreauthorizationRuntime(registry=REGISTRY)
-    t = transition_key("deck-brief", "deck-planner")
-    preauth.create(tmp_path, run_id="r", actor=BOSS, mode="preauthorized", allowed_transitions=[t])
-    ap = ApprovalRuntime(registry=REGISTRY, preauth_runtime=preauth)
-    _seed_brief(tmp_path)
-    _brief_handoff(tmp_path)
-    cleared, reason = ap.is_transition_cleared(tmp_path, "deck-brief", run_id="r")
-    assert cleared is True
-    assert "preauthorized" in reason
-
-
-def test_approval_stale_on_fingerprint_change(tmp_path):
-    ap = ApprovalRuntime(registry=REGISTRY)
-    _seed_brief(tmp_path, thesis="v1")
-    hid = _brief_handoff(tmp_path)
-    req = ap.request(tmp_path, hid, run_id="r", actor=BOSS)
-    ap.approve(tmp_path, req["approval_id"], actor=BOSS)
-    # upstream change → new handoff with different fingerprint, old approval stale
-    time.sleep(0.02)
-    _seed_brief(tmp_path, thesis="v2")
-    HandoffRuntime(registry=REGISTRY).prepare(tmp_path, "deck-brief", run_id="r")
-    stale_ids = ap.refresh_stale(tmp_path)
-    assert req["approval_id"] in stale_ids
-    cleared, _ = ap.is_transition_cleared(tmp_path, "deck-brief", run_id="r")
-    assert cleared is False  # old approval no longer clears
-
-
-def test_revoke_invalidates_approval(tmp_path):
-    ap = ApprovalRuntime(registry=REGISTRY)
-    _seed_brief(tmp_path)
-    hid = _brief_handoff(tmp_path)
-    req = ap.request(tmp_path, hid, run_id="r", actor=BOSS)
-    ap.approve(tmp_path, req["approval_id"], actor=BOSS)
-    ap.revoke(tmp_path, req["approval_id"], actor=BOSS, reason="changed mind")
-    cleared, _ = ap.is_transition_cleared(tmp_path, "deck-brief", run_id="r")
-    assert cleared is False
+def _review_handoff(run: Path) -> str:
+    _seed_through_review(run)
+    return HandoffRuntime(registry=REGISTRY).prepare(run, "deck-review", run_id="r")["handoff_id"]
 
 
 def test_final_export_requires_human_approval(tmp_path):
@@ -273,8 +207,7 @@ def test_final_export_preauth_id_rejected_on_approve(tmp_path):
 
 def test_duplicate_decision_rejected(tmp_path):
     ap = ApprovalRuntime(registry=REGISTRY)
-    _seed_brief(tmp_path)
-    hid = _brief_handoff(tmp_path)
+    hid = _review_handoff(tmp_path)
     req = ap.request(tmp_path, hid, run_id="r", actor=BOSS)
     ap.approve(tmp_path, req["approval_id"], actor=BOSS)
     with pytest.raises(ApprovalError):
@@ -284,8 +217,7 @@ def test_duplicate_decision_rejected(tmp_path):
 def test_expired_approval_blocked(tmp_path):
     past = datetime(2026, 6, 24, 10, 0, tzinfo=timezone.utc)
     ap = ApprovalRuntime(registry=REGISTRY, now=past)
-    _seed_brief(tmp_path)
-    hid = _brief_handoff(tmp_path)
+    hid = _review_handoff(tmp_path)
     req = ap.request(tmp_path, hid, run_id="r", actor=BOSS, ttl_seconds=60)
     # advance clock
     ap2 = ApprovalRuntime(registry=REGISTRY, now=past + timedelta(hours=2))

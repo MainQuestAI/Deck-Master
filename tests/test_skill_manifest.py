@@ -68,10 +68,9 @@ def test_contract_order_matches_production_ladder(registry):
     assert ordered == list(PRODUCTION_STAGE_IDS)
 
 
-def test_high_impact_transitions_require_approval(registry):
-    # D8: brief->planner, planner->sourcing, sourcing->producer need approval
+def test_authoring_transitions_continue_without_segmented_approval(registry):
     for stage in ("deck-brief", "deck-planner", "deck-sourcing"):
-        assert registry.contract(stage).approval_required, stage
+        assert not registry.contract(stage).approval_required, stage
 
 
 def test_client_export_is_non_bypassable_and_not_preauthorizable(registry):

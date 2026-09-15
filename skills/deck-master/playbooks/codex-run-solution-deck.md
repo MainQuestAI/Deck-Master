@@ -112,8 +112,9 @@ entry should state `meaning` (what the cited source supports for this page,
 sharing the page's key terms and the deck's main line), plus
 `source_position` when the span matters. The builder verifies that page
 claims are grounded in these citations and that numeric values trace to
-them; pages below the high-density density floor are asked to add content
-regions. Ids are assigned automatically, so cite sources, not evidence ids.
+them. Content completeness and readability are reviewed against the page task;
+there is no universal density floor or minimum block count. IDs are assigned
+automatically, so cite sources rather than manufacturing evidence IDs.
 
 Or step-by-step:
 

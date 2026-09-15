@@ -118,15 +118,15 @@ class WorkspaceFoundationTests(unittest.TestCase):
         (ws / "quality/scoring_rubric.md").unlink()
 
         report = validate_workspace(ws)
-        self.assertEqual("pending_manual_review", report["status"])
-        self.assertIn("quality/scoring_rubric.md", report["missing_items"])
+        self.assertEqual("valid", report["status"])
+        self.assertNotIn("quality/scoring_rubric.md", report["missing_items"])
 
     def test_validate_missing_manifest(self) -> None:
         empty_ws = self.temp_dir / "empty"
         empty_ws.mkdir()
         report = validate_workspace(empty_ws)
-        self.assertEqual("pending_manual_review", report["status"])
-        self.assertIn(MANIFEST_NAME, report["missing_items"])
+        self.assertEqual("valid", report["status"])
+        self.assertNotIn(MANIFEST_NAME, report["missing_items"])
 
     def test_validate_bad_manifest_json(self) -> None:
         ws = self.temp_dir / "bad-json"

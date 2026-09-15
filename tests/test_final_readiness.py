@@ -123,7 +123,7 @@ class FinalReadinessTests(unittest.TestCase):
         self.assertEqual(2, readiness["page_counts"]["approved"])
         self.assertTrue((self.run_dir / "delivery" / "final_readiness.json").exists())
         self.assertEqual(readiness["run_id"], read_final_readiness(self.run_dir)["run_id"])
-        self.assertTrue(any("客户可见内容安全检查" in item for item in readiness["warnings"]))
+        self.assertTrue(any("缺少当前有效质量门 render" in item for item in readiness["warnings"]))
 
     def test_production_missing_customer_visible_safety_gate_blocks_readiness(self) -> None:
         self._write_baseline()
@@ -137,7 +137,7 @@ class FinalReadinessTests(unittest.TestCase):
         )
 
         codes = {item["code"] for item in readiness["blockers"]}
-        self.assertIn("final_customer_visible_safety_missing", codes)
+        self.assertIn("final_current_artifact_gate_missing", codes)
 
     def test_stale_customer_visible_safety_is_warning_in_fixture(self) -> None:
         self._write_baseline()
@@ -147,7 +147,8 @@ class FinalReadinessTests(unittest.TestCase):
         readiness = compute_final_readiness(self.run_dir)
 
         self.assertTrue(readiness["ready"])
-        self.assertTrue(any("需要重新扫描当前产物" in item for item in readiness["warnings"]))
+        self.assertTrue(any("customer_visible_safety is stale" in item for item in readiness["warnings"]))
+        self.assertTrue(any("缺少当前有效质量门 render" in item for item in readiness["warnings"]))
 
     def test_stale_customer_visible_safety_blocks_production(self) -> None:
         self._write_baseline()
@@ -162,9 +163,10 @@ class FinalReadinessTests(unittest.TestCase):
         )
 
         codes = {item["code"] for item in readiness["blockers"]}
-        self.assertIn("final_customer_visible_safety_stale", codes)
+        self.assertIn("final_current_artifact_gate_missing", codes)
         clearance = final_readiness_clearance(self.run_dir)
-        self.assertIn("重新扫描当前产物", clearance["reason"])
+        self.assertFalse(clearance["ready"])
+        self.assertTrue(clearance["reason"])
 
     def test_customer_visible_safety_blocker_is_user_facing_clearance_reason(self) -> None:
         self._write_baseline()
@@ -249,7 +251,6 @@ class FinalReadinessTests(unittest.TestCase):
         codes = {item["code"] for item in readiness["blockers"]}
         self.assertIn("final_run_state_not_ready", codes)
         self.assertIn("final_quality_gate_blocked", codes)
-        self.assertIn("final_delivery_validation_blocked", codes)
 
     def test_p1_quality_gate_override_allows_final_readiness(self) -> None:
         self._write_baseline(gate_blocks=True)

@@ -12,12 +12,14 @@ import sys
 from pathlib import Path
 
 import pytest
+from pptx import Presentation
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT / "scripts") not in sys.path:
     sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
 from build.manifest import build_manifest_v2  # noqa: E402
+from high_density.engine import prepare_high_density, run_high_density  # noqa: E402
 from narrative.judgment_builder import build_judgments  # noqa: E402
 from runtime.orchestration import import_plan  # noqa: E402
 from runtime.run_state import create_run, read_json, write_json  # noqa: E402
@@ -122,6 +124,62 @@ def test_full_draft_import_writes_packages_index_and_mode(tmp_path: Path) -> Non
     ]
     events = (run_dir / "events.jsonl").read_text(encoding="utf-8")
     assert '"mode": "full_draft"' in events
+
+
+def test_imported_full_draft_builds_without_mbb_and_keeps_nested_copy(tmp_path: Path) -> None:
+    run_dir = _make_run(tmp_path)
+    beats = [_beat(1, "architecture"), _beat(2, "solution")]
+    packages = [
+        {
+            "beat_id": beats[0]["beat_id"],
+            "customer_visible": {
+                "title": "职责与数据流",
+                "body_blocks": [
+                    {
+                        "title": "业务工作台",
+                        "responsibilities": ["接收任务", "确认结果"],
+                        "connections": [{"target": "智能编排", "relation": "提交与回写"}],
+                    },
+                    {"title": "智能编排", "status": "建设中", "unit": "双向读写"},
+                ],
+                "footnotes": ["来源：合成输入"],
+            },
+            "visual_spec": {"page_type": "architecture", "page_role": "architecture"},
+        },
+        {
+            "beat_id": beats[1]["beat_id"],
+            "customer_visible": {
+                "title": "方案选择",
+                "body_blocks": [
+                    {"title": "优先方案", "text": "先连接高频资料，再扩展审批回写。"},
+                    {"title": "选择理由", "text": "先验证资料命中与责任闭环，降低跨系统改造风险。"},
+                ],
+            },
+            "visual_spec": {"page_type": "comparison", "page_role": "solution"},
+        },
+    ]
+    import_plan(run_dir, _write_input(tmp_path, _full_draft(beats, packages)), source="agent")
+    blueprint_template = (REPO_ROOT / "tests/fixtures/high_density/blueprint.svg").read_bytes()
+    blueprint_dir = run_dir / "high_density_build/blueprints"
+    blueprint_dir.mkdir(parents=True, exist_ok=True)
+    for beat in beats:
+        (blueprint_dir / f"{beat['beat_id']}.svg").write_bytes(blueprint_template)
+
+    prepared = prepare_high_density(run_dir)
+    result = run_high_density(run_dir)
+
+    assert prepared["status"] == "prepared"
+    assert result["status"] == "completed", result
+    assert not (run_dir / "high_density_build/mbb/mbb_plan.json").exists()
+    presentation = Presentation(run_dir / "high_density_build/pptx/deck_high_density.pptx")
+    visible = "\n".join(
+        shape.text
+        for slide in presentation.slides
+        for shape in slide.shapes
+        if hasattr(shape, "text")
+    )
+    for expected in ("接收任务", "确认结果", "提交与回写", "建设中", "双向读写", "选择理由"):
+        assert expected in visible
 
 
 def test_json_plan_without_packages_reports_plan_mode(tmp_path: Path) -> None:
@@ -377,9 +435,11 @@ def test_downstream_pruned_on_delete_and_change(tmp_path: Path) -> None:
     result = import_plan(run_dir, _write_input(tmp_path, _full_draft(v2_beats, v2_packages), name="v2.json"), source="agent")
 
     assert result["changed_pages"] == ["beat_03_solution"]
-    assert result["downstream"].get("sourcing_plan.json") == "invalidated"
-    assert not (run_dir / "sourcing_plan.json").exists()
-    assert not (run_dir / "preview_manifest.json").exists()
+    assert result["downstream"].get("sourcing_plan.json") == "pruned"
+    sourcing = read_json(run_dir / "sourcing_plan.json")
+    assert [page["page_id"] for page in sourcing["pages"]] == ["beat_01_opener", "beat_03_solution"]
+    preview = read_json(run_dir / "preview_manifest.json")
+    assert [page["page_id"] for page in preview["pages"]] == ["beat_01_opener"]
 
 
 def test_material_change_ignores_spoofed_source_fingerprint_and_invalidates_build(tmp_path: Path) -> None:
@@ -415,7 +475,8 @@ def test_visual_spec_change_invalidates_derived_output(tmp_path: Path) -> None:
     result = import_plan(run_dir, _write_input(tmp_path, _full_draft(beats, v2), name="visual-v2.json"), source="agent")
 
     assert result["changed_pages"] == ["beat_03_solution"]
-    assert not (run_dir / "high_density_build").exists()
+    assert (run_dir / "high_density_build").exists()
+    assert not (run_dir / "high_density_build/status.json").exists()
 
 
 def test_downstream_invalidation_failure_rolls_back_entire_import(tmp_path: Path, monkeypatch) -> None:
@@ -468,7 +529,10 @@ def test_reorder_invalidates_deck_level_downstream_state(tmp_path: Path) -> None
     )
 
     assert result["reordered"] is True
-    assert not (run_dir / "sourcing_plan.json").exists()
+    assert (run_dir / "sourcing_plan.json").exists()
+    assert [page["page_id"] for page in read_json(run_dir / "sourcing_plan.json")["pages"]] == [
+        "beat_03_solution", "beat_01_opener", "beat_02_problem"
+    ]
     assert not (run_dir / "quality_reports").exists()
 
 

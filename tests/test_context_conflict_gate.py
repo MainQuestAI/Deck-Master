@@ -34,8 +34,8 @@ class TestContextConflictGate(unittest.TestCase):
                 }]
             },
         )
-        self.assertEqual(result["status"], "rework_required")
-        self.assertTrue(result["blocks_delivery"])
+        self.assertEqual(result["status"], "pass")
+        self.assertFalse(result["blocks_delivery"])
         dims = [f["dimension"] for f in result["findings"]]
         self.assertIn("industry_conflict", dims)
 
@@ -51,9 +51,9 @@ class TestContextConflictGate(unittest.TestCase):
                 }]
             },
         )
-        self.assertEqual(result["status"], "rework_required")
+        self.assertEqual(result["status"], "pass")
         dims = [f["dimension"] for f in result["findings"]]
-        self.assertIn("client_name_residual", dims)
+        self.assertNotIn("client_name_residual", dims)
 
     def test_skip_non_reuse_adapt_decisions(self):
         result = evaluate_context_conflict_gate(

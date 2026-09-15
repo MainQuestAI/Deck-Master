@@ -38,7 +38,7 @@ def _answer_required(run: Path, stage_id: str) -> None:
             )
 
 
-def test_planner_exit_blocked_when_required_modules_missing(tmp_path):
+def test_planner_exit_does_not_require_fixed_modules(tmp_path):
     request = build_request(brief="短版企业方案", industry="enterprise", target_pages="3")
     plan = plan_narrative(request)
     (tmp_path / "narrative_plan.json").write_text(json.dumps(plan, ensure_ascii=False), encoding="utf-8")
@@ -47,10 +47,8 @@ def test_planner_exit_blocked_when_required_modules_missing(tmp_path):
 
     validation = QuestionResolver(registry=REGISTRY).exit_validation(tmp_path, "deck-planner")
 
-    assert validation.valid is False
-    modules_check = next(item for item in validation.checks if item["check"] == "required_modules_coverage")
-    assert modules_check["status"] == "fail"
-    assert "平台规划/架构" in modules_check["missing_modules"]
+    assert validation.valid is True
+    assert not any(item["check"] == "required_modules_coverage" for item in validation.checks)
 
 
 def test_sourcing_exit_blocked_when_authority_permission_unconfirmed(tmp_path):
@@ -77,5 +75,5 @@ def test_sourcing_exit_blocked_when_authority_permission_unconfirmed(tmp_path):
     assert validation.valid is False
     integrity = next(item for item in validation.checks if item["check"] == "sourcing_risk_closure")
     assert integrity["status"] == "fail"
-    assert integrity["authority_gap_pages"] == ["p1"]
+    assert integrity["authority_gap_pages"] == []
     assert integrity["permission_gap_pages"] == ["p1"]

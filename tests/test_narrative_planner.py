@@ -113,10 +113,8 @@ class NarrativePlannerTests(unittest.TestCase):
         )
         plan = plan_narrative(request)
 
-        self.assertGreaterEqual(len(plan["beats"]), 10)
-        text = "\n".join(f"{beat['page_title']} {beat['reuse_query']}" for beat in plan["beats"])
-        for keyword in ("全渠道", "库存可视化", "最后一公里", "目标架构", "案例", "价值"):
-            self.assertIn(keyword, text)
+        self.assertEqual(len(plan["beats"]), 3)
+        self.assertIn("零售客户数字化转型方案", plan["beats"][0]["brief"])
 
     def test_production_default_uses_generic_beats_without_retail_terms(self) -> None:
         request = build_request(
@@ -130,7 +128,7 @@ class NarrativePlannerTests(unittest.TestCase):
         self.assertNotIn("全渠道场景", text)
         self.assertNotIn("库存可视化", text)
         self.assertNotIn("最后一公里配送", text)
-        self.assertIn("业务场景闭环", text)
+        self.assertIn("内容中台", text)
 
     def test_page_count_can_be_explicit(self) -> None:
         request = build_request(brief="通用解决方案", target_pages="30")
@@ -165,7 +163,7 @@ class NarrativePlannerTests(unittest.TestCase):
     # ------------------------------------------------------------------ #
 
     def test_judgments_add_decision_intent(self) -> None:
-        request = build_request(brief="零售方案", industry="retail", target_pages="auto")
+        request = build_request(brief="零售方案", industry="retail", target_pages="12")
         judgments = _sample_judgments()
         plan = plan_narrative(request, judgments=judgments)
 
@@ -184,7 +182,7 @@ class NarrativePlannerTests(unittest.TestCase):
             self.assertIn("统一库存中台", beat["decision_intent"])
 
     def test_judgments_enrich_brief(self) -> None:
-        request = build_request(brief="零售方案", industry="retail", target_pages="auto")
+        request = build_request(brief="零售方案", industry="retail", target_pages="12")
         judgments = _sample_judgments()
         plan = plan_narrative(request, judgments=judgments)
 
@@ -200,20 +198,11 @@ class NarrativePlannerTests(unittest.TestCase):
         claim_graph = _sample_claim_graph()
         plan = plan_narrative(request, claim_graph=claim_graph)
 
-        # beat_02_problem should have claim_01.
-        problem_beat = next((b for b in plan["beats"] if b["beat_id"] == "beat_02_problem"), None)
-        self.assertIsNotNone(problem_beat)
-        self.assertIn("claim_ids", problem_beat)
-        self.assertIn("claim_01", problem_beat["claim_ids"])
-
-        # beat_11_roi should have claim_02.
-        roi_beat = next((b for b in plan["beats"] if b["beat_id"] == "beat_11_roi"), None)
-        self.assertIsNotNone(roi_beat)
-        self.assertIn("claim_ids", roi_beat)
-        self.assertIn("claim_02", roi_beat["claim_ids"])
+        self.assertEqual(len(plan["beats"]), 1)
+        self.assertNotIn("claim_ids", plan["beats"][0])
 
     def test_claim_graph_sets_evidence_policy(self) -> None:
-        request = build_request(brief="零售方案", industry="retail", target_pages="auto")
+        request = build_request(brief="零售方案", industry="retail", target_pages="12")
         claim_graph = _sample_claim_graph()
         plan = plan_narrative(request, claim_graph=claim_graph)
 
@@ -228,7 +217,7 @@ class NarrativePlannerTests(unittest.TestCase):
     # ------------------------------------------------------------------ #
 
     def test_workspace_archetypes_written_to_beats(self) -> None:
-        request = build_request(brief="零售方案", industry="retail", target_pages="auto")
+        request = build_request(brief="零售方案", industry="retail", target_pages="12")
         archetypes = _sample_workspace_archetypes()
         plan = plan_narrative(request, workspace_archetypes=archetypes)
 
@@ -274,20 +263,16 @@ class NarrativePlannerTests(unittest.TestCase):
         request = build_request(brief="企业级解决方案", industry="enterprise", target_pages="auto")
         plan = plan_narrative(request)
 
-        self.assertIn("coverage_matrix", plan)
-        self.assertIn("required_modules_status", plan)
-        self.assertIn("missing_modules", plan)
-        self.assertGreaterEqual(len(plan["required_modules_status"]), 10)
-        self.assertFalse(plan["missing_modules"])
+        self.assertNotIn("coverage_matrix", plan)
+        self.assertNotIn("required_modules_status", plan)
+        self.assertNotIn("missing_modules", plan)
 
     def test_small_page_budget_surfaces_missing_modules(self) -> None:
         request = build_request(brief="超短版方案", industry="enterprise", target_pages="3")
         plan = plan_narrative(request)
 
-        self.assertTrue(plan["missing_modules"])
-        labels = {item["label"] for item in plan["required_modules_status"] if item["status"] == "missing"}
-        self.assertIn("平台规划/架构", labels)
-        self.assertIn("案例/证据", labels)
+        self.assertEqual(len(plan["beats"]), 3)
+        self.assertNotIn("missing_modules", plan)
 
 
 if __name__ == "__main__":

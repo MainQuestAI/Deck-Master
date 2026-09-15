@@ -1009,7 +1009,7 @@ class StudioServerTests(unittest.TestCase):
         )
         self.assertEqual(201, status)
         self.assertEqual("studio-test", created["run_id"])
-        self.assertEqual(12, created["pages"])
+        self.assertEqual(3, created["pages"])
 
         status, runs = self.handler.request("GET", "/api/runs")
         self.assertEqual(200, status)
@@ -1018,7 +1018,7 @@ class StudioServerTests(unittest.TestCase):
         status, deck = self.handler.request("GET", "/api/deck?run_id=studio-test")
         self.assertEqual(200, status)
         self.assertEqual("studio-test", deck["run_id"])
-        self.assertEqual(12, len(deck["pages"]))
+        self.assertEqual(3, len(deck["pages"]))
 
     def test_setup_not_ready_blocks_production_run(self) -> None:
         status, data = self.handler.request(

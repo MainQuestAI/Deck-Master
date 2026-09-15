@@ -28,6 +28,7 @@ from high_density.content import (
     _page_structural_claim_targets,
     _validate_claim_bindings,
     build_content_lock,
+    build_page_package_content_lock,
     build_mbb_page,
     build_mbb_plan,
     enrich_selected_mbb_plan,
@@ -202,7 +203,7 @@ def test_retired_content_lock_lineage_requires_mbb_regeneration(tmp_path: Path) 
         ),
     ],
 )
-def test_retired_receipt_prompt_and_manifest_require_mbb_regeneration(
+def test_inactive_retired_artifacts_do_not_block_current_run(
     tmp_path: Path,
     relative_path: str,
     payload: dict[str, str],
@@ -210,8 +211,9 @@ def test_retired_receipt_prompt_and_manifest_require_mbb_regeneration(
     run, _ = _make_run(tmp_path, mode="fixture")
     write_json(run / relative_path, payload)
 
+    assert_current_mbb_artifact(run)
     with pytest.raises(ContractError, match=MIGRATION_REQUIRED_CODE):
-        assert_current_mbb_artifact(run)
+        assert_current_mbb_artifact(run, payload)
 
 
 def test_active_high_density_surface_has_no_retired_content_plan_terminology() -> None:
@@ -857,48 +859,44 @@ def test_content_lock_requires_approved_mbb_page_plan(tmp_path: Path) -> None:
         build_content_lock(package, mbb_plan_sha256="a" * 64)
 
 
-def test_production_records_storyline_confirmation_without_host_key(tmp_path: Path) -> None:
+def test_page_package_content_lock_preserves_nested_business_copy() -> None:
+    package = _package("direct-run", FIXTURE["pages"][0])
+    package["customer_visible"] = {
+        "title": "职责与数据流",
+        "body_blocks": [
+            {
+                "title": "业务工作台",
+                "responsibilities": ["接收任务", "确认结果"],
+                "connections": [{"target": "智能编排", "relation": "提交与回写"}],
+            },
+            {"title": "智能编排", "status": "建设中", "unit": "双向读写"},
+        ],
+        "labels": ["业务域", "能力域"],
+        "footnotes": ["来源：合成架构约束"],
+        "callouts": [],
+    }
+    package["citations"] = [{"evidence_id": "E-DIRECT", "source_ref": "brief.md#architecture"}]
+
+    lock = build_page_package_content_lock(package)
+    visible = {str(item["value"]) for item in lock["required_text_refs"]}
+
+    assert {"职责与数据流", "接收任务", "确认结果", "智能编排", "提交与回写", "建设中", "双向读写"}.issubset(visible)
+    assert lock["enrichment"]["framework"] == "page_package"
+    assert lock["evidence_bindings"][0]["meaning"] == ""
+    assert lock["evidence_bindings"][0]["implication"] == ""
+
+
+def test_production_consumes_page_packages_without_second_storyline(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path, mode="production", project_name="production mbb")
     write_style_lock(run, run.name, "cyber-01", approved=True, approver="test")
     prepare_high_density(run)
-    assert run_high_density(run)["next_action"]["kind"] == "agent_mbb_candidates"
-
-    packages = load_page_packages(run, expected_run_id=run.name)
-    pending = build_mbb_plan(packages, run_id=run.name)
-    write_mbb_plan(run, pending)
     waiting = run_high_density(run)
 
-    assert waiting["status"] == "awaiting_user_decision"
-    assert waiting["current_stage"] == "content_lock"
-    assert waiting["next_action"]["recommended_storyline_id"] == "storyline.decision"
-    assert len(waiting["next_action"]["storyline_candidates"]) == 3
-
-    selected = retry_high_density(run, page_id="", stage="content_lock", storyline_id="storyline.risk")
-
-    assert selected["status"] == "awaiting_agent_build"
-    assert selected["next_action"]["kind"] == "agent_mbb_enrich_selected"
-    assert not (run / "high_density_build/mbb/user_decision_receipt.json").exists()
-    assert not (run / "high_density_build/content_locks/P001.json").exists()
-    selected_plan = load_mbb_plan(run, packages=packages, expected_run_id=run.name, require_approved=False)
-    assert selected_plan["selection"]["status"] == "selected_pending_enrichment"
-    enriched = enrich_selected_mbb_plan(selected_plan, packages)
-    write_mbb_plan(run, enriched)
-
-    resumed = run_high_density(run)
-
-    assert resumed["status"] == "awaiting_agent_build"
-    assert resumed["current_stage"] == "blueprint"
-    lock = read_json(run / "high_density_build/content_locks/P001.json")
-    assert lock["lineage"]["selected_storyline_id"] == "storyline.risk"
-    assert lock["lineage"]["mbb_page_plan_sha256"]
-    context = lock["enrichment"]["storyline_context"]
-    assert context["storyline_id"] == "storyline.risk"
-    assert context["management_conclusion"].startswith("Reduce the execution risk")
-    assert lock["enrichment"]["conclusion"].startswith("Synthetic framework page: Reduce the execution risk")
-    assert "risk route" in lock["enrichment"]["so_what"]
-    prompt = read_json(run / "high_density_build/prompts/P001.blueprint_prompt.json")
-    assert context["management_conclusion"] in prompt["prompt_text"]
-    assert "--source-type explicit_import --approved-by <approver>" in resumed["next_action"]["import_command"]
+    assert waiting["next_action"]["kind"] == "agent_imagegen"
+    assert not (run / "high_density_build/mbb/mbb_plan.json").exists()
+    lock = load_content_lock(run, "P001", expected_run_id=run.name)
+    assert lock["enrichment"]["framework"] == "page_package"
+    assert lock["lineage"]["source"] == "approved_page_package"
 
 
 def test_storyline_selection_does_not_rewrite_agent_content(tmp_path: Path) -> None:
@@ -1316,16 +1314,16 @@ def test_prompt_excludes_internal_analysis_fields(tmp_path: Path) -> None:
         assert internal_field not in prompt
 
 
-def test_page_number_is_hard_forbidden_and_internal_labels_need_allowlist(tmp_path: Path) -> None:
+def test_business_labels_are_allowed_and_production_annotations_are_rejected(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path)
     package = read_json(run / "page_packages/P001.json")
     policy = build_visibility_policy(package, page_id="P001")
 
-    assert visible_text_violation(policy, "1 / 12", page_id="P001") == "page_number"
-    assert visible_text_violation(policy, "P001", page_id="P001") == "page_number"
-    assert visible_text_violation(policy, "来源：", page_id="P001") == "source_marker"
-    policy["allowed_visible_terms"] = [{"term": "SWOT", "content_ref": "content_lock.customer_visible.body_blocks.0", "approved_by": "client", "reason": "client-facing framework"}]
+    assert visible_text_violation(policy, "1 / 12", page_id="P001") is None
+    assert visible_text_violation(policy, "P001", page_id="P001") is None
+    assert visible_text_violation(policy, "来源：", page_id="P001") is None
     assert visible_text_violation(policy, "SWOT", page_id="P001") is None
+    assert visible_text_violation(policy, "生成提示：把这里做成三栏", page_id="P001") == "production_annotation"
 
 
 def test_blueprint_requires_content_review_before_approval(tmp_path: Path) -> None:
@@ -1972,11 +1970,11 @@ def test_default_production_visual_review_does_not_require_host_attestation(tmp_
     assert not main_review_receipt_path(run, "P001").exists()
 
 
-def test_near_full_image_is_blocked(tmp_path: Path) -> None:
+def test_large_image_still_requires_registered_asset(tmp_path: Path) -> None:
     run, _, scene = _prepared_fixture(tmp_path)
     scene["elements"].append({"element_id": "image.near_full", "component_id": "component.proof", "kind": "image", "role": "proof", "priority": "P2", "bbox": {"x": 20, "y": 20, "w": 900, "h": 800}, "asset_ref": "proof", "asset_sha256": "a" * 64, "editability_target": "registered_asset", "asset_policy": "registered"})
 
-    with pytest.raises(SvgVisualError, match="exceeds 35%"):
+    with pytest.raises(SvgVisualError, match="asset is unavailable"):
         compile_svg(scene, run / "high_density_build/svg/near-full.svg")
 
 
@@ -2018,7 +2016,7 @@ def test_production_svg_blocks_near_full_image_and_p0_p1_coverage(tmp_path: Path
     near_full = near_full.replace('data-pptx-bounds="1400.00,866.00,120.00,24.00"', 'data-pptx-bounds="20.00,20.00,900.00,800.00"')
     output.write_text(near_full, encoding="utf-8")
 
-    with pytest.raises(SvgVisualError, match="exceeds 35%"):
+    with pytest.raises(SvgVisualError, match="covers P0/P1 text"):
         validate_approved_svg(output, scene, lock, {"proof": asset})
 
     coverage = source.replace('x="1400.00" y="866.00" width="120.00" height="24.00"', 'x="100.00" y="240.00" width="300.00" height="100.00"')

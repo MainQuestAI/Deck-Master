@@ -52,8 +52,8 @@ class TestBrandGate(unittest.TestCase):
                 workspace_dir=tmpdir,
                 final_artifact=str(artifact_path),
             )
-            self.assertEqual(result["status"], "conditional_pass")
-            self.assertTrue(any(f["severity"] == "P2" for f in result["findings"]))
+            self.assertEqual(result["status"], "not_applicable")
+            self.assertFalse(result["findings"])
             self.assertFalse(result["blocks_delivery"])  # P2 doesn't block
 
     def test_empty_visual_system_dir_triggers_p2(self):
@@ -69,7 +69,7 @@ class TestBrandGate(unittest.TestCase):
                 workspace_dir=tmpdir,
                 final_artifact=str(artifact_path),
             )
-            self.assertTrue(any(f["finding_id"] == "brand_no_visual_system" for f in result["findings"]))
+            self.assertFalse(result["findings"])
 
     def test_schema_version_present(self):
         result = evaluate_brand_gate(run_id="run-006")

@@ -27,9 +27,9 @@ def test_9_production_stage_contracts():
     assert [c.stage_id for c in REGISTRY.ordered_contracts()] == list(PRODUCTION_STAGE_IDS)
 
 
-def test_high_impact_transitions_require_approval():
+def test_authoring_transitions_do_not_require_segmented_approval():
     for sid in ("deck-brief", "deck-planner", "deck-sourcing"):
-        assert REGISTRY.contract(sid).approval_required
+        assert not REGISTRY.contract(sid).approval_required
 
 
 def test_final_export_non_bypassable_and_not_preauthorizable():

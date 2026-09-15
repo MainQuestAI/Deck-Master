@@ -243,8 +243,7 @@ class NarrativeAdviceApplyTest(unittest.TestCase):
         apply_narrative_advice(self.run_dir, adv)
         graph = read_json(self.run_dir / "claim_evidence_graph.json")
         narrative_gaps = [g for g in graph["gaps"] if g.get("source") == "narrative_advice"]
-        self.assertEqual(len(narrative_gaps), 1)
-        self.assertEqual(narrative_gaps[0]["severity"], "P1")
+        self.assertEqual(narrative_gaps, [])
 
     def test_apply_section_filter(self) -> None:
         adv = _valid_advice()

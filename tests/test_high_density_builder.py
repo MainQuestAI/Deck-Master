@@ -129,9 +129,9 @@ def test_production_waiting_state_is_resumable(tmp_path: Path) -> None:
     build_manifest = read_json(run / "build/build_manifest.json")
 
     assert waiting["status"] == "awaiting_agent_build"
-    assert waiting["current_stage"] == "content_lock"
+    assert waiting["current_stage"] == "blueprint"
     assert status["status"] == "awaiting_agent_build"
-    assert status["next_action"]["kind"] == "agent_mbb_candidates"
+    assert status["next_action"]["kind"] == "agent_imagegen"
     assert build_manifest["status"] == "building"
     assert next_step["status"] == "awaiting_agent_build"
     assert next_step["recommended_skill"] == "deck-builder-high-density"
@@ -234,7 +234,7 @@ def test_registered_asset_is_native_and_whole_page_asset_is_blocked(tmp_path: Pa
     prepare_high_density(run)
     assert run_high_density(run)["status"] == "completed"
 
-    scene = read_json(run / "high_density_build/page_scenes/P001.json")
+    scene = read_json(run / "high_density_build/scenes/P001.page_scene.json")
     scene["elements"].append(
         {
             "element_id": "asset.proof",
@@ -274,7 +274,7 @@ def test_basic_path_compiles_to_editable_freeform(tmp_path: Path) -> None:
     prepare_high_density(run)
     assert run_high_density(run)["status"] == "completed"
 
-    scene = read_json(run / "high_density_build/page_scenes/P001.json")
+    scene = read_json(run / "high_density_build/scenes/P001.page_scene.json")
     scene["elements"].append(
         {
             "element_id": "connector.path",
@@ -315,7 +315,7 @@ def test_failed_build_persists_blocked_status(tmp_path: Path) -> None:
     run, _ = _make_run(tmp_path, mode="fixture", page_count=1)
     _blueprint(run, "P001")
     prepare_high_density(run)
-    scene = read_json(run / "high_density_build/page_scenes/P001.json") if (run / "high_density_build/page_scenes/P001.json").exists() else None
+    scene = read_json(run / "high_density_build/scenes/P001.page_scene.json") if (run / "high_density_build/scenes/P001.page_scene.json").exists() else None
     assert scene is None
     (run / "high_density_build/blueprints/P001.svg").write_text("broken", encoding="utf-8")
 
@@ -333,7 +333,7 @@ def test_blueprint_ratio_drift_blocks_the_page(tmp_path: Path) -> None:
     _blueprint(run, "P001")
     prepare_high_density(run)
     assert run_high_density(run)["status"] == "completed"
-    manifest_path = run / "high_density_build/blueprints/P001.manifest.json"
+    manifest_path = run / "high_density_build/blueprints/P001.blueprint_manifest.json"
     manifest = read_json(manifest_path)
     manifest["slide_frame"] = {"x": 0, "y": 0, "w": 100, "h": 100}
     manifest_path.write_text(json.dumps(manifest) + "\n", encoding="utf-8")
@@ -351,7 +351,7 @@ def test_overflow_blocks_with_svg_stage_error(tmp_path: Path) -> None:
     _blueprint(run, "P001")
     prepare_high_density(run)
     assert run_high_density(run)["status"] == "completed"
-    scene = read_json(run / "high_density_build/page_scenes/P001.json")
+    scene = read_json(run / "high_density_build/scenes/P001.page_scene.json")
     title = next(element for element in scene["elements"] if element["element_id"] == "title.main")
     title["bbox"]["h"] = 8
     from high_density.scene import write_scene
@@ -390,7 +390,7 @@ def test_supported_curved_path_compiles_as_native_freeform(tmp_path: Path) -> No
     _blueprint(run, "P001")
     prepare_high_density(run)
     assert run_high_density(run)["status"] == "completed"
-    scene = read_json(run / "high_density_build/page_scenes/P001.json")
+    scene = read_json(run / "high_density_build/scenes/P001.page_scene.json")
     scene["elements"].append(
         {
             "element_id": "curve.path",

@@ -90,7 +90,7 @@ def test_partial_run_blocks_downstream(tmp_path):
     assert state["current_skill_stage"] == "deck-brief"
 
 
-def test_brief_outputs_present_marks_awaiting_approval(tmp_path):
+def test_brief_outputs_present_continues_to_planner(tmp_path):
     # init complete
     for f in ("deck_project.json", "material_inventory.json", "workspace_policy.json"):
         _touch(tmp_path / f)
@@ -99,11 +99,9 @@ def test_brief_outputs_present_marks_awaiting_approval(tmp_path):
     _touch(tmp_path / "claim_map.json", {"claims": []})
     state = resolve_workflow_state(tmp_path, registry=REGISTRY)
     stages = _stages_by_id(state)
-    # brief is approval-required → awaiting_approval (not auto completed)
-    assert stages["deck-brief"]["status"] == "awaiting_approval"
-    assert state["approval_required"] is True
-    # planner entry still blocked because brief not COMPLETED
-    assert stages["deck-planner"]["status"] == "entry_blocked"
+    assert stages["deck-brief"]["status"] == "completed"
+    assert state["approval_required"] is False
+    assert stages["deck-planner"]["status"] == "ready"
 
 
 # --- completed run ---
@@ -127,7 +125,7 @@ def test_automatic_stage_completes(tmp_path):
 # --- stale propagation ---
 
 
-def test_upstream_change_marks_downstream_stale(tmp_path):
+def test_upstream_mtime_does_not_invalidate_downstream_content(tmp_path):
     # complete init + brief outputs (brief awaiting_approval)
     for f in ("deck_project.json", "material_inventory.json", "workspace_policy.json"):
         _touch(tmp_path / f)
@@ -147,11 +145,8 @@ def test_upstream_change_marks_downstream_stale(tmp_path):
 
     state1 = resolve_workflow_state(tmp_path, registry=REGISTRY)
     s1 = _stages_by_id(state1)
-    assert s1["deck-planner"]["stale"] is True
-    assert s1["deck-planner"]["status"] == "stale"
-    assert "deck-planner" in state1["stale_skills"]
-    # and the stale artifact surfaces
-    assert "deck_brief.json" in state1["stale_artifacts"]
+    assert s1["deck-planner"]["stale"] is False
+    assert "deck-planner" not in state1["stale_skills"]
 
 
 # --- determinism / rebuild ---
@@ -220,6 +215,5 @@ def test_allowed_and_blocked_actions(tmp_path):
     _touch(tmp_path / "deck_brief.json", {"v": 1})
     _touch(tmp_path / "claim_map.json", {})
     state = resolve_workflow_state(tmp_path, registry=REGISTRY)
-    # brief awaiting approval → approve/reject allowed, advance blocked
-    assert "approve" in state["allowed_actions"]
-    assert any(ba["action"] == "advance:deck-brief" for ba in state["blocked_actions"])
+    assert "run:deck-planner" in state["allowed_actions"]
+    assert not any(ba["action"] == "advance:deck-brief" for ba in state["blocked_actions"])
