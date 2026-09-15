@@ -377,9 +377,14 @@ def load_registry(
 
     # locate schema (docs/contracts/stage-contract.v1.schema.json relative to repo root)
     schema_path: Path | None = None
-    search_roots = [skills_dir.parent, skills_dir.parent / "docs" / "contracts"]
+    search_roots = [
+        skills_dir.parent,
+        skills_dir.parent / "docs" / "contracts",
+        skills_dir.parent / "contracts",
+    ]
     if root is not None:
         search_roots.insert(0, Path(root) / "docs" / "contracts")
+        search_roots.insert(1, Path(root) / "contracts")
     for candidate_root in search_roots:
         cand = candidate_root / SCHEMA_NAME if candidate_root.name == "contracts" else candidate_root / "docs" / "contracts" / SCHEMA_NAME
         if cand.exists():

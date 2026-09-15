@@ -1429,6 +1429,8 @@ def verify_release_tree(
         "contracts/workflow-state.v1.schema.json",
         "contracts/final-readiness.v1.schema.json",
         "contracts/rc-gate-report.v1.schema.json",
+        "contracts/page-package.v1.schema.json",
+        "contracts/high-density-status.v2.schema.json",
         "skills/manifest.json",
         "skills/stage-contracts.json",
     ]
@@ -1573,11 +1575,51 @@ def verify_release_tree(
                     ) + "\n",
                     encoding="utf-8",
                 )
+                smoke_plan = smoke_root / "full-draft.json"
+                smoke_plan.write_text(
+                    json.dumps(
+                        {
+                            "narrative_plan": {
+                                "title": "release contract smoke",
+                                "density": "high",
+                                "beats": [
+                                    {
+                                        "beat_id": "page_001",
+                                        "page_title": "Contract smoke",
+                                        "role": "solution",
+                                        "content_goal": "validate packaged contracts",
+                                        "generation_brief": "render one complete page",
+                                    }
+                                ],
+                            },
+                            "page_packages": [
+                                {
+                                    "beat_id": "page_001",
+                                    "customer_visible": {
+                                        "title": "Contract smoke",
+                                        "body_blocks": [{"type": "text", "text": "Packaged contracts are readable."}],
+                                    },
+                                }
+                            ],
+                        }
+                    ) + "\n",
+                    encoding="utf-8",
+                )
                 commands = [
                     [str(bin_path), "--help"],
                     [str(bin_path), "suite-status", "--output", "json"],
                     [str(bin_path), "workflow", "status", "--run-dir", str(run_dir)],
                     [str(bin_path), "next-step", "--run-dir", str(run_dir)],
+                    [
+                        str(bin_path),
+                        "import-plan",
+                        "--run-dir",
+                        str(run_dir),
+                        "--input",
+                        str(smoke_plan),
+                        "--source",
+                        "agent",
+                    ],
                 ]
                 if include_rc_gate and os.environ.get("DECK_MASTER_RELEASE_SMOKE_ACTIVE") != "1":
                     commands.append(

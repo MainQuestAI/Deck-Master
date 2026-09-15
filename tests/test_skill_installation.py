@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import shlex
 import shutil
 import subprocess
 import tempfile
@@ -89,7 +90,11 @@ class SkillInstallationTest(unittest.TestCase):
     def _install_fake_release_runtime(self, release_root: Path) -> dict[str, str]:
         runtime_python = release_root / installer_module.RELEASE_PYTHON_RELATIVE
         runtime_python.parent.mkdir(parents=True, exist_ok=True)
-        runtime_python.symlink_to(sys.executable)
+        runtime_python.write_text(
+            f"#!/bin/sh\nexec {shlex.quote(sys.executable)} \"$@\"\n",
+            encoding="utf-8",
+        )
+        runtime_python.chmod(0o755)
         installer_module._record_release_runtime(release_root, "3.12.8")
         return {
             "python_requirement": installer_module.RUNTIME_PYTHON_REQUIREMENT,
@@ -1242,6 +1247,8 @@ class SkillInstallationTest(unittest.TestCase):
         self.assertTrue((release_root / "bin" / "deck-master").exists())
         self.assertTrue(result["self_contained"])
         self.assertTrue((release_root / "scripts" / "deck_master.py").exists())
+        self.assertTrue((release_root / "contracts" / "page-package.v1.schema.json").exists())
+        self.assertTrue((release_root / "contracts" / "high-density-status.v2.schema.json").exists())
         self.assertTrue((release_root / "release-manifest.json").exists())
         self.assertTrue((release_root / "deck_capability_lock.json").exists())
         self.assertTrue((release_root / "SHA256SUMS").exists())

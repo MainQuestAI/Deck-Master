@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import shutil
+import subprocess
 import sys
 import tempfile
 import tomllib
@@ -77,6 +78,23 @@ class ReleaseRuntimeTests(unittest.TestCase):
         self.assertIsNone(manifest["runtime"]["python_version"])
         self.assertEqual(".venv/bin/python", manifest["runtime"]["interpreter"])
         self.assertNotIn(str(ROOT), json.dumps(manifest))
+
+        probe = subprocess.run(
+            [
+                sys.executable,
+                "-c",
+                "from high_density.contracts import SCHEMA_DIR; "
+                "from skills.manifest import load_registry; "
+                "assert (SCHEMA_DIR / 'page-package.v1.schema.json').is_file(); "
+                "load_registry(repo_root='.')",
+            ],
+            cwd=release_root,
+            env={**os.environ, "PYTHONPATH": str(release_root / "scripts")},
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertEqual(0, probe.returncode, probe.stderr)
 
     def test_release_sha_enumeration_excludes_runtime_venv(self) -> None:
         release_root = self.temp_dir / "release"

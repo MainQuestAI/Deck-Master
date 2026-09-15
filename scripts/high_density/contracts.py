@@ -6,7 +6,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-SCHEMA_DIR = Path(__file__).resolve().parents[2] / "docs" / "contracts"
+_RUNTIME_ROOT = Path(__file__).resolve().parents[2]
+SCHEMA_DIR = _RUNTIME_ROOT / "docs" / "contracts"
+if not SCHEMA_DIR.is_dir():
+    # Self-contained releases keep public runtime contracts at /contracts.
+    # Source checkouts keep the same files under /docs/contracts.
+    SCHEMA_DIR = _RUNTIME_ROOT / "contracts"
 SCHEMA_FILES = {
     "page_package": "page-package.v1.schema.json",
     "content_lock": "content-lock.v2.schema.json",
