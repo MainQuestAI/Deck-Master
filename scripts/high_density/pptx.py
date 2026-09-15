@@ -285,8 +285,11 @@ def _add_text(slide: Any, element: dict[str, Any], trace: list[dict[str, Any]]) 
 def _add_rect(slide: Any, element: dict[str, Any], trace: list[dict[str, Any]]) -> None:
     bbox = element["bbox"]
     style = element.get("style") or {}
-    shape_type = MSO_SHAPE.ROUNDED_RECTANGLE if float(style.get("radius") or 0) > 0 else MSO_SHAPE.RECTANGLE
+    radius = float(style.get("radius") or 0)
+    shape_type = MSO_SHAPE.ROUNDED_RECTANGLE if radius > 0 else MSO_SHAPE.RECTANGLE
     shape = slide.shapes.add_shape(shape_type, Inches(_inches(float(bbox["x"]), CANVAS_WIDTH)), Inches(_inches(float(bbox["y"]), CANVAS_HEIGHT)), Inches(_inches(float(bbox["w"]), CANVAS_WIDTH)), Inches(_inches(float(bbox["h"]), CANVAS_HEIGHT)))
+    if radius > 0:
+        shape.adjustments[0] = min(0.5, radius / max(0.01, min(float(bbox["w"]), float(bbox["h"]))))
     shape.name = str(element["element_id"])
     _remove_theme_effects(shape)
     trace_entry = {"element_id": element["element_id"], "object_type": "shape", "shape_name": shape.name, "bbox": bbox, "priority": element.get("priority", ""), "component_id": element.get("component_id", ""), "z_order": element.get("z_index", 0)}
@@ -796,6 +799,8 @@ def _svg_elements(root: Path, scene: dict[str, Any], asset_paths: dict[str, Path
             "group_id": group_id,
             "visual_id": str(native.get("visual_id") or ""),
         }
+        if tag == "rect" and native.get("node") is not None:
+            element["style"]["radius"] = float(native["node"].get("rx") or native["node"].get("ry") or 0)
         if kind == "text":
             svg_text = str(native.get("text") or "")
             expected_text = str(source.get("text") or "")

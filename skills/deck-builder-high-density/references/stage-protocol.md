@@ -34,6 +34,11 @@ can verify its imported image from run-local hashes without the original host
 cache. A failed content review returns a page-scoped repair action; retry until
 the defect is fixed or the user-supplied budget or stop instruction is reached.
 
+Before reconstruction, inventory the blueprint's visible regions, nested cards,
+status badges, directed connections, icons, labels, and footer. Compare that
+inventory with the Scene and SVG preview. A sparse Scene cannot count as a
+faithful redraw merely because it contains every locked text field.
+
 ### C. Blueprint to editable Scene, SVG, and PPTX
 
 The Agent reads the blueprint and Content Lock and writes canonical
@@ -42,6 +47,9 @@ business text, ownership, connections, direction, values, units, labels, and
 footnotes. Structural and layout metadata stays internal. Native SVG and the
 DrawingML compiler preserve editable text and shapes; a single background image
 cannot stand in for editable delivery.
+Blueprint copy that is useful but absent from the Content Lock must first be
+edited into customer-visible PagePackage content; the image alone is not a
+source of business facts.
 
 The runtime checks actual overflow, clipping, illegal overlap, unsupported SVG,
 unregistered assets, content coverage, and readback. It does not impose a
@@ -54,6 +62,10 @@ about geometry and rendering, not a substitute for semantic review. Producer
 self-review and optional independent review record concrete observations,
 issues found, and an explicit revision decision bound to current hashes. A
 reviewer ID alone cannot create a passing review.
+Review the blueprint and actual SVG side by side, including icon and dense-card
+crops. Record missing regions or details as revision work. Do not explain away
+a failed full-page comparison as an editable-style difference when structure,
+icons, or information density have visibly changed.
 
 ```bash
 PYTHONPATH=scripts python3 -m high_density.self_review --run-dir <run_dir> --page-id P001 --reviewer-id <id> --observation "<what was checked>" --no-revision-required

@@ -105,6 +105,37 @@ def _high_density_page_count(root: Path) -> int:
     return len(pages) if isinstance(pages, list) else 0
 
 
+def _high_density_visual_failures(root: Path) -> list[str]:
+    from high_density.contracts import ContractError
+    from high_density.review_policy import load_review_policy
+    from high_density.svg import SvgVisualError, load_visual_review
+
+    manifest = _safe_read_json(root / "high_density_build" / "high_density_manifest.json")
+    pages = manifest.get("pages")
+    if not isinstance(pages, list) or not pages:
+        return ["当前高密度成片缺少页面清单，无法核对图→SVG→PPT 结果。"]
+    try:
+        policy = load_review_policy(root)
+    except (ContractError, OSError, ValueError) as exc:
+        return [f"高密度审阅策略无法读取：{exc}"]
+    failures: list[str] = []
+    for page in pages:
+        page_id = str(page.get("page_id") or "") if isinstance(page, dict) else ""
+        if not page_id:
+            failures.append("页面清单含无效 page_id。")
+            continue
+        try:
+            load_visual_review(
+                root,
+                page_id,
+                review_depth=policy["review_depth"],
+                receipt_policy=policy["receipt_policy"],
+            )
+        except (ContractError, SvgVisualError, OSError, ValueError) as exc:
+            failures.append(f"{page_id}: {exc}")
+    return failures
+
+
 def _add_blocker(blockers: list[dict[str, str]], code: str, message: str, *, severity: str = "P0") -> None:
     if any(item.get("code") == code for item in blockers):
         return
@@ -270,6 +301,15 @@ def compute_final_readiness(
             _add_blocker(blockers, "final_delivery_validation_blocked", "Delivery validation blocks final readiness.")
     else:
         _add_blocker(blockers, "final_artifact_missing", "Final artifact is missing.")
+
+    if high_density_completed:
+        visual_failures = _high_density_visual_failures(root)
+        if visual_failures:
+            _add_blocker(
+                blockers,
+                "final_high_density_visual_invalid",
+                "当前高密度成片的蓝图／SVG 审阅未通过：" + "；".join(visual_failures),
+            )
 
     lineage = _safe_read_json(root / "delivery" / "final_version_lineage.json")
     if not lineage:

@@ -413,6 +413,7 @@ class FinalReadinessTests(unittest.TestCase):
         self.assertEqual("high_density_build/pptx/deck_high_density.pptx", readiness["final_artifact"]["path"])
         self.assertNotIn("final_run_state_not_ready", {item["code"] for item in readiness["blockers"]})
         self.assertIn("final_current_artifact_gate_missing", {item["code"] for item in readiness["blockers"]})
+        self.assertIn("final_high_density_visual_invalid", {item["code"] for item in readiness["blockers"]})
 
     def test_high_density_completed_profile_keeps_workspace_blocker(self) -> None:
         missing_workspace = self.temp_dir / "missing-workspace"

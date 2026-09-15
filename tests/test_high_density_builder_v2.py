@@ -1925,7 +1925,7 @@ def test_visual_bbox_metrics_read_actual_svg_geometry(tmp_path: Path) -> None:
     assert any(item["code"] == "p0_p1_bbox_drift" for item in metrics["findings"])
 
 
-def test_current_human_review_can_accept_semantic_redraw_with_failed_pixel_similarity(
+def test_current_review_cannot_accept_failed_blueprint_region(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -1938,18 +1938,14 @@ def test_current_human_review_can_accept_semantic_redraw_with_failed_pixel_simil
     assert metrics["status"] == "failed"
     monkeypatch.setattr("high_density.svg._run_mode", lambda _root: "production")
 
-    record_visual_self_review(
-        run,
-        "P001",
-        reviewer_id="producer",
-        observations=["Business content and editable geometry were inspected in the current render."],
-        revision_required=False,
-    )
-
-    review = load_visual_review(run, "P001", review_depth="producer_only", receipt_policy="local_traceable")
-    assert review["visual_status"] == "pass"
-    assert review["unresolved_issues"] == []
-    assert review["full_page_checks"]["layout"] == "failed"
+    with pytest.raises(SvgVisualError, match="cannot pass failed blueprint regions"):
+        record_visual_self_review(
+            run,
+            "P001",
+            reviewer_id="producer",
+            observations=["Business content and editable geometry were inspected in the current render."],
+            revision_required=False,
+        )
 
 
 def test_visual_review_rejects_handwritten_metrics(tmp_path: Path) -> None:
@@ -2235,6 +2231,22 @@ def test_svg_mutation_changes_pptx_trace_and_render(tmp_path: Path) -> None:
     assert sha256_file(pptx_path(run)) != original_pptx_hash
     assert new_trace["pages"][0]["svg_sha256"] != original_trace["pages"][0]["svg_sha256"]
     assert sha256_file(new_preview) != original_preview
+
+
+def test_svg_rounded_rect_remains_rounded_in_editable_pptx(tmp_path: Path) -> None:
+    run, lock, scene = _prepared_fixture(tmp_path)
+    svg = svg_path(run, "P001")
+    original = svg.read_text(encoding="utf-8")
+    svg.write_text(original.replace('id="block.03" x="80.00" y="511.00" width="744.00" height="289.00" rx="0.00"', 'id="block.03" x="80.00" y="511.00" width="744.00" height="289.00" rx="24.00"', 1), encoding="utf-8")
+    compile_pptx(run, [scene], {"P001": lock})
+
+    from pptx import Presentation
+    from pptx.enum.shapes import MSO_SHAPE
+
+    slide = Presentation(pptx_path(run)).slides[0]
+    shape = next(item for item in slide.shapes if item.name == "block.03")
+    assert shape.auto_shape_type == MSO_SHAPE.ROUNDED_RECTANGLE
+    assert shape.adjustments[0] > 0
 
 
 def test_svg_gradient_shadow_compile_to_drawingml_and_readback(tmp_path: Path) -> None:

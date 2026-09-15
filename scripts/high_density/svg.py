@@ -994,6 +994,31 @@ def _review_pass_evidence(
     if sha256_file(metrics_file) != str(review.get("metrics_sha256") or ""):
         raise SvgVisualError(f"visual {source} requires current metrics on page {page_id}", page_id=page_id)
     expected_regions = _build_region_checks(scene, metrics)
+    if not revision_required:
+        severe_mismatch = sum(
+            item.get("code") in {
+                "visual_ssim_below_threshold",
+                "p0_region_ssim_below_threshold",
+                "edge_similarity_below_threshold",
+            }
+            for item in metrics.get("findings") or []
+        ) >= 2
+        failed_regions = [
+            str(item["region_id"])
+            for item in expected_regions
+            if item.get("status") == "failed"
+        ]
+        failed_objects = [
+            str(item.get("visual_id") or item.get("object_id") or "visual_object")
+            for item in metrics.get("object_checks") or []
+            if item.get("status") == "failed"
+        ]
+        if failed_regions or failed_objects or severe_mismatch:
+            raise SvgVisualError(
+                f"visual {source} cannot pass failed blueprint regions on page {page_id}: "
+                + ", ".join(failed_regions or failed_objects or ["severe_full_page_mismatch"]),
+                page_id=page_id,
+            )
     svg_sha = sha256_file(svg_path(root, page_id))
     if svg_sha != str(review.get("svg_sha256") or ""):
         raise SvgVisualError(f"visual {source} SVG hash is stale on page {page_id}", page_id=page_id)
@@ -1335,6 +1360,20 @@ def load_visual_review(
         if str((review.get(name) or {}).get("evidence_sha256") or "") != expected_evidence_sha:
             raise SvgVisualError(f"visual {name} evidence is stale on page {page_id}", page_id=page_id)
     expected_status = "pass" if computed.get("status") == "pass" and all(item.get("status") == "pass" for item in expected_regions) and all(item.get("status") == "pass" for item in computed.get("object_checks") or []) else "failed"
+    severe_mismatch = sum(
+        item.get("code") in {
+            "visual_ssim_below_threshold",
+            "p0_region_ssim_below_threshold",
+            "edge_similarity_below_threshold",
+        }
+        for item in computed.get("findings") or []
+    ) >= 2
+    failed_objects = any(item.get("status") == "failed" for item in computed.get("object_checks") or [])
+    if (severe_mismatch or failed_objects) and review.get("visual_status") == "pass":
+        raise SvgVisualError(
+            f"visual review accepted failed blueprint comparison on page {page_id}",
+            page_id=page_id,
+        )
     if expected_status == "pass" and (review.get("full_page_checks") or {}).get("layout") != "pass":
         raise SvgVisualError(f"visual review full-page layout evidence failed on page {page_id}", page_id=page_id)
     if _run_mode(root) in {"production", "benchmark"} and require_main_review:
