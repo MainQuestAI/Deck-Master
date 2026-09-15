@@ -168,9 +168,9 @@ class QuestionResolver:
             if not text:
                 return True
             vague_tokens = {
-                "tbd", "n/a", "na", "none", "unknown", "ok", "yes", "no",
+                "tbd", "unknown", "ok", "yes",
                 "不知道", "不清楚", "待定", "暂定", "都可以", "看情况", "后面再说",
-                "再看看", "先这样", "有", "没有", "是", "否", "好的",
+                "再看看", "先这样", "有", "是", "好的",
             }
             return text in vague_tokens
         if isinstance(answer, (list, tuple, set)):

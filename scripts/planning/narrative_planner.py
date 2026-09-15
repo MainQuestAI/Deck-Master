@@ -33,111 +33,12 @@ _ROLE_EVIDENCE_TYPES: dict[str, list[str]] = {
     "appendix": ["data_point", "product_screenshot", "customer_material"],
 }
 
-REQUIRED_SOLUTION_MODULES: list[dict[str, str]] = [
-    {"module_id": "company_credentials", "label": "公司介绍/资质"},
-    {"module_id": "demand_understanding", "label": "需求理解"},
-    {"module_id": "problem_diagnosis", "label": "现状与问题诊断"},
-    {"module_id": "target_vision", "label": "目标愿景"},
-    {"module_id": "business_solution", "label": "业务方案"},
-    {"module_id": "platform_architecture", "label": "平台规划/架构"},
-    {"module_id": "implementation_path", "label": "实施路径"},
-    {"module_id": "service_assurance", "label": "服务与保障"},
-    {"module_id": "case_evidence", "label": "案例/证据"},
-    {"module_id": "next_step", "label": "收尾与推进动作"},
-]
-
-_ROLE_MODULE_COVERAGE: dict[str, set[str]] = {
-    "opener": {"company_credentials", "target_vision"},
-    "problem": {"demand_understanding", "problem_diagnosis"},
-    "solution": {"business_solution"},
-    "architecture": {"platform_architecture"},
-    "case": {"case_evidence"},
-    "roi": {"case_evidence"},
-    "cta": {"next_step"},
-}
-
-_TITLE_MODULE_HINTS: tuple[tuple[str, set[str]], ...] = (
-    ("资质", {"company_credentials"}),
-    ("公司", {"company_credentials"}),
-    ("需求", {"demand_understanding"}),
-    ("痛点", {"problem_diagnosis"}),
-    ("挑战", {"problem_diagnosis"}),
-    ("现状", {"problem_diagnosis"}),
-    ("愿景", {"target_vision"}),
-    ("方案", {"business_solution"}),
-    ("能力", {"business_solution"}),
-    ("架构", {"platform_architecture"}),
-    ("平台", {"platform_architecture"}),
-    ("实施", {"implementation_path"}),
-    ("路径", {"implementation_path"}),
-    ("服务", {"service_assurance"}),
-    ("保障", {"service_assurance"}),
-    ("案例", {"case_evidence"}),
-    ("证据", {"case_evidence"}),
-    ("推进", {"next_step"}),
-    ("下一步", {"next_step"}),
-)
-
-
-def _modules_for_beat(beat: dict[str, Any]) -> set[str]:
-    role = str(beat.get("role") or "")
-    title = str(beat.get("page_title") or beat.get("title") or "")
-    modules = set(_ROLE_MODULE_COVERAGE.get(role, set()))
-    for token, implied in _TITLE_MODULE_HINTS:
-        if token in title:
-            modules.update(implied)
-    return modules
-
-
-def build_required_modules_status(beats: list[dict[str, Any]]) -> dict[str, Any]:
-    coverage = {
-        item["module_id"]: {
-            "module_id": item["module_id"],
-            "label": item["label"],
-            "status": "missing",
-            "beat_ids": [],
-            "page_titles": [],
-        }
-        for item in REQUIRED_SOLUTION_MODULES
-    }
-
-    for beat in beats:
-        if not isinstance(beat, dict):
-            continue
-        beat_id = str(beat.get("beat_id") or "")
-        page_title = str(beat.get("page_title") or beat.get("title") or "")
-        for module_id in _modules_for_beat(beat):
-            item = coverage.get(module_id)
-            if item is None:
-                continue
-            item["status"] = "covered"
-            if beat_id and beat_id not in item["beat_ids"]:
-                item["beat_ids"].append(beat_id)
-            if page_title and page_title not in item["page_titles"]:
-                item["page_titles"].append(page_title)
-
-    required_modules_status = [coverage[item["module_id"]] for item in REQUIRED_SOLUTION_MODULES]
-    missing_modules = [item["label"] for item in required_modules_status if item["status"] != "covered"]
-    return {
-        "required_modules_status": required_modules_status,
-        "missing_modules": missing_modules,
-        "coverage_matrix": {
-            "required_modules": required_modules_status,
-            "covered_count": len(required_modules_status) - len(missing_modules),
-            "missing_count": len(missing_modules),
-            "complete": not missing_modules,
-        },
-    }
-
-
 def identify_gaps(request: dict[str, Any]) -> list[dict[str, str]]:
     gaps: list[dict[str, str]] = []
     if not request.get("industry"):
         gaps.append({"field": "industry", "message": "缺少明确行业，检索会按跨行业方案处理。"})
     if not request.get("must_cover_topics"):
         gaps.append({"field": "must_cover_topics", "message": "缺少必须覆盖主题，页面规划会采用通用方案结构。"})
-    if "案例" not in str(request.get("brief", "")) and "case" not in str(request.get("brief", "")).lower():
-        gaps.append({"field": "case_evidence", "message": "缺少可引用案例，案例页需要人工确认或生成占位。"})
     return gaps
 
 
@@ -340,11 +241,41 @@ def plan_narrative(
 ) -> dict[str, Any]:
     page_count = resolve_page_count(str(request.get("target_pages") or "auto"), str(request.get("audience") or "client"))
     gaps = identify_gaps(request)
-    templates = _template_filter(
-        planner_mode,
-        request,
-        beat_templates(page_count, template_profile=_template_profile(planner_mode, request, judgments, claim_graph)),
-    )
+    if planner_mode == "fixture_template":
+        templates = _template_filter(
+            planner_mode,
+            request,
+            beat_templates(page_count or 12, template_profile=_template_profile(planner_mode, request, judgments, claim_graph)),
+        )
+    else:
+        topics = request.get("must_cover_topics") or []
+        if isinstance(topics, str):
+            topics = [item.strip() for item in re.split(r"[、,，;；\n]", topics) if item.strip()]
+        templates = []
+        for item in topics if isinstance(topics, list) else []:
+            title = str(item.get("title") if isinstance(item, dict) else item).strip()
+            if not title:
+                continue
+            role = "architecture" if any(token in title for token in ("架构", "流程", "机制")) else "case" if "案例" in title else "solution"
+            templates.append((role, title, f"完成本次交流要求的内容：{title}"))
+        if templates and page_count > len(templates):
+            scaffold = beat_templates(page_count, template_profile=_template_profile(planner_mode, request, judgments, claim_graph))
+            templates.extend(scaffold[len(templates):page_count])
+        if not templates and page_count:
+            # An explicit user page count is a real constraint. The generic
+            # sequence is only a starting scaffold in that case; auto mode is
+            # never expanded to a fixed directory.
+            templates = beat_templates(page_count, template_profile=_template_profile(planner_mode, request, judgments, claim_graph))
+        if not templates:
+            problem = _extract_judgment_statement(judgments, "business_problem") if judgments else ""
+            solution = _extract_judgment_statement(judgments, "solution_approach") if judgments else ""
+            if problem:
+                templates.append(("problem", "当前任务与关键问题", problem))
+            if solution:
+                templates.append(("solution", "建议方案与选择理由", solution))
+        if not templates:
+            goal = str(request.get("business_goal") or request.get("brief") or "本次交流任务")
+            templates = [("solution", "本次交流任务", goal)]
     adjusted_page_count = len(templates)
     density = density_for(adjusted_page_count)
     beats: list[dict[str, Any]] = []
@@ -382,7 +313,7 @@ def plan_narrative(
             "density": density,
             "reuse_query": build_reuse_query(request, role, title),
             "generation_brief": f"生成一页{title}，用于{request.get('project_name', 'Deck')}。{goal}",
-            "approval_required": role in {"case", "roi", "architecture"},
+            "approval_required": False,
         }
 
         # Enhanced fields — only populated when optional inputs are provided.
@@ -429,8 +360,6 @@ def plan_narrative(
 
         beats.append(beat)
 
-    module_coverage = build_required_modules_status(beats)
-
     return {
         "run_id": request.get("run_id", ""),
         "title": request.get("project_name", "Deck Master Run"),
@@ -444,7 +373,4 @@ def plan_narrative(
         "roles": [beat["role"] for beat in beats],
         "gaps": gaps,
         "beats": beats,
-        "coverage_matrix": module_coverage["coverage_matrix"],
-        "required_modules_status": module_coverage["required_modules_status"],
-        "missing_modules": module_coverage["missing_modules"],
     }

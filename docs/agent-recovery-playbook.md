@@ -52,7 +52,9 @@ python3 scripts/deck_master.py generation-session status --run-dir <run_dir>
 python3 scripts/deck_master.py generation-session dispatch --run-dir <run_dir>
 ```
 
-- Stop when: external Agent execution is required.
+- Continue when the current Agent can create the declared output with its
+  available tools. Stop only when the required backend or capability is
+  unavailable.
 
 ## P0 Quality Finding
 
@@ -113,8 +115,10 @@ python3 scripts/deck_master.py next-step --run-dir <run_dir>
 - Visual review waiting: the Agent must write a passing visual review tied to
   the current SVG and blueprint hashes, then resume the run.
 - Stop when: the error is `HIGH_DENSITY_CAPABILITY_MISSING`, a production run
-  lacks the required Agent/ImageGen capability, or the error remains after one
-  targeted retry. Do not mark the canonical build manifest completed while
+  lacks the required Agent/ImageGen capability, or the failure identifies
+  missing source material or a required user decision. A repeated failure must
+  be diagnosed from its persisted evidence; it is not stopped merely because a
+  retry count was reached. Do not mark the canonical build manifest completed while
   high-density status is blocked or awaiting Agent work.
 - Verify after repair:
 

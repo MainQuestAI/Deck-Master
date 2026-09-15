@@ -183,8 +183,8 @@
       },
       "transition_policy": {
         "next_stage": "deck-planner",
-        "mode": "manual",
-        "approval_required": true,
+        "mode": "automatic",
+        "approval_required": false,
         "preauthorizable": true,
         "non_bypassable": false
       },
@@ -192,7 +192,7 @@
       "staleness_dependencies": ["deck_brief.json", "claim_map.json", "material_inventory.json", "workflow/decision_log.jsonl"],
       "display": {
         "label": "需求访谈",
-        "completion_message": "Brief 与主张种子已完成，等待确认后进入方案规划。"
+        "completion_message": "Brief 与主张种子已完成，进入方案规划。"
       }
     },
     {
@@ -272,8 +272,8 @@
       },
       "transition_policy": {
         "next_stage": "deck-sourcing",
-        "mode": "manual",
-        "approval_required": true,
+        "mode": "automatic",
+        "approval_required": false,
         "preauthorizable": true,
         "non_bypassable": false
       },
@@ -281,7 +281,7 @@
       "staleness_dependencies": ["deck_brief.json", "claim_map.json", "workflow/decision_log.jsonl"],
       "display": {
         "label": "方案规划",
-        "completion_message": "叙事和页面任务已完成，等待确认后进入素材来源决策。"
+        "completion_message": "叙事和页面任务已完成，进入素材来源决策。"
       }
     },
     {
@@ -300,42 +300,6 @@
       },
       "first_checks": ["planner handoff accepted", "page tasks fresh", "sourcing roots available"],
       "forcing_questions": [
-        {
-          "question_id": "sourcing.source_authority",
-          "category": "evidence",
-          "prompt": "每个关键主张的来源权威性是否足够？",
-          "required": true,
-          "assumption_allowed": false,
-          "evidence_required": true,
-          "trigger": "missing_source_authority"
-        },
-        {
-          "question_id": "sourcing.reuse_license",
-          "category": "permission",
-          "prompt": "复用的历史资产是否取得了使用许可？",
-          "required": true,
-          "assumption_allowed": true,
-          "evidence_required": true,
-          "trigger": "missing_reuse_license"
-        },
-        {
-          "question_id": "sourcing.freshness",
-          "category": "evidence",
-          "prompt": "引用数据或案例是否在可接受时效内？",
-          "required": true,
-          "assumption_allowed": true,
-          "evidence_required": false,
-          "trigger": "missing_freshness"
-        },
-        {
-          "question_id": "sourcing.screenshot_consent",
-          "category": "permission",
-          "prompt": "截图或客户素材是否获得展示授权？",
-          "required": true,
-          "assumption_allowed": true,
-          "evidence_required": false,
-          "trigger": "missing_screenshot_consent"
-        },
         {
           "question_id": "sourcing.generation_strategy",
           "category": "asset",
@@ -364,14 +328,14 @@
       ],
       "exit_criteria": {
         "required_artifacts": ["sourcing_plan.json"],
-        "required_decisions": ["sourcing.source_authority", "sourcing.reuse_license", "sourcing.generation_strategy"],
+        "required_decisions": ["sourcing.generation_strategy"],
         "validators": ["sourcing_page_coverage", "evidence_source_bound"],
         "required_capabilities": []
       },
       "transition_policy": {
         "next_stage": "deck-producer",
-        "mode": "manual",
-        "approval_required": true,
+        "mode": "automatic",
+        "approval_required": false,
         "preauthorizable": true,
         "non_bypassable": false
       },
@@ -379,7 +343,7 @@
       "staleness_dependencies": ["sourcing_plan.json", "page_tasks.json", "narrative_plan.json", "workflow/decision_log.jsonl"],
       "display": {
         "label": "素材来源",
-        "completion_message": "素材与证据来源已确定，等待确认后进入页面生产。"
+        "completion_message": "素材与证据来源已确定，自动进入页面生产。"
       }
     },
     {

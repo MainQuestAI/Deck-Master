@@ -294,25 +294,6 @@ def _build_diff(
         if change["new"]:
             diff["page_task_changes"].append(change)
 
-    # Claim graph gaps.
-    risks = advice.get("deck_level_risks", [])
-    if risks and claim_graph is not None:
-        old_gaps = claim_graph.get("gaps", [])
-        new_gaps = [
-            {
-                "gap_id": f"narrative_{r.get('risk_id', '')}",
-                "claim_id": "",
-                "description": r.get("message", ""),
-                "severity": r.get("severity", "P2"),
-                "source": "narrative_advice",
-            }
-            for r in risks
-        ]
-        diff["claim_graph_gap_changes"] = {
-            "old_gaps_count": len(old_gaps),
-            "new_gaps_to_add": new_gaps,
-        }
-
     return diff
 
 
@@ -420,24 +401,6 @@ def apply_narrative_advice(
             applied.append(beat_id)
 
         write_json(root / PAGE_TASKS_NAME, page_tasks)
-
-    # Apply risks to claim graph gaps.
-    if "risks" in sections and claim_graph is not None:
-        risks = result.get("deck_level_risks", [])
-        if risks:
-            existing_gaps = claim_graph.get("gaps", [])
-            for risk in risks:
-                gap = {
-                    "gap_id": f"narrative_{risk.get('risk_id', '')}",
-                    "claim_id": "",
-                    "description": risk.get("message", ""),
-                    "severity": risk.get("severity", "P2"),
-                    "source": "narrative_advice",
-                }
-                existing_gaps.append(gap)
-            claim_graph["gaps"] = existing_gaps
-            write_json(claim_graph_path, claim_graph)
-            applied.append("claim_evidence_graph.gaps")
 
     # Write external narrative gate quality report.
     quality_reports_dir = root / "quality_reports"

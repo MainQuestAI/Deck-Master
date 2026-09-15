@@ -1,10 +1,8 @@
 """Legacy Run & Compatibility Migration (C3).
 
-Bootstraps pre-Skill-OS runs into the Workflow runtime WITHOUT forging
-approvals: a legacy run whose artifacts exist is inferred to have reached the
-corresponding stage, but every high-impact transition stays
-``awaiting_approval`` until a real human approval is recorded. No handoff or
-approval records are synthesized (C3 must-implement #1).
+Bootstraps pre-Skill-OS runs into the current Workflow runtime without
+manufacturing approval records. Authoring stages follow the current automatic
+transition policy; final client export still requires an actual approval.
 
 Also provides a rollback hook so a migration can be undone without losing the
 original run state.
@@ -22,7 +20,7 @@ from workflow.state import WorkflowStateResolver
 SCHEMA_VERSION = "deck_legacy_bootstrap.v1"
 BOOTSTRAP_PATH = "workflow/legacy_bootstrap.json"
 
-HIGH_IMPACT_STAGES = {"deck-brief", "deck-planner", "deck-sourcing", "deck-review"}
+HIGH_IMPACT_STAGES = {"deck-review"}
 
 
 class MigrationError(RuntimeError):
@@ -48,17 +46,13 @@ class LegacyBootstrap:
     def infer_run(self, run_dir: str | Path) -> dict[str, Any]:
         """Resolve a legacy run to a workflow_state without forging approvals.
 
-        Returns the inferred state plus a migration record. The state is the
-        standard workflow_state.v1; high-impact stages with artifacts present
-        are ``awaiting_approval`` (never ``completed``/approved) until a real
-        approval is recorded.
+        Returns the inferred standard workflow state plus migration evidence.
         """
         root = Path(run_dir).expanduser().resolve()
         resolver = WorkflowStateResolver(registry=self.registry, now=self._now)
         state = resolver.resolve(root, run_id=root.name)
-        # defense-in-depth: force approval-required stages to awaiting_approval
-        # if they were inferred completed (they must NOT be, but legacy paths
-        # could surprise us). This is the non-forgery invariant.
+        # Only the current non-bypassable export transition may be awaiting an
+        # approval. Earlier authoring artifacts remain usable as authored.
         forged_fixed = 0
         for stage in state.get("stages", []):
             sid = stage.get("stage_id")

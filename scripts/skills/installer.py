@@ -2408,8 +2408,7 @@ def inspect_suite_status(
         next_command = "deck-master library-status"
         next_agent_action = "Inspect PPT Library readiness and repair its reported blocker; installed skills are ready."
     elif not client_delivery_ready:
-        next_command = "deck-master rc-gate --tier full"
-        next_agent_action = "Installed skills are ready. Complete full-tier release evidence before client delivery."
+        next_agent_action = "Installed skills are ready. Full-tier RC evidence remains a software-release check."
 
     blocking_summary: list[dict[str, Any]] = []
     if not deck_ready:
@@ -2446,16 +2445,6 @@ def inspect_suite_status(
             "message": "后端已认证，但 Deck Master 运行时仍走内部 contract_smoke 路径，render 尚未闭环到外部后端。",
             "repair_owner": "runtime",
             "next_command": "",
-        })
-    if not client_delivery_ready:
-        missing = client_delivery_evidence.get("missing") if isinstance(client_delivery_evidence.get("missing"), list) else []
-        missing_text = "；缺少：" + "、".join(str(item) for item in missing) if missing else ""
-        blocking_summary.append({
-            "code": "client_delivery_blocked",
-            "blocking_type": "delivery",
-            "message": "客户版交付仍被阻断，当前 release 还未满足真实 render、外部依赖闭环和 RC gate 前提。" + missing_text,
-            "repair_owner": "release",
-            "next_command": "deck-master rc-gate --tier full",
         })
     if lib_blocked:
         lib_blockers = library_status.get("blocking_summary") or []

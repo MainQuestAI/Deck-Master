@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -344,16 +345,19 @@ def setup_status(
         if not str(default_runs) or not default_runs.is_dir():
             missing.append("default_runs_dir")
 
-        if not cfg.get("review_cockpit_url"):
-            missing.append("review_cockpit_url")
-
         workspace_path = workspace or str(cfg.get("active_workspace") or "")
         if workspace_path:
             workspace_report = validate_workspace(workspace_path)
             if workspace_report.get("status") != "valid":
                 repairs.extend(workspace_report.get("missing_items", []))
 
-        for target in cfg.get("agent_targets") or []:
+        configured_targets = [str(target) for target in (cfg.get("agent_targets") or [])]
+        current_target = os.environ.get("DECK_MASTER_CURRENT_AGENT", "codex").strip() or "codex"
+        # An empty target list means this installation has no host link to
+        # validate. Do not manufacture a Codex dependency for a route that can
+        # run directly from the installed command.
+        targets_to_check = [current_target] if current_target in configured_targets else configured_targets[:1]
+        for target in targets_to_check:
             agent_status[str(target)] = inspect_skill_link(str(target), skill_name="deck-master")
             if not agent_status[str(target)].get("valid"):
                 missing.append(f"agent_target:{target}")

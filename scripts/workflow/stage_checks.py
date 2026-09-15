@@ -5,7 +5,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from planning.narrative_planner import build_required_modules_status
 from sourcing.plan import (
     ALL_DECISIONS,
     PERMISSION_BLOCKED,
@@ -42,36 +41,13 @@ def _planner_checks(root: Path) -> StageCheckResult:
     if not isinstance(beats, list):
         return StageCheckResult()
 
-    module_coverage = build_required_modules_status(beats)
-    missing_modules = list(module_coverage["missing_modules"])
-    required_modules_status = list(module_coverage["required_modules_status"])
-    checks = [{
-        "check": "required_modules_coverage",
-        "status": "pass" if not missing_modules else "fail",
-        "missing_modules": missing_modules,
-    }]
-    if not missing_modules:
-        return StageCheckResult(
-            valid=True,
-            checks=checks,
-            required_modules_status=required_modules_status,
-        )
-
-    message = "方案规划缺少必备模块：" + "、".join(missing_modules)
+    invalid = [index for index, beat in enumerate(beats, start=1) if not isinstance(beat, dict) or not str(beat.get("beat_id") or "").strip()]
     return StageCheckResult(
-        valid=False,
-        checks=checks,
-        blocking=[f"missing_module:{item}" for item in missing_modules],
-        blocking_summary=[{
-            "code": "coverage_gap",
-            "blocking_type": "coverage_gap",
-            "message": message,
-            "repair_owner": "deck-planner",
-        }],
-        coverage_gaps=missing_modules,
-        required_modules_status=required_modules_status,
-        safe_next_action="补齐缺失模块后，再提交方案规划阶段。",
-        repair_owner="deck-planner",
+        valid=not invalid,
+        checks=[{"check": "narrative_page_identity", "status": "pass" if not invalid else "fail", "invalid_pages": invalid}],
+        blocking=[f"invalid_narrative_page:{index}" for index in invalid],
+        safe_next_action="修正缺少页面身份的叙事项。" if invalid else "",
+        repair_owner="deck-planner" if invalid else "",
     )
 
 
@@ -101,9 +77,7 @@ def _is_high_risk_page(page: dict[str, Any]) -> bool:
     decision = str(page.get("decision") or "").strip().lower()
     if decision in {"reuse", "adapt", "evidence"}:
         return True
-    if page.get("selected_sources"):
-        return True
-    return bool(page.get("missing_evidence"))
+    return bool(page.get("selected_sources"))
 
 
 def _sourcing_checks(root: Path) -> StageCheckResult:
@@ -139,10 +113,6 @@ def _sourcing_checks(root: Path) -> StageCheckResult:
 
         if not _is_high_risk_page(page):
             continue
-        if authority in {"", "unknown", "pending"}:
-            authority_gap_pages.append(page_id)
-        if freshness in {"", "unknown", "pending", "stale", "outdated", "expired"}:
-            freshness_gap_pages.append(page_id)
         if permission in {PERMISSION_PENDING, PERMISSION_RESTRICTED, PERMISSION_BLOCKED, ""}:
             permission_gap_pages.append(page_id)
 

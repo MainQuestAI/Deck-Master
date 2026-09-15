@@ -110,7 +110,10 @@ python3 scripts/deck_master.py agent-doctor --mode production --run-dir <run_dir
 
 - Expected output: `runtime_stage`, `blocking_issues`, `errors`,
   `next_agent_action`.
-- If the next action needs external backend or handoff output, stop and report.
+- If the next action declares an Agent handoff and the current Agent has the
+  required tool and authorization, write the declared `output_ref` and run the
+  returned resume command. Stop only for a missing backend, missing source
+  material, unavailable capability, or a decision the user must make.
 
 ## High-Density Build
 

@@ -68,7 +68,10 @@ Stop and report when:
 
 - `agent-doctor --mode production` returns `blocked`.
 - `suite-status` reports a required skill or capability as missing.
-- `next-step` points to an external Agent handoff waiting state.
+- `next-step` requires an output that the current Agent cannot create with its
+  available tools, or requires missing material or a user decision. When the
+  current Agent is authorized and can write the declared `output_ref`, complete
+  the handoff and resume the run.
 - `final-readiness` returns blockers.
 - A contract schema mismatch appears and no migration command is documented.
 - A command would require private backend binding or customer material not

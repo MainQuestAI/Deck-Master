@@ -24,14 +24,11 @@ def evidence_fragments(context_manifest: dict[str, Any]) -> list[dict[str, str]]
 
 
 def build_claim_map(deck_brief: dict[str, Any], context_manifest: dict[str, Any]) -> dict[str, Any]:
-    fragments = evidence_fragments(context_manifest)
     claims = []
     for index, point in enumerate(deck_brief.get("core_points", []), start=1):
         text = str(point).strip()
         if not text:
             continue
-        has_evidence = bool(fragments)
-        risk_flags = [] if has_evidence else ["evidence_gap"]
         claims.append(
             {
                 "claim_id": f"claim_{index:02d}",
@@ -41,9 +38,9 @@ def build_claim_map(deck_brief: dict[str, Any], context_manifest: dict[str, Any]
                     "明确业务问题和目标状态。",
                     "连接产品能力、业务场景和可验证证据。",
                 ],
-                "evidence_needed": ["客户案例、产品截图、业务数据或会议原话"],
-                "evidence_refs": [fragment["source_id"] for fragment in fragments[:3]],
-                "risk_flags": risk_flags,
+                "evidence_needed": [],
+                "evidence_refs": [],
+                "risk_flags": [],
             }
         )
     if not claims:

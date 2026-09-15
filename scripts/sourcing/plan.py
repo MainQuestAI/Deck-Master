@@ -335,7 +335,15 @@ def _decide_for_page(
         decision = DECISION_BLOCKED
         reason = "PERMISSION_BLOCKED"
 
-    missing_evidence = list(page.evidence_need) if not selected_sources and page.evidence_need else []
+    # Sourcing decides whether a historical asset is reused; it does not decide
+    # whether the authored business argument has evidence.  A generated page can
+    # carry explicit citations and reasoned recommendations in its PagePackage
+    # without any PPT Library candidate.
+    missing_evidence = (
+        list(page.evidence_need)
+        if decision in {DECISION_EVIDENCE, DECISION_BLOCKED} and page.evidence_need
+        else []
+    )
     return {
         "page_id": page.page_id,
         "page_task_id": page.page_task_id,

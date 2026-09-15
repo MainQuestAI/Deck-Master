@@ -30,13 +30,13 @@ BASE_BEATS = GENERIC_BEATS
 def resolve_page_count(target_pages: str, audience: str = "client") -> int:
     value = str(target_pages or "auto").strip().lower()
     if value == "auto":
-        return 12 if audience in {"client", "exec"} else 15
+        return 0
     try:
         count = int(value)
     except ValueError:
-        return 12
+        return 0
     if count <= 0:
-        return 12
+        return 0
     return count
 
 

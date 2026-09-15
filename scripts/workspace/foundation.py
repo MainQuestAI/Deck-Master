@@ -140,10 +140,10 @@ def register_workspace(
 
 
 def validate_workspace(workspace_dir: str | Path) -> dict[str, Any]:
-    """Validate workspace completeness.
+    """Validate that a workspace is readable and any declared manifest is valid.
 
-    Returns a validation report dict. Does not raise on missing items;
-    instead sets status to 'pending_manual_review'.
+    Standard templates are conveniences created by ``workspace-init``. They
+    are not production inputs and therefore do not define workspace readiness.
     """
     root = Path(workspace_dir).expanduser().resolve()
     missing_items: list[str] = []
@@ -152,31 +152,18 @@ def validate_workspace(workspace_dir: str | Path) -> dict[str, Any]:
 
     # Check manifest.
     manifest_path = root / MANIFEST_NAME
-    if not manifest_path.is_file():
-        missing_items.append(MANIFEST_NAME)
+    if not root.is_dir():
+        missing_items.append("workspace_dir")
         manifest = {}
+    elif not manifest_path.is_file():
+        manifest = {}
+        warnings.append("Workspace manifest is absent; treating this as a material-only workspace.")
     else:
         try:
             manifest = read_json(manifest_path)
         except Exception:
             missing_items.append(f"{MANIFEST_NAME} (invalid JSON)")
             manifest = {}
-
-    # Check standard directories.
-    for rel in STANDARD_DIRS:
-        if not (root / rel).is_dir():
-            missing_items.append(rel + "/")
-
-    # Check standard files.
-    for rel in STANDARD_FILES:
-        if not (root / rel).is_file():
-            missing_items.append(rel)
-
-    # Check asset files.
-    if not (root / "assets/asset_graph.json").is_file():
-        missing_items.append("assets/asset_graph.json")
-    if not (root / "assets/asset_feedback.jsonl").is_file():
-        missing_items.append("assets/asset_feedback.jsonl")
 
     # Reference PPT check.
     ref_ppt = manifest.get("reference_ppt")

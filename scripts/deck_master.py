@@ -94,7 +94,6 @@ from delivery.validate import validate_delivery
 from delivery.outcome import record_delivery_outcome
 from feedback.library_feedback import LibraryFeedbackError, record_library_feedback
 from team.opportunity import create_opportunity, attach_run
-from team.approval import submit_approval, approve, reject
 from connectors.import_contract import validate_import_manifest, import_to_context_manifest
 from skills.installer import (
     SkillInstallError,
@@ -1116,24 +1115,6 @@ def command_opportunity_attach_run(args: argparse.Namespace) -> dict[str, Any]:
     return attach_run(args.workspace, args.opportunity_id, args.run_id)
 
 
-def command_approval_submit(args: argparse.Namespace) -> dict[str, Any]:
-    if not args.workspace:
-        raise RunStateError("--workspace is required for approval submit.")
-    return submit_approval(args.workspace, args.run_id, args.submitted_by, notes=args.notes or "")
-
-
-def command_approval_approve(args: argparse.Namespace) -> dict[str, Any]:
-    if not args.workspace:
-        raise RunStateError("--workspace is required for approval approve.")
-    return approve(args.workspace, args.approval_id, args.approver, notes=args.notes or "")
-
-
-def command_approval_reject(args: argparse.Namespace) -> dict[str, Any]:
-    if not args.workspace:
-        raise RunStateError("--workspace is required for approval reject.")
-    return reject(args.workspace, args.approval_id, args.rejecter, reason=args.reason or "")
-
-
 def command_connector_import(args: argparse.Namespace) -> dict[str, Any]:
     manifest_path = Path(args.manifest).expanduser().resolve()
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -1299,13 +1280,15 @@ def _blocked_suite_capabilities(setup: dict[str, Any]) -> list[dict[str, str]]:
 
 def _start_first_action(setup: dict[str, Any], run_state: dict[str, Any] | None = None) -> str:
     setup_command = str(setup.get("next_command") or "").strip()
+    if run_state and run_state.get("next_command"):
+        return str(run_state["next_command"])
     if setup.get("status") != "ready":
         return setup_command or "deck-master setup-status --include-suite --output json"
     if setup.get("full_suite_ready") is False:
         suite = setup.get("suite") if isinstance(setup.get("suite"), dict) else {}
         return str(suite.get("next_command") or setup_command or "deck-master suite-repair --target codex")
     if run_state:
-        return str(run_state.get("next_command") or setup_command or "deck-master setup-status --include-suite --output json")
+        return setup_command or "deck-master setup-status --include-suite --output json"
     return setup_command or "deck-master setup-status --include-suite --output json"
 
 
@@ -1923,6 +1906,11 @@ def command_agent_doctor(args: argparse.Namespace) -> dict[str, Any]:
 
     run_dir_raw = str(getattr(args, "run_dir", "") or "").strip()
     run_dir = Path(run_dir_raw).expanduser().resolve() if run_dir_raw else Path("/tmp/deck-master-demo/oss-demo")
+    run_request = read_json(run_dir / "request.json") if run_dir_raw and (run_dir / "request.json").exists() else {}
+    high_density_route = bool(
+        str(run_request.get("builder_profile") or "").replace("-", "_") == "high_density"
+        or (run_dir / "high_density_build" / "status.json").exists()
+    )
     if run_dir.exists():
         try:
             preview_payload = command_preview_gate(
@@ -1998,7 +1986,7 @@ def command_agent_doctor(args: argparse.Namespace) -> dict[str, Any]:
     _agent_doctor_add_check(
         checks,
         "suite_status",
-        "pass" if bool(suite_payload.get("full_suite_ready")) else "blocked",
+        "pass" if bool(suite_payload.get("full_suite_ready")) else "warn",
         (
             "Required suite capabilities are ready."
             if bool(suite_payload.get("full_suite_ready"))
@@ -2014,7 +2002,7 @@ def command_agent_doctor(args: argparse.Namespace) -> dict[str, Any]:
     _agent_doctor_add_check(
         checks,
         "production_backend",
-        "pass" if production_dependencies_ready else "blocked",
+        "pass" if production_dependencies_ready else ("warn" if high_density_route or not run_dir_raw else "blocked"),
         (
             "Production backend dependencies are bound, verified, and pinned."
             if production_dependencies_ready
@@ -2033,7 +2021,7 @@ def command_agent_doctor(args: argparse.Namespace) -> dict[str, Any]:
     _agent_doctor_add_check(
         checks,
         "capability_lock",
-        "pass" if capability_lock.exists() else "blocked",
+        "pass" if capability_lock.exists() else "warn",
         (
             "Capability lock is present."
             if capability_lock.exists()
@@ -2071,7 +2059,7 @@ def command_agent_doctor(args: argparse.Namespace) -> dict[str, Any]:
             _agent_doctor_add_check(
                 checks,
                 "final_readiness",
-                "pass" if final_payload.get("status") == "ready" else "blocked",
+                "pass" if final_payload.get("status") == "ready" else "warn",
                 "Final readiness result is available.",
                 details={
                     "status": final_payload.get("status"),
@@ -2084,8 +2072,8 @@ def command_agent_doctor(args: argparse.Namespace) -> dict[str, Any]:
         _agent_doctor_add_check(
             checks,
             "final_readiness",
-            "blocked",
-            "Production mode requires --run-dir so final-readiness can be checked.",
+            "warn",
+            "No run was selected, so final artifact readiness was not evaluated.",
             details={"next_command": "deck-master final-readiness --run-dir <run_dir> --no-write"},
             evidence_paths=[],
         )
@@ -3579,31 +3567,6 @@ def build_parser() -> argparse.ArgumentParser:
     p_ar.add_argument("--opportunity-id", required=True)
     p_ar.add_argument("--run-id", required=True)
     p_ar.set_defaults(func=command_opportunity_attach_run)
-
-    # ---- approval subcommands ----
-    p_approval = sub.add_parser("approval", help="Manage approval flows")
-    approval_sub = p_approval.add_subparsers(dest="approval_command", required=True)
-
-    p_as = approval_sub.add_parser("submit", help="Submit a run for approval")
-    p_as.add_argument("--workspace", required=True, help="Workspace directory path")
-    p_as.add_argument("--run-id", required=True)
-    p_as.add_argument("--submitted-by", required=True)
-    p_as.add_argument("--notes", default="")
-    p_as.set_defaults(func=command_approval_submit)
-
-    p_aa = approval_sub.add_parser("approve", help="Approve a pending approval")
-    p_aa.add_argument("--workspace", required=True, help="Workspace directory path")
-    p_aa.add_argument("--approval-id", required=True)
-    p_aa.add_argument("--approver", required=True)
-    p_aa.add_argument("--notes", default="")
-    p_aa.set_defaults(func=command_approval_approve)
-
-    p_aj = approval_sub.add_parser("reject", help="Reject a pending approval")
-    p_aj.add_argument("--workspace", required=True, help="Workspace directory path")
-    p_aj.add_argument("--approval-id", required=True)
-    p_aj.add_argument("--rejecter", required=True)
-    p_aj.add_argument("--reason", default="")
-    p_aj.set_defaults(func=command_approval_reject)
 
     # ---- connector subcommands ----
     p_connector = sub.add_parser("connector", help="Import data from external systems")

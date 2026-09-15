@@ -197,6 +197,9 @@ class HandoffRuntime:
 
     # --- transitions ---
     def accept(self, run_dir: str | Path, handoff_id: str, *, actor: str) -> dict[str, Any]:
+        current = self.inspect(Path(run_dir).expanduser().resolve(), handoff_id)
+        if current.get("status") == ACCEPTED:
+            return current
         return self._transition(
             run_dir, handoff_id, target=ACCEPTED, allowed_from=(AWAITING_APPROVAL,),
             extra={"accepted_by": actor, "accepted_at": _utc_iso(self._clock())},
@@ -217,7 +220,7 @@ class HandoffRuntime:
         actor: str = "",
     ) -> dict[str, Any]:
         return self._transition(
-            run_dir, handoff_id, target=REJECTED, allowed_from=(AWAITING_APPROVAL,),
+            run_dir, handoff_id, target=REJECTED, allowed_from=(AWAITING_APPROVAL, ACCEPTED),
             extra={
                 "rejected_reason": reason,
                 "repair_owner_stage": repair_owner_stage or _default_repair_owner(handoff_id),
