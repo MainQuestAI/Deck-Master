@@ -171,6 +171,10 @@ def test_imported_full_draft_builds_without_mbb_and_keeps_nested_copy(tmp_path: 
     assert prepared["status"] == "prepared"
     assert result["status"] == "completed", result
     assert not (run_dir / "high_density_build/mbb/mbb_plan.json").exists()
+    assert not (run_dir / "deck_brief.json").exists()
+    assert not (run_dir / "claim_map.json").exists()
+    write_json(run_dir / "context_manifest.json", {"run_id": run_dir.name, "sources": []})
+    assert resolve_run_state(run_dir, run_mode="fixture")["stage"] == "ready_for_client_export"
     presentation = Presentation(run_dir / "high_density_build/pptx/deck_high_density.pptx")
     visible = "\n".join(
         shape.text

@@ -498,13 +498,14 @@ def _resolve_stage(root: Path, run_mode: str) -> tuple[str, list[dict[str, str]]
             [{"action": "context", "reason": "context manifest is missing"}],
             "context manifest is missing",
         )
-    if not (root / DECK_BRIEF_NAME).exists():
+    imported_full_draft = _package_build_state(root).get("state") == "complete"
+    if not imported_full_draft and not (root / DECK_BRIEF_NAME).exists():
         return (
             "needs_brief",
             [{"action": "brief", "reason": "deck brief is missing"}],
             "deck brief is missing",
         )
-    if not (root / CLAIM_MAP_NAME).exists():
+    if not imported_full_draft and not (root / CLAIM_MAP_NAME).exists():
         return (
             "needs_claim_map",
             [{"action": "claim_map", "reason": "claim map is missing"}],
