@@ -1606,6 +1606,11 @@ def verify_release_tree(
                     encoding="utf-8",
                 )
                 commands = [
+                    [
+                        str(runtime_python),
+                        "-c",
+                        "import high_density.blueprint_content_review, page_roles",
+                    ],
                     [str(bin_path), "--help"],
                     [str(bin_path), "suite-status", "--output", "json"],
                     [str(bin_path), "workflow", "status", "--run-dir", str(run_dir)],

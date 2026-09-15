@@ -561,7 +561,9 @@ def _validate_svg_text(node: Any, scene_element: dict[str, Any], page_id: str, a
         line_widths.append(current_width)
         line_sizes.append(current_max_size)
     visible_text = " ".join(line.strip() for line in lines)
-    if " ".join(declared_text.split()) != " ".join(visible_text.split()):
+    compact_visible_text = "".join(line.strip() for line in lines)
+    normalized_declared = " ".join(declared_text.split())
+    if normalized_declared not in {" ".join(visible_text.split()), " ".join(compact_visible_text.split())}:
         raise SvgVisualError(f"visible SVG text drift on {element_id}", page_id=page_id, code="HD_SVG_CONTENT_DRIFT")
     if any(step < font_size * 0.7 or step > font_size * 2.5 for step in line_steps):
         raise SvgVisualError(f"SVG tspan line height is invalid: {element_id}", page_id=page_id, code="HD_SVG_TEXT_OVERFLOW")

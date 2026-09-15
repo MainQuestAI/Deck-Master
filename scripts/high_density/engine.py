@@ -1283,7 +1283,7 @@ def _run_high_density(run_dir: str | Path) -> dict[str, Any]:
                     page_id=page_id,
                     stage="page_scene",
                     kind="agent_visual_reconstruct",
-                    input_ref=f"high_density_build/blueprints/{page_id}.manifest.json",
+                    input_ref=f"high_density_build/blueprints/{page_id}.blueprint_manifest.json",
                     output_ref=f"high_density_build/scenes/{page_id}.page_scene.json",
                     output_refs=[f"high_density_build/svg/{page_id}.svg"],
                     reason="Reconstruct the blueprint into semantic native scene geometry and approved native SVG with locked text and overflow policies.",

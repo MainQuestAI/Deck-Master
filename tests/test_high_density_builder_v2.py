@@ -56,7 +56,7 @@ from high_density.migration import MIGRATION_REQUIRED_CODE, assert_current_mbb_a
 from high_density.pptx import PptxEditabilityError, _render_pptx_page, compile_pptx, pptx_path, readback_pptx, trace_path
 from high_density.scene import canonical_scene_path, scene_path, _fixture_background, build_fixture_scene, load_scene, validate_scene_content, write_scene
 from high_density.style import write_style_lock
-from high_density.svg import SvgVisualError, _font_path, _load_main_review_receipt, _main_review_receipt_payload, compile_svg, load_visual_review, main_review_receipt_path, preview_path, render_preview, review_path, svg_path, validate_approved_svg, validate_svg
+from high_density.svg import SvgVisualError, _font_path, _load_main_review_receipt, _main_review_receipt_payload, _validate_svg_text, compile_svg, load_visual_review, main_review_receipt_path, preview_path, render_preview, review_path, svg_path, validate_approved_svg, validate_svg
 from high_density.visibility import build_visibility_policy, visible_text_violation
 from production.page_package import PageContent, PagePackageIndex, build_page_package
 from runtime.run_state import create_run
@@ -2356,6 +2356,21 @@ def test_visible_tspan_text_cannot_hide_behind_declared_metadata(tmp_path: Path)
         validate_approved_svg(svg, scene, lock)
     with pytest.raises(PptxEditabilityError, match="visible SVG text drift"):
         compile_pptx(run, [scene], {"P001": lock})
+
+
+def test_wrapped_chinese_tspans_preserve_contiguous_visible_text() -> None:
+    declared = "优先接入高频产品资料、案例与方案文档，让每个关键判断都能回到当前来源。"
+    node = ElementTree.fromstring(
+        '<text id="body" x="0" y="20" font-family="Arial" font-size="18px" '
+        'font-weight="400" fill="#111111" data-pptx-bounds="0,0,1000,100" '
+        f'data-pptx-text="{declared}" data-pptx-text-ref="content_lock.customer_visible.body">'
+        '<tspan x="0" dy="0">优先接入高频产品资料、案例与方案文档，</tspan>'
+        '<tspan x="0" dy="21.24">让每个关键判断都能回到当前来源。</tspan>'
+        '</text>'
+    )
+    scene_element = {"text": declared, "text_ref": "content_lock.customer_visible.body"}
+
+    _validate_svg_text(node, scene_element, "P001", [])
 
 
 @pytest.mark.parametrize("paint", ['fill="none"', 'fill-opacity="0"'])

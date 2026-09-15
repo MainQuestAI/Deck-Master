@@ -39,7 +39,7 @@ deck-master = "deck_master:main"
 
 [tool.setuptools]
 package-dir = { "" = "scripts" }
-py-modules = ["deck_master"]
+py-modules = ["deck_master", "page_roles"]
 
 [tool.setuptools.packages.find]
 where = ["scripts"]
