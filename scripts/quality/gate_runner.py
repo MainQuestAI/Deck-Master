@@ -273,19 +273,6 @@ def evaluate_delivery_gate(
         item["excerpt"] = str(hit.get("excerpt") or "")
         findings.append(item)
 
-    if not audit["media_files"]:
-        lower_score(scorecard, "delivery_readiness", 3)
-        findings.append(
-            finding(
-                "delivery_no_media",
-                "P2",
-                "delivery_readiness",
-                "PPTX 包内没有媒体文件，若方案依赖截图或视觉证据，需要复核资源是否缺失。",
-                [str(audit["artifact"])],
-                "确认本稿是否应包含产品截图、客户证据图或案例图；如需要，补齐后重新导出。",
-            )
-        )
-
     return _report(
         run_id,
         "delivery",

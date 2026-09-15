@@ -86,6 +86,17 @@ class DraftGateTests(unittest.TestCase):
         self.assertFalse(report["blocks_delivery"])
         self.assertFalse(report["page_findings"])
 
+    def test_delivery_gate_accepts_native_editable_deck_without_media(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            pptx = Path(temp) / "deck.pptx"
+            write_minimal_pptx(pptx, [{"text": "客户方案包括职责分工、执行顺序和选择理由。", "pictures": 0}])
+
+            report = evaluate_delivery_gate("run-1", pptx, expected_pages=1)
+
+        self.assertEqual("pass", report["status"])
+        self.assertFalse(report["blocks_delivery"])
+        self.assertNotIn("delivery_no_media", {finding["finding_id"] for finding in report["findings"]})
+
 
 def write_minimal_pptx(path: Path, slides: list[dict]) -> None:
     content_types = """<?xml version="1.0" encoding="UTF-8"?>
