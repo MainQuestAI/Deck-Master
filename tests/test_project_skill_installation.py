@@ -72,8 +72,8 @@ def test_project_links_survive_central_activation_and_rollback(central, tmp_path
     invoke("suite-install", "--project-root", str(project), "--links-only")
     entry = project / ".agents/skills/deck-master"
     original = (entry / "SKILL.md").read_bytes()
-    # Runtime provisioning is external to link behavior; verification and
-    # activation are real, using the test interpreter for isolated smoke.
+    # Runtime provisioning is external to link behavior. The interpreter
+    # symlink supports metadata verification, not installed-module smoke.
     release = central / "current"
     python = release / installer.RELEASE_PYTHON_RELATIVE
     python.parent.mkdir(parents=True, exist_ok=True)
@@ -93,7 +93,10 @@ def test_project_links_survive_central_activation_and_rollback(central, tmp_path
     assert entry.resolve() == central / "current/skills/deck-master"
     assert (entry.parents[0] / "deck-builder/SKILL.md").exists()
     assert (central / "current/upgrade-marker").exists()
-    result = installer.rollback_release_tree()
+    verify = installer.verify_release_tree
+    with monkeypatch.context() as patch:
+        patch.setattr(installer, "verify_release_tree", lambda root, **_kwargs: verify(root, run_smoke=False))
+        result = installer.rollback_release_tree()
     assert result["status"] == "rolled_back"
     assert (entry / "SKILL.md").read_bytes() == original
     assert not (central / "current/upgrade-marker").exists()
