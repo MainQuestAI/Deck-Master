@@ -2380,6 +2380,8 @@ def test_tspan_runs_preserve_text_and_style(tmp_path: Path) -> None:
     assert runs[0].font.bold is False
     assert runs[1].font.bold is True
     assert [run["paint"]["color"] for run in title_trace["runs"]] == ["#c65c42", "#1f6fd1"]
+    run_properties = shape.text_frame.paragraphs[0].runs[0]._r.get_or_add_rPr()
+    assert [str(child.tag).split("}")[-1] for child in run_properties][:2] == ["solidFill", "latin"]
 
 
 def test_visible_tspan_text_cannot_hide_behind_declared_metadata(tmp_path: Path) -> None:

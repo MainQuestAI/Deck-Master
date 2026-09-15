@@ -264,7 +264,11 @@ def _add_text(slide: Any, element: dict[str, Any], trace: list[dict[str, Any]]) 
             elif text_paint.get("kind") == "solid":
                 solid = OxmlElement("a:solidFill")
                 _append_color(solid, str(text_paint.get("color") or "#18212b"), float(paint.get("opacity") or 1) * float(paint.get("fill_opacity") or 1))
-                run_properties.append(solid)
+                run_properties.insert(0, solid)
+            if text_paint.get("kind") == "gradient":
+                gradient = next(child for child in run_properties if str(child.tag).split("}")[-1] == "gradFill")
+                run_properties.remove(gradient)
+                run_properties.insert(0, gradient)
             run_trace.append({"text": run.text, "font_family": font.name, "font_size_px": font_size, "font_weight": str(run_style.get("font_weight") or "400"), "font_style": str(run_style.get("font_style") or "normal"), "paint": _paint_trace(text_paint)})
     trace_entry = {"element_id": element["element_id"], "object_type": "text", "shape_name": shape.name, "bbox": bbox, "text": element.get("text", ""), "text_ref": element.get("text_ref", ""), "priority": element.get("priority", ""), "component_id": element.get("component_id", ""), "z_order": element.get("z_index", 0), "runs": run_trace}
     paint = element.get("_paint") or {}
