@@ -219,3 +219,47 @@ def test_hash_matches_file_bytes(tmp_path: Path) -> None:
     extract = read_source(path)
     expected = hashlib.sha256(path.read_bytes()).hexdigest()
     assert extract.original_sha256 == expected
+
+
+def test_pdf_empty_pages_keep_physical_number_and_full_text(tmp_path,monkeypatch):
+    import deck_master.sources as sources
+    from types import SimpleNamespace
+    monkeypatch.setattr(sources.shutil,'which',lambda _: '/tools/pdftotext')
+    text='\f'+('A'*4500)+' TAIL READ ONLY\f'
+    monkeypatch.setattr(sources.subprocess,'run',lambda *a,**k:SimpleNamespace(returncode=0,stdout=text.encode(),stderr=b''))
+    result=read_source(_write(tmp_path,'scanned.pdf',b'pdf'))
+    assert result.status=='pending_visual'
+    assert result.locators[0]['locator']=='page-1' and result.locators[0]['text']==''
+    assert result.locators[1]['locator']=='page-2' and result.locators[1]['text'].endswith('TAIL READ ONLY')
+    assert [p['locator'] for p in result.image_pages]==['page-1','page-2']
+
+
+def test_grouped_ppt_text_notes_and_picture_detection(tmp_path):
+    from pptx import Presentation
+    from pptx.util import Inches
+    from PIL import Image
+    prs=Presentation();slide=prs.slides.add_slide(prs.slide_layouts[6])
+    group=slide.shapes.add_group_shape();group.shapes.add_textbox(0,0,Inches(2),Inches(1)).text='Grouped tail constraint'
+    slide.notes_slide.notes_text_frame.text='READ ONLY; DO NOT WRITE BACK'
+    image=tmp_path/'input.png';Image.new('RGB',(40,30),'red').save(image)
+    slide.shapes.add_picture(str(image),0,0,Inches(1),Inches(1))
+    p=tmp_path/'input.pptx';prs.save(p);result=read_source(p)
+    assert 'Grouped tail constraint' in result.text and 'DO NOT WRITE BACK' in result.text
+    assert result.status=='pending_visual' and result.image_pages[0]['locator']=='slide-1'
+
+
+def test_create_preserves_source_status_and_immutable_original(tmp_path):
+    from deck_master import service
+    from deck_master.store import Store
+    source=_write(tmp_path,'unread.xyz',b'original material')
+    project=tmp_path/'project';service.create(project,brief='read actual material',sources=[str(source)])
+    source.unlink()
+    task=service.continue_project(project)['pending_tasks'][0]
+    read=task['source_reading'][0]
+    assert read['status']=='needs_tool' and '.xyz' in read['detail']
+    assert Store(project).read_object_bytes(read['original_file'])==b'original material'
+
+
+def test_json_pointer_escapes_keys(tmp_path):
+    result=read_source(_write(tmp_path,'escaped.json','{"a/b~c":0}'))
+    assert result.locators[0]['locator']=='/a~1b~0c'

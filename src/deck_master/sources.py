@@ -114,7 +114,8 @@ def _read_json(path: Path) -> SourceExtract:
     def walk(node, pointer: str) -> None:
         if isinstance(node, dict):
             for key, value in node.items():
-                walk(value, f"{pointer}/{key}")
+                escaped=str(key).replace("~","~0").replace("/","~1")
+                walk(value, f"{pointer}/{escaped}")
         elif isinstance(node, list):
             for index, value in enumerate(node):
                 walk(value, f"{pointer}/{index}")
@@ -172,9 +173,10 @@ def _read_pdf(path: Path) -> SourceExtract:
             detail=f"pdftotext failed: {result.stderr.decode('utf-8', 'replace').strip()}",
         )
     text = result.stdout.decode("utf-8", "replace")
-    pages = [block.strip() for block in text.split("\f") if block.strip()]
+    pages = text.split("\f")
+    if pages and not pages[-1].strip():pages.pop()
     locators = [
-        {"locator": f"page-{index}", "kind": "page", "text": block[:4000]}
+        {"locator": f"page-{index}", "kind": "page", "text": block.strip()}
         for index, block in enumerate(pages, start=1)
     ]
     return SourceExtract(
@@ -182,9 +184,11 @@ def _read_pdf(path: Path) -> SourceExtract:
         original_sha256=measure_hash(path),
         format="pdf",
         format_kind="pdf",
-        status="read",
+        status="pending_visual",
         text=text,
         locators=locators,
+        image_pages=[{"locator":f"page-{i}","reason":"verify visual layout and graphical meaning; text extraction alone is incomplete"} for i in range(1,len(pages)+1)],
+        detail="PDF pages require Host visual verification; page numbers include textless pages",
     )
 
 
@@ -207,6 +211,7 @@ def _read_docx(path: Path) -> SourceExtract:
     root = ET.fromstring(xml_bytes)
     locators: list[dict] = []
     counter = 0
+    has_images=any(e.tag.rsplit("}",1)[-1] in ("drawing","pict") for e in root.iter())
     for element in root.iter():
         tag = element.tag
         if tag == f"{namespace}p":
@@ -235,9 +240,11 @@ def _read_docx(path: Path) -> SourceExtract:
         original_sha256=measure_hash(path),
         format="docx",
         format_kind="docx",
-        status="read",
+        status="pending_visual" if has_images else "read",
         text=text,
         locators=locators,
+        tables=[item for item in locators if item["kind"]=="table"],
+        image_pages=[{"locator":"document","reason":"embedded drawings require Host visual reading"}] if has_images else [],
     )
 
 
@@ -266,9 +273,16 @@ def _read_pptx(path: Path) -> SourceExtract:
         )
     locators: list[dict] = []
     text_parts: list[str] = []
+    image_pages=[]
+    def shapes_recursive(shapes):
+        for shape in shapes:
+            yield shape
+            if hasattr(shape,"shapes"):yield from shapes_recursive(shape.shapes)
     for index, slide in enumerate(presentation.slides, start=1):
         page_lines = []
-        for shape in slide.shapes:
+        visual=False
+        for shape in shapes_recursive(slide.shapes):
+            if shape.shape_type in (13,3):visual=True
             if shape.has_text_frame:
                 for paragraph in shape.text_frame.paragraphs:
                     text = "".join(run.text for run in paragraph.runs)
@@ -280,6 +294,10 @@ def _read_pptx(path: Path) -> SourceExtract:
                     for row in shape.table.rows
                 ]
                 page_lines.append(json.dumps(rows, ensure_ascii=False))
+        if slide.has_notes_slide:
+            notes=slide.notes_slide.notes_text_frame.text
+            if notes.strip():page_lines.append("[speaker notes] "+notes)
+        if visual or not page_lines:image_pages.append({"locator":f"slide-{index}","reason":"image/chart or textless slide requires actual visual reading"})
         locators.append({"locator": f"slide-{index}", "kind": "slide", "text": "\n".join(page_lines)})
         text_parts.append("\n".join(page_lines))
     return SourceExtract(
@@ -287,9 +305,10 @@ def _read_pptx(path: Path) -> SourceExtract:
         original_sha256=measure_hash(path),
         format="pptx",
         format_kind="pptx",
-        status="read",
+        status="pending_visual" if image_pages else "read",
         text="\n\n".join(text_parts),
         locators=locators,
+        image_pages=image_pages,
     )
 
 

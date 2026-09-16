@@ -99,9 +99,10 @@ def create(
     source_entries = []
     for source_path in sources or []:
         extract = read_source(source_path)
-        extract_ref = None
-        if extract.text:
-            extract_ref = store.put_blob(extract.text.encode("utf-8"), ext="txt")
+        from dataclasses import asdict
+        extraction=asdict(extract)
+        extraction['original_file']=store.put_blob(Path(source_path).expanduser().read_bytes(),ext=extract.format)
+        extract_ref=store.put_json_object(extraction)
         source_entries.append(
             {
                 "source_id": f"src-{len(source_entries) + 1}-{Path(str(source_path)).stem}",
@@ -281,6 +282,12 @@ def task_summary(store: Store, document: dict, task: dict) -> dict:
             "deck_master://skills/deck-master/references/content-examples.md",
         ],
     }
+    summary['source_reading'] = []
+    for source in document.get('sources') or []:
+        ref=source.get('extract')
+        if ref and ref['path'].endswith('.json'):
+            extract=store.read_object_json(ref)
+            summary['source_reading'].append({'source_id':source['source_id'],**extract})
     if task.get('kind') in ('reconstruct','repair','review'):
         summary['page_entries'] = [e for e in document['pages'] if e['page_id'] in task['scope_pages']]
         summary['reference_images'] = []
