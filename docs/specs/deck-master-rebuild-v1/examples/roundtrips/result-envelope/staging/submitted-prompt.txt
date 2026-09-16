@@ -1,0 +1,1 @@
+Synthetic envelope illustration only. No real provider call was made.

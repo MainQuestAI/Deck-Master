@@ -1,0 +1,36 @@
+{
+  "kind": "reconstruct",
+  "files": [
+    {
+      "file_id": "svg",
+      "path": "complete-page.svg",
+      "media_type": "image/svg+xml"
+    }
+  ],
+  "artifact_specs": [
+    {
+      "file_id": "svg",
+      "role": "svg",
+      "page_id": "p09",
+      "derived_from": [
+        {
+          "path": ".deckmaster/objects/18/18bb547bbf4be1e7ec8f7bae7cdd320658fbf3ac1cfe2912473b7fc8933b28fd.json",
+          "sha256": "18bb547bbf4be1e7ec8f7bae7cdd320658fbf3ac1cfe2912473b7fc8933b28fd"
+        },
+        {
+          "path": ".deckmaster/objects/94/941787a7f0dcad6828bdd04d1db68e7b63d605c436b051b21b35cbffb8d1ff94.json",
+          "sha256": "941787a7f0dcad6828bdd04d1db68e7b63d605c436b051b21b35cbffb8d1ff94"
+        }
+      ],
+      "provenance": {
+        "source_type": "unknown",
+        "tool": "synthetic-contract-fixture",
+        "invocation_ref": null
+      },
+      "limitations": [
+        "完整三atom信封正例；接收格式正确不代表实际PPT/视觉验证已发生。"
+      ]
+    }
+  ],
+  "notes": "本正例在给定synthetic mini Page的全部文字/引用上自洽；真实生产仍执行全部适用检查。"
+}

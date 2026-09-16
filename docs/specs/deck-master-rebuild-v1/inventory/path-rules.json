@@ -1,0 +1,68 @@
+[
+  {
+    "prefix": "scripts/",
+    "action": "RETIRE_THEN_DELETE",
+    "target": "按old-files.csv提取后删除；deck_master.py仅兼容薄层",
+    "phase": "WP05"
+  },
+  {
+    "prefix": "tests/",
+    "action": "PORT_OR_RETIRE",
+    "target": "tests/rebuild/，逐行为映射后移除旧测试，禁止简单skip",
+    "phase": "WP05"
+  },
+  {
+    "prefix": "skills/deck-master/",
+    "action": "REWRITE_OR_RETIRE",
+    "target": "单入口及本包指定references；旧schema/playbook归档",
+    "phase": "WP04"
+  },
+  {
+    "prefix": "skills/",
+    "action": "RETIRE_OR_ASSET_EXTRACT",
+    "target": "只保留deck-master；样式和必要方法按目标表迁移",
+    "phase": "WP05"
+  },
+  {
+    "prefix": "product_capabilities/",
+    "action": "RETIRE_THEN_DELETE",
+    "target": "不进入发行包，外部工具不是新核心前置",
+    "phase": "WP05"
+  },
+  {
+    "prefix": "docs/contracts/",
+    "action": "ARCHIVE",
+    "target": "docs/archive/pre-rebuild/contracts/，旧版本字节不修改",
+    "phase": "WP05"
+  },
+  {
+    "prefix": "docs/",
+    "action": "KEEP_HISTORY_UPDATE_ACTIVE_INDEX",
+    "target": "历史原件保留；活动指南按root-and-config.csv替换",
+    "phase": "WP04/WP05"
+  },
+  {
+    "prefix": "benchmarks/",
+    "action": "KEEP_NON_RUNTIME",
+    "target": "保留数据来源和历史，不继承旧时间/完成数量指标",
+    "phase": "WP05"
+  },
+  {
+    "prefix": "examples/",
+    "action": "ARCHIVE_OR_PORT",
+    "target": "新使用示例重写；旧示例归档，不能当新生产通过证据",
+    "phase": "WP05"
+  },
+  {
+    "prefix": ".github/",
+    "action": "UPDATE_CI_AND_GUIDANCE",
+    "target": "以新默认链与安装测试为准；其余治理文档保留",
+    "phase": "WP04"
+  },
+  {
+    "prefix": ".devcontainer/",
+    "action": "UPDATE_ENV",
+    "target": "新src布局与必要工具，无外部仓前置",
+    "phase": "WP04"
+  }
+]

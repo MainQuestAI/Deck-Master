@@ -1,0 +1,100 @@
+{
+  "example_only": true,
+  "unit": "one_host_image_tool_request",
+  "limit": 1,
+  "sequence": [
+    {
+      "step": 1,
+      "operation": "Host A reserve",
+      "allowance_id": "a1",
+      "states": {
+        "a1": "reserved"
+      },
+      "occupied": 1,
+      "free": 0
+    },
+    {
+      "step": 2,
+      "operation": "Host B reserve",
+      "result": "needs_allowance",
+      "states": {
+        "a1": "reserved"
+      },
+      "occupied": 1,
+      "free": 0
+    },
+    {
+      "step": 3,
+      "operation": "Host A begin",
+      "result": "execute_once",
+      "states": {
+        "a1": "in_flight"
+      },
+      "occupied": 1,
+      "free": 0
+    },
+    {
+      "step": 4,
+      "operation": "duplicate begin",
+      "result": "already_started_do_not_invoke",
+      "states": {
+        "a1": "in_flight"
+      },
+      "occupied": 1,
+      "free": 0
+    },
+    {
+      "step": 5,
+      "operation": "response lost",
+      "result": "unknown_pause_new_external_calls",
+      "states": {
+        "a1": "unknown"
+      },
+      "occupied": 1,
+      "free": 0
+    },
+    {
+      "step": 6,
+      "operation": "local SVG repair",
+      "result": "allowed_no_external_consumption",
+      "states": {
+        "a1": "unknown"
+      },
+      "occupied": 1,
+      "free": 0
+    },
+    {
+      "step": 7,
+      "operation": "restore older content",
+      "result": "calls_unchanged",
+      "states": {
+        "a1": "unknown"
+      },
+      "occupied": 1,
+      "free": 0
+    },
+    {
+      "step": 8,
+      "operation": "late tool record confirms sent",
+      "result": "settle_only_if_task_cancelled",
+      "states": {
+        "a1": "consumed"
+      },
+      "occupied": 1,
+      "free": 0
+    }
+  ],
+  "alternate_not_sent": {
+    "precondition": "specific evidence confirms request never sent",
+    "from": "unknown",
+    "to": "released",
+    "occupied": 0,
+    "free": 1
+  },
+  "never_infer": [
+    "timeout means not sent",
+    "retry task resets usage",
+    "file hash proves provider request",
+    "product controls host calls that bypass it"
+  ]
+}

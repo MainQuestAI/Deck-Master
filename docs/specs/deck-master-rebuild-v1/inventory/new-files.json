@@ -1,0 +1,752 @@
+[
+  {
+    "id": "NEW-001",
+    "target": "src/deck_master/__init__.py",
+    "action": "NEW",
+    "purpose": "版本/发行资源入口",
+    "implementation": "只公开版本与包资源位置；不得导入旧engine",
+    "work_package": "WP01",
+    "test": "tests/rebuild/test_package_boundary.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-002",
+    "target": "src/deck_master/__main__.py",
+    "action": "NEW",
+    "purpose": "模块执行入口",
+    "implementation": "调用cli.main；不含业务流程",
+    "work_package": "WP01",
+    "test": "tests/rebuild/test_cli.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-003",
+    "target": "src/deck_master/models.py",
+    "action": "NEW",
+    "purpose": "五类对象和Ref",
+    "implementation": "validate_document/page/artifact/task/review；只格式/身份不专业评分；v1.1：Document.design_context、未知原hash、asset与Task.call_allowances格式/跨引用",
+    "work_package": "WP01",
+    "test": "tests/rebuild/test_contracts.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-004",
+    "target": "src/deck_master/store.py",
+    "action": "EXTRACT_REWRITE",
+    "purpose": "文件资源与原子版本",
+    "implementation": "put_blob/read_current/commit_change/restore；不可变对象、读集冲突、取消同锁",
+    "work_package": "WP01",
+    "test": "tests/rebuild/test_store_transactions.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-005",
+    "target": "src/deck_master/sources.py",
+    "action": "EXTRACT_REWRITE",
+    "purpose": "材料读取与定位",
+    "implementation": "register_sources/read_source/locate；全文可达、页/段定位、敏感外发边界；v1.1：缺原文保留未知，extract/asset独立真实hash，项目相对资产",
+    "work_package": "WP01",
+    "test": "tests/rebuild/test_sources.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-006",
+    "target": "src/deck_master/content.py",
+    "action": "EXTRACT_REWRITE",
+    "purpose": "正文与设计",
+    "implementation": "normalize_draft/visible_atoms/content_diff；保留必要叶子；不规则配论点；v1.1：稳定atom/旧Pointer规范化；共享设计解析与Page明确覆盖",
+    "work_package": "WP01",
+    "test": "tests/rebuild/test_content.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-007",
+    "target": "src/deck_master/tasks.py",
+    "action": "NEW",
+    "purpose": "宿主任务交接",
+    "implementation": "issue/claim/accept/cancel/retry；按输入依赖稳定身份，支持幂等晚到拒绝；v1.1：项目额度分配/begin/settle与结果信封，未知/取消/恢复不清零",
+    "work_package": "WP01",
+    "test": "tests/rebuild/test_tasks.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-008",
+    "target": "src/deck_master/service.py",
+    "action": "NEW",
+    "purpose": "应用用例",
+    "implementation": "create/continue/edit/check/export；所有CLI/UI共用，不注册阶段平台；v1.1：设计与资产接收、首次正文触发工作台动作、共享有效配置",
+    "work_package": "WP01",
+    "test": "tests/rebuild/test_service_flow.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-009",
+    "target": "src/deck_master/cli.py",
+    "action": "REPLACE",
+    "purpose": "唯一命令入口",
+    "implementation": "薄参数解析+service调用+标准JSON；兼容命令不能偷走旧链",
+    "work_package": "WP01",
+    "test": "tests/rebuild/test_cli.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-010",
+    "target": "src/deck_master/production.py",
+    "action": "EXTRACT_REWRITE",
+    "purpose": "页面视觉制作",
+    "implementation": "project_prompt/adopt_blueprint/accept_svg/build；正文往返、原图独立、分步失败；v1.1：Document唯一画布/字体/style_ref与允许资产输入，无原生数据图表声明",
+    "work_package": "WP02",
+    "test": "tests/rebuild/test_production.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-011",
+    "target": "src/deck_master/review.py",
+    "action": "EXTRACT_REWRITE",
+    "purpose": "真实检查与审稿",
+    "implementation": "measure/evaluate/accept_review/freshness；唯一定义检查结论；v1.1：fixed经新产物真实复查及replaces链，负例明确",
+    "work_package": "WP03",
+    "test": "tests/rebuild/test_review.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-012",
+    "target": "src/deck_master/view.py",
+    "action": "NEW",
+    "purpose": "当前状态投影",
+    "implementation": "project_view/page_view；只派生，不持久化另一ready",
+    "work_package": "WP01",
+    "test": "tests/rebuild/test_view.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-013",
+    "target": "src/deck_master/web.py",
+    "action": "REPLACE",
+    "purpose": "本地工作台服务",
+    "implementation": "serve/open；GET实际产物、POST修改请求；复用service，不含模型服务；v1.1：自动首次启动、服务复用、无浏览器/不可达原因",
+    "work_package": "WP03",
+    "test": "tests/rebuild/test_web.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-014",
+    "target": "src/deck_master/export.py",
+    "action": "EXTRACT_REWRITE",
+    "purpose": "本地导出",
+    "implementation": "export_review/export_delivery；不发邮件，未通过稿可明确标识查看；v1.1：明确形状文字编辑范围和未验证状态",
+    "work_package": "WP03",
+    "test": "tests/rebuild/test_export.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-015",
+    "target": "src/deck_master/legacy.py",
+    "action": "EXTRACT_REWRITE",
+    "purpose": "旧格式读取/导入",
+    "implementation": "inspect/import_copy；不执行旧脚本、不继承旧pass，原run零写入；v1.1：缺源hash空，旧设计/素材规范化不追认原身份",
+    "work_package": "WP04",
+    "test": "tests/rebuild/test_legacy.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-016",
+    "target": "src/deck_master/doctor.py",
+    "action": "EXTRACT_REWRITE",
+    "purpose": "实际运行诊断",
+    "implementation": "inspect_install/check_step；报告版本/模块/字体/渲染器，不判业务专业",
+    "work_package": "WP04",
+    "test": "tests/rebuild/test_install.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-017",
+    "target": "src/deck_master/install.py",
+    "action": "EXTRACT_REWRITE",
+    "purpose": "最小安装和回滚",
+    "implementation": "build_release/install/rollback；固定解释器、资源齐备、旧Skill受控移除",
+    "work_package": "WP04",
+    "test": "tests/rebuild/test_install.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-018",
+    "target": "src/deck_master/compiler/__init__.py",
+    "action": "NEW",
+    "purpose": "纯转换包",
+    "implementation": "不导入service/review/store/Host模型",
+    "work_package": "WP02",
+    "test": "tests/rebuild/test_package_boundary.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-019",
+    "target": "src/deck_master/compiler/api.py",
+    "action": "EXTRACT_REWRITE",
+    "purpose": "独立编译接口",
+    "implementation": "compile_deck(SvgInput[],CompileOptions,output_dir)->CompileResult",
+    "work_package": "WP02",
+    "test": "tests/rebuild/test_compiler_api.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-020",
+    "target": "src/deck_master/compiler/ir.py",
+    "action": "EXTRACT_REWRITE",
+    "purpose": "派生图形表示",
+    "implementation": "内部SVG标准化节点/样式/几何；Host不手写",
+    "work_package": "WP02",
+    "test": "tests/rebuild/test_svg_parser.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-021",
+    "target": "src/deck_master/compiler/svg.py",
+    "action": "EXTRACT_REWRITE",
+    "purpose": "SVG受支持子集",
+    "implementation": "parse_svg/validate_subset；本地解析，禁外链与脚本，明确不支持",
+    "work_package": "WP02",
+    "test": "tests/rebuild/test_svg_parser.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-022",
+    "target": "src/deck_master/compiler/geometry.py",
+    "action": "EXTRACT_REWRITE",
+    "purpose": "变换/端点/曲线",
+    "implementation": "affine/bounds/path/connector；修旋转圆/负斜率/圆角/描边",
+    "work_package": "WP02",
+    "test": "tests/rebuild/test_geometry.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-023",
+    "target": "src/deck_master/compiler/paint.py",
+    "action": "EXTRACT_REWRITE",
+    "purpose": "画笔/透明度",
+    "implementation": "fill/stroke/gradient；0与缺值区分",
+    "work_package": "WP02",
+    "test": "tests/rebuild/test_paint.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-024",
+    "target": "src/deck_master/compiler/text.py",
+    "action": "EXTRACT_REWRITE",
+    "purpose": "可编辑文字",
+    "implementation": "字体/字重/基线/换行/行距；不可隐形或缩字过检",
+    "work_package": "WP02",
+    "test": "tests/rebuild/test_text.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-025",
+    "target": "src/deck_master/compiler/drawingml.py",
+    "action": "EXTRACT_REWRITE",
+    "purpose": "PPT对象写入",
+    "implementation": "native text/shape/path/connector/image；不改正文与业务边",
+    "work_package": "WP02",
+    "test": "tests/rebuild/test_drawingml.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-026",
+    "target": "src/deck_master/compiler/render.py",
+    "action": "EXTRACT_REWRITE",
+    "purpose": "实际渲染",
+    "implementation": "SVG和PPT独立渲染，隔离输出；返回工具版本和实际页图",
+    "work_package": "WP02",
+    "test": "tests/rebuild/test_render.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-027",
+    "target": "src/deck_master/compiler/readback.py",
+    "action": "EXTRACT_REWRITE",
+    "purpose": "实际PPT读取",
+    "implementation": "XML/文本/端点/画笔/字体检查；不得以生成trace作唯一预期",
+    "work_package": "WP02",
+    "test": "tests/rebuild/test_readback.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-028",
+    "target": "src/deck_master/resources/static/index.html",
+    "action": "EXTRACT_REWRITE",
+    "purpose": "工作台HTML",
+    "implementation": "三栏实际页面；去掉商机/团队/Skill阶段面板",
+    "work_package": "WP03",
+    "test": "tests/rebuild/test_workbench_e2e.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-029",
+    "target": "src/deck_master/resources/static/app.js",
+    "action": "EXTRACT_REWRITE",
+    "purpose": "工作台交互",
+    "implementation": "版本化API与四视图比较、反馈、改稿、取消和冲突",
+    "work_package": "WP03",
+    "test": "tests/rebuild/test_workbench_e2e.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-030",
+    "target": "src/deck_master/resources/static/style.css",
+    "action": "EXTRACT_REWRITE",
+    "purpose": "工作台样式",
+    "implementation": "复用可用样式，保证1280/1440宽度和文字可读",
+    "work_package": "WP03",
+    "test": "tests/rebuild/test_workbench_e2e.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-031",
+    "target": "src/deck_master/resources/contracts/document.v1.schema.json",
+    "action": "NEW",
+    "purpose": "规范契约",
+    "implementation": "从本包contracts落地为唯一安装资源，不复制58份旧合同",
+    "work_package": "WP01",
+    "test": "tests/rebuild/test_contracts.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-032",
+    "target": "src/deck_master/resources/contracts/page.v2.schema.json",
+    "action": "NEW",
+    "purpose": "规范契约",
+    "implementation": "从本包contracts落地为唯一安装资源，不复制58份旧合同",
+    "work_package": "WP01",
+    "test": "tests/rebuild/test_contracts.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-033",
+    "target": "src/deck_master/resources/contracts/artifact.v1.schema.json",
+    "action": "NEW",
+    "purpose": "规范契约",
+    "implementation": "从本包contracts落地为唯一安装资源，不复制58份旧合同",
+    "work_package": "WP01",
+    "test": "tests/rebuild/test_contracts.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-034",
+    "target": "src/deck_master/resources/contracts/task.v1.schema.json",
+    "action": "NEW",
+    "purpose": "规范契约",
+    "implementation": "从本包contracts落地为唯一安装资源，不复制58份旧合同",
+    "work_package": "WP01",
+    "test": "tests/rebuild/test_contracts.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-035",
+    "target": "src/deck_master/resources/contracts/review.v1.schema.json",
+    "action": "NEW",
+    "purpose": "规范契约",
+    "implementation": "从本包contracts落地为唯一安装资源，不复制58份旧合同",
+    "work_package": "WP01",
+    "test": "tests/rebuild/test_contracts.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-036",
+    "target": "setup.py",
+    "action": "NEW",
+    "purpose": "正常PEP517构建注册",
+    "implementation": "仅注册本地build_py hook；不在安装时访问用户run/网络",
+    "work_package": "WP01",
+    "test": "tests/rebuild/test_install.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-037",
+    "target": "MANIFEST.in",
+    "action": "NEW",
+    "purpose": "sdist内容",
+    "implementation": "纳入src、Skill、hook与许可证；排除运行资料/字体",
+    "work_package": "WP01",
+    "test": "tests/rebuild/test_install.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-038",
+    "target": "tools/build_hook.py",
+    "action": "NEW",
+    "purpose": "资源唯一来源",
+    "implementation": "把skills/deck-master复制到build_lib资源；源仓不维护第二份",
+    "work_package": "WP01",
+    "test": "tests/rebuild/test_install.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-039",
+    "target": "tools/build_release.py",
+    "action": "NEW",
+    "purpose": "发行打包",
+    "implementation": "调用相同构建hook并核实wheel实际内容，生成最小release记录",
+    "work_package": "WP04",
+    "test": "tests/rebuild/test_install.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-040",
+    "target": "skills/deck-master/references/source-reading.md",
+    "action": "NEW",
+    "purpose": "Host材料方法",
+    "implementation": "提取文字/图表、尾部约束与引用；摘要只导航",
+    "work_package": "WP01",
+    "test": "tests/rebuild/test_content.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-041",
+    "target": "skills/deck-master/references/blueprint-svg.md",
+    "action": "NEW",
+    "purpose": "Host视觉方法",
+    "implementation": "真实原图/正文往返/忠实SVG；不写第二Scene",
+    "work_package": "WP02",
+    "test": "tests/rebuild/test_production.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-042",
+    "target": "skills/deck-master/references/review-and-repair.md",
+    "action": "NEW",
+    "purpose": "Host编辑方法",
+    "implementation": "看实际成品，分内容/制作/转换，修到新产物",
+    "work_package": "WP03",
+    "test": "tests/rebuild/test_review.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-043",
+    "target": "skills/deck-master/references/content-examples.md",
+    "action": "NEW",
+    "purpose": "成对完整示例",
+    "implementation": "从本包examples/content-pair.md提炼；不是固定模板目录",
+    "work_package": "WP01",
+    "test": "tests/rebuild/test_content.py",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-044",
+    "target": "tests/rebuild/test_cli.py",
+    "action": "NEW",
+    "purpose": "新默认行为回归",
+    "implementation": "按AC逐行为实施，移植旧有效断言；当前仅拟建路径，不是已通过测试",
+    "work_package": "跨WP",
+    "test": "—",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-045",
+    "target": "tests/rebuild/test_compiler_api.py",
+    "action": "NEW",
+    "purpose": "新默认行为回归",
+    "implementation": "按AC逐行为实施，移植旧有效断言；当前仅拟建路径，不是已通过测试",
+    "work_package": "跨WP",
+    "test": "—",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-046",
+    "target": "tests/rebuild/test_content.py",
+    "action": "NEW",
+    "purpose": "新默认行为回归",
+    "implementation": "按AC逐行为实施，移植旧有效断言；当前仅拟建路径，不是已通过测试",
+    "work_package": "跨WP",
+    "test": "—",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-047",
+    "target": "tests/rebuild/test_contracts.py",
+    "action": "NEW",
+    "purpose": "新默认行为回归",
+    "implementation": "按AC逐行为实施，移植旧有效断言；当前仅拟建路径，不是已通过测试",
+    "work_package": "跨WP",
+    "test": "—",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-048",
+    "target": "tests/rebuild/test_drawingml.py",
+    "action": "NEW",
+    "purpose": "新默认行为回归",
+    "implementation": "按AC逐行为实施，移植旧有效断言；当前仅拟建路径，不是已通过测试",
+    "work_package": "跨WP",
+    "test": "—",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-049",
+    "target": "tests/rebuild/test_export.py",
+    "action": "NEW",
+    "purpose": "新默认行为回归",
+    "implementation": "按AC逐行为实施，移植旧有效断言；当前仅拟建路径，不是已通过测试",
+    "work_package": "跨WP",
+    "test": "—",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-050",
+    "target": "tests/rebuild/test_geometry.py",
+    "action": "NEW",
+    "purpose": "新默认行为回归",
+    "implementation": "按AC逐行为实施，移植旧有效断言；当前仅拟建路径，不是已通过测试",
+    "work_package": "跨WP",
+    "test": "—",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-051",
+    "target": "tests/rebuild/test_install.py",
+    "action": "NEW",
+    "purpose": "新默认行为回归",
+    "implementation": "按AC逐行为实施，移植旧有效断言；当前仅拟建路径，不是已通过测试",
+    "work_package": "跨WP",
+    "test": "—",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-052",
+    "target": "tests/rebuild/test_legacy.py",
+    "action": "NEW",
+    "purpose": "新默认行为回归",
+    "implementation": "按AC逐行为实施，移植旧有效断言；当前仅拟建路径，不是已通过测试",
+    "work_package": "跨WP",
+    "test": "—",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-053",
+    "target": "tests/rebuild/test_package_boundary.py",
+    "action": "NEW",
+    "purpose": "新默认行为回归",
+    "implementation": "按AC逐行为实施，移植旧有效断言；当前仅拟建路径，不是已通过测试",
+    "work_package": "跨WP",
+    "test": "—",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-054",
+    "target": "tests/rebuild/test_paint.py",
+    "action": "NEW",
+    "purpose": "新默认行为回归",
+    "implementation": "按AC逐行为实施，移植旧有效断言；当前仅拟建路径，不是已通过测试",
+    "work_package": "跨WP",
+    "test": "—",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-055",
+    "target": "tests/rebuild/test_production.py",
+    "action": "NEW",
+    "purpose": "新默认行为回归",
+    "implementation": "按AC逐行为实施，移植旧有效断言；当前仅拟建路径，不是已通过测试",
+    "work_package": "跨WP",
+    "test": "—",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-056",
+    "target": "tests/rebuild/test_readback.py",
+    "action": "NEW",
+    "purpose": "新默认行为回归",
+    "implementation": "按AC逐行为实施，移植旧有效断言；当前仅拟建路径，不是已通过测试",
+    "work_package": "跨WP",
+    "test": "—",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-057",
+    "target": "tests/rebuild/test_render.py",
+    "action": "NEW",
+    "purpose": "新默认行为回归",
+    "implementation": "按AC逐行为实施，移植旧有效断言；当前仅拟建路径，不是已通过测试",
+    "work_package": "跨WP",
+    "test": "—",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-058",
+    "target": "tests/rebuild/test_review.py",
+    "action": "NEW",
+    "purpose": "新默认行为回归",
+    "implementation": "按AC逐行为实施，移植旧有效断言；当前仅拟建路径，不是已通过测试",
+    "work_package": "跨WP",
+    "test": "—",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-059",
+    "target": "tests/rebuild/test_service_flow.py",
+    "action": "NEW",
+    "purpose": "新默认行为回归",
+    "implementation": "按AC逐行为实施，移植旧有效断言；当前仅拟建路径，不是已通过测试",
+    "work_package": "跨WP",
+    "test": "—",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-060",
+    "target": "tests/rebuild/test_sources.py",
+    "action": "NEW",
+    "purpose": "新默认行为回归",
+    "implementation": "按AC逐行为实施，移植旧有效断言；当前仅拟建路径，不是已通过测试",
+    "work_package": "跨WP",
+    "test": "—",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-061",
+    "target": "tests/rebuild/test_store_transactions.py",
+    "action": "NEW",
+    "purpose": "新默认行为回归",
+    "implementation": "按AC逐行为实施，移植旧有效断言；当前仅拟建路径，不是已通过测试",
+    "work_package": "跨WP",
+    "test": "—",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-062",
+    "target": "tests/rebuild/test_svg_parser.py",
+    "action": "NEW",
+    "purpose": "新默认行为回归",
+    "implementation": "按AC逐行为实施，移植旧有效断言；当前仅拟建路径，不是已通过测试",
+    "work_package": "跨WP",
+    "test": "—",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-063",
+    "target": "tests/rebuild/test_tasks.py",
+    "action": "NEW",
+    "purpose": "新默认行为回归",
+    "implementation": "按AC逐行为实施，移植旧有效断言；当前仅拟建路径，不是已通过测试",
+    "work_package": "跨WP",
+    "test": "—",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-064",
+    "target": "tests/rebuild/test_text.py",
+    "action": "NEW",
+    "purpose": "新默认行为回归",
+    "implementation": "按AC逐行为实施，移植旧有效断言；当前仅拟建路径，不是已通过测试",
+    "work_package": "跨WP",
+    "test": "—",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-065",
+    "target": "tests/rebuild/test_view.py",
+    "action": "NEW",
+    "purpose": "新默认行为回归",
+    "implementation": "按AC逐行为实施，移植旧有效断言；当前仅拟建路径，不是已通过测试",
+    "work_package": "跨WP",
+    "test": "—",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-066",
+    "target": "tests/rebuild/test_web.py",
+    "action": "NEW",
+    "purpose": "新默认行为回归",
+    "implementation": "按AC逐行为实施，移植旧有效断言；当前仅拟建路径，不是已通过测试",
+    "work_package": "跨WP",
+    "test": "—",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-067",
+    "target": "tests/rebuild/test_workbench_e2e.py",
+    "action": "NEW",
+    "purpose": "新默认行为回归",
+    "implementation": "按AC逐行为实施，移植旧有效断言；当前仅拟建路径，不是已通过测试",
+    "work_package": "跨WP",
+    "test": "—",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-068",
+    "target": "tests/rebuild/conftest.py",
+    "action": "NEW",
+    "purpose": "测试隔离",
+    "implementation": "合成project、独立HOME、工具缺失/故障注入fixture；不读客户目录",
+    "work_package": "WP01",
+    "test": "—",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-069",
+    "target": "tests/rebuild/fixtures/content_pair/",
+    "action": "NEW",
+    "purpose": "D1/D2公开合成或脱敏材料与任务；不得含H1/H2答案",
+    "implementation": "D1/D2公开合成或脱敏材料与任务；不得含H1/H2答案",
+    "work_package": "WP01",
+    "test": "—",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-070",
+    "target": "tests/rebuild/fixtures/compiler/",
+    "action": "NEW",
+    "purpose": "线/圆/文字/画笔/表格原始SVG输入与独立数值期待",
+    "implementation": "线/圆/文字/画笔/表格原始SVG输入与独立数值期待",
+    "work_package": "WP02",
+    "test": "—",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-071",
+    "target": "tests/rebuild/fixtures/legacy/",
+    "action": "NEW",
+    "purpose": "已知v1/HD合成旧run；原件不写/未知字段/旧pass反例",
+    "implementation": "已知v1/HD合成旧run；原件不写/未知字段/旧pass反例",
+    "work_package": "WP04",
+    "test": "—",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-072",
+    "target": "tests/rebuild/fixtures/review/",
+    "action": "NEW",
+    "purpose": "正常还原/故意删减/合理渲染差异；不用当前结果反造预期",
+    "implementation": "正常还原/故意删减/合理渲染差异；不用当前结果反造预期",
+    "work_package": "WP03",
+    "test": "—",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-073",
+    "target": "docs/specs/deck-master-rebuild-v1/",
+    "action": "NEW",
+    "purpose": "本包落地目录；活动基线，历史规范不自动继承",
+    "implementation": "本包落地目录；活动基线，历史规范不自动继承",
+    "work_package": "WP01",
+    "test": "—",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-074",
+    "target": "docs/archive/pre-rebuild/README.md",
+    "action": "NEW",
+    "purpose": "旧源版本/旧合同/文档历史索引及退出默认说明",
+    "implementation": "旧源版本/旧合同/文档历史索引及退出默认说明",
+    "work_package": "WP05",
+    "test": "—",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  },
+  {
+    "id": "NEW-075",
+    "target": "docs/migration-to-rebuilt-core.md",
+    "action": "NEW",
+    "purpose": "用户旧run读取、导入、安装回退的具体指引",
+    "implementation": "用户旧run读取、导入、安装回退的具体指引",
+    "work_package": "WP04",
+    "test": "—",
+    "status": "拟新建，尚未实现；需要 Codex 核验"
+  }
+]

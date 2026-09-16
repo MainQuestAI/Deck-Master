@@ -1,0 +1,19 @@
+{
+  "example_only": true,
+  "submitted_page_ref": {
+    "path": ".deckmaster/objects/18/18bb547bbf4be1e7ec8f7bae7cdd320658fbf3ac1cfe2912473b7fc8933b28fd.json",
+    "sha256": "18bb547bbf4be1e7ec8f7bae7cdd320658fbf3ac1cfe2912473b7fc8933b28fd"
+  },
+  "source_blueprint_ref": {
+    "path": ".deckmaster/objects/94/941787a7f0dcad6828bdd04d1db68e7b63d605c436b051b21b35cbffb8d1ff94.json",
+    "sha256": "941787a7f0dcad6828bdd04d1db68e7b63d605c436b051b21b35cbffb8d1ff94"
+  },
+  "submitted_svg_file_sha256": "42b437780425e456a0940396a039316e0cfb2b0b492632b5e3841a07dde1f32a",
+  "expected_after_accept": {
+    "status": "accepted",
+    "production": "needs_compile_and_review",
+    "professional_use": "not_evaluated"
+  },
+  "duplicate_same_input": "already_applied, same revision",
+  "changed_base": "conflict, current unchanged"
+}

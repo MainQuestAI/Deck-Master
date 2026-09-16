@@ -1,0 +1,31 @@
+{
+  "schema_version": "deck_review.v1",
+  "review_id": "review_demo_unassessed",
+  "kind": "professional_use",
+  "status": "not_evaluated",
+  "subjects": [
+    {
+      "path": ".deckmaster/objects/51/51112d64a761880e7a66118f5a550dab7716cae0ad507f1c77704534d0cf355a.json",
+      "sha256": "51112d64a761880e7a66118f5a550dab7716cae0ad507f1c77704534d0cf355a"
+    }
+  ],
+  "dependencies": [
+    {
+      "kind": "content",
+      "identity": "page:p09",
+      "sha256": "51112d64a761880e7a66118f5a550dab7716cae0ad507f1c77704534d0cf355a"
+    }
+  ],
+  "reviewer": {
+    "type": "host_self",
+    "id": "example-only",
+    "execution_ref": null,
+    "independence_confirmed": false
+  },
+  "observations": [
+    "这是未评估状态的结构示例，不是审阅结论。"
+  ],
+  "findings": [],
+  "created_at": "2026-09-16T00:00:00Z",
+  "replaces": null
+}

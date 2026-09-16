@@ -1,0 +1,1 @@
+Protocol fixture only. 120 records; 54 require additional equipment details; interface is read-only. Not customer data.

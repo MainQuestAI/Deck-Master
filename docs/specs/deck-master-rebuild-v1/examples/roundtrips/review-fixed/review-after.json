@@ -1,0 +1,68 @@
+{
+  "schema_version": "deck_review.v1",
+  "review_id": "review_p09_example",
+  "kind": "content",
+  "status": "pass",
+  "subjects": [
+    {
+      "path": ".deckmaster/objects/ea/ea58c430f7d73a826317e0f160d28de77dbbc9d5bb5ddbeff16b0959adaa4709.json",
+      "sha256": "ea58c430f7d73a826317e0f160d28de77dbbc9d5bb5ddbeff16b0959adaa4709"
+    }
+  ],
+  "dependencies": [
+    {
+      "kind": "content",
+      "identity": "page:p09",
+      "sha256": "b6b3d0b287c54605861cc019ba35d8c30af9f74a41847164d5ff441897568743"
+    },
+    {
+      "kind": "artifact",
+      "identity": "svg:p09",
+      "sha256": "ea58c430f7d73a826317e0f160d28de77dbbc9d5bb5ddbeff16b0959adaa4709"
+    }
+  ],
+  "reviewer": {
+    "type": "host_self",
+    "id": "synthetic-review-example",
+    "execution_ref": null,
+    "independence_confirmed": false
+  },
+  "observations": [
+    "合成新复查例：针对新SVG核对相同标签；预期文字、绑定、对象均存在。实际实施仍需实际渲染检查，不可用本例填报通过。"
+  ],
+  "findings": [
+    {
+      "finding_id": "finding_read_only",
+      "kind": "content",
+      "impact": "must_fix",
+      "page_id": "p09",
+      "element_refs": [
+        "atom:p09:label:read_only:text"
+      ],
+      "message": "示例标签缺失",
+      "expected": "READ ONLY / SPEC FIXTURE",
+      "actual": "新示例SVG包含标签",
+      "evidence": [
+        {
+          "path": ".deckmaster/objects/b6/b6b3d0b287c54605861cc019ba35d8c30af9f74a41847164d5ff441897568743.json",
+          "sha256": "b6b3d0b287c54605861cc019ba35d8c30af9f74a41847164d5ff441897568743"
+        },
+        {
+          "path": ".deckmaster/objects/40/40d9c24dd1a3fef0b098c1e65da4e57e242c980c9a09b0cffe56083e68f4f904.svg",
+          "sha256": "40d9c24dd1a3fef0b098c1e65da4e57e242c980c9a09b0cffe56083e68f4f904"
+        },
+        {
+          "path": ".deckmaster/objects/9c/9c97a2678c2949d5cdc43a48c58a1a9370fffcc5424a84e85c63933db4f0a832.json",
+          "sha256": "9c97a2678c2949d5cdc43a48c58a1a9370fffcc5424a84e85c63933db4f0a832"
+        }
+      ],
+      "resolution": "fixed",
+      "resolution_reason": "针对新对象的复查示例，旧Review保持fail。"
+    }
+  ],
+  "created_at": "2026-09-16T00:00:00Z",
+  "replaces": {
+    "path": ".deckmaster/objects/b3/b316ac3fc7bebfa74da945333cb5cbdf75621813b16a9d69d6b94f03b69a0882.json",
+    "sha256": "b316ac3fc7bebfa74da945333cb5cbdf75621813b16a9d69d6b94f03b69a0882"
+  }
+}

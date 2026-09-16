@@ -1,0 +1,812 @@
+[
+  {
+    "acceptance_id": "AC-C01",
+    "name": "原文末尾约束",
+    "expected_behavior": "关键只读/不可回写放材料末尾；输出正文与设计关系随约束改变，不只写已读",
+    "test": "tests/rebuild/test_sources.py",
+    "task_id": "T03",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-C02",
+    "name": "场景结构与短稿",
+    "expected_behavior": "同源D1/D2结构/深度/结尾不同；合理短稿不加固定痛点风险CTA",
+    "test": "tests/rebuild/test_content.py",
+    "task_id": "T04",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-C03",
+    "name": "全可见正文",
+    "expected_behavior": "嵌套职责、标签、副标题、脚注、表格值全部保留；metadata不变正文；稳定atom不依数组顺序/文字hash，重排改字ID不变，复制新条目新ID，旧Pointer导入规范化",
+    "test": "tests/rebuild/test_content.py",
+    "task_id": "T03",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-C04",
+    "name": "不再循环配论点",
+    "expected_behavior": "预置正确接口论点不能被数组取模配成公司成立年份；默认入口不调用旧enrich",
+    "test": "tests/rebuild/test_service_flow.py",
+    "task_id": "T04",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-C05",
+    "name": "事实/计算/建议区别",
+    "expected_behavior": "54÷120可复算；无依据40%提升不当事实；只读条件影响自动化推荐",
+    "test": "tests/rebuild/test_review.py",
+    "task_id": "T11",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-C06",
+    "name": "不依赖库和工作区",
+    "expected_behavior": "普通材料目录、无历史库缓存/模板可从create正常进入Host任务",
+    "test": "tests/rebuild/test_service_flow.py",
+    "task_id": "T04",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-C07",
+    "name": "不重复问答",
+    "expected_behavior": "无额外约束/不适用有效；只问足以改变本次决定且来源无法回答的缺口",
+    "test": "tests/rebuild/test_content.py",
+    "task_id": "T04",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-C08",
+    "name": "来源形态",
+    "expected_behavior": "TXT/MD/JSON/PDF/DOCX/PPTX读到相关正文和表格；图页派发阅图；缺工具不空成功",
+    "test": "tests/rebuild/test_sources.py",
+    "task_id": "T03",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-C09",
+    "name": "正文完整而非占位",
+    "expected_behavior": "内容有业务机制/方案理由/适当深度；制作意图不替代正文",
+    "test": "human_content_review",
+    "task_id": "T21",
+    "evidence_kind": "实际人类/Host运行记录",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-C10",
+    "name": "复合Deck",
+    "expected_behavior": "案例/架构/实施围绕同一任务，不重复拼接、无关章节不凑满",
+    "test": "human_content_review",
+    "task_id": "T21",
+    "evidence_kind": "实际人类/Host运行记录",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-C11",
+    "name": "未知输入形态",
+    "expected_behavior": "不能静默丢旧body字段；定位待规范化内容，未经检查不强设ready",
+    "test": "tests/rebuild/test_content.py",
+    "task_id": "T03",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-B01",
+    "name": "真实prompt全字段",
+    "expected_behavior": "marker确认subtitle/footnotes/labels/visual_spec等进入实际prompt而非仅中间JSON；同Document有效design_context/style_ref/允许资产投影，不独立补默认",
+    "test": "tests/rebuild/test_production.py",
+    "task_id": "T06",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-B02",
+    "name": "来源诚实",
+    "expected_behavior": "actual prompt只从真实提交记录取得；未知调用标unknown；文件名/签名不升级真实性",
+    "test": "tests/rebuild/test_production.py",
+    "task_id": "T06",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-B03",
+    "name": "文案往返",
+    "expected_behavior": "采纳蓝图新文案产生新Page；原图generated_from与prompt保持原版，小改文字不强制重生",
+    "test": "tests/rebuild/test_production.py",
+    "task_id": "T07",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-B04",
+    "name": "图像实际参与",
+    "expected_behavior": "同业务两张显著不同布局源图，SVG几何相应变化，不能只换hash",
+    "test": "host_image_review",
+    "task_id": "T10",
+    "evidence_kind": "实际人类/Host运行记录",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-B05",
+    "name": "基准方向",
+    "expected_behavior": "当前SVG/PPT预览及已知派生图不能成为自己原始参考；重编码不改变角色",
+    "test": "tests/rebuild/test_production.py",
+    "task_id": "T07",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-B06",
+    "name": "单手写源",
+    "expected_behavior": "只提交SVG可生成IR；Host无需手写Scene；必要绑定能解析",
+    "test": "tests/rebuild/test_svg_parser.py",
+    "task_id": "T08",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-B07",
+    "name": "源图预期独立",
+    "expected_behavior": "删除SVG图标登记不缩小源图预期；未识别原图不记满覆盖",
+    "test": "tests/rebuild/test_review.py",
+    "task_id": "T11",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-B08",
+    "name": "结构不重复印字",
+    "expected_behavior": "edge.target不自动变正文；必要标签保留，关系实际连节点",
+    "test": "tests/rebuild/test_content.py",
+    "task_id": "T07",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-B09",
+    "name": "无假生图降级",
+    "expected_behavior": "缺Host工具返回待工具，不走fixture/无字通用图/自动直绘替代任务",
+    "test": "tests/rebuild/test_service_flow.py",
+    "task_id": "T06",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-B10",
+    "name": "原件与重设计",
+    "expected_behavior": "明确新设计能建立新参考版本；旧还原失败仍保留，不回填通过",
+    "test": "tests/rebuild/test_production.py",
+    "task_id": "T07",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-K01",
+    "name": "独立转换",
+    "expected_behavior": "只给SVG/资产/参数，隔离安装可产PPT，不读旧OS/审批/HOME仓库",
+    "test": "tests/rebuild/test_compiler_api.py",
+    "task_id": "T08",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-K02",
+    "name": "负斜率与端点",
+    "expected_behavior": "正负斜率及反向line的实际PPT端点方向正确，不只bbox相同",
+    "test": "tests/rebuild/test_geometry.py",
+    "task_id": "T09",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-K03",
+    "name": "旋转圆边界",
+    "expected_behavior": "r10圆旋转45度仍20×20；椭圆变换使用正确极值",
+    "test": "tests/rebuild/test_geometry.py",
+    "task_id": "T09",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-K04",
+    "name": "字体权重",
+    "expected_behavior": "800/900不反为normal；记录实际字体匹配/替代，XML与渲染核对",
+    "test": "tests/rebuild/test_text.py",
+    "task_id": "T09",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-K05",
+    "name": "零透明度",
+    "expected_behavior": "fill/stroke/gradient stop/group opacity=0保留；None才默认",
+    "test": "tests/rebuild/test_paint.py",
+    "task_id": "T09",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-K06",
+    "name": "多行中文",
+    "expected_behavior": "tspan位置/基线/行距/字重/换行保留；无精确字符串掩盖排版损失",
+    "test": "tests/rebuild/test_text.py",
+    "task_id": "T09",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-K07",
+    "name": "圆角和描边",
+    "expected_behavior": "缩放圆角矩形、图标描边既有修复不回退；非等比范围明确",
+    "test": "tests/rebuild/test_geometry.py",
+    "task_id": "T09",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-K08",
+    "name": "实际几何读取",
+    "expected_behavior": "从输入SVG+独立Page关系检查实际PPT/XML，不只trace对trace",
+    "test": "tests/rebuild/test_readback.py",
+    "task_id": "T10",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-K09",
+    "name": "不支持与安全",
+    "expected_behavior": "脚本/外部可执行引用拒绝；不支持特性定位对象，不静默删图",
+    "test": "tests/rebuild/test_svg_parser.py",
+    "task_id": "T08",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-K10",
+    "name": "可读性",
+    "expected_behavior": "1pt/透明补全文层不能过内容覆盖；真实文本溢出有定位",
+    "test": "tests/rebuild/test_readback.py",
+    "task_id": "T10",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-K11",
+    "name": "实际渲染",
+    "expected_behavior": "SVG/PPT分别实际渲染，缺renderer标未验证，旧预览不能充新图",
+    "test": "tests/rebuild/test_render.py",
+    "task_id": "T10",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-K12",
+    "name": "桌面编辑",
+    "expected_behavior": "实际目标软件修改当前文字与关键图形/连接，保存重开；headless不代替；仅证明形状/文字编辑，不外推Office原生图表编辑数据或原生Table能力",
+    "test": "human_desktop_edit",
+    "task_id": "T23",
+    "evidence_kind": "实际人类/Host运行记录",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-K13",
+    "name": "支持范围",
+    "expected_behavior": "线/路径/图标/表格/图片/渐变和画布按子集正确；其余明确限制",
+    "test": "tests/rebuild/test_drawingml.py",
+    "task_id": "T10",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-S01",
+    "name": "事务不半写",
+    "expected_behavior": "对象/Document/指针各断点故障，当前仍完整旧版或完整新版",
+    "test": "tests/rebuild/test_store_transactions.py",
+    "task_id": "T02",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-S02",
+    "name": "文件安全",
+    "expected_behavior": "路径逃逸/符号链接危险写入/坏对象不能覆盖源和历史",
+    "test": "tests/rebuild/test_store_transactions.py",
+    "task_id": "T02",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-S03",
+    "name": "Task幂等",
+    "expected_behavior": "同operation相同输出重复返回同结果；不同输出拒绝",
+    "test": "tests/rebuild/test_tasks.py",
+    "task_id": "T12",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-S04",
+    "name": "依赖分层",
+    "expected_behavior": "预算/备注不让未变SVG失效；实际字体/源事实/全局style改变影响正确范围",
+    "test": "tests/rebuild/test_store_transactions.py",
+    "task_id": "T12",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-S05",
+    "name": "局部编辑",
+    "expected_behavior": "p09修改后无关页原图/SVG hash不变；整PPT允许重装配",
+    "test": "tests/rebuild/test_service_flow.py",
+    "task_id": "T12",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-S06",
+    "name": "多页事实",
+    "expected_behavior": "改变共用事实/关系，所有引用处更新，不只修改点选页",
+    "test": "tests/rebuild/test_service_flow.py",
+    "task_id": "T12",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-S07",
+    "name": "页集合",
+    "expected_behavior": "增删重排稳定ID，删页历史保留不混回当前PPT",
+    "test": "tests/rebuild/test_service_flow.py",
+    "task_id": "T12",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-S08",
+    "name": "并发与冲突",
+    "expected_behavior": "不同页读集安全重基；同页冲突不最后写覆盖",
+    "test": "tests/rebuild/test_store_transactions.py",
+    "task_id": "T12",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-S09",
+    "name": "取消竞态",
+    "expected_behavior": "cancel先赢则晚到不写；accept先赢则cancel不删除成品",
+    "test": "tests/rebuild/test_tasks.py",
+    "task_id": "T12",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-S10",
+    "name": "恢复/重定位",
+    "expected_behavior": "恢复新revision不改旧快照；移动项目refs可读，源映射检查hash；design_context相对对象/字体实际指纹恢复；不恢复已消费调用额度",
+    "test": "tests/rebuild/test_store_transactions.py",
+    "task_id": "T12",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-S11",
+    "name": "超过三次归档",
+    "expected_behavior": "4次及更多原件均保留独立ID；无attempt3覆盖",
+    "test": "tests/rebuild/test_tasks.py",
+    "task_id": "T13",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-S12",
+    "name": "预算与进展",
+    "expected_behavior": "并行Host仅一个取得最后名额；begin/settle幂等；已发失败计消耗，未知占额暂停新外部调用，本地修正继续；取消/重试/restore不清零；明确仅约束产品协议调用",
+    "test": "tests/rebuild/test_tasks.py",
+    "task_id": "T13",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-R01",
+    "name": "实际成品检查",
+    "expected_behavior": "内容/隐藏项/XML/页集合按当前产物检查，工具共享解析但检查意义分开",
+    "test": "tests/rebuild/test_review.py",
+    "task_id": "T11",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-R02",
+    "name": "未评估不是高分",
+    "expected_behavior": "没有执行对应检查时not_evaluated，无4/5默认专业分",
+    "test": "tests/rebuild/test_review.py",
+    "task_id": "T11",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-R03",
+    "name": "读写判定一致",
+    "expected_behavior": "同一发现和处理，submit/load/UI/export一致；不存在两套if",
+    "test": "tests/rebuild/test_review.py",
+    "task_id": "T11",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-R04",
+    "name": "像素差异分流",
+    "expected_behavior": "正常抗锯齿、故意删节点、真实字体/圆角丢失三类区分；不两票表决",
+    "test": "tests/rebuild/test_review.py",
+    "task_id": "T11",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-R05",
+    "name": "独立性诚实",
+    "expected_behavior": "同一Host两名称不能independence_confirmed；实际执行ref可追溯",
+    "test": "tests/rebuild/test_review.py",
+    "task_id": "T11",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-R06",
+    "name": "返修真完成",
+    "expected_behavior": "新Review replaces旧失败，固定finding_id，subjects新产物且有实际复查观察/证据；只改fixed/旧产物/过期证据拒绝；旧记录不改",
+    "test": "tests/rebuild/test_review.py",
+    "task_id": "T11",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-R07",
+    "name": "真实泄漏与业务词",
+    "expected_behavior": "正常缩略图/左屏保留，真正内部字段/客户敏感信息被识别",
+    "test": "tests/rebuild/test_review.py",
+    "task_id": "T11",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-R08",
+    "name": "品牌按任务",
+    "expected_behavior": "没有品牌库不阻断；已给VI要求实际进入设计和检查",
+    "test": "tests/rebuild/test_production.py",
+    "task_id": "T06",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-R09",
+    "name": "导出用途",
+    "expected_behavior": "review可看失败稿且标明；delivery拒未解决实质问题，不假人类通过",
+    "test": "tests/rebuild/test_export.py",
+    "task_id": "T15",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-R10",
+    "name": "历史报告",
+    "expected_behavior": "依赖变化的旧pass显示历史/过期，不能覆盖当前fail",
+    "test": "tests/rebuild/test_review.py",
+    "task_id": "T11",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-U01",
+    "name": "真实页数",
+    "expected_behavior": "无preview_manifest也显示Document真实页，不出现可交付+0页+初始化问卷",
+    "test": "tests/rebuild/test_workbench_e2e.py",
+    "task_id": "T14",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-U02",
+    "name": "当前版本统一",
+    "expected_behavior": "CLI/UI/continue/export读同一revision与检查，修改后一起更新",
+    "test": "tests/rebuild/test_web.py",
+    "task_id": "T14",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-U03",
+    "name": "本地服务",
+    "expected_behavior": "自然语言主Skill首次正文接收后自动view --open；有效服务/URL复用；无浏览器返回真实本地地址，服务失败为null+原因；不让用户补命令",
+    "test": "tests/rebuild/test_web.py",
+    "task_id": "T14",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-U04",
+    "name": "四视图",
+    "expected_behavior": "原文/蓝图/SVG/PPT显示真实文件和版本，问题能跳转对象/区域",
+    "test": "tests/rebuild/test_workbench_e2e.py",
+    "task_id": "T14",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-U05",
+    "name": "无Host不假运行",
+    "expected_behavior": "UI提交反馈后awaiting_host，实际start/accept才更新执行与成品",
+    "test": "tests/rebuild/test_workbench_e2e.py",
+    "task_id": "T14",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-U06",
+    "name": "写接口安全",
+    "expected_behavior": "同源token/路径白名单/XSS处理；只读浏览不要求团队账号",
+    "test": "tests/rebuild/test_web.py",
+    "task_id": "T14",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-U07",
+    "name": "可用布局",
+    "expected_behavior": "1280/1440下导航、比较、反馈可用，键盘可操作，状态不只颜色",
+    "test": "tests/rebuild/test_workbench_e2e.py",
+    "task_id": "T14",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-I01",
+    "name": "包依赖边界",
+    "expected_behavior": "新src不import旧命名空间；compiler不反向依赖业务审批",
+    "test": "tests/rebuild/test_package_boundary.py",
+    "task_id": "T16",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-I02",
+    "name": "实际doctor",
+    "expected_behavior": "解释器、模块路径、字体、renderer按步报；不把安装就绪当内容专业",
+    "test": "tests/rebuild/test_install.py",
+    "task_id": "T16",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-I03",
+    "name": "安装回滚",
+    "expected_behavior": "release先测后原子激活；失败保留current，回滚不让旧代码写未知新格式",
+    "test": "tests/rebuild/test_install.py",
+    "task_id": "T16",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-I04",
+    "name": "唯一入口",
+    "expected_behavior": "根Skill/CLI/API/doc/installer指同一路；旧命令明确映射或退役",
+    "test": "tests/rebuild/test_cli.py",
+    "task_id": "T17",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-I05",
+    "name": "无外部绑定",
+    "expected_behavior": "隔离HOME无PPTMaster/Library配置和缓存仍完整运行",
+    "test": "tests/rebuild/test_install.py",
+    "task_id": "T20",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-I06",
+    "name": "资源完整",
+    "expected_behavior": "wheel与sdist/pip install路径包含方法/schema/static；不借checkout补文件",
+    "test": "tests/rebuild/test_install.py",
+    "task_id": "T20",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-I07",
+    "name": "Skill不误删",
+    "expected_behavior": "只替换安装器拥有且未改的旧资源；同名第三方Skill不动",
+    "test": "tests/rebuild/test_install.py",
+    "task_id": "T16",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-I08",
+    "name": "许可证与资料",
+    "expected_behavior": "source归属保留；release不包含客户run/密钥/外带字体/历史敏感资料",
+    "test": "tests/rebuild/test_install.py",
+    "task_id": "T19",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-L01",
+    "name": "已知旧格式",
+    "expected_behavior": "v1/HD/PPT/SVG来源可读导入新副本；未知字段明确需要规范化",
+    "test": "tests/rebuild/test_legacy.py",
+    "task_id": "T18",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-L02",
+    "name": "原run不写",
+    "expected_behavior": "import前后原文件hash一致，不执行旧.py/.sh，不就地初始化",
+    "test": "tests/rebuild/test_legacy.py",
+    "task_id": "T18",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-L03",
+    "name": "旧pass不继承",
+    "expected_behavior": "原completed/reviewer字符串不变新专业通过，明确legacy未验证",
+    "test": "tests/rebuild/test_legacy.py",
+    "task_id": "T18",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-L04",
+    "name": "移动与缺源",
+    "expected_behavior": "缺原文original_sha256=null/缺省可导入；全零假hash拒绝；extract/媒体真实hash保留可看；未知原hash补文件不追认为旧原文",
+    "test": "tests/rebuild/test_legacy.py",
+    "task_id": "T18",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-L05",
+    "name": "退役引用",
+    "expected_behavior": "旧文件/命令/Skill/合同不在新发行或默认调用，真实引用检查无残留",
+    "test": "tests/rebuild/test_package_boundary.py",
+    "task_id": "T24",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-L06",
+    "name": "旧测试取舍",
+    "expected_behavior": "可靠性/转换断言有新对应；删除错误门禁断言不靠skip装绿",
+    "test": "tests/rebuild/test_package_boundary.py",
+    "task_id": "T24",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-V01",
+    "name": "D1/D2公平对照",
+    "expected_behavior": "同源同模型条件，A/B/C开发结果分开，第一系统完整稿留存",
+    "test": "manual_protocol",
+    "task_id": "T21",
+    "evidence_kind": "实际人类/Host运行记录",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-V02",
+    "name": "P1提前迁移",
+    "expected_behavior": "主链刚可用就运行陌生业务材料，用于改方法后归开发",
+    "test": "manual_protocol",
+    "task_id": "T10",
+    "evidence_kind": "实际人类/Host运行记录",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-V03",
+    "name": "H1/H2未见",
+    "expected_behavior": "冻结后A/C，归因争议补B；改方法后样例归回归，不叫泛化完成",
+    "test": "manual_protocol",
+    "task_id": "T22",
+    "evidence_kind": "实际人类/Host运行记录",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-V04",
+    "name": "人类专业阅稿",
+    "expected_behavior": "适合经验的人类判断是否需要重建主线；模型一致不替代",
+    "test": "human_content_review",
+    "task_id": "T23",
+    "evidence_kind": "实际人类/Host运行记录",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-V05",
+    "name": "最终安装任务",
+    "expected_behavior": "用最终候选实际安装从资料出稿/工作台/修改/导出，不调用repo补丁",
+    "test": "installed_host_flow",
+    "task_id": "T25",
+    "evidence_kind": "实际人类/Host运行记录",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-V06",
+    "name": "诚实交付",
+    "expected_behavior": "未验证/失败如实记录，不以对象/测试数量/默认分叫专业通过",
+    "test": "manual_protocol",
+    "task_id": "T25",
+    "evidence_kind": "实际人类/Host运行记录",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-L07",
+    "name": "建立退役清单",
+    "expected_behavior": "T01只冻结逐路径处置/引用基线与保留项；此时不要求AC-L05归零，后者由T24完成",
+    "test": "tests/rebuild/test_package_boundary.py",
+    "task_id": "T01",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-K14",
+    "name": "画布与设计权威",
+    "expected_behavior": "同一Document的4:3/指定物理尺寸、style_ref、字体和Logo被prompt/编译/UI一致采用；无隐藏16:9默认",
+    "test": "tests/rebuild/test_compiler_geometry.py",
+    "task_id": "T10",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-K15",
+    "name": "资产字体重定位",
+    "expected_behavior": "移动项目后Logo/icon从对象Ref读取；系统字体实际hash变化报告并重检，缺字体不阻旧媒体查看；不打包字体到发行",
+    "test": "tests/rebuild/test_sources.py",
+    "task_id": "T12",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-K16",
+    "name": "编辑能力诚实",
+    "expected_behavior": "表格/图表输出声明editable_shapes_and_text；无原生chart数据模型时UI/API/导出不得声称编辑数据；旧文件未知",
+    "test": "tests/rebuild/test_service_flow.py",
+    "task_id": "T15",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-S13",
+    "name": "只改有效样式",
+    "expected_behavior": "默认style改动仅影响依赖它的页；独立覆盖页与未用style/asset不重生；同asset_id换字节使相关页失效",
+    "test": "tests/rebuild/test_service_flow.py",
+    "task_id": "T12",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-V07",
+    "name": "最早真实纵向切片",
+    "expected_behavior": "T03全格式/T09全特性尚未完成也可T10.min真实制作+只读四视图+T12.min单页改；实际阅图必做，不能宣称全产品完成",
+    "test": "manual_protocol",
+    "task_id": "T10",
+    "evidence_kind": "实际人类/Host运行记录",
+    "status": "planned_not_executed"
+  },
+  {
+    "acceptance_id": "AC-S14",
+    "name": "临时结果完整往返",
+    "expected_behavior": "compose/blueprint/reconstruct/review/repair信封kind/files/refs一致；真实文件先存再原子采用；重复幂等、旧输入/路径逃逸拒绝",
+    "test": "tests/rebuild/test_tasks.py",
+    "task_id": "T04",
+    "evidence_kind": "拟自动化测试；尚未实现执行",
+    "status": "planned_not_executed"
+  }
+]

@@ -1,0 +1,28 @@
+{
+  "schema_version": "deck_artifact.v1",
+  "artifact_id": "extract_demo",
+  "page_id": null,
+  "role": "source_extract",
+  "file": {
+    "path": ".deckmaster/objects/80/805e631484d0b87392b1372a7adde1bb56c5019833de16547374917f2622c279.txt",
+    "sha256": "805e631484d0b87392b1372a7adde1bb56c5019833de16547374917f2622c279"
+  },
+  "media_type": "text/plain",
+  "created_at": "2026-09-16T00:00:00Z",
+  "dependencies": [
+    {
+      "kind": "source",
+      "identity": "synthetic-brief",
+      "sha256": "805e631484d0b87392b1372a7adde1bb56c5019833de16547374917f2622c279"
+    }
+  ],
+  "derived_from": [],
+  "provenance": {
+    "source_type": "user_supplied",
+    "tool": "spec-example",
+    "invocation_ref": null
+  },
+  "limitations": [
+    "仅合成文字示例；没有媒体制作。"
+  ]
+}

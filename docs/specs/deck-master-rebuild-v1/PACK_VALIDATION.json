@@ -1,0 +1,68 @@
+{
+  "pack_version": "1.1",
+  "validation_scope": "documentation_and_synthetic_examples_only",
+  "product_code_implemented": false,
+  "real_repository_reverified": false,
+  "real_host_or_compiler_or_ui_or_install_run": false,
+  "business_acceptance_performed": false,
+  "baseline_zip_used": true,
+  "checks": [
+    {
+      "check": "schema_and_synthetic_objects",
+      "result": "pass",
+      "detail": "5 schema definitions; 46 embedded/standalone synthetic contract objects valid. Not product behavior."
+    },
+    {
+      "check": "synthetic_file_references",
+      "result": "pass",
+      "detail": "107 concrete synthetic Ref occurrences resolve to exact local bytes; current pointers resolve. No real project accessed."
+    },
+    {
+      "check": "design_and_atom_reference_examples",
+      "result": "pass",
+      "detail": "9 synthetic Document configurations checked for ID/fallback consistency; sample page atom refs valid. Font availability/rendering NOT tested."
+    },
+    {
+      "check": "R1_unknown_original_hash",
+      "result": "pass",
+      "detail": "v1.1 null/omitted original digest accepted; zero placeholder and unknown stored Ref digest rejected. v1.0 null rejection reproduced when baseline provided."
+    },
+    {
+      "check": "R3_R6_task_graph_and_acceptance",
+      "result": "pass",
+      "detail": "25-task completion DAG acyclic; T25 covers all 24 predecessors including T13; T01/L07 and T24/L05 separated; early-start fields present. Does not prove implementation done."
+    },
+    {
+      "check": "inventories_and_source_preservation",
+      "result": "pass",
+      "detail": "JSON/CSV tables agree; original 177/58/122 scope and 75 targets preserved. Historical evidence/old path inventories unchanged when baseline provided; NOT a fresh Git path audit."
+    },
+    {
+      "check": "stable_atom_roundtrip",
+      "result": "pass",
+      "detail": "Synthetic reorder/text change preserves expected atom IDs; new item receives separate ID. Example-level check only."
+    },
+    {
+      "check": "review_fixed_roundtrip",
+      "result": "pass",
+      "detail": "Example replaces/new-subject/evidence link valid; two schema-valid negative examples fail fixture linkage checks. No real reviewer execution verified."
+    },
+    {
+      "check": "temporary_result_envelopes",
+      "result": "pass",
+      "detail": "Five kind envelope forms, declared fixture files and a complete 3-atom positive reference example checked; invalid discriminator/path rejected. NOT actual task accept or visual production."
+    },
+    {
+      "check": "allowance_state_example",
+      "result": "pass",
+      "detail": "Static allowance sequence arithmetic and non-resetting restore expectation consistent. Parallelism, file locks and external calls NOT executed."
+    },
+    {
+      "check": "document_sync_and_links",
+      "result": "pass",
+      "detail": "15 chapters / 5 workbooks / merged handbook and active links present; branch name, early slicing, editability wording synchronized; no font binaries. Completeness of product APIs not asserted."
+    }
+  ],
+  "failed": 0,
+  "note": "These checks do not prove concurrency enforcement, source authenticity, font matching, actual rendering, human review or business usefulness. 需要 Codex 在实施后核验。"
+}

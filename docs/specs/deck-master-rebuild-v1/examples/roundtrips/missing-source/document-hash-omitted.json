@@ -1,0 +1,143 @@
+{
+  "schema_version": "deck_document.v1",
+  "project_id": "missing-source-example",
+  "revision_id": "rev_missing_001",
+  "parent_revision_id": null,
+  "created_at": "2026-09-16T00:00:00Z",
+  "task": {
+    "title": "合成售后方案",
+    "brief": "本例仅展示契约；没有调用模型、生图、生成PPT或进行专业验收。",
+    "audience": "业务与信息化负责人",
+    "scenario": "已有客户方案讨论",
+    "presentation_mode": "mixed",
+    "page_limit": null,
+    "existing_decisions": [
+      "不新增服务点入口",
+      "本期工单接口只读"
+    ]
+  },
+  "sources": [
+    {
+      "source_id": "synthetic-brief",
+      "name": "合成资料.txt",
+      "original_uri": "file:///unavailable/legacy-original.pdf",
+      "format": "pdf",
+      "extract": {
+        "path": ".deckmaster/objects/80/805e631484d0b87392b1372a7adde1bb56c5019833de16547374917f2622c279.txt",
+        "sha256": "805e631484d0b87392b1372a7adde1bb56c5019833de16547374917f2622c279"
+      },
+      "external_use": "allowed",
+      "restriction": "原PDF不可达，仅保存提取文本；其为合成接口例，不是已核实原件。",
+      "locator_scheme": "段号"
+    }
+  ],
+  "pages": [
+    {
+      "page_id": "p09",
+      "page": {
+        "path": ".deckmaster/objects/51/51112d64a761880e7a66118f5a550dab7716cae0ad507f1c77704534d0cf355a.json",
+        "sha256": "51112d64a761880e7a66118f5a550dab7716cae0ad507f1c77704534d0cf355a"
+      },
+      "blueprint": null,
+      "svg": null,
+      "svg_preview": null,
+      "ppt_preview": null
+    }
+  ],
+  "tasks": [],
+  "reviews": [],
+  "outputs": {
+    "pptx": null,
+    "trace": null,
+    "render_report": null
+  },
+  "policy": {
+    "authoring_mode": "image_blueprint",
+    "external_call_limit": null,
+    "user_stop": false,
+    "professional_review_required_for_delivery": false
+  },
+  "change": {
+    "operation_id": "op_missing_source",
+    "kind": "legacy_import",
+    "description": "仅合成契约示例，未执行真实生成。",
+    "read_set": []
+  },
+  "design_context": {
+    "canvas": {
+      "width_px": 1600,
+      "height_px": 900,
+      "slide_width_in": 13.333333333333334,
+      "slide_height_in": 7.5,
+      "fit": "contain"
+    },
+    "language": "zh-CN",
+    "fonts": [
+      {
+        "font_id": "body",
+        "family": "Noto Sans CJK SC",
+        "face": "Regular",
+        "weight": 400,
+        "asset_id": null,
+        "fallback_font_ids": []
+      },
+      {
+        "font_id": "heading",
+        "family": "Noto Sans CJK SC",
+        "face": "Bold",
+        "weight": 700,
+        "asset_id": null,
+        "fallback_font_ids": []
+      }
+    ],
+    "styles": [
+      {
+        "style_id": "default",
+        "colors": {
+          "background": "#FFFFFF",
+          "text": "#14213D",
+          "accent": "#1478FF"
+        },
+        "typography": {
+          "body_font_id": "body",
+          "heading_font_id": "heading",
+          "body_size_pt": 18,
+          "heading_size_pt": 30,
+          "auxiliary_size_pt": 12
+        },
+        "layout_notes": "使用已授权的demo-logo；保留脚注空间。字体名称只是配置示例，未核实本机安装。"
+      },
+      {
+        "style_id": "alternate",
+        "colors": {
+          "background": "#FFFFFF",
+          "text": "#202020",
+          "accent": "#555555"
+        },
+        "typography": {
+          "body_font_id": "body",
+          "heading_font_id": "heading",
+          "body_size_pt": 20,
+          "heading_size_pt": 32,
+          "auxiliary_size_pt": 12
+        },
+        "layout_notes": "独立样式，用于未受默认style修改影响的例子。"
+      }
+    ],
+    "default_style_id": "default",
+    "assets": [
+      {
+        "asset_id": "demo-logo",
+        "kind": "logo",
+        "artifact": {
+          "path": ".deckmaster/objects/9d/9d6a3b28ee96e23519104042167b597696b2a536e8b3f558046953f98ceef613.json",
+          "sha256": "9d6a3b28ee96e23519104042167b597696b2a536e8b3f558046953f98ceef613"
+        },
+        "external_use": "allowed"
+      }
+    ],
+    "allowed_asset_ids": [
+      "demo-logo"
+    ]
+  }
+}

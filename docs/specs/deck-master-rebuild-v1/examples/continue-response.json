@@ -1,0 +1,143 @@
+{
+  "status": "awaiting_host",
+  "project_id": "synthetic-demo",
+  "revision_id": "rev_demo_0001",
+  "artifacts_available": false,
+  "readiness": {
+    "content": "unreviewed",
+    "production": "awaiting_blueprint",
+    "checks": "not_evaluated",
+    "professional_use": "not_evaluated"
+  },
+  "next_action": "首次正文已接收：桌面主Skill立即自动view --open；取得实际URL后继续Host制作任务。",
+  "review_url": null,
+  "pending_tasks": [
+    {
+      "schema_version": "deck_task.v1",
+      "task_id": "task_blueprint_p09",
+      "operation_id": "op_demo_1",
+      "kind": "blueprint",
+      "status": "awaiting_host",
+      "scope_pages": [
+        "p09"
+      ],
+      "instruction": "读取完整页面，生成包含全部业务区域和设计关系的蓝图。",
+      "inputs": [
+        {
+          "path": ".deckmaster/objects/51/51112d64a761880e7a66118f5a550dab7716cae0ad507f1c77704534d0cf355a.json",
+          "sha256": "51112d64a761880e7a66118f5a550dab7716cae0ad507f1c77704534d0cf355a"
+        },
+        {
+          "path": ".deckmaster/objects/24/24a7749618323b8ad65e9cc35d4cdf4d04659878dde81c8b28e4ec30af52b902.json",
+          "sha256": "24a7749618323b8ad65e9cc35d4cdf4d04659878dde81c8b28e4ec30af52b902"
+        },
+        {
+          "path": ".deckmaster/objects/9d/9d6a3b28ee96e23519104042167b597696b2a536e8b3f558046953f98ceef613.json",
+          "sha256": "9d6a3b28ee96e23519104042167b597696b2a536e8b3f558046953f98ceef613"
+        }
+      ],
+      "dependencies": [
+        {
+          "kind": "content",
+          "identity": "page:p09",
+          "sha256": "51112d64a761880e7a66118f5a550dab7716cae0ad507f1c77704534d0cf355a"
+        },
+        {
+          "kind": "style",
+          "identity": "design:p09",
+          "sha256": "24a7749618323b8ad65e9cc35d4cdf4d04659878dde81c8b28e4ec30af52b902"
+        },
+        {
+          "kind": "asset",
+          "identity": "asset:demo-logo",
+          "sha256": "2b0cee5b7214384b57e44a943d820dc5f3594143dac22efa1e2e5a107d09d86a"
+        }
+      ],
+      "dispatch_revision": "rev_demo_0001",
+      "produced_against": "852a828c9fc62f234ecb4ee0d5587e40fffcaade8b4d0fe4618c9310724bc473",
+      "result_refs": [],
+      "error": null,
+      "execution_ref": null,
+      "created_at": "2026-09-16T00:00:00Z",
+      "updated_at": "2026-09-16T00:00:00Z",
+      "cost_class": "external_generation",
+      "usage": {
+        "source": "not_reported",
+        "external_calls": null
+      },
+      "call_allowances": [
+        {
+          "allowance_id": "allowance_demo_001",
+          "state": "reserved",
+          "execution_ref": null,
+          "invocation_ref": null,
+          "evidence": []
+        }
+      ]
+    }
+  ],
+  "requested_action": "continue",
+  "result_refs": [],
+  "findings": [],
+  "evidence_level": "synthetic_not_executed",
+  "view_status": {
+    "service": "not_started",
+    "browser": "not_attempted",
+    "reason": "合成响应未启动服务；桌面主Skill下一动作必须自动view --open，不能等待整稿完成。"
+  },
+  "resolved_design_context": {
+    "canvas": {
+      "width_px": 1600,
+      "height_px": 900,
+      "slide_width_in": 13.333333333333334,
+      "slide_height_in": 7.5,
+      "fit": "contain"
+    },
+    "language": "zh-CN",
+    "style": {
+      "style_id": "default",
+      "colors": {
+        "background": "#FFFFFF",
+        "text": "#14213D",
+        "accent": "#1478FF"
+      },
+      "typography": {
+        "body_font_id": "body",
+        "heading_font_id": "heading",
+        "body_size_pt": 18,
+        "heading_size_pt": 30,
+        "auxiliary_size_pt": 12
+      },
+      "layout_notes": "使用已授权的demo-logo；保留脚注空间。字体名称只是配置示例，未核实本机安装。"
+    },
+    "fonts": [
+      {
+        "font_id": "body",
+        "family": "Noto Sans CJK SC",
+        "face": "Regular",
+        "weight": 400,
+        "asset_id": null,
+        "fallback_font_ids": []
+      },
+      {
+        "font_id": "heading",
+        "family": "Noto Sans CJK SC",
+        "face": "Bold",
+        "weight": 700,
+        "asset_id": null,
+        "fallback_font_ids": []
+      }
+    ],
+    "permitted_assets": [
+      {
+        "asset_id": "demo-logo",
+        "kind": "logo",
+        "artifact": {
+          "path": ".deckmaster/objects/9d/9d6a3b28ee96e23519104042167b597696b2a536e8b3f558046953f98ceef613.json",
+          "sha256": "9d6a3b28ee96e23519104042167b597696b2a536e8b3f558046953f98ceef613"
+        },
+        "external_use": "allowed"
+      }
+    ]
+  }
+}

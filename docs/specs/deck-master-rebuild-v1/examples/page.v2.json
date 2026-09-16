@@ -1,0 +1,199 @@
+{
+  "schema_version": "deck_page_package.v2",
+  "page_id": "p09",
+  "customer_visible": {
+    "title": "将设备条件收集前移，减少总部重复补问",
+    "subtitle": "建议在现有售后门户嵌入条件补齐与引用问答",
+    "body_blocks": [
+      {
+        "id": "service",
+        "type": "bullets",
+        "heading": "服务点提交",
+        "items": [
+          {
+            "id": "device",
+            "text": "填写设备型号与问题现象"
+          },
+          {
+            "id": "version",
+            "text": "补齐适用的固件版本或出厂批次"
+          }
+        ]
+      },
+      {
+        "id": "assistant",
+        "type": "bullets",
+        "heading": "知识助手",
+        "items": [
+          {
+            "id": "scope",
+            "text": "依据设备条件匹配适用资料"
+          },
+          {
+            "id": "citation",
+            "text": "展示可回查的引用位置"
+          }
+        ]
+      },
+      {
+        "id": "expert",
+        "type": "paragraph",
+        "text": "无法直接处理的问题，携带完整上下文交给总部专家。"
+      },
+      {
+        "id": "sample",
+        "type": "table",
+        "title": "样本观察",
+        "columns": [
+          {
+            "id": "metric",
+            "label": "指标"
+          },
+          {
+            "id": "count",
+            "label": "数值"
+          }
+        ],
+        "rows": [
+          {
+            "id": "total",
+            "cells": [
+              {
+                "column_id": "metric",
+                "display_text": "抽样记录"
+              },
+              {
+                "column_id": "count",
+                "display_text": "120条",
+                "value": 120,
+                "unit": "条"
+              }
+            ]
+          },
+          {
+            "id": "need",
+            "cells": [
+              {
+                "column_id": "metric",
+                "display_text": "需要补问版本/批次"
+              },
+              {
+                "column_id": "count",
+                "display_text": "54条",
+                "value": 54,
+                "unit": "条"
+              }
+            ]
+          },
+          {
+            "id": "ratio",
+            "cells": [
+              {
+                "column_id": "metric",
+                "display_text": "样本内占比"
+              },
+              {
+                "column_id": "count",
+                "display_text": "45%",
+                "value": 0.45,
+                "unit": "%"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "labels": [
+      {
+        "id": "read_only",
+        "text": "本期只读接口"
+      }
+    ],
+    "footnotes": [
+      {
+        "id": "source",
+        "text": "演示数据；54÷120=45%，不代表自动解决率。"
+      }
+    ],
+    "callouts": [
+      {
+        "id": "recommend",
+        "text": "先改变信息收集环节，再评估扩大自动处理范围。",
+        "tone": "emphasis"
+      }
+    ]
+  },
+  "speaker_notes": "所有企业与数字均为合成输入，不代表客户成绩。",
+  "visual_spec": {
+    "intent": "从左到右展示服务点、助手、总部专家；箭头连接实际节点，不使用脱离节点的装饰箭头。",
+    "layout_hint": "三层业务路径与底部紧凑样本表；脚注保留可读空间。",
+    "reference_mode": "new_design",
+    "nodes": [
+      {
+        "node_id": "service",
+        "label_ref": "atom:p09:block:service:heading",
+        "status": "existing",
+        "responsibility_refs": [
+          "atom:p09:item:device:text",
+          "atom:p09:item:version:text"
+        ]
+      },
+      {
+        "node_id": "assistant",
+        "label_ref": "atom:p09:block:assistant:heading",
+        "status": "proposed",
+        "responsibility_refs": [
+          "atom:p09:item:scope:text",
+          "atom:p09:item:citation:text"
+        ]
+      },
+      {
+        "node_id": "expert",
+        "label_ref": "atom:p09:block:expert:text",
+        "status": "existing"
+      }
+    ],
+    "edges": [
+      {
+        "edge_id": "submit",
+        "from": "service",
+        "to": "assistant",
+        "direction": "forward",
+        "relationship": "提交完整设备条件"
+      },
+      {
+        "edge_id": "escalate",
+        "from": "assistant",
+        "to": "expert",
+        "direction": "forward",
+        "relationship": "转交需进一步判断的问题"
+      }
+    ],
+    "style_ref": "default"
+  },
+  "citations": [
+    {
+      "id": "c1",
+      "source_id": "synthetic-brief",
+      "locator": "段1",
+      "supports": "样本记录数与只读条件",
+      "claim_kind": "reported_fact"
+    },
+    {
+      "id": "c2",
+      "source_id": "synthetic-brief",
+      "locator": "段1",
+      "supports": "54/120的占比",
+      "claim_kind": "calculation",
+      "expression": "54/120*100",
+      "input_refs": [
+        "c1"
+      ]
+    }
+  ],
+  "internal_only": {
+    "production_notes": "不要把这一段加入图中。",
+    "source_private_refs": [],
+    "unresolved_questions": []
+  }
+}

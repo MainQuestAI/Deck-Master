@@ -1,0 +1,43 @@
+{
+  "example_only": true,
+  "cases": [
+    {
+      "case": "compose-after-validation",
+      "status": "accepted",
+      "new_page_hash": "51112d64a761880e7a66118f5a550dab7716cae0ad507f1c77704534d0cf355a",
+      "work_complete": false,
+      "next_action": "auto_view_then_production"
+    },
+    {
+      "case": "same_operation_same_output",
+      "status": "already_applied",
+      "same_revision": true
+    },
+    {
+      "case": "same_operation_different_output",
+      "status": "conflict",
+      "current_changed": false
+    },
+    {
+      "case": "cancelled_task",
+      "status": "late_result",
+      "current_changed": false,
+      "usage_settlement_allowed": true
+    },
+    {
+      "case": "invalid_path",
+      "status": "invalid_input",
+      "current_changed": false
+    },
+    {
+      "case": "synthetic_blueprint_no_real_execution",
+      "status": "needs_tool_or_revision",
+      "production_evidence": false
+    },
+    {
+      "case": "review_not_evaluated",
+      "status": "accepted_unassessed",
+      "professional_use": "not_evaluated"
+    }
+  ]
+}

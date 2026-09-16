@@ -1,0 +1,18 @@
+{
+  "example_only": true,
+  "old_review": {
+    "path": ".deckmaster/objects/b3/b316ac3fc7bebfa74da945333cb5cbdf75621813b16a9d69d6b94f03b69a0882.json",
+    "sha256": "b316ac3fc7bebfa74da945333cb5cbdf75621813b16a9d69d6b94f03b69a0882"
+  },
+  "new_review": {
+    "path": ".deckmaster/objects/08/086d0e8d6a53e56b144ec89f39779cbf569722b2bdaed2f72310598cab9fa4e1.json",
+    "sha256": "086d0e8d6a53e56b144ec89f39779cbf569722b2bdaed2f72310598cab9fa4e1"
+  },
+  "current_svg_artifact": {
+    "path": ".deckmaster/objects/ea/ea58c430f7d73a826317e0f160d28de77dbbc9d5bb5ddbeff16b0959adaa4709.json",
+    "sha256": "ea58c430f7d73a826317e0f160d28de77dbbc9d5bb5ddbeff16b0959adaa4709"
+  },
+  "negative_only_resolution": "拒绝：subjects仍是旧产物，无新产物复查",
+  "negative_no_recheck": "拒绝：无实际复查观察和证据",
+  "scope": "仅一个finding的合同关联示例，不代表该示例Page已全部满足内容/视觉检查。"
+}

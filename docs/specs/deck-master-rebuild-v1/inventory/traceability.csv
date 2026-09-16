@@ -1,0 +1,29 @@
+﻿source_issue,description,tasks,acceptance
+E1结构/默认入口,规则Planner与循环配claim,"T04,T17","AC-C02,AC-C04,AC-I04"
+E1材料消费,摘要代替读原文、尾约束未用,"T03,T04","AC-C01,AC-C08"
+E1投影接线,设计/副标题/脚注/labels漏传,T06,AC-B01
+E1 UI/状态,0页与多套ready/初始化问卷,"T05,T14,T15","AC-U01,AC-U02"
+E1独立性,全局PPTMaster/Library与安装接线,"T16,T17,T20","AC-I04,AC-I05,AC-I06"
+E3-D01,还原任务被改成简图,"T06,T07,T10","AC-B04,AC-B07"
+E3-D02,Scene定义预期/空registry满覆盖,"T07,T11","AC-B07,AC-R02"
+E3-D03,蓝图新增表达未编辑,T07,AC-B03
+E3-D04,两个字符串冒充独立阅图,"T11,T23","AC-R05,AC-V04"
+E3-D05,规则放宽接受事故、全白正例,"T11,T24","AC-R04,AC-L06"
+E3-D06,审阅写入读取不同判定,T11,AC-R03
+E3-D07,字重/几何/行距/描边信息损失,"T08,T09,T10","AC-K02,AC-K03,AC-K04,AC-K06,AC-K07"
+E3-D08,trace读回自证/方向仅bbox,"T09,T10,T11","AC-K08,AC-B07"
+E3-D09,像素/框相交误判,T11,AC-R04
+E3-D10,正文编辑与原图历史无法往返,"T07,T12","AC-B03,AC-B08,AC-B10"
+E3-D11,源码安装/状态/旧记录不一致,"T14,T16,T20","AC-U02,AC-I02,AC-R10"
+E3-D12,重试归档仍封顶覆盖,T13,AC-S11
+E3-D13,失效完成叙述留在实施记录,"T01,T24,T25","AC-L07,AC-L05,AC-V06"
+E4隔离反例,0 opacity被or1变不透明,T09,AC-K05
+E4体系边界,SVG/Scene双份手写、编译器耦合OS,T08,"AC-B06,AC-K01,AC-I01"
+E4恢复开销,导入全量备份，不必要重建,"T02,T12","AC-S01,AC-S04,AC-S05"
+Codex-R1,未知原hash与已保存文件hash分离,"T02,T03,T18",AC-L04
+Codex-R2,唯一design_context与资产/字体/移动/样式依赖,"T02,T03,T06,T10,T12","AC-B01,AC-K14,AC-K15,AC-S13"
+Codex-R3,最终依赖覆盖T13、清单与退役分离、调用额度事务,"T01,T13,T20,T24,T25","AC-L07,AC-L05,AC-S11,AC-S12"
+Codex-R4,首次正文自动工作台，非交互真实返回,"T04,T05,T14,T20",AC-U03
+Codex-R5,形状文字编辑不扩成Office数据对象,"T08,T10,T15,T23","AC-K12,AC-K16"
+Codex-R6,开始条件与整项完成条件区分，早期三方对照和单页修改,"T03,T05,T08,T09,T10,T12",AC-V07
+Codex-往返例,稳定atom、Review复查、结果信封,"T03,T04,T07,T11,T12","AC-C03,AC-R06,AC-S14"

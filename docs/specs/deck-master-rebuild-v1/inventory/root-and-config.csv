@@ -1,0 +1,43 @@
+﻿path,action,detail,work_package,status,path_basis
+pyproject.toml,ADJUST,src发现；console deck_master.cli:main；限定安装resources；不包scripts旧包；版本为候选而非虚称2.0正式,WP04,拟调整；实际修改需要 Codex 核验,B0目录/用户审计确认；具体修改需要Codex核验
+requirements.txt,ADJUST,与pyproject同源锁依赖范围；资料提取按来源格式声明实际依赖,WP04,拟调整；实际修改需要 Codex 核验,B0目录/用户审计确认；具体修改需要Codex核验
+product-capability-manifest.json,REPLACE,只描述当前单入口、本地工具和Host要求；删除ppt-master backend依赖及生产专业ready,WP04,拟调整；实际修改需要 Codex 核验,B0目录/用户审计确认；具体修改需要Codex核验
+skills/manifest.json,REPLACE,仅deck-master公开入口，内部reference非公开专家Skill；无stage registry加载,WP04,拟调整；实际修改需要 Codex 核验,B0目录/用户审计确认；具体修改需要Codex核验
+skills/stage-contracts.json,ARCHIVE_DELETE,固定旧阶段不随包安装；移历史档案，无新运行消费者后删原路径,WP05,拟调整；实际修改需要 Codex 核验,B0目录/用户审计确认；具体修改需要Codex核验
+skills/RESOLVER.md,REPLACE,创建/继续/修改/查看/检查/导出，不是九阶段路由,WP04,拟调整；实际修改需要 Codex 核验,B0目录/用户审计确认；具体修改需要Codex核验
+skills/deck-master/SKILL.md,REWRITE,宿主原文理解与完整成稿为默认；不得autoplan脚手架输出后当专业规划,WP01/WP04,拟调整；实际修改需要 Codex 核验,B0目录/用户审计确认；具体修改需要Codex核验
+skills/deck-master/references/content-methods.md,REWRITE,少量方法+完整成对好坏例+选择理由；不复制行业目录,WP01,拟调整；实际修改需要 Codex 核验,B0目录/用户审计确认；具体修改需要Codex核验
+skills/deck-master/references/agent-instructions.md,REWRITE,本包任务输入/accept/continue/返修协议，无阶段审批,WP01/WP04,拟调整；实际修改需要 Codex 核验,B0目录/用户审计确认；具体修改需要Codex核验
+skills/deck-master/references/installation.md,REWRITE,候选安装验证、版本路径、必要渲染工具和回滚；无PPTMaster授权步骤,WP04,拟调整；实际修改需要 Codex 核验,B0目录/用户审计确认；具体修改需要Codex核验
+skills/deck-master/agents/openai.yaml,ADJUST,保留Host元信息，路由到单一skill；不承诺未验证模型,WP04,拟调整；实际修改需要 Codex 核验,B0目录/用户审计确认；具体修改需要Codex核验
+README.md,REWRITE,正常安装→材料→首稿→工作台→改稿；注明宿主执行、未验证边界,WP04,拟调整；实际修改需要 Codex 核验,B0目录/用户审计确认；具体修改需要Codex核验
+AGENTS.md,REWRITE,当前权威Spec/代码边界/测试路径；旧Spec仅历史,WP01/WP04,拟调整；实际修改需要 Codex 核验,B0目录/用户审计确认；具体修改需要Codex核验
+CLAUDE.md,REWRITE,与AGENTS一致的可用命令，不带回旧OS,WP04,拟调整；实际修改需要 Codex 核验,B0目录/用户审计确认；具体修改需要Codex核验
+DESIGN.md,REWRITE,新依赖方向、唯一当前事实、SVG源/IR派生、UI数据链,WP04,拟调整；实际修改需要 Codex 核验,B0目录/用户审计确认；具体修改需要Codex核验
+ROADMAP.md,ADJUST,本轮五包和事实完成状态；旧P2-P5不是待完成义务,WP04,拟调整；实际修改需要 Codex 核验,B0目录/用户审计确认；具体修改需要Codex核验
+CHANGELOG.md,ADJUST,明确破坏性入口变更、迁移方式与旧承诺更正，保留历史,WP05,拟调整；实际修改需要 Codex 核验,B0目录/用户审计确认；具体修改需要Codex核验
+CONTRIBUTING.md,ADJUST,新测试/格式/安装复核与PR范围；不能只测fixture,WP04,拟调整；实际修改需要 Codex 核验,B0目录/用户审计确认；具体修改需要Codex核验
+SECURITY.md,ADJUST,本地文件/loopback服务/隐私边界；不声称签章证明业务正确,WP04,拟调整；实际修改需要 Codex 核验,B0目录/用户审计确认；具体修改需要Codex核验
+Makefile,ADJUST,lint/test/real-render/install-smoke调用新包；无绑后端命令,WP04,拟调整；实际修改需要 Codex 核验,B0目录/用户审计确认；具体修改需要Codex核验
+Dockerfile,ADJUST,安装实际src包、字体/渲染器声明；不COPY整repo冒充发行包,WP04,拟调整；实际修改需要 Codex 核验,B0目录/用户审计确认；具体修改需要Codex核验
+.github/workflows/ci.yml,REWRITE,纯单元/真实渲染/隔离安装三类；禁止跳过失败并报全绿,WP04,拟调整；实际修改需要 Codex 核验,B0目录/用户审计确认；具体修改需要Codex核验
+.github/CODEOWNERS,ADJUST,新src/resources/tests/rebuild路径责任,WP04,拟调整；实际修改需要 Codex 核验,B0目录/用户审计确认；具体修改需要Codex核验
+.github/PULL_REQUEST_TEMPLATE.md,ADJUST,任务ID、实际改动、源SHA、执行命令结果、待验证边界,WP04,拟调整；实际修改需要 Codex 核验,B0目录/用户审计确认；具体修改需要Codex核验
+.devcontainer/devcontainer.json,ADJUST,新src与必要工具；不安装整套15技能平台,WP04,拟调整；实际修改需要 Codex 核验,B0目录/用户审计确认；具体修改需要Codex核验
+.gitignore,ADJUST,排除真实run/客户资料/下载字体/局部安装与渲染缓存,WP01,拟调整；实际修改需要 Codex 核验,B0目录/用户审计确认；具体修改需要Codex核验
+docs/specs/README.md,REWRITE,本包为活动基线，旧规范明确被替代,WP04,拟调整；实际修改需要 Codex 核验,目标活动文档路径：存在则改、缺失则新建；需要Codex核验
+docs/quick-start.md,REWRITE,唯一正常入口例子与真实待Host状态,WP04,拟调整；实际修改需要 Codex 核验,目标活动文档路径：存在则改、缺失则新建；需要Codex核验
+docs/user-guide.md,REWRITE,来源/四视图/局部修改/导出区别,WP04,拟调整；实际修改需要 Codex 核验,目标活动文档路径：存在则改、缺失则新建；需要Codex核验
+docs/agent-guide.md,REWRITE,Host具体执行与恢复，不重复用户问卷,WP04,拟调整；实际修改需要 Codex 核验,目标活动文档路径：存在则改、缺失则新建；需要Codex核验
+docs/agent-recovery-playbook.md,REWRITE,按失败原因恢复，禁止自签/替换上游基准,WP04,拟调整；实际修改需要 Codex 核验,目标活动文档路径：存在则改、缺失则新建；需要Codex核验
+docs/agent-task-index.md,REWRITE,指向新任务协议和本包五个工作包,WP04,拟调整；实际修改需要 Codex 核验,目标活动文档路径：存在则改、缺失则新建；需要Codex核验
+docs/troubleshooting.md,REWRITE,实际模块路径、字体、转换错误、待Host、版本冲突,WP04,拟调整；实际修改需要 Codex 核验,目标活动文档路径：存在则改、缺失则新建；需要Codex核验
+docs/known-limitations.md,REWRITE,SVG子集/平台/无人审等实际限制，不把旧绑定误列新前置,WP05,拟调整；实际修改需要 Codex 核验,目标活动文档路径：存在则改、缺失则新建；需要Codex核验
+docs/planning/2026-09-15-overdefense-remediation-implementation.md,ADD_CORRECTION,加显著更正链接保留历史值，撤回被事故否定的验收解释；不重写原始日志,WP01,拟调整；实际修改需要 Codex 核验,目标活动文档路径：存在则改、缺失则新建；需要Codex核验
+LICENSE,KEEP,保留原许可证；提取第三方代码合规核对,WP04,拟调整；实际修改需要 Codex 核验,B0目录/用户审计确认；具体修改需要Codex核验
+NOTICE,ADJUST_IF_EXTRACTION_REQUIRES,保留归属并补跨分支/第三方实际来源；不要删除署名,WP04,拟调整；实际修改需要 Codex 核验,B0目录/用户审计确认；具体修改需要Codex核验
+THIRD_PARTY_NOTICES.md,ADJUST,记录实际保留组件/许可证；不把字体文件打入文档包,WP04,拟调整；实际修改需要 Codex 核验,B0目录/用户审计确认；具体修改需要Codex核验
+CODE_OF_CONDUCT.md,KEEP,不属于本轮功能重构,—,拟调整；实际修改需要 Codex 核验,B0目录/用户审计确认；具体修改需要Codex核验
+.github/dependabot.yml,ADJUST_IF_PACKAGING_CHANGES,按实际依赖范围维护,WP04,拟调整；实际修改需要 Codex 核验,B0目录/用户审计确认；具体修改需要Codex核验
+.github/ISSUE_TEMPLATE/bug_report.md,ADJUST,增加安装版本和步骤/输入匿名说明,WP04,拟调整；实际修改需要 Codex 核验,B0目录/用户审计确认；具体修改需要Codex核验
+.github/ISSUE_TEMPLATE/feature_request.md,KEEP,不扩大本轮功能,—,拟调整；实际修改需要 Codex 核验,B0目录/用户审计确认；具体修改需要Codex核验

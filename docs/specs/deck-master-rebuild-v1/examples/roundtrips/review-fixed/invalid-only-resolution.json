@@ -1,0 +1,64 @@
+{
+  "schema_version": "deck_review.v1",
+  "review_id": "review_p09_example",
+  "kind": "content",
+  "status": "pass",
+  "subjects": [
+    {
+      "path": ".deckmaster/objects/fd/fd36bdf67112fe11c746dd9122fc7440f278265a4df11197788312e2f63c0d2d.json",
+      "sha256": "fd36bdf67112fe11c746dd9122fc7440f278265a4df11197788312e2f63c0d2d"
+    }
+  ],
+  "dependencies": [
+    {
+      "kind": "content",
+      "identity": "page:p09",
+      "sha256": "b6b3d0b287c54605861cc019ba35d8c30af9f74a41847164d5ff441897568743"
+    },
+    {
+      "kind": "artifact",
+      "identity": "svg:p09",
+      "sha256": "fd36bdf67112fe11c746dd9122fc7440f278265a4df11197788312e2f63c0d2d"
+    }
+  ],
+  "reviewer": {
+    "type": "host_self",
+    "id": "synthetic-review-example",
+    "execution_ref": null,
+    "independence_confirmed": false
+  },
+  "observations": [
+    "合成旧失败例：应有的READ ONLY标签未写入该示例SVG；这不是实际Host审阅记录。"
+  ],
+  "findings": [
+    {
+      "finding_id": "finding_read_only",
+      "kind": "content",
+      "impact": "must_fix",
+      "page_id": "p09",
+      "element_refs": [
+        "atom:p09:label:read_only:text"
+      ],
+      "message": "示例标签缺失",
+      "expected": "READ ONLY / SPEC FIXTURE",
+      "actual": "未出现",
+      "evidence": [
+        {
+          "path": ".deckmaster/objects/b6/b6b3d0b287c54605861cc019ba35d8c30af9f74a41847164d5ff441897568743.json",
+          "sha256": "b6b3d0b287c54605861cc019ba35d8c30af9f74a41847164d5ff441897568743"
+        },
+        {
+          "path": ".deckmaster/objects/2a/2a04c6194a16e6def14a137f6ebbbe57687f05977fbbc2977140d004989ce833.svg",
+          "sha256": "2a04c6194a16e6def14a137f6ebbbe57687f05977fbbc2977140d004989ce833"
+        }
+      ],
+      "resolution": "fixed",
+      "resolution_reason": ""
+    }
+  ],
+  "created_at": "2026-09-16T00:00:00Z",
+  "replaces": {
+    "path": ".deckmaster/objects/b3/b316ac3fc7bebfa74da945333cb5cbdf75621813b16a9d69d6b94f03b69a0882.json",
+    "sha256": "b316ac3fc7bebfa74da945333cb5cbdf75621813b16a9d69d6b94f03b69a0882"
+  }
+}

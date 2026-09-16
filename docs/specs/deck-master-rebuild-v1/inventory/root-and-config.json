@@ -1,0 +1,338 @@
+[
+  {
+    "path": "pyproject.toml",
+    "action": "ADJUST",
+    "detail": "src发现；console deck_master.cli:main；限定安装resources；不包scripts旧包；版本为候选而非虚称2.0正式",
+    "work_package": "WP04",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "B0目录/用户审计确认；具体修改需要Codex核验"
+  },
+  {
+    "path": "requirements.txt",
+    "action": "ADJUST",
+    "detail": "与pyproject同源锁依赖范围；资料提取按来源格式声明实际依赖",
+    "work_package": "WP04",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "B0目录/用户审计确认；具体修改需要Codex核验"
+  },
+  {
+    "path": "product-capability-manifest.json",
+    "action": "REPLACE",
+    "detail": "只描述当前单入口、本地工具和Host要求；删除ppt-master backend依赖及生产专业ready",
+    "work_package": "WP04",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "B0目录/用户审计确认；具体修改需要Codex核验"
+  },
+  {
+    "path": "skills/manifest.json",
+    "action": "REPLACE",
+    "detail": "仅deck-master公开入口，内部reference非公开专家Skill；无stage registry加载",
+    "work_package": "WP04",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "B0目录/用户审计确认；具体修改需要Codex核验"
+  },
+  {
+    "path": "skills/stage-contracts.json",
+    "action": "ARCHIVE_DELETE",
+    "detail": "固定旧阶段不随包安装；移历史档案，无新运行消费者后删原路径",
+    "work_package": "WP05",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "B0目录/用户审计确认；具体修改需要Codex核验"
+  },
+  {
+    "path": "skills/RESOLVER.md",
+    "action": "REPLACE",
+    "detail": "创建/继续/修改/查看/检查/导出，不是九阶段路由",
+    "work_package": "WP04",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "B0目录/用户审计确认；具体修改需要Codex核验"
+  },
+  {
+    "path": "skills/deck-master/SKILL.md",
+    "action": "REWRITE",
+    "detail": "宿主原文理解与完整成稿为默认；不得autoplan脚手架输出后当专业规划",
+    "work_package": "WP01/WP04",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "B0目录/用户审计确认；具体修改需要Codex核验"
+  },
+  {
+    "path": "skills/deck-master/references/content-methods.md",
+    "action": "REWRITE",
+    "detail": "少量方法+完整成对好坏例+选择理由；不复制行业目录",
+    "work_package": "WP01",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "B0目录/用户审计确认；具体修改需要Codex核验"
+  },
+  {
+    "path": "skills/deck-master/references/agent-instructions.md",
+    "action": "REWRITE",
+    "detail": "本包任务输入/accept/continue/返修协议，无阶段审批",
+    "work_package": "WP01/WP04",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "B0目录/用户审计确认；具体修改需要Codex核验"
+  },
+  {
+    "path": "skills/deck-master/references/installation.md",
+    "action": "REWRITE",
+    "detail": "候选安装验证、版本路径、必要渲染工具和回滚；无PPTMaster授权步骤",
+    "work_package": "WP04",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "B0目录/用户审计确认；具体修改需要Codex核验"
+  },
+  {
+    "path": "skills/deck-master/agents/openai.yaml",
+    "action": "ADJUST",
+    "detail": "保留Host元信息，路由到单一skill；不承诺未验证模型",
+    "work_package": "WP04",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "B0目录/用户审计确认；具体修改需要Codex核验"
+  },
+  {
+    "path": "README.md",
+    "action": "REWRITE",
+    "detail": "正常安装→材料→首稿→工作台→改稿；注明宿主执行、未验证边界",
+    "work_package": "WP04",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "B0目录/用户审计确认；具体修改需要Codex核验"
+  },
+  {
+    "path": "AGENTS.md",
+    "action": "REWRITE",
+    "detail": "当前权威Spec/代码边界/测试路径；旧Spec仅历史",
+    "work_package": "WP01/WP04",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "B0目录/用户审计确认；具体修改需要Codex核验"
+  },
+  {
+    "path": "CLAUDE.md",
+    "action": "REWRITE",
+    "detail": "与AGENTS一致的可用命令，不带回旧OS",
+    "work_package": "WP04",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "B0目录/用户审计确认；具体修改需要Codex核验"
+  },
+  {
+    "path": "DESIGN.md",
+    "action": "REWRITE",
+    "detail": "新依赖方向、唯一当前事实、SVG源/IR派生、UI数据链",
+    "work_package": "WP04",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "B0目录/用户审计确认；具体修改需要Codex核验"
+  },
+  {
+    "path": "ROADMAP.md",
+    "action": "ADJUST",
+    "detail": "本轮五包和事实完成状态；旧P2-P5不是待完成义务",
+    "work_package": "WP04",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "B0目录/用户审计确认；具体修改需要Codex核验"
+  },
+  {
+    "path": "CHANGELOG.md",
+    "action": "ADJUST",
+    "detail": "明确破坏性入口变更、迁移方式与旧承诺更正，保留历史",
+    "work_package": "WP05",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "B0目录/用户审计确认；具体修改需要Codex核验"
+  },
+  {
+    "path": "CONTRIBUTING.md",
+    "action": "ADJUST",
+    "detail": "新测试/格式/安装复核与PR范围；不能只测fixture",
+    "work_package": "WP04",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "B0目录/用户审计确认；具体修改需要Codex核验"
+  },
+  {
+    "path": "SECURITY.md",
+    "action": "ADJUST",
+    "detail": "本地文件/loopback服务/隐私边界；不声称签章证明业务正确",
+    "work_package": "WP04",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "B0目录/用户审计确认；具体修改需要Codex核验"
+  },
+  {
+    "path": "Makefile",
+    "action": "ADJUST",
+    "detail": "lint/test/real-render/install-smoke调用新包；无绑后端命令",
+    "work_package": "WP04",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "B0目录/用户审计确认；具体修改需要Codex核验"
+  },
+  {
+    "path": "Dockerfile",
+    "action": "ADJUST",
+    "detail": "安装实际src包、字体/渲染器声明；不COPY整repo冒充发行包",
+    "work_package": "WP04",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "B0目录/用户审计确认；具体修改需要Codex核验"
+  },
+  {
+    "path": ".github/workflows/ci.yml",
+    "action": "REWRITE",
+    "detail": "纯单元/真实渲染/隔离安装三类；禁止跳过失败并报全绿",
+    "work_package": "WP04",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "B0目录/用户审计确认；具体修改需要Codex核验"
+  },
+  {
+    "path": ".github/CODEOWNERS",
+    "action": "ADJUST",
+    "detail": "新src/resources/tests/rebuild路径责任",
+    "work_package": "WP04",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "B0目录/用户审计确认；具体修改需要Codex核验"
+  },
+  {
+    "path": ".github/PULL_REQUEST_TEMPLATE.md",
+    "action": "ADJUST",
+    "detail": "任务ID、实际改动、源SHA、执行命令结果、待验证边界",
+    "work_package": "WP04",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "B0目录/用户审计确认；具体修改需要Codex核验"
+  },
+  {
+    "path": ".devcontainer/devcontainer.json",
+    "action": "ADJUST",
+    "detail": "新src与必要工具；不安装整套15技能平台",
+    "work_package": "WP04",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "B0目录/用户审计确认；具体修改需要Codex核验"
+  },
+  {
+    "path": ".gitignore",
+    "action": "ADJUST",
+    "detail": "排除真实run/客户资料/下载字体/局部安装与渲染缓存",
+    "work_package": "WP01",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "B0目录/用户审计确认；具体修改需要Codex核验"
+  },
+  {
+    "path": "docs/specs/README.md",
+    "action": "REWRITE",
+    "detail": "本包为活动基线，旧规范明确被替代",
+    "work_package": "WP04",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "目标活动文档路径：存在则改、缺失则新建；需要Codex核验"
+  },
+  {
+    "path": "docs/quick-start.md",
+    "action": "REWRITE",
+    "detail": "唯一正常入口例子与真实待Host状态",
+    "work_package": "WP04",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "目标活动文档路径：存在则改、缺失则新建；需要Codex核验"
+  },
+  {
+    "path": "docs/user-guide.md",
+    "action": "REWRITE",
+    "detail": "来源/四视图/局部修改/导出区别",
+    "work_package": "WP04",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "目标活动文档路径：存在则改、缺失则新建；需要Codex核验"
+  },
+  {
+    "path": "docs/agent-guide.md",
+    "action": "REWRITE",
+    "detail": "Host具体执行与恢复，不重复用户问卷",
+    "work_package": "WP04",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "目标活动文档路径：存在则改、缺失则新建；需要Codex核验"
+  },
+  {
+    "path": "docs/agent-recovery-playbook.md",
+    "action": "REWRITE",
+    "detail": "按失败原因恢复，禁止自签/替换上游基准",
+    "work_package": "WP04",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "目标活动文档路径：存在则改、缺失则新建；需要Codex核验"
+  },
+  {
+    "path": "docs/agent-task-index.md",
+    "action": "REWRITE",
+    "detail": "指向新任务协议和本包五个工作包",
+    "work_package": "WP04",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "目标活动文档路径：存在则改、缺失则新建；需要Codex核验"
+  },
+  {
+    "path": "docs/troubleshooting.md",
+    "action": "REWRITE",
+    "detail": "实际模块路径、字体、转换错误、待Host、版本冲突",
+    "work_package": "WP04",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "目标活动文档路径：存在则改、缺失则新建；需要Codex核验"
+  },
+  {
+    "path": "docs/known-limitations.md",
+    "action": "REWRITE",
+    "detail": "SVG子集/平台/无人审等实际限制，不把旧绑定误列新前置",
+    "work_package": "WP05",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "目标活动文档路径：存在则改、缺失则新建；需要Codex核验"
+  },
+  {
+    "path": "docs/planning/2026-09-15-overdefense-remediation-implementation.md",
+    "action": "ADD_CORRECTION",
+    "detail": "加显著更正链接保留历史值，撤回被事故否定的验收解释；不重写原始日志",
+    "work_package": "WP01",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "目标活动文档路径：存在则改、缺失则新建；需要Codex核验"
+  },
+  {
+    "path": "LICENSE",
+    "action": "KEEP",
+    "detail": "保留原许可证；提取第三方代码合规核对",
+    "work_package": "WP04",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "B0目录/用户审计确认；具体修改需要Codex核验"
+  },
+  {
+    "path": "NOTICE",
+    "action": "ADJUST_IF_EXTRACTION_REQUIRES",
+    "detail": "保留归属并补跨分支/第三方实际来源；不要删除署名",
+    "work_package": "WP04",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "B0目录/用户审计确认；具体修改需要Codex核验"
+  },
+  {
+    "path": "THIRD_PARTY_NOTICES.md",
+    "action": "ADJUST",
+    "detail": "记录实际保留组件/许可证；不把字体文件打入文档包",
+    "work_package": "WP04",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "B0目录/用户审计确认；具体修改需要Codex核验"
+  },
+  {
+    "path": "CODE_OF_CONDUCT.md",
+    "action": "KEEP",
+    "detail": "不属于本轮功能重构",
+    "work_package": "—",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "B0目录/用户审计确认；具体修改需要Codex核验"
+  },
+  {
+    "path": ".github/dependabot.yml",
+    "action": "ADJUST_IF_PACKAGING_CHANGES",
+    "detail": "按实际依赖范围维护",
+    "work_package": "WP04",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "B0目录/用户审计确认；具体修改需要Codex核验"
+  },
+  {
+    "path": ".github/ISSUE_TEMPLATE/bug_report.md",
+    "action": "ADJUST",
+    "detail": "增加安装版本和步骤/输入匿名说明",
+    "work_package": "WP04",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "B0目录/用户审计确认；具体修改需要Codex核验"
+  },
+  {
+    "path": ".github/ISSUE_TEMPLATE/feature_request.md",
+    "action": "KEEP",
+    "detail": "不扩大本轮功能",
+    "work_package": "—",
+    "status": "拟调整；实际修改需要 Codex 核验",
+    "path_basis": "B0目录/用户审计确认；具体修改需要Codex核验"
+  }
+]

@@ -1,0 +1,32 @@
+{
+  "kind": "reconstruct",
+  "files": [
+    {
+      "file_id": "svg_file",
+      "path": "../../user-original.svg",
+      "media_type": "image/svg+xml"
+    }
+  ],
+  "artifact_specs": [
+    {
+      "file_id": "svg_file",
+      "role": "svg",
+      "page_id": "p09",
+      "derived_from": [
+        {
+          "path": ".deckmaster/objects/51/51112d64a761880e7a66118f5a550dab7716cae0ad507f1c77704534d0cf355a.json",
+          "sha256": "51112d64a761880e7a66118f5a550dab7716cae0ad507f1c77704534d0cf355a"
+        }
+      ],
+      "provenance": {
+        "source_type": "unknown",
+        "tool": "synthetic-envelope-only",
+        "invocation_ref": null
+      },
+      "limitations": [
+        "只演示信封接收，缺真实蓝图依赖，不得作为已完成的忠实重构任务。"
+      ]
+    }
+  ],
+  "notes": "结构示例：此SVG不是完整Page；生产内容/蓝图校验应返回needs_revision而非专业通过。"
+}

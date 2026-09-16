@@ -1,0 +1,20 @@
+{
+  "evidence_level": "synthetic_expected_not_executed",
+  "page_content_hashes_unchanged": [
+    "p09",
+    "p10"
+  ],
+  "changed_effective_style_pages": [
+    "p09"
+  ],
+  "unchanged_effective_style_pages": [
+    "p10"
+  ],
+  "checks": [
+    "prompt使用1200x900与10x7.5，而非隐藏16:9",
+    "compiler传入相同物理画布",
+    "移动project仍可找到asset_logo_demo的真实字节",
+    "字体仅名称配置，尚未解析，不能假称已安装",
+    "改变未用样式或未用asset不使其他页重生"
+  ]
+}

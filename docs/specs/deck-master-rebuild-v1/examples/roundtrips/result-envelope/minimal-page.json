@@ -1,0 +1,25 @@
+{
+  "schema_version": "deck_page_package.v2",
+  "page_id": "p09",
+  "customer_visible": {
+    "title": "PROTOCOL EXAMPLE",
+    "body_blocks": [
+      {
+        "id": "summary",
+        "type": "paragraph",
+        "text": "Read-only knowledge lookup."
+      }
+    ],
+    "labels": [
+      {
+        "id": "readonly",
+        "text": "READ ONLY"
+      }
+    ]
+  },
+  "visual_spec": {
+    "intent": "Simple supplied-reference fixture; no production success claimed.",
+    "reference_mode": "faithful_reconstruction",
+    "style_ref": "default"
+  }
+}
