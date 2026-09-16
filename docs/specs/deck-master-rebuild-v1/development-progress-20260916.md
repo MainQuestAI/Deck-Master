@@ -32,7 +32,7 @@
 ### 主入口制作与编辑里程碑复验
 
 - Python 原生编译 → LibreOffice 渲染 → PPT XML 回读 → Host 实际阅图 → 导出已运行。单页修改 54→60、45%→50%，提交关系改为“已核对设备条件”，原蓝图不变。
-- 两页 p09/p10 主入口运行；回读发现 p10 缺“实施路径”标题，自动派发 repair，补 SVG 后重新编译和逐图检查。p09 4:3 输入在16:9 PPT中等比contain，左右留白；p10保留16:9。不能将这两页等同三类页面全部验收。
+- 两页 p09/p10 主入口运行；回读发现 p10 缺“实施路径”标题，自动派发 repair，补 SVG 后重新编译和逐图检查。此时p09误用了另一张4:3原图的SVG，后续实际原图复核判失败；下面的纠正记录替代该次还原结论。p10保留16:9。不能将这两页等同三类页面全部验收。
 - 工作台真实浏览器验证反馈进入 awaiting_host，取消后任务移除；分离服务缺 session token 的实测错误已修复。完整正文、SVG预览与实际PPT预览可查看。
 - 工作稿导出包括固定 revision 的可继续编辑项目，迁移副本 continue 不产生重复任务；交付稿不带内部 Page/trace。
 - 稳定证据：`/Users/dingcheng/Downloads/Deck-Master-development-20260916/` 下 `delivery-before-edit/`、`delivery-after-edit/`、`multipage-working/`、`evidence/edited-mainline-review.json`、`evidence/multipage-review.json`。原始失败修订仍在项目历史。
@@ -48,3 +48,18 @@
 - 当前交付审阅需每一页具备content、blueprint_content、blueprint_fidelity、conversion、readability、privacy六类当前产物记录；Host自审不等于专业或桌面验收。
 
 - 后续编译修复：rx/ry圆角转可编辑路径、填充路径仿射剪切、文本旋转锚点、批准图片contain/slice裁切；重新实际渲染架构页确认未回退。当前完整rebuild回归127项通过。仍未关闭T08/T09/T10全卡，任意渐变变换、内联tspan自动布局等存在明确支持边界。
+
+### 原图身份复核与纠正
+
+- 实际阅读多页项目p09原图后发现之前误配另一张4:3图的SVG；旧自审通过结论无效，新增失败Review，保留旧产物及三个SUPERSEDED记录。
+- 正确原图SHA `a2a269744b28d0107ea957012ad80cd6758b426679830c645eb2f8c3c0d12067`，1672×941。按深青三卡、纸笔/书本/专家、只读库标签及灯泡重建，经正常repair接收、重新编译和实际阅图。
+- 新两页项目revision `a419ef35ee7948ceab7795af46f48858`，六类Host自审完成；`multipage-working-corrected/`与`multipage-delivery-corrected/`为有效替代，旧目录只作历史。
+- `isolated-three-page-corrected/`从独立安装模块生成三页PPT、渲染、读回通过。三页不是同一个新建项目的全链证据。
+- 重建任务现在明确暴露当前原图ref/hash/尺寸，Skill要求实际阅读并写入SVG原图hash。声明的hash错误会拒绝接收；历史无标记SVG不新增强制门禁，hash不代替视觉审核。
+
+### 候选打包准备
+
+- 修复普通PEP517构建缺完整Skill入口的问题：自动从唯一Skill源复制到build_lib；sdist重建wheel也验证，不再要求手工预同步。
+- 新增按步doctor，renderer缺失只影响render，生图能力明确Host报告/awaiting_host；不检查旧PPTMaster/Library绑定。
+- 候选安装器在显式测试前缀建独立venv，校验wheel hash、包资源、真实编译和渲染后才允许激活；current/previous支持失败回退。用户当前安装未切换。
+- 当前回归130项通过。候选dev2在installation-test测试前缀完成独立venv安装、真实编译/渲染并激活；candidate-install.json记录来源SHA和dirty状态，未切用户当前安装；T16仅准备切片，不关闭其依赖或整卡。Skill ownership迁移、全链安装验收、专业/桌面证据与最终默认切换仍未完成。

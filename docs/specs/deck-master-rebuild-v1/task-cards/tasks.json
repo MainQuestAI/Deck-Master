@@ -1176,7 +1176,7 @@
     "implementation": "隔离release/固定解释器/原子激活回滚；资源完整、按步骤报告依赖；旧Skillownership清理",
     "acceptance_ids": "AC-I01,AC-I02,AC-I03,AC-I07",
     "failure_return": "安装失败不改current；不借源码目录补文件",
-    "status": "not_started",
+    "status": "implementation_in_progress",
     "start_after": "T05,T10",
     "early_delivery": "按整项任务依赖执行",
     "card": "T16.md",

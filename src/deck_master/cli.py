@@ -55,6 +55,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--version", action="version", version=f"deck-master {__version__}")
     sub = parser.add_subparsers(dest="command", required=True)
 
+    doctor = sub.add_parser("doctor")
+    doctor.add_argument("--step", required=True, choices=("compose","blueprint","compile","render","view","export"))
+    doctor.add_argument("--font", action="append", default=[])
+    doctor.add_argument("--host-imagegen", action="store_true", help="Host reports tool availability; not provider verification")
+
     create = sub.add_parser("create")
     create.add_argument("--brief", required=False, help="task brief text (or --brief-file)")
     create.add_argument("--brief-file", required=False)
@@ -163,6 +168,11 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     options = parser.parse_args(argv)
     try:
+        if options.command == 'doctor':
+            from .doctor import diagnose
+            result=diagnose(options.step,fonts=options.font,host_imagegen=options.host_imagegen)
+            _emit(result)
+            return 0 if result['status']=='ready' else 3
         if options.command == 'history':
             from .editing import history, restore
             if options.history_command == 'list':

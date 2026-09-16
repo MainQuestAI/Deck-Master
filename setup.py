@@ -1,10 +1,6 @@
-"""Thin legacy shim: setuptools builds the src-layout package via pyproject.toml.
-
-Kept because T05's target list includes it; the isolated build reads packaging
-config from pyproject.toml, and tools/build_hook.py syncs Skill method
-resources into the package before building (single Skill source in the repo).
-"""
-
+"""Normal PEP 517 builds include the unique Host Skill source."""
+from pathlib import Path
+import runpy
 from setuptools import setup
-
-setup()
+BuildPy=runpy.run_path(str(Path(__file__).parent/'tools'/'build_hook.py'))['BuildPy']
+setup(cmdclass={'build_py':BuildPy})
