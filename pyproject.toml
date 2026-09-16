@@ -49,6 +49,7 @@ where = ["src"]
 [tool.setuptools.package-data]
 deck_master = [
   "resources/contracts/*.json",
+  "resources/compiler/*.mjs",
   "resources/static/*",
   "resources/skills-references/*.md",
 ]
