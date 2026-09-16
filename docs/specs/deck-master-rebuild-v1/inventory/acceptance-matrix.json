@@ -193,7 +193,7 @@
     "name": "独立转换",
     "expected_behavior": "只给SVG/资产/参数，隔离安装可产PPT，不读旧OS/审批/HOME仓库",
     "test": "tests/rebuild/test_compiler_api.py",
-    "task_id": "T08",
+    "task_id": "T10",
     "evidence_kind": "拟自动化测试；尚未实现执行",
     "status": "planned_not_executed"
   },

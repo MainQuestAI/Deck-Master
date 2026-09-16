@@ -1,0 +1,127 @@
+﻿subtask_id,task_id,work_package,title,work,deliverable_and_check,status,execution_unit
+T01.01,T01,WP01,核验开发与提取基线,记录当前分支/SHA/工作树、B0和K0可解析性、当前安装解释器与模块来源；对B0至当前的差异补充映射,基线记录能区分源码、远端、安装版本；不改已有历史,not_started,internal_step
+T01.02,T01,WP01,展开完整文件处置表,运行只读清单工具；关联old-files/new-files/contracts/tests/skills/root配置；未知路径逐项注明用途与处置,全部跟踪路径有保留、提取、重写、归档或退役去向，用户资料单列不删除,not_started,internal_step
+T01.03,T01,WP01,固定提取边界,标记新包禁用旧命名空间及compiler反向依赖；给每项提取标B0/K0文件与SHA,后续开发可直接找到实现来源和行为测试，不整包合并K0,not_started,internal_step
+T01.04,T01,WP01,更正事故与旧完成描述,定位把对象存在、两reviewer名称或旧pass写成成功的活动文档；保留原证据，增加更正与新Spec入口,更正清单区分真实工程结果与尚未验证的还原能力；本卡不要求旧引用归零,not_started,internal_step
+T01.05,T01,WP01,准备固定制作输入,按inputs.md建立三类公开或合成样本及本机映射；记录Page版本、原图、来源和独立视觉期待，原事故材料可用性单列,接收者能打开输入并核对hash；缺原事故时明确替代样本，不宣称事故复跑,not_started,internal_step
+T02.01,T02,WP01,建立五对象和包骨架,落地Document/Page/Artifact/Task/Review及Ref校验、最小__init__/__main__与合成项目fixture；schema从包资源读取,五个合法示例可读，坏引用/重复页/跨项目引用给具体路径；不含第六永久对象,not_started,internal_step
+T02.02,T02,WP01,实现不可变字节存储,统一JSON canonical编码与媒体字节hash；先staging再objects；文件Ref按项目相对位置解析,同字节复用；已有对象不能被不同字节覆盖；路径逃逸和跨根符号链接拒绝,not_started,internal_step
+T02.03,T02,WP01,实现原子current提交,store.commit_change在项目flock内重读current、检查read_set/取消/operation，再写Document并原子换指针,对象半写、Document已写指针未切、指针已切响应丢失分别恢复完整旧版或新版,not_started,internal_step
+T02.04,T02,WP01,落地制作配置与调用字段,校验design_context、nullable original_sha256、asset Ref及Task.call_allowances；默认值只在创建时持久化,空原hash可表示未知，媒体实hash仍必填；配置未知引用报错，无隐藏默认,not_started,internal_step
+T02.05,T02,WP01,交付T02.min并补完整故障边界,先交五对象最小可用集/原子指针/基础幂等取消，后续扩展不另建min格式,T03/T04能接入；全卡关闭前完成AC-S01/S02并交故障注入结果,not_started,internal_step
+T03.01,T03,WP01,接收TXT/JSON完整Page切片,实现sources读取和content整稿预校验；返回资料实际定位及全部Page，未知字段定位错误,T03.min可供compose或draft导入，失败不部分采用页,not_started,internal_step
+T03.02,T03,WP01,实现可见正文原子,递归paragraph/bullets/table、标题副标题、labels/callouts/脚注；保留display_text、0、空值差异；不投影排版元数据,嵌套职责、表头单位和脚注逐项可定位，内部说明不会变正文,not_started,internal_step
+T03.03,T03,WP01,规范稳定ID和正文关系,缺ID只分配一次；旧Pointer在导入时解析成atom；修改/重排保ID，复制新ID；拆合显式映射,atom-identity往返成立；同字条目不误合并，删除ID不复用,not_started,internal_step
+T03.04,T03,WP01,统一设计与资料引用,规范style/font/asset、用户本地asset到真实Artifact；解析Page覆盖和许可子集；读取已存extract不依赖原hash可得,design_context可供Host/编译/UI共用，指定Logo/字体可追溯且不外发受限资产,not_started,internal_step
+T03.05,T03,WP01,补齐MD/PDF/DOCX/PPTX读取,选择现有可用解析工具，保留表格及页段位置；纯图页交实际阅图；缺工具返回具体待处理格式,六种资料各有内容样例；尾部只读约束能进入实际输入，未读内容不写已读,not_started,internal_step
+T04.01,T04,WP01,实现创建与连续推进,service/cli接create、--draft、import draft、continue；返回稳定待Host任务，复用已确认决定,普通材料目录无库无模板可开始，重复continue不造重复任务,not_started,internal_step
+T04.02,T04,WP01,实现五种结果接收,按kind解析compose/blueprint/reconstruct/review/repair；核验scope、files及引用后一次采用；调用结算独立保留,五种result-envelope走真实accept往返；坏路径/旧输入/同operation异结果拒绝且current不变,not_started,internal_step
+T04.03,T04,WP01,接入成对内容方法,在实际compose输入加载source-reading/content-methods/content-examples；同源D1/D2推导受众待判断问题和完整正文,实际Host输入包含资料与方法；没有循环claim、关键词页角色或固定CTA补页,not_started,internal_step
+T04.04,T04,WP01,贯通CLI状态与错误,JSON统一status/revision/pending_tasks/next_action；退出码0/2/3/4/5遵循09章,创建成功不被称成稿通过；缺Host、无效字段和冲突可分别复现,not_started,internal_step
+T04.05,T04,WP01,自动呈现首次正文,首次compose/create--draft/import draft有页后返回呈现动作，主Skill立即调用view--open；与T05.min接线,自然语言执行记录中用户无需补view；无服务时如实返回原因,not_started,internal_step
+T04.06,T04,WP01,完成缺口问答与主Skill循环,已确认答案有效；仅核心缺口触发询问，正常任务连续accept/continue,无额外约束与不适用可继续；默认成稿用真实D1/D2，不把精修示例当自动成绩,not_started,internal_step
+T05.01,T05,WP01,建立Document只读视图,view.project_view从current解析页数组、正文、Artifact/Review；零页和失败稿分别显示,删除旧preview_manifest仍显示真实页数；当前与历史版本不混淆,not_started,internal_step
+T05.02,T05,WP01,建立最小工作台和本地服务,web只读API、真实四视图槽位及文件链接；按DESIGN.md复用现有可用样式,有正文即能查看；蓝图/SVG/PPT缺失槽位明确等待而非假预览,not_started,internal_step
+T05.03,T05,WP01,接入自动打开和服务复用,实现view--open健康检查、有效URL复用、无浏览器返回实际URL、服务失败null,T04首次正文自动出现工作台；后续继续不反复弹窗或新起服务,not_started,internal_step
+T05.04,T05,WP01,配置src隔离构建,pyproject、setup.py、MANIFEST.in和build_hook仅打包新包及唯一Skill源资源；importlib.resources读取,隔离wheel可加载schema/method/static，不借源码路径；不激活用户current,not_started,internal_step
+T05.05,T05,WP01,交付T05.min和后续资源验证,先只读四视图联通，再补普通pip/sdist构建链资源检查,早期可供T10实物对照；完整资源与包边界最终仍由T16/T20复验,not_started,internal_step
+T06.01,T06,WP02,实现完整prompt单次投影,production.project_prompt同次生成prompt文本和字段映射；消费完整Page与已解析设计配置,marker落在真实prompt，覆盖副标题/所有嵌套正文/数值单位/脚注/节点边/允许资产,not_started,internal_step
+T06.02,T06,WP02,连接真实blueprint任务,派发实际可读Page、prompt、画布和资产；Host调用真实图像工具，缺工具明示,不同页按真实内容设计；不以hash差异证明实际独立生成,not_started,internal_step
+T06.03,T06,WP02,接入首次调用额度边界,依赖T13.min，在调用前start/begin、之后settle；无用户限制不设三次默认,已发失败、未发和未知分开；本地产物接收失败不抹掉真实调用,not_started,internal_step
+T06.04,T06,WP02,登记真实来源和版本,保存图片实际字节、可得invocation和真实submitted prompt；拿不到时标unknown,记录可与真实工具调用对照，不用当前Page倒填原prompt,not_started,internal_step
+T06.05,T06,WP02,验证设计要求实际生效,同Page传指定画布/Logo/字体/品牌条件与无品牌材料对照,无品牌库可生产，给定VI进入真实prompt和实际阅图；T06.min交出当前页原图,not_started,internal_step
+T07.01,T07,WP02,实际读图并建立上游期待,打开原图识别模块、图标、状态、关系、辅助说明及层级；essential/supporting/decorative按实物登记,原图区域期待在SVG制作前形成；未识别维度为not_evaluated,not_started,internal_step
+T07.02,T07,WP02,处理新增文案与错字,对照来源判断新增事实、建议和说明；接受内容写新Page，拒绝虚构能力与无依据数字,新Page有完整对外正文；原生成Page/prompt/图片保持原版,not_started,internal_step
+T07.03,T07,WP02,贯通正文和结构边,关系说明与可见label_ref分开；正文atom保留，结构ID不重复打印,只读/回写和建设状态可对照；不用在每条边重复节点名,not_started,internal_step
+T07.04,T07,WP02,保持原图谱系与明确重设计,识别已知下游预览及其派生链；拒绝把它当自身原始参考；用户新设计建立新起点,改编码/缩放不洗掉已知身份；旧还原失败保留,not_started,internal_step
+T07.05,T07,WP02,交付T07.min往返,将真实原图与编辑后Page一起交reconstruct；小文案修订可沿用布局，大改按需重设计,一次实际图文往返记录可供T10；不靠重生图隐藏正文问题,not_started,internal_step
+T08.01,T08,WP02,比较并提取独立接口,逐项比较B0/K0转换实现与依赖；建立SvgInput/CompileOptions/CompileResult,只传SVG/资产/参数可调用，compiler不读取HOME/旧OS/审批,not_started,internal_step
+T08.02,T08,WP02,实现SVG到派生IR,解析受控元素、嵌套变换和属性；保留text/node/edge绑定与element定位,Host只交SVG；IR由同份SVG派生，无第二份手写Scene,not_started,internal_step
+T08.03,T08,WP02,实现自包含资源和明确诊断,本地symbol/use与批准图片解析；不支持特性给page/element/feature/recovery,脚本、事件、实体扩展与外部可执行引用拒绝；正常不支持图形不静默删除,not_started,internal_step
+T08.04,T08,WP02,固定配置与编译输出接口,canvas/font/asset由调用方传入；输入字节一致性检查；输出到新目录交store采用,读取中输入变化不能登记成功，CompileResult只报告真实产物诊断,not_started,internal_step
+T08.05,T08,WP02,交付事故页所需最小子集,按实际原图需要完成SVG解析与IR投影，将图标、连线、文字完整交给T09绘制；不在本卡重复实现原生绘制,解析保留全部必要元素和定位，纯接口和错误诊断可测试；实际隔离PPT生成在T10关闭AC-K01,not_started,internal_step
+T09.01,T09,WP02,修方向和边界几何,保留原line端点与方向；圆/椭圆变换求正确极值而非四点采样,负斜率、反向线和旋转r10圆的实际XML/边界符合独立数值期待,not_started,internal_step
+T09.02,T09,WP02,修画笔零值与组合,fill/stroke/gradient stop/group opacity显式区分None与0；保留颜色和有效描边,零透明度真实写入PPT，组合透明度和渐变反例可读回,not_started,internal_step
+T09.03,T09,WP02,修字重字体与中文排版,800/900不降normal；保留tspan基线/行距/run；记录实际字体匹配与声明fallback,文字XML与SVG/PPT局部渲染同时对照，拼接全文正确不能抵扣布局错误,not_started,internal_step
+T09.04,T09,WP02,保留圆角与缩放既有修复,核对B0有效实现；等比和非等比变换下明确支持边界,圆角/图标描边无回退；近似转换有对象级限制说明,not_started,internal_step
+T09.05,T09,WP02,贯通DrawingML并交T09.min,把事故页所需修复先接实际编译；其余声明特性随后补齐,独立坏样例修前失败修后正确；事故页不用重画成更简单卡片,not_started,internal_step
+T10.01,T10,WP02,接真实编译和双段渲染,production调用纯compiler；SVG与PPT各自用真实工具渲染；当前文件写入新Artifact,四视图显示正文/源图/SVG/PPT真实版本；缺renderer明确未验证,not_started,internal_step
+T10.02,T10,WP02,实现实际文件读回,从PPT ZIP/XML读取文字、端点、path/字体/画笔，对照原Page和SVG而非自产trace,删职责、反箭头、隐藏1pt/透明全文均能定位真实异常,not_started,internal_step
+T10.03,T10,WP02,完成首张复杂事故页还原,按原图保留模块/图标/状态/层级/辅助说明，分别阅图像→SVG和SVG→PPT,T10.min交真实可编辑PPT及三方对照、问题记录；不能只凭对象数量完成,not_started,internal_step
+T10.04,T10,WP02,扩展三页与布局敏感性,覆盖架构职责、图表/表格、另一方案页；同业务换不同布局原图，几何随之改变,三页正文/图形完整；换图不只是换hash，简化版不能冒充还原,not_started,internal_step
+T10.05,T10,WP02,尽早运行P1迁移,主链一旦可用用陌生材料生成首稿，记录业务缺陷并回内容方法或制作层,P1用后归开发；精修制作样例与默认内容能力分开,not_started,internal_step
+T10.06,T10,WP02,完成声明子集与设计一致性,补全06.2特性、4:3/字体/Logo、视图比例和实际读回；按依赖补全T03/T09范围,完整卡关闭须覆盖AC-K13/K14，min成功不等于所有格式/特性完成,not_started,internal_step
+T11.01,T11,WP03,实现唯一审阅解释,evaluate_current统一检查适用性/依赖/must_fix/needs_judgment；接收读取UI导出复用,同一当前Review在各入口结果一致，空registry/空findings不自动满分,not_started,internal_step
+T11.02,T11,WP03,连接真实检查对象,读取实际PPT页面/备注/隐藏项/XML与当前页集合，共享解析但按检查目的判断,正文、关系、内部指令泄漏有具体定位；页码/业务词不误判,not_started,internal_step
+T11.03,T11,WP03,实现三类视觉差异复核,正常还原、故意缺节点、合理抗锯齿差异分别实测；需要判断的指标保留问题,严重缩水不能靠revision_required=false清空；accepted_variance有具体观察,not_started,internal_step
+T11.04,T11,WP03,实现真返修闭环,repair生成新产物；新Review用replaces/finding_id关联旧失败并实际复查,review-fixed正负例真实接收；只改fixed、旧subject或过期观察均不关闭,not_started,internal_step
+T11.05,T11,WP03,如实记录审阅身份与证据,区分tool/Host/human、execution_ref和实际阅图；原图期待独立于输出登记,同人两个名字不算独立；模型互相同意不等于专业人类验收,not_started,internal_step
+T11.06,T11,WP03,补内容判断与失效检查,分别复算计算、核对事实和审阅有条件建议；方法或产物变化只失效对应结论,54/120可核算，无依据40%被识别；旧pass不盖当前fail,not_started,internal_step
+T12.01,T12,WP03,先交单页修改T12.min,request_edit带scope和read_set；正文/边修改产新Page/SVG/PPT并刷新文件检查；分别验证轻微文本修改和需重生蓝图的重大目标页修改,目标p09按实际影响修改，必要时重生该页蓝图；其他未受影响页蓝图/SVG hash不变、无新增外部制作；旧件可找回,not_started,internal_step
+T12.02,T12,WP03,实现影响范围与页集合,按正文/有效样式/字体/资产/共用事实依赖传播；Document负责增删重排,删页不由glob混回；重排仅更新实际页码/引用与装配，未用样式不重生,not_started,internal_step
+T12.03,T12,WP03,实现幂等与并发重基,相同operation同结果复用，异结果冲突；不同页可重基，同页和共享输入变化拒绝,两写者并发反例无最后写覆盖；超时重交不生重复版本,not_started,internal_step
+T12.04,T12,WP03,实现取消和晚到结果保护,start/cancel/accept同项目事务；本地子进程仅管理所属进程；晚到可结算调用但不采用内容,cancel先赢不写，accept先赢不删产物；取消后的同hash结果也不接受,not_started,internal_step
+T12.05,T12,WP03,实现历史恢复和目录搬迁,restore生成新revision并保留操作事实；object相对Ref；源重映射核验hash、字体重新定位,复制项目后产物可看，调用消耗/未知/停止不回滚，缺源只影响需原文动作,not_started,internal_step
+T12.06,T12,WP03,验证跨页与设计修改,共用事实、默认style、独立style、同asset换字节、画布变化成组回归,所有相关页更新；不相关页保留；完整卡由T11复核当前状态后关闭,not_started,internal_step
+T13.01,T13,WP03,提前实现调用许可T13.min,在项目锁内reserve/start/begin/settle；统计所有最新Task含历史消耗与未知,首次T06真实调用前可用；最后名额仅一个执行者取得，重复begin不能重发,not_started,internal_step
+T13.02,T13,WP03,处理调用结果与未知,已发成功/失败consumed，确认未发released，未知占额暂停新外部调用；本地修正继续,timeout不自动退额；真实调用发生但业务接收失败仍可结算,not_started,internal_step
+T13.03,T13,WP03,处理基础取消、用户停止与限额调整,实现基础取消和用户停止，调整上限不抹除调用消耗；取消在途未知不释放；复用T02/T04基本事务,真实调用前停止生效；未知调用保留，不以取消重新获得名额；完整恢复矩阵在T13.06,not_started,internal_step
+T13.04,T13,WP03,保留多轮返修与进展,每次独立归档ID不覆盖attempt3；同错误无进展改修法或报告缺口,四轮以上原件均可恢复；本地修格式不算图像调用，不伪造质量通过,not_started,internal_step
+T13.05,T13,WP03,完成并发与工具证据回归,两个Host争最后名额、响应丢失/晚到、invocation重复分别检验,仅承诺约束产品协议请求；缺工具回执标host_reported而非provider_verified,not_started,internal_step
+T13.06,T13,WP03,补全恢复与冲突结算,在T12完成后验证restore/retry不重获名额，settle冲突拒绝；保留多轮历史,恢复前后实际消耗与未知状态不回滚，当前和历史产物均可追溯,not_started,internal_step
+T14.01,T14,WP03,完成真实四视图阅读,复用DESIGN.md布局，页列表/正文/蓝图/SVG/PPT/问题/历史直接消费ProjectView,无preview有两页即两页；失败和过期产物能打开且版本清楚,not_started,internal_step
+T14.02,T14,WP03,实现正文编辑与视觉反馈,POST content/edits带revision/page_hash/operation，正文结构化编辑，区域意见形成Host任务,修改从Page开始；按钮创建awaiting_host，无Host不假running,not_started,internal_step
+T14.03,T14,WP03,接取消检查导出恢复,API统一service，409/400或422/503带具体错误；表单冲突保输入,取消晚到不更新；恢复生成新revision；导出仍按用途判断,not_started,internal_step
+T14.04,T14,WP03,完成真实服务与文件安全,loopback、Origin/token、登记Artifact ID访问；材料用textContent，SVG隔离展示,正常只读无需账号；路径逃逸/XSS/跨源写入反例拒绝,not_started,internal_step
+T14.05,T14,WP03,完成桌面入口连续交互,自动view、健康服务复用，无浏览器/服务启动失败分流；更新给当前页链接,自然语言任务不需用户补开UI；工作台反馈能被下一Host真实执行,not_started,internal_step
+T14.06,T14,WP03,验收布局和编辑能力说明,1280×800/1440×900、键盘切页/反馈/取消、对照缩放；显示实际画布/字体替代,浏览器操作记录与截图齐备；形状文字编辑不说成Office图表编辑数据,not_started,internal_step
+T15.01,T15,WP03,统一导出用途,export的review可包含明确标识失败稿；delivery消费当前集合和evaluate_current,同稿可审阅但有must_fix不能交付；缺人类审阅如实标记,not_started,internal_step
+T15.02,T15,WP03,固定当前成品与依赖,选Document当前页/PPT/预览并核对实际文件，导出到用户选定新目录,旧approved queue/历史pass不能代替当前结果，导出说明对应真实revision,not_started,internal_step
+T15.03,T15,WP03,统一状态与Host完成措辞,CLI/continue/UI/export共用view四维状态及专业证据字段,exit0与Task completed不会被转换为专业通过,not_started,internal_step
+T15.04,T15,WP03,补编辑能力和交付说明,Artifact/API/UI/README明确editable_shapes_and_text；未核实旧件为unknown,表格图表不承诺Office编辑数据；未做桌面编辑保留未验证,not_started,internal_step
+T15.05,T15,WP03,覆盖导出正反场景,正常当前稿、失败稿、过期报告、缺关键审阅、用户要求人类审阅分别执行,导出结果/拒绝原因/当前版本形成可复核记录,not_started,internal_step
+T16.01,T16,WP04,提取独立发行构建,tools/build_release调用正常PEP517资源hook；release记录精确源码/包/方法/内核版本,wheel/sdist资源完整，新包不引旧命名空间,not_started,internal_step
+T16.02,T16,WP04,实现固定解释器安装,新release目录独立venv、实际模块路径与按步探针；不改系统Python,隔离前缀安装可导入/读取资源/调用编译；不借旧安装补依赖,not_started,internal_step
+T16.03,T16,WP04,实现原子激活与回滚,检查通过后在测试前缀切current/previous；失败不动旧current；旧代码不写新格式,故障安装原链接不变；rollback回旧二进制并提示格式边界,not_started,internal_step
+T16.04,T16,WP04,实现按步doctor,compose/blueprint/compile/render/view/export分别报告解释器/工具/字体/来源,缺renderer不阻正文，无PPTMaster/Library不报新核心缺绑定,not_started,internal_step
+T16.05,T16,WP04,实现旧Skill所有权处理,仅替换安装器拥有且未被改动的资源；第三方/用户同名内容保留,三种归属反例真实验证，激活用户当前版本留到授权实施阶段,not_started,internal_step
+T17.01,T17,WP04,清点并映射全部旧命令,将只读CLI清单逐项对应别名或退役提示；import-plan/build/next-step等按09.6落实,每个旧入口有明确行为，不能继续调用旧main隐式生成规则稿,not_started,internal_step
+T17.02,T17,WP04,统一默认新入口,console entry、__main__、根Skill、API和安装器指新service；隔离候选先验,没有永久v2开关，用户主任务走宿主成稿,not_started,internal_step
+T17.03,T17,WP04,解除所有绑定宣传与检查,manifest/doctor/routing/README/UI不再要求PPTMaster SHA认证或Library安装,无配置无缓存仍进入新流程；真实python-pptx/renderer依赖正常报告,not_started,internal_step
+T17.04,T17,WP04,迁移使用和恢复文档,更新AGENTS/任务索引/恢复说明/主README和migration文档，历史规格标归档,新用户照文档走create→view→edit→export，旧run不会被自动写新pointer,not_started,internal_step
+T17.05,T17,WP04,做入口矩阵回归,新命令、旧别名、旧run误输入、退役命令逐类验证,JSON/退出码/提示一致；实际默认激活由T25完成,not_started,internal_step
+T18.01,T18,WP04,只读识别和dry-run,legacy按明确schema/version读已知v1/HD、SVG/PPT；先输出字段/媒体/未知项计划,未知结构具体定位，不用任意NBB子串判断版本,not_started,internal_step
+T18.02,T18,WP04,规范旧正文与设计,v1到v2保留可见正文/关系/稳定ID；字体Logo到design_context，缺源hash可空,未知正文形态不得静默丢弃或强设ready,not_started,internal_step
+T18.03,T18,WP04,导入新副本和实际媒体,复制允许媒体到新objects，记录真实hash与原来源说明；不执行旧脚本,导入前后原目录逐文件hash一致，旧媒体可读,not_started,internal_step
+T18.04,T18,WP04,处理旧状态与来源不确定,旧completed/pass仅历史说明，不变新Review通过；未知hash不追认候选原文,缺原文仍可看已存extract/媒体，需要原文动作才明确缺口,not_started,internal_step
+T18.05,T18,WP04,检验移动与恢复,合成旧run副本导入、移目录、恢复、源路径失效分别核对,新项目Ref可解析，旧源未动，错误返回待规范化字段,not_started,internal_step
+T19.01,T19,WP04,核实提取来源归属,对B0/K0提取函数和第三方依赖登记许可证/归属，保留要求的版权说明,每个随包组件可追溯到版本和授权信息,not_started,internal_step
+T19.02,T19,WP04,补发行许可证与说明,更新LICENSE/NOTICE/THIRD_PARTY_NOTICES和release清单,新包元数据与实际打包内容一致，无未经核实开源承诺,not_started,internal_step
+T19.03,T19,WP04,检查真实包内容,解包wheel/sdist/release核对run/env/客户资料/秘密/字体/历史敏感材料排除,提交文件清单与扫描结果；授权未知资源暂不随包,not_started,internal_step
+T19.04,T19,WP04,修打包排除和回归,调整.gitignore/build hook/MANIFEST实际路径规则，再从干净构建产物核验,合法schema/static/方法仍包含；不能靠删运行能力完成清理,not_started,internal_step
+T20.01,T20,WP04,搭建候选隔离环境,从wheel及sdist正常安装；独立HOME无PPTMaster/Library/缓存，禁止访问源码补资源,记录真实解释器、模块来源、包SHA与方法资源路径,not_started,internal_step
+T20.02,T20,WP04,执行自然语言新建全链,主Skill给普通材料任务，真实compose/生图/SVG/PPT/读回/审阅；首次正文自动view,真实成品与工作台可访问，fixture不替代本轮生产,not_started,internal_step
+T20.03,T20,WP04,执行工作台局部修改,在当前页改正文和关系，Host接单再交回，导出并对照其他页hash,未受影响页不重生，旧稿可看，当前文件/状态同步,not_started,internal_step
+T20.04,T20,WP04,覆盖配置和重定位,指定字体/Logo/非16:9；移动完整项目；缺工具/字体分步诊断,实际PPT/视图/输入一致，缺字体不阻旧媒体查看,not_started,internal_step
+T20.05,T20,WP04,覆盖限额未知与安装来源,通过产品交接检验T13并发/未知、取消恢复；检查调用和产物分别记录,无绑定端到端及资源完整的当前证据齐备，失败退回具体模块,not_started,internal_step
+T21.01,T21,WP05,冻结输入与比较条件,固定D1/D2同源不同任务；记录模型、方法/实现、来源、工具权限和人工介入,形成可重跑条件表，任何变更明确影响哪一组,not_started,internal_step
+T21.02,T21,WP05,运行A/B/C独立会话,A充分资料+合理自查；B增加方法；C完整工作流；业务背景一致且不互喂答案,保留每组第一次系统完整稿，失败也留；不用挑最佳输出,not_started,internal_step
+T21.03,T21,WP05,分开内容与制作比较,内容对照用同制作器；整链路再看还原/编辑/局部修改；核对业务机制和复合结构,结构差异由任务决定，观点有理由；不以字数/页数/模型好评评分,not_started,internal_step
+T21.04,T21,WP05,记录结论并处理失败,若主线仍需重建回T04；方法/代码改动后重冻并只重跑受影响条件,开发增量、精修示例与冻结候选分开，无自动泛化承诺,not_started,internal_step
+T22.01,T22,WP05,准备未见H1/H2,在T21冻结后选陌生企业及另一材料类型，验证资料不含在示例/定向调试中,留来源与未见边界记录，不要求巨大benchmark平台,not_started,internal_step
+T22.02,T22,WP05,运行A/C迁移对照,同输入条件独立会话；保留第一完整稿；归因不明再补B,具体说明结构/专业内容/制作有哪些迁移成功或失败,not_started,internal_step
+T22.03,T22,WP05,归类失败并约束结论,使用H样例改方法后它归回归；需新材料验证或收窄支持范围,不把已见修好叫未见通过，不以两例成功宣称普遍稳定,not_started,internal_step
+T22.04,T22,WP05,交付迁移记录,关联实际版本、所有稿件、观察、剩余风险及下一修改入口,结论能区分整体候选增量与方法归因，失败有事实依据,not_started,internal_step
+T23.01,T23,WP05,组织真实专业阅稿,向有相应经验的用户/专家提供当前完整稿、任务和必要来源，询问是否值得进入正常业务审阅,保留真实人员反馈；没有反馈为pending，不填写模型代答,not_started,internal_step
+T23.02,T23,WP05,记录内容问题与必要返修,定位主线、业务机制、方案取舍、深度和事实；回相应方法/内容任务修订,首稿与修订稿分开；需要重建主线不能标专业首稿通过,not_started,internal_step
+T23.03,T23,WP05,完成目标桌面编辑,打开真实当前PPT改关键文字、连接/图形、表格或图表形状文字，保存后重开,记录应用/版本/文件与前后观察；headless不替代实际编辑,not_started,internal_step
+T23.04,T23,WP05,分层汇报验收,基于当前候选与已取得的反馈出具分层记录；没有专业人员或桌面编辑结果时明确pending，记录样本版本、缺失证据与后续动作；本步骤不等待T23.01–03完成,向T25交接工程试行边界；AC-V04/AC-K12保持未验，T23整卡不能关闭；实际反馈取得后更新,not_started,internal_step
+T24.01,T24,WP05,逐路径核对删除前提,以T01全文件表比对当前调用/包资源/测试映射；每个旧行为有替代或明确退役理由,未知消费者先查明，不能按目录一次清空,not_started,internal_step
+T24.02,T24,WP05,迁移有效测试和合同引用,保留事务/解析/转换真实行为断言；错误固定模板/假通过断言记录理由后退役,新测试对应真实行为，无skip装绿；活动schema唯一资源来源,not_started,internal_step
+T24.03,T24,WP05,分批退役旧代码与Skill入口,替代已通过T20后按表删除/归档旧源码、命令入口和合同；保留只读导入能力,新默认/发行不再引用旧OS；第三方Skill和用户run不动,not_started,internal_step
+T24.04,T24,WP05,归档旧文档并清零引用,建立docs/archive索引、版本与旧运行指引；扫描源码/文档/构建/安装引用,AC-L05/L06实测完成，清单全部有实际处置和证据,not_started,internal_step
+T24.05,T24,WP05,重验退役后的发行边界,重建候选包，检查依赖/资源/命令兼容及相关可靠性测试,删除后仍能执行新链；旧安装和历史证据保留可恢复,not_started,internal_step
+T25.01,T25,WP05,汇总最终候选与未验边界,核对T01–T24完成/未验项、源码SHA/包hash/方法版本及T22/T23结论,交付说明不把工程试行写成已获专业认可；发布授权按会话事实处理,not_started,internal_step
+T25.02,T25,WP05,最终候选安装和默认切换,已有相应授权后用安装器原子激活唯一新入口，留previous,实际命令来源是该release；失败可回退而不让旧代码写新项目,not_started,internal_step
+T25.03,T25,WP05,从安装版复跑真实任务,材料→首稿→自动工作台→真实蓝图/SVG/PPT→审阅→局部改稿→导出,不调用源码补丁；交付当前完整PPT、预览、可复现项目与具体证据,not_started,internal_step
+T25.04,T25,WP05,记录交付和失败回退,关联最终版本/测试/真实业务反馈；失败保留产物并退回对应卡,只有实际通过的维度完成；无历史回填，无额外长期平台,not_started,internal_step

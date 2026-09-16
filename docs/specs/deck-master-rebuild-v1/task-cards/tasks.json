@@ -1,0 +1,1834 @@
+[
+  {
+    "task_id": "T01",
+    "work_package": "WP01",
+    "title": "冻结现场与逐文件处置",
+    "depends_on": "—",
+    "target_scope": "inventory/*;AGENTS.md;docs/planning更正",
+    "implementation": "读取B0/K0、本地安装和未提交变更；生成全Git路径处置表；记录事故完成叙述更正；建立新包反向import禁区；仅建立处置清单/引用基线，不要求此时旧引用归零",
+    "acceptance_ids": "AC-L07",
+    "failure_return": "本地不可解析基线则只修映射，不reset工作树、不整包合并K0",
+    "status": "not_started",
+    "start_after": "—",
+    "early_delivery": "固定来源/清单，当前旧代码和用户资料不删",
+    "card": "T01.md",
+    "primary_acceptance_ids": [
+      "AC-L07"
+    ],
+    "shared_acceptance_ids": [],
+    "subtasks": [
+      {
+        "subtask_id": "T01.01",
+        "task_id": "T01",
+        "work_package": "WP01",
+        "title": "核验开发与提取基线",
+        "work": "记录当前分支/SHA/工作树、B0和K0可解析性、当前安装解释器与模块来源；对B0至当前的差异补充映射",
+        "deliverable_and_check": "基线记录能区分源码、远端、安装版本；不改已有历史",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T01.02",
+        "task_id": "T01",
+        "work_package": "WP01",
+        "title": "展开完整文件处置表",
+        "work": "运行只读清单工具；关联old-files/new-files/contracts/tests/skills/root配置；未知路径逐项注明用途与处置",
+        "deliverable_and_check": "全部跟踪路径有保留、提取、重写、归档或退役去向，用户资料单列不删除",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T01.03",
+        "task_id": "T01",
+        "work_package": "WP01",
+        "title": "固定提取边界",
+        "work": "标记新包禁用旧命名空间及compiler反向依赖；给每项提取标B0/K0文件与SHA",
+        "deliverable_and_check": "后续开发可直接找到实现来源和行为测试，不整包合并K0",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T01.04",
+        "task_id": "T01",
+        "work_package": "WP01",
+        "title": "更正事故与旧完成描述",
+        "work": "定位把对象存在、两reviewer名称或旧pass写成成功的活动文档；保留原证据，增加更正与新Spec入口",
+        "deliverable_and_check": "更正清单区分真实工程结果与尚未验证的还原能力；本卡不要求旧引用归零",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T01.05",
+        "task_id": "T01",
+        "work_package": "WP01",
+        "title": "准备固定制作输入",
+        "work": "按inputs.md建立三类公开或合成样本及本机映射；记录Page版本、原图、来源和独立视觉期待，原事故材料可用性单列",
+        "deliverable_and_check": "接收者能打开输入并核对hash；缺原事故时明确替代样本，不宣称事故复跑",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      }
+    ]
+  },
+  {
+    "task_id": "T02",
+    "work_package": "WP01",
+    "title": "五对象与最小原子存储",
+    "depends_on": "T01",
+    "target_scope": "models.py;store.py;resources/contracts/*",
+    "implementation": "实现五schema/跨引用和不可变对象、current原子提交、基本恢复；增加Document.change幂等记录，不上数据库平台；明确design_context与nullable原始来源hash、asset Ref；基础call_allowance事务字段一起落地",
+    "acceptance_ids": "AC-S01,AC-S02",
+    "failure_return": "对象格式/事务未成立先修，不接真实生图或UI写入",
+    "status": "not_started",
+    "start_after": "T01边界/目标身份确定",
+    "early_delivery": "T02.min：五对象最小合法子集、不可变blob与原子指针、基础幂等/取消保护",
+    "card": "T02.md",
+    "primary_acceptance_ids": [
+      "AC-S01",
+      "AC-S02"
+    ],
+    "shared_acceptance_ids": [],
+    "subtasks": [
+      {
+        "subtask_id": "T02.01",
+        "task_id": "T02",
+        "work_package": "WP01",
+        "title": "建立五对象和包骨架",
+        "work": "落地Document/Page/Artifact/Task/Review及Ref校验、最小__init__/__main__与合成项目fixture；schema从包资源读取",
+        "deliverable_and_check": "五个合法示例可读，坏引用/重复页/跨项目引用给具体路径；不含第六永久对象",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T02.02",
+        "task_id": "T02",
+        "work_package": "WP01",
+        "title": "实现不可变字节存储",
+        "work": "统一JSON canonical编码与媒体字节hash；先staging再objects；文件Ref按项目相对位置解析",
+        "deliverable_and_check": "同字节复用；已有对象不能被不同字节覆盖；路径逃逸和跨根符号链接拒绝",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T02.03",
+        "task_id": "T02",
+        "work_package": "WP01",
+        "title": "实现原子current提交",
+        "work": "store.commit_change在项目flock内重读current、检查read_set/取消/operation，再写Document并原子换指针",
+        "deliverable_and_check": "对象半写、Document已写指针未切、指针已切响应丢失分别恢复完整旧版或新版",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T02.04",
+        "task_id": "T02",
+        "work_package": "WP01",
+        "title": "落地制作配置与调用字段",
+        "work": "校验design_context、nullable original_sha256、asset Ref及Task.call_allowances；默认值只在创建时持久化",
+        "deliverable_and_check": "空原hash可表示未知，媒体实hash仍必填；配置未知引用报错，无隐藏默认",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T02.05",
+        "task_id": "T02",
+        "work_package": "WP01",
+        "title": "交付T02.min并补完整故障边界",
+        "work": "先交五对象最小可用集/原子指针/基础幂等取消，后续扩展不另建min格式",
+        "deliverable_and_check": "T03/T04能接入；全卡关闭前完成AC-S01/S02并交故障注入结果",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      }
+    ]
+  },
+  {
+    "task_id": "T03",
+    "work_package": "WP01",
+    "title": "完整材料与Page接收",
+    "depends_on": "T02",
+    "target_scope": "sources.py;content.py",
+    "implementation": "支持来源表、原文/图表定位、v2可见原子、计算/设计关系；整稿预校验，未知字段明确返回；先TXT/JSON与已知Page垂直切片，随后补其余格式；稳定atom与旧Pointer规范化；未知原hash不拦媒体读取",
+    "acceptance_ids": "AC-C01,AC-C03,AC-C08,AC-C11",
+    "failure_return": "丢字段回内容映射，缺格式工具明确待处理，不空成功",
+    "status": "not_started",
+    "start_after": "T02.min",
+    "early_delivery": "T03.min：TXT/JSON/完整Page，design_context规范化；其余资料格式随后",
+    "card": "T03.md",
+    "primary_acceptance_ids": [
+      "AC-C01",
+      "AC-C03",
+      "AC-C08",
+      "AC-C11"
+    ],
+    "shared_acceptance_ids": [],
+    "subtasks": [
+      {
+        "subtask_id": "T03.01",
+        "task_id": "T03",
+        "work_package": "WP01",
+        "title": "接收TXT/JSON完整Page切片",
+        "work": "实现sources读取和content整稿预校验；返回资料实际定位及全部Page，未知字段定位错误",
+        "deliverable_and_check": "T03.min可供compose或draft导入，失败不部分采用页",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T03.02",
+        "task_id": "T03",
+        "work_package": "WP01",
+        "title": "实现可见正文原子",
+        "work": "递归paragraph/bullets/table、标题副标题、labels/callouts/脚注；保留display_text、0、空值差异；不投影排版元数据",
+        "deliverable_and_check": "嵌套职责、表头单位和脚注逐项可定位，内部说明不会变正文",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T03.03",
+        "task_id": "T03",
+        "work_package": "WP01",
+        "title": "规范稳定ID和正文关系",
+        "work": "缺ID只分配一次；旧Pointer在导入时解析成atom；修改/重排保ID，复制新ID；拆合显式映射",
+        "deliverable_and_check": "atom-identity往返成立；同字条目不误合并，删除ID不复用",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T03.04",
+        "task_id": "T03",
+        "work_package": "WP01",
+        "title": "统一设计与资料引用",
+        "work": "规范style/font/asset、用户本地asset到真实Artifact；解析Page覆盖和许可子集；读取已存extract不依赖原hash可得",
+        "deliverable_and_check": "design_context可供Host/编译/UI共用，指定Logo/字体可追溯且不外发受限资产",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T03.05",
+        "task_id": "T03",
+        "work_package": "WP01",
+        "title": "补齐MD/PDF/DOCX/PPTX读取",
+        "work": "选择现有可用解析工具，保留表格及页段位置；纯图页交实际阅图；缺工具返回具体待处理格式",
+        "deliverable_and_check": "六种资料各有内容样例；尾部只读约束能进入实际输入，未读内容不写已读",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      }
+    ]
+  },
+  {
+    "task_id": "T04",
+    "work_package": "WP01",
+    "title": "宿主默认成稿和主入口",
+    "depends_on": "T03",
+    "target_scope": "tasks.py;service.py;cli.py;skills/deck-master/*",
+    "implementation": "实现create/continue/task accept骨架；D1/D2成对方法写进实际Host输入；不再调用规则Planner和循环claim；固定临时结果信封与往返；首次正文后主Skill自动view --open；不需用户额外执行",
+    "acceptance_ids": "AC-C02,AC-C04,AC-C06,AC-C07,AC-S14",
+    "failure_return": "正文无机制回方法，不以schema加字段求专业",
+    "status": "not_started",
+    "start_after": "T02.min,T03.min",
+    "early_delivery": "T04.min：create/accept/continue及D1/D2正常Host输入，信封与稳定ID",
+    "card": "T04.md",
+    "primary_acceptance_ids": [
+      "AC-C02",
+      "AC-C04",
+      "AC-C06",
+      "AC-C07",
+      "AC-S14"
+    ],
+    "shared_acceptance_ids": [],
+    "subtasks": [
+      {
+        "subtask_id": "T04.01",
+        "task_id": "T04",
+        "work_package": "WP01",
+        "title": "实现创建与连续推进",
+        "work": "service/cli接create、--draft、import draft、continue；返回稳定待Host任务，复用已确认决定",
+        "deliverable_and_check": "普通材料目录无库无模板可开始，重复continue不造重复任务",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T04.02",
+        "task_id": "T04",
+        "work_package": "WP01",
+        "title": "实现五种结果接收",
+        "work": "按kind解析compose/blueprint/reconstruct/review/repair；核验scope、files及引用后一次采用；调用结算独立保留",
+        "deliverable_and_check": "五种result-envelope走真实accept往返；坏路径/旧输入/同operation异结果拒绝且current不变",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T04.03",
+        "task_id": "T04",
+        "work_package": "WP01",
+        "title": "接入成对内容方法",
+        "work": "在实际compose输入加载source-reading/content-methods/content-examples；同源D1/D2推导受众待判断问题和完整正文",
+        "deliverable_and_check": "实际Host输入包含资料与方法；没有循环claim、关键词页角色或固定CTA补页",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T04.04",
+        "task_id": "T04",
+        "work_package": "WP01",
+        "title": "贯通CLI状态与错误",
+        "work": "JSON统一status/revision/pending_tasks/next_action；退出码0/2/3/4/5遵循09章",
+        "deliverable_and_check": "创建成功不被称成稿通过；缺Host、无效字段和冲突可分别复现",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T04.05",
+        "task_id": "T04",
+        "work_package": "WP01",
+        "title": "自动呈现首次正文",
+        "work": "首次compose/create--draft/import draft有页后返回呈现动作，主Skill立即调用view--open；与T05.min接线",
+        "deliverable_and_check": "自然语言执行记录中用户无需补view；无服务时如实返回原因",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T04.06",
+        "task_id": "T04",
+        "work_package": "WP01",
+        "title": "完成缺口问答与主Skill循环",
+        "work": "已确认答案有效；仅核心缺口触发询问，正常任务连续accept/continue",
+        "deliverable_and_check": "无额外约束与不适用可继续；默认成稿用真实D1/D2，不把精修示例当自动成绩",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      }
+    ]
+  },
+  {
+    "task_id": "T05",
+    "work_package": "WP01",
+    "title": "最小真实视图与隔离包",
+    "depends_on": "T02,T04",
+    "target_scope": "view.py;web.py只读部分;pyproject.toml;setup.py;tools/build_hook.py;MANIFEST.in",
+    "implementation": "最小页面列表/正文/文件链接直接读Document；隔离安装验证方法/schema资源，尚不激活用户当前版本；先同项目服务复用/实际URL/四视图槽位及失败稿可看，随后隔离资源验证",
+    "acceptance_ids": "AC-U01,AC-I01,AC-I06",
+    "failure_return": "依赖旧preview则修view；源码偷读资源则修打包",
+    "status": "not_started",
+    "start_after": "T02.min,T04.min",
+    "early_delivery": "T05.min：只读四视图/实际页集合/自动view；资源隔离检查随后补全",
+    "card": "T05.md",
+    "primary_acceptance_ids": [],
+    "shared_acceptance_ids": [
+      "AC-U01",
+      "AC-I01",
+      "AC-I06"
+    ],
+    "subtasks": [
+      {
+        "subtask_id": "T05.01",
+        "task_id": "T05",
+        "work_package": "WP01",
+        "title": "建立Document只读视图",
+        "work": "view.project_view从current解析页数组、正文、Artifact/Review；零页和失败稿分别显示",
+        "deliverable_and_check": "删除旧preview_manifest仍显示真实页数；当前与历史版本不混淆",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T05.02",
+        "task_id": "T05",
+        "work_package": "WP01",
+        "title": "建立最小工作台和本地服务",
+        "work": "web只读API、真实四视图槽位及文件链接；按DESIGN.md复用现有可用样式",
+        "deliverable_and_check": "有正文即能查看；蓝图/SVG/PPT缺失槽位明确等待而非假预览",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T05.03",
+        "task_id": "T05",
+        "work_package": "WP01",
+        "title": "接入自动打开和服务复用",
+        "work": "实现view--open健康检查、有效URL复用、无浏览器返回实际URL、服务失败null",
+        "deliverable_and_check": "T04首次正文自动出现工作台；后续继续不反复弹窗或新起服务",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T05.04",
+        "task_id": "T05",
+        "work_package": "WP01",
+        "title": "配置src隔离构建",
+        "work": "pyproject、setup.py、MANIFEST.in和build_hook仅打包新包及唯一Skill源资源；importlib.resources读取",
+        "deliverable_and_check": "隔离wheel可加载schema/method/static，不借源码路径；不激活用户current",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T05.05",
+        "task_id": "T05",
+        "work_package": "WP01",
+        "title": "交付T05.min和后续资源验证",
+        "work": "先只读四视图联通，再补普通pip/sdist构建链资源检查",
+        "deliverable_and_check": "早期可供T10实物对照；完整资源与包边界最终仍由T16/T20复验",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      }
+    ]
+  },
+  {
+    "task_id": "T06",
+    "work_package": "WP02",
+    "title": "完整prompt与真实工具任务",
+    "depends_on": "T03,T04",
+    "target_scope": "production.py;references/blueprint-svg.md",
+    "implementation": "全字段投影；Host真实图像输入/输出；缺工具待执行，不降级；实际prompt来源如实；使用Document解析的画布/字体/style_ref/允许资产；首次真实调用前接T13.min额度",
+    "acceptance_ids": "AC-B01,AC-B02,AC-B09,AC-R08",
+    "failure_return": "投影漏项直接修投影，不让后续SVG补假内容",
+    "status": "not_started",
+    "start_after": "T03.min,T04.min,T13.min",
+    "early_delivery": "T06.min：当前事故页完整prompt与允许资产真实调用",
+    "card": "T06.md",
+    "primary_acceptance_ids": [
+      "AC-B01",
+      "AC-B02",
+      "AC-B09",
+      "AC-R08"
+    ],
+    "shared_acceptance_ids": [],
+    "subtasks": [
+      {
+        "subtask_id": "T06.01",
+        "task_id": "T06",
+        "work_package": "WP02",
+        "title": "实现完整prompt单次投影",
+        "work": "production.project_prompt同次生成prompt文本和字段映射；消费完整Page与已解析设计配置",
+        "deliverable_and_check": "marker落在真实prompt，覆盖副标题/所有嵌套正文/数值单位/脚注/节点边/允许资产",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T06.02",
+        "task_id": "T06",
+        "work_package": "WP02",
+        "title": "连接真实blueprint任务",
+        "work": "派发实际可读Page、prompt、画布和资产；Host调用真实图像工具，缺工具明示",
+        "deliverable_and_check": "不同页按真实内容设计；不以hash差异证明实际独立生成",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T06.03",
+        "task_id": "T06",
+        "work_package": "WP02",
+        "title": "接入首次调用额度边界",
+        "work": "依赖T13.min，在调用前start/begin、之后settle；无用户限制不设三次默认",
+        "deliverable_and_check": "已发失败、未发和未知分开；本地产物接收失败不抹掉真实调用",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T06.04",
+        "task_id": "T06",
+        "work_package": "WP02",
+        "title": "登记真实来源和版本",
+        "work": "保存图片实际字节、可得invocation和真实submitted prompt；拿不到时标unknown",
+        "deliverable_and_check": "记录可与真实工具调用对照，不用当前Page倒填原prompt",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T06.05",
+        "task_id": "T06",
+        "work_package": "WP02",
+        "title": "验证设计要求实际生效",
+        "work": "同Page传指定画布/Logo/字体/品牌条件与无品牌材料对照",
+        "deliverable_and_check": "无品牌库可生产，给定VI进入真实prompt和实际阅图；T06.min交出当前页原图",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      }
+    ]
+  },
+  {
+    "task_id": "T07",
+    "work_package": "WP02",
+    "title": "原图保持与文案往返",
+    "depends_on": "T06,T02",
+    "target_scope": "production.py;content.py;review.py输入部分",
+    "implementation": "记录实际原图区域期待，编辑生成文案为新Page；保留原生成版；禁止已知下游回灌；结构边不重复印字",
+    "acceptance_ids": "AC-B03,AC-B05,AC-B08,AC-B10",
+    "failure_return": "内容不成立回T04；原图结构不足重新设计，不能更换验收答案",
+    "status": "not_started",
+    "start_after": "T06.min,T02.min",
+    "early_delivery": "T07.min：真实原图、最终正文与独立期待",
+    "card": "T07.md",
+    "primary_acceptance_ids": [
+      "AC-B03",
+      "AC-B05",
+      "AC-B08",
+      "AC-B10"
+    ],
+    "shared_acceptance_ids": [],
+    "subtasks": [
+      {
+        "subtask_id": "T07.01",
+        "task_id": "T07",
+        "work_package": "WP02",
+        "title": "实际读图并建立上游期待",
+        "work": "打开原图识别模块、图标、状态、关系、辅助说明及层级；essential/supporting/decorative按实物登记",
+        "deliverable_and_check": "原图区域期待在SVG制作前形成；未识别维度为not_evaluated",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T07.02",
+        "task_id": "T07",
+        "work_package": "WP02",
+        "title": "处理新增文案与错字",
+        "work": "对照来源判断新增事实、建议和说明；接受内容写新Page，拒绝虚构能力与无依据数字",
+        "deliverable_and_check": "新Page有完整对外正文；原生成Page/prompt/图片保持原版",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T07.03",
+        "task_id": "T07",
+        "work_package": "WP02",
+        "title": "贯通正文和结构边",
+        "work": "关系说明与可见label_ref分开；正文atom保留，结构ID不重复打印",
+        "deliverable_and_check": "只读/回写和建设状态可对照；不用在每条边重复节点名",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T07.04",
+        "task_id": "T07",
+        "work_package": "WP02",
+        "title": "保持原图谱系与明确重设计",
+        "work": "识别已知下游预览及其派生链；拒绝把它当自身原始参考；用户新设计建立新起点",
+        "deliverable_and_check": "改编码/缩放不洗掉已知身份；旧还原失败保留",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T07.05",
+        "task_id": "T07",
+        "work_package": "WP02",
+        "title": "交付T07.min往返",
+        "work": "将真实原图与编辑后Page一起交reconstruct；小文案修订可沿用布局，大改按需重设计",
+        "deliverable_and_check": "一次实际图文往返记录可供T10；不靠重生图隐藏正文问题",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      }
+    ]
+  },
+  {
+    "task_id": "T08",
+    "work_package": "WP02",
+    "title": "纯SVG接口与派生IR",
+    "depends_on": "T01,T02",
+    "target_scope": "compiler/api.py;compiler/ir.py;compiler/svg.py",
+    "implementation": "对比B0/K0提取SVG解析，建立受控子集和纯接口；Host单写SVG；禁止反向import旧engine；首版形状文字可编辑，图表/表格非Office原生数据对象；不要求Host补chart数据接口；本卡只完成解析/IR/API契约，原生绘制归T09，隔离产PPT验收AC-K01归T10",
+    "acceptance_ids": "AC-K09,AC-B06",
+    "failure_return": "抽取牵出旧状态则切依赖，不整目录搬入",
+    "status": "not_started",
+    "start_after": "T01边界,T02.min",
+    "early_delivery": "T08.min：独立SVG接口与当前事故页实际子集",
+    "card": "T08.md",
+    "primary_acceptance_ids": [
+      "AC-B06",
+      "AC-K09"
+    ],
+    "shared_acceptance_ids": [],
+    "subtasks": [
+      {
+        "subtask_id": "T08.01",
+        "task_id": "T08",
+        "work_package": "WP02",
+        "title": "比较并提取独立接口",
+        "work": "逐项比较B0/K0转换实现与依赖；建立SvgInput/CompileOptions/CompileResult",
+        "deliverable_and_check": "只传SVG/资产/参数可调用，compiler不读取HOME/旧OS/审批",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T08.02",
+        "task_id": "T08",
+        "work_package": "WP02",
+        "title": "实现SVG到派生IR",
+        "work": "解析受控元素、嵌套变换和属性；保留text/node/edge绑定与element定位",
+        "deliverable_and_check": "Host只交SVG；IR由同份SVG派生，无第二份手写Scene",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T08.03",
+        "task_id": "T08",
+        "work_package": "WP02",
+        "title": "实现自包含资源和明确诊断",
+        "work": "本地symbol/use与批准图片解析；不支持特性给page/element/feature/recovery",
+        "deliverable_and_check": "脚本、事件、实体扩展与外部可执行引用拒绝；正常不支持图形不静默删除",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T08.04",
+        "task_id": "T08",
+        "work_package": "WP02",
+        "title": "固定配置与编译输出接口",
+        "work": "canvas/font/asset由调用方传入；输入字节一致性检查；输出到新目录交store采用",
+        "deliverable_and_check": "读取中输入变化不能登记成功，CompileResult只报告真实产物诊断",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T08.05",
+        "task_id": "T08",
+        "work_package": "WP02",
+        "title": "交付事故页所需最小子集",
+        "work": "按实际原图需要完成SVG解析与IR投影，将图标、连线、文字完整交给T09绘制；不在本卡重复实现原生绘制",
+        "deliverable_and_check": "解析保留全部必要元素和定位，纯接口和错误诊断可测试；实际隔离PPT生成在T10关闭AC-K01",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      }
+    ]
+  },
+  {
+    "task_id": "T09",
+    "work_package": "WP02",
+    "title": "绘制缺陷逐项修复",
+    "depends_on": "T08",
+    "target_scope": "compiler/geometry.py;paint.py;text.py;drawingml.py",
+    "implementation": "修端点/圆边界/800900字重/0透明度/多行与圆角；保留实际PPT XML反例",
+    "acceptance_ids": "AC-K02,AC-K03,AC-K04,AC-K05,AC-K06,AC-K07",
+    "failure_return": "内核失败修对应函数，不把源图简化绕过",
+    "status": "not_started",
+    "start_after": "T08.min",
+    "early_delivery": "T09.min：当前事故页涉及的绘制缺陷先修；不简化原图绕过",
+    "card": "T09.md",
+    "primary_acceptance_ids": [
+      "AC-K02",
+      "AC-K03",
+      "AC-K04",
+      "AC-K05",
+      "AC-K06",
+      "AC-K07"
+    ],
+    "shared_acceptance_ids": [],
+    "subtasks": [
+      {
+        "subtask_id": "T09.01",
+        "task_id": "T09",
+        "work_package": "WP02",
+        "title": "修方向和边界几何",
+        "work": "保留原line端点与方向；圆/椭圆变换求正确极值而非四点采样",
+        "deliverable_and_check": "负斜率、反向线和旋转r10圆的实际XML/边界符合独立数值期待",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T09.02",
+        "task_id": "T09",
+        "work_package": "WP02",
+        "title": "修画笔零值与组合",
+        "work": "fill/stroke/gradient stop/group opacity显式区分None与0；保留颜色和有效描边",
+        "deliverable_and_check": "零透明度真实写入PPT，组合透明度和渐变反例可读回",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T09.03",
+        "task_id": "T09",
+        "work_package": "WP02",
+        "title": "修字重字体与中文排版",
+        "work": "800/900不降normal；保留tspan基线/行距/run；记录实际字体匹配与声明fallback",
+        "deliverable_and_check": "文字XML与SVG/PPT局部渲染同时对照，拼接全文正确不能抵扣布局错误",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T09.04",
+        "task_id": "T09",
+        "work_package": "WP02",
+        "title": "保留圆角与缩放既有修复",
+        "work": "核对B0有效实现；等比和非等比变换下明确支持边界",
+        "deliverable_and_check": "圆角/图标描边无回退；近似转换有对象级限制说明",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T09.05",
+        "task_id": "T09",
+        "work_package": "WP02",
+        "title": "贯通DrawingML并交T09.min",
+        "work": "把事故页所需修复先接实际编译；其余声明特性随后补齐",
+        "deliverable_and_check": "独立坏样例修前失败修后正确；事故页不用重画成更简单卡片",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      }
+    ]
+  },
+  {
+    "task_id": "T10",
+    "work_package": "WP02",
+    "title": "真实渲染与首段完整闭环",
+    "depends_on": "T05,T07,T09",
+    "target_scope": "compiler/render.py;readback.py;production.py",
+    "implementation": "事故型三页在小UI完整显示，使用真实原图/重构/渲染；同时尽早运行P1，内容与制作证据分开；先在事故页实际子集完成min三方对照，不等所有材料格式/绘制修复；整体完成再覆盖声明子集",
+    "acceptance_ids": "AC-K01,AC-K08,AC-K10,AC-K11,AC-K13,AC-B04,AC-V02,AC-K14,AC-V07",
+    "failure_return": "分段找第一丢失点；不先增加平台和评分；P1改方法后归开发",
+    "status": "not_started",
+    "start_after": "T05.min,T07.min,T08.min,T09.min",
+    "early_delivery": "T10.min：真实PPT、原图/SVG/PPT实际阅图，四视图可见",
+    "card": "T10.md",
+    "primary_acceptance_ids": [
+      "AC-B04",
+      "AC-K01",
+      "AC-K08",
+      "AC-K10",
+      "AC-K11",
+      "AC-K13",
+      "AC-V02",
+      "AC-K14",
+      "AC-V07"
+    ],
+    "shared_acceptance_ids": [],
+    "subtasks": [
+      {
+        "subtask_id": "T10.01",
+        "task_id": "T10",
+        "work_package": "WP02",
+        "title": "接真实编译和双段渲染",
+        "work": "production调用纯compiler；SVG与PPT各自用真实工具渲染；当前文件写入新Artifact",
+        "deliverable_and_check": "四视图显示正文/源图/SVG/PPT真实版本；缺renderer明确未验证",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T10.02",
+        "task_id": "T10",
+        "work_package": "WP02",
+        "title": "实现实际文件读回",
+        "work": "从PPT ZIP/XML读取文字、端点、path/字体/画笔，对照原Page和SVG而非自产trace",
+        "deliverable_and_check": "删职责、反箭头、隐藏1pt/透明全文均能定位真实异常",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T10.03",
+        "task_id": "T10",
+        "work_package": "WP02",
+        "title": "完成首张复杂事故页还原",
+        "work": "按原图保留模块/图标/状态/层级/辅助说明，分别阅图像→SVG和SVG→PPT",
+        "deliverable_and_check": "T10.min交真实可编辑PPT及三方对照、问题记录；不能只凭对象数量完成",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T10.04",
+        "task_id": "T10",
+        "work_package": "WP02",
+        "title": "扩展三页与布局敏感性",
+        "work": "覆盖架构职责、图表/表格、另一方案页；同业务换不同布局原图，几何随之改变",
+        "deliverable_and_check": "三页正文/图形完整；换图不只是换hash，简化版不能冒充还原",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T10.05",
+        "task_id": "T10",
+        "work_package": "WP02",
+        "title": "尽早运行P1迁移",
+        "work": "主链一旦可用用陌生材料生成首稿，记录业务缺陷并回内容方法或制作层",
+        "deliverable_and_check": "P1用后归开发；精修制作样例与默认内容能力分开",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T10.06",
+        "task_id": "T10",
+        "work_package": "WP02",
+        "title": "完成声明子集与设计一致性",
+        "work": "补全06.2特性、4:3/字体/Logo、视图比例和实际读回；按依赖补全T03/T09范围",
+        "deliverable_and_check": "完整卡关闭须覆盖AC-K13/K14，min成功不等于所有格式/特性完成",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      }
+    ]
+  },
+  {
+    "task_id": "T11",
+    "work_package": "WP03",
+    "title": "统一审阅解释与真返修",
+    "depends_on": "T07,T10",
+    "target_scope": "review.py;references/review-and-repair.md",
+    "implementation": "工具/Host/人类证据分级；写读export统一；空集合未知；具体像素差异复核；修复必须指新产物；fixed必须replaces旧Review、指向新产物及实际复查观察，旧失败保留；提供完整往返负例",
+    "acceptance_ids": "AC-R01,AC-R02,AC-R03,AC-R04,AC-R05,AC-R06,AC-R07,AC-R10,AC-C05,AC-B07",
+    "failure_return": "误报修规则与三类样例，不只调当前失败到绿",
+    "status": "not_started",
+    "start_after": "T07.min,T10.min",
+    "early_delivery": "统一审阅实现；此前T10实际阅图不得省略",
+    "card": "T11.md",
+    "primary_acceptance_ids": [
+      "AC-C05",
+      "AC-B07",
+      "AC-R01",
+      "AC-R02",
+      "AC-R03",
+      "AC-R04",
+      "AC-R05",
+      "AC-R06",
+      "AC-R07",
+      "AC-R10"
+    ],
+    "shared_acceptance_ids": [],
+    "subtasks": [
+      {
+        "subtask_id": "T11.01",
+        "task_id": "T11",
+        "work_package": "WP03",
+        "title": "实现唯一审阅解释",
+        "work": "evaluate_current统一检查适用性/依赖/must_fix/needs_judgment；接收读取UI导出复用",
+        "deliverable_and_check": "同一当前Review在各入口结果一致，空registry/空findings不自动满分",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T11.02",
+        "task_id": "T11",
+        "work_package": "WP03",
+        "title": "连接真实检查对象",
+        "work": "读取实际PPT页面/备注/隐藏项/XML与当前页集合，共享解析但按检查目的判断",
+        "deliverable_and_check": "正文、关系、内部指令泄漏有具体定位；页码/业务词不误判",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T11.03",
+        "task_id": "T11",
+        "work_package": "WP03",
+        "title": "实现三类视觉差异复核",
+        "work": "正常还原、故意缺节点、合理抗锯齿差异分别实测；需要判断的指标保留问题",
+        "deliverable_and_check": "严重缩水不能靠revision_required=false清空；accepted_variance有具体观察",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T11.04",
+        "task_id": "T11",
+        "work_package": "WP03",
+        "title": "实现真返修闭环",
+        "work": "repair生成新产物；新Review用replaces/finding_id关联旧失败并实际复查",
+        "deliverable_and_check": "review-fixed正负例真实接收；只改fixed、旧subject或过期观察均不关闭",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T11.05",
+        "task_id": "T11",
+        "work_package": "WP03",
+        "title": "如实记录审阅身份与证据",
+        "work": "区分tool/Host/human、execution_ref和实际阅图；原图期待独立于输出登记",
+        "deliverable_and_check": "同人两个名字不算独立；模型互相同意不等于专业人类验收",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T11.06",
+        "task_id": "T11",
+        "work_package": "WP03",
+        "title": "补内容判断与失效检查",
+        "work": "分别复算计算、核对事实和审阅有条件建议；方法或产物变化只失效对应结论",
+        "deliverable_and_check": "54/120可核算，无依据40%被识别；旧pass不盖当前fail",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      }
+    ]
+  },
+  {
+    "task_id": "T12",
+    "work_package": "WP03",
+    "title": "局部修改与并发恢复",
+    "depends_on": "T02,T10,T11",
+    "target_scope": "store.py;tasks.py;service.py;production.py",
+    "implementation": "读集重基、稳定页ID/增删重排、跨页事实、取消竞态、晚到保护、恢复与重定位；先单页编辑/无关页不重生，再补全并发与恢复；恢复内容不重置调用记录；样式/资产按实际依赖失效",
+    "acceptance_ids": "AC-S03,AC-S04,AC-S05,AC-S06,AC-S07,AC-S08,AC-S09,AC-S10,AC-K15,AC-S13",
+    "failure_return": "发现无关重生则修依赖；不清整目录或删除旧产物",
+    "status": "not_started",
+    "start_after": "T02.min,T10.min",
+    "early_delivery": "T12.min：一次单页修改、旧原件保留/无关页不重生；先实际阅图再补统一自动关联",
+    "card": "T12.md",
+    "primary_acceptance_ids": [
+      "AC-S03",
+      "AC-S04",
+      "AC-S05",
+      "AC-S06",
+      "AC-S07",
+      "AC-S08",
+      "AC-S09",
+      "AC-S10",
+      "AC-K15",
+      "AC-S13"
+    ],
+    "shared_acceptance_ids": [],
+    "subtasks": [
+      {
+        "subtask_id": "T12.01",
+        "task_id": "T12",
+        "work_package": "WP03",
+        "title": "先交单页修改T12.min",
+        "work": "request_edit带scope和read_set；正文/边修改产新Page/SVG/PPT并刷新文件检查；分别验证轻微文本修改和需重生蓝图的重大目标页修改",
+        "deliverable_and_check": "目标p09按实际影响修改，必要时重生该页蓝图；其他未受影响页蓝图/SVG hash不变、无新增外部制作；旧件可找回",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T12.02",
+        "task_id": "T12",
+        "work_package": "WP03",
+        "title": "实现影响范围与页集合",
+        "work": "按正文/有效样式/字体/资产/共用事实依赖传播；Document负责增删重排",
+        "deliverable_and_check": "删页不由glob混回；重排仅更新实际页码/引用与装配，未用样式不重生",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T12.03",
+        "task_id": "T12",
+        "work_package": "WP03",
+        "title": "实现幂等与并发重基",
+        "work": "相同operation同结果复用，异结果冲突；不同页可重基，同页和共享输入变化拒绝",
+        "deliverable_and_check": "两写者并发反例无最后写覆盖；超时重交不生重复版本",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T12.04",
+        "task_id": "T12",
+        "work_package": "WP03",
+        "title": "实现取消和晚到结果保护",
+        "work": "start/cancel/accept同项目事务；本地子进程仅管理所属进程；晚到可结算调用但不采用内容",
+        "deliverable_and_check": "cancel先赢不写，accept先赢不删产物；取消后的同hash结果也不接受",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T12.05",
+        "task_id": "T12",
+        "work_package": "WP03",
+        "title": "实现历史恢复和目录搬迁",
+        "work": "restore生成新revision并保留操作事实；object相对Ref；源重映射核验hash、字体重新定位",
+        "deliverable_and_check": "复制项目后产物可看，调用消耗/未知/停止不回滚，缺源只影响需原文动作",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T12.06",
+        "task_id": "T12",
+        "work_package": "WP03",
+        "title": "验证跨页与设计修改",
+        "work": "共用事实、默认style、独立style、同asset换字节、画布变化成组回归",
+        "deliverable_and_check": "所有相关页更新；不相关页保留；完整卡由T11复核当前状态后关闭",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      }
+    ]
+  },
+  {
+    "task_id": "T13",
+    "work_package": "WP03",
+    "title": "重试历史与真实成本",
+    "depends_on": "T12",
+    "target_scope": "tasks.py;service.py",
+    "implementation": "外部调用限额与本地修复分开；无进展停止；归档不封顶、不重置历史；项目锁下分配call_allowances；begin/settle幂等，未知保留并暂停新外部调用，本地修复继续；min提前接入",
+    "acceptance_ids": "AC-S11,AC-S12",
+    "failure_return": "不通过新增user授权历史平台解决本地格式错误",
+    "status": "not_started",
+    "start_after": "T02.min,T04.min",
+    "early_delivery": "T13.min：首次外部调用前的项目额度事务/begin/settle；随后全并发未知恢复测试",
+    "card": "T13.md",
+    "primary_acceptance_ids": [
+      "AC-S11",
+      "AC-S12"
+    ],
+    "shared_acceptance_ids": [],
+    "subtasks": [
+      {
+        "subtask_id": "T13.01",
+        "task_id": "T13",
+        "work_package": "WP03",
+        "title": "提前实现调用许可T13.min",
+        "work": "在项目锁内reserve/start/begin/settle；统计所有最新Task含历史消耗与未知",
+        "deliverable_and_check": "首次T06真实调用前可用；最后名额仅一个执行者取得，重复begin不能重发",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T13.02",
+        "task_id": "T13",
+        "work_package": "WP03",
+        "title": "处理调用结果与未知",
+        "work": "已发成功/失败consumed，确认未发released，未知占额暂停新外部调用；本地修正继续",
+        "deliverable_and_check": "timeout不自动退额；真实调用发生但业务接收失败仍可结算",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T13.03",
+        "task_id": "T13",
+        "work_package": "WP03",
+        "title": "处理基础取消、用户停止与限额调整",
+        "work": "实现基础取消和用户停止，调整上限不抹除调用消耗；取消在途未知不释放；复用T02/T04基本事务",
+        "deliverable_and_check": "真实调用前停止生效；未知调用保留，不以取消重新获得名额；完整恢复矩阵在T13.06",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T13.04",
+        "task_id": "T13",
+        "work_package": "WP03",
+        "title": "保留多轮返修与进展",
+        "work": "每次独立归档ID不覆盖attempt3；同错误无进展改修法或报告缺口",
+        "deliverable_and_check": "四轮以上原件均可恢复；本地修格式不算图像调用，不伪造质量通过",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T13.05",
+        "task_id": "T13",
+        "work_package": "WP03",
+        "title": "完成并发与工具证据回归",
+        "work": "两个Host争最后名额、响应丢失/晚到、invocation重复分别检验",
+        "deliverable_and_check": "仅承诺约束产品协议请求；缺工具回执标host_reported而非provider_verified",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T13.06",
+        "task_id": "T13",
+        "work_package": "WP03",
+        "title": "补全恢复与冲突结算",
+        "work": "在T12完成后验证restore/retry不重获名额，settle冲突拒绝；保留多轮历史",
+        "deliverable_and_check": "恢复前后实际消耗与未知状态不回滚，当前和历史产物均可追溯",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      }
+    ]
+  },
+  {
+    "task_id": "T14",
+    "work_package": "WP03",
+    "title": "完整四视图工作台",
+    "depends_on": "T05,T11,T12",
+    "target_scope": "web.py;view.py;resources/static/*",
+    "implementation": "真实页/蓝图/SVG/PPT、反馈、正文更新、取消、冲突；无Host时明确等待；loopback必要安全；自然语言入口无需手动view；同项目URL复用、无浏览器/服务失败真实返回；显示编辑能力范围",
+    "acceptance_ids": "AC-U01,AC-U02,AC-U03,AC-U04,AC-U05,AC-U06,AC-U07",
+    "failure_return": "UI实际数据缺失先修service，不能用演示假卡片",
+    "status": "not_started",
+    "start_after": "T05,T11,T12",
+    "early_delivery": "按整项任务依赖执行",
+    "card": "T14.md",
+    "primary_acceptance_ids": [
+      "AC-U01",
+      "AC-U02",
+      "AC-U03",
+      "AC-U04",
+      "AC-U05",
+      "AC-U06",
+      "AC-U07"
+    ],
+    "shared_acceptance_ids": [],
+    "subtasks": [
+      {
+        "subtask_id": "T14.01",
+        "task_id": "T14",
+        "work_package": "WP03",
+        "title": "完成真实四视图阅读",
+        "work": "复用DESIGN.md布局，页列表/正文/蓝图/SVG/PPT/问题/历史直接消费ProjectView",
+        "deliverable_and_check": "无preview有两页即两页；失败和过期产物能打开且版本清楚",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T14.02",
+        "task_id": "T14",
+        "work_package": "WP03",
+        "title": "实现正文编辑与视觉反馈",
+        "work": "POST content/edits带revision/page_hash/operation，正文结构化编辑，区域意见形成Host任务",
+        "deliverable_and_check": "修改从Page开始；按钮创建awaiting_host，无Host不假running",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T14.03",
+        "task_id": "T14",
+        "work_package": "WP03",
+        "title": "接取消检查导出恢复",
+        "work": "API统一service，409/400或422/503带具体错误；表单冲突保输入",
+        "deliverable_and_check": "取消晚到不更新；恢复生成新revision；导出仍按用途判断",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T14.04",
+        "task_id": "T14",
+        "work_package": "WP03",
+        "title": "完成真实服务与文件安全",
+        "work": "loopback、Origin/token、登记Artifact ID访问；材料用textContent，SVG隔离展示",
+        "deliverable_and_check": "正常只读无需账号；路径逃逸/XSS/跨源写入反例拒绝",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T14.05",
+        "task_id": "T14",
+        "work_package": "WP03",
+        "title": "完成桌面入口连续交互",
+        "work": "自动view、健康服务复用，无浏览器/服务启动失败分流；更新给当前页链接",
+        "deliverable_and_check": "自然语言任务不需用户补开UI；工作台反馈能被下一Host真实执行",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T14.06",
+        "task_id": "T14",
+        "work_package": "WP03",
+        "title": "验收布局和编辑能力说明",
+        "work": "1280×800/1440×900、键盘切页/反馈/取消、对照缩放；显示实际画布/字体替代",
+        "deliverable_and_check": "浏览器操作记录与截图齐备；形状文字编辑不说成Office图表编辑数据",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      }
+    ]
+  },
+  {
+    "task_id": "T15",
+    "work_package": "WP03",
+    "title": "导出与状态汇报收口",
+    "depends_on": "T11,T12,T14",
+    "target_scope": "export.py;view.py;cli.py",
+    "implementation": "review/delivery分开；实际当前文件/检查一致；失败稿能查看；Host完成表述遵从真实状态；PPT交付注明editable_shapes_and_text，不能暗示原生图表编辑数据",
+    "acceptance_ids": "AC-R09,AC-V06,AC-K16",
+    "failure_return": "不得通过裸completed或旧approval强行放行",
+    "status": "not_started",
+    "start_after": "T11,T12,T14",
+    "early_delivery": "按整项任务依赖执行",
+    "card": "T15.md",
+    "primary_acceptance_ids": [
+      "AC-R09",
+      "AC-K16"
+    ],
+    "shared_acceptance_ids": [
+      "AC-V06"
+    ],
+    "subtasks": [
+      {
+        "subtask_id": "T15.01",
+        "task_id": "T15",
+        "work_package": "WP03",
+        "title": "统一导出用途",
+        "work": "export的review可包含明确标识失败稿；delivery消费当前集合和evaluate_current",
+        "deliverable_and_check": "同稿可审阅但有must_fix不能交付；缺人类审阅如实标记",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T15.02",
+        "task_id": "T15",
+        "work_package": "WP03",
+        "title": "固定当前成品与依赖",
+        "work": "选Document当前页/PPT/预览并核对实际文件，导出到用户选定新目录",
+        "deliverable_and_check": "旧approved queue/历史pass不能代替当前结果，导出说明对应真实revision",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T15.03",
+        "task_id": "T15",
+        "work_package": "WP03",
+        "title": "统一状态与Host完成措辞",
+        "work": "CLI/continue/UI/export共用view四维状态及专业证据字段",
+        "deliverable_and_check": "exit0与Task completed不会被转换为专业通过",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T15.04",
+        "task_id": "T15",
+        "work_package": "WP03",
+        "title": "补编辑能力和交付说明",
+        "work": "Artifact/API/UI/README明确editable_shapes_and_text；未核实旧件为unknown",
+        "deliverable_and_check": "表格图表不承诺Office编辑数据；未做桌面编辑保留未验证",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T15.05",
+        "task_id": "T15",
+        "work_package": "WP03",
+        "title": "覆盖导出正反场景",
+        "work": "正常当前稿、失败稿、过期报告、缺关键审阅、用户要求人类审阅分别执行",
+        "deliverable_and_check": "导出结果/拒绝原因/当前版本形成可复核记录",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      }
+    ]
+  },
+  {
+    "task_id": "T16",
+    "work_package": "WP04",
+    "title": "安装器与诊断提取",
+    "depends_on": "T05,T10",
+    "target_scope": "install.py;doctor.py;tools/build_release.py",
+    "implementation": "隔离release/固定解释器/原子激活回滚；资源完整、按步骤报告依赖；旧Skillownership清理",
+    "acceptance_ids": "AC-I01,AC-I02,AC-I03,AC-I07",
+    "failure_return": "安装失败不改current；不借源码目录补文件",
+    "status": "not_started",
+    "start_after": "T05,T10",
+    "early_delivery": "按整项任务依赖执行",
+    "card": "T16.md",
+    "primary_acceptance_ids": [
+      "AC-I01",
+      "AC-I02",
+      "AC-I03",
+      "AC-I07"
+    ],
+    "shared_acceptance_ids": [],
+    "subtasks": [
+      {
+        "subtask_id": "T16.01",
+        "task_id": "T16",
+        "work_package": "WP04",
+        "title": "提取独立发行构建",
+        "work": "tools/build_release调用正常PEP517资源hook；release记录精确源码/包/方法/内核版本",
+        "deliverable_and_check": "wheel/sdist资源完整，新包不引旧命名空间",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T16.02",
+        "task_id": "T16",
+        "work_package": "WP04",
+        "title": "实现固定解释器安装",
+        "work": "新release目录独立venv、实际模块路径与按步探针；不改系统Python",
+        "deliverable_and_check": "隔离前缀安装可导入/读取资源/调用编译；不借旧安装补依赖",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T16.03",
+        "task_id": "T16",
+        "work_package": "WP04",
+        "title": "实现原子激活与回滚",
+        "work": "检查通过后在测试前缀切current/previous；失败不动旧current；旧代码不写新格式",
+        "deliverable_and_check": "故障安装原链接不变；rollback回旧二进制并提示格式边界",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T16.04",
+        "task_id": "T16",
+        "work_package": "WP04",
+        "title": "实现按步doctor",
+        "work": "compose/blueprint/compile/render/view/export分别报告解释器/工具/字体/来源",
+        "deliverable_and_check": "缺renderer不阻正文，无PPTMaster/Library不报新核心缺绑定",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T16.05",
+        "task_id": "T16",
+        "work_package": "WP04",
+        "title": "实现旧Skill所有权处理",
+        "work": "仅替换安装器拥有且未被改动的资源；第三方/用户同名内容保留",
+        "deliverable_and_check": "三种归属反例真实验证，激活用户当前版本留到授权实施阶段",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      }
+    ]
+  },
+  {
+    "task_id": "T17",
+    "work_package": "WP04",
+    "title": "唯一默认入口与文档",
+    "depends_on": "T15,T16",
+    "target_scope": "cli.py;root-and-config.csv;单Skill与methods",
+    "implementation": "新旧命令明确映射/退役，manifest/README/installer/UI共同解除PPTMaster与Library前置",
+    "acceptance_ids": "AC-I04,AC-C06",
+    "failure_return": "不能保留永久v2开关把旧默认留在原处",
+    "status": "not_started",
+    "start_after": "T15,T16",
+    "early_delivery": "按整项任务依赖执行",
+    "card": "T17.md",
+    "primary_acceptance_ids": [
+      "AC-I04"
+    ],
+    "shared_acceptance_ids": [
+      "AC-C06"
+    ],
+    "subtasks": [
+      {
+        "subtask_id": "T17.01",
+        "task_id": "T17",
+        "work_package": "WP04",
+        "title": "清点并映射全部旧命令",
+        "work": "将只读CLI清单逐项对应别名或退役提示；import-plan/build/next-step等按09.6落实",
+        "deliverable_and_check": "每个旧入口有明确行为，不能继续调用旧main隐式生成规则稿",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T17.02",
+        "task_id": "T17",
+        "work_package": "WP04",
+        "title": "统一默认新入口",
+        "work": "console entry、__main__、根Skill、API和安装器指新service；隔离候选先验",
+        "deliverable_and_check": "没有永久v2开关，用户主任务走宿主成稿",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T17.03",
+        "task_id": "T17",
+        "work_package": "WP04",
+        "title": "解除所有绑定宣传与检查",
+        "work": "manifest/doctor/routing/README/UI不再要求PPTMaster SHA认证或Library安装",
+        "deliverable_and_check": "无配置无缓存仍进入新流程；真实python-pptx/renderer依赖正常报告",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T17.04",
+        "task_id": "T17",
+        "work_package": "WP04",
+        "title": "迁移使用和恢复文档",
+        "work": "更新AGENTS/任务索引/恢复说明/主README和migration文档，历史规格标归档",
+        "deliverable_and_check": "新用户照文档走create→view→edit→export，旧run不会被自动写新pointer",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T17.05",
+        "task_id": "T17",
+        "work_package": "WP04",
+        "title": "做入口矩阵回归",
+        "work": "新命令、旧别名、旧run误输入、退役命令逐类验证",
+        "deliverable_and_check": "JSON/退出码/提示一致；实际默认激活由T25完成",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      }
+    ]
+  },
+  {
+    "task_id": "T18",
+    "work_package": "WP04",
+    "title": "旧run只读导入",
+    "depends_on": "T03,T12",
+    "target_scope": "legacy.py;tests/rebuild/test_legacy.py",
+    "implementation": "已知v1/HD只读规范化，源不写，旧媒体可看，未知状态不继承pass；缺原文original_sha256可空；保留extract/媒体实hash；字体/Logo入design_context，原件不动",
+    "acceptance_ids": "AC-L01,AC-L02,AC-L03,AC-L04",
+    "failure_return": "不能就地迁移/执行旧脚本；有歧义返回具体字段规范化",
+    "status": "not_started",
+    "start_after": "T03,T12",
+    "early_delivery": "按整项任务依赖执行",
+    "card": "T18.md",
+    "primary_acceptance_ids": [
+      "AC-L01",
+      "AC-L02",
+      "AC-L03",
+      "AC-L04"
+    ],
+    "shared_acceptance_ids": [],
+    "subtasks": [
+      {
+        "subtask_id": "T18.01",
+        "task_id": "T18",
+        "work_package": "WP04",
+        "title": "只读识别和dry-run",
+        "work": "legacy按明确schema/version读已知v1/HD、SVG/PPT；先输出字段/媒体/未知项计划",
+        "deliverable_and_check": "未知结构具体定位，不用任意NBB子串判断版本",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T18.02",
+        "task_id": "T18",
+        "work_package": "WP04",
+        "title": "规范旧正文与设计",
+        "work": "v1到v2保留可见正文/关系/稳定ID；字体Logo到design_context，缺源hash可空",
+        "deliverable_and_check": "未知正文形态不得静默丢弃或强设ready",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T18.03",
+        "task_id": "T18",
+        "work_package": "WP04",
+        "title": "导入新副本和实际媒体",
+        "work": "复制允许媒体到新objects，记录真实hash与原来源说明；不执行旧脚本",
+        "deliverable_and_check": "导入前后原目录逐文件hash一致，旧媒体可读",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T18.04",
+        "task_id": "T18",
+        "work_package": "WP04",
+        "title": "处理旧状态与来源不确定",
+        "work": "旧completed/pass仅历史说明，不变新Review通过；未知hash不追认候选原文",
+        "deliverable_and_check": "缺原文仍可看已存extract/媒体，需要原文动作才明确缺口",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T18.05",
+        "task_id": "T18",
+        "work_package": "WP04",
+        "title": "检验移动与恢复",
+        "work": "合成旧run副本导入、移目录、恢复、源路径失效分别核对",
+        "deliverable_and_check": "新项目Ref可解析，旧源未动，错误返回待规范化字段",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      }
+    ]
+  },
+  {
+    "task_id": "T19",
+    "work_package": "WP04",
+    "title": "发布资源与许可证清理",
+    "depends_on": "T01,T16",
+    "target_scope": "LICENSE;NOTICE;THIRD_PARTY_NOTICES.md;.gitignore;build hook",
+    "implementation": "跨分支归属、依赖/资源清单、排除客户材料/秘密/字体误打包",
+    "acceptance_ids": "AC-I08",
+    "failure_return": "许可或材料授权不明先不随包，不伪称开源可用",
+    "status": "not_started",
+    "start_after": "T01,T16",
+    "early_delivery": "按整项任务依赖执行",
+    "card": "T19.md",
+    "primary_acceptance_ids": [
+      "AC-I08"
+    ],
+    "shared_acceptance_ids": [],
+    "subtasks": [
+      {
+        "subtask_id": "T19.01",
+        "task_id": "T19",
+        "work_package": "WP04",
+        "title": "核实提取来源归属",
+        "work": "对B0/K0提取函数和第三方依赖登记许可证/归属，保留要求的版权说明",
+        "deliverable_and_check": "每个随包组件可追溯到版本和授权信息",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T19.02",
+        "task_id": "T19",
+        "work_package": "WP04",
+        "title": "补发行许可证与说明",
+        "work": "更新LICENSE/NOTICE/THIRD_PARTY_NOTICES和release清单",
+        "deliverable_and_check": "新包元数据与实际打包内容一致，无未经核实开源承诺",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T19.03",
+        "task_id": "T19",
+        "work_package": "WP04",
+        "title": "检查真实包内容",
+        "work": "解包wheel/sdist/release核对run/env/客户资料/秘密/字体/历史敏感材料排除",
+        "deliverable_and_check": "提交文件清单与扫描结果；授权未知资源暂不随包",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T19.04",
+        "task_id": "T19",
+        "work_package": "WP04",
+        "title": "修打包排除和回归",
+        "work": "调整.gitignore/build hook/MANIFEST实际路径规则，再从干净构建产物核验",
+        "deliverable_and_check": "合法schema/static/方法仍包含；不能靠删运行能力完成清理",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      }
+    ]
+  },
+  {
+    "task_id": "T20",
+    "work_package": "WP04",
+    "title": "候选隔离安装端到端",
+    "depends_on": "T14,T15,T16,T17,T18,T19,T13",
+    "target_scope": "CI/install smoke及实际候选环境",
+    "implementation": "无库/外部后端/源码访问的安装，从材料任务到真产物UI改稿；记精确模块来源；从自然语言主Skill观察自动工作台；指定字体/Logo/非16:9/移动项目；调用限额与未知结算进入验收",
+    "acceptance_ids": "AC-I05,AC-I06",
+    "failure_return": "不能用fixture/旧安装/源码运行顶替；修具体依赖/资源",
+    "status": "not_started",
+    "start_after": "T14,T15,T16,T17,T18,T19,T13",
+    "early_delivery": "按整项任务依赖执行",
+    "card": "T20.md",
+    "primary_acceptance_ids": [
+      "AC-I05",
+      "AC-I06"
+    ],
+    "shared_acceptance_ids": [],
+    "subtasks": [
+      {
+        "subtask_id": "T20.01",
+        "task_id": "T20",
+        "work_package": "WP04",
+        "title": "搭建候选隔离环境",
+        "work": "从wheel及sdist正常安装；独立HOME无PPTMaster/Library/缓存，禁止访问源码补资源",
+        "deliverable_and_check": "记录真实解释器、模块来源、包SHA与方法资源路径",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T20.02",
+        "task_id": "T20",
+        "work_package": "WP04",
+        "title": "执行自然语言新建全链",
+        "work": "主Skill给普通材料任务，真实compose/生图/SVG/PPT/读回/审阅；首次正文自动view",
+        "deliverable_and_check": "真实成品与工作台可访问，fixture不替代本轮生产",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T20.03",
+        "task_id": "T20",
+        "work_package": "WP04",
+        "title": "执行工作台局部修改",
+        "work": "在当前页改正文和关系，Host接单再交回，导出并对照其他页hash",
+        "deliverable_and_check": "未受影响页不重生，旧稿可看，当前文件/状态同步",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T20.04",
+        "task_id": "T20",
+        "work_package": "WP04",
+        "title": "覆盖配置和重定位",
+        "work": "指定字体/Logo/非16:9；移动完整项目；缺工具/字体分步诊断",
+        "deliverable_and_check": "实际PPT/视图/输入一致，缺字体不阻旧媒体查看",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T20.05",
+        "task_id": "T20",
+        "work_package": "WP04",
+        "title": "覆盖限额未知与安装来源",
+        "work": "通过产品交接检验T13并发/未知、取消恢复；检查调用和产物分别记录",
+        "deliverable_and_check": "无绑定端到端及资源完整的当前证据齐备，失败退回具体模块",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      }
+    ]
+  },
+  {
+    "task_id": "T21",
+    "work_package": "WP05",
+    "title": "冻结D1/D2对照",
+    "depends_on": "T10,T15,T20",
+    "target_scope": "验证记录与内容样本",
+    "implementation": "冻结同模型输入设置；A/B/C保留第一完整稿，开发增量与精修范例分开",
+    "acceptance_ids": "AC-V01,AC-C09,AC-C10",
+    "failure_return": "正文需重建则回T04，之后重新冻结；不挑最佳",
+    "status": "not_started",
+    "start_after": "T10,T15,T20",
+    "early_delivery": "按整项任务依赖执行",
+    "card": "T21.md",
+    "primary_acceptance_ids": [
+      "AC-C09",
+      "AC-C10",
+      "AC-V01"
+    ],
+    "shared_acceptance_ids": [],
+    "subtasks": [
+      {
+        "subtask_id": "T21.01",
+        "task_id": "T21",
+        "work_package": "WP05",
+        "title": "冻结输入与比较条件",
+        "work": "固定D1/D2同源不同任务；记录模型、方法/实现、来源、工具权限和人工介入",
+        "deliverable_and_check": "形成可重跑条件表，任何变更明确影响哪一组",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T21.02",
+        "task_id": "T21",
+        "work_package": "WP05",
+        "title": "运行A/B/C独立会话",
+        "work": "A充分资料+合理自查；B增加方法；C完整工作流；业务背景一致且不互喂答案",
+        "deliverable_and_check": "保留每组第一次系统完整稿，失败也留；不用挑最佳输出",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T21.03",
+        "task_id": "T21",
+        "work_package": "WP05",
+        "title": "分开内容与制作比较",
+        "work": "内容对照用同制作器；整链路再看还原/编辑/局部修改；核对业务机制和复合结构",
+        "deliverable_and_check": "结构差异由任务决定，观点有理由；不以字数/页数/模型好评评分",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T21.04",
+        "task_id": "T21",
+        "work_package": "WP05",
+        "title": "记录结论并处理失败",
+        "work": "若主线仍需重建回T04；方法/代码改动后重冻并只重跑受影响条件",
+        "deliverable_and_check": "开发增量、精修示例与冻结候选分开，无自动泛化承诺",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      }
+    ]
+  },
+  {
+    "task_id": "T22",
+    "work_package": "WP05",
+    "title": "H1/H2迁移验证",
+    "depends_on": "T21",
+    "target_scope": "验证记录与未见材料",
+    "implementation": "冻结后A/C，归因不明补B；用后修改即变回归，必要时新材料或收窄承诺",
+    "acceptance_ids": "AC-V03",
+    "failure_return": "不称三样例成功=稳定泛化；失败如实记录",
+    "status": "not_started",
+    "start_after": "T21",
+    "early_delivery": "按整项任务依赖执行",
+    "card": "T22.md",
+    "primary_acceptance_ids": [
+      "AC-V03"
+    ],
+    "shared_acceptance_ids": [],
+    "subtasks": [
+      {
+        "subtask_id": "T22.01",
+        "task_id": "T22",
+        "work_package": "WP05",
+        "title": "准备未见H1/H2",
+        "work": "在T21冻结后选陌生企业及另一材料类型，验证资料不含在示例/定向调试中",
+        "deliverable_and_check": "留来源与未见边界记录，不要求巨大benchmark平台",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T22.02",
+        "task_id": "T22",
+        "work_package": "WP05",
+        "title": "运行A/C迁移对照",
+        "work": "同输入条件独立会话；保留第一完整稿；归因不明再补B",
+        "deliverable_and_check": "具体说明结构/专业内容/制作有哪些迁移成功或失败",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T22.03",
+        "task_id": "T22",
+        "work_package": "WP05",
+        "title": "归类失败并约束结论",
+        "work": "使用H样例改方法后它归回归；需新材料验证或收窄支持范围",
+        "deliverable_and_check": "不把已见修好叫未见通过，不以两例成功宣称普遍稳定",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T22.04",
+        "task_id": "T22",
+        "work_package": "WP05",
+        "title": "交付迁移记录",
+        "work": "关联实际版本、所有稿件、观察、剩余风险及下一修改入口",
+        "deliverable_and_check": "结论能区分整体候选增量与方法归因，失败有事实依据",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      }
+    ]
+  },
+  {
+    "task_id": "T23",
+    "work_package": "WP05",
+    "title": "专业阅稿与实际编辑",
+    "depends_on": "T20,T21",
+    "target_scope": "当前成品与人类/桌面观察",
+    "implementation": "合格人类检查主线/机制/可用；目标桌面软件编辑文字与关系保存重开；目标应用修改表格/图表形状文字，保存重开；明确未承诺Office编辑数据",
+    "acceptance_ids": "AC-V04,AC-K12",
+    "failure_return": "无人审则工程试行；headless不顶替桌面，不暂停全部改进",
+    "status": "not_started",
+    "start_after": "T20,T21",
+    "early_delivery": "按整项任务依赖执行",
+    "card": "T23.md",
+    "primary_acceptance_ids": [
+      "AC-K12",
+      "AC-V04"
+    ],
+    "shared_acceptance_ids": [],
+    "subtasks": [
+      {
+        "subtask_id": "T23.01",
+        "task_id": "T23",
+        "work_package": "WP05",
+        "title": "组织真实专业阅稿",
+        "work": "向有相应经验的用户/专家提供当前完整稿、任务和必要来源，询问是否值得进入正常业务审阅",
+        "deliverable_and_check": "保留真实人员反馈；没有反馈为pending，不填写模型代答",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T23.02",
+        "task_id": "T23",
+        "work_package": "WP05",
+        "title": "记录内容问题与必要返修",
+        "work": "定位主线、业务机制、方案取舍、深度和事实；回相应方法/内容任务修订",
+        "deliverable_and_check": "首稿与修订稿分开；需要重建主线不能标专业首稿通过",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T23.03",
+        "task_id": "T23",
+        "work_package": "WP05",
+        "title": "完成目标桌面编辑",
+        "work": "打开真实当前PPT改关键文字、连接/图形、表格或图表形状文字，保存后重开",
+        "deliverable_and_check": "记录应用/版本/文件与前后观察；headless不替代实际编辑",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T23.04",
+        "task_id": "T23",
+        "work_package": "WP05",
+        "title": "分层汇报验收",
+        "work": "基于当前候选与已取得的反馈出具分层记录；没有专业人员或桌面编辑结果时明确pending，记录样本版本、缺失证据与后续动作；本步骤不等待T23.01–03完成",
+        "deliverable_and_check": "向T25交接工程试行边界；AC-V04/AC-K12保持未验，T23整卡不能关闭；实际反馈取得后更新",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      }
+    ]
+  },
+  {
+    "task_id": "T24",
+    "work_package": "WP05",
+    "title": "旧源/测试/合同退役",
+    "depends_on": "T17,T18,T20",
+    "target_scope": "inventory全部处置；docs/archive",
+    "implementation": "逐文件删除前完成行为移植/引用归零；历史文档更正；可靠性测试不skip；负责AC-L05最终引用归零，与T01清单建档分离",
+    "acceptance_ids": "AC-L05,AC-L06",
+    "failure_return": "未知消费者先核实/移植；不删用户目录、外部Skill或原证据",
+    "status": "not_started",
+    "start_after": "T17,T18,T20",
+    "early_delivery": "按整项任务依赖执行",
+    "card": "T24.md",
+    "primary_acceptance_ids": [
+      "AC-L05",
+      "AC-L06"
+    ],
+    "shared_acceptance_ids": [],
+    "subtasks": [
+      {
+        "subtask_id": "T24.01",
+        "task_id": "T24",
+        "work_package": "WP05",
+        "title": "逐路径核对删除前提",
+        "work": "以T01全文件表比对当前调用/包资源/测试映射；每个旧行为有替代或明确退役理由",
+        "deliverable_and_check": "未知消费者先查明，不能按目录一次清空",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T24.02",
+        "task_id": "T24",
+        "work_package": "WP05",
+        "title": "迁移有效测试和合同引用",
+        "work": "保留事务/解析/转换真实行为断言；错误固定模板/假通过断言记录理由后退役",
+        "deliverable_and_check": "新测试对应真实行为，无skip装绿；活动schema唯一资源来源",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T24.03",
+        "task_id": "T24",
+        "work_package": "WP05",
+        "title": "分批退役旧代码与Skill入口",
+        "work": "替代已通过T20后按表删除/归档旧源码、命令入口和合同；保留只读导入能力",
+        "deliverable_and_check": "新默认/发行不再引用旧OS；第三方Skill和用户run不动",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T24.04",
+        "task_id": "T24",
+        "work_package": "WP05",
+        "title": "归档旧文档并清零引用",
+        "work": "建立docs/archive索引、版本与旧运行指引；扫描源码/文档/构建/安装引用",
+        "deliverable_and_check": "AC-L05/L06实测完成，清单全部有实际处置和证据",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T24.05",
+        "task_id": "T24",
+        "work_package": "WP05",
+        "title": "重验退役后的发行边界",
+        "work": "重建候选包，检查依赖/资源/命令兼容及相关可靠性测试",
+        "deliverable_and_check": "删除后仍能执行新链；旧安装和历史证据保留可恢复",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      }
+    ]
+  },
+  {
+    "task_id": "T25",
+    "work_package": "WP05",
+    "title": "最终默认切换与交付说明",
+    "depends_on": "T22,T24",
+    "target_scope": "最终候选安装及实际运行记录",
+    "implementation": "在明确发布/安装授权后切换唯一入口；正常出稿改稿导出复跑；列未验证边界；消费T23.04未验项记录即可交工程试行，T23整体及专业/桌面AC保持待验；用户明确要求专业批准时遵循该要求",
+    "acceptance_ids": "AC-V05,AC-V06",
+    "failure_return": "失败保留旧安装/用户数据，撤回候选激活；不回填历史通过",
+    "status": "not_started",
+    "start_after": "T22,T24",
+    "early_delivery": "按整项任务依赖执行",
+    "card": "T25.md",
+    "primary_acceptance_ids": [
+      "AC-V05",
+      "AC-V06"
+    ],
+    "shared_acceptance_ids": [],
+    "subtasks": [
+      {
+        "subtask_id": "T25.01",
+        "task_id": "T25",
+        "work_package": "WP05",
+        "title": "汇总最终候选与未验边界",
+        "work": "核对T01–T24完成/未验项、源码SHA/包hash/方法版本及T22/T23结论",
+        "deliverable_and_check": "交付说明不把工程试行写成已获专业认可；发布授权按会话事实处理",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T25.02",
+        "task_id": "T25",
+        "work_package": "WP05",
+        "title": "最终候选安装和默认切换",
+        "work": "已有相应授权后用安装器原子激活唯一新入口，留previous",
+        "deliverable_and_check": "实际命令来源是该release；失败可回退而不让旧代码写新项目",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T25.03",
+        "task_id": "T25",
+        "work_package": "WP05",
+        "title": "从安装版复跑真实任务",
+        "work": "材料→首稿→自动工作台→真实蓝图/SVG/PPT→审阅→局部改稿→导出",
+        "deliverable_and_check": "不调用源码补丁；交付当前完整PPT、预览、可复现项目与具体证据",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      },
+      {
+        "subtask_id": "T25.04",
+        "task_id": "T25",
+        "work_package": "WP05",
+        "title": "记录交付和失败回退",
+        "work": "关联最终版本/测试/真实业务反馈；失败保留产物并退回对应卡",
+        "deliverable_and_check": "只有实际通过的维度完成；无历史回填，无额外长期平台",
+        "status": "not_started",
+        "execution_unit": "internal_step"
+      }
+    ]
+  }
+]

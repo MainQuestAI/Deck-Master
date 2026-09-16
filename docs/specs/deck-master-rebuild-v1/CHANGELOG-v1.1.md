@@ -10,7 +10,7 @@ R1–R6全部接受；对应补充集中到现有五对象、15章、25任务与
 | --- | --- | --- | --- |
 | R1 来源未知 | original_sha256可null/省略；已保存extract/媒体hash仍真实必填；全零拒绝；未知不能追认补来的候选原件 | 03.2/03.11、12.2–12.3、document schema | AC-L04；missing-source |
 | R2 制作输入 | Document.design_context为唯一版本化画布/语言/字体/样式/资产；Page只能明确覆盖；asset角色保存字节；style_ref指ID；临时相对路径只在接收时解析 | 03.3a、05.1、06.1/06.4、08.8；Document/Page/Artifact | AC-K14/K15、AC-S13、AC-B01；design-context |
-| R3 依赖/额度 | T20依赖T13，最终T25祖先覆盖T01–T24；T01用L07建立清单，T24完成L05引用归零；项目事务分配allowance与begin/settle | 08.6、09.2、14.2；Task与task-list | AC-L07、AC-S11/S12；call-allowance |
+| R3 依赖/额度 | T20依赖T13，T25工程交付祖先覆盖T01–T22及T24，消费T23.04待验记录；T01用L07建立清单，T24完成L05引用归零；项目事务分配allowance与begin/settle | 08.6、09.2、14.2；Task与task-list | AC-L07、AC-S11/S12；call-allowance |
 | R4 UI首次可见 | 主Skill首次正文页被接收就自动view --open；同项目复用；无浏览器与服务失败分别如实；不是等PPT全部完成 | 09.5、10.4/10.6、11.7、Host例 | AC-U03、T05/T14/T20 |
 | R5 编辑边界 | 首版为可编辑形状与文字；不承诺Office Chart编辑数据/原生Table行列；PPT Artifact与UI/导出声明 | 00.5、06.7、07.7、10.2；Artifact | AC-K16、AC-K12 |
 | R6 最早切片 | start_after/early_delivery允许先试做，depends_on仍为整项完成条件；T10.min真实三方对照与T12.min单页改先行，最终范围不缩水 | 01.8、06.8、14.2；任务/工作包/清单同步 | AC-V07；T10/T12 |

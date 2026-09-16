@@ -166,7 +166,8 @@ def main():
             for child in deps[k]:result.add(child);result|=ancestors(child,stack+(k,))
             return result
         for k in by:ancestors(k)
-        end=ancestors('T25');assert end==set(by)-{'T25'},f'missing {set(by)-end-{"T25"}}'
+        end=ancestors('T25');assert end==set(by)-{'T25','T23'},f'missing {set(by)-end-{"T25"}}'
+        assert next(a for a in acs if a['acceptance_id']=='AC-K01')['task_id']=='T10'
         assert 'T13' in deps['T20']
         assert by['T01']['acceptance_ids']=='AC-L07'
         assert 'AC-L05' in by['T24']['acceptance_ids'].split(',')
@@ -175,8 +176,27 @@ def main():
             assert set(t['acceptance_ids'].split(','))<=aid
             assert t['start_after'] and t['early_delivery']
         for a in acs:assert a['acceptance_id'] in by[a['task_id']]['acceptance_ids'].split(','),f'unowned {a}'
-        return '25-task completion DAG acyclic; T25 covers all 24 predecessors including T13; T01/L07 and T24/L05 separated; early-start fields present. Does not prove implementation done.'
+        return '25-task completion DAG acyclic; T25 engineering delivery covers 23 predecessors including T13; T23 human acceptance remains separate; T01/L07 and T24/L05 separated; early-start fields present. Does not prove implementation done.'
     check('R3_R6_task_graph_and_acceptance',graph)
+    def cards():
+        tasks=read(root/'task-cards/tasks.json'); originals={t['task_id']:t for t in read(root/'inventory/task-list.json')}
+        acs=read(root/'inventory/acceptance-matrix.json'); steps=[]
+        for t in tasks:
+            for key,value in originals[t['task_id']].items():
+                if key!='status': assert t[key]==value,(t['task_id'],key)
+            assert t['primary_acceptance_ids']==[a['acceptance_id'] for a in acs if a['task_id']==t['task_id']]
+            body=(root/'task-cards'/t['card']).read_text()
+            for step in t['subtasks']:
+                assert step['execution_unit']=='internal_step'
+                assert step['subtask_id']+' '+step['title'] in body
+                assert step['work'] in body and step['deliverable_and_check'] in body
+                steps.append(step)
+        assert len(tasks)==25 and len(steps)==126 and len({s['subtask_id'] for s in steps})==126
+        with (root/'task-cards/subtasks.csv').open(encoding='utf-8-sig',newline='') as f: assert list(csv.DictReader(f))==steps
+        assert 'T23.04' in (root/'task-cards/T25.md').read_text()
+        assert 'AC-K01' not in next(t for t in tasks if t['task_id']=='T08')['acceptance_ids']
+        return '25 cards and 126 internal steps match JSON/CSV, task source and unique AC owners; runtime behavior remains unverified.'
+    check('task_cards_consistency',cards)
     def inventories():
         for stem in ['task-list','acceptance-matrix','new-files','old-files','root-and-config']:
             with (root/f'inventory/{stem}.csv').open(encoding='utf-8-sig',newline='') as f:c=list(csv.DictReader(f))

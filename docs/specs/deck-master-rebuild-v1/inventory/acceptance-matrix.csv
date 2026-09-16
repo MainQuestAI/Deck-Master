@@ -20,7 +20,7 @@ AC-B07,源图预期独立,删除SVG图标登记不缩小源图预期；未识别
 AC-B08,结构不重复印字,edge.target不自动变正文；必要标签保留，关系实际连节点,tests/rebuild/test_content.py,T07,拟自动化测试；尚未实现执行,planned_not_executed
 AC-B09,无假生图降级,缺Host工具返回待工具，不走fixture/无字通用图/自动直绘替代任务,tests/rebuild/test_service_flow.py,T06,拟自动化测试；尚未实现执行,planned_not_executed
 AC-B10,原件与重设计,明确新设计能建立新参考版本；旧还原失败仍保留，不回填通过,tests/rebuild/test_production.py,T07,拟自动化测试；尚未实现执行,planned_not_executed
-AC-K01,独立转换,只给SVG/资产/参数，隔离安装可产PPT，不读旧OS/审批/HOME仓库,tests/rebuild/test_compiler_api.py,T08,拟自动化测试；尚未实现执行,planned_not_executed
+AC-K01,独立转换,只给SVG/资产/参数，隔离安装可产PPT，不读旧OS/审批/HOME仓库,tests/rebuild/test_compiler_api.py,T10,拟自动化测试；尚未实现执行,planned_not_executed
 AC-K02,负斜率与端点,正负斜率及反向line的实际PPT端点方向正确，不只bbox相同,tests/rebuild/test_geometry.py,T09,拟自动化测试；尚未实现执行,planned_not_executed
 AC-K03,旋转圆边界,r10圆旋转45度仍20×20；椭圆变换使用正确极值,tests/rebuild/test_geometry.py,T09,拟自动化测试；尚未实现执行,planned_not_executed
 AC-K04,字体权重,800/900不反为normal；记录实际字体匹配/替代，XML与渲染核对,tests/rebuild/test_text.py,T09,拟自动化测试；尚未实现执行,planned_not_executed
