@@ -114,3 +114,11 @@ def test_approved_image_slice_crops_without_stretch(tmp_path):
         root=ET.fromstring(z.read('ppt/slides/slide1.xml'))
     crop=root.find('.//{http://schemas.openxmlformats.org/drawingml/2006/main}srcRect')
     assert crop.get('l')=='25000' and crop.get('r')=='25000'
+
+
+def test_reconstruction_declared_original_must_match_actual_image():
+    from deck_master.tasks import _validate_svg_reference, EnvelopeError
+    svg=('<svg data-blueprint-sha256="'+'a'*64+'"/>').encode()
+    _validate_svg_reference(svg,'a'*64)
+    with pytest.raises(EnvelopeError,match='different original'):
+        _validate_svg_reference(svg,'b'*64)

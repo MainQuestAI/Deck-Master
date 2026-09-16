@@ -283,6 +283,19 @@ def task_summary(store: Store, document: dict, task: dict) -> dict:
     }
     if task.get('kind') in ('reconstruct','repair','review'):
         summary['page_entries'] = [e for e in document['pages'] if e['page_id'] in task['scope_pages']]
+        summary['reference_images'] = []
+        summary['page_design_contexts'] = {}
+        for entry in summary['page_entries']:
+            page=store.read_object_json(entry['page'])
+            effective,_=resolve_design(page,document['design_context'],document['design_context'].get('assets',[]))
+            summary['page_design_contexts'][entry['page_id']]=effective
+            if entry['blueprint']:
+                from PIL import Image
+                import io
+                original=store.read_object_json(entry['blueprint'])
+                with Image.open(io.BytesIO(store.read_object_bytes(original['file']))) as image:
+                    dimensions=list(image.size)
+                summary['reference_images'].append({'page_id':entry['page_id'],'artifact':entry['blueprint'],'file':original['file'],'dimensions':dimensions,'requirement':'Read this exact immutable image before reconstructing; matching page text alone does not establish visual fidelity.'})
         summary['outputs'] = document['outputs']
         summary['staging_dir'] = str(store.staging_dir / task['operation_id'])
     if task.get("kind") == "blueprint":

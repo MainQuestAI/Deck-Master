@@ -255,6 +255,20 @@ def task_inputs_current(store, document, task):
     return True
 
 
+def _validate_svg_reference(data, expected_sha):
+    import re
+    import xml.etree.ElementTree as ET
+    if re.search(br'<!\s*(DOCTYPE|ENTITY)',data,re.I):
+        raise EnvelopeError('svg/reference','XML entities are forbidden')
+    try:
+        root=ET.fromstring(data)
+    except ET.ParseError as exc:
+        raise EnvelopeError('svg/reference',str(exc)) from exc
+    claimed=root.get('data-blueprint-sha256')
+    if claimed is not None and claimed != expected_sha:
+        raise EnvelopeError('svg/data-blueprint-sha256','SVG was reconstructed against a different original image')
+
+
 def _build_artifact(
     store: Store,
     spec: dict[str, Any],
@@ -536,6 +550,11 @@ def accept_result(
         page["page_id"] for page in adopted_pages
     }
     for spec in envelope.get("artifact_specs") or []:
+        if spec.get('role') == 'svg':
+            entry=next((e for e in document['pages'] if e['page_id']==spec.get('page_id')),None)
+            if entry and entry['blueprint']:
+                original=store.read_object_json(entry['blueprint'])
+                _validate_svg_reference(staged[spec['file_id']]['bytes'],original['file']['sha256'])
         artifacts.append(_build_artifact(store, spec, staged, existing_page_ids))
     reviews = []
     for review in envelope.get("reviews") or []:
