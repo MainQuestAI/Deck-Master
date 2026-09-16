@@ -378,6 +378,16 @@ def _minimal_document_shell() -> dict[str, Any]:
     }
 
 
+def bump_revision(document: dict[str, Any], change: dict[str, Any]) -> dict[str, Any]:
+    """Advance to a new immutable revision: new id, parent link, and change record."""
+    return {
+        **document,
+        "revision_id": uuid.uuid4().hex,
+        "parent_revision_id": document["revision_id"],
+        "change": change,
+    }
+
+
 def new_document(
     *,
     project_id: str,

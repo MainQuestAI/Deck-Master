@@ -1,53 +1,39 @@
 ---
 name: deck-master
-description: Route Deck Master tasks for new decks, selected-page edits, read-only diagnostics, and approved delivery.
+description: Operate the rebuilt Deck Master core for new decks, page edits, checks, and delivery; the Host writes complete copy and real results, the code owns files, storage, and truth.
 ---
 
-# Deck Master
+# Deck Master（重建核心）
 
-## Use When
-Operate a Deck Master run. Choose the task before loading production instructions.
+## 使用场景
 
-| Task | Route | Read when needed |
+用户给出任务或修改意见时操作 Deck Master。主流程通过 create / continue / task accept 完成，不要求用户按阶段手动执行命令。
+
+| 任务 | 入口 | 方法 |
 | --- | --- | --- |
-| New deck from material | deck-brief, then deck-planner | [New deck](playbooks/codex-run-solution-deck.md) |
-| Complete draft already written | deck-planner for import, then the existing build profile | [New deck, full-draft import](playbooks/codex-run-solution-deck.md) and [content methods](references/content-methods.md) |
-| Change selected pages with confirmed direction | deck-producer or the existing build profile | [Local edits](playbooks/local-edits.md) |
-| Explain a blocker or inspect readiness | deck-doctor | The reported error in [recovery](../../docs/agent-recovery-playbook.md) |
-| Check or perform client delivery | deck-review | Current final-readiness and approval |
-| Install or upgrade the software | deck-setup or deck-upgrade | [Installation](references/installation.md) |
+| 新 Deck（普通材料目录） | `deck-master create --brief … --source … --out …` | [source-reading](references/source-reading.md)、[content-methods](references/content-methods.md)、[content-examples](references/content-examples.md) |
+| 已有完整稿 | `create --draft draft.json` 或 `import-draft` | [content-examples](references/content-examples.md) |
+| 继续推进 / 领取下一批任务 | `deck-master continue --project …` | 返回稳定 pending_tasks，不重复提问 |
+| 提交宿主结果 | `deck-master task accept --project … --task-id … --operation-id … --produced-against … --result result.json` | 信封形状见 CLI 输出与 [result-envelope 例](../../docs/specs/deck-master-rebuild-v1/examples/roundtrips/result-envelope/README.md) |
+| 修改页 | `task accept`（repair 信封，仅 scope_pages 内） | [content-methods](references/content-methods.md) |
+| 查看与交付 | `view`（T05 起可用）、`check`、`export` | 工作台与导出规则见 spec 09/07 |
 
-## Do Not Use
-Standalone document edits and unrelated code work do not require a Deck Master run.
+## 自动工作台（必守）
 
-## First Checks
-Use the installed launcher `~/.deck-master/bin/deck-master`, or the source checkout CLI `python3 scripts/deck_master.py`. Run one relevant status command when current state is unknown; reuse its result until inputs change.
+create --draft / import draft / compose 结果**第一次形成至少一页后，主 Skill 必须立即自动调用 `deck-master view --open`**，再继续逐页制作；service 响应的 `next_action=auto_view_then_production` 就是该动作。不需要用户手动执行 view。同项目复用同一服务与 URL；服务失效才重启并更新实际地址。
 
-## Forcing Questions
-Reuse the user's brief, selected style, page scope, and prior authorization. Ask only for an unresolved content, design, or external delivery decision that affects this task. Record applicable answers through the runtime instead of interviewing again.
+## 真实性规则
 
-## Runtime Ownership
-Deck Master owns run_state, artifact bindings, quality findings, and approvals. Import generated or edited results through its commands. Keep factual sources and user decisions traceable.
+- 任务输入里只装真实读取的资料与已确认决定；不调用规则 Planner、不循环 claim、不从数组取模配论点、不用固定痛点/风险/CTA 补页。
+- `task accept` 前文件已写入本次 operation 的 staging；`produced_against` 与任务派发 hash 一致，否则先重读新输入。
+- 外部图像调用先按额度事务 begin，完成后 settle；未执行不报 consumed。
+- 没有实际阅图/渲染/人类检查的项目保持未验证标注；工程通过不升级为内容专业。
+- 普通取舍按 spec 决定，不把每一步交回用户；缺工具、缺授权、真实用户决定是停止条件。
 
-## Allowed Commands
-```bash
-deck-master route-skill --input-type new_deck
-deck-master route-skill --input-type local_edit --run-dir <run_dir>
-deck-master route-skill --input-type diagnosis --run-dir <run_dir>
-deck-master next-step --run-dir <run_dir>
-deck-master final-readiness --run-dir <run_dir> --no-write
-```
+## 旧体系说明
 
-## Exit Artifacts
-The requested change and its run_state, next_step, or review_workspace evidence. Finish after relevant rendering and checks pass; do not wait for another "continue".
+旧 v0.9.x 预览链（`python3 scripts/deck_master.py`，route-skill/next-step/run-dir）仍存在但只服务历史 demo；新工作一律走本文件命令，不在同一 run 里混用两套写入者。旧命令退役按 spec 12/02 排期。
 
-## Next Skill
-Follow the task route above. For an active build, keep its selected standard or high-density profile.
+## 停止与安全
 
-## Stop Conditions
-A required input or tool is unavailable, a real unresolved decision needs the user, or the user stops. Agent-owned work may continue with available tools and existing authorization.
-
-## Safety Rules
-Preserve unaffected pages and approved design. Keep private/internal material out of customer-visible output. Do not fabricate evidence, bypass current artifact gates, directly edit events.jsonl, or export without applicable approval. Validation follows the changed inputs; repeat it when a new change or failure requires it.
-
-Detailed handback schemas and command examples are in [agent instructions](references/agent-instructions.md). Load only the section needed by the current handoff.
+缺输入或工具、需要真实用户决定、用户叫停时停止并说明。保留无关页与已确认设计；私密/内部材料不进客户可见产物；不伪造证据或绕过当前门禁；无授权不导出交付。

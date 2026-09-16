@@ -1,0 +1,11 @@
+{
+  "framework": "D2",
+  "title": "独立阅读版",
+  "audience": "事后阅读方案的运营主管",
+  "scenario": "read_alone",
+  "presentation_mode": "read_alone",
+  "time_budget_minutes": null,
+  "goal": "完整说明方案理由、阶段责任与回落机制",
+  "existing_decisions": ["每周人工处理约3120单", "约480单可条件自动处理"],
+  "notes": "结构以完整论证为主轴；结尾收束在结论与适用边界，不加行动号召。"
+}

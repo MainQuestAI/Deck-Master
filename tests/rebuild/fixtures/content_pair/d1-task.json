@@ -1,0 +1,11 @@
+{
+  "framework": "D1",
+  "title": "现场交流版",
+  "audience": "运营团队周会",
+  "scenario": "live",
+  "presentation_mode": "live",
+  "time_budget_minutes": 10,
+  "goal": "让团队同意按阶段推进条件自动处理",
+  "existing_decisions": ["每周人工处理约3120单", "约480单可条件自动处理"],
+  "notes": "结构以团队本次待决定事项为主轴；结尾给出明确的下一步选项。"
+}
