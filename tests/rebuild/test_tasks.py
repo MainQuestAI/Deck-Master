@@ -316,6 +316,7 @@ def test_call_begin_settle_flow(tmp_path: Path) -> None:
     bumped = tasks_mod._replace_task_ref(bumped, task_obj, task_ref, store)
     store.commit_change(base_revision=document["revision_id"], document=bumped, operation_id="alloc-2")
 
+    service.task_start(project, task_id=task["task_id"], execution_ref="exec-1")
     first_begin = tasks_mod.call_begin(store, task_id=task["task_id"], allowance_id="img-1", execution_ref="exec-1")
     assert first_begin["status"] in ("in_flight", "started")
     # Idempotent same execution

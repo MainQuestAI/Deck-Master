@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import uuid
+from functools import wraps
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -346,21 +347,25 @@ def _settled_allowances(
                 f"outcome must be one of {', '.join(CALL_OUTCOMES)}",
             )
         allowance = by_id[allowance_id]
-        if allowance.get("state") in ("consumed", "released"):
-            continue  # already settled; existing facts are preserved
-        allowance["state"] = {"consumed": "consumed", "not_sent": "released", "unknown": "unknown"}[outcome]
-        allowance["invocation_ref"] = event.get("invocation_ref")
-        evidence = list(allowance.get("evidence") or [])
-        for evidence_file_id in event.get("evidence_file_ids") or []:
-            if evidence_file_id not in staged:
-                raise EnvelopeError(
-                    f"(result)/usage_events/{allowance_id}",
-                    f"evidence_file_ids must reference declared files; {evidence_file_id!r} missing",
-                )
-            evidence.append(
-                store.put_blob(staged[evidence_file_id]["bytes"], ext=_ext_for(staged[evidence_file_id]["media_type"], staged[evidence_file_id]["staged_path"]))
-            )
-        allowance["evidence"] = evidence
+        reports = []
+        for file_id in event.get("evidence_file_ids") or []:
+            if file_id not in staged:
+                raise EnvelopeError("(result)/usage_events", f"missing evidence file {file_id!r}")
+            reports.append(staged[file_id])
+        invocation = event.get("invocation_ref")
+        if invocation and any(a is not allowance and a.get("invocation_ref") == invocation for a in allowances):
+            raise TaskConflict("(result)/usage_events", "duplicate invocation")
+        report = reports[0] if reports else None
+        updated = _settle_target(
+            store, store.load_document(), task["task_id"], allowance_id, allowance, outcome,
+            report["bytes"] if report else None,
+            _ext_for(report["media_type"], report["staged_path"]) if report else "json", invocation,
+        )
+        for extra in reports[1:]:
+            ref = store.put_blob(extra["bytes"], ext=_ext_for(extra["media_type"], extra["staged_path"]))
+            if ref not in updated["evidence"]:
+                updated["evidence"] = updated["evidence"] + [ref]
+        allowance.update(updated)
     task["call_allowances"] = allowances
     return task
 
@@ -619,6 +624,45 @@ def accept_result(
     }
 
 
+class CallBlocked(TaskConflict):
+    """A recoverable stop/budget/unknown condition, not an input conflict."""
+
+
+def _project_transaction(function):
+    @wraps(function)
+    def locked(store, *args, **kwargs):
+        with store._locked():
+            return function(store, *args, **kwargs)
+    return locked
+
+
+def reserve_allowances(store, document, task, count):
+    """Build an updated task using the locked current project ledger."""
+    if not isinstance(count, int) or isinstance(count, bool) or count < 1:
+        raise EnvelopeError("(allocate)/count", "count must be a positive integer")
+    if task.get("status") not in ("awaiting_host", "running", "queued"):
+        raise TaskConflict("(allocate)", "allowances require an active task")
+    policy = document.get("policy") or {}
+    if policy.get("user_stop"):
+        raise CallBlocked("policy/user_stop", "user stopped external calls")
+    if project_has_unknown_calls(document, store):
+        raise CallBlocked("call_allowances", "resolve unknown calls before allocating")
+    held = sum(
+        entry["state"] in ("reserved", "in_flight", "consumed", "unknown")
+        for ref in document.get("tasks") or []
+        for entry in store.read_object_json(ref).get("call_allowances") or []
+    )
+    limit = policy.get("external_call_limit")
+    if limit is not None and held + count > limit:
+        raise CallBlocked("policy/external_call_limit",
+                          f"project limit {limit}; already held/consumed {held}; requested {count}")
+    existing = list(task.get("call_allowances") or [])
+    allocated = [dict(allowance_id=f"call-{len(existing)+i+1}", state="reserved",
+                      execution_ref=None, invocation_ref=None, evidence=[]) for i in range(count)]
+    return {**task, "call_allowances": existing + allocated, "updated_at": _utc_now_iso()}, [x["allowance_id"] for x in allocated]
+
+
+@_project_transaction
 def allocate_call_allowances(
     store: Store, *, task_id: str, count: int, operation_id: str | None = None
 ) -> dict:
@@ -628,43 +672,9 @@ def allocate_call_allowances(
     project ``policy.external_call_limit`` bounds total held+consumed slots.
     This is a service-side allocation, not a Host-granted budget (spec 08.6).
     """
-    if not isinstance(count, int) or count < 1:
-        raise EnvelopeError("(allocate)/count", "count must be a positive integer")
     document = store.load_document()
     task = _lookup_task(document, task_id, store)
-    if task.get("status") in ("cancelled", "superseded", "completed"):
-        raise TaskConflict(
-            f"(task {task_id})", f"task is {task.get('status')}; allowances only for active tasks"
-        )
-    policy = document.get("policy") or {}
-    limit = policy.get("external_call_limit")
-    existing = list(task.get("call_allowances") or [])
-    held = sum(
-        1
-        for entry in existing
-        if entry.get("state") in ("reserved", "in_flight", "consumed", "unknown")
-    )
-    if limit is not None and held + count > int(limit):
-        raise TaskConflict(
-            f"(task {task_id})",
-            f"allocation exceeds the project limit: {held} already held/consumed, "
-            f"limit {limit}, requested {count}",
-        )
-    allocated_ids = []
-    next_index = len(existing) + 1
-    for _ in range(count):
-        existing.append(
-            {
-                "allowance_id": f"call-{next_index}",
-                "state": "reserved",
-                "execution_ref": None,
-                "invocation_ref": None,
-                "evidence": [],
-            }
-        )
-        allocated_ids.append(f"call-{next_index}")
-        next_index += 1
-    updated_task = {**task, "call_allowances": existing, "updated_at": _utc_now_iso()}
+    updated_task, allocated_ids = reserve_allowances(store, document, task, count)
     validate_task_semantics(updated_task)
     task_ref = store.put_json_object(updated_task)
     bumped = bump_revision(
@@ -677,7 +687,7 @@ def allocate_call_allowances(
         },
     )
     bumped = _replace_task_ref(bumped, task, task_ref, store)
-    store.commit_change(
+    store._commit_locked(blobs=[],
         base_revision=document["revision_id"], document=bumped, operation_id=bumped["change"]["operation_id"]
     )
     return {
@@ -687,19 +697,42 @@ def allocate_call_allowances(
     }
 
 
+@_project_transaction
+def repair_empty_allowance(store, *, task_id):
+    document = store.load_document()
+    task = _lookup_task(document, task_id, store)
+    if task.get("call_allowances"):
+        return
+    if task["status"] != "awaiting_host" or task.get("execution_ref"):
+        raise TaskConflict("(repair)", "only unclaimed empty tasks may be repaired")
+    if task["produced_against"] != content_identity(document):
+        original = store.load_document(task["dispatch_revision"])
+        if task["produced_against"] != content_identity(original):
+            raise TaskConflict("(repair)", "invalid dispatched input identity")
+        comparable = {**document, "policy": {**document["policy"],
+            "external_call_limit": original["policy"].get("external_call_limit"),
+            "user_stop": original["policy"].get("user_stop")}}
+        if content_identity(comparable) != content_identity(original):
+            raise TaskConflict("(repair)", "stale blueprint inputs")
+        task = {**task, "produced_against": content_identity(document)}
+    updated, _ = reserve_allowances(store, document, task, 1)
+    ref = store.put_json_object(updated)
+    bumped = bump_revision(document, {"operation_id": f"repair-allowance-{uuid.uuid4().hex}", "kind": "task_update", "description": "repair empty allowance", "read_set": []})
+    bumped = _replace_task_ref(bumped, task, ref, store)
+    store._commit_locked(blobs=[], base_revision=document["revision_id"], document=bumped)
+
+
 def project_has_unknown_calls(document: dict, store: Store) -> str | None:
     """Any allowance in ``unknown`` pauses new external calls project-wide."""
     for ref in document.get("tasks") or []:
-        try:
-            task = store.read_object_json(ref)
-        except StoreError:
-            continue
+        task = store.read_object_json(ref)
         for entry in task.get("call_allowances") or []:
             if entry.get("state") == "unknown":
                 return task.get("task_id")
     return None
 
 
+@_project_transaction
 def call_begin(store: Store, *, task_id: str, allowance_id: str, execution_ref: str | None) -> dict:
     """Atomically take one pre-allocated call allowance (spec 08.6, T13.min)."""
     document = store.load_document()
@@ -709,13 +742,6 @@ def call_begin(store: Store, *, task_id: str, allowance_id: str, execution_ref: 
             f"(task {task_id})",
             f"task is {task.get('status')}; cancelled or finished tasks cannot start external calls",
         )
-    paused_by = project_has_unknown_calls(document, store)
-    if paused_by is not None:
-        raise TaskConflict(
-            f"(task {task_id})",
-            f"external calls are paused project-wide: task {paused_by!r} holds an "
-            "unknown settlement; local fixes may continue",
-        )
     allowances = [dict(entry) for entry in (task.get("call_allowances") or [])]
     target = next((entry for entry in allowances if entry.get("allowance_id") == allowance_id), None)
     if target is None:
@@ -723,6 +749,8 @@ def call_begin(store: Store, *, task_id: str, allowance_id: str, execution_ref: 
             f"(task {task_id})/call_allowances/{allowance_id}",
             "allowance not allocated on this task; allocation is a project transaction",
         )
+    if task.get("status") != "running" or not execution_ref or task.get("execution_ref") != execution_ref:
+        raise TaskConflict("(begin)/execution_ref", "claim task first with the same execution_ref")
     if target.get("state") == "in_flight":
         if target.get("execution_ref") == execution_ref:
             return {"status": "already_started", "task_id": task_id, "allowance_id": allowance_id}
@@ -735,6 +763,10 @@ def call_begin(store: Store, *, task_id: str, allowance_id: str, execution_ref: 
             f"(task {task_id})/{allowance_id}",
             f"allowance already settled as {target.get('state')}; re-sending is not allowed",
         )
+    if (document.get("policy") or {}).get("user_stop"):
+        raise CallBlocked("policy/user_stop", "user stopped external calls")
+    if project_has_unknown_calls(document, store):
+        raise CallBlocked("call_allowances", "resolve unknown calls before beginning")
     target["state"] = "in_flight"
     target["execution_ref"] = execution_ref
     updated_task = {**task, "call_allowances": allowances, "updated_at": _utc_now_iso()}
@@ -751,12 +783,57 @@ def call_begin(store: Store, *, task_id: str, allowance_id: str, execution_ref: 
         },
     )
     new_document = _replace_task_ref(new_document, task, task_ref, store)
-    store.commit_change(
+    store._commit_locked(blobs=[],
         base_revision=document["revision_id"], document=new_document, operation_id=begin_operation_id
     )
     return {"status": "started", "task_id": task_id, "allowance_id": allowance_id}
 
 
+def _settle_target(store, document, task_id, allowance_id, target, outcome, report_bytes,
+                   report_ext="json", invocation_ref=None):
+    """Shared settlement validation for CLI and result-envelope observations."""
+    target = dict(target)
+    state = target["state"]
+    desired = {"consumed": "consumed", "not_sent": "released", "unknown": "unknown"}[outcome]
+    known_invocation = target.get("invocation_ref")
+    if known_invocation and invocation_ref and known_invocation != invocation_ref:
+        raise TaskConflict("(settle)/invocation_ref", "conflicting invocation")
+    if invocation_ref:
+        for ref in document.get("tasks") or []:
+            other = store.read_object_json(ref)
+            for entry in other.get("call_allowances") or []:
+                if other["task_id"] == task_id and entry["allowance_id"] == allowance_id:
+                    continue
+                if entry.get("invocation_ref") == invocation_ref:
+                    raise TaskConflict("(settle)/invocation_ref", "invocation already registered in project")
+    if state in ("consumed", "released") and state != desired:
+        raise TaskConflict("(settle)/outcome", "terminal settlement cannot be overwritten")
+    if state == "reserved" and desired != "released":
+        raise TaskConflict("(settle)/state", "call must begin before reporting sent or unknown")
+    report_ref = None
+    if report_bytes is not None:
+        report_ref = {"sha256": sha256_bytes(report_bytes)}
+    evidence_hashes = {r["sha256"] for r in target.get("evidence") or []}
+    if state == desired:
+        if report_ref and evidence_hashes and report_ref["sha256"] not in evidence_hashes:
+            raise TaskConflict("(settle)/report", "conflicting settlement report")
+        if (not invocation_ref or known_invocation == invocation_ref) and (not report_ref or report_ref["sha256"] in evidence_hashes):
+            return target
+    if (desired == "consumed" or state == "unknown" and desired != "unknown" or invocation_ref and not known_invocation) and not report_bytes:
+        raise EnvelopeError("(settle)/report", "execution evidence required (host_reported)")
+    evidence = list(target.get("evidence") or [])
+    if report_bytes is not None:
+        ref = store.put_blob(report_bytes, ext=report_ext)
+        if ref not in evidence:
+            evidence.append(ref)
+    target["state"] = {"consumed": "consumed", "not_sent": "released", "unknown": "unknown"}[outcome]
+    if invocation_ref:
+        target["invocation_ref"] = invocation_ref
+    target["evidence"] = evidence
+    return target
+
+
+@_project_transaction
 def call_settle(
     store: Store,
     *,
@@ -781,32 +858,11 @@ def call_settle(
         raise EnvelopeError(
             f"(task {task_id})/call_allowances/{allowance_id}", "allowance not allocated"
         )
-    if target.get("state") == "consumed" and outcome != "consumed":
-        raise TaskConflict(
-            f"(task {task_id})/{allowance_id}",
-            "consumed allowance cannot be changed to another outcome",
-        )
-    if target.get("state") == "consumed" and (
-        not invocation_ref or target.get("invocation_ref") == invocation_ref
-    ):
+    settled = _settle_target(store, document, task_id, allowance_id, target, outcome,
+                             report_bytes, report_ext, invocation_ref)
+    if settled == target:
         return {"status": "already_settled", "task_id": task_id, "allowance_id": allowance_id}
-    if target.get("state") == "consumed" and target.get("invocation_ref"):
-        raise TaskConflict(
-            f"(task {task_id})/{allowance_id}",
-            "settled allowance already has a different invocation_ref",
-        )
-    if target.get("state") == "in_flight" and outcome == "consumed" and report_bytes is None:
-        raise EnvelopeError(
-            f"(task {task_id})/{allowance_id}",
-            "consumed settlement requires the real report file",
-        )
-    evidence = list(target.get("evidence") or [])
-    if report_bytes is not None:
-        evidence.append(store.put_blob(report_bytes, ext=report_ext))
-    target["state"] = {"consumed": "consumed", "not_sent": "released", "unknown": "unknown"}[outcome]
-    if invocation_ref:
-        target["invocation_ref"] = invocation_ref
-    target["evidence"] = evidence
+    target.update(settled)
     updated_task = {
         **task,
         "call_allowances": allowances,
@@ -814,7 +870,7 @@ def call_settle(
     }
     validate_task_semantics(updated_task)
     task_ref = store.put_json_object(updated_task)
-    settle_operation_id = f"settle-{task_id}-{allowance_id}"
+    settle_operation_id = f"settle-{task_id}-{allowance_id}-{sha256_bytes(canonical_json_bytes(target))[:16]}"
     new_document = bump_revision(
         document,
         {
@@ -825,7 +881,7 @@ def call_settle(
         },
     )
     new_document = _replace_task_ref(new_document, task, task_ref, store)
-    store.commit_change(
+    store._commit_locked(blobs=[],
         base_revision=document["revision_id"], document=new_document, operation_id=settle_operation_id
     )
     return {"status": "settled", "task_id": task_id, "allowance_id": allowance_id, "outcome": outcome}

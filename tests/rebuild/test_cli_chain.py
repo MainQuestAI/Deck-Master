@@ -62,7 +62,7 @@ def test_full_cli_chain_create_start_accept_view_continue(tmp_path: Path) -> Non
 
     assert cli_main(["create", "--brief", "说明条件自动处理方案", "--source", str(material), "--out", str(project)]) == 0
 
-    assert cli_main(["continue", "--project", str(project)]) == 0
+    assert cli_main(["continue", "--project", str(project)]) == 3
     from deck_master.service import continue_project
 
     pending = continue_project(project)["pending_tasks"]

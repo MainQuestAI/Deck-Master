@@ -18,7 +18,7 @@ from . import __version__
 from . import service
 from .models import ModelError
 from .service import ServiceError
-from .store import StoreError
+from .store import StoreError, ConflictError
 from .tasks import EnvelopeError, TaskConflict
 
 
@@ -35,7 +35,7 @@ def _error(code: str, message: str, next_action: str, field: str | None = None) 
 def _fail(exc: Exception) -> int:
     if isinstance(exc, (EnvelopeError, ModelError, ServiceError)):
         return _emit_and_exit(_error("invalid_input", str(exc), "fix the named field"), 2)
-    if isinstance(exc, TaskConflict):
+    if isinstance(exc, (TaskConflict, ConflictError)):
         return _emit_and_exit(_error("conflict", str(exc), "rebase or read new inputs"), 5)
     if isinstance(exc, FileNotFoundError):
         return _emit_and_exit(_error("invalid_input", str(exc), "check the path"), 2)
@@ -156,7 +156,9 @@ def main(argv: list[str] | None = None) -> int:
             )
             return _emit(payload)
         if options.command == "continue":
-            return _emit(service.continue_project(options.project))
+            payload = service.continue_project(options.project)
+            _emit(payload)
+            return 3 if payload["status"] in ("awaiting_host", "needs_tool", "needs_input") else 0
         if options.command == "import-draft":
             return _emit(service.import_draft(options.project, draft_path=options.input))
         if options.command == "view":

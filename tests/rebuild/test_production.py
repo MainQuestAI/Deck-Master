@@ -52,6 +52,30 @@ def test_only_allowed_assets_enter_prompt() -> None:
     assert "private-photo" not in request["prompt"]
 
 
+def test_blueprint_task_exposes_only_allowed_asset_bytes(tmp_path: Path) -> None:
+    logo = tmp_path / "logo.svg"
+    logo.write_text("<svg xmlns='http://www.w3.org/2000/svg' width='80' height='20'/>")
+    project = tmp_path / "project"
+    draft = json.loads(COMPOSE.read_text("utf-8"))
+    service.create(
+        project,
+        brief="brand test",
+        draft=draft,
+        design={
+            "assets": [
+                {"asset_id": "brand-logo", "kind": "logo", "file": str(logo), "external_use": "allowed"}
+            ],
+            "allowed_asset_ids": ["brand-logo"],
+        },
+    )
+    task = service.continue_project(project)["pending_tasks"][0]
+    files = task["production_request"]["permitted_asset_files"]
+    assert len(files) == 1
+    assert files[0]["asset_id"] == "brand-logo"
+    assert files[0]["media_type"] == "image/svg+xml"
+    assert files[0]["file"]["path"].startswith(".deckmaster/objects/")
+
+
 def test_continue_dispatches_one_codex_blueprint_with_allowance(tmp_path: Path) -> None:
     project = tmp_path / "project"
     draft = json.loads(COMPOSE.read_text("utf-8"))
@@ -116,6 +140,7 @@ def test_call_operation_ids_include_task_identity(tmp_path: Path) -> None:
         store, task_id=first["task_id"], allowance_id="call-1", outcome="consumed",
         report_bytes=b"{}", invocation_ref="inv-1"
     )
+    service.task_cancel(project, task_id=first["task_id"])
     # A second task deliberately reuses the allowance's local name.
     document = store.load_document()
     page_entry = document["pages"][0]

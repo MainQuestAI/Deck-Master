@@ -69,6 +69,7 @@ def test_allocation_respects_project_limit(tmp_path: Path) -> None:
 def test_unknown_settlement_pauses_new_calls(tmp_path: Path) -> None:
     store, task_id = _active_task(tmp_path, call_limit=3)
     tasks_mod.allocate_call_allowances(store, task_id=task_id, count=1)
+    service.task_start(store.project_root, task_id=task_id, execution_ref="exec-a")
     tasks_mod.call_begin(store, task_id=task_id, allowance_id="call-1", execution_ref="exec-a")
     # The tool timed out: the Host may only report unknown.
     tasks_mod.call_settle(
@@ -76,10 +77,11 @@ def test_unknown_settlement_pauses_new_calls(tmp_path: Path) -> None:
     )
     task = tasks_mod._lookup_task(store.load_document(), task_id, store)
     assert task["call_allowances"][0]["state"] == "unknown"
-    # A second allocation succeeds on paper, but begin is refused project-wide.
-    tasks_mod.allocate_call_allowances(store, task_id=task_id, count=1)
+    # Unknown pauses additional reservations as well as begin.
     with pytest.raises(tasks_mod.TaskConflict):
-        tasks_mod.call_begin(store, task_id=task_id, allowance_id="call-2", execution_ref="exec-b")
+        tasks_mod.allocate_call_allowances(store, task_id=task_id, count=1)
+    with pytest.raises(tasks_mod.TaskConflict):
+        tasks_mod.call_begin(store, task_id=task_id, allowance_id="call-1", execution_ref="exec-a")
 
 
 def test_cancelled_task_cannot_reacquire_calls(tmp_path: Path) -> None:
@@ -97,6 +99,7 @@ def test_cancelled_task_cannot_reacquire_calls(tmp_path: Path) -> None:
 def test_settle_after_unknown_requires_report_for_consumed(tmp_path: Path) -> None:
     store, task_id = _active_task(tmp_path, call_limit=2)
     tasks_mod.allocate_call_allowances(store, task_id=task_id, count=1)
+    service.task_start(store.project_root, task_id=task_id, execution_ref="exec-a")
     tasks_mod.call_begin(store, task_id=task_id, allowance_id="call-1", execution_ref="exec-a")
     with pytest.raises(tasks_mod.EnvelopeError):
         tasks_mod.call_settle(

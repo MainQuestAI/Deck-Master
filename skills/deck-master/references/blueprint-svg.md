@@ -8,7 +8,7 @@ ImageGen 工具生成；Deck Master 本地包不连接 Provider API、不读取 
 
 1. 读取 `production_request.prompt`、完整 Page、解析后的设计配置和允许资产。
 2. 用 `task start` 领取任务，再用 `task call begin` 消耗本任务的 reserved allowance。
-3. 将实际提交给内置 ImageGen 的 prompt 原样保存。不能用后来重建的 prompt 代替。
+3. 将 `production_request.prompt` 原样提交给内置 ImageGen，并原样保存。需要补充要求时先更新有效输入并重新投影，不在调用时手写另一套正文。不能用后来重建的 prompt 代替。
 4. 保存工具返回的原始图片；记录可得的 invocation ref。工具未报告费用或 token 时写
    `not_reported`，不能估算。
 5. 实际查看图片，核对页面模块、数值、方向关系和明显文字偏差。原图文字不作为正文来源；

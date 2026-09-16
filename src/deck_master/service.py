@@ -23,7 +23,7 @@ from .content import normalize_design_assets
 from .models import bump_revision, canonical_json_bytes, content_identity, new_document, sha256_bytes, validate_document_semantics
 from .sources import read_source
 from .store import Store, StoreError
-from .production import project_prompt
+from .production import project_prompt, resolve_design
 
 AUTO_VIEW = "auto_view_then_production"
 CONTINUE_PRODUCTION = "continue_production"
@@ -276,16 +276,28 @@ def task_summary(store: Store, document: dict, task: dict) -> dict:
                 continue
             if candidate.get("schema_version") == "deck_blueprint_request.v1":
                 summary["production_request"] = candidate
+                page = store.read_object_json(next(p["page"] for p in document["pages"] if p["page_id"] == candidate["page_id"]))
+                summary["resolved_design_context"], _ = resolve_design(page, document["design_context"], document["design_context"].get("assets") or [])
                 break
     return summary
 
 
+@tasks_mod._project_transaction
 def open_blueprint_task(store: Store, document: dict, page_entry: dict) -> dict:
     """Dispatch one Codex ImageGen task with one service-owned allowance."""
+    current = store.load_document()
+    if content_identity(current) != content_identity(document):
+        raise tasks_mod.TaskConflict("(blueprint)", "inputs changed before dispatch")
+    document = current
+    for ref in document.get("tasks") or []:
+        existing = store.read_object_json(ref)
+        if existing.get("kind") == "blueprint" and existing.get("status") in ("awaiting_host", "running") and existing.get("scope_pages") == [page_entry["page_id"]]:
+            return existing
     page_ref = page_entry["page"]
     page = store.read_object_json(page_ref)
     design = document.get("design_context") or {}
     request = project_prompt(page, design, design.get("assets") or [])
+    request["permitted_asset_files"] = _resolve_permitted_asset_files(store, request["projection"]["permitted_assets"])
     request_ref = store.put_json_object(request)
     operation_id = _new_operation_id("blueprint")
     task = tasks_mod.new_task(
@@ -307,6 +319,7 @@ def open_blueprint_task(store: Store, document: dict, page_entry: dict) -> dict:
         produced_against=content_identity(document),
         cost_class="external_generation",
     )
+    task, _ = tasks_mod.reserve_allowances(store, document, task, 1)
     task_ref = store.put_json_object(task)
     bumped = bump_revision(
         document,
@@ -318,17 +331,42 @@ def open_blueprint_task(store: Store, document: dict, page_entry: dict) -> dict:
         },
     )
     bumped["tasks"] = list(document.get("tasks") or []) + [task_ref]
-    store.commit_change(
+    store._commit_locked(blobs=[],
         base_revision=document["revision_id"],
         document=bumped,
         operation_id=bumped["change"]["operation_id"],
     )
-    tasks_mod.allocate_call_allowances(store, task_id=task["task_id"], count=1)
     refreshed = store.load_document()
     return tasks_mod._lookup_task(refreshed, task["task_id"], store)
 
 
+def _resolve_permitted_asset_files(store: Store, assets: list[dict]) -> list[dict]:
+    """Expose only allowed immutable asset bytes to the Codex task."""
+    resolved = []
+    for asset in assets:
+        artifact = store.read_object_json(asset["artifact"])
+        resolved.append(
+            {
+                "asset_id": asset["asset_id"],
+                "kind": asset.get("kind"),
+                "media_type": artifact.get("media_type"),
+                "file": artifact.get("file"),
+            }
+        )
+    return resolved
+
+
 def continue_project(project_dir: Path | str) -> dict:
+    try:
+        return _continue_project(project_dir)
+    except tasks_mod.CallBlocked as exc:
+        document = Store(Path(project_dir)).load_document()
+        return _response(status="needs_input", document=document, requested_action="continue",
+                         findings=[{"code": "external_call_blocked", "field": exc.path, "message": exc.detail}],
+                         next_action="resolve_external_call_block")
+
+
+def _continue_project(project_dir: Path | str) -> dict:
     """Run runnable local work; return the stable pending Host tasks.
 
     Already-confirmed decisions and tasks are reused; no duplicate tasks are
@@ -337,6 +375,16 @@ def continue_project(project_dir: Path | str) -> dict:
     which arrives with T06; until then continue reports that honestly.
     """
     store = Store(Path(project_dir).expanduser())
+    document = store.load_document()
+    pending = _pending_host_tasks(document, store)
+    if any(t["kind"] == "blueprint" for t in pending):
+        if document["policy"].get("user_stop"):
+            raise tasks_mod.CallBlocked("policy/user_stop", "user stopped external calls")
+        if tasks_mod.project_has_unknown_calls(document, store):
+            raise tasks_mod.CallBlocked("call_allowances", "resolve unknown calls before continuing")
+    for summary in pending:
+        if summary["kind"] == "blueprint" and summary["status"] == "awaiting_host" and not summary["call_allowances"]:
+            tasks_mod.repair_empty_allowance(store, task_id=summary["task_id"])
     document = store.load_document()
     pending = _pending_host_tasks(document, store)
     if pending:

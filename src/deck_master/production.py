@@ -8,9 +8,10 @@ image tool and returns the resulting file through the normal task envelope.
 from __future__ import annotations
 
 import json
+from copy import deepcopy
 from typing import Any
 
-from .models import canonical_json_bytes, sha256_bytes
+from .models import ModelError, canonical_json_bytes, sha256_bytes
 
 
 def _visible_block(block: dict[str, Any]) -> dict[str, Any]:
@@ -24,8 +25,34 @@ def _style_for(page: dict[str, Any], design_context: dict[str, Any]) -> dict[str
     styles = design_context.get("styles") or []
     style = next((item for item in styles if item.get("style_id") == style_id), None)
     if style is None:
-        raise ValueError(f"page {page.get('page_id')} references unknown style {style_id!r}")
+        raise ModelError("visual_spec/style_ref", f"unknown style {style_id!r}")
     return style
+
+
+def resolve_design(page, design, permitted_assets):
+    effective = deepcopy(design)
+    style = deepcopy(_style_for(page, design))
+    overrides = (page.get("visual_spec") or {}).get("design_overrides") or {}
+    project_ids = set(design.get("allowed_asset_ids") or [])
+    page_ids = set(overrides.get("allowed_asset_ids", project_ids))
+    if not page_ids <= project_ids:
+        raise ModelError("visual_spec/design_overrides/allowed_asset_ids", "page asset permissions exceed project")
+    asset_map = {a["asset_id"]: a for a in permitted_assets}
+    for aid in project_ids:
+        if aid not in asset_map or asset_map[aid].get("external_use") != "allowed":
+            raise ModelError("design_context/allowed_asset_ids", f"asset {aid!r} is missing or not allowed for external use")
+    fonts = {f["font_id"]: f for f in design.get("fonts") or []}
+    for slot in ("body_font_id", "heading_font_id"):
+        fid = overrides.get(slot, style["typography"].get(slot))
+        if fid not in fonts:
+            raise ModelError(f"visual_spec/design_overrides/{slot}", f"unknown font {fid!r}")
+        style["typography"][slot] = fid
+    effective["language"] = overrides.get("language", design["language"])
+    effective["styles"] = [style]
+    effective["default_style_id"] = style["style_id"]
+    effective["allowed_asset_ids"] = sorted(page_ids)
+    effective["assets"] = [a for a in permitted_assets if a["asset_id"] in page_ids]
+    return effective, style
 
 
 def project_prompt(
@@ -41,9 +68,8 @@ def project_prompt(
     """
     visible = page.get("customer_visible") or {}
     visual = page.get("visual_spec") or {}
-    style = _style_for(page, resolved_design_context)
-    asset_ids = set(resolved_design_context.get("allowed_asset_ids") or [])
-    assets = [asset for asset in permitted_assets if asset.get("asset_id") in asset_ids]
+    resolved_design_context, style = resolve_design(page, resolved_design_context, permitted_assets)
+    assets = resolved_design_context["assets"]
     projection = {
         "page_id": page.get("page_id"),
         "language": resolved_design_context.get("language") or "zh-CN",
@@ -71,7 +97,9 @@ def project_prompt(
     payload = json.dumps(projection, ensure_ascii=False, indent=2, sort_keys=True)
     prompt = (
         "Use case: productivity-visual\n"
-        "Asset type: editable-presentation blueprint reference, one complete 16:9 slide\n"
+        "Asset type: editable-presentation blueprint reference, one complete slide\n"
+        f"Canvas: {projection['canvas']['width_px']}x{projection['canvas']['height_px']} px; "
+        f"physical size {projection['canvas']['slide_width_in']}x{projection['canvas']['slide_height_in']} in; contain fit\n"
         "Primary request: Create a polished business slide blueprint from the exact structured input below. "
         "Preserve every visible fact, number, unit, label, footnote, node and directed relationship.\n"
         "Style/medium: precise enterprise presentation design; clear hierarchy; production-ready reference image\n"
