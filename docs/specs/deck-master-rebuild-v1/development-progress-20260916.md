@@ -71,3 +71,12 @@
 - 历史顺序改为已提交父链，不按项目创建时间排序；未提交孤立revision不展示、不允许恢复。待处理Host任务存在时不再显示可交付。
 - `workbench-acceptance/browser-evidence.json`保留浏览器行为与真实任务记录。未把部分UI验证扩大为完整T14/T15验收。
 - P1未见材料尚无可读取路径，已向用户请求资料和受众用途。不能把本轮合成NOVA当作陌生业务验证或专业验收。
+
+### 本轮可交付节点（源码9c497b0）
+
+- 完整`tests/rebuild`：137 passed；Node语法检查通过。一次setuptools许可证字段弃用提示保留，不影响本次构建。
+- 干净候选`candidate-9c497b0/`：wheel由普通构建生成，manifest记录source_dirty=false；显式测试前缀完成安装、原生编译、渲染、激活→previous回滚→再次激活。未改变用户默认安装。
+- 安装版从仓库外对三页SVG生成`candidate-three-page/compiled/deck.pptx`，实际渲染、回读与逐页Host阅图通过；246原生形状、84文字段、0整页栅格图片。专业/桌面验收未完成。
+- 搬迁项目使用安装版CLI continue（无重复任务）→view→export实际通过，`candidate-mainline-delivery/`两页PPT仍对应已核验修订。
+- `Deck-Master-delivery.zip`与`delivery-bundle/`包含三页、主流程两页、单页修改前后、SVG/原图/两段预览和范围说明。`evidence/final-candidate-install.json`与`installed-project-cli.json`记录实际命令和结果。
+- 六阶段尚未全部完成：完整SVG语义、细粒度设计影响和自动本地任务跟踪仍需补齐；Skill所有权处理、旧项目迁移、最终入口切换、A/B/C及未见任务和专业/桌面验收未关闭。当前交付为工程试行里程碑，不称完整产品发布。
