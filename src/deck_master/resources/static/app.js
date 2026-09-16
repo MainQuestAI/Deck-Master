@@ -37,12 +37,15 @@
       const item = document.createElement("li");
       item.textContent = `p${index + 1} · ${page.page_id}`;
       item.dataset.pageId = page.page_id;
+      item.tabIndex=0;item.setAttribute('role','button');item.onkeydown=e=>{if(e.key==='Enter' || e.key===' ')item.click();};
       if (page.broken) item.classList.add("broken");
       if (page.page_id === state.activePage) item.classList.add("is-active");
       item.addEventListener("click", () => {
         state.activePage = page.page_id;
         renderPageList(view);
+        state.dirty=false;
         renderPage(page);
+        renderSlots(page);
       });
       list.appendChild(item);
     });
@@ -65,44 +68,60 @@
       body.appendChild(note);
       return;
     }
-    const atoms = page.visible_atoms || [];
-    // Group atoms: title/subtitle rendered separately; body blocks in order.
-    const customer = pageData || {};
-    (atoms.filter((atom) => atom.kind === "callout")).forEach((atom) => {
-      const p = document.createElement("p");
-      p.className = "block-heading";
-      p.textContent = atom.text;
-      body.appendChild(p);
-    });
-    (atoms.filter((atom) => atom.kind === "block_heading")).forEach((atom) => {
-      const h = document.createElement("h2");
-      h.className = "block-heading";
-      h.textContent = atom.text;
-      body.appendChild(h);
-    });
-    (atoms.filter((atom) => atom.kind === "item_text" || atom.kind === "paragraph")).forEach((atom) => {
-      const li = document.createElement("li");
-      li.textContent = atom.text;
-      body.appendChild(li);
-    });
-    const tableCells = atoms.filter((atom) => atom.kind === "table_cell");
-    if (tableCells.length) {
-      const table = document.createElement("table");
-      const row = document.createElement("tr");
-      tableCells.forEach((cell) => {
-        const td = document.createElement("td");
-        td.textContent = cell.text;
-        row.appendChild(td);
-      });
-      table.appendChild(row);
-      body.appendChild(table);
+    const customer = page.page.customer_visible;
+    document.getElementById('page-subtitle').textContent=customer.subtitle || '';
+    const append=(tag,text,parent=body)=>{const node=document.createElement(tag);node.textContent=text || '';parent.appendChild(node);return node;};
+    for(const block of customer.body_blocks || []) {
+      if(block.heading || block.title)append('h2',block.heading || block.title);
+      if(block.text)append('p',block.text);
+      if(block.items){const list=append('ul','');for(const item of block.items)append('li',item.text,list);}
+      if(block.type==='table'){
+        const table=append('table','');const header=append('tr','',table);
+        for(const col of block.columns)append('th',col.label,header);
+        for(const row of block.rows){const tr=append('tr','',table);for(const col of block.columns)append('td',(row.cells.find(c=>c.column_id===col.id)||{}).display_text,tr);}
+      }
     }
-    (atoms.filter((atom) => atom.kind === "footnote" || atom.kind === "label")).forEach((atom) => {
-      const p = document.createElement("p");
-      p.className = "mono";
-      p.textContent = atom.text;
-      body.appendChild(p);
+    for(const key of ['callouts','labels','footnotes'])for(const item of customer[key] || [])append('p',item.text);
+    if(!state.dirty)renderEditor(page);
+  }
+
+  function renderEditor(page){
+    const form=document.getElementById('editor-fields');form.replaceChildren();
+    state.editBase={revision:state.view.revision_id,hash:page.slots.content.sha256,page:JSON.parse(JSON.stringify(page.page))};
+    for(const atom of page.visible_atoms){
+      if(typeof atom.text!=='string')continue;
+      const label=document.createElement('label');label.textContent=atom.kind;
+      const input=document.createElement('textarea');input.value=atom.text;input.dataset.pointer=atom.pointer;input.rows=2;
+      input.addEventListener('input',()=>{state.dirty=true;});label.appendChild(input);form.appendChild(label);
+    }
+  }
+
+  async function post(path,data){
+    const session=await fetch('/api/session').then(r=>r.json());
+    const response=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json','X-Deck-Token':session.token},body:JSON.stringify(data)});
+    const result=await response.json();if(!response.ok)throw new Error(result.error || response.status);return result;
+  }
+  function notice(text){document.getElementById('action-status').textContent=text;}
+  async function action(fn){try{const result=await fn();notice(result.status || '已完成');await refresh();}catch(error){notice(error.message);}}
+  function pointerSet(root,pointer,value){const keys=pointer.slice(1).split('/').map(k=>k.replace(/~1/g,'/').replace(/~0/g,'~'));let obj=root;for(const k of keys.slice(0,-1))obj=obj[k];obj[keys.at(-1)]=value;}
+  function bindActions(){
+    document.getElementById('save-content').onclick=()=>action(async()=>{
+      if(!state.editBase)throw new Error('先选择页面');
+      const page=JSON.parse(JSON.stringify(state.editBase.page));
+      for(const input of document.querySelectorAll('#editor-fields textarea'))pointerSet(page,input.dataset.pointer,input.value);
+      const result=await post('/api/edit',{page,base_revision:state.editBase.revision,page_hash:state.editBase.hash,operation_id:crypto.randomUUID()});
+      state.dirty=false;return result;
     });
+    document.getElementById('send-feedback').onclick=()=>action(()=>{
+      const instruction=document.getElementById('feedback').value.trim();if(!instruction)throw new Error('请输入具体修改意见');
+      return post('/api/feedback',{page_id:state.activePage,instruction});
+    });
+    document.getElementById('export-working').onclick=()=>action(()=>post('/api/export',{purpose:'working'}));
+    document.getElementById('refresh').onclick=refresh;
+    document.getElementById('show-history').onclick=async()=>{
+      const data=await fetch('/api/history').then(r=>r.json());const list=document.getElementById('history-list');list.replaceChildren();
+      for(const entry of data.revisions){const button=document.createElement('button');button.textContent=entry.created_at+' · '+entry.change.description;button.onclick=()=>action(()=>post('/api/restore',{revision_id:entry.revision_id,base_revision:state.view.revision_id,operation_id:crypto.randomUUID()}));list.appendChild(button);}
+    };
   }
 
   function renderSlots(page) {
@@ -144,6 +163,7 @@
       const instruction = document.createElement("div");
       instruction.textContent = (task.instruction || "").slice(0, 160);
       li.appendChild(instruction);
+      const cancel=document.createElement('button');cancel.textContent='取消';cancel.onclick=()=>action(()=>post('/api/cancel',{task_id:task.task_id,reason:'用户工作台取消'}));li.appendChild(cancel);
       list.appendChild(li);
     });
     if (!(view.pending_tasks || []).length) {
@@ -172,6 +192,9 @@
         state.activePage = null;
       }
       renderMeta(view);
+      const download=document.getElementById('download-ppt');
+      download.hidden=!view.outputs.pptx;
+      if(view.outputs.pptx)download.href=fileUrl(view.outputs.pptx);
       renderPageList(view);
       const active = view.pages.find((page) => page.page_id === state.activePage);
       if (active) {
@@ -191,5 +214,6 @@
   }
 
   bindTabs();
+  bindActions();
   refresh();
 })();

@@ -10,7 +10,7 @@ def test_native_source_preserves_text_spacing_and_zero_opacity():
     assert page['shapes'][0]['opacity'] == 0
     assert page['shapes'][0]['letter_spacing'] == 3
 
-@pytest.mark.parametrize('body', ['<image href="secret.png"/>', '<script/>', '<rect transform="scale(2)"/>'])
+@pytest.mark.parametrize('body', ['<image href="secret.png"/>', '<script/>', '<rect filter="blur(2)"/>'])
 def test_unsupported_svg_fails_explicitly(body):
     with pytest.raises(SvgError):
         parse_svg(f'<svg viewBox="0 0 100 75">{body}</svg>'.encode(), page_id='p')

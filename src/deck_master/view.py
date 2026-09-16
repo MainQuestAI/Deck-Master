@@ -37,6 +37,7 @@ def project_view(project_dir: Path | str, *, revision: str | None = None) -> dic
                 "page_id": entry.get("page_id"),
                 "title": (page.get("customer_visible") or {}).get("title") if page else None,
                 "visible_atoms": atoms,
+                "page": page,
                 "speaker_notes": (page or {}).get("speaker_notes"),
                 "slots": {
                     "content": entry.get("page"),
@@ -99,6 +100,9 @@ def project_view(project_dir: Path | str, *, revision: str | None = None) -> dic
         "view_status": derive_view_status(document),
         "evidence_level": "engineering",
     }
+    from .editing import review_status
+    if document['outputs'].get('pptx'):
+        view['view_status']='ready_for_export' if review_status(store,document)=='pass' else 'awaiting_review'
     return view
 
 
@@ -136,6 +140,10 @@ def artifact_bytes(store: Store, ref: dict) -> tuple[bytes, str]:
     from .models import sha256_bytes
 
     data = store.read_object_bytes(ref)
+    if ref['path'].endswith('.json'):
+        obj = json.loads(data)
+        if obj.get('schema_version') == 'deck_artifact.v1':
+            return store.read_object_bytes(obj['file']), obj['media_type']
     _ = sha256_bytes  # sha verified inside read_object_bytes
     path = ref["path"]
     ext = path.rpartition(".")[2]

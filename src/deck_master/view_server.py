@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import signal
+import secrets
 import sys
 from http.server import ThreadingHTTPServer
 from pathlib import Path
@@ -28,7 +29,7 @@ def main(argv: list[str] | None = None) -> int:
     handler = type(
         "BoundHandler",
         (WorkbenchHandler,),
-        {"store": store, "static_dir": _static_dir()},
+        {"store": store, "static_dir": _static_dir(), "write_token": secrets.token_urlsafe(32)},
     )
     server = ThreadingHTTPServer(("127.0.0.1", options.port), handler)
     server.serve_forever()

@@ -236,6 +236,25 @@ def _lookup_task(document: dict, task_id: str, store: Store) -> dict:
     raise EnvelopeError(f"(task {task_id})", "task not found in current Document")
 
 
+def task_inputs_current(store, document, task):
+    if content_identity(document) == task.get('produced_against'):
+        return True
+    if not task.get('scope_pages'):
+        return False
+    dispatched = store.load_document(task['dispatch_revision'])
+    if dispatched['design_context'] != document['design_context'] or dispatched['sources'] != document['sources']:
+        return False
+    before = {e['page_id']: e for e in dispatched['pages']}
+    after = {e['page_id']: e for e in document['pages']}
+    slots = ('page','blueprint','svg') if task['kind'] in ('reconstruct','repair','review') else ('page',)
+    for pid in task['scope_pages']:
+        if pid not in before or pid not in after or any(before[pid].get(k) != after[pid].get(k) for k in slots):
+            return False
+    if task['kind'] == 'review' and dispatched['outputs'] != document['outputs']:
+        return False
+    return True
+
+
 def _build_artifact(
     store: Store,
     spec: dict[str, Any],
@@ -499,7 +518,7 @@ def accept_result(
         )
     # Freshness is content-based: task-management revisions (claim, allocation)
     # keep the result valid; a content change invalidates it (spec 09.7 recheck).
-    if content_identity(document) != task.get("produced_against"):
+    if not task_inputs_current(store, document, task):
         raise TaskConflict(
             "(document)",
             "project content moved since dispatch; read the new inputs and rebase",
@@ -570,6 +589,14 @@ def accept_result(
         new_document["pages"] = [
             _merge_page_entry(existing, page_slots, page_refs, pid) for pid in order
         ]
+    if envelope['kind'] in ('reconstruct', 'repair') and (page_refs or artifacts):
+        changed_ids = set(page_refs) | {a['page_id'] for a in artifacts if a.get('page_id')}
+        new_document['outputs'] = {key: None for key in new_document['outputs']}
+        for entry in new_document['pages']:
+            if entry['page_id'] in changed_ids:
+                entry['svg_preview'] = entry['ppt_preview'] = None
+                if entry['page_id'] in page_refs and 'svg' not in page_slots.get(entry['page_id'], {}):
+                    entry['svg'] = None
     new_document["reviews"] = list(new_document.get("reviews") or []) + review_refs
     _replace_task_in_document(new_document, task, task_ref, store)
     if envelope["kind"] == "compose":

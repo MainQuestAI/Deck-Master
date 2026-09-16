@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -124,21 +125,43 @@ def build_parser() -> argparse.ArgumentParser:
     settle.add_argument("--report", default=None)
     settle.add_argument("--invocation-ref", default=None)
 
+    build = sub.add_parser('build')
+    build.add_argument('--project', required=True)
+    edit = sub.add_parser('edit')
+    edit.add_argument('--project', required=True)
+    edit.add_argument('--page', required=True, help='complete updated Page JSON')
+    edit.add_argument('--base-revision', required=True)
+    edit.add_argument('--page-hash', required=True)
+    edit.add_argument('--operation-id', required=True)
+    export = sub.add_parser('export')
+    export.add_argument('--project', required=True)
+    export.add_argument('--out', required=True)
+    export.add_argument('--purpose', choices=['working','delivery'], default='working')
+    # JSON is the default; retain an explicit switch on every executable leaf.
+    def json_switch(command):
+        if not any('--json' in action.option_strings for action in command._actions):
+            command.add_argument('--json', action='store_true')
+        for action in command._actions:
+            if isinstance(action, argparse._SubParsersAction):
+                for child in action.choices.values():
+                    json_switch(child)
+    json_switch(parser)
     return parser
-
-
-def _read_brief(options) -> str:
-    if options.brief_file:
-        return open(options.brief_file, encoding="utf-8").read()
-    if options.brief:
-        return options.brief
-    return sys.stdin.read()
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     options = parser.parse_args(argv)
     try:
+        if options.command == 'build':
+            from .pipeline import produce
+            return _emit(produce(options.project))
+        if options.command == 'edit':
+            from .editing import edit_page
+            return _emit(edit_page(options.project,page=json.loads(Path(options.page).read_text()),base_revision=options.base_revision,page_hash=options.page_hash,operation_id=options.operation_id))
+        if options.command == 'export':
+            from .editing import export_project
+            return _emit(export_project(options.project,output_dir=options.out,purpose=options.purpose))
         if options.command == "create":
             design = None
             if options.design:
@@ -183,6 +206,8 @@ def main(argv: list[str] | None = None) -> int:
         return _fail(exc)
     except json.JSONDecodeError as exc:
         return _emit_and_exit(_error("invalid_input", f"unreadable JSON input: {exc}", "fix the JSON file"), 2)
+    except (RuntimeError, OSError, ValueError, subprocess.SubprocessError) as exc:
+        return _fail(exc)
     return 2
 
 

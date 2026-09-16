@@ -1,6 +1,7 @@
 """Explicit-runtime, SVG-derived native presentation compiler."""
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
+import math
 import hashlib
 import json
 import subprocess
@@ -16,39 +17,52 @@ class SvgInput:
 
 @dataclass(frozen=True)
 class CompileOptions:
-    node_executable: str
-    artifact_module: str
-    width_px: float = 960
+    node_executable: str | None = None
+    artifact_module: str | None = None
+    width_px: float = 1280
     height_px: float = 720
+    fonts: dict[str, str] = field(default_factory=dict)
     timeout_seconds: int = 120
 
 @dataclass(frozen=True)
 class CompileResult:
     pptx_path: Path
     manifest_path: Path
+    diagnostics: tuple[dict, ...] = ()
 
 def compile_deck(inputs: list[SvgInput], options: CompileOptions, output_dir: Path) -> CompileResult:
     if not inputs:
         raise ValueError('At least one SVG is required')
     output_dir = Path(output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
+    output_dir.mkdir(parents=True, exist_ok=False)
     target = output_dir / 'deck.pptx'
     if target.exists():
         raise FileExistsError(target)
+    if not all(math.isfinite(v) and v > 0 for v in (options.width_px, options.height_px)):
+        raise ValueError("slide dimensions must be positive")
     pages = []
     for item in inputs:
         data = Path(item.path).read_bytes()
         page = parse_svg(data, page_id=item.page_id)
-        if abs(page['width']/page['height'] - options.width_px/options.height_px) > 1e-6:
-            raise ValueError(f'{item.page_id}: SVG and slide aspect ratios differ')
         page['sha256'] = hashlib.sha256(data).hexdigest()
         pages.append(page)
+    diagnostics = []
+    for page in pages:
+        scale = min(options.width_px / page['width'], options.height_px / page['height'])
+        horizontal = (options.width_px - scale * page['width']) / 2
+        vertical = (options.height_px - scale * page['height']) / 2
+        if max(horizontal, vertical) > .01:
+            diagnostics.append({'page_id': page['page_id'], 'code': 'contained_with_letterbox', 'scale': scale, 'horizontal_margin_px': horizontal, 'vertical_margin_px': vertical})
     manifest = output_dir / 'compile-input.json'
-    manifest.write_text(json.dumps({'pages': pages, 'width': options.width_px, 'height': options.height_px}, ensure_ascii=False, indent=2))
+    manifest.write_text(json.dumps({'pages': pages, 'width': options.width_px, 'height': options.height_px, 'diagnostics': diagnostics, 'compiler_version': 'python-native-v1', 'fonts': {k: {'sha256': hashlib.sha256(Path(v).read_bytes()).hexdigest()} for k,v in options.fonts.items()}}, ensure_ascii=False, indent=2))
     script = Path(__file__).parents[1] / 'resources' / 'compiler' / 'native.mjs'
     with tempfile.TemporaryDirectory(prefix='compile-', dir=output_dir) as temporary:
         candidate = Path(temporary) / 'candidate.pptx'
-        subprocess.run([options.node_executable, str(script), options.artifact_module, str(manifest), str(candidate)], check=True, timeout=options.timeout_seconds)
+        if options.node_executable:
+            subprocess.run([options.node_executable, str(script), options.artifact_module, str(manifest), str(candidate)], check=True, timeout=options.timeout_seconds)
+        else:
+            from .native import emit
+            emit(pages, options.width_px, options.height_px, options.fonts, candidate)
         # Explicit SVG letter spacing becomes editable DrawingML character spacing.
         patched = Path(temporary) / 'patched.pptx'
         ns = {'p': 'http://schemas.openxmlformats.org/presentationml/2006/main', 'a': 'http://schemas.openxmlformats.org/drawingml/2006/main'}
@@ -64,9 +78,13 @@ def compile_deck(inputs: list[SvgInput], options: CompileOptions, output_dir: Pa
                         name = shape.find('p:nvSpPr/p:cNvPr', ns).get('name')
                         if spacing.get(name):
                             for props in shape.findall('.//a:rPr', ns) + shape.findall('.//a:defRPr', ns):
-                                props.set('spc', str(round(spacing[name] * options.width_px / page['width'] * 75)))
+                                props.set('spc', str(round(spacing[name] * min(options.width_px / page['width'], options.height_px / page['height']) * 75)))
                     data = ET.tostring(root, encoding='utf-8', xml_declaration=True)
                 dest.writestr(info, data)
-        # Never publish a partially exported package.
-        patched.rename(target)
-    return CompileResult(target, manifest)
+        for item, page in zip(inputs, pages):
+            if hashlib.sha256(Path(item.path).read_bytes()).hexdigest() != page['sha256']:
+                raise ValueError(f'{item.page_id}: input changed during compilation')
+        # Exclusive publication also protects against a competing output writer.
+        import os
+        os.link(patched, target)
+    return CompileResult(target, manifest, tuple(diagnostics))

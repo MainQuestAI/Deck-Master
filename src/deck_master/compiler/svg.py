@@ -2,6 +2,9 @@
 from __future__ import annotations
 
 import re
+import math
+import copy
+from .geometry import _parse_path, commands_to_svg_path, _parse_transform, _matrix_product, _apply_matrix, _IDENTITY
 import xml.etree.ElementTree as ET
 
 
@@ -19,13 +22,70 @@ def parse_svg(data: bytes, *, page_id: str) -> dict:
     if len(box) != 4 or box[:2] != [0, 0] or min(box[2:]) <= 0:
         raise SvgError(f'{page_id}: require positive viewBox starting at 0 0')
     shapes = []
-    def visit(el, inherited):
+    definitions = {e.get('id'): e for e in root.iter() if e.get('id')}
+    active_uses = set()
+    def transformed(base, matrix):
+        a,b,c,d,_,_=matrix
+        sx=math.hypot(a,b);sy=math.hypot(c,d)
+        base['stroke_width'] *= (sx+sy)/2
+        if base['stroke']!='none' and abs(sx-sy)>1e-6:
+            raise SvgError(f"{page_id}/{base['id']}: nonuniform transformed stroke requires an explicit outline")
+        if matrix == _IDENTITY:return base
+        def point(x,y):return list(_apply_matrix(matrix,(x,y)))
+        kind=base['kind']
+        if kind=='text':
+            if abs(sx-sy)>1e-6:raise SvgError(f"{page_id}/{base['id']}: nonuniform text scaling unsupported")
+            base['x'],base['y']=point(base['x'],base['y']);base['font_size']*=sx
+            base['rotation']=math.degrees(math.atan2(b,a));base['letter_spacing']*=sx
+        elif kind in ('circle','ellipse') and abs(sx-sy)<1e-6 and abs(base['width']-base['height'])<1e-6:
+            cx,cy=point(base['x']+base['width']/2,base['y']+base['height']/2)
+            base.update(x=cx-base['width']*sx/2,y=cy-base['height']*sy/2,width=base['width']*sx,height=base['height']*sy)
+        elif kind in ('rect','circle','ellipse'):
+            x,y,w,h=base['x'],base['y'],base['width'],base['height']
+            if abs(b)<1e-9 and abs(c)<1e-9 and a>0 and d>0:
+                base.update(x=a*x+matrix[4],y=d*y+matrix[5],width=w*a,height=h*d,rx=base.get('rx',0)*min(a,d))
+            else:
+                if kind=='rect':
+                    if base.get('rx'):raise SvgError(f"{page_id}/{base['id']}: rotated rounded rect requires explicit path")
+                    pts=[[x,y],[x+w,y],[x+w,y+h],[x,y+h]]
+                else:
+                    # Include analytic extrema; do not infer bounds from four samples.
+                    rx,ry=w/2,h/2
+                    angles=[i*math.pi/64 for i in range(128)]
+                    angles += [math.atan2(c*ry,a*rx)+j*math.pi for j in (0,1)]
+                    angles += [math.atan2(d*ry,b*rx)+j*math.pi for j in (0,1)]
+                    pts=[[x+rx+rx*math.cos(t),y+ry+ry*math.sin(t)] for t in sorted(t%(2*math.pi) for t in angles)]
+                base['kind']='polygon';base['points']=[point(*p) for p in pts]
+        elif 'points' in base:base['points']=[point(*p) for p in base['points']]
+        elif 'commands' in base:
+            base['commands']=[{op:dict(zip(('x','y'),point(p['x'],p['y'])))} if op!='close' else command for command in base['commands'] for op,p in command.items()]
+        return base
+    def visit(el, inherited, matrix=_IDENTITY):
         tag = el.tag.split('}')[-1]
+        el = copy.deepcopy(el)
+        if el.get('style'):
+            for declaration in el.attrib.pop('style').split(';'):
+                if not declaration.strip():continue
+                key,value=declaration.split(':',1)
+                if key.strip() not in ('fill','stroke','stroke-width','opacity','fill-opacity','stroke-opacity','font-family','font-size','font-weight','text-anchor'):
+                    raise SvgError(f'{page_id}: unsupported style property {key}')
+                el.set(key.strip(),value.strip())
+        matrix=_matrix_product(matrix,_parse_transform(el.attrib.pop('transform',None),element_id=el.get('id',tag)))
         attrs = {**inherited, **el.attrib}
         identity = el.get('id', tag)
         for key in el.attrib:
-            if key.startswith('on') or key in ('style', 'transform', 'filter', 'mask', 'clip-path') or key.endswith('href'):
+            if key.startswith('on') or key in ('style', 'transform', 'filter', 'mask', 'clip-path') or (key.endswith('href') and tag!='use'):
                 raise SvgError(f'{page_id}/{identity}: unsupported {key}; flatten to explicit geometry')
+        if tag=='defs':return
+        if tag=='use':
+            href=el.get('href') or el.get('{http://www.w3.org/1999/xlink}href','')
+            if not href.startswith('#') or href[1:] not in definitions or href in active_uses:
+                raise SvgError(f'{page_id}/{identity}: unresolved or cyclic local use')
+            target=copy.deepcopy(definitions[href[1:]])
+            if target.tag.split('}')[-1]=='symbol':target.tag='{http://www.w3.org/2000/svg}g'
+            active_uses.add(href)
+            translated=_matrix_product(matrix,(1.,0.,0.,1.,float(el.get('x',0)),float(el.get('y',0))))
+            visit(target,inherited,translated);active_uses.remove(href);return
         if any('url(' in value for value in el.attrib.values()):
             raise SvgError(f'{page_id}/{identity}: referenced paint is not in the current subset')
         if tag in ('title', 'desc', 'metadata'):
@@ -38,13 +98,18 @@ def parse_svg(data: bytes, *, page_id: str) -> dict:
             # SVG group opacity multiplies ancestor opacity.
             if 'opacity' in el.attrib:
                 style['opacity']=str(float(inherited.get('opacity','1'))*float(el.attrib['opacity']))
-            for child in el: visit(child,style)
+            for child in el: visit(child,style,matrix)
             return
         def num(key, default=0):
             raw=attrs.get(key,str(default))
-            try: return float(raw)
+            try:
+                value=float(raw)
+                if not math.isfinite(value):raise ValueError()
+                return value
             except ValueError: raise SvgError(f'{page_id}/{identity}: {key} must use unitless pixels')
         base=dict(id=identity,kind=tag,fill=attrs.get('fill','#000000'),stroke=attrs.get('stroke','none'),stroke_width=num('stroke-width',1),opacity=num('opacity',1),fill_opacity=num('fill-opacity',1),stroke_opacity=num('stroke-opacity',1),atom_id=el.get('data-atom-id'))
+        if 'opacity' in el.attrib:
+            base['opacity'] = float(inherited.get('opacity',1))*float(el.attrib['opacity'])
         if tag=='text':
             children=list(el)
             if any(x.tag.split('}')[-1]!='tspan' for x in children):
@@ -61,7 +126,7 @@ def parse_svg(data: bytes, *, page_id: str) -> dict:
                 runs.append((child.text or '',c));cursor=c
                 if child.tail and child.tail.strip(): raise SvgError(f'{page_id}/{identity}: trailing inline text unsupported')
             for i,(text,a) in enumerate(runs):
-                shapes.append({**base,'id':f'{identity}:{i}','text':text,'x':float(a.get('x',0)), 'y':float(a.get('y',0)), 'font_size':float(a.get('font-size',24)), 'font_family':a.get('font-family','Noto Sans SC').split(',')[0].strip(' \"\''), 'letter_spacing':float(a.get('letter-spacing',0)),'bold':a.get('font-weight','400') in ('bold','600','700','800','900'),'anchor':a.get('text-anchor','start'),'fill':a.get('fill',base['fill'])})
+                shapes.append(transformed({**base,'id':f'{identity}:{i}','text':text,'x':float(a.get('x',0)), 'y':float(a.get('y',0)), 'font_size':float(a.get('font-size',24)), 'font_family':a.get('font-family','Noto Sans SC').split(',')[0].strip(' \"\''), 'letter_spacing':float(a.get('letter-spacing',0)),'bold':a.get('font-weight','400') in ('bold','600','700','800','900'),'anchor':a.get('text-anchor','start'),'fill':a.get('fill',base['fill'])},matrix))
             return
         if tag=='tspan': raise SvgError(f'{page_id}/{identity}: orphan tspan')
         if tag=='rect': base.update(x=num('x'),y=num('y'),width=num('width'),height=num('height'),rx=num('rx'))
@@ -73,8 +138,8 @@ def parse_svg(data: bytes, *, page_id: str) -> dict:
             pts=numbers(attrs.get('points',''))
             if len(pts)<4 or len(pts)%2: raise SvgError(f'{page_id}/{identity}: invalid points')
             base['points']=[pts[i:i+2] for i in range(0,len(pts),2)]
-        elif tag=='path': base['commands']=parse_path(attrs.get('d',''),f'{page_id}/{identity}')
-        shapes.append(base)
+        elif tag=='path': base['commands']=parse_path(commands_to_svg_path(_parse_path(attrs.get('d',''),element_id=identity)),f'{page_id}/{identity}')
+        shapes.append(transformed(base,matrix))
     visit(root,{})
     return dict(page_id=page_id,width=box[2],height=box[3],shapes=shapes)
 

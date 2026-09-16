@@ -33,7 +33,7 @@
       <button class="slot-tab" data-slot="blueprint" role="tab">原图</button>
       <button class="slot-tab" data-slot="svg" role="tab">SVG</button>
       <button class="slot-tab" data-slot="ppt" role="tab">PPT</button>
-    </section>
+    </nav>
 
     <section class="slot-panel">
       <div id="slot-content" class="slot is-active" role="tabpanel">
@@ -52,6 +52,15 @@
       </div>
     </section>
 
+    <section class="task-strip actions">
+      <button id="refresh">刷新</button><a id="download-ppt" download="deck.pptx" hidden>下载当前 PPT</a>
+      <button id="export-working">导出工作稿</button><button id="show-history">查看历史／恢复</button>
+      <p id="action-status" role="status" aria-live="polite"></p>
+      <details><summary>编辑本页正文</summary><div id="editor-fields"></div><button id="save-content">保存正文修改</button></details>
+      <label for="feedback">本页修改意见（可注明区域、对象或关系）</label><textarea id="feedback" rows="3"></textarea>
+      <button id="send-feedback">交给 Codex 修改</button>
+      <div id="history-list"></div>
+    </section>
     <section class="task-strip">
       <h2 class="rail-title">Pending Host Tasks</h2>
       <ul id="task-list" class="task-list"></ul>

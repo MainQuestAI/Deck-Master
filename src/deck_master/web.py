@@ -10,6 +10,7 @@ health-checked before reuse (spec 09.5.3).
 from __future__ import annotations
 
 import json
+import secrets
 import socket
 import threading
 import webbrowser
@@ -65,6 +66,7 @@ def _free_port() -> int:
 class WorkbenchHandler(BaseHTTPRequestHandler):
     store: Store
     static_dir: Path
+    write_token: str
 
     def log_message(self, fmt, *args):  # quiet default
         pass
@@ -74,18 +76,61 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("Content-Security-Policy", "default-src 'self'; script-src 'self'; object-src 'none'; frame-ancestors 'none'")
         self.end_headers()
         self.wfile.write(body)
 
     def _send_bytes(self, body: bytes, media: str) -> None:
         self.send_response(200)
         self.send_header("Content-Type", media)
+        if media == "image/svg+xml":
+            self.send_header("Content-Security-Policy", "sandbox; default-src 'none'; style-src 'unsafe-inline'")
         self.send_header("Content-Length", str(len(body)))
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("Content-Security-Policy", "default-src 'self'; script-src 'self'; object-src 'none'; frame-ancestors 'none'")
         self.end_headers()
         self.wfile.write(body)
 
+    def _local_host(self):
+        return self.headers.get('Host') in (f'127.0.0.1:{self.server.server_port}', f'localhost:{self.server.server_port}')
+
+    def do_POST(self):
+        origin=self.headers.get('Origin')
+        allowed=(f'http://127.0.0.1:{self.server.server_port}',f'http://localhost:{self.server.server_port}')
+        if not self._local_host() or origin not in allowed or not secrets.compare_digest(self.headers.get('X-Deck-Token',''),self.write_token):
+            self._send_json({'error':'same-origin session token required'},403);return
+        try:
+            length=int(self.headers.get('Content-Length','0'))
+            if not 0<length<=2_000_000:raise ValueError('invalid request size')
+            data=json.loads(self.rfile.read(length))
+            from . import editing, service
+            if self.path=='/api/edit':result=editing.edit_page(self.store.project_root,**data)
+            elif self.path=='/api/feedback':
+                task=service.open_host_task(self.store,kind='repair',page_ids=[data['page_id']],instruction=data['instruction'])
+                result={'status':'awaiting_host','task_id':task['task_id']}
+            elif self.path=='/api/cancel':result=service.task_cancel(self.store.project_root,**data)
+            elif self.path=='/api/restore':result=editing.restore(self.store.project_root,**data)
+            elif self.path=='/api/export':
+                import uuid
+                data.setdefault('output_dir',str(self.store.project_root/'exports'/uuid.uuid4().hex[:12]))
+                result=editing.export_project(self.store.project_root,**data)
+            else:self._send_json({'error':'not found'},404);return
+            self._send_json(result)
+        except Exception as exc:
+            from .store import ConflictError
+            from .tasks import TaskConflict
+            self._send_json({'error':str(exc)},409 if isinstance(exc,(ConflictError,TaskConflict)) else 400)
+
     def do_GET(self) -> None:  # noqa: N802 - http.server API
+        if not self._local_host():
+            self._send_json({'error':'loopback Host required'},403);return
         parsed = urlparse(self.path)
+        if parsed.path=='/api/session':
+            self._send_json({'token':self.write_token});return
+        if parsed.path=='/api/history':
+            from .editing import history
+            self._send_json(history(self.store.project_root));return
         if parsed.path in ("/", "/index.html"):
             self._send_bytes(
                 (self.static_dir / "index.html").read_bytes(), "text/html; charset=utf-8"
@@ -135,7 +180,7 @@ class WorkbenchServer:
         handler = type(
             "BoundHandler",
             (WorkbenchHandler,),
-            {"store": self.store, "static_dir": _static_dir()},
+            {"store": self.store, "static_dir": _static_dir(), "write_token": secrets.token_urlsafe(32)},
         )
         self.httpd = ThreadingHTTPServer(("127.0.0.1", self.port), handler)
         self.thread = threading.Thread(target=self.httpd.serve_forever, daemon=True)

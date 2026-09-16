@@ -1,0 +1,71 @@
+[
+  {
+    "function": "_matrix_product",
+    "source": "2a866cf138f6359f853db35e0a926ad79391b691",
+    "source_path": "scripts/high_density/svg_native.py",
+    "k0_same": true,
+    "source_sha256": "b6e9485052703eb9c2159e847458515719ac6f1e114924140e05baedcc8a1ec1"
+  },
+  {
+    "function": "_apply_matrix",
+    "source": "2a866cf138f6359f853db35e0a926ad79391b691",
+    "source_path": "scripts/high_density/svg_native.py",
+    "k0_same": true,
+    "source_sha256": "ffe03cae45a1ccb59636dd0a17af762f9271c1856eb0739d596ff868e39eceaa"
+  },
+  {
+    "function": "_translation",
+    "source": "2a866cf138f6359f853db35e0a926ad79391b691",
+    "source_path": "scripts/high_density/svg_native.py",
+    "k0_same": true,
+    "source_sha256": "b13a51ed39c4c29c26a7af771feeaeaafe9559d27b8c381349b7d2ae438ffdf7"
+  },
+  {
+    "function": "_rotation",
+    "source": "2a866cf138f6359f853db35e0a926ad79391b691",
+    "source_path": "scripts/high_density/svg_native.py",
+    "k0_same": true,
+    "source_sha256": "d6452bb0a0120a0c762963714f7effbf76b3c3c29ca03c56d4a4038fdbcd8eea"
+  },
+  {
+    "function": "_parse_transform",
+    "source": "2a866cf138f6359f853db35e0a926ad79391b691",
+    "source_path": "scripts/high_density/svg_native.py",
+    "k0_same": true,
+    "source_sha256": "be3ad12d8df2541c6d4267d8066fb0277cfa0db8633f1b659ff84aacd456c573"
+  },
+  {
+    "function": "_tokenize_path",
+    "source": "2a866cf138f6359f853db35e0a926ad79391b691",
+    "source_path": "scripts/high_density/svg_native.py",
+    "k0_same": true,
+    "source_sha256": "cc579a760a3ae7a4537385de722f62ebadee002292525a76ae62c0717f1c352f"
+  },
+  {
+    "function": "_arc_cubics",
+    "source": "2a866cf138f6359f853db35e0a926ad79391b691",
+    "source_path": "scripts/high_density/svg_native.py",
+    "k0_same": true,
+    "source_sha256": "048ce2c1b76dfaeed2caeabc8407df0aaa822909dd80f6d947bbab28a9b7f86f"
+  },
+  {
+    "function": "_parse_path",
+    "source": "2a866cf138f6359f853db35e0a926ad79391b691",
+    "source_path": "scripts/high_density/svg_native.py",
+    "k0_same": true,
+    "source_sha256": "73827cf85b1bf1430aeda7617d34173d0076ba30b2666674f70aec93c5b0a2fd"
+  },
+  {
+    "function": "commands_to_svg_path",
+    "source": "2a866cf138f6359f853db35e0a926ad79391b691",
+    "source_path": "scripts/high_density/svg_native.py",
+    "k0_same": true,
+    "source_sha256": "ded423aa4ac18107ae6075a456f90f92efaed20ec85edd3d8c957429da63681d"
+  },
+  {
+    "function": "_finite",
+    "source": "2a866cf138f6359f853db35e0a926ad79391b691",
+    "source_path": "scripts/high_density/svg_native.py",
+    "source_sha256": "44e71b8a97825004733036ecfca25bb4704939dfd0e92dea95773e0e655fbb77"
+  }
+]

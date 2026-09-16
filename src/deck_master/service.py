@@ -268,6 +268,10 @@ def task_summary(store: Store, document: dict, task: dict) -> dict:
             "deck_master://skills/deck-master/references/content-examples.md",
         ],
     }
+    if task.get('kind') in ('reconstruct','repair','review'):
+        summary['page_entries'] = [e for e in document['pages'] if e['page_id'] in task['scope_pages']]
+        summary['outputs'] = document['outputs']
+        summary['staging_dir'] = str(store.staging_dir / task['operation_id'])
     if task.get("kind") == "blueprint":
         for ref in task.get("inputs") or []:
             try:
@@ -421,14 +425,60 @@ def _continue_project(project_dir: Path | str) -> dict:
             pending_tasks=[task_summary(store, document, task)],
             next_action="codex_generate_blueprint",
         )
-    return _response(
-        status="content_ready",
-        document=document,
-        requested_action="continue",
-        pending_tasks=[],
-        next_action=PRODUCTION_PENDING,
-        findings=["蓝图已接收；SVG重构与编译随 T08–T10 接入。"],
-    )
+    missing_svg = next((entry for entry in document['pages'] if not entry.get('svg')), None)
+    if missing_svg:
+        task = open_host_task(store, kind='reconstruct', page_ids=[missing_svg['page_id']],
+            instruction='实际阅读原始蓝图并记录上游期待；核对正文，必要纠正写新 Page。按授权资产与有效设计重建可编辑 SVG。保存原图，提交 reconstruct 信封；不得把预览图冒充原始蓝图。')
+        return _response(status='awaiting_host', document=store.load_document(), requested_action='continue',
+                         pending_tasks=[task_summary(store, store.load_document(), task)], next_action='codex_reconstruct_svg')
+    if not document['outputs'].get('pptx'):
+        from .pipeline import produce, NeedsTool
+        try:
+            produce(project_dir)
+        except NeedsTool as exc:
+            return _response(status='needs_tool',document=document,requested_action='continue',findings=[str(exc)],next_action='configure_reported_tool')
+        document = store.load_document()
+    report_artifact = store.read_object_json(document['outputs']['render_report'])
+    report = store.read_object_json(report_artifact['file'])
+    if report['status'] == 'fail':
+        task = open_host_task(store,kind='repair',page_ids=[e['page_id'] for e in document['pages']],
+                              instruction='修复实际 PPT 回读问题，修改对应 Page 或 SVG；保留失败输出。检查报告见输入。')
+        return _response(status='awaiting_host',document=store.load_document(),requested_action='continue',
+                         pending_tasks=[task_summary(store,store.load_document(),task)],findings=report['findings'],next_action='repair_readback')
+    from .editing import review_status
+    status = review_status(store, document)
+    if status != 'pass':
+        task = open_host_task(store,kind='repair' if status == 'fail' else 'review',page_ids=[e['page_id'] for e in document['pages']],
+            instruction='实际打开每页原图、SVG预览及PPT真实渲染，核对正文/模块/图标/数字/方向/Logo。提交当前 subjects 的 blueprint_fidelity、conversion、readability Review；未实际检查不能 pass，问题返回具体对象。')
+        return _response(status='awaiting_host',document=store.load_document(),requested_action='continue',
+                         pending_tasks=[task_summary(store,store.load_document(),task)],next_action='codex_review_renderings')
+    return _response(status='ready_for_export',document=document,requested_action='continue',
+                     result_refs=[document['outputs']['pptx']],next_action='export')
+
+
+@tasks_mod._project_transaction
+def open_host_task(store, *, kind, page_ids, instruction):
+    document = store.load_document()
+    if kind not in ('reconstruct', 'repair', 'review'):
+        raise ServiceError('kind', 'unsupported local host task')
+    if not isinstance(instruction, str) or not instruction.strip():
+        raise ServiceError('instruction', 'must not be empty')
+    if not page_ids or len(set(page_ids)) != len(page_ids) or not set(page_ids) <= {e['page_id'] for e in document['pages']}:
+        raise ServiceError('scope_pages', 'must name existing distinct pages')
+    for ref in document['tasks']:
+        task = store.read_object_json(ref)
+        if task['kind'] == kind and task['scope_pages'] == page_ids and task['status'] in ('awaiting_host','running'):
+            return task
+    entries = [e for e in document['pages'] if e['page_id'] in page_ids]
+    inputs = [ref for e in entries for slot,ref in e.items() if slot != 'page_id' and ref]
+    inputs += [ref for ref in document['outputs'].values() if ref]
+    task = tasks_mod.new_task(task_id=uuid.uuid4().hex[:12],operation_id=_new_operation_id(kind),kind=kind,
+        scope_pages=page_ids,instruction=instruction,inputs=inputs,dependencies=[{'kind':'content','identity':e['page_id'],'sha256':e['page']['sha256']} for e in entries],
+        dispatch_revision=document['revision_id'],produced_against=content_identity(document))
+    updated=bump_revision(document,{'operation_id':_new_operation_id('dispatch'),'kind':'task_update','description':instruction,'read_set':[]})
+    updated['tasks'].append(store.put_json_object(task))
+    store._commit_locked(base_revision=document['revision_id'],document=updated,operation_id=updated['change']['operation_id'],blobs=[])
+    return task
 
 
 def accept_result(
