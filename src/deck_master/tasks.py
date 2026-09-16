@@ -21,6 +21,7 @@ from .content import check_page
 from .models import (
     ModelError,
     bump_revision,
+    content_identity,
     canonical_json_bytes,
     sha256_bytes,
     validate_artifact_semantics,
@@ -491,12 +492,12 @@ def accept_result(
             f"(task {task_id})",
             "produced_against does not match the dispatched dependency hash; rebase required",
         )
-    current_ok = document.get("revision_id") == task.get("dispatch_revision") or (
-        document.get("parent_revision_id") == task.get("dispatch_revision")
-    )
-    if not current_ok:
+    # Freshness is content-based: task-management revisions (claim, allocation)
+    # keep the result valid; a content change invalidates it (spec 09.7 recheck).
+    if content_identity(document) != task.get("produced_against"):
         raise TaskConflict(
-            "(document)", "current revision moved since dispatch; rebase required"
+            "(document)",
+            "project content moved since dispatch; read the new inputs and rebase",
         )
 
     staged = _read_staged(store, operation_id, envelope)

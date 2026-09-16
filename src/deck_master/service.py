@@ -20,12 +20,13 @@ from typing import Any
 
 from . import tasks as tasks_mod
 from .content import normalize_design_assets
-from .models import bump_revision, canonical_json_bytes, new_document, sha256_bytes, validate_document_semantics
+from .models import bump_revision, canonical_json_bytes, content_identity, new_document, sha256_bytes, validate_document_semantics
 from .sources import read_source
 from .store import Store, StoreError
 
 AUTO_VIEW = "auto_view_then_production"
 CONTINUE_PRODUCTION = "continue_production"
+PRODUCTION_PENDING = "production_pending"
 
 
 class ServiceError(StoreError):
@@ -138,6 +139,7 @@ def create(
     store.init_project(document, operation_id=operation_id)
 
     if draft:
+        _adopt_draft(store, draft)
         document = store.load_document()
         return _response(
             status="created",
@@ -145,6 +147,7 @@ def create(
             requested_action="create",
             pending_tasks=_pending_host_tasks(document, store),
             next_action=AUTO_VIEW,
+            result_refs=[entry["page"] for entry in document.get("pages") or []],
         )
     document = store.load_document()
     task = open_compose_task(store, document, operation_id=_new_operation_id("compose"))
@@ -158,9 +161,41 @@ def create(
     )
 
 
+def _adopt_draft(store: Store, draft_payload: dict) -> dict:
+    """Validate a complete page array and adopt it through the compose path.
+
+    Both ``create --draft`` and ``import-draft`` share this single lineage so
+    imported copy and Host-composed copy behave identically downstream.
+    """
+    pages = draft_payload.get("pages") if isinstance(draft_payload, dict) else None
+    page_order = draft_payload.get("page_order") if isinstance(draft_payload, dict) else None
+    if not isinstance(pages, list) or not pages:
+        raise ServiceError("(draft)/pages", "draft must carry a non-empty pages array")
+    envelope = {
+        "kind": "compose",
+        "files": [],
+        "pages": pages,
+        "page_order": page_order or [page.get("page_id") for page in pages],
+        "artifact_specs": draft_payload.get("artifact_specs") or [],
+        "reviews": draft_payload.get("reviews") or [],
+        "usage_events": [],
+        "notes": draft_payload.get("notes") or "import draft",
+    }
+    document = store.load_document()
+    task = open_compose_task(store, document, operation_id=_new_operation_id("draft"))
+    outcome = tasks_mod.accept_result(
+        store,
+        task_id=task["task_id"],
+        operation_id=task["operation_id"],
+        produced_against=task["produced_against"],
+        envelope_raw=envelope,
+    )
+    return outcome
+
+
 def open_compose_task(store: Store, document: dict, *, operation_id: str) -> dict:
-    """Open a compose Host task against the current dispatch revision."""
-    produced_against = _document_hash(document)
+    """Open a compose Host task against the current content identity."""
+    produced_against = content_identity(document)
     task = tasks_mod.new_task(
         task_id=uuid.uuid4().hex[:12],
         operation_id=operation_id,
@@ -238,22 +273,43 @@ def continue_project(project_dir: Path | str) -> dict:
     """Run runnable local work; return the stable pending Host tasks.
 
     Already-confirmed decisions and tasks are reused; no duplicate tasks are
-    created on repeated continue.
+    created on repeated continue. Once real pages exist the flow does NOT
+    re-open compose — the next step is production (blueprint/reconstruct),
+    which arrives with T06; until then continue reports that honestly.
     """
     store = Store(Path(project_dir).expanduser())
     document = store.load_document()
     pending = _pending_host_tasks(document, store)
-    if not pending:
+    if pending:
+        return _response(
+            status="awaiting_host",
+            document=document,
+            requested_action="continue",
+            pending_tasks=pending,
+            next_action="submit_host_results",
+        )
+    if not (document.get("pages") or []):
         task = open_compose_task(store, document, operation_id=_new_operation_id("compose"))
         document = store.load_document()
         pending = _pending_host_tasks(document, store)
         assert pending, "compose task must be pending right after creation"
+        return _response(
+            status="awaiting_host",
+            document=document,
+            requested_action="continue",
+            pending_tasks=pending,
+            next_action="submit_host_results",
+        )
     return _response(
-        status="awaiting_host",
+        status="content_ready",
         document=document,
         requested_action="continue",
-        pending_tasks=pending,
-        next_action="submit_host_results",
+        pending_tasks=[],
+        next_action=PRODUCTION_PENDING,
+        findings=[
+            "完整正文已就绪；制作任务（blueprint/reconstruct）随 T06 接入。"
+            "在制作能力落地前不重新成稿、不伪造制作进度。"
+        ],
     )
 
 
@@ -328,25 +384,7 @@ def import_draft(
             operation_id=_new_operation_id("draft"),
         )
         store.init_project(document, operation_id=document["change"]["operation_id"])
-    envelope = {
-        "kind": "compose",
-        "files": [],
-        "pages": pages,
-        "page_order": page_order or [page.get("page_id") for page in pages],
-        "artifact_specs": draft_payload.get("artifact_specs") or [],
-        "reviews": draft_payload.get("reviews") or [],
-        "usage_events": [],
-        "notes": draft_payload.get("notes") or "import draft",
-    }
-    document = store.load_document()
-    task = open_compose_task(store, document, operation_id=_new_operation_id("draft"))
-    outcome = tasks_mod.accept_result(
-        store,
-        task_id=task["task_id"],
-        operation_id=task["operation_id"],
-        produced_against=task["produced_against"],
-        envelope_raw=envelope,
-    )
+    outcome = _adopt_draft(store, draft_payload)
     document = store.load_document()
     return _response(
         status="accepted",

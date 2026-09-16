@@ -70,6 +70,7 @@ def build_parser() -> argparse.ArgumentParser:
     view_cmd = sub.add_parser("view")
     view_cmd.add_argument("--project", required=True)
     view_cmd.add_argument("--open", action="store_true", default=False)
+    view_cmd.add_argument("--no-open", action="store_true")
     view_cmd.add_argument("--json", dest="as_json", action="store_true")
 
     import_draft = sub.add_parser("import-draft")
@@ -155,6 +156,8 @@ def main(argv: list[str] | None = None) -> int:
             return _emit(payload)
         if options.command == "continue":
             return _emit(service.continue_project(options.project))
+        if options.command == "import-draft":
+            return _emit(service.import_draft(options.project, draft_path=options.input))
         if options.command == "view":
             from .web import open_view, service_status
 
@@ -175,6 +178,8 @@ def main(argv: list[str] | None = None) -> int:
             return _dispatch_task(options)
     except (EnvelopeError, ModelError, ServiceError, TaskConflict, FileNotFoundError, StoreError) as exc:
         return _fail(exc)
+    except json.JSONDecodeError as exc:
+        return _emit_and_exit(_error("invalid_input", f"unreadable JSON input: {exc}", "fix the JSON file"), 2)
     return 2
 
 

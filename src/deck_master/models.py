@@ -388,6 +388,20 @@ def bump_revision(document: dict[str, Any], change: dict[str, Any]) -> dict[str,
     }
 
 
+CONTENT_KEYS = ("project_id", "task", "sources", "pages", "design_context", "policy", "outputs")
+
+
+def content_identity(document: dict[str, Any]) -> str:
+    """Hash of the content a Host task depends on — revision/task-list agnostic.
+
+    Task-management revisions (dispatch, claim, allocation) never move this
+    identity; an adopted result or a real content change does. Accept uses it
+    to decide whether work is still fresh, without blocking legitimate claims.
+    """
+    projection = {key: document.get(key) for key in CONTENT_KEYS}
+    return sha256_bytes(canonical_json_bytes(projection))
+
+
 def new_document(
     *,
     project_id: str,

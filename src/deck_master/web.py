@@ -24,6 +24,10 @@ from .store import Store
 STATE_FILE = "view.json"
 
 
+class ServiceUnavailable(RuntimeError):
+    """The read-only service could not start or become healthy in time."""
+
+
 def _state_path(project_dir: Path) -> Path:
     return project_dir / ".deckmaster" / STATE_FILE
 
@@ -159,7 +163,12 @@ def _static_dir() -> Path:
 
 
 def open_view(project_dir: Path | str, *, open_browser: bool = True) -> dict:
-    """``view --open``: reuse a healthy service, start one if needed, open the browser."""
+    """``view --open``: reuse a healthy service, spawn a detached one if needed.
+
+    The server runs in its own process (``python -m deck_master.view_server``),
+    so it keeps serving after the CLI exits. Startup waits bounded on a health
+    check; failures return ``unavailable`` with the real reason (spec 09.5).
+    """
     project_dir = Path(project_dir).expanduser().resolve()
     if not (project_dir / ".deckmaster" / "current.json").is_file():
         return {
@@ -167,26 +176,110 @@ def open_view(project_dir: Path | str, *, open_browser: bool = True) -> dict:
             "view_status": "unavailable",
             "detail": "project has no current Document; run create first",
         }
-    existing = read_active_service(project_dir)
-    reused = bool(existing and _port_alive(int(existing["port"])))
     try:
-        url = WorkbenchServer(project_dir).start()
-    except OSError as exc:
-        return {
-            "review_url": None,
-            "view_status": "unavailable",
-            "detail": f"service failed to start: {exc}",
-        }
+        state = ensure_service(project_dir)
+    except ServiceUnavailable as exc:
+        return {"review_url": None, "view_status": "unavailable", "detail": str(exc)}
     if open_browser:
         try:
-            webbrowser.open(url, new=2)
+            webbrowser.open(state["url"], new=2)
         except Exception:  # noqa: BLE001 - no browser on this host
             pass
     return {
-        "review_url": url,
+        "review_url": state["url"],
         "view_status": "opened" if open_browser else "available",
-        "reused": reused,
+        "port": state["port"],
+        "pid": state.get("pid"),
+        "reused": state.get("reused", False),
     }
+
+
+def ensure_service(project_dir: Path) -> dict:
+    """Reuse a healthy active service, or spawn a detached one and wait for it."""
+    existing = read_active_service(project_dir)
+    if existing and _port_alive(int(existing["port"])) and _health_ok(existing["url"]):
+        return {**existing, "reused": True}
+    port = _free_port()
+    log_path = project_dir / ".deckmaster" / "view-server.log"
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    import os
+    import subprocess
+    import sys
+    import time
+
+    child_env = dict(os.environ)
+
+    import deck_master
+
+    package_root = Path(deck_master.__file__).resolve().parents[1]
+    previous = os.environ.get("PYTHONPATH")
+    child_env["PYTHONPATH"] = str(package_root) + (os.pathsep + previous if previous else "")
+    log_handle = open(log_path, "ab")
+    try:
+        process = subprocess.Popen(
+            [
+                sys.executable,
+                "-m",
+                "deck_master.view_server",
+                "--project",
+                str(project_dir),
+                "--port",
+                str(port),
+            ],
+            stdin=subprocess.DEVNULL,
+            stdout=log_handle,
+            stderr=log_handle,
+            env=child_env,
+            start_new_session=True,
+        )
+    finally:
+        log_handle.close()
+    url = f"http://127.0.0.1:{port}/"
+    _write_state(project_dir, {"port": port, "url": url, "pid": process.pid})
+    deadline = time.time() + 5.0
+    while time.time() < deadline:
+        if process.poll() is not None:
+            raise ServiceUnavailable(
+                f"view server exited early with code {process.poll()}; see {log_path}"
+            )
+        if _port_alive(port) and _health_ok(url):
+            return {"port": port, "url": url, "pid": process.pid, "reused": False}
+        time.sleep(0.1)
+    process.terminate()
+    raise ServiceUnavailable(
+        f"view server did not become healthy within 5s; see {log_path}"
+    )
+
+
+def _health_ok(url: str) -> bool:
+    import json as _json
+    import urllib.request
+
+    try:
+        with urllib.request.urlopen(url.rstrip("/") + "/api/health", timeout=1.5) as response:
+            return _json.loads(response.read().decode("utf-8")).get("status") == "ok"
+    except Exception:  # noqa: BLE001
+        return False
+
+
+def stop_service(project_dir: Path | str) -> dict:
+    """Terminate the detached view server recorded for this project."""
+    import os
+    import signal
+
+    state = read_active_service(Path(project_dir).expanduser())
+    if not state:
+        return {"view_status": "not_running", "review_url": None}
+    pid = state.get("pid")
+    stopped = False
+    if pid:
+        try:
+            os.kill(int(pid), signal.SIGTERM)
+            stopped = True
+        except (ProcessLookupError, PermissionError):
+            stopped = False
+    _write_state(Path(project_dir).expanduser(), {"port": state["port"], "url": state["url"], "pid": pid, "stopped": stopped})
+    return {"view_status": "stopped" if stopped else "not_running", "review_url": None}
 
 
 def service_status(project_dir: Path | str) -> dict:

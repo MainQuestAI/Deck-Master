@@ -190,16 +190,21 @@ def test_blueprint_envelope_stages_files_and_prompt(tmp_path: Path) -> None:
         produced_against=task["produced_against"],
         result_payload=compose,
     )
-    # Continue produces a blueprint task against the new revision.
+    # With content adopted, continue reports production pending instead of
+    # re-opening compose (T06 wires blueprint dispatch).
     response = service.continue_project(project)
-    blueprint_task = response["pending_tasks"][0]
-    assert blueprint_task["kind"] == "compose"  # continue only opens compose (T06 opens blueprint later)
+    assert response["pending_tasks"] == []
+    assert response["next_action"] == "production_pending"
+    blueprint_task = None
 
     # Blueprint envelope via a dedicated task object built for this test.
     store = service.Store(project)
     document = store.load_document()
     page_ref = document["pages"][0]["page"]
-    produced = sha256_bytes(canonical_json_bytes(document))
+    from deck_master.models import content_identity
+
+    produced = content_identity(document)
+    assert blueprint_task is None
     task_obj = tasks_mod.new_task(
         task_id=uuid_hex(12),
         operation_id="blueprint-op-1",
@@ -256,6 +261,8 @@ def test_review_envelope_keeps_not_evaluated(tmp_path: Path) -> None:
     store = service.Store(project)
     document = store.load_document()
     page_ref = document["pages"][0]["page"]
+    from deck_master.models import content_identity
+
     review = json.loads((ENVELOPES / "review.json").read_text())["reviews"][0]
     review = {**review, "subjects": [page_ref]}
     envelope = {"kind": "review", "files": [], "reviews": [review]}
@@ -268,7 +275,7 @@ def test_review_envelope_keeps_not_evaluated(tmp_path: Path) -> None:
         inputs=[page_ref],
         dependencies=[{"kind": "content", "identity": "page:p09", "sha256": page_ref["sha256"]}],
         dispatch_revision=document["revision_id"],
-        produced_against=sha256_bytes(canonical_json_bytes(document)),
+        produced_against=content_identity(document),
     )
     task_ref = store.put_json_object(task_obj)
     bumped = tasks_mod.bump_revision(
