@@ -55,11 +55,6 @@ def _parse_transform(raw: str | None, *, element_id: str, visual_id: str = "") -
                 local = _matrix_product(_translation(values[1], values[2]), _matrix_product(local, _translation(-values[1], -values[2])))
         elif name == "matrix" and len(values) == 6:
             local = tuple(values)  # type: ignore[assignment]
-            a, b, c, d, _, _ = local
-            # A shear changes a glyph/icon's topology in a way the native
-            # DrawingML subset cannot reproduce reliably.
-            if abs(a * c + b * d) > 1e-6:
-                raise SvgNativeError(f"matrix shear is unsupported on {element_id}", element_id=element_id, visual_id=visual_id, property_name="transform", code="HD_SVG_UNSUPPORTED_TRANSFORM")
         else:
             raise SvgNativeError(f"unsupported SVG transform {name} on {element_id}", element_id=element_id, visual_id=visual_id, property_name="transform", code="HD_SVG_UNSUPPORTED_TRANSFORM")
         matrix = _matrix_product(matrix, local)

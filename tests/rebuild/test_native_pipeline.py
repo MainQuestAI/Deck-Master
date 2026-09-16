@@ -60,3 +60,57 @@ def test_workbench_session_token_and_cancel(tmp_path):
         assert result['status']=='cancelled'
     finally:
         server.stop()
+
+
+def test_invalid_draft_does_not_create_project(tmp_path):
+    with pytest.raises(Exception):
+        service.create(tmp_path/'invalid',brief='test',draft={'pages':[{'page_id':'broken'}]})
+    assert not (tmp_path/'invalid').exists()
+
+
+def test_images_require_explicit_asset_and_embed_original_bytes(tmp_path):
+    from PIL import Image
+    from deck_master.compiler.svg import SvgError
+    asset=tmp_path/'logo.png';Image.new('RGB',(20,10),'red').save(asset)
+    svg=tmp_path/'asset.svg';svg.write_text('<svg viewBox="0 0 100 100"><image href="approved-logo" x="0" y="0" width="100" height="100"/></svg>')
+    with pytest.raises(SvgError,match='approved'):
+        compile_deck([SvgInput('p',svg)],CompileOptions(),tmp_path/'denied')
+    result=compile_deck([SvgInput('p',svg)],CompileOptions(assets={'p':{'approved-logo':str(asset)}}),tmp_path/'ok')
+    with zipfile.ZipFile(result.pptx_path) as z:
+        media=[name for name in z.namelist() if name.startswith('ppt/media/')]
+        assert len(media)==1 and z.read(media[0])==asset.read_bytes()
+
+
+def test_edit_replay_after_later_edit_and_restore_keeps_history(tmp_path):
+    from deck_master.editing import restore
+    from copy import deepcopy
+    page={'schema_version':'deck_page_package.v2','page_id':'p','customer_visible':{'title':'original','body_blocks':[]},'visual_spec':{'intent':'test','reference_mode':'new_design'}}
+    service.create(tmp_path/'p',brief='test',draft={'pages':[page]})
+    s=Store(tmp_path/'p');original=s.load_document();first=deepcopy(page);first['customer_visible']['title']='first'
+    edit_page(s.project_root,page=first,base_revision=original['revision_id'],page_hash=original['pages'][0]['page']['sha256'],operation_id='edit-first')
+    middle=s.load_document();second=deepcopy(page);second['customer_visible']['title']='second'
+    edit_page(s.project_root,page=second,base_revision=middle['revision_id'],page_hash=middle['pages'][0]['page']['sha256'],operation_id='edit-second')
+    before=s.load_document()
+    replay=edit_page(s.project_root,page=first,base_revision=original['revision_id'],page_hash=original['pages'][0]['page']['sha256'],operation_id='edit-first')
+    assert replay['status']=='already_applied' and s.load_document()==before
+    restore(s.project_root,revision_id=original['revision_id'],base_revision=before['revision_id'],operation_id='restore-first')
+    after=s.load_document();assert after['revision_id']!=original['revision_id']
+    assert after['pages']==original['pages'] and after['parent_revision_id']==before['revision_id']
+    assert s.load_document(before['revision_id'])==before
+
+
+def test_source_paint_feature_never_silently_ignored():
+    from deck_master.compiler.svg import parse_svg, SvgError
+    with pytest.raises(SvgError,match='stroke-dasharray'):
+        parse_svg(b'<svg viewBox="0 0 100 100"><line x1="0" y1="0" x2="50" y2="50" stroke="red" stroke-dasharray="4 2"/></svg>',page_id='p')
+
+
+def test_approved_image_slice_crops_without_stretch(tmp_path):
+    from PIL import Image
+    asset=tmp_path/'image.png';Image.new('RGB',(200,100),'blue').save(asset)
+    svg=tmp_path/'image.svg';svg.write_text('<svg viewBox="0 0 100 100"><image href="asset" width="100" height="100" preserveAspectRatio="xMidYMid slice"/></svg>')
+    result=compile_deck([SvgInput('p',svg)],CompileOptions(assets={'p':{'asset':str(asset)}}),tmp_path/'out')
+    with zipfile.ZipFile(result.pptx_path) as z:
+        root=ET.fromstring(z.read('ppt/slides/slide1.xml'))
+    crop=root.find('.//{http://schemas.openxmlformats.org/drawingml/2006/main}srcRect')
+    assert crop.get('l')=='25000' and crop.get('r')=='25000'

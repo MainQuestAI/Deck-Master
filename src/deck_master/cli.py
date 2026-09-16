@@ -15,6 +15,7 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
+from .compiler.svg import SvgError
 from . import __version__
 from . import service
 from .models import ModelError
@@ -34,7 +35,7 @@ def _error(code: str, message: str, next_action: str, field: str | None = None) 
 
 
 def _fail(exc: Exception) -> int:
-    if isinstance(exc, (EnvelopeError, ModelError, ServiceError)):
+    if isinstance(exc, (EnvelopeError, ModelError, ServiceError, SvgError)):
         return _emit_and_exit(_error("invalid_input", str(exc), "fix the named field"), 2)
     if isinstance(exc, (TaskConflict, ConflictError)):
         return _emit_and_exit(_error("conflict", str(exc), "rebase or read new inputs"), 5)
@@ -137,6 +138,15 @@ def build_parser() -> argparse.ArgumentParser:
     export.add_argument('--project', required=True)
     export.add_argument('--out', required=True)
     export.add_argument('--purpose', choices=['working','delivery'], default='working')
+    history = sub.add_parser('history')
+    history_sub = history.add_subparsers(dest='history_command', required=True)
+    history_list = history_sub.add_parser('list')
+    history_list.add_argument('--project', required=True)
+    history_restore = history_sub.add_parser('restore')
+    history_restore.add_argument('--project', required=True)
+    history_restore.add_argument('--revision', required=True)
+    history_restore.add_argument('--base-revision', required=True)
+    history_restore.add_argument('--operation-id', required=True)
     # JSON is the default; retain an explicit switch on every executable leaf.
     def json_switch(command):
         if not any('--json' in action.option_strings for action in command._actions):
@@ -153,6 +163,11 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     options = parser.parse_args(argv)
     try:
+        if options.command == 'history':
+            from .editing import history, restore
+            if options.history_command == 'list':
+                return _emit(history(options.project))
+            return _emit(restore(options.project,revision_id=options.revision,base_revision=options.base_revision,operation_id=options.operation_id))
         if options.command == 'build':
             from .pipeline import produce
             return _emit(produce(options.project))
@@ -206,6 +221,8 @@ def main(argv: list[str] | None = None) -> int:
         return _fail(exc)
     except json.JSONDecodeError as exc:
         return _emit_and_exit(_error("invalid_input", f"unreadable JSON input: {exc}", "fix the JSON file"), 2)
+    except SvgError as exc:
+        return _fail(exc)
     except (RuntimeError, OSError, ValueError, subprocess.SubprocessError) as exc:
         return _fail(exc)
     return 2

@@ -578,6 +578,7 @@ def accept_result(
                 }
             )
         new_document["pages"] = new_pages
+        new_document['outputs'] = {key: None for key in new_document['outputs']}
     else:
         existing = {
             entry.get("page_id"): entry
@@ -589,13 +590,13 @@ def accept_result(
         new_document["pages"] = [
             _merge_page_entry(existing, page_slots, page_refs, pid) for pid in order
         ]
-    if envelope['kind'] in ('reconstruct', 'repair') and (page_refs or artifacts):
+    if envelope['kind'] in ('blueprint', 'reconstruct', 'repair') and (page_refs or artifacts):
         changed_ids = set(page_refs) | {a['page_id'] for a in artifacts if a.get('page_id')}
         new_document['outputs'] = {key: None for key in new_document['outputs']}
         for entry in new_document['pages']:
             if entry['page_id'] in changed_ids:
                 entry['svg_preview'] = entry['ppt_preview'] = None
-                if entry['page_id'] in page_refs and 'svg' not in page_slots.get(entry['page_id'], {}):
+                if (entry['page_id'] in page_refs or 'blueprint' in page_slots.get(entry['page_id'], {})) and 'svg' not in page_slots.get(entry['page_id'], {}):
                     entry['svg'] = None
     new_document["reviews"] = list(new_document.get("reviews") or []) + review_refs
     _replace_task_in_document(new_document, task, task_ref, store)

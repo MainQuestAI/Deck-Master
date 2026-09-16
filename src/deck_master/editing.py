@@ -6,7 +6,7 @@ import json
 import shutil
 import uuid
 from .content import check_page
-from .models import bump_revision, canonical_json_bytes
+from .models import bump_revision
 from .store import Store, ConflictError, StoreError
 from .tasks import _project_transaction
 
@@ -14,12 +14,30 @@ from .tasks import _project_transaction
 def review_status(store,doc):
     current=doc['outputs'].get('pptx')
     if not current:return 'not_evaluated'
-    required={'blueprint_fidelity','conversion','readability'};latest={}
+    required={'content','blueprint_content','blueprint_fidelity','conversion','readability','privacy'}
+    latest={}
     for ref in doc['reviews']:
         review=store.read_object_json(ref)
-        if current in review['subjects']:latest[review['kind']]=review
-    if any(r['status']=='fail' or any(f['impact']=='must_fix' and f['resolution']=='open' for f in r['findings']) for r in latest.values()):return 'fail'
-    return 'pass' if all(latest.get(k,{}).get('status')=='pass' for k in required) else 'not_evaluated'
+        if current not in review['subjects']:
+            continue
+        for entry in doc['pages']:
+            if entry['page'] in review['subjects']:
+                latest[(review['kind'],entry['page_id'])]=review
+    if any(r['status']=='fail' or any(f['impact']=='must_fix' and f['resolution']=='open' for f in r['findings']) for r in latest.values()):
+        return 'fail'
+    return 'pass' if all(latest.get((kind,entry['page_id']),{}).get('status')=='pass' for kind in required for entry in doc['pages']) else 'not_evaluated'
+
+
+
+def operation_revision(store, current, operation_id):
+    """Walk committed ancestry only; never replay an uncommitted orphan revision."""
+    node=current
+    while node:
+        if node['change']['operation_id']==operation_id:
+            return node
+        parent=node['parent_revision_id']
+        node=store.load_document(parent) if parent else None
+    return None
 
 
 def edit_page(project_dir, *, page, base_revision, page_hash, operation_id):
@@ -29,8 +47,11 @@ def edit_page(project_dir, *, page, base_revision, page_hash, operation_id):
 def _edit(store, *, page, base_revision, page_hash, operation_id):
     doc=store.load_document();entry=next((e for e in doc['pages'] if e['page_id']==page['page_id']),None)
     if entry is None:raise StoreError('page_id','not found')
-    if doc['change']['operation_id']==operation_id:
-        if store.read_object_json(entry['page'])==page:return {'status':'already_applied','revision_id':doc['revision_id']}
+    prior=operation_revision(store,doc,operation_id)
+    if prior:
+        previous=next((e for e in prior['pages'] if e['page_id']==page['page_id']),None)
+        if prior['change']['kind']=='content_update' and previous and store.read_object_json(previous['page'])==page:
+            return {'status':'already_applied','revision_id':doc['revision_id'],'applied_revision_id':prior['revision_id']}
         raise ConflictError('operation_id','different payload already applied')
     if entry['page']['sha256']!=page_hash:raise ConflictError('page_hash','page changed; reload and rebase')
     # Disjoint page edits can rebase, but design changes cannot.
@@ -103,6 +124,11 @@ def restore(project_dir, *, revision_id, base_revision, operation_id):
 @_project_transaction
 def _restore(store, *, revision_id, base_revision, operation_id):
     current=store.load_document()
+    prior=operation_revision(store,current,operation_id)
+    if prior:
+        if prior['change']['kind']=='restore' and prior['change']['description']=='restore '+revision_id:
+            return {'status':'already_applied','revision_id':current['revision_id'],'applied_revision_id':prior['revision_id']}
+        raise ConflictError('operation_id','different operation already applied')
     if current['revision_id']!=base_revision:raise ConflictError('revision','project changed')
     past=store.load_document(revision_id)
     updated=bump_revision(current,{'operation_id':operation_id,'kind':'restore','description':'restore '+revision_id,'read_set':[]})

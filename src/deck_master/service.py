@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import Any
 
 from . import tasks as tasks_mod
-from .content import normalize_design_assets
+from .content import normalize_design_assets, check_page
 from .models import bump_revision, canonical_json_bytes, content_identity, new_document, sha256_bytes, validate_document_semantics
 from .sources import read_source
 from .store import Store, StoreError
@@ -89,6 +89,8 @@ def create(
     existing_decisions: list[str] | None = None,
 ) -> dict:
     """Create the project; register real sources; optionally import a draft."""
+    if draft is not None:
+        _validate_draft(draft)
     project_dir = Path(project_dir).expanduser()
     store = Store(project_dir)
     store.ensure_layout()
@@ -162,12 +164,23 @@ def create(
     )
 
 
+def _validate_draft(payload):
+    pages = payload.get('pages') if isinstance(payload, dict) else None
+    if not isinstance(pages, list) or not pages:
+        raise ServiceError('(draft)/pages', 'draft must carry a non-empty pages array')
+    ids = [check_page(page)['page_id'] for page in pages]
+    order = payload.get('page_order') or ids
+    if len(set(ids)) != len(ids) or len(order) != len(ids) or set(order) != set(ids):
+        raise ServiceError('(draft)/page_order', 'must list each unique page exactly once')
+
+
 def _adopt_draft(store: Store, draft_payload: dict) -> dict:
     """Validate a complete page array and adopt it through the compose path.
 
     Both ``create --draft`` and ``import-draft`` share this single lineage so
     imported copy and Host-composed copy behave identically downstream.
     """
+    _validate_draft(draft_payload)
     pages = draft_payload.get("pages") if isinstance(draft_payload, dict) else None
     page_order = draft_payload.get("page_order") if isinstance(draft_payload, dict) else None
     if not isinstance(pages, list) or not pages:
@@ -457,8 +470,14 @@ def _continue_project(project_dir: Path | str) -> dict:
 
 
 @tasks_mod._project_transaction
-def open_host_task(store, *, kind, page_ids, instruction):
+def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, page_hash=None):
     document = store.load_document()
+    if base_revision is not None and base_revision != document['revision_id']:
+        from .store import ConflictError
+        raise ConflictError('revision', 'project changed; reload before submitting feedback')
+    if page_hash is not None and not any(e['page_id'] in page_ids and e['page']['sha256'] == page_hash for e in document['pages']):
+        from .store import ConflictError
+        raise ConflictError('page_hash', 'feedback page changed')
     if kind not in ('reconstruct', 'repair', 'review'):
         raise ServiceError('kind', 'unsupported local host task')
     if not isinstance(instruction, str) or not instruction.strip():
@@ -467,7 +486,7 @@ def open_host_task(store, *, kind, page_ids, instruction):
         raise ServiceError('scope_pages', 'must name existing distinct pages')
     for ref in document['tasks']:
         task = store.read_object_json(ref)
-        if task['kind'] == kind and task['scope_pages'] == page_ids and task['status'] in ('awaiting_host','running'):
+        if task['kind'] == kind and task['scope_pages'] == page_ids and task['instruction'] == instruction and task['status'] in ('awaiting_host','running'):
             return task
     entries = [e for e in document['pages'] if e['page_id'] in page_ids]
     inputs = [ref for e in entries for slot,ref in e.items() if slot != 'page_id' and ref]
@@ -533,6 +552,7 @@ def import_draft(
         if draft_path is None:
             raise ServiceError("(draft)", "provide --input draft file or inline payload")
         draft_payload = json.loads(Path(draft_path).expanduser().read_text("utf-8"))
+    _validate_draft(draft_payload)
     pages = draft_payload.get("pages") if isinstance(draft_payload, dict) else None
     page_order = draft_payload.get("page_order") if isinstance(draft_payload, dict) else None
     if not isinstance(pages, list) or not pages:

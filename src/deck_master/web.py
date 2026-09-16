@@ -10,6 +10,7 @@ health-checked before reuse (spec 09.5.3).
 from __future__ import annotations
 
 import json
+import hashlib
 import secrets
 import socket
 import threading
@@ -28,6 +29,9 @@ STATE_FILE = "view.json"
 class ServiceUnavailable(RuntimeError):
     """The read-only service could not start or become healthy in time."""
 
+
+def _project_identity(project_dir):
+    return hashlib.sha256(str(Path(project_dir).resolve()).encode()).hexdigest()
 
 def _state_path(project_dir: Path) -> Path:
     return project_dir / ".deckmaster" / STATE_FILE
@@ -107,7 +111,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             from . import editing, service
             if self.path=='/api/edit':result=editing.edit_page(self.store.project_root,**data)
             elif self.path=='/api/feedback':
-                task=service.open_host_task(self.store,kind='repair',page_ids=[data['page_id']],instruction=data['instruction'])
+                task=service.open_host_task(self.store,kind='repair',page_ids=[data['page_id']],instruction=data['instruction'],base_revision=data.get('base_revision'),page_hash=data.get('page_hash'))
                 result={'status':'awaiting_host','task_id':task['task_id']}
             elif self.path=='/api/cancel':result=service.task_cancel(self.store.project_root,**data)
             elif self.path=='/api/restore':result=editing.restore(self.store.project_root,**data)
@@ -143,7 +147,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             self._send_bytes((self.static_dir / "app.js").read_bytes(), "text/javascript; charset=utf-8")
             return
         if parsed.path == "/api/health":
-            self._send_json({"status": "ok"})
+            self._send_json({"status": "ok", "project_identity": _project_identity(self.store.project_root)})
             return
         if parsed.path == "/api/view":
             self._send_json(view_mod.project_view(self.store.project_root))
@@ -174,7 +178,7 @@ class WorkbenchServer:
 
     def start(self) -> str:
         state = read_active_service(self.project_dir)
-        if state and _port_alive(int(state["port"])):
+        if state and _port_alive(int(state["port"])) and _health_ok(state["url"], self.project_dir):
             return state["url"]  # same-project URL reuse (spec 09.5.3)
         self.port = _free_port()
         handler = type(
@@ -242,7 +246,7 @@ def open_view(project_dir: Path | str, *, open_browser: bool = True) -> dict:
 def ensure_service(project_dir: Path) -> dict:
     """Reuse a healthy active service, or spawn a detached one and wait for it."""
     existing = read_active_service(project_dir)
-    if existing and _port_alive(int(existing["port"])) and _health_ok(existing["url"]):
+    if existing and _port_alive(int(existing["port"])) and _health_ok(existing["url"], project_dir):
         return {**existing, "reused": True}
     port = _free_port()
     log_path = project_dir / ".deckmaster" / "view-server.log"
@@ -287,7 +291,7 @@ def ensure_service(project_dir: Path) -> dict:
             raise ServiceUnavailable(
                 f"view server exited early with code {process.poll()}; see {log_path}"
             )
-        if _port_alive(port) and _health_ok(url):
+        if _port_alive(port) and _health_ok(url, project_dir):
             return {"port": port, "url": url, "pid": process.pid, "reused": False}
         time.sleep(0.1)
     process.terminate()
@@ -296,13 +300,14 @@ def ensure_service(project_dir: Path) -> dict:
     )
 
 
-def _health_ok(url: str) -> bool:
+def _health_ok(url: str, project_dir: Path | str) -> bool:
     import json as _json
     import urllib.request
 
     try:
         with urllib.request.urlopen(url.rstrip("/") + "/api/health", timeout=1.5) as response:
-            return _json.loads(response.read().decode("utf-8")).get("status") == "ok"
+            payload = _json.loads(response.read().decode("utf-8"))
+            return payload.get("status") == "ok" and payload.get("project_identity") == _project_identity(project_dir)
     except Exception:  # noqa: BLE001
         return False
 
@@ -317,7 +322,7 @@ def stop_service(project_dir: Path | str) -> dict:
         return {"view_status": "not_running", "review_url": None}
     pid = state.get("pid")
     stopped = False
-    if pid:
+    if pid and _health_ok(state["url"], project_dir):
         try:
             os.kill(int(pid), signal.SIGTERM)
             stopped = True
@@ -332,7 +337,7 @@ def service_status(project_dir: Path | str) -> dict:
     state = read_active_service(project_dir)
     if not state:
         return {"view_status": "not_running", "review_url": None}
-    alive = _port_alive(int(state["port"]))
+    alive = _port_alive(int(state["port"])) and _health_ok(state["url"], project_dir)
     return {
         "view_status": "running" if alive else "stale",
         "review_url": state["url"] if alive else None,

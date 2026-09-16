@@ -3,6 +3,7 @@
 B0 2a866cf: keep explicit alpha=0; no business runtime imports.
 The current IR contains only source-derived coordinates and visible text.
 """
+import math
 from pathlib import Path
 from PIL import ImageFont, ImageColor
 from pptx import Presentation
@@ -16,6 +17,20 @@ def paint(parent, color, alpha):
     for child in list(parent):
         if child.tag.rsplit('}',1)[-1] in ('solidFill','noFill','gradFill'):
             parent.remove(child)
+    if isinstance(color,dict):
+        fill=OxmlElement('a:gradFill');fill.set('rotWithShape','1');stops=OxmlElement('a:gsLst')
+        for item in color['stops']:
+            stop=OxmlElement('a:gs');stop.set('pos',str(round(item['offset']*100000)))
+            holder=OxmlElement('a:rPr');paint(holder,item['color'],alpha*item['opacity'])
+            stop.append(holder[0][0]);stops.append(stop)
+        fill.append(stops)
+        if color['kind']=='linear':
+            direction=OxmlElement('a:lin');direction.set('ang',str(round(color['angle']*60000)));direction.set('scaled','1')
+        else:
+            direction=OxmlElement('a:path');direction.set('path','circle');rect=OxmlElement('a:fillToRect')
+            for key in ('l','t','r','b'):rect.set(key,'50000')
+            direction.append(rect)
+        fill.append(direction);parent.append(fill);return
     if color == 'none':
         parent.append(OxmlElement('a:noFill')); return
     fill=OxmlElement('a:solidFill'); rgb=OxmlElement('a:srgbClr')
@@ -34,6 +49,18 @@ def emit(pages, width, height, fonts, output):
         def Y(y):return round((oy+y*k)*9525)
         def S(v):return round(v*k*9525)
         for s in page['shapes']:
+            if s['kind']=='image':
+                from PIL import Image
+                x,y,w,h=s['x'],s['y'],s['width'],s['height']
+                if s['fit']=='contain':
+                    with Image.open(s['asset_path']) as raster:iw,ih=raster.size
+                    ratio=min(w/iw,h/ih);x+=(w-iw*ratio)/2;y+=(h-ih*ratio)/2;w=iw*ratio;h=ih*ratio
+                sh=slide.shapes.add_picture(s['asset_path'],X(x),Y(y),S(w),S(h));sh.name=s.get('atom_id') or s['id']
+                if s['fit']=='cover':
+                    with Image.open(s['asset_path']) as raster:iw,ih=raster.size
+                    if iw/ih>w/h:sh.crop_left=sh.crop_right=(1-(w/h)/(iw/ih))/2
+                    else:sh.crop_top=sh.crop_bottom=(1-(iw/ih)/(w/h))/2
+                continue
             if s['kind']=='text':
                 family=s['font_family'];key=family+(':bold' if s['bold'] else '')
                 filename=fonts.get(key,fonts.get(family))
@@ -43,7 +70,12 @@ def emit(pages, width, height, fonts, output):
                 w=text_width+s['font_size']*1.0;x=s['x']
                 if s['anchor']=='middle':x-=w/2
                 if s['anchor']=='end':x-=w
-                sh=slide.shapes.add_textbox(X(x),Y(s['y']-s['font_size']*.88),S(w),S(s['font_size']*1.5))
+                y=s['y']-s['font_size']*.88;h=s['font_size']*1.5
+                if s.get('rotation'):
+                    theta=math.radians(s['rotation']);dx=x+w/2-s['x'];dy=y+h/2-s['y']
+                    x=s['x']+math.cos(theta)*dx-math.sin(theta)*dy-w/2
+                    y=s['y']+math.sin(theta)*dx+math.cos(theta)*dy-h/2
+                sh=slide.shapes.add_textbox(X(x),Y(y),S(w),S(h))
                 tf=sh.text_frame;tf.clear();tf.word_wrap=False;tf.vertical_anchor=MSO_ANCHOR.TOP
                 from pptx.enum.text import MSO_AUTO_SIZE
                 tf.auto_size=MSO_AUTO_SIZE.NONE
@@ -90,4 +122,12 @@ def emit(pages, width, height, fonts, output):
                 paint(sh._element.spPr,s['fill'],s['opacity']*s['fill_opacity'])
                 line=sh._element.spPr.get_or_add_ln();line.set('w',str(S(s['stroke_width'])))
                 paint(line,s['stroke'],s['opacity']*s['stroke_opacity'])
+                caps={'butt':'flat','round':'rnd','square':'sq'}
+                joins={'miter':'miter','round':'round','bevel':'bevel'}
+                if s.get('stroke_linecap','butt') not in caps or s.get('stroke_linejoin','miter') not in joins:
+                    raise ValueError(f"{page['page_id']}/{s['id']}: unsupported stroke cap/join")
+                line.set('cap',caps[s.get('stroke_linecap','butt')])
+                join=OxmlElement('a:'+joins[s.get('stroke_linejoin','miter')])
+                if s.get('stroke_linejoin','miter')=='miter':join.set('lim',str(round(s.get('stroke_miterlimit',4)*100000)))
+                line.append(join)
     pres.save(output)

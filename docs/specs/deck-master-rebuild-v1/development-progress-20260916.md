@@ -37,3 +37,14 @@
 - 工作稿导出包括固定 revision 的可继续编辑项目，迁移副本 continue 不产生重复任务；交付稿不带内部 Page/trace。
 - 稳定证据：`/Users/dingcheng/Downloads/Deck-Master-development-20260916/` 下 `delivery-before-edit/`、`delivery-after-edit/`、`multipage-working/`、`evidence/edited-mainline-review.json`、`evidence/multipage-review.json`。原始失败修订仍在项目历史。
 - 本节只关闭已列明工程切片；完整编译子集、三类页面、全面工作台/安装、专业阅稿、桌面编辑保存重开仍未完成。
+
+### 扩展复验
+
+- 第三类架构页用程序 prompt 原样调用 Codex ImageGen（`exec-750dba28-2236-4611-8287-9aa2c6376c0a`），完成 start→begin→ImageGen→settle→accept；`architecture-v3` 保留原图、prompt、Host报告、Page人工审核说明、SVG与PPT。前两次准备中的错误与未发送额度解除记录保留。
+- `isolated-candidate` 是新venv，wheel安装后在仓库外使用 `python -I`；`isolated-three-page/` 只提供SVG、明确字体参数，生成3页PPT并渲染读回通过。该证据是独立编译接口，不冒称三页都从同一个新建项目完整执行。
+- 额外修复：use样式继承、有限渐变与零透明度、明确批准的PNG/JPEG图片、未知属性拒绝、跨后续修订的编辑幂等、历史恢复CLI、移动项目后服务身份验证、防止旧PID误终止、compose/blueprint变化废止旧下游输出、坏草稿不先创建项目。
+- 浏览器1280/1440阅图布局已实看；未提交正文在p09→p10→p09切换后保留。刷新/反馈/取消已检查。尚未宣称全区域反馈和全部冲突交互验收完成。
+- 独立PPT已由桌面LibreOffice打开并枚举真实文字/形状；自动化输入和剪贴板超时，修改保存重开未通过，不能以headless渲染替代。
+- 当前交付审阅需每一页具备content、blueprint_content、blueprint_fidelity、conversion、readability、privacy六类当前产物记录；Host自审不等于专业或桌面验收。
+
+- 后续编译修复：rx/ry圆角转可编辑路径、填充路径仿射剪切、文本旋转锚点、批准图片contain/slice裁切；重新实际渲染架构页确认未回退。当前完整rebuild回归127项通过。仍未关闭T08/T09/T10全卡，任意渐变变换、内联tspan自动布局等存在明确支持边界。

@@ -20,7 +20,7 @@ ImageGen，不配置 Provider 或 API Key；其他宿主兼容暂不进入验收
 | 提交宿主结果 | `deck-master task accept --project … --task-id … --operation-id … --produced-against … --result result.json` | 信封形状见 CLI 输出与 [result-envelope 例](../../docs/specs/deck-master-rebuild-v1/examples/roundtrips/result-envelope/README.md) |
 | 生成蓝图 | `continue` 返回 `kind=blueprint` | [Codex 蓝图执行方法](references/blueprint-svg.md) |
 | 修改页 | `task accept`（repair 信封，仅 scope_pages 内） | [content-methods](references/content-methods.md) |
-| 查看与交付 | `view`（T05 起可用）、`check`、`export` | 工作台与导出规则见 spec 09/07 |
+| 查看与交付 | `view`、`continue` 自动检查、`export` | 工作台与导出规则见 spec 09/07 |
 
 ## 自动工作台（必守）
 
@@ -34,6 +34,19 @@ create --draft / import draft / compose 结果**第一次形成至少一页后�
 - 蓝图任务只调用当前 Codex 会话的内置 ImageGen；不请求 Provider/API Key。实际提交 prompt、原始图片和可得 invocation ref 一并保存。
 - 没有实际阅图/渲染/人类检查的项目保持未验证标注；工程通过不升级为内容专业。
 - 普通取舍按 spec 决定，不把每一步交回用户；缺工具、缺授权、真实用户决定是停止条件。
+
+## 连续制作与返修
+
+`task accept` 后继续执行 `continue`，直至 `ready_for_export`、用户停止或具体输入/工具缺口。
+`awaiting_host` 是交接请求，不是已执行；先 `task start` 再做 Host 工作。CLI 返回 3 时读取 stdout JSON 并处理其中任务，不能把它当成执行失败直接终止。
+
+- `reconstruct`：实际读取原图、完整 Page 和允许资产，先写原图模块/关系期待，再输出单份原生 SVG。若纠正文案或补标签，同一信封提交更新后的 Page 和理由。不得改写原图，不能仅改 SVG 隐藏正文错误。
+- `continue` 本地执行编译、SVG/PPT 渲染和真实文件回读；不需要手写外部编译脚本。失败回到明确的 Page/SVG/编译层处理，不通过重新生图掩盖。
+- `review`：实际看 Page、原图、SVG 和 PPT 渲染。分别提交 content、blueprint_content、blueprint_fidelity、conversion、readability、privacy 记录，subjects 固定当前文件；有问题保留 findings 并返修。Host 自审写 host_self，不能写独立或专业验收。
+- `edit --page … --base-revision … --page-hash … --operation-id …` 修改正文后继续重建受影响页；原图保留。`history list/restore` 恢复产生新 revision。
+- `export --purpose working` 包含可继续编辑项目；`--purpose delivery` 要求当前工程审阅通过。导出完成不等于专业或桌面验收完成。
+
+候选尚未切换全局入口时，使用候选环境的 `python -m deck_master` 执行上述子命令，不能误调用旧全局 `deck-master`。
 
 ## 旧体系说明
 

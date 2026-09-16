@@ -22,6 +22,7 @@ class CompileOptions:
     width_px: float = 1280
     height_px: float = 720
     fonts: dict[str, str] = field(default_factory=dict)
+    assets: dict[str, dict[str, str]] = field(default_factory=dict)
     timeout_seconds: int = 120
 
 @dataclass(frozen=True)
@@ -40,10 +41,11 @@ def compile_deck(inputs: list[SvgInput], options: CompileOptions, output_dir: Pa
         raise FileExistsError(target)
     if not all(math.isfinite(v) and v > 0 for v in (options.width_px, options.height_px)):
         raise ValueError("slide dimensions must be positive")
+    asset_hashes = {path: hashlib.sha256(Path(path).read_bytes()).hexdigest() for mapping in options.assets.values() for path in mapping.values()}
     pages = []
     for item in inputs:
         data = Path(item.path).read_bytes()
-        page = parse_svg(data, page_id=item.page_id)
+        page = parse_svg(data, page_id=item.page_id, assets=options.assets.get(item.page_id, {}))
         page['sha256'] = hashlib.sha256(data).hexdigest()
         pages.append(page)
     diagnostics = []
@@ -84,6 +86,9 @@ def compile_deck(inputs: list[SvgInput], options: CompileOptions, output_dir: Pa
         for item, page in zip(inputs, pages):
             if hashlib.sha256(Path(item.path).read_bytes()).hexdigest() != page['sha256']:
                 raise ValueError(f'{item.page_id}: input changed during compilation')
+        for path, digest in asset_hashes.items():
+            if hashlib.sha256(Path(path).read_bytes()).hexdigest() != digest:
+                raise ValueError('approved asset changed during compilation')
         # Exclusive publication also protects against a competing output writer.
         import os
         os.link(patched, target)

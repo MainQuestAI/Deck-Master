@@ -2,7 +2,7 @@
 "use strict";
 
 (function () {
-  const state = { view: null, activePage: null, activeSlot: "content" };
+  const state = { view: null, activePage: null, activeSlot: "content", drafts: new Map() };
 
   async function fetchView() {
     const response = await fetch("/api/view");
@@ -41,6 +41,7 @@
       if (page.broken) item.classList.add("broken");
       if (page.page_id === state.activePage) item.classList.add("is-active");
       item.addEventListener("click", () => {
+        if(state.dirty && state.editBase)state.drafts.set(state.activePage,{base:state.editBase,values:Array.from(document.querySelectorAll('#editor-fields textarea')).map(input=>input.value)});
         state.activePage = page.page_id;
         renderPageList(view);
         state.dirty=false;
@@ -87,13 +88,16 @@
 
   function renderEditor(page){
     const form=document.getElementById('editor-fields');form.replaceChildren();
-    state.editBase={revision:state.view.revision_id,hash:page.slots.content.sha256,page:JSON.parse(JSON.stringify(page.page))};
+    const draft=state.drafts.get(page.page_id);
+    state.editBase=draft ? draft.base : {revision:state.view.revision_id,hash:page.slots.content.sha256,page:JSON.parse(JSON.stringify(page.page))};
+    let fieldIndex=0;
     for(const atom of page.visible_atoms){
       if(typeof atom.text!=='string')continue;
       const label=document.createElement('label');label.textContent=atom.kind;
-      const input=document.createElement('textarea');input.value=atom.text;input.dataset.pointer=atom.pointer;input.rows=2;
+      const input=document.createElement('textarea');input.value=draft ? draft.values[fieldIndex++] : atom.text;input.dataset.pointer=atom.pointer;input.rows=2;
       input.addEventListener('input',()=>{state.dirty=true;});label.appendChild(input);form.appendChild(label);
     }
+    if(draft)state.dirty=true;
   }
 
   async function post(path,data){
@@ -102,7 +106,7 @@
     const result=await response.json();if(!response.ok)throw new Error(result.error || response.status);return result;
   }
   function notice(text){document.getElementById('action-status').textContent=text;}
-  async function action(fn){try{const result=await fn();notice(result.status || '已完成');await refresh();}catch(error){notice(error.message);}}
+  async function action(fn){try{const result=await fn();notice(result.output_dir ? '已导出：'+result.output_dir : result.status || '已完成');await refresh();}catch(error){notice(error.message);}}
   function pointerSet(root,pointer,value){const keys=pointer.slice(1).split('/').map(k=>k.replace(/~1/g,'/').replace(/~0/g,'~'));let obj=root;for(const k of keys.slice(0,-1))obj=obj[k];obj[keys.at(-1)]=value;}
   function bindActions(){
     document.getElementById('save-content').onclick=()=>action(async()=>{
@@ -110,11 +114,11 @@
       const page=JSON.parse(JSON.stringify(state.editBase.page));
       for(const input of document.querySelectorAll('#editor-fields textarea'))pointerSet(page,input.dataset.pointer,input.value);
       const result=await post('/api/edit',{page,base_revision:state.editBase.revision,page_hash:state.editBase.hash,operation_id:crypto.randomUUID()});
-      state.dirty=false;return result;
+      state.dirty=false;state.drafts.delete(state.activePage);return result;
     });
     document.getElementById('send-feedback').onclick=()=>action(()=>{
       const instruction=document.getElementById('feedback').value.trim();if(!instruction)throw new Error('请输入具体修改意见');
-      return post('/api/feedback',{page_id:state.activePage,instruction});
+      return post('/api/feedback',{page_id:state.activePage,instruction,base_revision:state.view.revision_id,page_hash:state.view.pages.find(p=>p.page_id===state.activePage).slots.content.sha256});
     });
     document.getElementById('export-working').onclick=()=>action(()=>post('/api/export',{purpose:'working'}));
     document.getElementById('refresh').onclick=refresh;
@@ -176,9 +180,9 @@
   function bindTabs() {
     document.querySelectorAll(".slot-tab").forEach((tab) => {
       tab.addEventListener("click", () => {
-        document.querySelectorAll(".slot-tab").forEach((item) => item.classList.remove("is-active"));
-        document.querySelectorAll(".slot").forEach((item) => item.classList.remove("is-active"));
-        tab.classList.add("is-active");
+        document.querySelectorAll(".slot-tab").forEach((item) => {item.classList.remove("is-active");item.setAttribute("aria-selected","false");});
+        document.querySelectorAll(".slot").forEach((item) => {item.classList.remove("is-active");item.setAttribute("aria-selected","false");});
+        tab.classList.add("is-active");tab.setAttribute("aria-selected","true");
         document.getElementById(`slot-${tab.dataset.slot}`).classList.add("is-active");
       });
     });

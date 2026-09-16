@@ -4,15 +4,28 @@ from __future__ import annotations
 import re
 import math
 import copy
+from .paint import gradient
 from .geometry import _parse_path, commands_to_svg_path, _parse_transform, _matrix_product, _apply_matrix, _IDENTITY
 import xml.etree.ElementTree as ET
 
 
 class SvgError(ValueError):
-    pass
+    def __init__(self, message):
+        super().__init__(message)
+        self.diagnostic={'code':'unsupported_or_invalid_svg','location':message.split(':',1)[0], 'detail':message, 'recovery':'Correct the named SVG element or express it using supported explicit geometry.'}
 
 
-def parse_svg(data: bytes, *, page_id: str) -> dict:
+
+def parse_svg(data: bytes, *, page_id: str, assets: dict[str, str] | None = None) -> dict:
+    try:
+        return _parse_svg(data,page_id=page_id,assets=assets)
+    except SvgError:
+        raise
+    except (ValueError, ET.ParseError) as exc:
+        raise SvgError(f'{page_id}: {exc}') from exc
+
+
+def _parse_svg(data: bytes, *, page_id: str, assets: dict[str, str] | None = None) -> dict:
     if re.search(br'<!\s*(DOCTYPE|ENTITY)', data, re.I):
         raise SvgError(f'{page_id}: XML entities/DOCTYPE are forbidden')
     root = ET.fromstring(data)
@@ -28,16 +41,18 @@ def parse_svg(data: bytes, *, page_id: str) -> dict:
         a,b,c,d,_,_=matrix
         sx=math.hypot(a,b);sy=math.hypot(c,d)
         base['stroke_width'] *= (sx+sy)/2
-        if base['stroke']!='none' and abs(sx-sy)>1e-6:
+        if base['stroke']!='none' and (abs(sx-sy)>1e-6 or abs(a*c+b*d)>1e-6):
             raise SvgError(f"{page_id}/{base['id']}: nonuniform transformed stroke requires an explicit outline")
         if matrix == _IDENTITY:return base
+        if any(isinstance(base[k],dict) for k in ('fill','stroke')):
+            raise SvgError(f"{page_id}/{base['id']}: transformed gradient requires flattening paint coordinates")
         def point(x,y):return list(_apply_matrix(matrix,(x,y)))
         kind=base['kind']
         if kind=='text':
-            if abs(sx-sy)>1e-6:raise SvgError(f"{page_id}/{base['id']}: nonuniform text scaling unsupported")
+            if abs(sx-sy)>1e-6 or abs(a*c+b*d)>1e-6 or a*d-b*c<0:raise SvgError(f"{page_id}/{base['id']}: nonuniform text scaling unsupported")
             base['x'],base['y']=point(base['x'],base['y']);base['font_size']*=sx
             base['rotation']=math.degrees(math.atan2(b,a));base['letter_spacing']*=sx
-        elif kind in ('circle','ellipse') and abs(sx-sy)<1e-6 and abs(base['width']-base['height'])<1e-6:
+        elif kind in ('circle','ellipse') and abs(sx-sy)<1e-6 and abs(base['width']-base['height'])<1e-6 and abs(a*c+b*d)<1e-6:
             cx,cy=point(base['x']+base['width']/2,base['y']+base['height']/2)
             base.update(x=cx-base['width']*sx/2,y=cy-base['height']*sy/2,width=base['width']*sx,height=base['height']*sy)
         elif kind in ('rect','circle','ellipse'):
@@ -67,32 +82,47 @@ def parse_svg(data: bytes, *, page_id: str) -> dict:
             for declaration in el.attrib.pop('style').split(';'):
                 if not declaration.strip():continue
                 key,value=declaration.split(':',1)
-                if key.strip() not in ('fill','stroke','stroke-width','opacity','fill-opacity','stroke-opacity','font-family','font-size','font-weight','text-anchor'):
+                if key.strip() not in ('fill','stroke','stroke-width','stroke-linecap','stroke-linejoin','stroke-miterlimit','opacity','fill-opacity','stroke-opacity','font-family','font-size','font-weight','letter-spacing','text-anchor'):
                     raise SvgError(f'{page_id}: unsupported style property {key}')
                 el.set(key.strip(),value.strip())
         matrix=_matrix_product(matrix,_parse_transform(el.attrib.pop('transform',None),element_id=el.get('id',tag)))
         attrs = {**inherited, **el.attrib}
         identity = el.get('id', tag)
         for key in el.attrib:
-            if key.startswith('on') or key in ('style', 'transform', 'filter', 'mask', 'clip-path') or (key.endswith('href') and tag!='use'):
+            if key.startswith('on') or key in ('style', 'transform', 'filter', 'mask', 'clip-path') or (key.endswith('href') and tag not in ('use','image')):
                 raise SvgError(f'{page_id}/{identity}: unsupported {key}; flatten to explicit geometry')
+        common={'id','fill','stroke','stroke-width','stroke-linecap','stroke-linejoin','stroke-miterlimit','opacity','fill-opacity','stroke-opacity','font-family','font-size','font-weight','letter-spacing','text-anchor'}
+        geometry={'svg':{'viewBox','width','height','version','preserveAspectRatio'},'g':set(),'rect':{'x','y','width','height','rx','ry'},'circle':{'cx','cy','r'},'ellipse':{'cx','cy','rx','ry'},'line':{'x1','y1','x2','y2'},'polygon':{'points'},'polyline':{'points'},'path':{'d'},'text':{'x','y'},'tspan':{'x','y','dx','dy'},'image':{'href','{http://www.w3.org/1999/xlink}href','x','y','width','height','preserveAspectRatio'},'use':{'href','{http://www.w3.org/1999/xlink}href','x','y','width','height'}}
+        if tag in geometry:
+            unknown=[k for k in el.attrib if k not in common|geometry[tag] and not k.startswith('data-')]
+            if unknown:raise SvgError(f'{page_id}/{identity}: unsupported attribute {unknown[0]}; provide explicit supported geometry')
         if tag=='defs':return
         if tag=='use':
             href=el.get('href') or el.get('{http://www.w3.org/1999/xlink}href','')
             if not href.startswith('#') or href[1:] not in definitions or href in active_uses:
                 raise SvgError(f'{page_id}/{identity}: unresolved or cyclic local use')
             target=copy.deepcopy(definitions[href[1:]])
-            if target.tag.split('}')[-1]=='symbol':target.tag='{http://www.w3.org/2000/svg}g'
+            if target.tag.split('}')[-1]=='symbol':
+                target.tag='{http://www.w3.org/2000/svg}g'
+                vb=numbers(target.attrib.pop('viewBox',''))
+                target.attrib.pop('preserveAspectRatio',None)
+                if vb:
+                    if len(vb)!=4 or min(vb[2:])<=0 or not el.get('width') or not el.get('height'):
+                        raise SvgError(f'{page_id}/{identity}: symbol viewBox needs positive explicit use width/height')
+                    k=min(float(el.get('width'))/vb[2],float(el.get('height'))/vb[3])
+                    tx=(float(el.get('width'))-vb[2]*k)/2-vb[0]*k
+                    ty=(float(el.get('height'))-vb[3]*k)/2-vb[1]*k
+                    target.set('transform',f'translate({tx} {ty}) scale({k})')
             active_uses.add(href)
             translated=_matrix_product(matrix,(1.,0.,0.,1.,float(el.get('x',0)),float(el.get('y',0))))
-            visit(target,inherited,translated);active_uses.remove(href);return
-        if any('url(' in value for value in el.attrib.values()):
-            raise SvgError(f'{page_id}/{identity}: referenced paint is not in the current subset')
+            visit(target,{k:v for k,v in attrs.items() if k in ('fill','stroke','stroke-width','stroke-linecap','stroke-linejoin','stroke-miterlimit','opacity','fill-opacity','stroke-opacity','font-family','font-size','font-weight','letter-spacing','text-anchor')},translated);active_uses.remove(href);return
+        if any('url(' in value for key,value in el.attrib.items() if key not in ('fill','stroke')):
+            raise SvgError(f'{page_id}/{identity}: unsupported referenced property')
         if tag in ('title', 'desc', 'metadata'):
             return
-        if tag not in ('svg','g','rect','circle','ellipse','line','polygon','polyline','path','text','tspan'):
+        if tag not in ('svg','g','rect','circle','ellipse','line','polygon','polyline','path','text','tspan','image'):
             raise SvgError(f'{page_id}/{identity}: unsupported {tag}; provide native geometry')
-        inherited_keys=('fill','stroke','stroke-width','font-family','font-size','font-weight','text-anchor','opacity','fill-opacity','stroke-opacity')
+        inherited_keys=('fill','stroke','stroke-width','font-family','font-size','font-weight','text-anchor','letter-spacing','opacity','fill-opacity','stroke-opacity')
         if tag in ('svg','g'):
             style={key:attrs[key] for key in inherited_keys if key in attrs}
             # SVG group opacity multiplies ancestor opacity.
@@ -107,9 +137,30 @@ def parse_svg(data: bytes, *, page_id: str) -> dict:
                 if not math.isfinite(value):raise ValueError()
                 return value
             except ValueError: raise SvgError(f'{page_id}/{identity}: {key} must use unitless pixels')
-        base=dict(id=identity,kind=tag,fill=attrs.get('fill','#000000'),stroke=attrs.get('stroke','none'),stroke_width=num('stroke-width',1),opacity=num('opacity',1),fill_opacity=num('fill-opacity',1),stroke_opacity=num('stroke-opacity',1),atom_id=el.get('data-atom-id'))
+        base=dict(id=identity,kind=tag,fill=attrs.get('fill','#000000'),stroke=attrs.get('stroke','none'),stroke_width=num('stroke-width',1),stroke_linecap=attrs.get('stroke-linecap','butt'),stroke_linejoin=attrs.get('stroke-linejoin','miter'),stroke_miterlimit=num('stroke-miterlimit',4),opacity=num('opacity',1),fill_opacity=num('fill-opacity',1),stroke_opacity=num('stroke-opacity',1),atom_id=el.get('data-atom-id'))
+        if any(not 0 <= base[key] <= 1 for key in ('opacity','fill_opacity','stroke_opacity')) or base['stroke_width'] < 0:
+            raise SvgError(f'{page_id}/{identity}: invalid opacity or stroke width')
         if 'opacity' in el.attrib:
             base['opacity'] = float(inherited.get('opacity',1))*float(el.attrib['opacity'])
+        try:
+            base['fill']=gradient(base['fill'],definitions,f'{page_id}/{identity}')
+            base['stroke']=gradient(base['stroke'],definitions,f'{page_id}/{identity}')
+        except ValueError as exc:
+            raise SvgError(str(exc)) from exc
+        if tag=='image':
+            href=el.get('href') or el.get('{http://www.w3.org/1999/xlink}href','')
+            if href not in (assets or {}):raise SvgError(f'{page_id}/{identity}: image is not an explicitly approved asset')
+            if matrix!=_IDENTITY:raise SvgError(f'{page_id}/{identity}: transformed image needs explicit axis-aligned bounds')
+            if el.get('preserveAspectRatio','xMidYMid meet') not in ('xMidYMid meet','xMidYMid slice','none'):
+                raise SvgError(f'{page_id}/{identity}: unsupported image preserveAspectRatio')
+            if base['opacity']!=1:raise SvgError(f'{page_id}/{identity}: image opacity requires flattened approved asset')
+            from PIL import Image
+            with Image.open(assets[href]) as image:
+                if image.format not in ('PNG','JPEG'):raise SvgError(f'{page_id}/{identity}: approved image must be PNG/JPEG')
+                image.verify()
+            base.update(x=num('x'),y=num('y'),width=num('width'),height=num('height'),asset_path=assets[href],fit={'none':'stretch','xMidYMid slice':'cover'}.get(el.get('preserveAspectRatio'),'contain'))
+            if min(base['width'],base['height'])<=0:raise SvgError(f'{page_id}/{identity}: image bounds must be positive')
+            shapes.append(base);return
         if tag=='text':
             children=list(el)
             if any(x.tag.split('}')[-1]!='tspan' for x in children):
@@ -119,6 +170,8 @@ def parse_svg(data: bytes, *, page_id: str) -> dict:
             cursor={**attrs}
             for child in children:
                 if list(child): raise SvgError(f'{page_id}/{identity}: nested tspan unsupported')
+                if runs and not any(k in child.attrib for k in ('x','y','dy')):
+                    raise SvgError(f'{page_id}/{identity}: inline tspan requires explicit x position')
                 c={**attrs,**child.attrib}
                 c['x']=c.get('x',cursor.get('x','0'))
                 c['y']=str(float(c.get('y',cursor.get('y','0')))+float(c.get('dy','0')))
@@ -126,10 +179,18 @@ def parse_svg(data: bytes, *, page_id: str) -> dict:
                 runs.append((child.text or '',c));cursor=c
                 if child.tail and child.tail.strip(): raise SvgError(f'{page_id}/{identity}: trailing inline text unsupported')
             for i,(text,a) in enumerate(runs):
-                shapes.append(transformed({**base,'id':f'{identity}:{i}','text':text,'x':float(a.get('x',0)), 'y':float(a.get('y',0)), 'font_size':float(a.get('font-size',24)), 'font_family':a.get('font-family','Noto Sans SC').split(',')[0].strip(' \"\''), 'letter_spacing':float(a.get('letter-spacing',0)),'bold':a.get('font-weight','400') in ('bold','600','700','800','900'),'anchor':a.get('text-anchor','start'),'fill':a.get('fill',base['fill'])},matrix))
+                shapes.append(transformed({**base,'id':f'{identity}:{i}','text':text,'x':float(a.get('x',0)), 'y':float(a.get('y',0)), 'font_size':float(a.get('font-size',24)), 'font_family':a.get('font-family','Noto Sans SC').split(',')[0].strip(' \"\''), 'letter_spacing':float(a.get('letter-spacing',0)),'bold':a.get('font-weight','400') in ('bold','600','700','800','900'),'anchor':a.get('text-anchor','start'),'fill':gradient(a.get('fill',base['fill']),definitions,f'{page_id}/{identity}')},matrix))
             return
         if tag=='tspan': raise SvgError(f'{page_id}/{identity}: orphan tspan')
-        if tag=='rect': base.update(x=num('x'),y=num('y'),width=num('width'),height=num('height'),rx=num('rx'))
+        if tag=='rect':
+            rx=num('rx',num('ry'));ry=num('ry',rx)
+            x,y,w,h=num('x'),num('y'),num('width'),num('height')
+            if min(w,h,rx,ry)<0:raise SvgError(f'{page_id}/{identity}: rectangle dimensions cannot be negative')
+            rx=min(rx,w/2);ry=min(ry,h/2)
+            if rx and ry:
+                path=f'M{x+rx} {y} H{x+w-rx} A{rx} {ry} 0 0 1 {x+w} {y+ry} V{y+h-ry} A{rx} {ry} 0 0 1 {x+w-rx} {y+h} H{x+rx} A{rx} {ry} 0 0 1 {x} {y+h-ry} V{y+ry} A{rx} {ry} 0 0 1 {x+rx} {y} Z'
+                base['kind']='path';base['commands']=parse_path(commands_to_svg_path(_parse_path(path,element_id=identity)),identity)
+            else:base.update(x=x,y=y,width=w,height=h,rx=0)
         elif tag in ('circle','ellipse'):
             rx=num('r') if tag=='circle' else num('rx');ry=num('r') if tag=='circle' else num('ry')
             base.update(x=num('cx')-rx,y=num('cy')-ry,width=2*rx,height=2*ry)

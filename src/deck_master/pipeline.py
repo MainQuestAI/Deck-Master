@@ -11,6 +11,7 @@ import zipfile
 import xml.etree.ElementTree as ET
 from .compiler import CompileOptions, SvgInput, compile_deck
 from .compiler.svg import parse_svg
+from .production import resolve_design
 from .content import visible_atoms
 from .models import bump_revision, validate_artifact_semantics
 from .store import Store
@@ -87,14 +88,29 @@ def produce(project_dir):
     store=Store(project_dir);doc=store.load_document()
     for tool in ('rsvg-convert','soffice','pdftoppm'):executable(tool)
     with tempfile.TemporaryDirectory(prefix='production-',dir=store.staging_dir) as temporary:
-        work=Path(temporary);inputs=[];parsed=[];expected=[]
+        work=Path(temporary);inputs=[];parsed=[];expected=[];approved={};preview_inputs=[]
         for index,entry in enumerate(doc['pages']):
             obj=store.read_object_json(entry['svg']);data=store.read_object_bytes(obj['file'])
+            page=store.read_object_json(entry['page'])
+            effective,_=resolve_design(page,doc['design_context'],doc['design_context'].get('assets',[]))
+            mapping={}
+            for asset in effective['assets']:
+                resource=store.read_object_json(asset['artifact'])
+                if resource['media_type'] not in ('image/png','image/jpeg'):continue
+                raster=work/(asset['asset_id']+Path(resource['file']['path']).suffix)
+                raster.write_bytes(store.read_object_bytes(resource['file']));mapping[asset['asset_id']]=str(raster)
+            approved[entry['page_id']]=mapping
             path=work/f'page-{index+1}.svg';path.write_bytes(data)
-            inputs.append(SvgInput(entry['page_id'],path));parsed.append(parse_svg(data,page_id=entry['page_id']))
-            expected.append(store.read_object_json(entry['page']))
+            inputs.append(SvgInput(entry['page_id'],path));parsed.append(parse_svg(data,page_id=entry['page_id'],assets=mapping))
+            preview_tree=ET.fromstring(data)
+            for node in preview_tree.iter():
+                if node.tag.rsplit('}',1)[-1]=='image':
+                    key='href' if node.get('href') is not None else '{http://www.w3.org/1999/xlink}href'
+                    node.set(key,Path(mapping[node.get(key)]).as_uri())
+            preview_path=work/f'preview-input-{index+1}.svg';preview_path.write_bytes(ET.tostring(preview_tree));preview_inputs.append(preview_path)
+            expected.append(page)
         fonts=resolve_fonts(parsed);canvas=doc['design_context']['canvas']
-        options=CompileOptions(width_px=canvas['slide_width_in']*96,height_px=canvas['slide_height_in']*96,fonts=fonts)
+        options=CompileOptions(width_px=canvas['slide_width_in']*96,height_px=canvas['slide_height_in']*96,fonts=fonts,assets=approved)
         compiled=compile_deck(inputs,options,work/'compiled')
         renders=render_deck(compiled.pptx_path,work/'rendered',fonts=fonts)
         if len(renders)!=len(inputs):raise RuntimeError('rendered slide count differs from current page count')
@@ -103,7 +119,7 @@ def produce(project_dir):
         deps=[{'kind':'svg','identity':e['page_id'],'sha256':e['svg']['sha256']} for e in doc['pages']]
         new=bump_revision(doc,{'operation_id':'production-'+uuid.uuid4().hex,'kind':'artifact_adoption','description':'native compile, dual rendering and actual PPT readback','read_set':[]})
         for i,entry in enumerate(new['pages']):
-            preview=work/f'svg-{i+1}.png';run([executable('rsvg-convert'),str(inputs[i].path),'-o',str(preview)])
+            preview=work/f'svg-{i+1}.png';run([executable('rsvg-convert'),str(preview_inputs[i]),'-o',str(preview)])
             entry['svg_preview']=artifact(store,preview,'svg_preview',page_id=entry['page_id'],dependencies=deps,derived_from=[entry['svg']])
             entry['ppt_preview']=artifact(store,renders[i],'ppt_preview',page_id=entry['page_id'],dependencies=deps,derived_from=[entry['svg']])
         for i, ref in enumerate(new['tasks']):
