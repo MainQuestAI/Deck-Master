@@ -60,6 +60,12 @@ def build_parser() -> argparse.ArgumentParser:
     doctor.add_argument("--font", action="append", default=[])
     doctor.add_argument("--host-imagegen", action="store_true", help="Host reports tool availability; not provider verification")
 
+    installation=sub.add_parser('install')
+    installs=installation.add_subparsers(dest='install_command',required=True)
+    candidate=installs.add_parser('candidate');candidate.add_argument('--prefix',required=True);candidate.add_argument('--manifest',required=True)
+    activation=installs.add_parser('activate');activation.add_argument('--prefix',required=True);activation.add_argument('--release-id',required=True)
+    rollback=installs.add_parser('rollback');rollback.add_argument('--prefix',required=True)
+
     create = sub.add_parser("create")
     create.add_argument("--brief", required=False, help="task brief text (or --brief-file)")
     create.add_argument("--brief-file", required=False)
@@ -168,6 +174,15 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     options = parser.parse_args(argv)
     try:
+        if options.command == 'install':
+            from .install import install_candidate,activate,rollback
+            try:
+                if options.install_command=='candidate':result=install_candidate(options.prefix,options.manifest)
+                elif options.install_command=='activate':result=activate(options.prefix,options.release_id)
+                else:result=rollback(options.prefix)
+            except ValueError as exc:
+                return _emit_and_exit(_error('invalid_input',str(exc),'check candidate and prefix'),2)
+            return _emit(result)
         if options.command == 'doctor':
             from .doctor import diagnose
             result=diagnose(options.step,fonts=options.font,host_imagegen=options.host_imagegen)

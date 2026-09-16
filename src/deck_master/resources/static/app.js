@@ -42,6 +42,7 @@
       if (page.page_id === state.activePage) item.classList.add("is-active");
       item.addEventListener("click", () => {
         if(state.dirty && state.editBase)state.drafts.set(state.activePage,{base:state.editBase,values:Array.from(document.querySelectorAll('#editor-fields textarea')).map(input=>input.value)});
+        state.region=null;
         state.activePage = page.page_id;
         renderPageList(view);
         state.dirty=false;
@@ -75,7 +76,7 @@
     for(const block of customer.body_blocks || []) {
       if(block.heading || block.title)append('h2',block.heading || block.title);
       if(block.text)append('p',block.text);
-      if(block.items){const list=append('ul','');for(const item of block.items)append('li',item.text,list);}
+      if(block.items){const items=(rows,parent)=>{const list=append('ul','',parent);for(const item of rows){const li=append('li',item.text,list);if(item.items)items(item.items,li);}};items(block.items,body);}
       if(block.type==='table'){
         const table=append('table','');const header=append('tr','',table);
         for(const col of block.columns)append('th',col.label,header);
@@ -83,6 +84,13 @@
       }
     }
     for(const key of ['callouts','labels','footnotes'])for(const item of customer[key] || [])append('p',item.text);
+    const reviews=document.getElementById('review-list');reviews.replaceChildren();
+    for(const review of state.view.reviews.filter(r=>r.page_ids?.includes(page.page_id))){
+      const box=document.createElement('div');box.className='review-record';
+      const title=document.createElement('strong');title.textContent=`${review.current_output ? '当前产物' : '历史产物'} · ${review.kind} · ${review.status}`;box.appendChild(title);
+      for(const text of [...(review.observations || []),...(review.findings || []).map(f=>JSON.stringify(f))]){const line=document.createElement('p');line.textContent=text;box.appendChild(line);}
+      reviews.appendChild(box);
+    }
     if(!state.dirty)renderEditor(page);
   }
 
@@ -91,11 +99,20 @@
     const draft=state.drafts.get(page.page_id);
     state.editBase=draft ? draft.base : {revision:state.view.revision_id,hash:page.slots.content.sha256,page:JSON.parse(JSON.stringify(page.page))};
     let fieldIndex=0;
+    const field=(labelText,pointer,value,json=false)=>{
+      const label=document.createElement('label');label.textContent=labelText;
+      const input=document.createElement('textarea');input.value=draft ? draft.values[fieldIndex++] : (value === null ? '' : String(value));input.dataset.pointer=pointer;input.dataset.json=String(json);input.dataset.rawType=typeof value;input.rows=json ? 1 : 2;
+      input.addEventListener('input',()=>{state.dirty=true;});label.appendChild(input);form.appendChild(label);
+    };
     for(const atom of page.visible_atoms){
       if(typeof atom.text!=='string')continue;
-      const label=document.createElement('label');label.textContent=atom.kind;
-      const input=document.createElement('textarea');input.value=draft ? draft.values[fieldIndex++] : atom.text;input.dataset.pointer=atom.pointer;input.rows=2;
-      input.addEventListener('input',()=>{state.dirty=true;});label.appendChild(input);form.appendChild(label);
+      field(atom.kind,atom.pointer,atom.text);
+      if(atom.kind==='table_cell'){
+        const parent=atom.pointer.slice(0,atom.pointer.lastIndexOf('/'));
+        const cell=parent.slice(1).split('/').reduce((obj,key)=>obj[key],state.editBase.page);
+        if(Object.hasOwn(cell,'value'))field('表格原始值（与显示文字分别保存；留空表示空值）',parent+'/value',cell.value,true);
+        if(Object.hasOwn(cell,'unit'))field('表格单位',parent+'/unit',cell.unit);
+      }
     }
     if(draft)state.dirty=true;
   }
@@ -112,19 +129,24 @@
     document.getElementById('save-content').onclick=()=>action(async()=>{
       if(!state.editBase)throw new Error('先选择页面');
       const page=JSON.parse(JSON.stringify(state.editBase.page));
-      for(const input of document.querySelectorAll('#editor-fields textarea'))pointerSet(page,input.dataset.pointer,input.value);
+      for(const input of document.querySelectorAll('#editor-fields textarea'))pointerSet(page,input.dataset.pointer,input.dataset.json==='true' ? (input.value==='' ? null : input.dataset.rawType!=='string' && Number.isFinite(Number(input.value)) ? Number(input.value) : input.value) : input.value);
       const result=await post('/api/edit',{page,base_revision:state.editBase.revision,page_hash:state.editBase.hash,operation_id:crypto.randomUUID()});
       state.dirty=false;state.drafts.delete(state.activePage);return result;
     });
     document.getElementById('send-feedback').onclick=()=>action(()=>{
-      const instruction=document.getElementById('feedback').value.trim();if(!instruction)throw new Error('请输入具体修改意见');
+      let instruction=document.getElementById('feedback').value.trim();if(!instruction)throw new Error('请输入具体修改意见');
+      if(state.region){
+        if(state.region.revision!==state.view.revision_id)throw new Error('页面版本已变化，请重新框选区域；修改意见已保留。');
+        instruction+='\n选中区域（相对图像左上角，0–1归一化坐标）：'+JSON.stringify(state.region);
+      }
       return post('/api/feedback',{page_id:state.activePage,instruction,base_revision:state.view.revision_id,page_hash:state.view.pages.find(p=>p.page_id===state.activePage).slots.content.sha256});
     });
+    document.getElementById('clear-region').onclick=()=>{state.region=null;document.querySelectorAll('.region-box').forEach(e=>e.remove());document.getElementById('feedback-region').textContent='区域已清除';};
     document.getElementById('export-working').onclick=()=>action(()=>post('/api/export',{purpose:'working'}));
     document.getElementById('refresh').onclick=refresh;
     document.getElementById('show-history').onclick=async()=>{
       const data=await fetch('/api/history').then(r=>r.json());const list=document.getElementById('history-list');list.replaceChildren();
-      for(const entry of data.revisions){const button=document.createElement('button');button.textContent=entry.created_at+' · '+entry.change.description;button.onclick=()=>action(()=>post('/api/restore',{revision_id:entry.revision_id,base_revision:state.view.revision_id,operation_id:crypto.randomUUID()}));list.appendChild(button);}
+      for(const entry of data.revisions){const button=document.createElement('button');button.textContent=entry.revision_id.slice(0,12)+' · '+entry.change.description;button.onclick=()=>action(()=>post('/api/restore',{revision_id:entry.revision_id,base_revision:state.view.revision_id,operation_id:crypto.randomUUID()}));list.appendChild(button);}
     };
   }
 
@@ -137,14 +159,22 @@
     Object.entries(waiting).forEach(([slot, ref]) => {
       const placeholder = document.querySelector(`.slot-waiting[data-slot="${slot}"]`);
       const panel = document.getElementById(`slot-${slot}`);
-      const existing = panel.querySelector("img, object");
+      const existing = panel.querySelector(".image-wrap, img, object");
       if (existing) existing.remove();
       if (ref) {
         if (placeholder) placeholder.style.display = "none";
         const img = document.createElement("img");
         img.src = fileUrl(ref);
         img.alt = slot + " view";
-        panel.appendChild(img);
+        const wrap=document.createElement('div');wrap.className='image-wrap';wrap.appendChild(img);panel.appendChild(wrap);img.draggable=false;
+        let start=null;
+        const point=e=>{const r=img.getBoundingClientRect();return [Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)),Math.max(0,Math.min(1,(e.clientY-r.top)/r.height))];};
+        img.onpointerdown=e=>{start=point(e);img.setPointerCapture(e.pointerId);e.preventDefault();};
+        img.onpointerup=e=>{if(!start)return;const end=point(e);const rect={x:Math.min(start[0],end[0]),y:Math.min(start[1],end[1]),width:Math.abs(start[0]-end[0]),height:Math.abs(start[1]-end[1])};start=null;
+          if(rect.width<.005 || rect.height<.005)return;
+          document.querySelectorAll('.region-box').forEach(el=>el.remove());const box=document.createElement('div');box.className='region-box';Object.assign(box.style,{left:rect.x*100+'%',top:rect.y*100+'%',width:rect.width*100+'%',height:rect.height*100+'%'});wrap.appendChild(box);
+          state.region={page_id:page.page_id,slot,revision:state.view.revision_id,artifact:ref,...rect};document.getElementById('feedback-region').textContent='已框选 '+slot+' 区域；填写意见后提交。';
+        };
       } else {
         if (placeholder) placeholder.style.display = "";
       }

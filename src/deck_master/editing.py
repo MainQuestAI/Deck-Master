@@ -14,6 +14,8 @@ from .tasks import _project_transaction
 def review_status(store,doc):
     current=doc['outputs'].get('pptx')
     if not current:return 'not_evaluated'
+    if any(store.read_object_json(ref)['status'] in ('awaiting_host','running') for ref in doc['tasks']):
+        return 'not_evaluated'
     required={'content','blueprint_content','blueprint_fidelity','conversion','readability','privacy'}
     latest={}
     for ref in doc['reviews']:
@@ -110,12 +112,12 @@ def _export_locked(store, *, output_dir, purpose):
 
 
 def history(project_dir):
-    store=Store(project_dir)
-    records=[]
-    for path in store.revisions_dir.glob('*.json'):
-        document=json.loads(path.read_text())
+    store=Store(project_dir);document=store.load_document();current=document['revision_id'];records=[]
+    while document:
         records.append({'revision_id':document['revision_id'],'parent_revision_id':document['parent_revision_id'],'created_at':document['created_at'],'change':document['change'],'page_count':len(document['pages'])})
-    return {'current':store.load_document()['revision_id'],'revisions':sorted(records,key=lambda x:x['created_at'],reverse=True)}
+        parent=document['parent_revision_id']
+        document=store.load_document(parent) if parent else None
+    return {'current':current,'revisions':records}
 
 
 def restore(project_dir, *, revision_id, base_revision, operation_id):
@@ -130,7 +132,12 @@ def _restore(store, *, revision_id, base_revision, operation_id):
             return {'status':'already_applied','revision_id':current['revision_id'],'applied_revision_id':prior['revision_id']}
         raise ConflictError('operation_id','different operation already applied')
     if current['revision_id']!=base_revision:raise ConflictError('revision','project changed')
-    past=store.load_document(revision_id)
+    ancestor=current
+    while ancestor and ancestor['revision_id']!=revision_id:
+        parent=ancestor['parent_revision_id']
+        ancestor=store.load_document(parent) if parent else None
+    if ancestor is None:raise StoreError('revision_id','not a committed ancestor of current revision')
+    past=ancestor
     updated=bump_revision(current,{'operation_id':operation_id,'kind':'restore','description':'restore '+revision_id,'read_set':[]})
     for key in ('pages','design_context','sources','outputs'):
         updated[key]=copy.deepcopy(past[key])

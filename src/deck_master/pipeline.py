@@ -1,6 +1,7 @@
 """Local production and tool discovery; all adopted bytes go through Store."""
 from __future__ import annotations
 import json
+import posixpath
 import os
 from pathlib import Path
 import shutil
@@ -69,8 +70,23 @@ def readback(pptx_path,pages,expected_pages):
     findings=[];stats=[]
     normalize=lambda t:''.join(str(t).split())
     with zipfile.ZipFile(pptx_path) as z:
+        presentation=ET.fromstring(z.read('ppt/presentation.xml'))
+        slide_ids=presentation.findall('p:sldIdLst/p:sldId',ns)
+        relationships=ET.fromstring(z.read('ppt/_rels/presentation.xml.rels'))
+        targets={r.get('Id'):r.get('Target') for r in relationships if r.get('TargetMode')!='External'}
+        slide_paths=[]
+        for slide_id in slide_ids:
+            target=targets.get(slide_id.get('{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id'),'')
+            slide_paths.append(posixpath.normpath(posixpath.join('ppt',target)) if not target.startswith('/') else target.lstrip('/'))
+        actual_count=len(slide_ids)
+        if actual_count!=len(expected_pages) or len(pages)!=len(expected_pages):
+            findings.append({'code':'slide_count_mismatch','actual':actual_count,'expected':len(expected_pages),'svg_inputs':len(pages)})
         for index,(source,page) in enumerate(zip(pages,expected_pages),1):
-            root=ET.fromstring(z.read(f'ppt/slides/slide{index}.xml'))
+            slide_path=slide_paths[index-1] if index<=len(slide_paths) else ''
+            if slide_path not in z.namelist():
+                findings.append({'page_id':page['page_id'],'code':'missing_slide'})
+                continue
+            root=ET.fromstring(z.read(slide_path))
             texts=[e.text or '' for e in root.findall('.//a:t',ns)]
             joined=normalize(''.join(texts))
             svg_texts=[s['text'] for s in source['shapes'] if s['kind']=='text']

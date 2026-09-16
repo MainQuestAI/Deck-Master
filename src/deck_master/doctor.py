@@ -43,5 +43,12 @@ def diagnose(step, *, fonts=(), host_imagegen=False):
             exact=font.casefold() in [name.strip().casefold() for name in family.split(',')]
             add('font:'+font,'ready' if exact and Path(path).is_file() else 'unavailable',{'matched_family':family,'file':path,'requested':font})
         except (NeedsTool,OSError,ValueError,subprocess.SubprocessError) as exc:add('font:'+font,'unavailable',str(exc))
+    release=None
+    for parent in Path(str(root)).parents:
+        if parent.name=='venv' and (parent.parent/'release.json').is_file():
+            import json
+            record=json.loads((parent.parent/'release.json').read_text())
+            release={key:record.get(key) for key in ('release_id','source_sha','source_dirty','wheel_sha256')}
+            break
     status='needs_tool' if any(c['required'] and c['status']=='unavailable' for c in checks) else ('awaiting_host' if any(c['status']=='awaiting_host' for c in checks) else 'ready')
-    return {'status':status,'step':step,'package_version':__version__,'module_path':str(root),'checks':checks,'professional_evidence':'not_evaluated','desktop_editing':'not_evaluated'}
+    return {'status':status,'step':step,'package_version':__version__,'release':release,'module_path':str(root),'checks':checks,'professional_evidence':'not_evaluated','desktop_editing':'not_evaluated'}

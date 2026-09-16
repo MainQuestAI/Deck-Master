@@ -122,3 +122,40 @@ def test_reconstruction_declared_original_must_match_actual_image():
     _validate_svg_reference(svg,'a'*64)
     with pytest.raises(EnvelopeError,match='different original'):
         _validate_svg_reference(svg,'b'*64)
+
+
+def test_readback_rejects_truncated_or_extra_slides(tmp_path):
+    from deck_master.pipeline import readback
+    from deck_master.compiler.svg import parse_svg
+    svg=tmp_path/'input.svg';svg.write_text('<svg viewBox="0 0 100 100"><rect width="10" height="10"/></svg>')
+    compiled=compile_deck([SvgInput('p',svg)],CompileOptions(),tmp_path/'compiled')
+    page={'schema_version':'deck_page_package.v2','page_id':'p','customer_visible':{'title':'','body_blocks':[]},'visual_spec':{'intent':'test','reference_mode':'new_design'}}
+    report=readback(compiled.pptx_path,[parse_svg(svg.read_bytes(),page_id='p')],[page,page])
+    assert report['status']=='fail' and any(f['code']=='slide_count_mismatch' for f in report['findings'])
+
+
+def test_history_follows_committed_ancestry_not_creation_timestamp(tmp_path):
+    from deck_master.editing import history,restore
+    from deck_master.models import bump_revision
+    from deck_master.store import StoreError
+    page={'schema_version':'deck_page_package.v2','page_id':'p','customer_visible':{'title':'original','body_blocks':[]},'visual_spec':{'intent':'test','reference_mode':'new_design'}}
+    service.create(tmp_path/'p',brief='test',draft={'pages':[page]});s=Store(tmp_path/'p');before=s.load_document()
+    page['customer_visible']['title']='edited';edit_page(s.project_root,page=page,base_revision=before['revision_id'],page_hash=before['pages'][0]['page']['sha256'],operation_id='edit')
+    current=s.load_document();records=history(s.project_root)['revisions']
+    assert records[0]['revision_id']==current['revision_id'] and records[1]['revision_id']==before['revision_id']
+    orphan=bump_revision(current,{'operation_id':'orphan','kind':'restore','description':'uncommitted','read_set':[]})
+    (s.revisions_dir/(orphan['revision_id']+'.json')).write_text(json.dumps(orphan))
+    assert orphan['revision_id'] not in [r['revision_id'] for r in history(s.project_root)['revisions']]
+    with pytest.raises(StoreError,match='committed ancestor'):
+        restore(s.project_root,revision_id=orphan['revision_id'],base_revision=current['revision_id'],operation_id='restore-orphan')
+
+
+def test_pending_host_task_blocks_delivery_readiness(tmp_path):
+    from deck_master.editing import review_status
+    service.create(tmp_path/'p',brief='test')
+    s=Store(tmp_path/'p');service.continue_project(s.project_root);doc=s.load_document()
+    # Even an existing PPT cannot make a new, unprocessed Host request ready.
+    doc['outputs']['pptx']={'path':'.deckmaster/objects/test.json','sha256':'a'*64}
+    assert review_status(s,doc)=='not_evaluated'
+    from deck_master.view import project_view
+    assert project_view(s.project_root)['view_status']=='awaiting_host'

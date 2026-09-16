@@ -198,3 +198,5 @@ html, body {
 .actions button:focus-visible,.actions a:focus-visible {outline:2px solid #E09043;}
 #action-status {width:100%;color:#E09043;}
 #history-list {display:grid;gap:6px;}
+
+.image-wrap{position:relative;display:inline-block;max-width:100%;line-height:0}.image-wrap img{display:block;touch-action:none;cursor:crosshair}.region-box{position:absolute;border:2px solid var(--accent);pointer-events:none;box-sizing:border-box}.review-record{border-top:1px solid var(--hairline);padding:12px 0;line-height:1.5}.review-record p{overflow-wrap:anywhere}

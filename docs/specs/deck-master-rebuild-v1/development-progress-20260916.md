@@ -63,3 +63,11 @@
 - 新增按步doctor，renderer缺失只影响render，生图能力明确Host报告/awaiting_host；不检查旧PPTMaster/Library绑定。
 - 候选安装器在显式测试前缀建独立venv，校验wheel hash、包资源、真实编译和渲染后才允许激活；current/previous支持失败回退。用户当前安装未切换。
 - 当前回归130项通过。候选dev2在installation-test测试前缀完成独立venv安装、真实编译/渲染并激活；candidate-install.json记录来源SHA和dirty状态，未切用户当前安装；T16仅准备切片，不关闭其依赖或整卡。Skill ownership迁移、全链安装验收、专业/桌面证据与最终默认切换仍未完成。
+
+### 资料与工作台实测补缺
+
+- PDF保留无文本物理页及全文，PPTX递归分组/读取备注并标出图片图表，DOCX绘图标待阅图；新source extract保留状态、定位和不可变原文件。扫描PDF实际阅图→一页正文已通过正常Host接收，证据`source-visual/reading-evidence.json`。
+- 工作台副本实际保存60/50%显示值及60/.5原始值；另一编辑者更新后保存冲突，草稿仍保留。浏览器历史恢复产生新revision，区域框选带原图ref/版本/归一化区域进入repair，真实Host核对后接受无需改图结论。
+- 历史顺序改为已提交父链，不按项目创建时间排序；未提交孤立revision不展示、不允许恢复。待处理Host任务存在时不再显示可交付。
+- `workbench-acceptance/browser-evidence.json`保留浏览器行为与真实任务记录。未把部分UI验证扩大为完整T14/T15验收。
+- P1未见材料尚无可读取路径，已向用户请求资料和受众用途。不能把本轮合成NOVA当作陌生业务验证或专业验收。

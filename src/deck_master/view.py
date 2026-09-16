@@ -78,6 +78,10 @@ def project_view(project_dir: Path | str, *, revision: str | None = None) -> dic
                 "status": review.get("status"),
                 "reviewer": (review.get("reviewer") or {}).get("type"),
                 "created_at": review.get("created_at"),
+                "observations": review.get("observations",[]),
+                "findings": review.get("findings",[]),
+                "page_ids": [e['page_id'] for e in document['pages'] if e['page'] in review.get('subjects',[])],
+                "current_output": bool(document['outputs'].get('pptx') and document['outputs']['pptx'] in review.get('subjects',[])),
             }
         )
     design = document.get("design_context") or {}
@@ -103,6 +107,8 @@ def project_view(project_dir: Path | str, *, revision: str | None = None) -> dic
     from .editing import review_status
     if document['outputs'].get('pptx'):
         view['view_status']='ready_for_export' if review_status(store,document)=='pass' else 'awaiting_review'
+    if pending_tasks:
+        view['view_status']='running' if any(t.get('status')=='running' for t in pending_tasks) else 'awaiting_host'
     return view
 
 
