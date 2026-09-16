@@ -1,9 +1,12 @@
 ---
 name: deck-master
-description: Operate the rebuilt Deck Master core for new decks, page edits, checks, and delivery; the Host writes complete copy and real results, the code owns files, storage, and truth.
+description: Operate the Codex Desktop edition of the rebuilt Deck Master core; Codex writes complete copy and uses its built-in image tool, while the code owns files, storage, and truth.
 ---
 
 # Deck Master（重建核心）
+
+当前 v1.1 候选是 **Codex Desktop 专用版本**。需要生图时使用当前 Codex 会话内置
+ImageGen，不配置 Provider 或 API Key；其他宿主兼容暂不进入验收范围。
 
 ## 使用场景
 
@@ -15,6 +18,7 @@ description: Operate the rebuilt Deck Master core for new decks, page edits, che
 | 已有完整稿 | `create --draft draft.json` 或 `import-draft` | [content-examples](references/content-examples.md) |
 | 继续推进 / 领取下一批任务 | `deck-master continue --project …` | 返回稳定 pending_tasks，不重复提问 |
 | 提交宿主结果 | `deck-master task accept --project … --task-id … --operation-id … --produced-against … --result result.json` | 信封形状见 CLI 输出与 [result-envelope 例](../../docs/specs/deck-master-rebuild-v1/examples/roundtrips/result-envelope/README.md) |
+| 生成蓝图 | `continue` 返回 `kind=blueprint` | [Codex 蓝图执行方法](references/blueprint-svg.md) |
 | 修改页 | `task accept`（repair 信封，仅 scope_pages 内） | [content-methods](references/content-methods.md) |
 | 查看与交付 | `view`（T05 起可用）、`check`、`export` | 工作台与导出规则见 spec 09/07 |
 
@@ -27,6 +31,7 @@ create --draft / import draft / compose 结果**第一次形成至少一页后�
 - 任务输入里只装真实读取的资料与已确认决定；不调用规则 Planner、不循环 claim、不从数组取模配论点、不用固定痛点/风险/CTA 补页。
 - `task accept` 前文件已写入本次 operation 的 staging；`produced_against` 与任务派发 hash 一致，否则先重读新输入。
 - 外部图像调用先按额度事务 begin，完成后 settle；未执行不报 consumed。
+- 蓝图任务只调用当前 Codex 会话的内置 ImageGen；不请求 Provider/API Key。实际提交 prompt、原始图片和可得 invocation ref 一并保存。
 - 没有实际阅图/渲染/人类检查的项目保持未验证标注；工程通过不升级为内容专业。
 - 普通取舍按 spec 决定，不把每一步交回用户；缺工具、缺授权、真实用户决定是停止条件。
 

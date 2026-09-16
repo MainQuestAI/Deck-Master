@@ -122,6 +122,7 @@ def build_parser() -> argparse.ArgumentParser:
     settle.add_argument("--allowance-id", required=True)
     settle.add_argument("--outcome", required=True, choices=["consumed", "not_sent", "unknown"])
     settle.add_argument("--report", default=None)
+    settle.add_argument("--invocation-ref", default=None)
 
     return parser
 
@@ -249,6 +250,7 @@ def _dispatch_call(options) -> int:
             outcome=options.outcome,
             report_bytes=report_bytes,
             report_ext=report_ext,
+            invocation_ref=options.invocation_ref,
         )
     )
 

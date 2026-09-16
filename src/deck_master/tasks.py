@@ -740,10 +740,11 @@ def call_begin(store: Store, *, task_id: str, allowance_id: str, execution_ref: 
     updated_task = {**task, "call_allowances": allowances, "updated_at": _utc_now_iso()}
     validate_task_semantics(updated_task)
     task_ref = store.put_json_object(updated_task)
+    begin_operation_id = f"begin-{task_id}-{allowance_id}"
     new_document = bump_revision(
         document,
         {
-            "operation_id": f"begin-{allowance_id}",
+            "operation_id": begin_operation_id,
             "kind": "task_update",
             "description": f"external call {allowance_id} began",
             "read_set": [],
@@ -751,7 +752,7 @@ def call_begin(store: Store, *, task_id: str, allowance_id: str, execution_ref: 
     )
     new_document = _replace_task_ref(new_document, task, task_ref, store)
     store.commit_change(
-        base_revision=document["revision_id"], document=new_document, operation_id=f"begin-{allowance_id}"
+        base_revision=document["revision_id"], document=new_document, operation_id=begin_operation_id
     )
     return {"status": "started", "task_id": task_id, "allowance_id": allowance_id}
 
@@ -764,6 +765,7 @@ def call_settle(
     outcome: str,
     report_bytes: bytes | None,
     report_ext: str = "json",
+    invocation_ref: str | None = None,
 ) -> dict:
     """Record a real call observation; the report is not a permanent sixth object."""
     if outcome not in CALL_OUTCOMES:
@@ -779,8 +781,20 @@ def call_settle(
         raise EnvelopeError(
             f"(task {task_id})/call_allowances/{allowance_id}", "allowance not allocated"
         )
-    if target.get("state") == "consumed":
+    if target.get("state") == "consumed" and outcome != "consumed":
+        raise TaskConflict(
+            f"(task {task_id})/{allowance_id}",
+            "consumed allowance cannot be changed to another outcome",
+        )
+    if target.get("state") == "consumed" and (
+        not invocation_ref or target.get("invocation_ref") == invocation_ref
+    ):
         return {"status": "already_settled", "task_id": task_id, "allowance_id": allowance_id}
+    if target.get("state") == "consumed" and target.get("invocation_ref"):
+        raise TaskConflict(
+            f"(task {task_id})/{allowance_id}",
+            "settled allowance already has a different invocation_ref",
+        )
     if target.get("state") == "in_flight" and outcome == "consumed" and report_bytes is None:
         raise EnvelopeError(
             f"(task {task_id})/{allowance_id}",
@@ -790,6 +804,8 @@ def call_settle(
     if report_bytes is not None:
         evidence.append(store.put_blob(report_bytes, ext=report_ext))
     target["state"] = {"consumed": "consumed", "not_sent": "released", "unknown": "unknown"}[outcome]
+    if invocation_ref:
+        target["invocation_ref"] = invocation_ref
     target["evidence"] = evidence
     updated_task = {
         **task,
@@ -798,10 +814,11 @@ def call_settle(
     }
     validate_task_semantics(updated_task)
     task_ref = store.put_json_object(updated_task)
+    settle_operation_id = f"settle-{task_id}-{allowance_id}"
     new_document = bump_revision(
         document,
         {
-            "operation_id": f"settle-{allowance_id}",
+            "operation_id": settle_operation_id,
             "kind": "task_update",
             "description": f"call {allowance_id} settled as {outcome}",
             "read_set": [],
@@ -809,7 +826,7 @@ def call_settle(
     )
     new_document = _replace_task_ref(new_document, task, task_ref, store)
     store.commit_change(
-        base_revision=document["revision_id"], document=new_document, operation_id=f"settle-{allowance_id}"
+        base_revision=document["revision_id"], document=new_document, operation_id=settle_operation_id
     )
     return {"status": "settled", "task_id": task_id, "allowance_id": allowance_id, "outcome": outcome}
 

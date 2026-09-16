@@ -100,13 +100,13 @@ def test_full_cli_chain_create_start_accept_view_continue(tmp_path: Path) -> Non
     assert again["reused"] is True
     assert again["url"] == url
 
-    # continue after adoption must NOT re-open compose.
+    # continue after adoption must dispatch blueprint, not re-open compose.
     from deck_master.service import continue_project
 
     follow_up = continue_project(project)
-    assert follow_up["status"] == "content_ready"
-    assert follow_up["pending_tasks"] == []
-    assert follow_up["next_action"] == "production_pending"
+    assert follow_up["status"] == "awaiting_host"
+    assert follow_up["pending_tasks"][0]["kind"] == "blueprint"
+    assert follow_up["next_action"] == "codex_generate_blueprint"
 
     stop_service(project)
 
@@ -122,8 +122,8 @@ def test_import_draft_cli_entry(tmp_path: Path) -> None:
     from deck_master.service import continue_project
 
     follow_up = continue_project(project)
-    assert follow_up["status"] == "content_ready"
-    assert follow_up["next_action"] == "production_pending"
+    assert follow_up["status"] == "awaiting_host"
+    assert follow_up["next_action"] == "codex_generate_blueprint"
 
 
 def test_create_with_draft_adopts_pages(tmp_path: Path) -> None:
@@ -138,8 +138,8 @@ def test_create_with_draft_adopts_pages(tmp_path: Path) -> None:
     from deck_master.service import continue_project
 
     follow_up = continue_project(project)
-    assert follow_up["status"] == "content_ready"
-    assert follow_up["next_action"] == "production_pending"
+    assert follow_up["status"] == "awaiting_host"
+    assert follow_up["next_action"] == "codex_generate_blueprint"
 
 
 def test_invalid_result_json_exits_2(tmp_path: Path) -> None:

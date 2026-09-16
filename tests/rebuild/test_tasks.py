@@ -190,12 +190,10 @@ def test_blueprint_envelope_stages_files_and_prompt(tmp_path: Path) -> None:
         produced_against=task["produced_against"],
         result_payload=compose,
     )
-    # With content adopted, continue reports production pending instead of
-    # re-opening compose (T06 wires blueprint dispatch).
+    # With content adopted, continue dispatches the real T06 blueprint task.
     response = service.continue_project(project)
-    assert response["pending_tasks"] == []
-    assert response["next_action"] == "production_pending"
-    blueprint_task = None
+    assert response["pending_tasks"][0]["kind"] == "blueprint"
+    assert response["next_action"] == "codex_generate_blueprint"
 
     # Blueprint envelope via a dedicated task object built for this test.
     store = service.Store(project)
@@ -204,7 +202,6 @@ def test_blueprint_envelope_stages_files_and_prompt(tmp_path: Path) -> None:
     from deck_master.models import content_identity
 
     produced = content_identity(document)
-    assert blueprint_task is None
     task_obj = tasks_mod.new_task(
         task_id=uuid_hex(12),
         operation_id="blueprint-op-1",

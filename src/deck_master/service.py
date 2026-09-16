@@ -23,6 +23,7 @@ from .content import normalize_design_assets
 from .models import bump_revision, canonical_json_bytes, content_identity, new_document, sha256_bytes, validate_document_semantics
 from .sources import read_source
 from .store import Store, StoreError
+from .production import project_prompt
 
 AUTO_VIEW = "auto_view_then_production"
 CONTINUE_PRODUCTION = "continue_production"
@@ -248,7 +249,7 @@ def _pending_host_tasks(document: dict, store: Store) -> list[dict]:
 
 def task_summary(store: Store, document: dict, task: dict) -> dict:
     """The Host work order: identity, inputs, resolved design, method entrypoints."""
-    return {
+    summary = {
         "task_id": task["task_id"],
         "operation_id": task["operation_id"],
         "kind": task["kind"],
@@ -267,6 +268,64 @@ def task_summary(store: Store, document: dict, task: dict) -> dict:
             "deck_master://skills/deck-master/references/content-examples.md",
         ],
     }
+    if task.get("kind") == "blueprint":
+        for ref in task.get("inputs") or []:
+            try:
+                candidate = store.read_object_json(ref)
+            except (StoreError, UnicodeDecodeError, json.JSONDecodeError):
+                continue
+            if candidate.get("schema_version") == "deck_blueprint_request.v1":
+                summary["production_request"] = candidate
+                break
+    return summary
+
+
+def open_blueprint_task(store: Store, document: dict, page_entry: dict) -> dict:
+    """Dispatch one Codex ImageGen task with one service-owned allowance."""
+    page_ref = page_entry["page"]
+    page = store.read_object_json(page_ref)
+    design = document.get("design_context") or {}
+    request = project_prompt(page, design, design.get("assets") or [])
+    request_ref = store.put_json_object(request)
+    operation_id = _new_operation_id("blueprint")
+    task = tasks_mod.new_task(
+        task_id=uuid.uuid4().hex[:12],
+        operation_id=operation_id,
+        kind="blueprint",
+        scope_pages=[page["page_id"]],
+        instruction=(
+            "Codex专用：读取 production_request.prompt，先领取任务并 begin 本任务的调用额度，"
+            "使用当前会话内置图像工具生成一张真实蓝图；保存原始图片与实际提交prompt，实际阅图后"
+            "settle，再用 blueprint 信封提交。不得请求 Provider/API Key，不得用 fixture 或本地占位图。"
+        ),
+        inputs=[page_ref, request_ref],
+        dependencies=[
+            {"kind": "content", "identity": f"page:{page['page_id']}", "sha256": page_ref["sha256"]},
+            {"kind": "style", "identity": f"style:{request['projection']['visual_spec']['style_ref']}", "sha256": request["projection_sha256"]},
+        ],
+        dispatch_revision=document["revision_id"],
+        produced_against=content_identity(document),
+        cost_class="external_generation",
+    )
+    task_ref = store.put_json_object(task)
+    bumped = bump_revision(
+        document,
+        {
+            "operation_id": f"dispatch-{operation_id}",
+            "kind": "task_update",
+            "description": f"blueprint task opened for page {page['page_id']}",
+            "read_set": [],
+        },
+    )
+    bumped["tasks"] = list(document.get("tasks") or []) + [task_ref]
+    store.commit_change(
+        base_revision=document["revision_id"],
+        document=bumped,
+        operation_id=bumped["change"]["operation_id"],
+    )
+    tasks_mod.allocate_call_allowances(store, task_id=task["task_id"], count=1)
+    refreshed = store.load_document()
+    return tasks_mod._lookup_task(refreshed, task["task_id"], store)
 
 
 def continue_project(project_dir: Path | str) -> dict:
@@ -300,16 +359,27 @@ def continue_project(project_dir: Path | str) -> dict:
             pending_tasks=pending,
             next_action="submit_host_results",
         )
+    missing_blueprint = next(
+        (entry for entry in document.get("pages") or [] if entry.get("page") and not entry.get("blueprint")),
+        None,
+    )
+    if missing_blueprint is not None:
+        task = open_blueprint_task(store, document, missing_blueprint)
+        document = store.load_document()
+        return _response(
+            status="awaiting_host",
+            document=document,
+            requested_action="continue",
+            pending_tasks=[task_summary(store, document, task)],
+            next_action="codex_generate_blueprint",
+        )
     return _response(
         status="content_ready",
         document=document,
         requested_action="continue",
         pending_tasks=[],
         next_action=PRODUCTION_PENDING,
-        findings=[
-            "完整正文已就绪；制作任务（blueprint/reconstruct）随 T06 接入。"
-            "在制作能力落地前不重新成稿、不伪造制作进度。"
-        ],
+        findings=["蓝图已接收；SVG重构与编译随 T08–T10 接入。"],
     )
 
 
