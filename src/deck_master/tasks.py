@@ -12,6 +12,7 @@ facts survive even when product adoption fails (spec 08.6).
 from __future__ import annotations
 
 import json
+import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -617,10 +618,103 @@ def accept_result(
     }
 
 
+def allocate_call_allowances(
+    store: Store, *, task_id: str, count: int, operation_id: str | None = None
+) -> dict:
+    """Reserve ``count`` external-call allowances inside one project transaction.
+
+    Already-settled facts (consumed/released/unknown) are never erased; the
+    project ``policy.external_call_limit`` bounds total held+consumed slots.
+    This is a service-side allocation, not a Host-granted budget (spec 08.6).
+    """
+    if not isinstance(count, int) or count < 1:
+        raise EnvelopeError("(allocate)/count", "count must be a positive integer")
+    document = store.load_document()
+    task = _lookup_task(document, task_id, store)
+    if task.get("status") in ("cancelled", "superseded", "completed"):
+        raise TaskConflict(
+            f"(task {task_id})", f"task is {task.get('status')}; allowances only for active tasks"
+        )
+    policy = document.get("policy") or {}
+    limit = policy.get("external_call_limit")
+    existing = list(task.get("call_allowances") or [])
+    held = sum(
+        1
+        for entry in existing
+        if entry.get("state") in ("reserved", "in_flight", "consumed", "unknown")
+    )
+    if limit is not None and held + count > int(limit):
+        raise TaskConflict(
+            f"(task {task_id})",
+            f"allocation exceeds the project limit: {held} already held/consumed, "
+            f"limit {limit}, requested {count}",
+        )
+    allocated_ids = []
+    next_index = len(existing) + 1
+    for _ in range(count):
+        existing.append(
+            {
+                "allowance_id": f"call-{next_index}",
+                "state": "reserved",
+                "execution_ref": None,
+                "invocation_ref": None,
+                "evidence": [],
+            }
+        )
+        allocated_ids.append(f"call-{next_index}")
+        next_index += 1
+    updated_task = {**task, "call_allowances": existing, "updated_at": _utc_now_iso()}
+    validate_task_semantics(updated_task)
+    task_ref = store.put_json_object(updated_task)
+    bumped = bump_revision(
+        document,
+        {
+            "operation_id": operation_id or f"allocate-{uuid.uuid4().hex[:8]}",
+            "kind": "task_update",
+            "description": f"allocated {count} call allowance(s)",
+            "read_set": [],
+        },
+    )
+    bumped = _replace_task_ref(bumped, task, task_ref, store)
+    store.commit_change(
+        base_revision=document["revision_id"], document=bumped, operation_id=bumped["change"]["operation_id"]
+    )
+    return {
+        "status": "allocated",
+        "task_id": task_id,
+        "allowance_ids": allocated_ids,
+    }
+
+
+def project_has_unknown_calls(document: dict, store: Store) -> str | None:
+    """Any allowance in ``unknown`` pauses new external calls project-wide."""
+    for ref in document.get("tasks") or []:
+        try:
+            task = store.read_object_json(ref)
+        except StoreError:
+            continue
+        for entry in task.get("call_allowances") or []:
+            if entry.get("state") == "unknown":
+                return task.get("task_id")
+    return None
+
+
 def call_begin(store: Store, *, task_id: str, allowance_id: str, execution_ref: str | None) -> dict:
     """Atomically take one pre-allocated call allowance (spec 08.6, T13.min)."""
     document = store.load_document()
     task = _lookup_task(document, task_id, store)
+    if task.get("status") in ("cancelled", "superseded", "completed"):
+        raise TaskConflict(
+            f"(task {task_id})",
+            f"task is {task.get('status')}; cancelled or finished tasks cannot start external calls",
+        )
+    paused_by = project_has_unknown_calls(document, store)
+    if paused_by is not None:
+        raise TaskConflict(
+            f"(task {task_id})",
+            f"external calls are paused project-wide: task {paused_by!r} holds an "
+            "unknown settlement; local fixes may continue",
+        )
     allowances = [dict(entry) for entry in (task.get("call_allowances") or [])]
     target = next((entry for entry in allowances if entry.get("allowance_id") == allowance_id), None)
     if target is None:
