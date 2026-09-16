@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deck Master · Review Workbench</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true"></span>
+    <span class="brand-name">Deck Master</span>
+    <span class="brand-sub">Review Workbench</span>
+  </div>
+  <dl class="meta">
+    <div><dt>project</dt><dd id="meta-project" class="mono">—</dd></div>
+    <div><dt>revision</dt><dd id="meta-revision" class="mono">—</dd></div>
+    <div><dt>pages</dt><dd id="meta-pages" class="mono">—</dd></div>
+    <div><dt>status</dt><dd id="meta-status" class="mono">—</dd></div>
+  </dl>
+</header>
+
+<main class="workspace">
+  <section class="page-rail" aria-label="页面列表">
+    <h2 class="rail-title">Pages</h2>
+    <ul id="page-list" class="page-list"></ul>
+  </section>
+
+  <section class="stage">
+    <nav class="slot-tabs" role="tablist" aria-label="视图槽位">
+      <button class="slot-tab is-active" data-slot="content" role="tab">正文</button>
+      <button class="slot-tab" data-slot="blueprint" role="tab">原图</button>
+      <button class="slot-tab" data-slot="svg" role="tab">SVG</button>
+      <button class="slot-tab" data-slot="ppt" role="tab">PPT</button>
+    </section>
+
+    <section class="slot-panel">
+      <div id="slot-content" class="slot is-active" role="tabpanel">
+        <h1 id="page-title" class="page-title">—</h1>
+        <p id="page-subtitle" class="page-subtitle"></p>
+        <div id="page-body" class="page-body"></div>
+      </div>
+      <div id="slot-blueprint" class="slot" role="tabpanel">
+        <p class="slot-waiting" data-slot="blueprint">原图槽位等待真实蓝图。</p>
+      </div>
+      <div id="slot-svg" class="slot" role="tabpanel">
+        <p class="slot-waiting" data-slot="svg">SVG 槽位等待制作结果。</p>
+      </div>
+      <div id="slot-ppt" class="slot" role="tabpanel">
+        <p class="slot-waiting" data-slot="ppt">PPT 槽位等待编译渲染。</p>
+      </div>
+    </section>
+
+    <section class="task-strip">
+      <h2 class="rail-title">Pending Host Tasks</h2>
+      <ul id="task-list" class="task-list"></ul>
+    </section>
+  </section>
+</main>
+
+<script src="/app.js"></script>
+</body>
+</html>

@@ -4,10 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "deck-master"
-version = "0.9.14a4"
-description = "Local-first Solution Deck Run OS with fixture demo, Review Desk, and release readiness gates."
+version = "1.0.0.dev1"
+description = "Rebuilt Deck Master core: immutable storage, host-task envelopes, native SVG compiler, and read-only workbench."
 readme = "README.md"
-requires-python = ">=3.11,<3.14"
+requires-python = ">=3.12,<3.14"
 license = { text = "Apache-2.0" }
 authors = [
   { name = "MainQuest AI" }
@@ -28,18 +28,27 @@ dev = [
 ]
 
 [tool.ruff]
-target-version = "py311"
+target-version = "py312"
 line-length = 140
 
 [tool.ruff.lint]
 select = ["E9", "F63", "F7", "F82"]
 
-[project.scripts]
-deck-master = "deck_master:main"
+# Console entry stays switched off until T17 (spec 01.1: the new core runs via
+# `python -m deck_master` in an isolated environment during WP01–WP03).
+# [project.scripts]
+# deck-master = "deck_master.cli:main"
 
 [tool.setuptools]
-package-dir = { "" = "scripts" }
-py-modules = ["deck_master", "page_roles"]
+package-dir = { "" = "src" }
+include-package-data = true
 
 [tool.setuptools.packages.find]
-where = ["scripts"]
+where = ["src"]
+
+[tool.setuptools.package-data]
+deck_master = [
+  "resources/contracts/*.json",
+  "resources/static/*",
+  "resources/skills-references/*.md",
+]

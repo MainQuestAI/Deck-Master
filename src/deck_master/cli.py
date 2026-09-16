@@ -67,6 +67,11 @@ def build_parser() -> argparse.ArgumentParser:
     continue_cmd.add_argument("--project", required=True)
     continue_cmd.add_argument("--no-open", action="store_true")
 
+    view_cmd = sub.add_parser("view")
+    view_cmd.add_argument("--project", required=True)
+    view_cmd.add_argument("--open", action="store_true", default=False)
+    view_cmd.add_argument("--json", dest="as_json", action="store_true")
+
     import_draft = sub.add_parser("import-draft")
     import_draft.add_argument("--project", required=True)
     import_draft.add_argument("--input", required=True)
@@ -150,6 +155,12 @@ def main(argv: list[str] | None = None) -> int:
             return _emit(payload)
         if options.command == "continue":
             return _emit(service.continue_project(options.project))
+        if options.command == "view":
+            from .web import open_view, service_status
+
+            if options.open:
+                return _emit(open_view(options.project, open_browser=not options.no_open))
+            return _emit(service_status(options.project))
         if options.command == "import":
             return _emit(
                 service.import_asset(

@@ -29,3 +29,5 @@ tests/_ap_*/
 
 # Re-ignore bytecode caches under un-ignored source dirs (e.g. scripts/build/)
 **/__pycache__/
+skills-references/
+src/deck_master/resources/skills-references/

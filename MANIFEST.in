@@ -1,0 +1,6 @@
+# MANIFEST.in — rebuilt src-layout package (T05).
+include LICENSE
+include NOTICE
+include THIRD_PARTY_NOTICES.md
+include pyproject.toml
+recursive-include src/deck_master/resources *.json *.css *.js *.html *.md
