@@ -109,11 +109,25 @@ def test_server_serves_real_data_and_files(tmp_path: Path) -> None:
 
 def test_service_reuse_returns_same_url(tmp_path: Path) -> None:
     project, _ = _prepared_project(tmp_path)
-    first = open_view(project, open_browser=False)
-    second = open_view(project, open_browser=False)
-    assert first["review_url"]
-    assert second["review_url"] == first["review_url"], "same project reuses the running service"
-    assert second["reused"] is True
+    try:
+        first = open_view(project, open_browser=False)
+        second = open_view(project, open_browser=False)
+        assert first["review_url"]
+        assert second["review_url"] == first["review_url"], "same project reuses the running service"
+        assert second["reused"] is True
+    finally:
+        from deck_master.web import stop_service
+
+        stop_service(project)
+        # The detached process must be gone after the explicit stop.
+        import urllib.request
+
+        try:
+            urllib.request.urlopen(first["review_url"].rstrip("/") + "/api/health", timeout=1)
+            still_up = True
+        except Exception:
+            still_up = False
+        assert not still_up, "stop_service must terminate the detached server"
 
 
 def test_view_without_document_reports_unavailable(tmp_path: Path) -> None:
