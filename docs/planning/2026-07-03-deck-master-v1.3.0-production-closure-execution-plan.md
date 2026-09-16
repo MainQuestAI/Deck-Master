@@ -463,6 +463,10 @@ benchmark 私有资产作为第四类前置条件单独准备，但不进入 git
 
 ## 7. 完成定义
 
+> **2026-09-16 更正（T01.04）：**本节是当时合同/流程层面的完成口径，不构成内容专业、蓝图忠实或客户可用的证据；`ppt-master` 外部认证不是 Deck Master 自身的质量验收。完整更正与新验收基线见
+> [2026-09-16-incident-narrative-correction.md](2026-09-16-incident-narrative-correction.md) 与
+> [Deck Master 重建 v1.1 规格包](../specs/deck-master-rebuild-v1/START_HERE_FOR_CODEX.md)。以下原文保留。
+
 按当前仓状态，v1.3.0 Production Closure 的核心完成定义已经满足：
 
 1. `ppt-master` 已通过 production backend 认证；

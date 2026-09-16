@@ -10,6 +10,30 @@ agents working in this repository.
 2. `docs/agent-task-index.md` for user-intent to command routing.
 3. `docs/agent-recovery-playbook.md` for blocked-state repair decisions.
 4. `docs/contracts/` for runtime JSON contracts and schema truth.
+5. For mainline rebuild work: `docs/specs/deck-master-rebuild-v1/task-cards/README.md`
+   first, then `task-cards/<T-NN>.md` and `inventory/baseline-record.md`.
+
+## Rebuild Baseline (v1.1)
+
+The active implementation baseline for the mainline rebuild is
+`docs/specs/deck-master-rebuild-v1/` (spec pack v1.1). Rules for this effort:
+
+- New core code lives in `src/deck_master/` (src layout). It must never import
+  the old namespaces `runtime`, `workflow`, `high_density`, `preview`, or
+  `build` (the old scripts tree), and must not borrow implementations through
+  `sys.path` inserts. Enforced by `tests/rebuild/test_package_boundary.py`.
+- Execute work one task card at a time from `task-cards/` (25 cards, 90 ACs,
+  exactly one final owner per AC). Early `min` slices may ship before a card
+  closes, but never omit original-image comparison, immutable originals,
+  atomic writes, or cancel/late-result protection.
+- Extraction sources are fixed per file in `inventory/baseline-record.md`
+  (B0 `2a866cf…`, K0 `2c5a4c50…`). Migrate function by function; never merge
+  or cherry-pick PR31/K0 wholesale.
+- T01 froze the per-path disposition baseline in `inventory/old-files.csv`.
+  No old file is deleted before T24 verifies behavior migration and reference
+  zeroing. Never delete user runs, source material, third-party skills, fonts,
+  or historical artifacts. Do not reset the working tree or run
+  `git clean -fdx`.
 
 ## Project Truth
 
