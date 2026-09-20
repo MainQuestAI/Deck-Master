@@ -81,6 +81,8 @@ def _parse_svg(data: bytes, *, page_id: str, assets: dict[str, str] | None = Non
         if el.get('style'):
             for declaration in el.attrib.pop('style').split(';'):
                 if not declaration.strip():continue
+                if ':' not in declaration:
+                    raise SvgError(f'{page_id}/{el.get("id", tag)}: malformed style declaration {declaration.strip()!r}')
                 key,value=declaration.split(':',1)
                 if key.strip() not in ('fill','stroke','stroke-width','stroke-linecap','stroke-linejoin','stroke-miterlimit','opacity','fill-opacity','stroke-opacity','font-family','font-size','font-weight','letter-spacing','text-anchor'):
                     raise SvgError(f'{page_id}: unsupported style property {key}')
@@ -162,6 +164,14 @@ def _parse_svg(data: bytes, *, page_id: str, assets: dict[str, str] | None = Non
             if min(base['width'],base['height'])<=0:raise SvgError(f'{page_id}/{identity}: image bounds must be positive')
             shapes.append(base);return
         if tag=='text':
+            def finite(raw, label):
+                try:
+                    value=float(raw)
+                except (TypeError, ValueError):
+                    raise SvgError(f'{page_id}/{identity}: {label} must use unitless pixels')
+                if not math.isfinite(value):
+                    raise SvgError(f'{page_id}/{identity}: {label} must use unitless pixels')
+                return value
             children=list(el)
             if any(x.tag.split('}')[-1]!='tspan' for x in children):
                 raise SvgError(f'{page_id}/{identity}: only direct tspan in text')
@@ -174,12 +184,12 @@ def _parse_svg(data: bytes, *, page_id: str, assets: dict[str, str] | None = Non
                     raise SvgError(f'{page_id}/{identity}: inline tspan requires explicit x position')
                 c={**attrs,**child.attrib}
                 c['x']=c.get('x',cursor.get('x','0'))
-                c['y']=str(float(c.get('y',cursor.get('y','0')))+float(c.get('dy','0')))
-                if 'dx' in c: c['x']=str(float(c['x'])+float(c['dx']))
+                c['y']=str(finite(c.get('y',cursor.get('y','0')),'y')+finite(c.get('dy','0'),'dy'))
+                if 'dx' in c: c['x']=str(finite(c['x'],'x')+finite(c['dx'],'dx'))
                 runs.append((child.text or '',c));cursor=c
                 if child.tail and child.tail.strip(): raise SvgError(f'{page_id}/{identity}: trailing inline text unsupported')
             for i,(text,a) in enumerate(runs):
-                shapes.append(transformed({**base,'id':f'{identity}:{i}','text':text,'x':float(a.get('x',0)), 'y':float(a.get('y',0)), 'font_size':float(a.get('font-size',24)), 'font_family':a.get('font-family','Noto Sans SC').split(',')[0].strip(' \"\''), 'letter_spacing':float(a.get('letter-spacing',0)),'bold':a.get('font-weight','400') in ('bold','600','700','800','900'),'anchor':a.get('text-anchor','start'),'fill':gradient(a.get('fill',base['fill']),definitions,f'{page_id}/{identity}')},matrix))
+                shapes.append(transformed({**base,'id':f'{identity}:{i}','text':text,'x':finite(a.get('x',0),'x'), 'y':finite(a.get('y',0),'y'), 'font_size':finite(a.get('font-size',24),'font-size'), 'font_family':a.get('font-family','Noto Sans SC').split(',')[0].strip(' \"\''), 'letter_spacing':finite(a.get('letter-spacing',0),'letter-spacing'),'bold':a.get('font-weight','400') in ('bold','600','700','800','900'),'anchor':a.get('text-anchor','start'),'fill':gradient(a.get('fill',base['fill']),definitions,f'{page_id}/{identity}')},matrix))
             return
         if tag=='tspan': raise SvgError(f'{page_id}/{identity}: orphan tspan')
         if tag=='rect':

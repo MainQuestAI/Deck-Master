@@ -524,7 +524,7 @@
     "implementation": "对比B0/K0提取SVG解析，建立受控子集和纯接口；Host单写SVG；禁止反向import旧engine；首版形状文字可编辑，图表/表格非Office原生数据对象；不要求Host补chart数据接口；本卡只完成解析/IR/API契约，原生绘制归T09，隔离产PPT验收AC-K01归T10",
     "acceptance_ids": "AC-K09,AC-B06",
     "failure_return": "抽取牵出旧状态则切依赖，不整目录搬入",
-    "status": "in_progress",
+    "status": "implemented_verified",
     "start_after": "T01边界,T02.min",
     "early_delivery": "T08.min：独立SVG接口与当前事故页实际子集",
     "card": "T08.md",
@@ -541,7 +541,7 @@
         "title": "比较并提取独立接口",
         "work": "逐项比较B0/K0转换实现与依赖；建立SvgInput/CompileOptions/CompileResult",
         "deliverable_and_check": "只传SVG/资产/参数可调用，compiler不读取HOME/旧OS/审批",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -551,7 +551,7 @@
         "title": "实现SVG到派生IR",
         "work": "解析受控元素、嵌套变换和属性；保留text/node/edge绑定与element定位",
         "deliverable_and_check": "Host只交SVG；IR由同份SVG派生，无第二份手写Scene",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -561,7 +561,7 @@
         "title": "实现自包含资源和明确诊断",
         "work": "本地symbol/use与批准图片解析；不支持特性给page/element/feature/recovery",
         "deliverable_and_check": "脚本、事件、实体扩展与外部可执行引用拒绝；正常不支持图形不静默删除",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -571,7 +571,7 @@
         "title": "固定配置与编译输出接口",
         "work": "canvas/font/asset由调用方传入；输入字节一致性检查；输出到新目录交store采用",
         "deliverable_and_check": "读取中输入变化不能登记成功，CompileResult只报告真实产物诊断",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -581,7 +581,7 @@
         "title": "交付事故页所需最小子集",
         "work": "按实际原图需要完成SVG解析与IR投影，将图标、连线、文字完整交给T09绘制；不在本卡重复实现原生绘制",
         "deliverable_and_check": "解析保留全部必要元素和定位，纯接口和错误诊断可测试；实际隔离PPT生成在T10关闭AC-K01",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       }
     ]

@@ -1,4 +1,4 @@
-﻿subtask_id,task_id,work_package,title,work,deliverable_and_check,status,execution_unit
+subtask_id,task_id,work_package,title,work,deliverable_and_check,status,execution_unit
 T01.01,T01,WP01,核验开发与提取基线,记录当前分支/SHA/工作树、B0和K0可解析性、当前安装解释器与模块来源；对B0至当前的差异补充映射,基线记录能区分源码、远端、安装版本；不改已有历史,not_started,internal_step
 T01.02,T01,WP01,展开完整文件处置表,运行只读清单工具；关联old-files/new-files/contracts/tests/skills/root配置；未知路径逐项注明用途与处置,全部跟踪路径有保留、提取、重写、归档或退役去向，用户资料单列不删除,not_started,internal_step
 T01.03,T01,WP01,固定提取边界,标记新包禁用旧命名空间及compiler反向依赖；给每项提取标B0/K0文件与SHA,后续开发可直接找到实现来源和行为测试，不整包合并K0,not_started,internal_step
@@ -35,11 +35,11 @@ T07.02,T07,WP02,处理新增文案与错字,对照来源判断新增事实、建
 T07.03,T07,WP02,贯通正文和结构边,关系说明与可见label_ref分开；正文atom保留，结构ID不重复打印,只读/回写和建设状态可对照；不用在每条边重复节点名,not_started,internal_step
 T07.04,T07,WP02,保持原图谱系与明确重设计,识别已知下游预览及其派生链；拒绝把它当自身原始参考；用户新设计建立新起点,改编码/缩放不洗掉已知身份；旧还原失败保留,not_started,internal_step
 T07.05,T07,WP02,交付T07.min往返,将真实原图与编辑后Page一起交reconstruct；小文案修订可沿用布局，大改按需重设计,一次实际图文往返记录可供T10；不靠重生图隐藏正文问题,not_started,internal_step
-T08.01,T08,WP02,比较并提取独立接口,逐项比较B0/K0转换实现与依赖；建立SvgInput/CompileOptions/CompileResult,只传SVG/资产/参数可调用，compiler不读取HOME/旧OS/审批,not_started,internal_step
-T08.02,T08,WP02,实现SVG到派生IR,解析受控元素、嵌套变换和属性；保留text/node/edge绑定与element定位,Host只交SVG；IR由同份SVG派生，无第二份手写Scene,not_started,internal_step
-T08.03,T08,WP02,实现自包含资源和明确诊断,本地symbol/use与批准图片解析；不支持特性给page/element/feature/recovery,脚本、事件、实体扩展与外部可执行引用拒绝；正常不支持图形不静默删除,not_started,internal_step
-T08.04,T08,WP02,固定配置与编译输出接口,canvas/font/asset由调用方传入；输入字节一致性检查；输出到新目录交store采用,读取中输入变化不能登记成功，CompileResult只报告真实产物诊断,not_started,internal_step
-T08.05,T08,WP02,交付事故页所需最小子集,按实际原图需要完成SVG解析与IR投影，将图标、连线、文字完整交给T09绘制；不在本卡重复实现原生绘制,解析保留全部必要元素和定位，纯接口和错误诊断可测试；实际隔离PPT生成在T10关闭AC-K01,not_started,internal_step
+T08.01,T08,WP02,比较并提取独立接口,逐项比较B0/K0转换实现与依赖；建立SvgInput/CompileOptions/CompileResult,只传SVG/资产/参数可调用，compiler不读取HOME/旧OS/审批,implemented_verified,internal_step
+T08.02,T08,WP02,实现SVG到派生IR,解析受控元素、嵌套变换和属性；保留text/node/edge绑定与element定位,Host只交SVG；IR由同份SVG派生，无第二份手写Scene,implemented_verified,internal_step
+T08.03,T08,WP02,实现自包含资源和明确诊断,本地symbol/use与批准图片解析；不支持特性给page/element/feature/recovery,脚本、事件、实体扩展与外部可执行引用拒绝；正常不支持图形不静默删除,implemented_verified,internal_step
+T08.04,T08,WP02,固定配置与编译输出接口,canvas/font/asset由调用方传入；输入字节一致性检查；输出到新目录交store采用,读取中输入变化不能登记成功，CompileResult只报告真实产物诊断,implemented_verified,internal_step
+T08.05,T08,WP02,交付事故页所需最小子集,按实际原图需要完成SVG解析与IR投影，将图标、连线、文字完整交给T09绘制；不在本卡重复实现原生绘制,解析保留全部必要元素和定位，纯接口和错误诊断可测试；实际隔离PPT生成在T10关闭AC-K01,implemented_verified,internal_step
 T09.01,T09,WP02,修方向和边界几何,保留原line端点与方向；圆/椭圆变换求正确极值而非四点采样,负斜率、反向线和旋转r10圆的实际XML/边界符合独立数值期待,not_started,internal_step
 T09.02,T09,WP02,修画笔零值与组合,fill/stroke/gradient stop/group opacity显式区分None与0；保留颜色和有效描边,零透明度真实写入PPT，组合透明度和渐变反例可读回,not_started,internal_step
 T09.03,T09,WP02,修字重字体与中文排版,800/900不降normal；保留tspan基线/行距/run；记录实际字体匹配与声明fallback,文字XML与SVG/PPT局部渲染同时对照，拼接全文正确不能抵扣布局错误,not_started,internal_step

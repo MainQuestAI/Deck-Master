@@ -222,9 +222,10 @@ def _parse_path(path_data: str, *, element_id: str, visual_id: str = "") -> list
             previous_quadratic_control, previous_cubic_control = control, None
         elif upper == "A":
             rx, ry, rotation = number(), number(), number()
-            large_arc, sweep = int(number()), int(number())
-            if large_arc not in {0, 1} or sweep not in {0, 1}:
+            large_arc_value, sweep_value = number(), number()
+            if large_arc_value not in (0.0, 1.0) or sweep_value not in (0.0, 1.0):
                 raise SvgNativeError(f"SVG arc flags must be 0 or 1 on {element_id}", element_id=element_id, visual_id=visual_id, property_name="d")
+            large_arc, sweep = int(large_arc_value), int(sweep_value)
             target = point(number(), number(), relative)
             arc_segments = _arc_cubics(current, rx, ry, rotation, large_arc, sweep, target)
             commands.extend(arc_segments)
