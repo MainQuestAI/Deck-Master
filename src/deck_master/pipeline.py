@@ -72,6 +72,8 @@ def readback(pptx_path,pages,expected_pages):
     with zipfile.ZipFile(pptx_path) as z:
         presentation=ET.fromstring(z.read('ppt/presentation.xml'))
         slide_ids=presentation.findall('p:sldIdLst/p:sldId',ns)
+        sld_sz=presentation.find('p:sldSz',ns)
+        slide_cx=int(sld_sz.get('cx'));slide_cy=int(sld_sz.get('cy'))
         relationships=ET.fromstring(z.read('ppt/_rels/presentation.xml.rels'))
         targets={r.get('Id'):r.get('Target') for r in relationships if r.get('TargetMode')!='External'}
         slide_paths=[]
@@ -94,9 +96,84 @@ def readback(pptx_path,pages,expected_pages):
             for atom in visible_atoms(page):
                 if atom.get('text') and normalize(atom['text']) not in joined:
                     findings.append({'page_id':page['page_id'],'code':'missing_visible_atom','atom_id':atom['atom_id'],'text':atom['text']})
-            for node in root.findall('.//a:rPr',ns):
-                if float(node.get('sz','0'))<600 or any(int(a.get('val','100000'))==0 for a in node.findall('.//a:alpha',ns)):
-                    findings.append({'page_id':page['page_id'],'code':'hidden_or_tiny_text'})
+            # AC-K10: a coverage-blocking layer hides ALL text (transparent or
+            # under 6pt). Locally small/decorative runs do not fail the page.
+            run_nodes=root.findall('.//a:rPr',ns)
+            if texts and run_nodes:
+                def hidden_or_tiny(props):
+                    try:small=float(props.get('sz','0'))<600
+                    except ValueError:small=False
+                    transparent=any(int(a.get('val','100000'))==0 for a in props.findall('.//a:alpha',ns))
+                    return small or transparent
+                if all(hidden_or_tiny(props) for props in run_nodes):
+                    findings.append({'page_id':page['page_id'],'code':'hidden_or_tiny_text','detail':'all text runs are transparent or under 6pt'})
+            # AC-K10: real text overflow — a shape box leaving the slide bounds.
+            for sp in root.findall('.//p:sp',ns):
+                name_node=sp.find('p:nvSpPr/p:cNvPr',ns)
+                xfrm=sp.find('p:spPr/a:xfrm',ns)
+                if name_node is None or xfrm is None:continue
+                off=xfrm.find('a:off',ns);ext=xfrm.find('a:ext',ns)
+                if off is None or ext is None:continue
+                x,y=int(off.get('x')),int(off.get('y'));w,h=int(ext.get('cx')),int(ext.get('cy'))
+                if x<0 or y<0 or x+w>slide_cx or y+h>slide_cy:
+                    findings.append({'page_id':page['page_id'],'code':'shape_outside_slide','element':name_node.get('name'),'bounds':[x,y,w,h],'slide':[slide_cx,slide_cy]})
+            # AC-K08: verify declared node/edge relations against the actual
+            # slide geometry, located via data-node-ref/data-edge-ref bindings.
+            visual=page.get('visual_spec') or {}
+            nodes=visual.get('nodes') or []
+            edges=visual.get('edges') or []
+            ppt_by_name={}
+            for sp in root.findall('.//p:sp',ns):
+                name_node=sp.find('p:nvSpPr/p:cNvPr',ns)
+                if name_node is not None:ppt_by_name[name_node.get('name')]=sp
+            def shape_name(s):return s.get('atom_id') or s['id']
+            def sp_center(sp):
+                off=sp.find('p:spPr/a:xfrm/a:off',ns);ext=sp.find('p:spPr/a:xfrm/a:ext',ns)
+                if off is None or ext is None:return None
+                return (int(off.get('x'))+int(ext.get('cx'))/2,int(off.get('y'))+int(ext.get('cy'))/2)
+            def edge_endpoints(sp):
+                path=sp.find('p:spPr/a:custGeom/a:pathLst/a:path',ns)
+                if path is None:return None
+                off=sp.find('p:spPr/a:xfrm/a:off',ns)
+                if off is None:return None
+                ox,oy=int(off.get('x')),int(off.get('y'))
+                pts=[]
+                for child in path:
+                    op=child.tag.rsplit('}',1)[-1]
+                    if op=='close':continue
+                    pt=child.find('a:pt',ns)
+                    if pt is None:return None
+                    pts.append((ox+int(pt.get('x')),oy+int(pt.get('y'))))
+                if len(pts)<2:return None
+                return pts[0],pts[-1]
+            node_centers={}
+            for node in nodes:
+                node_id=node.get('node_id')
+                refs=[s for s in source['shapes'] if s.get('node_ref')==node_id]
+                center=None
+                for candidate in refs:
+                    sp=ppt_by_name.get(shape_name(candidate))
+                    if sp is not None:
+                        center=sp_center(sp);break
+                if center is None:
+                    findings.append({'page_id':page['page_id'],'code':'missing_node','node_id':node_id})
+                else:
+                    node_centers[node_id]=center
+            for edge in edges:
+                edge_id=edge.get('edge_id')
+                refs=[s for s in source['shapes'] if s.get('edge_ref')==edge_id]
+                sp=next((ppt_by_name.get(shape_name(s)) for s in refs if shape_name(s) in ppt_by_name),None)
+                if sp is None:
+                    findings.append({'page_id':page['page_id'],'code':'missing_edge','edge_id':edge_id})
+                    continue
+                if edge.get('direction') in ('both','undirected'):continue
+                start,end=edge_endpoints(sp)
+                from_center=node_centers.get(edge.get('from'));to_center=node_centers.get(edge.get('to'))
+                if start is None or from_center is None or to_center is None:continue
+                d_start_from=(start[0]-from_center[0])**2+(start[1]-from_center[1])**2
+                d_start_to=(start[0]-to_center[0])**2+(start[1]-to_center[1])**2
+                if d_start_to<d_start_from:
+                    findings.append({'page_id':page['page_id'],'code':'reversed_arrow','edge_id':edge_id,'from':edge.get('from'),'to':edge.get('to'),'element':sp.find('p:nvSpPr/p:cNvPr',ns).get('name')})
             stats.append({'page_id':page['page_id'],'text_runs':len(texts),'native_shapes':len(root.findall('.//p:sp',ns))})
     return {'status':'fail' if findings else 'pass','findings':findings,'pages':stats,'visual_review':'not_evaluated','desktop_editing':'not_evaluated'}
 

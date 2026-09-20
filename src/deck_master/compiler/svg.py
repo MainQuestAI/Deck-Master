@@ -139,7 +139,7 @@ def _parse_svg(data: bytes, *, page_id: str, assets: dict[str, str] | None = Non
                 if not math.isfinite(value):raise ValueError()
                 return value
             except ValueError: raise SvgError(f'{page_id}/{identity}: {key} must use unitless pixels')
-        base=dict(id=identity,kind=tag,fill=attrs.get('fill','#000000'),stroke=attrs.get('stroke','none'),stroke_width=num('stroke-width',1),stroke_linecap=attrs.get('stroke-linecap','butt'),stroke_linejoin=attrs.get('stroke-linejoin','miter'),stroke_miterlimit=num('stroke-miterlimit',4),opacity=num('opacity',1),fill_opacity=num('fill-opacity',1),stroke_opacity=num('stroke-opacity',1),atom_id=el.get('data-atom-id'))
+        base=dict(id=identity,kind=tag,fill=attrs.get('fill','#000000'),stroke=attrs.get('stroke','none'),stroke_width=num('stroke-width',1),stroke_linecap=attrs.get('stroke-linecap','butt'),stroke_linejoin=attrs.get('stroke-linejoin','miter'),stroke_miterlimit=num('stroke-miterlimit',4),opacity=num('opacity',1),fill_opacity=num('fill-opacity',1),stroke_opacity=num('stroke-opacity',1),atom_id=el.get('data-atom-id'),node_ref=el.get('data-node-ref'),edge_ref=el.get('data-edge-ref'))
         if any(not 0 <= base[key] <= 1 for key in ('opacity','fill_opacity','stroke_opacity')) or base['stroke_width'] < 0:
             raise SvgError(f'{page_id}/{identity}: invalid opacity or stroke width')
         if 'opacity' in el.attrib:

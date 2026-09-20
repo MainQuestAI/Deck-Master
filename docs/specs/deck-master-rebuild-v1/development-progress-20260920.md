@@ -33,3 +33,17 @@ T09 已关闭（见下节）。WP02 余下大卡为 T10（真实渲染与首段�
 - 验证：定向 20 passed；`tests/rebuild` 全量 193 passed（180+13）。
 - 状态同步：tasks.json/subtasks.csv 中 T09 及 T09.01–T09.05 标记 `implemented_verified`；T09.md 交接回填已记录。
 - 工作树待提交变更：`src/deck_master/compiler/native.py`、`tests/rebuild/test_geometry.py`、`test_paint.py`、新建 `test_text.py`。
+
+## T10 工程 AC 关闭：真实渲染与首段完整闭环（整卡未关）
+
+- 新建 5 个测试模块（20 项，全绿）：`test_compiler_geometry.py`（AC-K14：4:3 Document 走真实 produce 全链，PPT sldSz=9144000×6858000 EMU，prompt 采用 canvas 无 16:9 隐藏默认）；`test_readback.py`（AC-K08/K10：7 项，含 reversed_arrow/missing_node/missing_edge/全文级 hidden_or_tiny/越界定位）；`test_render.py`（AC-K11：rsvg 与 soffice+pdftoppm 真实渲染语义断言，缺 renderer 经 NeedsTool 标未验证）；`test_drawingml.py`（AC-K13：子集支持范围矩阵+子集外显式失败）；`test_compiler_api.py`（AC-K01：HOME/cwd/env 隔离、中途改字节拒绝、失败不发布）。
+- 扩展：`svg.py` IR 捕获 `data-node-ref`/`data-edge-ref`；`pipeline.readback` 新增 missing_node/missing_edge/reversed_arrow（首末点 vs 节点 bbox 中心；直边强语义、曲线边弱语义 limitation 已记录）、全文级 hidden_or_tiny_text（局部装饰豁免）、slide 越界定位。
+- 未发现需修复的既有 bug；现有行为全部回归保留。
+- 验证：定向 20 passed；`tests/rebuild` 全量 **213 passed**（193+20）。
+- 整卡未关闭：AC-B04（两张同业务异布局源图 Host 阅图）、AC-V02（P1 陌生材料——仍等用户到料）、AC-V07（min 证据见 2026-09-16 记录）。
+- 状态同步：tasks.json/subtasks.csv 中 T10.01–T10.04/T10.06 标记 `implemented_verified`，T10 卡保持 in_progress；T10.md 交接回填已记录。
+- 工作树待提交变更：`src/deck_master/compiler/svg.py`、`src/deck_master/pipeline.py`、5 个新测试模块。
+
+## 阶段 1 剩余
+
+WP02：T07 整卡（原图保持与文案往返，in_progress）。WP03：T11 统一审阅解释、T12 局部修改与并发恢复、T14 四视图工作台、T15 导出收口（均 in_progress 待整卡关闭）。

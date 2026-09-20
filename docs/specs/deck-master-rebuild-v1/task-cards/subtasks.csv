@@ -45,12 +45,12 @@ T09.02,T09,WP02,修画笔零值与组合,fill/stroke/gradient stop/group opacity
 T09.03,T09,WP02,修字重字体与中文排版,800/900不降normal；保留tspan基线/行距/run；记录实际字体匹配与声明fallback,文字XML与SVG/PPT局部渲染同时对照，拼接全文正确不能抵扣布局错误,implemented_verified,internal_step
 T09.04,T09,WP02,保留圆角与缩放既有修复,核对B0有效实现；等比和非等比变换下明确支持边界,圆角/图标描边无回退；近似转换有对象级限制说明,implemented_verified,internal_step
 T09.05,T09,WP02,贯通DrawingML并交T09.min,把事故页所需修复先接实际编译；其余声明特性随后补齐,独立坏样例修前失败修后正确；事故页不用重画成更简单卡片,implemented_verified,internal_step
-T10.01,T10,WP02,接真实编译和双段渲染,production调用纯compiler；SVG与PPT各自用真实工具渲染；当前文件写入新Artifact,四视图显示正文/源图/SVG/PPT真实版本；缺renderer明确未验证,not_started,internal_step
-T10.02,T10,WP02,实现实际文件读回,从PPT ZIP/XML读取文字、端点、path/字体/画笔，对照原Page和SVG而非自产trace,删职责、反箭头、隐藏1pt/透明全文均能定位真实异常,not_started,internal_step
-T10.03,T10,WP02,完成首张复杂事故页还原,按原图保留模块/图标/状态/层级/辅助说明，分别阅图像→SVG和SVG→PPT,T10.min交真实可编辑PPT及三方对照、问题记录；不能只凭对象数量完成,not_started,internal_step
-T10.04,T10,WP02,扩展三页与布局敏感性,覆盖架构职责、图表/表格、另一方案页；同业务换不同布局原图，几何随之改变,三页正文/图形完整；换图不只是换hash，简化版不能冒充还原,not_started,internal_step
+T10.01,T10,WP02,接真实编译和双段渲染,production调用纯compiler；SVG与PPT各自用真实工具渲染；当前文件写入新Artifact,四视图显示正文/源图/SVG/PPT真实版本；缺renderer明确未验证,implemented_verified,internal_step
+T10.02,T10,WP02,实现实际文件读回,从PPT ZIP/XML读取文字、端点、path/字体/画笔，对照原Page和SVG而非自产trace,删职责、反箭头、隐藏1pt/透明全文均能定位真实异常,implemented_verified,internal_step
+T10.03,T10,WP02,完成首张复杂事故页还原,按原图保留模块/图标/状态/层级/辅助说明，分别阅图像→SVG和SVG→PPT,T10.min交真实可编辑PPT及三方对照、问题记录；不能只凭对象数量完成,implemented_verified,internal_step
+T10.04,T10,WP02,扩展三页与布局敏感性,覆盖架构职责、图表/表格、另一方案页；同业务换不同布局原图，几何随之改变,三页正文/图形完整；换图不只是换hash，简化版不能冒充还原,implemented_verified,internal_step
 T10.05,T10,WP02,尽早运行P1迁移,主链一旦可用用陌生材料生成首稿，记录业务缺陷并回内容方法或制作层,P1用后归开发；精修制作样例与默认内容能力分开,not_started,internal_step
-T10.06,T10,WP02,完成声明子集与设计一致性,补全06.2特性、4:3/字体/Logo、视图比例和实际读回；按依赖补全T03/T09范围,完整卡关闭须覆盖AC-K13/K14，min成功不等于所有格式/特性完成,not_started,internal_step
+T10.06,T10,WP02,完成声明子集与设计一致性,补全06.2特性、4:3/字体/Logo、视图比例和实际读回；按依赖补全T03/T09范围,完整卡关闭须覆盖AC-K13/K14，min成功不等于所有格式/特性完成,implemented_verified,internal_step
 T11.01,T11,WP03,实现唯一审阅解释,evaluate_current统一检查适用性/依赖/must_fix/needs_judgment；接收读取UI导出复用,同一当前Review在各入口结果一致，空registry/空findings不自动满分,not_started,internal_step
 T11.02,T11,WP03,连接真实检查对象,读取实际PPT页面/备注/隐藏项/XML与当前页集合，共享解析但按检查目的判断,正文、关系、内部指令泄漏有具体定位；页码/业务词不误判,not_started,internal_step
 T11.03,T11,WP03,实现三类视觉差异复核,正常还原、故意缺节点、合理抗锯齿差异分别实测；需要判断的指标保留问题,严重缩水不能靠revision_required=false清空；accepted_variance有具体观察,not_started,internal_step
