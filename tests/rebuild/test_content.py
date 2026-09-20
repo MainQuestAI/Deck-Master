@@ -282,3 +282,70 @@ def test_restricted_asset_not_auto_allowed() -> None:
     # The gate for external upload lives with the design/production flow (T06);
     # content only guarantees the subset relationship is checkable.
     assert design["allowed_asset_ids"] == ["customer-mark"]
+
+
+def _relation_page(edges):
+    return {
+        'schema_version': 'deck_page_package.v2',
+        'page_id': 'p1',
+        'customer_visible': {
+            'title': '职责与关系',
+            'body_blocks': [{'id': 'b1', 'type': 'paragraph', 'text': '现有系统提交设备条件。'}],
+            'labels': [{'id': 'ro', 'text': '本期只读接口'}],
+        },
+        'visual_spec': {
+            'intent': 'relations',
+            'reference_mode': 'new_design',
+            'nodes': [{'node_id': 'service', 'label_ref': 'atom:p1:label:ro:text', 'status': 'existing'},
+                      {'node_id': 'assistant', 'label_ref': 'atom:p1:label:ro:text', 'status': 'proposed'}],
+            'edges': edges,
+        },
+    }
+
+
+def test_edge_metadata_never_becomes_body_atoms():
+    # AC-B08: relationship text is relation metadata, not copy; visible atoms
+    # only come from customer_visible fields, so edge text is never re-printed
+    # as body content automatically.
+    page = _relation_page([
+        {'edge_id': 'submit', 'from': 'service', 'to': 'assistant', 'direction': 'forward',
+         'relationship': '提交完整设备条件'},
+    ])
+    normalized = check_page(page)
+    texts = [atom['text'] for atom in visible_atoms(normalized)]
+    assert '现有系统提交设备条件。' in texts
+    assert '提交完整设备条件' not in texts
+
+
+def test_edge_label_ref_points_at_real_label_atom_and_roundtrips():
+    # AC-B08: a necessary edge label is kept via label_ref to a real visible
+    # atom, and id assignment/remap keeps that reference intact.
+    page = _relation_page([
+        {'edge_id': 'submit', 'from': 'service', 'to': 'assistant', 'direction': 'forward',
+         'relationship': 'feeds', 'label_ref': 'atom:p1:label:ro:text'},
+    ])
+    normalized = check_page(page)
+    again, id_map = assign_missing_ids(normalized, operation_id='op-1')
+    assert again['visual_spec']['edges'][0]['label_ref'] == 'atom:p1:label:ro:text'
+    assert id_map == []
+    label_atoms = [a for a in visible_atoms(again) if a['kind'] == 'label']
+    assert [a['text'] for a in label_atoms] == ['本期只读接口']
+
+
+def test_edge_with_dangling_endpoints_is_rejected():
+    # AC-B08 counter-case: a relation must actually connect existing nodes.
+    page = _relation_page([
+        {'edge_id': 'ghost-edge', 'from': 'service', 'to': 'missing-node',
+         'direction': 'forward', 'relationship': 'feeds'},
+    ])
+    with pytest.raises(Exception, match='edge endpoints must exist'):
+        check_page(page)
+
+
+def test_edge_unknown_target_property_is_rejected_not_printed():
+    # AC-B08 counter-case: a stray edge.target-style field is a schema
+    # violation (never silently promoted into visible copy).
+    edge = {'edge_id': 'submit', 'from': 'service', 'to': 'assistant', 'direction': 'forward',
+            'relationship': 'feeds', 'target': '提交完整设备条件'}
+    with pytest.raises(Exception):
+        check_page(_relation_page([edge]))

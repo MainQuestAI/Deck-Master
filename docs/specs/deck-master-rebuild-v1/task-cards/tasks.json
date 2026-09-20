@@ -451,7 +451,7 @@
     "implementation": "记录实际原图区域期待，编辑生成文案为新Page；保留原生成版；禁止已知下游回灌；结构边不重复印字",
     "acceptance_ids": "AC-B03,AC-B05,AC-B08,AC-B10",
     "failure_return": "内容不成立回T04；原图结构不足重新设计，不能更换验收答案",
-    "status": "in_progress",
+    "status": "implemented_verified",
     "start_after": "T06.min,T02.min",
     "early_delivery": "T07.min：真实原图、最终正文与独立期待",
     "card": "T07.md",
@@ -470,7 +470,7 @@
         "title": "实际读图并建立上游期待",
         "work": "打开原图识别模块、图标、状态、关系、辅助说明及层级；essential/supporting/decorative按实物登记",
         "deliverable_and_check": "原图区域期待在SVG制作前形成；未识别维度为not_evaluated",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -480,7 +480,7 @@
         "title": "处理新增文案与错字",
         "work": "对照来源判断新增事实、建议和说明；接受内容写新Page，拒绝虚构能力与无依据数字",
         "deliverable_and_check": "新Page有完整对外正文；原生成Page/prompt/图片保持原版",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -490,7 +490,7 @@
         "title": "贯通正文和结构边",
         "work": "关系说明与可见label_ref分开；正文atom保留，结构ID不重复打印",
         "deliverable_and_check": "只读/回写和建设状态可对照；不用在每条边重复节点名",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -500,7 +500,7 @@
         "title": "保持原图谱系与明确重设计",
         "work": "识别已知下游预览及其派生链；拒绝把它当自身原始参考；用户新设计建立新起点",
         "deliverable_and_check": "改编码/缩放不洗掉已知身份；旧还原失败保留",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -510,7 +510,7 @@
         "title": "交付T07.min往返",
         "work": "将真实原图与编辑后Page一起交reconstruct；小文案修订可沿用布局，大改按需重设计",
         "deliverable_and_check": "一次实际图文往返记录可供T10；不靠重生图隐藏正文问题",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       }
     ]

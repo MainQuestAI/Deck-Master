@@ -30,11 +30,11 @@ T06.02,T06,WP02,连接真实blueprint任务,派发实际可读Page、prompt、�
 T06.03,T06,WP02,接入首次调用额度边界,依赖T13.min，在调用前start/begin、之后settle；无用户限制不设三次默认,已发失败、未发和未知分开；本地产物接收失败不抹掉真实调用,not_started,internal_step
 T06.04,T06,WP02,登记真实来源和版本,保存图片实际字节、可得invocation和真实submitted prompt；拿不到时标unknown,记录可与真实工具调用对照，不用当前Page倒填原prompt,not_started,internal_step
 T06.05,T06,WP02,验证设计要求实际生效,同Page传指定画布/Logo/字体/品牌条件与无品牌材料对照,无品牌库可生产，给定VI进入真实prompt和实际阅图；T06.min交出当前页原图,not_started,internal_step
-T07.01,T07,WP02,实际读图并建立上游期待,打开原图识别模块、图标、状态、关系、辅助说明及层级；essential/supporting/decorative按实物登记,原图区域期待在SVG制作前形成；未识别维度为not_evaluated,not_started,internal_step
-T07.02,T07,WP02,处理新增文案与错字,对照来源判断新增事实、建议和说明；接受内容写新Page，拒绝虚构能力与无依据数字,新Page有完整对外正文；原生成Page/prompt/图片保持原版,not_started,internal_step
-T07.03,T07,WP02,贯通正文和结构边,关系说明与可见label_ref分开；正文atom保留，结构ID不重复打印,只读/回写和建设状态可对照；不用在每条边重复节点名,not_started,internal_step
-T07.04,T07,WP02,保持原图谱系与明确重设计,识别已知下游预览及其派生链；拒绝把它当自身原始参考；用户新设计建立新起点,改编码/缩放不洗掉已知身份；旧还原失败保留,not_started,internal_step
-T07.05,T07,WP02,交付T07.min往返,将真实原图与编辑后Page一起交reconstruct；小文案修订可沿用布局，大改按需重设计,一次实际图文往返记录可供T10；不靠重生图隐藏正文问题,not_started,internal_step
+T07.01,T07,WP02,实际读图并建立上游期待,打开原图识别模块、图标、状态、关系、辅助说明及层级；essential/supporting/decorative按实物登记,原图区域期待在SVG制作前形成；未识别维度为not_evaluated,implemented_verified,internal_step
+T07.02,T07,WP02,处理新增文案与错字,对照来源判断新增事实、建议和说明；接受内容写新Page，拒绝虚构能力与无依据数字,新Page有完整对外正文；原生成Page/prompt/图片保持原版,implemented_verified,internal_step
+T07.03,T07,WP02,贯通正文和结构边,关系说明与可见label_ref分开；正文atom保留，结构ID不重复打印,只读/回写和建设状态可对照；不用在每条边重复节点名,implemented_verified,internal_step
+T07.04,T07,WP02,保持原图谱系与明确重设计,识别已知下游预览及其派生链；拒绝把它当自身原始参考；用户新设计建立新起点,改编码/缩放不洗掉已知身份；旧还原失败保留,implemented_verified,internal_step
+T07.05,T07,WP02,交付T07.min往返,将真实原图与编辑后Page一起交reconstruct；小文案修订可沿用布局，大改按需重设计,一次实际图文往返记录可供T10；不靠重生图隐藏正文问题,implemented_verified,internal_step
 T08.01,T08,WP02,比较并提取独立接口,逐项比较B0/K0转换实现与依赖；建立SvgInput/CompileOptions/CompileResult,只传SVG/资产/参数可调用，compiler不读取HOME/旧OS/审批,implemented_verified,internal_step
 T08.02,T08,WP02,实现SVG到派生IR,解析受控元素、嵌套变换和属性；保留text/node/edge绑定与element定位,Host只交SVG；IR由同份SVG派生，无第二份手写Scene,implemented_verified,internal_step
 T08.03,T08,WP02,实现自包含资源和明确诊断,本地symbol/use与批准图片解析；不支持特性给page/element/feature/recovery,脚本、事件、实体扩展与外部可执行引用拒绝；正常不支持图形不静默删除,implemented_verified,internal_step

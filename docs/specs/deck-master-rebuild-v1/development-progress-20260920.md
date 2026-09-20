@@ -46,4 +46,16 @@ T09 已关闭（见下节）。WP02 余下大卡为 T10（真实渲染与首段�
 
 ## 阶段 1 剩余
 
-WP02：T07 整卡（原图保持与文案往返，in_progress）。WP03：T11 统一审阅解释、T12 局部修改与并发恢复、T14 四视图工作台、T15 导出收口（均 in_progress 待整卡关闭）。
+WP02：T07 已关闭（见下节）。WP03：T11 统一审阅解释、T12 局部修改与并发恢复、T14 四视图工作台、T15 导出收口（均 in_progress 待整卡关闭）。
+
+## T07 整卡关闭：原图保持与文案往返
+
+- 新增 7 项测试（test_content.py +4、test_production.py +3），四条工程 AC 全部关闭：
+  - AC-B03 = `test_copy_roundtrip_keeps_original_page_prompt_and_blueprint`：真实 Store 流（draft→continue→采纳蓝图信封），edit_page 产生新对象/新 revision，原 Page、蓝图字节、prompt blob 旧 ref 重读字节不变；小改正文后下一任务为 reconstruct（不强制重生原图）。
+  - AC-B05 = `test_previews_never_become_reference_and_reencode_fails_binding`：重编码（单像素扰动）的 svg_preview/ppt_preview 不进入 reference_images；以重编码 sha 绑定的 SVG 在 accept 时被 EnvelopeError 拒绝。
+  - AC-B08 = 4 项：edge 元数据永不进正文 atom；label_ref 指向真实可见 atom 且 assign_missing_ids 往返保留；悬空端点拒；未知 target 属性被 schema 拒绝。
+  - AC-B10 = `test_new_design_mode_and_failed_review_is_preserved`：reference_mode=new_design 进 prompt projection；失败 review 旧 ref 字节不变、状态不被后续通过回填。
+- 本卡未发现需修复的 src bug；仅测试构造对既有契约如实对齐（edit_page 状态词、节点必填字段、dependencies 带 kind、finding kind 枚举）。
+- 验证：定向 27 passed；`tests/rebuild` 全量 **220 passed**（213+7）。
+- 状态同步：tasks.json/subtasks.csv 中 T07 及子任务标记 `implemented_verified`；T07.md 交接回填已记录。
+- 工作树待提交变更：`tests/rebuild/test_content.py`、`test_production.py`。
