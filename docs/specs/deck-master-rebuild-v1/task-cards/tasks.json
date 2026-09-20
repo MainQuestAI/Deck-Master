@@ -595,7 +595,7 @@
     "implementation": "修端点/圆边界/800900字重/0透明度/多行与圆角；保留实际PPT XML反例",
     "acceptance_ids": "AC-K02,AC-K03,AC-K04,AC-K05,AC-K06,AC-K07",
     "failure_return": "内核失败修对应函数，不把源图简化绕过",
-    "status": "in_progress",
+    "status": "implemented_verified",
     "start_after": "T08.min",
     "early_delivery": "T09.min：当前事故页涉及的绘制缺陷先修；不简化原图绕过",
     "card": "T09.md",
@@ -616,7 +616,7 @@
         "title": "修方向和边界几何",
         "work": "保留原line端点与方向；圆/椭圆变换求正确极值而非四点采样",
         "deliverable_and_check": "负斜率、反向线和旋转r10圆的实际XML/边界符合独立数值期待",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -626,7 +626,7 @@
         "title": "修画笔零值与组合",
         "work": "fill/stroke/gradient stop/group opacity显式区分None与0；保留颜色和有效描边",
         "deliverable_and_check": "零透明度真实写入PPT，组合透明度和渐变反例可读回",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -636,7 +636,7 @@
         "title": "修字重字体与中文排版",
         "work": "800/900不降normal；保留tspan基线/行距/run；记录实际字体匹配与声明fallback",
         "deliverable_and_check": "文字XML与SVG/PPT局部渲染同时对照，拼接全文正确不能抵扣布局错误",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -646,7 +646,7 @@
         "title": "保留圆角与缩放既有修复",
         "work": "核对B0有效实现；等比和非等比变换下明确支持边界",
         "deliverable_and_check": "圆角/图标描边无回退；近似转换有对象级限制说明",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -656,7 +656,7 @@
         "title": "贯通DrawingML并交T09.min",
         "work": "把事故页所需修复先接实际编译；其余声明特性随后补齐",
         "deliverable_and_check": "独立坏样例修前失败修后正确；事故页不用重画成更简单卡片",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       }
     ]

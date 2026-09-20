@@ -3,7 +3,6 @@
 B0 2a866cf: keep explicit alpha=0; no business runtime imports.
 The current IR contains only source-derived coordinates and visible text.
 """
-import math
 from pathlib import Path
 from PIL import ImageFont, ImageColor
 from pptx import Presentation
@@ -71,10 +70,8 @@ def emit(pages, width, height, fonts, output):
                 if s['anchor']=='middle':x-=w/2
                 if s['anchor']=='end':x-=w
                 y=s['y']-s['font_size']*.88;h=s['font_size']*1.5
-                if s.get('rotation'):
-                    theta=math.radians(s['rotation']);dx=x+w/2-s['x'];dy=y+h/2-s['y']
-                    x=s['x']+math.cos(theta)*dx-math.sin(theta)*dy-w/2
-                    y=s['y']+math.sin(theta)*dx+math.cos(theta)*dy-h/2
+                # The IR anchor is already in final page coordinates; glyph rotation is
+                # applied once through sh.rotation below, so the box stays at the anchor.
                 sh=slide.shapes.add_textbox(X(x),Y(y),S(w),S(h))
                 tf=sh.text_frame;tf.clear();tf.word_wrap=False;tf.vertical_anchor=MSO_ANCHOR.TOP
                 from pptx.enum.text import MSO_AUTO_SIZE
@@ -82,12 +79,14 @@ def emit(pages, width, height, fonts, output):
                 tf.margin_left=tf.margin_right=tf.margin_top=tf.margin_bottom=0
                 p=tf.paragraphs[0];p.alignment={'middle':PP_ALIGN.CENTER,'end':PP_ALIGN.RIGHT}.get(s['anchor'],PP_ALIGN.LEFT)
                 p.space_before=p.space_after=Pt(0)
-                run=p.add_run();run.text=s['text'];run.font.size=Pt(s['font_size']*k*.75);run.font.name=family;run.font.bold=s['bold']
+                run=p.add_run();run.text=s['text']
                 props=run._r.get_or_add_rPr()
+                # Fill properties must precede latin/ea/cs in a:rPr.
+                paint(props,s['fill'],s['opacity']*s['fill_opacity'])
+                run.font.size=Pt(s['font_size']*k*.75);run.font.name=family;run.font.bold=s['bold']
                 for name in ('ea','cs'):
                     e=OxmlElement('a:'+name);e.set('typeface',family);props.append(e)
                 props.set('spc',str(round(s.get('letter_spacing',0)*k*75)))
-                paint(props,s['fill'],s['opacity']*s['fill_opacity'])
             elif s['kind'] in ('rect','circle','ellipse'):
                 shape=MSO_SHAPE.OVAL if s['kind']!='rect' else MSO_SHAPE.ROUNDED_RECTANGLE if s.get('rx') else MSO_SHAPE.RECTANGLE
                 sh=slide.shapes.add_shape(shape,X(s['x']),Y(s['y']),S(s['width']),S(s['height']))
@@ -117,8 +116,8 @@ def emit(pages, width, height, fonts, output):
             sh.name=s.get('atom_id') or s['id']
             for node in list(sh._element):
                 if node.tag.rsplit('}',1)[-1]=='style':sh._element.remove(node)
-            sh._element.spPr.append(OxmlElement('a:effectLst'))
             if s['kind']!='text':
+                # CT_ShapeProperties order: geometry, fill, a:ln, effectLst.
                 paint(sh._element.spPr,s['fill'],s['opacity']*s['fill_opacity'])
                 line=sh._element.spPr.get_or_add_ln();line.set('w',str(S(s['stroke_width'])))
                 paint(line,s['stroke'],s['opacity']*s['stroke_opacity'])
@@ -130,4 +129,7 @@ def emit(pages, width, height, fonts, output):
                 join=OxmlElement('a:'+joins[s.get('stroke_linejoin','miter')])
                 if s.get('stroke_linejoin','miter')=='miter':join.set('lim',str(round(s.get('stroke_miterlimit',4)*100000)))
                 line.append(join)
+                sh._element.spPr.append(OxmlElement('a:effectLst'))
+            else:
+                sh._element.spPr.append(OxmlElement('a:effectLst'))
     pres.save(output)

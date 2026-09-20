@@ -20,4 +20,16 @@
 
 ## 下一动作
 
-T09 绘制缺陷逐项修复（依赖 T08，已满足）：把 T08 声明子集的通用几何测试延展到原生 DrawingML 绘制层，关闭 T09 整卡。
+T09 已关闭（见下节）。WP02 余下大卡为 T10（真实渲染与首段完整闭环）。
+
+## T09 整卡关闭：绘制缺陷逐项修复
+
+- 修复 3 处 DrawingML 写出缺陷（`src/deck_master/compiler/native.py`）：
+  1. shape spPr 子元素顺序错误（fill 落在 ln/effectLst 之后，违反 DrawingML 序列，桌面 PowerPoint 会判需修复文件）→ geom→fill→ln→effectLst；
+  2. text rPr 子元素顺序错误（fill 落在 latin/ea/cs 之后）→ fill→latin→ea→cs；
+  3. 旋转文本双重变换（预定位块 + sh.rotation，探针实测盒子漂移出负坐标）→ 删除预定位，glyph 旋转只由 sh.rotation 承担一次。
+- 测试：新建 `tests/rebuild/test_text.py`（5 项，字体经 fc-match 解析本机 Hiragino Sans GB，含 fallback 与缺字体报错契约）；扩充 `test_geometry.py`（+5：正/负斜率与反向线端点方向、旋转圆 190500×190500 EMU、旋转椭圆解析极值、等比缩放圆角与图标描边、非等比带描边显式 SvgError）；扩充 `test_paint.py`（+2：fill/stroke opacity=0 写入、组 opacity 相乘含 0）。全部经 compile_deck 真实 PPT 解包 slide XML 读回。
+- AC-K02–K07 六条由本卡关闭；桌面 PowerPoint 实际打开编辑仍归 T10/T23 人工层。
+- 验证：定向 20 passed；`tests/rebuild` 全量 193 passed（180+13）。
+- 状态同步：tasks.json/subtasks.csv 中 T09 及 T09.01–T09.05 标记 `implemented_verified`；T09.md 交接回填已记录。
+- 工作树待提交变更：`src/deck_master/compiler/native.py`、`tests/rebuild/test_geometry.py`、`test_paint.py`、新建 `test_text.py`。
