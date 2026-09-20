@@ -604,6 +604,37 @@ def import_draft(
     )
 
 
+def _rendering_state(store, page, design):
+    """The design slice a page's SVG/previews actually depend on (spec 08.8)."""
+    from .models import canonical_json_bytes
+    from .production import resolve_design
+    effective, style = resolve_design(page, design, design.get('assets') or [])
+    assets_by_id = {a['asset_id']: a for a in design.get('assets') or []}
+    assets = sorted((aid, (assets_by_id.get(aid) or {}).get('artifact', {}).get('sha256'))
+                    for aid in effective.get('allowed_asset_ids') or [])
+    return canonical_json_bytes({'style': style, 'assets': assets})
+
+
+def _apply_rendering_invalidation(store, new_document, old_design, new_design):
+    """Clear SVG/previews (and outputs) only on pages whose real rendering
+    dependencies changed; blueprints are preserved as history (spec 08.8)."""
+    from .models import canonical_json_bytes
+    canvas_changed = canonical_json_bytes(old_design.get('canvas') or {}) != \
+        canonical_json_bytes(new_design.get('canvas') or {})
+    invalidated = []
+    for index, entry in enumerate(new_document['pages']):
+        page = store.read_object_json(entry['page'])
+        if canvas_changed or \
+                _rendering_state(store, page, old_design) != _rendering_state(store, page, new_design):
+            invalidated.append(index)
+    for index in invalidated:
+        slot_entry = new_document['pages'][index]
+        slot_entry['svg'] = slot_entry['svg_preview'] = slot_entry['ppt_preview'] = None
+    if invalidated:
+        new_document['outputs'] = {key: None for key in new_document['outputs']}
+    return invalidated
+
+
 def import_asset(
     project_dir: Path | str,
     *,
@@ -656,6 +687,11 @@ def import_asset(
     from .models import validate_document_semantics
 
     validate_document_semantics(new_document)
+    # AC-S13/AC-S08-scope: new bytes under the same asset_id invalidate only
+    # the pages whose real rendering dependencies changed; unused assets and
+    # unrelated pages keep their SVG/previews and current outputs.
+    _apply_rendering_invalidation(store, new_document, design, new_design)
+    validate_document_semantics(new_document)
     store.commit_change(
         base_revision=document["revision_id"], document=new_document, operation_id=operation_id
     )
@@ -664,6 +700,58 @@ def import_asset(
         status="registered",
         document=document,
         requested_action="import asset",
+    )
+
+
+def update_design(
+    project_dir: Path | str,
+    *,
+    design_context: dict,
+    base_revision: str | None = None,
+) -> dict:
+    """Commit a new design_context version with real-dependency invalidation.
+
+    A default-style change clears SVG/previews only on pages whose effective
+    style depends on it; pages pinned to another style_ref and styles no page
+    uses stay untouched. A physical canvas change invalidates every page
+    (group regression). Original blueprints are always preserved as history.
+    """
+    store = Store(Path(project_dir).expanduser())
+    document = store.load_document()
+    if base_revision is not None and base_revision != document["revision_id"]:
+        from .store import ConflictError
+        raise ConflictError("revision", "project changed; reload before updating design")
+    old_design = document.get("design_context") or {}
+    new_design = dict(design_context)
+    operation_id = _new_operation_id("design")
+    new_document = bump_revision(
+        document,
+        {
+            "operation_id": operation_id,
+            "kind": "design_update",
+            "description": "design_context updated (styles/canvas)",
+            "read_set": [],
+        },
+    )
+    new_document["design_context"] = new_design
+    from .models import validate_document_semantics
+    from .production import resolve_design as _resolve_design
+
+    validate_document_semantics(new_document)
+    # Validate every page resolves under the new design before committing.
+    for entry in new_document["pages"]:
+        page = store.read_object_json(entry["page"])
+        _resolve_design(page, new_design, new_design.get("assets") or [])
+    _apply_rendering_invalidation(store, new_document, old_design, new_design)
+    validate_document_semantics(new_document)
+    store.commit_change(
+        base_revision=document["revision_id"], document=new_document, operation_id=operation_id
+    )
+    document = store.load_document()
+    return _response(
+        status="updated",
+        document=document,
+        requested_action="update design",
     )
 
 

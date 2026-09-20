@@ -57,12 +57,12 @@ T11.03,T11,WP03,实现三类视觉差异复核,正常还原、故意缺节点、
 T11.04,T11,WP03,实现真返修闭环,repair生成新产物；新Review用replaces/finding_id关联旧失败并实际复查,review-fixed正负例真实接收；只改fixed、旧subject或过期观察均不关闭,implemented_verified,internal_step
 T11.05,T11,WP03,如实记录审阅身份与证据,区分tool/Host/human、execution_ref和实际阅图；原图期待独立于输出登记,同人两个名字不算独立；模型互相同意不等于专业人类验收,implemented_verified,internal_step
 T11.06,T11,WP03,补内容判断与失效检查,分别复算计算、核对事实和审阅有条件建议；方法或产物变化只失效对应结论,54/120可核算，无依据40%被识别；旧pass不盖当前fail,implemented_verified,internal_step
-T12.01,T12,WP03,先交单页修改T12.min,request_edit带scope和read_set；正文/边修改产新Page/SVG/PPT并刷新文件检查；分别验证轻微文本修改和需重生蓝图的重大目标页修改,目标p09按实际影响修改，必要时重生该页蓝图；其他未受影响页蓝图/SVG hash不变、无新增外部制作；旧件可找回,not_started,internal_step
-T12.02,T12,WP03,实现影响范围与页集合,按正文/有效样式/字体/资产/共用事实依赖传播；Document负责增删重排,删页不由glob混回；重排仅更新实际页码/引用与装配，未用样式不重生,not_started,internal_step
-T12.03,T12,WP03,实现幂等与并发重基,相同operation同结果复用，异结果冲突；不同页可重基，同页和共享输入变化拒绝,两写者并发反例无最后写覆盖；超时重交不生重复版本,not_started,internal_step
-T12.04,T12,WP03,实现取消和晚到结果保护,start/cancel/accept同项目事务；本地子进程仅管理所属进程；晚到可结算调用但不采用内容,cancel先赢不写，accept先赢不删产物；取消后的同hash结果也不接受,not_started,internal_step
-T12.05,T12,WP03,实现历史恢复和目录搬迁,restore生成新revision并保留操作事实；object相对Ref；源重映射核验hash、字体重新定位,复制项目后产物可看，调用消耗/未知/停止不回滚，缺源只影响需原文动作,not_started,internal_step
-T12.06,T12,WP03,验证跨页与设计修改,共用事实、默认style、独立style、同asset换字节、画布变化成组回归,所有相关页更新；不相关页保留；完整卡由T11复核当前状态后关闭,not_started,internal_step
+T12.01,T12,WP03,先交单页修改T12.min,request_edit带scope和read_set；正文/边修改产新Page/SVG/PPT并刷新文件检查；分别验证轻微文本修改和需重生蓝图的重大目标页修改,目标p09按实际影响修改，必要时重生该页蓝图；其他未受影响页蓝图/SVG hash不变、无新增外部制作；旧件可找回,implemented_verified,internal_step
+T12.02,T12,WP03,实现影响范围与页集合,按正文/有效样式/字体/资产/共用事实依赖传播；Document负责增删重排,删页不由glob混回；重排仅更新实际页码/引用与装配，未用样式不重生,implemented_verified,internal_step
+T12.03,T12,WP03,实现幂等与并发重基,相同operation同结果复用，异结果冲突；不同页可重基，同页和共享输入变化拒绝,两写者并发反例无最后写覆盖；超时重交不生重复版本,implemented_verified,internal_step
+T12.04,T12,WP03,实现取消和晚到结果保护,start/cancel/accept同项目事务；本地子进程仅管理所属进程；晚到可结算调用但不采用内容,cancel先赢不写，accept先赢不删产物；取消后的同hash结果也不接受,implemented_verified,internal_step
+T12.05,T12,WP03,实现历史恢复和目录搬迁,restore生成新revision并保留操作事实；object相对Ref；源重映射核验hash、字体重新定位,复制项目后产物可看，调用消耗/未知/停止不回滚，缺源只影响需原文动作,implemented_verified,internal_step
+T12.06,T12,WP03,验证跨页与设计修改,共用事实、默认style、独立style、同asset换字节、画布变化成组回归,所有相关页更新；不相关页保留；完整卡由T11复核当前状态后关闭,implemented_verified,internal_step
 T13.01,T13,WP03,提前实现调用许可T13.min,在项目锁内reserve/start/begin/settle；统计所有最新Task含历史消耗与未知,首次T06真实调用前可用；最后名额仅一个执行者取得，重复begin不能重发,not_started,internal_step
 T13.02,T13,WP03,处理调用结果与未知,已发成功/失败consumed，确认未发released，未知占额暂停新外部调用；本地修正继续,timeout不自动退额；真实调用发生但业务接收失败仍可结算,not_started,internal_step
 T13.03,T13,WP03,处理基础取消、用户停止与限额调整,实现基础取消和用户停止，调整上限不抹除调用消耗；取消在途未知不释放；复用T02/T04基本事务,真实调用前停止生效；未知调用保留，不以取消重新获得名额；完整恢复矩阵在T13.06,not_started,internal_step

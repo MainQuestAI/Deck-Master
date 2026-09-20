@@ -847,7 +847,7 @@
     "implementation": "读集重基、稳定页ID/增删重排、跨页事实、取消竞态、晚到保护、恢复与重定位；先单页编辑/无关页不重生，再补全并发与恢复；恢复内容不重置调用记录；样式/资产按实际依赖失效",
     "acceptance_ids": "AC-S03,AC-S04,AC-S05,AC-S06,AC-S07,AC-S08,AC-S09,AC-S10,AC-K15,AC-S13",
     "failure_return": "发现无关重生则修依赖；不清整目录或删除旧产物",
-    "status": "in_progress",
+    "status": "implemented_verified",
     "start_after": "T02.min,T10.min",
     "early_delivery": "T12.min：一次单页修改、旧原件保留/无关页不重生；先实际阅图再补统一自动关联",
     "card": "T12.md",
@@ -872,7 +872,7 @@
         "title": "先交单页修改T12.min",
         "work": "request_edit带scope和read_set；正文/边修改产新Page/SVG/PPT并刷新文件检查；分别验证轻微文本修改和需重生蓝图的重大目标页修改",
         "deliverable_and_check": "目标p09按实际影响修改，必要时重生该页蓝图；其他未受影响页蓝图/SVG hash不变、无新增外部制作；旧件可找回",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -882,7 +882,7 @@
         "title": "实现影响范围与页集合",
         "work": "按正文/有效样式/字体/资产/共用事实依赖传播；Document负责增删重排",
         "deliverable_and_check": "删页不由glob混回；重排仅更新实际页码/引用与装配，未用样式不重生",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -892,7 +892,7 @@
         "title": "实现幂等与并发重基",
         "work": "相同operation同结果复用，异结果冲突；不同页可重基，同页和共享输入变化拒绝",
         "deliverable_and_check": "两写者并发反例无最后写覆盖；超时重交不生重复版本",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -902,7 +902,7 @@
         "title": "实现取消和晚到结果保护",
         "work": "start/cancel/accept同项目事务；本地子进程仅管理所属进程；晚到可结算调用但不采用内容",
         "deliverable_and_check": "cancel先赢不写，accept先赢不删产物；取消后的同hash结果也不接受",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -912,7 +912,7 @@
         "title": "实现历史恢复和目录搬迁",
         "work": "restore生成新revision并保留操作事实；object相对Ref；源重映射核验hash、字体重新定位",
         "deliverable_and_check": "复制项目后产物可看，调用消耗/未知/停止不回滚，缺源只影响需原文动作",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -922,7 +922,7 @@
         "title": "验证跨页与设计修改",
         "work": "共用事实、默认style、独立style、同asset换字节、画布变化成组回归",
         "deliverable_and_check": "所有相关页更新；不相关页保留；完整卡由T11复核当前状态后关闭",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       }
     ]

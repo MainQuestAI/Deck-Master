@@ -348,3 +348,43 @@ def uuid_hex(length: int) -> str:
     import uuid
 
     return uuid.uuid4().hex[:length]
+
+
+# ---------------------------------------------------------------------------
+# T12 AC-S09: cancellation races — cancel-first never lands the late product,
+# accept-first cannot be revoked by a later cancel.
+
+
+def test_cancel_wins_late_result_is_settled_not_adopted(tmp_path: Path) -> None:
+    project, task = _make_project(tmp_path)
+    service.task_cancel(project, task_id=task["task_id"], reason="user stopped the call")
+    envelope = _compose_envelope()
+    with pytest.raises(tasks_mod.TaskConflict, match="after cancellation"):
+        service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+                              produced_against=task["produced_against"], result_payload=envelope)
+    store = Store(project)
+    document = store.load_document()
+    assert document["pages"] == [], "cancel-first: the late product never enters current"
+    settled = store.read_object_json(document["tasks"][-1])
+    assert settled["status"] == "cancelled"
+    # The identical late result is replay-idempotent and still not adopted.
+    replay = service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+                                   produced_against=task["produced_against"], result_payload=envelope)
+    assert replay["status"] == "already_applied"
+    assert Store(project).load_document()["pages"] == []
+
+
+def test_accept_wins_cancel_cannot_revoke_adopted_product(tmp_path: Path) -> None:
+    project, task = _make_project(tmp_path)
+    envelope = _compose_envelope()
+    outcome = service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+                                    produced_against=task["produced_against"], result_payload=envelope)
+    assert outcome["status"] == "accepted"
+    store = Store(project)
+    adopted = store.load_document()
+    assert len(adopted["pages"]) == len(envelope["pages"])
+    with pytest.raises(tasks_mod.TaskConflict, match="cancel refused"):
+        service.task_cancel(project, task_id=task["task_id"], reason="too late")
+    current = store.load_document()
+    assert current["pages"] == adopted["pages"], "adopted product survives the refused cancel"
+    assert current["revision_id"] == adopted["revision_id"]

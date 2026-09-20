@@ -119,3 +119,468 @@ def test_asset_registration_updates_design(tmp_path: Path) -> None:
     design = document["design_context"]
     assert any(entry["asset_id"] == "demo-logo" for entry in design["assets"])
     assert "demo-logo" in design["allowed_asset_ids"]
+
+
+# ---------------------------------------------------------------------------
+# T12 evidence: local edit blast radius (AC-S05), shared-fact updates
+# (AC-S06), page-set changes (AC-S07) and asset byte invalidation (AC-S13).
+
+import io
+import zipfile
+import xml.etree.ElementTree as ET
+from copy import deepcopy
+
+from PIL import Image
+
+from deck_master import service
+from deck_master.editing import edit_page
+from deck_master.models import bump_revision, content_identity
+from deck_master.pipeline import artifact as adopt_artifact, produce
+from deck_master.store import Store
+
+
+def _draft_page(page_id, title, body):
+    return {
+        "schema_version": "deck_page_package.v2",
+        "page_id": page_id,
+        "customer_visible": {"title": title, "body_blocks": [
+            {"id": "b1", "type": "paragraph", "text": body}]},
+        "visual_spec": {"intent": "demo", "reference_mode": "new_design"},
+    }
+
+
+def _png_bytes(color=(245, 246, 250)):
+    buffer = io.BytesIO()
+    Image.new("RGB", (320, 180), color).save(buffer, format="PNG")
+    return buffer.getvalue()
+
+
+def _blueprint_envelope(page_ref):
+    return {
+        "kind": "blueprint",
+        "files": [{"file_id": "b", "path": "reference.png", "media_type": "image/png"}],
+        "artifact_specs": [{
+            "file_id": "b", "role": "blueprint", "page_id": page_ref["page_id"],
+            "derived_from": [page_ref["ref"]],
+            "provenance": {"source_type": "unknown", "tool": "host-imagegen", "invocation_ref": None,
+                           "generated_from_page": page_ref["ref"]},
+        }],
+    }
+
+
+def _svg_for(page):
+    title = page["customer_visible"]["title"]
+    body = page["customer_visible"]["body_blocks"][0]["text"]
+    return (f'<svg viewBox="0 0 320 180"><rect width="320" height="180" fill="#ffffff"/>'
+            f'<text x="20" y="80" font-family="Hiragino Sans GB" font-size="20">{title}</text>'
+            f'<text x="20" y="130" font-family="Hiragino Sans GB" font-size="14">{body}</text>'
+            f'</svg>').encode()
+
+
+def _drive_blueprints(project, store):
+    while True:
+        document = store.load_document()
+        missing = next((e for e in document["pages"] if not e.get("blueprint")), None)
+        if missing is None:
+            return document
+        task = service.continue_project(project)["pending_tasks"][0]
+        assert task["kind"] == "blueprint"
+        staging = project / ".deckmaster" / "staging" / task["operation_id"]
+        staging.mkdir(parents=True, exist_ok=True)
+        (staging / "reference.png").write_bytes(_png_bytes())
+        envelope = _blueprint_envelope({"page_id": missing["page_id"], "ref": missing["page"]})
+        outcome = service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+                                        produced_against=task["produced_against"], result_payload=envelope)
+        assert outcome["status"] == "accepted"
+
+
+def _drive_reconstructs(project, store):
+    while True:
+        document = store.load_document()
+        missing = next((e for e in document["pages"] if not e.get("svg")), None)
+        if missing is None:
+            return document
+        task = service.continue_project(project)["pending_tasks"][0]
+        assert task["kind"] == "reconstruct", task["kind"]
+        blueprint_sha = store.read_object_json(missing["blueprint"])["file"]["sha256"]
+        page = store.read_object_json(missing["page"])
+        svg = _svg_for(page).replace(b"<svg ", f'<svg data-blueprint-sha256="{blueprint_sha}" '.encode(), 1)
+        staging = project / ".deckmaster" / "staging" / task["operation_id"]
+        staging.mkdir(parents=True, exist_ok=True)
+        (staging / "page.svg").write_bytes(svg)
+        envelope = {"kind": "reconstruct",
+                    "files": [{"file_id": "s", "path": "page.svg", "media_type": "image/svg+xml"}],
+                    "artifact_specs": [{"file_id": "s", "role": "svg", "page_id": missing["page_id"],
+                                        "provenance": {"source_type": "unknown", "tool": "host-reconstruct",
+                                                       "invocation_ref": None}}]}
+        outcome = service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+                                        produced_against=task["produced_against"], result_payload=envelope)
+        assert outcome["status"] == "accepted"
+
+
+def _slide_count(pptx_bytes):
+    with zipfile.ZipFile(io.BytesIO(pptx_bytes)) as archive:
+        root = ET.fromstring(archive.read("ppt/presentation.xml"))
+    ns = {"p": "http://schemas.openxmlformats.org/presentationml/2006/main"}
+    return len(root.findall("p:sldIdLst/p:sldId", ns))
+
+
+def _produced_project(tmp_path, pages):
+    project = tmp_path / "proj"
+    service.create(project, brief="局部修改流", draft={"pages": pages})
+    store = Store(project)
+    _drive_blueprints(project, store)
+    _drive_reconstructs(project, store)
+    report = produce(project)
+    assert report["status"] == "pass", report["findings"]
+    return project, Store(project)
+
+
+def test_single_page_edit_keeps_unrelated_page_artifacts_and_reassembles(tmp_path):
+    # AC-S05: editing p09 leaves the unrelated page's blueprint/SVG bytes and
+    # refs untouched, opens only a reconstruct (no new external image making),
+    # and the whole PPT is re-assembled afterwards; old artifacts stay findable.
+    project, store = _produced_project(tmp_path, [
+        _draft_page("p09", "条件收集", "在售后门户嵌入表单。"),
+        _draft_page("p10", "处理方案", "自动分派到值班组。"),
+    ])
+    document = store.load_document()
+    p10 = next(e for e in document["pages"] if e["page_id"] == "p10")
+    p10_hashes = {slot: store.read_object_json(p10[slot])["file"]["sha256"]
+                  for slot in ("blueprint", "svg")}
+    old_pptx_bytes = store.read_object_bytes(
+        store.read_object_json(document["outputs"]["pptx"])["file"])
+
+    p09_page = store.read_object_json(document["pages"][0]["page"])
+    edited = deepcopy(p09_page)
+    edited["customer_visible"]["body_blocks"][0]["text"] = "在售后门户与小程序双端嵌入表单。"
+    result = edit_page(store.project_root, page=edited, base_revision=document["revision_id"],
+                       page_hash=document["pages"][0]["page"]["sha256"], operation_id="edit-p09")
+    assert result["status"] == "edited"
+    after = store.load_document()
+    p10_after = next(e for e in after["pages"] if e["page_id"] == "p10")
+    assert p10_after["blueprint"] == p10["blueprint"] and p10_after["svg"] == p10["svg"]
+    assert all(store.read_object_json(p10_after[slot])["file"]["sha256"] == p10_hashes[slot]
+               for slot in p10_hashes)
+    assert after["pages"][0]["svg"] is None
+
+    # No new external image-making: the next step is a local reconstruct task.
+    response = service.continue_project(project)
+    assert response["next_action"] == "codex_reconstruct_svg"
+    assert response["pending_tasks"][0]["kind"] == "reconstruct"
+
+    # Re-assemble the whole deck and prove the untouched page still compiles in.
+    fresh = store.load_document()
+    task = response["pending_tasks"][0]
+    blueprint_sha = store.read_object_json(fresh["pages"][0]["blueprint"])["file"]["sha256"]
+    svg = _svg_for(edited).replace(b"<svg ", f'<svg data-blueprint-sha256="{blueprint_sha}" '.encode(), 1)
+    staging = project / ".deckmaster" / "staging" / task["operation_id"]
+    staging.mkdir(parents=True, exist_ok=True)
+    (staging / "page.svg").write_bytes(svg)
+    service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+                          produced_against=task["produced_against"], result_payload={
+                              "kind": "reconstruct",
+                              "files": [{"file_id": "s", "path": "page.svg", "media_type": "image/svg+xml"}],
+                              "artifact_specs": [{"file_id": "s", "role": "svg", "page_id": "p09",
+                                                  "provenance": {"source_type": "unknown",
+                                                                 "tool": "host-reconstruct",
+                                                                 "invocation_ref": None}}]})
+    report = produce(project)
+    assert report["status"] == "pass"
+    new_pptx = store.load_document()["outputs"]["pptx"]
+    assert _slide_count(store.read_object_bytes(store.read_object_json(new_pptx)["file"])) == 2
+    assert store.read_object_bytes(store.read_object_json(new_pptx)["file"]) != old_pptx_bytes
+    assert store.read_object_bytes(store.read_object_json(p10_after["svg"])["file"]).startswith(b"<svg")
+
+
+def test_shared_fact_update_applies_to_all_referencing_pages(tmp_path):
+    # AC-S06: a fact repeated across pages is corrected everywhere through the
+    # full-draft replacement path; no referencing page keeps the old wording.
+    project = tmp_path / "proj"
+    pages = [_draft_page("p1", "背景", "接口条件齐备。"), _draft_page("p2", "方案", "接口条件齐备。")]
+    service.create(project, brief="共用事实", draft={"pages": pages})
+    store = Store(project)
+    before = store.load_document()
+    corrected = []
+    for entry in before["pages"]:
+        page = store.read_object_json(entry["page"])
+        page["customer_visible"]["body_blocks"][0]["text"] = "接口条件已齐备。"
+        corrected.append(page)
+    outcome = service.import_draft(project, draft_payload={"pages": corrected, "page_order": ["p1", "p2"]})
+    assert outcome["status"] == "accepted"
+    after = store.load_document()
+    for entry in after["pages"]:
+        page = store.read_object_json(entry["page"])
+        assert page["customer_visible"]["body_blocks"][0]["text"] == "接口条件已齐备。"
+        assert page["page_id"] in ("p1", "p2")
+    old = store.load_document(before["revision_id"])
+    for entry in old["pages"]:
+        assert store.read_object_json(entry["page"])["customer_visible"]["body_blocks"][0]["text"] == "接口条件齐备。"
+
+
+def test_page_reorder_and_removal_keep_ids_and_history_out_of_current_ppt(tmp_path):
+    # AC-S07: reorder + removal keeps surviving page refs byte-identical, the
+    # removed page's objects stay readable in history, and the re-assembled
+    # PPT contains exactly the current page set.
+    project, store = _produced_project(tmp_path, [
+        _draft_page("p1", "第一页", "正文一。"),
+        _draft_page("p2", "第二页", "正文二。"),
+        _draft_page("p3", "第三页", "正文三。"),
+    ])
+    before = store.load_document()
+    p2_entry = before["pages"][1]
+    p2_svg_ref = p2_entry["svg"]
+    reordered = [store.read_object_json(before["pages"][2]["page"]),
+                 store.read_object_json(before["pages"][0]["page"])]
+    outcome = service.import_draft(project, draft_payload={"pages": reordered, "page_order": ["p3", "p1"]})
+    assert outcome["status"] == "accepted"
+    after = store.load_document()
+    assert [e["page_id"] for e in after["pages"]] == ["p3", "p1"]
+    assert after["pages"][1]["page"] == before["pages"][0]["page"], "reordered page keeps its stable ref"
+    assert after["pages"][0]["page"] == before["pages"][2]["page"]
+    # The removed page's objects remain readable from history.
+    assert store.read_object_bytes(p2_entry["page"]) == store.read_object_bytes(before["pages"][1]["page"])
+    old_svg_bytes = store.read_object_bytes(store.read_object_json(p2_svg_ref)["file"])
+    assert old_svg_bytes.startswith(b"<svg")
+
+    # Re-attach the unchanged SVGs (content-addressed: same bytes, same ref) and
+    # re-assemble: the deleted page never glob-mixes back into the current PPT.
+    from deck_master.pipeline import artifact as adopt
+    work = store.staging_dir / "reattach"
+    work.mkdir(parents=True, exist_ok=True)
+    for entry in after["pages"]:
+        prior = next(e for e in before["pages"] if e["page_id"] == entry["page_id"])
+        svg_bytes = store.read_object_bytes(store.read_object_json(prior["svg"])["file"])
+        svg_file = work / f"{entry['page_id']}.svg"
+        svg_file.write_bytes(svg_bytes)
+        entry["svg"] = adopt(store, svg_file, "svg", page_id=entry["page_id"])
+    bumped = bump_revision(after, {"operation_id": "reattach-svg", "kind": "task_update",
+                                   "description": "reattach unchanged svgs", "read_set": []})
+    bumped["pages"] = after["pages"]
+    store.commit_change(base_revision=after["revision_id"], document=bumped, operation_id="reattach-svg")
+    report = produce(project)
+    assert report["status"] == "pass"
+    pptx = store.load_document()["outputs"]["pptx"]
+    assert _slide_count(store.read_object_bytes(store.read_object_json(pptx)["file"])) == 2
+
+
+def test_asset_byte_change_invalidates_only_referencing_pages(tmp_path):
+    # AC-S13: importing new bytes under the same asset_id clears SVG/previews
+    # and outputs only on pages whose effective design references the asset;
+    # unrelated pages and unused assets stay untouched.
+    logo_v1 = tmp_path / "logo-v1.png"
+    Image.new("RGB", (12, 12), (10, 20, 200)).save(logo_v1)
+    pages = [_draft_page("p1", "带Logo页", "引用品牌Logo。"), _draft_page("p2", "无Logo页", "不引用任何资产。")]
+    pages[0]["visual_spec"]["design_overrides"] = {"allowed_asset_ids": ["logo"]}
+    pages[1]["visual_spec"]["design_overrides"] = {"allowed_asset_ids": []}
+    project = tmp_path / "proj"
+    service.create(project, brief="资产失效", draft={"pages": pages}, design={
+        "assets": [{"asset_id": "logo", "kind": "logo", "file": str(logo_v1), "external_use": "allowed"}],
+        "allowed_asset_ids": ["logo"],
+    })
+    store = Store(project)
+    document = store.load_document()
+    svg_file = tmp_path / "page.svg"
+    svg_file.write_text("<svg viewBox='0 0 10 10'/>")
+    png_file = tmp_path / "preview.png"
+    Image.new("RGB", (8, 6), (240, 240, 240)).save(png_file)
+    bumped = bump_revision(document, {"operation_id": "attach", "kind": "task_update",
+                                      "description": "attach slots", "read_set": []})
+    for entry in bumped["pages"]:
+        entry["svg"] = adopt_artifact(store, svg_file, "svg", page_id=entry["page_id"])
+        entry["svg_preview"] = adopt_artifact(store, png_file, "svg_preview", page_id=entry["page_id"])
+        entry["ppt_preview"] = adopt_artifact(store, png_file, "ppt_preview", page_id=entry["page_id"])
+    pptx_file = tmp_path / "deck.pptx"
+    pptx_file.write_bytes(b"pptx-v1")
+    bumped["outputs"]["pptx"] = adopt_artifact(store, pptx_file, "pptx")
+    store.commit_change(base_revision=document["revision_id"], document=bumped, operation_id="attach")
+    attached = store.load_document()
+
+    logo_v2 = tmp_path / "logo-v2.png"
+    Image.new("RGB", (12, 12), (200, 20, 10)).save(logo_v2)
+    service.import_asset(project, asset_id="logo", kind="logo", file_path=logo_v2)
+    after = store.load_document()
+    p1 = after["pages"][0]
+    p2 = after["pages"][1]
+    assert p1["svg"] is None and p1["svg_preview"] is None and p1["ppt_preview"] is None
+    assert p2["svg"] == attached["pages"][1]["svg"]
+    assert p2["svg_preview"] == attached["pages"][1]["svg_preview"]
+    assert all(value is None for value in after["outputs"].values())
+    new_logo = next(a for a in after["design_context"]["assets"] if a["asset_id"] == "logo")
+    logo_artifact = store.read_object_json(new_logo["artifact"])
+    assert store.read_object_bytes(logo_artifact["file"]) == logo_v2.read_bytes()
+
+    # Registering an asset nobody uses invalidates nothing.
+    other = tmp_path / "unused.png"
+    Image.new("RGB", (5, 5), (1, 2, 3)).save(other)
+    service.import_asset(project, asset_id="unused", kind=" " .strip() or "image", file_path=other)
+    final = store.load_document()
+    assert final["pages"][1]["svg"] == attached["pages"][1]["svg"]
+    assert final["pages"][0]["svg"] is None
+
+
+# ---------------------------------------------------------------------------
+# T12.06 / spec 08.8: style and canvas changes invalidate only real
+# dependents (AC-S13 style dimension + group regression on canvas).
+
+
+def _style_design_pages(tmp_path):
+    def styled(page_id, title, style_ref=None):
+        page = _draft_page(page_id, title, f"{title}的正文。")
+        if style_ref:
+            page["visual_spec"]["style_ref"] = style_ref
+        return page
+
+    pages = [styled("p1", "默认样式页"), styled("p2", "独立样式页", "alt"), styled("p3", "另一默认页")]
+    design = {
+        "styles": [
+            {"style_id": "default", "colors": {"background": "#FFFFFF", "text": "#14213D", "accent": "#1478FF"},
+             "typography": {"body_font_id": "body", "heading_font_id": "heading",
+                            "body_size_pt": 18, "heading_size_pt": 30, "auxiliary_size_pt": 12},
+             "layout_notes": "默认"},
+            {"style_id": "alt", "colors": {"background": "#000000", "text": "#EEEEEE", "accent": "#FF8800"},
+             "typography": {"body_font_id": "body", "heading_font_id": "heading",
+                            "body_size_pt": 16, "heading_size_pt": 28, "auxiliary_size_pt": 12},
+             "layout_notes": "备选"},
+            {"style_id": "unused", "colors": {"background": "#FFFFFF", "text": "#000000", "accent": "#AAAAAA"},
+             "typography": {"body_font_id": "body", "heading_font_id": "heading",
+                            "body_size_pt": 18, "heading_size_pt": 30, "auxiliary_size_pt": 12},
+             "layout_notes": "无人引用"},
+        ],
+        "default_style_id": "default",
+    }
+    project = tmp_path / "proj"
+    service.create(project, brief="样式失效", draft={"pages": pages}, design=design)
+    return project, Store(project)
+
+
+def _attach_design_slots(store):
+    from deck_master.models import bump_revision
+    document = store.load_document()
+    work = store.staging_dir / "design-attach"
+    work.mkdir(parents=True, exist_ok=True)
+    svg_file = work / "page.svg"
+    svg_file.write_text("<svg viewBox='0 0 10 10'/>")
+    png_file = work / "bp.png"
+    png_file.write_bytes(_png_bytes())
+    bumped = bump_revision(document, {"operation_id": "design-attach", "kind": "task_update",
+                                      "description": "attach slots", "read_set": []})
+    for entry in bumped["pages"]:
+        entry["blueprint"] = adopt_artifact(store, png_file, "blueprint", page_id=entry["page_id"])
+        entry["svg"] = adopt_artifact(store, svg_file, "svg", page_id=entry["page_id"])
+    pptx_file = work / "deck.pptx"
+    pptx_file.write_bytes(b"styled-pptx")
+    bumped["outputs"]["pptx"] = adopt_artifact(store, pptx_file, "pptx")
+    store.commit_change(base_revision=document["revision_id"], document=bumped, operation_id="design-attach")
+    return store.load_document()
+
+
+def test_default_style_change_invalidates_only_dependent_pages(tmp_path):
+    # 08.8: changing the default style clears SVG on pages whose effective
+    # style is the default; the independent style_ref page and unused styles
+    # stay untouched.
+    project, store = _style_design_pages(tmp_path)
+    attached = _attach_design_slots(store)
+    design = store.load_document()["design_context"]
+    changed = deepcopy(design)
+    changed["styles"][0]["colors"]["accent"] = "#00AA66"
+    outcome = service.update_design(project, design_context=changed)
+    assert outcome["status"] == "updated"
+    after = store.load_document()
+    assert after["pages"][0]["svg"] is None and after["pages"][2]["svg"] is None
+    assert after["pages"][1]["svg"] == attached["pages"][1]["svg"], "style_ref override page untouched"
+    assert all(value is None for value in after["outputs"].values())
+    for index in range(3):
+        assert after["pages"][index]["blueprint"] == attached["pages"][index]["blueprint"], \
+            "original blueprints are preserved as history"
+
+    # Mutating a style no page references invalidates nothing further.
+    untouched = deepcopy(after["design_context"])
+    untouched["styles"][2]["colors"]["accent"] = "#BBBBBB"
+    service.update_design(project, design_context=untouched)
+    final = store.load_document()
+    assert final["pages"][1]["svg"] == attached["pages"][1]["svg"]
+    assert final["pages"][0]["svg"] is None
+    assert final["revision_id"] != after["revision_id"]
+
+
+def test_canvas_change_invalidates_all_pages_groupwise(tmp_path):
+    # 08.8: a physical canvas change is a group regression — every page's
+    # SVG/previews and the assembled outputs are invalidated.
+    project, store = _style_design_pages(tmp_path)
+    attached = _attach_design_slots(store)
+    design = store.load_document()["design_context"]
+    changed = deepcopy(design)
+    changed["canvas"] = {**design["canvas"], "width_px": 1024, "height_px": 768,
+                         "slide_width_in": 10.0, "slide_height_in": 7.5}
+    service.update_design(project, design_context=changed)
+    after = store.load_document()
+    for entry in after["pages"]:
+        assert entry["svg"] is None
+    assert all(value is None for value in after["outputs"].values())
+    assert after["pages"][0]["page"] == attached["pages"][0]["page"], "page content itself is untouched"
+
+
+def test_reconstruct_after_style_change_uses_new_effective_style(tmp_path):
+    # After invalidation the rebuild actually runs against the new style, not
+    # just a cleared slot: reconstruct + produce re-renders and the resolved
+    # effective style carries the new accent value.
+    from deck_master.production import resolve_design
+    project, store = _style_design_pages(tmp_path)
+    _attach_design_slots(store)
+    document = store.load_document()
+    design = document["design_context"]
+    changed = deepcopy(design)
+    changed["styles"][0]["colors"]["accent"] = "#00AA66"
+    service.update_design(project, design_context=changed)
+
+    while True:
+        current = store.load_document()
+        missing = next((e for e in current["pages"] if not e.get("svg")), None)
+        if missing is None:
+            break
+        response = service.continue_project(project)
+        task = response["pending_tasks"][0]
+        assert task["kind"] == "reconstruct"
+        blueprint_sha = store.read_object_json(missing["blueprint"])["file"]["sha256"]
+        page = store.read_object_json(missing["page"])
+        svg = _svg_for(page).replace(b"<svg ", f'<svg data-blueprint-sha256="{blueprint_sha}" '.encode(), 1)
+        staging = project / ".deckmaster" / "staging" / task["operation_id"]
+        staging.mkdir(parents=True, exist_ok=True)
+        (staging / "page.svg").write_bytes(svg)
+        service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+                              produced_against=task["produced_against"], result_payload={
+                                  "kind": "reconstruct",
+                                  "files": [{"file_id": "s", "path": "page.svg", "media_type": "image/svg+xml"}],
+                                  "artifact_specs": [{"file_id": "s", "role": "svg", "page_id": missing["page_id"],
+                                                      "provenance": {"source_type": "unknown",
+                                                                     "tool": "host-reconstruct",
+                                                                     "invocation_ref": None}}]})
+    # p2/p3 kept their (textless fixture) SVGs through the style change; give
+    # them real text SVGs directly (they were never invalidated).
+    from deck_master.models import bump_revision as _bump
+    current = store.load_document()
+    work = store.staging_dir / "rest"
+    work.mkdir(parents=True, exist_ok=True)
+    for entry in current["pages"]:
+        if entry["svg"] is not None:
+            page = store.read_object_json(entry["page"])
+            blueprint_sha = store.read_object_json(entry["blueprint"])["file"]["sha256"]
+            svg = _svg_for(page).replace(b"<svg ", f'<svg data-blueprint-sha256="{blueprint_sha}" '.encode(), 1)
+            svg_file = work / f"{entry['page_id']}.svg"
+            svg_file.write_bytes(svg)
+            entry["svg"] = adopt_artifact(store, svg_file, "svg", page_id=entry["page_id"])
+    bumped = _bump(current, {"operation_id": "rest-svg", "kind": "task_update",
+                             "description": "restore text svgs", "read_set": []})
+    bumped["pages"] = current["pages"]
+    store.commit_change(base_revision=current["revision_id"], document=bumped, operation_id="rest-svg")
+    report = produce(project)
+    assert report["status"] == "pass"
+    rebuilt = store.load_document()
+    assert rebuilt["outputs"]["pptx"] is not None
+    assert rebuilt["pages"][0]["svg_preview"] is not None, "page was really re-rendered"
+    effective, style = resolve_design(
+        store.read_object_json(rebuilt["pages"][0]["page"]),
+        rebuilt["design_context"], rebuilt["design_context"].get("assets") or [])
+    assert style["style_id"] == "default"
+    assert style["colors"]["accent"] == "#00AA66", "effective style after rebuild is the new one"

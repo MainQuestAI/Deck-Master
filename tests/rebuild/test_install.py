@@ -51,6 +51,9 @@ def test_wheel_carries_schema_static_and_methods(tmp_path: Path) -> None:
         assert archive.read("deck_master/resources/skill/SKILL.md") == (REPO/"skills/deck-master/SKILL.md").read_bytes()
     assert "deck_master/resources/skills-references/source-reading.md" in names
     assert "deck_master/resources/skills-references/content-methods.md" in names
+    # AC-K15: release artifacts never bundle system/user font files.
+    assert not any(n.lower().endswith((".ttf", ".otf", ".ttc", ".woff", ".woff2")) for n in names), \
+        "system fonts must not be packaged into the wheel"
 
 
 def test_resources_resolve_through_importlib() -> None:

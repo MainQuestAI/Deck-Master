@@ -263,3 +263,106 @@ def test_create_preserves_source_status_and_immutable_original(tmp_path):
 def test_json_pointer_escapes_keys(tmp_path):
     result=read_source(_write(tmp_path,'escaped.json','{"a/b~c":0}'))
     assert result.locators[0]['locator']=='/a~1b~0c'
+
+
+# ---------------------------------------------------------------------------
+# T12 AC-K15: assets resolve from project-relative object refs after
+# relocation; system fonts are fingerprinted by actual file hash and never
+# packaged into the release.
+
+
+def test_logo_reads_from_object_ref_after_relocation(tmp_path: Path, monkeypatch) -> None:
+    import shutil
+    from PIL import Image
+    from deck_master import service
+    from deck_master.store import Store
+
+    logo = tmp_path / "logo.png"
+    Image.new("RGB", (24, 12), (20, 60, 180)).save(logo)
+    project = tmp_path / "proj"
+    service.create(project, brief="品牌页", draft={"pages": [{
+        "schema_version": "deck_page_package.v2", "page_id": "p1",
+        "customer_visible": {"title": "品牌", "body_blocks": []},
+        "visual_spec": {"intent": "brand", "reference_mode": "new_design"}}]},
+        design={"assets": [{"asset_id": "brand-logo", "kind": "logo", "file": str(logo),
+                            "external_use": "allowed"}],
+                "allowed_asset_ids": ["brand-logo"]})
+    store = Store(project)
+    document = store.load_document()
+    asset = document["design_context"]["assets"][0]
+    assert asset["artifact"]["path"].startswith(".deckmaster/objects/"), \
+        "design assets are stored as project-relative object refs, not absolute paths"
+    assert store.read_object_bytes(store.read_object_json(asset["artifact"])["file"]) == logo.read_bytes()
+
+    moved = tmp_path / "relocated"
+    shutil.copytree(project, moved)
+    relocated = Store(moved)
+    moved_doc = relocated.load_document()
+    moved_asset = moved_doc["design_context"]["assets"][0]
+    assert relocated.read_object_bytes(
+        relocated.read_object_json(moved_asset["artifact"])["file"]) == logo.read_bytes()
+
+
+def test_font_fingerprint_tracks_actual_file_hash(tmp_path: Path) -> None:
+    import hashlib
+    import shutil
+    import subprocess
+    from deck_master.compiler import CompileOptions, SvgInput, compile_deck
+
+    resolved = subprocess.run(["fc-match", "-f", "%{family}\n%{file}", "Hiragino Sans GB"],
+                              capture_output=True, text=True, check=True).stdout.splitlines()
+    font_path = Path(resolved[1])
+    svg = tmp_path / "page.svg"
+    svg.write_text('<svg viewBox="0 0 960 720"><text x="20" y="60" '
+                   'font-family="Hiragino Sans GB" font-size="24">字体指纹</text></svg>')
+    result = compile_deck([SvgInput("p1", svg)],
+                          CompileOptions(width_px=960, height_px=720,
+                                         fonts={"Hiragino Sans GB": str(font_path)}),
+                          tmp_path / "out")
+    manifest = json.loads(result.manifest_path.read_text())
+    recorded = manifest["fonts"]["Hiragino Sans GB"]["sha256"]
+    # The recorded fingerprint is the actual font file hash and re-resolves
+    # after relocation; a different file is a detectable font change.
+    assert recorded == hashlib.sha256(font_path.read_bytes()).hexdigest()
+    copied = shutil.copyfile(font_path, tmp_path / font_path.name)
+    assert hashlib.sha256(Path(copied).read_bytes()).hexdigest() == recorded
+    other = tmp_path / "other.ttf"
+    other.write_bytes(b"not-a-real-font")
+    assert hashlib.sha256(other.read_bytes()).hexdigest() != recorded
+
+
+def test_missing_font_blocks_new_work_but_not_old_media(tmp_path: Path) -> None:
+    import pytest
+    from PIL import Image
+    from deck_master import service
+    from deck_master.compiler import CompileOptions, SvgInput, compile_deck
+    from deck_master.pipeline import artifact as adopt_artifact
+    from deck_master.store import Store
+
+    project = tmp_path / "proj"
+    service.create(project, brief="旧媒体", draft={"pages": [{
+        "schema_version": "deck_page_package.v2", "page_id": "p1",
+        "customer_visible": {"title": "旧页", "body_blocks": []},
+        "visual_spec": {"intent": "keep", "reference_mode": "new_design"}}]})
+    store = Store(project)
+    document = store.load_document()
+    preview = tmp_path / "preview.png"
+    Image.new("RGB", (16, 9), (250, 250, 250)).save(preview)
+    bumped = store.load_document()
+    from deck_master.models import bump_revision
+    bumped = bump_revision(bumped, {"operation_id": "attach-preview", "kind": "task_update",
+                                    "description": "old media", "read_set": []})
+    bumped["pages"][0]["ppt_preview"] = adopt_artifact(store, preview, "ppt_preview", page_id="p1")
+    store.commit_change(base_revision=document["revision_id"], document=bumped, operation_id="attach-preview")
+
+    # New work that needs the font is refused with a located error...
+    svg = tmp_path / "text.svg"
+    svg.write_text('<svg viewBox="0 0 960 720"><text x="20" y="60" font-family="Noto Sans SC">新字</text></svg>')
+    with pytest.raises(ValueError, match="font file not supplied"):
+        compile_deck([SvgInput("p1", svg)], CompileOptions(width_px=960, height_px=720, fonts={}),
+                     tmp_path / "denied")
+
+    # ...while previously produced media stays viewable from the store.
+    current = store.load_document()
+    assert store.read_object_bytes(
+        store.read_object_json(current["pages"][0]["ppt_preview"])["file"]) == preview.read_bytes()

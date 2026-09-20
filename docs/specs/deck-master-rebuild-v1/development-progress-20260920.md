@@ -58,7 +58,15 @@ T09 已关闭（见下节）。WP02 余下大卡为 T10（真实渲染与首段�
 
 ## 阶段 1 剩余
 
-WP03:T12 局部修改与并发恢复、T14 四视图工作台、T15 导出收口（均待整卡关闭）；T13 整卡（依赖 T12）。
+WP03:T13 整卡（依赖 T12 已满足）、T14 四视图工作台、T15 导出收口。
+
+## T12 整卡关闭：局部修改与并发恢复
+
+- 新增 18 项测试（四模块）,11 条 AC 全部关闭：S03 幂等、S04 依赖分层（task 管理不失效、正文编辑仅失效当页）、S05 局部编辑（无关页 hash/ref 双不变+整 PPT 重装配+旧件找回）、S06 多页事实、S07 页集合（重排/删页稳定 ID、历史不混回）、S08 并发重基（异页安全/同页冲突无最后写覆盖）、S09 取消竞态（cancel 先赢晚到结算不采用/accept 先赢 cancel 不删产物/同 hash 重放仍拒）、S10 恢复重定位（新 revision 不回滚调用事实/搬迁 refs 可读/源 hash 核验）、K15 资产字体重定位（对象 Ref 读 Logo/字体指纹/缺字体不阻旧媒体/发行不打包字体）、S13 有效样式失效。
+- 新实现：`service.update_design(design_context, base_revision)`(operation=design_update，提交前逐页 resolve_design 试解析拒半态）；统一失效助手 `_rendering_state`/`_apply_rendering_invalidation`(canvas 变化全页成组失效；style 变化仅有效 style 变动页；blueprint 永保留）;import_asset 重构复用同一助手。
+- 验证：定向 60 passed；`tests/rebuild` 全量 **263 passed**(245+18)。
+- 状态同步：tasks.json/subtasks.csv 中 T12 及子任务标记 `implemented_verified`；T12.md 交接回填已记录。
+- 工作树待提交变更：`src/deck_master/service.py`、test_install/test_service_flow/test_sources/test_store_transactions/test_tasks。
 
 ## T07 整卡关闭：原图保持与文案往返
 
