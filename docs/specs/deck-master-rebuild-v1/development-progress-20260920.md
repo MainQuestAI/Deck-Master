@@ -44,9 +44,21 @@ T09 已关闭（见下节）。WP02 余下大卡为 T10（真实渲染与首段�
 - 状态同步：tasks.json/subtasks.csv 中 T10.01–T10.04/T10.06 标记 `implemented_verified`，T10 卡保持 in_progress；T10.md 交接回填已记录。
 - 工作树待提交变更：`src/deck_master/compiler/svg.py`、`src/deck_master/pipeline.py`、5 个新测试模块。
 
+## T11 整卡关闭：统一审阅解释与真返修
+
+- 新建 `src/deck_master/review.py`：纯解释模块 `evaluate_current(document, reviews, artifacts) -> CheckSummary`(status/dimensions/stale/missing_dimensions,07.2 语义）+ 配套纯函数 closing_review（R06 关闭链）、validate_independence（R05）、triage_render_difference（R04 像素三分类）、privacy_findings（R07）、classify_finding（C05 计算复算/无依据数字/建议只读）、source_expectations（B07）。
+- 重构 `editing.review_status` 整体走 evaluate_current——service(load)/view(UI)/export_project（导出闸）三入口同一份解释（AC-R03)。
+- `tasks._adopt_review` 增加 replaces 链接收校验（R0 存在/同 review/共享 finding_id/subjects 新增复查对象，悬空 replaces 改 EnvelopeError)。
+- 修复预存 bug:tasks.py:348 F821(`pid` 未定义，repair scope 检查命中即 NameError)。
+- 新建 `tests/rebuild/test_review.py`(25 项，真实 Store + PIL 合成 PNG 三类样例）;10 条 AC 全部关闭。
+- 新增 `skills/deck-master/references/review-and-repair.md` 简短引用。
+- 验证：定向 25 passed；`tests/rebuild` 全量 **245 passed**（220+25）。
+- 状态同步：tasks.json/subtasks.csv 中 T11 及子任务标记 `implemented_verified`；T11.md 交接回填已记录。
+- 工作树待提交变更：`src/deck_master/review.py`、`editing.py`、`tasks.py`、`tests/rebuild/test_review.py`、`skills/deck-master/references/review-and-repair.md`。
+
 ## 阶段 1 剩余
 
-WP02：T07 已关闭（见下节）。WP03：T11 统一审阅解释、T12 局部修改与并发恢复、T14 四视图工作台、T15 导出收口（均 in_progress 待整卡关闭）。
+WP03:T12 局部修改与并发恢复、T14 四视图工作台、T15 导出收口（均待整卡关闭）；T13 整卡（依赖 T12）。
 
 ## T07 整卡关闭：原图保持与文案往返
 

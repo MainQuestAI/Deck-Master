@@ -51,12 +51,12 @@ T10.03,T10,WP02,完成首张复杂事故页还原,按原图保留模块/图标/�
 T10.04,T10,WP02,扩展三页与布局敏感性,覆盖架构职责、图表/表格、另一方案页；同业务换不同布局原图，几何随之改变,三页正文/图形完整；换图不只是换hash，简化版不能冒充还原,implemented_verified,internal_step
 T10.05,T10,WP02,尽早运行P1迁移,主链一旦可用用陌生材料生成首稿，记录业务缺陷并回内容方法或制作层,P1用后归开发；精修制作样例与默认内容能力分开,not_started,internal_step
 T10.06,T10,WP02,完成声明子集与设计一致性,补全06.2特性、4:3/字体/Logo、视图比例和实际读回；按依赖补全T03/T09范围,完整卡关闭须覆盖AC-K13/K14，min成功不等于所有格式/特性完成,implemented_verified,internal_step
-T11.01,T11,WP03,实现唯一审阅解释,evaluate_current统一检查适用性/依赖/must_fix/needs_judgment；接收读取UI导出复用,同一当前Review在各入口结果一致，空registry/空findings不自动满分,not_started,internal_step
-T11.02,T11,WP03,连接真实检查对象,读取实际PPT页面/备注/隐藏项/XML与当前页集合，共享解析但按检查目的判断,正文、关系、内部指令泄漏有具体定位；页码/业务词不误判,not_started,internal_step
-T11.03,T11,WP03,实现三类视觉差异复核,正常还原、故意缺节点、合理抗锯齿差异分别实测；需要判断的指标保留问题,严重缩水不能靠revision_required=false清空；accepted_variance有具体观察,not_started,internal_step
-T11.04,T11,WP03,实现真返修闭环,repair生成新产物；新Review用replaces/finding_id关联旧失败并实际复查,review-fixed正负例真实接收；只改fixed、旧subject或过期观察均不关闭,not_started,internal_step
-T11.05,T11,WP03,如实记录审阅身份与证据,区分tool/Host/human、execution_ref和实际阅图；原图期待独立于输出登记,同人两个名字不算独立；模型互相同意不等于专业人类验收,not_started,internal_step
-T11.06,T11,WP03,补内容判断与失效检查,分别复算计算、核对事实和审阅有条件建议；方法或产物变化只失效对应结论,54/120可核算，无依据40%被识别；旧pass不盖当前fail,not_started,internal_step
+T11.01,T11,WP03,实现唯一审阅解释,evaluate_current统一检查适用性/依赖/must_fix/needs_judgment；接收读取UI导出复用,同一当前Review在各入口结果一致，空registry/空findings不自动满分,implemented_verified,internal_step
+T11.02,T11,WP03,连接真实检查对象,读取实际PPT页面/备注/隐藏项/XML与当前页集合，共享解析但按检查目的判断,正文、关系、内部指令泄漏有具体定位；页码/业务词不误判,implemented_verified,internal_step
+T11.03,T11,WP03,实现三类视觉差异复核,正常还原、故意缺节点、合理抗锯齿差异分别实测；需要判断的指标保留问题,严重缩水不能靠revision_required=false清空；accepted_variance有具体观察,implemented_verified,internal_step
+T11.04,T11,WP03,实现真返修闭环,repair生成新产物；新Review用replaces/finding_id关联旧失败并实际复查,review-fixed正负例真实接收；只改fixed、旧subject或过期观察均不关闭,implemented_verified,internal_step
+T11.05,T11,WP03,如实记录审阅身份与证据,区分tool/Host/human、execution_ref和实际阅图；原图期待独立于输出登记,同人两个名字不算独立；模型互相同意不等于专业人类验收,implemented_verified,internal_step
+T11.06,T11,WP03,补内容判断与失效检查,分别复算计算、核对事实和审阅有条件建议；方法或产物变化只失效对应结论,54/120可核算，无依据40%被识别；旧pass不盖当前fail,implemented_verified,internal_step
 T12.01,T12,WP03,先交单页修改T12.min,request_edit带scope和read_set；正文/边修改产新Page/SVG/PPT并刷新文件检查；分别验证轻微文本修改和需重生蓝图的重大目标页修改,目标p09按实际影响修改，必要时重生该页蓝图；其他未受影响页蓝图/SVG hash不变、无新增外部制作；旧件可找回,not_started,internal_step
 T12.02,T12,WP03,实现影响范围与页集合,按正文/有效样式/字体/资产/共用事实依赖传播；Document负责增删重排,删页不由glob混回；重排仅更新实际页码/引用与装配，未用样式不重生,not_started,internal_step
 T12.03,T12,WP03,实现幂等与并发重基,相同operation同结果复用，异结果冲突；不同页可重基，同页和共享输入变化拒绝,两写者并发反例无最后写覆盖；超时重交不生重复版本,not_started,internal_step

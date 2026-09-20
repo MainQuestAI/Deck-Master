@@ -758,7 +758,7 @@
     "implementation": "工具/Host/人类证据分级；写读export统一；空集合未知；具体像素差异复核；修复必须指新产物；fixed必须replaces旧Review、指向新产物及实际复查观察，旧失败保留；提供完整往返负例",
     "acceptance_ids": "AC-R01,AC-R02,AC-R03,AC-R04,AC-R05,AC-R06,AC-R07,AC-R10,AC-C05,AC-B07",
     "failure_return": "误报修规则与三类样例，不只调当前失败到绿",
-    "status": "in_progress",
+    "status": "implemented_verified",
     "start_after": "T07.min,T10.min",
     "early_delivery": "统一审阅实现；此前T10实际阅图不得省略",
     "card": "T11.md",
@@ -783,7 +783,7 @@
         "title": "实现唯一审阅解释",
         "work": "evaluate_current统一检查适用性/依赖/must_fix/needs_judgment；接收读取UI导出复用",
         "deliverable_and_check": "同一当前Review在各入口结果一致，空registry/空findings不自动满分",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -793,7 +793,7 @@
         "title": "连接真实检查对象",
         "work": "读取实际PPT页面/备注/隐藏项/XML与当前页集合，共享解析但按检查目的判断",
         "deliverable_and_check": "正文、关系、内部指令泄漏有具体定位；页码/业务词不误判",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -803,7 +803,7 @@
         "title": "实现三类视觉差异复核",
         "work": "正常还原、故意缺节点、合理抗锯齿差异分别实测；需要判断的指标保留问题",
         "deliverable_and_check": "严重缩水不能靠revision_required=false清空；accepted_variance有具体观察",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -813,7 +813,7 @@
         "title": "实现真返修闭环",
         "work": "repair生成新产物；新Review用replaces/finding_id关联旧失败并实际复查",
         "deliverable_and_check": "review-fixed正负例真实接收；只改fixed、旧subject或过期观察均不关闭",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -823,7 +823,7 @@
         "title": "如实记录审阅身份与证据",
         "work": "区分tool/Host/human、execution_ref和实际阅图；原图期待独立于输出登记",
         "deliverable_and_check": "同人两个名字不算独立；模型互相同意不等于专业人类验收",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -833,7 +833,7 @@
         "title": "补内容判断与失效检查",
         "work": "分别复算计算、核对事实和审阅有条件建议；方法或产物变化只失效对应结论",
         "deliverable_and_check": "54/120可核算，无依据40%被识别；旧pass不盖当前fail",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       }
     ]

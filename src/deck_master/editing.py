@@ -11,23 +11,36 @@ from .store import Store, ConflictError, StoreError
 from .tasks import _project_transaction
 
 
-def review_status(store,doc):
-    current=doc['outputs'].get('pptx')
-    if not current:return 'not_evaluated'
-    if any(store.read_object_json(ref)['status'] in ('awaiting_host','running') for ref in doc['tasks']):
-        return 'not_evaluated'
-    required={'content','blueprint_content','blueprint_fidelity','conversion','readability','privacy'}
-    latest={}
-    for ref in doc['reviews']:
-        review=store.read_object_json(ref)
-        if current not in review['subjects']:
-            continue
-        for entry in doc['pages']:
-            if entry['page'] in review['subjects']:
-                latest[(review['kind'],entry['page_id'])]=review
-    if any(r['status']=='fail' or any(f['impact']=='must_fix' and f['resolution']=='open' for f in r['findings']) for r in latest.values()):
-        return 'fail'
-    return 'pass' if all(latest.get((kind,entry['page_id']),{}).get('status')=='pass' for kind in required for entry in doc['pages']) else 'not_evaluated'
+def _current_artifact_digests(store, doc):
+    """Current dependency digests for review freshness (content/page/svg/pptx)."""
+    artifacts = {}
+    for entry in doc.get('pages') or []:
+        page_id = entry['page_id']
+        if entry.get('page'):
+            artifacts[f'content:page:{page_id}'] = entry['page']['sha256']
+        for slot, kind, identity in (('blueprint', 'blueprint', f'blueprint:{page_id}'),
+                                     ('svg', 'artifact', f'svg:{page_id}'),
+                                     ('svg_preview', 'artifact', f'svg_preview:{page_id}'),
+                                     ('ppt_preview', 'artifact', f'ppt_preview:{page_id}')):
+            ref = entry.get(slot)
+            if ref:
+                artifacts[identity] = store.read_object_json(ref)['file']['sha256']
+    outputs = doc.get('outputs') or {}
+    if outputs.get('pptx'):
+        try:
+            artifacts['artifact:pptx'] = store.read_object_json(outputs['pptx'])['file']['sha256']
+        except Exception:
+            pass  # unreadable injected refs simply cannot match any review dependency
+    return artifacts
+
+
+def review_status(store, doc):
+    """Load-side verdict; the single interpretation lives in review.evaluate_current."""
+    from . import review as review_mod
+    reviews = [{**store.read_object_json(ref), 'ref': ref} for ref in doc.get('reviews') or []]
+    document = {**doc, 'tasks': [store.read_object_json(ref) for ref in doc.get('tasks') or []]}
+    summary = review_mod.evaluate_current(document, reviews, _current_artifact_digests(store, doc))
+    return summary['status']
 
 
 

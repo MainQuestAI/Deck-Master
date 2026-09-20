@@ -324,6 +324,31 @@ def _adopt_review(store: Store, review: dict) -> dict:
     validate_review_semantics(review)
     for subject in review.get("subjects") or []:
         store.read_object_bytes(subject)  # must exist and match its digest
+    replaced = review.get("replaces")
+    if replaced is not None:
+        # AC-R06 receiver side: R1 must replace the same logical review and
+        # actually re-check a new product, not merely re-label the old one.
+        try:
+            prior = json.loads(store.read_object_bytes(replaced).decode("utf-8"))
+        except StoreError as exc:
+            raise EnvelopeError("review/replaces", f"replaced review not found: {exc}") from exc
+        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise EnvelopeError("review/replaces", "replaced object is not a review") from exc
+        if prior.get("schema_version") != "deck_review.v1":
+            raise EnvelopeError("review/replaces", "replaced object is not a review record")
+        if prior.get("review_id") != review.get("review_id"):
+            raise EnvelopeError("review/replaces", "replaces must point at the same logical review")
+        old_ids = {f.get("finding_id") for f in prior.get("findings") or []}
+        new_ids = {f.get("finding_id") for f in review.get("findings") or []}
+        if not old_ids & new_ids:
+            raise EnvelopeError("review/replaces", "no shared finding_id with the replaced review")
+        old_subjects = {(s.get("path"), s.get("sha256")) for s in prior.get("subjects") or []}
+        added_subjects = {(s.get("path"), s.get("sha256")) for s in review.get("subjects") or []} - old_subjects
+        if not added_subjects:
+            raise EnvelopeError(
+                "review/replaces",
+                "fix review must add the rechecked product to subjects; re-submitting the old subjects is not a recheck",
+            )
     return review
 
 
@@ -345,7 +370,7 @@ def _check_scope(kind: str, envelope: dict, task: dict) -> None:
             raise EnvelopeError("(result)/pages", "duplicate page_id in result")
     elif kind == "repair":
         if scope:
-            outside = [pid for pid in page_ids if page_ids and page_id not in scope]
+            outside = [pid for pid in page_ids if pid not in scope]
             if outside:
                 raise EnvelopeError(
                     "(result)/pages",
