@@ -1394,7 +1394,7 @@
     "implementation": "跨分支归属、依赖/资源清单、排除客户材料/秘密/字体误打包",
     "acceptance_ids": "AC-I08",
     "failure_return": "许可或材料授权不明先不随包，不伪称开源可用",
-    "status": "not_started",
+    "status": "implemented_verified",
     "start_after": "T01,T16",
     "early_delivery": "按整项任务依赖执行",
     "card": "T19.md",
@@ -1410,7 +1410,7 @@
         "title": "核实提取来源归属",
         "work": "对B0/K0提取函数和第三方依赖登记许可证/归属，保留要求的版权说明",
         "deliverable_and_check": "每个随包组件可追溯到版本和授权信息",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -1420,7 +1420,7 @@
         "title": "补发行许可证与说明",
         "work": "更新LICENSE/NOTICE/THIRD_PARTY_NOTICES和release清单",
         "deliverable_and_check": "新包元数据与实际打包内容一致，无未经核实开源承诺",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -1430,7 +1430,7 @@
         "title": "检查真实包内容",
         "work": "解包wheel/sdist/release核对run/env/客户资料/秘密/字体/历史敏感材料排除",
         "deliverable_and_check": "提交文件清单与扫描结果；授权未知资源暂不随包",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -1440,7 +1440,7 @@
         "title": "修打包排除和回归",
         "work": "调整.gitignore/build hook/MANIFEST实际路径规则，再从干净构建产物核验",
         "deliverable_and_check": "合法schema/static/方法仍包含；不能靠删运行能力完成清理",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       }
     ]

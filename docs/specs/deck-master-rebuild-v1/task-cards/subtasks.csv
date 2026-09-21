@@ -95,10 +95,10 @@ T18.02,T18,WP04,规范旧正文与设计,v1到v2保留可见正文/关系/稳定
 T18.03,T18,WP04,导入新副本和实际媒体,复制允许媒体到新objects，记录真实hash与原来源说明；不执行旧脚本,导入前后原目录逐文件hash一致，旧媒体可读,not_started,internal_step
 T18.04,T18,WP04,处理旧状态与来源不确定,旧completed/pass仅历史说明，不变新Review通过；未知hash不追认候选原文,缺原文仍可看已存extract/媒体，需要原文动作才明确缺口,not_started,internal_step
 T18.05,T18,WP04,检验移动与恢复,合成旧run副本导入、移目录、恢复、源路径失效分别核对,新项目Ref可解析，旧源未动，错误返回待规范化字段,not_started,internal_step
-T19.01,T19,WP04,核实提取来源归属,对B0/K0提取函数和第三方依赖登记许可证/归属，保留要求的版权说明,每个随包组件可追溯到版本和授权信息,not_started,internal_step
-T19.02,T19,WP04,补发行许可证与说明,更新LICENSE/NOTICE/THIRD_PARTY_NOTICES和release清单,新包元数据与实际打包内容一致，无未经核实开源承诺,not_started,internal_step
-T19.03,T19,WP04,检查真实包内容,解包wheel/sdist/release核对run/env/客户资料/秘密/字体/历史敏感材料排除,提交文件清单与扫描结果；授权未知资源暂不随包,not_started,internal_step
-T19.04,T19,WP04,修打包排除和回归,调整.gitignore/build hook/MANIFEST实际路径规则，再从干净构建产物核验,合法schema/static/方法仍包含；不能靠删运行能力完成清理,not_started,internal_step
+T19.01,T19,WP04,核实提取来源归属,对B0/K0提取函数和第三方依赖登记许可证/归属，保留要求的版权说明,每个随包组件可追溯到版本和授权信息,implemented_verified,internal_step
+T19.02,T19,WP04,补发行许可证与说明,更新LICENSE/NOTICE/THIRD_PARTY_NOTICES和release清单,新包元数据与实际打包内容一致，无未经核实开源承诺,implemented_verified,internal_step
+T19.03,T19,WP04,检查真实包内容,解包wheel/sdist/release核对run/env/客户资料/秘密/字体/历史敏感材料排除,提交文件清单与扫描结果；授权未知资源暂不随包,implemented_verified,internal_step
+T19.04,T19,WP04,修打包排除和回归,调整.gitignore/build hook/MANIFEST实际路径规则，再从干净构建产物核验,合法schema/static/方法仍包含；不能靠删运行能力完成清理,implemented_verified,internal_step
 T20.01,T20,WP04,搭建候选隔离环境,从wheel及sdist正常安装；独立HOME无PPTMaster/Library/缓存，禁止访问源码补资源,记录真实解释器、模块来源、包SHA与方法资源路径,not_started,internal_step
 T20.02,T20,WP04,执行自然语言新建全链,主Skill给普通材料任务，真实compose/生图/SVG/PPT/读回/审阅；首次正文自动view,真实成品与工作台可访问，fixture不替代本轮生产,not_started,internal_step
 T20.03,T20,WP04,执行工作台局部修改,在当前页改正文和关系，Host接单再交回，导出并对照其他页hash,未受影响页不重生，旧稿可看，当前文件/状态同步,not_started,internal_step

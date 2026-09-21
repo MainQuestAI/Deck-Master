@@ -87,9 +87,18 @@ WP03 最后一张卡 T15 关闭（见下节）。**阶段 1（WP02/WP03 收尾�
 - 状态同步：tasks.json/subtasks.csv 中 T17 及子任务标记 `implemented_verified`；T17.md 交接回填已记录。
 - 遗留：旧套件 17 个失败测试（test_skill_installation 等）归 T24;AGENTS.md "Stop And Report" 小节仍引用旧命令名（现走映射，语义不冲突，可后续润色）。
 
+## T19 整卡关闭：发布资源与许可证清理（2026-09-21）
+
+- 归属：B0/K0 提取头保留（测试断言 wheel 字节含归属注释）;compiler-extraction.json 与 geometry.py 实际函数集双向精确匹配；THIRD_PARTY_NOTICES.md 按本 venv 实际版本重写（python-pptx 1.0.2/Pillow 12.3.0/numpy 2.5.3/jsonschema 4.26.0,dev 依赖单列不分发）。
+- 元数据：pyproject 转 PEP 639(`license = "Apache-2.0"`),wheel licenses/ 目录携 LICENSE+NOTICE，构建弃用警告消除。
+- AC-I08 = test_install.py +2:wheel(57 项）+sdist(186 项）+release 树逐项排除客户材料/密钥四正则内容扫描/字体二进制，正向能力件全在；**未发现真实泄露路径**，无需改 build_hook/MANIFEST。
+- 验证：定向 7 passed；全量 **335 passed**(333+2);ruff 全过。
+- 状态同步：tasks.json/subtasks.csv 中 T19 及子任务标记 `implemented_verified`；T19.md 交接回填已记录。
+- 工作树待提交：THIRD_PARTY_NOTICES.md、pyproject.toml、test_install.py。
+
 ## 下一阶段
 
-阶段 2 剩余：T19 发布资源与许可证清理 → T18 旧 run 只读导入 → T16 收尾 + T20 隔离安装端到端。
+阶段 2 剩余：T18 旧 run 只读导入 → T16 收尾 + T20 隔离安装端到端。
 
 ## T14 整卡关闭：完整四视图工作台
 

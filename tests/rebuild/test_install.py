@@ -121,3 +121,107 @@ def test_activation_failure_preserves_current_and_rollback(tmp_path,monkeypatch)
     install.activate(tmp_path,'two');install.rollback(tmp_path)
     assert os.readlink(root/'current')=='releases/one'
     assert os.readlink(root/'previous')=='releases/two'
+
+
+# ---------------------------------------------------------------------------
+# T19 / AC-I08: provenance kept, distribution archives exclude customer runs,
+# secrets, bundled fonts and historical sensitive material.
+
+import re as _re
+import tarfile
+
+SECRET_PATTERNS = [
+    _re.compile(rb"AKIA[0-9A-Z]{16}"),
+    _re.compile(rb"-----BEGIN [A-Z ]*PRIVATE KEY-----"),
+    _re.compile(rb"ghp_[A-Za-z0-9]{30,}"),
+    _re.compile(rb"sk-[A-Za-z0-9]{20,}"),
+]
+FORBIDDEN_NAME_FRAGMENTS = (
+    ".deckmaster", "runs/", "rc_reports", "benchmarks/", "/.env", "credentials",
+)
+
+
+def _iter_wheel_files(wheel_path):
+    with zipfile.ZipFile(wheel_path) as archive:
+        for name in archive.namelist():
+            yield name, archive.read(name)
+
+
+def _iter_sdist_files(sdist_path):
+    with tarfile.open(sdist_path) as archive:
+        for member in archive.getmembers():
+            if member.isfile():
+                yield member.name, archive.extractfile(member).read()
+
+
+def _assert_archive_clean(files):
+    names = [name for name, _ in files]
+    for fragment in FORBIDDEN_NAME_FRAGMENTS:
+        assert not any(fragment in name.lower() for name in names), \
+            f"forbidden path fragment {fragment!r} in archive: {[n for n in names if fragment in n.lower()][:3]}"
+    assert not any(name.lower().endswith((".ttf", ".otf", ".ttc", ".woff", ".woff2")) for name in names), \
+        "font binaries must not ship in the distribution"
+    for name, data in files:
+        for pattern in SECRET_PATTERNS:
+            assert not pattern.search(data), f"secret pattern {pattern.pattern!r} found in {name}"
+
+
+def _build_sdist(tmp_path):
+    from setuptools import build_meta
+    out = tmp_path / "sdist-out"
+    out.mkdir()
+    return out / build_meta.build_sdist(str(out))
+
+
+def test_wheel_and_sdist_exclude_customer_material_and_secrets(tmp_path: Path) -> None:
+    _ensure_pip()
+    wheelhouse = tmp_path / "wheelhouse"
+    result = subprocess.run(
+        [sys.executable, "-m", "pip", "wheel", "--no-deps", "--no-build-isolation", "-w", str(wheelhouse), str(REPO)],
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=600,
+    )
+    assert result.returncode == 0, result.stderr.decode("utf-8", "replace")[-2000:]
+    wheel = next(wheelhouse.glob("deck_master-*.whl"))
+    sdist = _build_sdist(tmp_path)
+
+    wheel_files = list(_iter_wheel_files(wheel))
+    sdist_files = list(_iter_sdist_files(sdist))
+    _assert_archive_clean(wheel_files)
+    _assert_archive_clean(sdist_files)
+
+    # Positive: runtime resources stay complete — cleaning never removes
+    # operating capability (schemas, static workbench, skill references).
+    wheel_names = {name for name, _ in wheel_files}
+    for schema in ("document.v1", "page.v2", "artifact.v1", "task.v1", "review.v1"):
+        assert f"deck_master/resources/contracts/{schema}.schema.json" in wheel_names
+    for static in ("index.html", "app.js", "style.css"):
+        assert f"deck_master/resources/static/{static}" in wheel_names
+    assert "deck_master/resources/skill/SKILL.md" in wheel_names
+    assert any(n.startswith("deck_master/resources/skills-references/") for n in wheel_names)
+
+    # Provenance (T19.01): extraction attribution headers ship with the code.
+    geometry = dict(wheel_files)["deck_master/compiler/geometry.py"].decode("utf-8")
+    assert "Function-level extraction from pinned B0" in geometry
+    native = dict(wheel_files)["deck_master/compiler/native.py"].decode("utf-8")
+    assert "B0 2a866cf" in native
+    # License texts ship and match pyproject metadata.
+    license_text = dict(wheel_files)["deck_master-1.0.0.dev2.dist-info/licenses/LICENSE"].decode("utf-8") \
+        if any(n.endswith("dist-info/licenses/LICENSE") for n in wheel_names) \
+        else dict(wheel_files)["deck_master-1.0.0.dev2.dist-info/LICENSE"].decode("utf-8")
+    assert "Apache License" in license_text
+    metadata_name = next(n for n in wheel_names if n.endswith("METADATA"))
+    metadata_text = dict(wheel_files)[metadata_name].decode("utf-8")
+    assert "License: Apache-2.0" in metadata_text or "License-Expression: Apache-2.0" in metadata_text
+
+
+def test_release_tree_manifest_scans_clean(tmp_path: Path) -> None:
+    from tools.build_release import build_release
+
+    manifest = build_release(tmp_path / "release-out")
+    assert manifest["source_dirty"] in (True, False)
+    assert manifest["entry"] == ["python", "-m", "deck_master"]
+    for name in manifest["files"]:
+        lowered = name.lower()
+        for fragment in FORBIDDEN_NAME_FRAGMENTS:
+            assert fragment not in lowered, f"forbidden path in release manifest: {name}"
+        assert not lowered.endswith((".ttf", ".otf", ".ttc", ".woff", ".woff2")), name

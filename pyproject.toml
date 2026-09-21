@@ -8,7 +8,7 @@ version = "1.0.0.dev2"
 description = "Rebuilt Deck Master core: immutable storage, host-task envelopes, native SVG compiler, and read-only workbench."
 readme = "README.md"
 requires-python = ">=3.12,<3.14"
-license = { text = "Apache-2.0" }
+license = "Apache-2.0"
 authors = [
   { name = "MainQuest AI" }
 ]
