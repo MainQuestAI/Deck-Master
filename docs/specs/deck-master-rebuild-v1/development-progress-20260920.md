@@ -77,9 +77,19 @@ WP03 最后一张卡 T15 关闭（见下节）。**阶段 1（WP02/WP03 收尾�
 - P2 全部修复:OperationJournal status、CSP 头合并、浏览器拒绝如实 available、spec 10.3 路由补齐(/api/pages/{id}、/api/tasks、/api/reviews、POST /api/check)、挂起任务只屏蔽 scope 维度、privacy 交叠串、transform 括号垃圾校验、SvgError 结构化 page/element、空文本显式拒绝、cli 死条件与 NeedsTool→exit 3、letter-spacing 单点写入。
 - 全量 **309 passed**(294+15),ruff 全过;7 份真实交付 SVG 回归解析通过。
 
+## T17 整卡关闭：唯一默认入口与文档（阶段 2 首张，2026-09-21）
+
+- 新 CLI legacy 层：`_legacy_dispatch` 按 spec 09.6 三类处理旧命令——7 别名（执行新语义）、18 指引（exit 2 typed JSON）、60+4 退役（exit 2）；绝不 import/exec 旧 scripts/deck_master.py；旧 run 格式在全部写路径拒绝（`legacy_run_format`，零就地初始化）;`deck-master legacy-map` 打印全表。
+- 统一入口：`[project.scripts] deck-master = deck_master.cli:main` 启用；修复 venv editable 把 scripts/ 挂进 sys.path 导致 `python -m deck_master` 进旧 parser 的环境问题；wheel entry_points 断言；无 v2 开关。
+- 解除绑定：README/AGENTS/任务索引/恢复手册/migration 文档全部改新口径；5 个旧 spec 目录加 ARCHIVED.md 标记（零删除）;product-capability-manifest.json 未改字节（退役归 T24）。
+- 新建 `tests/rebuild/test_cli.py`(24 项）;AC-I04 关闭,AC-C06 交接 T04。
+- 验证：定向 40 passed；全量 **333 passed**(309+24);ruff 全过；`deck-master --version` = 1.0.0.dev2。
+- 状态同步：tasks.json/subtasks.csv 中 T17 及子任务标记 `implemented_verified`；T17.md 交接回填已记录。
+- 遗留：旧套件 17 个失败测试（test_skill_installation 等）归 T24;AGENTS.md "Stop And Report" 小节仍引用旧命令名（现走映射，语义不冲突，可后续润色）。
+
 ## 下一阶段
 
-阶段 2(WP04 安装与唯一入口）:T17 唯一默认入口与文档 → T19 发布资源与许可证 → T18 旧 run 只读导入 → T16 收尾 + T20 隔离安装端到端。
+阶段 2 剩余：T19 发布资源与许可证清理 → T18 旧 run 只读导入 → T16 收尾 + T20 隔离安装端到端。
 
 ## T14 整卡关闭：完整四视图工作台
 

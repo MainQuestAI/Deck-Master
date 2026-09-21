@@ -46,11 +46,11 @@ create --draft / import draft / compose 结果**第一次形成至少一页后�
 - `edit --page … --base-revision … --page-hash … --operation-id …` 修改正文后继续重建受影响页；原图保留。`history list/restore` 恢复产生新 revision。
 - `export --purpose working` 包含可继续编辑项目；`--purpose delivery` 要求当前工程审阅通过。导出完成不等于专业或桌面验收完成。
 
-候选尚未切换全局入口时，使用候选环境的 `python -m deck_master` 执行上述子命令，不能误调用旧全局 `deck-master`。
+统一入口已切换：`deck-master`(console entry = `deck_master.cli:main`)与 `python -m deck_master` 完全同路；旧 `scripts/deck_master.py` 不属于新流程。
 
 ## 旧体系说明
 
-旧 v0.9.x 预览链（`python3 scripts/deck_master.py`，route-skill/next-step/run-dir）仍存在但只服务历史 demo；新工作一律走本文件命令，不在同一 run 里混用两套写入者。旧命令退役按 spec 12/02 排期。
+旧 v0.9.x 命令按 spec 09.6 映射或退役（`deck-master legacy-map` 全表）；旧 run 目录被新写命令识别并拒绝就地迁移（`legacy_run_format`）。新工作一律走本文件命令，不在同一 run 里混用两套写入者；旧 run 处置见 `docs/migration-to-rebuilt-core.md`。
 
 ## 停止与安全
 

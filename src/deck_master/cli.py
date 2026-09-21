@@ -60,9 +60,11 @@ def build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command", required=True)
 
     doctor = sub.add_parser("doctor")
-    doctor.add_argument("--step", required=True, choices=("compose","blueprint","compile","render","view","export"))
+    doctor.add_argument("--step", choices=("compose","blueprint","compile","render","view","export"), default="view")
     doctor.add_argument("--font", action="append", default=[])
     doctor.add_argument("--host-imagegen", action="store_true", help="Host reports tool availability; not provider verification")
+
+    sub.add_parser("legacy-map", help="List every pre-rebuild command and its mapping class (spec 09.6)")
 
     installation=sub.add_parser('install')
     installs=installation.add_subparsers(dest='install_command',required=True)
@@ -175,9 +177,15 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    argv = list(sys.argv[1:] if argv is None else argv)
+    legacy = _legacy_dispatch(argv)
+    if legacy is not None:
+        return legacy
     parser = build_parser()
     options = parser.parse_args(argv)
     try:
+        if options.command == 'legacy-map':
+            return _emit(legacy_mapping_table())
         if options.command == 'install':
             from .install import install_candidate,activate,rollback
             try:
@@ -193,20 +201,35 @@ def main(argv: list[str] | None = None) -> int:
             _emit(result)
             return 0 if result['status']=='ready' else 3
         if options.command == 'history':
+            rejected = _reject_legacy_run(options.project)
+            if rejected is not None:
+                return rejected
             from .editing import history, restore
             if options.history_command == 'list':
                 return _emit(history(options.project))
             return _emit(restore(options.project,revision_id=options.revision,base_revision=options.base_revision,operation_id=options.operation_id))
         if options.command == 'build':
+            rejected = _reject_legacy_run(options.project)
+            if rejected is not None:
+                return rejected
             from .pipeline import produce
             return _emit(produce(options.project))
         if options.command == 'edit':
+            rejected = _reject_legacy_run(options.project)
+            if rejected is not None:
+                return rejected
             from .editing import edit_page
             return _emit(edit_page(options.project,page=json.loads(Path(options.page).read_text()),base_revision=options.base_revision,page_hash=options.page_hash,operation_id=options.operation_id))
         if options.command == 'export':
+            rejected = _reject_legacy_run(options.project)
+            if rejected is not None:
+                return rejected
             from .editing import export_project
             return _emit(export_project(options.project,output_dir=options.out,purpose=options.purpose))
         if options.command == "create":
+            rejected = _reject_legacy_run(options.out, '--out')
+            if rejected is not None:
+                return rejected
             design = None
             if options.design:
                 design = json.loads(open(options.design, encoding="utf-8").read())
@@ -225,15 +248,24 @@ def main(argv: list[str] | None = None) -> int:
                 payload = _attach_workbench_url(options.out, payload)
             return _emit(payload)
         if options.command == "continue":
+            rejected = _reject_legacy_run(options.project)
+            if rejected is not None:
+                return rejected
             payload = service.continue_project(options.project)
             _emit(payload)
             return 3 if payload["status"] in ("awaiting_host", "needs_tool", "needs_input") else 0
         if options.command == "import-draft":
+            rejected = _reject_legacy_run(options.project)
+            if rejected is not None:
+                return rejected
             payload = service.import_draft(options.project, draft_path=options.input)
             if _project_has_pages(options.project):
                 payload = _attach_workbench_url(options.project, payload)
             return _emit(payload)
         if options.command == "view":
+            rejected = _reject_legacy_run(options.project)
+            if rejected is not None:
+                return rejected
             from .web import open_view, service_status
 
             if options.open:
@@ -272,6 +304,269 @@ def _read_brief(options) -> str:
     return sys.stdin.read()
 
 
+# ---------------------------------------------------------------------------
+# Pre-rebuild command mapping (spec 09.6). Every legacy entry has exactly one
+# class — alias (executes the new semantics), guidance (points at the new
+# command, non-zero exit) or retired (non-zero exit). Nothing here imports or
+# execs scripts/deck_master.py; old runs are never migrated in place.
+
+_GUIDANCE_LIBRARY = (
+    "新核心不实现整页库流程;请用来源文件创建项目,或固定旧版本安装操作历史 run。"
+    "新工作一律走 deck-master create --brief … --source … --out …"
+)
+
+_LEGACY_GUIDANCE = {
+    'start-conversation': 'deck-master create --brief … --source … --out …(不隐式生成规则稿)',
+    'start': 'deck-master create(新项目)或 deck-master view --project <dir>(已有项目)',
+    'plan': 'deck-master create --brief … --source … --out …',
+    'build-brief': 'deck-master create --brief … --source … --out …',
+    'build-claim-map': 'deck-master create 后由内容方法派生;不单独生成 claim_map',
+    'autoplan': 'deck-master create --draft <完整稿.json> 或 import-draft',
+    'search-library': _GUIDANCE_LIBRARY,
+    'decide-sourcing': _GUIDANCE_LIBRARY,
+    'library-status': _GUIDANCE_LIBRARY,
+    'import-library-selection': _GUIDANCE_LIBRARY,
+    'record-library-feedback': _GUIDANCE_LIBRARY,
+    'uat-ppt-library': _GUIDANCE_LIBRARY,
+    'validate-ppt-library-result': _GUIDANCE_LIBRARY,
+    'suite-status': 'deck-master doctor --step view(renderer/字体按步如实报告)',
+    'suite-install': '无需安装 suite;pip 安装后 deck-master 直接可用',
+    'suite-repair': '无需 suite 修复;pip 安装后 deck-master 直接可用',
+    'setup': '新核心无首次运行配置;pip install -e . 后直接 create',
+    'setup-status': 'deck-master doctor --step compose',
+}
+
+_LEGACY_RETIRED = {
+    'backend', 'suite-build-release-tree', 'release-build', 'release-smoke',
+    'release-install', 'release-rollback', 'suite-migrate-legacy-skills',
+    'install-skill', 'validate-skill', 'uninstall-skill', 'orchestration-check',
+    'bind-workspace', 'build-judgments', 'build-claim-graph', 'init-workspace',
+    'init-project', 'register-workspace', 'validate-workspace', 'delivery',
+    'opportunity', 'connector', 'render', 'render-status', 'import-render-result',
+    'import-sourcing', 'validate-sourcing', 'import-context-pack',
+    'create-run-from-context-pack', 'prepare-narrative-advice',
+    'import-narrative-advice', 'apply-narrative-advice', 'prepare-quality-review',
+    'import-quality-review', 'import-quality-findings', 'prepare-generation-handoff',
+    'import-generation-result', 'refresh-preview-from-generation',
+    'generation-session', 'run-generation', 'build-learning-pack',
+    'show-learning-pack', 'validate-generation-result', 'validate-render-result',
+    'summarize-run-metrics', 'uat-generation-tool', 'uat-render-tool',
+    'smoke-real-workflow', 'validate-benchmark-case', 'benchmark-run',
+    'benchmark-report', 'benchmark-rc-report', 'benchmark-checkpoint',
+    'benchmark-list', 'benchmark-aggregate-report', 'rc-gate', 'preview-gate',
+}
+
+_LEGACY_BUILD_SUBCOMMANDS = {
+    'prepare': 'read-only status derived from the current ProjectView',
+    'status': 'read-only status derived from the current ProjectView',
+    'run': 'deck-master build --project <dir> 本地编译渲染',
+    'retry': None,
+    'select-style': None,
+    'import-provider-result': None,
+    'approve-blueprint': None,
+}
+
+_LEGACY_ALIAS = {
+    'agent-doctor', 'next-step', 'run-state', 'final-readiness', 'import-plan',
+    'product-capability-manifest', 'validate-product-capability-manifest',
+}
+
+
+def _looks_like_legacy_run(path: Path) -> bool:
+    """Old-run shape recognition: no new Document pointer, but old markers."""
+    if (path / '.deckmaster' / 'current.json').is_file():
+        return False
+    return any((path / name).exists() for name in
+               ('preview_manifest.json', 'run.json', 'request.json', 'narrative_plan.json'))
+
+
+def _reject_legacy_run(path_value, option='--project'):
+    path = Path(path_value).expanduser()
+    if _looks_like_legacy_run(path):
+        return _emit_and_exit(_error(
+            'legacy_run_format',
+            f'{option} {path} 是旧版 run(preview_manifest/run.json 标记),新写命令不就地初始化或迁移;'
+            '请按 docs/migration-to-rebuilt-core.md 处置,或固定旧版本安装操作该 run',
+            'convert with import-draft or pin the legacy version'), 2)
+    return None
+
+
+def _legacy_json(code, message, **extra):
+    payload = {'error': {'code': code, 'message': message}}
+    payload['error'].update(extra)
+    return payload
+
+
+def _legacy_dispatch(argv: list[str]) -> int | None:
+    command = next((token for token in argv if not token.startswith('-')), None)
+    if command is None:
+        return None
+    if command == 'build' and len(argv) > 1 and argv[argv.index('build') + 1] in _LEGACY_BUILD_SUBCOMMANDS:
+        return _legacy_build(argv)
+    if command in _LEGACY_GUIDANCE:
+        return _emit_and_exit(_legacy_json(
+            'legacy_guidance', f'旧命令 {command} 已由新核心取代: {_LEGACY_GUIDANCE[command]}',
+            next_action='use the mapped rebuilt command'), 2)
+    if command in _LEGACY_RETIRED:
+        return _emit_and_exit(_legacy_json(
+            'retired_command', f'旧命令 {command} 已退役,不进入新任务前置;'
+            '对照表见 deck-master legacy-map 与 docs/migration-to-rebuilt-core.md',
+            next_action='none'), 2)
+    if command in _LEGACY_ALIAS:
+        handler = {
+            'agent-doctor': _legacy_agent_doctor,
+            'next-step': _legacy_next_step,
+            'run-state': _legacy_next_step,
+            'final-readiness': _legacy_final_readiness,
+            'import-plan': _legacy_import_plan,
+            'product-capability-manifest': _legacy_manifest,
+            'validate-product-capability-manifest': _legacy_manifest_validate,
+        }[command]
+        return handler(argv)
+    return None
+
+
+def _option_value(argv, name, default=None):
+    if name in argv:
+        index = argv.index(name)
+        if index + 1 < len(argv):
+            return argv[index + 1]
+    return default
+
+
+def _legacy_agent_doctor(argv) -> int:
+    mode = _option_value(argv, '--mode', 'preview')
+    step = 'export' if mode == 'production' else 'view'
+    from .doctor import diagnose
+    result = diagnose(step, host_imagegen=('--host-imagegen' in argv))
+    _emit(result)
+    return 0 if result['status'] == 'ready' else 3
+
+
+def _legacy_next_step(argv) -> int:
+    # spec 09.6: 新项目返回同一 ProjectView;旧 run 拒绝就地初始化。
+    run_dir = _option_value(argv, '--run-dir')
+    if run_dir:
+        rejected = _reject_legacy_run(run_dir, '--run-dir')
+        if rejected is not None:
+            return rejected
+        project = run_dir
+    else:
+        project = _option_value(argv, '--project')
+    if not project:
+        return _emit_and_exit(_legacy_json('invalid_input', '提供 --project <dir>(旧 --run-dir 仅用于识别拒绝)',
+                                           next_action='add --project'), 2)
+    from .view import project_view
+    view = project_view(project)
+    next_action = ('submit_host_results' if view['pending_tasks']
+                   else 'continue_production' if view['page_count'] else 'create_or_import_content')
+    return _emit({**view, 'next_action': next_action})
+
+
+def _legacy_final_readiness(argv) -> int:
+    project = _option_value(argv, '--project') or _option_value(argv, '--run-dir')
+    if not project:
+        return _emit_and_exit(_legacy_json('invalid_input', '提供 --project <dir>', next_action='add --project'), 2)
+    rejected = _reject_legacy_run(project)
+    if rejected is not None:
+        return rejected
+    from .editing import check_summary
+    from .store import Store
+    from .view import project_view
+    store = Store(project)
+    doc = store.load_document()
+    summary = check_summary(store, doc)
+    view = project_view(project)
+    report = {
+        'status': 'ready' if summary['status'] == 'pass' and doc['outputs'].get('pptx') else 'blocked',
+        'review_status': summary['status'],
+        'unresolved': {'missing_dimensions': sorted(summary['missing_dimensions']),
+                       'failed_dimensions': sorted(k for k, v in summary['dimensions'].items()
+                                                 if v['open_must_fix'] or v['status'] == 'fail')},
+        'view_status': view['view_status'],
+        'revision_id': doc['revision_id'],
+        'evidence_level': 'engineering',
+    }
+    return _emit(report)
+
+
+def _legacy_import_plan(argv) -> int:
+    source = _option_value(argv, '--input') or _option_value(argv, '--plan')
+    if not source:
+        return _emit_and_exit(_legacy_json('invalid_input', 'import-plan 需要 --input <plan.json>',
+                                           next_action='add --input'), 2)
+    raw = json.loads(Path(source).read_text(encoding='utf-8'))
+    pages = raw.get('pages') if isinstance(raw, dict) else None
+    project = _option_value(argv, '--project')
+    if isinstance(pages, list) and pages and \
+            all(isinstance(page, dict) and page.get('schema_version') == 'deck_page_package.v2'
+                for page in pages):
+        # 已是 v2 完整稿:按 import-draft 语义接收,源数据不改,未知字段由 check_page 显式报错。
+        return _emit(service.import_draft(project or '.', draft_payload=raw))
+    legacy_keys = sorted(set(raw) - {'pages', 'page_order'}) if isinstance(raw, dict) else []
+    return _emit_and_exit(_legacy_json(
+        'legacy_plan_format',
+        f'{source} 不是 Page v2 完整稿(检测到旧字段: {legacy_keys or "结构不符"});'
+        '新核心不就地迁移旧 plan,请按 docs/migration-to-rebuilt-core.md 转换后 import-draft,'
+        '未知字段必须显式映射、不得静默丢弃', next_action='convert then import-draft'), 2)
+
+
+def _legacy_manifest(argv) -> int:
+    import deck_master
+    manifest_path = Path(deck_master.__file__).resolve().parents[2] / 'product-capability-manifest.json'
+    if not manifest_path.is_file():
+        manifest_path = Path.cwd() / 'product-capability-manifest.json'
+    return _emit(json.loads(manifest_path.read_text(encoding='utf-8')))
+
+
+def _legacy_manifest_validate(argv) -> int:
+    try:
+        _legacy_manifest(argv)
+    except Exception as exc:  # noqa: BLE001
+        return _emit_and_exit(_legacy_json('invalid_input', f'manifest 不可解析: {exc}',
+                                           next_action='fix the JSON'), 2)
+    return _emit({'status': 'valid'})
+
+
+def _legacy_build(argv) -> int:
+    index = argv.index('build')
+    subcommand = argv[index + 1]
+    mapping = _LEGACY_BUILD_SUBCOMMANDS[subcommand]
+    run_dir = _option_value(argv, '--run-dir')
+    if run_dir:
+        rejected = _reject_legacy_run(run_dir, '--run-dir')
+        if rejected is not None:
+            return rejected
+    if mapping is None:
+        return _emit_and_exit(_legacy_json(
+            'retired_command', f'build {subcommand} 已退役(MBB 阶段/style 锁定属于旧制作链)',
+            next_action='none'), 2)
+    if subcommand == 'run':
+        return _emit_and_exit(_legacy_json(
+            'legacy_guidance', '旧 build run 映射: deck-master build --project <dir>(本地编译渲染)',
+            next_action='deck-master build --project <dir>'), 2)
+    project = _option_value(argv, '--project') or run_dir
+    if not project:
+        return _emit_and_exit(_legacy_json('invalid_input', '提供 --project <dir>', next_action='add --project'), 2)
+    from .view import project_view
+    view = project_view(project)
+    return _emit({'status': 'prepared' if view['page_count'] else 'awaiting_content',
+                  'page_count': view['page_count'],
+                  'outputs': view['outputs'], 'view_status': view['view_status']})
+
+
+def legacy_mapping_table() -> dict:
+    return {
+        'alias': sorted(_LEGACY_ALIAS),
+        'guidance': sorted(_LEGACY_GUIDANCE),
+        'retired': sorted(_LEGACY_RETIRED | {f'build {name}' for name, mapped in
+                                             _LEGACY_BUILD_SUBCOMMANDS.items() if mapped is None}),
+        'legacy_build_subcommands': sorted(_LEGACY_BUILD_SUBCOMMANDS),
+        'note': 'spec 09.6;旧 scripts/deck_master.py 不再被新入口调用',
+    }
+
+
+
 def _project_has_pages(project: Path | str) -> bool:
     try:
         from .store import Store
@@ -302,6 +597,9 @@ def _attach_workbench_url(project: Path | str, payload: dict) -> dict:
 
 
 def _dispatch_task(options) -> int:
+    rejected = _reject_legacy_run(options.project)
+    if rejected is not None:
+        return rejected
     if options.task_command == "accept":
         had_pages = True
         try:

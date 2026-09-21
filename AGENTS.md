@@ -38,45 +38,49 @@ The active implementation baseline for the mainline rebuild is
 ## Project Truth
 
 - Runtime contracts: `docs/contracts/`.
-- Public capability manifest: `product-capability-manifest.json`.
-- Skill task schemas: `skills/deck-master/schemas/`.
-- Source checkout CLI entrypoint: `python3 scripts/deck_master.py`.
+- Rebuilt-core CLI entrypoint (the ONLY command surface): `deck-master`
+  (console entry = `deck_master.cli:main`); source checkout equivalent:
+  `python -m deck_master`. The legacy `scripts/deck_master.py` is not part of
+  the new flow.
+- Legacy command mapping (spec 09.6): `deck-master legacy-map`; migration
+  notes: `docs/migration-to-rebuilt-core.md`.
 - Editable install uses Python 3.12 by default. Python 3.11 and 3.12 are
-  supported for preview commands; real PPT Library v2 integration requires
-  Python 3.12+. After
-  `python -m pip install -e ".[dev]"`, installed command is `deck-master`.
-- Technical Preview demo: `scripts/demo.sh` plus `preview-gate`.
-- Release verification: `release-build` plus `release-smoke`.
+  supported. After `python -m pip install -e ".[dev]"`, installed command is
+  `deck-master`.
+- Old run paths are recognised and refused by new write commands
+  (`legacy_run_format`); they are never migrated or initialised in place.
 
 Do not infer state from prose when a JSON command exists. Prefer these
 machine-readable commands:
 
 ```bash
-python3 scripts/deck_master.py agent-doctor --mode preview --output json
-python3 scripts/deck_master.py agent-doctor --mode production --output json
-python3 scripts/deck_master.py suite-status --output json
-python3 scripts/deck_master.py next-step --run-dir <run_dir>
-python3 scripts/deck_master.py preview-gate --run-dir <run_dir> --expect-unconfigured-backend-ok
-python3 scripts/deck_master.py final-readiness --run-dir <run_dir> --no-write
+deck-master doctor --step compose   # content inputs
+deck-master doctor --step render    # renderer toolchain
+deck-master doctor --step export    # delivery-time checks
+deck-master continue --project <dir> --json
+deck-master final-readiness --project <dir> --json
+deck-master view --project <dir> --json
 ```
 
 ## Task Routing
 
-- New fixture demo or public preview: run `bash scripts/demo.sh`, then
-  `preview-gate`.
-- Continue an existing run: run `next-step` first, then execute only the
-  returned `next_command`.
-- Diagnose readiness: run `agent-doctor`; use `preview` for public demo and
-  `production` for production backend checks.
-- Check client export: run `final-readiness`; do not export when it is blocked.
-- Build release tree: run `release-build` to a fresh output path, then
-  `release-smoke --release-root <that_path>`.
+- New deck from material: `deck-master create --brief … --source … --out …`
+  (a plain material directory is enough; no library/workspace/backend setup).
+- Continue an existing project: `deck-master continue --project <dir>`; execute
+  only the returned pending Host tasks.
+- Adopt a Host result: `deck-master task accept --project … --task-id …
+  --operation-id … --produced-against … --result result.json`.
+- Review/edit/export: `deck-master view --open --project <dir>`;
+  `deck-master export --project <dir> --out <dir> --purpose review|delivery`.
+- Diagnose readiness: `deck-master doctor --step <step>`; renderer gaps report
+  as `needs_tool` with the real reason.
 - Repair blocked state: read `docs/agent-recovery-playbook.md` and follow the
-  matching blocked code or runtime stage.
+  matching blocked code.
 
 ## Forbidden Actions
 
-- Do not report production backend readiness unless JSON status says ready.
+- Do not report readiness as passing unless the current check summary says
+  pass; exit code 0 and completed tasks are never professional approval.
 - Do not use fixture fallback in production or benchmark mode.
 - Do not write placeholder artifacts into production runs.
 - Do not commit generated runs, private benchmark sources, local env files,

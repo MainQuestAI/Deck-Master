@@ -51,6 +51,10 @@ def test_wheel_carries_schema_static_and_methods(tmp_path: Path) -> None:
         assert archive.read("deck_master/resources/skill/SKILL.md") == (REPO/"skills/deck-master/SKILL.md").read_bytes()
     assert "deck_master/resources/skills-references/source-reading.md" in names
     assert "deck_master/resources/skills-references/content-methods.md" in names
+    # AC-I04: the console entry points at the rebuilt CLI (spec 11).
+    entry_points_name = next(n for n in names if n.endswith("entry_points.txt"))
+    with zipfile.ZipFile(wheels[0]) as archive:
+        assert "deck-master = deck_master.cli:main" in archive.read(entry_points_name).decode("utf-8")
     # AC-K15: release artifacts never bundle system/user font files.
     assert not any(n.lower().endswith((".ttf", ".otf", ".ttc", ".woff", ".woff2")) for n in names), \
         "system fonts must not be packaged into the wheel"

@@ -85,11 +85,11 @@ T16.02,T16,WP04,实现固定解释器安装,新release目录独立venv、实际�
 T16.03,T16,WP04,实现原子激活与回滚,检查通过后在测试前缀切current/previous；失败不动旧current；旧代码不写新格式,故障安装原链接不变；rollback回旧二进制并提示格式边界,not_started,internal_step
 T16.04,T16,WP04,实现按步doctor,compose/blueprint/compile/render/view/export分别报告解释器/工具/字体/来源,缺renderer不阻正文，无PPTMaster/Library不报新核心缺绑定,not_started,internal_step
 T16.05,T16,WP04,实现旧Skill所有权处理,仅替换安装器拥有且未被改动的资源；第三方/用户同名内容保留,三种归属反例真实验证，激活用户当前版本留到授权实施阶段,not_started,internal_step
-T17.01,T17,WP04,清点并映射全部旧命令,将只读CLI清单逐项对应别名或退役提示；import-plan/build/next-step等按09.6落实,每个旧入口有明确行为，不能继续调用旧main隐式生成规则稿,not_started,internal_step
-T17.02,T17,WP04,统一默认新入口,console entry、__main__、根Skill、API和安装器指新service；隔离候选先验,没有永久v2开关，用户主任务走宿主成稿,not_started,internal_step
-T17.03,T17,WP04,解除所有绑定宣传与检查,manifest/doctor/routing/README/UI不再要求PPTMaster SHA认证或Library安装,无配置无缓存仍进入新流程；真实python-pptx/renderer依赖正常报告,not_started,internal_step
-T17.04,T17,WP04,迁移使用和恢复文档,更新AGENTS/任务索引/恢复说明/主README和migration文档，历史规格标归档,新用户照文档走create→view→edit→export，旧run不会被自动写新pointer,not_started,internal_step
-T17.05,T17,WP04,做入口矩阵回归,新命令、旧别名、旧run误输入、退役命令逐类验证,JSON/退出码/提示一致；实际默认激活由T25完成,not_started,internal_step
+T17.01,T17,WP04,清点并映射全部旧命令,将只读CLI清单逐项对应别名或退役提示；import-plan/build/next-step等按09.6落实,每个旧入口有明确行为，不能继续调用旧main隐式生成规则稿,implemented_verified,internal_step
+T17.02,T17,WP04,统一默认新入口,console entry、__main__、根Skill、API和安装器指新service；隔离候选先验,没有永久v2开关，用户主任务走宿主成稿,implemented_verified,internal_step
+T17.03,T17,WP04,解除所有绑定宣传与检查,manifest/doctor/routing/README/UI不再要求PPTMaster SHA认证或Library安装,无配置无缓存仍进入新流程；真实python-pptx/renderer依赖正常报告,implemented_verified,internal_step
+T17.04,T17,WP04,迁移使用和恢复文档,更新AGENTS/任务索引/恢复说明/主README和migration文档，历史规格标归档,新用户照文档走create→view→edit→export，旧run不会被自动写新pointer,implemented_verified,internal_step
+T17.05,T17,WP04,做入口矩阵回归,新命令、旧别名、旧run误输入、退役命令逐类验证,JSON/退出码/提示一致；实际默认激活由T25完成,implemented_verified,internal_step
 T18.01,T18,WP04,只读识别和dry-run,legacy按明确schema/version读已知v1/HD、SVG/PPT；先输出字段/媒体/未知项计划,未知结构具体定位，不用任意NBB子串判断版本,not_started,internal_step
 T18.02,T18,WP04,规范旧正文与设计,v1到v2保留可见正文/关系/稳定ID；字体Logo到design_context，缺源hash可空,未知正文形态不得静默丢弃或强设ready,not_started,internal_step
 T18.03,T18,WP04,导入新副本和实际媒体,复制允许媒体到新objects，记录真实hash与原来源说明；不执行旧脚本,导入前后原目录逐文件hash一致，旧媒体可读,not_started,internal_step

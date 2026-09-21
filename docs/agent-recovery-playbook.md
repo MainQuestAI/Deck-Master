@@ -1,129 +1,67 @@
 # Deck Master Agent Recovery Playbook
 
-Use this playbook when a JSON command returns `blocked`, `fail`, or an
-unexpected runtime stage. Do not repair by editing random artifacts.
+Use this playbook when a rebuilt-core command returns a non-zero exit, a
+`blocked`/`fail` status, or an unexpected state. Do not repair by editing
+project objects by hand; every fix goes through the CLI/service layer.
 
-## Backend Missing
+Exit codes (spec 09.3): 0 action done (read `status` for deck state), 2 invalid
+input, 3 awaiting host/tool, 4 execution failure, 5 conflict/late result with
+current unchanged.
 
-- Detect by: `agent-doctor --mode production` check `production_backend` or
-  `suite-status.external_dependency_status` for `ppt-master`.
-- Auto action: none for production. Fixture preview may continue.
-- This blocker applies to the standard builder profile. A run already bound to
-  `builder_profile=high_density` checks
-  `deck_master.build.high_density.v1` and follows the High-Density Builder
-  section below; it does not require the external standard backend.
-- Stop a standard-profile run when the `ppt-master` production backend is not
-  `bound_verified` with a verified git SHA.
-- Verify with:
+## Legacy Run Format
 
-```bash
-python3 scripts/deck_master.py agent-doctor --mode production --output json
-```
+- Detect by: exit 2 with `error.code == "legacy_run_format"`.
+- Meaning: the path is an old v0.9.x run (preview/run markers, no new
+  Document pointer).
+- Auto action: none in place. Read
+  [docs/migration-to-rebuilt-core.md](migration-to-rebuilt-core.md); convert a
+  full draft and `import-draft`, or pin the old release for that run.
+- Stop when: the user has not chosen conversion vs pinning.
 
-## Preview Missing
+## Renderer Or Font Missing
 
-- Detect by: `preview-gate.required_files.status == "fail"` or
-  `next-step.runtime_stage == "needs_preview"`.
-- Auto action: rebuild preview only when upstream artifacts exist.
+- Detect by: `doctor --step render|compile` returns `status == "needs_tool"`,
+  or `continue` returns `status == "needs_tool"`.
+- Auto action: install the named tool (`soffice`, `pdftoppm`, `rsvg-convert`,
+  `fc-match`) or point `DECK_MASTER_<TOOL>` at it, then re-run the same step.
+- Never fall back to fixtures outside demo material.
 
-```bash
-python3 scripts/deck_master.py build-preview --run-dir <run_dir>
-python3 scripts/deck_master.py preview-gate --run-dir <run_dir> --expect-unconfigured-backend-ok
-```
+## Conflict / Late Result
 
-- Stop when: request, narrative plan, page tasks, or sourcing plan is missing.
+- Detect by: exit 5 or `error.code == "conflict"`.
+- Auto action: re-read the current project (`view` / `continue`), rebase the
+  payload (fresh `page_hash` / `produced_against`), retry with a new
+  `operation_id` for changed content. The late payload never overwrites.
+- Cancel-first wins: a result after `task cancel` is settled for call facts
+  and refused for content (`late result after cancellation`).
 
-## Schema Mismatch
+## Review Blocked
 
-- Detect by: validation error mentioning a schema version or a contract in
-  `docs/contracts/`.
-- Auto action: run a documented migration command only when one exists.
-- Stop when: no migration path is documented.
-- Verify with the same command that reported the schema mismatch.
+- Detect by: `final-readiness` reports `review_status != "pass"`, or
+  `export --purpose delivery` refuses with the unresolved dimensions list.
+- Auto action: fix the named Page/SVG layer, then re-run the affected checks.
+  Read findings from `deck-master view --project <dir>` (findings carry
+  page/element addressing).
+- A failing professional review blocks delivery even when all engineering
+  checks pass; stopping a no-progress repair loop is not a pass.
 
-## Stale Generation Result
+## Schema Or Envelope Mismatch
 
-- Detect by: import or generation session output mentions stale source
-  fingerprint, checksum mismatch, or session mismatch.
-- Auto action: recreate or redispatch the generation session.
+- Detect by: exit 2 with a field path in `error.message`.
+- Auto action: fix the named field; unknown envelope fields are rejected, not
+  ignored. Page v2 normalization raises the exact pointer needing a decision.
+- Stop when: a contract mismatch has no documented migration.
 
-```bash
-python3 scripts/deck_master.py generation-session status --run-dir <run_dir>
-python3 scripts/deck_master.py generation-session dispatch --run-dir <run_dir>
-```
+## Workbench Unavailable
 
-- Continue when the current Agent can create the declared output with its
-  available tools. Stop only when the required backend or capability is
-  unavailable.
+- Detect by: `view_status == "unavailable"` or `review_url == null`.
+- Auto action: the payload `findings` carry the real reason (no Document,
+  service start failure, no browser). The local URL is still printed when a
+  service is running; no browser does not lose the address.
 
-## P0 Quality Finding
+## History And Restore
 
-- Detect by: quality gate output with severity `P0` or final readiness blocker.
-- Auto action: repair the source artifact or rerun the matching quality gate.
-- Stop when: an override would be required. P0 cannot be overridden for client
-  export.
-- Verify with:
-
-```bash
-python3 scripts/deck_master.py final-readiness --run-dir <run_dir> --no-write
-```
-
-## Final Readiness Blocked
-
-- Detect by: `final-readiness` has blockers or `agent-doctor` check
-  `final_readiness` is blocked.
-- Auto action: fix blocker codes in order: render, artifact path, delivery
-  validation, lineage, quality gates, customer-visible safety.
-- Stop when: production backend, external artifact, or human approval is
-  missing.
-- Verify with:
-
-```bash
-python3 scripts/deck_master.py final-readiness --run-dir <run_dir> --no-write
-```
-
-## Release Smoke Failed
-
-- Detect by: `release-smoke.status != "passed"` or verification errors.
-- Auto action: rebuild release tree once.
-
-```bash
-python3 scripts/deck_master.py release-build --output /tmp/deck-master-0.9.14-preview-release --force
-python3 scripts/deck_master.py release-smoke --release-root /tmp/deck-master-0.9.14-preview-release
-```
-
-- Stop when: checksum, missing contract, or missing capability errors remain.
-
-## High-Density Builder
-
-- Detect by: `build status --profile high-density` returns `blocked`, or a
-  high-density command returns a structured error with an `HD_*` code.
-- Read the persisted failure before changing artifacts:
-
-```bash
-python3 scripts/deck_master.py build status --run-dir <run_dir> --profile high-density
-python3 scripts/deck_master.py next-step --run-dir <run_dir>
-```
-
-- Auto action: follow the returned `next_command`. A page-scoped failure uses
-  `build retry --profile high-density --page-id <page_id> --stage <stage>` and
-  invalidates that stage and all downstream artifacts.
-- Blueprint waiting: the Agent must generate or approve the blueprint at the
-  recorded `output_ref`, then rerun the recorded resume command.
-- Scene waiting: the Agent must write a semantic `page_scene.v2` with locked
-  text references and in-canvas geometry, then resume the run.
-- Visual review waiting: the Agent must write a passing visual review tied to
-  the current SVG and blueprint hashes, then resume the run.
-- Stop when: the error is `HIGH_DENSITY_CAPABILITY_MISSING`, a production run
-  lacks the required Agent/ImageGen capability, or the failure identifies
-  missing source material or a required user decision. A repeated failure must
-  be diagnosed from its persisted evidence; it is not stopped merely because a
-  retry count was reached. Do not mark the canonical build manifest completed while
-  high-density status is blocked or awaiting Agent work.
-- Verify after repair:
-
-```bash
-python3 scripts/deck_master.py build run --run-dir <run_dir> --profile high-density
-python3 scripts/deck_master.py build status --run-dir <run_dir> --profile high-density
-python3 scripts/deck_master.py final-readiness --run-dir <run_dir> --no-write
-```
+- Restore always creates a NEW revision; task call facts (consumed/unknown/
+  cancelled) and the user stop state are never rolled back. Use
+  `deck-master history list --project <dir>` to pick a revision, then
+  `history restore` with the current base revision.

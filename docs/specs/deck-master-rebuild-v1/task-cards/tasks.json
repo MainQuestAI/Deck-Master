@@ -1249,7 +1249,7 @@
     "implementation": "新旧命令明确映射/退役，manifest/README/installer/UI共同解除PPTMaster与Library前置",
     "acceptance_ids": "AC-I04,AC-C06",
     "failure_return": "不能保留永久v2开关把旧默认留在原处",
-    "status": "not_started",
+    "status": "implemented_verified",
     "start_after": "T15,T16",
     "early_delivery": "按整项任务依赖执行",
     "card": "T17.md",
@@ -1267,7 +1267,7 @@
         "title": "清点并映射全部旧命令",
         "work": "将只读CLI清单逐项对应别名或退役提示；import-plan/build/next-step等按09.6落实",
         "deliverable_and_check": "每个旧入口有明确行为，不能继续调用旧main隐式生成规则稿",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -1277,7 +1277,7 @@
         "title": "统一默认新入口",
         "work": "console entry、__main__、根Skill、API和安装器指新service；隔离候选先验",
         "deliverable_and_check": "没有永久v2开关，用户主任务走宿主成稿",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -1287,7 +1287,7 @@
         "title": "解除所有绑定宣传与检查",
         "work": "manifest/doctor/routing/README/UI不再要求PPTMaster SHA认证或Library安装",
         "deliverable_and_check": "无配置无缓存仍进入新流程；真实python-pptx/renderer依赖正常报告",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -1297,7 +1297,7 @@
         "title": "迁移使用和恢复文档",
         "work": "更新AGENTS/任务索引/恢复说明/主README和migration文档，历史规格标归档",
         "deliverable_and_check": "新用户照文档走create→view→edit→export，旧run不会被自动写新pointer",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -1307,7 +1307,7 @@
         "title": "做入口矩阵回归",
         "work": "新命令、旧别名、旧run误输入、退役命令逐类验证",
         "deliverable_and_check": "JSON/退出码/提示一致；实际默认激活由T25完成",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       }
     ]
