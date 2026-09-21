@@ -75,11 +75,11 @@ T14.03,T14,WP03,接取消检查导出恢复,API统一service，409/400或422/503
 T14.04,T14,WP03,完成真实服务与文件安全,loopback、Origin/token、登记Artifact ID访问；材料用textContent，SVG隔离展示,正常只读无需账号；路径逃逸/XSS/跨源写入反例拒绝,implemented_verified,internal_step
 T14.05,T14,WP03,完成桌面入口连续交互,自动view、健康服务复用，无浏览器/服务启动失败分流；更新给当前页链接,自然语言任务不需用户补开UI；工作台反馈能被下一Host真实执行,implemented_verified,internal_step
 T14.06,T14,WP03,验收布局和编辑能力说明,1280×800/1440×900、键盘切页/反馈/取消、对照缩放；显示实际画布/字体替代,浏览器操作记录与截图齐备；形状文字编辑不说成Office图表编辑数据,implemented_verified,internal_step
-T15.01,T15,WP03,统一导出用途,export的review可包含明确标识失败稿；delivery消费当前集合和evaluate_current,同稿可审阅但有must_fix不能交付；缺人类审阅如实标记,not_started,internal_step
-T15.02,T15,WP03,固定当前成品与依赖,选Document当前页/PPT/预览并核对实际文件，导出到用户选定新目录,旧approved queue/历史pass不能代替当前结果，导出说明对应真实revision,not_started,internal_step
-T15.03,T15,WP03,统一状态与Host完成措辞,CLI/continue/UI/export共用view四维状态及专业证据字段,exit0与Task completed不会被转换为专业通过,not_started,internal_step
-T15.04,T15,WP03,补编辑能力和交付说明,Artifact/API/UI/README明确editable_shapes_and_text；未核实旧件为unknown,表格图表不承诺Office编辑数据；未做桌面编辑保留未验证,not_started,internal_step
-T15.05,T15,WP03,覆盖导出正反场景,正常当前稿、失败稿、过期报告、缺关键审阅、用户要求人类审阅分别执行,导出结果/拒绝原因/当前版本形成可复核记录,not_started,internal_step
+T15.01,T15,WP03,统一导出用途,export的review可包含明确标识失败稿；delivery消费当前集合和evaluate_current,同稿可审阅但有must_fix不能交付；缺人类审阅如实标记,implemented_verified,internal_step
+T15.02,T15,WP03,固定当前成品与依赖,选Document当前页/PPT/预览并核对实际文件，导出到用户选定新目录,旧approved queue/历史pass不能代替当前结果，导出说明对应真实revision,implemented_verified,internal_step
+T15.03,T15,WP03,统一状态与Host完成措辞,CLI/continue/UI/export共用view四维状态及专业证据字段,exit0与Task completed不会被转换为专业通过,implemented_verified,internal_step
+T15.04,T15,WP03,补编辑能力和交付说明,Artifact/API/UI/README明确editable_shapes_and_text；未核实旧件为unknown,表格图表不承诺Office编辑数据；未做桌面编辑保留未验证,implemented_verified,internal_step
+T15.05,T15,WP03,覆盖导出正反场景,正常当前稿、失败稿、过期报告、缺关键审阅、用户要求人类审阅分别执行,导出结果/拒绝原因/当前版本形成可复核记录,implemented_verified,internal_step
 T16.01,T16,WP04,提取独立发行构建,tools/build_release调用正常PEP517资源hook；release记录精确源码/包/方法/内核版本,wheel/sdist资源完整，新包不引旧命名空间,not_started,internal_step
 T16.02,T16,WP04,实现固定解释器安装,新release目录独立venv、实际模块路径与按步探针；不改系统Python,隔离前缀安装可导入/读取资源/调用编译；不借旧安装补依赖,not_started,internal_step
 T16.03,T16,WP04,实现原子激活与回滚,检查通过后在测试前缀切current/previous；失败不动旧current；旧代码不写新格式,故障安装原链接不变；rollback回旧二进制并提示格式边界,not_started,internal_step

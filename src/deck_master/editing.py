@@ -34,13 +34,31 @@ def _current_artifact_digests(store, doc):
     return artifacts
 
 
-def review_status(store, doc):
-    """Load-side verdict; the single interpretation lives in review.evaluate_current."""
+def check_summary(store, doc):
+    """The full CheckSummary behind review_status (one interpretation, AC-R03)."""
     from . import review as review_mod
     reviews = [{**store.read_object_json(ref), 'ref': ref} for ref in doc.get('reviews') or []]
     document = {**doc, 'tasks': [store.read_object_json(ref) for ref in doc.get('tasks') or []]}
-    summary = review_mod.evaluate_current(document, reviews, _current_artifact_digests(store, doc))
-    return summary['status']
+    return review_mod.evaluate_current(document, reviews, _current_artifact_digests(store, doc))
+
+
+def review_status(store, doc):
+    """Load-side verdict; the single interpretation lives in review.evaluate_current."""
+    return check_summary(store, doc)['status']
+
+
+def _professional_evidence(store, doc):
+    """Human/professional review dimensions are reported honestly: a kind only
+    shows its recorded status when a current review exists, else not_evaluated
+    (never a fabricated human pass)."""
+    current = (doc.get('outputs') or {}).get('pptx')
+    evidence = {'professional_use': 'not_evaluated', 'desktop_editing': 'not_evaluated'}
+    for ref in doc.get('reviews') or []:
+        review = store.read_object_json(ref)
+        kind = review.get('kind')
+        if kind in evidence and current and current in (review.get('subjects') or []):
+            evidence[kind] = review.get('status') or 'not_evaluated'
+    return evidence
 
 
 
@@ -92,33 +110,51 @@ def export_project(project_dir, *, output_dir, purpose='working'):
         return _export_locked(store, output_dir=output_dir, purpose=purpose)
 
 def _export_locked(store, *, output_dir, purpose):
-    if purpose not in ('working', 'delivery'):
-        raise StoreError('purpose', 'must be working or delivery')
+    if purpose == 'working':
+        purpose = 'review'  # accepted alias (2026-09-16 evidence); semantics = review
+    if purpose not in ('review', 'delivery'):
+        raise StoreError('purpose', 'must be review or delivery')
     doc=store.load_document()
     if not doc['outputs'].get('pptx'):raise StoreError('outputs/pptx','no current PPT; continue production')
-    if purpose=='delivery' and review_status(store,doc)!='pass':raise StoreError('reviews','current deck review incomplete or failed')
+    summary=check_summary(store,doc)
+    status=summary['status']
+    if purpose=='delivery' and status!='pass':
+        failed=[key for key,value in summary['dimensions'].items() if value['open_must_fix'] or value['status']=='fail']
+        raise StoreError('reviews',f'delivery requires every required check to pass; '
+                         f'current review status is {status!r} '
+                         f'(unresolved: {sorted(set(summary["missing_dimensions"]) | set(failed))})')
     destination=Path(output_dir)
     destination.mkdir(parents=True,exist_ok=False)
     try:
         for role,ref in doc['outputs'].items():
-            if ref and (purpose == 'working' or role == 'pptx'):
+            if ref and (purpose == 'review' or role == 'pptx'):
                 obj=store.read_object_json(ref);suffix=Path(obj['file']['path']).suffix
                 (destination/('deck'+suffix if role=='pptx' else role+suffix)).write_bytes(store.read_object_bytes(obj['file']))
         for index,entry in enumerate(doc['pages'],1):
             directory=destination/f'{index:02d}-{entry["page_id"]}';directory.mkdir()
-            if purpose == 'working':
+            if purpose == 'review':
                 (directory/'page.json').write_bytes(store.read_object_bytes(entry['page']))
             for slot in ('blueprint','svg','svg_preview','ppt_preview'):
                 if entry[slot]:
                     obj=store.read_object_json(entry[slot]);(directory/(slot+Path(obj['file']['path']).suffix)).write_bytes(store.read_object_bytes(obj['file']))
-        if purpose == 'working':
+        if purpose == 'review':
             # Only immutable project data and the pinned pointer travel; no service PID, lock or staging.
             portable=destination/'project'/'.deckmaster'
             portable.mkdir(parents=True)
             for name in ('objects', 'revisions'):
                 shutil.copytree(store.deck_root/name, portable/name)
             (portable/'current.json').write_bytes((store.deck_root/'current.json').read_bytes())
-        (destination/'delivery.json').write_text(json.dumps({'project_id':doc['project_id'],'revision_id':doc['revision_id'],'purpose':purpose,'review_status':review_status(store,doc),'editability':'editable_shapes_and_text','desktop_editing':'not_evaluated'},ensure_ascii=False,indent=2))
+        failed_dimensions=sorted(key for key,value in summary['dimensions'].items()
+                                 if value['open_must_fix'] or value['status']=='fail')
+        report={'project_id':doc['project_id'],'revision_id':doc['revision_id'],'purpose':purpose,
+                'review_status':status,
+                'unresolved':{'missing_dimensions':sorted(summary['missing_dimensions']),
+                              'failed_dimensions':failed_dimensions},
+                'editability':'editable_shapes_and_text',
+                'professional_evidence':_professional_evidence(store,doc),
+                'desktop_editing':'not_evaluated',
+                'evidence_level':'engineering'}
+        (destination/'delivery.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
     except Exception:
         shutil.rmtree(destination);raise
     return {'status':'exported','revision_id':doc['revision_id'],'output_dir':str(destination)}

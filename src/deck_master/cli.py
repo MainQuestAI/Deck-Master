@@ -148,7 +148,7 @@ def build_parser() -> argparse.ArgumentParser:
     export = sub.add_parser('export')
     export.add_argument('--project', required=True)
     export.add_argument('--out', required=True)
-    export.add_argument('--purpose', choices=['working','delivery'], default='working')
+    export.add_argument('--purpose', choices=['review','working','delivery'], default='review')
     history = sub.add_parser('history')
     history_sub = history.add_subparsers(dest='history_command', required=True)
     history_list = history_sub.add_parser('list')

@@ -584,3 +584,87 @@ def test_reconstruct_after_style_change_uses_new_effective_style(tmp_path):
         rebuilt["design_context"], rebuilt["design_context"].get("assets") or [])
     assert style["style_id"] == "default"
     assert style["colors"]["accent"] == "#00AA66", "effective style after rebuild is the new one"
+
+
+# ---------------------------------------------------------------------------
+# T15 AC-K16: honest editability claims — shape/text only, never Office
+# native "edit data", and unverified legacy artifacts stay unknown.
+
+
+def test_pptx_artifact_and_export_declare_shape_text_editability(tmp_path):
+    from deck_master.models import validate_artifact_semantics
+    project = tmp_path / "proj"
+    service.create(project, brief="编辑能力", draft={"pages": [_draft_page("p1", "能力页", "正文。")]})
+    store = Store(project)
+    deck = tmp_path / "deck.pptx"
+    deck.write_bytes(b"current-pptx")
+    from deck_master.pipeline import artifact as adopt_artifact
+    document = store.load_document()
+    bumped = bump_revision(document, {"operation_id": "attach-pptx", "kind": "task_update",
+                                      "description": "outputs", "read_set": []})
+    bumped["outputs"]["pptx"] = adopt_artifact(store, deck, "pptx")
+    store.commit_change(base_revision=document["revision_id"], document=bumped, operation_id="attach-pptx")
+    artifact = store.read_object_json(store.load_document()["outputs"]["pptx"])
+    assert artifact["editability"] == "editable_shapes_and_text"
+
+    from deck_master.editing import export_project
+    export_project(project, output_dir=tmp_path / "out", purpose="review")
+    report = json.loads((tmp_path / "out" / "delivery.json").read_text("utf-8"))
+    assert report["editability"] == "editable_shapes_and_text"
+
+
+def test_no_office_native_editing_claims_in_ui_or_export(tmp_path):
+    static = Path(__file__).resolve().parents[2] / "src" / "deck_master" / "resources" / "static"
+    ui_text = (static / "index.html").read_text("utf-8") + (static / "app.js").read_text("utf-8")
+    for forbidden in ("编辑数据", "Edit Data", "编辑图表数据", "native chart", "原生图表编辑"):
+        assert forbidden not in ui_text, f"UI must not claim Office-native capability: {forbidden}"
+    assert "可编辑形状与文字" in ui_text, "UI states the real shape/text editability scope"
+
+    project = tmp_path / "proj"
+    service.create(project, brief="诚实声明", draft={"pages": [_draft_page("p1", "声明页", "正文。")]})
+    store = Store(project)
+    deck = tmp_path / "deck.pptx"
+    deck.write_bytes(b"pptx")
+    from deck_master.pipeline import artifact as adopt_artifact
+    document = store.load_document()
+    bumped = bump_revision(document, {"operation_id": "attach-pptx", "kind": "task_update",
+                                      "description": "outputs", "read_set": []})
+    bumped["outputs"]["pptx"] = adopt_artifact(store, deck, "pptx")
+    store.commit_change(base_revision=document["revision_id"], document=bumped, operation_id="attach-pptx")
+    from deck_master.editing import export_project
+    export_project(project, output_dir=tmp_path / "out", purpose="review")
+    report_text = (tmp_path / "out" / "delivery.json").read_text("utf-8")
+    for forbidden in ("编辑数据", "Edit Data", "native chart"):
+        assert forbidden not in report_text
+    assert "editable_shapes_and_text" in report_text
+
+
+def test_unverified_legacy_artifact_editability_stays_unknown(tmp_path):
+    # A legacy pptx registered without current-pipeline verification must not
+    # be promoted to editable_shapes_and_text: the schema-level value is
+    # unknown, and absence of the field reads as unknown too (spec 06.7).
+    from deck_master.models import validate_artifact_semantics, sha256_bytes
+    store_dir = tmp_path / "proj"
+    service.create(store_dir, brief="旧件", draft={"pages": [_draft_page("p1", "旧页", "正文。")]})
+    store = Store(store_dir)
+    legacy_bytes = b"legacy-unverified-pptx"
+    file_ref = store.put_blob(legacy_bytes, ext="pptx")
+    unknown_artifact = {
+        "schema_version": "deck_artifact.v1", "artifact_id": "legacy-1", "page_id": None,
+        "role": "pptx", "file": file_ref, "media_type":
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        "created_at": "2026-09-21T00:00:00Z", "dependencies": [], "derived_from": [],
+        "provenance": {"source_type": "user_supplied"}, "limitations": [],
+        "editability": "unknown",
+    }
+    validate_artifact_semantics(unknown_artifact), "unknown is the honest value for unverified imports"
+    ref = store.put_json_object(unknown_artifact)
+    document = store.load_document()
+    bumped = bump_revision(document, {"operation_id": "attach-legacy", "kind": "task_update",
+                                      "description": "legacy", "read_set": []})
+    bumped["outputs"]["pptx"] = ref
+    store.commit_change(base_revision=document["revision_id"], document=bumped, operation_id="attach-legacy")
+    stored = store.read_object_json(store.load_document()["outputs"]["pptx"])
+    assert stored["editability"] == "unknown"
+    assert stored["editability"] != "editable_shapes_and_text", \
+        "an unverified old file is never upgraded to the current verified claim"

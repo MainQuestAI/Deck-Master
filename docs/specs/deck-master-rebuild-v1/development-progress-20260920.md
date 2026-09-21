@@ -56,9 +56,23 @@ T09 已关闭（见下节）。WP02 余下大卡为 T10（真实渲染与首段�
 - 状态同步：tasks.json/subtasks.csv 中 T11 及子任务标记 `implemented_verified`；T11.md 交接回填已记录。
 - 工作树待提交变更：`src/deck_master/review.py`、`editing.py`、`tasks.py`、`tests/rebuild/test_review.py`、`skills/deck-master/references/review-and-repair.md`。
 
-## 阶段 1 剩余
+## 阶段 1 完成：WP03 收口
 
-WP03 仅余 T15 导出与状态汇报收口。
+WP03 最后一张卡 T15 关闭（见下节）。**阶段 1（WP02/WP03 收尾）按计划完成**——T07/T08/T09/T11/T12/T13/T14/T15 整卡关闭，T10 工程 AC 关闭（仅差 AC-B04/V02/V07 非工程证据）。回归 137 → 294 项全绿。
+
+## T15 整卡关闭：导出与状态汇报收口
+
+- `export --purpose review|delivery` 落地（`working` 保留为 review 别名）;review 导出附真实未通过/未评估清单（取自 evaluate_current);delivery 拒绝信息带具体维度；delivery.json 新增 `unresolved`/`professional_evidence`/`evidence_level` 字段。
+- 新建 `tests/rebuild/test_export.py`(7 项）:fail 稿 review 导出如实标注、delivery 拒未解决 must_fix、缺人类审阅 not_evaluated 不假通过、exit 0≠专业通过；扩充 test_service_flow.py(+3):editability 诚实声明、UI/导出无原生 Office 编辑数据声明、旧件 unknown 不升级。
+- UI 补"可编辑形状与文字"诚实标注；`check_summary`/`_professional_evidence` 与 evaluate_current 同源抽出。
+- AC-V06(诚实交付,T25 关闭）交接输入齐备：delivery.json 证据字段 + 4 个对照测试名。
+- 验证：定向 23 passed；`tests/rebuild` 全量 **294 passed**(284+10)。
+- 状态同步：tasks.json/subtasks.csv 中 T15 及子任务标记 `implemented_verified`；T15.md 交接回填已记录。
+- 工作树待提交变更：`editing.py`、`cli.py`、index.html/style.css、`test_service_flow.py`、新建 `test_export.py`。
+
+## 下一阶段
+
+阶段 2(WP04 安装与唯一入口）:T17 唯一默认入口与文档 → T19 发布资源与许可证 → T18 旧 run 只读导入 → T16 收尾 + T20 隔离安装端到端。
 
 ## T14 整卡关闭：完整四视图工作台
 

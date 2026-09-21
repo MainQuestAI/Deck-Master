@@ -1103,7 +1103,7 @@
     "implementation": "review/delivery分开；实际当前文件/检查一致；失败稿能查看；Host完成表述遵从真实状态；PPT交付注明editable_shapes_and_text，不能暗示原生图表编辑数据",
     "acceptance_ids": "AC-R09,AC-V06,AC-K16",
     "failure_return": "不得通过裸completed或旧approval强行放行",
-    "status": "in_progress",
+    "status": "implemented_verified",
     "start_after": "T11,T12,T14",
     "early_delivery": "按整项任务依赖执行",
     "card": "T15.md",
@@ -1122,7 +1122,7 @@
         "title": "统一导出用途",
         "work": "export的review可包含明确标识失败稿；delivery消费当前集合和evaluate_current",
         "deliverable_and_check": "同稿可审阅但有must_fix不能交付；缺人类审阅如实标记",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -1132,7 +1132,7 @@
         "title": "固定当前成品与依赖",
         "work": "选Document当前页/PPT/预览并核对实际文件，导出到用户选定新目录",
         "deliverable_and_check": "旧approved queue/历史pass不能代替当前结果，导出说明对应真实revision",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -1142,7 +1142,7 @@
         "title": "统一状态与Host完成措辞",
         "work": "CLI/continue/UI/export共用view四维状态及专业证据字段",
         "deliverable_and_check": "exit0与Task completed不会被转换为专业通过",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -1152,7 +1152,7 @@
         "title": "补编辑能力和交付说明",
         "work": "Artifact/API/UI/README明确editable_shapes_and_text；未核实旧件为unknown",
         "deliverable_and_check": "表格图表不承诺Office编辑数据；未做桌面编辑保留未验证",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -1162,7 +1162,7 @@
         "title": "覆盖导出正反场景",
         "work": "正常当前稿、失败稿、过期报告、缺关键审阅、用户要求人类审阅分别执行",
         "deliverable_and_check": "导出结果/拒绝原因/当前版本形成可复核记录",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       }
     ]
