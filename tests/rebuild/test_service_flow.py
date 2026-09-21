@@ -380,14 +380,18 @@ def test_asset_byte_change_invalidates_only_referencing_pages(tmp_path):
     })
     store = Store(project)
     document = store.load_document()
-    svg_file = tmp_path / "page.svg"
-    svg_file.write_text("<svg viewBox='0 0 10 10'/>")
+    # p1's SVG actually embeds the logo; p2's SVG references no assets.
+    svg_with_logo = tmp_path / "page-with-logo.svg"
+    svg_with_logo.write_text('<svg viewBox="0 0 10 10"><image href="logo" width="4" height="4"/></svg>')
+    svg_plain = tmp_path / "page.svg"
+    svg_plain.write_text("<svg viewBox='0 0 10 10'/>")
     png_file = tmp_path / "preview.png"
     Image.new("RGB", (8, 6), (240, 240, 240)).save(png_file)
     bumped = bump_revision(document, {"operation_id": "attach", "kind": "task_update",
                                       "description": "attach slots", "read_set": []})
+    bumped["pages"][0]["svg"] = adopt_artifact(store, svg_with_logo, "svg", page_id="p1")
+    bumped["pages"][1]["svg"] = adopt_artifact(store, svg_plain, "svg", page_id="p2")
     for entry in bumped["pages"]:
-        entry["svg"] = adopt_artifact(store, svg_file, "svg", page_id=entry["page_id"])
         entry["svg_preview"] = adopt_artifact(store, png_file, "svg_preview", page_id=entry["page_id"])
         entry["ppt_preview"] = adopt_artifact(store, png_file, "ppt_preview", page_id=entry["page_id"])
     pptx_file = tmp_path / "deck.pptx"
@@ -410,10 +414,11 @@ def test_asset_byte_change_invalidates_only_referencing_pages(tmp_path):
     logo_artifact = store.read_object_json(new_logo["artifact"])
     assert store.read_object_bytes(logo_artifact["file"]) == logo_v2.read_bytes()
 
-    # Registering an asset nobody uses invalidates nothing.
+    # Registering a newly allowed asset that no page's SVG embeds invalidates
+    # nothing — allowance alone is not a rendering dependency (spec 08.8).
     other = tmp_path / "unused.png"
     Image.new("RGB", (5, 5), (1, 2, 3)).save(other)
-    service.import_asset(project, asset_id="unused", kind=" " .strip() or "image", file_path=other)
+    service.import_asset(project, asset_id="extra", kind="image", file_path=other)
     final = store.load_document()
     assert final["pages"][1]["svg"] == attached["pages"][1]["svg"]
     assert final["pages"][0]["svg"] is None

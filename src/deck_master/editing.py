@@ -6,18 +6,25 @@ import json
 import shutil
 import uuid
 from .content import check_page
-from .models import bump_revision
+from .models import bump_revision, canonical_json_bytes, sha256_bytes
 from .store import Store, ConflictError, StoreError
 from .tasks import _project_transaction
 
 
 def _current_artifact_digests(store, doc):
-    """Current dependency digests for review freshness (content/page/svg/pptx)."""
+    """Current dependency digests for review freshness (content/page/style/svg/pptx)."""
+    from .models import canonical_json_bytes
+    from .production import resolve_design
+    design = doc.get('design_context') or {}
     artifacts = {}
     for entry in doc.get('pages') or []:
         page_id = entry['page_id']
+        page = store.read_object_json(entry['page']) if entry.get('page') else {}
         if entry.get('page'):
             artifacts[f'content:page:{page_id}'] = entry['page']['sha256']
+        if page:
+            _, style = resolve_design(page, design, design.get('assets') or [])
+            artifacts[f'style:{page_id}'] = sha256_bytes(canonical_json_bytes(style))
         for slot, kind, identity in (('blueprint', 'blueprint', f'blueprint:{page_id}'),
                                      ('svg', 'artifact', f'svg:{page_id}'),
                                      ('svg_preview', 'artifact', f'svg_preview:{page_id}'),
@@ -123,6 +130,23 @@ def _export_locked(store, *, output_dir, purpose):
         raise StoreError('reviews',f'delivery requires every required check to pass; '
                          f'current review status is {status!r} '
                          f'(unresolved: {sorted(set(summary["missing_dimensions"]) | set(failed))})')
+    if purpose=='delivery' and (doc.get('policy') or {}).get('professional_review_required_for_delivery'):
+        current=doc['outputs'].get('pptx')
+        satisfied=False
+        for ref in doc.get('reviews') or []:
+            review=store.read_object_json(ref)
+            if not current or current not in (review.get('subjects') or []):
+                continue
+            if review.get('status')=='fail':
+                continue
+            if review.get('kind')=='professional_use' or \
+                    (review.get('reviewer') or {}).get('type') in ('human_internal','human_external'):
+                satisfied=True
+                break
+        if not satisfied:
+            raise StoreError('policy/professional_review_required_for_delivery',
+                             'delivery requires a non-failing professional_use or human review '
+                             'recorded on the current output')
     destination=Path(output_dir)
     destination.mkdir(parents=True,exist_ok=False)
     try:
@@ -146,11 +170,15 @@ def _export_locked(store, *, output_dir, purpose):
             (portable/'current.json').write_bytes((store.deck_root/'current.json').read_bytes())
         failed_dimensions=sorted(key for key,value in summary['dimensions'].items()
                                  if value['open_must_fix'] or value['status']=='fail')
+        pptx_ref=doc['outputs'].get('pptx')
+        editability='unknown'
+        if pptx_ref:
+            editability=store.read_object_json(pptx_ref).get('editability') or 'unknown'
         report={'project_id':doc['project_id'],'revision_id':doc['revision_id'],'purpose':purpose,
                 'review_status':status,
                 'unresolved':{'missing_dimensions':sorted(summary['missing_dimensions']),
                               'failed_dimensions':failed_dimensions},
-                'editability':'editable_shapes_and_text',
+                'editability':editability,
                 'professional_evidence':_professional_evidence(store,doc),
                 'desktop_editing':'not_evaluated',
                 'evidence_level':'engineering'}

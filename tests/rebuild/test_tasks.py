@@ -548,3 +548,14 @@ def test_two_executions_race_for_the_last_allowance(tmp_path: Path) -> None:
                                 execution_ref="exec-a")["status"] == "started"
     with pytest.raises(tasks_mod.TaskConflict):
         tasks_mod.call_begin(store, task_id=task_id, allowance_id="call-1", execution_ref="exec-b")
+
+
+def test_operation_journal_json_keeps_status() -> None:
+    journal = tasks_mod.OperationJournal(
+        operation_id="op-1", task_id="task-1", kind="compose",
+        produced_against="abc", result_digest="def", revision_id="rev-1",
+        status="late_result_settled", usage_events=[{"allowance_id": "call-1", "outcome": "unknown"}],
+    )
+    payload = journal.to_json()
+    assert payload["status"] == "late_result_settled"
+    assert payload["usage_events"][0]["outcome"] == "unknown"

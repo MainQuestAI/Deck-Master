@@ -27,6 +27,9 @@ class CompileOptions:
 
 @dataclass(frozen=True)
 class CompileResult:
+    """Real compile output. ``manifest_path`` doubles as the object trace: the
+    compile-input JSON records every page IR, font and input digest used."""
+
     pptx_path: Path
     manifest_path: Path
     diagnostics: tuple[dict, ...] = ()

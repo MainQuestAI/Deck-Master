@@ -30,7 +30,7 @@ A1_REF = ref('svg-a1', 'svg')
 
 def make_document(pptx=PPTX_REF, pages=('p1',), tasks=()):
     return {
-        'pages': [{'page_id': pid, 'page': PAGE_REF} for pid in pages],
+        'pages': [{'page_id': pid, 'page': ref(f'page-{pid}')} for pid in pages],
         'outputs': {'pptx': pptx} if pptx else {},
         'tasks': list(tasks),
     }
@@ -235,7 +235,9 @@ def _render_pair(tmp_path, kind):
         draw2.rectangle([10, 10, 90, 60], fill=(30, 60, 120))
         draw2.rectangle([120, 20, 140, 40], fill=(200, 40, 40))
     elif kind == 'antialias':
-        actual = expected.filter(ImageFilter.GaussianBlur(0.5))
+        # A real renderer anti-alias / font-rasterisation difference: an
+        # actual Gaussian blur with radius >= 1, not a near-identity pass.
+        actual = expected.filter(ImageFilter.GaussianBlur(1.5))
     exp_path, act_path = tmp_path / f'{kind}-exp.png', tmp_path / f'{kind}-act.png'
     expected.save(exp_path)
     actual.save(act_path)
@@ -266,7 +268,9 @@ def test_triage_antialias_is_accepted_variance_candidate(tmp_path):
     expected, actual = _render_pair(tmp_path, 'antialias')
     findings = review_mod.triage_render_difference(expected, actual, REGIONS)
     assert not any(f['impact'] == 'must_fix' for f in findings)
-    assert any(f['impact'] == 'accepted_variance' for f in findings)
+    canvas = next(f for f in findings if f['location'] == 'canvas')
+    assert canvas['impact'] == 'accepted_variance', canvas
+    assert 'variance scale' in canvas['detail']
 
 
 def test_triage_size_mismatch_is_judgment_not_silent(tmp_path):
@@ -463,3 +467,69 @@ def test_source_expectations_survive_registry_shrink():
     empty = review_mod.source_expectations(regions, [])
     assert all(r['status'] == 'not_evaluated' for r in empty['regions'])
     assert empty['coverage'] is None
+
+
+def test_style_dependency_freshness_turns_old_pass_into_stale():
+    # A review depending on the page's effective style is current only while
+    # the style fingerprint matches; a style change demotes it to history.
+    from deck_master.models import canonical_json_bytes, sha256_bytes
+    style = {'style_id': 'default'}
+    style_sha = sha256_bytes(canonical_json_bytes(style))
+    document = make_document()
+    review = make_review('content', seed='styled',
+                         dependencies=[{'kind': 'style', 'identity': 'p1',
+                                        'sha256': style_sha}])
+    summary = review_mod.evaluate_current(document, [review], {**current_artifacts(),
+                                                               'style:p1': style_sha})
+    assert summary['status'] == 'not_evaluated'
+    assert 'content:p1' in summary['dimensions'], 'style-fresh review counts as current'
+    # Style drifts: same review becomes stale and the dimension turns missing.
+    summary = review_mod.evaluate_current(document, [review],
+                                          {**current_artifacts(), 'style:p1': 'a' * 64})
+    assert 'content:p1' in summary['missing_dimensions']
+    assert any(s['reason'] == 'dependency sha does not match the current object'
+               for s in summary['stale'])
+
+
+def test_untracked_dependency_kind_is_conservatively_stale():
+    document = make_document()
+    review = make_review('content', seed='untracked',
+                         dependencies=[{'kind': 'toolchain', 'identity': 'compiler',
+                                        'sha256': '0' * 64}])
+    summary = review_mod.evaluate_current(document, [review], current_artifacts())
+    assert 'content:p1' in summary['missing_dimensions']
+    assert any('unverifiable dependency kind' in s['reason'] for s in summary['stale'])
+
+
+def test_open_task_suspends_only_its_scope_pages():
+    # A running/awaiting Host task blocks interpretation only for its scope
+    # pages; other pages keep their current dimensions (no global blackout).
+    document = make_document(pages=('p1', 'p2'))
+    p2_ref = ref('page-p2')
+    reviews = pass_set('s1') + [
+        make_review(kind, page_id='p2', seed=f's2-{kind}', subjects=[p2_ref, PPTX_REF],
+                    dependencies=[{'kind': 'content', 'identity': 'page:p2',
+                                   'sha256': p2_ref['sha256']}])
+        for kind in review_mod.REQUIRED_KINDS
+    ]
+    artifacts = {**current_artifacts(), 'content:page:p2': ref('page-p2')['sha256']}
+    task = {'task_id': 't-1', 'status': 'running', 'scope_pages': ['p2']}
+    summary = review_mod.evaluate_current({**document, 'tasks': [task]}, reviews, artifacts)
+    assert summary['status'] == 'not_evaluated'
+    assert 'p2' in summary['reason']
+    assert set(summary['dimensions']) == {f'{kind}:p1' for kind in review_mod.REQUIRED_KINDS}
+    assert all(key.endswith(':p2') for key in summary['missing_dimensions'])
+    # A fail on an unsuspended page still surfaces (fail is not masked).
+    failing = make_review('content', seed='sf', status='fail', findings=[finding('fx')])
+    summary = review_mod.evaluate_current({**document, 'tasks': [task]}, [failing] + reviews[1:7], artifacts)
+    assert summary['status'] == 'fail'
+
+
+def test_privacy_false_friend_does_not_mask_sensitive_marker_in_same_string():
+    page = {'customer_visible': {
+        'title': '缩略图说明:此图机密,仅限内部使用',
+        'body_blocks': [],
+    }}
+    findings = review_mod.privacy_findings(page)
+    assert findings and all(f['impact'] == 'must_fix' for f in findings), \
+        'a sensitive marker in a string that also contains a business word must still report'

@@ -101,6 +101,7 @@ class OperationJournal:
             "produced_against": self.produced_against,
             "result_digest": self.result_digest,
             "revision_id": self.revision_id,
+            "status": self.status,
             "usage_events": self.usage_events,
         }
 

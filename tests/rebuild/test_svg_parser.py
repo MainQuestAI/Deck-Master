@@ -192,6 +192,9 @@ UNSUPPORTED_CASES = [
     ('negative viewBox', b'<svg viewBox="0 0 -10 10"><rect width="5" height="5"/></svg>', 'viewBox'),
     ('nonzero viewBox origin', b'<svg viewBox="5 5 10 10"><rect width="5" height="5"/></svg>', 'viewBox'),
     ('non-finite geometry', '<rect width="1e999" height="5"/>', 'unitless'),
+    ('empty text element', '<text x="0" y="10"></text>', 'empty text'),
+    ('whitespace-only text', '<text x="0" y="10">   </text>', 'empty text'),
+    ('transform garbage inside parens', '<rect width="5" height="5" transform="translate(10foo)"/>', 'transform'),
     ('non-finite text position', '<text x="0" y="nan">a</text>', 'unitless'),
     ('opacity out of range', '<rect width="5" height="5" opacity="1.5"/>', 'invalid opacity'),
     ('transformed gradient',
@@ -199,6 +202,7 @@ UNSUPPORTED_CASES = [
      '<stop offset="1" stop-color="#00f"/></linearGradient></defs>'
      '<g transform="scale(2)"><rect width="5" height="5" fill="url(#g)"/></g>',
      'transformed gradient'),
+    ('stroked text outside subset', '<text x="0" y="10" stroke="#000000">描边字</text>', 'stroked text'),
     ('nonuniform text scaling',
      '<g transform="scale(2 1)"><text x="1" y="2">a</text></g>', 'nonuniform text scaling'),
 ]
@@ -214,7 +218,13 @@ def test_unsupported_and_unsafe(name, body, match):
     diagnostic = excinfo.value.diagnostic
     assert diagnostic['code'] == 'unsupported_or_invalid_svg'
     assert 'p1' in diagnostic['location']
+    assert diagnostic['page_id'] == 'p1'
     assert diagnostic['recovery']
+    # Structured element addressing where the failure is element-located.
+    element_cases = {'script element', 'filter attribute', 'unknown attribute',
+                     'onload handler', 'unresolved local use'}
+    if name in element_cases:
+        assert diagnostic['element_id'], (name, diagnostic)
 
 
 def test_rotated_circle_bbox_is_invariant():

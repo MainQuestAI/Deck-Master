@@ -42,7 +42,11 @@ def _parse_transform(raw: str | None, *, element_id: str, visual_id: str = "") -
             raise SvgNativeError(f"unsupported SVG transform syntax on {element_id}", element_id=element_id, visual_id=visual_id, property_name="transform")
         cursor = match.end()
         name = match.group(1).lower()
-        values = [float(token) for token in re.findall(r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?", match.group(2))]
+        raw_args = match.group(2)
+        values = [float(token) for token in re.findall(r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?", raw_args)]
+        residue = re.sub(r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?", "", raw_args)
+        if residue.strip(" ,\t\r\n"):
+            raise SvgNativeError(f"unsupported SVG transform syntax on {element_id}", element_id=element_id, visual_id=visual_id, property_name="transform")
         if not all(math.isfinite(value) for value in values):
             raise SvgNativeError(f"SVG transform has a non-finite value on {element_id}", element_id=element_id, visual_id=visual_id, property_name="transform")
         if name == "translate" and len(values) in {1, 2}:

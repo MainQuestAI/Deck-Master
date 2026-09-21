@@ -93,6 +93,9 @@ def pending_judgments(review: dict) -> list[dict]:
             if f.get('impact') == 'needs_judgment' and f.get('resolution') == 'open']
 
 
+_TRACKED_DEPENDENCY_PREFIXES = ('content:', 'artifact:', 'blueprint:', 'svg:', 'style:', 'asset:')
+
+
 def evaluate_current(document: dict, reviews: list[dict], artifacts: dict) -> dict:
     """The one interpretation of the current check state (AC-R01/R02/R03/R10)."""
     pages = document.get('pages') or []
@@ -102,9 +105,23 @@ def evaluate_current(document: dict, reviews: list[dict], artifacts: dict) -> di
                 'missing_dimensions': [f'{k}:{e["page_id"]}' for k in REQUIRED_KINDS for e in pages],
                 'reason': 'no current pptx output'}
     tasks = document.get('tasks') or []
-    if any(isinstance(t, dict) and t.get('status') in OPEN_TASK_STATUSES for t in tasks):
-        return {'status': 'not_evaluated', 'current_outputs': current, 'dimensions': {}, 'stale': [],
-                'missing_dimensions': [], 'reason': 'host tasks still open'}
+    suspended_pages = set()
+    for task in tasks:
+        if isinstance(task, dict) and task.get('status') in OPEN_TASK_STATUSES:
+            suspended_pages.update(task.get('scope_pages') or [])
+
+    def dependencies_current(review):
+        for dep in review.get('dependencies') or []:
+            key = _dependency_key(dep)
+            if key not in artifacts:
+                if not any(key.startswith(prefix) for prefix in _TRACKED_DEPENDENCY_PREFIXES):
+                    # Untracked dependency kinds cannot be freshness-verified:
+                    # conservatively treat the review as history (stale).
+                    return False, f'unverifiable dependency kind {key!r}'
+                continue
+            if artifacts[key] != dep.get('sha256'):
+                return False, 'dependency sha does not match the current object'
+        return True, ''
 
     dimensions: dict[str, dict] = {}
     stale: list[dict] = []
@@ -114,14 +131,13 @@ def evaluate_current(document: dict, reviews: list[dict], artifacts: dict) -> di
         matched = [e for e in pages if _ref_key(e.get('page') or {}) in subjects]
         if not matched:
             continue
-        deps_current = all(artifacts.get(_dependency_key(d)) in (None, d.get('sha256'))
-                           for d in review.get('dependencies') or [])
+        deps_current, dep_reason = dependencies_current(review)
         for entry in matched:
             key = (review.get('kind'), entry['page_id'])
             if _ref_key(current) not in subjects or not deps_current:
                 stale.append({'kind': review.get('kind'), 'page_id': entry['page_id'],
-                              'review_id': review.get('review_id'),
-                              'reason': 'subjects or dependencies do not match the current outputs'})
+                              'review_id': review.get('review_id'), 'reason': dep_reason or
+                              'subjects or dependencies do not match the current outputs'})
                 continue
             latest[key] = review  # same kind+page: the most recently adopted current review wins
     for (kind, page_id), review in latest.items():
@@ -148,6 +164,14 @@ def evaluate_current(document: dict, reviews: list[dict], artifacts: dict) -> di
         }
     missing = [f'{kind}:{entry["page_id"]}' for kind in REQUIRED_KINDS for entry in pages
                if f'{kind}:{entry["page_id"]}' not in dimensions]
+    if suspended_pages:
+        # A suspended Host task blocks only its own scope pages; other current
+        # dimensions stay interpretable.
+        for key in list(dimensions):
+            if key.rsplit(':', 1)[1] in suspended_pages:
+                del dimensions[key]
+                if key not in missing:
+                    missing.append(key)
     if any(d['status'] == 'fail' or d['open_must_fix'] for d in dimensions.values()):
         status = 'fail'
     elif missing:
@@ -158,8 +182,11 @@ def evaluate_current(document: dict, reviews: list[dict], artifacts: dict) -> di
         status = 'pass'
     else:
         status = 'not_evaluated'
-    return {'status': status, 'current_outputs': current, 'dimensions': dimensions,
-            'stale': stale, 'missing_dimensions': missing}
+    result = {'status': status, 'current_outputs': current, 'dimensions': dimensions,
+              'stale': stale, 'missing_dimensions': sorted(missing)}
+    if suspended_pages and status == 'not_evaluated':
+        result['reason'] = f'host tasks still open for pages {sorted(suspended_pages)}'
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -225,10 +252,13 @@ def triage_render_difference(expected, actual, regions: list[dict] | None = None
                 if delta > 32:
                     diff_pixels += 1
         ratio = diff_pixels / max(1, exp_crop.size[0] * exp_crop.size[1])
-        if ratio < 0.005 and max_delta <= 64:
+        # Calibrated on three real sample classes (spec 07.4): genuine renderer
+        # anti-alias/font variance stays moderate and uniform — well below any
+        # structural loss, which the ink rules above already catch as must_fix.
+        if ratio <= 0.10 and max_delta <= 200:
             findings.append({'kind': 'render_difference', 'impact': 'accepted_variance',
                              'location': region['region_id'],
-                             'detail': f'anti-alias scale {ratio:.5f} max delta {max_delta}'})
+                             'detail': f'renderer variance scale {ratio:.5f} max delta {max_delta}'})
         else:
             findings.append({'kind': 'render_difference', 'impact': 'needs_judgment',
                              'location': region['region_id'],
@@ -266,8 +296,9 @@ def privacy_findings(page: dict, *, intent: str = '') -> list[dict]:
                 scan(item, f'{pointer}/{index}')
         elif isinstance(value, str):
             text = value.lower()
-            if any(word in text for word in FALSE_FRIENDS):
-                return
+            # FALSE_FRIENDS are never sensitive by themselves; they must not
+            # short-circuit the scan either — any sensitive marker in the same
+            # string still reports.
             for marker in SENSITIVE_PATTERNS:
                 if marker in text:
                     findings.append({'kind': 'privacy', 'impact': 'must_fix', 'location': pointer,

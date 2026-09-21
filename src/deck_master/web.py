@@ -26,6 +26,10 @@ from .store import Store
 STATE_FILE = "view.json"
 
 
+def _editing_review_doc(store):
+    return store.load_document()
+
+
 class ServiceUnavailable(RuntimeError):
     """The read-only service could not start or become healthy in time."""
 
@@ -88,11 +92,14 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
     def _send_bytes(self, body: bytes, media: str) -> None:
         self.send_response(200)
         self.send_header("Content-Type", media)
+        # One Content-Security-Policy header: sandboxed isolation for SVG,
+        # the default self-only policy for everything else.
         if media == "image/svg+xml":
             self.send_header("Content-Security-Policy", "sandbox; default-src 'none'; style-src 'unsafe-inline'")
+        else:
+            self.send_header("Content-Security-Policy", "default-src 'self'; script-src 'self'; object-src 'none'; frame-ancestors 'none'")
         self.send_header("Content-Length", str(len(body)))
         self.send_header("X-Content-Type-Options", "nosniff")
-        self.send_header("Content-Security-Policy", "default-src 'self'; script-src 'self'; object-src 'none'; frame-ancestors 'none'")
         self.end_headers()
         self.wfile.write(body)
 
@@ -115,6 +122,12 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                 result={'status':'awaiting_host','task_id':task['task_id']}
             elif self.path=='/api/cancel':result=service.task_cancel(self.store.project_root,**data)
             elif self.path=='/api/restore':result=editing.restore(self.store.project_root,**data)
+            elif self.path=='/api/check':
+                from . import editing as editing_mod
+                summary=editing_mod.check_summary(self.store,_editing_review_doc(self.store))
+                result={'status':summary['status'],'reason':summary.get('reason'),
+                        'missing_dimensions':summary['missing_dimensions'],
+                        'stale':summary['stale']}
             elif self.path=='/api/export':
                 import uuid
                 data.setdefault('output_dir',str(self.store.project_root/'exports'/uuid.uuid4().hex[:12]))
@@ -151,6 +164,43 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             return
         if parsed.path == "/api/view":
             self._send_json(view_mod.project_view(self.store.project_root))
+            return
+        if parsed.path.startswith("/api/pages/"):
+            page_id = parsed.path.rsplit("/", 1)[-1]
+            document = self.store.load_document()
+            entry = next((e for e in document.get("pages") or [] if e.get("page_id") == page_id), None)
+            if entry is None or not entry.get("page"):
+                self._send_json({"error": f"page {page_id!r} not found"}, 404)
+                return
+            self._send_json({
+                "page_id": page_id,
+                "page": self.store.read_object_json(entry["page"]),
+                "slots": {slot: entry.get(slot) for slot in
+                          ("content", "blueprint", "svg", "svg_preview", "ppt_preview")},
+                "revision_id": document["revision_id"],
+            })
+            return
+        if parsed.path == "/api/tasks":
+            document = self.store.load_document()
+            tasks = []
+            for ref in document.get("tasks") or []:
+                try:
+                    task = self.store.read_object_json(ref)
+                except Exception as exc:  # noqa: BLE001
+                    tasks.append({"task_id": None, "status": "unreadable", "detail": str(exc)})
+                    continue
+                tasks.append({"task_id": task.get("task_id"), "kind": task.get("kind"),
+                              "status": task.get("status"), "instruction": task.get("instruction"),
+                              "updated_at": task.get("updated_at")})
+            self._send_json({"tasks": tasks})
+            return
+        if parsed.path == "/api/reviews":
+            query = parse_qs(parsed.query)
+            page_filter = (query.get("page_id") or [None])[0]
+            view = view_mod.project_view(self.store.project_root)
+            reviews = [r for r in view.get("reviews") or []
+                       if not page_filter or page_filter in (r.get("page_ids") or [])]
+            self._send_json({"reviews": reviews})
             return
         if parsed.path == "/api/file":
             query = parse_qs(parsed.query)
@@ -232,10 +282,20 @@ def open_view(project_dir: Path | str, *, open_browser: bool = True) -> dict:
     except Exception as exc:  # noqa: BLE001 - spawn/health failures surface as a real reason
         return {"review_url": None, "view_status": "unavailable", "detail": f"view service failed: {exc}"}
     if open_browser:
+        opened = False
         try:
-            webbrowser.open(state["url"], new=2)
+            opened = bool(webbrowser.open(state["url"], new=2))
         except Exception:  # noqa: BLE001 - no browser on this host
-            pass
+            opened = False
+        if not opened:
+            return {
+                "review_url": state["url"],
+                "view_status": "available",
+                "detail": "no browser could be opened; use the local URL above",
+                "port": state["port"],
+                "pid": state.get("pid"),
+                "reused": state.get("reused", False),
+            }
     return {
         "review_url": state["url"],
         "view_status": "opened" if open_browser else "available",

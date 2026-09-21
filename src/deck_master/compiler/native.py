@@ -86,7 +86,8 @@ def emit(pages, width, height, fonts, output):
                 run.font.size=Pt(s['font_size']*k*.75);run.font.name=family;run.font.bold=s['bold']
                 for name in ('ea','cs'):
                     e=OxmlElement('a:'+name);e.set('typeface',family);props.append(e)
-                props.set('spc',str(round(s.get('letter_spacing',0)*k*75)))
+                # Letter spacing is written once by the api.py post-pass, which
+                # keys on the shape name for both native and node emitters.
             elif s['kind'] in ('rect','circle','ellipse'):
                 shape=MSO_SHAPE.OVAL if s['kind']!='rect' else MSO_SHAPE.ROUNDED_RECTANGLE if s.get('rx') else MSO_SHAPE.RECTANGLE
                 sh=slide.shapes.add_shape(shape,X(s['x']),Y(s['y']),S(s['width']),S(s['height']))

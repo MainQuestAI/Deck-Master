@@ -70,6 +70,13 @@ WP03 最后一张卡 T15 关闭（见下节）。**阶段 1（WP02/WP03 收尾�
 - 状态同步：tasks.json/subtasks.csv 中 T15 及子任务标记 `implemented_verified`；T15.md 交接回填已记录。
 - 工作树待提交变更：`editing.py`、`cli.py`、index.html/style.css、`test_service_flow.py`、新建 `test_export.py`。
 
+## Review 轮次与 P1/P2 修复（2026-09-21）
+
+- 对 T08–T15 开发轮次(0a3f316..954b59b)做独立只读 review(独立 plan 代理),结论:无 P0;6 条 P1、11 条 P2。
+- P1 全部修复:①文本描边声明子集边界(真实 SVG 零使用,显式 SvgError);②导出 editability 读 artifact 自身字段(旧件 unknown 如实);③`professional_review_required_for_delivery` policy 在 delivery 导出生效;④失效指纹改为 SVG 实际引用资产集(T12 S13 证据语义修正+注册新资产零失效反例);⑤抗锯齿样例改 GaussianBlur(1.5) 并按 07.4 校准阈值;⑥review 依赖新鲜度补 style 指纹+未知 kind 保守判 stale。
+- P2 全部修复:OperationJournal status、CSP 头合并、浏览器拒绝如实 available、spec 10.3 路由补齐(/api/pages/{id}、/api/tasks、/api/reviews、POST /api/check)、挂起任务只屏蔽 scope 维度、privacy 交叠串、transform 括号垃圾校验、SvgError 结构化 page/element、空文本显式拒绝、cli 死条件与 NeedsTool→exit 3、letter-spacing 单点写入。
+- 全量 **309 passed**(294+15),ruff 全过;7 份真实交付 SVG 回归解析通过。
+
 ## 下一阶段
 
 阶段 2(WP04 安装与唯一入口）:T17 唯一默认入口与文档 → T19 发布资源与许可证 → T18 旧 run 只读导入 → T16 收尾 + T20 隔离安装端到端。

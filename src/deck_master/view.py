@@ -143,14 +143,12 @@ def derive_view_status(document: dict) -> str:
 
 def artifact_bytes(store: Store, ref: dict) -> tuple[bytes, str]:
     """Read one artifact's bytes for file serving; the ref must be a project object."""
-    from .models import sha256_bytes
 
     data = store.read_object_bytes(ref)
     if ref['path'].endswith('.json'):
         obj = json.loads(data)
         if obj.get('schema_version') == 'deck_artifact.v1':
             return store.read_object_bytes(obj['file']), obj['media_type']
-    _ = sha256_bytes  # sha verified inside read_object_bytes
     path = ref["path"]
     ext = path.rpartition(".")[2]
     media = {

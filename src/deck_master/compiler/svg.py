@@ -10,9 +10,18 @@ import xml.etree.ElementTree as ET
 
 
 class SvgError(ValueError):
-    def __init__(self, message):
+    def __init__(self, message, *, page_id=None, element_id=None, feature=None):
         super().__init__(message)
-        self.diagnostic={'code':'unsupported_or_invalid_svg','location':message.split(':',1)[0], 'detail':message, 'recovery':'Correct the named SVG element or express it using supported explicit geometry.'}
+        location = message.split(':', 1)[0]
+        if page_id is None:
+            page_id, _, rest = location.partition('/')
+            page_id = page_id or None
+            if element_id is None and rest:
+                element_id = rest
+        self.diagnostic = {'code': 'unsupported_or_invalid_svg', 'location': location,
+                           'page_id': page_id, 'element_id': element_id, 'feature': feature,
+                           'detail': message,
+                           'recovery': 'Correct the named SVG element or express it using supported explicit geometry.'}
 
 
 
@@ -164,6 +173,8 @@ def _parse_svg(data: bytes, *, page_id: str, assets: dict[str, str] | None = Non
             if min(base['width'],base['height'])<=0:raise SvgError(f'{page_id}/{identity}: image bounds must be positive')
             shapes.append(base);return
         if tag=='text':
+            if base['stroke']!='none':
+                raise SvgError(f'{page_id}/{identity}: stroked text is outside the declared subset; flatten text paint to explicit geometry')
             def finite(raw, label):
                 try:
                     value=float(raw)
@@ -188,6 +199,8 @@ def _parse_svg(data: bytes, *, page_id: str, assets: dict[str, str] | None = Non
                 if 'dx' in c: c['x']=str(finite(c['x'],'x')+finite(c['dx'],'dx'))
                 runs.append((child.text or '',c));cursor=c
                 if child.tail and child.tail.strip(): raise SvgError(f'{page_id}/{identity}: trailing inline text unsupported')
+            if not any(text.strip() for text, _ in runs):
+                raise SvgError(f'{page_id}/{identity}: empty text has no editable content to deliver')
             for i,(text,a) in enumerate(runs):
                 shapes.append(transformed({**base,'id':f'{identity}:{i}','text':text,'x':finite(a.get('x',0),'x'), 'y':finite(a.get('y',0),'y'), 'font_size':finite(a.get('font-size',24),'font-size'), 'font_family':a.get('font-family','Noto Sans SC').split(',')[0].strip(' \"\''), 'letter_spacing':finite(a.get('letter-spacing',0),'letter-spacing'),'bold':a.get('font-weight','400') in ('bold','600','700','800','900'),'anchor':a.get('text-anchor','start'),'fill':gradient(a.get('fill',base['fill']),definitions,f'{page_id}/{identity}')},matrix))
             return

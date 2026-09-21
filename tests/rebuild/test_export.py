@@ -161,3 +161,73 @@ def test_cli_export_exit_zero_is_not_professional_pass(tmp_path, capsys):
     assert report['evidence_level'] == 'engineering'
     assert report['unresolved']['failed_dimensions'], 'exit 0 carries the real unresolved list'
     capsys.readouterr()
+
+
+def test_export_reports_unknown_editability_for_unverified_legacy_pptx(tmp_path):
+    project, store = _deck(tmp_path)
+    legacy_bytes = b'legacy-unverified-pptx'
+    file_ref = store.put_blob(legacy_bytes, ext='pptx')
+    legacy_artifact = {
+        'schema_version': 'deck_artifact.v1', 'artifact_id': 'legacy-1', 'page_id': None,
+        'role': 'pptx', 'file': file_ref, 'media_type':
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'created_at': '2026-09-21T00:00:00Z', 'dependencies': [], 'derived_from': [],
+        'provenance': {'source_type': 'user_supplied'}, 'limitations': [],
+        'editability': 'unknown',
+    }
+    ref = store.put_json_object(legacy_artifact)
+    document = store.load_document()
+    bumped = bump_revision(document, {'operation_id': 'legacy-out', 'kind': 'task_update',
+                                      'description': 'legacy', 'read_set': []})
+    bumped['outputs']['pptx'] = ref
+    store.commit_change(base_revision=document['revision_id'], document=bumped, operation_id='legacy-out')
+    export_project(project, output_dir=tmp_path / 'legacy-out', purpose='review')
+    report = json.loads((tmp_path / 'legacy-out' / 'delivery.json').read_text('utf-8'))
+    assert report['editability'] == 'unknown', \
+        'an unverified legacy file is exported with its real unknown editability'
+
+
+def _set_policy(store, **updates):
+    document = store.load_document()
+    bumped = bump_revision(document, {'operation_id': 'policy-' + '-'.join(updates), 'kind': 'policy_update',
+                                      'description': 'policy', 'read_set': []})
+    bumped['policy'] = {**bumped['policy'], **updates}
+    store.commit_change(base_revision=document['revision_id'], document=bumped,
+                        operation_id='policy-' + '-'.join(updates))
+
+
+def test_delivery_honors_professional_review_required_policy(tmp_path):
+    # Positive: six passing engineering checks are not enough when the policy
+    # demands professional review — a recorded professional_use pass unlocks it.
+    project, store = _passing_deck(tmp_path)
+    _set_policy(store, professional_review_required_for_delivery=True)
+    with pytest.raises(StoreError, match='professional_review_required_for_delivery'):
+        export_project(project, output_dir=tmp_path / 'needs-human', purpose='delivery')
+    assert not (tmp_path / 'needs-human').exists()
+
+    _review(store, store.load_document(), 'professional_use', 'pass', seed='human')
+    outcome = export_project(project, output_dir=tmp_path / 'with-human', purpose='delivery')
+    assert outcome['status'] == 'exported'
+    report = json.loads((tmp_path / 'with-human' / 'delivery.json').read_text('utf-8'))
+    assert report['professional_evidence']['professional_use'] == 'pass'
+
+    # A failing professional review blocks delivery even earlier: the shared
+    # interpretation already fails the deck (refused, destination cleaned).
+    project2, store2 = _passing_deck(tmp_path / 'second')
+    _set_policy(store2, professional_review_required_for_delivery=True)
+    _review(store2, store2.load_document(), 'professional_use', 'fail', seed='human-fail',
+            findings=_must_fix())
+    with pytest.raises(StoreError, match='delivery requires every required check'):
+        export_project(project2, output_dir=tmp_path / 'second' / 'fail-human', purpose='delivery')
+    assert not (tmp_path / 'second' / 'fail-human').exists()
+
+    # The policy only gates delivery; review export stays open (07.7).
+    export_project(project2, output_dir=tmp_path / 'second' / 'review-ok', purpose='review')
+
+
+def test_cli_needs_tool_maps_to_exit_3(tmp_path, capsys):
+    from deck_master.cli import _fail
+    from deck_master.pipeline import NeedsTool
+    assert _fail(NeedsTool('soffice unavailable')) == 3
+    payload = json.loads(capsys.readouterr().err)
+    assert payload['error']['code'] == 'needs_tool'

@@ -35,6 +35,10 @@ def _error(code: str, message: str, next_action: str, field: str | None = None) 
 
 
 def _fail(exc: Exception) -> int:
+    from .pipeline import NeedsTool
+
+    if isinstance(exc, NeedsTool):
+        return _emit_and_exit(_error("needs_tool", str(exc), "configure the reported tool"), 3)
     if isinstance(exc, (EnvelopeError, ModelError, ServiceError, SvgError)):
         return _emit_and_exit(_error("invalid_input", str(exc), "fix the named field"), 2)
     if isinstance(exc, (TaskConflict, ConflictError)):
@@ -217,7 +221,7 @@ def main(argv: list[str] | None = None) -> int:
                 design=design,
                 draft=draft,
             )
-            if payload.get("page_count") or _project_has_pages(options.out):
+            if _project_has_pages(options.out):
                 payload = _attach_workbench_url(options.out, payload)
             return _emit(payload)
         if options.command == "continue":

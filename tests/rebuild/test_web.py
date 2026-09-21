@@ -161,7 +161,10 @@ def test_cli_accept_auto_opens_workbench_after_first_content(tmp_path, monkeypat
     result_file = tmp_path / "compose-result.json"
     result_file.write_text((ENVELOPES / "compose.json").read_text())
     opened = []
-    monkeypatch.setattr("deck_master.web.webbrowser.open", lambda url, new=0: opened.append(url))
+    def _fake_open(url, new=0):
+        opened.append(url)
+        return True
+    monkeypatch.setattr("deck_master.web.webbrowser.open", _fake_open)
     try:
         exit_code = cli.main([
             "task", "accept", "--project", str(project),
@@ -187,7 +190,22 @@ def test_open_view_returns_real_url_without_browser(tmp_path, monkeypatch):
     try:
         info = open_view(project, open_browser=True)
         assert info["review_url"], "a missing browser must not lose the real local URL"
-        assert info["view_status"] == "opened"
+        assert info["view_status"] == "available"
+        assert "local URL" in info["detail"]
+    finally:
+        stop_service(project)
+
+
+def test_open_view_browser_refusal_reports_available(tmp_path, monkeypatch):
+    # webbrowser.open returns False when the host has no usable browser: the
+    # URL stays real and the status says the browser did not open.
+    project, _ = _compose_pending_project(tmp_path)
+    monkeypatch.setattr("deck_master.web.webbrowser.open", lambda *args, **kwargs: False)
+    try:
+        info = open_view(project, open_browser=True)
+        assert info["review_url"]
+        assert info["view_status"] == "available"
+        assert "no browser" in info["detail"]
     finally:
         stop_service(project)
 
@@ -294,3 +312,26 @@ def test_user_text_is_served_as_data_not_markup(server):
 
 
 import urllib.parse  # noqa: E402  (used by the whitelist test above)
+
+
+def test_spec_10_3_routes_serve_same_interpretation(server):
+    url, project, store = server
+    # GET /api/pages/{id} returns the real page; unknown ids 404 without fakes.
+    status, _, payload = _get_json(f"{url}/api/pages/p09")
+    assert status == 200 and payload["page"]["page_id"] == "p09"
+    assert payload["revision_id"] == store.load_document()["revision_id"]
+    status, _, _ = _get_json(f"{url}/api/pages/nope")
+    assert status == 404
+    # GET /api/tasks lists the current task records.
+    status, _, payload = _get_json(f"{url}/api/tasks")
+    assert status == 200 and payload["tasks"], "task view is served from the same store"
+    # GET /api/reviews?page_id= filters addressable review records.
+    status, _, payload = _get_json(f"{url}/api/reviews?page_id=p09")
+    assert status == 200 and payload["reviews"] == []
+    # POST /api/check reports the real current interpretation, never fake running.
+    token = _session_token(url)
+    status, payload = _post_json(f"{url}/api/check", {}, token=token,
+                                 origin=f"http://127.0.0.1:{url.rsplit(':', 1)[1]}")
+    assert status == 200
+    assert payload["status"] in ("pass", "fail", "needs_review", "not_evaluated")
+    assert payload["status"] != "running"

@@ -174,3 +174,24 @@ def test_rotated_text_stays_at_ir_anchor_in_slide_xml(tmp_path):
     # the 0.88em ascender offset on y only.
     assert int(off.get('x')) == -20 * 9525
     assert int(off.get('y')) == round((10 - 10 * 0.88) * 9525)
+
+
+def test_letter_spacing_written_exactly_once(tmp_path):
+    # The api post-pass owns spc writing; the emitter must not duplicate it.
+    regular, _ = resolve_fonts()
+    root, _ = compile_slide(tmp_path,
+                            '<text id="spc" x="10" y="30" font-family="Hiragino Sans GB" '
+                            'font-size="16" letter-spacing="2">间距</text>',
+                            {FAMILY: regular})
+    props = run_props(text_shape(root, 'spc:0'))
+    assert props.get('spc') == '150'
+    import zipfile as _zip
+    from deck_master.compiler import CompileOptions, SvgInput, compile_deck
+    svg = tmp_path / 'once.svg'
+    svg.write_text('<svg viewBox="0 0 400 300"><text id="t" x="10" y="30" '
+                   'font-family="Hiragino Sans GB" font-size="16" letter-spacing="2">间距</text></svg>')
+    result = compile_deck([SvgInput('t', svg)], CompileOptions(width_px=400, height_px=300,
+                          fonts={FAMILY: regular}), tmp_path / 'once-out')
+    with _zip.ZipFile(result.pptx_path) as archive:
+        xml_text = archive.read('ppt/slides/slide1.xml').decode('utf-8')
+    assert xml_text.count('spc=') == 1, 'letter spacing appears exactly once in the slide XML'
