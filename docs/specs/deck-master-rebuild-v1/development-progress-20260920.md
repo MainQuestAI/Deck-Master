@@ -58,7 +58,16 @@ T09 已关闭（见下节）。WP02 余下大卡为 T10（真实渲染与首段�
 
 ## 阶段 1 剩余
 
-WP03:T14 四视图工作台、T15 导出收口。
+WP03 仅余 T15 导出与状态汇报收口。
+
+## T14 整卡关闭：完整四视图工作台
+
+- 新建 `tests/rebuild/test_web.py`(9 项）:revision 跟随编辑且 review 解释与 web 状态一致（U02)、CLI accept 自动 `view --open`+无浏览器返回真实 URL+服务失败 null+原因+服务复用（U03)、同源 token/路径白名单/XSS textContent+CSP（U06)。
+- 扩充 `test_workbench_e2e.py`(+4)：四槽字节级真实文件+版本（U04)、finding 可寻址 page/element(U04)、反馈 awaiting_host 不假 running+真实执行才更新（U05)、静态资源键盘切页/缩放/非颜色状态（U07 工程部分；浏览器目视沿用 2026-09-16 人工证据）。
+- 新实现/修复：CLI 自动打开接线（`_attach_workbench_url`,accept/create/import-draft);`web.open_view` 容错（原 spawn 失败直接抛出 → 现返回 unavailable+真实原因）;app.js 补 `bindKeys`/`bindZoom`,index.html 补缩放工具栏与 `role="status"`/`aria-live`/`aria-selected`;test_cli_chain 断言更新（行为强化）。
+- 验证：定向 19 passed；`tests/rebuild` 全量 **284 passed**(271+13)。
+- 状态同步：tasks.json/subtasks.csv 中 T14 及子任务标记 `implemented_verified`；T14.md 交接回填已记录。
+- 工作树待提交变更：`cli.py`、`web.py`、静态资源三件套、`test_cli_chain.py`、`test_workbench_e2e.py`、新建 `test_web.py`。
 
 ## T13 整卡关闭：重试历史与真实成本
 

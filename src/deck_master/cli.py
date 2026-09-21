@@ -217,13 +217,18 @@ def main(argv: list[str] | None = None) -> int:
                 design=design,
                 draft=draft,
             )
+            if payload.get("page_count") or _project_has_pages(options.out):
+                payload = _attach_workbench_url(options.out, payload)
             return _emit(payload)
         if options.command == "continue":
             payload = service.continue_project(options.project)
             _emit(payload)
             return 3 if payload["status"] in ("awaiting_host", "needs_tool", "needs_input") else 0
         if options.command == "import-draft":
-            return _emit(service.import_draft(options.project, draft_path=options.input))
+            payload = service.import_draft(options.project, draft_path=options.input)
+            if _project_has_pages(options.project):
+                payload = _attach_workbench_url(options.project, payload)
+            return _emit(payload)
         if options.command == "view":
             from .web import open_view, service_status
 
@@ -263,17 +268,53 @@ def _read_brief(options) -> str:
     return sys.stdin.read()
 
 
+def _project_has_pages(project: Path | str) -> bool:
+    try:
+        from .store import Store
+
+        return bool(Store(project).load_document().get("pages"))
+    except Exception:  # noqa: BLE001
+        return False
+
+
+def _attach_workbench_url(project: Path | str, payload: dict) -> dict:
+    """Auto ``view --open`` after the first real content arrives (spec 10.4).
+
+    Failures degrade to a real reason instead of a missing URL: no browser,
+    service start failure and non-interactive runs stay distinguishable.
+    """
+    from .web import open_view
+    try:
+        info = open_view(project, open_browser=True)
+    except Exception as exc:  # noqa: BLE001 - the workbench must never break the accept
+        info = {"review_url": None, "view_status": "unavailable", "detail": str(exc)}
+    payload["review_url"] = info.get("review_url")
+    payload["view_status"] = info.get("view_status", "unavailable")
+    if not info.get("review_url"):
+        payload.setdefault("findings", []).append(
+            {"code": "workbench_unavailable", "message": info.get("detail", "view service unavailable")}
+        )
+    return payload
+
+
 def _dispatch_task(options) -> int:
     if options.task_command == "accept":
-        return _emit(
-            service.accept_result(
-                options.project,
-                task_id=options.task_id,
-                operation_id=options.operation_id,
-                produced_against=options.produced_against,
-                result_path=options.result,
-            )
+        had_pages = True
+        try:
+            from .store import Store
+            had_pages = bool(Store(options.project).load_document().get("pages"))
+        except Exception:  # noqa: BLE001 - adoption below reports real errors
+            pass
+        payload = service.accept_result(
+            options.project,
+            task_id=options.task_id,
+            operation_id=options.operation_id,
+            produced_against=options.produced_against,
+            result_path=options.result,
         )
+        if not had_pages:
+            payload = _attach_workbench_url(options.project, payload)
+        return _emit(payload)
     if options.task_command == "start":
         return _emit(
             service.task_start(

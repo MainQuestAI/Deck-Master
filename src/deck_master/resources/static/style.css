@@ -191,6 +191,9 @@ html, body {
 .task-list .status { font-family: var(--font-mono); font-size: 12px; color: var(--warning); }
 
 .actions {display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
+.zoom-bar {display:flex;gap:8px;align-items:center;padding:6px 0;}
+.zoom-bar button {background:#161B22;color:#E6E9EE;border:1px solid #232A33;padding:4px 10px;border-radius:3px;cursor:pointer;}
+.zoom-bar .mono {min-width:64px;}
 .actions details,.actions label,.actions textarea,.actions #history-list {width:100%;}
 .actions button,.actions a {background:#161B22;color:#E6E9EE;border:1px solid #232A33;padding:8px 12px;border-radius:3px;cursor:pointer;}
 .actions textarea {background:#0B0E12;color:#E6E9EE;border:1px solid #232A33;padding:10px;font:inherit;resize:vertical;}

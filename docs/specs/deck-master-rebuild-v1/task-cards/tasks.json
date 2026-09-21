@@ -1017,7 +1017,7 @@
     "implementation": "真实页/蓝图/SVG/PPT、反馈、正文更新、取消、冲突；无Host时明确等待；loopback必要安全；自然语言入口无需手动view；同项目URL复用、无浏览器/服务失败真实返回；显示编辑能力范围",
     "acceptance_ids": "AC-U01,AC-U02,AC-U03,AC-U04,AC-U05,AC-U06,AC-U07",
     "failure_return": "UI实际数据缺失先修service，不能用演示假卡片",
-    "status": "in_progress",
+    "status": "implemented_verified",
     "start_after": "T05,T11,T12",
     "early_delivery": "按整项任务依赖执行",
     "card": "T14.md",
@@ -1039,7 +1039,7 @@
         "title": "完成真实四视图阅读",
         "work": "复用DESIGN.md布局，页列表/正文/蓝图/SVG/PPT/问题/历史直接消费ProjectView",
         "deliverable_and_check": "无preview有两页即两页；失败和过期产物能打开且版本清楚",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -1049,7 +1049,7 @@
         "title": "实现正文编辑与视觉反馈",
         "work": "POST content/edits带revision/page_hash/operation，正文结构化编辑，区域意见形成Host任务",
         "deliverable_and_check": "修改从Page开始；按钮创建awaiting_host，无Host不假running",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -1059,7 +1059,7 @@
         "title": "接取消检查导出恢复",
         "work": "API统一service，409/400或422/503带具体错误；表单冲突保输入",
         "deliverable_and_check": "取消晚到不更新；恢复生成新revision；导出仍按用途判断",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -1069,7 +1069,7 @@
         "title": "完成真实服务与文件安全",
         "work": "loopback、Origin/token、登记Artifact ID访问；材料用textContent，SVG隔离展示",
         "deliverable_and_check": "正常只读无需账号；路径逃逸/XSS/跨源写入反例拒绝",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -1079,7 +1079,7 @@
         "title": "完成桌面入口连续交互",
         "work": "自动view、健康服务复用，无浏览器/服务启动失败分流；更新给当前页链接",
         "deliverable_and_check": "自然语言任务不需用户补开UI；工作台反馈能被下一Host真实执行",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -1089,7 +1089,7 @@
         "title": "验收布局和编辑能力说明",
         "work": "1280×800/1440×900、键盘切页/反馈/取消、对照缩放；显示实际画布/字体替代",
         "deliverable_and_check": "浏览器操作记录与截图齐备；形状文字编辑不说成Office图表编辑数据",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       }
     ]

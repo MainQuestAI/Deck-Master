@@ -218,6 +218,42 @@
     });
   }
 
+  function applyZoom() {
+    document.querySelectorAll(".slot img").forEach((img) => {
+      img.style.width = state.zoom === null ? "" : state.zoom * 100 + "%";
+    });
+    const label = document.getElementById("zoom-level");
+    if (label) label.textContent = state.zoom === null ? "适配宽度" : Math.round(state.zoom * 100) + "%";
+  }
+
+  function bindZoom() {
+    state.zoom = state.zoom ?? null;
+    const out = document.getElementById("zoom-out");
+    const inn = document.getElementById("zoom-in");
+    const fit = document.getElementById("zoom-fit");
+    if (!out || !inn || !fit) return;
+    out.onclick = () => { state.zoom = Math.max(0.25, (state.zoom ?? 1) / 1.25); applyZoom(); };
+    inn.onclick = () => { state.zoom = Math.min(4, (state.zoom ?? 1) * 1.25); applyZoom(); };
+    fit.onclick = () => { state.zoom = null; applyZoom(); };
+  }
+
+  function bindKeys() {
+    document.addEventListener("keydown", (event) => {
+      if (event.target && /^(TEXTAREA|INPUT|SELECT)$/.test(event.target.tagName)) return;
+      if (!state.view) return;
+      const pages = state.view.pages || [];
+      if (!pages.length) return;
+      const index = pages.findIndex((page) => page.page_id === state.activePage);
+      let target = null;
+      if (event.key === "ArrowRight") target = pages[(index + 1) % pages.length];
+      else if (event.key === "ArrowLeft") target = pages[(index - 1 + pages.length) % pages.length];
+      if (target) {
+        event.preventDefault();
+        document.querySelector(`#page-list li[data-page-id="${target.page_id}"]`)?.click();
+      }
+    });
+  }
+
   async function refresh() {
     try {
       const view = await fetchView();
@@ -249,5 +285,7 @@
 
   bindTabs();
   bindActions();
+  bindZoom();
+  bindKeys();
   refresh();
 })();

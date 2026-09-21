@@ -84,12 +84,13 @@ def test_full_cli_chain_create_start_accept_view_continue(tmp_path: Path) -> Non
     document = _read_document(project)
     assert [entry["page_id"] for entry in document["pages"]] == ["p09"]
 
-    # Workbench opens with a detached service that keeps serving.
+    # Workbench opens with a detached service that keeps serving. The accept
+    # above already auto-opened it (spec 10.4), so the explicit ensure may be
+    # a reuse; the second ensure must reuse the same healthy URL either way.
     from deck_master.web import ensure_service, stop_service
 
     state = ensure_service(project)
     url = state["url"]
-    assert state["reused"] is False
     with urllib.request.urlopen(url.rstrip("/") + "/api/view", timeout=5) as response:
         view = json.loads(response.read().decode("utf-8"))
     assert view["page_count"] == 1

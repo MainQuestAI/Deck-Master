@@ -229,6 +229,8 @@ def open_view(project_dir: Path | str, *, open_browser: bool = True) -> dict:
         state = ensure_service(project_dir)
     except ServiceUnavailable as exc:
         return {"review_url": None, "view_status": "unavailable", "detail": str(exc)}
+    except Exception as exc:  # noqa: BLE001 - spawn/health failures surface as a real reason
+        return {"review_url": None, "view_status": "unavailable", "detail": f"view service failed: {exc}"}
     if open_browser:
         try:
             webbrowser.open(state["url"], new=2)

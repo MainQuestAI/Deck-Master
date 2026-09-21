@@ -17,7 +17,7 @@
     <div><dt>project</dt><dd id="meta-project" class="mono">—</dd></div>
     <div><dt>revision</dt><dd id="meta-revision" class="mono">—</dd></div>
     <div><dt>pages</dt><dd id="meta-pages" class="mono">—</dd></div>
-    <div><dt>status</dt><dd id="meta-status" class="mono">—</dd></div>
+    <div><dt>status</dt><dd id="meta-status" class="mono" role="status" aria-live="polite">—</dd></div>
   </dl>
 </header>
 
@@ -29,13 +29,19 @@
 
   <section class="stage">
     <nav class="slot-tabs" role="tablist" aria-label="视图槽位">
-      <button class="slot-tab is-active" data-slot="content" role="tab">正文</button>
-      <button class="slot-tab" data-slot="blueprint" role="tab">原图</button>
-      <button class="slot-tab" data-slot="svg" role="tab">SVG</button>
-      <button class="slot-tab" data-slot="ppt" role="tab">PPT</button>
+      <button class="slot-tab is-active" data-slot="content" role="tab" aria-selected="true">正文</button>
+      <button class="slot-tab" data-slot="blueprint" role="tab" aria-selected="false">原图</button>
+      <button class="slot-tab" data-slot="svg" role="tab" aria-selected="false">SVG</button>
+      <button class="slot-tab" data-slot="ppt" role="tab" aria-selected="false">PPT</button>
     </nav>
 
     <section class="slot-panel">
+      <nav class="zoom-bar" aria-label="对照缩放">
+        <button id="zoom-out" type="button" aria-label="缩小">−</button>
+        <button id="zoom-fit" type="button">适配宽度</button>
+        <button id="zoom-in" type="button" aria-label="放大">＋</button>
+        <span id="zoom-level" class="mono" role="status" aria-live="polite">100%</span>
+      </nav>
       <div id="slot-content" class="slot is-active" role="tabpanel">
         <h1 id="page-title" class="page-title">—</h1>
         <p id="page-subtitle" class="page-subtitle"></p>
