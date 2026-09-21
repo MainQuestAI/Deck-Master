@@ -936,7 +936,7 @@
     "implementation": "外部调用限额与本地修复分开；无进展停止；归档不封顶、不重置历史；项目锁下分配call_allowances；begin/settle幂等，未知保留并暂停新外部调用，本地修复继续；min提前接入",
     "acceptance_ids": "AC-S11,AC-S12",
     "failure_return": "不通过新增user授权历史平台解决本地格式错误",
-    "status": "min_delivered",
+    "status": "implemented_verified",
     "start_after": "T02.min,T04.min",
     "early_delivery": "T13.min：首次外部调用前的项目额度事务/begin/settle；随后全并发未知恢复测试",
     "card": "T13.md",
@@ -953,7 +953,7 @@
         "title": "提前实现调用许可T13.min",
         "work": "在项目锁内reserve/start/begin/settle；统计所有最新Task含历史消耗与未知",
         "deliverable_and_check": "首次T06真实调用前可用；最后名额仅一个执行者取得，重复begin不能重发",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -963,7 +963,7 @@
         "title": "处理调用结果与未知",
         "work": "已发成功/失败consumed，确认未发released，未知占额暂停新外部调用；本地修正继续",
         "deliverable_and_check": "timeout不自动退额；真实调用发生但业务接收失败仍可结算",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -973,7 +973,7 @@
         "title": "处理基础取消、用户停止与限额调整",
         "work": "实现基础取消和用户停止，调整上限不抹除调用消耗；取消在途未知不释放；复用T02/T04基本事务",
         "deliverable_and_check": "真实调用前停止生效；未知调用保留，不以取消重新获得名额；完整恢复矩阵在T13.06",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -983,7 +983,7 @@
         "title": "保留多轮返修与进展",
         "work": "每次独立归档ID不覆盖attempt3；同错误无进展改修法或报告缺口",
         "deliverable_and_check": "四轮以上原件均可恢复；本地修格式不算图像调用，不伪造质量通过",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -993,7 +993,7 @@
         "title": "完成并发与工具证据回归",
         "work": "两个Host争最后名额、响应丢失/晚到、invocation重复分别检验",
         "deliverable_and_check": "仅承诺约束产品协议请求；缺工具回执标host_reported而非provider_verified",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -1003,7 +1003,7 @@
         "title": "补全恢复与冲突结算",
         "work": "在T12完成后验证restore/retry不重获名额，settle冲突拒绝；保留多轮历史",
         "deliverable_and_check": "恢复前后实际消耗与未知状态不回滚，当前和历史产物均可追溯",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       }
     ]

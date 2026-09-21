@@ -63,12 +63,12 @@ T12.03,T12,WP03,实现幂等与并发重基,相同operation同结果复用，异
 T12.04,T12,WP03,实现取消和晚到结果保护,start/cancel/accept同项目事务；本地子进程仅管理所属进程；晚到可结算调用但不采用内容,cancel先赢不写，accept先赢不删产物；取消后的同hash结果也不接受,implemented_verified,internal_step
 T12.05,T12,WP03,实现历史恢复和目录搬迁,restore生成新revision并保留操作事实；object相对Ref；源重映射核验hash、字体重新定位,复制项目后产物可看，调用消耗/未知/停止不回滚，缺源只影响需原文动作,implemented_verified,internal_step
 T12.06,T12,WP03,验证跨页与设计修改,共用事实、默认style、独立style、同asset换字节、画布变化成组回归,所有相关页更新；不相关页保留；完整卡由T11复核当前状态后关闭,implemented_verified,internal_step
-T13.01,T13,WP03,提前实现调用许可T13.min,在项目锁内reserve/start/begin/settle；统计所有最新Task含历史消耗与未知,首次T06真实调用前可用；最后名额仅一个执行者取得，重复begin不能重发,not_started,internal_step
-T13.02,T13,WP03,处理调用结果与未知,已发成功/失败consumed，确认未发released，未知占额暂停新外部调用；本地修正继续,timeout不自动退额；真实调用发生但业务接收失败仍可结算,not_started,internal_step
-T13.03,T13,WP03,处理基础取消、用户停止与限额调整,实现基础取消和用户停止，调整上限不抹除调用消耗；取消在途未知不释放；复用T02/T04基本事务,真实调用前停止生效；未知调用保留，不以取消重新获得名额；完整恢复矩阵在T13.06,not_started,internal_step
-T13.04,T13,WP03,保留多轮返修与进展,每次独立归档ID不覆盖attempt3；同错误无进展改修法或报告缺口,四轮以上原件均可恢复；本地修格式不算图像调用，不伪造质量通过,not_started,internal_step
-T13.05,T13,WP03,完成并发与工具证据回归,两个Host争最后名额、响应丢失/晚到、invocation重复分别检验,仅承诺约束产品协议请求；缺工具回执标host_reported而非provider_verified,not_started,internal_step
-T13.06,T13,WP03,补全恢复与冲突结算,在T12完成后验证restore/retry不重获名额，settle冲突拒绝；保留多轮历史,恢复前后实际消耗与未知状态不回滚，当前和历史产物均可追溯,not_started,internal_step
+T13.01,T13,WP03,提前实现调用许可T13.min,在项目锁内reserve/start/begin/settle；统计所有最新Task含历史消耗与未知,首次T06真实调用前可用；最后名额仅一个执行者取得，重复begin不能重发,implemented_verified,internal_step
+T13.02,T13,WP03,处理调用结果与未知,已发成功/失败consumed，确认未发released，未知占额暂停新外部调用；本地修正继续,timeout不自动退额；真实调用发生但业务接收失败仍可结算,implemented_verified,internal_step
+T13.03,T13,WP03,处理基础取消、用户停止与限额调整,实现基础取消和用户停止，调整上限不抹除调用消耗；取消在途未知不释放；复用T02/T04基本事务,真实调用前停止生效；未知调用保留，不以取消重新获得名额；完整恢复矩阵在T13.06,implemented_verified,internal_step
+T13.04,T13,WP03,保留多轮返修与进展,每次独立归档ID不覆盖attempt3；同错误无进展改修法或报告缺口,四轮以上原件均可恢复；本地修格式不算图像调用，不伪造质量通过,implemented_verified,internal_step
+T13.05,T13,WP03,完成并发与工具证据回归,两个Host争最后名额、响应丢失/晚到、invocation重复分别检验,仅承诺约束产品协议请求；缺工具回执标host_reported而非provider_verified,implemented_verified,internal_step
+T13.06,T13,WP03,补全恢复与冲突结算,在T12完成后验证restore/retry不重获名额，settle冲突拒绝；保留多轮历史,恢复前后实际消耗与未知状态不回滚，当前和历史产物均可追溯,implemented_verified,internal_step
 T14.01,T14,WP03,完成真实四视图阅读,复用DESIGN.md布局，页列表/正文/蓝图/SVG/PPT/问题/历史直接消费ProjectView,无preview有两页即两页；失败和过期产物能打开且版本清楚,not_started,internal_step
 T14.02,T14,WP03,实现正文编辑与视觉反馈,POST content/edits带revision/page_hash/operation，正文结构化编辑，区域意见形成Host任务,修改从Page开始；按钮创建awaiting_host，无Host不假running,not_started,internal_step
 T14.03,T14,WP03,接取消检查导出恢复,API统一service，409/400或422/503带具体错误；表单冲突保输入,取消晚到不更新；恢复生成新revision；导出仍按用途判断,not_started,internal_step

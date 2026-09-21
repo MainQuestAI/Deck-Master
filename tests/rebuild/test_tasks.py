@@ -9,7 +9,7 @@ import pytest
 
 import deck_master.service as service
 from deck_master import tasks as tasks_mod
-from deck_master.models import canonical_json_bytes, sha256_bytes
+from deck_master.models import bump_revision, canonical_json_bytes, sha256_bytes
 from deck_master.store import Store
 
 SPEC_DIR = Path(__file__).resolve().parents[2] / "docs" / "specs" / "deck-master-rebuild-v1"
@@ -388,3 +388,163 @@ def test_accept_wins_cancel_cannot_revoke_adopted_product(tmp_path: Path) -> Non
     current = store.load_document()
     assert current["pages"] == adopted["pages"], "adopted product survives the refused cancel"
     assert current["revision_id"] == adopted["revision_id"]
+
+
+# ---------------------------------------------------------------------------
+# T13.04/05/06: multi-round repair archives (AC-S11), no-progress stop,
+# executor race for the last allowance (AC-S12).
+
+
+def _adopt_compose(tmp_path: Path):
+    project, task = _make_project(tmp_path)
+    service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+                          produced_against=task["produced_against"], result_payload=_compose_envelope())
+    return project, Store(project)
+
+
+def test_repair_rounds_archive_distinct_ids_all_recoverable(tmp_path: Path) -> None:
+    # AC-S11: four repair rounds keep four independent page objects; no round
+    # overwrites attempt N, and every round's original stays readable.
+    project, store = _adopt_compose(tmp_path)
+    refs = []
+    for round_index in range(4):
+        document = store.load_document()
+        page = store.read_object_json(document["pages"][0]["page"])
+        page["customer_visible"]["body_blocks"][0]["heading"] = f"第{round_index + 1}轮返修正文"
+        task = service.open_host_task(store, kind="repair", page_ids=["p09"],
+                                      instruction=f"repair round {round_index + 1}")
+        outcome = service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+                                        produced_against=task["produced_against"],
+                                        result_payload={"kind": "repair", "files": [], "pages": [page]})
+        assert outcome["status"] == "accepted"
+        refs.append(store.load_document()["pages"][0]["page"])
+    assert len({ref["sha256"] for ref in refs}) == 4, "no attempt overwrites a previous one"
+    for round_index, ref in enumerate(refs):
+        page = store.read_object_json(ref)
+        assert page["customer_visible"]["body_blocks"][0]["heading"] == f"第{round_index + 1}轮返修正文"
+    # No repair round consumed an external image call.
+    document = store.load_document()
+    assert all(not store.read_object_json(t).get("call_allowances") for t in document["tasks"])
+
+
+def test_no_progress_repair_stops_instead_of_looping(tmp_path: Path) -> None:
+    # Same failing readback + unchanged content: the second repair dispatch is
+    # refused with an explicit no-progress explanation (stopping != passing).
+    from deck_master.pipeline import produce
+    project = tmp_path / "proj"
+    page = json.loads((ENVELOPES / "compose.json").read_text())["pages"][0]
+    service.create(project, brief="无进展返修", draft={"pages": [page]})
+    store = Store(project)
+
+    def drive(envelope, accept_kind, staged_name=None, staged_bytes=None):
+        response = service.continue_project(project)
+        task = response["pending_tasks"][0]
+        assert task["kind"] == accept_kind, (accept_kind, task["kind"])
+        if staged_name:
+            _stage(project, task["operation_id"], staged_name, staged_bytes)
+        outcome = service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+                                        produced_against=task["produced_against"], result_payload=envelope)
+        assert outcome["status"] == "accepted"
+        return task
+
+    import io as _io
+    from PIL import Image
+    png = _io.BytesIO()
+    Image.new("RGB", (16, 9), (250, 250, 250)).save(png, format="PNG")
+    document = store.load_document()
+    drive(_png_blueprint_envelope(document["pages"][0]["page"]), "blueprint",
+          "reference.png", png.getvalue())
+    # SVG deliberately misses the page's visible atoms -> readback fail.
+    bad_svg = (b'<svg viewBox="0 0 100 75" data-blueprint-sha256="' +
+               store.read_object_json(store.load_document()["pages"][0]["blueprint"])["file"]["sha256"].encode() +
+               b'"><rect width="10" height="10"/></svg>')
+    drive(_svg_envelope("p09"), "reconstruct", "page.svg", bad_svg)
+    report = produce(project)
+    assert report["status"] == "fail" and report["findings"]
+
+    # Round 1: a repair that changes nothing (same page bytes back).
+    document = store.load_document()
+    repair_task = service.continue_project(project)["pending_tasks"][0]
+    assert repair_task["kind"] == "repair"
+    assert "findings-sig:" in repair_task["instruction"]
+    unchanged = store.read_object_json(document["pages"][0]["page"])
+    _stage(project, repair_task["operation_id"], "page.svg", bad_svg)
+    service.accept_result(project, task_id=repair_task["task_id"], operation_id=repair_task["operation_id"],
+                          produced_against=repair_task["produced_against"],
+                          result_payload={"kind": "repair",
+                                          "files": [{"file_id": "s", "path": "page.svg", "media_type": "image/svg+xml"}],
+                                          "pages": [unchanged],
+                                          "artifact_specs": [{"file_id": "s", "role": "svg", "page_id": "p09",
+                                                              "provenance": {"source_type": "unknown",
+                                                                             "tool": "host-reconstruct",
+                                                                             "invocation_ref": None}}]})
+    again = produce(project)
+    assert again["status"] == "fail"
+
+    # Round 2 dispatch: same findings + same content -> stop with explanation.
+    response = service.continue_project(project)
+    assert response["next_action"] == "repair_no_progress"
+    assert response["status"] == "needs_input"
+    assert response["pending_tasks"] == []
+    assert response["findings"], "the real failing findings stay visible; stopping is not a pass"
+
+    # A repair candidate that really changes content is allowed a new round.
+    document = store.load_document()
+    from copy import deepcopy
+    changed = deepcopy(store.read_object_json(document["pages"][0]["page"]))
+    changed["customer_visible"]["title"] = changed["customer_visible"]["title"] + "(改法)"
+    from deck_master.editing import edit_page
+    edit_page(store.project_root, page=changed, base_revision=document["revision_id"],
+              page_hash=document["pages"][0]["page"]["sha256"], operation_id="real-progress")
+    after_change = service.continue_project(project)
+    assert after_change["next_action"] == "codex_generate_blueprint" or \
+        after_change["next_action"] in ("codex_reconstruct_svg", "repair_readback"), \
+        after_change["next_action"]
+
+
+def _png_blueprint_envelope(page_ref):
+    return {
+        "kind": "blueprint",
+        "files": [{"file_id": "b", "path": "reference.png", "media_type": "image/png"}],
+        "artifact_specs": [{"file_id": "b", "role": "blueprint", "page_id": "p09",
+                            "derived_from": [page_ref],
+                            "provenance": {"source_type": "unknown", "tool": "host-imagegen",
+                                           "invocation_ref": None, "generated_from_page": page_ref}}],
+    }
+
+
+def _svg_envelope(page_id):
+    return {
+        "kind": "reconstruct",
+        "files": [{"file_id": "s", "path": "page.svg", "media_type": "image/svg+xml"}],
+        "artifact_specs": [{"file_id": "s", "role": "svg", "page_id": page_id,
+                            "provenance": {"source_type": "unknown", "tool": "host-reconstruct",
+                                           "invocation_ref": None}}],
+    }
+
+
+def _stage(project: Path, operation_id: str, name: str, data: bytes) -> None:
+    staging = project / ".deckmaster" / "staging" / operation_id
+    staging.mkdir(parents=True, exist_ok=True)
+    (staging / name).write_bytes(data)
+
+
+def test_two_executions_race_for_the_last_allowance(tmp_path: Path) -> None:
+    # AC-S12: with one slot left, only one execution claims the task and
+    # begins the call; the other execution is refused at both layers.
+    project, _ = _make_project(tmp_path)
+    store = Store(project)
+    document = store.load_document()
+    bumped = bump_revision(document, {"operation_id": "limit-1", "kind": "policy_update",
+                                      "description": "one call left", "read_set": []})
+    bumped["policy"] = {**bumped["policy"], "external_call_limit": 1}
+    store.commit_change(base_revision=document["revision_id"], document=bumped, operation_id="limit-1")
+    task_id = service.continue_project(store.project_root)["pending_tasks"][0]["task_id"]
+    service.task_start(store.project_root, task_id=task_id, execution_ref="exec-a")
+    with pytest.raises(tasks_mod.TaskConflict, match="another execution"):
+        service.task_start(store.project_root, task_id=task_id, execution_ref="exec-b")
+    tasks_mod.allocate_call_allowances(store, task_id=task_id, count=1)
+    assert tasks_mod.call_begin(store, task_id=task_id, allowance_id="call-1",
+                                execution_ref="exec-a")["status"] == "started"
+    with pytest.raises(tasks_mod.TaskConflict):
+        tasks_mod.call_begin(store, task_id=task_id, allowance_id="call-1", execution_ref="exec-b")

@@ -58,7 +58,17 @@ T09 已关闭（见下节）。WP02 余下大卡为 T10（真实渲染与首段�
 
 ## 阶段 1 剩余
 
-WP03:T13 整卡（依赖 T12 已满足）、T14 四视图工作台、T15 导出收口。
+WP03:T14 四视图工作台、T15 导出收口。
+
+## T13 整卡关闭：重试历史与真实成本
+
+- T13.04：新增 4 轮真实 repair 流归档测试（独立 ref 全可读、repair 零图像调用）；新增**无进展停止守卫**(service repair 分支:同 findings sig + 同候选 page ref → `repair_no_progress`,停止≠通过；候选真实变化放行新轮）。
+- T13.05：两执行争最后名额双重拒绝；settle 幂等/异结果拒绝/同 invocation_ref 跨额度拒绝；**call_allowances 新增 evidence_level**(host_reported/provider_verified,有工具签发 invocation_ref + settle 报告才记 provider_verified,不隐式升级；task.v1.schema.json 可选字段向后兼容）。
+- T13.06:restore 不重获名额（consumed/unknown/evidence_level 全保留）、降上限不抹消耗、多轮历史可追溯。
+- 修复：repair 守卫初版误用 content_identity(repair 采纳合法清预览槽导致永不触发），改比 page ref。
+- 验证：定向 25 passed；`tests/rebuild` 全量 **271 passed**(263+8)。
+- 状态同步：tasks.json/subtasks.csv 中 T13 及子任务标记 `implemented_verified`；T13.md 交接回填已更新。
+- 工作树待提交变更：`src/deck_master/service.py`、`tasks.py`、`resources/contracts/task.v1.schema.json`、`test_budget.py`、`test_tasks.py`。
 
 ## T12 整卡关闭：局部修改与并发恢复
 

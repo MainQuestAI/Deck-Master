@@ -902,6 +902,10 @@ def _settle_target(store, document, task_id, allowance_id, target, outcome, repo
     if invocation_ref:
         target["invocation_ref"] = invocation_ref
     target["evidence"] = evidence
+    # Evidence grading (spec 08.6): a tool-issued invocation identity plus the
+    # settled report is provider_verified; a bare host report is host_reported
+    # and must never be upgraded implicitly.
+    target["evidence_level"] = "provider_verified" if (invocation_ref and report_bytes) else "host_reported"
     return target
 
 

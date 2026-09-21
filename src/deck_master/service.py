@@ -474,8 +474,25 @@ def _continue_project(project_dir: Path | str) -> dict:
     report_artifact = store.read_object_json(document['outputs']['render_report'])
     report = store.read_object_json(report_artifact['file'])
     if report['status'] == 'fail':
+        from .models import canonical_json_bytes, sha256_bytes
+        sig = sha256_bytes(canonical_json_bytes(report['findings']))[:16]
+        for ref in document.get('tasks') or []:
+            prior = store.read_object_json(ref)
+            if prior.get('kind') != 'repair' or prior.get('status') != 'completed' \
+                    or f'findings-sig:{sig}' not in (prior.get('instruction') or ''):
+                continue
+            repair_inputs = {(item.get('path')) for item in (prior.get('inputs') or [])}
+            candidate_unchanged = all(
+                (entry.get('page') or {}).get('path') in repair_inputs for entry in document['pages'])
+            if candidate_unchanged:
+                # Same findings, same repair candidate (page content untouched):
+                # another identical repair round would make no progress. Stop
+                # and explain instead of looping (spec 08.6/08.7); stopping is
+                # not a pass.
+                return _response(status='needs_input', document=document, requested_action='continue',
+                                 findings=report['findings'], next_action='repair_no_progress')
         task = open_host_task(store,kind='repair',page_ids=[e['page_id'] for e in document['pages']],
-                              instruction='修复实际 PPT 回读问题，修改对应 Page 或 SVG；保留失败输出。检查报告见输入。')
+                              instruction=f'修复实际 PPT 回读问题，修改对应 Page 或 SVG；保留失败输出。检查报告见输入。findings-sig:{sig}')
         return _response(status='awaiting_host',document=store.load_document(),requested_action='continue',
                          pending_tasks=[task_summary(store,store.load_document(),task)],findings=report['findings'],next_action='repair_readback')
     from .editing import review_status
