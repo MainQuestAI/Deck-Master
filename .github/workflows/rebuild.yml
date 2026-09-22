@@ -1,0 +1,45 @@
+name: Rebuilt Core Gate
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - "codex/**"
+      - "claude/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deck-master-rebuild-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rebuild:
+    name: Rebuild suite (Python 3.12)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install renderer toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y librsvg2-bin libreoffice poppler-utils fonts-dejavu
+
+      - name: Install rebuilt core with dev dependencies
+        run: python -m pip install --quiet -e ".[dev]"
+
+      - name: Ruff (rebuilt core and its tests)
+        run: python -m ruff check src/deck_master tests/rebuild
+
+      - name: Rebuild test suite
+        run: python -m pytest -q tests/rebuild

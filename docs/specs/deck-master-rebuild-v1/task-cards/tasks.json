@@ -1176,7 +1176,7 @@
     "implementation": "隔离release/固定解释器/原子激活回滚；资源完整、按步骤报告依赖；旧Skillownership清理",
     "acceptance_ids": "AC-I01,AC-I02,AC-I03,AC-I07",
     "failure_return": "安装失败不改current；不借源码目录补文件",
-    "status": "implementation_in_progress",
+    "status": "implemented_verified",
     "start_after": "T05,T10",
     "early_delivery": "按整项任务依赖执行",
     "card": "T16.md",
@@ -1195,7 +1195,7 @@
         "title": "提取独立发行构建",
         "work": "tools/build_release调用正常PEP517资源hook；release记录精确源码/包/方法/内核版本",
         "deliverable_and_check": "wheel/sdist资源完整，新包不引旧命名空间",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -1205,7 +1205,7 @@
         "title": "实现固定解释器安装",
         "work": "新release目录独立venv、实际模块路径与按步探针；不改系统Python",
         "deliverable_and_check": "隔离前缀安装可导入/读取资源/调用编译；不借旧安装补依赖",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -1215,7 +1215,7 @@
         "title": "实现原子激活与回滚",
         "work": "检查通过后在测试前缀切current/previous；失败不动旧current；旧代码不写新格式",
         "deliverable_and_check": "故障安装原链接不变；rollback回旧二进制并提示格式边界",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -1225,7 +1225,7 @@
         "title": "实现按步doctor",
         "work": "compose/blueprint/compile/render/view/export分别报告解释器/工具/字体/来源",
         "deliverable_and_check": "缺renderer不阻正文，无PPTMaster/Library不报新核心缺绑定",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -1235,7 +1235,7 @@
         "title": "实现旧Skill所有权处理",
         "work": "仅替换安装器拥有且未被改动的资源；第三方/用户同名内容保留",
         "deliverable_and_check": "三种归属反例真实验证，激活用户当前版本留到授权实施阶段",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       }
     ]
@@ -1454,7 +1454,7 @@
     "implementation": "无库/外部后端/源码访问的安装，从材料任务到真产物UI改稿；记精确模块来源；从自然语言主Skill观察自动工作台；指定字体/Logo/非16:9/移动项目；调用限额与未知结算进入验收",
     "acceptance_ids": "AC-I05,AC-I06",
     "failure_return": "不能用fixture/旧安装/源码运行顶替；修具体依赖/资源",
-    "status": "not_started",
+    "status": "implemented_verified",
     "start_after": "T14,T15,T16,T17,T18,T19,T13",
     "early_delivery": "按整项任务依赖执行",
     "card": "T20.md",
@@ -1471,7 +1471,7 @@
         "title": "搭建候选隔离环境",
         "work": "从wheel及sdist正常安装；独立HOME无PPTMaster/Library/缓存，禁止访问源码补资源",
         "deliverable_and_check": "记录真实解释器、模块来源、包SHA与方法资源路径",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -1481,7 +1481,7 @@
         "title": "执行自然语言新建全链",
         "work": "主Skill给普通材料任务，真实compose/生图/SVG/PPT/读回/审阅；首次正文自动view",
         "deliverable_and_check": "真实成品与工作台可访问，fixture不替代本轮生产",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -1491,7 +1491,7 @@
         "title": "执行工作台局部修改",
         "work": "在当前页改正文和关系，Host接单再交回，导出并对照其他页hash",
         "deliverable_and_check": "未受影响页不重生，旧稿可看，当前文件/状态同步",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -1501,7 +1501,7 @@
         "title": "覆盖配置和重定位",
         "work": "指定字体/Logo/非16:9；移动完整项目；缺工具/字体分步诊断",
         "deliverable_and_check": "实际PPT/视图/输入一致，缺字体不阻旧媒体查看",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -1511,7 +1511,7 @@
         "title": "覆盖限额未知与安装来源",
         "work": "通过产品交接检验T13并发/未知、取消恢复；检查调用和产物分别记录",
         "deliverable_and_check": "无绑定端到端及资源完整的当前证据齐备，失败退回具体模块",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       }
     ]

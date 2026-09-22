@@ -602,6 +602,14 @@ def _attach_workbench_url(project: Path | str, payload: dict) -> dict:
     Failures degrade to a real reason instead of a missing URL: no browser,
     service start failure and non-interactive runs stay distinguishable.
     """
+    import os
+    if os.environ.get("DECK_MASTER_NO_AUTO_VIEW"):
+        payload.setdefault("findings", []).append(
+            {"code": "workbench_auto_view_disabled",
+             "message": "non-interactive run; open with: deck-master view --open --project <dir>"})
+        payload["review_url"] = None
+        payload["view_status"] = "available"
+        return payload
     from .web import open_view
     try:
         info = open_view(project, open_browser=True)

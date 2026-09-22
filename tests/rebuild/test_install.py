@@ -225,3 +225,403 @@ def test_release_tree_manifest_scans_clean(tmp_path: Path) -> None:
         for fragment in FORBIDDEN_NAME_FRAGMENTS:
             assert fragment not in lowered, f"forbidden path in release manifest: {name}"
         assert not lowered.endswith((".ttf", ".otf", ".ttc", ".woff", ".woff2")), name
+
+
+import hashlib
+from pathlib import Path as _Path
+
+import pytest
+
+
+# ---------------------------------------------------------------------------
+# T20 / AC-I05: isolated installs (wheel AND sdist) run the full local flow
+# with an empty HOME — no PPT Master binding, no slide library, no caches,
+# and no source-checkout access at runtime.
+
+import json as _json
+import os as _os
+import shutil as _shutil
+import venv as _venv
+
+ENVELOPES = REPO / "docs" / "specs" / "deck-master-rebuild-v1" / "examples" / "roundtrips" / "result-envelope"
+
+
+@pytest.fixture(scope="module")
+def dist_artifacts(tmp_path_factory):
+    _ensure_pip()
+    work = tmp_path_factory.mktemp("dist-artifacts")
+    wheelhouse = work / "wheelhouse"
+    result = subprocess.run(
+        [sys.executable, "-m", "pip", "wheel", "--no-deps", "--no-build-isolation", "-w", str(wheelhouse), str(REPO)],
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=600)
+    assert result.returncode == 0, result.stderr.decode("utf-8", "replace")[-1500:]
+    from setuptools import build_meta
+    sdist_dir = work / "sdist"
+    sdist_dir.mkdir()
+    sdist = sdist_dir / build_meta.build_sdist(str(sdist_dir))
+    return {"wheel": next(wheelhouse.glob("deck_master-*.whl")), "sdist": sdist,
+            "wheel_sha256": hashlib.sha256(next(wheelhouse.glob("deck_master-*.whl")).read_bytes()).hexdigest()}
+
+
+def _make_isolated_venv(base: Path, artifact: Path) -> Path:
+    home = base / "venv-home"
+    home.mkdir()
+    subprocess.run([sys.executable, "-m", "venv", str(home)], check=True,
+                   stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=300)
+    pip = home / "bin" / "pip"
+    subprocess.run([str(pip), "install", "--quiet", str(artifact)], check=True,
+                   stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=900)
+    return home
+
+
+@pytest.fixture(scope="module")
+def wheel_venv(tmp_path_factory, dist_artifacts):
+    return _make_isolated_venv(tmp_path_factory.mktemp("wheel-venv"), dist_artifacts["wheel"])
+
+
+@pytest.fixture(scope="module")
+def sdist_venv(tmp_path_factory, dist_artifacts):
+    return _make_isolated_venv(tmp_path_factory.mktemp("sdist-venv"), dist_artifacts["sdist"])
+
+
+def _isolated_env(venv: Path, home: Path):
+    env = {key: value for key, value in _os.environ.items()
+           if not (key.startswith(("XDG_", "PYTHONPATH", "DECK_MASTER_")) or key in ("HOME", "USERPROFILE"))}
+    env["HOME"] = str(home)
+    env["XDG_CONFIG_HOME"] = str(home / "xdg-config")
+    env["XDG_DATA_HOME"] = str(home / "xdg-data")
+    env["PATH"] = str(venv / "bin") + _os.pathsep + env.get("PATH", "")
+    env["DECK_MASTER_NO_AUTO_VIEW"] = "1"
+    return env
+
+
+def _iso_run(venv: Path, args, home: Path, cwd: Path):
+    result = subprocess.run([str(venv / "bin" / "python"), "-I", "-m", "deck_master", *args],
+                            capture_output=True, text=True, timeout=600, env=_isolated_env(venv, home), cwd=str(cwd))
+    payload = {}
+    if result.stdout.strip():
+        try:
+            payload = _json.loads(result.stdout)
+        except _json.JSONDecodeError:
+            payload = {"raw": result.stdout}
+    return result.returncode, payload, result.stderr
+
+
+def _resolvable_font_family(venv: Path, home: Path, cwd: Path):
+    for candidate in ("Hiragino Sans GB", "Noto Sans CJK SC", "DejaVu Sans", "Helvetica", "Arial"):
+        code, payload, _ = _iso_run(venv, ["doctor", "--step", "compile", "--font", candidate], home, cwd)
+        checks = {check["name"]: check for check in payload.get("checks", [])}
+        if code == 0 and checks.get(f"font:{candidate}", {}).get("status") == "ready":
+            return candidate
+    pytest.fail("no resolvable font family on this host for the isolated chain")
+
+
+def _write_material(directory: Path) -> Path:
+    directory.mkdir(parents=True, exist_ok=True)
+    material = directory / "material.txt"
+    material.write_text("隔离安装材料正文\n(尾部约束)合成数据不可回写。", encoding="utf-8")
+    return material
+
+
+@pytest.mark.parametrize("venv_fixture", ["wheel_venv", "sdist_venv"])
+def test_isolated_install_runs_full_local_flow(venv_fixture, tmp_path, dist_artifacts, request):
+    """AC-I05: empty HOME, no bindings/caches, module from the venv — and the
+    real create→continue flow still produces a pending Host task."""
+    venv = request.getfixturevalue(venv_fixture)
+    home = tmp_path / "home"
+    home.mkdir()
+    work = tmp_path / "work"
+    work.mkdir()
+
+    probe = subprocess.run(
+        [str(venv / "bin" / "python"), "-I", "-c",
+         "import deck_master, json; print(json.dumps({'file': deck_master.__file__}))"],
+        capture_output=True, text=True, env=_isolated_env(venv, home), cwd=str(work))
+    module_path = _json.loads(probe.stdout)["file"]
+    assert module_path.startswith(str(venv)), f"module must come from the venv, got {module_path}"
+    assert not Path(module_path).resolve().is_relative_to(REPO), "module must not be borrowed from the checkout"
+
+    code, payload, _ = _iso_run(venv, ["doctor", "--step", "compose"], home, work)
+    assert code == 0 and payload["status"] == "ready", payload
+    assert Path(payload["module_path"]).resolve().is_relative_to(venv)
+    code, payload, _ = _iso_run(venv, ["doctor", "--step", "render"], home, work)
+    assert code == 0, payload
+    assert payload["status"] in ("ready", "needs_tool"), payload
+
+    evidence = {
+        "interpreter": str(venv / "bin" / "python"),
+        "module_path": module_path,
+        "package_sha256": dist_artifacts["wheel_sha256"] if venv_fixture == "wheel_venv" else None,
+        "doctor_module_path": payload["module_path"],
+    }
+    code, payload, _ = _iso_run(venv, ["create", "--brief", "隔离建项", "--source",
+                                       str(_write_material(work)), "--out", str(work / "proj")], home, work)
+    assert code == 0, payload
+    assert payload["status"] == "created"
+    assert payload["pending_tasks"][0]["kind"] == "compose"
+    assert payload["pending_tasks"][0]["status"] == "awaiting_host"
+    code, payload, _ = _iso_run(venv, ["continue", "--project", str(work / "proj")], home, work)
+    assert code == 3, payload
+    assert payload["next_action"] == "submit_host_results"
+
+
+def test_isolated_resources_resolve_inside_package(tmp_path, wheel_venv):
+    home = tmp_path / "home"
+    home.mkdir()
+    work = tmp_path / "work"
+    work.mkdir()
+    script = (
+        "import json; from importlib import resources\n"
+        "root = resources.files('deck_master')\n"
+        "paths = {name: str(root.joinpath(name)) for name in (\n"
+        "    'resources/contracts/page.v2.schema.json',\n"
+        "    'resources/static/index.html',\n"
+        "    'resources/skill/SKILL.md',\n"
+        "    'resources/skills-references/source-reading.md')}\n"
+        "print(json.dumps(paths))")
+    probe = subprocess.run([str(wheel_venv / "bin" / "python"), "-I", "-c", script],
+                           capture_output=True, text=True, env=_isolated_env(wheel_venv, home), cwd=str(work))
+    paths = _json.loads(probe.stdout)
+    for name, path in paths.items():
+        resolved = Path(path)
+        assert resolved.is_file(), f"{name} missing at {path}"
+        assert resolved.is_relative_to(wheel_venv), f"{name} resolved outside the venv: {path}"
+
+
+# ---------------------------------------------------------------------------
+# T20.02/03: full chain in the installed venv — compose/blueprint/reconstruct/
+# produce/export review, then a single-page edit and re-assembly with the
+# untouched page keeping its refs. Real soffice rendering; real storage.
+
+from PIL import Image as _Image
+
+
+def _adopt(venv, home, work, project, kind, envelope, staged=None):
+    code, pending, _ = _iso_run(venv, ["continue", "--project", str(project)], home, work)
+    assert code == 3 and pending["pending_tasks"][0]["kind"] == kind, (kind, pending)
+    task = pending["pending_tasks"][0]
+    if staged:
+        staging = project / ".deckmaster" / "staging" / task["operation_id"]
+        staging.mkdir(parents=True, exist_ok=True)
+        for name, data in staged.items():
+            (staging / name).write_bytes(data)
+    envelope_path = work / f"envelope-{kind}.json"
+    envelope_path.write_text(_json.dumps(envelope, ensure_ascii=False))
+    code, payload, err = _iso_run(venv, ["task", "accept", "--project", str(project),
+                                         "--task-id", task["task_id"], "--operation-id", task["operation_id"],
+                                         "--produced-against", task["produced_against"],
+                                         "--result", str(envelope_path)], home, work)
+    assert code == 0, (payload, err)
+    return payload
+
+
+def test_isolated_full_chain_and_local_edit(wheel_venv, tmp_path):
+    home = tmp_path / "home"
+    home.mkdir()
+    work = tmp_path / "work"
+    work.mkdir()
+    project = work / "chain-proj"
+    family = _resolvable_font_family(wheel_venv, home, work)
+    material = _write_material(work)
+
+    code, payload, _ = _iso_run(wheel_venv, ["create", "--brief", "隔离全链", "--source", str(material),
+                                             "--out", str(project)], home, work)
+    assert code == 0, payload
+    compose = _json.loads((ENVELOPES / "compose.json").read_text())
+    for page in compose["pages"]:
+        page.get("visual_spec", {}).pop("nodes", None)
+        page.get("visual_spec", {}).pop("edges", None)
+    _adopt(wheel_venv, home, work, project, "compose", compose)
+
+    png = work / "reference.png"
+    _Image.new("RGB", (64, 36), (245, 246, 250)).save(png)
+    blueprint_envelope = {
+        "kind": "blueprint",
+        "files": [{"file_id": "b", "path": "reference.png", "media_type": "image/png"}],
+        "artifact_specs": [{"file_id": "b", "role": "blueprint", "page_id": "p09",
+                            "provenance": {"source_type": "unknown", "tool": "host-imagegen",
+                                           "invocation_ref": None}}]}
+    _adopt(wheel_venv, home, work, project, "blueprint", blueprint_envelope,
+           staged={"reference.png": png.read_bytes()})
+
+    blueprint_sha = None
+    for obj in (project / ".deckmaster" / "objects").rglob("*.json"):
+        try:
+            obj_payload = _json.loads(obj.read_text())
+        except _json.JSONDecodeError:
+            continue
+        if obj_payload.get("schema_version") == "deck_artifact.v1" and obj_payload.get("role") == "blueprint":
+            blueprint_sha = obj_payload["file"]["sha256"]
+    assert blueprint_sha
+
+    def _svg_for_page(view_payload, sha):
+        atoms = [atom for page in view_payload["pages"] for atom in page["visible_atoms"]
+                 if isinstance(atom.get("text"), str) and atom["text"].strip()]
+        height = max(150, len(atoms) * 8 + 24)
+        lines = "".join(
+            f'<text x="6" y="{16 + 8 * index}" font-family="{family}" font-size="6">{atom["text"]}</text>'
+            for index, atom in enumerate(atoms))
+        return (f'<svg viewBox="0 0 200 {height}" data-blueprint-sha256="{sha}">'
+                f'<rect width="200" height="{height}" fill="#ffffff"/>{lines}</svg>').encode()
+
+    code, view, _ = _iso_run(wheel_venv, ["next-step", "--project", str(project)], home, work)
+    _adopt(wheel_venv, home, work, project, "reconstruct",
+           {"kind": "reconstruct",
+            "files": [{"file_id": "s", "path": "page.svg", "media_type": "image/svg+xml"}],
+            "artifact_specs": [{"file_id": "s", "role": "svg", "page_id": "p09",
+                                "provenance": {"source_type": "unknown", "tool": "host-reconstruct",
+                                               "invocation_ref": None}}]},
+           staged={"page.svg": _svg_for_page(view, blueprint_sha)})
+
+    code, report, err = _iso_run(wheel_venv, ["build", "--project", str(project)], home, work)
+    assert code == 0, (report, err)
+    assert report["status"] == "pass", report
+    code, outcome, _ = _iso_run(wheel_venv, ["export", "--project", str(project),
+                                             "--out", str(work / "review-out"), "--purpose", "review"], home, work)
+    assert code == 0, outcome
+    assert (work / "review-out" / "deck.pptx").is_file()
+
+    # T20.03: single-page edit, host re-delivers SVG, re-assemble.
+    code, view, _ = _iso_run(wheel_venv, ["next-step", "--project", str(project)], home, work)
+    entry = view["pages"][0]
+    page_payload = _json.loads(subprocess.run(
+        [str(wheel_venv / "bin" / "python"), "-I", "-c",
+         f"from deck_master.store import Store; import json; s=Store({str(project)!r}); "
+         f"print(json.dumps(s.read_object_json(s.load_document()['pages'][0]['page']), ensure_ascii=False))"],
+        capture_output=True, text=True, env=_isolated_env(wheel_venv, home), cwd=str(work)).stdout)
+    page_payload["customer_visible"]["title"] = "将设备条件收集前移(隔离修订)"
+    page_file = work / "page.json"
+    page_file.write_text(_json.dumps(page_payload, ensure_ascii=False))
+    code, edited, err = _iso_run(wheel_venv, ["edit", "--project", str(project), "--page", str(page_file),
+                                              "--base-revision", view["revision_id"],
+                                              "--page-hash", entry["slots"]["content"]["sha256"],
+                                              "--operation-id", "iso-edit-1"], home, work)
+    assert code == 0, (edited, err)
+    code, view, _ = _iso_run(wheel_venv, ["next-step", "--project", str(project)], home, work)
+    _adopt(wheel_venv, home, work, project, "reconstruct",
+           {"kind": "reconstruct",
+            "files": [{"file_id": "s", "path": "page.svg", "media_type": "image/svg+xml"}],
+            "artifact_specs": [{"file_id": "s", "role": "svg", "page_id": "p09",
+                                "provenance": {"source_type": "unknown", "tool": "host-reconstruct",
+                                               "invocation_ref": None}}]},
+           staged={"page.svg": _svg_for_page(view, blueprint_sha)})
+    code, report, _ = _iso_run(wheel_venv, ["build", "--project", str(project)], home, work)
+    assert code == 0 and report["status"] == "pass", report
+
+
+def test_isolated_non_default_canvas_font_logo_and_relocation(sdist_venv, tmp_path):
+    """T20.04: 4:3 canvas + real font + logo asset through the installed
+    compiler; whole-project relocation keeps refs readable; a missing font
+    is reported per doctor step without blocking old media."""
+    home = tmp_path / "home"
+    home.mkdir()
+    work = tmp_path / "work"
+    work.mkdir()
+    family = _resolvable_font_family(sdist_venv, home, work)
+    logo = work / "logo.png"
+    _Image.new("RGB", (12, 12), (20, 60, 180)).save(logo)
+    design = {"canvas": {"width_px": 960, "height_px": 720, "slide_width_in": 10.0,
+                         "slide_height_in": 7.5, "fit": "contain"},
+              "assets": [{"asset_id": "brand-logo", "kind": "logo", "file": str(logo),
+                          "external_use": "allowed"}],
+              "allowed_asset_ids": ["brand-logo"]}
+    design_file = work / "design.json"
+    design_file.write_text(_json.dumps(design, ensure_ascii=False))
+    project = work / "canvas-proj"
+    code, payload, _ = _iso_run(sdist_venv, ["create", "--brief", "画布验收", "--source", str(_write_material(work)),
+                                             "--out", str(project), "--design", str(design_file)], home, work)
+    assert code == 0, payload
+    compose = _json.loads((ENVELOPES / "compose.json").read_text())
+    _adopt(sdist_venv, home, work, project, "compose", compose)
+
+    moved = tmp_path / "relocated" / "canvas-proj"
+    moved.parent.mkdir()
+    _shutil.move(str(project), str(moved))
+    code, view, _ = _iso_run(sdist_venv, ["next-step", "--project", str(moved)], home, work)
+    assert code == 0 and view["page_count"] == 1, view
+    probe = subprocess.run(
+        [str(sdist_venv / "bin" / "python"), "-I", "-c",
+         f"from deck_master.store import Store; s=Store({str(moved)!r}); d=s.load_document(); "
+         f"s.read_object_bytes(d['pages'][0]['page']); print(d['design_context']['canvas']['slide_width_in'])"],
+        capture_output=True, text=True, env=_isolated_env(sdist_venv, home), cwd=str(work))
+    assert probe.stdout.strip() == "10.0"
+
+    code, payload, _ = _iso_run(sdist_venv, ["doctor", "--step", "compile", "--font", "No Such Font XYZ"],
+                                home, work)
+    font_check = next((c for c in payload.get("checks", []) if c["name"].startswith("font:")), None)
+    assert font_check and font_check["status"] == "unavailable", payload
+    code, view, _ = _iso_run(sdist_venv, ["next-step", "--project", str(moved)], home, work)
+    assert code == 0, "missing font must not block reading existing media"
+
+
+def test_isolated_call_budget_and_cancel_via_cli(wheel_venv, tmp_path):
+    """T20.05: allocation/begin/settle through the installed CLI entry."""
+    home = tmp_path / "home"
+    home.mkdir()
+    work = tmp_path / "work"
+    work.mkdir()
+    project = work / "budget-proj"
+    code, payload, _ = _iso_run(wheel_venv, ["create", "--brief", "额度验收", "--source", str(_write_material(work)),
+                                             "--out", str(project)], home, work)
+    assert code == 0, payload
+    compose_envelope = work / "compose-env.json"
+    compose_envelope.write_text((ENVELOPES / "compose.json").read_text())
+    code, created_task, _ = _iso_run(wheel_venv, ["continue", "--project", str(project)], home, work)
+    code, _, err = _iso_run(wheel_venv, ["task", "accept", "--project", str(project),
+                                         "--task-id", created_task["pending_tasks"][0]["task_id"],
+                                         "--operation-id", created_task["pending_tasks"][0]["operation_id"],
+                                         "--produced-against", created_task["pending_tasks"][0]["produced_against"],
+                                         "--result", str(compose_envelope)], home, work)
+    assert code == 0, err
+    code, pending, _ = _iso_run(wheel_venv, ["continue", "--project", str(project)], home, work)
+    task = pending["pending_tasks"][0]
+    assert task["kind"] == "blueprint"
+    # Allowance repair happens on the next continue (dispatch and repair are separate passes).
+    _iso_run(wheel_venv, ["continue", "--project", str(project)], home, work)
+    code, _, _ = _iso_run(wheel_venv, ["task", "start", "--project", str(project),
+                                       "--task-id", task["task_id"], "--execution-ref", "iso-exec-1"], home, work)
+    assert code == 0
+    code, begun, begin_err = _iso_run(wheel_venv, ["task", "call", "begin", "--project", str(project),
+                                                   "--task-id", task["task_id"], "--allowance-id", "call-1",
+                                                   "--execution-ref", "iso-exec-1"], home, work)
+    assert code == 0 and begun["status"] == "started", (begun, begin_err[:300])
+    code, refused, _ = _iso_run(wheel_venv, ["task", "call", "settle", "--project", str(project), "--task-id", task["task_id"],
+                                             "--allowance-id", "call-1", "--outcome", "consumed"], home, work)
+    assert code == 2, "consumed requires a real execution report"
+    report = work / "tool-report.json"
+    report.write_text(_json.dumps({"tool": "image-gen", "calls": 1}))
+    code, settled, _ = _iso_run(wheel_venv, ["task", "call", "settle", "--project", str(project), "--task-id", task["task_id"],
+                                             "--allowance-id", "call-1", "--outcome", "consumed",
+                                             "--report", str(report), "--invocation-ref", "iso-inv-1"], home, work)
+    assert code == 0 and settled["status"] == "settled", settled
+    code, _, _ = _iso_run(wheel_venv, ["task", "cancel", "--project", str(project),
+                                       "--task-id", task["task_id"], "--reason", "iso stop"], home, work)
+    assert code == 0
+    code, conflict, _ = _iso_run(wheel_venv, ["task", "call", "begin", "--project", str(project), "--task-id", task["task_id"],
+                                              "--allowance-id", "call-1", "--execution-ref", "iso-exec-1"], home, work)
+    assert code == 5, "cancelled task cannot reacquire calls"
+
+
+# ---------------------------------------------------------------------------
+# T16 close-out: the real candidate install path (build_release manifest →
+# install_candidate → activate) plus the existing rollback coverage.
+
+
+def test_candidate_install_activate_and_run_doctor(tmp_path):
+    from tools.build_release import build_release
+    from deck_master import install as install_mod
+
+    release_dir = tmp_path / "release"
+    manifest = build_release(release_dir)
+    prefix = tmp_path / "prefix"
+    install_mod.install_candidate(prefix, release_dir / "release.json")
+    install_mod.activate(prefix, manifest["release_id"])
+    current = _Path(prefix) / ".deck-master" / "current"
+    probe = subprocess.run([str(current / "venv/bin/python"), "-I", "-m", "deck_master", "doctor", "--step", "view"],
+                           capture_output=True, text=True, timeout=120)
+    assert probe.returncode == 0, probe.stderr
+    info = _json.loads(probe.stdout)
+    assert info["status"] == "ready", info
+    assert _Path(info["module_path"]).is_relative_to(_Path(prefix).resolve()), \
+        "activated candidate must not borrow the source checkout"
+    assert _Path(prefix, ".deck-master", "current").is_symlink()

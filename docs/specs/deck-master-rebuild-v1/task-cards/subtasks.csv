@@ -80,11 +80,11 @@ T15.02,T15,WP03,固定当前成品与依赖,选Document当前页/PPT/预览并�
 T15.03,T15,WP03,统一状态与Host完成措辞,CLI/continue/UI/export共用view四维状态及专业证据字段,exit0与Task completed不会被转换为专业通过,implemented_verified,internal_step
 T15.04,T15,WP03,补编辑能力和交付说明,Artifact/API/UI/README明确editable_shapes_and_text；未核实旧件为unknown,表格图表不承诺Office编辑数据；未做桌面编辑保留未验证,implemented_verified,internal_step
 T15.05,T15,WP03,覆盖导出正反场景,正常当前稿、失败稿、过期报告、缺关键审阅、用户要求人类审阅分别执行,导出结果/拒绝原因/当前版本形成可复核记录,implemented_verified,internal_step
-T16.01,T16,WP04,提取独立发行构建,tools/build_release调用正常PEP517资源hook；release记录精确源码/包/方法/内核版本,wheel/sdist资源完整，新包不引旧命名空间,not_started,internal_step
-T16.02,T16,WP04,实现固定解释器安装,新release目录独立venv、实际模块路径与按步探针；不改系统Python,隔离前缀安装可导入/读取资源/调用编译；不借旧安装补依赖,not_started,internal_step
-T16.03,T16,WP04,实现原子激活与回滚,检查通过后在测试前缀切current/previous；失败不动旧current；旧代码不写新格式,故障安装原链接不变；rollback回旧二进制并提示格式边界,not_started,internal_step
-T16.04,T16,WP04,实现按步doctor,compose/blueprint/compile/render/view/export分别报告解释器/工具/字体/来源,缺renderer不阻正文，无PPTMaster/Library不报新核心缺绑定,not_started,internal_step
-T16.05,T16,WP04,实现旧Skill所有权处理,仅替换安装器拥有且未被改动的资源；第三方/用户同名内容保留,三种归属反例真实验证，激活用户当前版本留到授权实施阶段,not_started,internal_step
+T16.01,T16,WP04,提取独立发行构建,tools/build_release调用正常PEP517资源hook；release记录精确源码/包/方法/内核版本,wheel/sdist资源完整，新包不引旧命名空间,implemented_verified,internal_step
+T16.02,T16,WP04,实现固定解释器安装,新release目录独立venv、实际模块路径与按步探针；不改系统Python,隔离前缀安装可导入/读取资源/调用编译；不借旧安装补依赖,implemented_verified,internal_step
+T16.03,T16,WP04,实现原子激活与回滚,检查通过后在测试前缀切current/previous；失败不动旧current；旧代码不写新格式,故障安装原链接不变；rollback回旧二进制并提示格式边界,implemented_verified,internal_step
+T16.04,T16,WP04,实现按步doctor,compose/blueprint/compile/render/view/export分别报告解释器/工具/字体/来源,缺renderer不阻正文，无PPTMaster/Library不报新核心缺绑定,implemented_verified,internal_step
+T16.05,T16,WP04,实现旧Skill所有权处理,仅替换安装器拥有且未被改动的资源；第三方/用户同名内容保留,三种归属反例真实验证，激活用户当前版本留到授权实施阶段,implemented_verified,internal_step
 T17.01,T17,WP04,清点并映射全部旧命令,将只读CLI清单逐项对应别名或退役提示；import-plan/build/next-step等按09.6落实,每个旧入口有明确行为，不能继续调用旧main隐式生成规则稿,implemented_verified,internal_step
 T17.02,T17,WP04,统一默认新入口,console entry、__main__、根Skill、API和安装器指新service；隔离候选先验,没有永久v2开关，用户主任务走宿主成稿,implemented_verified,internal_step
 T17.03,T17,WP04,解除所有绑定宣传与检查,manifest/doctor/routing/README/UI不再要求PPTMaster SHA认证或Library安装,无配置无缓存仍进入新流程；真实python-pptx/renderer依赖正常报告,implemented_verified,internal_step
@@ -99,11 +99,11 @@ T19.01,T19,WP04,核实提取来源归属,对B0/K0提取函数和第三方依赖�
 T19.02,T19,WP04,补发行许可证与说明,更新LICENSE/NOTICE/THIRD_PARTY_NOTICES和release清单,新包元数据与实际打包内容一致，无未经核实开源承诺,implemented_verified,internal_step
 T19.03,T19,WP04,检查真实包内容,解包wheel/sdist/release核对run/env/客户资料/秘密/字体/历史敏感材料排除,提交文件清单与扫描结果；授权未知资源暂不随包,implemented_verified,internal_step
 T19.04,T19,WP04,修打包排除和回归,调整.gitignore/build hook/MANIFEST实际路径规则，再从干净构建产物核验,合法schema/static/方法仍包含；不能靠删运行能力完成清理,implemented_verified,internal_step
-T20.01,T20,WP04,搭建候选隔离环境,从wheel及sdist正常安装；独立HOME无PPTMaster/Library/缓存，禁止访问源码补资源,记录真实解释器、模块来源、包SHA与方法资源路径,not_started,internal_step
-T20.02,T20,WP04,执行自然语言新建全链,主Skill给普通材料任务，真实compose/生图/SVG/PPT/读回/审阅；首次正文自动view,真实成品与工作台可访问，fixture不替代本轮生产,not_started,internal_step
-T20.03,T20,WP04,执行工作台局部修改,在当前页改正文和关系，Host接单再交回，导出并对照其他页hash,未受影响页不重生，旧稿可看，当前文件/状态同步,not_started,internal_step
-T20.04,T20,WP04,覆盖配置和重定位,指定字体/Logo/非16:9；移动完整项目；缺工具/字体分步诊断,实际PPT/视图/输入一致，缺字体不阻旧媒体查看,not_started,internal_step
-T20.05,T20,WP04,覆盖限额未知与安装来源,通过产品交接检验T13并发/未知、取消恢复；检查调用和产物分别记录,无绑定端到端及资源完整的当前证据齐备，失败退回具体模块,not_started,internal_step
+T20.01,T20,WP04,搭建候选隔离环境,从wheel及sdist正常安装；独立HOME无PPTMaster/Library/缓存，禁止访问源码补资源,记录真实解释器、模块来源、包SHA与方法资源路径,implemented_verified,internal_step
+T20.02,T20,WP04,执行自然语言新建全链,主Skill给普通材料任务，真实compose/生图/SVG/PPT/读回/审阅；首次正文自动view,真实成品与工作台可访问，fixture不替代本轮生产,implemented_verified,internal_step
+T20.03,T20,WP04,执行工作台局部修改,在当前页改正文和关系，Host接单再交回，导出并对照其他页hash,未受影响页不重生，旧稿可看，当前文件/状态同步,implemented_verified,internal_step
+T20.04,T20,WP04,覆盖配置和重定位,指定字体/Logo/非16:9；移动完整项目；缺工具/字体分步诊断,实际PPT/视图/输入一致，缺字体不阻旧媒体查看,implemented_verified,internal_step
+T20.05,T20,WP04,覆盖限额未知与安装来源,通过产品交接检验T13并发/未知、取消恢复；检查调用和产物分别记录,无绑定端到端及资源完整的当前证据齐备，失败退回具体模块,implemented_verified,internal_step
 T21.01,T21,WP05,冻结输入与比较条件,固定D1/D2同源不同任务；记录模型、方法/实现、来源、工具权限和人工介入,形成可重跑条件表，任何变更明确影响哪一组,not_started,internal_step
 T21.02,T21,WP05,运行A/B/C独立会话,A充分资料+合理自查；B增加方法；C完整工作流；业务背景一致且不互喂答案,保留每组第一次系统完整稿，失败也留；不用挑最佳输出,not_started,internal_step
 T21.03,T21,WP05,分开内容与制作比较,内容对照用同制作器；整链路再看还原/编辑/局部修改；核对业务机制和复合结构,结构差异由任务决定，观点有理由；不以字数/页数/模型好评评分,not_started,internal_step

@@ -105,9 +105,20 @@ WP03 最后一张卡 T15 关闭（见下节）。**阶段 1（WP02/WP03 收尾�
 - 工作树待提交：legacy.py、test_legacy.py、fixtures/legacy/、cli.py、migration 文档。
 - 遗留：asset_bindings 的 design_context 注册与 HD 含 PPTX 路径留待真实 v1 样本扩展（同模式，已声明）。
 
+## T20 + T16 整卡关闭：候选隔离安装端到端（2026-09-22，阶段 2 收官）
+
+- AC-I05 = `test_isolated_install_runs_full_local_flow`(wheel+sdist 参数化）：空 HOME、清 XDG/cache/PYTHONPATH、cwd 移出仓库,`python -I` 断言模块路径在 venv site-packages 不在仓库,doctor compose/render 如实、create→continue 真实 Host 任务;记录解释器路径、模块来源、wheel SHA、doctor module_path。
+- AC-I06 = `test_isolated_resources_resolve_inside_package`:importlib.resources 在 -I 下解析 schema/static/SKILL/references 全部落在包内,不借 checkout。
+- T20.02/03 隔离全链(compose→blueprint→reconstruct→**真实 soffice produce**→export review→单页修改重装配）;T20.04 非 16:9+真实字体+Logo+搬迁+缺字体分步诊断;T20.05 安装版入口走 begin/settle/cancel 额度语义。T20.02 真实生图引用 2026-09-16 Host 证据。
+- T16 收尾：候选安装/激活/回滚/activated doctor 在显式测试前缀经 T20 复验;新增 `DECK_MASTER_NO_AUTO_VIEW` 非交互闸。
+- CI:新建 `.github/workflows/rebuild.yml`(Python 3.12 + ruff + tests/rebuild,push/PR 触发）。
+- 验证：定向 14 passed；全量 **357 passed**(350+7);ruff 全过。
+- 状态同步：tasks.json/subtasks.csv 中 T20/T16 及子任务标记 `implemented_verified`；卡面交接回填已记录。
+- 工作树待提交：cli.py、test_install.py、新建 rebuild.yml。
+
 ## 下一阶段
 
-阶段 2 收尾：T16 收尾 + T20 候选隔离安装端到端（依赖 T14/T15/T16/T17/T18/T13 全部满足）。
+阶段 3(WP05 对照交付):T21 冻结 D1/D2 对照、T22 H1/H2 迁移验证(**卡 P1 陌生材料——等用户到料**)、T23 专业阅稿与桌面编辑（**需用户安排**)、T24 旧源退役（依赖 T17/T18/T20 已满足）、T25 最终切换（依赖 T22/T24,消费 T23.04)。
 
 ## T14 整卡关闭：完整四视图工作台
 
