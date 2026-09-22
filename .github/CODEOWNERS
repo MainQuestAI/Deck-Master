@@ -8,18 +8,16 @@
 
 # Runtime truth and contracts — high-trust surfaces, require careful review.
 
-/docs/contracts/            @zangqing828-ux
+/src/deck_master/resources/contracts/ @zangqing828-ux
 /skills/deck-master/schemas/ @zangqing828-ux
-/product-capability-manifest.json @zangqing828-ux
 /AGENTS.md                  @zangqing828-ux
 /DESIGN.md                  @zangqing828-ux
 
-# Release-candidate gate and release tooling.
+# Release tooling and CI (rebuilt core).
 
-/scripts/runtime/rc_gate.py @zangqing828-ux
-/scripts/skills/installer.py @zangqing828-ux
 /.github/workflows/         @zangqing828-ux
+/tools/                     @zangqing828-ux
 
-# Review Desk UI.
+# Review workbench UI.
 
-/scripts/preview/           @zangqing828-ux
+/src/deck_master/resources/static/ @zangqing828-ux

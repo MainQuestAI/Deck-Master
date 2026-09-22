@@ -35,7 +35,7 @@ decision that affects this task.
 - Old command names (`next-step`, `agent-doctor`, `final-readiness`,
   `import-plan`, `build …`) either execute the new semantics or return a
   controlled guidance/retirement JSON. Nothing re-enters
-  `scripts/deck_master.py`.
+  the retired legacy CLI entry.
 - For a human or Agent holding an old v0.9.x run: pin the old release for that
   run, or convert its full draft per the migration notes — never mix writers
   on one run.

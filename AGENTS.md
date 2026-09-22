@@ -9,7 +9,7 @@ agents working in this repository.
 1. `AGENTS.md` for project rules, task routing, and safety boundaries.
 2. `docs/agent-task-index.md` for user-intent to command routing.
 3. `docs/agent-recovery-playbook.md` for blocked-state repair decisions.
-4. `docs/contracts/` for runtime JSON contracts and schema truth.
+4. `src/deck_master/resources/contracts/` for runtime JSON contracts and schema truth.
 5. For mainline rebuild work: `docs/specs/deck-master-rebuild-v1/task-cards/README.md`
    first, then `task-cards/<T-NN>.md` and `inventory/baseline-record.md`.
 
@@ -37,11 +37,10 @@ The active implementation baseline for the mainline rebuild is
 
 ## Project Truth
 
-- Runtime contracts: `docs/contracts/`.
+- Runtime contracts: `src/deck_master/resources/contracts/` (唯一活动 schema 来源;旧合同见 docs/archive/pre-rebuild/contracts/).
 - Rebuilt-core CLI entrypoint (the ONLY command surface): `deck-master`
   (console entry = `deck_master.cli:main`); source checkout equivalent:
-  `python -m deck_master`. The legacy `scripts/deck_master.py` is not part of
-  the new flow.
+  `python -m deck_master`. The retired legacy CLI entry is not part of the new flow.
 - Legacy command mapping (spec 09.6): `deck-master legacy-map`; migration
   notes: `docs/migration-to-rebuilt-core.md`.
 - Editable install uses Python 3.12 by default. Python 3.11 and 3.12 are
@@ -110,5 +109,4 @@ Stop and report when:
 For visual or UI changes, read `DESIGN.md` before editing. Keep the locked
 direction: serious tool feel, Satoshi/Geist/IBM Plex Mono stack, cold ink
 surface with amber-copper action accent, hairline solid panels, no glass
-panels, restrained radius, and no decorative gradients. The Review Desk IA
-source is `docs/2026-06-21-web-ui-ia-v1.md`; design QA should flag deviations.
+panels, restrained radius, and no decorative gradients. The Review Desk IA history is archived under `docs/archive/pre-rebuild/`; design QA should flag deviations from DESIGN.md.

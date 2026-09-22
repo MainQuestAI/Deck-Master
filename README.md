@@ -41,7 +41,7 @@ uv pip install --python .venv/bin/python -e ".[dev]"
 
 The only command surface is the rebuilt CLI: `deck-master ...` after install,
 or `python -m deck_master ...` from a source checkout. The legacy
-`scripts/deck_master.py` entry is not part of the new flow.
+The retired legacy CLI entry is not part of the new flow.
 
 ## Quick Start
 
@@ -84,9 +84,7 @@ The rebuilt core guarantees:
 3. Renderer and font gaps surface as `needs_tool` with the actual reason.
 4. The review workbench serves the four real views (content / blueprint / SVG / PPT) from project-relative objects only.
 
-Current limits are tracked in [Known Limitations](docs/known-limitations.md); professional human review and desktop-editing evidence stay `not_evaluated` until actually performed.
-
-See [Known Limitations](docs/known-limitations.md).
+Professional human review and desktop-editing evidence stay `not_evaluated` until actually performed.
 
 ## Diagnostics
 
@@ -105,6 +103,5 @@ reason; nothing silently falls back to fixtures.
 - [Agent Task Index](docs/agent-task-index.md)
 - [Agent Recovery Playbook](docs/agent-recovery-playbook.md)
 - [Migration to the Rebuilt Core](docs/migration-to-rebuilt-core.md)
-- [Known Limitations](docs/known-limitations.md)
 - [Contributing](CONTRIBUTING.md)
 - [Security](SECURITY.md)

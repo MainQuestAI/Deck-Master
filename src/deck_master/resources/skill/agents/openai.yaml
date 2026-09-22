@@ -1,0 +1,4 @@
+interface:
+  display_name: "Deck Master"
+  short_description: "Run OS for professional solution decks"
+  default_prompt: "Use $deck-master to create or review a professional solution deck workflow."

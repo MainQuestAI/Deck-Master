@@ -26,14 +26,14 @@ assignees: ''
 
 ## Environment
 
-- Deck Master version: `python3 scripts/deck_master.py --version` or `deck-master --version`
+- Deck Master version: `deck-master --version` or `deck-master --version`
 - Python version:
 - OS:
 - Mode: fixture demo / Review Desk preview / production backend
-- Backend bound: `python3 scripts/deck_master.py backend status` output
+- Backend bound: `deck-master backend status` output
 
 ## Evidence
 
 <!-- Paste relevant JSON command output. Prefer:
-python3 scripts/deck_master.py agent-doctor --mode preview --output json
+deck-master agent-doctor --mode preview --output json
 Do NOT paste absolute local paths, private customer names, tokens, or raw customer material. -->

@@ -91,7 +91,7 @@ Import semantics:
 
 - Routing: [docs/agent-task-index.md](agent-task-index.md)
 - Blocked states: [docs/agent-recovery-playbook.md](agent-recovery-playbook.md)
-- Contracts: [docs/contracts/](contracts/)
+- Contracts: [src/deck_master/resources/contracts/](contracts/)
 - Rebuild baseline: [docs/specs/deck-master-rebuild-v1/](specs/deck-master-rebuild-v1/)
 - Historical spec packs under `docs/` are archived references, not current
   truth.

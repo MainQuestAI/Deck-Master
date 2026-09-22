@@ -311,7 +311,7 @@ def _read_brief(options) -> str:
 # Pre-rebuild command mapping (spec 09.6). Every legacy entry has exactly one
 # class — alias (executes the new semantics), guidance (points at the new
 # command, non-zero exit) or retired (non-zero exit). Nothing here imports or
-# execs scripts/deck_master.py; old runs are never migrated in place.
+# execs the retired legacy entry; old runs are never migrated in place.
 
 _GUIDANCE_LIBRARY = (
     "新核心不实现整页库流程;请用来源文件创建项目,或固定旧版本安装操作历史 run。"
@@ -516,9 +516,12 @@ def _legacy_import_plan(argv) -> int:
 
 def _legacy_manifest(argv) -> int:
     import deck_master
-    manifest_path = Path(deck_master.__file__).resolve().parents[2] / 'product-capability-manifest.json'
+    repo_root = Path(deck_master.__file__).resolve().parents[2]
+    manifest_path = repo_root / 'product-capability-manifest.json'
     if not manifest_path.is_file():
-        manifest_path = Path.cwd() / 'product-capability-manifest.json'
+        # T24: the v0.9.x manifest is archived, not deleted; the alias keeps
+        # serving it from the archive for history lookups.
+        manifest_path = repo_root / 'docs' / 'archive' / 'pre-rebuild' / 'product-capability-manifest.v09.json'
     return _emit(json.loads(manifest_path.read_text(encoding='utf-8')))
 
 
@@ -565,7 +568,7 @@ def legacy_mapping_table() -> dict:
         'retired': sorted(_LEGACY_RETIRED | {f'build {name}' for name, mapped in
                                              _LEGACY_BUILD_SUBCOMMANDS.items() if mapped is None}),
         'legacy_build_subcommands': sorted(_LEGACY_BUILD_SUBCOMMANDS),
-        'note': 'spec 09.6;旧 scripts/deck_master.py 不再被新入口调用',
+        'note': 'spec 09.6;退役的旧入口不再被新 CLI 调用',
     }
 
 

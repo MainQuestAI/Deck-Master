@@ -58,10 +58,45 @@ def test_disposition_inventory_is_complete() -> None:
             )
 
 
-def test_no_premature_old_file_deletion() -> None:
+def test_old_file_disposition_executed() -> None:
+    """T24: every frozen old path is now either deleted from the working tree
+    (disposition executed, history kept in git) or still present with a
+    recorded reason. The T01 "no premature deletion" rule is superseded by
+    the T24 cutover (WP04 entry switched, AC-L05)."""
     tracked = _git_tracked_paths()
-    missing = [row["path"] for row in _read_old_files() if row["path"].strip() not in tracked]
-    assert not missing, f"T01 must not delete old files; missing from git: {missing[:10]}"
+    rows = _read_old_files()
+    still_present = [row["path"] for row in rows if row["path"].strip() in tracked]
+    deleted = [row["path"] for row in rows if row["path"].strip() not in tracked]
+    # The old implementation tree is retired; surviving paths must be ones
+    # the disposition table explicitly keeps (none today under scripts/).
+    assert not still_present, (
+        f"T24 must retire every frozen old path or record a keep reason; still present: {still_present[:10]}"
+    )
+    assert deleted, "T24 disposition must actually delete the retired tree"
+    evidence = INVENTORY_DIR / "reference-scan.md"
+    assert evidence.is_file(), "per-path reference scan evidence must be committed"
+
+
+def test_retired_tree_has_zero_living_references() -> None:
+    """AC-L05: no living surface (new code, rebuild tests, build tools, living
+    skill, CI, root config) still references the retired scripts tree."""
+    living_roots = ["src/", "tests/rebuild/", "tools/", "skills/deck-master/",
+                    ".github/workflows/rebuild.yml", "pyproject.toml", "MANIFEST.in"]
+    for root in living_roots:
+        target = REPO_ROOT / root
+        files = [target] if target.is_file() else sorted(target.rglob("*"))
+        offenders = []
+        for path in files:
+            if path.resolve() == Path(__file__).resolve():
+                continue  # this scanner's own needles are not references
+            if path.is_file() and path.suffix in {".py", ".md", ".toml", ".yml", ".yaml", ".in", ".txt"}:
+                text = path.read_text(encoding="utf-8", errors="ignore")
+                for needle in ("scripts/deck_master.py", "scripts/runtime", "scripts/workflow",
+                               "scripts/high_density", "import runtime", "import workflow",
+                               "from runtime", "from workflow", "from high_density"):
+                    if needle in text:
+                        offenders.append(f"{path.relative_to(REPO_ROOT)}: {needle!r}")
+        assert not offenders, f"living references to the retired tree: {offenders[:10]}"
 
 
 def test_new_package_has_no_forbidden_imports() -> None:

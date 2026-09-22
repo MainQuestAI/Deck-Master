@@ -116,9 +116,23 @@ WP03 最后一张卡 T15 关闭（见下节）。**阶段 1（WP02/WP03 收尾�
 - 状态同步：tasks.json/subtasks.csv 中 T20/T16 及子任务标记 `implemented_verified`；卡面交接回填已记录。
 - 工作树待提交：cli.py、test_install.py、新建 rebuild.yml。
 
+## 阶段 2 Review 修复轮（2026-09-22）
+
+- 第二轮独立 review(阶段 2,8775a4a..eaafd83)：无 P0;4 P1(全在 legacy.py 静默丢弃族)+ 10 P2。全部修复：未映射字段/形态/节点边一律 `LegacyNormalizationRequired` 带指针;`--out` 在源目录内写入前拒绝;导入媒体 provenance 记 `legacy_import`;CI 按 11.8 拆 unit/render/report 三 job;setuptools floor≥77;隔离 venv 三级兜底离线可跑;T16/T18 卡面回填。
+- 全量 **367 passed**(357+10),ruff 全过；提交 2154d7a。
+
+## T24 整卡关闭：旧源/测试/合同退役（2026-09-22）
+
+- 按 T01 处置表逐路径退役:scripts 旧树 177 文件删除(living 引用先修零);tests 非 rebuild 123 文件退役(migrate/retire 判定入 `inventory/old-tests-disposition.md`,17+8 个已知失败点名,零 skip);docs/contracts 58 份与旧 spec/活文档全部 git mv 归档 `docs/archive/pre-rebuild/`(零删除历史);ci.yml→ci-legacy.yml;product-capability-manifest.json 归档 v09 副本。
+- 引用归零证据:`inventory/scan_old_references.py` 扫描器入库,`inventory/reference-scan.md` 记录 177 路径 blocking references=0;old-files.csv verification 列逐行回填。
+- AC-L05/L06 = test_package_boundary.py 升级口径(`test_old_file_disposition_executed`/`test_retired_tree_has_zero_living_references`);退役后干净 wheel 重建 56 项无 scripts 泄漏。
+- 全量 **368 passed**;ruff 全过;T18 legacy 导入能力保留(25 测试全绿)。
+- 状态同步:tasks.json/subtasks.csv 中 T24 及子任务标记 `implemented_verified`;T24.md 交接回填已记录。
+- 保留未动(按硬约束):runs/、第三方 skills、字体、docs/assets、.gstack/.impeccable/.zcode(查不明即保留)。
+
 ## 下一阶段
 
-阶段 3(WP05 对照交付):T21 冻结 D1/D2 对照、T22 H1/H2 迁移验证(**卡 P1 陌生材料——等用户到料**)、T23 专业阅稿与桌面编辑（**需用户安排**)、T24 旧源退役（依赖 T17/T18/T20 已满足）、T25 最终切换（依赖 T22/T24,消费 T23.04)。
+WP05 剩余:T21/T22 冻结对照(**等用户 P1 陌生材料与受众用途**)、T23 专业阅稿与桌面编辑(**等用户安排**)、T25 最终默认切换(依赖 T22/T24,T24 已满足)。
 
 ## T14 整卡关闭：完整四视图工作台
 
