@@ -1321,7 +1321,7 @@
     "implementation": "已知v1/HD只读规范化，源不写，旧媒体可看，未知状态不继承pass；缺原文original_sha256可空；保留extract/媒体实hash；字体/Logo入design_context，原件不动",
     "acceptance_ids": "AC-L01,AC-L02,AC-L03,AC-L04",
     "failure_return": "不能就地迁移/执行旧脚本；有歧义返回具体字段规范化",
-    "status": "not_started",
+    "status": "implemented_verified",
     "start_after": "T03,T12",
     "early_delivery": "按整项任务依赖执行",
     "card": "T18.md",
@@ -1340,7 +1340,7 @@
         "title": "只读识别和dry-run",
         "work": "legacy按明确schema/version读已知v1/HD、SVG/PPT；先输出字段/媒体/未知项计划",
         "deliverable_and_check": "未知结构具体定位，不用任意NBB子串判断版本",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -1350,7 +1350,7 @@
         "title": "规范旧正文与设计",
         "work": "v1到v2保留可见正文/关系/稳定ID；字体Logo到design_context，缺源hash可空",
         "deliverable_and_check": "未知正文形态不得静默丢弃或强设ready",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -1360,7 +1360,7 @@
         "title": "导入新副本和实际媒体",
         "work": "复制允许媒体到新objects，记录真实hash与原来源说明；不执行旧脚本",
         "deliverable_and_check": "导入前后原目录逐文件hash一致，旧媒体可读",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -1370,7 +1370,7 @@
         "title": "处理旧状态与来源不确定",
         "work": "旧completed/pass仅历史说明，不变新Review通过；未知hash不追认候选原文",
         "deliverable_and_check": "缺原文仍可看已存extract/媒体，需要原文动作才明确缺口",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       },
       {
@@ -1380,7 +1380,7 @@
         "title": "检验移动与恢复",
         "work": "合成旧run副本导入、移目录、恢复、源路径失效分别核对",
         "deliverable_and_check": "新项目Ref可解析，旧源未动，错误返回待规范化字段",
-        "status": "not_started",
+        "status": "implemented_verified",
         "execution_unit": "internal_step"
       }
     ]

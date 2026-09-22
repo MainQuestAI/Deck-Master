@@ -1,0 +1,21 @@
+{
+ "schema_version": "deck_page_package.v1",
+ "run_id": "legacy-v1",
+ "page_id": "p10",
+ "order": 2,
+ "status": "draft",
+ "customer_visible": {
+  "title": "旧版第二页",
+  "body_blocks": [
+   {
+    "id": "b1",
+    "type": "paragraph",
+    "text": "第二页正文。"
+   }
+  ]
+ },
+ "visual_spec": {
+  "intent": "legacy v1 page"
+ },
+ "source_fingerprint": ""
+}

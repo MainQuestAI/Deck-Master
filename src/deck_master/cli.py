@@ -178,6 +178,8 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
+    if len(argv) >= 2 and argv[0] == 'import' and argv[1] == 'legacy':
+        return _dispatch_import_legacy(argv[2:])
     legacy = _legacy_dispatch(argv)
     if legacy is not None:
         return legacy
@@ -565,6 +567,24 @@ def legacy_mapping_table() -> dict:
         'note': 'spec 09.6;旧 scripts/deck_master.py 不再被新入口调用',
     }
 
+
+
+def _dispatch_import_legacy(argv: list[str]) -> int:
+    """`deck-master import legacy --input <old-run> --out <new-project> [--inspect]`."""
+    parser = argparse.ArgumentParser(prog='deck-master import legacy')
+    parser.add_argument('--input', required=True, help='旧 run 目录或 v1 页包文件(只读)')
+    parser.add_argument('--out', required=True, help='新项目目录(必须为空/不存在)')
+    parser.add_argument('--inspect', action='store_true', help='dry-run: 输出字段/媒体/未知项计划,不写项目')
+    options = parser.parse_args(argv)
+    from . import legacy as legacy_mod
+    try:
+        result = legacy_mod.import_legacy(options.input, options.out, inspect_only=options.inspect)
+    except legacy_mod.LegacyNormalizationRequired as exc:
+        return _emit_and_exit(_error('needs_normalization', str(exc), 'map the named fields explicitly',
+                                     field='; '.join(exc.unknown_fields)), 2)
+    except legacy_mod.LegacyError as exc:
+        return _emit_and_exit(_error('legacy_import_refused', str(exc), 'fix the named legacy input'), 2)
+    return _emit(result)
 
 
 def _project_has_pages(project: Path | str) -> bool:

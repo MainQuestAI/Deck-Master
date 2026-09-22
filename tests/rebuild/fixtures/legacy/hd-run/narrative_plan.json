@@ -1,0 +1,21 @@
+{
+ "run_id": "legacy-hd",
+ "title": "旧 HD run",
+ "target_pages": 2,
+ "roles": [
+  "opener",
+  "architecture"
+ ],
+ "beats": [
+  {
+   "beat_id": "beat_01",
+   "role": "opener",
+   "order": 1
+  },
+  {
+   "beat_id": "beat_02",
+   "role": "architecture",
+   "order": 2
+  }
+ ]
+}

@@ -1,0 +1,42 @@
+{
+ "run_id": "legacy-hd",
+ "title": "旧 HD run",
+ "tasks": [
+  {
+   "beat_id": "beat_01",
+   "order": 1,
+   "planning": {
+    "page_title": "开场定位",
+    "role": "opener",
+    "core_claim": "说明方案业务主题。",
+    "content_goal": "说明方案业务主题。",
+    "evidence_need": "历史方案页",
+    "visual_need": "架构图",
+    "density": "executive",
+    "preferred_archetype": "opener",
+    "workspace_refs": [],
+    "quality_requirements": [
+     "有主观点"
+    ],
+    "gaps": []
+   }
+  },
+  {
+   "beat_id": "beat_06",
+   "order": 2,
+   "planning": {
+    "page_title": "架构总览",
+    "role": "architecture",
+    "core_claim": "总体架构如图。",
+    "content_goal": "总体架构如图。",
+    "evidence_need": "架构图",
+    "visual_need": "架构图",
+    "density": "executive",
+    "preferred_archetype": "architecture",
+    "workspace_refs": [],
+    "quality_requirements": [],
+    "gaps": []
+   }
+  }
+ ]
+}

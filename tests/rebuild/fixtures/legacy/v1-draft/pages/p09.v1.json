@@ -1,0 +1,86 @@
+{
+ "schema_version": "deck_page_package.v1",
+ "run_id": "legacy-v1",
+ "page_id": "p09",
+ "order": 1,
+ "status": "ready_for_build",
+ "customer_visible": {
+  "title": "旧版第一页",
+  "subtitle": "v1 副标题保留",
+  "body_blocks": [
+   {
+    "id": "b1",
+    "type": "paragraph",
+    "text": "v1 段落正文保留。"
+   },
+   {
+    "id": "b2",
+    "type": "bullets",
+    "heading": "要点",
+    "items": [
+     {
+      "id": "i1",
+      "text": "第一条"
+     },
+     {
+      "id": "i2",
+      "text": "第二条"
+     }
+    ]
+   }
+  ],
+  "labels": [
+   "本期只读接口"
+  ],
+  "footnotes": [
+   {
+    "id": "fn-1",
+    "text": "v1 脚注"
+   }
+  ]
+ },
+ "speaker_notes": "讲者备注保留",
+ "visual_spec": {
+  "intent": "legacy v1 page",
+  "nodes": [
+   {
+    "node_id": "n1",
+    "status": "existing",
+    "label_ref": "atom:p09:label:label-1:text"
+   },
+   {
+    "node_id": "n2",
+    "status": "proposed",
+    "label_ref": "atom:p09:label:label-1:text"
+   }
+  ],
+  "edges": [
+   {
+    "edge_id": "e1",
+    "from": "n1",
+    "to": "n2",
+    "direction": "forward",
+    "relationship": "提交"
+   }
+  ]
+ },
+ "asset_bindings": [
+  {
+   "asset_id": "brand-logo",
+   "kind": "logo",
+   "file": "logo.png"
+  }
+ ],
+ "citations": [
+  {
+   "ref": "v1-citation-1"
+  }
+ ],
+ "internal_only": {
+  "note": "内部说明不进正文"
+ },
+ "provenance": {
+  "generated_by": "legacy-suite"
+ },
+ "source_fingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

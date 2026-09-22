@@ -96,9 +96,18 @@ WP03 最后一张卡 T15 关闭（见下节）。**阶段 1（WP02/WP03 收尾�
 - 状态同步：tasks.json/subtasks.csv 中 T19 及子任务标记 `implemented_verified`；T19.md 交接回填已记录。
 - 工作树待提交：THIRD_PARTY_NOTICES.md、pyproject.toml、test_install.py。
 
+## T18 整卡关闭：旧 run 只读导入（2026-09-22）
+
+- 新建 `src/deck_master/legacy.py`：显式 schema/version 判别（v1 页包/HD run/v1 draft 目录，零子串猜版本）；`inspect_legacy` dry-run 计划（字段/媒体 sha/未知指针/旧状态历史）;`import_legacy` 只读导入（源全量 hash 前后一致校验、零写入、零脚本执行）;v1→v2 正文/关系/稳定 ID 映射（未知 block 形态抛 `LegacyNormalizationRequired` 带指针，不静默丢）;旧 completed/pass 仅历史说明，新项目 reviews 空、review_status not_evaluated；缺源 `original_sha256=null`、全零 hash 拒绝、补文件不追认。
+- CLI:`deck-master import legacy --input <old-run> --out <new-project> [--inspect]`;migration 文档补用法节。
+- 新建 `tests/rebuild/test_legacy.py`(15 项）+ fixtures(v1-draft、hd-run)；定向 15 passed，全量 **350 passed**(335+15),ruff 全过。
+- 状态同步：tasks.json/subtasks.csv 中 T18 及子任务标记 `implemented_verified`；T18.md 交接回填已记录。
+- 工作树待提交：legacy.py、test_legacy.py、fixtures/legacy/、cli.py、migration 文档。
+- 遗留：asset_bindings 的 design_context 注册与 HD 含 PPTX 路径留待真实 v1 样本扩展（同模式，已声明）。
+
 ## 下一阶段
 
-阶段 2 剩余：T18 旧 run 只读导入 → T16 收尾 + T20 隔离安装端到端。
+阶段 2 收尾：T16 收尾 + T20 候选隔离安装端到端（依赖 T14/T15/T16/T17/T18/T13 全部满足）。
 
 ## T14 整卡关闭：完整四视图工作台
 

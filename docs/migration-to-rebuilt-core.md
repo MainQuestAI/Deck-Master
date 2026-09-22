@@ -42,11 +42,40 @@ Options for an old run that still matters:
 
 1. **Pin the old release** for that run and keep operating it with the legacy
    toolchain. Do not mix the new CLI writers into the same run.
-2. **Convert its full draft**: map the v1 page package to Page v2 per spec
-   12.2 (customer_visible blocks, explicit page order, separated speaker
-   notes), then `deck-master import-draft --project <new> --input draft.json`.
-   Unknown fields must be mapped explicitly — they are rejected, never
-   silently dropped. Old artifact bytes stay in the old run as history.
+2. **Import read-only into a new project copy**:
+
+```bash
+# dry-run first: pages, media, unknown fields, source-hash plan
+deck-master import legacy --input <old-run> --out <new-project> --inspect
+
+# real import: copies allowed media into new objects with real byte hashes,
+# maps v1 visible copy/relations to Page v2, keeps speaker notes,
+# records old completed/pass strings as history only
+deck-master import legacy --input <old-run> --out <new-project>
+```
+
+Known inputs: a `deck_page_package.v1` page pack (single file or a directory
+of `*.v1.json` pages) and an HD run directory (`preview_manifest.json` +
+`narrative_plan.json` + `page_tasks.json` with SVG/PPT media). Anything else
+is refused with the concrete fields found — nothing is guessed from
+substrings, and unknown body-block shapes stop the import with a pointer
+(e.g. `pages[p09]/customer_visible/body_blocks/1`) until you map them.
+
+Import semantics:
+
+- The source run is strictly read-only: every file's sha256 is snapshotted
+  before and after; any change refuses the copy. No `.deckmaster` is created
+  inside the source, and no legacy script is executed.
+- Media bytes land in the new objects with their real sha256 and a
+  `legacy_import` provenance note; the original URI is recorded. A missing
+  original keeps `original_sha256: null` — never a fabricated value, and an
+  all-zero fingerprint is rejected outright.
+- If the original file is restored later, it is **not** retroactively claimed
+  as the verified original; only hashes actually measured at import count.
+- The new project starts with zero reviews: `review_status` is
+  `not_evaluated` and human/professional evidence stays unverified until real
+  checks run. `deck-master import-draft` remains the path for drafts that are
+  already Page v2.
 
 ## Status Semantics
 

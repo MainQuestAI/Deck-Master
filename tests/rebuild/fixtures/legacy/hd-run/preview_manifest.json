@@ -1,0 +1,37 @@
+{
+ "run_id": "legacy-hd",
+ "title": "旧 HD run",
+ "status": "ready_for_build",
+ "pages": [
+  {
+   "page_id": "beat_01",
+   "beat_id": "beat_01",
+   "order": 1,
+   "title": "开场定位",
+   "source_type": "generated",
+   "status": "completed",
+   "narrative_role": "opener",
+   "decision_reason": "生成完成",
+   "confidence": 0.9,
+   "alternatives": [],
+   "risk_flags": [],
+   "tool_refs": {},
+   "generation_task": null
+  },
+  {
+   "page_id": "beat_06",
+   "beat_id": "beat_06",
+   "order": 2,
+   "title": "架构总览",
+   "source_type": "generated",
+   "status": "completed",
+   "narrative_role": "architecture",
+   "decision_reason": "生成完成",
+   "confidence": 0.9,
+   "alternatives": [],
+   "risk_flags": [],
+   "tool_refs": {},
+   "generation_task": null
+  }
+ ]
+}
