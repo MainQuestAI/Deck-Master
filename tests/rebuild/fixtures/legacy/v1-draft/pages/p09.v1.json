@@ -64,18 +64,6 @@
    }
   ]
  },
- "asset_bindings": [
-  {
-   "asset_id": "brand-logo",
-   "kind": "logo",
-   "file": "logo.png"
-  }
- ],
- "citations": [
-  {
-   "ref": "v1-citation-1"
-  }
- ],
  "internal_only": {
   "note": "内部说明不进正文"
  },

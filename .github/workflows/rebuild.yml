@@ -17,29 +17,77 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  rebuild:
-    name: Rebuild suite (Python 3.12)
+  # Group 1: unit matrix — fast, no renderer required.
+  unit:
+    name: Unit matrix (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
-
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install rebuilt core with dev dependencies
+        run: python -m pip install --quiet -e ".[dev]"
+      - name: Ruff (rebuilt core and its tests)
+        run: python -m ruff check src/deck_master tests/rebuild
+      - name: Unit suite (no renderer-dependent tests)
+        run: >-
+          python -m pytest -q tests/rebuild
+          --ignore=tests/rebuild/test_render.py
+          --ignore=tests/rebuild/test_compiler_geometry.py
+          -k "not isolated and not release_tree"
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+  # Group 2: real rendering — needs soffice/pdftoppm/rsvg-convert; failures
+  # here never block group 1/3 (separate job, reported on its own).
+  render:
+    name: Real rendering chain (Python 3.12)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-
       - name: Install renderer toolchain
         run: |
           sudo apt-get update
-          sudo apt-get install --no-install-recommends -y librsvg2-bin libreoffice poppler-utils fonts-dejavu
-
+          sudo apt-get install --no-install-recommends -y librsvg2-bin libreoffice poppler-utils fonts-dejavu fonts-noto-cjk
       - name: Install rebuilt core with dev dependencies
         run: python -m pip install --quiet -e ".[dev]"
+      - name: Renderer-dependent tests (rendering, isolated installs, release tree)
+        run: >-
+          python -m pytest -q
+          tests/rebuild/test_render.py
+          tests/rebuild/test_compiler_geometry.py
+          tests/rebuild/test_install.py
+          -k "isolated or release_tree or render"
 
-      - name: Ruff (rebuilt core and its tests)
-        run: python -m ruff check src/deck_master tests/rebuild
-
-      - name: Rebuild test suite
-        run: python -m pytest -q tests/rebuild
+  # Report roll-up: mark skipped/unavailable groups explicitly.
+  report:
+    name: Group report
+    runs-on: ubuntu-latest
+    needs: [unit, render]
+    if: always()
+    steps:
+      - name: Summarise group outcomes
+        env:
+          UNIT: ${{ needs.unit.result }}
+          RENDER: ${{ needs.render.result }}
+        run: |
+          python - "$UNIT" "$RENDER" <<'PY'
+          import sys
+          unit, render = sys.argv[1], sys.argv[2]
+          print(f"unit: {unit}; render: {render}")
+          # executed / failed / skipped / unavailable roll-up per spec 11.8
+          if unit == "success" and render == "success":
+              print("rebuild gate: executed (all groups)")
+              sys.exit(0)
+          if unit != "success":
+              print("rebuild gate: failed (unit group)")
+              sys.exit(1)
+          print("rebuild gate: unavailable (render group did not pass; unit group green)")
+          sys.exit(1)
+          PY

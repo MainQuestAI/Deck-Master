@@ -222,3 +222,134 @@ def test_restore_after_import_keeps_call_facts_shape(tmp_path):
 def _view(project):
     from deck_master.view import project_view
     return project_view(project)
+
+
+# ---------------------------------------------------------------------------
+# P1 hardening round: nothing unmapped is dropped silently.
+
+
+def test_v1_asset_bindings_and_citations_require_normalization(tmp_path):
+    source = tmp_path / "with-bindings"
+    shutil.copytree(FIXTURES / "v1-draft", source)
+    page_file = source / "pages" / "p09.v1.json"
+    page = json.loads(page_file.read_text())
+    page["asset_bindings"] = [{"asset_id": "logo", "file": "logo.png"}]
+    page["citations"] = [{"ref": "c-1"}]
+    page_file.write_text(json.dumps(page, ensure_ascii=False))
+    with pytest.raises(legacy_mod.LegacyNormalizationRequired) as excinfo:
+        legacy_mod.import_legacy(source, tmp_path / "out")
+    message = str(excinfo.value)
+    assert "pages[p09]/asset_bindings" in message and "pages[p09]/citations" in message
+
+
+def test_v1_internal_only_and_provenance_recorded_not_carried(tmp_path):
+    plan = legacy_mod.inspect_legacy(FIXTURES / "v1-draft")
+    preserved = plan["deliberately_not_carried"]["p09"]
+    assert "internal_only" in preserved and "provenance" in preserved
+    result = legacy_mod.import_legacy(FIXTURES / "v1-draft", tmp_path / "p")
+    page = Store(tmp_path / "p").read_object_json(
+        Store(tmp_path / "p").load_document()["pages"][0]["page"])
+    assert "internal_only" not in page and "provenance" not in page
+
+
+def test_v1_block_with_text_and_items_requires_normalization(tmp_path):
+    source = tmp_path / "mixed-block"
+    shutil.copytree(FIXTURES / "v1-draft", source)
+    page_file = source / "pages" / "p10.v1.json"
+    page = json.loads(page_file.read_text())
+    page["customer_visible"]["body_blocks"][0]["items"] = [{"text": "混入条目"}]
+    page_file.write_text(json.dumps(page, ensure_ascii=False))
+    with pytest.raises(legacy_mod.LegacyNormalizationRequired,
+                       match="同时含 text 与 items"):
+        legacy_mod.import_legacy(source, tmp_path / "out")
+
+
+def test_v1_edge_missing_direction_is_located_not_filtered(tmp_path):
+    source = tmp_path / "bad-edge"
+    shutil.copytree(FIXTURES / "v1-draft", source)
+    page_file = source / "pages" / "p09.v1.json"
+    page = json.loads(page_file.read_text())
+    page["visual_spec"]["edges"][0].pop("direction")
+    page_file.write_text(json.dumps(page, ensure_ascii=False))
+    with pytest.raises(legacy_mod.LegacyNormalizationRequired) as excinfo:
+        legacy_mod.import_legacy(source, tmp_path / "out")
+    assert "visual_spec/edges/0" in str(excinfo.value)
+
+
+def test_output_inside_source_is_refused(tmp_path):
+    with pytest.raises(legacy_mod.LegacyError, match="互为子目录"):
+        legacy_mod.import_legacy(FIXTURES / "v1-draft",
+                                 FIXTURES / "v1-draft" / "nested-out")
+    with pytest.raises(legacy_mod.LegacyError, match="互为子目录"):
+        legacy_mod.import_legacy(FIXTURES / "v1-draft", FIXTURES)
+
+
+def test_source_change_during_import_refuses_and_cleans_copy(tmp_path, monkeypatch):
+    source = tmp_path / "watch-src"
+    shutil.copytree(FIXTURES / "v1-draft", source)
+    out = tmp_path / "watched-out"
+    original_snapshot = legacy_mod.snapshot
+
+    def _changing_snapshot(root):
+        entries = original_snapshot(root)
+        # Simulate an external writer touching the tree mid-import.
+        probe = root / ".import-probe"
+        if entries and not probe.exists():
+            probe.write_text("external")
+            entries[str(probe.relative_to(root))] = "external"
+        return entries
+
+    monkeypatch.setattr(legacy_mod, "snapshot", _changing_snapshot)
+    with pytest.raises(legacy_mod.LegacySourceModified):
+        legacy_mod.import_legacy(source, out)
+    assert not out.exists(), "the refused copy is cleaned up"
+
+
+def test_inspect_on_fresh_out_writes_nothing(tmp_path):
+    out = tmp_path / "fresh-out"
+    result = legacy_mod.import_legacy(FIXTURES / "v1-draft", out, inspect_only=True)
+    assert result["status"] == "inspected"
+    assert not (out / ".deckmaster").exists(), "--inspect must not create the project"
+    assert not out.exists() or not any(out.iterdir())
+
+
+def test_reimport_after_source_supplement_measures_honestly(tmp_path):
+    source = tmp_path / "supplement-src"
+    shutil.copytree(FIXTURES / "v1-draft", source)
+    (source / "logo.png").unlink()
+    first_out = tmp_path / "first"
+    legacy_mod.import_legacy(source, first_out)
+    assert Store(first_out).load_document()["sources"][0]["original_sha256"] is None
+    # Supplement the original file later and re-import into a fresh copy...
+    shutil.copyfile(FIXTURES / "v1-draft" / "logo.png", source / "logo.png")
+    second_out = tmp_path / "second"
+    result = legacy_mod.import_legacy(source, second_out)
+    # ...media carry their real byte hashes, and a directory source keeps
+    # original_sha256 null (only actually-measured single-file sources get one).
+    logo = next(item for item in result["report"]["plan"]["media"] if item["path"] == "logo.png")
+    assert logo["sha256"] == hashlib.sha256((source / "logo.png").read_bytes()).hexdigest()
+    assert Store(second_out).load_document()["sources"][0]["original_sha256"] is None
+    assert Store(first_out).load_document()["sources"][0]["original_sha256"] is None, \
+        "the earlier import is never retroactively upgraded"
+
+
+def test_single_file_source_measures_real_hash(tmp_path):
+    single = tmp_path / "one-page.v1.json"
+    page = json.loads((FIXTURES / "v1-draft" / "pages" / "p09.v1.json").read_text())
+    single.write_text(json.dumps(page, ensure_ascii=False))
+    out = tmp_path / "single-out"
+    legacy_mod.import_legacy(single, out)
+    source = Store(out).load_document()["sources"][0]
+    assert source["original_sha256"] == hashlib.sha256(single.read_bytes()).hexdigest()
+
+
+def test_cli_import_legacy_requires_legacy_flags(tmp_path, capsys):
+    # `import legacy` without --input/--out falls through to the asset import
+    # path, whose parser reports the missing --project as a usage error.
+    with pytest.raises(SystemExit) as usage_error:
+        cli.main(["import", "legacy"])
+    assert usage_error.value.code == 2
+    capsys.readouterr()
+    # With the legacy flags it dispatches to the importer.
+    assert cli.main(["import", "legacy", "--input", str(FIXTURES / "v1-draft"),
+                     "--out", str(tmp_path / "ok")]) == 0

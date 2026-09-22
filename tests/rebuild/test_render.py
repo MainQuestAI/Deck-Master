@@ -41,27 +41,27 @@ def test_renderers_available_on_this_machine():
     assert missing == [], f'renderers missing on this machine: {missing}'
 
 
-def test_svg_renders_with_rsvg_convert(tmp_path):
+def test_svg_renders_with_rsvg_convert(tmp_path, resolvable_font_family):
     # SVG side of AC-K11: real rasterisation with rsvg-convert.
     svg = tmp_path / 'slide.svg'
     svg.write_text('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100">'
                    '<rect width="200" height="100" fill="#ffffff"/>'
                    '<rect x="20" y="20" width="80" height="60" fill="#c00000"/>'
-                   '<text x="120" y="60" font-family="Hiragino Sans GB" font-size="18">渲染</text>'
+                   f'<text x="120" y="60" font-family="{resolvable_font_family}" font-size="18">渲染</text>'
                    '</svg>')
     png = tmp_path / 'slide.png'
     run([executable('rsvg-convert'), str(svg), '-o', str(png)])
     assert_real_rendering(png)
 
 
-def test_ppt_renders_with_soffice_pdftoppm_chain(tmp_path):
+def test_ppt_renders_with_soffice_pdftoppm_chain(tmp_path, resolvable_font_family):
     # PPT side of AC-K11: real compile, then the render_deck chain
     # (soffice -> pdf -> pdftoppm) with semantic PNG evidence per slide.
-    fonts = resolve_font()
+    fonts = {resolvable_font_family: resolve_font()[resolvable_font_family]}
     svg = tmp_path / 'page.svg'
     svg.write_text('<svg viewBox="0 0 200 100"><rect width="200" height="100" fill="#ffffff"/>'
                    '<rect x="20" y="20" width="80" height="60" fill="#003399"/>'
-                   '<text x="120" y="60" font-family="Hiragino Sans GB" font-size="18">渲染证据</text>'
+                   f'<text x="120" y="60" font-family="{resolvable_font_family}" font-size="18">渲染证据</text>'
                    '</svg>')
     compiled = compile_deck([SvgInput('p1', svg)], CompileOptions(width_px=200, height_px=100, fonts=fonts),
                             tmp_path / 'compiled')

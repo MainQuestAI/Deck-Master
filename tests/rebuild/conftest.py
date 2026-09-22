@@ -36,3 +36,20 @@ def created_store(tmp_path: Path) -> Store:
     )
     st.init_project(document, operation_id="op-create-1")
     return st
+
+
+@pytest.fixture(scope="session")
+def resolvable_font_family():
+    """A font family that fc-match resolves exactly (cross-host for CI)."""
+    import shutil
+    import subprocess
+
+    if not shutil.which("fc-match"):
+        pytest.fail("fc-match unavailable; cannot resolve a real font family")
+    for candidate in ("Hiragino Sans GB", "Noto Sans CJK SC", "Noto Sans CJK JP",
+                      "DejaVu Sans", "Helvetica", "Arial"):
+        result = subprocess.run(["fc-match", "-f", "%{family}", candidate],
+                                capture_output=True, text=True, check=True)
+        if candidate.lower() in result.stdout.lower():
+            return candidate
+    pytest.fail("no resolvable font family on this host")

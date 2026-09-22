@@ -17,7 +17,8 @@ def build_release(output):
             if name not in names:raise RuntimeError('missing resource: '+name)
         if any(name.startswith(('runtime/','workflow/','high_density/','preview/','build/')) for name in names):raise RuntimeError('legacy package in wheel')
         files={name:hashlib.sha256(z.read(name)).hexdigest() for name in sorted(names) if not name.endswith('/')}
-    manifest={'release_id':sha[:12]+'-'+hashlib.sha256(wheel.read_bytes()).hexdigest()[:12], 'source_sha':sha,'source_dirty':dirty,'wheel':wheel.name,'wheel_sha256':hashlib.sha256(wheel.read_bytes()).hexdigest(),'files':files,'entry':['python','-m','deck_master'],'professional_evidence':'not_evaluated'}
+    import deck_master
+    manifest={'release_id':sha[:12]+'-'+hashlib.sha256(wheel.read_bytes()).hexdigest()[:12], 'source_sha':sha,'source_dirty':dirty,'package_version':deck_master.__version__,'compiler_version':'python-native-v1','wheel':wheel.name,'wheel_sha256':hashlib.sha256(wheel.read_bytes()).hexdigest(),'files':files,'entry':['python','-m','deck_master'],'professional_evidence':'not_evaluated'}
     (output/'release.json').write_text(json.dumps(manifest,indent=2)+'\n')
     return manifest
 if __name__=='__main__':

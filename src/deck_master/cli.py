@@ -178,7 +178,8 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
-    if len(argv) >= 2 and argv[0] == 'import' and argv[1] == 'legacy':
+    if len(argv) >= 2 and argv[0] == 'import' and argv[1] == 'legacy' and \
+            any(flag in argv[2:] for flag in ('--input', '--out', '--inspect')):
         return _dispatch_import_legacy(argv[2:])
     legacy = _legacy_dispatch(argv)
     if legacy is not None:

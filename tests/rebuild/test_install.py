@@ -218,7 +218,11 @@ def test_release_tree_manifest_scans_clean(tmp_path: Path) -> None:
     from tools.build_release import build_release
 
     manifest = build_release(tmp_path / "release-out")
-    assert manifest["source_dirty"] in (True, False)
+    import deck_master as _dm
+    assert manifest["source_sha"] == subprocess.check_output(
+        ["git", "-C", str(REPO), "rev-parse", "HEAD"], text=True).strip()
+    assert manifest["package_version"] == _dm.__version__
+    assert manifest["compiler_version"] == "python-native-v1"
     assert manifest["entry"] == ["python", "-m", "deck_master"]
     for name in manifest["files"]:
         lowered = name.lower()
@@ -264,13 +268,28 @@ def dist_artifacts(tmp_path_factory):
 
 
 def _make_isolated_venv(base: Path, artifact: Path) -> Path:
+    """Create a venv and install the artifact offline-friendly: pip bootstrap
+    falls back when ensurepip is absent (uv-managed interpreters), and the
+    sdist path builds with --no-build-isolation against a preinstalled
+    setuptools so sandboxes do not fetch a second build backend."""
     home = base / "venv-home"
     home.mkdir()
-    subprocess.run([sys.executable, "-m", "venv", str(home)], check=True,
-                   stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=300)
+    created = subprocess.run([sys.executable, "-m", "venv", str(home)],
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=300)
+    python = home / "bin" / "python"
+    if created.returncode != 0 or not (home / "bin" / "pip").is_file():
+        subprocess.run([sys.executable, "-m", "venv", "--without-pip", str(home)], check=True,
+                       stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=300)
+        bootstrapped = subprocess.run([str(python), "-m", "ensurepip", "--upgrade"],
+                                      stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=300)
+        if bootstrapped.returncode != 0:
+            subprocess.run([sys.executable, "-m", "pip", "--python", str(python), "install", "pip"],
+                           check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=600)
     pip = home / "bin" / "pip"
-    subprocess.run([str(pip), "install", "--quiet", str(artifact)], check=True,
+    subprocess.run([str(pip), "install", "--quiet", "setuptools>=77", "wheel"],
                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=900)
+    subprocess.run([str(pip), "install", "--quiet", "--no-build-isolation", str(artifact)],
+                   check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=900)
     return home
 
 
