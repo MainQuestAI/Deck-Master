@@ -30,6 +30,7 @@ def assert_real_rendering(png_path):
         assert len(image.convert('RGB').getcolors(maxcolors=1_000_000) or []) > 2
 
 
+@pytest.mark.render
 def test_renderers_available_on_this_machine():
     missing = [tool for tool in REQUIRED_TOOLS if shutil.which(
         __import__('os').environ.get('DECK_MASTER_' + tool.upper().replace('-', '_'), tool)) is None]

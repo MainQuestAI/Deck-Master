@@ -66,7 +66,7 @@ def test_document_canvas_is_prompt_and_compile_authority(tmp_path, resolvable_fo
     # AC-K14: a 4:3 Document canvas flows into the prompt projection, resolve_design,
     # and the real produced PPT page size; no hidden 16:9 default appears anywhere.
     project = create_project(tmp_path)
-    store = attach_svg(project, SVG_4_3)
+    store = attach_svg(project, SVG_4_3.replace("Hiragino Sans GB", resolvable_font_family))
     document = store.load_document()
     assert document['design_context']['canvas'] == CANVAS_4_3
     assert (document['design_context']['canvas']['slide_width_in'],

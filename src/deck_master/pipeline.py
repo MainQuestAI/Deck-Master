@@ -52,14 +52,11 @@ def artifact(store,path,role,*,page_id=None,dependencies=(),derived_from=()):
 
 def render_deck(pptx_path, output_dir, *, fonts):
     output_dir=Path(output_dir);output_dir.mkdir(parents=True,exist_ok=True)
-    # Explicit font directories also work with the bundled headless renderer.
-    config=ET.Element('fontconfig')
-    for directory in sorted({str(Path(f).parent) for f in fonts.values()}):ET.SubElement(config,'dir').text=directory
-    ET.SubElement(config,'cachedir').text=str(output_dir/'font-cache')
-    config_path=output_dir/'fonts.conf';config_path.write_bytes(ET.tostring(config))
-    env={**os.environ,'FONTCONFIG_FILE':str(config_path)}
+    # resolve_fonts already verified these fonts using the host's Fontconfig.
+    # Keep that same configuration for LibreOffice: replacing it with a partial
+    # config can prevent headless LibreOffice from starting on Linux.
     profile=(output_dir/'lo-profile').resolve().as_uri()
-    run([executable('soffice'),f'-env:UserInstallation={profile}','--headless','--convert-to','pdf','--outdir',str(output_dir),str(pptx_path)],env=env)
+    run([executable('soffice'),f'-env:UserInstallation={profile}','--headless','--convert-to','pdf','--outdir',str(output_dir),str(pptx_path)])
     pdf=output_dir/(Path(pptx_path).stem+'.pdf')
     if not pdf.is_file():raise RuntimeError('renderer did not produce a PDF')
     run([executable('pdftoppm'),'-r','120','-png',str(pdf),str(output_dir/'page')])

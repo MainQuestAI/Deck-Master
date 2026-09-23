@@ -390,8 +390,7 @@ def test_isolated_install_runs_full_local_flow(venv_fixture, tmp_path, dist_arti
     assert code == 0 and payload["status"] == "ready", payload
     assert Path(payload["module_path"]).resolve().is_relative_to(venv)
     code, payload, _ = _iso_run(venv, ["doctor", "--step", "render"], home, work)
-    assert code == 0, payload
-    assert payload["status"] in ("ready", "needs_tool"), payload
+    assert (code, payload["status"]) in ((0, "ready"), (3, "needs_tool")), payload
 
     evidence = {
         "interpreter": str(venv / "bin" / "python"),
@@ -653,6 +652,7 @@ def test_isolated_call_budget_and_cancel_via_cli(wheel_venv, tmp_path):
 # install_candidate → activate) plus the existing rollback coverage.
 
 
+@pytest.mark.render
 def test_candidate_install_activate_and_run_doctor(tmp_path):
     from tools.build_release import build_release
     from deck_master import install as install_mod
