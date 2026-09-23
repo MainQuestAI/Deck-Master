@@ -200,6 +200,55 @@ def test_load_and_export_share_evaluate_current(tmp_path):
     assert outcome['status'] == 'exported'
 
 
+def test_handoff_check_rejects_external_ppt_and_accepts_current_export(tmp_path):
+    from deck_master.handoff import check_handoff
+    from deck_master.pipeline import artifact
+
+    project = _project_with_passing_reviews(tmp_path)
+    store = Store(project)
+    doc = store.load_document()
+    image = tmp_path / 'original.png'
+    Image.new('RGB', (120, 80), 'white').save(image)
+    bumped = tasks_mod.bump_revision(doc, {'operation_id': 'complete-page-slots', 'kind': 'task_update',
+                                          'description': 'complete page slots', 'read_set': []})
+    bumped['pages'][0]['blueprint'] = artifact(store, image, 'blueprint', page_id='p1')
+    bumped['pages'][0]['svg_preview'] = artifact(store, image, 'svg_preview', page_id='p1')
+    store.commit_change(base_revision=doc['revision_id'], document=bumped,
+                        operation_id='complete-page-slots')
+    from deck_master.editing import export_project
+    export_project(project, output_dir=tmp_path / 'review-export', purpose='review')
+    current = tmp_path / 'review-export' / 'deck.pptx'
+    checked = check_handoff(project, file_path=current)
+    assert checked['status'] == 'verified'
+    assert checked['file_sha256'] == checked['current_pptx_sha256']
+
+    external = tmp_path / 'text-only.pptx'
+    external.write_bytes(b'not the current deck')
+    blocked = check_handoff(project, file_path=external)
+    assert blocked['status'] == 'blocked'
+    assert 'candidate_not_current_output' in blocked['gaps']
+
+
+def test_handoff_check_blocks_while_production_has_no_ppt(tmp_path, capsys):
+    from deck_master.handoff import check_handoff
+
+    project = tmp_path / 'project'
+    service.create(project, brief='new draft', draft={'pages': [{
+        'schema_version': 'deck_page_package.v2', 'page_id': 'p1',
+        'customer_visible': {'title': '待制作', 'body_blocks': []},
+        'visual_spec': {'intent': 'test', 'reference_mode': 'new_design'},
+    }]})
+    external = tmp_path / 'external.pptx'
+    external.write_bytes(b'external')
+    blocked = check_handoff(project, file_path=external)
+    assert blocked['status'] == 'blocked'
+    assert 'missing_current_pptx' in blocked['gaps']
+    assert 'p1:missing_blueprint' in blocked['gaps']
+    from deck_master.cli import main
+    assert main(['handoff-check', '--project', str(project), '--file', str(external)]) == 3
+    assert json.loads(capsys.readouterr().out)['gaps'] == blocked['gaps']
+
+
 def test_export_blocked_when_interpretation_fails(tmp_path):
     from deck_master.editing import export_project
     from deck_master.store import StoreError

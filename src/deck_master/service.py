@@ -444,26 +444,21 @@ def _continue_project(project_dir: Path | str) -> dict:
             pending_tasks=pending,
             next_action="submit_host_results",
         )
-    missing_blueprint = next(
-        (entry for entry in document.get("pages") or [] if entry.get("page") and not entry.get("blueprint")),
-        None,
-    )
-    if missing_blueprint is not None:
-        task = open_blueprint_task(store, document, missing_blueprint)
-        document = store.load_document()
-        return _response(
-            status="awaiting_host",
-            document=document,
-            requested_action="continue",
-            pending_tasks=[task_summary(store, document, task)],
-            next_action="codex_generate_blueprint",
-        )
-    missing_svg = next((entry for entry in document['pages'] if not entry.get('svg')), None)
-    if missing_svg:
-        task = open_host_task(store, kind='reconstruct', page_ids=[missing_svg['page_id']],
-            instruction='实际阅读原始蓝图并记录上游期待；核对正文，必要纠正写新 Page。按授权资产与有效设计重建可编辑 SVG。保存原图，提交 reconstruct 信封；不得把预览图冒充原始蓝图。')
-        return _response(status='awaiting_host', document=store.load_document(), requested_action='continue',
-                         pending_tasks=[task_summary(store, store.load_document(), task)], next_action='codex_reconstruct_svg')
+    # Finish each page through SVG before starting the next image call. This
+    # exposes a real reconstruction result early without treating a single
+    # page as the completed Deck (the PPT is compiled only after all pages).
+    for entry in document.get("pages") or []:
+        if entry.get("page") and not entry.get("blueprint"):
+            task = open_blueprint_task(store, document, entry)
+            document = store.load_document()
+            return _response(status="awaiting_host", document=document, requested_action="continue",
+                             pending_tasks=[task_summary(store, document, task)], next_action="codex_generate_blueprint")
+        if not entry.get("svg"):
+            task = open_host_task(store, kind='reconstruct', page_ids=[entry['page_id']],
+                instruction='实际阅读原始蓝图并记录上游期待；核对正文，必要纠正写新 Page。按授权资产与有效设计重建可编辑 SVG。保存原图，提交 reconstruct 信封；不得把预览图冒充原始蓝图。')
+            document = store.load_document()
+            return _response(status='awaiting_host', document=document, requested_action='continue',
+                             pending_tasks=[task_summary(store, document, task)], next_action='codex_reconstruct_svg')
     if not document['outputs'].get('pptx'):
         from .pipeline import produce, NeedsTool
         try:

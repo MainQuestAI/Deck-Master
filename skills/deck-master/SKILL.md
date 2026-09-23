@@ -21,6 +21,7 @@ ImageGen，不配置 Provider 或 API Key；其他宿主兼容暂不进入验收
 | 生成蓝图 | `continue` 返回 `kind=blueprint` | [Codex 蓝图执行方法](references/blueprint-svg.md) |
 | 修改页 | `task accept`（repair 信封，仅 scope_pages 内） | [content-methods](references/content-methods.md) |
 | 查看与交付 | `view`、`continue` 自动检查、`export` | 工作台与导出规则见 spec 09/07 |
+| 核对拟交付 PPT | `deck-master handoff-check --project … --file … --purpose review\|delivery` | 对照当前项目 outputs、页级产物、渲染和待执行任务；blocked 时继续当前项目 |
 
 ## 自动工作台（必守）
 
@@ -39,12 +40,14 @@ create --draft / import draft / compose 结果**第一次形成至少一页后�
 
 `task accept` 后继续执行 `continue`，直至 `ready_for_export`、用户停止或具体输入/工具缺口。
 `awaiting_host` 是交接请求，不是已执行；先 `task start` 再做 Host 工作。CLI 返回 3 时读取 stdout JSON 并处理其中任务，不能把它当成执行失败直接终止。
+当前项目仍有待执行任务时，不把外部排版、旧稿选编或单页预览当作本次新稿完成。用户纠正产物后，先重读同一项目的 `continue`，处理它返回的任务。内容与制作分开比较是评价维度，不是跳过蓝图、SVG 和 PPT 制作的许可。
 
 - `reconstruct`：实际读取原图、完整 Page 和允许资产，以任务reference_images给出的实际图片hash读取原图，先写原图模块/关系期待，再输出单份原生 SVG；SVG根写data-blueprint-sha256为该原始图片字节哈希，不能复用同正文另一张图的SVG充当还原。若纠正文案或补标签，同一信封提交更新后的 Page 和理由。不得改写原图，不能仅改 SVG 隐藏正文错误。
 - `continue` 本地执行编译、SVG/PPT 渲染和真实文件回读；不需要手写外部编译脚本。失败回到明确的 Page/SVG/编译层处理，不通过重新生图掩盖。
 - `review`：实际看 Page、原图、SVG 和 PPT 渲染。分别提交 content、blueprint_content、blueprint_fidelity、conversion、readability、privacy 记录，subjects 固定当前文件；有问题保留 findings 并返修。Host 自审写 host_self，不能写独立或专业验收。
 - `edit --page … --base-revision … --page-hash … --operation-id …` 修改正文后继续重建受影响页；原图保留。`history list/restore` 恢复产生新 revision。
 - `export --purpose working` 包含可继续编辑项目；`--purpose delivery` 要求当前工程审阅通过。导出完成不等于专业或桌面验收完成。
+- 在最终回复附上 PPTX 前，对**准备附上的那个文件**调用 `handoff-check`。它必须与当前项目的 `outputs.pptx` 字节一致，且当前页蓝图、SVG、预览、渲染报告和 Host 任务完整；`blocked` 时不得称为本次项目成稿。`--purpose review` 只核对工程来源与制作链，`--purpose delivery` 还要求当前工程审阅通过。该检查不替代人工专业/桌面验收。
 
 统一入口已切换：`deck-master`(console entry = `deck_master.cli:main`)与 `python -m deck_master` 完全同路；退役的旧 CLI 不属于新流程。
 
