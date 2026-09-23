@@ -105,7 +105,7 @@ def create(
         extract_ref=store.put_json_object(extraction)
         source_entries.append(
             {
-                "source_id": f"src-{len(source_entries) + 1}-{Path(str(source_path)).stem}",
+                "source_id": f"src-{len(source_entries) + 1}",
                 "name": Path(str(source_path)).name,
                 "original_uri": extract.original_uri,
                 "original_sha256": extract.original_sha256,

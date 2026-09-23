@@ -37,6 +37,20 @@ def test_plain_material_directory_starts_without_library(tmp_path: Path) -> None
     assert not (project / "workspace").exists()
 
 
+def test_create_preserves_chinese_source_names_with_valid_ids(tmp_path: Path) -> None:
+    first = tmp_path / "客户原始需求.txt"
+    second = tmp_path / "三类Agent需求清单.md"
+    first.write_text("原始需求。", encoding="utf-8")
+    second.write_text("# 需求清单\n业务场景。", encoding="utf-8")
+
+    response = service.create(tmp_path / "project", brief="需求解析", sources=[first, second])
+
+    assert response["status"] == "created"
+    sources = service.Store(tmp_path / "project").load_document()["sources"]
+    assert [item["source_id"] for item in sources] == ["src-1", "src-2"]
+    assert [item["name"] for item in sources] == [first.name, second.name]
+
+
 def test_repeated_continue_returns_same_task(tmp_path: Path) -> None:
     """AC-C04: continue reuses the pending task instead of creating duplicates."""
     project, material = _write_brief(tmp_path)
