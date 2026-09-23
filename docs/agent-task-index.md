@@ -23,6 +23,7 @@ decision that affects this task.
 | Review workbench | `deck-master view --open --project <dir>` | One loopback service per project; reuse is automatic |
 | Edit copy | `deck-master edit --project … --page page.json --base-revision … --page-hash … --operation-id …` | Conflicts exit 5, current unchanged |
 | Export | `deck-master export --project … --out … --purpose review\|delivery` | review ships unfinished decks with the real unresolved list; delivery requires passing current checks |
+| Check a proposed PPTX handoff | `deck-master handoff-check --project … --file … --purpose review\|delivery` | Read-only match to current outputs plus page/render/task completeness; exit 3 means blocked |
 | Diagnose toolchain | `deck-master doctor --step compose\|blueprint\|compile\|render\|view\|export` | `needs_tool` carries the real reason |
 | History / restore | `deck-master history list\|restore --project <dir>` | Restore creates a new revision; call facts are never rolled back |
 

@@ -10,6 +10,34 @@ from deck_master import tasks as tasks_mod
 from deck_master.models import default_design_context
 from deck_master.production import project_prompt
 
+
+def test_continue_reconstructs_first_page_before_next_blueprint(tmp_path: Path) -> None:
+    """An accepted image gets SVG feedback before another page consumes ImageGen."""
+    from PIL import Image
+    from deck_master.models import bump_revision
+    from deck_master.pipeline import artifact
+    from deck_master.store import Store
+
+    first = _page()
+    second = {"schema_version": "deck_page_package.v2", "page_id": "p10",
+              "customer_visible": {"title": "第二页", "body_blocks": []},
+              "visual_spec": {"intent": "第二页图", "reference_mode": "new_design"}}
+    project = tmp_path / "project"
+    service.create(project, brief="two-page order", draft={"pages": [first, second]})
+    store = Store(project)
+    image_path = tmp_path / "first.png"
+    Image.new("RGB", (120, 80), "white").save(image_path)
+    document = store.load_document()
+    updated = bump_revision(document, {"operation_id": "first-blueprint", "kind": "task_update",
+                                       "description": "attach first image", "read_set": []})
+    updated["pages"][0]["blueprint"] = artifact(store, image_path, "blueprint", page_id="p09")
+    store.commit_change(base_revision=document["revision_id"], document=updated,
+                        operation_id="first-blueprint")
+
+    response = service.continue_project(project)
+    assert response["next_action"] == "codex_reconstruct_svg"
+    assert response["pending_tasks"][0]["scope_pages"] == ["p09"]
+
 SPEC = Path(__file__).resolve().parents[2] / "docs/specs/deck-master-rebuild-v1"
 COMPOSE = SPEC / "examples/roundtrips/result-envelope/compose.json"
 

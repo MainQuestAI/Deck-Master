@@ -211,30 +211,27 @@ def _drive_blueprints(project, store):
         outcome = service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
                                         produced_against=task["produced_against"], result_payload=envelope)
         assert outcome["status"] == "accepted"
+        _drive_reconstructs(project, store, missing["page_id"])
 
 
-def _drive_reconstructs(project, store):
-    while True:
-        document = store.load_document()
-        missing = next((e for e in document["pages"] if not e.get("svg")), None)
-        if missing is None:
-            return document
-        task = service.continue_project(project)["pending_tasks"][0]
-        assert task["kind"] == "reconstruct", task["kind"]
-        blueprint_sha = store.read_object_json(missing["blueprint"])["file"]["sha256"]
-        page = store.read_object_json(missing["page"])
-        svg = _svg_for(page).replace(b"<svg ", f'<svg data-blueprint-sha256="{blueprint_sha}" '.encode(), 1)
-        staging = project / ".deckmaster" / "staging" / task["operation_id"]
-        staging.mkdir(parents=True, exist_ok=True)
-        (staging / "page.svg").write_bytes(svg)
-        envelope = {"kind": "reconstruct",
-                    "files": [{"file_id": "s", "path": "page.svg", "media_type": "image/svg+xml"}],
-                    "artifact_specs": [{"file_id": "s", "role": "svg", "page_id": missing["page_id"],
-                                        "provenance": {"source_type": "unknown", "tool": "host-reconstruct",
-                                                       "invocation_ref": None}}]}
-        outcome = service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
-                                        produced_against=task["produced_against"], result_payload=envelope)
-        assert outcome["status"] == "accepted"
+def _drive_reconstructs(project, store, page_id):
+    missing = next(e for e in store.load_document()["pages"] if e["page_id"] == page_id)
+    task = service.continue_project(project)["pending_tasks"][0]
+    assert task["kind"] == "reconstruct", task["kind"]
+    blueprint_sha = store.read_object_json(missing["blueprint"])["file"]["sha256"]
+    page = store.read_object_json(missing["page"])
+    svg = _svg_for(page).replace(b"<svg ", f'<svg data-blueprint-sha256="{blueprint_sha}" '.encode(), 1)
+    staging = project / ".deckmaster" / "staging" / task["operation_id"]
+    staging.mkdir(parents=True, exist_ok=True)
+    (staging / "page.svg").write_bytes(svg)
+    envelope = {"kind": "reconstruct",
+                "files": [{"file_id": "s", "path": "page.svg", "media_type": "image/svg+xml"}],
+                "artifact_specs": [{"file_id": "s", "role": "svg", "page_id": missing["page_id"],
+                                    "provenance": {"source_type": "unknown", "tool": "host-reconstruct",
+                                                   "invocation_ref": None}}]}
+    outcome = service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+                                    produced_against=task["produced_against"], result_payload=envelope)
+    assert outcome["status"] == "accepted"
 
 
 def _slide_count(pptx_bytes):
@@ -249,7 +246,6 @@ def _produced_project(tmp_path, pages):
     service.create(project, brief="局部修改流", draft={"pages": pages})
     store = Store(project)
     _drive_blueprints(project, store)
-    _drive_reconstructs(project, store)
     report = produce(project)
     assert report["status"] == "pass", report["findings"]
     return project, Store(project)

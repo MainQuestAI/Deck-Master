@@ -155,6 +155,10 @@ def build_parser() -> argparse.ArgumentParser:
     export.add_argument('--project', required=True)
     export.add_argument('--out', required=True)
     export.add_argument('--purpose', choices=['review','working','delivery'], default='review')
+    handoff = sub.add_parser('handoff-check')
+    handoff.add_argument('--project', required=True)
+    handoff.add_argument('--file', required=True)
+    handoff.add_argument('--purpose', choices=['review','delivery'], default='review')
     history = sub.add_parser('history')
     history_sub = history.add_subparsers(dest='history_command', required=True)
     history_list = history_sub.add_parser('list')
@@ -229,6 +233,14 @@ def main(argv: list[str] | None = None) -> int:
                 return rejected
             from .editing import export_project
             return _emit(export_project(options.project,output_dir=options.out,purpose=options.purpose))
+        if options.command == 'handoff-check':
+            rejected = _reject_legacy_run(options.project)
+            if rejected is not None:
+                return rejected
+            from .handoff import check_handoff
+            result = check_handoff(options.project, file_path=options.file, purpose=options.purpose)
+            _emit(result)
+            return 0 if result['status'] == 'verified' else 3
         if options.command == "create":
             rejected = _reject_legacy_run(options.out, '--out')
             if rejected is not None:
