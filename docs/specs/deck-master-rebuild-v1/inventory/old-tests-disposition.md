@@ -9,9 +9,9 @@
 | 旧测试 | 判定 | 说明 |
 | --- | --- | --- |
 | tests/test_adapters.py | migrate → tests/rebuild/test_svg_parser.py + test_native_pipeline.py | SVG/适配行为已由声明子集解析/IR 测试覆盖 |
-| tests/test_agent_ready_contract.py | migrate → tests/rebuild/test_contracts.py | 合同校验已由新 schema 套件覆盖 |
-| tests/test_approval_flow.py | migrate → tests/rebuild/test_tasks.py + test_production.py | 信封采用/审阅流已由 T04/T07/T11 覆盖 |
-| tests/test_artifact_validator.py | migrate → tests/rebuild/test_contracts.py | artifact schema 校验已覆盖 |
+| tests/test_agent_ready_contract.py | migrate → tests/rebuild/test_contracts.py + test_install.py | 合同校验由新 schema 套件覆盖;"ready 门禁"语义由 doctor 分步(test_install 隔离断言)+ rebuild CI 组承接 |
+| tests/test_approval_flow.py | migrate → tests/rebuild/test_review.py + test_export.py | 审批平台按 spec 07 刻意退役;approval 语义由 evaluate_current 唯一解释 + delivery 导出门(test_delivery_export_rejected_with_specific_reason)承接 |
+| tests/test_artifact_validator.py | migrate → tests/rebuild/test_contracts.py + test_service_flow.py(test_pptx_artifact_and_export_declare_shape_text_editability) | artifact schema 与 editability 断言已覆盖 |
 | tests/test_benchmark_aggregate.py | migrate → retire — benchmark-* 命令已退役(09.6) | 无替代(功能退役) |
 | tests/test_benchmark_case.py | migrate → retire — benchmark-* 命令已退役(09.6) | 无替代(功能退役) |
 | tests/test_benchmark_checkpoints.py | migrate → retire — benchmark-* 命令已退役(09.6) | 无替代(功能退役) |
@@ -136,3 +136,15 @@
 - tests/test_skill_installation.py:17 failed(2026-09-21 入口切换后核查,全部 suite/skill 安装类)
 - tests/test_rc_gate.py:8 failed(预存,rc-gate 环境类)
 退役理由已含于上表;保留 Git 历史可查。
+
+## 可靠性敏感条目点名(approval/ready/gate 家族)
+
+| 旧测试 | 具名替代 |
+| --- | --- |
+| test_approval_flow.py | tests/rebuild/test_review.py(evaluate_current 唯一解释)+ test_export.py(delivery 拒未解决 must_fix) |
+| test_agent_ready_contract.py | tests/rebuild/test_contracts.py(schema)+ test_install.py(doctor 分步隔离断言)+ .github/workflows/rebuild.yml(CI 组) |
+| test_rc_gate.py | tests/rebuild/test_export.py(delivery 门)+ rebuild.yml(report 组);rc-gate 命令本身退役(09.6) |
+| test_quality_gate* / test_*_gate_* | tests/rebuild/test_readback.py(readback findings)+ test_review.py;旧 gate 命令按 09.6 退役 |
+
+其余模板化 "retire | 旧 OS 耦合" 条目按领域对应:workflow/runtime/sourcing/quality/learning 等旧 OS 模块的断言,
+其真实行为替代分别在 test_service_flow/test_tasks/test_review/test_budget/test_legacy 等领域测试中。

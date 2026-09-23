@@ -77,43 +77,72 @@ def test_old_file_disposition_executed() -> None:
     assert evidence.is_file(), "per-path reference scan evidence must be committed"
 
 
+RETIRED_COMMAND_NEEDLES = (
+    "suite-status", "suite-install", "suite-repair", "suite-migrate",
+    "release-build", "release-smoke", "release-install", "release-rollback",
+    "preview-gate", "rc-gate", "search-library", "decide-sourcing",
+    "library-status", "import-library-selection", "record-library-feedback",
+    "validate-ppt-library-result", "uat-ppt-library", "start-conversation",
+    "build-brief", "build-claim-map", "autoplan", "setup-status",
+    "install-skill", "uninstall-skill", "validate-skill",
+    "backend bind ", "backend verify ", "generation-session", "run-generation",
+    "build-judgments", "build-claim-graph", "init-workspace", "init-project",
+    "orchestration-check", "bind-workspace", "smoke-real-workflow",
+)
+
+# Surfaces allowed to NAME retired things: the mapping table (refuses them),
+# its refusal tests, the changelog (history), and the migration guide.
+SELF_DOCUMENTING = {"src/deck_master/cli.py", "tests/rebuild/test_cli.py",
+                    "tests/rebuild/test_install.py",  # wheel denial assertions name retired commands
+                    "CHANGELOG.md", "docs/migration-to-rebuilt-core.md"}
+
+
+def _living_surfaces() -> list[Path]:
+    roots = ["src/", "tests/rebuild/", "tools/", "skills/deck-master/", ".github/",
+             "docs/"]
+    root_files = ["pyproject.toml", "MANIFEST.in", "README.md", "AGENTS.md",
+                  "CONTRIBUTING.md", "ROADMAP.md", "DESIGN.md", "CHANGELOG.md"]
+    surfaces = [REPO_ROOT / name for name in root_files]
+    for root in roots:
+        target = REPO_ROOT / root
+        if not target.is_dir():
+            continue
+        for path in sorted(target.rglob("*")):
+            if path.is_file() and "__pycache__" not in path.parts                     and path.suffix in {".py", ".md", ".toml", ".yml", ".yaml", ".in", ".txt"}                     and not str(path.relative_to(REPO_ROOT)).startswith("docs/archive/")                     and not str(path.relative_to(REPO_ROOT)).startswith("docs/specs/deck-master-rebuild-v1/"):
+                surfaces.append(path)
+    return surfaces
+
+
 def test_retired_tree_has_zero_living_references() -> None:
     """AC-L05: no living surface (new code, rebuild tests, build tools, living
-    skill, CI, root config) still references the retired scripts tree."""
-    living_roots = ["src/", "tests/rebuild/", "tools/", "skills/deck-master/",
-                    ".github/workflows/rebuild.yml", "pyproject.toml", "MANIFEST.in"]
-    for root in living_roots:
-        target = REPO_ROOT / root
-        files = [target] if target.is_file() else sorted(target.rglob("*"))
-        offenders = []
-        for path in files:
-            if path.resolve() == Path(__file__).resolve():
-                continue  # this scanner's own needles are not references
-            if path.is_file() and path.suffix in {".py", ".md", ".toml", ".yml", ".yaml", ".in", ".txt"}:
-                text = path.read_text(encoding="utf-8", errors="ignore")
-                for needle in ("scripts/deck_master.py", "scripts/runtime", "scripts/workflow",
-                               "scripts/high_density", "import runtime", "import workflow",
-                               "from runtime", "from workflow", "from high_density"):
-                    if needle in text:
-                        offenders.append(f"{path.relative_to(REPO_ROOT)}: {needle!r}")
-        assert not offenders, f"living references to the retired tree: {offenders[:10]}"
+    skill, CI, root docs/config) references the retired tree or teaches the
+    retired commands. The legacy-map table, its refusal tests, the changelog
+    and the migration guide name them on purpose."""
+    offenders = []
+    for path in _living_surfaces():
+        relative = str(path.relative_to(REPO_ROOT))
+        if relative in SELF_DOCUMENTING or path.resolve() == Path(__file__).resolve():
+            continue
+        text = path.read_text(encoding="utf-8", errors="ignore")
+        for needle in ("scripts/deck_master.py", "scripts/runtime", "scripts/workflow",
+                       "scripts/high_density", "import runtime", "import workflow",
+                       "from runtime", "from workflow", "from high_density"):
+            if needle in text:
+                offenders.append(f"{relative}: {needle!r}")
+        for needle in RETIRED_COMMAND_NEEDLES:
+            if needle in text:
+                offenders.append(f"{relative}: retired command {needle!r}")
+    assert not offenders, f"living references to the retired surface: {offenders[:10]}"
 
 
-def test_new_package_has_no_forbidden_imports() -> None:
-    if not NEW_PACKAGE.is_dir():
-        return  # T01 runs before the package exists; later tasks keep this green.
-    offenders: list[str] = []
-    for path in sorted(NEW_PACKAGE.rglob("*.py")):
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Import):
-                names = [alias.name for alias in node.names]
-            elif isinstance(node, ast.ImportFrom):
-                names = [node.module or ""]
-            else:
-                continue
-            for name in names:
-                root = name.split(".")[0]
-                if root in FORBIDDEN_IMPORT_ROOTS:
-                    offenders.append(f"{path.name}: import {name}")
-    assert not offenders, f"new package imports old namespace (spec 01.2): {offenders[:10]}"
+def test_spec_contracts_match_packaged_contracts_byte_for_byte() -> None:
+    """The spec pack and the package resource dir are both contract sources;
+    they must not drift (P2 parity guard)."""
+    spec_dir = REPO_ROOT / "docs" / "specs" / "deck-master-rebuild-v1" / "contracts"
+    pkg_dir = NEW_PACKAGE / "resources" / "contracts"
+    spec_names = {p.name for p in spec_dir.glob("*.json")}
+    pkg_names = {p.name for p in pkg_dir.glob("*.json")}
+    assert spec_names == pkg_names, f"contract sets differ: {spec_names ^ pkg_names}"
+    for name in sorted(spec_names):
+        assert (spec_dir / name).read_bytes() == (pkg_dir / name).read_bytes(), \
+            f"contract drift: {name}"

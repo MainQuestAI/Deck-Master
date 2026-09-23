@@ -93,14 +93,13 @@ deck-master view --project <dir> --json
 
 Stop and report when:
 
-- `agent-doctor --mode production` returns `blocked`.
-- `suite-status` reports a required skill or capability as missing.
-- `next-step` requires an output that the current Agent cannot create with its
-  available tools, or requires missing material or a user decision. When the
-  current Agent is authorized and can write the declared `output_ref`, complete
-  the handoff and resume the run.
-- `final-readiness` returns blockers.
-- A contract schema mismatch appears and no migration command is documented.
+- `deck-master doctor --step <step>` returns `needs_tool` or a check is not
+  ready and the task needs that step.
+- `deck-master continue --project <dir>` returns a status you cannot satisfy
+  (missing material or a user decision).
+- `deck-master final-readiness --project <dir>` reports `blocked`, or
+  `deck-master export --purpose delivery` refuses with unresolved dimensions.
+- A contract/schema mismatch appears and no migration path is documented.
 - A command would require private backend binding or customer material not
   present in the repository.
 

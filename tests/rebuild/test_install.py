@@ -51,6 +51,12 @@ def test_wheel_carries_schema_static_and_methods(tmp_path: Path) -> None:
         assert archive.read("deck_master/resources/skill/SKILL.md") == (REPO/"skills/deck-master/SKILL.md").read_bytes()
     assert "deck_master/resources/skills-references/source-reading.md" in names
     assert "deck_master/resources/skills-references/content-methods.md" in names
+    # P1: the packaged installation guide must not teach retired commands.
+    with zipfile.ZipFile(wheels[0]) as archive:
+        installation = archive.read("deck_master/resources/skills-references/installation.md").decode("utf-8")
+    for retired in ("suite-install", "suite-status", "suite-repair", "release-rollback",
+                    "release-build", "release-smoke", "preview-gate", "rc-gate"):
+        assert retired not in installation, f"packaged installation.md teaches {retired}"
     # AC-I04: the console entry points at the rebuilt CLI (spec 11).
     entry_points_name = next(n for n in names if n.endswith("entry_points.txt"))
     with zipfile.ZipFile(wheels[0]) as archive:

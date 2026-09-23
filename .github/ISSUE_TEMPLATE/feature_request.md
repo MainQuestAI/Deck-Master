@@ -13,7 +13,7 @@ assignees: ''
 ## Proposed capability
 
 <!-- What should Deck Master do differently? Reference the relevant skill /
-command / contract if known (e.g. rc-gate, Review Desk, deck-builder). -->
+command / contract if known (e.g. deck-master export --purpose delivery gate, Review Desk, deck-builder). -->
 
 ## Alternatives considered
 

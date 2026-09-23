@@ -33,5 +33,5 @@ that still matters, or convert its full draft via
 - Old source tree (`scripts/`, 177 files): deleted per
   `docs/specs/deck-master-rebuild-v1/inventory/old-files.csv`; per-path
   reference evidence in `../deck-master-rebuild-v1/inventory/reference-scan.md`.
-- Old tests (`tests/*.py`, 122 files + fixtures): disposition rationale in
+- Old tests (`tests/*.py`, 123 entries (122 test files + tests/__init__.py) + fixtures): disposition rationale in
   `../deck-master-rebuild-v1/inventory/old-tests-disposition.md` (AC-L06).

@@ -258,6 +258,13 @@
                 }
               }
             }
+          },
+          "evidence_level": {
+            "type": "string",
+            "enum": [
+              "host_reported",
+              "provider_verified"
+            ]
           }
         },
         "required": [

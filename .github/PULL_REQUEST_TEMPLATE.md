@@ -17,7 +17,7 @@
 <!-- Commands you ran and their result. Do not claim production readiness. -->
 
 - [ ] `python -m pytest -q` passes
-- [ ] `python deck-master CLI rc-gate --tier ci --skip-browser-smoke --force` passes (CI tier)
+- [ ] `python deck-master CLI rebuild gate (.github/workflows/rebuild.yml) --tier ci --skip-browser-smoke --force` passes (CI tier)
 - [ ] `python deck-master CLI agent-doctor --mode preview --output json` not blocked by this change
 - [ ] No new absolute local paths, private customer names, tokens, or raw customer material in committed artifacts
 

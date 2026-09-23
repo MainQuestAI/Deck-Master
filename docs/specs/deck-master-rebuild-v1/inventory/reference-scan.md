@@ -184,4 +184,45 @@ rebuild spec pack itself are history, not blocking surfaces.
 | scripts/workspace/foundation.py | 0 | 0 |
 | scripts/workspace/project_init.py | 0 | 0 |
 
-Total blocking references: **0**
+## Retired-command sweep (living surfaces)
+
+| needle | hits |
+| --- | --- |
+| suite-status | 0 |
+| suite-install | 0 |
+| suite-repair | 0 |
+| suite-migrate | 0 |
+| release-build | 0 |
+| release-smoke | 0 |
+| release-install | 0 |
+| release-rollback | 0 |
+| preview-gate | 0 |
+| rc-gate | 0 |
+| search-library | 0 |
+| decide-sourcing | 0 |
+| library-status | 0 |
+| import-library-selection | 0 |
+| record-library-feedback | 0 |
+| validate-ppt-library-result | 0 |
+| uat-ppt-library | 0 |
+| start-conversation | 0 |
+| build-brief | 0 |
+| build-claim-map | 0 |
+| autoplan | 0 |
+| setup-status | 0 |
+| install-skill | 0 |
+| uninstall-skill | 0 |
+| validate-skill | 0 |
+| backend bind  | 0 |
+| backend verify  | 0 |
+| generation-session | 0 |
+| run-generation | 0 |
+| build-judgments | 0 |
+| build-claim-graph | 0 |
+| init-workspace | 0 |
+| init-project | 0 |
+| orchestration-check | 0 |
+| bind-workspace | 0 |
+| smoke-real-workflow | 0 |
+
+Total blocking references: **0**; retired-command hits: **0**

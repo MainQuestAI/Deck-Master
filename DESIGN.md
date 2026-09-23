@@ -1,7 +1,7 @@
 # Design System — Deck Master Review Desk
 
 > 设计系统源真相。所有视觉与 UI 决策以本文件为准。任何字体、颜色、间距、审美方向的偏离都需老板明确批准。
-> 生成依据：`docs/2026-06-21-web-ui-redesign-audit.md` + `docs/2026-06-21-web-ui-ia-v1.md` + `/design-consultation`。
+> 生成依据：`docs/archive/pre-rebuild/docs/2026-06-21-web-ui-redesign-audit.md` + `docs/archive/pre-rebuild/docs/2026-06-21-web-ui-ia-v1.md` (archived IA references) + `/design-consultation`。
 > 日期：2026-06-21 · v1
 
 ## Product Context
@@ -58,7 +58,7 @@
 
 ## Layout
 
-- **Approach:** grid-disciplined。桌面三栏严格对齐，与 `docs/2026-06-21-web-ui-ia-v1.md` 一致。
+- **Approach:** grid-disciplined。桌面三栏严格对齐，与归档的 IA v1(`docs/archive/pre-rebuild/docs/2026-06-21-web-ui-ia-v1.md`)一致。
 - **Grid:** 左窄(找页+筛选+状态计数) / 中大(预览+主动作条) / 右决策台(职责→来源·证据→风险→审批)。
 - **Max content width:** 1240px。
 - **Border radius:** 极克制。sm 2px / md 4px。不做大圆角与“bubble”一切。按钮可直角微圆 2px。唯一例外 pill 状态用 9999px。

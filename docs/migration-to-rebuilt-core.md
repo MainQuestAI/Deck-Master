@@ -87,6 +87,13 @@ Import semantics:
 - PPTX output is editable shapes and text; tables/charts are not Office-native
   data objects.
 
+## Third-Party Skills
+
+第三方 skills(`skills/` 下 deck-setup、deck-upgrade 等目录)仍可能引用
+suite-status 等旧命令;这是设计内惰性:新 CLI 对退役命令统一返回 guidance
+JSON(exit 2,`legacy_guidance`/`retired_command`),用户应直接使用本文的
+`deck-master` 新命令。这些第三方目录不属于本仓库退役范围,不在本轮修改。
+
 ## Document Map
 
 - Routing: [docs/agent-task-index.md](agent-task-index.md)

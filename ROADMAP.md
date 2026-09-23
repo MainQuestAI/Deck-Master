@@ -2,15 +2,15 @@
 
 This roadmap tracks the path from the current public Technical Preview
 (`v0.9.14-preview.4`) to a `1.0.0` release. It is a living document; priorities
-may shift. See `docs/releases/2026-07-09-1.0.0-iteration-plan.md` for the
+may shift. See `docs/archive/pre-rebuild/docs/releases/2026-07-09-1.0.0-iteration-plan.md` for the
 detailed sprint breakdown.
 
 ## Status
 
 Deck Master is a public **Technical Preview** (agent-operable). The fixture
-demo, Review Desk preview, backend readiness transparency, and `preview-gate`
+demo, review workbench, and honest per-step diagnostics
 are available. Production readiness is **not** claimed. The runtime is
-verified locally (suite ready, rc-gate green on a maintainer machine) but the
+verified locally on a maintainer machine (history in docs/archive/pre-rebuild/), but the
 1.0.0 gap is reproducible/traceable evidence + CI enforcement + governance,
 not new functionality.
 
@@ -18,7 +18,7 @@ not new functionality.
 
 Deck Master 1.0.0 is installable in a clean environment, can produce at least
 3 real benchmark cases end-to-end with public/configurable backends, and passes
-`rc-gate` (full tier), `final-readiness`, Review Desk browser smoke, and
+the rebuilt export gate (`deck-master export --purpose delivery`), Review Workbench, and
 release-tree install/rollback, with open-source governance and security
 boundaries in place.
 
@@ -28,12 +28,12 @@ boundaries in place.
 
 - Fixture demo from a public brief.
 - Review Desk preview.
-- Backend readiness transparency (`suite-status`, `agent-doctor`, `backend status`).
-- `preview-gate` and `release-build`/`release-smoke`.
+- Per-step toolchain diagnostics (`deck-master doctor --step …`).
+- CI gates: `.github/workflows/rebuild.yml` (unit matrix / real rendering / report).
 
 ### M2 — Release-candidate closure (in progress)
 
-- Two-tier `rc-gate`: CI-reproducible subset in CI (`--tier ci`), full tier
+- CI gates: `.github/workflows/rebuild.yml` (unit matrix / real rendering / report), full history
   locally / at release.
 - Real benchmark closure: ≥3 real metadata cases with complete report pairs,
   aggregate `report_ready` (local-only evidence, archived as such).
@@ -47,8 +47,8 @@ boundaries in place.
 
 - Freeze features, fix blockers only.
 - Full CI matrix (Python 3.11 + 3.12) green.
-- rc-gate (full) green; benchmark aggregate `report_ready`.
-- Release tree install/rollback green; `docs/releases/v1.0.0.md` published.
+- rebuilt gate green (`.github/workflows/rebuild.yml`); benchmark history archived.
+- Release tree install/rollback green; `docs/archive/pre-rebuild/docs/releases/v1.0.0.md` published.
 - External user can go from `0` to a working demo via README, and understands
   production configuration.
 
@@ -59,7 +59,7 @@ boundaries in place.
 
 ## Out of scope for 1.0.0
 
-- Splitting the large `scripts/deck_master.py` CLI module (tracked as a
+- Splitting the large legacy CLI module (history in `docs/archive/pre-rebuild/`; tracked as a
   follow-up refactor on its own branch).
 - Multi-quarter rewrites or unrelated migrations.
 

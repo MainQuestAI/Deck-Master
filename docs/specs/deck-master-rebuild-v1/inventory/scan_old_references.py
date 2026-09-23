@@ -34,9 +34,30 @@ NON_BLOCKING_SCOPES = {
 # The migration guide and the scanner/boundary tests name old paths on purpose.
 SELF_DOCUMENTING = ("docs/migration-to-rebuilt-core.md",
                     "docs/specs/deck-master-rebuild-v1/inventory/scan_old_references.py",
-                    "tests/rebuild/test_package_boundary.py")
+                    "tests/rebuild/test_package_boundary.py",
+                    "CHANGELOG.md",  # release history legitimately names old commands
+                    "src/deck_master/cli.py",  # the legacy mapping table names them to refuse them
+                    "tests/rebuild/test_cli.py",  # refusal tests invoke retired names
+                    "tests/rebuild/test_install.py")  # wheel denial assertions name them
 ROOT_CONFIG_FILES = ("pyproject.toml", "MANIFEST.in", "setup.py", "setup.cfg",
-                     "README.md", "AGENTS.md", "CLAUDE.md", "CHANGELOG.md")
+                     "README.md", "AGENTS.md", "CLAUDE.md", "CHANGELOG.md",
+                     "CONTRIBUTING.md", "ROADMAP.md", "DESIGN.md")
+
+# Retired command names that must never be taught on living surfaces again.
+# Live aliases (import-plan/next-step/agent-doctor/final-readiness/run-state)
+# are deliberately absent so the alias surface is not flagged.
+RETIRED_COMMAND_NEEDLES = (
+    "suite-status", "suite-install", "suite-repair", "suite-migrate",
+    "release-build", "release-smoke", "release-install", "release-rollback",
+    "preview-gate", "rc-gate", "search-library", "decide-sourcing",
+    "library-status", "import-library-selection", "record-library-feedback",
+    "validate-ppt-library-result", "uat-ppt-library", "start-conversation",
+    "build-brief", "build-claim-map", "autoplan", "setup-status",
+    "install-skill", "uninstall-skill", "validate-skill",
+    "backend bind ", "backend verify ", "generation-session", "run-generation",
+    "build-judgments", "build-claim-graph", "init-workspace", "init-project",
+    "orchestration-check", "bind-workspace", "smoke-real-workflow",
+)
 
 
 def _git_files() -> list[str]:
@@ -70,7 +91,6 @@ def main() -> int:
     # legacy-tests = tests/ minus rebuild; old-tree = scripts/
     scope_files["legacy-tests"] = []
     scope_files["old-tree"] = [f for f in files if f.startswith("scripts/")]
-    scope_files["old-tree"] = [f for f in files if f.startswith("scripts/")]
 
     rows = list(csv.DictReader((INVENTORY / "old-files.csv").open(encoding="utf-8-sig", newline="")))
     lines = ["# Old-file reference scan (T24 / AC-L05)",
@@ -98,7 +118,22 @@ def main() -> int:
         b = "; ".join(blocking) if blocking else "0"
         nb = f"{len(non_blocking)} ({'; '.join(non_blocking[:3])}{'…' if len(non_blocking) > 3 else ''})" if non_blocking else "0"
         lines.append(f"| {path} | {b} | {nb} |")
-    lines += ["", f"Total blocking references: **{total_blocking}**", ""]
+    # Retired-command sweep across the same living surfaces.
+    living_files = [f for scope, scope_list in scope_files.items()
+                    if scope not in NON_BLOCKING_SCOPES for f in scope_list]
+    lines += ["", "## Retired-command sweep (living surfaces)", "",
+              "| needle | hits |", "| --- | --- |"]
+    total_command_hits = 0
+    for needle in RETIRED_COMMAND_NEEDLES:
+        hits = [hit for hit in _grep(needle, living_files) if hit not in SELF_DOCUMENTING]
+        total_command_hits += len(hits)
+        if hits:
+            lines.append(f"| {needle} | {'; '.join(hits[:5])}{'…' if len(hits) > 5 else ''} |")
+        else:
+            lines.append(f"| {needle} | 0 |")
+    lines += ["", f"Total blocking references: **{total_blocking}**; "
+              f"retired-command hits: **{total_command_hits}**", ""]
+    print(f"command sweep hits: {total_command_hits}")
     (INVENTORY / "reference-scan.md").write_text("\n".join(lines), encoding="utf-8")
     print(f"scanned {len(rows)} paths; blocking references: {total_blocking}")
     return 0

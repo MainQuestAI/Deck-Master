@@ -130,6 +130,11 @@ WP03 最后一张卡 T15 关闭（见下节）。**阶段 1（WP02/WP03 收尾�
 - 状态同步:tasks.json/subtasks.csv 中 T24 及子任务标记 `implemented_verified`;T24.md 交接回填已记录。
 - 保留未动(按硬约束):runs/、第三方 skills、字体、docs/assets、.gstack/.impeccable/.zcode(查不明即保留)。
 
+## T24 Review 补刀轮（2026-09-23）
+
+- 第三轮 review(T24 退役):无 P0;4 P1(随包 installation.md 教授退役命令/根活文档失效链接/扫描器盲区/处置表模板化)+ 6 P2。全修:installation.md 重写新安装口径;CONTRIBUTING/ROADMAP/DESIGN/模板清零;扫描器扩面(根 *.md+references+36 词 needle,先抓 65 命中后修零);可靠性条目点名替代;新增 contracts parity 断言(抓到 task.v1 drift 已修);reference-scan blocking=0、retired hits=0——AC-L05 严格成立。
+- 全量 368 passed,ruff 全过。
+
 ## 下一阶段
 
 WP05 剩余:T21/T22 冻结对照(**等用户 P1 陌生材料与受众用途**)、T23 专业阅稿与桌面编辑(**等用户安排**)、T25 最终默认切换(依赖 T22/T24,T24 已满足)。
