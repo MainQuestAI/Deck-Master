@@ -30,6 +30,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Install build backend (hosted Python ships without setuptools)
+        run: python -m pip install --quiet "setuptools>=77" wheel
       - name: Install rebuilt core with dev dependencies
         run: python -m pip install --quiet -e ".[dev]"
       - name: Ruff (rebuilt core and its tests)
@@ -51,6 +53,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install --no-install-recommends -y librsvg2-bin libreoffice poppler-utils fonts-dejavu fonts-noto-cjk
+      - name: Install build backend (hosted Python ships without setuptools)
+        run: python -m pip install --quiet "setuptools>=77" wheel
       - name: Install rebuilt core with dev dependencies
         run: python -m pip install --quiet -e ".[dev]"
       - name: Renderer-dependent tests (marked render; needs the toolchain)
