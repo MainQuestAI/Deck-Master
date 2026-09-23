@@ -78,8 +78,12 @@ def test_resources_resolve_through_importlib() -> None:
 
 def test_sdist_rebuild_includes_unique_skill_without_presync(tmp_path):
     import tarfile
-    from setuptools import build_meta
-    archive=build_meta.build_sdist(str(tmp_path/'sdist'))
+    import textwrap
+    script = textwrap.dedent(
+        "from setuptools import build_meta\n"
+        f"print(build_meta.build_sdist({str(tmp_path / 'sdist')!r}))\n")
+    archive = subprocess.run([sys.executable, "-c", script], capture_output=True,
+                             text=True, check=True, timeout=600).stdout.strip().splitlines()[-1]
     unpacked=tmp_path/'unpacked';unpacked.mkdir()
     with tarfile.open(tmp_path/'sdist'/archive) as tar:
         tar.extractall(unpacked,filter='data')
@@ -173,10 +177,18 @@ def _assert_archive_clean(files):
 
 
 def _build_sdist(tmp_path):
-    from setuptools import build_meta
+    # In a subprocess: on Python 3.11 something in the pytest process may
+    # have imported the stdlib distutils before setuptools, which trips the
+    # _distutils_hack assert during an in-process backend import.
     out = tmp_path / "sdist-out"
     out.mkdir()
-    return out / build_meta.build_sdist(str(out))
+    import textwrap
+    script = textwrap.dedent(
+        "from setuptools import build_meta\n"
+        f"print(build_meta.build_sdist({str(out)!r}))\n")
+    result = subprocess.run([sys.executable, "-c", script],
+                            capture_output=True, text=True, check=True, timeout=600)
+    return out / result.stdout.strip().splitlines()[-1]
 
 
 def test_wheel_and_sdist_exclude_customer_material_and_secrets(tmp_path: Path) -> None:
@@ -265,10 +277,15 @@ def dist_artifacts(tmp_path_factory):
         [sys.executable, "-m", "pip", "wheel", "--no-deps", "--no-build-isolation", "-w", str(wheelhouse), str(REPO)],
         stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=600)
     assert result.returncode == 0, result.stderr.decode("utf-8", "replace")[-1500:]
-    from setuptools import build_meta
     sdist_dir = work / "sdist"
     sdist_dir.mkdir()
-    sdist = sdist_dir / build_meta.build_sdist(str(sdist_dir))
+    import textwrap
+    script = textwrap.dedent(
+        "from setuptools import build_meta\n"
+        f"print(build_meta.build_sdist({str(sdist_dir)!r}))\n")
+    sdist = sdist_dir / subprocess.run(
+        [sys.executable, "-c", script], capture_output=True, text=True,
+        check=True, timeout=600).stdout.strip().splitlines()[-1]
     return {"wheel": next(wheelhouse.glob("deck_master-*.whl")), "sdist": sdist,
             "wheel_sha256": hashlib.sha256(next(wheelhouse.glob("deck_master-*.whl")).read_bytes()).hexdigest()}
 
@@ -280,12 +297,15 @@ def _make_isolated_venv(base: Path, artifact: Path) -> Path:
     setuptools so sandboxes do not fetch a second build backend."""
     home = base / "venv-home"
     home.mkdir()
+    # SETUPTOOLS_USE_DISTUTILS=stdlib works around homebrew Python 3.11's
+    # _distutils_hack assertion while bootstrapping nested venvs.
+    venv_env = {**_os.environ, "SETUPTOOLS_USE_DISTUTILS": "stdlib"}
     created = subprocess.run([sys.executable, "-m", "venv", str(home)],
-                             stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=300)
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=300, env=venv_env)
     python = home / "bin" / "python"
     if created.returncode != 0 or not (home / "bin" / "pip").is_file():
         subprocess.run([sys.executable, "-m", "venv", "--without-pip", str(home)], check=True,
-                       stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=300)
+                       stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=300, env=venv_env)
         bootstrapped = subprocess.run([str(python), "-m", "ensurepip", "--upgrade"],
                                       stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=300)
         if bootstrapped.returncode != 0:
@@ -440,6 +460,7 @@ def _adopt(venv, home, work, project, kind, envelope, staged=None):
     return payload
 
 
+@pytest.mark.render
 def test_isolated_full_chain_and_local_edit(wheel_venv, tmp_path):
     home = tmp_path / "home"
     home.mkdir()

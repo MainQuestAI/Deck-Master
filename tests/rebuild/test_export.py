@@ -27,11 +27,18 @@ def _deck(tmp_path: Path) -> tuple[Path, Store]:
     work.mkdir(parents=True, exist_ok=True)
     pptx_file = work / 'deck.pptx'
     pptx_file.write_bytes(b'real-current-pptx')
+    svg_file = work / 'page.svg'
+    svg_file.write_text('<svg viewBox="0 0 10 10"/>')
+    report_file = work / 'readback.json'
+    report_file.write_text(json.dumps({'status': 'pass', 'findings': [], 'pages': []}, ensure_ascii=False))
     from deck_master.pipeline import artifact as adopt_artifact
     document = store.load_document()
     bumped = bump_revision(document, {'operation_id': 'attach-pptx', 'kind': 'task_update',
                                       'description': 'outputs', 'read_set': []})
     bumped['outputs']['pptx'] = adopt_artifact(store, pptx_file, 'pptx')
+    bumped['outputs']['render_report'] = adopt_artifact(store, report_file, 'render_report')
+    bumped['pages'][0]['svg'] = adopt_artifact(store, svg_file, 'svg', page_id='p1')
+    bumped['pages'][0]['ppt_preview'] = adopt_artifact(store, svg_file, 'ppt_preview', page_id='p1')
     store.commit_change(base_revision=document['revision_id'], document=bumped, operation_id='attach-pptx')
     return project, Store(project)
 

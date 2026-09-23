@@ -303,6 +303,26 @@ def _build_artifact(
         provenance["submitted_prompt"] = store.put_blob(
             staged[prompt_file_id]["bytes"], ext="txt"
         )
+    derived_from = spec.get("derived_from") or []
+    # P1-04: the original image must not be back-fed from derived/preview
+    # products; a blueprint built on its own preview would fabricate lineage.
+    if spec.get("role") == "blueprint":
+        for ref in derived_from:
+            try:
+                parent = store.read_object_json(ref)
+            except Exception as exc:
+                raise EnvelopeError(
+                    f"(result)/artifact_specs/{spec.get('role')}/derived_from",
+                    f"blueprint derived_from is not resolvable: {ref.get('path')}",
+                ) from exc
+            if parent.get("schema_version") == "deck_artifact.v1" and parent.get("role") in (
+                "svg_preview", "ppt_preview", "render_report", "object_trace",
+                "source_extract", "comparison_crop",
+            ):
+                raise EnvelopeError(
+                    f"(result)/artifact_specs/{spec.get('role')}/derived_from",
+                    f"blueprint lineage must not derive from a {parent.get('role')} artifact",
+                )
     artifact = {
         "schema_version": "deck_artifact.v1",
         "artifact_id": f"{spec.get('role')}-{page_id or 'shared'}-{sha256_bytes(media['bytes'])[:8]}",
@@ -312,8 +332,9 @@ def _build_artifact(
         "media_type": media["media_type"],
         "created_at": _utc_now_iso(),
         "dependencies": spec.get("dependencies") or [],
-        "derived_from": spec.get("derived_from") or [],
+        "derived_from": derived_from,
         "provenance": provenance,
+        "reference_regions": spec.get("reference_regions") or [],
         "limitations": spec.get("limitations") or [],
     }
     validate_artifact_semantics(artifact)
@@ -353,6 +374,18 @@ def _adopt_review(store: Store, review: dict) -> dict:
     return review
 
 
+# Roles a task kind may write into page slots (spec 09.7 scope). Conservative:
+# compose keeps full-deck semantics; blueprint writes the original image only;
+# reconstruct/repair rework the SVG; review writes no artifacts.
+_KIND_ARTIFACT_ROLES = {
+    "compose": None,
+    "blueprint": {"blueprint"},
+    "reconstruct": {"svg"},
+    "repair": {"svg"},
+    "review": set(),
+}
+
+
 def _check_scope(kind: str, envelope: dict, task: dict) -> None:
     scope = task.get("scope_pages") or []
     pages = envelope.get("pages") or []
@@ -362,6 +395,23 @@ def _check_scope(kind: str, envelope: dict, task: dict) -> None:
         raise EnvelopeError(
             "(result)/page_order", "page_order must match the pages payload exactly"
         )
+    # P1-03: artifact specs are scoped like pages — every page-bound artifact
+    # must target an in-scope page with a role this task kind may write.
+    allowed_roles = _KIND_ARTIFACT_ROLES.get(kind, set())
+    for index, spec in enumerate(envelope.get("artifact_specs") or []):
+        role = spec.get("role")
+        page_id = spec.get("page_id")
+        where = f"(result)/artifact_specs/{index}"
+        if allowed_roles is None:
+            continue  # compose: full-deck semantics
+        if role not in allowed_roles:
+            raise EnvelopeError(
+                where, f"task kind {kind!r} may not deliver role {role!r} artifacts"
+            )
+        if not page_id or page_id not in scope:
+            raise EnvelopeError(
+                where, f"artifact targets page {page_id!r} outside the authorized scope {scope}"
+            )
     if kind == "compose":
         if not pages or not page_order:
             raise EnvelopeError(
@@ -494,6 +544,13 @@ def accept_result(
             f"(task {task_id})/kind",
             f"task kind is {task.get('kind')!r}; envelope kind {envelope['kind']!r} does not match",
         )
+    # P1-03: an envelope is bound to the task's own operation; a different
+    # operation id is a conflict, never a new submission channel.
+    if operation_id != task.get("operation_id"):
+        raise TaskConflict(
+            f"(task {task_id})/operation_id",
+            "operation_id does not match the dispatched task operation",
+        )
 
     journal = read_operation_journal(store, operation_id)
     if journal is not None:
@@ -508,6 +565,14 @@ def accept_result(
             "same operation already applied with a different result",
         )
 
+    if task.get("status") == "completed":
+        # P1-03: a completed task only ever replays its original result (the
+        # journal check above already returned already_applied for it). Any
+        # other submission is refused; call facts are history, not a channel.
+        raise TaskConflict(
+            f"(task {task_id})",
+            "task already completed; only the original operation result replays",
+        )
     if task.get("status") in ("cancelled", "superseded"):
         # Settle call facts first; the late product is then refused (current unchanged).
         staged = _read_staged(store, operation_id, envelope)
@@ -564,7 +629,24 @@ def accept_result(
             "project content moved since dispatch; read the new inputs and rebase",
         )
 
+    # Round-B: settle call facts BEFORE any content prevalidation, in its own
+    # committed revision. A later content refusal must never erase already
+    # observed call facts (spec 09.7 settle-then-adopt, as on the cancelled path).
     staged = _read_staged(store, operation_id, envelope)
+    allowances_before = [dict(entry) for entry in (task.get("call_allowances") or [])]
+    _settled_allowances(task, envelope.get("usage_events") or [], staged, store)
+    if task.get("call_allowances") != allowances_before:
+        validate_task_semantics(task)
+        settled_ref = store.put_json_object(task)
+        settled_doc = bump_revision(
+            document,
+            {"operation_id": f"settle-{operation_id}", "kind": "task_update",
+             "description": "call facts settled before content adoption", "read_set": []},
+        )
+        settled_doc = _replace_task_ref(settled_doc, task, settled_ref, store)
+        store.commit_change(base_revision=document["revision_id"], document=settled_doc,
+                            operation_id=f"settle-{operation_id}")
+        document = store.load_document()
     _check_scope(envelope["kind"], envelope, task)
 
     # Prevalidate everything before any adoption.
@@ -862,6 +944,19 @@ def call_begin(store: Store, *, task_id: str, allowance_id: str, execution_ref: 
     return {"status": "started", "task_id": task_id, "allowance_id": allowance_id}
 
 
+
+def _provider_receipt(report_bytes) -> bool:
+    """A tool-issued receipt: JSON carrying a provider identity and a signature."""
+    if not report_bytes:
+        return False
+    try:
+        payload = json.loads(report_bytes.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError, AttributeError):
+        return False
+    return bool(isinstance(payload, dict) and payload.get("provider")
+                and payload.get("signature"))
+
+
 def _settle_target(store, document, task_id, allowance_id, target, outcome, report_bytes,
                    report_ext="json", invocation_ref=None):
     """Shared settlement validation for CLI and result-envelope observations."""
@@ -903,10 +998,11 @@ def _settle_target(store, document, task_id, allowance_id, target, outcome, repo
     if invocation_ref:
         target["invocation_ref"] = invocation_ref
     target["evidence"] = evidence
-    # Evidence grading (spec 08.6): a tool-issued invocation identity plus the
-    # settled report is provider_verified; a bare host report is host_reported
-    # and must never be upgraded implicitly.
-    target["evidence_level"] = "provider_verified" if (invocation_ref and report_bytes) else "host_reported"
+    # Evidence grading (spec 08.6, round-B): provider_verified requires a
+    # verifiable tool-issued receipt structure in the report bytes (a provider
+    # identity plus a signature); a bare host report — with or without an
+    # invocation_ref — stays host_reported and is never upgraded implicitly.
+    target["evidence_level"] = "provider_verified" if _provider_receipt(report_bytes) else "host_reported"
     return target
 
 

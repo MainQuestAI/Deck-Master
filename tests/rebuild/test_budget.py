@@ -134,7 +134,7 @@ def _allowance(store, task_id, allowance_id="call-1"):
 
 
 def test_settle_grades_host_reported_vs_provider_verified(tmp_path: Path) -> None:
-    store, task_id = _active_task(tmp_path, call_limit=2)
+    store, task_id = _active_task(tmp_path, call_limit=3)
     tasks_mod.allocate_call_allowances(store, task_id=task_id, count=2)
     report = tmp_path / "host-report.json"
     report.write_text('{"tool": "image-gen", "calls": 1}', encoding="utf-8")
@@ -145,11 +145,20 @@ def test_settle_grades_host_reported_vs_provider_verified(tmp_path: Path) -> Non
     assert _allowance(store, task_id, "call-1")["evidence_level"] == "host_reported"
     # The same report plus a real invocation identity upgrades to provider_verified.
     _started_allowance(store, task_id, "call-2")
+    # An invocation_ref alone never upgrades a bare host report.
     tasks_mod.call_settle(store, task_id=task_id, allowance_id="call-2", outcome="consumed",
                           report_bytes=report.read_bytes(), invocation_ref="inv-7788")
     second = _allowance(store, task_id, "call-2")
-    assert second["evidence_level"] == "provider_verified"
+    assert second["evidence_level"] == "host_reported"
     assert second["invocation_ref"] == "inv-7788"
+    # A verifiable tool-issued receipt (provider identity + signature) does.
+    tasks_mod.allocate_call_allowances(store, task_id=task_id, count=1)
+    receipt = tmp_path / "provider-receipt.json"
+    receipt.write_text(json.dumps({"provider": "image-gen", "signature": "sig-1", "invocation": "inv-7789"}))
+    _started_allowance(store, task_id, "call-3")
+    tasks_mod.call_settle(store, task_id=task_id, allowance_id="call-3", outcome="consumed",
+                          report_bytes=receipt.read_bytes(), invocation_ref="inv-7789")
+    assert _allowance(store, task_id, "call-3")["evidence_level"] == "provider_verified"
 
 
 def test_settle_is_idempotent_and_conflicting_outcome_rejected(tmp_path: Path) -> None:
@@ -222,7 +231,7 @@ def test_restore_and_local_format_fix_do_not_reacquire_calls(tmp_path: Path) -> 
     task_id = service.continue_project(store.project_root)["pending_tasks"][0]["task_id"]
     tasks_mod.allocate_call_allowances(store, task_id=task_id, count=2)
     report = tmp_path / "host-report.json"
-    report.write_text('{"calls": 1}', encoding="utf-8")
+    report.write_text(json.dumps({"provider": "image-gen", "signature": "sig-kept", "calls": 1}), encoding="utf-8")
     _started_allowance(store, task_id, "call-1")
     tasks_mod.call_settle(store, task_id=task_id, allowance_id="call-1", outcome="consumed",
                           report_bytes=report.read_bytes(), invocation_ref="inv-kept")

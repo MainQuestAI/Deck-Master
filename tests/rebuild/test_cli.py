@@ -2,6 +2,7 @@
 classes (alias / guidance / retired / old-format rejection), and the plain
 material-directory create path (AC-C06 handoff input)."""
 import json
+import sys
 from pathlib import Path
 
 import pytest
@@ -223,7 +224,7 @@ def test_python_dash_m_uses_same_entry(tmp_path, capsys):
     capsys.readouterr()
     import subprocess
     result = subprocess.run(
-        ["./.venv/bin/python", "-m", "deck_master", "view", "--project", str(project), "--json"],
+        [sys.executable, "-m", "deck_master", "view", "--project", str(project), "--json"],
         capture_output=True, text=True, timeout=60)
     assert result.returncode == 0, result.stderr
     payload = json.loads(result.stdout)

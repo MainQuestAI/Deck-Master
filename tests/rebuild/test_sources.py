@@ -309,18 +309,18 @@ def test_font_fingerprint_tracks_actual_file_hash(tmp_path: Path) -> None:
     import subprocess
     from deck_master.compiler import CompileOptions, SvgInput, compile_deck
 
-    resolved = subprocess.run(["fc-match", "-f", "%{family}\n%{file}", "Hiragino Sans GB"],
-                              capture_output=True, text=True, check=True).stdout.splitlines()
-    font_path = Path(resolved[1])
+    from hostenv import host_font_file, resolve_host_font
+    family = resolve_host_font()
+    font_path = Path(host_font_file())
     svg = tmp_path / "page.svg"
-    svg.write_text('<svg viewBox="0 0 960 720"><text x="20" y="60" '
-                   'font-family="Hiragino Sans GB" font-size="24">字体指纹</text></svg>')
+    svg.write_text(f'<svg viewBox="0 0 960 720"><text x="20" y="60" '
+                   f'font-family="{family}" font-size="24">字体指纹</text></svg>')
     result = compile_deck([SvgInput("p1", svg)],
                           CompileOptions(width_px=960, height_px=720,
-                                         fonts={"Hiragino Sans GB": str(font_path)}),
+                                         fonts={family: str(font_path)}),
                           tmp_path / "out")
     manifest = json.loads(result.manifest_path.read_text())
-    recorded = manifest["fonts"]["Hiragino Sans GB"]["sha256"]
+    recorded = manifest["fonts"][family]["sha256"]
     # The recorded fingerprint is the actual font file hash and re-resolves
     # after relocation; a different file is a detectable font change.
     assert recorded == hashlib.sha256(font_path.read_bytes()).hexdigest()

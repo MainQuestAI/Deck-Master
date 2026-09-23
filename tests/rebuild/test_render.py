@@ -15,13 +15,8 @@ REQUIRED_TOOLS = ('rsvg-convert', 'soffice', 'pdftoppm', 'fc-match')
 
 
 def resolve_font():
-    if not shutil.which('fc-match'):
-        pytest.fail('fc-match unavailable; cannot resolve a real font file')
-    output = subprocess.run(['fc-match', '-f', '%{family}\n%{file}', 'Hiragino Sans GB'],
-                            capture_output=True, text=True, check=True).stdout.splitlines()
-    if len(output) < 2 or 'Hiragino Sans GB' not in output[0]:
-        pytest.fail(f'fc-match did not resolve Hiragino Sans GB: {output!r}')
-    return {'Hiragino Sans GB': output[1]}
+    from hostenv import host_fonts
+    return host_fonts()
 
 
 def assert_real_rendering(png_path):

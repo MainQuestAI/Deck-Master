@@ -53,3 +53,18 @@ def resolvable_font_family():
         if candidate.lower() in result.stdout.lower():
             return candidate
     pytest.fail("no resolvable font family on this host")
+
+
+def pytest_collection_modifyitems(items):
+    """Auto-mark renderer-dependent tests by scanning the test source for the
+    real toolchain calls (produce/render_deck/soffice/rsvg/pdftoppm). CI unit
+    groups run ``-m "not render"``; the render group installs the toolchain."""
+    import inspect
+    for item in items:
+        try:
+            source = inspect.getsource(item.function)
+        except (OSError, TypeError):
+            continue
+        if any(needle in source for needle in
+               ("produce(", "render_deck(", "rsvg-convert", "soffice", "pdftoppm")):
+            item.add_marker(pytest.mark.render)

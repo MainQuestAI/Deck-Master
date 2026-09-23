@@ -14,7 +14,9 @@ from deck_master.compiler import compile_deck, CompileOptions, SvgInput
 NS = {'p': 'http://schemas.openxmlformats.org/presentationml/2006/main',
       'a': 'http://schemas.openxmlformats.org/drawingml/2006/main'}
 
-FAMILY = 'Hiragino Sans GB'
+from hostenv import resolve_host_font as _resolve
+
+FAMILY = _resolve()
 
 
 def _fc_match(query):
@@ -180,7 +182,7 @@ def test_letter_spacing_written_exactly_once(tmp_path):
     # The api post-pass owns spc writing; the emitter must not duplicate it.
     regular, _ = resolve_fonts()
     root, _ = compile_slide(tmp_path,
-                            '<text id="spc" x="10" y="30" font-family="Hiragino Sans GB" '
+                            f'<text id="spc" x="10" y="30" font-family="{FAMILY}" '
                             'font-size="16" letter-spacing="2">间距</text>',
                             {FAMILY: regular})
     props = run_props(text_shape(root, 'spc:0'))
@@ -188,8 +190,8 @@ def test_letter_spacing_written_exactly_once(tmp_path):
     import zipfile as _zip
     from deck_master.compiler import CompileOptions, SvgInput, compile_deck
     svg = tmp_path / 'once.svg'
-    svg.write_text('<svg viewBox="0 0 400 300"><text id="t" x="10" y="30" '
-                   'font-family="Hiragino Sans GB" font-size="16" letter-spacing="2">间距</text></svg>')
+    svg.write_text(f'<svg viewBox="0 0 400 300"><text id="t" x="10" y="30" '
+                   f'font-family="{FAMILY}" font-size="16" letter-spacing="2">间距</text></svg>')
     result = compile_deck([SvgInput('t', svg)], CompileOptions(width_px=400, height_px=300,
                           fonts={FAMILY: regular}), tmp_path / 'once-out')
     with _zip.ZipFile(result.pptx_path) as archive:

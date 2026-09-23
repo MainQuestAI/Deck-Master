@@ -7,7 +7,7 @@ name = "deck-master"
 version = "1.0.0.dev2"
 description = "Rebuilt Deck Master core: immutable storage, host-task envelopes, native SVG compiler, and read-only workbench."
 readme = "README.md"
-requires-python = ">=3.12,<3.14"
+requires-python = ">=3.11,<3.14"
 license = "Apache-2.0"
 authors = [
   { name = "MainQuest AI" }
@@ -28,7 +28,7 @@ dev = [
 ]
 
 [tool.ruff]
-target-version = "py312"
+target-version = "py311"
 line-length = 140
 
 [tool.ruff.lint]
@@ -52,4 +52,9 @@ deck_master = [
   "resources/compiler/*.mjs",
   "resources/static/*",
   "resources/skills-references/*.md",
+]
+
+[tool.pytest.ini_options]
+markers = [
+    "render: tests that need the real renderer toolchain (soffice/pdftoppm/rsvg-convert)",
 ]

@@ -55,6 +55,29 @@ def resolve_design(page, design, permitted_assets):
     return effective, style
 
 
+def style_font_fingerprint(design, style, asset_sha):
+    """Font-reality slice of a style fingerprint (P1-06).
+
+    ``asset_sha`` maps a design asset_id to its stored artifact content sha
+    (or None). Resolved font files hash by content, so swapping bytes under
+    the same font_id always changes the fingerprint; unresolvable fonts are
+    conservatively recorded by their declared identity.
+    """
+    fonts_by_id = {f.get("font_id"): f for f in (design or {}).get("fonts") or []}
+    typography = (style or {}).get("typography") or {}
+    entries = []
+    for slot in ("body_font_id", "heading_font_id"):
+        font_id = typography.get(slot)
+        font = fonts_by_id.get(font_id) or {}
+        sha = asset_sha(font.get("asset_id")) if font.get("asset_id") else None
+        if sha:
+            entries.append((slot, "asset", sha))
+        else:
+            entries.append((slot, "decl", font_id, font.get("family"), font.get("face"),
+                            font.get("weight")))
+    return repr(sorted(entries))
+
+
 def project_prompt(
     page: dict[str, Any],
     resolved_design_context: dict[str, Any],

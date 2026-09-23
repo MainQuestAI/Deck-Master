@@ -43,9 +43,9 @@ The active implementation baseline for the mainline rebuild is
   `python -m deck_master`. The retired legacy CLI entry is not part of the new flow.
 - Legacy command mapping (spec 09.6): `deck-master legacy-map`; migration
   notes: `docs/migration-to-rebuilt-core.md`.
-- Editable install uses Python 3.12 by default. Python 3.11 and 3.12 are
-  supported. After `python -m pip install -e ".[dev]"`, installed command is
-  `deck-master`.
+- Editable install supports Python 3.11 and 3.12 (`requires-python
+  >=3.11,<3.14`). After `python -m pip install -e ".[dev]"`, installed command
+  is `deck-master`.
 - Old run paths are recognised and refused by new write commands
   (`legacy_run_format`); they are never migrated or initialised in place.
 

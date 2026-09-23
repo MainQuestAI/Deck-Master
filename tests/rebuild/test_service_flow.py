@@ -139,6 +139,11 @@ from deck_master.pipeline import artifact as adopt_artifact, produce
 from deck_master.store import Store
 
 
+from hostenv import resolve_host_font
+
+FAMILY = resolve_host_font()
+
+
 def _draft_page(page_id, title, body):
     return {
         "schema_version": "deck_page_package.v2",
@@ -172,8 +177,8 @@ def _svg_for(page):
     title = page["customer_visible"]["title"]
     body = page["customer_visible"]["body_blocks"][0]["text"]
     return (f'<svg viewBox="0 0 320 180"><rect width="320" height="180" fill="#ffffff"/>'
-            f'<text x="20" y="80" font-family="Hiragino Sans GB" font-size="20">{title}</text>'
-            f'<text x="20" y="130" font-family="Hiragino Sans GB" font-size="14">{body}</text>'
+            f'<text x="20" y="80" font-family="{FAMILY}" font-size="20">{title}</text>'
+            f'<text x="20" y="130" font-family="{FAMILY}" font-size="14">{body}</text>'
             f'</svg>').encode()
 
 
@@ -673,3 +678,130 @@ def test_unverified_legacy_artifact_editability_stays_unknown(tmp_path):
     assert stored["editability"] == "unknown"
     assert stored["editability"] != "editable_shapes_and_text", \
         "an unverified old file is never upgraded to the current verified claim"
+
+
+# ---------------------------------------------------------------------------
+# 轮 C / P1-06: font-file reality in invalidation and review freshness.
+
+
+def _font_design_pages(tmp_path):
+    font_v1 = tmp_path / "body-v1.ttf"
+    font_v1.write_bytes(b"fake-font-file-v1")
+    design = {
+        "fonts": [
+            {"font_id": "body", "family": "Demo Sans", "face": "Regular", "weight": 400,
+             "asset_id": "body-font", "fallback_font_ids": []},
+            {"font_id": "heading", "family": "Demo Sans", "face": "Bold", "weight": 700,
+             "asset_id": None, "fallback_font_ids": []},
+        ],
+        "assets": [{"asset_id": "body-font", "kind": "font", "file": str(font_v1),
+                    "external_use": "allowed"}],
+        "allowed_asset_ids": ["body-font"],
+        "styles": [
+            {"style_id": "default", "colors": {"background": "#FFFFFF", "text": "#14213D", "accent": "#1478FF"},
+             "typography": {"body_font_id": "body", "heading_font_id": "heading",
+                            "body_size_pt": 18, "heading_size_pt": 30, "auxiliary_size_pt": 12},
+             "layout_notes": "默认"},
+            {"style_id": "alt", "colors": {"background": "#FFFFFF", "text": "#14213D", "accent": "#1478FF"},
+             "typography": {"body_font_id": "heading", "heading_font_id": "heading",
+                            "body_size_pt": 18, "heading_size_pt": 30, "auxiliary_size_pt": 12},
+             "layout_notes": "备选"},
+        ],
+        "default_style_id": "default",
+    }
+    pages = [_draft_page("p1", "字体页", "引用 body 字体。"),
+             _draft_page("p2", "无关页", "使用 alt 样式与 heading 字体。")]
+    pages[1]["visual_spec"]["style_ref"] = "alt"
+    project = tmp_path / "font-proj"
+    service.create(project, brief="字体失效", draft={"pages": pages}, design=design)
+    return project, Store(project)
+
+
+def test_font_file_swap_invalidates_only_dependent_pages(tmp_path):
+    project, store = _font_design_pages(tmp_path)
+    document = store.load_document()
+    work = store.staging_dir / "font-attach"
+    work.mkdir(parents=True, exist_ok=True)
+    svg_file = work / "page.svg"
+    svg_file.write_text("<svg viewBox='0 0 10 10'/>")
+    pptx_file = work / "deck.pptx"
+    pptx_file.write_bytes(b"font-pptx")
+    from deck_master.pipeline import artifact as adopt_artifact
+    bumped = bump_revision(document, {"operation_id": "font-attach", "kind": "task_update",
+                                      "description": "attach slots", "read_set": []})
+    for entry in bumped["pages"]:
+        entry["svg"] = adopt_artifact(store, svg_file, "svg", page_id=entry["page_id"])
+    bumped["outputs"]["pptx"] = adopt_artifact(store, pptx_file, "pptx")
+    store.commit_change(base_revision=document["revision_id"], document=bumped, operation_id="font-attach")
+    attached = store.load_document()
+
+    font_v2 = tmp_path / "body-v2.ttf"
+    font_v2.write_bytes(b"fake-font-file-v2-DIFFERENT-BYTES")
+    service.import_asset(project, asset_id="body-font", kind="font", file_path=font_v2)
+    after = store.load_document()
+    assert after["pages"][0]["svg"] is None, "same font_id with new bytes invalidates the dependent page"
+    assert after["pages"][1]["svg"] == attached["pages"][1]["svg"], "unrelated page untouched"
+    assert all(value is None for value in after["outputs"].values())
+
+
+def test_style_dependency_review_turns_stale_on_font_swap(tmp_path):
+    project, store = _font_design_pages(tmp_path)
+    document = store.load_document()
+    work = store.staging_dir / "font-review"
+    work.mkdir(parents=True, exist_ok=True)
+    svg_file = work / "page.svg"
+    svg_file.write_text("<svg viewBox='0 0 10 10'/>")
+    pptx_file = work / "deck.pptx"
+    pptx_file.write_bytes(b"font-pptx")
+    report_file = work / "readback.json"
+    report_file.write_text(json.dumps({"status": "pass", "findings": [], "pages": []}))
+    from deck_master.pipeline import artifact as adopt_artifact
+    bumped = bump_revision(document, {"operation_id": "font-review-attach", "kind": "task_update",
+                                      "description": "attach", "read_set": []})
+    for entry in bumped["pages"]:
+        entry["svg"] = adopt_artifact(store, svg_file, "svg", page_id=entry["page_id"])
+    bumped["outputs"]["pptx"] = adopt_artifact(store, pptx_file, "pptx")
+    bumped["outputs"]["render_report"] = adopt_artifact(store, report_file, "render_report")
+    store.commit_change(base_revision=document["revision_id"], document=bumped, operation_id="font-review-attach")
+
+    from deck_master.editing import _current_artifact_digests, check_summary
+    digests = _current_artifact_digests(store, store.load_document())
+    style_sha = digests["style:p1"]
+    review = {
+        "schema_version": "deck_review.v1", "review_id": "rv-font", "kind": "content", "status": "pass",
+        "subjects": [store.load_document()["outputs"]["pptx"], store.load_document()["pages"][0]["page"]],
+        "dependencies": [{"kind": "style", "identity": "p1", "sha256": style_sha}],
+        "reviewer": {"type": "host_self", "id": "host-1", "execution_ref": None,
+                     "independence_confirmed": False},
+        "observations": ["实际检查"], "findings": [], "created_at": "2026-09-23T00:00:00Z",
+        "replaces": None,
+    }
+    ref = store.put_json_object(review)
+    document = store.load_document()
+    bumped = bump_revision(document, {"operation_id": "font-review-add", "kind": "task_update",
+                                      "description": "review", "read_set": []})
+    bumped["reviews"] = [ref]
+    store.commit_change(base_revision=document["revision_id"], document=bumped, operation_id="font-review-add")
+    summary = check_summary(store, store.load_document())
+    assert summary["dimensions"].get("content:p1", {}).get("status") == "pass"
+
+    font_v2 = tmp_path / "body-v2.ttf"
+    font_v2.write_bytes(b"fake-font-file-v2-DIFFERENT-BYTES")
+    service.import_asset(project, asset_id="body-font", kind="font", file_path=font_v2)
+    from deck_master.editing import _current_artifact_digests
+    drifted = _current_artifact_digests(store, store.load_document())
+    assert drifted["style:p1"] != style_sha, "same font_id with new bytes drifts the style fingerprint"
+    summary = check_summary(store, store.load_document())
+    assert summary["status"] == "not_evaluated"
+    assert summary.get("reason") == "no current pptx output"
+    # With outputs re-anchored, the drifted style dependency is what keeps the
+    # old review out of the current set (stale), not a silent pass.
+    document = store.load_document()
+    bumped = bump_revision(document, {"operation_id": "reanchor-outputs", "kind": "task_update",
+                                      "description": "re-anchor outputs after font swap", "read_set": []})
+    bumped["outputs"]["pptx"] = store.load_document()["outputs"].get("pptx") or         adopt_artifact(store, pptx_file, "pptx")
+    bumped["outputs"]["render_report"] = adopt_artifact(store, report_file, "render_report")
+    store.commit_change(base_revision=document["revision_id"], document=bumped, operation_id="reanchor-outputs")
+    summary = check_summary(store, store.load_document())
+    assert "content:p1" in summary["missing_dimensions"], "font swap turns the style-dependent review stale"
+    assert any("dependency sha" in s["reason"] for s in summary["stale"])

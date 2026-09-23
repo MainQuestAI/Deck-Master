@@ -481,9 +481,30 @@ def _continue_project(project_dir: Path | str) -> dict:
             if prior.get('kind') != 'repair' or prior.get('status') != 'completed' \
                     or f'findings-sig:{sig}' not in (prior.get('instruction') or ''):
                 continue
-            repair_inputs = {(item.get('path')) for item in (prior.get('inputs') or [])}
-            candidate_unchanged = all(
-                (entry.get('page') or {}).get('path') in repair_inputs for entry in document['pages'])
+            def _content_sha(ref):
+                # Artifact objects are re-created every round even when bytes
+                # are identical, so stagnation must compare CONTENT hashes.
+                try:
+                    obj = store.read_object_json(ref)
+                    if obj.get('schema_version') == 'deck_artifact.v1':
+                        return obj['file']['sha256']
+                except Exception:
+                    pass
+                return ref.get('sha256')
+
+            prior_inputs = {_content_sha(item) for item in (prior.get('inputs') or [])}
+            # Round-B: progress means ANY repair-candidate object moved — the
+            # page copy or its blueprint/SVG bytes. Outputs and previews are
+            # downstream products re-created on every produce and must not
+            # mask candidate-level stagnation (an SVG-only fix is real
+            # progress even when the page text did not move).
+            candidate_inputs = set()
+            for entry in document['pages']:
+                for slot in ('page', 'blueprint', 'svg'):
+                    ref = entry.get(slot)
+                    if ref:
+                        candidate_inputs.add(_content_sha(ref))
+            candidate_unchanged = candidate_inputs <= prior_inputs
             if candidate_unchanged:
                 # Same findings, same repair candidate (page content untouched):
                 # another identical repair round would make no progress. Stop
@@ -654,7 +675,7 @@ def _rendering_state(store, page, design, svg_ref=None):
     page's allowance does not make an asset a rendering dependency.
     """
     from .models import canonical_json_bytes
-    from .production import resolve_design
+    from .production import resolve_design, style_font_fingerprint
     effective, style = resolve_design(page, design, design.get('assets') or [])
     assets_by_id = {a['asset_id']: a for a in design.get('assets') or []}
     referenced = _svg_referenced_asset_ids(store, svg_ref)
@@ -664,7 +685,10 @@ def _rendering_state(store, page, design, svg_ref=None):
         used = [aid for aid in sorted(referenced) if aid in assets_by_id]
     assets = sorted((aid, (assets_by_id.get(aid) or {}).get('artifact', {}).get('sha256'))
                     for aid in used)
-    return canonical_json_bytes({'style': style, 'assets': assets})
+    fonts = style_font_fingerprint(
+        design, style,
+        lambda aid: (assets_by_id.get(aid) or {}).get('artifact', {}).get('sha256'))
+    return canonical_json_bytes({'style': style, 'assets': assets, 'fonts': fonts})
 
 
 def _apply_rendering_invalidation(store, new_document, old_document, old_design, new_design):

@@ -22,9 +22,9 @@ Deck Master is built for solution architects and proposal builders who need a re
 
 ## Install
 
-Use Python 3.12 by default. Python 3.11 and 3.12 are supported; Python 3.14
-is not a supported test environment because the PPTX dependency chain may not
-have compatible wheels yet.
+Python 3.11 and 3.12 are supported (`requires-python >=3.11,<3.14`); use
+either as the default. Python 3.14 is not a supported test environment because
+the PPTX dependency chain may not have compatible wheels yet.
 
 ```bash
 python3.12 -m venv .venv

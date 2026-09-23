@@ -559,3 +559,229 @@ def test_operation_journal_json_keeps_status() -> None:
     payload = journal.to_json()
     assert payload["status"] == "late_result_settled"
     assert payload["usage_events"][0]["outcome"] == "unknown"
+
+
+# ---------------------------------------------------------------------------
+# PR 轮 B: envelope/task binding, artifact scope, blueprint lineage,
+# settle-first call facts, and receipt-based evidence grading.
+
+
+def _adopted_project(tmp_path):
+    """compose adopted so pages exist; returns (project, store, compose_task)."""
+    project, _ = _make_project(tmp_path)
+    store = Store(project)
+    task = service.continue_project(project)["pending_tasks"][0]
+    service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+                          produced_against=task["produced_against"], result_payload=_compose_envelope())
+    return project, store, task
+
+
+def test_accept_rejects_foreign_operation_id(tmp_path):
+    project, store, compose_task = _adopted_project(tmp_path)
+    pending = service.continue_project(project)["pending_tasks"][0]
+    with pytest.raises(tasks_mod.TaskConflict, match="operation_id"):
+        service.accept_result(project, task_id=pending["task_id"], operation_id="different-op",
+                              produced_against=pending["produced_against"],
+                              result_payload={"kind": "blueprint", "files": [], "artifact_specs": []})
+
+
+def test_completed_task_refuses_new_submission(tmp_path):
+    project, store, task = _adopted_project(tmp_path)
+    replay = service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+                                   produced_against=task["produced_against"], result_payload=_compose_envelope())
+    assert replay["status"] == "already_applied"
+    altered = _compose_envelope()
+    altered["notes"] = "different result for the same completed task"
+    with pytest.raises(tasks_mod.TaskConflict, match="different result"):
+        service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+                              produced_against=task["produced_against"], result_payload=altered)
+
+
+def test_artifact_specs_are_scoped_to_task_pages(tmp_path):
+    project, store, _ = _adopted_project(tmp_path)
+    task = service.open_host_task(store, kind="reconstruct", page_ids=["p09"], instruction="scope check")
+    staging = project / ".deckmaster" / "staging" / task["operation_id"]
+    staging.mkdir(parents=True, exist_ok=True)
+    (staging / "page.svg").write_text("<svg/>")
+    envelope = {"kind": "reconstruct",
+                "files": [{"file_id": "s", "path": "page.svg", "media_type": "image/svg+xml"}],
+                "artifact_specs": [{"file_id": "s", "role": "svg", "page_id": "p10",
+                                    "provenance": {"source_type": "unknown", "tool": "h",
+                                                   "invocation_ref": None}}]}
+    with pytest.raises(tasks_mod.EnvelopeError, match="outside the authorized scope"):
+        service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+                              produced_against=task["produced_against"], result_payload=envelope)
+
+
+def png_bytes():
+    from PIL import Image
+    import io
+    buffer = io.BytesIO()
+    Image.new("RGB", (4, 4), (1, 2, 3)).save(buffer, format="PNG")
+    return buffer.getvalue()
+
+
+def test_task_kind_cannot_deliver_foreign_roles(tmp_path):
+    project, store, _ = _adopted_project(tmp_path)
+    task = service.open_host_task(store, kind="reconstruct", page_ids=["p09"], instruction="role check")
+    staging = project / ".deckmaster" / "staging" / task["operation_id"]
+    staging.mkdir(parents=True, exist_ok=True)
+    (staging / "ref.png").write_bytes(png_bytes())
+    envelope = {"kind": "reconstruct",
+                "files": [{"file_id": "b", "path": "ref.png", "media_type": "image/png"}],
+                "artifact_specs": [{"file_id": "b", "role": "blueprint", "page_id": "p09",
+                                    "provenance": {"source_type": "unknown", "tool": "h",
+                                                   "invocation_ref": None}}]}
+    with pytest.raises(tasks_mod.EnvelopeError, match="may not deliver role"):
+        service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+                              produced_against=task["produced_against"], result_payload=envelope)
+
+
+def test_blueprint_reference_regions_are_preserved(tmp_path):
+    from PIL import Image
+    project, store, _ = _adopted_project(tmp_path)
+    page_ref = store.load_document()["pages"][0]["page"]
+    png = tmp_path / "ref.png"
+    Image.new("RGB", (8, 6), (240, 240, 240)).save(png)
+    regions = [{"region_id": "main", "description": "全页", "bbox_normalized": [0.0, 0.0, 1.0, 1.0],
+                "importance": "essential"}]
+    envelope = {"kind": "blueprint",
+                "files": [{"file_id": "b", "path": "ref.png", "media_type": "image/png"}],
+                "artifact_specs": [{"file_id": "b", "role": "blueprint", "page_id": "p09",
+                                    "derived_from": [page_ref],
+                                    "reference_regions": regions,
+                                    "provenance": {"source_type": "unknown", "tool": "h",
+                                                   "invocation_ref": None,
+                                                   "generated_from_page": page_ref}}]}
+    task = service.continue_project(project)["pending_tasks"][0]
+    assert task["kind"] == "blueprint"
+    staging = project / ".deckmaster" / "staging" / task["operation_id"]
+    staging.mkdir(parents=True, exist_ok=True)
+    (staging / "ref.png").write_bytes(png.read_bytes())
+    service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+                          produced_against=task["produced_against"], result_payload=envelope)
+    document = store.load_document()
+    blueprint = store.read_object_json(document["pages"][0]["blueprint"])
+    assert blueprint["reference_regions"] == regions
+
+
+def test_blueprint_lineage_rejects_preview_backfeed(tmp_path):
+    from PIL import Image
+    project, store, _ = _adopted_project(tmp_path)
+    page_ref = store.load_document()["pages"][0]["page"]
+    png = tmp_path / "ref.png"
+    Image.new("RGB", (8, 6), (240, 240, 240)).save(png)
+    preview = store.put_json_object({
+        "schema_version": "deck_artifact.v1", "artifact_id": "preview-1", "page_id": "p09",
+        "role": "svg_preview",
+        "file": store.put_blob(png.read_bytes(), ext="png"),
+        "media_type": "image/png", "created_at": "2026-09-23T00:00:00Z",
+        "dependencies": [], "derived_from": [], "provenance": {"source_type": "tool_generated"},
+        "limitations": []})
+    envelope = {"kind": "blueprint",
+                "files": [{"file_id": "b", "path": "ref.png", "media_type": "image/png"}],
+                "artifact_specs": [{"file_id": "b", "role": "blueprint", "page_id": "p09",
+                                    "derived_from": [preview],
+                                    "provenance": {"source_type": "unknown", "tool": "h",
+                                                   "invocation_ref": None}}]}
+    task = service.continue_project(project)["pending_tasks"][0]
+    assert task["kind"] == "blueprint"
+    staging = project / ".deckmaster" / "staging" / task["operation_id"]
+    staging.mkdir(parents=True, exist_ok=True)
+    (staging / "ref.png").write_bytes(png.read_bytes())
+    with pytest.raises(tasks_mod.EnvelopeError, match="must not derive"):
+        service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+                              produced_against=task["produced_against"], result_payload=envelope)
+
+
+def test_svg_only_fix_is_progress_not_no_progress(tmp_path):
+    """Round-B 附加-1: a repair round that only changes the SVG (page text
+    untouched) is real progress — the no-progress guard must not stop it."""
+    import io
+    from PIL import Image
+    from deck_master.pipeline import produce
+    project = tmp_path / "proj"
+    page = json.loads((ENVELOPES / "compose.json").read_text())["pages"][0]
+    service.create(project, brief="svg 进展", draft={"pages": [page]})
+    store = Store(project)
+
+    def drive(envelope, kind, name=None, data=None):
+        task = service.continue_project(project)["pending_tasks"][0]
+        assert task["kind"] == kind, (kind, task["kind"])
+        if name:
+            staging = project / ".deckmaster" / "staging" / task["operation_id"]
+            staging.mkdir(parents=True, exist_ok=True)
+            (staging / name).write_bytes(data)
+        assert service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+                                     produced_against=task["produced_against"],
+                                     result_payload=envelope)["status"] == "accepted"
+        return task
+
+    png = io.BytesIO()
+    Image.new("RGB", (16, 9), (250, 250, 250)).save(png, format="PNG")
+    document = store.load_document()
+    drive(_png_blueprint_envelope(document["pages"][0]["page"]), "blueprint",
+          "reference.png", png.getvalue())
+    blueprint_sha = store.read_object_json(store.load_document()["pages"][0]["blueprint"])["file"]["sha256"]
+    bad_svg = (b'<svg viewBox="0 0 100 75" data-blueprint-sha256="' + blueprint_sha.encode()
+               + b'"><rect width="10" height="10"/></svg>')
+    drive(_svg_envelope("p09"), "reconstruct", "page.svg", bad_svg)
+    assert produce(project)["status"] == "fail"
+    repair_task = service.continue_project(project)["pending_tasks"][0]
+    unchanged_page = store.read_object_json(store.load_document()["pages"][0]["page"])
+    # The host fixes ONLY the SVG geometry; the page copy is byte-identical.
+    changed_svg = (b'<svg viewBox="0 0 100 75" data-blueprint-sha256="' + blueprint_sha.encode()
+                   + b'"><rect width="20" height="20"/></svg>')
+    _stage(project, repair_task["operation_id"], "page.svg", changed_svg)
+    service.accept_result(project, task_id=repair_task["task_id"], operation_id=repair_task["operation_id"],
+                          produced_against=repair_task["produced_against"],
+                          result_payload={"kind": "repair",
+                                          "files": [{"file_id": "s", "path": "page.svg", "media_type": "image/svg+xml"}],
+                                          "pages": [unchanged_page],
+                                          "artifact_specs": [{"file_id": "s", "role": "svg", "page_id": "p09",
+                                                              "provenance": {"source_type": "unknown", "tool": "h",
+                                                                             "invocation_ref": None}}]})
+    assert produce(project)["status"] == "fail"
+    # Same findings, but the SVG bytes genuinely moved: a new round must be
+    # dispatched instead of repair_no_progress.
+    response = service.continue_project(project)
+    assert response["next_action"] == "repair_readback"
+    assert response["pending_tasks"][0]["kind"] == "repair"
+
+
+def test_settle_facts_survive_content_refusal(tmp_path):
+    """Round-B 附加-3: valid usage events settle even when the envelope
+    content is refused — call facts are never rolled back by a content error."""
+    project, store, _ = _adopted_project(tmp_path)
+    task = service.open_host_task(store, kind="repair", page_ids=["p09"], instruction="settle then refuse")
+    service.task_start(project, task_id=task["task_id"], execution_ref="round-b-exec")
+    tasks_mod.allocate_call_allowances(store, task_id=task["task_id"], count=1)
+    tasks_mod.call_begin(store, task_id=task["task_id"], allowance_id="call-1", execution_ref="round-b-exec")
+    report = tmp_path / "tool-report.json"
+    report.write_text(json.dumps({"tool": "image-gen", "calls": 1}))
+    staging = project / ".deckmaster" / "staging" / task["operation_id"]
+    staging.mkdir(parents=True, exist_ok=True)
+    (staging / "page.svg").write_text("<svg/>")
+    envelope = {
+        "kind": "repair",
+        "files": [{"file_id": "s", "path": "page.svg", "media_type": "image/svg+xml"},
+                  {"file_id": "report", "path": "report", "media_type": "application/json"}],
+        "pages": [{**json.loads((ENVELOPES / "minimal-page.json").read_text()), "page_id": "p99"}],
+        "artifact_specs": [{"file_id": "s", "role": "svg", "page_id": "p09",
+                            "provenance": {"source_type": "unknown", "tool": "h", "invocation_ref": None}}],
+        "usage_events": [{"allowance_id": "call-1", "outcome": "consumed",
+                          "invocation_ref": "inv-content-fail",
+                          "evidence_file_ids": ["report"]}],
+        "notes": "settled before refusal",
+    }
+    with pytest.raises(Exception):
+        # The page belongs to no current page entry → content prevalidation
+        # refuses AFTER the usage facts already settled.
+        (staging / "report").write_text(report.read_text())
+        service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+                              produced_against=task["produced_against"], result_payload=envelope)
+    settled = next(store.read_object_json(ref) for ref in store.load_document()["tasks"]
+                   if store.read_object_json(ref)["task_id"] == task["task_id"])
+    allowance = settled["call_allowances"][0]
+    assert allowance["state"] == "consumed", "call facts survive the content refusal"
+    assert allowance["invocation_ref"] == "inv-content-fail"

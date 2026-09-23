@@ -96,17 +96,38 @@ def readback(pptx_path,pages,expected_pages):
             for atom in visible_atoms(page):
                 if atom.get('text') and normalize(atom['text']) not in joined:
                     findings.append({'page_id':page['page_id'],'code':'missing_visible_atom','atom_id':atom['atom_id'],'text':atom['text']})
-            # AC-K10: a coverage-blocking layer hides ALL text (transparent or
-            # under 6pt). Locally small/decorative runs do not fail the page.
-            run_nodes=root.findall('.//a:rPr',ns)
-            if texts and run_nodes:
-                def hidden_or_tiny(props):
-                    try:small=float(props.get('sz','0'))<600
-                    except ValueError:small=False
-                    transparent=any(int(a.get('val','100000'))==0 for a in props.findall('.//a:alpha',ns))
+            # AC-K10 (P1-05): per-atom readability — every customer-visible
+            # atom must be carried by a readable run (>= 6pt and not fully
+            # transparent, spec 06.3). Runs whose text no atom covers are
+            # decorative and never judged. The page-level all-hidden check
+            # below stays as a backstop for layers that dodge atom mapping.
+            MIN_READABLE_SZ = 600  # 6pt in DrawingML hundredths-of-a-point units
+            run_nodes = root.findall('.//a:rPr', ns)
+            normalize = lambda s: ''.join(str(s).split())
+            atoms = visible_atoms(page)
+            atom_texts = {normalize(atom['text']) for atom in atoms
+                          if atom.get('text') and normalize(atom['text'])}
+            if run_nodes:
+                def run_unreadable(props):
+                    try: small = float(props.get('sz', '0')) < MIN_READABLE_SZ
+                    except ValueError: small = False
+                    transparent = any(int(a.get('val', '100000')) == 0
+                                        for a in props.findall('.//a:alpha', ns))
                     return small or transparent
-                if all(hidden_or_tiny(props) for props in run_nodes):
-                    findings.append({'page_id':page['page_id'],'code':'hidden_or_tiny_text','detail':'all text runs are transparent or under 6pt'})
+                run_pairs = list(zip(root.findall('.//a:rPr', ns), root.findall('.//a:t', ns)))
+                for props, text_node in run_pairs:
+                    run_text = normalize(text_node.text or '')
+                    if not run_text or run_text not in atom_texts:
+                        continue  # decorative run: no atom requires it
+                    if run_unreadable(props):
+                        atom = next(a for a in atoms if normalize(a.get('text')) == run_text)
+                        findings.append({'page_id': page['page_id'], 'code': 'unreadable_text',
+                                         'atom_id': atom['atom_id'],
+                                         'detail': f"run renders at sz={props.get('sz')!r} "
+                                                   f"(or transparent) for a required atom"})
+                if texts and all(run_unreadable(props) for props in run_nodes):
+                    findings.append({'page_id': page['page_id'], 'code': 'hidden_or_tiny_text',
+                                     'detail': 'all text runs are transparent or under 6pt'})
             # AC-K10: real text overflow — a shape box leaving the slide bounds.
             for sp in root.findall('.//p:sp',ns):
                 name_node=sp.find('p:nvSpPr/p:cNvPr',ns)
@@ -170,10 +191,28 @@ def readback(pptx_path,pages,expected_pages):
                 start,end=edge_endpoints(sp)
                 from_center=node_centers.get(edge.get('from'));to_center=node_centers.get(edge.get('to'))
                 if start is None or from_center is None or to_center is None:continue
-                d_start_from=(start[0]-from_center[0])**2+(start[1]-from_center[1])**2
-                d_start_to=(start[0]-to_center[0])**2+(start[1]-to_center[1])**2
-                if d_start_to<d_start_from:
-                    findings.append({'page_id':page['page_id'],'code':'reversed_arrow','edge_id':edge_id,'from':edge.get('from'),'to':edge.get('to'),'element':sp.find('p:nvSpPr/p:cNvPr',ns).get('name')})
+                # P1-05: dual-endpoint verification with a declared tolerance.
+                # Reversal is judged on the START point; reachability on both
+                # ends (a short stub near A that never arrives at B fails).
+                ENDPOINT_TOLERANCE_PX = 8.0  # connection slop vs node bbox centres
+                tol2 = (ENDPOINT_TOLERANCE_PX * 9525) ** 2
+                d_start_from = (start[0]-from_center[0])**2 + (start[1]-from_center[1])**2
+                d_start_to = (start[0]-to_center[0])**2 + (start[1]-to_center[1])**2
+                d_end_to = (end[0]-to_center[0])**2 + (end[1]-to_center[1])**2
+                d_end_from = (end[0]-from_center[0])**2 + (end[1]-from_center[1])**2
+                element = sp.find('p:nvSpPr/p:cNvPr', ns).get('name')
+                if d_start_to < d_start_from:
+                    findings.append({'page_id': page['page_id'], 'code': 'reversed_arrow',
+                                     'edge_id': edge_id, 'from': edge.get('from'), 'to': edge.get('to'),
+                                     'element': element})
+                elif d_start_from > tol2 or d_end_to > tol2:
+                    findings.append({'page_id': page['page_id'], 'code': 'edge_not_connected',
+                                     'edge_id': edge_id, 'from': edge.get('from'), 'to': edge.get('to'),
+                                     'element': element,
+                                     'detail': f'endpoints miss their nodes: '
+                                               f'd(start,from)={d_start_from**0.5/9525:.1f}px, '
+                                               f'd(end,to)={d_end_to**0.5/9525:.1f}px '
+                                               f'(tolerance {ENDPOINT_TOLERANCE_PX}px)'})
             stats.append({'page_id':page['page_id'],'text_runs':len(texts),'native_shapes':len(root.findall('.//p:sp',ns))})
     return {'status':'fail' if findings else 'pass','findings':findings,'pages':stats,'visual_review':'not_evaluated','desktop_editing':'not_evaluated'}
 

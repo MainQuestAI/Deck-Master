@@ -15,16 +15,13 @@ NS = {'p': 'http://schemas.openxmlformats.org/presentationml/2006/main',
       'r': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'}
 
 
+from hostenv import host_fonts, resolve_host_font
+
+FAMILY = resolve_host_font()
+
+
 def resolve_font():
-    import shutil
-    import subprocess
-    if not shutil.which('fc-match'):
-        pytest.fail('fc-match unavailable; cannot resolve a real font file')
-    output = subprocess.run(['fc-match', '-f', '%{family}\n%{file}', 'Hiragino Sans GB'],
-                            capture_output=True, text=True, check=True).stdout.splitlines()
-    if len(output) < 2 or 'Hiragino Sans GB' not in output[0]:
-        pytest.fail(f'fc-match did not resolve Hiragino Sans GB: {output!r}')
-    return {'Hiragino Sans GB': output[1]}
+    return host_fonts()
 
 
 def compile_sample(tmp_path, body, assets=None, name='sample', fonts=None):
@@ -54,7 +51,7 @@ def test_declared_subset_structures_in_slide_xml(tmp_path):
     # as the matching DrawingML structure in the actual slide XML.
     asset = tmp_path / 'photo.png'
     Image.new('RGB', (12, 8), (200, 30, 30)).save(asset)
-    result = compile_sample(tmp_path, '''
+    result = compile_sample(tmp_path, f'''
       <defs><g id="icon"><rect width="10" height="10" fill="#1478ff"/><path d="M1 9 L9 1" stroke="#000000" fill="none"/></g></defs>
       <line id="ln" x1="5" y1="5" x2="60" y2="30" stroke="#000000"/>
       <path id="curve" d="M 70 10 C 90 40, 110 40, 130 10" fill="none" stroke="#0000ff"/>
@@ -62,8 +59,8 @@ def test_declared_subset_structures_in_slide_xml(tmp_path):
       <g id="table">
         <rect id="cell-1" x="10" y="50" width="40" height="20" fill="#eeeeee"/>
         <rect id="cell-2" x="50" y="50" width="40" height="20" fill="#dddddd"/>
-        <text id="cell-1-text" x="14" y="64" font-family="Hiragino Sans GB" font-size="10">表头一</text>
-        <text id="cell-2-text" x="54" y="64" font-family="Hiragino Sans GB" font-size="10">表头二</text>
+        <text id="cell-1-text" x="14" y="64" font-family="{FAMILY}" font-size="10">表头一</text>
+        <text id="cell-2-text" x="54" y="64" font-family="{FAMILY}" font-size="10">表头二</text>
       </g>
       <image id="photo" href="photo.png" x="150" y="50" width="40" height="40"/>
       <defs><linearGradient id="fade" x1="0" y1="0" x2="1" y2="0">

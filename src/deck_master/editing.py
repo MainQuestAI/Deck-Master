@@ -23,8 +23,14 @@ def _current_artifact_digests(store, doc):
         if entry.get('page'):
             artifacts[f'content:page:{page_id}'] = entry['page']['sha256']
         if page:
+            from .production import style_font_fingerprint
             _, style = resolve_design(page, design, design.get('assets') or [])
-            artifacts[f'style:{page_id}'] = sha256_bytes(canonical_json_bytes(style))
+            assets_by_id = {a['asset_id']: a for a in design.get('assets') or []}
+            font_fp = style_font_fingerprint(
+                design, style,
+                lambda aid: (assets_by_id.get(aid) or {}).get('artifact', {}).get('sha256'))
+            artifacts[f'style:{page_id}'] = sha256_bytes(
+                canonical_json_bytes({'style': style, 'fonts': font_fp}))
         for slot, kind, identity in (('blueprint', 'blueprint', f'blueprint:{page_id}'),
                                      ('svg', 'artifact', f'svg:{page_id}'),
                                      ('svg_preview', 'artifact', f'svg_preview:{page_id}'),
@@ -32,20 +38,57 @@ def _current_artifact_digests(store, doc):
             ref = entry.get(slot)
             if ref:
                 artifacts[identity] = store.read_object_json(ref)['file']['sha256']
+                # object-ref sha too, so closing-review subjects (which cite
+                # the artifact object) can be freshness/currentness-checked
+                artifacts[f'{identity}:ref'] = ref['sha256']
     outputs = doc.get('outputs') or {}
     if outputs.get('pptx'):
         try:
             artifacts['artifact:pptx'] = store.read_object_json(outputs['pptx'])['file']['sha256']
+            artifacts['artifact:pptx:ref'] = outputs['pptx']['sha256']
         except Exception:
             pass  # unreadable injected refs simply cannot match any review dependency
+    # P1-07: resolvable dependency digests beyond page/style/artifact objects.
+    for source in doc.get('sources') or []:
+        extract = source.get('extract')
+        if extract:
+            artifacts[f"source:{source.get('source_id')}"] = extract['sha256']
+    artifacts['policy:document'] = sha256_bytes(canonical_json_bytes(doc.get('policy') or {}))
     return artifacts
+
+
+def _output_facts(store, doc):
+    """Hard output facts (P1-01): render report state and produced-artifact
+    completeness, read from the current objects — reviews never override them."""
+    import json as _json
+    facts = {'render_report_missing': False, 'completeness': []}
+    outputs = doc.get('outputs') or {}
+    if not outputs.get('pptx'):
+        return facts
+    report_ref = outputs.get('render_report')
+    if not report_ref:
+        facts['render_report_missing'] = True
+    else:
+        try:
+            report = _json.loads(store.read_object_bytes(store.read_object_json(report_ref)['file']))
+            facts['render_report_status'] = report.get('status')
+            facts['render_report_findings'] = report.get('findings') or []
+        except Exception:
+            facts['render_report_missing'] = True
+    for entry in doc.get('pages') or []:
+        if not entry.get('svg'):
+            facts['completeness'].append({'page_id': entry['page_id'], 'code': 'missing_svg'})
+        elif not entry.get('ppt_preview'):
+            facts['completeness'].append({'page_id': entry['page_id'], 'code': 'missing_preview'})
+    return facts
 
 
 def check_summary(store, doc):
     """The full CheckSummary behind review_status (one interpretation, AC-R03)."""
     from . import review as review_mod
     reviews = [{**store.read_object_json(ref), 'ref': ref} for ref in doc.get('reviews') or []]
-    document = {**doc, 'tasks': [store.read_object_json(ref) for ref in doc.get('tasks') or []]}
+    document = {**doc, 'tasks': [store.read_object_json(ref) for ref in doc.get('tasks') or []],
+                '_output_facts': _output_facts(store, doc)}
     return review_mod.evaluate_current(document, reviews, _current_artifact_digests(store, doc))
 
 
@@ -174,10 +217,15 @@ def _export_locked(store, *, output_dir, purpose):
         editability='unknown'
         if pptx_ref:
             editability=store.read_object_json(pptx_ref).get('editability') or 'unknown'
+        facts=summary.get('output_facts') or {}
         report={'project_id':doc['project_id'],'revision_id':doc['revision_id'],'purpose':purpose,
                 'review_status':status,
                 'unresolved':{'missing_dimensions':sorted(summary['missing_dimensions']),
-                              'failed_dimensions':failed_dimensions},
+                              'failed_dimensions':failed_dimensions,
+                              'render_report_missing':bool(facts.get('render_report_missing')),
+                              'render_report_findings':facts.get('render_report_findings') or [],
+                              'completeness_gaps':facts.get('completeness') or [],
+                              'not_evaluated_dimensions':dict(summary.get('dimension_reasons') or {})},
                 'editability':editability,
                 'professional_evidence':_professional_evidence(store,doc),
                 'desktop_editing':'not_evaluated',

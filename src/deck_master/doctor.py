@@ -15,7 +15,7 @@ def diagnose(step, *, fonts=(), host_imagegen=False):
     checks=[]
     def add(name,status,detail,required=True):
         checks.append({'name':name,'status':status,'detail':detail,'required':required})
-    add('python','ready' if (3,12)<=sys.version_info[:2]<(3,14) else 'unavailable',{'executable':sys.executable,'version':sys.version.split()[0]})
+    add('python','ready' if (3,11)<=sys.version_info[:2]<(3,14) else 'unavailable',{'executable':sys.executable,'version':sys.version.split()[0]})
     root=resources.files('deck_master')
     required=['resources/contracts/document.v1.schema.json']
     if step=='compose':required+=['resources/skill/SKILL.md','resources/skill/references/content-methods.md']

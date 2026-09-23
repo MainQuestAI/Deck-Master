@@ -50,19 +50,19 @@ def _dependency_key(dep: dict) -> str:
     return f"{dep.get('kind')}:{dep.get('identity')}"
 
 
-def closing_review(reviews: list[dict], review: dict, artifacts: dict) -> dict | None:
-    """Return the R1 record that validly closes an open must_fix of ``review``.
+def finding_closed(reviews: list[dict], review: dict, finding: dict, artifacts: dict) -> bool:
+    """Per-finding close validation (spec 07.9 / P1-02).
 
-    A close is valid only when a new review R1 exists with: replaces pointing
-    at this exact R0 ref; the same finding_id with resolution fixed; at least
-    one subject that is a NEW product (not an R0 subject) and is current per
-    ``artifacts``; and real recheck records (non-empty observations and
-    finding evidence). Old R0 records are never modified.
+    A finding of ``review`` counts fixed only when a new review R1 exists with:
+    replaces pointing at this exact R0 ref; the same finding_id with resolution
+    fixed and real evidence; at least one subject that is a NEW product (not an
+    R0 subject) and is current per ``artifacts``; and real recheck observations.
+    A later plain pass never clears an old open finding by itself.
     """
     current_shas = set(artifacts.values())
     review_ref = review.get('ref')
     if not review_ref:
-        return None
+        return False
     for candidate in reviews:
         if candidate is review:
             continue
@@ -76,10 +76,24 @@ def closing_review(reviews: list[dict], review: dict, artifacts: dict) -> dict |
         if not candidate.get('observations'):
             continue
         followups = {f.get('finding_id'): f for f in candidate.get('findings') or []}
-        for finding in review.get('findings') or []:
-            followup = followups.get(finding.get('finding_id'))
-            if followup and followup.get('resolution') == 'fixed' and followup.get('evidence'):
-                return candidate
+        followup = followups.get(finding.get('finding_id'))
+        if followup and followup.get('resolution') == 'fixed' and followup.get('evidence'):
+            return True
+    return False
+
+
+# Kinds whose pass requires actual reading by a non-tool reviewer
+# (spec 07.1/07.2: mechanical tool scans cannot substitute content review).
+SUBSTANTIVE_KINDS = {'content', 'blueprint_content', 'blueprint_fidelity'}
+
+
+def _substance_gate(kind: str, review: dict) -> str | None:
+    """Return None when the pass has execution substance, else a typed reason."""
+    reviewer_type = (review.get('reviewer') or {}).get('type')
+    if reviewer_type == 'tool' and kind in SUBSTANTIVE_KINDS:
+        return 'tool_cannot_substance'
+    if not review.get('observations'):
+        return 'missing_execution_evidence'
     return None
 
 
@@ -97,12 +111,22 @@ _TRACKED_DEPENDENCY_PREFIXES = ('content:', 'artifact:', 'blueprint:', 'svg:', '
 
 
 def evaluate_current(document: dict, reviews: list[dict], artifacts: dict) -> dict:
-    """The one interpretation of the current check state (AC-R01/R02/R03/R10)."""
+    """The one interpretation of the current check state (AC-R01/R02/R03/R10).
+
+    Reviews are interpreted together with hard output facts (P1-01, injected
+    by the caller under ``document['_output_facts']``): a failing render
+    report fails the deck regardless of review status; missing render_report
+    or produced-artifact completeness gaps block a pass. Open must_fix
+    findings aggregate per finding_id across ALL current reviews of a
+    dimension and only a validated closing review can fix one (P1-02).
+    """
     pages = document.get('pages') or []
     current = (document.get('outputs') or {}).get('pptx')
+    facts = document.get('_output_facts') or {}
     if not current:
         return {'status': 'not_evaluated', 'current_outputs': None, 'dimensions': {}, 'stale': [],
                 'missing_dimensions': [f'{k}:{e["page_id"]}' for k in REQUIRED_KINDS for e in pages],
+                'output_facts': facts, 'dimension_reasons': {},
                 'reason': 'no current pptx output'}
     tasks = document.get('tasks') or []
     suspended_pages = set()
@@ -111,21 +135,24 @@ def evaluate_current(document: dict, reviews: list[dict], artifacts: dict) -> di
             suspended_pages.update(task.get('scope_pages') or [])
 
     def dependencies_current(review):
+        # P1-07: a dependency counts as current only when it resolves against
+        # the current digest map and the sha matches; anything unresolvable is
+        # stale with a typed reason (no silent pass for known prefixes).
         for dep in review.get('dependencies') or []:
             key = _dependency_key(dep)
-            if key not in artifacts:
-                if not any(key.startswith(prefix) for prefix in _TRACKED_DEPENDENCY_PREFIXES):
-                    # Untracked dependency kinds cannot be freshness-verified:
-                    # conservatively treat the review as history (stale).
-                    return False, f'unverifiable dependency kind {key!r}'
+            if key in artifacts:
+                if artifacts[key] != dep.get('sha256'):
+                    return False, 'dependency sha does not match the current object'
                 continue
-            if artifacts[key] != dep.get('sha256'):
-                return False, 'dependency sha does not match the current object'
+            if key.startswith('source:'):
+                return False, f'unresolvable source dependency {key!r}'
+            return False, f'unverifiable dependency kind {key!r}'
         return True, ''
 
     dimensions: dict[str, dict] = {}
+    dimension_reasons: dict[str, str] = {}
     stale: list[dict] = []
-    latest: dict[tuple, dict] = {}
+    dim_reviews: dict[tuple, list] = {}
     for review in reviews:
         subjects = {_ref_key(s) for s in review.get('subjects') or []}
         matched = [e for e in pages if _ref_key(e.get('page') or {}) in subjects]
@@ -139,42 +166,61 @@ def evaluate_current(document: dict, reviews: list[dict], artifacts: dict) -> di
                               'review_id': review.get('review_id'), 'reason': dep_reason or
                               'subjects or dependencies do not match the current outputs'})
                 continue
-            latest[key] = review  # same kind+page: the most recently adopted current review wins
-    for (kind, page_id), review in latest.items():
-        open_must = open_findings(review)
-        remaining = [f['finding_id'] for f in open_must if not closing_review(reviews, review, artifacts)]
-        closed = [f['finding_id'] for f in open_must if f['finding_id'] not in remaining]
-        judgments = [f['finding_id'] for f in pending_judgments(review)]
+            dim_reviews.setdefault(key, []).append(review)  # adoption order
+    for (kind, page_id), reviews_for_dim in dim_reviews.items():
+        key = f'{kind}:{page_id}'
+        open_by_id: dict[str, dict] = {}
+        judgments: list[str] = []
+        for review in reviews_for_dim:
+            for finding in open_findings(review):
+                open_by_id.setdefault(finding['finding_id'], finding)
+            for finding in pending_judgments(review):
+                judgments.append(finding['finding_id'])
+        remaining = [fid for fid, finding in open_by_id.items()
+                     if not any(finding_closed(reviews, owner, finding, artifacts)
+                                for owner in reviews_for_dim)]
+        closed = [fid for fid in open_by_id if fid not in remaining]
+        passing = [review for review in reviews_for_dim if review.get('status') == 'pass']
+        viable = [review for review in passing if _substance_gate(kind, review) is None]
         if remaining:
-            effective = 'fail'
+            effective, reason = 'fail', ''
         elif judgments:
-            effective = 'needs_review'
-        elif closed or review.get('status') == 'pass':
-            effective = 'pass'
+            effective, reason = 'needs_review', ''
+        elif viable:
+            effective, reason = 'pass', ''
+        elif passing:
+            effective, reason = 'not_evaluated', _substance_gate(kind, passing[-1])
+        elif closed:
+            effective, reason = 'needs_review', 'fixes_verified_no_passing_review'
         else:
-            effective = review.get('status') or 'not_evaluated'
-        dimensions[f'{kind}:{page_id}'] = {
-            'review_id': review.get('review_id'),
+            effective, reason = reviews_for_dim[-1].get('status') or 'not_evaluated', ''
+        if reason:
+            dimension_reasons[key] = reason
+        dimensions[key] = {
+            'review_id': reviews_for_dim[-1].get('review_id'),
             'status': effective,
-            'reported_status': review.get('status'),
+            'reported_status': reviews_for_dim[-1].get('status'),
             'stale': False,
             'open_must_fix': remaining,
             'closed_findings': closed,
             'pending_judgments': judgments,
         }
     missing = [f'{kind}:{entry["page_id"]}' for kind in REQUIRED_KINDS for entry in pages
-               if f'{kind}:{entry["page_id"]}' not in dimensions]
+               if f"{kind}:{entry['page_id']}" not in dimensions]
     if suspended_pages:
-        # A suspended Host task blocks only its own scope pages; other current
-        # dimensions stay interpretable.
         for key in list(dimensions):
             if key.rsplit(':', 1)[1] in suspended_pages:
                 del dimensions[key]
+                dimension_reasons.pop(key, None)
                 if key not in missing:
                     missing.append(key)
-    if any(d['status'] == 'fail' or d['open_must_fix'] for d in dimensions.values()):
+    render_failed = facts.get('render_report_status') == 'fail'
+    render_report_findings = facts.get('render_report_findings') or []
+    completeness_gaps = facts.get('completeness') or []
+    render_report_missing = bool(facts.get('render_report_missing'))
+    if render_failed or any(d['status'] == 'fail' or d['open_must_fix'] for d in dimensions.values()):
         status = 'fail'
-    elif missing:
+    elif missing or render_report_missing or completeness_gaps or dimension_reasons:
         status = 'not_evaluated'
     elif any(d['pending_judgments'] for d in dimensions.values()):
         status = 'needs_review'
@@ -183,7 +229,10 @@ def evaluate_current(document: dict, reviews: list[dict], artifacts: dict) -> di
     else:
         status = 'not_evaluated'
     result = {'status': status, 'current_outputs': current, 'dimensions': dimensions,
-              'stale': stale, 'missing_dimensions': sorted(missing)}
+              'stale': stale, 'missing_dimensions': sorted(missing),
+              'output_facts': facts, 'dimension_reasons': dimension_reasons}
+    if render_failed:
+        result['render_report_findings'] = render_report_findings
     if suspended_pages and status == 'not_evaluated':
         result['reason'] = f'host tasks still open for pages {sorted(suspended_pages)}'
     return result

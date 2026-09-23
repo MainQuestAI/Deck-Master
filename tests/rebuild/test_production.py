@@ -177,6 +177,9 @@ from deck_master.production import project_prompt
 from deck_master.store import Store
 
 ENVELOPES_DIR = SPEC / "examples/roundtrips/result-envelope"
+from hostenv import resolve_host_font
+
+FAMILY = resolve_host_font()
 
 ROUNDTRIP_PAGE = {
     "schema_version": "deck_page_package.v2",
@@ -335,7 +338,7 @@ def test_previews_never_become_reference_and_reencode_fails_binding(tmp_path: Pa
     correct_sha = blueprint_artifact["file"]["sha256"]
     svg_ok = (f'<svg viewBox="0 0 320 180" data-blueprint-sha256="{correct_sha}">'
               f'<rect width="320" height="180" fill="#ffffff"/>'
-              f'<text x="20" y="90" font-family="Hiragino Sans GB" font-size="20">设备条件收集前移</text></svg>').encode()
+              f'<text x="20" y="90" font-family="{FAMILY}" font-size="20">设备条件收集前移</text></svg>').encode()
     task = _open_host_task(project, "reconstruct")
     outcome = _accept_reconstruct(project, task, svg_ok)
     assert outcome["status"] == "accepted"
@@ -447,8 +450,8 @@ def test_new_design_mode_and_failed_review_is_preserved(tmp_path: Path) -> None:
     blueprint_sha = store.read_object_json(document["pages"][0]["blueprint"])["file"]["sha256"]
     svg_bytes = (f'<svg viewBox="0 0 320 180" data-blueprint-sha256="{blueprint_sha}">'
                  f'<rect width="320" height="180" fill="#ffffff"/>'
-                 f'<text x="20" y="60" font-family="Hiragino Sans GB" font-size="20">设备条件收集前移</text>'
-                 f'<text x="20" y="120" font-family="Hiragino Sans GB" font-size="14">在现有售后门户嵌入设备条件表单。</text>'
+                 f'<text x="20" y="60" font-family="{FAMILY}" font-size="20">设备条件收集前移</text>'
+                 f'<text x="20" y="120" font-family="{FAMILY}" font-size="14">在现有售后门户嵌入设备条件表单。</text>'
                  f'</svg>').encode()
     task = _open_host_task(project, "reconstruct")
     _accept_reconstruct(project, task, svg_bytes)
@@ -489,4 +492,44 @@ def test_new_design_mode_and_failed_review_is_preserved(tmp_path: Path) -> None:
     assert len(document["reviews"]) == 1 + len(required)
     assert store.read_object_bytes(fail_ref) == fail_bytes
     assert store.read_object_json(fail_ref)["status"] == "fail"
-    assert review_status(store, document) == "pass"
+    # P1-02: the preserved fail keeps its finding open — a plain stack of
+    # passing reviews cannot clear it; only a validated closing review can.
+    assert review_status(store, document) == "fail"
+    from deck_master.pipeline import artifact as pipeline_artifact
+    work = store.staging_dir / "closing-fix"
+    work.mkdir(parents=True, exist_ok=True)
+    fixed_svg = work / "p1-fixed.svg"
+    fixed_svg.write_text('<svg viewBox="0 0 320 180"><rect width="320" height="180"/></svg>')
+    fix_ref = pipeline_artifact(store, fixed_svg, "svg", page_id="p1")
+    document = store.load_document()
+    bumped = tasks_mod.bump_revision(document, {"operation_id": "attach-fix-svg", "kind": "task_update",
+                                                "description": "fixed svg", "read_set": []})
+    bumped["pages"][0]["svg"] = fix_ref
+    store.commit_change(base_revision=document["revision_id"], document=bumped, operation_id="attach-fix-svg")
+    after_fix = store.load_document()
+    closing = {
+        "schema_version": "deck_review.v1",
+        "review_id": "r-fail",
+        "kind": "conversion",
+        "status": "pass",
+        "subjects": subjects + [fix_ref],
+        "dependencies": [{"kind": "content", "identity": "page:p1",
+                          "sha256": after_fix["pages"][0]["page"]["sha256"]}],
+        "reviewer": {"type": "host_self", "id": "host-1", "execution_ref": None,
+                     "independence_confirmed": False},
+        "observations": ["复查新 SVG 产物:正文缺失已修复。"],
+        "findings": [{"finding_id": "f-1", "kind": "conversion", "impact": "must_fix", "page_id": "p1",
+                      "element_refs": ["atom:p1:block:b1:text"], "message": "正文缺失", "expected": "有",
+                      "actual": "无", "evidence": [store.put_blob(b"recheck", ext="png")],
+                      "resolution": "fixed"}],
+        "created_at": "2026-09-23T00:00:00Z",
+        "replaces": fail_ref,
+    }
+    closing_ref = store.put_json_object(closing)
+    document = store.load_document()
+    bumped = tasks_mod.bump_revision(document, {"operation_id": "close-fail-review", "kind": "task_update",
+                                                "description": "closing review", "read_set": []})
+    bumped["reviews"] = list(bumped.get("reviews") or []) + [closing_ref]
+    store.commit_change(base_revision=document["revision_id"], document=bumped, operation_id="close-fail-review")
+    assert store.read_object_bytes(fail_ref) == fail_bytes, "R0 stays immutable history"
+    assert review_status(store, store.load_document()) == "pass"

@@ -148,9 +148,14 @@ def _project_with_passing_reviews(tmp_path):
     from deck_master.pipeline import artifact as adopt_artifact
     document = store.load_document()
     pptx_ref = adopt_artifact(store, compiled.pptx_path, 'pptx')
+    report_file = tmp_path / 'readback-pass.json'
+    report_file.write_text(json.dumps({'status': 'pass', 'findings': [], 'pages': []}, ensure_ascii=False))
     bumped = tasks_mod.bump_revision(document, {'operation_id': 'attach-pptx', 'kind': 'task_update',
                                                 'description': 'outputs', 'read_set': []})
     bumped['outputs']['pptx'] = pptx_ref
+    bumped['outputs']['render_report'] = adopt_artifact(store, report_file, 'render_report')
+    bumped['pages'][0]['svg'] = adopt_artifact(store, svg, 'svg', page_id='p1')
+    bumped['pages'][0]['ppt_preview'] = adopt_artifact(store, svg, 'ppt_preview', page_id='p1')
     store.commit_change(base_revision=document['revision_id'], document=bumped, operation_id='attach-pptx')
     for kind in review_mod.REQUIRED_KINDS:
         task = tasks_mod.new_task(
@@ -185,10 +190,11 @@ def test_load_and_export_share_evaluate_current(tmp_path):
     store = Store(project)
     doc = store.load_document()
     reviews = [{**store.read_object_json(r), 'ref': r} for r in doc['reviews']]
+    from deck_master.editing import _current_artifact_digests, _output_facts
     summary = review_mod.evaluate_current(
-        {**doc, 'tasks': [store.read_object_json(t) for t in doc['tasks']]}, reviews,
-        {f'content:page:p1': doc['pages'][0]['page']['sha256'],
-         'artifact:pptx': store.read_object_json(doc['outputs']['pptx'])['file']['sha256']})
+        {**doc, 'tasks': [store.read_object_json(t) for t in doc['tasks']],
+         '_output_facts': _output_facts(store, doc)}, reviews,
+        _current_artifact_digests(store, doc))
     assert summary['status'] == review_status(store, doc) == 'pass'
     outcome = export_project(project, output_dir=tmp_path / 'delivery', purpose='delivery')
     assert outcome['status'] == 'exported'
@@ -311,7 +317,7 @@ def _r0_failing():
 
 def _r1_closing(r0, *, seed='r1', observations=('复查新产物:标签已存在。',), evidence=(None,)):
     ev = [e if e is not None else ref(f'{seed}-evidence', 'png') for e in evidence]
-    candidate = make_review('content', seed=seed, status='pass',
+    candidate = make_review(r0['kind'], seed=seed, status='pass',
                             subjects=[PAGE_REF, PPTX_REF, A1_REF],
                             findings=[finding('f1', impact='must_fix', resolution='fixed', evidence=ev)],
                             replaces=r0['ref'], observations=list(observations))
@@ -533,3 +539,113 @@ def test_privacy_false_friend_does_not_mask_sensitive_marker_in_same_string():
     findings = review_mod.privacy_findings(page)
     assert findings and all(f['impact'] == 'must_fix' for f in findings), \
         'a sensitive marker in a string that also contains a business word must still report'
+
+
+# ---------------------------------------------------------------------------
+# PR 轮 A (P1-01/02/07): output facts in the one interpretation, finding-level
+# continuation, substance gates, and unified dependency resolution.
+
+
+def _facts_document(facts):
+    return {**make_document(), '_output_facts': facts}
+
+
+def test_render_report_fail_overrides_passing_reviews():
+    facts = {'render_report_status': 'fail',
+             'render_report_findings': [{'page_id': 'p1', 'code': 'missing_visible_atom',
+                                         'atom_id': 'atom:p1:title', 'text': '标题'}],
+             'completeness': []}
+    summary = review_mod.evaluate_current(_facts_document(facts), pass_set(), current_artifacts())
+    assert summary['status'] == 'fail'
+    assert summary['render_report_findings'][0]['code'] == 'missing_visible_atom'
+
+
+def test_missing_render_report_blocks_pass():
+    facts = {'render_report_missing': True, 'completeness': []}
+    summary = review_mod.evaluate_current(_facts_document(facts), pass_set(), current_artifacts())
+    assert summary['status'] == 'not_evaluated'
+    assert summary['output_facts']['render_report_missing'] is True
+
+
+def test_completeness_gap_blocks_pass():
+    facts = {'completeness': [{'page_id': 'p1', 'code': 'missing_svg'}]}
+    summary = review_mod.evaluate_current(_facts_document(facts), pass_set(), current_artifacts())
+    assert summary['status'] == 'not_evaluated'
+    assert summary['output_facts']['completeness'][0]['code'] == 'missing_svg'
+
+
+def test_plain_pass_does_not_clear_open_findings():
+    # R0 fail (F1+F2) then a plain new pass on the same deps: open findings continue.
+    r0 = make_review('content', seed='r0-open', status='fail',
+                     findings=[finding('f1'), finding('f2')])
+    plain_pass = make_review('content', seed='r0-plain', status='pass')
+    summary = review_mod.evaluate_current(make_document(), [r0, plain_pass], current_artifacts())
+    dimension = summary['dimensions']['content:p1']
+    assert dimension['open_must_fix'] == ['f1', 'f2']
+    assert summary['status'] == 'fail'
+
+
+def test_partial_closure_keeps_remaining_findings_open():
+    r0 = make_review('content', seed='r0-partial', status='fail',
+                     findings=[finding('f1'), finding('f2')])
+    r0['ref'] = ref('r0-partial-object')
+    closing = _r1_closing(r0)
+    summary = review_mod.evaluate_current(make_document(), [r0, closing], current_artifacts())
+    dimension = summary['dimensions']['content:p1']
+    assert dimension['closed_findings'] == ['f1'] and dimension['open_must_fix'] == ['f2']
+    assert summary['status'] == 'fail'
+
+
+def test_tool_pass_rejected_for_substantive_kinds():
+    tool_pass = make_review('content', seed='tool-content', status='pass',
+                            reviewer={'type': 'tool', 'id': 'scanner', 'execution_ref': None,
+                                      'independence_confirmed': False})
+    others = [r for r in pass_set() if r['kind'] != 'content']
+    summary = review_mod.evaluate_current(make_document(), [tool_pass] + others, current_artifacts())
+    assert summary['status'] == 'not_evaluated'
+    assert summary['dimension_reasons']['content:p1'] == 'tool_cannot_substance'
+
+
+def test_empty_observations_pass_rejected():
+    silent = make_review('readability', seed='silent', status='pass', observations=[])
+    others = [r for r in pass_set() if r['kind'] != 'readability']
+    summary = review_mod.evaluate_current(make_document(), [silent] + others, current_artifacts())
+    assert summary['status'] == 'not_evaluated'
+    assert summary['dimension_reasons']['readability:p1'] == 'missing_execution_evidence'
+
+
+def test_blueprint_fidelity_tool_pass_rejected():
+    tool_pass = make_review('blueprint_fidelity', seed='tool-bf', status='pass',
+                            reviewer={'type': 'tool', 'id': 'diff', 'execution_ref': None,
+                                      'independence_confirmed': False})
+    others = [r for r in pass_set() if r['kind'] != 'blueprint_fidelity']
+    summary = review_mod.evaluate_current(make_document(), [tool_pass] + others, current_artifacts())
+    assert summary['dimension_reasons']['blueprint_fidelity:p1'] == 'tool_cannot_substance'
+
+
+def test_resolvable_source_dependency_is_current():
+    document = make_document()
+    document['sources'] = [{'source_id': 'src-1', 'name': 'm.txt', 'original_uri': 'm.txt',
+                            'original_sha256': None, 'format': 'txt',
+                            'extract': {'path': '.deckmaster/objects/ab/x.json', 'sha256': 'b' * 64},
+                            'external_use': 'unspecified', 'restriction': '', 'locator_scheme': 'none'}]
+    review = make_review('content', seed='src-dep', status='pass',
+                         dependencies=[{'kind': 'source', 'identity': 'src-1', 'sha256': 'b' * 64}])
+    summary = review_mod.evaluate_current(document, [review], {**current_artifacts(), 'source:src-1': 'b' * 64})
+    assert 'content:p1' in summary['dimensions']
+
+
+def test_unresolvable_source_dependency_is_stale():
+    review = make_review('content', seed='src-miss', status='pass',
+                         dependencies=[{'kind': 'source', 'identity': 'ghost', 'sha256': 'b' * 64}])
+    summary = review_mod.evaluate_current(make_document(), [review], current_artifacts())
+    assert 'content:p1' in summary['missing_dimensions']
+    assert any('unresolvable source' in s['reason'] for s in summary['stale'])
+
+
+def test_missing_artifact_dependency_is_stale_not_skipped():
+    review = make_review('content', seed='art-miss', status='pass',
+                         dependencies=[{'kind': 'artifact', 'identity': 'ppt_preview:p1', 'sha256': 'b' * 64}])
+    summary = review_mod.evaluate_current(make_document(), [review], current_artifacts())
+    assert 'content:p1' in summary['missing_dimensions']
+    assert any('unverifiable' in s['reason'] for s in summary['stale'])
