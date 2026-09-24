@@ -267,6 +267,7 @@ def task_summary(store: Store, document: dict, task: dict) -> dict:
         "task_id": task["task_id"],
         "operation_id": task["operation_id"],
         "kind": task["kind"],
+        "review_stage": task.get("review_stage", "final"),
         "status": task["status"],
         "scope_pages": task.get("scope_pages") or [],
         "instruction": task.get("instruction") or "",
@@ -305,6 +306,36 @@ def task_summary(store: Store, document: dict, task: dict) -> dict:
                 summary['reference_images'].append({'page_id':entry['page_id'],'artifact':entry['blueprint'],'file':original['file'],'dimensions':dimensions,'requirement':'Read this exact immutable image before reconstructing; matching page text alone does not establish visual fidelity.'})
         summary['outputs'] = document['outputs']
         summary['staging_dir'] = str(store.staging_dir / task['operation_id'])
+        if task.get('review_stage') == 'page_visual':
+            from .editing import _current_artifact_digests
+            digests = _current_artifact_digests(store, document)
+            summary['page_visual_requirements'] = []
+            summary['prior_page_visual_findings'] = []
+            for entry in summary['page_entries']:
+                page = store.read_object_json(entry['page'])
+                effective, _ = resolve_design(page, document['design_context'],
+                                              document['design_context'].get('assets') or [])
+                keys = [f"content:page:{entry['page_id']}", f"blueprint:{entry['page_id']}",
+                        f"artifact:svg:{entry['page_id']}", f"style:{entry['page_id']}"]
+                keys += [f'asset:{aid}' for aid in effective.get('allowed_asset_ids') or []]
+                summary['page_visual_requirements'].append({
+                    'page_id': entry['page_id'],
+                    'subject_refs': [entry[slot] for slot in ('page', 'blueprint', 'svg', 'svg_preview')],
+                    'dependencies': [{'kind': key.split(':', 1)[0],
+                                      'identity': key.split(':', 1)[1], 'sha256': digests[key]}
+                                     for key in keys],
+                    'review_kinds': ['blueprint_content', 'blueprint_fidelity', 'readability'],
+                })
+                for ref in document.get('reviews') or []:
+                    prior = store.read_object_json(ref)
+                    if prior.get('review_stage') != 'page_visual' or not prior.get('findings'):
+                        continue
+                    if any(dep.get('kind') == 'content' and dep.get('identity') == f"page:{entry['page_id']}"
+                           for dep in prior.get('dependencies') or []):
+                        summary['prior_page_visual_findings'].append({
+                            'review_ref': ref, 'review_id': prior['review_id'],
+                            'kind': prior['kind'], 'findings': prior['findings'],
+                        })
     if task.get("kind") == "blueprint":
         for ref in task.get("inputs") or []:
             try:
@@ -444,9 +475,15 @@ def _continue_project(project_dir: Path | str) -> dict:
             pending_tasks=pending,
             next_action="submit_host_results",
         )
-    # Finish each page through SVG before starting the next image call. This
-    # exposes a real reconstruction result early without treating a single
-    # page as the completed Deck (the PPT is compiled only after all pages).
+    # A completed old run already has a current final review. In-progress old
+    # runs and all new runs complete each page's preview/review before moving on.
+    from .editing import review_status, page_visual_summary
+    already_final = bool(document['outputs'].get('pptx')) and review_status(store, document) == 'pass'
+    existing_report_failed = False
+    if document['outputs'].get('render_report'):
+        import json
+        report = store.read_object_json(document['outputs']['render_report'])
+        existing_report_failed = json.loads(store.read_object_bytes(report['file'])).get('status') == 'fail'
     for entry in document.get("pages") or []:
         if entry.get("page") and not entry.get("blueprint"):
             task = open_blueprint_task(store, document, entry)
@@ -459,6 +496,50 @@ def _continue_project(project_dir: Path | str) -> dict:
             document = store.load_document()
             return _response(status='awaiting_host', document=document, requested_action='continue',
                              pending_tasks=[task_summary(store, document, task)], next_action='codex_reconstruct_svg')
+        if already_final or existing_report_failed:
+            continue
+        if not entry.get('svg_preview'):
+            from .pipeline import preview_svg_page, NeedsTool
+            try:
+                preview_svg_page(project_dir, entry['page_id'])
+            except NeedsTool as exc:
+                return _response(status='needs_tool', document=document, requested_action='continue',
+                                 findings=[str(exc)], next_action='configure_reported_tool')
+            document = store.load_document()
+            entry = next(e for e in document['pages'] if e['page_id'] == entry['page_id'])
+        page_check = page_visual_summary(store, document, entry)
+        if page_check['status'] == 'pass':
+            continue
+        if page_check['status'] in ('fail', 'needs_review') and (
+                page_check['open_must_fix'] or page_check['unclosed_prior_findings']):
+            def candidate_sha(ref):
+                obj = store.read_object_json(ref)
+                return obj['file']['sha256'] if obj.get('schema_version') == 'deck_artifact.v1' else ref['sha256']
+            for ref in document.get('tasks') or []:
+                prior = store.read_object_json(ref)
+                if (prior.get('kind') != 'repair' or prior.get('review_stage') != 'page_visual'
+                        or prior.get('scope_pages') != [entry['page_id']]
+                        or prior.get('status') != 'completed'):
+                    continue
+                prior_hashes = {candidate_sha(item) for item in prior.get('inputs') or []}
+                if candidate_sha(entry['page']) in prior_hashes and candidate_sha(entry['svg']) in prior_hashes:
+                    return _response(status='needs_input', document=document, requested_action='continue',
+                                     findings=[page_check], next_action='repair_no_progress')
+        if page_check['status'] == 'fail':
+            task = open_host_task(store, kind='repair', page_ids=[entry['page_id']],
+                                  review_stage='page_visual',
+                                  instruction='本页逐页审图有 must_fix：对照 Page、原始蓝图、当前 SVG 与预览，只返修本页 Page/SVG；保留旧产物及具体发现。')
+            document = store.load_document()
+            return _response(status='awaiting_host', document=document, requested_action='continue',
+                             pending_tasks=[task_summary(store, document, task)],
+                             findings=[page_check], next_action='repair_page_visual')
+        task = open_host_task(store, kind='review', page_ids=[entry['page_id']],
+                              review_stage='page_visual',
+                              instruction='实际打开本页 Page、原始蓝图、SVG 预览，核对正文、数字、模块、图标语义、连线方向和遮挡；提交 blueprint_content、blueprint_fidelity、readability 三类记录。旧 must_fix 需用 replaces、同一 finding_id、新产物与实际复核证据关闭。不得把原图文字当事实源。')
+        document = store.load_document()
+        return _response(status='awaiting_host', document=document, requested_action='continue',
+                         pending_tasks=[task_summary(store, document, task)],
+                         findings=[page_check], next_action='codex_review_page_visual')
     if not document['outputs'].get('pptx'):
         from .pipeline import produce, NeedsTool
         try:
@@ -523,7 +604,8 @@ def _continue_project(project_dir: Path | str) -> dict:
 
 
 @tasks_mod._project_transaction
-def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, page_hash=None):
+def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, page_hash=None,
+                   review_stage=None):
     document = store.load_document()
     if base_revision is not None and base_revision != document['revision_id']:
         from .store import ConflictError
@@ -533,20 +615,23 @@ def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, pa
         raise ConflictError('page_hash', 'feedback page changed')
     if kind not in ('reconstruct', 'repair', 'review'):
         raise ServiceError('kind', 'unsupported local host task')
+    if review_stage is not None and (review_stage not in ('page_visual', 'final') or kind not in ('repair', 'review')):
+        raise ServiceError('review_stage', 'only review or repair supports page_visual/final')
     if not isinstance(instruction, str) or not instruction.strip():
         raise ServiceError('instruction', 'must not be empty')
     if not page_ids or len(set(page_ids)) != len(page_ids) or not set(page_ids) <= {e['page_id'] for e in document['pages']}:
         raise ServiceError('scope_pages', 'must name existing distinct pages')
     for ref in document['tasks']:
         task = store.read_object_json(ref)
-        if task['kind'] == kind and task['scope_pages'] == page_ids and task['instruction'] == instruction and task['status'] in ('awaiting_host','running'):
+        if task['kind'] == kind and task['scope_pages'] == page_ids and task['instruction'] == instruction and task.get('review_stage', 'final') == (review_stage or 'final') and task['status'] in ('awaiting_host','running'):
             return task
     entries = [e for e in document['pages'] if e['page_id'] in page_ids]
     inputs = [ref for e in entries for slot,ref in e.items() if slot != 'page_id' and ref]
     inputs += [ref for ref in document['outputs'].values() if ref]
     task = tasks_mod.new_task(task_id=uuid.uuid4().hex[:12],operation_id=_new_operation_id(kind),kind=kind,
         scope_pages=page_ids,instruction=instruction,inputs=inputs,dependencies=[{'kind':'content','identity':e['page_id'],'sha256':e['page']['sha256']} for e in entries],
-        dispatch_revision=document['revision_id'],produced_against=content_identity(document))
+        dispatch_revision=document['revision_id'],produced_against=content_identity(document),
+        review_stage=review_stage)
     updated=bump_revision(document,{'operation_id':_new_operation_id('dispatch'),'kind':'task_update','description':instruction,'read_set':[]})
     updated['tasks'].append(store.put_json_object(task))
     store._commit_locked(base_revision=document['revision_id'],document=updated,operation_id=updated['change']['operation_id'],blobs=[])

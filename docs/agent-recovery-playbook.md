@@ -39,6 +39,11 @@ current unchanged.
 
 - Detect by: `final-readiness` reports `review_status != "pass"`, or
   `export --purpose delivery` refuses with the unresolved dimensions list.
+- A `continue` result with `next_action == "repair_page_visual"` addresses only
+  the current page. Rebuild that Page/SVG, regenerate its preview, and submit a
+  new page review with evidence closing the original finding. If it returns
+  `repair_no_progress`, inspect the unchanged Page/SVG and the named finding
+  before retrying. An unreviewed current page cannot dispatch the next page.
 - Auto action: fix the named Page/SVG layer, then re-run the affected checks.
   Read findings from `deck-master view --project <dir>` (findings carry
   page/element addressing).

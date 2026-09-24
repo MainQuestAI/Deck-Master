@@ -194,8 +194,9 @@ def _parse_svg(data: bytes, *, page_id: str, assets: dict[str, str] | None = Non
                 if runs and not any(k in child.attrib for k in ('x','y','dy')):
                     raise SvgError(f'{page_id}/{identity}: inline tspan requires explicit x position')
                 c={**attrs,**child.attrib}
-                c['x']=c.get('x',cursor.get('x','0'))
-                c['y']=str(finite(c.get('y',cursor.get('y','0')),'y')+finite(c.get('dy','0'),'dy'))
+                c['x']=child.attrib.get('x',cursor.get('x','0'))
+                baseline=child.attrib.get('y',cursor.get('y','0'))
+                c['y']=str(finite(baseline,'y')+finite(child.attrib.get('dy','0'),'dy'))
                 if 'dx' in c: c['x']=str(finite(c['x'],'x')+finite(c['dx'],'dx'))
                 runs.append((child.text or '',c));cursor=c
                 if child.tail and child.tail.strip(): raise SvgError(f'{page_id}/{identity}: trailing inline text unsupported')

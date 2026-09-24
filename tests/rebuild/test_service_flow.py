@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 import deck_master.service as service
+from page_visual_helpers import pass_page_review
 
 
 def _write_brief(tmp_path: Path) -> tuple[Path, Path]:
@@ -212,6 +213,9 @@ def _drive_blueprints(project, store):
                                         produced_against=task["produced_against"], result_payload=envelope)
         assert outcome["status"] == "accepted"
         _drive_reconstructs(project, store, missing["page_id"])
+        visual_task = service.continue_project(project)["pending_tasks"][0]
+        assert visual_task['review_stage'] == 'page_visual'
+        assert pass_page_review(project, visual_task)['status'] == 'accepted'
 
 
 def _drive_reconstructs(project, store, page_id):
@@ -561,6 +565,9 @@ def test_reconstruct_after_style_change_uses_new_effective_style(tmp_path):
             break
         response = service.continue_project(project)
         task = response["pending_tasks"][0]
+        if task['kind'] == 'review' and task.get('review_stage') == 'page_visual':
+            pass_page_review(project, task)
+            continue
         assert task["kind"] == "reconstruct"
         blueprint_sha = store.read_object_json(missing["blueprint"])["file"]["sha256"]
         page = store.read_object_json(missing["page"])
@@ -576,6 +583,9 @@ def test_reconstruct_after_style_change_uses_new_effective_style(tmp_path):
                                                       "provenance": {"source_type": "unknown",
                                                                      "tool": "host-reconstruct",
                                                                      "invocation_ref": None}}]})
+        visual_task = service.continue_project(project)['pending_tasks'][0]
+        assert visual_task['review_stage'] == 'page_visual'
+        pass_page_review(project, visual_task)
     # p2/p3 kept their (textless fixture) SVGs through the style change; give
     # them real text SVGs directly (they were never invalidated).
     from deck_master.models import bump_revision as _bump

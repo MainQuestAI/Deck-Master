@@ -1,8 +1,17 @@
 # 审阅与返修(reference)
 
-统一解释在 `src/deck_master/review.py` 的 `evaluate_current(document, reviews,
-artifacts)`:接收(submit)、读取(load/`editing.review_status`)、UI 与导出
-(`editing.export_project`)共用这一份判定,不各写否决 if。
+最终六维解释在 `src/deck_master/review.py` 的 `evaluate_current(document, reviews,
+artifacts)`；逐页解释在 `evaluate_page_visual(entry, reviews, artifacts)`。接收、
+`continue`、读取、UI 与导出按相同记录和当前依赖判定，不把逐页通过当作最终通过。
+
+- `review_stage=page_visual`：SVG 接收后的当前页预览生成后执行。Host 实际查看
+  Page、原图和 SVG 预览，提交 `blueprint_content`、`blueprint_fidelity`、
+  `readability` 三类记录；subjects 必须包括这四个当前对象，dependencies
+  必须包括当前 Page、蓝图、SVG、设计样式与批准资产。缺项不能派发下一页；
+  `must_fix` 只返修本页，然后重审。重复提交同一 Page/SVG 而未关闭发现时停止循环。
+- `review_stage=final`：整套真实 PPT 渲染、文件读回后执行下列六维审阅。
+  旧记录无 `review_stage` 时解释为 final；逐页记录不能补足 conversion、privacy
+  或最终 readability 等维度。
 
 - status(07.2):有 open `must_fix` → `fail`;必需维度(content /
   blueprint_content / blueprint_fidelity / conversion / readability /

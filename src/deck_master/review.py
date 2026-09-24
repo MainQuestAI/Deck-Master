@@ -107,6 +107,63 @@ def pending_judgments(review: dict) -> list[dict]:
             if f.get('impact') == 'needs_judgment' and f.get('resolution') == 'open']
 
 
+PAGE_VISUAL_KINDS = ('blueprint_content', 'blueprint_fidelity', 'readability')
+
+
+def evaluate_page_visual(entry: dict, reviews: list[dict], artifacts: dict,
+                         allowed_asset_ids=()) -> dict:
+    """Evaluate a current page's pre-compile image/SVG review independently of PPT review."""
+    page_id = entry['page_id']
+    required_subjects = {_ref_key(entry[slot]) for slot in ('page', 'blueprint', 'svg', 'svg_preview')}
+    required_dependencies = {f'content:page:{page_id}', f'blueprint:{page_id}',
+                             f'artifact:svg:{page_id}', f'style:{page_id}'}
+    required_dependencies.update(f'asset:{asset_id}' for asset_id in allowed_asset_ids)
+    current = {}
+    for review in reviews:
+        if review.get('review_stage') != 'page_visual' or review.get('kind') not in PAGE_VISUAL_KINDS:
+            continue
+        subjects = {_ref_key(ref) for ref in review.get('subjects') or []}
+        if not required_subjects <= subjects:
+            continue
+        deps = {_dependency_key(dep): dep['sha256'] for dep in review.get('dependencies') or []}
+        if not required_dependencies <= deps.keys() or any(artifacts.get(key) != sha for key, sha in deps.items()):
+            continue
+        current.setdefault(review['kind'], []).append(review)
+    missing = [kind for kind in PAGE_VISUAL_KINDS if kind not in current]
+    open_findings_by_kind = {}
+    judgments = []
+    for kind, records in current.items():
+        for owner in records:
+            for finding in open_findings(owner):
+                if not finding_closed(reviews, owner, finding, artifacts):
+                    open_findings_by_kind.setdefault(kind, []).append(finding['finding_id'])
+            judgments.extend(f['finding_id'] for f in pending_judgments(owner))
+    unclosed_prior = []
+    for owner in reviews:
+        if owner.get('review_stage') != 'page_visual':
+            continue
+        if not any(_dependency_key(dep) == f'content:page:{page_id}'
+                   for dep in owner.get('dependencies') or []):
+            continue
+        for finding in open_findings(owner):
+            if not finding_closed(reviews, owner, finding, artifacts):
+                unclosed_prior.append(finding['finding_id'])
+    if open_findings_by_kind:
+        status = 'fail'
+    elif judgments or unclosed_prior:
+        status = 'needs_review'
+    elif missing:
+        status = 'not_evaluated'
+    elif all(any(r.get('status') == 'pass' and _substance_gate(kind, r) is None
+                 for r in current[kind]) for kind in PAGE_VISUAL_KINDS):
+        status = 'pass'
+    else:
+        status = 'not_evaluated'
+    return {'status': status, 'page_id': page_id, 'missing_dimensions': missing,
+            'open_must_fix': open_findings_by_kind, 'pending_judgments': judgments,
+            'unclosed_prior_findings': unclosed_prior}
+
+
 _TRACKED_DEPENDENCY_PREFIXES = ('content:', 'artifact:', 'blueprint:', 'svg:', 'style:', 'asset:')
 
 
@@ -154,6 +211,8 @@ def evaluate_current(document: dict, reviews: list[dict], artifacts: dict) -> di
     stale: list[dict] = []
     dim_reviews: dict[tuple, list] = {}
     for review in reviews:
+        if review.get('review_stage', 'final') != 'final':
+            continue
         subjects = {_ref_key(s) for s in review.get('subjects') or []}
         matched = [e for e in pages if _ref_key(e.get('page') or {}) in subjects]
         if not matched:

@@ -28,6 +28,13 @@ decision that affects this task.
 | Diagnose toolchain | `deck-master doctor --step compose\|blueprint\|compile\|render\|view\|export` | `needs_tool` carries the real reason |
 | History / restore | `deck-master history list\|restore --project <dir>` | Restore creates a new revision; call facts are never rolled back |
 
+`continue` now completes the current page's SVG compiler check, preview, and
+`review_stage=page_visual` review before dispatching the next page. The page
+review covers `blueprint_content`, `blueprint_fidelity`, and `readability`.
+After all pages pass, `continue` compiles the full PPT and dispatches the
+six-dimension `review_stage=final` review. Old reviews without this field are
+final reviews.
+
 ## Old Runs And Old Commands
 
 - A legacy run directory (`preview_manifest.json` / `run.json` markers, no

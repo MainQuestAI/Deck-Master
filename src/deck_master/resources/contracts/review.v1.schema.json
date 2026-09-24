@@ -23,6 +23,9 @@
         "desktop_editing"
       ]
     },
+    "review_stage": {
+      "enum": ["page_visual", "final"]
+    },
     "status": {
       "enum": [
         "pass",

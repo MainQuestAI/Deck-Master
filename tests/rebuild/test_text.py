@@ -160,6 +160,29 @@ def test_multiline_chinese_tspans_preserve_layout_in_slide_xml(tmp_path):
         assert align is not None and align.get('algn') == 'ctr'
 
 
+def test_repeated_tspan_dy_uses_previous_baseline_in_real_ppt(tmp_path):
+    regular, bold = resolve_fonts()
+    fonts = {FAMILY: regular, f'{FAMILY}:bold': bold}
+    root, _ = compile_slide(tmp_path, f'''
+      <g transform="translate(5 7)">
+        <text id="lines" x="80" y="610" font-family="{FAMILY}" font-size="20" font-weight="800">
+          <tspan x="80" dy="0">第一行</tspan>
+          <tspan x="80" dy="29">第二行</tspan>
+          <tspan x="80" dy="29">第三行</tspan>
+          <tspan x="80" y="700" dy="-5">重设基线</tspan>
+          <tspan x="80" dy="0">同一基线</tspan>
+        </text>
+      </g>
+    ''', fonts)
+    runs = [text_shape(root, f'lines:{i}') for i in range(5)]
+    positions = [int(sp.find('p:spPr/a:xfrm/a:off', NS).get('y')) for sp in runs]
+    assert positions == [round((y + 7 - 20 * 0.88) * 9525) for y in (610, 639, 668, 695, 695)]
+    assert [t.text for sp in runs for t in sp.iter('{%s}t' % NS['a'])] == [
+        '第一行', '第二行', '第三行', '重设基线', '同一基线',
+    ]
+    assert all(run_props(sp).get('b') == '1' for sp in runs)
+
+
 def test_rotated_text_stays_at_ir_anchor_in_slide_xml(tmp_path):
     # Rotation is applied once (sh.rotation); the box stays centred on the IR
     # anchor instead of being pre-rotated and rotated again.

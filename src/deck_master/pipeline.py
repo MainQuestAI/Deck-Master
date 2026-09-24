@@ -50,6 +50,22 @@ def artifact(store,path,role,*,page_id=None,dependencies=(),derived_from=()):
     validate_artifact_semantics(obj)
     return store.put_json_object(obj)
 
+
+def page_asset_paths(store, document, entry, work, *, page=None):
+    """Materialize exactly the assets the current Page permits for SVG parsing."""
+    page = page or store.read_object_json(entry['page'])
+    effective, _ = resolve_design(page, document['design_context'],
+                                  document['design_context'].get('assets', []))
+    mapping = {}
+    for asset in effective['assets']:
+        resource = store.read_object_json(asset['artifact'])
+        if resource['media_type'] not in ('image/png', 'image/jpeg'):
+            continue
+        raster = Path(work) / (asset['asset_id'] + Path(resource['file']['path']).suffix)
+        raster.write_bytes(store.read_object_bytes(resource['file']))
+        mapping[asset['asset_id']] = str(raster)
+    return mapping
+
 def render_deck(pptx_path, output_dir, *, fonts):
     output_dir=Path(output_dir);output_dir.mkdir(parents=True,exist_ok=True)
     # resolve_fonts already verified these fonts using the host's Fontconfig.
@@ -61,6 +77,44 @@ def render_deck(pptx_path, output_dir, *, fonts):
     if not pdf.is_file():raise RuntimeError('renderer did not produce a PDF')
     run([executable('pdftoppm'),'-r','120','-png',str(pdf),str(output_dir/'page')])
     return sorted(output_dir.glob('page-*.png'),key=lambda p:int(p.stem.split('-')[-1]))
+
+
+def preview_svg_page(project_dir, page_id):
+    """Render and atomically attach one current SVG preview before the next page."""
+    store = Store(project_dir)
+    doc = store.load_document()
+    entry = next(e for e in doc['pages'] if e['page_id'] == page_id)
+    if entry.get('svg_preview'):
+        return entry['svg_preview']
+    svg_artifact = store.read_object_json(entry['svg'])
+    data = store.read_object_bytes(svg_artifact['file'])
+    with tempfile.TemporaryDirectory(prefix='page-preview-', dir=store.staging_dir) as temporary:
+        work = Path(temporary)
+        mapping = page_asset_paths(store, doc, entry, work)
+        parsed = parse_svg(data, page_id=page_id, assets=mapping)
+        resolve_fonts([parsed])
+        tree = ET.fromstring(data)
+        for node in tree.iter():
+            if node.tag.rsplit('}', 1)[-1] == 'image':
+                key = 'href' if node.get('href') is not None else '{http://www.w3.org/1999/xlink}href'
+                node.set(key, Path(mapping[node.get(key)]).as_uri())
+        preview_input = work / 'page.svg'
+        preview_input.write_bytes(ET.tostring(tree))
+        preview_path = work / 'preview.png'
+        run([executable('rsvg-convert'), str(preview_input), '-o', str(preview_path)])
+        preview_ref = artifact(store, preview_path, 'svg_preview', page_id=page_id,
+                               dependencies=[{'kind': 'svg', 'identity': page_id,
+                                              'sha256': entry['svg']['sha256']}],
+                               derived_from=[entry['svg']])
+        updated = bump_revision(doc, {'operation_id': 'preview-' + uuid.uuid4().hex,
+                                     'kind': 'artifact_adoption',
+                                     'description': f'render SVG preview for {page_id}',
+                                     'read_set': []})
+        next_entry = next(e for e in updated['pages'] if e['page_id'] == page_id)
+        next_entry['svg_preview'] = preview_ref
+        store.commit_change(base_revision=doc['revision_id'], document=updated,
+                            operation_id=updated['change']['operation_id'])
+        return preview_ref
 
 def readback(pptx_path,pages,expected_pages):
     ns={'a':'http://schemas.openxmlformats.org/drawingml/2006/main','p':'http://schemas.openxmlformats.org/presentationml/2006/main'}
@@ -221,13 +275,7 @@ def produce(project_dir):
         for index,entry in enumerate(doc['pages']):
             obj=store.read_object_json(entry['svg']);data=store.read_object_bytes(obj['file'])
             page=store.read_object_json(entry['page'])
-            effective,_=resolve_design(page,doc['design_context'],doc['design_context'].get('assets',[]))
-            mapping={}
-            for asset in effective['assets']:
-                resource=store.read_object_json(asset['artifact'])
-                if resource['media_type'] not in ('image/png','image/jpeg'):continue
-                raster=work/(asset['asset_id']+Path(resource['file']['path']).suffix)
-                raster.write_bytes(store.read_object_bytes(resource['file']));mapping[asset['asset_id']]=str(raster)
+            mapping=page_asset_paths(store,doc,entry,work)
             approved[entry['page_id']]=mapping
             path=work/f'page-{index+1}.svg';path.write_bytes(data)
             inputs.append(SvgInput(entry['page_id'],path));parsed.append(parse_svg(data,page_id=entry['page_id'],assets=mapping))
@@ -249,7 +297,8 @@ def produce(project_dir):
         new=bump_revision(doc,{'operation_id':'production-'+uuid.uuid4().hex,'kind':'artifact_adoption','description':'native compile, dual rendering and actual PPT readback','read_set':[]})
         for i,entry in enumerate(new['pages']):
             preview=work/f'svg-{i+1}.png';run([executable('rsvg-convert'),str(preview_inputs[i]),'-o',str(preview)])
-            entry['svg_preview']=artifact(store,preview,'svg_preview',page_id=entry['page_id'],dependencies=deps,derived_from=[entry['svg']])
+            if not entry.get('svg_preview'):
+                entry['svg_preview']=artifact(store,preview,'svg_preview',page_id=entry['page_id'],dependencies=deps,derived_from=[entry['svg']])
             entry['ppt_preview']=artifact(store,renders[i],'ppt_preview',page_id=entry['page_id'],dependencies=deps,derived_from=[entry['svg']])
         for i, ref in enumerate(new['tasks']):
             task = store.read_object_json(ref)

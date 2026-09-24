@@ -17,6 +17,10 @@ def _current_artifact_digests(store, doc):
     from .production import resolve_design
     design = doc.get('design_context') or {}
     artifacts = {}
+    for asset in design.get('assets') or []:
+        ref = asset.get('artifact')
+        if ref:
+            artifacts[f"asset:{asset['asset_id']}"] = store.read_object_json(ref)['file']['sha256']
     for entry in doc.get('pages') or []:
         page_id = entry['page_id']
         page = store.read_object_json(entry['page']) if entry.get('page') else {}
@@ -96,6 +100,17 @@ def check_summary(store, doc):
 def review_status(store, doc):
     """Load-side verdict; the single interpretation lives in review.evaluate_current."""
     return check_summary(store, doc)['status']
+
+
+def page_visual_summary(store, doc, entry):
+    from .review import evaluate_page_visual
+    from .production import resolve_design
+    page = store.read_object_json(entry['page'])
+    effective, _ = resolve_design(page, doc['design_context'],
+                                  doc['design_context'].get('assets') or [])
+    reviews = [{**store.read_object_json(ref), 'ref': ref} for ref in doc.get('reviews') or []]
+    return evaluate_page_visual(entry, reviews, _current_artifact_digests(store, doc),
+                                effective.get('allowed_asset_ids') or [])
 
 
 def _professional_evidence(store, doc):

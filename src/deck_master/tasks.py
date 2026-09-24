@@ -247,7 +247,8 @@ def task_inputs_current(store, document, task):
         return False
     before = {e['page_id']: e for e in dispatched['pages']}
     after = {e['page_id']: e for e in document['pages']}
-    slots = ('page','blueprint','svg') if task['kind'] in ('reconstruct','repair','review') else ('page',)
+    slots = ('page','blueprint','svg','svg_preview') if task.get('review_stage') == 'page_visual' else (
+        ('page','blueprint','svg') if task['kind'] in ('reconstruct','repair','review') else ('page',))
     for pid in task['scope_pages']:
         if pid not in before or pid not in after or any(before[pid].get(k) != after[pid].get(k) for k in slots):
             return False
@@ -268,6 +269,23 @@ def _validate_svg_reference(data, expected_sha):
     claimed=root.get('data-blueprint-sha256')
     if claimed is not None and claimed != expected_sha:
         raise EnvelopeError('svg/data-blueprint-sha256','SVG was reconstructed against a different original image')
+
+
+def _preflight_svg(store, document, entry, data, *, page=None):
+    """Use the production parser and the current Page's approved assets before adoption."""
+    import tempfile
+    from .compiler.svg import parse_svg, SvgError
+    from .pipeline import page_asset_paths
+    with tempfile.TemporaryDirectory(prefix='svg-preflight-', dir=store.staging_dir) as temporary:
+        mapping = page_asset_paths(store, document, entry, temporary, page=page)
+        try:
+            parse_svg(data, page_id=entry['page_id'], assets=mapping)
+        except SvgError as exc:
+            diagnostic = exc.diagnostic
+            raise EnvelopeError(
+                f"svg/{diagnostic['page_id']}/{diagnostic['element_id'] or 'root'}",
+                f"{diagnostic['detail']}; {diagnostic['recovery']}",
+            ) from exc
 
 
 def _build_artifact(
@@ -493,6 +511,7 @@ def new_task(
     cost_class: str = "host_reasoning",
     call_allowances: list[dict] | None = None,
     status: str = "awaiting_host",
+    review_stage: str | None = None,
 ) -> dict:
     """Build a minimal valid Task v1 (05 chapter wires dispatch)."""
     task = {
@@ -516,6 +535,8 @@ def new_task(
         "usage": {"source": "not_reported", "external_calls": None},
         "call_allowances": call_allowances or [],
     }
+    if review_stage is not None:
+        task['review_stage'] = review_stage
     validate_task_semantics(task)
     return task
 
@@ -648,6 +669,31 @@ def accept_result(
                             operation_id=f"settle-{operation_id}")
         document = store.load_document()
     _check_scope(envelope["kind"], envelope, task)
+    stage = task.get('review_stage', 'final')
+    for review in envelope.get('reviews') or []:
+        if review.get('review_stage', 'final') != stage:
+            raise EnvelopeError('review/review_stage', 'review stage does not match the dispatched task')
+    if stage == 'page_visual' and envelope['kind'] == 'review':
+        required = {'blueprint_content', 'blueprint_fidelity', 'readability'}
+        reviews_by_kind = {item.get('kind'): item for item in envelope.get('reviews') or []}
+        if set(reviews_by_kind) != required or len(envelope.get('reviews') or []) != len(required):
+            raise EnvelopeError('review/kind', 'page_visual requires exactly blueprint_content, blueprint_fidelity and readability')
+        entry = next(e for e in document['pages'] if e['page_id'] == task['scope_pages'][0])
+        subjects = {(ref['path'], ref['sha256']) for ref in (entry['page'], entry['blueprint'], entry['svg'], entry['svg_preview'])}
+        from .editing import _current_artifact_digests
+        from .production import resolve_design
+        page = store.read_object_json(entry['page'])
+        effective, _ = resolve_design(page, document['design_context'], document['design_context'].get('assets') or [])
+        digests = _current_artifact_digests(store, document)
+        required_deps = {f"content:page:{entry['page_id']}", f"blueprint:{entry['page_id']}",
+                         f"artifact:svg:{entry['page_id']}", f"style:{entry['page_id']}"}
+        required_deps.update(f'asset:{asset_id}' for asset_id in effective.get('allowed_asset_ids') or [])
+        for item in reviews_by_kind.values():
+            if not subjects <= {(ref['path'], ref['sha256']) for ref in item.get('subjects') or []}:
+                raise EnvelopeError('review/subjects', 'page_visual review must reference current Page, blueprint, SVG and SVG preview')
+            deps = {f"{dep['kind']}:{dep['identity']}": dep['sha256'] for dep in item.get('dependencies') or []}
+            if not required_deps <= deps.keys() or any(digests.get(key) != sha for key, sha in deps.items()):
+                raise EnvelopeError('review/dependencies', 'page_visual review must bind current Page, blueprint, SVG, style and allowed assets')
 
     # Prevalidate everything before any adoption.
     adopted_pages = []
@@ -660,9 +706,13 @@ def accept_result(
     for spec in envelope.get("artifact_specs") or []:
         if spec.get('role') == 'svg':
             entry=next((e for e in document['pages'] if e['page_id']==spec.get('page_id')),None)
-            if entry and entry['blueprint']:
-                original=store.read_object_json(entry['blueprint'])
-                _validate_svg_reference(staged[spec['file_id']]['bytes'],original['file']['sha256'])
+            if entry:
+                data = staged[spec['file_id']]['bytes']
+                if entry['blueprint']:
+                    original=store.read_object_json(entry['blueprint'])
+                    _validate_svg_reference(data,original['file']['sha256'])
+                _preflight_svg(store, document, entry, data,
+                               page=next((p for p in adopted_pages if p['page_id'] == entry['page_id']), None))
         artifacts.append(_build_artifact(store, spec, staged, existing_page_ids))
     reviews = []
     for review in envelope.get("reviews") or []:
