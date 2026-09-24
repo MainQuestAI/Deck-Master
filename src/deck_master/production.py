@@ -128,7 +128,9 @@ def project_prompt(
         "Style/medium: precise enterprise presentation design; clear hierarchy; production-ready reference image\n"
         "Composition/framing: use the supplied canvas, layout intent and node relationships; keep all content inside safe margins\n"
         "Text: render the supplied customer-visible text verbatim and legibly\n"
-        "Constraints: do not add claims; do not omit modules; connect arrows to their actual nodes; "
+        "Constraints: do not add claims or invent numeric values, dates, customer data, or outcomes. "
+        "If a chart needs data absent from the input, use an unlabeled schematic marked 示意数据, "
+        "without plausible-looking values. Do not omit modules; connect arrows to their actual nodes; "
         "use only permitted assets; no watermark; no internal notes\n"
         "Structured input:\n" + payload
     )

@@ -18,6 +18,7 @@ decision that affects this task.
 | Complete draft at hand | `deck-master import-draft --project <dir> --input draft.json` (or `create --draft …`) | Page v2 shape; unknown fields raise, never drop |
 | Continue / next Host batch | `deck-master continue --project <dir>` | Returns stable `pending_tasks`; exit 3 = awaiting host/tool, not failure |
 | Submit Host results | `deck-master task accept --project … --task-id … --operation-id … --produced-against … --result result.json` | Envelope shape: `docs/specs/deck-master-rebuild-v1/examples/roundtrips/result-envelope/README.md` |
+| Retry a settled external call | `deck-master task call allocate --project … --task-id … --count 1` | Allocates a new allowance under the project policy; retain the earlier call outcome and evidence |
 | Read-only status | `deck-master view --project <dir>` or `deck-master next-step --project <dir>` | Same `deck_view.v1` projection everywhere |
 | Delivery readiness | `deck-master final-readiness --project <dir>` | Readiness is a report, not an export |
 | Review workbench | `deck-master view --open --project <dir>` | One loopback service per project; reuse is automatic |

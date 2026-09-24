@@ -37,10 +37,11 @@ def _current_artifact_digests(store, doc):
                                      ('ppt_preview', 'artifact', f'ppt_preview:{page_id}')):
             ref = entry.get(slot)
             if ref:
-                artifacts[identity] = store.read_object_json(ref)['file']['sha256']
+                dependency_key = f'{kind}:{identity}' if kind == 'artifact' else identity
+                artifacts[dependency_key] = store.read_object_json(ref)['file']['sha256']
                 # object-ref sha too, so closing-review subjects (which cite
                 # the artifact object) can be freshness/currentness-checked
-                artifacts[f'{identity}:ref'] = ref['sha256']
+                artifacts[f'{dependency_key}:ref'] = ref['sha256']
     outputs = doc.get('outputs') or {}
     if outputs.get('pptx'):
         try:

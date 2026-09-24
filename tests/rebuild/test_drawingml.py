@@ -115,3 +115,17 @@ def test_out_of_subset_input_fails_explicitly_at_compile(tmp_path, body):
     # located SvgError instead of being silently dropped at compile time.
     with pytest.raises(SvgError):
         compile_sample(tmp_path, body, name='out-of-subset')
+
+
+def test_corner_to_corner_gradient_compiles_to_native_linear_fill(tmp_path):
+    result = compile_sample(tmp_path, '''
+    <defs><linearGradient id="diagonal" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#eff7ff"/>
+      <stop offset="1" stop-color="#f8fbff"/>
+    </linearGradient></defs>
+    <rect id="diagonal-card" x="10" y="10" width="80" height="60" fill="url(#diagonal)"/>
+    ''', name='corner-gradient')
+    root = slide_root(result)
+    grad = named_shape(root, 'diagonal-card').find('p:spPr/a:gradFill', NS)
+    assert grad is not None
+    assert grad.find('a:lin', NS).get('ang') == str(45 * 60000)

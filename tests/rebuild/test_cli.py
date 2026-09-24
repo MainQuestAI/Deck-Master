@@ -44,6 +44,21 @@ def test_create_continue_view_export_loop(tmp_path, capsys):
     assert viewed["view_status"] in ("not_running", "running", "stale")
 
 
+def test_call_allocate_routes_to_transactional_allowance_service(tmp_path, capsys):
+    code, project, payload = _create(tmp_path, capsys)
+    assert code == 0
+    task_id = payload["pending_tasks"][0]["task_id"]
+    assert cli.main(["task", "call", "allocate", "--project", str(project),
+                     "--task-id", task_id, "--count", "1"]) == 0
+    allocated = json.loads(capsys.readouterr().out)
+    assert allocated == {"status": "allocated", "task_id": task_id,
+                         "allowance_ids": ["call-1"]}
+    assert cli.main(["task", "status", "--project", str(project),
+                     "--task-id", task_id]) == 0
+    status = json.loads(capsys.readouterr().out)
+    assert status["pending_tasks"][0]["call_allowances"][0]["state"] == "reserved"
+
+
 def test_plain_material_directory_enters_new_flow_without_config(tmp_path, capsys):
     """AC-C06 handoff: a plain material directory, no library/cache/template,
     goes straight from create into the Host task queue."""

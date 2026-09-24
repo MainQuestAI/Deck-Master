@@ -37,8 +37,11 @@ def gradient(raw, definitions, identity):
     if tag=='linearGradient':
         x1,y1,x2,y2=[fraction(node.get(k,v)) for k,v in [('x1','0'),('y1','0'),('x2','1'),('y2','0')]]
         # DrawingML linear fills span the bounding box; reject shortened vectors.
-        if (x1,y1,x2,y2) not in ((0,0,1,0),(1,0,0,0),(0,0,0,1),(0,1,0,0)):
-            raise ValueError(f'{identity}: only edge-to-edge horizontal/vertical gradient vectors supported')
+        if (x1,y1,x2,y2) not in (
+            (0,0,1,0),(1,0,0,0),(0,0,0,1),(0,1,0,0),
+            (0,0,1,1),(1,1,0,0),(1,0,0,1),(0,1,1,0),
+        ):
+            raise ValueError(f'{identity}: only full-edge or corner-to-corner gradient vectors supported')
         return {'kind':'linear','angle':math.degrees(math.atan2(y2-y1,x2-x1))%360,'stops':stops}
     if any(fraction(node.get(k,'.5'))!=.5 for k in ('cx','cy','r','fx','fy')):
         raise ValueError(f'{identity}: only centered radial gradient supported')

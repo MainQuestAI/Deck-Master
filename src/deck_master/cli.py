@@ -130,6 +130,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     call_parser = task_sub.add_parser("call")
     call_sub = call_parser.add_subparsers(dest="call_command", required=True)
+    allocate = call_sub.add_parser("allocate")
+    allocate.add_argument("--project", required=True)
+    allocate.add_argument("--task-id", required=True)
+    allocate.add_argument("--count", type=int, default=1)
     begin = call_sub.add_parser("begin")
     begin.add_argument("--project", required=True)
     begin.add_argument("--task-id", required=True)
@@ -681,6 +685,12 @@ def _dispatch_task(options) -> int:
 def _dispatch_call(options) -> int:
     from . import tasks as tasks_mod
 
+    if options.call_command == "allocate":
+        return _emit(
+            tasks_mod.allocate_call_allowances(
+                _store(options.project), task_id=options.task_id, count=options.count,
+            )
+        )
     if options.call_command == "begin":
         return _emit(
             tasks_mod.call_begin(

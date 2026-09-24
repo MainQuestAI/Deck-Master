@@ -4,11 +4,15 @@ compile never publishes deck.pptx."""
 import json
 import os
 from pathlib import Path
+import zipfile
+import xml.etree.ElementTree as ET
 
 import pytest
+from PIL import ImageFont
 
 import deck_master.compiler.native as native_emit
 from deck_master.compiler import CompileOptions, SvgInput, compile_deck
+from hostenv import host_fonts, resolve_host_font
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -59,3 +63,25 @@ def test_failed_compile_publishes_no_pptx(tmp_path):
         compile_deck([SvgInput('p1', svg)], CompileOptions(width_px=960, height_px=720, fonts={}),
                      tmp_path / 'out')
     assert not (tmp_path / 'out' / 'deck.pptx').exists()
+
+
+def test_text_box_slack_does_not_cause_false_slide_overflow(tmp_path):
+    family = resolve_host_font()
+    fonts = host_fonts()
+    size = 16
+    glyph_width = ImageFont.truetype(fonts[family], size=1000).getlength('A') / 1000 * size
+    x = 200 - glyph_width - 2
+    svg = tmp_path / 'near-edge.svg'
+    svg.write_text(f'<svg viewBox="0 0 200 100"><text x="{x}" y="50" '
+                   f'font-family="{family}" font-size="{size}">A</text></svg>')
+    result = compile_deck([SvgInput('p1', svg)],
+                          CompileOptions(width_px=200, height_px=100, fonts=fonts),
+                          tmp_path / 'near-edge-out')
+    ns = {'p': 'http://schemas.openxmlformats.org/presentationml/2006/main',
+          'a': 'http://schemas.openxmlformats.org/drawingml/2006/main'}
+    with zipfile.ZipFile(result.pptx_path) as archive:
+        slide = ET.fromstring(archive.read('ppt/slides/slide1.xml'))
+    shape = slide.find('.//p:sp/p:spPr/a:xfrm', ns)
+    off = shape.find('a:off', ns)
+    ext = shape.find('a:ext', ns)
+    assert int(off.get('x')) + int(ext.get('cx')) <= 200 * 9525

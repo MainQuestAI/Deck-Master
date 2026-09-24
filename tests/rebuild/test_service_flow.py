@@ -776,6 +776,8 @@ def test_style_dependency_review_turns_stale_on_font_swap(tmp_path):
 
     from deck_master.editing import _current_artifact_digests, check_summary
     digests = _current_artifact_digests(store, store.load_document())
+    assert digests['artifact:svg:p1'] == store.read_object_json(store.load_document()['pages'][0]['svg'])['file']['sha256']
+    assert digests['artifact:svg:p1:ref'] == store.load_document()['pages'][0]['svg']['sha256']
     style_sha = digests["style:p1"]
     review = {
         "schema_version": "deck_review.v1", "review_id": "rv-font", "kind": "content", "status": "pass",

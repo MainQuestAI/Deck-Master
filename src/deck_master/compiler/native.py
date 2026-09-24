@@ -69,6 +69,10 @@ def emit(pages, width, height, fonts, output):
                 w=text_width+s['font_size']*1.0;x=s['x']
                 if s['anchor']=='middle':x-=w/2
                 if s['anchor']=='end':x-=w
+                # The extra glyph of slack keeps Office from clipping text, but
+                # should not itself create a false slide-boundary overflow.
+                if x>=0 and text_width<=page['width']-x<w:
+                    w=page['width']-x
                 y=s['y']-s['font_size']*.88;h=s['font_size']*1.5
                 # The IR anchor is already in final page coordinates; glyph rotation is
                 # applied once through sh.rotation below, so the box stays at the anchor.
