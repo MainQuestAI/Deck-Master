@@ -9,9 +9,12 @@ class BuildPy(build_py):
         root=Path(__file__).resolve().parents[1]
         source=root/'skills'/'deck-master'
         target=Path(self.build_lib)/'deck_master'/'resources'/'skill'
+        if getattr(self,'editable_mode',False):
+            # Editable installs import from src/; materialise the git-ignored build copy there.
+            target=root/'src'/'deck_master'/'resources'/'skill'
         if not (source/'SKILL.md').is_file():
             raise RuntimeError('missing unique deck-master Skill source')
-        # build output only; never create a second source copy in src/.
+        # build output only; the src/ copy (editable mode) is git-ignored, never a second source.
         if target.exists():
             shutil.rmtree(target)
         target.mkdir(parents=True)
