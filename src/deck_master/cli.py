@@ -79,6 +79,8 @@ def build_parser() -> argparse.ArgumentParser:
     installs=installation.add_subparsers(dest='install_command',required=True)
     candidate=installs.add_parser('candidate');candidate.add_argument('--prefix',required=True);candidate.add_argument('--manifest',required=True)
     activation=installs.add_parser('activate');activation.add_argument('--prefix',required=True);activation.add_argument('--release-id',required=True)
+    activation.add_argument('--no-host-registration',dest='no_host_registration',action='store_true',
+                            help='CI/non-interactive: do not create or touch the Codex skill link')
     rollback=installs.add_parser('rollback');rollback.add_argument('--prefix',required=True)
 
     create = sub.add_parser("create")
@@ -233,7 +235,7 @@ def main(argv: list[str] | None = None) -> int:
             from .install import install_candidate,activate,rollback
             try:
                 if options.install_command=='candidate':result=install_candidate(options.prefix,options.manifest)
-                elif options.install_command=='activate':result=activate(options.prefix,options.release_id)
+                elif options.install_command=='activate':result=activate(options.prefix,options.release_id,register_host=not options.no_host_registration)
                 else:result=rollback(options.prefix)
             except ValueError as exc:
                 return _emit_and_exit(_error('invalid_input',str(exc),'check candidate and prefix'),2)

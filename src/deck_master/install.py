@@ -1,8 +1,20 @@
-"""Isolated candidate releases; activation only inside an explicit prefix."""
+"""Isolated candidate releases; activation only inside an explicit prefix.
+
+v1.1 adds the Codex skill chain (§8): each release carries ``skill/deck-master``
+extracted from its wheel, ``install activate`` establishes one managed link at
+``$CODEX_HOME/skills/deck-master`` → ``<prefix>/.deck-master/current/skill/deck-master``,
+rollback retires the link when the previous release predates skills, and a
+one-time migration moves the legacy companion layout aside without deleting
+anything. The installer never touches third-party skills or config.toml.
+"""
 from __future__ import annotations
+
 from contextlib import contextmanager
+from datetime import datetime, timezone
 from pathlib import Path
-import fcntl, hashlib, json, os, re, subprocess, sys, uuid
+import fcntl, hashlib, json, os, re, subprocess, sys, uuid, zipfile
+
+from .errors import HostSkillConflict
 
 @contextmanager
 def _locked(root):
@@ -26,6 +38,37 @@ def _release(root,release_id):
     if path.is_symlink():raise ValueError('release directory cannot be a symlink')
     return path
 
+def _codex_skill_root():
+    home=os.environ.get('CODEX_HOME') or os.path.join(os.path.expanduser('~'),'.codex')
+    return Path(home)/'skills'
+
+def _managed_target(root):
+    """The one link target this installer owns (always through current)."""
+    return str(root/'current'/'skill'/'deck-master')
+
+def _link_state(root):
+    """managed | absent | conflict(path kind) for the Codex skill entry."""
+    link=_codex_skill_root()/'deck-master'
+    if link.is_symlink():
+        return ('managed' if os.readlink(link)==_managed_target(root) else 'foreign', str(link))
+    if link.exists():
+        return ('occupied', str(link))
+    return ('absent', str(link))
+
+def _extract_skill(release: Path, wheel: Path) -> None:
+    with zipfile.ZipFile(wheel) as archive:
+        names=[n for n in archive.namelist()
+               if n.startswith('deck_master/resources/skill/') and not n.endswith('/')]
+        if not any(n=='deck_master/resources/skill/SKILL.md' for n in names):
+            raise ValueError('candidate wheel carries no deck-master skill')
+        skill_root=release/'skill'/'deck-master'
+        skill_root.mkdir(parents=True,exist_ok=True)
+        for name in names:
+            relative=name[len('deck_master/resources/skill/'):]
+            target=skill_root/relative
+            target.parent.mkdir(parents=True,exist_ok=True)
+            target.write_bytes(archive.read(name))
+
 def install_candidate(prefix, manifest_path):
     manifest_path=Path(manifest_path).resolve();manifest=json.loads(manifest_path.read_text())
     name=manifest['wheel']
@@ -38,6 +81,7 @@ def install_candidate(prefix, manifest_path):
         record={**manifest,'status':'installing','document_schema':'deck_document.v1'}
         (release/'release.json').write_text(json.dumps(record,indent=2))
         try:
+            _extract_skill(release,wheel)
             subprocess.run([sys.executable,'-m','venv',str(release/'venv')],check=True,capture_output=True,timeout=120)
             python=release/'venv/bin/python'
             subprocess.run([str(python),'-I','-m','pip','install',str(wheel)],check=True,capture_output=True,timeout=300)
@@ -51,12 +95,92 @@ def install_candidate(prefix, manifest_path):
             subprocess.run([str(python),'-I','-c',code],cwd=release,check=True,capture_output=True,timeout=60)
             render_probe=subprocess.run([str(python),'-I','-m','deck_master','doctor','--step','render'],check=True,capture_output=True,text=True,timeout=60)
             subprocess.run([str(python),'-I','-c','from deck_master.pipeline import render_deck; render_deck("probe-output/deck.pptx","probe-rendered",fonts={})'],cwd=release,check=True,capture_output=True,timeout=120)
-            record.update(status='candidate_ready',probe=info,render_probe=json.loads(render_probe.stdout))
+            record.update(status='candidate_ready',probe=info,render_probe=json.loads(render_probe.stdout),
+                          skill_sha256=hashlib.sha256((release/'skill'/'deck-master'/'SKILL.md').read_bytes()).hexdigest())
         except Exception as exc:
             record.update(status='failed',error=str(exc))
             (release/'release.json').write_text(json.dumps(record,indent=2));raise
         (release/'release.json').write_text(json.dumps(record,indent=2))
         return {'status':'candidate_ready','release_id':manifest['release_id'],'release':str(release),'activated':False}
+
+# ---------------------------------------------------------------------------
+# Legacy companion migration (§8.3): move the old real-directory ``current``
+# aside and prune only the dangling deck-* links that pointed into it.
+
+def _migrate_legacy_companion(root):
+    report={'migrated':False,'moved':None,'removed_links':[],'skipped_entries':[]}
+    current=root/'current'
+    if not (current.is_dir() and not current.is_symlink()):
+        return report
+    entries=sorted(current.iterdir())
+    manifest=current/'companion-manifest.json'
+    only_manifest=[e.name for e in entries]==['companion-manifest.json'] and manifest.is_file()
+    if not only_manifest:
+        raise HostSkillConflict(
+            str(current),
+            'current is a real directory with unexpected contents; refusing to treat it as a '
+            'legacy companion layout — resolve it manually')
+    try:
+        payload=json.loads(manifest.read_text())
+    except (OSError, json.JSONDecodeError) as exc:
+        raise HostSkillConflict(str(manifest), f'companion manifest is unreadable: {exc}') from exc
+    if payload.get('schema_version') not in (3, '3', 'v3') or \
+            payload.get('adoption_policy') != 'bundled_symlink_only':
+        raise HostSkillConflict(
+            str(manifest),
+            'companion manifest does not match the known legacy layout (schema_version 3, '
+            'adoption_policy bundled_symlink_only); refusing to migrate')
+    timestamp=datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S')
+    destination=root/f'legacy-companion-{timestamp}'
+    suffix=0
+    while destination.exists():
+        suffix+=1
+        destination=root/f'legacy-companion-{timestamp}-{suffix}'
+    os.rename(current,destination)
+    report.update(migrated=True,moved={'from':str(current),'to':str(destination)})
+    skill_root=_codex_skill_root()
+    prefix=str(root/'current'/'skills')
+    if skill_root.is_dir():
+        for entry in sorted(skill_root.iterdir()):
+            if entry.is_symlink() and re.fullmatch(r'deck-.*',entry.name) \
+                    and os.readlink(entry).startswith(prefix):
+                entry.unlink()
+                report['removed_links'].append(entry.name)
+            else:
+                report['skipped_entries'].append(entry.name)
+    return report
+
+def _ensure_host_skill_link(root):
+    """Create or repair the managed Codex link; refuse anything else."""
+    state,path=_link_state(root)
+    if state in ('managed','absent'):
+        link=Path(path)
+        if not link.is_symlink() or os.readlink(link)!=_managed_target(root):
+            link.parent.mkdir(parents=True,exist_ok=True)
+            _replace_link(link,_managed_target(root))
+        return {'host_skill':'registered','skill_link':str(link),'skill_target':_managed_target(root)}
+    raise HostSkillConflict(
+        path,
+        f'the Codex skill path is occupied by a {"real directory or file" if state=="occupied" else "foreign symlink"}; '
+        'remove or rename it before activating')
+
+def _retire_host_skill_link(root):
+    """Drop the managed link only when it points at this installation."""
+    state,path=_link_state(root)
+    if state=='managed':
+        Path(path).unlink()
+    return {'host_skill':'host_skill_unregistered','skill_link':path if state!='absent' else None}
+
+def _sync_host_skill(root, *, register: bool):
+    """After a release switch: keep the link valid, retire it without a skill."""
+    skill_marker=root/'current'/'skill'/'deck-master'/'SKILL.md'
+    if not skill_marker.is_file():
+        return _retire_host_skill_link(root)
+    if not register:
+        state,path=_link_state(root)
+        return {'host_skill':'registered' if state=='managed' else 'host_unregistered',
+                'skill_link':path if state!='absent' else None}
+    return _ensure_host_skill_link(root)
 
 def _activate_locked(root,release_id):
     release=_release(root,release_id);record=json.loads((release/'release.json').read_text())
@@ -84,15 +208,35 @@ def _activate_locked(root,release_id):
         raise
     return {'status':'activated','release_id':release_id,'previous':old,'format_boundary':'Older binaries must not write unsupported Document schemas; restore a compatible project copy.'}
 
-def activate(prefix,release_id):
+def activate(prefix,release_id,*,register_host=True):
     root=Path(prefix).resolve()/'.deck-master'
-    with _locked(root):return _activate_locked(root,release_id)
+    with _locked(root):
+        migration=_migrate_legacy_companion(root)
+        if register_host:
+            # Refuse before switching current: a conflict must not activate.
+            state,path=_link_state(root)
+            if state in ('occupied','foreign'):
+                raise HostSkillConflict(
+                    path,
+                    f'the Codex skill path is occupied by a {"real directory or file" if state=="occupied" else "foreign symlink"}; '
+                    'remove or rename it before activating')
+        result=_activate_locked(root,release_id)
+        result['cli_active']=True
+        result['migration']=migration
+        registration=_sync_host_skill(root,register=register_host)
+        result.update(registration)
+        if registration.get('host_skill')=='registered':
+            result['skill_release_id']=release_id
+        return result
 
-def rollback(prefix):
+def rollback(prefix,*,register_host=True):
     root=Path(prefix).resolve()/'.deck-master'
     with _locked(root):
         previous=root/'previous'
         if not previous.is_symlink():raise ValueError('no previous release')
         target=os.readlink(previous)
         if not target.startswith('releases/') or len(Path(target).parts)!=2:raise ValueError('invalid previous release')
-        return _activate_locked(root,Path(target).name)
+        result=_activate_locked(root,Path(target).name)
+        registration=_sync_host_skill(root,register=register_host)
+        result.update(registration)
+        return result

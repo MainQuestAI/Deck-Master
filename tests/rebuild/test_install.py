@@ -122,6 +122,7 @@ def test_doctor_step_isolation_and_host_truth(monkeypatch):
 
 def test_activation_failure_preserves_current_and_rollback(tmp_path,monkeypatch):
     import json,os
+    monkeypatch.setenv('CODEX_HOME',str(tmp_path/'codex-home'))
     from deck_master import install
     root=tmp_path/'.deck-master';releases=root/'releases'
     for name in ('one','two','failed'):
@@ -662,13 +663,14 @@ def test_isolated_call_budget_and_cancel_via_cli(wheel_venv, tmp_path):
 
 
 @pytest.mark.render
-def test_candidate_install_activate_and_run_doctor(tmp_path):
+def test_candidate_install_activate_and_run_doctor(tmp_path, monkeypatch):
     from tools.build_release import build_release
     from deck_master import install as install_mod
 
     release_dir = tmp_path / "release"
     manifest = build_release(release_dir)
     prefix = tmp_path / "prefix"
+    monkeypatch.setenv('CODEX_HOME', str(tmp_path / 'codex-home'))
     install_mod.install_candidate(prefix, release_dir / "release.json")
     install_mod.activate(prefix, manifest["release_id"])
     current = _Path(prefix) / ".deck-master" / "current"
@@ -680,3 +682,5 @@ def test_candidate_install_activate_and_run_doctor(tmp_path):
     assert _Path(info["module_path"]).is_relative_to(_Path(prefix).resolve()), \
         "activated candidate must not borrow the source checkout"
     assert _Path(prefix, ".deck-master", "current").is_symlink()
+    # T9: the candidate release tree carries the skill extracted from the wheel.
+    assert _Path(prefix, ".deck-master", "releases", manifest["release_id"], "skill", "deck-master", "SKILL.md").is_file()
