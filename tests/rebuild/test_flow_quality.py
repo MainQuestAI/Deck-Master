@@ -574,3 +574,232 @@ def test_irrelevant_material_update_still_awaits_host_judgment(tmp_path: Path) -
     assert result["input_alignment"] == "needs_reconciliation"
     dispatched = result["pending_tasks"][0]
     assert dispatched["project_context"]["input_digest"] == result["input_digest"]
+
+
+# ---------------------------------------------------------------------------
+# T5: content_update adoption and staleness fixes
+
+import io as _io
+
+from PIL import Image as _Image
+
+from deck_master.tasks import EnvelopeError
+
+
+def _png_bytes(color=(245, 246, 250)) -> bytes:
+    buffer = _io.BytesIO()
+    _Image.new("RGB", (320, 180), color).save(buffer, format="PNG")
+    return buffer.getvalue()
+
+
+def _accept_blueprint_envelope(project: Path, task: dict, page_entry: dict, png: bytes) -> dict:
+    staging = project / ".deckmaster" / "staging" / task["operation_id"]
+    staging.mkdir(parents=True, exist_ok=True)
+    (staging / "reference.png").write_bytes(png)
+    envelope = {
+        "kind": "blueprint",
+        "files": [{"file_id": "b", "path": "reference.png", "media_type": "image/png"}],
+        "artifact_specs": [{
+            "file_id": "b", "role": "blueprint", "page_id": page_entry["page_id"],
+            "derived_from": [page_entry["page"]],
+            "provenance": {"source_type": "unknown", "tool": "host-imagegen",
+                           "invocation_ref": None, "generated_from_page": page_entry["page"]},
+        }],
+    }
+    return service.accept_result(
+        project, task_id=task["task_id"], operation_id=task["operation_id"],
+        produced_against=task["produced_against"], result_payload=envelope)
+
+
+def test_task_fact_change_rejects_old_scoped_result(tmp_path: Path) -> None:
+    """T5④ (c93 defect): a Document.task change must invalidate open scoped
+    results even when pages/design/sources did not move."""
+    project, store, _ = _setup_project_with_pages(tmp_path)
+    opened = service.continue_project(project)
+    task = opened["pending_tasks"][0]
+    assert task["kind"] == "blueprint"
+    document = store.load_document()
+    page_entry = next(e for e in document["pages"] if e["page_id"] == task["scope_pages"][0])
+    _raw_commit(store, lambda doc: doc["task"].update(audience="已变更的受众"))
+    with pytest.raises(TaskConflict):
+        _accept_blueprint_envelope(project, task, page_entry, _png_bytes())
+
+
+def test_superseded_task_late_result_is_refused(tmp_path: Path) -> None:
+    project, store, _ = _setup_project_with_pages(tmp_path)
+    opened = service.continue_project(project)
+    task = opened["pending_tasks"][0]
+    document = store.load_document()
+    page_entry = next(e for e in document["pages"] if e["page_id"] == task["scope_pages"][0])
+    service.task_cancel(project, task_id=task["task_id"], reason="user stop")
+    with pytest.raises(TaskConflict):
+        _accept_blueprint_envelope(project, task, page_entry, _png_bytes())
+
+
+def test_content_update_roundtrip_changes_only_target_page(tmp_path: Path) -> None:
+    """AC-11: adopting the V1→V2 interface revision touches only p03."""
+    project, store, id_by_name = _setup_project_with_pages(tmp_path)
+    # Real blueprints so the changed page keeps its original as history.
+    for entry in store.load_document()["pages"]:
+        task = service.open_blueprint_task(store, store.load_document(), entry)
+        _accept_blueprint_envelope(project, task, entry, _png_bytes())
+    document = store.load_document()
+    before = {e["page_id"]: e for e in document["pages"]}
+
+    patch = _load_fixture("update-interface.json")
+    patch["source_changes"]["replace"][0]["source_id"] = id_by_name["interface-v1.md"]
+    update = service.inputs_update(project, patch=patch, base_revision=document["revision_id"],
+                                   operation_id="input-update-rt", patch_dir=FIXTURES)
+    document = store.load_document()
+    task = next(t for t in (store.read_object_json(r) for r in document["tasks"])
+                if t.get("intent") == "input_revision")
+    payload = _load_fixture("result-input-revision.json")
+    payload["content_update"]["input_digest"] = update["input_digest"]
+    outcome = service.accept_result(
+        project, task_id=task["task_id"], operation_id=task["operation_id"],
+        produced_against=task["produced_against"], result_payload=payload)
+    assert outcome["status"] == "accepted"
+
+    after_doc = store.load_document()
+    after = {e["page_id"]: e for e in after_doc["pages"]}
+    assert [e["page_id"] for e in after_doc["pages"]] == ["p01", "p02", "p03"]
+    for pid in ("p01", "p02"):
+        assert after[pid] == before[pid], f"unchanged page {pid} must keep every slot"
+    assert after["p03"]["page"]["sha256"] == outcome["new_page_hashes"]["p03"]
+    assert after["p03"]["blueprint"] == before["p03"]["blueprint"], "original blueprint is kept"
+    assert after["p03"]["svg"] is None and after["p03"]["svg_preview"] is None
+    basis = after_doc["content_basis"]
+    assert basis["input_digest"] == update["input_digest"]
+    assert basis["input_revision_id"] == "input-update-rt"
+    assert basis["resolved_by_task_id"] == task["task_id"]
+    p03 = store.read_object_json(after["p03"]["page"])
+    text = json.dumps(p03, ensure_ascii=False)
+    import re as _re
+    def _asserted(claim: str) -> bool:
+        # A claim counts only when asserted; negated mentions (不得/不能/禁止…)
+        # are exactly how the revised page states the boundary.
+        for clause in _re.split("[。；;\n]", text):
+            index = clause.find(claim)
+            while index != -1:
+                prefix = clause[:index]
+                if not _re.search(r"(不得|不允许|禁止|不能|不会|不可|并非|不是|不扩大)", prefix):
+                    return True
+                index = clause.find(claim, index + 1)
+        return False
+    for claim in _load_fixture("expected-effects.json")["forbidden_claims"]:
+        assert not _asserted(claim), f"forbidden claim asserted: {claim}"
+    assert service.inputs_show(project)["input_alignment"] == "current"
+
+
+def test_content_update_rejections(tmp_path: Path) -> None:
+    project, store, id_by_name = _setup_project_with_pages(tmp_path)
+    document = store.load_document()
+    patch = _load_fixture("update-interface.json")
+    patch["source_changes"]["replace"][0]["source_id"] = id_by_name["interface-v1.md"]
+    update = service.inputs_update(project, patch=patch, base_revision=document["revision_id"],
+                                   operation_id="input-update-rj", patch_dir=FIXTURES)
+    document = store.load_document()
+    task = next(t for t in (store.read_object_json(r) for r in document["tasks"])
+                if t.get("intent") == "input_revision")
+    base_payload = _load_fixture("result-input-revision.json")
+    base_payload["content_update"]["input_digest"] = update["input_digest"]
+
+    def submit(payload):
+        return service.accept_result(
+            project, task_id=task["task_id"], operation_id=task["operation_id"],
+            produced_against=task["produced_against"], result_payload=payload)
+
+    stale = json.loads(json.dumps(base_payload, ensure_ascii=False))
+    stale["content_update"]["input_digest"] = "0" * 64
+    with pytest.raises(TaskConflict):
+        submit(stale)
+
+    ghost = json.loads(json.dumps(base_payload, ensure_ascii=False))
+    ghost["content_update"]["page_order"] = ["p01", "p02", "p03", "p99"]
+    with pytest.raises(EnvelopeError):
+        submit(ghost)
+
+    no_reason = json.loads(json.dumps(base_payload, ensure_ascii=False))
+    no_reason["content_update"]["upsert_pages"] = []
+    no_reason["content_update"].pop("unchanged_reason", None)
+    with pytest.raises(EnvelopeError):
+        submit(no_reason)
+
+    with_artifact = json.loads(json.dumps(base_payload, ensure_ascii=False))
+    with_artifact["artifact_specs"] = [{"file_id": "x", "role": "svg", "page_id": "p03"}]
+    with pytest.raises(EnvelopeError):
+        submit(with_artifact)
+
+    # A plain (initial) compose task must not accept content_update.
+    initial = next(t for t in (store.read_object_json(r) for r in document["tasks"])
+                   if t["kind"] == "compose" and t.get("intent", "initial") == "initial"
+                   and t["status"] == "completed")
+    # Refused either as an envelope error (wrong task intent) or as a journal
+    # conflict (this operation already produced a different result).
+    with pytest.raises((EnvelopeError, TaskConflict)):
+        service.accept_result(
+            project, task_id=initial["task_id"], operation_id=initial["operation_id"],
+            produced_against=initial["produced_against"], result_payload=base_payload)
+
+
+def test_needs_reconciliation_gates_delivery_and_handoff(tmp_path: Path) -> None:
+    from deck_master.editing import export_project
+    from deck_master.errors import InputReconciliationPending
+    from deck_master.handoff import check_handoff
+
+    project, store, id_by_name = _setup_project_with_pages(tmp_path)
+    document = store.load_document()
+    patch = _load_fixture("update-interface.json")
+    patch["source_changes"]["replace"][0]["source_id"] = id_by_name["interface-v1.md"]
+    service.inputs_update(project, patch=patch, base_revision=document["revision_id"],
+                          operation_id="input-update-gate", patch_dir=FIXTURES)
+
+    # Give the project a current (fake) PPTX output so the export gate is the
+    # thing under test, not the missing-output check.
+    document = store.load_document()
+    pptx_ref = store.put_json_object({"schema_version": "deck_artifact.v1",
+                                      "artifact_id": "probe-pptx", "page_id": None,
+                                      "role": "probe", "file": document["pages"][0]["page"],
+                                      "media_type": "application/json", "created_at": "1970",
+                                      "dependencies": [], "derived_from": [], "provenance": {},
+                                      "reference_regions": [], "limitations": [],
+                                      "editability": "probe"})
+    from deck_master.models import bump_revision as _bump
+    bumped = _bump(document, {"operation_id": "probe-output", "kind": "task_update",
+                              "description": "probe output", "read_set": []})
+    bumped["outputs"]["pptx"] = pptx_ref
+    store._commit_locked(base_revision=document["revision_id"], document=bumped, blobs=[])
+
+    with pytest.raises(InputReconciliationPending):
+        export_project(project, output_dir=tmp_path / "delivery-out", purpose="delivery")
+    fake_pptx = tmp_path / "candidate.pptx"
+    fake_pptx.write_bytes(b"PK\x03\x04 not a real deck")
+    handoff = check_handoff(project, file_path=fake_pptx, purpose="review")
+    assert handoff["status"] == "blocked"
+    assert "input_reconciliation_pending" in handoff["gaps"]
+
+    # Review purpose still works and carries the annotation.
+    exported = export_project(project, output_dir=tmp_path / "review-out", purpose="review")
+    assert exported["status"] == "exported"
+    report = json.loads((tmp_path / "review-out" / "delivery.json").read_text(encoding="utf-8"))
+    assert report["input_alignment"] == "needs_reconciliation"
+    assert report["notice"] == "待按新要求更新"
+
+
+def test_view_carries_reconciliation_banner_data(tmp_path: Path) -> None:
+    from deck_master.view import project_view
+
+    project, store, id_by_name = _setup_project_with_pages(tmp_path)
+    document = store.load_document()
+    patch = _load_fixture("update-interface.json")
+    patch["source_changes"]["replace"][0]["source_id"] = id_by_name["interface-v1.md"]
+    service.inputs_update(project, patch=patch, base_revision=document["revision_id"],
+                          operation_id="input-update-view", patch_dir=FIXTURES)
+    view = project_view(project)
+    assert view["input_alignment"] == "needs_reconciliation"
+    assert view["reconciliation"]["notice"] == "待按新要求更新"
+    assert "input-update-view" in (view["reconciliation"]["reason"] or "")
+    # After adoption the banner data disappears (covered by the roundtrip test's
+    # alignment); legacy projects report legacy_current without content_basis.
+    _raw_commit(store, lambda doc: doc.pop("content_basis", None))
+    assert project_view(project)["input_alignment"] == "legacy_current"

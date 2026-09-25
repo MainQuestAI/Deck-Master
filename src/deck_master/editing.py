@@ -275,6 +275,14 @@ def _export_locked(store, *, output_dir, purpose):
         raise StoreError('purpose', 'must be review or delivery')
     doc=store.load_document()
     if not doc['outputs'].get('pptx'):raise StoreError('outputs/pptx','no current PPT; continue production')
+    from .models import input_alignment as _input_alignment
+    from .errors import InputReconciliationPending
+    alignment=_input_alignment(doc)
+    if alignment=='needs_reconciliation' and purpose=='delivery':
+        raise InputReconciliationPending('input_alignment',
+            'inputs changed after this content was completed; run inputs update and finish the '
+            'dispatched input_revision task before delivery (delivery is refused while '
+            'input_alignment is needs_reconciliation)')
     summary=check_summary(store,doc)
     status=summary['status']
     if purpose=='delivery' and status!='pass':
@@ -329,6 +337,7 @@ def _export_locked(store, *, output_dir, purpose):
         facts=summary.get('output_facts') or {}
         report={'project_id':doc['project_id'],'revision_id':doc['revision_id'],'purpose':purpose,
                 'review_status':status,
+                'input_alignment':alignment,
                 'unresolved':{'missing_dimensions':sorted(summary['missing_dimensions']),
                               'failed_dimensions':failed_dimensions,
                               'render_report_missing':bool(facts.get('render_report_missing')),
@@ -339,6 +348,8 @@ def _export_locked(store, *, output_dir, purpose):
                 'professional_evidence':_professional_evidence(store,doc),
                 'desktop_editing':'not_evaluated',
                 'evidence_level':'engineering'}
+        if alignment=='needs_reconciliation':
+            report['notice']='待按新要求更新'
         (destination/'delivery.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
     except Exception:
         shutil.rmtree(destination);raise

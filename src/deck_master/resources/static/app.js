@@ -254,6 +254,41 @@
     });
   }
 
+  function renderReconciliation(view) {
+    let banner = document.getElementById("reconciliation-banner");
+    const needsUpdate = view.input_alignment === "needs_reconciliation";
+    if (!needsUpdate) {
+      if (banner) banner.remove();
+      return;
+    }
+    if (!banner) {
+      banner = document.createElement("div");
+      banner.id = "reconciliation-banner";
+      banner.className = "reconciliation-banner";
+      const main = document.querySelector("main") || document.body;
+      main.prepend(banner);
+    }
+    banner.replaceChildren();
+    const title = document.createElement("strong");
+    title.textContent = (view.reconciliation && view.reconciliation.notice) || "待按新要求更新";
+    banner.appendChild(title);
+    const reason = document.createElement("span");
+    reason.className = "mono";
+    reason.textContent = (view.reconciliation && view.reconciliation.reason)
+      ? " · " + view.reconciliation.reason : "";
+    banner.appendChild(reason);
+    banner.appendChild(Object.assign(document.createElement("span"), {
+      className: "mono", textContent: " · 编辑与交付已暂停；请先完成 inputs update 派发的修订任务。",
+    }));
+    // Read-only while reconciliation is pending: no edit controls.
+    const editor = document.getElementById("editor-fields");
+    if (editor) editor.replaceChildren();
+    const save = document.getElementById("save-content");
+    if (save) save.disabled = true;
+    const feedback = document.getElementById("send-feedback");
+    if (feedback) feedback.disabled = true;
+  }
+
   async function refresh() {
     try {
       const view = await fetchView();
@@ -262,6 +297,7 @@
         state.activePage = null;
       }
       renderMeta(view);
+      renderReconciliation(view);
       const download=document.getElementById('download-ppt');
       download.hidden=!view.outputs.pptx;
       if(view.outputs.pptx)download.href=fileUrl(view.outputs.pptx);

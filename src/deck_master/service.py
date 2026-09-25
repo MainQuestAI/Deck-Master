@@ -1283,7 +1283,7 @@ def accept_result(
             document=document,
             requested_action="task accept",
         )
-    return _response(
+    response = _response(
         status="accepted",
         document=document,
         requested_action="task accept",
@@ -1291,6 +1291,10 @@ def accept_result(
         next_action=outcome.get("next_action"),
         result_refs=outcome.get("result_refs") or [],
     )
+    for key in ("new_page_hashes", "unchanged_reason", "impact_summary", "work_complete"):
+        if key in outcome:
+            response[key] = outcome[key]
+    return response
 
 
 def import_draft(
