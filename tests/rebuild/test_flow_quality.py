@@ -250,3 +250,102 @@ def test_brief_conflicts_and_empty_merge_exit_2(tmp_path: Path, capsys) -> None:
         "--task-file", str(empty_file),
     ], capsys)
     assert code == 2 and payload["error"]["code"] == "task_field_conflict"
+
+
+# ---------------------------------------------------------------------------
+# T3: directory material entry
+
+from deck_master.errors import SourceUnreadable, SourceUnsupported
+from deck_master.sources import discover_sources
+
+
+def test_directory_expansion_skips_noise_and_keeps_output_named_dirs(tmp_path: Path) -> None:
+    root = tmp_path / "materials"
+    (root / ".git").mkdir(parents=True)
+    (root / ".git" / "config.txt").write_text("noise", encoding="utf-8")
+    (root / "node_modules").mkdir()
+    (root / "node_modules" / "dep.md").write_text("noise", encoding="utf-8")
+    (root / "output").mkdir()
+    (root / "output" / "history.md").write_text("用户明确提供的历史方案", encoding="utf-8")
+    (root / "~$report.docx").write_bytes(b"lock-bytes")
+    (root / "empty.md").write_bytes(b"")
+    (root / "real.md").write_text("真实材料", encoding="utf-8")
+    (root / "binary.xyz").write_bytes(b"not supported")
+    outside = tmp_path / "outside.txt"
+    outside.write_text("外部材料", encoding="utf-8")
+    (root / "escape-link.md").symlink_to(outside)
+    (root / "inside-target.md").write_text("根内链接材料", encoding="utf-8")
+    (root / "inside-link.md").symlink_to(root / "inside-target.md")
+
+    result = discover_sources([root])
+    adopted_names = {p.name for p in result["adopted"]}
+    assert adopted_names == {"real.md", "history.md", "inside-link.md", "inside-target.md"}
+    skipped = {Path(item["path"]).name: item["reason"] for item in result["skipped"]}
+    assert "tool directory" in skipped[".git"]
+    assert "tool directory" in skipped["node_modules"]
+    assert "office lock file" in skipped["~$report.docx"]
+    assert "zero-byte" in skipped["empty.md"]
+    assert "unsupported format" in skipped["binary.xyz"]
+    assert "symlink outside" in skipped["escape-link.md"]
+    assert result["errored"] == []
+    # `output/` is an ordinary directory name: never skipped as a whole.
+    assert not any(Path(item["path"]).name == "output" for item in result["skipped"])
+
+
+def test_explicit_files_keep_call_order_and_dir_contents_sort_stably(tmp_path: Path) -> None:
+    second = tmp_path / "b-second.md"
+    first = tmp_path / "a-first.md"
+    second.write_text("2", encoding="utf-8")
+    first.write_text("1", encoding="utf-8")
+    directory = tmp_path / "dir"
+    directory.mkdir()
+    (directory / "z.md").write_text("z", encoding="utf-8")
+    (directory / "a.md").write_text("a", encoding="utf-8")
+    result = discover_sources([second, directory, first])
+    assert [p.name for p in result["adopted"]] == ["b-second.md", "a.md", "z.md", "a-first.md"]
+
+
+def test_create_with_directory_reports_three_lists(tmp_path: Path) -> None:
+    materials = tmp_path / "materials"
+    materials.mkdir()
+    (materials / "brief.md").write_text("正式要求正文", encoding="utf-8")
+    (materials / ".git").mkdir()
+    (materials / ".git" / "x.md").write_text("n", encoding="utf-8")
+    (materials / "~$c.docx").write_bytes(b"l")
+    project = tmp_path / "proj"
+    response = service.create(project, brief="说明方案", sources=[materials])
+    assert response["status"] == "created"
+    assert [item["name"] for item in response["sources_adopted"]] == ["brief.md"]
+    assert response["sources_errored"] == []
+    reasons = " | ".join(item["reason"] for item in response["sources_skipped"])
+    assert "tool directory" in reasons and "office lock" in reasons
+    document = Store(project).load_document()
+    import re
+    assert re.fullmatch(r"src-[0-9a-f]{8}", document["sources"][0]["source_id"])
+
+
+def test_explicit_bad_file_fails_whole_create_without_document(tmp_path: Path, capsys) -> None:
+    bad = tmp_path / "bad.xyz"
+    bad.write_bytes(b"junk")
+    missing = tmp_path / "gone.md"
+    project = tmp_path / "proj"
+    for source, exc_type in ((bad, SourceUnsupported), (missing, SourceUnreadable)):
+        with pytest.raises(exc_type):
+            service.create(project, brief="说明方案", sources=[source])
+    assert not (project / ".deckmaster").exists(), "no half-built Document may remain"
+    code = cli.main(["create", "--brief", "b", "--source", str(bad), "--out", str(project)])
+    assert code == 2
+    payload = json.loads(capsys.readouterr().err)
+    assert payload["error"]["code"] in ("source_unsupported", "source_unreadable")
+
+
+def test_out_directory_inside_source_root_is_skipped(tmp_path: Path) -> None:
+    materials = tmp_path / "materials"
+    materials.mkdir()
+    (materials / "a.md").write_text("材料", encoding="utf-8")
+    project = materials / "proj"
+    project.mkdir()
+    response = service.create(project, brief="说明方案", sources=[materials])
+    skipped_paths = [item["path"] for item in response["sources_skipped"]]
+    assert any(path.endswith("proj") for path in skipped_paths)
+    assert [item["name"] for item in response["sources_adopted"]] == ["a.md"]

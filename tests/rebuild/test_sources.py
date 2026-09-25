@@ -249,15 +249,23 @@ def test_grouped_ppt_text_notes_and_picture_detection(tmp_path):
 
 
 def test_create_preserves_source_status_and_immutable_original(tmp_path):
+    """v1.1 §4: an explicitly named unsupported file fails the whole create
+    (exit 2, code source_unsupported) and no Document is left behind; a
+    directory-discovered unsupported file is only skipped, with a reason."""
     from deck_master import service
-    from deck_master.store import Store
+    from deck_master.errors import SourceUnsupported
     source=_write(tmp_path,'unread.xyz',b'original material')
-    project=tmp_path/'project';service.create(project,brief='read actual material',sources=[str(source)])
-    source.unlink()
-    task=service.continue_project(project)['pending_tasks'][0]
-    read=task['source_reading'][0]
-    assert read['status']=='needs_tool' and '.xyz' in read['detail']
-    assert Store(project).read_object_bytes(read['original_file'])==b'original material'
+    project=tmp_path/'project'
+    with pytest.raises(SourceUnsupported):
+        service.create(project,brief='read actual material',sources=[str(source)])
+    assert not (project/'.deckmaster').exists()
+    directory=tmp_path/'materials';directory.mkdir()
+    (directory/'real.md').write_text('真实材料',encoding='utf-8')
+    (directory/'unread.xyz').write_bytes(b'original material')
+    response=service.create(tmp_path/'project2',brief='read actual material',sources=[directory])
+    assert [item['name'] for item in response['sources_adopted']]==['real.md']
+    skipped={Path(item['path']).name:item['reason'] for item in response['sources_skipped']}
+    assert 'unsupported format' in skipped['unread.xyz']
 
 
 def test_json_pointer_escapes_keys(tmp_path):

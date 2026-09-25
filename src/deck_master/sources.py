@@ -17,10 +17,21 @@ import zipfile
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from .errors import SourceUnreadable, SourceUnsupported
+
 SUPPORTED_TEXT_FORMATS = {"txt", "md"}
 SUPPORTED_STRUCTURED_FORMATS = {"json"}
 SUPPORTED_DOCUMENT_FORMATS = {"pdf", "docx", "pptx"}
 SUPPORTED_MEDIA_FORMATS = {"png", "jpg", "jpeg", "svg", "webp", "gif"}
+
+SUPPORTED_EXTENSIONS = (
+    SUPPORTED_TEXT_FORMATS | SUPPORTED_STRUCTURED_FORMATS
+    | SUPPORTED_DOCUMENT_FORMATS | SUPPORTED_MEDIA_FORMATS
+)
+
+# Tool/cache directories are never material; a directory merely NAMED like an
+# output (e.g. "output/") stays a normal directory (spec v1.1 §4).
+TOOL_DIRECTORY_NAMES = {".git", ".venv", "venv", "node_modules", "__pycache__", ".deckmaster"}
 
 FORMAT_KIND = {
     "txt": "text",
@@ -345,6 +356,113 @@ def read_source(path: Path | str) -> SourceExtract:
         status="needs_tool",
         detail=f"no reader declared for .{ext}",
     )
+
+
+def discover_sources(paths, *, out_dir: Path | str | None = None) -> dict:
+    """Expand user-given files and directories into a stable material list.
+
+    Explicitly named files are the user's choice: a missing, unreadable or
+    unsupported one raises and the whole create fails before any Document is
+    written (exit 2). Directory expansion never raises: tool directories,
+    Office lock files, zero-byte temporaries, the project ``--out`` directory
+    and symlinks leaving the authorized roots are skipped with a reason, and
+    unsupported formats are skipped too — noise never blocks creation.
+    Returns ``{"adopted": [Path], "skipped": [{path, reason}],
+    "errored": [{path, code, detail}]}`` with adopted sorted stably.
+    """
+    roots = [Path(p).expanduser() for p in paths]
+    authorized = {root.resolve() for root in roots if root.exists()}
+    exclude = Path(out_dir).expanduser().resolve() if out_dir is not None else None
+    adopted: list[Path] = []
+    skipped: list[dict] = []
+    errored: list[dict] = []
+
+    def skip(path: Path, reason: str) -> None:
+        skipped.append({"path": str(path), "reason": reason})
+
+    def note_error(path: Path, code: str, detail: str) -> None:
+        errored.append({"path": str(path), "code": code, "detail": detail})
+
+    def _within_authorized(target: Path) -> bool:
+        return any(target == root or root in target.parents for root in authorized)
+
+    def check_explicit_file(path: Path) -> None:
+        if not path.is_file():
+            raise SourceUnreadable(f"(source {path})", f"material not found: {path}")
+        try:
+            path.read_bytes()
+        except OSError as exc:
+            raise SourceUnreadable(f"(source {path})", f"material cannot be read: {exc}") from exc
+        ext = path.suffix.lstrip(".").lower()
+        if ext not in SUPPORTED_EXTENSIONS:
+            raise SourceUnsupported(f"(source {path})", f"no reader declared for .{ext}: {path}")
+
+    def handle_file(path: Path, *, explicit: bool) -> None:
+        if explicit:
+            check_explicit_file(path)
+            adopted.append(path)
+            return
+        if path.name.startswith("~$"):
+            skip(path, "office lock file")
+            return
+        try:
+            size = path.stat().st_size
+        except OSError as exc:
+            note_error(path, "source_unreadable", str(exc))
+            return
+        if size == 0:
+            skip(path, "zero-byte temporary file")
+            return
+        ext = path.suffix.lstrip(".").lower()
+        if ext not in SUPPORTED_EXTENSIONS:
+            skip(path, f"unsupported format .{ext}")
+            return
+        adopted.append(path)
+
+    def walk(directory: Path) -> None:
+        try:
+            entries = sorted(directory.iterdir(), key=lambda p: str(p))
+        except OSError as exc:
+            note_error(directory, "source_unreadable", str(exc))
+            return
+        for entry in entries:
+            if exclude is not None and entry.resolve() == exclude:
+                skip(entry, "project --out directory")
+                continue
+            if entry.is_symlink():
+                target = entry.resolve()
+                if not target.exists() or not _within_authorized(target):
+                    skip(entry, "symlink outside the authorized material roots")
+                    continue
+            if entry.is_dir():
+                if entry.name in TOOL_DIRECTORY_NAMES:
+                    skip(entry, "tool directory")
+                    continue
+                walk(entry)
+            else:
+                handle_file(entry, explicit=False)
+
+    for root in roots:
+        if not root.exists():
+            raise SourceUnreadable(f"(source {root})", f"material not found: {root}")
+        if exclude is not None and root.resolve() == exclude:
+            skip(root, "project --out directory")
+            continue
+        if root.is_symlink():
+            target = root.resolve()
+            if not target.exists() or not _within_authorized(target):
+                skip(root, "symlink outside the authorized material roots")
+                continue
+        if root.is_dir():
+            if root.name in TOOL_DIRECTORY_NAMES:
+                skip(root, "tool directory")
+                continue
+            walk(root)
+        else:
+            handle_file(root, explicit=True)
+    # Explicit roots keep call order; directory contents are walked in stable
+    # lexical order. No global re-sort: the user's naming order is information.
+    return {"adopted": adopted, "skipped": skipped, "errored": errored}
 
 
 def tail_constraint(extract: SourceExtract) -> str:

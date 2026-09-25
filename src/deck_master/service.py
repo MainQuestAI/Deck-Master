@@ -20,9 +20,10 @@ from typing import Any
 
 from . import tasks as tasks_mod
 from .content import normalize_design_assets, check_page
+from .errors import SourceUnreadable, SourceUnsupported
 from .method_resources import method_release, method_resources
 from .models import bump_revision, canonical_json_bytes, compute_input_digest, content_identity, input_alignment, new_document, sha256_bytes, validate_document_semantics
-from .sources import read_source
+from .sources import discover_sources, read_source
 from .store import Store, StoreError, ConflictError
 from .production import project_prompt, resolve_design
 
@@ -76,6 +77,40 @@ def _new_operation_id(prefix: str) -> str:
     return f"{prefix}-{uuid.uuid4().hex[:12]}"
 
 
+def _new_source_id(existing_ids: set[str]) -> str:
+    candidate = f"src-{uuid.uuid4().hex[:8]}"
+    while candidate in existing_ids:
+        candidate = f"src-{uuid.uuid4().hex[:8]}"
+    return candidate
+
+
+def _register_source(store: Store, source_path: Path, source_id: str) -> dict:
+    extract = read_source(source_path)
+    from dataclasses import asdict
+    extraction = asdict(extract)
+    extraction['original_file'] = store.put_blob(
+        Path(source_path).expanduser().read_bytes(), ext=extract.format)
+    extract_ref = store.put_json_object(extraction)
+    return {
+        "source_id": source_id,
+        "name": Path(str(source_path)).name,
+        "original_uri": extract.original_uri,
+        "original_sha256": extract.original_sha256,
+        "format": extract.format,
+        "extract": extract_ref,
+        "external_use": "unspecified",
+        "restriction": "",
+        "locator_scheme": {
+            "text": "line",
+            "json": "pointer",
+            "pdf": "page",
+            "docx": "paragraph",
+            "pptx": "slide",
+            "image": "region",
+        }.get(extract.format_kind, "none"),
+    }
+
+
 def create(
     project_dir: Path | str,
     *,
@@ -102,36 +137,36 @@ def create(
         presentation_mode_source = "provided"
     project_dir = Path(project_dir).expanduser()
     store = Store(project_dir)
+    discovered = discover_sources(sources or [], out_dir=project_dir)
+    # Phase 1 reads and validates every material before any state is written;
+    # a failure here must not leave even a layout shell behind (§4).
+    extracts: list = []
+    for source_path in discovered["adopted"]:
+        try:
+            extract = read_source(source_path)
+        except FileNotFoundError as exc:
+            raise SourceUnreadable(f"(source {source_path})", str(exc)) from exc
+        if extract.format_kind == "unknown":
+            ext = Path(str(source_path)).suffix.lstrip(".").lower()
+            raise SourceUnsupported(f"(source {source_path})", f"no reader declared for .{ext}")
+        extracts.append((source_path, extract))
     store.ensure_layout()
     operation_id = _new_operation_id("create")
 
-    source_entries = []
-    for source_path in sources or []:
-        extract = read_source(source_path)
-        from dataclasses import asdict
-        extraction=asdict(extract)
-        extraction['original_file']=store.put_blob(Path(source_path).expanduser().read_bytes(),ext=extract.format)
-        extract_ref=store.put_json_object(extraction)
+    source_entries: list[dict] = []
+    seen_ids: set[str] = set()
+    for source_path, extract in extracts:
         source_entries.append(
-            {
-                "source_id": f"src-{len(source_entries) + 1}",
-                "name": Path(str(source_path)).name,
-                "original_uri": extract.original_uri,
-                "original_sha256": extract.original_sha256,
-                "format": extract.format,
-                "extract": extract_ref,
-                "external_use": "unspecified",
-                "restriction": "",
-                "locator_scheme": {
-                    "text": "line",
-                    "json": "pointer",
-                    "pdf": "page",
-                    "docx": "paragraph",
-                    "pptx": "slide",
-                    "image": "region",
-                }.get(extract.format_kind, "none"),
-            }
-        )
+            _register_source(store, source_path, _new_source_id(seen_ids)))
+        seen_ids.add(source_entries[-1]["source_id"])
+    source_manifest = {
+        "sources_adopted": [
+            {"source_id": entry["source_id"], "name": entry["name"]}
+            for entry in source_entries
+        ],
+        "sources_skipped": discovered["skipped"],
+        "sources_errored": discovered["errored"],
+    }
 
     design = normalize_design_assets(store, design or {}, base_dir=project_dir)
     document = new_document(
@@ -155,24 +190,24 @@ def create(
     if draft:
         _adopt_draft(store, draft)
         document = store.load_document()
-        return _response(
+        return {**_response(
             status="created",
             document=document,
             requested_action="create",
             pending_tasks=_pending_host_tasks(document, store),
             next_action=AUTO_VIEW,
             result_refs=[entry["page"] for entry in document.get("pages") or []],
-        )
+        ), **source_manifest}
     document = store.load_document()
     task = open_compose_task(store, document, operation_id=_new_operation_id("compose"))
     document = store.load_document()
-    return _response(
+    return {**_response(
         status="created",
         document=document,
         requested_action="create",
         pending_tasks=[task_summary(store, document, task)],
         next_action="submit_host_results",
-    )
+    ), **source_manifest}
 
 
 def _validate_draft(payload):
