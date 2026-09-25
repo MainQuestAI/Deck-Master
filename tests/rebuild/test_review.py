@@ -856,3 +856,77 @@ def test_missing_artifact_dependency_is_stale_not_skipped():
     summary = review_mod.evaluate_current(make_document(), [review], current_artifacts())
     assert 'content:p1' in summary['missing_dimensions']
     assert any('unverifiable' in s['reason'] for s in summary['stale'])
+
+
+def _page_only_owner():
+    owner = make_review('conversion', seed='page-only', status='fail', subjects=[PAGE_REF],
+                        findings=[finding('f1')],
+                        dependencies=[{'kind': 'content', 'identity': 'page:p1', 'sha256': PAGE_REF['sha256']},
+                                      {'kind': 'artifact', 'identity': 'svg:p1', 'sha256': 'b' * 64}])
+    owner['ref'] = ref('page-only-owner')
+    return owner
+
+
+def _page_only_context():
+    return {**current_artifacts(), '_subjects': {
+        (PAGE_REF['path'], PAGE_REF['sha256']): {'page_id': 'p1', 'role': 'page',
+                                                 'file_sha': PAGE_REF['sha256'], 'current': True},
+        (PPTX_REF['path'], PPTX_REF['sha256']): {'page_id': None, 'role': 'pptx',
+                                                 'file_sha': 'new-deck', 'current': True},
+        (A1_REF['path'], A1_REF['sha256']): {'page_id': 'p1', 'role': 'svg',
+                                             'file_sha': A1_REF['sha256'], 'current': True},
+    }}
+
+
+def test_owner_without_deck_or_svg_subject_closes_on_current_page_dependency_change():
+    owner = _page_only_owner()
+    closing = _r1_closing(owner)
+    context = _page_only_context()
+    assert review_mod.finding_closed([owner, closing], owner, owner['findings'][0], context)
+    summary = review_mod.evaluate_current(make_document(), [owner, closing], context)
+    assert summary['dimensions']['conversion:p1']['open_must_fix'] == []
+
+
+def test_owner_without_deck_subject_stays_open_when_svg_digest_did_not_change():
+    owner = _page_only_owner()
+    owner['dependencies'][1]['sha256'] = A1_REF['sha256']
+    closing = _r1_closing(owner)
+    assert not review_mod.finding_closed([owner, closing], owner, owner['findings'][0], _page_only_context())
+
+
+def test_untracked_legacy_dependency_can_be_dropped_only_with_reason():
+    owner = _r0_failing()
+    owner['ref'] = ref('legacy-superset')
+    owner['dependencies'].append({'kind': 'svg_legacy', 'identity': 'p1', 'sha256': 'c' * 64})
+    closing = _r1_closing(owner)
+    assert not review_mod.finding_closed([owner, closing], owner, owner['findings'][0], current_artifacts())
+    closing['findings'][0]['resolution_reason'] = '旧依赖已不再跟踪，本页新 SVG 已复核'
+    assert review_mod.finding_closed([owner, closing], owner, owner['findings'][0], current_artifacts())
+    tracked = _r1_closing(owner)
+    tracked['findings'][0]['resolution_reason'] = '丢弃仍在跟踪的依赖'
+    tracked['dependencies'] = [dep for dep in tracked['dependencies'] if dep['identity'] != 'svg:p1']
+    owner['dependencies'] = [dep for dep in owner['dependencies'] if dep['kind'] != 'svg_legacy']
+    assert not review_mod.finding_closed([owner, tracked], owner, owner['findings'][0], current_artifacts())
+
+
+def test_page_visual_ignores_historical_findings_without_the_page():
+    blueprint, svg, preview = ref('bp-p1'), ref('svg-p1'), ref('pv-p1')
+    entry = {'page_id': 'p1', 'page': PAGE_REF, 'blueprint': blueprint, 'svg': svg, 'svg_preview': preview}
+    artifacts = {'content:page:p1': PAGE_REF['sha256'], 'blueprint:p1': 'b' * 64,
+                 'artifact:svg:p1': 'c' * 64, 'style:p1': 'd' * 64}
+    deps = [{'kind': 'content', 'identity': 'page:p1', 'sha256': PAGE_REF['sha256']},
+            {'kind': 'blueprint', 'identity': 'p1', 'sha256': 'b' * 64},
+            {'kind': 'artifact', 'identity': 'svg:p1', 'sha256': 'c' * 64},
+            {'kind': 'style', 'identity': 'p1', 'sha256': 'd' * 64}]
+    reviews = []
+    for kind in review_mod.PAGE_VISUAL_KINDS:
+        item = make_review(kind, seed=f'pv-{kind}', subjects=[PAGE_REF, blueprint, svg, preview],
+                           dependencies=deps)
+        item['review_stage'] = 'page_visual'
+        reviews.append(item)
+    orphan = make_review('readability', seed='orphan', status='fail', subjects=[PAGE_REF],
+                         dependencies=deps[:1], findings=[{**finding('f-null'), 'page_id': None}])
+    orphan['review_stage'] = 'page_visual'
+    summary = review_mod.evaluate_page_visual(entry, [*reviews, orphan], artifacts)
+    assert summary['unclosed_prior_findings'] == []
+    assert summary['status'] == 'pass'

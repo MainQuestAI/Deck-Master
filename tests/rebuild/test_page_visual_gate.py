@@ -205,6 +205,13 @@ def test_page_review_blocks_next_blueprint_until_current_three_checks_pass(tmp_p
     assert service.continue_project(project)['pending_tasks'][0]['task_id'] == visual['task_id']
     with pytest.raises(EnvelopeError, match='requires exactly'):
         _accept(project, visual, {'kind': 'review', 'reviews': make_page_reviews(visual)[:1]})
+    orphan = make_page_reviews(visual)
+    orphan[0]['status'] = 'fail'
+    orphan[0]['findings'] = [{'finding_id': 'f-null', 'kind': 'design', 'impact': 'must_fix',
+                              'page_id': None, 'element_refs': [], 'message': '无页',
+                              'expected': '有', 'actual': '无', 'evidence': [], 'resolution': 'open'}]
+    with pytest.raises(EnvelopeError, match='must name the reviewed page'):
+        _accept(project, visual, {'kind': 'review', 'reviews': orphan})
     assert pass_page_review(project, visual)['status'] == 'accepted'
     next_step = service.continue_project(project)
     assert next_step['pending_tasks'][0]['kind'] == 'blueprint'

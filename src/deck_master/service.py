@@ -694,7 +694,7 @@ def _continue_project(project_dir: Path | str) -> dict:
                                         'detail': '同一产物重复审阅仍有未关闭发现；补充页级修复证据或明确合理差异决定'}],
                              next_action='review_no_progress')
         task = open_host_task(store,kind='repair' if status == 'fail' else 'review',page_ids=[e['page_id'] for e in document['pages']],
-            instruction='实际打开每页原图、SVG预览及PPT真实渲染，核对正文/模块/图标/数字/方向/Logo。提交当前 subjects 的 blueprint_fidelity、conversion、readability Review；未实际检查不能 pass，问题返回具体对象。')
+            instruction='实际打开每页原图、SVG预览及PPT真实渲染，核对正文/模块/图标/数字/方向/Logo。提交 blueprint_fidelity、conversion、readability Review，subjects 必须包含当前 PPTX 与发现所在页的当前 Page；未实际检查不能 pass，问题返回具体对象。')
         return _response(status='awaiting_host',document=store.load_document(),requested_action='continue',
                          pending_tasks=[task_summary(store,store.load_document(),task)],next_action='codex_review_renderings')
     return _response(status='ready_for_export',document=document,requested_action='continue',

@@ -151,6 +151,16 @@ def parse_envelope(raw: dict[str, Any]) -> dict[str, Any]:
     for index, event in enumerate(raw.get('usage_events') or []):
         if not isinstance(event, dict):
             raise EnvelopeError(f'(result)/usage_events[{index}]', 'usage event must be an object')
+        if not isinstance(event.get('allowance_id'), str) or not event['allowance_id']:
+            raise EnvelopeError(f'(result)/usage_events[{index}]/allowance_id', 'must be a non-empty string')
+        if not isinstance(event.get('outcome'), str):
+            raise EnvelopeError(f'(result)/usage_events[{index}]/outcome', 'must be a string')
+        evidence = event.get('evidence_file_ids')
+        if evidence is not None and (not isinstance(evidence, list) or
+                                     not all(isinstance(item, str) for item in evidence)):
+            raise EnvelopeError(f'(result)/usage_events[{index}]/evidence_file_ids', 'must be an array of strings')
+        if event.get('invocation_ref') is not None and not isinstance(event['invocation_ref'], str):
+            raise EnvelopeError(f'(result)/usage_events[{index}]/invocation_ref', 'must be a string or null')
     return raw
 
 
@@ -764,11 +774,26 @@ def accept_result(
                          f"artifact:svg:{entry['page_id']}", f"style:{entry['page_id']}"}
         required_deps.update(f'asset:{asset_id}' for asset_id in effective.get('allowed_asset_ids') or [])
         for item in reviews_by_kind.values():
+            if any(f.get('page_id') != entry['page_id'] for f in item.get('findings') or []):
+                raise EnvelopeError('review/findings/page_id', 'page_visual findings must name the reviewed page')
             if not subjects <= {(ref['path'], ref['sha256']) for ref in item.get('subjects') or []}:
                 raise EnvelopeError('review/subjects', 'page_visual review must reference current Page, blueprint, SVG and SVG preview')
             deps = {f"{dep['kind']}:{dep['identity']}": dep['sha256'] for dep in item.get('dependencies') or []}
             if not required_deps <= deps.keys() or any(digests.get(key) != sha for key, sha in deps.items()):
                 raise EnvelopeError('review/dependencies', 'page_visual review must bind current Page, blueprint, SVG, style and allowed assets')
+    if stage == 'final' and envelope['kind'] == 'review' and envelope.get('reviews'):
+        pptx_ref = (document.get('outputs') or {}).get('pptx')
+        pages_by_id = {e['page_id']: e for e in document.get('pages') or []}
+        for item in envelope['reviews']:
+            cited = {(ref.get('path'), ref.get('sha256')) for ref in item.get('subjects') or []}
+            if pptx_ref and (pptx_ref['path'], pptx_ref['sha256']) not in cited:
+                raise EnvelopeError('review/subjects', 'final review must reference the current PPTX')
+            for f in item.get('findings') or []:
+                entry = pages_by_id.get(f.get('page_id'))
+                if f.get('page_id') not in (task.get('scope_pages') or []) or not entry:
+                    raise EnvelopeError('review/findings/page_id', 'final findings must name a page in the task scope')
+                if (entry['page']['path'], entry['page']['sha256']) not in cited:
+                    raise EnvelopeError('review/subjects', 'final review must reference the current Page of each finding')
 
     # Prevalidate everything before any adoption.
     adopted_pages = []

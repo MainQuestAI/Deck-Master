@@ -83,17 +83,18 @@ def finding_closed(reviews: list[dict], review: dict, finding: dict, artifacts: 
                         page_id in after.get('slides', {}) and
                         after['slides'][page_id] != before['slides'][page_id]):
                     return True
-        # Synthetic review fixtures have no Store metadata. The same page's
-        # dependency must still prove an actual digest change.
-        if not subjects:
-            old_deps = {_dependency_key(d): d.get('sha256') for d in owner.get('dependencies') or []}
-            new_deps = {_dependency_key(d): d.get('sha256') for d in candidate.get('dependencies') or []}
-            for key in (f'content:page:{page_id}', f'artifact:svg:{page_id}',
-                        f'artifact:ppt_preview:{page_id}'):
-                if (key in old_deps and key in new_deps and
-                        old_deps[key] != new_deps[key] == artifacts.get(key) and
-                        any(ref.get('sha256') == artifacts[key] for ref in candidate.get('subjects') or [])):
-                    return True
+        # Synthetic fixtures have no Store metadata, and owners may cite only
+        # the Page. The same page's dependency must still prove an actual
+        # digest change to a current product cited by the candidate.
+        old_deps = {_dependency_key(d): d.get('sha256') for d in owner.get('dependencies') or []}
+        new_deps = {_dependency_key(d): d.get('sha256') for d in candidate.get('dependencies') or []}
+        for key in (f'content:page:{page_id}', f'artifact:svg:{page_id}',
+                    f'artifact:ppt_preview:{page_id}'):
+            if (key in old_deps and key in new_deps and
+                    old_deps[key] != new_deps[key] == artifacts.get(key) and
+                    any(ref.get('sha256') in (artifacts[key], artifacts.get(f'{key}:ref'))
+                        for ref in candidate.get('subjects') or [])):
+                return True
         return False
 
     def current_page_subject(candidate):
@@ -117,6 +118,10 @@ def finding_closed(reviews: list[dict], review: dict, finding: dict, artifacts: 
         if subjects:
             before = [subjects.get(_ref_key(ref)) for ref in owner.get('subjects') or []]
             after = [subjects.get(_ref_key(ref)) for ref in candidate.get('subjects') or []]
+            if not any(b and b.get('role') == 'pptx' for b in before):
+                # Owner never cited a deck: the current deck is the output;
+                # changed_on_page carries the actual repair proof.
+                return any(a and a.get('role') == 'pptx' and a.get('current') for a in after)
             return any(a and a.get('role') == 'pptx' and a.get('current') and
                        b and b.get('role') == 'pptx' and a.get('file_sha') != b.get('file_sha')
                        for a in after for b in before)
@@ -149,8 +154,10 @@ def finding_closed(reviews: list[dict], review: dict, finding: dict, artifacts: 
                 continue
             removed = old_keys - new_keys
             old_deps = {_dependency_key(dep): dep for dep in owner.get('dependencies') or []}
-            if any(not key.startswith('asset:') or
-                   (key[6:], old_deps[key].get('sha256')) not in retired_assets
+            # Untracked legacy keys can never be current again; assets must be
+            # verifiably retired. Tracked keys must be re-declared.
+            if any((key[6:], old_deps[key].get('sha256')) not in retired_assets
+                   if key.startswith('asset:') else key in artifacts
                    for key in removed):
                 continue
             if removed and not (followup.get('resolution_reason') or '').strip():
@@ -229,12 +236,13 @@ def evaluate_page_visual(entry: dict, reviews: list[dict], artifacts: dict,
     for kind, records in current.items():
         for owner in records:
             for finding in open_findings(owner):
-                if not finding_closed(reviews, owner, finding, artifacts):
+                if finding.get('page_id') == page_id and not finding_closed(reviews, owner, finding, artifacts):
                     outstanding = open_findings_by_kind.setdefault(kind, [])
                     if finding['finding_id'] not in outstanding:
                         outstanding.append(finding['finding_id'])
             for finding in pending_judgments(owner):
-                if (not finding_closed(reviews, owner, finding, artifacts) and
+                if (finding.get('page_id') == page_id and
+                        not finding_closed(reviews, owner, finding, artifacts) and
                         finding['finding_id'] not in judgments):
                     judgments.append(finding['finding_id'])
     unclosed_prior = []
@@ -245,7 +253,7 @@ def evaluate_page_visual(entry: dict, reviews: list[dict], artifacts: dict,
                    for dep in owner.get('dependencies') or []):
             continue
         for finding in open_findings(owner):
-            if not finding_closed(reviews, owner, finding, artifacts):
+            if finding.get('page_id') == page_id and not finding_closed(reviews, owner, finding, artifacts):
                 if finding['finding_id'] not in unclosed_prior:
                     unclosed_prior.append(finding['finding_id'])
     if open_findings_by_kind:

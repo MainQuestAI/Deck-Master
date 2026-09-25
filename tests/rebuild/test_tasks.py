@@ -804,3 +804,68 @@ def test_settle_facts_survive_content_refusal(tmp_path):
     allowance = settled["call_allowances"][0]
     assert allowance["state"] == "consumed", "call facts survive the content refusal"
     assert allowance["invocation_ref"] == "inv-content-fail"
+
+
+@pytest.mark.parametrize("event, field", [
+    ({"allowance_id": {"x": 1}, "outcome": "consumed"}, "allowance_id"),
+    ({"allowance_id": "a", "outcome": "consumed", "evidence_file_ids": 1}, "evidence_file_ids"),
+    ({"allowance_id": "a", "outcome": ["consumed"]}, "outcome"),
+    ({"allowance_id": "a", "outcome": "consumed", "invocation_ref": 7}, "invocation_ref"),
+])
+def test_malformed_usage_event_fields_are_envelope_errors(event, field) -> None:
+    envelope = {"kind": "compose", "files": [], "usage_events": [event]}
+    with pytest.raises(tasks_mod.EnvelopeError, match=f"usage_events\\[0\\]/{field}"):
+        tasks_mod.parse_envelope(envelope)
+
+
+def _final_review_setup(tmp_path: Path):
+    from deck_master.models import content_identity
+    from deck_master.pipeline import artifact as adopt_artifact
+
+    project, task = _make_project(tmp_path)
+    service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+                          produced_against=task["produced_against"], result_payload=_compose_envelope())
+    store = service.Store(project)
+    document = store.load_document()
+    deck = store.staging_dir / "deck.pptx"
+    deck.parent.mkdir(parents=True, exist_ok=True)
+    deck.write_bytes(b"synthetic deck")
+    bumped = tasks_mod.bump_revision(document, {"operation_id": "attach-deck", "kind": "task_update",
+                                                "description": "deck", "read_set": []})
+    bumped["outputs"]["pptx"] = adopt_artifact(store, deck, "pptx")
+    store.commit_change(base_revision=document["revision_id"], document=bumped, operation_id="attach-deck")
+    document = store.load_document()
+    page_ref = document["pages"][0]["page"]
+    task_obj = tasks_mod.new_task(
+        task_id=uuid_hex(12), operation_id="final-op", kind="review", scope_pages=["p09"],
+        instruction="final", inputs=[page_ref],
+        dependencies=[{"kind": "content", "identity": "page:p09", "sha256": page_ref["sha256"]}],
+        dispatch_revision=document["revision_id"], produced_against=content_identity(document))
+    bumped = tasks_mod.bump_revision(document, {"operation_id": "final-dispatch", "kind": "task_update",
+                                                "description": "open final", "read_set": []})
+    bumped["tasks"] = list(bumped.get("tasks") or []) + [store.put_json_object(task_obj)]
+    store.commit_change(base_revision=document["revision_id"], document=bumped, operation_id="final-dispatch")
+    review = json.loads((ENVELOPES / "review.json").read_text())["reviews"][0]
+    finding = {"finding_id": "f1", "kind": "conversion", "impact": "must_fix", "page_id": "p09",
+               "element_refs": [], "message": "缺字", "expected": "有", "actual": "无",
+               "evidence": [], "resolution": "open"}
+    review = {**review, "status": "fail", "findings": [finding],
+              "subjects": [document["outputs"]["pptx"], page_ref]}
+
+    def submit(item):
+        return service.accept_result(project, task_id=task_obj["task_id"], operation_id="final-op",
+                                     produced_against=task_obj["produced_against"],
+                                     result_payload={"kind": "review", "files": [], "reviews": [item]})
+    return review, page_ref, submit
+
+
+def test_final_review_must_cite_current_deck_and_finding_page(tmp_path: Path) -> None:
+    review, page_ref, submit = _final_review_setup(tmp_path)
+    with pytest.raises(tasks_mod.EnvelopeError, match="current PPTX"):
+        submit({**review, "subjects": [page_ref]})
+    with pytest.raises(tasks_mod.EnvelopeError, match="task scope"):
+        submit({**review, "findings": [{**review["findings"][0], "page_id": None}]})
+    deck_only = [s for s in review["subjects"] if s != page_ref]
+    with pytest.raises(tasks_mod.EnvelopeError, match="current Page"):
+        submit({**review, "subjects": deck_only})
+    assert submit(review)["status"] == "accepted"
