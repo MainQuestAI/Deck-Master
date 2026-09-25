@@ -1,0 +1,146 @@
+{
+  "pages": [
+    {
+      "schema_version": "deck_page_package.v2",
+      "page_id": "p01",
+      "customer_visible": {
+        "title": "把设备知识接入服务人员实际使用的入口",
+        "body_blocks": [
+          {
+            "id": "b1",
+            "type": "paragraph",
+            "text": "澄川科技提供技术资料接入、引用式问答、企业身份与资料权限对接，并将查询能力嵌入已有业务门户。服务人员可以查找相关资料，返回原文核对适用条件。"
+          },
+          {
+            "id": "b2",
+            "type": "paragraph",
+            "text": "在北澜设备项目中，我们完成了设备手册与维修工单接入、权限对接、引用问答界面及上线培训。这些经验对应资料、访问身份和工作入口的协同建设。"
+          },
+          {
+            "id": "b3",
+            "type": "paragraph",
+            "text": "本次接入方案可复用资料整合、权限对接和上线培训经验，适配工作按嘉禾的业务条件另行设计。"
+          }
+        ]
+      },
+      "speaker_notes": "",
+      "visual_spec": {
+        "intent": "用资料、权限、服务入口的关系图与实际交付说明呈现能力，避免三个无连接的宣传口号。",
+        "reference_mode": "new_design"
+      },
+      "citations": [
+        {
+          "id": "c1",
+          "source_id": "src-company",
+          "locator": "line:3-6",
+          "supports": "b1,b2",
+          "claim_kind": "reported_fact"
+        }
+      ],
+      "internal_only": {
+        "production_notes": "本例仅为合成方法正文，不是已执行生成。"
+      }
+    },
+    {
+      "schema_version": "deck_page_package.v2",
+      "page_id": "p02",
+      "customer_visible": {
+        "title": "把设备条件收集前移，让总部接手时信息更完整",
+        "body_blocks": [
+          {
+            "id": "b1",
+            "type": "paragraph",
+            "text": "嘉禾的售后判断依赖型号、固件版本或出厂批次。目前版本与批次不是必填，部分问题提交后仍需总部再次补问。"
+          },
+          {
+            "id": "b2",
+            "type": "paragraph",
+            "text": "120条互斥样本中，36条信息齐全可依据资料继续处理，54条首先需要补问版本或批次，30条即使信息齐全仍需专家判断。该样本支持优先改善条件收集，不等于54条都可自动解决。"
+          },
+          {
+            "id": "b3",
+            "type": "paragraph",
+            "text": "建议在服务点提交时提示补齐设备条件，随后匹配适用手册和工单线索；需要进一步判断的问题，带着设备信息、现象和候选资料交给专家。"
+          }
+        ]
+      },
+      "speaker_notes": "",
+      "visual_spec": {
+        "intent": "表现提交、补齐条件、引用资料与专家接力的顺序，数据只是支持选择的材料，不画成未经证实的自动解决漏斗。",
+        "reference_mode": "new_design"
+      },
+      "citations": [
+        {
+          "id": "c1",
+          "source_id": "src-operations",
+          "locator": "line:3-7",
+          "supports": "b1,b2",
+          "claim_kind": "reported_fact"
+        },
+        {
+          "id": "c2",
+          "source_id": "src-operations",
+          "locator": "line:8",
+          "supports": "b3",
+          "claim_kind": "design_proposal"
+        }
+      ],
+      "internal_only": {
+        "production_notes": "本例仅为合成方法正文，不是已执行生成。"
+      }
+    },
+    {
+      "schema_version": "deck_page_package.v2",
+      "page_id": "p03",
+      "customer_visible": {
+        "title": "在现有门户中补齐条件并保存申请草稿，正式提交保留人工确认",
+        "body_blocks": [
+          {
+            "id": "b1",
+            "type": "paragraph",
+            "text": "资料搜索增强的流程改动较少，但设备条件仍可能在总部接单后补充。门户内条件补齐与引用助手增加设备字段、资料适用范围映射和补问交互，更直接对应当前反复补问的问题。"
+          },
+          {
+            "id": "b2",
+            "type": "paragraph",
+            "text": "新的正式接口要求允许保存服务申请草稿，但正式提交必须由员工确认。建议把设备条件、问题现象和引用资料写入草稿，员工核对后在原流程中正式提交；不得扩大为自动关闭工单。"
+          },
+          {
+            "id": "b3",
+            "type": "paragraph",
+            "text": "资料与权限接入复用澄川既有经验；草稿写入适配属于本期新增建设，需要独立权限与幂等控制。验证内容完整、草稿不重复、确认后才提交，以及未授权动作被拒绝。草稿保存与员工确认流程纳入本期设计、开发和验证。"
+          }
+        ]
+      },
+      "speaker_notes": "",
+      "visual_spec": {
+        "intent": "保留选项比较，流程调整为补齐设备条件、匹配引用、保存草稿、员工确认后提交；区分历史已有能力与本期新增适配。",
+        "reference_mode": "new_design"
+      },
+      "citations": [
+        {
+          "id": "c1",
+          "source_id": "src-interface",
+          "locator": "line:6-8",
+          "supports": "b2",
+          "claim_kind": "reported_fact"
+        },
+        {
+          "id": "c2",
+          "source_id": "src-operations",
+          "locator": "line:3-7",
+          "supports": "b1,b3",
+          "claim_kind": "design_proposal"
+        }
+      ],
+      "internal_only": {
+        "production_notes": "本例仅为合成方法正文，不是已执行生成。"
+      }
+    }
+  ],
+  "page_order": [
+    "p01",
+    "p02",
+    "p03"
+  ]
+}

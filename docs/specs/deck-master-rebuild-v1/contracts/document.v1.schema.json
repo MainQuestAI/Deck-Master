@@ -504,7 +504,8 @@
             "restore",
             "policy_update",
             "legacy_import",
-            "design_update"
+            "design_update",
+            "input_update"
           ]
         },
         "description": {

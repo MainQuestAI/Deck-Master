@@ -1,0 +1,36 @@
+{
+  "source_id_fixture_note": "真实create会返回source_id，本例固定ID仅供测试夹具映射",
+  "before_input_digest": "c895592e2465810b84608df938b6c50d738b5e614809d3d2b0e48da4d133fffd",
+  "after_input_digest": "bf03299240c8ae15b5ea3669c298932e5d888f94e11f88e2b6bd40805ec89945",
+  "changed_pages": [
+    "p03"
+  ],
+  "unchanged_pages": [
+    "p01",
+    "p02"
+  ],
+  "before_page_hashes": {
+    "p01": "218713892c1ed4bb3e2f1756684043263dc906b10914ba611a20aa1595fead47",
+    "p02": "990655aaef378a8d9f72f2c0b93191c501f24141c49386ea62331120863d983d",
+    "p03": "a4d70114ca07bb36fe67689c9c80e20b7eaac968c18a036fb1fef2f1fcb8d1df"
+  },
+  "after_page_hashes": {
+    "p01": "218713892c1ed4bb3e2f1756684043263dc906b10914ba611a20aa1595fead47",
+    "p02": "990655aaef378a8d9f72f2c0b93191c501f24141c49386ea62331120863d983d",
+    "p03": "ecc4cde2751002d5680cc8fb7bd3d400e754b58e5fbd503366f46c157c573580"
+  },
+  "must_keep_artifacts_for": [
+    "p01",
+    "p02"
+  ],
+  "must_rebuild_content_for": [
+    "p03"
+  ],
+  "blueprint_policy": "旧蓝图保留；是否新设计由新版正文需要决定，不伪改旧prompt",
+  "forbidden_claims": [
+    "历史案例已完成工单写入",
+    "无需员工确认自动提交",
+    "自动关闭工单",
+    "效率提升45%"
+  ]
+}

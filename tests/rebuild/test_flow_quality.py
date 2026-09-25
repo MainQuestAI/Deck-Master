@@ -402,3 +402,175 @@ def test_wheel_matches_sdist_wheel_methods() -> None:
     assert "skills-references" not in hook
     data = (repo / "pyproject.toml").read_text(encoding="utf-8")
     assert "skills-references" not in data
+
+
+# ---------------------------------------------------------------------------
+# T4: inputs show/update, content_basis and the update transaction
+
+
+def _load_fixture(name: str):
+    return json.loads((FIXTURES / name).read_text(encoding="utf-8"))
+
+
+def test_input_digest_fixtures_recompute(tmp_path: Path) -> None:
+    """AC-08: the packaged fixture digests must recompute under §5.1."""
+    before = _load_fixture("input-context-before.json")
+    after = _load_fixture("input-context-after.json")
+    assert compute_input_digest(before) == before["input_digest"]
+    assert compute_input_digest(after) == after["input_digest"]
+    # Usage-note-only edits move the digest; display names never do.
+    renamed = {**before, "sources": [{**s, "name": "显示名已改.md"} for s in before["sources"]]}
+    assert compute_input_digest(renamed) == before["input_digest"]
+    noted = {**before, "sources": [{**s, "usage_note": "新用途"} for s in before["sources"]]}
+    assert compute_input_digest(noted) != before["input_digest"]
+
+
+def _setup_project_with_pages(tmp_path: Path):
+    """A project whose pages exist (draft-adopted fixtures) and whose inputs
+    match the live fixtures."""
+    materials = FIXTURES / "materials"
+    project = tmp_path / "proj"
+    task = _load_fixture("request-live.json")
+    pages = _load_fixture("initial-pages.json")
+    service.create(
+        project, brief=task["brief"], title=task["title"],
+        sources=[materials / "company.md", materials / "operations.md", materials / "interface-v1.md"],
+        audience=task["audience"], scenario=task["scenario"],
+        presentation_mode=task["presentation_mode"], page_limit=task["page_limit"],
+        existing_decisions=task["existing_decisions"],
+        draft={"pages": pages["pages"], "page_order": pages["page_order"]},
+    )
+    store = Store(project)
+    document = store.load_document()
+    # Map fixture source ids onto the real uuid ids by file name.
+    id_by_name = {entry["name"]: entry["source_id"] for entry in document["sources"]}
+    _raw_commit(store, lambda doc: doc.update(
+        content_basis={"input_digest": compute_input_digest(document),
+                       "input_revision_id": None, "resolved_by_task_id": None}))
+    return project, store, id_by_name
+
+
+def test_inputs_show_returns_current_facts(tmp_path: Path) -> None:
+    project, store, _ = _setup_project_with_pages(tmp_path)
+    shown = service.inputs_show(project)
+    assert shown["status"] == "ok"
+    assert shown["input_alignment"] == "current"
+    assert shown["content_basis"]["input_digest"] == shown["input_digest"]
+    assert {entry["name"] for entry in shown["sources"]} == {"company.md", "operations.md", "interface-v1.md"}
+
+
+def test_inputs_update_supersedes_and_dispatches(tmp_path: Path) -> None:
+    project, store, id_by_name = _setup_project_with_pages(tmp_path)
+    # An open production task exists before the update (continue opens it).
+    opened = service.continue_project(project)
+    assert opened["pending_tasks"] and opened["pending_tasks"][0]["kind"] == "blueprint"
+    before_revision = store.load_document()["revision_id"]
+    patch = _load_fixture("update-interface.json")
+    patch["source_changes"]["replace"][0]["source_id"] = id_by_name["interface-v1.md"]
+    operation_id = "input-update-1"
+    result = service.inputs_update(
+        project, patch=patch, base_revision=before_revision,
+        operation_id=operation_id, patch_dir=FIXTURES)
+    assert result["status"] == "updated"
+    assert result["input_alignment"] == "needs_reconciliation"
+    assert result["superseded_tasks"], "open tasks must be superseded"
+    document = store.load_document()
+    tasks = [store.read_object_json(ref) for ref in document["tasks"]]
+    superseded_ids = set(result["superseded_tasks"])
+    assert opened["pending_tasks"][0]["task_id"] in superseded_ids
+    open_now = [task for task in tasks if task["status"] in ("awaiting_host", "running")]
+    assert len(open_now) == 1 and open_now[0].get("intent") == "input_revision"
+    dispatched = next(service.task_summary(store, document, task)
+                      for task in tasks if task.get("intent") == "input_revision")
+    assert dispatched["kind"] == "compose"
+    assert dispatched["project_context"]["input_digest"] == result["input_digest"]
+    assert [item["id"] for item in dispatched["method_resources"]] == [
+        "source-reading", "content-methods", "content-examples", "input-update"]
+    # Pages, reviews and outputs all survive; only the interface source changed.
+    replaced = next(entry for entry in document["sources"]
+                    if entry["source_id"] == id_by_name["interface-v1.md"])
+    assert replaced["name"] == "interface-v2.md"
+    assert replaced["original_sha256"] == _load_fixture("input-context-after.json")["sources"][2]["original_sha256"]
+    assert replaced["usage_note"] == "V2替代只读范围，允许草稿保存但不自动正式提交"
+    replaced = next(entry for entry in document["sources"]
+                    if entry["source_id"] == id_by_name["interface-v1.md"])
+    assert replaced["name"] == "interface-v2.md"
+    assert replaced["original_sha256"] == _load_fixture("input-context-after.json")["sources"][2]["original_sha256"]
+
+    # Idempotent retry returns the original result without a new revision.
+    replay = service.inputs_update(
+        project, patch=patch, base_revision=result["revision_id"],
+        operation_id=operation_id, patch_dir=FIXTURES)
+    assert replay == result
+
+
+def test_inputs_update_conflicts(tmp_path: Path) -> None:
+    from deck_master.errors import InputRevisionConflict
+
+    project, store, id_by_name = _setup_project_with_pages(tmp_path)
+    document = store.load_document()
+    patch = _load_fixture("update-interface.json")
+    patch["source_changes"]["replace"][0]["source_id"] = id_by_name["interface-v1.md"]
+
+    with pytest.raises(InputRevisionConflict):
+        service.inputs_update(project, patch=patch, base_revision="stale-revision",
+                              operation_id="op-conflict", patch_dir=FIXTURES)
+    # Same operation id, different content.
+    other = {**patch, "reason": "另一个不同的变化"}
+    service.inputs_update(project, patch=patch, base_revision=document["revision_id"],
+                          operation_id="op-dual", patch_dir=FIXTURES)
+    with pytest.raises(InputRevisionConflict):
+        service.inputs_update(project, patch=other, base_revision=store.load_document()["revision_id"],
+                              operation_id="op-dual", patch_dir=FIXTURES)
+
+
+def test_inputs_update_failure_keeps_state(tmp_path: Path) -> None:
+    from deck_master.errors import SourceUnreadable
+
+    project, store, _ = _setup_project_with_pages(tmp_path)
+    document = store.load_document()
+    patch = {"task_patch": {"audience": "新受众"},
+             "source_changes": {"add": [{"path": "materials/missing.md"}]},
+             "reason": "补一份缺失的材料"}
+    with pytest.raises(SourceUnreadable):
+        service.inputs_update(project, patch=patch, base_revision=document["revision_id"],
+                              operation_id="op-fail", patch_dir=FIXTURES)
+    after = store.load_document()
+    assert after["revision_id"] == document["revision_id"]
+    assert after["task"]["audience"] == document["task"]["audience"]
+    assert service.inputs_show(project)["input_alignment"] == "current"
+
+
+def test_inputs_update_display_name_only_does_not_dispatch(tmp_path: Path) -> None:
+    project, store, id_by_name = _setup_project_with_pages(tmp_path)
+    document = store.load_document()
+    open_before = [store.read_object_json(ref)["task_id"] for ref in document["tasks"]
+                   if store.read_object_json(ref)["status"] in ("awaiting_host", "running")]
+    patch = {"task_patch": {},
+             "source_changes": {"metadata": [{"source_id": id_by_name["company.md"],
+                                              "name": "公司简介.md"}]},
+             "reason": "只改显示名"}
+    result = service.inputs_update(project, patch=patch, base_revision=document["revision_id"],
+                                   operation_id="op-name", patch_dir=FIXTURES)
+    assert result["status"] == "unchanged"
+    assert result["revision_id"] != document["revision_id"], "display-name change still commits"
+    refreshed = store.load_document()
+    assert refreshed["sources"][0]["name"] == "公司简介.md"
+    assert service.inputs_show(project)["input_alignment"] == "current"
+    open_after = [store.read_object_json(ref)["task_id"] for ref in refreshed["tasks"]
+                  if store.read_object_json(ref)["status"] in ("awaiting_host", "running")]
+    assert open_before == open_after
+
+
+def test_irrelevant_material_update_still_awaits_host_judgment(tmp_path: Path) -> None:
+    project, store, _ = _setup_project_with_pages(tmp_path)
+    document = store.load_document()
+    patch = {"task_patch": {},
+             "source_changes": {"add": [{"path": "materials/unrelated-catalog.md"}]},
+             "reason": "补一份无关设备清单"}
+    result = service.inputs_update(project, patch=patch, base_revision=document["revision_id"],
+                                   operation_id="op-noise", patch_dir=FIXTURES)
+    assert result["status"] == "updated"
+    assert result["input_alignment"] == "needs_reconciliation"
+    dispatched = result["pending_tasks"][0]
+    assert dispatched["project_context"]["input_digest"] == result["input_digest"]

@@ -1,0 +1,22 @@
+{
+  "task_patch": {
+    "existing_decisions": [
+      "沿用现有售后门户",
+      "允许保存服务申请草稿，正式提交由员工确认",
+      "没有经核实的效率改善数字"
+    ]
+  },
+  "source_changes": {
+    "add": [],
+    "replace": [
+      {
+        "source_id": "src-interface",
+        "path": "materials/interface-v2.md",
+        "usage_note": "V2替代只读范围，允许草稿保存但不自动正式提交"
+      }
+    ],
+    "remove": [],
+    "metadata": []
+  },
+  "reason": "用户补充已确认V2接口要求，正式调整草稿保存范围"
+}

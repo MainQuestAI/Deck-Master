@@ -20,7 +20,7 @@ from typing import Any
 
 from . import tasks as tasks_mod
 from .content import normalize_design_assets, check_page
-from .errors import SourceUnreadable, SourceUnsupported
+from .errors import InputRevisionConflict, SourceUnreadable, SourceUnsupported
 from .method_resources import method_release, method_resources
 from .models import bump_revision, canonical_json_bytes, compute_input_digest, content_identity, input_alignment, new_document, sha256_bytes, validate_document_semantics
 from .sources import discover_sources, read_source
@@ -834,6 +834,422 @@ def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, pa
     updated['tasks'].append(store.put_json_object(task))
     store._commit_locked(base_revision=document['revision_id'],document=updated,operation_id=updated['change']['operation_id'],blobs=[])
     return task
+
+
+# ---------------------------------------------------------------------------
+# Inputs show/update (spec v1.1 §5): the persistent way to record changed
+# task facts and materials. The update transaction saves inputs, supersedes
+# open tasks and dispatches compose/intent=input_revision in one commit.
+
+_INPUT_PATCH_FIELDS = {"task_patch", "source_changes", "reason"}
+_INPUT_TASK_PATCH_FIELDS = {"title", "brief", "audience", "scenario",
+                            "presentation_mode", "page_limit", "existing_decisions"}
+_PRESENTATION_MODES = ("live", "read_alone", "mixed")
+
+
+def inputs_show(project_dir: Path | str) -> dict:
+    """The current task, sources, content basis and alignment in one read."""
+    store = Store(Path(project_dir).expanduser())
+    document = store.load_document()
+    return {
+        "status": "ok",
+        "project_id": document.get("project_id"),
+        "revision_id": document["revision_id"],
+        "task": document.get("task") or {},
+        "sources": document.get("sources") or [],
+        "content_basis": document.get("content_basis"),
+        "input_digest": compute_input_digest(document),
+        "input_alignment": input_alignment(document),
+    }
+
+
+def _read_input_operation(store: Store, operation_id: str) -> dict | None:
+    import re as _re
+    from .store import OPERATION_ID_PATTERN
+
+    if not _re.fullmatch(OPERATION_ID_PATTERN, operation_id or ""):
+        raise ServiceError("(operation-id)", "operation ids must match [A-Za-z0-9][A-Za-z0-9_.-]*")
+    path = store.deck_root / "operations" / f"{operation_id}.json"
+    if not path.is_file():
+        return None
+    record = json.loads(path.read_text("utf-8"))
+    if record.get("kind") != "input_update":
+        raise InputRevisionConflict(
+            f"(operation {operation_id})",
+            "operation id already used by a different operation type",
+        )
+    return record
+
+
+def _write_input_operation(store: Store, operation_id: str, request_digest: str, result: dict) -> None:
+    directory = store.deck_root / "operations"
+    directory.mkdir(parents=True, exist_ok=True)
+    path = directory / f"{operation_id}.json"
+    if path.exists():
+        return  # settled concurrently; the committed record stays authoritative
+    record = {
+        "kind": "input_update",
+        "operation_id": operation_id,
+        "request_sha256": request_digest,
+        "result": result,
+    }
+    from .store import _atomic_write_bytes
+    _atomic_write_bytes(path, canonical_json_bytes(record))
+
+
+def _normalize_input_patch(patch: dict, *, patch_dir: Path) -> dict:
+    """Validate and resolve one inputs-update patch; paths become absolute."""
+    if not isinstance(patch, dict):
+        raise ServiceError("(patch)", "patch must be a JSON object")
+    unknown = sorted(set(patch) - _INPUT_PATCH_FIELDS)
+    if unknown:
+        raise ServiceError("(patch)", f"unknown patch fields: {unknown}")
+    reason = (patch.get("reason") or "").strip()
+    if not reason:
+        raise ServiceError("(patch)/reason", "a one-line summary of what changed is required")
+
+    task_patch = patch.get("task_patch") or {}
+    if not isinstance(task_patch, dict):
+        raise ServiceError("(patch)/task_patch", "must be an object")
+    unknown_task = sorted(set(task_patch) - _INPUT_TASK_PATCH_FIELDS)
+    if unknown_task:
+        raise ServiceError("(patch)/task_patch", f"unknown task fields: {unknown_task}")
+    normalized_task: dict = {}
+    for field in ("title", "brief"):
+        if field in task_patch:
+            value = task_patch[field]
+            if not isinstance(value, str) or not value.strip():
+                raise ServiceError(f"(patch)/task_patch/{field}", "must be a non-empty string")
+            normalized_task[field] = value
+    for field in ("audience", "scenario"):
+        if field in task_patch:
+            value = task_patch[field]
+            if not isinstance(value, str):
+                raise ServiceError(f"(patch)/task_patch/{field}", "must be a string (empty string clears)")
+            normalized_task[field] = value
+    if "presentation_mode" in task_patch:
+        value = task_patch["presentation_mode"]
+        if value not in _PRESENTATION_MODES:
+            raise ServiceError("(patch)/task_patch/presentation_mode", "must be live, read_alone or mixed")
+        normalized_task["presentation_mode"] = value
+    if "page_limit" in task_patch:
+        value = task_patch["page_limit"]
+        if value is not None and (not isinstance(value, int) or isinstance(value, bool) or value < 1):
+            raise ServiceError("(patch)/task_patch/page_limit", "must be a positive integer or null")
+        normalized_task["page_limit"] = value
+    if "existing_decisions" in task_patch:
+        value = task_patch["existing_decisions"]
+        if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
+            raise ServiceError("(patch)/task_patch/existing_decisions", "must be an array of strings")
+        normalized_task["existing_decisions"] = value
+
+    source_changes = patch.get("source_changes") or {}
+    if not isinstance(source_changes, dict):
+        raise ServiceError("(patch)/source_changes", "must be an object")
+    unknown_source = sorted(set(source_changes) - {"add", "replace", "remove", "metadata"})
+    if unknown_source:
+        raise ServiceError("(patch)/source_changes", f"unknown fields: {unknown_source}")
+
+    def _resolve(item: dict, where: str) -> dict:
+        path_value = item.get("path")
+        if not isinstance(path_value, str) or not path_value:
+            raise ServiceError(f"{where}/path", "must be a non-empty path string")
+        resolved = Path(path_value).expanduser()
+        if not resolved.is_absolute():
+            resolved = patch_dir / resolved
+        note = item.get("usage_note")
+        if note is not None and not isinstance(note, str):
+            raise ServiceError(f"{where}/usage_note", "must be a string")
+        return {"path": str(resolved), "usage_note": note or ""}
+
+    add = []
+    for index, item in enumerate(source_changes.get("add") or []):
+        if not isinstance(item, dict):
+            raise ServiceError(f"(patch)/source_changes/add[{index}]", "must be an object")
+        add.append(_resolve(item, f"(patch)/source_changes/add[{index}]"))
+    replace = []
+    for index, item in enumerate(source_changes.get("replace") or []):
+        if not isinstance(item, dict) or not isinstance(item.get("source_id"), str) or not item["source_id"]:
+            raise ServiceError(f"(patch)/source_changes/replace[{index}]", "needs a source_id")
+        entry = _resolve(item, f"(patch)/source_changes/replace[{index}]")
+        entry["source_id"] = item["source_id"]
+        replace.append(entry)
+    remove = source_changes.get("remove") or []
+    if not isinstance(remove, list) or not all(isinstance(item, str) for item in remove):
+        raise ServiceError("(patch)/source_changes/remove", "must be an array of source ids")
+    overlap = sorted({item["source_id"] for item in replace} & set(remove))
+    if overlap:
+        raise ServiceError("(patch)/source_changes",
+                           f"the same source id cannot be replaced and removed: {overlap}")
+    metadata = []
+    for index, item in enumerate(source_changes.get("metadata") or []):
+        if not isinstance(item, dict) or not isinstance(item.get("source_id"), str) or not item["source_id"]:
+            raise ServiceError(f"(patch)/source_changes/metadata[{index}]", "needs a source_id")
+        unknown_meta = sorted(set(item) - {"source_id", "usage_note", "name"})
+        if unknown_meta:
+            raise ServiceError(f"(patch)/source_changes/metadata[{index}]", f"unknown fields: {unknown_meta}")
+        metadata.append({"source_id": item["source_id"],
+                         "usage_note": item.get("usage_note"),
+                         "name": item.get("name")})
+
+    return {
+        "task_patch": normalized_task,
+        "source_changes": {"add": add, "replace": replace, "remove": remove, "metadata": metadata},
+        "reason": reason,
+    }
+
+
+def _read_patch_material(path_str: str):
+    """Read one patch-named material; failures reject the whole request."""
+    path = Path(path_str)
+    try:
+        extract = read_source(path)
+    except FileNotFoundError as exc:
+        raise SourceUnreadable(f"(source {path})", str(exc)) from exc
+    except OSError as exc:
+        raise SourceUnreadable(f"(source {path})", str(exc)) from exc
+    if extract.format_kind == "unknown":
+        ext = path.suffix.lstrip(".").lower()
+        raise SourceUnsupported(f"(source {path})", f"no reader declared for .{ext}")
+    return extract
+
+
+def inputs_update(
+    project_dir: Path | str,
+    *,
+    patch: dict,
+    base_revision: str,
+    operation_id: str,
+    patch_dir: Path | str | None = None,
+) -> dict:
+    """Save changed inputs; supersede open tasks; dispatch the input revision.
+
+    Idempotent by operation id: the same request replays its original result
+    without re-reading sources; the same id with different content, or a
+    stale base revision, is refused with ``input_revision_conflict`` (exit 5).
+    """
+    from .errors import InputRevisionConflict
+
+    store = Store(Path(project_dir).expanduser())
+    store.ensure_layout()
+    patch_dir = Path(patch_dir).expanduser() if patch_dir else Path.cwd()
+    normalized = _normalize_input_patch(patch, patch_dir=patch_dir)
+    request_digest = sha256_bytes(canonical_json_bytes(normalized))
+    existing = _read_input_operation(store, operation_id)
+    if existing is not None:
+        if existing.get("request_sha256") == request_digest:
+            return existing["result"]
+        raise InputRevisionConflict(
+            f"(operation {operation_id})",
+            "operation id already applied with a different patch",
+        )
+
+    # Stage every new material before taking the lock; any failure rejects the
+    # whole request and leaves current state untouched (§5.3 step 2).
+    staged_add: list[tuple[dict, Any]] = []
+    staged_replace: list[tuple[dict, Any]] = []
+    for item in normalized["source_changes"]["add"]:
+        staged_add.append((item, _read_patch_material(item["path"])))
+    for item in normalized["source_changes"]["replace"]:
+        staged_replace.append((item, _read_patch_material(item["path"])))
+
+    with store._locked():
+        record = _read_input_operation(store, operation_id)
+        if record is not None:
+            if record.get("request_sha256") == request_digest:
+                return record["result"]
+            raise InputRevisionConflict(
+                f"(operation {operation_id})",
+                "operation id already applied with a different patch",
+            )
+        document = store.load_document()
+        if document["revision_id"] != base_revision:
+            raise InputRevisionConflict(
+                "(base-revision)",
+                f"base {base_revision!r} is not current (now {document['revision_id']!r}); "
+                "re-run inputs show and rebase the patch",
+            )
+        old_digest = compute_input_digest(document)
+
+        new_task = {**(document.get("task") or {}), **normalized["task_patch"]}
+        new_sources = [dict(entry) for entry in document.get("sources") or []]
+        by_id = {entry["source_id"]: entry for entry in new_sources}
+        diff = {"task_fields_changed": sorted(normalized["task_patch"]),
+                "sources_added": [], "sources_replaced": [], "sources_removed": [],
+                "sources_metadata": [], "noops": []}
+
+        def _resolve_same(entry: dict, path: Path, sha: str | None) -> bool:
+            try:
+                same_path = Path(entry.get("original_uri") or "").expanduser().resolve() == path.resolve()
+            except OSError:
+                same_path = entry.get("original_uri") == str(path)
+            return same_path and sha is not None and entry.get("original_sha256") == sha
+
+        for item, extract in staged_add:
+            path = Path(item["path"])
+            noop_target = next((entry for entry in new_sources
+                                if _resolve_same(entry, path, extract.original_sha256)), None)
+            if noop_target is not None:
+                diff["noops"].append({"path": item["path"], "source_id": noop_target["source_id"]})
+                continue
+            source_id = _new_source_id({entry["source_id"] for entry in new_sources})
+            new_sources.append(_entry_from_extract(store, path, extract, source_id,
+                                                   usage_note=item.get("usage_note") or ""))
+            by_id[source_id] = new_sources[-1]
+            diff["sources_added"].append(source_id)
+
+        for item, extract in staged_replace:
+            source_id = item["source_id"]
+            if source_id not in by_id:
+                raise ServiceError(f"(patch)/source_changes/replace/{source_id}",
+                                   "replace must name an existing source id")
+            path = Path(item["path"])
+            entry = by_id[source_id]
+            replacement = _entry_from_extract(store, path, extract, source_id,
+                                              usage_note=item.get("usage_note") or entry.get("usage_note") or "")
+            new_sources[new_sources.index(entry)] = replacement
+            by_id[source_id] = replacement
+            diff["sources_replaced"].append(source_id)
+
+        for source_id in normalized["source_changes"]["remove"]:
+            if source_id not in by_id:
+                raise ServiceError(f"(patch)/source_changes/remove/{source_id}",
+                                   "remove must name an existing source id")
+            new_sources = [entry for entry in new_sources if entry["source_id"] != source_id]
+            diff["sources_removed"].append(source_id)
+
+        for item in normalized["source_changes"]["metadata"]:
+            source_id = item["source_id"]
+            if source_id not in by_id:
+                raise ServiceError(f"(patch)/source_changes/metadata/{source_id}",
+                                   "metadata must name an existing source id")
+            entry = by_id[source_id]
+            if item.get("usage_note") is not None:
+                entry["usage_note"] = item["usage_note"]
+                diff["sources_metadata"].append(source_id)
+            if item.get("name") is not None:
+                if not isinstance(item["name"], str) or not item["name"]:
+                    raise ServiceError("(patch)/source_changes/metadata/name", "must be a non-empty string")
+                entry["name"] = item["name"]
+
+        probe = {"task": new_task, "sources": new_sources}
+        new_digest = compute_input_digest(probe)
+        names_changed = any(item.get("name") is not None
+                            for item in normalized["source_changes"]["metadata"])
+        if new_digest == old_digest:
+            result = {"status": "unchanged", "input_digest": new_digest,
+                      "input_alignment": input_alignment(document),
+                      "revision_id": document["revision_id"], "diff": diff,
+                      "reason": normalized["reason"]}
+            if names_changed:
+                bumped = bump_revision(document, {
+                    "operation_id": operation_id, "kind": "input_update",
+                    "description": "inputs update (display names only)", "read_set": []})
+                bumped["sources"] = new_sources
+                store._commit_locked(base_revision=document["revision_id"], document=bumped,
+                                     operation_id=operation_id, blobs=[])
+                result["revision_id"] = bumped["revision_id"]
+            _write_input_operation(store, operation_id, request_digest, result)
+            return result
+
+        new_document = bump_revision(document, {
+            "operation_id": operation_id, "kind": "input_update",
+            "description": normalized["reason"], "read_set": []})
+        new_document["task"] = new_task
+        new_document["sources"] = new_sources
+        if document.get("pages") and not document.get("content_basis"):
+            # First update on a legacy project: pin the basis the existing
+            # content was actually built on (§5.3 step 4).
+            new_document["content_basis"] = {"input_digest": old_digest,
+                                             "input_revision_id": None,
+                                             "resolved_by_task_id": None}
+        superseded_ids = []
+        for index, ref in enumerate(new_document.get("tasks") or []):
+            task = store.read_object_json(ref)
+            if task.get("status") in ("awaiting_host", "running") and \
+                    task.get("kind") in tasks_mod.HOST_TASK_KINDS:
+                superseded_ids.append(task["task_id"])
+                new_document["tasks"][index] = store.put_json_object(
+                    {**task, "status": "superseded", "updated_at": _utc_now_iso()})
+        pages = new_document.get("pages") or []
+        if pages:
+            intent = "input_revision"
+            scope = [entry["page_id"] for entry in pages]
+            instruction = (
+                f"输入已更新（operation {operation_id}）：{normalized['reason']}。"
+                "读取新输入、变化说明与全稿概览，检查相关正文和跨页结论；提交 content_update，"
+                "只包含真正变化的完整 Page v2、新增/删除页 ID 和最终页序；无影响时给出具体 unchanged_reason。"
+            )
+        else:
+            intent = "initial"
+            scope = []
+            instruction = (
+                f"输入已更新（operation {operation_id}）：{normalized['reason']}。"
+                "读取全部来源与任务事实，按方法写完整 Page v2 正文与页序。"
+            )
+        methods = method_resources("compose", intent=intent)
+        task = tasks_mod.new_task(
+            task_id=uuid.uuid4().hex[:12],
+            operation_id=_new_operation_id("compose"),
+            kind="compose",
+            intent=intent,
+            input_digest=new_digest,
+            input_revision_id=operation_id,
+            method_release=method_release(methods),
+            scope_pages=scope,
+            instruction=instruction,
+            inputs=[],
+            dependencies=[{"kind": "content",
+                           "identity": f"document-revision:{new_document['revision_id']}",
+                           "sha256": content_identity(new_document)}],
+            dispatch_revision=new_document["revision_id"],
+            produced_against=content_identity(new_document),
+        )
+        new_document["tasks"] = list(new_document.get("tasks") or []) + [store.put_json_object(task)]
+        new_revision = store._commit_locked(
+            base_revision=document["revision_id"], document=new_document,
+            operation_id=operation_id, blobs=[])
+        refreshed = store.load_document()
+        alignment = input_alignment(refreshed)
+        result = {
+            "status": "updated",
+            "input_digest": new_digest,
+            "input_alignment": alignment,
+            "revision_id": new_revision,
+            "superseded_tasks": superseded_ids,
+            "diff": diff,
+            "reason": normalized["reason"],
+            "pending_tasks": [task_summary(store, refreshed, task)],
+            "next_action": "submit_host_results",
+        }
+        _write_input_operation(store, operation_id, request_digest, result)
+        return result
+
+
+def _entry_from_extract(store: Store, path: Path, extract, source_id: str, *, usage_note: str = "") -> dict:
+    from dataclasses import asdict
+
+    extraction = asdict(extract)
+    extraction["original_file"] = store.put_blob(
+        Path(path).expanduser().read_bytes(), ext=extract.format)
+    extract_ref = store.put_json_object(extraction)
+    entry = {
+        "source_id": source_id,
+        "name": Path(str(path)).name,
+        "original_uri": extract.original_uri,
+        "original_sha256": extract.original_sha256,
+        "format": extract.format,
+        "extract": extract_ref,
+        "external_use": "unspecified",
+        "restriction": "",
+        "locator_scheme": {
+            "text": "line", "json": "pointer", "pdf": "page", "docx": "paragraph",
+            "pptx": "slide", "image": "region",
+        }.get(extract.format_kind, "none"),
+    }
+    if usage_note:
+        entry["usage_note"] = usage_note
+    return entry
 
 
 def accept_result(

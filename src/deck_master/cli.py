@@ -107,6 +107,17 @@ def build_parser() -> argparse.ArgumentParser:
     continue_cmd.add_argument("--project", required=True)
     continue_cmd.add_argument("--no-open", action="store_true")
 
+    inputs_cmd = sub.add_parser("inputs")
+    inputs_sub = inputs_cmd.add_subparsers(dest="inputs_command", required=True)
+    inputs_show_parser = inputs_sub.add_parser("show")
+    inputs_show_parser.add_argument("--project", required=True)
+    inputs_update_parser = inputs_sub.add_parser("update")
+    inputs_update_parser.add_argument("--project", required=True)
+    inputs_update_parser.add_argument("--patch", required=True,
+                                      help="patch JSON; paths inside resolve against this file's directory")
+    inputs_update_parser.add_argument("--base-revision", dest="base_revision", required=True)
+    inputs_update_parser.add_argument("--operation-id", dest="operation_id", required=True)
+
     view_cmd = sub.add_parser("view")
     view_cmd.add_argument("--project", required=True)
     view_cmd.add_argument("--open", action="store_true", default=False)
@@ -300,6 +311,23 @@ def main(argv: list[str] | None = None) -> int:
             payload = service.continue_project(options.project)
             _emit(payload)
             return 3 if payload["status"] in ("awaiting_host", "needs_tool", "needs_input") else 0
+        if options.command == "inputs":
+            rejected = _reject_legacy_run(options.project)
+            if rejected is not None:
+                return rejected
+            if options.inputs_command == "show":
+                return _emit(service.inputs_show(options.project))
+            patch_path = Path(options.patch).expanduser()
+            payload = service.inputs_update(
+                options.project,
+                patch=json.loads(patch_path.read_text(encoding="utf-8")),
+                base_revision=options.base_revision,
+                operation_id=options.operation_id,
+                patch_dir=patch_path.parent,
+            )
+            if _project_has_pages(options.project):
+                payload = _attach_workbench_url(options.project, payload)
+            return _emit(payload)
         if options.command == "import-draft":
             rejected = _reject_legacy_run(options.project)
             if rejected is not None:
