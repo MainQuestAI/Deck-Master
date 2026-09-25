@@ -953,3 +953,32 @@ def test_open_final_review_task_carries_review_plan(tmp_path: Path) -> None:
                                   review_stage="final", review_units=units)
     summary = service.task_summary(store, store.load_document(), task)
     assert summary["review_plan"]["units"] == units
+
+
+# ---------------------------------------------------------------------------
+# T8: old skills removed; single resolver line (AC-16)
+
+
+def test_skills_tree_reduced_to_deck_master_and_resolver() -> None:
+    repo = Path(service.__file__).resolve().parents[2]
+    skills = repo / "skills"
+    entries = sorted(p.name for p in skills.iterdir())
+    assert entries == ["RESOLVER.md", "deck-master"]
+    resolver = (skills / "RESOLVER.md").read_text(encoding="utf-8").strip()
+    assert "skills/deck-master/SKILL.md" in resolver
+    assert len(resolver.splitlines()) == 1
+
+
+def test_old_skill_names_gone_from_living_surfaces() -> None:
+    import subprocess as _subprocess
+
+    repo = Path(service.__file__).resolve().parents[2]
+    pattern = ("deck-autopilot|deck-brief|deck-builder|deck-doctor|deck-init|deck-learn|"
+               "deck-planner|deck-producer|deck-quality|deck-review|deck-setup|"
+               "deck-sourcing|deck-upgrade|ppt-deck-pro-max|ppt-quality-gate|ppt-master")
+    result = _subprocess.run(
+        ["rg", "-l", pattern, "src/", "tools/", "tests/", "pyproject.toml", "AGENTS.md", "skills/"],
+        cwd=repo, capture_output=True, text=True)
+    me = str(Path(__file__).relative_to(repo))
+    files = [line for line in result.stdout.splitlines() if line.strip() and line != me]
+    assert files == [], f"living references to removed skills: {files}"
