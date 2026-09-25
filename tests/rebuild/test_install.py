@@ -49,13 +49,20 @@ def test_wheel_carries_schema_static_and_methods(tmp_path: Path) -> None:
     for static in ("index.html", "app.js", "style.css"):
         assert f"deck_master/resources/static/{static}" in names, f"missing static in wheel: {static}"
     assert "deck_master/resources/skill/SKILL.md" in names
+    # T7 single source: every packaged method file is byte-identical to the
+    # canonical skills/deck-master source, and skills-references is gone.
     with zipfile.ZipFile(wheels[0]) as archive:
         assert archive.read("deck_master/resources/skill/SKILL.md") == (REPO/"skills/deck-master/SKILL.md").read_bytes()
-    assert "deck_master/resources/skills-references/source-reading.md" in names
-    assert "deck_master/resources/skills-references/content-methods.md" in names
+        for relative in ("source-reading.md", "content-methods.md", "content-examples.md",
+                         "input-update.md", "review-and-repair.md", "blueprint-svg.md"):
+            wheel_name = f"deck_master/resources/skill/references/{relative}"
+            assert wheel_name in names, f"missing method reference in wheel: {relative}"
+            assert archive.read(wheel_name) == (REPO/"skills/deck-master/references"/relative).read_bytes()
+    assert not any(n.startswith("deck_master/resources/skills-references") for n in names), \
+        "skills-references must no longer ship (single method source)"
     # P1: the packaged installation guide must not teach retired commands.
     with zipfile.ZipFile(wheels[0]) as archive:
-        installation = archive.read("deck_master/resources/skills-references/installation.md").decode("utf-8")
+        installation = archive.read("deck_master/resources/skill/references/installation.md").decode("utf-8")
     for retired in ("suite-install", "suite-status", "suite-repair", "release-rollback",
                     "release-build", "release-smoke", "preview-gate", "rc-gate"):
         assert retired not in installation, f"packaged installation.md teaches {retired}"
@@ -218,7 +225,7 @@ def test_wheel_and_sdist_exclude_customer_material_and_secrets(tmp_path: Path) -
     for static in ("index.html", "app.js", "style.css"):
         assert f"deck_master/resources/static/{static}" in wheel_names
     assert "deck_master/resources/skill/SKILL.md" in wheel_names
-    assert any(n.startswith("deck_master/resources/skills-references/") for n in wheel_names)
+    assert any(n.startswith("deck_master/resources/skill/references/") for n in wheel_names)
 
     # Provenance (T19.01): extraction attribution headers ship with the code.
     geometry = dict(wheel_files)["deck_master/compiler/geometry.py"].decode("utf-8")
@@ -423,7 +430,7 @@ def test_isolated_resources_resolve_inside_package(tmp_path, wheel_venv):
         "    'resources/contracts/page.v2.schema.json',\n"
         "    'resources/static/index.html',\n"
         "    'resources/skill/SKILL.md',\n"
-        "    'resources/skills-references/source-reading.md')}\n"
+        "    'resources/skill/references/source-reading.md')}\n"
         "print(json.dumps(paths))")
     probe = subprocess.run([str(wheel_venv / "bin" / "python"), "-I", "-c", script],
                            capture_output=True, text=True, env=_isolated_env(wheel_venv, home), cwd=str(work))

@@ -1,30 +1,33 @@
-# 审阅与返修(reference)
+# 实际审阅与返修
 
-最终六维解释在 `src/deck_master/review.py` 的 `evaluate_current(document, reviews,
-artifacts)`；逐页解释在 `evaluate_page_visual(entry, reviews, artifacts)`。接收、
-`continue`、读取、UI 与导出按相同记录和当前依赖判定，不把逐页通过当作最终通过。
+本草案只调整任务方法与交接。保留现有 PR33 的逐 finding 关闭、同页产物检查、原图来源、实际读回以及取消/晚到结果保护。
 
-- `review_stage=page_visual`：SVG 接收后的当前页预览生成后执行。Host 实际查看
-  Page、原图和 SVG 预览，提交 `blueprint_content`、`blueprint_fidelity`、
-  `readability` 三类记录；subjects 必须包括这四个当前对象，dependencies
-  必须包括当前 Page、蓝图、SVG、设计样式与批准资产。缺项不能派发下一页；
-  `must_fix` 只返修本页，然后重审。重复提交同一 Page/SVG 而未关闭发现时停止循环。
-- `review_stage=final`：整套真实 PPT 渲染、文件读回后执行下列六维审阅。
-  旧记录无 `review_stage` 时解释为 final；逐页记录不能补足 conversion、privacy
-  或最终 readability 等维度。
+## 工作单就是本次审阅范围
 
-- status(07.2):有 open `must_fix` → `fail`;必需维度(content /
-  blueprint_content / blueprint_fidelity / conversion / readability /
-  privacy)× 当前页集合缺执行记录 → `not_evaluated`;已执行但有未处置
-  `needs_judgment` → `needs_review`;全部完成且问题修复或有具体理由 → `pass`。
-- 当前性:Review 的 subjects 必须含当前 `outputs.pptx` 与该页 `page` ref,
-  dependencies 的 sha 必须与当前对象一致;旧产物上的 pass 只作历史
-  (stale),不覆盖当前 fail。
-- 空 reviews / 空 findings / 空登记都不是高分:`not_evaluated`。
-- 像素差异分流:`triage_render_difference` 按区域有序规则给出
-  must_fix / needs_judgment / accepted_variance,不做指标投票。
-- 独立性:`validate_independence` — host_self/tool 永不独立;
-  independent_host 与 human 类型需要真实 `execution_ref`,模型不得代填。
-- 发现项关闭：替代 Review 必须 `replaces` 指向旧 ref，并保持同一 `review_id`、`finding_id`、页、`kind` 与 `review_stage`。`page_visual` 的 `repair` 只提交本页 Page/SVG，待新预览生成后由独立 `review` 任务提交三类审阅。`fixed` 要有发现所在页实际改变的当前产物、预览、观察与证据；最终审阅还需当前 PPT 的页级产物或读回变化依据。仅原 `needs_judgment` 可在同一产物上以具体理由、实际观察和有效证据记录 `accepted_variance`。已明确移除的资产要说明原因；引用损坏不算移除。未处置的其他发现继续阻塞，过期依赖不放行。同一产物重复审阅没有消解发现时，按 `review_no_progress` 补充证据或决定。
-- 源图期待独立于输出 SVG 登记:`source_expectations` 对未识别维度保持
-  `not_evaluated`,coverage 不满记 1。
+读取当前 review_plan，确认哪些维度尚未执行、已经过期、存在旧问题或因输入变化需要重新检查。任务列出的每一项都要实际完成或准确说明缺口；不能只提交 instruction 中习惯出现的三个维度。
+
+最终六维是：content、blueprint_content、blueprint_fidelity、conversion、readability、privacy。它们不是六名 Agent，也不是六次用户审批。
+
+content 看任务、正式输入和整稿是否成立；blueprint_content 看全部可见表达是否正确进入正文；blueprint_fidelity 看原图的视觉与业务关系；conversion 看 SVG 到真实 PPT 的转换；readability 看实际阅读；privacy 看面向本次受众的可见/隐藏文字、备注及媒体限制。
+
+## 两个时点不做同样的登记
+
+逐页审图提前发现原图与 SVG 的内容、结构和阅读问题。最终查看实际 PPT，检查转换后结果和全稿一致性。前次真实观察可复用；但是只复制它的 pass 并不能证明最终 PPT 没有变化。
+
+来源/任务变化但物理页面没有变化时，重新核对适用内容与披露条件；转换层的已有观察仍可供使用。不因为 Document 管理版本变化就让所有几何观察过期。
+
+## 问题必须定位并形成动作
+
+每项说明所在页和对象、期待、实际、依据及需要改动的范围。内容不足先补机制与论证，不用增大标题、扩大禁词表或堆几张卡片代替。确有制作缺陷时修 SVG 或转换结果，不改原始参考基准。
+
+privacy 不等于宽泛法律认证；“缩略图”“右屏”等业务词不是自动泄密。真实禁止披露的信息应处理，包括讲者备注和媒体，不仅检查正文。
+
+## 处理历史发现
+
+fixed：同一发现有真实相关修订，当前产物经复查。
+
+accepted_variance：原来需要判断的差异，经具体解释、观察和证据确认可接受；不将 must_fix 改名放行。
+
+只有这两种关闭方式。输入更新让原要求失效时，按 input-update 的方法处理，不新增第三种关闭方式。
+
+没有执行阅读就是未评估，不能填默认高分或两套 reviewer 名称。工具可报告真实机械检查，但不能替用户提供专业认可或独立审查身份。

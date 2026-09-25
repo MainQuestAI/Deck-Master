@@ -51,7 +51,6 @@ deck_master = [
   "resources/contracts/*.json",
   "resources/compiler/*.mjs",
   "resources/static/*",
-  "resources/skills-references/*.md",
 ]
 
 [tool.pytest.ini_options]

@@ -31,3 +31,6 @@ tests/_ap_*/
 **/__pycache__/
 skills-references/
 src/deck_master/resources/skills-references/
+
+# Build output only: the build hook copies skills/deck-master here (T7 single source).
+src/deck_master/resources/skill/

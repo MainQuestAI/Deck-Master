@@ -19,8 +19,3 @@ class BuildPy(build_py):
         for name in ('references','agents'):
             if (source/name).is_dir():
                 shutil.copytree(source/name,target/name)
-        # Compatibility resource names consumed by existing candidate packages.
-        references=target.parent/'skills-references'
-        if references.exists():
-            shutil.rmtree(references)
-        shutil.copytree(source/'references',references)

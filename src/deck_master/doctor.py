@@ -5,6 +5,7 @@ from pathlib import Path
 import subprocess
 import sys
 from . import __version__
+from .method_resources import resolve_root
 from .pipeline import executable, NeedsTool
 
 STEPS=('compose','blueprint','compile','render','view','export')
@@ -18,7 +19,21 @@ def diagnose(step, *, fonts=(), host_imagegen=False):
     add('python','ready' if (3,11)<=sys.version_info[:2]<(3,14) else 'unavailable',{'executable':sys.executable,'version':sys.version.split()[0]})
     root=resources.files('deck_master')
     required=['resources/contracts/document.v1.schema.json']
-    if step=='compose':required+=['resources/skill/SKILL.md','resources/skill/references/content-methods.md']
+    method_root=None
+    if step=='compose':
+        # The method source is resolved through the single-source resolver, not
+        # assumed inside the package (source checkouts read skills/deck-master).
+        try:
+            method_root=resolve_root()
+        except Exception as exc:  # noqa: BLE001 - reported as an unavailable check
+            add('method_root','unavailable',str(exc))
+        else:
+            add('method_root','ready',str(method_root))
+        for relative in ('SKILL.md','references/content-methods.md'):
+            if method_root is None:
+                break
+            path=method_root/relative
+            add(f'method:{relative}','ready' if path.is_file() else 'unavailable',str(path))
     if step=='view':required+=['resources/static/index.html','resources/static/app.js','resources/static/style.css']
     for resource in required:
         add(resource,'ready' if root.joinpath(resource).is_file() else 'unavailable',str(root.joinpath(resource)))

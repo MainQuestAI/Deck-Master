@@ -19,7 +19,7 @@ from pathlib import Path
 import pytest
 
 from deck_master import service
-from deck_master.method_resources import method_resources, methods_sha256
+from deck_master.method_resources import method_resources, methods_sha256, resolve_root
 from deck_master.models import bump_revision, compute_input_digest
 from deck_master.store import Store
 from deck_master.tasks import TaskConflict
@@ -349,3 +349,56 @@ def test_out_directory_inside_source_root_is_skipped(tmp_path: Path) -> None:
     skipped_paths = [item["path"] for item in response["sources_skipped"]]
     assert any(path.endswith("proj") for path in skipped_paths)
     assert [item["name"] for item in response["sources_adopted"]] == ["a.md"]
+
+
+# ---------------------------------------------------------------------------
+# T7: single method source
+
+import subprocess
+
+
+def test_resolve_root_ignores_cwd_and_fake_files(tmp_path: Path, monkeypatch) -> None:
+    """A fake SKILL.md in the working directory must never be adopted."""
+    (tmp_path / "SKILL.md").write_text("fake", encoding="utf-8")
+    (tmp_path / "references").mkdir()
+    (tmp_path / "references" / "content-methods.md").write_text("fake", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    root = resolve_root()
+    assert root.name == "deck-master"
+    assert "fake" not in (root / "SKILL.md").read_text(encoding="utf-8")
+
+
+def test_canonical_methods_have_no_legacy_terms_or_paired_d1d2() -> None:
+    root = Path(service.__file__).resolve().parents[2] / "skills" / "deck-master"
+    assert root.is_dir(), "canonical skill must live in the repo"
+    for path in [root / "SKILL.md", *(root / "references").glob("*.md")]:
+        text = path.read_text(encoding="utf-8")
+        for needle in ("deck_brief", "narrative_plan", "claim_map", "D1｜", "D2｜",
+                       "成对方法", "skills-references"):
+            assert needle not in text, f"{path.name} still contains {needle!r}"
+    assert (root / "references" / "input-update.md").is_file()
+    assert not (root / "prompts").exists()
+    assert not (root / "schemas").exists()
+
+
+def test_doctor_compose_reports_ready_method_root() -> None:
+    from deck_master.doctor import diagnose
+
+    result = diagnose("compose")
+    checks = {check["name"]: check for check in result["checks"]}
+    assert checks["method_root"]["status"] == "ready", result
+    assert checks["method:references/content-methods.md"]["status"] == "ready"
+    assert result["status"] == "ready"
+
+
+def test_wheel_matches_sdist_wheel_methods() -> None:
+    """Heavy check guarded by the render marker set: reused from test_install
+    (AC-15 lives there); here we only assert the build hook keeps the wheel
+    self-consistent without the retired compatibility copies."""
+    from pathlib import Path as _P
+
+    repo = _P(service.__file__).resolve().parents[2]
+    hook = (repo / "tools" / "build_hook.py").read_text(encoding="utf-8")
+    assert "skills-references" not in hook
+    data = (repo / "pyproject.toml").read_text(encoding="utf-8")
+    assert "skills-references" not in data
