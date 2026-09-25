@@ -667,6 +667,7 @@ def test_content_update_roundtrip_changes_only_target_page(tmp_path: Path) -> No
         assert after[pid] == before[pid], f"unchanged page {pid} must keep every slot"
     assert after["p03"]["page"]["sha256"] == outcome["new_page_hashes"]["p03"]
     assert after["p03"]["blueprint"] == before["p03"]["blueprint"], "original blueprint is kept"
+    assert after_doc["outputs"] == document["outputs"], "outputs stay put during reconciliation"
     assert after["p03"]["svg"] is None and after["p03"]["svg_preview"] is None
     basis = after_doc["content_basis"]
     assert basis["input_digest"] == update["input_digest"]
@@ -718,6 +719,16 @@ def test_content_update_rejections(tmp_path: Path) -> None:
     ghost["content_update"]["page_order"] = ["p01", "p02", "p03", "p99"]
     with pytest.raises(EnvelopeError):
         submit(ghost)
+
+    duplicate = json.loads(json.dumps(base_payload, ensure_ascii=False))
+    duplicate["content_update"]["page_order"] = ["p01", "p02", "p02"]
+    with pytest.raises(EnvelopeError):
+        submit(duplicate)
+
+    omission = json.loads(json.dumps(base_payload, ensure_ascii=False))
+    omission["content_update"]["page_order"] = ["p01", "p02"]
+    with pytest.raises(EnvelopeError):
+        submit(omission)
 
     no_reason = json.loads(json.dumps(base_payload, ensure_ascii=False))
     no_reason["content_update"]["upsert_pages"] = []
@@ -982,3 +993,34 @@ def test_old_skill_names_gone_from_living_surfaces() -> None:
     me = str(Path(__file__).relative_to(repo))
     files = [line for line in result.stdout.splitlines() if line.strip() and line != me]
     assert files == [], f"living references to removed skills: {files}"
+
+
+def test_delivery_gate_surfaces_exit_3_code_via_cli(tmp_path: Path, capsys) -> None:
+    from deck_master.editing import export_project
+
+    project, store, id_by_name = _setup_project_with_pages(tmp_path)
+    document = store.load_document()
+    patch = _load_fixture("update-interface.json")
+    patch["source_changes"]["replace"][0]["source_id"] = id_by_name["interface-v1.md"]
+    service.inputs_update(project, patch=patch, base_revision=document["revision_id"],
+                          operation_id="input-update-cli", patch_dir=FIXTURES)
+    # Minimal current output so the delivery gate (not the missing-output
+    # check) is what refuses.
+    document = store.load_document()
+    pptx_ref = store.put_json_object({"schema_version": "deck_artifact.v1",
+                                      "artifact_id": "probe-pptx", "page_id": None,
+                                      "role": "probe", "file": document["pages"][0]["page"],
+                                      "media_type": "application/json", "created_at": "1970",
+                                      "dependencies": [], "derived_from": [], "provenance": {},
+                                      "reference_regions": [], "limitations": [],
+                                      "editability": "probe"})
+    bumped = bump_revision(document, {"operation_id": "probe-output-cli", "kind": "task_update",
+                                      "description": "probe output", "read_set": []})
+    bumped["outputs"]["pptx"] = pptx_ref
+    store._commit_locked(base_revision=document["revision_id"], document=bumped, blobs=[])
+    code = cli.main(["export", "--project", str(project), "--out", str(tmp_path / "gate-out"),
+                     "--purpose", "delivery"])
+    assert code == 3
+    payload = json.loads(capsys.readouterr().err)
+    assert payload["error"]["code"] == "input_reconciliation_pending"
+    assert not (tmp_path / "gate-out").exists()

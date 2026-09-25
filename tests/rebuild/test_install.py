@@ -102,6 +102,10 @@ def test_sdist_rebuild_includes_unique_skill_without_presync(tmp_path):
     assert result.returncode==0,result.stderr
     with zipfile.ZipFile(next((tmp_path/'wheel').glob('*.whl'))) as z:
         assert z.read('deck_master/resources/skill/SKILL.md')==(REPO/'skills/deck-master/SKILL.md').read_bytes()
+        for relative in ('source-reading.md', 'content-methods.md', 'input-update.md',
+                         'review-and-repair.md', 'content-examples.md'):
+            name = f'deck_master/resources/skill/references/{relative}'
+            assert z.read(name) == (REPO/'skills/deck-master/references'/relative).read_bytes()
         assert not any(n.startswith(('runtime/','workflow/','build/')) for n in z.namelist())
 
 
