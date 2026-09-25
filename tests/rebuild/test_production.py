@@ -563,4 +563,7 @@ def test_new_design_mode_and_failed_review_is_preserved(tmp_path: Path) -> None:
     bumped["reviews"] = list(bumped.get("reviews") or []) + [closing_ref]
     store.commit_change(base_revision=document["revision_id"], document=bumped, operation_id="close-fail-review")
     assert store.read_object_bytes(fail_ref) == fail_bytes, "R0 stays immutable history"
-    assert review_status(store, store.load_document()) == "pass"
+    # The old final PPT still contains the unfixed slide. An SVG adopted
+    # after compilation cannot close a final finding until that page is
+    # recompiled and the current PPT is reviewed.
+    assert review_status(store, store.load_document()) == "fail"

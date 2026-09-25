@@ -52,6 +52,23 @@ def test_envelope_roundtrip(tmp_path: Path) -> None:
     assert document["tasks"][0]["path"].startswith(".deckmaster/objects/")
 
 
+@pytest.mark.parametrize('bad,location', [
+    ({'artifact_specs': [{'role': 'svg', 'page_id': 'p09', 'file_id': 'missing'}]}, 'artifact_specs[0]/file_id'),
+    ({'reviews': [{'kind': 'conversion'}]}, 'reviews[0]'),
+    ({'reviews': [None]}, 'reviews[0]'),
+    ({'artifact_specs': [None]}, 'artifact_specs[0]'),
+])
+def test_malformed_nested_envelope_is_located_and_does_not_switch_document(tmp_path, bad, location):
+    project, task = _make_project(tmp_path)
+    before = Store(project).load_document()
+    envelope = _compose_envelope()
+    envelope.update(bad)
+    with pytest.raises(tasks_mod.EnvelopeError, match=location.replace('[', r'\[').replace(']', r'\]')):
+        service.accept_result(project, task_id=task['task_id'], operation_id=task['operation_id'],
+                              produced_against=task['produced_against'], result_payload=envelope)
+    assert Store(project).load_document()['pages'] == before['pages']
+
+
 def test_idempotent_replay_returns_same_revision(tmp_path: Path) -> None:
     project, task = _make_project(tmp_path)
     envelope = json.loads((ENVELOPES / "compose.json").read_text())

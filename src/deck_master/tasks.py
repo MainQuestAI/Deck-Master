@@ -126,12 +126,18 @@ def parse_envelope(raw: dict[str, Any]) -> dict[str, Any]:
     if raw.get("notes") is not None and not isinstance(raw["notes"], str):
         raise EnvelopeError("(result)/notes", "must be a string when present")
     files = raw.get("files") or []
+    file_ids = set()
     for index, item in enumerate(files):
         if not isinstance(item, dict) or not {"file_id", "path", "media_type"} <= set(item):
             raise EnvelopeError(
                 f"(result)/files[{index}]", "files need file_id, path and media_type"
             )
         staged_path = item.get("path")
+        if not isinstance(item.get('file_id'), str) or not item['file_id'] or item['file_id'] in file_ids:
+            raise EnvelopeError(f'(result)/files[{index}]/file_id', 'must be a unique non-empty string')
+        file_ids.add(item['file_id'])
+        if not isinstance(item.get('media_type'), str) or not item['media_type']:
+            raise EnvelopeError(f'(result)/files[{index}]/media_type', 'must be a non-empty string')
         if not isinstance(staged_path, str) or not staged_path:
             raise EnvelopeError(
                 f"(result)/files/{item.get('file_id')}", "path must be a non-empty string"
@@ -142,7 +148,44 @@ def parse_envelope(raw: dict[str, Any]) -> dict[str, Any]:
                 f"(result)/files/{item.get('file_id')}",
                 f"path must stay inside this operation's staging directory, got {staged_path!r}",
             )
+    for index, event in enumerate(raw.get('usage_events') or []):
+        if not isinstance(event, dict):
+            raise EnvelopeError(f'(result)/usage_events[{index}]', 'usage event must be an object')
     return raw
+
+
+def _validate_content_envelope(raw: dict) -> None:
+    """Validate nested product fields after call facts settle, before field access."""
+    file_ids = {item['file_id'] for item in raw.get('files') or []}
+    for index, spec in enumerate(raw.get('artifact_specs') or []):
+        where = f'(result)/artifact_specs[{index}]'
+        if not isinstance(spec, dict):
+            raise EnvelopeError(where, 'artifact spec must be an object')
+        if not isinstance(spec.get('file_id'), str) or spec['file_id'] not in file_ids:
+            raise EnvelopeError(where + '/file_id', 'must reference a declared file')
+        if not isinstance(spec.get('role'), str) or not spec['role']:
+            raise EnvelopeError(where + '/role', 'must be a non-empty string')
+        for slot in ('dependencies', 'derived_from', 'reference_regions', 'limitations'):
+            if spec.get(slot) is not None and not isinstance(spec[slot], list):
+                raise EnvelopeError(where + '/' + slot, 'must be an array')
+        if spec.get('provenance') is not None and not isinstance(spec['provenance'], dict):
+            raise EnvelopeError(where + '/provenance', 'must be an object')
+    for index, review in enumerate(raw.get('reviews') or []):
+        where = f'(result)/reviews[{index}]'
+        if not isinstance(review, dict):
+            raise EnvelopeError(where, 'review must be an object')
+        try:
+            validate_review_semantics(review)
+        except ModelError as exc:
+            raise EnvelopeError(where, str(exc)) from exc
+    for index, page in enumerate(raw.get('pages') or []):
+        if not isinstance(page, dict):
+            raise EnvelopeError(f'(result)/pages[{index}]', 'page must be an object')
+        if not isinstance(page.get('page_id'), str) or not page['page_id']:
+            raise EnvelopeError(f'(result)/pages[{index}]/page_id', 'must be a non-empty string')
+    for index, page_id in enumerate(raw.get('page_order') or []):
+        if not isinstance(page_id, str) or not page_id:
+            raise EnvelopeError(f'(result)/page_order[{index}]', 'must be a non-empty string')
 
 
 def _staged_file_path(store: Store, operation_id: str, staged_path: str) -> Path:
@@ -362,8 +405,15 @@ def _build_artifact(
 def _adopt_review(store: Store, review: dict) -> dict:
     """Reviews must reference already-saved objects, never envelope aliases."""
     validate_review_semantics(review)
+    finding_keys = [(item.get('finding_id'), item.get('page_id'))
+                    for item in review.get('findings') or []]
+    if len(finding_keys) != len(set(finding_keys)):
+        raise EnvelopeError('review/findings', 'duplicate finding_id for the same page')
     for subject in review.get("subjects") or []:
-        store.read_object_bytes(subject)  # must exist and match its digest
+        try:
+            store.read_object_bytes(subject)  # must exist and match its digest
+        except StoreError as exc:
+            raise EnvelopeError('review/subjects', f'unreadable subject: {exc}') from exc
     replaced = review.get("replaces")
     if replaced is not None:
         # AC-R06 receiver side: R1 must replace the same logical review and
@@ -380,18 +430,17 @@ def _adopt_review(store: Store, review: dict) -> dict:
                 prior.get("kind") != review.get("kind") or
                 prior.get("review_stage", "final") != review.get("review_stage", "final")):
             raise EnvelopeError("review/replaces", "replaces must point at the same logical review")
+        prior = {**prior, 'ref': replaced}
         old_findings = {f.get("finding_id"): f for f in prior.get("findings") or []}
         new_findings = {f.get("finding_id"): f for f in review.get("findings") or []}
         shared = old_findings.keys() & new_findings.keys()
         if not shared:
             raise EnvelopeError("review/replaces", "no shared finding_id with the replaced review")
-        old_subjects = {(s.get("path"), s.get("sha256")) for s in prior.get("subjects") or []}
-        added_subjects = {(s.get("path"), s.get("sha256")) for s in review.get("subjects") or []} - old_subjects
-        if any(new_findings[fid].get('resolution') == 'fixed' for fid in shared) and not added_subjects:
-            raise EnvelopeError(
-                "review/replaces",
-                "fix review must add the rechecked product to subjects; re-submitting the old subjects is not a recheck",
-            )
+        from .editing import _current_artifact_digests
+        from .review import finding_closed
+        context = _current_artifact_digests(
+            store, store.load_document(),
+            [*(prior.get('subjects') or []), *(review.get('subjects') or [])])
         for fid in shared:
             old, new = old_findings[fid], new_findings[fid]
             if new.get('page_id') != old.get('page_id'):
@@ -403,7 +452,13 @@ def _adopt_review(store: Store, review: dict) -> dict:
                     raise EnvelopeError('review/replaces', 'accepted variance needs reason, observation and evidence')
             if new.get('resolution') in ('fixed', 'accepted_variance'):
                 for evidence in new.get('evidence') or []:
-                    store.read_object_bytes(evidence)
+                    try:
+                        store.read_object_bytes(evidence)
+                    except StoreError as exc:
+                        raise EnvelopeError('review/findings/evidence', f'unreadable evidence: {exc}') from exc
+                if not finding_closed([prior, review], prior, old, context):
+                    raise EnvelopeError('review/replaces',
+                                        f"finding {fid!r} is not closed by a current same-page product, dependencies and evidence")
     return review
 
 
@@ -683,8 +738,13 @@ def accept_result(
         store.commit_change(base_revision=document["revision_id"], document=settled_doc,
                             operation_id=f"settle-{operation_id}")
         document = store.load_document()
+    _validate_content_envelope(envelope)
     _check_scope(envelope["kind"], envelope, task)
     stage = task.get('review_stage', 'final')
+    if stage == 'page_visual' and len(task.get('scope_pages') or []) != 1:
+        raise EnvelopeError('task/scope_pages', 'page_visual requires exactly one page; retire this historical task and continue')
+    if stage == 'page_visual' and envelope['kind'] == 'repair' and envelope.get('reviews'):
+        raise EnvelopeError('review', 'page_visual repair submits Page/SVG only; submit reviews in the subsequent review task')
     for review in envelope.get('reviews') or []:
         if review.get('review_stage', 'final') != stage:
             raise EnvelopeError('review/review_stage', 'review stage does not match the dispatched task')
@@ -712,8 +772,11 @@ def accept_result(
 
     # Prevalidate everything before any adoption.
     adopted_pages = []
-    for page in envelope.get("pages") or []:
-        adopted_pages.append(check_page(page))
+    for index, page in enumerate(envelope.get("pages") or []):
+        try:
+            adopted_pages.append(check_page(page))
+        except ModelError as exc:
+            raise EnvelopeError(f'(result)/pages[{index}]', str(exc)) from exc
     artifacts = []
     existing_page_ids = {entry.get("page_id") for entry in document.get("pages") or []} | {
         page["page_id"] for page in adopted_pages
@@ -738,7 +801,10 @@ def accept_result(
                     _validate_svg_reference(data,original['file']['sha256'])
                 _preflight_svg(store, document, entry, data,
                                page=adopted_by_id.get(entry['page_id']))
-        artifacts.append(_build_artifact(store, spec, staged, existing_page_ids))
+        try:
+            artifacts.append(_build_artifact(store, spec, staged, existing_page_ids))
+        except ModelError as exc:
+            raise EnvelopeError(f'(result)/artifact_specs/{spec.get("role")}', str(exc)) from exc
     reviews = []
     for review in envelope.get("reviews") or []:
         reviews.append(_adopt_review(store, review))

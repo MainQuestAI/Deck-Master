@@ -25,6 +25,6 @@ artifacts)`；逐页解释在 `evaluate_page_visual(entry, reviews, artifacts)`�
   must_fix / needs_judgment / accepted_variance,不做指标投票。
 - 独立性:`validate_independence` — host_self/tool 永不独立;
   independent_host 与 human 类型需要真实 `execution_ref`,模型不得代填。
-- 发现项关闭:替代 Review 必须 `replaces` 指向旧 ref，并保持同一 `review_id`、`finding_id`、页与审阅阶段。`fixed` 要有当前新产物、观察与证据；仅原 `needs_judgment` 可在同一产物上以具体理由、实际观察和有效证据记录 `accepted_variance`。未处置的其他发现继续阻塞，过期依赖不放行。
+- 发现项关闭：替代 Review 必须 `replaces` 指向旧 ref，并保持同一 `review_id`、`finding_id`、页、`kind` 与 `review_stage`。`page_visual` 的 `repair` 只提交本页 Page/SVG，待新预览生成后由独立 `review` 任务提交三类审阅。`fixed` 要有发现所在页实际改变的当前产物、预览、观察与证据；最终审阅还需当前 PPT 的页级产物或读回变化依据。仅原 `needs_judgment` 可在同一产物上以具体理由、实际观察和有效证据记录 `accepted_variance`。已明确移除的资产要说明原因；引用损坏不算移除。未处置的其他发现继续阻塞，过期依赖不放行。同一产物重复审阅没有消解发现时，按 `review_no_progress` 补充证据或决定。
 - 源图期待独立于输出 SVG 登记:`source_expectations` 对未识别维度保持
   `not_evaluated`,coverage 不满记 1。

@@ -2,25 +2,118 @@
 from __future__ import annotations
 from pathlib import Path
 import copy
+import io
 import json
 import shutil
 import uuid
+import zipfile
 from .content import check_page
 from .models import bump_revision, canonical_json_bytes, sha256_bytes
 from .store import Store, ConflictError, StoreError
 from .tasks import _project_transaction
 
 
-def _current_artifact_digests(store, doc):
+def _current_artifact_digests(store, doc, extra_subjects=()):
     """Current dependency digests for review freshness (content/page/style/svg/pptx)."""
     from .models import canonical_json_bytes
     from .production import resolve_design
     design = doc.get('design_context') or {}
     artifacts = {}
+    subject_info = {}
+    current_refs = {}
+    for entry in doc.get('pages') or []:
+        for role in ('page', 'blueprint', 'svg', 'svg_preview', 'ppt_preview'):
+            ref = entry.get(role)
+            if ref:
+                current_refs[(ref['path'], ref['sha256'])] = (entry['page_id'], role)
+    pptx_ref = (doc.get('outputs') or {}).get('pptx')
+    if pptx_ref:
+        current_refs[(pptx_ref['path'], pptx_ref['sha256'])] = (None, 'pptx')
+    subject_refs = list(extra_subjects)
+    historical_reviews = []
+    for review_ref in doc.get('reviews') or []:
+        try:
+            prior_review = store.read_object_json(review_ref)
+            historical_reviews.append(prior_review)
+            subject_refs.extend(prior_review.get('subjects') or [])
+        except (KeyError, ValueError, StoreError):
+            continue
+    subject_refs += [ref for entry in doc.get('pages') or []
+                     for role in ('page', 'blueprint', 'svg', 'svg_preview', 'ppt_preview')
+                     if (ref := entry.get(role))]
+    if pptx_ref:
+        subject_refs.append(pptx_ref)
+    for ref in subject_refs:
+        if not isinstance(ref, dict) or 'path' not in ref or 'sha256' not in ref:
+            continue
+        key = (ref['path'], ref['sha256'])
+        if key in subject_info:
+            continue
+        try:
+            obj = store.read_object_json(ref)
+            if obj.get('schema_version') == 'deck_artifact.v1':
+                role, page_id = obj.get('role'), obj.get('page_id')
+                content_sha = obj['file']['sha256']
+            elif obj.get('schema_version') == 'deck_page_package.v2':
+                role, page_id, content_sha = 'page', obj.get('page_id'), ref['sha256']
+            else:
+                continue
+            info = {'role': role, 'page_id': page_id,
+                    'file_sha': content_sha, 'current': key in current_refs}
+            if role == 'pptx':
+                slide_pages = [dep['identity'] for dep in obj.get('dependencies') or []
+                               if dep.get('kind') == 'svg' and dep.get('identity')]
+                if slide_pages:
+                    try:
+                        with zipfile.ZipFile(io.BytesIO(store.read_object_bytes(obj['file']))) as deck:
+                            info['slides'] = {
+                                slide_page: sha256_bytes(deck.read(f'ppt/slides/slide{index}.xml'))
+                                for index, slide_page in enumerate(slide_pages, 1)}
+                    except (KeyError, StoreError, zipfile.BadZipFile):
+                        pass
+            subject_info[key] = info
+        except (KeyError, ValueError, StoreError, zipfile.BadZipFile):
+            continue
+    artifacts['_subjects'] = subject_info
+    current_asset_ids = {asset.get('asset_id') for asset in design.get('assets') or []}
+    missing_asset_deps = {(dep.get('identity'), dep.get('sha256'))
+                          for prior_review in historical_reviews
+                          for dep in prior_review.get('dependencies') or []
+                          if dep.get('kind') == 'asset' and dep.get('identity') not in current_asset_ids}
+    retired_assets = set()
+    revision = doc.get('parent_revision_id')
+    visited = set()
+    while revision and revision not in visited and missing_asset_deps:
+        visited.add(revision)
+        try:
+            historic = store.load_document(revision)
+        except StoreError:
+            break
+        for asset in (historic.get('design_context') or {}).get('assets') or []:
+            matching = {(aid, sha) for aid, sha in missing_asset_deps if aid == asset.get('asset_id')}
+            if not matching:
+                continue
+            try:
+                resource = store.read_object_json(asset['artifact'])
+                store.read_object_bytes(resource['file'])
+                verified = (asset['asset_id'], resource['file']['sha256'])
+                if verified in matching:
+                    retired_assets.add(verified)
+                    missing_asset_deps.discard(verified)
+            except (KeyError, StoreError):
+                continue
+        revision = historic.get('parent_revision_id')
+    artifacts['_retired_assets'] = retired_assets
     for asset in design.get('assets') or []:
         ref = asset.get('artifact')
         if ref:
-            artifacts[f"asset:{asset['asset_id']}"] = store.read_object_json(ref)['file']['sha256']
+            try:
+                resource = store.read_object_json(ref)
+                store.read_object_bytes(resource['file'])
+                artifacts[f"asset:{asset['asset_id']}"] = resource['file']['sha256']
+            except (KeyError, StoreError) as exc:
+                raise StoreError(f"asset:{asset.get('asset_id')}",
+                                 'stored asset reference is unreadable; restore or replace it') from exc
     for entry in doc.get('pages') or []:
         page_id = entry['page_id']
         page = store.read_object_json(entry['page']) if entry.get('page') else {}

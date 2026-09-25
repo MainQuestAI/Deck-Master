@@ -108,6 +108,88 @@ def test_compose_blueprint_and_svg_in_one_envelope_use_candidate_image(tmp_path)
     assert entry['svg'] and entry['blueprint']
 
 
+def test_historical_multi_page_visual_task_is_retired_and_status_remains_readable(tmp_path):
+    from deck_master import tasks as tasks_mod
+    from deck_master.models import bump_revision, content_identity
+    project = tmp_path / 'project'
+    service.create(project, brief='历史多页审图', draft={'pages': [
+        _draft_page('p1', '第一页', '正文一。'), _draft_page('p2', '第二页', '正文二。')]})
+    store = Store(project)
+    doc = store.load_document()
+    with pytest.raises(service.ServiceError, match='exactly one page'):
+        service.open_host_task(store, kind='review', page_ids=['p1', 'p2'],
+                               instruction='review', review_stage='page_visual')
+    old = tasks_mod.new_task(task_id='old-visual', operation_id='old-visual-op', kind='review',
+                             scope_pages=['p1', 'p2'], instruction='legacy visual task',
+                             inputs=[e['page'] for e in doc['pages']], dependencies=[],
+                             dispatch_revision=doc['revision_id'], produced_against=content_identity(doc),
+                             review_stage='page_visual')
+    changed = bump_revision(doc, {'operation_id': 'attach-old-visual', 'kind': 'task_update',
+                                 'description': 'legacy task', 'read_set': []})
+    changed['tasks'].append(store.put_json_object(old))
+    store.commit_change(base_revision=doc['revision_id'], document=changed, operation_id='attach-old-visual')
+    outcome = service.continue_project(project)
+    assert outcome['pending_tasks'][0]['kind'] == 'blueprint'
+    status = service.task_status(project, task_id='old-visual')
+    assert status['status'] == 'superseded'
+    assert 'invalidated_reason' in status['pending_tasks'][0]
+
+
+@pytest.mark.render
+def test_stored_invalid_svg_reconstructs_then_resumes_page_review(tmp_path):
+    from deck_master.models import bump_revision
+    from deck_master.pipeline import artifact
+    project = tmp_path / 'project'
+    service.create(project, brief='坏 SVG 恢复', draft={'pages': [
+        _draft_page('p1', '第一页', '正文一。'), _draft_page('p2', '第二页', '正文二。')]})
+    task, svg = _start(project, 'p1')
+    _accept(project, task, _svg_envelope('p1'), file_name='page.svg', data=svg)
+    store = Store(project)
+    before = store.load_document()
+    bad_file = tmp_path / 'old.svg'
+    bad_file.write_bytes(svg.replace(b'</svg>', b'<image id="bad-logo" href="unapproved" width="10" height="10"/></svg>'))
+    bad_ref = artifact(store, bad_file, 'svg', page_id='p1')
+    changed = bump_revision(before, {'operation_id': 'inject-old-svg', 'kind': 'task_update',
+                                     'description': 'simulate historical invalid SVG', 'read_set': []})
+    changed['pages'][0]['svg'] = bad_ref
+    changed['pages'][0]['svg_preview'] = None
+    store.commit_change(base_revision=before['revision_id'], document=changed, operation_id='inject-old-svg')
+    recovery = service.continue_project(project)
+    assert recovery['next_action'] == 'codex_reconstruct_svg'
+    assert recovery['findings'][0]['element_id'] == 'bad-logo'
+    restore_task = recovery['pending_tasks'][0]
+    assert restore_task['kind'] == 'reconstruct' and restore_task['scope_pages'] == ['p1']
+    assert service.continue_project(project)['pending_tasks'][0]['task_id'] == restore_task['task_id']
+    _accept(project, restore_task, _svg_envelope('p1'), file_name='page.svg', data=svg)
+    review = service.continue_project(project)['pending_tasks'][0]
+    assert review['review_stage'] == 'page_visual' and review['scope_pages'] == ['p1']
+    pass_page_review(project, review)
+    assert service.continue_project(project)['pending_tasks'][0]['scope_pages'] == ['p2']
+
+
+@pytest.mark.render
+def test_repeated_visual_review_without_resolution_stops_with_actionable_finding(tmp_path):
+    project = tmp_path / 'project'
+    service.create(project, brief='无进展审阅', draft={'pages': [_draft_page('p1', '标题', '正文。')]})
+    task, svg = _start(project, 'p1')
+    _accept(project, task, _svg_envelope('p1'), file_name='page.svg', data=svg)
+    first = service.continue_project(project)['pending_tasks'][0]
+    reviews = make_page_reviews(first)
+    pending = next(r for r in reviews if r['kind'] == 'blueprint_fidelity')
+    pending['status'] = 'needs_review'
+    pending['findings'] = [{'finding_id': 'overlap', 'kind': 'design',
+                            'impact': 'needs_judgment', 'page_id': 'p1',
+                            'element_refs': ['title'], 'message': '疑似遮挡',
+                            'expected': '无遮挡', 'actual': '待复核',
+                            'evidence': [], 'resolution': 'open'}]
+    _accept(project, first, {'kind': 'review', 'reviews': reviews})
+    second = service.continue_project(project)['pending_tasks'][0]
+    _accept(project, second, {'kind': 'review', 'reviews': make_page_reviews(second)})
+    outcome = service.continue_project(project)
+    assert outcome['status'] == 'needs_input' and outcome['next_action'] == 'review_no_progress'
+    assert outcome['findings'][0]['unresolved']['pending_judgments'] == ['overlap']
+
+
 @pytest.mark.render
 def test_page_review_blocks_next_blueprint_until_current_three_checks_pass(tmp_path):
     project = tmp_path / 'project'
@@ -193,6 +275,8 @@ def test_failed_visual_review_requires_page_repair_and_evidenced_closure(tmp_pat
     repair = service.continue_project(project)['pending_tasks'][0]
     assert repair['kind'] == 'repair' and repair['review_stage'] == 'page_visual'
     assert repair['scope_pages'] == ['p1']
+    with pytest.raises(EnvelopeError, match='repair submits Page/SVG only'):
+        _accept(project, repair, {'kind': 'repair', 'reviews': make_page_reviews(repair)})
     changed = svg.replace(b'</svg>', b'<circle id="icon" cx="10" cy="10" r="5"/></svg>')
     _accept(project, repair, _svg_envelope('p1', 'repair'), file_name='page.svg', data=changed)
     recheck = service.continue_project(project)['pending_tasks'][0]
@@ -272,6 +356,25 @@ def test_missing_preview_renderer_blocks_next_page_with_tool_reason(tmp_path, mo
     assert result['status'] == 'needs_tool'
     assert 'rsvg-convert unavailable' in result['findings'][0]
     assert Store(project).load_document()['pages'][1]['blueprint'] is None
+
+
+@pytest.mark.render
+def test_preview_renderer_execution_error_is_reported_separately_from_missing_tool(tmp_path, monkeypatch):
+    from deck_master import pipeline
+    project = tmp_path / 'project'
+    service.create(project, brief='预览器运行失败', draft={'pages': [_draft_page('p1', '标题', '正文。')]})
+    task, svg = _start(project, 'p1')
+    _accept(project, task, _svg_envelope('p1'), file_name='page.svg', data=svg)
+    original = pipeline.run
+    def fail_render(args, **kwargs):
+        if 'rsvg-convert' in str(args[0]):
+            raise pipeline.RendererError('rsvg-convert exited 2: invalid font cache')
+        return original(args, **kwargs)
+    monkeypatch.setattr(pipeline, 'run', fail_render)
+    outcome = service.continue_project(project)
+    assert outcome['status'] == 'needs_input'
+    assert outcome['findings'][0]['code'] == 'renderer_execution_failed'
+    assert 'invalid font cache' in outcome['findings'][0]['message']
 
 
 @pytest.mark.render

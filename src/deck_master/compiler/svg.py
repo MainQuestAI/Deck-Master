@@ -4,6 +4,7 @@ from __future__ import annotations
 import re
 import math
 import copy
+from pathlib import Path
 from .paint import gradient
 from .geometry import _parse_path, commands_to_svg_path, _parse_transform, _matrix_product, _apply_matrix, _IDENTITY
 import xml.etree.ElementTree as ET
@@ -24,6 +25,37 @@ class SvgError(ValueError):
                            'recovery': 'Correct the named SVG element or express it using supported explicit geometry.'}
 
 
+XLINK_HREF = '{http://www.w3.org/1999/xlink}href'
+
+
+def image_href(element: ET.Element) -> str:
+    """Use the same non-empty asset ID for parsing and preview rewriting."""
+    return element.get('href') or element.get(XLINK_HREF, '')
+
+
+def image_elements(root: ET.Element, *, page_id: str, assets: dict[str, str]):
+    """Validate references even in defs; defs remain non-rendering until use."""
+    for element in root.iter():
+        if element.tag.rsplit('}', 1)[-1] != 'image':
+            continue
+        href = image_href(element)
+        if href not in assets:
+            identity = element.get('id') or 'image'
+            raise SvgError(f'{page_id}/{identity}: image {href!r} is not an explicitly approved asset',
+                           page_id=page_id, element_id=identity, feature='image_href')
+        identity = element.get('id') or 'image'
+        try:
+            from PIL import Image
+            with Image.open(Path(assets[href])) as image:
+                if image.format not in ('PNG', 'JPEG'):
+                    raise ValueError('approved image must be PNG/JPEG')
+                image.verify()
+        except (OSError, ValueError) as exc:
+            raise SvgError(f'{page_id}/{identity}: approved image {href!r} is unreadable: {exc}',
+                           page_id=page_id, element_id=identity, feature='image_href') from exc
+        yield element, href
+
+
 
 def parse_svg(data: bytes, *, page_id: str, assets: dict[str, str] | None = None) -> dict:
     try:
@@ -38,6 +70,7 @@ def _parse_svg(data: bytes, *, page_id: str, assets: dict[str, str] | None = Non
     if re.search(br'<!\s*(DOCTYPE|ENTITY)', data, re.I):
         raise SvgError(f'{page_id}: XML entities/DOCTYPE are forbidden')
     root = ET.fromstring(data)
+    list(image_elements(root, page_id=page_id, assets=assets or {}))
     def numbers(raw):
         return [float(x) for x in re.findall(r'[-+]?(?:\d*\.\d+|\d+\.?\d*)(?:[eE][-+]?\d+)?', raw)]
     box = numbers(root.get('viewBox', ''))
@@ -109,7 +142,7 @@ def _parse_svg(data: bytes, *, page_id: str, assets: dict[str, str] | None = Non
             if unknown:raise SvgError(f'{page_id}/{identity}: unsupported attribute {unknown[0]}; provide explicit supported geometry')
         if tag=='defs':return
         if tag=='use':
-            href=el.get('href') or el.get('{http://www.w3.org/1999/xlink}href','')
+            href=image_href(el)
             if not href.startswith('#') or href[1:] not in definitions or href in active_uses:
                 raise SvgError(f'{page_id}/{identity}: unresolved or cyclic local use')
             target=copy.deepcopy(definitions[href[1:]])
@@ -159,16 +192,12 @@ def _parse_svg(data: bytes, *, page_id: str, assets: dict[str, str] | None = Non
         except ValueError as exc:
             raise SvgError(str(exc)) from exc
         if tag=='image':
-            href=el.get('href') or el.get('{http://www.w3.org/1999/xlink}href','')
+            href=image_href(el)
             if href not in (assets or {}):raise SvgError(f'{page_id}/{identity}: image is not an explicitly approved asset')
             if matrix!=_IDENTITY:raise SvgError(f'{page_id}/{identity}: transformed image needs explicit axis-aligned bounds')
             if el.get('preserveAspectRatio','xMidYMid meet') not in ('xMidYMid meet','xMidYMid slice','none'):
                 raise SvgError(f'{page_id}/{identity}: unsupported image preserveAspectRatio')
             if base['opacity']!=1:raise SvgError(f'{page_id}/{identity}: image opacity requires flattened approved asset')
-            from PIL import Image
-            with Image.open(assets[href]) as image:
-                if image.format not in ('PNG','JPEG'):raise SvgError(f'{page_id}/{identity}: approved image must be PNG/JPEG')
-                image.verify()
             base.update(x=num('x'),y=num('y'),width=num('width'),height=num('height'),asset_path=assets[href],fit={'none':'stretch','xMidYMid slice':'cover'}.get(el.get('preserveAspectRatio'),'contain'))
             if min(base['width'],base['height'])<=0:raise SvgError(f'{page_id}/{identity}: image bounds must be positive')
             shapes.append(base);return

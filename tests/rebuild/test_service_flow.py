@@ -530,6 +530,32 @@ def test_default_style_change_invalidates_only_dependent_pages(tmp_path):
     assert final["revision_id"] != after["revision_id"]
 
 
+def test_design_rejects_unreadable_asset_and_old_project_gets_recovery_hint(tmp_path):
+    project = tmp_path / 'project'
+    service.create(project, brief='坏资产引用', draft={'pages': [_draft_page('p1', '标题', '正文。')]})
+    image = tmp_path / 'asset.png'
+    Image.new('RGB', (8, 8), 'blue').save(image)
+    service.import_asset(project, asset_id='logo', kind='logo', file_path=image)
+    store = Store(project)
+    before = store.load_document()
+    changed = deepcopy(before['design_context'])
+    fake_sha = 'f' * 64
+    changed['assets'][0]['artifact'] = {
+        'path': f'.deckmaster/objects/ff/{fake_sha}.json', 'sha256': fake_sha}
+    with pytest.raises(service.ServiceError, match='unreadable'):
+        service.update_design(project, design_context=changed)
+    assert store.load_document()['revision_id'] == before['revision_id']
+    # Simulate an older project committed before the write-side check existed.
+    damaged = bump_revision(before, {'operation_id': 'old-bad-asset', 'kind': 'task_update',
+                                    'description': 'old broken asset', 'read_set': []})
+    damaged['design_context'] = changed
+    store.commit_change(base_revision=before['revision_id'], document=damaged,
+                        operation_id='old-bad-asset')
+    result = service.continue_project(project)
+    assert result['status'] == 'needs_input'
+    assert result['findings'][0]['code'] == 'broken_asset_reference'
+
+
 def test_canvas_change_invalidates_all_pages_groupwise(tmp_path):
     # 08.8: a physical canvas change is a group regression — every page's
     # SVG/previews and the assembled outputs are invalidated.

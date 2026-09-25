@@ -361,7 +361,11 @@ def test_independence_requires_real_evidence():
 
 
 def _r0_failing():
-    return make_review('conversion', seed='r0', status='fail', findings=[finding('f1')])
+    old_svg = ref('svg-a0-old', 'svg')
+    return make_review('conversion', seed='r0', status='fail',
+                       subjects=[PAGE_REF, PPTX_OLD, old_svg], findings=[finding('f1')],
+                       dependencies=[{'kind': 'content', 'identity': 'page:p1', 'sha256': PAGE_REF['sha256']},
+                                     {'kind': 'artifact', 'identity': 'svg:p1', 'sha256': old_svg['sha256']}])
 
 
 def _r1_closing(r0, *, seed='r1', observations=('复查新产物:标签已存在。',), evidence=(None,)):
@@ -369,7 +373,9 @@ def _r1_closing(r0, *, seed='r1', observations=('复查新产物:标签已存在
     candidate = make_review(r0['kind'], seed=seed, status='pass',
                             subjects=[PAGE_REF, PPTX_REF, A1_REF],
                             findings=[finding('f1', impact='must_fix', resolution='fixed', evidence=ev)],
-                            replaces=r0['ref'], observations=list(observations))
+                            replaces=r0['ref'], observations=list(observations),
+                            dependencies=[{'kind': 'content', 'identity': 'page:p1', 'sha256': PAGE_REF['sha256']},
+                                          {'kind': 'artifact', 'identity': 'svg:p1', 'sha256': A1_REF['sha256']}])
     candidate['review_id'] = r0['review_id']
     return candidate
 
@@ -441,8 +447,9 @@ def test_adopt_review_validates_replaces_chain(tmp_path):
         _adopt_review(store, r1_base(review_id='different-id'))
     with pytest.raises(EnvelopeError):
         _adopt_review(store, r1_base(subjects=r0['subjects']))
-    accepted = _adopt_review(store, r1_base())
-    assert accepted['replaces'] == r0_ref
+    # Raw blobs are not current page artifacts and cannot prove a page repair.
+    with pytest.raises(EnvelopeError, match='same-page product'):
+        _adopt_review(store, r1_base())
 
 
 def test_final_review_accepts_only_evidenced_current_judgment_resolution():
@@ -481,10 +488,12 @@ def test_receiver_accepts_same_product_variance_but_not_must_fix_relabel(tmp_pat
     subject = store.load_document()['pages'][0]['page']
     evidence = store.put_blob(b'observed no glyph overlap', ext='png')
     original = make_review('blueprint_fidelity', seed='variance', status='needs_review',
-                           subjects=[subject], findings=[finding('f1', impact='needs_judgment')])
+                           subjects=[subject], findings=[finding('f1', impact='needs_judgment')],
+                           dependencies=[{'kind': 'content', 'identity': 'page:p1', 'sha256': subject['sha256']}])
     original_ref = store.put_json_object(original)
     candidate = make_review('blueprint_fidelity', seed='recheck', subjects=[subject],
-                            replaces=original_ref)
+                            replaces=original_ref,
+                            dependencies=[{'kind': 'content', 'identity': 'page:p1', 'sha256': subject['sha256']}])
     candidate['review_id'] = original['review_id']
     candidate['findings'] = [{**finding('f1', impact='needs_judgment',
                                        resolution='accepted_variance', evidence=[evidence]),
@@ -694,14 +703,104 @@ def test_plain_pass_does_not_clear_open_findings():
 
 
 def test_partial_closure_keeps_remaining_findings_open():
-    r0 = make_review('content', seed='r0-partial', status='fail',
-                     findings=[finding('f1'), finding('f2')])
+    r0 = _r0_failing()
+    r0['kind'] = 'content'
+    r0['findings'].append(finding('f2'))
     r0['ref'] = ref('r0-partial-object')
     closing = _r1_closing(r0)
     summary = review_mod.evaluate_current(make_document(), [r0, closing], current_artifacts())
     dimension = summary['dimensions']['content:p1']
     assert dimension['closed_findings'] == ['f1'] and dimension['open_must_fix'] == ['f2']
     assert summary['status'] == 'fail'
+
+
+def test_finding_closure_requires_changed_bytes_on_the_finding_page_and_survives_forks():
+    old_svg, new_svg, other_svg = ref('old-p1', 'json'), ref('new-p1', 'json'), ref('new-p2', 'json')
+    original = make_review('conversion', seed='page-owned', status='fail',
+                           subjects=[PAGE_REF, PPTX_OLD, old_svg], findings=[finding('f1')],
+                           dependencies=[{'kind': 'content', 'identity': 'page:p1', 'sha256': PAGE_REF['sha256']}])
+    original['ref'] = ref('page-owned-review')
+    def closing(subject, seed):
+        candidate = make_review('conversion', seed=seed, subjects=[PAGE_REF, PPTX_REF, subject],
+                                replaces=original['ref'], findings=[finding('f1', resolution='fixed', evidence=[ref('proof')])])
+        candidate['review_id'] = original['review_id']
+        return candidate
+    context = {**current_artifacts(), '_subjects': {
+        (PAGE_REF['path'], PAGE_REF['sha256']): {'page_id': 'p1', 'role': 'page', 'file_sha': PAGE_REF['sha256'], 'current': True},
+        (PPTX_OLD['path'], PPTX_OLD['sha256']): {'page_id': None, 'role': 'pptx', 'file_sha': 'old-deck', 'current': False},
+        (PPTX_REF['path'], PPTX_REF['sha256']): {'page_id': None, 'role': 'pptx', 'file_sha': 'new-deck', 'current': True},
+        (old_svg['path'], old_svg['sha256']): {'page_id': 'p1', 'role': 'svg', 'file_sha': 'old', 'current': False},
+        (new_svg['path'], new_svg['sha256']): {'page_id': 'p1', 'role': 'svg', 'file_sha': 'new', 'current': True},
+        (other_svg['path'], other_svg['sha256']): {'page_id': 'p2', 'role': 'svg', 'file_sha': 'new', 'current': True},
+    }}
+    good, wrong_page = closing(new_svg, 'good'), closing(other_svg, 'wrong-page')
+    assert not review_mod.finding_closed([original, wrong_page], original, original['findings'][0], context)
+    assert review_mod.finding_closed([original, good, wrong_page], original, original['findings'][0], context)
+    assert review_mod.finding_closed([original, wrong_page, good], original, original['findings'][0], context)
+    same_bytes = closing(new_svg, 'same-bytes')
+    context['_subjects'][(new_svg['path'], new_svg['sha256'])]['file_sha'] = 'old'
+    assert not review_mod.finding_closed([original, same_bytes], original, original['findings'][0], context)
+    deck_only = closing(new_svg, 'deck-only')
+    deck_only['subjects'] = [PAGE_REF, PPTX_REF]
+    context['_subjects'][(PPTX_OLD['path'], PPTX_OLD['sha256'])]['slides'] = {'p1': 'slide-1', 'p2': 'slide-2'}
+    context['_subjects'][(PPTX_REF['path'], PPTX_REF['sha256'])]['slides'] = {'p1': 'slide-1', 'p2': 'changed-2'}
+    assert not review_mod.finding_closed([original, deck_only], original, original['findings'][0], context)
+    context['_subjects'][(PPTX_REF['path'], PPTX_REF['sha256'])]['slides']['p1'] = 'changed-1'
+    assert review_mod.finding_closed([original, deck_only], original, original['findings'][0], context)
+    middle_svg = ref('middle-p1', 'json')
+    context['_subjects'][(middle_svg['path'], middle_svg['sha256'])] = {
+        'page_id': 'p1', 'role': 'svg', 'file_sha': 'middle', 'current': False}
+    middle = closing(middle_svg, 'middle')
+    middle['ref'] = ref('middle-review')
+    middle['subjects'] = [PAGE_REF, PPTX_OLD, middle_svg]
+    middle['findings'][0]['resolution'] = 'open'
+    tail = closing(new_svg, 'tail')
+    tail['replaces'] = middle['ref']
+    context['_subjects'][(new_svg['path'], new_svg['sha256'])]['file_sha'] = 'new'
+    assert review_mod.finding_closed([original, middle, tail], original, original['findings'][0], context)
+
+
+def test_retired_asset_can_leave_closure_dependencies_but_broken_active_asset_cannot():
+    original = _r0_failing()
+    original['ref'] = ref('asset-owner')
+    original['dependencies'].append({'kind': 'asset', 'identity': 'retired', 'sha256': ref('asset')['sha256']})
+    candidate = _r1_closing(original)
+    candidate['findings'][0]['resolution_reason'] = '旧资产已从当前设计移除，本页新 SVG 已复核'
+    context = {**current_artifacts(), '_retired_assets': {('retired', ref('asset')['sha256'])}}
+    assert review_mod.finding_closed([original, candidate], original, original['findings'][0], context)
+    context['_retired_assets'] = set()
+    assert not review_mod.finding_closed([original, candidate], original, original['findings'][0], context)
+
+
+def test_retired_asset_requires_a_matching_readable_historical_reference(tmp_path):
+    from deck_master.editing import _current_artifact_digests
+    project = tmp_path / 'project'
+    service.create(project, brief='资产历史', draft={'pages': [{
+        'schema_version': 'deck_page_package.v2', 'page_id': 'p1',
+        'customer_visible': {'title': 't', 'body_blocks': []},
+        'visual_spec': {'intent': 'x', 'reference_mode': 'new_design'}}]})
+    image = tmp_path / 'asset.png'
+    from PIL import Image
+    Image.new('RGB', (8, 8), 'red').save(image)
+    service.import_asset(project, asset_id='logo', kind='logo', file_path=image)
+    store = Store(project)
+    doc = store.load_document()
+    asset = doc['design_context']['assets'][0]
+    sha = store.read_object_json(asset['artifact'])['file']['sha256']
+    prior = make_review('conversion', seed='old-asset', subjects=[doc['pages'][0]['page']],
+                        dependencies=[{'kind': 'asset', 'identity': 'logo', 'sha256': sha},
+                                      {'kind': 'asset', 'identity': 'logo', 'sha256': 'a' * 64}])
+    changed = tasks_mod.bump_revision(doc, {'operation_id': 'asset-review', 'kind': 'task_update',
+                                            'description': 'historical review', 'read_set': []})
+    changed['reviews'].append(store.put_json_object(prior))
+    store.commit_change(base_revision=doc['revision_id'], document=changed, operation_id='asset-review')
+    design = deepcopy(store.load_document()['design_context'])
+    design['assets'] = []
+    design['allowed_asset_ids'] = []
+    service.update_design(project, design_context=design)
+    retired = _current_artifact_digests(store, store.load_document())['_retired_assets']
+    assert ('logo', sha) in retired
+    assert ('logo', 'a' * 64) not in retired
 
 
 def test_tool_pass_rejected_for_substantive_kinds():

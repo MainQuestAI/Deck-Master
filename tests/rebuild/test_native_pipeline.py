@@ -81,6 +81,24 @@ def test_images_require_explicit_asset_and_embed_original_bytes(tmp_path):
         assert len(media)==1 and z.read(media[0])==asset.read_bytes()
 
 
+def test_definitions_and_empty_href_use_the_same_approved_image_resolution(tmp_path):
+    from PIL import Image
+    from deck_master.compiler.svg import parse_svg, SvgError
+    from deck_master.pipeline import preview_svg_bytes
+    asset = tmp_path / 'approved.png'
+    Image.new('RGB', (8, 8), 'blue').save(asset)
+    data = (b'<svg viewBox="0 0 100 100" xmlns:xlink="http://www.w3.org/1999/xlink">'
+            b'<defs><image id="logo" href="" xlink:href="approved" width="10" height="10"/></defs>'
+            b'<use href="#logo"/></svg>')
+    parsed = parse_svg(data, page_id='p1', assets={'approved': str(asset)})
+    assert len(parsed['shapes']) == 1
+    rewritten = preview_svg_bytes(data, page_id='p1', assets={'approved': str(asset)})
+    assert asset.as_uri().encode() in rewritten
+    assert b'xlink:href="approved"' not in rewritten
+    with pytest.raises(SvgError, match='p1/logo.*approved'):
+        parse_svg(data, page_id='p1', assets={})
+
+
 def test_edit_replay_after_later_edit_and_restore_keeps_history(tmp_path):
     from deck_master.editing import restore
     from copy import deepcopy

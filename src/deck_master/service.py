@@ -22,7 +22,7 @@ from . import tasks as tasks_mod
 from .content import normalize_design_assets, check_page
 from .models import bump_revision, canonical_json_bytes, content_identity, new_document, sha256_bytes, validate_document_semantics
 from .sources import read_source
-from .store import Store, StoreError
+from .store import Store, StoreError, ConflictError
 from .production import project_prompt, resolve_design
 
 AUTO_VIEW = "auto_view_then_production"
@@ -261,12 +261,12 @@ def _pending_host_tasks(document: dict, store: Store) -> list[dict]:
     return pending
 
 
-def _retire_missing_page_inputs(store: Store, document: dict) -> dict:
+@tasks_mod._project_transaction
+def _retire_missing_page_inputs(store: Store, document: dict | None = None) -> dict:
     """Recover older runs whose open visual task outlived its SVG/preview."""
+    document = store.load_document()
     affected = {e['page_id'] for e in document.get('pages') or []
                 if not e.get('svg') or not e.get('svg_preview')}
-    if not affected:
-        return document
     updated = dict(document)
     updated['tasks'] = list(document.get('tasks') or [])
     changed = False
@@ -275,7 +275,8 @@ def _retire_missing_page_inputs(store: Store, document: dict) -> dict:
         if (task.get('status') in ('awaiting_host', 'running') and
                 task.get('review_stage') == 'page_visual' and
                 task.get('kind') in ('review', 'repair') and
-                affected.intersection(task.get('scope_pages') or [])):
+                (affected.intersection(task.get('scope_pages') or []) or
+                 len(task.get('scope_pages') or []) != 1)):
             updated['tasks'][index] = store.put_json_object(
                 {**task, 'status': 'superseded', 'updated_at': _utc_now_iso()})
             changed = True
@@ -285,8 +286,8 @@ def _retire_missing_page_inputs(store: Store, document: dict) -> dict:
                                     'kind': 'task_update',
                                     'description': 'retire page task with missing SVG or preview',
                                     'read_set': []})
-    store.commit_change(base_revision=document['revision_id'], document=bumped,
-                        operation_id=bumped['change']['operation_id'])
+    store._commit_locked(base_revision=document['revision_id'], document=bumped,
+                         operation_id=bumped['change']['operation_id'], blobs=[])
     return store.load_document()
 
 
@@ -312,6 +313,10 @@ def task_summary(store: Store, document: dict, task: dict) -> dict:
             "deck_master://skills/deck-master/references/content-examples.md",
         ],
     }
+    if task.get('status') in ('superseded', 'cancelled', 'completed', 'failed'):
+        if task.get('status') == 'superseded':
+            summary['invalidated_reason'] = 'task inputs or page scope changed; continue creates a current task'
+        return summary
     summary['source_reading'] = []
     for source in document.get('sources') or []:
         ref=source.get('extract')
@@ -357,7 +362,9 @@ def task_summary(store: Store, document: dict, task: dict) -> dict:
                 })
                 for ref in document.get('reviews') or []:
                     prior = store.read_object_json(ref)
-                    if prior.get('review_stage') != 'page_visual' or not prior.get('findings'):
+                    if (prior.get('review_stage') != 'page_visual' or
+                            prior.get('kind') not in ('blueprint_content', 'blueprint_fidelity', 'readability') or
+                            not prior.get('findings')):
                         continue
                     if any(dep.get('kind') == 'content' and dep.get('identity') == f"page:{entry['page_id']}"
                            for dep in prior.get('dependencies') or []):
@@ -441,7 +448,12 @@ def _resolve_permitted_asset_files(store: Store, assets: list[dict]) -> list[dic
     """Expose only allowed immutable asset bytes to the Codex task."""
     resolved = []
     for asset in assets:
-        artifact = store.read_object_json(asset["artifact"])
+        try:
+            artifact = store.read_object_json(asset["artifact"])
+            store.read_object_bytes(artifact['file'])
+        except (KeyError, StoreError) as exc:
+            raise StoreError(f"asset:{asset.get('asset_id')}",
+                             'stored asset reference is unreadable; restore or replace it') from exc
         resolved.append(
             {
                 "asset_id": asset["asset_id"],
@@ -461,6 +473,13 @@ def continue_project(project_dir: Path | str) -> dict:
         return _response(status="needs_input", document=document, requested_action="continue",
                          findings=[{"code": "external_call_blocked", "field": exc.path, "message": exc.detail}],
                          next_action="resolve_external_call_block")
+    except StoreError as exc:
+        if not exc.path.startswith('asset:'):
+            raise
+        document = Store(Path(project_dir)).load_document()
+        return _response(status='needs_input', document=document, requested_action='continue',
+                         findings=[{'code': 'broken_asset_reference', 'field': exc.path,
+                                    'message': exc.detail}], next_action='restore_or_replace_asset')
 
 
 def _continue_project(project_dir: Path | str) -> dict:
@@ -528,17 +547,42 @@ def _continue_project(project_dir: Path | str) -> dict:
         if already_final or existing_report_failed:
             continue
         if not entry.get('svg_preview'):
-            from .pipeline import preview_svg_page, NeedsTool
+            from .pipeline import preview_svg_page, NeedsTool, RendererError
+            from .compiler.svg import SvgError
             try:
                 preview_svg_page(project_dir, entry['page_id'])
             except NeedsTool as exc:
                 return _response(status='needs_tool', document=document, requested_action='continue',
                                  findings=[str(exc)], next_action='configure_reported_tool')
+            except RendererError as exc:
+                return _response(status='needs_input', document=document, requested_action='continue',
+                                 findings=[{'code': 'renderer_execution_failed', 'page_id': entry['page_id'],
+                                            'message': str(exc)}], next_action='repair_renderer_execution')
+            except ConflictError:
+                return _continue_project(project_dir)
+            except SvgError as exc:
+                task = open_host_task(store, kind='reconstruct', page_ids=[entry['page_id']],
+                    instruction=f'存量 SVG 编译失败：{exc.diagnostic}. 阅读原 Page 和蓝图，提交本页修正后的 SVG；旧 SVG 保留为历史。')
+                document = store.load_document()
+                return _response(status='awaiting_host', document=document, requested_action='continue',
+                                 pending_tasks=[task_summary(store, document, task)],
+                                 findings=[exc.diagnostic], next_action='codex_reconstruct_svg')
             document = store.load_document()
             entry = next(e for e in document['pages'] if e['page_id'] == entry['page_id'])
         page_check = page_visual_summary(store, document, entry)
         if page_check['status'] == 'pass':
             continue
+        completed_reviews = [store.read_object_json(ref) for ref in document.get('tasks') or []]
+        same_input_reviews = [task for task in completed_reviews
+                              if task.get('kind') == 'review' and task.get('status') == 'completed'
+                              and task.get('review_stage') == 'page_visual'
+                              and task.get('scope_pages') == [entry['page_id']]
+                              and task.get('produced_against') == content_identity(document)]
+        if len(same_input_reviews) >= 2 and page_check['status'] in ('fail', 'needs_review'):
+            return _response(status='needs_input', document=document, requested_action='continue',
+                             findings=[{'code': 'review_no_progress', 'page_id': entry['page_id'],
+                                        'detail': '同一页、同一产物的重复审阅仍有未关闭发现；补充本页修复证据或明确合理差异决定',
+                                        'unresolved': page_check}], next_action='review_no_progress')
         if page_check['status'] in ('fail', 'needs_review') and (
                 page_check['open_must_fix'] or page_check['unclosed_prior_findings']):
             def candidate_sha(ref):
@@ -564,17 +608,32 @@ def _continue_project(project_dir: Path | str) -> dict:
                              findings=[page_check], next_action='repair_page_visual')
         task = open_host_task(store, kind='review', page_ids=[entry['page_id']],
                               review_stage='page_visual',
-                              instruction='实际打开本页 Page、原始蓝图、SVG 预览，核对正文、数字、模块、图标语义、连线方向和遮挡；提交 blueprint_content、blueprint_fidelity、readability 三类记录。旧 must_fix 需新产物与复核证据关闭；needs_judgment 可用具体理由、观察与证据接受合理差异。两者均需 replaces 与同一 finding_id。不得把原图文字当事实源。')
+                              instruction='实际打开本页 Page、原始蓝图、SVG 预览，核对正文、数字、模块、图标语义、连线方向和遮挡；提交 blueprint_content、blueprint_fidelity、readability 三类记录。关闭旧发现时，replaces 必须保持同一 review_id、finding_id、page_id、kind 和 review_stage。must_fix 需本页新产物与复核证据；needs_judgment 可用具体理由、观察与证据接受合理差异。不得把原图文字当事实源。')
         document = store.load_document()
         return _response(status='awaiting_host', document=document, requested_action='continue',
                          pending_tasks=[task_summary(store, document, task)],
                          findings=[page_check], next_action='codex_review_page_visual')
     if not document['outputs'].get('pptx'):
-        from .pipeline import produce, NeedsTool
+        from .pipeline import produce, NeedsTool, RendererError
+        from .compiler.svg import SvgError
         try:
             produce(project_dir)
         except NeedsTool as exc:
             return _response(status='needs_tool',document=document,requested_action='continue',findings=[str(exc)],next_action='configure_reported_tool')
+        except RendererError as exc:
+            return _response(status='needs_input', document=document, requested_action='continue',
+                             findings=[{'code': 'renderer_execution_failed', 'message': str(exc)}],
+                             next_action='repair_renderer_execution')
+        except SvgError as exc:
+            page_id = exc.diagnostic.get('page_id')
+            if page_id not in {entry['page_id'] for entry in document['pages']}:
+                raise
+            task = open_host_task(store, kind='reconstruct', page_ids=[page_id],
+                instruction=f'存量 SVG 编译失败：{exc.diagnostic}. 阅读原 Page 和蓝图，提交本页修正后的 SVG；旧 SVG 保留为历史。')
+            document = store.load_document()
+            return _response(status='awaiting_host', document=document, requested_action='continue',
+                             pending_tasks=[task_summary(store, document, task)],
+                             findings=[exc.diagnostic], next_action='codex_reconstruct_svg')
         document = store.load_document()
     report_artifact = store.read_object_json(document['outputs']['render_report'])
     report = store.read_object_json(report_artifact['file'])
@@ -624,6 +683,16 @@ def _continue_project(project_dir: Path | str) -> dict:
     from .editing import review_status
     status = review_status(store, document)
     if status != 'pass':
+        repeated_final = [store.read_object_json(ref) for ref in document.get('tasks') or []]
+        if (status in ('fail', 'needs_review') and sum(
+                task.get('kind') == 'review' and task.get('status') == 'completed' and
+                task.get('review_stage', 'final') == 'final' and
+                task.get('produced_against') == content_identity(document)
+                for task in repeated_final) >= 2):
+            return _response(status='needs_input', document=document, requested_action='continue',
+                             findings=[{'code': 'review_no_progress',
+                                        'detail': '同一产物重复审阅仍有未关闭发现；补充页级修复证据或明确合理差异决定'}],
+                             next_action='review_no_progress')
         task = open_host_task(store,kind='repair' if status == 'fail' else 'review',page_ids=[e['page_id'] for e in document['pages']],
             instruction='实际打开每页原图、SVG预览及PPT真实渲染，核对正文/模块/图标/数字/方向/Logo。提交当前 subjects 的 blueprint_fidelity、conversion、readability Review；未实际检查不能 pass，问题返回具体对象。')
         return _response(status='awaiting_host',document=store.load_document(),requested_action='continue',
@@ -650,6 +719,8 @@ def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, pa
         raise ServiceError('instruction', 'must not be empty')
     if not page_ids or len(set(page_ids)) != len(page_ids) or not set(page_ids) <= {e['page_id'] for e in document['pages']}:
         raise ServiceError('scope_pages', 'must name existing distinct pages')
+    if review_stage == 'page_visual' and len(page_ids) != 1:
+        raise ServiceError('scope_pages', 'page_visual must target exactly one page')
     for ref in document['tasks']:
         task = store.read_object_json(ref)
         if task['kind'] == kind and task['scope_pages'] == page_ids and task['instruction'] == instruction and task.get('review_stage', 'final') == (review_stage or 'final') and task['status'] in ('awaiting_host','running'):
@@ -942,6 +1013,13 @@ def update_design(
     from .production import resolve_design as _resolve_design
 
     validate_document_semantics(new_document)
+    for asset in new_design.get('assets') or []:
+        try:
+            resource = store.read_object_json(asset['artifact'])
+            store.read_object_bytes(resource['file'])
+        except (KeyError, ValueError, StoreError) as exc:
+            raise ServiceError('design_context/assets',
+                               f"asset {asset.get('asset_id')!r} is unreadable; restore or replace its artifact before updating design: {exc}") from exc
     # Validate every page resolves under the new design before committing.
     for entry in new_document["pages"]:
         page = store.read_object_json(entry["page"])

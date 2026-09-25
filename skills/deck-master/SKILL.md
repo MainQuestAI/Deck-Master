@@ -44,7 +44,7 @@ create --draft / import draft / compose 结果**第一次形成至少一页后�
 
 - `reconstruct`：实际读取原图、完整 Page 和允许资产，以任务reference_images给出的实际图片hash读取原图，先写原图模块/关系期待，再输出单份原生 SVG；SVG根写data-blueprint-sha256为该原始图片字节哈希，不能复用同正文另一张图的SVG充当还原。若纠正文案或补标签，同一信封提交更新后的 Page 和理由。不得改写原图，不能仅改 SVG 隐藏正文错误。
 - `reconstruct` / `repair` 接收 SVG 时使用正式编译器解析同一份 Page、设计与批准资产；不支持的元素或属性当页修正后重交。`continue` 随后生成当前页 SVG 预览，缺工具或字体按返回原因处理。
-- `review_stage=page_visual`：实际打开当前 Page、原始蓝图、SVG 预览，逐项核对正文、数字、模块、图标语义、连线方向和遮挡。按任务给出的 subjects 与 dependencies 提交 `blueprint_content`、`blueprint_fidelity`、`readability` 三类记录；未审不能进入下一页。`must_fix` 只返修当前页，重生成预览并复核；关闭 `must_fix` 需 `replaces`、同一 finding_id、新产物及复查证据；`needs_judgment` 可在同一产物上凭具体理由、观察和证据记录 `accepted_variance`。原图文字有误时以 Page 与来源纠正，并保留原图及差异记录。
+- `review_stage=page_visual`：实际打开当前 Page、原始蓝图、SVG 预览，逐项核对正文、数字、模块、图标语义、连线方向和遮挡。按任务给出的 subjects 与 dependencies 提交 `blueprint_content`、`blueprint_fidelity`、`readability` 三类记录；未审不能进入下一页。`must_fix` 只返修当前页；`repair` 只提交 Page/SVG，待新预览生成后在独立 `review` 任务复核。关闭发现需 `replaces`，保持同一 review_id、finding_id、页、kind 与 stage，并证明本页产物实际改变；`needs_judgment` 可在同一产物上凭具体理由、观察和证据记录 `accepted_variance`。原图文字有误时以 Page 与来源纠正，并保留原图及差异记录。
 - 所有页面逐页通过后，`continue` 本地执行整套编译、SVG/PPT 渲染和真实文件回读；不需要手写外部编译脚本。失败回到明确的 Page/SVG/编译层处理，不通过重新生图掩盖。
 - `review_stage=final`（旧任务缺字段时同义）：实际看 Page、原图、SVG 和真实 PPT 渲染，分别提交 content、blueprint_content、blueprint_fidelity、conversion、readability、privacy 六维记录。逐页审图不能代替最终转换检查。Host 自审写 host_self，不能写独立或专业验收。
 - `edit --page … --base-revision … --page-hash … --operation-id …` 修改正文后继续重建受影响页；原图保留。`history list/restore` 恢复产生新 revision。

@@ -11,14 +11,18 @@ import uuid
 import zipfile
 import xml.etree.ElementTree as ET
 from .compiler import CompileOptions, SvgInput, compile_deck
-from .compiler.svg import parse_svg
+from .compiler.svg import parse_svg, image_elements, XLINK_HREF
 from .production import resolve_design
 from .content import visible_atoms
 from .models import bump_revision, validate_artifact_semantics
-from .store import Store
+from .store import Store, StoreError
 from .tasks import _utc_now_iso
 
 class NeedsTool(RuntimeError):
+    pass
+
+
+class RendererError(RuntimeError):
     pass
 
 def executable(name):
@@ -28,7 +32,13 @@ def executable(name):
     return path
 
 def run(args, **kwargs):
-    return subprocess.run(args,check=True,capture_output=True,timeout=120,**kwargs)
+    try:
+        return subprocess.run(args, check=True, capture_output=True, timeout=120, **kwargs)
+    except subprocess.CalledProcessError as exc:
+        detail = (exc.stderr or b'').decode(errors='replace').strip()
+        raise RendererError(f'{Path(args[0]).name} exited {exc.returncode}: {detail or "no stderr"}') from exc
+    except subprocess.TimeoutExpired as exc:
+        raise RendererError(f'{Path(args[0]).name} timed out after {exc.timeout}s') from exc
 
 def resolve_fonts(pages):
     fonts={}
@@ -58,13 +68,27 @@ def page_asset_paths(store, document, entry, work, *, page=None):
                                   document['design_context'].get('assets', []))
     mapping = {}
     for asset in effective['assets']:
-        resource = store.read_object_json(asset['artifact'])
+        try:
+            resource = store.read_object_json(asset['artifact'])
+            content = store.read_object_bytes(resource['file'])
+        except (KeyError, StoreError) as exc:
+            raise StoreError(f"asset:{asset.get('asset_id')}",
+                             'stored asset reference is unreadable; restore or replace it') from exc
         if resource['media_type'] not in ('image/png', 'image/jpeg'):
             continue
         raster = Path(work) / (asset['asset_id'] + Path(resource['file']['path']).suffix)
-        raster.write_bytes(store.read_object_bytes(resource['file']))
+        raster.write_bytes(content)
         mapping[asset['asset_id']] = str(raster)
     return mapping
+
+
+def preview_svg_bytes(data: bytes, *, page_id: str, assets: dict[str, str]) -> bytes:
+    """Resolve approved image references identically to the native compiler."""
+    tree = ET.fromstring(data)
+    for node, href in image_elements(tree, page_id=page_id, assets=assets):
+        node.attrib.pop(XLINK_HREF, None)
+        node.set('href', Path(assets[href]).as_uri())
+    return ET.tostring(tree)
 
 def render_deck(pptx_path, output_dir, *, fonts):
     output_dir=Path(output_dir);output_dir.mkdir(parents=True,exist_ok=True)
@@ -93,13 +117,8 @@ def preview_svg_page(project_dir, page_id):
         mapping = page_asset_paths(store, doc, entry, work)
         parsed = parse_svg(data, page_id=page_id, assets=mapping)
         resolve_fonts([parsed])
-        tree = ET.fromstring(data)
-        for node in tree.iter():
-            if node.tag.rsplit('}', 1)[-1] == 'image':
-                key = 'href' if node.get('href') is not None else '{http://www.w3.org/1999/xlink}href'
-                node.set(key, Path(mapping[node.get(key)]).as_uri())
         preview_input = work / 'page.svg'
-        preview_input.write_bytes(ET.tostring(tree))
+        preview_input.write_bytes(preview_svg_bytes(data, page_id=page_id, assets=mapping))
         preview_path = work / 'preview.png'
         run([executable('rsvg-convert'), str(preview_input), '-o', str(preview_path)])
         preview_ref = artifact(store, preview_path, 'svg_preview', page_id=page_id,
@@ -279,12 +298,8 @@ def produce(project_dir):
             approved[entry['page_id']]=mapping
             path=work/f'page-{index+1}.svg';path.write_bytes(data)
             inputs.append(SvgInput(entry['page_id'],path));parsed.append(parse_svg(data,page_id=entry['page_id'],assets=mapping))
-            preview_tree=ET.fromstring(data)
-            for node in preview_tree.iter():
-                if node.tag.rsplit('}',1)[-1]=='image':
-                    key='href' if node.get('href') is not None else '{http://www.w3.org/1999/xlink}href'
-                    node.set(key,Path(mapping[node.get(key)]).as_uri())
-            preview_path=work/f'preview-input-{index+1}.svg';preview_path.write_bytes(ET.tostring(preview_tree));preview_inputs.append(preview_path)
+            preview_path=work/f'preview-input-{index+1}.svg';preview_path.write_bytes(
+                preview_svg_bytes(data, page_id=entry['page_id'], assets=mapping));preview_inputs.append(preview_path)
             expected.append(page)
         fonts=resolve_fonts(parsed);canvas=doc['design_context']['canvas']
         options=CompileOptions(width_px=canvas['slide_width_in']*96,height_px=canvas['slide_height_in']*96,fonts=fonts,assets=approved)
