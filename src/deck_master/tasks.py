@@ -592,6 +592,11 @@ def new_task(
     call_allowances: list[dict] | None = None,
     status: str = "awaiting_host",
     review_stage: str | None = None,
+    intent: str | None = None,
+    input_digest: str | None = None,
+    input_revision_id: str | None = None,
+    method_release: dict | None = None,
+    review_units: list[dict] | None = None,
 ) -> dict:
     """Build a minimal valid Task v1 (05 chapter wires dispatch)."""
     task = {
@@ -617,6 +622,16 @@ def new_task(
     }
     if review_stage is not None:
         task['review_stage'] = review_stage
+    if intent is not None:
+        task['intent'] = intent
+    if input_digest is not None:
+        task['input_digest'] = input_digest
+    if input_revision_id is not None:
+        task['input_revision_id'] = input_revision_id
+    if method_release is not None:
+        task['method_release'] = method_release
+    if review_units is not None:
+        task['review_units'] = review_units
     validate_task_semantics(task)
     return task
 

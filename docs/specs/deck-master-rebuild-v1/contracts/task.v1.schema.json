@@ -28,7 +28,10 @@
       ]
     },
     "review_stage": {
-      "enum": ["page_visual", "final"]
+      "enum": [
+        "page_visual",
+        "final"
+      ]
     },
     "status": {
       "enum": [
@@ -279,6 +282,86 @@
         ],
         "additionalProperties": false
       }
+    },
+    "intent": {
+      "enum": [
+        "initial",
+        "input_revision"
+      ],
+      "description": "Compose split: initial writes the first full deck; input_revision submits only changed pages (spec v1.1 5.4)."
+    },
+    "input_digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "input_digest (spec v1.1 5.1) of the task facts and sources at dispatch time."
+    },
+    "input_revision_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Operation id of the inputs update this task works against."
+    },
+    "method_release": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "release_id",
+        "methods_sha256"
+      ],
+      "properties": {
+        "release_id": {
+          "type": "string"
+        },
+        "methods_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "description": "Which method release the task was dispatched with; traceability only, no snapshot (spec v1.1 3.4)."
+    },
+    "review_units": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "page_ids",
+          "reason"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "content",
+              "blueprint_content",
+              "blueprint_fidelity",
+              "conversion",
+              "readability",
+              "privacy"
+            ]
+          },
+          "page_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "reason": {
+            "enum": [
+              "missing",
+              "stale",
+              "open_finding",
+              "changed_input"
+            ]
+          }
+        }
+      },
+      "description": "Final review dispatched by actual gap only (spec v1.1 6)."
     }
   },
   "required": [

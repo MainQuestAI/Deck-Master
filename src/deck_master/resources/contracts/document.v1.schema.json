@@ -68,6 +68,13 @@
           "items": {
             "type": "string"
           }
+        },
+        "presentation_mode_source": {
+          "enum": [
+            "provided",
+            "default"
+          ],
+          "description": "provided = the user explicitly chose it; default must never be reported as user-confirmed (spec v1.1 3.1)."
         }
       },
       "required": [
@@ -151,6 +158,10 @@
           },
           "locator_scheme": {
             "type": "string"
+          },
+          "usage_note": {
+            "type": "string",
+            "description": "How this task uses the material; revisable usage description, never an authority score (spec v1.1 4)."
           }
         },
         "required": [
@@ -756,6 +767,40 @@
         "allowed_asset_ids"
       ],
       "additionalProperties": false
+    },
+    "content_basis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "input_digest"
+      ],
+      "properties": {
+        "input_digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "input_revision_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "resolved_by_task_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "description": "Which input version the current pages were completed against (spec v1.1 2/5.1); absent on legacy projects."
     }
   },
   "required": [

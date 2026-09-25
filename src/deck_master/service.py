@@ -20,7 +20,8 @@ from typing import Any
 
 from . import tasks as tasks_mod
 from .content import normalize_design_assets, check_page
-from .models import bump_revision, canonical_json_bytes, content_identity, new_document, sha256_bytes, validate_document_semantics
+from .method_resources import method_release, method_resources
+from .models import bump_revision, canonical_json_bytes, compute_input_digest, content_identity, input_alignment, new_document, sha256_bytes, validate_document_semantics
 from .sources import read_source
 from .store import Store, StoreError, ConflictError
 from .production import project_prompt, resolve_design
@@ -54,6 +55,7 @@ def _response(
         "pending_tasks": pending_tasks or [],
         "findings": findings or [],
         "next_action": next_action,
+        "input_alignment": input_alignment(document),
         "review_url": None,  # real loopback URL arrives with the workbench (T05/T14)
         "view_status": "view_arrives_with_workbench",
         "evidence_level": evidence_level,
@@ -84,13 +86,20 @@ def create(
     draft: dict | None = None,
     audience: str = "",
     scenario: str = "",
-    presentation_mode: str = "live",
+    presentation_mode: str | None = None,
     page_limit: int | None = None,
     existing_decisions: list[str] | None = None,
 ) -> dict:
     """Create the project; register real sources; optionally import a draft."""
     if draft is not None:
         _validate_draft(draft)
+    # presentation_mode stays a user-provided fact only when the caller actually
+    # chose one; the default must never be reported as user-confirmed (§3.1).
+    if presentation_mode is None:
+        presentation_mode_source = "default"
+        presentation_mode = "live"
+    else:
+        presentation_mode_source = "provided"
     project_dir = Path(project_dir).expanduser()
     store = Store(project_dir)
     store.ensure_layout()
@@ -133,6 +142,7 @@ def create(
             "audience": audience,
             "scenario": scenario,
             "presentation_mode": presentation_mode,
+            "presentation_mode_source": presentation_mode_source,
             "page_limit": page_limit,
             "existing_decisions": existing_decisions or [],
         },
@@ -208,13 +218,19 @@ def _adopt_draft(store: Store, draft_payload: dict) -> dict:
     return outcome
 
 
-def open_compose_task(store: Store, document: dict, *, operation_id: str) -> dict:
+def open_compose_task(store: Store, document: dict, *, operation_id: str,
+                      intent: str = "initial", input_revision_id: str | None = None) -> dict:
     """Open a compose Host task against the current content identity."""
     produced_against = content_identity(document)
+    methods = method_resources("compose", intent=intent)
     task = tasks_mod.new_task(
         task_id=uuid.uuid4().hex[:12],
         operation_id=operation_id,
         kind="compose",
+        intent=intent,
+        input_digest=compute_input_digest(document),
+        input_revision_id=input_revision_id,
+        method_release=method_release(methods),
         scope_pages=[],
         instruction=(
             "Read every source in Task.sources plus the method resources; derive the "
@@ -291,8 +307,51 @@ def _retire_missing_page_inputs(store: Store, document: dict | None = None) -> d
     return store.load_document()
 
 
+def _dispatch_snapshot(store: Store, document: dict, task: dict) -> dict:
+    """The revision the task was dispatched in; the work order binds to it."""
+    revision = task.get("dispatch_revision")
+    if revision and revision != document.get("revision_id"):
+        try:
+            return store.load_document(revision)
+        except StoreError:
+            return document
+    return document
+
+
+def _project_context(store: Store, document: dict, task: dict, dispatched: dict) -> dict:
+    """Task facts + input freshness for the work order (spec v1.1 §3.3).
+
+    A still-valid task reads its task/sources from the dispatch snapshot, not
+    from whatever the current Document happens to carry. A task superseded by
+    an input update, or one whose inputs moved underneath it, is ``stale``:
+    continue hands out a fresh task.
+    """
+    status = task.get("status")
+    if status in ("completed", "failed", "cancelled"):
+        context_status = "terminal"
+    elif status == "superseded" or not tasks_mod.task_inputs_current(store, document, task):
+        context_status = "stale"
+    else:
+        context_status = "current"
+    task_fields = dict(dispatched.get("task") or document.get("task") or {})
+    task_fields["presentation_mode_source"] = task_fields.get("presentation_mode_source") or "default"
+    context = {
+        "task": task_fields,
+        "input_digest": compute_input_digest(dispatched),
+        "dispatch_revision": task.get("dispatch_revision"),
+        "current_revision": document.get("revision_id"),
+        "context_status": context_status,
+        "input_alignment": input_alignment(document),
+    }
+    if context_status == "stale":
+        context["hint"] = "inputs moved after dispatch; run deck-master continue to obtain a fresh task"
+    return context
+
+
 def task_summary(store: Store, document: dict, task: dict) -> dict:
     """The Host work order: identity, inputs, resolved design, method entrypoints."""
+    dispatched = _dispatch_snapshot(store, document, task)
+    methods = method_resources(task.get("kind") or "", intent=task.get("intent"))
     summary = {
         "task_id": task["task_id"],
         "operation_id": task["operation_id"],
@@ -305,13 +364,10 @@ def task_summary(store: Store, document: dict, task: dict) -> dict:
         "dispatch_revision": task.get("dispatch_revision"),
         "produced_against": task.get("produced_against"),
         "call_allowances": task.get("call_allowances") or [],
-        "sources": document.get("sources") or [],
+        "sources": dispatched.get("sources") or [],
         "resolved_design_context": document.get("design_context") or {},
-        "method_resources": [
-            "deck_master://skills/deck-master/references/source-reading.md",
-            "deck_master://skills/deck-master/references/content-methods.md",
-            "deck_master://skills/deck-master/references/content-examples.md",
-        ],
+        "method_resources": methods,
+        "project_context": _project_context(store, document, task, dispatched),
     }
     if task.get('status') in ('superseded', 'cancelled', 'completed', 'failed'):
         if task.get('status') == 'superseded':
@@ -404,10 +460,12 @@ def open_blueprint_task(store: Store, document: dict, page_entry: dict) -> dict:
     request["permitted_asset_files"] = _resolve_permitted_asset_files(store, request["projection"]["permitted_assets"])
     request_ref = store.put_json_object(request)
     operation_id = _new_operation_id("blueprint")
+    methods = method_resources("blueprint")
     task = tasks_mod.new_task(
         task_id=uuid.uuid4().hex[:12],
         operation_id=operation_id,
         kind="blueprint",
+        method_release=method_release(methods),
         scope_pages=[page["page_id"]],
         instruction=(
             "Codex专用：读取 production_request.prompt，先领取任务并 begin 本任务的调用额度，"
@@ -694,7 +752,10 @@ def _continue_project(project_dir: Path | str) -> dict:
                                         'detail': '同一产物重复审阅仍有未关闭发现；补充页级修复证据或明确合理差异决定'}],
                              next_action='review_no_progress')
         task = open_host_task(store,kind='repair' if status == 'fail' else 'review',page_ids=[e['page_id'] for e in document['pages']],
-            instruction='实际打开每页原图、SVG预览及PPT真实渲染，核对正文/模块/图标/数字/方向/Logo。提交 blueprint_fidelity、conversion、readability Review，subjects 必须包含当前 PPTX 与发现所在页的当前 Page；未实际检查不能 pass，问题返回具体对象。')
+            instruction='实际打开每页原图、SVG预览及PPT真实渲染，核对正文/模块/图标/数字/方向/Logo。'
+                        '按当前真实缺口提交 content、blueprint_content、blueprint_fidelity、conversion、readability、privacy 六维中尚未有效覆盖的维度；'
+                        '已经有效的维度不再要求，额外发现问题照常提交。'
+                        'subjects 必须包含当前 PPTX 与发现所在页的当前 Page；未实际检查不能 pass，问题返回具体对象。')
         return _response(status='awaiting_host',document=store.load_document(),requested_action='continue',
                          pending_tasks=[task_summary(store,store.load_document(),task)],next_action='codex_review_renderings')
     return _response(status='ready_for_export',document=document,requested_action='continue',
@@ -728,7 +789,9 @@ def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, pa
     entries = [e for e in document['pages'] if e['page_id'] in page_ids]
     inputs = [ref for e in entries for slot,ref in e.items() if slot != 'page_id' and ref]
     inputs += [ref for ref in document['outputs'].values() if ref]
+    methods = method_resources(kind)
     task = tasks_mod.new_task(task_id=uuid.uuid4().hex[:12],operation_id=_new_operation_id(kind),kind=kind,
+        method_release=method_release(methods),
         scope_pages=page_ids,instruction=instruction,inputs=inputs,dependencies=[{'kind':'content','identity':e['page_id'],'sha256':e['page']['sha256']} for e in entries],
         dispatch_revision=document['revision_id'],produced_against=content_identity(document),
         review_stage=review_stage)

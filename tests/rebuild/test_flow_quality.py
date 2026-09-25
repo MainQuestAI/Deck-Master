@@ -1,0 +1,149 @@
+"""Flow Quality v1.1 acceptance tests (A-class evidence, spec v1.1).
+
+Covers, one section per task:
+- T1  work-order task projection, per-kind method dispatch, method_release;
+- T2  CLI task fields and --task-file merge rules;
+- T3  directory material entry with adopted/skipped/errored lists;
+- T4  inputs show/update, content_basis and the update transaction;
+- T5  content_update adoption and the task-fact staleness fix;
+- T6  gap-based final review dispatch.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import uuid
+from pathlib import Path
+
+import pytest
+
+from deck_master import service
+from deck_master.method_resources import method_resources, methods_sha256
+from deck_master.models import bump_revision, compute_input_digest
+from deck_master.store import Store
+from deck_master.tasks import TaskConflict
+
+FIXTURES = Path(__file__).resolve().parent / "fixtures" / "flow-quality"
+
+
+def _material(tmp_path: Path) -> Path:
+    material = tmp_path / "material.md"
+    material.write_text(
+        "# 材料\n向运营团队说明条件自动处理方案。\n\n（尾部约束）合成材料，不可回写。",
+        encoding="utf-8",
+    )
+    return material
+
+
+def _raw_commit(store: Store, mutate) -> None:
+    """Simulate a direct task-fact revision (any future write path)."""
+    document = store.load_document()
+    updated = {**document}
+    mutate(updated)
+    bumped = bump_revision(
+        updated,
+        {"operation_id": f"raw-{uuid.uuid4().hex[:12]}", "kind": "task_update",
+         "description": "task fact corrected", "read_set": []},
+    )
+    store._commit_locked(base_revision=document["revision_id"], document=bumped, blobs=[])
+
+
+# ---------------------------------------------------------------------------
+# T1: work-order task projection and method dispatch
+
+
+def test_work_order_carries_full_task_facts(tmp_path: Path) -> None:
+    project = tmp_path / "proj"
+    response = service.create(
+        project, brief="说明方案", sources=[_material(tmp_path)],
+        audience="运营负责人", scenario="首次交流", presentation_mode="read_alone",
+        page_limit=8, existing_decisions=["沿用现有门户"],
+    )
+    context = response["pending_tasks"][0]["project_context"]
+    task = context["task"]
+    for field in ("title", "brief", "audience", "scenario", "presentation_mode",
+                  "page_limit", "existing_decisions", "presentation_mode_source"):
+        assert field in task
+    assert task["presentation_mode"] == "read_alone"
+    assert task["presentation_mode_source"] == "provided"
+    assert context["context_status"] == "current"
+    assert context["input_alignment"] == "no_content"
+    assert len(context["input_digest"]) == 64
+    assert context["dispatch_revision"] == response["pending_tasks"][0]["dispatch_revision"]
+
+    # continue and task status project the same facts (AC-01).
+    continued = service.continue_project(project)
+    assert continued["pending_tasks"][0]["project_context"]["task"]["audience"] == "运营负责人"
+    status = service.task_status(project, task_id=response["pending_tasks"][0]["task_id"])
+    assert status["pending_tasks"][0]["project_context"]["task"]["brief"] == "说明方案"
+
+
+def test_default_presentation_mode_is_never_reported_as_provided(tmp_path: Path) -> None:
+    project = tmp_path / "proj"
+    response = service.create(project, brief="说明方案", sources=[_material(tmp_path)])
+    task = response["pending_tasks"][0]["project_context"]["task"]
+    assert task["presentation_mode"] == "live"
+    assert task["presentation_mode_source"] == "default"
+
+
+def test_method_resources_dispatch_by_kind_and_are_readable(tmp_path: Path) -> None:
+    project = tmp_path / "proj"
+    response = service.create(project, brief="说明方案", sources=[_material(tmp_path)])
+    compose = response["pending_tasks"][0]
+    compose_ids = [item["id"] for item in compose["method_resources"]]
+    assert compose_ids == ["source-reading", "content-methods", "content-examples"]
+    for item in compose["method_resources"]:
+        path = Path(item["path"])
+        assert path.is_file()
+        assert item["sha256"] == hashlib.sha256(path.read_bytes()).hexdigest()
+        assert item["relative_path"].endswith(item["id"] + ".md")
+
+    from deck_master.method_resources import method_release
+
+    stored = Store(project).read_object_json(
+        next(ref for ref in Store(project).load_document()["tasks"]
+             if Store(project).read_object_json(ref)["task_id"] == compose["task_id"]))
+    assert stored["method_release"]["methods_sha256"] == methods_sha256(compose["method_resources"])
+    assert stored["method_release"]["release_id"]
+
+
+def test_method_dispatch_mapping_by_kind_and_intent() -> None:
+    from deck_master.method_resources import method_ids_for
+
+    assert method_ids_for("compose", intent="initial") == (
+        "source-reading", "content-methods", "content-examples")
+    assert method_ids_for("compose", intent="input_revision") == (
+        "source-reading", "content-methods", "content-examples", "input-update")
+    assert method_ids_for("blueprint") == method_ids_for("reconstruct") == ("blueprint-svg",)
+    assert method_ids_for("review") == ("review-and-repair",)
+    assert method_ids_for("repair") == ("review-and-repair", "content-methods", "blueprint-svg")
+    assert method_ids_for("compile") == ()
+    # The dispatched entry list stays different between compose and review (AC-02).
+    assert method_ids_for("compose") != method_ids_for("review")
+
+
+def test_context_status_stale_after_task_facts_move(tmp_path: Path) -> None:
+    project = tmp_path / "proj"
+    response = service.create(project, brief="说明方案", sources=[_material(tmp_path)])
+    task_id = response["pending_tasks"][0]["task_id"]
+    store = Store(project)
+    _raw_commit(store, lambda doc: doc["task"].update(audience="新的受众"))
+    status = service.task_status(project, task_id=task_id)
+    context = status["pending_tasks"][0]["project_context"]
+    assert context["context_status"] == "stale"
+    assert "continue" in context["hint"]
+    # The stale work order still binds to the dispatch snapshot facts.
+    assert context["task"]["audience"] == ""
+
+
+def test_dispatch_snapshot_sources_survive_current_mutation(tmp_path: Path) -> None:
+    project = tmp_path / "proj"
+    response = service.create(project, brief="说明方案", sources=[_material(tmp_path)])
+    task_id = response["pending_tasks"][0]["task_id"]
+    store = Store(project)
+    _raw_commit(store, lambda doc: doc.update(sources=[]))
+    status = service.task_status(project, task_id=task_id)
+    # Valid task: sources come from the dispatch snapshot, not the mutated current.
+    assert status["pending_tasks"][0]["sources"], "dispatch snapshot sources must survive"
+    assert status["pending_tasks"][0]["project_context"]["context_status"] == "stale"

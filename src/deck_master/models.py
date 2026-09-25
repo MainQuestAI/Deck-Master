@@ -402,6 +402,47 @@ def content_identity(document: dict[str, Any]) -> str:
     return sha256_bytes(canonical_json_bytes(projection))
 
 
+INPUT_SOURCE_KEYS = ("source_id", "original_sha256", "extract_sha256", "usage_note",
+                     "external_use", "restriction")
+
+
+def compute_input_digest(document: dict[str, Any]) -> str:
+    """Digest of the task facts and source semantics the content is built on.
+
+    Canonical JSON over ``{"task": Document.task, "sources": [...]}`` where
+    each source contributes only its semantic fields (spec v1.1 §5.1):
+    storage paths, display names, timestamps, tasks, reviews and outputs are
+    excluded so a display-name change never invalidates the content basis.
+    Unset ``usage_note`` counts as the empty string.
+    """
+    sources = []
+    for source in sorted(document.get("sources") or [], key=lambda s: s.get("source_id") or ""):
+        extract = source.get("extract") or {}
+        sources.append(
+            {
+                "source_id": source.get("source_id"),
+                "original_sha256": source.get("original_sha256"),
+                "extract_sha256": extract.get("sha256"),
+                "usage_note": source.get("usage_note") or "",
+                "external_use": source.get("external_use"),
+                "restriction": source.get("restriction"),
+            }
+        )
+    payload = {"task": document.get("task"), "sources": sources}
+    return sha256_bytes(canonical_json_bytes(payload))
+
+
+def input_alignment(document: dict[str, Any]) -> str:
+    """Derived, never stored (spec v1.1 §5.1): how current content maps to inputs."""
+    if not document.get("pages"):
+        return "no_content"
+    basis = document.get("content_basis")
+    if not basis:
+        return "legacy_current"
+    return "current" if basis.get("input_digest") == compute_input_digest(document) \
+        else "needs_reconciliation"
+
+
 def new_document(
     *,
     project_id: str,
@@ -424,6 +465,7 @@ def new_document(
             "audience": task.get("audience", ""),
             "scenario": task.get("scenario", ""),
             "presentation_mode": task.get("presentation_mode", "live"),
+            "presentation_mode_source": task.get("presentation_mode_source") or "default",
             "page_limit": task.get("page_limit"),
             "existing_decisions": task.get("existing_decisions", []),
         },
