@@ -1,0 +1,37 @@
+$ codex mcp --help (commands)
+Commands:
+  list    
+  get     
+  add     
+  remove  
+  login   
+  logout  
+  help    Print this message or the help of the given subcommand(s)
+
+Options:
+$ codex --help | grep -i mcp
+  agents            Browse all agent sessions on the shared local app-server daemon
+  mcp               Manage external MCP servers for Codex
+  app-server        [experimental] Run the app server or related tooling
+  remote-control    [experimental] Manage the app-server daemon with remote control enabled
+  queue             Queue a message for an existing session
+      --remote <ADDR>
+          Connect the TUI to a remote app server endpoint.
+      --remote-auth-token-env <ENV_VAR>
+          Name of the environment variable containing the bearer token to send to a remote app
+$ shortcuts list | grep -i -E "codex|chatgpt" (count)
+0
+$ Info.plist keys: Intents/UserActivity/Services
+    NSUserActivityTypes = Array {
+        NSUserActivityTypeBrowsingWeb
+(end)
+$ ls ~/.codex/skills/deck-master -> 目标是否存在
+~/.codex/skills/deck-master -> ~/.deck-master/current/skills/deck-master
+SKILL.md MISSING (dangling install)
+companion-manifest.json
+  "suite_version": "1.1.0",
+  "git_commit": "cc8cf46",
+  "release_id": "main-cc8cf46",
+$ which deck-master
+deck-master not found
+not on PATH

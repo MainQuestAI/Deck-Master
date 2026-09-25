@@ -1,0 +1,45 @@
+{
+ "current": "a20b71131de34adb8b226b9aaf94ff9c",
+ "revisions": [
+  {
+   "revision_id": "a20b71131de34adb8b226b9aaf94ff9c",
+   "parent": "a7617b422d9e441db964e90666de9409",
+   "created_at": "2026-09-25T15:24:35Z",
+   "kind": "task_update",
+   "operation_id": "repair-7c3224a63dd4",
+   "description": "按用户意见，将 recommend 辅助说明及 read_only 接口条件移入脚注；原有脚注、正文、数字及引用保持不变。仅修改 p09 Page，当前无 SVG。"
+  },
+  {
+   "revision_id": "a7617b422d9e441db964e90666de9409",
+   "parent": "15d73b962b6c42ef815690e3abcbfef0",
+   "created_at": "2026-09-25T15:24:35Z",
+   "kind": "task_update",
+   "operation_id": "task-b6546abe2e65",
+   "description": "task claimed"
+  },
+  {
+   "revision_id": "15d73b962b6c42ef815690e3abcbfef0",
+   "parent": "e5b0176de2fe44469c6df9aa28bcd9ef",
+   "created_at": "2026-09-25T15:24:35Z",
+   "kind": "task_update",
+   "operation_id": "dispatch-0388af8e5b41",
+   "description": "把辅助说明移到脚注"
+  },
+  {
+   "revision_id": "e5b0176de2fe44469c6df9aa28bcd9ef",
+   "parent": "b1d98f6e59a34e63b898a2c68eacab9d",
+   "created_at": "2026-09-25T15:24:35Z",
+   "kind": "content_update",
+   "operation_id": "compose-5033f1dc55eb",
+   "description": "合成输入完整结构例，不是已生成的专业首稿。"
+  },
+  {
+   "revision_id": "b1d98f6e59a34e63b898a2c68eacab9d",
+   "parent": "dbe5fb7a6be142b6aab7ca978fed784f",
+   "created_at": "2026-09-25T15:24:35Z",
+   "kind": "task_update",
+   "operation_id": "dispatch-fc71e696843c",
+   "description": "compose task opened for Host"
+  }
+ ]
+}

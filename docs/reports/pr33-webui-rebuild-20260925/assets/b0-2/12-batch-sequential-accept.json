@@ -1,0 +1,27 @@
+[
+ {
+  "task_id": "4fe7cf497649",
+  "instruction": "标题缩短到 12 字以内",
+  "produced_against": "be0fd9287901",
+  "exit": 0,
+  "out": {
+   "status": "accepted",
+   "revision_id": "cbb68361c5b5459a98d0f65a640c2ca1",
+   "error": null
+  }
+ },
+ {
+  "task_id": "fc8f3467bc4d",
+  "instruction": "表格标题改为：样本观察（演示）",
+  "produced_against": "be0fd9287901",
+  "exit": 5,
+  "out": "{\n \"error\": {\n  \"code\": \"conflict\",\n  \"message\": \"(document): project content moved since dispatch; read the new inputs and rebase\",\n  \"field\": null,\n  \"next_action\": \"rebase or read new inputs\"\n }\n}\n"
+ },
+ {
+  "task_id": "df983f6b307e",
+  "instruction": "副标题去掉“建议”二字",
+  "produced_against": "be0fd9287901",
+  "exit": 5,
+  "out": "{\n \"error\": {\n  \"code\": \"conflict\",\n  \"message\": \"(document): project content moved since dispatch; read the new inputs and rebase\",\n  \"field\": null,\n  \"next_action\": \"rebase or read new inputs\"\n }\n}\n"
+ }
+]
