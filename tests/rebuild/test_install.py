@@ -51,6 +51,13 @@ def test_wheel_carries_schema_static_and_methods(tmp_path: Path) -> None:
     assert "deck_master/resources/skill/SKILL.md" in names
     with zipfile.ZipFile(wheels[0]) as archive:
         assert archive.read("deck_master/resources/skill/SKILL.md") == (REPO/"skills/deck-master/SKILL.md").read_bytes()
+        # Every shipped Skill reference/agent file equals its single source.
+        skill_source = REPO/"skills/deck-master"
+        for sub in ("references", "agents"):
+            for path in sorted((skill_source/sub).rglob("*")):
+                if path.is_file():
+                    rel = path.relative_to(skill_source).as_posix()
+                    assert archive.read(f"deck_master/resources/skill/{rel}") == path.read_bytes(), rel
     assert "deck_master/resources/skills-references/source-reading.md" in names
     assert "deck_master/resources/skills-references/content-methods.md" in names
     # P1: the packaged installation guide must not teach retired commands.
@@ -673,3 +680,13 @@ def test_candidate_install_activate_and_run_doctor(tmp_path):
     assert _Path(info["module_path"]).is_relative_to(_Path(prefix).resolve()), \
         "activated candidate must not borrow the source checkout"
     assert _Path(prefix, ".deck-master", "current").is_symlink()
+
+
+def test_skill_source_is_unique_and_manifest_version_matches_package() -> None:
+    import json
+    import deck_master
+    tracked = subprocess.run(["git", "-C", str(REPO), "ls-files", "src/deck_master/resources/skill"],
+                             capture_output=True, text=True, check=True).stdout.split()
+    assert tracked == [], "Skill source lives only in skills/deck-master/; src copy is build output"
+    manifest = json.loads((REPO/"skills/manifest.json").read_text("utf-8"))
+    assert manifest["package_version"] == deck_master.__version__
