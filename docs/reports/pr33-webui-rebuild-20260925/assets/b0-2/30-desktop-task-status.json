@@ -1,0 +1,104 @@
+{
+ "status": "completed",
+ "project_id": "proj",
+ "revision_id": "ad47427f88f744f2bc1f2ec78cd736da",
+ "requested_action": "task status",
+ "result_refs": [],
+ "pending_tasks": [
+  {
+   "task_id": "0f6c12c37eae",
+   "operation_id": "repair-18c2f85750e9",
+   "kind": "repair",
+   "review_stage": "final",
+   "status": "completed",
+   "scope_pages": [
+    "p09"
+   ],
+   "instruction": "把标题改得更短，控制在 12 个字以内",
+   "inputs": [
+    {
+     "path": ".deckmaster/objects/39/3926daeb26a2dbdbd4e3bc3677ebb453fb270d14b46449a153b1dd902604a9b2.json",
+     "sha256": "3926daeb26a2dbdbd4e3bc3677ebb453fb270d14b46449a153b1dd902604a9b2"
+    }
+   ],
+   "dispatch_revision": "177c6ba96d9b404b9c232eeb841dbe21",
+   "produced_against": "fd1c15b6a9b1152344dc3e55f2e4a3631555ffa35dec3e0cb79600d364c43f5b",
+   "call_allowances": [],
+   "sources": [
+    {
+     "external_use": "unspecified",
+     "extract": {
+      "path": ".deckmaster/objects/fb/fb3000f7d062831768a0a0efef33cf075fbdcea9990f9c0b4490d69ecc09aecd.json",
+      "sha256": "fb3000f7d062831768a0a0efef33cf075fbdcea9990f9c0b4490d69ecc09aecd"
+     },
+     "format": "txt",
+     "locator_scheme": "line",
+     "name": "material.txt",
+     "original_sha256": "8f5a43d03fb9cf73b9da7e8f28f3d4a07b0b33a61ebf912dc74ac9df81f167f4",
+     "original_uri": "/tmp/dm-b0-2/material.txt",
+     "restriction": "",
+     "source_id": "src-1"
+    }
+   ],
+   "resolved_design_context": {
+    "allowed_asset_ids": [],
+    "assets": [],
+    "canvas": {
+     "fit": "contain",
+     "height_px": 900,
+     "slide_height_in": 7.5,
+     "slide_width_in": 13.333333333333334,
+     "width_px": 1600
+    },
+    "default_style_id": "default",
+    "fonts": [
+     {
+      "asset_id": null,
+      "face": "Regular",
+      "fallback_font_ids": [],
+      "family": "Noto Sans CJK SC",
+      "font_id": "body",
+      "weight": 400
+     },
+     {
+      "asset_id": null,
+      "face": "Bold",
+      "fallback_font_ids": [],
+      "family": "Noto Sans CJK SC",
+      "font_id": "heading",
+      "weight": 700
+     }
+    ],
+    "language": "zh-CN",
+    "styles": [
+     {
+      "colors": {
+       "accent": "#1478FF",
+       "background": "#FFFFFF",
+       "text": "#14213D"
+      },
+      "layout_notes": "默认样式在 create 时固化；字体名称是配置需求，不是本机安装证明。",
+      "style_id": "default",
+      "typography": {
+       "auxiliary_size_pt": 12,
+       "body_font_id": "body",
+       "body_size_pt": 18,
+       "heading_font_id": "heading",
+       "heading_size_pt": 30
+      }
+     }
+    ]
+   },
+   "method_resources": [
+    "deck_master://skills/deck-master/references/source-reading.md",
+    "deck_master://skills/deck-master/references/content-methods.md",
+    "deck_master://skills/deck-master/references/content-examples.md"
+   ]
+  }
+ ],
+ "findings": [],
+ "next_action": null,
+ "review_url": null,
+ "view_status": "view_arrives_with_workbench",
+ "evidence_level": "engineering"
+}
