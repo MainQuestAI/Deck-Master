@@ -255,6 +255,7 @@ def _produced_project(tmp_path, pages):
     return project, Store(project)
 
 
+@pytest.mark.render
 def test_single_page_edit_keeps_unrelated_page_artifacts_and_reassembles(tmp_path):
     # AC-S05: editing p09 leaves the unrelated page's blueprint/SVG bytes and
     # refs untouched, opens only a reconstruct (no new external image making),
@@ -337,6 +338,7 @@ def test_shared_fact_update_applies_to_all_referencing_pages(tmp_path):
         assert store.read_object_json(entry["page"])["customer_visible"]["body_blocks"][0]["text"] == "接口条件齐备。"
 
 
+@pytest.mark.render
 def test_page_reorder_and_removal_keep_ids_and_history_out_of_current_ppt(tmp_path):
     # AC-S07: reorder + removal keeps surviving page refs byte-identical, the
     # removed page's objects stay readable in history, and the re-assembled
@@ -545,6 +547,7 @@ def test_canvas_change_invalidates_all_pages_groupwise(tmp_path):
     assert after["pages"][0]["page"] == attached["pages"][0]["page"], "page content itself is untouched"
 
 
+@pytest.mark.render
 def test_reconstruct_after_style_change_uses_new_effective_style(tmp_path):
     # After invalidation the rebuild actually runs against the new style, not
     # just a cleared slot: reconstruct + produce re-renders and the resolved
@@ -614,6 +617,9 @@ def test_reconstruct_after_style_change_uses_new_effective_style(tmp_path):
         rebuilt["design_context"], rebuilt["design_context"].get("assets") or [])
     assert style["style_id"] == "default"
     assert style["colors"]["accent"] == "#00AA66", "effective style after rebuild is the new one"
+    from deck_master.editing import export_project
+    export_project(project, output_dir=tmp_path / 'review-export', purpose='review')
+    assert list((tmp_path / 'review-export').glob('*.pptx'))
 
 
 # ---------------------------------------------------------------------------

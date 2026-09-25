@@ -66,13 +66,20 @@ def emit(pages, width, height, fonts, output):
                 if not filename:raise ValueError(f"{page['page_id']}/{s['id']}: font file not supplied: {key}")
                 font=ImageFont.truetype(str(filename),size=1000)
                 text_width=font.getlength(s['text'])/1000*s['font_size']+max(0,len(s['text'])-1)*s.get('letter_spacing',0)
-                w=text_width+s['font_size']*1.0;x=s['x']
-                if s['anchor']=='middle':x-=w/2
-                if s['anchor']=='end':x-=w
+                w=text_width+s['font_size']*1.0
+                anchor=s['x']
                 # The extra glyph of slack keeps Office from clipping text, but
                 # should not itself create a false slide-boundary overflow.
-                if x>=0 and text_width<=page['width']-x<w:
-                    w=page['width']-x
+                # Shrink only slack and recompute the box from the same anchor;
+                # otherwise centered/right-aligned glyphs move with the box.
+                if not s.get('rotation') and 0 <= anchor <= page['width']:
+                    maximum = {'middle': 2*min(anchor, page['width']-anchor),
+                               'end': anchor}.get(s['anchor'], page['width']-anchor)
+                    if text_width <= maximum < w:
+                        w = maximum
+                x=anchor
+                if s['anchor']=='middle':x-=w/2
+                if s['anchor']=='end':x-=w
                 y=s['y']-s['font_size']*.88;h=s['font_size']*1.5
                 # The IR anchor is already in final page coordinates; glyph rotation is
                 # applied once through sh.rotation below, so the box stays at the anchor.

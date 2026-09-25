@@ -420,6 +420,7 @@ def test_adopt_review_validates_replaces_chain(tmp_path):
     doc = store.load_document()
     a0 = store.put_blob(b'<svg id="a0"/>', ext='svg')
     a1 = store.put_blob(b'<svg id="a1"/>', ext='svg')
+    evidence = store.put_blob(b'visual recheck', ext='png')
     r0 = _r0_failing()
     r0['subjects'] = [doc['pages'][0]['page'], a0]
     r0_ref = store.put_json_object(r0)
@@ -428,6 +429,7 @@ def test_adopt_review_validates_replaces_chain(tmp_path):
     def r1_base(**overrides):
         candidate = _r1_closing({**r0, 'ref': r0_ref})
         candidate['subjects'] = r0['subjects'] + [a1]
+        candidate['findings'][0]['evidence'] = [evidence]
         candidate.update(overrides)
         return candidate
 
@@ -441,6 +443,63 @@ def test_adopt_review_validates_replaces_chain(tmp_path):
         _adopt_review(store, r1_base(subjects=r0['subjects']))
     accepted = _adopt_review(store, r1_base())
     assert accepted['replaces'] == r0_ref
+
+
+def test_final_review_accepts_only_evidenced_current_judgment_resolution():
+    old = make_review('content', seed='judgment', status='needs_review', findings=[
+        finding('variance', impact='needs_judgment'),
+        finding('still-open', impact='needs_judgment')])
+    old['ref'] = ref('judgment-review')
+    accepted = make_review('content', seed='resolution', status='pass', replaces=old['ref'])
+    accepted['review_id'] = old['review_id']
+    accepted['findings'] = [{**finding('variance', impact='needs_judgment',
+                                      resolution='accepted_variance', evidence=[ref('proof')]),
+                             'resolution_reason': '逐项核对后没有字形遮挡'}]
+    others = [r for r in pass_set() if r['kind'] != 'content']
+    reviews = [old, accepted, *others]
+    result = review_mod.evaluate_current(make_document(), reviews, current_artifacts())
+    assert result['dimensions']['content:p1']['pending_judgments'] == ['still-open']
+    assert result['status'] == 'needs_review'
+    accepted['findings'].append({**finding('still-open', impact='needs_judgment',
+                                          resolution='accepted_variance', evidence=[ref('proof')]),
+                                 'resolution_reason': '复核确认是合理差异'})
+    assert review_mod.evaluate_current(make_document(), reviews, current_artifacts())['status'] == 'pass'
+    accepted['dependencies'][0]['sha256'] = '0' * 64
+    assert review_mod.evaluate_current(make_document(), reviews, current_artifacts())['status'] == 'needs_review'
+    accepted['dependencies'][0]['sha256'] = PAGE_REF['sha256']
+    accepted['findings'][0]['evidence'] = []
+    assert review_mod.evaluate_current(make_document(), reviews, current_artifacts())['status'] == 'needs_review'
+
+
+def test_receiver_accepts_same_product_variance_but_not_must_fix_relabel(tmp_path):
+    project = tmp_path / 'project'
+    service.create(project, brief='review', draft={'pages': [{
+        'schema_version': 'deck_page_package.v2', 'page_id': 'p1',
+        'customer_visible': {'title': 't', 'body_blocks': []},
+        'visual_spec': {'intent': 'x', 'reference_mode': 'new_design'}}]})
+    store = Store(project)
+    subject = store.load_document()['pages'][0]['page']
+    evidence = store.put_blob(b'observed no glyph overlap', ext='png')
+    original = make_review('blueprint_fidelity', seed='variance', status='needs_review',
+                           subjects=[subject], findings=[finding('f1', impact='needs_judgment')])
+    original_ref = store.put_json_object(original)
+    candidate = make_review('blueprint_fidelity', seed='recheck', subjects=[subject],
+                            replaces=original_ref)
+    candidate['review_id'] = original['review_id']
+    candidate['findings'] = [{**finding('f1', impact='needs_judgment',
+                                       resolution='accepted_variance', evidence=[evidence]),
+                              'resolution_reason': '已实际检查字形没有遮挡'}]
+    assert tasks_mod._adopt_review(store, candidate) == candidate
+    without_reason = deepcopy(candidate)
+    without_reason['findings'][0]['resolution_reason'] = ''
+    with pytest.raises(tasks_mod.EnvelopeError, match='reason'):
+        tasks_mod._adopt_review(store, without_reason)
+    must_fix = deepcopy(original)
+    must_fix['findings'][0]['impact'] = 'must_fix'
+    must_fix['status'] = 'fail'
+    candidate['replaces'] = store.put_json_object(must_fix)
+    with pytest.raises(tasks_mod.EnvelopeError, match='needs_judgment'):
+        tasks_mod._adopt_review(store, candidate)
 
 
 # ---------------------------------------------------------------------------

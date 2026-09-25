@@ -13,6 +13,8 @@ import sys
 import zipfile
 from pathlib import Path
 
+import pytest
+
 REPO = Path(__file__).resolve().parents[2]
 
 
@@ -96,6 +98,7 @@ def test_sdist_rebuild_includes_unique_skill_without_presync(tmp_path):
         assert not any(n.startswith(('runtime/','workflow/','build/')) for n in z.namelist())
 
 
+@pytest.mark.render
 def test_doctor_step_isolation_and_host_truth(monkeypatch):
     from deck_master.doctor import diagnose
     monkeypatch.setenv('DECK_MASTER_SOFFICE','/missing/soffice')
@@ -252,7 +255,6 @@ def test_release_tree_manifest_scans_clean(tmp_path: Path) -> None:
 import hashlib
 from pathlib import Path as _Path
 
-import pytest
 
 
 # ---------------------------------------------------------------------------

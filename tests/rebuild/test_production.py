@@ -462,6 +462,7 @@ def _review_envelope(task: dict, status: str, subjects: list, finding: bool) -> 
     return {"kind": "review", "files": [], "reviews": [review]}
 
 
+@pytest.mark.render
 def test_new_design_mode_and_failed_review_is_preserved(tmp_path: Path) -> None:
     # AC-B10: reference_mode='new_design' reaches the prompt projection, and a
     # failed review stays preserved (readable, still failed) instead of being
@@ -539,7 +540,7 @@ def test_new_design_mode_and_failed_review_is_preserved(tmp_path: Path) -> None:
     after_fix = store.load_document()
     closing = {
         "schema_version": "deck_review.v1",
-        "review_id": "r-fail",
+            "review_id": store.read_object_json(fail_ref)["review_id"],
         "kind": "conversion",
         "status": "pass",
         "subjects": subjects + [fix_ref],

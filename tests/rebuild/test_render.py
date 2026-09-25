@@ -37,6 +37,7 @@ def test_renderers_available_on_this_machine():
     assert missing == [], f'renderers missing on this machine: {missing}'
 
 
+@pytest.mark.render
 def test_svg_renders_with_rsvg_convert(tmp_path, resolvable_font_family):
     # SVG side of AC-K11: real rasterisation with rsvg-convert.
     svg = tmp_path / 'slide.svg'
@@ -50,6 +51,7 @@ def test_svg_renders_with_rsvg_convert(tmp_path, resolvable_font_family):
     assert_real_rendering(png)
 
 
+@pytest.mark.render
 def test_ppt_renders_with_soffice_pdftoppm_chain(tmp_path, resolvable_font_family):
     # PPT side of AC-K11: real compile, then the render_deck chain
     # (soffice -> pdf -> pdftoppm) with semantic PNG evidence per slide.

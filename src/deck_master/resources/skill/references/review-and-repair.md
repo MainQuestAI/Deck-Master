@@ -25,9 +25,6 @@ artifacts)`；逐页解释在 `evaluate_page_visual(entry, reviews, artifacts)`�
   must_fix / needs_judgment / accepted_variance,不做指标投票。
 - 独立性:`validate_independence` — host_self/tool 永不独立;
   independent_host 与 human 类型需要真实 `execution_ref`,模型不得代填。
-- 返修关闭:只有 `replaces` 指向旧 Review 不可变 ref、同 `review_id` 与
-  `finding_id`、subjects 新增当前新产物、且有实际复查 observations /
-  evidence 的新 Review 才能把 finding 记为 fixed;仅改 resolution、旧
-  subjects、过期证据均被拒(接收侧 `tasks._adopt_review` 已校验)。
+- 发现项关闭:替代 Review 必须 `replaces` 指向旧 ref，并保持同一 `review_id`、`finding_id`、页与审阅阶段。`fixed` 要有当前新产物、观察与证据；仅原 `needs_judgment` 可在同一产物上以具体理由、实际观察和有效证据记录 `accepted_variance`。未处置的其他发现继续阻塞，过期依赖不放行。
 - 源图期待独立于输出 SVG 登记:`source_expectations` 对未识别维度保持
   `not_evaluated`,coverage 不满记 1。

@@ -261,6 +261,35 @@ def _pending_host_tasks(document: dict, store: Store) -> list[dict]:
     return pending
 
 
+def _retire_missing_page_inputs(store: Store, document: dict) -> dict:
+    """Recover older runs whose open visual task outlived its SVG/preview."""
+    affected = {e['page_id'] for e in document.get('pages') or []
+                if not e.get('svg') or not e.get('svg_preview')}
+    if not affected:
+        return document
+    updated = dict(document)
+    updated['tasks'] = list(document.get('tasks') or [])
+    changed = False
+    for index, ref in enumerate(updated['tasks']):
+        task = store.read_object_json(ref)
+        if (task.get('status') in ('awaiting_host', 'running') and
+                task.get('review_stage') == 'page_visual' and
+                task.get('kind') in ('review', 'repair') and
+                affected.intersection(task.get('scope_pages') or [])):
+            updated['tasks'][index] = store.put_json_object(
+                {**task, 'status': 'superseded', 'updated_at': _utc_now_iso()})
+            changed = True
+    if not changed:
+        return document
+    bumped = bump_revision(updated, {'operation_id': _new_operation_id('retire'),
+                                    'kind': 'task_update',
+                                    'description': 'retire page task with missing SVG or preview',
+                                    'read_set': []})
+    store.commit_change(base_revision=document['revision_id'], document=bumped,
+                        operation_id=bumped['change']['operation_id'])
+    return store.load_document()
+
+
 def task_summary(store: Store, document: dict, task: dict) -> dict:
     """The Host work order: identity, inputs, resolved design, method entrypoints."""
     summary = {
@@ -443,7 +472,7 @@ def _continue_project(project_dir: Path | str) -> dict:
     which arrives with T06; until then continue reports that honestly.
     """
     store = Store(Path(project_dir).expanduser())
-    document = store.load_document()
+    document = _retire_missing_page_inputs(store, store.load_document())
     pending = _pending_host_tasks(document, store)
     if any(t["kind"] == "blueprint" for t in pending):
         if document["policy"].get("user_stop"):
@@ -535,7 +564,7 @@ def _continue_project(project_dir: Path | str) -> dict:
                              findings=[page_check], next_action='repair_page_visual')
         task = open_host_task(store, kind='review', page_ids=[entry['page_id']],
                               review_stage='page_visual',
-                              instruction='实际打开本页 Page、原始蓝图、SVG 预览，核对正文、数字、模块、图标语义、连线方向和遮挡；提交 blueprint_content、blueprint_fidelity、readability 三类记录。旧 must_fix 需用 replaces、同一 finding_id、新产物与实际复核证据关闭。不得把原图文字当事实源。')
+                              instruction='实际打开本页 Page、原始蓝图、SVG 预览，核对正文、数字、模块、图标语义、连线方向和遮挡；提交 blueprint_content、blueprint_fidelity、readability 三类记录。旧 must_fix 需新产物与复核证据关闭；needs_judgment 可用具体理由、观察与证据接受合理差异。两者均需 replaces 与同一 finding_id。不得把原图文字当事实源。')
         document = store.load_document()
         return _response(status='awaiting_host', document=document, requested_action='continue',
                          pending_tasks=[task_summary(store, document, task)],
@@ -791,6 +820,22 @@ def _apply_rendering_invalidation(store, new_document, old_document, old_design,
         slot_entry['svg'] = slot_entry['svg_preview'] = slot_entry['ppt_preview'] = None
     if invalidated:
         new_document['outputs'] = {key: None for key in new_document['outputs']}
+    affected = {new_document['pages'][index]['page_id'] for index in invalidated}
+    review_affected = set(affected)
+    for entry in new_document['pages']:
+        page = store.read_object_json(entry['page'])
+        before, _ = resolve_design(page, old_design, old_design.get('assets') or [])
+        after, _ = resolve_design(page, new_design, new_design.get('assets') or [])
+        if before.get('allowed_asset_ids') != after.get('allowed_asset_ids'):
+            review_affected.add(entry['page_id'])
+    for index, ref in enumerate(new_document.get('tasks') or []):
+        task = store.read_object_json(ref)
+        scope = set(task.get('scope_pages') or [])
+        if task.get('status') not in ('awaiting_host', 'running'):
+            continue
+        if scope & affected or (task.get('kind') in ('review', 'repair') and scope & review_affected):
+            new_document['tasks'][index] = store.put_json_object(
+                {**task, 'status': 'superseded', 'updated_at': _utc_now_iso()})
     return invalidated
 
 

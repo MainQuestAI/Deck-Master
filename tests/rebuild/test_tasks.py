@@ -427,6 +427,7 @@ def test_repair_rounds_archive_distinct_ids_all_recoverable(tmp_path: Path) -> N
     assert all(not store.read_object_json(t).get("call_allowances") for t in document["tasks"])
 
 
+@pytest.mark.render
 def test_no_progress_repair_stops_instead_of_looping(tmp_path: Path) -> None:
     # Same failing readback + unchanged content: the second repair dispatch is
     # refused with an explicit no-progress explanation (stopping != passing).
@@ -694,6 +695,7 @@ def test_blueprint_lineage_rejects_preview_backfeed(tmp_path):
                               produced_against=task["produced_against"], result_payload=envelope)
 
 
+@pytest.mark.render
 def test_svg_only_fix_is_progress_not_no_progress(tmp_path):
     """Round-B 附加-1: a repair round that only changes the SVG (page text
     untouched) is real progress — the no-progress guard must not stop it."""

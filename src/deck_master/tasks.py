@@ -376,19 +376,34 @@ def _adopt_review(store: Store, review: dict) -> dict:
             raise EnvelopeError("review/replaces", "replaced object is not a review") from exc
         if prior.get("schema_version") != "deck_review.v1":
             raise EnvelopeError("review/replaces", "replaced object is not a review record")
-        if prior.get("review_id") != review.get("review_id"):
+        if (prior.get("review_id") != review.get("review_id") or
+                prior.get("kind") != review.get("kind") or
+                prior.get("review_stage", "final") != review.get("review_stage", "final")):
             raise EnvelopeError("review/replaces", "replaces must point at the same logical review")
-        old_ids = {f.get("finding_id") for f in prior.get("findings") or []}
-        new_ids = {f.get("finding_id") for f in review.get("findings") or []}
-        if not old_ids & new_ids:
+        old_findings = {f.get("finding_id"): f for f in prior.get("findings") or []}
+        new_findings = {f.get("finding_id"): f for f in review.get("findings") or []}
+        shared = old_findings.keys() & new_findings.keys()
+        if not shared:
             raise EnvelopeError("review/replaces", "no shared finding_id with the replaced review")
         old_subjects = {(s.get("path"), s.get("sha256")) for s in prior.get("subjects") or []}
         added_subjects = {(s.get("path"), s.get("sha256")) for s in review.get("subjects") or []} - old_subjects
-        if not added_subjects:
+        if any(new_findings[fid].get('resolution') == 'fixed' for fid in shared) and not added_subjects:
             raise EnvelopeError(
                 "review/replaces",
                 "fix review must add the rechecked product to subjects; re-submitting the old subjects is not a recheck",
             )
+        for fid in shared:
+            old, new = old_findings[fid], new_findings[fid]
+            if new.get('page_id') != old.get('page_id'):
+                raise EnvelopeError('review/replaces', 'finding page changed')
+            if new.get('resolution') == 'accepted_variance':
+                if old.get('impact') != 'needs_judgment':
+                    raise EnvelopeError('review/replaces', 'only needs_judgment can accept a variance')
+                if not (new.get('resolution_reason') or '').strip() or not review.get('observations') or not new.get('evidence'):
+                    raise EnvelopeError('review/replaces', 'accepted variance needs reason, observation and evidence')
+            if new.get('resolution') in ('fixed', 'accepted_variance'):
+                for evidence in new.get('evidence') or []:
+                    store.read_object_bytes(evidence)
     return review
 
 
@@ -703,16 +718,26 @@ def accept_result(
     existing_page_ids = {entry.get("page_id") for entry in document.get("pages") or []} | {
         page["page_id"] for page in adopted_pages
     }
+    candidates = {entry['page_id']: entry for entry in document.get('pages') or []}
+    for page in adopted_pages:
+        candidates.setdefault(page['page_id'], {'page_id': page['page_id'], 'page': None,
+                                                'blueprint': None})
+    adopted_by_id = {page['page_id']: page for page in adopted_pages}
+    staged_blueprints = {spec['page_id']: staged[spec['file_id']]['bytes']
+                         for spec in envelope.get('artifact_specs') or []
+                         if spec.get('role') == 'blueprint' and spec.get('page_id')}
     for spec in envelope.get("artifact_specs") or []:
         if spec.get('role') == 'svg':
-            entry=next((e for e in document['pages'] if e['page_id']==spec.get('page_id')),None)
+            entry = candidates.get(spec.get('page_id'))
             if entry:
                 data = staged[spec['file_id']]['bytes']
-                if entry['blueprint']:
+                if entry['page_id'] in staged_blueprints:
+                    _validate_svg_reference(data, sha256_bytes(staged_blueprints[entry['page_id']]))
+                elif entry.get('blueprint'):
                     original=store.read_object_json(entry['blueprint'])
                     _validate_svg_reference(data,original['file']['sha256'])
                 _preflight_svg(store, document, entry, data,
-                               page=next((p for p in adopted_pages if p['page_id'] == entry['page_id']), None))
+                               page=adopted_by_id.get(entry['page_id']))
         artifacts.append(_build_artifact(store, spec, staged, existing_page_ids))
     reviews = []
     for review in envelope.get("reviews") or []:

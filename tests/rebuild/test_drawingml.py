@@ -46,6 +46,36 @@ def named_shape(root, name):
     raise AssertionError(f'shape {name} not found')
 
 
+def test_boundary_text_box_keeps_svg_alignment_anchor(tmp_path):
+    result = compile_sample(tmp_path, f'''
+      <text id="near-middle" x="192" y="35" text-anchor="middle" font-family="{FAMILY}" font-size="16">A</text>
+      <text id="near-end" x="195" y="60" text-anchor="end" font-family="{FAMILY}" font-size="16">A</text>
+      <text id="normal-middle" x="100" y="82" text-anchor="middle" font-family="{FAMILY}" font-size="16">A</text>
+      <text id="near-start" x="4" y="95" font-family="{FAMILY}" font-size="16">A</text>
+    ''', fonts=resolve_font())
+    root = slide_root(result)
+    for name, anchor, fraction in [('near-middle:0', 192, .5),
+                                   ('near-end:0', 195, 1),
+                                   ('normal-middle:0', 100, .5),
+                                   ('near-start:0', 4, 0)]:
+        shape = named_shape(root, name)
+        xfrm = shape.find('p:spPr/a:xfrm', NS)
+        left = int(xfrm.find('a:off', NS).get('x')) / 9525
+        width = int(xfrm.find('a:ext', NS).get('cx')) / 9525
+        assert abs(left + width * fraction - anchor) < .01
+        assert left >= 0 and left + width <= 200.01
+
+    overflow = compile_sample(tmp_path, f'''
+      <text id="actual-overflow" x="198" y="40" font-family="{FAMILY}" font-size="16">LONG</text>
+    ''', name='overflow', fonts=resolve_font())
+    shape = named_shape(slide_root(overflow), 'actual-overflow:0')
+    xfrm = shape.find('p:spPr/a:xfrm', NS)
+    left = int(xfrm.find('a:off', NS).get('x')) / 9525
+    width = int(xfrm.find('a:ext', NS).get('cx')) / 9525
+    assert abs(left - 198) < .01
+    assert left + width > 200
+
+
 def test_declared_subset_structures_in_slide_xml(tmp_path):
     # AC-K13: line/path/icon/table(pure shape group)/image/gradient each land
     # as the matching DrawingML structure in the actual slide XML.

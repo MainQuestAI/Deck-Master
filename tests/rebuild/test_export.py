@@ -232,6 +232,7 @@ def test_delivery_honors_professional_review_required_policy(tmp_path):
     export_project(project2, output_dir=tmp_path / 'second' / 'review-ok', purpose='review')
 
 
+@pytest.mark.render
 def test_cli_needs_tool_maps_to_exit_3(tmp_path, capsys):
     from deck_master.cli import _fail
     from deck_master.pipeline import NeedsTool

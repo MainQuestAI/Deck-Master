@@ -51,34 +51,43 @@ def _dependency_key(dep: dict) -> str:
 
 
 def finding_closed(reviews: list[dict], review: dict, finding: dict, artifacts: dict) -> bool:
-    """Per-finding close validation (spec 07.9 / P1-02).
-
-    A finding of ``review`` counts fixed only when a new review R1 exists with:
-    replaces pointing at this exact R0 ref; the same finding_id with resolution
-    fixed and real evidence; at least one subject that is a NEW product (not an
-    R0 subject) and is current per ``artifacts``; and real recheck observations.
-    A later plain pass never clears an old open finding by itself.
-    """
+    """Resolve one finding through explicit, current replacement reviews."""
     current_shas = set(artifacts.values())
-    review_ref = review.get('ref')
-    if not review_ref:
-        return False
-    for candidate in reviews:
-        if candidate is review:
-            continue
-        replaced = candidate.get('replaces')
-        if not replaced or _ref_key(replaced) != _ref_key(review_ref):
-            continue
-        old_subjects = {_ref_key(s) for s in review.get('subjects') or []}
-        added = {_ref_key(s) for s in candidate.get('subjects') or []} - old_subjects
-        if not added or not any(sha in current_shas for _, sha in added):
-            continue
+    owner = review
+    seen = set()
+    while owner.get('ref') and _ref_key(owner['ref']) not in seen:
+        seen.add(_ref_key(owner['ref']))
+        candidates = [r for r in reviews if r.get('replaces') and
+                      _ref_key(r['replaces']) == _ref_key(owner['ref']) and
+                      r.get('review_id') == owner.get('review_id') and
+                      r.get('kind') == owner.get('kind') and
+                      r.get('review_stage', 'final') == owner.get('review_stage', 'final')]
+        if not candidates:
+            break
+        candidate = candidates[-1]
+        followup = next((f for f in candidate.get('findings') or []
+                         if f.get('finding_id') == finding.get('finding_id') and
+                         f.get('page_id') == finding.get('page_id')), None)
+        if followup is None:
+            break
+        deps = candidate.get('dependencies') or []
+        owner_dep_keys = {_dependency_key(dep) for dep in owner.get('dependencies') or []}
+        candidate_dep_keys = {_dependency_key(dep) for dep in deps}
+        if not owner_dep_keys <= candidate_dep_keys or any(
+                artifacts.get(_dependency_key(dep)) != dep.get('sha256') for dep in deps):
+            break
         if not candidate.get('observations'):
-            continue
-        followups = {f.get('finding_id'): f for f in candidate.get('findings') or []}
-        followup = followups.get(finding.get('finding_id'))
-        if followup and followup.get('resolution') == 'fixed' and followup.get('evidence'):
-            return True
+            break
+        resolution = followup.get('resolution')
+        if resolution == 'accepted_variance' and finding.get('impact') == 'needs_judgment':
+            if (followup.get('resolution_reason') or '').strip() and followup.get('evidence'):
+                return True
+        if resolution == 'fixed' and followup.get('evidence'):
+            old_subjects = {_ref_key(s) for s in owner.get('subjects') or []}
+            added = {_ref_key(s) for s in candidate.get('subjects') or []} - old_subjects
+            if any(sha in current_shas for _, sha in added):
+                return True
+        owner = candidate
     return False
 
 
@@ -137,7 +146,8 @@ def evaluate_page_visual(entry: dict, reviews: list[dict], artifacts: dict,
             for finding in open_findings(owner):
                 if not finding_closed(reviews, owner, finding, artifacts):
                     open_findings_by_kind.setdefault(kind, []).append(finding['finding_id'])
-            judgments.extend(f['finding_id'] for f in pending_judgments(owner))
+            judgments.extend(f['finding_id'] for f in pending_judgments(owner)
+                             if not finding_closed(reviews, owner, f, artifacts))
     unclosed_prior = []
     for owner in reviews:
         if owner.get('review_stage') != 'page_visual':
@@ -234,7 +244,8 @@ def evaluate_current(document: dict, reviews: list[dict], artifacts: dict) -> di
             for finding in open_findings(review):
                 open_by_id.setdefault(finding['finding_id'], finding)
             for finding in pending_judgments(review):
-                judgments.append(finding['finding_id'])
+                if not finding_closed(reviews_for_dim, review, finding, artifacts):
+                    judgments.append(finding['finding_id'])
         remaining = [fid for fid, finding in open_by_id.items()
                      if not any(finding_closed(reviews, owner, finding, artifacts)
                                 for owner in reviews_for_dim)]
