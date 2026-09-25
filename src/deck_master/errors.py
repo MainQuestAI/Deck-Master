@@ -71,3 +71,15 @@ class HostSkillConflict(TypedServiceError):
 
     error_code = "host_skill_conflict"
     exit_code = 5
+
+
+NEXT_ACTIONS_BY_CODE = {
+    "task_field_conflict": "remove one of the conflicting task-fact sources and retry",
+    "source_unreadable": "fix or replace the named file, or drop it from --source",
+    "source_unsupported": "convert the file to a supported format or drop it from --source",
+    "input_revision_conflict": "re-read inputs show, then retry with the current revision",
+    "stale_input_context": "run continue for a fresh task; late results are refused",
+    "input_reconciliation_pending": "run inputs update and the dispatched input_revision task first",
+    "method_resource_missing": "reinstall the package; the method source is missing or unreadable",
+    "host_skill_conflict": "remove or rename the occupant path, or choose another Codex skill root",
+}

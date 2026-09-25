@@ -37,6 +37,15 @@ def _error(code: str, message: str, next_action: str, field: str | None = None) 
 def _fail(exc: Exception) -> int:
     from .pipeline import NeedsTool
 
+    error_code = getattr(exc, "error_code", None)
+    if error_code is not None:
+        from .errors import NEXT_ACTIONS_BY_CODE
+
+        return _emit_and_exit(
+            _error(error_code, str(exc), NEXT_ACTIONS_BY_CODE.get(error_code, "follow the named recovery"),
+                   field=getattr(exc, "path", None)),
+            getattr(exc, "exit_code", 2),
+        )
     if isinstance(exc, NeedsTool):
         return _emit_and_exit(_error("needs_tool", str(exc), "configure the reported tool"), 3)
     if isinstance(exc, (EnvelopeError, ModelError, ServiceError, SvgError)):
@@ -76,11 +85,23 @@ def build_parser() -> argparse.ArgumentParser:
     create.add_argument("--brief", required=False, help="task brief text (or --brief-file)")
     create.add_argument("--brief-file", required=False)
     create.add_argument("--title", default="")
-    create.add_argument("--source", action="append", default=[])
+    create.add_argument("--source", action="append", default=[],
+                        help="material file or directory; directories are expanded recursively")
     create.add_argument("--out", required=True)
     create.add_argument("--design", default=None)
     create.add_argument("--draft", default=None, help="complete draft JSON to import")
     create.add_argument("--no-open", action="store_true")
+    create.add_argument("--audience", default=None, help="who must understand or decide what")
+    create.add_argument("--scenario", default=None, help="the exchange scenario")
+    create.add_argument("--presentation-mode", dest="presentation_mode",
+                        choices=("live", "read_alone", "mixed"), default=None,
+                        help="live/read_alone/mixed; defaults live without claiming user choice")
+    create.add_argument("--page-limit", dest="page_limit", type=int, default=None,
+                        help="maximum page count, not a target")
+    create.add_argument("--decision", action="append", default=None,
+                        help="a user-confirmed decision; repeatable, always the full effective set")
+    create.add_argument("--task-file", dest="task_file", default=None,
+                        help="JSON object carrying the task facts (spec v1.1 3.1 fields)")
 
     continue_cmd = sub.add_parser("continue")
     continue_cmd.add_argument("--project", required=True)
@@ -255,13 +276,19 @@ def main(argv: list[str] | None = None) -> int:
             draft = None
             if options.draft:
                 draft = json.loads(open(options.draft, encoding="utf-8").read())
+            task_fields = _merge_task_fields(options)
             payload = service.create(
                 options.out,
-                brief=_read_brief(options),
-                title=options.title,
+                brief=task_fields["brief"],
+                title=task_fields.get("title") or "",
                 sources=options.source,
                 design=design,
                 draft=draft,
+                audience=task_fields.get("audience") or "",
+                scenario=task_fields.get("scenario") or "",
+                presentation_mode=task_fields.get("presentation_mode"),
+                page_limit=task_fields.get("page_limit"),
+                existing_decisions=task_fields.get("existing_decisions"),
             )
             if _project_has_pages(options.out):
                 payload = _attach_workbench_url(options.out, payload)
@@ -313,14 +340,94 @@ def main(argv: list[str] | None = None) -> int:
     return 2
 
 
-def _read_brief(options) -> str:
-    if options.brief_file:
-        from pathlib import Path
+TASK_FILE_FIELDS = {"title", "brief", "audience", "scenario", "presentation_mode",
+                    "page_limit", "existing_decisions"}
 
-        return Path(options.brief_file).read_text(encoding="utf-8")
-    if options.brief:
-        return options.brief
-    return sys.stdin.read()
+
+def _load_task_file(path: str) -> dict:
+    from .errors import TaskFieldConflict
+
+    try:
+        raw = json.loads(Path(path).read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise TaskFieldConflict("(task-file)", f"task file is not valid JSON: {exc}") from exc
+    if not isinstance(raw, dict):
+        raise TaskFieldConflict("(task-file)", "task file must be a JSON object")
+    unknown = sorted(set(raw) - TASK_FILE_FIELDS)
+    if unknown:
+        raise TaskFieldConflict("(task-file)", f"unknown task fields: {unknown}")
+    if "presentation_mode" in raw and raw["presentation_mode"] not in ("live", "read_alone", "mixed"):
+        raise TaskFieldConflict("(task-file)/presentation_mode", "must be live, read_alone or mixed")
+    if "page_limit" in raw and raw["page_limit"] is not None and \
+            (not isinstance(raw["page_limit"], int) or isinstance(raw["page_limit"], bool)
+             or raw["page_limit"] < 1):
+        raise TaskFieldConflict("(task-file)/page_limit", "must be a positive integer or null")
+    if "existing_decisions" in raw and (
+            not isinstance(raw["existing_decisions"], list)
+            or not all(isinstance(item, str) for item in raw["existing_decisions"])):
+        raise TaskFieldConflict("(task-file)/existing_decisions", "must be an array of strings")
+    for field in ("title", "brief", "audience", "scenario"):
+        if field in raw and not isinstance(raw[field], str):
+            raise TaskFieldConflict(f"(task-file)/{field}", "must be a string")
+    return raw
+
+
+def _merge_task_fields(options) -> dict:
+    """Merge CLI task facts with --task-file (spec v1.1 §3.2).
+
+    Explicit CLI scalars win; absent flags never overwrite file values with
+    argparse defaults. ``--decision`` and file decisions are rejected
+    together instead of being concatenated.
+    """
+    from .errors import TaskFieldConflict
+
+    file_fields = _load_task_file(options.task_file) if options.task_file else {}
+    if options.brief and options.brief_file:
+        raise TaskFieldConflict("(brief)", "--brief and --brief-file are mutually exclusive")
+    if options.decision is not None and "existing_decisions" in file_fields:
+        raise TaskFieldConflict(
+            "(decision)",
+            "--decision and task-file existing_decisions cannot both be provided; "
+            "decisions are always the full effective set",
+        )
+
+    if options.brief_file:
+        brief = Path(options.brief_file).read_text(encoding="utf-8")
+    elif options.brief:
+        brief = options.brief
+    elif "brief" in file_fields:
+        brief = file_fields["brief"]
+    else:
+        brief = sys.stdin.read()
+    if not (brief or "").strip():
+        raise TaskFieldConflict("(brief)", "brief must not be empty after merging CLI and task file")
+
+    fields: dict = {"brief": brief}
+    if options.title:
+        fields["title"] = options.title
+    elif file_fields.get("title"):
+        fields["title"] = file_fields["title"]
+    if options.audience is not None:
+        fields["audience"] = options.audience
+    elif "audience" in file_fields:
+        fields["audience"] = file_fields["audience"]
+    if options.scenario is not None:
+        fields["scenario"] = options.scenario
+    elif "scenario" in file_fields:
+        fields["scenario"] = file_fields["scenario"]
+    if options.presentation_mode is not None:
+        fields["presentation_mode"] = options.presentation_mode
+    elif "presentation_mode" in file_fields:
+        fields["presentation_mode"] = file_fields["presentation_mode"]
+    if options.page_limit is not None:
+        fields["page_limit"] = options.page_limit
+    elif "page_limit" in file_fields:
+        fields["page_limit"] = file_fields["page_limit"]
+    if options.decision is not None:
+        fields["existing_decisions"] = options.decision
+    elif "existing_decisions" in file_fields:
+        fields["existing_decisions"] = file_fields["existing_decisions"]
+    return fields
 
 
 # ---------------------------------------------------------------------------

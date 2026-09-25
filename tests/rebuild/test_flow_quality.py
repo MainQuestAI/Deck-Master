@@ -147,3 +147,106 @@ def test_dispatch_snapshot_sources_survive_current_mutation(tmp_path: Path) -> N
     # Valid task: sources come from the dispatch snapshot, not the mutated current.
     assert status["pending_tasks"][0]["sources"], "dispatch snapshot sources must survive"
     assert status["pending_tasks"][0]["project_context"]["context_status"] == "stale"
+
+
+# ---------------------------------------------------------------------------
+# T2: CLI task fields and --task-file merge rules
+
+from deck_master import cli
+
+
+def _run_cli(argv, capsys):
+    code = cli.main(argv)
+    out, err = capsys.readouterr()
+    stream = out if code == 0 else err
+    payload = json.loads(stream) if stream.strip() else {}
+    return code, payload
+
+
+def test_cli_task_fields_land_in_document(tmp_path: Path, capsys) -> None:
+    project = tmp_path / "proj"
+    code, payload = _run_cli([
+        "create", "--brief", "需求说明", "--source", str(_material(tmp_path)), "--out", str(project),
+        "--audience", "运营负责人", "--scenario", "首次交流", "--presentation-mode", "read_alone",
+        "--page-limit", "8", "--decision", "沿用现有门户", "--decision", "本期接口只读",
+    ], capsys)
+    assert code == 0, payload
+    task = Store(project).load_document()["task"]
+    assert task["audience"] == "运营负责人"
+    assert task["scenario"] == "首次交流"
+    assert task["presentation_mode"] == "read_alone"
+    assert task["presentation_mode_source"] == "provided"
+    assert task["page_limit"] == 8
+    assert task["existing_decisions"] == ["沿用现有门户", "本期接口只读"]
+
+
+def test_task_file_merge_cli_overrides_only_explicit_flags(tmp_path: Path, capsys) -> None:
+    task_file = tmp_path / "task.json"
+    task_file.write_text(json.dumps({
+        "title": "文件里的标题",
+        "brief": "文件里的brief",
+        "audience": "文件受众",
+        "scenario": "文件场景",
+        "presentation_mode": "mixed",
+        "page_limit": 6,
+        "existing_decisions": ["沿用现有门户"],
+    }, ensure_ascii=False), encoding="utf-8")
+    project = tmp_path / "proj"
+    code, payload = _run_cli([
+        "create", "--source", str(_material(tmp_path)), "--out", str(project),
+        "--task-file", str(task_file), "--audience", "CLI受众",
+    ], capsys)
+    assert code == 0, payload
+    task = Store(project).load_document()["task"]
+    assert task["title"] == "文件里的标题"
+    assert task["brief"] == "文件里的brief"
+    assert task["audience"] == "CLI受众", "explicit CLI flag overrides the file value"
+    assert task["scenario"] == "文件场景"
+    assert task["presentation_mode"] == "mixed"
+    assert task["presentation_mode_source"] == "provided"
+    assert task["page_limit"] == 6
+    assert task["existing_decisions"] == ["沿用现有门户"]
+
+
+def test_decision_and_task_file_conflict_exit_2(tmp_path: Path, capsys) -> None:
+    task_file = tmp_path / "task.json"
+    task_file.write_text(json.dumps({
+        "brief": "文件brief", "existing_decisions": ["沿用现有门户"]}, ensure_ascii=False),
+        encoding="utf-8")
+    code, payload = _run_cli([
+        "create", "--source", str(_material(tmp_path)), "--out", str(tmp_path / "proj"),
+        "--task-file", str(task_file), "--decision", "CLI决定",
+    ], capsys)
+    assert code == 2
+    assert payload["error"]["code"] == "task_field_conflict"
+    assert not (tmp_path / "proj" / ".deckmaster").exists()
+
+
+def test_unknown_task_file_field_exit_2(tmp_path: Path, capsys) -> None:
+    task_file = tmp_path / "task.json"
+    task_file.write_text(json.dumps({"brief": "b", "narrative_plan": {}}, ensure_ascii=False),
+                         encoding="utf-8")
+    code, payload = _run_cli([
+        "create", "--source", str(_material(tmp_path)), "--out", str(tmp_path / "proj"),
+        "--task-file", str(task_file),
+    ], capsys)
+    assert code == 2
+    assert payload["error"]["code"] == "task_field_conflict"
+
+
+def test_brief_conflicts_and_empty_merge_exit_2(tmp_path: Path, capsys) -> None:
+    brief_file = tmp_path / "brief.md"
+    brief_file.write_text("文件brief", encoding="utf-8")
+    code, payload = _run_cli([
+        "create", "--brief", "CLI brief", "--brief-file", str(brief_file),
+        "--source", str(_material(tmp_path)), "--out", str(tmp_path / "proj"),
+    ], capsys)
+    assert code == 2 and payload["error"]["code"] == "task_field_conflict"
+
+    empty_file = tmp_path / "empty-task.json"
+    empty_file.write_text(json.dumps({"brief": ""}, ensure_ascii=False), encoding="utf-8")
+    code, payload = _run_cli([
+        "create", "--source", str(_material(tmp_path)), "--out", str(tmp_path / "proj2"),
+        "--task-file", str(empty_file),
+    ], capsys)
+    assert code == 2 and payload["error"]["code"] == "task_field_conflict"
