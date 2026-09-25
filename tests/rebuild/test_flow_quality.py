@@ -1024,3 +1024,17 @@ def test_delivery_gate_surfaces_exit_3_code_via_cli(tmp_path: Path, capsys) -> N
     payload = json.loads(capsys.readouterr().err)
     assert payload["error"]["code"] == "input_reconciliation_pending"
     assert not (tmp_path / "gate-out").exists()
+
+
+def test_stale_scoped_result_reports_stale_input_context(tmp_path: Path) -> None:
+    """§9: the input-moved refusal carries code stale_input_context (exit 5)."""
+    from deck_master.tasks import StaleInputContext
+
+    project, store, _ = _setup_project_with_pages(tmp_path)
+    opened = service.continue_project(project)
+    task = opened["pending_tasks"][0]
+    document = store.load_document()
+    page_entry = next(e for e in document["pages"] if e["page_id"] == task["scope_pages"][0])
+    _raw_commit(store, lambda doc: doc["task"].update(audience="已变更的受众"))
+    with pytest.raises(StaleInputContext):
+        _accept_blueprint_envelope(project, task, page_entry, _png_bytes())

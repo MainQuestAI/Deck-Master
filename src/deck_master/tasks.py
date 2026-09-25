@@ -78,6 +78,14 @@ class TaskConflict(StoreError):
     """Late result, stale input, or a different output for a known operation."""
 
 
+class StaleInputContext(TaskConflict):
+    """A result arrived after the task inputs moved on (exit 5,
+    ``stale_input_context``): continue hands out a fresh task."""
+
+    error_code = "stale_input_context"
+    exit_code = 5
+
+
 @dataclass
 class OperationJournal:
     """Management-record layer for idempotency and settled call facts.
@@ -891,7 +899,7 @@ def accept_result(
     # Freshness is content-based: task-management revisions (claim, allocation)
     # keep the result valid; a content change invalidates it (spec 09.7 recheck).
     if not task_inputs_current(store, document, task):
-        raise TaskConflict(
+        raise StaleInputContext(
             "(document)",
             "project content moved since dispatch; read the new inputs and rebase",
         )

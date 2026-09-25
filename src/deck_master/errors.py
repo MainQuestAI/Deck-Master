@@ -45,13 +45,6 @@ class InputRevisionConflict(TypedServiceError):
     exit_code = 5
 
 
-class StaleInputContext(TypedServiceError):
-    """A result arrived after the task inputs moved on (exit 5)."""
-
-    error_code = "stale_input_context"
-    exit_code = 5
-
-
 class InputReconciliationPending(TypedServiceError):
     """Delivery/handoff refused while the deck awaits input reconciliation (exit 3)."""
 
