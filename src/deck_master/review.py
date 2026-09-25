@@ -14,8 +14,12 @@ import io
 import re
 from typing import Any
 
-REQUIRED_KINDS = ('content', 'blueprint_content', 'blueprint_fidelity',
-                  'conversion', 'readability', 'privacy')
+# The single definition of the six final review dimensions (spec v1.1 §6).
+# REQUIRED_KINDS, PAGE_VISUAL_KINDS, final-review work orders and validation
+# all derive from here; never re-declare the set elsewhere.
+REVIEW_DIMENSIONS = ('content', 'blueprint_content', 'blueprint_fidelity',
+                     'conversion', 'readability', 'privacy')
+REQUIRED_KINDS = REVIEW_DIMENSIONS
 OPEN_TASK_STATUSES = ('awaiting_host', 'running')
 
 # 07.8: real leak markers only — never an open-ended banned-word list.
@@ -208,7 +212,54 @@ def pending_judgments(review: dict) -> list[dict]:
             if f.get('impact') == 'needs_judgment' and f.get('resolution') == 'open']
 
 
-PAGE_VISUAL_KINDS = ('blueprint_content', 'blueprint_fidelity', 'readability')
+PAGE_VISUAL_KINDS = tuple(
+    kind for kind in REVIEW_DIMENSIONS
+    if kind in ('blueprint_content', 'blueprint_fidelity', 'readability'))
+
+
+def final_review_units(document: dict, summary: dict, *, input_alignment: str = "current") -> list[dict]:
+    """The final review dispatched by actual gap only (spec v1.1 §6).
+
+    Each unit names one dimension, the pages it still covers, and why:
+    ``missing`` (no current execution), ``stale`` (execution does not bind the
+    current products), ``open_finding`` (unresolved findings or judgments) or
+    ``changed_input`` (content/privacy must be re-checked after an input
+    update). Dimensions that are currently valid produce no unit.
+    """
+    pages = document.get("pages") or []
+    stale_keys = {f"{item.get('kind')}:{item.get('page_id')}" for item in summary.get("stale") or []}
+    reasons = summary.get("dimension_reasons") or {}
+    dimensions = summary.get("dimensions") or {}
+    units: list[dict] = []
+    for kind in REVIEW_DIMENSIONS:
+        grouped: dict[str, list[str]] = {}
+        for entry in pages:
+            page_id = entry["page_id"]
+            key = f"{kind}:{page_id}"
+            if input_alignment == "needs_reconciliation" and kind in ("content", "privacy"):
+                grouped.setdefault("changed_input", []).append(page_id)
+                continue
+            state = dimensions.get(key)
+            if state is None:
+                grouped.setdefault("missing", []).append(page_id)
+            elif state.get("open_must_fix") or state.get("pending_judgments"):
+                grouped.setdefault("open_finding", []).append(page_id)
+            elif key in stale_keys or reasons.get(key) or state.get("status") != "pass":
+                grouped.setdefault("stale", []).append(page_id)
+        for reason, page_ids in grouped.items():
+            units.append({"kind": kind, "page_ids": page_ids, "reason": reason})
+    return units
+
+
+def describe_review_units(units: list[dict]) -> str:
+    """Human work-order text generated from the units, not a fixed triple."""
+    if not units:
+        return ("当前各维度均已有效覆盖；如仍有具体问题，照常提交对应维度的 Review。"
+                "subjects 必须包含当前 PPTX 与发现所在页的当前 Page；未实际检查不能 pass。")
+    parts = "；".join(f"{unit['kind']}（{','.join(unit['page_ids'])}：{unit['reason']}）"
+                      for unit in units)
+    return (f"最终审阅按缺口执行：{parts}。已经有效的维度不再要求，额外发现问题照常提交。"
+            "subjects 必须包含当前 PPTX 与发现所在页的当前 Page；未实际检查不能 pass，问题返回具体对象。")
 
 
 def evaluate_page_visual(entry: dict, reviews: list[dict], artifacts: dict,

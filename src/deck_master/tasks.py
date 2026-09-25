@@ -931,7 +931,8 @@ def accept_result(
         if review.get('review_stage', 'final') != stage:
             raise EnvelopeError('review/review_stage', 'review stage does not match the dispatched task')
     if stage == 'page_visual' and envelope['kind'] == 'review':
-        required = {'blueprint_content', 'blueprint_fidelity', 'readability'}
+        from .review import PAGE_VISUAL_KINDS
+        required = set(PAGE_VISUAL_KINDS)
         reviews_by_kind = {item.get('kind'): item for item in envelope.get('reviews') or []}
         if set(reviews_by_kind) != required or len(envelope.get('reviews') or []) != len(required):
             raise EnvelopeError('review/kind', 'page_visual requires exactly blueprint_content, blueprint_fidelity and readability')
@@ -954,9 +955,16 @@ def accept_result(
             if not required_deps <= deps.keys() or any(digests.get(key) != sha for key, sha in deps.items()):
                 raise EnvelopeError('review/dependencies', 'page_visual review must bind current Page, blueprint, SVG, style and allowed assets')
     if stage == 'final' and envelope['kind'] == 'review' and envelope.get('reviews'):
+        from .review import REVIEW_DIMENSIONS
+        # The six content dimensions are required; professional_use and
+        # desktop_editing remain valid supplementary final records.
+        allowed_kinds = set(REVIEW_DIMENSIONS) | {'professional_use', 'desktop_editing'}
         pptx_ref = (document.get('outputs') or {}).get('pptx')
         pages_by_id = {e['page_id']: e for e in document.get('pages') or []}
         for item in envelope['reviews']:
+            if item.get('kind') not in allowed_kinds:
+                raise EnvelopeError('review/kind',
+                                    f"final review kinds must be among {', '.join(sorted(allowed_kinds))}")
             cited = {(ref.get('path'), ref.get('sha256')) for ref in item.get('subjects') or []}
             if pptx_ref and (pptx_ref['path'], pptx_ref['sha256']) not in cited:
                 raise EnvelopeError('review/subjects', 'final review must reference the current PPTX')

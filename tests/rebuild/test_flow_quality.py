@@ -803,3 +803,153 @@ def test_view_carries_reconciliation_banner_data(tmp_path: Path) -> None:
     # alignment); legacy projects report legacy_current without content_basis.
     _raw_commit(store, lambda doc: doc.pop("content_basis", None))
     assert project_view(project)["input_alignment"] == "legacy_current"
+
+
+# ---------------------------------------------------------------------------
+# T6: gap-based final review dispatch
+
+from deck_master.review import REVIEW_DIMENSIONS, final_review_units, describe_review_units
+
+
+def test_review_dimensions_defined_once() -> None:
+    """AC-14: the six-dimension definition exists exactly once in the code."""
+    src_root = Path(service.__file__).resolve().parent
+    offenders = []
+    for path in src_root.rglob("*.py"):
+        text = path.read_text(encoding="utf-8")
+        if "'content', 'blueprint_content', 'blueprint_fidelity', 'conversion'" in text and \
+                path.name != "review.py":
+            offenders.append(path.name)
+    assert not offenders, f"dimension tuple re-declared in: {offenders}"
+    assert len(REVIEW_DIMENSIONS) == 6
+    from deck_master.review import REQUIRED_KINDS, PAGE_VISUAL_KINDS
+    assert REQUIRED_KINDS is REVIEW_DIMENSIONS
+    assert PAGE_VISUAL_KINDS == ("blueprint_content", "blueprint_fidelity", "readability")
+
+
+def _add_final_review(store, doc, kind, page_ids, status="pass") -> None:
+    """Craft a schema-valid final review bound to the current products."""
+    from deck_master.editing import _current_artifact_digests
+
+    digests = _current_artifact_digests(store, doc)
+    pptx_ref = doc["outputs"]["pptx"]
+    assert pptx_ref, "final reviews require a current pptx output"
+    entries = {e["page_id"]: e for e in doc["pages"]}
+    dependencies = [{"kind": "artifact", "identity": "pptx", "sha256": digests["artifact:pptx"]}]
+    subjects = [pptx_ref]
+    for pid in page_ids:
+        dependencies.append({"kind": "content", "identity": f"page:{pid}",
+                             "sha256": digests[f"content:page:{pid}"]})
+        dependencies.append({"kind": "style", "identity": pid,
+                             "sha256": digests[f"style:{pid}"]})
+        subjects.append(entries[pid]["page"])
+    review = {
+        "schema_version": "deck_review.v1",
+        "review_id": f"final-{kind}-{uuid.uuid4().hex[:8]}",
+        "kind": kind,
+        "status": status,
+        "review_stage": "final",
+        "subjects": subjects,
+        "dependencies": dependencies,
+        "reviewer": {"type": "host_self", "id": "host", "execution_ref": None,
+                     "independence_confirmed": False},
+        "observations": ["实际查看当前产物后记录"],
+        "findings": [],
+        "created_at": "2026-09-25T00:00:00Z",
+        "replaces": None,
+    }
+    doc["reviews"] = list(doc.get("reviews") or []) + [store.put_json_object(review)]
+
+
+def _force_fake_output(store) -> None:
+    document = store.load_document()
+    pptx_ref = store.put_json_object({"schema_version": "deck_artifact.v1",
+                                      "artifact_id": "probe-pptx", "page_id": None,
+                                      "role": "probe", "file": document["pages"][0]["page"],
+                                      "media_type": "application/json", "created_at": "1970",
+                                      "dependencies": [], "derived_from": [], "provenance": {},
+                                      "reference_regions": [], "limitations": [],
+                                      "editability": "probe"})
+    bumped = bump_revision(document, {"operation_id": "probe-output", "kind": "task_update",
+                                      "description": "probe output", "read_set": []})
+    bumped["outputs"]["pptx"] = pptx_ref
+    store._commit_locked(base_revision=document["revision_id"], document=bumped, blobs=[])
+
+
+def test_final_units_list_only_real_gaps(tmp_path: Path) -> None:
+    from deck_master.editing import check_summary
+
+    project, store, _ = _setup_project_with_pages(tmp_path)
+    _force_fake_output(store)
+    doc = store.load_document()
+    # p01 already has valid conversion + readability passes; nothing else valid.
+    _add_final_review(store, doc, "conversion", ["p01"])
+    _add_final_review(store, doc, "readability", ["p01"])
+    store._commit_locked(base_revision=doc["revision_id"],
+                         document=bump_revision(doc, {"operation_id": "add-reviews",
+                                                      "kind": "review_update",
+                                                      "description": "add final reviews",
+                                                      "read_set": []}), blobs=[])
+    doc = store.load_document()
+    summary = check_summary(store, doc)
+    units = final_review_units(doc, summary, input_alignment="current")
+    covered = {(unit["kind"], pid) for unit in units for pid in unit["page_ids"]}
+    assert ("conversion", "p01") not in covered, "valid dimension must not be required again"
+    assert ("readability", "p01") not in covered
+    assert ("conversion", "p02") in covered
+    for kind in ("content", "blueprint_content", "blueprint_fidelity", "privacy"):
+        assert (kind, "p01") in covered
+    reasons = {(unit["kind"], unit["reason"]) for unit in units}
+    assert ("conversion", "missing") in reasons
+    # Per-page passes never promote themselves to a final pass:
+    assert summary["status"] != "pass"
+
+
+def test_units_relist_content_and_privacy_after_input_change(tmp_path: Path) -> None:
+    from deck_master.editing import check_summary
+
+    project, store, id_by_name = _setup_project_with_pages(tmp_path)
+    _force_fake_output(store)
+    doc = store.load_document()
+    _add_final_review(store, doc, "content", ["p01", "p02", "p03"])
+    _add_final_review(store, doc, "privacy", ["p01", "p02", "p03"])
+    store._commit_locked(base_revision=doc["revision_id"],
+                         document=bump_revision(doc, {"operation_id": "add-reviews",
+                                                      "kind": "review_update",
+                                                      "description": "add final reviews",
+                                                      "read_set": []}), blobs=[])
+    patch = _load_fixture("update-interface.json")
+    patch["source_changes"]["replace"][0]["source_id"] = id_by_name["interface-v1.md"]
+    service.inputs_update(project, patch=patch, base_revision=store.load_document()["revision_id"],
+                          operation_id="input-update-units", patch_dir=FIXTURES)
+    doc = store.load_document()
+    summary = check_summary(store, doc)
+    units = final_review_units(doc, summary, input_alignment="needs_reconciliation")
+    for kind in ("content", "privacy"):
+        unit = next(u for u in units if u["kind"] == kind)
+        assert unit["reason"] == "changed_input"
+        assert set(unit["page_ids"]) == {"p01", "p02", "p03"}
+
+
+def test_final_work_order_instruction_from_units(tmp_path: Path) -> None:
+    units = [{"kind": "conversion", "page_ids": ["p02"], "reason": "missing"},
+             {"kind": "privacy", "page_ids": ["p01", "p03"], "reason": "changed_input"}]
+    instruction = describe_review_units(units)
+    assert "conversion" in instruction and "p02" in instruction and "missing" in instruction
+    assert "privacy" in instruction and "changed_input" in instruction
+    assert "已经有效的维度不再要求" in instruction
+    empty = describe_review_units([])
+    assert "已经有效" in empty or "均已有效" in empty
+
+
+def test_open_final_review_task_carries_review_plan(tmp_path: Path) -> None:
+    project, store, _ = _setup_project_with_pages(tmp_path)
+    document = store.load_document()
+    units = [{"kind": "conversion", "page_ids": [e["page_id"] for e in document["pages"]],
+              "reason": "missing"}]
+    task = service.open_host_task(store, kind="review",
+                                  page_ids=[e["page_id"] for e in document["pages"]],
+                                  instruction=describe_review_units(units),
+                                  review_stage="final", review_units=units)
+    summary = service.task_summary(store, store.load_document(), task)
+    assert summary["review_plan"]["units"] == units

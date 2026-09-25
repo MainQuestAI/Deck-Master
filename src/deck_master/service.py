@@ -404,6 +404,8 @@ def task_summary(store: Store, document: dict, task: dict) -> dict:
         "method_resources": methods,
         "project_context": _project_context(store, document, task, dispatched),
     }
+    if task.get("review_units") is not None:
+        summary["review_plan"] = {"units": task["review_units"]}
     if task.get('status') in ('superseded', 'cancelled', 'completed', 'failed'):
         if task.get('status') == 'superseded':
             summary['invalidated_reason'] = 'task inputs or page scope changed; continue creates a current task'
@@ -773,7 +775,9 @@ def _continue_project(project_dir: Path | str) -> dict:
                               instruction=f'修复实际 PPT 回读问题，修改对应 Page 或 SVG；保留失败输出。检查报告见输入。findings-sig:{sig}')
         return _response(status='awaiting_host',document=store.load_document(),requested_action='continue',
                          pending_tasks=[task_summary(store,store.load_document(),task)],findings=report['findings'],next_action='repair_readback')
-    from .editing import review_status
+    from .editing import review_status, check_summary
+    from .models import input_alignment as _input_alignment
+    from .review import final_review_units, describe_review_units
     status = review_status(store, document)
     if status != 'pass':
         repeated_final = [store.read_object_json(ref) for ref in document.get('tasks') or []]
@@ -786,11 +790,17 @@ def _continue_project(project_dir: Path | str) -> dict:
                              findings=[{'code': 'review_no_progress',
                                         'detail': '同一产物重复审阅仍有未关闭发现；补充页级修复证据或明确合理差异决定'}],
                              next_action='review_no_progress')
-        task = open_host_task(store,kind='repair' if status == 'fail' else 'review',page_ids=[e['page_id'] for e in document['pages']],
-            instruction='实际打开每页原图、SVG预览及PPT真实渲染，核对正文/模块/图标/数字/方向/Logo。'
-                        '按当前真实缺口提交 content、blueprint_content、blueprint_fidelity、conversion、readability、privacy 六维中尚未有效覆盖的维度；'
-                        '已经有效的维度不再要求，额外发现问题照常提交。'
-                        'subjects 必须包含当前 PPTX 与发现所在页的当前 Page；未实际检查不能 pass，问题返回具体对象。')
+        if status == 'fail':
+            task = open_host_task(store, kind='repair', page_ids=[e['page_id'] for e in document['pages']],
+                instruction='实际打开每页原图、SVG预览及PPT真实渲染，核对正文/模块/图标/数字/方向/Logo。'
+                            '存在 must_fix：先修复对象，再按缺口补足审阅；subjects 必须包含当前 PPTX 与发现所在页的当前 Page；'
+                            '未实际检查不能 pass，问题返回具体对象。')
+        else:
+            summary = check_summary(store, document)
+            units = final_review_units(document, summary, input_alignment=_input_alignment(document))
+            task = open_host_task(store, kind='review', page_ids=[e['page_id'] for e in document['pages']],
+                review_units=units,
+                instruction=describe_review_units(units))
         return _response(status='awaiting_host',document=store.load_document(),requested_action='continue',
                          pending_tasks=[task_summary(store,store.load_document(),task)],next_action='codex_review_renderings')
     return _response(status='ready_for_export',document=document,requested_action='continue',
@@ -799,7 +809,7 @@ def _continue_project(project_dir: Path | str) -> dict:
 
 @tasks_mod._project_transaction
 def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, page_hash=None,
-                   review_stage=None):
+                   review_stage=None, review_units=None):
     document = store.load_document()
     if base_revision is not None and base_revision != document['revision_id']:
         from .store import ConflictError
@@ -829,7 +839,7 @@ def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, pa
         method_release=method_release(methods),
         scope_pages=page_ids,instruction=instruction,inputs=inputs,dependencies=[{'kind':'content','identity':e['page_id'],'sha256':e['page']['sha256']} for e in entries],
         dispatch_revision=document['revision_id'],produced_against=content_identity(document),
-        review_stage=review_stage)
+        review_stage=review_stage,review_units=review_units)
     updated=bump_revision(document,{'operation_id':_new_operation_id('dispatch'),'kind':'task_update','description':instruction,'read_set':[]})
     updated['tasks'].append(store.put_json_object(task))
     store._commit_locked(base_revision=document['revision_id'],document=updated,operation_id=updated['change']['operation_id'],blobs=[])
