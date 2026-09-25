@@ -21,7 +21,8 @@
 
 ## 通用规则（所有卡适用）
 
-- **测试基线**：开工前和提交前都跑 `python3 -m pytest -q tests`（仓库无 `.venv`，用本机 `python3`）。全绿才能提交；有已知失败必须在回填中写明并附输出。
+- **测试环境**：本机 `python3` 是 3.14，超出 `requires-python >=3.11,<3.14` 且未装 pytest，**不能直接用**。每个工作目录先建一次环境：`uv venv -p 3.12 .venv && VIRTUAL_ENV=.venv uv pip install pip setuptools wheel build -e ".[dev]"`（`.venv` 已被 gitignore）；之后统一用 `.venv/bin/python -m pytest -q tests`。下文与各卡中的 `python3 -m pytest -q tests` 均指这条命令。基线：`codex/webui-rebuild@9d53f45` 为 437 passed。
+- **测试基线**：开工前和提交前都跑上述测试命令。全绿才能提交；有已知失败必须在回填中写明并附输出。
 - **共享文件**：`src/deck_master/view.py`、`web.py` 只能在 S 卡中修改，并先合入 `main`；B 卡在 rebase 后使用。B 卡**不得**修改 `service.py`/`tasks.py`/`editing.py`/`store.py` 的行为。
 - **B 路自有范围**：`src/deck_master/resources/static/`、本目录文档、`tests/rebuild/` 下新增的 Web/浏览器测试。
 - **真实数据**：所有界面状态来自真实 API。原型（B1-2）是唯一允许使用样本数据的卡，且每个样本必须带“样本”标记。
