@@ -1,0 +1,19 @@
+{
+ "source": "Store(/tmp/dm-b0-2/proj) task object",
+ "document_revision": "a20b71131de34adb8b226b9aaf94ff9c",
+ "task": {
+  "task_id": "758bdbb62e76",
+  "operation_id": "repair-7c3224a63dd4",
+  "kind": "repair",
+  "status": "completed",
+  "execution_ref": "codex-exec-b0-2",
+  "scope_pages": [
+   "p09"
+  ],
+  "instruction": "把辅助说明移到脚注",
+  "dispatch_revision": "e5b0176de2fe44469c6df9aa28bcd9ef",
+  "produced_against": "2a1b1c7d513c963a66f0da5f10c58414eef3faa1326210187b6132cb6273b52c",
+  "created_at": "2026-09-25T15:26:53Z",
+  "updated_at": "2026-09-25T15:32:17Z"
+ }
+}

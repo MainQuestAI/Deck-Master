@@ -1,0 +1,22 @@
+{
+ "time": "2026-09-25T23:26:53+0800",
+ "request": {
+  "url": "http://127.0.0.1:53036/api/feedback",
+  "headers": {
+   "X-Deck-Token": "***MASKED***",
+   "Origin": "http://127.0.0.1:53036"
+  },
+  "json": {
+   "page_id": "p09",
+   "instruction": "把辅助说明移到脚注",
+   "base_revision": "e5b0176de2fe44469c6df9aa28bcd9ef"
+  }
+ },
+ "response": {
+  "http": 200,
+  "body": {
+   "status": "awaiting_host",
+   "task_id": "758bdbb62e76"
+  }
+ }
+}

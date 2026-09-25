@@ -1,0 +1,17 @@
+{
+ "revision_id": "15d73b962b6c42ef815690e3abcbfef0",
+ "status": "awaiting_host",
+ "task": {
+  "task_id": "758bdbb62e76",
+  "operation_id": "repair-7c3224a63dd4",
+  "kind": "repair",
+  "status": "awaiting_host",
+  "scope_pages": [
+   "p09"
+  ],
+  "instruction": "把辅助说明移到脚注",
+  "execution_ref": null,
+  "dispatch_revision": "e5b0176de2fe44469c6df9aa28bcd9ef",
+  "produced_against": "2a1b1c7d513c963a66f0da5f10c58414eef3faa1326210187b6132cb6273b52c"
+ }
+}

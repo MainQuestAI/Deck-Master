@@ -1,0 +1,63 @@
+$ codex --version
+codex-cli 0.156.1
+
+$ codex queue --help (head)
+Queue a message for an existing session
+
+Usage: codex queue [OPTIONS] --thread <THREAD> --message <TEXT>
+
+Options:
+      --thread <THREAD>
+          Session UUID or exact session name
+
+
+$ codex app-server daemon version
+Error: failed to connect to ~/.codex/app-server-control/app-server-control.sock
+
+Caused by:
+    No such file or directory (os error 2)
+
+$ codex exec resume --help (head)
+Resume a previous session by id or pick the most recent with --last
+
+Usage: codex exec resume [OPTIONS] [SESSION_ID] [PROMPT]
+
+Arguments:
+  [SESSION_ID]
+          Conversation/session id (UUID) or thread name. UUIDs take precedence if it parses. If
+          omitted, use --last to pick the most recent recorded session
+
+  [PROMPT]
+
+$ codex mcp list (name only)
+codex_app
+computer-history
+computer-use
+cua_repl
+kimi-cu
+node_repl
+open-design
+openviking-memory
+
+$ PlistBuddy CFBundleIdentifier/Version
+com.openai.codex
+26.917.71314
+true
+Array {
+    Dict {
+        CFBundleURLName = ChatGPT
+        CFBundleURLSchemes = Array {
+            codex
+            http
+            https
+        }
+    }
+}
+
+$ lsregister -dump | grep codex: (claimed schemes)
+claimed schemes:            codex:, http:, https:
+claimed schemes:            codex:, http:, https:
+
+$ grep -c "<command" scripting.sdef ; suites
+<suite name="Standard Suite"
+<suite name="Chromium Suite"

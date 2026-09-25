@@ -1,0 +1,38 @@
+{
+ "exit_code": 3,
+ "status": "awaiting_host",
+ "revision_id": "01f8c737400d4c17b9ab13953af2f029",
+ "next_action": "submit_host_results",
+ "pending_tasks": [
+  {
+   "task_id": "4fe7cf497649",
+   "kind": "repair",
+   "status": "awaiting_host",
+   "scope_pages": [
+    "p09"
+   ],
+   "instruction": "标题缩短到 12 字以内",
+   "dependencies": null
+  },
+  {
+   "task_id": "fc8f3467bc4d",
+   "kind": "repair",
+   "status": "awaiting_host",
+   "scope_pages": [
+    "p09"
+   ],
+   "instruction": "表格标题改为：样本观察（演示）",
+   "dependencies": null
+  },
+  {
+   "task_id": "df983f6b307e",
+   "kind": "repair",
+   "status": "awaiting_host",
+   "scope_pages": [
+    "p09"
+   ],
+   "instruction": "副标题去掉“建议”二字",
+   "dependencies": null
+  }
+ ]
+}

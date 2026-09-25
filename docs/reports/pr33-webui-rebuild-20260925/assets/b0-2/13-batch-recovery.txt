@@ -1,0 +1,11 @@
+$ deck-master task cancel --task-id fc8f3467bc4d
+cancelled e7cb7256a6b941d188dcd234ea9080f4
+$ deck-master task cancel --task-id df983f6b307e
+cancelled 1206c1ee56854056b4d1462a96079d29
+$ POST /api/feedback (合并为一条：表格标题改为样本观察（演示）；副标题去掉“建议”)
+{'http': 200, 'body': {'status': 'awaiting_host', 'task_id': '5dcc8da24797'}}
+$ deck-master task --help
+usage: deck-master task [-h] [--json] {accept,start,status,cancel,call} ...
+
+positional arguments:
+$ task start+accept 5dcc8da24797 (宿主由验证 Agent 代行) -> accepted cbb9081a0b0e4d26a58643d34ea985ae

@@ -1,0 +1,256 @@
+[
+ {
+  "step": "F1-1 POST feedback #1",
+  "time": "23:32:06",
+  "revision": "d2cda092329c454f9418fb221cbf4f68",
+  "http": 200,
+  "body": {
+   "status": "awaiting_host",
+   "task_id": "33f9d730a42a"
+  }
+ },
+ {
+  "step": "F1-2 POST feedback #2 same base_revision (stale?)",
+  "time": "23:32:06",
+  "revision": "d2cda092329c454f9418fb221cbf4f68",
+  "http": 409,
+  "body": "{\n \"error\": \"revision: project changed; reload before submitting feedback\"\n}"
+ },
+ {
+  "step": "F1-3 POST feedback #3 no base_revision",
+  "time": "23:32:06",
+  "revision": "d2cda092329c454f9418fb221cbf4f68",
+  "http": 200,
+  "body": {
+   "status": "awaiting_host",
+   "task_id": "33f9d730a42a"
+  }
+ },
+ {
+  "step": "F1-4 task start ref=A",
+  "time": "23:32:06",
+  "revision": "a822c335490c46cda60b8dba8ada35c1",
+  "rc_out": [
+   0,
+   {
+    "status": "running",
+    "revision_id": "a822c335490c46cda60b8dba8ada35c1"
+   }
+  ]
+ },
+ {
+  "step": "F1-5 task start ref=A again (duplicate pickup same host)",
+  "time": "23:32:06",
+  "revision": "62ec09a7a5184b828376626e64f52525",
+  "rc_out": [
+   0,
+   {
+    "status": "running",
+    "revision_id": "62ec09a7a5184b828376626e64f52525"
+   }
+  ]
+ },
+ {
+  "step": "F1-6 task start ref=B (second host / second handoff)",
+  "time": "23:32:06",
+  "revision": "62ec09a7a5184b828376626e64f52525",
+  "rc_out": [
+   5,
+   "{\n \"error\": {\n  \"code\": \"conflict\",\n  \"message\": \"(task 33f9d730a42a): another execution already claimed this task\",\n  \"field\": null,\n  \"next_action\": \"rebase or read new inputs\"\n }\n}\n"
+  ]
+ },
+ {
+  "step": "F1-7 POST feedback same text while running",
+  "time": "23:32:06",
+  "revision": "62ec09a7a5184b828376626e64f52525",
+  "http": 200,
+  "body": {
+   "status": "awaiting_host",
+   "task_id": "33f9d730a42a"
+  }
+ },
+ {
+  "step": "F1-8 task accept",
+  "time": "23:32:06",
+  "revision": "17f95fd6aa174d9baaf3757bcf06db95",
+  "rc_out": [
+   0,
+   {
+    "status": "accepted",
+    "revision_id": "17f95fd6aa174d9baaf3757bcf06db95"
+   }
+  ]
+ },
+ {
+  "step": "F1-9 task accept replay (duplicate result)",
+  "time": "23:32:06",
+  "revision": "17f95fd6aa174d9baaf3757bcf06db95",
+  "rc_out": [
+   0,
+   {
+    "status": "already_applied",
+    "revision_id": "17f95fd6aa174d9baaf3757bcf06db95"
+   }
+  ]
+ },
+ {
+  "step": "F1-10 task start after completed",
+  "time": "23:32:06",
+  "revision": "17f95fd6aa174d9baaf3757bcf06db95",
+  "rc_out": [
+   5,
+   "{\n \"error\": {\n  \"code\": \"conflict\",\n  \"message\": \"(task 33f9d730a42a): task already completed; cannot start\",\n  \"field\": null,\n  \"next_action\": \"rebase or read new inputs\"\n }\n}\n"
+  ]
+ },
+ {
+  "step": "F1-11 POST same feedback after completed",
+  "time": "23:32:06",
+  "revision": "6eb2eed59ea74feda3ea31559dd85073",
+  "http": 200,
+  "body": {
+   "status": "awaiting_host",
+   "task_id": "a805692a97ae"
+  }
+ },
+ {
+  "step": "F1-12 cancel extra task",
+  "time": "23:32:06",
+  "revision": "5318df8d589b4b52a65e5e2d0081fbeb",
+  "rc_out": [
+   0,
+   {
+    "status": "cancelled",
+    "revision_id": "5318df8d589b4b52a65e5e2d0081fbeb"
+   }
+  ]
+ },
+ {
+  "step": "F2-1 POST feedback",
+  "time": "23:32:06",
+  "revision": "7712681a8053469eafc7b3b2d84663f4",
+  "http": 200,
+  "body": {
+   "status": "awaiting_host",
+   "task_id": "6c9637edb62a"
+  }
+ },
+ {
+  "step": "F2-2 task start ref=dead-host",
+  "time": "23:32:06",
+  "revision": "04aa91ab27c3437e8decf8ac5576d778",
+  "rc_out": [
+   0,
+   {
+    "status": "running",
+    "revision_id": "04aa91ab27c3437e8decf8ac5576d778"
+   }
+  ]
+ },
+ {
+  "step": "F2-3 (host process gone) task status",
+  "time": "23:32:06",
+  "revision": "04aa91ab27c3437e8decf8ac5576d778",
+  "rc_out": [
+   0,
+   {
+    "status": "running",
+    "revision_id": "04aa91ab27c3437e8decf8ac5576d778"
+   }
+  ]
+ },
+ {
+  "step": "F2-4 new host tries ref=new-host",
+  "time": "23:32:06",
+  "revision": "04aa91ab27c3437e8decf8ac5576d778",
+  "rc_out": [
+   5,
+   "{\n \"error\": {\n  \"code\": \"conflict\",\n  \"message\": \"(task 6c9637edb62a): another execution already claimed this task\",\n  \"field\": null,\n  \"next_action\": \"rebase or read new inputs\"\n }\n}\n"
+  ]
+ },
+ {
+  "step": "F2-5 same ref reclaims (resume)",
+  "time": "23:32:06",
+  "revision": "2070954eb2a04d319c67d2f0b31d1cf9",
+  "rc_out": [
+   0,
+   {
+    "status": "running",
+    "revision_id": "2070954eb2a04d319c67d2f0b31d1cf9"
+   }
+  ]
+ },
+ {
+  "step": "F2-6 POST /api/cancel from UI",
+  "time": "23:32:06",
+  "revision": "8170282b4a094476a251159ed8f692f7",
+  "http": 200,
+  "body": {
+   "status": "cancelled",
+   "project_id": "proj2",
+   "revision_id": "8170282b4a094476a251159ed8f692f7",
+   "requested_action": "task update",
+   "result_refs": [],
+   "pending_tasks": [],
+   "findings": [],
+   "next_action": null,
+   "review_url": null,
+   "view_status": "view_arrives_with_workbench",
+   "evidence_level": "engineering"
+  }
+ },
+ {
+  "step": "F2-6b task status after UI cancel",
+  "time": "23:32:06",
+  "revision": "8170282b4a094476a251159ed8f692f7",
+  "rc_out": [
+   0,
+   {
+    "status": "cancelled",
+    "revision_id": "8170282b4a094476a251159ed8f692f7"
+   }
+  ]
+ },
+ {
+  "step": "F2-7 late result from dead host after cancel",
+  "time": "23:32:06",
+  "revision": "59da7fb99e6947dab9f0995d2cf73b93",
+  "rc_out": [
+   5,
+   "{\n \"error\": {\n  \"code\": \"conflict\",\n  \"message\": \"(task 6c9637edb62a): result arrived after cancellation; call facts were settled\",\n  \"field\": null,\n  \"next_action\": \"rebase or read new inputs\"\n }\n}\n"
+  ]
+ },
+ {
+  "step": "F2-8 re-submit feedback -> new task",
+  "time": "23:32:06",
+  "revision": "17b14ea317754d3680dbb2351cd390da",
+  "http": 200,
+  "body": {
+   "status": "awaiting_host",
+   "task_id": "ff2e07da4d0c"
+  }
+ },
+ {
+  "step": "F2-9 new host start",
+  "time": "23:32:07",
+  "revision": "388ba8f5f4314863a1f7251391ce5ab4",
+  "rc_out": [
+   0,
+   {
+    "status": "running",
+    "revision_id": "388ba8f5f4314863a1f7251391ce5ab4"
+   }
+  ]
+ },
+ {
+  "step": "F2-10 new host accept",
+  "time": "23:32:07",
+  "revision": "20b7ca7efbb54b00a521d9c5c37eb68c",
+  "rc_out": [
+   0,
+   {
+    "status": "accepted",
+    "revision_id": "20b7ca7efbb54b00a521d9c5c37eb68c"
+   }
+  ]
+ }
+]
