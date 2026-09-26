@@ -1,0 +1,84 @@
+{
+  "ui_assets": [
+    {
+      "path": "src/deck_master/resources/static/v2/api.js",
+      "sha256": "8139fcfa3a2673e85032869a62496d327ad3ffaf3b7465215b50536015771f02",
+      "bytes": 3305,
+      "wheel_matches": true
+    },
+    {
+      "path": "src/deck_master/resources/static/v2/app.js",
+      "sha256": "9c8f3ad2f39958148e79fb7cf08b225d07059656d7eff3f229bf02981fac79f6",
+      "bytes": 1285,
+      "wheel_matches": true
+    },
+    {
+      "path": "src/deck_master/resources/static/v2/dom.js",
+      "sha256": "e39301e0b14cefe7b6b9fe9f51821c1e34e37925258be8093f2f7825747bb5a3",
+      "bytes": 3831,
+      "wheel_matches": true
+    },
+    {
+      "path": "src/deck_master/resources/static/v2/drafts.js",
+      "sha256": "32e10620f16ae3af9cf851685ddbd796a7a973e6ddd0807e5518e4d07c9e8c62",
+      "bytes": 16299,
+      "wheel_matches": true
+    },
+    {
+      "path": "src/deck_master/resources/static/v2/icons.js",
+      "sha256": "95fd179d9231f9993a8a98140a3711145a486bf022fb3096deaad56113da8456",
+      "bytes": 2010,
+      "wheel_matches": true
+    },
+    {
+      "path": "src/deck_master/resources/static/v2/index.html",
+      "sha256": "49084f6532bb728bb2150b43c75a1ef0ee5f9e0ae0f31ebb4b5a78b91258c6ed",
+      "bytes": 855,
+      "wheel_matches": true
+    },
+    {
+      "path": "src/deck_master/resources/static/v2/launcher-ui.js",
+      "sha256": "1e5ea56315f693161ad4fedba9a8b38fa3ed20fd4cb61bd572a95a07214acbc4",
+      "bytes": 7790,
+      "wheel_matches": true
+    },
+    {
+      "path": "src/deck_master/resources/static/v2/project.js",
+      "sha256": "1a5f9b9ecbc88194f7260ae347885cd64437109084c8abd6d4fa7e4cdc8d40cc",
+      "bytes": 10319,
+      "wheel_matches": true
+    },
+    {
+      "path": "src/deck_master/resources/static/v2/routes.js",
+      "sha256": "3aec1c175ffab09e3792baf159ffda35cf2c600a0ae1f3636d1d5328bd24c2de",
+      "bytes": 2211,
+      "wheel_matches": true
+    },
+    {
+      "path": "src/deck_master/resources/static/v2/style.css",
+      "sha256": "3045ea07efcb5418235df114511acaec7f5a5e5f694fd21dd5da2afee1553570",
+      "bytes": 32024,
+      "wheel_matches": true
+    },
+    {
+      "path": "src/deck_master/resources/static/v2/tokens.css",
+      "sha256": "da2e775a9430340cd6e2a0add92bdefcba8575fdd1fb2cc47d100b8b9c5783fc",
+      "bytes": 1726,
+      "wheel_matches": true
+    },
+    {
+      "path": "src/deck_master/resources/static/v2/views.js",
+      "sha256": "304dd56542ebdbcf52b5a6a92b4769972d387d201648c70ba53cdb8d0ab44010",
+      "bytes": 19788,
+      "wheel_matches": true
+    },
+    {
+      "path": "src/deck_master/resources/static/v2/workbench.css",
+      "sha256": "13d3a4effd3d32b9c356ece45cc683b64ca3f8f6010c1961fa3bd9f0f62c5aa7",
+      "bytes": 10370,
+      "wheel_matches": true
+    }
+  ],
+  "wheel_sha256": "dc0760c4446ee01daeee7276350f370b3de4eae7e017b55769d39ed9aa5fa429",
+  "evidence_level": "build archive inclusion; not installed-package acceptance"
+}

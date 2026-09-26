@@ -1,6 +1,6 @@
 {
   "baseline": "d1c7c4600cb0fc781070116ed8cc8a1ff6b8b7ca",
-  "branch": "codex/workbench-w03-services",
+  "branch": "codex/workbench-w03-ui",
   "active_package": "W03",
   "sequence": [
     "W01.core",
@@ -41,7 +41,6 @@
       "protocol_baseline": "de6293492fca41fbce34e269a4463da111214c2c",
       "protocol_evidence": "W02-PROTOCOL.md",
       "residuals": [
-        "New UI/core compatibility matrix: verify with W03 browser work; W02-AC02 owner remains W02",
         "Nonempty reference attachment observation remains unverified; preserve unknown coverage"
       ],
       "protocol_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/43",
@@ -52,15 +51,20 @@
       "content_plan_merge_commit": "13aaf3690c6cde67e405576f5020abdd5311b909"
     },
     "W03": {
-      "status": "core_verified_pending_integration",
+      "status": "frontend_verified_pending_merge",
       "accepted": false,
       "baseline": "13aaf3690c6cde67e405576f5020abdd5311b909",
       "core_evidence": "W03-CORE.md",
       "residuals": [
-        "W03 frontend wiring, two viewports, keyboard and cross-origin browser recovery",
-        "W02 new UI / old core compatibility matrix",
-        "W12 final offline installed package acceptance"
-      ]
+        "Real macOS directory dialog interaction: CUA inventory timed out; cancellation contract verified by injection",
+        "W12 final offline installed package acceptance",
+        "User acceptance not measured"
+      ],
+      "core_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/45",
+      "core_head": "7b62b6294c38ee58a6a29b708df8b2b1981a851f",
+      "core_merge_commit": "062fd6974f0f1ed4053ee9a397f2b1c288bd42f4",
+      "frontend_baseline": "062fd6974f0f1ed4053ee9a397f2b1c288bd42f4",
+      "frontend_evidence": "W03-UI.md"
     },
     "W04": {
       "status": "planned",
@@ -160,13 +164,14 @@
     },
     "W02-AC02": {
       "owner": "W02",
-      "status": "partial",
+      "status": "engineering_verified",
       "evidence": [
         "W02-CONTENT-PLAN.md",
-        "W02-PROTOCOL.md"
+        "W02-PROTOCOL.md",
+        "W03-UI.md",
+        "w03/browser/edge-checks.json"
       ],
-      "evidence_level": "core/CLI/HTTP/real older core",
-      "residual": "New UI startup compatibility needs W03"
+      "evidence_level": "core/CLI/HTTP/real older core/real Chromium"
     },
     "W02-AC03": {
       "owner": "W02",
@@ -213,62 +218,88 @@
     },
     "W03-AC01": {
       "owner": "W03",
-      "status": "partial",
+      "status": "engineering_verified",
       "evidence": [
         "W03-CORE.md",
-        "w03/core/checks.json"
+        "W03-UI.md",
+        "w03/core/checks.json",
+        "w03/browser/checks.json",
+        "w03/browser/edge-checks.json"
       ],
-      "evidence_level": "core/CLI/HTTP/local processes; synthetic"
+      "evidence_level": "core/CLI/HTTP/real Chromium; synthetic projects; labeled fault injection"
     },
     "W03-AC02": {
       "owner": "W03",
       "status": "partial",
       "evidence": [
         "W03-CORE.md",
-        "w03/core/checks.json"
+        "W03-UI.md",
+        "w03/core/checks.json",
+        "w03/browser/checks.json",
+        "w03/browser/edge-checks.json"
       ],
-      "evidence_level": "core/CLI/HTTP/local processes; synthetic"
+      "evidence_level": "core/CLI/HTTP/real Chromium; synthetic projects; labeled fault injection",
+      "residual": "Real native directory chooser UI remains unverified"
     },
     "W03-AC03": {
       "owner": "W03",
-      "status": "open",
-      "evidence": []
+      "status": "engineering_verified",
+      "evidence": [
+        "W03-CORE.md",
+        "W03-UI.md",
+        "w03/core/checks.json",
+        "w03/browser/checks.json",
+        "w03/browser/edge-checks.json"
+      ],
+      "evidence_level": "core/CLI/HTTP/real Chromium; synthetic projects; labeled fault injection"
     },
     "W03-AC04": {
       "owner": "W03",
-      "status": "partial",
+      "status": "engineering_verified",
       "evidence": [
         "W03-CORE.md",
-        "w03/core/checks.json"
+        "W03-UI.md",
+        "w03/core/checks.json",
+        "w03/browser/checks.json",
+        "w03/browser/edge-checks.json"
       ],
-      "evidence_level": "core/CLI/HTTP/local processes; synthetic"
+      "evidence_level": "core/CLI/HTTP/real Chromium; synthetic projects; labeled fault injection"
     },
     "W03-AC05": {
       "owner": "W03",
-      "status": "partial",
+      "status": "engineering_verified",
       "evidence": [
         "W03-CORE.md",
-        "w03/core/checks.json"
+        "W03-UI.md",
+        "w03/core/checks.json",
+        "w03/browser/checks.json",
+        "w03/browser/edge-checks.json"
       ],
-      "evidence_level": "core/CLI/HTTP/local processes; synthetic"
+      "evidence_level": "core/CLI/HTTP/real Chromium; synthetic projects; labeled fault injection"
     },
     "W03-AC06": {
       "owner": "W03",
-      "status": "partial",
+      "status": "engineering_verified",
       "evidence": [
         "W03-CORE.md",
-        "w03/core/checks.json"
+        "W03-UI.md",
+        "w03/core/checks.json",
+        "w03/browser/checks.json",
+        "w03/browser/edge-checks.json"
       ],
-      "evidence_level": "core/CLI/HTTP/local processes; synthetic"
+      "evidence_level": "core/CLI/HTTP/real Chromium; synthetic projects; labeled fault injection"
     },
     "W03-AC07": {
       "owner": "W03",
-      "status": "partial",
+      "status": "engineering_verified",
       "evidence": [
         "W03-CORE.md",
-        "w03/core/checks.json"
+        "W03-UI.md",
+        "w03/core/checks.json",
+        "w03/browser/checks.json",
+        "w03/browser/edge-checks.json"
       ],
-      "evidence_level": "core/CLI/HTTP/local processes; synthetic"
+      "evidence_level": "core/CLI/HTTP/real Chromium; synthetic projects; labeled fault injection"
     },
     "W04-AC01": {
       "owner": "W04",

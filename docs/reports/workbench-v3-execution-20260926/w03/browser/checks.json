@@ -1,0 +1,30 @@
+{
+  "evidence_level": "real Chromium / real local service / deterministic synthetic projects",
+  "checks": {
+    "explicit_registry_no_scan": true,
+    "dialog_escape_focus": true,
+    "create_material_handoff": {
+      "one_eligible_task": true,
+      "task_replaced": true,
+      "no_model_or_duplicate_dispatch": true
+    },
+    "no_host_draft_and_table_keyboard": true,
+    "layer_isolation_refresh_zoom": true,
+    "responsive_1440_1280_1100_767_390": true,
+    "late_ack_cannot_replace_reopened_local_buffer": true,
+    "lost_ack_frozen_payload_later_typing": true,
+    "two_window_cas_keep_both": true,
+    "same_project_and_page_ids_isolated": true,
+    "draft_and_position_do_not_change_document": true,
+    "port_change_position_ack_drafts_and_explicit_import": true,
+    "historical_stale_basis_no_forced_latest": true,
+    "missing_revision_no_fallback": true,
+    "no_unhandled_javascript_errors": true
+  },
+  "elapsed_seconds": 11.91,
+  "model_calls": 0,
+  "real_home_changed": false,
+  "user_acceptance": "not measured",
+  "installation_download_and_host_time": "not measured",
+  "user_help_requests": "not measured"
+}
