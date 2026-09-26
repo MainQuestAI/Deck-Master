@@ -278,15 +278,8 @@
       ? " · " + view.reconciliation.reason : "";
     banner.appendChild(reason);
     banner.appendChild(Object.assign(document.createElement("span"), {
-      className: "mono", textContent: " · 编辑与交付已暂停；请先完成 inputs update 派发的修订任务。",
+      className: "mono", textContent: " · 交付前需完成本次内容更新。",
     }));
-    // Read-only while reconciliation is pending: no edit controls.
-    const editor = document.getElementById("editor-fields");
-    if (editor) editor.replaceChildren();
-    const save = document.getElementById("save-content");
-    if (save) save.disabled = true;
-    const feedback = document.getElementById("send-feedback");
-    if (feedback) feedback.disabled = true;
   }
 
   async function refresh() {

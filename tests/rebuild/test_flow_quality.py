@@ -651,6 +651,16 @@ def test_uncommitted_input_receipt_is_not_reported_as_success(tmp_path: Path, mo
     assert result['revision_id'] == store.load_document()['revision_id'] != before['revision_id']
 
 
+def test_delivery_reconciliation_reason_before_first_pptx(tmp_path: Path) -> None:
+    from deck_master.editing import export_project
+    from deck_master.errors import InputReconciliationPending
+    project, store, _ = _setup_project_with_pages(tmp_path)
+    service.inputs_update(project, patch={'reason': '更换受众', 'task_patch': {'audience': '财务团队'}},
+                          base_revision=store.load_document()['revision_id'], operation_id='before-first-pptx')
+    with pytest.raises(InputReconciliationPending):
+        export_project(project, output_dir=tmp_path / 'delivery', purpose='delivery')
+
+
 def test_irrelevant_material_update_still_awaits_host_judgment(tmp_path: Path) -> None:
     project, store, _ = _setup_project_with_pages(tmp_path)
     document = store.load_document()

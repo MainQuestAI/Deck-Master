@@ -290,7 +290,6 @@ def _export_locked(store, *, output_dir, purpose):
     if purpose not in ('review', 'delivery'):
         raise StoreError('purpose', 'must be review or delivery')
     doc=store.load_document()
-    if not doc['outputs'].get('pptx'):raise StoreError('outputs/pptx','no current PPT; continue production')
     from .models import input_alignment as _input_alignment
     from .errors import InputReconciliationPending
     alignment=_input_alignment(doc)
@@ -299,6 +298,7 @@ def _export_locked(store, *, output_dir, purpose):
             'inputs changed after this content was completed; run inputs update and finish the '
             'dispatched input_revision task before delivery (delivery is refused while '
             'input_alignment is needs_reconciliation)')
+    if not doc['outputs'].get('pptx'):raise StoreError('outputs/pptx','no current PPT; continue production')
     summary=check_summary(store,doc)
     status=summary['status']
     if purpose=='delivery' and status!='pass':
