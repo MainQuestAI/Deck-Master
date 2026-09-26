@@ -1,0 +1,97 @@
+{
+  "status": "uploaded_and_readback_verified",
+  "time": "2026-09-26T09:40:20.834Z",
+  "method": "OpenDesign MCP direct artifact import of reviewed local prototype; no generation run commissioned",
+  "project_name": "Deck Master · 全链路生成工作台 v3",
+  "preview_url": "http://127.0.0.1:52366/api/projects/deck-master-generation-workbench-v3-20260926/raw/index.html",
+  "studio_url": "http://127.0.0.1:52371/projects/deck-master-generation-workbench-v3-20260926/conversations/b29f2884-f0b0-4aa0-8fb7-e075c21f1023/files/index.html",
+  "url_lifetime": "current_daemon_session",
+  "files": [
+    {
+      "name": "index.html",
+      "exact_match": true,
+      "size_bytes": 509
+    },
+    {
+      "name": "states.html",
+      "exact_match": true,
+      "size_bytes": 1608
+    },
+    {
+      "name": "states.js",
+      "exact_match": true,
+      "size_bytes": 27181
+    },
+    {
+      "name": "states.css",
+      "exact_match": true,
+      "size_bytes": 6188
+    },
+    {
+      "name": "app.js",
+      "exact_match": true,
+      "size_bytes": 87522
+    },
+    {
+      "name": "style.css",
+      "exact_match": true,
+      "size_bytes": 23249
+    }
+  ],
+  "sha256": {
+    "index.html": "30a12289ad59bbeae6bfc791c97305bdc03ad08c221d47cb4613d170a8cc9925",
+    "app.js": "178643f1370b0086c18a9f665dcbb32fa50e064c32ee72cc6929f5b3eda33abb",
+    "style.css": "69b02acc8d28d8c7e3f7b5100235a173beac6af245553ffe47e0c92be3a837bb",
+    "states.html": "1e7a0e933ca1811663b31df2420c853d7690b0b6aee4c4929ff0cf57b19e92b1",
+    "states.js": "e713b1b0b48cdcefee1d38d532e9b811b606eed212e39290f3df97c37ee3f465",
+    "states.css": "cd70e183fe022a39ab251b31b562585f60144968efa5fb748da4c3a2c463caf6"
+  },
+  "browser_verification": {
+    "status": "passed",
+    "time": "2026-09-26T09:46:19.678370+00:00",
+    "browser": "Chromium",
+    "scope": "Imported OpenDesign HTML prototype in isolated browser contexts",
+    "viewports": [
+      {
+        "viewport": "1280x800",
+        "status": "passed",
+        "passed_checks": 21
+      },
+      {
+        "viewport": "1440x900",
+        "status": "passed",
+        "passed_checks": 21
+      }
+    ],
+    "page_errors": 0,
+    "external_resource_requests": 0,
+    "resource_http_failures": 0,
+    "failed_network_requests": 0,
+    "asset_http_hash_matches": "6/6",
+    "screenshots_captured": 8,
+    "screenshots_visually_inspected": [
+      "gallery-1440.png",
+      "prompt-1440.png",
+      "state-text-saved-1280.png"
+    ],
+    "evidence_links": [
+      "opendesign-evidence/verify_preview.py",
+      "opendesign-evidence/browser-verification.json",
+      "opendesign-evidence/overview-1280.png",
+      "opendesign-evidence/gallery-1280.png",
+      "opendesign-evidence/prompt-1280.png",
+      "opendesign-evidence/state-text-saved-1280.png",
+      "opendesign-evidence/overview-1440.png",
+      "opendesign-evidence/gallery-1440.png",
+      "opendesign-evidence/prompt-1440.png",
+      "opendesign-evidence/state-text-saved-1440.png"
+    ],
+    "generation_run_commissioned": false,
+    "production_acceptance": false,
+    "limitations": [
+      "Confirms imported preview, resources and synthetic interactions only",
+      "No OpenDesign generation run, real Host, model, production service or export was executed",
+      "Preview URL is valid for the current daemon session"
+    ]
+  }
+}

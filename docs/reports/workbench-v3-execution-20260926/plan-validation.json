@@ -1,0 +1,81 @@
+{
+  "status": "passed",
+  "acceptance_count": 87,
+  "owner_count": 12,
+  "dependencies": {
+    "W01": [],
+    "W02": [
+      "W01"
+    ],
+    "W03": [
+      "W01"
+    ],
+    "W04": [
+      "W01",
+      "W03"
+    ],
+    "W05": [
+      "W02",
+      "W04"
+    ],
+    "W06": [
+      "W01",
+      "W02",
+      "W03",
+      "W05"
+    ],
+    "W07": [
+      "W02",
+      "W06"
+    ],
+    "W08": [
+      "W05",
+      "W07"
+    ],
+    "W09": [
+      "W02",
+      "W06",
+      "W03",
+      "W05"
+    ],
+    "W10": [
+      "W07"
+    ],
+    "W11": [
+      "W07",
+      "W09",
+      "W10"
+    ],
+    "W12": [
+      "W01",
+      "W02",
+      "W03",
+      "W04",
+      "W05",
+      "W06",
+      "W07",
+      "W08",
+      "W09",
+      "W10",
+      "W11"
+    ]
+  },
+  "implementation_order": [
+    "W01",
+    "W02",
+    "W03",
+    "W04",
+    "W05",
+    "W06",
+    "W07",
+    "W10",
+    "W08",
+    "W09",
+    "W11",
+    "W12"
+  ],
+  "deferred_acceptance": {
+    "W01-AC01": "actual Candidate/Attempt pressure after W07; owner unchanged"
+  },
+  "product_acceptance": false
+}

@@ -1,0 +1,117 @@
+{
+  "created_at": "2026-09-26T19:31:00.953767+08:00",
+  "handoff": "/private/var/folders/6g/c6q7pcvx6l1bz9fmqfnfhzch0000gn/T/deck-master-w12-handoff-xfbxkhtp/HANDOFF.md",
+  "handoff_sha256": "16c313bf62ff282dcdc9a92a79945d5f283db6d85f26c7931f805508d92e5ad2",
+  "trees": {
+    "3e1c70617701ceb01627e507de1592246ec47927": "88dd584bc7101496413af7a5420cab42c8ebd9eb",
+    "d1c7c4600cb0fc781070116ed8cc8a1ff6b8b7ca": "88dd584bc7101496413af7a5420cab42c8ebd9eb"
+  },
+  "remote_latest_reverified": false,
+  "reason": "GitHub connection unavailable during handoff",
+  "references": [
+    {
+      "path": "/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/AGENTS.md",
+      "sha256": "b5c9035d3301fd437829ecc912fefdd2c0d92575f6a92dfb17aacf17aaf0a0aa"
+    },
+    {
+      "path": "/Users/dingcheng/Deck-Master-workbench-spec/docs/specs/deck-master-workbench-v3/README.md",
+      "sha256": "8f207feaf3b05750d536cdfc016c1eba170a173113d4db274faccc2d286b2527"
+    },
+    {
+      "path": "/Users/dingcheng/Deck-Master-workbench-spec/docs/specs/deck-master-workbench-v3/PLAN.md",
+      "sha256": "745844d3d5181ca2fc31b32fb29ba5aaa8df67270e49fab7052d1416db8b3127"
+    },
+    {
+      "path": "/Users/dingcheng/Deck-Master-workbench-spec/docs/specs/deck-master-workbench-v3/UI-SPEC.md",
+      "sha256": "a761653add6bc3391029e835a493cc9972c1336e99d6a68b285c9463089c2f51"
+    },
+    {
+      "path": "/Users/dingcheng/Deck-Master-workbench-spec/docs/specs/deck-master-workbench-v3/ENGINEERING-SPEC.md",
+      "sha256": "1ecf00aa965f1ee564f84b276aef3f656a872ef8138d84170147bd8c9b734f7d"
+    },
+    {
+      "path": "/Users/dingcheng/Deck-Master-workbench-spec/docs/specs/deck-master-workbench-v3/DX-SPEC.md",
+      "sha256": "5ee517b2bd51a5e5ab13e5cd697abef7ddf666c344b87052276c0fc8458206a7"
+    },
+    {
+      "path": "/Users/dingcheng/Deck-Master-workbench-spec/docs/specs/deck-master-workbench-v3/ACCEPTANCE.md",
+      "sha256": "c7d649d671c2d7dfbfceb04fcf763571923ba614cdc881a459b4b2f8420b45df"
+    },
+    {
+      "path": "/Users/dingcheng/Deck-Master-workbench-spec/docs/specs/deck-master-workbench-v3/LEGACY-COVERAGE.md",
+      "sha256": "e51e0d00ea6367e246cc40015af942a006e9c594d407f35472f90f97d4e8b181"
+    },
+    {
+      "path": "/Users/dingcheng/Deck-Master-workbench-spec/docs/specs/deck-master-workbench-v3/reviews/README.md",
+      "sha256": "9454eb5e629f81e4cd8ad2b1e0778444b1eb21da22560a7675ccdf1bc56dff9b"
+    },
+    {
+      "path": "/Users/dingcheng/Deck-Master-workbench-spec/docs/specs/deck-master-workbench-v3/packages/README.md",
+      "sha256": "fda707ccecf4f5bda868447d409323be256259816f10ba5ba721aa7f7cecf971"
+    },
+    {
+      "path": "/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/reports/webui-backend-feasibility-20260926/README.md",
+      "sha256": "2ccd079d7dd46cb9166ad5d9736d51704406e7e0f46b90a50dc09afe7dfda843"
+    },
+    {
+      "path": "/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/reports/webui-backend-feasibility-20260926/CAPABILITY-MATRIX.md",
+      "sha256": "62482a5e84cc08e85edadec50ef2901b17a997676cbd04fbb246bbaae40f9b63"
+    },
+    {
+      "path": "/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/reports/webui-backend-feasibility-20260926/probe_backend.py",
+      "sha256": "3f99b98cf836e30dc5ae733cfb1bbc9a6d3cb49cf41ea147c431e51199c2b78b"
+    },
+    {
+      "path": "/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/docs/reports/webui-backend-feasibility-20260926/evidence/README.md",
+      "sha256": "e2227a4498bc07fc747187e8d5f30071632c0c8bd7ac7ebebbbf7c97ced45664"
+    },
+    {
+      "path": "/Users/dingcheng/Deck-Master-workbench-spec/docs/specs/deck-master-workbench-v3/packages/W01.md",
+      "sha256": "f490bd4a282d0ea5deb87d663b86e1957ea3a5b8d05b9f6c453861f0823758ba"
+    },
+    {
+      "path": "/Users/dingcheng/Deck-Master-workbench-spec/docs/specs/deck-master-workbench-v3/packages/W02.md",
+      "sha256": "c6f60efe8b6a5db12faa460efd8426df6f9d5c5c2a962a5af394eea7ddac5722"
+    },
+    {
+      "path": "/Users/dingcheng/Deck-Master-workbench-spec/docs/specs/deck-master-workbench-v3/packages/W03.md",
+      "sha256": "37f5cb93a0fab48d99ea6eadf536c87807e794c98c43a3530b0e86df401f45c2"
+    },
+    {
+      "path": "/Users/dingcheng/Deck-Master-workbench-spec/docs/specs/deck-master-workbench-v3/packages/W04.md",
+      "sha256": "cee8703e57e1ffae8e1c60256d8edc2c17c92119ac31121c190f560d9f287e57"
+    },
+    {
+      "path": "/Users/dingcheng/Deck-Master-workbench-spec/docs/specs/deck-master-workbench-v3/packages/W05.md",
+      "sha256": "33c4682d8192992bb57c8f3ad7e44e457eb08dd4d05fa030a8a415dba3d16f85"
+    },
+    {
+      "path": "/Users/dingcheng/Deck-Master-workbench-spec/docs/specs/deck-master-workbench-v3/packages/W06.md",
+      "sha256": "e989769009f7ce6b26d8c17abecb2d61a47e40d266777b0979232069df6eb282"
+    },
+    {
+      "path": "/Users/dingcheng/Deck-Master-workbench-spec/docs/specs/deck-master-workbench-v3/packages/W07.md",
+      "sha256": "ca464f74a075be10bb2785449ca4336aa669376ad0c925146a836ade0dbd30d1"
+    },
+    {
+      "path": "/Users/dingcheng/Deck-Master-workbench-spec/docs/specs/deck-master-workbench-v3/packages/W08.md",
+      "sha256": "ee3988bc467d1e179da6ea8d3241dd0077ec7c452e7a03ab043492bec13f9225"
+    },
+    {
+      "path": "/Users/dingcheng/Deck-Master-workbench-spec/docs/specs/deck-master-workbench-v3/packages/W09.md",
+      "sha256": "e48aa8b1abfbd022e5732b913850f65bbc0129d0082b6b5d3e94afc7fb2d80c3"
+    },
+    {
+      "path": "/Users/dingcheng/Deck-Master-workbench-spec/docs/specs/deck-master-workbench-v3/packages/W10.md",
+      "sha256": "24c0dd77e71eed47127c2efaaab43d4f1ea149c99bd419d93be172cc7ede2757"
+    },
+    {
+      "path": "/Users/dingcheng/Deck-Master-workbench-spec/docs/specs/deck-master-workbench-v3/packages/W11.md",
+      "sha256": "27ae2af59eb05859be17b550523c64badb94ba35f5729e9c780b71f551f64456"
+    },
+    {
+      "path": "/Users/dingcheng/Deck-Master-workbench-spec/docs/specs/deck-master-workbench-v3/packages/W12.md",
+      "sha256": "7fda6ff7caec9bacb4017a3e622f92b7afde9696859f17e04231dd16116c8089"
+    }
+  ]
+}

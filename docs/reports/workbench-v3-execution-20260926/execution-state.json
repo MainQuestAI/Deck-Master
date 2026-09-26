@@ -1,0 +1,507 @@
+{
+  "baseline": "d1c7c4600cb0fc781070116ed8cc8a1ff6b8b7ca",
+  "branch": "codex/workbench-w01",
+  "active_package": "W01",
+  "sequence": [
+    "W01.core",
+    "W02",
+    "W03",
+    "W04",
+    "W05",
+    "W06",
+    "W07",
+    "W01.pressure",
+    "W10",
+    "W08",
+    "W09",
+    "W11",
+    "W12"
+  ],
+  "packages": {
+    "W01": {
+      "status": "implementing",
+      "accepted": false
+    },
+    "W02": {
+      "status": "planned",
+      "accepted": false
+    },
+    "W03": {
+      "status": "planned",
+      "accepted": false
+    },
+    "W04": {
+      "status": "planned",
+      "accepted": false
+    },
+    "W05": {
+      "status": "planned",
+      "accepted": false
+    },
+    "W06": {
+      "status": "planned",
+      "accepted": false
+    },
+    "W07": {
+      "status": "planned",
+      "accepted": false
+    },
+    "W08": {
+      "status": "planned",
+      "accepted": false
+    },
+    "W09": {
+      "status": "planned",
+      "accepted": false
+    },
+    "W10": {
+      "status": "planned",
+      "accepted": false
+    },
+    "W11": {
+      "status": "planned",
+      "accepted": false
+    },
+    "W12": {
+      "status": "planned",
+      "accepted": false
+    }
+  },
+  "acceptance": {
+    "W01-AC01": {
+      "owner": "W01",
+      "status": "open",
+      "evidence": []
+    },
+    "W01-AC02": {
+      "owner": "W01",
+      "status": "open",
+      "evidence": []
+    },
+    "W01-AC03": {
+      "owner": "W01",
+      "status": "open",
+      "evidence": []
+    },
+    "W01-AC04": {
+      "owner": "W01",
+      "status": "open",
+      "evidence": []
+    },
+    "W01-AC05": {
+      "owner": "W01",
+      "status": "open",
+      "evidence": []
+    },
+    "W01-AC06": {
+      "owner": "W01",
+      "status": "open",
+      "evidence": []
+    },
+    "W02-AC01": {
+      "owner": "W02",
+      "status": "open",
+      "evidence": []
+    },
+    "W02-AC02": {
+      "owner": "W02",
+      "status": "open",
+      "evidence": []
+    },
+    "W02-AC03": {
+      "owner": "W02",
+      "status": "open",
+      "evidence": []
+    },
+    "W02-AC04": {
+      "owner": "W02",
+      "status": "open",
+      "evidence": []
+    },
+    "W02-AC05": {
+      "owner": "W02",
+      "status": "open",
+      "evidence": []
+    },
+    "W02-AC06": {
+      "owner": "W02",
+      "status": "open",
+      "evidence": []
+    },
+    "W02-AC07": {
+      "owner": "W02",
+      "status": "open",
+      "evidence": []
+    },
+    "W03-AC01": {
+      "owner": "W03",
+      "status": "open",
+      "evidence": []
+    },
+    "W03-AC02": {
+      "owner": "W03",
+      "status": "open",
+      "evidence": []
+    },
+    "W03-AC03": {
+      "owner": "W03",
+      "status": "open",
+      "evidence": []
+    },
+    "W03-AC04": {
+      "owner": "W03",
+      "status": "open",
+      "evidence": []
+    },
+    "W03-AC05": {
+      "owner": "W03",
+      "status": "open",
+      "evidence": []
+    },
+    "W03-AC06": {
+      "owner": "W03",
+      "status": "open",
+      "evidence": []
+    },
+    "W03-AC07": {
+      "owner": "W03",
+      "status": "open",
+      "evidence": []
+    },
+    "W04-AC01": {
+      "owner": "W04",
+      "status": "open",
+      "evidence": []
+    },
+    "W04-AC02": {
+      "owner": "W04",
+      "status": "open",
+      "evidence": []
+    },
+    "W04-AC03": {
+      "owner": "W04",
+      "status": "open",
+      "evidence": []
+    },
+    "W04-AC04": {
+      "owner": "W04",
+      "status": "open",
+      "evidence": []
+    },
+    "W04-AC05": {
+      "owner": "W04",
+      "status": "open",
+      "evidence": []
+    },
+    "W04-AC06": {
+      "owner": "W04",
+      "status": "open",
+      "evidence": []
+    },
+    "W04-AC07": {
+      "owner": "W04",
+      "status": "open",
+      "evidence": []
+    },
+    "W05-AC01": {
+      "owner": "W05",
+      "status": "open",
+      "evidence": []
+    },
+    "W05-AC02": {
+      "owner": "W05",
+      "status": "open",
+      "evidence": []
+    },
+    "W05-AC03": {
+      "owner": "W05",
+      "status": "open",
+      "evidence": []
+    },
+    "W05-AC04": {
+      "owner": "W05",
+      "status": "open",
+      "evidence": []
+    },
+    "W05-AC05": {
+      "owner": "W05",
+      "status": "open",
+      "evidence": []
+    },
+    "W05-AC06": {
+      "owner": "W05",
+      "status": "open",
+      "evidence": []
+    },
+    "W05-AC07": {
+      "owner": "W05",
+      "status": "open",
+      "evidence": []
+    },
+    "W06-AC01": {
+      "owner": "W06",
+      "status": "open",
+      "evidence": []
+    },
+    "W06-AC02": {
+      "owner": "W06",
+      "status": "open",
+      "evidence": []
+    },
+    "W06-AC03": {
+      "owner": "W06",
+      "status": "open",
+      "evidence": []
+    },
+    "W06-AC04": {
+      "owner": "W06",
+      "status": "open",
+      "evidence": []
+    },
+    "W06-AC05": {
+      "owner": "W06",
+      "status": "open",
+      "evidence": []
+    },
+    "W06-AC06": {
+      "owner": "W06",
+      "status": "open",
+      "evidence": []
+    },
+    "W06-AC07": {
+      "owner": "W06",
+      "status": "open",
+      "evidence": []
+    },
+    "W06-AC08": {
+      "owner": "W06",
+      "status": "open",
+      "evidence": []
+    },
+    "W07-AC01": {
+      "owner": "W07",
+      "status": "open",
+      "evidence": []
+    },
+    "W07-AC02": {
+      "owner": "W07",
+      "status": "open",
+      "evidence": []
+    },
+    "W07-AC03": {
+      "owner": "W07",
+      "status": "open",
+      "evidence": []
+    },
+    "W07-AC04": {
+      "owner": "W07",
+      "status": "open",
+      "evidence": []
+    },
+    "W07-AC05": {
+      "owner": "W07",
+      "status": "open",
+      "evidence": []
+    },
+    "W07-AC06": {
+      "owner": "W07",
+      "status": "open",
+      "evidence": []
+    },
+    "W07-AC07": {
+      "owner": "W07",
+      "status": "open",
+      "evidence": []
+    },
+    "W07-AC08": {
+      "owner": "W07",
+      "status": "open",
+      "evidence": []
+    },
+    "W08-AC01": {
+      "owner": "W08",
+      "status": "open",
+      "evidence": []
+    },
+    "W08-AC02": {
+      "owner": "W08",
+      "status": "open",
+      "evidence": []
+    },
+    "W08-AC03": {
+      "owner": "W08",
+      "status": "open",
+      "evidence": []
+    },
+    "W08-AC04": {
+      "owner": "W08",
+      "status": "open",
+      "evidence": []
+    },
+    "W08-AC05": {
+      "owner": "W08",
+      "status": "open",
+      "evidence": []
+    },
+    "W08-AC06": {
+      "owner": "W08",
+      "status": "open",
+      "evidence": []
+    },
+    "W08-AC07": {
+      "owner": "W08",
+      "status": "open",
+      "evidence": []
+    },
+    "W09-AC01": {
+      "owner": "W09",
+      "status": "open",
+      "evidence": []
+    },
+    "W09-AC02": {
+      "owner": "W09",
+      "status": "open",
+      "evidence": []
+    },
+    "W09-AC03": {
+      "owner": "W09",
+      "status": "open",
+      "evidence": []
+    },
+    "W09-AC04": {
+      "owner": "W09",
+      "status": "open",
+      "evidence": []
+    },
+    "W09-AC05": {
+      "owner": "W09",
+      "status": "open",
+      "evidence": []
+    },
+    "W09-AC06": {
+      "owner": "W09",
+      "status": "open",
+      "evidence": []
+    },
+    "W09-AC07": {
+      "owner": "W09",
+      "status": "open",
+      "evidence": []
+    },
+    "W10-AC01": {
+      "owner": "W10",
+      "status": "open",
+      "evidence": []
+    },
+    "W10-AC02": {
+      "owner": "W10",
+      "status": "open",
+      "evidence": []
+    },
+    "W10-AC03": {
+      "owner": "W10",
+      "status": "open",
+      "evidence": []
+    },
+    "W10-AC04": {
+      "owner": "W10",
+      "status": "open",
+      "evidence": []
+    },
+    "W10-AC05": {
+      "owner": "W10",
+      "status": "open",
+      "evidence": []
+    },
+    "W10-AC06": {
+      "owner": "W10",
+      "status": "open",
+      "evidence": []
+    },
+    "W10-AC07": {
+      "owner": "W10",
+      "status": "open",
+      "evidence": []
+    },
+    "W10-AC08": {
+      "owner": "W10",
+      "status": "open",
+      "evidence": []
+    },
+    "W11-AC01": {
+      "owner": "W11",
+      "status": "open",
+      "evidence": []
+    },
+    "W11-AC02": {
+      "owner": "W11",
+      "status": "open",
+      "evidence": []
+    },
+    "W11-AC03": {
+      "owner": "W11",
+      "status": "open",
+      "evidence": []
+    },
+    "W11-AC04": {
+      "owner": "W11",
+      "status": "open",
+      "evidence": []
+    },
+    "W11-AC05": {
+      "owner": "W11",
+      "status": "open",
+      "evidence": []
+    },
+    "W11-AC06": {
+      "owner": "W11",
+      "status": "open",
+      "evidence": []
+    },
+    "W11-AC07": {
+      "owner": "W11",
+      "status": "open",
+      "evidence": []
+    },
+    "W12-AC01": {
+      "owner": "W12",
+      "status": "open",
+      "evidence": []
+    },
+    "W12-AC02": {
+      "owner": "W12",
+      "status": "open",
+      "evidence": []
+    },
+    "W12-AC03": {
+      "owner": "W12",
+      "status": "open",
+      "evidence": []
+    },
+    "W12-AC04": {
+      "owner": "W12",
+      "status": "open",
+      "evidence": []
+    },
+    "W12-AC05": {
+      "owner": "W12",
+      "status": "open",
+      "evidence": []
+    },
+    "W12-AC06": {
+      "owner": "W12",
+      "status": "open",
+      "evidence": []
+    },
+    "W12-AC07": {
+      "owner": "W12",
+      "status": "open",
+      "evidence": []
+    },
+    "W12-AC08": {
+      "owner": "W12",
+      "status": "open",
+      "evidence": []
+    }
+  }
+}

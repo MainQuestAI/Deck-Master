@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="6" failures="11" skipped="0" tests="214" time="30.331" timestamp="2026-09-26T18:57:35.407722+08:00" hostname="Mac"><testcase classname="tests.rebuild.test_web" name="test_view_revision_matches_document_and_follows_edits" time="0.014"><error message="failed on setup with &quot;PermissionError: [Errno 1] Operation not permitted&quot;">tmp_path = PosixPath('/private/tmp/deck-master-backend-audit-tests/test_view_revision_matches_doc0')
+
+    @pytest.fixture()
+    def server(tmp_path):
+        project, store = _adopted_project(tmp_path)
+        instance = WorkbenchServer(project)
+&gt;       url = instance.start().rstrip("/")
+              ^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_web.py:100: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/web.py:233: in start
+    self.port = _free_port()
+                ^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _free_port() -&gt; int:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+&gt;           sock.bind(("127.0.0.1", 0))
+E           PermissionError: [Errno 1] Operation not permitted
+
+src/deck_master/web.py:70: PermissionError</error></testcase><testcase classname="tests.rebuild.test_web" name="test_view_status_tracks_review_interpretation" time="0.018"><error message="failed on setup with &quot;PermissionError: [Errno 1] Operation not permitted&quot;">tmp_path = PosixPath('/private/tmp/deck-master-backend-audit-tests/test_view_status_tracks_review0')
+
+    @pytest.fixture()
+    def server(tmp_path):
+        project, store = _adopted_project(tmp_path)
+        instance = WorkbenchServer(project)
+&gt;       url = instance.start().rstrip("/")
+              ^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_web.py:100: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/web.py:233: in start
+    self.port = _free_port()
+                ^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _free_port() -&gt; int:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+&gt;           sock.bind(("127.0.0.1", 0))
+E           PermissionError: [Errno 1] Operation not permitted
+
+src/deck_master/web.py:70: PermissionError</error></testcase><testcase classname="tests.rebuild.test_web" name="test_cli_accept_auto_opens_workbench_after_first_content" time="0.014"><failure message="AssertionError: first content triggers the automatic workbench URL&#10;assert None">tmp_path = PosixPath('/private/tmp/deck-master-backend-audit-tests/test_cli_accept_auto_opens_wor0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x10baf7da0&gt;
+capsys = &lt;_pytest.capture.CaptureFixture object at 0x10baf6f30&gt;
+
+    def test_cli_accept_auto_opens_workbench_after_first_content(tmp_path, monkeypatch, capsys):
+        project, task = _compose_pending_project(tmp_path)
+        result_file = tmp_path / "compose-result.json"
+        result_file.write_text((ENVELOPES / "compose.json").read_text())
+        opened = []
+        def _fake_open(url, new=0):
+            opened.append(url)
+            return True
+        monkeypatch.setattr("deck_master.web.webbrowser.open", _fake_open)
+        try:
+            exit_code = cli.main([
+                "task", "accept", "--project", str(project),
+                "--task-id", task["task_id"], "--operation-id", task["operation_id"],
+                "--produced-against", task["produced_against"], "--result", str(result_file),
+            ])
+            assert exit_code == 0
+            payload = json.loads(capsys.readouterr().out)
+&gt;           assert payload["review_url"], "first content triggers the automatic workbench URL"
+E           AssertionError: first content triggers the automatic workbench URL
+E           assert None
+
+tests/rebuild/test_web.py:176: AssertionError</failure></testcase><testcase classname="tests.rebuild.test_web" name="test_open_view_returns_real_url_without_browser" time="0.009"><failure message="AssertionError: a missing browser must not lose the real local URL&#10;assert None">tmp_path = PosixPath('/private/tmp/deck-master-backend-audit-tests/test_open_view_returns_real_ur0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x10c143860&gt;
+
+    def test_open_view_returns_real_url_without_browser(tmp_path, monkeypatch):
+        project, _ = _compose_pending_project(tmp_path)
+        monkeypatch.setattr("deck_master.web.webbrowser.open",
+                            lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("no browser")))
+        try:
+            info = open_view(project, open_browser=True)
+&gt;           assert info["review_url"], "a missing browser must not lose the real local URL"
+E           AssertionError: a missing browser must not lose the real local URL
+E           assert None
+
+tests/rebuild/test_web.py:192: AssertionError</failure></testcase><testcase classname="tests.rebuild.test_web" name="test_open_view_browser_refusal_reports_available" time="0.008"><failure message="assert None">tmp_path = PosixPath('/private/tmp/deck-master-backend-audit-tests/test_open_view_browser_refusal0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x10c163e00&gt;
+
+    def test_open_view_browser_refusal_reports_available(tmp_path, monkeypatch):
+        # webbrowser.open returns False when the host has no usable browser: the
+        # URL stays real and the status says the browser did not open.
+        project, _ = _compose_pending_project(tmp_path)
+        monkeypatch.setattr("deck_master.web.webbrowser.open", lambda *args, **kwargs: False)
+        try:
+            info = open_view(project, open_browser=True)
+&gt;           assert info["review_url"]
+E           assert None
+
+tests/rebuild/test_web.py:206: AssertionError</failure></testcase><testcase classname="tests.rebuild.test_web" name="test_open_view_service_failure_is_null_with_reason" time="0.008"><failure message="AssertionError: assert 'spawn refused' in 'view service failed: [Errno 1] Operation not permitted'">tmp_path = PosixPath('/private/tmp/deck-master-backend-audit-tests/test_open_view_service_failure0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x10c1822d0&gt;
+
+    def test_open_view_service_failure_is_null_with_reason(tmp_path, monkeypatch):
+        project, _ = _compose_pending_project(tmp_path)
+    
+        def _boom(*args, **kwargs):
+            raise OSError("spawn refused")
+    
+        monkeypatch.setattr("subprocess.Popen", _boom)
+        info = open_view(project, open_browser=False)
+        assert info["review_url"] is None
+        assert info["view_status"] == "unavailable"
+&gt;       assert "spawn refused" in info["detail"]
+E       AssertionError: assert 'spawn refused' in 'view service failed: [Errno 1] Operation not permitted'
+
+tests/rebuild/test_web.py:223: AssertionError</failure></testcase><testcase classname="tests.rebuild.test_web" name="test_web_server_layer_reuses_running_service_url" time="0.011"><failure message="PermissionError: [Errno 1] Operation not permitted">tmp_path = PosixPath('/private/tmp/deck-master-backend-audit-tests/test_web_server_layer_reuses_r0')
+
+    def test_web_server_layer_reuses_running_service_url(tmp_path):
+        project, _ = _adopted_project(tmp_path)
+        first = WorkbenchServer(project)
+        second = WorkbenchServer(project)
+        try:
+&gt;           first_url = first.start().rstrip("/")
+                        ^^^^^^^^^^^^^
+
+tests/rebuild/test_web.py:231: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/web.py:233: in start
+    self.port = _free_port()
+                ^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _free_port() -&gt; int:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+&gt;           sock.bind(("127.0.0.1", 0))
+E           PermissionError: [Errno 1] Operation not permitted
+
+src/deck_master/web.py:70: PermissionError</failure></testcase><testcase classname="tests.rebuild.test_web" name="test_writes_require_same_origin_session_token" time="0.011"><error message="failed on setup with &quot;PermissionError: [Errno 1] Operation not permitted&quot;">tmp_path = PosixPath('/private/tmp/deck-master-backend-audit-tests/test_writes_require_same_origi0')
+
+    @pytest.fixture()
+    def server(tmp_path):
+        project, store = _adopted_project(tmp_path)
+        instance = WorkbenchServer(project)
+&gt;       url = instance.start().rstrip("/")
+              ^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_web.py:100: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/web.py:233: in start
+    self.port = _free_port()
+                ^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _free_port() -&gt; int:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+&gt;           sock.bind(("127.0.0.1", 0))
+E           PermissionError: [Errno 1] Operation not permitted
+
+src/deck_master/web.py:70: PermissionError</error></testcase><testcase classname="tests.rebuild.test_web" name="test_file_route_whitelists_registered_project_objects" time="0.012"><error message="failed on setup with &quot;PermissionError: [Errno 1] Operation not permitted&quot;">tmp_path = PosixPath('/private/tmp/deck-master-backend-audit-tests/test_file_route_whitelists_reg0')
+
+    @pytest.fixture()
+    def server(tmp_path):
+        project, store = _adopted_project(tmp_path)
+        instance = WorkbenchServer(project)
+&gt;       url = instance.start().rstrip("/")
+              ^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_web.py:100: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/web.py:233: in start
+    self.port = _free_port()
+                ^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _free_port() -&gt; int:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+&gt;           sock.bind(("127.0.0.1", 0))
+E           PermissionError: [Errno 1] Operation not permitted
+
+src/deck_master/web.py:70: PermissionError</error></testcase><testcase classname="tests.rebuild.test_web" name="test_user_text_is_served_as_data_not_markup" time="0.015"><error message="failed on setup with &quot;PermissionError: [Errno 1] Operation not permitted&quot;">tmp_path = PosixPath('/private/tmp/deck-master-backend-audit-tests/test_user_text_is_served_as_da0')
+
+    @pytest.fixture()
+    def server(tmp_path):
+        project, store = _adopted_project(tmp_path)
+        instance = WorkbenchServer(project)
+&gt;       url = instance.start().rstrip("/")
+              ^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_web.py:100: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/web.py:233: in start
+    self.port = _free_port()
+                ^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _free_port() -&gt; int:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+&gt;           sock.bind(("127.0.0.1", 0))
+E           PermissionError: [Errno 1] Operation not permitted
+
+src/deck_master/web.py:70: PermissionError</error></testcase><testcase classname="tests.rebuild.test_web" name="test_spec_10_3_routes_serve_same_interpretation" time="0.013"><error message="failed on setup with &quot;PermissionError: [Errno 1] Operation not permitted&quot;">tmp_path = PosixPath('/private/tmp/deck-master-backend-audit-tests/test_spec_10_3_routes_serve_sa0')
+
+    @pytest.fixture()
+    def server(tmp_path):
+        project, store = _adopted_project(tmp_path)
+        instance = WorkbenchServer(project)
+&gt;       url = instance.start().rstrip("/")
+              ^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_web.py:100: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/web.py:233: in start
+    self.port = _free_port()
+                ^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _free_port() -&gt; int:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+&gt;           sock.bind(("127.0.0.1", 0))
+E           PermissionError: [Errno 1] Operation not permitted
+
+src/deck_master/web.py:70: PermissionError</error></testcase><testcase classname="tests.rebuild.test_workbench_e2e" name="test_view_reads_real_pages_without_preview_manifest" time="0.012" /><testcase classname="tests.rebuild.test_workbench_e2e" name="test_zero_page_project_shows_zero_and_awaiting" time="0.007" /><testcase classname="tests.rebuild.test_workbench_e2e" name="test_missing_slots_wait_explicitly" time="0.011" /><testcase classname="tests.rebuild.test_workbench_e2e" name="test_server_serves_real_data_and_files" time="0.013"><failure message="PermissionError: [Errno 1] Operation not permitted">tmp_path = PosixPath('/private/tmp/deck-master-backend-audit-tests/test_server_serves_real_data_a0')
+
+    def test_server_serves_real_data_and_files(tmp_path: Path) -&gt; None:
+        project, _ = _prepared_project(tmp_path)
+        server = WorkbenchServer(project)
+&gt;       url = server.start().rstrip("/")
+              ^^^^^^^^^^^^^^
+
+tests/rebuild/test_workbench_e2e.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/web.py:233: in start
+    self.port = _free_port()
+                ^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _free_port() -&gt; int:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+&gt;           sock.bind(("127.0.0.1", 0))
+E           PermissionError: [Errno 1] Operation not permitted
+
+src/deck_master/web.py:70: PermissionError</failure></testcase><testcase classname="tests.rebuild.test_workbench_e2e" name="test_service_reuse_returns_same_url" time="0.012"><failure message="assert None">tmp_path = PosixPath('/private/tmp/deck-master-backend-audit-tests/test_service_reuse_returns_sam0')
+
+    def test_service_reuse_returns_same_url(tmp_path: Path) -&gt; None:
+        project, _ = _prepared_project(tmp_path)
+        try:
+            first = open_view(project, open_browser=False)
+            second = open_view(project, open_browser=False)
+&gt;           assert first["review_url"]
+E           assert None
+
+tests/rebuild/test_workbench_e2e.py:115: AssertionError</failure></testcase><testcase classname="tests.rebuild.test_workbench_e2e" name="test_view_without_document_reports_unavailable" time="0.000" /><testcase classname="tests.rebuild.test_workbench_e2e" name="test_four_view_slots_serve_real_files_with_revision" time="0.024"><failure message="PermissionError: [Errno 1] Operation not permitted">tmp_path = PosixPath('/private/tmp/deck-master-backend-audit-tests/test_four_view_slots_serve_rea0')
+
+    def test_four_view_slots_serve_real_files_with_revision(tmp_path: Path) -&gt; None:
+        """AC-U04: content/blueprint/svg/ppt slots serve the registered object
+        bytes, and the view carries the current revision for every slot."""
+        project, store = _four_slot_project(tmp_path)
+        server = WorkbenchServer(project)
+&gt;       url = server.start().rstrip("/")
+              ^^^^^^^^^^^^^^
+
+tests/rebuild/test_workbench_e2e.py:187: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/web.py:233: in start
+    self.port = _free_port()
+                ^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _free_port() -&gt; int:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+&gt;           sock.bind(("127.0.0.1", 0))
+E           PermissionError: [Errno 1] Operation not permitted
+
+src/deck_master/web.py:70: PermissionError</failure></testcase><testcase classname="tests.rebuild.test_workbench_e2e" name="test_review_findings_are_addressable_to_page_and_element" time="0.021"><failure message="PermissionError: [Errno 1] Operation not permitted">tmp_path = PosixPath('/private/tmp/deck-master-backend-audit-tests/test_review_findings_are_addre0')
+
+    def test_review_findings_are_addressable_to_page_and_element(tmp_path: Path) -&gt; None:
+        project, store = _four_slot_project(tmp_path)
+        from deck_master.models import bump_revision
+        document = store.load_document()
+        review = {
+            "schema_version": "deck_review.v1", "review_id": "rv-e2e", "kind": "readability",
+            "status": "fail",
+            "subjects": [document["outputs"]["pptx"], document["pages"][0]["page"]],
+            "dependencies": [{"kind": "content", "identity": "page:p09",
+                              "sha256": document["pages"][0]["page"]["sha256"]}],
+            "reviewer": {"type": "host_self", "id": "host-1", "execution_ref": None,
+                         "independence_confirmed": False},
+            "observations": ["工程记录"],
+            "findings": [{"finding_id": "f-e2e", "kind": "readability", "impact": "must_fix",
+                          "page_id": "p09", "element_refs": ["atom:p09:block:service:heading"],
+                          "message": "字号过小", "expected": "≥10pt", "actual": "6pt",
+                          "evidence": [], "resolution": "open"}],
+            "created_at": "2026-09-21T00:00:00Z", "replaces": None,
+        }
+        ref = store.put_json_object(review)
+        bumped = bump_revision(document, {"operation_id": "add-review", "kind": "task_update",
+                                          "description": "review", "read_set": []})
+        bumped["reviews"] = [ref]
+        store.commit_change(base_revision=document["revision_id"], document=bumped, operation_id="add-review")
+        server = WorkbenchServer(project)
+&gt;       url = server.start().rstrip("/")
+              ^^^^^^^^^^^^^^
+
+tests/rebuild/test_workbench_e2e.py:231: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/web.py:233: in start
+    self.port = _free_port()
+                ^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _free_port() -&gt; int:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+&gt;           sock.bind(("127.0.0.1", 0))
+E           PermissionError: [Errno 1] Operation not permitted
+
+src/deck_master/web.py:70: PermissionError</failure></testcase><testcase classname="tests.rebuild.test_workbench_e2e" name="test_feedback_stays_awaiting_host_until_real_execution" time="0.011"><failure message="PermissionError: [Errno 1] Operation not permitted">tmp_path = PosixPath('/private/tmp/deck-master-backend-audit-tests/test_feedback_stays_awaiting_h0')
+
+    def test_feedback_stays_awaiting_host_until_real_execution(tmp_path: Path) -&gt; None:
+        """AC-U05: UI feedback records a task in awaiting_host (never fake
+        running); execution state and the revision move only after a real
+        task_start/accept."""
+        from deck_master.store import Store
+        project, _ = _prepared_project(tmp_path)
+        store = Store(project)
+        server = WorkbenchServer(project)
+&gt;       url = server.start().rstrip("/")
+              ^^^^^^^^^^^^^^
+
+tests/rebuild/test_workbench_e2e.py:265: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/web.py:233: in start
+    self.port = _free_port()
+                ^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _free_port() -&gt; int:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+&gt;           sock.bind(("127.0.0.1", 0))
+E           PermissionError: [Errno 1] Operation not permitted
+
+src/deck_master/web.py:70: PermissionError</failure></testcase><testcase classname="tests.rebuild.test_workbench_e2e" name="test_static_assets_carry_keyboard_zoom_and_text_status" time="0.011"><failure message="PermissionError: [Errno 1] Operation not permitted">tmp_path = PosixPath('/private/tmp/deck-master-backend-audit-tests/test_static_assets_carry_keybo0')
+
+    def test_static_assets_carry_keyboard_zoom_and_text_status(tmp_path: Path) -&gt; None:
+        """AC-U07 engineering part: keyboard page switching, comparison zoom
+        controls and non-colour status text ship in the served assets."""
+        project, _ = _prepared_project(tmp_path)
+        server = WorkbenchServer(project)
+&gt;       url = server.start().rstrip("/")
+              ^^^^^^^^^^^^^^
+
+tests/rebuild/test_workbench_e2e.py:303: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/web.py:233: in start
+    self.port = _free_port()
+                ^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _free_port() -&gt; int:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+&gt;           sock.bind(("127.0.0.1", 0))
+E           PermissionError: [Errno 1] Operation not permitted
+
+src/deck_master/web.py:70: PermissionError</failure></testcase><testcase classname="tests.rebuild.test_tasks" name="test_envelope_roundtrip" time="0.011" /><testcase classname="tests.rebuild.test_tasks" name="test_malformed_nested_envelope_is_located_and_does_not_switch_document[bad0-artifact_specs[0]/file_id]" time="0.008" /><testcase classname="tests.rebuild.test_tasks" name="test_malformed_nested_envelope_is_located_and_does_not_switch_document[bad1-reviews[0]]" time="0.008" /><testcase classname="tests.rebuild.test_tasks" name="test_malformed_nested_envelope_is_located_and_does_not_switch_document[bad2-reviews[0]]" time="0.008" /><testcase classname="tests.rebuild.test_tasks" name="test_malformed_nested_envelope_is_located_and_does_not_switch_document[bad3-artifact_specs[0]]" time="0.008" /><testcase classname="tests.rebuild.test_tasks" name="test_idempotent_replay_returns_same_revision" time="0.012" /><testcase classname="tests.rebuild.test_tasks" name="test_same_operation_different_output_conflicts" time="0.011" /><testcase classname="tests.rebuild.test_tasks" name="test_stale_produced_against_conflicts" time="0.008" /><testcase classname="tests.rebuild.test_tasks" name="test_cancelled_task_late_result_settles_usage" time="0.012" /><testcase classname="tests.rebuild.test_tasks" name="test_path_escape_rejected_in_envelope" time="0.001" /><testcase classname="tests.rebuild.test_tasks" name="test_unknown_type_discriminator_rejected" time="0.003" /><testcase classname="tests.rebuild.test_tasks" name="test_blueprint_envelope_stages_files_and_prompt" time="0.025" /><testcase classname="tests.rebuild.test_tasks" name="test_review_envelope_keeps_not_evaluated" time="0.016" /><testcase classname="tests.rebuild.test_tasks" name="test_call_begin_settle_flow" time="0.017" /><testcase classname="tests.rebuild.test_tasks" name="test_cancel_wins_late_result_is_settled_not_adopted" time="0.012" /><testcase classname="tests.rebuild.test_tasks" name="test_accept_wins_cancel_cannot_revoke_adopted_product" time="0.012" /><testcase classname="tests.rebuild.test_tasks" name="test_repair_rounds_archive_distinct_ids_all_recoverable" time="0.039" /><testcase classname="tests.rebuild.test_tasks" name="test_no_progress_repair_stops_instead_of_looping" time="3.936" /><testcase classname="tests.rebuild.test_tasks" name="test_two_executions_race_for_the_last_allowance" time="0.019" /><testcase classname="tests.rebuild.test_tasks" name="test_operation_journal_json_keeps_status" time="0.000" /><testcase classname="tests.rebuild.test_tasks" name="test_accept_rejects_foreign_operation_id" time="0.018" /><testcase classname="tests.rebuild.test_tasks" name="test_completed_task_refuses_new_submission" time="0.013" /><testcase classname="tests.rebuild.test_tasks" name="test_artifact_specs_are_scoped_to_task_pages" time="0.016" /><testcase classname="tests.rebuild.test_tasks" name="test_task_kind_cannot_deliver_foreign_roles" time="0.015" /><testcase classname="tests.rebuild.test_tasks" name="test_blueprint_reference_regions_are_preserved" time="0.022" /><testcase classname="tests.rebuild.test_tasks" name="test_blueprint_lineage_rejects_preview_backfeed" time="0.020" /><testcase classname="tests.rebuild.test_tasks" name="test_svg_only_fix_is_progress_not_no_progress" time="1.814" /><testcase classname="tests.rebuild.test_tasks" name="test_settle_facts_survive_content_refusal" time="0.028" /><testcase classname="tests.rebuild.test_tasks" name="test_malformed_usage_event_fields_are_envelope_errors[event0-allowance_id]" time="0.000" /><testcase classname="tests.rebuild.test_tasks" name="test_malformed_usage_event_fields_are_envelope_errors[event1-evidence_file_ids]" time="0.000" /><testcase classname="tests.rebuild.test_tasks" name="test_malformed_usage_event_fields_are_envelope_errors[event2-outcome]" time="0.000" /><testcase classname="tests.rebuild.test_tasks" name="test_malformed_usage_event_fields_are_envelope_errors[event3-invocation_ref]" time="0.000" /><testcase classname="tests.rebuild.test_tasks" name="test_final_review_must_cite_current_deck_and_finding_page" time="0.022" /><testcase classname="tests.rebuild.test_production" name="test_continue_reconstructs_first_page_before_next_blueprint" time="0.016" /><testcase classname="tests.rebuild.test_production" name="test_prompt_projects_all_visible_fields_and_excludes_internal_notes" time="0.000" /><testcase classname="tests.rebuild.test_production" name="test_only_allowed_assets_enter_prompt" time="0.000" /><testcase classname="tests.rebuild.test_production" name="test_blueprint_task_exposes_only_allowed_asset_bytes" time="0.015" /><testcase classname="tests.rebuild.test_production" name="test_continue_dispatches_one_codex_blueprint_with_allowance" time="0.016" /><testcase classname="tests.rebuild.test_production" name="test_prompt_is_stable_and_page_specific" time="0.001" /><testcase classname="tests.rebuild.test_production" name="test_settle_records_invocation_ref_and_can_enrich_old_consumed_fact" time="0.022" /><testcase classname="tests.rebuild.test_production" name="test_call_operation_ids_include_task_identity" time="0.038" /><testcase classname="tests.rebuild.test_production" name="test_copy_roundtrip_keeps_original_page_prompt_and_blueprint" time="0.027" /><testcase classname="tests.rebuild.test_production" name="test_previews_never_become_reference_and_reencode_fails_binding" time="0.036" /><testcase classname="tests.rebuild.test_production" name="test_new_design_mode_and_failed_review_is_preserved" time="1.067" /><testcase classname="tests.rebuild.test_store_transactions" name="test_atomic_current_failure[objects]" time="0.004" /><testcase classname="tests.rebuild.test_store_transactions" name="test_atomic_current_failure[document]" time="0.004" /><testcase classname="tests.rebuild.test_store_transactions" name="test_atomic_current_failure[pointer]" time="0.005" /><testcase classname="tests.rebuild.test_store_transactions" name="test_pointer_swapped_response_lost_is_complete_new" time="0.004" /><testcase classname="tests.rebuild.test_store_transactions" name="test_stale_base_conflict" time="0.005" /><testcase classname="tests.rebuild.test_store_transactions" name="test_read_set_mismatch_blocks_commit" time="0.005" /><testcase classname="tests.rebuild.test_store_transactions" name="test_cancelled_task_check_blocks_commit" time="0.003" /><testcase classname="tests.rebuild.test_store_transactions" name="test_path_escape_and_symlink_rejected" time="0.001" /><testcase classname="tests.rebuild.test_store_transactions" name="test_corrupt_object_cannot_overwrite_or_read" time="0.002" /><testcase classname="tests.rebuild.test_store_transactions" name="test_identical_bytes_reuse_object" time="0.001" /><testcase classname="tests.rebuild.test_store_transactions" name="test_document_revision_files_are_immutable" time="0.003" /><testcase classname="tests.rebuild.test_store_transactions" name="test_operation_id_cannot_escape_staging" time="0.001" /><testcase classname="tests.rebuild.test_store_transactions" name="test_idempotent_replay_returns_same_revision" time="0.005" /><testcase classname="tests.rebuild.test_store_transactions" name="test_task_management_changes_do_not_invalidate_untouched_pages" time="0.027" /><testcase classname="tests.rebuild.test_store_transactions" name="test_content_edit_invalidates_only_the_edited_page" time="0.021" /><testcase classname="tests.rebuild.test_store_transactions" name="test_disjoint_page_edits_rebase_safely" time="0.014" /><testcase classname="tests.rebuild.test_store_transactions" name="test_same_page_concurrent_edit_conflicts_without_overwrite" time="0.012" /><testcase classname="tests.rebuild.test_store_transactions" name="test_restore_keeps_call_facts_and_old_snapshot" time="0.020" /><testcase classname="tests.rebuild.test_store_transactions" name="test_relocated_project_refs_resolve_and_source_hash_verified" time="0.021" /><testcase classname="tests.rebuild.test_export" name="test_review_export_of_failing_deck_marks_unresolved" time="0.023" /><testcase classname="tests.rebuild.test_export" name="test_delivery_export_rejected_with_specific_reason" time="0.017" /><testcase classname="tests.rebuild.test_export" name="test_working_alias_matches_review_semantics" time="0.022" /><testcase classname="tests.rebuild.test_export" name="test_review_and_delivery_of_passing_current_deck" time="0.041" /><testcase classname="tests.rebuild.test_export" name="test_missing_human_reviews_reported_not_evaluated" time="0.030" /><testcase classname="tests.rebuild.test_export" name="test_recorded_human_review_status_is_reported_verbatim" time="0.036" /><testcase classname="tests.rebuild.test_export" name="test_cli_export_exit_zero_is_not_professional_pass" time="0.024" /><testcase classname="tests.rebuild.test_export" name="test_export_reports_unknown_editability_for_unverified_legacy_pptx" time="0.023" /><testcase classname="tests.rebuild.test_export" name="test_delivery_honors_professional_review_required_policy" time="0.084" /><testcase classname="tests.rebuild.test_export" name="test_cli_needs_tool_maps_to_exit_3" time="0.000" /><testcase classname="tests.rebuild.test_flow_quality" name="test_work_order_carries_full_task_facts" time="0.009" /><testcase classname="tests.rebuild.test_flow_quality" name="test_work_order_exposes_intent_paths_and_only_dispatch_sources" time="0.009" /><testcase classname="tests.rebuild.test_flow_quality" name="test_default_presentation_mode_is_never_reported_as_provided" time="0.007" /><testcase classname="tests.rebuild.test_flow_quality" name="test_method_resources_dispatch_by_kind_and_are_readable" time="0.007" /><testcase classname="tests.rebuild.test_flow_quality" name="test_method_dispatch_mapping_by_kind_and_intent" time="0.000" /><testcase classname="tests.rebuild.test_flow_quality" name="test_context_status_stale_after_task_facts_move" time="0.008" /><testcase classname="tests.rebuild.test_flow_quality" name="test_dispatch_snapshot_sources_survive_current_mutation" time="0.008" /><testcase classname="tests.rebuild.test_flow_quality" name="test_cli_task_fields_land_in_document" time="0.008" /><testcase classname="tests.rebuild.test_flow_quality" name="test_task_file_merge_cli_overrides_only_explicit_flags" time="0.008" /><testcase classname="tests.rebuild.test_flow_quality" name="test_decision_and_task_file_conflict_exit_2" time="0.002" /><testcase classname="tests.rebuild.test_flow_quality" name="test_unknown_task_file_field_exit_2" time="0.002" /><testcase classname="tests.rebuild.test_flow_quality" name="test_brief_conflicts_and_empty_merge_exit_2" time="0.003" /><testcase classname="tests.rebuild.test_flow_quality" name="test_directory_expansion_skips_noise_and_keeps_output_named_dirs" time="0.001" /><testcase classname="tests.rebuild.test_flow_quality" name="test_explicit_files_keep_call_order_and_dir_contents_sort_stably" time="0.001" /><testcase classname="tests.rebuild.test_flow_quality" name="test_create_with_directory_reports_three_lists" time="0.007" /><testcase classname="tests.rebuild.test_flow_quality" name="test_explicit_bad_file_fails_whole_create_without_document" time="0.002" /><testcase classname="tests.rebuild.test_flow_quality" name="test_out_directory_inside_source_root_is_skipped" time="0.007" /><testcase classname="tests.rebuild.test_flow_quality" name="test_resolve_root_ignores_cwd_and_fake_files" time="0.001" /><testcase classname="tests.rebuild.test_flow_quality" name="test_canonical_methods_have_no_legacy_terms_or_paired_d1d2" time="0.001" /><testcase classname="tests.rebuild.test_flow_quality" name="test_doctor_compose_reports_ready_method_root" time="0.001" /><testcase classname="tests.rebuild.test_flow_quality" name="test_package_configuration_omits_retired_method_resources" time="0.000" /><testcase classname="tests.rebuild.test_flow_quality" name="test_input_digest_fixtures_recompute" time="0.000" /><testcase classname="tests.rebuild.test_flow_quality" name="test_inputs_show_returns_current_facts" time="0.017" /><testcase classname="tests.rebuild.test_flow_quality" name="test_inputs_update_supersedes_and_dispatches" time="0.028" /><testcase classname="tests.rebuild.test_flow_quality" name="test_inputs_update_conflicts" time="0.022" /><testcase classname="tests.rebuild.test_flow_quality" name="test_inputs_update_failure_keeps_state" time="0.016" /><testcase classname="tests.rebuild.test_flow_quality" name="test_inputs_update_display_name_only_does_not_dispatch" time="0.019" /><testcase classname="tests.rebuild.test_flow_quality" name="test_rename_source_keeps_existing_compose_task_usable" time="0.013" /><testcase classname="tests.rebuild.test_flow_quality" name="test_input_update_preserves_restrictions_and_marks_provided_mode" time="0.012" /><testcase classname="tests.rebuild.test_flow_quality" name="test_input_update_receipt_survives_failure_after_pointer_swap" time="0.020" /><testcase classname="tests.rebuild.test_flow_quality" name="test_uncommitted_input_receipt_is_not_reported_as_success" time="0.023" /><testcase classname="tests.rebuild.test_flow_quality" name="test_delivery_reconciliation_reason_before_first_pptx" time="0.020" /><testcase classname="tests.rebuild.test_flow_quality" name="test_irrelevant_material_update_still_awaits_host_judgment" time="0.021" /><testcase classname="tests.rebuild.test_flow_quality" name="test_task_fact_change_rejects_old_scoped_result" time="0.024" /><testcase classname="tests.rebuild.test_flow_quality" name="test_superseded_task_late_result_is_refused" time="0.029" /><testcase classname="tests.rebuild.test_flow_quality" name="test_input_revision_cannot_bypass_partial_update_with_full_pages" time="0.020" /><testcase classname="tests.rebuild.test_flow_quality" name="test_content_update_bad_shapes_are_controlled_errors[invalid0]" time="0.020" /><testcase classname="tests.rebuild.test_flow_quality" name="test_content_update_bad_shapes_are_controlled_errors[invalid1]" time="0.020" /><testcase classname="tests.rebuild.test_flow_quality" name="test_content_update_bad_shapes_are_controlled_errors[invalid2]" time="0.020" /><testcase classname="tests.rebuild.test_flow_quality" name="test_content_update_bad_shapes_are_controlled_errors[invalid3]" time="0.020" /><testcase classname="tests.rebuild.test_flow_quality" name="test_content_update_bad_shapes_are_controlled_errors[invalid4]" time="0.021" /><testcase classname="tests.rebuild.test_flow_quality" name="test_content_update_roundtrip_changes_only_target_page" time="0.067" /><testcase classname="tests.rebuild.test_flow_quality" name="test_content_update_rejections" time="0.025" /><testcase classname="tests.rebuild.test_flow_quality" name="test_needs_reconciliation_gates_delivery_and_handoff" time="0.032" /><testcase classname="tests.rebuild.test_flow_quality" name="test_view_carries_reconciliation_banner_data" time="0.027" /><testcase classname="tests.rebuild.test_flow_quality" name="test_review_dimensions_defined_once" time="0.001" /><testcase classname="tests.rebuild.test_flow_quality" name="test_final_units_list_only_real_gaps" time="0.025" /><testcase classname="tests.rebuild.test_flow_quality" name="test_units_relist_content_and_privacy_after_input_change" time="0.029" /><testcase classname="tests.rebuild.test_flow_quality" name="test_reconciliation_without_page_changes_still_requires_new_input_review" time="0.049" /><testcase classname="tests.rebuild.test_flow_quality" name="test_final_work_order_instruction_from_units" time="0.000" /><testcase classname="tests.rebuild.test_flow_quality" name="test_open_final_review_task_carries_review_plan" time="0.020" /><testcase classname="tests.rebuild.test_flow_quality" name="test_skills_tree_reduced_to_deck_master_and_resolver" time="0.000" /><testcase classname="tests.rebuild.test_flow_quality" name="test_old_skill_names_gone_from_living_surfaces" time="0.076" /><testcase classname="tests.rebuild.test_flow_quality" name="test_delivery_gate_surfaces_exit_3_code_via_cli" time="0.026" /><testcase classname="tests.rebuild.test_flow_quality" name="test_stale_scoped_result_reports_stale_input_context" time="0.024" /><testcase classname="tests.rebuild.test_flow_quality" name="test_revision_invalidates_changed_deck_outputs[reorder]" time="0.025" /><testcase classname="tests.rebuild.test_flow_quality" name="test_revision_invalidates_changed_deck_outputs[remove]" time="0.033" /><testcase classname="tests.rebuild.test_flow_quality" name="test_revision_invalidates_changed_deck_outputs[add]" time="0.027" /><testcase classname="tests.rebuild.test_flow_quality" name="test_revision_invalidates_changed_deck_outputs[edit]" time="0.027" /><testcase classname="tests.rebuild.test_flow_quality" name="test_revision_invalidates_changed_deck_outputs[noop]" time="0.026" /><testcase classname="tests.rebuild.test_flow_quality" name="test_restore_keeps_historical_content_basis[False-False]" time="0.019" /><testcase classname="tests.rebuild.test_flow_quality" name="test_restore_keeps_historical_content_basis[False-True]" time="0.020" /><testcase classname="tests.rebuild.test_flow_quality" name="test_restore_keeps_historical_content_basis[True-False]" time="0.026" /><testcase classname="tests.rebuild.test_flow_quality" name="test_restore_keeps_historical_content_basis[True-True]" time="0.030" /><testcase classname="tests.rebuild.test_flow_quality" name="test_cancelled_revision_recovers_once_and_refuses_late_result" time="0.041" /><testcase classname="tests.rebuild.test_flow_quality" name="test_restore_empty_removes_basis_and_preserves_stop_policy" time="0.016" /><testcase classname="tests.rebuild.test_flow_quality" name="test_restore_reconciliation_dispatch_uses_restore_operation" time="0.028" /><testcase classname="tests.rebuild.test_flow_quality" name="test_revised_deck_recompiles_real_slide_order[reorder]" time="2.481" /><testcase classname="tests.rebuild.test_flow_quality" name="test_revised_deck_recompiles_real_slide_order[remove]" time="2.284" /><testcase classname="tests.rebuild.test_flow_quality" name="test_revised_deck_recompiles_real_slide_order[add]" time="2.739" /><testcase classname="tests.rebuild.test_flow_quality" name="test_revised_deck_recompiles_real_slide_order[edit]" time="2.628" /><testcase classname="tests.rebuild.test_flow_quality" name="test_resume_retires_incompatible_tasks_and_keeps_change_reason" time="0.047" /><testcase classname="tests.rebuild.test_review_round4" name="test_migrate_ppt_links_with_ownership_and_optout[False]" time="0.004" /><testcase classname="tests.rebuild.test_review_round4" name="test_migrate_ppt_links_with_ownership_and_optout[True]" time="0.004" /><testcase classname="tests.rebuild.test_review_round4" name="test_page_limit_rejects_full_import" time="0.023" /><testcase classname="tests.rebuild.test_review_round4" name="test_page_limit_rejects_unchanged_revision_then_accepts_reduction" time="0.024" /><testcase classname="tests.rebuild.test_review_round4" name="test_existing_overlimit_cannot_pass_summary" time="0.019" /><testcase classname="tests.rebuild.test_review_round4" name="test_ppt_links_restored_after_failed_registration" time="0.004" /><testcase classname="tests.rebuild.test_review_round4" name="test_full_import_at_or_under_limit_remains_accepted[None]" time="0.025" /><testcase classname="tests.rebuild.test_review_round4" name="test_full_import_at_or_under_limit_remains_accepted[3]" time="0.027" /><testcase classname="tests.rebuild.test_review_round4" name="test_full_import_at_or_under_limit_remains_accepted[4]" time="0.027" /><testcase classname="tests.rebuild.test_review_round4" name="test_initial_compose_cannot_exceed_limit" time="0.007" /><testcase classname="tests.rebuild.test_review_round4" name="test_existing_overlimit_blocks_delivery_and_handoff" time="0.024" /><testcase classname="tests.rebuild.test_service_flow" name="test_plain_material_directory_starts_without_library" time="0.007" /><testcase classname="tests.rebuild.test_service_flow" name="test_create_preserves_chinese_source_names_with_valid_ids" time="0.009" /><testcase classname="tests.rebuild.test_service_flow" name="test_repeated_continue_returns_same_task" time="0.009" /><testcase classname="tests.rebuild.test_service_flow" name="test_default_entry_does_not_invoke_legacy_planner" time="0.008" /><testcase classname="tests.rebuild.test_service_flow" name="test_import_draft_without_prior_create" time="0.008" /><testcase classname="tests.rebuild.test_service_flow" name="test_unknown_draft_shape_is_rejected_not_adopted" time="0.007" /><testcase classname="tests.rebuild.test_service_flow" name="test_asset_registration_updates_design" time="0.010" /><testcase classname="tests.rebuild.test_service_flow" name="test_single_page_edit_keeps_unrelated_page_artifacts_and_reassembles" time="2.322" /><testcase classname="tests.rebuild.test_service_flow" name="test_shared_fact_update_applies_to_all_referencing_pages" time="0.017" /><testcase classname="tests.rebuild.test_service_flow" name="test_page_reorder_and_removal_keep_ids_and_history_out_of_current_ppt" time="2.946" /><testcase classname="tests.rebuild.test_service_flow" name="test_asset_byte_change_invalidates_only_referencing_pages" time="0.071" /><testcase classname="tests.rebuild.test_service_flow" name="test_default_style_change_invalidates_only_dependent_pages" time="0.055" /><testcase classname="tests.rebuild.test_service_flow" name="test_design_rejects_unreadable_asset_and_old_project_gets_recovery_hint" time="0.030" /><testcase classname="tests.rebuild.test_service_flow" name="test_canvas_change_invalidates_all_pages_groupwise" time="0.042" /><testcase classname="tests.rebuild.test_service_flow" name="test_reconstruct_after_style_change_uses_new_effective_style" time="1.801" /><testcase classname="tests.rebuild.test_service_flow" name="test_pptx_artifact_and_export_declare_shape_text_editability" time="0.015" /><testcase classname="tests.rebuild.test_service_flow" name="test_no_office_native_editing_claims_in_ui_or_export" time="0.015" /><testcase classname="tests.rebuild.test_service_flow" name="test_unverified_legacy_artifact_editability_stays_unknown" time="0.012" /><testcase classname="tests.rebuild.test_service_flow" name="test_font_file_swap_invalidates_only_dependent_pages" time="0.022" /><testcase classname="tests.rebuild.test_service_flow" name="test_style_dependency_review_turns_stale_on_font_swap" time="0.036" /><testcase classname="tests.rebuild.test_page_visual_gate" name="test_unsupported_svg_is_rejected_on_current_page_before_adoption" time="0.028" /><testcase classname="tests.rebuild.test_page_visual_gate" name="test_compose_new_page_svg_uses_same_preflight_and_atomic_adoption" time="0.012" /><testcase classname="tests.rebuild.test_page_visual_gate" name="test_compose_blueprint_and_svg_in_one_envelope_use_candidate_image" time="0.013" /><testcase classname="tests.rebuild.test_page_visual_gate" name="test_historical_multi_page_visual_task_is_retired_and_status_remains_readable" time="0.019" /><testcase classname="tests.rebuild.test_page_visual_gate" name="test_stored_invalid_svg_reconstructs_then_resumes_page_review" time="0.182" /><testcase classname="tests.rebuild.test_page_visual_gate" name="test_repeated_visual_review_without_resolution_stops_with_actionable_finding" time="0.170" /><testcase classname="tests.rebuild.test_page_visual_gate" name="test_page_review_blocks_next_blueprint_until_current_three_checks_pass" time="1.458" /><testcase classname="tests.rebuild.test_page_visual_gate" name="test_accepted_variance_on_same_page_advances_to_next_blueprint" time="0.144" /><testcase classname="tests.rebuild.test_page_visual_gate" name="test_failed_visual_review_requires_page_repair_and_evidenced_closure" time="0.219" /><testcase classname="tests.rebuild.test_page_visual_gate" name="test_unchanged_page_visual_repair_stops_without_another_repair_loop" time="0.180" /><testcase classname="tests.rebuild.test_page_visual_gate" name="test_preflight_and_preview_share_approved_image_assets" time="0.063" /><testcase classname="tests.rebuild.test_page_visual_gate" name="test_missing_preview_renderer_blocks_next_page_with_tool_reason" time="0.050" /><testcase classname="tests.rebuild.test_page_visual_gate" name="test_preview_renderer_execution_error_is_reported_separately_from_missing_tool" time="0.051" /><testcase classname="tests.rebuild.test_page_visual_gate" name="test_page_review_cannot_pass_after_design_asset_change" time="0.125" /><testcase classname="tests.rebuild.test_page_visual_gate" name="test_style_change_retires_open_review_and_rebuilds_only_current_page" time="0.201" /><testcase classname="tests.rebuild.test_contracts" name="test_five_valid_objects" time="0.002" /><testcase classname="tests.rebuild.test_contracts" name="test_invalid_references_report_paths" time="0.002" /></testsuite></testsuites>

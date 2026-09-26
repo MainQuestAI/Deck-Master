@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 2,
+  "date": "2026-09-26",
+  "runId": "45596-1790414293-7bf452fb",
+  "url": "http://127.0.0.1:8766/",
+  "scope": "synthetic prototype only",
+  "designScore": "B",
+  "aiSlopScore": "A",
+  "categoryGrades": {
+    "hierarchy": "A",
+    "typography": "B",
+    "spacingLayout": "B",
+    "colorContrast": "A",
+    "interactionStates": "B",
+    "responsive": "B",
+    "contentQuality": "A",
+    "aiSlop": "A",
+    "motion": "A",
+    "performanceFeel": "A"
+  },
+  "gradingNote": "Conservative subjective final grades; no new blind-user, VoiceOver, real-image performance or production evidence. Fixed findings do not establish production quality.",
+  "findings": [
+    {
+      "id": "R2-01",
+      "status": "verified_in_synthetic_prototype"
+    },
+    {
+      "id": "R2-02",
+      "status": "verified_in_synthetic_prototype"
+    },
+    {
+      "id": "R2-03",
+      "status": "verified_in_synthetic_prototype"
+    },
+    {
+      "id": "R2-04",
+      "status": "verified_in_synthetic_prototype"
+    },
+    {
+      "id": "R2-05",
+      "status": "verified_in_synthetic_prototype"
+    },
+    {
+      "id": "R2-06",
+      "status": "verified_in_synthetic_prototype"
+    },
+    {
+      "id": "R2-07",
+      "status": "verified_in_synthetic_prototype"
+    },
+    {
+      "id": "R2-08",
+      "status": "verified_in_synthetic_prototype"
+    },
+    {
+      "id": "R2-09",
+      "status": "verified_in_synthetic_prototype"
+    }
+  ],
+  "detector": {
+    "mode": "none",
+    "reason": "IMPECCABLE_NOT_CACHED; detector not run",
+    "total": null
+  },
+  "evidence": "../prototype/validation/round2-fixes-result.json"
+}

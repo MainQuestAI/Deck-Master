@@ -1,0 +1,42 @@
+[
+  {
+    "path": "app.js",
+    "bytes": 86913,
+    "sha256": "9ecd9023480dca9c62a408bdd599dcb74214120f02f53ba5f0fc2e6debbb30a6"
+  },
+  {
+    "path": "product-ui-language.md",
+    "bytes": 3419,
+    "sha256": "9919f4431bb162d093c5892c550d81155c1ca1daadf57931667420963eab45e9"
+  },
+  {
+    "path": "states.js",
+    "bytes": 27540,
+    "sha256": "b24ad3f5ce9927bb6066af1552d26c3d29d75e31fcbf5d34e8c847f0a6b895f8"
+  },
+  {
+    "path": "states.html",
+    "bytes": 3568,
+    "sha256": "d1e3bea90239bb925d23dab4682c94d69b15bd188009fc660b073553fc9ebbff"
+  },
+  {
+    "path": "index.html",
+    "bytes": 2280,
+    "sha256": "26bdc216489e762d0d5d5dd7d797125384e92ac989bd342e4b3c3f6e4881d2c5"
+  },
+  {
+    "path": "style.css",
+    "bytes": 32024,
+    "sha256": "3045ea07efcb5418235df114511acaec7f5a5e5f694fd21dd5da2afee1553570"
+  },
+  {
+    "path": "icons.js",
+    "bytes": 2010,
+    "sha256": "95fd179d9231f9993a8a98140a3711145a486bf022fb3096deaad56113da8456"
+  },
+  {
+    "path": "states.css",
+    "bytes": 8016,
+    "sha256": "c012e13866bd2919f05ce280d8cae65d15e833f04bf473b1ec4c104514e34a4f"
+  }
+]

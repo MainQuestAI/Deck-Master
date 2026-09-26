@@ -1,0 +1,217 @@
+{
+  "scope": "Review 2 accepted changes in the synthetic prototype only; no production acceptance",
+  "status": "passed",
+  "browser": "Chromium",
+  "results": [
+    {
+      "viewport": "1280x800",
+      "status": "passed",
+      "page_errors": [],
+      "candidate_width_px": [
+        480,
+        479
+      ],
+      "primary_height_px": 44,
+      "evidence": [
+        "round2-after-material-kept-1280.png",
+        "round2-after-gallery-columns-1280.png",
+        "round2-after-overview-matrix-1280.png",
+        "round2-after-keyboard-region-1280.png",
+        "round2-after-prompt19-single-1280.png",
+        "round2-after-first-image-adopted-1280.png",
+        "round2-after-candidate-wide-1280.png",
+        "round2-after-reference-enlarged-1280.png",
+        "round2-after-semantic-states-1280.png"
+      ]
+    },
+    {
+      "viewport": "1440x900",
+      "status": "passed",
+      "page_errors": [],
+      "candidate_width_px": [
+        560,
+        559
+      ],
+      "primary_height_px": 44,
+      "evidence": [
+        "round2-after-material-kept-1440.png",
+        "round2-after-gallery-columns-1440.png",
+        "round2-after-overview-matrix-1440.png",
+        "round2-after-keyboard-region-1440.png",
+        "round2-after-prompt19-single-1440.png",
+        "round2-after-first-image-adopted-1440.png",
+        "round2-after-candidate-wide-1440.png",
+        "round2-after-reference-enlarged-1440.png",
+        "round2-after-semantic-states-1440.png"
+      ]
+    }
+  ],
+  "existing_regressions": [
+    {
+      "script": "smoke.py",
+      "scope": "synthetic interactive prototype only",
+      "browser": "Chromium",
+      "viewport": "1280x800",
+      "checks": [
+        "PPT missing 12 slots",
+        "explicit host claim before result",
+        "style candidate adoption",
+        "page-local downstream staleness",
+        "text and region draft restoration",
+        "handoff stays queued",
+        "unknown historic prompt",
+        "all 7 routes without horizontal overflow"
+      ],
+      "page_errors": [],
+      "status": "passed"
+    },
+    {
+      "script": "revision-smoke.py",
+      "scope": "synthetic prototype review revision",
+      "viewport": "1280x800",
+      "status": "passed",
+      "page_errors": [],
+      "checks": [
+        "overview gallery primary CTA",
+        "simple style default with collapsed details",
+        "saved trial request and copied-not-started feedback",
+        "return to request from overview and reload",
+        "fixed current/candidate columns with request labels",
+        "adopt only page 8",
+        "Esc cancels selection mode",
+        "save opinion creates no task; add change does",
+        "empty-name and empty-brief validation",
+        "cancel creates no project",
+        "simulated new project has no invented artifacts",
+        "new project preparation and first handoff request"
+      ]
+    },
+    {
+      "script": "smoke.py",
+      "scope": "synthetic interactive prototype only",
+      "browser": "Chromium",
+      "viewport": "1440x900",
+      "checks": [
+        "PPT missing 12 slots",
+        "explicit host claim before result",
+        "style candidate adoption",
+        "page-local downstream staleness",
+        "text and region draft restoration",
+        "handoff stays queued",
+        "unknown historic prompt",
+        "all 7 routes without horizontal overflow"
+      ],
+      "page_errors": [],
+      "status": "passed"
+    },
+    {
+      "script": "revision-smoke.py",
+      "scope": "synthetic prototype review revision",
+      "viewport": "1440x900",
+      "status": "passed",
+      "page_errors": [],
+      "checks": [
+        "overview gallery primary CTA",
+        "simple style default with collapsed details",
+        "saved trial request and copied-not-started feedback",
+        "return to request from overview and reload",
+        "fixed current/candidate columns with request labels",
+        "adopt only page 8",
+        "Esc cancels selection mode",
+        "save opinion creates no task; add change does",
+        "empty-name and empty-brief validation",
+        "cancel creates no project",
+        "simulated new project has no invented artifacts",
+        "new project preparation and first handoff request"
+      ]
+    },
+    {
+      "script": "round1-fixes.py",
+      "scope": "synthetic localStorage prototype only; no model, CLI or production acceptance",
+      "status": "passed",
+      "browser": "Chromium",
+      "results": [
+        {
+          "viewport": "1280x800",
+          "status": "passed",
+          "page_errors": [],
+          "evidence": [
+            "round1-after-p12-svg-defect-1280.png",
+            "round1-after-p12-svg-candidate-1280.png",
+            "round1-after-p12-svg-adopted-1280.png",
+            "round1-after-fixed-style-request-1280.png",
+            "round1-after-style-decisions-1280.png",
+            "round1-after-p8-current-v3-1280.png",
+            "round1-after-p9-existing-request-1280.png",
+            "round1-after-style-failed-1280.png",
+            "round1-after-style-cancelled-1280.png"
+          ],
+          "findings_closed": [
+            "R1-01",
+            "R1-02",
+            "R1-03",
+            "R1-04",
+            "R1-05",
+            "R1-06"
+          ]
+        },
+        {
+          "viewport": "1440x900",
+          "status": "passed",
+          "page_errors": [],
+          "evidence": [
+            "round1-after-p12-svg-defect-1440.png",
+            "round1-after-p12-svg-candidate-1440.png",
+            "round1-after-p12-svg-adopted-1440.png",
+            "round1-after-fixed-style-request-1440.png",
+            "round1-after-style-decisions-1440.png",
+            "round1-after-p8-current-v3-1440.png",
+            "round1-after-p9-existing-request-1440.png",
+            "round1-after-style-failed-1440.png",
+            "round1-after-style-cancelled-1440.png"
+          ],
+          "findings_closed": [
+            "R1-01",
+            "R1-02",
+            "R1-03",
+            "R1-04",
+            "R1-05",
+            "R1-06"
+          ]
+        }
+      ],
+      "source_sha256": {
+        "app.js": "178643f1370b0086c18a9f665dcbb32fa50e064c32ee72cc6929f5b3eda33abb",
+        "style.css": "69b02acc8d28d8c7e3f7b5100235a173beac6af245553ffe47e0c92be3a837bb",
+        "index.html": "30a12289ad59bbeae6bfc791c97305bdc03ad08c221d47cb4613d170a8cc9925"
+      },
+      "checks": [
+        "P12 visible SVG arrow defect and repaired SVG v3, same image/prompt v2 and stale PPT v2",
+        "saved SVG opinion joins exactly one rebuild request",
+        "failure/cancellation refresh and explicit new request",
+        "keep current closes decision; edited retry preserves old request/candidate",
+        "color-only fixed P7 reference and P8/P9 actual scope survive clipboard/reload",
+        "P8 current v3 labels agree; request compare baseline stays v2",
+        "P9 continuation reuses existing request",
+        "7 routes have no horizontal overflow at both desktop viewports"
+      ]
+    }
+  ],
+  "before_evidence": "../reviews/round2-native-evidence/ (frozen Review 2 screenshots)",
+  "source_sha256": {
+    "app.js": "178643f1370b0086c18a9f665dcbb32fa50e064c32ee72cc6929f5b3eda33abb",
+    "index.html": "30a12289ad59bbeae6bfc791c97305bdc03ad08c221d47cb4613d170a8cc9925",
+    "style.css": "69b02acc8d28d8c7e3f7b5100235a173beac6af245553ffe47e0c92be3a837bb"
+  },
+  "checks": [
+    "R2-01 custom material input retained through close, request, reload and clipboard; blank rejected",
+    "R2-02 local focus retained, real navigation to heading, named modal with return focus",
+    "R2-03 one matrix Tab stop with arrow/Enter/Esc, page-layer labels and keyboard region fields",
+    "R2-04 single missing-page action and four individually compared same-batch first-image requests; adopted image persists",
+    "R2-05 full-width comparison, fixed base/candidate/reference enlargement and gallery 2/3/4 selection with minimum width fallback",
+    "R2-06 factual overview, single high-weight CTA, explicit to-do labels and matrix thumbnails",
+    "R2-07 one P19 missing history panel without duplicate execution prompt sidebar",
+    "R2-08 primary targets >=44px, chain metadata >=12px, prompt text >=16px",
+    "R2-09 distinct semantic state classes retaining text"
+  ]
+}

@@ -1,0 +1,422 @@
+[
+  {
+    "viewport": [
+      1440,
+      900
+    ],
+    "styleRetryTasks": 2,
+    "svgCandidateModalOpen": true,
+    "modalInitialFocus": "关闭",
+    "focusInsideAfterSixTabs": true,
+    "focusAfterEscape": {
+      "tag": "BUTTON",
+      "text": "查看候选并比较"
+    },
+    "matrixButtons": 144,
+    "matrixRight": {
+      "tag": "BUTTON",
+      "text": "01让服务，从被动响应转向主动协同"
+    },
+    "matrixTab": {
+      "tag": "BUTTON",
+      "text": "✓ 已就绪"
+    },
+    "galleryFocusAfterChange": {
+      "tag": "BODY",
+      "text": "跳到工作区DDeck Master← 全部项目当前项目北岸 · 服务协同方案24"
+    },
+    "galleryFocusAfterTab": {
+      "tag": "BUTTON",
+      "text": "← 全部项目"
+    },
+    "materialTask": {
+      "title": "判断新材料对当前方案的影响",
+      "note": "读取试点范围补充（合成），列出受影响的章节与页面；未经采用不改写当前内容。",
+      "kind": "材料影响判断",
+      "pages": [
+        19,
+        20,
+        21,
+        22,
+        23,
+        24
+      ],
+      "status": "queued",
+      "id": 1790414486052,
+      "targetStage": "script",
+      "baseRevision": "R18",
+      "bases": {
+        "19": {
+          "page": 19,
+          "stage": "script",
+          "version": 4,
+          "variant": "original",
+          "sourceImageVersion": 2,
+          "sourceSvgVersion": 2
+        },
+        "20": {
+          "page": 20,
+          "stage": "script",
+          "version": 4,
+          "variant": "original",
+          "sourceImageVersion": 2,
+          "sourceSvgVersion": 2
+        },
+        "21": {
+          "page": 21,
+          "stage": "script",
+          "version": 4,
+          "variant": "original",
+          "sourceImageVersion": 2,
+          "sourceSvgVersion": 2
+        },
+        "22": {
+          "page": 22,
+          "stage": "script",
+          "version": 4,
+          "variant": "original",
+          "sourceImageVersion": 2,
+          "sourceSvgVersion": 2
+        },
+        "23": {
+          "page": 23,
+          "stage": "script",
+          "version": 4,
+          "variant": "original",
+          "sourceImageVersion": 2,
+          "sourceSvgVersion": 2
+        },
+        "24": {
+          "page": 24,
+          "stage": "script",
+          "version": 4,
+          "variant": "original",
+          "sourceImageVersion": 2,
+          "sourceSvgVersion": 2
+        }
+      },
+      "inputs": {
+        "19": {
+          "image": {
+            "page": 19,
+            "stage": "image",
+            "version": 2,
+            "variant": "original",
+            "sourceImageVersion": 2,
+            "sourceSvgVersion": 2
+          },
+          "prompt": {
+            "page": 19,
+            "stage": "prompt",
+            "version": 2,
+            "variant": "original",
+            "sourceImageVersion": 2,
+            "sourceSvgVersion": 2
+          }
+        },
+        "20": {
+          "image": {
+            "page": 20,
+            "stage": "image",
+            "version": 2,
+            "variant": "original",
+            "sourceImageVersion": 2,
+            "sourceSvgVersion": 2
+          },
+          "prompt": {
+            "page": 20,
+            "stage": "prompt",
+            "version": 2,
+            "variant": "original",
+            "sourceImageVersion": 2,
+            "sourceSvgVersion": 2
+          }
+        },
+        "21": {
+          "image": {
+            "page": 21,
+            "stage": "image",
+            "version": 2,
+            "variant": "original",
+            "sourceImageVersion": 2,
+            "sourceSvgVersion": 2
+          },
+          "prompt": {
+            "page": 21,
+            "stage": "prompt",
+            "version": 2,
+            "variant": "original",
+            "sourceImageVersion": 2,
+            "sourceSvgVersion": 2
+          }
+        },
+        "22": {
+          "image": {
+            "page": 22,
+            "stage": "image",
+            "version": 2,
+            "variant": "original",
+            "sourceImageVersion": 2,
+            "sourceSvgVersion": 2
+          },
+          "prompt": {
+            "page": 22,
+            "stage": "prompt",
+            "version": 2,
+            "variant": "original",
+            "sourceImageVersion": 2,
+            "sourceSvgVersion": 2
+          }
+        },
+        "23": {
+          "image": {
+            "page": 23,
+            "stage": "image",
+            "version": 2,
+            "variant": "original",
+            "sourceImageVersion": 2,
+            "sourceSvgVersion": 2
+          },
+          "prompt": {
+            "page": 23,
+            "stage": "prompt",
+            "version": 2,
+            "variant": "original",
+            "sourceImageVersion": 2,
+            "sourceSvgVersion": 2
+          }
+        },
+        "24": {
+          "image": {
+            "page": 24,
+            "stage": "image",
+            "version": 2,
+            "variant": "original",
+            "sourceImageVersion": 2,
+            "sourceSvgVersion": 2
+          },
+          "prompt": {
+            "page": 24,
+            "stage": "prompt",
+            "version": 2,
+            "variant": "original",
+            "sourceImageVersion": 2,
+            "sourceSvgVersion": 2
+          }
+        }
+      }
+    },
+    "materialClipboard": "【交互原型样本，非真实执行指令；以下字段仅供设计演示，不是生产协议】\n项目：北岸服务协同方案（合成）\n请求：DEMO-1790414486052\n基准：R18\n实际执行范围：第 19、20、21、22、23、24 页\n目标层：script（逐页稿）\n固定目标产物：p19/script/v4、p20/script/v4、p21/script/v4、p22/script/v4、p23/script/v4、p24/script/v4\n任务：判断新材料对当前方案的影响\n要求：读取试点范围补充（合成），列出受影响的章节与页面；未经采用不改写当前内容。\n采用规则：先返回候选；未经采用不改当前稿。\n本段仅演示交接文本，不应对真实项目执行。",
+    "errors": []
+  },
+  {
+    "viewport": [
+      1280,
+      800
+    ],
+    "styleRetryTasks": 2,
+    "svgCandidateModalOpen": true,
+    "modalInitialFocus": "关闭",
+    "focusInsideAfterSixTabs": true,
+    "focusAfterEscape": {
+      "tag": "BUTTON",
+      "text": "查看候选并比较"
+    },
+    "matrixButtons": 144,
+    "matrixRight": {
+      "tag": "BUTTON",
+      "text": "01让服务，从被动响应转向主动协同"
+    },
+    "matrixTab": {
+      "tag": "BUTTON",
+      "text": "✓ 已就绪"
+    },
+    "galleryFocusAfterChange": {
+      "tag": "BODY",
+      "text": "跳到工作区DDeck Master← 全部项目当前项目北岸 · 服务协同方案24"
+    },
+    "galleryFocusAfterTab": {
+      "tag": "BUTTON",
+      "text": "← 全部项目"
+    },
+    "materialTask": {
+      "title": "判断新材料对当前方案的影响",
+      "note": "读取试点范围补充（合成），列出受影响的章节与页面；未经采用不改写当前内容。",
+      "kind": "材料影响判断",
+      "pages": [
+        19,
+        20,
+        21,
+        22,
+        23,
+        24
+      ],
+      "status": "queued",
+      "id": 1790414487085,
+      "targetStage": "script",
+      "baseRevision": "R18",
+      "bases": {
+        "19": {
+          "page": 19,
+          "stage": "script",
+          "version": 4,
+          "variant": "original",
+          "sourceImageVersion": 2,
+          "sourceSvgVersion": 2
+        },
+        "20": {
+          "page": 20,
+          "stage": "script",
+          "version": 4,
+          "variant": "original",
+          "sourceImageVersion": 2,
+          "sourceSvgVersion": 2
+        },
+        "21": {
+          "page": 21,
+          "stage": "script",
+          "version": 4,
+          "variant": "original",
+          "sourceImageVersion": 2,
+          "sourceSvgVersion": 2
+        },
+        "22": {
+          "page": 22,
+          "stage": "script",
+          "version": 4,
+          "variant": "original",
+          "sourceImageVersion": 2,
+          "sourceSvgVersion": 2
+        },
+        "23": {
+          "page": 23,
+          "stage": "script",
+          "version": 4,
+          "variant": "original",
+          "sourceImageVersion": 2,
+          "sourceSvgVersion": 2
+        },
+        "24": {
+          "page": 24,
+          "stage": "script",
+          "version": 4,
+          "variant": "original",
+          "sourceImageVersion": 2,
+          "sourceSvgVersion": 2
+        }
+      },
+      "inputs": {
+        "19": {
+          "image": {
+            "page": 19,
+            "stage": "image",
+            "version": 2,
+            "variant": "original",
+            "sourceImageVersion": 2,
+            "sourceSvgVersion": 2
+          },
+          "prompt": {
+            "page": 19,
+            "stage": "prompt",
+            "version": 2,
+            "variant": "original",
+            "sourceImageVersion": 2,
+            "sourceSvgVersion": 2
+          }
+        },
+        "20": {
+          "image": {
+            "page": 20,
+            "stage": "image",
+            "version": 2,
+            "variant": "original",
+            "sourceImageVersion": 2,
+            "sourceSvgVersion": 2
+          },
+          "prompt": {
+            "page": 20,
+            "stage": "prompt",
+            "version": 2,
+            "variant": "original",
+            "sourceImageVersion": 2,
+            "sourceSvgVersion": 2
+          }
+        },
+        "21": {
+          "image": {
+            "page": 21,
+            "stage": "image",
+            "version": 2,
+            "variant": "original",
+            "sourceImageVersion": 2,
+            "sourceSvgVersion": 2
+          },
+          "prompt": {
+            "page": 21,
+            "stage": "prompt",
+            "version": 2,
+            "variant": "original",
+            "sourceImageVersion": 2,
+            "sourceSvgVersion": 2
+          }
+        },
+        "22": {
+          "image": {
+            "page": 22,
+            "stage": "image",
+            "version": 2,
+            "variant": "original",
+            "sourceImageVersion": 2,
+            "sourceSvgVersion": 2
+          },
+          "prompt": {
+            "page": 22,
+            "stage": "prompt",
+            "version": 2,
+            "variant": "original",
+            "sourceImageVersion": 2,
+            "sourceSvgVersion": 2
+          }
+        },
+        "23": {
+          "image": {
+            "page": 23,
+            "stage": "image",
+            "version": 2,
+            "variant": "original",
+            "sourceImageVersion": 2,
+            "sourceSvgVersion": 2
+          },
+          "prompt": {
+            "page": 23,
+            "stage": "prompt",
+            "version": 2,
+            "variant": "original",
+            "sourceImageVersion": 2,
+            "sourceSvgVersion": 2
+          }
+        },
+        "24": {
+          "image": {
+            "page": 24,
+            "stage": "image",
+            "version": 2,
+            "variant": "original",
+            "sourceImageVersion": 2,
+            "sourceSvgVersion": 2
+          },
+          "prompt": {
+            "page": 24,
+            "stage": "prompt",
+            "version": 2,
+            "variant": "original",
+            "sourceImageVersion": 2,
+            "sourceSvgVersion": 2
+          }
+        }
+      }
+    },
+    "materialClipboard": "【交互原型样本，非真实执行指令；以下字段仅供设计演示，不是生产协议】\n项目：北岸服务协同方案（合成）\n请求：DEMO-1790414487085\n基准：R18\n实际执行范围：第 19、20、21、22、23、24 页\n目标层：script（逐页稿）\n固定目标产物：p19/script/v4、p20/script/v4、p21/script/v4、p22/script/v4、p23/script/v4、p24/script/v4\n任务：判断新材料对当前方案的影响\n要求：读取试点范围补充（合成），列出受影响的章节与页面；未经采用不改写当前内容。\n采用规则：先返回候选；未经采用不改当前稿。\n本段仅演示交接文本，不应对真实项目执行。",
+    "errors": []
+  }
+]

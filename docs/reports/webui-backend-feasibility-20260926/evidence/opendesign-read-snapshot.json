@@ -1,0 +1,49 @@
+{
+  "method": "Read-only OpenDesign MCP get_artifact(include=all); no writes",
+  "project": "deck-master-generation-workbench-v3-20260926",
+  "truncated": false,
+  "active_entry": "index.html",
+  "scope": "Six active files; original-v2 backup excluded; action comparison is source metadata, not UI acceptance",
+  "files": [
+    {
+      "name": "states.css",
+      "sha256": "c012e13866bd2919f05ce280d8cae65d15e833f04bf473b1ec4c104514e34a4f",
+      "bytes": 8016,
+      "matches_previous_design": false
+    },
+    {
+      "name": "style.css",
+      "sha256": "2a43a0b2bcb5c54344fe0233645de13f49d2dbd6afccc714ba720e99449da163",
+      "bytes": 30798,
+      "matches_previous_design": false
+    },
+    {
+      "name": "states.js",
+      "sha256": "25ea58630066107caf0fafa6dd800b0135657cc7346031567a7dcc57a968848d",
+      "bytes": 27289,
+      "matches_previous_design": false,
+      "literal_action_ids_added": [],
+      "literal_action_ids_removed": []
+    },
+    {
+      "name": "app.js",
+      "sha256": "b2c4ffd22c78ad070391c746c98ba0d04d0c4d9b0a8e91f9d7537ab1bca0d85c",
+      "bytes": 87727,
+      "matches_previous_design": false,
+      "literal_action_ids_added": [],
+      "literal_action_ids_removed": []
+    },
+    {
+      "name": "states.html",
+      "sha256": "46000b3d44e477467679a15b8c93c50ba7755f8014e6bbc93c3be01749fc0703",
+      "bytes": 3350,
+      "matches_previous_design": false
+    },
+    {
+      "name": "index.html",
+      "sha256": "548d413e1fbd0d88d3ebc053e7d8b2b44025e292b8d5230e55703ceb06d2c9ab",
+      "bytes": 2251,
+      "matches_previous_design": false
+    }
+  ]
+}

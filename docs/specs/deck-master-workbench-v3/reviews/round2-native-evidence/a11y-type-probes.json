@@ -1,0 +1,103 @@
+{
+  "typography": {
+    "prompt": [
+      {
+        "text": "协同中枢：统一任务，而非统一工具。跨团队协同，需要稳定的工作对象。必须保留业务对象与责任关系。",
+        "size": "14px",
+        "lineHeight": "24.5px",
+        "color": "rgb(230, 233, 238)"
+      },
+      {
+        "text": "横向四段流程。按受理、调度、现场、确认顺序排列，每段包含负责人和输出。",
+        "size": "14px",
+        "lineHeight": "24.5px",
+        "color": "rgb(230, 233, 238)"
+      },
+      {
+        "text": "浅蓝背景 #E2ECFF，蓝紫主色 #314FB2，亮紫强调 #6A75DC。",
+        "size": "14px",
+        "lineHeight": "24.5px",
+        "color": "rgb(230, 233, 238)"
+      },
+      {
+        "text": "大圆角模块，柔和几何字型，模块间距增大，减少页面信息密度。",
+        "size": "14px",
+        "lineHeight": "24.5px",
+        "color": "rgb(230, 233, 238)"
+      }
+    ],
+    "chain": [
+      {
+        "text": "01",
+        "size": "11px"
+      },
+      {
+        "text": "可查看",
+        "size": "11px"
+      },
+      {
+        "text": "02",
+        "size": "11px"
+      },
+      {
+        "text": "可查看",
+        "size": "11px"
+      }
+    ],
+    "colorScheme": "dark",
+    "mainButtons": [
+      {
+        "text": "← 上一页",
+        "height": 41
+      },
+      {
+        "text": "下一页 →",
+        "height": 41
+      },
+      {
+        "text": "固定双层比较",
+        "height": 41
+      },
+      {
+        "text": "仅重建 SVG",
+        "height": 41
+      },
+      {
+        "text": "去风格校准 →",
+        "height": 24
+      },
+      {
+        "text": "执行提示词",
+        "height": 33.5
+      }
+    ],
+    "headingTextWrap": "wrap"
+  },
+  "matrix": {
+    "outerHTML": "<button class=\"cell-btn \" data-action=\"page-1-script\">✓ 已就绪</button>",
+    "name": null,
+    "tabIndex": 0
+  },
+  "primary": {
+    "text": "看 24 页原图 →",
+    "height": 41,
+    "width": 128.796875
+  },
+  "dialog": {
+    "role": null,
+    "ariaLabel": null,
+    "ariaLabelledby": null,
+    "title": "新建一个方案项目"
+  },
+  "resources": [
+    {
+      "name": "http://127.0.0.1:8766/style.css",
+      "duration": 1.600000023841858
+    },
+    {
+      "name": "http://127.0.0.1:8766/app.js",
+      "duration": 1.4000000357627869
+    }
+  ],
+  "navigation": "{\"name\":\"http://127.0.0.1:8766/#page/8/image\",\"entryType\":\"navigation\",\"startTime\":0,\"duration\":36,\"initiatorType\":\"navigation\",\"deliveryType\":\"\",\"nextHopProtocol\":\"http/1.0\",\"renderBlockingStatus\":\"non-blocking\",\"contentEncoding\":\"\",\"workerStart\":0,\"workerRouterEvaluationStart\":0,\"workerCacheLookupStart\":0,\"workerMatchedSourceType\":\"\",\"workerFinalSourceType\":\"\",\"redirectStart\":0,\"redirectEnd\":0,\"fetchStart\":0.30000001192092896,\"domainLookupStart\":4.400000035762787,\"domainLookupEnd\":4.5,\"connectStart\":4.5,\"secureConnectionStart\":0,\"connectEnd\":4.699999988079071,\"requestStart\":5.199999988079071,\"responseStart\":5.5,\"firstInterimResponseStart\":0,\"finalResponseHeadersStart\":5.5,\"responseEnd\":6.699999988079071,\"transferSize\":731,\"encodedBodySize\":431,\"decodedBodySize\":431,\"responseStatus\":200,\"serverTiming\":[],\"unloadEventStart\":0,\"unloadEventEnd\":0,\"domInteractive\":30.600000023841858,\"domContentLoadedEventStart\":30.600000023841858,\"domContentLoadedEventEnd\":30.69999998807907,\"domComplete\":35.80000001192093,\"loadEventStart\":36,\"loadEventEnd\":36,\"type\":\"navigate\",\"redirectCount\":0,\"activationStart\":0,\"criticalCHRestart\":0,\"notRestoredReasons\":null,\"confidence\":{\"randomizedTriggerRate\":0.4994798,\"value\":\"high\"}}"
+}

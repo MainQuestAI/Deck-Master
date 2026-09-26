@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Deck Master · 制作工作台</title><style>
+:root {
+  --bg:           #ffffff;
+  --surface:      #f5f5f5;
+  --surface-warm: #fafafa;
+  --fg:   #0d0d0d;
+  --fg-2: #1a1a1a;
+  --muted: #6e6e6e;
+  --meta:  #9b9b9b;
+  --border:      #e5e5e5;
+  --border-soft: #ededed;
+  --accent:        #10a37f;
+  --accent-on:     #ffffff;
+  --accent-hover:  #0a7a5e;
+  --accent-active: color-mix(in oklab, var(--accent), black 14%);
+  --success: #10a37f;
+  --warn:    #f5a623;
+  --danger:  #ef4146;
+  --font-display: "Signifier", "Source Serif Pro", Georgia, ui-serif, serif;
+  --font-body:    "Söhne", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono:    "Söhne Mono", ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+  --text-xs:   12px;
+  --text-sm:   13px;
+  --text-base: 16px;
+  --text-lg:   18px;
+  --text-xl:   20px;
+  --text-2xl:  28px;
+  --text-3xl:  40px;
+  --text-4xl:  56px;
+  --leading-body:     1.65;
+  --leading-tight:    1.08;
+  --tracking-display: -0.02em;
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --section-y-desktop: 96px;
+  --section-y-tablet:  64px;
+  --section-y-phone:   48px;
+  --radius-sm:   12px;
+  --radius-md:   16px;
+  --radius-lg:   16px;
+  --radius-pill: 9999px;
+  --elev-flat:   none;
+  --elev-ring:   0 0 0 1px var(--border);
+  --elev-raised: 0 4px 16px rgba(13, 13, 13, 0.06);
+  --focus-ring: 0 0 0 3px rgba(16, 163, 127, 0.12);
+  --motion-fast:   150ms;
+  --motion-base:   220ms;
+  --ease-standard: cubic-bezier(0.16, 1, 0.3, 1);
+  --container-max:            1200px;
+  --container-gutter-desktop: 48px;
+  --container-gutter-tablet:  24px;
+  --container-gutter-phone:   24px;
+}
+</style>
+<link rel="stylesheet" href="style.css"></head>
+<body><a class="skip" href="#main">跳到工作区</a><div id="app"></div><div id="route-status" class="sr-only" role="status" aria-live="polite"></div><div id="toast" role="status" aria-live="polite"></div><dialog id="modal"></dialog><script src="icons.js"></script><script src="app.js"></script></body>
+</html>

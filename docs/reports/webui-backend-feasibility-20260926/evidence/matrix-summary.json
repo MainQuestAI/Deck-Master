@@ -1,0 +1,11 @@
+{
+  "rows": 38,
+  "classification_counts": {
+    "补服务/接口": 11,
+    "扩展核心机制": 17,
+    "后端可复用": 6,
+    "前端为主": 2,
+    "条件能力": 2
+  },
+  "meaning": "Implementation classification, not completion percentage"
+}
