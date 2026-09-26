@@ -1,0 +1,3620 @@
+{
+  "/api/view": [
+    200,
+    {
+      "format": "deck_view.v1",
+      "project_id": "synthetic-project",
+      "revision_id": "380418a8baa84d2280ea8695747f3e19",
+      "requested_revision": "380418a8baa84d2280ea8695747f3e19",
+      "page_count": 24,
+      "pages": [
+        {
+          "page_id": "p001",
+          "title": "<img src=x onerror=\"window.__w01_xss=true\">",
+          "visible_atoms": [
+            {
+              "atom_id": "atom:p001:title",
+              "pointer": "/customer_visible/title",
+              "text": "<img src=x onerror=\"window.__w01_xss=true\">",
+              "kind": "title"
+            }
+          ],
+          "page": {
+            "customer_visible": {
+              "body_blocks": [],
+              "title": "<img src=x onerror=\"window.__w01_xss=true\">"
+            },
+            "page_id": "p001",
+            "schema_version": "deck_page_package.v2",
+            "visual_spec": {
+              "intent": "W01 synthetic example",
+              "reference_mode": "new_design"
+            }
+          },
+          "speaker_notes": null,
+          "slots": {
+            "content": {
+              "path": ".deckmaster/objects/0a/0a9723dc1b18b24ea94e2e799ef83f06baadd813f889b2773426e288aff0d6af.json",
+              "sha256": "0a9723dc1b18b24ea94e2e799ef83f06baadd813f889b2773426e288aff0d6af"
+            },
+            "blueprint": {
+              "path": ".deckmaster/objects/d1/d1f10f534189f09e70a3b2120c271a36062726befb78ab1b6c60997125800d0b.json",
+              "sha256": "d1f10f534189f09e70a3b2120c271a36062726befb78ab1b6c60997125800d0b"
+            },
+            "svg": {
+              "path": ".deckmaster/objects/f5/f5cbc25f05f7fcb0381dd96200e319c1502c1feff6612d626764f3f80aebc1ee.json",
+              "sha256": "f5cbc25f05f7fcb0381dd96200e319c1502c1feff6612d626764f3f80aebc1ee"
+            },
+            "svg_preview": {
+              "path": ".deckmaster/objects/61/6129054ccac9d0838b27a426aca602f1b63ecf3a462e1f9a532daf764ca085f8.json",
+              "sha256": "6129054ccac9d0838b27a426aca602f1b63ecf3a462e1f9a532daf764ca085f8"
+            },
+            "ppt_preview": null
+          }
+        },
+        {
+          "page_id": "p002",
+          "title": "Synthetic page 2",
+          "visible_atoms": [
+            {
+              "atom_id": "atom:p002:title",
+              "pointer": "/customer_visible/title",
+              "text": "Synthetic page 2",
+              "kind": "title"
+            }
+          ],
+          "page": {
+            "customer_visible": {
+              "body_blocks": [],
+              "title": "Synthetic page 2"
+            },
+            "page_id": "p002",
+            "schema_version": "deck_page_package.v2",
+            "visual_spec": {
+              "intent": "W01 synthetic example",
+              "reference_mode": "new_design"
+            }
+          },
+          "speaker_notes": null,
+          "slots": {
+            "content": {
+              "path": ".deckmaster/objects/b4/b43db9cdde984a0649f460c1a07c0e03a128c6018058fe7eaf6036e8aee68ded.json",
+              "sha256": "b43db9cdde984a0649f460c1a07c0e03a128c6018058fe7eaf6036e8aee68ded"
+            },
+            "blueprint": {
+              "path": ".deckmaster/objects/d2/d203611c4ad36b100a66411d70417265ec93f33baabc815b3a9d1a44b998c4af.json",
+              "sha256": "d203611c4ad36b100a66411d70417265ec93f33baabc815b3a9d1a44b998c4af"
+            },
+            "svg": null,
+            "svg_preview": null,
+            "ppt_preview": null
+          }
+        },
+        {
+          "page_id": "p003",
+          "title": "Synthetic page 3",
+          "visible_atoms": [
+            {
+              "atom_id": "atom:p003:title",
+              "pointer": "/customer_visible/title",
+              "text": "Synthetic page 3",
+              "kind": "title"
+            }
+          ],
+          "page": {
+            "customer_visible": {
+              "body_blocks": [],
+              "title": "Synthetic page 3"
+            },
+            "page_id": "p003",
+            "schema_version": "deck_page_package.v2",
+            "visual_spec": {
+              "intent": "W01 synthetic example",
+              "reference_mode": "new_design"
+            }
+          },
+          "speaker_notes": null,
+          "slots": {
+            "content": {
+              "path": ".deckmaster/objects/84/84187d41bef9500810689ea92de7e7e9e21871075918b26747216b34e1be5905.json",
+              "sha256": "84187d41bef9500810689ea92de7e7e9e21871075918b26747216b34e1be5905"
+            },
+            "blueprint": {
+              "path": ".deckmaster/objects/46/46a03d835f0ed86afba2d781b725191b74dbf8dc0f64d1ea9d3685597f8d282a.json",
+              "sha256": "46a03d835f0ed86afba2d781b725191b74dbf8dc0f64d1ea9d3685597f8d282a"
+            },
+            "svg": null,
+            "svg_preview": null,
+            "ppt_preview": null
+          }
+        },
+        {
+          "page_id": "p004",
+          "title": "Synthetic page 4",
+          "visible_atoms": [
+            {
+              "atom_id": "atom:p004:title",
+              "pointer": "/customer_visible/title",
+              "text": "Synthetic page 4",
+              "kind": "title"
+            }
+          ],
+          "page": {
+            "customer_visible": {
+              "body_blocks": [],
+              "title": "Synthetic page 4"
+            },
+            "page_id": "p004",
+            "schema_version": "deck_page_package.v2",
+            "visual_spec": {
+              "intent": "W01 synthetic example",
+              "reference_mode": "new_design"
+            }
+          },
+          "speaker_notes": null,
+          "slots": {
+            "content": {
+              "path": ".deckmaster/objects/26/265e0cfc2213a5482d006152dec174d45fd5961206f9dc8d3671a518b9e69729.json",
+              "sha256": "265e0cfc2213a5482d006152dec174d45fd5961206f9dc8d3671a518b9e69729"
+            },
+            "blueprint": null,
+            "svg": null,
+            "svg_preview": null,
+            "ppt_preview": null
+          }
+        },
+        {
+          "page_id": "p005",
+          "title": "Synthetic page 5",
+          "visible_atoms": [
+            {
+              "atom_id": "atom:p005:title",
+              "pointer": "/customer_visible/title",
+              "text": "Synthetic page 5",
+              "kind": "title"
+            }
+          ],
+          "page": {
+            "customer_visible": {
+              "body_blocks": [],
+              "title": "Synthetic page 5"
+            },
+            "page_id": "p005",
+            "schema_version": "deck_page_package.v2",
+            "visual_spec": {
+              "intent": "W01 synthetic example",
+              "reference_mode": "new_design"
+            }
+          },
+          "speaker_notes": null,
+          "slots": {
+            "content": {
+              "path": ".deckmaster/objects/a8/a89132e91d67b1950c646ac6fecc939c0444ceb61721380977851f2746975d0c.json",
+              "sha256": "a89132e91d67b1950c646ac6fecc939c0444ceb61721380977851f2746975d0c"
+            },
+            "blueprint": {
+              "path": ".deckmaster/objects/7f/7f6d1003f474708d2faf69cbe99e082ab4104fcdfdd151866fab4af5ba5df884.json",
+              "sha256": "7f6d1003f474708d2faf69cbe99e082ab4104fcdfdd151866fab4af5ba5df884"
+            },
+            "svg": {
+              "path": ".deckmaster/objects/33/3344fe4782fd723267543a89e8809138acdfd0c0e73f0b442f2e126510c7001b.json",
+              "sha256": "3344fe4782fd723267543a89e8809138acdfd0c0e73f0b442f2e126510c7001b"
+            },
+            "svg_preview": {
+              "path": ".deckmaster/objects/77/77a6c029fc0d1250cacb36a9d41b07ec41ee12fbcbc8707b905478d5066c0bdb.json",
+              "sha256": "77a6c029fc0d1250cacb36a9d41b07ec41ee12fbcbc8707b905478d5066c0bdb"
+            },
+            "ppt_preview": null
+          }
+        },
+        {
+          "page_id": "p006",
+          "title": "Synthetic page 6",
+          "visible_atoms": [
+            {
+              "atom_id": "atom:p006:title",
+              "pointer": "/customer_visible/title",
+              "text": "Synthetic page 6",
+              "kind": "title"
+            }
+          ],
+          "page": {
+            "customer_visible": {
+              "body_blocks": [],
+              "title": "Synthetic page 6"
+            },
+            "page_id": "p006",
+            "schema_version": "deck_page_package.v2",
+            "visual_spec": {
+              "intent": "W01 synthetic example",
+              "reference_mode": "new_design"
+            }
+          },
+          "speaker_notes": null,
+          "slots": {
+            "content": {
+              "path": ".deckmaster/objects/26/2674b559b25812dd7349eb55b02d0305bccc01c0543c5e1619b4d79dac4fadb1.json",
+              "sha256": "2674b559b25812dd7349eb55b02d0305bccc01c0543c5e1619b4d79dac4fadb1"
+            },
+            "blueprint": {
+              "path": ".deckmaster/objects/78/781b20b68fd1e68abe9257221f512353ca535aba317f3b8b0ec7ad073a58c551.json",
+              "sha256": "781b20b68fd1e68abe9257221f512353ca535aba317f3b8b0ec7ad073a58c551"
+            },
+            "svg": null,
+            "svg_preview": null,
+            "ppt_preview": null
+          }
+        },
+        {
+          "page_id": "p007",
+          "title": "Synthetic page 7",
+          "visible_atoms": [
+            {
+              "atom_id": "atom:p007:title",
+              "pointer": "/customer_visible/title",
+              "text": "Synthetic page 7",
+              "kind": "title"
+            }
+          ],
+          "page": {
+            "customer_visible": {
+              "body_blocks": [],
+              "title": "Synthetic page 7"
+            },
+            "page_id": "p007",
+            "schema_version": "deck_page_package.v2",
+            "visual_spec": {
+              "intent": "W01 synthetic example",
+              "reference_mode": "new_design"
+            }
+          },
+          "speaker_notes": null,
+          "slots": {
+            "content": {
+              "path": ".deckmaster/objects/b8/b8042116dae821ae50503908b1eddefc49badc59c565949d58c58febc7c3aac7.json",
+              "sha256": "b8042116dae821ae50503908b1eddefc49badc59c565949d58c58febc7c3aac7"
+            },
+            "blueprint": {
+              "path": ".deckmaster/objects/43/430afb4be9ca2e8dcfb45b3c849038b2bf1aa933471d61cd5aed72ef767407b3.json",
+              "sha256": "430afb4be9ca2e8dcfb45b3c849038b2bf1aa933471d61cd5aed72ef767407b3"
+            },
+            "svg": null,
+            "svg_preview": null,
+            "ppt_preview": null
+          }
+        },
+        {
+          "page_id": "p008",
+          "title": "Synthetic page 8",
+          "visible_atoms": [
+            {
+              "atom_id": "atom:p008:title",
+              "pointer": "/customer_visible/title",
+              "text": "Synthetic page 8",
+              "kind": "title"
+            }
+          ],
+          "page": {
+            "customer_visible": {
+              "body_blocks": [],
+              "title": "Synthetic page 8"
+            },
+            "page_id": "p008",
+            "schema_version": "deck_page_package.v2",
+            "visual_spec": {
+              "intent": "W01 synthetic example",
+              "reference_mode": "new_design"
+            }
+          },
+          "speaker_notes": null,
+          "slots": {
+            "content": {
+              "path": ".deckmaster/objects/17/178684c97a6c9a88be7876b1961ff4c35a61ff1aad1e93d0d0b7db575824dca7.json",
+              "sha256": "178684c97a6c9a88be7876b1961ff4c35a61ff1aad1e93d0d0b7db575824dca7"
+            },
+            "blueprint": null,
+            "svg": null,
+            "svg_preview": null,
+            "ppt_preview": null
+          }
+        },
+        {
+          "page_id": "p009",
+          "title": "Synthetic page 9",
+          "visible_atoms": [
+            {
+              "atom_id": "atom:p009:title",
+              "pointer": "/customer_visible/title",
+              "text": "Synthetic page 9",
+              "kind": "title"
+            }
+          ],
+          "page": {
+            "customer_visible": {
+              "body_blocks": [],
+              "title": "Synthetic page 9"
+            },
+            "page_id": "p009",
+            "schema_version": "deck_page_package.v2",
+            "visual_spec": {
+              "intent": "W01 synthetic example",
+              "reference_mode": "new_design"
+            }
+          },
+          "speaker_notes": null,
+          "slots": {
+            "content": {
+              "path": ".deckmaster/objects/55/5539adeb00715a0e30d281d300772bac1c005661c880a145ddb22257a7ad9544.json",
+              "sha256": "5539adeb00715a0e30d281d300772bac1c005661c880a145ddb22257a7ad9544"
+            },
+            "blueprint": {
+              "path": ".deckmaster/objects/27/27f2ad9b5b9415b8032fdf0aa640ac0c80224d6485781fd67ebf8a4e6c85c601.json",
+              "sha256": "27f2ad9b5b9415b8032fdf0aa640ac0c80224d6485781fd67ebf8a4e6c85c601"
+            },
+            "svg": {
+              "path": ".deckmaster/objects/db/db4adda3cc91cd7a883edd91944564682080ce35c643e8665e86657c0c11cdc6.json",
+              "sha256": "db4adda3cc91cd7a883edd91944564682080ce35c643e8665e86657c0c11cdc6"
+            },
+            "svg_preview": {
+              "path": ".deckmaster/objects/fb/fba057702cfe6037c83d0c1c2cb9413107e4c3d8704bbd634e94651d4e5658fe.json",
+              "sha256": "fba057702cfe6037c83d0c1c2cb9413107e4c3d8704bbd634e94651d4e5658fe"
+            },
+            "ppt_preview": null
+          }
+        },
+        {
+          "page_id": "p010",
+          "title": "Synthetic page 10",
+          "visible_atoms": [
+            {
+              "atom_id": "atom:p010:title",
+              "pointer": "/customer_visible/title",
+              "text": "Synthetic page 10",
+              "kind": "title"
+            }
+          ],
+          "page": {
+            "customer_visible": {
+              "body_blocks": [],
+              "title": "Synthetic page 10"
+            },
+            "page_id": "p010",
+            "schema_version": "deck_page_package.v2",
+            "visual_spec": {
+              "intent": "W01 synthetic example",
+              "reference_mode": "new_design"
+            }
+          },
+          "speaker_notes": null,
+          "slots": {
+            "content": {
+              "path": ".deckmaster/objects/8f/8fab06538c9c6176993797b2834dbe49a2d230151ab1666c8a58259c450cb6c1.json",
+              "sha256": "8fab06538c9c6176993797b2834dbe49a2d230151ab1666c8a58259c450cb6c1"
+            },
+            "blueprint": {
+              "path": ".deckmaster/objects/e1/e103cffdbb5fee5106ff48588a9afaccff412978011b3f13ecd4459bac279da2.json",
+              "sha256": "e103cffdbb5fee5106ff48588a9afaccff412978011b3f13ecd4459bac279da2"
+            },
+            "svg": null,
+            "svg_preview": null,
+            "ppt_preview": null
+          }
+        },
+        {
+          "page_id": "p011",
+          "title": "Synthetic page 11",
+          "visible_atoms": [
+            {
+              "atom_id": "atom:p011:title",
+              "pointer": "/customer_visible/title",
+              "text": "Synthetic page 11",
+              "kind": "title"
+            }
+          ],
+          "page": {
+            "customer_visible": {
+              "body_blocks": [],
+              "title": "Synthetic page 11"
+            },
+            "page_id": "p011",
+            "schema_version": "deck_page_package.v2",
+            "visual_spec": {
+              "intent": "W01 synthetic example",
+              "reference_mode": "new_design"
+            }
+          },
+          "speaker_notes": null,
+          "slots": {
+            "content": {
+              "path": ".deckmaster/objects/16/1647a7e27856c463adcefab4fd3b00822ac5e5cb141f566899df70c9d98c7c7d.json",
+              "sha256": "1647a7e27856c463adcefab4fd3b00822ac5e5cb141f566899df70c9d98c7c7d"
+            },
+            "blueprint": {
+              "path": ".deckmaster/objects/c5/c5ef1a1b19a94064cb2d92f795daf4d6f1fe47578267c8ada940c36b320f7922.json",
+              "sha256": "c5ef1a1b19a94064cb2d92f795daf4d6f1fe47578267c8ada940c36b320f7922"
+            },
+            "svg": null,
+            "svg_preview": null,
+            "ppt_preview": null
+          }
+        },
+        {
+          "page_id": "p012",
+          "title": "Synthetic page 12",
+          "visible_atoms": [
+            {
+              "atom_id": "atom:p012:title",
+              "pointer": "/customer_visible/title",
+              "text": "Synthetic page 12",
+              "kind": "title"
+            }
+          ],
+          "page": {
+            "customer_visible": {
+              "body_blocks": [],
+              "title": "Synthetic page 12"
+            },
+            "page_id": "p012",
+            "schema_version": "deck_page_package.v2",
+            "visual_spec": {
+              "intent": "W01 synthetic example",
+              "reference_mode": "new_design"
+            }
+          },
+          "speaker_notes": null,
+          "slots": {
+            "content": {
+              "path": ".deckmaster/objects/d2/d215396068a14a6205352f0ccd99f63153567547e3050d774a5bcbd63a2e04f2.json",
+              "sha256": "d215396068a14a6205352f0ccd99f63153567547e3050d774a5bcbd63a2e04f2"
+            },
+            "blueprint": null,
+            "svg": null,
+            "svg_preview": null,
+            "ppt_preview": null
+          }
+        },
+        {
+          "page_id": "p013",
+          "title": "Synthetic page 13",
+          "visible_atoms": [
+            {
+              "atom_id": "atom:p013:title",
+              "pointer": "/customer_visible/title",
+              "text": "Synthetic page 13",
+              "kind": "title"
+            }
+          ],
+          "page": {
+            "customer_visible": {
+              "body_blocks": [],
+              "title": "Synthetic page 13"
+            },
+            "page_id": "p013",
+            "schema_version": "deck_page_package.v2",
+            "visual_spec": {
+              "intent": "W01 synthetic example",
+              "reference_mode": "new_design"
+            }
+          },
+          "speaker_notes": null,
+          "slots": {
+            "content": {
+              "path": ".deckmaster/objects/1e/1e60c672e43d2ede81fd73f42ce85eaf2397b10443ffdde97bd038d16b701e00.json",
+              "sha256": "1e60c672e43d2ede81fd73f42ce85eaf2397b10443ffdde97bd038d16b701e00"
+            },
+            "blueprint": {
+              "path": ".deckmaster/objects/f4/f44ca5c018425b579ba541192eafa3077dfeb3e29feffd5277ef9ad684f05454.json",
+              "sha256": "f44ca5c018425b579ba541192eafa3077dfeb3e29feffd5277ef9ad684f05454"
+            },
+            "svg": {
+              "path": ".deckmaster/objects/e7/e7eebc226e5484cecf9fbde06644be9e4fcfd2338a244756c7d12346adaf0c35.json",
+              "sha256": "e7eebc226e5484cecf9fbde06644be9e4fcfd2338a244756c7d12346adaf0c35"
+            },
+            "svg_preview": {
+              "path": ".deckmaster/objects/aa/aa8328a2c3d8f3e5492a802f6a00dbbcefa4631c6e224a9efdb88d48ea6f87fd.json",
+              "sha256": "aa8328a2c3d8f3e5492a802f6a00dbbcefa4631c6e224a9efdb88d48ea6f87fd"
+            },
+            "ppt_preview": null
+          }
+        },
+        {
+          "page_id": "p014",
+          "title": "Synthetic page 14",
+          "visible_atoms": [
+            {
+              "atom_id": "atom:p014:title",
+              "pointer": "/customer_visible/title",
+              "text": "Synthetic page 14",
+              "kind": "title"
+            }
+          ],
+          "page": {
+            "customer_visible": {
+              "body_blocks": [],
+              "title": "Synthetic page 14"
+            },
+            "page_id": "p014",
+            "schema_version": "deck_page_package.v2",
+            "visual_spec": {
+              "intent": "W01 synthetic example",
+              "reference_mode": "new_design"
+            }
+          },
+          "speaker_notes": null,
+          "slots": {
+            "content": {
+              "path": ".deckmaster/objects/48/483fa40cd6b1d7ca705b6f8b59f737aa3e3a67d442f3d926e9195571574ead16.json",
+              "sha256": "483fa40cd6b1d7ca705b6f8b59f737aa3e3a67d442f3d926e9195571574ead16"
+            },
+            "blueprint": {
+              "path": ".deckmaster/objects/e9/e9630626138ee8b4725573ba9e74d4bc61959e8a99faf130981ca610935eb651.json",
+              "sha256": "e9630626138ee8b4725573ba9e74d4bc61959e8a99faf130981ca610935eb651"
+            },
+            "svg": null,
+            "svg_preview": null,
+            "ppt_preview": null
+          }
+        },
+        {
+          "page_id": "p015",
+          "title": "Synthetic page 15",
+          "visible_atoms": [
+            {
+              "atom_id": "atom:p015:title",
+              "pointer": "/customer_visible/title",
+              "text": "Synthetic page 15",
+              "kind": "title"
+            }
+          ],
+          "page": {
+            "customer_visible": {
+              "body_blocks": [],
+              "title": "Synthetic page 15"
+            },
+            "page_id": "p015",
+            "schema_version": "deck_page_package.v2",
+            "visual_spec": {
+              "intent": "W01 synthetic example",
+              "reference_mode": "new_design"
+            }
+          },
+          "speaker_notes": null,
+          "slots": {
+            "content": {
+              "path": ".deckmaster/objects/ff/ffd1e1c496c03f1570e669c3714fbac0f59d99ec5a90f6195ec80b4bff11572b.json",
+              "sha256": "ffd1e1c496c03f1570e669c3714fbac0f59d99ec5a90f6195ec80b4bff11572b"
+            },
+            "blueprint": {
+              "path": ".deckmaster/objects/75/758123c770353f43b8605696b0b8c99ce2bc6a932ade3ef765c586f5d8ea60d7.json",
+              "sha256": "758123c770353f43b8605696b0b8c99ce2bc6a932ade3ef765c586f5d8ea60d7"
+            },
+            "svg": null,
+            "svg_preview": null,
+            "ppt_preview": null
+          }
+        },
+        {
+          "page_id": "p016",
+          "title": "Synthetic page 16",
+          "visible_atoms": [
+            {
+              "atom_id": "atom:p016:title",
+              "pointer": "/customer_visible/title",
+              "text": "Synthetic page 16",
+              "kind": "title"
+            }
+          ],
+          "page": {
+            "customer_visible": {
+              "body_blocks": [],
+              "title": "Synthetic page 16"
+            },
+            "page_id": "p016",
+            "schema_version": "deck_page_package.v2",
+            "visual_spec": {
+              "intent": "W01 synthetic example",
+              "reference_mode": "new_design"
+            }
+          },
+          "speaker_notes": null,
+          "slots": {
+            "content": {
+              "path": ".deckmaster/objects/37/3758eb18606cbc0729e58fe35a4823f59cb4c0cc81fdf8b6d9002e349d4c48d2.json",
+              "sha256": "3758eb18606cbc0729e58fe35a4823f59cb4c0cc81fdf8b6d9002e349d4c48d2"
+            },
+            "blueprint": null,
+            "svg": null,
+            "svg_preview": null,
+            "ppt_preview": null
+          }
+        },
+        {
+          "page_id": "p017",
+          "title": "Synthetic page 17",
+          "visible_atoms": [
+            {
+              "atom_id": "atom:p017:title",
+              "pointer": "/customer_visible/title",
+              "text": "Synthetic page 17",
+              "kind": "title"
+            }
+          ],
+          "page": {
+            "customer_visible": {
+              "body_blocks": [],
+              "title": "Synthetic page 17"
+            },
+            "page_id": "p017",
+            "schema_version": "deck_page_package.v2",
+            "visual_spec": {
+              "intent": "W01 synthetic example",
+              "reference_mode": "new_design"
+            }
+          },
+          "speaker_notes": null,
+          "slots": {
+            "content": {
+              "path": ".deckmaster/objects/f0/f03feb1e76f18cfd1b403e167f7bc3fe3c3383bf553e27489340d566695fac2c.json",
+              "sha256": "f03feb1e76f18cfd1b403e167f7bc3fe3c3383bf553e27489340d566695fac2c"
+            },
+            "blueprint": {
+              "path": ".deckmaster/objects/1c/1c3bc38b5b459371fd7d7930581cd1ceebe656d5894b54a443e430b9813de491.json",
+              "sha256": "1c3bc38b5b459371fd7d7930581cd1ceebe656d5894b54a443e430b9813de491"
+            },
+            "svg": {
+              "path": ".deckmaster/objects/9a/9a80f8a24c87a2a3df97fcd1250656a88f9316c207b1ff63b60197cbc954144b.json",
+              "sha256": "9a80f8a24c87a2a3df97fcd1250656a88f9316c207b1ff63b60197cbc954144b"
+            },
+            "svg_preview": {
+              "path": ".deckmaster/objects/e5/e535c666e5fe2dfec90c4b9a78146f18f52a19fb91c86eac64a6bc9e5209152f.json",
+              "sha256": "e535c666e5fe2dfec90c4b9a78146f18f52a19fb91c86eac64a6bc9e5209152f"
+            },
+            "ppt_preview": null
+          }
+        },
+        {
+          "page_id": "p018",
+          "title": "Synthetic page 18",
+          "visible_atoms": [
+            {
+              "atom_id": "atom:p018:title",
+              "pointer": "/customer_visible/title",
+              "text": "Synthetic page 18",
+              "kind": "title"
+            }
+          ],
+          "page": {
+            "customer_visible": {
+              "body_blocks": [],
+              "title": "Synthetic page 18"
+            },
+            "page_id": "p018",
+            "schema_version": "deck_page_package.v2",
+            "visual_spec": {
+              "intent": "W01 synthetic example",
+              "reference_mode": "new_design"
+            }
+          },
+          "speaker_notes": null,
+          "slots": {
+            "content": {
+              "path": ".deckmaster/objects/9e/9ef6835caea27367209849e11ed63148b534533b9eba8695e15f704b5b4d8bbe.json",
+              "sha256": "9ef6835caea27367209849e11ed63148b534533b9eba8695e15f704b5b4d8bbe"
+            },
+            "blueprint": {
+              "path": ".deckmaster/objects/54/54dcf6f0133e0482305e03064eba1f88a844e482965fb8a85cb75bf6527ab226.json",
+              "sha256": "54dcf6f0133e0482305e03064eba1f88a844e482965fb8a85cb75bf6527ab226"
+            },
+            "svg": null,
+            "svg_preview": null,
+            "ppt_preview": null
+          }
+        },
+        {
+          "page_id": "p019",
+          "title": "Synthetic page 19",
+          "visible_atoms": [
+            {
+              "atom_id": "atom:p019:title",
+              "pointer": "/customer_visible/title",
+              "text": "Synthetic page 19",
+              "kind": "title"
+            }
+          ],
+          "page": {
+            "customer_visible": {
+              "body_blocks": [],
+              "title": "Synthetic page 19"
+            },
+            "page_id": "p019",
+            "schema_version": "deck_page_package.v2",
+            "visual_spec": {
+              "intent": "W01 synthetic example",
+              "reference_mode": "new_design"
+            }
+          },
+          "speaker_notes": null,
+          "slots": {
+            "content": {
+              "path": ".deckmaster/objects/bf/bf40e73717d7402c1f5da5fcf8b5f3a8c18e12675fb5ae163316cfb8ba980e17.json",
+              "sha256": "bf40e73717d7402c1f5da5fcf8b5f3a8c18e12675fb5ae163316cfb8ba980e17"
+            },
+            "blueprint": {
+              "path": ".deckmaster/objects/31/310fe1143cdaf5a3660fc9a39e0f0d75a22b5c739f21f7476368a45850c5ee2f.json",
+              "sha256": "310fe1143cdaf5a3660fc9a39e0f0d75a22b5c739f21f7476368a45850c5ee2f"
+            },
+            "svg": null,
+            "svg_preview": null,
+            "ppt_preview": null
+          }
+        },
+        {
+          "page_id": "p020",
+          "title": "Synthetic page 20",
+          "visible_atoms": [
+            {
+              "atom_id": "atom:p020:title",
+              "pointer": "/customer_visible/title",
+              "text": "Synthetic page 20",
+              "kind": "title"
+            }
+          ],
+          "page": {
+            "customer_visible": {
+              "body_blocks": [],
+              "title": "Synthetic page 20"
+            },
+            "page_id": "p020",
+            "schema_version": "deck_page_package.v2",
+            "visual_spec": {
+              "intent": "W01 synthetic example",
+              "reference_mode": "new_design"
+            }
+          },
+          "speaker_notes": null,
+          "slots": {
+            "content": {
+              "path": ".deckmaster/objects/0c/0c7965f3044ff0309f58b1afb074b8a1b4092b51c58ee45f9bb5876bef5f52a4.json",
+              "sha256": "0c7965f3044ff0309f58b1afb074b8a1b4092b51c58ee45f9bb5876bef5f52a4"
+            },
+            "blueprint": null,
+            "svg": null,
+            "svg_preview": null,
+            "ppt_preview": null
+          }
+        },
+        {
+          "page_id": "p021",
+          "title": "Synthetic page 21",
+          "visible_atoms": [
+            {
+              "atom_id": "atom:p021:title",
+              "pointer": "/customer_visible/title",
+              "text": "Synthetic page 21",
+              "kind": "title"
+            }
+          ],
+          "page": {
+            "customer_visible": {
+              "body_blocks": [],
+              "title": "Synthetic page 21"
+            },
+            "page_id": "p021",
+            "schema_version": "deck_page_package.v2",
+            "visual_spec": {
+              "intent": "W01 synthetic example",
+              "reference_mode": "new_design"
+            }
+          },
+          "speaker_notes": null,
+          "slots": {
+            "content": {
+              "path": ".deckmaster/objects/13/131f70a3e91e167951b48e9d99f62e032c23b702d4251815c2c0e9aba09ca19b.json",
+              "sha256": "131f70a3e91e167951b48e9d99f62e032c23b702d4251815c2c0e9aba09ca19b"
+            },
+            "blueprint": {
+              "path": ".deckmaster/objects/77/7705cdc4240bc5e93c74eea9a6755ea9f3708bdf4def9caceb2010f102928bd0.json",
+              "sha256": "7705cdc4240bc5e93c74eea9a6755ea9f3708bdf4def9caceb2010f102928bd0"
+            },
+            "svg": {
+              "path": ".deckmaster/objects/10/104ee7614534dee399d90d6e8229aadafa6a47d56ba8bcf16668c4291eac8bd0.json",
+              "sha256": "104ee7614534dee399d90d6e8229aadafa6a47d56ba8bcf16668c4291eac8bd0"
+            },
+            "svg_preview": {
+              "path": ".deckmaster/objects/e9/e919e8abf53d785f4461fe8b971b832dc53d806a09a4fdee53d557deb1342a7b.json",
+              "sha256": "e919e8abf53d785f4461fe8b971b832dc53d806a09a4fdee53d557deb1342a7b"
+            },
+            "ppt_preview": null
+          }
+        },
+        {
+          "page_id": "p022",
+          "title": "Synthetic page 22",
+          "visible_atoms": [
+            {
+              "atom_id": "atom:p022:title",
+              "pointer": "/customer_visible/title",
+              "text": "Synthetic page 22",
+              "kind": "title"
+            }
+          ],
+          "page": {
+            "customer_visible": {
+              "body_blocks": [],
+              "title": "Synthetic page 22"
+            },
+            "page_id": "p022",
+            "schema_version": "deck_page_package.v2",
+            "visual_spec": {
+              "intent": "W01 synthetic example",
+              "reference_mode": "new_design"
+            }
+          },
+          "speaker_notes": null,
+          "slots": {
+            "content": {
+              "path": ".deckmaster/objects/36/3618d739fd5a178d9d737040e45107f9ff37b6cdc80318e4c1cee9142c41363a.json",
+              "sha256": "3618d739fd5a178d9d737040e45107f9ff37b6cdc80318e4c1cee9142c41363a"
+            },
+            "blueprint": {
+              "path": ".deckmaster/objects/db/db233d05437c480ae52c90dbb95a4a5e94cfe39f62f6c4832de4d8e6ed484d70.json",
+              "sha256": "db233d05437c480ae52c90dbb95a4a5e94cfe39f62f6c4832de4d8e6ed484d70"
+            },
+            "svg": null,
+            "svg_preview": null,
+            "ppt_preview": null
+          }
+        },
+        {
+          "page_id": "p023",
+          "title": "Synthetic page 23",
+          "visible_atoms": [
+            {
+              "atom_id": "atom:p023:title",
+              "pointer": "/customer_visible/title",
+              "text": "Synthetic page 23",
+              "kind": "title"
+            }
+          ],
+          "page": {
+            "customer_visible": {
+              "body_blocks": [],
+              "title": "Synthetic page 23"
+            },
+            "page_id": "p023",
+            "schema_version": "deck_page_package.v2",
+            "visual_spec": {
+              "intent": "W01 synthetic example",
+              "reference_mode": "new_design"
+            }
+          },
+          "speaker_notes": null,
+          "slots": {
+            "content": {
+              "path": ".deckmaster/objects/21/2177e2a0a3d9dd81d19f50ff36ba29ab218bccf588beba73c02172430eecb1b9.json",
+              "sha256": "2177e2a0a3d9dd81d19f50ff36ba29ab218bccf588beba73c02172430eecb1b9"
+            },
+            "blueprint": {
+              "path": ".deckmaster/objects/6e/6e9d28109dc64cd90a4073c7fa53d338084761cc27c61e2b79228ad7d135ce1c.json",
+              "sha256": "6e9d28109dc64cd90a4073c7fa53d338084761cc27c61e2b79228ad7d135ce1c"
+            },
+            "svg": null,
+            "svg_preview": null,
+            "ppt_preview": null
+          }
+        },
+        {
+          "page_id": "p024",
+          "title": "Synthetic page 24",
+          "visible_atoms": [
+            {
+              "atom_id": "atom:p024:title",
+              "pointer": "/customer_visible/title",
+              "text": "Synthetic page 24",
+              "kind": "title"
+            }
+          ],
+          "page": {
+            "customer_visible": {
+              "body_blocks": [],
+              "title": "Synthetic page 24"
+            },
+            "page_id": "p024",
+            "schema_version": "deck_page_package.v2",
+            "visual_spec": {
+              "intent": "W01 synthetic example",
+              "reference_mode": "new_design"
+            }
+          },
+          "speaker_notes": null,
+          "slots": {
+            "content": {
+              "path": ".deckmaster/objects/de/de67f11975b0cc770052e4fc59904281d5291feb5f255727589906911d7dcc8b.json",
+              "sha256": "de67f11975b0cc770052e4fc59904281d5291feb5f255727589906911d7dcc8b"
+            },
+            "blueprint": null,
+            "svg": null,
+            "svg_preview": null,
+            "ppt_preview": null
+          }
+        }
+      ],
+      "pending_tasks": [
+        {
+          "task_id": "29c4a93dd29d",
+          "kind": "blueprint",
+          "status": "awaiting_host",
+          "instruction": "Codex专用：读取 production_request.prompt，先领取任务并 begin 本任务的调用额度，使用当前会话内置图像工具生成一张真实蓝图；保存原始图片与实际提交prompt，实际阅图后settle，再用 blueprint 信封提交。不得请求 Provider/API Key，不得用 fixture 或本地占位图。"
+        }
+      ],
+      "reviews": [],
+      "design_context": {
+        "canvas": {
+          "fit": "contain",
+          "height_px": 900,
+          "slide_height_in": 7.5,
+          "slide_width_in": 13.333333333333334,
+          "width_px": 1600
+        },
+        "language": "zh-CN",
+        "default_style_id": "default"
+      },
+      "outputs": {
+        "pptx": null,
+        "render_report": null,
+        "trace": null
+      },
+      "policy": {
+        "authoring_mode": "image_blueprint",
+        "external_call_limit": null,
+        "professional_review_required_for_delivery": false,
+        "user_stop": false
+      },
+      "input_alignment": "current",
+      "view_status": "awaiting_host",
+      "evidence_level": "engineering"
+    }
+  ],
+  "/api/view/summary": [
+    200,
+    {
+      "format": "workbench_summary.v1",
+      "project_id": "synthetic-project",
+      "revision_id": "380418a8baa84d2280ea8695747f3e19",
+      "requested_revision": "380418a8baa84d2280ea8695747f3e19",
+      "snapshot_mode": "fixed",
+      "page_count": 24,
+      "pages": [
+        {
+          "page_id": "p001",
+          "title": "<img src=x onerror=\"window.__w01_xss=true\">",
+          "stages": {
+            "content": {
+              "ref": {
+                "path": ".deckmaster/objects/0a/0a9723dc1b18b24ea94e2e799ef83f06baadd813f889b2773426e288aff0d6af.json",
+                "sha256": "0a9723dc1b18b24ea94e2e799ef83f06baadd813f889b2773426e288aff0d6af"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known"
+            },
+            "blueprint": {
+              "ref": {
+                "path": ".deckmaster/objects/d1/d1f10f534189f09e70a3b2120c271a36062726befb78ab1b6c60997125800d0b.json",
+                "sha256": "d1f10f534189f09e70a3b2120c271a36062726befb78ab1b6c60997125800d0b"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current",
+                "changed": [],
+                "checked": [
+                  "content"
+                ],
+                "unverified": [],
+                "source": "stored_bindings"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known",
+              "file": {
+                "path": ".deckmaster/objects/8c/8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1.png",
+                "sha256": "8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1"
+              },
+              "media_type": "image/png",
+              "dependencies": [
+                {
+                  "identity": "page:p001",
+                  "kind": "content",
+                  "sha256": "0a9723dc1b18b24ea94e2e799ef83f06baadd813f889b2773426e288aff0d6af"
+                }
+              ],
+              "derived_from": [],
+              "file_integrity": "checked_on_file_read"
+            },
+            "svg": {
+              "ref": {
+                "path": ".deckmaster/objects/f5/f5cbc25f05f7fcb0381dd96200e319c1502c1feff6612d626764f3f80aebc1ee.json",
+                "sha256": "f5cbc25f05f7fcb0381dd96200e319c1502c1feff6612d626764f3f80aebc1ee"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current",
+                "changed": [],
+                "checked": [
+                  "content"
+                ],
+                "unverified": [],
+                "source": "stored_bindings"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known",
+              "file": {
+                "path": ".deckmaster/objects/45/45e32328dd29a64a41128f4ed4117c31437370d2861c71eac676b13fd1700194.svg",
+                "sha256": "45e32328dd29a64a41128f4ed4117c31437370d2861c71eac676b13fd1700194"
+              },
+              "media_type": "image/svg+xml",
+              "dependencies": [
+                {
+                  "identity": "page:p001",
+                  "kind": "content",
+                  "sha256": "0a9723dc1b18b24ea94e2e799ef83f06baadd813f889b2773426e288aff0d6af"
+                }
+              ],
+              "derived_from": [
+                {
+                  "path": ".deckmaster/objects/fe/fe8e25740d3f142fe85928e35b08af279cda8f4a57cbd0c050e78baa58531acc.json",
+                  "sha256": "fe8e25740d3f142fe85928e35b08af279cda8f4a57cbd0c050e78baa58531acc"
+                }
+              ],
+              "file_integrity": "checked_on_file_read"
+            },
+            "svg_preview": {
+              "ref": {
+                "path": ".deckmaster/objects/61/6129054ccac9d0838b27a426aca602f1b63ecf3a462e1f9a532daf764ca085f8.json",
+                "sha256": "6129054ccac9d0838b27a426aca602f1b63ecf3a462e1f9a532daf764ca085f8"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current",
+                "changed": [],
+                "checked": [
+                  "content"
+                ],
+                "unverified": [],
+                "source": "stored_bindings"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known",
+              "file": {
+                "path": ".deckmaster/objects/8c/8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1.png",
+                "sha256": "8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1"
+              },
+              "media_type": "image/png",
+              "dependencies": [
+                {
+                  "identity": "page:p001",
+                  "kind": "content",
+                  "sha256": "0a9723dc1b18b24ea94e2e799ef83f06baadd813f889b2773426e288aff0d6af"
+                }
+              ],
+              "derived_from": [
+                {
+                  "path": ".deckmaster/objects/f5/f5cbc25f05f7fcb0381dd96200e319c1502c1feff6612d626764f3f80aebc1ee.json",
+                  "sha256": "f5cbc25f05f7fcb0381dd96200e319c1502c1feff6612d626764f3f80aebc1ee"
+                }
+              ],
+              "file_integrity": "checked_on_file_read",
+              "preview_of": {
+                "scope": "per_page",
+                "ref": {
+                  "path": ".deckmaster/objects/f5/f5cbc25f05f7fcb0381dd96200e319c1502c1feff6612d626764f3f80aebc1ee.json",
+                  "sha256": "f5cbc25f05f7fcb0381dd96200e319c1502c1feff6612d626764f3f80aebc1ee"
+                },
+                "relation": "known"
+              }
+            },
+            "ppt_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            }
+          },
+          "execution": [
+            {
+              "task_id": "29c4a93dd29d",
+              "kind": "blueprint",
+              "status": "awaiting_host",
+              "execution_ref": null
+            }
+          ],
+          "attention": {
+            "status": "not_recorded"
+          }
+        },
+        {
+          "page_id": "p002",
+          "title": "Synthetic page 2",
+          "stages": {
+            "content": {
+              "ref": {
+                "path": ".deckmaster/objects/b4/b43db9cdde984a0649f460c1a07c0e03a128c6018058fe7eaf6036e8aee68ded.json",
+                "sha256": "b43db9cdde984a0649f460c1a07c0e03a128c6018058fe7eaf6036e8aee68ded"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known"
+            },
+            "blueprint": {
+              "ref": {
+                "path": ".deckmaster/objects/d2/d203611c4ad36b100a66411d70417265ec93f33baabc815b3a9d1a44b998c4af.json",
+                "sha256": "d203611c4ad36b100a66411d70417265ec93f33baabc815b3a9d1a44b998c4af"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current",
+                "changed": [],
+                "checked": [
+                  "content"
+                ],
+                "unverified": [],
+                "source": "stored_bindings"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known",
+              "file": {
+                "path": ".deckmaster/objects/8c/8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1.png",
+                "sha256": "8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1"
+              },
+              "media_type": "image/png",
+              "dependencies": [
+                {
+                  "identity": "page:p002",
+                  "kind": "content",
+                  "sha256": "b43db9cdde984a0649f460c1a07c0e03a128c6018058fe7eaf6036e8aee68ded"
+                }
+              ],
+              "derived_from": [],
+              "file_integrity": "checked_on_file_read"
+            },
+            "svg": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "svg_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "ppt_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            }
+          },
+          "execution": [],
+          "attention": {
+            "status": "not_recorded"
+          }
+        },
+        {
+          "page_id": "p003",
+          "title": "Synthetic page 3",
+          "stages": {
+            "content": {
+              "ref": {
+                "path": ".deckmaster/objects/84/84187d41bef9500810689ea92de7e7e9e21871075918b26747216b34e1be5905.json",
+                "sha256": "84187d41bef9500810689ea92de7e7e9e21871075918b26747216b34e1be5905"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known"
+            },
+            "blueprint": {
+              "ref": {
+                "path": ".deckmaster/objects/46/46a03d835f0ed86afba2d781b725191b74dbf8dc0f64d1ea9d3685597f8d282a.json",
+                "sha256": "46a03d835f0ed86afba2d781b725191b74dbf8dc0f64d1ea9d3685597f8d282a"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current",
+                "changed": [],
+                "checked": [
+                  "content"
+                ],
+                "unverified": [],
+                "source": "stored_bindings"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known",
+              "file": {
+                "path": ".deckmaster/objects/8c/8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1.png",
+                "sha256": "8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1"
+              },
+              "media_type": "image/png",
+              "dependencies": [
+                {
+                  "identity": "page:p003",
+                  "kind": "content",
+                  "sha256": "84187d41bef9500810689ea92de7e7e9e21871075918b26747216b34e1be5905"
+                }
+              ],
+              "derived_from": [],
+              "file_integrity": "checked_on_file_read"
+            },
+            "svg": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "svg_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "ppt_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            }
+          },
+          "execution": [],
+          "attention": {
+            "status": "not_recorded"
+          }
+        },
+        {
+          "page_id": "p004",
+          "title": "Synthetic page 4",
+          "stages": {
+            "content": {
+              "ref": {
+                "path": ".deckmaster/objects/26/265e0cfc2213a5482d006152dec174d45fd5961206f9dc8d3671a518b9e69729.json",
+                "sha256": "265e0cfc2213a5482d006152dec174d45fd5961206f9dc8d3671a518b9e69729"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known"
+            },
+            "blueprint": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "svg": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "svg_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "ppt_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            }
+          },
+          "execution": [],
+          "attention": {
+            "status": "not_recorded"
+          }
+        },
+        {
+          "page_id": "p005",
+          "title": "Synthetic page 5",
+          "stages": {
+            "content": {
+              "ref": {
+                "path": ".deckmaster/objects/a8/a89132e91d67b1950c646ac6fecc939c0444ceb61721380977851f2746975d0c.json",
+                "sha256": "a89132e91d67b1950c646ac6fecc939c0444ceb61721380977851f2746975d0c"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known"
+            },
+            "blueprint": {
+              "ref": {
+                "path": ".deckmaster/objects/7f/7f6d1003f474708d2faf69cbe99e082ab4104fcdfdd151866fab4af5ba5df884.json",
+                "sha256": "7f6d1003f474708d2faf69cbe99e082ab4104fcdfdd151866fab4af5ba5df884"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current",
+                "changed": [],
+                "checked": [
+                  "content"
+                ],
+                "unverified": [],
+                "source": "stored_bindings"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known",
+              "file": {
+                "path": ".deckmaster/objects/8c/8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1.png",
+                "sha256": "8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1"
+              },
+              "media_type": "image/png",
+              "dependencies": [
+                {
+                  "identity": "page:p005",
+                  "kind": "content",
+                  "sha256": "a89132e91d67b1950c646ac6fecc939c0444ceb61721380977851f2746975d0c"
+                }
+              ],
+              "derived_from": [],
+              "file_integrity": "checked_on_file_read"
+            },
+            "svg": {
+              "ref": {
+                "path": ".deckmaster/objects/33/3344fe4782fd723267543a89e8809138acdfd0c0e73f0b442f2e126510c7001b.json",
+                "sha256": "3344fe4782fd723267543a89e8809138acdfd0c0e73f0b442f2e126510c7001b"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current",
+                "changed": [],
+                "checked": [
+                  "content"
+                ],
+                "unverified": [],
+                "source": "stored_bindings"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known",
+              "file": {
+                "path": ".deckmaster/objects/45/45e32328dd29a64a41128f4ed4117c31437370d2861c71eac676b13fd1700194.svg",
+                "sha256": "45e32328dd29a64a41128f4ed4117c31437370d2861c71eac676b13fd1700194"
+              },
+              "media_type": "image/svg+xml",
+              "dependencies": [
+                {
+                  "identity": "page:p005",
+                  "kind": "content",
+                  "sha256": "a89132e91d67b1950c646ac6fecc939c0444ceb61721380977851f2746975d0c"
+                }
+              ],
+              "derived_from": [
+                {
+                  "path": ".deckmaster/objects/7f/7f6d1003f474708d2faf69cbe99e082ab4104fcdfdd151866fab4af5ba5df884.json",
+                  "sha256": "7f6d1003f474708d2faf69cbe99e082ab4104fcdfdd151866fab4af5ba5df884"
+                }
+              ],
+              "file_integrity": "checked_on_file_read"
+            },
+            "svg_preview": {
+              "ref": {
+                "path": ".deckmaster/objects/77/77a6c029fc0d1250cacb36a9d41b07ec41ee12fbcbc8707b905478d5066c0bdb.json",
+                "sha256": "77a6c029fc0d1250cacb36a9d41b07ec41ee12fbcbc8707b905478d5066c0bdb"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current",
+                "changed": [],
+                "checked": [
+                  "content"
+                ],
+                "unverified": [],
+                "source": "stored_bindings"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known",
+              "file": {
+                "path": ".deckmaster/objects/8c/8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1.png",
+                "sha256": "8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1"
+              },
+              "media_type": "image/png",
+              "dependencies": [
+                {
+                  "identity": "page:p005",
+                  "kind": "content",
+                  "sha256": "a89132e91d67b1950c646ac6fecc939c0444ceb61721380977851f2746975d0c"
+                }
+              ],
+              "derived_from": [
+                {
+                  "path": ".deckmaster/objects/33/3344fe4782fd723267543a89e8809138acdfd0c0e73f0b442f2e126510c7001b.json",
+                  "sha256": "3344fe4782fd723267543a89e8809138acdfd0c0e73f0b442f2e126510c7001b"
+                }
+              ],
+              "file_integrity": "checked_on_file_read",
+              "preview_of": {
+                "scope": "per_page",
+                "ref": {
+                  "path": ".deckmaster/objects/33/3344fe4782fd723267543a89e8809138acdfd0c0e73f0b442f2e126510c7001b.json",
+                  "sha256": "3344fe4782fd723267543a89e8809138acdfd0c0e73f0b442f2e126510c7001b"
+                },
+                "relation": "known"
+              }
+            },
+            "ppt_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            }
+          },
+          "execution": [],
+          "attention": {
+            "status": "not_recorded"
+          }
+        },
+        {
+          "page_id": "p006",
+          "title": "Synthetic page 6",
+          "stages": {
+            "content": {
+              "ref": {
+                "path": ".deckmaster/objects/26/2674b559b25812dd7349eb55b02d0305bccc01c0543c5e1619b4d79dac4fadb1.json",
+                "sha256": "2674b559b25812dd7349eb55b02d0305bccc01c0543c5e1619b4d79dac4fadb1"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known"
+            },
+            "blueprint": {
+              "ref": {
+                "path": ".deckmaster/objects/78/781b20b68fd1e68abe9257221f512353ca535aba317f3b8b0ec7ad073a58c551.json",
+                "sha256": "781b20b68fd1e68abe9257221f512353ca535aba317f3b8b0ec7ad073a58c551"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current",
+                "changed": [],
+                "checked": [
+                  "content"
+                ],
+                "unverified": [],
+                "source": "stored_bindings"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known",
+              "file": {
+                "path": ".deckmaster/objects/8c/8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1.png",
+                "sha256": "8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1"
+              },
+              "media_type": "image/png",
+              "dependencies": [
+                {
+                  "identity": "page:p006",
+                  "kind": "content",
+                  "sha256": "2674b559b25812dd7349eb55b02d0305bccc01c0543c5e1619b4d79dac4fadb1"
+                }
+              ],
+              "derived_from": [],
+              "file_integrity": "checked_on_file_read"
+            },
+            "svg": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "svg_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "ppt_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            }
+          },
+          "execution": [],
+          "attention": {
+            "status": "not_recorded"
+          }
+        },
+        {
+          "page_id": "p007",
+          "title": "Synthetic page 7",
+          "stages": {
+            "content": {
+              "ref": {
+                "path": ".deckmaster/objects/b8/b8042116dae821ae50503908b1eddefc49badc59c565949d58c58febc7c3aac7.json",
+                "sha256": "b8042116dae821ae50503908b1eddefc49badc59c565949d58c58febc7c3aac7"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known"
+            },
+            "blueprint": {
+              "ref": {
+                "path": ".deckmaster/objects/43/430afb4be9ca2e8dcfb45b3c849038b2bf1aa933471d61cd5aed72ef767407b3.json",
+                "sha256": "430afb4be9ca2e8dcfb45b3c849038b2bf1aa933471d61cd5aed72ef767407b3"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current",
+                "changed": [],
+                "checked": [
+                  "content"
+                ],
+                "unverified": [],
+                "source": "stored_bindings"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known",
+              "file": {
+                "path": ".deckmaster/objects/8c/8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1.png",
+                "sha256": "8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1"
+              },
+              "media_type": "image/png",
+              "dependencies": [
+                {
+                  "identity": "page:p007",
+                  "kind": "content",
+                  "sha256": "b8042116dae821ae50503908b1eddefc49badc59c565949d58c58febc7c3aac7"
+                }
+              ],
+              "derived_from": [],
+              "file_integrity": "checked_on_file_read"
+            },
+            "svg": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "svg_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "ppt_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            }
+          },
+          "execution": [],
+          "attention": {
+            "status": "not_recorded"
+          }
+        },
+        {
+          "page_id": "p008",
+          "title": "Synthetic page 8",
+          "stages": {
+            "content": {
+              "ref": {
+                "path": ".deckmaster/objects/17/178684c97a6c9a88be7876b1961ff4c35a61ff1aad1e93d0d0b7db575824dca7.json",
+                "sha256": "178684c97a6c9a88be7876b1961ff4c35a61ff1aad1e93d0d0b7db575824dca7"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known"
+            },
+            "blueprint": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "svg": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "svg_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "ppt_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            }
+          },
+          "execution": [],
+          "attention": {
+            "status": "not_recorded"
+          }
+        },
+        {
+          "page_id": "p009",
+          "title": "Synthetic page 9",
+          "stages": {
+            "content": {
+              "ref": {
+                "path": ".deckmaster/objects/55/5539adeb00715a0e30d281d300772bac1c005661c880a145ddb22257a7ad9544.json",
+                "sha256": "5539adeb00715a0e30d281d300772bac1c005661c880a145ddb22257a7ad9544"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known"
+            },
+            "blueprint": {
+              "ref": {
+                "path": ".deckmaster/objects/27/27f2ad9b5b9415b8032fdf0aa640ac0c80224d6485781fd67ebf8a4e6c85c601.json",
+                "sha256": "27f2ad9b5b9415b8032fdf0aa640ac0c80224d6485781fd67ebf8a4e6c85c601"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current",
+                "changed": [],
+                "checked": [
+                  "content"
+                ],
+                "unverified": [],
+                "source": "stored_bindings"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known",
+              "file": {
+                "path": ".deckmaster/objects/8c/8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1.png",
+                "sha256": "8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1"
+              },
+              "media_type": "image/png",
+              "dependencies": [
+                {
+                  "identity": "page:p009",
+                  "kind": "content",
+                  "sha256": "5539adeb00715a0e30d281d300772bac1c005661c880a145ddb22257a7ad9544"
+                }
+              ],
+              "derived_from": [],
+              "file_integrity": "checked_on_file_read"
+            },
+            "svg": {
+              "ref": {
+                "path": ".deckmaster/objects/db/db4adda3cc91cd7a883edd91944564682080ce35c643e8665e86657c0c11cdc6.json",
+                "sha256": "db4adda3cc91cd7a883edd91944564682080ce35c643e8665e86657c0c11cdc6"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current",
+                "changed": [],
+                "checked": [
+                  "content"
+                ],
+                "unverified": [],
+                "source": "stored_bindings"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known",
+              "file": {
+                "path": ".deckmaster/objects/45/45e32328dd29a64a41128f4ed4117c31437370d2861c71eac676b13fd1700194.svg",
+                "sha256": "45e32328dd29a64a41128f4ed4117c31437370d2861c71eac676b13fd1700194"
+              },
+              "media_type": "image/svg+xml",
+              "dependencies": [
+                {
+                  "identity": "page:p009",
+                  "kind": "content",
+                  "sha256": "5539adeb00715a0e30d281d300772bac1c005661c880a145ddb22257a7ad9544"
+                }
+              ],
+              "derived_from": [
+                {
+                  "path": ".deckmaster/objects/27/27f2ad9b5b9415b8032fdf0aa640ac0c80224d6485781fd67ebf8a4e6c85c601.json",
+                  "sha256": "27f2ad9b5b9415b8032fdf0aa640ac0c80224d6485781fd67ebf8a4e6c85c601"
+                }
+              ],
+              "file_integrity": "checked_on_file_read"
+            },
+            "svg_preview": {
+              "ref": {
+                "path": ".deckmaster/objects/fb/fba057702cfe6037c83d0c1c2cb9413107e4c3d8704bbd634e94651d4e5658fe.json",
+                "sha256": "fba057702cfe6037c83d0c1c2cb9413107e4c3d8704bbd634e94651d4e5658fe"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current",
+                "changed": [],
+                "checked": [
+                  "content"
+                ],
+                "unverified": [],
+                "source": "stored_bindings"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known",
+              "file": {
+                "path": ".deckmaster/objects/8c/8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1.png",
+                "sha256": "8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1"
+              },
+              "media_type": "image/png",
+              "dependencies": [
+                {
+                  "identity": "page:p009",
+                  "kind": "content",
+                  "sha256": "5539adeb00715a0e30d281d300772bac1c005661c880a145ddb22257a7ad9544"
+                }
+              ],
+              "derived_from": [
+                {
+                  "path": ".deckmaster/objects/db/db4adda3cc91cd7a883edd91944564682080ce35c643e8665e86657c0c11cdc6.json",
+                  "sha256": "db4adda3cc91cd7a883edd91944564682080ce35c643e8665e86657c0c11cdc6"
+                }
+              ],
+              "file_integrity": "checked_on_file_read",
+              "preview_of": {
+                "scope": "per_page",
+                "ref": {
+                  "path": ".deckmaster/objects/db/db4adda3cc91cd7a883edd91944564682080ce35c643e8665e86657c0c11cdc6.json",
+                  "sha256": "db4adda3cc91cd7a883edd91944564682080ce35c643e8665e86657c0c11cdc6"
+                },
+                "relation": "known"
+              }
+            },
+            "ppt_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            }
+          },
+          "execution": [],
+          "attention": {
+            "status": "not_recorded"
+          }
+        },
+        {
+          "page_id": "p010",
+          "title": "Synthetic page 10",
+          "stages": {
+            "content": {
+              "ref": {
+                "path": ".deckmaster/objects/8f/8fab06538c9c6176993797b2834dbe49a2d230151ab1666c8a58259c450cb6c1.json",
+                "sha256": "8fab06538c9c6176993797b2834dbe49a2d230151ab1666c8a58259c450cb6c1"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known"
+            },
+            "blueprint": {
+              "ref": {
+                "path": ".deckmaster/objects/e1/e103cffdbb5fee5106ff48588a9afaccff412978011b3f13ecd4459bac279da2.json",
+                "sha256": "e103cffdbb5fee5106ff48588a9afaccff412978011b3f13ecd4459bac279da2"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current",
+                "changed": [],
+                "checked": [
+                  "content"
+                ],
+                "unverified": [],
+                "source": "stored_bindings"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known",
+              "file": {
+                "path": ".deckmaster/objects/8c/8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1.png",
+                "sha256": "8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1"
+              },
+              "media_type": "image/png",
+              "dependencies": [
+                {
+                  "identity": "page:p010",
+                  "kind": "content",
+                  "sha256": "8fab06538c9c6176993797b2834dbe49a2d230151ab1666c8a58259c450cb6c1"
+                }
+              ],
+              "derived_from": [],
+              "file_integrity": "checked_on_file_read"
+            },
+            "svg": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "svg_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "ppt_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            }
+          },
+          "execution": [],
+          "attention": {
+            "status": "not_recorded"
+          }
+        },
+        {
+          "page_id": "p011",
+          "title": "Synthetic page 11",
+          "stages": {
+            "content": {
+              "ref": {
+                "path": ".deckmaster/objects/16/1647a7e27856c463adcefab4fd3b00822ac5e5cb141f566899df70c9d98c7c7d.json",
+                "sha256": "1647a7e27856c463adcefab4fd3b00822ac5e5cb141f566899df70c9d98c7c7d"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known"
+            },
+            "blueprint": {
+              "ref": {
+                "path": ".deckmaster/objects/c5/c5ef1a1b19a94064cb2d92f795daf4d6f1fe47578267c8ada940c36b320f7922.json",
+                "sha256": "c5ef1a1b19a94064cb2d92f795daf4d6f1fe47578267c8ada940c36b320f7922"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current",
+                "changed": [],
+                "checked": [
+                  "content"
+                ],
+                "unverified": [],
+                "source": "stored_bindings"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known",
+              "file": {
+                "path": ".deckmaster/objects/8c/8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1.png",
+                "sha256": "8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1"
+              },
+              "media_type": "image/png",
+              "dependencies": [
+                {
+                  "identity": "page:p011",
+                  "kind": "content",
+                  "sha256": "1647a7e27856c463adcefab4fd3b00822ac5e5cb141f566899df70c9d98c7c7d"
+                }
+              ],
+              "derived_from": [],
+              "file_integrity": "checked_on_file_read"
+            },
+            "svg": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "svg_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "ppt_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            }
+          },
+          "execution": [],
+          "attention": {
+            "status": "not_recorded"
+          }
+        },
+        {
+          "page_id": "p012",
+          "title": "Synthetic page 12",
+          "stages": {
+            "content": {
+              "ref": {
+                "path": ".deckmaster/objects/d2/d215396068a14a6205352f0ccd99f63153567547e3050d774a5bcbd63a2e04f2.json",
+                "sha256": "d215396068a14a6205352f0ccd99f63153567547e3050d774a5bcbd63a2e04f2"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known"
+            },
+            "blueprint": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "svg": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "svg_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "ppt_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            }
+          },
+          "execution": [],
+          "attention": {
+            "status": "not_recorded"
+          }
+        },
+        {
+          "page_id": "p013",
+          "title": "Synthetic page 13",
+          "stages": {
+            "content": {
+              "ref": {
+                "path": ".deckmaster/objects/1e/1e60c672e43d2ede81fd73f42ce85eaf2397b10443ffdde97bd038d16b701e00.json",
+                "sha256": "1e60c672e43d2ede81fd73f42ce85eaf2397b10443ffdde97bd038d16b701e00"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known"
+            },
+            "blueprint": {
+              "ref": {
+                "path": ".deckmaster/objects/f4/f44ca5c018425b579ba541192eafa3077dfeb3e29feffd5277ef9ad684f05454.json",
+                "sha256": "f44ca5c018425b579ba541192eafa3077dfeb3e29feffd5277ef9ad684f05454"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current",
+                "changed": [],
+                "checked": [
+                  "content"
+                ],
+                "unverified": [],
+                "source": "stored_bindings"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known",
+              "file": {
+                "path": ".deckmaster/objects/8c/8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1.png",
+                "sha256": "8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1"
+              },
+              "media_type": "image/png",
+              "dependencies": [
+                {
+                  "identity": "page:p013",
+                  "kind": "content",
+                  "sha256": "1e60c672e43d2ede81fd73f42ce85eaf2397b10443ffdde97bd038d16b701e00"
+                }
+              ],
+              "derived_from": [],
+              "file_integrity": "checked_on_file_read"
+            },
+            "svg": {
+              "ref": {
+                "path": ".deckmaster/objects/e7/e7eebc226e5484cecf9fbde06644be9e4fcfd2338a244756c7d12346adaf0c35.json",
+                "sha256": "e7eebc226e5484cecf9fbde06644be9e4fcfd2338a244756c7d12346adaf0c35"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current",
+                "changed": [],
+                "checked": [
+                  "content"
+                ],
+                "unverified": [],
+                "source": "stored_bindings"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known",
+              "file": {
+                "path": ".deckmaster/objects/45/45e32328dd29a64a41128f4ed4117c31437370d2861c71eac676b13fd1700194.svg",
+                "sha256": "45e32328dd29a64a41128f4ed4117c31437370d2861c71eac676b13fd1700194"
+              },
+              "media_type": "image/svg+xml",
+              "dependencies": [
+                {
+                  "identity": "page:p013",
+                  "kind": "content",
+                  "sha256": "1e60c672e43d2ede81fd73f42ce85eaf2397b10443ffdde97bd038d16b701e00"
+                }
+              ],
+              "derived_from": [
+                {
+                  "path": ".deckmaster/objects/f4/f44ca5c018425b579ba541192eafa3077dfeb3e29feffd5277ef9ad684f05454.json",
+                  "sha256": "f44ca5c018425b579ba541192eafa3077dfeb3e29feffd5277ef9ad684f05454"
+                }
+              ],
+              "file_integrity": "checked_on_file_read"
+            },
+            "svg_preview": {
+              "ref": {
+                "path": ".deckmaster/objects/aa/aa8328a2c3d8f3e5492a802f6a00dbbcefa4631c6e224a9efdb88d48ea6f87fd.json",
+                "sha256": "aa8328a2c3d8f3e5492a802f6a00dbbcefa4631c6e224a9efdb88d48ea6f87fd"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current",
+                "changed": [],
+                "checked": [
+                  "content"
+                ],
+                "unverified": [],
+                "source": "stored_bindings"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known",
+              "file": {
+                "path": ".deckmaster/objects/8c/8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1.png",
+                "sha256": "8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1"
+              },
+              "media_type": "image/png",
+              "dependencies": [
+                {
+                  "identity": "page:p013",
+                  "kind": "content",
+                  "sha256": "1e60c672e43d2ede81fd73f42ce85eaf2397b10443ffdde97bd038d16b701e00"
+                }
+              ],
+              "derived_from": [
+                {
+                  "path": ".deckmaster/objects/e7/e7eebc226e5484cecf9fbde06644be9e4fcfd2338a244756c7d12346adaf0c35.json",
+                  "sha256": "e7eebc226e5484cecf9fbde06644be9e4fcfd2338a244756c7d12346adaf0c35"
+                }
+              ],
+              "file_integrity": "checked_on_file_read",
+              "preview_of": {
+                "scope": "per_page",
+                "ref": {
+                  "path": ".deckmaster/objects/e7/e7eebc226e5484cecf9fbde06644be9e4fcfd2338a244756c7d12346adaf0c35.json",
+                  "sha256": "e7eebc226e5484cecf9fbde06644be9e4fcfd2338a244756c7d12346adaf0c35"
+                },
+                "relation": "known"
+              }
+            },
+            "ppt_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            }
+          },
+          "execution": [],
+          "attention": {
+            "status": "not_recorded"
+          }
+        },
+        {
+          "page_id": "p014",
+          "title": "Synthetic page 14",
+          "stages": {
+            "content": {
+              "ref": {
+                "path": ".deckmaster/objects/48/483fa40cd6b1d7ca705b6f8b59f737aa3e3a67d442f3d926e9195571574ead16.json",
+                "sha256": "483fa40cd6b1d7ca705b6f8b59f737aa3e3a67d442f3d926e9195571574ead16"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known"
+            },
+            "blueprint": {
+              "ref": {
+                "path": ".deckmaster/objects/e9/e9630626138ee8b4725573ba9e74d4bc61959e8a99faf130981ca610935eb651.json",
+                "sha256": "e9630626138ee8b4725573ba9e74d4bc61959e8a99faf130981ca610935eb651"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current",
+                "changed": [],
+                "checked": [
+                  "content"
+                ],
+                "unverified": [],
+                "source": "stored_bindings"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known",
+              "file": {
+                "path": ".deckmaster/objects/8c/8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1.png",
+                "sha256": "8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1"
+              },
+              "media_type": "image/png",
+              "dependencies": [
+                {
+                  "identity": "page:p014",
+                  "kind": "content",
+                  "sha256": "483fa40cd6b1d7ca705b6f8b59f737aa3e3a67d442f3d926e9195571574ead16"
+                }
+              ],
+              "derived_from": [],
+              "file_integrity": "checked_on_file_read"
+            },
+            "svg": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "svg_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "ppt_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            }
+          },
+          "execution": [],
+          "attention": {
+            "status": "not_recorded"
+          }
+        },
+        {
+          "page_id": "p015",
+          "title": "Synthetic page 15",
+          "stages": {
+            "content": {
+              "ref": {
+                "path": ".deckmaster/objects/ff/ffd1e1c496c03f1570e669c3714fbac0f59d99ec5a90f6195ec80b4bff11572b.json",
+                "sha256": "ffd1e1c496c03f1570e669c3714fbac0f59d99ec5a90f6195ec80b4bff11572b"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known"
+            },
+            "blueprint": {
+              "ref": {
+                "path": ".deckmaster/objects/75/758123c770353f43b8605696b0b8c99ce2bc6a932ade3ef765c586f5d8ea60d7.json",
+                "sha256": "758123c770353f43b8605696b0b8c99ce2bc6a932ade3ef765c586f5d8ea60d7"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current",
+                "changed": [],
+                "checked": [
+                  "content"
+                ],
+                "unverified": [],
+                "source": "stored_bindings"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known",
+              "file": {
+                "path": ".deckmaster/objects/8c/8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1.png",
+                "sha256": "8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1"
+              },
+              "media_type": "image/png",
+              "dependencies": [
+                {
+                  "identity": "page:p015",
+                  "kind": "content",
+                  "sha256": "ffd1e1c496c03f1570e669c3714fbac0f59d99ec5a90f6195ec80b4bff11572b"
+                }
+              ],
+              "derived_from": [],
+              "file_integrity": "checked_on_file_read"
+            },
+            "svg": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "svg_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "ppt_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            }
+          },
+          "execution": [],
+          "attention": {
+            "status": "not_recorded"
+          }
+        },
+        {
+          "page_id": "p016",
+          "title": "Synthetic page 16",
+          "stages": {
+            "content": {
+              "ref": {
+                "path": ".deckmaster/objects/37/3758eb18606cbc0729e58fe35a4823f59cb4c0cc81fdf8b6d9002e349d4c48d2.json",
+                "sha256": "3758eb18606cbc0729e58fe35a4823f59cb4c0cc81fdf8b6d9002e349d4c48d2"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known"
+            },
+            "blueprint": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "svg": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "svg_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "ppt_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            }
+          },
+          "execution": [],
+          "attention": {
+            "status": "not_recorded"
+          }
+        },
+        {
+          "page_id": "p017",
+          "title": "Synthetic page 17",
+          "stages": {
+            "content": {
+              "ref": {
+                "path": ".deckmaster/objects/f0/f03feb1e76f18cfd1b403e167f7bc3fe3c3383bf553e27489340d566695fac2c.json",
+                "sha256": "f03feb1e76f18cfd1b403e167f7bc3fe3c3383bf553e27489340d566695fac2c"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known"
+            },
+            "blueprint": {
+              "ref": {
+                "path": ".deckmaster/objects/1c/1c3bc38b5b459371fd7d7930581cd1ceebe656d5894b54a443e430b9813de491.json",
+                "sha256": "1c3bc38b5b459371fd7d7930581cd1ceebe656d5894b54a443e430b9813de491"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current",
+                "changed": [],
+                "checked": [
+                  "content"
+                ],
+                "unverified": [],
+                "source": "stored_bindings"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known",
+              "file": {
+                "path": ".deckmaster/objects/8c/8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1.png",
+                "sha256": "8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1"
+              },
+              "media_type": "image/png",
+              "dependencies": [
+                {
+                  "identity": "page:p017",
+                  "kind": "content",
+                  "sha256": "f03feb1e76f18cfd1b403e167f7bc3fe3c3383bf553e27489340d566695fac2c"
+                }
+              ],
+              "derived_from": [],
+              "file_integrity": "checked_on_file_read"
+            },
+            "svg": {
+              "ref": {
+                "path": ".deckmaster/objects/9a/9a80f8a24c87a2a3df97fcd1250656a88f9316c207b1ff63b60197cbc954144b.json",
+                "sha256": "9a80f8a24c87a2a3df97fcd1250656a88f9316c207b1ff63b60197cbc954144b"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current",
+                "changed": [],
+                "checked": [
+                  "content"
+                ],
+                "unverified": [],
+                "source": "stored_bindings"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known",
+              "file": {
+                "path": ".deckmaster/objects/45/45e32328dd29a64a41128f4ed4117c31437370d2861c71eac676b13fd1700194.svg",
+                "sha256": "45e32328dd29a64a41128f4ed4117c31437370d2861c71eac676b13fd1700194"
+              },
+              "media_type": "image/svg+xml",
+              "dependencies": [
+                {
+                  "identity": "page:p017",
+                  "kind": "content",
+                  "sha256": "f03feb1e76f18cfd1b403e167f7bc3fe3c3383bf553e27489340d566695fac2c"
+                }
+              ],
+              "derived_from": [
+                {
+                  "path": ".deckmaster/objects/1c/1c3bc38b5b459371fd7d7930581cd1ceebe656d5894b54a443e430b9813de491.json",
+                  "sha256": "1c3bc38b5b459371fd7d7930581cd1ceebe656d5894b54a443e430b9813de491"
+                }
+              ],
+              "file_integrity": "checked_on_file_read"
+            },
+            "svg_preview": {
+              "ref": {
+                "path": ".deckmaster/objects/e5/e535c666e5fe2dfec90c4b9a78146f18f52a19fb91c86eac64a6bc9e5209152f.json",
+                "sha256": "e535c666e5fe2dfec90c4b9a78146f18f52a19fb91c86eac64a6bc9e5209152f"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current",
+                "changed": [],
+                "checked": [
+                  "content"
+                ],
+                "unverified": [],
+                "source": "stored_bindings"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known",
+              "file": {
+                "path": ".deckmaster/objects/8c/8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1.png",
+                "sha256": "8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1"
+              },
+              "media_type": "image/png",
+              "dependencies": [
+                {
+                  "identity": "page:p017",
+                  "kind": "content",
+                  "sha256": "f03feb1e76f18cfd1b403e167f7bc3fe3c3383bf553e27489340d566695fac2c"
+                }
+              ],
+              "derived_from": [
+                {
+                  "path": ".deckmaster/objects/9a/9a80f8a24c87a2a3df97fcd1250656a88f9316c207b1ff63b60197cbc954144b.json",
+                  "sha256": "9a80f8a24c87a2a3df97fcd1250656a88f9316c207b1ff63b60197cbc954144b"
+                }
+              ],
+              "file_integrity": "checked_on_file_read",
+              "preview_of": {
+                "scope": "per_page",
+                "ref": {
+                  "path": ".deckmaster/objects/9a/9a80f8a24c87a2a3df97fcd1250656a88f9316c207b1ff63b60197cbc954144b.json",
+                  "sha256": "9a80f8a24c87a2a3df97fcd1250656a88f9316c207b1ff63b60197cbc954144b"
+                },
+                "relation": "known"
+              }
+            },
+            "ppt_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            }
+          },
+          "execution": [],
+          "attention": {
+            "status": "not_recorded"
+          }
+        },
+        {
+          "page_id": "p018",
+          "title": "Synthetic page 18",
+          "stages": {
+            "content": {
+              "ref": {
+                "path": ".deckmaster/objects/9e/9ef6835caea27367209849e11ed63148b534533b9eba8695e15f704b5b4d8bbe.json",
+                "sha256": "9ef6835caea27367209849e11ed63148b534533b9eba8695e15f704b5b4d8bbe"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known"
+            },
+            "blueprint": {
+              "ref": {
+                "path": ".deckmaster/objects/54/54dcf6f0133e0482305e03064eba1f88a844e482965fb8a85cb75bf6527ab226.json",
+                "sha256": "54dcf6f0133e0482305e03064eba1f88a844e482965fb8a85cb75bf6527ab226"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current",
+                "changed": [],
+                "checked": [
+                  "content"
+                ],
+                "unverified": [],
+                "source": "stored_bindings"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known",
+              "file": {
+                "path": ".deckmaster/objects/8c/8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1.png",
+                "sha256": "8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1"
+              },
+              "media_type": "image/png",
+              "dependencies": [
+                {
+                  "identity": "page:p018",
+                  "kind": "content",
+                  "sha256": "9ef6835caea27367209849e11ed63148b534533b9eba8695e15f704b5b4d8bbe"
+                }
+              ],
+              "derived_from": [],
+              "file_integrity": "checked_on_file_read"
+            },
+            "svg": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "svg_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "ppt_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            }
+          },
+          "execution": [],
+          "attention": {
+            "status": "not_recorded"
+          }
+        },
+        {
+          "page_id": "p019",
+          "title": "Synthetic page 19",
+          "stages": {
+            "content": {
+              "ref": {
+                "path": ".deckmaster/objects/bf/bf40e73717d7402c1f5da5fcf8b5f3a8c18e12675fb5ae163316cfb8ba980e17.json",
+                "sha256": "bf40e73717d7402c1f5da5fcf8b5f3a8c18e12675fb5ae163316cfb8ba980e17"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known"
+            },
+            "blueprint": {
+              "ref": {
+                "path": ".deckmaster/objects/31/310fe1143cdaf5a3660fc9a39e0f0d75a22b5c739f21f7476368a45850c5ee2f.json",
+                "sha256": "310fe1143cdaf5a3660fc9a39e0f0d75a22b5c739f21f7476368a45850c5ee2f"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current",
+                "changed": [],
+                "checked": [
+                  "content"
+                ],
+                "unverified": [],
+                "source": "stored_bindings"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known",
+              "file": {
+                "path": ".deckmaster/objects/8c/8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1.png",
+                "sha256": "8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1"
+              },
+              "media_type": "image/png",
+              "dependencies": [
+                {
+                  "identity": "page:p019",
+                  "kind": "content",
+                  "sha256": "bf40e73717d7402c1f5da5fcf8b5f3a8c18e12675fb5ae163316cfb8ba980e17"
+                }
+              ],
+              "derived_from": [],
+              "file_integrity": "checked_on_file_read"
+            },
+            "svg": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "svg_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "ppt_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            }
+          },
+          "execution": [],
+          "attention": {
+            "status": "not_recorded"
+          }
+        },
+        {
+          "page_id": "p020",
+          "title": "Synthetic page 20",
+          "stages": {
+            "content": {
+              "ref": {
+                "path": ".deckmaster/objects/0c/0c7965f3044ff0309f58b1afb074b8a1b4092b51c58ee45f9bb5876bef5f52a4.json",
+                "sha256": "0c7965f3044ff0309f58b1afb074b8a1b4092b51c58ee45f9bb5876bef5f52a4"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known"
+            },
+            "blueprint": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "svg": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "svg_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "ppt_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            }
+          },
+          "execution": [],
+          "attention": {
+            "status": "not_recorded"
+          }
+        },
+        {
+          "page_id": "p021",
+          "title": "Synthetic page 21",
+          "stages": {
+            "content": {
+              "ref": {
+                "path": ".deckmaster/objects/13/131f70a3e91e167951b48e9d99f62e032c23b702d4251815c2c0e9aba09ca19b.json",
+                "sha256": "131f70a3e91e167951b48e9d99f62e032c23b702d4251815c2c0e9aba09ca19b"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known"
+            },
+            "blueprint": {
+              "ref": {
+                "path": ".deckmaster/objects/77/7705cdc4240bc5e93c74eea9a6755ea9f3708bdf4def9caceb2010f102928bd0.json",
+                "sha256": "7705cdc4240bc5e93c74eea9a6755ea9f3708bdf4def9caceb2010f102928bd0"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current",
+                "changed": [],
+                "checked": [
+                  "content"
+                ],
+                "unverified": [],
+                "source": "stored_bindings"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known",
+              "file": {
+                "path": ".deckmaster/objects/8c/8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1.png",
+                "sha256": "8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1"
+              },
+              "media_type": "image/png",
+              "dependencies": [
+                {
+                  "identity": "page:p021",
+                  "kind": "content",
+                  "sha256": "131f70a3e91e167951b48e9d99f62e032c23b702d4251815c2c0e9aba09ca19b"
+                }
+              ],
+              "derived_from": [],
+              "file_integrity": "checked_on_file_read"
+            },
+            "svg": {
+              "ref": {
+                "path": ".deckmaster/objects/10/104ee7614534dee399d90d6e8229aadafa6a47d56ba8bcf16668c4291eac8bd0.json",
+                "sha256": "104ee7614534dee399d90d6e8229aadafa6a47d56ba8bcf16668c4291eac8bd0"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current",
+                "changed": [],
+                "checked": [
+                  "content"
+                ],
+                "unverified": [],
+                "source": "stored_bindings"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known",
+              "file": {
+                "path": ".deckmaster/objects/45/45e32328dd29a64a41128f4ed4117c31437370d2861c71eac676b13fd1700194.svg",
+                "sha256": "45e32328dd29a64a41128f4ed4117c31437370d2861c71eac676b13fd1700194"
+              },
+              "media_type": "image/svg+xml",
+              "dependencies": [
+                {
+                  "identity": "page:p021",
+                  "kind": "content",
+                  "sha256": "131f70a3e91e167951b48e9d99f62e032c23b702d4251815c2c0e9aba09ca19b"
+                }
+              ],
+              "derived_from": [
+                {
+                  "path": ".deckmaster/objects/77/7705cdc4240bc5e93c74eea9a6755ea9f3708bdf4def9caceb2010f102928bd0.json",
+                  "sha256": "7705cdc4240bc5e93c74eea9a6755ea9f3708bdf4def9caceb2010f102928bd0"
+                }
+              ],
+              "file_integrity": "checked_on_file_read"
+            },
+            "svg_preview": {
+              "ref": {
+                "path": ".deckmaster/objects/e9/e919e8abf53d785f4461fe8b971b832dc53d806a09a4fdee53d557deb1342a7b.json",
+                "sha256": "e919e8abf53d785f4461fe8b971b832dc53d806a09a4fdee53d557deb1342a7b"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current",
+                "changed": [],
+                "checked": [
+                  "content"
+                ],
+                "unverified": [],
+                "source": "stored_bindings"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known",
+              "file": {
+                "path": ".deckmaster/objects/8c/8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1.png",
+                "sha256": "8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1"
+              },
+              "media_type": "image/png",
+              "dependencies": [
+                {
+                  "identity": "page:p021",
+                  "kind": "content",
+                  "sha256": "131f70a3e91e167951b48e9d99f62e032c23b702d4251815c2c0e9aba09ca19b"
+                }
+              ],
+              "derived_from": [
+                {
+                  "path": ".deckmaster/objects/10/104ee7614534dee399d90d6e8229aadafa6a47d56ba8bcf16668c4291eac8bd0.json",
+                  "sha256": "104ee7614534dee399d90d6e8229aadafa6a47d56ba8bcf16668c4291eac8bd0"
+                }
+              ],
+              "file_integrity": "checked_on_file_read",
+              "preview_of": {
+                "scope": "per_page",
+                "ref": {
+                  "path": ".deckmaster/objects/10/104ee7614534dee399d90d6e8229aadafa6a47d56ba8bcf16668c4291eac8bd0.json",
+                  "sha256": "104ee7614534dee399d90d6e8229aadafa6a47d56ba8bcf16668c4291eac8bd0"
+                },
+                "relation": "known"
+              }
+            },
+            "ppt_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            }
+          },
+          "execution": [],
+          "attention": {
+            "status": "not_recorded"
+          }
+        },
+        {
+          "page_id": "p022",
+          "title": "Synthetic page 22",
+          "stages": {
+            "content": {
+              "ref": {
+                "path": ".deckmaster/objects/36/3618d739fd5a178d9d737040e45107f9ff37b6cdc80318e4c1cee9142c41363a.json",
+                "sha256": "3618d739fd5a178d9d737040e45107f9ff37b6cdc80318e4c1cee9142c41363a"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known"
+            },
+            "blueprint": {
+              "ref": {
+                "path": ".deckmaster/objects/db/db233d05437c480ae52c90dbb95a4a5e94cfe39f62f6c4832de4d8e6ed484d70.json",
+                "sha256": "db233d05437c480ae52c90dbb95a4a5e94cfe39f62f6c4832de4d8e6ed484d70"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current",
+                "changed": [],
+                "checked": [
+                  "content"
+                ],
+                "unverified": [],
+                "source": "stored_bindings"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known",
+              "file": {
+                "path": ".deckmaster/objects/8c/8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1.png",
+                "sha256": "8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1"
+              },
+              "media_type": "image/png",
+              "dependencies": [
+                {
+                  "identity": "page:p022",
+                  "kind": "content",
+                  "sha256": "3618d739fd5a178d9d737040e45107f9ff37b6cdc80318e4c1cee9142c41363a"
+                }
+              ],
+              "derived_from": [],
+              "file_integrity": "checked_on_file_read"
+            },
+            "svg": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "svg_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "ppt_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            }
+          },
+          "execution": [],
+          "attention": {
+            "status": "not_recorded"
+          }
+        },
+        {
+          "page_id": "p023",
+          "title": "Synthetic page 23",
+          "stages": {
+            "content": {
+              "ref": {
+                "path": ".deckmaster/objects/21/2177e2a0a3d9dd81d19f50ff36ba29ab218bccf588beba73c02172430eecb1b9.json",
+                "sha256": "2177e2a0a3d9dd81d19f50ff36ba29ab218bccf588beba73c02172430eecb1b9"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known"
+            },
+            "blueprint": {
+              "ref": {
+                "path": ".deckmaster/objects/6e/6e9d28109dc64cd90a4073c7fa53d338084761cc27c61e2b79228ad7d135ce1c.json",
+                "sha256": "6e9d28109dc64cd90a4073c7fa53d338084761cc27c61e2b79228ad7d135ce1c"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current",
+                "changed": [],
+                "checked": [
+                  "content"
+                ],
+                "unverified": [],
+                "source": "stored_bindings"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known",
+              "file": {
+                "path": ".deckmaster/objects/8c/8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1.png",
+                "sha256": "8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1"
+              },
+              "media_type": "image/png",
+              "dependencies": [
+                {
+                  "identity": "page:p023",
+                  "kind": "content",
+                  "sha256": "2177e2a0a3d9dd81d19f50ff36ba29ab218bccf588beba73c02172430eecb1b9"
+                }
+              ],
+              "derived_from": [],
+              "file_integrity": "checked_on_file_read"
+            },
+            "svg": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "svg_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "ppt_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            }
+          },
+          "execution": [],
+          "attention": {
+            "status": "not_recorded"
+          }
+        },
+        {
+          "page_id": "p024",
+          "title": "Synthetic page 24",
+          "stages": {
+            "content": {
+              "ref": {
+                "path": ".deckmaster/objects/de/de67f11975b0cc770052e4fc59904281d5291feb5f255727589906911d7dcc8b.json",
+                "sha256": "de67f11975b0cc770052e4fc59904281d5291feb5f255727589906911d7dcc8b"
+              },
+              "scope": "per_page",
+              "existence": "recorded",
+              "applicability": {
+                "status": "current"
+              },
+              "adoption": "adopted_at_snapshot",
+              "relation": "known"
+            },
+            "blueprint": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "svg": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "svg_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            },
+            "ppt_preview": {
+              "ref": null,
+              "scope": "per_page",
+              "existence": "not_generated",
+              "applicability": {
+                "status": "unknown"
+              },
+              "adoption": "none",
+              "relation": "unknown"
+            }
+          },
+          "execution": [],
+          "attention": {
+            "status": "not_recorded"
+          }
+        }
+      ],
+      "task_counts": {
+        "awaiting_host": 1,
+        "completed": 1
+      },
+      "unreadable_tasks": 0,
+      "outputs": {
+        "pptx": {
+          "ref": null,
+          "scope": "whole_deck",
+          "revision_id": "380418a8baa84d2280ea8695747f3e19",
+          "existence": "not_generated",
+          "relation": "unknown",
+          "ordered_pages": []
+        }
+      },
+      "input_alignment": "current",
+      "quality": {
+        "status": "detail_required",
+        "review_refs": []
+      },
+      "candidates": {
+        "status": "not_recorded"
+      },
+      "attempts": {
+        "status": "not_recorded"
+      },
+      "evidence_level": "engineering"
+    }
+  ],
+  "/api/pages/p001/lineage": [
+    200,
+    {
+      "format": "page_lineage.v1",
+      "project_id": "synthetic-project",
+      "revision_id": "380418a8baa84d2280ea8695747f3e19",
+      "requested_revision": "380418a8baa84d2280ea8695747f3e19",
+      "page_id": "p001",
+      "page": {
+        "customer_visible": {
+          "body_blocks": [],
+          "title": "<img src=x onerror=\"window.__w01_xss=true\">"
+        },
+        "page_id": "p001",
+        "schema_version": "deck_page_package.v2",
+        "visual_spec": {
+          "intent": "W01 synthetic example",
+          "reference_mode": "new_design"
+        }
+      },
+      "stages": {
+        "content": {
+          "ref": {
+            "path": ".deckmaster/objects/0a/0a9723dc1b18b24ea94e2e799ef83f06baadd813f889b2773426e288aff0d6af.json",
+            "sha256": "0a9723dc1b18b24ea94e2e799ef83f06baadd813f889b2773426e288aff0d6af"
+          },
+          "scope": "per_page",
+          "existence": "recorded",
+          "applicability": {
+            "status": "current"
+          },
+          "adoption": "adopted_at_snapshot",
+          "relation": "known"
+        },
+        "blueprint": {
+          "ref": {
+            "path": ".deckmaster/objects/d1/d1f10f534189f09e70a3b2120c271a36062726befb78ab1b6c60997125800d0b.json",
+            "sha256": "d1f10f534189f09e70a3b2120c271a36062726befb78ab1b6c60997125800d0b"
+          },
+          "scope": "per_page",
+          "existence": "recorded",
+          "applicability": {
+            "status": "current",
+            "changed": [],
+            "checked": [
+              "content"
+            ],
+            "unverified": [],
+            "source": "stored_bindings"
+          },
+          "adoption": "adopted_at_snapshot",
+          "relation": "known",
+          "file": {
+            "path": ".deckmaster/objects/8c/8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1.png",
+            "sha256": "8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1"
+          },
+          "media_type": "image/png",
+          "dependencies": [
+            {
+              "identity": "page:p001",
+              "kind": "content",
+              "sha256": "0a9723dc1b18b24ea94e2e799ef83f06baadd813f889b2773426e288aff0d6af"
+            }
+          ],
+          "derived_from": [],
+          "file_integrity": "checked_on_file_read"
+        },
+        "svg": {
+          "ref": {
+            "path": ".deckmaster/objects/f5/f5cbc25f05f7fcb0381dd96200e319c1502c1feff6612d626764f3f80aebc1ee.json",
+            "sha256": "f5cbc25f05f7fcb0381dd96200e319c1502c1feff6612d626764f3f80aebc1ee"
+          },
+          "scope": "per_page",
+          "existence": "recorded",
+          "applicability": {
+            "status": "current",
+            "changed": [],
+            "checked": [
+              "content"
+            ],
+            "unverified": [],
+            "source": "stored_bindings"
+          },
+          "adoption": "adopted_at_snapshot",
+          "relation": "known",
+          "file": {
+            "path": ".deckmaster/objects/45/45e32328dd29a64a41128f4ed4117c31437370d2861c71eac676b13fd1700194.svg",
+            "sha256": "45e32328dd29a64a41128f4ed4117c31437370d2861c71eac676b13fd1700194"
+          },
+          "media_type": "image/svg+xml",
+          "dependencies": [
+            {
+              "identity": "page:p001",
+              "kind": "content",
+              "sha256": "0a9723dc1b18b24ea94e2e799ef83f06baadd813f889b2773426e288aff0d6af"
+            }
+          ],
+          "derived_from": [
+            {
+              "path": ".deckmaster/objects/fe/fe8e25740d3f142fe85928e35b08af279cda8f4a57cbd0c050e78baa58531acc.json",
+              "sha256": "fe8e25740d3f142fe85928e35b08af279cda8f4a57cbd0c050e78baa58531acc"
+            }
+          ],
+          "file_integrity": "checked_on_file_read"
+        },
+        "svg_preview": {
+          "ref": {
+            "path": ".deckmaster/objects/61/6129054ccac9d0838b27a426aca602f1b63ecf3a462e1f9a532daf764ca085f8.json",
+            "sha256": "6129054ccac9d0838b27a426aca602f1b63ecf3a462e1f9a532daf764ca085f8"
+          },
+          "scope": "per_page",
+          "existence": "recorded",
+          "applicability": {
+            "status": "current",
+            "changed": [],
+            "checked": [
+              "content"
+            ],
+            "unverified": [],
+            "source": "stored_bindings"
+          },
+          "adoption": "adopted_at_snapshot",
+          "relation": "known",
+          "file": {
+            "path": ".deckmaster/objects/8c/8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1.png",
+            "sha256": "8c4e5da8fe816951a2163607df659bfb1767f7684461308276ff22e943e143c1"
+          },
+          "media_type": "image/png",
+          "dependencies": [
+            {
+              "identity": "page:p001",
+              "kind": "content",
+              "sha256": "0a9723dc1b18b24ea94e2e799ef83f06baadd813f889b2773426e288aff0d6af"
+            }
+          ],
+          "derived_from": [
+            {
+              "path": ".deckmaster/objects/f5/f5cbc25f05f7fcb0381dd96200e319c1502c1feff6612d626764f3f80aebc1ee.json",
+              "sha256": "f5cbc25f05f7fcb0381dd96200e319c1502c1feff6612d626764f3f80aebc1ee"
+            }
+          ],
+          "file_integrity": "checked_on_file_read",
+          "preview_of": {
+            "scope": "per_page",
+            "ref": {
+              "path": ".deckmaster/objects/f5/f5cbc25f05f7fcb0381dd96200e319c1502c1feff6612d626764f3f80aebc1ee.json",
+              "sha256": "f5cbc25f05f7fcb0381dd96200e319c1502c1feff6612d626764f3f80aebc1ee"
+            },
+            "relation": "known"
+          }
+        },
+        "ppt_preview": {
+          "ref": null,
+          "scope": "per_page",
+          "existence": "not_generated",
+          "applicability": {
+            "status": "unknown"
+          },
+          "adoption": "none",
+          "relation": "unknown"
+        }
+      },
+      "sources": {
+        "citations": [],
+        "relation": "unknown"
+      },
+      "prompts": {
+        "prepared": [
+          {
+            "ref": {
+              "path": ".deckmaster/objects/e7/e7d8440ee91bcc1ba634ff3ede1dcbd508265d63569f65ec9ff488757ebeaacc.json",
+              "sha256": "e7d8440ee91bcc1ba634ff3ede1dcbd508265d63569f65ec9ff488757ebeaacc"
+            },
+            "task_ref": {
+              "path": ".deckmaster/objects/f3/f3a58c43b43946e39de0c1eab50ea3519dde7590a2b73fb7dd8e16d8f5e78ebc.json",
+              "sha256": "f3a58c43b43946e39de0c1eab50ea3519dde7590a2b73fb7dd8e16d8f5e78ebc"
+            },
+            "task_id": "29c4a93dd29d",
+            "dispatch_revision": "78da6c91ae584e91a986f4b9f211c443",
+            "text": "Use case: productivity-visual\nAsset type: editable-presentation blueprint reference, one complete slide\nCanvas: 1600x900 px; physical size 13.333333333333334x7.5 in; contain fit\nPrimary request: Create a polished business slide blueprint from the exact structured input below. Preserve every visible fact, number, unit, label, footnote, node and directed relationship.\nStyle/medium: precise enterprise presentation design; clear hierarchy; production-ready reference image\nComposition/framing: use the supplied canvas, layout intent and node relationships; keep all content inside safe margins\nText: render the supplied customer-visible text verbatim and legibly\nConstraints: do not add claims or invent numeric values, dates, customer data, or outcomes. If a chart needs data absent from the input, use an unlabeled schematic marked 示意数据, without plausible-looking values. Do not omit modules; connect arrows to their actual nodes; use only permitted assets; no watermark; no internal notes\nStructured input:\n{\n  \"canvas\": {\n    \"fit\": \"contain\",\n    \"height_px\": 900,\n    \"slide_height_in\": 7.5,\n    \"slide_width_in\": 13.333333333333334,\n    \"width_px\": 1600\n  },\n  \"customer_visible\": {\n    \"body_blocks\": [],\n    \"callouts\": [],\n    \"footnotes\": [],\n    \"labels\": [],\n    \"subtitle\": \"\",\n    \"title\": \"<img src=x onerror=\\\"window.__w01_xss=true\\\">\"\n  },\n  \"fonts\": [\n    {\n      \"asset_id\": null,\n      \"face\": \"Regular\",\n      \"fallback_font_ids\": [],\n      \"family\": \"Noto Sans CJK SC\",\n      \"font_id\": \"body\",\n      \"weight\": 400\n    },\n    {\n      \"asset_id\": null,\n      \"face\": \"Bold\",\n      \"fallback_font_ids\": [],\n      \"family\": \"Noto Sans CJK SC\",\n      \"font_id\": \"heading\",\n      \"weight\": 700\n    }\n  ],\n  \"language\": \"zh-CN\",\n  \"page_id\": \"p001\",\n  \"permitted_assets\": [],\n  \"style\": {\n    \"colors\": {\n      \"accent\": \"#1478FF\",\n      \"background\": \"#FFFFFF\",\n      \"text\": \"#14213D\"\n    },\n    \"layout_notes\": \"默认样式在 create 时固化；字体名称是配置需求，不是本机安装证明。\",\n    \"style_id\": \"default\",\n    \"typography\": {\n      \"auxiliary_size_pt\": 12,\n      \"body_font_id\": \"body\",\n      \"body_size_pt\": 18,\n      \"heading_font_id\": \"heading\",\n      \"heading_size_pt\": 30\n    }\n  },\n  \"visual_spec\": {\n    \"edges\": [],\n    \"intent\": \"W01 synthetic example\",\n    \"layout_hint\": \"\",\n    \"nodes\": [],\n    \"reference_mode\": \"new_design\",\n    \"style_ref\": \"default\"\n  }\n}",
+            "prompt_sha256": "676f118e18b3aecf30ae886fea234f0b6248a3e9f439426e0ac1852860d1b3a6",
+            "state": "prepared",
+            "observer": "core_frozen",
+            "output_relation": "unknown",
+            "basis": "task_scope_only"
+          }
+        ],
+        "submitted": {
+          "state": "recorded",
+          "ref": {
+            "path": ".deckmaster/objects/78/78670235cf3813801d89cb9b75339afe807eabfd012d241e6fbbf9e8d8a06369.txt",
+            "sha256": "78670235cf3813801d89cb9b75339afe807eabfd012d241e6fbbf9e8d8a06369"
+          },
+          "observer": "host_reported",
+          "text": "Synthetic stored Host-reported text; not a live invocation",
+          "relation": "known",
+          "basis": "artifact.provenance.submitted_prompt"
+        },
+        "errors": [],
+        "parameters": {
+          "status": "not_recorded"
+        },
+        "attempt": {
+          "status": "not_recorded"
+        }
+      },
+      "tasks": [
+        {
+          "ref": {
+            "path": ".deckmaster/objects/f3/f3a58c43b43946e39de0c1eab50ea3519dde7590a2b73fb7dd8e16d8f5e78ebc.json",
+            "sha256": "f3a58c43b43946e39de0c1eab50ea3519dde7590a2b73fb7dd8e16d8f5e78ebc"
+          },
+          "task_id": "29c4a93dd29d",
+          "kind": "blueprint",
+          "status": "awaiting_host",
+          "scope_pages": [
+            "p001"
+          ],
+          "instruction": "Codex专用：读取 production_request.prompt，先领取任务并 begin 本任务的调用额度，使用当前会话内置图像工具生成一张真实蓝图；保存原始图片与实际提交prompt，实际阅图后settle，再用 blueprint 信封提交。不得请求 Provider/API Key，不得用 fixture 或本地占位图。",
+          "updated_at": "2026-09-26T12:12:25Z",
+          "execution_ref": null,
+          "result_refs": [],
+          "result_linkage": "unknown"
+        }
+      ],
+      "deck_output": {
+        "ref": null,
+        "scope": "whole_deck",
+        "revision_id": "380418a8baa84d2280ea8695747f3e19",
+        "existence": "not_generated",
+        "relation": "unknown",
+        "ordered_pages": []
+      },
+      "evidence_level": "engineering"
+    }
+  ],
+  "/api/tasks": [
+    200,
+    {
+      "project_id": "synthetic-project",
+      "revision_id": "380418a8baa84d2280ea8695747f3e19",
+      "tasks": [
+        {
+          "ref": {
+            "path": ".deckmaster/objects/14/142c7a51d1404b0116c995d30c0edfb7d017ef92f8e39961b8a9525bca8b2165.json",
+            "sha256": "142c7a51d1404b0116c995d30c0edfb7d017ef92f8e39961b8a9525bca8b2165"
+          },
+          "task_id": "a2f8a342f702",
+          "kind": "compose",
+          "status": "completed",
+          "scope_pages": [],
+          "instruction": "Read every source in Task.sources plus the method resources; derive the audience's open question and write complete visible copy as Page v2 with an explicit page order. Same source supports different framings; do not call a rule planner or fill pages from templates.",
+          "updated_at": "2026-09-26T12:12:25Z",
+          "execution_ref": null,
+          "result_refs": [],
+          "result_linkage": "unknown"
+        },
+        {
+          "ref": {
+            "path": ".deckmaster/objects/f3/f3a58c43b43946e39de0c1eab50ea3519dde7590a2b73fb7dd8e16d8f5e78ebc.json",
+            "sha256": "f3a58c43b43946e39de0c1eab50ea3519dde7590a2b73fb7dd8e16d8f5e78ebc"
+          },
+          "task_id": "29c4a93dd29d",
+          "kind": "blueprint",
+          "status": "awaiting_host",
+          "scope_pages": [
+            "p001"
+          ],
+          "instruction": "Codex专用：读取 production_request.prompt，先领取任务并 begin 本任务的调用额度，使用当前会话内置图像工具生成一张真实蓝图；保存原始图片与实际提交prompt，实际阅图后settle，再用 blueprint 信封提交。不得请求 Provider/API Key，不得用 fixture 或本地占位图。",
+          "updated_at": "2026-09-26T12:12:25Z",
+          "execution_ref": null,
+          "result_refs": [],
+          "result_linkage": "unknown"
+        }
+      ]
+    }
+  ],
+  "/api/reviews": [
+    200,
+    {
+      "project_id": "synthetic-project",
+      "revision_id": "380418a8baa84d2280ea8695747f3e19",
+      "reviews": []
+    }
+  ]
+}

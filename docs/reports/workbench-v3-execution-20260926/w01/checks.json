@@ -1,0 +1,11 @@
+{
+  "implementation_commit": "b0ac9e5c00ffa2b975f3d9f2e02382e9cf7adf8a",
+  "command": "PYTHONPATH=src python -m pytest -q -p no:cacheprovider tests/rebuild/test_workbench_reads.py tests/rebuild/test_web.py tests/rebuild/test_workbench_e2e.py tests/rebuild/test_package_boundary.py",
+  "passed": 45,
+  "failed": 0,
+  "elapsed_seconds": 17.68,
+  "ruff": "passed",
+  "level": "local core/HTTP; synthetic fixtures",
+  "installation": "not verified",
+  "real_host": "not run"
+}

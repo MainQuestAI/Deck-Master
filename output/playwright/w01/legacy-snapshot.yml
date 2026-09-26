@@ -1,0 +1,83 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e5]: Deck Master
+      - generic [ref=e6]: Review Workbench
+      - generic [ref=e7]: 可编辑形状与文字；非 Office 原生数据图表/表格
+    - generic [ref=e8]:
+      - generic [ref=e9]:
+        - term [ref=e10]: project
+        - definition [ref=e11]: synthetic-project
+      - generic [ref=e12]:
+        - term [ref=e13]: revision
+        - definition [ref=e14]: b535e1a5eeb9
+      - generic [ref=e15]:
+        - term [ref=e16]: pages
+        - definition [ref=e17]: "24"
+      - generic [ref=e18]:
+        - term [ref=e19]: status
+        - status [ref=e20]: awaiting_host
+  - main [ref=e21]:
+    - region "页面列表" [ref=e22]:
+      - heading "Pages" [level=2] [ref=e23]
+      - list [ref=e24]:
+        - button "p1 · p001" [ref=e25] [cursor=pointer]
+        - button "p2 · p002" [ref=e26] [cursor=pointer]
+        - button "p3 · p003" [ref=e27] [cursor=pointer]
+        - button "p4 · p004" [ref=e28] [cursor=pointer]
+        - button "p5 · p005" [ref=e29] [cursor=pointer]
+        - button "p6 · p006" [ref=e30] [cursor=pointer]
+        - button "p7 · p007" [ref=e31] [cursor=pointer]
+        - button "p8 · p008" [ref=e32] [cursor=pointer]
+        - button "p9 · p009" [ref=e33] [cursor=pointer]
+        - button "p10 · p010" [ref=e34] [cursor=pointer]
+        - button "p11 · p011" [ref=e35] [cursor=pointer]
+        - button "p12 · p012" [ref=e36] [cursor=pointer]
+        - button "p13 · p013" [ref=e37] [cursor=pointer]
+        - button "p14 · p014" [ref=e38] [cursor=pointer]
+        - button "p15 · p015" [ref=e39] [cursor=pointer]
+        - button "p16 · p016" [ref=e40] [cursor=pointer]
+        - button "p17 · p017" [ref=e41] [cursor=pointer]
+        - button "p18 · p018" [ref=e42] [cursor=pointer]
+        - button "p19 · p019" [ref=e43] [cursor=pointer]
+        - button "p20 · p020" [ref=e44] [cursor=pointer]
+        - button "p21 · p021" [ref=e45] [cursor=pointer]
+        - button "p22 · p022" [ref=e46] [cursor=pointer]
+        - button "p23 · p023" [ref=e47] [cursor=pointer]
+        - button "p24 · p024" [ref=e48] [cursor=pointer]
+    - generic [ref=e49]:
+      - tablist "视图槽位" [ref=e50]:
+        - tab "正文" [selected] [ref=e51] [cursor=pointer]
+        - tab "原图" [ref=e52] [cursor=pointer]
+        - tab "SVG" [ref=e53] [cursor=pointer]
+        - tab "PPT" [ref=e54] [cursor=pointer]
+      - generic [ref=e55]:
+        - navigation "对照缩放" [ref=e56]:
+          - button "缩小" [ref=e57] [cursor=pointer]: −
+          - button "适配宽度" [ref=e58] [cursor=pointer]
+          - button "放大" [ref=e59] [cursor=pointer]: ＋
+          - status [ref=e60]: 100%
+        - tabpanel [ref=e61]:
+          - heading "<img src=x onerror=\"window.__w01_xss=true\">" [level=1] [ref=e62]
+          - paragraph
+      - generic [ref=e63]:
+        - button "刷新" [ref=e64] [cursor=pointer]
+        - button "导出工作稿" [ref=e65] [cursor=pointer]
+        - button "查看历史／恢复" [ref=e66] [cursor=pointer]
+        - status
+        - group [ref=e67]:
+          - generic "编辑本页正文" [ref=e68]
+        - generic [ref=e69]: 本页修改意见（可注明区域、对象或关系）
+        - textbox "本页修改意见（可注明区域、对象或关系）" [ref=e70]
+        - button "交给 Codex 修改" [ref=e71] [cursor=pointer]
+        - status [ref=e72]: 可在原图、SVG 或 PPT 预览上拖动框选区域。
+        - button "清除区域" [ref=e73] [cursor=pointer]
+        - group [ref=e74]:
+          - generic "本页审阅记录" [ref=e75]
+      - generic [ref=e76]:
+        - heading "Pending Host Tasks" [level=2] [ref=e77]
+        - list [ref=e78]:
+          - listitem [ref=e79]:
+            - text: blueprintawaiting_host
+            - generic [ref=e80]: Codex专用：读取 production_request.prompt，先领取任务并 begin 本任务的调用额度，使用当前会话内置图像工具生成一张真实蓝图；保存原始图片与实际提交prompt，实际阅图后settle，再用 blueprint 信封提交。不得请求 Provider/API Key，不得用 fixtur
+            - button "取消" [ref=e81]

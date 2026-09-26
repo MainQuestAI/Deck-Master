@@ -1,0 +1,12 @@
+{
+  "synthetic": true,
+  "browser_fixture": true,
+  "project_id": "synthetic-project",
+  "fixed_revision": "380418a8baa84d2280ea8695747f3e19",
+  "current_revision": "b535e1a5eeb94af4a5abd61755b7ed9f",
+  "page_id": "p001",
+  "history_read_did_not_write": true,
+  "pointer_sha256": "d7bc40900c34e909201e6718e23536b7236bb635e11c6caa4f8ccae0c0c6f796",
+  "svg_file_route": "/api/file?path=.deckmaster%2Fobjects%2F45%2F45e32328dd29a64a41128f4ed4117c31437370d2861c71eac676b13fd1700194.svg&sha256=45e32328dd29a64a41128f4ed4117c31437370d2861c71eac676b13fd1700194",
+  "source_command": "PYTHONPATH=src python examples/workbench/w01_lineage.py --out <new-directory> --pages 24"
+}

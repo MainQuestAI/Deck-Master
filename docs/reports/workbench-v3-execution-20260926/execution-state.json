@@ -19,8 +19,14 @@
   ],
   "packages": {
     "W01": {
-      "status": "implementing",
-      "accepted": false
+      "status": "core_verified_pending_integration",
+      "accepted": false,
+      "implementation_commit": "b0ac9e5c00ffa2b975f3d9f2e02382e9cf7adf8a",
+      "evidence": "W01.md",
+      "residuals": [
+        "W02/W07 object adaptation",
+        "W01-AC01 full 300x5x3 pressure with background updates"
+      ]
     },
     "W02": {
       "status": "planned",
@@ -70,33 +76,52 @@
   "acceptance": {
     "W01-AC01": {
       "owner": "W01",
-      "status": "open",
-      "evidence": []
+      "status": "partial",
+      "evidence": [
+        "W01.md"
+      ],
+      "evidence_level": "core/http"
     },
     "W01-AC02": {
       "owner": "W01",
-      "status": "open",
-      "evidence": []
+      "status": "core_verified",
+      "evidence": [
+        "W01.md"
+      ],
+      "evidence_level": "core/http"
     },
     "W01-AC03": {
       "owner": "W01",
-      "status": "open",
-      "evidence": []
+      "status": "core_verified",
+      "evidence": [
+        "W01.md"
+      ],
+      "evidence_level": "core/http"
     },
     "W01-AC04": {
       "owner": "W01",
-      "status": "open",
-      "evidence": []
+      "status": "core_verified",
+      "evidence": [
+        "W01.md"
+      ],
+      "evidence_level": "core/http"
     },
     "W01-AC05": {
       "owner": "W01",
-      "status": "open",
-      "evidence": []
+      "status": "core_verified",
+      "evidence": [
+        "W01.md"
+      ],
+      "evidence_level": "core/http"
     },
     "W01-AC06": {
       "owner": "W01",
-      "status": "open",
-      "evidence": []
+      "status": "core_verified",
+      "evidence": [
+        "W01.md",
+        "w01/browser-check.json"
+      ],
+      "evidence_level": "core/http/browser"
     },
     "W02-AC01": {
       "owner": "W02",

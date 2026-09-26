@@ -1,0 +1,13 @@
+[
+  404,
+  {
+    "status": "error",
+    "error": {
+      "code": "revision_not_found",
+      "message": "revision is not committed in this project",
+      "field": "revision",
+      "next_action": "read available project history and select a valid snapshot",
+      "docs_ref": "docs/agent-recovery-playbook.md#workbench-snapshot-reads"
+    }
+  }
+]

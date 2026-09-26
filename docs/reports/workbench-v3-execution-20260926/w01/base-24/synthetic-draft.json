@@ -1,0 +1,292 @@
+{
+  "pages": [
+    {
+      "schema_version": "deck_page_package.v2",
+      "page_id": "p001",
+      "customer_visible": {
+        "title": "<img src=x onerror=\"window.__w01_xss=true\">",
+        "body_blocks": []
+      },
+      "visual_spec": {
+        "intent": "W01 synthetic example",
+        "reference_mode": "new_design"
+      }
+    },
+    {
+      "schema_version": "deck_page_package.v2",
+      "page_id": "p002",
+      "customer_visible": {
+        "title": "Synthetic page 2",
+        "body_blocks": []
+      },
+      "visual_spec": {
+        "intent": "W01 synthetic example",
+        "reference_mode": "new_design"
+      }
+    },
+    {
+      "schema_version": "deck_page_package.v2",
+      "page_id": "p003",
+      "customer_visible": {
+        "title": "Synthetic page 3",
+        "body_blocks": []
+      },
+      "visual_spec": {
+        "intent": "W01 synthetic example",
+        "reference_mode": "new_design"
+      }
+    },
+    {
+      "schema_version": "deck_page_package.v2",
+      "page_id": "p004",
+      "customer_visible": {
+        "title": "Synthetic page 4",
+        "body_blocks": []
+      },
+      "visual_spec": {
+        "intent": "W01 synthetic example",
+        "reference_mode": "new_design"
+      }
+    },
+    {
+      "schema_version": "deck_page_package.v2",
+      "page_id": "p005",
+      "customer_visible": {
+        "title": "Synthetic page 5",
+        "body_blocks": []
+      },
+      "visual_spec": {
+        "intent": "W01 synthetic example",
+        "reference_mode": "new_design"
+      }
+    },
+    {
+      "schema_version": "deck_page_package.v2",
+      "page_id": "p006",
+      "customer_visible": {
+        "title": "Synthetic page 6",
+        "body_blocks": []
+      },
+      "visual_spec": {
+        "intent": "W01 synthetic example",
+        "reference_mode": "new_design"
+      }
+    },
+    {
+      "schema_version": "deck_page_package.v2",
+      "page_id": "p007",
+      "customer_visible": {
+        "title": "Synthetic page 7",
+        "body_blocks": []
+      },
+      "visual_spec": {
+        "intent": "W01 synthetic example",
+        "reference_mode": "new_design"
+      }
+    },
+    {
+      "schema_version": "deck_page_package.v2",
+      "page_id": "p008",
+      "customer_visible": {
+        "title": "Synthetic page 8",
+        "body_blocks": []
+      },
+      "visual_spec": {
+        "intent": "W01 synthetic example",
+        "reference_mode": "new_design"
+      }
+    },
+    {
+      "schema_version": "deck_page_package.v2",
+      "page_id": "p009",
+      "customer_visible": {
+        "title": "Synthetic page 9",
+        "body_blocks": []
+      },
+      "visual_spec": {
+        "intent": "W01 synthetic example",
+        "reference_mode": "new_design"
+      }
+    },
+    {
+      "schema_version": "deck_page_package.v2",
+      "page_id": "p010",
+      "customer_visible": {
+        "title": "Synthetic page 10",
+        "body_blocks": []
+      },
+      "visual_spec": {
+        "intent": "W01 synthetic example",
+        "reference_mode": "new_design"
+      }
+    },
+    {
+      "schema_version": "deck_page_package.v2",
+      "page_id": "p011",
+      "customer_visible": {
+        "title": "Synthetic page 11",
+        "body_blocks": []
+      },
+      "visual_spec": {
+        "intent": "W01 synthetic example",
+        "reference_mode": "new_design"
+      }
+    },
+    {
+      "schema_version": "deck_page_package.v2",
+      "page_id": "p012",
+      "customer_visible": {
+        "title": "Synthetic page 12",
+        "body_blocks": []
+      },
+      "visual_spec": {
+        "intent": "W01 synthetic example",
+        "reference_mode": "new_design"
+      }
+    },
+    {
+      "schema_version": "deck_page_package.v2",
+      "page_id": "p013",
+      "customer_visible": {
+        "title": "Synthetic page 13",
+        "body_blocks": []
+      },
+      "visual_spec": {
+        "intent": "W01 synthetic example",
+        "reference_mode": "new_design"
+      }
+    },
+    {
+      "schema_version": "deck_page_package.v2",
+      "page_id": "p014",
+      "customer_visible": {
+        "title": "Synthetic page 14",
+        "body_blocks": []
+      },
+      "visual_spec": {
+        "intent": "W01 synthetic example",
+        "reference_mode": "new_design"
+      }
+    },
+    {
+      "schema_version": "deck_page_package.v2",
+      "page_id": "p015",
+      "customer_visible": {
+        "title": "Synthetic page 15",
+        "body_blocks": []
+      },
+      "visual_spec": {
+        "intent": "W01 synthetic example",
+        "reference_mode": "new_design"
+      }
+    },
+    {
+      "schema_version": "deck_page_package.v2",
+      "page_id": "p016",
+      "customer_visible": {
+        "title": "Synthetic page 16",
+        "body_blocks": []
+      },
+      "visual_spec": {
+        "intent": "W01 synthetic example",
+        "reference_mode": "new_design"
+      }
+    },
+    {
+      "schema_version": "deck_page_package.v2",
+      "page_id": "p017",
+      "customer_visible": {
+        "title": "Synthetic page 17",
+        "body_blocks": []
+      },
+      "visual_spec": {
+        "intent": "W01 synthetic example",
+        "reference_mode": "new_design"
+      }
+    },
+    {
+      "schema_version": "deck_page_package.v2",
+      "page_id": "p018",
+      "customer_visible": {
+        "title": "Synthetic page 18",
+        "body_blocks": []
+      },
+      "visual_spec": {
+        "intent": "W01 synthetic example",
+        "reference_mode": "new_design"
+      }
+    },
+    {
+      "schema_version": "deck_page_package.v2",
+      "page_id": "p019",
+      "customer_visible": {
+        "title": "Synthetic page 19",
+        "body_blocks": []
+      },
+      "visual_spec": {
+        "intent": "W01 synthetic example",
+        "reference_mode": "new_design"
+      }
+    },
+    {
+      "schema_version": "deck_page_package.v2",
+      "page_id": "p020",
+      "customer_visible": {
+        "title": "Synthetic page 20",
+        "body_blocks": []
+      },
+      "visual_spec": {
+        "intent": "W01 synthetic example",
+        "reference_mode": "new_design"
+      }
+    },
+    {
+      "schema_version": "deck_page_package.v2",
+      "page_id": "p021",
+      "customer_visible": {
+        "title": "Synthetic page 21",
+        "body_blocks": []
+      },
+      "visual_spec": {
+        "intent": "W01 synthetic example",
+        "reference_mode": "new_design"
+      }
+    },
+    {
+      "schema_version": "deck_page_package.v2",
+      "page_id": "p022",
+      "customer_visible": {
+        "title": "Synthetic page 22",
+        "body_blocks": []
+      },
+      "visual_spec": {
+        "intent": "W01 synthetic example",
+        "reference_mode": "new_design"
+      }
+    },
+    {
+      "schema_version": "deck_page_package.v2",
+      "page_id": "p023",
+      "customer_visible": {
+        "title": "Synthetic page 23",
+        "body_blocks": []
+      },
+      "visual_spec": {
+        "intent": "W01 synthetic example",
+        "reference_mode": "new_design"
+      }
+    },
+    {
+      "schema_version": "deck_page_package.v2",
+      "page_id": "p024",
+      "customer_visible": {
+        "title": "Synthetic page 24",
+        "body_blocks": []
+      },
+      "visual_spec": {
+        "intent": "W01 synthetic example",
+        "reference_mode": "new_design"
+      }
+    }
+  ]
+}
