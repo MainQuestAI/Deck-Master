@@ -20,10 +20,13 @@ from typing import Any
 
 from . import tasks as tasks_mod
 from .content import normalize_design_assets, check_page
-from .models import bump_revision, canonical_json_bytes, content_identity, new_document, sha256_bytes, validate_document_semantics
-from .sources import read_source
+from .errors import InputRevisionConflict, SourceUnreadable, SourceUnsupported
+from .method_resources import method_release, method_resources
+from .models import bump_revision, canonical_json_bytes, compute_input_digest, content_identity, input_alignment, new_document, sha256_bytes, validate_document_semantics
+from .sources import discover_sources, read_source_snapshot
 from .store import Store, StoreError, ConflictError
 from .production import project_prompt, resolve_design
+from .review import PAGE_VISUAL_KINDS
 
 AUTO_VIEW = "auto_view_then_production"
 CONTINUE_PRODUCTION = "continue_production"
@@ -54,6 +57,7 @@ def _response(
         "pending_tasks": pending_tasks or [],
         "findings": findings or [],
         "next_action": next_action,
+        "input_alignment": input_alignment(document),
         "review_url": None,  # real loopback URL arrives with the workbench (T05/T14)
         "view_status": "view_arrives_with_workbench",
         "evidence_level": evidence_level,
@@ -74,6 +78,13 @@ def _new_operation_id(prefix: str) -> str:
     return f"{prefix}-{uuid.uuid4().hex[:12]}"
 
 
+def _new_source_id(existing_ids: set[str]) -> str:
+    candidate = f"src-{uuid.uuid4().hex[:8]}"
+    while candidate in existing_ids:
+        candidate = f"src-{uuid.uuid4().hex[:8]}"
+    return candidate
+
+
 def create(
     project_dir: Path | str,
     *,
@@ -84,45 +95,52 @@ def create(
     draft: dict | None = None,
     audience: str = "",
     scenario: str = "",
-    presentation_mode: str = "live",
+    presentation_mode: str | None = None,
     page_limit: int | None = None,
     existing_decisions: list[str] | None = None,
 ) -> dict:
     """Create the project; register real sources; optionally import a draft."""
     if draft is not None:
         _validate_draft(draft)
+    # presentation_mode stays a user-provided fact only when the caller actually
+    # chose one; the default must never be reported as user-confirmed (§3.1).
+    if presentation_mode is None:
+        presentation_mode_source = "default"
+        presentation_mode = "live"
+    else:
+        presentation_mode_source = "provided"
     project_dir = Path(project_dir).expanduser()
     store = Store(project_dir)
+    discovered = discover_sources(sources or [], out_dir=project_dir)
+    # Phase 1 reads and validates every material before any state is written;
+    # a failure here must not leave even a layout shell behind (§4).
+    extracts: list = []
+    for source_path in discovered["adopted"]:
+        try:
+            extract, data = read_source_snapshot(source_path)
+        except (SourceUnreadable, SourceUnsupported) as exc:
+            if source_path.resolve() in discovered['explicit']:
+                raise
+            discovered['errored'].append({'path': str(source_path), 'code': exc.error_code, 'detail': str(exc)})
+            continue
+        extracts.append((source_path, extract, data))
     store.ensure_layout()
     operation_id = _new_operation_id("create")
 
-    source_entries = []
-    for source_path in sources or []:
-        extract = read_source(source_path)
-        from dataclasses import asdict
-        extraction=asdict(extract)
-        extraction['original_file']=store.put_blob(Path(source_path).expanduser().read_bytes(),ext=extract.format)
-        extract_ref=store.put_json_object(extraction)
+    source_entries: list[dict] = []
+    seen_ids: set[str] = set()
+    for source_path, extract, data in extracts:
         source_entries.append(
-            {
-                "source_id": f"src-{len(source_entries) + 1}",
-                "name": Path(str(source_path)).name,
-                "original_uri": extract.original_uri,
-                "original_sha256": extract.original_sha256,
-                "format": extract.format,
-                "extract": extract_ref,
-                "external_use": "unspecified",
-                "restriction": "",
-                "locator_scheme": {
-                    "text": "line",
-                    "json": "pointer",
-                    "pdf": "page",
-                    "docx": "paragraph",
-                    "pptx": "slide",
-                    "image": "region",
-                }.get(extract.format_kind, "none"),
-            }
-        )
+            _entry_from_extract(store, source_path, extract, _new_source_id(seen_ids), data=data))
+        seen_ids.add(source_entries[-1]["source_id"])
+    source_manifest = {
+        "sources_adopted": [
+            {"source_id": entry["source_id"], "name": entry["name"]}
+            for entry in source_entries
+        ],
+        "sources_skipped": discovered["skipped"],
+        "sources_errored": discovered["errored"],
+    }
 
     design = normalize_design_assets(store, design or {}, base_dir=project_dir)
     document = new_document(
@@ -133,6 +151,7 @@ def create(
             "audience": audience,
             "scenario": scenario,
             "presentation_mode": presentation_mode,
+            "presentation_mode_source": presentation_mode_source,
             "page_limit": page_limit,
             "existing_decisions": existing_decisions or [],
         },
@@ -145,24 +164,24 @@ def create(
     if draft:
         _adopt_draft(store, draft)
         document = store.load_document()
-        return _response(
+        return {**_response(
             status="created",
             document=document,
             requested_action="create",
             pending_tasks=_pending_host_tasks(document, store),
             next_action=AUTO_VIEW,
             result_refs=[entry["page"] for entry in document.get("pages") or []],
-        )
+        ), **source_manifest}
     document = store.load_document()
     task = open_compose_task(store, document, operation_id=_new_operation_id("compose"))
     document = store.load_document()
-    return _response(
+    return {**_response(
         status="created",
         document=document,
         requested_action="create",
         pending_tasks=[task_summary(store, document, task)],
         next_action="submit_host_results",
-    )
+    ), **source_manifest}
 
 
 def _validate_draft(payload):
@@ -208,13 +227,56 @@ def _adopt_draft(store: Store, draft_payload: dict) -> dict:
     return outcome
 
 
-def open_compose_task(store: Store, document: dict, *, operation_id: str) -> dict:
+def _input_compose_task(document, *, operation_id, reason):
+    pages = document.get("pages") or []
+    if pages:
+        intent = "input_revision"
+        scope = [entry["page_id"] for entry in pages]
+        instruction = (
+            f"输入已更新（operation {operation_id}）：{reason}。"
+            "读取新输入、变化说明与全稿概览，检查相关正文和跨页结论；提交 content_update，"
+            "只包含真正变化的完整 Page v2、新增/删除页 ID 和最终页序；无影响时给出具体 unchanged_reason。"
+        )
+    else:
+        intent = "initial"
+        scope = []
+        instruction = (
+            f"输入已更新（operation {operation_id}）：{reason}。"
+            "读取全部来源与任务事实，按方法写完整 Page v2 正文与页序。"
+        )
+    methods = method_resources("compose", intent=intent)
+    return tasks_mod.new_task(
+        task_id=uuid.uuid4().hex[:12],
+        operation_id=_new_operation_id("compose"),
+        kind="compose",
+        intent=intent,
+        input_digest=compute_input_digest(document),
+        input_revision_id=operation_id,
+        method_release=method_release(methods),
+        scope_pages=scope,
+        instruction=instruction,
+        inputs=[],
+        dependencies=[{"kind": "content",
+                       "identity": f"document-revision:{document['revision_id']}",
+                       "sha256": content_identity(document)}],
+        dispatch_revision=document["revision_id"],
+        produced_against=content_identity(document),
+    )
+
+
+def open_compose_task(store: Store, document: dict, *, operation_id: str,
+                      intent: str = "initial", input_revision_id: str | None = None) -> dict:
     """Open a compose Host task against the current content identity."""
     produced_against = content_identity(document)
+    methods = method_resources("compose", intent=intent)
     task = tasks_mod.new_task(
         task_id=uuid.uuid4().hex[:12],
         operation_id=operation_id,
         kind="compose",
+        intent=intent,
+        input_digest=compute_input_digest(document),
+        input_revision_id=input_revision_id,
+        method_release=method_release(methods),
         scope_pages=[],
         instruction=(
             "Read every source in Task.sources plus the method resources; derive the "
@@ -291,12 +353,54 @@ def _retire_missing_page_inputs(store: Store, document: dict | None = None) -> d
     return store.load_document()
 
 
+def _dispatch_snapshot(store: Store, document: dict, task: dict) -> dict:
+    """The revision the task was dispatched in; the work order binds to it."""
+    revision = task.get("dispatch_revision")
+    if revision and revision != document.get("revision_id"):
+        return store.load_document(revision)
+    return document
+
+
+def _project_context(store: Store, document: dict, task: dict, dispatched: dict) -> dict:
+    """Task facts + input freshness for the work order (spec v1.1 §3.3).
+
+    A still-valid task reads its task/sources from the dispatch snapshot, not
+    from whatever the current Document happens to carry. A task superseded by
+    an input update, or one whose inputs moved underneath it, is ``stale``:
+    continue hands out a fresh task.
+    """
+    status = task.get("status")
+    if status in ("completed", "failed", "cancelled"):
+        context_status = "terminal"
+    elif status == "superseded" or not tasks_mod.task_inputs_current(store, document, task):
+        context_status = "stale"
+    else:
+        context_status = "current"
+    task_fields = dict(dispatched.get("task") or document.get("task") or {})
+    task_fields["presentation_mode_source"] = task_fields.get("presentation_mode_source") or "default"
+    context = {
+        "task": task_fields,
+        "input_digest": compute_input_digest(dispatched),
+        "dispatch_revision": task.get("dispatch_revision"),
+        "current_revision": document.get("revision_id"),
+        "context_status": context_status,
+        "input_alignment": input_alignment(document),
+    }
+    if context_status == "stale":
+        context["hint"] = "inputs moved after dispatch; run deck-master continue to obtain a fresh task"
+    return context
+
+
 def task_summary(store: Store, document: dict, task: dict) -> dict:
     """The Host work order: identity, inputs, resolved design, method entrypoints."""
+    dispatched = _dispatch_snapshot(store, document, task)
+    methods = method_resources(task.get("kind") or "", intent=task.get("intent"))
     summary = {
         "task_id": task["task_id"],
         "operation_id": task["operation_id"],
         "kind": task["kind"],
+        "intent": task.get("intent"),
+        "method_release": task.get("method_release"),
         "review_stage": task.get("review_stage", "final"),
         "status": task["status"],
         "scope_pages": task.get("scope_pages") or [],
@@ -305,24 +409,29 @@ def task_summary(store: Store, document: dict, task: dict) -> dict:
         "dispatch_revision": task.get("dispatch_revision"),
         "produced_against": task.get("produced_against"),
         "call_allowances": task.get("call_allowances") or [],
-        "sources": document.get("sources") or [],
-        "resolved_design_context": document.get("design_context") or {},
-        "method_resources": [
-            "deck_master://skills/deck-master/references/source-reading.md",
-            "deck_master://skills/deck-master/references/content-methods.md",
-            "deck_master://skills/deck-master/references/content-examples.md",
-        ],
+        "sources": dispatched.get("sources") or [],
+        "resolved_design_context": dispatched.get("design_context") or {},
+        "method_resources": methods,
+        "project_context": _project_context(store, document, task, dispatched),
+        "staging_dir": str(store.staging_dir / task['operation_id']),
     }
+    if task.get("review_units") is not None:
+        summary["review_plan"] = {"units": task["review_units"]}
     if task.get('status') in ('superseded', 'cancelled', 'completed', 'failed'):
         if task.get('status') == 'superseded':
             summary['invalidated_reason'] = 'task inputs or page scope changed; continue creates a current task'
         return summary
     summary['source_reading'] = []
-    for source in document.get('sources') or []:
+    for source in dispatched.get('sources') or []:
         ref=source.get('extract')
         if ref and ref['path'].endswith('.json'):
             extract=store.read_object_json(ref)
-            summary['source_reading'].append({'source_id':source['source_id'],**extract})
+            summary['source_reading'].append({
+                'source_id': source['source_id'], **extract,
+                'extract_path': str(store.project_root / ref['path']),
+                'original_path': str(store.project_root / extract['original_file']['path'])
+                if extract.get('original_file') else extract['original_uri'],
+            })
     if task.get('kind') in ('reconstruct','repair','review'):
         summary['page_entries'] = [e for e in document['pages'] if e['page_id'] in task['scope_pages']]
         summary['reference_images'] = []
@@ -358,12 +467,12 @@ def task_summary(store: Store, document: dict, task: dict) -> dict:
                     'dependencies': [{'kind': key.split(':', 1)[0],
                                       'identity': key.split(':', 1)[1], 'sha256': digests[key]}
                                      for key in keys],
-                    'review_kinds': ['blueprint_content', 'blueprint_fidelity', 'readability'],
+                    'review_kinds': list(PAGE_VISUAL_KINDS),
                 })
                 for ref in document.get('reviews') or []:
                     prior = store.read_object_json(ref)
                     if (prior.get('review_stage') != 'page_visual' or
-                            prior.get('kind') not in ('blueprint_content', 'blueprint_fidelity', 'readability') or
+                            prior.get('kind') not in PAGE_VISUAL_KINDS or
                             not prior.get('findings')):
                         continue
                     if any(dep.get('kind') == 'content' and dep.get('identity') == f"page:{entry['page_id']}"
@@ -372,6 +481,19 @@ def task_summary(store: Store, document: dict, task: dict) -> dict:
                             'review_ref': ref, 'review_id': prior['review_id'],
                             'kind': prior['kind'], 'findings': prior['findings'],
                         })
+        elif task.get('kind') == 'review':
+            from .editing import page_visual_summary
+            summary['prior_page_visual_evidence'] = []
+            for entry in summary['page_entries']:
+                if all(entry.get(slot) for slot in ('blueprint', 'svg', 'svg_preview')):
+                    summary['prior_page_visual_evidence'].append({
+                        'page_id': entry['page_id'],
+                        'check_summary': page_visual_summary(store, document, entry),
+                        'reviews': [ref for ref in document.get('reviews') or []
+                                    if (prior := store.read_object_json(ref)).get('review_stage') == 'page_visual'
+                                    and entry['page'] in prior.get('subjects', [])],
+                        'usage': 'prior observation only; final checks still follow review_plan.units',
+                    })
     if task.get("kind") == "blueprint":
         for ref in task.get("inputs") or []:
             try:
@@ -404,10 +526,12 @@ def open_blueprint_task(store: Store, document: dict, page_entry: dict) -> dict:
     request["permitted_asset_files"] = _resolve_permitted_asset_files(store, request["projection"]["permitted_assets"])
     request_ref = store.put_json_object(request)
     operation_id = _new_operation_id("blueprint")
+    methods = method_resources("blueprint")
     task = tasks_mod.new_task(
         task_id=uuid.uuid4().hex[:12],
         operation_id=operation_id,
         kind="blueprint",
+        method_release=method_release(methods),
         scope_pages=[page["page_id"]],
         instruction=(
             "Codex专用：读取 production_request.prompt，先领取任务并 begin 本任务的调用额度，"
@@ -482,15 +606,67 @@ def continue_project(project_dir: Path | str) -> dict:
                                     'message': exc.detail}], next_action='restore_or_replace_asset')
 
 
+@tasks_mod._project_transaction
+def _recover_input_revision(store):
+    document = store.load_document()
+    all_tasks = [store.read_object_json(ref) for ref in document.get('tasks') or []]
+    if input_alignment(document) != 'needs_reconciliation':
+        stale = [index for index, task in enumerate(all_tasks)
+                 if task.get('kind') == 'compose' and task.get('intent') == 'input_revision'
+                 and task.get('status') in ('awaiting_host', 'running', 'queued')
+                 and not tasks_mod.task_inputs_current(store, document, task)]
+        if stale:
+            updated = bump_revision(document, {'operation_id': _new_operation_id('retire-input'),
+                                     'kind': 'task_update', 'description': 'retire stale input revisions', 'read_set': []})
+            for index in stale:
+                updated['tasks'][index] = store.put_json_object(
+                    {**all_tasks[index], 'status': 'superseded', 'updated_at': _utc_now_iso()})
+            store._commit_locked(base_revision=document['revision_id'], document=updated,
+                                 operation_id=updated['change']['operation_id'], blobs=[])
+        return
+    valid = next((task for task in reversed(all_tasks)
+                  if task.get('kind') == 'compose' and task.get('intent') == 'input_revision'
+                  and task.get('status') in ('awaiting_host', 'running')
+                  and tasks_mod.task_inputs_current(store, document, task)), None)
+    if valid and not any(task.get('kind') in tasks_mod.HOST_TASK_KINDS
+                         and task.get('status') in ('awaiting_host', 'running', 'queued')
+                         and task['task_id'] != valid['task_id'] for task in all_tasks):
+        return
+    # Use the operation that caused the mismatch, not a later display-name edit.
+    origin = document
+    while origin.get('parent_revision_id'):
+        change = origin.get('change') or {}
+        if change.get('kind') == 'restore':
+            break
+        if change.get('kind') == 'input_update':
+            parent = store.load_document(origin['parent_revision_id'])
+            if compute_input_digest(parent) != compute_input_digest(origin):
+                break
+        origin = store.load_document(origin['parent_revision_id'])
+    change = origin.get('change') or {}
+    updated = bump_revision(document, {'operation_id': _new_operation_id('resume-input'),
+                                       'kind': 'task_update', 'description': 'resume input reconciliation', 'read_set': []})
+    for index, task in enumerate(all_tasks):
+        if (task.get('kind') in tasks_mod.HOST_TASK_KINDS
+                and task.get('status') in ('awaiting_host', 'running', 'queued')
+                and (not valid or task['task_id'] != valid['task_id'])):
+            updated['tasks'][index] = store.put_json_object({**task, 'status': 'superseded', 'updated_at': _utc_now_iso()})
+    if not valid:
+        task = _input_compose_task(updated, operation_id=change.get('operation_id'),
+                                   reason=change.get('description') or 'Resume reconciliation against current inputs')
+        updated['tasks'].append(store.put_json_object(task))
+    store._commit_locked(base_revision=document['revision_id'], document=updated,
+                         operation_id=updated['change']['operation_id'], blobs=[])
+
+
 def _continue_project(project_dir: Path | str) -> dict:
     """Run runnable local work; return the stable pending Host tasks.
 
-    Already-confirmed decisions and tasks are reused; no duplicate tasks are
-    created on repeated continue. Once real pages exist the flow does NOT
-    re-open compose — the next step is production (blueprint/reconstruct),
-    which arrives with T06; until then continue reports that honestly.
+    Reuse pending work. Reconcile changed inputs before producing existing
+    pages; an explicitly resumed cancelled revision gets a new task identity.
     """
     store = Store(Path(project_dir).expanduser())
+    _recover_input_revision(store)
     document = _retire_missing_page_inputs(store, store.load_document())
     pending = _pending_host_tasks(document, store)
     if any(t["kind"] == "blueprint" for t in pending):
@@ -680,7 +856,9 @@ def _continue_project(project_dir: Path | str) -> dict:
                               instruction=f'修复实际 PPT 回读问题，修改对应 Page 或 SVG；保留失败输出。检查报告见输入。findings-sig:{sig}')
         return _response(status='awaiting_host',document=store.load_document(),requested_action='continue',
                          pending_tasks=[task_summary(store,store.load_document(),task)],findings=report['findings'],next_action='repair_readback')
-    from .editing import review_status
+    from .editing import review_status, check_summary
+    from .models import input_alignment as _input_alignment
+    from .review import final_review_units, describe_review_units
     status = review_status(store, document)
     if status != 'pass':
         repeated_final = [store.read_object_json(ref) for ref in document.get('tasks') or []]
@@ -693,8 +871,17 @@ def _continue_project(project_dir: Path | str) -> dict:
                              findings=[{'code': 'review_no_progress',
                                         'detail': '同一产物重复审阅仍有未关闭发现；补充页级修复证据或明确合理差异决定'}],
                              next_action='review_no_progress')
-        task = open_host_task(store,kind='repair' if status == 'fail' else 'review',page_ids=[e['page_id'] for e in document['pages']],
-            instruction='实际打开每页原图、SVG预览及PPT真实渲染，核对正文/模块/图标/数字/方向/Logo。提交 blueprint_fidelity、conversion、readability Review，subjects 必须包含当前 PPTX 与发现所在页的当前 Page；未实际检查不能 pass，问题返回具体对象。')
+        if status == 'fail':
+            task = open_host_task(store, kind='repair', page_ids=[e['page_id'] for e in document['pages']],
+                instruction='实际打开每页原图、SVG预览及PPT真实渲染，核对正文/模块/图标/数字/方向/Logo。'
+                            '存在 must_fix：先修复对象，再按缺口补足审阅；subjects 必须包含当前 PPTX 与发现所在页的当前 Page；'
+                            '未实际检查不能 pass，问题返回具体对象。')
+        else:
+            summary = check_summary(store, document)
+            units = final_review_units(document, summary, input_alignment=_input_alignment(document))
+            task = open_host_task(store, kind='review', page_ids=[e['page_id'] for e in document['pages']],
+                review_units=units,
+                instruction=describe_review_units(units))
         return _response(status='awaiting_host',document=store.load_document(),requested_action='continue',
                          pending_tasks=[task_summary(store,store.load_document(),task)],next_action='codex_review_renderings')
     return _response(status='ready_for_export',document=document,requested_action='continue',
@@ -703,7 +890,7 @@ def _continue_project(project_dir: Path | str) -> dict:
 
 @tasks_mod._project_transaction
 def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, page_hash=None,
-                   review_stage=None):
+                   review_stage=None, review_units=None):
     document = store.load_document()
     if base_revision is not None and base_revision != document['revision_id']:
         from .store import ConflictError
@@ -728,14 +915,407 @@ def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, pa
     entries = [e for e in document['pages'] if e['page_id'] in page_ids]
     inputs = [ref for e in entries for slot,ref in e.items() if slot != 'page_id' and ref]
     inputs += [ref for ref in document['outputs'].values() if ref]
+    methods = method_resources(kind)
     task = tasks_mod.new_task(task_id=uuid.uuid4().hex[:12],operation_id=_new_operation_id(kind),kind=kind,
+        method_release=method_release(methods),
         scope_pages=page_ids,instruction=instruction,inputs=inputs,dependencies=[{'kind':'content','identity':e['page_id'],'sha256':e['page']['sha256']} for e in entries],
         dispatch_revision=document['revision_id'],produced_against=content_identity(document),
-        review_stage=review_stage)
+        review_stage=review_stage,review_units=review_units)
     updated=bump_revision(document,{'operation_id':_new_operation_id('dispatch'),'kind':'task_update','description':instruction,'read_set':[]})
     updated['tasks'].append(store.put_json_object(task))
     store._commit_locked(base_revision=document['revision_id'],document=updated,operation_id=updated['change']['operation_id'],blobs=[])
     return task
+
+
+# ---------------------------------------------------------------------------
+# Inputs show/update (spec v1.1 §5): the persistent way to record changed
+# task facts and materials. The update transaction saves inputs, supersedes
+# open tasks and dispatches compose/intent=input_revision in one commit.
+
+_INPUT_PATCH_FIELDS = {"task_patch", "source_changes", "reason"}
+_INPUT_TASK_PATCH_FIELDS = {"title", "brief", "audience", "scenario",
+                            "presentation_mode", "page_limit", "existing_decisions"}
+_PRESENTATION_MODES = ("live", "read_alone", "mixed")
+
+
+def inputs_show(project_dir: Path | str) -> dict:
+    """The current task, sources, content basis and alignment in one read."""
+    store = Store(Path(project_dir).expanduser())
+    document = store.load_document()
+    return {
+        "status": "ok",
+        "project_id": document.get("project_id"),
+        "revision_id": document["revision_id"],
+        "task": document.get("task") or {},
+        "sources": document.get("sources") or [],
+        "content_basis": document.get("content_basis"),
+        "input_digest": compute_input_digest(document),
+        "input_alignment": input_alignment(document),
+    }
+
+
+def _read_input_operation(store: Store, operation_id: str) -> dict | None:
+    import re as _re
+    from .store import OPERATION_ID_PATTERN
+
+    if not _re.fullmatch(OPERATION_ID_PATTERN, operation_id or ""):
+        raise ServiceError("(operation-id)", "operation ids must match [A-Za-z0-9][A-Za-z0-9_.-]*")
+    path = store.deck_root / "operations" / f"{operation_id}.json"
+    if not path.is_file():
+        return None
+    record = json.loads(path.read_text("utf-8"))
+    if record.get("kind") != "input_update":
+        raise InputRevisionConflict(
+            f"(operation {operation_id})",
+            "operation id already used by a different operation type",
+        )
+    # Receipts are written before the atomic Document pointer. An interrupted
+    # commit is a replay only when its revision is in committed history.
+    expected = record['result']['revision_id']
+    document = store.load_document()
+    while document['revision_id'] != expected:
+        parent = document.get('parent_revision_id')
+        if not parent:
+            return None
+        document = store.load_document(parent)
+    return record
+
+
+def _write_input_operation(store: Store, operation_id: str, request_digest: str, result: dict) -> None:
+    directory = store.deck_root / "operations"
+    directory.mkdir(parents=True, exist_ok=True)
+    path = directory / f"{operation_id}.json"
+    record = {
+        "kind": "input_update",
+        "operation_id": operation_id,
+        "request_sha256": request_digest,
+        "result": result,
+    }
+    from .store import _atomic_write_bytes
+    _atomic_write_bytes(path, canonical_json_bytes(record))
+
+
+def _normalize_input_patch(patch: dict, *, patch_dir: Path) -> dict:
+    """Validate and resolve one inputs-update patch; paths become absolute."""
+    if not isinstance(patch, dict):
+        raise ServiceError("(patch)", "patch must be a JSON object")
+    unknown = sorted(set(patch) - _INPUT_PATCH_FIELDS)
+    if unknown:
+        raise ServiceError("(patch)", f"unknown patch fields: {unknown}")
+    reason = patch.get("reason")
+    if not isinstance(reason, str) or not reason.strip():
+        raise ServiceError("(patch)/reason", "a one-line summary of what changed is required")
+    reason = reason.strip()
+
+    task_patch = patch.get("task_patch", {})
+    if not isinstance(task_patch, dict):
+        raise ServiceError("(patch)/task_patch", "must be an object")
+    unknown_task = sorted(set(task_patch) - _INPUT_TASK_PATCH_FIELDS)
+    if unknown_task:
+        raise ServiceError("(patch)/task_patch", f"unknown task fields: {unknown_task}")
+    normalized_task: dict = {}
+    for field in ("title", "brief"):
+        if field in task_patch:
+            value = task_patch[field]
+            if not isinstance(value, str) or not value.strip():
+                raise ServiceError(f"(patch)/task_patch/{field}", "must be a non-empty string")
+            normalized_task[field] = value
+    for field in ("audience", "scenario"):
+        if field in task_patch:
+            value = task_patch[field]
+            if not isinstance(value, str):
+                raise ServiceError(f"(patch)/task_patch/{field}", "must be a string (empty string clears)")
+            normalized_task[field] = value
+    if "presentation_mode" in task_patch:
+        value = task_patch["presentation_mode"]
+        if value not in _PRESENTATION_MODES:
+            raise ServiceError("(patch)/task_patch/presentation_mode", "must be live, read_alone or mixed")
+        normalized_task["presentation_mode"] = value
+    if "page_limit" in task_patch:
+        value = task_patch["page_limit"]
+        if value is not None and (not isinstance(value, int) or isinstance(value, bool) or value < 1):
+            raise ServiceError("(patch)/task_patch/page_limit", "must be a positive integer or null")
+        normalized_task["page_limit"] = value
+    if "existing_decisions" in task_patch:
+        value = task_patch["existing_decisions"]
+        if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
+            raise ServiceError("(patch)/task_patch/existing_decisions", "must be an array of strings")
+        normalized_task["existing_decisions"] = value
+
+    source_changes = patch.get("source_changes", {})
+    if not isinstance(source_changes, dict):
+        raise ServiceError("(patch)/source_changes", "must be an object")
+    unknown_source = sorted(set(source_changes) - {"add", "replace", "remove", "metadata"})
+    if unknown_source:
+        raise ServiceError("(patch)/source_changes", f"unknown fields: {unknown_source}")
+    for key, value in source_changes.items():
+        if not isinstance(value, list):
+            raise ServiceError(f"(patch)/source_changes/{key}", "must be an array")
+
+    def _resolve(item: dict, where: str) -> dict:
+        path_value = item.get("path")
+        if not isinstance(path_value, str) or not path_value:
+            raise ServiceError(f"{where}/path", "must be a non-empty path string")
+        resolved = Path(path_value).expanduser()
+        if not resolved.is_absolute():
+            resolved = patch_dir / resolved
+        note = item.get("usage_note")
+        if "usage_note" in item and not isinstance(note, str):
+            raise ServiceError(f"{where}/usage_note", "must be a string")
+        result = {"path": str(resolved.resolve())}
+        if note is not None:
+            result['usage_note'] = note
+        return result
+
+    add = []
+    for index, item in enumerate(source_changes.get("add") or []):
+        if not isinstance(item, dict):
+            raise ServiceError(f"(patch)/source_changes/add[{index}]", "must be an object")
+        add.append(_resolve(item, f"(patch)/source_changes/add[{index}]"))
+    replace = []
+    for index, item in enumerate(source_changes.get("replace") or []):
+        if not isinstance(item, dict) or not isinstance(item.get("source_id"), str) or not item["source_id"]:
+            raise ServiceError(f"(patch)/source_changes/replace[{index}]", "needs a source_id")
+        entry = _resolve(item, f"(patch)/source_changes/replace[{index}]")
+        entry["source_id"] = item["source_id"]
+        replace.append(entry)
+    remove = source_changes.get("remove") or []
+    if not isinstance(remove, list) or not all(isinstance(item, str) for item in remove):
+        raise ServiceError("(patch)/source_changes/remove", "must be an array of source ids")
+    overlap = sorted({item["source_id"] for item in replace} & set(remove))
+    if overlap:
+        raise ServiceError("(patch)/source_changes",
+                           f"the same source id cannot be replaced and removed: {overlap}")
+    metadata = []
+    for index, item in enumerate(source_changes.get("metadata") or []):
+        if not isinstance(item, dict) or not isinstance(item.get("source_id"), str) or not item["source_id"]:
+            raise ServiceError(f"(patch)/source_changes/metadata[{index}]", "needs a source_id")
+        unknown_meta = sorted(set(item) - {"source_id", "usage_note", "name"})
+        if unknown_meta:
+            raise ServiceError(f"(patch)/source_changes/metadata[{index}]", f"unknown fields: {unknown_meta}")
+        for key in ('usage_note', 'name'):
+            if key in item and not isinstance(item[key], str):
+                raise ServiceError(f"(patch)/source_changes/metadata[{index}]/{key}", "must be a string")
+        metadata.append({"source_id": item["source_id"],
+                         "usage_note": item.get("usage_note"),
+                         "name": item.get("name")})
+
+    return {
+        "task_patch": normalized_task,
+        "source_changes": {"add": add, "replace": replace, "remove": remove, "metadata": metadata},
+        "reason": reason,
+    }
+
+
+def _read_patch_material(path_str: str):
+    """Read one patch-named material; failures reject the whole request."""
+    return read_source_snapshot(path_str)
+
+
+def inputs_update(
+    project_dir: Path | str,
+    *,
+    patch: dict,
+    base_revision: str,
+    operation_id: str,
+    patch_dir: Path | str | None = None,
+) -> dict:
+    """Save changed inputs; supersede open tasks; dispatch the input revision.
+
+    Idempotent by operation id: the same request replays its original result
+    without re-reading sources; the same id with different content, or a
+    stale base revision, is refused with ``input_revision_conflict`` (exit 5).
+    """
+    from .errors import InputRevisionConflict
+
+    store = Store(Path(project_dir).expanduser())
+    store.ensure_layout()
+    patch_dir = Path(patch_dir).expanduser() if patch_dir else Path.cwd()
+    normalized = _normalize_input_patch(patch, patch_dir=patch_dir)
+    request_digest = sha256_bytes(canonical_json_bytes(normalized))
+    existing = _read_input_operation(store, operation_id)
+    if existing is not None:
+        if existing.get("request_sha256") == request_digest:
+            return existing["result"]
+        raise InputRevisionConflict(
+            f"(operation {operation_id})",
+            "operation id already applied with a different patch",
+        )
+
+    # Stage every new material before taking the lock; any failure rejects the
+    # whole request and leaves current state untouched (§5.3 step 2).
+    staged_add: list[tuple[dict, Any]] = []
+    staged_replace: list[tuple[dict, Any]] = []
+    for item in normalized["source_changes"]["add"]:
+        staged_add.append((item, _read_patch_material(item["path"])))
+    for item in normalized["source_changes"]["replace"]:
+        staged_replace.append((item, _read_patch_material(item["path"])))
+
+    with store._locked():
+        record = _read_input_operation(store, operation_id)
+        if record is not None:
+            if record.get("request_sha256") == request_digest:
+                return record["result"]
+            raise InputRevisionConflict(
+                f"(operation {operation_id})",
+                "operation id already applied with a different patch",
+            )
+        document = store.load_document()
+        if document["revision_id"] != base_revision:
+            raise InputRevisionConflict(
+                "(base-revision)",
+                f"base {base_revision!r} is not current (now {document['revision_id']!r}); "
+                "re-run inputs show and rebase the patch",
+            )
+        old_digest = compute_input_digest(document)
+
+        new_task = {**(document.get("task") or {}), **normalized["task_patch"]}
+        if 'presentation_mode' in normalized['task_patch']:
+            new_task['presentation_mode_source'] = 'provided'
+        new_sources = [dict(entry) for entry in document.get("sources") or []]
+        by_id = {entry["source_id"]: entry for entry in new_sources}
+        diff = {"task_fields_changed": sorted(normalized["task_patch"]),
+                "sources_added": [], "sources_replaced": [], "sources_removed": [],
+                "sources_metadata": [], "noops": []}
+
+        def _resolve_same(entry: dict, path: Path, sha: str | None) -> bool:
+            try:
+                same_path = Path(entry.get("original_uri") or "").expanduser().resolve() == path.resolve()
+            except OSError:
+                same_path = entry.get("original_uri") == str(path)
+            return same_path and sha is not None and entry.get("original_sha256") == sha
+
+        for item, (extract, data) in staged_add:
+            path = Path(item["path"])
+            noop_target = next((entry for entry in new_sources
+                                if _resolve_same(entry, path, extract.original_sha256)), None)
+            if noop_target is not None:
+                diff["noops"].append({"path": item["path"], "source_id": noop_target["source_id"]})
+                continue
+            source_id = _new_source_id({entry["source_id"] for entry in new_sources})
+            new_sources.append(_entry_from_extract(store, path, extract, source_id,
+                                                   usage_note=item.get("usage_note") or "", data=data))
+            by_id[source_id] = new_sources[-1]
+            diff["sources_added"].append(source_id)
+
+        for item, (extract, data) in staged_replace:
+            source_id = item["source_id"]
+            if source_id not in by_id:
+                raise ServiceError(f"(patch)/source_changes/replace/{source_id}",
+                                   "replace must name an existing source id")
+            path = Path(item["path"])
+            entry = by_id[source_id]
+            replacement = _entry_from_extract(store, path, extract, source_id,
+                                              usage_note=item.get("usage_note", entry.get("usage_note", "")), data=data)
+            for key in ('external_use', 'restriction'):
+                replacement[key] = entry[key]
+            new_sources[new_sources.index(entry)] = replacement
+            by_id[source_id] = replacement
+            diff["sources_replaced"].append(source_id)
+
+        for source_id in normalized["source_changes"]["remove"]:
+            if source_id not in by_id:
+                raise ServiceError(f"(patch)/source_changes/remove/{source_id}",
+                                   "remove must name an existing source id")
+            new_sources = [entry for entry in new_sources if entry["source_id"] != source_id]
+            diff["sources_removed"].append(source_id)
+
+        for item in normalized["source_changes"]["metadata"]:
+            source_id = item["source_id"]
+            if source_id not in by_id:
+                raise ServiceError(f"(patch)/source_changes/metadata/{source_id}",
+                                   "metadata must name an existing source id")
+            entry = by_id[source_id]
+            if item.get("usage_note") is not None:
+                entry["usage_note"] = item["usage_note"]
+                diff["sources_metadata"].append(source_id)
+            if item.get("name") is not None:
+                if not isinstance(item["name"], str) or not item["name"]:
+                    raise ServiceError("(patch)/source_changes/metadata/name", "must be a non-empty string")
+                entry["name"] = item["name"]
+
+        probe = {"task": new_task, "sources": new_sources}
+        new_digest = compute_input_digest(probe)
+        names_changed = new_sources != document.get('sources', [])
+        if new_digest == old_digest:
+            result = {"status": "unchanged", "input_digest": new_digest,
+                      "input_alignment": input_alignment(document),
+                      "revision_id": document["revision_id"], "diff": diff,
+                      "reason": normalized["reason"]}
+            if names_changed:
+                bumped = bump_revision(document, {
+                    "operation_id": operation_id, "kind": "input_update",
+                    "description": "inputs update (display names only)", "read_set": []})
+                bumped["sources"] = new_sources
+                result["revision_id"] = bumped["revision_id"]
+            _write_input_operation(store, operation_id, request_digest, result)
+            if names_changed:
+                store._commit_locked(base_revision=document["revision_id"], document=bumped,
+                                     operation_id=operation_id, blobs=[])
+            return result
+
+        new_document = bump_revision(document, {
+            "operation_id": operation_id, "kind": "input_update",
+            "description": normalized["reason"], "read_set": []})
+        new_document["task"] = new_task
+        new_document["sources"] = new_sources
+        if document.get("pages") and not document.get("content_basis"):
+            # First update on a legacy project: pin the basis the existing
+            # content was actually built on (§5.3 step 4).
+            new_document["content_basis"] = {"input_digest": old_digest,
+                                             "input_revision_id": None,
+                                             "resolved_by_task_id": None}
+        superseded_ids = []
+        for index, ref in enumerate(new_document.get("tasks") or []):
+            task = store.read_object_json(ref)
+            if task.get("status") in ("awaiting_host", "running") and \
+                    task.get("kind") in tasks_mod.HOST_TASK_KINDS:
+                superseded_ids.append(task["task_id"])
+                new_document["tasks"][index] = store.put_json_object(
+                    {**task, "status": "superseded", "updated_at": _utc_now_iso()})
+        task = _input_compose_task(new_document, operation_id=operation_id, reason=normalized["reason"])
+        new_document["tasks"] = list(new_document.get("tasks") or []) + [store.put_json_object(task)]
+        alignment = input_alignment(new_document)
+        result = {
+            "status": "updated",
+            "input_digest": new_digest,
+            "input_alignment": alignment,
+            "revision_id": new_document['revision_id'],
+            "superseded_tasks": superseded_ids,
+            "diff": diff,
+            "reason": normalized["reason"],
+            "pending_tasks": [task_summary(store, new_document, task)],
+            "next_action": "submit_host_results",
+        }
+        _write_input_operation(store, operation_id, request_digest, result)
+        store._commit_locked(base_revision=document["revision_id"], document=new_document,
+                             operation_id=operation_id, blobs=[])
+        return result
+
+
+def _entry_from_extract(store: Store, path: Path, extract, source_id: str, *, data: bytes, usage_note: str = "") -> dict:
+    from dataclasses import asdict
+
+    extraction = asdict(extract)
+    extraction["original_file"] = store.put_blob(data, ext=extract.format)
+    extract_ref = store.put_json_object(extraction)
+    entry = {
+        "source_id": source_id,
+        "name": Path(str(path)).name,
+        "original_uri": extract.original_uri,
+        "original_sha256": extract.original_sha256,
+        "format": extract.format,
+        "extract": extract_ref,
+        "external_use": "unspecified",
+        "restriction": "",
+        "locator_scheme": {
+            "text": "line", "json": "pointer", "pdf": "page", "docx": "paragraph",
+            "pptx": "slide", "image": "region",
+        }.get(extract.format_kind, "none"),
+    }
+    if usage_note:
+        entry["usage_note"] = usage_note
+    return entry
 
 
 def accept_result(
@@ -769,7 +1349,7 @@ def accept_result(
             document=document,
             requested_action="task accept",
         )
-    return _response(
+    response = _response(
         status="accepted",
         document=document,
         requested_action="task accept",
@@ -777,6 +1357,10 @@ def accept_result(
         next_action=outcome.get("next_action"),
         result_refs=outcome.get("result_refs") or [],
     )
+    for key in ("new_page_hashes", "unchanged_reason", "impact_summary", "work_complete"):
+        if key in outcome:
+            response[key] = outcome[key]
+    return response
 
 
 def import_draft(

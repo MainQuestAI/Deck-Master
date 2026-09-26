@@ -1,0 +1,12 @@
+{
+  "task_patch": {},
+  "source_changes": {
+    "add": [
+      {
+        "path": "materials/unrelated-catalog.md",
+        "usage_note": "补充备查；是否影响当前任务由Host判断"
+      }
+    ]
+  },
+  "reason": "用户补了一份包装编码材料，按当前售后任务判断是否相关"
+}

@@ -14,8 +14,14 @@ import io
 import re
 from typing import Any
 
-REQUIRED_KINDS = ('content', 'blueprint_content', 'blueprint_fidelity',
-                  'conversion', 'readability', 'privacy')
+from .models import input_alignment as derive_input_alignment
+
+# The single definition of the six final review dimensions (spec v1.1 §6).
+# REQUIRED_KINDS, PAGE_VISUAL_KINDS, final-review work orders and validation
+# all derive from here; never re-declare the set elsewhere.
+REVIEW_DIMENSIONS = ('content', 'blueprint_content', 'blueprint_fidelity',
+                     'conversion', 'readability', 'privacy')
+REQUIRED_KINDS = REVIEW_DIMENSIONS
 OPEN_TASK_STATUSES = ('awaiting_host', 'running')
 
 # 07.8: real leak markers only — never an open-ended banned-word list.
@@ -208,7 +214,57 @@ def pending_judgments(review: dict) -> list[dict]:
             if f.get('impact') == 'needs_judgment' and f.get('resolution') == 'open']
 
 
-PAGE_VISUAL_KINDS = ('blueprint_content', 'blueprint_fidelity', 'readability')
+PAGE_VISUAL_KINDS = tuple(
+    kind for kind in REVIEW_DIMENSIONS
+    if kind in ('blueprint_content', 'blueprint_fidelity', 'readability'))
+
+
+def final_review_units(document: dict, summary: dict, *, input_alignment: str = "current") -> list[dict]:
+    """The final review dispatched by actual gap only (spec v1.1 §6).
+
+    Each unit names one dimension, the pages it still covers, and why:
+    ``missing`` (no current execution), ``stale`` (execution does not bind the
+    current products), ``open_finding`` (unresolved findings or judgments) or
+    ``changed_input`` (content/privacy must be re-checked after an input
+    update). Dimensions that are currently valid produce no unit.
+    """
+    pages = document.get("pages") or []
+    stale_keys = {f"{item.get('kind')}:{item.get('page_id')}" for item in summary.get("stale") or []}
+    changed_inputs = {f"{item.get('kind')}:{item.get('page_id')}"
+                      for item in summary.get("stale") or [] if item.get("code") == "changed_input"}
+    reasons = summary.get("dimension_reasons") or {}
+    dimensions = summary.get("dimensions") or {}
+    units: list[dict] = []
+    for kind in REVIEW_DIMENSIONS:
+        grouped: dict[str, list[str]] = {}
+        for entry in pages:
+            page_id = entry["page_id"]
+            key = f"{kind}:{page_id}"
+            if input_alignment == "needs_reconciliation" and kind in ("content", "privacy"):
+                grouped.setdefault("changed_input", []).append(page_id)
+                continue
+            state = dimensions.get(key)
+            if state is None:
+                reason = "changed_input" if key in changed_inputs else "stale" if key in stale_keys else "missing"
+                grouped.setdefault(reason, []).append(page_id)
+            elif state.get("open_must_fix") or state.get("pending_judgments"):
+                grouped.setdefault("open_finding", []).append(page_id)
+            elif reasons.get(key) or state.get("status") != "pass":
+                grouped.setdefault("stale", []).append(page_id)
+        for reason, page_ids in grouped.items():
+            units.append({"kind": kind, "page_ids": page_ids, "reason": reason})
+    return units
+
+
+def describe_review_units(units: list[dict]) -> str:
+    """Human work-order text generated from the units, not a fixed triple."""
+    if not units:
+        return ("当前各维度均已有效覆盖；如仍有具体问题，照常提交对应维度的 Review。"
+                "subjects 必须包含当前 PPTX 与发现所在页的当前 Page；未实际检查不能 pass。")
+    parts = "；".join(f"{unit['kind']}（{','.join(unit['page_ids'])}：{unit['reason']}）"
+                      for unit in units)
+    return (f"最终审阅按缺口执行：{parts}。已经有效的维度不再要求，额外发现问题照常提交。"
+            "subjects 必须包含当前 PPTX 与发现所在页的当前 Page；未实际检查不能 pass，问题返回具体对象。")
 
 
 def evaluate_page_visual(entry: dict, reviews: list[dict], artifacts: dict,
@@ -282,18 +338,22 @@ def evaluate_current(document: dict, reviews: list[dict], artifacts: dict) -> di
     findings aggregate per finding_id across ALL current reviews of a
     dimension and only a validated closing review can fix one (P1-02).
     """
+    from .models import page_limit_violation
+    limit_violation = page_limit_violation(document)
     pages = document.get('pages') or []
     current = (document.get('outputs') or {}).get('pptx')
     facts = document.get('_output_facts') or {}
+    alignment = derive_input_alignment(document)
     if not current:
-        return {'status': 'not_evaluated', 'current_outputs': None, 'dimensions': {}, 'stale': [],
+        return {'status': 'fail' if limit_violation else 'not_evaluated', 'current_outputs': None, 'dimensions': {}, 'stale': [],
                 'missing_dimensions': [f'{k}:{e["page_id"]}' for k in REQUIRED_KINDS for e in pages],
-                'output_facts': facts, 'dimension_reasons': {},
-                'reason': 'no current pptx output'}
+                'output_facts': facts, 'dimension_reasons': {}, 'input_alignment': alignment,
+                'reason': limit_violation or 'no current pptx output'}
     tasks = document.get('tasks') or []
     suspended_pages = set()
     for task in tasks:
-        if isinstance(task, dict) and task.get('status') in OPEN_TASK_STATUSES:
+        if (isinstance(task, dict) and task.get('status') in OPEN_TASK_STATUSES
+                and task.get('intent') != 'input_revision'):
             suspended_pages.update(task.get('scope_pages') or [])
 
     def dependencies_current(review):
@@ -325,6 +385,13 @@ def evaluate_current(document: dict, reviews: list[dict], artifacts: dict) -> di
         deps_current, dep_reason = dependencies_current(review)
         for entry in matched:
             key = (review.get('kind'), entry['page_id'])
+            if (review.get('kind') in ('content', 'privacy') and
+                    (alignment == 'needs_reconciliation' or
+                     _ref_key(review.get('ref') or {}) in artifacts.get('_input_stale_reviews', set()))):
+                stale.append({'kind': review.get('kind'), 'page_id': entry['page_id'],
+                              'review_id': review.get('review_id'), 'code': 'changed_input',
+                              'reason': 'content/privacy observation predates the current task or sources'})
+                continue
             if _ref_key(current) not in subjects or not deps_current:
                 stale.append({'kind': review.get('kind'), 'page_id': entry['page_id'],
                               'review_id': review.get('review_id'), 'reason': dep_reason or
@@ -389,9 +456,9 @@ def evaluate_current(document: dict, reviews: list[dict], artifacts: dict) -> di
     render_report_findings = facts.get('render_report_findings') or []
     completeness_gaps = facts.get('completeness') or []
     render_report_missing = bool(facts.get('render_report_missing'))
-    if render_failed or any(d['status'] == 'fail' or d['open_must_fix'] for d in dimensions.values()):
+    if limit_violation or render_failed or any(d['status'] == 'fail' or d['open_must_fix'] for d in dimensions.values()):
         status = 'fail'
-    elif missing or render_report_missing or completeness_gaps or dimension_reasons:
+    elif missing or render_report_missing or completeness_gaps or dimension_reasons or alignment == 'needs_reconciliation':
         status = 'not_evaluated'
     elif any(d['pending_judgments'] for d in dimensions.values()):
         status = 'needs_review'
@@ -401,7 +468,9 @@ def evaluate_current(document: dict, reviews: list[dict], artifacts: dict) -> di
         status = 'not_evaluated'
     result = {'status': status, 'current_outputs': current, 'dimensions': dimensions,
               'stale': stale, 'missing_dimensions': sorted(missing),
-              'output_facts': facts, 'dimension_reasons': dimension_reasons}
+              'output_facts': facts, 'dimension_reasons': dimension_reasons, 'input_alignment': alignment}
+    if limit_violation:
+        result['reason'] = limit_violation
     if render_failed:
         result['render_report_findings'] = render_report_findings
     if suspended_pages and status == 'not_evaluated':

@@ -21,8 +21,10 @@ from typing import Any
 from .content import check_page
 from .models import (
     ModelError,
+    page_limit_violation,
     bump_revision,
     content_identity,
+    compute_input_digest,
     canonical_json_bytes,
     sha256_bytes,
     validate_artifact_semantics,
@@ -41,6 +43,7 @@ ENVELOPE_SLOTS = (
     "reviews",
     "usage_events",
     "notes",
+    "content_update",
 )
 
 TASK_KINDS = ENVELOPE_KINDS + ("compile", "render", "check")
@@ -75,6 +78,14 @@ class EnvelopeError(ModelError):
 
 class TaskConflict(StoreError):
     """Late result, stale input, or a different output for a known operation."""
+
+
+class StaleInputContext(TaskConflict):
+    """A result arrived after the task inputs moved on (exit 5,
+    ``stale_input_context``): continue hands out a fresh task."""
+
+    error_code = "stale_input_context"
+    exit_code = 5
 
 
 @dataclass
@@ -123,6 +134,8 @@ def parse_envelope(raw: dict[str, Any]) -> dict[str, Any]:
         value = raw.get(slot)
         if value is not None and not isinstance(value, list):
             raise EnvelopeError(f"(result)/{slot}", "must be an array when present")
+    if raw.get("content_update") is not None and not isinstance(raw["content_update"], dict):
+        raise EnvelopeError("(result)/content_update", "must be an object when present")
     if raw.get("notes") is not None and not isinstance(raw["notes"], str):
         raise EnvelopeError("(result)/notes", "must be a string when present")
     files = raw.get("files") or []
@@ -293,10 +306,23 @@ def _lookup_task(document: dict, task_id: str, store: Store) -> dict:
 def task_inputs_current(store, document, task):
     if content_identity(document) == task.get('produced_against'):
         return True
-    if not task.get('scope_pages'):
-        return False
     dispatched = store.load_document(task['dispatch_revision'])
-    if dispatched['design_context'] != document['design_context'] or dispatched['sources'] != document['sources']:
+    # Task facts are part of the dispatched input: a task-field change
+    # (audience, decisions, ...) invalidates scoped results too, even when
+    # pages/design/sources are untouched (spec v1.1 §5.4, c93 defect).
+    if (compute_input_digest(dispatched) != compute_input_digest(document)
+            or dispatched['design_context'] != document['design_context']):
+        return False
+    if task.get('kind') == 'compose' and task.get('intent') == 'input_revision':
+        # The result writes the whole page order, so its read dependency must
+        # include order and membership as well as normalized Page contents.
+        return [(p['page_id'], p['page']['sha256']) for p in dispatched['pages']] == [
+            (p['page_id'], p['page']['sha256']) for p in document['pages']]
+    # Display names and source paths are not input semantics. A metadata-only
+    # revision keeps even an initial, unscoped compose task usable.
+    if content_identity({**document, 'sources': dispatched['sources']}) == task.get('produced_against'):
+        return True
+    if not task.get('scope_pages'):
         return False
     before = {e['page_id']: e for e in dispatched['pages']}
     after = {e['page_id']: e for e in document['pages']}
@@ -592,6 +618,11 @@ def new_task(
     call_allowances: list[dict] | None = None,
     status: str = "awaiting_host",
     review_stage: str | None = None,
+    intent: str | None = None,
+    input_digest: str | None = None,
+    input_revision_id: str | None = None,
+    method_release: dict | None = None,
+    review_units: list[dict] | None = None,
 ) -> dict:
     """Build a minimal valid Task v1 (05 chapter wires dispatch)."""
     task = {
@@ -617,8 +648,181 @@ def new_task(
     }
     if review_stage is not None:
         task['review_stage'] = review_stage
+    if intent is not None:
+        task['intent'] = intent
+    if input_digest is not None:
+        task['input_digest'] = input_digest
+    if input_revision_id is not None:
+        task['input_revision_id'] = input_revision_id
+    if method_release is not None:
+        task['method_release'] = method_release
+    if review_units is not None:
+        task['review_units'] = review_units
     validate_task_semantics(task)
     return task
+
+
+def _validate_content_update_request(envelope: dict, document: dict, task: dict, content_update: dict) -> None:
+    """Shape and scope checks for a compose/input_revision content_update (§5.4)."""
+    if task.get("kind") != "compose" or task.get("intent") != "input_revision":
+        raise EnvelopeError(
+            "(result)/content_update",
+            "content_update is only accepted by compose tasks dispatched with intent=input_revision",
+        )
+    allowed = {"input_digest", "upsert_pages", "remove_page_ids", "page_order",
+               "impact_summary", "unchanged_reason"}
+    unknown = sorted(set(content_update) - allowed)
+    if unknown:
+        raise EnvelopeError("(result)/content_update", f"unknown fields: {unknown}")
+    for field in ("impact_summary", "unchanged_reason"):
+        if field in content_update and not isinstance(content_update[field], str):
+            raise EnvelopeError(f"(result)/content_update/{field}", "must be a string")
+    for slot in ("pages", "page_order", "artifact_specs", "reviews"):
+        if envelope.get(slot):
+            raise EnvelopeError(
+                f"(result)/{slot}",
+                "input_revision results submit content_update only; no top-level pages, "
+                "page_order, artifacts or reviews",
+            )
+    digest = content_update.get("input_digest")
+    if digest != task.get("input_digest"):
+        raise TaskConflict(
+            "(result)/content_update/input_digest",
+            "content_update input_digest does not match the dispatched input revision; "
+            "read the new inputs and resubmit",
+        )
+    upserts = content_update.get("upsert_pages", [])
+    removes = content_update.get("remove_page_ids", [])
+    if not isinstance(upserts, list) or not all(
+            isinstance(page, dict) and isinstance(page.get("page_id"), str) and page["page_id"]
+            for page in upserts):
+        raise EnvelopeError("(result)/content_update/upsert_pages",
+                            "must be an array of complete Page v2 objects")
+    if not isinstance(removes, list) or not all(isinstance(pid, str) and pid for pid in removes) or \
+            len(set(removes)) != len(removes):
+        raise EnvelopeError("(result)/content_update/remove_page_ids",
+                            "must be unique page ids currently in the deck")
+    if not upserts and not removes and not (content_update.get("unchanged_reason") or "").strip():
+        raise EnvelopeError(
+            "(result)/content_update/unchanged_reason",
+            "an adoption with no page changes requires a concrete unchanged_reason",
+        )
+    upsert_ids = [page["page_id"] for page in upserts]
+    if len(set(upsert_ids)) != len(upsert_ids):
+        raise EnvelopeError("(result)/content_update/upsert_pages", "duplicate page_id")
+    if set(upsert_ids) & set(removes):
+        raise EnvelopeError("(result)/content_update", "a page cannot be both upserted and removed")
+    old_ids = [entry["page_id"] for entry in document.get("pages") or []]
+    ghosts = [pid for pid in removes if pid not in old_ids]
+    if ghosts:
+        raise EnvelopeError("(result)/content_update/remove_page_ids",
+                            f"pages not in the current deck: {ghosts}")
+    expected = (set(old_ids) - set(removes)) | set(upsert_ids)
+    page_order = content_update.get("page_order")
+    if (not isinstance(page_order, list) or not page_order
+            or not all(isinstance(pid, str) and pid for pid in page_order)
+            or len(set(page_order)) != len(page_order)
+            or set(page_order) != expected):
+        raise EnvelopeError(
+            "(result)/content_update/page_order",
+            "page_order must equal current pages minus removals plus additions; "
+            "no ghost pages, duplicates or omissions",
+        )
+
+
+def _accept_content_update(store: Store, *, document: dict, task: dict, envelope: dict,
+                           content_update: dict, result_digest: str, produced_against: str,
+                           staged: dict[str, dict]) -> dict:
+    """Adopt an input_revision result: only changed pages move (spec v1.1 §5.4).
+
+    Unchanged pages keep every slot; changed pages keep their original
+    blueprint as history while SVG/previews clear for reconstruction; new
+    pages start from blueprint; removed pages exit the current set with their
+    history intact. Changed content/order retires current deck outputs; their
+    immutable objects remain available in history.
+    """
+    if not task_inputs_current(store, document, task):
+        raise StaleInputContext('(content_update)', 'document changed since dispatch; run continue')
+    _validate_content_update_request(envelope, document, task, content_update)
+    violation = page_limit_violation({**document, 'pages': content_update['page_order']})
+    if violation:
+        raise EnvelopeError('(result)/content_update/page_order', violation)
+    upserts = {}
+    for index, page in enumerate(content_update.get("upsert_pages") or []):
+        try:
+            upserts[page["page_id"]] = check_page(page)
+        except ModelError as exc:
+            raise EnvelopeError(f"(result)/content_update/upsert_pages[{index}]", str(exc)) from exc
+
+    updated_task = {**task, "status": "completed", "updated_at": _utc_now_iso()}
+    old_entries = {entry["page_id"]: entry for entry in document.get("pages") or []}
+    page_refs = {pid: store.put_json_object(page) for pid, page in upserts.items()}
+    new_pages = []
+    changed_ids = []
+    for pid in content_update["page_order"]:
+        old = old_entries.get(pid)
+        if pid in page_refs:
+            if old and old["page"]["sha256"] == page_refs[pid]["sha256"]:
+                new_pages.append(dict(old))  # normalized bytes identical: all slots preserved
+                continue
+            changed_ids.append(pid)
+            if old:
+                entry = {**old, "page": page_refs[pid],
+                         "svg": None, "svg_preview": None, "ppt_preview": None}
+            else:
+                entry = {"page_id": pid, "page": page_refs[pid], "blueprint": None,
+                         "svg": None, "svg_preview": None, "ppt_preview": None}
+            new_pages.append(entry)
+        else:
+            new_pages.append(dict(old))
+    for pid in content_update.get("remove_page_ids") or []:
+        changed_ids.append(pid)  # exits the current set; history stays
+
+    new_document = bump_revision(document, {
+        "operation_id": task["operation_id"], "kind": "content_update",
+        "description": content_update.get("impact_summary") or envelope.get("notes")
+        or "input revision adopted", "read_set": [],
+    })
+    new_document["pages"] = new_pages
+    before_sequence = [(entry["page_id"], entry["page"]["sha256"]) for entry in document["pages"]]
+    after_sequence = [(entry["page_id"], entry["page"]["sha256"]) for entry in new_pages]
+    if before_sequence != after_sequence:
+        new_document["outputs"] = dict.fromkeys(document["outputs"])
+    new_document["content_basis"] = {
+        "input_digest": content_update["input_digest"],
+        "input_revision_id": task.get("input_revision_id"),
+        "resolved_by_task_id": task["task_id"],
+    }
+    task_ref = store.put_json_object(updated_task)
+    _replace_task_in_document(new_document, task, task_ref, store)
+    new_document["change"] = {
+        "operation_id": task["operation_id"],
+        "kind": "content_update",
+        "description": content_update.get("impact_summary") or envelope.get("notes")
+        or "input revision adopted",
+        "read_set": [{"identity": f"document-revision:{task.get('dispatch_revision')}",
+                      "sha256": produced_against}],
+    }
+    new_revision = store.commit_change(
+        base_revision=document["revision_id"], document=new_document,
+        operation_id=task["operation_id"],
+    )
+    write_operation_journal(store, OperationJournal(
+        operation_id=task["operation_id"], task_id=task["task_id"],
+        kind=envelope["kind"], produced_against=produced_against,
+        result_digest=result_digest, revision_id=new_revision,
+        usage_events=envelope.get("usage_events") or [],
+    ))
+    return {
+        "status": "accepted",
+        "revision_id": new_revision,
+        "new_page_hashes": {pid: page_refs[pid]["sha256"] for pid in changed_ids if pid in page_refs},
+        "unchanged_reason": (content_update.get("unchanged_reason") or "").strip() or None,
+        "impact_summary": content_update.get("impact_summary"),
+        "result_refs": [],
+        "work_complete": derive_work_complete(new_document, store),
+        "next_action": "continue_production",
+    }
 
 
 def accept_result(
@@ -655,6 +859,8 @@ def accept_result(
 
     journal = read_operation_journal(store, operation_id)
     if journal is not None:
+        if task.get("status") == "superseded":
+            raise StaleInputContext(f"(task {task_id})", "task was superseded by newer inputs; run continue")
         if journal.get("result_digest") == result_digest:
             return {
                 "status": "already_applied",
@@ -713,7 +919,8 @@ def accept_result(
                 usage_events=envelope.get("usage_events") or [],
             ),
         )
-        raise TaskConflict(
+        conflict = StaleInputContext if task.get("status") == "superseded" else TaskConflict
+        raise conflict(
             f"(task {task_id})", "result arrived after cancellation; call facts were settled"
         )
 
@@ -725,7 +932,7 @@ def accept_result(
     # Freshness is content-based: task-management revisions (claim, allocation)
     # keep the result valid; a content change invalidates it (spec 09.7 recheck).
     if not task_inputs_current(store, document, task):
-        raise TaskConflict(
+        raise StaleInputContext(
             "(document)",
             "project content moved since dispatch; read the new inputs and rebase",
         )
@@ -749,6 +956,15 @@ def accept_result(
                             operation_id=f"settle-{operation_id}")
         document = store.load_document()
     _validate_content_envelope(envelope)
+    content_update = envelope.get("content_update")
+    if task.get("intent") == "input_revision" and content_update is None:
+        raise EnvelopeError("(result)/content_update",
+                            "input_revision requires content_update; full pages cannot replace the deck")
+    if content_update is not None:
+        return _accept_content_update(
+            store, document=document, task=task, envelope=envelope,
+            content_update=content_update, result_digest=result_digest,
+            produced_against=produced_against, staged=staged)
     _check_scope(envelope["kind"], envelope, task)
     stage = task.get('review_stage', 'final')
     if stage == 'page_visual' and len(task.get('scope_pages') or []) != 1:
@@ -759,7 +975,8 @@ def accept_result(
         if review.get('review_stage', 'final') != stage:
             raise EnvelopeError('review/review_stage', 'review stage does not match the dispatched task')
     if stage == 'page_visual' and envelope['kind'] == 'review':
-        required = {'blueprint_content', 'blueprint_fidelity', 'readability'}
+        from .review import PAGE_VISUAL_KINDS
+        required = set(PAGE_VISUAL_KINDS)
         reviews_by_kind = {item.get('kind'): item for item in envelope.get('reviews') or []}
         if set(reviews_by_kind) != required or len(envelope.get('reviews') or []) != len(required):
             raise EnvelopeError('review/kind', 'page_visual requires exactly blueprint_content, blueprint_fidelity and readability')
@@ -782,9 +999,16 @@ def accept_result(
             if not required_deps <= deps.keys() or any(digests.get(key) != sha for key, sha in deps.items()):
                 raise EnvelopeError('review/dependencies', 'page_visual review must bind current Page, blueprint, SVG, style and allowed assets')
     if stage == 'final' and envelope['kind'] == 'review' and envelope.get('reviews'):
+        from .review import REVIEW_DIMENSIONS
+        # The six content dimensions are required; professional_use and
+        # desktop_editing remain valid supplementary final records.
+        allowed_kinds = set(REVIEW_DIMENSIONS) | {'professional_use', 'desktop_editing'}
         pptx_ref = (document.get('outputs') or {}).get('pptx')
         pages_by_id = {e['page_id']: e for e in document.get('pages') or []}
         for item in envelope['reviews']:
+            if item.get('kind') not in allowed_kinds:
+                raise EnvelopeError('review/kind',
+                                    f"final review kinds must be among {', '.join(sorted(allowed_kinds))}")
             cited = {(ref.get('path'), ref.get('sha256')) for ref in item.get('subjects') or []}
             if pptx_ref and (pptx_ref['path'], pptx_ref['sha256']) not in cited:
                 raise EnvelopeError('review/subjects', 'final review must reference the current PPTX')
@@ -841,6 +1065,12 @@ def accept_result(
     }
 
     # Persist the validated payload (immutable blobs), then switch the Document once.
+    if envelope['kind'] == 'compose' or adopted_pages:
+        resulting_ids = (envelope.get('page_order') or []) if envelope['kind'] == 'compose' else (
+            {entry['page_id'] for entry in document['pages']} | {page['page_id'] for page in adopted_pages})
+        violation = page_limit_violation({**document, 'pages': resulting_ids})
+        if violation:
+            raise EnvelopeError('(result)/pages', violation)
     page_refs = {}
     for page in adopted_pages:
         page_refs[page["page_id"]] = store.put_json_object(page)
@@ -872,6 +1102,13 @@ def accept_result(
             )
         new_document["pages"] = new_pages
         new_document['outputs'] = {key: None for key in new_document['outputs']}
+        if task.get("input_digest"):
+            # The initial content is complete against its dispatch inputs.
+            new_document["content_basis"] = {
+                "input_digest": task["input_digest"],
+                "input_revision_id": task.get("input_revision_id"),
+                "resolved_by_task_id": task["task_id"],
+            }
     else:
         existing = {
             entry.get("page_id"): entry

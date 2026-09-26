@@ -39,6 +39,7 @@ def test_plain_material_directory_starts_without_library(tmp_path: Path) -> None
 
 
 def test_create_preserves_chinese_source_names_with_valid_ids(tmp_path: Path) -> None:
+    import re
     first = tmp_path / "客户原始需求.txt"
     second = tmp_path / "三类Agent需求清单.md"
     first.write_text("原始需求。", encoding="utf-8")
@@ -48,7 +49,10 @@ def test_create_preserves_chinese_source_names_with_valid_ids(tmp_path: Path) ->
 
     assert response["status"] == "created"
     sources = service.Store(tmp_path / "project").load_document()["sources"]
-    assert [item["source_id"] for item in sources] == ["src-1", "src-2"]
+    ids = [item["source_id"] for item in sources]
+    assert len(ids) == len(set(ids)) == 2
+    assert all(re.fullmatch(r"src-[0-9a-f]{8}", item) for item in ids)
+    assert [item["name"] for item in sources] == [first.name, second.name]
     assert [item["name"] for item in sources] == [first.name, second.name]
 
 

@@ -54,6 +54,12 @@ def check_handoff(project_dir, *, file_path, purpose="review"):
     review_status = check_summary(store, document)["status"] if output_ref else "not_evaluated"
     if purpose == "delivery" and review_status != "pass":
         gaps.append("required_review_not_pass")
+    from .models import input_alignment
+    alignment = input_alignment(document)
+    if alignment == "needs_reconciliation":
+        # Refused for both purposes: the deck cannot be handed off against an
+        # input version it was not built on (spec v1.1 §5.5).
+        gaps.append("input_reconciliation_pending")
 
     return {
         "status": "verified" if not gaps else "blocked",
@@ -63,6 +69,7 @@ def check_handoff(project_dir, *, file_path, purpose="review"):
         "file": str(candidate),
         "file_sha256": actual_hash,
         "current_pptx_sha256": expected_hash,
+        "input_alignment": alignment,
         "page_count": len(document.get("pages") or []),
         "render_report_status": report_status or "not_evaluated",
         "review_status": review_status,

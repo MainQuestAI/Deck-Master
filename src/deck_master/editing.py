@@ -8,7 +8,7 @@ import shutil
 import uuid
 import zipfile
 from .content import check_page
-from .models import bump_revision, canonical_json_bytes, sha256_bytes
+from .models import bump_revision, canonical_json_bytes, compute_input_digest, sha256_bytes
 from .store import Store, ConflictError, StoreError
 from .tasks import _project_transaction
 
@@ -152,6 +152,22 @@ def _current_artifact_digests(store, doc, extra_subjects=()):
         if extract:
             artifacts[f"source:{source.get('source_id')}"] = extract['sha256']
     artifacts['policy:document'] = sha256_bytes(canonical_json_bytes(doc.get('policy') or {}))
+    # Legacy reviews have no input dependency. Their immutable adoption history
+    # identifies which observations predate the latest semantic input change.
+    # Retain the Review objects; only content/privacy need a new observation.
+    artifacts['_input_stale_reviews'] = set()
+    if doc.get('content_basis'):
+        digest = compute_input_digest(doc)
+        revision = doc.get('parent_revision_id')
+        visited = set()
+        while revision and revision not in visited:
+            visited.add(revision)
+            prior = store.load_document(revision)
+            if compute_input_digest(prior) != digest:
+                artifacts['_input_stale_reviews'] = {
+                    (ref['path'], ref['sha256']) for ref in prior.get('reviews') or []}
+                break
+            revision = prior.get('parent_revision_id')
     return artifacts
 
 
@@ -274,13 +290,21 @@ def _export_locked(store, *, output_dir, purpose):
     if purpose not in ('review', 'delivery'):
         raise StoreError('purpose', 'must be review or delivery')
     doc=store.load_document()
+    from .models import input_alignment as _input_alignment
+    from .errors import InputReconciliationPending
+    alignment=_input_alignment(doc)
+    if alignment=='needs_reconciliation' and purpose=='delivery':
+        raise InputReconciliationPending('input_alignment',
+            'inputs changed after this content was completed; run inputs update and finish the '
+            'dispatched input_revision task before delivery (delivery is refused while '
+            'input_alignment is needs_reconciliation)')
     if not doc['outputs'].get('pptx'):raise StoreError('outputs/pptx','no current PPT; continue production')
     summary=check_summary(store,doc)
     status=summary['status']
     if purpose=='delivery' and status!='pass':
         failed=[key for key,value in summary['dimensions'].items() if value['open_must_fix'] or value['status']=='fail']
         raise StoreError('reviews',f'delivery requires every required check to pass; '
-                         f'current review status is {status!r} '
+                         f'current review status is {status!r}; {summary.get("reason", "")} '
                          f'(unresolved: {sorted(set(summary["missing_dimensions"]) | set(failed))})')
     if purpose=='delivery' and (doc.get('policy') or {}).get('professional_review_required_for_delivery'):
         current=doc['outputs'].get('pptx')
@@ -329,6 +353,7 @@ def _export_locked(store, *, output_dir, purpose):
         facts=summary.get('output_facts') or {}
         report={'project_id':doc['project_id'],'revision_id':doc['revision_id'],'purpose':purpose,
                 'review_status':status,
+                'input_alignment':alignment,
                 'unresolved':{'missing_dimensions':sorted(summary['missing_dimensions']),
                               'failed_dimensions':failed_dimensions,
                               'render_report_missing':bool(facts.get('render_report_missing')),
@@ -339,6 +364,8 @@ def _export_locked(store, *, output_dir, purpose):
                 'professional_evidence':_professional_evidence(store,doc),
                 'desktop_editing':'not_evaluated',
                 'evidence_level':'engineering'}
+        if alignment=='needs_reconciliation':
+            report['notice']='待按新要求更新'
         (destination/'delivery.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
     except Exception:
         shutil.rmtree(destination);raise
@@ -375,6 +402,13 @@ def _restore(store, *, revision_id, base_revision, operation_id):
     updated=bump_revision(current,{'operation_id':operation_id,'kind':'restore','description':'restore '+revision_id,'read_set':[]})
     for key in ('pages','design_context','sources','outputs'):
         updated[key]=copy.deepcopy(past[key])
+    if not past.get('pages'):
+        updated.pop('content_basis', None)
+    elif past.get('content_basis'):
+        updated['content_basis'] = copy.deepcopy(past['content_basis'])
+    else:
+        updated['content_basis'] = {'input_digest': compute_input_digest(past),
+                                    'input_revision_id': None, 'resolved_by_task_id': None}
     # Call facts and policy are never rolled back by restoring old page content.
     for i,ref in enumerate(updated['tasks']):
         task=store.read_object_json(ref)

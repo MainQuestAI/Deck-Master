@@ -254,6 +254,33 @@
     });
   }
 
+  function renderReconciliation(view) {
+    let banner = document.getElementById("reconciliation-banner");
+    const needsUpdate = view.input_alignment === "needs_reconciliation";
+    if (!needsUpdate) {
+      if (banner) banner.remove();
+      return;
+    }
+    if (!banner) {
+      banner = document.createElement("div");
+      banner.id = "reconciliation-banner";
+      banner.className = "reconciliation-banner";
+      document.querySelector("main").before(banner);
+    }
+    banner.replaceChildren();
+    const title = document.createElement("strong");
+    title.textContent = (view.reconciliation && view.reconciliation.notice) || "待按新要求更新";
+    banner.appendChild(title);
+    const reason = document.createElement("span");
+    reason.className = "mono";
+    reason.textContent = (view.reconciliation && view.reconciliation.reason)
+      ? " · " + view.reconciliation.reason : "";
+    banner.appendChild(reason);
+    banner.appendChild(Object.assign(document.createElement("span"), {
+      className: "mono", textContent: " · 交付前需完成本次内容更新。",
+    }));
+  }
+
   async function refresh() {
     try {
       const view = await fetchView();
@@ -262,6 +289,7 @@
         state.activePage = null;
       }
       renderMeta(view);
+      renderReconciliation(view);
       const download=document.getElementById('download-ppt');
       download.hidden=!view.outputs.pptx;
       if(view.outputs.pptx)download.href=fileUrl(view.outputs.pptx);

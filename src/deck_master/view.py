@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Any
 
 from .content import visible_atoms
-from .store import Store
+from .store import Store, StoreError
 
 
 def project_view(project_dir: Path | str, *, revision: str | None = None) -> dict[str, Any]:
@@ -85,6 +85,8 @@ def project_view(project_dir: Path | str, *, revision: str | None = None) -> dic
             }
         )
     design = document.get("design_context") or {}
+    from .models import input_alignment as derive_input_alignment
+    alignment = derive_input_alignment(document)
     view = {
         "format": "deck_view.v1",
         "project_id": document.get("project_id"),
@@ -101,9 +103,16 @@ def project_view(project_dir: Path | str, *, revision: str | None = None) -> dic
         },
         "outputs": document.get("outputs") or {},
         "policy": document.get("policy") or {},
+        "input_alignment": alignment,
         "view_status": derive_view_status(document),
         "evidence_level": "engineering",
     }
+    if alignment == "needs_reconciliation":
+        # Read-only notice; existing page editing remains available.
+        view["reconciliation"] = {
+            "notice": "待按新要求更新",
+            "reason": _latest_input_update_reason(store, document),
+        }
     from .editing import review_status
     if document['outputs'].get('pptx'):
         view['view_status']='ready_for_export' if review_status(store,document)=='pass' else 'awaiting_review'
@@ -127,6 +136,42 @@ def _broken_page_entry(entry: dict, detail: str) -> dict[str, Any]:
             "ppt_preview": entry.get("ppt_preview"),
         },
     }
+
+
+def _latest_input_update_reason(store: Store, document: dict) -> str | None:
+    """Show the user's change reason, never the Host's execution instructions."""
+    for ref in document.get("tasks") or []:
+        try:
+            task = store.read_object_json(ref)
+        except Exception:  # noqa: BLE001 - unreadable task refs never break the view
+            continue
+        if task.get("kind") == "compose" and task.get("intent") == "input_revision" \
+                and task.get("status") in ("awaiting_host", "running"):
+            revision = task.get("dispatch_revision")
+            seen = set()
+            while revision and revision not in seen:
+                seen.add(revision)
+                try:
+                    dispatched = store.load_document(revision)
+                except StoreError:
+                    break
+                change = dispatched.get("change") or {}
+                if change.get("operation_id") == task.get("input_revision_id"):
+                    return change.get("description")
+                revision = dispatched.get("parent_revision_id")
+    revision = document.get("revision_id")
+    visited = set()
+    while revision and revision not in visited and len(visited) < 200:
+        visited.add(revision)
+        try:
+            historic = store.load_document(revision)
+        except StoreError:
+            break
+        change = historic.get("change") or {}
+        if change.get("kind") == "input_update":
+            return change.get("description")
+        revision = historic.get("parent_revision_id")
+    return None
 
 
 def derive_view_status(document: dict) -> str:

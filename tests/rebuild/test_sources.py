@@ -69,10 +69,9 @@ def test_json_reading_keeps_numbers_zero_and_nesting(tmp_path: Path) -> None:
 
 def test_invalid_json_is_explicit_not_empty_success(tmp_path: Path) -> None:
     path = _write(tmp_path, "broken.json", b"{not json")
-    extract = read_source(path)
-    assert extract.status == "needs_tool"
-    assert "invalid JSON" in extract.detail
-    assert extract.text == ""
+    from deck_master.errors import SourceUnreadable
+    with pytest.raises(SourceUnreadable, match="invalid JSON"):
+        read_source(path)
 
 
 def _pdf_stream(text: str) -> bytes:
@@ -249,15 +248,23 @@ def test_grouped_ppt_text_notes_and_picture_detection(tmp_path):
 
 
 def test_create_preserves_source_status_and_immutable_original(tmp_path):
+    """v1.1 §4: an explicitly named unsupported file fails the whole create
+    (exit 2, code source_unsupported) and no Document is left behind; a
+    directory-discovered unsupported file is only skipped, with a reason."""
     from deck_master import service
-    from deck_master.store import Store
+    from deck_master.errors import SourceUnsupported
     source=_write(tmp_path,'unread.xyz',b'original material')
-    project=tmp_path/'project';service.create(project,brief='read actual material',sources=[str(source)])
-    source.unlink()
-    task=service.continue_project(project)['pending_tasks'][0]
-    read=task['source_reading'][0]
-    assert read['status']=='needs_tool' and '.xyz' in read['detail']
-    assert Store(project).read_object_bytes(read['original_file'])==b'original material'
+    project=tmp_path/'project'
+    with pytest.raises(SourceUnsupported):
+        service.create(project,brief='read actual material',sources=[str(source)])
+    assert not (project/'.deckmaster').exists()
+    directory=tmp_path/'materials';directory.mkdir()
+    (directory/'real.md').write_text('真实材料',encoding='utf-8')
+    (directory/'unread.xyz').write_bytes(b'original material')
+    response=service.create(tmp_path/'project2',brief='read actual material',sources=[directory])
+    assert [item['name'] for item in response['sources_adopted']]==['real.md']
+    skipped={Path(item['path']).name:item['reason'] for item in response['sources_skipped']}
+    assert 'unsupported format' in skipped['unread.xyz']
 
 
 def test_json_pointer_escapes_keys(tmp_path):
@@ -366,3 +373,55 @@ def test_missing_font_blocks_new_work_but_not_old_media(tmp_path: Path) -> None:
     current = store.load_document()
     assert store.read_object_bytes(
         store.read_object_json(current["pages"][0]["ppt_preview"])["file"]) == preview.read_bytes()
+@pytest.mark.parametrize('suffix,data', [('json', b'{broken'), ('docx', b'not a ZIP'), ('txt', b'\xff\xfe')])
+def test_create_rejects_explicit_unreadable_material_before_document(tmp_path, suffix, data):
+    from deck_master.service import create
+    from deck_master.errors import SourceUnreadable
+    source = tmp_path / f'bad.{suffix}'
+    source.write_bytes(data)
+    project = tmp_path / 'project'
+    with pytest.raises(SourceUnreadable):
+        create(project, brief='读取材料', sources=[source])
+    assert not (project / '.deckmaster/current.json').exists()
+
+
+def test_directory_reports_bad_material_and_stops_symlink_cycles(tmp_path):
+    from deck_master.service import create
+    materials = tmp_path / 'materials'
+    materials.mkdir()
+    (materials / 'good.md').write_text('可读材料')
+    (materials / 'bad.json').write_text('{bad')
+    (materials / 'again').symlink_to(materials, target_is_directory=True)
+    result = create(tmp_path / 'project', brief='读取材料', sources=[materials])
+    assert [entry['name'] for entry in result['sources_adopted']] == ['good.md']
+    assert result['sources_errored'][0]['code'] == 'source_unreadable'
+    assert any('cycle' in entry['reason'] or 'visited' in entry['reason']
+               for entry in result['sources_skipped'])
+
+
+def test_input_update_uses_staged_bytes_and_rejects_parse_failure(tmp_path, monkeypatch):
+    from deck_master import service
+    from deck_master.errors import SourceUnreadable
+    from deck_master.store import Store
+    project = tmp_path / 'project'
+    service.create(project, brief='读取材料')
+    store = Store(project)
+    before = store.load_document()
+    source = tmp_path / 'source.json'
+    source.write_text('{broken')
+    patch = {'reason': '补充材料', 'source_changes': {'add': [{'path': str(source)}]}}
+    with pytest.raises(SourceUnreadable):
+        service.inputs_update(project, patch=patch, base_revision=before['revision_id'], operation_id='bad-json')
+    assert store.load_document() == before
+    source.write_text('{"version":1}')
+    original_read = service._read_patch_material
+    def change_after_staging(path):
+        staged = original_read(path)
+        source.write_text('{"version":2}')
+        return staged
+    monkeypatch.setattr(service, '_read_patch_material', change_after_staging)
+    service.inputs_update(project, patch=patch, base_revision=before['revision_id'], operation_id='staged-bytes')
+    entry = store.load_document()['sources'][0]
+    extract = store.read_object_json(entry['extract'])
+    assert json.loads(extract['text']) == {'version': 1}
+    assert store.read_object_bytes(extract['original_file']) == b'{"version":1}'

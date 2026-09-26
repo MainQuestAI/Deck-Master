@@ -17,10 +17,21 @@ import zipfile
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from .errors import SourceUnreadable, SourceUnsupported, SourceNeedsTool
+
 SUPPORTED_TEXT_FORMATS = {"txt", "md"}
 SUPPORTED_STRUCTURED_FORMATS = {"json"}
 SUPPORTED_DOCUMENT_FORMATS = {"pdf", "docx", "pptx"}
 SUPPORTED_MEDIA_FORMATS = {"png", "jpg", "jpeg", "svg", "webp", "gif"}
+
+SUPPORTED_EXTENSIONS = (
+    SUPPORTED_TEXT_FORMATS | SUPPORTED_STRUCTURED_FORMATS
+    | SUPPORTED_DOCUMENT_FORMATS | SUPPORTED_MEDIA_FORMATS
+)
+
+# Tool/cache directories are never material; a directory merely NAMED like an
+# output (e.g. "output/") stays a normal directory (spec v1.1 §4).
+TOOL_DIRECTORY_NAMES = {".git", ".venv", "venv", "node_modules", "__pycache__", ".deckmaster"}
 
 FORMAT_KIND = {
     "txt": "text",
@@ -72,14 +83,7 @@ def _read_text(path: Path, ext: str) -> SourceExtract:
     try:
         text = path.read_text(encoding="utf-8")
     except UnicodeDecodeError as exc:
-        return SourceExtract(
-            original_uri=str(path),
-            original_sha256=None,
-            format=ext,
-            format_kind="text",
-            status="needs_tool",
-            detail=f"unreadable encoding: {exc}",
-        )
+        raise SourceUnreadable(str(path), f"unreadable encoding: {exc}")
     return SourceExtract(
         original_uri=str(path),
         original_sha256=measure_hash(path),
@@ -101,14 +105,7 @@ def _read_json(path: Path) -> SourceExtract:
     try:
         payload = json.loads(raw.decode("utf-8"))
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-        return SourceExtract(
-            original_uri=str(path),
-            original_sha256=digest,
-            format="json",
-            format_kind="json",
-            status="needs_tool",
-            detail=f"invalid JSON: {exc}",
-        )
+        raise SourceUnreadable(str(path), f"invalid JSON: {exc}")
     locators: list[dict] = []
 
     def walk(node, pointer: str) -> None:
@@ -157,21 +154,14 @@ def _read_pdf(path: Path) -> SourceExtract:
             format="pdf",
             format_kind="pdf",
             status="needs_tool",
-            detail="pdftotext not available on this machine",
+            detail="pdftotext not available on PATH; install Poppler or restore PATH",
         )
     result = subprocess.run(
         [tool, "-layout", str(path), "-"],
         check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=120,
     )
     if result.returncode != 0:
-        return SourceExtract(
-            original_uri=str(path),
-            original_sha256=measure_hash(path),
-            format="pdf",
-            format_kind="pdf",
-            status="needs_tool",
-            detail=f"pdftotext failed: {result.stderr.decode('utf-8', 'replace').strip()}",
-        )
+        raise SourceUnreadable(str(path), f"pdftotext failed: {result.stderr.decode('utf-8', 'replace').strip()}")
     text = result.stdout.decode("utf-8", "replace")
     pages = text.split("\f")
     if pages and not pages[-1].strip():pages.pop()
@@ -198,14 +188,7 @@ def _read_docx(path: Path) -> SourceExtract:
         with zipfile.ZipFile(path) as archive:
             xml_bytes = archive.read("word/document.xml")
     except (zipfile.BadZipFile, KeyError) as exc:
-        return SourceExtract(
-            original_uri=str(path),
-            original_sha256=measure_hash(path),
-            format="docx",
-            format_kind="docx",
-            status="needs_tool",
-            detail=f"unreadable DOCX: {exc}",
-        )
+        raise SourceUnreadable(str(path), f"unreadable DOCX: {exc}")
     import xml.etree.ElementTree as ET
 
     root = ET.fromstring(xml_bytes)
@@ -258,19 +241,12 @@ def _read_pptx(path: Path) -> SourceExtract:
             format="pptx",
             format_kind="pptx",
             status="needs_tool",
-            detail="python-pptx not installed",
+            detail="python-pptx not installed in this CLI environment",
         )
     try:
         presentation = Presentation(str(path))
     except Exception as exc:  # noqa: BLE001 - python-pptx raises broad errors
-        return SourceExtract(
-            original_uri=str(path),
-            original_sha256=measure_hash(path),
-            format="pptx",
-            format_kind="pptx",
-            status="needs_tool",
-            detail=f"unreadable PPTX: {exc}",
-        )
+        raise SourceUnreadable(str(path), f"unreadable PPTX: {exc}")
     locators: list[dict] = []
     text_parts: list[str] = []
     image_pages=[]
@@ -345,6 +321,171 @@ def read_source(path: Path | str) -> SourceExtract:
         status="needs_tool",
         detail=f"no reader declared for .{ext}",
     )
+
+
+def read_source_snapshot(path: Path | str) -> tuple[SourceExtract, bytes]:
+    """Read a single immutable byte snapshot, or report a material error.
+
+    Parsing and the stored original must describe the same bytes even if the
+    user edits the external file while an input transaction is in progress.
+    Visual verification remains pending for image-bearing formats.
+    """
+    import tempfile
+    import xml.etree.ElementTree as ET
+
+    path = Path(path).expanduser().absolute()
+    if path.suffix.lstrip('.').lower() not in SUPPORTED_EXTENSIONS:
+        raise SourceUnsupported(str(path), f'no reader declared for {path.suffix}')
+    try:
+        data = path.read_bytes()
+        with tempfile.TemporaryDirectory(prefix='deck-source-') as directory:
+            snapshot = Path(directory) / path.name
+            snapshot.write_bytes(data)
+            extract = read_source(snapshot)
+    except SourceUnreadable as exc:
+        raise SourceUnreadable(str(path), exc.detail.replace(str(snapshot), str(path))) from exc
+    except (OSError, ValueError, ET.ParseError, subprocess.TimeoutExpired) as exc:
+        raise SourceUnreadable(str(path), f'material could not be read: {exc}') from exc
+    if extract.status == 'needs_tool':
+        raise SourceNeedsTool(str(path), extract.detail)
+    if extract.status not in ('read', 'pending_visual'):
+        raise SourceUnreadable(str(path), extract.detail or 'material reader did not complete')
+    extract.original_uri = str(path)
+    extract.original_sha256 = sha256_bytes(data)
+    return extract, data
+
+
+def discover_sources(paths, *, out_dir: Path | str | None = None) -> dict:
+    """Expand user-given files and directories into a stable material list.
+
+    Explicitly named files are the user's choice: a missing, unreadable or
+    unsupported one raises and the whole create fails before any Document is
+    written (exit 2). Directory expansion never raises: tool directories,
+    Office lock files, zero-byte temporaries, the project ``--out`` directory
+    and symlinks leaving the authorized roots are skipped with a reason, and
+    unsupported formats are skipped too — noise never blocks creation.
+    Returns ``{"adopted": [Path], "skipped": [{path, reason}],
+    "errored": [{path, code, detail}]}`` with adopted sorted stably.
+    """
+    roots = [Path(p).expanduser() for p in paths]
+    def resolve_explicit(root):
+        try:
+            return root.resolve()
+        except (OSError, RuntimeError) as exc:
+            raise SourceUnreadable(str(root), f'material path cannot be resolved: {exc}') from exc
+
+    resolved_roots = {root: resolve_explicit(root) for root in roots}
+    authorized = {resolved_roots[root] for root in roots if root.exists()}
+    exclude = Path(out_dir).expanduser().resolve() if out_dir is not None else None
+    adopted: list[Path] = []
+    skipped: list[dict] = []
+    errored: list[dict] = []
+    explicit = {resolved_roots[root] for root in roots if not root.is_dir()}
+    visited_directories: set[Path] = set()
+
+    def skip(path: Path, reason: str) -> None:
+        skipped.append({"path": str(path), "reason": reason})
+
+    def note_error(path: Path, code: str, detail: str) -> None:
+        errored.append({"path": str(path), "code": code, "detail": detail})
+
+    def _within_authorized(target: Path) -> bool:
+        return any(target == root or root in target.parents for root in authorized)
+
+    def check_explicit_file(path: Path) -> None:
+        if not path.is_file():
+            raise SourceUnreadable(f"(source {path})", f"material not found: {path}")
+        try:
+            path.read_bytes()
+        except OSError as exc:
+            raise SourceUnreadable(f"(source {path})", f"material cannot be read: {exc}") from exc
+        ext = path.suffix.lstrip(".").lower()
+        if ext not in SUPPORTED_EXTENSIONS:
+            raise SourceUnsupported(f"(source {path})", f"no reader declared for .{ext}: {path}")
+
+    def handle_file(path: Path, *, explicit: bool) -> None:
+        if explicit:
+            check_explicit_file(path)
+            adopted.append(path)
+            return
+        if path.name.startswith("~$"):
+            skip(path, "office lock file")
+            return
+        try:
+            size = path.stat().st_size
+        except OSError as exc:
+            note_error(path, "source_unreadable", str(exc))
+            return
+        if size == 0:
+            skip(path, "zero-byte temporary file")
+            return
+        ext = path.suffix.lstrip(".").lower()
+        if ext not in SUPPORTED_EXTENSIONS:
+            skip(path, f"unsupported format .{ext}")
+            skipped[-1]['code'] = 'source_unsupported'
+            return
+        adopted.append(path)
+
+    def walk(directory: Path) -> None:
+        try:
+            resolved = directory.resolve()
+        except (OSError, RuntimeError) as exc:
+            skip(directory, f'symlink or path resolution failed: {exc}')
+            return
+        if resolved in visited_directories:
+            skip(directory, 'already visited directory (symlink cycle or duplicate root)')
+            return
+        visited_directories.add(resolved)
+        try:
+            entries = sorted(directory.iterdir(), key=lambda p: str(p))
+        except OSError as exc:
+            note_error(directory, "source_unreadable", str(exc))
+            return
+        for entry in entries:
+            try:
+                target = entry.resolve()
+            except (OSError, RuntimeError) as exc:
+                skip(entry, f'symlink or path resolution failed: {exc}')
+                continue
+            if exclude is not None and target == exclude:
+                skip(entry, "project --out directory")
+                continue
+            if entry.is_symlink():
+                if not target.exists():
+                    skip(entry, "broken symlink target")
+                    continue
+                if not _within_authorized(target):
+                    skip(entry, "symlink outside the authorized material roots")
+                    continue
+            if entry.is_dir():
+                if entry.name in TOOL_DIRECTORY_NAMES:
+                    skip(entry, "tool directory")
+                    continue
+                walk(entry)
+            else:
+                handle_file(entry, explicit=False)
+
+    for root in roots:
+        if not root.exists():
+            raise SourceUnreadable(f"(source {root})", f"material not found: {root}")
+        if exclude is not None and resolved_roots[root] == exclude:
+            skip(root, "project --out directory")
+            continue
+        if root.is_symlink():
+            target = resolved_roots[root]
+            if not target.exists() or not _within_authorized(target):
+                skip(root, "symlink outside the authorized material roots")
+                continue
+        if root.is_dir():
+            if root.name in TOOL_DIRECTORY_NAMES:
+                skip(root, "tool directory")
+                continue
+            walk(root)
+        else:
+            handle_file(root, explicit=True)
+    # Explicit roots keep call order; directory contents are walked in stable
+    # lexical order. No global re-sort: the user's naming order is information.
+    return {"adopted": adopted, "skipped": skipped, "errored": errored, "explicit": explicit}
 
 
 def tail_constraint(extract: SourceExtract) -> str:

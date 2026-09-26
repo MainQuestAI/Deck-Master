@@ -1,0 +1,9 @@
+{
+  "task_patch": {
+    "audience": "已了解公司能力的售后与信息化评审人",
+    "scenario": "已有客户方案评审",
+    "presentation_mode": "read_alone"
+  },
+  "source_changes": {},
+  "reason": "用户要求改为独立阅读的评审稿，保留事实和既有接入决定"
+}

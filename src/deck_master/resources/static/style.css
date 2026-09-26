@@ -204,3 +204,14 @@ html, body {
 #history-list {display:grid;gap:6px;}
 
 .image-wrap{position:relative;display:inline-block;max-width:100%;line-height:0}.image-wrap img{display:block;touch-action:none;cursor:crosshair}.region-box{position:absolute;border:2px solid var(--accent);pointer-events:none;box-sizing:border-box}.review-record{border-top:1px solid var(--hairline);padding:12px 0;line-height:1.5}.review-record p{overflow-wrap:anywhere}
+
+/* Pending input reconciliation: read-only banner (spec v1.1 §5.5). */
+.reconciliation-banner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: baseline;
+  padding: 0.6rem 0.9rem;
+  border-bottom: 1px solid var(--accent-line);
+  background: var(--surface-1);
+}
