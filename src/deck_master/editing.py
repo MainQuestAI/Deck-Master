@@ -402,6 +402,13 @@ def _restore(store, *, revision_id, base_revision, operation_id):
     updated=bump_revision(current,{'operation_id':operation_id,'kind':'restore','description':'restore '+revision_id,'read_set':[]})
     for key in ('pages','design_context','sources','outputs'):
         updated[key]=copy.deepcopy(past[key])
+    if not past.get('pages'):
+        updated.pop('content_basis', None)
+    elif past.get('content_basis'):
+        updated['content_basis'] = copy.deepcopy(past['content_basis'])
+    else:
+        updated['content_basis'] = {'input_digest': compute_input_digest(past),
+                                    'input_revision_id': None, 'resolved_by_task_id': None}
     # Call facts and policy are never rolled back by restoring old page content.
     for i,ref in enumerate(updated['tasks']):
         task=store.read_object_json(ref)

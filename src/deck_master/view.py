@@ -148,14 +148,17 @@ def _latest_input_update_reason(store: Store, document: dict) -> str | None:
         if task.get("kind") == "compose" and task.get("intent") == "input_revision" \
                 and task.get("status") in ("awaiting_host", "running"):
             revision = task.get("dispatch_revision")
-            if revision:
+            seen = set()
+            while revision and revision not in seen:
+                seen.add(revision)
                 try:
                     dispatched = store.load_document(revision)
                 except StoreError:
-                    continue
+                    break
                 change = dispatched.get("change") or {}
-                if change.get("kind") == "input_update":
+                if change.get("operation_id") == task.get("input_revision_id"):
                     return change.get("description")
+                revision = dispatched.get("parent_revision_id")
     revision = document.get("revision_id")
     visited = set()
     while revision and revision not in visited and len(visited) < 200:

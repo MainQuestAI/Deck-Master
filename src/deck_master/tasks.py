@@ -732,7 +732,8 @@ def _accept_content_update(store: Store, *, document: dict, task: dict, envelope
     Unchanged pages keep every slot; changed pages keep their original
     blueprint as history while SVG/previews clear for reconstruction; new
     pages start from blueprint; removed pages exit the current set with their
-    history intact. Outputs stay put — delivery is gated by input_alignment.
+    history intact. Changed content/order retires current deck outputs; their
+    immutable objects remain available in history.
     """
     _validate_content_update_request(envelope, document, task, content_update)
     upserts = {}
@@ -772,6 +773,10 @@ def _accept_content_update(store: Store, *, document: dict, task: dict, envelope
         or "input revision adopted", "read_set": [],
     })
     new_document["pages"] = new_pages
+    before_sequence = [(entry["page_id"], entry["page"]["sha256"]) for entry in document["pages"]]
+    after_sequence = [(entry["page_id"], entry["page"]["sha256"]) for entry in new_pages]
+    if before_sequence != after_sequence:
+        new_document["outputs"] = dict.fromkeys(document["outputs"])
     new_document["content_basis"] = {
         "input_digest": content_update["input_digest"],
         "input_revision_id": task.get("input_revision_id"),

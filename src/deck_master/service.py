@@ -227,6 +227,43 @@ def _adopt_draft(store: Store, draft_payload: dict) -> dict:
     return outcome
 
 
+def _input_compose_task(document, *, operation_id, reason):
+    pages = document.get("pages") or []
+    if pages:
+        intent = "input_revision"
+        scope = [entry["page_id"] for entry in pages]
+        instruction = (
+            f"输入已更新（operation {operation_id}）：{reason}。"
+            "读取新输入、变化说明与全稿概览，检查相关正文和跨页结论；提交 content_update，"
+            "只包含真正变化的完整 Page v2、新增/删除页 ID 和最终页序；无影响时给出具体 unchanged_reason。"
+        )
+    else:
+        intent = "initial"
+        scope = []
+        instruction = (
+            f"输入已更新（operation {operation_id}）：{reason}。"
+            "读取全部来源与任务事实，按方法写完整 Page v2 正文与页序。"
+        )
+    methods = method_resources("compose", intent=intent)
+    return tasks_mod.new_task(
+        task_id=uuid.uuid4().hex[:12],
+        operation_id=_new_operation_id("compose"),
+        kind="compose",
+        intent=intent,
+        input_digest=compute_input_digest(document),
+        input_revision_id=operation_id,
+        method_release=method_release(methods),
+        scope_pages=scope,
+        instruction=instruction,
+        inputs=[],
+        dependencies=[{"kind": "content",
+                       "identity": f"document-revision:{document['revision_id']}",
+                       "sha256": content_identity(document)}],
+        dispatch_revision=document["revision_id"],
+        produced_against=content_identity(document),
+    )
+
+
 def open_compose_task(store: Store, document: dict, *, operation_id: str,
                       intent: str = "initial", input_revision_id: str | None = None) -> dict:
     """Open a compose Host task against the current content identity."""
@@ -569,15 +606,55 @@ def continue_project(project_dir: Path | str) -> dict:
                                     'message': exc.detail}], next_action='restore_or_replace_asset')
 
 
+@tasks_mod._project_transaction
+def _recover_input_revision(store):
+    document = store.load_document()
+    if input_alignment(document) != 'needs_reconciliation':
+        return
+    all_tasks = [store.read_object_json(ref) for ref in document.get('tasks') or []]
+    valid = next((task for task in reversed(all_tasks)
+                  if task.get('kind') == 'compose' and task.get('intent') == 'input_revision'
+                  and task.get('status') in ('awaiting_host', 'running')
+                  and tasks_mod.task_inputs_current(store, document, task)), None)
+    if valid and not any(task.get('kind') in tasks_mod.HOST_TASK_KINDS
+                         and task.get('status') in ('awaiting_host', 'running', 'queued')
+                         and task['task_id'] != valid['task_id'] for task in all_tasks):
+        return
+    # Use the operation that caused the mismatch, not a later display-name edit.
+    origin = document
+    while origin.get('parent_revision_id'):
+        change = origin.get('change') or {}
+        if change.get('kind') == 'restore':
+            break
+        if change.get('kind') == 'input_update':
+            parent = store.load_document(origin['parent_revision_id'])
+            if compute_input_digest(parent) != compute_input_digest(origin):
+                break
+        origin = store.load_document(origin['parent_revision_id'])
+    change = origin.get('change') or {}
+    updated = bump_revision(document, {'operation_id': _new_operation_id('resume-input'),
+                                       'kind': 'task_update', 'description': 'resume input reconciliation', 'read_set': []})
+    for index, task in enumerate(all_tasks):
+        if (task.get('kind') in tasks_mod.HOST_TASK_KINDS
+                and task.get('status') in ('awaiting_host', 'running', 'queued')
+                and (not valid or task['task_id'] != valid['task_id'])):
+            updated['tasks'][index] = store.put_json_object({**task, 'status': 'superseded', 'updated_at': _utc_now_iso()})
+    if not valid:
+        task = _input_compose_task(updated, operation_id=change.get('operation_id'),
+                                   reason=change.get('description') or 'Resume reconciliation against current inputs')
+        updated['tasks'].append(store.put_json_object(task))
+    store._commit_locked(base_revision=document['revision_id'], document=updated,
+                         operation_id=updated['change']['operation_id'], blobs=[])
+
+
 def _continue_project(project_dir: Path | str) -> dict:
     """Run runnable local work; return the stable pending Host tasks.
 
-    Already-confirmed decisions and tasks are reused; no duplicate tasks are
-    created on repeated continue. Once real pages exist the flow does NOT
-    re-open compose — the next step is production (blueprint/reconstruct),
-    which arrives with T06; until then continue reports that honestly.
+    Reuse pending work. Reconcile changed inputs before producing existing
+    pages; an explicitly resumed cancelled revision gets a new task identity.
     """
     store = Store(Path(project_dir).expanduser())
+    _recover_input_revision(store)
     document = _retire_missing_page_inputs(store, store.load_document())
     pending = _pending_host_tasks(document, store)
     if any(t["kind"] == "blueprint" for t in pending):
@@ -1184,40 +1261,7 @@ def inputs_update(
                 superseded_ids.append(task["task_id"])
                 new_document["tasks"][index] = store.put_json_object(
                     {**task, "status": "superseded", "updated_at": _utc_now_iso()})
-        pages = new_document.get("pages") or []
-        if pages:
-            intent = "input_revision"
-            scope = [entry["page_id"] for entry in pages]
-            instruction = (
-                f"输入已更新（operation {operation_id}）：{normalized['reason']}。"
-                "读取新输入、变化说明与全稿概览，检查相关正文和跨页结论；提交 content_update，"
-                "只包含真正变化的完整 Page v2、新增/删除页 ID 和最终页序；无影响时给出具体 unchanged_reason。"
-            )
-        else:
-            intent = "initial"
-            scope = []
-            instruction = (
-                f"输入已更新（operation {operation_id}）：{normalized['reason']}。"
-                "读取全部来源与任务事实，按方法写完整 Page v2 正文与页序。"
-            )
-        methods = method_resources("compose", intent=intent)
-        task = tasks_mod.new_task(
-            task_id=uuid.uuid4().hex[:12],
-            operation_id=_new_operation_id("compose"),
-            kind="compose",
-            intent=intent,
-            input_digest=new_digest,
-            input_revision_id=operation_id,
-            method_release=method_release(methods),
-            scope_pages=scope,
-            instruction=instruction,
-            inputs=[],
-            dependencies=[{"kind": "content",
-                           "identity": f"document-revision:{new_document['revision_id']}",
-                           "sha256": content_identity(new_document)}],
-            dispatch_revision=new_document["revision_id"],
-            produced_against=content_identity(new_document),
-        )
+        task = _input_compose_task(new_document, operation_id=operation_id, reason=normalized["reason"])
         new_document["tasks"] = list(new_document.get("tasks") or []) + [store.put_json_object(task)]
         alignment = input_alignment(new_document)
         result = {

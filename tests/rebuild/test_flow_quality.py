@@ -827,7 +827,7 @@ def test_content_update_roundtrip_changes_only_target_page(tmp_path: Path) -> No
     assert {pid: entry['page']['sha256'] for pid, entry in after.items()} == expected['after_page_hashes']
     assert after["p03"]["page"]["sha256"] == outcome["new_page_hashes"]["p03"]
     assert after["p03"]["blueprint"] == before["p03"]["blueprint"], "original blueprint is kept"
-    assert after_doc["outputs"] == document["outputs"], "outputs stay put during reconciliation"
+    assert after_doc["outputs"] == dict.fromkeys(document["outputs"]), "changed content retires deck outputs"
     assert after["p03"]["svg"] is None and after["p03"]["svg_preview"] is None
     basis = after_doc["content_basis"]
     assert basis["input_digest"] == update["input_digest"]
@@ -1182,19 +1182,38 @@ def test_skills_tree_reduced_to_deck_master_and_resolver() -> None:
     assert len(resolver.splitlines()) == 1
 
 
-def test_old_skill_names_gone_from_living_surfaces() -> None:
-    import subprocess as _subprocess
+def test_old_skill_names_gone_from_living_surfaces(monkeypatch) -> None:
+    import re
+
+    monkeypatch.setenv("PATH", "")  # This check needs no system search executable.
 
     repo = Path(service.__file__).resolve().parents[2]
     pattern = ("deck-autopilot|deck-brief|deck-builder|deck-doctor|deck-init|deck-learn|"
                "deck-planner|deck-producer|deck-quality|deck-review|deck-setup|"
                "deck-sourcing|deck-upgrade|ppt-deck-pro-max|ppt-quality-gate|ppt-master")
-    result = _subprocess.run(
-        ["rg", "-l", pattern, "src/", "tools/", "tests/", "pyproject.toml", "AGENTS.md", "skills/"],
-        cwd=repo, capture_output=True, text=True)
-    me = str(Path(__file__).relative_to(repo))
-    files = [line for line in result.stdout.splitlines() if line.strip() and line != me]
+    excluded = {'__pycache__', '.pytest_cache', '.venv', 'venv', 'node_modules',
+                'build', 'dist', 'skills-references'}
+    generated_skill = repo / 'src/deck_master/resources/skill'
+    files = []
+    for name in ('src', 'tools', 'tests', 'pyproject.toml', 'AGENTS.md', 'skills'):
+        root = repo / name
+        for path in sorted(root.rglob('*')) if root.is_dir() else [root]:
+            if (not path.is_file() or path.is_symlink() or path.resolve() == Path(__file__).resolve()
+                    or generated_skill in path.parents
+                    or any(part in excluded or part.endswith('.egg-info') or part.startswith('_ap_')
+                           for part in path.relative_to(repo).parts)):
+                continue
+            data = path.read_bytes()
+            if b'\x00' in data:
+                continue
+            try:
+                text = data.decode('utf-8')
+            except UnicodeDecodeError:
+                continue
+            files.extend(f'{path.relative_to(repo)}:{index}' for index, line in enumerate(text.splitlines(), 1)
+                         if re.search(pattern, line))
     assert files == [], f"living references to removed skills: {files}"
+
 
 
 def test_delivery_gate_surfaces_exit_3_code_via_cli(tmp_path: Path, capsys) -> None:
@@ -1240,3 +1259,230 @@ def test_stale_scoped_result_reports_stale_input_context(tmp_path: Path) -> None
     _raw_commit(store, lambda doc: doc["task"].update(audience="已变更的受众"))
     with pytest.raises(StaleInputContext):
         _accept_blueprint_envelope(project, task, page_entry, _png_bytes())
+
+
+@pytest.mark.parametrize('mode', ['reorder', 'remove', 'add', 'edit', 'noop'])
+def test_revision_invalidates_changed_deck_outputs(tmp_path, mode):
+    import copy
+    project, store, _ = _setup_project_with_pages(tmp_path)
+    _force_fake_output(store)
+    before = store.load_document()
+    update = service.inputs_update(project, patch={'reason': 'review regression', 'task_patch': {'audience': 'new audience'}},
+                                   base_revision=before['revision_id'], operation_id='rev-output')
+    assert store.load_document()['outputs'] == before['outputs']
+    order = [entry['page_id'] for entry in before['pages']]
+    upserts, removes = [], []
+    if mode == 'reorder':
+        order.reverse()
+    elif mode == 'remove':
+        removes = [order.pop()]
+    elif mode in ('add', 'edit'):
+        page = copy.deepcopy(store.read_object_json(before['pages'][0]['page']))
+        if mode == 'add':
+            page['page_id'] = 'p04'
+            order.append('p04')
+        page['customer_visible']['title'] = 'Changed title'
+        upserts = [page]
+    task = update['pending_tasks'][0]
+    service.accept_result(project, task_id=task['task_id'], operation_id=task['operation_id'],
+                          produced_against=task['produced_against'], result_payload={'kind': 'compose', 'content_update': {
+                              'input_digest': update['input_digest'], 'upsert_pages': upserts,
+                              'remove_page_ids': removes, 'page_order': order, 'unchanged_reason': 'Only ordering or no content change'}})
+    after = store.load_document()
+    assert after['outputs'] == (before['outputs'] if mode == 'noop' else dict.fromkeys(before['outputs']))
+    assert store.load_document(before['revision_id'])['outputs'] == before['outputs']
+
+
+@pytest.mark.parametrize('legacy', [False, True])
+@pytest.mark.parametrize('changed_input', [False, True])
+def test_restore_keeps_historical_content_basis(tmp_path, legacy, changed_input):
+    from deck_master.editing import restore
+    project, store, _ = _setup_project_with_pages(tmp_path)
+    if legacy:
+        _raw_commit(store, lambda doc: doc.pop('content_basis', None))
+    past = store.load_document()
+    if changed_input:
+        update = service.inputs_update(project, patch={'reason': 'reading mode', 'task_patch': {'presentation_mode': 'read_alone'}},
+                                       base_revision=past['revision_id'], operation_id='restore-input')
+        task = update['pending_tasks'][0]
+        page = store.read_object_json(past['pages'][0]['page'])
+        page['customer_visible']['title'] = 'New reading copy'
+        service.accept_result(project, task_id=task['task_id'], operation_id=task['operation_id'],
+                              produced_against=task['produced_against'], result_payload={'kind': 'compose', 'content_update': {
+                                  'input_digest': update['input_digest'], 'upsert_pages': [page],
+                                  'remove_page_ids': [], 'page_order': [e['page_id'] for e in past['pages']]}})
+    current = store.load_document()
+    restore(project, revision_id=past['revision_id'], base_revision=current['revision_id'], operation_id='restore-probe')
+    after = store.load_document()
+    assert after['pages'] == past['pages']
+    assert after['task'] == current['task'] and after['policy'] == current['policy']
+    assert after['content_basis']['input_digest'] == compute_input_digest(past)
+    assert service.inputs_show(project)['input_alignment'] == ('needs_reconciliation' if changed_input else 'current')
+
+
+def test_cancelled_revision_recovers_once_and_refuses_late_result(tmp_path):
+    from concurrent.futures import ThreadPoolExecutor
+    project, store, _ = _setup_project_with_pages(tmp_path)
+    patch = {'reason': 'new audience', 'task_patch': {'audience': 'new audience'}}
+    update = service.inputs_update(project, patch=patch, base_revision=store.load_document()['revision_id'], operation_id='cancel-input')
+    old = update['pending_tasks'][0]
+    service.task_cancel(project, task_id=old['task_id'])
+    assert service.inputs_update(project, patch=patch, base_revision=store.load_document()['revision_id'], operation_id='same-patch')['status'] == 'unchanged'
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        responses = list(pool.map(lambda _: service.continue_project(project), range(2)))
+    pending = [r['pending_tasks'][0] for r in responses]
+    assert all(t['kind'] == 'compose' and t['intent'] == 'input_revision' for t in pending)
+    assert len({t['task_id'] for t in pending}) == 1
+    assert pending[0]['task_id'] != old['task_id']
+    new = service.continue_project(project)['pending_tasks'][0]
+    assert new['task_id'] == pending[0]['task_id']
+    assert service.task_status(project, task_id=old['task_id'])['status'] == 'cancelled'
+    with pytest.raises(TaskConflict):
+        service.accept_result(project, task_id=old['task_id'], operation_id=old['operation_id'], produced_against=old['produced_against'],
+                              result_payload={'kind': 'compose', 'content_update': {'input_digest': update['input_digest'],
+                                  'upsert_pages': [], 'remove_page_ids': [], 'page_order': ['p01', 'p02', 'p03'], 'unchanged_reason': 'no change'}})
+
+
+def test_restore_empty_removes_basis_and_preserves_stop_policy(tmp_path):
+    from deck_master.editing import restore
+    project = tmp_path / 'empty'
+    service.create(project, brief='empty baseline')
+    store = Store(project)
+    empty = store.load_document()
+    service.import_draft(project, draft_payload=_load_fixture('initial-pages.json'))
+    _raw_commit(store, lambda doc: doc.update(content_basis={'input_digest': compute_input_digest(doc)},
+                                             policy={**doc['policy'], 'user_stop': True}))
+    current = store.load_document()
+    restore(project, revision_id=empty['revision_id'], base_revision=current['revision_id'], operation_id='empty-restore')
+    after = store.load_document()
+    assert not after['pages'] and 'content_basis' not in after
+    assert after['policy']['user_stop'] is True
+    assert service.inputs_show(project)['input_alignment'] == 'no_content'
+
+
+def test_restore_reconciliation_dispatch_uses_restore_operation(tmp_path):
+    from deck_master.editing import restore
+    project, store, _ = _setup_project_with_pages(tmp_path)
+    old = store.load_document()
+    service.inputs_update(project, patch={'reason': 'new audience', 'task_patch': {'audience': 'other'}},
+                          base_revision=old['revision_id'], operation_id='changed-audience')
+    restore(project, revision_id=old['revision_id'], base_revision=store.load_document()['revision_id'], operation_id='restore-old')
+    response = service.continue_project(project)
+    task = response['pending_tasks'][0]
+    assert task['intent'] == 'input_revision'
+    stored = next(store.read_object_json(ref) for ref in store.load_document()['tasks']
+                  if store.read_object_json(ref)['task_id'] == task['task_id'])
+    assert stored['input_revision_id'] == 'restore-old'
+    assert stored['scope_pages'] == ['p01', 'p02', 'p03']
+    assert stored['input_digest'] == compute_input_digest(store.load_document())
+    assert store.load_document(stored['dispatch_revision'])['revision_id'] == stored['dispatch_revision']
+
+
+@pytest.mark.render
+@pytest.mark.parametrize('mode', ['reorder', 'remove', 'add', 'edit'])
+def test_revised_deck_recompiles_real_slide_order(tmp_path, resolvable_font_family, mode):
+    import io
+    import zipfile
+    import xml.etree.ElementTree as ET
+    from PIL import Image
+    from page_visual_helpers import pass_page_review
+    from deck_master.pipeline import artifact, produce
+    from deck_master.editing import export_project
+    from deck_master.handoff import check_handoff
+    from deck_master.store import StoreError
+
+    def page(pid):
+        return {'schema_version': 'deck_page_package.v2', 'page_id': pid,
+                'customer_visible': {'title': pid, 'body_blocks': []},
+                'visual_spec': {'intent': 'synthetic regression', 'reference_mode': 'new_design'}}
+
+    project = tmp_path / 'real-deck'
+    service.create(project, brief='Synthetic render regression', draft={'pages': [page('p01'), page('p02'), page('p03')]})
+    store = Store(project)
+    png = tmp_path / 'reference.png'
+    Image.new('RGB', (960, 540), 'white').save(png)
+
+    def attach_missing_svgs(doc):
+        for entry in doc['pages']:
+            if entry.get('svg'):
+                continue
+            content = store.read_object_json(entry['page'])
+            svg = tmp_path / (entry['page_id'] + '.svg')
+            svg.write_text(f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540">'
+                           f'<rect width="960" height="540" fill="#ffffff"/>'
+                           f'<text x="40" y="100" font-family="{resolvable_font_family}" font-size="32">'
+                           f'{content["customer_visible"]["title"]}</text></svg>')
+            if not entry.get('blueprint'):
+                entry['blueprint'] = artifact(store, png, 'blueprint', page_id=entry['page_id'])
+            entry['svg'] = artifact(store, svg, 'svg', page_id=entry['page_id'])
+
+    _raw_commit(store, attach_missing_svgs)
+    assert produce(project)['status'] == 'pass'
+    before = store.load_document()
+    old_file = tmp_path / 'old.pptx'
+    old_file.write_bytes(store.read_object_bytes(store.read_object_json(before['outputs']['pptx'])['file']))
+    update = service.inputs_update(project, patch={'reason': 'revised deck', 'task_patch': {'audience': 'new audience'}},
+                                   base_revision=before['revision_id'], operation_id='render-update')
+    order, remove, upserts = ['p01', 'p02', 'p03'], [], []
+    if mode == 'reorder':
+        order.reverse()
+    elif mode == 'remove':
+        remove = [order.pop()]
+    elif mode == 'add':
+        order.append('p04')
+        upserts = [page('p04')]
+    else:
+        changed = page('p01')
+        changed['customer_visible']['title'] = 'Updated'
+        upserts = [changed]
+    task = update['pending_tasks'][0]
+    service.accept_result(project, task_id=task['task_id'], operation_id=task['operation_id'],
+                          produced_against=task['produced_against'], result_payload={'kind': 'compose', 'content_update': {
+                              'input_digest': update['input_digest'], 'upsert_pages': upserts, 'remove_page_ids': remove,
+                              'page_order': order, 'unchanged_reason': 'Only ordering'}})
+    with pytest.raises(StoreError, match='no current PPT'):
+        export_project(project, output_dir=tmp_path / 'delivery', purpose='delivery')
+    assert check_handoff(project, file_path=old_file, purpose='delivery')['status'] == 'blocked'
+    _raw_commit(store, attach_missing_svgs)
+    for _ in range(6):
+        response = service.continue_project(project)
+        task = response['pending_tasks'][0]
+        if task.get('review_stage') != 'page_visual':
+            break
+        pass_page_review(project, task)
+    assert task['kind'] == 'review' and task.get('review_stage') == 'final'
+    current = store.load_document()
+    assert current['outputs']['pptx'] != before['outputs']['pptx']
+    data = store.read_object_bytes(store.read_object_json(current['outputs']['pptx'])['file'])
+    with zipfile.ZipFile(io.BytesIO(data)) as deck:
+        slides = sorted(name for name in deck.namelist() if name.startswith('ppt/slides/slide') and name.endswith('.xml'))
+        texts = [''.join(ET.fromstring(deck.read(name)).itertext()) for name in slides]
+    assert texts == [('Updated' if mode == 'edit' and pid == 'p01' else pid) for pid in order]
+    assert check_handoff(project, file_path=old_file, purpose='delivery')['status'] == 'blocked'
+
+
+def test_resume_retires_incompatible_tasks_and_keeps_change_reason(tmp_path):
+    from deck_master.view import project_view
+    project, store, ids = _setup_project_with_pages(tmp_path)
+    update = service.inputs_update(project, patch={'reason': 'Original requirement', 'task_patch': {'audience': 'new team'}},
+                                   base_revision=store.load_document()['revision_id'], operation_id='original-input')
+    old = update['pending_tasks'][0]
+    service.task_cancel(project, task_id=old['task_id'])
+    service.inputs_update(project, patch={'reason': 'Only display name', 'source_changes': {'metadata': [
+        {'source_id': ids['company.md'], 'name': 'Renamed.md'}]}},
+        base_revision=store.load_document()['revision_id'], operation_id='rename')
+    resumed = service.continue_project(project)['pending_tasks'][0]
+    repair = service.open_host_task(store, kind='repair', page_ids=['p01'], instruction='obsolete page repair')
+    pending = service.continue_project(project)['pending_tasks']
+    assert [t['task_id'] for t in pending] == [resumed['task_id']]
+    assert service.task_status(project, task_id=repair['task_id'])['status'] == 'superseded'
+    assert project_view(project)['reconciliation']['reason'] == 'Original requirement'
+    stored = next(store.read_object_json(ref) for ref in store.load_document()['tasks']
+                  if store.read_object_json(ref)['task_id'] == resumed['task_id'])
+    assert stored['input_revision_id'] == 'original-input'
+    result = service.accept_result(project, task_id=resumed['task_id'], operation_id=resumed['operation_id'],
+                                   produced_against=resumed['produced_against'], result_payload={'kind': 'compose', 'content_update': {
+                                       'input_digest': stored['input_digest'], 'upsert_pages': [], 'remove_page_ids': [],
+                                       'page_order': ['p01', 'p02', 'p03'], 'unchanged_reason': 'Checked current copy'}})
+    assert result['status'] == 'accepted'
+    assert service.inputs_show(project)['input_alignment'] == 'current'
