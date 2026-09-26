@@ -320,10 +320,7 @@ def _dispatch_snapshot(store: Store, document: dict, task: dict) -> dict:
     """The revision the task was dispatched in; the work order binds to it."""
     revision = task.get("dispatch_revision")
     if revision and revision != document.get("revision_id"):
-        try:
-            return store.load_document(revision)
-        except StoreError:
-            return document
+        return store.load_document(revision)
     return document
 
 
@@ -365,6 +362,8 @@ def task_summary(store: Store, document: dict, task: dict) -> dict:
         "task_id": task["task_id"],
         "operation_id": task["operation_id"],
         "kind": task["kind"],
+        "intent": task.get("intent"),
+        "method_release": task.get("method_release"),
         "review_stage": task.get("review_stage", "final"),
         "status": task["status"],
         "scope_pages": task.get("scope_pages") or [],
@@ -374,9 +373,10 @@ def task_summary(store: Store, document: dict, task: dict) -> dict:
         "produced_against": task.get("produced_against"),
         "call_allowances": task.get("call_allowances") or [],
         "sources": dispatched.get("sources") or [],
-        "resolved_design_context": document.get("design_context") or {},
+        "resolved_design_context": dispatched.get("design_context") or {},
         "method_resources": methods,
         "project_context": _project_context(store, document, task, dispatched),
+        "staging_dir": str(store.staging_dir / task['operation_id']),
     }
     if task.get("review_units") is not None:
         summary["review_plan"] = {"units": task["review_units"]}
@@ -385,11 +385,16 @@ def task_summary(store: Store, document: dict, task: dict) -> dict:
             summary['invalidated_reason'] = 'task inputs or page scope changed; continue creates a current task'
         return summary
     summary['source_reading'] = []
-    for source in document.get('sources') or []:
+    for source in dispatched.get('sources') or []:
         ref=source.get('extract')
         if ref and ref['path'].endswith('.json'):
             extract=store.read_object_json(ref)
-            summary['source_reading'].append({'source_id':source['source_id'],**extract})
+            summary['source_reading'].append({
+                'source_id': source['source_id'], **extract,
+                'extract_path': str(store.project_root / ref['path']),
+                'original_path': str(store.project_root / extract['original_file']['path'])
+                if extract.get('original_file') else extract['original_uri'],
+            })
     if task.get('kind') in ('reconstruct','repair','review'):
         summary['page_entries'] = [e for e in document['pages'] if e['page_id'] in task['scope_pages']]
         summary['reference_images'] = []

@@ -79,6 +79,25 @@ def test_work_order_carries_full_task_facts(tmp_path: Path) -> None:
     assert status["pending_tasks"][0]["project_context"]["task"]["brief"] == "说明方案"
 
 
+def test_work_order_exposes_intent_paths_and_only_dispatch_sources(tmp_path: Path) -> None:
+    project = tmp_path / 'project'
+    created = service.create(project, brief='完整首稿', sources=[_material(tmp_path)])
+    task = created['pending_tasks'][0]
+    assert task['intent'] == 'initial' and task['method_release']['release_id']
+    source = task['source_reading'][0]
+    assert Path(source['original_path']).read_bytes() == _material(tmp_path).read_bytes()
+    assert Path(source['extract_path']).is_file()
+    store = Store(project)
+    def change_source(doc):
+        extract = store.read_object_json(doc['sources'][0]['extract'])
+        extract['text'] = '新材料内容，不属于旧任务'
+        doc['sources'][0]['extract'] = store.put_json_object(extract)
+    _raw_commit(store, change_source)
+    stale = service.task_status(project, task_id=task['task_id'])['pending_tasks'][0]
+    assert stale['project_context']['context_status'] == 'stale'
+    assert stale['source_reading'][0]['text'] == source['text']
+
+
 def test_default_presentation_mode_is_never_reported_as_provided(tmp_path: Path) -> None:
     project = tmp_path / "proj"
     response = service.create(project, brief="说明方案", sources=[_material(tmp_path)])

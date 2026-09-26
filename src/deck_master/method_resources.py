@@ -10,12 +10,14 @@ borrows files from the current working directory.
 from __future__ import annotations
 
 import re
+import json
+import sys
 from pathlib import Path
 
 from .errors import MethodResourceMissing
 from .models import canonical_json_bytes, sha256_bytes
 
-METHOD_RELEASE_ID = "flow-quality-v1.1"
+from . import __version__
 
 RELATIVE_PATHS = {
     "source-reading": "references/source-reading.md",
@@ -100,4 +102,9 @@ def methods_sha256(items: list[dict]) -> str:
 
 
 def method_release(items: list[dict]) -> dict:
-    return {"release_id": METHOD_RELEASE_ID, "methods_sha256": methods_sha256(items)}
+    release_id = __version__
+    prefix = Path(sys.prefix).resolve()
+    manifest = prefix.parent / 'release.json'
+    if Path(__file__).resolve().is_relative_to(prefix) and manifest.is_file():
+        release_id = json.loads(manifest.read_text(encoding='utf-8'))['release_id']
+    return {"release_id": release_id, "methods_sha256": methods_sha256(items)}
