@@ -1,0 +1,11 @@
+### Result
+{
+  "url": "http://127.0.0.1:61800/api/file?path=.deckmaster%2Fobjects%2F45%2F45e32328dd29a64a41128f4ed4117c31437370d2861c71eac676b13fd1700194.svg&sha256=45e32328dd29a64a41128f4ed4117c31437370d2861c71eac676b13fd1700194",
+  "root": "svg",
+  "svgScriptExecuted": false,
+  "executionMarker": null
+}
+### Ran Playwright code
+```js
+await page.evaluate('() => ({url:location.href, root:document.documentElement.tagName, svgScriptExecuted:window.__w01_svg===true, executionMarker:document.documentElement.getAttribute("data-executed")})');
+```

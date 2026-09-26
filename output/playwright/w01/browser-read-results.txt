@@ -1,0 +1,21 @@
+### Result
+{
+  "svgImageLoaded": true,
+  "svgExecuted": false,
+  "snapshot": "380418a8baa84d2280ea8695747f3e19",
+  "lineageSnapshot": "380418a8baa84d2280ea8695747f3e19",
+  "requestedSnapshot": "380418a8baa84d2280ea8695747f3e19",
+  "missingStatus": 404,
+  "preparedCount": 1,
+  "submittedObserver": "host_reported"
+}
+### Ran Playwright code
+```js
+await page.evaluate('async () => {\n const img=document.querySelector("#slot-svg img");\n const summary=await fetch("/api/view/summary?revision=380418a8baa84d2280ea8695747f3e19",{credentials:"omit"}).then(r=>r.json());\n const lineage=await fetch("/api/pages/p001/lineage?revision=380418a8baa84d2280ea8695747f3e19",{credentials:"omit"}).then(r=>r.json());\n const bad=await fetch("/api/workbench?revision=missing",{credentials:"omit"});\n return {svgImageLoaded:!!img&&img.complete&&img.naturalWidth>0, svgExecuted:window.__w01_svg===true, snapshot:summary.revision_id, lineageSnapshot:lineage.revision_id, requestedSnapshot:summary.requested_revision, missingStatus:bad.status, preparedCount:lineage.prompts.prepared.length, submittedObserver:lineage.prompts.submitted.observer};\n}');
+```
+### Page
+- Page URL: http://127.0.0.1:61800/
+- Page Title: Deck Master · Review Workbench
+- Console: 2 errors, 0 warnings
+### Events
+- New console entries: .playwright-cli/console-2026-09-26T12-12-35-019Z.log#L2

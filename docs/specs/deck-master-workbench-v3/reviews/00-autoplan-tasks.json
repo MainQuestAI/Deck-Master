@@ -1,0 +1,314 @@
+[
+  {
+    "phase": "ceo-review",
+    "run_id": "workbench-v3-20260926",
+    "branch": "codex/generation-workbench-spec",
+    "commit": "cad56e0",
+    "id": "T1",
+    "priority": "P1",
+    "component": "W02",
+    "effort_human": "omitted per project instruction",
+    "effort_cc": "omitted per project instruction",
+    "title": "记录请求证据边界并完成一次真实绑定验证",
+    "source_finding": "N2",
+    "files": [
+      "src/deck_master/tasks.py",
+      "src/deck_master/production.py"
+    ]
+  },
+  {
+    "phase": "ceo-review",
+    "run_id": "workbench-v3-20260926",
+    "branch": "codex/generation-workbench-spec",
+    "commit": "cad56e0",
+    "id": "T2",
+    "priority": "P1",
+    "component": "W07",
+    "effort_human": "omitted per project instruction",
+    "effort_cc": "omitted per project instruction",
+    "title": "在跨页功能前证明单页候选采用与失效",
+    "source_finding": "N3",
+    "files": [
+      "src/deck_master/tasks.py",
+      "src/deck_master/service.py"
+    ]
+  },
+  {
+    "phase": "ceo-review",
+    "run_id": "workbench-v3-20260926",
+    "branch": "codex/generation-workbench-spec",
+    "commit": "cad56e0",
+    "id": "T3",
+    "priority": "P1",
+    "component": "W08",
+    "effort_human": "omitted per project instruction",
+    "effort_cc": "omitted per project instruction",
+    "title": "提供简单风格路径并验证事实与视觉效果",
+    "source_finding": "N4/N1",
+    "files": [
+      "src/deck_master/production.py"
+    ]
+  },
+  {
+    "phase": "ceo-review",
+    "run_id": "workbench-v3-20260926",
+    "branch": "codex/generation-workbench-spec",
+    "commit": "cad56e0",
+    "id": "T4",
+    "priority": "P1",
+    "component": "W12",
+    "effort_human": "omitted per project instruction",
+    "effort_cc": "omitted per project instruction",
+    "title": "记录真实返工和交接等待基线",
+    "source_finding": "N1",
+    "files": []
+  },
+  {
+    "phase": "ceo-review",
+    "run_id": "workbench-v3-20260926",
+    "branch": "codex/generation-workbench-spec",
+    "commit": "cad56e0",
+    "id": "T5",
+    "priority": "P1",
+    "component": "W03/W11",
+    "effort_human": "omitted per project instruction",
+    "effort_cc": "omitted per project instruction",
+    "title": "验证项目授权范围与指定快照导出",
+    "source_finding": "安全/发布",
+    "files": [
+      "src/deck_master/web.py",
+      "src/deck_master/editing.py"
+    ]
+  },
+  {
+    "phase": "design-review",
+    "run_id": "workbench-v3",
+    "branch": "codex/generation-workbench-spec",
+    "commit": "cad56e0",
+    "id": "D1",
+    "priority": "P1",
+    "component": "W03–W05",
+    "title": "实现首屏、矩阵和证据来源",
+    "source_finding": "02-design.md",
+    "files": [
+      "UI-SPEC.md",
+      "PLAN.md"
+    ],
+    "effort_human": null,
+    "effort_cc": null
+  },
+  {
+    "phase": "design-review",
+    "run_id": "workbench-v3",
+    "branch": "codex/generation-workbench-spec",
+    "commit": "cad56e0",
+    "id": "D2",
+    "priority": "P1",
+    "component": "W06–W08",
+    "title": "实现简单校准、持久交接与固定候选",
+    "source_finding": "02-design.md",
+    "files": [
+      "UI-SPEC.md",
+      "PLAN.md"
+    ],
+    "effort_human": null,
+    "effort_cc": null
+  },
+  {
+    "phase": "design-review",
+    "run_id": "workbench-v3",
+    "branch": "codex/generation-workbench-spec",
+    "commit": "cad56e0",
+    "id": "D3",
+    "priority": "P1",
+    "component": "W06",
+    "title": "实现版本标注与输入保护",
+    "source_finding": "02-design.md",
+    "files": [
+      "UI-SPEC.md",
+      "PLAN.md"
+    ],
+    "effort_human": null,
+    "effort_cc": null
+  },
+  {
+    "phase": "design-review",
+    "run_id": "workbench-v3",
+    "branch": "codex/generation-workbench-spec",
+    "commit": "cad56e0",
+    "id": "D4",
+    "priority": "P1",
+    "component": "W11–W12",
+    "title": "投影真实可编辑性并验证安装闸门",
+    "source_finding": "02-design.md",
+    "files": [
+      "UI-SPEC.md",
+      "PLAN.md"
+    ],
+    "effort_human": null,
+    "effort_cc": null
+  },
+  {
+    "phase": "devex-review",
+    "run_id": "workbench-v3",
+    "branch": "codex/generation-workbench-spec",
+    "commit": "cad56e0",
+    "id": "DX1",
+    "priority": "P1",
+    "component": "W02",
+    "title": "交付Host协议与真实绑定样例",
+    "source_finding": "03-dx.md",
+    "files": [
+      "DX-SPEC.md"
+    ],
+    "effort_human": null,
+    "effort_cc": null
+  },
+  {
+    "phase": "devex-review",
+    "run_id": "workbench-v3",
+    "branch": "codex/generation-workbench-spec",
+    "commit": "cad56e0",
+    "id": "DX2",
+    "priority": "P1",
+    "component": "W03",
+    "title": "提供独立启动和隔离样例",
+    "source_finding": "03-dx.md",
+    "files": [
+      "DX-SPEC.md"
+    ],
+    "effort_human": null,
+    "effort_cc": null
+  },
+  {
+    "phase": "devex-review",
+    "run_id": "workbench-v3",
+    "branch": "codex/generation-workbench-spec",
+    "commit": "cad56e0",
+    "id": "DX3",
+    "priority": "P1",
+    "component": "W06–W10",
+    "title": "实现CLI/HTTP同义和恢复",
+    "source_finding": "03-dx.md",
+    "files": [
+      "DX-SPEC.md"
+    ],
+    "effort_human": null,
+    "effort_cc": null
+  },
+  {
+    "phase": "devex-review",
+    "run_id": "workbench-v3",
+    "branch": "codex/generation-workbench-spec",
+    "commit": "cad56e0",
+    "id": "DX4",
+    "priority": "P1",
+    "component": "W11–W12",
+    "title": "随包验证升级导出说明",
+    "source_finding": "03-dx.md",
+    "files": [
+      "DX-SPEC.md"
+    ],
+    "effort_human": null,
+    "effort_cc": null
+  },
+  {
+    "phase": "eng-review",
+    "run_id": "20260926-workbench-v3-eng",
+    "branch": "codex/generation-workbench-spec",
+    "commit": "cad56e059fb1b8087fc305d78ad59fb0e8c2f19c",
+    "id": "EN1",
+    "priority": "P1",
+    "component": "W06",
+    "title": "持久幂等与草稿恢复",
+    "source_finding": "N1/N3",
+    "files": [
+      "src/deck_master/store.py",
+      "src/deck_master/editing.py"
+    ],
+    "effort_human": null,
+    "effort_cc": null
+  },
+  {
+    "phase": "eng-review",
+    "run_id": "20260926-workbench-v3-eng",
+    "branch": "codex/generation-workbench-spec",
+    "commit": "cad56e059fb1b8087fc305d78ad59fb0e8c2f19c",
+    "id": "EN2",
+    "priority": "P1",
+    "component": "W07",
+    "title": "分离候选生成基准与采用CAS",
+    "source_finding": "N2",
+    "files": [
+      "src/deck_master/tasks.py",
+      "src/deck_master/editing.py"
+    ],
+    "effort_human": null,
+    "effort_cc": null
+  },
+  {
+    "phase": "eng-review",
+    "run_id": "20260926-workbench-v3-eng",
+    "branch": "codex/generation-workbench-spec",
+    "commit": "cad56e059fb1b8087fc305d78ad59fb0e8c2f19c",
+    "id": "EN3",
+    "priority": "P2",
+    "component": "W03",
+    "title": "启动器与项目恢复边界",
+    "source_finding": "E1/E4/E18",
+    "files": [
+      "src/deck_master/web.py"
+    ],
+    "effort_human": null,
+    "effort_cc": null
+  },
+  {
+    "phase": "eng-review",
+    "run_id": "20260926-workbench-v3-eng",
+    "branch": "codex/generation-workbench-spec",
+    "commit": "cad56e059fb1b8087fc305d78ad59fb0e8c2f19c",
+    "id": "EN4",
+    "priority": "P2",
+    "component": "W06",
+    "title": "精确文字坐标与交接数据边界",
+    "source_finding": "N4/E6",
+    "files": [
+      "src/deck_master/resources/contracts/"
+    ],
+    "effort_human": null,
+    "effort_cc": null
+  },
+  {
+    "phase": "eng-review",
+    "run_id": "20260926-workbench-v3-eng",
+    "branch": "codex/generation-workbench-spec",
+    "commit": "cad56e059fb1b8087fc305d78ad59fb0e8c2f19c",
+    "id": "EN5",
+    "priority": "P2",
+    "component": "W04",
+    "title": "300页性能与缩略图缓存",
+    "source_finding": "N5/E11",
+    "files": [
+      "src/deck_master/view.py",
+      "src/deck_master/resources/static/"
+    ],
+    "effort_human": null,
+    "effort_cc": null
+  },
+  {
+    "phase": "eng-review",
+    "run_id": "20260926-workbench-v3-eng",
+    "branch": "codex/generation-workbench-spec",
+    "commit": "cad56e059fb1b8087fc305d78ad59fb0e8c2f19c",
+    "id": "EN6",
+    "priority": "P2",
+    "component": "W11",
+    "title": "固定导出与隐私回归",
+    "source_finding": "E7/E13/E15",
+    "files": [
+      "src/deck_master/editing.py"
+    ],
+    "effort_human": null,
+    "effort_cc": null
+  }
+]

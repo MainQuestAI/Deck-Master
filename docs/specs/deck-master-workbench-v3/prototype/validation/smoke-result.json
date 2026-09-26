@@ -1,0 +1,17 @@
+{
+  "scope": "synthetic interactive prototype only",
+  "browser": "Chromium",
+  "viewport": "1440x900",
+  "checks": [
+    "PPT missing 12 slots",
+    "explicit host claim before result",
+    "style candidate adoption",
+    "page-local downstream staleness",
+    "text and region draft restoration",
+    "handoff stays queued",
+    "unknown historic prompt",
+    "all 7 routes without horizontal overflow"
+  ],
+  "page_errors": [],
+  "status": "passed"
+}

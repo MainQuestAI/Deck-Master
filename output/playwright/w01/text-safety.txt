@@ -1,0 +1,12 @@
+### Result
+{
+  "titleText": "<img src=x onerror=\"window.__w01_xss=true\">",
+  "titleChildElements": 0,
+  "scriptExecuted": false,
+  "pageCount": "24",
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+}
+### Ran Playwright code
+```js
+await page.evaluate('() => ({titleText:document.querySelector("#page-title").textContent, titleChildElements:document.querySelector("#page-title").childElementCount, scriptExecuted:window.__w01_xss===true, pageCount:document.querySelector("#meta-pages").textContent, userAgent:navigator.userAgent})');
+```

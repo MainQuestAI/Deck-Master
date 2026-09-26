@@ -1,0 +1,17 @@
+{
+  "CAPABILITY-MATRIX.md": "62482a5e84cc08e85edadec50ef2901b17a997676cbd04fbb246bbaae40f9b63",
+  "README.md": "2ccd079d7dd46cb9166ad5d9736d51704406e7e0f46b90a50dc09afe7dfda843",
+  "capability-matrix.csv": "40cc6ef6ee7d446099ec9f1953b1e02d022f43ffd5ca928ca1b89877fd70d818",
+  "evidence/README.md": "e2227a4498bc07fc747187e8d5f30071632c0c8bd7ac7ebebbbf7c97ced45664",
+  "evidence/audit-baseline.json": "a72a26119d6b36143bdc1fe527b14f4bacb8ce5019f36444e0b9825b1d529f39",
+  "evidence/backend-probes.json": "259e63c65f4aae2698e43d118c3ad890141c30d0a9a01db896a52035667a1967",
+  "evidence/backend-probes.log": "ec153eb62a227fce2bec20257630fdad8fc509ef090c41608d85c86b3e94b5a4",
+  "evidence/backend-tests-loopback.log": "5253470ae32fe3ab9c92b59ca1ae0717009e28e6ae6a342bc9a2c68d5da9df1c",
+  "evidence/backend-tests-loopback.xml": "422cb63445c18b66de3319aaee59afa2d32e5f8a9a183c15f656f42f2c684a24",
+  "evidence/backend-tests.log": "c13801eb2e11cd7e6b38f50ec8864041cbbe5744d78b41ae41f88f67c156c201",
+  "evidence/backend-tests.xml": "e20b4c23ccec473fb6a6bed7012e45285898f16b22f67e7e21b60c05e7358db6",
+  "evidence/matrix-summary.json": "b79c8085449b62c0d0ab19fe3d961fb4e736505f5afbb733303674751114184c",
+  "evidence/opendesign-read-snapshot.json": "bf45a3cada5426fde5edfb42e4b6d38a74a2c4cb75c846c15a4db36921f8ccb6",
+  "evidence/report-check.json": "754debcc46a298c4dcc90b82dabf30196dbfa09a75792b790b8a449e0f30105e",
+  "probe_backend.py": "3f99b98cf836e30dc5ae733cfb1bbc9a6d3cb49cf41ea147c431e51199c2b78b"
+}

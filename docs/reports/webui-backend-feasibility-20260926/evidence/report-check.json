@@ -1,0 +1,8 @@
+{
+  "scope": "report links and evidence consistency, not product acceptance",
+  "matrix_rows": 38,
+  "probe_observations": 17,
+  "existing_tests": 214,
+  "link_errors": [],
+  "status": "passed"
+}

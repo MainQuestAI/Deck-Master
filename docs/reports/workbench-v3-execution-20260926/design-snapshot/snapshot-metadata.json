@@ -1,0 +1,50 @@
+{
+  "projectId": "deck-master-generation-workbench-v3-20260926",
+  "projectName": "Deck Master · 全链路生成工作台 v3",
+  "entryFile": "index.html",
+  "truncated": false,
+  "retrievedAt": "2026-09-26",
+  "source": "OpenDesign get_artifact(include=all)",
+  "files": [
+    {
+      "name": "app.js",
+      "size": 86913
+    },
+    {
+      "name": "product-ui-language.md",
+      "size": 3419
+    },
+    {
+      "name": "states.js",
+      "size": 27540
+    },
+    {
+      "name": "states.html",
+      "size": 3568
+    },
+    {
+      "name": "index.html",
+      "size": 2280
+    },
+    {
+      "name": "style.css",
+      "size": 32024
+    },
+    {
+      "name": "icons.js",
+      "size": 2010
+    },
+    {
+      "name": "states.css",
+      "size": 8016
+    }
+  ],
+  "excluded": [
+    "original-v2/states.js",
+    "original-v2/app.js",
+    "original-v2/states.css",
+    "original-v2/style.css",
+    "original-v2/states.html",
+    "original-v2/index.html"
+  ]
+}

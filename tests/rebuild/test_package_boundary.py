@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import ast
 import csv
+import re
 import subprocess
 from pathlib import Path
 
@@ -130,19 +131,24 @@ def test_retired_tree_has_zero_living_references() -> None:
             if needle in text:
                 offenders.append(f"{relative}: {needle!r}")
         for needle in RETIRED_COMMAND_NEEDLES:
-            if needle in text:
+            # /autoplan is an external review skill, also named in archived
+            # input paths. Still forbid the bare Deck Master CLI subcommand.
+            found = re.search(r"(?<![/\w-])autoplan(?![\w-])", text) if needle == "autoplan" else needle in text
+            if found:
                 offenders.append(f"{relative}: retired command {needle!r}")
     assert not offenders, f"living references to the retired surface: {offenders[:10]}"
 
 
 def test_spec_contracts_match_packaged_contracts_byte_for_byte() -> None:
-    """The spec pack and the package resource dir are both contract sources;
-    they must not drift (P2 parity guard)."""
-    spec_dir = REPO_ROOT / "docs" / "specs" / "deck-master-rebuild-v1" / "contracts"
+    """Spec mirrors must match the active packaged contracts (P2 parity guard)."""
+    spec_dirs = [REPO_ROOT / "docs" / "specs" / pack / "contracts"
+                 for pack in ("deck-master-rebuild-v1", "deck-master-workbench-v3")]
     pkg_dir = NEW_PACKAGE / "resources" / "contracts"
-    spec_names = {p.name for p in spec_dir.glob("*.json")}
+    spec_files = [p for folder in spec_dirs for p in folder.glob("*.json")]
+    spec_names = {p.name for p in spec_files}
+    assert len(spec_names) == len(spec_files), "each contract has exactly one spec mirror"
     pkg_names = {p.name for p in pkg_dir.glob("*.json")}
     assert spec_names == pkg_names, f"contract sets differ: {spec_names ^ pkg_names}"
-    for name in sorted(spec_names):
-        assert (spec_dir / name).read_bytes() == (pkg_dir / name).read_bytes(), \
-            f"contract drift: {name}"
+    for path in spec_files:
+        assert path.read_bytes() == (pkg_dir / path.name).read_bytes(), \
+            f"contract drift: {path.name}"

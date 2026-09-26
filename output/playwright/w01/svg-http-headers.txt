@@ -1,0 +1,8 @@
+HTTP/1.0 200 OK
+Server: BaseHTTP/0.6 Python/3.12.12
+Date: Sat, 26 Sep 2026 12:17:20 GMT
+Content-Type: image/svg+xml
+Content-Security-Policy: sandbox; default-src 'none'; style-src 'unsafe-inline'
+Content-Length: 214
+X-Content-Type-Options: nosniff
+

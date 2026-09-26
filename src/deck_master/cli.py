@@ -36,6 +36,10 @@ def _error(code: str, message: str, next_action: str, field: str | None = None) 
 
 def _fail(exc: Exception) -> int:
     from .pipeline import NeedsTool
+    from .workbench import ReadModelError
+
+    if isinstance(exc, ReadModelError):
+        return _emit_and_exit(exc.payload(), exc.exit_code)
 
     error_code = getattr(exc, "error_code", None)
     if error_code is not None:
@@ -125,6 +129,10 @@ def build_parser() -> argparse.ArgumentParser:
     view_cmd.add_argument("--open", action="store_true", default=False)
     view_cmd.add_argument("--no-open", action="store_true")
     view_cmd.add_argument("--json", dest="as_json", action="store_true")
+    view_cmd.add_argument("--revision", help="read a fixed committed Document snapshot")
+    view_cmd.add_argument("--summary", action="store_true", help="read the lightweight workbench summary")
+    view_cmd.add_argument("--page-id", help="read one page from the selected snapshot")
+    view_cmd.add_argument("--lineage", action="store_true", help="include stored lineage for --page-id")
 
     import_draft = sub.add_parser("import-draft")
     import_draft.add_argument("--project", required=True)
@@ -343,6 +351,22 @@ def main(argv: list[str] | None = None) -> int:
             if rejected is not None:
                 return rejected
             from .web import open_view, service_status
+            from . import workbench
+
+            reading = options.revision is not None or options.summary or options.page_id is not None or options.lineage
+            if options.page_id is not None and not options.page_id:
+                raise workbench.ReadModelError("invalid_input", "page_id", "provide a page identifier", http_status=400)
+            if ((reading and options.open) or (options.lineage and not options.page_id)
+                    or (options.summary and (options.page_id or options.lineage))):
+                raise workbench.ReadModelError("invalid_input", "view", "read options cannot combine with --open; --lineage requires --page-id; --summary is whole-project", http_status=400)
+            if options.page_id:
+                reader = workbench.page_lineage if options.lineage else workbench.page_view
+                return _emit(reader(options.project, options.page_id, revision=options.revision))
+            if options.summary:
+                return _emit(workbench.workbench_summary(options.project, revision=options.revision))
+            if options.revision is not None:
+                from .view import project_view
+                return _emit(project_view(options.project, revision=options.revision))
 
             if options.open:
                 return _emit(open_view(options.project, open_browser=not options.no_open))

@@ -20,7 +20,10 @@ decision that affects this task.
 | Change audience, decisions, purpose or materials | `deck-master inputs show --project <dir>` then `inputs update --project … --patch … --base-revision … --operation-id …` | `skills/deck-master/references/input-update.md`; only changed pages go in `content_update` |
 | Submit Host results | `deck-master task accept --project … --task-id … --operation-id … --produced-against … --result result.json` | Envelope shape: `docs/specs/deck-master-rebuild-v1/examples/roundtrips/result-envelope/README.md` |
 | Retry a settled external call | `deck-master task call allocate --project … --task-id … --count 1` | Allocates a new allowance under the project policy; retain the earlier call outcome and evidence |
-| Read-only status | `deck-master view --project <dir>` or `deck-master next-step --project <dir>` | Same `deck_view.v1` projection everywhere |
+| Workbench service status | `deck-master view --project <dir>` | Existing service status; does not launch a browser |
+| Read ordered stages | `deck-master view --project <dir> --summary --json` | Lightweight Document projection; add `--revision <id>` to pin history |
+| Read one page's lineage | `deck-master view --project <dir> --page-id <id> --lineage --revision <id> --json` | Stored prompts and references only; missing history stays unknown |
+| Read full fixed snapshot | `deck-master view --project <dir> --revision <id> --json` | Same `deck_view.v1` as HTTP; obtain IDs with `history list` |
 | Delivery readiness | `deck-master final-readiness --project <dir>` | Readiness is a report, not an export |
 | Review workbench | `deck-master view --open --project <dir>` | One loopback service per project; reuse is automatic |
 | Edit copy | `deck-master edit --project … --page page.json --base-revision … --page-hash … --operation-id …` | Conflicts exit 5, current unchanged |

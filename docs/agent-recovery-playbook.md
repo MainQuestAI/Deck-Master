@@ -45,7 +45,7 @@ current unchanged.
   `repair_no_progress`, inspect the unchanged Page/SVG and the named finding
   before retrying. An unreviewed current page cannot dispatch the next page.
 - Auto action: fix the named Page/SVG layer, then re-run the affected checks.
-  Read findings from `deck-master view --project <dir>` (findings carry
+  Read findings from `deck-master view --project <dir> --revision <id>` (findings carry
   page/element addressing).
 - A failing professional review blocks delivery even when all engineering
   checks pass; stopping a no-progress repair loop is not a pass.
@@ -70,3 +70,30 @@ current unchanged.
   cancelled) and the user stop state are never rolled back. Use
   `deck-master history list --project <dir>` to pick a revision, then
   `history restore` with the current base revision.
+
+## Workbench Snapshot Reads
+
+`view --summary` and `view --page-id <id> --lineage` read current by default.
+Add `--revision <id>` to pin the Document, page slots, tasks and stored prompts.
+Get valid IDs with `deck-master history list --project <dir>`. Reads never
+restore a revision, start Host work or save project changes. Read options
+cannot combine with `--open`; `--lineage` requires `--page-id`.
+
+- `invalid_revision` (HTTP 400 / CLI 2): provide one valid identifier, not a
+  path. Empty or repeated HTTP revision arguments are rejected.
+- `revision_not_found` / `revision_unavailable` (HTTP 404 / CLI 2): the
+  snapshot must be readable, belong to this project and be reachable through
+  the committed parent chain. Copied files, orphans and symlinks do not count.
+  Read the project's available history. Never silently fall back to current.
+- `page_not_found` (HTTP 404 / CLI 2): choose a page present in that snapshot.
+- `project_unavailable` (HTTP 404 or 422 / CLI 2): check the selected project
+  and restore missing/corrupt storage from a verified copy; do not rewrite
+  current.json or content-addressed objects by hand.
+- `object_unreadable` within a successful response: other pages/layers remain
+  usable. Select an earlier readable snapshot or recover the affected object
+  from a verified copy. An unreadable quality record cannot make the view pass.
+
+The summary's `quality.status=detail_required` is not a quality verdict. Use
+`final-readiness` for the current delivery gate. Artifact metadata is hash
+checked on read; large image/PPT bytes are checked when `/api/file` serves
+them. Historical applicability means relative to the selected snapshot.

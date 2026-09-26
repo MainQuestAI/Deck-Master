@@ -1,0 +1,40 @@
+{
+  "evidence": "real Chrome 153 via Playwright CLI; W01 legacy entry only",
+  "text_data": {
+    "observed": true,
+    "attack_rendered_as_text": true,
+    "injected_elements": 0,
+    "script_executed": false
+  },
+  "svg_img": {
+    "observed": true,
+    "loaded": true,
+    "script_executed": false
+  },
+  "fixed_reads_without_credentials": {
+    "observed": true,
+    "summary_matches_lineage": true,
+    "missing_revision_http": 404
+  },
+  "svg_direct_navigation": {
+    "observed": true,
+    "svg_root": "svg",
+    "script_executed": false,
+    "execution_marker": null,
+    "automation_limitation": "goto/snapshot timed out; later explicit DOM evaluation returned the actual SVG state"
+  },
+  "svg_response_csp": "sandbox; default-src 'none'; style-src 'unsafe-inline'",
+  "console": {
+    "unrelated_favicon_404": 1,
+    "expected_missing_revision_404": 1
+  },
+  "new_v2_frontend": "not implemented or tested",
+  "real_Host": "not run",
+  "paths": [
+    "output/playwright/w01/text-safety.txt",
+    "output/playwright/w01/browser-read-results.txt",
+    "output/playwright/w01/svg-http-headers.txt",
+    "output/playwright/w01/legacy-svg.png",
+    "output/playwright/w01/svg-isolation.txt"
+  ]
+}

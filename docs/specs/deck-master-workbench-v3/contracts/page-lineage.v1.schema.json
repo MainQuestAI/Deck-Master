@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:deck-master:page-lineage:v1",
+  "title": "page_lineage.v1 read projection (not a persistent object)",
+  "type": "object",
+  "required": ["format", "project_id", "revision_id", "requested_revision", "page_id", "page", "stages", "sources", "prompts", "tasks", "deck_output", "evidence_level"],
+  "additionalProperties": false,
+  "properties": {
+    "format": {"const": "page_lineage.v1"},
+    "project_id": {"type": "string"}, "revision_id": {"type": "string"}, "requested_revision": {"type": ["string", "null"]},
+    "page_id": {"type": "string"}, "page": {"type": ["object", "null"]},
+    "stages": {"$ref": "urn:deck-master:workbench-summary:v1#/$defs/stages"},
+    "sources": {"type": "object", "required": ["citations", "relation"], "additionalProperties": false, "properties": {"citations": {"type": "array"}, "relation": {"$ref": "urn:deck-master:workbench-summary:v1#/$defs/relation"}}},
+    "prompts": {
+      "type": "object", "required": ["prepared", "submitted", "errors", "parameters", "attempt"], "additionalProperties": false,
+      "properties": {
+        "prepared": {"type": "array", "items": {
+          "type": "object", "required": ["ref", "task_ref", "task_id", "dispatch_revision", "text", "prompt_sha256", "state", "observer", "output_relation", "basis"], "additionalProperties": false,
+          "properties": {
+            "ref": {"$ref": "urn:deck-master:workbench-summary:v1#/$defs/ref"}, "task_ref": {"$ref": "urn:deck-master:workbench-summary:v1#/$defs/ref"},
+            "task_id": {"type": "string"}, "dispatch_revision": {"type": ["string", "null"]}, "text": {"type": "string"}, "prompt_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+            "state": {"const": "prepared"}, "observer": {"const": "core_frozen"}, "output_relation": {"$ref": "urn:deck-master:workbench-summary:v1#/$defs/relation"}, "basis": {"enum": ["task_result_ref", "invocation_ref", "task_scope_only"]}
+          }
+        }},
+        "submitted": {
+          "type": "object", "required": ["state", "ref", "observer", "text"], "additionalProperties": false,
+          "properties": {"state": {"enum": ["not_recorded", "recorded", "unreadable"]}, "ref": {"$ref": "urn:deck-master:workbench-summary:v1#/$defs/optional_ref"}, "observer": {"enum": ["unknown", "host_reported"]}, "text": {"type": ["string", "null"]}, "relation": {"$ref": "urn:deck-master:workbench-summary:v1#/$defs/relation"}, "basis": {"const": "artifact.provenance.submitted_prompt"}, "error": {"$ref": "urn:deck-master:workbench-summary:v1#/$defs/error"}}
+        },
+        "errors": {"type": "array", "items": {"$ref": "urn:deck-master:workbench-summary:v1#/$defs/error"}},
+        "parameters": {"$ref": "urn:deck-master:workbench-summary:v1#/$defs/not_recorded"},
+        "attempt": {"$ref": "urn:deck-master:workbench-summary:v1#/$defs/not_recorded"}
+      }
+    },
+    "tasks": {"type": "array", "items": {"type": "object", "required": ["task_id", "status", "ref"]}},
+    "deck_output": {"$ref": "urn:deck-master:workbench-summary:v1#/$defs/deck_output"},
+    "evidence_level": {"const": "engineering"}
+  }
+}

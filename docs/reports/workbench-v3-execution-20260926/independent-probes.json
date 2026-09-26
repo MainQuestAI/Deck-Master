@@ -1,0 +1,31 @@
+{
+  "baseline": "d1c7c4600cb0fc781070116ed8cc8a1ff6b8b7ca",
+  "evidence_layer": "synthetic core; no real Host",
+  "observations": [
+    {
+      "id": "R01",
+      "check": "copied foreign revision",
+      "requested_project": "project-a",
+      "observed_project": "project-b",
+      "current_unchanged": true
+    },
+    {
+      "id": "R02",
+      "check": "symlinked foreign revision",
+      "observed_project": "project-b"
+    },
+    {
+      "id": "R03",
+      "check": "uncommitted revision snapshot",
+      "read_revision": "27f7ef6e6bdb4c38bcc63fa03fa74ead",
+      "is_current": false
+    },
+    {
+      "id": "R04",
+      "check": "corrupt review with PPT output",
+      "returned": false,
+      "exception": "StoreError",
+      "detail": "object bytes do not match declared sha256"
+    }
+  ]
+}

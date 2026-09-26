@@ -1,0 +1,222 @@
+{
+  "scope": "Real current Python core and local HTTP; synthetic input/results only",
+  "production_acceptance": false,
+  "real_host_invoked": false,
+  "temporary_projects_cleaned": true,
+  "source_commit": "3e1c70617701ceb01627e507de1592246ec47927",
+  "observations": [
+    {
+      "id": "P01",
+      "finding": "24-page current read and core historical read work",
+      "facts": {
+        "page_count": 24,
+        "old_title": "合成核验页 1",
+        "current_title": "已保存的新标题",
+        "replay_status": "already_applied"
+      },
+      "verified": true
+    },
+    {
+      "id": "P02",
+      "finding": "HTTP revision queries are ignored, including nonexistent revisions",
+      "facts": {
+        "http_status": 200,
+        "matches_current": true,
+        "requested_revision": null,
+        "invalid_revision_status": 200,
+        "invalid_returns_current": true,
+        "single_page_status": 200,
+        "single_page_title": "已保存的新标题"
+      },
+      "verified": true
+    },
+    {
+      "id": "P03",
+      "finding": "Required/proposed read surfaces are absent",
+      "facts": {
+        "/api/view/summary": 404,
+        "/v2/": 404,
+        "/api/projects": 404,
+        "/api/inputs": 404,
+        "/api/operations/audit-edit-1": 404
+      },
+      "verified": true
+    },
+    {
+      "id": "P04",
+      "finding": "Existing view omits task facts and sources",
+      "facts": {
+        "view_keys": [
+          "design_context",
+          "evidence_level",
+          "format",
+          "input_alignment",
+          "outputs",
+          "page_count",
+          "pages",
+          "pending_tasks",
+          "policy",
+          "project_id",
+          "requested_revision",
+          "reviews",
+          "revision_id",
+          "view_status"
+        ],
+        "core_has_task": true,
+        "core_has_sources": true
+      },
+      "verified": true
+    },
+    {
+      "id": "P05",
+      "finding": "Feedback drops structured selection and ignores client operation identity",
+      "facts": {
+        "http_statuses": [
+          200,
+          200
+        ],
+        "selection_stored": false,
+        "operation_matches_client": false,
+        "same_client_id_created_distinct_tasks": true
+      },
+      "verified": true
+    },
+    {
+      "id": "P06",
+      "finding": "Batch feedback shape is unsupported; rejected without adding a task",
+      "facts": {
+        "status": 400,
+        "error": {
+          "error": "'page_id'"
+        },
+        "task_count_unchanged": true
+      },
+      "verified": true
+    },
+    {
+      "id": "P07",
+      "finding": "Real claim state exists; HTTP task projection omits execution identity/result references",
+      "facts": {
+        "status": "running",
+        "projected_fields": [
+          "instruction",
+          "kind",
+          "status",
+          "task_id",
+          "updated_at"
+        ]
+      },
+      "verified": true
+    },
+    {
+      "id": "P08",
+      "finding": "Old running task is not timed out by continue",
+      "facts": {
+        "status": "running",
+        "updated_at": "2000-01-01T00:00:00Z",
+        "continue_status": "awaiting_host"
+      },
+      "verified": true
+    },
+    {
+      "id": "P09a",
+      "finding": "Even review export refuses a content-only project",
+      "facts": {
+        "error": "StoreError: outputs/pptx: no current PPT; continue production"
+      },
+      "verified": true
+    },
+    {
+      "id": "P09",
+      "finding": "Current review contains project objects; engineering/revision/download missing",
+      "facts": {
+        "review_has_engineering_objects": true,
+        "engineering_error": "StoreError: purpose: must be review or delivery",
+        "revision_error": "export_project() got an unexpected keyword argument 'revision'",
+        "export_file_route_status": 403
+      },
+      "verified": true
+    },
+    {
+      "id": "P10",
+      "finding": "Disjoint results accepted out of order, but acceptance immediately changes current",
+      "facts": {
+        "accept_statuses": [
+          "accepted",
+          "accepted"
+        ],
+        "current_titles": [
+          "p01 returned result",
+          "p02 returned result"
+        ],
+        "separate_user_candidate_adoption_called": false
+      },
+      "verified": true
+    },
+    {
+      "id": "P11",
+      "finding": "Cancelled task rejects late product",
+      "facts": {
+        "refusal": "(task bb2c562a7d26): result arrived after cancellation; call facts were settled",
+        "current_title": "p01 returned result"
+      },
+      "verified": true
+    },
+    {
+      "id": "P12",
+      "finding": "Prepared generation request already persists in Task inputs",
+      "facts": {
+        "request_count": 1,
+        "has_prompt": true,
+        "task_kind": "blueprint"
+      },
+      "verified": true
+    },
+    {
+      "id": "P15",
+      "finding": "Returned artifact references are not persisted into completed Task.result_refs",
+      "facts": {
+        "response_result_ref_count": 1,
+        "stored_task_result_ref_count": 0
+      },
+      "verified": true
+    },
+    {
+      "id": "P13",
+      "finding": "Blueprint accepted without submitted prompt; next work is same-page reconstruction",
+      "facts": {
+        "accept_status": "accepted",
+        "submitted_prompt_present": false,
+        "next_action": "codex_reconstruct_svg",
+        "next_scope": [
+          "p01"
+        ]
+      },
+      "verified": true
+    },
+    {
+      "id": "P14",
+      "finding": "Input update saves facts and dispatches impact/reconciliation work",
+      "facts": {
+        "status": "updated",
+        "audience": "合成的新受众",
+        "content_unchanged": true,
+        "pending_kind": "compose",
+        "pending_intent": "input_revision"
+      },
+      "verified": true
+    },
+    {
+      "id": "P16",
+      "finding": "Fault after current commit but before Host-result journal leaves retry conflicted",
+      "facts": {
+        "fault": "synthetic failure after current commit",
+        "result_already_current": true,
+        "replay_error": "(task 477d76e49b0d): task already completed; only the original operation result replays"
+      },
+      "verified": true
+    }
+  ],
+  "verified_observations": 17,
+  "status": "passed"
+}

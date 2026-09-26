@@ -1,0 +1,43 @@
+{
+  "at": "2026-09-26T17:46:54+0800",
+  "scope": "Final review documentation reads; delivery status markers may subsequently update, final artifact manifest supersedes these SHA values",
+  "files": {
+    "README.md": "d6b92f8e32b4a75cf16cd9153a78624832a43320385b8f7cc66d5fa7ad068245",
+    "WALKTHROUGH.md": "e7303050a503a282f841b9731b4f16837367892cd17c68c59aab56df6bb2ff54",
+    "LEGACY-COVERAGE.md": "a3acedd716204b64959fddd1df4e9f15eab1f5af9da00765e37a7de60e9ea16f",
+    "ACCEPTANCE.md": "e9c3278596470987f2e24240be79fdb909b729e43b11ef7d61d78ffb35fdd0a5",
+    "packages/W12.md": "2362f9d0ecc06794a117059a1d0afc305654849529fb0f881200d684ef6a6530",
+    "reviews/05-round1-product.md": "848309776ec6fdd3310a30d77bb6a3cf5f785d379cb2fd0b28d5c2da6bf89893",
+    "reviews/06-round2-design.md": "3685384c796c3baae2e8410e0dc4f12f88e7c0f17027082d7dc43905058039c7",
+    "reviews/07-round3-contracts.md": "7e860ccf06ee05c697f541705adb69ae5d206c672e25e75db984e6b4cbd15e03",
+    "prototype/validation/smoke-result.json": "fdef2575f292db66e03d7f0cf45e5a0a3301872ff3e4c98412c83af27a23f014",
+    "prototype/validation/revision-smoke-result.json": "38a33bd13d39eed80da6d47f382056e9b0739d4a23c34d4e1b11ba7184a784f0",
+    "prototype/validation/round1-fixes-result.json": "a99dc0b50d97e3f3e7795db6026641cffe3f8c0cfe6a07cd2899f84279b653e4",
+    "prototype/validation/round2-fixes-result.json": "024a71fb963e3ad7c6d6982de2e198ffeee90bd219ad7d00077a84f6266b3395",
+    "prototype/validation/states-smoke-result.json": "26e007224f7e8605ffc32123558ff5ebe2c66ab9dec85af3dd3a8f0d8a09acff"
+  },
+  "browser_evidence": {
+    "structure-1440.png": "3d5e02386c4f12938bb7dcf19cf9186ab44ab91029ea1ec52bf4f73dc8a0386f",
+    "gallery-1280.png": "ab226763a1f18b15ce0f464a59c63d73b91073aa36a1cf5ad41154a27ead71bb",
+    "gallery-1440.png": "cb8a11b5e3610d6a6cc17514733bbeb201e1432895c8786fdaba057e1ecff955",
+    "structure-1280.png": "8cc2243113d18c5b116e6c98266e2e32cabaff595628bf2f64baa652e6ba14a0",
+    "svg-fixed-comparison-1440.png": "d829f0380352f396c2ebe0abf74521bc2c0323a2f69f85041df5aab9929f68bc",
+    "conflict-1280.png": "0635618f4943bfa81e15534e5021b10bc203422affdf659e4db11b4e6b8b5f9c",
+    "svg-fixed-comparison-1280.png": "86da0bb2bb76fa89b89d968ccbfc521c990df219ca526b5734858cbc3431bf66",
+    "conflict-1440.png": "fad5945ab1ee1e5d7fd1e6802bf6b2b727a93f99aa0c566c3364b76ee0f46bc7",
+    "history-confirm-1440.png": "63aea21e71d28922d7599883e672ed6f0293dfd12ed86d53df6c5b3826baff62",
+    "unknown-save-1440.png": "3b339d08a875e9d8821709e5ce88db01a091eb4d827ad232b9fe4acbec1d2033",
+    "unknown-save-1280.png": "74aeca492fb8f6dc5bb3f1aa628a7fd4d5f3e6129feb038d52ff4fe1383c18c9",
+    "history-confirm-1280.png": "f7ebed90621a765a3a8f74bc0234863c74a322bdf39d6e52e6e9e245cce06cd6",
+    "style-candidate-1440.png": "7f84eabf24e27046edc531a24e32905373eded2c18a42fc32a51bcb26e49700e",
+    "style-candidate-1280.png": "e0627b3b1c136a159083c90c44ed0d19b6cb241a0a29bcc013710d90878bf9c0"
+  },
+  "reviewed_images": [
+    "gallery-1280.png",
+    "style-candidate-1280.png",
+    "svg-fixed-comparison-1440.png",
+    "conflict-1440.png",
+    "history-confirm-1280.png",
+    "structure-1440.png"
+  ]
+}

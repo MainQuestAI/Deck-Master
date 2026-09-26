@@ -1,0 +1,149 @@
+{
+  "time": "2026-09-26T09:46:19.678370+00:00",
+  "scope": "Imported OpenDesign HTML prototype in isolated browser contexts",
+  "preview_url": "http://127.0.0.1:52366/api/projects/deck-master-generation-workbench-v3-20260926/raw/index.html",
+  "generation_run_commissioned": false,
+  "production_acceptance": false,
+  "browser": "Chromium",
+  "viewports": [
+    {
+      "viewport": "1280x800",
+      "checks": [
+        "OpenDesign imported index responds HTTP 200",
+        "entry overview is rendered",
+        "visible synthetic boundary",
+        "entry has no horizontal overflow",
+        "gallery contains 24 page tiles",
+        "gallery has 20 originals and 4 missing placeholders",
+        "gallery has no horizontal overflow",
+        "single page 8 is selected",
+        "single page displays synthetic execution prompt",
+        "prompt layer and independent draft are reachable",
+        "prompt has no horizontal overflow",
+        "state sample link resolves within imported project",
+        "state sample entry is clearly simulated",
+        "text-only sample contains no fake image preview",
+        "sample save creates R17",
+        "sample draft and saved value survive reload",
+        "state sample has no horizontal overflow",
+        "zero browser page errors",
+        "zero external resource requests",
+        "zero resource HTTP failures",
+        "zero failed network requests"
+      ],
+      "page_errors": [],
+      "external_resource_requests": [],
+      "resource_http_failures": [],
+      "request_failures": [],
+      "screenshots": [
+        "overview-1280.png",
+        "gallery-1280.png",
+        "prompt-1280.png",
+        "state-text-saved-1280.png"
+      ],
+      "status": "passed"
+    },
+    {
+      "viewport": "1440x900",
+      "checks": [
+        "OpenDesign imported index responds HTTP 200",
+        "entry overview is rendered",
+        "visible synthetic boundary",
+        "entry has no horizontal overflow",
+        "gallery contains 24 page tiles",
+        "gallery has 20 originals and 4 missing placeholders",
+        "gallery has no horizontal overflow",
+        "single page 8 is selected",
+        "single page displays synthetic execution prompt",
+        "prompt layer and independent draft are reachable",
+        "prompt has no horizontal overflow",
+        "state sample link resolves within imported project",
+        "state sample entry is clearly simulated",
+        "text-only sample contains no fake image preview",
+        "sample save creates R17",
+        "sample draft and saved value survive reload",
+        "state sample has no horizontal overflow",
+        "zero browser page errors",
+        "zero external resource requests",
+        "zero resource HTTP failures",
+        "zero failed network requests"
+      ],
+      "page_errors": [],
+      "external_resource_requests": [],
+      "resource_http_failures": [],
+      "request_failures": [],
+      "screenshots": [
+        "overview-1440.png",
+        "gallery-1440.png",
+        "prompt-1440.png",
+        "state-text-saved-1440.png"
+      ],
+      "status": "passed"
+    }
+  ],
+  "asset_http_hash_checks": [
+    {
+      "file": "index.html",
+      "http_status": 200,
+      "sha256": "30a12289ad59bbeae6bfc791c97305bdc03ad08c221d47cb4613d170a8cc9925",
+      "expected_sha256": "30a12289ad59bbeae6bfc791c97305bdc03ad08c221d47cb4613d170a8cc9925",
+      "matches_import_manifest": true
+    },
+    {
+      "file": "app.js",
+      "http_status": 200,
+      "sha256": "178643f1370b0086c18a9f665dcbb32fa50e064c32ee72cc6929f5b3eda33abb",
+      "expected_sha256": "178643f1370b0086c18a9f665dcbb32fa50e064c32ee72cc6929f5b3eda33abb",
+      "matches_import_manifest": true
+    },
+    {
+      "file": "style.css",
+      "http_status": 200,
+      "sha256": "69b02acc8d28d8c7e3f7b5100235a173beac6af245553ffe47e0c92be3a837bb",
+      "expected_sha256": "69b02acc8d28d8c7e3f7b5100235a173beac6af245553ffe47e0c92be3a837bb",
+      "matches_import_manifest": true
+    },
+    {
+      "file": "states.html",
+      "http_status": 200,
+      "sha256": "1e7a0e933ca1811663b31df2420c853d7690b0b6aee4c4929ff0cf57b19e92b1",
+      "expected_sha256": "1e7a0e933ca1811663b31df2420c853d7690b0b6aee4c4929ff0cf57b19e92b1",
+      "matches_import_manifest": true
+    },
+    {
+      "file": "states.js",
+      "http_status": 200,
+      "sha256": "e713b1b0b48cdcefee1d38d532e9b811b606eed212e39290f3df97c37ee3f465",
+      "expected_sha256": "e713b1b0b48cdcefee1d38d532e9b811b606eed212e39290f3df97c37ee3f465",
+      "matches_import_manifest": true
+    },
+    {
+      "file": "states.css",
+      "http_status": 200,
+      "sha256": "cd70e183fe022a39ab251b31b562585f60144968efa5fb748da4c3a2c463caf6",
+      "expected_sha256": "cd70e183fe022a39ab251b31b562585f60144968efa5fb748da4c3a2c463caf6",
+      "matches_import_manifest": true
+    }
+  ],
+  "status": "passed",
+  "limitations": [
+    "Confirms imported preview, resources and synthetic interactions only",
+    "No OpenDesign generation run, real Host, model, production service or export was executed",
+    "Preview URL is valid for the current daemon session"
+  ],
+  "visual_inspection": {
+    "performed": true,
+    "method": "Direct view_image inspection of browser screenshots",
+    "screenshots": [
+      "gallery-1440.png",
+      "prompt-1440.png",
+      "state-text-saved-1280.png"
+    ],
+    "observations": [
+      "24-page gallery preserves visible missing-artifact placeholders and shows P7 versus P8/P9 style differences without overlap.",
+      "Prompt layer separates the execution snapshot from the next-use draft; page and version context are visible.",
+      "Text-only state clearly marks simulated data, shows the saved R17 title after reload, and contains no fake image preview."
+    ],
+    "material_visual_issues": []
+  }
+}

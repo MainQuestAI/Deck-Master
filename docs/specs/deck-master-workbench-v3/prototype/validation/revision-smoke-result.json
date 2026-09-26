@@ -1,0 +1,20 @@
+{
+  "scope": "synthetic prototype review revision",
+  "viewport": "1440x900",
+  "status": "passed",
+  "page_errors": [],
+  "checks": [
+    "overview gallery primary CTA",
+    "simple style default with collapsed details",
+    "saved trial request and copied-not-started feedback",
+    "return to request from overview and reload",
+    "fixed current/candidate columns with request labels",
+    "adopt only page 8",
+    "Esc cancels selection mode",
+    "save opinion creates no task; add change does",
+    "empty-name and empty-brief validation",
+    "cancel creates no project",
+    "simulated new project has no invented artifacts",
+    "new project preparation and first handoff request"
+  ]
+}
