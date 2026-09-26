@@ -410,15 +410,12 @@ def test_doctor_compose_reports_ready_method_root() -> None:
     assert result["status"] == "ready"
 
 
-def test_wheel_matches_sdist_wheel_methods() -> None:
-    """Heavy check guarded by the render marker set: reused from test_install
-    (AC-15 lives there); here we only assert the build hook keeps the wheel
-    self-consistent without the retired compatibility copies."""
-    from pathlib import Path as _P
+def test_package_configuration_omits_retired_method_resources() -> None:
+    """Artifact contents and warm rebuilds are exercised by test_install.
 
-    repo = _P(service.__file__).resolve().parents[2]
-    hook = (repo / "tools" / "build_hook.py").read_text(encoding="utf-8")
-    assert "skills-references" not in hook
+    Cleanup code must be allowed to name the retired output directory.
+    """
+    repo = Path(service.__file__).resolve().parents[2]
     data = (repo / "pyproject.toml").read_text(encoding="utf-8")
     assert "skills-references" not in data
 

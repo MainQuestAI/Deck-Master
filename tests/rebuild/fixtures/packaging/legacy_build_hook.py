@@ -6,11 +6,6 @@ from setuptools.command.build_py import build_py
 class BuildPy(build_py):
     def run(self):
         super().run()
-        retired=Path(self.build_lib)/'deck_master/resources/skills-references'
-        if retired.is_symlink():
-            retired.unlink()
-        elif retired.exists():
-            shutil.rmtree(retired)
         root=Path(__file__).resolve().parents[1]
         source=root/'skills'/'deck-master'
         target=Path(self.build_lib)/'deck_master'/'resources'/'skill'
@@ -24,3 +19,8 @@ class BuildPy(build_py):
         for name in ('references','agents'):
             if (source/name).is_dir():
                 shutil.copytree(source/name,target/name)
+        # Compatibility resource names consumed by existing candidate packages.
+        references=target.parent/'skills-references'
+        if references.exists():
+            shutil.rmtree(references)
+        shutil.copytree(source/'references',references)

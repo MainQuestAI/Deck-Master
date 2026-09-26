@@ -673,10 +673,28 @@ def test_candidate_install_activate_and_run_doctor(tmp_path, monkeypatch):
 
     release_dir = tmp_path / "release"
     manifest = build_release(release_dir)
-    prefix = tmp_path / "prefix"
+    prefix = tmp_path / "custom prefix with spaces"
     monkeypatch.setenv('CODEX_HOME', str(tmp_path / 'codex-home'))
     install_mod.install_candidate(prefix, release_dir / "release.json")
     install_mod.activate(prefix, manifest["release_id"])
+    # The default HOME CLI is a trap: the documented binding must use the
+    # release reached through CODEX_HOME even outside the repository.
+    fake_home = tmp_path / 'fake-home'
+    decoy = fake_home / '.deck-master/bin/deck-master'
+    decoy.parent.mkdir(parents=True)
+    decoy.write_text('#!/bin/sh\nexit 97\n')
+    decoy.chmod(0o755)
+    monkeypatch.setenv('HOME', str(fake_home))
+    skill_entry = tmp_path / 'codex-home/skills/deck-master/SKILL.md'
+    skill_text = skill_entry.read_text()
+    binding = skill_text.split('```python\n', 1)[1].split('```', 1)[0]
+    namespace = {'skill_entry': str(skill_entry)}
+    exec(binding, namespace)
+    bound = subprocess.run([*namespace['deck_master_cli'], 'doctor', '--step', 'view'],
+                           cwd=tmp_path, capture_output=True, text=True, timeout=120)
+    assert bound.returncode == 0, bound.stderr
+    assert _Path(_json.loads(bound.stdout)['module_path']).is_relative_to(skill_entry.resolve().parents[2])
+    assert skill_entry.read_bytes() == (REPO / 'skills/deck-master/SKILL.md').read_bytes()
     current = _Path(prefix) / ".deck-master" / "current"
     probe = subprocess.run([str(current / "venv/bin/python"), "-I", "-m", "deck_master", "doctor", "--step", "view"],
                            capture_output=True, text=True, timeout=120)
@@ -688,3 +706,50 @@ def test_candidate_install_activate_and_run_doctor(tmp_path, monkeypatch):
     assert _Path(prefix, ".deck-master", "current").is_symlink()
     # T9: the candidate release tree carries the skill extracted from the wheel.
     assert _Path(prefix, ".deck-master", "releases", manifest["release_id"], "skill", "deck-master", "SKILL.md").is_file()
+
+
+def test_warm_build_removes_retired_resources(tmp_path):
+    """Execute c93's build hook, then the current hook with build/ retained."""
+    import shutil
+    checkout = tmp_path / 'checkout'
+    checkout.mkdir()
+    for name in ('src', 'skills', 'tools'):
+        shutil.copytree(REPO / name, checkout / name,
+                        ignore=shutil.ignore_patterns('__pycache__', '*.egg-info'))
+    for name in ('pyproject.toml', 'setup.py', 'MANIFEST.in', 'README.md',
+                 'LICENSE', 'NOTICE', 'THIRD_PARTY_NOTICES.md'):
+        shutil.copy2(REPO / name, checkout / name)
+    hook = checkout / 'tools/build_hook.py'
+    current_hook = hook.read_bytes()
+    hook.write_bytes((REPO / 'tests/rebuild/fixtures/packaging/legacy_build_hook.py').read_bytes())
+
+    def build(name):
+        output = tmp_path / name
+        result = subprocess.run([sys.executable, '-m', 'pip', 'wheel', '--no-deps',
+                                 '--no-build-isolation', '-w', str(output), str(checkout)],
+                                capture_output=True, text=True, timeout=120)
+        assert result.returncode == 0, result.stderr
+        return next(output.glob('*.whl'))
+
+    with zipfile.ZipFile(build('baseline')) as archive:
+        assert any('resources/skills-references/' in n for n in archive.namelist())
+    assert (checkout / 'build/lib/deck_master/resources/skills-references').is_dir()
+    hook.write_bytes(current_hook)
+    # The second hook must actually be reimported even on coarse timestamp filesystems.
+    shutil.rmtree(checkout / 'tools/__pycache__', ignore_errors=True)
+    with zipfile.ZipFile(build('updated')) as archive:
+        assert not any('resources/skills-references/' in n for n in archive.namelist())
+        for source in (REPO / 'skills/deck-master').rglob('*'):
+            if source.is_file():
+                relative = source.relative_to(REPO / 'skills/deck-master')
+                assert archive.read(f'deck_master/resources/skill/{relative}') == source.read_bytes()
+
+
+def test_skill_rejects_unmanaged_location(tmp_path):
+    text = (REPO / 'skills/deck-master/SKILL.md').read_text()
+    entry = tmp_path / 'unmanaged/SKILL.md'
+    entry.parent.mkdir()
+    entry.write_text(text)
+    binding = text.split('```python\n', 1)[1].split('```', 1)[0]
+    with pytest.raises(RuntimeError, match='managed release'):
+        exec(binding, {'skill_entry': str(entry)})

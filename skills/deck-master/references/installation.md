@@ -22,12 +22,19 @@ python -m deck_master install activate \
 
 For the normal personal installation, `--prefix "$HOME"` produces
 `~/.deck-master/bin/deck-master`. Use the chosen prefix's launcher when using
-another prefix. Activation manages exactly one link:
+another prefix. When operating through the Host Skill, resolve its loaded entry
+path to `releases/<id>/skill/deck-master/SKILL.md` and invoke that same release's
+`venv/bin/python -I -m deck_master`, as shown in SKILL.md. Do not substitute a
+HOME or PATH installation. Reload the Skill entry and resolve again after
+activation or rollback. Skill bytes are not rewritten during installation.
+Activation manages exactly one link:
 `$CODEX_HOME/skills/deck-master` (default `~/.codex/skills/deck-master`) to
 `<prefix>/.deck-master/current/skill/deck-master`.
 A real directory/file or a foreign link at that path is a `host_skill_conflict`
 (exit 5); resolve the named conflict before retrying. `--no-host-registration`
-skips registration for CI and reports CLI and Host status separately.
+leaves every Host entry untouched, including legacy cleanup and retiring a
+managed link when the target release has no Skill. CLI and Host status are
+reported separately; a preserved link can remain unreadable.
 No config.toml changes, other Host registrations or third-party Skill changes occur.
 
 Rollback follows `previous` and keeps method and CLI releases aligned. If the
@@ -42,7 +49,12 @@ Activation recognizes a real `current/` containing only
 it is not a top-level manifest field. Other directory contents are refused.
 The old directory moves to `legacy-companion-<timestamp>` and remains available.
 Only `deck-*` symlinks targeting the exact old `current/skills/` subtree are
-removed, with each move, removal and skipped entry reported. Retry is idempotent.
+removed, with each move, removal and skipped entry reported. Launcher and path
+conflicts are checked before moving the directory or deleting links.
+With `--no-host-registration`, the directory is backed up and the CLI activated,
+but all Host links remain unchanged. A later activation without that flag uses
+the validated preserved manifest to finish legacy link cleanup and registration.
+Retry is idempotent.
 
 Run migration tests with an isolated HOME and CODEX_HOME. Actual installation
 migration and the seven-step new Codex session are user-run acceptance checks;

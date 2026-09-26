@@ -11,7 +11,24 @@ description: 从任务、已有讨论与文件材料创建、继续和修改专�
 
 先接收用户已给出的任务、材料、输出位置和已确认决定，不重新完成标准问卷。分清：这次要让谁理解或判断什么、对方已经知道什么、现场讲解还是独立阅读、用户实际要求的篇幅与范围。
 
-用 `~/.deck-master/bin/deck-master`（即当前安装的 CLI）执行命令。工作单 `method_resources` 给出的是本次任务该读的方法文件的真实路径，直接读取；不要凭记忆或其他版本的说明执行。
+先从本次 Host 加载的 Skill 入口路径解析所属发布版，后续所有 `deck-master` 命令都使用该发布版的 CLI。把 `skill_entry` 设为本次加载的 `SKILL.md` 路径（保留 Host 入口路径，供激活或回滚后重新解析），执行以下 Python 片段取得命令参数数组；用数组调用，路径含空格也不拆分：
+
+```python
+from pathlib import Path
+
+skill_file = Path(skill_entry).expanduser().resolve(strict=True)
+release = skill_file.parents[2]
+python = release / "venv/bin/python"
+if (skill_file != release / "skill/deck-master/SKILL.md"
+        or release.parent.name != "releases"
+        or release.parent.parent.name != ".deck-master"
+        or not (release / "release.json").is_file()
+        or not python.is_file()):
+    raise RuntimeError("Skill is not in a complete managed release; check installation")
+deck_master_cli = [str(python), "-I", "-m", "deck_master"]
+```
+
+执行时使用 `subprocess.run([*deck_master_cli, ...], ...)`。不从 HOME 或 PATH 猜测另一套安装。激活或回滚后，重新读取 Host 入口的 Skill 并重新绑定命令。若明确使用源码开发安装，按 installation 方法确认该 checkout 的虚拟环境，并用其 Python 执行 `-m deck_master`；通过 doctor 的 `module_path` 核对源码归属。无法确认安装来源时停止并报告。工作单 `method_resources` 给出的是本次任务该读的方法文件的真实路径，直接读取；不要凭记忆或其他版本的说明执行。
 
 ## 正常循环
 
