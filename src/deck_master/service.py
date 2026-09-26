@@ -14,6 +14,7 @@ lock, so a stale submission is refused with current unchanged (exit 5).
 from __future__ import annotations
 
 import json
+import re
 import uuid
 from pathlib import Path
 from typing import Any
@@ -147,7 +148,8 @@ def create(
 
     design = normalize_design_assets(store, design or {}, base_dir=project_dir)
     document = new_document(
-        project_id=project_dir.name,
+        project_id=project_dir.name if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", project_dir.name)
+        else "project-" + uuid.uuid4().hex,
         task={
             "title": title or "Deck task",
             "brief": brief,

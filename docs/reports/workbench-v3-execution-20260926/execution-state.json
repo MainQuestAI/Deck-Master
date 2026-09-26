@@ -1,7 +1,7 @@
 {
   "baseline": "d1c7c4600cb0fc781070116ed8cc8a1ff6b8b7ca",
-  "branch": "codex/workbench-w02-content-plan",
-  "active_package": "W02",
+  "branch": "codex/workbench-w03-services",
+  "active_package": "W03",
   "sequence": [
     "W01.core",
     "W02",
@@ -32,7 +32,7 @@
       "merge_commit": "ea4b5b8fa1e4e4e3444b6cd8861f83f5fcc61468"
     },
     "W02": {
-      "status": "content_plan_core_verified",
+      "status": "core_slices_merged",
       "accepted": false,
       "baseline": "ea4b5b8fa1e4e4e3444b6cd8861f83f5fcc61468",
       "evidence": "W02.md",
@@ -47,11 +47,20 @@
       "protocol_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/43",
       "protocol_merge_commit": "09f4486a453d2132a18dbefd10f99ef7317e8fd5",
       "content_plan_baseline": "09f4486a453d2132a18dbefd10f99ef7317e8fd5",
-      "content_plan_evidence": "W02-CONTENT-PLAN.md"
+      "content_plan_evidence": "W02-CONTENT-PLAN.md",
+      "content_plan_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/44",
+      "content_plan_merge_commit": "13aaf3690c6cde67e405576f5020abdd5311b909"
     },
     "W03": {
-      "status": "planned",
-      "accepted": false
+      "status": "core_verified_pending_integration",
+      "accepted": false,
+      "baseline": "13aaf3690c6cde67e405576f5020abdd5311b909",
+      "core_evidence": "W03-CORE.md",
+      "residuals": [
+        "W03 frontend wiring, two viewports, keyboard and cross-origin browser recovery",
+        "W02 new UI / old core compatibility matrix",
+        "W12 final offline installed package acceptance"
+      ]
     },
     "W04": {
       "status": "planned",
@@ -204,13 +213,21 @@
     },
     "W03-AC01": {
       "owner": "W03",
-      "status": "open",
-      "evidence": []
+      "status": "partial",
+      "evidence": [
+        "W03-CORE.md",
+        "w03/core/checks.json"
+      ],
+      "evidence_level": "core/CLI/HTTP/local processes; synthetic"
     },
     "W03-AC02": {
       "owner": "W03",
-      "status": "open",
-      "evidence": []
+      "status": "partial",
+      "evidence": [
+        "W03-CORE.md",
+        "w03/core/checks.json"
+      ],
+      "evidence_level": "core/CLI/HTTP/local processes; synthetic"
     },
     "W03-AC03": {
       "owner": "W03",
@@ -219,23 +236,39 @@
     },
     "W03-AC04": {
       "owner": "W03",
-      "status": "open",
-      "evidence": []
+      "status": "partial",
+      "evidence": [
+        "W03-CORE.md",
+        "w03/core/checks.json"
+      ],
+      "evidence_level": "core/CLI/HTTP/local processes; synthetic"
     },
     "W03-AC05": {
       "owner": "W03",
-      "status": "open",
-      "evidence": []
+      "status": "partial",
+      "evidence": [
+        "W03-CORE.md",
+        "w03/core/checks.json"
+      ],
+      "evidence_level": "core/CLI/HTTP/local processes; synthetic"
     },
     "W03-AC06": {
       "owner": "W03",
-      "status": "open",
-      "evidence": []
+      "status": "partial",
+      "evidence": [
+        "W03-CORE.md",
+        "w03/core/checks.json"
+      ],
+      "evidence_level": "core/CLI/HTTP/local processes; synthetic"
     },
     "W03-AC07": {
       "owner": "W03",
-      "status": "open",
-      "evidence": []
+      "status": "partial",
+      "evidence": [
+        "W03-CORE.md",
+        "w03/core/checks.json"
+      ],
+      "evidence_level": "core/CLI/HTTP/local processes; synthetic"
     },
     "W04-AC01": {
       "owner": "W04",

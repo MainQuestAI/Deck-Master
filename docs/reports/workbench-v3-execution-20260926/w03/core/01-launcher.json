@@ -1,0 +1,21 @@
+{
+  "exit_code": 3,
+  "response": {
+    "build_id": "0555fb5a85910a5731cd7a633a7a1d6fa130c06f1fb713a1920c4b9c2f9fe887",
+    "identity": "bb399c430e77eecd0ea1d701b01f577bd837cc8baae1189a781ca5cf05bc8013",
+    "instance_id": "75b1cd250ee458d2013175a115489340",
+    "pid": 27768,
+    "port": 50255,
+    "protocol_version": "workbench-service.v1",
+    "role": "launcher",
+    "service_version": "1.0.0.dev2",
+    "url": "http://127.0.0.1:50255/v2/",
+    "reused": false,
+    "mode": "v2",
+    "project_id": null,
+    "status": "core_ready_ui_unavailable",
+    "ui_available": false,
+    "browser_opened": false,
+    "host_execution": "handoff_required"
+  }
+}

@@ -187,8 +187,34 @@ def _assert_archive_clean(files):
     assert not any(name.lower().endswith((".ttf", ".otf", ".ttc", ".woff", ".woff2")) for name in names), \
         "font binaries must not ship in the distribution"
     for name, data in files:
+        if name.endswith('.dist-info/RECORD'):
+            # Wheel digests are URL-safe base64 and can coincidentally contain
+            # a key-like substring. Exempt only a verified checksum field;
+            # filenames and every actual payload remain subject to scanning.
+            import base64
+            import csv
+            import io
+            contents = dict(files)
+            rows = list(csv.reader(io.StringIO(data.decode('utf-8'))))
+            for row in rows:
+                assert len(row) == 3 and row[0] in contents, 'invalid wheel RECORD'
+                if row[0] == name:
+                    assert row[1:] == ['', '']
+                else:
+                    encoded = base64.urlsafe_b64encode(hashlib.sha256(contents[row[0]]).digest()).decode().rstrip('=')
+                    assert row[1] == 'sha256=' + encoded and row[2] == str(len(contents[row[0]])), 'wheel RECORD hash/size mismatch'
+            data = '\n'.join(row[0] for row in rows).encode()
         for pattern in SECRET_PATTERNS:
             assert not pattern.search(data), f"secret pattern {pattern.pattern!r} found in {name}"
+
+
+def test_archive_scan_still_rejects_payload_keys_and_invalid_record():
+    key = b's' + b'k-' + b'X' * 24
+    with pytest.raises(AssertionError, match='secret pattern'):
+        _assert_archive_clean([('deck_master/example.py', key)])
+    with pytest.raises(AssertionError, match='hash/size mismatch'):
+        _assert_archive_clean([('deck_master/example.py', b'safe'),
+                               ('test.dist-info/RECORD', b'deck_master/example.py,sha256=invalid,4\ntest.dist-info/RECORD,,\n')])
 
 
 def _build_sdist(tmp_path):
@@ -313,7 +339,8 @@ def _make_isolated_venv(base: Path, artifact: Path) -> Path:
     home.mkdir()
     # SETUPTOOLS_USE_DISTUTILS=stdlib works around homebrew Python 3.11's
     # _distutils_hack assertion while bootstrapping nested venvs.
-    venv_env = {**_os.environ, "SETUPTOOLS_USE_DISTUTILS": "stdlib"}
+    venv_env = {key: value for key, value in _os.environ.items() if key != 'PYTHONPATH'}
+    venv_env["SETUPTOOLS_USE_DISTUTILS"] = "stdlib"
     created = subprocess.run([sys.executable, "-m", "venv", str(home)],
                              stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=300, env=venv_env)
     python = home / "bin" / "python"
@@ -321,15 +348,18 @@ def _make_isolated_venv(base: Path, artifact: Path) -> Path:
         subprocess.run([sys.executable, "-m", "venv", "--without-pip", str(home)], check=True,
                        stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=300, env=venv_env)
         bootstrapped = subprocess.run([str(python), "-m", "ensurepip", "--upgrade"],
-                                      stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=300)
+                                      stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=300, env=venv_env)
         if bootstrapped.returncode != 0:
             subprocess.run([sys.executable, "-m", "pip", "--python", str(python), "install", "pip"],
-                           check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=600)
+                           check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=600, env=venv_env)
     pip = home / "bin" / "pip"
-    subprocess.run([str(pip), "install", "--quiet", "setuptools>=77", "wheel"],
-                   stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=900)
-    subprocess.run([str(pip), "install", "--quiet", "--no-build-isolation", str(artifact)],
-                   check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=900)
+    # The stdlib-distutils workaround applies to venv bootstrap only; Python
+    # 3.12 no longer has that module, so the sdist backend needs setuptools'.
+    install_env = {key: value for key, value in venv_env.items() if key != 'SETUPTOOLS_USE_DISTUTILS'}
+    for arguments in (["setuptools>=77", "wheel"], ["--no-build-isolation", str(artifact)]):
+        installed = subprocess.run([str(pip), "install", "--quiet", *arguments],
+                     stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=900, env=install_env, cwd=base)
+        assert installed.returncode == 0, installed.stderr.decode('utf-8', 'replace')[-3000:]
     return home
 
 

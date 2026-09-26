@@ -34,6 +34,10 @@ SCHEMA_FILES = {
     "tool_observation": "tool-observation.v1.schema.json",
     "content_plan_input": "content-plan-input.v1.schema.json",
     "content_plan": "content-plan.v1.schema.json",
+    "ui_draft": "ui-draft.v1.schema.json",
+    "ui_draft_record": "ui-draft-record.v1.schema.json",
+    "ui_draft_recovery": "ui-draft-recovery.v1.schema.json",
+    "ui_position": "ui-position.v1.schema.json",
 }
 
 REF_PATH_PATTERN = r"^\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\.[a-z0-9]+$"

@@ -1,0 +1,22 @@
+{
+  "evidence_level": "core/CLI/HTTP/real local process; synthetic project",
+  "empty_launcher": true,
+  "one_eligible_compose_after_material_update": true,
+  "handoff_no_new_task": true,
+  "draft_keeps_business_revision_and_content_identity": true,
+  "ack_recovers_on_new_port": true,
+  "unsent_draft_requires_explicit_import": true,
+  "independent_shutdown": true,
+  "model_calls": 0,
+  "browser_verified": false,
+  "real_home_changed": false,
+  "installed_package_verified": false,
+  "core_cli_timings": [
+    {
+      "step": "01-launcher",
+      "seconds": 0.2342
+    }
+  ],
+  "installation_download_host_time": "not measured",
+  "user_help_requests": "not measured"
+}

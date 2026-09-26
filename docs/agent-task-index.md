@@ -24,6 +24,7 @@ decision that affects this task.
 | Freeze a new-protocol generation input | `deck-master requests freeze --project … --task-id … --input request.json --base-revision … --operation-id …` | First claim with required capabilities; input comes from the task's generation_input |
 | Inspect a generation request or attempt | `deck-master requests show --project … --request-id …` / `attempts show --project … --attempt-id …` | Optional --revision; attempt reads its original call allowance and actual observed fields |
 | Read the content plan | `deck-master view --project … --content-plan --revision …` | Stored chapters/goals/source versions; absent plans show a labeled derived outline without writing |
+| Independent project launcher | `deck-master workbench --registry <file> --no-open` | Separate launcher; optional `--project <absolute-dir>`, `--port 0`, `--ui legacy`, `--stop`; core-only installs report missing v2 UI honestly |
 | Workbench service status | `deck-master view --project <dir>` | Existing service status; does not launch a browser |
 | Read ordered stages | `deck-master view --project <dir> --summary --json` | Lightweight Document projection; add `--revision <id>` to pin history |
 | Read one page's lineage | `deck-master view --project <dir> --page-id <id> --lineage --revision <id> --json` | Stored prompts and references only; missing history stays unknown |

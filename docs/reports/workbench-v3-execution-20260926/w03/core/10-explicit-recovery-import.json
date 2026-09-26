@@ -1,0 +1,27 @@
+{
+  "status": "saved",
+  "replayed": false,
+  "record": {
+    "schema_version": "ui_draft_record.v1",
+    "draft": {
+      "schema_version": "ui_draft.v1",
+      "project_id": "project",
+      "project_identity": "329f87042267c780b3b8b21b7595c856719a58184c4ed5e42716f667dfb78d5a",
+      "draft_id": "offline-draft",
+      "target": {
+        "scope": "project",
+        "page_id": null,
+        "layer": "notes"
+      },
+      "base_revision": "0541da85174c4c1890903de02dbfebe0",
+      "base_ref": null,
+      "content": {
+        "text": "尚未同步的独立恢复副本"
+      },
+      "pending": null
+    },
+    "updated_sequence": 1,
+    "digest": "15b0b072bc7b0de52d5183e50f265baaf77a2b94eaf50104019fa92db41bce65",
+    "etag": "bc8cbcf96811bf0e2ba962f71ca6fd843b016bbb1f2069f47e2048726cfc629c"
+  }
+}

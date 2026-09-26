@@ -1,0 +1,152 @@
+{
+  "status": "created",
+  "project_id": "project",
+  "revision_id": "3564ba9025b0448fa97c1a8455890e2a",
+  "requested_action": "create",
+  "result_refs": [],
+  "pending_tasks": [
+    {
+      "task_id": "0f665b5340eb",
+      "operation_id": "compose-947ee906d09d",
+      "kind": "compose",
+      "intent": "initial",
+      "method_release": {
+        "methods_sha256": "a16b8a5c6b028bdb0e9193ffea69a3907d025a8d5141971c2ae9e3f9d4531411",
+        "release_id": "1.0.0.dev2"
+      },
+      "review_stage": "final",
+      "status": "awaiting_host",
+      "scope_pages": [],
+      "instruction": "Read every source in Task.sources plus the method resources; derive the audience's open question and write complete visible copy as Page v2 with an explicit page order. Same source supports different framings; do not call a rule planner or fill pages from templates.",
+      "inputs": [],
+      "dispatch_revision": "261a0db08c7b424c8e94854d2858b4da",
+      "produced_against": "c53f805ca2d65203707ed4588bc24820f2027485f8ce7aa847ab2bb61c24467c",
+      "call_allowances": [],
+      "sources": [],
+      "resolved_design_context": {
+        "allowed_asset_ids": [],
+        "assets": [],
+        "canvas": {
+          "fit": "contain",
+          "height_px": 900,
+          "slide_height_in": 7.5,
+          "slide_width_in": 13.333333333333334,
+          "width_px": 1600
+        },
+        "default_style_id": "default",
+        "fonts": [
+          {
+            "asset_id": null,
+            "face": "Regular",
+            "fallback_font_ids": [],
+            "family": "Noto Sans CJK SC",
+            "font_id": "body",
+            "weight": 400
+          },
+          {
+            "asset_id": null,
+            "face": "Bold",
+            "fallback_font_ids": [],
+            "family": "Noto Sans CJK SC",
+            "font_id": "heading",
+            "weight": 700
+          }
+        ],
+        "language": "zh-CN",
+        "styles": [
+          {
+            "colors": {
+              "accent": "#1478FF",
+              "background": "#FFFFFF",
+              "text": "#14213D"
+            },
+            "layout_notes": "默认样式在 create 时固化；字体名称是配置需求，不是本机安装证明。",
+            "style_id": "default",
+            "typography": {
+              "auxiliary_size_pt": 12,
+              "body_font_id": "body",
+              "body_size_pt": 18,
+              "heading_font_id": "heading",
+              "heading_size_pt": 30
+            }
+          }
+        ]
+      },
+      "method_resources": [
+        {
+          "id": "source-reading",
+          "relative_path": "references/source-reading.md",
+          "path": "<checkout>/skills/deck-master/references/source-reading.md",
+          "sha256": "f46d3783f86677086bcce06e29cf09bf0715d1cd1afb48dbf56f7ec43d918c52"
+        },
+        {
+          "id": "content-methods",
+          "relative_path": "references/content-methods.md",
+          "path": "<checkout>/skills/deck-master/references/content-methods.md",
+          "sha256": "4bd00c9270b7c3f400787cd85027eff9cde025494a7a9825641c97e4a9caddff"
+        },
+        {
+          "id": "content-examples",
+          "relative_path": "references/content-examples.md",
+          "path": "<checkout>/skills/deck-master/references/content-examples.md",
+          "sha256": "18b6b87c28a24e5cdd22665afde95e6c98724e35ed3d6b20ffe0c5f28d63ab21"
+        }
+      ],
+      "project_context": {
+        "task": {
+          "audience": "首次使用者",
+          "brief": "说明工作台使用流程",
+          "existing_decisions": [],
+          "page_limit": null,
+          "presentation_mode": "live",
+          "presentation_mode_source": "default",
+          "scenario": "",
+          "title": "合成新建验证"
+        },
+        "input_digest": "550bf98a8bbe5987d4199368987942a5e3ecdf04ee83c2c8875d92221c309108",
+        "dispatch_revision": "261a0db08c7b424c8e94854d2858b4da",
+        "current_revision": "3564ba9025b0448fa97c1a8455890e2a",
+        "context_status": "current",
+        "input_alignment": "no_content"
+      },
+      "staging_dir": "<local-resource>/compose-947ee906d09d",
+      "protocol_version": "compose.v1",
+      "required_capabilities": [
+        "content_plan",
+        "versioned_source_links"
+      ],
+      "content_plan_contract": {
+        "schema_version": "content_plan_input.v1",
+        "required": true,
+        "sources": [],
+        "prior": {
+          "status": "derived",
+          "relation": "derived",
+          "ref": null,
+          "basis": "Page titles at this snapshot; no historical content plan",
+          "chapters": [],
+          "goals": []
+        },
+        "instruction": "Return content_plan with every resulting page goal, chapter, versioned source locator and unresolved fact; Page remains the body-copy truth."
+      },
+      "source_reading": []
+    }
+  ],
+  "findings": [],
+  "next_action": "submit_host_results",
+  "input_alignment": "no_content",
+  "review_url": null,
+  "view_status": "view_arrives_with_workbench",
+  "evidence_level": "engineering",
+  "sources_adopted": [],
+  "sources_skipped": [],
+  "sources_errored": [],
+  "registered": true,
+  "project": {
+    "entry_id": "57893e8565b0f6bda0f6357b4e384a755ee25a642f743b1bc259c4e35275f3f2",
+    "path": "<local-resource>/project",
+    "title": "合成新建验证",
+    "project_id": "project"
+  },
+  "model_started": false
+}

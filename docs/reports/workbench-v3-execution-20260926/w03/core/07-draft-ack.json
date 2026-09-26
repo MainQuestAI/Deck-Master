@@ -1,0 +1,27 @@
+{
+  "status": "saved",
+  "replayed": false,
+  "record": {
+    "schema_version": "ui_draft_record.v1",
+    "draft": {
+      "schema_version": "ui_draft.v1",
+      "project_id": "project",
+      "project_identity": "329f87042267c780b3b8b21b7595c856719a58184c4ed5e42716f667dfb78d5a",
+      "draft_id": "example-draft",
+      "target": {
+        "scope": "project",
+        "page_id": null,
+        "layer": "notes"
+      },
+      "base_revision": "0541da85174c4c1890903de02dbfebe0",
+      "base_ref": null,
+      "content": {
+        "text": "等待 Host 整理；这是个人草稿。"
+      },
+      "pending": null
+    },
+    "updated_sequence": 1,
+    "digest": "64ea12a8e7fba0a46dc9405e1dd7b44dc5bb29664bc3b4b824cb5c032be99b3b",
+    "etag": "d56886cfcd091cd562208d347ac755de0ea535ea884dc7ca9f8050476bb1b6ee"
+  }
+}

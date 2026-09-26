@@ -114,6 +114,22 @@ without creating a second allowance or erasing the earlier observation.
   service start failure, no browser). The local URL is still printed when a
   service is running; no browser does not lose the address.
 
+## Launcher And Personal Draft Recovery
+
+`deck-master workbench` checks role, instance, project/registry identity and
+loaded code version before service reuse. `port_conflict` never takes over
+another listener: choose `--port 0` or explicitly stop the matching service.
+`--stop` affects only the selected launcher/project and keeps business data.
+`core_ready_ui_unavailable` means the core runs but the v2 UI is not installed;
+use the explicit project `--ui legacy` until the frontend is available.
+
+A `local_state_conflict` is a personal draft ETag/target conflict. Retain the
+local buffer, read the saved draft, and keep an independent draft when needed.
+Only a project ACK promises automatic recovery on a new port. A recovery file
+is validated data and never a command to adopt or replay a pending operation.
+Do not delete the journal to resolve a business conflict; it does not change
+Document revision, content identity, or call facts.
+
 ## History And Restore
 
 - Restore always creates a NEW revision; task call facts (consumed/unknown/

@@ -347,15 +347,8 @@ class Store:
     @contextlib.contextmanager
     def _locked(self) -> Iterator[None]:
         self.ensure_layout()
-        handle = os.open(self.lock_path, os.O_CREAT | os.O_RDWR, 0o600)
-        try:
-            fcntl.flock(handle, fcntl.LOCK_EX)
-            try:
-                yield
-            finally:
-                fcntl.flock(handle, fcntl.LOCK_UN)
-        finally:
-            os.close(handle)
+        with locked_file(self.lock_path):
+            yield
 
     def _verify_read_set_entry(self, entry: dict[str, Any]) -> None:
         """Object-path entries must match current bytes; other identities are opaque."""
@@ -387,6 +380,23 @@ def _validate_operation_id(operation_id: str) -> None:
         )
 
 
+@contextlib.contextmanager
+def locked_file(path: Path) -> Iterator[None]:
+    """Short file lock, also used by independent local UI state journals."""
+    handle = os.open(path, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
+    try:
+        import stat
+        if not stat.S_ISREG(os.fstat(handle).st_mode):
+            raise StoreError("lock", "lock must be a regular file")
+        fcntl.flock(handle, fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(handle, fcntl.LOCK_UN)
+    finally:
+        os.close(handle)
+
+
 def _atomic_write_bytes(target: Path, data: bytes) -> None:
     target.parent.mkdir(parents=True, exist_ok=True)
     handle, tmp_name = tempfile.mkstemp(dir=str(target.parent), prefix=".tmp-")
@@ -397,6 +407,13 @@ def _atomic_write_bytes(target: Path, data: bytes) -> None:
             stream.flush()
             os.fsync(stream.fileno())
         os.replace(tmp, target)
+        # The rename is part of the durability boundary, including a UI draft
+        # ACK. Flushing only the file can lose the directory entry on a crash.
+        directory = os.open(target.parent, os.O_RDONLY | os.O_DIRECTORY)
+        try:
+            os.fsync(directory)
+        finally:
+            os.close(directory)
     except BaseException:
         tmp.unlink(missing_ok=True)
         raise

@@ -1,39 +1,45 @@
-"""Detached loopback workbench server entry.
-
-``python -m deck_master.view_server --project <dir> --port <n>`` runs the
-read-only workbench in the foreground of its own process, so a CLI that
-spawns it detached can exit while the service keeps serving (spec 09.5).
-Parent records pid/port in ``view.json``; a stale entry is health-checked
-and replaced on the next ``view --open``.
-"""
-
+"""Internal detached service runner; the public command remains deck-master."""
 from __future__ import annotations
 
 import argparse
 import signal
-import secrets
 import sys
-from http.server import ThreadingHTTPServer
-from pathlib import Path
+import threading
 
-from .store import Store
-from .web import _static_dir, WorkbenchHandler
+from . import local_runtime as runtime
 
 
-def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="deck-master-view-server")
-    parser.add_argument("--project", required=True)
-    parser.add_argument("--port", type=int, required=True)
+def main(argv=None):
+    parser = argparse.ArgumentParser(prog="deck-master internal local server")
+    targets = parser.add_mutually_exclusive_group(required=True)
+    targets.add_argument("--project")
+    targets.add_argument("--registry")
+    parser.add_argument("--port", type=int, default=0)
+    parser.add_argument("--instance-id")
     options = parser.parse_args(argv)
-    store = Store(Path(options.project).expanduser().resolve())
-    handler = type(
-        "BoundHandler",
-        (WorkbenchHandler,),
-        {"store": store, "static_dir": _static_dir(), "write_token": secrets.token_urlsafe(32)},
-    )
-    server = ThreadingHTTPServer(("127.0.0.1", options.port), handler)
-    server.serve_forever()
-    return 0
+    desc = runtime.descriptor(project=options.project, registry=options.registry)
+    server = state = None
+    stopped = threading.Event()
+    for signum in (signal.SIGINT, signal.SIGTERM):
+        signal.signal(signum, lambda *_: stopped.set())
+    try:
+        server, state = runtime.bind_server(desc, port=options.port, instance_id=options.instance_id)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        if not runtime.healthy(state, desc):
+            raise runtime.ServiceUnavailable("service", "bound service failed its own health check")
+        runtime.publish(desc, state)
+        stopped.wait()
+        return 0
+    except runtime.ServiceUnavailable as exc:
+        print(str(exc), file=sys.stderr)
+        return exc.exit_code
+    finally:
+        if server:
+            server.shutdown()
+            server.server_close()
+        if state:
+            runtime.clear_own_state(desc, state["instance_id"])
 
 
 if __name__ == "__main__":

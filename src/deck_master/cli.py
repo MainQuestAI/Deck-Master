@@ -79,6 +79,14 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub.add_parser("legacy-map", help="List every pre-rebuild command and its mapping class (spec 09.6)")
 
+    workbench_cmd = sub.add_parser("workbench", help="Open the independent project launcher or an explicit project")
+    workbench_cmd.add_argument("--project")
+    workbench_cmd.add_argument("--registry", help="isolated project registry JSON file")
+    workbench_cmd.add_argument("--ui", choices=("v2", "legacy"), default="v2")
+    workbench_cmd.add_argument("--port", type=int, default=0)
+    workbench_cmd.add_argument("--no-open", action="store_true")
+    workbench_cmd.add_argument("--stop", action="store_true", help="stop only this selected service; retain projects and registry")
+
     installation=sub.add_parser('install')
     installs=installation.add_subparsers(dest='install_command',required=True)
     candidate=installs.add_parser('candidate');candidate.add_argument('--prefix',required=True);candidate.add_argument('--manifest',required=True)
@@ -260,6 +268,13 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     options = parser.parse_args(argv)
     try:
+        if options.command == "workbench":
+            from .launcher import open_workbench
+            result = open_workbench(project=options.project, registry_file=options.registry,
+                                    ui=options.ui, port=options.port, open_browser=not options.no_open,
+                                    stop=options.stop)
+            _emit(result)
+            return 3 if result["status"] == "core_ready_ui_unavailable" else 0
         if options.command == 'legacy-map':
             return _emit(legacy_mapping_table())
         if options.command == 'install':
