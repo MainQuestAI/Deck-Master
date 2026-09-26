@@ -8,7 +8,7 @@ import shutil
 import uuid
 import zipfile
 from .content import check_page
-from .models import bump_revision, canonical_json_bytes, sha256_bytes
+from .models import bump_revision, canonical_json_bytes, compute_input_digest, sha256_bytes
 from .store import Store, ConflictError, StoreError
 from .tasks import _project_transaction
 
@@ -152,6 +152,22 @@ def _current_artifact_digests(store, doc, extra_subjects=()):
         if extract:
             artifacts[f"source:{source.get('source_id')}"] = extract['sha256']
     artifacts['policy:document'] = sha256_bytes(canonical_json_bytes(doc.get('policy') or {}))
+    # Legacy reviews have no input dependency. Their immutable adoption history
+    # identifies which observations predate the latest semantic input change.
+    # Retain the Review objects; only content/privacy need a new observation.
+    artifacts['_input_stale_reviews'] = set()
+    if doc.get('content_basis'):
+        digest = compute_input_digest(doc)
+        revision = doc.get('parent_revision_id')
+        visited = set()
+        while revision and revision not in visited:
+            visited.add(revision)
+            prior = store.load_document(revision)
+            if compute_input_digest(prior) != digest:
+                artifacts['_input_stale_reviews'] = {
+                    (ref['path'], ref['sha256']) for ref in prior.get('reviews') or []}
+                break
+            revision = prior.get('parent_revision_id')
     return artifacts
 
 

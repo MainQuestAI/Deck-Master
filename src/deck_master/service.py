@@ -26,6 +26,7 @@ from .models import bump_revision, canonical_json_bytes, compute_input_digest, c
 from .sources import discover_sources, read_source
 from .store import Store, StoreError, ConflictError
 from .production import project_prompt, resolve_design
+from .review import PAGE_VISUAL_KINDS
 
 AUTO_VIEW = "auto_view_then_production"
 CONTINUE_PRODUCTION = "continue_production"
@@ -451,12 +452,12 @@ def task_summary(store: Store, document: dict, task: dict) -> dict:
                     'dependencies': [{'kind': key.split(':', 1)[0],
                                       'identity': key.split(':', 1)[1], 'sha256': digests[key]}
                                      for key in keys],
-                    'review_kinds': ['blueprint_content', 'blueprint_fidelity', 'readability'],
+                    'review_kinds': list(PAGE_VISUAL_KINDS),
                 })
                 for ref in document.get('reviews') or []:
                     prior = store.read_object_json(ref)
                     if (prior.get('review_stage') != 'page_visual' or
-                            prior.get('kind') not in ('blueprint_content', 'blueprint_fidelity', 'readability') or
+                            prior.get('kind') not in PAGE_VISUAL_KINDS or
                             not prior.get('findings')):
                         continue
                     if any(dep.get('kind') == 'content' and dep.get('identity') == f"page:{entry['page_id']}"
@@ -465,6 +466,19 @@ def task_summary(store: Store, document: dict, task: dict) -> dict:
                             'review_ref': ref, 'review_id': prior['review_id'],
                             'kind': prior['kind'], 'findings': prior['findings'],
                         })
+        elif task.get('kind') == 'review':
+            from .editing import page_visual_summary
+            summary['prior_page_visual_evidence'] = []
+            for entry in summary['page_entries']:
+                if all(entry.get(slot) for slot in ('blueprint', 'svg', 'svg_preview')):
+                    summary['prior_page_visual_evidence'].append({
+                        'page_id': entry['page_id'],
+                        'check_summary': page_visual_summary(store, document, entry),
+                        'reviews': [ref for ref in document.get('reviews') or []
+                                    if (prior := store.read_object_json(ref)).get('review_stage') == 'page_visual'
+                                    and entry['page'] in prior.get('subjects', [])],
+                        'usage': 'prior observation only; final checks still follow review_plan.units',
+                    })
     if task.get("kind") == "blueprint":
         for ref in task.get("inputs") or []:
             try:

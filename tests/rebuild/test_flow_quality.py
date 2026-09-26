@@ -983,6 +983,43 @@ def test_units_relist_content_and_privacy_after_input_change(tmp_path: Path) -> 
         assert set(unit["page_ids"]) == {"p01", "p02", "p03"}
 
 
+def test_reconciliation_without_page_changes_still_requires_new_input_review(tmp_path: Path) -> None:
+    from deck_master.editing import check_summary
+
+    project, store, _ = _setup_project_with_pages(tmp_path)
+    _force_fake_output(store)
+    doc = store.load_document()
+    page_ids = [entry["page_id"] for entry in doc["pages"]]
+    for kind in REVIEW_DIMENSIONS:
+        _add_final_review(store, doc, kind, page_ids)
+    _raw_commit(store, lambda current: current.update(reviews=doc["reviews"]))
+    before = store.load_document()
+    update = service.inputs_update(
+        project, patch={"task_patch": {"audience": "新评审团队"}, "reason": "更换受众"},
+        base_revision=before["revision_id"], operation_id="update-after-review")
+    task = update["pending_tasks"][0]
+    service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+                          produced_against=task["produced_against"], result_payload={
+                              "kind": "compose", "content_update": {
+                                  "input_digest": update["input_digest"], "upsert_pages": [],
+                                  "remove_page_ids": [], "page_order": page_ids,
+                                  "unchanged_reason": "新受众已掌握相同背景，逐页核对后无需改正文"}})
+    doc = store.load_document()
+    assert doc["pages"] == before["pages"] and doc["reviews"] == before["reviews"]
+    assert service.inputs_show(project)["input_alignment"] == "current"
+    summary = check_summary(store, doc)
+    units = final_review_units(doc, summary)
+    assert {(u["kind"], u["reason"]) for u in units} == {
+        ("content", "changed_input"), ("privacy", "changed_input")}
+    # New observations under the new input close the gap, even though old
+    # review history still contains stale records for those dimensions.
+    for kind in ("content", "privacy"):
+        _add_final_review(store, doc, kind, page_ids)
+    _raw_commit(store, lambda current: current.update(reviews=doc["reviews"]))
+    doc = store.load_document()
+    assert final_review_units(doc, check_summary(store, doc)) == []
+
+
 def test_final_work_order_instruction_from_units(tmp_path: Path) -> None:
     units = [{"kind": "conversion", "page_ids": ["p02"], "reason": "missing"},
              {"kind": "privacy", "page_ids": ["p01", "p03"], "reason": "changed_input"}]
