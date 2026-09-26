@@ -35,6 +35,25 @@ current unchanged.
 - Cancel-first wins: a result after `task cancel` is settled for call facts
   and refused for content (`late result after cancellation`).
 
+## Task Accept Response Lost
+
+Retry the exact same task_id, operation_id, produced_against and result envelope.
+For new successful adoptions, the request digest and stable result are stored
+in the same Document commit as the completed Task and result_refs. A missing
+or damaged operations cache is rebuilt from committed history; orphan revision
+files never count as applied operations.
+
+`already_applied.revision_id` names the original adoption, while
+`current_revision_id` names the current project version. These may differ after
+later work. `operation_result` is the original core result. Replay does not
+restore the old version or dispatch historical pending tasks.
+
+If `journal_warning.code == receipt_cache_unavailable`, adoption is committed
+but the derived cache could not be saved. Keep the same payload and operation
+ID when retrying after storage is writable. Changed payloads or dependency
+bindings conflict. Old completed tasks without a receipt and without their
+journal remain unresolved; do not invent a digest or edit storage by hand.
+
 ## Review Blocked
 
 - Detect by: `final-readiness` reports `review_status != "pass"`, or

@@ -1,0 +1,20 @@
+{
+  "kind": "compose",
+  "page_order": [
+    "synthetic-page"
+  ],
+  "pages": [
+    {
+      "schema_version": "deck_page_package.v2",
+      "page_id": "synthetic-page",
+      "customer_visible": {
+        "title": "Recovery demonstration",
+        "body_blocks": []
+      },
+      "visual_spec": {
+        "intent": "Synthetic example",
+        "reference_mode": "new_design"
+      }
+    }
+  ]
+}

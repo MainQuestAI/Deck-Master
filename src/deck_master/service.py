@@ -1343,21 +1343,27 @@ def accept_result(
         envelope_raw=envelope_raw,
     )
     document = store.load_document()
+    current_revision = document["revision_id"]
     if outcome["status"] == "already_applied":
-        return _response(
+        from .snapshots import load_snapshot
+        applied = load_snapshot(store, outcome["revision_id"])
+        response = _response(
             status="already_applied",
+            document=applied,
+            requested_action="task accept",
+            result_refs=outcome.get("result_refs") or [],
+        )
+    else:
+        response = _response(
+            status="accepted",
             document=document,
             requested_action="task accept",
+            pending_tasks=_pending_host_tasks(document, store),
+            next_action=outcome.get("next_action"),
+            result_refs=outcome.get("result_refs") or [],
         )
-    response = _response(
-        status="accepted",
-        document=document,
-        requested_action="task accept",
-        pending_tasks=_pending_host_tasks(document, store),
-        next_action=outcome.get("next_action"),
-        result_refs=outcome.get("result_refs") or [],
-    )
-    for key in ("new_page_hashes", "unchanged_reason", "impact_summary", "work_complete"):
+    response["current_revision_id"] = current_revision
+    for key in ("new_page_hashes", "unchanged_reason", "impact_summary", "work_complete", "operation_result", "journal_warning", "same_revision"):
         if key in outcome:
             response[key] = outcome[key]
     return response

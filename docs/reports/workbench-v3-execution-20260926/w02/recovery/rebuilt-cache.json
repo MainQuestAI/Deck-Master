@@ -1,0 +1,10 @@
+{
+  "kind": "compose",
+  "operation_id": "compose-3aa1185e14d6",
+  "produced_against": "88461d0338c2d80885fc86d21981fcd2dc4a775e4dafb5a7752463c32dabc875",
+  "result_digest": "04c35fffb575a423dc13caa46c7000aef3acf0d6a95b3c01008287eccc288ab1",
+  "revision_id": "f2fe4df699684f9796ab91087f878a0d",
+  "status": "applied",
+  "task_id": "0000a4e3a0ba",
+  "usage_events": []
+}

@@ -12,6 +12,7 @@ facts survive even when product adoption fails (spec 08.6).
 from __future__ import annotations
 
 import json
+import copy
 import uuid
 from functools import wraps
 from dataclasses import dataclass, field
@@ -31,7 +32,7 @@ from .models import (
     validate_review_semantics,
     validate_task_semantics,
 )
-from .store import Store, StoreError
+from .store import Store, StoreError, _atomic_write_bytes
 
 ENVELOPE_KINDS = ("compose", "blueprint", "reconstruct", "review", "repair")
 ENVELOPE_SLOTS = (
@@ -280,11 +281,11 @@ def read_operation_journal(store: Store, operation_id: str) -> dict[str, Any] | 
     return json.loads(path.read_text("utf-8"))
 
 
-def write_operation_journal(store: Store, journal: OperationJournal) -> None:
+def write_operation_journal(store: Store, journal: OperationJournal, *, committed: bool = False) -> None:
     directory = _operations_dir(store)
     directory.mkdir(parents=True, exist_ok=True)
     path = directory / f"{journal.operation_id}.json"
-    if path.exists():
+    if path.exists() and not committed:
         existing = json.loads(path.read_text("utf-8"))
         if existing.get("result_digest") != journal.result_digest:
             raise TaskConflict(
@@ -292,7 +293,40 @@ def write_operation_journal(store: Store, journal: OperationJournal) -> None:
                 f"operation {journal.operation_id} journal conflicts with a different result",
             )
         return
-    path.write_text(json.dumps(journal.to_json(), ensure_ascii=False, indent=1) + "\n")
+    _atomic_write_bytes(path, canonical_json_bytes(journal.to_json()))
+
+
+def _request_digest(task_id, operation_id, produced_against, envelope):
+    return sha256_bytes(canonical_json_bytes({"task_id": task_id, "operation_id": operation_id,
+                                             "produced_against": produced_against, "envelope": envelope}))
+
+
+def _publish_receipt_cache(store, *, task, envelope, produced_against, result_digest, response):
+    """The committed Document remains authoritative even if cache I/O fails."""
+    try:
+        write_operation_journal(store, OperationJournal(
+            operation_id=task["operation_id"], task_id=task["task_id"], kind=envelope["kind"],
+            produced_against=produced_against, result_digest=result_digest,
+            revision_id=response["revision_id"], usage_events=envelope.get("usage_events") or [],
+        ), committed=True)
+    except OSError:
+        return {"code": "receipt_cache_unavailable", "message": "result is committed; the derived receipt file could not be saved",
+                "next_action": "retry the same task operation to rebuild its receipt cache"}
+    return None
+
+
+def _commit_adoption(store, *, document, base_revision, task, envelope, produced_against, result_digest, response):
+    receipt = {"format": "operation_receipt.v1",
+               "request_digest": _request_digest(task["task_id"], task["operation_id"], produced_against, envelope),
+               "response": response}
+    store.commit_change(base_revision=base_revision, document=document,
+                        operation_id=task["operation_id"], operation_receipt=receipt)
+    warning = _publish_receipt_cache(store, task=task, envelope=envelope, produced_against=produced_against,
+                                     result_digest=result_digest, response=response)
+    result = {**response, "operation_result": copy.deepcopy(response)}
+    if warning:
+        result["journal_warning"] = warning
+    return result
 
 
 def _lookup_task(document: dict, task_id: str, store: Store) -> dict:
@@ -793,6 +827,8 @@ def _accept_content_update(store: Store, *, document: dict, task: dict, envelope
         "input_revision_id": task.get("input_revision_id"),
         "resolved_by_task_id": task["task_id"],
     }
+    updated_task["result_refs"] = list(page_refs.values())
+    validate_task_semantics(updated_task)
     task_ref = store.put_json_object(updated_task)
     _replace_task_in_document(new_document, task, task_ref, store)
     new_document["change"] = {
@@ -803,26 +839,20 @@ def _accept_content_update(store: Store, *, document: dict, task: dict, envelope
         "read_set": [{"identity": f"document-revision:{task.get('dispatch_revision')}",
                       "sha256": produced_against}],
     }
-    new_revision = store.commit_change(
-        base_revision=document["revision_id"], document=new_document,
-        operation_id=task["operation_id"],
-    )
-    write_operation_journal(store, OperationJournal(
-        operation_id=task["operation_id"], task_id=task["task_id"],
-        kind=envelope["kind"], produced_against=produced_against,
-        result_digest=result_digest, revision_id=new_revision,
-        usage_events=envelope.get("usage_events") or [],
-    ))
-    return {
+    response = {
         "status": "accepted",
-        "revision_id": new_revision,
+        "revision_id": new_document["revision_id"],
         "new_page_hashes": {pid: page_refs[pid]["sha256"] for pid in changed_ids if pid in page_refs},
         "unchanged_reason": (content_update.get("unchanged_reason") or "").strip() or None,
         "impact_summary": content_update.get("impact_summary"),
-        "result_refs": [],
+        "result_refs": list(page_refs.values()),
         "work_complete": derive_work_complete(new_document, store),
         "next_action": "continue_production",
     }
+
+    return _commit_adoption(store, document=new_document, base_revision=document["revision_id"],
+                            task=task, envelope=envelope, produced_against=produced_against,
+                            result_digest=result_digest, response=response)
 
 
 def accept_result(
@@ -856,6 +886,26 @@ def accept_result(
             f"(task {task_id})/operation_id",
             "operation_id does not match the dispatched task operation",
         )
+
+    # Successful adoption completes the Task in the same pointer swap. New
+    # active tasks have no committed receipt; avoid scanning every old revision
+    # on the normal production path. Terminal retries recover from ancestry.
+    receipt = store.operation_receipt(operation_id) if task.get("status") in (
+        "completed", "cancelled", "superseded", "failed"
+    ) or (_operations_dir(store) / f"{operation_id}.json").is_file() else None
+    if receipt is not None:
+        if task.get("status") == "superseded":
+            raise StaleInputContext(f"(task {task_id})", "task was superseded by newer inputs; run continue")
+        if receipt["request_digest"] != _request_digest(task_id, operation_id, produced_against, envelope):
+            raise TaskConflict("(operation)", "same operation already applied with a different result or request binding")
+        response = receipt["response"]
+        warning = _publish_receipt_cache(store, task=task, envelope=envelope, produced_against=produced_against,
+                                         result_digest=result_digest, response=response)
+        replay = {**response, "status": "already_applied", "same_revision": True,
+                  "operation_result": copy.deepcopy(response)}
+        if warning:
+            replay["journal_warning"] = warning
+        return replay
 
     journal = read_operation_journal(store, operation_id)
     if journal is not None:
@@ -1076,6 +1126,8 @@ def accept_result(
         page_refs[page["page_id"]] = store.put_json_object(page)
     artifact_refs = [store.put_json_object(artifact) for artifact in artifacts]
     review_refs = [store.put_json_object(review) for review in reviews]
+    updated_task["result_refs"] = list(page_refs.values()) + artifact_refs + review_refs
+    validate_task_semantics(updated_task)
     task_ref = store.put_json_object(updated_task)
 
     new_document = bump_revision(
@@ -1151,35 +1203,22 @@ def accept_result(
             "description": envelope.get("notes") or "task result adopted",
             "read_set": [{"identity": f"document-revision:{task.get('dispatch_revision')}", "sha256": produced_against}],
         }
-    new_revision = store.commit_change(
-        base_revision=document["revision_id"],
-        document=new_document,
-        operation_id=operation_id,
-    )
-    write_operation_journal(
-        store,
-        OperationJournal(
-            operation_id=operation_id,
-            task_id=task_id,
-            kind=envelope["kind"],
-            produced_against=produced_against,
-            result_digest=result_digest,
-            revision_id=new_revision,
-            usage_events=envelope.get("usage_events") or [],
-        ),
-    )
-    return {
+    response = {
         "status": "accepted",
-        "revision_id": new_revision,
+        "revision_id": new_document["revision_id"],
         "new_page_hashes": {
             page_id: ref["sha256"] for page_id, ref in page_refs.items()
         },
-        "result_refs": artifact_refs + review_refs,
+        "result_refs": list(page_refs.values()) + artifact_refs + review_refs,
         "work_complete": derive_work_complete(new_document, store),
         "next_action": "auto_view_then_production"
         if envelope["kind"] == "compose"
         else "continue_production",
     }
+
+    return _commit_adoption(store, document=new_document, base_revision=document["revision_id"],
+                            task=task, envelope=envelope, produced_against=produced_against,
+                            result_digest=result_digest, response=response)
 
 
 class CallBlocked(TaskConflict):

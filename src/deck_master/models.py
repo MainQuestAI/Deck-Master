@@ -194,6 +194,10 @@ def validate_review_semantics(review: dict[str, Any]) -> None:
 def validate_document_structure(document: dict[str, Any]) -> None:
     """Schema plus structural checks reachable without loading other objects."""
     validate_schema("document", document)
+    receipt = (document.get("change") or {}).get("operation_receipt")
+    if receipt is not None and receipt["response"]["revision_id"] != document["revision_id"]:
+        raise ModelError("document/change/operation_receipt/response/revision_id",
+                         "operation receipt must name its own Document revision")
     pages = document.get("pages") or []
     page_ids = [entry.get("page_id") for entry in pages]
     if len(page_ids) != len(set(page_ids)):
