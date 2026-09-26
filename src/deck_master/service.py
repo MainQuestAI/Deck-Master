@@ -875,6 +875,15 @@ def _read_input_operation(store: Store, operation_id: str) -> dict | None:
             f"(operation {operation_id})",
             "operation id already used by a different operation type",
         )
+    # Receipts are written before the atomic Document pointer. An interrupted
+    # commit is a replay only when its revision is in committed history.
+    expected = record['result']['revision_id']
+    document = store.load_document()
+    while document['revision_id'] != expected:
+        parent = document.get('parent_revision_id')
+        if not parent:
+            return None
+        document = store.load_document(parent)
     return record
 
 
@@ -882,8 +891,6 @@ def _write_input_operation(store: Store, operation_id: str, request_digest: str,
     directory = store.deck_root / "operations"
     directory.mkdir(parents=True, exist_ok=True)
     path = directory / f"{operation_id}.json"
-    if path.exists():
-        return  # settled concurrently; the committed record stays authoritative
     record = {
         "kind": "input_update",
         "operation_id": operation_id,
@@ -901,11 +908,12 @@ def _normalize_input_patch(patch: dict, *, patch_dir: Path) -> dict:
     unknown = sorted(set(patch) - _INPUT_PATCH_FIELDS)
     if unknown:
         raise ServiceError("(patch)", f"unknown patch fields: {unknown}")
-    reason = (patch.get("reason") or "").strip()
-    if not reason:
+    reason = patch.get("reason")
+    if not isinstance(reason, str) or not reason.strip():
         raise ServiceError("(patch)/reason", "a one-line summary of what changed is required")
+    reason = reason.strip()
 
-    task_patch = patch.get("task_patch") or {}
+    task_patch = patch.get("task_patch", {})
     if not isinstance(task_patch, dict):
         raise ServiceError("(patch)/task_patch", "must be an object")
     unknown_task = sorted(set(task_patch) - _INPUT_TASK_PATCH_FIELDS)
@@ -940,12 +948,15 @@ def _normalize_input_patch(patch: dict, *, patch_dir: Path) -> dict:
             raise ServiceError("(patch)/task_patch/existing_decisions", "must be an array of strings")
         normalized_task["existing_decisions"] = value
 
-    source_changes = patch.get("source_changes") or {}
+    source_changes = patch.get("source_changes", {})
     if not isinstance(source_changes, dict):
         raise ServiceError("(patch)/source_changes", "must be an object")
     unknown_source = sorted(set(source_changes) - {"add", "replace", "remove", "metadata"})
     if unknown_source:
         raise ServiceError("(patch)/source_changes", f"unknown fields: {unknown_source}")
+    for key, value in source_changes.items():
+        if not isinstance(value, list):
+            raise ServiceError(f"(patch)/source_changes/{key}", "must be an array")
 
     def _resolve(item: dict, where: str) -> dict:
         path_value = item.get("path")
@@ -955,9 +966,12 @@ def _normalize_input_patch(patch: dict, *, patch_dir: Path) -> dict:
         if not resolved.is_absolute():
             resolved = patch_dir / resolved
         note = item.get("usage_note")
-        if note is not None and not isinstance(note, str):
+        if "usage_note" in item and not isinstance(note, str):
             raise ServiceError(f"{where}/usage_note", "must be a string")
-        return {"path": str(resolved), "usage_note": note or ""}
+        result = {"path": str(resolved.resolve())}
+        if note is not None:
+            result['usage_note'] = note
+        return result
 
     add = []
     for index, item in enumerate(source_changes.get("add") or []):
@@ -985,6 +999,9 @@ def _normalize_input_patch(patch: dict, *, patch_dir: Path) -> dict:
         unknown_meta = sorted(set(item) - {"source_id", "usage_note", "name"})
         if unknown_meta:
             raise ServiceError(f"(patch)/source_changes/metadata[{index}]", f"unknown fields: {unknown_meta}")
+        for key in ('usage_note', 'name'):
+            if key in item and not isinstance(item[key], str):
+                raise ServiceError(f"(patch)/source_changes/metadata[{index}]/{key}", "must be a string")
         metadata.append({"source_id": item["source_id"],
                          "usage_note": item.get("usage_note"),
                          "name": item.get("name")})
@@ -1059,6 +1076,8 @@ def inputs_update(
         old_digest = compute_input_digest(document)
 
         new_task = {**(document.get("task") or {}), **normalized["task_patch"]}
+        if 'presentation_mode' in normalized['task_patch']:
+            new_task['presentation_mode_source'] = 'provided'
         new_sources = [dict(entry) for entry in document.get("sources") or []]
         by_id = {entry["source_id"]: entry for entry in new_sources}
         diff = {"task_fields_changed": sorted(normalized["task_patch"]),
@@ -1093,7 +1112,9 @@ def inputs_update(
             path = Path(item["path"])
             entry = by_id[source_id]
             replacement = _entry_from_extract(store, path, extract, source_id,
-                                              usage_note=item.get("usage_note") or entry.get("usage_note") or "", data=data)
+                                              usage_note=item.get("usage_note", entry.get("usage_note", "")), data=data)
+            for key in ('external_use', 'restriction'):
+                replacement[key] = entry[key]
             new_sources[new_sources.index(entry)] = replacement
             by_id[source_id] = replacement
             diff["sources_replaced"].append(source_id)
@@ -1121,8 +1142,7 @@ def inputs_update(
 
         probe = {"task": new_task, "sources": new_sources}
         new_digest = compute_input_digest(probe)
-        names_changed = any(item.get("name") is not None
-                            for item in normalized["source_changes"]["metadata"])
+        names_changed = new_sources != document.get('sources', [])
         if new_digest == old_digest:
             result = {"status": "unchanged", "input_digest": new_digest,
                       "input_alignment": input_alignment(document),
@@ -1133,10 +1153,11 @@ def inputs_update(
                     "operation_id": operation_id, "kind": "input_update",
                     "description": "inputs update (display names only)", "read_set": []})
                 bumped["sources"] = new_sources
-                store._commit_locked(base_revision=document["revision_id"], document=bumped,
-                                     operation_id=operation_id, blobs=[])
                 result["revision_id"] = bumped["revision_id"]
             _write_input_operation(store, operation_id, request_digest, result)
+            if names_changed:
+                store._commit_locked(base_revision=document["revision_id"], document=bumped,
+                                     operation_id=operation_id, blobs=[])
             return result
 
         new_document = bump_revision(document, {
@@ -1193,23 +1214,21 @@ def inputs_update(
             produced_against=content_identity(new_document),
         )
         new_document["tasks"] = list(new_document.get("tasks") or []) + [store.put_json_object(task)]
-        new_revision = store._commit_locked(
-            base_revision=document["revision_id"], document=new_document,
-            operation_id=operation_id, blobs=[])
-        refreshed = store.load_document()
-        alignment = input_alignment(refreshed)
+        alignment = input_alignment(new_document)
         result = {
             "status": "updated",
             "input_digest": new_digest,
             "input_alignment": alignment,
-            "revision_id": new_revision,
+            "revision_id": new_document['revision_id'],
             "superseded_tasks": superseded_ids,
             "diff": diff,
             "reason": normalized["reason"],
-            "pending_tasks": [task_summary(store, refreshed, task)],
+            "pending_tasks": [task_summary(store, new_document, task)],
             "next_action": "submit_host_results",
         }
         _write_input_operation(store, operation_id, request_digest, result)
+        store._commit_locked(base_revision=document["revision_id"], document=new_document,
+                             operation_id=operation_id, blobs=[])
         return result
 
 

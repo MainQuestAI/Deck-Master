@@ -23,6 +23,7 @@ from .models import (
     ModelError,
     bump_revision,
     content_identity,
+    compute_input_digest,
     canonical_json_bytes,
     sha256_bytes,
     validate_artifact_semantics,
@@ -304,15 +305,18 @@ def _lookup_task(document: dict, task_id: str, store: Store) -> dict:
 def task_inputs_current(store, document, task):
     if content_identity(document) == task.get('produced_against'):
         return True
-    if not task.get('scope_pages'):
-        return False
     dispatched = store.load_document(task['dispatch_revision'])
     # Task facts are part of the dispatched input: a task-field change
     # (audience, decisions, ...) invalidates scoped results too, even when
     # pages/design/sources are untouched (spec v1.1 §5.4, c93 defect).
-    if (dispatched['task'] != document['task']
-            or dispatched['design_context'] != document['design_context']
-            or dispatched['sources'] != document['sources']):
+    if (compute_input_digest(dispatched) != compute_input_digest(document)
+            or dispatched['design_context'] != document['design_context']):
+        return False
+    # Display names and source paths are not input semantics. A metadata-only
+    # revision keeps even an initial, unscoped compose task usable.
+    if content_identity({**document, 'sources': dispatched['sources']}) == task.get('produced_against'):
+        return True
+    if not task.get('scope_pages'):
         return False
     before = {e['page_id']: e for e in dispatched['pages']}
     after = {e['page_id']: e for e in document['pages']}

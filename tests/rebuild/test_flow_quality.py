@@ -562,6 +562,76 @@ def test_inputs_update_display_name_only_does_not_dispatch(tmp_path: Path) -> No
     assert open_before == open_after
 
 
+def test_rename_source_keeps_existing_compose_task_usable(tmp_path: Path) -> None:
+    project = tmp_path / 'project'
+    created = service.create(project, brief='完整首稿', sources=[_material(tmp_path)])
+    task = created['pending_tasks'][0]
+    store = Store(project)
+    doc = store.load_document()
+    service.inputs_update(project, patch={'reason': '修正显示名', 'source_changes': {'metadata': [
+        {'source_id': doc['sources'][0]['source_id'], 'name': '显示名.md'}]}},
+        base_revision=doc['revision_id'], operation_id='rename-during-compose')
+    assert service.task_status(project, task_id=task['task_id'])['pending_tasks'][0]['project_context']['context_status'] == 'current'
+    result = service.accept_result(project, task_id=task['task_id'], operation_id=task['operation_id'],
+                                   produced_against=task['produced_against'],
+                                   result_payload={'kind': 'compose', **_load_fixture('initial-pages.json')})
+    assert result['status'] == 'accepted'
+
+
+def test_input_update_preserves_restrictions_and_marks_provided_mode(tmp_path: Path) -> None:
+    project = tmp_path / 'project'
+    service.create(project, brief='完整首稿', sources=[_material(tmp_path)])
+    store = Store(project)
+    _raw_commit(store, lambda doc: doc['sources'][0].update(external_use='restricted', restriction='内部材料',
+                                                          usage_note='原用途'))
+    doc = store.load_document()
+    replacement = tmp_path / 'v2.md'
+    replacement.write_text('已确认的第二版')
+    service.inputs_update(project, patch={'reason': '独立阅读与材料升级',
+        'task_patch': {'presentation_mode': 'read_alone'}, 'source_changes': {'replace': [
+            {'source_id': doc['sources'][0]['source_id'], 'path': str(replacement), 'usage_note': ''}]}},
+        base_revision=doc['revision_id'], operation_id='replace-restricted')
+    after = store.load_document()
+    assert after['task']['presentation_mode_source'] == 'provided'
+    assert after['sources'][0]['external_use'] == 'restricted'
+    assert after['sources'][0]['restriction'] == '内部材料'
+    assert after['sources'][0].get('usage_note', '') == ''
+
+
+def test_input_update_receipt_survives_failure_after_pointer_swap(tmp_path: Path, monkeypatch) -> None:
+    project, store, _ = _setup_project_with_pages(tmp_path)
+    patch = {'reason': '更换受众', 'task_patch': {'audience': '财务团队'}}
+    before = store.load_document()
+    original = Store._commit_locked
+    def interrupted(self, **kwargs):
+        original(self, **kwargs)
+        raise OSError('process interrupted after pointer swap')
+    monkeypatch.setattr(Store, '_commit_locked', interrupted)
+    with pytest.raises(OSError):
+        service.inputs_update(project, patch=patch, base_revision=before['revision_id'], operation_id='durable-input')
+    monkeypatch.setattr(Store, '_commit_locked', original)
+    after = store.load_document()
+    result = service.inputs_update(project, patch=patch, base_revision=before['revision_id'], operation_id='durable-input')
+    assert result['revision_id'] == after['revision_id']
+    assert store.load_document() == after
+
+
+def test_uncommitted_input_receipt_is_not_reported_as_success(tmp_path: Path, monkeypatch) -> None:
+    project, store, _ = _setup_project_with_pages(tmp_path)
+    before = store.load_document()
+    patch = {'reason': '更换受众', 'task_patch': {'audience': '财务团队'}}
+    original = Store._commit_locked
+    def interrupted(self, **kwargs):
+        raise OSError('process interrupted before pointer swap')
+    monkeypatch.setattr(Store, '_commit_locked', interrupted)
+    with pytest.raises(OSError):
+        service.inputs_update(project, patch=patch, base_revision=before['revision_id'], operation_id='retry-input')
+    assert store.load_document() == before
+    monkeypatch.setattr(Store, '_commit_locked', original)
+    result = service.inputs_update(project, patch=patch, base_revision=before['revision_id'], operation_id='retry-input')
+    assert result['revision_id'] == store.load_document()['revision_id'] != before['revision_id']
+
+
 def test_irrelevant_material_update_still_awaits_host_judgment(tmp_path: Path) -> None:
     project, store, _ = _setup_project_with_pages(tmp_path)
     document = store.load_document()
