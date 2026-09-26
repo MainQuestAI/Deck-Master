@@ -108,7 +108,7 @@ def project_view(project_dir: Path | str, *, revision: str | None = None) -> dic
         "evidence_level": "engineering",
     }
     if alignment == "needs_reconciliation":
-        # Read-only banner for the workbench; editing waits for reconciliation.
+        # Read-only notice; existing page editing remains available.
         view["reconciliation"] = {
             "notice": "待按新要求更新",
             "reason": _latest_input_update_reason(store, document),
@@ -139,8 +139,7 @@ def _broken_page_entry(entry: dict, detail: str) -> dict[str, Any]:
 
 
 def _latest_input_update_reason(store: Store, document: dict) -> str | None:
-    """Why the inputs moved: the open input_revision work order, else the
-    latest committed input_update description."""
+    """Show the user's change reason, never the Host's execution instructions."""
     for ref in document.get("tasks") or []:
         try:
             task = store.read_object_json(ref)
@@ -148,8 +147,16 @@ def _latest_input_update_reason(store: Store, document: dict) -> str | None:
             continue
         if task.get("kind") == "compose" and task.get("intent") == "input_revision" \
                 and task.get("status") in ("awaiting_host", "running"):
-            return task.get("instruction")
-    revision = document.get("parent_revision_id")
+            revision = task.get("dispatch_revision")
+            if revision:
+                try:
+                    dispatched = store.load_document(revision)
+                except StoreError:
+                    continue
+                change = dispatched.get("change") or {}
+                if change.get("kind") == "input_update":
+                    return change.get("description")
+    revision = document.get("revision_id")
     visited = set()
     while revision and revision not in visited and len(visited) < 200:
         visited.add(revision)

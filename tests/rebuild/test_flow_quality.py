@@ -969,7 +969,12 @@ def test_view_carries_reconciliation_banner_data(tmp_path: Path) -> None:
     view = project_view(project)
     assert view["input_alignment"] == "needs_reconciliation"
     assert view["reconciliation"]["notice"] == "待按新要求更新"
-    assert "input-update-view" in (view["reconciliation"]["reason"] or "")
+    assert view["reconciliation"]["reason"] == patch["reason"]
+    # A later display-name-only commit must not hide the outstanding reason.
+    service.inputs_update(project, patch={"reason": "只改显示名", "source_changes": {"metadata": [
+        {"source_id": id_by_name["company.md"], "name": "公司简介.md"}]}},
+        base_revision=store.load_document()["revision_id"], operation_id="rename-after-input-update")
+    assert project_view(project)["reconciliation"]["reason"] == patch["reason"]
     # After adoption the banner data disappears (covered by the roundtrip test's
     # alignment); legacy projects report legacy_current without content_basis.
     _raw_commit(store, lambda doc: doc.pop("content_basis", None))

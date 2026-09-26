@@ -265,8 +265,7 @@
       banner = document.createElement("div");
       banner.id = "reconciliation-banner";
       banner.className = "reconciliation-banner";
-      const main = document.querySelector("main") || document.body;
-      main.prepend(banner);
+      document.querySelector("main").before(banner);
     }
     banner.replaceChildren();
     const title = document.createElement("strong");
