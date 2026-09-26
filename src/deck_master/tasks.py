@@ -659,6 +659,14 @@ def _validate_content_update_request(envelope: dict, document: dict, task: dict,
             "(result)/content_update",
             "content_update is only accepted by compose tasks dispatched with intent=input_revision",
         )
+    allowed = {"input_digest", "upsert_pages", "remove_page_ids", "page_order",
+               "impact_summary", "unchanged_reason"}
+    unknown = sorted(set(content_update) - allowed)
+    if unknown:
+        raise EnvelopeError("(result)/content_update", f"unknown fields: {unknown}")
+    for field in ("impact_summary", "unchanged_reason"):
+        if field in content_update and not isinstance(content_update[field], str):
+            raise EnvelopeError(f"(result)/content_update/{field}", "must be a string")
     for slot in ("pages", "page_order", "artifact_specs", "reviews"):
         if envelope.get(slot):
             raise EnvelopeError(
@@ -673,15 +681,15 @@ def _validate_content_update_request(envelope: dict, document: dict, task: dict,
             "content_update input_digest does not match the dispatched input revision; "
             "read the new inputs and resubmit",
         )
-    upserts = content_update.get("upsert_pages") or []
-    removes = content_update.get("remove_page_ids") or []
+    upserts = content_update.get("upsert_pages", [])
+    removes = content_update.get("remove_page_ids", [])
     if not isinstance(upserts, list) or not all(
             isinstance(page, dict) and isinstance(page.get("page_id"), str) and page["page_id"]
             for page in upserts):
         raise EnvelopeError("(result)/content_update/upsert_pages",
                             "must be an array of complete Page v2 objects")
-    if not isinstance(removes, list) or len(set(removes)) != len(removes) or \
-            not all(isinstance(pid, str) and pid for pid in removes):
+    if not isinstance(removes, list) or not all(isinstance(pid, str) and pid for pid in removes) or \
+            len(set(removes)) != len(removes):
         raise EnvelopeError("(result)/content_update/remove_page_ids",
                             "must be unique page ids currently in the deck")
     if not upserts and not removes and not (content_update.get("unchanged_reason") or "").strip():
@@ -692,6 +700,8 @@ def _validate_content_update_request(envelope: dict, document: dict, task: dict,
     upsert_ids = [page["page_id"] for page in upserts]
     if len(set(upsert_ids)) != len(upsert_ids):
         raise EnvelopeError("(result)/content_update/upsert_pages", "duplicate page_id")
+    if set(upsert_ids) & set(removes):
+        raise EnvelopeError("(result)/content_update", "a page cannot be both upserted and removed")
     old_ids = [entry["page_id"] for entry in document.get("pages") or []]
     ghosts = [pid for pid in removes if pid not in old_ids]
     if ghosts:
@@ -829,6 +839,8 @@ def accept_result(
 
     journal = read_operation_journal(store, operation_id)
     if journal is not None:
+        if task.get("status") == "superseded":
+            raise StaleInputContext(f"(task {task_id})", "task was superseded by newer inputs; run continue")
         if journal.get("result_digest") == result_digest:
             return {
                 "status": "already_applied",
@@ -887,7 +899,8 @@ def accept_result(
                 usage_events=envelope.get("usage_events") or [],
             ),
         )
-        raise TaskConflict(
+        conflict = StaleInputContext if task.get("status") == "superseded" else TaskConflict
+        raise conflict(
             f"(task {task_id})", "result arrived after cancellation; call facts were settled"
         )
 
@@ -924,6 +937,9 @@ def accept_result(
         document = store.load_document()
     _validate_content_envelope(envelope)
     content_update = envelope.get("content_update")
+    if task.get("intent") == "input_revision" and content_update is None:
+        raise EnvelopeError("(result)/content_update",
+                            "input_revision requires content_update; full pages cannot replace the deck")
     if content_update is not None:
         return _accept_content_update(
             store, document=document, task=task, envelope=envelope,

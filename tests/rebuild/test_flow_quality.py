@@ -631,9 +631,50 @@ def test_superseded_task_late_result_is_refused(tmp_path: Path) -> None:
     task = opened["pending_tasks"][0]
     document = store.load_document()
     page_entry = next(e for e in document["pages"] if e["page_id"] == task["scope_pages"][0])
-    service.task_cancel(project, task_id=task["task_id"], reason="user stop")
-    with pytest.raises(TaskConflict):
-        _accept_blueprint_envelope(project, task, page_entry, _png_bytes())
+    service.inputs_update(project, patch={"task_patch": {"audience": "董事会"},
+                                          "reason": "用户改为董事会汇报"},
+                          base_revision=document["revision_id"], operation_id="supersede-input")
+    from deck_master.tasks import StaleInputContext
+    for _ in range(2):
+        with pytest.raises(StaleInputContext):
+            _accept_blueprint_envelope(project, task, page_entry, _png_bytes())
+    assert store.load_document()["pages"] == document["pages"]
+
+
+def test_input_revision_cannot_bypass_partial_update_with_full_pages(tmp_path: Path) -> None:
+    project, store, _ = _setup_project_with_pages(tmp_path)
+    updated = service.inputs_update(
+        project, patch={"task_patch": {"audience": "董事会"}, "reason": "调整受众"},
+        base_revision=store.load_document()["revision_id"], operation_id="changed-audience")
+    task = updated["pending_tasks"][0]
+    before = store.load_document()
+    payload = {"kind": "compose", **_load_fixture("initial-pages.json")}
+    with pytest.raises(EnvelopeError, match="content_update"):
+        service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+                              produced_against=task["produced_against"], result_payload=payload)
+    assert store.load_document() == before
+
+
+@pytest.mark.parametrize("invalid", [
+    {"remove_page_ids": [{}]}, {"upsert_pages": {}},
+    {"unchanged_reason": 5}, {"impact_summary": []}, {"unknown": "ignored"},
+])
+def test_content_update_bad_shapes_are_controlled_errors(tmp_path: Path, invalid: dict) -> None:
+    project, store, _ = _setup_project_with_pages(tmp_path)
+    updated = service.inputs_update(
+        project, patch={"task_patch": {"audience": "董事会"}, "reason": "调整受众"},
+        base_revision=store.load_document()["revision_id"], operation_id="bad-result-shape")
+    task = updated["pending_tasks"][0]
+    before = store.load_document()
+    update = {"input_digest": updated["input_digest"], "upsert_pages": [],
+              "remove_page_ids": [], "page_order": [e["page_id"] for e in before["pages"]],
+              "impact_summary": "逐页核对后没有正文变化", "unchanged_reason": "现有正文适合新受众",
+              **invalid}
+    with pytest.raises(EnvelopeError):
+        service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+                              produced_against=task["produced_against"],
+                              result_payload={"kind": "compose", "content_update": update})
+    assert store.load_document() == before
 
 
 def test_content_update_roundtrip_changes_only_target_page(tmp_path: Path) -> None:
