@@ -6,7 +6,7 @@
 
 `deck-master workbench` 可在没有项目时启动独立 launcher。`--project` 显式打开并注册项目；`--registry` 指定独立注册表，默认在用户配置目录。支持 `--port 0`、`--no-open`、`--ui legacy` 和只停止所选服务的 `--stop`。新命令默认地址为 `/v2/`；当前核心切片没有新界面资源时返回 `core_ready_ui_unavailable`、退出 3，不打开空白页。旧 `view --open` 仍返回 `/`。
 
-注册表仅保存用户显式选择的 canonical path 和基本展示信息；读取列表不扫描目录，阅读位置从项目 UI-state 读取，移除入口不删除项目。新建要求名称、用途、受众和新目录，先在同一父目录准备完整项目，再发布 `.deckmaster`。注册失败保留完整项目及恢复路径；输入错误或准备失败不发布半成项目。中文目录名得到有效内部 project_id，展示名保留中文。
+注册表仅保存用户显式选择的 canonical path 和基本展示信息；读取列表不扫描目录，阅读位置从项目 UI-state 读取，移除入口不删除项目。新建要求名称、用途、受众和新目录，支持可选页数上限，先在同一父目录准备完整项目，再发布 `.deckmaster`。注册失败保留完整项目及恢复路径；输入错误或准备失败不发布半成项目。中文目录名得到有效内部 project_id，展示名保留中文。
 
 新建复用 `service.create(..., project_format='workbench.v3')`，只登记一个 compose 任务。空材料保持事实缺口。补材料调用原 `inputs_update`，旧 compose 失效；交接只读取最新 eligible compose，反复交接不写版本、不追加任务、不执行模型。Host 仍走 CLI 和唯一 Deck Master Skill。
 
@@ -28,7 +28,7 @@ launcher 与项目分别使用 detached 进程。端口由绑定 `127.0.0.1:0` �
 
 pending payload 单独保存其 operation_id 和 digest；后写草稿不会替换待核实请求，也不表示请求已业务提交。恢复文件校验版本、大小、hash、项目与基准；冲突保存为独立草稿，不提交业务、不采用产物、不重放模型。文件只携带数据，不带服务 token；结构中的凭据、本机绝对路径和执行元数据会拒绝，用户文本不会被静默删改，界面后续须标明可能含内部提示词。
 
-真实服务换端口后只返回项目已经持久化的草稿；未发送副本须显式导入恢复文件。历史恢复不回滚个人草稿。单个损坏草稿局部报错，不隐藏其它草稿。浏览器临时缓冲、debounce、ACK 状态、下载/导入 UI 和冲突保留界面尚待前端切片。
+真实服务换端口后只返回项目已经持久化的草稿；未发送副本须显式导入恢复文件。历史恢复不回滚个人草稿。单个损坏草稿局部报错，不隐藏其它草稿。阅读位置覆盖五个工作面、单页、层、固定版本、缩放与已存在的任务定位。浏览器临时缓冲、debounce、ACK 状态、下载/导入 UI 和冲突保留界面尚待前端切片。
 
 ## API 与可运行证据
 
@@ -48,7 +48,7 @@ PYTHONPATH=src python examples/workbench/w03_first_run.py --out /tmp/w03-core-ex
 PYTHONPATH=src python -m pytest -q tests/rebuild/test_workbench_services.py tests/rebuild/test_ui_journal.py
 ```
 
-[原始检查](w03/core/checks.json)与逐步输入/输出已归档；本机路径换为逻辑标签，不保存 token。源码检查期间首轮全核心回归为 681 passed / 4 failed / 29 deselected，4 个失败均在安装检查。修复后相关检查为 61 passed / 3 deselected；共享事务、任务回执、schema 与包边界再检查 35 passed。此前新服务、journal、旧工作台及固定版读取组合为 68 passed。Ruff、diff 检查通过。
+[原始检查](w03/core/checks.json)与逐步输入/输出已归档；本机路径换为逻辑标签，不保存 token。源码检查期间首轮全核心回归为 681 passed / 4 failed / 29 deselected，4 个失败均在安装检查。修复后相关检查为 61 passed / 3 deselected；共享事务、任务回执、schema 与包边界再检查 35 passed。此前新服务、journal、旧工作台及固定版读取组合为 68 passed。补齐五区路由、缩放、待办定位与新建页数上限后，最终核心定向 44 passed。Ruff、diff 检查通过。
 
 安装测试修复两点：wheel RECORD 的随机 base64 摘要可能碰巧符合 key 字符模式，现在只对已逐项核实的 checksum 字段免误报，所有实际文件和名称仍扫描，错误 checksum 仍拒绝；隔离 pip 不再继承源码 PYTHONPATH，且 stdlib-distutils workaround 仅用于 venv bootstrap，避免 3.12 sdist 后端缺失。没有降低生产校验，也没有改真实 HOME 安装。
 

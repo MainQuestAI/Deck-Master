@@ -262,7 +262,7 @@ def test_actual_port_restart_restores_ack_but_not_unsent_and_can_import(project)
 def test_position_cross_project_and_historical_reads(project, tmp_path):
     info = journal.project_info(project)
     value = {'schema_version': 'ui_position.v1', 'project_id': info['project_id'], 'project_identity': info['project_identity'],
-             'page_id': 'p02', 'surface': 'page', 'layer': 'original_image', 'revision': info['revision_id']}
+             'page_id': 'p02', 'surface': 'page', 'layer': 'original_image', 'revision': info['revision_id'], 'zoom': 1.5, 'task_id': None}
     before = business_state(project)
     journal.save_position(project, position=value)
     assert journal.read_position(project)['position'] == value
@@ -294,3 +294,18 @@ def test_synthetic_factory_images_deterministic_and_browser_readonly(tmp_path):
     finally:
         server.stop()
     assert business_state(a) == before
+
+
+@pytest.mark.parametrize('surface', ['overview', 'content', 'gallery', 'style', 'runs', 'page'])
+def test_every_work_surface_and_task_location_can_be_restored(project, surface):
+    store = Store(project)
+    info = journal.project_info(project)
+    task_id = store.read_object_json(store.load_document()['tasks'][0])['task_id']
+    value = {'schema_version': 'ui_position.v1', 'project_id': info['project_id'], 'project_identity': info['project_identity'],
+             'page_id': 'p01', 'surface': surface, 'layer': 'original_image', 'revision': None, 'zoom': 1.25, 'task_id': task_id}
+    journal.save_position(project, position=value)
+    assert journal.read_position(project)['position'] == value
+    with pytest.raises(LocalStateError, match='task'):
+        journal.save_position(project, position={**value, 'task_id': 'foreign-task'})
+    with pytest.raises(ModelError):
+        journal.save_position(project, position={**value, 'zoom': 100})

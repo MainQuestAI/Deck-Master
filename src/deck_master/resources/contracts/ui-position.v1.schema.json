@@ -27,11 +27,12 @@
     },
     "surface": {
       "enum": [
-        "deck",
+        "overview",
         "content",
-        "page",
-        "tasks",
-        "delivery"
+        "gallery",
+        "style",
+        "runs",
+        "page"
       ]
     },
     "layer": {
@@ -45,6 +46,22 @@
       ]
     },
     "revision": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "zoom": {
+      "type": "number",
+      "minimum": 0.25,
+      "maximum": 3
+    },
+    "task_id": {
       "anyOf": [
         {
           "type": "string",

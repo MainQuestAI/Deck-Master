@@ -120,7 +120,7 @@ def test_registry_refuses_old_or_invalid_project_without_initialization(tmp_path
 def test_create_material_update_handoff_preserves_one_eligible_compose(tmp_path):
     reg = tmp_path / 'registry.json'
     p = tmp_path / '中文项目'
-    result = registry.create_project(reg, path=str(p), title='中文名称', brief='整理材料', audience='内部读者')
+    result = registry.create_project(reg, path=str(p), title='中文名称', brief='整理材料', audience='内部读者', page_limit=12)
     assert result['registered'] and result['model_started'] is False
     original = result['pending_tasks'][0]['task_id']
     assert result['pending_tasks'][0]['staging_dir'].startswith(str(p / '.deckmaster' / 'staging'))
@@ -128,6 +128,7 @@ def test_create_material_update_handoff_preserves_one_eligible_compose(tmp_path)
     handoff = launcher.compose_handoff(p)
     assert handoff['task_id'] == original and handoff['model_started'] is False
     assert Store(p).load_document()['sources'] == []
+    assert Store(p).load_document()['task']['page_limit'] == 12
     source = tmp_path / 'facts.md'
     source.write_text('# 合成材料\n三个步骤，未验证成效。')
     store = Store(p)

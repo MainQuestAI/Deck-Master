@@ -114,13 +114,14 @@ class LauncherHandler(WorkbenchHandler):
             elif self.path == "/api/projects/sample":
                 if data:
                     raise LocalStateError("body", "sample creation takes no arbitrary paths")
-                from .local_state import safe_path
+                from .local_state import local_lock, safe_path
                 from .samples import create_sample, sample_info
                 sample = safe_path(self.registry_path.parent, 'samples', 'workbench-v1')
-                if not sample.exists():
-                    create_sample(sample)
-                elif not sample_info(sample):
-                    raise LocalStateError('sample', 'sample location is occupied; use a different registry directory')
+                with local_lock(safe_path(self.registry_path.parent, 'sample.start.lock')):
+                    if not sample.exists():
+                        create_sample(sample)
+                    elif not sample_info(sample):
+                        raise LocalStateError('sample', 'sample location is occupied; use a different registry directory')
                 result = registry.register(self.registry_path, sample)
             elif self.path == "/api/projects/open":
                 if set(data) - {"entry_id", "ui"}:

@@ -89,7 +89,7 @@ def listing(registry):
     return {"schema_version": "project_registry.v1", "projects": entries}
 
 
-def create_project(registry, *, path, title, brief, audience, sources=None):
+def create_project(registry, *, path, title, brief, audience, sources=None, page_limit=None):
     """Prepare a complete project privately, publish it, then register explicitly.
 
     Registry failures leave a complete project that can be registered again;
@@ -102,6 +102,8 @@ def create_project(registry, *, path, title, brief, audience, sources=None):
     for key, value in (("title", title), ("brief", brief), ("audience", audience)):
         if not isinstance(value, str) or not value.strip():
             raise LocalStateError(key, "name, purpose and audience are required")
+    if page_limit is not None and (type(page_limit) is not int or page_limit < 1):
+        raise LocalStateError("page_limit", "page limit must be a positive integer")
     target = absolute_path(path, field="project")
     target = safe_path(target.parent.resolve(), target.name)
     if not target.parent.is_dir() or target.exists():
@@ -114,7 +116,7 @@ def create_project(registry, *, path, title, brief, audience, sources=None):
     stage = stage_root / target.name
     try:
         result = service.create(stage, brief=brief, title=title, audience=audience,
-                                sources=sources or [], project_format="workbench.v3")
+                                sources=sources or [], page_limit=page_limit, project_format="workbench.v3")
         # mkdir reserves the destination without replacing an existing folder.
         target.mkdir()
         try:

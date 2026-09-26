@@ -220,6 +220,9 @@ def save_position(project, *, position):
     base = load_snapshot(store, position["revision"])
     if position["page_id"] is not None and position["page_id"] not in {p["page_id"] for p in base["pages"]}:
         raise LocalStateError("page_id", "position page is not in this revision")
+    if position.get("task_id") is not None and position["task_id"] not in {
+            store.read_object_json(ref)["task_id"] for ref in base["tasks"]}:
+        raise LocalStateError("task_id", "position task is not in this revision")
     path = _position_path(store)
     with local_lock(safe_path(path.parent, "position.lock")):
         record = {"position": position, "digest": digest(position), "updated_at": time.time()}
