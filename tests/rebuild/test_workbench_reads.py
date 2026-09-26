@@ -221,6 +221,11 @@ def test_stored_prompts_not_recomputed_or_guessed_as_same_invocation(tmp_path, m
     assert lineage["prompts"]["submitted"]["observer"] == "host_reported"
     assert lineage["prompts"]["parameters"]["status"] == "not_recorded"
     assert "permitted_asset_files" not in json.dumps(lineage)
+    (project / doc["pages"][0]["page"]["path"]).write_bytes(b"broken page input")
+    broken_input = workbench.page_lineage(project, "p01")
+    assert broken_input["stages"]["content"]["existence"] == "unreadable"
+    assert broken_input["prompts"]["prepared"] == lineage["prompts"]["prepared"]
+    assert broken_input["prompts"]["submitted"] == lineage["prompts"]["submitted"]
     (project / obj["file"]["path"]).unlink()
     missing_image = workbench.page_lineage(project, "p01")
     assert missing_image["stages"]["blueprint"]["existence"] == "unreadable"

@@ -16,5 +16,12 @@
     "real_render_312": "success",
     "group_report": "success",
     "run_id": 36241872642
+  },
+  "prompt_input_isolation_followup": {
+    "test_file": "tests/rebuild/test_workbench_reads.py",
+    "passed": 21,
+    "failed": 0,
+    "elapsed_seconds": 11.12,
+    "ruff": "passed"
   }
 }

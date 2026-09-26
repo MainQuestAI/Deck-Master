@@ -331,10 +331,16 @@ def _prompt_records(ctx, entry, artifact):
                 raise ValueError("not a task")
             if task.get("kind") != "blueprint" or entry["page_id"] not in (task.get("scope_pages") or []):
                 continue
-            for ref in task.get("inputs") or []:
+        except READ_FAILURES:
+            errors.append(object_error())
+            continue
+        for ref in task.get("inputs") or []:
+            try:
                 if not ref["path"].endswith(".json"):
                     continue
                 request = ctx.read(ref)
+                if not isinstance(request, dict):
+                    continue
                 if request.get("schema_version") != "deck_blueprint_request.v1" or request.get("page_id") != entry["page_id"]:
                     continue
                 if not isinstance(request.get("prompt"), str) or sha256_bytes(request["prompt"].encode("utf-8")) != request.get("prompt_sha256"):
@@ -347,8 +353,10 @@ def _prompt_records(ctx, entry, artifact):
                                  "state": "prepared", "observer": "core_frozen",
                                  "output_relation": "known" if linked else "derived" if call_link else "unknown",
                                  "basis": "task_result_ref" if linked else "invocation_ref" if call_link else "task_scope_only"})
-        except READ_FAILURES:
-            errors.append(object_error())
+            except READ_FAILURES:
+                # One lost Page/other input must not hide the separate frozen
+                # request still present in this task's remaining inputs.
+                errors.append(object_error())
     actual_ref = (artifact.get("provenance") or {}).get("submitted_prompt") if artifact else None
     actual = {"state": "not_recorded", "ref": actual_ref, "observer": "unknown", "text": None}
     if artifact is None and entry.get("blueprint"):
