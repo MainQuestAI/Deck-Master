@@ -1,4 +1,19 @@
-# W01 read-model example
+# Workbench examples
+
+## W02 task accept recovery
+
+```sh
+PYTHONPATH=src python examples/workbench/w02_recovery.py --out /tmp/w02-recovery
+```
+
+This creates a temporary synthetic project, crashes a child process immediately
+after task adoption and before receipt publication, makes a later independent
+commit, and retries through the public CLI. It records the real request IDs,
+stable receipt, CLI response, rebuilt cache and pointer hash. The original
+adoption is recovered without moving current backward. No Host/model call is
+made; this is not W02's real tool-observation acceptance.
+
+## W01 read model
 
 Run from a source checkout with the project's Python dependencies installed:
 

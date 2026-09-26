@@ -1,0 +1,19 @@
+{
+  "format": "operation_receipt.v1",
+  "request_digest": "a1a463b2f880686db114d48bff79a74d9494adcfeac23dc46df1edd15a9936c8",
+  "response": {
+    "new_page_hashes": {
+      "synthetic-page": "6e1d8403f1834a25bfee406e52d0c5bbec6754be72fb36f85ead398853976c8a"
+    },
+    "next_action": "auto_view_then_production",
+    "result_refs": [
+      {
+        "path": ".deckmaster/objects/6e/6e1d8403f1834a25bfee406e52d0c5bbec6754be72fb36f85ead398853976c8a.json",
+        "sha256": "6e1d8403f1834a25bfee406e52d0c5bbec6754be72fb36f85ead398853976c8a"
+      }
+    ],
+    "revision_id": "f2fe4df699684f9796ab91087f878a0d",
+    "status": "accepted",
+    "work_complete": true
+  }
+}

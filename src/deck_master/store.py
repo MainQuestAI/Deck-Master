@@ -19,6 +19,7 @@ new (AC-S01); bad bytes can never overwrite existing objects (AC-S02).
 from __future__ import annotations
 
 import contextlib
+import copy
 import fcntl
 import json
 import os
@@ -34,6 +35,7 @@ from .models import (
     sha256_bytes,
     validate_document_semantics,
     validate_ref,
+    validate_schema,
 )
 
 CURRENT_FORMAT = "deckmaster-current.v1"
@@ -230,6 +232,7 @@ class Store:
         operation_id: str,
         read_set: list[dict[str, str]] | None = None,
         cancelled_task_check: Callable[[], bool] | None = None,
+        operation_receipt: dict[str, Any] | None = None,
     ) -> str:
         """Atomic change commit; returns the new revision id.
 
@@ -246,6 +249,7 @@ class Store:
                 operation_id=operation_id,
                 read_set=read_set,
                 cancelled_task_check=cancelled_task_check,
+                operation_receipt=operation_receipt,
             )
 
     def _commit_locked(
@@ -257,9 +261,16 @@ class Store:
         operation_id: str | None = None,
         read_set: list[dict[str, str]] | None = None,
         cancelled_task_check: Callable[[], bool] | None = None,
+        operation_receipt: dict[str, Any] | None = None,
     ) -> str:
         if cancelled_task_check is not None and cancelled_task_check():
             raise OperationCancelled("(commit)", "operation cancelled before pointer swap")
+        if operation_receipt is not None:
+            if (not isinstance(operation_receipt, dict) or not isinstance(operation_receipt.get("response"), dict)
+                    or operation_receipt["response"].get("revision_id") != document.get("revision_id")):
+                raise StoreError("operation_receipt", "response must name this commit's revision")
+            document = {**document, "change": {**document["change"],
+                        "operation_receipt": copy.deepcopy(operation_receipt)}}
         effective_read_set = read_set
         if effective_read_set is None:
             effective_read_set = (document.get("change") or {}).get("read_set") or []
@@ -299,6 +310,27 @@ class Store:
         pointer = {"format": CURRENT_FORMAT, "revision_id": document["revision_id"]}
         _atomic_write_bytes(self.deck_root / "current.json", canonical_json_bytes(pointer))
         return document["revision_id"]
+
+    def operation_receipt(self, operation_id: str) -> dict[str, Any] | None:
+        """Recover only facts saved with the committed pointer, never an orphan.
+
+        Older changes have no request digest. Do not infer one from their ID.
+        The operations directory is a rebuildable cache, not another ledger.
+        """
+        from .snapshots import committed_snapshots
+
+        _validate_operation_id(operation_id)
+        for document in committed_snapshots(self):
+            change = document.get("change") or {}
+            if change.get("operation_id") != operation_id:
+                continue
+            receipt = change.get("operation_receipt")
+            if receipt is not None:
+                validate_schema("document", document)
+                if receipt["response"]["revision_id"] != document["revision_id"]:
+                    raise StoreError("operation_receipt", "stored response revision differs from its commit")
+            return copy.deepcopy(receipt)
+        return None
 
     # ---------- locks and staging ----------
 

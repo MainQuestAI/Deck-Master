@@ -530,6 +530,41 @@
               }
             }
           }
+        },
+        "operation_receipt": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "format",
+            "request_digest",
+            "response"
+          ],
+          "properties": {
+            "format": {
+              "const": "operation_receipt.v1"
+            },
+            "request_digest": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "response": {
+              "type": "object",
+              "required": [
+                "status",
+                "revision_id"
+              ],
+              "properties": {
+                "status": {
+                  "type": "string"
+                },
+                "revision_id": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+                }
+              },
+              "additionalProperties": true
+            }
+          }
         }
       }
     },

@@ -1,7 +1,7 @@
 {
   "baseline": "d1c7c4600cb0fc781070116ed8cc8a1ff6b8b7ca",
-  "branch": "codex/workbench-w01",
-  "active_package": "W01",
+  "branch": "codex/workbench-w02",
+  "active_package": "W02",
   "sequence": [
     "W01.core",
     "W02",
@@ -19,7 +19,7 @@
   ],
   "packages": {
     "W01": {
-      "status": "core_verified_pending_integration",
+      "status": "slice_merged",
       "accepted": false,
       "implementation_commit": "b0ac9e5c00ffa2b975f3d9f2e02382e9cf7adf8a",
       "evidence": "W01.md",
@@ -28,11 +28,14 @@
         "W01-AC01 full 300x5x3 pressure with background updates"
       ],
       "reference_safety_commit": "8effeb352d72f9c500e37740307df2cc7ceb5a4f",
-      "pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/41"
+      "pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/41",
+      "merge_commit": "ea4b5b8fa1e4e4e3444b6cd8861f83f5fcc61468"
     },
     "W02": {
-      "status": "planned",
-      "accepted": false
+      "status": "recovery_core_verified",
+      "accepted": false,
+      "baseline": "ea4b5b8fa1e4e4e3444b6cd8861f83f5fcc61468",
+      "evidence": "W02.md"
     },
     "W03": {
       "status": "planned",
@@ -152,8 +155,11 @@
     },
     "W02-AC06": {
       "owner": "W02",
-      "status": "open",
-      "evidence": []
+      "status": "partial",
+      "evidence": [
+        "W02.md"
+      ],
+      "evidence_level": "core/CLI/process-fault"
     },
     "W02-AC07": {
       "owner": "W02",

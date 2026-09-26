@@ -1,0 +1,18 @@
+{
+  "status": "passed",
+  "synthetic": true,
+  "evidence_level": "core/CLI/process-fault",
+  "crash_exit": 77,
+  "replay_exit": 0,
+  "applied_revision": "f2fe4df699684f9796ab91087f878a0d",
+  "current_revision": "e136538bc1054cbca92861b774a1d449",
+  "pointer_unchanged_sha256": "675e36f8249970157a371c47c8c44709384fe9627f06e99c25828494fb5556b9",
+  "operation_result_unchanged": true,
+  "receipt_cache_rebuilt": true,
+  "host_calls": 0,
+  "environment": {
+    "python": "3.12.12",
+    "os": "macOS-27.0-arm64-arm-64bit"
+  },
+  "source_command": "PYTHONPATH=src python examples/workbench/w02_recovery.py --out <new-directory>"
+}
