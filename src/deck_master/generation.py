@@ -43,12 +43,13 @@ def check_host(task, declaration=None):
     if not task.get("protocol_version"):
         return
     declaration = declaration if declaration is not None else task.get("host_protocol") or {}
-    if (task.get("protocol_version") != PROTOCOL or not isinstance(declaration, dict)
+    protocol = task.get("protocol_version")
+    if (protocol not in (PROTOCOL, "compose.v1") or not isinstance(declaration, dict)
             or not all(isinstance(declaration.get(k), list) and all(isinstance(v, str) for v in declaration[k])
                        for k in ("supported_protocols", "capabilities"))
-            or PROTOCOL not in declaration["supported_protocols"]
+            or protocol not in declaration["supported_protocols"]
             or not set(task.get("required_capabilities") or []) <= set(declaration["capabilities"])):
-        raise _error("host_protocol_unsupported", "host_protocol", "this task requires generation.v1 and its declared capabilities")
+        raise _error("host_protocol_unsupported", "host_protocol", f"this task requires {protocol} and its declared capabilities")
 
 
 def prepared_input(store, document, task):

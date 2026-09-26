@@ -28,7 +28,8 @@ def _cached_json(root, path, digest, signature):
     if isinstance(obj, dict):
         kind = {"deck_page_package.v2": "page", "deck_artifact.v1": "artifact",
                 "deck_task.v1": "task", "deck_review.v1": "review", "generation_request.v1": "generation_request",
-                "generation_attempt.v1": "generation_attempt", "tool_observation.v1": "tool_observation"}.get(obj.get("schema_version"))
+                "generation_attempt.v1": "generation_attempt", "tool_observation.v1": "tool_observation",
+                "content_plan.v1": "content_plan"}.get(obj.get("schema_version"))
         if kind:
             validate_schema(kind, obj)
     return obj
@@ -207,6 +208,7 @@ def _deck_output(ctx):
 
 
 def workbench_summary(project_dir, *, revision=None):
+    from .content_plan import projection
     store = Store(project_dir)
     doc = load_snapshot(store, revision)
     ctx = _ReadContext(store, doc)
@@ -228,6 +230,7 @@ def workbench_summary(project_dir, *, revision=None):
             "task_counts": {status: sum(t["status"] == status for t in tasks) for status in sorted({t["status"] for t in tasks})},
             "unreadable_tasks": sum(t["status"] == "unreadable" for t in tasks),
             "outputs": {"pptx": _deck_output(ctx)}, "input_alignment": input_alignment(doc),
+            "content_plan": projection(store, doc, reader=ctx.read, summary=True),
             "quality": {"status": "detail_required", "review_refs": doc.get("reviews") or []},
             "candidates": {"status": "not_recorded"},
             "attempts": {"status": "recorded", "count": sum(t.get("attempt_count", 0) for t in tasks)}
@@ -288,6 +291,7 @@ def _prompt_records(ctx, entry, artifact):
 
 
 def page_lineage(project_dir, page_id, *, revision=None):
+    from .content_plan import projection
     store = Store(project_dir)
     doc = load_snapshot(store, revision)
     entry = _entry(doc, page_id)
@@ -316,6 +320,7 @@ def page_lineage(project_dir, page_id, *, revision=None):
             "revision_id": doc["revision_id"], "requested_revision": revision,
             "page_id": page_id, "page": page, "stages": stages,
             "sources": {"citations": (page or {}).get("citations") or [], "relation": "known" if (page or {}).get("citations") else "unknown"},
+            "content_plan": projection(store, doc, reader=ctx.read, page_id=page_id),
             "prompts": prompts, "generation": generation,
             "tasks": [t for t in _task_rows(ctx) if page_id in (t.get("scope_pages") or [])],
             "deck_output": _deck_output(ctx), "evidence_level": "engineering"}

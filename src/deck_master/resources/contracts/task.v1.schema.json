@@ -287,7 +287,8 @@
     "intent": {
       "enum": [
         "initial",
-        "input_revision"
+        "input_revision",
+        "import_draft"
       ],
       "description": "Compose split: initial writes the first full deck; input_revision submits only changed pages (spec v1.1 5.4)."
     },
@@ -365,7 +366,10 @@
       "description": "Final review dispatched by actual gap only (spec v1.1 6)."
     },
     "protocol_version": {
-      "const": "generation.v1"
+      "enum": [
+        "generation.v1",
+        "compose.v1"
+      ]
     },
     "required_capabilities": {
       "type": "array",

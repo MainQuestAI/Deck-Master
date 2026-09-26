@@ -1,0 +1,23 @@
+{
+  "status": "passed",
+  "synthetic": true,
+  "evidence_level": "core/CLI",
+  "host_calls": 0,
+  "task_id": "37ab6a9b5ae4",
+  "revision_id": "c5be8aca12944f2ab3087692678d74ef",
+  "plan_ref": {
+    "path": ".deckmaster/objects/6c/6c4ba0abd42953f00799474642dfad18deb0d61f76eb979ef3223ed00ad66f5b.json",
+    "sha256": "6c4ba0abd42953f00799474642dfad18deb0d61f76eb979ef3223ed00ad66f5b"
+  },
+  "page_count": 2,
+  "chapter_count": 1,
+  "goal_count": 2,
+  "source_hash": "fd238cb2814c4db0a16b748accb61527f68bb0549d98b6d62369b99989c60302",
+  "unresolved_fact_recorded": true,
+  "same_operation_replay": true,
+  "pointer_unchanged_sha256": "9f93b009a1b939cbf85f54781265ca7566542cb1d913428051658cbb3386924d",
+  "cli_read_exit_codes": [
+    0,
+    0
+  ]
+}

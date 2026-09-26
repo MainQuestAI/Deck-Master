@@ -82,3 +82,11 @@ Detail reads stored request/submitted text and never rerun prompt projection.
 Legacy actual text is only `host_reported`; result linkage without a saved
 binding is `unknown`. A PPT preview co-recorded with an output has a `derived`
 snapshot relationship, not a proven compiler parent.
+
+## W02 ContentPlan 合成流程
+
+```sh
+PYTHONPATH=src python examples/workbench/w02_content_plan.py --out /tmp/w02-content-plan-example
+```
+
+输出目录必须不存在。脚本从 CLI 新建项目回包取任务和真实材料版本，声明 compose.v1 能力，采用两页合成正文及计划，再通过公开 CLI 重放并读取固定版本和按页链路。首次采用使用共享 Service，避免为隔离验证打开浏览器；全过程不调用模型，属于 core/CLI 工程证据。保留 checks、schema 输入和读取回包；项目运行目录不提交到仓库。

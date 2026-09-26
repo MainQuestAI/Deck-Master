@@ -1,0 +1,58 @@
+{
+  "status": "already_applied",
+  "project_id": "synthetic-project",
+  "revision_id": "c5be8aca12944f2ab3087692678d74ef",
+  "requested_action": "task accept",
+  "result_refs": [
+    {
+      "path": ".deckmaster/objects/73/734a02b37257102dc06133c7d9810a56022391a6d0d843d577c9b59e74e68922.json",
+      "sha256": "734a02b37257102dc06133c7d9810a56022391a6d0d843d577c9b59e74e68922"
+    },
+    {
+      "path": ".deckmaster/objects/b9/b93435a4e39daa6c544731b99c54bbcf4f0ad5987fa827b9b9cd3decac47fff8.json",
+      "sha256": "b93435a4e39daa6c544731b99c54bbcf4f0ad5987fa827b9b9cd3decac47fff8"
+    },
+    {
+      "path": ".deckmaster/objects/6c/6c4ba0abd42953f00799474642dfad18deb0d61f76eb979ef3223ed00ad66f5b.json",
+      "sha256": "6c4ba0abd42953f00799474642dfad18deb0d61f76eb979ef3223ed00ad66f5b"
+    }
+  ],
+  "pending_tasks": [],
+  "findings": [],
+  "next_action": null,
+  "input_alignment": "current",
+  "review_url": null,
+  "view_status": "view_arrives_with_workbench",
+  "evidence_level": "engineering",
+  "current_revision_id": "c5be8aca12944f2ab3087692678d74ef",
+  "new_page_hashes": {
+    "evidence": "b93435a4e39daa6c544731b99c54bbcf4f0ad5987fa827b9b9cd3decac47fff8",
+    "steps": "734a02b37257102dc06133c7d9810a56022391a6d0d843d577c9b59e74e68922"
+  },
+  "work_complete": true,
+  "operation_result": {
+    "new_page_hashes": {
+      "evidence": "b93435a4e39daa6c544731b99c54bbcf4f0ad5987fa827b9b9cd3decac47fff8",
+      "steps": "734a02b37257102dc06133c7d9810a56022391a6d0d843d577c9b59e74e68922"
+    },
+    "next_action": "auto_view_then_production",
+    "result_refs": [
+      {
+        "path": ".deckmaster/objects/73/734a02b37257102dc06133c7d9810a56022391a6d0d843d577c9b59e74e68922.json",
+        "sha256": "734a02b37257102dc06133c7d9810a56022391a6d0d843d577c9b59e74e68922"
+      },
+      {
+        "path": ".deckmaster/objects/b9/b93435a4e39daa6c544731b99c54bbcf4f0ad5987fa827b9b9cd3decac47fff8.json",
+        "sha256": "b93435a4e39daa6c544731b99c54bbcf4f0ad5987fa827b9b9cd3decac47fff8"
+      },
+      {
+        "path": ".deckmaster/objects/6c/6c4ba0abd42953f00799474642dfad18deb0d61f76eb979ef3223ed00ad66f5b.json",
+        "sha256": "6c4ba0abd42953f00799474642dfad18deb0d61f76eb979ef3223ed00ad66f5b"
+      }
+    ],
+    "revision_id": "c5be8aca12944f2ab3087692678d74ef",
+    "status": "accepted",
+    "work_complete": true
+  },
+  "same_revision": true
+}

@@ -32,6 +32,8 @@ SCHEMA_FILES = {
     "generation_request": "generation-request.v1.schema.json",
     "generation_attempt": "generation-attempt.v1.schema.json",
     "tool_observation": "tool-observation.v1.schema.json",
+    "content_plan_input": "content-plan-input.v1.schema.json",
+    "content_plan": "content-plan.v1.schema.json",
 }
 
 REF_PATH_PATTERN = r"^\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\.[a-z0-9]+$"
@@ -199,6 +201,10 @@ def validate_review_semantics(review: dict[str, Any]) -> None:
 def validate_document_structure(document: dict[str, Any]) -> None:
     """Schema plus structural checks reachable without loading other objects."""
     validate_schema("document", document)
+    if document.get("content_plan"):
+        validate_ref(document["content_plan"], where="document/content_plan")
+        if document.get("compatibility", {}).get("minimum_writer") != "content-plan.v1":
+            raise ModelError("document/compatibility", "content plans require the content-plan.v1 writer boundary")
     receipt = (document.get("change") or {}).get("operation_receipt")
     if receipt is not None and receipt["response"]["revision_id"] != document["revision_id"]:
         raise ModelError("document/change/operation_receipt/response/revision_id",
@@ -408,6 +414,8 @@ def content_identity(document: dict[str, Any]) -> str:
     to decide whether work is still fresh, without blocking legitimate claims.
     """
     projection = {key: document.get(key) for key in CONTENT_KEYS}
+    if document.get("content_plan"):
+        projection["content_plan"] = document["content_plan"]
     return sha256_bytes(canonical_json_bytes(projection))
 
 

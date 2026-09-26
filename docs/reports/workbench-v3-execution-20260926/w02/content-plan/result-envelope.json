@@ -1,0 +1,104 @@
+{
+  "kind": "compose",
+  "page_order": [
+    "steps",
+    "evidence"
+  ],
+  "content_plan": {
+    "schema_version": "content_plan_input.v1",
+    "input_summary": "流程步骤有明确依据，成效尚无实测数据。",
+    "chapters": [
+      {
+        "chapter_id": "workflow",
+        "title": "流程与依据",
+        "goal_ids": [
+          "explain",
+          "verify"
+        ]
+      }
+    ],
+    "goals": [
+      {
+        "goal_id": "explain",
+        "page_id": "steps",
+        "purpose": "解释登记、核对、归档的顺序",
+        "source_links": [
+          {
+            "source_id": "src-ffacb5ac",
+            "source_version": {
+              "original_sha256": "fd238cb2814c4db0a16b748accb61527f68bb0549d98b6d62369b99989c60302",
+              "extract": {
+                "path": ".deckmaster/objects/d1/d12a8fdc92411c180a7b425eab7bb057bfa448f2415d4d352221421ccd12d37c.json",
+                "sha256": "d12a8fdc92411c180a7b425eab7bb057bfa448f2415d4d352221421ccd12d37c"
+              }
+            },
+            "locator": "L2"
+          }
+        ],
+        "unresolved_facts": []
+      },
+      {
+        "goal_id": "verify",
+        "page_id": "evidence",
+        "purpose": "指出成效尚待实测",
+        "source_links": [
+          {
+            "source_id": "src-ffacb5ac",
+            "source_version": {
+              "original_sha256": "fd238cb2814c4db0a16b748accb61527f68bb0549d98b6d62369b99989c60302",
+              "extract": {
+                "path": ".deckmaster/objects/d1/d12a8fdc92411c180a7b425eab7bb057bfa448f2415d4d352221421ccd12d37c.json",
+                "sha256": "d12a8fdc92411c180a7b425eab7bb057bfa448f2415d4d352221421ccd12d37c"
+              }
+            },
+            "locator": "L3"
+          }
+        ],
+        "unresolved_facts": [
+          "需实际测量节省时间。"
+        ]
+      }
+    ],
+    "unresolved_facts": [
+      "不能由三个步骤推定成效。"
+    ]
+  },
+  "pages": [
+    {
+      "schema_version": "deck_page_package.v2",
+      "page_id": "steps",
+      "customer_visible": {
+        "title": "先登记，再核对，最后归档",
+        "body_blocks": [
+          {
+            "id": "body",
+            "type": "paragraph",
+            "text": "材料列明登记、核对、归档三个步骤。"
+          }
+        ]
+      },
+      "visual_spec": {
+        "intent": "Synthetic traceability example",
+        "reference_mode": "new_design"
+      }
+    },
+    {
+      "schema_version": "deck_page_package.v2",
+      "page_id": "evidence",
+      "customer_visible": {
+        "title": "成效需要另行测量",
+        "body_blocks": [
+          {
+            "id": "body",
+            "type": "paragraph",
+            "text": "当前材料没有节省时间或提升产出的实测数据。"
+          }
+        ]
+      },
+      "visual_spec": {
+        "intent": "Synthetic traceability example",
+        "reference_mode": "new_design"
+      }
+    }
+  ]
+}

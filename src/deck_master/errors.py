@@ -67,6 +67,7 @@ class HostSkillConflict(TypedServiceError):
 
 
 NEXT_ACTIONS_BY_CODE = {
+    "content_plan_invalid": "use the compose.v1 schema; preserve goal IDs and cite exact stored source versions/locators or record the missing basis",
     "legacy_run_format": "use the documented legacy import into a separate project; never initialize an old run in place",
     "needs_tool": "install or restore the named reader dependency in this CLI environment, then retry the same command",
     "task_field_conflict": "remove one of the conflicting task-fact sources and retry",

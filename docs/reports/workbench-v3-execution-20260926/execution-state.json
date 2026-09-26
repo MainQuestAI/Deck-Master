@@ -1,6 +1,6 @@
 {
   "baseline": "d1c7c4600cb0fc781070116ed8cc8a1ff6b8b7ca",
-  "branch": "codex/workbench-w02-protocol",
+  "branch": "codex/workbench-w02-content-plan",
   "active_package": "W02",
   "sequence": [
     "W01.core",
@@ -32,7 +32,7 @@
       "merge_commit": "ea4b5b8fa1e4e4e3444b6cd8861f83f5fcc61468"
     },
     "W02": {
-      "status": "protocol_core_verified",
+      "status": "content_plan_core_verified",
       "accepted": false,
       "baseline": "ea4b5b8fa1e4e4e3444b6cd8861f83f5fcc61468",
       "evidence": "W02.md",
@@ -41,10 +41,13 @@
       "protocol_baseline": "de6293492fca41fbce34e269a4463da111214c2c",
       "protocol_evidence": "W02-PROTOCOL.md",
       "residuals": [
-        "ContentPlan and compose protocol",
-        "full old-project outline compatibility",
-        "nonempty reference attachment observation remains unverified"
-      ]
+        "New UI/core compatibility matrix: verify with W03 browser work; W02-AC02 owner remains W02",
+        "Nonempty reference attachment observation remains unverified; preserve unknown coverage"
+      ],
+      "protocol_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/43",
+      "protocol_merge_commit": "09f4486a453d2132a18dbefd10f99ef7317e8fd5",
+      "content_plan_baseline": "09f4486a453d2132a18dbefd10f99ef7317e8fd5",
+      "content_plan_evidence": "W02-CONTENT-PLAN.md"
     },
     "W03": {
       "status": "planned",
@@ -139,13 +142,22 @@
     },
     "W02-AC01": {
       "owner": "W02",
-      "status": "open",
-      "evidence": []
+      "status": "core_verified",
+      "evidence": [
+        "W02-CONTENT-PLAN.md",
+        "w02/content-plan/checks.json"
+      ],
+      "evidence_level": "core/CLI/HTTP"
     },
     "W02-AC02": {
       "owner": "W02",
-      "status": "open",
-      "evidence": []
+      "status": "partial",
+      "evidence": [
+        "W02-CONTENT-PLAN.md",
+        "W02-PROTOCOL.md"
+      ],
+      "evidence_level": "core/CLI/HTTP/real older core",
+      "residual": "New UI startup compatibility needs W03"
     },
     "W02-AC03": {
       "owner": "W02",

@@ -163,7 +163,7 @@ def create(
         operation_id=operation_id,
     )
     if project_format == "workbench.v3":
-        document["compatibility"] = {"project_format": "workbench.v3", "minimum_writer": "generation.v1"}
+        document["compatibility"] = {"project_format": "workbench.v3", "minimum_writer": "content-plan.v1"}
     store.init_project(document, operation_id=operation_id)
 
     if draft:
@@ -220,8 +220,11 @@ def _adopt_draft(store: Store, draft_payload: dict) -> dict:
         "usage_events": [],
         "notes": draft_payload.get("notes") or "import draft",
     }
+    if draft_payload.get("content_plan") is not None:
+        envelope["content_plan"] = draft_payload["content_plan"]
     document = store.load_document()
-    task = open_compose_task(store, document, operation_id=_new_operation_id("draft"))
+    task = open_compose_task(store, document, operation_id=_new_operation_id("draft"),
+                            intent="import_draft" if document.get("compatibility") else "initial")
     outcome = tasks_mod.accept_result(
         store,
         task_id=task["task_id"],
@@ -250,7 +253,7 @@ def _input_compose_task(document, *, operation_id, reason):
             "读取全部来源与任务事实，按方法写完整 Page v2 正文与页序。"
         )
     methods = method_resources("compose", intent=intent)
-    return tasks_mod.new_task(
+    task = tasks_mod.new_task(
         task_id=uuid.uuid4().hex[:12],
         operation_id=_new_operation_id("compose"),
         kind="compose",
@@ -267,6 +270,9 @@ def _input_compose_task(document, *, operation_id, reason):
         dispatch_revision=document["revision_id"],
         produced_against=content_identity(document),
     )
+    from .content_plan import protocol_fields
+    task.update(protocol_fields(document, intent))
+    return task
 
 
 def open_compose_task(store: Store, document: dict, *, operation_id: str,
@@ -300,6 +306,8 @@ def open_compose_task(store: Store, document: dict, *, operation_id: str,
         dispatch_revision=document["revision_id"],
         produced_against=produced_against,
     )
+    from .content_plan import protocol_fields
+    task.update(protocol_fields(document, intent))
     task_ref = store.put_json_object(task)
     bumped = bump_revision(
         document,
@@ -429,6 +437,12 @@ def task_summary(store: Store, document: dict, task: dict) -> dict:
         if task.get('status') == 'superseded':
             summary['invalidated_reason'] = 'task inputs or page scope changed; continue creates a current task'
         return summary
+    if task.get("protocol_version") == "compose.v1":
+        from .content_plan import projection, source_version
+        summary["content_plan_contract"] = {"schema_version": "content_plan_input.v1", "required": True,
+            "sources": [{"source_id": s["source_id"], "source_version": source_version(s)} for s in dispatched["sources"]],
+            "prior": projection(store, dispatched),
+            "instruction": "Return content_plan with every resulting page goal, chapter, versioned source locator and unresolved fact; Page remains the body-copy truth."}
     summary['source_reading'] = []
     for source in dispatched.get('sources') or []:
         ref=source.get('extract')

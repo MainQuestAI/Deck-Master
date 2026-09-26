@@ -20,6 +20,7 @@
     "quality": {"type": "object", "required": ["status", "review_refs"], "properties": {"status": {"const": "detail_required"}, "review_refs": {"type": "array", "items": {"$ref": "#/$defs/ref"}}}, "additionalProperties": false},
     "candidates": {"$ref": "#/$defs/not_recorded"},
     "attempts": {"oneOf": [{"$ref": "#/$defs/not_recorded"}, {"type": "object", "required": ["status", "count"], "additionalProperties": false, "properties": {"status": {"const": "recorded"}, "count": {"type": "integer", "minimum": 1}}}]},
+    "content_plan": {"type": "object", "required": ["status", "relation", "ref"]},
     "evidence_level": {"const": "engineering"}
   },
   "$defs": {

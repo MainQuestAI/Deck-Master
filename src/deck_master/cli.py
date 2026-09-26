@@ -92,7 +92,7 @@ def build_parser() -> argparse.ArgumentParser:
     create.add_argument("--brief-file", required=False)
     create.add_argument("--title", default="")
     create.add_argument("--project-format", choices=["workbench.v3"], default=None,
-                        help="opt in a new project to generation.v1; older cores cannot write it")
+                        help="opt in a new project to compose.v1 and generation.v1; older cores cannot write it")
     create.add_argument("--source", action="append", default=[],
                         help="material file or directory; directories are expanded recursively")
     create.add_argument("--out", required=True)
@@ -135,6 +135,7 @@ def build_parser() -> argparse.ArgumentParser:
     view_cmd.add_argument("--summary", action="store_true", help="read the lightweight workbench summary")
     view_cmd.add_argument("--page-id", help="read one page from the selected snapshot")
     view_cmd.add_argument("--lineage", action="store_true", help="include stored lineage for --page-id")
+    view_cmd.add_argument("--content-plan", action="store_true", help="read the stored content plan or a labeled derived outline")
 
     import_draft = sub.add_parser("import-draft")
     import_draft.add_argument("--project", required=True)
@@ -376,12 +377,16 @@ def main(argv: list[str] | None = None) -> int:
             from .web import open_view, service_status
             from . import workbench
 
-            reading = options.revision is not None or options.summary or options.page_id is not None or options.lineage
+            reading = options.revision is not None or options.summary or options.page_id is not None or options.lineage or options.content_plan
             if options.page_id is not None and not options.page_id:
                 raise workbench.ReadModelError("invalid_input", "page_id", "provide a page identifier", http_status=400)
             if ((reading and options.open) or (options.lineage and not options.page_id)
-                    or (options.summary and (options.page_id or options.lineage))):
+                    or (options.summary and (options.page_id or options.lineage or options.content_plan))
+                    or (options.content_plan and (options.page_id or options.lineage))):
                 raise workbench.ReadModelError("invalid_input", "view", "read options cannot combine with --open; --lineage requires --page-id; --summary is whole-project", http_status=400)
+            if options.content_plan:
+                from .content_plan import show
+                return _emit(show(options.project, revision=options.revision))
             if options.page_id:
                 reader = workbench.page_lineage if options.lineage else workbench.page_view
                 return _emit(reader(options.project, options.page_id, revision=options.revision))
