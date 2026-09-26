@@ -107,14 +107,52 @@ def install_candidate(prefix, manifest_path):
 # Legacy companion migration (§8.3): move the old real-directory ``current``
 # aside and prune only the dangling deck-* links that pointed into it.
 
-def _migrate_legacy_companion(root, *, dry_run=False):
+def _migrate_legacy_companion(root, *, dry_run=False, register_host=True):
     report={'migrated':False,'moved':None,'removed_links':[],'skipped_entries':[]}
     current=root/'current'
-    if not (current.is_dir() and not current.is_symlink()):
-        return report
+    moving=current.is_dir() and not current.is_symlink()
+    if not moving:
+        # A prior opt-out activation preserved both the manifest and Host links.
+        for backup in sorted(root.glob('legacy-companion-*')):
+            if backup.is_symlink() or not backup.is_dir():
+                continue
+            try:
+                _validate_legacy_companion(backup)
+            except (HostSkillConflict, OSError):
+                continue
+            break
+        else:
+            return report
+    else:
+        _validate_legacy_companion(current)
+    if moving:
+        timestamp=datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S')
+        destination=root/f'legacy-companion-{timestamp}'
+        suffix=0
+        while destination.exists() or destination.is_symlink():
+            suffix+=1
+            destination=root/f'legacy-companion-{timestamp}-{suffix}'
+        if not dry_run:
+            os.rename(current,destination)
+        report.update(migrated=True,moved={'from':str(current),'to':str(destination)})
+    skill_root=_codex_skill_root()
+    prefix=str(root/'current'/'skills')+'/'
+    if skill_root.is_dir():
+        for entry in sorted(skill_root.iterdir()):
+            if register_host and entry.is_symlink() and re.fullmatch(r'deck-.*',entry.name) \
+                    and os.readlink(entry).startswith(prefix):
+                if not dry_run:
+                    entry.unlink()
+                report['removed_links'].append(entry.name)
+            else:
+                report['skipped_entries'].append(entry.name)
+    return report
+
+
+def _validate_legacy_companion(current):
     entries=sorted(current.iterdir())
     manifest=current/'companion-manifest.json'
-    only_manifest=[e.name for e in entries]==['companion-manifest.json'] and manifest.is_file()
+    only_manifest=[e.name for e in entries]==['companion-manifest.json'] and manifest.is_file() and not manifest.is_symlink()
     if not only_manifest:
         raise HostSkillConflict(
             str(current),
@@ -136,28 +174,6 @@ def _migrate_legacy_companion(root, *, dry_run=False):
             str(manifest),
             'companion manifest does not match deck_master_companion_manifest.v3 with '
             'bundled_symlink_only on its deck skill rows; refusing to migrate')
-    timestamp=datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S')
-    destination=root/f'legacy-companion-{timestamp}'
-    suffix=0
-    while destination.exists():
-        suffix+=1
-        destination=root/f'legacy-companion-{timestamp}-{suffix}'
-    if not dry_run:
-        os.rename(current,destination)
-    report.update(migrated=True,moved={'from':str(current),'to':str(destination)})
-    skill_root=_codex_skill_root()
-    prefix=str(root/'current'/'skills')+'/'
-    if skill_root.is_dir():
-        for entry in sorted(skill_root.iterdir()):
-            if entry.is_symlink() and re.fullmatch(r'deck-.*',entry.name) \
-                    and os.readlink(entry).startswith(prefix):
-                if not dry_run:
-                    entry.unlink()
-                report['removed_links'].append(entry.name)
-            else:
-                report['skipped_entries'].append(entry.name)
-    return report
-
 def _ensure_host_skill_link(root):
     """Create or repair the managed Codex link; refuse anything else."""
     state,path=_link_state(root)
@@ -182,12 +198,12 @@ def _retire_host_skill_link(root):
 def _sync_host_skill(root, *, register: bool):
     """After a release switch: keep the link valid, retire it without a skill."""
     skill_marker=root/'current'/'skill'/'deck-master'/'SKILL.md'
-    if not skill_marker.is_file():
-        return _retire_host_skill_link(root)
     if not register:
         state,path=_link_state(root)
-        return {'host_skill':'registered' if state=='managed' else 'host_unregistered',
+        return {'host_skill':'registered' if state=='managed' and skill_marker.is_file() else 'host_unregistered',
                 'skill_link':path if state!='absent' else None}
+    if not skill_marker.is_file():
+        return _retire_host_skill_link(root)
     return _ensure_host_skill_link(root)
 
 def _preflight_host_skill(root, *, removed_links=()):
@@ -207,18 +223,31 @@ def _checked_release(root, release_id):
         raise ValueError('candidate checks incomplete')
     return release
 
+_LAUNCHER_TEXT='#!/bin/sh\nexec "$(dirname "$0")/../current/venv/bin/python" -I -m deck_master "$@"\n'
+
+
+def _preflight_activation(root, release_id, *, migrating=False):
+    _checked_release(root,release_id)
+    for link in (root/'current', root/'previous'):
+        if link.name == 'current' and migrating:
+            continue
+        if link.exists() and not link.is_symlink():
+            raise ValueError('refuse to replace user-owned path: '+str(link))
+    launcher=root/'bin/deck-master'
+    if launcher.parent.is_symlink() or (launcher.parent.exists() and not launcher.parent.is_dir()):
+        raise ValueError('refuse to use user-owned launcher parent')
+    if launcher.is_symlink() or (launcher.exists() and
+            (not launcher.is_file() or launcher.read_text()!=_LAUNCHER_TEXT)):
+        raise ValueError('refuse to replace user-owned launcher')
+
+
 def _activate_locked(root,release_id):
-    release=_checked_release(root,release_id)
+    _preflight_activation(root,release_id)
     current=root/'current';previous=root/'previous'
-    for link in (current,previous):
-        if link.exists() and not link.is_symlink():raise ValueError('refuse to replace user-owned path: '+str(link))
-    launcher=root/'bin'/'deck-master'
-    launcher_text='#!/bin/sh\nexec "$(dirname "$0")/../current/venv/bin/python" -I -m deck_master "$@"\n'
+    launcher=root/'bin/deck-master'
     launcher.parent.mkdir(exist_ok=True)
-    if launcher.exists():
-        if launcher.is_symlink() or launcher.read_text()!=launcher_text:raise ValueError('refuse to replace user-owned launcher')
-    else:
-        with launcher.open('x') as handle:handle.write(launcher_text)
+    if not launcher.exists():
+        with launcher.open('x') as handle:handle.write(_LAUNCHER_TEXT)
         launcher.chmod(0o755)
     old=os.readlink(current) if current.is_symlink() else None
     target='releases/'+release_id
@@ -236,14 +265,12 @@ def activate(prefix,release_id,*,register_host=True):
     root=Path(prefix).resolve()/'.deck-master'
     with _locked(root):
         _checked_release(root,release_id)
-        migration=_migrate_legacy_companion(root,dry_run=True)
+        migration=_migrate_legacy_companion(root,dry_run=True,register_host=register_host)
+        _preflight_activation(root,release_id,migrating=migration['migrated'])
         if register_host:
             # Refuse before switching current: a conflict must not activate.
             _preflight_host_skill(root,removed_links=migration['removed_links'])
-        previous=root/'previous'
-        if previous.exists() and not previous.is_symlink():
-            raise ValueError('refuse to replace user-owned path: '+str(previous))
-        migration=_migrate_legacy_companion(root)
+        migration=_migrate_legacy_companion(root,register_host=register_host)
         result=_activate_locked(root,release_id)
         result['cli_active']=True
         result['migration']=migration

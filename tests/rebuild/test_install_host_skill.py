@@ -232,3 +232,67 @@ def test_rollback_host_conflict_keeps_active_release(isolated):
         install.rollback(prefix)
     assert os.readlink(prefix / '.deck-master/current') == 'releases/r2'
     assert os.readlink(prefix / '.deck-master/previous') == 'releases/r1'
+
+
+@pytest.mark.parametrize('occupant', ['file', 'directory', 'link', 'dangling', 'parent'])
+def test_launcher_conflict_preserves_legacy(isolated, occupant):
+    prefix, codex = isolated['prefix'], isolated['codex']
+    _build_legacy_layout(prefix, codex)
+    _make_release(prefix, 'r1')
+    root = prefix / '.deck-master'
+    launcher = root / 'bin/deck-master'
+    if occupant == 'parent':
+        launcher.parent.write_text('user file')
+    else:
+        launcher.parent.mkdir()
+        if occupant == 'file':
+            launcher.write_text('user launcher')
+        elif occupant == 'directory':
+            launcher.mkdir()
+        else:
+            launcher.symlink_to(root / ('current' if occupant == 'link' else 'missing'))
+    before = {p.name: os.readlink(p) for p in (codex / 'skills').iterdir() if p.is_symlink()}
+    with pytest.raises((ValueError, OSError)):
+        install.activate(prefix, 'r1')
+    assert (root / 'current/companion-manifest.json').is_file()
+    assert not list(root.glob('legacy-companion-*'))
+    assert before == {p.name: os.readlink(p) for p in (codex / 'skills').iterdir() if p.is_symlink()}
+
+
+def test_legacy_opt_out_then_register(isolated):
+    prefix, codex = isolated['prefix'], isolated['codex']
+    _build_legacy_layout(prefix, codex)
+    _make_release(prefix, 'r1')
+    before = {p.name: os.readlink(p) for p in (codex / 'skills').iterdir() if p.is_symlink()}
+    result = install.activate(prefix, 'r1', register_host=False)
+    assert result['migration']['removed_links'] == []
+    assert before == {p.name: os.readlink(p) for p in (codex / 'skills').iterdir() if p.is_symlink()}
+    result = install.activate(prefix, 'r1')
+    assert len(result['migration']['removed_links']) == 15
+    assert result['host_skill'] == 'registered'
+    assert install.activate(prefix, 'r1')['migration']['removed_links'] == []
+
+
+def test_opt_out_never_retires_managed_link(isolated):
+    prefix, codex = isolated['prefix'], isolated['codex']
+    _make_release(prefix, 'r1')
+    _make_release(prefix, 'old', with_skill=False)
+    install.activate(prefix, 'r1')
+    link = codex / 'skills/deck-master'
+    before = os.readlink(link)
+    install.activate(prefix, 'old', register_host=False)
+    assert link.is_symlink() and os.readlink(link) == before
+
+
+def test_deferred_cleanup_requires_valid_preserved_manifest(isolated):
+    prefix, codex = isolated['prefix'], isolated['codex']
+    _build_legacy_layout(prefix, codex)
+    _make_release(prefix, 'r1')
+    result = install.activate(prefix, 'r1', register_host=False)
+    manifest = Path(result['migration']['moved']['to']) / 'companion-manifest.json'
+    manifest.write_text('{"schema_version": "unknown"}')
+    links = {p.name: os.readlink(p) for p in (codex / 'skills').iterdir() if p.is_symlink()}
+    with pytest.raises(HostSkillConflict):
+        install.activate(prefix, 'r1')
+    assert links == {p.name: os.readlink(p) for p in (codex / 'skills').iterdir() if p.is_symlink()}
+    assert os.readlink(prefix / '.deck-master/current') == 'releases/r1'
