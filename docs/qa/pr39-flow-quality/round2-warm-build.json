@@ -1,0 +1,24 @@
+{
+  "baseline": "c93f5a2",
+  "baseline_legacy_files": [
+    "deck_master/resources/skills-references/blueprint-svg.md",
+    "deck_master/resources/skills-references/content-examples.md",
+    "deck_master/resources/skills-references/content-methods.md",
+    "deck_master/resources/skills-references/installation.md",
+    "deck_master/resources/skills-references/review-and-repair.md",
+    "deck_master/resources/skills-references/source-reading.md"
+  ],
+  "updated_legacy_files": [],
+  "canonical_files_verified": [
+    "SKILL.md",
+    "references/content-examples.md",
+    "references/content-methods.md",
+    "references/review-and-repair.md",
+    "references/input-update.md",
+    "references/installation.md",
+    "references/source-reading.md",
+    "references/blueprint-svg.md",
+    "agents/openai.yaml"
+  ],
+  "build_cache_preserved": true
+}
