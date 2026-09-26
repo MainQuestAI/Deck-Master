@@ -22,6 +22,7 @@ from urllib.parse import parse_qs, urlparse
 
 from . import view as view_mod
 from .store import Store
+from . import workbench as workbench_mod
 
 STATE_FILE = "view.json"
 
@@ -143,6 +144,9 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
         if not self._local_host():
             self._send_json({'error':'loopback Host required'},403);return
         parsed = urlparse(self.path)
+        if parsed.path in ("/api/view", "/api/view/summary", "/api/workbench", "/api/tasks", "/api/reviews") or parsed.path.startswith("/api/pages/"):
+            self._read_projection(parsed)
+            return
         if parsed.path=='/api/session':
             self._send_json({'token':self.write_token});return
         if parsed.path=='/api/history':
@@ -162,46 +166,6 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
         if parsed.path == "/api/health":
             self._send_json({"status": "ok", "project_identity": _project_identity(self.store.project_root)})
             return
-        if parsed.path == "/api/view":
-            self._send_json(view_mod.project_view(self.store.project_root))
-            return
-        if parsed.path.startswith("/api/pages/"):
-            page_id = parsed.path.rsplit("/", 1)[-1]
-            document = self.store.load_document()
-            entry = next((e for e in document.get("pages") or [] if e.get("page_id") == page_id), None)
-            if entry is None or not entry.get("page"):
-                self._send_json({"error": f"page {page_id!r} not found"}, 404)
-                return
-            self._send_json({
-                "page_id": page_id,
-                "page": self.store.read_object_json(entry["page"]),
-                "slots": {slot: entry.get(slot) for slot in
-                          ("content", "blueprint", "svg", "svg_preview", "ppt_preview")},
-                "revision_id": document["revision_id"],
-            })
-            return
-        if parsed.path == "/api/tasks":
-            document = self.store.load_document()
-            tasks = []
-            for ref in document.get("tasks") or []:
-                try:
-                    task = self.store.read_object_json(ref)
-                except Exception as exc:  # noqa: BLE001
-                    tasks.append({"task_id": None, "status": "unreadable", "detail": str(exc)})
-                    continue
-                tasks.append({"task_id": task.get("task_id"), "kind": task.get("kind"),
-                              "status": task.get("status"), "instruction": task.get("instruction"),
-                              "updated_at": task.get("updated_at")})
-            self._send_json({"tasks": tasks})
-            return
-        if parsed.path == "/api/reviews":
-            query = parse_qs(parsed.query)
-            page_filter = (query.get("page_id") or [None])[0]
-            view = view_mod.project_view(self.store.project_root)
-            reviews = [r for r in view.get("reviews") or []
-                       if not page_filter or page_filter in (r.get("page_ids") or [])]
-            self._send_json({"reviews": reviews})
-            return
         if parsed.path == "/api/file":
             query = parse_qs(parsed.query)
             path_value = (query.get("path") or [""])[0]
@@ -211,11 +175,48 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             try:
                 data, media = view_mod.artifact_bytes(self.store, {"path": path_value, "sha256": (query.get("sha256") or [""])[0]})
             except Exception as exc:  # noqa: BLE001
-                self._send_json({"error": str(exc)}, 404)
+                self._send_json({"error": workbench_mod.object_error()}, 404)
                 return
             self._send_bytes(data, media)
             return
         self._send_json({"error": "not found"}, 404)
+
+    def _read_projection(self, parsed):
+        """All related GETs share one revision contract and sanitized errors."""
+        query = parse_qs(parsed.query, keep_blank_values=True)
+        try:
+            revisions = query.get("revision", [])
+            if len(revisions) > 1:
+                raise workbench_mod.ReadModelError("invalid_revision", "revision", "provide one revision", http_status=400)
+            revision = revisions[0] if revisions else None
+            project = self.store.project_root
+            if parsed.path == "/api/view":
+                payload = view_mod.project_view(project, revision=revision)
+            elif parsed.path in ("/api/view/summary", "/api/workbench"):
+                payload = workbench_mod.workbench_summary(project, revision=revision)
+            elif parsed.path == "/api/tasks":
+                payload = workbench_mod.tasks_view(project, revision=revision)
+            elif parsed.path == "/api/reviews":
+                page_filter = (query.get("page_id") or [None])[0]
+                view = view_mod.project_view(project, revision=revision)
+                payload = {"project_id": view["project_id"], "revision_id": view["revision_id"],
+                           "reviews": [r for r in view.get("reviews") or []
+                                       if not page_filter or page_filter in (r.get("page_ids") or [])]}
+            else:
+                parts = parsed.path.split("/")
+                if len(parts) == 5 and parts[-1] == "lineage":
+                    payload = workbench_mod.page_lineage(project, parts[3], revision=revision)
+                elif len(parts) == 4:
+                    payload = workbench_mod.page_view(project, parts[3], revision=revision)
+                else:
+                    self._send_json({"error": "not found"}, 404)
+                    return
+            self._send_json(payload)
+        except workbench_mod.ReadModelError as exc:
+            self._send_json(exc.payload(), exc.http_status)
+        except workbench_mod.READ_FAILURES:
+            exc = workbench_mod.ReadModelError("project_unavailable", "project", "project snapshot is not readable", http_status=422)
+            self._send_json(exc.payload(), exc.http_status)
 
 
 class WorkbenchServer:

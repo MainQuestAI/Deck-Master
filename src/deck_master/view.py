@@ -14,13 +14,15 @@ from pathlib import Path
 from typing import Any
 
 from .content import visible_atoms
+from .models import validate_schema
 from .store import Store, StoreError
+from .workbench import READ_FAILURES, load_snapshot, object_error
 
 
 def project_view(project_dir: Path | str, *, revision: str | None = None) -> dict[str, Any]:
     """One shared read-only projection of the current (or a historical) revision."""
     store = Store(Path(project_dir).expanduser())
-    document = store.load_document(revision)
+    document = load_snapshot(store, revision)
     pages = []
     for entry in document.get("pages") or []:
         page = None
@@ -28,9 +30,12 @@ def project_view(project_dir: Path | str, *, revision: str | None = None) -> dic
         if entry.get("page"):
             try:
                 page = store.read_object_json(entry["page"])
+                validate_schema("page", page)
+                if page["page_id"] != entry["page_id"]:
+                    raise ValueError("page identity differs")
                 atoms = visible_atoms(page)
             except Exception as exc:  # noqa: BLE001 - broken page shows as broken
-                pages.append(_broken_page_entry(entry, f"page unreadable: {exc}"))
+                pages.append(_broken_page_entry(entry, object_error()["message"]))
                 continue
         pages.append(
             {
@@ -52,8 +57,9 @@ def project_view(project_dir: Path | str, *, revision: str | None = None) -> dic
     for ref in document.get("tasks") or []:
         try:
             task = store.read_object_json(ref)
+            validate_schema("task", task)
         except Exception as exc:  # noqa: BLE001 - broken task ref shows as unreadable
-            pending_tasks.append({"task_id": None, "status": "unreadable", "detail": str(exc)})
+            pending_tasks.append({"task_id": None, "status": "unreadable", "detail": object_error()["message"]})
             continue
         if task.get("status") in ("awaiting_host", "running"):
             pending_tasks.append(
@@ -68,8 +74,9 @@ def project_view(project_dir: Path | str, *, revision: str | None = None) -> dic
     for ref in document.get("reviews") or []:
         try:
             review = store.read_object_json(ref)
+            validate_schema("review", review)
         except Exception as exc:  # noqa: BLE001
-            reviews.append({"review_id": None, "status": "unreadable", "detail": str(exc)})
+            reviews.append({"review_id": None, "status": "unreadable", "detail": object_error()["message"]})
             continue
         reviews.append(
             {
@@ -115,7 +122,16 @@ def project_view(project_dir: Path | str, *, revision: str | None = None) -> dic
         }
     from .editing import review_status
     if document['outputs'].get('pptx'):
-        view['view_status']='ready_for_export' if review_status(store,document)=='pass' else 'awaiting_review'
+        try:
+            if (any(p.get('broken') for p in pages)
+                    or any(t.get('status') == 'unreadable' for t in pending_tasks)
+                    or any(r.get('status') == 'unreadable' for r in reviews)):
+                raise ValueError('quality evidence is unreadable')
+            view['view_status']='ready_for_export' if review_status(store,document)=='pass' else 'awaiting_review'
+        except READ_FAILURES:
+            # Never turn filtered/missing quality records into a passing verdict.
+            view['view_status'] = 'awaiting_review'
+            view['quality_error'] = object_error()
     if pending_tasks:
         view['view_status']='running' if any(t.get('status')=='running' for t in pending_tasks) else 'awaiting_host'
     return view
@@ -143,6 +159,7 @@ def _latest_input_update_reason(store: Store, document: dict) -> str | None:
     for ref in document.get("tasks") or []:
         try:
             task = store.read_object_json(ref)
+            validate_schema("task", task)
         except Exception:  # noqa: BLE001 - unreadable task refs never break the view
             continue
         if task.get("kind") == "compose" and task.get("intent") == "input_revision" \
@@ -152,8 +169,8 @@ def _latest_input_update_reason(store: Store, document: dict) -> str | None:
             while revision and revision not in seen:
                 seen.add(revision)
                 try:
-                    dispatched = store.load_document(revision)
-                except StoreError:
+                    dispatched = load_snapshot(store, revision)
+                except READ_FAILURES:
                     break
                 change = dispatched.get("change") or {}
                 if change.get("operation_id") == task.get("input_revision_id"):
@@ -164,8 +181,8 @@ def _latest_input_update_reason(store: Store, document: dict) -> str | None:
     while revision and revision not in visited and len(visited) < 200:
         visited.add(revision)
         try:
-            historic = store.load_document(revision)
-        except StoreError:
+            historic = load_snapshot(store, revision)
+        except READ_FAILURES:
             break
         change = historic.get("change") or {}
         if change.get("kind") == "input_update":
