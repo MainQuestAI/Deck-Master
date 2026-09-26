@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Any
 
 from .content import visible_atoms
-from .store import Store
+from .store import Store, StoreError
 
 
 def project_view(project_dir: Path | str, *, revision: str | None = None) -> dict[str, Any]:
