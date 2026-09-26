@@ -1,6 +1,6 @@
 # 生成工作台 v3 执行索引
 
-当前活动卡：**W03，核心 PR #45 已合入 main；前端与浏览器证据已完成、待集成**。W01 核心 PR #41、W02 恢复 PR #42、协议 PR #43 和 ContentPlan PR #44 均已合入 main；本切片基线 `062fd6974f0f1ed4053ee9a397f2b1c288bd42f4`。当前执行分支 `codex/workbench-w03-ui`，不是原 A/B 线或设计分支。
+当前活动卡：**W04，缩略图与个人画廊状态核心切片进行中**。W03 核心 PR #45 与前端 PR #46 已合入 main，前端提交 `8eabda9…` 的 8 项 CI 全绿；当前基线 `f3c9b617b868748ea09765ff072858f563f65b8f`，分支 `codex/workbench-w04-core`。W03 保留系统目录弹窗的实机复核项，用户验收及 W12 安装验收尚未签收。
 
 - [独立 Review：4 P1、3 P2](REVIEW.md)
 - [外部原始复核与取舍](OUTSIDE-REVIEW.md)
@@ -8,6 +8,7 @@
 - [W01 实现提交、46 项回归、浏览器与性能证据](W01.md)
 - [W02 恢复切片](W02.md) / [冻结请求、Attempt 与真实 Host 证据](W02-PROTOCOL.md) / [ContentPlan 与来源版本](W02-CONTENT-PLAN.md)
 - [W03 独立入口、服务生命周期与个人草稿](W03-CORE.md) / [前端与真实浏览器验证](W03-UI.md)
+- [W04 缩略图与个人画廊状态核心](W04-CORE.md)
 - [修订后的包顺序](../../specs/deck-master-workbench-v3/packages/README.md)
 - [交接原件](handoff/HANDOFF.md) / [26 个输入的原始 manifest](handoff/manifest.json)
 - [当前用户设计快照](design-snapshot/index.html) / [8 文件 SHA256](design-snapshot/sha256-manifest.json)

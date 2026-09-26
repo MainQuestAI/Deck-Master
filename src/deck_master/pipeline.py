@@ -58,7 +58,10 @@ def artifact(store,path,role,*,page_id=None,dependencies=(),derived_from=()):
     obj={'schema_version':'deck_artifact.v1','artifact_id':role+'-'+uuid.uuid4().hex[:12],'page_id':page_id,'role':role,'file':store.put_blob(Path(path).read_bytes(),ext=suffix[1:]),'media_type':media,'created_at':_utc_now_iso(),'dependencies':list(dependencies),'derived_from':list(derived_from),'provenance':{'source_type':'tool_generated','tool':'deck_master.local'},'limitations':[]}
     if role=='pptx':obj['editability']='editable_shapes_and_text'
     validate_artifact_semantics(obj)
-    return store.put_json_object(obj)
+    ref = store.put_json_object(obj)
+    from .thumbnails import warm_artifact
+    warm_artifact(store, obj)
+    return ref
 
 
 def page_asset_paths(store, document, entry, work, *, page=None):

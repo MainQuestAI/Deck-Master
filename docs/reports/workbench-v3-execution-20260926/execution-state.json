@@ -1,7 +1,7 @@
 {
   "baseline": "d1c7c4600cb0fc781070116ed8cc8a1ff6b8b7ca",
-  "branch": "codex/workbench-w03-ui",
-  "active_package": "W03",
+  "branch": "codex/workbench-w04-core",
+  "active_package": "W04",
   "sequence": [
     "W01.core",
     "W02",
@@ -51,7 +51,7 @@
       "content_plan_merge_commit": "13aaf3690c6cde67e405576f5020abdd5311b909"
     },
     "W03": {
-      "status": "frontend_verified_pending_merge",
+      "status": "slices_merged",
       "accepted": false,
       "baseline": "13aaf3690c6cde67e405576f5020abdd5311b909",
       "core_evidence": "W03-CORE.md",
@@ -64,11 +64,21 @@
       "core_head": "7b62b6294c38ee58a6a29b708df8b2b1981a851f",
       "core_merge_commit": "062fd6974f0f1ed4053ee9a397f2b1c288bd42f4",
       "frontend_baseline": "062fd6974f0f1ed4053ee9a397f2b1c288bd42f4",
-      "frontend_evidence": "W03-UI.md"
+      "frontend_evidence": "W03-UI.md",
+      "frontend_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/46",
+      "frontend_head": "8eabda92876a2dd3a2ef1be7c7c541b75cda531b",
+      "frontend_merge_commit": "f3c9b617b868748ea09765ff072858f563f65b8f"
     },
     "W04": {
-      "status": "planned",
-      "accepted": false
+      "status": "core_verified_pending_merge",
+      "accepted": false,
+      "baseline": "f3c9b617b868748ea09765ff072858f563f65b8f",
+      "core_evidence": "W04-CORE.md",
+      "residuals": [
+        "Gallery frontend and viewport interaction verification",
+        "Full 300x5x3 pressure after W07 Candidate contracts",
+        "Human 30-second observation not measured"
+      ]
     },
     "W05": {
       "status": "planned",
@@ -308,13 +318,21 @@
     },
     "W04-AC02": {
       "owner": "W04",
-      "status": "open",
-      "evidence": []
+      "status": "partial",
+      "evidence": [
+        "W04-CORE.md",
+        "w04/core/checks.json"
+      ],
+      "evidence_level": "core/HTTP/targeted Chromium CSP"
     },
     "W04-AC03": {
       "owner": "W04",
-      "status": "open",
-      "evidence": []
+      "status": "partial",
+      "evidence": [
+        "W04-CORE.md",
+        "w04/core/checks.json"
+      ],
+      "evidence_level": "core/HTTP/targeted Chromium CSP"
     },
     "W04-AC04": {
       "owner": "W04",
@@ -328,8 +346,12 @@
     },
     "W04-AC06": {
       "owner": "W04",
-      "status": "open",
-      "evidence": []
+      "status": "partial",
+      "evidence": [
+        "W04-CORE.md",
+        "w04/core/checks.json"
+      ],
+      "evidence_level": "core/HTTP/targeted Chromium CSP"
     },
     "W04-AC07": {
       "owner": "W04",
