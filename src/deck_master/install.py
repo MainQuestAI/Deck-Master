@@ -247,7 +247,7 @@ def _migrate_legacy_companion(root, *, dry_run=False, register_host=True, plan=N
     prefix=str(root/'current'/'skills')+'/'
     if skill_root.is_dir():
         for entry in sorted(skill_root.iterdir()):
-            if register_host and entry.is_symlink() and re.fullmatch(r'deck-.*',entry.name) \
+            if register_host and entry.is_symlink() and re.fullmatch(r'(?:deck|ppt)-.*',entry.name) \
                     and os.readlink(entry).startswith(prefix):
                 if not dry_run:
                     _unlink(entry)

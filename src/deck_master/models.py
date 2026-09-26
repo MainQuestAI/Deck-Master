@@ -497,3 +497,12 @@ def _utc_now_iso() -> str:
     from datetime import datetime, timezone
 
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def page_limit_violation(document):
+    """A task limit constrains the resulting deck, not just changed pages."""
+    limit = (document.get('task') or {}).get('page_limit')
+    count = len(document.get('pages') or [])
+    if limit is not None and count > limit:
+        return f'page_limit={limit}, resulting page count={count}; reduce the deck or update the page limit'
+    return None

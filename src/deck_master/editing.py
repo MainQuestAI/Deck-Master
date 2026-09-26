@@ -304,7 +304,7 @@ def _export_locked(store, *, output_dir, purpose):
     if purpose=='delivery' and status!='pass':
         failed=[key for key,value in summary['dimensions'].items() if value['open_must_fix'] or value['status']=='fail']
         raise StoreError('reviews',f'delivery requires every required check to pass; '
-                         f'current review status is {status!r} '
+                         f'current review status is {status!r}; {summary.get("reason", "")} '
                          f'(unresolved: {sorted(set(summary["missing_dimensions"]) | set(failed))})')
     if purpose=='delivery' and (doc.get('policy') or {}).get('professional_review_required_for_delivery'):
         current=doc['outputs'].get('pptx')

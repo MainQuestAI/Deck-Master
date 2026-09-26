@@ -21,6 +21,7 @@ from typing import Any
 from .content import check_page
 from .models import (
     ModelError,
+    page_limit_violation,
     bump_revision,
     content_identity,
     compute_input_digest,
@@ -743,6 +744,9 @@ def _accept_content_update(store: Store, *, document: dict, task: dict, envelope
     if not task_inputs_current(store, document, task):
         raise StaleInputContext('(content_update)', 'document changed since dispatch; run continue')
     _validate_content_update_request(envelope, document, task, content_update)
+    violation = page_limit_violation({**document, 'pages': content_update['page_order']})
+    if violation:
+        raise EnvelopeError('(result)/content_update/page_order', violation)
     upserts = {}
     for index, page in enumerate(content_update.get("upsert_pages") or []):
         try:
@@ -1061,6 +1065,12 @@ def accept_result(
     }
 
     # Persist the validated payload (immutable blobs), then switch the Document once.
+    if envelope['kind'] == 'compose' or adopted_pages:
+        resulting_ids = (envelope.get('page_order') or []) if envelope['kind'] == 'compose' else (
+            {entry['page_id'] for entry in document['pages']} | {page['page_id'] for page in adopted_pages})
+        violation = page_limit_violation({**document, 'pages': resulting_ids})
+        if violation:
+            raise EnvelopeError('(result)/pages', violation)
     page_refs = {}
     for page in adopted_pages:
         page_refs[page["page_id"]] = store.put_json_object(page)

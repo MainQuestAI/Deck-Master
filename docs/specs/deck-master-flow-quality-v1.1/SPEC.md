@@ -308,7 +308,7 @@ patch 格式：
 
 - `~/.deck-master/current` 是**真实目录**，里面只有 `companion-manifest.json`（schema v3，release main-cc8cf46，adoption_policy `bundled_symlink_only`）。
 - 没有 `releases/`、`previous` 和 `bin`。
-- `~/.codex/skills/` 下有 15 个 `deck-*` 符号链接，都指向 `~/.deck-master/current/skills/<name>`，其中包括 `deck-master` 本身。这些链接**全部是断链**。
+- `~/.codex/skills/` 下有 15 个 `deck-*` 符号链接，都指向 `~/.deck-master/current/skills/<name>`，其中包括 `deck-master` 本身。这些链接**全部是断链**。另有 4 条 ppt-* 链接指向同一旧目录，合计 19 条，名称见本节补充。
 
 现有 `_activate_locked` 看到非符号链接的 current 会拒绝（refuse to replace user-owned path），所以必须先迁移。迁移规则如下：
 
@@ -320,7 +320,7 @@ patch 格式：
 2. 把它移到 `PREFIX/.deck-master/legacy-companion-<时间戳>/`，只移动，不删除。
 3. 在 Codex skill 根目录下，**只删除**同时满足以下三点的条目：
    - 是符号链接；
-   - 名字匹配 `deck-*`；
+   - 名字匹配 `deck-*` 或 `ppt-*`；
    - `readlink` 以 `PREFIX/.deck-master/current/skills/` 开头。
 
    其他条目一律不碰，只报告。
@@ -358,3 +358,7 @@ patch 格式：
 - 在仓库外新开 Codex 会话，自然语言走通 7 步场景（AC-17）。
 
 只改了字段、JSON 能通过或拼出一份范例，都不算完成。缺少真实 Host 条件时，可以交付工程候选，但要写明哪些没有验证。
+
+### 2026-09-26 迁移范围补充
+
+只读核对发现另外 4 条旧链接：ppt-master、ppt-library、ppt-deck-pro-max、ppt-quality-gate，同样指向本安装前缀的 current/skills/。它们与 15 条 deck-* 一并按上述归属规则处理；外部前缀链接和真实文件/目录不动。禁用 Host 注册时不清理，随后正常激活可依据有效备份 manifest 补做清理；失败时按原补偿规则恢复。真实 HOME 尚未迁移。

@@ -27,6 +27,7 @@
 | `~/.deck-master/current` | **真实目录**，只有 `companion-manifest.json`（schema v3，release main-cc8cf46，`bundled_symlink_only`） |
 | `~/.deck-master/releases`、`previous`、`bin` | 不存在 |
 | `~/.codex/skills/deck-*` | 15 条符号链接，都指向 `~/.deck-master/current/skills/<name>`，**全部是断链**（包括 deck-master） |
+| `~/.codex/skills/ppt-*` | 4 条旧符号链接，同样指向本安装的 `current/skills/`：ppt-master、ppt-library、ppt-deck-pro-max、ppt-quality-gate |
 | `~/.codex/config.toml` | 没有 deck 相关的 skills 配置，只有一条项目 trust_level。**不需要改** |
 | `~/.codex/skills` 其他条目 | gstack*、artifact-template-* 等第三方 Skill，**不能碰** |
 
@@ -38,13 +39,13 @@
 2. `mv ~/.deck-master/current ~/.deck-master/legacy-companion-<ts>`。只移动，不删除。
 3. 删除 `~/.codex/skills/` 下同时满足以下三点的条目：
    - 是符号链接；
-   - 名字匹配 `deck-*`；
+   - 名字匹配 `deck-*` 或 `ppt-*`；
    - 目标以 `~/.deck-master/current/skills/` 开头。
 
-   预期正好 15 条。
+   本机预期 19 条（15 条 deck-*、4 条 ppt-*）；数量只用于验收，不作为硬编码删除条件。
 4. 正常完成 activate：建立 releases/<id>、current、previous、bin。
 5. 建立受管链接：`~/.codex/skills/deck-master` → `~/.deck-master/current/skill/deck-master`。
-6. 输出迁移报告：移走了什么、删除了哪 15 条链接、跳过了哪些条目。
+6. 输出迁移报告：移走了什么、删除了哪些链接（本机预期 19 条）、跳过了哪些条目。
 
 ## 4. 老板操作步骤（代码合并后）
 
@@ -59,3 +60,7 @@
 - 不注册到 Claude Code（`~/.claude/skills`）或 `.agents/skills`。
 - 不修改 `~/.codex/config.toml`。
 - 不自动删除 `legacy-companion-<ts>` 目录。
+
+### 2026-09-26 迁移范围补充
+
+只读核对发现另外 4 条旧链接：ppt-master、ppt-library、ppt-deck-pro-max、ppt-quality-gate，同样指向本安装前缀的 current/skills/。它们与 15 条 deck-* 一并按上述归属规则处理；外部前缀链接和真实文件/目录不动。禁用 Host 注册时不清理，随后正常激活可依据有效备份 manifest 补做清理；失败时按原补偿规则恢复。真实 HOME 尚未迁移。

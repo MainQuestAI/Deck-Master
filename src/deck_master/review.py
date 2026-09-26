@@ -338,15 +338,17 @@ def evaluate_current(document: dict, reviews: list[dict], artifacts: dict) -> di
     findings aggregate per finding_id across ALL current reviews of a
     dimension and only a validated closing review can fix one (P1-02).
     """
+    from .models import page_limit_violation
+    limit_violation = page_limit_violation(document)
     pages = document.get('pages') or []
     current = (document.get('outputs') or {}).get('pptx')
     facts = document.get('_output_facts') or {}
     alignment = derive_input_alignment(document)
     if not current:
-        return {'status': 'not_evaluated', 'current_outputs': None, 'dimensions': {}, 'stale': [],
+        return {'status': 'fail' if limit_violation else 'not_evaluated', 'current_outputs': None, 'dimensions': {}, 'stale': [],
                 'missing_dimensions': [f'{k}:{e["page_id"]}' for k in REQUIRED_KINDS for e in pages],
                 'output_facts': facts, 'dimension_reasons': {}, 'input_alignment': alignment,
-                'reason': 'no current pptx output'}
+                'reason': limit_violation or 'no current pptx output'}
     tasks = document.get('tasks') or []
     suspended_pages = set()
     for task in tasks:
@@ -454,7 +456,7 @@ def evaluate_current(document: dict, reviews: list[dict], artifacts: dict) -> di
     render_report_findings = facts.get('render_report_findings') or []
     completeness_gaps = facts.get('completeness') or []
     render_report_missing = bool(facts.get('render_report_missing'))
-    if render_failed or any(d['status'] == 'fail' or d['open_must_fix'] for d in dimensions.values()):
+    if limit_violation or render_failed or any(d['status'] == 'fail' or d['open_must_fix'] for d in dimensions.values()):
         status = 'fail'
     elif missing or render_report_missing or completeness_gaps or dimension_reasons or alignment == 'needs_reconciliation':
         status = 'not_evaluated'
@@ -467,6 +469,8 @@ def evaluate_current(document: dict, reviews: list[dict], artifacts: dict) -> di
     result = {'status': status, 'current_outputs': current, 'dimensions': dimensions,
               'stale': stale, 'missing_dimensions': sorted(missing),
               'output_facts': facts, 'dimension_reasons': dimension_reasons, 'input_alignment': alignment}
+    if limit_violation:
+        result['reason'] = limit_violation
     if render_failed:
         result['render_report_findings'] = render_report_findings
     if suspended_pages and status == 'not_evaluated':

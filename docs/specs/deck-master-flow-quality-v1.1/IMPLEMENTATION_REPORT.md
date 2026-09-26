@@ -109,7 +109,7 @@ ls -l "$CODEX_HOME/skills/deck-master"
 
 隔离验证通过后，用户可将 `INSTALL_PREFIX` 设为 `$HOME`、`CODEX_HOME` 设为 `$HOME/.codex`，使用同一份已经校验的 manifest 和它的 `release_id` 执行上述 candidate、activate、doctor 命令。不要复用历史 dc2636e 候选，也不要手写推测发布标识。
 
-检查激活输出中的迁移报告：旧目录移至 `legacy-companion-<timestamp>` 并保留；移除的旧链接应为 15 条；唯一受管 Skill 指向 `current/skill/deck-master`；第三方 Skill 与 config.toml 不变。
+检查激活输出中的迁移报告：旧目录移至 `legacy-companion-<timestamp>` 并保留；移除的旧链接按归属规则判断，本机预期 19 条（15 条 deck-*、4 条 ppt-*）；唯一受管 Skill 指向 `current/skill/deck-master`；第三方 Skill 与 config.toml 不变。
 
 随后在仓库外新开 Codex 会话，按 [ACCEPTANCE.md 的 AC-17](ACCEPTANCE.md#ac-177-步场景从仓库外新开的-codex-会话启动) 运行全部 7 步，保存命令、退出码、工作单、截图，以及第 4、5 步前后 p01/p02 的 hash。第二个新会话也属于该验收的一部分。
 

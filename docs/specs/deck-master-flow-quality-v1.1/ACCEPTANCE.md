@@ -25,7 +25,7 @@
 | AC-15 | wheel 和 sdist→wheel 中的 `resources/skill` 与 canonical 字节一致；没有 skills-references；CWD 放假文件不影响 `resolve_root`；canonical 中没有 D1/D2 和旧术语 | A+R | T7 |
 | AC-16 | `skills/` 只剩 deck-master 和 RESOLVER.md；除历史文档外，没有地方引用旧 Skill 名；legacy run 提示仍然正常 | A+R | T8 |
 | AC-17 | **真实端到端**：在仓库外新开 Codex 会话，走完下面的 7 步场景 | H | T9 |
-| AC-18 | 安装、回滚、迁移（在隔离 HOME 中）：受管链接正确；已占用 → exit 5 且 current 不切换；旧 companion 布局迁移只删除 15 条断链，第三方 Skill 不变，重复执行结果不变；回滚到无 skill 的旧版本时移除链接 | A+R | T9 |
+| AC-18 | 安装、回滚、迁移（在隔离 HOME 中）：受管链接正确；已占用 → exit 5 且 current 不切换；旧 companion 布局迁移按归属条件删除 19 条断链（15 条 deck-*、4 条 ppt-*），第三方 Skill 不变，重复执行结果不变；回滚到无 skill 的旧版本时移除链接 | A+R | T9 |
 
 ## AC-17：7 步场景（从仓库外、新开的 Codex 会话启动）
 
