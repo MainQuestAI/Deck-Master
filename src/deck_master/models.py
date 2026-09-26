@@ -38,6 +38,8 @@ SCHEMA_FILES = {
     "ui_draft_record": "ui-draft-record.v1.schema.json",
     "ui_draft_recovery": "ui-draft-recovery.v1.schema.json",
     "ui_position": "ui-position.v1.schema.json",
+    "ui_gallery": "ui-gallery.v1.schema.json",
+    "thumbnail": "thumbnail.v1.schema.json",
 }
 
 REF_PATH_PATTERN = r"^\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\.[a-z0-9]+$"

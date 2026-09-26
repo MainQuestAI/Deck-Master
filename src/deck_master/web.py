@@ -69,20 +69,20 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", "no-store")
         self.send_header("X-Content-Type-Options", "nosniff")
-        self.send_header("Content-Security-Policy", "default-src 'self'; script-src 'self'; object-src 'none'; frame-ancestors 'none'")
+        self.send_header("Content-Security-Policy", "default-src 'self'; script-src 'self'; img-src 'self' blob:; object-src 'none'; frame-ancestors 'none'")
         self.end_headers()
         self.wfile.write(body)
 
-    def _send_bytes(self, body: bytes, media: str) -> None:
+    def _send_bytes(self, body: bytes, media: str, *, immutable=False) -> None:
         self.send_response(200)
         self.send_header("Content-Type", media)
-        self.send_header("Cache-Control", "no-cache")
+        self.send_header("Cache-Control", "private, max-age=31536000, immutable" if immutable else "no-cache")
         # One Content-Security-Policy header: sandboxed isolation for SVG,
         # the default self-only policy for everything else.
         if media == "image/svg+xml":
             self.send_header("Content-Security-Policy", "sandbox; default-src 'none'; style-src 'unsafe-inline'")
         else:
-            self.send_header("Content-Security-Policy", "default-src 'self'; script-src 'self'; object-src 'none'; frame-ancestors 'none'")
+            self.send_header("Content-Security-Policy", "default-src 'self'; script-src 'self'; img-src 'self' blob:; object-src 'none'; frame-ancestors 'none'")
         self.send_header("Content-Length", str(len(body)))
         self.send_header("X-Content-Type-Options", "nosniff")
         self.end_headers()
@@ -129,7 +129,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             data=self._read_json_body()
             from .samples import sample_info
             sample = sample_info(self.store.project_root)
-            if sample and sample['readonly'] and self.path not in ('/api/ui-state',):
+            if sample and sample['readonly'] and self.path not in ('/api/ui-state', '/api/gallery'):
                 self._send_json({'error': {'code': 'sample_readonly', 'message': 'this synthetic example is read-only; create your own project'}}, 403)
                 return
             from . import editing, service
@@ -138,6 +138,9 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                 action = {'/api/drafts/save': ui_journal.save, '/api/drafts/import': ui_journal.import_recovery,
                           '/api/drafts/recovery': ui_journal.recovery_file, '/api/ui-state': ui_journal.save_position}[self.path]
                 result = action(self.store.project_root, **data)
+            elif self.path == '/api/gallery':
+                from .gallery_state import save
+                result = save(self.store.project_root, **data)
             elif self.path == '/api/inputs/update':
                 from .local_state import project_path
                 result = service.inputs_update(project_path(self.store.project_root), **data)
@@ -163,7 +166,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             else:self._send_json({'error':'not found'},404);return
             self._send_json(result)
         except Exception as exc:
-            if self.path.startswith(('/api/drafts/', '/api/ui-state')):
+            if self.path.startswith(('/api/drafts/', '/api/ui-state', '/api/gallery')):
                 self._send_error(exc)
                 return
             from .store import ConflictError
@@ -188,6 +191,34 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         if parsed.path.startswith('/v2/') or parsed.path == '/v2':
             self._serve_v2(parsed.path)
+            return
+        if parsed.path in ('/api/gallery', '/api/thumbnails', '/api/thumbnail-file'):
+            try:
+                from . import gallery_state, thumbnails
+                query = parse_qs(parsed.query, keep_blank_values=True)
+                if any(len(values) != 1 for values in query.values()):
+                    raise thumbnails.ThumbnailError('query', 'provide one value for each parameter')
+                if parsed.path == '/api/gallery':
+                    if query:
+                        raise thumbnails.ThumbnailError('query', 'gallery state takes no query parameters')
+                    thumbnails.activate(self.store.project_root)
+                    self._send_json(gallery_state.get(self.store.project_root))
+                elif parsed.path == '/api/thumbnail-file':
+                    if set(query) != {'cache_key'}:
+                        raise thumbnails.ThumbnailError('query', 'thumbnail file requires one derived cache identity')
+                    data, media = thumbnails.file_bytes(self.store.project_root, query['cache_key'][0])
+                    self._send_bytes(data, media, immutable=True)
+                else:
+                    if set(query) - {'path', 'sha256', 'variant', 'retry'} or not {'path', 'sha256'} <= set(query):
+                        raise thumbnails.ThumbnailError('query', 'thumbnail requests require a verified object reference')
+                    if query.get('retry', ['0'])[0] not in ('0', '1'):
+                        raise thumbnails.ThumbnailError('retry', 'retry must be 0 or 1')
+                    result = thumbnails.request(self.store.project_root,
+                        ref={'path': query['path'][0], 'sha256': query['sha256'][0]},
+                        variant=query.get('variant', [thumbnails.VARIANT])[0], retry=query.get('retry', ['0'])[0] == '1')
+                    self._send_json(result, 202 if result['status'] in ('queued', 'running', 'busy') else 200)
+            except Exception as exc:
+                self._send_error(exc)
             return
         if parsed.path in ('/api/project', '/api/drafts', '/api/ui-state', '/api/inputs', '/api/compose/handoff') or parsed.path.startswith('/api/drafts/'):
             try:
@@ -231,7 +262,8 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
         if parsed.path == "/api/health":
             self._send_json({"status": "ok", **self.runtime_state,
                              "project_identity": _project_identity(self.store.project_root),
-                             "ui_available": (self.static_dir / 'v2' / 'index.html').is_file()})
+                             "ui_available": (self.static_dir / 'v2' / 'index.html').is_file(),
+                             "ui_capabilities": ["ui_draft.v1", "ui_gallery.v1", "thumbnails.v1", "fixed_snapshot.v1"]})
             return
         if parsed.path == "/api/file":
             query = parse_qs(parsed.query)

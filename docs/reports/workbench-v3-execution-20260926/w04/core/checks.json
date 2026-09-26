@@ -1,0 +1,204 @@
+{
+  "evidence_level": "core/HTTP and targeted real Chromium CSP proof; synthetic data",
+  "baseline_commit": "f3c9b617b868748ea09765ff072858f563f65b8f",
+  "environment": {
+    "os": "macOS-27.0-arm64-arm-64bit",
+    "python": "3.12.12",
+    "chromium": "149.0.7827.55"
+  },
+  "fixture": {
+    "pages": 30,
+    "candidate_objects": "deferred to W07",
+    "real_model_calls": 0,
+    "source_dimensions": [
+      960,
+      540
+    ]
+  },
+  "thumbnail_derivation": {
+    "cold_30_seconds": 0.106527,
+    "warm_30_seconds": 0.025642,
+    "note": "core batch measurements only, not UI first-screen SLO",
+    "initial_states": [
+      "queued",
+      "queued",
+      "queued",
+      "queued",
+      "queued",
+      "queued",
+      "queued",
+      "queued",
+      "queued",
+      "queued",
+      "queued",
+      "queued",
+      "queued",
+      "queued",
+      "queued",
+      "queued",
+      "queued",
+      "queued",
+      "queued",
+      "queued",
+      "queued",
+      "queued",
+      "queued",
+      "queued",
+      "queued",
+      "queued",
+      "queued",
+      "queued",
+      "queued",
+      "queued"
+    ],
+    "queue_metrics": {
+      "workers_limit": 2,
+      "queued_limit": 64,
+      "status_limit": 256,
+      "running": 0,
+      "queued": 0,
+      "retained_statuses": 31,
+      "peak_running": 2,
+      "peak_queued": 22,
+      "completed": 31,
+      "failed": 0
+    },
+    "all_warm_hits": true,
+    "dimensions": [
+      [
+        480,
+        270
+      ],
+      [
+        480,
+        270
+      ],
+      [
+        480,
+        270
+      ],
+      [
+        480,
+        270
+      ],
+      [
+        480,
+        270
+      ],
+      [
+        480,
+        270
+      ],
+      [
+        480,
+        270
+      ],
+      [
+        480,
+        270
+      ],
+      [
+        480,
+        270
+      ],
+      [
+        480,
+        270
+      ],
+      [
+        480,
+        270
+      ],
+      [
+        480,
+        270
+      ],
+      [
+        480,
+        270
+      ],
+      [
+        480,
+        270
+      ],
+      [
+        480,
+        270
+      ],
+      [
+        480,
+        270
+      ],
+      [
+        480,
+        270
+      ],
+      [
+        480,
+        270
+      ],
+      [
+        480,
+        270
+      ],
+      [
+        480,
+        270
+      ],
+      [
+        480,
+        270
+      ],
+      [
+        480,
+        270
+      ],
+      [
+        480,
+        270
+      ],
+      [
+        480,
+        270
+      ],
+      [
+        480,
+        270
+      ],
+      [
+        480,
+        270
+      ],
+      [
+        480,
+        270
+      ],
+      [
+        480,
+        270
+      ],
+      [
+        480,
+        270
+      ],
+      [
+        480,
+        270
+      ]
+    ],
+    "source_bytes": 440766,
+    "thumbnail_bytes": 807065
+  },
+  "checks": {
+    "new_artifact_background_warming": true,
+    "gallery_etag_ack": true,
+    "fixed_reference_and_selection": true,
+    "document_and_content_identity_unchanged": true,
+    "blob_svg_scripts_inert": true,
+    "blob_image_allowed": true,
+    "svg_external_script_request_absent": true
+  },
+  "gallery_frontend_verified": false,
+  "full_300x5x3_fixture_verified": false,
+  "real_home_changed": false
+}

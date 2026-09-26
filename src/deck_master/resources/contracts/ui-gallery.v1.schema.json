@@ -1,0 +1,178 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:deck-master:ui-gallery:v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "project_id",
+    "project_identity",
+    "revision_id",
+    "layer",
+    "mode",
+    "columns",
+    "selected_page_ids",
+    "references",
+    "filter",
+    "anchor",
+    "zoom"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "ui_gallery.v1"
+    },
+    "project_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+    },
+    "project_identity": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "revision_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+    },
+    "layer": {
+      "enum": [
+        "original_image",
+        "svg",
+        "ppt"
+      ]
+    },
+    "mode": {
+      "enum": [
+        "grid",
+        "continuous",
+        "compare"
+      ]
+    },
+    "columns": {
+      "enum": [
+        2,
+        3,
+        4
+      ]
+    },
+    "selected_page_ids": {
+      "type": "array",
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+      }
+    },
+    "references": {
+      "type": "array",
+      "maxItems": 300,
+      "items": {
+        "type": "object",
+        "required": [
+          "page_id",
+          "revision_id",
+          "original_ref"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "page_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+          },
+          "revision_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+          },
+          "original_ref": {
+            "type": "object",
+            "required": [
+              "path",
+              "sha256"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "path": {
+                "type": "string",
+                "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
+        }
+      }
+    },
+    "filter": {
+      "type": "object",
+      "required": [
+        "chapter_id",
+        "status"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "chapter_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 200
+        },
+        "status": {
+          "enum": [
+            "all",
+            "missing",
+            "stale",
+            "attention",
+            "references"
+          ]
+        }
+      }
+    },
+    "anchor": {
+      "type": "object",
+      "required": [
+        "page_id",
+        "offset"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "page_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "offset": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "zoom": {
+      "type": "object",
+      "required": [
+        "synchronized",
+        "scale"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "synchronized": {
+          "type": "boolean"
+        },
+        "scale": {
+          "type": "number",
+          "minimum": 0.25,
+          "maximum": 3
+        }
+      }
+    }
+  }
+}

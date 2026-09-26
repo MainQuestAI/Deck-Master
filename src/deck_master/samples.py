@@ -79,3 +79,89 @@ def create_sample(project, *, page_count=5, readonly=True):
     write_json(safe_path(project, ".deckmaster", "workbench", "sample.json"),
                {"format": FACTORY_VERSION, "readonly": readonly, "evidence_level": "synthetic", "model_calls": 0})
     return {"project_id": doc["project_id"], "page_count": page_count, "synthetic": True, "readonly": readonly}
+
+
+def create_gallery_sample(project, *, page_count=30, readonly=True):
+    """Explicit mixed-layer fixture, not a reconstruction or PPT render claim.
+
+    SVG and PPT-preview images are independently drawn synthetic layer examples;
+    no actual PPT file, candidate, Attempt, quality approval, or Host call is
+    fabricated. The manifest names visual deviations for a later user test.
+    """
+    import copy
+    from pathlib import Path
+    import uuid
+    from PIL import Image, ImageDraw
+    from .models import validate_schema
+    from .pipeline import artifact
+
+    if type(page_count) is not int or not 24 <= page_count <= 300:
+        raise LocalStateError('page_count', 'gallery fixture requires 24 to 300 pages')
+    create_sample(project, page_count=page_count, readonly=readonly)
+    store = Store(project); doc = store.load_document()
+    original_revision = doc['revision_id']
+    deviations = {'p08', 'p19'}
+    missing = {'p03', 'p14'}
+    stale = {'p11', 'p21'}
+
+    def synthetic_art(data, extension, role, entry, *, dependencies=(), derived_from=()):
+        file = store.put_blob(data, ext=extension)
+        ref = artifact(store, store.project_root / file['path'], role, page_id=entry['page_id'],
+                       dependencies=dependencies, derived_from=derived_from)
+        obj = store.read_object_json(ref)
+        obj['limitations'] = ['Explicit synthetic layer fixture; not an actual model, SVG reconstruction or PPT rendering result.']
+        return store.put_json_object(obj)
+
+    def image_bytes(canvas):
+        output = BytesIO(); canvas.save(output, format='PNG'); return output.getvalue()
+
+    for index, entry in enumerate(doc['pages'], 1):
+        page_id = entry['page_id']; old = entry['blueprint']
+        old_image = store.read_object_json(old)['file']
+        if page_id not in missing and (index % 3 == 0 or page_id in stale):
+            canvas = Image.new('RGB', (960, 540), '#f7f7f7'); draw = ImageDraw.Draw(canvas)
+            draw.rectangle((40, 40, 920, 500), outline='#56606a', width=3)
+            draw.text((80, 150), f'PAGE {index:02} / SYNTHETIC PPT PREVIEW', fill='#23303a')
+            for offset in range(4): draw.rectangle((80, 220 + offset * 42, 780 - offset * 60, 238 + offset * 42), fill='#c2cfda')
+            entry['ppt_preview'] = synthetic_art(image_bytes(canvas), 'png', 'ppt_preview', entry,
+                dependencies=[{'kind': 'blueprint', 'identity': 'page:' + page_id, 'sha256': old['sha256']}], derived_from=[old])
+        if page_id in deviations or page_id in stale:
+            with Image.open(BytesIO(store.read_object_bytes(old_image))) as image:
+                canvas = image.convert('RGB')
+            draw = ImageDraw.Draw(canvas)
+            if page_id in deviations:
+                draw.rectangle((0, 0, 960, 540), fill='#6b2468' if page_id == 'p08' else '#143e87')
+                for offset in range(9): draw.rectangle((40, 35 + offset * 52, 920, 55 + offset * 52), fill='#e5adc5' if page_id == 'p08' else '#78bade')
+                draw.text((80, 160), f'PAGE {index:02} / DENSE ALTERNATE COMPOSITION', fill='white')
+            else:
+                draw.rectangle((0, 480, 960, 540), fill='#d1e4d6')
+                draw.text((60, 500), 'UPDATED ORIGINAL / SYNTHETIC REVISION', fill='#173523')
+            entry['blueprint'] = synthetic_art(image_bytes(canvas), 'png', 'blueprint', entry,
+                dependencies=[{'kind': 'content', 'identity': 'page:' + page_id, 'sha256': entry['page']['sha256']}])
+        if index % 2 == 0 and page_id not in missing:
+            content = f'<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540"><rect width="960" height="540" fill="#f0f3f4"/><rect x="40" y="40" width="12" height="440" fill="#28768a"/><text x="90" y="120" font-family="sans-serif" font-size="32" fill="#23333b">PAGE {index:02} / SYNTHETIC SVG LAYER</text><rect x="90" y="190" width="700" height="50" fill="#b0c8d0"/><rect x="90" y="280" width="500" height="50" fill="#cad9de"/></svg>'
+            entry['svg'] = synthetic_art(content.encode(), 'svg', 'svg', entry,
+                dependencies=[{'kind': 'blueprint', 'identity': 'page:' + page_id, 'sha256': entry['blueprint']['sha256']}], derived_from=[entry['blueprint']])
+        if page_id in missing: entry['blueprint'] = None
+
+    plan = copy.deepcopy(store.read_object_json(doc['content_plan']))
+    old_plan = doc['content_plan']
+    plan['plan_id'] = 'plan-' + uuid.uuid4().hex
+    plan['version'] += 1; plan['previous_ref'] = old_plan
+    goal_ids = [goal['goal_id'] for goal in plan['input']['goals']]
+    chapter_size = (page_count + 2) // 3
+    plan['input']['chapters'] = [{'chapter_id': f'chapter-{i + 1}', 'title': title, 'goal_ids': goal_ids[i * chapter_size:(i + 1) * chapter_size]}
+        for i, title in enumerate(['项目与材料', '逐页制作', '检查与交付'])]
+    validate_schema('content_plan', plan)
+    doc['content_plan'] = store.put_json_object(plan)
+    updated = bump_revision(doc, {'operation_id': 'synthetic-gallery', 'kind': 'task_update',
+        'description': 'Explicit mixed-layer gallery fixture; no model or rendering claim', 'read_set': []})
+    store.commit_change(base_revision=original_revision, document=updated, operation_id='synthetic-gallery')
+    manifest = {'schema_version': 'gallery_fixture.v1', 'factory': FACTORY_VERSION, 'seed': 0,
+        'page_count': page_count, 'page_ids': [entry['page_id'] for entry in doc['pages']], 'revision_id': updated['revision_id'],
+        'original_revision': original_revision, 'style_deviation_pages': sorted(deviations), 'missing_original_pages': sorted(missing),
+        'stale_ppt_preview_pages': sorted(stale), 'source_dimensions': [960, 540],
+        'candidate_count': 0, 'attempt_count': 0, 'model_calls': 0, 'actual_ppt_rendering': False,
+        'user_30_second_observation': 'not measured'}
+    write_json(safe_path(Path(project), '.deckmaster', 'workbench', 'gallery-fixture.json'), manifest)
+    return manifest

@@ -471,6 +471,8 @@ def _build_artifact(
         "limitations": spec.get("limitations") or [],
     }
     validate_artifact_semantics(artifact)
+    from .thumbnails import warm_artifact
+    warm_artifact(store, artifact)
     return artifact
 
 
