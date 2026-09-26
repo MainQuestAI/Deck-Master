@@ -1,6 +1,22 @@
 # 公共内容方法｜从任务与资料写成专业完整稿
 
-这份方法用于判断和实际写作，不是每次必须填满的字段表。正式结果是完整 Page 正文、合理页序和能支撑表达的图示要求；不是另一套 brief、claim map 或 narrative plan。
+这份方法用于判断和实际写作，不是每次必须填满的字段表。正式正文保存在 Page，配以合理页序和能支撑表达的图示要求。`compose.v1` 另记录下面的 ContentPlan，保存整理依据和页目标；其中不重复正文。
+
+## 新项目的过程记录（compose.v1）
+
+仅当工作单声明 `protocol_version=compose.v1` 时必需；旧任务保持原信封。先 `task start --supported-protocol compose.v1 --capability content_plan --capability versioned_source_links`，项目、任务、execution_ref 仍取本次工作单与实际执行身份。
+
+在 compose 信封顶层增加 `content_plan`，按运行时 `content-plan-input.v1.schema.json`：
+
+- `input_summary`：材料如何整合、哪些判断还缺依据。
+- `chapters`：稳定 `chapter_id`、标题及有序 `goal_ids`；每个目标只属于一个章节。
+- `goals`：稳定 `goal_id`、实际 `page_id`、本页用途、`source_links`、`unresolved_facts`；必须覆盖采用后的每个 Page。
+- 来源链接包含真实 `source_id`、`source_version`（原文件 SHA256 和 extract ref）以及 extract 中存在的 `locator`；复制工作单 `content_plan_contract.sources` 的版本，不把旧材料或页标题冒充来源。图像材料的定位存在，也不自动证明 Host 已阅图。
+- 全局 `unresolved_facts` 记录剩余缺口。某页没有来源链接时，必须说明该页缺少什么依据；不能伪造出处来通过结构检查。
+
+核心在同一次正文提交中生成不可变计划版本、绑定 Page refs，并保存 Task.result_refs。输入修订时保留未删除页的 goal_id；source/version/locator 有误或 Host 不支持协议时不采用正文。历史计划通过 ref 和固定 Document revision 定位，页标题推导的旧稿目录只供阅读、不会回填。
+
+可以在 `view --content-plan --revision …` 或按页 lineage 中核对；可运行的合成流程在 `examples/workbench/w02_content_plan.py`，不是专业内容验收证据。
 
 ## 1. 先确定交流任务
 

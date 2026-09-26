@@ -46,6 +46,7 @@ ENVELOPE_SLOTS = (
     "notes",
     "content_update",
     "generation_result",
+    "content_plan",
 )
 
 TASK_KINDS = ENVELOPE_KINDS + ("compile", "render", "check")
@@ -351,7 +352,7 @@ def task_inputs_current(store, document, task):
     if task.get('kind') == 'compose' and task.get('intent') == 'input_revision':
         # The result writes the whole page order, so its read dependency must
         # include order and membership as well as normalized Page contents.
-        return [(p['page_id'], p['page']['sha256']) for p in dispatched['pages']] == [
+        return dispatched.get('content_plan') == document.get('content_plan') and [(p['page_id'], p['page']['sha256']) for p in dispatched['pages']] == [
             (p['page_id'], p['page']['sha256']) for p in document['pages']]
     # Display names and source paths are not input semantics. A metadata-only
     # revision keeps even an initial, unscoped compose task usable.
@@ -830,7 +831,11 @@ def _accept_content_update(store: Store, *, document: dict, task: dict, envelope
         "input_revision_id": task.get("input_revision_id"),
         "resolved_by_task_id": task["task_id"],
     }
-    updated_task["result_refs"] = list(page_refs.values())
+    from .content_plan import bind_result, attach
+    plan_ref = bind_result(store, document, task, envelope.get("content_plan"), new_pages)
+    attach(new_document, plan_ref)
+    result_refs = list(page_refs.values()) + ([plan_ref] if plan_ref else [])
+    updated_task["result_refs"] = result_refs
     validate_task_semantics(updated_task)
     task_ref = store.put_json_object(updated_task)
     _replace_task_in_document(new_document, task, task_ref, store)
@@ -848,7 +853,7 @@ def _accept_content_update(store: Store, *, document: dict, task: dict, envelope
         "new_page_hashes": {pid: page_refs[pid]["sha256"] for pid in changed_ids if pid in page_refs},
         "unchanged_reason": (content_update.get("unchanged_reason") or "").strip() or None,
         "impact_summary": content_update.get("impact_summary"),
-        "result_refs": list(page_refs.values()),
+        "result_refs": result_refs,
         "work_complete": derive_work_complete(new_document, store),
         "next_action": "continue_production",
     }
@@ -1129,9 +1134,13 @@ def accept_result(
     page_refs = {}
     for page in adopted_pages:
         page_refs[page["page_id"]] = store.put_json_object(page)
+    from .content_plan import bind_result, attach
+    plan_ref = bind_result(store, document, task, envelope.get("content_plan"),
+                           [{"page_id": pid, "page": page_refs[pid]} for pid in (envelope.get("page_order") or list(page_refs))])
     artifact_refs = [store.put_json_object(artifact) for artifact in artifacts]
     review_refs = [store.put_json_object(review) for review in reviews]
-    updated_task["result_refs"] = list(page_refs.values()) + artifact_refs + review_refs
+    result_refs = list(page_refs.values()) + artifact_refs + review_refs + ([plan_ref] if plan_ref else [])
+    updated_task["result_refs"] = result_refs
     validate_task_semantics(updated_task)
     task_ref = store.put_json_object(updated_task)
 
@@ -1139,6 +1148,7 @@ def accept_result(
         document,
         {"operation_id": operation_id, "kind": "task_update", "description": "", "read_set": []},
     )
+    attach(new_document, plan_ref)
     page_slots = {}
     for artifact in artifacts:
         if artifact.get("page_id"):
@@ -1214,7 +1224,7 @@ def accept_result(
         "new_page_hashes": {
             page_id: ref["sha256"] for page_id, ref in page_refs.items()
         },
-        "result_refs": list(page_refs.values()) + artifact_refs + review_refs,
+        "result_refs": result_refs,
         "work_complete": derive_work_complete(new_document, store),
         "next_action": "auto_view_then_production"
         if envelope["kind"] == "compose"

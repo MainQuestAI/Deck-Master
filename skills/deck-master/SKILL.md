@@ -48,6 +48,7 @@ create --draft / import draft / compose 结果**第一次形成至少一页后�
 - 任务输入里只装真实读取的资料与已确认决定；不调用规则 Planner、不循环 claim、不从数组取模配论点、不用固定痛点/风险/CTA 补页。
 - `task accept` 前文件已写入本次 operation 的 staging；`produced_against` 与任务派发 hash 一致，否则先重读新输入。
 - 外部图像调用先按额度事务 begin，完成后 settle；未执行不报 consumed。
+- 工作单带 `protocol_version=compose.v1` 时，start 声明该协议和 `content_plan`、`versioned_source_links` 能力；按 content-methods 返回 `content_plan`，input_revision 仍只用 content_update 改正文。引用必须来自工作单给出的材料版本与真实 locator；没依据就记录未解决事实。
 - 工作单带 `protocol_version=generation.v1` 时，先按 blueprint-svg 方法声明能力、冻结准确输入，begin 绑定 request_id，settle 绑定 attempt_id。不能用旧信封跳过新协议，也不能自行填写高等级 observer 充当工具证明。
 - 蓝图任务只调用当前 Codex 会话的内置 ImageGen；不请求 Provider/API Key。实际提交 prompt、原始图片和可得 invocation ref 一并保存。
 - 没有实际阅图/渲染/人类检查的项目保持未验证标注；工程通过不升级为内容专业。

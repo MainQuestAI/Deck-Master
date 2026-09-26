@@ -1,0 +1,91 @@
+{
+  "basis": {
+    "input_digest": "b4441fd95d54a4f660006262c293a15bb9a3c7228611638265bdab14f74f21f9",
+    "produced_against": "7817bd6d19f07939834f2d4d1be3e192e2c3e163a10a6946ec538b8f201e8857",
+    "revision_id": "9ea62731295747d482b843a279af25de"
+  },
+  "input": {
+    "chapters": [
+      {
+        "chapter_id": "workflow",
+        "goal_ids": [
+          "explain",
+          "verify"
+        ],
+        "title": "流程与依据"
+      }
+    ],
+    "goals": [
+      {
+        "goal_id": "explain",
+        "page_id": "steps",
+        "purpose": "解释登记、核对、归档的顺序",
+        "source_links": [
+          {
+            "locator": "L2",
+            "source_id": "src-ffacb5ac",
+            "source_version": {
+              "extract": {
+                "path": ".deckmaster/objects/d1/d12a8fdc92411c180a7b425eab7bb057bfa448f2415d4d352221421ccd12d37c.json",
+                "sha256": "d12a8fdc92411c180a7b425eab7bb057bfa448f2415d4d352221421ccd12d37c"
+              },
+              "original_sha256": "fd238cb2814c4db0a16b748accb61527f68bb0549d98b6d62369b99989c60302"
+            }
+          }
+        ],
+        "unresolved_facts": []
+      },
+      {
+        "goal_id": "verify",
+        "page_id": "evidence",
+        "purpose": "指出成效尚待实测",
+        "source_links": [
+          {
+            "locator": "L3",
+            "source_id": "src-ffacb5ac",
+            "source_version": {
+              "extract": {
+                "path": ".deckmaster/objects/d1/d12a8fdc92411c180a7b425eab7bb057bfa448f2415d4d352221421ccd12d37c.json",
+                "sha256": "d12a8fdc92411c180a7b425eab7bb057bfa448f2415d4d352221421ccd12d37c"
+              },
+              "original_sha256": "fd238cb2814c4db0a16b748accb61527f68bb0549d98b6d62369b99989c60302"
+            }
+          }
+        ],
+        "unresolved_facts": [
+          "需实际测量节省时间。"
+        ]
+      }
+    ],
+    "input_summary": "流程步骤有明确依据，成效尚无实测数据。",
+    "schema_version": "content_plan_input.v1",
+    "unresolved_facts": [
+      "不能由三个步骤推定成效。"
+    ]
+  },
+  "origin": "host_composed",
+  "page_links": [
+    {
+      "goal_id": "explain",
+      "page_id": "steps",
+      "page_ref": {
+        "path": ".deckmaster/objects/73/734a02b37257102dc06133c7d9810a56022391a6d0d843d577c9b59e74e68922.json",
+        "sha256": "734a02b37257102dc06133c7d9810a56022391a6d0d843d577c9b59e74e68922"
+      }
+    },
+    {
+      "goal_id": "verify",
+      "page_id": "evidence",
+      "page_ref": {
+        "path": ".deckmaster/objects/b9/b93435a4e39daa6c544731b99c54bbcf4f0ad5987fa827b9b9cd3decac47fff8.json",
+        "sha256": "b93435a4e39daa6c544731b99c54bbcf4f0ad5987fa827b9b9cd3decac47fff8"
+      }
+    }
+  ],
+  "plan_id": "plan-662a1b10150e43f6bf5872d5c3792879",
+  "previous_ref": null,
+  "project_id": "synthetic-project",
+  "schema_version": "content_plan.v1",
+  "task_id": "37ab6a9b5ae4",
+  "version": 1
+}

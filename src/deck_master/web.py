@@ -161,7 +161,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
         if not self._local_host():
             self._send_json({'error':'loopback Host required'},403);return
         parsed = urlparse(self.path)
-        if parsed.path in ("/api/view", "/api/view/summary", "/api/workbench", "/api/tasks", "/api/reviews") or parsed.path.startswith(("/api/pages/", "/api/requests/", "/api/attempts/")):
+        if parsed.path in ("/api/view", "/api/view/summary", "/api/workbench", "/api/tasks", "/api/reviews", "/api/content-plan") or parsed.path.startswith(("/api/pages/", "/api/requests/", "/api/attempts/")):
             self._read_projection(parsed)
             return
         if parsed.path=='/api/session':
@@ -213,6 +213,9 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                 payload = workbench_mod.workbench_summary(project, revision=revision)
             elif parsed.path == "/api/tasks":
                 payload = workbench_mod.tasks_view(project, revision=revision)
+            elif parsed.path == "/api/content-plan":
+                from .content_plan import show
+                payload = show(project, revision=revision)
             elif parsed.path.startswith(("/api/requests/", "/api/attempts/")):
                 from .generation import show
                 parts = parsed.path.split("/")

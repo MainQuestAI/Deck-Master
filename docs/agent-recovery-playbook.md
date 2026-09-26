@@ -123,6 +123,20 @@ without creating a second allowance or erasing the earlier observation.
 
 ## Workbench Snapshot Reads
 
+`view --content-plan` and `GET /api/content-plan` follow the same fixed revision
+rules. `recorded` means the plan was saved, not that its claims passed review;
+`derived` is a Page-title outline and is never persisted as a historical plan.
+`basis_changed` retains the original Page/source links for comparison.
+`content_plan_invalid` rejects compose adoption for missing goals, invalid
+source versions/locators or missing basis. Re-read the work order's source
+contract and use explicit unresolved facts where material is missing.
+`content_plan_unreadable` is local to that detail; other pages remain readable.
+
+New workbench projects require the `content-plan.v1` writer boundary and
+`compose.v1` Host capabilities. Existing old-protocol tasks remain compatible;
+never make an old project new-format by editing its pointer. History restore
+restores the selected plan reference while keeping the current writer boundary.
+
 `view --summary` and `view --page-id <id> --lineage` read current by default.
 Add `--revision <id>` to pin the Document, page slots, tasks and stored prompts.
 Get valid IDs with `deck-master history list --project <dir>`. Reads never

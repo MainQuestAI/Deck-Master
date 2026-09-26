@@ -34,6 +34,7 @@
     "generation": {"type": "object", "required": ["requests", "attempts", "errors", "adopted_observation"], "additionalProperties": false, "properties": {"requests": {"type": "array", "items": {"type": "object"}}, "attempts": {"type": "array", "items": {"type": "object"}}, "errors": {"type": "array", "items": {"type": "object"}}, "adopted_observation": {"type": ["object", "null"]}}},
     "tasks": {"type": "array", "items": {"type": "object", "required": ["task_id", "status", "ref"]}},
     "deck_output": {"$ref": "urn:deck-master:workbench-summary:v1#/$defs/deck_output"},
+    "content_plan": {"type": "object", "required": ["status", "relation", "ref"]},
     "evidence_level": {"const": "engineering"}
   }
 }

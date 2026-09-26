@@ -1,6 +1,7 @@
 # W02：冻结请求、Attempt 与真实观察
 
 基线 main `de6293492fca41fbce34e269a4463da111214c2c`；分支 `codex/workbench-w02-protocol`。
+本切片已通过 [PR #43](https://github.com/MainQuestAI/Deck-Master/pull/43) 合入 main `09f4486a453d2132a18dbefd10f99ef7317e8fd5`；此文件保留该切片范围，后续 ContentPlan 见 [执行记录](W02-CONTENT-PLAN.md)。
 前一恢复切片已通过 [PR #42](https://github.com/MainQuestAI/Deck-Master/pull/42) 合入；本切片不包含 ContentPlan，也没有关闭 W02 整卡。
 
 ## 可用结果
