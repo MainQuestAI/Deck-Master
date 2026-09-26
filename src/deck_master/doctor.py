@@ -5,7 +5,7 @@ from pathlib import Path
 import subprocess
 import sys
 from . import __version__
-from .method_resources import resolve_root
+from .method_resources import resolve_root, method_ids_for, RELATIVE_PATHS
 from .pipeline import executable, NeedsTool
 
 STEPS=('compose','blueprint','compile','render','view','export')
@@ -29,7 +29,8 @@ def diagnose(step, *, fonts=(), host_imagegen=False):
             add('method_root','unavailable',str(exc))
         else:
             add('method_root','ready',str(method_root))
-        for relative in ('SKILL.md','references/content-methods.md'):
+        methods = dict.fromkeys(method_ids_for('compose') + method_ids_for('compose', intent='input_revision'))
+        for relative in ('SKILL.md', *(RELATIVE_PATHS[method] for method in methods)):
             if method_root is None:
                 break
             path=method_root/relative

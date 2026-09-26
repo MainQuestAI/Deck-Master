@@ -10,9 +10,10 @@ anything. The installer never touches third-party skills or config.toml.
 from __future__ import annotations
 
 from contextlib import contextmanager
+from contextvars import ContextVar
 from datetime import datetime, timezone
 from pathlib import Path
-import fcntl, hashlib, json, os, re, subprocess, sys, uuid, zipfile
+import fcntl, hashlib, json, os, re, stat, subprocess, sys, uuid, zipfile
 
 from .errors import HostSkillConflict
 
@@ -24,11 +25,109 @@ def _locked(root):
         try:yield
         finally:fcntl.flock(handle,fcntl.LOCK_UN)
 
+# Only active inside the installation lock; never persisted across processes.
+_transaction = ContextVar('installation_transaction', default=None)
+
+
+def _identity(path):
+    try:
+        info = path.lstat()
+    except FileNotFoundError:
+        return None
+    return (info.st_dev, info.st_ino, stat.S_IFMT(info.st_mode))
+
+
+class _Undo:
+    def __init__(self):
+        self.actions = []
+        self.backups = []
+
+    def record(self, path, expected, restore):
+        parent = path.parent.stat()
+        parent_identity = (parent.st_dev, parent.st_ino)
+        def undo():
+            parent_now = path.parent.stat()
+            if (parent_now.st_dev, parent_now.st_ino) != parent_identity:
+                raise RuntimeError('parent changed externally; refusing compensation')
+            actual = _identity(path)
+            if actual != expected:
+                raise RuntimeError('path changed externally; refusing compensation')
+            restore()
+        self.actions.append((path, undo))
+
+    def compensate(self, original):
+        failures = []
+        for path, undo in reversed(self.actions):
+            try:
+                undo()
+            except Exception as exc:
+                failures.append(f'{path}: {exc}')
+        if failures:
+            raise RuntimeError(f'installation failed: {original}; compensation incomplete: '
+                               + '; '.join(failures) + '; backups: ' + ', '.join(self.backups)) from original
+
+
+@contextmanager
+def _compensated():
+    transaction = _Undo()
+    token = _transaction.set(transaction)
+    try:
+        yield
+    except Exception as exc:
+        # Undo operations must not add new actions to the log.
+        _transaction.reset(token)
+        token = None
+        transaction.compensate(exc)
+        raise
+    finally:
+        if token is not None:
+            _transaction.reset(token)
+
+
+def _mkdir(path):
+    if path.is_dir():
+        return
+    _mkdir(path.parent)
+    path.mkdir()
+    if transaction := _transaction.get():
+        transaction.record(path, _identity(path), path.rmdir)
+
+
+def _unlink(path):
+    target = os.readlink(path)
+    path.unlink()
+    if transaction := _transaction.get():
+        transaction.record(path, None, lambda: path.symlink_to(target))
+
+
+def _move(source, destination):
+    if _identity(destination) is not None:
+        raise ValueError('migration backup occupied: ' + str(destination))
+    os.rename(source, destination)
+    if transaction := _transaction.get():
+        def restore():
+            if _identity(source) is not None:
+                raise RuntimeError(f'original location occupied: {source}')
+            os.rename(destination, source)
+        transaction.backups.append(str(destination))
+        transaction.record(destination, _identity(destination), restore)
+
+
 def _replace_link(path,target):
     temp=path.parent/('.'+path.name+'-'+uuid.uuid4().hex)
+    old = os.readlink(path) if path.is_symlink() else None
+    if _identity(path) is not None and old is None:
+        raise ValueError('refuse to replace occupied path: ' + str(path))
     try:
         temp.symlink_to(target)
         os.replace(temp,path)
+        if transaction := _transaction.get():
+            def restore():
+                if old is None:
+                    path.unlink()
+                else:
+                    _replace_link(path, old)
+            transaction.record(path, _identity(path), restore)
     finally:
         temp.unlink(missing_ok=True)
 
@@ -107,7 +206,16 @@ def install_candidate(prefix, manifest_path):
 # Legacy companion migration (§8.3): move the old real-directory ``current``
 # aside and prune only the dangling deck-* links that pointed into it.
 
-def _migrate_legacy_companion(root, *, dry_run=False, register_host=True):
+def _migrate_legacy_companion(root, *, dry_run=False, register_host=True, plan=None):
+    if plan is not None:
+        if plan['moved']:
+            _move(Path(plan['moved']['from']), Path(plan['moved']['to']))
+        for name in plan['removed_links']:
+            path = _codex_skill_root() / name
+            if not path.is_symlink() or not os.readlink(path).startswith(str(root / 'current/skills') + '/'):
+                raise HostSkillConflict(str(path), 'legacy link changed after preflight')
+            _unlink(path)
+        return plan
     report={'migrated':False,'moved':None,'removed_links':[],'skipped_entries':[]}
     current=root/'current'
     moving=current.is_dir() and not current.is_symlink()
@@ -133,7 +241,7 @@ def _migrate_legacy_companion(root, *, dry_run=False, register_host=True):
             suffix+=1
             destination=root/f'legacy-companion-{timestamp}-{suffix}'
         if not dry_run:
-            os.rename(current,destination)
+            _move(current,destination)
         report.update(migrated=True,moved={'from':str(current),'to':str(destination)})
     skill_root=_codex_skill_root()
     prefix=str(root/'current'/'skills')+'/'
@@ -142,7 +250,7 @@ def _migrate_legacy_companion(root, *, dry_run=False, register_host=True):
             if register_host and entry.is_symlink() and re.fullmatch(r'deck-.*',entry.name) \
                     and os.readlink(entry).startswith(prefix):
                 if not dry_run:
-                    entry.unlink()
+                    _unlink(entry)
                 report['removed_links'].append(entry.name)
             else:
                 report['skipped_entries'].append(entry.name)
@@ -180,7 +288,7 @@ def _ensure_host_skill_link(root):
     if state in ('managed','absent'):
         link=Path(path)
         if not link.is_symlink() or os.readlink(link)!=_managed_target(root):
-            link.parent.mkdir(parents=True,exist_ok=True)
+            _mkdir(link.parent)
             _replace_link(link,_managed_target(root))
         return {'host_skill':'registered','skill_link':str(link),'skill_target':_managed_target(root)}
     raise HostSkillConflict(
@@ -192,7 +300,7 @@ def _retire_host_skill_link(root):
     """Drop the managed link only when it points at this installation."""
     state,path=_link_state(root)
     if state=='managed':
-        Path(path).unlink()
+        _unlink(Path(path))
     return {'host_skill':'host_skill_unregistered','skill_link':path if state!='absent' else None}
 
 def _sync_host_skill(root, *, register: bool):
@@ -207,14 +315,21 @@ def _sync_host_skill(root, *, register: bool):
     return _ensure_host_skill_link(root)
 
 def _preflight_host_skill(root, *, removed_links=()):
+    # Walk from the root: exists() alone treats dangling links as missing.
+    parent = _codex_skill_root().absolute()
+    for component in reversed((parent, *parent.parents)):
+        try:
+            if component.is_symlink():
+                component.resolve(strict=True)
+                if not component.is_dir():
+                    raise ValueError('symlink does not resolve to a directory')
+            elif component.exists() and not component.is_dir():
+                raise ValueError('not a directory')
+        except (OSError, RuntimeError, ValueError) as exc:
+            raise HostSkillConflict(str(component), f'invalid Codex skill parent: {exc}; current is unchanged') from exc
     state,path=_link_state(root)
     if state in ('occupied','foreign') and 'deck-master' not in removed_links:
         raise HostSkillConflict(path, 'the Codex skill path belongs to another installation or user; current is unchanged')
-    parent=_codex_skill_root()
-    while not parent.exists() and parent != parent.parent:
-        parent=parent.parent
-    if not parent.is_dir():
-        raise HostSkillConflict(str(parent), 'Codex skill parent is not a directory; current is unchanged')
 
 def _checked_release(root, release_id):
     release=_release(root, release_id)
@@ -245,20 +360,18 @@ def _activate_locked(root,release_id):
     _preflight_activation(root,release_id)
     current=root/'current';previous=root/'previous'
     launcher=root/'bin/deck-master'
-    launcher.parent.mkdir(exist_ok=True)
+    _mkdir(launcher.parent)
     if not launcher.exists():
-        with launcher.open('x') as handle:handle.write(_LAUNCHER_TEXT)
+        with launcher.open('x') as handle:
+            if transaction := _transaction.get():
+                transaction.record(launcher, _identity(launcher), launcher.unlink)
+            handle.write(_LAUNCHER_TEXT)
         launcher.chmod(0o755)
     old=os.readlink(current) if current.is_symlink() else None
     target='releases/'+release_id
     if old==target:return {'status':'already_active','release_id':release_id}
-    old_previous=os.readlink(previous) if previous.is_symlink() else None
     if old:_replace_link(previous,old)
-    try:_replace_link(current,target)
-    except Exception:
-        if old_previous:_replace_link(previous,old_previous)
-        else:previous.unlink(missing_ok=True)
-        raise
+    _replace_link(current,target)
     return {'status':'activated','release_id':release_id,'previous':old,'format_boundary':'Older binaries must not write unsupported Document schemas; restore a compatible project copy.'}
 
 def activate(prefix,release_id,*,register_host=True):
@@ -270,15 +383,16 @@ def activate(prefix,release_id,*,register_host=True):
         if register_host:
             # Refuse before switching current: a conflict must not activate.
             _preflight_host_skill(root,removed_links=migration['removed_links'])
-        migration=_migrate_legacy_companion(root,register_host=register_host)
-        result=_activate_locked(root,release_id)
-        result['cli_active']=True
-        result['migration']=migration
-        registration=_sync_host_skill(root,register=register_host)
-        result.update(registration)
-        if registration.get('host_skill')=='registered':
-            result['skill_release_id']=release_id
-        return result
+        with _compensated():
+            migration=_migrate_legacy_companion(root,register_host=register_host,plan=migration)
+            result=_activate_locked(root,release_id)
+            result['cli_active']=True
+            result['migration']=migration
+            registration=_sync_host_skill(root,register=register_host)
+            result.update(registration)
+            if registration.get('host_skill')=='registered':
+                result['skill_release_id']=release_id
+            return result
 
 def rollback(prefix,*,register_host=True):
     root=Path(prefix).resolve()/'.deck-master'
@@ -287,13 +401,15 @@ def rollback(prefix,*,register_host=True):
         if not previous.is_symlink():raise ValueError('no previous release')
         target=os.readlink(previous)
         if not target.startswith('releases/') or len(Path(target).parts)!=2:raise ValueError('invalid previous release')
-        release=_checked_release(root,Path(target).name)
-        if register_host and (release/'skill/deck-master/SKILL.md').is_file():
+        _checked_release(root,Path(target).name)
+        _preflight_activation(root,Path(target).name)
+        if register_host:
             _preflight_host_skill(root)
-        result=_activate_locked(root,Path(target).name)
-        registration=_sync_host_skill(root,register=register_host)
-        result.update(registration)
-        result['cli_active']=True
-        if registration.get('host_skill')=='registered':
-            result['skill_release_id']=Path(target).name
-        return result
+        with _compensated():
+            result=_activate_locked(root,Path(target).name)
+            registration=_sync_host_skill(root,register=register_host)
+            result.update(registration)
+            result['cli_active']=True
+            if registration.get('host_skill')=='registered':
+                result['skill_release_id']=Path(target).name
+            return result

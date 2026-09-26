@@ -609,9 +609,21 @@ def continue_project(project_dir: Path | str) -> dict:
 @tasks_mod._project_transaction
 def _recover_input_revision(store):
     document = store.load_document()
-    if input_alignment(document) != 'needs_reconciliation':
-        return
     all_tasks = [store.read_object_json(ref) for ref in document.get('tasks') or []]
+    if input_alignment(document) != 'needs_reconciliation':
+        stale = [index for index, task in enumerate(all_tasks)
+                 if task.get('kind') == 'compose' and task.get('intent') == 'input_revision'
+                 and task.get('status') in ('awaiting_host', 'running', 'queued')
+                 and not tasks_mod.task_inputs_current(store, document, task)]
+        if stale:
+            updated = bump_revision(document, {'operation_id': _new_operation_id('retire-input'),
+                                     'kind': 'task_update', 'description': 'retire stale input revisions', 'read_set': []})
+            for index in stale:
+                updated['tasks'][index] = store.put_json_object(
+                    {**all_tasks[index], 'status': 'superseded', 'updated_at': _utc_now_iso()})
+            store._commit_locked(base_revision=document['revision_id'], document=updated,
+                                 operation_id=updated['change']['operation_id'], blobs=[])
+        return
     valid = next((task for task in reversed(all_tasks)
                   if task.get('kind') == 'compose' and task.get('intent') == 'input_revision'
                   and task.get('status') in ('awaiting_host', 'running')

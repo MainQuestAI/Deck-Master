@@ -312,6 +312,11 @@ def task_inputs_current(store, document, task):
     if (compute_input_digest(dispatched) != compute_input_digest(document)
             or dispatched['design_context'] != document['design_context']):
         return False
+    if task.get('kind') == 'compose' and task.get('intent') == 'input_revision':
+        # The result writes the whole page order, so its read dependency must
+        # include order and membership as well as normalized Page contents.
+        return [(p['page_id'], p['page']['sha256']) for p in dispatched['pages']] == [
+            (p['page_id'], p['page']['sha256']) for p in document['pages']]
     # Display names and source paths are not input semantics. A metadata-only
     # revision keeps even an initial, unscoped compose task usable.
     if content_identity({**document, 'sources': dispatched['sources']}) == task.get('produced_against'):
@@ -735,6 +740,8 @@ def _accept_content_update(store: Store, *, document: dict, task: dict, envelope
     history intact. Changed content/order retires current deck outputs; their
     immutable objects remain available in history.
     """
+    if not task_inputs_current(store, document, task):
+        raise StaleInputContext('(content_update)', 'document changed since dispatch; run continue')
     _validate_content_update_request(envelope, document, task, content_update)
     upserts = {}
     for index, page in enumerate(content_update.get("upsert_pages") or []):

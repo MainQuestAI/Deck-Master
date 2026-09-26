@@ -2,9 +2,9 @@
 
 日期：2026-09-26。分支：`codex/flow-quality`。
 
-**当前进展：PR #39 的五项评审问题已补充修复与本地回归，远端门禁以 PR 当前提交的 Checks 为准。AC-17 真实 Codex 会话和用户本机迁移尚未执行。** 自动测试、合成材料与真实 CLI 输出不替代专业内容验收。
+**当前进展：PR #39 已进入第三轮修复，当前结果见 [第三轮验证记录](../../qa/pr39-flow-quality/round3.md)，远端门禁以 PR 当前提交的 Checks 为准。AC-17 真实 Codex 会话和用户本机迁移尚未执行。** 自动测试、合成材料与真实 CLI 输出不替代专业内容验收。
 
-最新修复与 **528 项回归**见 [修复验证](../../qa/pr39-flow-quality/README.md)。下文 511 项测试、隔离安装结果和 dc2636e 安装候选是前一轮证据；该候选不包含后续修复，安装验收需从最终提交重新构建。
+第一轮修复与 **528 项回归**见 [修复验证](../../qa/pr39-flow-quality/README.md)。下文 511 项测试、隔离安装结果和 dc2636e 安装候选是前一轮证据；该候选不包含后续修复，安装验收需从最终提交重新构建。
 
 评审历史：在 `859d479` 核对时，[PR #39](https://github.com/MainQuestAI/Deck-Master/pull/39) 对 `d98e4b0` 提出的 1 项 P1、4 项 P2 中，仅工作台布局已由 `dc2636e` 修复；其余为删页/重排后旧 PPT 可能继续交付、历史恢复未恢复 content_basis、取消修订后无法续作、CI 缺少 rg。该版本两组 unit 失败、真实渲染通过。本次已补充这些修复及 AC-11/AC-13 的负向回归，原记录保留用于追溯。
 
@@ -16,7 +16,7 @@
 
 未扩展已砍掉的功能：不增加方法快照、method read、独立材料扫描/读取命令、材料清单文件、请求输入命令、撤销要求的关闭状态、用途标签、GUI 输入编辑区、runtime.json 或其他 Host 注册。目录直接进入 `--source`，用户答复由 Host 对话取得后用 `inputs update` 写入。
 
-## 本轮修复
+## 初轮修复历史
 
 | 对应任务 | 修复与结果 |
 |---|---|
@@ -31,18 +31,18 @@
 
 本机 manifest 的实际 schema 是 `deck_master_companion_manifest.v3`，`adoption_policy` 位于 `skills[]` 内，而非顶层。安装器及隔离迁移测试均已按此修正。真实 HOME 只读复核仍为旧真实目录和 15 条断链，未修改配置、链接或第三方 Skill。
 
-## 验证结果
+## 历史验证结果（不用于当前安装验收）
 
-- 最终代码全量测试：**511 passed in 90.59s**。日志：[pytest-final.log](../../../dist/flow-quality-20260926/pytest-final.log)。
+- 当时提交的全量测试：**511 passed in 90.59s**。日志：[pytest-final.log](../../../dist/flow-quality-20260926/pytest-final.log)。
 - `ruff check src tools tests`、JavaScript 语法检查、`git diff --check` 通过。
-- 最终 wheel 在隔离 HOME 的 **18 条真实 CLI 检查通过**：候选安装、激活、包内方法定位、占用拒绝、15 条旧链接迁移、幂等重试、回滚、目录材料、更新及导出。详见 [installed-cli-summary.json](../../../dist/flow-quality-20260926/installed-cli-summary.json) 与 [逐条命令输出](../../../dist/flow-quality-20260926/commands/)。
+- 当时 wheel 在隔离 HOME 的 **18 条真实 CLI 检查通过**：候选安装、激活、包内方法定位、占用拒绝、15 条旧链接迁移、幂等重试、回滚、目录材料、更新及导出。详见 [installed-cli-summary.json](../../../dist/flow-quality-20260926/installed-cli-summary.json) 与 [逐条命令输出](../../../dist/flow-quality-20260926/commands/)。
 - 直接 wheel、sdist→wheel 中的 **9 个方法文件**与 canonical 逐字节一致，无 skills-references。证据：[wheel](../../../dist/flow-quality-20260926/package-verification.json)、[sdist→wheel](../../../dist/flow-quality-20260926/sdist-verification.json)。
 - 真实浏览器检查了待更新提示、正文布局和编辑控件：1280px 视口下正文区域 1060px、侧栏 220px，无横向溢出。截图及数据：[截图](../../../dist/flow-quality-20260926/ui-proof.png)、[检查结果](../../../dist/flow-quality-20260926/ui-proof.json)。这是合成项目的界面验证，不是 AC-17。
 - 基线缺陷对照：[scoped-input-regression.json](../../../dist/flow-quality-20260926/scoped-input-regression.json)。原包校验：[spec-package-verification.json](../../../dist/flow-quality-20260926/spec-package-verification.json)。本机只读状态：[user-install-readonly.json](../../../dist/flow-quality-20260926/user-install-readonly.json)。
 
 真实 CLI 验证使用合成材料与合成 Page/SVG 输入，其中 PPTX 由真实编译器生成，用于验证导出行为；不作为 Host 首稿或业务质量证据。回滚至无 Skill 的旧版本使用旧格式发布记录夹具，验证真实 CLI 的结构兼容行为，未安装或执行历史旧二进制。
 
-## 18 条验收对照
+## 历史 18 条验收对照
 
 A 为自动测试，R 为真实命令或浏览器输出，H 为用户运行的新 Codex 会话。A 的主要入口为 [test_flow_quality.py](../../../tests/rebuild/test_flow_quality.py)，安装相关测试位于 [tests/rebuild](../../../tests/rebuild/)。
 
@@ -67,7 +67,7 @@ A 为自动测试，R 为真实命令或浏览器输出，H 为用户运行的�
 | 17 | **H 待用户执行** | 仓库外新会话的 7 步场景尚未执行，不能宣布产品端到端验收通过。 |
 | 18 | A+R 通过 | 隔离 HOME 验证注册、占用拒绝、15 链接迁移、第三方保护、重试与无 Skill 旧格式回滚。真实 HOME 迁移仍留给用户。 |
 
-## 最终安装候选
+## 历史安装候选（不得用于当前安装验收）
 
 - 发布标识：`dc2636e481d5-3f3af84b7243`
 - 代码提交：`dc2636e481d52e210b97d1ac5c042377398f13e7`，构建时 `source_dirty=false`。
@@ -75,26 +75,39 @@ A 为自动测试，R 为真实命令或浏览器输出，H 为用户运行的�
 - [wheel](../../../dist/flow-quality-20260926/candidate-final/deck_master-1.0.0.dev2-py3-none-any.whl)
 - wheel SHA256：`3f3af84b72437b55d4d2e989785d4ba9898bfdf976939c2898002b6633713898`
 
-`dist/flow-quality-20260926/` 是本机验证与候选目录，按仓库约定未提交到 Git。源代码、测试和本报告已提交；没有合并主线。该目录中的早期 `candidate/` 已被 `candidate-final/` 取代，安装请使用上面的最终候选。
+`dist/flow-quality-20260926/` 是本机验证与候选目录，按仓库约定未提交到 Git。源代码、测试和本报告已提交；没有合并主线。其中 `candidate/` 与 `candidate-final/` 均为历史证据，不包含后续修复，不应用于当前安装验收。
 
 ## 用户执行的两项检查
 
-先在本机完成候选安装和一次迁移。以下命令未替用户执行：
+先确认 PR 最终提交的 CI 全绿，再检出该提交并确保工作区干净。以下命令在仓库根目录运行；`PR_HEAD` 必须等于已核对 CI 的提交。先使用隔离前缀验证，真实 HOME 迁移仍由用户决定并执行。
 
 ```bash
-cd /Users/dingcheng/Coding-Project/02-key-project/Deck-Master
-
+set -eu
+PR_HEAD="$(gh pr view 39 --json headRefOid --jq .headRefOid)"
+gh pr checks 39
+test "$(git rev-parse HEAD)" = "$PR_HEAD"
+test -z "$(git status --porcelain)"
+CANDIDATE_DIR="$(mktemp -d)/candidate"
+.venv/bin/python tools/build_release.py --out "$CANDIDATE_DIR"
+RELEASE_ID="$(.venv/bin/python - "$CANDIDATE_DIR/release.json" "$PR_HEAD" <<'PYTHON'
+import json, sys
+manifest = json.load(open(sys.argv[1]))
+assert manifest['source_sha'] == sys.argv[2]
+assert manifest['source_dirty'] is False
+print(manifest['release_id'])
+PYTHON
+)"
+INSTALL_PREFIX="$(mktemp -d)/isolated prefix"
+export CODEX_HOME="$(mktemp -d)/codex"
 .venv/bin/python -m deck_master install candidate \
-  --prefix "$HOME" \
-  --manifest "$PWD/dist/flow-quality-20260926/candidate-final/release.json"
-
-CODEX_HOME="$HOME/.codex" .venv/bin/python -m deck_master install activate \
-  --prefix "$HOME" \
-  --release-id dc2636e481d5-3f3af84b7243
-
-"$HOME/.deck-master/bin/deck-master" doctor --step compose
-ls -l "$HOME/.codex/skills/deck-master"
+  --prefix "$INSTALL_PREFIX" --manifest "$CANDIDATE_DIR/release.json"
+.venv/bin/python -m deck_master install activate \
+  --prefix "$INSTALL_PREFIX" --release-id "$RELEASE_ID"
+"$INSTALL_PREFIX/.deck-master/bin/deck-master" doctor --step compose
+ls -l "$CODEX_HOME/skills/deck-master"
 ```
+
+隔离验证通过后，用户可将 `INSTALL_PREFIX` 设为 `$HOME`、`CODEX_HOME` 设为 `$HOME/.codex`，使用同一份已经校验的 manifest 和它的 `release_id` 执行上述 candidate、activate、doctor 命令。不要复用历史 dc2636e 候选，也不要手写推测发布标识。
 
 检查激活输出中的迁移报告：旧目录移至 `legacy-companion-<timestamp>` 并保留；移除的旧链接应为 15 条；唯一受管 Skill 指向 `current/skill/deck-master`；第三方 Skill 与 config.toml 不变。
 
