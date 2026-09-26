@@ -67,6 +67,7 @@ class HostSkillConflict(TypedServiceError):
 
 
 NEXT_ACTIONS_BY_CODE = {
+    "legacy_run_format": "use the documented legacy import into a separate project; never initialize an old run in place",
     "needs_tool": "install or restore the named reader dependency in this CLI environment, then retry the same command",
     "task_field_conflict": "remove one of the conflicting task-fact sources and retry",
     "source_unreadable": "fix or replace the named file, or drop it from --source",
@@ -76,6 +77,16 @@ NEXT_ACTIONS_BY_CODE = {
     "input_reconciliation_pending": "run inputs update and the dispatched input_revision task first",
     "method_resource_missing": "reinstall the package; the method source is missing or unreadable",
     "host_skill_conflict": "remove or rename the occupant path, or choose another Codex skill root",
+    "host_protocol_unsupported": "use a Host declaring the task's required protocol and capabilities; read the bundled Skill",
+    "generation_request_required": "freeze the exact tool input, then begin with the returned request_id",
+    "generation_attempt_required": "use the attempt_id returned by the same call begin",
+    "generation_request_invalid": "read the task's generation_input and fix the named field",
+    "generation_binding_conflict": "read the original request and attempt; do not reuse an allowance for different input",
+    "generation_input_mismatch": "inspect the preserved actual input; create a new request for changed input",
+    "generation_evidence_incomplete": "settle with a native event covering the required inputs and exact output; usage is retained",
+    "generation_object_not_found": "read the task's request and attempt references in the selected revision",
+    "tool_observation_unavailable": "check the native event identities and local runtime output; do not invent a receipt",
+    "operation_payload_conflict": "replay the original payload or use a new operation ID for a different request",
 }
 
 

@@ -1,0 +1,28 @@
+{
+  "kind": "blueprint",
+  "generation_result": {
+    "request_id": "req-b0741a7a183b46479966d6891dbcdf38",
+    "attempt_id": "attempt-164c75b9584a4262b52f0f289d5b3f5d"
+  },
+  "files": [
+    {
+      "file_id": "native-output",
+      "path": "native-output.png",
+      "media_type": "image/png"
+    }
+  ],
+  "artifact_specs": [
+    {
+      "role": "blueprint",
+      "page_id": "traceable-generation",
+      "file_id": "native-output",
+      "provenance": {
+        "source_type": "host_generated",
+        "tool": "image_gen"
+      },
+      "limitations": [
+        "Synthetic protocol verification; no customer or professional acceptance."
+      ]
+    }
+  ]
+}

@@ -54,6 +54,37 @@ ID when retrying after storage is writable. Changed payloads or dependency
 bindings conflict. Old completed tasks without a receipt and without their
 journal remain unresolved; do not invent a digest or edit storage by hand.
 
+## Generation Protocol
+
+New `generation.v1` blueprint tasks require explicit Host protocol/capability
+declarations, an immutable request and a begun attempt. These are enabled only
+for new projects created with `--project-format workbench.v3`; no old project
+is migrated in place. New projects use `deckmaster-current.v2` so old writers
+refuse them before changing current. Use the matching core to read or continue;
+an older UI may be used with that core, but do not downgrade the writer.
+
+- `host_protocol_unsupported` (CLI 2 / HTTP 422): read the current public Skill
+  and declare the required capabilities. A Host name alone is not support.
+- `generation_request_required` / `generation_attempt_required` (2 / 422):
+  use the IDs returned by requests freeze and the same call begin.
+- `generation_binding_conflict` / `generation_input_mismatch` (5 / 409):
+  inspect frozen and actual input. New input needs a new request; the same
+  allowance cannot be resent or relabeled. Consumed facts are retained.
+- `generation_evidence_incomplete` / `tool_observation_unavailable` (2 / 422):
+  inspect the real tool completion and its exposed fields. The current Codex
+  adapter verifies native prompt/PNG/transparent-background fields. Its narrow
+  direct literal-call profile also proves reference arguments were omitted.
+  Nonempty references, model/seed and other unrecorded parameters remain
+  unverified. Never fill them from defaults or a self-reported observer label.
+- `generation_object_not_found` (2 / 404): select a request/attempt referenced
+  by the task in the chosen committed revision; orphan objects are not history.
+- `operation_payload_conflict` (5 / 409): reuse the original freeze payload
+  or use a new operation ID for genuinely different input.
+
+An attempt's call state comes from Task.call_allowances. Unknown blocks new
+calls; it is not not_sent. Native receipts may enrich a consumed Host report
+without creating a second allowance or erasing the earlier observation.
+
 ## Review Blocked
 
 - Detect by: `final-readiness` reports `review_status != "pass"`, or

@@ -20,6 +20,9 @@ decision that affects this task.
 | Change audience, decisions, purpose or materials | `deck-master inputs show --project <dir>` then `inputs update --project … --patch … --base-revision … --operation-id …` | `skills/deck-master/references/input-update.md`; only changed pages go in `content_update` |
 | Submit Host results | `deck-master task accept --project … --task-id … --operation-id … --produced-against … --result result.json` | Envelope shape: `docs/specs/deck-master-rebuild-v1/examples/roundtrips/result-envelope/README.md` |
 | Retry a settled external call | `deck-master task call allocate --project … --task-id … --count 1` | Allocates a new allowance under the project policy; retain the earlier call outcome and evidence |
+| Start a new v3 protocol project | `deck-master create --project-format workbench.v3 --brief … --source … --out …` | Explicit opt-in; old projects and the default UI do not change; older cores refuse its pointer format |
+| Freeze a new-protocol generation input | `deck-master requests freeze --project … --task-id … --input request.json --base-revision … --operation-id …` | First claim with required capabilities; input comes from the task's generation_input |
+| Inspect a generation request or attempt | `deck-master requests show --project … --request-id …` / `attempts show --project … --attempt-id …` | Optional --revision; attempt reads its original call allowance and actual observed fields |
 | Workbench service status | `deck-master view --project <dir>` | Existing service status; does not launch a browser |
 | Read ordered stages | `deck-master view --project <dir> --summary --json` | Lightweight Document projection; add `--revision <id>` to pin history |
 | Read one page's lineage | `deck-master view --project <dir> --page-id <id> --lineage --revision <id> --json` | Stored prompts and references only; missing history stays unknown |

@@ -2,6 +2,25 @@
 
 ## W02 task accept recovery
 
+The generation protocol now has a separate two-phase real Host example:
+
+```sh
+PYTHONPATH=src python examples/workbench/w02_host_roundtrip.py prepare --out /tmp/w02-host --thread-id ACTUAL_THREAD --turn-id ACTUAL_TURN
+# Execute the actual built-in image tool using the frozen input between phases.
+PYTHONPATH=src python examples/workbench/w02_host_roundtrip.py complete --out /tmp/w02-host --item-id ACTUAL_NATIVE_ITEM
+```
+
+Replace the identity labels with real runtime IDs. The script makes no model
+call itself. Its temporary synthetic project survives between phases; it saves
+machine responses and verifies one request/attempt/call ledger against native
+PNG bytes. Read the generation.v1 section of the public blueprint-svg method
+for the observed-field coverage and restricted literal-call shape. Ordinary
+variable-based calls retain unknown attachment coverage; provider model/seed
+remain unknown. Nonempty reference-image observation is not claimed.
+
+`w02_observation_probe.py` can independently collect one real native image
+completion by thread/turn/item identities; it does not accept arbitrary logs.
+
 ```sh
 PYTHONPATH=src python examples/workbench/w02_recovery.py --out /tmp/w02-recovery
 ```

@@ -91,6 +91,8 @@ def build_parser() -> argparse.ArgumentParser:
     create.add_argument("--brief", required=False, help="task brief text (or --brief-file)")
     create.add_argument("--brief-file", required=False)
     create.add_argument("--title", default="")
+    create.add_argument("--project-format", choices=["workbench.v3"], default=None,
+                        help="opt in a new project to generation.v1; older cores cannot write it")
     create.add_argument("--source", action="append", default=[],
                         help="material file or directory; directories are expanded recursively")
     create.add_argument("--out", required=True)
@@ -160,6 +162,8 @@ def build_parser() -> argparse.ArgumentParser:
     start_parser.add_argument("--project", required=True)
     start_parser.add_argument("--task-id", required=True)
     start_parser.add_argument("--execution-ref", required=True)
+    start_parser.add_argument("--supported-protocol", action="append", default=None)
+    start_parser.add_argument("--capability", action="append", default=None)
 
     status_parser = task_sub.add_parser("status")
     status_parser.add_argument("--project", required=True)
@@ -181,6 +185,7 @@ def build_parser() -> argparse.ArgumentParser:
     begin.add_argument("--task-id", required=True)
     begin.add_argument("--allowance-id", required=True)
     begin.add_argument("--execution-ref", default=None)
+    begin.add_argument("--request-id", default=None)
     settle = call_sub.add_parser("settle")
     settle.add_argument("--project", required=True)
     settle.add_argument("--task-id", required=True)
@@ -188,6 +193,23 @@ def build_parser() -> argparse.ArgumentParser:
     settle.add_argument("--outcome", required=True, choices=["consumed", "not_sent", "unknown"])
     settle.add_argument("--report", default=None)
     settle.add_argument("--invocation-ref", default=None)
+    settle.add_argument("--attempt-id", default=None)
+
+    requests = sub.add_parser("requests", help="freeze or read an immutable generation input")
+    requests_sub = requests.add_subparsers(dest="requests_command", required=True)
+    freeze = requests_sub.add_parser("freeze")
+    for flag in ("project", "task-id", "input", "base-revision", "operation-id"):
+        freeze.add_argument("--" + flag, required=True)
+    request_show = requests_sub.add_parser("show")
+    request_show.add_argument("--project", required=True)
+    request_show.add_argument("--request-id", required=True)
+    request_show.add_argument("--revision")
+    attempts = sub.add_parser("attempts", help="read attempt observations and its existing call allowance")
+    attempts_sub = attempts.add_subparsers(dest="attempts_command", required=True)
+    attempt_show = attempts_sub.add_parser("show")
+    attempt_show.add_argument("--project", required=True)
+    attempt_show.add_argument("--attempt-id", required=True)
+    attempt_show.add_argument("--revision")
 
     build = sub.add_parser('build')
     build.add_argument('--project', required=True)
@@ -310,6 +332,7 @@ def main(argv: list[str] | None = None) -> int:
                 presentation_mode=task_fields.get("presentation_mode"),
                 page_limit=task_fields.get("page_limit"),
                 existing_decisions=task_fields.get("existing_decisions"),
+                project_format=options.project_format,
             )
             if _project_has_pages(options.out):
                 payload = _attach_workbench_url(options.out, payload)
@@ -381,6 +404,17 @@ def main(argv: list[str] | None = None) -> int:
                     external_use=options.external_use,
                 )
             )
+        if options.command in ("requests", "attempts"):
+            rejected = _reject_legacy_run(options.project)
+            if rejected is not None:
+                return rejected
+            from . import generation
+            if options.command == "requests" and options.requests_command == "freeze":
+                return _emit(generation.freeze(options.project, task_id=options.task_id,
+                             input=json.loads(Path(options.input).read_text(encoding="utf-8")),
+                             base_revision=options.base_revision, operation_id=options.operation_id))
+            return _emit(generation.show(options.project, request_id=getattr(options, "request_id", None),
+                                         attempt_id=getattr(options, "attempt_id", None), revision=options.revision))
         if options.command == "task":
             return _dispatch_task(options)
     except (EnvelopeError, ModelError, ServiceError, TaskConflict, FileNotFoundError, StoreError) as exc:
@@ -554,10 +588,8 @@ _LEGACY_ALIAS = {
 
 def _looks_like_legacy_run(path: Path) -> bool:
     """Old-run shape recognition: no new Document pointer, but old markers."""
-    if (path / '.deckmaster' / 'current.json').is_file():
-        return False
-    return any((path / name).exists() for name in
-               ('preview_manifest.json', 'run.json', 'request.json', 'narrative_plan.json'))
+    from .legacy import looks_like_legacy_run
+    return looks_like_legacy_run(path)
 
 
 def _reject_legacy_run(path_value, option='--project'):
@@ -829,7 +861,8 @@ def _dispatch_task(options) -> int:
     if options.task_command == "start":
         return _emit(
             service.task_start(
-                options.project, task_id=options.task_id, execution_ref=options.execution_ref
+                options.project, task_id=options.task_id, execution_ref=options.execution_ref,
+                supported_protocols=options.supported_protocol, capabilities=options.capability,
             )
         )
     if options.task_command == "status":
@@ -859,6 +892,7 @@ def _dispatch_call(options) -> int:
                 task_id=options.task_id,
                 allowance_id=options.allowance_id,
                 execution_ref=options.execution_ref,
+                request_id=options.request_id,
             )
         )
     report_bytes = None
@@ -878,6 +912,7 @@ def _dispatch_call(options) -> int:
             report_bytes=report_bytes,
             report_ext=report_ext,
             invocation_ref=options.invocation_ref,
+            attempt_id=options.attempt_id,
         )
     )
 

@@ -1,0 +1,98 @@
+{
+  "project_id": "synthetic-project",
+  "revision_id": "482274b2db6d4341ab7d0d7bc772a140",
+  "ref": {
+    "path": ".deckmaster/objects/f9/f9f3a64449c0bc313c1e07e4dd2e58d0d06e35001f999171839562fbe2b2033e.json",
+    "sha256": "f9f3a64449c0bc313c1e07e4dd2e58d0d06e35001f999171839562fbe2b2033e"
+  },
+  "attempt": {
+    "allowance_id": "call-1",
+    "attempt_id": "attempt-e89bd11b5ad3492caeeb65e685b4bef4",
+    "execution_ref": "codex:01a0dd7c-2fa3-7383-a844-16162a5d61c8:01a0dd7c-3169-70b0-a0a7-d9f3d9955f07",
+    "observations": [
+      {
+        "path": ".deckmaster/objects/68/684a77e11965717121c8c1b3a7521224ddc3828f4d8d4769a7c96aab8030bca8.json",
+        "sha256": "684a77e11965717121c8c1b3a7521224ddc3828f4d8d4769a7c96aab8030bca8"
+      }
+    ],
+    "output_refs": [
+      {
+        "path": ".deckmaster/objects/c5/c5430c6647800f6360930d2ca45a8e0e298503ef36b2be18320a4a459a21c6d2.png",
+        "sha256": "c5430c6647800f6360930d2ca45a8e0e298503ef36b2be18320a4a459a21c6d2"
+      }
+    ],
+    "previous_ref": {
+      "path": ".deckmaster/objects/98/9859856b708760c14bd1e46509b204ba359d48a082dd616810c224a813903d2c.json",
+      "sha256": "9859856b708760c14bd1e46509b204ba359d48a082dd616810c224a813903d2c"
+    },
+    "project_id": "synthetic-project",
+    "request_ref": {
+      "path": ".deckmaster/objects/b6/b6d3e46c0271a68ffdd8f09db9bda36934fba5fb182c693065f12ce332d3349c.json",
+      "sha256": "b6d3e46c0271a68ffdd8f09db9bda36934fba5fb182c693065f12ce332d3349c"
+    },
+    "schema_version": "generation_attempt.v1",
+    "started_at_ms": 1790429159763,
+    "task_id": "bc1bce0e8dc3"
+  },
+  "call": {
+    "allowance_id": "call-1",
+    "evidence": [
+      {
+        "path": ".deckmaster/objects/68/684a77e11965717121c8c1b3a7521224ddc3828f4d8d4769a7c96aab8030bca8.json",
+        "sha256": "684a77e11965717121c8c1b3a7521224ddc3828f4d8d4769a7c96aab8030bca8"
+      }
+    ],
+    "evidence_level": "tool_observed",
+    "execution_ref": "codex:01a0dd7c-2fa3-7383-a844-16162a5d61c8:01a0dd7c-3169-70b0-a0a7-d9f3d9955f07",
+    "invocation_ref": "exec-fbf11518-a863-4d91-bceb-62b0f5bcc180",
+    "state": "consumed"
+  },
+  "observations": [
+    {
+      "collector": "codex-session-image.v1",
+      "completed_at_ms": 1790429213034,
+      "coverage": {
+        "model": "unknown",
+        "output": "native.result",
+        "parameters": {
+          "transparent_background": "native.transparentBackground"
+        },
+        "prompt": "native.revisedPrompt",
+        "references": "unknown",
+        "seed": "unknown"
+      },
+      "invocation_ref": "exec-fbf11518-a863-4d91-bceb-62b0f5bcc180",
+      "observer": "tool_observed",
+      "output": {
+        "dimensions": [
+          1672,
+          941
+        ],
+        "media_type": "image/png",
+        "sha256": "c5430c6647800f6360930d2ca45a8e0e298503ef36b2be18320a4a459a21c6d2"
+      },
+      "schema_version": "tool_observation.v1",
+      "source": {
+        "byte_offset": 16517064,
+        "item_id": "exec-fbf11518-a863-4d91-bceb-62b0f5bcc180",
+        "line_number": 1419,
+        "record_sha256": "c11ca553b87f832850e7423d8f697c2e2d58b0261bc8f6506a6f49c922a4464f",
+        "session_cli_version": "0.158.0-alpha.2.1",
+        "source": "codex_session.v1",
+        "thread_id": "01a0dd7c-2fa3-7383-a844-16162a5d61c8",
+        "turn_id": "01a0dd7c-3169-70b0-a0a7-d9f3d9955f07"
+      },
+      "started_at_ms": 1790429182718,
+      "submitted": {
+        "model": null,
+        "parameters": {
+          "transparent_background": false
+        },
+        "prompt": "Use case: productivity-visual\nAsset type: editable-presentation blueprint reference, one complete slide\nCanvas: 1600x900 px; physical size 13.333333333333334x7.5 in; contain fit\nPrimary request: Create a polished business slide blueprint from the exact structured input below. Preserve every visible fact, number, unit, label, footnote, node and directed relationship.\nStyle/medium: precise enterprise presentation design; clear hierarchy; production-ready reference image\nComposition/framing: use the supplied canvas, layout intent and node relationships; keep all content inside safe margins\nText: render the supplied customer-visible text verbatim and legibly\nConstraints: do not add claims or invent numeric values, dates, customer data, or outcomes. If a chart needs data absent from the input, use an unlabeled schematic marked 示意数据, without plausible-looking values. Do not omit modules; connect arrows to their actual nodes; use only permitted assets; no watermark; no internal notes\nStructured input:\n{\n  \"canvas\": {\n    \"fit\": \"contain\",\n    \"height_px\": 900,\n    \"slide_height_in\": 7.5,\n    \"slide_width_in\": 13.333333333333334,\n    \"width_px\": 1600\n  },\n  \"customer_visible\": {\n    \"body_blocks\": [\n      {\n        \"heading\": \"每一步都有明确依据\",\n        \"id\": \"steps\",\n        \"items\": [\n          {\n            \"id\": \"request\",\n            \"text\": \"调用前冻结准确提示词\"\n          },\n          {\n            \"id\": \"observation\",\n            \"text\": \"调用后核对工具原生记录\"\n          },\n          {\n            \"id\": \"output\",\n            \"text\": \"按图片字节绑定生成结果\"\n          }\n        ],\n        \"type\": \"bullets\"\n      }\n    ],\n    \"callouts\": [],\n    \"footnotes\": [],\n    \"labels\": [],\n    \"subtitle\": \"合成验证样例\",\n    \"title\": \"一次生成，保留可核对的记录\"\n  },\n  \"fonts\": [\n    {\n      \"asset_id\": null,\n      \"face\": \"Regular\",\n      \"fallback_font_ids\": [],\n      \"family\": \"Noto Sans CJK SC\",\n      \"font_id\": \"body\",\n      \"weight\": 400\n    },\n    {\n      \"asset_id\": null,\n      \"face\": \"Bold\",\n      \"fallback_font_ids\": [],\n      \"family\": \"Noto Sans CJK SC\",\n      \"font_id\": \"heading\",\n      \"weight\": 700\n    }\n  ],\n  \"language\": \"zh-CN\",\n  \"page_id\": \"traceable-generation\",\n  \"permitted_assets\": [],\n  \"style\": {\n    \"colors\": {\n      \"accent\": \"#1478FF\",\n      \"background\": \"#FFFFFF\",\n      \"text\": \"#14213D\"\n    },\n    \"layout_notes\": \"默认样式在 create 时固化；字体名称是配置需求，不是本机安装证明。\",\n    \"style_id\": \"default\",\n    \"typography\": {\n      \"auxiliary_size_pt\": 12,\n      \"body_font_id\": \"body\",\n      \"body_size_pt\": 18,\n      \"heading_font_id\": \"heading\",\n      \"heading_size_pt\": 30\n    }\n  },\n  \"visual_spec\": {\n    \"edges\": [],\n    \"intent\": \"A clean three-step business slide, synthetic software verification sample.\",\n    \"layout_hint\": \"\",\n    \"nodes\": [],\n    \"reference_mode\": \"new_design\",\n    \"style_ref\": \"default\"\n  }\n}",
+        "references": null,
+        "seed": null
+      },
+      "trust_scope": "current-user local Codex runtime; not a provider signature"
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "exit_code": 0,
+  "stdout": "{\n \"status\": \"settled\",\n \"task_id\": \"bc1bce0e8dc3\",\n \"allowance_id\": \"call-1\",\n \"outcome\": \"consumed\",\n \"attempt_id\": \"attempt-e89bd11b5ad3492caeeb65e685b4bef4\",\n \"attempt_ref\": {\n  \"path\": \".deckmaster/objects/f9/f9f3a64449c0bc313c1e07e4dd2e58d0d06e35001f999171839562fbe2b2033e.json\",\n  \"sha256\": \"f9f3a64449c0bc313c1e07e4dd2e58d0d06e35001f999171839562fbe2b2033e\"\n }\n}\n",
+  "stderr": ""
+}

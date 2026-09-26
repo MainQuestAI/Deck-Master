@@ -1,0 +1,21 @@
+{
+  "old_core_commit": "de6293492fca41fbce34e269a4463da111214c2c",
+  "project_format": "deckmaster-current.v2",
+  "pointer_sha256": "14dfe1531dbc6ea0a2c9308d7ce83b3f4dc36b6ab0eb121375c7a7920530d58a",
+  "checks": [
+    {
+      "case": "old_reader",
+      "exit_code": 2,
+      "stdout": "",
+      "stderr": "{\n \"status\": \"error\",\n \"error\": {\n  \"code\": \"project_unavailable\",\n  \"message\": \"project snapshot is not readable\",\n  \"field\": \"project\",\n  \"next_action\": \"read available project history and select a valid snapshot\",\n  \"docs_ref\": \"docs/agent-recovery-playbook.md#workbench-snapshot-reads\"\n }\n}\n",
+      "pointer_unchanged": true
+    },
+    {
+      "case": "old_writer",
+      "exit_code": 4,
+      "stdout": "",
+      "stderr": "{\n \"error\": {\n  \"code\": \"execution_failed\",\n  \"message\": \"current.json: unknown pointer format 'deckmaster-current.v2'\",\n  \"field\": null,\n  \"next_action\": \"inspect the failure detail\"\n }\n}\n",
+      "pointer_unchanged": true
+    }
+  ]
+}

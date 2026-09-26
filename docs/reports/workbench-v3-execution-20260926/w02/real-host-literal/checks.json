@@ -1,0 +1,31 @@
+{
+  "status": "passed",
+  "synthetic_content": true,
+  "real_host_call": true,
+  "input_hash": "e62ee707ffb1531ce9373ad51fda4d0fc6d999216dca708e84a1d469e71d6fac",
+  "output_sha256": "0db863ab13734a8609efd81563245fc704f1130e947791ac5de97b4dfab48574",
+  "request_id": "req-b0741a7a183b46479966d6891dbcdf38",
+  "attempt_id": "attempt-164c75b9584a4262b52f0f289d5b3f5d",
+  "invocation_ref": "exec-e7c58705-bb0f-45aa-bd4e-9f730bcf55c2",
+  "adopted_revision": "606a8bdb45894b83a83560f870cb5356",
+  "allowance_count": 1,
+  "consumed_count": 1,
+  "observer": "tool_observed",
+  "coverage": {
+    "model": "unknown",
+    "output": "native.result",
+    "parameters": {
+      "transparent_background": "native.transparentBackground"
+    },
+    "prompt": "native.revisedPrompt",
+    "references": "native completion + executed literal call + same-call PNG return; reference arguments omitted",
+    "seed": "unknown"
+  },
+  "full_actual_input_match": {
+    "status": "match",
+    "differences": [],
+    "unknown": []
+  },
+  "W02_AC07": "real_requested_input_output_binding_verified",
+  "provider_model_and_seed": "unknown; not requested or independently observed"
+}

@@ -1,0 +1,11 @@
+{
+  "status": "settled",
+  "task_id": "88c3eedb2753",
+  "allowance_id": "call-1",
+  "outcome": "consumed",
+  "attempt_id": "attempt-164c75b9584a4262b52f0f289d5b3f5d",
+  "attempt_ref": {
+    "path": ".deckmaster/objects/b2/b2a6b6376f857f40923c5b39092068de58169fb240ab2441e5738cb9556bcca2.json",
+    "sha256": "b2a6b6376f857f40923c5b39092068de58169fb240ab2441e5738cb9556bcca2"
+  }
+}

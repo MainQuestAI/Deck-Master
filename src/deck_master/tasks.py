@@ -45,6 +45,7 @@ ENVELOPE_SLOTS = (
     "usage_events",
     "notes",
     "content_update",
+    "generation_result",
 )
 
 TASK_KINDS = ENVELOPE_KINDS + ("compile", "render", "check")
@@ -628,6 +629,8 @@ def _settled_allowances(
             report["bytes"] if report else None,
             _ext_for(report["media_type"], report["staged_path"]) if report else "json", invocation,
         )
+        if task.get("protocol_version") == "generation.v1" and updated.get("evidence_level") == "provider_verified":
+            updated["evidence_level"] = "host_reported"
         for extra in reports[1:]:
             ref = store.put_blob(extra["bytes"], ext=_ext_for(extra["media_type"], extra["staged_path"]))
             if ref not in updated["evidence"]:
@@ -1006,6 +1009,8 @@ def accept_result(
                             operation_id=f"settle-{operation_id}")
         document = store.load_document()
     _validate_content_envelope(envelope)
+    from .generation import adoption_binding, bind_artifact
+    generation_binding = adoption_binding(store, document, task, envelope, staged)
     content_update = envelope.get("content_update")
     if task.get("intent") == "input_revision" and content_update is None:
         raise EnvelopeError("(result)/content_update",
@@ -1101,7 +1106,7 @@ def accept_result(
                 _preflight_svg(store, document, entry, data,
                                page=adopted_by_id.get(entry['page_id']))
         try:
-            artifacts.append(_build_artifact(store, spec, staged, existing_page_ids))
+            artifacts.append(bind_artifact(store, _build_artifact(store, spec, staged, existing_page_ids), generation_binding))
         except ModelError as exc:
             raise EnvelopeError(f'(result)/artifact_specs/{spec.get("role")}', str(exc)) from exc
     reviews = []
@@ -1330,10 +1335,13 @@ def project_has_unknown_calls(document: dict, store: Store) -> str | None:
 
 
 @_project_transaction
-def call_begin(store: Store, *, task_id: str, allowance_id: str, execution_ref: str | None) -> dict:
+def call_begin(store: Store, *, task_id: str, allowance_id: str, execution_ref: str | None,
+               request_id: str | None = None) -> dict:
     """Atomically take one pre-allocated call allowance (spec 08.6, T13.min)."""
     document = store.load_document()
     task = _lookup_task(document, task_id, store)
+    from .generation import is_new, check_host, begin_attempt
+    check_host(task)
     if task.get("status") in ("cancelled", "superseded", "completed"):
         raise TaskConflict(
             f"(task {task_id})",
@@ -1350,6 +1358,10 @@ def call_begin(store: Store, *, task_id: str, allowance_id: str, execution_ref: 
         raise TaskConflict("(begin)/execution_ref", "claim task first with the same execution_ref")
     if target.get("state") == "in_flight":
         if target.get("execution_ref") == execution_ref:
+            if is_new(task):
+                _, attempt, ref = begin_attempt(store, document, task, allowance_id, execution_ref, request_id)
+                return {"status": "already_started", "task_id": task_id, "allowance_id": allowance_id,
+                        "attempt_id": attempt["attempt_id"], "attempt_ref": ref, "request_id": request_id}
             return {"status": "already_started", "task_id": task_id, "allowance_id": allowance_id}
         raise TaskConflict(
             f"(task {task_id})/{allowance_id}",
@@ -1366,7 +1378,14 @@ def call_begin(store: Store, *, task_id: str, allowance_id: str, execution_ref: 
         raise CallBlocked("call_allowances", "resolve unknown calls before beginning")
     target["state"] = "in_flight"
     target["execution_ref"] = execution_ref
-    updated_task = {**task, "call_allowances": allowances, "updated_at": _utc_now_iso()}
+    extra = {}
+    updated_task = task
+    if is_new(task):
+        updated_task, attempt, ref = begin_attempt(store, document, task, allowance_id, execution_ref, request_id)
+        extra = {"attempt_id": attempt["attempt_id"], "attempt_ref": ref, "request_id": request_id}
+    elif request_id is not None:
+        raise EnvelopeError("request_id", "old tasks cannot bind generation requests")
+    updated_task = {**updated_task, "call_allowances": allowances, "updated_at": _utc_now_iso()}
     validate_task_semantics(updated_task)
     task_ref = store.put_json_object(updated_task)
     begin_operation_id = f"begin-{task_id}-{allowance_id}"
@@ -1383,7 +1402,7 @@ def call_begin(store: Store, *, task_id: str, allowance_id: str, execution_ref: 
     store._commit_locked(blobs=[],
         base_revision=document["revision_id"], document=new_document, operation_id=begin_operation_id
     )
-    return {"status": "started", "task_id": task_id, "allowance_id": allowance_id}
+    return {"status": "started", "task_id": task_id, "allowance_id": allowance_id, **extra}
 
 
 
@@ -1458,6 +1477,7 @@ def call_settle(
     report_bytes: bytes | None,
     report_ext: str = "json",
     invocation_ref: str | None = None,
+    attempt_id: str | None = None,
 ) -> dict:
     """Record a real call observation; the report is not a permanent sixth object."""
     if outcome not in CALL_OUTCOMES:
@@ -1473,13 +1493,23 @@ def call_settle(
         raise EnvelopeError(
             f"(task {task_id})/call_allowances/{allowance_id}", "allowance not allocated"
         )
-    settled = _settle_target(store, document, task_id, allowance_id, target, outcome,
-                             report_bytes, report_ext, invocation_ref)
-    if settled == target:
-        return {"status": "already_settled", "task_id": task_id, "allowance_id": allowance_id}
+    from .generation import is_new, settle_attempt
+    extra = {}
+    updated_task = task
+    if is_new(task):
+        updated_task, settled, ref = settle_attempt(store, document, task, target, attempt_id=attempt_id,
+                                                   outcome=outcome, report_bytes=report_bytes, invocation_ref=invocation_ref)
+        extra = {"attempt_id": attempt_id, "attempt_ref": ref}
+    else:
+        if attempt_id is not None:
+            raise EnvelopeError("attempt_id", "old tasks cannot bind generation attempts")
+        settled = _settle_target(store, document, task_id, allowance_id, target, outcome,
+                                 report_bytes, report_ext, invocation_ref)
+    if settled == target and updated_task == task:
+        return {"status": "already_settled", "task_id": task_id, "allowance_id": allowance_id, **extra}
     target.update(settled)
     updated_task = {
-        **task,
+        **updated_task,
         "call_allowances": allowances,
         "updated_at": _utc_now_iso(),
     }
@@ -1499,7 +1529,7 @@ def call_settle(
     store._commit_locked(blobs=[],
         base_revision=document["revision_id"], document=new_document, operation_id=settle_operation_id
     )
-    return {"status": "settled", "task_id": task_id, "allowance_id": allowance_id, "outcome": outcome}
+    return {"status": "settled", "task_id": task_id, "allowance_id": allowance_id, "outcome": outcome, **extra}
 
 
 def _replace_task_ref(document: dict, old_task: dict, new_ref: dict, store: Store) -> dict:
