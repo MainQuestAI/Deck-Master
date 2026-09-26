@@ -1,0 +1,9 @@
+{
+  "status": "awaiting_host",
+  "task_id": "8509571b41b2",
+  "kind": "compose",
+  "intent": "initial",
+  "revision_id": "0541da85174c4c1890903de02dbfebe0",
+  "model_started": false,
+  "handoff": "请使用 Deck Master Skill 读取并处理这个 compose 任务。先检查材料缺口；不要重复新建任务。\ndeck-master task status --project /private<example>/project --task-id 8509571b41b2 --json"
+}

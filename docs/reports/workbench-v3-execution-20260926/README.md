@@ -1,12 +1,13 @@
 # 生成工作台 v3 执行索引
 
-当前活动卡：**W02，ContentPlan 切片已验证、待集成**。W01 核心切片已通过 PR #41 合入 main `ea4b5b8fa1e4e4e3444b6cd8861f83f5fcc61468`，恢复切片 PR #42 又合入 main `de629349…`。协议切片 PR #43 已合入 main `09f4486…`。当前执行分支 `codex/workbench-w02-content-plan`，不是原 A/B 线或设计分支。
+当前活动卡：**W03，独立入口、服务与草稿核心切片已验证、待集成**。W01 核心 PR #41、W02 恢复 PR #42、协议 PR #43 和 ContentPlan PR #44 均已合入 main；本切片基线 `13aaf3690c6cde67e405576f5020abdd5311b909`。当前执行分支 `codex/workbench-w03-services`，不是原 A/B 线或设计分支。
 
 - [独立 Review：4 P1、3 P2](REVIEW.md)
 - [外部原始复核与取舍](OUTSIDE-REVIEW.md)
 - [执行状态及 87 条 AC](execution-state.json)
 - [W01 实现提交、46 项回归、浏览器与性能证据](W01.md)
 - [W02 恢复切片](W02.md) / [冻结请求、Attempt 与真实 Host 证据](W02-PROTOCOL.md) / [ContentPlan 与来源版本](W02-CONTENT-PLAN.md)
+- [W03 独立入口、服务生命周期与个人草稿](W03-CORE.md)
 - [修订后的包顺序](../../specs/deck-master-workbench-v3/packages/README.md)
 - [交接原件](handoff/HANDOFF.md) / [26 个输入的原始 manifest](handoff/manifest.json)
 - [当前用户设计快照](design-snapshot/index.html) / [8 文件 SHA256](design-snapshot/sha256-manifest.json)

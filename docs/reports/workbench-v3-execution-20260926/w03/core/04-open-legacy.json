@@ -1,0 +1,18 @@
+{
+  "build_id": "0555fb5a85910a5731cd7a633a7a1d6fa130c06f1fb713a1920c4b9c2f9fe887",
+  "identity": "57893e8565b0f6bda0f6357b4e384a755ee25a642f743b1bc259c4e35275f3f2",
+  "instance_id": "5ddbe18ae4481d6022d22200592af38a",
+  "pid": 27769,
+  "port": 50263,
+  "protocol_version": "workbench-service.v1",
+  "role": "project",
+  "service_version": "1.0.0.dev2",
+  "url": "http://127.0.0.1:50263/",
+  "reused": false,
+  "mode": "legacy",
+  "project_id": "project",
+  "status": "available",
+  "ui_available": true,
+  "browser_opened": false,
+  "host_execution": "handoff_required"
+}

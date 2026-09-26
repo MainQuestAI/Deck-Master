@@ -12,10 +12,9 @@ from __future__ import annotations
 import json
 import hashlib
 import secrets
-import socket
 import threading
 import webbrowser
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from http.server import BaseHTTPRequestHandler
 from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, urlparse
@@ -25,16 +24,13 @@ from .store import Store
 from . import workbench as workbench_mod
 from .errors import TypedServiceError, NEXT_ACTIONS_BY_CODE
 from .models import ModelError
+from .local_runtime import ServiceUnavailable
 
 STATE_FILE = "view.json"
 
 
 def _editing_review_doc(store):
     return store.load_document()
-
-
-class ServiceUnavailable(RuntimeError):
-    """The read-only service could not start or become healthy in time."""
 
 
 def _project_identity(project_dir):
@@ -45,39 +41,23 @@ def _state_path(project_dir: Path) -> Path:
 
 
 def read_active_service(project_dir: Path) -> dict | None:
-    path = _state_path(project_dir)
-    if not path.is_file():
-        return None
+    from .local_runtime import descriptor, read_state
     try:
-        return json.loads(path.read_text("utf-8"))
-    except json.JSONDecodeError:
+        return read_state(descriptor(project=project_dir))
+    except (ValueError, RuntimeError, OSError):
         return None
 
 
 def _write_state(project_dir: Path, state: dict) -> None:
-    path = _state_path(project_dir)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(state, ensure_ascii=False, indent=1) + "\n")
-
-
-def _port_alive(port: int) -> bool:
-    try:
-        with socket.create_connection(("127.0.0.1", port), timeout=0.5):
-            return True
-    except OSError:
-        return False
-
-
-def _free_port() -> int:
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        sock.bind(("127.0.0.1", 0))
-        return sock.getsockname()[1]
+    from .local_runtime import descriptor, publish
+    publish(descriptor(project=project_dir), state)
 
 
 class WorkbenchHandler(BaseHTTPRequestHandler):
     store: Store
     static_dir: Path
     write_token: str
+    runtime_state: dict
 
     def log_message(self, fmt, *args):  # quiet default
         pass
@@ -87,6 +67,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store")
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("Content-Security-Policy", "default-src 'self'; script-src 'self'; object-src 'none'; frame-ancestors 'none'")
         self.end_headers()
@@ -95,6 +76,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
     def _send_bytes(self, body: bytes, media: str) -> None:
         self.send_response(200)
         self.send_header("Content-Type", media)
+        self.send_header("Cache-Control", "no-cache")
         # One Content-Security-Policy header: sandboxed isolation for SVG,
         # the default self-only policy for everything else.
         if media == "image/svg+xml":
@@ -109,17 +91,57 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
     def _local_host(self):
         return self.headers.get('Host') in (f'127.0.0.1:{self.server.server_port}', f'localhost:{self.server.server_port}')
 
-    def do_POST(self):
+    def _authorized_write(self):
         origin=self.headers.get('Origin')
         allowed=(f'http://127.0.0.1:{self.server.server_port}',f'http://localhost:{self.server.server_port}')
         if not self._local_host() or origin not in allowed or not secrets.compare_digest(self.headers.get('X-Deck-Token',''),self.write_token):
-            self._send_json({'error':'same-origin session token required'},403);return
+            self._send_json({'error':'same-origin session token required'},403)
+            return False
+        return True
+
+    def _read_json_body(self):
+        from .local_state import MAX_BODY, LocalStateError
+        if self.headers.get('Transfer-Encoding') or len(self.headers.get_all('Content-Length', [])) != 1:
+            raise LocalStateError('body', 'one Content-Length is required')
+        length = int(self.headers.get('Content-Length', '0'))
+        if not 0 < length <= MAX_BODY:
+            raise LocalStateError('body', 'request must be at most 2,000,000 bytes')
+        value = json.loads(self.rfile.read(length))
+        if not isinstance(value, dict):
+            raise LocalStateError('body', 'request must be a JSON object')
+        return value
+
+    def _send_error(self, exc):
+        from .local_state import LocalStateError
+        if isinstance(exc, (LocalStateError, ModelError, workbench_mod.ReadModelError)):
+            self._send_json({'error': {'code': getattr(exc, 'error_code', 'invalid_input'),
+                            'message': getattr(exc, 'detail', str(exc)), 'field': getattr(exc, 'path', None),
+                            'next_action': 'keep local input; read the saved state or correct the named field'}},
+                            409 if getattr(exc, 'exit_code', 2) == 5 else 422)
+        else:
+            self._send_json({'error': {'code': 'local_io_failed', 'message': 'local action failed; retain input and inspect the path or runtime log',
+                                      'field': None, 'next_action': 'retry after checking local permissions and input'}}, 400)
+
+    def do_POST(self):
+        if not self._authorized_write():
+            return
         try:
-            length=int(self.headers.get('Content-Length','0'))
-            if not 0<length<=2_000_000:raise ValueError('invalid request size')
-            data=json.loads(self.rfile.read(length))
+            data=self._read_json_body()
+            from .samples import sample_info
+            sample = sample_info(self.store.project_root)
+            if sample and sample['readonly'] and self.path not in ('/api/ui-state',):
+                self._send_json({'error': {'code': 'sample_readonly', 'message': 'this synthetic example is read-only; create your own project'}}, 403)
+                return
             from . import editing, service
-            if self.path=='/api/requests/freeze':
+            if self.path in ('/api/drafts/save', '/api/drafts/import', '/api/drafts/recovery', '/api/ui-state'):
+                from . import ui_journal
+                action = {'/api/drafts/save': ui_journal.save, '/api/drafts/import': ui_journal.import_recovery,
+                          '/api/drafts/recovery': ui_journal.recovery_file, '/api/ui-state': ui_journal.save_position}[self.path]
+                result = action(self.store.project_root, **data)
+            elif self.path == '/api/inputs/update':
+                from .local_state import project_path
+                result = service.inputs_update(project_path(self.store.project_root), **data)
+            elif self.path=='/api/requests/freeze':
                 from .generation import freeze
                 result=freeze(self.store.project_root,**data)
             elif self.path=='/api/edit':result=editing.edit_page(self.store.project_root,**data)
@@ -141,6 +163,9 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             else:self._send_json({'error':'not found'},404);return
             self._send_json(result)
         except Exception as exc:
+            if self.path.startswith(('/api/drafts/', '/api/ui-state')):
+                self._send_error(exc)
+                return
             from .store import ConflictError
             from .tasks import TaskConflict
             if isinstance(exc, TypedServiceError):
@@ -161,6 +186,29 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
         if not self._local_host():
             self._send_json({'error':'loopback Host required'},403);return
         parsed = urlparse(self.path)
+        if parsed.path.startswith('/v2/') or parsed.path == '/v2':
+            self._serve_v2(parsed.path)
+            return
+        if parsed.path in ('/api/project', '/api/drafts', '/api/ui-state', '/api/inputs', '/api/compose/handoff') or parsed.path.startswith('/api/drafts/'):
+            try:
+                from . import ui_journal, service
+                if parsed.path == '/api/project':
+                    result = ui_journal.project_info(self.store.project_root)
+                elif parsed.path == '/api/drafts':
+                    result = ui_journal.list_drafts(self.store.project_root)
+                elif parsed.path == '/api/ui-state':
+                    result = {'record': ui_journal.read_position(self.store.project_root)}
+                elif parsed.path == '/api/inputs':
+                    result = service.inputs_show(self.store.project_root)
+                elif parsed.path == '/api/compose/handoff':
+                    from .launcher import compose_handoff
+                    result = compose_handoff(self.store.project_root)
+                else:
+                    result = ui_journal.get(self.store.project_root, parsed.path.removeprefix('/api/drafts/'))
+                self._send_json(result)
+            except Exception as exc:
+                self._send_error(exc)
+            return
         if parsed.path in ("/api/view", "/api/view/summary", "/api/workbench", "/api/tasks", "/api/reviews", "/api/content-plan") or parsed.path.startswith(("/api/pages/", "/api/requests/", "/api/attempts/")):
             self._read_projection(parsed)
             return
@@ -181,7 +229,9 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             self._send_bytes((self.static_dir / "app.js").read_bytes(), "text/javascript; charset=utf-8")
             return
         if parsed.path == "/api/health":
-            self._send_json({"status": "ok", "project_identity": _project_identity(self.store.project_root)})
+            self._send_json({"status": "ok", **self.runtime_state,
+                             "project_identity": _project_identity(self.store.project_root),
+                             "ui_available": (self.static_dir / 'v2' / 'index.html').is_file()})
             return
         if parsed.path == "/api/file":
             query = parse_qs(parsed.query)
@@ -197,6 +247,19 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             self._send_bytes(data, media)
             return
         self._send_json({"error": "not found"}, 404)
+
+    def _serve_v2(self, path):
+        from .local_state import safe_path
+        name = 'index.html' if path in ('/v2', '/v2/') else path.removeprefix('/v2/')
+        try:
+            target = safe_path(self.static_dir, 'v2', *name.split('/'))
+            media = {'.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
+                     '.css': 'text/css; charset=utf-8', '.woff2': 'font/woff2'}.get(target.suffix)
+            if not media or not target.is_file():
+                raise FileNotFoundError
+            self._send_bytes(target.read_bytes(), media)
+        except (ValueError, RuntimeError, OSError):
+            self._send_json({'error': {'code': 'ui_unavailable', 'message': 'workbench UI resource is not installed'}}, 404)
 
     def _read_projection(self, parsed):
         """All related GETs share one revision contract and sanitized errors."""
@@ -259,25 +322,34 @@ class WorkbenchServer:
         self.port = None
 
     def start(self) -> str:
-        state = read_active_service(self.project_dir)
-        if state and _port_alive(int(state["port"])) and _health_ok(state["url"], self.project_dir):
-            return state["url"]  # same-project URL reuse (spec 09.5.3)
-        self.port = _free_port()
-        handler = type(
-            "BoundHandler",
-            (WorkbenchHandler,),
-            {"store": self.store, "static_dir": _static_dir(), "write_token": secrets.token_urlsafe(32)},
-        )
-        self.httpd = ThreadingHTTPServer(("127.0.0.1", self.port), handler)
-        self.thread = threading.Thread(target=self.httpd.serve_forever, daemon=True)
-        self.thread.start()
-        url = f"http://127.0.0.1:{self.port}/"
-        _write_state(self.project_dir, {"port": self.port, "url": url})
-        return url
+        from . import local_runtime as runtime
+        from .local_state import local_lock, safe_path
+        self.desc = runtime.descriptor(project=self.project_dir)
+        state_path = self.desc['state_path']
+        with local_lock(safe_path(state_path.parent, state_path.name + '.start.lock')):
+            state = runtime.read_state(self.desc)
+            if runtime.healthy(state, self.desc):
+                return state['url']
+            self.httpd, self.state = runtime.bind_server(self.desc)
+            self.port = self.state['port']
+            self.thread = threading.Thread(target=self.httpd.serve_forever, daemon=True)
+            self.thread.start()
+            try:
+                if not runtime.healthy(self.state, self.desc):
+                    raise ServiceUnavailable('service', 'in-process service health check failed')
+                runtime.publish(self.desc, self.state)
+            except BaseException:
+                self.stop()
+                raise
+            return self.state['url']
 
     def stop(self) -> None:
         if self.httpd:
+            from .local_runtime import clear_own_state
             self.httpd.shutdown()
+            self.httpd.server_close()
+            self.thread.join(timeout=2)
+            clear_own_state(self.desc, self.state['instance_id'])
             self.httpd = None
 
 
@@ -337,103 +409,33 @@ def open_view(project_dir: Path | str, *, open_browser: bool = True) -> dict:
     }
 
 
-def ensure_service(project_dir: Path) -> dict:
-    """Reuse a healthy active service, or spawn a detached one and wait for it."""
-    existing = read_active_service(project_dir)
-    if existing and _port_alive(int(existing["port"])) and _health_ok(existing["url"], project_dir):
-        return {**existing, "reused": True}
-    port = _free_port()
-    log_path = project_dir / ".deckmaster" / "view-server.log"
-    log_path.parent.mkdir(parents=True, exist_ok=True)
-    import os
-    import subprocess
-    import sys
-    import time
-
-    child_env = dict(os.environ)
-
-    import deck_master
-
-    package_root = Path(deck_master.__file__).resolve().parents[1]
-    previous = os.environ.get("PYTHONPATH")
-    child_env["PYTHONPATH"] = str(package_root) + (os.pathsep + previous if previous else "")
-    log_handle = open(log_path, "ab")
-    try:
-        process = subprocess.Popen(
-            [
-                sys.executable,
-                "-m",
-                "deck_master.view_server",
-                "--project",
-                str(project_dir),
-                "--port",
-                str(port),
-            ],
-            stdin=subprocess.DEVNULL,
-            stdout=log_handle,
-            stderr=log_handle,
-            env=child_env,
-            start_new_session=True,
-        )
-    finally:
-        log_handle.close()
-    url = f"http://127.0.0.1:{port}/"
-    _write_state(project_dir, {"port": port, "url": url, "pid": process.pid})
-    deadline = time.time() + 5.0
-    while time.time() < deadline:
-        if process.poll() is not None:
-            raise ServiceUnavailable(
-                f"view server exited early with code {process.poll()}; see {log_path}"
-            )
-        if _port_alive(port) and _health_ok(url, project_dir):
-            return {"port": port, "url": url, "pid": process.pid, "reused": False}
-        time.sleep(0.1)
-    process.terminate()
-    raise ServiceUnavailable(
-        f"view server did not become healthy within 5s; see {log_path}"
-    )
+def ensure_service(project_dir: Path, *, port=0) -> dict:
+    from .local_runtime import descriptor, ensure
+    return ensure(descriptor(project=project_dir), port=port)
 
 
 def _health_ok(url: str, project_dir: Path | str) -> bool:
-    import json as _json
-    import urllib.request
-
+    from .local_runtime import descriptor, healthy, read_state
     try:
-        with urllib.request.urlopen(url.rstrip("/") + "/api/health", timeout=1.5) as response:
-            payload = _json.loads(response.read().decode("utf-8"))
-            return payload.get("status") == "ok" and payload.get("project_identity") == _project_identity(project_dir)
-    except Exception:  # noqa: BLE001
+        desc = descriptor(project=project_dir)
+        state = read_state(desc)
+        return bool(state and state.get("url") == url and healthy(state, desc))
+    except (ValueError, RuntimeError, OSError):
         return False
 
 
 def stop_service(project_dir: Path | str) -> dict:
-    """Terminate the detached view server recorded for this project."""
-    import os
-    import signal
-
-    state = read_active_service(Path(project_dir).expanduser())
-    if not state:
+    from .local_runtime import descriptor, stop
+    if not read_active_service(Path(project_dir).expanduser()):
         return {"view_status": "not_running", "review_url": None}
-    pid = state.get("pid")
-    stopped = False
-    if pid and _health_ok(state["url"], project_dir):
-        try:
-            os.kill(int(pid), signal.SIGTERM)
-            stopped = True
-        except (ProcessLookupError, PermissionError):
-            stopped = False
-    _write_state(Path(project_dir).expanduser(), {"port": state["port"], "url": state["url"], "pid": pid, "stopped": stopped})
-    return {"view_status": "stopped" if stopped else "not_running", "review_url": None}
+    result = stop(descriptor(project=project_dir))
+    return {"view_status": result["status"], "review_url": None}
 
 
 def service_status(project_dir: Path | str) -> dict:
-    project_dir = Path(project_dir).expanduser()
-    state = read_active_service(project_dir)
+    state = read_active_service(Path(project_dir).expanduser())
     if not state:
         return {"view_status": "not_running", "review_url": None}
-    alive = _port_alive(int(state["port"])) and _health_ok(state["url"], project_dir)
-    return {
-        "view_status": "running" if alive else "stale",
-        "review_url": state["url"] if alive else None,
-        "port": state["port"],
-    }
+    alive = _health_ok(state.get("url"), project_dir)
+    return {"view_status": "running" if alive else "stale",
+            "review_url": state.get("url") if alive else None, "port": state.get("port")}
