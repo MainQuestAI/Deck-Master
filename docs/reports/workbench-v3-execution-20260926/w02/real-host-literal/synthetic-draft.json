@@ -1,0 +1,37 @@
+{
+  "pages": [
+    {
+      "schema_version": "deck_page_package.v2",
+      "page_id": "traceable-generation",
+      "customer_visible": {
+        "title": "一次生成，保留可核对的记录",
+        "subtitle": "合成验证样例",
+        "body_blocks": [
+          {
+            "id": "steps",
+            "type": "bullets",
+            "heading": "每一步都有明确依据",
+            "items": [
+              {
+                "id": "request",
+                "text": "调用前冻结准确提示词"
+              },
+              {
+                "id": "observation",
+                "text": "调用后核对工具原生记录"
+              },
+              {
+                "id": "output",
+                "text": "按图片字节绑定生成结果"
+              }
+            ]
+          }
+        ]
+      },
+      "visual_spec": {
+        "intent": "A clean three-step business slide, synthetic software verification sample.",
+        "reference_mode": "new_design"
+      }
+    }
+  ]
+}

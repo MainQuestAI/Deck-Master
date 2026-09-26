@@ -39,6 +39,7 @@ from .models import (
 )
 
 CURRENT_FORMAT = "deckmaster-current.v1"
+WORKBENCH_FORMAT = "deckmaster-current.v2"
 DECKMASTER_DIR = ".deckmaster"
 OPERATION_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
 
@@ -188,8 +189,10 @@ class Store:
             pointer = json.loads(pointer_path.read_text("utf-8"))
         except json.JSONDecodeError as exc:
             raise StoreError("current.json", f"unreadable pointer: {exc}") from exc
-        if pointer.get("format") != CURRENT_FORMAT:
+        if pointer.get("format") not in (CURRENT_FORMAT, WORKBENCH_FORMAT):
             raise StoreError("current.json", f"unknown pointer format {pointer.get('format')!r}")
+        if pointer.get("format") == WORKBENCH_FORMAT and pointer.get("minimum_writer") != "generation.v1":
+            raise StoreError("current.json", "unsupported minimum writer; use the matching core")
         return pointer
 
     def load_document(self, revision_id: str | None = None) -> dict[str, Any]:
@@ -306,8 +309,12 @@ class Store:
                 "current.json",
                 f"base {base_revision!r} is not current (now {current['revision_id']!r}); rebase required",
             )
+        if current and current.get("format") == WORKBENCH_FORMAT and not document.get("compatibility"):
+            raise StoreError("compatibility", "a workbench project cannot drop its writer boundary")
         self.save_revision(document)
         pointer = {"format": CURRENT_FORMAT, "revision_id": document["revision_id"]}
+        if document.get("compatibility"):
+            pointer.update(format=WORKBENCH_FORMAT, minimum_writer="generation.v1")
         _atomic_write_bytes(self.deck_root / "current.json", canonical_json_bytes(pointer))
         return document["revision_id"]
 

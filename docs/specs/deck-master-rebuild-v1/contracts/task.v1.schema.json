@@ -269,7 +269,8 @@
             "type": "string",
             "enum": [
               "host_reported",
-              "provider_verified"
+              "provider_verified",
+              "tool_observed"
             ]
           }
         },
@@ -362,6 +363,79 @@
         }
       },
       "description": "Final review dispatched by actual gap only (spec v1.1 6)."
+    },
+    "protocol_version": {
+      "const": "generation.v1"
+    },
+    "required_capabilities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "host_protocol": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "supported_protocols": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "supported_protocols",
+        "capabilities"
+      ]
+    },
+    "generation_requests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        }
+      }
+    },
+    "generation_attempts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        }
+      }
     }
   },
   "required": [

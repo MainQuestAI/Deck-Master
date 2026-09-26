@@ -1,0 +1,11 @@
+{
+  "status": "started",
+  "task_id": "88c3eedb2753",
+  "allowance_id": "call-1",
+  "attempt_id": "attempt-164c75b9584a4262b52f0f289d5b3f5d",
+  "attempt_ref": {
+    "path": ".deckmaster/objects/3c/3cc2b25b1acec84a93f3c9e833848e2adca1ce621bba12b6199ebabca07a8215.json",
+    "sha256": "3cc2b25b1acec84a93f3c9e833848e2adca1ce621bba12b6199ebabca07a8215"
+  },
+  "request_id": "req-b0741a7a183b46479966d6891dbcdf38"
+}

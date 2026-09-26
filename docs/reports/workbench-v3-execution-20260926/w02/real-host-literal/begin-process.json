@@ -1,0 +1,5 @@
+{
+  "exit_code": 0,
+  "stdout": "{\n \"status\": \"started\",\n \"task_id\": \"88c3eedb2753\",\n \"allowance_id\": \"call-1\",\n \"attempt_id\": \"attempt-164c75b9584a4262b52f0f289d5b3f5d\",\n \"attempt_ref\": {\n  \"path\": \".deckmaster/objects/3c/3cc2b25b1acec84a93f3c9e833848e2adca1ce621bba12b6199ebabca07a8215.json\",\n  \"sha256\": \"3cc2b25b1acec84a93f3c9e833848e2adca1ce621bba12b6199ebabca07a8215\"\n },\n \"request_id\": \"req-b0741a7a183b46479966d6891dbcdf38\"\n}\n",
+  "stderr": ""
+}

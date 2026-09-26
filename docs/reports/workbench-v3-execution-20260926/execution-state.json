@@ -1,6 +1,6 @@
 {
   "baseline": "d1c7c4600cb0fc781070116ed8cc8a1ff6b8b7ca",
-  "branch": "codex/workbench-w02",
+  "branch": "codex/workbench-w02-protocol",
   "active_package": "W02",
   "sequence": [
     "W01.core",
@@ -32,10 +32,19 @@
       "merge_commit": "ea4b5b8fa1e4e4e3444b6cd8861f83f5fcc61468"
     },
     "W02": {
-      "status": "recovery_core_verified",
+      "status": "protocol_core_verified",
       "accepted": false,
       "baseline": "ea4b5b8fa1e4e4e3444b6cd8861f83f5fcc61468",
-      "evidence": "W02.md"
+      "evidence": "W02.md",
+      "recovery_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/42",
+      "recovery_merge_commit": "de6293492fca41fbce34e269a4463da111214c2c",
+      "protocol_baseline": "de6293492fca41fbce34e269a4463da111214c2c",
+      "protocol_evidence": "W02-PROTOCOL.md",
+      "residuals": [
+        "ContentPlan and compose protocol",
+        "full old-project outline compatibility",
+        "nonempty reference attachment observation remains unverified"
+      ]
     },
     "W03": {
       "status": "planned",
@@ -140,31 +149,46 @@
     },
     "W02-AC03": {
       "owner": "W02",
-      "status": "open",
-      "evidence": []
+      "status": "core_verified",
+      "evidence": [
+        "W02-PROTOCOL.md"
+      ],
+      "evidence_level": "core/CLI/HTTP"
     },
     "W02-AC04": {
       "owner": "W02",
-      "status": "open",
-      "evidence": []
+      "status": "core_verified",
+      "evidence": [
+        "W02-PROTOCOL.md"
+      ],
+      "evidence_level": "core/CLI/HTTP"
     },
     "W02-AC05": {
       "owner": "W02",
-      "status": "open",
-      "evidence": []
+      "status": "core_verified",
+      "evidence": [
+        "W02-PROTOCOL.md"
+      ],
+      "evidence_level": "core/CLI/HTTP"
     },
     "W02-AC06": {
       "owner": "W02",
-      "status": "partial",
+      "status": "core_verified",
       "evidence": [
-        "W02.md"
+        "W02.md",
+        "W02-PROTOCOL.md"
       ],
-      "evidence_level": "core/CLI/process-fault"
+      "evidence_level": "core/CLI/HTTP/process-fault"
     },
     "W02-AC07": {
       "owner": "W02",
-      "status": "open",
-      "evidence": []
+      "status": "real_host_verified",
+      "evidence": [
+        "W02-PROTOCOL.md",
+        "w02/real-host-literal/checks.json"
+      ],
+      "evidence_level": "real Host: Codex literal no-reference call",
+      "scope": "Requested prompt, transparent_background, omitted reference arguments and output; provider model/seed unknown"
     },
     "W03-AC01": {
       "owner": "W03",

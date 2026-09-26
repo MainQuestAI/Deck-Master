@@ -837,6 +837,22 @@
         }
       },
       "description": "Which input version the current pages were completed against (spec v1.1 2/5.1); absent on legacy projects."
+    },
+    "compatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "project_format": {
+          "const": "workbench.v3"
+        },
+        "minimum_writer": {
+          "const": "generation.v1"
+        }
+      },
+      "required": [
+        "project_format",
+        "minimum_writer"
+      ]
     }
   },
   "required": [

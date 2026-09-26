@@ -1,0 +1,13 @@
+{
+  "synthetic": true,
+  "thread_id": "01a0dd7c-2fa3-7383-a844-16162a5d61c8",
+  "turn_id": "01a0dd7c-3169-70b0-a0a7-d9f3d9955f07",
+  "task_id": "bc1bce0e8dc3",
+  "operation_id": "blueprint-090b69144712",
+  "produced_against": "22691c9229866ab5d8a1492771396fa2005c835afe501eb77f690ecd70cd4a4b",
+  "page_id": "traceable-generation",
+  "request_id": "req-64523b70fe934471aec1fbcea415117a",
+  "input_hash": "cafb302425c7bae8f704cb125ef10ca9d56fb7e5956be8bc9932e80e88fcb0fb",
+  "attempt_id": "attempt-e89bd11b5ad3492caeeb65e685b4bef4",
+  "allowance_id": "call-1"
+}

@@ -98,8 +98,11 @@ def create(
     presentation_mode: str | None = None,
     page_limit: int | None = None,
     existing_decisions: list[str] | None = None,
+    project_format: str | None = None,
 ) -> dict:
     """Create the project; register real sources; optionally import a draft."""
+    if project_format not in (None, "workbench.v3"):
+        raise ServiceError("project_format", "unsupported project format")
     if draft is not None:
         _validate_draft(draft)
     # presentation_mode stays a user-provided fact only when the caller actually
@@ -159,6 +162,8 @@ def create(
         sources=source_entries,
         operation_id=operation_id,
     )
+    if project_format == "workbench.v3":
+        document["compatibility"] = {"project_format": "workbench.v3", "minimum_writer": "generation.v1"}
     store.init_project(document, operation_id=operation_id)
 
     if draft:
@@ -417,6 +422,9 @@ def task_summary(store: Store, document: dict, task: dict) -> dict:
     }
     if task.get("review_units") is not None:
         summary["review_plan"] = {"units": task["review_units"]}
+    for key in ("protocol_version", "required_capabilities", "host_protocol", "generation_requests", "generation_attempts"):
+        if key in task:
+            summary[key] = task[key]
     if task.get('status') in ('superseded', 'cancelled', 'completed', 'failed'):
         if task.get('status') == 'superseded':
             summary['invalidated_reason'] = 'task inputs or page scope changed; continue creates a current task'
@@ -505,6 +513,9 @@ def task_summary(store: Store, document: dict, task: dict) -> dict:
                 page = store.read_object_json(next(p["page"] for p in document["pages"] if p["page_id"] == candidate["page_id"]))
                 summary["resolved_design_context"], _ = resolve_design(page, document["design_context"], document["design_context"].get("assets") or [])
                 break
+        if task.get("protocol_version"):
+            from .generation import prepared_input
+            summary["generation_input"] = prepared_input(store, document, task)
     return summary
 
 
@@ -548,6 +559,8 @@ def open_blueprint_task(store: Store, document: dict, page_entry: dict) -> dict:
         cost_class="external_generation",
     )
     task, _ = tasks_mod.reserve_allowances(store, document, task, 1)
+    from .generation import protocol_fields
+    task.update(protocol_fields(document))
     task_ref = store.put_json_object(task)
     bumped = bump_revision(
         document,
@@ -1627,11 +1640,16 @@ def update_design(
     )
 
 
-def task_start(project_dir: Path | str, *, task_id: str, execution_ref: str) -> dict:
+def task_start(project_dir: Path | str, *, task_id: str, execution_ref: str,
+               supported_protocols=None, capabilities=None) -> dict:
     """Actual claim by a named execution; a second executor conflicts."""
     store = Store(Path(project_dir).expanduser())
     document = store.load_document()
     task = tasks_mod._lookup_task(document, task_id, store)
+    declaration = {"supported_protocols": supported_protocols, "capabilities": capabilities}
+    if task.get("protocol_version"):
+        from .generation import check_host
+        check_host(task, declaration)
     if task.get("status") == "running" and task.get("execution_ref") != execution_ref:
         raise tasks_mod.TaskConflict(
             f"(task {task_id})", "another execution already claimed this task"
@@ -1646,6 +1664,10 @@ def task_start(project_dir: Path | str, *, task_id: str, execution_ref: str) -> 
         "execution_ref": execution_ref,
         "updated_at": _utc_now_iso(),
     }
+    if task.get("protocol_version"):
+        updated_task["host_protocol"] = declaration
+        if task.get("status") == "running" and task.get("host_protocol") == declaration:
+            return task_status(project_dir, task_id=task_id)
     return _commit_task_update(store, document, task, updated_task, "task claimed")
 
 

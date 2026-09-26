@@ -1,0 +1,46 @@
+{
+  "schema_version": "tool_observation.v1",
+  "observer": "tool_observed",
+  "collector": "codex-session-image.v1",
+  "source": {
+    "source": "codex_session.v1",
+    "thread_id": "01a0dd7c-2fa3-7383-a844-16162a5d61c8",
+    "turn_id": "01a0dd7c-3169-70b0-a0a7-d9f3d9955f07",
+    "item_id": "exec-62d032e4-bfdd-4208-8279-74702b96ddf8",
+    "session_cli_version": "0.158.0-alpha.2.1",
+    "record_sha256": "01957bcffd33fdd319e2cc8d02db705e72a1eb660d7956c900b46e5ee5012a0c",
+    "line_number": 1118,
+    "byte_offset": 8728946
+  },
+  "invocation_ref": "exec-62d032e4-bfdd-4208-8279-74702b96ddf8",
+  "started_at_ms": 1790427704882,
+  "completed_at_ms": 1790427727138,
+  "submitted": {
+    "prompt": "Use case: photorealistic-natural\nAsset type: isolated synthetic image-tool verification sample\nPrimary request: a close-up photograph of one green leaf with a clear dew drop, resting on a neutral pale gray background.\nStyle/medium: natural macro photography, soft diffuse light, visible leaf texture.\nComposition/framing: square, single centered leaf.\nConstraints: no people, logos, text, watermark or identifiable location.",
+    "references": null,
+    "parameters": {
+      "transparent_background": false
+    },
+    "model": null,
+    "seed": null
+  },
+  "coverage": {
+    "prompt": "native.revisedPrompt",
+    "references": "unknown",
+    "model": "unknown",
+    "seed": "unknown",
+    "parameters": {
+      "transparent_background": "native.transparentBackground"
+    },
+    "output": "native.result"
+  },
+  "output": {
+    "sha256": "81df5fa8a3231cf3889436a395ddd36a6f3886d6c4a53fcfc0fc326efd7c93cd",
+    "media_type": "image/png",
+    "dimensions": [
+      1254,
+      1254
+    ]
+  },
+  "trust_scope": "current-user local Codex runtime; not a provider signature"
+}

@@ -1,0 +1,26 @@
+{
+  "status": "passed",
+  "synthetic_content": true,
+  "real_host_call": true,
+  "input_hash": "cafb302425c7bae8f704cb125ef10ca9d56fb7e5956be8bc9932e80e88fcb0fb",
+  "output_sha256": "c5430c6647800f6360930d2ca45a8e0e298503ef36b2be18320a4a459a21c6d2",
+  "request_id": "req-64523b70fe934471aec1fbcea415117a",
+  "attempt_id": "attempt-e89bd11b5ad3492caeeb65e685b4bef4",
+  "invocation_ref": "exec-fbf11518-a863-4d91-bceb-62b0f5bcc180",
+  "adopted_revision": "5b67b505e68444a19b340496dd9da243",
+  "allowance_count": 1,
+  "consumed_count": 1,
+  "observer": "tool_observed",
+  "coverage": {
+    "model": "unknown",
+    "output": "native.result",
+    "parameters": {
+      "transparent_background": "native.transparentBackground"
+    },
+    "prompt": "native.revisedPrompt",
+    "references": "unknown",
+    "seed": "unknown"
+  },
+  "full_actual_input_match": "unverified: native event does not expose reference attachments, model or seed",
+  "W02_AC07": "partial: real prompt/output binding verified; complete submitted-input coverage remains open"
+}

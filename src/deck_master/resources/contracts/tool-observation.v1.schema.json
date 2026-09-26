@@ -1,0 +1,173 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "tool_observation.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "tool_observation.v1"
+    },
+    "observer": {
+      "enum": [
+        "host_reported",
+        "tool_observed"
+      ]
+    },
+    "collector": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "submitted": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "coverage": {
+      "type": "object"
+    },
+    "output": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "media_type": {
+              "const": "image/png"
+            },
+            "dimensions": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          },
+          "required": [
+            "sha256",
+            "media_type",
+            "dimensions"
+          ]
+        }
+      ]
+    },
+    "invocation_ref": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "source": {
+      "type": "object"
+    },
+    "started_at_ms": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "completed_at_ms": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "trust_scope": {
+      "type": "string"
+    },
+    "reported": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "schema_version",
+    "observer",
+    "collector",
+    "submitted",
+    "coverage",
+    "output",
+    "invocation_ref"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "observer": {
+            "const": "tool_observed"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "source",
+          "started_at_ms",
+          "completed_at_ms",
+          "trust_scope"
+        ],
+        "properties": {
+          "collector": {
+            "const": "codex-session-image.v1"
+          },
+          "submitted": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "prompt": {
+                "type": "string",
+                "minLength": 1
+              },
+              "references": {
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "parameters": {
+                "type": "object"
+              },
+              "model": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "seed": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "prompt",
+              "references",
+              "parameters",
+              "model",
+              "seed"
+            ]
+          }
+        }
+      },
+      "else": {
+        "required": [
+          "reported"
+        ],
+        "properties": {
+          "collector": {
+            "type": "null"
+          },
+          "output": {
+            "type": "null"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,7 +1,8 @@
-"""Five-object contracts and validation for the rebuilt core.
+"""Runtime contracts and validation for the rebuilt core.
 
-Five object types only (Document v1, PagePackage v2, Artifact v1, Task v1,
-Review v1) plus shared object Refs. JSON Schema (Draft 2020-12) checks
+Document v1, PagePackage v2, Artifact v1, Task v1, Review v1 and the W02
+frozen GenerationRequest/Attempt records share immutable object Refs.
+JSON Schema (Draft 2020-12) checks
 format/required fields/enums; cross-object semantics are explicit functions
 here, not schema tricks (spec 03.1, 03.9).
 
@@ -27,6 +28,10 @@ SCHEMA_FILES = {
     "artifact": "artifact.v1.schema.json",
     "task": "task.v1.schema.json",
     "review": "review.v1.schema.json",
+    "generation_input": "generation-input.v1.schema.json",
+    "generation_request": "generation-request.v1.schema.json",
+    "generation_attempt": "generation-attempt.v1.schema.json",
+    "tool_observation": "tool-observation.v1.schema.json",
 }
 
 REF_PATH_PATTERN = r"^\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\.[a-z0-9]+$"

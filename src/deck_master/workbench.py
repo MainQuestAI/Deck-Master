@@ -27,7 +27,8 @@ def _cached_json(root, path, digest, signature):
     obj = Store(root).read_object_json({"path": path, "sha256": digest})
     if isinstance(obj, dict):
         kind = {"deck_page_package.v2": "page", "deck_artifact.v1": "artifact",
-                "deck_task.v1": "task", "deck_review.v1": "review"}.get(obj.get("schema_version"))
+                "deck_task.v1": "task", "deck_review.v1": "review", "generation_request.v1": "generation_request",
+                "generation_attempt.v1": "generation_attempt", "tool_observation.v1": "tool_observation"}.get(obj.get("schema_version"))
         if kind:
             validate_schema(kind, obj)
     return obj
@@ -62,6 +63,8 @@ def _task_rows(ctx):
                          "instruction": task.get("instruction"), "updated_at": task.get("updated_at"),
                          "execution_ref": task.get("execution_ref"),
                          "result_refs": task.get("result_refs") or [],
+                         "request_count": len(task.get("generation_requests") or []),
+                         "attempt_count": len(task.get("generation_attempts") or []),
                          "result_linkage": "known" if task.get("result_refs") else "unknown"})
         except READ_FAILURES:
             rows.append({"ref": ref, "task_id": None, "status": "unreadable",
@@ -226,7 +229,9 @@ def workbench_summary(project_dir, *, revision=None):
             "unreadable_tasks": sum(t["status"] == "unreadable" for t in tasks),
             "outputs": {"pptx": _deck_output(ctx)}, "input_alignment": input_alignment(doc),
             "quality": {"status": "detail_required", "review_refs": doc.get("reviews") or []},
-            "candidates": {"status": "not_recorded"}, "attempts": {"status": "not_recorded"},
+            "candidates": {"status": "not_recorded"},
+            "attempts": {"status": "recorded", "count": sum(t.get("attempt_count", 0) for t in tasks)}
+            if any(t.get("attempt_count") for t in tasks) else {"status": "not_recorded"},
             "evidence_level": "engineering"}
 
 
@@ -301,10 +306,62 @@ def page_lineage(project_dir, page_id, *, revision=None):
             blueprint = obj
         except READ_FAILURES:
             pass
+    prompts = _prompt_records(ctx, entry, blueprint)
+    generation = _generation_records(ctx, entry, blueprint)
+    if generation.get("adopted_observation"):
+        observed = generation["adopted_observation"]
+        if prompts["submitted"]["text"] == observed["submitted"]["prompt"]:
+            prompts["submitted"].update(observer="tool_observed", basis="native_tool_observation")
     return {"format": "page_lineage.v1", "project_id": doc["project_id"],
             "revision_id": doc["revision_id"], "requested_revision": revision,
             "page_id": page_id, "page": page, "stages": stages,
             "sources": {"citations": (page or {}).get("citations") or [], "relation": "known" if (page or {}).get("citations") else "unknown"},
-            "prompts": _prompt_records(ctx, entry, blueprint),
+            "prompts": prompts, "generation": generation,
             "tasks": [t for t in _task_rows(ctx) if page_id in (t.get("scope_pages") or [])],
             "deck_output": _deck_output(ctx), "evidence_level": "engineering"}
+
+
+def _generation_records(ctx, entry, artifact):
+    from .generation import comparison
+    requests, attempts, errors = [], [], []
+    adopted = None
+    provenance = (artifact or {}).get("provenance") or {}
+    for task_ref in ctx.document["tasks"]:
+        try:
+            task = ctx.read(task_ref)
+            if task.get("protocol_version") != "generation.v1" or entry["page_id"] not in task.get("scope_pages", []):
+                continue
+            request_map = {}
+            for ref in task.get("generation_requests") or []:
+                request = ctx.read(ref)
+                if (request["task_id"] != task["task_id"] or request["project_id"] != ctx.document["project_id"]
+                        or request["input"]["page"]["page_id"] != entry["page_id"]):
+                    raise ValueError("foreign request")
+                from .models import canonical_json_bytes
+                if request["input_hash"] != sha256_bytes(canonical_json_bytes(request["input"])):
+                    raise ValueError("invalid frozen input hash")
+                requests.append({"ref": ref, **copy.deepcopy(request), "observer": "core_frozen"})
+                request_map[ref["sha256"]] = request
+            for ref in task.get("generation_attempts") or []:
+                attempt = ctx.read(ref)
+                if attempt["task_id"] != task["task_id"] or attempt["project_id"] != ctx.document["project_id"]:
+                    raise ValueError("foreign attempt")
+                request = request_map[attempt["request_ref"]["sha256"]]
+                observations = []
+                for evidence_ref in attempt["observations"]:
+                    observation = ctx.read(evidence_ref)
+                    observations.append({"ref": evidence_ref, **copy.deepcopy(observation), "comparison": comparison(request, observation)})
+                    if (provenance.get("generation_request") == attempt["request_ref"]
+                            and provenance.get("generation_attempt") is not None
+                            and ctx.read(provenance["generation_attempt"]).get("attempt_id") == attempt["attempt_id"]
+                            and observation.get("observer") == "tool_observed"
+                            and observation.get("collector") == "codex-session-image.v1"
+                            and (observation.get("output") or {}).get("sha256") == (artifact.get("file") or {}).get("sha256")):
+                        adopted = copy.deepcopy(observation)
+                call = next((c for c in task["call_allowances"] if c["allowance_id"] == attempt["allowance_id"]), None)
+                if call is None:
+                    raise ValueError("attempt allowance is missing")
+                attempts.append({"ref": ref, **copy.deepcopy(attempt), "call": copy.deepcopy(call), "observations": observations})
+        except READ_FAILURES:
+            errors.append(object_error())
+    return {"requests": requests, "attempts": attempts, "errors": errors, "adopted_observation": adopted}

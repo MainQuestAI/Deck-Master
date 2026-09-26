@@ -46,6 +46,14 @@ class LegacySourceModified(LegacyError):
     """The source directory changed during import; the copy is refused."""
 
 
+def looks_like_legacy_run(path: Path) -> bool:
+    """Recognize old runs before any new-format writer creates its layout."""
+    if (path / '.deckmaster' / 'current.json').is_file():
+        return False
+    return any((path / name).exists() for name in
+               ('preview_manifest.json', 'run.json', 'request.json', 'narrative_plan.json'))
+
+
 def _sha256_file(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
