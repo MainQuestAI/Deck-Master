@@ -58,6 +58,13 @@ def _snapshot(store, revision):
                 or (doc.get("parent_revision_id") is not None
                     and not isinstance(doc["parent_revision_id"], str))):
             raise ValueError("invalid snapshot identity")
+        refs = [p.get(slot) for p in doc["pages"] for slot in SLOTS]
+        refs += doc["tasks"] + doc["reviews"] + list(doc["outputs"].values())
+        for ref in refs:
+            if ref is not None:
+                # A corrupt Document must not echo an absolute or foreign path
+                # as a public slot/ref before object-level error handling runs.
+                validate_ref(ref, where="snapshot/ref")
         return doc
     except (OSError, ValueError, RuntimeError) as exc:
         raise ReadModelError("revision_unavailable", "revision", "snapshot is not readable in this project") from exc

@@ -323,3 +323,15 @@ def test_wrong_page_artifact_does_not_supply_a_prompt_or_preview(live):
     assert lineage["prompts"]["submitted"]["state"] == "unreadable"
     assert lineage["prompts"]["submitted"]["text"] is None
     assert get(url + "/api/pages/p02/lineage")[1]["stages"]["blueprint"]["existence"] == "recorded"
+
+
+def test_invalid_document_reference_never_echoes_a_private_path(live):
+    project, store, url = live
+    doc = store.load_document()
+    doc["pages"][0]["blueprint"] = {"path": "/private/unrelated-project/private.png", "sha256": "b" * 64}
+    (store.revisions_dir / (doc["revision_id"] + ".json")).write_text(json.dumps(doc))
+    for route in ("/api/workbench", "/api/view", "/api/pages/p01", "/api/pages/p01/lineage", "/api/tasks", "/api/reviews"):
+        status, payload = get(url + route)
+        assert status == 404
+        assert payload["error"]["code"] == "revision_unavailable"
+        assert "/private/" not in json.dumps(payload)
