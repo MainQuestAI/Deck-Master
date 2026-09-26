@@ -108,9 +108,10 @@ def _build_legacy_layout(prefix: Path, codex: Path) -> None:
     current = prefix / ".deck-master" / "current"
     current.mkdir(parents=True)
     (current / "companion-manifest.json").write_text(json.dumps({
-        "schema_version": 3,
-        "adoption_policy": "bundled_symlink_only",
-        "release": "main-cc8cf46",
+        "schema_version": "deck_master_companion_manifest.v3",
+        "release_id": "main-cc8cf46",
+        "skills": [{"name": "deck-master", "adoption_policy": "bundled_symlink_only"},
+                   {"name": "external-helper", "adoption_policy": "preserve_full_external_or_bundled_symlink"}],
     }))
     skills = codex / "skills"
     skills.mkdir(parents=True, exist_ok=True)
@@ -184,3 +185,50 @@ def test_skillless_release_activation_reports_unregistered(isolated) -> None:
     assert result["cli_active"] is True
     assert result["host_skill"] == "host_skill_unregistered"
     assert not (codex / "skills" / "deck-master").exists()
+
+
+def test_migration_does_not_match_similar_foreign_prefix(isolated):
+    prefix, codex = isolated['prefix'], isolated['codex']
+    _build_legacy_layout(prefix, codex)
+    _make_release(prefix, 'r1')
+    link = codex / 'skills/deck-neighbor'
+    target = str(prefix / '.deck-master/current/skills-other/deck-neighbor')
+    link.symlink_to(target)
+    result = install.activate(prefix, 'r1')
+    assert link.is_symlink() and os.readlink(link) == target
+    assert len(result['migration']['removed_links']) == 15
+
+
+@pytest.mark.parametrize('failure', ['occupied_skill', 'failed_candidate', 'missing_candidate'])
+def test_migration_preflight_failure_preserves_legacy_layout(isolated, failure):
+    prefix, codex = isolated['prefix'], isolated['codex']
+    _build_legacy_layout(prefix, codex)
+    if failure != 'missing_candidate':
+        release = _make_release(prefix, 'r1')
+        if failure == 'failed_candidate':
+            (release / 'release.json').write_text(json.dumps({'status': 'failed'}))
+    if failure == 'occupied_skill':
+        link = codex / 'skills/deck-master'
+        link.unlink()
+        link.mkdir()
+    before = {p.name: os.readlink(p) for p in (codex / 'skills').iterdir() if p.is_symlink()}
+    with pytest.raises((HostSkillConflict, ValueError, FileNotFoundError)):
+        install.activate(prefix, 'r1')
+    assert (prefix / '.deck-master/current/companion-manifest.json').is_file()
+    assert not list((prefix / '.deck-master').glob('legacy-companion-*'))
+    assert before == {p.name: os.readlink(p) for p in (codex / 'skills').iterdir() if p.is_symlink()}
+
+
+def test_rollback_host_conflict_keeps_active_release(isolated):
+    prefix, codex = isolated['prefix'], isolated['codex']
+    _make_release(prefix, 'r1')
+    _make_release(prefix, 'r2')
+    install.activate(prefix, 'r1')
+    install.activate(prefix, 'r2')
+    link = codex / 'skills/deck-master'
+    link.unlink()
+    link.mkdir()
+    with pytest.raises(HostSkillConflict):
+        install.rollback(prefix)
+    assert os.readlink(prefix / '.deck-master/current') == 'releases/r2'
+    assert os.readlink(prefix / '.deck-master/previous') == 'releases/r1'

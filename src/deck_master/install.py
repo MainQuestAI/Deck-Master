@@ -107,7 +107,7 @@ def install_candidate(prefix, manifest_path):
 # Legacy companion migration (§8.3): move the old real-directory ``current``
 # aside and prune only the dangling deck-* links that pointed into it.
 
-def _migrate_legacy_companion(root):
+def _migrate_legacy_companion(root, *, dry_run=False):
     report={'migrated':False,'moved':None,'removed_links':[],'skipped_entries':[]}
     current=root/'current'
     if not (current.is_dir() and not current.is_symlink()):
@@ -124,27 +124,35 @@ def _migrate_legacy_companion(root):
         payload=json.loads(manifest.read_text())
     except (OSError, json.JSONDecodeError) as exc:
         raise HostSkillConflict(str(manifest), f'companion manifest is unreadable: {exc}') from exc
-    if payload.get('schema_version') not in (3, '3', 'v3') or \
-            payload.get('adoption_policy') != 'bundled_symlink_only':
+    skill_rows=payload.get('skills') if isinstance(payload,dict) else None
+    deck_rows=[row for row in skill_rows if isinstance(row,dict) and
+               isinstance(row.get('name'),str) and row['name'].startswith('deck-')] \
+        if isinstance(skill_rows,list) else []
+    if (not isinstance(payload,dict) or
+            payload.get('schema_version') != 'deck_master_companion_manifest.v3' or
+            not any(row['name']=='deck-master' for row in deck_rows) or
+            not all(row.get('adoption_policy')=='bundled_symlink_only' for row in deck_rows)):
         raise HostSkillConflict(
             str(manifest),
-            'companion manifest does not match the known legacy layout (schema_version 3, '
-            'adoption_policy bundled_symlink_only); refusing to migrate')
+            'companion manifest does not match deck_master_companion_manifest.v3 with '
+            'bundled_symlink_only on its deck skill rows; refusing to migrate')
     timestamp=datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S')
     destination=root/f'legacy-companion-{timestamp}'
     suffix=0
     while destination.exists():
         suffix+=1
         destination=root/f'legacy-companion-{timestamp}-{suffix}'
-    os.rename(current,destination)
+    if not dry_run:
+        os.rename(current,destination)
     report.update(migrated=True,moved={'from':str(current),'to':str(destination)})
     skill_root=_codex_skill_root()
-    prefix=str(root/'current'/'skills')
+    prefix=str(root/'current'/'skills')+'/'
     if skill_root.is_dir():
         for entry in sorted(skill_root.iterdir()):
             if entry.is_symlink() and re.fullmatch(r'deck-.*',entry.name) \
                     and os.readlink(entry).startswith(prefix):
-                entry.unlink()
+                if not dry_run:
+                    entry.unlink()
                 report['removed_links'].append(entry.name)
             else:
                 report['skipped_entries'].append(entry.name)
@@ -182,9 +190,25 @@ def _sync_host_skill(root, *, register: bool):
                 'skill_link':path if state!='absent' else None}
     return _ensure_host_skill_link(root)
 
+def _preflight_host_skill(root, *, removed_links=()):
+    state,path=_link_state(root)
+    if state in ('occupied','foreign') and 'deck-master' not in removed_links:
+        raise HostSkillConflict(path, 'the Codex skill path belongs to another installation or user; current is unchanged')
+    parent=_codex_skill_root()
+    while not parent.exists() and parent != parent.parent:
+        parent=parent.parent
+    if not parent.is_dir():
+        raise HostSkillConflict(str(parent), 'Codex skill parent is not a directory; current is unchanged')
+
+def _checked_release(root, release_id):
+    release=_release(root, release_id)
+    record=json.loads((release/'release.json').read_text())
+    if record.get('status')!='candidate_ready':
+        raise ValueError('candidate checks incomplete')
+    return release
+
 def _activate_locked(root,release_id):
-    release=_release(root,release_id);record=json.loads((release/'release.json').read_text())
-    if record.get('status')!='candidate_ready':raise ValueError('candidate checks incomplete')
+    release=_checked_release(root,release_id)
     current=root/'current';previous=root/'previous'
     for link in (current,previous):
         if link.exists() and not link.is_symlink():raise ValueError('refuse to replace user-owned path: '+str(link))
@@ -211,15 +235,15 @@ def _activate_locked(root,release_id):
 def activate(prefix,release_id,*,register_host=True):
     root=Path(prefix).resolve()/'.deck-master'
     with _locked(root):
-        migration=_migrate_legacy_companion(root)
+        _checked_release(root,release_id)
+        migration=_migrate_legacy_companion(root,dry_run=True)
         if register_host:
             # Refuse before switching current: a conflict must not activate.
-            state,path=_link_state(root)
-            if state in ('occupied','foreign'):
-                raise HostSkillConflict(
-                    path,
-                    f'the Codex skill path is occupied by a {"real directory or file" if state=="occupied" else "foreign symlink"}; '
-                    'remove or rename it before activating')
+            _preflight_host_skill(root,removed_links=migration['removed_links'])
+        previous=root/'previous'
+        if previous.exists() and not previous.is_symlink():
+            raise ValueError('refuse to replace user-owned path: '+str(previous))
+        migration=_migrate_legacy_companion(root)
         result=_activate_locked(root,release_id)
         result['cli_active']=True
         result['migration']=migration
@@ -236,7 +260,13 @@ def rollback(prefix,*,register_host=True):
         if not previous.is_symlink():raise ValueError('no previous release')
         target=os.readlink(previous)
         if not target.startswith('releases/') or len(Path(target).parts)!=2:raise ValueError('invalid previous release')
+        release=_checked_release(root,Path(target).name)
+        if register_host and (release/'skill/deck-master/SKILL.md').is_file():
+            _preflight_host_skill(root)
         result=_activate_locked(root,Path(target).name)
         registration=_sync_host_skill(root,register=register_host)
         result.update(registration)
+        result['cli_active']=True
+        if registration.get('host_skill')=='registered':
+            result['skill_release_id']=Path(target).name
         return result
