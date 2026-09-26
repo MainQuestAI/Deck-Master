@@ -17,6 +17,7 @@ decision that affects this task.
 | New deck from material | `deck-master create --brief … --source … --out …` | `skills/deck-master/references/source-reading.md`、`content-methods.md`、`content-examples.md` |
 | Complete draft at hand | `deck-master import-draft --project <dir> --input draft.json` (or `create --draft …`) | Page v2 shape; unknown fields raise, never drop |
 | Continue / next Host batch | `deck-master continue --project <dir>` | Returns stable `pending_tasks`; exit 3 = awaiting host/tool, not failure |
+| Change audience, decisions, purpose or materials | `deck-master inputs show --project <dir>` then `inputs update --project … --patch … --base-revision … --operation-id …` | `skills/deck-master/references/input-update.md`; only changed pages go in `content_update` |
 | Submit Host results | `deck-master task accept --project … --task-id … --operation-id … --produced-against … --result result.json` | Envelope shape: `docs/specs/deck-master-rebuild-v1/examples/roundtrips/result-envelope/README.md` |
 | Retry a settled external call | `deck-master task call allocate --project … --task-id … --count 1` | Allocates a new allowance under the project policy; retain the earlier call outcome and evidence |
 | Read-only status | `deck-master view --project <dir>` or `deck-master next-step --project <dir>` | Same `deck_view.v1` projection everywhere |
@@ -52,6 +53,9 @@ final reviews.
 ## Project Skill Installation
 
 After `python -m pip install -e ".[dev]"` the `deck-master` console command is
-the only entry; no suite linking, skill symlink installation, or first-run
-setup step is required. See `skills/deck-master/references/installation.md`
-for release-candidate activation and rollback of installed trees.
+the only CLI entry. For a release used from Codex, `install activate` registers
+one managed `deck-master` Skill under `$CODEX_HOME/skills` (default
+`~/.codex/skills`), following `current/skill/deck-master`. Registration does
+not modify config.toml or other Host skill roots. See
+`skills/deck-master/references/installation.md` for candidate installation,
+legacy companion migration and rollback.

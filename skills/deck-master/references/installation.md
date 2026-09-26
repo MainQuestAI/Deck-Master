@@ -1,52 +1,61 @@
 # Installation
 
-The rebuilt core installs as a normal Python package; the `deck-master`
-console entry and `python -m deck_master` are the same CLI. There is no
-suite-linking step and no first-run setup.
+The rebuilt Python package exposes one CLI: `deck-master` or `python -m deck_master`.
+For development, use Python 3.11 or 3.12 and `python -m pip install -e '.[dev]'`.
+A release used from Codex also needs its managed Skill registration.
 
-## Editable Install (development)
+## Candidate, activation and rollback
+
+Build and check the candidate first. `install candidate` creates an isolated
+virtual environment, extracts `skill/deck-master/` from the wheel, and runs
+compile/render/compose/view checks. It does not activate or register the Skill.
 
 ```bash
-python -m pip install -e ".[dev]"
-deck-master --version
-deck-master doctor --step compose   # content inputs
-deck-master doctor --step render    # renderer toolchain
+python tools/build_release.py --out /path/to/new-release
+python -m deck_master install candidate \
+  --prefix /path/to/prefix --manifest /path/to/new-release/release.json
+python -m deck_master install activate \
+  --prefix /path/to/prefix --release-id <release_id>
+/path/to/prefix/.deck-master/bin/deck-master doctor --step compose
+/path/to/prefix/.deck-master/bin/deck-master install rollback --prefix /path/to/prefix
 ```
 
-Renderer or font gaps are reported per step as `needs_tool` with the real
-reason — nothing silently falls back to fixtures.
+For the normal personal installation, `--prefix "$HOME"` produces
+`~/.deck-master/bin/deck-master`. Use the chosen prefix's launcher when using
+another prefix. Activation manages exactly one link:
+`$CODEX_HOME/skills/deck-master` (default `~/.codex/skills/deck-master`) to
+`<prefix>/.deck-master/current/skill/deck-master`.
+A real directory/file or a foreign link at that path is a `host_skill_conflict`
+(exit 5); resolve the named conflict before retrying. `--no-host-registration`
+skips registration for CI and reports CLI and Host status separately.
+No config.toml changes, other Host registrations or third-party Skill changes occur.
 
-## Candidate Releases (staging → activate → rollback)
+Rollback follows `previous` and keeps method and CLI releases aligned. If the
+previous release predates the Skill, the managed link is removed and the result
+reports `host_skill_unregistered`. Project data and recorded calls are not rolled back.
 
-Release candidates are built with `tools/build_release.py` and installed into
-an isolated prefix. Activation creates per-release virtual environments; no
-`.agents/skills` link maintenance is required — activated candidates expose
-the `deck-master` entry from their own venv.
+## Legacy companion layout
+
+Activation recognizes a real `current/` containing only
+`companion-manifest.json` with schema `deck_master_companion_manifest.v3` and
+`bundled_symlink_only` on its Deck Skill rows. The policy is nested in `skills[]`;
+it is not a top-level manifest field. Other directory contents are refused.
+The old directory moves to `legacy-companion-<timestamp>` and remains available.
+Only `deck-*` symlinks targeting the exact old `current/skills/` subtree are
+removed, with each move, removal and skipped entry reported. Retry is idempotent.
+
+Run migration tests with an isolated HOME and CODEX_HOME. Actual installation
+migration and the seven-step new Codex session are user-run acceptance checks;
+passing package tests is not evidence that either was completed.
+
+## Tools and old runs
 
 ```bash
-python tools/build_release.py --out /path/to/release        # wheel + release.json
-python -m deck_master.cli install candidate \
-  --prefix ~/.deck-master-candidates --manifest /path/to/release/release.json
-python -m deck_master.cli install activate \
-  --prefix ~/.deck-master-candidates --release-id <release_id>
-# doctor proves the activated candidate serves its own copy:
-~/.deck-master-candidates/.deck-master/current/venv/bin/python \
-  -I -m deck_master doctor --step view
-python -m deck_master.cli install rollback --prefix ~/.deck-master-candidates
-```
-
-Rollback restores the previous activated release; activation failures leave
-`current` untouched (covered by `tests/rebuild/test_install.py`).
-
-## Old Commands
-
-Pre-rebuild commands are retired or mapped — the full table (do not reuse the
-old names in new material):
-
-```bash
+deck-master doctor --step compose
+deck-master doctor --step render
 deck-master legacy-map
 ```
 
-Old run directories are recognised and refused (`legacy_run_format`); convert
-a full draft with `deck-master import legacy --input <old-run> --out <new>`
-(read-only). See `docs/migration-to-rebuilt-core.md`.
+Missing renderers/fonts report `needs_tool`. Old run directories report
+`legacy_run_format`; use `deck-master import legacy --input <old-run> --out <new>`
+or pin a compatible old release. Never initialize or migrate an old run in place.

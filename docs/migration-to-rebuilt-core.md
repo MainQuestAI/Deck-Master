@@ -89,10 +89,9 @@ Import semantics:
 
 ## Third-Party Skills
 
-第三方 skills(`skills/` 下 deck-setup、deck-upgrade 等目录)仍可能引用
-suite-status 等旧命令;这是设计内惰性:新 CLI 对退役命令统一返回 guidance
-JSON(exit 2,`legacy_guidance`/`retired_command`),用户应直接使用本文的
-`deck-master` 新命令。这些第三方目录不属于本仓库退役范围,不在本轮修改。
+仓库中旧的多 Skill 入口已退役，统一使用 `skills/deck-master/SKILL.md`。
+旧入口到新命令的对照见 [Flow Quality 迁移说明](specs/deck-master-flow-quality-v1.1/MIGRATION.md)。
+本机第三方 Skill 保持原样；安装器只迁移已识别的旧 companion 目录和属于该目录的失效链接。
 
 ## Document Map
 

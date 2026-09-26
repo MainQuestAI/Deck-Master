@@ -8,6 +8,11 @@ CLI and a loopback review workbench.
 **Status:** rebuilt core (spec pack v1.1), Python package `1.0.0.dev2`.
 **License:** Apache-2.0.
 
+Flow Quality v1.1 adds complete task context, directory sources and input
+revision updates that preserve unaffected pages. The development input and
+acceptance checklist are in [the specification pack](docs/specs/deck-master-flow-quality-v1.1/README.md).
+Engineering checks and the user-run Codex scenario are reported separately.
+
 The rebuilt core does not require a PPT Master backend binding, a slide
 library installation, or any first-run workspace setup: a plain material
 directory is enough to start. Legacy v0.9.x material and runs are handled by
@@ -40,8 +45,8 @@ uv pip install --python .venv/bin/python -e ".[dev]"
 ```
 
 The only command surface is the rebuilt CLI: `deck-master ...` after install,
-or `python -m deck_master ...` from a source checkout. The legacy
-The retired legacy CLI entry is not part of the new flow.
+or `python -m deck_master ...` from a source checkout. Release activation also
+registers the single Codex Skill; see [installation](skills/deck-master/references/installation.md).
 
 ## Quick Start
 
@@ -61,6 +66,11 @@ deck-master view --open --project ./my-deck
 # 4. Edit copy, review, and export — review purpose allows unfinished decks
 #    with an honest unresolved list; delivery requires passing checks.
 deck-master export --project ./my-deck --out ./out --purpose review
+
+# 5. Persist changed requirements or materials before continuing the same deck.
+deck-master inputs show --project ./my-deck
+deck-master inputs update --project ./my-deck --patch update.json \
+  --base-revision <revision_id> --operation-id <unique_id>
 ```
 
 ## Review Workbench

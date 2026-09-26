@@ -1,0 +1,63 @@
+{
+  "task": {
+    "title": "嘉禾装备售后知识助手能力交流",
+    "brief": "面向首次接触的客户说明澄川科技能力及与售后任务的适配方式。基于给定材料形成完整稿，不要求本次决定启动POC。",
+    "audience": "售后负责人和信息化负责人",
+    "scenario": "首次能力交流",
+    "presentation_mode": "live",
+    "page_limit": 8,
+    "existing_decisions": [
+      "沿用现有售后门户",
+      "允许保存服务申请草稿，正式提交由员工确认",
+      "没有经核实的效率改善数字"
+    ]
+  },
+  "sources": [
+    {
+      "source_id": "src-company",
+      "name": "company.md",
+      "original_uri": "materials/company.md",
+      "original_sha256": "5d2ea25fb609e5d7dfe907f3069725c750c6b1282dd0eb06ef78056ed02a69e9",
+      "format": "md",
+      "extract": {
+        "path": ".deckmaster/objects/7e/7e22212ae19cb84108854af7859ce294c1607139a53f500cbe0398a76c54a7cb.json",
+        "sha256": "7e22212ae19cb84108854af7859ce294c1607139a53f500cbe0398a76c54a7cb"
+      },
+      "external_use": "unspecified",
+      "restriction": "",
+      "locator_scheme": "line",
+      "usage_note": "仅证明实际交付经验，不证明量化效果"
+    },
+    {
+      "source_id": "src-operations",
+      "name": "operations.md",
+      "original_uri": "materials/operations.md",
+      "original_sha256": "a25872e1686b13189464032439d8fc5cb421834b065f8eb4e9de0e815746aa96",
+      "format": "md",
+      "extract": {
+        "path": ".deckmaster/objects/73/732e21e121e437cd3868df0fe2065cc312e890e5900a83df0ffd8c6a229de5be.json",
+        "sha256": "732e21e121e437cd3868df0fe2065cc312e890e5900a83df0ffd8c6a229de5be"
+      },
+      "external_use": "unspecified",
+      "restriction": "",
+      "locator_scheme": "line",
+      "usage_note": "用于理解业务机制和样本现象"
+    },
+    {
+      "source_id": "src-interface",
+      "name": "interface-v2.md",
+      "original_uri": "materials/interface-v2.md",
+      "original_sha256": "01fbf97ad3159107f2c1629838622dfdfdc9da22f371af49099aa0db9ee11779",
+      "format": "md",
+      "extract": {
+        "path": ".deckmaster/objects/43/4335bee6d094fab32d7e94eac67581409ae0b00e52827f9955346f3aa570506e.json",
+        "sha256": "4335bee6d094fab32d7e94eac67581409ae0b00e52827f9955346f3aa570506e"
+      },
+      "external_use": "unspecified",
+      "restriction": "",
+      "locator_scheme": "line",
+      "usage_note": "V2替代只读范围，允许草稿保存但不自动正式提交"
+    }
+  ],
+  "input_digest": "bf03299240c8ae15b5ea3669c298932e5d888f94e11f88e2b6bd40805ec89945"
+}

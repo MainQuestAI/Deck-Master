@@ -15,6 +15,13 @@ agents working in this repository.
 
 ## Rebuild Baseline (v1.1)
 
+The current Flow Quality increment follows
+`docs/specs/deck-master-flow-quality-v1.1/README.md`, then its SPEC, TASKS,
+ACCEPTANCE and MIGRATION. Its T1–T9 are distinct from the older rebuild cards
+below. This increment authorizes retiring the listed repository skills;
+the real Codex AC-17 session and actual HOME migration remain user-run checks.
+The single public skill is `skills/deck-master/SKILL.md`.
+
 The active implementation baseline for the mainline rebuild is
 `docs/specs/deck-master-rebuild-v1/` (spec pack v1.1). Rules for this effort:
 
@@ -65,6 +72,9 @@ deck-master view --project <dir> --json
 
 - New deck from material: `deck-master create --brief … --source … --out …`
   (a plain material directory is enough; no library/workspace/backend setup).
+- Change task facts or materials: `deck-master inputs show --project <dir>`,
+  then `inputs update --patch … --base-revision … --operation-id …`.
+  Accept only `content_update` for the resulting `compose/input_revision` task.
 - Continue an existing project: `deck-master continue --project <dir>`; execute
   only the returned pending Host tasks.
 - Adopt a Host result: `deck-master task accept --project … --task-id …
