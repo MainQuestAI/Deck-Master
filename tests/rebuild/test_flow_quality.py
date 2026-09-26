@@ -783,8 +783,23 @@ def test_content_update_roundtrip_changes_only_target_page(tmp_path: Path) -> No
     for entry in store.load_document()["pages"]:
         task = service.open_blueprint_task(store, store.load_document(), entry)
         _accept_blueprint_envelope(project, task, entry, _png_bytes())
+    # Populate every slot with explicit synthetic test artifacts, so retaining
+    # None slots cannot masquerade as preserving existing SVG/preview bytes.
+    from deck_master.pipeline import artifact
+    svg = tmp_path / 'synthetic.svg'
+    svg.write_text('<svg viewBox="0 0 320 180"><rect width="320" height="180" fill="#161b22"/></svg>')
+    preview = tmp_path / 'synthetic-preview.png'
+    preview.write_bytes(_png_bytes())
+    def attach_test_slots(doc):
+        for entry in doc['pages']:
+            entry['svg'] = artifact(store, svg, 'svg', page_id=entry['page_id'])
+            entry['svg_preview'] = artifact(store, preview, 'svg_preview', page_id=entry['page_id'])
+            entry['ppt_preview'] = artifact(store, preview, 'ppt_preview', page_id=entry['page_id'])
+    _raw_commit(store, attach_test_slots)
     document = store.load_document()
     before = {e["page_id"]: e for e in document["pages"]}
+    expected = _load_fixture('expected-effects.json')
+    assert {pid: entry['page']['sha256'] for pid, entry in before.items()} == expected['before_page_hashes']
 
     patch = _load_fixture("update-interface.json")
     patch["source_changes"]["replace"][0]["source_id"] = id_by_name["interface-v1.md"]
@@ -805,6 +820,11 @@ def test_content_update_roundtrip_changes_only_target_page(tmp_path: Path) -> No
     assert [e["page_id"] for e in after_doc["pages"]] == ["p01", "p02", "p03"]
     for pid in ("p01", "p02"):
         assert after[pid] == before[pid], f"unchanged page {pid} must keep every slot"
+        for slot in ('blueprint', 'svg', 'svg_preview', 'ppt_preview'):
+            old_file = store.read_object_json(before[pid][slot])['file']
+            new_file = store.read_object_json(after[pid][slot])['file']
+            assert store.read_object_bytes(old_file) == store.read_object_bytes(new_file)
+    assert {pid: entry['page']['sha256'] for pid, entry in after.items()} == expected['after_page_hashes']
     assert after["p03"]["page"]["sha256"] == outcome["new_page_hashes"]["p03"]
     assert after["p03"]["blueprint"] == before["p03"]["blueprint"], "original blueprint is kept"
     assert after_doc["outputs"] == document["outputs"], "outputs stay put during reconciliation"
