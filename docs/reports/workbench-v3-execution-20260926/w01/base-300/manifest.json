@@ -2,11 +2,11 @@
   "synthetic": true,
   "browser_fixture": false,
   "project_id": "synthetic-project",
-  "fixed_revision": "35d4635a989247f8bb32773591577a22",
-  "current_revision": "b8f30a2bf9964c2ba38c7cb0b7bfee4a",
+  "fixed_revision": "e59e941ca3414004b912654c9044492f",
+  "current_revision": "f0a41e5bd1a445dea3f8016ab3a4d3b2",
   "page_id": "p001",
   "history_read_did_not_write": true,
-  "pointer_sha256": "2ecf957f54097552d803911cd9ce4dd2095cfefde76aced45c92e1a2bb0d58e2",
+  "pointer_sha256": "357221794340d0ccd2d70427d9ee9171af0980db6205982bffa40a28880fbc18",
   "svg_file_route": "/api/file?path=.deckmaster%2Fobjects%2Fc7%2Fc7ba0778660047314c591cbeb83469a11089391fe7e50834c815d577f541b7c7.svg&sha256=c7ba0778660047314c591cbeb83469a11089391fe7e50834c815d577f541b7c7",
   "source_command": "PYTHONPATH=src python examples/workbench/w01_lineage.py --out <new-directory> --pages 300"
 }

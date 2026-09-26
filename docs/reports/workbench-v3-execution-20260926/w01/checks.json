@@ -1,11 +1,20 @@
 {
   "implementation_commit": "b0ac9e5c00ffa2b975f3d9f2e02382e9cf7adf8a",
   "command": "PYTHONPATH=src python -m pytest -q -p no:cacheprovider tests/rebuild/test_workbench_reads.py tests/rebuild/test_web.py tests/rebuild/test_workbench_e2e.py tests/rebuild/test_package_boundary.py",
-  "passed": 45,
+  "passed": 46,
   "failed": 0,
-  "elapsed_seconds": 17.68,
+  "elapsed_seconds": 17.92,
   "ruff": "passed",
   "level": "local core/HTTP; synthetic fixtures",
   "installation": "not verified",
-  "real_host": "not run"
+  "real_host": "not run",
+  "reference_safety_commit": "8effeb352d72f9c500e37740307df2cc7ceb5a4f",
+  "first_PR_CI": {
+    "head": "fd0e96f904fd6a5ef9d23e70e3d6eb87d548c84d",
+    "unit_311": "success",
+    "unit_312": "success",
+    "real_render_312": "success",
+    "group_report": "success",
+    "run_id": 36241872642
+  }
 }

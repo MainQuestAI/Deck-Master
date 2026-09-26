@@ -5,7 +5,7 @@
 - [独立 Review：4 P1、3 P2](REVIEW.md)
 - [外部原始复核与取舍](OUTSIDE-REVIEW.md)
 - [执行状态及 87 条 AC](execution-state.json)
-- [W01 实现提交、45 项回归、浏览器与性能证据](W01.md)
+- [W01 实现提交、46 项回归、浏览器与性能证据](W01.md)
 - [修订后的包顺序](../../specs/deck-master-workbench-v3/packages/README.md)
 - [交接原件](handoff/HANDOFF.md) / [26 个输入的原始 manifest](handoff/manifest.json)
 - [当前用户设计快照](design-snapshot/index.html) / [8 文件 SHA256](design-snapshot/sha256-manifest.json)

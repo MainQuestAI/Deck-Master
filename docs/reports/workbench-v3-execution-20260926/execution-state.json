@@ -26,7 +26,9 @@
       "residuals": [
         "W02/W07 object adaptation",
         "W01-AC01 full 300x5x3 pressure with background updates"
-      ]
+      ],
+      "reference_safety_commit": "8effeb352d72f9c500e37740307df2cc7ceb5a4f",
+      "pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/41"
     },
     "W02": {
       "status": "planned",
