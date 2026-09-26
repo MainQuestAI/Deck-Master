@@ -69,10 +69,9 @@ def test_json_reading_keeps_numbers_zero_and_nesting(tmp_path: Path) -> None:
 
 def test_invalid_json_is_explicit_not_empty_success(tmp_path: Path) -> None:
     path = _write(tmp_path, "broken.json", b"{not json")
-    extract = read_source(path)
-    assert extract.status == "needs_tool"
-    assert "invalid JSON" in extract.detail
-    assert extract.text == ""
+    from deck_master.errors import SourceUnreadable
+    with pytest.raises(SourceUnreadable, match="invalid JSON"):
+        read_source(path)
 
 
 def _pdf_stream(text: str) -> bytes:

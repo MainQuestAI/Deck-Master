@@ -17,7 +17,7 @@ import zipfile
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from .errors import SourceUnreadable, SourceUnsupported
+from .errors import SourceUnreadable, SourceUnsupported, SourceNeedsTool
 
 SUPPORTED_TEXT_FORMATS = {"txt", "md"}
 SUPPORTED_STRUCTURED_FORMATS = {"json"}
@@ -83,14 +83,7 @@ def _read_text(path: Path, ext: str) -> SourceExtract:
     try:
         text = path.read_text(encoding="utf-8")
     except UnicodeDecodeError as exc:
-        return SourceExtract(
-            original_uri=str(path),
-            original_sha256=None,
-            format=ext,
-            format_kind="text",
-            status="needs_tool",
-            detail=f"unreadable encoding: {exc}",
-        )
+        raise SourceUnreadable(str(path), f"unreadable encoding: {exc}")
     return SourceExtract(
         original_uri=str(path),
         original_sha256=measure_hash(path),
@@ -112,14 +105,7 @@ def _read_json(path: Path) -> SourceExtract:
     try:
         payload = json.loads(raw.decode("utf-8"))
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-        return SourceExtract(
-            original_uri=str(path),
-            original_sha256=digest,
-            format="json",
-            format_kind="json",
-            status="needs_tool",
-            detail=f"invalid JSON: {exc}",
-        )
+        raise SourceUnreadable(str(path), f"invalid JSON: {exc}")
     locators: list[dict] = []
 
     def walk(node, pointer: str) -> None:
@@ -168,21 +154,14 @@ def _read_pdf(path: Path) -> SourceExtract:
             format="pdf",
             format_kind="pdf",
             status="needs_tool",
-            detail="pdftotext not available on this machine",
+            detail="pdftotext not available on PATH; install Poppler or restore PATH",
         )
     result = subprocess.run(
         [tool, "-layout", str(path), "-"],
         check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=120,
     )
     if result.returncode != 0:
-        return SourceExtract(
-            original_uri=str(path),
-            original_sha256=measure_hash(path),
-            format="pdf",
-            format_kind="pdf",
-            status="needs_tool",
-            detail=f"pdftotext failed: {result.stderr.decode('utf-8', 'replace').strip()}",
-        )
+        raise SourceUnreadable(str(path), f"pdftotext failed: {result.stderr.decode('utf-8', 'replace').strip()}")
     text = result.stdout.decode("utf-8", "replace")
     pages = text.split("\f")
     if pages and not pages[-1].strip():pages.pop()
@@ -209,14 +188,7 @@ def _read_docx(path: Path) -> SourceExtract:
         with zipfile.ZipFile(path) as archive:
             xml_bytes = archive.read("word/document.xml")
     except (zipfile.BadZipFile, KeyError) as exc:
-        return SourceExtract(
-            original_uri=str(path),
-            original_sha256=measure_hash(path),
-            format="docx",
-            format_kind="docx",
-            status="needs_tool",
-            detail=f"unreadable DOCX: {exc}",
-        )
+        raise SourceUnreadable(str(path), f"unreadable DOCX: {exc}")
     import xml.etree.ElementTree as ET
 
     root = ET.fromstring(xml_bytes)
@@ -269,19 +241,12 @@ def _read_pptx(path: Path) -> SourceExtract:
             format="pptx",
             format_kind="pptx",
             status="needs_tool",
-            detail="python-pptx not installed",
+            detail="python-pptx not installed in this CLI environment",
         )
     try:
         presentation = Presentation(str(path))
     except Exception as exc:  # noqa: BLE001 - python-pptx raises broad errors
-        return SourceExtract(
-            original_uri=str(path),
-            original_sha256=measure_hash(path),
-            format="pptx",
-            format_kind="pptx",
-            status="needs_tool",
-            detail=f"unreadable PPTX: {exc}",
-        )
+        raise SourceUnreadable(str(path), f"unreadable PPTX: {exc}")
     locators: list[dict] = []
     text_parts: list[str] = []
     image_pages=[]
@@ -377,8 +342,12 @@ def read_source_snapshot(path: Path | str) -> tuple[SourceExtract, bytes]:
             snapshot = Path(directory) / path.name
             snapshot.write_bytes(data)
             extract = read_source(snapshot)
+    except SourceUnreadable as exc:
+        raise SourceUnreadable(str(path), exc.detail.replace(str(snapshot), str(path))) from exc
     except (OSError, ValueError, ET.ParseError, subprocess.TimeoutExpired) as exc:
         raise SourceUnreadable(str(path), f'material could not be read: {exc}') from exc
+    if extract.status == 'needs_tool':
+        raise SourceNeedsTool(str(path), extract.detail)
     if extract.status not in ('read', 'pending_visual'):
         raise SourceUnreadable(str(path), extract.detail or 'material reader did not complete')
     extract.original_uri = str(path)
@@ -399,12 +368,19 @@ def discover_sources(paths, *, out_dir: Path | str | None = None) -> dict:
     "errored": [{path, code, detail}]}`` with adopted sorted stably.
     """
     roots = [Path(p).expanduser() for p in paths]
-    authorized = {root.resolve() for root in roots if root.exists()}
+    def resolve_explicit(root):
+        try:
+            return root.resolve()
+        except (OSError, RuntimeError) as exc:
+            raise SourceUnreadable(str(root), f'material path cannot be resolved: {exc}') from exc
+
+    resolved_roots = {root: resolve_explicit(root) for root in roots}
+    authorized = {resolved_roots[root] for root in roots if root.exists()}
     exclude = Path(out_dir).expanduser().resolve() if out_dir is not None else None
     adopted: list[Path] = []
     skipped: list[dict] = []
     errored: list[dict] = []
-    explicit = {root.resolve() for root in roots if not root.is_dir()}
+    explicit = {resolved_roots[root] for root in roots if not root.is_dir()}
     visited_directories: set[Path] = set()
 
     def skip(path: Path, reason: str) -> None:
@@ -451,7 +427,11 @@ def discover_sources(paths, *, out_dir: Path | str | None = None) -> dict:
         adopted.append(path)
 
     def walk(directory: Path) -> None:
-        resolved = directory.resolve()
+        try:
+            resolved = directory.resolve()
+        except (OSError, RuntimeError) as exc:
+            skip(directory, f'symlink or path resolution failed: {exc}')
+            return
         if resolved in visited_directories:
             skip(directory, 'already visited directory (symlink cycle or duplicate root)')
             return
@@ -462,12 +442,19 @@ def discover_sources(paths, *, out_dir: Path | str | None = None) -> dict:
             note_error(directory, "source_unreadable", str(exc))
             return
         for entry in entries:
-            if exclude is not None and entry.resolve() == exclude:
+            try:
+                target = entry.resolve()
+            except (OSError, RuntimeError) as exc:
+                skip(entry, f'symlink or path resolution failed: {exc}')
+                continue
+            if exclude is not None and target == exclude:
                 skip(entry, "project --out directory")
                 continue
             if entry.is_symlink():
-                target = entry.resolve()
-                if not target.exists() or not _within_authorized(target):
+                if not target.exists():
+                    skip(entry, "broken symlink target")
+                    continue
+                if not _within_authorized(target):
                     skip(entry, "symlink outside the authorized material roots")
                     continue
             if entry.is_dir():
@@ -481,11 +468,11 @@ def discover_sources(paths, *, out_dir: Path | str | None = None) -> dict:
     for root in roots:
         if not root.exists():
             raise SourceUnreadable(f"(source {root})", f"material not found: {root}")
-        if exclude is not None and root.resolve() == exclude:
+        if exclude is not None and resolved_roots[root] == exclude:
             skip(root, "project --out directory")
             continue
         if root.is_symlink():
-            target = root.resolve()
+            target = resolved_roots[root]
             if not target.exists() or not _within_authorized(target):
                 skip(root, "symlink outside the authorized material roots")
                 continue

@@ -67,6 +67,7 @@ class HostSkillConflict(TypedServiceError):
 
 
 NEXT_ACTIONS_BY_CODE = {
+    "needs_tool": "install or restore the named reader dependency in this CLI environment, then retry the same command",
     "task_field_conflict": "remove one of the conflicting task-fact sources and retry",
     "source_unreadable": "fix or replace the named file, or drop it from --source",
     "source_unsupported": "convert the file to a supported format or drop it from --source",
@@ -76,3 +77,10 @@ NEXT_ACTIONS_BY_CODE = {
     "method_resource_missing": "reinstall the package; the method source is missing or unreadable",
     "host_skill_conflict": "remove or rename the occupant path, or choose another Codex skill root",
 }
+
+
+class SourceNeedsTool(TypedServiceError):
+    """A selected source cannot be read until its dependency is restored."""
+
+    error_code = "needs_tool"
+    exit_code = 3
