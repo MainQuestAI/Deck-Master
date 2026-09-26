@@ -374,3 +374,55 @@ def test_missing_font_blocks_new_work_but_not_old_media(tmp_path: Path) -> None:
     current = store.load_document()
     assert store.read_object_bytes(
         store.read_object_json(current["pages"][0]["ppt_preview"])["file"]) == preview.read_bytes()
+@pytest.mark.parametrize('suffix,data', [('json', b'{broken'), ('docx', b'not a ZIP'), ('txt', b'\xff\xfe')])
+def test_create_rejects_explicit_unreadable_material_before_document(tmp_path, suffix, data):
+    from deck_master.service import create
+    from deck_master.errors import SourceUnreadable
+    source = tmp_path / f'bad.{suffix}'
+    source.write_bytes(data)
+    project = tmp_path / 'project'
+    with pytest.raises(SourceUnreadable):
+        create(project, brief='读取材料', sources=[source])
+    assert not (project / '.deckmaster/current.json').exists()
+
+
+def test_directory_reports_bad_material_and_stops_symlink_cycles(tmp_path):
+    from deck_master.service import create
+    materials = tmp_path / 'materials'
+    materials.mkdir()
+    (materials / 'good.md').write_text('可读材料')
+    (materials / 'bad.json').write_text('{bad')
+    (materials / 'again').symlink_to(materials, target_is_directory=True)
+    result = create(tmp_path / 'project', brief='读取材料', sources=[materials])
+    assert [entry['name'] for entry in result['sources_adopted']] == ['good.md']
+    assert result['sources_errored'][0]['code'] == 'source_unreadable'
+    assert any('cycle' in entry['reason'] or 'visited' in entry['reason']
+               for entry in result['sources_skipped'])
+
+
+def test_input_update_uses_staged_bytes_and_rejects_parse_failure(tmp_path, monkeypatch):
+    from deck_master import service
+    from deck_master.errors import SourceUnreadable
+    from deck_master.store import Store
+    project = tmp_path / 'project'
+    service.create(project, brief='读取材料')
+    store = Store(project)
+    before = store.load_document()
+    source = tmp_path / 'source.json'
+    source.write_text('{broken')
+    patch = {'reason': '补充材料', 'source_changes': {'add': [{'path': str(source)}]}}
+    with pytest.raises(SourceUnreadable):
+        service.inputs_update(project, patch=patch, base_revision=before['revision_id'], operation_id='bad-json')
+    assert store.load_document() == before
+    source.write_text('{"version":1}')
+    original_read = service._read_patch_material
+    def change_after_staging(path):
+        staged = original_read(path)
+        source.write_text('{"version":2}')
+        return staged
+    monkeypatch.setattr(service, '_read_patch_material', change_after_staging)
+    service.inputs_update(project, patch=patch, base_revision=before['revision_id'], operation_id='staged-bytes')
+    entry = store.load_document()['sources'][0]
+    extract = store.read_object_json(entry['extract'])
+    assert json.loads(extract['text']) == {'version': 1}
+    assert store.read_object_bytes(extract['original_file']) == b'{"version":1}'

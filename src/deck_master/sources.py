@@ -358,6 +358,34 @@ def read_source(path: Path | str) -> SourceExtract:
     )
 
 
+def read_source_snapshot(path: Path | str) -> tuple[SourceExtract, bytes]:
+    """Read a single immutable byte snapshot, or report a material error.
+
+    Parsing and the stored original must describe the same bytes even if the
+    user edits the external file while an input transaction is in progress.
+    Visual verification remains pending for image-bearing formats.
+    """
+    import tempfile
+    import xml.etree.ElementTree as ET
+
+    path = Path(path).expanduser().absolute()
+    if path.suffix.lstrip('.').lower() not in SUPPORTED_EXTENSIONS:
+        raise SourceUnsupported(str(path), f'no reader declared for {path.suffix}')
+    try:
+        data = path.read_bytes()
+        with tempfile.TemporaryDirectory(prefix='deck-source-') as directory:
+            snapshot = Path(directory) / path.name
+            snapshot.write_bytes(data)
+            extract = read_source(snapshot)
+    except (OSError, ValueError, ET.ParseError, subprocess.TimeoutExpired) as exc:
+        raise SourceUnreadable(str(path), f'material could not be read: {exc}') from exc
+    if extract.status not in ('read', 'pending_visual'):
+        raise SourceUnreadable(str(path), extract.detail or 'material reader did not complete')
+    extract.original_uri = str(path)
+    extract.original_sha256 = sha256_bytes(data)
+    return extract, data
+
+
 def discover_sources(paths, *, out_dir: Path | str | None = None) -> dict:
     """Expand user-given files and directories into a stable material list.
 
@@ -376,6 +404,8 @@ def discover_sources(paths, *, out_dir: Path | str | None = None) -> dict:
     adopted: list[Path] = []
     skipped: list[dict] = []
     errored: list[dict] = []
+    explicit = {root.resolve() for root in roots if not root.is_dir()}
+    visited_directories: set[Path] = set()
 
     def skip(path: Path, reason: str) -> None:
         skipped.append({"path": str(path), "reason": reason})
@@ -416,10 +446,16 @@ def discover_sources(paths, *, out_dir: Path | str | None = None) -> dict:
         ext = path.suffix.lstrip(".").lower()
         if ext not in SUPPORTED_EXTENSIONS:
             skip(path, f"unsupported format .{ext}")
+            skipped[-1]['code'] = 'source_unsupported'
             return
         adopted.append(path)
 
     def walk(directory: Path) -> None:
+        resolved = directory.resolve()
+        if resolved in visited_directories:
+            skip(directory, 'already visited directory (symlink cycle or duplicate root)')
+            return
+        visited_directories.add(resolved)
         try:
             entries = sorted(directory.iterdir(), key=lambda p: str(p))
         except OSError as exc:
@@ -462,7 +498,7 @@ def discover_sources(paths, *, out_dir: Path | str | None = None) -> dict:
             handle_file(root, explicit=True)
     # Explicit roots keep call order; directory contents are walked in stable
     # lexical order. No global re-sort: the user's naming order is information.
-    return {"adopted": adopted, "skipped": skipped, "errored": errored}
+    return {"adopted": adopted, "skipped": skipped, "errored": errored, "explicit": explicit}
 
 
 def tail_constraint(extract: SourceExtract) -> str:

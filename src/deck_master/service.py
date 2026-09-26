@@ -23,7 +23,7 @@ from .content import normalize_design_assets, check_page
 from .errors import InputRevisionConflict, SourceUnreadable, SourceUnsupported
 from .method_resources import method_release, method_resources
 from .models import bump_revision, canonical_json_bytes, compute_input_digest, content_identity, input_alignment, new_document, sha256_bytes, validate_document_semantics
-from .sources import discover_sources, read_source
+from .sources import discover_sources, read_source_snapshot
 from .store import Store, StoreError, ConflictError
 from .production import project_prompt, resolve_design
 from .review import PAGE_VISUAL_KINDS
@@ -85,33 +85,6 @@ def _new_source_id(existing_ids: set[str]) -> str:
     return candidate
 
 
-def _register_source(store: Store, source_path: Path, source_id: str) -> dict:
-    extract = read_source(source_path)
-    from dataclasses import asdict
-    extraction = asdict(extract)
-    extraction['original_file'] = store.put_blob(
-        Path(source_path).expanduser().read_bytes(), ext=extract.format)
-    extract_ref = store.put_json_object(extraction)
-    return {
-        "source_id": source_id,
-        "name": Path(str(source_path)).name,
-        "original_uri": extract.original_uri,
-        "original_sha256": extract.original_sha256,
-        "format": extract.format,
-        "extract": extract_ref,
-        "external_use": "unspecified",
-        "restriction": "",
-        "locator_scheme": {
-            "text": "line",
-            "json": "pointer",
-            "pdf": "page",
-            "docx": "paragraph",
-            "pptx": "slide",
-            "image": "region",
-        }.get(extract.format_kind, "none"),
-    }
-
-
 def create(
     project_dir: Path | str,
     *,
@@ -144,21 +117,21 @@ def create(
     extracts: list = []
     for source_path in discovered["adopted"]:
         try:
-            extract = read_source(source_path)
-        except FileNotFoundError as exc:
-            raise SourceUnreadable(f"(source {source_path})", str(exc)) from exc
-        if extract.format_kind == "unknown":
-            ext = Path(str(source_path)).suffix.lstrip(".").lower()
-            raise SourceUnsupported(f"(source {source_path})", f"no reader declared for .{ext}")
-        extracts.append((source_path, extract))
+            extract, data = read_source_snapshot(source_path)
+        except (SourceUnreadable, SourceUnsupported) as exc:
+            if source_path.resolve() in discovered['explicit']:
+                raise
+            discovered['errored'].append({'path': str(source_path), 'code': exc.error_code, 'detail': str(exc)})
+            continue
+        extracts.append((source_path, extract, data))
     store.ensure_layout()
     operation_id = _new_operation_id("create")
 
     source_entries: list[dict] = []
     seen_ids: set[str] = set()
-    for source_path, extract in extracts:
+    for source_path, extract, data in extracts:
         source_entries.append(
-            _register_source(store, source_path, _new_source_id(seen_ids)))
+            _entry_from_extract(store, source_path, extract, _new_source_id(seen_ids), data=data))
         seen_ids.add(source_entries[-1]["source_id"])
     source_manifest = {
         "sources_adopted": [
@@ -1025,17 +998,7 @@ def _normalize_input_patch(patch: dict, *, patch_dir: Path) -> dict:
 
 def _read_patch_material(path_str: str):
     """Read one patch-named material; failures reject the whole request."""
-    path = Path(path_str)
-    try:
-        extract = read_source(path)
-    except FileNotFoundError as exc:
-        raise SourceUnreadable(f"(source {path})", str(exc)) from exc
-    except OSError as exc:
-        raise SourceUnreadable(f"(source {path})", str(exc)) from exc
-    if extract.format_kind == "unknown":
-        ext = path.suffix.lstrip(".").lower()
-        raise SourceUnsupported(f"(source {path})", f"no reader declared for .{ext}")
-    return extract
+    return read_source_snapshot(path_str)
 
 
 def inputs_update(
@@ -1109,7 +1072,7 @@ def inputs_update(
                 same_path = entry.get("original_uri") == str(path)
             return same_path and sha is not None and entry.get("original_sha256") == sha
 
-        for item, extract in staged_add:
+        for item, (extract, data) in staged_add:
             path = Path(item["path"])
             noop_target = next((entry for entry in new_sources
                                 if _resolve_same(entry, path, extract.original_sha256)), None)
@@ -1118,11 +1081,11 @@ def inputs_update(
                 continue
             source_id = _new_source_id({entry["source_id"] for entry in new_sources})
             new_sources.append(_entry_from_extract(store, path, extract, source_id,
-                                                   usage_note=item.get("usage_note") or ""))
+                                                   usage_note=item.get("usage_note") or "", data=data))
             by_id[source_id] = new_sources[-1]
             diff["sources_added"].append(source_id)
 
-        for item, extract in staged_replace:
+        for item, (extract, data) in staged_replace:
             source_id = item["source_id"]
             if source_id not in by_id:
                 raise ServiceError(f"(patch)/source_changes/replace/{source_id}",
@@ -1130,7 +1093,7 @@ def inputs_update(
             path = Path(item["path"])
             entry = by_id[source_id]
             replacement = _entry_from_extract(store, path, extract, source_id,
-                                              usage_note=item.get("usage_note") or entry.get("usage_note") or "")
+                                              usage_note=item.get("usage_note") or entry.get("usage_note") or "", data=data)
             new_sources[new_sources.index(entry)] = replacement
             by_id[source_id] = replacement
             diff["sources_replaced"].append(source_id)
@@ -1250,12 +1213,11 @@ def inputs_update(
         return result
 
 
-def _entry_from_extract(store: Store, path: Path, extract, source_id: str, *, usage_note: str = "") -> dict:
+def _entry_from_extract(store: Store, path: Path, extract, source_id: str, *, data: bytes, usage_note: str = "") -> dict:
     from dataclasses import asdict
 
     extraction = asdict(extract)
-    extraction["original_file"] = store.put_blob(
-        Path(path).expanduser().read_bytes(), ext=extract.format)
+    extraction["original_file"] = store.put_blob(data, ext=extract.format)
     extract_ref = store.put_json_object(extraction)
     entry = {
         "source_id": source_id,
