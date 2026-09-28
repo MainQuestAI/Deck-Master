@@ -1,0 +1,150 @@
+{
+  "evidence_level": "real Chromium / real local HTTP / synthetic recorded evidence",
+  "checks": {
+    "original_to_recorded_prompt_and_content_within_three_clicks": true,
+    "unicode_dom_utf16_to_codepoints_crlf_combining_zwj": {
+      "map": [
+        0,
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "rejected": true,
+      "zwj": [
+        0,
+        2,
+        3,
+        5
+      ],
+      "range": "🙂é"
+    },
+    "diff_preserves_combining_marks_and_bounds_large_comparison": {
+      "exact": [
+        "removed",
+        "added"
+      ],
+      "large": "full_sides"
+    },
+    "draft_does_not_modify_recorded_prompt_or_image": true,
+    "all_prepared_records_exact_basis_switch_trusted_segments_and_diff": true,
+    "unknown_actual_parameters_and_references_not_filled_from_frozen_defaults": true,
+    "host_reported_unknown_and_missing_image_states": true,
+    "prompt_ack_cross_port_offline_not_auto_recovered_explicit_import": true,
+    "production_summary_exact_field_semantics_and_unassessed_quality": true,
+    "same_page_same_layer_fixed_versions": true,
+    "background_update_only_banner_does_not_replace_comparison": true,
+    "failed_comparand_keeps_previous_pinned_side": true,
+    "responsive_comparison_switch_and_no_horizontal_overflow": true,
+    "comparand_evidence_link_keeps_its_own_snapshot": true,
+    "source_return_keeps_fixed_material_snapshot": true
+  },
+  "manifest": {
+    "original_revision": "24f71b291af44ed9b2bbfbc4f01f675b",
+    "fixed_revision": "c5205607ca09458581f2dd3b9cf01329",
+    "fixture": {
+      "schema_version": "gallery_fixture.v1",
+      "factory": "workbench-synthetic.v1",
+      "seed": 0,
+      "page_count": 30,
+      "page_ids": [
+        "p01",
+        "p02",
+        "p03",
+        "p04",
+        "p05",
+        "p06",
+        "p07",
+        "p08",
+        "p09",
+        "p10",
+        "p11",
+        "p12",
+        "p13",
+        "p14",
+        "p15",
+        "p16",
+        "p17",
+        "p18",
+        "p19",
+        "p20",
+        "p21",
+        "p22",
+        "p23",
+        "p24",
+        "p25",
+        "p26",
+        "p27",
+        "p28",
+        "p29",
+        "p30"
+      ],
+      "revision_id": "24f71b291af44ed9b2bbfbc4f01f675b",
+      "original_revision": "67e3afdf7b104c85a5b78388c42a045a",
+      "style_deviation_pages": [
+        "p08",
+        "p19"
+      ],
+      "missing_original_pages": [
+        "p03",
+        "p14"
+      ],
+      "stale_ppt_preview_pages": [
+        "p11",
+        "p21"
+      ],
+      "source_dimensions": [
+        960,
+        540
+      ],
+      "candidate_count": 0,
+      "attempt_count": 0,
+      "model_calls": 0,
+      "actual_ppt_rendering": false,
+      "user_30_second_observation": "not measured"
+    },
+    "request_id": "req-e9fb0a98fc4a4674b321018858cf9a7e",
+    "model_calls": 0
+  },
+  "source_commit": "0df9546bed3a356e7266c183893d0b062f895222",
+  "source_assets": {
+    "icons.js": "95fd179d9231f9993a8a98140a3711145a486bf022fb3096deaad56113da8456",
+    "index.html": "49084f6532bb728bb2150b43c75a1ef0ee5f9e0ae0f31ebb4b5a78b91258c6ed",
+    "page-workbench.js": "a9a5f2dfba6ff54197fe77421030052d4073c332c801465c0daca42547b2c2a9",
+    "tokens.css": "da2e775a9430340cd6e2a0add92bdefcba8575fdd1fb2cc47d100b8b9c5783fc",
+    "text-selection.js": "64b89188f34442944905671b2b512b07cc5627ae3add72ad0bea1aebddd06267",
+    "gallery.js": "1db3c656e54f87fb9404a269b9be8889bb6158024bdf6127c618aac39d85b89d",
+    "production-view.js": "7786bcf3381e35933330f3e78dd8e81b89bfb23e6da64b80e0e877cfbaa07d1b",
+    "launcher-ui.js": "1e5ea56315f693161ad4fedba9a8b38fa3ed20fd4cb61bd572a95a07214acbc4",
+    "text-diff.js": "cc52557c11ad1000989db7151cab5ed203d8b440d1b9c190a017291f12e1a632",
+    "routes.js": "3aec1c175ffab09e3792baf159ffda35cf2c600a0ae1f3636d1d5328bd24c2de",
+    "project.js": "76945a341d2cd6904afd75045bb3e80a9886f2639c0abc7ac93213b0917305fb",
+    "dom.js": "e39301e0b14cefe7b6b9fe9f51821c1e34e37925258be8093f2f7825747bb5a3",
+    "views.js": "d230d01d3cbffb94bdc06e79fc3b893476e7a54ba22364ec38fb6f9d4f288eb5",
+    "style.css": "3045ea07efcb5418235df114511acaec7f5a5e5f694fd21dd5da2afee1553570",
+    "request-view.js": "2e3a3675189af0e0c21a48b5ede649744b23ae91ea3e8f809865b3563e4a43d6",
+    "gallery-state.js": "bbe704c776e37bf6dfd216c4f2750e7dec447e9dd0c300556a4a0d1959aee308",
+    "api.js": "8139fcfa3a2673e85032869a62496d327ad3ffaf3b7465215b50536015771f02",
+    "app.js": "9c8f3ad2f39958148e79fb7cf08b225d07059656d7eff3f229bf02981fac79f6",
+    "images.js": "b8b67c32711de317268be890071aa159a84d768dc6af835463f965c9d9f0f2b7",
+    "workbench.css": "a191f238cc03209c038be6f761106dd25fc4c2153291c54dc47660365e4bbe5b",
+    "drafts.js": "32e10620f16ae3af9cf851685ddbd796a7a973e6ddd0807e5518e4d07c9e8c62"
+  },
+  "environment": {
+    "os": "macOS-27.0-arm64-arm-64bit",
+    "python": "3.12.12",
+    "browser": "149.0.7827.55",
+    "viewports": [
+      "1440x900",
+      "1280x800",
+      "1100x800"
+    ]
+  },
+  "real_host_proof": false,
+  "desktop_editing_verified": false,
+  "user_acceptance": "not measured",
+  "model_calls": 0
+}
