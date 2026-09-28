@@ -265,7 +265,8 @@ def _prompt_records(ctx, entry, artifact):
                     raise ValueError("request prompt does not match its recorded hash")
                 linked = bool(blueprint_ref and blueprint_ref in (task.get("result_refs") or []))
                 call_link = bool(invocation and any(c.get("invocation_ref") == invocation for c in task.get("call_allowances") or []))
-                prepared.append({"ref": ref, "task_ref": task_ref, "task_id": task["task_id"],
+                from .text_sources import prompt_sections
+                prepared.append({"ref": ref, "sections": prompt_sections(request), "task_ref": task_ref, "task_id": task["task_id"],
                                  "dispatch_revision": task.get("dispatch_revision"),
                                  "text": request.get("prompt"), "prompt_sha256": request.get("prompt_sha256"),
                                  "state": "prepared", "observer": "core_frozen",
@@ -292,6 +293,7 @@ def _prompt_records(ctx, entry, artifact):
 
 def page_lineage(project_dir, page_id, *, revision=None):
     from .content_plan import projection
+    from . import production_detail, text_sources
     store = Store(project_dir)
     doc = load_snapshot(store, revision)
     entry = _entry(doc, page_id)
@@ -316,6 +318,7 @@ def page_lineage(project_dir, page_id, *, revision=None):
         observed = generation["adopted_observation"]
         if prompts["submitted"]["text"] == observed["submitted"]["prompt"]:
             prompts["submitted"].update(observer="tool_observed", basis="native_tool_observation")
+    deck_output = _deck_output(ctx)
     return {"format": "page_lineage.v1", "project_id": doc["project_id"],
             "revision_id": doc["revision_id"], "requested_revision": revision,
             "page_id": page_id, "page": page, "stages": stages,
@@ -323,7 +326,8 @@ def page_lineage(project_dir, page_id, *, revision=None):
             "content_plan": projection(store, doc, reader=ctx.read, page_id=page_id),
             "prompts": prompts, "generation": generation,
             "tasks": [t for t in _task_rows(ctx) if page_id in (t.get("scope_pages") or [])],
-            "deck_output": _deck_output(ctx), "evidence_level": "engineering"}
+            "deck_output": deck_output, "production": production_detail.projection(ctx, entry, deck_output),
+            "text_sources": text_sources.projection(entry, page, prompts, generation), "evidence_level": "engineering"}
 
 
 def _generation_records(ctx, entry, artifact):
@@ -369,4 +373,10 @@ def _generation_records(ctx, entry, artifact):
                 attempts.append({"ref": ref, **copy.deepcopy(attempt), "call": copy.deepcopy(call), "observations": observations})
         except READ_FAILURES:
             errors.append(object_error())
-    return {"requests": requests, "attempts": attempts, "errors": errors, "adopted_observation": adopted}
+    request_ref = provenance.get("generation_request")
+    attempt_ref = provenance.get("generation_attempt")
+    bound_request = next((r for r in requests if r["ref"] == request_ref), None)
+    bound_attempt = next((a for a in attempts if a["ref"] == attempt_ref and a["request_ref"] == request_ref), None)
+    return {"requests": requests, "attempts": attempts, "errors": errors, "adopted_observation": adopted,
+            "adopted_request_ref": copy.deepcopy(request_ref) if bound_request else None,
+            "adopted_attempt_ref": copy.deepcopy(attempt_ref) if bound_request and bound_attempt else None}

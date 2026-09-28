@@ -1,7 +1,7 @@
 {
   "baseline": "d1c7c4600cb0fc781070116ed8cc8a1ff6b8b7ca",
-  "branch": "codex/workbench-w04-ui",
-  "active_package": "W04",
+  "branch": "codex/workbench-w05-core",
+  "active_package": "W05",
   "sequence": [
     "W01.core",
     "W02",
@@ -70,7 +70,7 @@
       "frontend_merge_commit": "f3c9b617b868748ea09765ff072858f563f65b8f"
     },
     "W04": {
-      "status": "frontend_verified_pending_merge",
+      "status": "slices_merged",
       "accepted": false,
       "baseline": "f3c9b617b868748ea09765ff072858f563f65b8f",
       "core_evidence": "W04-CORE.md",
@@ -83,11 +83,22 @@
       "core_merge_commit": "e5e7892561400a06003971c8ad9239fb5e3b62af",
       "frontend_baseline": "e5e7892561400a06003971c8ad9239fb5e3b62af",
       "frontend_source_commit": "33c99bed12cd9c352a1429955fe798c1f9646b2d",
-      "frontend_evidence": "W04-UI.md"
+      "frontend_evidence": "W04-UI.md",
+      "frontend_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/48",
+      "frontend_head": "b11452ff32305a91d2dd743e7b1248e5c59126a1",
+      "frontend_merge_commit": "b00525557ac69e9453ae4d6e3b5faf20dbefcf8b"
     },
     "W05": {
-      "status": "planned",
-      "accepted": false
+      "status": "core_pr_ready",
+      "accepted": false,
+      "baseline": "b00525557ac69e9453ae4d6e3b5faf20dbefcf8b",
+      "core_implementation_commit": "6f3e39635094543704ca498c32db0f2f7ead29dc",
+      "core_evidence": "W05-CORE.md",
+      "residuals": [
+        "W05 browser UI and fixed comparison not yet implemented",
+        "Candidate comparison requires W07",
+        "User acceptance not measured"
+      ]
     },
     "W06": {
       "status": "planned",

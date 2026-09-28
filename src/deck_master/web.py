@@ -129,7 +129,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             data=self._read_json_body()
             from .samples import sample_info
             sample = sample_info(self.store.project_root)
-            if sample and sample['readonly'] and self.path not in ('/api/ui-state', '/api/gallery'):
+            if sample and sample['readonly'] and self.path not in ('/api/ui-state', '/api/gallery', '/api/text-ranges/validate'):
                 self._send_json({'error': {'code': 'sample_readonly', 'message': 'this synthetic example is read-only; create your own project'}}, 403)
                 return
             from . import editing, service
@@ -141,6 +141,9 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             elif self.path == '/api/gallery':
                 from .gallery_state import save
                 result = save(self.store.project_root, **data)
+            elif self.path == '/api/text-ranges/validate':
+                from .text_ranges import validate
+                result = validate(self.store.project_root, **data)
             elif self.path == '/api/inputs/update':
                 from .local_state import project_path
                 result = service.inputs_update(project_path(self.store.project_root), **data)
@@ -166,7 +169,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             else:self._send_json({'error':'not found'},404);return
             self._send_json(result)
         except Exception as exc:
-            if self.path.startswith(('/api/drafts/', '/api/ui-state', '/api/gallery')):
+            if self.path.startswith(('/api/drafts/', '/api/ui-state', '/api/gallery', '/api/text-ranges/')):
                 self._send_error(exc)
                 return
             from .store import ConflictError
@@ -263,7 +266,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             self._send_json({"status": "ok", **self.runtime_state,
                              "project_identity": _project_identity(self.store.project_root),
                              "ui_available": (self.static_dir / 'v2' / 'index.html').is_file(),
-                             "ui_capabilities": ["ui_draft.v1", "ui_gallery.v1", "thumbnails.v1", "fixed_snapshot.v1"]})
+                             "ui_capabilities": ["ui_draft.v1", "ui_gallery.v1", "thumbnails.v1", "fixed_snapshot.v1", "text_range.v1", "page_detail.v1"]})
             return
         if parsed.path == "/api/file":
             query = parse_qs(parsed.query)
