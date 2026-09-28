@@ -12,6 +12,7 @@ from deck_master.text_sources import prompt_sections
 from deck_master.web import WorkbenchServer
 from test_workbench_reads import make_project, mixed_project, commit
 from test_workbench_services import http, auth
+from test_generation_protocol import flow, start, freeze, begin, settle, accept
 
 TEXT = 'A🙂e\u0301\r\n中'
 
@@ -263,3 +264,19 @@ def test_report_malformed_and_unbound_never_invents_current_counts(tmp_path, bad
         assert report['text_runs'] == 7 and report['pptx_relation'] == 'unknown'
     else:
         assert report['state'] == 'unreadable' and report['text_runs'] is None and report['native_shapes'] is None
+
+
+def test_adopted_request_and_attempt_are_explicit_not_latest_guess(flow):
+    project, store, task, native = flow
+    start(flow)
+    frozen = freeze(flow)
+    other = freeze(flow, prompt='different request on the same page')
+    attempt = begin(flow, frozen)
+    locator, raw = native()
+    settle(flow, attempt, locator)
+    accept(flow, frozen, attempt, raw)
+    result = workbench.page_lineage(project, 'p1')['generation']
+    assert result['adopted_request_ref'] == next(r['ref'] for r in result['requests'] if r['request_id'] == frozen['request_id'])
+    assert result['adopted_request_ref'] != next(r['ref'] for r in result['requests'] if r['request_id'] == other['request_id'])
+    assert result['adopted_attempt_ref'] == result['attempts'][0]['ref']
+    assert result['attempts'][0]['request_ref'] == result['adopted_request_ref']

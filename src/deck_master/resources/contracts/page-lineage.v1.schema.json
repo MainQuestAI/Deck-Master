@@ -37,7 +37,7 @@
         "attempt": {"$ref": "urn:deck-master:workbench-summary:v1#/$defs/not_recorded"}
       }
     },
-    "generation": {"type": "object", "required": ["requests", "attempts", "errors", "adopted_observation"], "additionalProperties": false, "properties": {"requests": {"type": "array", "items": {"type": "object"}}, "attempts": {"type": "array", "items": {"type": "object"}}, "errors": {"type": "array", "items": {"type": "object"}}, "adopted_observation": {"type": ["object", "null"]}}},
+    "generation": {"type": "object", "required": ["requests", "attempts", "errors", "adopted_observation"], "additionalProperties": false, "properties": {"requests": {"type": "array", "items": {"type": "object"}}, "attempts": {"type": "array", "items": {"type": "object"}}, "errors": {"type": "array", "items": {"type": "object"}}, "adopted_observation": {"type": ["object", "null"]}, "adopted_request_ref": {"$ref": "urn:deck-master:workbench-summary:v1#/$defs/optional_ref"}, "adopted_attempt_ref": {"$ref": "urn:deck-master:workbench-summary:v1#/$defs/optional_ref"}}},
     "tasks": {"type": "array", "items": {"type": "object", "required": ["task_id", "status", "ref"]}},
     "deck_output": {"$ref": "urn:deck-master:workbench-summary:v1#/$defs/deck_output"},
     "content_plan": {"type": "object", "required": ["status", "relation", "ref"]},

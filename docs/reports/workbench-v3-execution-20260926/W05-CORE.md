@@ -16,6 +16,8 @@ python -m ruff check src/deck_master tests/rebuild/test_page_detail.py
 git diff --check
 ```
 
-结果：105 passed（20.75s）；Ruff 与 diff 检查通过。新增 27 项行为用例包含精确 Unicode、归一化拒绝、跨页/跨版本拒绝、固定历史、真实 HTTP 权限和 CLI 投影一致性、新旧 prepared 与 submitted、冻结请求草稿、损坏/缺失/失效/错误范围制作记录、评估对象绑定与 reviewer 来源。制作记录与图片都是明确的合成夹具，未运行真实 PPT 编译、模型或桌面 Office 编辑。
+结果：106 passed（20.57s）；Ruff 与 diff 检查通过。新增 28 项行为用例包含精确 Unicode、归一化拒绝、跨页/跨版本拒绝、固定历史、真实 HTTP 权限和 CLI 投影一致性、新旧 prepared 与 submitted、冻结请求草稿、损坏/缺失/失效/错误范围制作记录、评估对象绑定与 reviewer 来源。制作记录与图片都是明确的合成夹具，未运行真实 PPT 编译、模型或桌面 Office 编辑。
 
 W05-AC05/AC07 的核心部分已有工程证据，完整 AC 暂不签收。下一步先将此共享核心 PR 合入 main，再实施 W05 前端；保持 W02 原有实际提交证明边界，非空参考附件仍不自动升级为已验证。
+
+补充：原图 provenance 指向的 generation request / attempt 仅在该固定版本中通过页与请求归属核验后返回 adopted 引用。测试在同页冻结第二份请求后采用第一份，确认读取没有猜测为最新请求。

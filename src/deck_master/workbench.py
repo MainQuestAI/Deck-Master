@@ -373,4 +373,10 @@ def _generation_records(ctx, entry, artifact):
                 attempts.append({"ref": ref, **copy.deepcopy(attempt), "call": copy.deepcopy(call), "observations": observations})
         except READ_FAILURES:
             errors.append(object_error())
-    return {"requests": requests, "attempts": attempts, "errors": errors, "adopted_observation": adopted}
+    request_ref = provenance.get("generation_request")
+    attempt_ref = provenance.get("generation_attempt")
+    bound_request = next((r for r in requests if r["ref"] == request_ref), None)
+    bound_attempt = next((a for a in attempts if a["ref"] == attempt_ref and a["request_ref"] == request_ref), None)
+    return {"requests": requests, "attempts": attempts, "errors": errors, "adopted_observation": adopted,
+            "adopted_request_ref": copy.deepcopy(request_ref) if bound_request else None,
+            "adopted_attempt_ref": copy.deepcopy(attempt_ref) if bound_request and bound_attempt else None}
