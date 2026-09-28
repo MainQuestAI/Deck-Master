@@ -71,7 +71,7 @@ def _base_refs(store, doc, target):
         if layer == "submitted_prompt":
             submitted = prompts["submitted"]
             return [submitted["ref"]] if submitted.get("state") == "recorded" else []
-        return [p["ref"] for p in prompts["prepared"]]
+        return [p["ref"] for p in prompts["prepared"]] + [request["ref"] for request in lineage["generation"]["requests"]]
     slot = {"content": "page", "notes": "page", "original_image": "blueprint", "svg": "svg", "ppt": "ppt_preview"}[layer]
     ref = entry.get(slot)
     if not ref:

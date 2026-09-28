@@ -40,6 +40,7 @@ SCHEMA_FILES = {
     "ui_position": "ui-position.v1.schema.json",
     "ui_gallery": "ui-gallery.v1.schema.json",
     "thumbnail": "thumbnail.v1.schema.json",
+    "text_range": "text-range.v1.schema.json",
 }
 
 REF_PATH_PATTERN = r"^\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\.[a-z0-9]+$"
