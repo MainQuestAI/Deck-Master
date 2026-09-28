@@ -105,3 +105,13 @@ PYTHONPATH=src python examples/workbench/w02_content_plan.py --out /tmp/w02-cont
 ```
 
 输出目录必须不存在。脚本从 CLI 新建项目回包取任务和真实材料版本，声明 compose.v1 能力，采用两页合成正文及计划，再通过公开 CLI 重放并读取固定版本和按页链路。首次采用使用共享 Service，避免为隔离验证打开浏览器；全过程不调用模型，属于 core/CLI 工程证据。保留 checks、schema 输入和读取回包；项目运行目录不提交到仓库。
+
+### W05 单页链路、提示词与固定比较
+
+```
+PYTHONPATH=src python examples/workbench/w05_page_chain.py --out /tmp/workbench-w05-proof-new
+```
+
+脚本启动真实本机服务和 Chromium，读取来源、逐页正文、预备/实际提示词、制作摘要与固定版本图件，验证 Unicode 码点选段、差异、草稿基准隔离、ACK 跨端口恢复及未同步内容显式导入。后台更新与比较读取失败都必须保留固定双方；比较侧链接与来源返回保留自身版本。
+
+输入全部是明确标注的合成夹具。为验证观察来源的呈现，脚本只在独立临时目录重放人工构造的 native event，绝不读取真实会话或调用模型；这不替代 W02 真实 Host 证明。制作计数与 PPT 预览也是合成记录，不证明实际 Office 编辑或渲染质量。仅可分享 `checks.json` 与截图；`local-only-trace.zip`、`local-only-prompt-recovery.json` 和临时会话记录保留本机。

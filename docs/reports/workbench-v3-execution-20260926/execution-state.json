@@ -1,6 +1,6 @@
 {
   "baseline": "d1c7c4600cb0fc781070116ed8cc8a1ff6b8b7ca",
-  "branch": "codex/workbench-w05-core",
+  "branch": "codex/workbench-w05-ui",
   "active_package": "W05",
   "sequence": [
     "W01.core",
@@ -89,16 +89,21 @@
       "frontend_merge_commit": "b00525557ac69e9453ae4d6e3b5faf20dbefcf8b"
     },
     "W05": {
-      "status": "core_pr_ready",
+      "status": "frontend_pr_ready",
       "accepted": false,
       "baseline": "b00525557ac69e9453ae4d6e3b5faf20dbefcf8b",
       "core_implementation_commit": "6f3e39635094543704ca498c32db0f2f7ead29dc",
       "core_evidence": "W05-CORE.md",
       "residuals": [
-        "W05 browser UI and fixed comparison not yet implemented",
-        "Candidate comparison requires W07",
-        "User acceptance not measured"
-      ]
+        "W05-AC03 candidate comparison requires W07 contracts and UI",
+        "User acceptance not measured; W12 installed/offline acceptance remains separate"
+      ],
+      "core_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/49",
+      "core_head": "4640a02555a701e9dd41084df2b1fffced2c63f9",
+      "core_merge_commit": "a2a27f6937209da6befc440dd787c1065a845c94",
+      "frontend_baseline": "a2a27f6937209da6befc440dd787c1065a845c94",
+      "frontend_implementation_commit": "0df9546bed3a356e7266c183893d0b062f895222",
+      "frontend_evidence": "W05-UI.md"
     },
     "W06": {
       "status": "planned",
@@ -399,38 +404,66 @@
     },
     "W05-AC01": {
       "owner": "W05",
-      "status": "open",
-      "evidence": []
+      "status": "engineering_verified",
+      "evidence": [
+        "W05-CORE.md",
+        "W05-UI.md",
+        "w05/browser/checks.json"
+      ]
     },
     "W05-AC02": {
       "owner": "W05",
-      "status": "open",
-      "evidence": []
+      "status": "engineering_verified",
+      "evidence": [
+        "W05-CORE.md",
+        "W05-UI.md",
+        "w05/browser/checks.json"
+      ]
     },
     "W05-AC03": {
       "owner": "W05",
-      "status": "open",
-      "evidence": []
+      "status": "partial",
+      "evidence": [
+        "W05-CORE.md",
+        "W05-UI.md",
+        "w05/browser/checks.json"
+      ]
     },
     "W05-AC04": {
       "owner": "W05",
-      "status": "open",
-      "evidence": []
+      "status": "engineering_verified",
+      "evidence": [
+        "W05-CORE.md",
+        "W05-UI.md",
+        "w05/browser/checks.json"
+      ]
     },
     "W05-AC05": {
       "owner": "W05",
-      "status": "open",
-      "evidence": []
+      "status": "engineering_verified",
+      "evidence": [
+        "W05-CORE.md",
+        "W05-UI.md",
+        "w05/browser/checks.json"
+      ]
     },
     "W05-AC06": {
       "owner": "W05",
-      "status": "open",
-      "evidence": []
+      "status": "engineering_verified",
+      "evidence": [
+        "W05-CORE.md",
+        "W05-UI.md",
+        "w05/browser/checks.json"
+      ]
     },
     "W05-AC07": {
       "owner": "W05",
-      "status": "open",
-      "evidence": []
+      "status": "engineering_verified",
+      "evidence": [
+        "W05-CORE.md",
+        "W05-UI.md",
+        "w05/browser/checks.json"
+      ]
     },
     "W06-AC01": {
       "owner": "W06",
