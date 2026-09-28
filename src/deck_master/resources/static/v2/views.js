@@ -1,8 +1,7 @@
-import {get, post, fileURL, readableError} from './api.js';
+import {get, post, readableError} from './api.js';
 import {el, button, heading, empty, field, version, modal, toast} from './dom.js';
 import {layers} from './routes.js';
 import {DraftEditor} from './drafts.js';
-import {imageView} from './images.js';
 import {stageKey, stageLabel} from './gallery.js';
 
 const pageTitle = (page, index) => `第 ${index + 1} 页 · ${page.title || '未命名页面'}`;
@@ -96,82 +95,7 @@ function addMaterial(app, inputs) {
     }
   });
 }
-function bulletItems(items) {
-  return el('ul', {}, items.map(item => el('li', {}, typeof item === 'string' ? item : item.text, item.children?.length ? bulletItems(item.children) : null)));
-}
-function bodyBlocks(blocks) {
-  return (blocks || []).map(block => {
-    if (block.type === 'paragraph') return el('p', {}, block.text);
-    if (block.type === 'bullets') return el('section', {}, block.heading && el('h3', {}, block.heading), bulletItems(block.items));
-    if (block.type === 'table') return el('div', {class: 'table-scroll'}, el('table', {class: 'body-table'}, block.title && el('caption', {}, block.title),
-      el('thead', {}, el('tr', {}, block.columns.map(col => el('th', {scope: 'col'}, col.label)))),
-      el('tbody', {}, block.rows.map(row => el('tr', {}, block.columns.map(col => el('td', {}, row.cells.find(cell => cell.column_id === col.id)?.display_text || '')))))));
-    return el('p', {class: 'muted'}, '这个内容块暂不可读。');
-  });
-}
-export function pageDetail(app, data) {
-  const index = app.summary.pages.findIndex(page => page.page_id === app.route.page_id);
-  const page = app.summary.pages[index]; const layer = app.route.layer;
-  const node = el('div', {}, heading(pageTitle(page, index), `${layers[layer]} · ${version(app.route.revision)} · 固定阅读基准`));
-  const selector = el('select', {'aria-label': '转到页面'});
-  app.summary.pages.forEach((page, n) => selector.append(el('option', {value: page.page_id, selected: n === index}, pageTitle(page, n))));
-  selector.value = page.page_id; selector.addEventListener('change', () => app.go({page_id: selector.value}));
-  const tabs = el('nav', {class: 'layer-tabs', 'aria-label': '页面层'});
-  for (const [value, label] of Object.entries(layers)) tabs.append(button(label, () => app.go({layer: value}), false, {'aria-current': value === layer ? 'page' : null, class: value === layer ? 'active' : ''}));
-  node.append(el('div', {class: 'toolbar'}, selector, button('回到整稿画廊', () => app.go({surface: 'gallery'}))), tabs);
-  let ref = data.stages[stageKey[layer]]?.ref || null;
-  const main = el('section', {class: 'page-reading stack', 'aria-label': '页面内容'});
-  if (layer === 'content') {
-    main.append(el('article', {class: 'page-copy stack'}, el('h2', {}, data.page?.customer_visible?.title || '逐页稿暂不可读'),
-      data.page?.customer_visible?.subtitle && el('p', {}, data.page.customer_visible.subtitle),
-      data.page?.customer_visible?.body_blocks?.length ? bodyBlocks(data.page.customer_visible.body_blocks) : el('p', {class: 'muted'}, '此页未记录正文块。'),
-      ['callouts', 'labels', 'footnotes'].flatMap(key => (data.page?.customer_visible?.[key] || []).map(item => el('p', {class: key}, item.text)))));
-    main.append(el('details', {class: 'source-detail'}, el('summary', {}, '内容来源'),
-      data.sources.citations.length ? el('pre', {class: 'read-text'}, JSON.stringify(data.sources.citations, null, 2)) : el('p', {class: 'muted'}, '此页未记录材料引用。')));
-  } else if (layer === 'submitted_prompt' || layer === 'prepared_prompt') {
-    const prepared = data.prompts.prepared;
-    if (layer === 'submitted_prompt') {
-      ref = data.prompts.submitted.ref;
-      main.append(el('h2', {}, '这张原图的实际提示词'), data.prompts.submitted.text !== null ?
-        el('div', {}, el('p', {class: 'muted'}, data.prompts.submitted.observer === 'tool_observed' ? '已由工具调用记录核实' : '由制作工具报告，未独立观察实际调用'), el('pre', {class: 'read-text'}, data.prompts.submitted.text)) :
-        empty('实际提示词未记录', '现有预备稿不能证明实际使用了相同内容。', button('查看预备提示词', () => app.go({layer: 'prepared_prompt'}))));
-    } else {
-      ref = prepared.length === 1 ? prepared[0].ref : null;
-      main.append(el('h2', {}, '预备提示词'), el('p', {class: 'muted'}, '这是准备交给制作工具的内容；是否实际使用，以实际调用记录为准。'),
-        prepared.length ? prepared.map(item => el('article', {class: 'panel-body'}, el('pre', {class: 'read-text'}, item.text))) : empty('尚无预备提示词', '此页没有记录可读取的预备稿。'));
-    }
-  } else {
-    const stage = data.stages[stageKey[layer]];
-    const url = stage?.existence === 'recorded' && fileURL(stage.file);
-    const viewport = el('div', {class: 'page-image-viewport', tabindex: '0', 'aria-label': `${layers[layer]}阅读画布`});
-    if (url && stage.media_type?.startsWith('image/')) {
-      const view = imageView(app, stage, `${pageTitle(page, index)} · ${layers[layer]}`, {kind: 'large'});
-      view.node.style.width = `${(app.route.zoom || 1) * 100}%`;
-      app.disposables.push(() => view.dispose()); viewport.append(view.node);
-    } else viewport.append(empty(`${layers[layer]}${stageLabel(stage)}`, layer === 'ppt' ? '只有这个版本的逐页 PPT 预览才会出现在这里。' : '没有用其它层的图片替代。可回到逐页稿查看内容。'));
-    const zoom = el('select', {'aria-label': '阅读缩放'}, [.5, .75, 1, 1.25, 1.5, 2, 3].map(value => el('option', {value}, `${value * 100}%`)));
-    if (![.5, .75, 1, 1.25, 1.5, 2, 3].includes(app.route.zoom)) zoom.append(el('option', {value: app.route.zoom}, `${app.route.zoom * 100}%`));
-    zoom.value = String(app.route.zoom || 1); zoom.addEventListener('change', () => app.go({zoom: Number(zoom.value)}));
-    main.append(el('div', {class: 'row'}, el('label', {}, '阅读缩放 ', zoom), el('span', {class: 'muted'}, stageLabel(stage))), viewport);
-  }
-  const target = {scope: 'page', page_id: page.page_id, layer};
-  let notes;
-  if (layer === 'prepared_prompt' && data.prompts.prepared.length > 1) {
-    const select = el('select', {'aria-label': '选择草稿绑定的预备提示词'}, el('option', {value: ''}, '先选择具体预备稿'));
-    data.prompts.prepared.forEach((item, index) => select.append(el('option', {value: item.ref.sha256}, `预备稿 ${index + 1} · ${version(item.dispatch_revision)}`)));
-    const slot = el('div', {}, el('p', {class: 'muted'}, '同一页有多份预备稿。个人草稿需要绑定其中一份，避免混淆依据。'));
-    select.addEventListener('change', () => {
-      const selected = data.prompts.prepared.find(item => item.ref.sha256 === select.value);
-      if (!selected) return;
-      app.editor?.dispose();
-      main.replaceChildren(el('h2', {}, '所选预备提示词'), el('p', {class: 'muted'}, '是否实际使用，以实际调用记录为准。'), el('pre', {class: 'read-text'}, selected.text));
-      slot.replaceChildren(draft(app, target, selected.ref));
-    });
-    notes = el('aside', {class: 'stack'}, el('label', {}, '选择个人草稿的依据', select), slot);
-  } else notes = draft(app, target, ref);
-  node.append(el('div', {class: 'page-columns'}, main, notes));
-  return node;
-}
+export {pageDetail} from './page-workbench.js';
 const taskNames = {compose: '整理内容', blueprint: '制作原图', svg: '制作 SVG', render: '渲染预览', repair: '局部修改', review: '检查', export: '准备文件'};
 const taskStatus = {awaiting_host: '待交接', running: '已记录处理中', completed: '结果已记录', failed: '执行失败', cancelled: '已取消', superseded: '已由新任务接续', blocked: '需要处理阻碍'};
 export function runs(app, data) {
