@@ -163,7 +163,7 @@ def main():
             expect(page.get_by_label('个人草稿', exact=True)).to_be_editable()
             assert page.locator('[data-pwn]').count() == 0
             expect(page.locator('.page-image')).to_be_visible()
-            page.wait_for_function('document.querySelector(".page-image")?.naturalWidth > 0')
+            page.wait_for_function('() => document.querySelector(".page-image")?.dataset.imageReady === "true"')
             assert page.evaluate('window.injected === undefined')
             assert not any('/forbidden' in url for url in requests)
             page.get_by_role('button', name='逐页稿', exact=True).click()
@@ -190,6 +190,7 @@ def main():
             quota.add_init_script("""const setItem = Storage.prototype.setItem; Storage.prototype.setItem = function(k,v) { if (this === localStorage) throw new DOMException('Full', 'QuotaExceededError'); return setItem.call(this,k,v); };""")
             qpage = quota.new_page(); qpage.route('**/api/drafts/save', lambda route: route.abort('failed'))
             qpage.goto(states[0]['url'] + 'v2/')
+            qpage.get_by_role('button', name='制作总览', exact=True).click()
             qpage.get_by_role('button', name='第 2 页 · 材料如何成为内容', exact=True).click()
             qpage.get_by_label('个人草稿', exact=True).fill('缓冲配额失败仍可下载')
             expect(qpage.get_by_text('浏览器缓冲未保存。输入仍在此页，请立即下载恢复文件或复制内容。', exact=True)).to_be_visible()
