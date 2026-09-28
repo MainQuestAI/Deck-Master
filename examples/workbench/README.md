@@ -1,5 +1,20 @@
 # Workbench examples
 
+## W04 gallery and image cache
+
+```sh
+PYTHONPATH=src python examples/workbench/w04_core.py --out /tmp/w04-core
+PYTHONPATH=src python examples/workbench/w04_gallery.py --out /tmp/w04-gallery
+```
+
+Use new output directories. The browser script runs real Chromium against local
+synthetic 30/80-page projects: fixed layers, filters, comparison, keyboard and
+position recovery, CAS conflicts, lost ACKs, offline reading, two-viewport warm
+timings, and bounded image caches. Share checks.json and screenshots; raw traces
+remain local because they can contain session headers. The 80-page cache walk
+does not replace the pending 300×5×3 Candidate/Attempt pressure fixture or the
+W10 20-minute heap test. No model calls, real HOME changes or user acceptance.
+
 ## W02 task accept recovery
 
 The generation protocol now has a separate two-phase real Host example:

@@ -3,10 +3,11 @@ import {el, button, heading, empty, icon, version, announce, modal, copyText} fr
 import {localURL} from './launcher-ui.js';
 import {readRoute, routeHash, position, surfaces, layers} from './routes.js';
 import {DraftEditor} from './drafts.js';
-import {overview, content, gallery, pageDetail, runs, style} from './views.js';
+import {overview, content, pageDetail, runs, style} from './views.js';
+import {gallery} from './gallery.js';
 
 export class Project {
-  constructor(root, health) { this.root = root; this.health = health; this.generation = 0; this.positionQueue = Promise.resolve(); }
+  constructor(root, health) { this.root = root; this.health = health; this.generation = 0; this.positionQueue = Promise.resolve(); this.disposables = []; }
   async start() {
     const [info, summary, state] = await Promise.all([get('/api/project'), get('/api/view/summary'), get('/api/ui-state')]);
     this.info = info; this.latest = summary; this.returnTo = state.record?.position;
@@ -43,6 +44,12 @@ export class Project {
         const plan = await get('/api/content-plan' + q);
         data = {plan: plan.content_plan, inputs: route.revision === latest.revision_id ? await get('/api/inputs') : null};
         if (data.inputs && data.inputs.revision_id !== route.revision) data.inputs = null;
+      } else if (route.surface === 'gallery') {
+        if (!this.health.ui_capabilities?.includes('ui_gallery.v1')) data = {unsupported: true};
+        else {
+          const [saved, plan, drafts] = await Promise.all([get('/api/gallery'), get('/api/content-plan' + q), get('/api/drafts')]);
+          data = {saved, plan: plan.content_plan, drafts};
+        }
       } else if (route.surface === 'runs') {
         const [tasks, history] = await Promise.all([get('/api/tasks' + q), get('/api/history')]);
         data = {tasks: tasks.tasks, history};
@@ -50,6 +57,7 @@ export class Project {
       }
       if (serial !== this.generation) return;
       this.editor?.dispose(); this.editor = null;
+      this.disposables.forEach(dispose => dispose()); this.disposables = [];
       this.info = info; this.latest = latest; this.summary = summary; this.route = route;
       this.historical = summary.revision_id !== latest.revision_id;
       this.readonly = this.historical || Boolean(info.sample?.readonly);
@@ -108,6 +116,10 @@ export class Project {
     this.main = el('main', {id: 'main', class: 'workspace', tabindex: '-1'});
     const view = {overview, content, gallery, page: pageDetail, runs, style}[this.route.surface];
     this.main.append(view(this, data));
+    if (this.route.surface === 'page') this.main.addEventListener('keydown', event => {
+      if (event.key !== 'Escape' || event.target.closest('textarea,input,select,[contenteditable]')) return;
+      event.preventDefault(); this.go({surface: 'gallery'});
+    });
     const pending = this.summary.task_counts.awaiting_host || 0;
     const top = el('header', {class: 'topbar'}, el('div', {class: 'crumb'}, el('strong', {}, this.info.title), el('span', {class: 'version'}, version(this.route.revision))),
       button(`待交接 ${pending}`, () => this.go({surface: 'runs', task_id: null}), false, {'aria-label': `查看待交接任务，${pending} 项` }));

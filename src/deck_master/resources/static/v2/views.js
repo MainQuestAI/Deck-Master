@@ -2,27 +2,15 @@ import {get, post, fileURL, readableError} from './api.js';
 import {el, button, heading, empty, field, version, modal, toast} from './dom.js';
 import {layers} from './routes.js';
 import {DraftEditor} from './drafts.js';
+import {imageView} from './images.js';
+import {stageKey, stageLabel} from './gallery.js';
 
-const stageKey = {content: 'content', original_image: 'blueprint', svg: 'svg', ppt: 'ppt_preview'};
-const stageLabel = stage => !stage || stage.existence === 'not_generated' ? '未生成' : stage.existence !== 'recorded' ? '暂不可读' :
-  stage.applicability?.status === 'basis_changed' ? '依据已变化' : stage.applicability?.status === 'current' ? '可看' : '适用性待核实';
 const pageTitle = (page, index) => `第 ${index + 1} 页 · ${page.title || '未命名页面'}`;
 const panel = (title, ...children) => el('section', {class: 'panel'}, el('div', {class: 'panel-head'}, el('h2', {}, title)), el('div', {class: 'panel-body stack'}, children));
 function draft(app, target = {scope: 'project', page_id: null, layer: 'notes'}, ref = null) {
   const info = {...app.info, page_label: target.page_id ? `第 ${app.summary.pages.findIndex(page => page.page_id === target.page_id) + 1} 页` : null};
   app.editor = new DraftEditor(info, target, app.route.revision, ref, {readonly: app.readonly});
   return app.editor.mount();
-}
-function imageFigure(stage, title, onOpen) {
-  const image = stage?.existence === 'recorded' && fileURL(stage.file);
-  const body = el('div', {class: 'image-frame'});
-  if (image) {
-    const img = el('img', {src: image, alt: title, loading: 'lazy', decoding: 'async'});
-    img.addEventListener('error', () => body.replaceChildren(el('p', {class: 'muted'}, '此图暂不可读。原位置保留。'), button('重新读取图片', () => { body.replaceChildren(img); img.src = image; })));
-    body.append(img);
-  } else body.append(el('span', {class: 'muted'}, stageLabel(stage)));
-  return el('figure', {class: 'slide-tile'}, onOpen ? button(body, onOpen, false, {class: 'image-button', 'aria-label': title}) : body,
-    el('figcaption', {}, el('strong', {}, title), el('p', {class: 'muted'}, `${stageLabel(stage)} · 原图`)));
 }
 export function overview(app) {
   const pages = app.summary.pages;
@@ -56,12 +44,6 @@ export function overview(app) {
   });
   node.append(el('div', {class: 'matrix-wrap'}, table), el('p', {class: 'matrix-caption'}, '方向键在表格中移动，Enter 打开对应页与层。原图保留完整画布。'));
   return node;
-}
-export function gallery(app) {
-  return el('div', {}, heading('整稿画廊', `${app.summary.page_count} 页 · 原图 · ${version(app.route.revision)}。点击图片查看该页。`),
-    app.summary.page_count ? el('div', {class: 'gallery'}, app.summary.pages.map((page, index) =>
-      imageFigure(page.stages.blueprint, pageTitle(page, index), () => app.go({surface: 'page', page_id: page.page_id, layer: 'original_image'})))) :
-      empty('还没有原图', '先到内容与来源整理逐页稿，再交接制作要求。', button('查看内容与来源', () => app.go({surface: 'content'}))));
 }
 export function content(app, data) {
   const inputs = data.inputs;
@@ -163,10 +145,9 @@ export function pageDetail(app, data) {
     const url = stage?.existence === 'recorded' && fileURL(stage.file);
     const viewport = el('div', {class: 'page-image-viewport', tabindex: '0', 'aria-label': `${layers[layer]}阅读画布`});
     if (url && stage.media_type?.startsWith('image/')) {
-      const img = el('img', {class: 'page-image', src: url, alt: `${pageTitle(page, index)} · ${layers[layer]}`});
-      img.style.width = `${(app.route.zoom || 1) * 100}%`;
-      img.addEventListener('error', () => { viewport.replaceChildren(empty('这张图片暂不可读', '固定版本和个人草稿保持，可重新读取。', button('重新读取', () => app.loadRoute()))); });
-      viewport.append(img);
+      const view = imageView(app, stage, `${pageTitle(page, index)} · ${layers[layer]}`, {kind: 'large'});
+      view.node.style.width = `${(app.route.zoom || 1) * 100}%`;
+      app.disposables.push(() => view.dispose()); viewport.append(view.node);
     } else viewport.append(empty(`${layers[layer]}${stageLabel(stage)}`, layer === 'ppt' ? '只有这个版本的逐页 PPT 预览才会出现在这里。' : '没有用其它层的图片替代。可回到逐页稿查看内容。'));
     const zoom = el('select', {'aria-label': '阅读缩放'}, [.5, .75, 1, 1.25, 1.5, 2, 3].map(value => el('option', {value}, `${value * 100}%`)));
     if (![.5, .75, 1, 1.25, 1.5, 2, 3].includes(app.route.zoom)) zoom.append(el('option', {value: app.route.zoom}, `${app.route.zoom * 100}%`));

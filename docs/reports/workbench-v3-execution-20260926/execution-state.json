@@ -1,6 +1,6 @@
 {
   "baseline": "d1c7c4600cb0fc781070116ed8cc8a1ff6b8b7ca",
-  "branch": "codex/workbench-w04-core",
+  "branch": "codex/workbench-w04-ui",
   "active_package": "W04",
   "sequence": [
     "W01.core",
@@ -70,15 +70,20 @@
       "frontend_merge_commit": "f3c9b617b868748ea09765ff072858f563f65b8f"
     },
     "W04": {
-      "status": "core_verified_pending_merge",
+      "status": "frontend_verified_pending_merge",
       "accepted": false,
       "baseline": "f3c9b617b868748ea09765ff072858f563f65b8f",
       "core_evidence": "W04-CORE.md",
       "residuals": [
-        "Gallery frontend and viewport interaction verification",
         "Full 300x5x3 pressure after W07 Candidate contracts",
         "Human 30-second observation not measured"
-      ]
+      ],
+      "core_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/47",
+      "core_head": "54f940dd80986c9d73077c1b4f2b234a452c083d",
+      "core_merge_commit": "e5e7892561400a06003971c8ad9239fb5e3b62af",
+      "frontend_baseline": "e5e7892561400a06003971c8ad9239fb5e3b62af",
+      "frontend_source_commit": "33c99bed12cd9c352a1429955fe798c1f9646b2d",
+      "frontend_evidence": "W04-UI.md"
     },
     "W05": {
       "status": "planned",
@@ -313,50 +318,73 @@
     },
     "W04-AC01": {
       "owner": "W04",
-      "status": "open",
-      "evidence": []
+      "status": "partial",
+      "evidence": [
+        "W04-CORE.md",
+        "W04-UI.md",
+        "w04/browser/checks.json"
+      ],
+      "evidence_level": "core/HTTP/real Chromium; synthetic content"
     },
     "W04-AC02": {
       "owner": "W04",
-      "status": "partial",
+      "status": "engineering_verified",
       "evidence": [
         "W04-CORE.md",
-        "w04/core/checks.json"
+        "W04-UI.md",
+        "w04/browser/checks.json"
       ],
-      "evidence_level": "core/HTTP/targeted Chromium CSP"
+      "evidence_level": "core/HTTP/real Chromium; synthetic content"
     },
     "W04-AC03": {
       "owner": "W04",
-      "status": "partial",
+      "status": "engineering_verified",
       "evidence": [
         "W04-CORE.md",
-        "w04/core/checks.json"
+        "W04-UI.md",
+        "w04/browser/checks.json"
       ],
-      "evidence_level": "core/HTTP/targeted Chromium CSP"
+      "evidence_level": "core/HTTP/real Chromium; synthetic content"
     },
     "W04-AC04": {
       "owner": "W04",
-      "status": "open",
-      "evidence": []
+      "status": "engineering_verified",
+      "evidence": [
+        "W04-CORE.md",
+        "W04-UI.md",
+        "w04/browser/checks.json"
+      ],
+      "evidence_level": "core/HTTP/real Chromium; synthetic content"
     },
     "W04-AC05": {
       "owner": "W04",
-      "status": "open",
-      "evidence": []
+      "status": "engineering_verified",
+      "evidence": [
+        "W04-CORE.md",
+        "W04-UI.md",
+        "w04/browser/checks.json"
+      ],
+      "evidence_level": "core/HTTP/real Chromium; synthetic content"
     },
     "W04-AC06": {
       "owner": "W04",
       "status": "partial",
       "evidence": [
         "W04-CORE.md",
-        "w04/core/checks.json"
+        "W04-UI.md",
+        "w04/browser/checks.json"
       ],
-      "evidence_level": "core/HTTP/targeted Chromium CSP"
+      "evidence_level": "core/HTTP/real Chromium; synthetic content"
     },
     "W04-AC07": {
       "owner": "W04",
-      "status": "open",
-      "evidence": []
+      "status": "engineering_verified",
+      "evidence": [
+        "W04-CORE.md",
+        "W04-UI.md",
+        "w04/browser/checks.json"
+      ],
+      "evidence_level": "core/HTTP/real Chromium; synthetic content"
     },
     "W05-AC01": {
       "owner": "W05",
