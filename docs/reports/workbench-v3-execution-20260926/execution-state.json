@@ -143,7 +143,8 @@
       "remaining": [
         "W07-AC07 real auto/trial interleaving and unchanged second page before W08",
         "User acceptance"
-      ]
+      ],
+      "frontend_source_commit": "10164ffaeb1342d2597c560555aa269db7ca8f88"
     },
     "W08": {
       "status": "planned",
@@ -590,43 +591,107 @@
     },
     "W07-AC01": {
       "owner": "W07",
-      "status": "open",
-      "evidence": []
+      "status": "engineering_verified",
+      "evidence": [
+        "W07-CORE.md",
+        "W07-UI.md",
+        "w07/ui/browser-checks.json",
+        "w07/ui/edge-checks.json",
+        "w07/real-host/checks.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; separately identified one-page real native ImageGen and SVG Host roundtrip"
     },
     "W07-AC02": {
       "owner": "W07",
-      "status": "open",
-      "evidence": []
+      "status": "engineering_verified",
+      "evidence": [
+        "W07-CORE.md",
+        "W07-UI.md",
+        "w07/ui/browser-checks.json",
+        "w07/ui/edge-checks.json",
+        "w07/real-host/checks.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; separately identified one-page real native ImageGen and SVG Host roundtrip"
     },
     "W07-AC03": {
       "owner": "W07",
-      "status": "open",
-      "evidence": []
+      "status": "engineering_verified",
+      "evidence": [
+        "W07-CORE.md",
+        "W07-UI.md",
+        "w07/ui/browser-checks.json",
+        "w07/ui/edge-checks.json",
+        "w07/real-host/checks.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; separately identified one-page real native ImageGen and SVG Host roundtrip"
     },
     "W07-AC04": {
       "owner": "W07",
-      "status": "open",
-      "evidence": []
+      "status": "engineering_verified",
+      "evidence": [
+        "W07-CORE.md",
+        "W07-UI.md",
+        "w07/ui/browser-checks.json",
+        "w07/ui/edge-checks.json",
+        "w07/real-host/checks.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; separately identified one-page real native ImageGen and SVG Host roundtrip"
     },
     "W07-AC05": {
       "owner": "W07",
-      "status": "open",
-      "evidence": []
+      "status": "engineering_verified",
+      "evidence": [
+        "W07-CORE.md",
+        "W07-UI.md",
+        "w07/ui/browser-checks.json",
+        "w07/ui/edge-checks.json",
+        "w07/real-host/checks.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; separately identified one-page real native ImageGen and SVG Host roundtrip"
     },
     "W07-AC06": {
       "owner": "W07",
-      "status": "open",
-      "evidence": []
+      "status": "engineering_verified",
+      "evidence": [
+        "W07-CORE.md",
+        "W07-UI.md",
+        "w07/ui/browser-checks.json",
+        "w07/ui/edge-checks.json",
+        "w07/real-host/checks.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; separately identified one-page real native ImageGen and SVG Host roundtrip"
     },
     "W07-AC07": {
       "owner": "W07",
-      "status": "open",
-      "evidence": []
+      "status": "partial_real_host_verification",
+      "evidence": [
+        "W07-CORE.md",
+        "W07-UI.md",
+        "w07/ui/browser-checks.json",
+        "w07/ui/edge-checks.json",
+        "w07/real-host/checks.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; separately identified one-page real native ImageGen and SVG Host roundtrip"
     },
     "W07-AC08": {
       "owner": "W07",
-      "status": "open",
-      "evidence": []
+      "status": "engineering_verified",
+      "evidence": [
+        "W07-CORE.md",
+        "W07-UI.md",
+        "w07/ui/browser-checks.json",
+        "w07/ui/edge-checks.json",
+        "w07/real-host/checks.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; separately identified one-page real native ImageGen and SVG Host roundtrip"
     },
     "W08-AC01": {
       "owner": "W08",

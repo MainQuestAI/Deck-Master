@@ -1,6 +1,6 @@
 # W07 候选比较、阶段试作与集合采用前端
 
-核心先行 PR #53 已合入 `8de4317c9843347b8075c937e04af54e43d0cbb9`；前端从该 main 独立实施。此交付为工程切片，`accepted=false`，W07-AC07 仍有明确的真实并发验证缺口。
+核心先行 PR #53 已合入 `8de4317c9843347b8075c937e04af54e43d0cbb9`；前端从该 main 独立实施。前端源提交为 `10164ffaeb1342d2597c560555aa269db7ca8f88`。此交付为工程切片，`accepted=false`，W07-AC07 仍有明确的真实并发验证缺口。
 
 ## 当前行为
 
@@ -18,6 +18,7 @@
 - [9 项浏览器边界](w07/ui/edge-checks.json)：短要求和固定参考图跨刷新恢复、真实服务派发/返回、图片失败与重试、弹窗释放、历史只读及无 JS 错误。
 - [W06 主流程 23 项](w07/ui/w06-regression.json)、[W06 边界 14 项](w07/ui/w06-edges-regression.json)、[W05 15 项](w07/ui/w05-regression.json)回归。W06 的真实 Host 接手分支在本次无模型回归中未重复执行。
 - [相关 pytest 62 项](w07/ui/pytest.txt)通过。JS 语法、Ruff、diff 空白检查通过。
+- [wheel 资源核对](w07/ui/wheel-assets.json)：26 个前端文件与固定实现提交和当前源码逐字节一致；隔离构建，未安装到 HOME。
 - 工厂 `examples/workbench/w07_synthetic.py` 用真实任务/冻结请求/Attempt/候选服务构造明确标记的合成图与本地合成工具事件；不调用模型，不修改实际 Codex session 或 HOME。上述浏览器并发和故障注入属于工程证明。
 
 可复现：
