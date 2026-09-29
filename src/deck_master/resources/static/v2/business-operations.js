@@ -1,7 +1,7 @@
 import {get, post, digest, readableError} from './api.js';
 import {el, button, modal, version} from './dom.js';
 
-const paths = {'annotations.save': '/api/annotations/batch', 'changes.commit': '/api/changes/commit'};
+const paths = {'annotations.save': '/api/annotations/batch', 'changes.commit': '/api/changes/commit', 'candidates.adopt': '/api/candidates/adopt', 'stages.assemble': '/api/stages/assemble'};
 export class BusinessOperations {
   constructor(app) {
     this.app = app; this.entries = new Map(); this.completed = new Map();
@@ -50,7 +50,7 @@ export class BusinessOperations {
       this.storageWarning && el('p', {}, this.storageWarning), this.loadWarning && el('p', {}, this.loadWarning),
       this.loadWarning && button('重新读取待核实请求', async () => { this.loadWarning = ''; this.ready = this.restore(); await this.ready; }),
       [...this.entries.values()].map(entry => el('div', {class: 'pending-operation stack'},
-        el('p', {}, entry.pending.payload.action === 'annotations.save' ? '意见保存' : '修改计划提交'),
+        el('p', {}, ({'annotations.save': '意见保存', 'changes.commit': '修改计划提交', 'candidates.adopt': '候选采用', 'stages.assemble': '整稿制作'})[entry.pending.payload.action]),
         el('p', {role: 'status'}, entry.note || (entry.state === 'sending' ? '正在确认保存结果，输入仍可继续写。' : '保留原请求和编号，后写草稿不会替换它。')),
         el('div', {class: 'row wrap'}, button('核实保存结果', () => this.verify(entry), false, {disabled: ['preparing', 'sending', 'checking'].includes(entry.state)}),
           entry.state === 'not_found' && button('重放已保存的原请求', () => this.execute(entry)),
@@ -101,6 +101,7 @@ export class BusinessOperations {
       } else {
         entry.state = 'rejected'; entry.note = readableError(error);
         await this.clear(entry); this.conflict(entry, error);
+        this.app.root.dispatchEvent(new CustomEvent('business-rejected', {detail: {action: entry.pending.payload.action, error}}));
       }
       this.persist(); this.render();
     }
@@ -150,7 +151,8 @@ export class BusinessOperations {
     let latest;
     try { latest = await get('/api/view/summary'); } catch { /* Keep both the draft and the exact failure. */ }
     const editor = entry.editor;
-    modal('本次未提交，输入已保留', el('div', {class: 'stack'}, el('p', {class: 'field-error'}, entry.note),
+    modal(entry.pending.payload.action === 'candidates.adopt' ? '本次未采用任何页，选择已保留' : '本次未提交，输入已保留', el('div', {class: 'stack'}, el('p', {class: 'field-error'}, entry.note),
+      error.details?.items?.length && el('ul', {}, error.details.items.map(item => el('li', {}, `${item.page_id || '候选'}：${item.cause === 'generation_basis_changed' ? '生成依据已变化' : item.cause === 'one_candidate_per_page' ? '同一页只能选择一个候选' : '请重新核对采用目标'}`))),
       el('div', {class: 'conflict-panes'},
         el('section', {}, el('h3', {}, '你的本机草稿'), el('textarea', {readOnly: true, value: editor?.input.value || JSON.stringify(entry.pending.payload.request), 'aria-label': '未提交的本机草稿'})),
         el('section', {}, el('h3', {}, '服务端新基准'), el('p', {}, latest ? version(latest.revision_id) : '暂时无法读取'),

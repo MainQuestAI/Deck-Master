@@ -1,0 +1,11 @@
+{
+  "real_host_call": true,
+  "content_fixture_only": true,
+  "candidate_id": "candidate-71bb42036aea426fb04c0c2d8219a0a8",
+  "trial_current_unchanged": true,
+  "comparison": {
+    "status": "match",
+    "differences": [],
+    "unknown": []
+  }
+}

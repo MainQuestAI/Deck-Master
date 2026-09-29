@@ -1,0 +1,17 @@
+{
+  "evidence": "real browser/services; synthetic Host only",
+  "checks": [
+    "trial_short_instruction_and_fixed_reference_survive_reload",
+    "browser_trial_dispatches_one_explicit_fixed_reference_task",
+    "host_return_keeps_current_slots_untouched",
+    "browser_short_request_and_reference_reach_frozen_request",
+    "failed_image_keeps_candidate_identity",
+    "image_retry_restores_same_candidate",
+    "reference_modal_releases_lease_within_image_limits",
+    "unknown_save_candidate_switch_keeps_reply_identity",
+    "recovered_adoption_targets_original_candidate_only",
+    "historical_trial_entry_read_only",
+    "no_browser_javascript_errors"
+  ],
+  "errors": []
+}

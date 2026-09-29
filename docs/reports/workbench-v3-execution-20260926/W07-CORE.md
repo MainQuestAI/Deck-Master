@@ -1,6 +1,6 @@
 # W07 核心实现与验证记录（核心切片）
 
-基线：W06 UI PR #52 合并 `fc800d500462c720963f3f9e60d87ce0f90aa838`。当前分支 `codex/workbench-w07-core`，实现提交：`9ce30b15f793578d9bc9f604373fa728507cb172`。参考来源补充提交：`4e22054a13fd81cbc03ca68b4de170a0e1b13681`。核心 PR [#53](https://github.com/MainQuestAI/Deck-Master/pull/53) 待 CI 合并。本报告不表示前端或整卡完成。
+基线：W06 UI PR #52 合并 `fc800d500462c720963f3f9e60d87ce0f90aa838`。当前分支 `codex/workbench-w07-core`，实现提交：`9ce30b15f793578d9bc9f604373fa728507cb172`。参考来源补充提交：`4e22054a13fd81cbc03ca68b4de170a0e1b13681`。核心 PR [#53](https://github.com/MainQuestAI/Deck-Master/pull/53) 已在最终提交的 8 项 CI 全通过后合并，merge `8de4317c9843347b8075c937e04af54e43d0cbb9`。本报告不表示前端或整卡完成。
 
 - `changes plan/commit` 增加显式 `mode=auto|trial`、目标阶段与历史原图引用。旧 W06 输入的计划重算保持原样。参考文件来自已提交版本，冻结时不允许更换指令或遗漏附件。
 - Trial 沿用 Task、调用额度、Host 声明、结果校验和原子回执，只保存 Candidate。`continue` 与自动任务复用排除 trial；实际未知调用与预算仍按原策略处理。

@@ -1,0 +1,164 @@
+{
+  "evidence": "Actual Codex native image call and CLI Host SVG reconstruction; one-page synthetic content; Host self-review only",
+  "real_reference_request_output_match": {
+    "real_host_call": true,
+    "content_fixture_only": true,
+    "candidate_id": "candidate-71bb42036aea426fb04c0c2d8219a0a8",
+    "trial_current_unchanged": true,
+    "comparison": {
+      "status": "match",
+      "differences": [],
+      "unknown": []
+    }
+  },
+  "observed_coverage": {
+    "model": "unknown",
+    "output": "native.result",
+    "parameters": {
+      "transparent_background": "native.transparentBackground"
+    },
+    "prompt": "native.revisedPrompt",
+    "references": "native completion + executed literal object paths + same-call PNG return; content hashes and pre-call file timestamps verified",
+    "seed": "unknown"
+  },
+  "real_reference_file": [
+    {
+      "file": {
+        "path": ".deckmaster/objects/0d/0db863ab13734a8609efd81563245fc704f1130e947791ac5de97b4dfab48574.png",
+        "sha256": "0db863ab13734a8609efd81563245fc704f1130e947791ac5de97b4dfab48574"
+      },
+      "role": "reference"
+    }
+  ],
+  "image_call_count_this_run": 2,
+  "first_call": {
+    "accepted": false,
+    "reason": "noncanonical /tmp path alias; references remain unknown",
+    "exit_code": 2,
+    "task_cancelled": true,
+    "usage_retained": true
+  },
+  "original_adoption": {
+    "before": [
+      {
+        "blueprint": {
+          "path": ".deckmaster/objects/24/24807242a74bdd9724a4a62fbd3605ced773be2286d168380f11f4b6ce2d4153.json",
+          "sha256": "24807242a74bdd9724a4a62fbd3605ced773be2286d168380f11f4b6ce2d4153"
+        },
+        "page": {
+          "path": ".deckmaster/objects/05/057719e3cf908334462481645de4b76ae289914ba2491a0c8243b6c697b55bfe.json",
+          "sha256": "057719e3cf908334462481645de4b76ae289914ba2491a0c8243b6c697b55bfe"
+        },
+        "page_id": "traceable-generation",
+        "ppt_preview": null,
+        "svg": null,
+        "svg_preview": null
+      }
+    ],
+    "after": [
+      {
+        "blueprint": {
+          "path": ".deckmaster/objects/96/9675a0ca6976df44cb9dd0425a8cbb9a9cf76aab2a5e5b2542eff48c91f7395d.json",
+          "sha256": "9675a0ca6976df44cb9dd0425a8cbb9a9cf76aab2a5e5b2542eff48c91f7395d"
+        },
+        "page": {
+          "path": ".deckmaster/objects/05/057719e3cf908334462481645de4b76ae289914ba2491a0c8243b6c697b55bfe.json",
+          "sha256": "057719e3cf908334462481645de4b76ae289914ba2491a0c8243b6c697b55bfe"
+        },
+        "page_id": "traceable-generation",
+        "ppt_preview": null,
+        "svg": null,
+        "svg_preview": null
+      }
+    ],
+    "outputs_after": {
+      "pptx": null,
+      "render_report": null,
+      "trace": null
+    }
+  },
+  "svg_adoption": {
+    "before": [
+      {
+        "blueprint": {
+          "path": ".deckmaster/objects/96/9675a0ca6976df44cb9dd0425a8cbb9a9cf76aab2a5e5b2542eff48c91f7395d.json",
+          "sha256": "9675a0ca6976df44cb9dd0425a8cbb9a9cf76aab2a5e5b2542eff48c91f7395d"
+        },
+        "page": {
+          "path": ".deckmaster/objects/05/057719e3cf908334462481645de4b76ae289914ba2491a0c8243b6c697b55bfe.json",
+          "sha256": "057719e3cf908334462481645de4b76ae289914ba2491a0c8243b6c697b55bfe"
+        },
+        "page_id": "traceable-generation",
+        "ppt_preview": null,
+        "svg": null,
+        "svg_preview": null
+      }
+    ],
+    "after": [
+      {
+        "blueprint": {
+          "path": ".deckmaster/objects/96/9675a0ca6976df44cb9dd0425a8cbb9a9cf76aab2a5e5b2542eff48c91f7395d.json",
+          "sha256": "9675a0ca6976df44cb9dd0425a8cbb9a9cf76aab2a5e5b2542eff48c91f7395d"
+        },
+        "page": {
+          "path": ".deckmaster/objects/05/057719e3cf908334462481645de4b76ae289914ba2491a0c8243b6c697b55bfe.json",
+          "sha256": "057719e3cf908334462481645de4b76ae289914ba2491a0c8243b6c697b55bfe"
+        },
+        "page_id": "traceable-generation",
+        "ppt_preview": null,
+        "svg": {
+          "path": ".deckmaster/objects/1f/1fa1c55e367011e17541433912d2ace296342f881bba9eaf42f0b4596a4a90f2.json",
+          "sha256": "1fa1c55e367011e17541433912d2ace296342f881bba9eaf42f0b4596a4a90f2"
+        },
+        "svg_preview": null
+      }
+    ],
+    "outputs_after": {
+      "pptx": null,
+      "render_report": null,
+      "trace": null
+    }
+  },
+  "assemble": {
+    "status": "assembled",
+    "revision_id": "36a70039ca58496983e8326f750bca4d",
+    "report": {
+      "status": "pass",
+      "findings": [],
+      "pages": [
+        {
+          "page_id": "traceable-generation",
+          "text_runs": 6,
+          "native_shapes": 42
+        }
+      ],
+      "visual_review": "not_evaluated",
+      "desktop_editing": "not_evaluated"
+    },
+    "outputs": {
+      "pptx": {
+        "path": ".deckmaster/objects/6c/6cff3b36db40b12694ecb676a21f608ef981741dc3bc72fc457c0f2884967da1.json",
+        "sha256": "6cff3b36db40b12694ecb676a21f608ef981741dc3bc72fc457c0f2884967da1"
+      },
+      "trace": {
+        "path": ".deckmaster/objects/57/57b2068a1c820d85ca35b157a6a5a41abe1828d60d6468eff19f177bbf90cb57.json",
+        "sha256": "57b2068a1c820d85ca35b157a6a5a41abe1828d60d6468eff19f177bbf90cb57"
+      },
+      "render_report": {
+        "path": ".deckmaster/objects/b0/b0b640de35ed6a99931d162419af28d62723b04431940ba750aad4df5b46fd9b.json",
+        "sha256": "b0b640de35ed6a99931d162419af28d62723b04431940ba750aad4df5b46fd9b"
+      }
+    },
+    "max_calls": 0,
+    "final_review": "required"
+  },
+  "current_ppt_preview": {
+    "path": ".deckmaster/objects/20/20d18194926001e64ae0e1e1d8ef5c87f4d790a0a25c5e9d80fccc11c3c88734.json",
+    "sha256": "20d18194926001e64ae0e1e1d8ef5c87f4d790a0a25c5e9d80fccc11c3c88734"
+  },
+  "remaining": [
+    "Real auto/trial interleaving with a second unchanged page is not yet proven in this real Host run; synthetic browser coverage is separate.",
+    "Final review, independent professional acceptance and actual PowerPoint desktop edit were not performed."
+  ],
+  "W07_AC07": "partial real evidence; not closed"
+}
