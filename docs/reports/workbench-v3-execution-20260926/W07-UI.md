@@ -15,7 +15,7 @@
 ## 验证
 
 - [15 项浏览器主流程](w07/ui/browser-checks.json)：候选身份联动、固定比较、auto 更新、显式重计划、响应丢失刷新恢复、零重复采用、批量冲突与子集采用、SVG 保留原图、窄屏、整稿前置拒绝。
-- [9 项浏览器边界](w07/ui/edge-checks.json)：短要求和固定参考图跨刷新恢复、真实服务派发/返回、图片失败与重试、弹窗释放、历史只读及无 JS 错误。
+- [11 项浏览器边界](w07/ui/edge-checks.json)：短要求和固定参考图跨刷新恢复、真实服务派发/返回、图片失败与重试、弹窗释放、待核实期间切换候选的回包归属、历史只读及无 JS 错误。
 - [W06 主流程 23 项](w07/ui/w06-regression.json)、[W06 边界 14 项](w07/ui/w06-edges-regression.json)、[W05 15 项](w07/ui/w05-regression.json)回归。W06 的真实 Host 接手分支在本次无模型回归中未重复执行。
 - [相关 pytest 62 项](w07/ui/pytest.txt)通过。JS 语法、Ruff、diff 空白检查通过。
 - [wheel 资源核对](w07/ui/wheel-assets.json)：26 个前端文件与固定实现提交和当前源码逐字节一致；隔离构建，未安装到 HOME。

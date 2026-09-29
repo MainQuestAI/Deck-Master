@@ -156,9 +156,11 @@ export function candidateDesk(app, data) {
     try {
       await app.business.submit(app.editor, 'candidates.adopt', {input: value, base_revision: value.base_revision}, value, async result => {
         currentPlan = null; planInvalid = false;
-        impact.replaceChildren(el('p', {class: 'success-note'}, `已采用到 ${version(result.revision_id)}。本页下游与整稿待更新，请继续单页预览、审图和整稿制作。`),
+        const prior = selected?.candidate_id !== value.selections[0].candidate_id;
+        impact.replaceChildren(el('p', {class: 'success-note'}, `${prior ? '先前提交的候选' : '这个候选'}已采用到 ${version(result.revision_id)}。${prior ? '当前比较选择未变。' : ''}本页下游与整稿待更新，请继续单页预览、审图和整稿制作。`),
           button('查看任务与交付', () => app.go({surface: 'runs', revision: result.revision_id, candidate_id: null})));
-        live = await get('/api/candidates/' + encodeURIComponent(selected.candidate_id)); renderState();
+        const id = selected?.candidate_id, state = await get('/api/candidates/' + encodeURIComponent(id));
+        if (!disposed && selected?.candidate_id === id) { live = state; renderState(); }
       });
     } catch (error) { if (!disposed) impact.replaceChildren(el('p', {class: 'field-error'}, readableError(error))); }
     finally { busy = false; if (!disposed) controls(); }

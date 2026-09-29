@@ -61,6 +61,22 @@ def main():
             page.keyboard.press('Escape'); expect(page.get_by_role('dialog')).not_to_be_visible()
             stats = page.evaluate("async () => (await import('/v2/images.js')).imagePool.snapshot()")
             check('reference_modal_releases_lease_within_image_limits', stats['large'] <= 4 and stats['thumbnails'] <= 60 and stats['pinned'] <= 3)
+            # Read another candidate while a previous adoption response is unknown.
+            other = flow.image(flow.dispatch(reference_page='p03'), 9)['candidate_ids'][0]
+            page.get_by_role('button', name='刷新候选与当前状态').click()
+            expect(page.get_by_label('选择本页候选').locator('option')).to_have_count(2)
+            page.get_by_role('button', name='预览采用这个候选').click()
+            adopt = page.get_by_role('button', name='采用这个候选', exact=True); expect(adopt).to_be_enabled()
+            def lose_adoption(route):
+                response = route.fetch(); assert response.status == 200; route.abort()
+            page.route('**/api/candidates/adopt', lose_adoption, times=1); adopt.click()
+            expect(page.get_by_text('保存结果待核实 · 新的业务提交已暂停', exact=True)).to_be_visible()
+            page.get_by_label('选择本页候选').select_option(other)
+            expect(page.locator('.candidate-desk')).to_have_attribute('data-candidate-id', other)
+            page.get_by_role('button', name='核实保存结果', exact=True).click()
+            expect(page.locator('.candidate-impact .success-note')).to_contain_text('先前提交的候选已采用')
+            check('unknown_save_candidate_switch_keeps_reply_identity', page.locator('.candidate-desk').get_attribute('data-candidate-id') == other)
+            check('recovered_adoption_targets_original_candidate_only', flow.store.load_document()['pages'][0]['blueprint'] == value['candidate']['result_ref'])
             # An explicitly old route remains read-only despite live candidates being visible.
             open_page(revision); expect(page.get_by_label('本页试作短要求')).not_to_be_editable(); expect(page.get_by_role('button', name='预览本页试作', exact=True)).to_be_disabled()
             check('historical_trial_entry_read_only')
