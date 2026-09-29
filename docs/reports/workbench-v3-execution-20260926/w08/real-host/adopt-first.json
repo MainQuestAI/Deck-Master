@@ -1,0 +1,52 @@
+{
+  "status": "committed",
+  "operation_id": "ef7a3268-b5b5-4e92-9c8c-33c0869a2dc2",
+  "committed_revision_id": "d0d4eee08fa947479e6fed72a8693742",
+  "current_revision_id": "d0d4eee08fa947479e6fed72a8693742",
+  "request_digest": "f8137d21c068d24da2f322917261b7ce43349c34b1c59448ef144e857d27022e",
+  "result_ref": {
+    "path": ".deckmaster/objects/c7/c7986f0fe2f9183f2dbb6b51456a16a23156575ee0741da12d5d0468f37f71a3.json",
+    "sha256": "c7986f0fe2f9183f2dbb6b51456a16a23156575ee0741da12d5d0468f37f71a3"
+  },
+  "operation_result": {
+    "status": "adopted",
+    "revision_id": "d0d4eee08fa947479e6fed72a8693742",
+    "candidate_ids": [
+      "candidate-ca19a1ec7a6d46fc9e33af06fa4b4bad"
+    ],
+    "result_refs": [
+      {
+        "path": ".deckmaster/objects/52/5207caa8d487b6e75767320b7bae6deceba576569a62a25588330cd59ebf27d6.json",
+        "sha256": "5207caa8d487b6e75767320b7bae6deceba576569a62a25588330cd59ebf27d6"
+      }
+    ],
+    "impact": [
+      {
+        "candidate_id": "candidate-ca19a1ec7a6d46fc9e33af06fa4b4bad",
+        "candidate_ref": {
+          "path": ".deckmaster/objects/ef/ef3155428aa71b53381f75621d7cfb5de389aec0904d9fb2041fb460f1dd1580.json",
+          "sha256": "ef3155428aa71b53381f75621d7cfb5de389aec0904d9fb2041fb460f1dd1580"
+        },
+        "page_id": "independent-page",
+        "stage": "blueprint",
+        "target_ref": {
+          "path": ".deckmaster/objects/e1/e1c22bcb01d82ee48e3c90d25d344bfd6e1a2c21551a0cf13b75fbed8eadd8ad.json",
+          "sha256": "e1c22bcb01d82ee48e3c90d25d344bfd6e1a2c21551a0cf13b75fbed8eadd8ad"
+        },
+        "result_ref": {
+          "path": ".deckmaster/objects/52/5207caa8d487b6e75767320b7bae6deceba576569a62a25588330cd59ebf27d6.json",
+          "sha256": "5207caa8d487b6e75767320b7bae6deceba576569a62a25588330cd59ebf27d6"
+        },
+        "basis_digest": "8fced6cf7e8fc69f00f0fe534a547eaf5cfb0d09064a59e4051711604dc9b0ab",
+        "downstream": [
+          "svg",
+          "svg_preview",
+          "ppt_preview",
+          "deck_outputs",
+          "quality_applicability"
+        ]
+      }
+    ],
+    "max_calls": 0
+  }
+}

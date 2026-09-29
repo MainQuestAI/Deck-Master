@@ -1,0 +1,464 @@
+{
+  "status": "suggestion",
+  "proposal_id": "style-proposal-0ce186fb075cf94d49ce835020a9f1b063de727276da37d95636d85896d61fa8",
+  "proposal_ref": {
+    "path": ".deckmaster/objects/0c/0ce186fb075cf94d49ce835020a9f1b063de727276da37d95636d85896d61fa8.json",
+    "sha256": "0ce186fb075cf94d49ce835020a9f1b063de727276da37d95636d85896d61fa8"
+  },
+  "proposal": {
+    "schema_version": "style_proposal.v1",
+    "project_id": "synthetic-project",
+    "base_revision": "7e857a6a703648e09257e5df26377d33",
+    "input": {
+      "schema_version": "style_input.v1",
+      "project_id": "synthetic-project",
+      "base_revision": "7e857a6a703648e09257e5df26377d33",
+      "reference": {
+        "page_id": "traceable-generation",
+        "revision_id": "7e857a6a703648e09257e5df26377d33",
+        "artifact_ref": {
+          "path": ".deckmaster/objects/96/9675a0ca6976df44cb9dd0425a8cbb9a9cf76aab2a5e5b2542eff48c91f7395d.json",
+          "sha256": "9675a0ca6976df44cb9dd0425a8cbb9a9cf76aab2a5e5b2542eff48c91f7395d"
+        },
+        "role": "reference"
+      },
+      "target_page_ids": [
+        "independent-page",
+        "explicit-expansion"
+      ],
+      "instruction": "只借用参考页绿色配色与清楚的文字层级，保留目标页全部标题、事实、数字和三栏内容。绿色配色替代目标原有蓝色；不复制参考页正文和图标。",
+      "dimensions": {
+        "palette": "采用参考原图的绿色强调色与浅绿卡片底色，替代原蓝色，保留白底与深色文字。",
+        "typography": "主标题最强，分组标题次之，卡片正文清楚；不改变目标页文本，不借构图。"
+      }
+    },
+    "targets": [
+      {
+        "page_id": "independent-page",
+        "page_ref": {
+          "path": ".deckmaster/objects/8d/8df9db4b0427039a426678dae2932bada18ab414c12248cf92da984d4b991014.json",
+          "sha256": "8df9db4b0427039a426678dae2932bada18ab414c12248cf92da984d4b991014"
+        },
+        "blueprint_ref": {
+          "path": ".deckmaster/objects/e1/e1c22bcb01d82ee48e3c90d25d344bfd6e1a2c21551a0cf13b75fbed8eadd8ad.json",
+          "sha256": "e1c22bcb01d82ee48e3c90d25d344bfd6e1a2c21551a0cf13b75fbed8eadd8ad"
+        },
+        "content": {
+          "body_blocks": [
+            {
+              "heading": "并行制作不混淆页面",
+              "id": "flow",
+              "items": [
+                {
+                  "id": "auto",
+                  "text": "第二页自动结果独立返回"
+                },
+                {
+                  "id": "trial",
+                  "text": "第一页试作保留当前稿"
+                },
+                {
+                  "id": "adopt",
+                  "text": "采用候选只更新目标页"
+                }
+              ],
+              "type": "bullets"
+            }
+          ],
+          "subtitle": "合成验证样例",
+          "title": "逐页返回，各自保留修改依据"
+        }
+      },
+      {
+        "page_id": "explicit-expansion",
+        "page_ref": {
+          "path": ".deckmaster/objects/63/63d5ac98f3672563bf7e8e5da19e3c63f57e058928dcb9bdace9ffc2a0227a6a.json",
+          "sha256": "63d5ac98f3672563bf7e8e5da19e3c63f57e058928dcb9bdace9ffc2a0227a6a"
+        },
+        "blueprint_ref": {
+          "path": ".deckmaster/objects/2d/2d6fa565ec942c7a0ffdfa44ac1901324dbf825ecf746f57d578b3542e14af78.json",
+          "sha256": "2d6fa565ec942c7a0ffdfa44ac1901324dbf825ecf746f57d578b3542e14af78"
+        },
+        "content": {
+          "body_blocks": [
+            {
+              "heading": "本次扩展 1 页",
+              "id": "scope",
+              "items": [
+                {
+                  "id": "facts",
+                  "text": "先核对标题与数字"
+                },
+                {
+                  "id": "selected",
+                  "text": "只扩到明确选择的页面"
+                },
+                {
+                  "id": "unchanged",
+                  "text": "未选择页面保持原有结果"
+                }
+              ],
+              "type": "bullets"
+            }
+          ],
+          "subtitle": "合成验证样例",
+          "title": "确认一页，再扩到指定页"
+        }
+      }
+    ],
+    "reference_sources": {
+      "reference": {
+        "page_id": "traceable-generation",
+        "revision_id": "7e857a6a703648e09257e5df26377d33",
+        "artifact_ref": {
+          "path": ".deckmaster/objects/96/9675a0ca6976df44cb9dd0425a8cbb9a9cf76aab2a5e5b2542eff48c91f7395d.json",
+          "sha256": "9675a0ca6976df44cb9dd0425a8cbb9a9cf76aab2a5e5b2542eff48c91f7395d"
+        },
+        "role": "reference"
+      },
+      "submitted": {
+        "state": "recorded",
+        "ref": {
+          "path": ".deckmaster/objects/52/520aa5c66eade886f31c18d784fadfef0c5d0e7db6eca5ef773bff12c1edacd9.txt",
+          "sha256": "520aa5c66eade886f31c18d784fadfef0c5d0e7db6eca5ef773bff12c1edacd9"
+        },
+        "observer": "tool_observed",
+        "text": "以固定参考图为风格和事实依据，保持中文标题和三个步骤原文，将三步改为横向等宽卡片，增加留白，白底绿色强调；不增加数字、结论或装饰。\n\nUse case: productivity-visual\nAsset type: editable-presentation blueprint reference, one complete slide\nCanvas: 1600x900 px; physical size 13.333333333333334x7.5 in; contain fit\nPrimary request: Create a polished business slide blueprint from the exact structured input below. Preserve every visible fact, number, unit, label, footnote, node and directed relationship.\nStyle/medium: precise enterprise presentation design; clear hierarchy; production-ready reference image\nComposition/framing: use the supplied canvas, layout intent and node relationships; keep all content inside safe margins\nText: render the supplied customer-visible text verbatim and legibly\nConstraints: do not add claims or invent numeric values, dates, customer data, or outcomes. If a chart needs data absent from the input, use an unlabeled schematic marked 示意数据, without plausible-looking values. Do not omit modules; connect arrows to their actual nodes; use only permitted assets; no watermark; no internal notes\nStructured input:\n{\n  \"canvas\": {\n    \"fit\": \"contain\",\n    \"height_px\": 900,\n    \"slide_height_in\": 7.5,\n    \"slide_width_in\": 13.333333333333334,\n    \"width_px\": 1600\n  },\n  \"customer_visible\": {\n    \"body_blocks\": [\n      {\n        \"heading\": \"每一步都有明确依据\",\n        \"id\": \"steps\",\n        \"items\": [\n          {\n            \"id\": \"request\",\n            \"text\": \"调用前冻结准确提示词\"\n          },\n          {\n            \"id\": \"observation\",\n            \"text\": \"调用后核对工具原生记录\"\n          },\n          {\n            \"id\": \"output\",\n            \"text\": \"按图片字节绑定生成结果\"\n          }\n        ],\n        \"type\": \"bullets\"\n      }\n    ],\n    \"callouts\": [],\n    \"footnotes\": [],\n    \"labels\": [],\n    \"subtitle\": \"合成验证样例\",\n    \"title\": \"一次生成，保留可核对的记录\"\n  },\n  \"fonts\": [\n    {\n      \"asset_id\": null,\n      \"face\": \"Regular\",\n      \"fallback_font_ids\": [],\n      \"family\": \"Noto Sans CJK SC\",\n      \"font_id\": \"body\",\n      \"weight\": 400\n    },\n    {\n      \"asset_id\": null,\n      \"face\": \"Bold\",\n      \"fallback_font_ids\": [],\n      \"family\": \"Noto Sans CJK SC\",\n      \"font_id\": \"heading\",\n      \"weight\": 700\n    }\n  ],\n  \"language\": \"zh-CN\",\n  \"page_id\": \"traceable-generation\",\n  \"permitted_assets\": [],\n  \"style\": {\n    \"colors\": {\n      \"accent\": \"#1478FF\",\n      \"background\": \"#FFFFFF\",\n      \"text\": \"#14213D\"\n    },\n    \"layout_notes\": \"默认样式在 create 时固化；字体名称是配置需求，不是本机安装证明。\",\n    \"style_id\": \"default\",\n    \"typography\": {\n      \"auxiliary_size_pt\": 12,\n      \"body_font_id\": \"body\",\n      \"body_size_pt\": 18,\n      \"heading_font_id\": \"heading\",\n      \"heading_size_pt\": 30\n    }\n  },\n  \"visual_spec\": {\n    \"edges\": [],\n    \"intent\": \"A clean three-step business slide, synthetic software verification sample.\",\n    \"layout_hint\": \"\",\n    \"nodes\": [],\n    \"reference_mode\": \"new_design\",\n    \"style_ref\": \"default\"\n  }\n}",
+        "relation": "known",
+        "basis": "native_tool_observation"
+      },
+      "prepared": [
+        {
+          "ref": {
+            "path": ".deckmaster/objects/9f/9f5b98cb416f60844162910b8cba2c3fdb9476087a326ccb337c09c311eddcaa.json",
+            "sha256": "9f5b98cb416f60844162910b8cba2c3fdb9476087a326ccb337c09c311eddcaa"
+          },
+          "sections": {
+            "state": "verified_core_projection",
+            "segments": [
+              {
+                "label": "instructions",
+                "start": 0,
+                "end": 992
+              },
+              {
+                "label": "structured_input",
+                "start": 992,
+                "end": 2803
+              }
+            ]
+          },
+          "task_ref": {
+            "path": ".deckmaster/objects/9a/9a32ecd47c75e7b19682d805115cdd9f9d68d7c72bcd249cd15f19c53bd68a0d.json",
+            "sha256": "9a32ecd47c75e7b19682d805115cdd9f9d68d7c72bcd249cd15f19c53bd68a0d"
+          },
+          "task_id": "88c3eedb2753",
+          "dispatch_revision": "564852a8fee349fd83ab785a4ef1f138",
+          "text": "Use case: productivity-visual\nAsset type: editable-presentation blueprint reference, one complete slide\nCanvas: 1600x900 px; physical size 13.333333333333334x7.5 in; contain fit\nPrimary request: Create a polished business slide blueprint from the exact structured input below. Preserve every visible fact, number, unit, label, footnote, node and directed relationship.\nStyle/medium: precise enterprise presentation design; clear hierarchy; production-ready reference image\nComposition/framing: use the supplied canvas, layout intent and node relationships; keep all content inside safe margins\nText: render the supplied customer-visible text verbatim and legibly\nConstraints: do not add claims or invent numeric values, dates, customer data, or outcomes. If a chart needs data absent from the input, use an unlabeled schematic marked 示意数据, without plausible-looking values. Do not omit modules; connect arrows to their actual nodes; use only permitted assets; no watermark; no internal notes\nStructured input:\n{\n  \"canvas\": {\n    \"fit\": \"contain\",\n    \"height_px\": 900,\n    \"slide_height_in\": 7.5,\n    \"slide_width_in\": 13.333333333333334,\n    \"width_px\": 1600\n  },\n  \"customer_visible\": {\n    \"body_blocks\": [\n      {\n        \"heading\": \"每一步都有明确依据\",\n        \"id\": \"steps\",\n        \"items\": [\n          {\n            \"id\": \"request\",\n            \"text\": \"调用前冻结准确提示词\"\n          },\n          {\n            \"id\": \"observation\",\n            \"text\": \"调用后核对工具原生记录\"\n          },\n          {\n            \"id\": \"output\",\n            \"text\": \"按图片字节绑定生成结果\"\n          }\n        ],\n        \"type\": \"bullets\"\n      }\n    ],\n    \"callouts\": [],\n    \"footnotes\": [],\n    \"labels\": [],\n    \"subtitle\": \"合成验证样例\",\n    \"title\": \"一次生成，保留可核对的记录\"\n  },\n  \"fonts\": [\n    {\n      \"asset_id\": null,\n      \"face\": \"Regular\",\n      \"fallback_font_ids\": [],\n      \"family\": \"Noto Sans CJK SC\",\n      \"font_id\": \"body\",\n      \"weight\": 400\n    },\n    {\n      \"asset_id\": null,\n      \"face\": \"Bold\",\n      \"fallback_font_ids\": [],\n      \"family\": \"Noto Sans CJK SC\",\n      \"font_id\": \"heading\",\n      \"weight\": 700\n    }\n  ],\n  \"language\": \"zh-CN\",\n  \"page_id\": \"traceable-generation\",\n  \"permitted_assets\": [],\n  \"style\": {\n    \"colors\": {\n      \"accent\": \"#1478FF\",\n      \"background\": \"#FFFFFF\",\n      \"text\": \"#14213D\"\n    },\n    \"layout_notes\": \"默认样式在 create 时固化；字体名称是配置需求，不是本机安装证明。\",\n    \"style_id\": \"default\",\n    \"typography\": {\n      \"auxiliary_size_pt\": 12,\n      \"body_font_id\": \"body\",\n      \"body_size_pt\": 18,\n      \"heading_font_id\": \"heading\",\n      \"heading_size_pt\": 30\n    }\n  },\n  \"visual_spec\": {\n    \"edges\": [],\n    \"intent\": \"A clean three-step business slide, synthetic software verification sample.\",\n    \"layout_hint\": \"\",\n    \"nodes\": [],\n    \"reference_mode\": \"new_design\",\n    \"style_ref\": \"default\"\n  }\n}",
+          "prompt_sha256": "2cdb85d884eb689399b4738dc5ea88603a427141376767398bd07476c306f291",
+          "state": "prepared",
+          "observer": "core_frozen",
+          "output_relation": "unknown",
+          "basis": "task_scope_only"
+        }
+      ],
+      "requests": [
+        {
+          "ref": {
+            "path": ".deckmaster/objects/e7/e77ee66bfd94e2e2d527c1a1d605940118f4a8bf14aab256ea8a02a5e50ac6a5.json",
+            "sha256": "e77ee66bfd94e2e2d527c1a1d605940118f4a8bf14aab256ea8a02a5e50ac6a5"
+          },
+          "request_id": "req-b0741a7a183b46479966d6891dbcdf38",
+          "input": {
+            "basis": {
+              "produced_against": "22691c9229866ab5d8a1492771396fa2005c835afe501eb77f690ecd70cd4a4b",
+              "project_id": "synthetic-project",
+              "revision_id": "564852a8fee349fd83ab785a4ef1f138"
+            },
+            "constraints": {},
+            "design_context": {
+              "allowed_asset_ids": [],
+              "assets": [],
+              "canvas": {
+                "fit": "contain",
+                "height_px": 900,
+                "slide_height_in": 7.5,
+                "slide_width_in": 13.333333333333334,
+                "width_px": 1600
+              },
+              "default_style_id": "default",
+              "fonts": [
+                {
+                  "asset_id": null,
+                  "face": "Regular",
+                  "fallback_font_ids": [],
+                  "family": "Noto Sans CJK SC",
+                  "font_id": "body",
+                  "weight": 400
+                },
+                {
+                  "asset_id": null,
+                  "face": "Bold",
+                  "fallback_font_ids": [],
+                  "family": "Noto Sans CJK SC",
+                  "font_id": "heading",
+                  "weight": 700
+                }
+              ],
+              "language": "zh-CN",
+              "styles": [
+                {
+                  "colors": {
+                    "accent": "#1478FF",
+                    "background": "#FFFFFF",
+                    "text": "#14213D"
+                  },
+                  "layout_notes": "默认样式在 create 时固化；字体名称是配置需求，不是本机安装证明。",
+                  "style_id": "default",
+                  "typography": {
+                    "auxiliary_size_pt": 12,
+                    "body_font_id": "body",
+                    "body_size_pt": 18,
+                    "heading_font_id": "heading",
+                    "heading_size_pt": 30
+                  }
+                }
+              ]
+            },
+            "page": {
+              "page_id": "traceable-generation",
+              "page_ref": {
+                "path": ".deckmaster/objects/05/057719e3cf908334462481645de4b76ae289914ba2491a0c8243b6c697b55bfe.json",
+                "sha256": "057719e3cf908334462481645de4b76ae289914ba2491a0c8243b6c697b55bfe"
+              }
+            },
+            "parameters": {
+              "transparent_background": false
+            },
+            "prompt": "Use case: productivity-visual\nAsset type: editable-presentation blueprint reference, one complete slide\nCanvas: 1600x900 px; physical size 13.333333333333334x7.5 in; contain fit\nPrimary request: Create a polished business slide blueprint from the exact structured input below. Preserve every visible fact, number, unit, label, footnote, node and directed relationship.\nStyle/medium: precise enterprise presentation design; clear hierarchy; production-ready reference image\nComposition/framing: use the supplied canvas, layout intent and node relationships; keep all content inside safe margins\nText: render the supplied customer-visible text verbatim and legibly\nConstraints: do not add claims or invent numeric values, dates, customer data, or outcomes. If a chart needs data absent from the input, use an unlabeled schematic marked 示意数据, without plausible-looking values. Do not omit modules; connect arrows to their actual nodes; use only permitted assets; no watermark; no internal notes\nStructured input:\n{\n  \"canvas\": {\n    \"fit\": \"contain\",\n    \"height_px\": 900,\n    \"slide_height_in\": 7.5,\n    \"slide_width_in\": 13.333333333333334,\n    \"width_px\": 1600\n  },\n  \"customer_visible\": {\n    \"body_blocks\": [\n      {\n        \"heading\": \"每一步都有明确依据\",\n        \"id\": \"steps\",\n        \"items\": [\n          {\n            \"id\": \"request\",\n            \"text\": \"调用前冻结准确提示词\"\n          },\n          {\n            \"id\": \"observation\",\n            \"text\": \"调用后核对工具原生记录\"\n          },\n          {\n            \"id\": \"output\",\n            \"text\": \"按图片字节绑定生成结果\"\n          }\n        ],\n        \"type\": \"bullets\"\n      }\n    ],\n    \"callouts\": [],\n    \"footnotes\": [],\n    \"labels\": [],\n    \"subtitle\": \"合成验证样例\",\n    \"title\": \"一次生成，保留可核对的记录\"\n  },\n  \"fonts\": [\n    {\n      \"asset_id\": null,\n      \"face\": \"Regular\",\n      \"fallback_font_ids\": [],\n      \"family\": \"Noto Sans CJK SC\",\n      \"font_id\": \"body\",\n      \"weight\": 400\n    },\n    {\n      \"asset_id\": null,\n      \"face\": \"Bold\",\n      \"fallback_font_ids\": [],\n      \"family\": \"Noto Sans CJK SC\",\n      \"font_id\": \"heading\",\n      \"weight\": 700\n    }\n  ],\n  \"language\": \"zh-CN\",\n  \"page_id\": \"traceable-generation\",\n  \"permitted_assets\": [],\n  \"style\": {\n    \"colors\": {\n      \"accent\": \"#1478FF\",\n      \"background\": \"#FFFFFF\",\n      \"text\": \"#14213D\"\n    },\n    \"layout_notes\": \"默认样式在 create 时固化；字体名称是配置需求，不是本机安装证明。\",\n    \"style_id\": \"default\",\n    \"typography\": {\n      \"auxiliary_size_pt\": 12,\n      \"body_font_id\": \"body\",\n      \"body_size_pt\": 18,\n      \"heading_font_id\": \"heading\",\n      \"heading_size_pt\": 30\n    }\n  },\n  \"visual_spec\": {\n    \"edges\": [],\n    \"intent\": \"A clean three-step business slide, synthetic software verification sample.\",\n    \"layout_hint\": \"\",\n    \"nodes\": [],\n    \"reference_mode\": \"new_design\",\n    \"style_ref\": \"default\"\n  }\n}",
+            "references": [],
+            "schema_version": "generation_input.v1",
+            "template_ref": null
+          }
+        },
+        {
+          "ref": {
+            "path": ".deckmaster/objects/c8/c84c56cfd333bc8f6061638595dbebbf795e675ee41afc692fa0595f1d675c99.json",
+            "sha256": "c84c56cfd333bc8f6061638595dbebbf795e675ee41afc692fa0595f1d675c99"
+          },
+          "request_id": "req-1224a5fd7e3c45e2ae879576d79d0bb1",
+          "input": {
+            "basis": {
+              "produced_against": "b6dfbdcf29b7260bad672eafc857e05ea14800c760d1ee8ba2f02e26f24e23fc",
+              "project_id": "synthetic-project",
+              "revision_id": "606a8bdb45894b83a83560f870cb5356"
+            },
+            "constraints": {},
+            "design_context": {
+              "allowed_asset_ids": [],
+              "assets": [],
+              "canvas": {
+                "fit": "contain",
+                "height_px": 900,
+                "slide_height_in": 7.5,
+                "slide_width_in": 13.333333333333334,
+                "width_px": 1600
+              },
+              "default_style_id": "default",
+              "fonts": [
+                {
+                  "asset_id": null,
+                  "face": "Regular",
+                  "fallback_font_ids": [],
+                  "family": "Noto Sans CJK SC",
+                  "font_id": "body",
+                  "weight": 400
+                },
+                {
+                  "asset_id": null,
+                  "face": "Bold",
+                  "fallback_font_ids": [],
+                  "family": "Noto Sans CJK SC",
+                  "font_id": "heading",
+                  "weight": 700
+                }
+              ],
+              "language": "zh-CN",
+              "styles": [
+                {
+                  "colors": {
+                    "accent": "#1478FF",
+                    "background": "#FFFFFF",
+                    "text": "#14213D"
+                  },
+                  "layout_notes": "默认样式在 create 时固化；字体名称是配置需求，不是本机安装证明。",
+                  "style_id": "default",
+                  "typography": {
+                    "auxiliary_size_pt": 12,
+                    "body_font_id": "body",
+                    "body_size_pt": 18,
+                    "heading_font_id": "heading",
+                    "heading_size_pt": 30
+                  }
+                }
+              ]
+            },
+            "page": {
+              "page_id": "traceable-generation",
+              "page_ref": {
+                "path": ".deckmaster/objects/05/057719e3cf908334462481645de4b76ae289914ba2491a0c8243b6c697b55bfe.json",
+                "sha256": "057719e3cf908334462481645de4b76ae289914ba2491a0c8243b6c697b55bfe"
+              }
+            },
+            "parameters": {
+              "transparent_background": false
+            },
+            "prompt": "以固定参考图为风格和事实依据，保持中文标题和三个步骤原文，将三步改为横向等宽卡片，增加留白，白底绿色强调；不增加数字、结论或装饰。\n\nUse case: productivity-visual\nAsset type: editable-presentation blueprint reference, one complete slide\nCanvas: 1600x900 px; physical size 13.333333333333334x7.5 in; contain fit\nPrimary request: Create a polished business slide blueprint from the exact structured input below. Preserve every visible fact, number, unit, label, footnote, node and directed relationship.\nStyle/medium: precise enterprise presentation design; clear hierarchy; production-ready reference image\nComposition/framing: use the supplied canvas, layout intent and node relationships; keep all content inside safe margins\nText: render the supplied customer-visible text verbatim and legibly\nConstraints: do not add claims or invent numeric values, dates, customer data, or outcomes. If a chart needs data absent from the input, use an unlabeled schematic marked 示意数据, without plausible-looking values. Do not omit modules; connect arrows to their actual nodes; use only permitted assets; no watermark; no internal notes\nStructured input:\n{\n  \"canvas\": {\n    \"fit\": \"contain\",\n    \"height_px\": 900,\n    \"slide_height_in\": 7.5,\n    \"slide_width_in\": 13.333333333333334,\n    \"width_px\": 1600\n  },\n  \"customer_visible\": {\n    \"body_blocks\": [\n      {\n        \"heading\": \"每一步都有明确依据\",\n        \"id\": \"steps\",\n        \"items\": [\n          {\n            \"id\": \"request\",\n            \"text\": \"调用前冻结准确提示词\"\n          },\n          {\n            \"id\": \"observation\",\n            \"text\": \"调用后核对工具原生记录\"\n          },\n          {\n            \"id\": \"output\",\n            \"text\": \"按图片字节绑定生成结果\"\n          }\n        ],\n        \"type\": \"bullets\"\n      }\n    ],\n    \"callouts\": [],\n    \"footnotes\": [],\n    \"labels\": [],\n    \"subtitle\": \"合成验证样例\",\n    \"title\": \"一次生成，保留可核对的记录\"\n  },\n  \"fonts\": [\n    {\n      \"asset_id\": null,\n      \"face\": \"Regular\",\n      \"fallback_font_ids\": [],\n      \"family\": \"Noto Sans CJK SC\",\n      \"font_id\": \"body\",\n      \"weight\": 400\n    },\n    {\n      \"asset_id\": null,\n      \"face\": \"Bold\",\n      \"fallback_font_ids\": [],\n      \"family\": \"Noto Sans CJK SC\",\n      \"font_id\": \"heading\",\n      \"weight\": 700\n    }\n  ],\n  \"language\": \"zh-CN\",\n  \"page_id\": \"traceable-generation\",\n  \"permitted_assets\": [],\n  \"style\": {\n    \"colors\": {\n      \"accent\": \"#1478FF\",\n      \"background\": \"#FFFFFF\",\n      \"text\": \"#14213D\"\n    },\n    \"layout_notes\": \"默认样式在 create 时固化；字体名称是配置需求，不是本机安装证明。\",\n    \"style_id\": \"default\",\n    \"typography\": {\n      \"auxiliary_size_pt\": 12,\n      \"body_font_id\": \"body\",\n      \"body_size_pt\": 18,\n      \"heading_font_id\": \"heading\",\n      \"heading_size_pt\": 30\n    }\n  },\n  \"visual_spec\": {\n    \"edges\": [],\n    \"intent\": \"A clean three-step business slide, synthetic software verification sample.\",\n    \"layout_hint\": \"\",\n    \"nodes\": [],\n    \"reference_mode\": \"new_design\",\n    \"style_ref\": \"default\"\n  }\n}",
+            "references": [
+              {
+                "file": {
+                  "path": ".deckmaster/objects/0d/0db863ab13734a8609efd81563245fc704f1130e947791ac5de97b4dfab48574.png",
+                  "sha256": "0db863ab13734a8609efd81563245fc704f1130e947791ac5de97b4dfab48574"
+                },
+                "role": "reference"
+              }
+            ],
+            "schema_version": "generation_input.v1",
+            "template_ref": null
+          }
+        },
+        {
+          "ref": {
+            "path": ".deckmaster/objects/c1/c1c247b66102a79d804b457b4771c90ab075c6439ba21fa3e2deeab20a4a2b2d.json",
+            "sha256": "c1c247b66102a79d804b457b4771c90ab075c6439ba21fa3e2deeab20a4a2b2d"
+          },
+          "request_id": "req-5c6cde734afd4dee927702583a35e455",
+          "input": {
+            "basis": {
+              "produced_against": "b6dfbdcf29b7260bad672eafc857e05ea14800c760d1ee8ba2f02e26f24e23fc",
+              "project_id": "synthetic-project",
+              "revision_id": "af8a60df54444fd39616a2a6fda20691"
+            },
+            "constraints": {},
+            "design_context": {
+              "allowed_asset_ids": [],
+              "assets": [],
+              "canvas": {
+                "fit": "contain",
+                "height_px": 900,
+                "slide_height_in": 7.5,
+                "slide_width_in": 13.333333333333334,
+                "width_px": 1600
+              },
+              "default_style_id": "default",
+              "fonts": [
+                {
+                  "asset_id": null,
+                  "face": "Regular",
+                  "fallback_font_ids": [],
+                  "family": "Noto Sans CJK SC",
+                  "font_id": "body",
+                  "weight": 400
+                },
+                {
+                  "asset_id": null,
+                  "face": "Bold",
+                  "fallback_font_ids": [],
+                  "family": "Noto Sans CJK SC",
+                  "font_id": "heading",
+                  "weight": 700
+                }
+              ],
+              "language": "zh-CN",
+              "styles": [
+                {
+                  "colors": {
+                    "accent": "#1478FF",
+                    "background": "#FFFFFF",
+                    "text": "#14213D"
+                  },
+                  "layout_notes": "默认样式在 create 时固化；字体名称是配置需求，不是本机安装证明。",
+                  "style_id": "default",
+                  "typography": {
+                    "auxiliary_size_pt": 12,
+                    "body_font_id": "body",
+                    "body_size_pt": 18,
+                    "heading_font_id": "heading",
+                    "heading_size_pt": 30
+                  }
+                }
+              ]
+            },
+            "page": {
+              "page_id": "traceable-generation",
+              "page_ref": {
+                "path": ".deckmaster/objects/05/057719e3cf908334462481645de4b76ae289914ba2491a0c8243b6c697b55bfe.json",
+                "sha256": "057719e3cf908334462481645de4b76ae289914ba2491a0c8243b6c697b55bfe"
+              }
+            },
+            "parameters": {
+              "transparent_background": false
+            },
+            "prompt": "以固定参考图为风格和事实依据，保持中文标题和三个步骤原文，将三步改为横向等宽卡片，增加留白，白底绿色强调；不增加数字、结论或装饰。\n\nUse case: productivity-visual\nAsset type: editable-presentation blueprint reference, one complete slide\nCanvas: 1600x900 px; physical size 13.333333333333334x7.5 in; contain fit\nPrimary request: Create a polished business slide blueprint from the exact structured input below. Preserve every visible fact, number, unit, label, footnote, node and directed relationship.\nStyle/medium: precise enterprise presentation design; clear hierarchy; production-ready reference image\nComposition/framing: use the supplied canvas, layout intent and node relationships; keep all content inside safe margins\nText: render the supplied customer-visible text verbatim and legibly\nConstraints: do not add claims or invent numeric values, dates, customer data, or outcomes. If a chart needs data absent from the input, use an unlabeled schematic marked 示意数据, without plausible-looking values. Do not omit modules; connect arrows to their actual nodes; use only permitted assets; no watermark; no internal notes\nStructured input:\n{\n  \"canvas\": {\n    \"fit\": \"contain\",\n    \"height_px\": 900,\n    \"slide_height_in\": 7.5,\n    \"slide_width_in\": 13.333333333333334,\n    \"width_px\": 1600\n  },\n  \"customer_visible\": {\n    \"body_blocks\": [\n      {\n        \"heading\": \"每一步都有明确依据\",\n        \"id\": \"steps\",\n        \"items\": [\n          {\n            \"id\": \"request\",\n            \"text\": \"调用前冻结准确提示词\"\n          },\n          {\n            \"id\": \"observation\",\n            \"text\": \"调用后核对工具原生记录\"\n          },\n          {\n            \"id\": \"output\",\n            \"text\": \"按图片字节绑定生成结果\"\n          }\n        ],\n        \"type\": \"bullets\"\n      }\n    ],\n    \"callouts\": [],\n    \"footnotes\": [],\n    \"labels\": [],\n    \"subtitle\": \"合成验证样例\",\n    \"title\": \"一次生成，保留可核对的记录\"\n  },\n  \"fonts\": [\n    {\n      \"asset_id\": null,\n      \"face\": \"Regular\",\n      \"fallback_font_ids\": [],\n      \"family\": \"Noto Sans CJK SC\",\n      \"font_id\": \"body\",\n      \"weight\": 400\n    },\n    {\n      \"asset_id\": null,\n      \"face\": \"Bold\",\n      \"fallback_font_ids\": [],\n      \"family\": \"Noto Sans CJK SC\",\n      \"font_id\": \"heading\",\n      \"weight\": 700\n    }\n  ],\n  \"language\": \"zh-CN\",\n  \"page_id\": \"traceable-generation\",\n  \"permitted_assets\": [],\n  \"style\": {\n    \"colors\": {\n      \"accent\": \"#1478FF\",\n      \"background\": \"#FFFFFF\",\n      \"text\": \"#14213D\"\n    },\n    \"layout_notes\": \"默认样式在 create 时固化；字体名称是配置需求，不是本机安装证明。\",\n    \"style_id\": \"default\",\n    \"typography\": {\n      \"auxiliary_size_pt\": 12,\n      \"body_font_id\": \"body\",\n      \"body_size_pt\": 18,\n      \"heading_font_id\": \"heading\",\n      \"heading_size_pt\": 30\n    }\n  },\n  \"visual_spec\": {\n    \"edges\": [],\n    \"intent\": \"A clean three-step business slide, synthetic software verification sample.\",\n    \"layout_hint\": \"\",\n    \"nodes\": [],\n    \"reference_mode\": \"new_design\",\n    \"style_ref\": \"default\"\n  }\n}",
+            "references": [
+              {
+                "file": {
+                  "path": ".deckmaster/objects/0d/0db863ab13734a8609efd81563245fc704f1130e947791ac5de97b4dfab48574.png",
+                  "sha256": "0db863ab13734a8609efd81563245fc704f1130e947791ac5de97b4dfab48574"
+                },
+                "role": "reference"
+              }
+            ],
+            "schema_version": "generation_input.v1",
+            "template_ref": null
+          }
+        }
+      ],
+      "unstructured_text_policy": "Keep original text; exact selected excerpts or explicitly confirmed Host suggestions only."
+    },
+    "dimensions": {
+      "palette": "采用参考原图的绿色强调色与浅绿卡片底色，替代原蓝色，保留白底与深色文字。",
+      "typography": "主标题最强，分组标题次之，卡片正文清楚；不改变目标页文本，不借构图。"
+    },
+    "conflicts": [],
+    "diff": [
+      {
+        "field": "reference",
+        "before": null,
+        "after": {
+          "page_id": "traceable-generation",
+          "revision_id": "7e857a6a703648e09257e5df26377d33",
+          "artifact_ref": {
+            "path": ".deckmaster/objects/96/9675a0ca6976df44cb9dd0425a8cbb9a9cf76aab2a5e5b2542eff48c91f7395d.json",
+            "sha256": "9675a0ca6976df44cb9dd0425a8cbb9a9cf76aab2a5e5b2542eff48c91f7395d"
+          },
+          "role": "reference"
+        }
+      },
+      {
+        "field": "target_page_ids",
+        "before": null,
+        "after": [
+          "independent-page",
+          "explicit-expansion"
+        ]
+      },
+      {
+        "field": "instruction",
+        "before": null,
+        "after": "只借用参考页绿色配色与清楚的文字层级，保留目标页全部标题、事实、数字和三栏内容。绿色配色替代目标原有蓝色；不复制参考页正文和图标。"
+      },
+      {
+        "field": "dimensions",
+        "before": null,
+        "after": {
+          "palette": "采用参考原图的绿色强调色与浅绿卡片底色，替代原蓝色，保留白底与深色文字。",
+          "typography": "主标题最强，分组标题次之，卡片正文清楚；不改变目标页文本，不借构图。"
+        }
+      }
+    ],
+    "preserve_target_content": true,
+    "suggestion_state": "none"
+  },
+  "model_calls": 0
+}

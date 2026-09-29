@@ -131,3 +131,11 @@ textarea{font-size:14px;line-height:1.7}
 .change-list select { max-width: 100%; }
 .run-desk .run-task { padding: 12px; }
 .run-filters { align-items: center; }
+
+.style-calibration { max-width: 1180px; }
+.style-reference { max-width: 760px; }
+.style-reference .pooled-image { aspect-ratio: 16 / 9; }
+.style-targets { display: flex; flex-wrap: wrap; gap: 12px 24px; max-height: 240px; overflow: auto; }
+.style-calibration details > .stack { padding-top: 16px; }
+.style-calibration .evidence-json { max-height: 320px; overflow: auto; }
+.style-calibration .row > input:not([type=checkbox]) { flex: 1; min-width: 180px; }

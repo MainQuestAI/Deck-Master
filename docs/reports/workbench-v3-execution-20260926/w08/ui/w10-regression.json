@@ -1,0 +1,24 @@
+{
+  "checks": [
+    "task_and_candidate_dom_bounded_to_30",
+    "paged_task_snapshot_does_not_reorder_on_background_update",
+    "same_origin_reload_restores_task_page_and_revision",
+    "candidate_selection_survives_pagination",
+    "normal_running_excluded_from_human_todo",
+    "real_claim_time_and_execution_identity_visible",
+    "unknown_cancel_survives_reload_without_automatic_resend",
+    "explicit_cancel_retry_confirms_same_task",
+    "poll_never_dispatches_or_allocates",
+    "no_horizontal_overflow_1280",
+    "no_horizontal_overflow_1440",
+    "no_boolean_placeholders_in_task_detail",
+    "no_browser_javascript_errors"
+  ],
+  "errors": [],
+  "synthetic": true,
+  "model_calls": 0,
+  "native_host_evidence": false,
+  "execution_started_at": "2026-09-29T21:07:13Z",
+  "task_id": "task-ec132b1252e14978a050bd3b91b42b5b",
+  "browser": "149.0.7827.55"
+}

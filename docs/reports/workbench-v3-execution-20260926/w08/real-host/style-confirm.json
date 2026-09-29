@@ -1,0 +1,21 @@
+{
+  "status": "committed",
+  "operation_id": "4596f6eb-1ea5-4e14-bb07-2606c54d5934",
+  "committed_revision_id": "bf6c233a0a044c49baca04dfd57e9a91",
+  "current_revision_id": "bf6c233a0a044c49baca04dfd57e9a91",
+  "request_digest": "397bbd54c5ef60b284c103c415f64ea7e449a8826157cf0a9a590b059adec4ab",
+  "result_ref": {
+    "path": ".deckmaster/objects/23/23a9f65d0ef223401df61474e0041fbdc628b016f807c22ecbf5f75d47ba3b57.json",
+    "sha256": "23a9f65d0ef223401df61474e0041fbdc628b016f807c22ecbf5f75d47ba3b57"
+  },
+  "operation_result": {
+    "status": "confirmed",
+    "revision_id": "bf6c233a0a044c49baca04dfd57e9a91",
+    "recipe_id": "recipe-f7d63fdaa342416db4dde435f59e0388",
+    "recipe_ref": {
+      "path": ".deckmaster/objects/fb/fb8335a2fdeb1aa496827102f750c50d8345f7276ad849cec44998193719095c.json",
+      "sha256": "fb8335a2fdeb1aa496827102f750c50d8345f7276ad849cec44998193719095c"
+    },
+    "model_calls": 0
+  }
+}

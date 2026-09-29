@@ -1,0 +1,10 @@
+{
+  "status": "confirmed",
+  "revision_id": "f7d1510028a5402daaa655433574f148",
+  "recipe_id": "recipe-e7b33327da744309b6b0884e46e3b67b",
+  "recipe_ref": {
+    "path": ".deckmaster/objects/6b/6bf4c13b3618d5ef3446e2b8284d65a2c9d90654a37a28c50148a71e1c03f811.json",
+    "sha256": "6bf4c13b3618d5ef3446e2b8284d65a2c9d90654a37a28c50148a71e1c03f811"
+  },
+  "model_calls": 0
+}

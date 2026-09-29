@@ -1,0 +1,35 @@
+{
+  "sample": "synthetic facts with actual native ImageGen calls; no customer acceptance",
+  "actual_calls": {
+    "baseline": 1,
+    "first_trial": 1,
+    "diagnostic_retry": 1,
+    "explicit_expansion": 1,
+    "total": 4
+  },
+  "correction": {
+    "initial_observation": "Initially suspected a missing 页 in the first candidate; this was a visual misreading.",
+    "correction": "Native Vision OCR read the complete 第一页试作保留当前稿 in both candidates; do not attribute the initial suspicion to the model.",
+    "decision": "Adopted first candidate using the generic recipe; retained second candidate as an unadopted diagnostic call.",
+    "additional_call_cause": "observer visual misreading, not established model text omission"
+  },
+  "first_trial": {
+    "facts": "All structured title/subtitle/heading and three bullet strings preserved; OCR plus visual assessment.",
+    "selected_style": "Blue replaced by green; visible title/body hierarchy.",
+    "unselected_dimensions": "Iconography changed; card order follows structured target source, which differed from original raster order.",
+    "decision": "adopted for this engineering demonstration"
+  },
+  "expansion": {
+    "facts": "Title, subtitle, 本次扩展 1 页 and all three bullets preserved.",
+    "selected_style": "Green accent and light green cards achieved.",
+    "unselected_dimensions": "Unsatisfactory composition drift: title centered, section heading moved left, numbered circles removed, arrows introduced and bottom wave removed.",
+    "decision": "candidate retained, not adopted"
+  },
+  "checks": {
+    "reference_entry_unchanged": true,
+    "expansion_current_original_unchanged": true,
+    "first_adopted_entry_unchanged_by_expansion": true,
+    "all_content_refs_unchanged": true,
+    "all_four_native_request_comparisons_match": true
+  }
+}

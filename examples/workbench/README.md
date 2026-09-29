@@ -167,3 +167,7 @@ model. Obtain candidate IDs from actual task returns or candidates list/show.
 Core fault and renderer cases are in `tests/rebuild/test_candidates.py`.
 These synthetic tests do not close W07-AC07's real fixed-reference/Host/browser
 acceptance; the W07 execution report records that separately.
+
+### W08 风格校准浏览器
+
+`w08_browser.py --out <new-dir>` 验证简单/高级要求、单页试作、比较采用、明确扩展和画廊/单页入口；`w08_browser_edges.py --out <new-dir>` 验证原文选段、逐项冲突、未知确认恢复及并发目标变动。两者只用显式合成 Host，实际模型调用为 0；真实图像评价见 W08-UI 报告。

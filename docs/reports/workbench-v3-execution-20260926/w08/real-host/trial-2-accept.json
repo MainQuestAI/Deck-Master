@@ -1,0 +1,59 @@
+{
+  "status": "candidate_ready",
+  "project_id": "synthetic-project",
+  "revision_id": "174929c81eb748ce87652bdcfbbfcdd9",
+  "requested_action": "task accept",
+  "result_refs": [
+    {
+      "path": ".deckmaster/objects/62/62491f3125a790c14913717479258e3d1fadeab09ebfed6da2bc2fa7f11e34d7.json",
+      "sha256": "62491f3125a790c14913717479258e3d1fadeab09ebfed6da2bc2fa7f11e34d7"
+    },
+    {
+      "path": ".deckmaster/objects/b0/b05445cad0eec3914356311a6fda179830841c7f842a3dfea96384dcae7e8c33.json",
+      "sha256": "b05445cad0eec3914356311a6fda179830841c7f842a3dfea96384dcae7e8c33"
+    }
+  ],
+  "findings": [],
+  "next_action": "compare_candidates",
+  "input_alignment": "current",
+  "review_url": null,
+  "view_status": "view_arrives_with_workbench",
+  "evidence_level": "engineering",
+  "current_revision_id": "174929c81eb748ce87652bdcfbbfcdd9",
+  "candidate_ids": [
+    "candidate-f83aada6accb471fac8789f56c650bf3"
+  ],
+  "candidate_refs": [
+    {
+      "path": ".deckmaster/objects/b0/b05445cad0eec3914356311a6fda179830841c7f842a3dfea96384dcae7e8c33.json",
+      "sha256": "b05445cad0eec3914356311a6fda179830841c7f842a3dfea96384dcae7e8c33"
+    }
+  ],
+  "current_artifacts_changed": false,
+  "operation_result": {
+    "status": "candidate_ready",
+    "revision_id": "174929c81eb748ce87652bdcfbbfcdd9",
+    "candidate_ids": [
+      "candidate-f83aada6accb471fac8789f56c650bf3"
+    ],
+    "candidate_refs": [
+      {
+        "path": ".deckmaster/objects/b0/b05445cad0eec3914356311a6fda179830841c7f842a3dfea96384dcae7e8c33.json",
+        "sha256": "b05445cad0eec3914356311a6fda179830841c7f842a3dfea96384dcae7e8c33"
+      }
+    ],
+    "result_refs": [
+      {
+        "path": ".deckmaster/objects/62/62491f3125a790c14913717479258e3d1fadeab09ebfed6da2bc2fa7f11e34d7.json",
+        "sha256": "62491f3125a790c14913717479258e3d1fadeab09ebfed6da2bc2fa7f11e34d7"
+      },
+      {
+        "path": ".deckmaster/objects/b0/b05445cad0eec3914356311a6fda179830841c7f842a3dfea96384dcae7e8c33.json",
+        "sha256": "b05445cad0eec3914356311a6fda179830841c7f842a3dfea96384dcae7e8c33"
+      }
+    ],
+    "next_action": "compare_candidates",
+    "current_artifacts_changed": false
+  },
+  "evidence_note": "Portable acceptance receipt excerpt; pending Host instructions remain in the original isolated project."
+}

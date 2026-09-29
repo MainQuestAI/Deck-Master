@@ -1,0 +1,139 @@
+{
+  "files": [
+    {
+      "name": "adopt-first.json",
+      "sha256": "f0f3807713c491a9208ad2d533b6a14285e0495f64b91f48b37f8dade59042d7",
+      "bytes": 2102
+    },
+    {
+      "name": "baseline-accept.json",
+      "sha256": "dce3ced04bcc6e5811027cb777bfa7a524945e8b96cebf1a43a86238ffc441cd",
+      "bytes": 1261
+    },
+    {
+      "name": "baseline-frozen-input.json",
+      "sha256": "7b6b76067b3d31df8bfbd56546f76efec5af664f58f625df4647c34f17446b37",
+      "bytes": 5365
+    },
+    {
+      "name": "baseline-image-checks.json",
+      "sha256": "2fc380627a0970792dd1b8ae4024fc58be910b944d7800add20f501d47009ffb",
+      "bytes": 213
+    },
+    {
+      "name": "baseline-native-output.png",
+      "sha256": "201095652bef89c79185112ee80e67467777ddadc5b9a89e3e14e5fc5b0b12eb",
+      "bytes": 973737
+    },
+    {
+      "name": "expansion-accept.json",
+      "sha256": "ba603ee2fc50c640a65ba64339e64be417c4042c8a5a2604404de0335d0de608",
+      "bytes": 2299
+    },
+    {
+      "name": "expansion-frozen-input.json",
+      "sha256": "2fa5bc3c937e8a6379a16147bfbefa5f15921152be1ee6c8bfde714168cf8687",
+      "bytes": 6752
+    },
+    {
+      "name": "expansion-image-checks.json",
+      "sha256": "67cacda01ed52f4206bfe0dc5d5c485f45a4e8ce626603235809a7c9024833f4",
+      "bytes": 213
+    },
+    {
+      "name": "expansion-native-output.png",
+      "sha256": "ac740acfda6da689b26c116e80423c001dee6473c3d151ba11df9a896674e30d",
+      "bytes": 878702
+    },
+    {
+      "name": "expansion-target-original.png",
+      "sha256": "201095652bef89c79185112ee80e67467777ddadc5b9a89e3e14e5fc5b0b12eb",
+      "bytes": 973737
+    },
+    {
+      "name": "first-target-original.png",
+      "sha256": "441513b8caecc1c98e8ed027360ca5cda2a32500995b3708d02c8b1fd96cc31b",
+      "bytes": 960295
+    },
+    {
+      "name": "ocr-results.json",
+      "sha256": "de8ce5e597f848ad29e13fbfdfd6fce608f25ee040e0099e5a4685d70bb5ebfc",
+      "bytes": 1140
+    },
+    {
+      "name": "recipe-2.json",
+      "sha256": "42c50a365b8d3cd68efb15bc93ef12d4ae2b31f6aba31ab3b12de0e99811253b",
+      "bytes": 371
+    },
+    {
+      "name": "recipe.json",
+      "sha256": "7b29d206ab0a883d3ba795fbbfdadfd718eaab56144b7d7a66d885255940b9c8",
+      "bytes": 371
+    },
+    {
+      "name": "reference-original.png",
+      "sha256": "cf18717a0bfe6197a3489fd48a5fab9839b9ebecc395766af2c33a6fd28c8326",
+      "bytes": 961071
+    },
+    {
+      "name": "style-confirm.json",
+      "sha256": "981cc07e98b173bd806faf66d38e1fd0fe2c17426d00ce33f0e1747b4920e879",
+      "bytes": 922
+    },
+    {
+      "name": "style-input.json",
+      "sha256": "69c1e1e5e7ce5abfc906dfc73cc479992b5807aabc9bdb10919068a15c52582d",
+      "bytes": 1061
+    },
+    {
+      "name": "style-proposal.json",
+      "sha256": "4ecb10872b9612db4686143c0d752eba458d67940b023aa5d7fb5017fb5156b5",
+      "bytes": 34575
+    },
+    {
+      "name": "trial-2-accept.json",
+      "sha256": "31a1c979f8705c691aa656ec880c3432705d2ad5f5d8e0707580812651381894",
+      "bytes": 2299
+    },
+    {
+      "name": "trial-2-frozen-input.json",
+      "sha256": "68e0f16a141503e0e5df568ef381c0121d966ab14ca612ad01b65e76b7b4f9f4",
+      "bytes": 6811
+    },
+    {
+      "name": "trial-2-image-checks.json",
+      "sha256": "f875cb84d51c007ea47f49901f8e4c649cf9c66d1eed4aa753aa9c6bc8510138",
+      "bytes": 213
+    },
+    {
+      "name": "trial-2-native-output.png",
+      "sha256": "2117563e814d5cb5ed675828930d81d239836644a3e6537309b9a0973aa03801",
+      "bytes": 907278
+    },
+    {
+      "name": "trial-accept.json",
+      "sha256": "5e5a8170723b57653c6d1ca42b2043f8b00edf6e69aa2cb3ec5622cc1be6910b",
+      "bytes": 2299
+    },
+    {
+      "name": "trial-frozen-input.json",
+      "sha256": "ada592bda09569406f4e59950245f661a1b5daad0ee3ae697199aa3924e0295b",
+      "bytes": 6651
+    },
+    {
+      "name": "trial-image-checks.json",
+      "sha256": "20490309fe9b6399b4d7fa6caa1b514914b42392b0cd1dcbccf3ad8bf373741b",
+      "bytes": 213
+    },
+    {
+      "name": "trial-native-output.png",
+      "sha256": "63a6255f8d4999e6e6ca44099511eb8e8faba1769a21e388cd611fe515c5def6",
+      "bytes": 1098104
+    },
+    {
+      "name": "visual-review.json",
+      "sha256": "1c12e8a24ce53a7cf994ce4bd834d8749b919b5139512d8911fd553ac6b715e8",
+      "bytes": 1841
+    }
+  ]
+}

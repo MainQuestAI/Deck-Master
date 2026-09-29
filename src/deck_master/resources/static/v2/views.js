@@ -125,7 +125,4 @@ export function runs(app, data) {
     el('p', {class: 'muted'}, '可在原有工作区查看已有导出流程。'), el('a', {href: '/'}, '打开原有工作区')));
   return node;
 }
-export function style(app) {
-  return el('div', {}, heading('风格校准', '先阅读固定版本的原图，明确希望保留或调整的部分。'),
-    empty('先记录你的风格判断', '个人草稿可保存参考方向。当前工作面尚未接入跨页试作与候选采用。', button('查看整稿原图', () => app.go({surface: 'gallery'}))), draft(app));
-}
+export {style} from './style-calibration.js';

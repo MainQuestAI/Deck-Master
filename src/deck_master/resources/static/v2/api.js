@@ -39,6 +39,8 @@ export function readableError(error) {
     stage_prerequisite_missing: '整稿制作前还需要当前原图、SVG 与对应预览。请先继续本页制作。',
     stage_quality_blocked: '当前逐页审图尚未全部通过。请先完成审阅，已查看和候选采用都不代表通过。',
     stage_format_required: '这个阶段需要新版工作台项目；旧项目不会原地迁移。',
+    style_conflict: '风格要求或目标页基准已变化，未覆盖任何新内容；请核对逐项冲突后另建计划。',
+    style_invalid: '本次风格要求或扩展条件不满足，请检查所选版本、目标与已采用候选。',
     candidate_not_found: '所选版本没有这个候选，未跳转到其它候选。',
     port_conflict: '端口已被占用，未关闭其它服务。请使用自动端口重新打开。',
   };

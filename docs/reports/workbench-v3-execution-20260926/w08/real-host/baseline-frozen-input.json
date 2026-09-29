@@ -1,0 +1,71 @@
+{
+  "basis": {
+    "produced_against": "2fa4cfcaa03814bfe2bf5bba43e71a23a4e4cf5d25fa49cbf96d962d6072c4ec",
+    "project_id": "synthetic-project",
+    "revision_id": "ec30f8dfd59f450ebe5e41a923c23053"
+  },
+  "constraints": {},
+  "design_context": {
+    "allowed_asset_ids": [],
+    "assets": [],
+    "canvas": {
+      "fit": "contain",
+      "height_px": 900,
+      "slide_height_in": 7.5,
+      "slide_width_in": 13.333333333333334,
+      "width_px": 1600
+    },
+    "default_style_id": "default",
+    "fonts": [
+      {
+        "asset_id": null,
+        "face": "Regular",
+        "fallback_font_ids": [],
+        "family": "Noto Sans CJK SC",
+        "font_id": "body",
+        "weight": 400
+      },
+      {
+        "asset_id": null,
+        "face": "Bold",
+        "fallback_font_ids": [],
+        "family": "Noto Sans CJK SC",
+        "font_id": "heading",
+        "weight": 700
+      }
+    ],
+    "language": "zh-CN",
+    "styles": [
+      {
+        "colors": {
+          "accent": "#1478FF",
+          "background": "#FFFFFF",
+          "text": "#14213D"
+        },
+        "layout_notes": "默认样式在 create 时固化；字体名称是配置需求，不是本机安装证明。",
+        "style_id": "default",
+        "typography": {
+          "auxiliary_size_pt": 12,
+          "body_font_id": "body",
+          "body_size_pt": 18,
+          "heading_font_id": "heading",
+          "heading_size_pt": 30
+        }
+      }
+    ]
+  },
+  "page": {
+    "page_id": "explicit-expansion",
+    "page_ref": {
+      "path": ".deckmaster/objects/63/63d5ac98f3672563bf7e8e5da19e3c63f57e058928dcb9bdace9ffc2a0227a6a.json",
+      "sha256": "63d5ac98f3672563bf7e8e5da19e3c63f57e058928dcb9bdace9ffc2a0227a6a"
+    }
+  },
+  "parameters": {
+    "transparent_background": false
+  },
+  "prompt": "Create the explicit third synthetic page baseline using its unchanged target content and blue project style.\n\nUse case: productivity-visual\nAsset type: editable-presentation blueprint reference, one complete slide\nCanvas: 1600x900 px; physical size 13.333333333333334x7.5 in; contain fit\nPrimary request: Create a polished business slide blueprint from the exact structured input below. Preserve every visible fact, number, unit, label, footnote, node and directed relationship.\nStyle/medium: precise enterprise presentation design; clear hierarchy; production-ready reference image\nComposition/framing: use the supplied canvas, layout intent and node relationships; keep all content inside safe margins\nText: render the supplied customer-visible text verbatim and legibly\nConstraints: do not add claims or invent numeric values, dates, customer data, or outcomes. If a chart needs data absent from the input, use an unlabeled schematic marked 示意数据, without plausible-looking values. Do not omit modules; connect arrows to their actual nodes; use only permitted assets; no watermark; no internal notes\nStructured input:\n{\n  \"canvas\": {\n    \"fit\": \"contain\",\n    \"height_px\": 900,\n    \"slide_height_in\": 7.5,\n    \"slide_width_in\": 13.333333333333334,\n    \"width_px\": 1600\n  },\n  \"customer_visible\": {\n    \"body_blocks\": [\n      {\n        \"heading\": \"本次扩展 1 页\",\n        \"id\": \"scope\",\n        \"items\": [\n          {\n            \"id\": \"facts\",\n            \"text\": \"先核对标题与数字\"\n          },\n          {\n            \"id\": \"selected\",\n            \"text\": \"只扩到明确选择的页面\"\n          },\n          {\n            \"id\": \"unchanged\",\n            \"text\": \"未选择页面保持原有结果\"\n          }\n        ],\n        \"type\": \"bullets\"\n      }\n    ],\n    \"callouts\": [],\n    \"footnotes\": [],\n    \"labels\": [],\n    \"subtitle\": \"合成验证样例\",\n    \"title\": \"确认一页，再扩到指定页\"\n  },\n  \"fonts\": [\n    {\n      \"asset_id\": null,\n      \"face\": \"Regular\",\n      \"fallback_font_ids\": [],\n      \"family\": \"Noto Sans CJK SC\",\n      \"font_id\": \"body\",\n      \"weight\": 400\n    },\n    {\n      \"asset_id\": null,\n      \"face\": \"Bold\",\n      \"fallback_font_ids\": [],\n      \"family\": \"Noto Sans CJK SC\",\n      \"font_id\": \"heading\",\n      \"weight\": 700\n    }\n  ],\n  \"language\": \"zh-CN\",\n  \"page_id\": \"explicit-expansion\",\n  \"permitted_assets\": [],\n  \"style\": {\n    \"colors\": {\n      \"accent\": \"#1478FF\",\n      \"background\": \"#FFFFFF\",\n      \"text\": \"#14213D\"\n    },\n    \"layout_notes\": \"默认样式在 create 时固化；字体名称是配置需求，不是本机安装证明。\",\n    \"style_id\": \"default\",\n    \"typography\": {\n      \"auxiliary_size_pt\": 12,\n      \"body_font_id\": \"body\",\n      \"body_size_pt\": 18,\n      \"heading_font_id\": \"heading\",\n      \"heading_size_pt\": 30\n    }\n  },\n  \"visual_spec\": {\n    \"edges\": [],\n    \"intent\": \"Clean business slide with three clear steps. Blue accent from the project style. Synthetic verification only.\",\n    \"layout_hint\": \"One title and subtitle at top; three equal horizontal panels with one bullet in each; heading above panels.\",\n    \"nodes\": [],\n    \"reference_mode\": \"new_design\",\n    \"style_ref\": \"default\"\n  }\n}",
+  "references": [],
+  "schema_version": "generation_input.v1",
+  "template_ref": null
+}

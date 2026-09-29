@@ -1,0 +1,2 @@
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q tests/rebuild/test_styles.py tests/rebuild/test_changes.py tests/rebuild/test_candidates.py tests/rebuild/test_workbench_operations.py tests/rebuild/test_package_boundary.py
+62 passed in 9.76s

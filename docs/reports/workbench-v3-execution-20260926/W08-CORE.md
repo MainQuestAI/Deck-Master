@@ -1,6 +1,6 @@
 # W08 固定风格配方与试作核心
 
-基线 `c17ba512db3efb4196b0e88dcab2d604eb23b053`。实现提交 `1bccae4e68156f3e71556253f33f69a5536de8e8`，[PR #58](https://github.com/MainQuestAI/Deck-Master/pull/58) 待 CI/合并。本切片新增共享契约、服务、CLI/HTTP 与 Host 指引；前端尚未接入，真实风格效果及用户验收未进行。
+基线 `c17ba512db3efb4196b0e88dcab2d604eb23b053`。实现提交 `1bccae4e68156f3e71556253f33f69a5536de8e8`，[PR #58](https://github.com/MainQuestAI/Deck-Master/pull/58) 已合入 main：`38d0b446592e8558b9126cfa85a484d2bddf557b`，最终 head `5a164c71e475d1172291f0cf157c649d371d5b3c` 的 8 项 CI 通过。本切片新增共享契约、服务、CLI/HTTP 与 Host 指引；核心交付时尚未接入前端；后续浏览器和真实风格评价见 [W08-UI](W08-UI.md)，用户验收未代签。
 
 ## 实现
 

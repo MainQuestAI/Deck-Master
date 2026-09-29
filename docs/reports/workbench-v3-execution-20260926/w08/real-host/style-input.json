@@ -1,0 +1,23 @@
+{
+  "schema_version": "style_input.v1",
+  "project_id": "synthetic-project",
+  "base_revision": "7e857a6a703648e09257e5df26377d33",
+  "reference": {
+    "page_id": "traceable-generation",
+    "revision_id": "7e857a6a703648e09257e5df26377d33",
+    "artifact_ref": {
+      "path": ".deckmaster/objects/96/9675a0ca6976df44cb9dd0425a8cbb9a9cf76aab2a5e5b2542eff48c91f7395d.json",
+      "sha256": "9675a0ca6976df44cb9dd0425a8cbb9a9cf76aab2a5e5b2542eff48c91f7395d"
+    },
+    "role": "reference"
+  },
+  "target_page_ids": [
+    "independent-page",
+    "explicit-expansion"
+  ],
+  "instruction": "只借用参考页绿色配色与清楚的文字层级，保留目标页全部标题、事实、数字和三栏内容。绿色配色替代目标原有蓝色；不复制参考页正文和图标。",
+  "dimensions": {
+    "palette": "采用参考原图的绿色强调色与浅绿卡片底色，替代原蓝色，保留白底与深色文字。",
+    "typography": "主标题最强，分组标题次之，卡片正文清楚；不改变目标页文本，不借构图。"
+  }
+}
