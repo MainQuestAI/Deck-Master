@@ -1,0 +1,13 @@
+{
+  "synthetic": true,
+  "actual_model_calls": 0,
+  "checks": [
+    "metadata_uses_real_input_transaction",
+    "replace_preserves_page_entries_pending_host",
+    "old_goal_reads_exact_old_material_version",
+    "source_removal_preserves_history_and_pages",
+    "removed_source_historical_locator_still_readable",
+    "no_browser_errors"
+  ],
+  "errors": []
+}

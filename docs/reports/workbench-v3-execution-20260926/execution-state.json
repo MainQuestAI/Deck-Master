@@ -1,6 +1,6 @@
 {
   "baseline": "d1c7c4600cb0fc781070116ed8cc8a1ff6b8b7ca",
-  "branch": "codex/workbench-w09-core",
+  "branch": "codex/workbench-w09-ui",
   "active_package": "W09",
   "sequence": [
     "W01.core",
@@ -177,11 +177,23 @@
       "frontend_merge_commit": "590e408c36409d435c81291ffea17686419e6fdf"
     },
     "W09": {
-      "status": "core_verified_pending_merge",
+      "status": "ui_verified_pending_merge",
       "accepted": false,
       "baseline": "590e408c36409d435c81291ffea17686419e6fdf",
       "plan": "W09-PLAN.md",
-      "core_evidence": "W09-CORE.md"
+      "core_evidence": "W09-CORE.md",
+      "core_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/60",
+      "core_head": "44bdf47db936bf99bd6f4efad24a3823cc1f2b0f",
+      "core_merge_commit": "fa3f9238904c753d294e04588ab4d936c426e25e",
+      "contract_fix_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/61",
+      "contract_fix_head": "3f9986c1a74c8df3b7ac7f7905d5b97ff076a642",
+      "contract_fix_merge_commit": "bab4c3e5a7434b979442fda0c081b828d10b9021",
+      "frontend_baseline": "bab4c3e5a7434b979442fda0c081b828d10b9021",
+      "frontend_evidence": "W09-UI.md",
+      "residuals": [
+        "W12 isolated installed acceptance",
+        "User acceptance not measured"
+      ]
     },
     "W10": {
       "status": "slices_merged",
@@ -836,66 +848,101 @@
     },
     "W09-AC01": {
       "owner": "W09",
-      "status": "partial",
+      "status": "engineering_and_real_host_verified",
       "evidence": [
         "W09-CORE.md",
+        "W09-UI.md",
+        "w09/ui/browser-checks.json",
+        "w09/ui/edge-checks.json",
+        "w09/ui/source-checks.json",
         "w09/real-host/ref-matrix.json"
       ],
-      "accepted": false
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; synthetic browser Host separate from actual Codex Host reading synthetic materials"
     },
     "W09-AC02": {
       "owner": "W09",
-      "status": "partial",
+      "status": "engineering_and_real_host_verified",
       "evidence": [
         "W09-CORE.md",
+        "W09-UI.md",
+        "w09/ui/browser-checks.json",
+        "w09/ui/edge-checks.json",
+        "w09/ui/source-checks.json",
         "w09/real-host/ref-matrix.json"
       ],
-      "accepted": false
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; synthetic browser Host separate from actual Codex Host reading synthetic materials"
     },
     "W09-AC03": {
       "owner": "W09",
-      "status": "partial",
+      "status": "engineering_and_real_host_verified",
       "evidence": [
         "W09-CORE.md",
+        "W09-UI.md",
+        "w09/ui/browser-checks.json",
+        "w09/ui/edge-checks.json",
+        "w09/ui/source-checks.json",
         "w09/real-host/ref-matrix.json"
       ],
-      "accepted": false
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; synthetic browser Host separate from actual Codex Host reading synthetic materials"
     },
     "W09-AC04": {
       "owner": "W09",
-      "status": "partial",
+      "status": "engineering_and_real_host_verified",
       "evidence": [
         "W09-CORE.md",
+        "W09-UI.md",
+        "w09/ui/browser-checks.json",
+        "w09/ui/edge-checks.json",
+        "w09/ui/source-checks.json",
         "w09/real-host/ref-matrix.json"
       ],
-      "accepted": false
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; synthetic browser Host separate from actual Codex Host reading synthetic materials"
     },
     "W09-AC05": {
       "owner": "W09",
-      "status": "partial",
+      "status": "engineering_and_real_host_verified",
       "evidence": [
         "W09-CORE.md",
+        "W09-UI.md",
+        "w09/ui/browser-checks.json",
+        "w09/ui/edge-checks.json",
+        "w09/ui/source-checks.json",
         "w09/real-host/ref-matrix.json"
       ],
-      "accepted": false
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; synthetic browser Host separate from actual Codex Host reading synthetic materials"
     },
     "W09-AC06": {
       "owner": "W09",
-      "status": "partial",
+      "status": "engineering_and_real_host_verified",
       "evidence": [
         "W09-CORE.md",
+        "W09-UI.md",
+        "w09/ui/browser-checks.json",
+        "w09/ui/edge-checks.json",
+        "w09/ui/source-checks.json",
         "w09/real-host/ref-matrix.json"
       ],
-      "accepted": false
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; synthetic browser Host separate from actual Codex Host reading synthetic materials"
     },
     "W09-AC07": {
       "owner": "W09",
-      "status": "partial",
+      "status": "engineering_and_real_host_verified",
       "evidence": [
         "W09-CORE.md",
+        "W09-UI.md",
+        "w09/ui/browser-checks.json",
+        "w09/ui/edge-checks.json",
+        "w09/ui/source-checks.json",
         "w09/real-host/ref-matrix.json"
       ],
-      "accepted": false
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; synthetic browser Host separate from actual Codex Host reading synthetic materials"
     },
     "W10-AC01": {
       "owner": "W10",

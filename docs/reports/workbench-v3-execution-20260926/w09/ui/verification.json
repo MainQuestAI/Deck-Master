@@ -1,0 +1,23 @@
+{
+  "targeted_pytest": {
+    "passed": 68,
+    "seconds": 12.97
+  },
+  "browser": {
+    "main": 15,
+    "edges": 14,
+    "sources": 6
+  },
+  "regressions": {
+    "W08": 14,
+    "W06": 14
+  },
+  "actual_model_calls_in_browser": 0,
+  "wheel": {
+    "name": "deck_master-1.0.0.dev2-py3-none-any.whl",
+    "sha256": "029d434012ba1bae9c9a4a5ff0bd1ac1d67bf0ccf93e2bda916fa7f0552080bb",
+    "v2_assets_byte_identical": 32,
+    "isolated_build": true,
+    "installed_runtime": "W12 not yet evaluated"
+  }
+}

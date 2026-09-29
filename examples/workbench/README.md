@@ -175,3 +175,7 @@ acceptance; the W07 execution report records that separately.
 ### W09 内容与来源核心
 
 `w09_content_inputs.py --out <new-dir>` 通过公开 CLI 验证材料替换、局部更新、来源读取、重排与移除。该脚本使用明确的合成 Host 结果，模型调用为 0；实际 Codex Host 阅读和影响判断证据见 W09-CORE。
+
+### W09 内容编辑浏览器
+
+`w09_browser.py` 验证正文、页序、输入与保存恢复；`w09_browser_edges.py` 验证模拟 Host 的合并/拆分/改写、来源与冲突；`w09_source_browser.py` 验证材料用途、替换、移除及历史版本定位。均使用 `--out <new-dir>`，真实本地服务 + Chromium，显式合成材料/Host，模型调用为 0。真实 Host 材料判断另见 W09-CORE。

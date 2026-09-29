@@ -1,19 +1,12 @@
 import {runDesk} from './run-desk.js';
 import {candidateBatch} from './candidate-desk.js';
-import {get, post, readableError} from './api.js';
-import {el, button, heading, empty, field, version, modal, toast} from './dom.js';
+import {el, button, heading, empty, version} from './dom.js';
 import {layers} from './routes.js';
-import {DraftEditor} from './drafts.js';
 import {stageKey, stageLabel} from './gallery.js';
 import {changeHandoffs} from './change-handoff.js';
 
 const pageTitle = (page, index) => `第 ${index + 1} 页 · ${page.title || '未命名页面'}`;
 const panel = (title, ...children) => el('section', {class: 'panel'}, el('div', {class: 'panel-head'}, el('h2', {}, title)), el('div', {class: 'panel-body stack'}, children));
-function draft(app, target = {scope: 'project', page_id: null, layer: 'notes'}, ref = null) {
-  const info = {...app.info, page_label: target.page_id ? `第 ${app.summary.pages.findIndex(page => page.page_id === target.page_id) + 1} 页` : null};
-  app.editor = new DraftEditor(info, target, app.route.revision, ref, {readonly: app.readonly});
-  return app.editor.mount();
-}
 export function overview(app) {
   const pages = app.summary.pages;
   const count = pages.filter(page => page.stages.blueprint.existence === 'recorded').length;
@@ -47,59 +40,7 @@ export function overview(app) {
   node.append(el('div', {class: 'matrix-wrap'}, table), el('p', {class: 'matrix-caption'}, '方向键在表格中移动，Enter 打开对应页与层。原图保留完整画布。'));
   return node;
 }
-export function content(app, data) {
-  const inputs = data.inputs;
-  const node = el('div', {}, heading('内容与来源', '确认用途、受众和材料，再把内容整理交给制作工具。',
-    !app.readonly && button('整理内容并生成大纲', () => app.handoff(), true)));
-  if (inputs) {
-    node.append(panel('项目要求', el('dl', {class: 'facts'}, el('dt', {}, '用途'), el('dd', {}, inputs.task.brief),
-      el('dt', {}, '受众'), el('dd', {}, inputs.task.audience || '未填写'),
-      el('dt', {}, '页数目标'), el('dd', {}, inputs.task.page_limit || '未指定'))));
-    const sources = el('ul', {class: 'source-list'});
-    for (const source of inputs.sources) sources.append(el('li', {}, el('strong', {}, source.name || source.original_name || source.source_id || '材料'),
-      el('span', {class: 'muted'}, source.extract ? ' · 已有提取内容，仍需制作工具阅读' : ' · 已登记，待读取')));
-    node.append(panel('材料', sources.children.length ? sources : el('p', {class: 'muted'}, '材料暂为空。当前不能判断内容是否足够，请补充材料或在制作工具中明确要求。'),
-      !app.readonly && button('补充本机材料', () => addMaterial(app, inputs))));
-  } else node.append(el('p', {class: 'notice'}, '此处按固定版本阅读内容计划。当前任务要求可能已经改变，未混入这个版本。'));
-  const plan = data.plan;
-  if (plan?.status === 'recorded' || plan?.goals?.length) {
-    const goals = el('ol', {class: 'goal-list'});
-    for (const goal of plan.goals || []) {
-      const page = app.summary.pages.find(page => page.page_id === goal.page_id);
-      goals.append(el('li', {}, page ? button(page.title || goal.purpose, () => app.go({surface: 'page', page_id: page.page_id, layer: 'content'})) : el('strong', {}, goal.purpose),
-        el('p', {class: 'muted'}, goal.purpose), (goal.unresolved_facts || []).map(fact => el('p', {class: 'muted'}, '待确认：' + fact))));
-    }
-    node.append(panel('内容计划', el('p', {}, plan.input_summary || '按已记录的逐页内容查看。'), goals));
-  } else if (app.summary.pages.length) node.append(panel('逐页稿', app.summary.pages.map((page, index) => button(pageTitle(page, index), () => app.go({surface: 'page', page_id: page.page_id, layer: 'content'})))));
-  else node.append(empty('逐页稿尚未返回', '项目已建立，内容整理尚待交接。复制交接说明后，需要到 Codex 发送。'));
-  node.append(draft(app)); return node;
-}
-function addMaterial(app, inputs) {
-  const paths = field('材料文件完整路径', el('textarea', {required: true, rows: 4, placeholder: '每行一个已有文件的完整路径'}), '路径由本机服务验证。材料登记后，原内容整理任务会失效，由最新任务接续。');
-  const notice = el('p', {class: 'field-error', role: 'status'});
-  let pending;
-  const form = el('form', {class: 'stack'}, paths.node, notice);
-  const submit = button('登记材料', () => form.requestSubmit(), true);
-  const dialog = modal('补充材料', form, [submit]);
-  form.addEventListener('submit', async event => {
-    event.preventDefault(); submit.disabled = true;
-    try { await app.business?.available(); }
-    catch (error) { notice.textContent = readableError(error); submit.disabled = false; return; }
-    pending ||= {base_revision: inputs.revision_id, operation_id: 'input-' + crypto.randomUUID(),
-      patch: {reason: '在工作台补充材料', source_changes: {add: paths.input.value.split('\n').map(v => v.trim()).filter(Boolean).map(path => ({path}))}}};
-    try {
-      await post('/api/inputs/update', pending); dialog.close();
-      const current = await get('/api/view/summary'); app.go({surface: 'content', revision: current.revision_id}); toast('材料已登记，内容整理仍需交接。');
-    } catch (error) {
-      const unknown = !error.status || error.status >= 500;
-      notice.textContent = readableError(error) + (unknown ? ' 保存结果待核实，重试使用原内容与原操作标识。' : ' 本次材料未登记。');
-      submit.textContent = unknown ? '核实原材料登记' : '重新登记';
-      paths.input.readOnly = unknown;
-      if (!unknown) pending = null;
-      submit.disabled = false;
-    }
-  });
-}
+export {content} from './content-sources.js';
 export {pageDetail} from './page-workbench.js';
 const taskNames = {compose: '整理内容', blueprint: '制作原图', svg: '制作 SVG', render: '渲染预览', repair: '局部修改', review: '检查', export: '准备文件'};
 const taskStatus = {awaiting_host: '待交接', running: '已记录处理中', completed: '结果已记录', failed: '执行失败', cancelled: '已取消', superseded: '已由新任务接续', blocked: '需要处理阻碍'};

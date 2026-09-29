@@ -1,0 +1,21 @@
+{
+  "synthetic": true,
+  "actual_model_calls": 0,
+  "checks": [
+    "merge_explicit_scope_and_no_early_body_write",
+    "merge_unselected_page_retained",
+    "derivation_navigates_immutable_readonly_source",
+    "split_explicit_scope_and_no_early_body_write",
+    "split_unselected_page_retained",
+    "rewrite_explicit_scope_and_no_early_body_write",
+    "rewrite_unselected_page_retained",
+    "input_unknown_recovery_survives_refresh",
+    "historical_inputs_cannot_write",
+    "new_input_version_not_shadowed_by_old_draft",
+    "host_unchanged_reason_visible_without_reinventing_it",
+    "source_navigation_exact_version_locator",
+    "stale_plan_refused_and_draft_preserved",
+    "no_browser_errors"
+  ],
+  "errors": []
+}

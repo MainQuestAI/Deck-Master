@@ -139,3 +139,16 @@ textarea{font-size:14px;line-height:1.7}
 .style-calibration details > .stack { padding-top: 16px; }
 .style-calibration .evidence-json { max-height: 320px; overflow: auto; }
 .style-calibration .row > input:not([type=checkbox]) { flex: 1; min-width: 180px; }
+
+/* W09: content editing follows the same solid panels and readable form rhythm. */
+.content-sources textarea,.content-editor textarea{width:100%;min-width:0;resize:vertical}
+.content-order{padding:0;list-style:none;display:grid;gap:8px}
+.content-order-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px;border:1px solid var(--border);border-radius:12px}
+.content-order-row .order-handle{flex:1;min-width:160px;text-align:left;cursor:grab}
+.source-card,.goal-editor{padding:16px;border:1px solid var(--border);border-radius:12px}
+.content-editor{border-top:1px solid var(--border);padding-top:16px}
+.content-editor>summary{font-weight:650;cursor:pointer;margin-bottom:16px}
+.content-operation{padding:16px;border:1px solid var(--border);border-radius:12px;background:var(--surface)}
+.content-operation-note:empty{display:none}
+
+.content-form-fields{border:0;padding:0;margin:0;min-width:0}

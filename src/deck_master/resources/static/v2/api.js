@@ -29,6 +29,8 @@ async function request(path, options) {
 }
 export function readableError(error) {
   const labels = {
+    content_basis_changed: '内容或大纲基准已变化。你的输入仍保留，请比较后重新预览影响。',
+    content_invalid: '本次内容调整不满足范围或来源约束，请核对选页和要求。',
     local_state_conflict: '另一个窗口已保存不同内容。你的草稿仍保留，请比较两稿或另存一份。',
     legacy_run_format: '这是旧运行目录，新工作台不会在原目录迁移。请新建项目并重新选入材料。',
     project_unavailable: '项目目前无法读取，请检查保存位置、权限或版本兼容性。',
