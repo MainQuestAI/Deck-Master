@@ -179,7 +179,8 @@
       "remaining": [
         "Frontend PR CI and merge",
         "User acceptance"
-      ]
+      ],
+      "frontend_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/57"
     },
     "W11": {
       "status": "planned",
