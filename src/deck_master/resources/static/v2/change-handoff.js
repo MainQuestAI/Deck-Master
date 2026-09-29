@@ -1,3 +1,4 @@
+import {openCandidate} from './trial-actions.js';
 import {get, post, readableError} from './api.js';
 import {el, button, modal, version} from './dom.js';
 
@@ -11,7 +12,7 @@ export function changeHandoffs(app) {
   const list = el('div', {class: 'change-list stack'}), detail = el('div', {class: 'handoff-detail stack'});
   const notice = el('p', {role: 'status', class: 'muted'});
   node.append(heading, el('div', {class: 'panel-body stack'}, el('p', {class: 'muted'}, '这里读取当前交接事实；页面与任务的历史阅读版本保持不变。'), notice, list, detail));
-  let disposed = false, busy = false, timer, delay = 3000, active = null, lastSync = null, latest, lastList;
+  let disposed = false, busy = false, timer, delay = 3000, active = null, lastSync = null, latest, lastList, candidateRows = [], candidateRevision = null, candidateSignature = "";
   const copied = new Set();
   try { for (const id of JSON.parse(localStorage.getItem(`deck-master:v3:copied:${app.info.project_identity}`) || '[]')) copied.add(id); } catch { /* Copy hints are not execution facts. */ }
   const cancelUnknown = new Set();
@@ -42,7 +43,8 @@ export function changeHandoffs(app) {
   function renderDetail() {
     if (!latest) return;
     const tasks = latest.handoff.tasks;
-    const title = latest.status === 'awaiting_host' && copied.has(active) ? '已复制、未接手' : labels[latest.status] || '执行状态待核实';
+    const trial = latest.handoff.plan.input.mode === 'trial';
+    const title = trial && latest.status === 'completed' ? '候选已返回 · 待比较' : latest.status === 'awaiting_host' && copied.has(active) ? '已复制、未接手' : labels[latest.status] || '执行状态待核实';
     detail.replaceChildren(el('div', {class: 'stack'}, el('h3', {'data-change-id': active}, title),
       el('p', {class: 'handoff-progress', role: 'status'}, `${latest.completed_count} / ${latest.total_count} 项已返回 · ${version(latest.handoff.base_revision)} 的计划`),
       latest.needs_verification && el('p', {class: 'field-error'}, '已超过等待阈值或调用状态不明。请核实原执行，或确认取消后重新计划；不会自动重试。'),
@@ -52,6 +54,7 @@ export function changeHandoffs(app) {
         if (task.status === 'cancelled') cancelUnknown.delete(task.task_id);
         return el('article', {class: 'handoff-task'},
           el('strong', {}, taskLabels[task.status] || '待核实'), el('p', {class: 'muted'}, `任务 ${task.task_id}`),
+          candidateRows.filter(row => row.candidate.task_id === task.task_id).map(row => button('比较返回候选', () => openCandidate(app, row.candidate, candidateRevision))),
           task.execution_ref && el('p', {class: 'execution-reference'}, `已记录接手：${task.execution_ref}`),
           cancelUnknown.has(task.task_id) && el('p', {class: 'field-error'}, '取消结果待核实，未安排替代任务。'),
           ['queued', 'awaiting_host', 'running'].includes(task.status) && button('取消这项任务', () => cancel(task), false,
@@ -62,7 +65,13 @@ export function changeHandoffs(app) {
   async function refresh() {
     if (busy || disposed) return; busy = true;
     try {
-      const changes = await get('/api/changes'); if (disposed) return;
+      const [changes, candidateResult] = await Promise.all([get('/api/changes'), app.health.ui_capabilities?.includes('candidates.v1') ? get('/api/candidates') : Promise.resolve(null)]); if (disposed) return;
+      let candidatesChanged = false;
+      if (candidateResult) {
+        const signature = JSON.stringify(candidateResult.candidates.map(row => row.ref));
+        candidatesChanged = signature !== candidateSignature; candidateSignature = signature;
+        candidateRows = candidateResult.candidates; candidateRevision = candidateResult.revision_id;
+      }
       const nextList = JSON.stringify([active, changes.changes]);
       if (lastList !== nextList) {
         lastList = nextList;
@@ -82,7 +91,7 @@ export function changeHandoffs(app) {
       if (active) {
         const id = active; const result = await get('/api/changes/' + encodeURIComponent(id) + '/handoff');
         if (disposed || id !== active) return;
-        if (JSON.stringify(latest) !== JSON.stringify(result)) { latest = result; renderDetail(); }
+        if (candidatesChanged || JSON.stringify(latest) !== JSON.stringify(result)) { latest = result; renderDetail(); }
       }
       lastSync = new Date(); notice.textContent = '最后同步：' + lastSync.toLocaleTimeString();
       delay = latest && ['awaiting_host', 'running', 'partial', 'unknown'].includes(latest.status) ? 3000 : 15000;

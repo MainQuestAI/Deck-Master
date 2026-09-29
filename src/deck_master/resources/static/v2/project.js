@@ -85,11 +85,12 @@ export class Project {
   go(patch) {
     const route = {...this.route, ...patch};
     if (patch.surface && patch.surface !== 'runs') route.task_id = null;
+    if (!('candidate_id' in patch) && (patch.surface || patch.page_id || patch.layer)) route.candidate_id = null;
     if (patch.surface && patch.surface !== 'page' && !('page_id' in patch)) route.page_id = null;
     const hash = routeHash(this.info, route);
     if (location.hash === hash) this.loadRoute(route); else location.hash = hash;
   }
-  current() { this.go({revision: this.latest.revision_id, task_id: null}); }
+  current() { this.loadRoute({...this.route, revision: null, task_id: null}); }
   savePosition() {
     const saved = position(this.info, this.route);
     this.positionQueue = this.positionQueue.catch(() => {}).then(async () => {

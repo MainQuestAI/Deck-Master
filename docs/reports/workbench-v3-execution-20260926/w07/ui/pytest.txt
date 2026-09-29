@@ -1,0 +1,2 @@
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src .venv/bin/python -m pytest tests/rebuild/test_candidates.py tests/rebuild/test_web.py tests/rebuild/test_package_boundary.py tests/rebuild/test_ui_journal.py tests/rebuild/test_browser_wire_digest.py -q
+62 passed in 13.23s

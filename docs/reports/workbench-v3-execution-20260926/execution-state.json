@@ -1,6 +1,6 @@
 {
   "baseline": "d1c7c4600cb0fc781070116ed8cc8a1ff6b8b7ca",
-  "branch": "codex/workbench-w07-core",
+  "branch": "codex/workbench-w07-ui",
   "active_package": "W07",
   "sequence": [
     "W01.core",
@@ -128,13 +128,22 @@
       "frontend_merge_commit": "fc800d500462c720963f3f9e60d87ce0f90aa838"
     },
     "W07": {
-      "status": "core_verified",
+      "status": "frontend_engineering_verified_pending_pr",
       "accepted": false,
       "baseline": "fc800d500462c720963f3f9e60d87ce0f90aa838",
       "core_evidence": "W07-CORE.md",
       "core_implementation_commit": "4e22054a13fd81cbc03ca68b4de170a0e1b13681",
       "core_initial_commit": "9ce30b1",
-      "core_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/53"
+      "core_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/53",
+      "core_head": "e1a111a3e7fd5ae6aafc43f40b047b129f4afabe",
+      "core_merge_commit": "8de4317c9843347b8075c937e04af54e43d0cbb9",
+      "frontend_baseline": "8de4317c9843347b8075c937e04af54e43d0cbb9",
+      "frontend_evidence": "W07-UI.md",
+      "real_host_evidence": "w07/real-host/checks.json",
+      "remaining": [
+        "W07-AC07 real auto/trial interleaving and unchanged second page before W08",
+        "User acceptance"
+      ]
     },
     "W08": {
       "status": "planned",

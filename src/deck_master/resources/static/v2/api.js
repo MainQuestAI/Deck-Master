@@ -21,8 +21,9 @@ async function request(path, options) {
   if (!response.ok) {
     const error = payload.error || {};
     if (response.status === 403) token = null;
-    throw new ApiError(typeof error === 'string' ? error : error.message || '本次操作未完成，当前输入仍保留。',
+    const failure = new ApiError(typeof error === 'string' ? error : error.message || '本次操作未完成，当前输入仍保留。',
       error.code || 'request_failed', response.status, error.field);
+    failure.details = typeof error === 'object' ? error : {}; throw failure;
   }
   return payload;
 }
@@ -33,6 +34,12 @@ export function readableError(error) {
     project_unavailable: '项目目前无法读取，请检查保存位置、权限或版本兼容性。',
     revision_not_found: '这个版本不在当前项目的已提交历史中。没有跳转到其它版本。',
     sample_readonly: '这个示例项目只供阅读。请新建自己的项目后编辑。',
+    candidate_basis_changed: '候选的生成依据已变化。本次未采用任何页，选择仍保留；请核对冲突后重新选择并预览。',
+    adoption_target_changed: '当前采用目标或计划已变化。本次未采用任何页，请重新预览采用影响。',
+    stage_prerequisite_missing: '整稿制作前还需要当前原图、SVG 与对应预览。请先继续本页制作。',
+    stage_quality_blocked: '当前逐页审图尚未全部通过。请先完成审阅，已查看和候选采用都不代表通过。',
+    stage_format_required: '这个阶段需要新版工作台项目；旧项目不会原地迁移。',
+    candidate_not_found: '所选版本没有这个候选，未跳转到其它候选。',
     port_conflict: '端口已被占用，未关闭其它服务。请使用自动端口重新打开。',
   };
   return labels[error.code] || error.message || '操作未完成，当前输入仍保留。';

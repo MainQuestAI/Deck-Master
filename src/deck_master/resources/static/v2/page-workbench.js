@@ -8,6 +8,8 @@ import {promptView, generationBasis, preparedRecords} from './request-view.js';
 import {textObject} from './text-selection.js';
 import {diffView} from './text-diff.js';
 import {productionView} from './production-view.js';
+import {trialActions} from './trial-actions.js';
+import {candidateDesk} from './candidate-desk.js';
 import {Annotations} from './annotations.js';
 
 const pageTitle = (page, index) => `第 ${index + 1} 页 · ${page.title || '未命名页面'}`;
@@ -69,6 +71,7 @@ function renderLayer(app, data, layer, title, releases, onBasis) {
   return imageLayer(app, data, layer, title, releases);
 }
 export function pageDetail(app, data) {
+  if (app.route.candidate_id) return candidateDesk(app, data);
   const index = app.summary.pages.findIndex(p => p.page_id === data.page_id);
   const page = app.summary.pages[index], layer = app.route.layer, fixed = data.revision_id;
   const node = el('div', {class: 'page-workbench'}, heading(pageTitle(page, index), `${layers[layer]} · ${version(fixed)} · 固定阅读基准`));
@@ -191,5 +194,5 @@ export function pageDetail(app, data) {
       app.route.zoom = value; history.replaceState(null, '', routeHash(app.info, app.route)); app.savePosition();
     }); toolbar.append(el('label', {}, '阅读缩放 ', zoom));
   }
-  node.append(toolbar, tabs, update, compareControls, layout); return node;
+  node.append(toolbar, tabs, update, compareControls, layout, trialActions(app, data)); return node;
 }

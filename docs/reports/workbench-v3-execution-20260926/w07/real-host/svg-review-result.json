@@ -1,0 +1,182 @@
+{
+  "kind": "review",
+  "reviews": [
+    {
+      "schema_version": "deck_review.v1",
+      "review_id": "w07-real-blueprint_content",
+      "kind": "blueprint_content",
+      "review_stage": "page_visual",
+      "status": "pass",
+      "subjects": [
+        {
+          "path": ".deckmaster/objects/05/057719e3cf908334462481645de4b76ae289914ba2491a0c8243b6c697b55bfe.json",
+          "sha256": "057719e3cf908334462481645de4b76ae289914ba2491a0c8243b6c697b55bfe"
+        },
+        {
+          "path": ".deckmaster/objects/96/9675a0ca6976df44cb9dd0425a8cbb9a9cf76aab2a5e5b2542eff48c91f7395d.json",
+          "sha256": "9675a0ca6976df44cb9dd0425a8cbb9a9cf76aab2a5e5b2542eff48c91f7395d"
+        },
+        {
+          "path": ".deckmaster/objects/1f/1fa1c55e367011e17541433912d2ace296342f881bba9eaf42f0b4596a4a90f2.json",
+          "sha256": "1fa1c55e367011e17541433912d2ace296342f881bba9eaf42f0b4596a4a90f2"
+        },
+        {
+          "path": ".deckmaster/objects/76/764a212ef9b900f9b9f11b3024fc03832fb1d4da914cb9ea75249ef4ae9667d4.json",
+          "sha256": "764a212ef9b900f9b9f11b3024fc03832fb1d4da914cb9ea75249ef4ae9667d4"
+        }
+      ],
+      "dependencies": [
+        {
+          "kind": "content",
+          "identity": "page:traceable-generation",
+          "sha256": "057719e3cf908334462481645de4b76ae289914ba2491a0c8243b6c697b55bfe"
+        },
+        {
+          "kind": "blueprint",
+          "identity": "traceable-generation",
+          "sha256": "cf18717a0bfe6197a3489fd48a5fab9839b9ebecc395766af2c33a6fd28c8326"
+        },
+        {
+          "kind": "artifact",
+          "identity": "svg:traceable-generation",
+          "sha256": "6cecdc17375aaa0a5978a7fdd174b08f510ba666b61f95807bcf6926941d40dd"
+        },
+        {
+          "kind": "style",
+          "identity": "traceable-generation",
+          "sha256": "5fb5e15f8b296b5a14c1817ce4f8b98a0d74b2b8f7ae0d1a095a384a603f11ee"
+        }
+      ],
+      "reviewer": {
+        "type": "host_self",
+        "id": "Codex-current-host",
+        "execution_ref": "codex:01a0dd7c-2fa3-7383-a844-16162a5d61c8:01a0e880-85e6-7803-a4cb-9731a7695d23",
+        "independence_confirmed": false
+      },
+      "observations": [
+        "实际读取 Page 的标题、副标题、段落标题和三个步骤文字，并查看原图与 rsvg-convert 1600×900 预览。六组中文完整一致，无额外事实、数字、单位或结论。原图的锁、放大镜、图片链图标对应冻结、核对、绑定三个步骤；没有作为额外事实写入 Page。"
+      ],
+      "findings": [],
+      "created_at": "2026-09-29T16:19:25.244888+00:00",
+      "replaces": null
+    },
+    {
+      "schema_version": "deck_review.v1",
+      "review_id": "w07-real-blueprint_fidelity",
+      "kind": "blueprint_fidelity",
+      "review_stage": "page_visual",
+      "status": "pass",
+      "subjects": [
+        {
+          "path": ".deckmaster/objects/05/057719e3cf908334462481645de4b76ae289914ba2491a0c8243b6c697b55bfe.json",
+          "sha256": "057719e3cf908334462481645de4b76ae289914ba2491a0c8243b6c697b55bfe"
+        },
+        {
+          "path": ".deckmaster/objects/96/9675a0ca6976df44cb9dd0425a8cbb9a9cf76aab2a5e5b2542eff48c91f7395d.json",
+          "sha256": "9675a0ca6976df44cb9dd0425a8cbb9a9cf76aab2a5e5b2542eff48c91f7395d"
+        },
+        {
+          "path": ".deckmaster/objects/1f/1fa1c55e367011e17541433912d2ace296342f881bba9eaf42f0b4596a4a90f2.json",
+          "sha256": "1fa1c55e367011e17541433912d2ace296342f881bba9eaf42f0b4596a4a90f2"
+        },
+        {
+          "path": ".deckmaster/objects/76/764a212ef9b900f9b9f11b3024fc03832fb1d4da914cb9ea75249ef4ae9667d4.json",
+          "sha256": "764a212ef9b900f9b9f11b3024fc03832fb1d4da914cb9ea75249ef4ae9667d4"
+        }
+      ],
+      "dependencies": [
+        {
+          "kind": "content",
+          "identity": "page:traceable-generation",
+          "sha256": "057719e3cf908334462481645de4b76ae289914ba2491a0c8243b6c697b55bfe"
+        },
+        {
+          "kind": "blueprint",
+          "identity": "traceable-generation",
+          "sha256": "cf18717a0bfe6197a3489fd48a5fab9839b9ebecc395766af2c33a6fd28c8326"
+        },
+        {
+          "kind": "artifact",
+          "identity": "svg:traceable-generation",
+          "sha256": "6cecdc17375aaa0a5978a7fdd174b08f510ba666b61f95807bcf6926941d40dd"
+        },
+        {
+          "kind": "style",
+          "identity": "traceable-generation",
+          "sha256": "5fb5e15f8b296b5a14c1817ce4f8b98a0d74b2b8f7ae0d1a095a384a603f11ee"
+        }
+      ],
+      "reviewer": {
+        "type": "host_self",
+        "id": "Codex-current-host",
+        "execution_ref": "codex:01a0dd7c-2fa3-7383-a844-16162a5d61c8:01a0e880-85e6-7803-a4cb-9731a7695d23",
+        "independence_confirmed": false
+      },
+      "observations": [
+        "实际对照已采用绿色原图与 SVG 预览：三张等宽卡片、从左到右的两个箭头、三种图标语义、标题与步骤映射均保留。SVG 使用平面填色取代原图轻微渐变，锁与链条轮廓经过简化，卡片布局与业务关系不变；这属于为原生编辑作出的视觉简化，非逐像素复刻。"
+      ],
+      "findings": [],
+      "created_at": "2026-09-29T16:19:25.245047+00:00",
+      "replaces": null
+    },
+    {
+      "schema_version": "deck_review.v1",
+      "review_id": "w07-real-readability",
+      "kind": "readability",
+      "review_stage": "page_visual",
+      "status": "pass",
+      "subjects": [
+        {
+          "path": ".deckmaster/objects/05/057719e3cf908334462481645de4b76ae289914ba2491a0c8243b6c697b55bfe.json",
+          "sha256": "057719e3cf908334462481645de4b76ae289914ba2491a0c8243b6c697b55bfe"
+        },
+        {
+          "path": ".deckmaster/objects/96/9675a0ca6976df44cb9dd0425a8cbb9a9cf76aab2a5e5b2542eff48c91f7395d.json",
+          "sha256": "9675a0ca6976df44cb9dd0425a8cbb9a9cf76aab2a5e5b2542eff48c91f7395d"
+        },
+        {
+          "path": ".deckmaster/objects/1f/1fa1c55e367011e17541433912d2ace296342f881bba9eaf42f0b4596a4a90f2.json",
+          "sha256": "1fa1c55e367011e17541433912d2ace296342f881bba9eaf42f0b4596a4a90f2"
+        },
+        {
+          "path": ".deckmaster/objects/76/764a212ef9b900f9b9f11b3024fc03832fb1d4da914cb9ea75249ef4ae9667d4.json",
+          "sha256": "764a212ef9b900f9b9f11b3024fc03832fb1d4da914cb9ea75249ef4ae9667d4"
+        }
+      ],
+      "dependencies": [
+        {
+          "kind": "content",
+          "identity": "page:traceable-generation",
+          "sha256": "057719e3cf908334462481645de4b76ae289914ba2491a0c8243b6c697b55bfe"
+        },
+        {
+          "kind": "blueprint",
+          "identity": "traceable-generation",
+          "sha256": "cf18717a0bfe6197a3489fd48a5fab9839b9ebecc395766af2c33a6fd28c8326"
+        },
+        {
+          "kind": "artifact",
+          "identity": "svg:traceable-generation",
+          "sha256": "6cecdc17375aaa0a5978a7fdd174b08f510ba666b61f95807bcf6926941d40dd"
+        },
+        {
+          "kind": "style",
+          "identity": "traceable-generation",
+          "sha256": "5fb5e15f8b296b5a14c1817ce4f8b98a0d74b2b8f7ae0d1a095a384a603f11ee"
+        }
+      ],
+      "reviewer": {
+        "type": "host_self",
+        "id": "Codex-current-host",
+        "execution_ref": "codex:01a0dd7c-2fa3-7383-a844-16162a5d61c8:01a0e880-85e6-7803-a4cb-9731a7695d23",
+        "independence_confirmed": false
+      },
+      "observations": [
+        "在 1600×900 的实际 SVG PNG 预览中检查：标题、副标题、分组标题和三段步骤文字均清晰、完整，无截字、溢出或互相遮挡；箭头处于相邻卡片之间且方向正确。此记录是本次 Host 自查，不是独立审查或客户验收。"
+      ],
+      "findings": [],
+      "created_at": "2026-09-29T16:19:25.245049+00:00",
+      "replaces": null
+    }
+  ]
+}

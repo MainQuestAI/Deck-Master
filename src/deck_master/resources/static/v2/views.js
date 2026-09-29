@@ -1,3 +1,4 @@
+import {candidateBatch} from './candidate-desk.js';
 import {get, post, readableError} from './api.js';
 import {el, button, heading, empty, field, version, modal, toast} from './dom.js';
 import {layers} from './routes.js';
@@ -108,6 +109,7 @@ export function runs(app, data) {
   if (selected && app.returnTo && !app.returnTo.task_id) node.append(button('返回上次工作面', () => app.go(app.returnTo)));
   if (app.health.ui_capabilities?.includes('changes.v1')) node.append(changeHandoffs(app));
   const tasks = selected ? [selected] : data.tasks;
+  node.append(candidateBatch(app));
   node.append(tasks.length ? el('div', {class: 'task-list stack'}, tasks.map(task => el('article', {class: 'panel task-row'},
     el('div', {}, el('h2', {}, taskNames[task.kind] || '制作任务'), el('p', {class: 'muted'}, `${taskStatus[task.status] || '状态待核实'} · 任务 ${task.task_id}`),
       task.result_refs?.length > 0 && el('p', {class: 'muted'}, `${task.result_refs.length} 项已记录结果；这不代表专业质量通过。`)),

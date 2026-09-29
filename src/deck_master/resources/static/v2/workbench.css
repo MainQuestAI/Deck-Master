@@ -85,3 +85,32 @@ textarea{font-size:14px;line-height:1.7}
 /* W06: saved opinions and durable execution facts share the existing panels. */
 .business-pending{padding:16px 24px;background:#fff8e7;border-bottom:1px solid var(--border)}.pending-operation{padding:12px;border:1px solid var(--border);border-radius:12px;background:white}.annotations-panel h3{font-size:16px}.annotation-tools button[aria-pressed=true]{background:#19201b;color:white}.annotation-tools button{min-height:44px}.annotation-region,.saved-opinion,.handoff-task{padding:12px;border:1px solid var(--border);border-radius:12px;overflow-wrap:anywhere}.annotation-region p,.saved-opinion p{white-space:pre-wrap;font-size:14px}.saved-opinion label{display:flex;gap:10px;align-items:center}.saved-opinion input{width:20px;height:20px}.change-plan-preview:empty{display:none}.change-plan-preview{border-top:1px solid var(--border);padding-top:16px}.page-image-viewport>.pooled-image{position:relative}.annotation-overlay{position:absolute;touch-action:none;overflow:visible}.annotation-mark{position:absolute;pointer-events:none;border:2px solid #187343;color:#fff;background:#187343;font-size:12px;line-height:20px;min-width:22px;text-align:center}.annotation-mark.point{border-radius:50%;transform:translate(-50%,-50%)}.annotation-mark.rect{background:rgba(24,115,67,.09);color:#12562f;text-align:left;min-width:0}.annotation-mark.saved{border-style:dashed}.annotating .page-image-viewport{overscroll-behavior:contain}.change-handoffs{margin-bottom:24px}.handoff-detail textarea{width:100%;font-size:14px}.geometry-fields .range-fields{grid-template-columns:1fr 1fr}.annotation-regions:empty{display:none}@media(max-width:767px){.annotation-tools button[data-mode=point],.annotation-tools button[data-mode=rect],.geometry-fields{display:none}.business-pending{padding:12px 16px}}
 .with-fixed-compare>.page-context{align-items:start}.annotations-panel .field-error[data-success=true]{color:#23533d}.annotations-panel .personal-draft{margin:0}.annotations-panel .personal-draft .panel-head{padding:12px}.annotations-panel .personal-draft .panel-body{padding:12px}.annotations-panel .personal-draft h2{font-size:15px}
+
+/* W07: keep the decision between current and candidate, reference as context. */
+.candidate-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; align-items: start; }
+.candidate-column { padding: 18px; border: 1px solid var(--line, #dfe4df); border-radius: 16px; background: #fff; min-width: 0; }
+.candidate-column h2 { font-size: 17px; margin: 0 0 8px; }
+.candidate-column > .pooled-image { width: 100%; aspect-ratio: 16/9; min-height: 0; background: #f4f6f3; }
+.candidate-reference-row { display: flex; flex-wrap: wrap; gap: 14px; }
+.candidate-reference { width: 220px; padding: 12px; border: 1px solid var(--line, #dfe4df); border-radius: 12px; background: #fff; }
+.candidate-reference h3 { margin: 0 0 8px; font-size: 14px; }
+.candidate-reference > .pooled-image { width: 100%; aspect-ratio: 16/9; }
+.candidate-state { padding: 12px 16px; border-left: 3px solid #148564; background: #eef5ef; }
+.candidate-batch-row { display: grid; grid-template-columns: minmax(150px, 1fr) minmax(160px, 1fr) auto; align-items: center; gap: 12px; border-bottom: 1px solid var(--line, #dfe4df); padding: 12px 0; }
+.candidate-batch-row label { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+.candidate-batch-row input { width: 20px; height: 20px; flex: none; }
+.candidate-batch-row p { margin: 0; }
+.candidate-impact:not(:empty) { padding: 14px; border: 1px solid var(--line, #dfe4df); border-radius: 12px; }
+.candidate-basis pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.candidate-recovery > summary, .trial-form > summary { padding: 16px 20px; cursor: pointer; font-weight: 600; }
+.trial-reference { max-width: 240px; }
+.trial-reference .pooled-image { aspect-ratio: 16/9; }
+.trial-actions { margin-top: 22px; }
+.candidate-desk button, .candidate-batch button, .trial-actions button { min-height: 44px; }
+@media (max-width: 1050px) { .candidate-columns { gap: 10px; } .candidate-column { padding: 12px; } .candidate-batch-row { grid-template-columns: 1fr auto; } .candidate-batch-row p { grid-row: 2; } }
+@media (max-width: 760px) { .candidate-columns { grid-template-columns: 1fr; } }
+.candidate-desk { gap: 18px; }
+.candidate-desk .page-head { margin-bottom: 0; }
+.candidate-state .stack { gap: 8px; }
+.candidate-state p { margin: 0; }
+.candidate-column > p { margin: 4px 0 10px; }

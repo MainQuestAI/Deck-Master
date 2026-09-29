@@ -1,6 +1,6 @@
 # 生成工作台 v3 执行索引
 
-当前活动卡：**W07 核心实施中；W06 核心 PR #51、前端 PR #52 均在各自 8 项 CI 通过后合入 main（最新 `fc800d5…`）**。W06 浏览器主流程 24 项、边界 14 项、相关测试 104 项通过；真实 CLI 接手和取消后晚到结果拒绝有独立记录。W03/W04/W05 的 61 项浏览器回归通过；24 个 UI 文件与 wheel 字节一致。W07 共享核心/schema/CLI/Host 能力先合入，再接前端。
+当前活动卡：**W07 前端工程验证完成，待提交；核心 PR #53 已合入 main（`8de4317…`）**。候选浏览器检查 24 项、既有浏览器回归 52 项、相关 pytest 62 项通过；真实单页参考图→候选→采用→SVG→整稿制作有单独证据。真实 auto/trial 交错和第二页不变尚未补齐，W07-AC07 不关闭。
 
 - [独立 Review：4 P1、3 P2](REVIEW.md)
 - [外部原始复核与取舍](OUTSIDE-REVIEW.md)
@@ -12,7 +12,7 @@
 - [W05 单页证据、制作摘要与精确文本选段核心](W05-CORE.md) / [提示词工作台与固定比较](W05-UI.md)
 - [W06 标注、明确范围的计划、操作恢复与交接核心](W06-CORE.md)
 - [W06 版本绑定意见、可核实保存与持久交接前端](W06-UI.md)
-- [W07 候选与阶段核心](W07-CORE.md) / [执行边界](W07-PLAN.md)
+- [W07 候选与阶段核心](W07-CORE.md) / [比较采用前端与真实 Host](W07-UI.md) / [执行边界](W07-PLAN.md)
 - [修订后的包顺序](../../specs/deck-master-workbench-v3/packages/README.md)
 - [交接原件](handoff/HANDOFF.md) / [26 个输入的原始 manifest](handoff/manifest.json)
 - [当前用户设计快照](design-snapshot/index.html) / [8 文件 SHA256](design-snapshot/sha256-manifest.json)
