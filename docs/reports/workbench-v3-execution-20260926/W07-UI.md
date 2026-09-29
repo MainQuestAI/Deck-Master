@@ -1,6 +1,6 @@
 # W07 候选比较、阶段试作与集合采用前端
 
-核心先行 PR #53 已合入 `8de4317c9843347b8075c937e04af54e43d0cbb9`；前端从该 main 独立实施。前端源提交为 `10164ffaeb1342d2597c560555aa269db7ca8f88`。此交付为工程切片，`accepted=false`，W07-AC07 仍有明确的真实并发验证缺口。
+前端 PR：[ #54](https://github.com/MainQuestAI/Deck-Master/pull/54)。核心先行 PR #53 已合入 `8de4317c9843347b8075c937e04af54e43d0cbb9`；前端从该 main 独立实施。前端源提交为 `10164ffaeb1342d2597c560555aa269db7ca8f88`。此交付为工程切片，`accepted=false`，W07-AC07 仍有明确的真实并发验证缺口。
 
 ## 当前行为
 

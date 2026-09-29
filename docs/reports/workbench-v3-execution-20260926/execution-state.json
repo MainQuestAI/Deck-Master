@@ -128,7 +128,7 @@
       "frontend_merge_commit": "fc800d500462c720963f3f9e60d87ce0f90aa838"
     },
     "W07": {
-      "status": "frontend_engineering_verified_pending_pr",
+      "status": "frontend_pr_open",
       "accepted": false,
       "baseline": "fc800d500462c720963f3f9e60d87ce0f90aa838",
       "core_evidence": "W07-CORE.md",
@@ -144,7 +144,8 @@
         "W07-AC07 real auto/trial interleaving and unchanged second page before W08",
         "User acceptance"
       ],
-      "frontend_source_commit": "10164ffaeb1342d2597c560555aa269db7ca8f88"
+      "frontend_source_commit": "10164ffaeb1342d2597c560555aa269db7ca8f88",
+      "frontend_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/54"
     },
     "W08": {
       "status": "planned",
