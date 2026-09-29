@@ -1,7 +1,7 @@
 {
   "baseline": "d1c7c4600cb0fc781070116ed8cc8a1ff6b8b7ca",
-  "branch": "codex/workbench-w10-ui",
-  "active_package": "W10",
+  "branch": "codex/workbench-w08-core",
+  "active_package": "W08",
   "sequence": [
     "W01.core",
     "W02",
@@ -157,15 +157,26 @@
       "real_interleaving_evidence": "w07/real-host-interleaving/interleaving-checks.json"
     },
     "W08": {
-      "status": "planned",
-      "accepted": false
+      "status": "core_verified_pending_pr",
+      "accepted": false,
+      "baseline": "c17ba512db3efb4196b0e88dcab2d604eb23b053",
+      "plan": "W08-PLAN.md",
+      "core_evidence": "W08-CORE.md",
+      "remaining": [
+        "Core PR CI and merge",
+        "Frontend",
+        "Actual Host style trial and expansion evaluation",
+        "User acceptance"
+      ],
+      "core_implementation_commit": "1bccae4e68156f3e71556253f33f69a5536de8e8",
+      "core_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/58"
     },
     "W09": {
       "status": "planned",
       "accepted": false
     },
     "W10": {
-      "status": "core_merged_ui_verified",
+      "status": "slices_merged",
       "accepted": false,
       "baseline": "d42dda62c53bfeaf177c077f8e46074c8c23bdba",
       "plan": "W10-PLAN.md",
@@ -177,10 +188,11 @@
       "frontend_source_commit": "7036f8e962f33f78a90fcc5b5ea1f506e47d3010",
       "frontend_evidence": "W10-UI.md",
       "remaining": [
-        "Frontend PR CI and merge",
         "User acceptance"
       ],
-      "frontend_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/57"
+      "frontend_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/57",
+      "frontend_head": "d18b872d3ef3b88b93f98ac54712121b5875ffa3",
+      "frontend_merge_commit": "c17ba512db3efb4196b0e88dcab2d604eb23b053"
     },
     "W11": {
       "status": "planned",
@@ -725,33 +737,63 @@
     },
     "W08-AC01": {
       "owner": "W08",
-      "status": "open",
-      "evidence": []
+      "status": "partial_core_verified",
+      "evidence": [
+        "W08-CORE.md",
+        "w08/core/checks.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP; explicitly synthetic protocol events; visual effect unverified"
     },
     "W08-AC02": {
       "owner": "W08",
-      "status": "open",
-      "evidence": []
+      "status": "partial_core_verified",
+      "evidence": [
+        "W08-CORE.md",
+        "w08/core/checks.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP; explicitly synthetic protocol events; visual effect unverified"
     },
     "W08-AC03": {
       "owner": "W08",
-      "status": "open",
-      "evidence": []
+      "status": "partial_core_verified",
+      "evidence": [
+        "W08-CORE.md",
+        "w08/core/checks.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP; explicitly synthetic protocol events; visual effect unverified"
     },
     "W08-AC04": {
       "owner": "W08",
-      "status": "open",
-      "evidence": []
+      "status": "partial_core_verified",
+      "evidence": [
+        "W08-CORE.md",
+        "w08/core/checks.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP; explicitly synthetic protocol events; visual effect unverified"
     },
     "W08-AC05": {
       "owner": "W08",
-      "status": "open",
-      "evidence": []
+      "status": "partial_core_verified",
+      "evidence": [
+        "W08-CORE.md",
+        "w08/core/checks.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP; explicitly synthetic protocol events; visual effect unverified"
     },
     "W08-AC06": {
       "owner": "W08",
-      "status": "open",
-      "evidence": []
+      "status": "partial_core_verified",
+      "evidence": [
+        "W08-CORE.md",
+        "w08/core/checks.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP; explicitly synthetic protocol events; visual effect unverified"
     },
     "W08-AC07": {
       "owner": "W08",

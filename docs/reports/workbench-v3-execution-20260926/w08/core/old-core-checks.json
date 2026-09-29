@@ -1,0 +1,9 @@
+{
+  "old_core": "c17ba512db3efb4196b0e88dcab2d604eb23b053",
+  "command": "continue --json",
+  "exit_code": 4,
+  "stdout": "",
+  "stderr": "{\n \"error\": {\n  \"code\": \"execution_failed\",\n  \"message\": \"current.json: unsupported minimum writer; use the matching core\",\n  \"field\": null,\n  \"next_action\": \"inspect the failure detail\"\n }\n}\n",
+  "pointer_unchanged": true,
+  "actual_home_install": false
+}

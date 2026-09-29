@@ -1,0 +1,425 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "style_proposal.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "style_proposal.v1"
+    },
+    "project_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "base_revision": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "style_input.v1"
+        },
+        "project_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "base_revision": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "reference": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "page_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "revision_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "artifact_ref": {
+              "type": "object",
+              "required": [
+                "path",
+                "sha256"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              }
+            },
+            "role": {
+              "enum": [
+                "reference",
+                "edit_target",
+                "supporting"
+              ]
+            }
+          },
+          "required": [
+            "page_id",
+            "revision_id",
+            "artifact_ref",
+            "role"
+          ]
+        },
+        "target_page_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 300,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "instruction": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "dimensions": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "palette": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000
+            },
+            "typography": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000
+            },
+            "density": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000
+            },
+            "lines": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000
+            },
+            "composition": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000
+            }
+          },
+          "required": []
+        },
+        "prompt_selection": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "layer": {
+              "enum": [
+                "prepared_prompt",
+                "submitted_prompt"
+              ]
+            },
+            "selection": {
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "$id": "urn:deck-master:text-range:v1",
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schema_version",
+                "ref",
+                "locator",
+                "text_sha256",
+                "start",
+                "end",
+                "excerpt"
+              ],
+              "properties": {
+                "schema_version": {
+                  "const": "text_range.v1"
+                },
+                "ref": {
+                  "type": "object",
+                  "required": [
+                    "path",
+                    "sha256"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "path": {
+                      "type": "string",
+                      "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+                    },
+                    "sha256": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    }
+                  }
+                },
+                "locator": {
+                  "type": "string",
+                  "maxLength": 2000
+                },
+                "text_sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "start": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "end": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "excerpt": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          },
+          "required": [
+            "layer",
+            "selection"
+          ]
+        },
+        "host_suggestion": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 12000
+        },
+        "resolutions": {
+          "type": "object",
+          "additionalProperties": {
+            "enum": [
+              "keep_target",
+              "use_reference"
+            ]
+          }
+        },
+        "parent_recipe_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        }
+      },
+      "required": [
+        "schema_version",
+        "project_id",
+        "base_revision",
+        "reference",
+        "target_page_ids",
+        "instruction"
+      ]
+    },
+    "targets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "page_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "page_ref": {
+            "type": "object",
+            "required": [
+              "path",
+              "sha256"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "path": {
+                "type": "string",
+                "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          },
+          "blueprint_ref": {
+            "anyOf": [
+              {
+                "type": "object",
+                "required": [
+                  "path",
+                  "sha256"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "content": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "page_id",
+          "page_ref",
+          "blueprint_ref",
+          "content"
+        ]
+      }
+    },
+    "reference_sources": {
+      "type": "object"
+    },
+    "dimensions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "palette": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "typography": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "density": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "lines": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "composition": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        }
+      },
+      "required": []
+    },
+    "conflicts": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "diff": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "preserve_target_content": {
+      "const": true
+    },
+    "suggestion_state": {
+      "enum": [
+        "none",
+        "unconfirmed",
+        "confirmed"
+      ]
+    },
+    "recipe_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "parent_ref": {
+      "anyOf": [
+        {
+          "type": "object",
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "type": "string",
+              "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "proposal_ref": {
+      "type": "object",
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    }
+  },
+  "required": [
+    "schema_version",
+    "project_id",
+    "base_revision",
+    "input",
+    "targets",
+    "reference_sources",
+    "dimensions",
+    "conflicts",
+    "diff",
+    "preserve_target_content",
+    "suggestion_state"
+  ]
+}

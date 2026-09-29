@@ -1,0 +1,19 @@
+{
+  "schema_version": "style_input.v1",
+  "project_id": "synthetic-project",
+  "base_revision": "21ed1e7dfb524e58a64def797c3598cf",
+  "reference": {
+    "page_id": "p01",
+    "revision_id": "21ed1e7dfb524e58a64def797c3598cf",
+    "artifact_ref": {
+      "path": ".deckmaster/objects/db/db283eef00d3d881a1bfa60c33ce158a6511111ddc94aa128178480721928789.json",
+      "sha256": "db283eef00d3d881a1bfa60c33ce158a6511111ddc94aa128178480721928789"
+    },
+    "role": "reference"
+  },
+  "target_page_ids": [
+    "p02",
+    "p03"
+  ],
+  "instruction": "借用配色与文字层级，保持目标页标题、事实、数字与构图。"
+}

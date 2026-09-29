@@ -248,3 +248,9 @@ allocate or replay an external call automatically. After confirmed cancellation,
 return to the affected page and explicitly preview a new scoped plan. Preserve
 successful results and calls, and exclude those pages from the replacement.
 The normal late-result protection remains in force after cancellation.
+
+## Style calibration
+
+`style_invalid` (CLI 2 / HTTP 422) means the chosen reference, recipe, dimensions or expansion gate is invalid. Preserve the draft, inspect `styles show`, and select explicit targets. `style_conflict` (CLI 5 / HTTP 409) includes per-page `items`; unresolved density constraints need explicit keep_target/use_reference before confirmation. Changed target bases need a new version/plan, never silently overwrite. Unreadable or unknown fixed snapshots use the shared `operation_unavailable` (CLI 4 / HTTP 503); read available history rather than treating it as the current version.
+
+Confirmation recovery uses the original UUID and proposal through `operations show`; pointer-committed facts survive receipt-cache loss. A confirmed recipe does not dispatch or spend calls. Expansion requires an adopted, still-current candidate of the same immutable recipe. Unknown calls, cancellation and late results use the existing generation recovery procedure.

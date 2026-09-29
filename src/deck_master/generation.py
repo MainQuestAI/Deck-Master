@@ -65,11 +65,16 @@ def prepared_input(store, document, task):
     entry = next(p for p in dispatched["pages"] if p["page_id"] == prepared["page_id"])
     page = store.read_object_json(entry["page"])
     design, _ = resolve_design(page, dispatched["design_context"], dispatched["design_context"].get("assets") or [])
-    return {"schema_version": "generation_input.v1", "prompt": prepared["prompt"],
+    result = {"schema_version": "generation_input.v1", "prompt": prepared["prompt"],
             "page": {"page_id": entry["page_id"], "page_ref": entry["page"]}, "design_context": design,
             "template_ref": None, "references": copy.deepcopy(task.get("stage_request", {}).get("references", [])), "parameters": {}, "constraints": {},
             "basis": {"project_id": document["project_id"], "revision_id": dispatched["revision_id"],
                       "produced_against": task["produced_against"]}}
+    recipe_ref = task.get("stage_request", {}).get("style_recipe_ref")
+    if recipe_ref:
+        result["style_recipe_ref"] = copy.deepcopy(recipe_ref)
+        result["constraints"] = {"preserve_target_content": True, "style_recipe_ref": copy.deepcopy(recipe_ref)}
+    return result
 
 
 def _read_owned(store, task, field, object_id):
@@ -118,6 +123,8 @@ def _validate_input(store, document, task, value):
     for key in ("page", "design_context", "template_ref", "basis"):
         if value[key] != expected[key]:
             raise _error("generation_binding_conflict", "input/" + key, "input does not match the dispatched task basis", conflict=True)
+    if value.get("style_recipe_ref") != expected.get("style_recipe_ref") or (expected.get("style_recipe_ref") and value["constraints"] != expected["constraints"]):
+        raise _error("generation_binding_conflict", "input/style_recipe_ref", "preserve the dispatched recipe and content constraints", conflict=True)
     allowed = set()
     if task.get('stage_request'):
         for key in ('prompt', 'references'):

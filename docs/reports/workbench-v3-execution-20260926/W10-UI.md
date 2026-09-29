@@ -1,6 +1,6 @@
 # W10 运行台与恢复前端
 
-共享核心 PR #56 已先合入 main `45e645e7dc6b8f537d852343fae48a77bd98ca49`。前端初始实现 `703ec7349c6983548d08c07b0093026fc7f5d2b1`，统一可见性刷新后的源码提交 `7036f8e962f33f78a90fcc5b5ea1f506e47d3010`。完整持续浏览复测已通过，前端 [PR #57](https://github.com/MainQuestAI/Deck-Master/pull/57) 待 CI 与合并；用户验收未代签。
+共享核心 PR #56 已先合入 main `45e645e7dc6b8f537d852343fae48a77bd98ca49`。前端初始实现 `703ec7349c6983548d08c07b0093026fc7f5d2b1`，统一可见性刷新后的源码提交 `7036f8e962f33f78a90fcc5b5ea1f506e47d3010`。完整持续浏览复测已通过，前端 [PR #57](https://github.com/MainQuestAI/Deck-Master/pull/57) 已合入 main `c17ba512db3efb4196b0e88dcab2d604eb23b053`，最终 head `d18b872d3ef3b88b93f98ac54712121b5875ffa3` 的 8 项 CI 全通过；用户验收未代签。
 
 ## 行为
 
