@@ -1,7 +1,7 @@
 {
   "baseline": "d1c7c4600cb0fc781070116ed8cc8a1ff6b8b7ca",
-  "branch": "codex/workbench-w11-ui",
-  "active_package": "W11",
+  "branch": "codex/workbench-w12-integration",
+  "active_package": "W12",
   "sequence": [
     "W01.core",
     "W02",
@@ -218,7 +218,7 @@
       "frontend_merge_commit": "c17ba512db3efb4196b0e88dcab2d604eb23b053"
     },
     "W11": {
-      "status": "frontend_verified_pending_merge",
+      "status": "slices_merged",
       "accepted": false,
       "baseline": "314df380b2b8df9d7540132f99a190c1d0b2f047",
       "evidence": "W11-PLAN.md",
@@ -231,11 +231,15 @@
       "residuals": [
         "W12 isolated installed acceptance",
         "User acceptance not measured"
-      ]
+      ],
+      "frontend_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/64",
+      "frontend_head": "5792bc6bad54ddcfef3bca1a7779949061d4429c",
+      "frontend_merge_commit": "ef94d069f80b6f45ed46d7b335cb640248c5ac8c"
     },
     "W12": {
-      "status": "planned",
-      "accepted": false
+      "status": "engineering_verification_in_progress",
+      "accepted": false,
+      "evidence": "W12.md"
     }
   },
   "acceptance": {

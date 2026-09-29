@@ -32,7 +32,7 @@ Activation manages exactly one link:
 `<prefix>/.deck-master/current/skill/deck-master`.
 A real directory/file or a foreign link at that path is a `host_skill_conflict`
 (exit 5); resolve the named conflict before retrying. `--no-host-registration`
-leaves every Host entry untouched, including legacy cleanup and retiring a
+on both `activate` and `rollback` leaves every Host entry untouched, including legacy cleanup and retiring a
 managed link when the target release has no Skill. CLI and Host status are
 reported separately; a preserved link can remain unreadable.
 No config.toml changes, other Host registrations or third-party Skill changes occur.

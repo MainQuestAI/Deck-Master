@@ -98,6 +98,8 @@ def build_parser() -> argparse.ArgumentParser:
     activation.add_argument('--no-host-registration',dest='no_host_registration',action='store_true',
                             help='CI/non-interactive: do not create or touch the Codex skill link')
     rollback=installs.add_parser('rollback');rollback.add_argument('--prefix',required=True)
+    rollback.add_argument('--no-host-registration',action='store_true',
+                          help='CI/non-interactive: do not create or touch the Codex skill link')
 
     create = sub.add_parser("create")
     create.add_argument("--brief", required=False, help="task brief text (or --brief-file)")
@@ -336,7 +338,7 @@ def main(argv: list[str] | None = None) -> int:
             try:
                 if options.install_command=='candidate':result=install_candidate(options.prefix,options.manifest)
                 elif options.install_command=='activate':result=activate(options.prefix,options.release_id,register_host=not options.no_host_registration)
-                else:result=rollback(options.prefix)
+                else:result=rollback(options.prefix,register_host=not options.no_host_registration)
             except ValueError as exc:
                 return _emit_and_exit(_error('invalid_input',str(exc),'check candidate and prefix'),2)
             return _emit(result)

@@ -30,6 +30,7 @@ def wait_dom(page, selector):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--fixture', type=Path, required=True); parser.add_argument('--out', type=Path, required=True)
+    parser.add_argument('--source-commit', help='Installed candidate source SHA; otherwise use checkout HEAD')
     parser.add_argument('--smoke', action='store_true'); args = parser.parse_args()
     manifest = json.loads((args.fixture / 'manifest.json').read_text())
     assert manifest['factory'] == 'w01-pressure.v1' and manifest['candidate_count'] == 1500 and manifest['attempt_count'] == 4500
@@ -42,7 +43,7 @@ def main():
     try:
         url = server.start() + 'v2/#' + urlencode({'project': info['project_identity'], 'surface': 'gallery', 'layer': 'original_image', 'revision': doc['revision_id'], 'zoom': 1})
         with sync_playwright() as pw:
-            browser = pw.chromium.launch(); context = browser.new_context(viewport={'width': 1440, 'height': 900})
+            browser = pw.chromium.launch(); context = browser.new_context(viewport={'width': 1440, 'height': 900}, record_har_path=str(args.out / 'local-only.har'), record_har_content='omit')
             page = context.new_page(); page.set_default_timeout(60000)
             page.on('pageerror', lambda error: errors.append(str(error)))
             def requested(request):
@@ -108,7 +109,8 @@ def main():
                 'middle_median': statistics.median(middle) if middle else None, 'last_median': statistics.median(end) if end else None, 'growth': ratio,
                 'memory_pass': ratio is not None and ratio <= .20, 'errors': errors, 'post_paths': sorted(set(posts)), 'get_counts': request_counts, 'updates': updates,
                 'environment': {'browser': browser.version, 'os': platform.platform(), 'python': platform.python_version(), 'viewport': [1440, 900],
-                                'commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()}}
+                                'commit': args.source_commit or subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
+                                'module': str(__import__('deck_master').__file__)}}
             (args.out / 'checks.json').write_text(json.dumps(payload, indent=2) + '\n'); print(json.dumps(payload), flush=True)
             page.screenshot(path=str(args.out / 'final-window.png'))
             context.close(); browser.close()
