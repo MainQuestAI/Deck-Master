@@ -1,3 +1,4 @@
+import {sourceReader, pageContentEditor} from './content-edit.js';
 import {get, revisionQuery, readableError} from './api.js';
 import {el, button, heading, empty, version, modal} from './dom.js';
 import {layers, routeHash} from './routes.js';
@@ -29,6 +30,8 @@ function bodyBlocks(blocks) {
 }
 function sourceView(app, data) {
   const node = el('div', {class: 'stack'}, el('p', {}, `本页来源固定在 ${version(data.revision_id)}。`));
+  const links = (data.content_plan?.goals || []).flatMap(g => g.source_links || []);
+  if (app.health.ui_capabilities?.includes('content_ops.v1')) node.append(...links.map(link => button('查看材料 ' + (link.locator || '原文'), () => sourceReader(app, link, data.revision_id))));
   node.append(data.sources.citations.length ? el('pre', {class: 'evidence-json'}, JSON.stringify(data.sources.citations, null, 2)) : el('p', {class: 'muted'}, '此页未记录材料引用，不能据此补造来源。'),
     button('回到此版本的内容与来源', () => { document.querySelector('#modal').close(); app.go({surface: 'content', revision: data.revision_id}); }));
   return node;
@@ -46,6 +49,7 @@ function contentView(app, data) {
     select.addEventListener('change', show); show();
     node.append(detail('正文原文与精确选段', el('label', {}, '选择文字对象 ', select), textSlot));
   }
+  if (data.page?.customer_visible && !app.readonly && app.health.ui_capabilities?.includes('content_ops.v1') && data.revision_id === app.route.revision && data.page_id === app.route.page_id) node.append(pageContentEditor(app, data));
   node.append(button('查看本页来源', () => modal('本页来源', sourceView(app, data)))); return node;
 }
 function imageLayer(app, data, layer, title, releases) {

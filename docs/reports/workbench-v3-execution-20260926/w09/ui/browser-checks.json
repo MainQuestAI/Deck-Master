@@ -1,0 +1,22 @@
+{
+  "synthetic": true,
+  "actual_model_calls": 0,
+  "checks": [
+    "body_draft_survives_refresh",
+    "direct_edit_only_selected_page",
+    "paragraph_list_table_text_and_identities",
+    "original_immutable_and_basis_changed",
+    "keyboard_reorder_keeps_focus",
+    "reorder_preserves_all_page_entries",
+    "mouse_reorder_draft",
+    "outline_does_not_edit_body",
+    "inputs_dispatch_without_rewriting_pages",
+    "source_reading_honest_material_only",
+    "remove_focuses_neighbor_and_keeps_history",
+    "unknown_save_keeps_later_draft",
+    "unknown_recovery_does_not_resubmit_later_input",
+    "no_horizontal_overflow",
+    "no_browser_errors"
+  ],
+  "errors": []
+}

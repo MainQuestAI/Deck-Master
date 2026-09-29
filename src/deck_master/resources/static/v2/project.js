@@ -24,7 +24,7 @@ export class Project {
       const previous = this.editor;
       try {
         localStorage.setItem(previous.activeKey, JSON.stringify(event.detail));
-        const editor = new DraftEditor(previous.info, previous.target, previous.baseRevision, previous.baseRef, {readonly: previous.readonly});
+        const editor = new DraftEditor(previous.info, previous.target, previous.baseRevision, previous.baseRef, {readonly: previous.readonly, exactRevision: previous.exactRevision});
         const section = event.target.closest('.personal-draft');
         this.editor = editor; section.replaceWith(editor.mount());
         this.root.dispatchEvent(new CustomEvent('draft-editor-replaced', {detail: editor}));
