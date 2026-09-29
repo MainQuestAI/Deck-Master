@@ -144,7 +144,7 @@
         "W07-AC07 real auto/trial interleaving and unchanged second page before W08",
         "User acceptance"
       ],
-      "frontend_source_commit": "10164ffaeb1342d2597c560555aa269db7ca8f88",
+      "frontend_source_commit": "ac3a88a5851501e2e83c5f4f0d3448bfe7aad75c",
       "frontend_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/54"
     },
     "W08": {

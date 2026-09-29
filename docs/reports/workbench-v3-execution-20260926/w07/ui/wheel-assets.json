@@ -1,6 +1,6 @@
 {
   "status": "verified",
-  "source_commit": "10164ffaeb1342d2597c560555aa269db7ca8f88",
+  "source_commit": "ac3a88a5851501e2e83c5f4f0d3448bfe7aad75c",
   "asset_count": 26,
   "assets": [
     {
@@ -21,7 +21,7 @@
     },
     {
       "path": "deck_master/resources/static/v2/candidate-desk.js",
-      "sha256": "f16e63ad454ba429de9280a86f53e5b5581fbb22974edece635d0100eed606fb"
+      "sha256": "21957d7f478abbb80824c3fe17569f839f3126294c2527996b58a16c8632a287"
     },
     {
       "path": "deck_master/resources/static/v2/change-handoff.js",
