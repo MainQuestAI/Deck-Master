@@ -1,3 +1,4 @@
+import {runDesk} from './run-desk.js';
 import {candidateBatch} from './candidate-desk.js';
 import {get, post, readableError} from './api.js';
 import {el, button, heading, empty, field, version, modal, toast} from './dom.js';
@@ -103,19 +104,23 @@ export {pageDetail} from './page-workbench.js';
 const taskNames = {compose: '整理内容', blueprint: '制作原图', svg: '制作 SVG', render: '渲染预览', repair: '局部修改', review: '检查', export: '准备文件'};
 const taskStatus = {awaiting_host: '待交接', running: '已记录处理中', completed: '结果已记录', failed: '执行失败', cancelled: '已取消', superseded: '已由新任务接续', blocked: '需要处理阻碍'};
 export function runs(app, data) {
-  const selected = data.tasks.find(task => task.task_id === app.route.task_id);
+  const selected = data.runDetail?.task || data.tasks.find(task => task.task_id === app.route.task_id);
   const node = el('div', {}, heading(selected ? '当前任务' : '任务与交付', '任务状态按当前阅读版本展示。复制交接说明不会启动模型。',
     selected?.kind === 'compose' && selected.status === 'awaiting_host' && !app.readonly ? button('交接这项内容整理', () => app.handoff(selected.task_id), true) : null));
   if (selected && app.returnTo && !app.returnTo.task_id) node.append(button('返回上次工作面', () => app.go(app.returnTo)));
-  if (app.health.ui_capabilities?.includes('changes.v1')) node.append(changeHandoffs(app));
+  const handoffs = app.health.ui_capabilities?.includes('changes.v1') ? changeHandoffs(app) : null;
+  const batch = candidateBatch(app);
   const tasks = selected ? [selected] : data.tasks;
-  node.append(candidateBatch(app));
-  node.append(tasks.length ? el('div', {class: 'task-list stack'}, tasks.map(task => el('article', {class: 'panel task-row'},
+  node.append(data.runPage ? runDesk(app, data) : tasks.length ? el('div', {class: 'task-list stack'}, tasks.map(task => el('article', {class: 'panel task-row'},
     el('div', {}, el('h2', {}, taskNames[task.kind] || '制作任务'), el('p', {class: 'muted'}, `${taskStatus[task.status] || '状态待核实'} · 任务 ${task.task_id}`),
       task.result_refs?.length > 0 && el('p', {class: 'muted'}, `${task.result_refs.length} 项已记录结果；这不代表专业质量通过。`)),
     !selected && button('查看这项任务', () => app.go({task_id: task.task_id})), selected && button('查看全部任务', () => app.go({task_id: null}))))) : empty('没有已记录的任务', '此版本还没有制作任务。'));
-  node.append(panel('版本记录', data.history.revisions.map(revision => button(`${version(revision.revision_id)} · ${revision.page_count} 页${revision.revision_id === data.history.current ? ' · 当前' : ' · 只读查看'}`,
-    () => app.go({revision: revision.revision_id, task_id: null})))));
+  if (handoffs) node.append(handoffs);
+  node.append(batch);
+  const revisions = el('select', {'aria-label': '阅读历史版本'}, data.history.revisions.map(revision => el('option', {value: revision.revision_id},
+    `${version(revision.revision_id)} · ${revision.page_count} 页${revision.revision_id === data.history.current ? ' · 当前' : ''}`)));
+  revisions.value = app.route.revision;
+  node.append(panel('版本记录', el('div', {class: 'row wrap'}, revisions, button('读取所选版本', () => app.go({revision: revisions.value, task_id: null})))));
   node.append(panel('交付状态', el('p', {}, app.summary.outputs.pptx.existence === 'recorded' ? '这个版本已记录整稿 PPT 文件，正式交付仍需检查质量与完整性。' : '这个版本尚无整稿 PPT 文件。'),
     el('p', {class: 'muted'}, '可在原有工作区查看已有导出流程。'), el('a', {href: '/'}, '打开原有工作区')));
   return node;

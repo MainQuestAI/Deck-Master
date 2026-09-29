@@ -1,6 +1,6 @@
 {
   "baseline": "d1c7c4600cb0fc781070116ed8cc8a1ff6b8b7ca",
-  "branch": "codex/workbench-w10-core",
+  "branch": "codex/workbench-w10-ui",
   "active_package": "W10",
   "sequence": [
     "W01.core",
@@ -165,13 +165,15 @@
       "accepted": false
     },
     "W10": {
-      "status": "core_pr_open",
+      "status": "core_merged_ui_in_progress",
       "accepted": false,
       "baseline": "d42dda62c53bfeaf177c077f8e46074c8c23bdba",
       "plan": "W10-PLAN.md",
       "core_implementation_commit": "b505d34f384edda5f50e94f1e8d2a3d0060fb737",
       "core_evidence": "W10-CORE.md",
-      "core_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/56"
+      "core_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/56",
+      "core_merge_commit": "45e645e7dc6b8f537d852343fae48a77bd98ca49",
+      "core_head": "9ce3857b57e538761323359ab2959979c17abb9f"
     },
     "W11": {
       "status": "planned",
