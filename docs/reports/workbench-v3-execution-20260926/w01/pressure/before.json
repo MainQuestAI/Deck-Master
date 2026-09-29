@@ -1,0 +1,1370 @@
+{
+  "measurement": "loopback client request start through JSON parse",
+  "warmup": 5,
+  "samples": [
+    {
+      "index": 0,
+      "ms": 1771.829707955476,
+      "revision_id": "dfa87ad69c9947a682ca71be78406248",
+      "updates_completed": 4
+    },
+    {
+      "index": 1,
+      "ms": 1813.6230839882046,
+      "revision_id": "8727f0f5a0fb40aab13226e72e9e0be9",
+      "updates_completed": 5
+    },
+    {
+      "index": 2,
+      "ms": 1820.475583022926,
+      "revision_id": "8727f0f5a0fb40aab13226e72e9e0be9",
+      "updates_completed": 6
+    },
+    {
+      "index": 3,
+      "ms": 2060.03629200859,
+      "revision_id": "2efc32207c074bad8751af11e5c0fb98",
+      "updates_completed": 7
+    },
+    {
+      "index": 4,
+      "ms": 1854.2528750258498,
+      "revision_id": "91ac17e8a51d4fa083274ef90b413565",
+      "updates_completed": 7
+    },
+    {
+      "index": 5,
+      "ms": 1841.0964999930002,
+      "revision_id": "8a376a323b024a7b998c9ce8cc2f7139",
+      "updates_completed": 8
+    },
+    {
+      "index": 6,
+      "ms": 1883.1982500269078,
+      "revision_id": "8a376a323b024a7b998c9ce8cc2f7139",
+      "updates_completed": 9
+    },
+    {
+      "index": 7,
+      "ms": 1999.8477500048466,
+      "revision_id": "e165a21d153b4c8887a8532eeb11c23c",
+      "updates_completed": 10
+    },
+    {
+      "index": 8,
+      "ms": 1947.5407499703579,
+      "revision_id": "9f964cf48e9145a3aafb62acc7bfda17",
+      "updates_completed": 10
+    },
+    {
+      "index": 9,
+      "ms": 1886.5870839799754,
+      "revision_id": "a792586a6ef844ee80ecf02b9fdfdfa1",
+      "updates_completed": 11
+    },
+    {
+      "index": 10,
+      "ms": 1849.0766659961082,
+      "revision_id": "899ad089e9d347b7ab9776fbeeb65434",
+      "updates_completed": 12
+    },
+    {
+      "index": 11,
+      "ms": 1891.9869170058519,
+      "revision_id": "899ad089e9d347b7ab9776fbeeb65434",
+      "updates_completed": 13
+    },
+    {
+      "index": 12,
+      "ms": 2076.040165964514,
+      "revision_id": "0307ce453e1c4c69931bb2b7d6c373c0",
+      "updates_completed": 13
+    },
+    {
+      "index": 13,
+      "ms": 1895.3380419989116,
+      "revision_id": "62b9e6081dbb40f59b762148ef4545ea",
+      "updates_completed": 14
+    },
+    {
+      "index": 14,
+      "ms": 1872.3697499954142,
+      "revision_id": "92ab50d631dd4efebe16efb24c6122eb",
+      "updates_completed": 15
+    },
+    {
+      "index": 15,
+      "ms": 1861.156500002835,
+      "revision_id": "92ab50d631dd4efebe16efb24c6122eb",
+      "updates_completed": 16
+    },
+    {
+      "index": 16,
+      "ms": 2103.2322910032235,
+      "revision_id": "8fe723f288a243759f13f433c08ca39b",
+      "updates_completed": 16
+    },
+    {
+      "index": 17,
+      "ms": 1886.6529170190915,
+      "revision_id": "b735c7d3def14b98b44ab1208ba6f249",
+      "updates_completed": 17
+    },
+    {
+      "index": 18,
+      "ms": 1870.0175000121817,
+      "revision_id": "3db183a5de6e4506a7789ab25f0cd54e",
+      "updates_completed": 18
+    },
+    {
+      "index": 19,
+      "ms": 1833.9931250084192,
+      "revision_id": "3db183a5de6e4506a7789ab25f0cd54e",
+      "updates_completed": 19
+    },
+    {
+      "index": 20,
+      "ms": 2108.183584001381,
+      "revision_id": "0e01f4fa9cfc4525ad6398b631e5344c",
+      "updates_completed": 20
+    },
+    {
+      "index": 21,
+      "ms": 1905.2594170207158,
+      "revision_id": "231c742e83a04fee869d8c56688b0680",
+      "updates_completed": 20
+    },
+    {
+      "index": 22,
+      "ms": 1894.3379999836907,
+      "revision_id": "8e01780c998b47d2b6da832f377299ee",
+      "updates_completed": 21
+    },
+    {
+      "index": 23,
+      "ms": 1952.3250000202097,
+      "revision_id": "8e01780c998b47d2b6da832f377299ee",
+      "updates_completed": 22
+    },
+    {
+      "index": 24,
+      "ms": 1956.3755000126548,
+      "revision_id": "6d7c85243c454c43939f7f15ecb24d6e",
+      "updates_completed": 23
+    },
+    {
+      "index": 25,
+      "ms": 2164.278791984543,
+      "revision_id": "945d1621b4e3449fb5875f155f3e8e8f",
+      "updates_completed": 23
+    },
+    {
+      "index": 26,
+      "ms": 1846.7642500181682,
+      "revision_id": "829dd86e036d47059d3fd313c0814bc2",
+      "updates_completed": 24
+    },
+    {
+      "index": 27,
+      "ms": 1922.4826249992475,
+      "revision_id": "df62d56409704d609ad1a2a217bff127",
+      "updates_completed": 25
+    },
+    {
+      "index": 28,
+      "ms": 1898.742375022266,
+      "revision_id": "df62d56409704d609ad1a2a217bff127",
+      "updates_completed": 26
+    },
+    {
+      "index": 29,
+      "ms": 2092.391707992647,
+      "revision_id": "9d0c6ebacaf3410bbe4cf84ebf86ab32",
+      "updates_completed": 27
+    },
+    {
+      "index": 30,
+      "ms": 2032.4230419937521,
+      "revision_id": "f5470673aeac437296d28981be5d6dc0",
+      "updates_completed": 27
+    },
+    {
+      "index": 31,
+      "ms": 1975.4831250174902,
+      "revision_id": "36cf5f5a9c74479fbbd2713b0db35c90",
+      "updates_completed": 28
+    },
+    {
+      "index": 32,
+      "ms": 1936.537541972939,
+      "revision_id": "e3493091f268452391bdb430e9183513",
+      "updates_completed": 29
+    },
+    {
+      "index": 33,
+      "ms": 1864.5300000207499,
+      "revision_id": "e3493091f268452391bdb430e9183513",
+      "updates_completed": 30
+    },
+    {
+      "index": 34,
+      "ms": 2157.709666993469,
+      "revision_id": "4e2831187c0945dbb3a347f3470714fb",
+      "updates_completed": 31
+    },
+    {
+      "index": 35,
+      "ms": 1958.5252919932827,
+      "revision_id": "8877414ef0a54b0d93dddd96c70d2f17",
+      "updates_completed": 31
+    },
+    {
+      "index": 36,
+      "ms": 2035.1508330204524,
+      "revision_id": "b715d8e11f6f458aa225ea183b8a2180",
+      "updates_completed": 32
+    },
+    {
+      "index": 37,
+      "ms": 1912.7419579890557,
+      "revision_id": "684fcd8312a0413793b6af0b586e0f09",
+      "updates_completed": 33
+    },
+    {
+      "index": 38,
+      "ms": 2014.535791007802,
+      "revision_id": "684fcd8312a0413793b6af0b586e0f09",
+      "updates_completed": 34
+    },
+    {
+      "index": 39,
+      "ms": 2132.417708984576,
+      "revision_id": "ee4cf7cefc074d6fb8caca943ed39bd4",
+      "updates_completed": 34
+    },
+    {
+      "index": 40,
+      "ms": 1970.606916001998,
+      "revision_id": "11d890c27c314768b20ae579400d5825",
+      "updates_completed": 35
+    },
+    {
+      "index": 41,
+      "ms": 1866.1578750470653,
+      "revision_id": "86d9ed46590747ba8ca596694c0921d2",
+      "updates_completed": 36
+    },
+    {
+      "index": 42,
+      "ms": 1954.7826249618083,
+      "revision_id": "86d9ed46590747ba8ca596694c0921d2",
+      "updates_completed": 37
+    },
+    {
+      "index": 43,
+      "ms": 2113.4674579952843,
+      "revision_id": "14bd80a15004436089239d6cd41f143b",
+      "updates_completed": 38
+    },
+    {
+      "index": 44,
+      "ms": 1982.239583041519,
+      "revision_id": "e4c3e3afc0f443ac9f8b3d6d8e8f53d5",
+      "updates_completed": 38
+    },
+    {
+      "index": 45,
+      "ms": 2023.7985829589888,
+      "revision_id": "8c875145e61044ab815d8c070d21dbf5",
+      "updates_completed": 39
+    },
+    {
+      "index": 46,
+      "ms": 1853.610792022664,
+      "revision_id": "ae6453b2d5b649be8f0c1e1efc44d46d",
+      "updates_completed": 40
+    },
+    {
+      "index": 47,
+      "ms": 1936.8953329976648,
+      "revision_id": "ae6453b2d5b649be8f0c1e1efc44d46d",
+      "updates_completed": 41
+    },
+    {
+      "index": 48,
+      "ms": 2186.936167010572,
+      "revision_id": "9c468fa0200a4734851c987122ee682a",
+      "updates_completed": 41
+    },
+    {
+      "index": 49,
+      "ms": 1941.3356670411304,
+      "revision_id": "53b04df40a484e28b01dffdbcd6e4e1c",
+      "updates_completed": 42
+    },
+    {
+      "index": 50,
+      "ms": 1888.50924995495,
+      "revision_id": "59fd116aa6a5482c85da300c99c9c226",
+      "updates_completed": 43
+    },
+    {
+      "index": 51,
+      "ms": 1942.7307919831946,
+      "revision_id": "59fd116aa6a5482c85da300c99c9c226",
+      "updates_completed": 44
+    },
+    {
+      "index": 52,
+      "ms": 2119.1358329961076,
+      "revision_id": "1fa4b2a87d77468e939734e5f8641976",
+      "updates_completed": 45
+    },
+    {
+      "index": 53,
+      "ms": 1968.8976670149714,
+      "revision_id": "373a52cacc05432385ea8eaf724a7595",
+      "updates_completed": 45
+    },
+    {
+      "index": 54,
+      "ms": 2032.023667008616,
+      "revision_id": "02481a28e8b44fb594fc3fc6a4b015a4",
+      "updates_completed": 46
+    },
+    {
+      "index": 55,
+      "ms": 1949.696917028632,
+      "revision_id": "fe88561e90424d0a8d6fbfd995ab6cf6",
+      "updates_completed": 47
+    },
+    {
+      "index": 56,
+      "ms": 1909.6841660211794,
+      "revision_id": "fe88561e90424d0a8d6fbfd995ab6cf6",
+      "updates_completed": 48
+    },
+    {
+      "index": 57,
+      "ms": 2214.355500007514,
+      "revision_id": "c9598aad2eda4f07a5baa6614134fec0",
+      "updates_completed": 49
+    },
+    {
+      "index": 58,
+      "ms": 1904.219957999885,
+      "revision_id": "c385477b1d8949a4ad89d4d6b49c1f3d",
+      "updates_completed": 49
+    },
+    {
+      "index": 59,
+      "ms": 2033.7596670142375,
+      "revision_id": "4dc644a1f59d4ea7b4bc3802353a0c68",
+      "updates_completed": 50
+    },
+    {
+      "index": 60,
+      "ms": 1992.253125004936,
+      "revision_id": "7e38be95b6b14f2ca02aa62de1d5fd59",
+      "updates_completed": 51
+    },
+    {
+      "index": 61,
+      "ms": 1831.6115830093622,
+      "revision_id": "7e38be95b6b14f2ca02aa62de1d5fd59",
+      "updates_completed": 52
+    },
+    {
+      "index": 62,
+      "ms": 2213.345666998066,
+      "revision_id": "616b21e2f00b40068a3195bdf0e9750f",
+      "updates_completed": 52
+    },
+    {
+      "index": 63,
+      "ms": 1950.400792004075,
+      "revision_id": "c1636ef1148c4ca3ac0748131047f956",
+      "updates_completed": 53
+    },
+    {
+      "index": 64,
+      "ms": 1870.9208749933168,
+      "revision_id": "18b0382554e54e119490f2974225b452",
+      "updates_completed": 54
+    },
+    {
+      "index": 65,
+      "ms": 1964.0142080024816,
+      "revision_id": "18b0382554e54e119490f2974225b452",
+      "updates_completed": 55
+    },
+    {
+      "index": 66,
+      "ms": 2107.288582948968,
+      "revision_id": "736357250fc54dd990bdb57aa0648951",
+      "updates_completed": 56
+    },
+    {
+      "index": 67,
+      "ms": 1991.954250028357,
+      "revision_id": "d150a712b9cb46db98deecb857031c38",
+      "updates_completed": 56
+    },
+    {
+      "index": 68,
+      "ms": 2053.1859169714153,
+      "revision_id": "a7d0f2b05fb244fdbb37ece5a96cb065",
+      "updates_completed": 57
+    },
+    {
+      "index": 69,
+      "ms": 1870.2884160447866,
+      "revision_id": "1e65cbbbea8e4c379602b15bbcbccbff",
+      "updates_completed": 58
+    },
+    {
+      "index": 70,
+      "ms": 1936.9000830338337,
+      "revision_id": "1e65cbbbea8e4c379602b15bbcbccbff",
+      "updates_completed": 59
+    },
+    {
+      "index": 71,
+      "ms": 2231.5666670328937,
+      "revision_id": "81f3f2d1cea641e1b522dd26e115f536",
+      "updates_completed": 59
+    },
+    {
+      "index": 72,
+      "ms": 1864.5120409782976,
+      "revision_id": "751b2dff38714072a68c3a4f70932a59",
+      "updates_completed": 60
+    },
+    {
+      "index": 73,
+      "ms": 1967.7562920260243,
+      "revision_id": "ae5d3b601dbf4e3e85aa95b9d092a080",
+      "updates_completed": 61
+    },
+    {
+      "index": 74,
+      "ms": 1911.9967910228297,
+      "revision_id": "ae5d3b601dbf4e3e85aa95b9d092a080",
+      "updates_completed": 62
+    },
+    {
+      "index": 75,
+      "ms": 2064.394499990158,
+      "revision_id": "e26457d9e18d419c8dbedf43e2d96926",
+      "updates_completed": 63
+    },
+    {
+      "index": 76,
+      "ms": 2030.2327499957755,
+      "revision_id": "2cf08656e6b24fffaab12d85157673f6",
+      "updates_completed": 63
+    },
+    {
+      "index": 77,
+      "ms": 2014.7406249889173,
+      "revision_id": "5cabafac57c243ba9a22f146f61300ab",
+      "updates_completed": 64
+    },
+    {
+      "index": 78,
+      "ms": 1974.08562497003,
+      "revision_id": "1d1cd4cce6664d0eb9005ab28db6e56d",
+      "updates_completed": 65
+    },
+    {
+      "index": 79,
+      "ms": 1844.1699579707347,
+      "revision_id": "1d1cd4cce6664d0eb9005ab28db6e56d",
+      "updates_completed": 66
+    },
+    {
+      "index": 80,
+      "ms": 2196.9178339932114,
+      "revision_id": "96d46b39298e47e2ac156aad7d088921",
+      "updates_completed": 67
+    },
+    {
+      "index": 81,
+      "ms": 1925.4671660019085,
+      "revision_id": "2f15562322424056acca15b227473dc1",
+      "updates_completed": 67
+    },
+    {
+      "index": 82,
+      "ms": 2051.7209159443155,
+      "revision_id": "d6fe430dbc074589af13ed1b486afd8e",
+      "updates_completed": 68
+    },
+    {
+      "index": 83,
+      "ms": 1963.4910420281813,
+      "revision_id": "808203a73d2348a79fb8a50e53dda444",
+      "updates_completed": 69
+    },
+    {
+      "index": 84,
+      "ms": 1858.98445895873,
+      "revision_id": "808203a73d2348a79fb8a50e53dda444",
+      "updates_completed": 70
+    },
+    {
+      "index": 85,
+      "ms": 2247.920540976338,
+      "revision_id": "3c871f08ad4447b2a361b2dca3e30424",
+      "updates_completed": 70
+    },
+    {
+      "index": 86,
+      "ms": 1886.5179579588585,
+      "revision_id": "6cd4a2e669bd4f7f864781b829d361f6",
+      "updates_completed": 71
+    },
+    {
+      "index": 87,
+      "ms": 1991.3325420347974,
+      "revision_id": "603e3f78fd564e539affe36ffbcfcdc2",
+      "updates_completed": 72
+    },
+    {
+      "index": 88,
+      "ms": 1897.6125419721939,
+      "revision_id": "603e3f78fd564e539affe36ffbcfcdc2",
+      "updates_completed": 73
+    },
+    {
+      "index": 89,
+      "ms": 2100.241540989373,
+      "revision_id": "581aa03f5a0a459b9096e6df9dde5922",
+      "updates_completed": 74
+    },
+    {
+      "index": 90,
+      "ms": 2016.9979589991271,
+      "revision_id": "d81f61ed52144c61877b0fe399608e92",
+      "updates_completed": 74
+    },
+    {
+      "index": 91,
+      "ms": 2041.0059999558143,
+      "revision_id": "6541ff479fad41ff9fb59f9ac99b4f98",
+      "updates_completed": 75
+    },
+    {
+      "index": 92,
+      "ms": 1875.7193749770522,
+      "revision_id": "ee0823fe99e8468e98592709debefeb7",
+      "updates_completed": 76
+    },
+    {
+      "index": 93,
+      "ms": 1968.0343749932945,
+      "revision_id": "ee0823fe99e8468e98592709debefeb7",
+      "updates_completed": 77
+    },
+    {
+      "index": 94,
+      "ms": 2091.298417013604,
+      "revision_id": "53006d9d67d747258fc5f7f87d7b1d40",
+      "updates_completed": 78
+    },
+    {
+      "index": 95,
+      "ms": 2049.644458980765,
+      "revision_id": "1ac6a3a84da148d890ae197aa5d788c9",
+      "updates_completed": 78
+    },
+    {
+      "index": 96,
+      "ms": 1974.1638749837875,
+      "revision_id": "a455b90ac83d45ac94e396dae88253f8",
+      "updates_completed": 79
+    },
+    {
+      "index": 97,
+      "ms": 1983.414750022348,
+      "revision_id": "ff77449f35704b73a076f588205cba8e",
+      "updates_completed": 80
+    },
+    {
+      "index": 98,
+      "ms": 1847.735500021372,
+      "revision_id": "ff77449f35704b73a076f588205cba8e",
+      "updates_completed": 81
+    },
+    {
+      "index": 99,
+      "ms": 2224.6183330425993,
+      "revision_id": "fd577ba4c7bc41f0b3ac7b2fd59c226a",
+      "updates_completed": 81
+    }
+  ],
+  "cold_ms": 1000.1057090121321,
+  "p50_ms": 1956.3755000126548,
+  "p95_ms": 2196.9178339932114,
+  "p99_ms": 2231.5666670328937,
+  "max_ms": 2247.920540976338,
+  "background": [
+    {
+      "task_id": "pressure-background-000",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "0e29041d84544b26aae9a7ce1e80081f"
+      },
+      "elapsed_ms": 2198.4109170152806
+    },
+    {
+      "task_id": "pressure-background-000",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "0bd2d93c037d4e6da156f95c040e3a51"
+      },
+      "elapsed_ms": 2153.1409999588504
+    },
+    {
+      "task_id": "pressure-background-001",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "be9083ddee404d6b9fe1cae7dc894282"
+      },
+      "elapsed_ms": 2171.1798749747686
+    },
+    {
+      "task_id": "pressure-background-001",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "dfa87ad69c9947a682ca71be78406248"
+      },
+      "elapsed_ms": 2204.9044590094127
+    },
+    {
+      "task_id": "pressure-background-002",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "8727f0f5a0fb40aab13226e72e9e0be9"
+      },
+      "elapsed_ms": 2205.459999968298
+    },
+    {
+      "task_id": "pressure-background-002",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "2efc32207c074bad8751af11e5c0fb98"
+      },
+      "elapsed_ms": 2191.172374994494
+    },
+    {
+      "task_id": "pressure-background-003",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "91ac17e8a51d4fa083274ef90b413565"
+      },
+      "elapsed_ms": 2175.6129160057753
+    },
+    {
+      "task_id": "pressure-background-003",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "8a376a323b024a7b998c9ce8cc2f7139"
+      },
+      "elapsed_ms": 2244.207042036578
+    },
+    {
+      "task_id": "pressure-background-004",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "e165a21d153b4c8887a8532eeb11c23c"
+      },
+      "elapsed_ms": 2237.16845898889
+    },
+    {
+      "task_id": "pressure-background-004",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "9f964cf48e9145a3aafb62acc7bfda17"
+      },
+      "elapsed_ms": 2246.6992920381017
+    },
+    {
+      "task_id": "pressure-background-005",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "a792586a6ef844ee80ecf02b9fdfdfa1"
+      },
+      "elapsed_ms": 2221.552375005558
+    },
+    {
+      "task_id": "pressure-background-005",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "899ad089e9d347b7ab9776fbeeb65434"
+      },
+      "elapsed_ms": 2298.306791984942
+    },
+    {
+      "task_id": "pressure-background-006",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "0307ce453e1c4c69931bb2b7d6c373c0"
+      },
+      "elapsed_ms": 2210.036208969541
+    },
+    {
+      "task_id": "pressure-background-006",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "62b9e6081dbb40f59b762148ef4545ea"
+      },
+      "elapsed_ms": 2321.188250032719
+    },
+    {
+      "task_id": "pressure-background-007",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "92ab50d631dd4efebe16efb24c6122eb"
+      },
+      "elapsed_ms": 2283.123874978628
+    },
+    {
+      "task_id": "pressure-background-007",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "8fe723f288a243759f13f433c08ca39b"
+      },
+      "elapsed_ms": 2245.510583044961
+    },
+    {
+      "task_id": "pressure-background-008",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "b735c7d3def14b98b44ab1208ba6f249"
+      },
+      "elapsed_ms": 2281.5864169970155
+    },
+    {
+      "task_id": "pressure-background-008",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "3db183a5de6e4506a7789ab25f0cd54e"
+      },
+      "elapsed_ms": 2291.726875002496
+    },
+    {
+      "task_id": "pressure-background-009",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "0e01f4fa9cfc4525ad6398b631e5344c"
+      },
+      "elapsed_ms": 2228.1519999960437
+    },
+    {
+      "task_id": "pressure-background-009",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "231c742e83a04fee869d8c56688b0680"
+      },
+      "elapsed_ms": 2226.6367090051062
+    },
+    {
+      "task_id": "pressure-background-010",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "8e01780c998b47d2b6da832f377299ee"
+      },
+      "elapsed_ms": 2279.128041001968
+    },
+    {
+      "task_id": "pressure-background-010",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "6d7c85243c454c43939f7f15ecb24d6e"
+      },
+      "elapsed_ms": 2247.3478330066428
+    },
+    {
+      "task_id": "pressure-background-011",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "945d1621b4e3449fb5875f155f3e8e8f"
+      },
+      "elapsed_ms": 2215.2745840139687
+    },
+    {
+      "task_id": "pressure-background-011",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "829dd86e036d47059d3fd313c0814bc2"
+      },
+      "elapsed_ms": 2263.2843339815736
+    },
+    {
+      "task_id": "pressure-background-012",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "df62d56409704d609ad1a2a217bff127"
+      },
+      "elapsed_ms": 2258.0019159941003
+    },
+    {
+      "task_id": "pressure-background-012",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "9d0c6ebacaf3410bbe4cf84ebf86ab32"
+      },
+      "elapsed_ms": 2259.616708033718
+    },
+    {
+      "task_id": "pressure-background-013",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "f5470673aeac437296d28981be5d6dc0"
+      },
+      "elapsed_ms": 2242.0907920459285
+    },
+    {
+      "task_id": "pressure-background-013",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "36cf5f5a9c74479fbbd2713b0db35c90"
+      },
+      "elapsed_ms": 2238.4156659827568
+    },
+    {
+      "task_id": "pressure-background-014",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "e3493091f268452391bdb430e9183513"
+      },
+      "elapsed_ms": 2308.666000026278
+    },
+    {
+      "task_id": "pressure-background-014",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "4e2831187c0945dbb3a347f3470714fb"
+      },
+      "elapsed_ms": 2239.838665991556
+    },
+    {
+      "task_id": "pressure-background-015",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "8877414ef0a54b0d93dddd96c70d2f17"
+      },
+      "elapsed_ms": 2232.3797499993816
+    },
+    {
+      "task_id": "pressure-background-015",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "b715d8e11f6f458aa225ea183b8a2180"
+      },
+      "elapsed_ms": 2307.7305409824476
+    },
+    {
+      "task_id": "pressure-background-016",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "684fcd8312a0413793b6af0b586e0f09"
+      },
+      "elapsed_ms": 2376.84820900904
+    },
+    {
+      "task_id": "pressure-background-016",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "ee4cf7cefc074d6fb8caca943ed39bd4"
+      },
+      "elapsed_ms": 2322.715957998298
+    },
+    {
+      "task_id": "pressure-background-017",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "11d890c27c314768b20ae579400d5825"
+      },
+      "elapsed_ms": 2265.8391250297427
+    },
+    {
+      "task_id": "pressure-background-017",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "86d9ed46590747ba8ca596694c0921d2"
+      },
+      "elapsed_ms": 2282.8997499891557
+    },
+    {
+      "task_id": "pressure-background-018",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "14bd80a15004436089239d6cd41f143b"
+      },
+      "elapsed_ms": 2289.9661249830388
+    },
+    {
+      "task_id": "pressure-background-018",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "e4c3e3afc0f443ac9f8b3d6d8e8f53d5"
+      },
+      "elapsed_ms": 2275.039875006769
+    },
+    {
+      "task_id": "pressure-background-019",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "8c875145e61044ab815d8c070d21dbf5"
+      },
+      "elapsed_ms": 2287.948291981593
+    },
+    {
+      "task_id": "pressure-background-019",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "ae6453b2d5b649be8f0c1e1efc44d46d"
+      },
+      "elapsed_ms": 2299.273957964033
+    },
+    {
+      "task_id": "pressure-background-020",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "9c468fa0200a4734851c987122ee682a"
+      },
+      "elapsed_ms": 2275.25925001828
+    },
+    {
+      "task_id": "pressure-background-020",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "53b04df40a484e28b01dffdbcd6e4e1c"
+      },
+      "elapsed_ms": 2302.637999993749
+    },
+    {
+      "task_id": "pressure-background-021",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "59fd116aa6a5482c85da300c99c9c226"
+      },
+      "elapsed_ms": 2293.7244169879705
+    },
+    {
+      "task_id": "pressure-background-021",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "1fa4b2a87d77468e939734e5f8641976"
+      },
+      "elapsed_ms": 2299.5400829822756
+    },
+    {
+      "task_id": "pressure-background-022",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "373a52cacc05432385ea8eaf724a7595"
+      },
+      "elapsed_ms": 2282.608291017823
+    },
+    {
+      "task_id": "pressure-background-022",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "02481a28e8b44fb594fc3fc6a4b015a4"
+      },
+      "elapsed_ms": 2288.6007920023985
+    },
+    {
+      "task_id": "pressure-background-023",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "fe88561e90424d0a8d6fbfd995ab6cf6"
+      },
+      "elapsed_ms": 2290.455334004946
+    },
+    {
+      "task_id": "pressure-background-023",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "c9598aad2eda4f07a5baa6614134fec0"
+      },
+      "elapsed_ms": 2270.0689579942264
+    },
+    {
+      "task_id": "pressure-background-024",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "c385477b1d8949a4ad89d4d6b49c1f3d"
+      },
+      "elapsed_ms": 2276.078167022206
+    },
+    {
+      "task_id": "pressure-background-024",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "4dc644a1f59d4ea7b4bc3802353a0c68"
+      },
+      "elapsed_ms": 2295.413332991302
+    },
+    {
+      "task_id": "pressure-background-025",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "7e38be95b6b14f2ca02aa62de1d5fd59"
+      },
+      "elapsed_ms": 2227.9107499634847
+    },
+    {
+      "task_id": "pressure-background-025",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "616b21e2f00b40068a3195bdf0e9750f"
+      },
+      "elapsed_ms": 2218.0325830122456
+    },
+    {
+      "task_id": "pressure-background-026",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "c1636ef1148c4ca3ac0748131047f956"
+      },
+      "elapsed_ms": 2313.796083035413
+    },
+    {
+      "task_id": "pressure-background-026",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "18b0382554e54e119490f2974225b452"
+      },
+      "elapsed_ms": 2282.7810419839807
+    },
+    {
+      "task_id": "pressure-background-027",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "736357250fc54dd990bdb57aa0648951"
+      },
+      "elapsed_ms": 2313.886417017784
+    },
+    {
+      "task_id": "pressure-background-027",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "d150a712b9cb46db98deecb857031c38"
+      },
+      "elapsed_ms": 2318.6582500347868
+    },
+    {
+      "task_id": "pressure-background-028",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "a7d0f2b05fb244fdbb37ece5a96cb065"
+      },
+      "elapsed_ms": 2276.6495419782586
+    },
+    {
+      "task_id": "pressure-background-028",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "1e65cbbbea8e4c379602b15bbcbccbff"
+      },
+      "elapsed_ms": 2320.6567500019446
+    },
+    {
+      "task_id": "pressure-background-029",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "81f3f2d1cea641e1b522dd26e115f536"
+      },
+      "elapsed_ms": 2269.7608749731444
+    },
+    {
+      "task_id": "pressure-background-029",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "751b2dff38714072a68c3a4f70932a59"
+      },
+      "elapsed_ms": 2354.9548339797184
+    },
+    {
+      "task_id": "pressure-background-030",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "ae5d3b601dbf4e3e85aa95b9d092a080"
+      },
+      "elapsed_ms": 2222.608750045765
+    },
+    {
+      "task_id": "pressure-background-030",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "e26457d9e18d419c8dbedf43e2d96926"
+      },
+      "elapsed_ms": 2326.6677500214428
+    },
+    {
+      "task_id": "pressure-background-031",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "2cf08656e6b24fffaab12d85157673f6"
+      },
+      "elapsed_ms": 2295.450457953848
+    },
+    {
+      "task_id": "pressure-background-031",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "5cabafac57c243ba9a22f146f61300ab"
+      },
+      "elapsed_ms": 2305.823957954999
+    },
+    {
+      "task_id": "pressure-background-032",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "1d1cd4cce6664d0eb9005ab28db6e56d"
+      },
+      "elapsed_ms": 2227.1398750017397
+    },
+    {
+      "task_id": "pressure-background-032",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "96d46b39298e47e2ac156aad7d088921"
+      },
+      "elapsed_ms": 2309.1894580284134
+    },
+    {
+      "task_id": "pressure-background-033",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "2f15562322424056acca15b227473dc1"
+      },
+      "elapsed_ms": 2290.2687919558957
+    },
+    {
+      "task_id": "pressure-background-033",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "d6fe430dbc074589af13ed1b486afd8e"
+      },
+      "elapsed_ms": 2310.805541987065
+    },
+    {
+      "task_id": "pressure-background-034",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "808203a73d2348a79fb8a50e53dda444"
+      },
+      "elapsed_ms": 2209.356041974388
+    },
+    {
+      "task_id": "pressure-background-034",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "3c871f08ad4447b2a361b2dca3e30424"
+      },
+      "elapsed_ms": 2310.973624989856
+    },
+    {
+      "task_id": "pressure-background-035",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "6cd4a2e669bd4f7f864781b829d361f6"
+      },
+      "elapsed_ms": 2354.2237500078045
+    },
+    {
+      "task_id": "pressure-background-035",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "603e3f78fd564e539affe36ffbcfcdc2"
+      },
+      "elapsed_ms": 2228.5926250042394
+    },
+    {
+      "task_id": "pressure-background-036",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "581aa03f5a0a459b9096e6df9dde5922"
+      },
+      "elapsed_ms": 2331.8235839833505
+    },
+    {
+      "task_id": "pressure-background-036",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "d81f61ed52144c61877b0fe399608e92"
+      },
+      "elapsed_ms": 2301.7723750090227
+    },
+    {
+      "task_id": "pressure-background-037",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "6541ff479fad41ff9fb59f9ac99b4f98"
+      },
+      "elapsed_ms": 2198.2907920028083
+    },
+    {
+      "task_id": "pressure-background-037",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "ee0823fe99e8468e98592709debefeb7"
+      },
+      "elapsed_ms": 2329.8756249714643
+    },
+    {
+      "task_id": "pressure-background-038",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "53006d9d67d747258fc5f7f87d7b1d40"
+      },
+      "elapsed_ms": 2329.8202920123003
+    },
+    {
+      "task_id": "pressure-background-038",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "1ac6a3a84da148d890ae197aa5d788c9"
+      },
+      "elapsed_ms": 2193.4332499513403
+    },
+    {
+      "task_id": "pressure-background-039",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "a455b90ac83d45ac94e396dae88253f8"
+      },
+      "elapsed_ms": 2318.3409580378793
+    },
+    {
+      "task_id": "pressure-background-039",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "ff77449f35704b73a076f588205cba8e"
+      },
+      "elapsed_ms": 2331.611083005555
+    },
+    {
+      "task_id": "pressure-background-040",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "fd577ba4c7bc41f0b3ac7b2fd59c226a"
+      },
+      "elapsed_ms": 2211.832166009117
+    },
+    {
+      "task_id": "pressure-background-040",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "40470f2ffaaf45d6b046bd7415f72e4f"
+      },
+      "elapsed_ms": 2375.7298340206034
+    }
+  ],
+  "background_errors": [],
+  "summary_object_reads": {
+    "deck_task.v1": 1650,
+    "deck_page_package.v2": 600,
+    "deck_artifact.v1": 796,
+    "content_plan.v1": 1
+  },
+  "environment": {
+    "os": "macOS-27.0-arm64-arm-64bit",
+    "python": "3.12.12",
+    "machine": "arm64",
+    "hardware": "Mac17,9",
+    "memory_bytes": 68719476736,
+    "commit": "9e6b6e1b804eea7b843f716165fbde2ce04a72be",
+    "browser": null,
+    "viewport": null
+  },
+  "threshold_ms": 250,
+  "passed": false
+}
