@@ -251,11 +251,20 @@ def test_restore_does_not_revive_cancelled_trial_or_drop_completed_candidates(st
 from test_generation_protocol import flow, EXECUTION
 
 
-def test_blueprint_candidate_keeps_request_attempt_and_only_adoption_changes_original(flow):
+@pytest.mark.parametrize("use_reference", [False, True])
+def test_blueprint_candidate_keeps_request_attempt_and_only_adoption_changes_original(flow, use_reference):
     from deck_master.models import canonical_json_bytes
     from test_generation_protocol import accept as accept_image
     project, store, automatic, native = flow
-    task = dispatch(store, 'p1', layer='original_image')
+    references = None
+    if use_reference:
+        from test_generation_protocol import start as start_auto, freeze, begin, settle
+        start_auto(flow); first_request = freeze(flow); first_attempt = begin(flow, first_request)
+        first_report, first_raw = native(); settle(flow, first_attempt, first_report)
+        accept_image(flow, first_request, first_attempt, first_raw)
+        doc = store.load_document()
+        references = [{'page_id': 'p1', 'revision_id': doc['revision_id'], 'artifact_ref': doc['pages'][0]['blueprint'], 'role': 'reference'}]
+    task = dispatch(store, 'p1', layer='original_image', references=references)
     service.task_start(project, task_id=task['task_id'], execution_ref=EXECUTION,
                        supported_protocols=['generation.v1'], capabilities=[*generation.CAPABILITIES, 'change_plan', 'candidate_result'])
     prepared = generation.prepared_input(store, store.load_document(), task)
@@ -265,6 +274,18 @@ def test_blueprint_candidate_keeps_request_attempt_and_only_adoption_changes_ori
     attempt = tasks.call_begin(store, task_id=task['task_id'], allowance_id=task['call_allowances'][0]['allowance_id'],
                                execution_ref=EXECUTION, request_id=frozen['request_id'])
     report, raw = native(prompt=prepared['prompt'])
+    if use_reference:
+        import json, base64
+        from deck_master import observations
+        session = next(observations._session_root().rglob('*.jsonl'))
+        records = session.read_text().splitlines(); event = records.pop()
+        arguments = {'prompt': prepared['prompt'], 'transparent_background': False,
+                     'referenced_image_paths': [str(store.project_root / item['file']['path']) for item in prepared['references']]}
+        call = {'type': 'response_item', 'payload': {'type': 'custom_tool_call', 'name': 'exec', 'call_id': 'synthetic-reference-call',
+                'input': 'const result = await tools.image_gen__imagegen(' + json.dumps(arguments) + ');generatedImage(result);'}}
+        returned = {'type': 'response_item', 'payload': {'type': 'custom_tool_call_output', 'call_id': 'synthetic-reference-call',
+                    'output': [{'type': 'input_image', 'image_url': 'data:image/png;base64,' + base64.b64encode(raw).decode()}]}}
+        session.write_text('\n'.join([*records, json.dumps(call), event, json.dumps(returned)]) + '\n')
     tasks.call_settle(store, task_id=task['task_id'], allowance_id=attempt['allowance_id'], attempt_id=attempt['attempt_id'],
                        outcome='consumed', report_bytes=canonical_json_bytes(report))
     before = copy.deepcopy(store.load_document()['pages'])
@@ -272,6 +293,7 @@ def test_blueprint_candidate_keeps_request_attempt_and_only_adoption_changes_ori
     assert store.load_document()['pages'] == before
     cid = result['candidate_ids'][0]; shown = candidates.show(project, candidate_id=cid)
     assert shown['request']['request_id'] == frozen['request_id'] and shown['attempt']['attempt_id'] == attempt['attempt_id']
+    assert shown['reference_sources'] == ([{**references[0], 'file': prepared['references'][0]['file']}] if use_reference else [])
     adopt(store, plan(store, [cid]))
     assert store.load_document()['pages'][0]['blueprint'] == shown['candidate']['result_ref']
     assert store.load_document()['pages'][0]['svg'] is None

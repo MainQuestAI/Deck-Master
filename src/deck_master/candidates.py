@@ -128,9 +128,21 @@ def show(project, *, candidate_id, revision=None):
                 or request['task_id'] != task['task_id'] or attempt['task_id'] != task['task_id']
                 or request['project_id'] != document['project_id'] or attempt['project_id'] != document['project_id']):
             raise operations.OperationError('candidate_invalid', 'request_ref', 'candidate request and attempt do not belong to its task')
+    reference_sources = []
+    if task.get('change_binding'):
+        from .changes import action_for_task, _reference_files
+        action_for_task(store, document, task)
+        change = store.read_object_json(task['change_binding']['change_ref'])
+        change_plan = store.read_object_json(change['plan_ref']); validate_schema('change_plan', change_plan)
+        sources = change_plan['input'].get('references', [])
+        files = _reference_files(store, document, sources)
+        if files != task['stage_request']['references']:
+            raise operations.OperationError('candidate_invalid', 'references', 'fixed reference sources differ from the committed task')
+        reference_sources = [{**source, 'file': file['file']} for source, file in zip(sources, files, strict=True)]
     return {'project_id': document['project_id'], 'revision_id': document['revision_id'],
             'candidate_id': candidate_id, 'candidate_ref': ref, 'candidate': candidate, 'artifact': artifact,
             'request': request, 'attempt': attempt, 'references': task['stage_request']['references'],
+            'reference_sources': reference_sources,
             **_state(store, document, candidate)}
 
 
