@@ -165,12 +165,13 @@
       "accepted": false
     },
     "W10": {
-      "status": "core_ready",
+      "status": "core_pr_open",
       "accepted": false,
       "baseline": "d42dda62c53bfeaf177c077f8e46074c8c23bdba",
       "plan": "W10-PLAN.md",
       "core_implementation_commit": "b505d34f384edda5f50e94f1e8d2a3d0060fb737",
-      "core_evidence": "W10-CORE.md"
+      "core_evidence": "W10-CORE.md",
+      "core_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/56"
     },
     "W11": {
       "status": "planned",
