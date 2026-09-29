@@ -5,9 +5,10 @@
     "seconds": 140.73
   },
   "versioned_export_tests": {
-    "passed": 15,
-    "seconds": 1.0,
-    "note": "one historical-delivery test added after the full run; all 15 then passed"
+    "passed": 16,
+    "combined_export_suite_passed": 26,
+    "seconds": 1.55,
+    "note": "historical-delivery and stale-professional-policy tests added after the 896-test full run; related 26 tests passed"
   },
   "ruff": "pass",
   "cli_evidence": "cli-checks.json",

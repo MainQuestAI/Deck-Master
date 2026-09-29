@@ -351,3 +351,22 @@ def test_historical_delivery_uses_its_checks_and_input_alignment(tmp_path):
     assert historical["revision_id"] == good["revision_id"]
     report = json.loads(exports.download(root, export_id=historical["export_id"], filename="delivery.json")[0])
     assert report["input_alignment"] == "current" and report["review_status"] == "pass"
+
+
+def test_stale_professional_review_cannot_satisfy_delivery_policy(tmp_path):
+    from test_export import _passing_deck, _set_policy, _review
+
+    root, store = _passing_deck(tmp_path)
+    _set_policy(store, professional_review_required_for_delivery=True)
+    _review(store, store.load_document(), "professional_use", "pass", seed="professional")
+    doc = store.load_document()
+    record = store.read_object_json(doc["reviews"][-1])
+    record["dependencies"][0]["sha256"] = "a" * 64
+    changed = bump_revision(
+        copy.deepcopy(doc), {"operation_id": "stale-professional", "kind": "task_update", "description": "stale fixture", "read_set": []}
+    )
+    changed["reviews"][-1] = store.put_json_object(record)
+    store.commit_change(base_revision=doc["revision_id"], document=changed, operation_id="stale-professional")
+    assert exports.describe(root)["check_summary"]["status"] == "pass"
+    with pytest.raises(exports.ExportError, match="professional or human review"):
+        exports.create(root, purpose="delivery")

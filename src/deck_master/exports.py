@@ -127,11 +127,21 @@ def _gate(store, doc, facts, purpose):
             gaps=facts["gaps"],
         )
     if (doc.get("policy") or {}).get("professional_review_required_for_delivery"):
+        from .editing import _current_artifact_digests
+        from .review import _dependency_key
+
+        artifacts = _current_artifact_digests(store, doc)
         satisfied = False
         for ref in doc["reviews"]:
             review = store.read_object_json(ref)
             if (
                 doc["outputs"]["pptx"] in review["subjects"]
+                and review.get("review_stage", "final") == "final"
+                and all(artifacts.get(_dependency_key(dep)) == dep["sha256"] for dep in review.get("dependencies", []))
+                and not (
+                    review["kind"] in ("content", "privacy")
+                    and (ref["path"], ref["sha256"]) in artifacts.get("_input_stale_reviews", set())
+                )
                 and review["status"] != "fail"
                 and (review["kind"] == "professional_use" or review["reviewer"]["type"] in ("human_internal", "human_external"))
             ):

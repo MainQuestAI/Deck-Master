@@ -12,8 +12,8 @@ PNG/JPEG 元数据、SVG 注释/metadata 和 PPT 属性/备注/非可见形状�
 
 ## 验证与范围
 
-- W11 专项：15 项；覆盖元数据 canary、正文/链接/像素保留、原件不变、无 PPT、固定历史与后台提交、内部恢复、跨项目/失效 ID、白名单及 hash 损坏、同源/token、结构化错误、恢复取消/冲突/回执故障/重试。
-- 首次完整 rebuild：893 passed、1 failed（139.20 秒）。失败是超页数拒绝消息漏掉 `page_limit`；补回具体原因与结构化缺项后，相关 33 项通过。最终完整回归 896 passed（140.73 秒）；随后新增历史正式导出用例，15 项专项再跑通过（1.00 秒）。[测试输出](w11/core/pytest.txt)、[检查摘要](w11/core/checks.json)、[CLI 检查](w11/core/cli-checks.json)。
+- W11 专项：16 项；覆盖元数据 canary、正文/链接/像素保留、原件不变、无 PPT、固定历史与后台提交、内部恢复、跨项目/失效 ID、白名单及 hash 损坏、同源/token、结构化错误、恢复取消/冲突/回执故障/重试。
+- 首次完整 rebuild：893 passed、1 failed（139.20 秒）。失败是超页数拒绝消息漏掉 `page_limit`；补回具体原因与结构化缺项后，相关 33 项通过。最终完整回归 896 passed（140.73 秒）；随后新增历史正式导出用例，15 项专项再跑通过（1.00 秒）。提交后复查再补专业政策的依赖新鲜度检查，新增回归后相关导出 26 项通过（1.55 秒），W11 专项累计 16 项。[测试输出](w11/core/pytest.txt)、[检查摘要](w11/core/checks.json)、[CLI 检查](w11/core/cli-checks.json)。
 - CLI 示例在 W09 已有实际 Host 三页材料项目运行：审阅包与工程包 hash 校验通过，工程包在独立目录恢复，源 Document 不变。原项目无 PPT，delivery 明确拒绝，未伪造正式交付。
 - 正式交付正向门禁由明确标注的合成单元项目覆盖；不是客户或独立专业批准。示例不调用模型，不修改真实 HOME，不替用户安装或切换默认入口。
 - 兼容说明见 [迁移文档](../../migration-to-rebuilt-core.md#fixed-revision-exports-workbench-w11)，公开路由与错误见任务索引和恢复手册。新 manifest/restore-plan 活动合同与唯一镜像同步；Document 未增加新的字段，既有 writer floor 保留。

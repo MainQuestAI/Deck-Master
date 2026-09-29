@@ -1,8 +1,8 @@
 [
   {
     "path": "core/checks.json",
-    "sha256": "c265a9d5344464e858f0d9426498d78d56a62783096dd1c84b1b43f018152b09",
-    "size": 457
+    "sha256": "24ece16375c86eb40a561266864f9b5da791db68016a56cd1d702b8e5c11ac6e",
+    "size": 539
   },
   {
     "path": "core/cli-checks.json",
