@@ -168,8 +168,10 @@ export function candidateDesk(app, data) {
   const rejected = event => { if (event.detail.action === 'candidates.adopt') { currentPlan = null; controls(); } };
   app.root.addEventListener('business-rejected', rejected);
   const sync = () => controls(); app.root.addEventListener('business-state-changed', sync);
-  const timer = setInterval(() => { if (!document.hidden) refresh(); }, 5000);
-  app.disposables.push(() => { disposed = true; serial++; clearInterval(timer); releases.forEach(fn => fn()); auxReleases.forEach(fn => fn()); modalReleases.forEach(fn => fn()); app.root.removeEventListener('business-state-changed', sync); app.root.removeEventListener('business-rejected', rejected); });
+  const fromSummary = event => { if (event.detail.revision_id !== live?.revision_id && !document.hidden) refresh(); };
+  app.root.addEventListener('summary-refreshed', fromSummary);
+  const timer = app.health.ui_capabilities?.includes('run_desk.v1') ? null : setInterval(() => { if (!document.hidden) refresh(); }, 5000);
+  app.disposables.push(() => { disposed = true; serial++; clearInterval(timer); app.root.removeEventListener('summary-refreshed', fromSummary); releases.forEach(fn => fn()); auxReleases.forEach(fn => fn()); modalReleases.forEach(fn => fn()); app.root.removeEventListener('business-state-changed', sync); app.root.removeEventListener('business-rejected', rejected); });
   refresh(); controls(); return root;
 }
 

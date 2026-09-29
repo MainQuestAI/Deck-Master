@@ -19,6 +19,14 @@ from deck_master.store import Store
 from deck_master.web import WorkbenchServer
 
 
+def wait_dom(page, selector):
+    # Chromium 149 / Playwright locator.wait_for retains target DOM handles in
+    # DevTools Global handles. A boolean predicate avoids measuring the driver.
+    # No console clearing, explicit GC, page reload, or cache purge is used.
+    handle = page.wait_for_function('(selector) => Boolean(document.querySelector(selector))', arg=selector)
+    handle.dispose()
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--fixture', type=Path, required=True); parser.add_argument('--out', type=Path, required=True)
@@ -43,13 +51,13 @@ def main():
                     key = request.url.split('/api/')[1].split('?')[0]
                     request_counts[key] = request_counts.get(key, 0) + 1
             page.on('request', requested); page.goto(url)
-            page.locator('.gallery-card').first.wait_for()
+            wait_dom(page, '.gallery-card')
             cdp = context.new_cdp_session(page); cdp.send('Performance.enable')
             start = time.monotonic(); step = 0
             def gallery():
                 if not page.locator('.gallery-viewport').count():
                     page.get_by_role('button', name='整稿画廊', exact=True).click()
-                    page.locator('.gallery-viewport').wait_for()
+                    wait_dom(page, '.gallery-viewport')
             while time.monotonic() - start < duration:
                 phase = step % 6
                 if phase == 0:
@@ -59,19 +67,19 @@ def main():
                     gallery(); page.get_by_role('navigation', name='画廊图层').get_by_role('button', name='SVG', exact=True).click()
                     expect(page.get_by_role('navigation', name='画廊图层').get_by_role('button', name='SVG', exact=True)).to_have_attribute('aria-pressed', 'true')
                 elif phase == 2:
-                    page.locator('.gallery-open').first.click(); page.locator('.page-reading').first.wait_for()
+                    page.locator('.gallery-open').first.click(); wait_dom(page, '.page-reading')
                     if page.get_by_role('combobox', name='阅读缩放').count(): page.get_by_role('combobox', name='阅读缩放').select_option('1.25')
                 elif phase == 3:
                     gallery(); page.get_by_role('navigation', name='画廊图层').get_by_role('button', name='原图', exact=True).click()
                     expect(page.get_by_role('navigation', name='画廊图层').get_by_role('button', name='原图', exact=True)).to_have_attribute('aria-pressed', 'true')
                 elif phase == 4:
                     page.get_by_role('button', name='任务与交付', exact=True).click()
-                    page.locator('.candidate-batch-row').first.wait_for(); page.locator('.candidate-batch-row').first.get_by_role('button', name='比较这个候选').click()
-                    page.locator('.candidate-desk').wait_for(); page.locator('.candidate-column [data-image-state=ready]').first.wait_for()
+                    wait_dom(page, '.candidate-batch-row'); page.locator('.candidate-batch-row').first.get_by_role('button', name='比较这个候选').click()
+                    wait_dom(page, '.candidate-desk'); wait_dom(page, '.candidate-column [data-image-state=ready]')
                 else:
                     chooser = page.get_by_role('combobox', name='选择本页候选'); values = chooser.locator('option').evaluate_all('(nodes)=>nodes.map(node=>node.value)')
                     chooser.select_option(values[(step // 6) % len(values)])
-                    page.locator('.candidate-column [data-image-state=ready]').first.wait_for(); gallery()
+                    wait_dom(page, '.candidate-column [data-image-state=ready]'); gallery()
                 if step % 2 == 0:
                     if pending:
                         value = service.task_cancel(project, task_id=pending, reason='W10 synthetic pressure cancellation'); updates.append({'step': step, 'task_id': pending, 'kind': 'cancel'}); pending = None

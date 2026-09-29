@@ -88,7 +88,7 @@ export function pageDetail(app, data) {
   const update = el('div', {class: 'notice', role: 'status', hidden: true});
   let lastSync = Date.now(), polling = false;
   const poll = async () => {
-    if (polling || disposed) return; polling = true;
+    if (polling || disposed || document.hidden) return; polling = true;
     try {
       const latest = await get('/api/view/summary'); if (disposed) return;
       lastSync = Date.now();
@@ -101,7 +101,15 @@ export function pageDetail(app, data) {
       if (!disposed) { update.hidden = false; update.textContent = '服务暂时断线，保留已读内容。最后同步：' + new Date(lastSync).toLocaleTimeString(); }
     } finally { polling = false; }
   };
-  const timer = setInterval(poll, 5000); app.disposables.push(() => clearInterval(timer));
+  const fromSummary = event => {
+    if (disposed) return;
+    const latest = event.detail; lastSync = Date.now(); update.hidden = latest.revision_id === fixed;
+    if (!update.hidden) update.replaceChildren(el('span', {}, '当前稿已更新；这里的页、图层与比较双方仍固定。'),
+      button('查看新的当前版本', () => app.go({revision: latest.revision_id})));
+  };
+  app.root.addEventListener('summary-refreshed', fromSummary);
+  const timer = app.health.ui_capabilities?.includes('run_desk.v1') ? null : setInterval(poll, 5000);
+  app.disposables.push(() => { clearInterval(timer); app.root.removeEventListener('summary-refreshed', fromSummary); });
   const aside = el('aside', {class: 'page-context stack'}), draftSlot = el('div');
   let annotations, draftRef;
   function bindDraft(ref, text) {

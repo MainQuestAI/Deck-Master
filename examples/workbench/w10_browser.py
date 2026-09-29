@@ -45,7 +45,7 @@ def main():
             page.wait_for_timeout(3400)
             check('paged_task_snapshot_does_not_reorder_on_background_update', page.locator('.run-task').evaluate_all('(nodes)=>nodes.map(n=>n.dataset.taskId)') == fixed_ids)
             page.reload(); expect(page.locator('.run-task')).to_have_count(remaining)
-            check('project_ack_restores_task_page_and_revision', page.locator('.run-task').evaluate_all('(nodes)=>nodes.map(n=>n.dataset.taskId)') == fixed_ids)
+            check('same_origin_reload_restores_task_page_and_revision', page.locator('.run-task').evaluate_all('(nodes)=>nodes.map(n=>n.dataset.taskId)') == fixed_ids)
             # Current version lets the synthetic project persist personal selection.
             page.get_by_role('button', name='读取项目最新状态', exact=True).click()
             page.locator('.candidate-batch-row').first.wait_for()
