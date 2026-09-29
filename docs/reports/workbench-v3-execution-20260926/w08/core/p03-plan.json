@@ -1,0 +1,87 @@
+{
+  "status": "planned",
+  "plan_id": "plan-f0a6906a871bdb9c1615be92ec8e35ba95c8b7dd129a80fef1a79717819376d7",
+  "plan_ref": {
+    "path": ".deckmaster/objects/f0/f0a6906a871bdb9c1615be92ec8e35ba95c8b7dd129a80fef1a79717819376d7.json",
+    "sha256": "f0a6906a871bdb9c1615be92ec8e35ba95c8b7dd129a80fef1a79717819376d7"
+  },
+  "plan": {
+    "schema_version": "change_plan.v1",
+    "project_id": "synthetic-project",
+    "base_revision": "02002b91758f46ff927fd4457909c930",
+    "input": {
+      "schema_version": "change_intent.v1",
+      "project_id": "synthetic-project",
+      "base_revision": "02002b91758f46ff927fd4457909c930",
+      "intent": "style_calibration",
+      "instruction": "跨页风格试作。只借用明确选定的视觉维度，不复制参考页的标题、事实、数字、论点或其它正文。\n目标页结构化正文必须完整保留；未选维度沿用目标页。构图仅在单独选择 composition 时借用。\n用户简短要求：借用配色与文字层级，保持目标页标题、事实、数字与构图。\n明确借用维度：{\"palette\": \"借用参考页配色\", \"typography\": \"借用参考页文字层级\"}",
+      "annotation_refs": [],
+      "max_calls": 1,
+      "mode": "trial",
+      "references": [
+        {
+          "artifact_ref": {
+            "path": ".deckmaster/objects/db/db283eef00d3d881a1bfa60c33ce158a6511111ddc94aa128178480721928789.json",
+            "sha256": "db283eef00d3d881a1bfa60c33ce158a6511111ddc94aa128178480721928789"
+          },
+          "page_id": "p01",
+          "revision_id": "21ed1e7dfb524e58a64def797c3598cf",
+          "role": "reference"
+        }
+      ],
+      "style_recipe_ref": {
+        "path": ".deckmaster/objects/35/35f30b7842cb2361851c24c76cd4759793579d2f52ff23c4a8bca8f27f95bc4b.json",
+        "sha256": "35f30b7842cb2361851c24c76cd4759793579d2f52ff23c4a8bca8f27f95bc4b"
+      },
+      "targets": [
+        {
+          "page_id": "p03",
+          "page_ref": {
+            "path": ".deckmaster/objects/e9/e9d619ddce32b9c92a9e23d59d05c3892fadffe30ff4276e70e0f70709e7a413.json",
+            "sha256": "e9d619ddce32b9c92a9e23d59d05c3892fadffe30ff4276e70e0f70709e7a413"
+          },
+          "layer": "original_image",
+          "stage": "blueprint",
+          "artifact_ref": {
+            "path": ".deckmaster/objects/62/6255a095a185ebe2560a156149b91722b231dc30c97cb1b3b1909994bcc73cd4.json",
+            "sha256": "6255a095a185ebe2560a156149b91722b231dc30c97cb1b3b1909994bcc73cd4"
+          }
+        }
+      ],
+      "style_adopted_candidate_id": "candidate-0faf5a2021514966a0aed2e1aab1bfc1"
+    },
+    "payload_digest": "53974ab5231b8b460799ebcb3b13fe96e986fa960e93aa970f03836ae7d873d3",
+    "actions": [
+      {
+        "action_id": "action-1",
+        "page_id": "p03",
+        "page_ref": {
+          "path": ".deckmaster/objects/e9/e9d619ddce32b9c92a9e23d59d05c3892fadffe30ff4276e70e0f70709e7a413.json",
+          "sha256": "e9d619ddce32b9c92a9e23d59d05c3892fadffe30ff4276e70e0f70709e7a413"
+        },
+        "layer": "original_image",
+        "target_ref": {
+          "path": ".deckmaster/objects/62/6255a095a185ebe2560a156149b91722b231dc30c97cb1b3b1909994bcc73cd4.json",
+          "sha256": "6255a095a185ebe2560a156149b91722b231dc30c97cb1b3b1909994bcc73cd4"
+        },
+        "kind": "blueprint",
+        "write_slots": [
+          "blueprint"
+        ],
+        "max_calls": 1,
+        "downstream": [
+          "svg",
+          "svg_preview",
+          "ppt_preview",
+          "deck_outputs",
+          "quality_applicability"
+        ],
+        "mode": "trial",
+        "stage": "blueprint"
+      }
+    ],
+    "max_calls": 1,
+    "content_identity": "b606f8047bdf9e57aac946a71613276903acd3ed3d2a33a64fa8a7781bb1b2b2",
+    "effects": "Trial results are immutable candidates; current artifacts change only through explicit candidate adoption."
+  }
+}

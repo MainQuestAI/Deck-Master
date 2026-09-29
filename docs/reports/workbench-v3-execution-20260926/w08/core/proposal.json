@@ -1,0 +1,120 @@
+{
+  "status": "suggestion",
+  "proposal_id": "style-proposal-bb0764cdbd613d27218f338d5ebfefc4d12fc38475fcdf85aa6875681485921c",
+  "proposal_ref": {
+    "path": ".deckmaster/objects/bb/bb0764cdbd613d27218f338d5ebfefc4d12fc38475fcdf85aa6875681485921c.json",
+    "sha256": "bb0764cdbd613d27218f338d5ebfefc4d12fc38475fcdf85aa6875681485921c"
+  },
+  "proposal": {
+    "schema_version": "style_proposal.v1",
+    "project_id": "synthetic-project",
+    "base_revision": "21ed1e7dfb524e58a64def797c3598cf",
+    "input": {
+      "schema_version": "style_input.v1",
+      "project_id": "synthetic-project",
+      "base_revision": "21ed1e7dfb524e58a64def797c3598cf",
+      "reference": {
+        "page_id": "p01",
+        "revision_id": "21ed1e7dfb524e58a64def797c3598cf",
+        "artifact_ref": {
+          "path": ".deckmaster/objects/db/db283eef00d3d881a1bfa60c33ce158a6511111ddc94aa128178480721928789.json",
+          "sha256": "db283eef00d3d881a1bfa60c33ce158a6511111ddc94aa128178480721928789"
+        },
+        "role": "reference"
+      },
+      "target_page_ids": [
+        "p02",
+        "p03"
+      ],
+      "instruction": "借用配色与文字层级，保持目标页标题、事实、数字与构图。"
+    },
+    "targets": [
+      {
+        "page_id": "p02",
+        "page_ref": {
+          "path": ".deckmaster/objects/14/144c0d10eb1a5df4abeb9709a8b6b6a7ddeb00edf29cb8a385d77bb5a52a14e8.json",
+          "sha256": "144c0d10eb1a5df4abeb9709a8b6b6a7ddeb00edf29cb8a385d77bb5a52a14e8"
+        },
+        "blueprint_ref": {
+          "path": ".deckmaster/objects/ab/abccd4304cd188f45162050a172ce199ab88d999b8b81c46981afd5f617d19f9.json",
+          "sha256": "abccd4304cd188f45162050a172ce199ab88d999b8b81c46981afd5f617d19f9"
+        },
+        "content": {
+          "body_blocks": [],
+          "title": "材料如何成为内容"
+        }
+      },
+      {
+        "page_id": "p03",
+        "page_ref": {
+          "path": ".deckmaster/objects/e9/e9d619ddce32b9c92a9e23d59d05c3892fadffe30ff4276e70e0f70709e7a413.json",
+          "sha256": "e9d619ddce32b9c92a9e23d59d05c3892fadffe30ff4276e70e0f70709e7a413"
+        },
+        "blueprint_ref": {
+          "path": ".deckmaster/objects/62/6255a095a185ebe2560a156149b91722b231dc30c97cb1b3b1909994bcc73cd4.json",
+          "sha256": "6255a095a185ebe2560a156149b91722b231dc30c97cb1b3b1909994bcc73cd4"
+        },
+        "content": {
+          "body_blocks": [],
+          "title": "每页保留原图与来源"
+        }
+      }
+    ],
+    "reference_sources": {
+      "reference": {
+        "page_id": "p01",
+        "revision_id": "21ed1e7dfb524e58a64def797c3598cf",
+        "artifact_ref": {
+          "path": ".deckmaster/objects/db/db283eef00d3d881a1bfa60c33ce158a6511111ddc94aa128178480721928789.json",
+          "sha256": "db283eef00d3d881a1bfa60c33ce158a6511111ddc94aa128178480721928789"
+        },
+        "role": "reference"
+      },
+      "submitted": {
+        "state": "not_recorded",
+        "ref": null,
+        "observer": "unknown",
+        "text": null
+      },
+      "prepared": [],
+      "requests": [],
+      "unstructured_text_policy": "Keep original text; exact selected excerpts or explicitly confirmed Host suggestions only."
+    },
+    "dimensions": {
+      "palette": "借用参考页配色",
+      "typography": "借用参考页文字层级"
+    },
+    "conflicts": [],
+    "diff": [
+      {
+        "field": "reference",
+        "before": null,
+        "after": {
+          "page_id": "p01",
+          "revision_id": "21ed1e7dfb524e58a64def797c3598cf",
+          "artifact_ref": {
+            "path": ".deckmaster/objects/db/db283eef00d3d881a1bfa60c33ce158a6511111ddc94aa128178480721928789.json",
+            "sha256": "db283eef00d3d881a1bfa60c33ce158a6511111ddc94aa128178480721928789"
+          },
+          "role": "reference"
+        }
+      },
+      {
+        "field": "target_page_ids",
+        "before": null,
+        "after": [
+          "p02",
+          "p03"
+        ]
+      },
+      {
+        "field": "instruction",
+        "before": null,
+        "after": "借用配色与文字层级，保持目标页标题、事实、数字与构图。"
+      }
+    ],
+    "preserve_target_content": true,
+    "suggestion_state": "none"
+  },
+  "model_calls": 0
+}

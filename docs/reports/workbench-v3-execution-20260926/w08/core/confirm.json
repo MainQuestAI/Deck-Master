@@ -1,0 +1,21 @@
+{
+  "status": "committed",
+  "operation_id": "516a969a-c4ee-4606-a4a9-f0615d9b22b2",
+  "committed_revision_id": "c1b5659ecb6141eb861b9b85c47e8888",
+  "current_revision_id": "c1b5659ecb6141eb861b9b85c47e8888",
+  "request_digest": "2bce6d2aa19eeccfe823d83bcbed7ee7bb2b1d59aabb103c19ea66990a38a53c",
+  "result_ref": {
+    "path": ".deckmaster/objects/7b/7bb1f003d6ca1139a913cc60a25f9e09ca7285e0123a0887facf1675fc7de2ac.json",
+    "sha256": "7bb1f003d6ca1139a913cc60a25f9e09ca7285e0123a0887facf1675fc7de2ac"
+  },
+  "operation_result": {
+    "status": "confirmed",
+    "revision_id": "c1b5659ecb6141eb861b9b85c47e8888",
+    "recipe_id": "recipe-04d6d8e362b94feba9f31506681876cb",
+    "recipe_ref": {
+      "path": ".deckmaster/objects/35/35f30b7842cb2361851c24c76cd4759793579d2f52ff23c4a8bca8f27f95bc4b.json",
+      "sha256": "35f30b7842cb2361851c24c76cd4759793579d2f52ff23c4a8bca8f27f95bc4b"
+    },
+    "model_calls": 0
+  }
+}

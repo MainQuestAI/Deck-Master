@@ -54,6 +54,11 @@ def _plan(store, document, value):
     entries = {entry['page_id']: entry for entry in document['pages']}
     extended = any(key in value for key in ('mode', 'references')) or any('stage' in t for t in value['targets'])
     mode = value.get('mode', 'auto')
+    if value.get('style_recipe_ref'):
+        from .styles import validate_change
+        validate_change(store, document, value)
+    elif value.get('style_adopted_candidate_id'):
+        fail('style_adopted_candidate_id', 'style expansion requires its fixed recipe')
     _reference_files(store, document, value.get('references', []))
     seen = set(); actions = []
     for target in value['targets']:
@@ -185,7 +190,12 @@ def _new_task(store, ledger, basis, plan, change_ref, task_id, action):
         from .service import _resolve_permitted_asset_files
         design = basis['design_context']
         request = project_prompt(store.read_object_json(entry['page']), design, design.get('assets') or [])
-        request['prompt'] = plan['input']['instruction'] + '\n\n' + request['prompt']
+        if plan['input'].get('style_recipe_ref'):
+            from .styles import apply_request
+            apply_request(store, basis, plan['input'], request, action['page_id'])
+        else:
+            request['prompt'] = plan['input']['instruction'] + '\n\n' + request['prompt']
+            request['prompt_sha256'] = sha256_bytes(request['prompt'].encode('utf-8'))
         request['permitted_asset_files'] = _resolve_permitted_asset_files(store, request['projection']['permitted_assets'])
         inputs.append(store.put_json_object(request))
         protocol = protocol_fields(basis)
@@ -204,6 +214,10 @@ def _new_task(store, ledger, basis, plan, change_ref, task_id, action):
     if 'mode' in action:
         task['stage_request'] = {'mode': action['mode'], 'stage': action['stage'],
                                  'references': _reference_files(store, basis, plan['input'].get('references', []))}
+        if plan['input'].get('style_recipe_ref'):
+            task['stage_request']['style_recipe_ref'] = plan['input']['style_recipe_ref']
+            task['inputs'].append(plan['input']['style_recipe_ref'])
+            task['required_capabilities'].append('style_recipe')
         if action['mode'] == 'trial':
             task['required_capabilities'].append('candidate_result')
     validate_task_semantics(task)

@@ -1,0 +1,24 @@
+{
+  "synthetic": true,
+  "actual_model_calls": 0,
+  "synthetic_observed_calls": 2,
+  "recipe_id": "recipe-04d6d8e362b94feba9f31506681876cb",
+  "candidate_ids": [
+    "candidate-0faf5a2021514966a0aed2e1aab1bfc1",
+    "candidate-59c43d98180e4d23a244570043c2dc60"
+  ],
+  "checks": [
+    "proposal_and_confirmation_do_not_dispatch",
+    "default_excludes_composition",
+    "fixed_recipe_frozen_into_requests",
+    "trial_return_preserves_current_pages",
+    "adopted_first_candidate_gates_explicit_expansion",
+    "reference_page_unchanged",
+    "first_adopted_page_unchanged_by_expansion",
+    "all_target_content_refs_unchanged",
+    "only_adopted_target_downstream_invalidated",
+    "confirmation_replay_after_later_writes",
+    "one_bounded_call_per_selected_page"
+  ],
+  "visual_effect_evaluation": "not_performed_synthetic_protocol_only"
+}
