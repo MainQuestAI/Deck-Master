@@ -1,6 +1,6 @@
 {
   "baseline": "d1c7c4600cb0fc781070116ed8cc8a1ff6b8b7ca",
-  "branch": "codex/workbench-w06-core",
+  "branch": "codex/workbench-w06-ui",
   "active_package": "W06",
   "sequence": [
     "W01.core",
@@ -109,16 +109,20 @@
       "frontend_merge_commit": "2d7e1a6dffc6755c20e8ca51175450b0fcbf829b"
     },
     "W06": {
-      "status": "core_pr_ready",
+      "status": "frontend_verified",
       "accepted": false,
       "baseline": "2d7e1a6dffc6755c20e8ca51175450b0fcbf829b",
       "core_implementation_commit": "f3d5c3ebcd8dac12541e62b49e280cbaa34ab60f",
       "core_evidence": "W06-CORE.md",
       "residuals": [
-        "Frontend annotation/draft/operation/handoff interactions pending",
-        "Real Host claim not yet verified",
-        "User acceptance not measured"
-      ]
+        "User acceptance not measured; actual image calls and final installed/offline acceptance remain separate"
+      ],
+      "core_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/51",
+      "core_head": "b95323ca92c9ab18264a6cdbee4ead3c9130ce8d",
+      "core_merge_commit": "6c3e156a47926187b71ada1bd5983a0ad73662f2",
+      "frontend_baseline": "6c3e156a47926187b71ada1bd5983a0ad73662f2",
+      "frontend_source_commit": "0e976f7e5b0d6a6cecf638bb3ed0f60b140bde74",
+      "frontend_evidence": "W06-UI.md"
     },
     "W07": {
       "status": "planned",
@@ -478,61 +482,94 @@
     },
     "W06-AC01": {
       "owner": "W06",
-      "status": "open",
-      "evidence": []
+      "status": "engineering_verified",
+      "evidence": [
+        "W06-CORE.md",
+        "W06-UI.md",
+        "w06/ui/browser-checks.json",
+        "w06/ui/edge-checks.json"
+      ],
+      "evidence_level": "core/CLI/HTTP/real Chromium"
     },
     "W06-AC02": {
       "owner": "W06",
-      "status": "partial",
+      "status": "engineering_verified",
       "evidence": [
-        "W06-CORE.md"
+        "W06-CORE.md",
+        "W06-UI.md",
+        "w06/ui/browser-checks.json",
+        "w06/ui/edge-checks.json"
       ],
-      "evidence_level": "core/CLI/HTTP/real Chromium same-origin request/process-fault; synthetic tasks"
+      "evidence_level": "core/CLI/HTTP/real Chromium"
     },
     "W06-AC03": {
       "owner": "W06",
-      "status": "partial",
+      "status": "engineering_verified",
       "evidence": [
-        "W06-CORE.md"
+        "W06-CORE.md",
+        "W06-UI.md",
+        "w06/ui/browser-checks.json",
+        "w06/ui/edge-checks.json"
       ],
-      "evidence_level": "core/CLI/HTTP/real Chromium same-origin request/process-fault; synthetic tasks"
+      "evidence_level": "core/CLI/HTTP/real Chromium"
     },
     "W06-AC04": {
       "owner": "W06",
-      "status": "partial",
+      "status": "engineering_verified",
       "evidence": [
-        "W06-CORE.md"
+        "W06-CORE.md",
+        "W06-UI.md",
+        "w06/ui/browser-checks.json",
+        "w06/ui/edge-checks.json"
       ],
-      "evidence_level": "core/CLI/HTTP/real Chromium same-origin request/process-fault; synthetic tasks"
+      "evidence_level": "core/CLI/HTTP/real Chromium"
     },
     "W06-AC05": {
       "owner": "W06",
-      "status": "partial",
+      "status": "engineering_verified",
       "evidence": [
-        "W06-CORE.md"
+        "W06-CORE.md",
+        "W06-UI.md",
+        "w06/ui/browser-checks.json",
+        "w06/ui/edge-checks.json",
+        "w06/ui/real-host-checks.json"
       ],
-      "evidence_level": "core/CLI/HTTP/real Chromium same-origin request/process-fault; synthetic tasks"
+      "evidence_level": "core/CLI/HTTP/real Chromium / actual current Codex CLI claim and cancelled late-result refusal"
     },
     "W06-AC06": {
       "owner": "W06",
-      "status": "partial",
+      "status": "engineering_verified",
       "evidence": [
-        "W06-CORE.md"
+        "W06-CORE.md",
+        "W06-UI.md",
+        "w06/ui/browser-checks.json",
+        "w06/ui/edge-checks.json"
       ],
-      "evidence_level": "core/CLI/HTTP/real Chromium same-origin request/process-fault; synthetic tasks"
+      "evidence_level": "core/CLI/HTTP/real Chromium"
     },
     "W06-AC07": {
       "owner": "W06",
-      "status": "partial",
+      "status": "engineering_verified",
       "evidence": [
-        "W06-CORE.md"
+        "W06-CORE.md",
+        "W06-UI.md",
+        "w06/ui/browser-checks.json",
+        "w06/ui/edge-checks.json",
+        "w06/ui/real-host-checks.json"
       ],
-      "evidence_level": "core/CLI/HTTP/real Chromium same-origin request/process-fault; synthetic tasks"
+      "evidence_level": "core/CLI/HTTP/real Chromium / actual current Codex CLI claim and cancelled late-result refusal"
     },
     "W06-AC08": {
       "owner": "W06",
-      "status": "open",
-      "evidence": []
+      "status": "engineering_verified",
+      "evidence": [
+        "W06-CORE.md",
+        "W06-UI.md",
+        "w06/ui/browser-checks.json",
+        "w06/ui/edge-checks.json",
+        "w06/ui/real-host-checks.json"
+      ],
+      "evidence_level": "core/CLI/HTTP/real Chromium / actual current Codex CLI claim and cancelled late-result refusal"
     },
     "W07-AC01": {
       "owner": "W07",

@@ -1,0 +1,104 @@
+{
+  "status": "verified",
+  "source_commit": "0e976f7e5b0d6a6cecf638bb3ed0f60b140bde74",
+  "asset_count": 24,
+  "assets": [
+    {
+      "path": "deck_master/resources/static/v2/annotations.js",
+      "sha256": "675f63c7d4a8b9c8fb06ee406845336ad12f0b6547ac5494b65a18e4946ba31f"
+    },
+    {
+      "path": "deck_master/resources/static/v2/api.js",
+      "sha256": "009b7923cbc919d7eb0f29d7f40f12f069f5ed2fbb3dee49f51620b698f30d22"
+    },
+    {
+      "path": "deck_master/resources/static/v2/app.js",
+      "sha256": "9c8f3ad2f39958148e79fb7cf08b225d07059656d7eff3f229bf02981fac79f6"
+    },
+    {
+      "path": "deck_master/resources/static/v2/business-operations.js",
+      "sha256": "d2a389f5d5ffd2f1c373bc3a1b4b51380557b32a280014dcf626e840f502160b"
+    },
+    {
+      "path": "deck_master/resources/static/v2/change-handoff.js",
+      "sha256": "a2e91ea27b1e1cbc3e2f091ad11553985b570c2c31b17a7a9cf865301f8b51d3"
+    },
+    {
+      "path": "deck_master/resources/static/v2/dom.js",
+      "sha256": "e39301e0b14cefe7b6b9fe9f51821c1e34e37925258be8093f2f7825747bb5a3"
+    },
+    {
+      "path": "deck_master/resources/static/v2/drafts.js",
+      "sha256": "ecb2b4eea761bf4cc1df810eee60ba569bbd57a63f2d9782eed59fdb2081c138"
+    },
+    {
+      "path": "deck_master/resources/static/v2/gallery-state.js",
+      "sha256": "bbe704c776e37bf6dfd216c4f2750e7dec447e9dd0c300556a4a0d1959aee308"
+    },
+    {
+      "path": "deck_master/resources/static/v2/gallery.js",
+      "sha256": "1db3c656e54f87fb9404a269b9be8889bb6158024bdf6127c618aac39d85b89d"
+    },
+    {
+      "path": "deck_master/resources/static/v2/icons.js",
+      "sha256": "95fd179d9231f9993a8a98140a3711145a486bf022fb3096deaad56113da8456"
+    },
+    {
+      "path": "deck_master/resources/static/v2/images.js",
+      "sha256": "b8b67c32711de317268be890071aa159a84d768dc6af835463f965c9d9f0f2b7"
+    },
+    {
+      "path": "deck_master/resources/static/v2/index.html",
+      "sha256": "49084f6532bb728bb2150b43c75a1ef0ee5f9e0ae0f31ebb4b5a78b91258c6ed"
+    },
+    {
+      "path": "deck_master/resources/static/v2/launcher-ui.js",
+      "sha256": "1e5ea56315f693161ad4fedba9a8b38fa3ed20fd4cb61bd572a95a07214acbc4"
+    },
+    {
+      "path": "deck_master/resources/static/v2/page-workbench.js",
+      "sha256": "bfb4b9df15ff432a3ff40fba33ed25a5ed3bb073fd16c547d4b419c4ab015982"
+    },
+    {
+      "path": "deck_master/resources/static/v2/production-view.js",
+      "sha256": "7786bcf3381e35933330f3e78dd8e81b89bfb23e6da64b80e0e877cfbaa07d1b"
+    },
+    {
+      "path": "deck_master/resources/static/v2/project.js",
+      "sha256": "6ecf21cba1300aa6a4d358cb5aafec86bf5e517bd62d0d31e323f849f62f920b"
+    },
+    {
+      "path": "deck_master/resources/static/v2/request-view.js",
+      "sha256": "2e3a3675189af0e0c21a48b5ede649744b23ae91ea3e8f809865b3563e4a43d6"
+    },
+    {
+      "path": "deck_master/resources/static/v2/routes.js",
+      "sha256": "3aec1c175ffab09e3792baf159ffda35cf2c600a0ae1f3636d1d5328bd24c2de"
+    },
+    {
+      "path": "deck_master/resources/static/v2/style.css",
+      "sha256": "3045ea07efcb5418235df114511acaec7f5a5e5f694fd21dd5da2afee1553570"
+    },
+    {
+      "path": "deck_master/resources/static/v2/text-diff.js",
+      "sha256": "cc52557c11ad1000989db7151cab5ed203d8b440d1b9c190a017291f12e1a632"
+    },
+    {
+      "path": "deck_master/resources/static/v2/text-selection.js",
+      "sha256": "64b89188f34442944905671b2b512b07cc5627ae3add72ad0bea1aebddd06267"
+    },
+    {
+      "path": "deck_master/resources/static/v2/tokens.css",
+      "sha256": "da2e775a9430340cd6e2a0add92bdefcba8575fdd1fb2cc47d100b8b9c5783fc"
+    },
+    {
+      "path": "deck_master/resources/static/v2/views.js",
+      "sha256": "0f2b5f9a640dc4bc2761634f448fcb116c16e2e53125f1b6c1f25c6080199443"
+    },
+    {
+      "path": "deck_master/resources/static/v2/workbench.css",
+      "sha256": "2dd0b5a3f71115dff4c844d2e07a247d662c760647731c93153229cdbda338d7"
+    }
+  ],
+  "evidence": "isolated wheel archive content and checkout byte parity; not installed or offline acceptance"
+}
