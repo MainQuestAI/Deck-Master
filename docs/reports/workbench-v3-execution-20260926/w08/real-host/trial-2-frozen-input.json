@@ -1,0 +1,89 @@
+{
+  "basis": {
+    "produced_against": "6f33600bb6ae50b31dfd0358626d8d0b2fa34da7b6c3bea61e5c0fe0ba527d61",
+    "project_id": "synthetic-project",
+    "revision_id": "f7d1510028a5402daaa655433574f148"
+  },
+  "constraints": {
+    "preserve_target_content": true,
+    "style_recipe_ref": {
+      "path": ".deckmaster/objects/6b/6bf4c13b3618d5ef3446e2b8284d65a2c9d90654a37a28c50148a71e1c03f811.json",
+      "sha256": "6bf4c13b3618d5ef3446e2b8284d65a2c9d90654a37a28c50148a71e1c03f811"
+    }
+  },
+  "design_context": {
+    "allowed_asset_ids": [],
+    "assets": [],
+    "canvas": {
+      "fit": "contain",
+      "height_px": 900,
+      "slide_height_in": 7.5,
+      "slide_width_in": 13.333333333333334,
+      "width_px": 1600
+    },
+    "default_style_id": "default",
+    "fonts": [
+      {
+        "asset_id": null,
+        "face": "Regular",
+        "fallback_font_ids": [],
+        "family": "Noto Sans CJK SC",
+        "font_id": "body",
+        "weight": 400
+      },
+      {
+        "asset_id": null,
+        "face": "Bold",
+        "fallback_font_ids": [],
+        "family": "Noto Sans CJK SC",
+        "font_id": "heading",
+        "weight": 700
+      }
+    ],
+    "language": "zh-CN",
+    "styles": [
+      {
+        "colors": {
+          "accent": "#1478FF",
+          "background": "#FFFFFF",
+          "text": "#14213D"
+        },
+        "layout_notes": "默认样式在 create 时固化；字体名称是配置需求，不是本机安装证明。",
+        "style_id": "default",
+        "typography": {
+          "auxiliary_size_pt": 12,
+          "body_font_id": "body",
+          "body_size_pt": 18,
+          "heading_font_id": "heading",
+          "heading_size_pt": 30
+        }
+      }
+    ]
+  },
+  "page": {
+    "page_id": "independent-page",
+    "page_ref": {
+      "path": ".deckmaster/objects/8d/8df9db4b0427039a426678dae2932bada18ab414c12248cf92da984d4b991014.json",
+      "sha256": "8df9db4b0427039a426678dae2932bada18ab414c12248cf92da984d4b991014"
+    }
+  },
+  "parameters": {
+    "transparent_background": false
+  },
+  "prompt": "跨页风格试作。只借用明确选定的视觉维度，不复制参考页的标题、事实、数字、论点或其它正文。\n目标页结构化正文必须完整保留；未选维度沿用目标页。构图仅在单独选择 composition 时借用。\n用户简短要求：只借用参考页绿色配色与清楚的文字层级，保留目标页全部标题、事实、数字和三栏内容。绿色配色替代目标原有蓝色；不复制参考页正文和图标。 严格逐字呈现第二条“第一页试作保留当前稿”，第一、页、试作各字完整，不得漏掉“页”字；三条正文均不得缩写。\n明确借用维度：{\"palette\": \"采用参考原图的绿色强调色与浅绿卡片底色，替代原蓝色，保留白底与深色文字。\", \"typography\": \"主标题最强，分组标题次之，卡片正文清楚；不改变目标页文本，不借构图。\"}\n\nUse case: productivity-visual\nAsset type: editable-presentation blueprint reference, one complete slide\nCanvas: 1600x900 px; physical size 13.333333333333334x7.5 in; contain fit\nPrimary request: Create a polished business slide blueprint from the exact structured input below. Preserve every visible fact, number, unit, label, footnote, node and directed relationship.\nStyle/medium: precise enterprise presentation design; clear hierarchy; production-ready reference image\nComposition/framing: use the supplied canvas, layout intent and node relationships; keep all content inside safe margins\nText: render the supplied customer-visible text verbatim and legibly\nConstraints: do not add claims or invent numeric values, dates, customer data, or outcomes. If a chart needs data absent from the input, use an unlabeled schematic marked 示意数据, without plausible-looking values. Do not omit modules; connect arrows to their actual nodes; use only permitted assets; no watermark; no internal notes\nStructured input:\n{\n  \"canvas\": {\n    \"fit\": \"contain\",\n    \"height_px\": 900,\n    \"slide_height_in\": 7.5,\n    \"slide_width_in\": 13.333333333333334,\n    \"width_px\": 1600\n  },\n  \"customer_visible\": {\n    \"body_blocks\": [\n      {\n        \"heading\": \"并行制作不混淆页面\",\n        \"id\": \"flow\",\n        \"items\": [\n          {\n            \"id\": \"auto\",\n            \"text\": \"第二页自动结果独立返回\"\n          },\n          {\n            \"id\": \"trial\",\n            \"text\": \"第一页试作保留当前稿\"\n          },\n          {\n            \"id\": \"adopt\",\n            \"text\": \"采用候选只更新目标页\"\n          }\n        ],\n        \"type\": \"bullets\"\n      }\n    ],\n    \"callouts\": [],\n    \"footnotes\": [],\n    \"labels\": [],\n    \"subtitle\": \"合成验证样例\",\n    \"title\": \"逐页返回，各自保留修改依据\"\n  },\n  \"fonts\": [\n    {\n      \"asset_id\": null,\n      \"face\": \"Regular\",\n      \"fallback_font_ids\": [],\n      \"family\": \"Noto Sans CJK SC\",\n      \"font_id\": \"body\",\n      \"weight\": 400\n    },\n    {\n      \"asset_id\": null,\n      \"face\": \"Bold\",\n      \"fallback_font_ids\": [],\n      \"family\": \"Noto Sans CJK SC\",\n      \"font_id\": \"heading\",\n      \"weight\": 700\n    }\n  ],\n  \"language\": \"zh-CN\",\n  \"page_id\": \"independent-page\",\n  \"permitted_assets\": [],\n  \"style\": {\n    \"colors\": {\n      \"accent\": \"#1478FF\",\n      \"background\": \"#FFFFFF\",\n      \"text\": \"#14213D\"\n    },\n    \"layout_notes\": \"默认样式在 create 时固化；字体名称是配置需求，不是本机安装证明。\",\n    \"style_id\": \"default\",\n    \"typography\": {\n      \"auxiliary_size_pt\": 12,\n      \"body_font_id\": \"body\",\n      \"body_size_pt\": 18,\n      \"heading_font_id\": \"heading\",\n      \"heading_size_pt\": 30\n    }\n  },\n  \"visual_spec\": {\n    \"edges\": [],\n    \"intent\": \"A clean three-step business slide matching the green reference image; synthetic software verification only.\",\n    \"layout_hint\": \"\",\n    \"nodes\": [],\n    \"reference_mode\": \"new_design\",\n    \"style_ref\": \"default\"\n  }\n}",
+  "references": [
+    {
+      "file": {
+        "path": ".deckmaster/objects/cf/cf18717a0bfe6197a3489fd48a5fab9839b9ebecc395766af2c33a6fd28c8326.png",
+        "sha256": "cf18717a0bfe6197a3489fd48a5fab9839b9ebecc395766af2c33a6fd28c8326"
+      },
+      "role": "reference"
+    }
+  ],
+  "schema_version": "generation_input.v1",
+  "style_recipe_ref": {
+    "path": ".deckmaster/objects/6b/6bf4c13b3618d5ef3446e2b8284d65a2c9d90654a37a28c50148a71e1c03f811.json",
+    "sha256": "6bf4c13b3618d5ef3446e2b8284d65a2c9d90654a37a28c50148a71e1c03f811"
+  },
+  "template_ref": null
+}

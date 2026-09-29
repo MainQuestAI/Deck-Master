@@ -1,0 +1,21 @@
+{
+  "synthetic": true,
+  "actual_model_calls": 0,
+  "checks": [
+    "simple_path_without_advanced",
+    "default_excludes_composition",
+    "confirm_no_dispatch_or_page_change",
+    "first_trial_exactly_one_target",
+    "trial_return_does_not_replace_current",
+    "browser_adoption_only_target",
+    "explicit_expansion_one_page",
+    "changed_scope_invalidates_plan",
+    "expansion_return_keeps_reference_and_adopted_page",
+    "versioned_advanced_suggestion",
+    "no_horizontal_overflow",
+    "gallery_selection_seeds_reference_and_explicit_targets",
+    "page_reference_entry_keeps_fixed_identity",
+    "no_browser_errors"
+  ],
+  "errors": []
+}

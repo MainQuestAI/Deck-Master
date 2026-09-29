@@ -76,6 +76,10 @@ export function pageDetail(app, data) {
   const page = app.summary.pages[index], layer = app.route.layer, fixed = data.revision_id;
   const node = el('div', {class: 'page-workbench'}, heading(pageTitle(page, index), `${layers[layer]} · ${version(fixed)} · 固定阅读基准`));
   if (!app.health.ui_capabilities?.includes('page_detail.v1')) return el('div', {}, node, empty('核心需要升级', '单页证据与文本选段需要新版核心。此页面没有写入草稿。'));
+  if (app.health.ui_capabilities?.includes('style_recipes.v1') && data.stages.blueprint.existence === 'recorded') node.append(button('以本页为风格参考', () => {
+    app.styleSelection = {reference: {page_id:data.page_id, revision_id:data.revision_id, artifact_ref:data.stages.blueprint.ref, file:data.stages.blueprint.file, role:'reference'}, target_ids:[]};
+    app.go({surface:'style', page_id:null, candidate_id:null, task_id:null, revision:app.latest.revision_id});
+  }));
   let disposed = false, compareSerial = 0, compareData = null;
   const primaryReleases = [], compareReleases = [];
   app.disposables.push(() => { disposed = true; compareSerial++; primaryReleases.forEach(fn => fn()); compareReleases.forEach(fn => fn()); });

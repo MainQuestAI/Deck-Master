@@ -111,6 +111,12 @@ export function gallery(app, data) {
     }
     if (s.selected_page_ids.length) extras.append(button('清空选页', () => resetReading({selected_page_ids: [], mode: s.mode === 'compare' ? 'grid' : s.mode}, true)));
     if (s.references.length) extras.append(button(`管理参考页（${s.references.length}）`, manageReferences));
+    if (s.selected_page_ids.length && app.health.ui_capabilities?.includes('style_recipes.v1')) extras.append(button('用选页开始风格校准', () => {
+      const first = pages.find(p => p.page_id === s.selected_page_ids[0]);
+      app.styleSelection = {reference: first.stages.blueprint.existence === 'recorded' ? {page_id:first.page_id, revision_id:app.route.revision, artifact_ref:first.stages.blueprint.ref, file:first.stages.blueprint.file, role:'reference'} : null,
+        target_ids:s.selected_page_ids.slice(1)};
+      app.go({surface:'style', page_id:null, candidate_id:null, task_id:null, revision:app.latest.revision_id});
+    }));
     controls.replaceChildren(el('div', {class: 'row between wrap'}, tabs, modes), el('div', {class: 'gallery-filters'}, chapter, filter, columns, extras));
     const shown = new Set(filtered().map(page => page.page_id));
     const outside = s.selected_page_ids.filter(id => !shown.has(id)).length;

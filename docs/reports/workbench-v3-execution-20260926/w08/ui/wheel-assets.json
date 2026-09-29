@@ -1,0 +1,128 @@
+{
+  "asset_count": 30,
+  "all_byte_identical": true,
+  "isolated_build": true,
+  "installed_to_home": false,
+  "files": [
+    {
+      "name": "annotations.js",
+      "sha256": "675f63c7d4a8b9c8fb06ee406845336ad12f0b6547ac5494b65a18e4946ba31f"
+    },
+    {
+      "name": "api.js",
+      "sha256": "4823ee8126a4585c991ae4e6b316ea09465815e932c5c2a824c8d07ecaa28efe"
+    },
+    {
+      "name": "app.js",
+      "sha256": "9c8f3ad2f39958148e79fb7cf08b225d07059656d7eff3f229bf02981fac79f6"
+    },
+    {
+      "name": "business-operations.js",
+      "sha256": "a206a65b09d94addcbd2799bec7e187acf414047618418b2fa0ead5926d742fb"
+    },
+    {
+      "name": "candidate-desk.js",
+      "sha256": "3a4c6306c123d85339ff775c3ec1d28f21c4ae574972de8d72f0af0a5f9a5aa5"
+    },
+    {
+      "name": "change-handoff.js",
+      "sha256": "d8e3ca27e119ef5a66f18a496f4e5d513c4cea24657d6177ee41dd4eba32077c"
+    },
+    {
+      "name": "dom.js",
+      "sha256": "e39301e0b14cefe7b6b9fe9f51821c1e34e37925258be8093f2f7825747bb5a3"
+    },
+    {
+      "name": "drafts.js",
+      "sha256": "ecb2b4eea761bf4cc1df810eee60ba569bbd57a63f2d9782eed59fdb2081c138"
+    },
+    {
+      "name": "gallery-state.js",
+      "sha256": "bbe704c776e37bf6dfd216c4f2750e7dec447e9dd0c300556a4a0d1959aee308"
+    },
+    {
+      "name": "gallery.js",
+      "sha256": "b51f88541ada7259e69b76de6b0bd3ea57761738f77677604bff111d561db35a"
+    },
+    {
+      "name": "icons.js",
+      "sha256": "95fd179d9231f9993a8a98140a3711145a486bf022fb3096deaad56113da8456"
+    },
+    {
+      "name": "images.js",
+      "sha256": "b8b67c32711de317268be890071aa159a84d768dc6af835463f965c9d9f0f2b7"
+    },
+    {
+      "name": "index.html",
+      "sha256": "49084f6532bb728bb2150b43c75a1ef0ee5f9e0ae0f31ebb4b5a78b91258c6ed"
+    },
+    {
+      "name": "launcher-ui.js",
+      "sha256": "1e5ea56315f693161ad4fedba9a8b38fa3ed20fd4cb61bd572a95a07214acbc4"
+    },
+    {
+      "name": "page-workbench.js",
+      "sha256": "84badcfa502ee74388b5fca8cc508461a4697b4f01e5706bf0ce03362386d5ec"
+    },
+    {
+      "name": "production-view.js",
+      "sha256": "7786bcf3381e35933330f3e78dd8e81b89bfb23e6da64b80e0e877cfbaa07d1b"
+    },
+    {
+      "name": "project.js",
+      "sha256": "cd25cb13db487ca0199f72d9650ddd48e7903b4b1e8df683192412dc4eeaf36f"
+    },
+    {
+      "name": "request-view.js",
+      "sha256": "2e3a3675189af0e0c21a48b5ede649744b23ae91ea3e8f809865b3563e4a43d6"
+    },
+    {
+      "name": "routes.js",
+      "sha256": "4f5fef249700aa3756cf2c69ec0d31cb772d20b17505dd9f141d9a52f2954acc"
+    },
+    {
+      "name": "run-desk.js",
+      "sha256": "fdd9e1e149957c1151f0cb00d755f03dd911b0dd5ae67a92959eb4790d3ffb8c"
+    },
+    {
+      "name": "run-recovery.js",
+      "sha256": "0601ae908e0cbc7f2b121671e8d11a2b5f4a3250455532688cab02ad12911262"
+    },
+    {
+      "name": "style-calibration.js",
+      "sha256": "5bfb95785079280e4695c5eb215b9c57b81f78c70c4b5af4dc5f4b713369f048"
+    },
+    {
+      "name": "style.css",
+      "sha256": "3045ea07efcb5418235df114511acaec7f5a5e5f694fd21dd5da2afee1553570"
+    },
+    {
+      "name": "summary-poll.js",
+      "sha256": "bb964fda5a47732749f819fe384d7a444bc56688a19c84a33d924c7f340b634b"
+    },
+    {
+      "name": "text-diff.js",
+      "sha256": "cc52557c11ad1000989db7151cab5ed203d8b440d1b9c190a017291f12e1a632"
+    },
+    {
+      "name": "text-selection.js",
+      "sha256": "64b89188f34442944905671b2b512b07cc5627ae3add72ad0bea1aebddd06267"
+    },
+    {
+      "name": "tokens.css",
+      "sha256": "da2e775a9430340cd6e2a0add92bdefcba8575fdd1fb2cc47d100b8b9c5783fc"
+    },
+    {
+      "name": "trial-actions.js",
+      "sha256": "01b4493444d21691cb18b36271ceb52c7d0fb80e7e2c3382d55af3ff6c513257"
+    },
+    {
+      "name": "views.js",
+      "sha256": "5a733287c45faa008ec85d892afd863ad637021d604436e5aa0f0852b1a42dad"
+    },
+    {
+      "name": "workbench.css",
+      "sha256": "e7c5006564c6d9fa7b26b3e76d1b4ba1a4495fb11931053c8d17e0e07e92855e"
+    }
+  ]
+}

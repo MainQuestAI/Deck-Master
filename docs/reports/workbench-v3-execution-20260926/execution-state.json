@@ -1,6 +1,6 @@
 {
   "baseline": "d1c7c4600cb0fc781070116ed8cc8a1ff6b8b7ca",
-  "branch": "codex/workbench-w08-core",
+  "branch": "codex/workbench-w08-ui",
   "active_package": "W08",
   "sequence": [
     "W01.core",
@@ -157,19 +157,21 @@
       "real_interleaving_evidence": "w07/real-host-interleaving/interleaving-checks.json"
     },
     "W08": {
-      "status": "core_verified_pending_pr",
+      "status": "frontend_verified_pending_pr",
       "accepted": false,
       "baseline": "c17ba512db3efb4196b0e88dcab2d604eb23b053",
       "plan": "W08-PLAN.md",
       "core_evidence": "W08-CORE.md",
       "remaining": [
-        "Core PR CI and merge",
-        "Frontend",
-        "Actual Host style trial and expansion evaluation",
+        "Frontend PR CI and merge",
+        "Recorded unselected visual composition drift; no visual fidelity guarantee",
         "User acceptance"
       ],
       "core_implementation_commit": "1bccae4e68156f3e71556253f33f69a5536de8e8",
-      "core_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/58"
+      "core_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/58",
+      "core_merge_commit": "38d0b446592e8558b9126cfa85a484d2bddf557b",
+      "core_head": "5a164c71e475d1172291f0cf157c649d371d5b3c",
+      "frontend_evidence": "W08-UI.md"
     },
     "W09": {
       "status": "planned",
@@ -737,68 +739,94 @@
     },
     "W08-AC01": {
       "owner": "W08",
-      "status": "partial_core_verified",
+      "status": "engineering_and_real_host_evaluated",
       "evidence": [
         "W08-CORE.md",
-        "w08/core/checks.json"
+        "W08-UI.md",
+        "w08/ui/checks.json",
+        "w08/ui/edge-checks.json",
+        "w08/real-host/visual-review.json"
       ],
       "accepted": false,
-      "evidence_level": "core/CLI/HTTP; explicitly synthetic protocol events; visual effect unverified"
+      "evidence_level": "core/CLI/HTTP/Chromium plus four real native ImageGen calls; synthetic content; unselected composition drift recorded; not customer acceptance"
     },
     "W08-AC02": {
       "owner": "W08",
-      "status": "partial_core_verified",
+      "status": "engineering_and_real_host_evaluated",
       "evidence": [
         "W08-CORE.md",
-        "w08/core/checks.json"
+        "W08-UI.md",
+        "w08/ui/checks.json",
+        "w08/ui/edge-checks.json",
+        "w08/real-host/visual-review.json"
       ],
       "accepted": false,
-      "evidence_level": "core/CLI/HTTP; explicitly synthetic protocol events; visual effect unverified"
+      "evidence_level": "core/CLI/HTTP/Chromium plus four real native ImageGen calls; synthetic content; unselected composition drift recorded; not customer acceptance"
     },
     "W08-AC03": {
       "owner": "W08",
-      "status": "partial_core_verified",
+      "status": "engineering_and_real_host_evaluated",
       "evidence": [
         "W08-CORE.md",
-        "w08/core/checks.json"
+        "W08-UI.md",
+        "w08/ui/checks.json",
+        "w08/ui/edge-checks.json",
+        "w08/real-host/visual-review.json"
       ],
       "accepted": false,
-      "evidence_level": "core/CLI/HTTP; explicitly synthetic protocol events; visual effect unverified"
+      "evidence_level": "core/CLI/HTTP/Chromium plus four real native ImageGen calls; synthetic content; unselected composition drift recorded; not customer acceptance"
     },
     "W08-AC04": {
       "owner": "W08",
-      "status": "partial_core_verified",
+      "status": "engineering_and_real_host_evaluated",
       "evidence": [
         "W08-CORE.md",
-        "w08/core/checks.json"
+        "W08-UI.md",
+        "w08/ui/checks.json",
+        "w08/ui/edge-checks.json",
+        "w08/real-host/visual-review.json"
       ],
       "accepted": false,
-      "evidence_level": "core/CLI/HTTP; explicitly synthetic protocol events; visual effect unverified"
+      "evidence_level": "core/CLI/HTTP/Chromium plus four real native ImageGen calls; synthetic content; unselected composition drift recorded; not customer acceptance"
     },
     "W08-AC05": {
       "owner": "W08",
-      "status": "partial_core_verified",
+      "status": "engineering_and_real_host_evaluated",
       "evidence": [
         "W08-CORE.md",
-        "w08/core/checks.json"
+        "W08-UI.md",
+        "w08/ui/checks.json",
+        "w08/ui/edge-checks.json",
+        "w08/real-host/visual-review.json"
       ],
       "accepted": false,
-      "evidence_level": "core/CLI/HTTP; explicitly synthetic protocol events; visual effect unverified"
+      "evidence_level": "core/CLI/HTTP/Chromium plus four real native ImageGen calls; synthetic content; unselected composition drift recorded; not customer acceptance"
     },
     "W08-AC06": {
       "owner": "W08",
-      "status": "partial_core_verified",
+      "status": "engineering_and_real_host_evaluated",
       "evidence": [
         "W08-CORE.md",
-        "w08/core/checks.json"
+        "W08-UI.md",
+        "w08/ui/checks.json",
+        "w08/ui/edge-checks.json",
+        "w08/real-host/visual-review.json"
       ],
       "accepted": false,
-      "evidence_level": "core/CLI/HTTP; explicitly synthetic protocol events; visual effect unverified"
+      "evidence_level": "core/CLI/HTTP/Chromium plus four real native ImageGen calls; synthetic content; unselected composition drift recorded; not customer acceptance"
     },
     "W08-AC07": {
       "owner": "W08",
-      "status": "open",
-      "evidence": []
+      "status": "engineering_and_real_host_evaluated",
+      "evidence": [
+        "W08-CORE.md",
+        "W08-UI.md",
+        "w08/ui/checks.json",
+        "w08/ui/edge-checks.json",
+        "w08/real-host/visual-review.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium plus four real native ImageGen calls; synthetic content; unselected composition drift recorded; not customer acceptance"
     },
     "W09-AC01": {
       "owner": "W09",

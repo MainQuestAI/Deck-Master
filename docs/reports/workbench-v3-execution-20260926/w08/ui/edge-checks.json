@@ -1,0 +1,16 @@
+{
+  "synthetic": true,
+  "actual_model_calls": 0,
+  "checks": [
+    "exact_prompt_excerpt_matches_source",
+    "all_conflicts_explicit_before_confirmation",
+    "unknown_confirmation_verified_once",
+    "later_draft_preserved_after_recovery",
+    "stale_plan_dispatch_changes_nothing",
+    "per_target_conflict_displayed",
+    "unaffected_page_can_form_new_explicit_plan",
+    "trial_scope_restores_without_dispatch",
+    "no_browser_errors"
+  ],
+  "errors": []
+}

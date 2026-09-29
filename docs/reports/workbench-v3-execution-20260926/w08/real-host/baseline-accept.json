@@ -1,0 +1,35 @@
+{
+  "status": "accepted",
+  "project_id": "synthetic-project",
+  "revision_id": "7e857a6a703648e09257e5df26377d33",
+  "requested_action": "task accept",
+  "result_refs": [
+    {
+      "path": ".deckmaster/objects/2d/2d6fa565ec942c7a0ffdfa44ac1901324dbf825ecf746f57d578b3542e14af78.json",
+      "sha256": "2d6fa565ec942c7a0ffdfa44ac1901324dbf825ecf746f57d578b3542e14af78"
+    }
+  ],
+  "findings": [],
+  "next_action": "continue_production",
+  "input_alignment": "current",
+  "review_url": null,
+  "view_status": "view_arrives_with_workbench",
+  "evidence_level": "engineering",
+  "current_revision_id": "7e857a6a703648e09257e5df26377d33",
+  "new_page_hashes": {},
+  "work_complete": true,
+  "operation_result": {
+    "status": "accepted",
+    "revision_id": "7e857a6a703648e09257e5df26377d33",
+    "new_page_hashes": {},
+    "result_refs": [
+      {
+        "path": ".deckmaster/objects/2d/2d6fa565ec942c7a0ffdfa44ac1901324dbf825ecf746f57d578b3542e14af78.json",
+        "sha256": "2d6fa565ec942c7a0ffdfa44ac1901324dbf825ecf746f57d578b3542e14af78"
+      }
+    ],
+    "work_complete": true,
+    "next_action": "continue_production"
+  },
+  "evidence_note": "Portable acceptance receipt excerpt; pending Host instructions remain in the original isolated project."
+}
