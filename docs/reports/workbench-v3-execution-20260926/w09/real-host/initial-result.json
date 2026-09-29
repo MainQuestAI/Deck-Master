@@ -1,0 +1,216 @@
+{
+  "kind": "compose",
+  "pages": [
+    {
+      "schema_version": "deck_page_package.v2",
+      "page_id": "responsibility",
+      "customer_visible": {
+        "title": "人工掌握正式动作",
+        "subtitle": "合成验证样例",
+        "body_blocks": [
+          {
+            "id": "body",
+            "type": "paragraph",
+            "text": "员工手动正式提交。系统不得自动正式提交，也不得自动关闭工单。"
+          }
+        ]
+      },
+      "visual_spec": {
+        "intent": "Explain the stated responsibility and capability boundaries without measured outcome claims.",
+        "reference_mode": "new_design"
+      },
+      "citations": [
+        {
+          "id": "responsibility-L3",
+          "source_id": "src-6e364d78",
+          "locator": "L3",
+          "supports": "人工掌握正式动作",
+          "claim_kind": "reported_fact"
+        },
+        {
+          "id": "responsibility-L4",
+          "source_id": "src-6e364d78",
+          "locator": "L4",
+          "supports": "人工掌握正式动作",
+          "claim_kind": "reported_fact"
+        }
+      ]
+    },
+    {
+      "schema_version": "deck_page_package.v2",
+      "page_id": "capability",
+      "customer_visible": {
+        "title": "只读试点的操作路径",
+        "subtitle": "合成验证样例",
+        "body_blocks": [
+          {
+            "id": "body",
+            "type": "paragraph",
+            "text": "当前仅支持只读查询，不支持保存草稿。业务经办查询后核对信息，再由员工手动正式提交。"
+          }
+        ]
+      },
+      "visual_spec": {
+        "intent": "Explain the stated responsibility and capability boundaries without measured outcome claims.",
+        "reference_mode": "new_design"
+      },
+      "citations": [
+        {
+          "id": "capability-L2",
+          "source_id": "src-6e364d78",
+          "locator": "L2",
+          "supports": "只读试点的操作路径",
+          "claim_kind": "reported_fact"
+        },
+        {
+          "id": "capability-L3",
+          "source_id": "src-6e364d78",
+          "locator": "L3",
+          "supports": "只读试点的操作路径",
+          "claim_kind": "reported_fact"
+        }
+      ]
+    },
+    {
+      "schema_version": "deck_page_package.v2",
+      "page_id": "verification",
+      "customer_visible": {
+        "title": "验证条件尚待补齐",
+        "subtitle": "合成验证样例",
+        "body_blocks": [
+          {
+            "id": "body",
+            "type": "paragraph",
+            "text": "需验证权限校验、提交留痕和人工确认是否完整。试点尚无实测效率数据，不承诺效率提升比例。"
+          }
+        ]
+      },
+      "visual_spec": {
+        "intent": "Explain the stated responsibility and capability boundaries without measured outcome claims.",
+        "reference_mode": "new_design"
+      },
+      "citations": [
+        {
+          "id": "verification-L5",
+          "source_id": "src-6e364d78",
+          "locator": "L5",
+          "supports": "验证条件尚待补齐",
+          "claim_kind": "reported_fact"
+        },
+        {
+          "id": "verification-L6",
+          "source_id": "src-6e364d78",
+          "locator": "L6",
+          "supports": "验证条件尚待补齐",
+          "claim_kind": "reported_fact"
+        }
+      ]
+    }
+  ],
+  "page_order": [
+    "responsibility",
+    "capability",
+    "verification"
+  ],
+  "content_plan": {
+    "schema_version": "content_plan_input.v1",
+    "input_summary": "材料只支持查询和人工提交；责任边界明确，效率与联调验证仍缺证据。",
+    "chapters": [
+      {
+        "chapter_id": "pilot",
+        "title": "试点范围、责任与验证",
+        "goal_ids": [
+          "goal-responsibility",
+          "goal-capability",
+          "goal-verification"
+        ]
+      }
+    ],
+    "goals": [
+      {
+        "goal_id": "goal-responsibility",
+        "page_id": "responsibility",
+        "purpose": "明确人工与系统的正式动作边界",
+        "source_links": [
+          {
+            "source_id": "src-6e364d78",
+            "source_version": {
+              "original_sha256": "7ea9ee067b91a0f7964f2ed84be2e4ead38da1e09e388af0b0a58d2335e09d92",
+              "extract": {
+                "path": ".deckmaster/objects/37/376f7ae72fc4d20d726dccd6bce261cd80691a6d8e251f348e4543ef99a3436c.json",
+                "sha256": "376f7ae72fc4d20d726dccd6bce261cd80691a6d8e251f348e4543ef99a3436c"
+              }
+            },
+            "locator": "L4"
+          }
+        ],
+        "unresolved_facts": []
+      },
+      {
+        "goal_id": "goal-capability",
+        "page_id": "capability",
+        "purpose": "让经办了解只读查询与人工提交的操作范围",
+        "source_links": [
+          {
+            "source_id": "src-6e364d78",
+            "source_version": {
+              "original_sha256": "7ea9ee067b91a0f7964f2ed84be2e4ead38da1e09e388af0b0a58d2335e09d92",
+              "extract": {
+                "path": ".deckmaster/objects/37/376f7ae72fc4d20d726dccd6bce261cd80691a6d8e251f348e4543ef99a3436c.json",
+                "sha256": "376f7ae72fc4d20d726dccd6bce261cd80691a6d8e251f348e4543ef99a3436c"
+              }
+            },
+            "locator": "L2"
+          },
+          {
+            "source_id": "src-6e364d78",
+            "source_version": {
+              "original_sha256": "7ea9ee067b91a0f7964f2ed84be2e4ead38da1e09e388af0b0a58d2335e09d92",
+              "extract": {
+                "path": ".deckmaster/objects/37/376f7ae72fc4d20d726dccd6bce261cd80691a6d8e251f348e4543ef99a3436c.json",
+                "sha256": "376f7ae72fc4d20d726dccd6bce261cd80691a6d8e251f348e4543ef99a3436c"
+              }
+            },
+            "locator": "L3"
+          }
+        ],
+        "unresolved_facts": []
+      },
+      {
+        "goal_id": "goal-verification",
+        "page_id": "verification",
+        "purpose": "区分待验证条件与尚无依据的效果承诺",
+        "source_links": [
+          {
+            "source_id": "src-6e364d78",
+            "source_version": {
+              "original_sha256": "7ea9ee067b91a0f7964f2ed84be2e4ead38da1e09e388af0b0a58d2335e09d92",
+              "extract": {
+                "path": ".deckmaster/objects/37/376f7ae72fc4d20d726dccd6bce261cd80691a6d8e251f348e4543ef99a3436c.json",
+                "sha256": "376f7ae72fc4d20d726dccd6bce261cd80691a6d8e251f348e4543ef99a3436c"
+              }
+            },
+            "locator": "L5"
+          },
+          {
+            "source_id": "src-6e364d78",
+            "source_version": {
+              "original_sha256": "7ea9ee067b91a0f7964f2ed84be2e4ead38da1e09e388af0b0a58d2335e09d92",
+              "extract": {
+                "path": ".deckmaster/objects/37/376f7ae72fc4d20d726dccd6bce261cd80691a6d8e251f348e4543ef99a3436c.json",
+                "sha256": "376f7ae72fc4d20d726dccd6bce261cd80691a6d8e251f348e4543ef99a3436c"
+              }
+            },
+            "locator": "L6"
+          }
+        ],
+        "unresolved_facts": [
+          "尚无效率实测与联调验证结果。"
+        ]
+      }
+    ],
+    "unresolved_facts": [
+      "未提供效率实测或权限联调结果。"
+    ]
+  }
+}

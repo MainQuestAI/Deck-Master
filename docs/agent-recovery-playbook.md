@@ -254,3 +254,9 @@ The normal late-result protection remains in force after cancellation.
 `style_invalid` (CLI 2 / HTTP 422) means the chosen reference, recipe, dimensions or expansion gate is invalid. Preserve the draft, inspect `styles show`, and select explicit targets. `style_conflict` (CLI 5 / HTTP 409) includes per-page `items`; unresolved density constraints need explicit keep_target/use_reference before confirmation. Changed target bases need a new version/plan, never silently overwrite. Unreadable or unknown fixed snapshots use the shared `operation_unavailable` (CLI 4 / HTTP 503); read available history rather than treating it as the current version.
 
 Confirmation recovery uses the original UUID and proposal through `operations show`; pointer-committed facts survive receipt-cache loss. A confirmed recipe does not dispatch or spend calls. Expansion requires an adopted, still-current candidate of the same immutable recipe. Unknown calls, cancellation and late results use the existing generation recovery procedure.
+
+## Content operations
+
+`content_basis_changed`: retain the body/outline draft and fixed sources. Read the current Document, Page refs and ContentPlan ref, compare the changed basis, then explicitly form a new content plan. Do not rebase an old payload silently. `content_invalid` identifies an invalid action/scope or provenance request. Unknown `content.commit` / `content.inputs` saves use the original UUID with `operations show`; replay only the exact original payload if no committed fact exists. Merge/split preserve old annotations on their original identity, and never reuse an old page ID.
+
+`content-ops.v1` is a forward writer boundary for manual ContentPlan versions, derived-page records and bounded compose requests. Older cores must refuse writes; use the current core to continue or read a committed earlier snapshot. No in-place downgrade or actual HOME migration is performed by these operations.

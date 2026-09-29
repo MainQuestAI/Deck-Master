@@ -38,3 +38,15 @@ compose 的 input_revision intent 返回 content_update。upsert_pages 只放真
 同一项目又收到更新时，旧工作单应被替代；不要用旧 produced_against 提交新输入内容。若其他执行者修改了全稿分析依赖的页面，重新读取当前版本，保留自己的工作作为可比较草稿，不强行覆盖。
 
 必要业务决定尚未明确时提出具体问题，并持久化已知上下文。恢复会话后使用同一项目继续；没有 Host 的工作台只能记录反馈和显示等待，不能宣称后台正在思考或制作。
+
+## 工作台内容操作（content_ops.v1）
+
+新版工作台用 `content plan --input` / `content commit --plan-id --base-revision --operation-id` 预览并保存正文、重排、移除和大纲编辑，绑定当前 Document、Page ref 与 ContentPlan ref。正文只改 `customer_visible`；Page 身份、引用、原图和历史意见保留。保留旧原图不表示它已适用于新正文，需要显式计划决定是否重制。
+
+`content inputs --input <patch.json> --base-revision … --operation-id <UUIDv4>` 复用原输入服务，返回可由 `operations show` 核实的原子业务回执。无实际变化也只记录管理回执，不派发、不推断新的材料阅读。原 `inputs update` CLI 保持原返回兼容。
+
+工作单带 `content_operation` 时，阅读其固定 `input.action`、`targets` 与短要求，start 声明 `compose.v1` 以及工作单要求的 `content_operations` 能力。`rewrite` 只改所选页并保留页 ID 与页序；`merge` 将所选至少两页变为一张新页；`split` 将所选一页变为至少两张新页。新页 ID 不得复用任何历史页身份，未选 Page ref、页目标和来源关系保持。合并拆分不是机械拼接正文，仍需真实整合论证并列明影响依据。
+
+仍提交既有 `content_update` 和完整 `content_plan`，不自己构造派生记录。核心原子记录新页与选定旧页 ref/版本的关系；旧意见、文本选段留在原页/原版本，不能声称自动迁移。任务晚到、输入或分析基准变化时拒绝覆盖，保留已完成工作并重新读取当前工作单。
+
+`content source --source-id … --revision … --locator …` 只读取明确版本的材料；指定 `--extract-sha256` 时只在所选快照及其祖先内找该版本。真实 locator 不存在就返回 `material_only`，不要编造页码/段落。提取完成只是机器读取；Host 判断影响与正文采用需对应工作单和结果记录。

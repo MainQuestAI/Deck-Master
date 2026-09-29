@@ -447,6 +447,9 @@ def task_summary(store: Store, document: dict, task: dict) -> dict:
         if task.get('status') == 'superseded':
             summary['invalidated_reason'] = 'task inputs or page scope changed; continue creates a current task'
         return summary
+    if task.get('content_operation_ref'):
+        summary['content_operation'] = store.read_object_json(task['content_operation_ref'])
+        summary['content_operation']['annotation_policy'] = 'retain_original_basis'
     if task.get("protocol_version") == "compose.v1":
         from .content_plan import projection, source_version
         summary["content_plan_contract"] = {"schema_version": "content_plan_input.v1", "required": True,
@@ -1156,6 +1159,7 @@ def inputs_update(
     base_revision: str,
     operation_id: str,
     patch_dir: Path | str | None = None,
+    _recoverable_workbench: bool = False,
 ) -> dict:
     """Save changed inputs; supersede open tasks; dispatch the input revision.
 
@@ -1170,14 +1174,24 @@ def inputs_update(
     patch_dir = Path(patch_dir).expanduser() if patch_dir else Path.cwd()
     normalized = _normalize_input_patch(patch, patch_dir=patch_dir)
     request_digest = sha256_bytes(canonical_json_bytes(normalized))
-    existing = _read_input_operation(store, operation_id)
-    if existing is not None:
-        if existing.get("request_sha256") == request_digest:
-            return existing["result"]
-        raise InputRevisionConflict(
-            f"(operation {operation_id})",
-            "operation id already applied with a different patch",
-        )
+    business_digest = None
+    if _recoverable_workbench:
+        from . import operations
+        from .models import require_writer
+        operations.validate_id(operation_id, new=True)
+        current = store.load_document()
+        if current.get('compatibility', {}).get('project_format') != 'workbench.v3':
+            raise ServiceError('(project)', 'recoverable content inputs require workbench.v3')
+        business_digest = operations.request_digest(current, 'content.inputs', base_revision, {'input': patch})
+        existing = operations.recover(store, operation_id, business_digest)
+        if existing:
+            return existing
+    else:
+        existing = _read_input_operation(store, operation_id)
+        if existing is not None:
+            if existing.get("request_sha256") == request_digest:
+                return existing["result"]
+            raise InputRevisionConflict(f"(operation {operation_id})", "operation id already applied with a different patch")
 
     # Stage every new material before taking the lock; any failure rejects the
     # whole request and leaves current state untouched (§5.3 step 2).
@@ -1189,14 +1203,16 @@ def inputs_update(
         staged_replace.append((item, _read_patch_material(item["path"])))
 
     with store._locked():
-        record = _read_input_operation(store, operation_id)
-        if record is not None:
-            if record.get("request_sha256") == request_digest:
-                return record["result"]
-            raise InputRevisionConflict(
-                f"(operation {operation_id})",
-                "operation id already applied with a different patch",
-            )
+        if _recoverable_workbench:
+            record = operations.recover(store, operation_id, business_digest)
+            if record:
+                return record
+        else:
+            record = _read_input_operation(store, operation_id)
+            if record is not None:
+                if record.get("request_sha256") == request_digest:
+                    return record["result"]
+                raise InputRevisionConflict(f"(operation {operation_id})", "operation id already applied with a different patch")
         document = store.load_document()
         if document["revision_id"] != base_revision:
             raise InputRevisionConflict(
@@ -1279,12 +1295,16 @@ def inputs_update(
                       "input_alignment": input_alignment(document),
                       "revision_id": document["revision_id"], "diff": diff,
                       "reason": normalized["reason"]}
-            if names_changed:
+            if names_changed or _recoverable_workbench:
                 bumped = bump_revision(document, {
                     "operation_id": operation_id, "kind": "input_update",
                     "description": "inputs update (display names only)", "read_set": []})
                 bumped["sources"] = new_sources
                 result["revision_id"] = bumped["revision_id"]
+            if _recoverable_workbench:
+                require_writer(bumped, 'content-ops.v1')
+                return operations.commit_locked(store, document=bumped, base_revision=document['revision_id'],
+                    operation_id=operation_id, kind='content.inputs', digest=business_digest, result=result)
             _write_input_operation(store, operation_id, request_digest, result)
             if names_changed:
                 store._commit_locked(base_revision=document["revision_id"], document=bumped,
@@ -1324,6 +1344,10 @@ def inputs_update(
             "pending_tasks": [task_summary(store, new_document, task)],
             "next_action": "submit_host_results",
         }
+        if _recoverable_workbench:
+            require_writer(new_document, 'content-ops.v1')
+            return operations.commit_locked(store, document=new_document, base_revision=document['revision_id'],
+                operation_id=operation_id, kind='content.inputs', digest=business_digest, result=result)
         _write_input_operation(store, operation_id, request_digest, result)
         store._commit_locked(base_revision=document["revision_id"], document=new_document,
                              operation_id=operation_id, blobs=[])

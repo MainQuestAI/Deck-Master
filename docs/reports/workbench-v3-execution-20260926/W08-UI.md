@@ -1,6 +1,6 @@
 # W08 风格校准界面与真实效果记录
 
-前置核心 [PR #58](https://github.com/MainQuestAI/Deck-Master/pull/58) 已合入 main `38d0b446592e8558b9126cfa85a484d2bddf557b`，之后才在 `codex/workbench-w08-ui` 接线。这个切片只改前端与验证/证据，不新增 schema、CLI、Host 或共享服务。实现提交 `fd05f563e692d49120e0fd3cefa4fc2e358e722f`，[前端 PR #59](https://github.com/MainQuestAI/Deck-Master/pull/59) 待 CI/合并。用户验收、实际 HOME 安装和发布未执行。
+前置核心 [PR #58](https://github.com/MainQuestAI/Deck-Master/pull/58) 已合入 main `38d0b446592e8558b9126cfa85a484d2bddf557b`，之后才在 `codex/workbench-w08-ui` 接线。这个切片只改前端与验证/证据，不新增 schema、CLI、Host 或共享服务。实现提交 `fd05f563e692d49120e0fd3cefa4fc2e358e722f`，[前端 PR #59](https://github.com/MainQuestAI/Deck-Master/pull/59) 已合入 main `590e408c36409d435c81291ffea17686419e6fdf`；最终 head `cbd2b469ec14a4af3d0067359a5b723b163f4ebf` 的 8 项 CI 全部通过。用户验收、实际 HOME 安装和发布未执行。
 
 ## 已实现的用户路径
 

@@ -1,0 +1,50 @@
+{
+  "checks": {
+    "page_order_preserved": true,
+    "only_capability_changed": true,
+    "decisions_preserved": true,
+    "audience_updated": true,
+    "all_sources_rebound": true
+  },
+  "pages": [
+    {
+      "page_id": "responsibility",
+      "before": {
+        "path": ".deckmaster/objects/2c/2c8adb426822de920253532f1f7c45bf15199c25a434271dbdcd8b2eafc74bf4.json",
+        "sha256": "2c8adb426822de920253532f1f7c45bf15199c25a434271dbdcd8b2eafc74bf4"
+      },
+      "after": {
+        "path": ".deckmaster/objects/2c/2c8adb426822de920253532f1f7c45bf15199c25a434271dbdcd8b2eafc74bf4.json",
+        "sha256": "2c8adb426822de920253532f1f7c45bf15199c25a434271dbdcd8b2eafc74bf4"
+      },
+      "entry_unchanged": true
+    },
+    {
+      "page_id": "capability",
+      "before": {
+        "path": ".deckmaster/objects/9a/9ad3a11efae4924e13f3c9637bd5660f4d2cc30534ee3413ecfed13be9240f60.json",
+        "sha256": "9ad3a11efae4924e13f3c9637bd5660f4d2cc30534ee3413ecfed13be9240f60"
+      },
+      "after": {
+        "path": ".deckmaster/objects/53/53941edf39aeef5715f76613e23621c34518c8b6c89fd0d0528caa03b3adbd17.json",
+        "sha256": "53941edf39aeef5715f76613e23621c34518c8b6c89fd0d0528caa03b3adbd17"
+      },
+      "entry_unchanged": false
+    },
+    {
+      "page_id": "verification",
+      "before": {
+        "path": ".deckmaster/objects/c8/c85f3bff957abf91385b3fc87f9e533155cd250c86c517f01243cf110aec1bb6.json",
+        "sha256": "c85f3bff957abf91385b3fc87f9e533155cd250c86c517f01243cf110aec1bb6"
+      },
+      "after": {
+        "path": ".deckmaster/objects/c8/c85f3bff957abf91385b3fc87f9e533155cd250c86c517f01243cf110aec1bb6.json",
+        "sha256": "c85f3bff957abf91385b3fc87f9e533155cd250c86c517f01243cf110aec1bb6"
+      },
+      "entry_unchanged": true
+    }
+  ],
+  "host": "current Codex session; literal reasoning based on both material versions",
+  "image_tool_calls": 0,
+  "quality_boundary": "synthetic material; real Host adoption, not customer acceptance or independent factual verification"
+}

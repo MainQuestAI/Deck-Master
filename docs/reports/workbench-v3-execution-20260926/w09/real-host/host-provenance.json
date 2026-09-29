@@ -1,0 +1,9 @@
+{
+  "host": "actual current Codex session",
+  "thread_id": "01a0dd7c-2fa3-7383-a844-16162a5d61c8",
+  "turn_id": "01a0ee27-e7c4-7c73-bb1e-783f2bd6676a",
+  "material": "synthetic, no customer facts",
+  "method": "Read both source versions via public content source CLI; authored literal initial and replacement results; public task start/accept",
+  "image_tool_calls": 0,
+  "automation_boundary": "ref assertions automate verification, not impact reasoning"
+}

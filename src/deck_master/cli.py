@@ -225,6 +225,7 @@ def build_parser() -> argparse.ArgumentParser:
         "operations": {"show": ("operation-id",)},
         "candidates": {"list": (), "show": ("candidate-id",), "plan": ("input",), "adopt": ("input", "base-revision", "operation-id")},
         "stages": {"assemble": ("base-revision", "operation-id")},
+        "content": {"plan": ("input",), "commit": ("plan-id", "base-revision", "operation-id"), "inputs": ("input", "base-revision", "operation-id"), "source": ("source-id",), "lineage": ("page-id",)},
         "styles": {"list": (), "show": ("recipe-id",), "propose": ("input",), "confirm": ("proposal-id", "base-revision", "operation-id"), "plan": ("input",)},
     }.items():
         group = sub.add_parser(name)
@@ -234,6 +235,11 @@ def build_parser() -> argparse.ArgumentParser:
             command_parser.add_argument("--project", required=True)
             for flag in flags:
                 command_parser.add_argument("--" + flag, required=True)
+            if name == "content" and command in ("source", "lineage"):
+                command_parser.add_argument("--revision")
+                if command == "source":
+                    command_parser.add_argument("--locator")
+                    command_parser.add_argument("--extract-sha256")
             if name == "styles" and command in ("list", "show"):
                 command_parser.add_argument("--revision")
             if name == "candidates" and command in ("list", "show"):
@@ -461,9 +467,10 @@ def main(argv: list[str] | None = None) -> int:
                     external_use=options.external_use,
                 )
             )
-        if options.command in ("annotations", "changes", "operations", "candidates", "stages", "styles"):
-            from . import annotation_service, changes, operations, candidates, stages, styles
-            actions = {("annotations", "save"): annotation_service.save,
+        if options.command in ("annotations", "changes", "operations", "candidates", "stages", "styles", "content"):
+            from . import annotation_service, changes, operations, candidates, stages, styles, content_ops
+            actions = {("content", "plan"): content_ops.plan, ("content", "commit"): content_ops.commit, ("content", "inputs"): content_ops.inputs, ("content", "source"): content_ops.source, ("content", "lineage"): content_ops.lineage,
+                       ("annotations", "save"): annotation_service.save,
                        ("annotations", "list"): annotation_service.list_annotations,
                        ("changes", "list"): changes.list_changes, ("changes", "plan"): changes.plan, ("changes", "commit"): changes.commit,
                        ("changes", "handoff"): changes.handoff, ("operations", "show"): operations.show,
@@ -473,7 +480,7 @@ def main(argv: list[str] | None = None) -> int:
                        ("styles", "list"): styles.listing, ("styles", "show"): styles.show,
                        ("styles", "propose"): styles.propose, ("styles", "confirm"): styles.confirm, ("styles", "plan"): styles.plan}
             fields = {key: getattr(options, key) for key in
-                      ("base_revision", "operation_id", "plan_id", "change_id", "candidate_id", "page_id", "revision", "recipe_id", "proposal_id") if hasattr(options, key)}
+                      ("base_revision", "operation_id", "plan_id", "change_id", "candidate_id", "page_id", "revision", "recipe_id", "proposal_id", "source_id", "locator", "extract_sha256") if hasattr(options, key)}
             if hasattr(options, "input"):
                 fields["input"] = json.loads(Path(options.input).read_text(encoding="utf-8"))
             return _emit(actions[(options.command, options.workbench_command)](options.project, **fields))
