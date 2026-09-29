@@ -1,3 +1,4 @@
+import {deliveryDesk, historyDesk} from './delivery-desk.js';
 import {runDesk} from './run-desk.js';
 import {candidateBatch} from './candidate-desk.js';
 import {el, button, heading, empty, version} from './dom.js';
@@ -48,6 +49,7 @@ export function runs(app, data) {
   const selected = data.runDetail?.task || data.tasks.find(task => task.task_id === app.route.task_id);
   const node = el('div', {}, heading(selected ? '当前任务' : '任务与交付', '任务状态按当前阅读版本展示。复制交接说明不会启动模型。',
     selected?.kind === 'compose' && selected.status === 'awaiting_host' && !app.readonly ? button('交接这项内容整理', () => app.handoff(selected.task_id), true) : null));
+  if (app.health.ui_capabilities?.includes('exports.v1')) node.append(button('查看版本与文件', () => { const target = document.querySelector('#delivery-desk'); target?.scrollIntoView({block: 'start'}); target?.querySelector('h2')?.focus({preventScroll: true}); }));
   if (selected && app.returnTo && !app.returnTo.task_id) node.append(button('返回上次工作面', () => app.go(app.returnTo)));
   const handoffs = app.health.ui_capabilities?.includes('changes.v1') ? changeHandoffs(app) : null;
   const batch = candidateBatch(app);
@@ -58,12 +60,8 @@ export function runs(app, data) {
     !selected && button('查看这项任务', () => app.go({task_id: task.task_id})), selected && button('查看全部任务', () => app.go({task_id: null}))))) : empty('没有已记录的任务', '此版本还没有制作任务。'));
   if (handoffs) node.append(handoffs);
   node.append(batch);
-  const revisions = el('select', {'aria-label': '阅读历史版本'}, data.history.revisions.map(revision => el('option', {value: revision.revision_id},
-    `${version(revision.revision_id)} · ${revision.page_count} 页${revision.revision_id === data.history.current ? ' · 当前' : ''}`)));
-  revisions.value = app.route.revision;
-  node.append(panel('版本记录', el('div', {class: 'row wrap'}, revisions, button('读取所选版本', () => app.go({revision: revisions.value, task_id: null})))));
-  node.append(panel('交付状态', el('p', {}, app.summary.outputs.pptx.existence === 'recorded' ? '这个版本已记录整稿 PPT 文件，正式交付仍需检查质量与完整性。' : '这个版本尚无整稿 PPT 文件。'),
-    el('p', {class: 'muted'}, '可在原有工作区查看已有导出流程。'), el('a', {href: '/'}, '打开原有工作区')));
+  if (app.health.ui_capabilities?.includes('exports.v1')) node.append(historyDesk(app, data.history), deliveryDesk(app));
+  else node.append(panel('版本与文件', el('p', {}, '升级核心后可读取固定版本的导出与恢复功能。')));
   return node;
 }
 export {style} from './style-calibration.js';

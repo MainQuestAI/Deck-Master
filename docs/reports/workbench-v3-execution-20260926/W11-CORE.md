@@ -20,3 +20,7 @@ PNG/JPEG 元数据、SVG 注释/metadata 和 PPT 属性/备注/非可见形状�
 - 兼容说明见 [迁移文档](../../migration-to-rebuilt-core.md#fixed-revision-exports-workbench-w11)，公开路由与错误见任务索引和恢复手册。新 manifest/restore-plan 活动合同与唯一镜像同步；Document 未增加新的字段，既有 writer floor 保留。
 
 后续：核心合入 main 后接浏览器下载、版本选择、恢复确认及可编辑性摘要。W11 AC 保持 partial；W12 仍需用户指定 30 页真实 Host 验收项目/材料。
+
+核心 #63 已由远端 Git main 的合并提交 `9c9aa820833f039121a0115793258e7a2acb2ac9` 确认，父提交为既有 main 和已过 8 项 CI 的 `fca496a955c0b12c10eacdf9e8877727ed96b7fa`。合并请求首次回包丢失，后续 REST 曾滞后返回未合并/dirty；以 fetch 获得的确切合并对象及父链核实，没有擅自解决不存在的冲突。
+
+额外单页合成 PPT 经真实 LibreOffice/Poppler 渲染，原件与清理副本逐像素相同，原件 hash 不变。[渲染对照](w11/core/render-copy.json)。这不是桌面实际编辑或客户验收。

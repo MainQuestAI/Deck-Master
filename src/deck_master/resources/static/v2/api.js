@@ -29,6 +29,12 @@ async function request(path, options) {
 }
 export function readableError(error) {
   const labels = {
+    restore_basis_changed: '当前版本已变化，未恢复或覆盖任何页。来源与当前版本均保留，请比较后重新预览。',
+    delivery_blocked: '所选版本尚不满足正式交付条件，请处理下面的页与检查项。',
+    input_reconciliation_pending: '所选版本的内容与任务要求尚未协调，请先完成内容更新。',
+    export_privacy_blocked: '公开副本中存在需处理的私密内容或不支持的资源。本次未生成文件包，原件保留。',
+    export_file_changed: '文件包或清单已变化，未提供损坏文件。请从所选版本重新生成。',
+    export_not_found: '本项目尚未找到这个文件包，可按保留的原版本与用途重试。',
     content_basis_changed: '内容或大纲基准已变化。你的输入仍保留，请比较后重新预览影响。',
     content_invalid: '本次内容调整不满足范围或来源约束，请核对选页和要求。',
     local_state_conflict: '另一个窗口已保存不同内容。你的草稿仍保留，请比较两稿或另存一份。',

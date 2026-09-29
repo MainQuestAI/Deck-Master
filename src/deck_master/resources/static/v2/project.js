@@ -32,6 +32,12 @@ export class Project {
         this.setNotice('本机缓冲不可用，请先下载恢复文件。'); previous.disposed = false;
       }
     });
+    this.root.addEventListener('business-committed', event => {
+      if (event.detail.action !== 'history.restore') return;
+      const revision = event.detail.result.revision_id;
+      this.setNotice(`历史恢复已确认，已创建 ${version(revision)}。当前阅读位置保持不变。`);
+      this.notice?.append(button('查看恢复后的版本', () => this.go({surface: 'runs', revision, task_id: null})));
+    });
     addEventListener('beforeunload', () => this.editor?.persist());
     addEventListener('online', () => this.setNotice('网络已恢复。可核实草稿保存，或重新读取当前工作面。'));
     await this.loadRoute(this.route, false);
