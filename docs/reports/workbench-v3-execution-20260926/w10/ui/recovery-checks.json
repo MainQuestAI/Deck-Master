@@ -1,0 +1,14 @@
+{
+  "checks": [
+    "new_origin_restores_only_project_ack_task_page",
+    "unknown_cancel_project_ack_survives_second_origin_change",
+    "31_minute_projection_clock_only_requests_verification",
+    "no_automatic_cancel_or_dispatch_across_origins",
+    "no_browser_javascript_errors"
+  ],
+  "synthetic": true,
+  "clock_fault_minutes": 31,
+  "model_calls": 0,
+  "native_host_evidence": false,
+  "errors": []
+}

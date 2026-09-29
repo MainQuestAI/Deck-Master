@@ -1,0 +1,379 @@
+{
+  "image_bounds_pass": true,
+  "qualifying": true,
+  "elapsed_s": 1200.0019156250055,
+  "synthetic": true,
+  "model_calls": 0,
+  "fixture": {
+    "factory": "w01-pressure.v1",
+    "project_id": "project",
+    "page_count": 300,
+    "candidate_count": 1500,
+    "attempt_count": 4500
+  },
+  "sampling": "Chromium Performance.getMetrics JSHeapUsedSize after each ten-second interaction slot; no forced GC",
+  "middle_window_s": [
+    300,
+    600
+  ],
+  "last_window_s": [
+    900,
+    1200
+  ],
+  "middle_samples": 30,
+  "last_samples": 30,
+  "middle_median": 8515600.0,
+  "last_median": 8692088.0,
+  "growth": 0.020725257175066902,
+  "memory_pass": true,
+  "errors": [],
+  "post_paths": [
+    "gallery",
+    "ui-state"
+  ],
+  "get_counts": {
+    "health": 1,
+    "project": 142,
+    "view/summary": 622,
+    "ui-state": 1,
+    "drafts": 142,
+    "gallery": 81,
+    "content-plan": 81,
+    "session": 1,
+    "thumbnails": 468,
+    "thumbnail-file": 330,
+    "file": 280,
+    "pages/p01/lineage": 42,
+    "annotations": 20,
+    "candidates": 80,
+    "tasks": 77,
+    "history": 20,
+    "candidates/candidate-20260930-p01-0": 44,
+    "attempts/attempt-20260930-p01-0-2": 20,
+    "pages/p25/lineage": 2,
+    "candidates/candidate-20260930-p01-1": 4,
+    "pages/p55/lineage": 2,
+    "candidates/candidate-20260930-p01-2": 4,
+    "pages/p85/lineage": 2,
+    "candidates/candidate-20260930-p01-3": 4,
+    "pages/p115/lineage": 2,
+    "candidates/candidate-20260930-p01-4": 4,
+    "pages/p145/lineage": 2,
+    "pages/p175/lineage": 2,
+    "pages/p205/lineage": 2,
+    "pages/p235/lineage": 2,
+    "pages/p265/lineage": 2
+  },
+  "updates": [
+    {
+      "step": 0,
+      "task_id": "pressure-background-080",
+      "kind": "start"
+    },
+    {
+      "step": 2,
+      "task_id": "pressure-background-080",
+      "kind": "cancel"
+    },
+    {
+      "step": 4,
+      "task_id": "pressure-background-081",
+      "kind": "start"
+    },
+    {
+      "step": 6,
+      "task_id": "pressure-background-081",
+      "kind": "cancel"
+    },
+    {
+      "step": 8,
+      "task_id": "pressure-background-082",
+      "kind": "start"
+    },
+    {
+      "step": 10,
+      "task_id": "pressure-background-082",
+      "kind": "cancel"
+    },
+    {
+      "step": 12,
+      "task_id": "pressure-background-083",
+      "kind": "start"
+    },
+    {
+      "step": 14,
+      "task_id": "pressure-background-083",
+      "kind": "cancel"
+    },
+    {
+      "step": 16,
+      "task_id": "pressure-background-084",
+      "kind": "start"
+    },
+    {
+      "step": 18,
+      "task_id": "pressure-background-084",
+      "kind": "cancel"
+    },
+    {
+      "step": 20,
+      "task_id": "pressure-background-085",
+      "kind": "start"
+    },
+    {
+      "step": 22,
+      "task_id": "pressure-background-085",
+      "kind": "cancel"
+    },
+    {
+      "step": 24,
+      "task_id": "pressure-background-086",
+      "kind": "start"
+    },
+    {
+      "step": 26,
+      "task_id": "pressure-background-086",
+      "kind": "cancel"
+    },
+    {
+      "step": 28,
+      "task_id": "pressure-background-087",
+      "kind": "start"
+    },
+    {
+      "step": 30,
+      "task_id": "pressure-background-087",
+      "kind": "cancel"
+    },
+    {
+      "step": 32,
+      "task_id": "pressure-background-088",
+      "kind": "start"
+    },
+    {
+      "step": 34,
+      "task_id": "pressure-background-088",
+      "kind": "cancel"
+    },
+    {
+      "step": 36,
+      "task_id": "pressure-background-089",
+      "kind": "start"
+    },
+    {
+      "step": 38,
+      "task_id": "pressure-background-089",
+      "kind": "cancel"
+    },
+    {
+      "step": 40,
+      "task_id": "pressure-background-090",
+      "kind": "start"
+    },
+    {
+      "step": 42,
+      "task_id": "pressure-background-090",
+      "kind": "cancel"
+    },
+    {
+      "step": 44,
+      "task_id": "pressure-background-091",
+      "kind": "start"
+    },
+    {
+      "step": 46,
+      "task_id": "pressure-background-091",
+      "kind": "cancel"
+    },
+    {
+      "step": 48,
+      "task_id": "pressure-background-092",
+      "kind": "start"
+    },
+    {
+      "step": 50,
+      "task_id": "pressure-background-092",
+      "kind": "cancel"
+    },
+    {
+      "step": 52,
+      "task_id": "pressure-background-093",
+      "kind": "start"
+    },
+    {
+      "step": 54,
+      "task_id": "pressure-background-093",
+      "kind": "cancel"
+    },
+    {
+      "step": 56,
+      "task_id": "pressure-background-094",
+      "kind": "start"
+    },
+    {
+      "step": 58,
+      "task_id": "pressure-background-094",
+      "kind": "cancel"
+    },
+    {
+      "step": 60,
+      "task_id": "pressure-background-095",
+      "kind": "start"
+    },
+    {
+      "step": 62,
+      "task_id": "pressure-background-095",
+      "kind": "cancel"
+    },
+    {
+      "step": 64,
+      "task_id": "pressure-background-096",
+      "kind": "start"
+    },
+    {
+      "step": 66,
+      "task_id": "pressure-background-096",
+      "kind": "cancel"
+    },
+    {
+      "step": 68,
+      "task_id": "pressure-background-097",
+      "kind": "start"
+    },
+    {
+      "step": 70,
+      "task_id": "pressure-background-097",
+      "kind": "cancel"
+    },
+    {
+      "step": 72,
+      "task_id": "pressure-background-098",
+      "kind": "start"
+    },
+    {
+      "step": 74,
+      "task_id": "pressure-background-098",
+      "kind": "cancel"
+    },
+    {
+      "step": 76,
+      "task_id": "pressure-background-099",
+      "kind": "start"
+    },
+    {
+      "step": 78,
+      "task_id": "pressure-background-099",
+      "kind": "cancel"
+    },
+    {
+      "step": 80,
+      "task_id": "pressure-background-100",
+      "kind": "start"
+    },
+    {
+      "step": 82,
+      "task_id": "pressure-background-100",
+      "kind": "cancel"
+    },
+    {
+      "step": 84,
+      "task_id": "pressure-background-101",
+      "kind": "start"
+    },
+    {
+      "step": 86,
+      "task_id": "pressure-background-101",
+      "kind": "cancel"
+    },
+    {
+      "step": 88,
+      "task_id": "pressure-background-102",
+      "kind": "start"
+    },
+    {
+      "step": 90,
+      "task_id": "pressure-background-102",
+      "kind": "cancel"
+    },
+    {
+      "step": 92,
+      "task_id": "pressure-background-103",
+      "kind": "start"
+    },
+    {
+      "step": 94,
+      "task_id": "pressure-background-103",
+      "kind": "cancel"
+    },
+    {
+      "step": 96,
+      "task_id": "pressure-background-104",
+      "kind": "start"
+    },
+    {
+      "step": 98,
+      "task_id": "pressure-background-104",
+      "kind": "cancel"
+    },
+    {
+      "step": 100,
+      "task_id": "pressure-background-105",
+      "kind": "start"
+    },
+    {
+      "step": 102,
+      "task_id": "pressure-background-105",
+      "kind": "cancel"
+    },
+    {
+      "step": 104,
+      "task_id": "pressure-background-106",
+      "kind": "start"
+    },
+    {
+      "step": 106,
+      "task_id": "pressure-background-106",
+      "kind": "cancel"
+    },
+    {
+      "step": 108,
+      "task_id": "pressure-background-107",
+      "kind": "start"
+    },
+    {
+      "step": 110,
+      "task_id": "pressure-background-107",
+      "kind": "cancel"
+    },
+    {
+      "step": 112,
+      "task_id": "pressure-background-108",
+      "kind": "start"
+    },
+    {
+      "step": 114,
+      "task_id": "pressure-background-108",
+      "kind": "cancel"
+    },
+    {
+      "step": 116,
+      "task_id": "pressure-background-109",
+      "kind": "start"
+    },
+    {
+      "step": 118,
+      "task_id": "pressure-background-109",
+      "kind": "cancel"
+    }
+  ],
+  "environment": {
+    "browser": "149.0.7827.55",
+    "os": "macOS-27.0-arm64-arm-64bit",
+    "python": "3.12.12",
+    "viewport": [
+      1440,
+      900
+    ],
+    "commit": "7036f8e962f33f78a90fcc5b5ea1f506e47d3010"
+  }
+}

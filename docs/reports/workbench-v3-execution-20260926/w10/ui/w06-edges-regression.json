@@ -1,0 +1,63 @@
+{
+  "status": "verified",
+  "evidence": "real browser with synthetic project and injected faults",
+  "browser": "149.0.7827.55",
+  "checks": [
+    {
+      "name": "real-comparison-canvas-has-letterbox",
+      "status": "pass"
+    },
+    {
+      "name": "letterbox-click-does-not-create-region",
+      "status": "pass"
+    },
+    {
+      "name": "svg-viewbox-and-letterbox-normalized-coordinate",
+      "status": "pass"
+    },
+    {
+      "name": "tiny-fraction-canonical-digest-matches-python",
+      "status": "pass"
+    },
+    {
+      "name": "coordinate-recovery-file-preserves-raw-normalized-range",
+      "status": "pass"
+    },
+    {
+      "name": "stale-plan-conflict-keeps-both-bases-and-creates-no-task",
+      "status": "pass"
+    },
+    {
+      "name": "project-ack-pending-and-late-draft-survive-port-change",
+      "status": "pass"
+    },
+    {
+      "name": "query-timeout-does-not-change-id-or-enable-new-save",
+      "status": "pass"
+    },
+    {
+      "name": "cross-origin-replay-remains-original-request",
+      "status": "pass"
+    },
+    {
+      "name": "unacknowledged-recovery-contains-frozen-request-and-late-text",
+      "status": "pass"
+    },
+    {
+      "name": "unacknowledged-origin-buffer-is-not-claimed-cross-port",
+      "status": "pass"
+    },
+    {
+      "name": "explicit-recovery-import-replays-original-business-payload",
+      "status": "pass"
+    },
+    {
+      "name": "tiny-coordinate-recovery-file-imports-across-origin",
+      "status": "pass"
+    },
+    {
+      "name": "no-uncaught-browser-errors",
+      "status": "pass"
+    }
+  ]
+}

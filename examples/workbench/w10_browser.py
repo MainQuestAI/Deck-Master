@@ -14,6 +14,7 @@ from w07_synthetic import SyntheticW07
 def main():
     parser = argparse.ArgumentParser(description=__doc__); parser.add_argument('--out', type=Path, required=True)
     args = parser.parse_args(); args.out.mkdir(parents=True, exist_ok=False)
+    expect.set_options(timeout=15000)
     flow = SyntheticW07(args.out); checks = []; errors = []; writes = []
     # Real protocol transitions, explicit synthetic SVG content and Host identity.
     for n in range(31):

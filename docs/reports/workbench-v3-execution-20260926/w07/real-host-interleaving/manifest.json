@@ -1,0 +1,17 @@
+{
+  "source_commit": "703ec73",
+  "real_host": true,
+  "synthetic_business_content": true,
+  "new_native_image_calls": 1,
+  "native_item_id": "exec-ebb78d75-24c9-40d7-8424-c9ad969df66e",
+  "files": {
+    "image-checks.json": "af5d984f71d65825f19798f0b606ee610c3dbab90516a222215c265c260de569",
+    "interleaving-checks.json": "55396e4319ed625685d5704a44026f4afae082d7d69acf7d4186f847337f6938",
+    "late-result-checks.json": "eb206b671c14e0fdd0aa1d426b1b0faccab377c6169b7cca3f10511af10b2376",
+    "second-page-native.png": "441513b8caecc1c98e8ed027360ca5cda2a32500995b3708d02c8b1fd96cc31b",
+    "first-page-trial.svg": "dd48cf3bb9f607c8b4b0a88b4c5170d02a4c2c7ec2b926828599540eae48b20e",
+    "second-page-auto.svg": "87bce5e61d1efef1a17f225d7779f448b953a445c79e0b9c66c89e8e310c1f0b",
+    "comparison-before.png": "6d7265ca4616f0f5dad67e6ff2d0a304d5a2e5212e8420f426b37568bba152d6",
+    "comparison-after.png": "a77e34ebc674d217ca6ebd789e6d0476350a53bc003aa5b2501e70819790e666"
+  }
+}

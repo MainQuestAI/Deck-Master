@@ -1,0 +1,10 @@
+{
+  "checks": [
+    "one_corrupt_task_local_error_preserves_other_rows_and_offline_docs",
+    "explicit_reread_recovers_original_task",
+    "no_tasks_has_content_and_gallery_actions"
+  ],
+  "synthetic": true,
+  "model_calls": 0,
+  "fault": "temporary corrupt immutable task in disposable fixture; restored byte-for-byte"
+}

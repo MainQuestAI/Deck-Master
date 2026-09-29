@@ -1,0 +1,57 @@
+{
+  "checks": {
+    "actual_auto_return_does_not_move_fixed_trial_comparison": true,
+    "trial_return_keeps_first_current_and_auto_returns_second_only": true,
+    "browser_adopts_first_candidate_preserves_entire_second_page": true,
+    "adopted_page_downstream_invalidated_without_faking_preview": true,
+    "actual_host_start_time_and_current_turn_recorded": true
+  },
+  "real_host": true,
+  "content_fixture_only": true,
+  "professional_acceptance": false,
+  "project_id": "synthetic-project",
+  "candidate_id": "candidate-08aea8892b344db68076f8c0ce6b446c",
+  "fixed_revision": "af92c95ae5f040818a86ce215ee30ec0",
+  "auto_revision": "890c773450274d9f907e75507ded6369",
+  "adopted_revision": "22a7491857c2457b8071abe28ad5188e",
+  "auto_task_id": "4ea3b4ca64d2",
+  "trial_task_id": "task-57d98ece0f2a49c9b01059e248f5e053",
+  "auto_claimed_at": "2026-09-29T19:09:35Z",
+  "trial_claimed_at": "2026-09-29T19:09:35Z",
+  "second_page_before_adopt": {
+    "blueprint": {
+      "path": ".deckmaster/objects/e1/e1c22bcb01d82ee48e3c90d25d344bfd6e1a2c21551a0cf13b75fbed8eadd8ad.json",
+      "sha256": "e1c22bcb01d82ee48e3c90d25d344bfd6e1a2c21551a0cf13b75fbed8eadd8ad"
+    },
+    "page": {
+      "path": ".deckmaster/objects/8d/8df9db4b0427039a426678dae2932bada18ab414c12248cf92da984d4b991014.json",
+      "sha256": "8df9db4b0427039a426678dae2932bada18ab414c12248cf92da984d4b991014"
+    },
+    "page_id": "independent-page",
+    "ppt_preview": null,
+    "svg": {
+      "path": ".deckmaster/objects/1b/1bc7fd3021ec06a0a3a3427d2e40198eda1023e24f41f16b75a3fb1f6978668b.json",
+      "sha256": "1bc7fd3021ec06a0a3a3427d2e40198eda1023e24f41f16b75a3fb1f6978668b"
+    },
+    "svg_preview": null
+  },
+  "second_page_after_adopt": {
+    "blueprint": {
+      "path": ".deckmaster/objects/e1/e1c22bcb01d82ee48e3c90d25d344bfd6e1a2c21551a0cf13b75fbed8eadd8ad.json",
+      "sha256": "e1c22bcb01d82ee48e3c90d25d344bfd6e1a2c21551a0cf13b75fbed8eadd8ad"
+    },
+    "page": {
+      "path": ".deckmaster/objects/8d/8df9db4b0427039a426678dae2932bada18ab414c12248cf92da984d4b991014.json",
+      "sha256": "8df9db4b0427039a426678dae2932bada18ab414c12248cf92da984d4b991014"
+    },
+    "page_id": "independent-page",
+    "ppt_preview": null,
+    "svg": {
+      "path": ".deckmaster/objects/1b/1bc7fd3021ec06a0a3a3427d2e40198eda1023e24f41f16b75a3fb1f6978668b.json",
+      "sha256": "1bc7fd3021ec06a0a3a3427d2e40198eda1023e24f41f16b75a3fb1f6978668b"
+    },
+    "svg_preview": null
+  },
+  "browser": "149.0.7827.55",
+  "errors": []
+}

@@ -1,0 +1,13 @@
+{
+  "real_current_host": true,
+  "content_fixture_only": true,
+  "late_result_exit_code": 5,
+  "cancelled_task_retained": true,
+  "pages_candidates_outputs_unchanged": true,
+  "task_id": "task-4acaad927f3247ab963529b4d6b4a335",
+  "execution_started_at": "2026-09-29T19:12:17Z",
+  "request_count": 0,
+  "attempt_count": 0,
+  "additional_image_calls": 0,
+  "stderr": "{\n \"error\": {\n  \"code\": \"conflict\",\n  \"message\": \"(task task-4acaad927f3247ab963529b4d6b4a335): result arrived after cancellation; call facts were settled\",\n  \"field\": null,\n  \"next_action\": \"rebase or read new inputs\"\n }\n}\n"
+}

@@ -1,0 +1,125 @@
+{
+  "status": "verified",
+  "source_commit": "7036f8e962f33f78a90fcc5b5ea1f506e47d3010",
+  "asset_count": 29,
+  "assets": [
+    {
+      "path": "deck_master/resources/static/v2/annotations.js",
+      "sha256": "675f63c7d4a8b9c8fb06ee406845336ad12f0b6547ac5494b65a18e4946ba31f"
+    },
+    {
+      "path": "deck_master/resources/static/v2/api.js",
+      "sha256": "673ca9c7d89992e59cd0de81c9580e3e85e8729ed8b34cad9dcd38c4c346967f"
+    },
+    {
+      "path": "deck_master/resources/static/v2/app.js",
+      "sha256": "9c8f3ad2f39958148e79fb7cf08b225d07059656d7eff3f229bf02981fac79f6"
+    },
+    {
+      "path": "deck_master/resources/static/v2/business-operations.js",
+      "sha256": "fd2e826e920b1a39fdfaffb1ac15e399d517f7f2d32f94586625b6489d9b68b6"
+    },
+    {
+      "path": "deck_master/resources/static/v2/candidate-desk.js",
+      "sha256": "3a4c6306c123d85339ff775c3ec1d28f21c4ae574972de8d72f0af0a5f9a5aa5"
+    },
+    {
+      "path": "deck_master/resources/static/v2/change-handoff.js",
+      "sha256": "d8e3ca27e119ef5a66f18a496f4e5d513c4cea24657d6177ee41dd4eba32077c"
+    },
+    {
+      "path": "deck_master/resources/static/v2/dom.js",
+      "sha256": "e39301e0b14cefe7b6b9fe9f51821c1e34e37925258be8093f2f7825747bb5a3"
+    },
+    {
+      "path": "deck_master/resources/static/v2/drafts.js",
+      "sha256": "ecb2b4eea761bf4cc1df810eee60ba569bbd57a63f2d9782eed59fdb2081c138"
+    },
+    {
+      "path": "deck_master/resources/static/v2/gallery-state.js",
+      "sha256": "bbe704c776e37bf6dfd216c4f2750e7dec447e9dd0c300556a4a0d1959aee308"
+    },
+    {
+      "path": "deck_master/resources/static/v2/gallery.js",
+      "sha256": "1db3c656e54f87fb9404a269b9be8889bb6158024bdf6127c618aac39d85b89d"
+    },
+    {
+      "path": "deck_master/resources/static/v2/icons.js",
+      "sha256": "95fd179d9231f9993a8a98140a3711145a486bf022fb3096deaad56113da8456"
+    },
+    {
+      "path": "deck_master/resources/static/v2/images.js",
+      "sha256": "b8b67c32711de317268be890071aa159a84d768dc6af835463f965c9d9f0f2b7"
+    },
+    {
+      "path": "deck_master/resources/static/v2/index.html",
+      "sha256": "49084f6532bb728bb2150b43c75a1ef0ee5f9e0ae0f31ebb4b5a78b91258c6ed"
+    },
+    {
+      "path": "deck_master/resources/static/v2/launcher-ui.js",
+      "sha256": "1e5ea56315f693161ad4fedba9a8b38fa3ed20fd4cb61bd572a95a07214acbc4"
+    },
+    {
+      "path": "deck_master/resources/static/v2/page-workbench.js",
+      "sha256": "b999a49228ad47bf02a64ebbc3876e6b8d648d0d18e3fc2d4edfc508042a51b8"
+    },
+    {
+      "path": "deck_master/resources/static/v2/production-view.js",
+      "sha256": "7786bcf3381e35933330f3e78dd8e81b89bfb23e6da64b80e0e877cfbaa07d1b"
+    },
+    {
+      "path": "deck_master/resources/static/v2/project.js",
+      "sha256": "cd25cb13db487ca0199f72d9650ddd48e7903b4b1e8df683192412dc4eeaf36f"
+    },
+    {
+      "path": "deck_master/resources/static/v2/request-view.js",
+      "sha256": "2e3a3675189af0e0c21a48b5ede649744b23ae91ea3e8f809865b3563e4a43d6"
+    },
+    {
+      "path": "deck_master/resources/static/v2/routes.js",
+      "sha256": "4f5fef249700aa3756cf2c69ec0d31cb772d20b17505dd9f141d9a52f2954acc"
+    },
+    {
+      "path": "deck_master/resources/static/v2/run-desk.js",
+      "sha256": "fdd9e1e149957c1151f0cb00d755f03dd911b0dd5ae67a92959eb4790d3ffb8c"
+    },
+    {
+      "path": "deck_master/resources/static/v2/run-recovery.js",
+      "sha256": "0601ae908e0cbc7f2b121671e8d11a2b5f4a3250455532688cab02ad12911262"
+    },
+    {
+      "path": "deck_master/resources/static/v2/style.css",
+      "sha256": "3045ea07efcb5418235df114511acaec7f5a5e5f694fd21dd5da2afee1553570"
+    },
+    {
+      "path": "deck_master/resources/static/v2/summary-poll.js",
+      "sha256": "bb964fda5a47732749f819fe384d7a444bc56688a19c84a33d924c7f340b634b"
+    },
+    {
+      "path": "deck_master/resources/static/v2/text-diff.js",
+      "sha256": "cc52557c11ad1000989db7151cab5ed203d8b440d1b9c190a017291f12e1a632"
+    },
+    {
+      "path": "deck_master/resources/static/v2/text-selection.js",
+      "sha256": "64b89188f34442944905671b2b512b07cc5627ae3add72ad0bea1aebddd06267"
+    },
+    {
+      "path": "deck_master/resources/static/v2/tokens.css",
+      "sha256": "da2e775a9430340cd6e2a0add92bdefcba8575fdd1fb2cc47d100b8b9c5783fc"
+    },
+    {
+      "path": "deck_master/resources/static/v2/trial-actions.js",
+      "sha256": "01b4493444d21691cb18b36271ceb52c7d0fb80e7e2c3382d55af3ff6c513257"
+    },
+    {
+      "path": "deck_master/resources/static/v2/views.js",
+      "sha256": "dce9bc958600e23b68adfe14819a64246d6743c085986294d2f8923ecb8bfbd7"
+    },
+    {
+      "path": "deck_master/resources/static/v2/workbench.css",
+      "sha256": "6c8a9c7a1efdab86b198d5e57babeda24a7ba2b3ddda72945550bf830480166f"
+    }
+  ],
+  "wheel_sha256": "6cb6762e17d59773ff91de4895013fd5b8400d2702a13572c8ffe524cfdcc092",
+  "installed_into_HOME": false
+}

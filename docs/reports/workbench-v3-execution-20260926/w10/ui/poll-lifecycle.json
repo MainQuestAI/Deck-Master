@@ -1,0 +1,1 @@
+{"passed":true,"checks":["active_3s","idle_15s","failure_backoff_max_30s","single_inflight","focus_coalesced","hidden_pauses_aborts","visible_immediate","late_hidden_response_ignored","bfcache_old_generation_ignored","stop_removes_listeners"]}
