@@ -102,7 +102,8 @@ def bind_result(store, document, task, value, pages):
 def attach(document, ref):
     if ref:
         document["content_plan"] = ref
-        document["compatibility"] = {"project_format": "workbench.v3", "minimum_writer": "content-plan.v1"}
+        document["compatibility"] = {"project_format": "workbench.v3", "minimum_writer":
+                                     "changes.v1" if document.get("compatibility", {}).get("minimum_writer") == "changes.v1" else "content-plan.v1"}
 
 
 def projection(store, document, *, reader=None, page_id=None, summary=False):

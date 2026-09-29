@@ -368,7 +368,8 @@
     "protocol_version": {
       "enum": [
         "generation.v1",
-        "compose.v1"
+        "compose.v1",
+        "changes.v1"
       ]
     },
     "required_capabilities": {
@@ -440,6 +441,39 @@
           }
         }
       }
+    },
+    "change_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "change_ref": {
+          "type": "object",
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "type": "string",
+              "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "action_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        }
+      },
+      "required": [
+        "change_ref",
+        "action_id"
+      ]
     }
   },
   "required": [

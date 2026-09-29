@@ -1,0 +1,177 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "change_set.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "change_set.v1"
+    },
+    "change_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "project_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "base_revision": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "payload_digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "plan_ref": {
+      "type": "object",
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "task_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      }
+    },
+    "actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "action_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "page_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "page_ref": {
+            "type": "object",
+            "required": [
+              "path",
+              "sha256"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "path": {
+                "type": "string",
+                "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          },
+          "layer": {
+            "enum": [
+              "content",
+              "prepared_prompt",
+              "submitted_prompt",
+              "original_image",
+              "svg",
+              "ppt"
+            ]
+          },
+          "target_ref": {
+            "anyOf": [
+              {
+                "type": "object",
+                "required": [
+                  "path",
+                  "sha256"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "kind": {
+            "enum": [
+              "repair",
+              "reconstruct",
+              "blueprint"
+            ]
+          },
+          "write_slots": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "page",
+                "svg",
+                "blueprint"
+              ]
+            }
+          },
+          "max_calls": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "downstream": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "action_id",
+          "page_id",
+          "page_ref",
+          "layer",
+          "target_ref",
+          "kind",
+          "write_slots",
+          "max_calls",
+          "downstream"
+        ]
+      }
+    }
+  },
+  "required": [
+    "schema_version",
+    "change_id",
+    "project_id",
+    "base_revision",
+    "payload_digest",
+    "plan_ref",
+    "task_ids",
+    "actions"
+  ]
+}

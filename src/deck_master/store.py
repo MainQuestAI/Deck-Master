@@ -191,7 +191,7 @@ class Store:
             raise StoreError("current.json", f"unreadable pointer: {exc}") from exc
         if pointer.get("format") not in (CURRENT_FORMAT, WORKBENCH_FORMAT):
             raise StoreError("current.json", f"unknown pointer format {pointer.get('format')!r}")
-        if pointer.get("format") == WORKBENCH_FORMAT and pointer.get("minimum_writer") not in ("generation.v1", "content-plan.v1"):
+        if pointer.get("format") == WORKBENCH_FORMAT and pointer.get("minimum_writer") not in ("generation.v1", "content-plan.v1", "changes.v1"):
             raise StoreError("current.json", "unsupported minimum writer; use the matching core")
         return pointer
 
@@ -311,9 +311,19 @@ class Store:
             )
         if current and current.get("format") == WORKBENCH_FORMAT and not document.get("compatibility"):
             raise StoreError("compatibility", "a workbench project cannot drop its writer boundary")
-        if (current and current.get("minimum_writer") == "content-plan.v1"
-                and document.get("compatibility", {}).get("minimum_writer") != "content-plan.v1"):
+        writer_rank = {None: 0, "generation.v1": 1, "content-plan.v1": 2, "changes.v1": 3}
+        if (current and writer_rank.get(current.get("minimum_writer"), 99)
+                > writer_rank.get(document.get("compatibility", {}).get("minimum_writer"), 0)):
             raise StoreError("compatibility", "minimum writer cannot be downgraded")
+        if document.get("change", {}).get("operation_commit"):
+            record = self.read_object_json(document["change"]["operation_commit"])
+            validate_schema("operation_commit", record)
+            result = self.read_object_json(record["result_ref"])
+            if (record["operation_id"] != change_operation or record["project_id"] != document["project_id"]
+                    or record["committed_revision_id"] != document["revision_id"]
+                    or record["base_revision"] != document["parent_revision_id"]
+                    or result.get("revision_id") != document["revision_id"]):
+                raise StoreError("operation_commit", "operation/result binding does not match the business commit")
         self.save_revision(document)
         pointer = {"format": CURRENT_FORMAT, "revision_id": document["revision_id"]}
         if document.get("compatibility"):
@@ -334,6 +344,11 @@ class Store:
             change = document.get("change") or {}
             if change.get("operation_id") != operation_id:
                 continue
+            if change.get("operation_commit"):
+                from .operations import committed_record
+                record, response = committed_record(self, operation_id)
+                return {"format": "operation_receipt.v1", "request_digest": record["request_digest"],
+                        "response": response}
             receipt = change.get("operation_receipt")
             if receipt is not None:
                 validate_schema("document", document)

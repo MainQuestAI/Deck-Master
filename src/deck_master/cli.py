@@ -41,6 +41,10 @@ def _fail(exc: Exception) -> int:
     if isinstance(exc, ReadModelError):
         return _emit_and_exit(exc.payload(), exc.exit_code)
 
+    from .operations import OperationError
+    if isinstance(exc, OperationError):
+        return _emit_and_exit(exc.payload(), exc.exit_code)
+
     error_code = getattr(exc, "error_code", None)
     if error_code is not None:
         from .errors import NEXT_ACTIONS_BY_CODE
@@ -203,6 +207,19 @@ def build_parser() -> argparse.ArgumentParser:
     settle.add_argument("--report", default=None)
     settle.add_argument("--invocation-ref", default=None)
     settle.add_argument("--attempt-id", default=None)
+
+    for name, commands in {
+        "annotations": {"save": ("input", "base-revision", "operation-id"), "list": ()},
+        "changes": {"list": (), "plan": ("input",), "commit": ("plan-id", "base-revision", "operation-id"), "handoff": ("change-id",)},
+        "operations": {"show": ("operation-id",)},
+    }.items():
+        group = sub.add_parser(name)
+        commands_parser = group.add_subparsers(dest="workbench_command", required=True)
+        for command, flags in commands.items():
+            command_parser = commands_parser.add_parser(command)
+            command_parser.add_argument("--project", required=True)
+            for flag in flags:
+                command_parser.add_argument("--" + flag, required=True)
 
     requests = sub.add_parser("requests", help="freeze or read an immutable generation input")
     requests_sub = requests.add_subparsers(dest="requests_command", required=True)
@@ -424,6 +441,17 @@ def main(argv: list[str] | None = None) -> int:
                     external_use=options.external_use,
                 )
             )
+        if options.command in ("annotations", "changes", "operations"):
+            from . import annotation_service, changes, operations
+            actions = {("annotations", "save"): annotation_service.save,
+                       ("annotations", "list"): annotation_service.list_annotations,
+                       ("changes", "list"): changes.list_changes, ("changes", "plan"): changes.plan, ("changes", "commit"): changes.commit,
+                       ("changes", "handoff"): changes.handoff, ("operations", "show"): operations.show}
+            fields = {key: getattr(options, key) for key in
+                      ("base_revision", "operation_id", "plan_id", "change_id") if hasattr(options, key)}
+            if hasattr(options, "input"):
+                fields["input"] = json.loads(Path(options.input).read_text(encoding="utf-8"))
+            return _emit(actions[(options.command, options.workbench_command)](options.project, **fields))
         if options.command in ("requests", "attempts"):
             rejected = _reject_legacy_run(options.project)
             if rejected is not None:

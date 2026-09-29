@@ -1,7 +1,7 @@
 {
   "baseline": "d1c7c4600cb0fc781070116ed8cc8a1ff6b8b7ca",
-  "branch": "codex/workbench-w05-ui",
-  "active_package": "W05",
+  "branch": "codex/workbench-w06-core",
+  "active_package": "W06",
   "sequence": [
     "W01.core",
     "W02",
@@ -89,7 +89,7 @@
       "frontend_merge_commit": "b00525557ac69e9453ae4d6e3b5faf20dbefcf8b"
     },
     "W05": {
-      "status": "frontend_pr_ready",
+      "status": "slices_merged",
       "accepted": false,
       "baseline": "b00525557ac69e9453ae4d6e3b5faf20dbefcf8b",
       "core_implementation_commit": "6f3e39635094543704ca498c32db0f2f7ead29dc",
@@ -103,11 +103,22 @@
       "core_merge_commit": "a2a27f6937209da6befc440dd787c1065a845c94",
       "frontend_baseline": "a2a27f6937209da6befc440dd787c1065a845c94",
       "frontend_implementation_commit": "0df9546bed3a356e7266c183893d0b062f895222",
-      "frontend_evidence": "W05-UI.md"
+      "frontend_evidence": "W05-UI.md",
+      "frontend_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/50",
+      "frontend_head": "607e84541a0c314fa4211560ee3e7cac36840934",
+      "frontend_merge_commit": "2d7e1a6dffc6755c20e8ca51175450b0fcbf829b"
     },
     "W06": {
-      "status": "planned",
-      "accepted": false
+      "status": "core_pr_ready",
+      "accepted": false,
+      "baseline": "2d7e1a6dffc6755c20e8ca51175450b0fcbf829b",
+      "core_implementation_commit": "f3d5c3ebcd8dac12541e62b49e280cbaa34ab60f",
+      "core_evidence": "W06-CORE.md",
+      "residuals": [
+        "Frontend annotation/draft/operation/handoff interactions pending",
+        "Real Host claim not yet verified",
+        "User acceptance not measured"
+      ]
     },
     "W07": {
       "status": "planned",
@@ -472,33 +483,51 @@
     },
     "W06-AC02": {
       "owner": "W06",
-      "status": "open",
-      "evidence": []
+      "status": "partial",
+      "evidence": [
+        "W06-CORE.md"
+      ],
+      "evidence_level": "core/CLI/HTTP/real Chromium same-origin request/process-fault; synthetic tasks"
     },
     "W06-AC03": {
       "owner": "W06",
-      "status": "open",
-      "evidence": []
+      "status": "partial",
+      "evidence": [
+        "W06-CORE.md"
+      ],
+      "evidence_level": "core/CLI/HTTP/real Chromium same-origin request/process-fault; synthetic tasks"
     },
     "W06-AC04": {
       "owner": "W06",
-      "status": "open",
-      "evidence": []
+      "status": "partial",
+      "evidence": [
+        "W06-CORE.md"
+      ],
+      "evidence_level": "core/CLI/HTTP/real Chromium same-origin request/process-fault; synthetic tasks"
     },
     "W06-AC05": {
       "owner": "W06",
-      "status": "open",
-      "evidence": []
+      "status": "partial",
+      "evidence": [
+        "W06-CORE.md"
+      ],
+      "evidence_level": "core/CLI/HTTP/real Chromium same-origin request/process-fault; synthetic tasks"
     },
     "W06-AC06": {
       "owner": "W06",
-      "status": "open",
-      "evidence": []
+      "status": "partial",
+      "evidence": [
+        "W06-CORE.md"
+      ],
+      "evidence_level": "core/CLI/HTTP/real Chromium same-origin request/process-fault; synthetic tasks"
     },
     "W06-AC07": {
       "owner": "W06",
-      "status": "open",
-      "evidence": []
+      "status": "partial",
+      "evidence": [
+        "W06-CORE.md"
+      ],
+      "evidence_level": "core/CLI/HTTP/real Chromium same-origin request/process-fault; synthetic tasks"
     },
     "W06-AC08": {
       "owner": "W06",

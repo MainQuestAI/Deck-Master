@@ -113,6 +113,10 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
 
     def _send_error(self, exc):
         from .local_state import LocalStateError
+        from .operations import OperationError
+        if isinstance(exc, OperationError):
+            self._send_json(exc.payload(), exc.http_status)
+            return
         if isinstance(exc, (LocalStateError, ModelError, workbench_mod.ReadModelError)):
             self._send_json({'error': {'code': getattr(exc, 'error_code', 'invalid_input'),
                             'message': getattr(exc, 'detail', str(exc)), 'field': getattr(exc, 'path', None),
@@ -141,6 +145,11 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             elif self.path == '/api/gallery':
                 from .gallery_state import save
                 result = save(self.store.project_root, **data)
+            elif self.path in ('/api/annotations/batch', '/api/changes/plan', '/api/changes/commit'):
+                from . import annotation_service, changes
+                action = {'/api/annotations/batch': annotation_service.save,
+                          '/api/changes/plan': changes.plan, '/api/changes/commit': changes.commit}[self.path]
+                result = action(self.store.project_root, **data)
             elif self.path == '/api/text-ranges/validate':
                 from .text_ranges import validate
                 result = validate(self.store.project_root, **data)
@@ -169,7 +178,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             else:self._send_json({'error':'not found'},404);return
             self._send_json(result)
         except Exception as exc:
-            if self.path.startswith(('/api/drafts/', '/api/ui-state', '/api/gallery', '/api/text-ranges/')):
+            if self.path.startswith(('/api/drafts/', '/api/ui-state', '/api/gallery', '/api/text-ranges/', '/api/annotations/', '/api/changes/')):
                 self._send_error(exc)
                 return
             from .store import ConflictError
@@ -194,6 +203,26 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         if parsed.path.startswith('/v2/') or parsed.path == '/v2':
             self._serve_v2(parsed.path)
+            return
+        if parsed.path in ('/api/annotations', '/api/changes') or parsed.path.startswith(('/api/operations/', '/api/changes/')):
+            try:
+                from . import annotation_service, changes, operations
+                if parsed.query:
+                    raise operations.OperationError('invalid_input', 'query', 'this read takes no query parameters')
+                if parsed.path == '/api/changes':
+                    result = changes.list_changes(self.store.project_root)
+                elif parsed.path == '/api/annotations':
+                    result = annotation_service.list_annotations(self.store.project_root)
+                elif parsed.path.startswith('/api/operations/'):
+                    result = operations.show(self.store.project_root, operation_id=parsed.path.removeprefix('/api/operations/'))
+                elif parsed.path.endswith('/handoff'):
+                    result = changes.handoff(self.store.project_root, change_id=parsed.path[len('/api/changes/'):-len('/handoff')])
+                else:
+                    self._send_json({'error': 'not found'}, 404)
+                    return
+                self._send_json(result)
+            except Exception as exc:
+                self._send_error(exc)
             return
         if parsed.path in ('/api/gallery', '/api/thumbnails', '/api/thumbnail-file'):
             try:
@@ -266,7 +295,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             self._send_json({"status": "ok", **self.runtime_state,
                              "project_identity": _project_identity(self.store.project_root),
                              "ui_available": (self.static_dir / 'v2' / 'index.html').is_file(),
-                             "ui_capabilities": ["ui_draft.v1", "ui_gallery.v1", "thumbnails.v1", "fixed_snapshot.v1", "text_range.v1", "page_detail.v1"]})
+                             "ui_capabilities": ["ui_draft.v1", "ui_gallery.v1", "thumbnails.v1", "fixed_snapshot.v1", "text_range.v1", "page_detail.v1", "annotations.v1", "changes.v1", "operations.v1"]})
             return
         if parsed.path == "/api/file":
             query = parse_qs(parsed.query)

@@ -176,8 +176,8 @@ def test_valid_directory_symlink_and_optout_broken_host(tmp_path, monkeypatch):
 
 
 @pytest.mark.parametrize('timing', ['settlement', 'commit'])
-def test_accept_rechecks_after_settlement_and_commit_race(tmp_path, monkeypatch, timing):
-    from deck_master.store import StoreError
+def test_accept_serializes_settlement_and_commit_against_other_writers(tmp_path, monkeypatch, timing):
+    import fcntl
     project, store, _ = _setup_project_with_pages(tmp_path)
     task = service.inputs_update(project, patch={'reason': 'new audience', 'task_patch': {'audience': 'other'}},
                                  base_revision=store.load_document()['revision_id'], operation_id='new-input')['pending_tasks'][0]
@@ -185,30 +185,29 @@ def test_accept_rechecks_after_settlement_and_commit_race(tmp_path, monkeypatch,
     service.task_start(project, task_id=task['task_id'], execution_ref='race')
     tasks.call_begin(store, task_id=task['task_id'], allowance_id='call-1', execution_ref='race')
     stored = tasks._lookup_task(store.load_document(), task['task_id'], store)
-    original = type(store).commit_change
+    original = type(store)._commit_locked
     fired = False
-    def racing(self, **kwargs):
+    def guarded(self, **kwargs):
         nonlocal fired
         is_settlement = kwargs['operation_id'].startswith('settle-')
         if not fired and is_settlement == (timing == 'settlement'):
             fired = True
-            if timing == 'settlement':
-                result = original(self, **kwargs)
-            _raw_commit(store, lambda doc: doc['pages'].reverse())
-            if timing == 'settlement':
-                return result
+            # W06 closes the old gap between settlement and adoption. A
+            # distinct open-file description cannot acquire the project lock.
+            with store.lock_path.open('rb') as competing:
+                with pytest.raises(BlockingIOError):
+                    fcntl.flock(competing.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
         return original(self, **kwargs)
-    monkeypatch.setattr(type(store), 'commit_change', racing)
-    with pytest.raises((tasks.StaleInputContext, StoreError)):
-        service.accept_result(project, task_id=task['task_id'], operation_id=task['operation_id'],
+    monkeypatch.setattr(type(store), '_commit_locked', guarded)
+    result = service.accept_result(project, task_id=task['task_id'], operation_id=task['operation_id'],
                               produced_against=task['produced_against'], result_payload={
                                   'kind': 'compose', 'usage_events': [{'allowance_id': 'call-1', 'outcome': 'unknown'}],
                                   'content_update': {'input_digest': stored['input_digest'], 'upsert_pages': [],
                                                      'remove_page_ids': [], 'page_order': ['p01', 'p02', 'p03'],
                                                      'unchanged_reason': 'unchanged'}})
-    assert fired, tasks._lookup_task(store.load_document(), task['task_id'], store)
+    assert fired and result['status'] == 'accepted'
     current = store.load_document()
-    assert [p['page_id'] for p in current['pages']] == ['p03', 'p02', 'p01']
+    assert [p['page_id'] for p in current['pages']] == ['p01', 'p02', 'p03']
     assert tasks._lookup_task(current, task['task_id'], store)['call_allowances'][0]['state'] == 'unknown'
 
 

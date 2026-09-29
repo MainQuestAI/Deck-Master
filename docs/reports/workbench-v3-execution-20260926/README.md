@@ -1,6 +1,6 @@
 # 生成工作台 v3 执行索引
 
-当前活动卡：**W05，核心 PR #49 已合入 main，前端代码 `0df9546…` 已完成单页浏览器验证，准备前端 PR**。W05 单页 15 组、W03 主流程 15 组和边界 13 组及 W04 画廊 18 组通过；21 个 UI 文件与 wheel 字节一致。W05 候选比较待 W07；W04 完整压力与真实用户观察、W03 目录弹窗实机复核及 W12 安装验收仍保留。
+当前活动卡：**W06，共享核心已通过 808 项回归和 9 项示例验证，准备核心 PR；W05 前端 PR #50 已通过 8 项 CI 并合入 main（`2d7e1a6…`）**。W05 单页 15 组、W03 主流程 15 组和边界 13 组及 W04 画廊 18 组通过；21 个 UI 文件与 wheel 字节一致。W05 候选比较待 W07；W04 完整压力与真实用户观察、W03 目录弹窗实机复核及 W12 安装验收仍保留。
 
 - [独立 Review：4 P1、3 P2](REVIEW.md)
 - [外部原始复核与取舍](OUTSIDE-REVIEW.md)
@@ -10,6 +10,7 @@
 - [W03 独立入口、服务生命周期与个人草稿](W03-CORE.md) / [前端与真实浏览器验证](W03-UI.md)
 - [W04 缩略图与个人画廊状态核心](W04-CORE.md) / [同层画廊及图片资源验证](W04-UI.md)
 - [W05 单页证据、制作摘要与精确文本选段核心](W05-CORE.md) / [提示词工作台与固定比较](W05-UI.md)
+- [W06 标注、明确范围的计划、操作恢复与交接核心](W06-CORE.md)
 - [修订后的包顺序](../../specs/deck-master-workbench-v3/packages/README.md)
 - [交接原件](handoff/HANDOFF.md) / [26 个输入的原始 manifest](handoff/manifest.json)
 - [当前用户设计快照](design-snapshot/index.html) / [8 文件 SHA256](design-snapshot/sha256-manifest.json)

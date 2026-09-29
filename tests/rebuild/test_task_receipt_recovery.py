@@ -180,3 +180,26 @@ def test_a_receipt_cannot_be_carried_into_a_different_revision(tmp_path):
     with pytest.raises(ModelError, match="operation_receipt"):
         store.save_revision(invalid)
     assert not (store.revisions_dir / (invalid["revision_id"] + ".json")).exists()
+
+
+@pytest.mark.parametrize('different', [False, True])
+def test_parallel_adoption_dedupes_inside_project_lock(tmp_path, different):
+    from concurrent.futures import ThreadPoolExecutor
+    project, store, task, payload = pending(tmp_path)
+    other = copy.deepcopy(payload)
+    if different:
+        other['notes'] = 'A different request body'
+    def call(value):
+        try:
+            return submit(project, task, value)
+        except tasks.TaskConflict:
+            return 'payload_conflict'
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = list(pool.map(call, [payload, other]))
+    if different:
+        assert results.count('payload_conflict') == 1
+    else:
+        assert {r['status'] for r in results} == {'accepted', 'already_applied'}
+        assert results[0]['operation_result'] == results[1]['operation_result']
+    from deck_master.snapshots import committed_snapshots
+    assert len([doc for doc in committed_snapshots(store) if doc['change']['operation_id'] == task['operation_id']]) == 1

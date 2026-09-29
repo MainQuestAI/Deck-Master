@@ -177,3 +177,37 @@ The summary's `quality.status=detail_required` is not a quality verdict. Use
 `final-readiness` for the current delivery gate. Artifact metadata is hash
 checked on read; large image/PPT bytes are checked when `/api/file` serves
 them. Historical applicability means relative to the selected snapshot.
+
+## Workbench Operations
+
+New `annotations save` and `changes commit` operations require a client-generated
+canonical UUIDv4 saved with the complete request before transmission. Saving
+opinions changes only their history; it does not dispatch tasks or invalidate
+production outputs. `changes plan` stores an immutable derived preview without
+changing the business revision. Commit requires that exact plan and base.
+
+- `conflict` (CLI 5 / HTTP 409): read current state and preview a new plan. Do not
+  silently widen its page/layer scope or reuse a stale target slot.
+- `operation_payload_conflict` (5 / 409): an ID already names a different
+  committed request. Recover the original request or use a new ID for genuinely
+  new input. Whitespace and Unicode are not normalized.
+- A missing response is unknown, not a failed save. Keep the original payload
+  separate from later draft edits. Run `deck-master operations show --project
+  <dir> --operation-id <UUID>` before another business submission.
+- `operation_not_found` (2 / 404): no matching committed fact was found. Replay
+  only the exact original payload and ID. A query timeout is not `not_found`;
+  keep the pending operation and verify again without creating a new ID.
+- `receipt_cache_unavailable`: business state is committed. The operations
+  directory is a derived index and is rebuilt from committed parent history.
+  Do not delete or rewrite immutable objects/current.json to repair it.
+- `operation_unavailable` (4 / 503): storage or verification could not complete.
+  Preserve the pending request and inspect the project before retrying.
+
+Read `changes handoff --change-id <id>` to obtain the core-generated plan,
+tasks, required protocols and safely quoted CLI entry. Copying does not start
+work. Only an actual `task start` with an execution reference records a claim.
+A task older than 30 minutes needs verification; the service never automatically
+repeats its call. Confirm cancellation before creating a replacement handoff.
+Late results keep call facts but cannot overwrite the cancelled task's targets.
+New `changes.v1` records require the matching writer; older cores refuse that
+boundary. Existing projects are not migrated in place.
