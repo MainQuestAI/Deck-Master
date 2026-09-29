@@ -1,6 +1,6 @@
 # W10 运行与恢复共享核心
 
-状态：本地实现与回归完成，PR 待提交；前端、20 分钟压力、实际当前 Host 验证与用户验收未完成。
+实现提交 `b505d34f384edda5f50e94f1e8d2a3d0060fb737`。状态：本地实现与回归完成，PR 待提交；前端、20 分钟压力、实际当前 Host 验证与用户验收未完成。
 
 运行列表复用正式 Task/ChangeSet/Candidate/Request/Attempt 对象，分页最多 100 条，可按修改组、任务状态和人的待办过滤。当前运行不会被列为人的待办；复制、读取、轮询均无执行动作。固定 revision 的后续分页保留该版本，历史任务不会因墙上时间流逝获得当前超时状态。旧 `/api/tasks` 与旧 CLI status 响应保留；新 CLI list/status --details 与 HTTP 分页/详情共用投影和错误。
 
@@ -15,3 +15,7 @@
 - 恢复说明：[Run Desk Recovery](../../agent-recovery-playbook.md#run-desk-recovery)。
 
 本卡未关闭。下一步仅在共享核心合入 main 后接前端、补浏览器恢复矩阵和固定 300×5×3 的 20 分钟内存测量。
+
+证据：[恢复检查及完整错误 JSON](w10/core/recovery-checks.json) / [真实前版核心拒写](w10/core/old-core-checks.json)。
+
+W04 压力首屏补证使用 W01 的同一 300×5×3 manifest，并使用提交中的 w04_pressure.py 复现。两个视口各 3 次，最慢 0.899 秒；只预热首 30 页窗口的实际缩略图，页面导航包括真实 JSON 读取与页面选择动作。[原始样本](w04/pressure/checks.json)、[1280 视口](w04/pressure/gallery-1280.png)、[1440 视口](w04/pressure/gallery-1440.png)。原型画面没有替代这些真实浏览器读取。该补证不覆盖 20 分钟压力缓存/内存，W04-AC06 仍待 W10 持续浏览证据补全。

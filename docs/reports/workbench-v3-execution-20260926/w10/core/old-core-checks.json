@@ -1,0 +1,12 @@
+{
+  "previous_core": "d42dda62c53bfeaf177c077f8e46074c8c23bdba",
+  "new_writer": "run-desk.v1",
+  "attempted_action": "task cancel",
+  "exit_code": 4,
+  "stdout": "",
+  "stderr": "{\n \"error\": {\n  \"code\": \"execution_failed\",\n  \"message\": \"current.json: unsupported minimum writer; use the matching core\",\n  \"field\": null,\n  \"next_action\": \"inspect the failure detail\"\n }\n}\n",
+  "pointer_unchanged": true,
+  "synthetic": true,
+  "native_host_evidence": false,
+  "source_commit": "b505d34f384edda5f50e94f1e8d2a3d0060fb737"
+}

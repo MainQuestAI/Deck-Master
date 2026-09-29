@@ -1,0 +1,59 @@
+{
+  "synthetic": true,
+  "model_calls": 0,
+  "native_host_evidence": false,
+  "faults": [
+    "lost response after real commit",
+    "31-minute projection clock",
+    "late SVG after confirmed cancellation",
+    "unknown call without tool receipt"
+  ],
+  "checks": {
+    "lost_response_original_operation_recovered": true,
+    "reverse_return_partial_group_fixed_history_and_selected_adoption": true,
+    "cancelled_late_svg_refused": true,
+    "late_result_only_settles_facts_current_artifacts_unchanged": true,
+    "only_unfinished_page_replaced_adopted_page_preserved": true,
+    "unknown_read_never_replays_or_allocates": true,
+    "unknown_survives_cancellation": true,
+    "continue_awaiting_exit3_status_query_exit0": true
+  },
+  "project_id": "synthetic-project",
+  "awaiting_project_id": "awaiting-project",
+  "operation_id": "f42a4059-cb7c-4052-9229-ced37885877e",
+  "change_id": "change-2bc9bef9cee84e199cd60fdd51a6f897",
+  "task_ids": [
+    "task-2f6c88496c55462cb099211d7fdcef39",
+    "task-0b8b550fecda4feab5513be09b157ed7",
+    "task-706565c47a3c4cff863ee94435ace950",
+    "task-d1c6d0241eb74e04ab26aa4164eca9db"
+  ],
+  "request_id": "req-9db23532e440486999b4e5180fc2711f",
+  "attempt_id": "attempt-b02f57570c4f4aadabbddd5b4c31899f",
+  "execution_started_at": "2026-09-29T18:28:43Z",
+  "errors": {
+    "/api/tasks?limit=0": {
+      "status": "error",
+      "error": {
+        "code": "invalid_run_query",
+        "message": "limit must be 1..100, offset nonnegative, attention boolean",
+        "field": "pagination",
+        "next_action": "read the original task at a committed revision; verify unknown calls before any replacement",
+        "docs_ref": "docs/agent-recovery-playbook.md#run-desk-recovery",
+        "cause": "invalid_run_query"
+      }
+    },
+    "/api/tasks/missing": {
+      "status": "error",
+      "error": {
+        "code": "task_not_found",
+        "message": "task is not readable in this committed project version",
+        "field": "task_id",
+        "next_action": "read the original task at a committed revision; verify unknown calls before any replacement",
+        "docs_ref": "docs/agent-recovery-playbook.md#run-desk-recovery",
+        "cause": "task_not_found"
+      }
+    }
+  },
+  "source_commit": "b505d34f384edda5f50e94f1e8d2a3d0060fb737"
+}

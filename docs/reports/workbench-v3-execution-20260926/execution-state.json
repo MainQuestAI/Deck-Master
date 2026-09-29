@@ -92,7 +92,8 @@
       "frontend_evidence": "W04-UI.md",
       "frontend_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/48",
       "frontend_head": "b11452ff32305a91d2dd743e7b1248e5c59126a1",
-      "frontend_merge_commit": "b00525557ac69e9453ae4d6e3b5faf20dbefcf8b"
+      "frontend_merge_commit": "b00525557ac69e9453ae4d6e3b5faf20dbefcf8b",
+      "pressure_first_screen_evidence": "w04/pressure/checks.json"
     },
     "W05": {
       "status": "slices_merged",
@@ -164,10 +165,12 @@
       "accepted": false
     },
     "W10": {
-      "status": "core_in_progress",
+      "status": "core_ready",
       "accepted": false,
       "baseline": "d42dda62c53bfeaf177c077f8e46074c8c23bdba",
-      "plan": "W10-PLAN.md"
+      "plan": "W10-PLAN.md",
+      "core_implementation_commit": "b505d34f384edda5f50e94f1e8d2a3d0060fb737",
+      "core_evidence": "W10-CORE.md"
     },
     "W11": {
       "status": "planned",
@@ -779,18 +782,30 @@
     },
     "W10-AC01": {
       "owner": "W10",
-      "status": "open",
-      "evidence": []
+      "status": "partial_core_verified",
+      "evidence": [
+        "W10-CORE.md",
+        "w10/core/recovery-checks.json"
+      ],
+      "accepted": false
     },
     "W10-AC02": {
       "owner": "W10",
-      "status": "open",
-      "evidence": []
+      "status": "partial_core_verified",
+      "evidence": [
+        "W10-CORE.md",
+        "w10/core/recovery-checks.json"
+      ],
+      "accepted": false
     },
     "W10-AC03": {
       "owner": "W10",
-      "status": "open",
-      "evidence": []
+      "status": "partial_core_verified",
+      "evidence": [
+        "W10-CORE.md",
+        "w10/core/recovery-checks.json"
+      ],
+      "accepted": false
     },
     "W10-AC04": {
       "owner": "W10",
@@ -799,13 +814,21 @@
     },
     "W10-AC05": {
       "owner": "W10",
-      "status": "open",
-      "evidence": []
+      "status": "partial_core_verified",
+      "evidence": [
+        "W10-CORE.md",
+        "w10/core/recovery-checks.json"
+      ],
+      "accepted": false
     },
     "W10-AC06": {
       "owner": "W10",
-      "status": "open",
-      "evidence": []
+      "status": "partial_core_verified",
+      "evidence": [
+        "W10-CORE.md",
+        "w10/core/recovery-checks.json"
+      ],
+      "accepted": false
     },
     "W10-AC07": {
       "owner": "W10",
@@ -814,8 +837,12 @@
     },
     "W10-AC08": {
       "owner": "W10",
-      "status": "open",
-      "evidence": []
+      "status": "partial_core_verified",
+      "evidence": [
+        "W10-CORE.md",
+        "w10/core/recovery-checks.json"
+      ],
+      "accepted": false
     },
     "W11-AC01": {
       "owner": "W11",
