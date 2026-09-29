@@ -289,8 +289,25 @@ def readback(pptx_path,pages,expected_pages):
             stats.append({'page_id':page['page_id'],'text_runs':len(texts),'native_shapes':len(root.findall('.//p:sp',ns))})
     return {'status':'fail' if findings else 'pass','findings':findings,'pages':stats,'visual_review':'not_evaluated','desktop_editing':'not_evaluated'}
 
-def produce(project_dir):
-    store=Store(project_dir);doc=store.load_document()
+def produce(project_dir, *, base_revision=None, operation_id=None):
+    from . import operations
+    from .stages import require_assembly_ready
+    store=Store(project_dir)
+    explicit = base_revision is not None or operation_id is not None
+    with store._locked():
+        doc=store.load_document()
+        if explicit:
+            if doc.get('compatibility', {}).get('project_format') != 'workbench.v3':
+                raise operations.OperationError('stage_format_required', 'project', 'explicit stages require an existing workbench.v3 project; no in-place migration')
+            operations.validate_id(operation_id, new=True)
+            digest = operations.request_digest(doc, 'stages.assemble', base_revision, {})
+            previous = operations.recover(store, operation_id, digest)
+            if previous:
+                return previous
+            if doc['revision_id'] != base_revision:
+                raise operations.OperationError('conflict', 'base_revision', 'assembly basis changed; read current state', exit_code=5)
+        if explicit or doc.get('compatibility', {}).get('project_format') == 'workbench.v3':
+            require_assembly_ready(store, doc)
     for tool in ('rsvg-convert','soffice','pdftoppm'):executable(tool)
     with tempfile.TemporaryDirectory(prefix='production-',dir=store.staging_dir) as temporary:
         work=Path(temporary);inputs=[];parsed=[];expected=[];approved={};preview_inputs=[]
@@ -312,7 +329,7 @@ def produce(project_dir):
         report=readback(compiled.pptx_path,parsed,expected)
         report_path=work/'readback.json';report_path.write_text(json.dumps(report,ensure_ascii=False,indent=2))
         deps=[{'kind':'svg','identity':e['page_id'],'sha256':e['svg']['sha256']} for e in doc['pages']]
-        new=bump_revision(doc,{'operation_id':'production-'+uuid.uuid4().hex,'kind':'artifact_adoption','description':'native compile, dual rendering and actual PPT readback','read_set':[]})
+        new=bump_revision(doc,{'operation_id':operation_id or 'production-'+uuid.uuid4().hex,'kind':'artifact_adoption','description':'native compile, dual rendering and actual PPT readback','read_set':[]})
         for i,entry in enumerate(new['pages']):
             preview=work/f'svg-{i+1}.png';run([executable('rsvg-convert'),str(preview_inputs[i]),'-o',str(preview)])
             if not entry.get('svg_preview'):
@@ -324,5 +341,17 @@ def produce(project_dir):
                 task['status'] = 'superseded'
                 new['tasks'][i] = store.put_json_object(task)
         new['outputs']={'pptx':artifact(store,compiled.pptx_path,'pptx',dependencies=deps),'trace':artifact(store,compiled.manifest_path,'object_trace',dependencies=deps),'render_report':artifact(store,report_path,'render_report',dependencies=deps)}
+        if explicit:
+            new['compatibility']['minimum_writer'] = 'candidates.v1'
+            with store._locked():
+                previous = operations.recover(store, operation_id, digest)
+                if previous:
+                    return previous
+                if store.current_revision_id() != base_revision:
+                    raise operations.OperationError('conflict', 'base_revision', 'project changed while compiling; outputs were not adopted', exit_code=5)
+                result = {'status': 'assembled', 'revision_id': new['revision_id'], 'report': report,
+                          'outputs': new['outputs'], 'max_calls': 0, 'final_review': 'required'}
+                return operations.commit_locked(store, document=new, base_revision=base_revision,
+                                                operation_id=operation_id, kind='stages.assemble', digest=digest, result=result)
         store.commit_change(base_revision=doc['revision_id'],document=new,operation_id=new['change']['operation_id'])
         return report

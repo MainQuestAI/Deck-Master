@@ -329,11 +329,12 @@ def open_compose_task(store: Store, document: dict, *, operation_id: str,
     return task
 
 
-def _pending_host_tasks(document: dict, store: Store) -> list[dict]:
+def _pending_host_tasks(document: dict, store: Store, *, include_trials=True) -> list[dict]:
     pending = []
     for ref in document.get("tasks") or []:
         task = store.read_object_json(ref)
-        if task.get("status") in ("awaiting_host", "running"):
+        if (task.get("status") in ("awaiting_host", "running") and
+                (include_trials or task.get("stage_request", {}).get("mode") != "trial")):
             pending.append(task_summary(store, document, task))
     return pending
 
@@ -430,6 +431,9 @@ def task_summary(store: Store, document: dict, task: dict) -> dict:
         "project_context": _project_context(store, document, task, dispatched),
         "staging_dir": str(store.staging_dir / task['operation_id']),
     }
+    for key in ("stage_request", "candidate_refs"):
+        if key in task:
+            summary[key] = task[key]
     if task.get("change_binding"):
         from .changes import action_for_task
         summary["change_binding"] = task["change_binding"]
@@ -548,7 +552,7 @@ def open_blueprint_task(store: Store, document: dict, page_entry: dict) -> dict:
     document = current
     for ref in document.get("tasks") or []:
         existing = store.read_object_json(ref)
-        if existing.get("kind") == "blueprint" and existing.get("status") in ("awaiting_host", "running") and existing.get("scope_pages") == [page_entry["page_id"]]:
+        if existing.get("stage_request", {}).get("mode") != "trial" and existing.get("kind") == "blueprint" and existing.get("status") in ("awaiting_host", "running") and existing.get("scope_pages") == [page_entry["page_id"]]:
             return existing
     page_ref = page_entry["page"]
     page = store.read_object_json(page_ref)
@@ -701,7 +705,7 @@ def _continue_project(project_dir: Path | str) -> dict:
     store = Store(Path(project_dir).expanduser())
     _recover_input_revision(store)
     document = _retire_missing_page_inputs(store, store.load_document())
-    pending = _pending_host_tasks(document, store)
+    pending = _pending_host_tasks(document, store, include_trials=False)
     if any(t["kind"] == "blueprint" for t in pending):
         if document["policy"].get("user_stop"):
             raise tasks_mod.CallBlocked("policy/user_stop", "user stopped external calls")
@@ -711,7 +715,7 @@ def _continue_project(project_dir: Path | str) -> dict:
         if summary["kind"] == "blueprint" and summary["status"] == "awaiting_host" and not summary["call_allowances"]:
             tasks_mod.repair_empty_allowance(store, task_id=summary["task_id"])
     document = store.load_document()
-    pending = _pending_host_tasks(document, store)
+    pending = _pending_host_tasks(document, store, include_trials=False)
     if pending:
         return _response(
             status="awaiting_host",
@@ -723,7 +727,7 @@ def _continue_project(project_dir: Path | str) -> dict:
     if not (document.get("pages") or []):
         task = open_compose_task(store, document, operation_id=_new_operation_id("compose"))
         document = store.load_document()
-        pending = _pending_host_tasks(document, store)
+        pending = _pending_host_tasks(document, store, include_trials=False)
         assert pending, "compose task must be pending right after creation"
         return _response(
             status="awaiting_host",
@@ -943,7 +947,7 @@ def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, pa
         raise ServiceError('scope_pages', 'page_visual must target exactly one page')
     for ref in document['tasks']:
         task = store.read_object_json(ref)
-        if task['kind'] == kind and task['scope_pages'] == page_ids and task['instruction'] == instruction and task.get('review_stage', 'final') == (review_stage or 'final') and task['status'] in ('awaiting_host','running'):
+        if task.get('stage_request', {}).get('mode') != 'trial' and task['kind'] == kind and task['scope_pages'] == page_ids and task['instruction'] == instruction and task.get('review_stage', 'final') == (review_stage or 'final') and task['status'] in ('awaiting_host','running'):
             return task
     entries = [e for e in document['pages'] if e['page_id'] in page_ids]
     inputs = [ref for e in entries for slot,ref in e.items() if slot != 'page_id' and ref]
@@ -1388,7 +1392,7 @@ def accept_result(
         )
     else:
         response = _response(
-            status="accepted",
+            status="candidate_ready" if outcome["status"] == "candidate_ready" else "accepted",
             document=document,
             requested_action="task accept",
             pending_tasks=_pending_host_tasks(document, store),
@@ -1396,7 +1400,7 @@ def accept_result(
             result_refs=outcome.get("result_refs") or [],
         )
     response["current_revision_id"] = current_revision
-    for key in ("new_page_hashes", "unchanged_reason", "impact_summary", "work_complete", "operation_result", "journal_warning", "same_revision"):
+    for key in ("candidate_ids", "candidate_refs", "current_artifacts_changed", "new_page_hashes", "unchanged_reason", "impact_summary", "work_complete", "operation_result", "journal_warning", "same_revision"):
         if key in outcome:
             response[key] = outcome[key]
     return response

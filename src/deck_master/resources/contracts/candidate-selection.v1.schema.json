@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "candidate_selection.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "candidate_selection.v1"
+    },
+    "project_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "base_revision": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "candidate_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      },
+      "minItems": 1,
+      "maxItems": 300,
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "schema_version",
+    "project_id",
+    "base_revision",
+    "candidate_ids"
+  ]
+}

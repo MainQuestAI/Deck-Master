@@ -27,6 +27,9 @@ decision that affects this task.
 | Save version-bound opinions | `deck-master annotations save --project … --input notes.json --base-revision … --operation-id <UUIDv4>` | Saves opinions only; no task dispatch or output invalidation |
 | Preview and dispatch a bounded change | `deck-master changes plan --project … --input changes.json`, then `changes commit --plan-id … --base-revision … --operation-id <UUIDv4>` | Exact plan, page/layer targets and call bound; changing the basis requires a new plan |
 | Recover an uncertain operation | `deck-master operations show --project … --operation-id …` | Committed ancestry is authoritative; same payload/ID only after not_found |
+| Trial one page without replacing current | `changes plan/commit` with `mode=trial` and explicit target/stage | [Candidate/Host protocol](../skills/deck-master/references/candidates-and-stages.md); candidate_result capability required |
+| Inspect and adopt selected candidates | `candidates list/show/plan/adopt --project …` | Length-one and batch selections share all-or-none CAS; no image call during adoption |
+| Explicitly assemble reviewed current SVGs | `stages assemble --project … --base-revision … --operation-id <UUIDv4>` | Same normal pipeline, all current page visual gates required; final review still required |
 | Read a change handoff | `deck-master changes handoff --project … --change-id …` | Core plan and task identities; copy does not claim execution |
 | Independent project launcher | `deck-master workbench --registry <file> --no-open` | Separate launcher; optional `--project <absolute-dir>`, `--port 0`, `--ui legacy`, `--stop`; core-only installs report missing v2 UI honestly |
 | Workbench service status | `deck-master view --project <dir>` | Existing service status; does not launch a browser |

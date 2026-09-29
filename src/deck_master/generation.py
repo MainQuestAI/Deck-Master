@@ -67,7 +67,7 @@ def prepared_input(store, document, task):
     design, _ = resolve_design(page, dispatched["design_context"], dispatched["design_context"].get("assets") or [])
     return {"schema_version": "generation_input.v1", "prompt": prepared["prompt"],
             "page": {"page_id": entry["page_id"], "page_ref": entry["page"]}, "design_context": design,
-            "template_ref": None, "references": [], "parameters": {}, "constraints": {},
+            "template_ref": None, "references": copy.deepcopy(task.get("stage_request", {}).get("references", [])), "parameters": {}, "constraints": {},
             "basis": {"project_id": document["project_id"], "revision_id": dispatched["revision_id"],
                       "produced_against": task["produced_against"]}}
 
@@ -119,6 +119,11 @@ def _validate_input(store, document, task, value):
         if value[key] != expected[key]:
             raise _error("generation_binding_conflict", "input/" + key, "input does not match the dispatched task basis", conflict=True)
     allowed = set()
+    if task.get('stage_request'):
+        for key in ('prompt', 'references'):
+            if value[key] != expected[key]:
+                raise _error('generation_binding_conflict', 'input/' + key, 'input differs from the committed stage request', conflict=True)
+        allowed.update(ref['file']['sha256'] for ref in expected['references'])
     for asset in value["design_context"].get("assets") or []:
         if asset.get("external_use") == "allowed" and asset.get("artifact"):
             allowed.add(store.read_object_json(asset["artifact"])["file"]["sha256"])
@@ -223,7 +228,7 @@ def settle_attempt(store, document, task, target, *, attempt_id, outcome, report
             raise _error("generation_binding_conflict", "outcome", "a completed native output is a consumed call", conflict=True)
         if attempt["execution_ref"] != f"codex:{report.get('thread_id')}:{report.get('turn_id')}":
             raise _error("generation_binding_conflict", "execution_ref", "native event does not belong to the claimed execution", conflict=True)
-        observed = collect_codex_image(report, minimum_started_at_ms=attempt["started_at_ms"])
+        observed = collect_codex_image(report, minimum_started_at_ms=attempt["started_at_ms"], reference_store=store)
         metadata = observed.metadata
         if invocation_ref and invocation_ref != metadata["invocation_ref"]:
             raise _error("generation_binding_conflict", "invocation_ref", "native invocation differs from the supplied identity", conflict=True)

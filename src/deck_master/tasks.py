@@ -340,6 +340,9 @@ def _lookup_task(document: dict, task_id: str, store: Store) -> dict:
 
 
 def task_inputs_current(store, document, task):
+    from .candidates import is_trial, inputs_current
+    if is_trial(task):
+        return inputs_current(store, document, task)
     if content_identity(document) == task.get('produced_against'):
         return True
     dispatched = store.load_document(task['dispatch_revision'])
@@ -372,7 +375,7 @@ def task_inputs_current(store, document, task):
     return True
 
 
-def _validate_svg_reference(data, expected_sha):
+def _validate_svg_reference(data, expected_sha, *, require=False):
     import re
     import xml.etree.ElementTree as ET
     if re.search(br'<!\s*(DOCTYPE|ENTITY)',data,re.I):
@@ -382,6 +385,8 @@ def _validate_svg_reference(data, expected_sha):
     except ET.ParseError as exc:
         raise EnvelopeError('svg/reference',str(exc)) from exc
     claimed=root.get('data-blueprint-sha256')
+    if require and claimed is None:
+        raise EnvelopeError('svg/data-blueprint-sha256', 'explicit SVG stage requires its original image hash')
     if claimed is not None and claimed != expected_sha:
         raise EnvelopeError('svg/data-blueprint-sha256','SVG was reconstructed against a different original image')
 
@@ -923,6 +928,9 @@ def _accept_result_locked(
 
     journal = read_operation_journal(store, operation_id)
     if journal is not None:
+        if (journal.get('status') == 'late_result_settled' and
+                document.get('compatibility', {}).get('project_format') == 'workbench.v3'):
+            raise TaskConflict(f'(task {task_id})', 'late result call facts were settled; cancelled output was not adopted')
         if task.get("status") == "superseded":
             raise StaleInputContext(f"(task {task_id})", "task was superseded by newer inputs; run continue")
         if journal.get("result_digest") == result_digest:
@@ -1115,7 +1123,7 @@ def _accept_result_locked(
                     _validate_svg_reference(data, sha256_bytes(staged_blueprints[entry['page_id']]))
                 elif entry.get('blueprint'):
                     original=store.read_object_json(entry['blueprint'])
-                    _validate_svg_reference(data,original['file']['sha256'])
+                    _validate_svg_reference(data,original['file']['sha256'], require=bool(task.get('stage_request')))
                 _preflight_svg(store, document, entry, data,
                                page=adopted_by_id.get(entry['page_id']))
         try:
@@ -1149,6 +1157,11 @@ def _accept_result_locked(
     review_refs = [store.put_json_object(review) for review in reviews]
     result_refs = list(page_refs.values()) + artifact_refs + review_refs + ([plan_ref] if plan_ref else [])
     updated_task["result_refs"] = result_refs
+    from .candidates import is_trial, record_result
+    if is_trial(task):
+        return record_result(store, document=document, task=task, updated_task=updated_task,
+                             artifacts=artifacts, artifact_refs=artifact_refs, generation_binding=generation_binding,
+                             envelope=envelope, produced_against=produced_against, result_digest=result_digest)
     validate_task_semantics(updated_task)
     task_ref = store.put_json_object(updated_task)
 

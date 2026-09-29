@@ -1,0 +1,221 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "candidate.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "candidate.v1"
+    },
+    "candidate_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "project_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "task_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "page_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "stage": {
+      "enum": [
+        "blueprint",
+        "svg"
+      ]
+    },
+    "base_revision": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "generation_basis": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "page_ref": {
+          "type": "object",
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "type": "string",
+              "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "input_digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "design_digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "blueprint_ref": {
+          "anyOf": [
+            {
+              "type": "object",
+              "required": [
+                "path",
+                "sha256"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "page_ref",
+        "input_digest",
+        "design_digest",
+        "blueprint_ref"
+      ]
+    },
+    "request_ref": {
+      "anyOf": [
+        {
+          "type": "object",
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "type": "string",
+              "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "attempt_ref": {
+      "anyOf": [
+        {
+          "type": "object",
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "type": "string",
+              "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "target_ref": {
+      "anyOf": [
+        {
+          "type": "object",
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "type": "string",
+              "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "result_ref": {
+      "type": "object",
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "status": {
+      "const": "available"
+    }
+  },
+  "required": [
+    "schema_version",
+    "candidate_id",
+    "project_id",
+    "task_id",
+    "created_at",
+    "page_id",
+    "stage",
+    "base_revision",
+    "generation_basis",
+    "request_ref",
+    "attempt_ref",
+    "target_ref",
+    "result_ref",
+    "status"
+  ]
+}

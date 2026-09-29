@@ -1,11 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "change_intent.v1",
+  "title": "candidate_adoption.v1",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "schema_version": {
-      "const": "change_intent.v1"
+      "const": "candidate_adoption.v1"
     },
     "project_id": {
       "type": "string",
@@ -17,20 +17,18 @@
       "minLength": 1,
       "maxLength": 128
     },
-    "targets": {
+    "selections": {
       "type": "array",
-      "minItems": 1,
-      "maxItems": 300,
       "items": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "page_id": {
+          "candidate_id": {
             "type": "string",
             "minLength": 1,
             "maxLength": 128
           },
-          "page_ref": {
+          "candidate_ref": {
             "type": "object",
             "required": [
               "path",
@@ -48,17 +46,18 @@
               }
             }
           },
-          "layer": {
+          "page_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "stage": {
             "enum": [
-              "content",
-              "prepared_prompt",
-              "submitted_prompt",
-              "original_image",
-              "svg",
-              "ppt"
+              "blueprint",
+              "svg"
             ]
           },
-          "artifact_ref": {
+          "target_ref": {
             "anyOf": [
               {
                 "type": "object",
@@ -83,82 +82,7 @@
               }
             ]
           },
-          "stage": {
-            "enum": [
-              "blueprint",
-              "reconstruct",
-              "repair"
-            ]
-          }
-        },
-        "required": [
-          "page_id",
-          "page_ref",
-          "layer",
-          "artifact_ref"
-        ]
-      }
-    },
-    "intent": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 256
-    },
-    "instruction": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 100000
-    },
-    "annotation_refs": {
-      "type": "array",
-      "maxItems": 100,
-      "items": {
-        "type": "object",
-        "required": [
-          "path",
-          "sha256"
-        ],
-        "additionalProperties": false,
-        "properties": {
-          "path": {
-            "type": "string",
-            "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
-          },
-          "sha256": {
-            "type": "string",
-            "pattern": "^[a-f0-9]{64}$"
-          }
-        }
-      }
-    },
-    "max_calls": {
-      "type": "integer",
-      "minimum": 0,
-      "maximum": 300
-    },
-    "mode": {
-      "enum": [
-        "auto",
-        "trial"
-      ]
-    },
-    "references": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "page_id": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 128
-          },
-          "revision_id": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 128
-          },
-          "artifact_ref": {
+          "result_ref": {
             "type": "object",
             "required": [
               "path",
@@ -176,32 +100,40 @@
               }
             }
           },
-          "role": {
-            "enum": [
-              "reference",
-              "edit_target",
-              "supporting"
-            ]
+          "basis_digest": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "downstream": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "required": [
+          "candidate_id",
+          "candidate_ref",
           "page_id",
-          "revision_id",
-          "artifact_ref",
-          "role"
+          "stage",
+          "target_ref",
+          "result_ref",
+          "basis_digest",
+          "downstream"
         ]
       },
-      "maxItems": 16
+      "minItems": 1,
+      "maxItems": 300
+    },
+    "max_calls": {
+      "const": 0
     }
   },
   "required": [
     "schema_version",
     "project_id",
     "base_revision",
-    "targets",
-    "intent",
-    "instruction",
-    "annotation_refs",
+    "selections",
     "max_calls"
   ]
 }

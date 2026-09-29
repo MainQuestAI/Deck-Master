@@ -191,7 +191,7 @@ class Store:
             raise StoreError("current.json", f"unreadable pointer: {exc}") from exc
         if pointer.get("format") not in (CURRENT_FORMAT, WORKBENCH_FORMAT):
             raise StoreError("current.json", f"unknown pointer format {pointer.get('format')!r}")
-        if pointer.get("format") == WORKBENCH_FORMAT and pointer.get("minimum_writer") not in ("generation.v1", "content-plan.v1", "changes.v1"):
+        if pointer.get("format") == WORKBENCH_FORMAT and pointer.get("minimum_writer") not in ("generation.v1", "content-plan.v1", "changes.v1", "candidates.v1"):
             raise StoreError("current.json", "unsupported minimum writer; use the matching core")
         return pointer
 
@@ -311,7 +311,7 @@ class Store:
             )
         if current and current.get("format") == WORKBENCH_FORMAT and not document.get("compatibility"):
             raise StoreError("compatibility", "a workbench project cannot drop its writer boundary")
-        writer_rank = {None: 0, "generation.v1": 1, "content-plan.v1": 2, "changes.v1": 3}
+        writer_rank = {None: 0, "generation.v1": 1, "content-plan.v1": 2, "changes.v1": 3, "candidates.v1": 4}
         if (current and writer_rank.get(current.get("minimum_writer"), 99)
                 > writer_rank.get(document.get("compatibility", {}).get("minimum_writer"), 0)):
             raise StoreError("compatibility", "minimum writer cannot be downgraded")

@@ -26,6 +26,21 @@ def fail(field, message, *, conflict=False):
                                     exit_code=5 if conflict else 2)
 
 
+def _reference_files(store, document, references):
+    files = []
+    for reference in references:
+        snapshot = load_snapshot(store, reference['revision_id'])
+        entry = next((e for e in snapshot['pages'] if e['page_id'] == reference['page_id']), None)
+        if snapshot['project_id'] != document['project_id'] or not entry or entry.get('blueprint') != reference['artifact_ref']:
+            fail('references', 'reference must name the original image in its fixed committed page version')
+        artifact = store.read_object_json(reference['artifact_ref']); validate_schema('artifact', artifact)
+        if artifact['role'] != 'blueprint' or artifact['page_id'] != reference['page_id']:
+            fail('references', 'reference is not the selected original image')
+        store.read_object_bytes(artifact['file'])
+        files.append({'file': artifact['file'], 'role': reference['role']})
+    return files
+
+
 def _plan(store, document, value):
     validate_schema('change_intent', value)
     if document.get('compatibility', {}).get('project_format') != 'workbench.v3':
@@ -37,6 +52,9 @@ def _plan(store, document, value):
     if not value['instruction'].strip() or not value['intent'].strip():
         fail('instruction', 'provide a concrete change instruction')
     entries = {entry['page_id']: entry for entry in document['pages']}
+    extended = any(key in value for key in ('mode', 'references')) or any('stage' in t for t in value['targets'])
+    mode = value.get('mode', 'auto')
+    _reference_files(store, document, value.get('references', []))
     seen = set(); actions = []
     for target in value['targets']:
         pid = target['page_id']; layer = target['layer']; entry = entries.get(pid)
@@ -51,12 +69,25 @@ def _plan(store, document, value):
         if (refs and target['artifact_ref'] not in refs) or (not refs and target['artifact_ref'] is not None):
             fail('targets/artifact_ref', 'target reference differs from the selected layer', conflict=True)
         slot = SLOTS[layer]
+        stage = target.get('stage', {'page': 'repair', 'blueprint': 'blueprint', 'svg': 'reconstruct'}[slot])
+        if stage not in ({'repair'} if slot == 'page' else {'blueprint'} if slot == 'blueprint' else {'reconstruct', 'repair'}):
+            fail('targets/stage', 'stage does not match the selected layer')
+        if mode == 'trial' and slot == 'page':
+            fail('mode', 'trial supports original-image and SVG candidates')
+        if extended and slot == 'svg':
+            if not entry.get('blueprint'):
+                fail('targets/stage', 'SVG reconstruction requires a current original image')
+            store.read_object_bytes(store.read_object_json(entry['blueprint'])['file'])
+        if value.get('references') and slot != 'blueprint':
+            fail('references', 'fixed image references are for original-image generation')
         downstream = (['svg', 'svg_preview', 'ppt_preview', 'deck_outputs', 'quality_applicability']
                       if slot in ('page', 'blueprint') else ['svg_preview', 'ppt_preview', 'deck_outputs', 'quality_applicability'])
         actions.append({'action_id': 'action-' + str(len(actions) + 1), 'page_id': pid,
                         'page_ref': entry['page'], 'layer': layer, 'target_ref': entry.get(slot),
-                        'kind': {'page': 'repair', 'blueprint': 'blueprint', 'svg': 'reconstruct'}[slot],
+                        'kind': stage,
                         'write_slots': [slot], 'max_calls': int(slot == 'blueprint'), 'downstream': downstream})
+        if extended:
+            actions[-1].update(mode=mode, stage=stage)
     for ref in value['annotation_refs']:
         if ref not in document.get('annotations', []):
             fail('annotation_refs', 'opinion is not saved in the selected project version')
@@ -79,7 +110,7 @@ def _plan(store, document, value):
             'base_revision': document['revision_id'], 'input': copy.deepcopy(value),
             'payload_digest': sha256_bytes(canonical_json_bytes(value)), 'actions': actions,
             'max_calls': required_calls, 'content_identity': content_identity(document),
-            'effects': 'Commit creates Host tasks only. Adoption writes the listed slots and invalidates listed downstream outputs. PPT requests repair the selected page SVG before normal deck compilation.'}
+            'effects': 'Trial results are immutable candidates; current artifacts change only through explicit candidate adoption.' if mode == 'trial' else 'Commit creates Host tasks only. Adoption writes the listed slots and invalidates listed downstream outputs. PPT requests repair the selected page SVG before normal deck compilation.'}
 
 
 @operations.public
@@ -117,7 +148,9 @@ def commit(project, *, plan_id, base_revision, operation_id):
             fail('plan_id', 'plan payload or target basis changed; preview again', conflict=True)
         active = [store.read_object_json(ref) for ref in document['tasks']]
         for action in record['actions']:
-            if any(task['status'] in ('queued', 'awaiting_host', 'running')
+            if action.get('mode') == 'trial':
+                continue
+            if any(task.get('stage_request', {}).get('mode') != 'trial' and task['status'] in ('queued', 'awaiting_host', 'running')
                    and action['page_id'] in task.get('scope_pages', []) and task['kind'] != 'review' for task in active):
                 fail('tasks', 'target has active work; verify or cancel it before a new handoff', conflict=True)
         change_id = 'change-' + uuid.uuid4().hex
@@ -129,6 +162,8 @@ def commit(project, *, plan_id, base_revision, operation_id):
         validate_schema('change_set', change); change_ref = store.put_json_object(change)
         updated = bump_revision(copy.deepcopy(document), {'operation_id': operation_id, 'kind': 'task_update',
                                   'description': 'Explicit change plan dispatched', 'read_set': []})
+        if any('mode' in a for a in record['actions']):
+            updated['compatibility']['minimum_writer'] = 'candidates.v1'
         updated['changes'] = [*document.get('changes', []), change_ref]
         for task_id, action in zip(task_ids, record['actions']):
             task = _new_task(store, updated, document, record, change_ref, task_id, action)
@@ -165,6 +200,11 @@ def _new_task(store, ledger, basis, plan, change_ref, task_id, action):
     if action['max_calls']:
         task, _ = tasks.reserve_allowances(store, ledger, task, action['max_calls'])
     task.update(protocol, change_binding={'change_ref': change_ref, 'action_id': action['action_id']})
+    if 'mode' in action:
+        task['stage_request'] = {'mode': action['mode'], 'stage': action['stage'],
+                                 'references': _reference_files(store, basis, plan['input'].get('references', []))}
+        if action['mode'] == 'trial':
+            task['required_capabilities'].append('candidate_result')
     validate_task_semantics(task)
     return task
 
@@ -196,7 +236,7 @@ def validate_result(store, document, task, envelope):
         fail('result', 'the planned action requires a result in its explicit write slot')
     entry = next((e for e in document['pages'] if e['page_id'] == action['page_id']), None)
     slot = action['write_slots'][0]
-    if not entry or entry['page'] != action['page_ref'] or entry.get(slot) != action['target_ref']:
+    if not entry or entry['page'] != action['page_ref'] or (action.get('mode') != 'trial' and entry.get(slot) != action['target_ref']):
         fail('adoption_target', 'planned target slot changed; late result cannot overwrite it', conflict=True)
     if envelope.get('page_order') or envelope.get('content_update') or envelope.get('content_plan') or envelope.get('reviews'):
         fail('result', 'result exceeds the explicitly planned write scope')

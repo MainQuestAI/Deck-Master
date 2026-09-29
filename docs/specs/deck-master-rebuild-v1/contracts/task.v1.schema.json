@@ -474,6 +474,89 @@
         "change_ref",
         "action_id"
       ]
+    },
+    "stage_request": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "enum": [
+            "auto",
+            "trial"
+          ]
+        },
+        "stage": {
+          "enum": [
+            "blueprint",
+            "reconstruct",
+            "repair"
+          ]
+        },
+        "references": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "file": {
+                "type": "object",
+                "required": [
+                  "path",
+                  "sha256"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  }
+                }
+              },
+              "role": {
+                "enum": [
+                  "reference",
+                  "edit_target",
+                  "supporting"
+                ]
+              }
+            },
+            "required": [
+              "file",
+              "role"
+            ]
+          }
+        }
+      },
+      "required": [
+        "mode",
+        "stage",
+        "references"
+      ]
+    },
+    "candidate_refs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        }
+      }
     }
   },
   "required": [

@@ -42,8 +42,12 @@ def _literal_image_call(code):
         return None
     try:
         args = json.loads(match[1])
-        if (not isinstance(args, dict) or set(args) != {"prompt", "transparent_background"}
+        if (not isinstance(args, dict) or set(args) not in ({"prompt", "transparent_background"}, {"prompt", "transparent_background", "referenced_image_paths"})
                 or not isinstance(args["prompt"], str) or not isinstance(args["transparent_background"], bool)):
+            return None
+        if 'referenced_image_paths' in args and (not isinstance(args['referenced_image_paths'], list)
+                or not 1 <= len(args['referenced_image_paths']) <= 16
+                or any(not isinstance(path, str) or not Path(path).is_absolute() for path in args['referenced_image_paths'])):
             return None
         return args
     except (ValueError, TypeError):
@@ -80,19 +84,55 @@ def _owned_file(path, root):
         raise _unavailable("runtime event source cannot be read") from exc
 
 
+def _fixed_object_references(store, paths, started_at_ms):
+    """Resolve only this project's immutable object paths; never Host hashes.
+
+    A file changed after the call started cannot prove those original bytes.
+    The image API exposes attachments, not semantic roles: only `reference`
+    is observed. edit_target/supporting remain a binding mismatch.
+    """
+    from .store import StoreError
+    refs = []
+    try:
+        for raw in paths:
+            path = Path(raw)
+            relative = path.relative_to(store.project_root).as_posix()
+            match = re.fullmatch(r'\.deckmaster/objects/([a-f0-9]{2})/([a-f0-9]{64})\.([a-z0-9]+)', relative)
+            if not match or match[1] != match[2][:2] or str(store.project_root / relative) != raw:
+                return None
+            ref = {'path': relative, 'sha256': match[2]}
+            safe = store._resolve_object_path(relative)
+            before = safe.stat()
+            if max(before.st_mtime_ns, before.st_ctime_ns) // 1000000 > started_at_ms:
+                return None
+            if before.st_size > MAX_RECORD_BYTES:
+                return None
+            content = store.read_object_bytes(ref)
+            after = safe.stat()
+            if (before.st_ino, before.st_size, before.st_mtime_ns, before.st_ctime_ns) != (
+                    after.st_ino, after.st_size, after.st_mtime_ns, after.st_ctime_ns):
+                return None
+            with Image.open(io.BytesIO(content)) as image:
+                image.verify()
+            refs.append({'file': ref, 'role': 'reference'})
+    except (OSError, ValueError, StoreError):
+        return None
+    return refs
+
+
 @dataclass(frozen=True)
 class CollectedObservation:
     metadata: dict
     output_bytes: bytes
 
 
-def collect_codex_image(selector, *, minimum_started_at_ms=None):
+def collect_codex_image(selector, *, minimum_started_at_ms=None, reference_store=None):
     """Resolve identities in Codex's runtime store; no arbitrary JSON path input.
 
     Native image completions record revisedPrompt, transparentBackground and
     PNG bytes. They do not record attachments, model, seed or all provider
     parameters. A restricted, executed JSON-literal call with its same-call PNG
-    return can additionally prove reference arguments were omitted. Arbitrary
+    return can additionally prove omitted references or fixed object-file arguments. Arbitrary
     exec source, Host reports, image pixels and defaults confer no such proof.
     """
     allowed = {"source", "thread_id", "turn_id", "item_id"}
@@ -179,13 +219,21 @@ def collect_codex_image(selector, *, minimum_started_at_ms=None):
     transparent = item.get("transparentBackground")
     parameters = {"transparent_background": transparent} if isinstance(transparent, bool) else {}
     literal_verified = bool(literal_proof and literal_proof["output_sha256"] == sha256_bytes(output)
-                            and literal_proof["arguments"] == {"prompt": item["revisedPrompt"], "transparent_background": transparent})
+                            and literal_proof['arguments']['prompt'] == item['revisedPrompt']
+                            and literal_proof['arguments']['transparent_background'] == transparent)
+    references = None
+    if literal_verified:
+        paths = literal_proof['arguments'].get('referenced_image_paths')
+        if paths is None:
+            references = []
+        elif reference_store is not None:
+            references = _fixed_object_references(reference_store, paths, started)
     metadata = {
         "schema_version": "tool_observation.v1", "observer": "tool_observed", "collector": "codex-session-image.v1",
         "source": {**selector, "session_cli_version": session.get("cli_version"), "record_sha256": record_hash,
                    "line_number": line_number, "byte_offset": offset},
         "invocation_ref": selector["item_id"], "started_at_ms": started, "completed_at_ms": completed,
-        "submitted": {"prompt": item["revisedPrompt"], "references": [] if literal_verified else None, "parameters": parameters,
+        "submitted": {"prompt": item["revisedPrompt"], "references": references, "parameters": parameters,
                       "model": None, "seed": None},
         "coverage": {"prompt": "native.revisedPrompt", "references": "unknown", "model": "unknown", "seed": "unknown",
                      "parameters": {key: "native.transparentBackground" for key in parameters}, "output": "native.result"},
@@ -194,6 +242,9 @@ def collect_codex_image(selector, *, minimum_started_at_ms=None):
     }
     if literal_verified:
         metadata["source"]["literal_call"] = {k: v for k, v in literal_proof.items() if k != "arguments"}
-        metadata["coverage"]["references"] = "native completion + executed literal call + same-call PNG return; reference arguments omitted"
+        if references is not None:
+            metadata["coverage"]["references"] = (
+                "native completion + executed literal call + same-call PNG return; reference arguments omitted" if not references else
+                "native completion + executed literal object paths + same-call PNG return; content hashes and pre-call file timestamps verified")
     validate_schema("tool_observation", metadata)
     return CollectedObservation(metadata=metadata, output_bytes=output)

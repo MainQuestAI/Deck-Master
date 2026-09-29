@@ -1,0 +1,35 @@
+{
+  "evidence_level": "engineering",
+  "full_suite": {
+    "passed": 833,
+    "seconds": 134.59,
+    "log": "rebuild-tests.txt",
+    "note": "before final assemble writer assertion and historical-reference fixture strengthening"
+  },
+  "final_targeted": {
+    "passed": 22,
+    "seconds": 6.05,
+    "tests": [
+      "test_candidates.py",
+      "test_package_boundary.py"
+    ]
+  },
+  "related_regression": {
+    "passed": 103,
+    "seconds": 18.61
+  },
+  "literal_reference_adapter_cases": 7,
+  "cli_example": {
+    "checks": 3,
+    "model_calls": 0
+  },
+  "real_host_reference_roundtrip": "not_verified",
+  "browser_candidate_ui": "not_implemented",
+  "user_acceptance": false,
+  "final_reference_integration": {
+    "passed": 43,
+    "seconds": 6.04,
+    "level": "synthetic_protocol",
+    "source_commit": "4e22054a13fd81cbc03ca68b4de170a0e1b13681"
+  }
+}
