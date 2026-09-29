@@ -168,8 +168,10 @@ export function candidateDesk(app, data) {
   const rejected = event => { if (event.detail.action === 'candidates.adopt') { currentPlan = null; controls(); } };
   app.root.addEventListener('business-rejected', rejected);
   const sync = () => controls(); app.root.addEventListener('business-state-changed', sync);
-  const timer = setInterval(() => { if (!document.hidden) refresh(); }, 5000);
-  app.disposables.push(() => { disposed = true; serial++; clearInterval(timer); releases.forEach(fn => fn()); auxReleases.forEach(fn => fn()); modalReleases.forEach(fn => fn()); app.root.removeEventListener('business-state-changed', sync); app.root.removeEventListener('business-rejected', rejected); });
+  const fromSummary = event => { if (event.detail.revision_id !== live?.revision_id && !document.hidden) refresh(); };
+  app.root.addEventListener('summary-refreshed', fromSummary);
+  const timer = app.health.ui_capabilities?.includes('run_desk.v1') ? null : setInterval(() => { if (!document.hidden) refresh(); }, 5000);
+  app.disposables.push(() => { disposed = true; serial++; clearInterval(timer); app.root.removeEventListener('summary-refreshed', fromSummary); releases.forEach(fn => fn()); auxReleases.forEach(fn => fn()); modalReleases.forEach(fn => fn()); app.root.removeEventListener('business-state-changed', sync); app.root.removeEventListener('business-rejected', rejected); });
   refresh(); controls(); return root;
 }
 
@@ -177,12 +179,14 @@ export function candidateBatch(app) {
   if (!app.business || !app.health.ui_capabilities?.includes('candidates.v1')) return el('div');
   const root = el('section', {class: 'panel candidate-batch', 'aria-label': '候选集合采用'});
   const rows = el('div', {class: 'candidate-batch-rows stack'}), notice = el('p', {role: 'status'}), impact = el('div', {class: 'stack'});
+  const pager = el('div', {class: 'row wrap candidate-pagination'});
+  let offset = 0;
   let records = [], selected = new Set(), currentPlan = null, disposed = false, busy = false, polling = false, revision = null, serial = 0;
   const draft = operationDraft(app);
   const preview = button('预览所选候选的采用影响', previewSelection), adopt = button('采用所选候选', adoptSelection, true, {disabled: true});
   const assemble = button('更新整稿 PPT', assembleDeck);
   root.append(el('div', {class: 'panel-head'}, el('h2', {}, '候选与当前稿'), button('刷新候选列表', refresh)),
-    el('div', {class: 'panel-body stack'}, el('p', {}, '勾选要采用的候选；同一页只能选一个。任何冲突都会整批不采用，选择继续保留。'), notice, rows,
+    el('div', {class: 'panel-body stack'}, el('p', {}, '勾选要采用的候选；同一页只能选一个。任何冲突都会整批不采用，选择继续保留。'), notice, rows, pager,
       el('div', {class: 'row wrap'}, preview, adopt), impact,
       el('details', {}, el('summary', {}, '采用后的整稿制作'), el('p', {}, '先由原有 continue 完成受影响页的 SVG 预览和逐页审图，再更新整稿。仍需最终审阅。'), assemble), draft));
   function persist() {
@@ -198,7 +202,9 @@ export function candidateBatch(app) {
   function renderRows() {
     const missing = [...selected].filter(id => !records.some(row => row.candidate.candidate_id === id));
     notice.textContent = `${records.length} 个已返回候选 · 已选 ${selected.size} 个${missing.length ? `（${missing.length} 个暂未读到，选择仍保留）` : ''}`;
-    rows.replaceChildren(...records.map((row, index) => {
+    offset = Math.min(offset, Math.max(0, Math.floor((records.length - 1) / 30) * 30));
+    rows.replaceChildren(...records.slice(offset, offset + 30).map((row, localIndex) => {
+      const index = offset + localIndex;
       const record = row.candidate, id = record.candidate_id;
       const input = el('input', {type: 'checkbox', checked: selected.has(id), 'aria-label': `选择 ${record.page_id} 候选 ${index + 1}`});
       input.addEventListener('change', () => {
@@ -215,6 +221,9 @@ export function candidateBatch(app) {
         button('比较这个候选', () => openCandidate(app, record, revision)));
     }));
     if (!records.length) rows.append(el('p', {class: 'muted'}, '还没有候选。单页原图或 SVG 中可保存试作要求；正在运行或失败的任务仍在下方交接面板。'));
+    pager.replaceChildren(button('上一页候选', () => { offset = Math.max(0, offset - 30); renderRows(); }, false, {disabled: offset === 0}),
+      el('span', {}, `第 ${Math.floor(offset / 30) + 1} 页 · 选择跨页保留`),
+      button('下一页候选', () => { offset += 30; renderRows(); }, false, {disabled: offset + 30 >= records.length}));
     controls();
   }
   async function refresh() {
@@ -278,7 +287,9 @@ export function candidateBatch(app) {
     });
   }
   app.root.addEventListener('draft-editor-replaced', hydrate); hydrate();
-  const timer = setInterval(() => { if (!document.hidden) refresh(); }, 5000);
-  app.disposables.push(() => { disposed = true; serial++; clearInterval(timer); app.root.removeEventListener('draft-editor-replaced', hydrate); app.root.removeEventListener('business-state-changed', sync); app.root.removeEventListener('business-rejected', rejected); });
+  const onSummary = event => { if (event.detail.revision_id !== revision) refresh(); };
+  app.root.addEventListener('summary-refreshed', onSummary);
+  const timer = app.health.ui_capabilities?.includes('run_desk.v1') ? null : setInterval(() => { if (!document.hidden) refresh(); }, 5000);
+  app.disposables.push(() => { disposed = true; serial++; clearInterval(timer); app.root.removeEventListener('summary-refreshed', onSummary); app.root.removeEventListener('draft-editor-replaced', hydrate); app.root.removeEventListener('business-state-changed', sync); app.root.removeEventListener('business-rejected', rejected); });
   controls(); return root;
 }

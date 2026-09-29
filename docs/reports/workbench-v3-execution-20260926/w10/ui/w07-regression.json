@@ -1,0 +1,21 @@
+{
+  "evidence": "real browser and service; synthetic Host/tool events only",
+  "checks": [
+    "two_main_columns_and_fixed_aux_reference",
+    "candidate_switch_request_attempt_reference_identity",
+    "auto_result_does_not_drift_fixed_comparison",
+    "auto_current_change_is_separate_from_trial",
+    "explicit_replan_rebinds_target_without_regeneration",
+    "lost_response_refresh_recovers_original_operation_once",
+    "recovery_does_not_post_second_adoption",
+    "conflicting_batch_adopts_zero_pages",
+    "conflicting_batch_preserves_both_choices",
+    "explicit_subset_new_plan_new_operation",
+    "svg_trial_preserves_current_and_call_count",
+    "svg_adoption_retains_page_original_no_fake_ppt_preview",
+    "narrow_viewport_no_horizontal_overflow",
+    "assemble_quality_dependency_refusal_visible",
+    "no_browser_javascript_errors"
+  ],
+  "errors": []
+}

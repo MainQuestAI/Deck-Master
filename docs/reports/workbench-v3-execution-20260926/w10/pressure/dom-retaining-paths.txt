@@ -1,0 +1,31 @@
+TARGETS ['3629 native <article class="candidate-batch-row" data-candidate-id="candidate-20260930-p01-0"> detached=2', '3631 native <div class="gallery-viewport" tabindex="0" aria-label="整稿画廊阅读区" data-mode="grid" data-visible-pages="12" style="height: 408.281px;"> detached=2', '3632 native <div class="gallery-viewport" tabindex="0" aria-label="整稿画廊阅读区" data-mode="grid" data-visible-pages="12" style="height: 408.281px;"> detached=2', '3634 native <article class="candidate-batch-row" data-candidate-id="candidate-20260930-p01-0"> detached=2', '3636 native <div class="gallery-viewport" tabindex="0" aria-label="整稿画廊阅读区" data-mode="grid" data-visible-pages="12" style="height: 408.281px;"> detached=2', '3638 native <div class="gallery-viewport" tabindex="0" aria-label="整稿画廊阅读区" data-mode="grid" data-visible-pages="15" style="height: 408.281px;"> detached=2', '3640 native <article class="candidate-batch-row" data-candidate-id="candidate-20260930-p01-0"> detached=2', '3641 native <div class="gallery-viewport" tabindex="0" aria-label="整稿画廊阅读区" data-mode="grid" data-visible-pages="12" style="height: 408.281px;"> detached=2', '3645 native <div class="gallery-viewport" tabindex="0" aria-label="整稿画廊阅读区" data-mode="grid" data-visible-pages="12" style="height: 408.281px;"> detached=2', '3646 native <div class="gallery-viewport" tabindex="0" aria-label="整稿画廊阅读区" data-mode="grid" data-visible-pages="9" style="height: 408.281px;"> detached=2', '3647 native <div class="gallery-viewport" tabindex="0" aria-label="整稿画廊阅读区" data-mode="grid" data-visible-pages="15" style="height: 408.281px;"> detached=2', '3648 native <div class="gallery-viewport" tabindex="0" aria-label="整稿画廊阅读区" data-mode="grid" data-visible-pages="12" style="height: 408.281px;"> detached=2', '3649 native <div class="gallery-viewport" tabindex="0" aria-label="整稿画廊阅读区" data-mode="grid" data-visible-pages="12" style="height: 408.281px;"> detached=2', '3651 native <div class="gallery-viewport" tabindex="0" aria-label="整稿画廊阅读区" data-mode="grid" data-visible-pages="15" style="height: 408.281px;"> detached=2', '3652 native <div class="gallery-viewport" tabindex="0" aria-label="整稿画廊阅读区" data-mode="grid" data-visible-pages="12" style="height: 408.281px;"> detached=2', '3653 native <div class="gallery-viewport" tabindex="0" aria-label="整稿画廊阅读区" data-mode="grid" data-visible-pages="12" style="height: 408.281px;"> detached=2', '3657 native <div class="gallery-viewport" tabindex="0" aria-label="整稿画廊阅读区" data-mode="grid" data-visible-pages="12" style="height: 408.281px;"> detached=2', '3658 native <div class="gallery-viewport" tabindex="0" aria-label="整稿画廊阅读区" data-mode="grid" data-visible-pages="12" style="height: 408.281px;"> detached=2', '3661 native <div class="gallery-viewport" tabindex="0" aria-label="整稿画廊阅读区" data-mode="grid" data-visible-pages="9" style="height: 408.281px;"> detached=2', '3663 native <article class="candidate-batch-row" data-candidate-id="candidate-20260930-p01-0"> detached=2']
+
+RETAINING PATH
+0 synthetic  detached=0 -- element:1 -->
+1 synthetic (GC roots) detached=0 -- element:10 -->
+11 synthetic (Global handles) detached=0 -- internal:2 / DevTools console -->
+3629 native <article class="candidate-batch-row" data-candidate-id="candidate-20260930-p01-0"> detached=2
+
+RETAINING PATH
+0 synthetic  detached=0 -- element:1 -->
+1 synthetic (GC roots) detached=0 -- element:10 -->
+11 synthetic (Global handles) detached=0 -- internal:4 / DevTools console -->
+3631 native <div class="gallery-viewport" tabindex="0" aria-label="整稿画廊阅读区" data-mode="grid" data-visible-pages="12" style="height: 408.281px;"> detached=2
+
+RETAINING PATH
+0 synthetic  detached=0 -- element:1 -->
+1 synthetic (GC roots) detached=0 -- element:10 -->
+11 synthetic (Global handles) detached=0 -- internal:5 / DevTools console -->
+3632 native <div class="gallery-viewport" tabindex="0" aria-label="整稿画廊阅读区" data-mode="grid" data-visible-pages="12" style="height: 408.281px;"> detached=2
+
+RETAINING PATH
+0 synthetic  detached=0 -- element:1 -->
+1 synthetic (GC roots) detached=0 -- element:10 -->
+11 synthetic (Global handles) detached=0 -- internal:7 / DevTools console -->
+3634 native <article class="candidate-batch-row" data-candidate-id="candidate-20260930-p01-0"> detached=2
+
+RETAINING PATH
+0 synthetic  detached=0 -- element:1 -->
+1 synthetic (GC roots) detached=0 -- element:10 -->
+11 synthetic (Global handles) detached=0 -- internal:9 / DevTools console -->
+3636 native <div class="gallery-viewport" tabindex="0" aria-label="整稿画廊阅读区" data-mode="grid" data-visible-pages="12" style="height: 408.281px;"> detached=2

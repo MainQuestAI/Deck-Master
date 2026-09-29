@@ -1,6 +1,6 @@
 # 生成工作台 v3 执行索引
 
-当前活动卡：**W10 核心 PR #56 已提交，等待 CI；合入后接前端**。W01 压力 PR #55 已合入 main（`d42dda6…`），完整压力 summary p95 206.16ms；W07 前端 PR #54 已合入 main（`9e6b6e1…`），最终 head 的 8 项 CI 通过。候选浏览器检查 26 项、既有浏览器回归 52 项、相关 pytest 62 项通过；真实单页参考图→候选→采用→SVG→整稿制作有单独证据。真实 auto/trial 交错和第二页不变尚未补齐，W07-AC07 不关闭。
+当前活动卡：**W10 核心 PR #56 已合入 main（`45e645e…`），前端与完整持续浏览已验证，待 PR CI/合并**。W01 压力 PR #55 已合入 main（`d42dda6…`），完整压力 summary p95 206.16ms；W07 前端 PR #54 已合入 main（`9e6b6e1…`），最终 head 的 8 项 CI 通过。候选浏览器检查 26 项、既有浏览器回归 52 项、相关 pytest 62 项通过；真实单页参考图→候选→采用→SVG→整稿制作有单独证据。真实 auto/trial 交错和第二页不变已在 W10 期间补齐，W07-AC07 已达工程与真实 Host 验证层；用户验收未代签。
 
 - [独立 Review：4 P1、3 P2](REVIEW.md)
 - [外部原始复核与取舍](OUTSIDE-REVIEW.md)
@@ -13,6 +13,7 @@
 - [W06 标注、明确范围的计划、操作恢复与交接核心](W06-CORE.md)
 - [W06 版本绑定意见、可核实保存与持久交接前端](W06-UI.md)
 - [W07 候选与阶段核心](W07-CORE.md) / [比较采用前端与真实 Host](W07-UI.md) / [执行边界](W07-PLAN.md)
+- [W10 运行台共享核心](W10-CORE.md) / [前端、恢复与持续浏览](W10-UI.md)
 - [修订后的包顺序](../../specs/deck-master-workbench-v3/packages/README.md)
 - [交接原件](handoff/HANDOFF.md) / [26 个输入的原始 manifest](handoff/manifest.json)
 - [当前用户设计快照](design-snapshot/index.html) / [8 文件 SHA256](design-snapshot/sha256-manifest.json)

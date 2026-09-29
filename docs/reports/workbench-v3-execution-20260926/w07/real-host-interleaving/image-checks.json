@@ -1,0 +1,10 @@
+{
+  "real_host_call": true,
+  "content_fixture_only": true,
+  "native_item_id": "exec-ebb78d75-24c9-40d7-8424-c9ad969df66e",
+  "comparison": {
+    "status": "match",
+    "differences": [],
+    "unknown": []
+  }
+}

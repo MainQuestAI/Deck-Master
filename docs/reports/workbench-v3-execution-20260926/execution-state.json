@@ -1,6 +1,6 @@
 {
   "baseline": "d1c7c4600cb0fc781070116ed8cc8a1ff6b8b7ca",
-  "branch": "codex/workbench-w10-core",
+  "branch": "codex/workbench-w10-ui",
   "active_package": "W10",
   "sequence": [
     "W01.core",
@@ -81,7 +81,6 @@
       "baseline": "f3c9b617b868748ea09765ff072858f563f65b8f",
       "core_evidence": "W04-CORE.md",
       "residuals": [
-        "Full 300x5x3 pressure after W07 Candidate contracts",
         "Human 30-second observation not measured"
       ],
       "core_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/47",
@@ -93,7 +92,8 @@
       "frontend_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/48",
       "frontend_head": "b11452ff32305a91d2dd743e7b1248e5c59126a1",
       "frontend_merge_commit": "b00525557ac69e9453ae4d6e3b5faf20dbefcf8b",
-      "pressure_first_screen_evidence": "w04/pressure/checks.json"
+      "pressure_first_screen_evidence": "w04/pressure/checks.json",
+      "pressure_sustained_evidence": "w10/pressure/checks.json"
     },
     "W05": {
       "status": "slices_merged",
@@ -148,13 +148,13 @@
       "frontend_evidence": "W07-UI.md",
       "real_host_evidence": "w07/real-host/checks.json",
       "remaining": [
-        "W07-AC07 real auto/trial interleaving and unchanged second page before W08",
         "User acceptance"
       ],
       "frontend_source_commit": "ac3a88a5851501e2e83c5f4f0d3448bfe7aad75c",
       "frontend_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/54",
       "frontend_head": "477690e545fa224759a58adc78373004e3b29d8c",
-      "frontend_merge_commit": "9e6b6e1b804eea7b843f716165fbde2ce04a72be"
+      "frontend_merge_commit": "9e6b6e1b804eea7b843f716165fbde2ce04a72be",
+      "real_interleaving_evidence": "w07/real-host-interleaving/interleaving-checks.json"
     },
     "W08": {
       "status": "planned",
@@ -165,13 +165,22 @@
       "accepted": false
     },
     "W10": {
-      "status": "core_pr_open",
+      "status": "core_merged_ui_verified",
       "accepted": false,
       "baseline": "d42dda62c53bfeaf177c077f8e46074c8c23bdba",
       "plan": "W10-PLAN.md",
       "core_implementation_commit": "b505d34f384edda5f50e94f1e8d2a3d0060fb737",
       "core_evidence": "W10-CORE.md",
-      "core_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/56"
+      "core_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/56",
+      "core_merge_commit": "45e645e7dc6b8f537d852343fae48a77bd98ca49",
+      "core_head": "9ce3857b57e538761323359ab2959979c17abb9f",
+      "frontend_source_commit": "7036f8e962f33f78a90fcc5b5ea1f506e47d3010",
+      "frontend_evidence": "W10-UI.md",
+      "remaining": [
+        "Frontend PR CI and merge",
+        "User acceptance"
+      ],
+      "frontend_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/57"
     },
     "W11": {
       "status": "planned",
@@ -435,11 +444,13 @@
     },
     "W04-AC06": {
       "owner": "W04",
-      "status": "partial",
+      "status": "engineering_verified",
       "evidence": [
         "W04-CORE.md",
         "W04-UI.md",
-        "w04/browser/checks.json"
+        "w04/browser/checks.json",
+        "w04/pressure/checks.json",
+        "w10/pressure/checks.json"
       ],
       "evidence_level": "core/HTTP/real Chromium; synthetic content"
     },
@@ -687,16 +698,17 @@
     },
     "W07-AC07": {
       "owner": "W07",
-      "status": "partial_real_host_verification",
+      "status": "engineering_and_real_host_verified",
       "evidence": [
         "W07-CORE.md",
         "W07-UI.md",
         "w07/ui/browser-checks.json",
         "w07/ui/edge-checks.json",
-        "w07/real-host/checks.json"
+        "w07/real-host/checks.json",
+        "w07/real-host-interleaving/interleaving-checks.json"
       ],
       "accepted": false,
-      "evidence_level": "core/CLI/HTTP/Chromium; separately identified one-page real native ImageGen and SVG Host roundtrip"
+      "evidence_level": "core/CLI/HTTP/Chromium plus actual native ImageGen and current Codex Host two-page auto/trial interleaving; user acceptance pending"
     },
     "W07-AC08": {
       "owner": "W07",
@@ -783,67 +795,109 @@
     },
     "W10-AC01": {
       "owner": "W10",
-      "status": "partial_core_verified",
+      "status": "engineering_verified",
       "evidence": [
         "W10-CORE.md",
-        "w10/core/recovery-checks.json"
+        "w10/core/recovery-checks.json",
+        "W10-UI.md",
+        "w10/ui/browser-checks.json",
+        "w10/ui/recovery-checks.json"
       ],
-      "accepted": false
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; synthetic fault injection identified separately from actual Host"
     },
     "W10-AC02": {
       "owner": "W10",
-      "status": "partial_core_verified",
+      "status": "engineering_verified",
       "evidence": [
         "W10-CORE.md",
-        "w10/core/recovery-checks.json"
+        "w10/core/recovery-checks.json",
+        "W10-UI.md",
+        "w10/ui/browser-checks.json",
+        "w10/ui/recovery-checks.json"
       ],
-      "accepted": false
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; synthetic fault injection identified separately from actual Host"
     },
     "W10-AC03": {
       "owner": "W10",
-      "status": "partial_core_verified",
+      "status": "engineering_verified",
       "evidence": [
         "W10-CORE.md",
-        "w10/core/recovery-checks.json"
+        "w10/core/recovery-checks.json",
+        "W10-UI.md",
+        "w10/ui/browser-checks.json",
+        "w10/ui/recovery-checks.json"
       ],
-      "accepted": false
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; synthetic fault injection identified separately from actual Host"
     },
     "W10-AC04": {
       "owner": "W10",
-      "status": "open",
-      "evidence": []
+      "status": "engineering_verified",
+      "evidence": [
+        "W10-UI.md",
+        "w10/ui/poll-lifecycle.json",
+        "w10/ui/polling-checks.json",
+        "w10/pressure/checks.json",
+        "w10/pressure/samples.jsonl"
+      ],
+      "accepted": false,
+      "evidence_level": "timer injection, Chromium visibility injection, full 1200-second synthetic 300x5x3 pressure without forced GC"
     },
     "W10-AC05": {
       "owner": "W10",
-      "status": "partial_core_verified",
+      "status": "engineering_verified",
       "evidence": [
         "W10-CORE.md",
-        "w10/core/recovery-checks.json"
+        "w10/core/recovery-checks.json",
+        "W10-UI.md",
+        "w10/ui/browser-checks.json",
+        "w10/ui/recovery-checks.json",
+        "w07/real-host-interleaving/late-result-checks.json"
       ],
-      "accepted": false
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; synthetic fault injection identified separately from actual Host"
     },
     "W10-AC06": {
       "owner": "W10",
-      "status": "partial_core_verified",
+      "status": "engineering_verified",
       "evidence": [
         "W10-CORE.md",
-        "w10/core/recovery-checks.json"
+        "w10/core/recovery-checks.json",
+        "W10-UI.md",
+        "w10/ui/browser-checks.json",
+        "w10/ui/recovery-checks.json"
       ],
-      "accepted": false
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; synthetic fault injection identified separately from actual Host"
     },
     "W10-AC07": {
       "owner": "W10",
-      "status": "open",
-      "evidence": []
+      "status": "engineering_verified",
+      "evidence": [
+        "W10-UI.md",
+        "w10/ui/browser-checks.json",
+        "w10/ui/recovery-checks.json",
+        "w10/ui/w05-regression.json",
+        "w10/ui/w06-edges-regression.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; synthetic fault injection identified separately from actual Host"
     },
     "W10-AC08": {
       "owner": "W10",
-      "status": "partial_core_verified",
+      "status": "engineering_verified",
       "evidence": [
         "W10-CORE.md",
-        "w10/core/recovery-checks.json"
+        "w10/core/recovery-checks.json",
+        "W10-UI.md",
+        "w10/ui/browser-checks.json",
+        "w10/ui/recovery-checks.json",
+        "w10/ui/error-checks.json"
       ],
-      "accepted": false
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; synthetic fault injection identified separately from actual Host"
     },
     "W11-AC01": {
       "owner": "W11",

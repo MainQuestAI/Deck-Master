@@ -1,6 +1,6 @@
 # W10 运行与恢复共享核心
 
-实现提交 `b505d34f384edda5f50e94f1e8d2a3d0060fb737`。状态：本地实现与回归完成，[PR #56](https://github.com/MainQuestAI/Deck-Master/pull/56) 已提交，等待 CI；前端、20 分钟压力、实际当前 Host 验证与用户验收未完成。
+实现提交 `b505d34f384edda5f50e94f1e8d2a3d0060fb737`。状态：本地实现与回归完成，[PR #56](https://github.com/MainQuestAI/Deck-Master/pull/56) 已合入 main（`45e645e7dc6b8f537d852343fae48a77bd98ca49`）；最终 head `9ce3857b57e538761323359ab2959979c17abb9f` 的 8 项 CI 通过。前端、20 分钟压力、实际当前 Host 验证与用户验收未完成。
 
 运行列表复用正式 Task/ChangeSet/Candidate/Request/Attempt 对象，分页最多 100 条，可按修改组、任务状态和人的待办过滤。当前运行不会被列为人的待办；复制、读取、轮询均无执行动作。固定 revision 的后续分页保留该版本，历史任务不会因墙上时间流逝获得当前超时状态。旧 `/api/tasks` 与旧 CLI status 响应保留；新 CLI list/status --details 与 HTTP 分页/详情共用投影和错误。
 

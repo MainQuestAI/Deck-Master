@@ -1,3 +1,4 @@
+import {SummaryPoll} from './summary-poll.js';
 import {get, post, revisionQuery, readableError} from './api.js';
 import {el, button, heading, empty, icon, version, announce, modal, copyText} from './dom.js';
 import {localURL} from './launcher-ui.js';
@@ -34,6 +35,23 @@ export class Project {
     addEventListener('beforeunload', () => this.editor?.persist());
     addEventListener('online', () => this.setNotice('网络已恢复。可核实草稿保存，或重新读取当前工作面。'));
     await this.loadRoute(this.route, false);
+    if (this.health.ui_capabilities?.includes('run_desk.v1')) {
+      this.summaryPoll = new SummaryPoll(signal => get('/api/view/summary', {signal}), value => {
+        if (value.project_id !== this.info.project_id) throw new Error('服务项目已变化，请重新打开项目。');
+        this.latest = value;
+        const count = value.task_counts.awaiting_host || 0;
+        if (this.pendingButton) {
+          this.pendingButton.textContent = `待交接 ${count}`;
+          this.pendingButton.setAttribute('aria-label', `查看待交接任务，${count} 项`);
+        }
+        this.syncState(value.revision_id !== this.route.revision ? '项目有新状态。当前页面仍按顶栏版本阅读。' : '');
+        this.root.dispatchEvent(new CustomEvent('summary-refreshed', {detail: value}));
+      }, error => this.syncState('运行状态同步中断。' + readableError(error) + ' 固定阅读与草稿仍保留。'), this.latest);
+      this.summaryPoll.start();
+      this.root.addEventListener('business-state-changed', () => this.summaryPoll.refresh());
+      addEventListener('pagehide', () => this.summaryPoll.stop());
+      addEventListener('pageshow', event => { if (event.persisted) { this.summaryPoll.start(); this.summaryPoll.refresh(); } });
+    }
   }
   async loadRoute(initial = null, focus = true) {
     const serial = ++this.generation;
@@ -58,9 +76,11 @@ export class Project {
           data = {saved, plan: plan.content_plan, drafts};
         }
       } else if (route.surface === 'runs') {
-        const [tasks, history] = await Promise.all([get('/api/tasks' + q), get('/api/history')]);
-        data = {tasks: tasks.tasks, history};
-        if (route.task_id && !tasks.tasks.some(task => task.task_id === route.task_id)) throw new Error('此版本没有链接中的任务。请检查任务与版本，未跳到其它任务。');
+        const modern = this.health.ui_capabilities?.includes('run_desk.v1');
+        const [tasks, history, detail] = await Promise.all([get('/api/tasks' + q + (modern ? '&limit=30' : '')), get('/api/history'),
+          modern && route.task_id ? get('/api/tasks/' + encodeURIComponent(route.task_id) + q) : Promise.resolve(null)]);
+        data = {tasks: tasks.tasks, runPage: modern ? tasks : null, runDetail: detail, history};
+        if (route.task_id && !(detail || tasks.tasks.some(task => task.task_id === route.task_id))) throw new Error('此版本没有链接中的任务。请检查任务与版本，未跳到其它任务。');
       }
       if (serial !== this.generation) return;
       this.editor?.dispose(); this.editor = null;
@@ -99,6 +119,10 @@ export class Project {
       catch (error) { this.setNotice('阅读位置尚未保存到项目。' + readableError(error)); }
     });
   }
+  syncState(message) {
+    if (!this.syncNotice || !this.syncRow) return;
+    this.syncNotice.textContent = message; this.syncRow.hidden = !message;
+  }
   setNotice(message, retry = false) {
     if (!this.notice) return;
     this.notice.replaceChildren(el('span', {}, message)); this.notice.hidden = !message;
@@ -118,6 +142,9 @@ export class Project {
     this.notice = el('div', {class: 'notice', role: 'status', hidden: true});
     const banners = el('div', {class: 'banners'}, this.notice);
     if (this.business) banners.append(this.business.node);
+    this.syncNotice = el('p', {class: 'runtime-sync muted', role: 'status'});
+    this.syncRow = el('div', {class: 'runtime-sync-row', hidden: true}, this.syncNotice, button('读取项目最新状态', () => this.current()));
+    if (this.health.ui_capabilities?.includes('run_desk.v1')) banners.append(this.syncRow);
     if (this.historical) banners.append(el('div', {class: 'history-banner'}, el('strong', {}, '历史版本 · 只读'),
       el('span', {}, `正在看 ${version(this.route.revision)}，当前为 ${version(this.latest.revision_id)}。阅读位置与个人草稿仍绑定原基准。`), button('查看当前版本', () => this.current())));
     if (this.info.sample) banners.append(el('div', {class: 'sample-banner'}, this.info.sample.readonly ? '这是合成的只读示例，未调用模型，也未进行专业质量验收。' : '这是可编辑的合成验证项目，未调用模型，也未进行专业质量验收。'));
@@ -130,8 +157,9 @@ export class Project {
       event.preventDefault(); this.go({surface: 'gallery'});
     });
     const pending = this.summary.task_counts.awaiting_host || 0;
+    this.pendingButton = button(`待交接 ${pending}`, () => this.go({surface: 'runs', task_id: null}), false, {'aria-label': `查看待交接任务，${pending} 项`});
     const top = el('header', {class: 'topbar'}, el('div', {class: 'crumb'}, el('strong', {}, this.info.title), el('span', {class: 'version'}, version(this.route.revision))),
-      button(`待交接 ${pending}`, () => this.go({surface: 'runs', task_id: null}), false, {'aria-label': `查看待交接任务，${pending} 项` }));
+      this.pendingButton);
     this.root.className = 'shell';
     this.root.replaceChildren(aside, el('div', {class: 'content'}, top, banners, this.main));
   }

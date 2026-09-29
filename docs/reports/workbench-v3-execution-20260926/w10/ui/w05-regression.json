@@ -1,0 +1,158 @@
+{
+  "evidence_level": "real Chromium / real local HTTP / synthetic recorded evidence",
+  "checks": {
+    "original_to_recorded_prompt_and_content_within_three_clicks": true,
+    "unicode_dom_utf16_to_codepoints_crlf_combining_zwj": {
+      "map": [
+        0,
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "rejected": true,
+      "zwj": [
+        0,
+        2,
+        3,
+        5
+      ],
+      "range": "🙂é"
+    },
+    "diff_preserves_combining_marks_and_bounds_large_comparison": {
+      "exact": [
+        "removed",
+        "added"
+      ],
+      "large": "full_sides"
+    },
+    "draft_does_not_modify_recorded_prompt_or_image": true,
+    "all_prepared_records_exact_basis_switch_trusted_segments_and_diff": true,
+    "unknown_actual_parameters_and_references_not_filled_from_frozen_defaults": true,
+    "host_reported_unknown_and_missing_image_states": true,
+    "prompt_ack_cross_port_offline_not_auto_recovered_explicit_import": true,
+    "production_summary_exact_field_semantics_and_unassessed_quality": true,
+    "same_page_same_layer_fixed_versions": true,
+    "background_update_only_banner_does_not_replace_comparison": true,
+    "failed_comparand_keeps_previous_pinned_side": true,
+    "responsive_comparison_switch_and_no_horizontal_overflow": true,
+    "comparand_evidence_link_keeps_its_own_snapshot": true,
+    "source_return_keeps_fixed_material_snapshot": true
+  },
+  "manifest": {
+    "original_revision": "a468d133f98246e6831592728371360a",
+    "fixed_revision": "9dc5a36fc8e94118ab618a59529226cc",
+    "fixture": {
+      "schema_version": "gallery_fixture.v1",
+      "factory": "workbench-synthetic.v1",
+      "seed": 0,
+      "page_count": 30,
+      "page_ids": [
+        "p01",
+        "p02",
+        "p03",
+        "p04",
+        "p05",
+        "p06",
+        "p07",
+        "p08",
+        "p09",
+        "p10",
+        "p11",
+        "p12",
+        "p13",
+        "p14",
+        "p15",
+        "p16",
+        "p17",
+        "p18",
+        "p19",
+        "p20",
+        "p21",
+        "p22",
+        "p23",
+        "p24",
+        "p25",
+        "p26",
+        "p27",
+        "p28",
+        "p29",
+        "p30"
+      ],
+      "revision_id": "a468d133f98246e6831592728371360a",
+      "original_revision": "a0694f2e90b24bc88f8fe2be05cd0a5f",
+      "style_deviation_pages": [
+        "p08",
+        "p19"
+      ],
+      "missing_original_pages": [
+        "p03",
+        "p14"
+      ],
+      "stale_ppt_preview_pages": [
+        "p11",
+        "p21"
+      ],
+      "source_dimensions": [
+        960,
+        540
+      ],
+      "candidate_count": 0,
+      "attempt_count": 0,
+      "model_calls": 0,
+      "actual_ppt_rendering": false,
+      "user_30_second_observation": "not measured"
+    },
+    "request_id": "req-4c97b10cb3104281a6b5d8b5d6a89346",
+    "model_calls": 0
+  },
+  "source_commit": "7036f8e962f33f78a90fcc5b5ea1f506e47d3010",
+  "source_assets": {
+    "icons.js": "95fd179d9231f9993a8a98140a3711145a486bf022fb3096deaad56113da8456",
+    "index.html": "49084f6532bb728bb2150b43c75a1ef0ee5f9e0ae0f31ebb4b5a78b91258c6ed",
+    "page-workbench.js": "b999a49228ad47bf02a64ebbc3876e6b8d648d0d18e3fc2d4edfc508042a51b8",
+    "summary-poll.js": "bb964fda5a47732749f819fe384d7a444bc56688a19c84a33d924c7f340b634b",
+    "candidate-desk.js": "3a4c6306c123d85339ff775c3ec1d28f21c4ae574972de8d72f0af0a5f9a5aa5",
+    "tokens.css": "da2e775a9430340cd6e2a0add92bdefcba8575fdd1fb2cc47d100b8b9c5783fc",
+    "business-operations.js": "fd2e826e920b1a39fdfaffb1ac15e399d517f7f2d32f94586625b6489d9b68b6",
+    "change-handoff.js": "d8e3ca27e119ef5a66f18a496f4e5d513c4cea24657d6177ee41dd4eba32077c",
+    "text-selection.js": "64b89188f34442944905671b2b512b07cc5627ae3add72ad0bea1aebddd06267",
+    "trial-actions.js": "01b4493444d21691cb18b36271ceb52c7d0fb80e7e2c3382d55af3ff6c513257",
+    "gallery.js": "1db3c656e54f87fb9404a269b9be8889bb6158024bdf6127c618aac39d85b89d",
+    "production-view.js": "7786bcf3381e35933330f3e78dd8e81b89bfb23e6da64b80e0e877cfbaa07d1b",
+    "annotations.js": "675f63c7d4a8b9c8fb06ee406845336ad12f0b6547ac5494b65a18e4946ba31f",
+    "launcher-ui.js": "1e5ea56315f693161ad4fedba9a8b38fa3ed20fd4cb61bd572a95a07214acbc4",
+    "text-diff.js": "cc52557c11ad1000989db7151cab5ed203d8b440d1b9c190a017291f12e1a632",
+    "routes.js": "4f5fef249700aa3756cf2c69ec0d31cb772d20b17505dd9f141d9a52f2954acc",
+    "run-recovery.js": "0601ae908e0cbc7f2b121671e8d11a2b5f4a3250455532688cab02ad12911262",
+    "project.js": "cd25cb13db487ca0199f72d9650ddd48e7903b4b1e8df683192412dc4eeaf36f",
+    "dom.js": "e39301e0b14cefe7b6b9fe9f51821c1e34e37925258be8093f2f7825747bb5a3",
+    "views.js": "dce9bc958600e23b68adfe14819a64246d6743c085986294d2f8923ecb8bfbd7",
+    "style.css": "3045ea07efcb5418235df114511acaec7f5a5e5f694fd21dd5da2afee1553570",
+    "request-view.js": "2e3a3675189af0e0c21a48b5ede649744b23ae91ea3e8f809865b3563e4a43d6",
+    "gallery-state.js": "bbe704c776e37bf6dfd216c4f2750e7dec447e9dd0c300556a4a0d1959aee308",
+    "api.js": "673ca9c7d89992e59cd0de81c9580e3e85e8729ed8b34cad9dcd38c4c346967f",
+    "app.js": "9c8f3ad2f39958148e79fb7cf08b225d07059656d7eff3f229bf02981fac79f6",
+    "images.js": "b8b67c32711de317268be890071aa159a84d768dc6af835463f965c9d9f0f2b7",
+    "workbench.css": "6c8a9c7a1efdab86b198d5e57babeda24a7ba2b3ddda72945550bf830480166f",
+    "drafts.js": "ecb2b4eea761bf4cc1df810eee60ba569bbd57a63f2d9782eed59fdb2081c138",
+    "run-desk.js": "fdd9e1e149957c1151f0cb00d755f03dd911b0dd5ae67a92959eb4790d3ffb8c"
+  },
+  "environment": {
+    "os": "macOS-27.0-arm64-arm-64bit",
+    "python": "3.12.12",
+    "browser": "149.0.7827.55",
+    "viewports": [
+      "1440x900",
+      "1280x800",
+      "1100x800"
+    ]
+  },
+  "real_host_proof": false,
+  "desktop_editing_verified": false,
+  "user_acceptance": "not measured",
+  "model_calls": 0
+}

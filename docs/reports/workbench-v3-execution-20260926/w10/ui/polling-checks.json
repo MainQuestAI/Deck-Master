@@ -1,0 +1,14 @@
+{
+  "checks": [
+    "page_hidden_pauses_current_summary_requests",
+    "page_visible_refreshes_immediately",
+    "runs_hidden_pauses_current_summary_requests",
+    "runs_visible_refreshes_immediately",
+    "focus_burst_keeps_one_summary_inflight",
+    "no_browser_errors"
+  ],
+  "visibility": "injected document.hidden flag with real DOM events",
+  "model_calls": 0,
+  "errors": [],
+  "peak": 1
+}

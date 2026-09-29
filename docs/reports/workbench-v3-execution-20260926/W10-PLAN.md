@@ -1,6 +1,6 @@
 # W10 完整运行台与恢复执行边界
 
-基线 `d42dda62c53bfeaf177c077f8e46074c8c23bdba`（W01 压力 PR #55 已合入），分支 `codex/workbench-w10-core`。先共享核心/CLI/schema 合入 main，再接前端。W07 真实 auto/trial 交错与第二页不变的缺口仍在 W08 前补齐，不由本卡代签。
+基线 `d42dda62c53bfeaf177c077f8e46074c8c23bdba`（W01 压力 PR #55 已合入），分支 `codex/workbench-w10-core`。先共享核心/CLI/schema 合入 main，再接前端。W07 真实 auto/trial 交错与第二页不变的缺口已在本卡验证期间补齐，见 W07-UI 的 2026-09-30 补证；用户验收仍单列。
 
 核心复用现有 Task、ChangeSet、Candidate、GenerationRequest/Attempt、operations 和 Store；新增分页读取和按任务详情投影，不新增调用账或执行器。保留旧 `/api/tasks` 与 CLI status 的既有字段；新分页和详情共享固定 revision、typed error、离线恢复入口。
 

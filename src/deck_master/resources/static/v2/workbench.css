@@ -114,3 +114,20 @@ textarea{font-size:14px;line-height:1.7}
 .candidate-state .stack { gap: 8px; }
 .candidate-state p { margin: 0; }
 .candidate-column > p { margin: 4px 0 10px; }
+
+/* The runtime lane can advance without replacing a fixed page comparison. */
+.runtime-sync-row:not([hidden]) { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 8px 0; }
+.run-task { border-bottom: 1px solid var(--line, #dfe4df); padding: 16px 0; }
+.run-task p, .runtime-sync { margin: 0; }
+.run-filters select { max-width: 320px; min-height: 44px; }
+.run-filters label { display: flex; align-items: center; gap: 8px; }
+.run-actions { font-weight: 600; }
+.run-detail:empty { display: none; }
+.run-detail { border-top: 1px solid var(--line, #dfe4df); padding-top: 16px; overflow-wrap: anywhere; }
+.run-evidence { max-height: 360px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+.run-pagination, .candidate-pagination { justify-content: space-between; }
+
+.run-rows:not([hidden]), .candidate-batch-rows { max-height: 480px; overflow: auto; overscroll-behavior: contain; }
+.change-list select { max-width: 100%; }
+.run-desk .run-task { padding: 12px; }
+.run-filters { align-items: center; }

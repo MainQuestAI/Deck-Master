@@ -1,6 +1,6 @@
 # W07 候选比较、阶段试作与集合采用前端
 
-前端 PR：[ #54](https://github.com/MainQuestAI/Deck-Master/pull/54)。核心先行 PR #53 已合入 `8de4317c9843347b8075c937e04af54e43d0cbb9`；前端从该 main 独立实施。前端初始提交为 `10164ffaeb1342d2597c560555aa269db7ca8f88`，回包身份修复后的源提交为 `ac3a88a5851501e2e83c5f4f0d3448bfe7aad75c`。此交付为工程切片，`accepted=false`，W07-AC07 仍有明确的真实并发验证缺口。
+前端 PR：[ #54](https://github.com/MainQuestAI/Deck-Master/pull/54)。核心先行 PR #53 已合入 `8de4317c9843347b8075c937e04af54e43d0cbb9`；前端从该 main 独立实施。前端初始提交为 `10164ffaeb1342d2597c560555aa269db7ca8f88`，回包身份修复后的源提交为 `ac3a88a5851501e2e83c5f4f0d3448bfe7aad75c`。此交付为工程切片，`accepted=false`，W07-AC07 的真实交错验证已在 W10 前端验证期间补齐，见下方补证；用户验收仍未代签。
 
 ## 当前行为
 
@@ -41,3 +41,13 @@ PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python examples/workbench/w07_candidate
 图像工具使用内置 imagegen；[成功冻结提示词](w07/real-host/original-request-input.json)、[原图比较](w07/real-host/original-real-comparison.png)、[SVG 比较](w07/real-host/svg-real-comparison.png)、[SVG 源文件](w07/real-host/svg-page.svg)、[SVG 预览](w07/real-host/svg_preview.png)、[PPT 预览](w07/real-host/ppt_preview.png)及 [SHA256](w07/real-host/sha256.json)已保留。
 
 **仍未完成：**这个真实 Host 项目只有一页，未证明真实 auto/trial 交错和第二页原图/SVG 不变；对应场景目前只有明确标记的核心/浏览器合成覆盖。W07-AC07 保持部分验证，进入 W08 前必须补齐。W01 的 300×5×3 压力、W10 运行台、W12 安装/离线等仍按各自卡片执行。本轮不切换默认入口、不执行实际 HOME 迁移、不发布。
+
+## 2026-09-30 真实交错补证
+
+使用原真实单页项目的隔离副本，通过 `inputs update` 与真实 compose Host 增加第二页合成内容。第二页原图实际调用原生 ImageGen 一次，保留第一页原图作固定参考；冻结输入与真实原生观察比较为 match。未重复调用已成功的第一次原图生成。新图采用了冻结设计中的蓝色，并重排了三项文本，未宣称参考图风格完全复刻或专业视觉通过。
+
+真实 Host 先领取第二页自动 reconstruct，再领取第一页 SVG trial；trial 先返回，页面当前稿保持不变。在浏览器固定候选比较打开时，第二页自动 SVG 经 CLI 返回。固定比较内容与版本保持不变。随后在浏览器明确预览并采用第一页候选，第二页完整 Page entry（含原图、SVG 和已有下游引用）逐字段相同；第一页的 Page/原图保留，SVG 更新且下游预览失效。
+
+[交错检查与前后引用](w07/real-host-interleaving/interleaving-checks.json)、[原生绑定](w07/real-host-interleaving/image-checks.json)、[比较前](w07/real-host-interleaving/comparison-before.png)、[采用后](w07/real-host-interleaving/comparison-after.png)、[文件 SHA](w07/real-host-interleaving/manifest.json)。本轮实际 Host 的执行身份和接手时间同时用于 W10；另一个真实 SVG 任务明确取消后提交晚到结果，CLI 返回 5，页面/候选/输出均未改变，[检查](w07/real-host-interleaving/late-result-checks.json)。
+
+这是当前 Host 和实际浏览器机制补证，业务文案仍为合成演示；不代表客户验收、独立专业审阅或发布。
