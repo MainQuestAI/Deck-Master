@@ -789,6 +789,8 @@ def _accept_content_update(store: Store, *, document: dict, task: dict, envelope
     if not task_inputs_current(store, document, task):
         raise StaleInputContext('(content_update)', 'document changed since dispatch; run continue')
     _validate_content_update_request(envelope, document, task, content_update)
+    from .content_ops import validate_host_result, bind_derivation
+    validate_host_result(store, document, task, content_update, envelope.get('content_plan'))
     violation = page_limit_violation({**document, 'pages': content_update['page_order']})
     if violation:
         raise EnvelopeError('(result)/content_update/page_order', violation)
@@ -841,6 +843,7 @@ def _accept_content_update(store: Store, *, document: dict, task: dict, envelope
     from .content_plan import bind_result, attach
     plan_ref = bind_result(store, document, task, envelope.get("content_plan"), new_pages)
     attach(new_document, plan_ref)
+    bind_derivation(store, document, new_document, task, page_refs)
     result_refs = list(page_refs.values()) + ([plan_ref] if plan_ref else [])
     updated_task["result_refs"] = result_refs
     validate_task_semantics(updated_task)

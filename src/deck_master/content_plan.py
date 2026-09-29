@@ -52,6 +52,22 @@ def bind_result(store, document, task, value, pages):
         return None
     if task.get("kind") != "compose" or document.get("compatibility", {}).get("project_format") != "workbench.v3":
         _fail("input", "only compose in an explicit workbench.v3 project can adopt a plan")
+    previous_ref, previous = validate_input(store, document, value, pages)
+    goals = value["goals"]
+    goals_by_page = {g["page_id"]: g for g in goals}
+    record = {"schema_version": "content_plan.v1", "plan_id": previous["plan_id"] if previous else "plan-" + uuid.uuid4().hex,
+              "version": previous["version"] + 1 if previous else 1, "project_id": document["project_id"],
+              "task_id": task["task_id"], "origin": "user_imported" if task.get("intent") == "import_draft" else "host_composed",
+              "basis": {"revision_id": task["dispatch_revision"], "input_digest": task["input_digest"],
+                        "produced_against": task["produced_against"]}, "previous_ref": previous_ref,
+              "input": copy.deepcopy(value),
+              "page_links": [{"goal_id": goals_by_page[p["page_id"]]["goal_id"], "page_id": p["page_id"], "page_ref": p["page"]} for p in pages]}
+    validate_schema("content_plan", record)
+    return store.put_json_object(record)
+
+
+def validate_input(store, document, value, pages):
+    """Validate editorial structure independently from how the edit was made."""
     validate_schema("content_plan_input", value)
     goals, chapters = value["goals"], value["chapters"]
     _unique([g["goal_id"] for g in goals], "goals")
@@ -87,16 +103,7 @@ def bind_result(store, document, task, value, pages):
         old_goals = {g["page_id"]: g["goal_id"] for g in previous["input"]["goals"]}
         if any(g["page_id"] in old_goals and old_goals[g["page_id"]] != g["goal_id"] for g in goals):
             _fail("goals/goal_id", "preserve the goal identity of retained pages")
-    goals_by_page = {g["page_id"]: g for g in goals}
-    record = {"schema_version": "content_plan.v1", "plan_id": previous["plan_id"] if previous else "plan-" + uuid.uuid4().hex,
-              "version": previous["version"] + 1 if previous else 1, "project_id": document["project_id"],
-              "task_id": task["task_id"], "origin": "user_imported" if task.get("intent") == "import_draft" else "host_composed",
-              "basis": {"revision_id": task["dispatch_revision"], "input_digest": task["input_digest"],
-                        "produced_against": task["produced_against"]}, "previous_ref": previous_ref,
-              "input": copy.deepcopy(value),
-              "page_links": [{"goal_id": goals_by_page[p["page_id"]]["goal_id"], "page_id": p["page_id"], "page_ref": p["page"]} for p in pages]}
-    validate_schema("content_plan", record)
-    return store.put_json_object(record)
+    return previous_ref, previous
 
 
 def attach(document, ref):

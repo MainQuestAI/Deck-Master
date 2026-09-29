@@ -62,6 +62,8 @@ create --draft / import draft / compose 结果**第一次形成至少一页后�
 
 确实缺少必须由用户裁决的信息时，在对话中问一个具体问题，说明已知条件以及它为什么影响任务。已有决定不重复问。用户答复后，用 `inputs update` 写入 `existing_decisions`（完整集合）再继续，不要用「已批准」之类的话填空。
 
+新版工作台的 `content_ops.v1` 支持正文/大纲事务与明确选页的改写、合并、拆分；先读取 [input-update 方法](references/input-update.md) 的内容操作段，使用工作单要求的 `content_operations` 能力。新页来源由核心记录，旧意见不自动迁移。
+
 ## 连续制作与返修
 
 `task accept` 后继续执行 `continue`，直至 `ready_for_export`、用户停止或具体输入/工具缺口。

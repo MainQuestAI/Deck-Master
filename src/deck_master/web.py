@@ -145,9 +145,9 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             elif self.path == '/api/gallery':
                 from .gallery_state import save
                 result = save(self.store.project_root, **data)
-            elif self.path in ('/api/annotations/batch', '/api/changes/plan', '/api/changes/commit', '/api/candidates/plan', '/api/candidates/adopt', '/api/stages/assemble', '/api/styles/propose', '/api/styles/confirm', '/api/styles/plan'):
-                from . import annotation_service, changes, candidates, stages, styles
-                action = {'/api/annotations/batch': annotation_service.save,
+            elif self.path in ('/api/annotations/batch', '/api/changes/plan', '/api/changes/commit', '/api/candidates/plan', '/api/candidates/adopt', '/api/stages/assemble', '/api/styles/propose', '/api/styles/confirm', '/api/styles/plan', '/api/content/plan', '/api/content/commit', '/api/content/inputs'):
+                from . import annotation_service, changes, candidates, stages, styles, content_ops
+                action = {'/api/content/plan': content_ops.plan, '/api/content/commit': content_ops.commit, '/api/content/inputs': content_ops.inputs, '/api/annotations/batch': annotation_service.save,
                           '/api/changes/plan': changes.plan, '/api/changes/commit': changes.commit,
                           '/api/candidates/plan': candidates.plan, '/api/candidates/adopt': candidates.adopt,
                           '/api/stages/assemble': stages.assemble,
@@ -181,7 +181,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             else:self._send_json({'error':'not found'},404);return
             self._send_json(result)
         except Exception as exc:
-            if self.path.startswith(('/api/drafts/', '/api/ui-state', '/api/gallery', '/api/text-ranges/', '/api/annotations/', '/api/changes/', '/api/candidates/', '/api/stages/', '/api/styles/')):
+            if self.path.startswith(('/api/drafts/', '/api/ui-state', '/api/gallery', '/api/text-ranges/', '/api/annotations/', '/api/changes/', '/api/candidates/', '/api/stages/', '/api/styles/', '/api/content/')):
                 self._send_error(exc)
                 return
             from .store import ConflictError
@@ -206,6 +206,20 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         if parsed.path.startswith('/v2/') or parsed.path == '/v2':
             self._serve_v2(parsed.path)
+            return
+        if parsed.path.startswith('/api/content/sources/') or parsed.path.startswith('/api/content/lineage/'):
+            try:
+                from . import content_ops, operations
+                is_source = parsed.path.startswith('/api/content/sources/')
+                query = parse_qs(parsed.query, keep_blank_values=True)
+                allowed = {'revision', 'locator', 'extract_sha256'} if is_source else {'revision'}
+                if set(query) - allowed or any(len(v) != 1 or not v[0] for v in query.values()):
+                    raise operations.OperationError('invalid_input', 'query', 'use one nonempty value per supported source query field')
+                fields = {key: value[0] for key, value in query.items()}
+                result = content_ops.source(self.store.project_root, source_id=parsed.path.removeprefix('/api/content/sources/'), **fields) if is_source else content_ops.lineage(self.store.project_root, page_id=parsed.path.removeprefix('/api/content/lineage/'), **fields)
+                self._send_json(result)
+            except Exception as exc:
+                self._send_error(exc)
             return
         if parsed.path == '/api/styles' or parsed.path.startswith('/api/styles/'):
             try:
@@ -327,7 +341,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             self._send_json({"status": "ok", **self.runtime_state,
                              "project_identity": _project_identity(self.store.project_root),
                              "ui_available": (self.static_dir / 'v2' / 'index.html').is_file(),
-                             "ui_capabilities": ["ui_draft.v1", "ui_gallery.v1", "thumbnails.v1", "fixed_snapshot.v1", "text_range.v1", "page_detail.v1", "annotations.v1", "changes.v1", "operations.v1", "candidates.v1", "stages.v1", "run_desk.v1", "style_recipes.v1"]})
+                             "ui_capabilities": ["ui_draft.v1", "ui_gallery.v1", "thumbnails.v1", "fixed_snapshot.v1", "text_range.v1", "page_detail.v1", "annotations.v1", "changes.v1", "operations.v1", "candidates.v1", "stages.v1", "run_desk.v1", "style_recipes.v1", "content_ops.v1"]})
             return
         if parsed.path == "/api/file":
             query = parse_qs(parsed.query)

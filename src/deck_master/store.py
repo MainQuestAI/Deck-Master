@@ -192,7 +192,7 @@ class Store:
             raise StoreError("current.json", f"unreadable pointer: {exc}") from exc
         if pointer.get("format") not in (CURRENT_FORMAT, WORKBENCH_FORMAT):
             raise StoreError("current.json", f"unknown pointer format {pointer.get('format')!r}")
-        if pointer.get("format") == WORKBENCH_FORMAT and pointer.get("minimum_writer") not in ("generation.v1", "content-plan.v1", "changes.v1", "candidates.v1", "run-desk.v1", "style-recipes.v1"):
+        if pointer.get("format") == WORKBENCH_FORMAT and pointer.get("minimum_writer") not in ("generation.v1", "content-plan.v1", "changes.v1", "candidates.v1", "run-desk.v1", "style-recipes.v1", "content-ops.v1"):
             raise StoreError("current.json", "unsupported minimum writer; use the matching core")
         return pointer
 

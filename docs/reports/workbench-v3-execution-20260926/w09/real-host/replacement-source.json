@@ -1,0 +1,56 @@
+{
+  "project_id": "project",
+  "revision_id": "a5904f7e47864378ac22f1936248ff49",
+  "source_id": "src-6e364d78",
+  "name": "material-v2.md",
+  "usage_note": "新版本替代原只读范围，正式提交责任边界不变。",
+  "source_version": {
+    "original_sha256": "666edfee498f549eed058c25eb5b2e4d1552a68e8736b4625a9426f442f4a1c8",
+    "extract": {
+      "path": ".deckmaster/objects/52/528d4bff646b90e75de1ba145c805d8d257d62a6f4f8b2e50adfc57b83da09c0.json",
+      "sha256": "528d4bff646b90e75de1ba145c805d8d257d62a6f4f8b2e50adfc57b83da09c0"
+    }
+  },
+  "extraction_status": "read",
+  "reading_claim": "extraction_only_not_host_impact_judgment",
+  "location": "material_only",
+  "requested_locator": null,
+  "matches": [],
+  "text": "合成验证材料，不是客户事实。\n本次试点范围增加保存草稿能力，原只读限制被这份新说明替代。\n草稿供员工核对信息后手动正式提交，保存草稿不等于正式提交。\n系统不得自动正式提交，也不得自动关闭工单。\n试点尚无实测效率数据，不承诺效率提升比例。\n后续需验证权限校验、提交留痕和人工确认是否完整。\n",
+  "locators": [
+    {
+      "kind": "line",
+      "locator": "L1",
+      "text": "合成验证材料，不是客户事实。"
+    },
+    {
+      "kind": "line",
+      "locator": "L2",
+      "text": "本次试点范围增加保存草稿能力，原只读限制被这份新说明替代。"
+    },
+    {
+      "kind": "line",
+      "locator": "L3",
+      "text": "草稿供员工核对信息后手动正式提交，保存草稿不等于正式提交。"
+    },
+    {
+      "kind": "line",
+      "locator": "L4",
+      "text": "系统不得自动正式提交，也不得自动关闭工单。"
+    },
+    {
+      "kind": "line",
+      "locator": "L5",
+      "text": "试点尚无实测效率数据，不承诺效率提升比例。"
+    },
+    {
+      "kind": "line",
+      "locator": "L6",
+      "text": "后续需验证权限校验、提交留痕和人工确认是否完整。"
+    }
+  ],
+  "original_file": {
+    "path": ".deckmaster/objects/66/666edfee498f549eed058c25eb5b2e4d1552a68e8736b4625a9426f442f4a1c8.md",
+    "sha256": "666edfee498f549eed058c25eb5b2e4d1552a68e8736b4625a9426f442f4a1c8"
+  }
+}

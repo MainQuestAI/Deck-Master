@@ -20,13 +20,21 @@
       "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
     },
     "task_id": {
-      "type": "string",
-      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "origin": {
       "enum": [
         "host_composed",
-        "user_imported"
+        "user_imported",
+        "user_edited"
       ]
     },
     "basis": {
@@ -281,6 +289,10 @@
         ]
       },
       "minItems": 1
+    },
+    "operation_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
     }
   },
   "required": [

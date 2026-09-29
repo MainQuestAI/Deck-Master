@@ -1,0 +1,13 @@
+{
+  "status": "running",
+  "project_id": "project",
+  "revision_id": "b5b6268c9fe84eada137a7052eac0831",
+  "requested_action": "task update",
+  "result_refs": [],
+  "findings": [],
+  "next_action": null,
+  "input_alignment": "needs_reconciliation",
+  "review_url": null,
+  "view_status": "view_arrives_with_workbench",
+  "evidence_level": "engineering"
+}

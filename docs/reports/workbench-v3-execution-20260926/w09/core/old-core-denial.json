@@ -1,0 +1,6 @@
+{
+  "baseline": "590e408c36409d435c81291ffea17686419e6fdf",
+  "exit_code": 4,
+  "stdout": "",
+  "stderr": "{\n \"error\": {\n  \"code\": \"execution_failed\",\n  \"message\": \"current.json: unsupported minimum writer; use the matching core\",\n  \"field\": null,\n  \"next_action\": \"inspect the failure detail\"\n }\n}\n"
+}

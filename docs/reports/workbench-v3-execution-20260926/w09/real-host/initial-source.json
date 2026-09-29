@@ -1,0 +1,56 @@
+{
+  "project_id": "project",
+  "revision_id": "2cf2e3e6de7b472287c624dcafd1aae3",
+  "source_id": "src-6e364d78",
+  "name": "material-v1.md",
+  "usage_note": "",
+  "source_version": {
+    "original_sha256": "7ea9ee067b91a0f7964f2ed84be2e4ead38da1e09e388af0b0a58d2335e09d92",
+    "extract": {
+      "path": ".deckmaster/objects/37/376f7ae72fc4d20d726dccd6bce261cd80691a6d8e251f348e4543ef99a3436c.json",
+      "sha256": "376f7ae72fc4d20d726dccd6bce261cd80691a6d8e251f348e4543ef99a3436c"
+    }
+  },
+  "extraction_status": "read",
+  "reading_claim": "extraction_only_not_host_impact_judgment",
+  "location": "material_only",
+  "requested_locator": null,
+  "matches": [],
+  "text": "合成验证材料，不是客户事实。\n当前试点仅支持只读查询，不支持保存草稿。\n业务经办查询后核对信息，由员工手动正式提交。\n系统不得自动正式提交，也不得自动关闭工单。\n试点尚无实测效率数据，不承诺效率提升比例。\n后续需验证权限校验、提交留痕和人工确认是否完整。\n",
+  "locators": [
+    {
+      "kind": "line",
+      "locator": "L1",
+      "text": "合成验证材料，不是客户事实。"
+    },
+    {
+      "kind": "line",
+      "locator": "L2",
+      "text": "当前试点仅支持只读查询，不支持保存草稿。"
+    },
+    {
+      "kind": "line",
+      "locator": "L3",
+      "text": "业务经办查询后核对信息，由员工手动正式提交。"
+    },
+    {
+      "kind": "line",
+      "locator": "L4",
+      "text": "系统不得自动正式提交，也不得自动关闭工单。"
+    },
+    {
+      "kind": "line",
+      "locator": "L5",
+      "text": "试点尚无实测效率数据，不承诺效率提升比例。"
+    },
+    {
+      "kind": "line",
+      "locator": "L6",
+      "text": "后续需验证权限校验、提交留痕和人工确认是否完整。"
+    }
+  ],
+  "original_file": {
+    "path": ".deckmaster/objects/7e/7ea9ee067b91a0f7964f2ed84be2e4ead38da1e09e388af0b0a58d2335e09d92.md",
+    "sha256": "7ea9ee067b91a0f7964f2ed84be2e4ead38da1e09e388af0b0a58d2335e09d92"
+  }
+}

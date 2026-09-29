@@ -1,0 +1,14 @@
+{
+  "synthetic": true,
+  "actual_model_calls": 0,
+  "checks": [
+    "public_cli_source_locator",
+    "recoverable_inputs_transaction",
+    "only_changed_page_upserted",
+    "unselected_page_entries_unchanged",
+    "decisions_retained",
+    "reorder_preserves_page_entries",
+    "remove_keeps_immutable_history"
+  ],
+  "real_host_impact_judgment": "not_measured_in_this_synthetic_script"
+}

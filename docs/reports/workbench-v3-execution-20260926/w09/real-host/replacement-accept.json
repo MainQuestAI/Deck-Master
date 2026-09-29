@@ -1,0 +1,50 @@
+{
+  "status": "accepted",
+  "project_id": "project",
+  "revision_id": "f8cae2ce7740443d916649ddf4e6d376",
+  "requested_action": "task accept",
+  "result_refs": [
+    {
+      "path": ".deckmaster/objects/53/53941edf39aeef5715f76613e23621c34518c8b6c89fd0d0528caa03b3adbd17.json",
+      "sha256": "53941edf39aeef5715f76613e23621c34518c8b6c89fd0d0528caa03b3adbd17"
+    },
+    {
+      "path": ".deckmaster/objects/d4/d46937c39a14889bc111505f6ccfbb12b7e21175af5c1455584fc00c218ca76a.json",
+      "sha256": "d46937c39a14889bc111505f6ccfbb12b7e21175af5c1455584fc00c218ca76a"
+    }
+  ],
+  "findings": [],
+  "next_action": "continue_production",
+  "input_alignment": "current",
+  "review_url": null,
+  "view_status": "view_arrives_with_workbench",
+  "evidence_level": "engineering",
+  "current_revision_id": "f8cae2ce7740443d916649ddf4e6d376",
+  "new_page_hashes": {
+    "capability": "53941edf39aeef5715f76613e23621c34518c8b6c89fd0d0528caa03b3adbd17"
+  },
+  "unchanged_reason": null,
+  "impact_summary": "新材料 L2 明确替代旧只读限制，L3 区分草稿与正式提交；受众由经办改为部门管理者，用途变为确认范围及验证前提，因此仅 capability 页改为范围与责任表述，并引用 L6 的待验证条件。responsibility 页不改：新 L3/L4 仍支持员工手动正式提交、禁止自动提交和关闭工单。verification 页不改：新 L5/L6 的无效率实测和待验证条件与旧版相同。逐一复核后将三个目标的来源绑定到新材料版本，保留既定决定，无依据支持整套重制。",
+  "work_complete": true,
+  "operation_result": {
+    "status": "accepted",
+    "revision_id": "f8cae2ce7740443d916649ddf4e6d376",
+    "new_page_hashes": {
+      "capability": "53941edf39aeef5715f76613e23621c34518c8b6c89fd0d0528caa03b3adbd17"
+    },
+    "unchanged_reason": null,
+    "impact_summary": "新材料 L2 明确替代旧只读限制，L3 区分草稿与正式提交；受众由经办改为部门管理者，用途变为确认范围及验证前提，因此仅 capability 页改为范围与责任表述，并引用 L6 的待验证条件。responsibility 页不改：新 L3/L4 仍支持员工手动正式提交、禁止自动提交和关闭工单。verification 页不改：新 L5/L6 的无效率实测和待验证条件与旧版相同。逐一复核后将三个目标的来源绑定到新材料版本，保留既定决定，无依据支持整套重制。",
+    "result_refs": [
+      {
+        "path": ".deckmaster/objects/53/53941edf39aeef5715f76613e23621c34518c8b6c89fd0d0528caa03b3adbd17.json",
+        "sha256": "53941edf39aeef5715f76613e23621c34518c8b6c89fd0d0528caa03b3adbd17"
+      },
+      {
+        "path": ".deckmaster/objects/d4/d46937c39a14889bc111505f6ccfbb12b7e21175af5c1455584fc00c218ca76a.json",
+        "sha256": "d46937c39a14889bc111505f6ccfbb12b7e21175af5c1455584fc00c218ca76a"
+      }
+    ],
+    "work_complete": true,
+    "next_action": "continue_production"
+  }
+}

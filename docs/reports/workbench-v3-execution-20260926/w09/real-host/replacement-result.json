@@ -1,0 +1,169 @@
+{
+  "kind": "compose",
+  "content_update": {
+    "input_digest": "548136918238292d37875d3f43590dce6ee84b53623722eca02b6ea36d3745df",
+    "upsert_pages": [
+      {
+        "schema_version": "deck_page_package.v2",
+        "page_id": "capability",
+        "customer_visible": {
+          "title": "新增草稿能力的决策边界",
+          "subtitle": "合成验证样例",
+          "body_blocks": [
+            {
+              "id": "body",
+              "type": "paragraph",
+              "text": "本次试点范围允许保存草稿。保存草稿不等于正式提交，仍由员工核对后手动正式提交。权限校验、提交留痕和人工确认仍需验证。"
+            }
+          ]
+        },
+        "visual_spec": {
+          "intent": "Explain the stated responsibility and capability boundaries without measured outcome claims.",
+          "reference_mode": "new_design"
+        },
+        "citations": [
+          {
+            "id": "capability-L2",
+            "source_id": "src-6e364d78",
+            "locator": "L2",
+            "supports": "新增草稿能力的决策边界",
+            "claim_kind": "reported_fact"
+          },
+          {
+            "id": "capability-L3",
+            "source_id": "src-6e364d78",
+            "locator": "L3",
+            "supports": "新增草稿能力的决策边界",
+            "claim_kind": "reported_fact"
+          },
+          {
+            "id": "capability-L6",
+            "source_id": "src-6e364d78",
+            "locator": "L6",
+            "supports": "新增草稿能力的决策边界",
+            "claim_kind": "reported_fact"
+          }
+        ]
+      }
+    ],
+    "remove_page_ids": [],
+    "page_order": [
+      "responsibility",
+      "capability",
+      "verification"
+    ],
+    "impact_summary": "新材料 L2 明确替代旧只读限制，L3 区分草稿与正式提交；受众由经办改为部门管理者，用途变为确认范围及验证前提，因此仅 capability 页改为范围与责任表述，并引用 L6 的待验证条件。responsibility 页不改：新 L3/L4 仍支持员工手动正式提交、禁止自动提交和关闭工单。verification 页不改：新 L5/L6 的无效率实测和待验证条件与旧版相同。逐一复核后将三个目标的来源绑定到新材料版本，保留既定决定，无依据支持整套重制。"
+  },
+  "content_plan": {
+    "schema_version": "content_plan_input.v1",
+    "input_summary": "新说明将试点范围扩为可保存草稿；面向部门管理者说明范围及验证前提。正式提交仍由员工完成，自动提交或关闭工单被禁止，效率效果仍无实测依据。",
+    "chapters": [
+      {
+        "chapter_id": "pilot",
+        "title": "试点范围、责任与验证",
+        "goal_ids": [
+          "goal-responsibility",
+          "goal-capability",
+          "goal-verification"
+        ]
+      }
+    ],
+    "goals": [
+      {
+        "goal_id": "goal-responsibility",
+        "page_id": "responsibility",
+        "purpose": "明确人工与系统的正式动作边界",
+        "source_links": [
+          {
+            "source_id": "src-6e364d78",
+            "source_version": {
+              "original_sha256": "666edfee498f549eed058c25eb5b2e4d1552a68e8736b4625a9426f442f4a1c8",
+              "extract": {
+                "path": ".deckmaster/objects/52/528d4bff646b90e75de1ba145c805d8d257d62a6f4f8b2e50adfc57b83da09c0.json",
+                "sha256": "528d4bff646b90e75de1ba145c805d8d257d62a6f4f8b2e50adfc57b83da09c0"
+              }
+            },
+            "locator": "L4"
+          }
+        ],
+        "unresolved_facts": []
+      },
+      {
+        "goal_id": "goal-capability",
+        "page_id": "capability",
+        "purpose": "让部门管理者明确新增草稿能力的范围、正式提交责任与验证前提",
+        "source_links": [
+          {
+            "source_id": "src-6e364d78",
+            "source_version": {
+              "original_sha256": "666edfee498f549eed058c25eb5b2e4d1552a68e8736b4625a9426f442f4a1c8",
+              "extract": {
+                "path": ".deckmaster/objects/52/528d4bff646b90e75de1ba145c805d8d257d62a6f4f8b2e50adfc57b83da09c0.json",
+                "sha256": "528d4bff646b90e75de1ba145c805d8d257d62a6f4f8b2e50adfc57b83da09c0"
+              }
+            },
+            "locator": "L2"
+          },
+          {
+            "source_id": "src-6e364d78",
+            "source_version": {
+              "original_sha256": "666edfee498f549eed058c25eb5b2e4d1552a68e8736b4625a9426f442f4a1c8",
+              "extract": {
+                "path": ".deckmaster/objects/52/528d4bff646b90e75de1ba145c805d8d257d62a6f4f8b2e50adfc57b83da09c0.json",
+                "sha256": "528d4bff646b90e75de1ba145c805d8d257d62a6f4f8b2e50adfc57b83da09c0"
+              }
+            },
+            "locator": "L3"
+          },
+          {
+            "source_id": "src-6e364d78",
+            "source_version": {
+              "original_sha256": "666edfee498f549eed058c25eb5b2e4d1552a68e8736b4625a9426f442f4a1c8",
+              "extract": {
+                "path": ".deckmaster/objects/52/528d4bff646b90e75de1ba145c805d8d257d62a6f4f8b2e50adfc57b83da09c0.json",
+                "sha256": "528d4bff646b90e75de1ba145c805d8d257d62a6f4f8b2e50adfc57b83da09c0"
+              }
+            },
+            "locator": "L6"
+          }
+        ],
+        "unresolved_facts": []
+      },
+      {
+        "goal_id": "goal-verification",
+        "page_id": "verification",
+        "purpose": "区分待验证条件与尚无依据的效果承诺",
+        "source_links": [
+          {
+            "source_id": "src-6e364d78",
+            "source_version": {
+              "original_sha256": "666edfee498f549eed058c25eb5b2e4d1552a68e8736b4625a9426f442f4a1c8",
+              "extract": {
+                "path": ".deckmaster/objects/52/528d4bff646b90e75de1ba145c805d8d257d62a6f4f8b2e50adfc57b83da09c0.json",
+                "sha256": "528d4bff646b90e75de1ba145c805d8d257d62a6f4f8b2e50adfc57b83da09c0"
+              }
+            },
+            "locator": "L5"
+          },
+          {
+            "source_id": "src-6e364d78",
+            "source_version": {
+              "original_sha256": "666edfee498f549eed058c25eb5b2e4d1552a68e8736b4625a9426f442f4a1c8",
+              "extract": {
+                "path": ".deckmaster/objects/52/528d4bff646b90e75de1ba145c805d8d257d62a6f4f8b2e50adfc57b83da09c0.json",
+                "sha256": "528d4bff646b90e75de1ba145c805d8d257d62a6f4f8b2e50adfc57b83da09c0"
+              }
+            },
+            "locator": "L6"
+          }
+        ],
+        "unresolved_facts": [
+          "尚无效率实测与联调验证结果。"
+        ]
+      }
+    ],
+    "unresolved_facts": [
+      "未提供效率实测或权限联调结果。"
+    ]
+  }
+}

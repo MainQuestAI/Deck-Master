@@ -1,7 +1,7 @@
 {
   "baseline": "d1c7c4600cb0fc781070116ed8cc8a1ff6b8b7ca",
-  "branch": "codex/workbench-w08-ui",
-  "active_package": "W08",
+  "branch": "codex/workbench-w09-core",
+  "active_package": "W09",
   "sequence": [
     "W01.core",
     "W02",
@@ -157,13 +157,12 @@
       "real_interleaving_evidence": "w07/real-host-interleaving/interleaving-checks.json"
     },
     "W08": {
-      "status": "frontend_verified_pending_pr",
+      "status": "slices_merged",
       "accepted": false,
       "baseline": "c17ba512db3efb4196b0e88dcab2d604eb23b053",
       "plan": "W08-PLAN.md",
       "core_evidence": "W08-CORE.md",
       "remaining": [
-        "Frontend PR CI and merge",
         "Recorded unselected visual composition drift; no visual fidelity guarantee",
         "User acceptance"
       ],
@@ -173,11 +172,16 @@
       "core_head": "5a164c71e475d1172291f0cf157c649d371d5b3c",
       "frontend_evidence": "W08-UI.md",
       "frontend_implementation_commit": "fd05f563e692d49120e0fd3cefa4fc2e358e722f",
-      "frontend_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/59"
+      "frontend_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/59",
+      "frontend_head": "cbd2b469ec14a4af3d0067359a5b723b163f4ebf",
+      "frontend_merge_commit": "590e408c36409d435c81291ffea17686419e6fdf"
     },
     "W09": {
-      "status": "planned",
-      "accepted": false
+      "status": "core_verified_pending_merge",
+      "accepted": false,
+      "baseline": "590e408c36409d435c81291ffea17686419e6fdf",
+      "plan": "W09-PLAN.md",
+      "core_evidence": "W09-CORE.md"
     },
     "W10": {
       "status": "slices_merged",
@@ -832,38 +836,66 @@
     },
     "W09-AC01": {
       "owner": "W09",
-      "status": "open",
-      "evidence": []
+      "status": "partial",
+      "evidence": [
+        "W09-CORE.md",
+        "w09/real-host/ref-matrix.json"
+      ],
+      "accepted": false
     },
     "W09-AC02": {
       "owner": "W09",
-      "status": "open",
-      "evidence": []
+      "status": "partial",
+      "evidence": [
+        "W09-CORE.md",
+        "w09/real-host/ref-matrix.json"
+      ],
+      "accepted": false
     },
     "W09-AC03": {
       "owner": "W09",
-      "status": "open",
-      "evidence": []
+      "status": "partial",
+      "evidence": [
+        "W09-CORE.md",
+        "w09/real-host/ref-matrix.json"
+      ],
+      "accepted": false
     },
     "W09-AC04": {
       "owner": "W09",
-      "status": "open",
-      "evidence": []
+      "status": "partial",
+      "evidence": [
+        "W09-CORE.md",
+        "w09/real-host/ref-matrix.json"
+      ],
+      "accepted": false
     },
     "W09-AC05": {
       "owner": "W09",
-      "status": "open",
-      "evidence": []
+      "status": "partial",
+      "evidence": [
+        "W09-CORE.md",
+        "w09/real-host/ref-matrix.json"
+      ],
+      "accepted": false
     },
     "W09-AC06": {
       "owner": "W09",
-      "status": "open",
-      "evidence": []
+      "status": "partial",
+      "evidence": [
+        "W09-CORE.md",
+        "w09/real-host/ref-matrix.json"
+      ],
+      "accepted": false
     },
     "W09-AC07": {
       "owner": "W09",
-      "status": "open",
-      "evidence": []
+      "status": "partial",
+      "evidence": [
+        "W09-CORE.md",
+        "w09/real-host/ref-matrix.json"
+      ],
+      "accepted": false
     },
     "W10-AC01": {
       "owner": "W10",

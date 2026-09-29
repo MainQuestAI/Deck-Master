@@ -1,0 +1,34 @@
+{
+  "status": "committed",
+  "operation_id": "9517f07a-9a8d-4b0a-abbd-523431bc7358",
+  "committed_revision_id": "a5904f7e47864378ac22f1936248ff49",
+  "current_revision_id": "a5904f7e47864378ac22f1936248ff49",
+  "request_digest": "f8798d9c7cfa45afa4a4ced27fe114c450b2e4cb928e42cfbee3fe108cd5edd1",
+  "result_ref": {
+    "path": ".deckmaster/objects/6c/6cb10175434b2e01677a367382c34a65377d7aa0d5702aca9cb97b96a5558727.json",
+    "sha256": "6cb10175434b2e01677a367382c34a65377d7aa0d5702aca9cb97b96a5558727"
+  },
+  "operation_result": {
+    "status": "updated",
+    "input_digest": "548136918238292d37875d3f43590dce6ee84b53623722eca02b6ea36d3745df",
+    "input_alignment": "needs_reconciliation",
+    "revision_id": "a5904f7e47864378ac22f1936248ff49",
+    "superseded_tasks": [],
+    "diff": {
+      "task_fields_changed": [
+        "audience",
+        "brief",
+        "existing_decisions"
+      ],
+      "sources_added": [],
+      "sources_replaced": [
+        "src-6e364d78"
+      ],
+      "sources_removed": [],
+      "sources_metadata": [],
+      "noops": []
+    },
+    "reason": "替换只读范围说明，新增草稿保存；汇报对象改为部门管理者，用于确认试点范围及验证前提。",
+    "next_action": "submit_host_results"
+  }
+}

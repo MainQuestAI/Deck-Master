@@ -1,0 +1,17 @@
+{
+  "core/checks.json": "c7185d0e09a5b7d0c075d9b49952c5185aa363955ddab0f5fadee1fce4d00de4",
+  "core/pytest.txt": "052a00ee70287947965c03d34c144413679ed10bdd6d921122fef9b32052332b",
+  "core/old-core-denial.json": "0adfe063ebe06bd1fb003e95c1bf21f330f8ccf83158aa1d862ac0438b791959",
+  "real-host/replacement-accept.json": "4b5f8269d78d9258905abb6f2ef78a374eef561eb6956374c3776be4b6f9a0b5",
+  "real-host/initial-result.json": "d2ff0524af9b52c9f343532a0eca1d210208c4d054a83190ef993e5c7b73f27c",
+  "real-host/initial-source.json": "5b4e6e7b272a0faa9cd351004a2bef1445853da63d3171a4966880a36469ca41",
+  "real-host/ref-matrix.json": "4871abe839425ed72a2d0179979e627bde28ffabdf2f4d298e97c97f9ee8006a",
+  "real-host/material-v1.md": "7ea9ee067b91a0f7964f2ed84be2e4ead38da1e09e388af0b0a58d2335e09d92",
+  "real-host/initial-accept.json": "f15e3cc359fb7e05ff198436a62f18076aa557c8dda1bff49bc04d97fbb1e169",
+  "real-host/replacement.json": "a2f86dae0de5392da0aba47a4f29aa09ba4daa5aa0cc396d9822541033209ab5",
+  "real-host/material-v2.md": "666edfee498f549eed058c25eb5b2e4d1552a68e8736b4625a9426f442f4a1c8",
+  "real-host/host-provenance.json": "d6c5dddb60686bffafc9ea28ced69aba3c66a4456beb22ccb4af0aeed6c3ddb6",
+  "real-host/replacement-source.json": "bba2a65c84ee0be6445b35416b134d394685195cc3587b3821fb39aacd3bc272",
+  "real-host/replacement-result.json": "38fb5d6858cd82bb77780c4b7ebada461d7c3432629463344ead9ca2ddac2de9",
+  "real-host/replacement-start.json": "c8b79507bac9f9290bd3cfc9a8fa079e19c3b88499f23a9088233b9d39fd1d2b"
+}

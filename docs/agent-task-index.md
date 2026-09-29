@@ -77,3 +77,7 @@ one managed `deck-master` Skill under `$CODEX_HOME/skills` (default
 not modify config.toml or other Host skill roots. See
 `skills/deck-master/references/installation.md` for candidate installation,
 legacy companion migration and rollback.
+
+## Workbench content operations
+
+For `content_ops.v1`, use `deck-master content plan --project <dir> --input <json>` then `content commit --plan-id … --base-revision … --operation-id <UUIDv4>`. Direct body/outline edits, reorder/remove, and bounded Host rewrite/merge/split share this transaction. Use `content inputs --input <patch.json>` for the recoverable workbench form of existing input updates, `content source --source-id … --revision …` for exact material versions, and `content lineage --page-id … --revision …` for derived-page provenance. Method: `skills/deck-master/references/input-update.md`.

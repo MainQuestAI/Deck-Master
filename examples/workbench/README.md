@@ -171,3 +171,7 @@ acceptance; the W07 execution report records that separately.
 ### W08 风格校准浏览器
 
 `w08_browser.py --out <new-dir>` 验证简单/高级要求、单页试作、比较采用、明确扩展和画廊/单页入口；`w08_browser_edges.py --out <new-dir>` 验证原文选段、逐项冲突、未知确认恢复及并发目标变动。两者只用显式合成 Host，实际模型调用为 0；真实图像评价见 W08-UI 报告。
+
+### W09 内容与来源核心
+
+`w09_content_inputs.py --out <new-dir>` 通过公开 CLI 验证材料替换、局部更新、来源读取、重排与移除。该脚本使用明确的合成 Host 结果，模型调用为 0；实际 Codex Host 阅读和影响判断证据见 W09-CORE。
