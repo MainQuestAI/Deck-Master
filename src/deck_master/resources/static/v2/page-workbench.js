@@ -8,6 +8,7 @@ import {promptView, generationBasis, preparedRecords} from './request-view.js';
 import {textObject} from './text-selection.js';
 import {diffView} from './text-diff.js';
 import {productionView} from './production-view.js';
+import {Annotations} from './annotations.js';
 
 const pageTitle = (page, index) => `第 ${index + 1} 页 · ${page.title || '未命名页面'}`;
 const detail = (title, ...body) => el('details', {class: 'source-detail'}, el('summary', {}, title), ...body);
@@ -99,14 +100,20 @@ export function pageDetail(app, data) {
   };
   const timer = setInterval(poll, 5000); app.disposables.push(() => clearInterval(timer));
   const aside = el('aside', {class: 'page-context stack'}), draftSlot = el('div');
+  let annotations, draftRef;
   function bindDraft(ref, text) {
+    draftRef = ref;
     app.editor?.dispose(); app.editor = null;
     if (layer === 'prepared_prompt' && preparedRecords(data).length > 1 && !ref) {
+      annotations?.bind(null, null);
       draftSlot.replaceChildren(el('p', {class: 'muted'}, '请选择明确的预备稿，再写绑定这份原文的个人草稿。')); return;
     }
     const info = {...app.info, page_label: `第 ${index + 1} 页`};
-    app.editor = new DraftEditor(info, {scope: 'page', page_id: data.page_id, layer}, fixed, ref, {readonly: app.readonly});
+    const samePageBasis = app.latest.pages.find(p => p.page_id === data.page_id)?.stages.content.ref?.sha256 === data.stages.content.ref?.sha256;
+    app.editor = new DraftEditor(info, {scope: 'page', page_id: data.page_id, layer}, fixed, ref,
+      {readonly: app.business && samePageBasis ? Boolean(app.info.sample?.readonly) : app.readonly});
     draftSlot.replaceChildren(app.editor.mount());
+    annotations?.bind(app.editor, ref);
     if (text !== null) draftSlot.append(button('比较原文与草稿', () => {
       if (app.editor?.draft.base_ref?.sha256 !== ref?.sha256) { modal('草稿依据不同', el('p', {}, '恢复的草稿属于另一份原文，请先选择对应基准。')); return; }
       modal('原文与个人草稿', diffView(text, app.editor.input.value, '已记录原文（只读）', '个人草稿（未提交）'));
@@ -122,7 +129,11 @@ export function pageDetail(app, data) {
     const basis = generationBasis(app, data); basis.open = layer === 'original_image'; aside.append(basis);
   }
   if (layer === 'svg' || layer === 'ppt') aside.append(productionView(data));
-  aside.append(draftSlot);
+  if (app.business && app.health.ui_capabilities?.includes('annotations.v1')) {
+    annotations = new Annotations(app, data, layer, original, draftSlot);
+    if (app.editor) annotations.bind(app.editor, draftRef);
+    aside.append(annotations.node); app.disposables.push(() => annotations.dispose());
+  } else aside.append(draftSlot);
   const layout = el('div', {class: 'page-columns'}, reading, aside);
   const compareControls = el('div', {class: 'fixed-compare-controls stack', hidden: true});
   const error = el('p', {class: 'field-error', role: 'status'});
