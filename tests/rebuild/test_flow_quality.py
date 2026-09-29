@@ -922,16 +922,12 @@ def test_needs_reconciliation_gates_delivery_and_handoff(tmp_path: Path) -> None
     service.inputs_update(project, patch=patch, base_revision=document["revision_id"],
                           operation_id="input-update-gate", patch_dir=FIXTURES)
 
-    # Give the project a current (fake) PPTX output so the export gate is the
-    # thing under test, not the missing-output check.
+    # Keep a valid PPTX so review export also exercises privacy sanitation.
     document = store.load_document()
-    pptx_ref = store.put_json_object({"schema_version": "deck_artifact.v1",
-                                      "artifact_id": "probe-pptx", "page_id": None,
-                                      "role": "probe", "file": document["pages"][0]["page"],
-                                      "media_type": "application/json", "created_at": "1970",
-                                      "dependencies": [], "derived_from": [], "provenance": {},
-                                      "reference_regions": [], "limitations": [],
-                                      "editability": "probe"})
+    from pptx import Presentation
+    from deck_master.pipeline import artifact
+    ppt_file=tmp_path/'valid.pptx';Presentation().save(ppt_file)
+    pptx_ref=artifact(store,ppt_file,'pptx')
     from deck_master.models import bump_revision as _bump
     bumped = _bump(document, {"operation_id": "probe-output", "kind": "task_update",
                               "description": "probe output", "read_set": []})

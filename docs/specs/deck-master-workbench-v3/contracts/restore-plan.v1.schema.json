@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "project_id",
+    "base_revision",
+    "source_revision",
+    "impact"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "restore_plan.v1"
+    },
+    "project_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+    },
+    "base_revision": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+    },
+    "source_revision": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+    },
+    "impact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "changed_pages",
+        "removed_pages",
+        "page_order",
+        "outputs_changed",
+        "superseded_tasks",
+        "input_alignment_after",
+        "preserved",
+        "image_calls"
+      ],
+      "properties": {
+        "changed_pages": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+          },
+          "uniqueItems": true
+        },
+        "removed_pages": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+          },
+          "uniqueItems": true
+        },
+        "page_order": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+          },
+          "uniqueItems": true
+        },
+        "outputs_changed": {
+          "type": "boolean"
+        },
+        "superseded_tasks": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+          },
+          "uniqueItems": true
+        },
+        "input_alignment_after": {
+          "enum": [
+            "current",
+            "needs_reconciliation",
+            "legacy_current",
+            "no_content"
+          ]
+        },
+        "preserved": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "image_calls": {
+          "const": 0
+        }
+      }
+    }
+  }
+}

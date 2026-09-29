@@ -1,0 +1,15 @@
+usage: deck-master export [-h] --project PROJECT --out OUT
+                          [--revision REVISION] [--export-id EXPORT_ID]
+                          [--purpose {review,working,delivery,engineering}]
+                          [--json]
+
+options:
+  -h, --help            show this help message and exit
+  --project PROJECT
+  --out OUT
+  --revision REVISION   Freeze a committed snapshot; defaults to current at
+                        start
+  --export-id EXPORT_ID
+                        Retry the same frozen export ID and revision
+  --purpose {review,working,delivery,engineering}
+  --json

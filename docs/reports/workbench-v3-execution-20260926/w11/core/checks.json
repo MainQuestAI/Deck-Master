@@ -1,0 +1,17 @@
+{
+  "baseline": "314df380b2b8df9d7540132f99a190c1d0b2f047",
+  "full_rebuild": {
+    "passed": 896,
+    "seconds": 140.73
+  },
+  "versioned_export_tests": {
+    "passed": 15,
+    "seconds": 1.0,
+    "note": "one historical-delivery test added after the full run; all 15 then passed"
+  },
+  "ruff": "pass",
+  "cli_evidence": "cli-checks.json",
+  "browser": "not yet implemented",
+  "professional_acceptance": "not evaluated",
+  "real_home_migration": false
+}

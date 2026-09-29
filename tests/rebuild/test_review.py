@@ -220,7 +220,8 @@ def test_handoff_check_rejects_external_ppt_and_accepts_current_export(tmp_path)
     current = tmp_path / 'review-export' / 'deck.pptx'
     checked = check_handoff(project, file_path=current)
     assert checked['status'] == 'verified'
-    assert checked['file_sha256'] == checked['current_pptx_sha256']
+    assert checked['file_sha256'] == checked['sanitized_pptx_sha256']
+    assert checked['candidate_relation'] == 'sanitized_copy'
 
     external = tmp_path / 'text-only.pptx'
     external.write_bytes(b'not the current deck')

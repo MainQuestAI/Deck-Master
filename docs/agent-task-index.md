@@ -42,10 +42,10 @@ decision that affects this task.
 | Delivery readiness | `deck-master final-readiness --project <dir>` | Readiness is a report, not an export |
 | Review workbench | `deck-master view --open --project <dir>` | One loopback service per project; reuse is automatic |
 | Edit copy | `deck-master edit --project … --page page.json --base-revision … --page-hash … --operation-id …` | Conflicts exit 5, current unchanged |
-| Export | `deck-master export --project … --out … --purpose review\|delivery` | review ships unfinished decks with the real unresolved list; delivery requires passing current checks |
+| Export | `deck-master export --project … --out … --purpose review\|delivery\|engineering --revision <id>` | review is a public reading copy (PPT optional); delivery checks the selected snapshot; engineering is internal recovery |
 | Check a proposed PPTX handoff | `deck-master handoff-check --project … --file … --purpose review\|delivery` | Read-only match to current outputs plus page/render/task completeness; exit 3 means blocked |
 | Diagnose toolchain | `deck-master doctor --step compose\|blueprint\|compile\|render\|view\|export` | `needs_tool` carries the real reason |
-| History / restore | `deck-master history list\|restore --project <dir>` | Restore creates a new revision; call facts are never rolled back |
+| History / restore | `deck-master history list\|restore --project <dir>` | Restore creates a new revision; call facts are never rolled back. Workbench: `history plan-restore` then `history commit-restore` with a UUIDv4 operation ID |
 
 `continue` now completes the current page's SVG compiler check, preview, and
 `review_stage=page_visual` review before dispatching the next page. The page

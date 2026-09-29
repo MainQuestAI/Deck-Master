@@ -1,0 +1,191 @@
+{
+  "checks": {
+    "review_manifest_verified": true,
+    "delivery_refusal_is_explicit": true,
+    "engineering_manifest_verified": true,
+    "engineering_restored_in_isolation": true,
+    "source_document_unchanged": true
+  },
+  "revision_id": "f8cae2ce7740443d916649ddf4e6d376",
+  "model_calls": 0,
+  "evidence": "file/CLI verification only; existing project quality is unchanged",
+  "purposes": {
+    "review": {
+      "export_id": "export-811453fd-cc7a-49f6-a28f-f3811874319d"
+    },
+    "delivery": {
+      "error": {
+        "code": "delivery_blocked",
+        "message": "no current PPT; delivery requires every required check to pass on the selected snapshot",
+        "field": "export",
+        "cause": "delivery_blocked",
+        "operation_id": null,
+        "retryable": false,
+        "operation_state": "not_committed",
+        "next_action": "inspect the selected snapshot gaps; complete the relevant page/layer or export a review copy",
+        "docs_ref": "docs/agent-recovery-playbook.md#versioned-exports",
+        "revision_id": "f8cae2ce7740443d916649ddf4e6d376",
+        "gaps": [
+          {
+            "page_id": "responsibility",
+            "layer": "blueprint",
+            "reason": "not_recorded"
+          },
+          {
+            "page_id": "responsibility",
+            "layer": "svg",
+            "reason": "not_recorded"
+          },
+          {
+            "page_id": "responsibility",
+            "layer": "svg_preview",
+            "reason": "not_recorded"
+          },
+          {
+            "page_id": "responsibility",
+            "layer": "ppt_preview",
+            "reason": "not_recorded"
+          },
+          {
+            "page_id": "capability",
+            "layer": "blueprint",
+            "reason": "not_recorded"
+          },
+          {
+            "page_id": "capability",
+            "layer": "svg",
+            "reason": "not_recorded"
+          },
+          {
+            "page_id": "capability",
+            "layer": "svg_preview",
+            "reason": "not_recorded"
+          },
+          {
+            "page_id": "capability",
+            "layer": "ppt_preview",
+            "reason": "not_recorded"
+          },
+          {
+            "page_id": "verification",
+            "layer": "blueprint",
+            "reason": "not_recorded"
+          },
+          {
+            "page_id": "verification",
+            "layer": "svg",
+            "reason": "not_recorded"
+          },
+          {
+            "page_id": "verification",
+            "layer": "svg_preview",
+            "reason": "not_recorded"
+          },
+          {
+            "page_id": "verification",
+            "layer": "ppt_preview",
+            "reason": "not_recorded"
+          },
+          {
+            "page_id": null,
+            "layer": "ppt",
+            "reason": "not_recorded"
+          },
+          {
+            "page_id": "responsibility",
+            "layer": "content",
+            "reason": "not_evaluated"
+          },
+          {
+            "page_id": "capability",
+            "layer": "content",
+            "reason": "not_evaluated"
+          },
+          {
+            "page_id": "verification",
+            "layer": "content",
+            "reason": "not_evaluated"
+          },
+          {
+            "page_id": "responsibility",
+            "layer": "blueprint_content",
+            "reason": "not_evaluated"
+          },
+          {
+            "page_id": "capability",
+            "layer": "blueprint_content",
+            "reason": "not_evaluated"
+          },
+          {
+            "page_id": "verification",
+            "layer": "blueprint_content",
+            "reason": "not_evaluated"
+          },
+          {
+            "page_id": "responsibility",
+            "layer": "blueprint_fidelity",
+            "reason": "not_evaluated"
+          },
+          {
+            "page_id": "capability",
+            "layer": "blueprint_fidelity",
+            "reason": "not_evaluated"
+          },
+          {
+            "page_id": "verification",
+            "layer": "blueprint_fidelity",
+            "reason": "not_evaluated"
+          },
+          {
+            "page_id": "responsibility",
+            "layer": "conversion",
+            "reason": "not_evaluated"
+          },
+          {
+            "page_id": "capability",
+            "layer": "conversion",
+            "reason": "not_evaluated"
+          },
+          {
+            "page_id": "verification",
+            "layer": "conversion",
+            "reason": "not_evaluated"
+          },
+          {
+            "page_id": "responsibility",
+            "layer": "readability",
+            "reason": "not_evaluated"
+          },
+          {
+            "page_id": "capability",
+            "layer": "readability",
+            "reason": "not_evaluated"
+          },
+          {
+            "page_id": "verification",
+            "layer": "readability",
+            "reason": "not_evaluated"
+          },
+          {
+            "page_id": "responsibility",
+            "layer": "privacy",
+            "reason": "not_evaluated"
+          },
+          {
+            "page_id": "capability",
+            "layer": "privacy",
+            "reason": "not_evaluated"
+          },
+          {
+            "page_id": "verification",
+            "layer": "privacy",
+            "reason": "not_evaluated"
+          }
+        ]
+      }
+    },
+    "engineering": {
+      "export_id": "export-f73c6f20-cfec-4a0e-9acc-6af2190cb572"
+    }
+  }
+}

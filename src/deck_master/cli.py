@@ -274,7 +274,9 @@ def build_parser() -> argparse.ArgumentParser:
     export = sub.add_parser('export')
     export.add_argument('--project', required=True)
     export.add_argument('--out', required=True)
-    export.add_argument('--purpose', choices=['review','working','delivery'], default='review')
+    export.add_argument('--revision', help='Freeze a committed snapshot; defaults to current at start')
+    export.add_argument('--export-id', help='Retry the same frozen export ID and revision')
+    export.add_argument('--purpose', choices=['review','working','delivery','engineering'], default='review')
     handoff = sub.add_parser('handoff-check')
     handoff.add_argument('--project', required=True)
     handoff.add_argument('--file', required=True)
@@ -288,6 +290,15 @@ def build_parser() -> argparse.ArgumentParser:
     history_restore.add_argument('--revision', required=True)
     history_restore.add_argument('--base-revision', required=True)
     history_restore.add_argument('--operation-id', required=True)
+    restore_plan = history_sub.add_parser('plan-restore')
+    restore_plan.add_argument('--project', required=True)
+    restore_plan.add_argument('--revision', required=True)
+    restore_plan.add_argument('--base-revision', required=True)
+    restore_commit = history_sub.add_parser('commit-restore')
+    restore_commit.add_argument('--project', required=True)
+    restore_commit.add_argument('--plan-id', required=True)
+    restore_commit.add_argument('--base-revision', required=True)
+    restore_commit.add_argument('--operation-id', required=True)
     # JSON is the default; retain an explicit switch on every executable leaf.
     def json_switch(command):
         if not any('--json' in action.option_strings for action in command._actions):
@@ -339,6 +350,11 @@ def main(argv: list[str] | None = None) -> int:
             if rejected is not None:
                 return rejected
             from .editing import history, restore
+            if options.history_command in ('plan-restore','commit-restore'):
+                from . import restoration
+                if options.history_command=='plan-restore':
+                    return _emit(restoration.plan(options.project,revision_id=options.revision,base_revision=options.base_revision))
+                return _emit(restoration.commit(options.project,plan_id=options.plan_id,base_revision=options.base_revision,operation_id=options.operation_id))
             if options.history_command == 'list':
                 return _emit(history(options.project))
             return _emit(restore(options.project,revision_id=options.revision,base_revision=options.base_revision,operation_id=options.operation_id))
@@ -359,7 +375,7 @@ def main(argv: list[str] | None = None) -> int:
             if rejected is not None:
                 return rejected
             from .editing import export_project
-            return _emit(export_project(options.project,output_dir=options.out,purpose=options.purpose))
+            return _emit(export_project(options.project,output_dir=options.out,purpose=options.purpose,revision=options.revision,export_id=options.export_id))
         if options.command == 'handoff-check':
             rejected = _reject_legacy_run(options.project)
             if rejected is not None:
