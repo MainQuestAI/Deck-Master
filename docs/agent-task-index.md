@@ -24,6 +24,10 @@ decision that affects this task.
 | Freeze a new-protocol generation input | `deck-master requests freeze --project … --task-id … --input request.json --base-revision … --operation-id …` | First claim with required capabilities; input comes from the task's generation_input |
 | Inspect a generation request or attempt | `deck-master requests show --project … --request-id …` / `attempts show --project … --attempt-id …` | Optional --revision; attempt reads its original call allowance and actual observed fields |
 | Read the content plan | `deck-master view --project … --content-plan --revision …` | Stored chapters/goals/source versions; absent plans show a labeled derived outline without writing |
+| Save version-bound opinions | `deck-master annotations save --project … --input notes.json --base-revision … --operation-id <UUIDv4>` | Saves opinions only; no task dispatch or output invalidation |
+| Preview and dispatch a bounded change | `deck-master changes plan --project … --input changes.json`, then `changes commit --plan-id … --base-revision … --operation-id <UUIDv4>` | Exact plan, page/layer targets and call bound; changing the basis requires a new plan |
+| Recover an uncertain operation | `deck-master operations show --project … --operation-id …` | Committed ancestry is authoritative; same payload/ID only after not_found |
+| Read a change handoff | `deck-master changes handoff --project … --change-id …` | Core plan and task identities; copy does not claim execution |
 | Independent project launcher | `deck-master workbench --registry <file> --no-open` | Separate launcher; optional `--project <absolute-dir>`, `--port 0`, `--ui legacy`, `--stop`; core-only installs report missing v2 UI honestly |
 | Workbench service status | `deck-master view --project <dir>` | Existing service status; does not launch a browser |
 | Read ordered stages | `deck-master view --project <dir> --summary --json` | Lightweight Document projection; add `--revision <id>` to pin history |

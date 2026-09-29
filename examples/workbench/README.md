@@ -115,3 +115,15 @@ PYTHONPATH=src python examples/workbench/w05_page_chain.py --out /tmp/workbench-
 脚本启动真实本机服务和 Chromium，读取来源、逐页正文、预备/实际提示词、制作摘要与固定版本图件，验证 Unicode 码点选段、差异、草稿基准隔离、ACK 跨端口恢复及未同步内容显式导入。后台更新与比较读取失败都必须保留固定双方；比较侧链接与来源返回保留自身版本。
 
 输入全部是明确标注的合成夹具。为验证观察来源的呈现，脚本只在独立临时目录重放人工构造的 native event，绝不读取真实会话或调用模型；这不替代 W02 真实 Host 证明。制作计数与 PPT 预览也是合成记录，不证明实际 Office 编辑或渲染质量。仅可分享 `checks.json` 与截图；`local-only-trace.zip`、`local-only-prompt-recovery.json` 和临时会话记录保留本机。
+
+### W06 标注、变更计划与操作恢复
+
+```sh
+PYTHONPATH=src python examples/workbench/w06_change_handoff.py --out /tmp/workbench-w06-proof-new
+```
+
+输出目录必须不存在。脚本使用明确标注的合成项目，从 CLI 摘要回包取得真实 project/revision/Page refs，发送前保存 UUIDv4 和完整请求，再执行意见保存、计划、提交、operations 核实和 handoff 读取。真实 Chromium 中的同源 fetch 例子沿用 session/Origin 防线；这属于 HTTP 工程示例，不是产品标注 UI 或真实 Host 接手证明。
+
+原始回包位于本机 `local-only-requests/`：`base-conflict.json` 对应 CLI 5，须刷新版本重新预览；`operation-payload-conflict.json` 对应 CLI 5，原 ID 只能重放原 payload；`operation-not-found.json` 对应 CLI 2，脚本随后用已保存的同一 ID 和 payload 重放。响应丢失由客户端主动忽略第一次回包模拟，查询以已提交历史为准。另有单测对新操作与旧 task accept 分别执行四个位置的真实子进程退出；这不证明任意硬件断电恢复。
+
+任务保留 `awaiting_host`，脚本不编造执行身份或调用模型。可分享 `checks.json`；完整请求、交接块和项目运行目录保留本机，不提交仓库。

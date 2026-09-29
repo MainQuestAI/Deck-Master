@@ -430,6 +430,10 @@ def task_summary(store: Store, document: dict, task: dict) -> dict:
         "project_context": _project_context(store, document, task, dispatched),
         "staging_dir": str(store.staging_dir / task['operation_id']),
     }
+    if task.get("change_binding"):
+        from .changes import action_for_task
+        summary["change_binding"] = task["change_binding"]
+        summary["change_action"] = action_for_task(store, document, task)
     if task.get("review_units") is not None:
         summary["review_plan"] = {"units": task["review_units"]}
     for key in ("protocol_version", "required_capabilities", "host_protocol", "generation_requests", "generation_attempts"):

@@ -321,7 +321,7 @@ def _commit_adoption(store, *, document, base_revision, task, envelope, produced
     receipt = {"format": "operation_receipt.v1",
                "request_digest": _request_digest(task["task_id"], task["operation_id"], produced_against, envelope),
                "response": response}
-    store.commit_change(base_revision=base_revision, document=document,
+    store._commit_locked(blobs=[], base_revision=base_revision, document=document,
                         operation_id=task["operation_id"], operation_receipt=receipt)
     warning = _publish_receipt_cache(store, task=task, envelope=envelope, produced_against=produced_against,
                                      result_digest=result_digest, response=response)
@@ -865,7 +865,13 @@ def _accept_content_update(store: Store, *, document: dict, task: dict, envelope
                             result_digest=result_digest, response=response)
 
 
-def accept_result(
+def accept_result(store: Store, **kwargs) -> dict:
+    """Serialize replay detection, call settlement and adoption on one project."""
+    with store._locked():
+        return _accept_result_locked(store, **kwargs)
+
+
+def _accept_result_locked(
     store: Store,
     *,
     task_id: str,
@@ -904,8 +910,6 @@ def accept_result(
         "completed", "cancelled", "superseded", "failed"
     ) or (_operations_dir(store) / f"{operation_id}.json").is_file() else None
     if receipt is not None:
-        if task.get("status") == "superseded":
-            raise StaleInputContext(f"(task {task_id})", "task was superseded by newer inputs; run continue")
         if receipt["request_digest"] != _request_digest(task_id, operation_id, produced_against, envelope):
             raise TaskConflict("(operation)", "same operation already applied with a different result or request binding")
         response = receipt["response"]
@@ -961,8 +965,8 @@ def accept_result(
             },
         )
         bumped = _replace_task_ref(bumped, task, task_ref, store)
-        store.commit_change(
-            base_revision=document["revision_id"],
+        store._commit_locked(
+            blobs=[], base_revision=document["revision_id"],
             document=bumped,
             operation_id=f"settle-{operation_id}",
         )
@@ -1012,10 +1016,12 @@ def accept_result(
              "description": "call facts settled before content adoption", "read_set": []},
         )
         settled_doc = _replace_task_ref(settled_doc, task, settled_ref, store)
-        store.commit_change(base_revision=document["revision_id"], document=settled_doc,
+        store._commit_locked(blobs=[], base_revision=document["revision_id"], document=settled_doc,
                             operation_id=f"settle-{operation_id}")
         document = store.load_document()
     _validate_content_envelope(envelope)
+    from .changes import validate_result
+    validate_result(store, document, task, envelope)
     from .generation import adoption_binding, bind_artifact
     generation_binding = adoption_binding(store, document, task, envelope, staged)
     content_update = envelope.get("content_update")
@@ -1256,6 +1262,11 @@ def reserve_allowances(store, document, task, count):
         raise EnvelopeError("(allocate)/count", "count must be a positive integer")
     if task.get("status") not in ("awaiting_host", "running", "queued"):
         raise TaskConflict("(allocate)", "allowances require an active task")
+    if task.get("change_binding"):
+        from .changes import action_for_task
+        action = action_for_task(store, document, task)
+        if len(task.get("call_allowances") or []) + count > action["max_calls"]:
+            raise CallBlocked("call_allowances", "change plan call upper bound reached; no automatic replacement call")
     policy = document.get("policy") or {}
     if policy.get("user_stop"):
         raise CallBlocked("policy/user_stop", "user stopped external calls")

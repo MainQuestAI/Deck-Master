@@ -44,7 +44,7 @@ def check_host(task, declaration=None):
         return
     declaration = declaration if declaration is not None else task.get("host_protocol") or {}
     protocol = task.get("protocol_version")
-    if (protocol not in (PROTOCOL, "compose.v1") or not isinstance(declaration, dict)
+    if (protocol not in (PROTOCOL, "compose.v1", "changes.v1") or not isinstance(declaration, dict)
             or not all(isinstance(declaration.get(k), list) and all(isinstance(v, str) for v in declaration[k])
                        for k in ("supported_protocols", "capabilities"))
             or protocol not in declaration["supported_protocols"]
