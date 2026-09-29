@@ -55,7 +55,10 @@ class _ReadContext:
         validate_ref(ref, where="object")
         if os.name != "posix":
             # Preserve Store's platform-specific resolution (e.g. junctions).
-            return self.store._resolve_object_path(ref["path"]).stat()
+            value = self.store._resolve_object_path(ref["path"]).stat()
+            if not stat.S_ISREG(value.st_mode):
+                raise ValueError("object is not a regular file")
+            return value
         target = self.root + "/" + ref["path"]
         bucket = target.rsplit("/", 1)[0]
         for directory in (*self.directories, bucket):

@@ -389,3 +389,16 @@ def test_warm_artifact_file_replacement_by_symlink_is_local(tmp_path):
     result = workbench.workbench_summary(project)
     assert result['pages'][0]['stages']['blueprint']['existence'] == 'unreadable'
     assert result['pages'][0]['stages']['content']['existence'] == 'recorded'
+
+
+def test_non_posix_object_check_keeps_store_resolution_and_regular_file_rule(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    project, store = mixed_project(tmp_path)
+    doc = store.load_document(); ref = doc['pages'][0]['page']
+    ctx = workbench._ReadContext(store, doc)
+    # Replace only this module's os binding, not process-global os.name/pathlib.
+    monkeypatch.setattr(workbench, 'os', SimpleNamespace(name='nt'))
+    assert ctx.object_stat(ref).st_size > 0
+    monkeypatch.setattr(store, '_resolve_object_path', lambda path: project)
+    with pytest.raises(ValueError, match='regular file'):
+        ctx.object_stat(ref)

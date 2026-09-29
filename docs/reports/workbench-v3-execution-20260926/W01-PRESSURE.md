@@ -20,7 +20,7 @@
 
 独立观测摘要未读取 candidate / generation_request / generation_attempt / tool_observation 正文；读取对象统计和缓存指标见 after.json。阶段、任务与历史返回保持原协议。
 
-验证：相关 pytest 60 passed（workbench_reads / web / candidates / package_boundary），包含新增热缓存后对象、bucket、objects 目录及图片符号链接拒绝、跨页任务投影隔离。Ruff 与 git diff --check 通过。环境详情含 macOS、硬件型号、物理内存和 Python 版本记录在原始结果；此项为 HTTP 测量，browser/viewport 不适用。
+验证：相关 pytest 60 passed（workbench_reads / web / candidates / package_boundary），包含新增热缓存后对象、bucket、objects 目录及图片符号链接拒绝、跨页任务投影隔离。追加非 POSIX 普通文件检查兼容修复后，workbench_reads 27 passed；该分支没有改变 macOS 测量路径。Ruff 与 git diff --check 通过。环境详情含 macOS、硬件型号、物理内存和 Python 版本记录在原始结果；此项为 HTTP 测量，browser/viewport 不适用。
 
 - [完整数据 manifest](w01/pressure/manifest.json)
 - [原实现 100 次样本](w01/pressure/before.json)
@@ -35,3 +35,5 @@ PYTHONPATH=src python examples/workbench/w01_pressure.py --out /tmp/new-measurem
 ```
 
 输出目录必须新建。项目保留在本地供 W04/W10 后续测量，仓库只提交工厂和 JSON 证据。读取性能通过不等于真实 Host、用户验收、安装或发布通过。
+
+共享核心 PR：[#55](https://github.com/MainQuestAI/Deck-Master/pull/55)。
