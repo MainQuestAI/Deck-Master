@@ -17,7 +17,7 @@ import webbrowser
 from http.server import BaseHTTPRequestHandler
 from pathlib import Path
 from typing import Any
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, urlparse, unquote
 
 from . import view as view_mod
 from .store import Store
@@ -73,9 +73,11 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-    def _send_bytes(self, body: bytes, media: str, *, immutable=False) -> None:
+    def _send_bytes(self, body: bytes, media: str, *, immutable=False, download_name=None) -> None:
         self.send_response(200)
         self.send_header("Content-Type", media)
+        if download_name:
+            self.send_header("Content-Disposition", f'attachment; filename="{download_name}"')
         self.send_header("Cache-Control", "private, max-age=31536000, immutable" if immutable else "no-cache")
         # One Content-Security-Policy header: sandboxed isolation for SVG,
         # the default self-only policy for everything else.
@@ -167,6 +169,10 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                 task=service.open_host_task(self.store,kind='repair',page_ids=[data['page_id']],instruction=data['instruction'],base_revision=data.get('base_revision'),page_hash=data.get('page_hash'))
                 result={'status':'awaiting_host','task_id':task['task_id']}
             elif self.path=='/api/cancel':result=service.task_cancel(self.store.project_root,**data)
+            elif self.path in ('/api/history/plan-restore','/api/history/commit-restore'):
+                from . import restoration
+                action=restoration.plan if self.path.endswith('plan-restore') else restoration.commit
+                result=action(self.store.project_root,**data)
             elif self.path=='/api/restore':result=editing.restore(self.store.project_root,**data)
             elif self.path=='/api/check':
                 from . import editing as editing_mod
@@ -174,6 +180,12 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                 result={'status':summary['status'],'reason':summary.get('reason'),
                         'missing_dimensions':summary['missing_dimensions'],
                         'stale':summary['stale']}
+            elif self.path=='/api/exports':
+                from . import exports
+                from .operations import OperationError
+                if set(data)-{'purpose','revision','export_id'}:
+                    raise OperationError('invalid_export_request','body','only purpose, revision and export_id are accepted')
+                result=exports.create(self.store.project_root,**data)
             elif self.path=='/api/export':
                 import uuid
                 data.setdefault('output_dir',str(self.store.project_root/'exports'/uuid.uuid4().hex[:12]))
@@ -181,7 +193,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             else:self._send_json({'error':'not found'},404);return
             self._send_json(result)
         except Exception as exc:
-            if self.path.startswith(('/api/drafts/', '/api/ui-state', '/api/gallery', '/api/text-ranges/', '/api/annotations/', '/api/changes/', '/api/candidates/', '/api/stages/', '/api/styles/', '/api/content/')):
+            if self.path.startswith(('/api/drafts/', '/api/ui-state', '/api/gallery', '/api/text-ranges/', '/api/annotations/', '/api/changes/', '/api/candidates/', '/api/stages/', '/api/styles/', '/api/content/', '/api/export', '/api/history/')):
                 self._send_error(exc)
                 return
             from .store import ConflictError
@@ -204,6 +216,26 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
         if not self._local_host():
             self._send_json({'error':'loopback Host required'},403);return
         parsed = urlparse(self.path)
+        if parsed.path.startswith('/api/exports/') or parsed.path == '/api/export-facts':
+            from . import exports
+            from .operations import OperationError
+            try:
+                query=parse_qs(parsed.query,keep_blank_values=True)
+                if parsed.path=='/api/export-facts':
+                    if set(query)-{'revision'} or any(len(v)!=1 for v in query.values()):
+                        raise OperationError('invalid_export_request','query','one optional revision is accepted')
+                    self._send_json(exports.describe(self.store.project_root,revision=query.get('revision',[None])[0]));return
+                if parsed.query:raise OperationError('invalid_export_request','query','download URLs do not accept query parameters')
+                parts=parsed.path.split('/')
+                if len(parts)==4:
+                    self._send_json(exports.show(self.store.project_root,export_id=parts[3]));return
+                if len(parts)>=6 and parts[4]=='files':
+                    filename=unquote('/'.join(parts[5:]))
+                    data,name=exports.download(self.store.project_root,export_id=parts[3],filename=filename)
+                    self._send_bytes(data,'application/octet-stream',download_name=name);return
+                raise OperationError('export_file_not_found','url','use a returned export download URL',http_status=404)
+            except Exception as exc:
+                self._send_error(exc);return
         if parsed.path.startswith('/v2/') or parsed.path == '/v2':
             self._serve_v2(parsed.path)
             return
@@ -341,7 +373,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             self._send_json({"status": "ok", **self.runtime_state,
                              "project_identity": _project_identity(self.store.project_root),
                              "ui_available": (self.static_dir / 'v2' / 'index.html').is_file(),
-                             "ui_capabilities": ["ui_draft.v1", "ui_gallery.v1", "thumbnails.v1", "fixed_snapshot.v1", "text_range.v1", "page_detail.v1", "annotations.v1", "changes.v1", "operations.v1", "candidates.v1", "stages.v1", "run_desk.v1", "style_recipes.v1", "content_ops.v1"]})
+                             "ui_capabilities": ["ui_draft.v1", "ui_gallery.v1", "thumbnails.v1", "fixed_snapshot.v1", "text_range.v1", "page_detail.v1", "annotations.v1", "changes.v1", "operations.v1", "candidates.v1", "stages.v1", "run_desk.v1", "style_recipes.v1", "content_ops.v1", "exports.v1", "restoration.v1"]})
             return
         if parsed.path == "/api/file":
             query = parse_qs(parsed.query)

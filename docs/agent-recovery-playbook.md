@@ -260,3 +260,28 @@ Confirmation recovery uses the original UUID and proposal through `operations sh
 `content_basis_changed`: retain the body/outline draft and fixed sources. Read the current Document, Page refs and ContentPlan ref, compare the changed basis, then explicitly form a new content plan. Do not rebase an old payload silently. `content_invalid` identifies an invalid action/scope or provenance request. Unknown `content.commit` / `content.inputs` saves use the original UUID with `operations show`; replay only the exact original payload if no committed fact exists. Merge/split preserve old annotations on their original identity, and never reuse an old page ID.
 
 `content-ops.v1` is a forward writer boundary for manual ContentPlan versions, derived-page records and bounded compose requests. Older cores must refuse writes; use the current core to continue or read a committed earlier snapshot. No in-place downgrade or actual HOME migration is performed by these operations.
+
+## Versioned exports
+
+- `delivery_blocked` / `input_reconciliation_pending` (exit 3, HTTP 409): read the
+  returned `revision_id` and `gaps`. Complete the named page/layer or reconcile
+  inputs; select the resulting new snapshot explicitly. `review` can export an
+  unfinished readable copy without claiming delivery approval.
+- `export_privacy_blocked`: inspect the named public artifact. The export has no
+  downloadable half-package. Fix visible private content or an unsupported
+  embedded/external resource in a new revision; original files remain intact.
+- `export_id_conflict`: the ID already names another frozen purpose/revision.
+  Reuse its original request to retry; a changed request needs a new export ID.
+- `export_file_changed`: a stored package failed its hash or whitelist check.
+  Keep it for diagnosis; create a new export ID from the intended revision.
+- `restore_basis_changed` (exit 5, HTTP 409): current advanced after the plan.
+  Keep both versions, read current history, and create a new plan and operation ID.
+  Do not silently change the base of the old confirmed request.
+- `operation_not_found` after an interrupted restoration: replay the saved plan,
+  base and operation ID; durable ancestry determines whether it committed. A
+  missing disposable receipt file does not authorize a second business change.
+
+Engineering packages are internal. Recover only their `project/` directory into
+an isolated location and use a compatible writer. They include source materials
+and prompts, but exclude runtime authentication and personal drafts. They do not
+install software, migrate HOME, or change another running project.

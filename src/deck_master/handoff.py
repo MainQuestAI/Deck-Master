@@ -25,10 +25,22 @@ def check_handoff(project_dir, *, file_path, purpose="review"):
         expected_hash = store.read_object_json(output_ref)["file"]["sha256"]
     actual_hash = hashlib.sha256(candidate.read_bytes()).hexdigest()
 
+    # A public export is a deterministic cleaned copy, not byte-identical to
+    # its immutable original. Recompute from the current object, never trust a
+    # user-supplied manifest to claim provenance.
+    sanitized_hash = None
+    if output_ref and actual_hash != expected_hash:
+        from .export_sanitize import pptx
+        from .operations import OperationError
+        try:
+            original = store.read_object_json(output_ref)['file']
+            sanitized_hash = hashlib.sha256(pptx(store.read_object_bytes(original), 'deck.pptx')).hexdigest()
+        except OperationError:
+            pass
     gaps = []
     if not output_ref:
         gaps.append("missing_current_pptx")
-    if actual_hash != expected_hash:
+    if actual_hash not in (expected_hash, sanitized_hash):
         gaps.append("candidate_not_current_output")
     for entry in document.get("pages") or []:
         for slot in ("blueprint", "svg", "svg_preview", "ppt_preview"):
@@ -69,6 +81,8 @@ def check_handoff(project_dir, *, file_path, purpose="review"):
         "file": str(candidate),
         "file_sha256": actual_hash,
         "current_pptx_sha256": expected_hash,
+        "sanitized_pptx_sha256": sanitized_hash,
+        "candidate_relation": ("immutable_original" if actual_hash==expected_hash else "sanitized_copy" if actual_hash==sanitized_hash else "unverified"),
         "input_alignment": alignment,
         "page_count": len(document.get("pages") or []),
         "render_report_status": report_status or "not_evaluated",

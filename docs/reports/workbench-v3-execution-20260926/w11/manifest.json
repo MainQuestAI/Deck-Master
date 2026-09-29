@@ -1,0 +1,32 @@
+[
+  {
+    "path": "core/browser-download.json",
+    "sha256": "73ec42c0dc9272178160023a7ace4df2d979c300526b10bb094dcc8e31637d3a",
+    "size": 1008
+  },
+  {
+    "path": "core/checks.json",
+    "sha256": "12680f7ef144fda5b9d1791ef38ab36c0fdf15597fd2dc397a861195c7d648d3",
+    "size": 660
+  },
+  {
+    "path": "core/cli-checks.json",
+    "sha256": "51b68d6ffa3f32b0746c0064084dd7a52297c1e718c7a09597d9268e6b742ead",
+    "size": 5456
+  },
+  {
+    "path": "core/export-help.txt",
+    "sha256": "09cb4fc9864dc790c986822904177d642d13828da41e9de3b87bec33557d39be",
+    "size": 598
+  },
+  {
+    "path": "core/pytest.txt",
+    "sha256": "3ef64ac5e21a5ee14c3f9b98699a8cd15bdfbd892b5b9f7bfea74740169aff24",
+    "size": 1072
+  },
+  {
+    "path": "core/restore-help.txt",
+    "sha256": "5154c4de13d9b5171835426ffccb41b5130b334e3f7d816bd925ed0450979891",
+    "size": 351
+  }
+]

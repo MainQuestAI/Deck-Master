@@ -663,7 +663,8 @@ def test_pptx_artifact_and_export_declare_shape_text_editability(tmp_path):
     service.create(project, brief="编辑能力", draft={"pages": [_draft_page("p1", "能力页", "正文。")]})
     store = Store(project)
     deck = tmp_path / "deck.pptx"
-    deck.write_bytes(b"current-pptx")
+    from pptx import Presentation
+    Presentation().save(deck)
     from deck_master.pipeline import artifact as adopt_artifact
     document = store.load_document()
     bumped = bump_revision(document, {"operation_id": "attach-pptx", "kind": "task_update",
@@ -690,7 +691,8 @@ def test_no_office_native_editing_claims_in_ui_or_export(tmp_path):
     service.create(project, brief="诚实声明", draft={"pages": [_draft_page("p1", "声明页", "正文。")]})
     store = Store(project)
     deck = tmp_path / "deck.pptx"
-    deck.write_bytes(b"pptx")
+    from pptx import Presentation
+    Presentation().save(deck)
     from deck_master.pipeline import artifact as adopt_artifact
     document = store.load_document()
     bumped = bump_revision(document, {"operation_id": "attach-pptx", "kind": "task_update",

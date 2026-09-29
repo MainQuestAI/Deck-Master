@@ -279,97 +279,10 @@ def _edit(store, *, page, base_revision, page_hash, operation_id):
     return {'status':'edited','revision_id':updated['revision_id'],'next_action':'continue','preserved_blueprint':entry['blueprint']}
 
 
-def export_project(project_dir, *, output_dir, purpose='working'):
-    store=Store(project_dir)
-    with store._locked():
-        return _export_locked(store, output_dir=output_dir, purpose=purpose)
-
-def _export_locked(store, *, output_dir, purpose):
-    if purpose == 'working':
-        purpose = 'review'  # accepted alias (2026-09-16 evidence); semantics = review
-    if purpose not in ('review', 'delivery'):
-        raise StoreError('purpose', 'must be review or delivery')
-    doc=store.load_document()
-    from .models import input_alignment as _input_alignment
-    from .errors import InputReconciliationPending
-    alignment=_input_alignment(doc)
-    if alignment=='needs_reconciliation' and purpose=='delivery':
-        raise InputReconciliationPending('input_alignment',
-            'inputs changed after this content was completed; run inputs update and finish the '
-            'dispatched input_revision task before delivery (delivery is refused while '
-            'input_alignment is needs_reconciliation)')
-    if not doc['outputs'].get('pptx'):raise StoreError('outputs/pptx','no current PPT; continue production')
-    summary=check_summary(store,doc)
-    status=summary['status']
-    if purpose=='delivery' and status!='pass':
-        failed=[key for key,value in summary['dimensions'].items() if value['open_must_fix'] or value['status']=='fail']
-        raise StoreError('reviews',f'delivery requires every required check to pass; '
-                         f'current review status is {status!r}; {summary.get("reason", "")} '
-                         f'(unresolved: {sorted(set(summary["missing_dimensions"]) | set(failed))})')
-    if purpose=='delivery' and (doc.get('policy') or {}).get('professional_review_required_for_delivery'):
-        current=doc['outputs'].get('pptx')
-        satisfied=False
-        for ref in doc.get('reviews') or []:
-            review=store.read_object_json(ref)
-            if not current or current not in (review.get('subjects') or []):
-                continue
-            if review.get('status')=='fail':
-                continue
-            if review.get('kind')=='professional_use' or \
-                    (review.get('reviewer') or {}).get('type') in ('human_internal','human_external'):
-                satisfied=True
-                break
-        if not satisfied:
-            raise StoreError('policy/professional_review_required_for_delivery',
-                             'delivery requires a non-failing professional_use or human review '
-                             'recorded on the current output')
-    destination=Path(output_dir)
-    destination.mkdir(parents=True,exist_ok=False)
-    try:
-        for role,ref in doc['outputs'].items():
-            if ref and (purpose == 'review' or role == 'pptx'):
-                obj=store.read_object_json(ref);suffix=Path(obj['file']['path']).suffix
-                (destination/('deck'+suffix if role=='pptx' else role+suffix)).write_bytes(store.read_object_bytes(obj['file']))
-        for index,entry in enumerate(doc['pages'],1):
-            directory=destination/f'{index:02d}-{entry["page_id"]}';directory.mkdir()
-            if purpose == 'review':
-                (directory/'page.json').write_bytes(store.read_object_bytes(entry['page']))
-            for slot in ('blueprint','svg','svg_preview','ppt_preview'):
-                if entry[slot]:
-                    obj=store.read_object_json(entry[slot]);(directory/(slot+Path(obj['file']['path']).suffix)).write_bytes(store.read_object_bytes(obj['file']))
-        if purpose == 'review':
-            # Only immutable project data and the pinned pointer travel; no service PID, lock or staging.
-            portable=destination/'project'/'.deckmaster'
-            portable.mkdir(parents=True)
-            for name in ('objects', 'revisions'):
-                shutil.copytree(store.deck_root/name, portable/name)
-            (portable/'current.json').write_bytes((store.deck_root/'current.json').read_bytes())
-        failed_dimensions=sorted(key for key,value in summary['dimensions'].items()
-                                 if value['open_must_fix'] or value['status']=='fail')
-        pptx_ref=doc['outputs'].get('pptx')
-        editability='unknown'
-        if pptx_ref:
-            editability=store.read_object_json(pptx_ref).get('editability') or 'unknown'
-        facts=summary.get('output_facts') or {}
-        report={'project_id':doc['project_id'],'revision_id':doc['revision_id'],'purpose':purpose,
-                'review_status':status,
-                'input_alignment':alignment,
-                'unresolved':{'missing_dimensions':sorted(summary['missing_dimensions']),
-                              'failed_dimensions':failed_dimensions,
-                              'render_report_missing':bool(facts.get('render_report_missing')),
-                              'render_report_findings':facts.get('render_report_findings') or [],
-                              'completeness_gaps':facts.get('completeness') or [],
-                              'not_evaluated_dimensions':dict(summary.get('dimension_reasons') or {})},
-                'editability':editability,
-                'professional_evidence':_professional_evidence(store,doc),
-                'desktop_editing':'not_evaluated',
-                'evidence_level':'engineering'}
-        if alignment=='needs_reconciliation':
-            report['notice']='待按新要求更新'
-        (destination/'delivery.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
-    except Exception:
-        shutil.rmtree(destination);raise
-    return {'status':'exported','revision_id':doc['revision_id'],'output_dir':str(destination)}
+def export_project(project_dir, *, output_dir, purpose='working', revision=None, export_id=None):
+    """Export a frozen public copy or explicitly internal recovery package."""
+    from .exports import create
+    return create(project_dir, output_dir=output_dir, purpose=purpose, revision=revision, export_id=export_id)
 
 
 def history(project_dir):
@@ -398,8 +311,14 @@ def _restore(store, *, revision_id, base_revision, operation_id):
         parent=ancestor['parent_revision_id']
         ancestor=store.load_document(parent) if parent else None
     if ancestor is None:raise StoreError('revision_id','not a committed ancestor of current revision')
-    past=ancestor
-    updated=bump_revision(current,{'operation_id':operation_id,'kind':'restore','description':'restore '+revision_id,'read_set':[]})
+    updated=restore_document(store,current,ancestor,operation_id)
+    store._commit_locked(base_revision=base_revision,document=updated,operation_id=operation_id,blobs=[])
+    return {'status':'restored','revision_id':updated['revision_id'],'restored_from':revision_id}
+
+
+def restore_document(store, current, past, operation_id):
+    """Shared restoration transform; call facts, stop policy and task facts stay current."""
+    updated=bump_revision(current,{'operation_id':operation_id,'kind':'restore','description':'restore '+past['revision_id'],'read_set':[]})
     for key in ('pages','design_context','sources','outputs'):
         updated[key]=copy.deepcopy(past[key])
     if past.get('content_plan'):
@@ -416,7 +335,6 @@ def _restore(store, *, revision_id, base_revision, operation_id):
     # Call facts and policy are never rolled back by restoring old page content.
     for i,ref in enumerate(updated['tasks']):
         task=store.read_object_json(ref)
-        if task['status'] in ('running','awaiting_host'):
+        if task['status'] in ('running','awaiting_host','blocked'):
             task['status']='superseded';updated['tasks'][i]=store.put_json_object(task)
-    store._commit_locked(base_revision=base_revision,document=updated,operation_id=operation_id,blobs=[])
-    return {'status':'restored','revision_id':updated['revision_id'],'restored_from':revision_id}
+    return updated

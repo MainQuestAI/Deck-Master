@@ -101,3 +101,49 @@ Import semantics:
 - Rebuild baseline: [docs/specs/deck-master-rebuild-v1/](specs/deck-master-rebuild-v1/)
 - Historical spec packs under `docs/` are archived references, not current
   truth.
+
+## Fixed-revision exports (Workbench W11)
+
+`export --revision <committed-id> --purpose review|delivery|engineering --out <new-directory>`
+freezes one snapshot before reading artifacts. Omit `--revision` to capture current
+at start; background commits cannot change the package. Retry a download using
+its returned export ID. A CLI retry also supplies the same revision and purpose.
+
+The old `review` package included a portable project. **That behavior is retired:**
+`review` now contains readable page text, available images/SVG/PPTX, missing-stage
+information and a hash manifest. It works before a PPT exists. `working` remains
+an alias. Use `engineering` explicitly for internal recovery: it includes original
+materials, complete prompts, immutable objects and the selected snapshot's
+committed ancestry. Treat this package as internal. Runtime authentication,
+service state, locks, caches and personal UI drafts are excluded.
+
+Public packages clean copies of PNG/JPEG metadata, SVG metadata/comments and
+PPTX properties/notes/comments/non-visible shape descriptions/printer settings.
+Pixels, visible text and ordinary hyperlinks are retained; unsupported embedded
+files, external SVG assets, macros, unnormalized EXIF orientation or private values in retained content refuse
+export with `export_privacy_blocked`. Immutable originals are unchanged. Public
+PPTX hashes can therefore differ from the original; `handoff-check` recognizes a
+deterministically cleaned copy by recomputing it from the current original.
+This cleanup is not a replacement for reviewing visible customer content.
+
+`delivery` still requires the selected snapshot's effective engineering checks,
+input alignment and applicable professional-review policy. Failure returns exit
+3 / HTTP 409 with `revision_id`, page/layer `gaps` and an offline recovery link.
+It does not borrow a pass from current when exporting history. Counts of text
+runs/shapes, editability declarations, professional review and desktop editing
+remain separate facts; missing evidence is not a pass.
+
+Browser clients use same-origin `POST /api/exports` with the normal session token
+and only `purpose`, `revision`, `export_id`; returned download URLs select a
+project-local export ID and whitelisted file. CLI/Host clients use the CLI.
+No new Origin-bypass token exists. Files are checked against their frozen hashes
+on every download. Existing output directories are never overwritten.
+
+`history plan-restore` records a read-only impact plan; `history commit-restore`
+requires that plan, the unchanged base revision and a UUIDv4 operation ID.
+Confirmation creates a new revision, preserving current task facts, call history,
+policy and `user_stop`; in-flight tasks become superseded. A lost receipt can be
+recovered through `operations show` or replaying the exact same request. The old
+`history restore` command remains available with its existing semantics. Restored
+engineering projects retain their writer floor; older writers must still refuse
+unsupported formats. This change does not migrate HOME or switch the default UI.

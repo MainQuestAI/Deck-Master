@@ -1,0 +1,10 @@
+usage: deck-master history plan-restore [-h] --project PROJECT --revision
+                                        REVISION --base-revision BASE_REVISION
+                                        [--json]
+
+options:
+  -h, --help            show this help message and exit
+  --project PROJECT
+  --revision REVISION
+  --base-revision BASE_REVISION
+  --json

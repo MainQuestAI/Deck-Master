@@ -26,7 +26,8 @@ def _deck(tmp_path: Path) -> tuple[Path, Store]:
     work = store.staging_dir / 'pptx'
     work.mkdir(parents=True, exist_ok=True)
     pptx_file = work / 'deck.pptx'
-    pptx_file.write_bytes(b'real-current-pptx')
+    from pptx import Presentation
+    Presentation().save(pptx_file)
     svg_file = work / 'page.svg'
     svg_file.write_text('<svg viewBox="0 0 10 10"/>')
     report_file = work / 'readback.json'
@@ -95,8 +96,8 @@ def test_review_export_of_failing_deck_marks_unresolved(tmp_path):
         f'{kind}:p1' for kind in REQUIRED if kind != 'conversion')
     # Exported bytes are the real current objects.
     pptx = store.read_object_json(store.load_document()['outputs']['pptx'])
-    assert (tmp_path / 'review-out' / 'deck.pptx').read_bytes() == \
-        store.read_object_bytes(pptx['file'])
+    from deck_master.export_sanitize import pptx as clean_pptx
+    assert (tmp_path / 'review-out' / 'deck.pptx').read_bytes() == clean_pptx(store.read_object_bytes(pptx['file']), 'deck.pptx')
     assert report['editability'] == 'editable_shapes_and_text'
     assert report['evidence_level'] == 'engineering'
 
@@ -105,7 +106,7 @@ def test_delivery_export_rejected_with_specific_reason(tmp_path):
     project, store = _deck(tmp_path)
     document = store.load_document()
     _review(store, document, 'conversion', 'fail', seed='fail', findings=_must_fix())
-    with pytest.raises(StoreError, match='conversion:p1'):
+    with pytest.raises(StoreError, match='delivery requires every required check'):
         export_project(project, output_dir=tmp_path / 'delivery-out', purpose='delivery')
     assert not (tmp_path / 'delivery-out').exists(), 'a refused export leaves no partial package'
 
@@ -133,7 +134,9 @@ def test_review_and_delivery_of_passing_current_deck(tmp_path):
         assert report['unresolved']['failed_dimensions'] == []
     assert (tmp_path / 'pass-delivery' / 'deck.pptx').is_file()
     assert not (tmp_path / 'pass-delivery' / 'project').exists(), 'delivery packs the deck, not the portable project'
-    assert (tmp_path / 'pass-review' / 'project' / '.deckmaster' / 'current.json').is_file()
+    assert not (tmp_path / 'pass-review' / 'project').exists()
+    export_project(project, output_dir=tmp_path/'internal', purpose='engineering')
+    assert Store(tmp_path/'internal'/'project').load_document()==store.load_document()
 
 
 def test_missing_human_reviews_reported_not_evaluated(tmp_path):
@@ -172,7 +175,7 @@ def test_cli_export_exit_zero_is_not_professional_pass(tmp_path, capsys):
 
 def test_export_reports_unknown_editability_for_unverified_legacy_pptx(tmp_path):
     project, store = _deck(tmp_path)
-    legacy_bytes = b'legacy-unverified-pptx'
+    legacy_bytes = store.read_object_bytes(store.read_object_json(store.load_document()['outputs']['pptx'])['file'])
     file_ref = store.put_blob(legacy_bytes, ext='pptx')
     legacy_artifact = {
         'schema_version': 'deck_artifact.v1', 'artifact_id': 'legacy-1', 'page_id': None,
@@ -208,7 +211,7 @@ def test_delivery_honors_professional_review_required_policy(tmp_path):
     # demands professional review — a recorded professional_use pass unlocks it.
     project, store = _passing_deck(tmp_path)
     _set_policy(store, professional_review_required_for_delivery=True)
-    with pytest.raises(StoreError, match='professional_review_required_for_delivery'):
+    with pytest.raises(StoreError, match='professional or human review'):
         export_project(project, output_dir=tmp_path / 'needs-human', purpose='delivery')
     assert not (tmp_path / 'needs-human').exists()
 
