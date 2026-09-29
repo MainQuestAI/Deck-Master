@@ -131,7 +131,8 @@
       "status": "core_verified",
       "accepted": false,
       "baseline": "fc800d500462c720963f3f9e60d87ce0f90aa838",
-      "core_evidence": "W07-CORE.md"
+      "core_evidence": "W07-CORE.md",
+      "core_implementation_commit": "9ce30b15f793578d9bc9f604373fa728507cb172"
     },
     "W08": {
       "status": "planned",
