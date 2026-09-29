@@ -145,10 +145,12 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             elif self.path == '/api/gallery':
                 from .gallery_state import save
                 result = save(self.store.project_root, **data)
-            elif self.path in ('/api/annotations/batch', '/api/changes/plan', '/api/changes/commit'):
-                from . import annotation_service, changes
+            elif self.path in ('/api/annotations/batch', '/api/changes/plan', '/api/changes/commit', '/api/candidates/plan', '/api/candidates/adopt', '/api/stages/assemble'):
+                from . import annotation_service, changes, candidates, stages
                 action = {'/api/annotations/batch': annotation_service.save,
-                          '/api/changes/plan': changes.plan, '/api/changes/commit': changes.commit}[self.path]
+                          '/api/changes/plan': changes.plan, '/api/changes/commit': changes.commit,
+                          '/api/candidates/plan': candidates.plan, '/api/candidates/adopt': candidates.adopt,
+                          '/api/stages/assemble': stages.assemble}[self.path]
                 result = action(self.store.project_root, **data)
             elif self.path == '/api/text-ranges/validate':
                 from .text_ranges import validate
@@ -178,7 +180,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             else:self._send_json({'error':'not found'},404);return
             self._send_json(result)
         except Exception as exc:
-            if self.path.startswith(('/api/drafts/', '/api/ui-state', '/api/gallery', '/api/text-ranges/', '/api/annotations/', '/api/changes/')):
+            if self.path.startswith(('/api/drafts/', '/api/ui-state', '/api/gallery', '/api/text-ranges/', '/api/annotations/', '/api/changes/', '/api/candidates/', '/api/stages/')):
                 self._send_error(exc)
                 return
             from .store import ConflictError
@@ -203,6 +205,22 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         if parsed.path.startswith('/v2/') or parsed.path == '/v2':
             self._serve_v2(parsed.path)
+            return
+        if parsed.path == '/api/candidates' or parsed.path.startswith('/api/candidates/'):
+            try:
+                from . import candidates, operations
+                query = parse_qs(parsed.query, keep_blank_values=True)
+                allowed = {'revision', 'page_id'} if parsed.path == '/api/candidates' else {'revision'}
+                if set(query) - allowed or any(len(v) != 1 or not v[0] for v in query.values()):
+                    raise operations.OperationError('invalid_input', 'query', 'use one nonempty value for each supported query field')
+                fields = {key: value[0] for key, value in query.items()}
+                if parsed.path == '/api/candidates':
+                    result = candidates.listing(self.store.project_root, **fields)
+                else:
+                    result = candidates.show(self.store.project_root, candidate_id=parsed.path.removeprefix('/api/candidates/'), **fields)
+                self._send_json(result)
+            except Exception as exc:
+                self._send_error(exc)
             return
         if parsed.path in ('/api/annotations', '/api/changes') or parsed.path.startswith(('/api/operations/', '/api/changes/')):
             try:
@@ -295,7 +313,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             self._send_json({"status": "ok", **self.runtime_state,
                              "project_identity": _project_identity(self.store.project_root),
                              "ui_available": (self.static_dir / 'v2' / 'index.html').is_file(),
-                             "ui_capabilities": ["ui_draft.v1", "ui_gallery.v1", "thumbnails.v1", "fixed_snapshot.v1", "text_range.v1", "page_detail.v1", "annotations.v1", "changes.v1", "operations.v1"]})
+                             "ui_capabilities": ["ui_draft.v1", "ui_gallery.v1", "thumbnails.v1", "fixed_snapshot.v1", "text_range.v1", "page_detail.v1", "annotations.v1", "changes.v1", "operations.v1", "candidates.v1", "stages.v1"]})
             return
         if parsed.path == "/api/file":
             query = parse_qs(parsed.query)

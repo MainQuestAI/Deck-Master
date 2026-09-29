@@ -2,7 +2,7 @@
 
 Document -> ordered slots -> immutable metadata; only page detail loads prompts.
 Task and artifact references are facts at the selected revision, not live state.
-Candidates/Attempts are deliberately not invented before their writer exists.
+Candidates and Attempts are projected only from committed writer records.
 """
 from __future__ import annotations
 
@@ -232,7 +232,7 @@ def workbench_summary(project_dir, *, revision=None):
             "outputs": {"pptx": _deck_output(ctx)}, "input_alignment": input_alignment(doc),
             "content_plan": projection(store, doc, reader=ctx.read, summary=True),
             "quality": {"status": "detail_required", "review_refs": doc.get("reviews") or []},
-            "candidates": {"status": "not_recorded"},
+            "candidates": {"status": "recorded", "count": len(doc["candidates"])} if doc.get("candidates") else {"status": "not_recorded"},
             "attempts": {"status": "recorded", "count": sum(t.get("attempt_count", 0) for t in tasks)}
             if any(t.get("attempt_count") for t in tasks) else {"status": "not_recorded"},
             "evidence_level": "engineering"}

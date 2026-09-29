@@ -1,7 +1,7 @@
 {
   "baseline": "d1c7c4600cb0fc781070116ed8cc8a1ff6b8b7ca",
-  "branch": "codex/workbench-w06-ui",
-  "active_package": "W06",
+  "branch": "codex/workbench-w07-core",
+  "active_package": "W07",
   "sequence": [
     "W01.core",
     "W02",
@@ -109,7 +109,7 @@
       "frontend_merge_commit": "2d7e1a6dffc6755c20e8ca51175450b0fcbf829b"
     },
     "W06": {
-      "status": "frontend_verified",
+      "status": "slices_merged",
       "accepted": false,
       "baseline": "2d7e1a6dffc6755c20e8ca51175450b0fcbf829b",
       "core_implementation_commit": "f3d5c3ebcd8dac12541e62b49e280cbaa34ab60f",
@@ -122,11 +122,16 @@
       "core_merge_commit": "6c3e156a47926187b71ada1bd5983a0ad73662f2",
       "frontend_baseline": "6c3e156a47926187b71ada1bd5983a0ad73662f2",
       "frontend_source_commit": "0e976f7e5b0d6a6cecf638bb3ed0f60b140bde74",
-      "frontend_evidence": "W06-UI.md"
+      "frontend_evidence": "W06-UI.md",
+      "frontend_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/52",
+      "frontend_head": "78de53b9f9a1a08b1b91ab6330e28806d9ccbd80",
+      "frontend_merge_commit": "fc800d500462c720963f3f9e60d87ce0f90aa838"
     },
     "W07": {
-      "status": "planned",
-      "accepted": false
+      "status": "core_verified",
+      "accepted": false,
+      "baseline": "fc800d500462c720963f3f9e60d87ce0f90aa838",
+      "core_evidence": "W07-CORE.md"
     },
     "W08": {
       "status": "planned",

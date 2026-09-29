@@ -148,6 +148,19 @@
             "items": {
               "type": "string"
             }
+          },
+          "mode": {
+            "enum": [
+              "auto",
+              "trial"
+            ]
+          },
+          "stage": {
+            "enum": [
+              "blueprint",
+              "reconstruct",
+              "repair"
+            ]
           }
         },
         "required": [

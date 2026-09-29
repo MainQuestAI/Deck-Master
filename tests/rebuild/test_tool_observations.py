@@ -112,3 +112,30 @@ def test_invalid_sources_cannot_become_native_observations(native, change):
         native["session"].write_bytes(native["session"].read_bytes().rstrip(b"\n"))
     with pytest.raises(ObservationUnavailable):
         observations.collect_codex_image(native["selector"])
+
+
+@pytest.mark.parametrize('failure', [None, 'variable', 'foreign', 'changed', 'symlink', 'late_file', 'no_store'])
+def test_fixed_reference_paths_prove_only_preexisting_same_project_bytes(native, tmp_path, failure):
+    import time
+    from deck_master.store import Store
+    store = Store(tmp_path / 'project'); store.ensure_layout()
+    ref = store.put_blob(native['output'], ext='png'); path = store.project_root / ref['path']
+    started = max(time.time_ns(), path.stat().st_ctime_ns) // 1000000
+    event = native['event']; event['payload'].update(started_at_ms=started, completed_at_ms=started + 10)
+    item = event['payload']['item']
+    supplied = str(path)
+    if failure == 'foreign': supplied = str(native['image_file'])
+    if failure == 'changed': path.write_bytes(b'changed')
+    if failure == 'symlink':
+        path.unlink(); path.symlink_to(native['image_file'])
+    if failure == 'late_file': event['payload']['started_at_ms'] = 1
+    args = {'prompt': item['revisedPrompt'], 'transparent_background': False, 'referenced_image_paths': [supplied]}
+    code = 'const result = await tools.image_gen__imagegen(' + json.dumps(args) + ');generatedImage(result);'
+    if failure == 'variable': code = 'const args = ' + json.dumps(args) + ';const result = await tools.image_gen__imagegen(args);generatedImage(result);'
+    call = {'type': 'response_item', 'payload': {'type': 'custom_tool_call', 'name': 'exec', 'call_id': 'reference-call', 'input': code}}
+    returned = {'type': 'response_item', 'payload': {'type': 'custom_tool_call_output', 'call_id': 'reference-call',
+                'output': [{'type': 'input_image', 'image_url': 'data:image/png;base64,' + item['result']}]}}
+    native['save']([call, event, returned])
+    record = observations.collect_codex_image(native['selector'], reference_store=None if failure == 'no_store' else store).metadata
+    assert record['submitted']['references'] == ([{'file': ref, 'role': 'reference'}] if failure is None else None)
+    assert str(store.project_root) not in json.dumps(record)

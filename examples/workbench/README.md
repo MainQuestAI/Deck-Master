@@ -151,3 +151,19 @@ cancellation through the browser. This proves claim/status/cancellation only, no
 model generation, result quality or delivery readiness. Requests, recovery files
 and full local handoffs stay in `local-only/`; only curated checks/screenshots
 belong in the repository report.
+
+## W07 trial and candidate adoption
+
+`w07_trial_adopt.py` operates an existing workbench.v3 project through the public
+CLI. `trial --page-id ACTUAL_PAGE --stage blueprint --instruction '…'` previews a
+trial, optionally with `--reference-page-id` and a fixed `--reference-revision`.
+`adopt --candidate-id ACTUAL_ID` previews a length-one adoption; repeat the ID
+flag for a batch. Both require `--project` and a **new** `--out` directory.
+`--commit` submits the selected plan; without it the script only previews.
+It saves the exact payload and operation ID before writing and retains unknown
+responses for `operations show` recovery. It never starts a Host or calls a
+model. Obtain candidate IDs from actual task returns or candidates list/show.
+
+Core fault and renderer cases are in `tests/rebuild/test_candidates.py`.
+These synthetic tests do not close W07-AC07's real fixed-reference/Host/browser
+acceptance; the W07 execution report records that separately.

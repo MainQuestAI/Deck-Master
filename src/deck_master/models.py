@@ -23,6 +23,9 @@ from jsonschema import Draft202012Validator
 from jsonschema.exceptions import best_match
 
 SCHEMA_FILES = {
+    "candidate": "candidate.v1.schema.json",
+    "candidate_selection": "candidate-selection.v1.schema.json",
+    "candidate_adoption": "candidate-adoption.v1.schema.json",
     "change_handoff": "handoff.v1.schema.json",
     "change_intent": "change-intent.v1.schema.json",
     "change_plan": "change-plan.v1.schema.json",
@@ -217,15 +220,18 @@ def validate_document_structure(document: dict[str, Any]) -> None:
     validate_schema("document", document)
     if document.get("content_plan"):
         validate_ref(document["content_plan"], where="document/content_plan")
-        if document.get("compatibility", {}).get("minimum_writer") not in ("content-plan.v1", "changes.v1"):
+        if document.get("compatibility", {}).get("minimum_writer") not in ("content-plan.v1", "changes.v1", "candidates.v1"):
             raise ModelError("document/compatibility", "content plans require the content-plan.v1 writer boundary")
     receipt = (document.get("change") or {}).get("operation_receipt")
     if receipt is not None and receipt["response"]["revision_id"] != document["revision_id"]:
         raise ModelError("document/change/operation_receipt/response/revision_id",
                          "operation receipt must name its own Document revision")
     if (document.get("annotations") or document.get("changes") or document.get("change", {}).get("operation_commit")):
-        if document.get("compatibility", {}).get("minimum_writer") != "changes.v1":
+        if document.get("compatibility", {}).get("minimum_writer") not in ("changes.v1", "candidates.v1"):
             raise ModelError("document/compatibility", "change records require the changes.v1 writer boundary")
+    if document.get('candidates') or document.get('candidate_adoptions'):
+        if document.get('compatibility', {}).get('minimum_writer') != 'candidates.v1':
+            raise ModelError('document/compatibility', 'candidate records require the candidates.v1 writer boundary')
     pages = document.get("pages") or []
     page_ids = [entry.get("page_id") for entry in pages]
     if len(page_ids) != len(set(page_ids)):

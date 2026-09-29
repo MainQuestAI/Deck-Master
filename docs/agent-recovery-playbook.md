@@ -74,8 +74,10 @@ an older UI may be used with that core, but do not downgrade the writer.
   inspect the real tool completion and its exposed fields. The current Codex
   adapter verifies native prompt/PNG/transparent-background fields. Its narrow
   direct literal-call profile also proves reference arguments were omitted.
-  Nonempty references, model/seed and other unrecorded parameters remain
-  unverified. Never fill them from defaults or a self-reported observer label.
+  Nonempty references require a direct literal referenced_image_paths call,
+  same-project immutable object files unchanged since call start, and the
+  same-call PNG return. Other wrappers, semantic roles besides reference,
+  model/seed and unrecorded parameters remain unverified. Never fill them from defaults or a self-reported observer label.
 - `generation_object_not_found` (2 / 404): select a request/attempt referenced
   by the task in the chosen committed revision; orphan objects are not history.
 - `operation_payload_conflict` (5 / 409): reuse the original freeze payload

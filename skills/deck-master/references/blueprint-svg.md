@@ -37,7 +37,7 @@ generatedImage(result);
 
 这是调用形状示意，不能把示例文字当本次 prompt。可在首行使用 functions.exec 的 `// @exec:` 设置；其余形状保持原样。核心同时核对运行时保存的调用、原生完成事件、同一调用返回的 PNG，单有这段 Host 文字并不构成证据。普通含变量调用仍可采集原生记录，但参考参数保持未知。
 
-6. 将当前真实 thread_id、turn_id、工具 item_id 写为 `{ "source":"codex_session.v1", "thread_id":"…", "turn_id":"…", "item_id":"exec-…" }`，交给 `task call settle --attempt-id … --report observation.json --outcome consumed`。核心自行读取该本地运行时事件及原始输出，不接收任意日志路径。当前版本不证明非空参考图附件或未暴露的模型/seed；缺所需字段不得声称相符。
+6. 将当前真实 thread_id、turn_id、工具 item_id 写为 `{ "source":"codex_session.v1", "thread_id":"…", "turn_id":"…", "item_id":"exec-…" }`，交给 `task call settle --attempt-id … --report observation.json --outcome consumed`。核心自行读取该本地运行时事件及原始输出，不接收任意日志路径。非空参考图仅在上述严格调用形状中增加 `referenced_image_paths` 的 JSON 字符串数组时可核验：路径必须是本项目冻结 Ref 对应的对象文件，文件 hash 正确且调用开始后未修改；核心记录角色 `reference`。其它包装、外部路径、变量、调用后修改或未暴露的模型/seed 保持未知；缺所需字段不得声称相符。实际参考图流程的验收另见 W07 报告。
 7. 实际看图后，按原信封提交文件，并增加 `generation_result` 的 request_id 与 attempt_id。task accept 核对原图字节与真实观察；输入差异拒绝采用，已发生用量保留。用 `requests show`、`attempts show` 和 `view --page-id … --lineage` 反查固定关系。
 
 观察层级由核心确定。Host JSON 即使填写 `provider_receipt`、provider 或 signature，也只作为 Host 申报。这个采集器基于当前用户的 Codex 本地运行时记录，不是供应商签名验证。

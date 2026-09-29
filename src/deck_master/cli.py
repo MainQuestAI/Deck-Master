@@ -212,6 +212,8 @@ def build_parser() -> argparse.ArgumentParser:
         "annotations": {"save": ("input", "base-revision", "operation-id"), "list": ()},
         "changes": {"list": (), "plan": ("input",), "commit": ("plan-id", "base-revision", "operation-id"), "handoff": ("change-id",)},
         "operations": {"show": ("operation-id",)},
+        "candidates": {"list": (), "show": ("candidate-id",), "plan": ("input",), "adopt": ("input", "base-revision", "operation-id")},
+        "stages": {"assemble": ("base-revision", "operation-id")},
     }.items():
         group = sub.add_parser(name)
         commands_parser = group.add_subparsers(dest="workbench_command", required=True)
@@ -220,6 +222,10 @@ def build_parser() -> argparse.ArgumentParser:
             command_parser.add_argument("--project", required=True)
             for flag in flags:
                 command_parser.add_argument("--" + flag, required=True)
+            if name == "candidates" and command in ("list", "show"):
+                command_parser.add_argument("--revision")
+                if command == "list":
+                    command_parser.add_argument("--page-id")
 
     requests = sub.add_parser("requests", help="freeze or read an immutable generation input")
     requests_sub = requests.add_subparsers(dest="requests_command", required=True)
@@ -441,14 +447,17 @@ def main(argv: list[str] | None = None) -> int:
                     external_use=options.external_use,
                 )
             )
-        if options.command in ("annotations", "changes", "operations"):
-            from . import annotation_service, changes, operations
+        if options.command in ("annotations", "changes", "operations", "candidates", "stages"):
+            from . import annotation_service, changes, operations, candidates, stages
             actions = {("annotations", "save"): annotation_service.save,
                        ("annotations", "list"): annotation_service.list_annotations,
                        ("changes", "list"): changes.list_changes, ("changes", "plan"): changes.plan, ("changes", "commit"): changes.commit,
-                       ("changes", "handoff"): changes.handoff, ("operations", "show"): operations.show}
+                       ("changes", "handoff"): changes.handoff, ("operations", "show"): operations.show,
+                       ("candidates", "list"): candidates.listing, ("candidates", "show"): candidates.show,
+                       ("candidates", "plan"): candidates.plan, ("candidates", "adopt"): candidates.adopt,
+                       ("stages", "assemble"): stages.assemble}
             fields = {key: getattr(options, key) for key in
-                      ("base_revision", "operation_id", "plan_id", "change_id") if hasattr(options, key)}
+                      ("base_revision", "operation_id", "plan_id", "change_id", "candidate_id", "page_id", "revision") if hasattr(options, key)}
             if hasattr(options, "input"):
                 fields["input"] = json.loads(Path(options.input).read_text(encoding="utf-8"))
             return _emit(actions[(options.command, options.workbench_command)](options.project, **fields))
