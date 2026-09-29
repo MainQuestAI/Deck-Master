@@ -1,0 +1,49 @@
+{
+  "status": "verified",
+  "evidence": "synthetic CLI and real Chromium same-origin HTTP; no real Host claim or product annotation UI",
+  "python": "3.12.12",
+  "platform": "macOS-27.0-arm64-arm-64bit",
+  "browser": "149.0.7827.55",
+  "checks": [
+    {
+      "name": "lost-response-query-preserves-original-result",
+      "status": "pass"
+    },
+    {
+      "name": "same-id-changed-payload-conflicts",
+      "status": "pass"
+    },
+    {
+      "name": "new-operation-stale-base-conflicts",
+      "status": "pass"
+    },
+    {
+      "name": "not-found-does-not-claim-failure-or-change-id",
+      "status": "pass"
+    },
+    {
+      "name": "plan-does-not-change-business-version",
+      "status": "pass"
+    },
+    {
+      "name": "handoff-remains-unclaimed",
+      "status": "pass"
+    },
+    {
+      "name": "core-command-quotes-exact-project",
+      "status": "pass"
+    },
+    {
+      "name": "same-origin-browser-persists-opinion",
+      "status": "pass"
+    },
+    {
+      "name": "browser-ack-is-business-commit",
+      "status": "pass"
+    }
+  ],
+  "residuals": [
+    "Real Host claim and product clipboard flow are separate W06 UI acceptance evidence."
+  ],
+  "source_commit": "f3d5c3ebcd8dac12541e62b49e280cbaa34ab60f"
+}
