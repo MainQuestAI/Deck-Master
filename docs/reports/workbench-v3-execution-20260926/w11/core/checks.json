@@ -5,14 +5,18 @@
     "seconds": 140.73
   },
   "versioned_export_tests": {
-    "passed": 16,
-    "combined_export_suite_passed": 26,
-    "seconds": 1.55,
-    "note": "historical-delivery and stale-professional-policy tests added after the 896-test full run; related 26 tests passed"
+    "passed": 17,
+    "combined_export_suite_passed": 27,
+    "note": "historical gates, policy freshness and recovery-plan closure added after full local run"
   },
   "ruff": "pass",
   "cli_evidence": "cli-checks.json",
   "browser": "not yet implemented",
   "professional_acceptance": "not evaluated",
-  "real_home_migration": false
+  "real_home_migration": false,
+  "browser_core_transport": {
+    "passed": 5,
+    "evidence": "browser-download.json",
+    "scope": "real Chromium core downloads; frontend remains unimplemented"
+  }
 }

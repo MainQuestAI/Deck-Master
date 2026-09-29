@@ -1,0 +1,28 @@
+{
+  "checks": {
+    "review_same_origin_download_hash": true,
+    "review_same_id_retry_identical": true,
+    "engineering_same_origin_download_hash": true,
+    "engineering_same_id_retry_identical": true,
+    "source_document_unchanged": true
+  },
+  "downloads": [
+    {
+      "purpose": "review",
+      "export_id": "export-90129de8-cadb-46ac-b39c-d316ac571d05",
+      "revision_id": "7f19c5caa53147cf8eb994e64c15e75e",
+      "sha256": "a5268a192d4edaf19bc0999e4e2f4b3f659cb0c57ed06af018ecd0581896c690",
+      "filename": "deck-review-7f19c5ca.zip"
+    },
+    {
+      "purpose": "engineering",
+      "export_id": "export-5e0c3398-ab73-4bdd-84d3-85c356a6b087",
+      "revision_id": "7f19c5caa53147cf8eb994e64c15e75e",
+      "sha256": "a7469e2111802c0d4bc9b1002908823ea693f105c1c478e54f8b6cfc9c41ed5c",
+      "filename": "deck-engineering-7f19c5ca.zip"
+    }
+  ],
+  "browser": "Chromium via Python Playwright",
+  "model_calls": 0,
+  "scope": "real browser transport over core routes; W11 UI not connected"
+}

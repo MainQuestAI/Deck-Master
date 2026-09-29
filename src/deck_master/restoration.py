@@ -66,7 +66,8 @@ def commit(project, *, plan_id, base_revision, operation_id):
         raise operations.OperationError("invalid_restore_plan", "plan_id", "use the immutable restoration plan ID")
     store = Store(project_path(project))
     digest = plan_id.removeprefix("restore-plan-")
-    planned = store.read_object_json({"path": f".deckmaster/objects/{digest[:2]}/{digest}.json", "sha256": digest})
+    plan_ref = {"path": f".deckmaster/objects/{digest[:2]}/{digest}.json", "sha256": digest}
+    planned = store.read_object_json(plan_ref)
     validate_schema("restore_plan", planned)
     with store._locked():
         current = store.load_document()
@@ -93,6 +94,7 @@ def commit(project, *, plan_id, base_revision, operation_id):
                 "status": "restored",
                 "revision_id": updated["revision_id"],
                 "restored_from": past["revision_id"],
+                "plan_ref": plan_ref,
                 "impact": planned["impact"],
             },
         )

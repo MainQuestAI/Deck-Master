@@ -1,8 +1,13 @@
 [
   {
+    "path": "core/browser-download.json",
+    "sha256": "73ec42c0dc9272178160023a7ace4df2d979c300526b10bb094dcc8e31637d3a",
+    "size": 1008
+  },
+  {
     "path": "core/checks.json",
-    "sha256": "24ece16375c86eb40a561266864f9b5da791db68016a56cd1d702b8e5c11ac6e",
-    "size": 539
+    "sha256": "12680f7ef144fda5b9d1791ef38ab36c0fdf15597fd2dc397a861195c7d648d3",
+    "size": 660
   },
   {
     "path": "core/cli-checks.json",

@@ -370,3 +370,18 @@ def test_stale_professional_review_cannot_satisfy_delivery_policy(tmp_path):
     assert exports.describe(root)["check_summary"]["status"] == "pass"
     with pytest.raises(exports.ExportError, match="professional or human review"):
         exports.create(root, purpose="delivery")
+
+
+def test_engineering_recovery_keeps_committed_restore_plan_for_retry(tmp_path):
+    from deck_master import restoration
+
+    root, store = project(tmp_path)
+    revision = store.current_revision_id()
+    plan = restoration.plan(root, revision_id=revision, base_revision=revision)
+    operation_id = str(uuid.uuid4())
+    result = restoration.commit(root, plan_id=plan["plan_id"], base_revision=revision, operation_id=operation_id)
+    exports.create(root, purpose="engineering", output_dir=tmp_path / "internal")
+    recovered = tmp_path / "internal" / "project"
+    replay = restoration.commit(recovered, plan_id=plan["plan_id"], base_revision=revision, operation_id=operation_id)
+    assert replay["committed_revision_id"] == result["committed_revision_id"]
+    assert Store(recovered).current_revision_id() == store.current_revision_id()
