@@ -241,3 +241,25 @@ def test_changed_body_marks_retained_original_basis_stale(project):
     path, store = project; commit(path, store, value(store))
     stage = workbench.page_lineage(path, 'p02')['stages']['blueprint']
     assert stage['existence'] == 'recorded' and stage['applicability']['status'] == 'basis_changed'
+
+
+def test_direct_edit_supports_recursive_bullets_and_tables(project):
+    """Embedded customer_visible refs must resolve in input AND stored plan roots."""
+    path, store = project
+    before = copy.deepcopy(store.load_document())
+    visible = copy.deepcopy(store.read_object_json(before['pages'][1]['page'])['customer_visible'])
+    visible['body_blocks'] = [
+        {'id': 'paragraph', 'type': 'paragraph', 'text': 'A revised paragraph'},
+        {'id': 'list', 'type': 'bullets', 'items': [{'id': 'parent', 'text': 'Parent fact',
+          'children': [{'id': 'child', 'text': 'Nested evidence'}]}]},
+        {'id': 'table', 'type': 'table', 'columns': [{'id': 'col', 'label': 'Capacity'}],
+         'rows': [{'id': 'row', 'cells': [{'column_id': 'col', 'display_text': '42 units'}]}]},
+    ]
+    commit(path, store, value(store, customer_visible=visible))
+    after = store.load_document()
+    assert store.read_object_json(after['pages'][1]['page'])['customer_visible'] == visible
+    assert after['pages'][0] == before['pages'][0] and after['pages'][2] == before['pages'][2]
+    broken = copy.deepcopy(visible)
+    del broken['body_blocks'][1]['items'][0]['children'][0]['text']
+    with pytest.raises(operations.OperationError):
+        content_ops.plan(path, input=value(store, customer_visible=broken))
