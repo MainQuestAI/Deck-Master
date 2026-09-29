@@ -868,7 +868,8 @@
             "generation.v1",
             "content-plan.v1",
             "changes.v1",
-            "candidates.v1"
+            "candidates.v1",
+            "run-desk.v1"
           ]
         }
       },

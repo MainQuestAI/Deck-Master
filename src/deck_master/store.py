@@ -31,6 +31,7 @@ from typing import Any, Callable, Iterator
 
 from .models import (
     ModelError,
+    WRITER_RANK,
     canonical_json_bytes,
     sha256_bytes,
     validate_document_semantics,
@@ -191,7 +192,7 @@ class Store:
             raise StoreError("current.json", f"unreadable pointer: {exc}") from exc
         if pointer.get("format") not in (CURRENT_FORMAT, WORKBENCH_FORMAT):
             raise StoreError("current.json", f"unknown pointer format {pointer.get('format')!r}")
-        if pointer.get("format") == WORKBENCH_FORMAT and pointer.get("minimum_writer") not in ("generation.v1", "content-plan.v1", "changes.v1", "candidates.v1"):
+        if pointer.get("format") == WORKBENCH_FORMAT and pointer.get("minimum_writer") not in ("generation.v1", "content-plan.v1", "changes.v1", "candidates.v1", "run-desk.v1"):
             raise StoreError("current.json", "unsupported minimum writer; use the matching core")
         return pointer
 
@@ -311,9 +312,8 @@ class Store:
             )
         if current and current.get("format") == WORKBENCH_FORMAT and not document.get("compatibility"):
             raise StoreError("compatibility", "a workbench project cannot drop its writer boundary")
-        writer_rank = {None: 0, "generation.v1": 1, "content-plan.v1": 2, "changes.v1": 3, "candidates.v1": 4}
-        if (current and writer_rank.get(current.get("minimum_writer"), 99)
-                > writer_rank.get(document.get("compatibility", {}).get("minimum_writer"), 0)):
+        if (current and WRITER_RANK.get(current.get("minimum_writer"), 99)
+                > WRITER_RANK.get(document.get("compatibility", {}).get("minimum_writer"), 0)):
             raise StoreError("compatibility", "minimum writer cannot be downgraded")
         if document.get("change", {}).get("operation_commit"):
             record = self.read_object_json(document["change"]["operation_commit"])

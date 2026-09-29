@@ -33,6 +33,8 @@ decision that affects this task.
 | Read a change handoff | `deck-master changes handoff --project … --change-id …` | Core plan and task identities; copy does not claim execution |
 | Independent project launcher | `deck-master workbench --registry <file> --no-open` | Separate launcher; optional `--project <absolute-dir>`, `--port 0`, `--ui legacy`, `--stop`; core-only installs report missing v2 UI honestly |
 | Workbench service status | `deck-master view --project <dir>` | Existing service status; does not launch a browser |
+| Read paged run facts | `deck-master task list --project <dir> --limit 30 --offset 0 --revision <id>` | Optional `--change-id`, `--status`, `--attention`; next page stays on the returned revision; no execution |
+| Inspect run recovery links | `deck-master task status --project <dir> --task-id <id> --details --revision <id>` | Core claim time, call facts and existing request/Attempt links; [run recovery](agent-recovery-playbook.md#run-desk-recovery) |
 | Read ordered stages | `deck-master view --project <dir> --summary --json` | Lightweight Document projection; add `--revision <id>` to pin history |
 | Read one page's lineage | `deck-master view --project <dir> --page-id <id> --lineage --revision <id> --json` | Stored prompts and references only; missing history stays unknown |
 | Read full fixed snapshot | `deck-master view --project <dir> --revision <id> --json` | Same `deck_view.v1` as HTTP; obtain IDs with `history list` |

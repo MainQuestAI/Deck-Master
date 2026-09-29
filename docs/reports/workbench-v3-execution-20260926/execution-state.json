@@ -1,7 +1,7 @@
 {
   "baseline": "d1c7c4600cb0fc781070116ed8cc8a1ff6b8b7ca",
-  "branch": "codex/workbench-w01-pressure",
-  "active_package": "W01.pressure",
+  "branch": "codex/workbench-w10-core",
+  "active_package": "W10",
   "sequence": [
     "W01.core",
     "W02",
@@ -30,10 +30,12 @@
       "pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/41",
       "merge_commit": "ea4b5b8fa1e4e4e3444b6cd8861f83f5fcc61468",
       "pressure_baseline": "9e6b6e1b804eea7b843f716165fbde2ce04a72be",
-      "pressure_status": "pr_open",
+      "pressure_status": "merged",
       "pressure_implementation_commit": "e21be437f033b112dc15779fe51e45d267cc6bf8",
       "pressure_evidence": "W01-PRESSURE.md",
-      "pressure_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/55"
+      "pressure_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/55",
+      "pressure_head": "54e8c74c4193d793250e6351e21658000e999267",
+      "pressure_merge_commit": "d42dda62c53bfeaf177c077f8e46074c8c23bdba"
     },
     "W02": {
       "status": "core_slices_merged",
@@ -162,8 +164,10 @@
       "accepted": false
     },
     "W10": {
-      "status": "planned",
-      "accepted": false
+      "status": "core_in_progress",
+      "accepted": false,
+      "baseline": "d42dda62c53bfeaf177c077f8e46074c8c23bdba",
+      "plan": "W10-PLAN.md"
     },
     "W11": {
       "status": "planned",

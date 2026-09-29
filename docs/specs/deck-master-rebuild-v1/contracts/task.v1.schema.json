@@ -557,6 +557,11 @@
           }
         }
       }
+    },
+    "execution_started_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Core-recorded first task_start time for this execution; absent means not recorded."
     }
   },
   "required": [

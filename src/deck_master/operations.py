@@ -133,8 +133,8 @@ def commit_locked(store, *, document, base_revision, operation_id, kind, digest,
               'result_ref': store.put_json_object(result)}
     validate_schema('operation_commit', record)
     document['change']['operation_commit'] = store.put_json_object(record)
-    writer = 'candidates.v1' if document.get('compatibility', {}).get('minimum_writer') == 'candidates.v1' else 'changes.v1'
-    document['compatibility'] = {'project_format': 'workbench.v3', 'minimum_writer': writer}
+    from .models import require_writer
+    require_writer(document, 'changes.v1')
     store._commit_locked(base_revision=base_revision, document=document, operation_id=operation_id, blobs=[])
     warning = publish_index(store, record)
     response = {'status': 'committed', 'operation_id': operation_id,

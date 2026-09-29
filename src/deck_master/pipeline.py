@@ -342,7 +342,8 @@ def produce(project_dir, *, base_revision=None, operation_id=None):
                 new['tasks'][i] = store.put_json_object(task)
         new['outputs']={'pptx':artifact(store,compiled.pptx_path,'pptx',dependencies=deps),'trace':artifact(store,compiled.manifest_path,'object_trace',dependencies=deps),'render_report':artifact(store,report_path,'render_report',dependencies=deps)}
         if explicit:
-            new['compatibility']['minimum_writer'] = 'candidates.v1'
+            from .models import require_writer
+            require_writer(new, 'candidates.v1')
             with store._locked():
                 previous = operations.recover(store, operation_id, digest)
                 if previous:
