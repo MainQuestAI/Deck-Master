@@ -25,5 +25,11 @@
   },
   "real_host_reference_roundtrip": "not_verified",
   "browser_candidate_ui": "not_implemented",
-  "user_acceptance": false
+  "user_acceptance": false,
+  "final_reference_integration": {
+    "passed": 43,
+    "seconds": 6.04,
+    "level": "synthetic_protocol",
+    "source_commit": "4e22054a13fd81cbc03ca68b4de170a0e1b13681"
+  }
 }

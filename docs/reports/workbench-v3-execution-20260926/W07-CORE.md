@@ -1,6 +1,6 @@
 # W07 核心实现与验证记录（核心切片）
 
-基线：W06 UI PR #52 合并 `fc800d500462c720963f3f9e60d87ce0f90aa838`。当前分支 `codex/workbench-w07-core`，实现提交：`9ce30b15f793578d9bc9f604373fa728507cb172`。核心切片待 PR 合并。本报告不表示前端或整卡完成。
+基线：W06 UI PR #52 合并 `fc800d500462c720963f3f9e60d87ce0f90aa838`。当前分支 `codex/workbench-w07-core`，实现提交：`9ce30b15f793578d9bc9f604373fa728507cb172`。参考来源补充提交：`4e22054a13fd81cbc03ca68b4de170a0e1b13681`。核心 PR [#53](https://github.com/MainQuestAI/Deck-Master/pull/53) 待 CI 合并。本报告不表示前端或整卡完成。
 
 - `changes plan/commit` 增加显式 `mode=auto|trial`、目标阶段与历史原图引用。旧 W06 输入的计划重算保持原样。参考文件来自已提交版本，冻结时不允许更换指令或遗漏附件。
 - Trial 沿用 Task、调用额度、Host 声明、结果校验和原子回执，只保存 Candidate。`continue` 与自动任务复用排除 trial；实际未知调用与预算仍按原策略处理。
@@ -18,3 +18,5 @@
 - Ruff、git diff --check、活动 schema/唯一镜像字节一致检查通过。
 
 真实参考图调用、真实 SVG Host 往返、浏览器比较/采用及用户验收尚未完成，W07-AC07 保持未验证。工作台功能仍显式 opt-in；没有默认入口切换、实际 HOME 安装迁移或发布。
+
+候选 show 补充已核对的固定参考来源（原 page/revision/artifact/file），不从当前稿推测。该补充连同非空参考图的合成事件完整往返通过 43 项候选/采集测试（6.04 秒）；这仍不是真实 Host 证据。

@@ -132,7 +132,9 @@
       "accepted": false,
       "baseline": "fc800d500462c720963f3f9e60d87ce0f90aa838",
       "core_evidence": "W07-CORE.md",
-      "core_implementation_commit": "9ce30b15f793578d9bc9f604373fa728507cb172"
+      "core_implementation_commit": "4e22054a13fd81cbc03ca68b4de170a0e1b13681",
+      "core_initial_commit": "9ce30b1",
+      "core_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/53"
     },
     "W08": {
       "status": "planned",
