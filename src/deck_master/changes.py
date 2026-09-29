@@ -163,7 +163,8 @@ def commit(project, *, plan_id, base_revision, operation_id):
         updated = bump_revision(copy.deepcopy(document), {'operation_id': operation_id, 'kind': 'task_update',
                                   'description': 'Explicit change plan dispatched', 'read_set': []})
         if any('mode' in a for a in record['actions']):
-            updated['compatibility']['minimum_writer'] = 'candidates.v1'
+            from .models import require_writer
+            require_writer(updated, 'candidates.v1')
         updated['changes'] = [*document.get('changes', []), change_ref]
         for task_id, action in zip(task_ids, record['actions']):
             task = _new_task(store, updated, document, record, change_ref, task_id, action)
@@ -260,6 +261,12 @@ def handoff(project, *, change_id):
              'required_capabilities': t.get('required_capabilities', []),
              'request_ids': [store.read_object_json(ref)['request_id'] for ref in t.get('generation_requests', [])]}
             for t in selected]
+    from .run_desk import task_row
+    for row, task in zip(rows, selected, strict=True):
+        projected = task_row(task)
+        row.update({key: projected[key] for key in ('scope_pages', 'execution_started_at', 'execution_time_source',
+                    'result_refs', 'candidate_refs', 'call_counts', 'needs_verification')})
+        row['attempt_ids'] = [store.read_object_json(ref)['attempt_id'] for ref in task.get('generation_attempts', [])]
     plan_record = store.read_object_json(change['plan_ref']); validate_schema('change_plan', plan_record)
     block = {'schema_version': 'deck-master-handoff.v1', 'project_id': document['project_id'],
              'change_id': change_id, 'base_revision': change['base_revision'], 'tasks': rows,
@@ -271,11 +278,7 @@ def handoff(project, *, change_id):
              'running' if any(t['status'] == 'running' and t.get('execution_ref') for t in selected) else
              'cancelled' if all(t['status'] == 'cancelled' for t in selected) else
              'failed' if any(t['status'] in ('failed', 'superseded') for t in selected) else 'awaiting_host')
-    from datetime import datetime, timezone
-    now = datetime.now(timezone.utc)
-    needs_verification = any(t['status'] == 'running' and
-                             (now - datetime.fromisoformat(t['updated_at'].replace('Z', '+00:00'))).total_seconds() > 1800
-                             for t in selected)
+    needs_verification = any(row['needs_verification'] for row in rows)
     unknown = any(c['state'] == 'unknown' for t in selected for c in t.get('call_allowances', []))
     if unknown:
         state = 'unknown'

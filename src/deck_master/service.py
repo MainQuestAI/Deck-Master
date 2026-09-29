@@ -431,7 +431,7 @@ def task_summary(store: Store, document: dict, task: dict) -> dict:
         "project_context": _project_context(store, document, task, dispatched),
         "staging_dir": str(store.staging_dir / task['operation_id']),
     }
-    for key in ("stage_request", "candidate_refs"):
+    for key in ("stage_request", "candidate_refs", "execution_ref", "execution_started_at"):
         if key in task:
             summary[key] = task[key]
     if task.get("change_binding"):
@@ -1688,6 +1688,8 @@ def task_start(project_dir: Path | str, *, task_id: str, execution_ref: str,
         "execution_ref": execution_ref,
         "updated_at": _utc_now_iso(),
     }
+    if document.get("compatibility", {}).get("project_format") == "workbench.v3" and task.get("status") != "running":
+        updated_task["execution_started_at"] = updated_task["updated_at"]
     if task.get("protocol_version"):
         updated_task["host_protocol"] = declaration
         if task.get("status") == "running" and task.get("host_protocol") == declaration:
@@ -1728,6 +1730,9 @@ def _commit_task_update(
     from .models import validate_task_semantics
 
     validate_task_semantics(updated_task)
+    if updated_task.get("execution_started_at"):
+        from .models import require_writer
+        require_writer(document, "run-desk.v1")
     task_ref = store.put_json_object(updated_task)
     operation_id = _new_operation_id("task")
     bumped = bump_revision(

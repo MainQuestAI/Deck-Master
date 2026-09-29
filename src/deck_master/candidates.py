@@ -7,7 +7,7 @@ import uuid
 from . import operations
 from .local_state import project_path
 from .models import (bump_revision, canonical_json_bytes, compute_input_digest,
-                     sha256_bytes, validate_schema, validate_task_semantics)
+                     sha256_bytes, validate_schema, validate_task_semantics, require_writer)
 from .snapshots import load_snapshot
 from .store import Store
 
@@ -61,7 +61,7 @@ def record_result(store, *, document, task, updated_task, artifacts, artifact_re
     validate_task_semantics(updated_task)
     updated = bump_revision(document, {'operation_id': task['operation_id'], 'kind': 'task_update',
                                       'description': 'trial returned an immutable candidate; current artifacts unchanged', 'read_set': []})
-    updated['compatibility'] = {'project_format': 'workbench.v3', 'minimum_writer': WRITER}
+    require_writer(updated, WRITER)
     updated['candidates'] = [*document.get('candidates', []), candidate_ref]
     tasks._replace_task_in_document(updated, task, store.put_json_object(updated_task), store)
     response = {'status': 'candidate_ready', 'revision_id': updated['revision_id'],
@@ -238,7 +238,7 @@ def adopt(project, *, input, base_revision, operation_id):
             adoptions.append({key: item[key] for key in ('candidate_id', 'candidate_ref', 'page_id', 'stage', 'result_ref')} | {'revision_id': updated['revision_id']})
         updated['outputs'] = {key: None for key in updated['outputs']}
         updated['candidate_adoptions'] = adoptions
-        updated['compatibility'] = {'project_format': 'workbench.v3', 'minimum_writer': WRITER}
+        require_writer(updated, WRITER)
         result = {'status': 'adopted', 'revision_id': updated['revision_id'], 'candidate_ids': ids,
                   'result_refs': [item['result_ref'] for item in input['selections']], 'impact': input['selections'], 'max_calls': 0}
         return operations.commit_locked(store, document=updated, base_revision=base_revision,

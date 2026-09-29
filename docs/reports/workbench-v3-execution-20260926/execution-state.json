@@ -1,7 +1,7 @@
 {
   "baseline": "d1c7c4600cb0fc781070116ed8cc8a1ff6b8b7ca",
-  "branch": "codex/workbench-w01-pressure",
-  "active_package": "W01.pressure",
+  "branch": "codex/workbench-w10-core",
+  "active_package": "W10",
   "sequence": [
     "W01.core",
     "W02",
@@ -30,10 +30,12 @@
       "pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/41",
       "merge_commit": "ea4b5b8fa1e4e4e3444b6cd8861f83f5fcc61468",
       "pressure_baseline": "9e6b6e1b804eea7b843f716165fbde2ce04a72be",
-      "pressure_status": "pr_open",
+      "pressure_status": "merged",
       "pressure_implementation_commit": "e21be437f033b112dc15779fe51e45d267cc6bf8",
       "pressure_evidence": "W01-PRESSURE.md",
-      "pressure_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/55"
+      "pressure_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/55",
+      "pressure_head": "54e8c74c4193d793250e6351e21658000e999267",
+      "pressure_merge_commit": "d42dda62c53bfeaf177c077f8e46074c8c23bdba"
     },
     "W02": {
       "status": "core_slices_merged",
@@ -90,7 +92,8 @@
       "frontend_evidence": "W04-UI.md",
       "frontend_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/48",
       "frontend_head": "b11452ff32305a91d2dd743e7b1248e5c59126a1",
-      "frontend_merge_commit": "b00525557ac69e9453ae4d6e3b5faf20dbefcf8b"
+      "frontend_merge_commit": "b00525557ac69e9453ae4d6e3b5faf20dbefcf8b",
+      "pressure_first_screen_evidence": "w04/pressure/checks.json"
     },
     "W05": {
       "status": "slices_merged",
@@ -162,8 +165,13 @@
       "accepted": false
     },
     "W10": {
-      "status": "planned",
-      "accepted": false
+      "status": "core_pr_open",
+      "accepted": false,
+      "baseline": "d42dda62c53bfeaf177c077f8e46074c8c23bdba",
+      "plan": "W10-PLAN.md",
+      "core_implementation_commit": "b505d34f384edda5f50e94f1e8d2a3d0060fb737",
+      "core_evidence": "W10-CORE.md",
+      "core_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/56"
     },
     "W11": {
       "status": "planned",
@@ -775,18 +783,30 @@
     },
     "W10-AC01": {
       "owner": "W10",
-      "status": "open",
-      "evidence": []
+      "status": "partial_core_verified",
+      "evidence": [
+        "W10-CORE.md",
+        "w10/core/recovery-checks.json"
+      ],
+      "accepted": false
     },
     "W10-AC02": {
       "owner": "W10",
-      "status": "open",
-      "evidence": []
+      "status": "partial_core_verified",
+      "evidence": [
+        "W10-CORE.md",
+        "w10/core/recovery-checks.json"
+      ],
+      "accepted": false
     },
     "W10-AC03": {
       "owner": "W10",
-      "status": "open",
-      "evidence": []
+      "status": "partial_core_verified",
+      "evidence": [
+        "W10-CORE.md",
+        "w10/core/recovery-checks.json"
+      ],
+      "accepted": false
     },
     "W10-AC04": {
       "owner": "W10",
@@ -795,13 +815,21 @@
     },
     "W10-AC05": {
       "owner": "W10",
-      "status": "open",
-      "evidence": []
+      "status": "partial_core_verified",
+      "evidence": [
+        "W10-CORE.md",
+        "w10/core/recovery-checks.json"
+      ],
+      "accepted": false
     },
     "W10-AC06": {
       "owner": "W10",
-      "status": "open",
-      "evidence": []
+      "status": "partial_core_verified",
+      "evidence": [
+        "W10-CORE.md",
+        "w10/core/recovery-checks.json"
+      ],
+      "accepted": false
     },
     "W10-AC07": {
       "owner": "W10",
@@ -810,8 +838,12 @@
     },
     "W10-AC08": {
       "owner": "W10",
-      "status": "open",
-      "evidence": []
+      "status": "partial_core_verified",
+      "evidence": [
+        "W10-CORE.md",
+        "w10/core/recovery-checks.json"
+      ],
+      "accepted": false
     },
     "W11-AC01": {
       "owner": "W11",

@@ -182,6 +182,17 @@ def build_parser() -> argparse.ArgumentParser:
     status_parser.add_argument("--project", required=True)
     status_parser.add_argument("--task-id", required=True)
 
+    status_parser.add_argument("--revision", default=None)
+    status_parser.add_argument("--details", action="store_true", help="bounded run facts and links, shared with HTTP task detail")
+    list_parser = task_sub.add_parser("list")
+    list_parser.add_argument("--project", required=True)
+    list_parser.add_argument("--revision", default=None)
+    list_parser.add_argument("--limit", type=int, default=30)
+    list_parser.add_argument("--offset", type=int, default=0)
+    list_parser.add_argument("--change-id", default=None)
+    list_parser.add_argument("--status", default=None)
+    list_parser.add_argument("--attention", action="store_true")
+
     cancel_parser = task_sub.add_parser("cancel")
     cancel_parser.add_argument("--project", required=True)
     cancel_parser.add_argument("--task-id", required=True)
@@ -922,7 +933,14 @@ def _dispatch_task(options) -> int:
                 supported_protocols=options.supported_protocol, capabilities=options.capability,
             )
         )
+    if options.task_command == "list":
+        from .run_desk import listing
+        return _emit(listing(options.project, revision=options.revision, limit=options.limit, offset=options.offset,
+                             change_id=options.change_id, status=options.status, attention=options.attention))
     if options.task_command == "status":
+        if options.details or options.revision is not None:
+            from .run_desk import detail
+            return _emit(detail(options.project, task_id=options.task_id, revision=options.revision))
         return _emit(service.task_status(options.project, task_id=options.task_id))
     if options.task_command == "cancel":
         return _emit(

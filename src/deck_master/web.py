@@ -290,7 +290,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             except Exception as exc:
                 self._send_error(exc)
             return
-        if parsed.path in ("/api/view", "/api/view/summary", "/api/workbench", "/api/tasks", "/api/reviews", "/api/content-plan") or parsed.path.startswith(("/api/pages/", "/api/requests/", "/api/attempts/")):
+        if parsed.path in ("/api/view", "/api/view/summary", "/api/workbench", "/api/tasks", "/api/reviews", "/api/content-plan") or parsed.path.startswith(("/api/pages/", "/api/requests/", "/api/attempts/", "/api/tasks/")):
             self._read_projection(parsed)
             return
         if parsed.path=='/api/session':
@@ -313,7 +313,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             self._send_json({"status": "ok", **self.runtime_state,
                              "project_identity": _project_identity(self.store.project_root),
                              "ui_available": (self.static_dir / 'v2' / 'index.html').is_file(),
-                             "ui_capabilities": ["ui_draft.v1", "ui_gallery.v1", "thumbnails.v1", "fixed_snapshot.v1", "text_range.v1", "page_detail.v1", "annotations.v1", "changes.v1", "operations.v1", "candidates.v1", "stages.v1"]})
+                             "ui_capabilities": ["ui_draft.v1", "ui_gallery.v1", "thumbnails.v1", "fixed_snapshot.v1", "text_range.v1", "page_detail.v1", "annotations.v1", "changes.v1", "operations.v1", "candidates.v1", "stages.v1", "run_desk.v1"]})
             return
         if parsed.path == "/api/file":
             query = parse_qs(parsed.query)
@@ -357,7 +357,25 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             elif parsed.path in ("/api/view/summary", "/api/workbench"):
                 payload = workbench_mod.workbench_summary(project, revision=revision)
             elif parsed.path == "/api/tasks":
-                payload = workbench_mod.tasks_view(project, revision=revision)
+                from . import run_desk
+                fields = ('limit', 'offset', 'change_id', 'status', 'attention')
+                if any(field in query for field in fields):
+                    if any(len(query.get(field, [])) > 1 for field in fields):
+                        raise run_desk.RunReadError('invalid_run_query', 'query', 'provide each filter once', http_status=400)
+                    try:
+                        limit = int(query.get('limit', ['30'])[0]); offset = int(query.get('offset', ['0'])[0])
+                    except ValueError as exc:
+                        raise run_desk.RunReadError('invalid_run_query', 'pagination', 'pagination must use integers', http_status=400) from exc
+                    attention = query.get('attention', ['0'])[0]
+                    if attention not in ('0', '1'):
+                        raise run_desk.RunReadError('invalid_run_query', 'attention', 'attention must be 0 or 1', http_status=400)
+                    payload = run_desk.listing(project, revision=revision, limit=limit, offset=offset,
+                        change_id=query.get('change_id', [None])[0], status=query.get('status', [None])[0], attention=attention == '1')
+                else:
+                    payload = workbench_mod.tasks_view(project, revision=revision)
+            elif parsed.path.startswith('/api/tasks/'):
+                from .run_desk import detail
+                payload = detail(project, task_id=parsed.path.removeprefix('/api/tasks/'), revision=revision)
             elif parsed.path == "/api/content-plan":
                 from .content_plan import show
                 payload = show(project, revision=revision)

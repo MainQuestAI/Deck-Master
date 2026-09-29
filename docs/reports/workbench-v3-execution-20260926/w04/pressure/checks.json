@@ -1,0 +1,165 @@
+{
+  "browser": "149.0.7827.55",
+  "project_id": "project",
+  "revision_id": "d62290c4c551453ca459b9ca09367f1c",
+  "synthetic": true,
+  "timings": [
+    {
+      "viewport": [
+        1280,
+        800
+      ],
+      "sample": 0,
+      "seconds": 0.898617375001777,
+      "pass": true,
+      "cards": 9,
+      "pool": {
+        "network": 0,
+        "network_peak": 6,
+        "decode": 0,
+        "decode_peak": 2,
+        "thumbnails": 8,
+        "large": 0,
+        "thumbnails_peak": 8,
+        "large_peak": 0,
+        "pinned": 8,
+        "hits": 3,
+        "evictions": 21,
+        "closed_bitmaps": 0,
+        "active_object_urls": 0
+      }
+    },
+    {
+      "viewport": [
+        1280,
+        800
+      ],
+      "sample": 1,
+      "seconds": 0.7517826670082286,
+      "pass": true,
+      "cards": 9,
+      "pool": {
+        "network": 5,
+        "network_peak": 6,
+        "decode": 0,
+        "decode_peak": 1,
+        "thumbnails": 8,
+        "large": 0,
+        "thumbnails_peak": 8,
+        "large_peak": 0,
+        "pinned": 8,
+        "hits": 3,
+        "evictions": 21,
+        "closed_bitmaps": 0,
+        "active_object_urls": 0
+      }
+    },
+    {
+      "viewport": [
+        1280,
+        800
+      ],
+      "sample": 2,
+      "seconds": 0.7663574159960262,
+      "pass": true,
+      "cards": 9,
+      "pool": {
+        "network": 5,
+        "network_peak": 6,
+        "decode": 0,
+        "decode_peak": 1,
+        "thumbnails": 8,
+        "large": 0,
+        "thumbnails_peak": 8,
+        "large_peak": 0,
+        "pinned": 8,
+        "hits": 3,
+        "evictions": 21,
+        "closed_bitmaps": 0,
+        "active_object_urls": 0
+      }
+    },
+    {
+      "viewport": [
+        1440,
+        900
+      ],
+      "sample": 0,
+      "seconds": 0.7804664579452947,
+      "pass": true,
+      "cards": 9,
+      "pool": {
+        "network": 0,
+        "network_peak": 6,
+        "decode": 0,
+        "decode_peak": 2,
+        "thumbnails": 8,
+        "large": 0,
+        "thumbnails_peak": 8,
+        "large_peak": 0,
+        "pinned": 8,
+        "hits": 8,
+        "evictions": 16,
+        "closed_bitmaps": 0,
+        "active_object_urls": 0
+      }
+    },
+    {
+      "viewport": [
+        1440,
+        900
+      ],
+      "sample": 1,
+      "seconds": 0.780448833014816,
+      "pass": true,
+      "cards": 9,
+      "pool": {
+        "network": 0,
+        "network_peak": 6,
+        "decode": 0,
+        "decode_peak": 2,
+        "thumbnails": 8,
+        "large": 0,
+        "thumbnails_peak": 8,
+        "large_peak": 0,
+        "pinned": 8,
+        "hits": 8,
+        "evictions": 16,
+        "closed_bitmaps": 0,
+        "active_object_urls": 0
+      }
+    },
+    {
+      "viewport": [
+        1440,
+        900
+      ],
+      "sample": 2,
+      "seconds": 0.7924089580192231,
+      "pass": true,
+      "cards": 9,
+      "pool": {
+        "network": 0,
+        "network_peak": 6,
+        "decode": 0,
+        "decode_peak": 2,
+        "thumbnails": 8,
+        "large": 0,
+        "thumbnails_peak": 8,
+        "large_peak": 0,
+        "pinned": 8,
+        "hits": 8,
+        "evictions": 16,
+        "closed_bitmaps": 0,
+        "active_object_urls": 0
+      }
+    }
+  ],
+  "errors": [],
+  "fixture_manifest": "w01-pressure.v1",
+  "environment": {
+    "os": "macOS-27.0-arm64-arm-64bit",
+    "python": "3.12.12",
+    "source_commit": "b505d34f384edda5f50e94f1e8d2a3d0060fb737"
+  }
+}

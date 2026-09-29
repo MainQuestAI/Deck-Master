@@ -213,3 +213,38 @@ repeats its call. Confirm cancellation before creating a replacement handoff.
 Late results keep call facts but cannot overwrite the cancelled task's targets.
 New `changes.v1` records require the matching writer; older cores refuse that
 boundary. Existing projects are not migrated in place.
+
+## Run Desk Recovery
+
+`deck-master task list --project <dir> --limit 30 --offset 0 --revision <id>`
+and `GET /api/tasks?limit=30&offset=0&revision=<id>` share a bounded projection.
+Pin the returned revision for later pages. Optional status/change_id/attention
+filters never start work. Existing `/api/tasks` without paging filters retains
+its old response. `task status --details --revision <id>` and
+`GET /api/tasks/<task_id>?revision=<id>` share detail, call facts and links to the
+existing requests/attempts queries. Normal awaiting_host is HTTP 200 / CLI 0;
+`continue` still uses exit 3 when it is waiting for a Host.
+
+- `invalid_run_query`: CLI 2 / HTTP 400. Use limit 1–100, a nonnegative offset,
+  one filter value and a committed revision. Do not fall back to a new snapshot.
+- `task_not_found` / `change_not_found`: CLI 2 / HTTP 404. Read IDs from the
+  selected project's committed run list; do not substitute another task.
+- `run_object_unreadable`: local row/detail error. Other rows remain readable;
+  use available history or restore that object from a verified project copy.
+- `run_unavailable`: CLI 2 / HTTP 503. Preserve the current UI and saved operation;
+  retry the same read. It is not permission to dispatch a replacement call.
+
+New real claims on workbench.v3 record `execution_started_at` in the same Task
+commit as execution_ref/status, and advance the pointer to `run-desk.v1`.
+Use the matching core; older cores refuse the new writer before changing the
+project. No existing HOME, installation or project is migrated by a read.
+Legacy claims without this field remain "not recorded". Fixed-revision reads
+do not acquire a live timeout merely because wall-clock time passes. Their last task update
+may establish at least 30 minutes of waiting, but is never labeled claim time.
+
+A 30-minute waiting warning only requests verification. Inspect the original
+Task, request, Attempt and call allowance. Unknown is not not_sent; never
+allocate or replay an external call automatically. After confirmed cancellation,
+return to the affected page and explicitly preview a new scoped plan. Preserve
+successful results and calls, and exclude those pages from the replacement.
+The normal late-result protection remains in force after cancellation.
