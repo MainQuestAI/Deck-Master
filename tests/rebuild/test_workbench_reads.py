@@ -340,3 +340,65 @@ def test_invalid_document_reference_never_echoes_a_private_path(live):
         assert status == 404
         assert payload["error"]["code"] == "revision_unavailable"
         assert "/private/" not in json.dumps(payload)
+
+
+@pytest.mark.parametrize('component', ['object', 'bucket', 'objects'])
+def test_warm_metadata_and_file_checks_reject_new_symlinks(tmp_path, component):
+    project, store = mixed_project(tmp_path / 'run')
+    expected = workbench.workbench_summary(project)
+    ref = store.load_document()['pages'][0]['blueprint']
+    target = project / ref['path']
+    if component == 'bucket':
+        target = target.parent
+    elif component == 'objects':
+        target = store.objects_dir
+    external = tmp_path / 'external'
+    target.rename(external)
+    target.symlink_to(external, target_is_directory=external.is_dir())
+    changed = workbench.workbench_summary(project)
+    assert changed['pages'][0]['stages']['blueprint']['existence'] == 'unreadable'
+    assert str(external) not in json.dumps(changed)
+    assert expected['pages'][0]['stages']['blueprint']['existence'] == 'recorded'
+
+
+def test_summary_projects_scoped_tasks_once_without_mutable_aliases(tmp_path):
+    from deck_master import tasks
+    from deck_master.models import content_identity
+    project, store = make_project(tmp_path, 3)
+    doc = store.load_document()
+    task = tasks.new_task(task_id='two-pages', operation_id='fixture-task', kind='review',
+        scope_pages=['p01', 'p02'], instruction='long detail only', inputs=[], dependencies=[],
+        dispatch_revision=doc['revision_id'], produced_against=content_identity(doc))
+    doc['tasks'] = [store.put_json_object(task)]
+    commit(store, doc, 'scoped-task')
+    result = workbench.workbench_summary(project)
+    assert result['task_counts'] == {'awaiting_host': 1}
+    assert [len(p['execution']) for p in result['pages']] == [1, 1, 0]
+    assert 'long detail only' not in json.dumps(result)
+    result['pages'][0]['execution'][0]['status'] = 'poison'
+    assert result['pages'][1]['execution'][0]['status'] == 'awaiting_host'
+    assert workbench.tasks_view(project)['tasks'][0]['instruction'] == 'long detail only'
+
+
+def test_warm_artifact_file_replacement_by_symlink_is_local(tmp_path):
+    project, store = mixed_project(tmp_path / 'run')
+    workbench.workbench_summary(project)
+    art = store.read_object_json(store.load_document()['pages'][0]['blueprint'])
+    target = project / art['file']['path']
+    external = tmp_path / 'external.png'; target.rename(external); target.symlink_to(external)
+    result = workbench.workbench_summary(project)
+    assert result['pages'][0]['stages']['blueprint']['existence'] == 'unreadable'
+    assert result['pages'][0]['stages']['content']['existence'] == 'recorded'
+
+
+def test_non_posix_object_check_keeps_store_resolution_and_regular_file_rule(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    project, store = mixed_project(tmp_path)
+    doc = store.load_document(); ref = doc['pages'][0]['page']
+    ctx = workbench._ReadContext(store, doc)
+    # Replace only this module's os binding, not process-global os.name/pathlib.
+    monkeypatch.setattr(workbench, 'os', SimpleNamespace(name='nt'))
+    assert ctx.object_stat(ref).st_size > 0
+    monkeypatch.setattr(store, '_resolve_object_path', lambda path: project)
+    with pytest.raises(ValueError, match='regular file'):
+        ctx.object_stat(ref)
