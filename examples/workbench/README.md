@@ -127,3 +127,27 @@ PYTHONPATH=src python examples/workbench/w06_change_handoff.py --out /tmp/workbe
 原始回包位于本机 `local-only-requests/`：`base-conflict.json` 对应 CLI 5，须刷新版本重新预览；`operation-payload-conflict.json` 对应 CLI 5，原 ID 只能重放原 payload；`operation-not-found.json` 对应 CLI 2，脚本随后用已保存的同一 ID 和 payload 重放。响应丢失由客户端主动忽略第一次回包模拟，查询以已提交历史为准。另有单测对新操作与旧 task accept 分别执行四个位置的真实子进程退出；这不证明任意硬件断电恢复。
 
 任务保留 `awaiting_host`，脚本不编造执行身份或调用模型。可分享 `checks.json`；完整请求、交接块和项目运行目录保留本机，不提交仓库。
+
+## W06 opinions, plans and durable handoff UI
+
+```sh
+PYTHONPATH=src python examples/workbench/w06_annotations_browser.py --out /tmp/w06-browser
+PYTHONPATH=src python examples/workbench/w06_annotations_edges.py --out /tmp/w06-edges
+```
+
+These scripts drive the actual UI against a real loopback service with synthetic
+pages. Network and clipboard faults are explicitly injected. They check fixed
+version points/rectangles, Unicode code-point ranges, conditional opinion scopes,
+read-only impact preview, changed-input invalidation, persistent handoff, original
+operation replay, late-draft isolation, SVG letterboxing, tiny-coordinate digest
+parity, and recovery after a service restart on a different port.
+
+Add `--wait-for-host` to the first script to pause after the UI has saved, planned,
+committed and copied the handoff. It prints a local-only handoff file. A real Host
+must read that generated plan and invoke the official CLI with its own execution
+reference and the required protocol/capabilities; the script never impersonates
+that Host. It waits for the actual running state, records it, then confirms
+cancellation through the browser. This proves claim/status/cancellation only, not
+model generation, result quality or delivery readiness. Requests, recovery files
+and full local handoffs stay in `local-only/`; only curated checks/screenshots
+belong in the repository report.

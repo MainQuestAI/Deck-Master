@@ -1,0 +1,16 @@
+{
+  "evidence": "actual current Codex session read the browser-created plan and invoked official CLI task start; browser later confirmed cancellation",
+  "source_commit": "0e976f7e5b0d6a6cecf638bb3ed0f60b140bde74",
+  "change_id": "change-6a0a2ccdf9e84fab9bf93fedae738979",
+  "task_id": "task-e08784c7e47945b0a90b5f04625cdb9a",
+  "execution_ref_sha256": "5893947c27c4c1d05167d16b7f3a8b7f4848ef78a7c20f362afd5dd37d612d87",
+  "host_status_seen_by_browser": "running",
+  "late_result_exit_code": 5,
+  "late_result_error_code": "conflict",
+  "all_page_pointers_unchanged": true,
+  "outputs_unchanged": true,
+  "content_identity_unchanged": true,
+  "audit_revision_advanced": true,
+  "model_calls": 0,
+  "result_adopted": false
+}

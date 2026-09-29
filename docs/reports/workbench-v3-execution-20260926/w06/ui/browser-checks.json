@@ -1,0 +1,109 @@
+{
+  "status": "verified",
+  "evidence": "synthetic project, actual Chromium UI and same-origin HTTP; network/clipboard faults explicitly injected",
+  "real_host_wait": true,
+  "browser": "149.0.7827.55",
+  "python": "3.12.12",
+  "checks": [
+    {
+      "name": "default-reading-drag-creates-no-opinion",
+      "status": "pass"
+    },
+    {
+      "name": "explicit-point-mode-locks-zoom",
+      "status": "pass"
+    },
+    {
+      "name": "out-of-bounds-keyboard-range-keeps-input",
+      "status": "pass"
+    },
+    {
+      "name": "zoom-scroll-coordinate-is-original-normalized",
+      "status": "pass"
+    },
+    {
+      "name": "multi-regions-save-as-separate-version-bound-opinions",
+      "status": "pass"
+    },
+    {
+      "name": "saving-opinions-does-not-create-tasks-or-change-content",
+      "status": "pass"
+    },
+    {
+      "name": "rectangle-can-be-deleted",
+      "status": "pass"
+    },
+    {
+      "name": "escape-cancels-last-unsaved-range-and-keeps-page",
+      "status": "pass"
+    },
+    {
+      "name": "opinion-link-returns-fixed-original-version",
+      "status": "pass"
+    },
+    {
+      "name": "whole-scope-conditional-identities",
+      "status": "pass"
+    },
+    {
+      "name": "unknown-response-globally-pauses-new-business-save",
+      "status": "pass"
+    },
+    {
+      "name": "reload-recovery-queries-original-commit-and-keeps-later-draft",
+      "status": "pass"
+    },
+    {
+      "name": "not-found-replay-retains-original-id-payload",
+      "status": "pass"
+    },
+    {
+      "name": "later-draft-is-not-sent-by-replay",
+      "status": "pass"
+    },
+    {
+      "name": "unicode-codepoint-emoji-combining-crlf-preserved",
+      "status": "pass"
+    },
+    {
+      "name": "plan-preview-is-read-only-and-precise",
+      "status": "pass"
+    },
+    {
+      "name": "changed-payload-invalidates-preview-before-commit",
+      "status": "pass"
+    },
+    {
+      "name": "commit-creates-unclaimed-durable-handoff",
+      "status": "pass"
+    },
+    {
+      "name": "clipboard-failure-keeps-complete-manual-handoff",
+      "status": "pass"
+    },
+    {
+      "name": "successful-copy-does-not-start-host",
+      "status": "pass"
+    },
+    {
+      "name": "handoff-survives-navigation-and-returns-from-runs",
+      "status": "pass"
+    },
+    {
+      "name": "external-cli-host-claim-refreshes-real-execution-reference",
+      "status": "pass"
+    },
+    {
+      "name": "cancel-is-displayed-only-after-service-confirmation",
+      "status": "pass"
+    },
+    {
+      "name": "no-uncaught-browser-errors",
+      "status": "pass"
+    }
+  ],
+  "residuals": [
+    "Actual model calls and professional quality acceptance are not implied by UI or Host claim."
+  ],
+  "source_commit": "0e976f7e5b0d6a6cecf638bb3ed0f60b140bde74"
+}

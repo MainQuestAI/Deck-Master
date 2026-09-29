@@ -1,0 +1,153 @@
+{
+  "evidence_level": "real Chromium / real local HTTP / synthetic recorded evidence",
+  "checks": {
+    "original_to_recorded_prompt_and_content_within_three_clicks": true,
+    "unicode_dom_utf16_to_codepoints_crlf_combining_zwj": {
+      "map": [
+        0,
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "rejected": true,
+      "zwj": [
+        0,
+        2,
+        3,
+        5
+      ],
+      "range": "🙂é"
+    },
+    "diff_preserves_combining_marks_and_bounds_large_comparison": {
+      "exact": [
+        "removed",
+        "added"
+      ],
+      "large": "full_sides"
+    },
+    "draft_does_not_modify_recorded_prompt_or_image": true,
+    "all_prepared_records_exact_basis_switch_trusted_segments_and_diff": true,
+    "unknown_actual_parameters_and_references_not_filled_from_frozen_defaults": true,
+    "host_reported_unknown_and_missing_image_states": true,
+    "prompt_ack_cross_port_offline_not_auto_recovered_explicit_import": true,
+    "production_summary_exact_field_semantics_and_unassessed_quality": true,
+    "same_page_same_layer_fixed_versions": true,
+    "background_update_only_banner_does_not_replace_comparison": true,
+    "failed_comparand_keeps_previous_pinned_side": true,
+    "responsive_comparison_switch_and_no_horizontal_overflow": true,
+    "comparand_evidence_link_keeps_its_own_snapshot": true,
+    "source_return_keeps_fixed_material_snapshot": true
+  },
+  "manifest": {
+    "original_revision": "6d410b1c900f4dc3aec1011899522c59",
+    "fixed_revision": "7c93d927116f466fbd42f07118a5d744",
+    "fixture": {
+      "schema_version": "gallery_fixture.v1",
+      "factory": "workbench-synthetic.v1",
+      "seed": 0,
+      "page_count": 30,
+      "page_ids": [
+        "p01",
+        "p02",
+        "p03",
+        "p04",
+        "p05",
+        "p06",
+        "p07",
+        "p08",
+        "p09",
+        "p10",
+        "p11",
+        "p12",
+        "p13",
+        "p14",
+        "p15",
+        "p16",
+        "p17",
+        "p18",
+        "p19",
+        "p20",
+        "p21",
+        "p22",
+        "p23",
+        "p24",
+        "p25",
+        "p26",
+        "p27",
+        "p28",
+        "p29",
+        "p30"
+      ],
+      "revision_id": "6d410b1c900f4dc3aec1011899522c59",
+      "original_revision": "86a4f78581aa4b39a5dbcb038ea8a868",
+      "style_deviation_pages": [
+        "p08",
+        "p19"
+      ],
+      "missing_original_pages": [
+        "p03",
+        "p14"
+      ],
+      "stale_ppt_preview_pages": [
+        "p11",
+        "p21"
+      ],
+      "source_dimensions": [
+        960,
+        540
+      ],
+      "candidate_count": 0,
+      "attempt_count": 0,
+      "model_calls": 0,
+      "actual_ppt_rendering": false,
+      "user_30_second_observation": "not measured"
+    },
+    "request_id": "req-c68a1985ea2740dd88228607a3204bbb",
+    "model_calls": 0
+  },
+  "source_commit": "6c3e156a47926187b71ada1bd5983a0ad73662f2",
+  "source_assets": {
+    "icons.js": "95fd179d9231f9993a8a98140a3711145a486bf022fb3096deaad56113da8456",
+    "index.html": "49084f6532bb728bb2150b43c75a1ef0ee5f9e0ae0f31ebb4b5a78b91258c6ed",
+    "page-workbench.js": "bfb4b9df15ff432a3ff40fba33ed25a5ed3bb073fd16c547d4b419c4ab015982",
+    "tokens.css": "da2e775a9430340cd6e2a0add92bdefcba8575fdd1fb2cc47d100b8b9c5783fc",
+    "business-operations.js": "d2a389f5d5ffd2f1c373bc3a1b4b51380557b32a280014dcf626e840f502160b",
+    "change-handoff.js": "a2e91ea27b1e1cbc3e2f091ad11553985b570c2c31b17a7a9cf865301f8b51d3",
+    "text-selection.js": "64b89188f34442944905671b2b512b07cc5627ae3add72ad0bea1aebddd06267",
+    "gallery.js": "1db3c656e54f87fb9404a269b9be8889bb6158024bdf6127c618aac39d85b89d",
+    "production-view.js": "7786bcf3381e35933330f3e78dd8e81b89bfb23e6da64b80e0e877cfbaa07d1b",
+    "annotations.js": "4c2d9db2ad338d98ac851e0e101706804ebafeb2ae4ae470e98e424b4c406491",
+    "launcher-ui.js": "1e5ea56315f693161ad4fedba9a8b38fa3ed20fd4cb61bd572a95a07214acbc4",
+    "text-diff.js": "cc52557c11ad1000989db7151cab5ed203d8b440d1b9c190a017291f12e1a632",
+    "routes.js": "3aec1c175ffab09e3792baf159ffda35cf2c600a0ae1f3636d1d5328bd24c2de",
+    "project.js": "6ecf21cba1300aa6a4d358cb5aafec86bf5e517bd62d0d31e323f849f62f920b",
+    "dom.js": "e39301e0b14cefe7b6b9fe9f51821c1e34e37925258be8093f2f7825747bb5a3",
+    "views.js": "0f2b5f9a640dc4bc2761634f448fcb116c16e2e53125f1b6c1f25c6080199443",
+    "style.css": "3045ea07efcb5418235df114511acaec7f5a5e5f694fd21dd5da2afee1553570",
+    "request-view.js": "2e3a3675189af0e0c21a48b5ede649744b23ae91ea3e8f809865b3563e4a43d6",
+    "gallery-state.js": "bbe704c776e37bf6dfd216c4f2750e7dec447e9dd0c300556a4a0d1959aee308",
+    "api.js": "009b7923cbc919d7eb0f29d7f40f12f069f5ed2fbb3dee49f51620b698f30d22",
+    "app.js": "9c8f3ad2f39958148e79fb7cf08b225d07059656d7eff3f229bf02981fac79f6",
+    "images.js": "b8b67c32711de317268be890071aa159a84d768dc6af835463f965c9d9f0f2b7",
+    "workbench.css": "2dd0b5a3f71115dff4c844d2e07a247d662c760647731c93153229cdbda338d7",
+    "drafts.js": "ecb2b4eea761bf4cc1df810eee60ba569bbd57a63f2d9782eed59fdb2081c138"
+  },
+  "environment": {
+    "os": "macOS-27.0-arm64-arm-64bit",
+    "python": "3.12.12",
+    "browser": "149.0.7827.55",
+    "viewports": [
+      "1440x900",
+      "1280x800",
+      "1100x800"
+    ]
+  },
+  "real_host_proof": false,
+  "desktop_editing_verified": false,
+  "user_acceptance": "not measured",
+  "model_calls": 0
+}

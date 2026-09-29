@@ -5,21 +5,28 @@ import {readRoute, routeHash, position, surfaces, layers} from './routes.js';
 import {DraftEditor} from './drafts.js';
 import {overview, content, pageDetail, runs, style} from './views.js';
 import {gallery} from './gallery.js';
+import {BusinessOperations} from './business-operations.js';
 
 export class Project {
   constructor(root, health) { this.root = root; this.health = health; this.generation = 0; this.positionQueue = Promise.resolve(); this.disposables = []; }
   async start() {
     const [info, summary, state] = await Promise.all([get('/api/project'), get('/api/view/summary'), get('/api/ui-state')]);
     this.info = info; this.latest = summary; this.returnTo = state.record?.position;
+    if (this.health.ui_capabilities?.includes('operations.v1')) this.business = new BusinessOperations(this);
+    this.root.addEventListener('draft-state-changed', () => {
+      const editor = this.editor;
+      if (editor && this.business) this.business.ready.then(() => this.business.observe(editor));
+    });
     this.route = readRoute(info, this.returnTo, summary);
     addEventListener('hashchange', () => this.loadRoute());
     this.root.addEventListener('draft-restore-local', event => {
       const previous = this.editor;
       try {
         localStorage.setItem(previous.activeKey, JSON.stringify(event.detail));
-        const editor = new DraftEditor(previous.info, previous.target, previous.baseRevision, previous.baseRef, {readonly: this.readonly});
+        const editor = new DraftEditor(previous.info, previous.target, previous.baseRevision, previous.baseRef, {readonly: previous.readonly});
         const section = event.target.closest('.personal-draft');
         this.editor = editor; section.replaceWith(editor.mount());
+        this.root.dispatchEvent(new CustomEvent('draft-editor-replaced', {detail: editor}));
       } catch {
         this.setNotice('本机缓冲不可用，请先下载恢复文件。'); previous.disposed = false;
       }
@@ -109,6 +116,7 @@ export class Project {
         el('a', {href: '/'}, '原有工作区')));
     this.notice = el('div', {class: 'notice', role: 'status', hidden: true});
     const banners = el('div', {class: 'banners'}, this.notice);
+    if (this.business) banners.append(this.business.node);
     if (this.historical) banners.append(el('div', {class: 'history-banner'}, el('strong', {}, '历史版本 · 只读'),
       el('span', {}, `正在看 ${version(this.route.revision)}，当前为 ${version(this.latest.revision_id)}。阅读位置与个人草稿仍绑定原基准。`), button('查看当前版本', () => this.current())));
     if (this.info.sample) banners.append(el('div', {class: 'sample-banner'}, this.info.sample.readonly ? '这是合成的只读示例，未调用模型，也未进行专业质量验收。' : '这是可编辑的合成验证项目，未调用模型，也未进行专业质量验收。'));

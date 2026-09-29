@@ -48,6 +48,24 @@ export function canonical(value) {
   return JSON.stringify(value);
 }
 export async function digest(value) {
-  const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(canonical(value)));
+  const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(wireCanonical(value)));
   return [...new Uint8Array(bytes)].map(v => v.toString(16).padStart(2, '0')).join('');
+}
+// The service hashes Python's canonical_json_bytes after JSON parsing. Small
+// fractional coordinates use scientific notation there (including a two-digit
+// exponent), while JSON.stringify uses decimal notation down to 1e-6.
+export function wireCanonical(value) {
+  if (Array.isArray(value)) return '[' + value.map(wireCanonical).join(',') + ']';
+  if (value && typeof value === 'object') {
+    const order = (a, b) => {
+      const left = Array.from(a, ch => ch.codePointAt(0)), right = Array.from(b, ch => ch.codePointAt(0));
+      for (let i = 0; i < Math.min(left.length, right.length); i++) if (left[i] !== right[i]) return left[i] - right[i];
+      return left.length - right.length;
+    };
+    return '{' + Object.keys(value).sort(order).map(key => JSON.stringify(key) + ':' + wireCanonical(value[key])).join(',') + '}';
+  }
+  if (typeof value === 'number' && value !== 0 && Math.abs(value) < .0001) {
+    return value.toExponential().replace(/e([+-])(\d)$/, 'e$10$2');
+  }
+  return JSON.stringify(value);
 }

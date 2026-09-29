@@ -1,0 +1,33 @@
+{
+  "checks": {
+    "new_ui_actual_old_core": {
+      "commit": "09f4486a453d2132a18dbefd10f99ef7317e8fd5",
+      "upgrade_screen": true,
+      "api_reads": [
+        {
+          "method": "GET",
+          "path": "/api/health"
+        }
+      ],
+      "writes": 0,
+      "transport": "new static files plus GET-only proxy to unmodified old core"
+    },
+    "new_ui_new_core_old_project_without_migration": true,
+    "task_deep_link_reload": true,
+    "legacy_ui_new_core_default_preserved": true,
+    "html_and_svg_scripts_inert": true,
+    "skip_link_does_not_break_route": true,
+    "disconnection_preserves_last_read_surface": true,
+    "quota_and_network_failure_export_recovery": true,
+    "selecting_local_copy_preserves_both_sides": true,
+    "same_origin_tabs_preserve_distinct_unsent_buffers": true,
+    "picker_cancel_keeps_input_and_registry": "browser route fault injection; native dialog not driven",
+    "sample_readonly": true,
+    "multiple_prepared_prompts_require_explicit_draft_basis": true
+  },
+  "evidence_level": "real Chromium and real local cores; explicit fault injection where labeled",
+  "model_calls": 0,
+  "native_directory_dialog": "unverified: CUA inventory timed out before dialog was opened",
+  "real_home_changed": false,
+  "release": false
+}

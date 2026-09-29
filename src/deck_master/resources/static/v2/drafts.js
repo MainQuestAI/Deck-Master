@@ -46,7 +46,7 @@ export class DraftEditor {
         el('label', {class: 'recovery-import'}, '导入草稿恢复文件', file),
         el('p', {class: 'muted field-help'}, '恢复文件可能包含内部提示词。已保存到项目的内容可跨端口恢复；未同步内容请下载保管。'),
         this.restoreNode, this.localRestoreNode));
-    this.updateStatus(); this.load();
+    this.updateStatus(); this.ready = this.load();
     return node;
   }
   async load() {
@@ -170,6 +170,7 @@ export class DraftEditor {
     this.importInput.disabled = this.readonly || this.status === 'loading';
     this.verifyButton.hidden = this.status !== 'unknown';
     this.conflictButton.hidden = this.status !== 'conflict';
+    this.input.dispatchEvent(new CustomEvent('draft-state-changed', {bubbles: true}));
   }
   async save() {
     clearTimeout(this.timer);
@@ -178,6 +179,11 @@ export class DraftEditor {
     await this.submitPending();
   }
   async submitPending() {
+    if (this.pendingWrite) return this.pendingWrite;
+    this.pendingWrite = this.writePending();
+    try { return await this.pendingWrite; } finally { this.pendingWrite = null; }
+  }
+  async writePending() {
     const pending = this.pendingSave;
     if (!pending || this.status === 'saving') return;
     this.status = 'saving'; this.note = ''; this.persist(); this.updateStatus();

@@ -3,6 +3,7 @@ import {el, button, heading, empty, field, version, modal, toast} from './dom.js
 import {layers} from './routes.js';
 import {DraftEditor} from './drafts.js';
 import {stageKey, stageLabel} from './gallery.js';
+import {changeHandoffs} from './change-handoff.js';
 
 const pageTitle = (page, index) => `第 ${index + 1} 页 · ${page.title || '未命名页面'}`;
 const panel = (title, ...children) => el('section', {class: 'panel'}, el('div', {class: 'panel-head'}, el('h2', {}, title)), el('div', {class: 'panel-body stack'}, children));
@@ -80,6 +81,8 @@ function addMaterial(app, inputs) {
   const dialog = modal('补充材料', form, [submit]);
   form.addEventListener('submit', async event => {
     event.preventDefault(); submit.disabled = true;
+    try { await app.business?.available(); }
+    catch (error) { notice.textContent = readableError(error); submit.disabled = false; return; }
     pending ||= {base_revision: inputs.revision_id, operation_id: 'input-' + crypto.randomUUID(),
       patch: {reason: '在工作台补充材料', source_changes: {add: paths.input.value.split('\n').map(v => v.trim()).filter(Boolean).map(path => ({path}))}}};
     try {
@@ -103,6 +106,7 @@ export function runs(app, data) {
   const node = el('div', {}, heading(selected ? '当前任务' : '任务与交付', '任务状态按当前阅读版本展示。复制交接说明不会启动模型。',
     selected?.kind === 'compose' && selected.status === 'awaiting_host' && !app.readonly ? button('交接这项内容整理', () => app.handoff(selected.task_id), true) : null));
   if (selected && app.returnTo && !app.returnTo.task_id) node.append(button('返回上次工作面', () => app.go(app.returnTo)));
+  if (app.health.ui_capabilities?.includes('changes.v1')) node.append(changeHandoffs(app));
   const tasks = selected ? [selected] : data.tasks;
   node.append(tasks.length ? el('div', {class: 'task-list stack'}, tasks.map(task => el('article', {class: 'panel task-row'},
     el('div', {}, el('h2', {}, taskNames[task.kind] || '制作任务'), el('p', {class: 'muted'}, `${taskStatus[task.status] || '状态待核实'} · 任务 ${task.task_id}`),
