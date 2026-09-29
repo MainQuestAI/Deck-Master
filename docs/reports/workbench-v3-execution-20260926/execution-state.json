@@ -167,7 +167,9 @@
         "Frontend",
         "Actual Host style trial and expansion evaluation",
         "User acceptance"
-      ]
+      ],
+      "core_implementation_commit": "1bccae4e68156f3e71556253f33f69a5536de8e8",
+      "core_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/58"
     },
     "W09": {
       "status": "planned",
