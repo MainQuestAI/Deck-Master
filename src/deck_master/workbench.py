@@ -7,6 +7,9 @@ Candidates and Attempts are projected only from committed writer records.
 from __future__ import annotations
 
 import copy
+import os
+import stat
+from collections import Counter, defaultdict
 from functools import lru_cache
 
 from .models import input_alignment, sha256_bytes, validate_ref, validate_schema
@@ -20,7 +23,9 @@ def object_error():
             "next_action": "read available history; restore the object from a verified project copy"}
 
 
-@lru_cache(maxsize=2048)
+# Bounded working set: the 300-page pressure graph has ~2,500 summary
+# metadata objects. 2,048 entries made a sequential scan evict every prior hit.
+@lru_cache(maxsize=4096)
 def _cached_json(root, path, digest, signature):
     # Signature includes ctime/inode as well as size/mtime. Every call checks
     # path safety anew; corrupted/replaced immutable files cannot hide in cache.
@@ -39,34 +44,55 @@ class _ReadContext:
     def __init__(self, store, document):
         self.store, self.document = store, document
         self.objects = {}
+        self.root = str(store.project_root)
+        self.directories = (str(store.deck_root), str(store.objects_dir))
         self.pages = {p["page_id"]: p for p in document.get("pages") or []}
+
+    def object_stat(self, ref):
+        # validate_ref fixes the exact objects/<bucket>/<hash>.<ext> grammar.
+        # Check every component on every access, including warm cache hits.
+        # No repeated realpath traversal of the already-resolved project root.
+        validate_ref(ref, where="object")
+        if os.name != "posix":
+            # Preserve Store's platform-specific resolution (e.g. junctions).
+            return self.store._resolve_object_path(ref["path"]).stat()
+        target = self.root + "/" + ref["path"]
+        bucket = target.rsplit("/", 1)[0]
+        for directory in (*self.directories, bucket):
+            if not stat.S_ISDIR(os.lstat(directory).st_mode):
+                raise ValueError("unsafe object directory")
+        value = os.lstat(target)
+        if not stat.S_ISREG(value.st_mode):
+            raise ValueError("object is not a regular file")
+        return value
 
     def read(self, ref):
         validate_ref(ref, where="object")
         key = (ref["path"], ref["sha256"])
         if key not in self.objects:
-            target = self.store._resolve_object_path(ref["path"])
-            st = target.stat()
+            st = self.object_stat(ref)
             signature = (st.st_ino, st.st_size, st.st_mtime_ns, st.st_ctime_ns)
-            self.objects[key] = _cached_json(str(self.store.project_root), *key, signature)
+            self.objects[key] = _cached_json(self.root, *key, signature)
         return self.objects[key]
 
 
-def _task_rows(ctx):
+def _task_rows(ctx, *, summary=False):
     rows = []
     for ref in ctx.document.get("tasks") or []:
         try:
             task = ctx.read(ref)
             if task.get("schema_version") != "deck_task.v1":
                 raise ValueError("not a task")
-            rows.append({"ref": ref, "task_id": task["task_id"], "kind": task["kind"],
-                         "status": task["status"], "scope_pages": task.get("scope_pages") or [],
-                         "instruction": task.get("instruction"), "updated_at": task.get("updated_at"),
-                         "execution_ref": task.get("execution_ref"),
-                         "result_refs": task.get("result_refs") or [],
-                         "request_count": len(task.get("generation_requests") or []),
-                         "attempt_count": len(task.get("generation_attempts") or []),
-                         "result_linkage": "known" if task.get("result_refs") else "unknown"})
+            row = {"task_id": task["task_id"], "kind": task["kind"],
+                   "status": task["status"], "scope_pages": task.get("scope_pages") or [],
+                   "execution_ref": task.get("execution_ref"),
+                   "attempt_count": len(task.get("generation_attempts") or [])}
+            if not summary:
+                row.update(ref=ref, instruction=task.get("instruction"), updated_at=task.get("updated_at"),
+                           result_refs=task.get("result_refs") or [],
+                           request_count=len(task.get("generation_requests") or []),
+                           result_linkage="known" if task.get("result_refs") else "unknown")
+            rows.append(row)
         except READ_FAILURES:
             rows.append({"ref": ref, "task_id": None, "status": "unreadable",
                          "detail": object_error()["message"], "error": object_error()})
@@ -160,8 +186,7 @@ def _stage(ctx, entry, slot):
         validate_ref(obj["file"], where="artifact/file")
         # Byte integrity is checked by /api/file. Summary never hashes large
         # images; absence/path errors can still be shown before image loading.
-        if not ctx.store._resolve_object_path(obj["file"]["path"]).is_file():
-            raise ValueError("missing artifact file")
+        ctx.object_stat(obj["file"])
         result.update(file=copy.deepcopy(obj["file"]), media_type=obj["media_type"],
                       relation="known", dependencies=copy.deepcopy(obj.get("dependencies") or []),
                       derived_from=copy.deepcopy(obj.get("derived_from") or []),
@@ -192,8 +217,7 @@ def _deck_output(ctx):
         if artifact.get("schema_version") != "deck_artifact.v1" or artifact.get("role") != "pptx":
             raise ValueError("not a PPT artifact")
         validate_ref(artifact["file"], where="artifact/file")
-        if not ctx.store._resolve_object_path(artifact["file"]["path"]).is_file():
-            raise ValueError("missing PPT file")
+        ctx.object_stat(artifact["file"])
         deps = [d for d in artifact.get("dependencies") or [] if d.get("kind") == "svg"]
         expected = [(e["page_id"], (e.get("svg") or {}).get("sha256")) for e in ctx.document.get("pages") or []]
         recorded = [(d.get("identity"), d.get("sha256")) for d in deps]
@@ -212,7 +236,14 @@ def workbench_summary(project_dir, *, revision=None):
     store = Store(project_dir)
     doc = load_snapshot(store, revision)
     ctx = _ReadContext(store, doc)
-    tasks = _task_rows(ctx)
+    tasks = _task_rows(ctx, summary=True)
+    by_page = defaultdict(list)
+    counts = Counter()
+    for task in tasks:
+        counts[task["status"]] += 1
+        row = {k: task.get(k) for k in ("task_id", "kind", "status", "execution_ref")}
+        for page_id in set(task.get("scope_pages") or []):
+            by_page[page_id].append(row)
     pages = []
     for entry in doc.get("pages") or []:
         stages = {("content" if s == "page" else s): _stage(ctx, entry, s) for s in SLOTS}
@@ -220,14 +251,13 @@ def workbench_summary(project_dir, *, revision=None):
         if stages["content"]["existence"] == "recorded":
             title = (ctx.read(entry["page"]).get("customer_visible") or {}).get("title")
         pages.append({"page_id": entry["page_id"], "title": title, "stages": stages,
-                      "execution": [{k: t.get(k) for k in ("task_id", "kind", "status", "execution_ref")}
-                                    for t in tasks if entry["page_id"] in (t.get("scope_pages") or [])],
+                      "execution": copy.deepcopy(by_page[entry["page_id"]]),
                       "attention": {"status": "not_recorded"}})
     return {"format": "workbench_summary.v1", "project_id": doc["project_id"],
             "revision_id": doc["revision_id"], "requested_revision": revision,
             "snapshot_mode": "fixed" if revision is not None else "current",
             "page_count": len(pages), "pages": pages,
-            "task_counts": {status: sum(t["status"] == status for t in tasks) for status in sorted({t["status"] for t in tasks})},
+            "task_counts": dict(sorted(counts.items())),
             "unreadable_tasks": sum(t["status"] == "unreadable" for t in tasks),
             "outputs": {"pptx": _deck_output(ctx)}, "input_alignment": input_alignment(doc),
             "content_plan": projection(store, doc, reader=ctx.read, summary=True),
