@@ -152,3 +152,19 @@ textarea{font-size:14px;line-height:1.7}
 .content-operation-note:empty{display:none}
 
 .content-form-fields{border:0;padding:0;margin:0;min-width:0}
+
+/* W11 frozen files and explicit restoration. */
+.export-purpose-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.export-purpose{border:1px solid var(--border);border-radius:12px;padding:18px;background:var(--surface)}
+.export-purpose p{flex:1;color:var(--muted);line-height:1.65}.export-purpose button{align-self:flex-start}
+.export-version{font-weight:600}.export-result{border:1px solid var(--border);border-radius:12px;padding:18px;background:var(--surface)}
+.download-link{display:inline-flex;align-self:center;align-items:center;min-height:40px;padding:8px 16px;border-radius:10px;background:var(--fg);color:var(--surface);text-decoration:none;font-weight:600;align-self:flex-start}
+.hash-line{font-family:var(--font-mono);overflow-wrap:anywhere;display:block;color:var(--muted);font-size:11px}
+.export-file-list{list-style:none;padding:0;display:grid;gap:12px}.export-file-list a{overflow-wrap:anywhere}
+.gap-list{padding-left:20px;display:grid;gap:10px}.gap-list li>span{margin-right:12px}.gap-list button{font-size:12px;padding:5px 10px}
+.export-facts>summary{cursor:pointer;padding:12px 0;font-weight:600}.export-purpose h3,.export-result h3{margin:0}
+.restore-impact .conflict-panes section{padding:16px;border:1px solid var(--border);border-radius:12px}
+@media(max-width:1200px){.export-purpose-grid{grid-template-columns:1fr}.export-purpose{display:grid;grid-template-columns:140px 1fr auto;align-items:center}.export-purpose p{margin:0}}
+@media(max-width:760px){.export-purpose{display:flex}}
+
+.download-link,.download-link:visited,.download-link:hover{color:var(--bg)}

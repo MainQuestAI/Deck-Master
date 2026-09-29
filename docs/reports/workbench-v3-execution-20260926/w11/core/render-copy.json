@@ -1,0 +1,13 @@
+{
+  "checks": {
+    "real_libreoffice_render_identical_pixels": true,
+    "original_hash_unchanged": true
+  },
+  "size": [
+    1200,
+    900
+  ],
+  "original_sha256": "5989ed52df54dfa141530a902b49d03f7b46b8a4a2cce7a883dd91300833407b",
+  "public_sha256": "55c3d5d4cbb3517f11f41f1a8445223ec38ca0e3ddf691c51ed4567f82cbc154",
+  "scope": "one synthetic text/link slide; real LibreOffice render, not desktop editing or customer approval"
+}

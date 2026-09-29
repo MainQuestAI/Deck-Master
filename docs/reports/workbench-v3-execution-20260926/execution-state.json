@@ -1,6 +1,6 @@
 {
   "baseline": "d1c7c4600cb0fc781070116ed8cc8a1ff6b8b7ca",
-  "branch": "codex/workbench-w11-core",
+  "branch": "codex/workbench-w11-ui",
   "active_package": "W11",
   "sequence": [
     "W01.core",
@@ -218,11 +218,20 @@
       "frontend_merge_commit": "c17ba512db3efb4196b0e88dcab2d604eb23b053"
     },
     "W11": {
-      "status": "core_verified_pending_merge",
+      "status": "frontend_verified_pending_merge",
       "accepted": false,
       "baseline": "314df380b2b8df9d7540132f99a190c1d0b2f047",
       "evidence": "W11-PLAN.md",
-      "core_evidence": "W11-CORE.md"
+      "core_evidence": "W11-CORE.md",
+      "core_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/63",
+      "core_head": "fca496a955c0b12c10eacdf9e8877727ed96b7fa",
+      "core_merge_commit": "9c9aa820833f039121a0115793258e7a2acb2ac9",
+      "frontend_baseline": "9c9aa820833f039121a0115793258e7a2acb2ac9",
+      "frontend_evidence": "W11-UI.md",
+      "residuals": [
+        "W12 isolated installed acceptance",
+        "User acceptance not measured"
+      ]
     },
     "W12": {
       "status": "planned",
@@ -1061,7 +1070,9 @@
       "status": "partial",
       "evidence": [
         "W11-CORE.md",
-        "w11/core/checks.json"
+        "W11-UI.md",
+        "w11/core/checks.json",
+        "w11/ui/checks.json"
       ]
     },
     "W11-AC02": {
@@ -1069,7 +1080,9 @@
       "status": "partial",
       "evidence": [
         "W11-CORE.md",
-        "w11/core/checks.json"
+        "W11-UI.md",
+        "w11/core/checks.json",
+        "w11/ui/checks.json"
       ]
     },
     "W11-AC03": {
@@ -1077,7 +1090,9 @@
       "status": "partial",
       "evidence": [
         "W11-CORE.md",
-        "w11/core/checks.json"
+        "W11-UI.md",
+        "w11/core/checks.json",
+        "w11/ui/checks.json"
       ]
     },
     "W11-AC04": {
@@ -1085,7 +1100,9 @@
       "status": "partial",
       "evidence": [
         "W11-CORE.md",
-        "w11/core/checks.json"
+        "W11-UI.md",
+        "w11/core/checks.json",
+        "w11/ui/checks.json"
       ]
     },
     "W11-AC05": {
@@ -1093,7 +1110,9 @@
       "status": "partial",
       "evidence": [
         "W11-CORE.md",
-        "w11/core/checks.json"
+        "W11-UI.md",
+        "w11/core/checks.json",
+        "w11/ui/checks.json"
       ]
     },
     "W11-AC06": {
@@ -1101,7 +1120,9 @@
       "status": "partial",
       "evidence": [
         "W11-CORE.md",
-        "w11/core/checks.json"
+        "W11-UI.md",
+        "w11/core/checks.json",
+        "w11/ui/checks.json"
       ]
     },
     "W11-AC07": {
@@ -1109,7 +1130,9 @@
       "status": "partial",
       "evidence": [
         "W11-CORE.md",
-        "w11/core/checks.json"
+        "W11-UI.md",
+        "w11/core/checks.json",
+        "w11/ui/checks.json"
       ]
     },
     "W12-AC01": {

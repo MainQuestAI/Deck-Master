@@ -25,8 +25,48 @@
     "size": 1072
   },
   {
+    "path": "core/render-copy.json",
+    "sha256": "461f69b8646f3ac8280c5585995f8855193f6ea1355259cdec0305e4938a28ab",
+    "size": 434
+  },
+  {
     "path": "core/restore-help.txt",
     "sha256": "5154c4de13d9b5171835426ffccb41b5130b334e3f7d816bd925ed0450979891",
     "size": 351
+  },
+  {
+    "path": "ui/checks.json",
+    "sha256": "fc4b9810e4edcf92fa99f0af367fdb2ebe4e0fb41d3ce3837d14c7fd50bb0e0c",
+    "size": 2221
+  },
+  {
+    "path": "ui/desktop-1180.png",
+    "sha256": "ff8c2553557316aad08caa3786e951b6ca18c7658417e42c2aa9c110023ac586",
+    "size": 400681
+  },
+  {
+    "path": "ui/desktop-1440.png",
+    "sha256": "1d940de17ddde4a6550ea7831e419edf503ead8b0d62b81ae724ac0a20958811",
+    "size": 428214
+  },
+  {
+    "path": "ui/interrupted-transfer.json",
+    "sha256": "e19a23434a96e7a8105201ba8c16ceeb4bcfc73d4d525a6b7e7f5bf23f05d95d",
+    "size": 158
+  },
+  {
+    "path": "ui/pytest.txt",
+    "sha256": "b709f9e9402a43d1b48280f63991fcccb70bb9e0ba8aae7ec7ef9cdef6aae0f8",
+    "size": 179
+  },
+  {
+    "path": "ui/w09-regression.json",
+    "sha256": "7b506b882730b0707c494c94cf30fce7789124f990e1a3f49a22308c866f63bb",
+    "size": 675
+  },
+  {
+    "path": "ui/w10-regression.json",
+    "sha256": "457ca5ea571ee0b96a552de0353ef3819c20b0d51ea39be80eea047bd418f5f7",
+    "size": 409
   }
 ]

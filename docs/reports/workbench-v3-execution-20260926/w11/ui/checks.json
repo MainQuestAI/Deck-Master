@@ -1,0 +1,58 @@
+{
+  "checks": {
+    "separate_engineering_and_professional_evidence": true,
+    "review_browser_download": true,
+    "delivery_browser_download": true,
+    "engineering_browser_download": true,
+    "two_desktop_widths_no_horizontal_overflow": true,
+    "historical_no_ppt_review": true,
+    "historical_delivery_keeps_structured_gaps": true,
+    "restore_cancel_no_revision": true,
+    "restore_conflict_preserves_both_versions": true,
+    "unknown_restore_recovers_across_reload_without_repeat": true,
+    "unknown_export_recovers_frozen_id_after_reload": true,
+    "background_result_does_not_relabel_download": true,
+    "truncated_download_retries_same_manifest": true
+  },
+  "downloads": [
+    {
+      "purpose": "review",
+      "revision_id": "c0c02aab8b3c4a7c949914876daab6ed",
+      "sha256": "dd3088199f38be0970af0bc2ccec10c7d5693bbd054efdbf58240894a50ef003",
+      "filename": "0-deck-review-c0c02aab.zip"
+    },
+    {
+      "purpose": "delivery",
+      "revision_id": "c0c02aab8b3c4a7c949914876daab6ed",
+      "sha256": "fd246f80dd572747dd29b413552726040bf56b9af9a06cb1b2deaf60052d5c30",
+      "filename": "1-deck-delivery-c0c02aab.zip"
+    },
+    {
+      "purpose": "engineering",
+      "revision_id": "c0c02aab8b3c4a7c949914876daab6ed",
+      "sha256": "ff5d94fcf56b2c9da98c8dccb60ed9b98a082a66a3fbd378fa108d251878165c",
+      "filename": "2-deck-engineering-c0c02aab.zip"
+    },
+    {
+      "purpose": "review",
+      "revision_id": "62c94b12d3c94a4b8c090b9c4ab6f5b4",
+      "sha256": "e0e7c2d7ebdacbc99229088e009934826353a6f6240c3ffe7a293eaf05be915c",
+      "filename": "3-deck-review-62c94b12.zip"
+    },
+    {
+      "purpose": "review",
+      "revision_id": "237bdd7605b642d1959111cdcf68350b",
+      "sha256": "d7b115d4e543805b4b8a17a6270a9c4a966ae7dfa922f331f4496f1d9d785175",
+      "filename": "4-deck-review-237bdd76.zip"
+    },
+    {
+      "purpose": "review",
+      "revision_id": "237bdd7605b642d1959111cdcf68350b",
+      "sha256": "d7b115d4e543805b4b8a17a6270a9c4a966ae7dfa922f331f4496f1d9d785175",
+      "filename": "5-deck-review-237bdd76.zip"
+    }
+  ],
+  "page_errors": [],
+  "model_calls": 0,
+  "fixture": "real compiler/rendered PPT, synthetic quality records; no professional acceptance"
+}
