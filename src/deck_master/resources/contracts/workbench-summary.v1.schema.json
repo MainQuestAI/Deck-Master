@@ -40,12 +40,13 @@
     "candidates_summary": {
       "oneOf": [
         {"$ref": "#/$defs/not_recorded"},
-        {"type": "object", "required": ["status", "count", "pending_count", "adopted_count", "unreadable_count"], "additionalProperties": false,
+        {"type": "object", "required": ["status", "count", "pending_count", "adopted_count", "kept_count", "unreadable_count"], "additionalProperties": false,
          "properties": {
            "status": {"const": "recorded"},
            "count": {"type": "integer", "minimum": 1},
            "pending_count": {"type": "integer", "minimum": 0},
            "adopted_count": {"type": "integer", "minimum": 0},
+           "kept_count": {"type": "integer", "minimum": 0},
            "unreadable_count": {"type": "integer", "minimum": 0}
          }}
       ]

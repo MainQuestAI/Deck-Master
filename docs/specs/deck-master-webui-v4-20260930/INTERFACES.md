@@ -47,11 +47,15 @@
 
 决定写入不可变对象，并在Document记录引用；与operation结果同事务。输出 `decision_ref, candidate_id, status, revision_id`。候选本身及当前产物不改变。show/list投影加decision及pending状态；adopted历史记录不删除。重开不自动采用，基准变更仍阻断旧plan。expected_decision_ref冲突返回409及当前决定引用，重复operation返回原结果，跨项目候选404。状态命名应映射现有OperationError而不是吞掉异常。
 
+决定记录合同 `candidate-decision.v1`（Document新增可选数组 `candidate_decisions`，引用不可变对象；镜像同步至 deck-master-workbench-v3/contracts）。workbench summary 的 candidates 块新增 `kept_count`（required，recorded 分支）：pending_count=count−adopted−kept；已采用候选的决定历史不影响 adopted_count。show/list 的候选投影新增 `decision`（state/decision_ref/decided_at）与 `pending`；已采用候选 `pending` 恒 false。keep_current 与 reopen 幂等：重复同向决定返回 `unchanged` 不新增修订。
+
 ## B05：个人状态清理
 
 拟增 POST `/api/ui-state/plan-clear`、`/api/ui-state/commit-clear`。plan输入明确scope=current_project、所选draft_id列表或全部草稿、是否reading_preferences；返回plan_id/manifest_digest、每项etag、恢复备份ref、阻断项。commit输入operation_id、plan_id、manifest_digest及确认范围。仅删除计划已确认的UI对象；清理事务日志放个人journal，不进入Document业务revision。
 
 服务先完成恢复备份再接受commit；存在business operation未确认保存时拒绝清理其关联记录。新草稿/etag变更返回409，不扩大删除范围。清理失败/重放可查询同操作结果。原型“清项目记录/任务/候选”的描述不进入正式产品。接口不用于清理registry、项目目录、调用账或安装。
+
+合同 `ui-clear-plan.v1`（只读投影：items/blockers/kept_out/manifest_digest/plan_id/backup_ref）与 `ui-clear-result.v1`（个人journal事务记录，镜像同步至 deck-master-workbench-v3/contracts）。blocked 草稿按 operations.committed_record 判定；显式点名 blocked 草稿时 plan 直接拒绝。commit 顶层参数 operation_id/plan_id/manifest_digest + input(scope/draft_ids/reading_preferences)；删除前逐项 etag 复核，备份失败或任一 etag 变化即整体 409 不删。幂等日志 `.deckmaster/workbench/clear-log.jsonl`，备份位于 `.deckmaster/workbench/clear-backups/<manifest16>.json`。CLI：`deck-master ui plan-clear / commit-clear`。备份落盘合同 `ui-clear-backup.v1`（写入前校验，A07 恢复入口消费）。输入仅接受 project_id/scope/draft_ids/reading_preferences 四键，未知键拒绝；`draft_ids: []` 合法=只清阅读设置；重复 draft_ids 拒绝。commit 在 verify→备份→删除全程按固定顺序持有 drafts/journal.lock、gallery.lock、position.lock 三锁，与三类保存方互斥；clear-log.jsonl 残行按缺失隔离。
 
 ## B06：保持约束
 

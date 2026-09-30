@@ -1,0 +1,90 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "ui_clear_plan.v1 read projection (not persisted; commit re-derives it)",
+ "type": "object",
+ "additionalProperties": false,
+ "required": ["schema_version", "project_id", "project_identity", "scope", "items", "blockers", "kept_out", "manifest_digest", "plan_id", "backup_ref"],
+ "properties": {
+  "schema_version": {
+   "const": "ui_clear_plan.v1"
+  },
+  "project_id": {
+   "type": "string",
+   "minLength": 1
+  },
+  "project_identity": {
+   "type": "string",
+   "pattern": "^[a-f0-9]{64}$"
+  },
+  "scope": {
+   "const": "current_project"
+  },
+  "items": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["kind", "id", "etag"],
+    "properties": {
+     "kind": {
+      "enum": ["draft", "gallery_state", "reading_position"]
+     },
+     "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+     },
+     "etag": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+     }
+    }
+   }
+  },
+  "blockers": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["kind", "id", "reason_code", "operation_id", "next_action"],
+    "properties": {
+     "kind": {
+      "const": "draft"
+     },
+     "id": {
+      "type": "string",
+      "minLength": 1
+     },
+     "reason_code": {
+      "const": "unconfirmed_operation"
+     },
+     "operation_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+     },
+     "next_action": {
+      "type": "string"
+     }
+    }
+   }
+  },
+  "kept_out": {
+   "type": "array",
+   "items": {
+    "type": "string"
+   }
+  },
+  "manifest_digest": {
+   "type": "string",
+   "pattern": "^[a-f0-9]{64}$"
+  },
+  "plan_id": {
+   "type": "string",
+   "pattern": "^clear-plan-[a-f0-9]{16}$"
+  },
+  "backup_ref": {
+   "type": "string",
+   "pattern": "^\\.deckmaster/workbench/clear-backups/[A-Za-z0-9][A-Za-z0-9_.-]*\\.json$"
+  }
+ }
+}

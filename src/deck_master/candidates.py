@@ -170,7 +170,8 @@ def _state(store, document, candidate):
         return {'content_basis': {'status': 'changed' if changed else 'current', 'changed_fields': changed},
                 'adoption_target': {'status': 'changed' if changed else 'unchanged',
                                     'original_ref': None, 'current_ref': None},
-                'adopted_revisions': adoptions, 'status': 'adopted' if adoptions else 'available'}
+                'adopted_revisions': adoptions, **_decision_projection(store, document, candidate, adoptions),
+                'status': 'adopted' if adoptions else 'available'}
     entry = next((e for e in document['pages'] if e['page_id'] == candidate['page_id']), None)
     if kind == 'page':
         # Precise scope: only the current Page identity can stale a page candidate.
@@ -183,7 +184,23 @@ def _state(store, document, candidate):
     return {'generation_basis': {'status': 'changed' if changed else 'current', 'changed_fields': changed},
             'adoption_target': {'status': 'missing_page' if entry is None else 'unchanged' if target == candidate['target_ref'] else 'changed',
                                 'original_ref': candidate['target_ref'], 'current_ref': target},
-            'adopted_revisions': adoptions, 'status': 'adopted' if adoptions else 'available'}
+            'adopted_revisions': adoptions, **_decision_projection(store, document, candidate, adoptions),
+            'status': 'adopted' if adoptions else 'available'}
+
+
+def _decision_projection(store, document, candidate, adoptions):
+    """B04 projection: latest decision activity and pending truth.
+
+    pending 不等于未采用：曾采用仍是 adopted；keep_current 把待决变为已决定，
+    reopen 恢复待决。决定与采用分别保存，互不顶替。决定记录属辅助审阅元数据：
+    单条引用损伤时按 unreadable 如实投影并按待决处理，不阻断候选采用规划。
+    """
+    try:
+        decision = _decision_state(store, document, candidate['candidate_id'])
+    except Exception:
+        decision = {'state': 'unreadable', 'decision_ref': None, 'decided_at': None}
+    return {'decision': decision,
+            'pending': not adoptions and decision['state'] != 'keep_current'}
 
 
 def _changeset_projection(store, document, candidate, task):
@@ -616,3 +633,106 @@ def adopt(project, *, input, base_revision, operation_id):
                   'result_refs': [item['result_ref'] for item in input['selections']], 'impact': input['selections'], 'max_calls': 0}
         return operations.commit_locked(store, document=updated, base_revision=base_revision,
                                          operation_id=operation_id, kind='candidates.adopt', digest=digest, result=result)
+
+
+def _last_decision(store, document, candidate_id):
+    """Latest decision record for one candidate; damaged refs fail loudly."""
+    last = None
+    for ref in document.get('candidate_decisions', []) or []:
+        record = store.read_object_json(ref)
+        validate_schema('candidate_decision', record)
+        if record['candidate_id'] == candidate_id:
+            last = (record, ref)
+    return last
+
+
+def _decision_state(store, document, candidate_id):
+    last = _last_decision(store, document, candidate_id)
+    return {'state': last[0]['decision'] if last else None,
+            'decision_ref': last[1] if last else None,
+            'decided_at': last[0]['decided_at'] if last else None}
+
+
+class DecisionConflict(operations.OperationError):
+    def __init__(self, candidate_id, current_ref):
+        super().__init__('decision_conflict', 'expected_decision_ref',
+                         'another decision was recorded for this candidate; re-read it and retry', exit_code=5)
+        self.candidate_id = candidate_id
+        self.current_ref = current_ref
+
+    def payload(self):
+        value = super().payload()
+        # 完整 ref 对象与 show/listing 投影对称，客户端可直接回填 expected_decision_ref。
+        value['error']['current_decision_ref'] = self.current_ref
+        value['error']['candidate_id'] = self.candidate_id
+        return value
+
+
+@operations.public
+def decide(project, *, input, base_revision, operation_id):
+    """B04: persist one recoverable review decision (keep_current / reopen).
+
+    The decision is a review activity record: it never moves the candidate,
+    the current artifacts or the call ledger, and it lives in
+    candidate_decisions, separate from candidate_adoptions, so a past
+    adoption is never mistaken for the current one. Replaying the exact
+    operation returns the original committed result.
+    """
+    operations.validate_id(operation_id, new=True)
+    if not isinstance(input, dict):
+        raise operations.OperationError('invalid_input', 'input', 'decision request must be an object')
+    if input.get('schema_version') != 'candidate_decision.v1':
+        raise operations.OperationError('invalid_input', 'input/schema_version',
+                                        'decision requests use candidate_decision.v1')
+    unknown = sorted(set(input) - {'schema_version', 'project_id', 'base_revision', 'candidate_id', 'decision', 'expected_decision_ref'})
+    if unknown:
+        raise operations.OperationError('invalid_input', 'input', 'unknown decision fields: ' + ', '.join(unknown))
+    if input.get('decision') not in ('keep_current', 'reopen'):
+        raise operations.OperationError('invalid_input', 'input/decision', 'decision is keep_current or reopen')
+    expected = input.get('expected_decision_ref')
+    if expected is not None and (not isinstance(expected, dict) or set(expected) != {'path', 'sha256'}
+                                 or not isinstance(expected.get('sha256'), str)):
+        raise operations.OperationError('invalid_input', 'input/expected_decision_ref',
+                                        'expected_decision_ref is the current decision ref object, or null when undecided')
+    store = Store(project_path(project))
+    with store._locked():
+        document = store.load_document()
+        digest = operations.request_digest(document, 'candidates.decide', base_revision, input)
+        previous = operations.recover(store, operation_id, digest)
+        if previous:
+            return previous
+        if (base_revision != document['revision_id'] or input.get('base_revision') != base_revision
+                or input.get('project_id') != document['project_id']):
+            raise operations.OperationError('conflict', 'base_revision',
+                                            'decision needs a current basis; re-read the candidate and retry', exit_code=5)
+        candidate_id = input.get('candidate_id')
+        _candidate, ref, _task = _lookup(_records(store, document), candidate_id)
+        if any(a.get('candidate_id') == candidate_id for a in document.get('candidate_adoptions', [])
+               if isinstance(a, dict)):
+            raise operations.OperationError('candidate_adopted', 'candidate_id',
+                                            'this candidate is adopted; decisions apply to pending candidates', exit_code=5)
+        last = _last_decision(store, document, candidate_id)
+        current_sha = last[1]['sha256'] if last else None
+        if (expected.get('sha256') if isinstance(expected, dict) else expected) != current_sha:
+            raise DecisionConflict(candidate_id, last[1] if last else None)
+        kept = bool(last) and last[0]['decision'] == 'keep_current'
+        if (input['decision'] == 'keep_current') == kept:
+            return {'status': 'unchanged', 'candidate_id': candidate_id,
+                    'decision': last[0]['decision'] if last else None,
+                    'decision_ref': last[1] if last else None,
+                    'revision_id': document['revision_id'], 'max_calls': 0}
+        updated = bump_revision(copy.deepcopy(document), {'operation_id': operation_id, 'kind': 'review_update',
+                                                          'description': f"candidate {input['decision']} recorded",
+                                                          'read_set': []})
+        record = {'schema_version': 'candidate_decision.v1', 'candidate_id': candidate_id, 'candidate_ref': ref,
+                  'decision': input['decision'], 'decided_at': tasks._utc_now_iso(),
+                  'revision_id': updated['revision_id']}
+        validate_schema('candidate_decision', record)
+        decision_ref = store.put_json_object(record)
+        updated['candidate_decisions'] = [*document.get('candidate_decisions', []), decision_ref]
+        require_writer(updated, WRITER)
+        result = {'status': 'kept_current' if input['decision'] == 'keep_current' else 'reopened',
+                  'candidate_id': candidate_id, 'decision': input['decision'],
+                  'decision_ref': decision_ref, 'revision_id': updated['revision_id'], 'max_calls': 0}
+        return operations.commit_locked(store, document=updated, base_revision=base_revision,
+                                        operation_id=operation_id, kind='candidates.decide', digest=digest, result=result)
