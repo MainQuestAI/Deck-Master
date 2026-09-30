@@ -63,6 +63,8 @@
 
 在现有style recipe/request内明确selected_dimensions与preserve_dimensions、目标事实引用和固定参考。核心可验证身份/范围/内容字段；视觉构图是否退化需实际阅图，不能写成自动可判定承诺。扩选仍由用户明确确认目标与预算，不靠单页task completed自动执行整稿。
 
+实施（2026-10-01）：style_proposal.v1/style_recipe.v1 新增可选 `preserve_dimensions`（键限定 palette/typography/density/lines/composition，值为保持说明），由 propose 按 DIMENSIONS 全集与所选 dimensions 差集投影，随 recipe 可追溯并进入 instruction（明确保持维度：沿用目标页，不向参考看齐）；dimensions 键做范围校验（未知维度拒绝）。镜像同步至 deck-master-workbench-v3/contracts。AC02 真实制作闭环与 AC03 30 页真实项目保持外部待验（引用 W07/W08 证据，不合成关闭）。
+
 ## 合同交付与同步
 
 B每卡先提交schema/服务/CLI/HTTP及兼容用例，独立复核进入main后A同步消费。例子必须来自临时真实服务回包，不写假revision/hash为成功示例；提案示意值只可出现在此规范。按既有退出码与error envelope，覆盖鉴权、旧项目、未知字段/能力、不合法引用、幂等、CAS、cancel/late以及partial read。

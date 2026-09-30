@@ -26,17 +26,19 @@ export class Annotations {
     this.chapter = el('select', {'aria-label': '意见所属章节'}, (data.content_plan.chapters || []).map(c => el('option', {value: c.chapter_id}, c.title)));
     this.chapter.hidden = true;
     this.scope.querySelector('[value=chapter]').disabled = !data.content_plan.ref || !this.chapter.options.length;
-    this.tools = el('div', {class: 'row wrap annotation-tools', 'aria-label': '意见定位工具'});
     const image = ['original_image', 'svg', 'ppt'].includes(layer);
-    this.modes = [['read', '阅读'], ['whole', '整页意见'], ...(image ? [['point', '点标注'], ['rect', '框选']] : [['text', '文本意见']])];
+    // 设计 annotation-form：segmented 模式切换 + 行为提示（阅读不产生标注）。
+    this.tools = el('div', {class: 'row wrap annotation-tools', 'aria-label': '画面操作模式'});
+    this.modeHint = el('p', {class: 'form-hint'});
+    this.modes = [['read', '阅读模式'], ['whole', '整页意见'], ...(image ? [['point', '点标注'], ['rect', '框选模式']] : [['text', '文本意见']])];
     for (const [mode, label] of this.modes) this.tools.append(button(label, () => this.setMode(mode), false, {'data-mode': mode}));
     this.fields = Object.fromEntries(['x', 'y', 'width', 'height'].map((key, i) => [key, field(['横向起点 %', '纵向起点 %', '区域宽度 %', '区域高度 %'][i], el('input', {type: 'number', min: 0, max: 100, step: .1, value: i < 2 ? 10 : 20}))]));
     this.geometry = el('details', {class: 'geometry-fields', hidden: true}, el('summary', {}, '用百分比定位区域'),
       el('div', {class: 'range-fields'}, Object.values(this.fields).map(f => f.node)), button('添加百分比区域', () => this.keyboardRegion()));
     this.saveButton = button('保存意见', () => this.save(), true);
     this.planButton = button('加入修改计划', () => this.plan());
-    this.node.append(el('div', {class: 'panel-head'}, el('h2', {}, '意见与修改')),
-      el('div', {class: 'panel-body stack'}, this.basis, this.tools, el('label', {}, '意见作用范围 ', this.scope), this.chapter, this.intent.node,
+    this.node.append(el('div', {class: 'panel-head'}, el('h2', {}, '标注与意见')),
+      el('div', {class: 'panel-body stack'}, this.basis, this.tools, this.modeHint, el('label', {}, '意见作用范围 ', this.scope), this.chapter, this.intent.node,
         el('p', {class: 'muted'}, '正文使用个人草稿。保存意见不会启动制作；选入已保存意见后再预览修改计划。'),
         this.geometry, this.regionList, draftSlot, this.error, this.saveButton, el('h3', {}, '已保存意见'), this.savedList, this.planButton, this.preview));
     this.scope.addEventListener('change', () => { if (this.scope.value !== 'artifact') this.setMode('whole'); this.changed(); });
@@ -95,7 +97,9 @@ export class Annotations {
     this.chapter.hidden = this.scope.value !== 'chapter';
     this.basis.textContent = `${version(this.data.revision_id)} · ${layers[this.layer]} · 草稿区域 ${this.regions.length} 个` + (this.editor && !this.basisMatches() ? '。恢复稿属于其它基准，请先回原版本；未迁移范围。' : this.app.historical && this.editor && !this.editor.readonly ? '。原内容只读；新意见仍绑定这里的原版本。' : '');
     for (const control of this.tools.querySelectorAll('button')) {
-      control.setAttribute('aria-pressed', String(control.dataset.mode === this.mode));
+      const active = control.dataset.mode === this.mode;
+      control.setAttribute('aria-pressed', String(active));
+      control.classList.toggle('active', active);
       control.disabled = Boolean(this.editor?.readonly || !this.basisMatches());
     }
     this.scope.disabled = this.intent.input.disabled = this.chapter.disabled = Boolean(this.editor?.readonly || !this.basisMatches());
@@ -104,6 +108,11 @@ export class Annotations {
   }
   setMode(mode) {
     this.mode = mode; this.drag = null;
+    this.modeHint.textContent = mode === 'read' ? '阅读不会产生标注；无需框选，也可以针对整页写意见。'
+      : mode === 'rect' ? '拖动框选画面；按 Esc 取消框选，返回阅读。'
+      : mode === 'point' ? '在画面上点击放置标注点；按 Esc 返回阅读。'
+      : mode === 'text' ? '在逐页稿原文中选择文本，再校验保存；按 Esc 返回阅读。'
+      : '针对整页写意见，不绑定具体区域。';
     if (['point', 'rect', 'text'].includes(mode)) this.scope.value = 'artifact';
     this.geometry.hidden = !['point', 'rect'].includes(mode);
     for (const key of ['width', 'height']) this.fields[key].node.hidden = mode === 'point';

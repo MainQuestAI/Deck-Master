@@ -302,6 +302,24 @@
     "reference_sources": {
       "type": "object"
     },
+    "preserve_dimensions": {
+      "type": "object",
+      "additionalProperties": false,
+      "propertyNames": {
+        "enum": [
+          "palette",
+          "typography",
+          "density",
+          "lines",
+          "composition"
+        ]
+      },
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 4000
+      }
+    },
     "dimensions": {
       "type": "object",
       "additionalProperties": false,

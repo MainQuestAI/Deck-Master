@@ -1,5 +1,5 @@
 import {get, readableError, revisionQuery} from './api.js';
-import {el, button, heading, empty} from './dom.js';
+import {el, button, heading, empty, version} from './dom.js';
 import {DraftEditor} from './drafts.js';
 import {contentOperation, contentPanel as panel, inputField, sourceReader} from './content-edit.js';
 
@@ -46,8 +46,10 @@ export function content(app, data) {
       path.node.hidden=source.action!=='replace';
       action.addEventListener('change',()=>{source.action=action.value;path.node.hidden=source.action!=='replace';changed();});
       note.input.addEventListener('input',()=>{source.usage_note=note.input.value;changed();});path.input.addEventListener('input',()=>{source.path=path.input.value;changed();});
-      return el('article',{class:'source-card stack'},el('strong',{},source.name),el('p',{class:'muted'},source.extract?'已有提取记录；不等于 Host 已阅读并判断影响。':'尚无提取记录。'),
-        button('读取材料原文 '+source.name,()=>sourceReader(app,{source_id:source.source_id,source_version:{extract:source.extract}})),
+      return el('article',{class:'source-card stack'},el('strong',{},source.name),
+        el('p',{class:'muted'},source.extract?'已读取 · 提取不等于制作工具已阅读并判断影响。':'已登记 · 尚未读取。'),
+        el('span',{class:'status '+(source.extract?'ok':'')},source.extract?'制作工具已读取':'等待读取'),
+        button('读取材料原文 '+source.name,()=>sourceReader(app,{source_id:source.source_id,source_version:{extract:source.extract}}),false,{class:'text-link'}),
         app.readonly?el('p',{},source.usage_note):[action,note.node,path.node]);
     }));
   }
@@ -70,6 +72,35 @@ export function content(app, data) {
       row.addEventListener('dragover',event=>event.preventDefault());row.addEventListener('drop',event=>{event.preventDefault();const source=event.dataTransfer.getData('text/plain');if(order.includes(source))move(source,index);});
       return row;
     }));
+  }
+  function outlineBlocks() {
+    // 设计大纲块：章节编号、页范围与来源关联导航；编辑仍在下方内容计划面板。
+    const chapterOf = new Map();
+    for (const chapter of chapters) for (const goal of goals) {
+      const ids = chapterPages(chapter);
+      if (ids.has(goal.page_id)) chapterOf.set(goal.page_id, chapter);
+    }
+    return chapters.map((chapter, index) => {
+      const ids = [...chapterPages(chapter)].sort();
+      const pageList = ids.map(id => pageMap.get(id)).filter(Boolean);
+      if (!pageList.length) return null;
+      const first = pageList[0], last = pageList[pageList.length - 1];
+      const links = [...new Set(goals.filter(goal => ids.includes(goal.page_id))
+        .flatMap(goal => goal.source_links.map(link => link.locator || '材料')))];
+      return el('div', {class: 'outline-block'},
+        el('span', {class: 'mono'}, String(index + 1).padStart(2, '0')),
+        el('div', {},
+          el('h3', {}, chapter.title),
+          el('p', {}, goals.find(goal => ids.includes(goal.page_id))?.purpose || ''),
+          el('p', {class: 'small-text', style: 'margin-top:7px'},
+            pageList.length > 1 ? `第 ${order.indexOf(first.page_id) + 1}–${order.indexOf(last.page_id) + 1} 页` : `第 ${order.indexOf(first.page_id) + 1} 页`,
+            links.length ? ` · ${links.join('、')}` : ' · 未记录来源关联'),
+          app.summary.pages.some(p => ids.includes(p.page_id)) && button('看逐页稿', () => app.go({surface: 'page', page_id: first.page_id, layer: 'content'}), false, {class: 'quiet'})));
+    }).filter(Boolean);
+  }
+  function chapterPages(chapter) {
+    const chapterGoals = new Set(chapter.goal_ids);
+    return new Set(goals.filter(goal => chapterGoals.has(goal.goal_id)).map(goal => goal.page_id));
   }
   function drawGoals() {
     const chapterFields=chapters.map(chapter=>{
@@ -123,14 +154,25 @@ export function content(app, data) {
   }).catch(error=>hostImpact.replaceChildren(el('p',{class:'muted'},'影响说明暂不可读：'+readableError(error))));
   const aligned=app.summary.input_alignment==='current';
   const editable = node => app.readonly ? node : operation.guard(node);
-  const node=el('div',{class:'content-sources stack'},heading('内容与来源','先看材料与论证，再改逐页稿。直接改内容和交接制作分别保存。',!app.readonly&&button('交接待整理内容',()=>app.handoff())),
+  // 材料四态分呈（G15）：已登记（无提取）、制作工具已读取（有提取）、影响判断（Host 已采用/待协调）、采用对齐（input_alignment）。
+  const materialAside=el('aside',{class:'panel materials-aside','aria-label':'使用中的材料'},
+    el('div',{class:'panel-head'},el('h2',{},'使用中的材料'),el('span',{class:'status'},(inputs?.sources || []).length+' 份')),
+    el('div',{class:'panel-body stack'},sourceList,
+      el('p',{class:'muted'},aligned?'当前输入已由内容结果对齐；这不是独立事实核验。':'输入待协调：制作工具尚需按最新材料判断影响。'),
+      !app.readonly&&inputs&&el('details',{},el('summary',{},'调整任务要求与材料'),editable(el('div',{class:'stack'},brief.node,audience.node,decisions.node,el('p',{class:'muted'},'保留已明确的决定；需要改变时在此修改，并说明原因。'),
+        additions.node,reason.node,button('预览材料与任务变化',inputPreview)))),
+      el('p',{class:'footer-note muted'},'更新材料后，先确认受影响的页面，再比较修改结果。')));
+  const node=el('div',{class:'content-sources stack'},heading('内容与来源','先看材料与论证，再改逐页稿。直接改内容和交接制作分别保存。',!app.readonly&&button('添加材料或调整要求',()=>{const details=node.querySelector('.materials-aside details');details.open=true;details.querySelector('textarea,input,select')?.focus();},!app.readonly)),
     el('div',{class:aligned?'notice':'history-banner'},el('strong',{},aligned?'当前输入已由内容结果对齐':'输入待协调'),el('p',{},aligned?'已有内容结果采用了这一版输入；这不是独立事实核验。':'已保存的稿件仍可阅读。制作工具尚需按最新材料、受众和用途判断影响。')),
     hostImpact,
-    inputs?panel('任务要求与材料',el('p',{},inputs.task.brief),el('p',{class:'muted'},'受众：'+(inputs.task.audience || '未填写')+' · 材料 '+inputs.sources.length+' 份'),el('details',{},el('summary',{},'调整任务要求与材料'),editable(el('div',{class:'stack'},brief.node,audience.node,decisions.node,el('p',{class:'muted'},'保留已明确的决定；需要改变时在此修改，并说明原因。'),sourceList,
-      !app.readonly&&[additions.node,reason.node,button('预览材料与任务变化',inputPreview)])))):panel('历史材料',el('p',{},'此处只读固定版本的内容目标与来源，不混入当前任务要求。')),
-    panel('逐页稿与顺序',editable(el('div',{class:'stack'},el('p',{class:'muted'},'打开页面可改标题和正文。用移动按钮、拖动标题，或聚焦标题后按 Alt + ↑/↓ 调整顺序，再预览保存。'),pageList,
-      !app.readonly&&el('div',{class:'stack'},button('预览页序变更',()=>preview('reorder')),instruction.node,el('div',{class:'row wrap'},button('预览移除选页',()=>preview('remove')),button('预览选页改写',()=>preview('rewrite')),button('预览合并选页',()=>preview('merge')),button('预览拆分选页',()=>preview('split'))),el('p',{class:'muted'},'改写保留页身份；合并/拆分由制作工具返回新页，旧标注仍保留在原基准。'))))),
-    ref?panel('内容计划',el('p',{},plan.input_summary || ''),el('ol',{},goals.map(g=>el('li',{},g.purpose))),el('details',{},el('summary',{},'编辑内容计划'),editable(el('div',{class:'stack'},el('p',{class:'muted'},'这里编辑章节、目标与待确认事实；正文请进入对应页面修改。'),summary.node,goalList,!app.readonly&&button('预览内容计划变更',()=>preview('outline')))))):panel('内容计划',el('p',{},'尚未记录完整内容计划，当前仅能按逐页稿阅读。请交接内容整理。')),
+    el('div',{class:'content-layout'},
+      el('section',{class:'stack'},
+        ref?el('div',{class:'stack'},el('div',{class:'section-head'},el('h2',{},'方案大纲'),el('span',{class:'status'},'内容基准 '+version(ref?.sha256 || ref))),...outlineBlocks()):panel('方案大纲',el('p',{},'尚未记录完整内容计划，当前仅能按逐页稿阅读。请交接内容整理。')),
+        panel('逐页稿与顺序',editable(el('div',{class:'stack'},el('p',{class:'muted'},'打开页面可改标题和正文。用移动按钮、拖动标题，或聚焦标题后按 Alt + ↑/↓ 调整顺序，再预览保存。'),pageList,
+          !app.readonly&&el('div',{class:'stack'},button('预览页序变更',()=>preview('reorder')),instruction.node,el('div',{class:'row wrap'},button('预览移除选页',()=>preview('remove')),button('预览选页改写',()=>preview('rewrite')),button('预览合并选页',()=>preview('merge')),button('预览拆分选页',()=>preview('split'))),el('p',{class:'muted'},'改写保留页身份；合并/拆分由制作工具返回新页，旧标注仍保留在原基准。'))))),
+        ref?panel('内容计划',el('p',{},plan.input_summary || ''),el('ol',{},goals.map(g=>el('li',{},g.purpose))),el('details',{},el('summary',{},'编辑内容计划'),editable(el('div',{class:'stack'},el('p',{class:'muted'},'这里编辑章节、目标与待确认事实；正文请进入对应页面修改。'),summary.node,goalList,!app.readonly&&button('预览内容计划变更',()=>preview('outline')))))):panel('内容计划',el('p',{},'尚未记录完整内容计划。')),
+        inputs?null:panel('历史材料',el('p',{},'此处只读固定版本的内容目标与来源，不混入当前任务要求。'))),
+      materialAside),
     !app.readonly&&operation.node,draftNode);
   if(app.readonly) for(const item of node.querySelectorAll('textarea'))item.readOnly=true;
   if(app.contentFocusPage){const focus=app.contentFocusPage;delete app.contentFocusPage;requestAnimationFrame(()=>pageList.querySelector('[data-page-id="'+CSS.escape(focus)+'"] .order-handle')?.focus());}

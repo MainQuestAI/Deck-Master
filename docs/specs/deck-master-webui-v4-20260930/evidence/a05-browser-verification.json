@@ -1,0 +1,61 @@
+{
+ "card": "A05",
+ "recorded_at": "2026-10-01（随提交写入，时间以 git 为准）",
+ "base": "0ccd8dd（origin/main，PR-M1 合并后）",
+ "branch": "codex/webui-v4-completion",
+ "environment": {
+  "worktree": "/Users/dingcheng/.codex/worktrees/webui-a/Deck-Master",
+  "browser": "Playwright Chromium via playwright-cli，session a05，1440x900",
+  "service": "真实 WorkbenchServer + create_gallery_sample 24 页 + 真实材料登记（磁盘文件经 inputs_update 读取提取=已读取）+ 真实大纲提交（content_ops plan/commit，6 条 goal source_links 带 locator L3 与 source_version）+ 1 条真实已存意见。无 mock；合成证据。"
+ },
+ "changed_files": [
+  "content-sources.js（content-layout 双栏：方案大纲 outline-block 导航+逐页稿与顺序+内容计划 主栏 / 使用中的材料材料四态侧栏；材料卡升级为已登记·尚未读取 / 已读取·制作工具已读取 状态标签；保留全部既有 plan/commit 编辑流）",
+  "annotations.js（模式工具改设计 segmented 语义+active 态；每模式 form-hint 行为提示：阅读不产生标注/框选 Esc 返回等；面板题改为 标注与意见）",
+  "content-edit.js / text-selection.js / change-handoff.js：代码审读后无需改动（文案与诚实语义已达标）"
+ ],
+ "browser_verification": {
+  "ac01": {
+   "content_layout": "content-layout 双栏渲染；outline-block 3 个（章节编号 mono/章名/页范围+来源关联 L3/看逐页稿导航可用，导航到 surface=page ✓）",
+   "materials": "使用中的材料 1 份：调研纪要.md · 已读取 · 提取不等于制作工具已阅读并判断影响。 · 状态标签『制作工具已读取』；读取材料原文 打开真实提取（modal 固定版本+提取状态+阅读声明）",
+   "annotations": "原图层模式 segmented（阅读/整页意见/点标注/框选模式）+ per-mode form-hint；键盘百分比区域（10,10,30,20）添加成功 regionAdded=1（无鼠标替代 G24）",
+   "text_range": "逐页稿原文选段校验：选段已校验 · [0, 1) · 仅定位原文，尚未保存意见。（code point 语义 + 诚实文案）",
+   "screenshots": [
+    "ac01-content-layout-1440.png",
+    "ac01-source-reader-1440.png",
+    "ac01-annotation-1440.png"
+   ]
+  },
+  "ac02": {
+   "draft_isolation": "p01 草稿输入 → 切 p02（草稿空）→ 回 p01（文本保留）；刷新后仍保留（draftOnReload=原文）——按页面+基准隔离 ✓",
+   "save_not_execution": "保存意见前后 /api/tasks 数量不变（saveNotExecution=true）；成功注记=意见已保存，尚未提交修改计划。原草稿与范围继续保留。",
+   "unknown_policy": "选段校验文案明示 仅定位原文，尚未保存意见；影响判断缺失时显示 输入待协调（fixture 即此态），不补造",
+   "conflict_paths": "草稿 etag 冲突/未知 operation 恢复由既有单测覆盖（test_ui_journal.py 等），本轮未在浏览器重复注入"
+  },
+  "ac03": {
+   "structure_previews": "预览移除选页：修改 0 页，移除或替换 2 个旧页身份（列名页题）；预览页序变更：0 页变化影响说明；预览合并选页（含选页调整要求）：修改 2 页…仅交接选定页，Host 返回后才更新正文。不会在此生成图片（B03 候选流：返回后先看影响再采用）；拆分约束不满足时服务 422 如实显示、旧预览保留",
+   "material_update": "更新材料用途 → 预览材料与任务变化：旧材料版本保留，输入进入待协调…只有 Host 判断并采用后才说明内容已对齐，不默认整套重制 + 差异清单（更新 1 份材料用途）→ 确认输入并交接判断",
+   "alignment_states": "input_alignment=needs_reconciliation（fixture 真实态）：内容面显示 输入待协调 banner + Host 影响判断区留空（无 resolved 任务不补造）",
+   "screenshots": [
+    "ac03-structure-preview-1440.png",
+    "ac03-merge-preview-1440.png",
+    "ac03-material-preview-1440.png"
+   ]
+  },
+  "defects_found_and_fixed": [
+   "大纲链接把 source_version 对象拼成 [object Object]（改为只显示 locator）",
+   "材料卡与编辑器旧卡重复渲染（统一为侧栏单一四态卡）",
+   "version(ref) 收到引用对象导致内容面整页静默渲染失败（loadRoute catch 在 boot 阶段 this.notice 未建而无声）——修复为 version(ref?.sha256 || ref)；临时 console.error 定位后已移除。教训：loadRoute 的静默失败面值得在 A08 检查是否补充可见错误"
+  ]
+ },
+ "boundaries": [
+  "合并/拆分返回候选后的固定比较与采用 UI 归 A06（本卡只交付 plan 影响预览与交接）",
+  "runs 面无编辑器持久化 no-op 归 A07；G26 复制制作要求呈现归 A07",
+  "真实制作工具执行（Host）不在本卡闸门；材料更新后的实际影响判断需 Host，open 如实"
+ ],
+ "test_layers": {
+  "core_and_http": "PYTHONPATH=src <venv> pytest tests/rebuild -q = 978 passed；ruff clean（本卡纯 UI 无新 pytest）",
+  "browser": "本文件；真实服务 24 页混合项目 + 真实材料/大纲/意见操作，合成证据标注",
+  "real_authoring_tool": "不在本卡闸门（B06）",
+  "install": "不在本卡闸门（B07）"
+ }
+}

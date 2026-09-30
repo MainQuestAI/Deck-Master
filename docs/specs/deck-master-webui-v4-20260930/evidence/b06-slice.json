@@ -1,0 +1,22 @@
+{
+  "card": "B06",
+  "head": "随提交（见 git log 本文件），基线 0ccd8dd",
+  "command": "PYTHONPATH=src <venv> python -m pytest tests/rebuild -q  # 全量见提交记录；test_styles.py 14 passed",
+  "core": {
+    "ac01": {
+      "preserve_dimensions": "propose 按 DIMENSIONS 全集投影未选维度（默认选 palette+typography → density/lines/composition 为保持项）；proposal/recipe/schema 四处落盘可追溯",
+      "scope_validation": "维度键限定五维，未知键（texture）拒绝并报出键名",
+      "instruction": "instruction() 显式追加『明确保持维度（沿用目标页，不向参考看齐）』机器可读清单；既有文案保留：只借选定维度、不复制事实/数字/论点、构图仅单独选择时借用",
+      "inherited_mechanisms": "固定参考身份/文件校验、目标事实引用 targets[].content、prompt_selection code point 校验、密度冲突显式取舍（unresolved 阻断 confirm）、host_suggestion unconfirmed 人工复核、扩选门槛（首试单页；扩选须同 recipe 当前已采用候选）——styles.py 既有实现逐条复核确认",
+      "no_auto_claims": "全链路无质量/改善自动声明；视觉退化按 INTERFACES 需实际阅图（AC02 真实证据）"
+    },
+    "ac02_ac03_open": "AC02 需真实制作工具正向试作与跨页扩展证据；AC03 需获准 30 页真实项目。按卡面与 CONSOLIDATION『按设计保持 open』执行：引用 W07/W08 既有证据（inherited-w07-real-host-checks.json / inherited-w08-visual-review.json），不合成关闭"
+  },
+  "layers": {
+    "core": "test_styles.py 14 passed（新增 B06 preserve_dimensions 三面断言）",
+    "http_cli": "styles.propose/confirm/plan/listing/show 既有 HTTP+CLI 由 test_styles.py HTTP 用例覆盖",
+    "browser": "风格面 UI 呈现归 A06（PR-M3）；本卡无独立浏览器断言",
+    "real_authoring_tool": "open（AC02）",
+    "install": "不在本卡闸门"
+  }
+}
