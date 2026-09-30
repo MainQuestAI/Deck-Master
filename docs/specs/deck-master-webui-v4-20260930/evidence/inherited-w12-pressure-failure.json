@@ -1,0 +1,525 @@
+{
+  "error": "Locator.click: Timeout 60000ms exceeded.\nCall log:\n  - waiting for get_by_role(\"button\", name=\"整稿画廊\", exact=True)\n    - locator resolved to <button title=\"整稿画廊\" type=\"button\" class=\"active\" aria-current=\"page\">…</button>\n  - attempting click action\n    - waiting for element to be visible, enabled and stable\n    - element is visible, enabled and stable\n    - scrolling into view if needed\n",
+  "url": "http://127.0.0.1:63422/v2/#project=29dff4903f6c860740f114ad8e7ff1f05d924d81506e9898525b375e7f42a5c3&surface=page&layer=original_image&revision=d55155c4ac5a4e94933dfabbe3a734e6&zoom=1.25&page=p01&candidate=candidate-20260930-p01-0",
+  "body": "跳到工作区\nD\nDeck Master\n制作总览\n内容与来源\n整稿画廊\n风格校准\n任务与交付\n当前项目\n工作台合成示例\n合成示例 · 只读\n\n当前为项目独立入口\n\n原有工作区\n工作台合成示例\nR d55155c4\n待交接 148\n\n项目有新状态。当前页面仍按顶栏版本阅读。\n\n读取项目最新状态\n这是合成的只读示例，未调用模型，也未进行专业质量验收。\n第 1 页 · 原图候选\n\n当前采用与候选固定比较；参考原图作为辅助。\n\n候选 \n候选 1 · 2026/9/30 08:00:00\n候选 2 · 2026/9/30 08:00:00\n候选 3 · 2026/9/30 08:00:00\n候选 4 · 2026/9/30 08:00:00\n候选 5 · 2026/9/30 08:00:00\n刷新候选与当前状态\n候选可比较，采用前请检查事实与数字\n· p01 · 原图 · 返回 2026/9/30 08:00:00\n\n最后同步：11:33:47\n\n当前采用（原固定基准）\n\nR 7e41f746\n\n所选候选\n\n原图 · 2026/9/30 08:00:00\n\n所选候选的生成依据\n预览采用这个候选\n采用这个候选\n保留当前，返回本页\n回本页调整并再试\n\n正在读取所选候选；已读比较在新数据完整前保持不变。\n\n个人记录与操作恢复\n单页 · 原图，R d55155c4",
+  "errors": [],
+  "recent_requests": [
+    {
+      "elapsed": 530151.178383166,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/thumbnails?path=.deckmaster%2Fobjects%2F81%2F81f5a16c02835adb8b45b6a99f682e28f0c380d3c7002707a191abe9088a1e29.png&sha256=81f5a16c02835adb8b45b6a99f682e28f0c380d3c7002707a191abe9088a1e29&retry=0"
+    },
+    {
+      "elapsed": 530151.178473541,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/thumbnails?path=.deckmaster%2Fobjects%2F8f%2F8f3eb8b858b9d7e2c8c8296a2c05b8d920098116829c0b4d4c32fe7dd4e488d0.png&sha256=8f3eb8b858b9d7e2c8c8296a2c05b8d920098116829c0b4d4c32fe7dd4e488d0&retry=0"
+    },
+    {
+      "elapsed": 530151.178535791,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/thumbnails?path=.deckmaster%2Fobjects%2F20%2F201bece9919ed2cec66f6ec3af33532709917f7b2324eb0587b9f6e1c2a64ebe.png&sha256=201bece9919ed2cec66f6ec3af33532709917f7b2324eb0587b9f6e1c2a64ebe&retry=0"
+    },
+    {
+      "elapsed": 530151.178654083,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/thumbnails?path=.deckmaster%2Fobjects%2F73%2F73ac7177c525bd6e8beb231059fe5e45a2e84ad0af169a65bf6d014d6af90d58.png&sha256=73ac7177c525bd6e8beb231059fe5e45a2e84ad0af169a65bf6d014d6af90d58&retry=0"
+    },
+    {
+      "elapsed": 530151.1789415,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/thumbnails?path=.deckmaster%2Fobjects%2F2b%2F2bef035086a0558e3cca6057b187a0725e54f2905892ef949d8d76b17385bdb4.png&sha256=2bef035086a0558e3cca6057b187a0725e54f2905892ef949d8d76b17385bdb4&retry=0"
+    },
+    {
+      "elapsed": 530151.179108833,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/thumbnails?path=.deckmaster%2Fobjects%2F1f%2F1f13dd7a7b1d2af8f2f19fb4a28b233178123ef91edc196e5a96a8fcf9917fb9.png&sha256=1f13dd7a7b1d2af8f2f19fb4a28b233178123ef91edc196e5a96a8fcf9917fb9&retry=0"
+    },
+    {
+      "elapsed": 530151.179362083,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/thumbnail-file?cache_key=5c062b60c685d005029ae115f08569c38642c83d478e90ee86b6d2ccb2302faa"
+    },
+    {
+      "elapsed": 530151.179650041,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/thumbnail-file?cache_key=e568f9ef949b3bba1119c731ede79841312adfab9806ab2d3075790db11f5485"
+    },
+    {
+      "elapsed": 530151.179846541,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/thumbnail-file?cache_key=0b12ea4dda8531885f1659f7ae47c6c9ebe6365608ca0b6b86da2cd97c8444bb"
+    },
+    {
+      "elapsed": 530151.1800255,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/thumbnail-file?cache_key=6c28e9a2592e8863a23602660746c01c7ba98c7392ec9dbd3e9c6d54c1c9f1e9"
+    },
+    {
+      "elapsed": 530151.180153916,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/thumbnail-file?cache_key=25246a99abdf498fc1fb62eabed1cf24e2db07061fd16d3b26bf85a59533b624"
+    },
+    {
+      "elapsed": 530151.180273708,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/thumbnail-file?cache_key=215051734f2662840174441b38ce31dc953d92b889629feed743ef237f494923"
+    },
+    {
+      "elapsed": 530151.180442916,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/thumbnail-file?cache_key=6ee9298bb118b978783f0e0c007841c60b32457a7d49f38e6c91bdfd07019df4"
+    },
+    {
+      "elapsed": 530151.180611708,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/thumbnail-file?cache_key=838bc7cd6c616e9dce74071a742e875ce2ab846b671eafae8f3a34d24a43f39b"
+    },
+    {
+      "elapsed": 530152.889903041,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/view/summary"
+    },
+    {
+      "elapsed": 530155.995709875,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/view/summary"
+    },
+    {
+      "elapsed": 530159.081753,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/view/summary"
+    },
+    {
+      "elapsed": 530160.065557375,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/project"
+    },
+    {
+      "elapsed": 530160.066064625,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/view/summary"
+    },
+    {
+      "elapsed": 530160.17104,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/view/summary?revision=412f7d0d1a3b4d86a06b6cf835539a56"
+    },
+    {
+      "elapsed": 530160.2573855,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/gallery"
+    },
+    {
+      "elapsed": 530160.257739416,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/content-plan?revision=412f7d0d1a3b4d86a06b6cf835539a56"
+    },
+    {
+      "elapsed": 530160.257923166,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/drafts"
+    },
+    {
+      "elapsed": 530160.326375916,
+      "method": "POST",
+      "url": "http://127.0.0.1:63422/api/gallery"
+    },
+    {
+      "elapsed": 530160.335790041,
+      "method": "POST",
+      "url": "http://127.0.0.1:63422/api/ui-state"
+    },
+    {
+      "elapsed": 530160.335953583,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/file?path=.deckmaster%2Fobjects%2F79%2F79d2838aa2eb04f9fbc53ae4e9dc84ae589fdd8794ac1a94b6d3ec62e49172a2.svg&sha256=79d2838aa2eb04f9fbc53ae4e9dc84ae589fdd8794ac1a94b6d3ec62e49172a2"
+    },
+    {
+      "elapsed": 530160.336431625,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/file?path=.deckmaster%2Fobjects%2F54%2F545a4da212c78ebe5918a20a873295928e1c3dfe1582e140e357943d30265be3.svg&sha256=545a4da212c78ebe5918a20a873295928e1c3dfe1582e140e357943d30265be3"
+    },
+    {
+      "elapsed": 530160.336654291,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/file?path=.deckmaster%2Fobjects%2Fdd%2Fddeb44c30b194437360f58e670607282adaf649a832f8b272fbb52d4c13eccb8.svg&sha256=ddeb44c30b194437360f58e670607282adaf649a832f8b272fbb52d4c13eccb8"
+    },
+    {
+      "elapsed": 530160.344351166,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/file?path=.deckmaster%2Fobjects%2F89%2F89b734a5faa108f73947f262c1f40f96512d0e0cda196de1f54c5a38d59242f1.svg&sha256=89b734a5faa108f73947f262c1f40f96512d0e0cda196de1f54c5a38d59242f1"
+    },
+    {
+      "elapsed": 530160.344931666,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/file?path=.deckmaster%2Fobjects%2F79%2F79d2838aa2eb04f9fbc53ae4e9dc84ae589fdd8794ac1a94b6d3ec62e49172a2.svg&sha256=79d2838aa2eb04f9fbc53ae4e9dc84ae589fdd8794ac1a94b6d3ec62e49172a2"
+    },
+    {
+      "elapsed": 530160.345103625,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/file?path=.deckmaster%2Fobjects%2F54%2F545a4da212c78ebe5918a20a873295928e1c3dfe1582e140e357943d30265be3.svg&sha256=545a4da212c78ebe5918a20a873295928e1c3dfe1582e140e357943d30265be3"
+    },
+    {
+      "elapsed": 530160.354787416,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/file?path=.deckmaster%2Fobjects%2Fdd%2Fddeb44c30b194437360f58e670607282adaf649a832f8b272fbb52d4c13eccb8.svg&sha256=ddeb44c30b194437360f58e670607282adaf649a832f8b272fbb52d4c13eccb8"
+    },
+    {
+      "elapsed": 530160.355818041,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/file?path=.deckmaster%2Fobjects%2F89%2F89b734a5faa108f73947f262c1f40f96512d0e0cda196de1f54c5a38d59242f1.svg&sha256=89b734a5faa108f73947f262c1f40f96512d0e0cda196de1f54c5a38d59242f1"
+    },
+    {
+      "elapsed": 530160.373343791,
+      "method": "GET",
+      "url": "blob:http://127.0.0.1:63422/3c3108b5-bed6-475b-b2ac-9e42829f9258"
+    },
+    {
+      "elapsed": 530160.374976458,
+      "method": "GET",
+      "url": "blob:http://127.0.0.1:63422/872fe6a3-6ec8-477e-93cc-8e7eecc7cfc8"
+    },
+    {
+      "elapsed": 530160.383803375,
+      "method": "GET",
+      "url": "blob:http://127.0.0.1:63422/9d721cc7-b7dd-4f20-b7f5-44f58ad2fce7"
+    },
+    {
+      "elapsed": 530160.38421875,
+      "method": "GET",
+      "url": "blob:http://127.0.0.1:63422/fb565ccd-1527-46cd-b190-84c6ebdb72f7"
+    },
+    {
+      "elapsed": 530160.629904333,
+      "method": "POST",
+      "url": "http://127.0.0.1:63422/api/gallery"
+    },
+    {
+      "elapsed": 530162.17086825,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/view/summary"
+    },
+    {
+      "elapsed": 530163.866139375,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/project"
+    },
+    {
+      "elapsed": 530163.86675,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/view/summary"
+    },
+    {
+      "elapsed": 530164.013533416,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/view/summary?revision=412f7d0d1a3b4d86a06b6cf835539a56"
+    },
+    {
+      "elapsed": 530164.148960833,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/pages/p01/lineage?revision=412f7d0d1a3b4d86a06b6cf835539a56"
+    },
+    {
+      "elapsed": 530164.262087916,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/drafts"
+    },
+    {
+      "elapsed": 530164.262714708,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/annotations"
+    },
+    {
+      "elapsed": 530164.263045458,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/candidates?page_id=p01"
+    },
+    {
+      "elapsed": 530164.263461666,
+      "method": "POST",
+      "url": "http://127.0.0.1:63422/api/ui-state"
+    },
+    {
+      "elapsed": 530165.883221625,
+      "method": "POST",
+      "url": "http://127.0.0.1:63422/api/ui-state"
+    },
+    {
+      "elapsed": 530165.883665416,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/view/summary"
+    },
+    {
+      "elapsed": 530168.491734666,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/view/summary"
+    },
+    {
+      "elapsed": 530171.600466416,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/view/summary"
+    },
+    {
+      "elapsed": 530174.70996,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/view/summary"
+    },
+    {
+      "elapsed": 530177.841080666,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/view/summary"
+    },
+    {
+      "elapsed": 530177.878581708,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/project"
+    },
+    {
+      "elapsed": 530177.878813833,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/view/summary"
+    },
+    {
+      "elapsed": 530178.060274916,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/view/summary?revision=412f7d0d1a3b4d86a06b6cf835539a56"
+    },
+    {
+      "elapsed": 530178.143439791,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/gallery"
+    },
+    {
+      "elapsed": 530178.143659333,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/content-plan?revision=412f7d0d1a3b4d86a06b6cf835539a56"
+    },
+    {
+      "elapsed": 530178.14378975,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/drafts"
+    },
+    {
+      "elapsed": 530178.222042333,
+      "method": "POST",
+      "url": "http://127.0.0.1:63422/api/ui-state"
+    },
+    {
+      "elapsed": 530178.279727791,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/project"
+    },
+    {
+      "elapsed": 530178.280084,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/view/summary"
+    },
+    {
+      "elapsed": 530178.384245666,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/view/summary?revision=412f7d0d1a3b4d86a06b6cf835539a56"
+    },
+    {
+      "elapsed": 530178.464528125,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/gallery"
+    },
+    {
+      "elapsed": 530178.464690458,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/content-plan?revision=412f7d0d1a3b4d86a06b6cf835539a56"
+    },
+    {
+      "elapsed": 530178.46483,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/drafts"
+    },
+    {
+      "elapsed": 530178.542514541,
+      "method": "POST",
+      "url": "http://127.0.0.1:63422/api/ui-state"
+    },
+    {
+      "elapsed": 530178.846647708,
+      "method": "POST",
+      "url": "http://127.0.0.1:63422/api/gallery"
+    },
+    {
+      "elapsed": 530180.997936333,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/view/summary"
+    },
+    {
+      "elapsed": 530184.106783666,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/view/summary"
+    },
+    {
+      "elapsed": 530187.214093625,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/view/summary"
+    },
+    {
+      "elapsed": 530190.045180708,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/project"
+    },
+    {
+      "elapsed": 530190.045773166,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/view/summary"
+    },
+    {
+      "elapsed": 530190.166454375,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/view/summary?revision=412f7d0d1a3b4d86a06b6cf835539a56"
+    },
+    {
+      "elapsed": 530190.2440645,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/tasks?revision=412f7d0d1a3b4d86a06b6cf835539a56&limit=30"
+    },
+    {
+      "elapsed": 530190.244477041,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/history"
+    },
+    {
+      "elapsed": 530190.303097708,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/tasks?limit=1"
+    },
+    {
+      "elapsed": 530190.303243208,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/drafts"
+    },
+    {
+      "elapsed": 530190.303492791,
+      "method": "POST",
+      "url": "http://127.0.0.1:63422/api/ui-state"
+    },
+    {
+      "elapsed": 530190.319712708,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/view/summary"
+    },
+    {
+      "elapsed": 530190.329457958,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/candidates"
+    },
+    {
+      "elapsed": 530190.329709083,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/tasks?limit=30&offset=0&revision=412f7d0d1a3b4d86a06b6cf835539a56"
+    },
+    {
+      "elapsed": 530190.586043375,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/tasks?limit=1"
+    },
+    {
+      "elapsed": 530191.277835333,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/project"
+    },
+    {
+      "elapsed": 530191.278568708,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/view/summary"
+    },
+    {
+      "elapsed": 530191.37227225,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/pages/p01/lineage?revision=d55155c4ac5a4e94933dfabbe3a734e6"
+    },
+    {
+      "elapsed": 530191.448889541,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/drafts"
+    },
+    {
+      "elapsed": 530191.456328666,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/candidates?page_id=p01"
+    },
+    {
+      "elapsed": 530191.456477,
+      "method": "POST",
+      "url": "http://127.0.0.1:63422/api/ui-state"
+    },
+    {
+      "elapsed": 530191.886898583,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/candidates/candidate-20260930-p01-0"
+    },
+    {
+      "elapsed": 530192.308080041,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/pages/p01/lineage?revision=7e41f7464ffb41a68fc3cb1269bcfe2d"
+    },
+    {
+      "elapsed": 530192.308518958,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/attempts/attempt-20260930-p01-0-2?revision=d55155c4ac5a4e94933dfabbe3a734e6"
+    },
+    {
+      "elapsed": 530192.335213041,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/file?path=.deckmaster%2Fobjects%2F81%2F81f5a16c02835adb8b45b6a99f682e28f0c380d3c7002707a191abe9088a1e29.png&sha256=81f5a16c02835adb8b45b6a99f682e28f0c380d3c7002707a191abe9088a1e29"
+    },
+    {
+      "elapsed": 530192.335724083,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/file?path=.deckmaster%2Fobjects%2Fb8%2Fb8d545e2415e05b911173709e5159793b186706dd73eb92e56adc663253510fb.png&sha256=b8d545e2415e05b911173709e5159793b186706dd73eb92e56adc663253510fb"
+    },
+    {
+      "elapsed": 530193.59164175,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/view/summary"
+    },
+    {
+      "elapsed": 530193.696639166,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/candidates?page_id=p01"
+    },
+    {
+      "elapsed": 530194.132019958,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/candidates/candidate-20260930-p01-0"
+    },
+    {
+      "elapsed": 530196.699567208,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/view/summary"
+    },
+    {
+      "elapsed": 530199.807783208,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/view/summary"
+    },
+    {
+      "elapsed": 530200.012134208,
+      "method": "GET",
+      "url": "http://127.0.0.1:63422/api/candidates/candidate-20260930-p01-0"
+    }
+  ],
+  "updates": [
+    {
+      "step": 0,
+      "task_id": "pressure-background-000",
+      "kind": "start"
+    },
+    {
+      "step": 2,
+      "task_id": "pressure-background-000",
+      "kind": "cancel"
+    },
+    {
+      "step": 4,
+      "task_id": "pressure-background-001",
+      "kind": "start"
+    }
+  ]
+}

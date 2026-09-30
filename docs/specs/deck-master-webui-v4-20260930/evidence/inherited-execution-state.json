@@ -1,0 +1,1186 @@
+{
+  "baseline": "d1c7c4600cb0fc781070116ed8cc8a1ff6b8b7ca",
+  "branch": "codex/workbench-w12-final",
+  "active_package": "W12",
+  "sequence": [
+    "W01.core",
+    "W02",
+    "W03",
+    "W04",
+    "W05",
+    "W06",
+    "W07",
+    "W01.pressure",
+    "W10",
+    "W08",
+    "W09",
+    "W11",
+    "W12"
+  ],
+  "packages": {
+    "W01": {
+      "status": "slice_merged",
+      "accepted": false,
+      "implementation_commit": "b0ac9e5c00ffa2b975f3d9f2e02382e9cf7adf8a",
+      "evidence": "W01.md",
+      "residuals": [
+        "User acceptance not measured"
+      ],
+      "reference_safety_commit": "8effeb352d72f9c500e37740307df2cc7ceb5a4f",
+      "pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/41",
+      "merge_commit": "ea4b5b8fa1e4e4e3444b6cd8861f83f5fcc61468",
+      "pressure_baseline": "9e6b6e1b804eea7b843f716165fbde2ce04a72be",
+      "pressure_status": "merged",
+      "pressure_implementation_commit": "e21be437f033b112dc15779fe51e45d267cc6bf8",
+      "pressure_evidence": "W01-PRESSURE.md",
+      "pressure_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/55",
+      "pressure_head": "54e8c74c4193d793250e6351e21658000e999267",
+      "pressure_merge_commit": "d42dda62c53bfeaf177c077f8e46074c8c23bdba"
+    },
+    "W02": {
+      "status": "core_slices_merged",
+      "accepted": false,
+      "baseline": "ea4b5b8fa1e4e4e3444b6cd8861f83f5fcc61468",
+      "evidence": "W02.md",
+      "recovery_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/42",
+      "recovery_merge_commit": "de6293492fca41fbce34e269a4463da111214c2c",
+      "protocol_baseline": "de6293492fca41fbce34e269a4463da111214c2c",
+      "protocol_evidence": "W02-PROTOCOL.md",
+      "residuals": [
+        "Nonempty reference attachment observation remains unverified; preserve unknown coverage"
+      ],
+      "protocol_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/43",
+      "protocol_merge_commit": "09f4486a453d2132a18dbefd10f99ef7317e8fd5",
+      "content_plan_baseline": "09f4486a453d2132a18dbefd10f99ef7317e8fd5",
+      "content_plan_evidence": "W02-CONTENT-PLAN.md",
+      "content_plan_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/44",
+      "content_plan_merge_commit": "13aaf3690c6cde67e405576f5020abdd5311b909"
+    },
+    "W03": {
+      "status": "slices_merged",
+      "accepted": false,
+      "baseline": "13aaf3690c6cde67e405576f5020abdd5311b909",
+      "core_evidence": "W03-CORE.md",
+      "residuals": [
+        "Real macOS directory dialog interaction: CUA inventory timed out; cancellation contract verified by injection",
+        "W12 final offline installed package acceptance",
+        "User acceptance not measured"
+      ],
+      "core_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/45",
+      "core_head": "7b62b6294c38ee58a6a29b708df8b2b1981a851f",
+      "core_merge_commit": "062fd6974f0f1ed4053ee9a397f2b1c288bd42f4",
+      "frontend_baseline": "062fd6974f0f1ed4053ee9a397f2b1c288bd42f4",
+      "frontend_evidence": "W03-UI.md",
+      "frontend_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/46",
+      "frontend_head": "8eabda92876a2dd3a2ef1be7c7c541b75cda531b",
+      "frontend_merge_commit": "f3c9b617b868748ea09765ff072858f563f65b8f"
+    },
+    "W04": {
+      "status": "slices_merged",
+      "accepted": false,
+      "baseline": "f3c9b617b868748ea09765ff072858f563f65b8f",
+      "core_evidence": "W04-CORE.md",
+      "residuals": [
+        "Human 30-second observation not measured"
+      ],
+      "core_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/47",
+      "core_head": "54f940dd80986c9d73077c1b4f2b234a452c083d",
+      "core_merge_commit": "e5e7892561400a06003971c8ad9239fb5e3b62af",
+      "frontend_baseline": "e5e7892561400a06003971c8ad9239fb5e3b62af",
+      "frontend_source_commit": "33c99bed12cd9c352a1429955fe798c1f9646b2d",
+      "frontend_evidence": "W04-UI.md",
+      "frontend_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/48",
+      "frontend_head": "b11452ff32305a91d2dd743e7b1248e5c59126a1",
+      "frontend_merge_commit": "b00525557ac69e9453ae4d6e3b5faf20dbefcf8b",
+      "pressure_first_screen_evidence": "w04/pressure/checks.json",
+      "pressure_sustained_evidence": "w10/pressure/checks.json"
+    },
+    "W05": {
+      "status": "slices_merged",
+      "accepted": false,
+      "baseline": "b00525557ac69e9453ae4d6e3b5faf20dbefcf8b",
+      "core_implementation_commit": "6f3e39635094543704ca498c32db0f2f7ead29dc",
+      "core_evidence": "W05-CORE.md",
+      "residuals": [
+        "W05-AC03 candidate comparison requires W07 contracts and UI",
+        "User acceptance not measured; W12 installed/offline acceptance remains separate"
+      ],
+      "core_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/49",
+      "core_head": "4640a02555a701e9dd41084df2b1fffced2c63f9",
+      "core_merge_commit": "a2a27f6937209da6befc440dd787c1065a845c94",
+      "frontend_baseline": "a2a27f6937209da6befc440dd787c1065a845c94",
+      "frontend_implementation_commit": "0df9546bed3a356e7266c183893d0b062f895222",
+      "frontend_evidence": "W05-UI.md",
+      "frontend_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/50",
+      "frontend_head": "607e84541a0c314fa4211560ee3e7cac36840934",
+      "frontend_merge_commit": "2d7e1a6dffc6755c20e8ca51175450b0fcbf829b"
+    },
+    "W06": {
+      "status": "slices_merged",
+      "accepted": false,
+      "baseline": "2d7e1a6dffc6755c20e8ca51175450b0fcbf829b",
+      "core_implementation_commit": "f3d5c3ebcd8dac12541e62b49e280cbaa34ab60f",
+      "core_evidence": "W06-CORE.md",
+      "residuals": [
+        "User acceptance not measured; actual image calls and final installed/offline acceptance remain separate"
+      ],
+      "core_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/51",
+      "core_head": "b95323ca92c9ab18264a6cdbee4ead3c9130ce8d",
+      "core_merge_commit": "6c3e156a47926187b71ada1bd5983a0ad73662f2",
+      "frontend_baseline": "6c3e156a47926187b71ada1bd5983a0ad73662f2",
+      "frontend_source_commit": "0e976f7e5b0d6a6cecf638bb3ed0f60b140bde74",
+      "frontend_evidence": "W06-UI.md",
+      "frontend_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/52",
+      "frontend_head": "78de53b9f9a1a08b1b91ab6330e28806d9ccbd80",
+      "frontend_merge_commit": "fc800d500462c720963f3f9e60d87ce0f90aa838"
+    },
+    "W07": {
+      "status": "slices_merged",
+      "accepted": false,
+      "baseline": "fc800d500462c720963f3f9e60d87ce0f90aa838",
+      "core_evidence": "W07-CORE.md",
+      "core_implementation_commit": "4e22054a13fd81cbc03ca68b4de170a0e1b13681",
+      "core_initial_commit": "9ce30b1",
+      "core_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/53",
+      "core_head": "e1a111a3e7fd5ae6aafc43f40b047b129f4afabe",
+      "core_merge_commit": "8de4317c9843347b8075c937e04af54e43d0cbb9",
+      "frontend_baseline": "8de4317c9843347b8075c937e04af54e43d0cbb9",
+      "frontend_evidence": "W07-UI.md",
+      "real_host_evidence": "w07/real-host/checks.json",
+      "remaining": [
+        "User acceptance"
+      ],
+      "frontend_source_commit": "ac3a88a5851501e2e83c5f4f0d3448bfe7aad75c",
+      "frontend_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/54",
+      "frontend_head": "477690e545fa224759a58adc78373004e3b29d8c",
+      "frontend_merge_commit": "9e6b6e1b804eea7b843f716165fbde2ce04a72be",
+      "real_interleaving_evidence": "w07/real-host-interleaving/interleaving-checks.json"
+    },
+    "W08": {
+      "status": "slices_merged",
+      "accepted": false,
+      "baseline": "c17ba512db3efb4196b0e88dcab2d604eb23b053",
+      "plan": "W08-PLAN.md",
+      "core_evidence": "W08-CORE.md",
+      "remaining": [
+        "Recorded unselected visual composition drift; no visual fidelity guarantee",
+        "User acceptance"
+      ],
+      "core_implementation_commit": "1bccae4e68156f3e71556253f33f69a5536de8e8",
+      "core_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/58",
+      "core_merge_commit": "38d0b446592e8558b9126cfa85a484d2bddf557b",
+      "core_head": "5a164c71e475d1172291f0cf157c649d371d5b3c",
+      "frontend_evidence": "W08-UI.md",
+      "frontend_implementation_commit": "fd05f563e692d49120e0fd3cefa4fc2e358e722f",
+      "frontend_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/59",
+      "frontend_head": "cbd2b469ec14a4af3d0067359a5b723b163f4ebf",
+      "frontend_merge_commit": "590e408c36409d435c81291ffea17686419e6fdf"
+    },
+    "W09": {
+      "status": "slices_merged",
+      "accepted": false,
+      "baseline": "590e408c36409d435c81291ffea17686419e6fdf",
+      "plan": "W09-PLAN.md",
+      "core_evidence": "W09-CORE.md",
+      "core_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/60",
+      "core_head": "44bdf47db936bf99bd6f4efad24a3823cc1f2b0f",
+      "core_merge_commit": "fa3f9238904c753d294e04588ab4d936c426e25e",
+      "contract_fix_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/61",
+      "contract_fix_head": "3f9986c1a74c8df3b7ac7f7905d5b97ff076a642",
+      "contract_fix_merge_commit": "bab4c3e5a7434b979442fda0c081b828d10b9021",
+      "frontend_baseline": "bab4c3e5a7434b979442fda0c081b828d10b9021",
+      "frontend_evidence": "W09-UI.md",
+      "residuals": [
+        "W12 isolated installed acceptance",
+        "User acceptance not measured"
+      ],
+      "frontend_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/62",
+      "frontend_head": "f773af57a4ce7480cbb6b7e65d26e6a03aeea347",
+      "frontend_merge_commit": "314df380b2b8df9d7540132f99a190c1d0b2f047"
+    },
+    "W10": {
+      "status": "slices_merged",
+      "accepted": false,
+      "baseline": "d42dda62c53bfeaf177c077f8e46074c8c23bdba",
+      "plan": "W10-PLAN.md",
+      "core_implementation_commit": "b505d34f384edda5f50e94f1e8d2a3d0060fb737",
+      "core_evidence": "W10-CORE.md",
+      "core_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/56",
+      "core_merge_commit": "45e645e7dc6b8f537d852343fae48a77bd98ca49",
+      "core_head": "9ce3857b57e538761323359ab2959979c17abb9f",
+      "frontend_source_commit": "7036f8e962f33f78a90fcc5b5ea1f506e47d3010",
+      "frontend_evidence": "W10-UI.md",
+      "remaining": [
+        "User acceptance"
+      ],
+      "frontend_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/57",
+      "frontend_head": "d18b872d3ef3b88b93f98ac54712121b5875ffa3",
+      "frontend_merge_commit": "c17ba512db3efb4196b0e88dcab2d604eb23b053"
+    },
+    "W11": {
+      "status": "slices_merged",
+      "accepted": false,
+      "baseline": "314df380b2b8df9d7540132f99a190c1d0b2f047",
+      "evidence": "W11-PLAN.md",
+      "core_evidence": "W11-CORE.md",
+      "core_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/63",
+      "core_head": "fca496a955c0b12c10eacdf9e8877727ed96b7fa",
+      "core_merge_commit": "9c9aa820833f039121a0115793258e7a2acb2ac9",
+      "frontend_baseline": "9c9aa820833f039121a0115793258e7a2acb2ac9",
+      "frontend_evidence": "W11-UI.md",
+      "residuals": [
+        "W12 isolated installed acceptance",
+        "User acceptance not measured"
+      ],
+      "frontend_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/64",
+      "frontend_head": "5792bc6bad54ddcfef3bca1a7779949061d4429c",
+      "frontend_merge_commit": "ef94d069f80b6f45ed46d7b335cb640248c5ac8c"
+    },
+    "W12": {
+      "status": "engineering_verification_in_progress",
+      "accepted": false,
+      "evidence": "W12.md",
+      "core_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/65",
+      "core_head": "629d625f4b012b8813efabb6355c584f4717b84d",
+      "core_merge_commit": "66da345c84de48933a76de577114f08dcebf4f0e"
+    }
+  },
+  "acceptance": {
+    "W01-AC01": {
+      "owner": "W01",
+      "status": "engineering_verified",
+      "evidence": [
+        "W01.md",
+        "W01-PRESSURE.md",
+        "w01/pressure/after.json"
+      ],
+      "evidence_level": "core/HTTP; synthetic 300x5x3 pressure with real task state writes",
+      "accepted": false
+    },
+    "W01-AC02": {
+      "owner": "W01",
+      "status": "core_verified",
+      "evidence": [
+        "W01.md"
+      ],
+      "evidence_level": "core/http"
+    },
+    "W01-AC03": {
+      "owner": "W01",
+      "status": "core_verified",
+      "evidence": [
+        "W01.md"
+      ],
+      "evidence_level": "core/http"
+    },
+    "W01-AC04": {
+      "owner": "W01",
+      "status": "core_verified",
+      "evidence": [
+        "W01.md"
+      ],
+      "evidence_level": "core/http"
+    },
+    "W01-AC05": {
+      "owner": "W01",
+      "status": "core_verified",
+      "evidence": [
+        "W01.md"
+      ],
+      "evidence_level": "core/http"
+    },
+    "W01-AC06": {
+      "owner": "W01",
+      "status": "core_verified",
+      "evidence": [
+        "W01.md",
+        "w01/browser-check.json"
+      ],
+      "evidence_level": "core/http/browser"
+    },
+    "W02-AC01": {
+      "owner": "W02",
+      "status": "core_verified",
+      "evidence": [
+        "W02-CONTENT-PLAN.md",
+        "w02/content-plan/checks.json"
+      ],
+      "evidence_level": "core/CLI/HTTP"
+    },
+    "W02-AC02": {
+      "owner": "W02",
+      "status": "engineering_verified",
+      "evidence": [
+        "W02-CONTENT-PLAN.md",
+        "W02-PROTOCOL.md",
+        "W03-UI.md",
+        "w03/browser/edge-checks.json"
+      ],
+      "evidence_level": "core/CLI/HTTP/real older core/real Chromium"
+    },
+    "W02-AC03": {
+      "owner": "W02",
+      "status": "core_verified",
+      "evidence": [
+        "W02-PROTOCOL.md"
+      ],
+      "evidence_level": "core/CLI/HTTP"
+    },
+    "W02-AC04": {
+      "owner": "W02",
+      "status": "core_verified",
+      "evidence": [
+        "W02-PROTOCOL.md"
+      ],
+      "evidence_level": "core/CLI/HTTP"
+    },
+    "W02-AC05": {
+      "owner": "W02",
+      "status": "core_verified",
+      "evidence": [
+        "W02-PROTOCOL.md"
+      ],
+      "evidence_level": "core/CLI/HTTP"
+    },
+    "W02-AC06": {
+      "owner": "W02",
+      "status": "core_verified",
+      "evidence": [
+        "W02.md",
+        "W02-PROTOCOL.md"
+      ],
+      "evidence_level": "core/CLI/HTTP/process-fault"
+    },
+    "W02-AC07": {
+      "owner": "W02",
+      "status": "real_host_verified",
+      "evidence": [
+        "W02-PROTOCOL.md",
+        "w02/real-host-literal/checks.json"
+      ],
+      "evidence_level": "real Host: Codex literal no-reference call",
+      "scope": "Requested prompt, transparent_background, omitted reference arguments and output; provider model/seed unknown"
+    },
+    "W03-AC01": {
+      "owner": "W03",
+      "status": "engineering_verified",
+      "evidence": [
+        "W03-CORE.md",
+        "W03-UI.md",
+        "w03/core/checks.json",
+        "w03/browser/checks.json",
+        "w03/browser/edge-checks.json"
+      ],
+      "evidence_level": "core/CLI/HTTP/real Chromium; synthetic projects; labeled fault injection"
+    },
+    "W03-AC02": {
+      "owner": "W03",
+      "status": "partial",
+      "evidence": [
+        "W03-CORE.md",
+        "W03-UI.md",
+        "w03/core/checks.json",
+        "w03/browser/checks.json",
+        "w03/browser/edge-checks.json"
+      ],
+      "evidence_level": "core/CLI/HTTP/real Chromium; synthetic projects; labeled fault injection",
+      "residual": "Real native directory chooser UI remains unverified"
+    },
+    "W03-AC03": {
+      "owner": "W03",
+      "status": "engineering_verified",
+      "evidence": [
+        "W03-CORE.md",
+        "W03-UI.md",
+        "w03/core/checks.json",
+        "w03/browser/checks.json",
+        "w03/browser/edge-checks.json"
+      ],
+      "evidence_level": "core/CLI/HTTP/real Chromium; synthetic projects; labeled fault injection"
+    },
+    "W03-AC04": {
+      "owner": "W03",
+      "status": "engineering_verified",
+      "evidence": [
+        "W03-CORE.md",
+        "W03-UI.md",
+        "w03/core/checks.json",
+        "w03/browser/checks.json",
+        "w03/browser/edge-checks.json"
+      ],
+      "evidence_level": "core/CLI/HTTP/real Chromium; synthetic projects; labeled fault injection"
+    },
+    "W03-AC05": {
+      "owner": "W03",
+      "status": "engineering_verified",
+      "evidence": [
+        "W03-CORE.md",
+        "W03-UI.md",
+        "w03/core/checks.json",
+        "w03/browser/checks.json",
+        "w03/browser/edge-checks.json"
+      ],
+      "evidence_level": "core/CLI/HTTP/real Chromium; synthetic projects; labeled fault injection"
+    },
+    "W03-AC06": {
+      "owner": "W03",
+      "status": "engineering_verified",
+      "evidence": [
+        "W03-CORE.md",
+        "W03-UI.md",
+        "w03/core/checks.json",
+        "w03/browser/checks.json",
+        "w03/browser/edge-checks.json"
+      ],
+      "evidence_level": "core/CLI/HTTP/real Chromium; synthetic projects; labeled fault injection"
+    },
+    "W03-AC07": {
+      "owner": "W03",
+      "status": "engineering_verified",
+      "evidence": [
+        "W03-CORE.md",
+        "W03-UI.md",
+        "w03/core/checks.json",
+        "w03/browser/checks.json",
+        "w03/browser/edge-checks.json"
+      ],
+      "evidence_level": "core/CLI/HTTP/real Chromium; synthetic projects; labeled fault injection"
+    },
+    "W04-AC01": {
+      "owner": "W04",
+      "status": "partial",
+      "evidence": [
+        "W04-CORE.md",
+        "W04-UI.md",
+        "w04/browser/checks.json"
+      ],
+      "evidence_level": "core/HTTP/real Chromium; synthetic content"
+    },
+    "W04-AC02": {
+      "owner": "W04",
+      "status": "engineering_verified",
+      "evidence": [
+        "W04-CORE.md",
+        "W04-UI.md",
+        "w04/browser/checks.json"
+      ],
+      "evidence_level": "core/HTTP/real Chromium; synthetic content"
+    },
+    "W04-AC03": {
+      "owner": "W04",
+      "status": "engineering_verified",
+      "evidence": [
+        "W04-CORE.md",
+        "W04-UI.md",
+        "w04/browser/checks.json"
+      ],
+      "evidence_level": "core/HTTP/real Chromium; synthetic content"
+    },
+    "W04-AC04": {
+      "owner": "W04",
+      "status": "engineering_verified",
+      "evidence": [
+        "W04-CORE.md",
+        "W04-UI.md",
+        "w04/browser/checks.json"
+      ],
+      "evidence_level": "core/HTTP/real Chromium; synthetic content"
+    },
+    "W04-AC05": {
+      "owner": "W04",
+      "status": "engineering_verified",
+      "evidence": [
+        "W04-CORE.md",
+        "W04-UI.md",
+        "w04/browser/checks.json"
+      ],
+      "evidence_level": "core/HTTP/real Chromium; synthetic content"
+    },
+    "W04-AC06": {
+      "owner": "W04",
+      "status": "engineering_verified",
+      "evidence": [
+        "W04-CORE.md",
+        "W04-UI.md",
+        "w04/browser/checks.json",
+        "w04/pressure/checks.json",
+        "w10/pressure/checks.json"
+      ],
+      "evidence_level": "core/HTTP/real Chromium; synthetic content"
+    },
+    "W04-AC07": {
+      "owner": "W04",
+      "status": "engineering_verified",
+      "evidence": [
+        "W04-CORE.md",
+        "W04-UI.md",
+        "w04/browser/checks.json"
+      ],
+      "evidence_level": "core/HTTP/real Chromium; synthetic content"
+    },
+    "W05-AC01": {
+      "owner": "W05",
+      "status": "engineering_verified",
+      "evidence": [
+        "W05-CORE.md",
+        "W05-UI.md",
+        "w05/browser/checks.json"
+      ]
+    },
+    "W05-AC02": {
+      "owner": "W05",
+      "status": "engineering_verified",
+      "evidence": [
+        "W05-CORE.md",
+        "W05-UI.md",
+        "w05/browser/checks.json"
+      ]
+    },
+    "W05-AC03": {
+      "owner": "W05",
+      "status": "partial",
+      "evidence": [
+        "W05-CORE.md",
+        "W05-UI.md",
+        "w05/browser/checks.json"
+      ]
+    },
+    "W05-AC04": {
+      "owner": "W05",
+      "status": "engineering_verified",
+      "evidence": [
+        "W05-CORE.md",
+        "W05-UI.md",
+        "w05/browser/checks.json"
+      ]
+    },
+    "W05-AC05": {
+      "owner": "W05",
+      "status": "engineering_verified",
+      "evidence": [
+        "W05-CORE.md",
+        "W05-UI.md",
+        "w05/browser/checks.json"
+      ]
+    },
+    "W05-AC06": {
+      "owner": "W05",
+      "status": "engineering_verified",
+      "evidence": [
+        "W05-CORE.md",
+        "W05-UI.md",
+        "w05/browser/checks.json"
+      ]
+    },
+    "W05-AC07": {
+      "owner": "W05",
+      "status": "engineering_verified",
+      "evidence": [
+        "W05-CORE.md",
+        "W05-UI.md",
+        "w05/browser/checks.json"
+      ]
+    },
+    "W06-AC01": {
+      "owner": "W06",
+      "status": "engineering_verified",
+      "evidence": [
+        "W06-CORE.md",
+        "W06-UI.md",
+        "w06/ui/browser-checks.json",
+        "w06/ui/edge-checks.json"
+      ],
+      "evidence_level": "core/CLI/HTTP/real Chromium"
+    },
+    "W06-AC02": {
+      "owner": "W06",
+      "status": "engineering_verified",
+      "evidence": [
+        "W06-CORE.md",
+        "W06-UI.md",
+        "w06/ui/browser-checks.json",
+        "w06/ui/edge-checks.json"
+      ],
+      "evidence_level": "core/CLI/HTTP/real Chromium"
+    },
+    "W06-AC03": {
+      "owner": "W06",
+      "status": "engineering_verified",
+      "evidence": [
+        "W06-CORE.md",
+        "W06-UI.md",
+        "w06/ui/browser-checks.json",
+        "w06/ui/edge-checks.json"
+      ],
+      "evidence_level": "core/CLI/HTTP/real Chromium"
+    },
+    "W06-AC04": {
+      "owner": "W06",
+      "status": "engineering_verified",
+      "evidence": [
+        "W06-CORE.md",
+        "W06-UI.md",
+        "w06/ui/browser-checks.json",
+        "w06/ui/edge-checks.json"
+      ],
+      "evidence_level": "core/CLI/HTTP/real Chromium"
+    },
+    "W06-AC05": {
+      "owner": "W06",
+      "status": "engineering_verified",
+      "evidence": [
+        "W06-CORE.md",
+        "W06-UI.md",
+        "w06/ui/browser-checks.json",
+        "w06/ui/edge-checks.json",
+        "w06/ui/real-host-checks.json"
+      ],
+      "evidence_level": "core/CLI/HTTP/real Chromium / actual current Codex CLI claim and cancelled late-result refusal"
+    },
+    "W06-AC06": {
+      "owner": "W06",
+      "status": "engineering_verified",
+      "evidence": [
+        "W06-CORE.md",
+        "W06-UI.md",
+        "w06/ui/browser-checks.json",
+        "w06/ui/edge-checks.json"
+      ],
+      "evidence_level": "core/CLI/HTTP/real Chromium"
+    },
+    "W06-AC07": {
+      "owner": "W06",
+      "status": "engineering_verified",
+      "evidence": [
+        "W06-CORE.md",
+        "W06-UI.md",
+        "w06/ui/browser-checks.json",
+        "w06/ui/edge-checks.json",
+        "w06/ui/real-host-checks.json"
+      ],
+      "evidence_level": "core/CLI/HTTP/real Chromium / actual current Codex CLI claim and cancelled late-result refusal"
+    },
+    "W06-AC08": {
+      "owner": "W06",
+      "status": "engineering_verified",
+      "evidence": [
+        "W06-CORE.md",
+        "W06-UI.md",
+        "w06/ui/browser-checks.json",
+        "w06/ui/edge-checks.json",
+        "w06/ui/real-host-checks.json"
+      ],
+      "evidence_level": "core/CLI/HTTP/real Chromium / actual current Codex CLI claim and cancelled late-result refusal"
+    },
+    "W07-AC01": {
+      "owner": "W07",
+      "status": "engineering_verified",
+      "evidence": [
+        "W07-CORE.md",
+        "W07-UI.md",
+        "w07/ui/browser-checks.json",
+        "w07/ui/edge-checks.json",
+        "w07/real-host/checks.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; separately identified one-page real native ImageGen and SVG Host roundtrip"
+    },
+    "W07-AC02": {
+      "owner": "W07",
+      "status": "engineering_verified",
+      "evidence": [
+        "W07-CORE.md",
+        "W07-UI.md",
+        "w07/ui/browser-checks.json",
+        "w07/ui/edge-checks.json",
+        "w07/real-host/checks.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; separately identified one-page real native ImageGen and SVG Host roundtrip"
+    },
+    "W07-AC03": {
+      "owner": "W07",
+      "status": "engineering_verified",
+      "evidence": [
+        "W07-CORE.md",
+        "W07-UI.md",
+        "w07/ui/browser-checks.json",
+        "w07/ui/edge-checks.json",
+        "w07/real-host/checks.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; separately identified one-page real native ImageGen and SVG Host roundtrip"
+    },
+    "W07-AC04": {
+      "owner": "W07",
+      "status": "engineering_verified",
+      "evidence": [
+        "W07-CORE.md",
+        "W07-UI.md",
+        "w07/ui/browser-checks.json",
+        "w07/ui/edge-checks.json",
+        "w07/real-host/checks.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; separately identified one-page real native ImageGen and SVG Host roundtrip"
+    },
+    "W07-AC05": {
+      "owner": "W07",
+      "status": "engineering_verified",
+      "evidence": [
+        "W07-CORE.md",
+        "W07-UI.md",
+        "w07/ui/browser-checks.json",
+        "w07/ui/edge-checks.json",
+        "w07/real-host/checks.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; separately identified one-page real native ImageGen and SVG Host roundtrip"
+    },
+    "W07-AC06": {
+      "owner": "W07",
+      "status": "engineering_verified",
+      "evidence": [
+        "W07-CORE.md",
+        "W07-UI.md",
+        "w07/ui/browser-checks.json",
+        "w07/ui/edge-checks.json",
+        "w07/real-host/checks.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; separately identified one-page real native ImageGen and SVG Host roundtrip"
+    },
+    "W07-AC07": {
+      "owner": "W07",
+      "status": "engineering_and_real_host_verified",
+      "evidence": [
+        "W07-CORE.md",
+        "W07-UI.md",
+        "w07/ui/browser-checks.json",
+        "w07/ui/edge-checks.json",
+        "w07/real-host/checks.json",
+        "w07/real-host-interleaving/interleaving-checks.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium plus actual native ImageGen and current Codex Host two-page auto/trial interleaving; user acceptance pending"
+    },
+    "W07-AC08": {
+      "owner": "W07",
+      "status": "engineering_verified",
+      "evidence": [
+        "W07-CORE.md",
+        "W07-UI.md",
+        "w07/ui/browser-checks.json",
+        "w07/ui/edge-checks.json",
+        "w07/real-host/checks.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; separately identified one-page real native ImageGen and SVG Host roundtrip"
+    },
+    "W08-AC01": {
+      "owner": "W08",
+      "status": "engineering_and_real_host_evaluated",
+      "evidence": [
+        "W08-CORE.md",
+        "W08-UI.md",
+        "w08/ui/checks.json",
+        "w08/ui/edge-checks.json",
+        "w08/real-host/visual-review.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium plus four real native ImageGen calls; synthetic content; unselected composition drift recorded; not customer acceptance"
+    },
+    "W08-AC02": {
+      "owner": "W08",
+      "status": "engineering_and_real_host_evaluated",
+      "evidence": [
+        "W08-CORE.md",
+        "W08-UI.md",
+        "w08/ui/checks.json",
+        "w08/ui/edge-checks.json",
+        "w08/real-host/visual-review.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium plus four real native ImageGen calls; synthetic content; unselected composition drift recorded; not customer acceptance"
+    },
+    "W08-AC03": {
+      "owner": "W08",
+      "status": "engineering_and_real_host_evaluated",
+      "evidence": [
+        "W08-CORE.md",
+        "W08-UI.md",
+        "w08/ui/checks.json",
+        "w08/ui/edge-checks.json",
+        "w08/real-host/visual-review.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium plus four real native ImageGen calls; synthetic content; unselected composition drift recorded; not customer acceptance"
+    },
+    "W08-AC04": {
+      "owner": "W08",
+      "status": "engineering_and_real_host_evaluated",
+      "evidence": [
+        "W08-CORE.md",
+        "W08-UI.md",
+        "w08/ui/checks.json",
+        "w08/ui/edge-checks.json",
+        "w08/real-host/visual-review.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium plus four real native ImageGen calls; synthetic content; unselected composition drift recorded; not customer acceptance"
+    },
+    "W08-AC05": {
+      "owner": "W08",
+      "status": "engineering_and_real_host_evaluated",
+      "evidence": [
+        "W08-CORE.md",
+        "W08-UI.md",
+        "w08/ui/checks.json",
+        "w08/ui/edge-checks.json",
+        "w08/real-host/visual-review.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium plus four real native ImageGen calls; synthetic content; unselected composition drift recorded; not customer acceptance"
+    },
+    "W08-AC06": {
+      "owner": "W08",
+      "status": "engineering_and_real_host_evaluated",
+      "evidence": [
+        "W08-CORE.md",
+        "W08-UI.md",
+        "w08/ui/checks.json",
+        "w08/ui/edge-checks.json",
+        "w08/real-host/visual-review.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium plus four real native ImageGen calls; synthetic content; unselected composition drift recorded; not customer acceptance"
+    },
+    "W08-AC07": {
+      "owner": "W08",
+      "status": "engineering_and_real_host_evaluated",
+      "evidence": [
+        "W08-CORE.md",
+        "W08-UI.md",
+        "w08/ui/checks.json",
+        "w08/ui/edge-checks.json",
+        "w08/real-host/visual-review.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium plus four real native ImageGen calls; synthetic content; unselected composition drift recorded; not customer acceptance"
+    },
+    "W09-AC01": {
+      "owner": "W09",
+      "status": "engineering_and_real_host_verified",
+      "evidence": [
+        "W09-CORE.md",
+        "W09-UI.md",
+        "w09/ui/browser-checks.json",
+        "w09/ui/edge-checks.json",
+        "w09/ui/source-checks.json",
+        "w09/real-host/ref-matrix.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; synthetic browser Host separate from actual Codex Host reading synthetic materials"
+    },
+    "W09-AC02": {
+      "owner": "W09",
+      "status": "engineering_and_real_host_verified",
+      "evidence": [
+        "W09-CORE.md",
+        "W09-UI.md",
+        "w09/ui/browser-checks.json",
+        "w09/ui/edge-checks.json",
+        "w09/ui/source-checks.json",
+        "w09/real-host/ref-matrix.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; synthetic browser Host separate from actual Codex Host reading synthetic materials"
+    },
+    "W09-AC03": {
+      "owner": "W09",
+      "status": "engineering_and_real_host_verified",
+      "evidence": [
+        "W09-CORE.md",
+        "W09-UI.md",
+        "w09/ui/browser-checks.json",
+        "w09/ui/edge-checks.json",
+        "w09/ui/source-checks.json",
+        "w09/real-host/ref-matrix.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; synthetic browser Host separate from actual Codex Host reading synthetic materials"
+    },
+    "W09-AC04": {
+      "owner": "W09",
+      "status": "engineering_and_real_host_verified",
+      "evidence": [
+        "W09-CORE.md",
+        "W09-UI.md",
+        "w09/ui/browser-checks.json",
+        "w09/ui/edge-checks.json",
+        "w09/ui/source-checks.json",
+        "w09/real-host/ref-matrix.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; synthetic browser Host separate from actual Codex Host reading synthetic materials"
+    },
+    "W09-AC05": {
+      "owner": "W09",
+      "status": "engineering_and_real_host_verified",
+      "evidence": [
+        "W09-CORE.md",
+        "W09-UI.md",
+        "w09/ui/browser-checks.json",
+        "w09/ui/edge-checks.json",
+        "w09/ui/source-checks.json",
+        "w09/real-host/ref-matrix.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; synthetic browser Host separate from actual Codex Host reading synthetic materials"
+    },
+    "W09-AC06": {
+      "owner": "W09",
+      "status": "engineering_and_real_host_verified",
+      "evidence": [
+        "W09-CORE.md",
+        "W09-UI.md",
+        "w09/ui/browser-checks.json",
+        "w09/ui/edge-checks.json",
+        "w09/ui/source-checks.json",
+        "w09/real-host/ref-matrix.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; synthetic browser Host separate from actual Codex Host reading synthetic materials"
+    },
+    "W09-AC07": {
+      "owner": "W09",
+      "status": "engineering_and_real_host_verified",
+      "evidence": [
+        "W09-CORE.md",
+        "W09-UI.md",
+        "w09/ui/browser-checks.json",
+        "w09/ui/edge-checks.json",
+        "w09/ui/source-checks.json",
+        "w09/real-host/ref-matrix.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; synthetic browser Host separate from actual Codex Host reading synthetic materials"
+    },
+    "W10-AC01": {
+      "owner": "W10",
+      "status": "engineering_verified",
+      "evidence": [
+        "W10-CORE.md",
+        "w10/core/recovery-checks.json",
+        "W10-UI.md",
+        "w10/ui/browser-checks.json",
+        "w10/ui/recovery-checks.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; synthetic fault injection identified separately from actual Host"
+    },
+    "W10-AC02": {
+      "owner": "W10",
+      "status": "engineering_verified",
+      "evidence": [
+        "W10-CORE.md",
+        "w10/core/recovery-checks.json",
+        "W10-UI.md",
+        "w10/ui/browser-checks.json",
+        "w10/ui/recovery-checks.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; synthetic fault injection identified separately from actual Host"
+    },
+    "W10-AC03": {
+      "owner": "W10",
+      "status": "engineering_verified",
+      "evidence": [
+        "W10-CORE.md",
+        "w10/core/recovery-checks.json",
+        "W10-UI.md",
+        "w10/ui/browser-checks.json",
+        "w10/ui/recovery-checks.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; synthetic fault injection identified separately from actual Host"
+    },
+    "W10-AC04": {
+      "owner": "W10",
+      "status": "engineering_verified",
+      "evidence": [
+        "W10-UI.md",
+        "w10/ui/poll-lifecycle.json",
+        "w10/ui/polling-checks.json",
+        "w10/pressure/checks.json",
+        "w10/pressure/samples.jsonl"
+      ],
+      "accepted": false,
+      "evidence_level": "timer injection, Chromium visibility injection, full 1200-second synthetic 300x5x3 pressure without forced GC"
+    },
+    "W10-AC05": {
+      "owner": "W10",
+      "status": "engineering_verified",
+      "evidence": [
+        "W10-CORE.md",
+        "w10/core/recovery-checks.json",
+        "W10-UI.md",
+        "w10/ui/browser-checks.json",
+        "w10/ui/recovery-checks.json",
+        "w07/real-host-interleaving/late-result-checks.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; synthetic fault injection identified separately from actual Host"
+    },
+    "W10-AC06": {
+      "owner": "W10",
+      "status": "engineering_verified",
+      "evidence": [
+        "W10-CORE.md",
+        "w10/core/recovery-checks.json",
+        "W10-UI.md",
+        "w10/ui/browser-checks.json",
+        "w10/ui/recovery-checks.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; synthetic fault injection identified separately from actual Host"
+    },
+    "W10-AC07": {
+      "owner": "W10",
+      "status": "engineering_verified",
+      "evidence": [
+        "W10-UI.md",
+        "w10/ui/browser-checks.json",
+        "w10/ui/recovery-checks.json",
+        "w10/ui/w05-regression.json",
+        "w10/ui/w06-edges-regression.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; synthetic fault injection identified separately from actual Host"
+    },
+    "W10-AC08": {
+      "owner": "W10",
+      "status": "engineering_verified",
+      "evidence": [
+        "W10-CORE.md",
+        "w10/core/recovery-checks.json",
+        "W10-UI.md",
+        "w10/ui/browser-checks.json",
+        "w10/ui/recovery-checks.json",
+        "w10/ui/error-checks.json"
+      ],
+      "accepted": false,
+      "evidence_level": "core/CLI/HTTP/Chromium; synthetic fault injection identified separately from actual Host"
+    },
+    "W11-AC01": {
+      "owner": "W11",
+      "status": "partial",
+      "evidence": [
+        "W11-CORE.md",
+        "W11-UI.md",
+        "w11/core/checks.json",
+        "w11/ui/checks.json"
+      ]
+    },
+    "W11-AC02": {
+      "owner": "W11",
+      "status": "partial",
+      "evidence": [
+        "W11-CORE.md",
+        "W11-UI.md",
+        "w11/core/checks.json",
+        "w11/ui/checks.json"
+      ]
+    },
+    "W11-AC03": {
+      "owner": "W11",
+      "status": "partial",
+      "evidence": [
+        "W11-CORE.md",
+        "W11-UI.md",
+        "w11/core/checks.json",
+        "w11/ui/checks.json"
+      ]
+    },
+    "W11-AC04": {
+      "owner": "W11",
+      "status": "partial",
+      "evidence": [
+        "W11-CORE.md",
+        "W11-UI.md",
+        "w11/core/checks.json",
+        "w11/ui/checks.json"
+      ]
+    },
+    "W11-AC05": {
+      "owner": "W11",
+      "status": "partial",
+      "evidence": [
+        "W11-CORE.md",
+        "W11-UI.md",
+        "w11/core/checks.json",
+        "w11/ui/checks.json"
+      ]
+    },
+    "W11-AC06": {
+      "owner": "W11",
+      "status": "partial",
+      "evidence": [
+        "W11-CORE.md",
+        "W11-UI.md",
+        "w11/core/checks.json",
+        "w11/ui/checks.json"
+      ]
+    },
+    "W11-AC07": {
+      "owner": "W11",
+      "status": "partial",
+      "evidence": [
+        "W11-CORE.md",
+        "W11-UI.md",
+        "w11/core/checks.json",
+        "w11/ui/checks.json"
+      ]
+    },
+    "W12-AC01": {
+      "owner": "W12",
+      "status": "open",
+      "evidence": []
+    },
+    "W12-AC02": {
+      "owner": "W12",
+      "status": "open",
+      "evidence": []
+    },
+    "W12-AC03": {
+      "owner": "W12",
+      "status": "open",
+      "evidence": []
+    },
+    "W12-AC04": {
+      "owner": "W12",
+      "status": "open",
+      "evidence": []
+    },
+    "W12-AC05": {
+      "owner": "W12",
+      "status": "open",
+      "evidence": []
+    },
+    "W12-AC06": {
+      "owner": "W12",
+      "status": "open",
+      "evidence": []
+    },
+    "W12-AC07": {
+      "owner": "W12",
+      "status": "open",
+      "evidence": []
+    },
+    "W12-AC08": {
+      "owner": "W12",
+      "status": "open",
+      "evidence": []
+    }
+  }
+}

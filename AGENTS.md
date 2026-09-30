@@ -115,7 +115,12 @@ Stop and report when:
 
 ## UI And Design Work
 
-For visual or UI changes, read `DESIGN.md` before editing. Keep the locked
-direction: serious tool feel, Satoshi/Geist/IBM Plex Mono stack, cold ink
-surface with amber-copper action accent, hairline solid panels, no glass
-panels, restrained radius, and no decorative gradients. The Review Desk IA history is archived under `docs/archive/pre-rebuild/`; design QA should flag deviations from DESIGN.md.
+For visual or UI changes, read `DESIGN.md` before editing. The active design is
+`docs/design/webui-opendesign-20260930/`: the received OpenDesign design system,
+product UI language, current prototype, and state references. Use its Deck Master
+product overrides: light neutral surfaces, black primary actions, sans-serif
+product typography, and factual task/candidate states. The old cold-ink Review
+Desk direction is historical, not the current constraint. Runtime integration and
+remaining work follow `docs/specs/deck-master-webui-v4-20260930/README.md`.
+For this increment only, A means Web UI implementation and B means capability
+completion; this does not rename historical Flow Quality or W01-W12 evidence.

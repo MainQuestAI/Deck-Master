@@ -1,0 +1,56 @@
+{
+  "source_base": "66da345c84de48933a76de577114f08dcebf4f0e",
+  "synthetic": true,
+  "real_host_calls": 0,
+  "production_acceptance": false,
+  "temporary_projects_cleaned": true,
+  "observations": [
+    {
+      "id": "P01",
+      "finding": "content_trial_rejected",
+      "observed": "mode: trial supports original-image and SVG candidates",
+      "current_unchanged": true
+    },
+    {
+      "id": "P02",
+      "finding": "attention_not_recorded_and_no_prompt_summary",
+      "stage_keys": [
+        "content",
+        "blueprint",
+        "svg",
+        "svg_preview",
+        "ppt_preview"
+      ],
+      "attention": {
+        "status": "not_recorded"
+      }
+    },
+    {
+      "id": "P03",
+      "finding": "candidate_summary_violates_active_schema",
+      "candidate_id": "candidate-915c839fad3d4a948ca40c3bcb68f857",
+      "errors": [
+        {
+          "path": "candidates/status",
+          "message": "'not_recorded' was expected"
+        },
+        {
+          "path": "candidates",
+          "message": "Additional properties are not allowed ('count' was unexpected)"
+        }
+      ]
+    },
+    {
+      "id": "P04",
+      "finding": "fixed_revision_HTTP_now_supported",
+      "revision_matches": true
+    },
+    {
+      "id": "P05",
+      "finding": "server_capability_not_project_action_availability",
+      "project_format": "deck_document.v1",
+      "advertised_candidates": true,
+      "refusal": "project: changes require an explicit workbench.v3 project"
+    }
+  ]
+}

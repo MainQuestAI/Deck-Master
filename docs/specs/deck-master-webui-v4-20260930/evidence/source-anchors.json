@@ -1,0 +1,86 @@
+[
+  {
+    "finding": "summary_attention",
+    "file": "src/deck_master/workbench.py",
+    "line": 258,
+    "text": "\"attention\": {\"status\": \"not_recorded\"}})",
+    "source_base": "66da345c84de48933a76de577114f08dcebf4f0e"
+  },
+  {
+    "finding": "summary_candidate_count",
+    "file": "src/deck_master/workbench.py",
+    "line": 268,
+    "text": "\"candidates\": {\"status\": \"recorded\", \"count\": len(doc[\"candidates\"])} if doc.get(\"candidates\") else {\"status\": \"not_recorded\"},",
+    "source_base": "66da345c84de48933a76de577114f08dcebf4f0e"
+  },
+  {
+    "finding": "content_trial_rejected",
+    "file": "src/deck_master/changes.py",
+    "line": 81,
+    "text": "fail('mode', 'trial supports original-image and SVG candidates')",
+    "source_base": "66da345c84de48933a76de577114f08dcebf4f0e"
+  },
+  {
+    "finding": "keep_only_navigation",
+    "file": "src/deck_master/resources/static/v2/candidate-desk.js",
+    "line": 41,
+    "text": "const keep = button('保留当前，返回本页', () => app.go({candidate_id: null}));",
+    "source_base": "66da345c84de48933a76de577114f08dcebf4f0e"
+  },
+  {
+    "finding": "adoption_state",
+    "file": "src/deck_master/candidates.py",
+    "line": 102,
+    "text": "def _state(store, document, candidate):",
+    "source_base": "66da345c84de48933a76de577114f08dcebf4f0e"
+  },
+  {
+    "finding": "direct_content_adoption",
+    "file": "src/deck_master/tasks.py",
+    "line": 778,
+    "text": "def _accept_content_update(store: Store, *, document: dict, task: dict, envelope: dict,",
+    "source_base": "66da345c84de48933a76de577114f08dcebf4f0e"
+  },
+  {
+    "finding": "content_result_dispatch",
+    "file": "src/deck_master/tasks.py",
+    "line": 1043,
+    "text": "return _accept_content_update(",
+    "source_base": "66da345c84de48933a76de577114f08dcebf4f0e"
+  },
+  {
+    "finding": "project_caps",
+    "file": "src/deck_master/web.py",
+    "line": 372,
+    "text": "if parsed.path == \"/api/health\":",
+    "source_base": "66da345c84de48933a76de577114f08dcebf4f0e"
+  },
+  {
+    "finding": "static_overview",
+    "file": "src/deck_master/resources/static/v2/views.js",
+    "line": 17,
+    "text": "node.append(el('div', {class: 'action-band'}, el('div', {class: 'action-main'}, el('h2', {}, '从整稿开始阅读'),",
+    "source_base": "66da345c84de48933a76de577114f08dcebf4f0e"
+  },
+  {
+    "finding": "table_keyboard",
+    "file": "src/deck_master/resources/static/v2/views.js",
+    "line": 32,
+    "text": "table.addEventListener('keydown', event => {",
+    "source_base": "66da345c84de48933a76de577114f08dcebf4f0e"
+  },
+  {
+    "finding": "journal",
+    "file": "src/deck_master/ui_journal.py",
+    "line": 213,
+    "text": "def save_position(project, *, position):",
+    "source_base": "66da345c84de48933a76de577114f08dcebf4f0e"
+  },
+  {
+    "finding": "open_view",
+    "file": "src/deck_master/web.py",
+    "line": 528,
+    "text": "def open_view(project_dir: Path | str, *, open_browser: bool = True) -> dict:",
+    "source_base": "66da345c84de48933a76de577114f08dcebf4f0e"
+  }
+]

@@ -1,0 +1,598 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>设计系统 · Deck Master</title><style>
+:root {
+  --bg:           #ffffff;
+  --surface:      #f5f5f5;
+  --surface-warm: #fafafa;
+  --fg:   #0d0d0d;
+  --fg-2: #1a1a1a;
+  --muted: #6e6e6e;
+  --meta:  #9b9b9b;
+  --border:      #e5e5e5;
+  --border-soft: #ededed;
+  --accent:        #10a37f;
+  --accent-on:     #ffffff;
+  --accent-hover:  #0a7a5e;
+  --accent-active: color-mix(in oklab, var(--accent), black 14%);
+  --success: #10a37f;
+  --warn:    #f5a623;
+  --danger:  #ef4146;
+  --font-display: "Signifier", "Source Serif Pro", Georgia, ui-serif, serif;
+  --font-body:    "Söhne", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono:    "Söhne Mono", ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+  --text-xs:   12px;
+  --text-sm:   13px;
+  --text-base: 16px;
+  --text-lg:   18px;
+  --text-xl:   20px;
+  --text-2xl:  28px;
+  --text-3xl:  40px;
+  --text-4xl:  56px;
+  --leading-body:     1.65;
+  --leading-tight:    1.08;
+  --tracking-display: -0.02em;
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --section-y-desktop: 96px;
+  --section-y-tablet:  64px;
+  --section-y-phone:   48px;
+  --radius-sm:   12px;
+  --radius-md:   16px;
+  --radius-lg:   16px;
+  --radius-pill: 9999px;
+  --elev-flat:   none;
+  --elev-ring:   0 0 0 1px var(--border);
+  --elev-raised: 0 4px 16px rgba(13, 13, 13, 0.06);
+  --focus-ring: 0 0 0 3px rgba(16, 163, 127, 0.12);
+  --motion-fast:   150ms;
+  --motion-base:   220ms;
+  --ease-standard: cubic-bezier(0.16, 1, 0.3, 1);
+  --container-max:            1200px;
+  --container-gutter-desktop: 48px;
+  --container-gutter-tablet:  24px;
+  --container-gutter-phone:   24px;
+}
+
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:14px;line-height:1.5}
+button,input,select,textarea{font:inherit}
+button,a,select{touch-action:manipulation}
+button{cursor:pointer}
+button,input,select,textarea{border:1px solid var(--border);border-radius:3px;background:var(--surface-warm);color:var(--fg)}
+button{padding:9px 13px;min-height:40px;font-weight:500}
+button:hover{background:var(--surface);border-color:var(--border)}
+button:active{transform:translateY(1px)}
+button:disabled{cursor:not-allowed;opacity:.5}
+button.primary{color:var(--fg-2);background:var(--accent);border-color:var(--accent);font-weight:600}
+button.primary:hover{background:var(--fg-2)}
+button.quiet{background:transparent;border-color:transparent;color:var(--muted)}
+button.quiet:hover{color:var(--fg);background:var(--surface-warm)}
+button.small{min-height:32px;padding:5px 9px;font-size:13px}
+input,select{padding:8px 10px;min-height:40px}
+input[type=checkbox],input[type=radio]{min-height:16px;accent-color:var(--accent);width:16px;height:16px}
+textarea{width:100%;padding:12px;resize:vertical;min-height:100px;line-height:1.65}
+textarea:focus,input:focus{border-color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+a{color:var(--fg-2);text-underline-offset:3px}
+a:visited{color:var(--fg-2)}
+h1,h2,h3,p{margin:0}
+h1{font-family:var(--font-body);font-size:28px;line-height:1.25;font-weight:600;letter-spacing:-.5px}
+h2{font-family:var(--font-body);font-size:20px;line-height:1.4}
+h3{font-size:16px;font-weight:600}
+p{line-height:1.65}
+small,.small-text{font-size:12px}
+.muted{color:var(--muted)}
+.faint{color:var(--muted)}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.accent{color:var(--accent)}
+.green{color:var(--muted)}
+.red{color:var(--danger)}
+.blue{color:var(--fg-2)}
+.skip{position:absolute;top:-80px}
+.skip:focus{top:8px;left:240px;z-index:100}
+.shell{display:grid;grid-template-columns:210px minmax(0,1fr);min-height:100vh}
+.sidebar{background:var(--surface-warm);border-right:1px solid var(--border-soft);position:fixed;inset:0 auto 0 0;width:210px;display:flex;flex-direction:column;padding:24px 16px;z-index:10}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--font-body);font-weight:600;font-size:19px;letter-spacing:-.5px;margin:0 7px 32px}
+.mark{width:28px;height:30px;border:1px solid var(--accent);display:grid;place-items:center;font-size:18px;color:var(--accent);font-weight:400}
+.side-project{padding:18px 8px;border-top:1px solid var(--border);margin-top:17px}
+.side-project strong{display:block;font-size:14px;margin:5px 0}
+.nav{display:flex;flex-direction:column;gap:5px}
+.nav button{text-align:left;display:flex;align-items:center;gap:12px;background:transparent;border:1px solid transparent;font-weight:400;color:var(--muted);min-height:44px}
+.nav button.active{background:var(--surface-warm);border-color:var(--border);color:var(--fg-2)}
+.nav button:hover{background:var(--surface-warm);color:var(--fg)}
+.nav-icon{font-size:18px;width:20px;text-align:center;line-height:1}
+.nav-count{margin-left:auto;font-family:var(--font-mono);font-size:12px}
+.sidebar-footer{margin-top:auto;padding:20px 8px 0;border-top:1px solid var(--border-soft)}
+.sample{font-size:12px;letter-spacing:.3px;color:var(--fg-2)}
+.dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-right:6px}
+.content{grid-column:2;min-width:0}
+.topbar{height:64px;border-bottom:1px solid var(--border-soft);display:flex;align-items:center;justify-content:space-between;padding:0 32px;color:var(--muted);gap:12px;background:var(--bg)}
+.topbar span+span{margin-left:12px}
+.crumb{display:flex;align-items:center;gap:10px}
+.topbar .version{font:12px var(--font-mono);background:var(--surface-warm);padding:4px 7px;border:1px solid var(--border);border-radius:3px;color:var(--fg)}
+.workspace{padding:32px;max-width:1760px;margin:auto}
+.page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:24px}
+.page-head p{margin-top:9px;color:var(--muted);max-width:750px;font-size:15px}
+.eyebrow{font:12px var(--font-mono);letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:9px}
+.row{display:flex;align-items:center;gap:12px}
+.wrap{flex-wrap:wrap}
+.between{justify-content:space-between}
+.stack{display:flex;flex-direction:column;gap:16px}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:14px;margin:20px 0}
+.segmented{display:flex;gap:0;background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:3px}
+.segmented button{border-color:transparent;background:transparent;color:var(--muted);min-height:32px;padding:6px 11px;font-size:13px}
+.segmented button.active{background:var(--surface);color:var(--fg)}
+.status{font-size:12px;border:1px solid var(--border);padding:3px 7px;border-radius:3px;white-space:nowrap;background:var(--surface-warm);display:inline-flex;gap:5px;align-items:center}
+.status.warn{color:var(--fg-2);background:var(--surface-warm);border-color:var(--border)}
+.status.ok{color:var(--muted);border-color:var(--border);background:var(--surface)}
+.status.info{color:var(--fg-2);border-color:var(--border)}
+.section-head{display:flex;justify-content:space-between;align-items:center;margin:24px 0 16px}
+.section-head h2{font-size:17px}
+.action-band{display:grid;grid-template-columns:minmax(250px,1.1fr) minmax(230px,1fr);border:1px solid var(--border);background:var(--bg);margin:20px 0 24px}
+.action-main{padding:22px 24px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:13px}
+.action-main h2{font-size:20px}
+.action-list{padding:6px 22px}
+.action-item{display:flex;align-items:center;gap:14px;padding:13px 0;border-bottom:1px solid var(--border-soft)}
+.action-item:last-child{border:0}
+.action-item>div{flex:1}
+.action-item p{font-size:12px;color:var(--muted)}
+.action-n{font:12px var(--font-mono);color:var(--muted)}
+.progressline{height:3px;display:flex;margin:16px 0 8px;gap:3px}
+.progressline span{height:100%;background:var(--muted);flex:1}
+.progressline .ready{background:var(--muted)}
+.progressline .waiting{background:var(--accent)}
+.matrix-wrap{border:1px solid var(--border);overflow:auto}
+.matrix{border-collapse:collapse;width:100%;text-align:left;table-layout:fixed}
+.matrix th{font-size:12px;color:var(--muted);font-weight:500;padding:12px 13px;background:var(--surface-warm);border-bottom:1px solid var(--border);text-align:center}
+.matrix th:first-child{text-align:left;width:31%}
+.matrix td{border-bottom:1px solid var(--border-soft);padding:10px 13px;text-align:center;font-size:13px}
+.matrix td:first-child{text-align:left}
+.matrix tbody tr:hover{background:var(--bg)}
+.matrix .chapter-row td{padding:9px 13px;background:var(--surface-warm);color:var(--muted);font-size:12px;font-weight:600;text-align:left}
+.matrix .title-button{border:0;background:none;padding:2px 0;min-height:26px;text-align:left;display:flex;gap:14px;align-items:center;font-size:14px;font-weight:400}
+.cell-btn{border:0;min-height:26px;padding:3px 4px;background:none;font-size:12px;color:var(--muted)}
+.cell-btn.warn{color:var(--accent)}
+.cell-btn.empty{color:var(--muted)}
+.matrix-caption{display:flex;justify-content:space-between;gap:16px;font-size:12px;color:var(--muted);padding:10px 0}
+.gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px 20px}
+.gallery.continuous{display:flex;flex-direction:column;align-items:center;gap:32px}
+.gallery.continuous .slide-tile{width:min(920px,100%)}
+.slide-tile{min-width:0}
+.slide-cover{display:block;width:100%;padding:0;border:1px solid var(--border);background:var(--bg);border-radius:2px;overflow:hidden;aspect-ratio:16/9}
+.slide-cover:hover{border-color:var(--accent);background:var(--bg)}
+.slide-cover svg{width:100%;height:100%;display:block}
+.tile-title{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding:10px 1px 0}
+.tile-title strong{font-weight:500;font-size:14px}
+.tile-title .mono{color:var(--muted);margin-right:7px;font-size:12px}
+.tile-meta{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);margin:5px 0}
+.empty-artifact{width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:7px;background:var(--bg);color:var(--muted);font-size:13px}
+.empty-artifact .empty-symbol{font-size:24px;color:var(--muted);font-weight:200}
+.legend{padding:12px 16px;border:1px solid var(--border);background:var(--bg);font-size:13px;display:flex;gap:20px;align-items:center}
+.selection-list{display:flex;gap:8px;flex-wrap:wrap}
+.select-chip{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--surface-warm);border:1px solid var(--border);border-radius:3px}
+.page-workspace .page-head{margin-bottom:16px}
+.chain{display:flex;align-items:stretch;border-bottom:1px solid var(--border);margin:0 0 20px;gap:0}
+.chain button{flex:1;border:0;border-radius:0;background:transparent;padding:12px 8px;border-bottom:2px solid transparent;text-align:left;color:var(--muted)}
+.chain button.active{border-bottom-color:var(--accent);color:var(--fg)}
+.chain .chain-number{display:block;font-size:11px;color:var(--muted);font-family:var(--font-mono);margin-bottom:5px}
+.chain .chain-state{display:block;font-size:11px;margin-top:3px;color:var(--muted)}
+.page-split{display:grid;grid-template-columns:minmax(360px,1.6fr) minmax(300px,1fr);gap:24px}
+.viewpane{min-width:0}
+.panel{background:var(--bg);border:1px solid var(--border);border-radius:3px}
+.panel-head{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px}
+.panel-body{padding:18px}
+.panel-body p+p{margin-top:12px}
+.artifact-surface{background:var(--surface-warm);padding:16px;position:relative}
+.artifact-surface svg{width:100%;height:auto;display:block;aspect-ratio:16/9}
+.artifact-surface .empty-artifact{aspect-ratio:16/9}
+.artifact-info{padding:12px 16px;font-size:12px;color:var(--muted);display:flex;justify-content:space-between;border-top:1px solid var(--border-soft);gap:12px}
+.full-article{font-size:16px;line-height:1.85;background:var(--surface-warm);color:var(--fg-2);padding:30px;min-height:340px}
+.full-article h3{font-size:22px;color:var(--fg-2);margin-bottom:20px}
+.full-article ul{padding-left:22px}
+.source-row{display:flex;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--border);gap:15px}
+.source-row p{font-size:12px;color:var(--muted)}
+.prompt-block{border-bottom:1px solid var(--border);padding:14px 0}
+.prompt-block:first-child{padding-top:0}
+.prompt-block:last-child{border:0}
+.prompt-label{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:12px;margin-bottom:6px}
+.prompt-block p{font-size:14px;line-height:1.75}
+.right-tabs{margin-bottom:14px}
+.annotation-form{display:flex;flex-direction:column;gap:12px}
+.label{font-weight:500;font-size:13px;display:block;margin-bottom:6px}
+.form-hint{color:var(--muted);font-size:12px;margin-top:5px}
+.form-bottom{border-top:1px solid var(--border);padding-top:14px}
+.comparison{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.comparison .artifact-surface{padding:10px}
+.comparison .panel-head{font-size:13px}
+.comparison-label{font-size:12px;margin-top:7px;color:var(--muted)}
+.flow-steps{display:flex;gap:20px;align-items:center;margin:24px 0}
+.flow-steps span{display:flex;align-items:center;gap:9px;color:var(--muted);font-size:13px}
+.flow-steps b{font:12px var(--font-mono);width:24px;height:24px;border:1px solid var(--border);display:grid;place-items:center;border-radius:50%}
+.flow-steps span.active{color:var(--accent)}
+.flow-steps span.active b{border-color:var(--accent)}
+.flow-steps i{height:1px;flex:1;background:var(--border)}
+.style-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px}
+.style-main{min-width:0}
+.style-settings{align-self:start}
+.checkline{display:flex;align-items:flex-start;gap:9px;padding:10px 0}
+.checkline small{display:block;color:var(--muted);margin-top:3px}
+.checkline input{margin-top:3px;flex:none}
+.diffline{padding:10px 13px;border-top:1px solid var(--border-soft);font-size:13px;line-height:1.6}
+.diffline.remove{background:color-mix(in oklch, var(--danger) 7%, var(--bg));color:color-mix(in oklch, var(--danger) 65%, var(--fg))}
+.diffline.add{background:var(--surface);color:var(--fg-2)}
+.diffline.keep{color:var(--muted)}
+.impact{padding:16px;background:var(--surface-warm);border:1px solid var(--border);line-height:1.6}
+.impact h3{font-size:14px;color:var(--fg-2);margin-bottom:7px}
+.impact p{font-size:13px}
+.table{border-collapse:collapse;width:100%;text-align:left}
+.table th{font-size:12px;color:var(--muted);font-weight:400;padding:12px;border-bottom:1px solid var(--border)}
+.table td{padding:15px 12px;border-bottom:1px solid var(--border-soft)}
+.table tr:last-child td{border-bottom:0}
+.runtime-layout{display:grid;grid-template-columns:1fr 330px;gap:24px}
+.run-item{border-bottom:1px solid var(--border);padding:22px 0}
+.run-item:first-child{padding-top:0}
+.run-item h3{margin-bottom:8px}
+.run-meta{font-size:12px;color:var(--muted);margin-top:8px}
+.run-actions{display:flex;gap:8px;align-items:center;margin-top:14px;flex-wrap:wrap}
+.trace{display:flex;gap:8px;font-size:12px;align-items:center;color:var(--muted);padding:12px 0}
+.trace .current{color:var(--accent)}
+.prototype-control{border:1px dashed var(--border);padding:12px;margin-top:16px;font-size:12px;color:var(--fg-2)}
+.prototype-control .row{margin-top:9px;gap:6px}
+.prototype-control button{font-size:12px;min-height:30px;padding:5px 8px}
+.file-item{padding:15px 0;border-bottom:1px solid var(--border)}
+.file-item:last-child{border:0}
+.file-item p{font-size:12px;color:var(--muted);margin:6px 0 12px}
+.project-entry{border-top:1px solid var(--border);display:grid;grid-template-columns:190px minmax(0,1fr) auto;gap:28px;padding:24px 0;align-items:center}
+.project-entry .project-preview{aspect-ratio:16/9;overflow:hidden;border:1px solid var(--border)}
+.project-preview svg{width:100%;height:100%}
+.project-entry p{margin:7px 0;color:var(--muted)}
+.project-entry small{color:var(--muted)}
+.intro-strip{border-bottom:1px solid var(--border);padding:0 0 24px;margin-bottom:8px;font-size:16px;color:var(--muted);max-width:760px}
+.content-layout{display:grid;grid-template-columns:1fr 330px;gap:28px}
+.outline-block{border-top:1px solid var(--border);padding:20px 0;display:grid;grid-template-columns:48px 1fr 95px;gap:16px}
+.outline-block h3{margin-bottom:6px}
+.outline-block p{color:var(--muted);font-size:14px}
+.outline-block .mono{font-size:20px;color:var(--muted)}
+.source-card{border-bottom:1px solid var(--border);padding:15px 0}
+.source-card:first-child{padding-top:0}
+.source-card p{font-size:12px;color:var(--muted);margin-top:6px}
+.text-link{padding:0;border:0;background:none!important;color:var(--fg-2);min-height:24px;font-size:13px;font-weight:400;text-align:left}
+.footer-note{margin-top:24px;padding-top:16px;border-top:1px solid var(--border-soft);font-size:12px;color:var(--muted)}
+#toast{position:fixed;bottom:24px;left:calc(50% + 90px);transform:translateX(-50%);background:var(--surface);color:var(--fg-2);border:1px solid var(--border);padding:12px 18px;border-radius:4px;z-index:100;display:none;max-width:600px;font-size:14px}
+#toast.visible{display:block;animation:appear .16s ease-out}
+dialog{border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--fg);padding:0;max-width:600px;width:calc(100% - 32px)}
+dialog::backdrop{background:color-mix(in oklch, var(--fg) 40%, transparent)}
+dialog .modal-body{padding:24px}
+dialog h2{margin-bottom:12px}
+dialog p{margin-bottom:14px;color:var(--muted)}
+dialog textarea{min-height:160px}
+dialog .modal-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:20px}
+.region-overlay{position:absolute;border:2px solid var(--accent);background:color-mix(in oklch, var(--accent) 12%, transparent);pointer-events:none}
+.selectable{cursor:crosshair;touch-action:none}
+.frame-banner{background:var(--surface-warm);color:var(--fg-2);padding:9px 14px;font-size:12px;margin-bottom:15px;border:1px solid var(--border)}
+.project-open{font-size:13px;width:100%;text-align:left;background:none;border:1px solid var(--border)}
+.hidden{display:none!important}
+.zero-state{padding:50px 25px;border:1px solid var(--border);text-align:center;color:var(--muted)}
+::selection{background:var(--fg);color:var(--bg)}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:var(--muted);border:2px solid var(--bg);border-radius:8px}
+@keyframes appear{from{opacity:.6;transform:translate(-50%,5px)}
+to{opacity:1;transform:translate(-50%,0)}
+}
+@media(min-width:1600px){.gallery{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+@media(max-width:1270px){.workspace{padding:24px}
+.sidebar{width:190px}
+.shell{grid-template-columns:190px minmax(0,1fr)}
+.topbar{padding:0 24px}
+.style-layout{grid-template-columns:minmax(0,1fr) 270px}
+.page-split{grid-template-columns:minmax(350px,1.4fr) minmax(260px,1fr)}
+.runtime-layout{grid-template-columns:1fr 290px}
+.content-layout{grid-template-columns:1fr 280px}
+}
+@media(max-width:1000px){.sidebar{width:170px;padding:20px 10px}
+.shell{grid-template-columns:170px minmax(0,1fr)}
+.logo{font-size:16px;gap:7px}
+.action-band,.page-split,.style-layout,.runtime-layout,.content-layout{grid-template-columns:1fr}
+.action-main{border-right:0;border-bottom:1px solid var(--border)}
+.gallery{grid-template-columns:repeat(2,minmax(0,1fr))}
+.style-settings{max-width:none}
+.page-head{flex-wrap:wrap}
+.chain button{font-size:12px}
+.chain .chain-state{display:none}
+.project-entry{grid-template-columns:140px 1fr}
+.project-entry>button{grid-column:2}
+}
+@media(max-width:680px){.shell{display:block}
+.sidebar{position:relative;width:100%;padding:14px}
+.sidebar .logo{margin:0 0 14px}
+.sidebar .side-project,.sidebar-footer{display:none}
+.sidebar .nav{display:flex;flex-direction:row;flex-wrap:wrap;gap:4px}
+.nav button{font-size:12px;min-height:36px;padding:7px}
+.nav .nav-icon,.nav-count{display:none}
+.content{display:block}
+.topbar{padding:10px 16px;height:auto;font-size:12px;flex-wrap:wrap}
+.workspace{padding:22px 16px}
+.gallery{grid-template-columns:1fr}
+.comparison{grid-template-columns:1fr}
+.toolbar{align-items:flex-start;flex-wrap:wrap}
+.toolbar input{max-width:100%}
+.page-head h1{font-size:24px}
+.matrix{min-width:700px}
+.chain{overflow:auto}
+.chain button{min-width:85px}
+.project-entry{grid-template-columns:1fr}
+.project-entry>button{grid-column:1}
+.project-preview{max-width:260px}
+.flow-steps{gap:8px}
+.flow-steps span{font-size:11px}
+.flow-steps b{width:20px;height:20px}
+#toast{left:50%;width:90%}
+.legend{flex-wrap:wrap}
+.outline-block{grid-template-columns:30px 1fr}
+.outline-block button{grid-column:2}
+}
+
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
+
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+.artifact-plane{position:relative}
+
+.handoff-banner{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:16px 20px;border:1px solid var(--border);background:var(--surface-warm);margin:0 0 22px}
+.handoff-banner p{font-size:13px;color:var(--fg-2);margin-top:5px}
+.requirement-panel{padding:20px;margin-top:20px}
+.requirement-panel textarea{min-height:82px;font-size:16px}
+.fine-settings{border:1px solid var(--border);margin-top:20px;background:var(--bg)}
+.fine-settings summary{padding:15px 18px;cursor:pointer;font-size:14px}
+.fine-settings summary span{font-size:12px;margin-left:10px}
+.fine-body{padding:0 18px 18px;border-top:1px solid var(--border)}
+.dimension-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 20px;padding-top:12px}
+.prompt-diff{margin-top:16px;border:1px solid var(--border)}
+.prompt-diff summary{padding:12px}
+.candidate-compare{gap:0}
+.candidate-compare>section+section{border-left:1px solid var(--border)}
+.compare-column-head{padding:16px 16px 0;display:flex;flex-direction:column;gap:5px}
+.compare-column-head strong{font-size:16px}
+.compare-column-head span{font:12px var(--font-mono);color:var(--muted)}
+.reference-small{display:grid;grid-template-columns:240px 1fr;gap:18px;padding-top:18px;align-items:center}
+.reference-small svg{width:100%;height:auto}
+.reference-small p{font-size:14px;color:var(--muted)}
+.request-facts{margin:0}
+.request-facts>div{display:flex;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:1px solid var(--border)}
+.request-facts dt{color:var(--muted)}
+.request-facts dd{margin:0;text-align:right}
+.new-project-form{display:flex;flex-direction:column;gap:15px}
+.new-project-form input{width:100%}
+.field-error{color:var(--danger);font-size:13px;min-height:20px;margin:0!important}
+.draft-project{border-top:1px solid var(--border);padding:22px 0;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.draft-project p{font-size:13px;color:var(--muted);margin-top:7px}
+.draft-project h3{font-size:18px}
+@media(max-width:680px){.handoff-banner{flex-direction:column;align-items:stretch}
+.reference-small,.dimension-grid{grid-template-columns:1fr}
+.candidate-compare>section+section{border-left:0;border-top:1px solid var(--border)}
+}
+
+.new-project-form textarea{min-height:86px;height:86px}
+dialog{max-height:calc(100vh - 32px);overflow:auto}
+
+/* Fixed artifact comparisons need legible canvases at both desktop targets. */
+dialog.comparison-modal{max-width:1100px;width:calc(100% - 48px)}
+
+.comparison-modal .modal-actions{flex-wrap:wrap}
+.comparison-modal .artifact-info{flex-wrap:wrap}
+
+.compare-column-head span,.request-facts dd,.run-meta{overflow-wrap:anywhere}
+
+.style-settings .request-facts>div{font-size:13px}
+.request-facts dd{min-width:0}
+
+.reference-small>div{min-width:0}
+
+/* Review 2: readable decisions and primary pointer targets. */
+
+button{min-height:44px;border-radius:4px}
+
+button.primary{min-height:44px}
+
+.chain .chain-number,.chain .chain-state{font-size:12px}
+
+.style-layout.comparison-active{grid-template-columns:minmax(0,1fr)}
+
+.comparison-active .style-settings .panel-body{display:grid;grid-template-columns:minmax(260px,1fr) minmax(240px,1fr);gap:16px 28px;align-items:start}
+
+.comparison-active .style-settings .request-facts{grid-row:span 4}
+
+.comparison-active .style-settings .panel-body>p{margin-top:0!important}
+
+.comparison-active .style-settings .footer-note{margin-top:0}
+
+.reference-zoom{display:block;padding:0;border:1px solid var(--border);background:transparent;width:100%;aspect-ratio:16/9}
+
+.reference-zoom svg{width:100%;height:100%;display:block}
+
+.gallery{grid-template-columns:repeat(var(--gallery-columns,3),minmax(0,1fr))}
+
+.status.error{color:var(--danger);border-color:var(--border);background:color-mix(in oklch, var(--danger) 7%, var(--bg))}
+
+.region-fields{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+
+.region-fields label{min-width:0;font-size:12px;color:var(--muted)}
+
+.region-fields input{width:100%;min-width:0}
+
+.matrix-thumb{width:64px;aspect-ratio:16/9;flex:none;overflow:hidden;border:1px solid var(--border)}
+
+.matrix-thumb svg{display:block;width:100%;height:100%}
+
+.matrix-thumbnail{width:64px;aspect-ratio:16/9;flex:none;overflow:hidden;border:1px solid var(--border)}
+
+.matrix-thumbnail svg{display:block;width:100%;height:100%}
+
+.prompt-block p{font-size:16px}
+
+.matrix .title-button{min-width:0}
+
+@media(max-width:1100px){.comparison-active .style-settings .panel-body{display:block}
+.comparison-active .style-settings .panel-body>p{margin-top:16px!important}
+}
+
+@media(max-width:680px){.gallery{grid-template-columns:1fr}
+.region-fields{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+/* OpenAI product surface. Existing workflow and content canvases stay intact. */
+html{color-scheme:light}
+body{font-family:var(--font-body);line-height:var(--leading-body);color:var(--fg);background:var(--bg)}
+h1,h2,h3,strong,b{font-weight:600}h1{font-size:32px;letter-spacing:-.02em;line-height:1.25;text-wrap:balance}h2,h3,p{text-wrap:pretty}
+button,input,select,textarea{border-radius:var(--radius-sm);background:var(--bg);color:var(--fg)}
+button{transition:background var(--motion-fast) var(--ease-standard),border-color var(--motion-fast) var(--ease-standard);min-height:44px;padding:10px 16px}
+button:hover{background:var(--surface);color:var(--fg);border-color:var(--muted)}
+button.primary{background:var(--fg);color:var(--bg);border-color:var(--fg);font-weight:500}
+button.primary:hover{background:var(--fg-2);color:var(--bg);border-color:var(--fg-2)}
+button.quiet{color:var(--fg-2)}button.quiet:hover{color:var(--fg);background:var(--surface)}
+button.small,.segmented button{min-height:44px}
+a,a:visited,.text-link{color:var(--fg-2)}a:hover,.text-link:hover{color:var(--fg);text-decoration:underline}
+:focus-visible{outline:2px solid var(--accent-hover);outline-offset:3px;box-shadow:var(--focus-ring)}
+input:focus,textarea:focus,select:focus{border-color:var(--accent-hover)}
+.shell{grid-template-columns:224px minmax(0,1fr)}
+.sidebar{width:224px;padding:28px 16px;background:var(--surface-warm);border-right-color:var(--border-soft)}
+.logo{font-family:var(--font-body);font-weight:600;margin:0 8px 32px;letter-spacing:-.5px}
+.mark{border:0;border-radius:8px;background:var(--fg);color:var(--bg);width:30px;height:32px;font-weight:500}
+.side-project{padding:24px 8px;border:0;margin-top:4px}.side-project strong{margin:8px 0}
+.nav{gap:4px}.nav button{border-radius:var(--radius-sm);color:var(--fg-2);padding:11px 12px}
+.nav button.active,.nav button.active:hover{background:var(--surface);border-color:transparent;color:var(--fg);font-weight:600}
+.nav-icon{color:var(--muted)}.nav button.active .nav-icon{color:var(--fg)}
+.sidebar-footer{border:0;padding:24px 8px 0}.sample{color:var(--muted)}.dot{background:var(--muted)}
+.topbar{height:72px;padding:0 40px;border-color:var(--border-soft);font-size:13px}.topbar .version{border:0;border-radius:var(--radius-pill);padding:4px 10px;background:var(--surface)}
+.workspace{padding:40px;max-width:1520px}.page-head{margin-bottom:32px;gap:24px}.page-head>div:first-child{min-width:0}.page-head>.row{flex-shrink:0;max-width:100%}.page-head p{font-size:15px;line-height:1.7}
+.eyebrow{font-family:var(--font-body);font-size:12px;letter-spacing:.03em;margin-bottom:12px}
+.action-band{border-radius:var(--radius-md);background:var(--surface-warm);border-color:var(--border-soft);margin:24px 0 32px}
+.action-main{padding:24px 28px}.action-list{padding:10px 24px}.action-item{padding:14px 0}.action-main h2{font-size:22px;line-height:1.4}
+.panel,.state-panel{border-radius:var(--radius-md);border-color:var(--border-soft);background:var(--bg)}
+.panel-head{padding:18px 20px;border-color:var(--border-soft)}.panel-body{padding:24px}.artifact-surface{background:var(--surface);padding:20px}
+.status,.state-badge{border-radius:var(--radius-pill);padding:4px 10px;background:var(--surface);border-color:transparent;color:var(--fg-2)}
+.status.warn,.status.info,.status.ok{background:var(--surface);color:var(--fg-2);border-color:transparent}
+.status.error,.red,.field-error{color:color-mix(in oklch,var(--danger) 65%,var(--fg))}
+.accent,.cell-btn.warn,.flow-steps span.active,.trace .current{color:var(--accent-hover)}
+.cell-btn{color:var(--muted);min-height:44px}.cell-btn:hover{color:var(--fg);background:var(--surface)}
+.progressline{height:4px;gap:4px}.progressline span{background:var(--border)}.progressline .ready{background:var(--muted)}.progressline .waiting{background:var(--accent-hover)}
+.matrix-wrap{border-radius:var(--radius-md);border-color:var(--border-soft)}.matrix th{background:var(--surface-warm);padding:14px 16px}.matrix td{padding:8px 16px}.matrix .chapter-row td{background:var(--surface-warm);padding:12px 16px}.matrix .title-button{min-height:44px;line-height:1.5}.matrix .title-button:hover{color:var(--fg);text-decoration:underline}
+.matrix tbody tr:hover{background:var(--surface-warm)}
+.segmented{background:var(--surface);border:0;border-radius:var(--radius-sm);gap:2px}.segmented button{color:var(--fg-2);border-radius:8px}.segmented button.active{background:var(--bg);color:var(--fg);box-shadow:var(--elev-ring)}
+.segmented button:hover{background:var(--bg);color:var(--fg)}
+.chain button.active{border-bottom-color:var(--fg)}.chain button:hover{background:var(--surface-warm);color:var(--fg)}
+.slide-cover,.reference-zoom{border-radius:var(--radius-sm);border-color:var(--border)}.slide-cover:hover{border-color:var(--muted);box-shadow:var(--elev-raised)}
+.legend{border:0;background:var(--surface-warm);border-radius:var(--radius-sm);padding:16px 20px}
+.impact,.frame-banner,.handoff-banner{background:var(--surface-warm);border-color:var(--border);border-radius:var(--radius-sm)}.impact h3,.impact p,.handoff-banner p,.frame-banner{color:var(--fg-2)}
+.select-chip,.fine-settings,.prompt-diff,.zero-state{border-radius:var(--radius-sm)}
+.full-article{background:var(--bg);color:var(--fg-2)}.full-article h3{color:var(--fg)}
+.diffline.add{background:var(--surface-warm);color:var(--fg-2)}
+.prototype-control{color:var(--muted);border-color:var(--border);border-radius:var(--radius-sm)}
+dialog{border-color:var(--border);border-radius:var(--radius-md);box-shadow:var(--elev-raised);background:var(--bg)}
+#toast{border-radius:var(--radius-sm);background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.row,.panel-head,.artifact-info{flex-wrap:wrap}.page-head .row{align-self:flex-start}.viewpane,.style-settings,.runtime-layout>*,.content-layout>*{min-width:0}
+@media(min-width:1600px){.workspace{padding:48px}}
+@media(max-width:1270px){.sidebar{width:200px}.shell{grid-template-columns:200px minmax(0,1fr)}.workspace{padding:28px}.topbar{padding:0 28px}.page-head{flex-wrap:wrap}}
+@media(max-width:1000px){.sidebar{width:184px}.shell{grid-template-columns:184px minmax(0,1fr)}.workspace{padding:24px}.logo{font-size:16px}.page-head h1{font-size:28px}.topbar{height:auto;min-height:64px;flex-wrap:wrap;padding:16px 24px}.page-split{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:680px){.shell{display:block}.sidebar{position:relative;width:100%;padding:16px}.sidebar .nav{gap:4px}.nav button{min-height:44px}.workspace{padding:24px 16px}.page-head h1{font-size:26px}.topbar{padding:12px 16px}.action-main{padding:20px}.action-list{padding:8px 20px}.panel-body{padding:18px}.toolbar>.row{flex-wrap:wrap;max-width:100%}.state-table{table-layout:fixed;overflow-wrap:anywhere}.state-table textarea{min-width:0}.page-head>.row{flex-shrink:1}.matrix .title-button{white-space:normal}.flow-steps{flex-wrap:wrap}}
+/* Reserve enough width for page titles alongside their thumbnails. */
+.matrix th:first-child{width:42%}
+.matrix .title-button{text-wrap:pretty}
+.sidebar{overflow-y:auto}
+@media(max-width:680px){.matrix{min-width:820px}.sidebar{overflow-y:visible}}
+/* Shared icon geometry. Artwork SVGs retain their own dimensions. */
+.ui-icon{display:inline-block;width:18px;height:18px;flex:0 0 auto;vertical-align:-4px;color:inherit;pointer-events:none}
+.nav-icon{display:inline-flex;width:20px;height:20px;align-items:center;justify-content:center}
+.nav-icon .ui-icon{width:20px;height:20px}
+button .ui-icon{vertical-align:-4px}
+.empty-artifact .empty-symbol{display:inline-flex;align-items:center;justify-content:center}
+.empty-artifact .empty-symbol .ui-icon{width:28px;height:28px;aspect-ratio:1}
+.matrix .cell-btn .ui-icon,.matrix-caption .ui-icon{width:14px;height:14px;vertical-align:-2px}
+.trace .ui-icon{width:16px;height:16px;vertical-align:-3px}
+.sample .ui-icon{width:12px;height:12px;vertical-align:-1px;margin-right:3px}
+.diffline .ui-icon{width:16px;height:16px;vertical-align:-3px;margin-right:4px}
+.state-actions button:has(>.ui-icon:only-child){display:inline-flex;align-items:center;justify-content:center;padding:10px}
+
+
+.ds{display:grid;grid-template-columns:240px minmax(0,1fr);min-height:100vh}.ds-aside{position:sticky;top:0;height:100vh;background:var(--surface-warm);padding:32px 24px;display:flex;flex-direction:column;border-right:1px solid var(--border-soft)}.ds-brand{font-size:18px;font-weight:600;margin-bottom:8px}.ds-aside nav{display:grid;gap:6px;margin-top:40px}.ds-aside nav button{text-align:left;background:transparent;border-color:transparent}.ds-aside nav button[aria-current=page]{background:var(--surface);font-weight:600}.ds-aside nav button:hover{background:var(--surface);color:var(--fg)}.ds-aside>a{margin-top:auto;min-height:44px;padding-top:16px;font-size:13px}.ds-main{width:100%;max-width:1240px;padding:48px 56px 64px;min-width:0}.ds-section[hidden]{display:none}.ds-section header{margin-bottom:40px}.ds-section h1{font-size:36px;line-height:1.25}.intro{margin-top:16px;color:var(--muted);max-width:720px;font-size:16px}.ds-section h2{font-size:20px}.ds-section h3{font-size:16px}.ds-section p{margin-top:12px}.principle-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:32px;margin:40px 0}.number{display:block;font:14px var(--font-mono);color:var(--muted);margin-bottom:24px}.principle-grid p,.two p{color:var(--muted)}.example{border:1px solid var(--border-soft);border-radius:var(--radius-md);padding:28px;margin:24px 0}.example-label{font-size:12px;color:var(--muted);margin-bottom:24px}.task-demo{display:flex;align-items:center;justify-content:space-between;gap:24px}.task-demo h2{margin-top:16px}.task-demo button{flex-shrink:0}.two{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:32px}.two>*{min-width:0}.two .example{margin:0}.note{background:var(--surface-warm);border-radius:var(--radius-sm);padding:20px 24px;margin:28px 0;font-size:14px}.swatches{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:24px 16px}.swatch{height:72px;border:1px solid var(--border);border-radius:12px;margin-bottom:12px}.swatches h3{font-size:13px}.swatches code,.token-value{display:block;font-size:12px;overflow-wrap:anywhere}.token-value{color:var(--muted)}code{font-family:var(--font-mono);font-size:12px}.subhead{margin:40px 0 20px}.type-row{display:grid;grid-template-columns:200px 1fr;gap:24px;padding:20px 0;border-bottom:1px solid var(--border-soft);align-items:center}.type-row>span,.small-note{font-size:13px;color:var(--muted)}.spacing-demo{display:flex;flex-wrap:wrap;gap:16px;margin-top:24px;align-items:flex-end}.spacing-demo span{display:block;height:16px;background:var(--fg);margin-bottom:8px}.table-frame{border:1px solid var(--border-soft);border-radius:16px;overflow:auto}table{width:100%;border-collapse:collapse;font-size:14px;table-layout:fixed}th,td{text-align:left;padding:16px;border-bottom:1px solid var(--border-soft);overflow-wrap:anywhere;vertical-align:top}th{font-weight:500;background:var(--surface-warm)}tr:last-child td{border:0}.icon-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:40px}.icon-grid article{background:var(--surface-warm);border-radius:12px;padding:24px;display:flex;flex-direction:column;align-items:flex-start;gap:12px}.icon-grid .ui-icon{width:24px;height:24px}.icon-grid strong{font-size:14px}.icon-grid code{color:var(--muted)}.checklist{display:grid;grid-template-columns:1fr 1fr;gap:12px 24px}.checklist label{display:flex;gap:12px;align-items:center;min-height:44px}#sample-form>label{display:block;margin-bottom:8px}#sample-name{width:100%;min-height:44px}.resource-links{display:flex;flex-wrap:wrap;gap:24px;margin-top:40px}.resource-links a{padding:10px 0}.ds-dialog{max-width:520px;padding:28px}.ds-dialog h2{margin-bottom:16px}#ds-feedback{position:fixed;bottom:24px;right:24px;max-width:calc(100% - 48px);background:var(--fg);color:var(--bg);border-radius:12px;padding:12px 20px;z-index:30}#ds-feedback:empty{display:none}
+@media(max-width:1100px){.ds-main{padding:32px}.ds{grid-template-columns:208px minmax(0,1fr)}.swatches{grid-template-columns:repeat(3,minmax(0,1fr))}.principle-grid{grid-template-columns:1fr}.number{margin-bottom:12px}.ds-section h1{font-size:30px}.task-demo{align-items:flex-start;flex-direction:column}}
+@media(max-width:700px){.ds{display:block}.ds-aside{position:relative;height:auto;padding:24px}.ds-aside nav{grid-template-columns:1fr 1fr;margin-top:20px}.ds-aside>a{margin-top:16px}.ds-main{padding:32px 24px}.two,.checklist{grid-template-columns:1fr}.icon-grid{grid-template-columns:1fr 1fr}.swatches{grid-template-columns:1fr 1fr}.type-row{grid-template-columns:1fr;gap:12px}.example{padding:20px}.ds-section h1{font-size:28px}th,td{padding:12px 8px;font-size:13px}}
+
+.ds-aside{overflow-y:auto}.ds-aside nav{margin-top:24px}.spec-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:20px 0;font-size:14px}.spec-toolbar select{margin-left:8px}.spec-table .select-col{width:56px}.spec-table th:nth-child(2){width:40%}.spec-table button{max-width:100%;white-space:normal}.check-target{display:flex;align-items:center;justify-content:center;min-height:44px;min-width:32px}.spec-table tbody tr:hover{background:var(--surface-warm)}.spec-table tbody tr[data-selected=true]{background:var(--surface)}.spec-table td{vertical-align:middle}.compare-spec{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--border-soft);border-radius:var(--radius-md);margin-top:24px}.compare-spec article{min-width:0}.compare-spec article+article{border-left:1px solid var(--border-soft)}.compare-spec article header{padding:24px;margin:0;background:var(--surface-warm);border-bottom:1px solid var(--border-soft)}.compare-spec h2{font-size:18px}.compare-spec header p{font-size:13px;color:var(--muted)}.compare-copy{padding:28px}.compare-copy p{font-size:16px;line-height:1.8}.compare-copy mark{background:var(--surface);color:var(--fg);text-decoration:underline;text-decoration-color:var(--muted);text-underline-offset:4px}.compare-copy p.small-note{font-size:13px}.spec-table button.quiet{padding:8px 0}#compare-result{min-height:24px}
+@media(max-width:800px){.compare-spec{grid-template-columns:1fr}.compare-spec article+article{border-left:0;border-top:1px solid var(--border-soft)}.spec-table,.spec-table tbody,.spec-table tr,.spec-table td{display:block;width:100%}.spec-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}.spec-table tr{padding:16px;border-bottom:1px solid var(--border)}.spec-table td{border:0;padding:6px 0}.spec-table td[data-label]::before{content:attr(data-label);display:block;font-size:12px;color:var(--muted);margin-bottom:4px}.spec-table .check-target{justify-content:flex-start}.compare-copy{padding:20px}}
+</style></head><body><a class="skip" href="#ds-main">跳到规范内容</a><div class="ds"><aside class="ds-aside" data-od-id="system-navigation"><div class="ds-brand">Deck Master</div><span class="muted">产品设计系统</span><nav aria-label="设计系统目录"><button data-od-id="nav-principles" data-section="principles">01　设计原则</button><button data-od-id="nav-foundations" data-section="foundations">02　视觉基础</button><button data-od-id="nav-components" data-section="components">03　组件与反馈</button><button data-od-id="nav-iconography" data-section="iconography">04　图标规范</button><button data-od-id="nav-language" data-section="language">05　产品语言</button><button data-od-id="nav-workflow" data-section="workflow">06　状态与验收</button><button data-od-id="nav-tables" data-section="tables">07　表格规范</button><button data-od-id="nav-comparison" data-section="comparison">08　候选对比</button></nav><a href="index.html">返回工作台</a></aside><main class="ds-main" id="ds-main" data-od-id="system-content"><section id="principles" data-od-id="section-principles" class="ds-section" hidden><header><div class="eyebrow">01 / 设计原则</div><h1 data-od-id="title-principles">让工作对象成为界面的中心</h1><p class="intro">用清晰的事实、克制的视觉和明确的下一步，组织方案制作。</p></header><div class="principle-grid"><article><span class="number">01</span><h2>先呈现正在处理的事</h2><p>围绕项目、页面、任务与版本组织信息。标题命名对象，说明交代当前事实。</p></article><article><span class="number">02</span><h2>一个场景，一个重点</h2><p>同一操作区只保留一个主要动作。次要操作使用描边、轻量按钮或文字链接。</p></article><article><span class="number">03</span><h2>状态必须有依据</h2><p>保存、复制、提交、处理与完成分别表达。没有执行记录，就不能显示已经开始。</p></article></div><div class="example"><div class="example-label">组合示例 · 制作任务</div><div class="task-demo"><div><span class="status">待确认</span><h2>第 8 页 · 风格校准</h2><p>候选已返回，当前版本保留。比较后再决定是否采用。</p></div><button class="primary" data-od-id="open-example" id="open-example">查看影响说明</button></div></div><div class="two"><div><h3>基础与产品的关系</h3><p>基础视觉来自当前 OpenAI 设计体系；产品层保留高密度工作台布局与中文操作语言。本页面汇总当前项目实现，不代表 OpenAI 官方组件库。</p></div><div><h3>使用范围</h3><p>用于设计、开发与评审对齐。示例控件只在本页反馈，不修改项目、不调用生成服务。</p></div></div></section><section id="foundations" data-od-id="section-foundations" class="ds-section" hidden><header><div class="eyebrow">02 / 视觉基础</div><h1 data-od-id="title-foundations">颜色、字体与空间</h1><p class="intro">先建立稳定的层级，再使用少量强调。</p></header><div class="swatches"><article data-od-id="token-bg"><div class="swatch" style="background:var(--bg)"></div><h3>页面底色</h3><code>--bg</code><span class="token-value" data-token="--bg"></span></article><article data-od-id="token-surface"><div class="swatch" style="background:var(--surface)"></div><h3>次级表面</h3><code>--surface</code><span class="token-value" data-token="--surface"></span></article><article data-od-id="token-surface-warm"><div class="swatch" style="background:var(--surface-warm)"></div><h3>轻量分区</h3><code>--surface-warm</code><span class="token-value" data-token="--surface-warm"></span></article><article data-od-id="token-fg"><div class="swatch" style="background:var(--fg)"></div><h3>主要文字与主按钮</h3><code>--fg</code><span class="token-value" data-token="--fg"></span></article><article data-od-id="token-muted"><div class="swatch" style="background:var(--muted)"></div><h3>辅助文字</h3><code>--muted</code><span class="token-value" data-token="--muted"></span></article><article data-od-id="token-border"><div class="swatch" style="background:var(--border)"></div><h3>分隔与边框</h3><code>--border</code><span class="token-value" data-token="--border"></span></article><article data-od-id="token-accent"><div class="swatch" style="background:var(--accent)"></div><h3>品牌强调</h3><code>--accent</code><span class="token-value" data-token="--accent"></span></article><article data-od-id="token-accent-hover"><div class="swatch" style="background:var(--accent-hover)"></div><h3>强调文字与焦点</h3><code>--accent-hover</code><span class="token-value" data-token="--accent-hover"></span></article><article data-od-id="token-danger"><div class="swatch" style="background:var(--danger)"></div><h3>错误基础色</h3><code>--danger</code><span class="token-value" data-token="--danger"></span></article><article data-od-id="token-warn"><div class="swatch" style="background:var(--warn)"></div><h3>提醒基础色</h3><code>--warn</code><span class="token-value" data-token="--warn"></span></article></div><div class="note">基础强调色用于色块与标记；小字号强调文字使用更深的 <code>--accent-hover</code>。错误与提醒必须搭配文字，不直接把鲜艳基础色用作正文。</div><h2 class="subhead">字体层级</h2><div class="type-row"><span>页面标题 · 32 / 600</span><div style="font-size:32px;font-weight:600;line-height:1.25">制作总览</div></div><div class="type-row"><span>区域标题 · 20 / 600</span><div style="font-size:20px;font-weight:600">需要你处理</div></div><div class="type-row"><span>正文 · 16 / 400</span><div style="font-size:16px">比较候选后，再决定是否采用。</div></div><div class="type-row"><span>辅助信息 · 13 / 400</span><div class="muted" style="font-size:13px">当前版本 R18 · 仅本机保存</div></div><p class="small-note">产品界面使用 Söhne / Inter / 系统字体回退；项目未包含字体文件，实际字体取决于设备。Signifier 仅用于编辑性展示。基础 H1 token 为 40px，当前工作台标题为 32px。</p><h2 class="subhead">空间与形状</h2><div class="two"><div class="example"><h3>4px 基础网格</h3><div class="spacing-demo"><div><span style="width:4px"></span><code>4</code></div><div><span style="width:8px"></span><code>8</code></div><div><span style="width:12px"></span><code>12</code></div><div><span style="width:16px"></span><code>16</code></div><div><span style="width:24px"></span><code>24</code></div><div><span style="width:32px"></span><code>32</code></div><div><span style="width:48px"></span><code>48</code></div><div><span style="width:64px"></span><code>64</code></div></div></div><div class="example"><h3>按组件分配圆角</h3><p>控件 12px · 容器 16px · 标签胶囊形</p><p>点击目标至少 44px；主要操作与表单保持稳定尺寸。桌面主体用留白分区，小屏改为单列。</p></div></div></section><section id="components" data-od-id="section-components" class="ds-section" hidden><header><div class="eyebrow">03 / 组件与反馈</div><h1 data-od-id="title-components">让操作与反馈成对出现</h1><p class="intro">组件直接沿用当前工作台样式。用键盘 Tab 检查焦点，用鼠标检查悬停状态。</p></header><div class="example"><div class="example-label">按钮 · 默认 / 次要 / 轻量 / 禁用</div><div class="row wrap"><button class="primary" data-feedback="已预览主要操作反馈；未创建任务">创建任务</button><button data-feedback="草稿示例已保存；未修改项目">保存草稿</button><button class="quiet" data-feedback="已返回示例初始状态">取消</button><button disabled>正在保存</button></div><p class="small-note">主按钮使用黑底白字；悬停同时保持文字与背景对比。禁用状态不可触发操作。</p></div><div class="two"><form class="example" id="sample-form" novalidate data-od-id="sample-form"><div class="example-label">表单 · 标签 / 提示 / 错误</div><label for="sample-name">项目名称</label><input id="sample-name" aria-describedby="name-help name-error" placeholder="例如：区域服务试点方案"><p id="name-help" class="small-note">用名称区分不同方案。</p><p id="name-error" class="field-error" role="alert"></p><button type="submit">检查输入</button></form><div class="example"><div class="example-label">空态 · 原因与下一步</div><h3>还没有制作任务</h3><p>从页面添加修改意见，保存后可在任务列表继续处理。</p><p class="small-note">空态不伪造缩略图，不用“出错了”描述尚未开始的工作。</p></div></div><div class="example"><div class="example-label">状态 · 文字始终保留</div><div class="row wrap"><span class="status">待提交</span><span class="status">待确认</span><span class="status">已采用 · 待检查</span><span class="status error">失败 · 可重试</span></div><p class="small-note">中性状态使用浅灰底；错误用派生深色文字。绿色只强调当前需要关注的少数位置。</p></div><div class="note">正文对比度至少 4.5:1；大字号文字与图标至少 3:1。焦点使用可见描边；减弱动态偏好下关闭过渡。悬停不得把正文变为更浅的灰色。</div></section><section id="iconography" data-od-id="section-iconography" class="ds-section" hidden><header><div class="eyebrow">04 / 图标</div><h1 data-od-id="title-iconography">同一套几何，同一种语气</h1><p class="intro">24 单位网格、1.75 线宽、圆角端点与连接。全部继承当前文字颜色。</p></header><div class="icon-grid"><article data-od-id="icon-overview"><span data-icon-name="overview"></span><strong>制作总览</strong><code>overview</code></article><article data-od-id="icon-content"><span data-icon-name="content"></span><strong>内容与来源</strong><code>content</code></article><article data-od-id="icon-gallery"><span data-icon-name="gallery"></span><strong>整稿画廊</strong><code>gallery</code></article><article data-od-id="icon-style"><span data-icon-name="style"></span><strong>风格校准</strong><code>style</code></article><article data-od-id="icon-runs"><span data-icon-name="runs"></span><strong>任务与交付</strong><code>runs</code></article><article data-od-id="icon-left"><span data-icon-name="left"></span><strong>返回</strong><code>left</code></article><article data-od-id="icon-right"><span data-icon-name="right"></span><strong>继续</strong><code>right</code></article><article data-od-id="icon-up"><span data-icon-name="up"></span><strong>上移</strong><code>up</code></article><article data-od-id="icon-down"><span data-icon-name="down"></span><strong>下移</strong><code>down</code></article><article data-od-id="icon-external"><span data-icon-name="external"></span><strong>打开页面</strong><code>external</code></article><article data-od-id="icon-check"><span data-icon-name="check"></span><strong>已就绪</strong><code>check</code></article><article data-od-id="icon-attention"><span data-icon-name="attention"></span><strong>需要处理</strong><code>attention</code></article><article data-od-id="icon-minus"><span data-icon-name="minus"></span><strong>尚未生成</strong><code>minus</code></article><article data-od-id="icon-plus"><span data-icon-name="plus"></span><strong>新增</strong><code>plus</code></article><article data-od-id="icon-clock"><span data-icon-name="clock"></span><strong>等待</strong><code>clock</code></article><article data-od-id="icon-dot"><span data-icon-name="dot"></span><strong>状态标记</strong><code>dot</code></article></div><div class="two"><div><h3>按位置调整尺寸</h3><p>导航 20px，普通控件 18px，流程箭头 16px，表格状态 14px，空态 28px。图标本身大小不等于点击区域大小。</p></div><div><h3>保留操作含义</h3><p>装饰图标不重复朗读；纯图标按钮必须有中文可访问名称。正文中的关系箭头保留为文字，稿件插图不随界面图标改变。</p></div></div></section><section id="language" data-od-id="section-language" class="ds-section" hidden><header><div class="eyebrow">05 / 产品语言</div><h1 data-od-id="title-language">说清对象、事实与下一步</h1><p class="intro">标题直接命名工作对象；按钮使用动词加对象；辅助说明只保留影响判断的信息。</p></header><div class="table-frame"><table><thead><tr><th>使用</th><th>不使用</th><th>含义</th></tr></thead><tbody><tr><td>项目</td><td>原型项目、模拟新建</td><td>用户管理的一份方案</td></tr><tr><td>示例项目</td><td>合成演示项目</td><td>预置内容，不是真实客户资料</td></tr><tr><td>制作工具</td><td>Host</td><td>执行生成工作的外部工具</td></tr><tr><td>任务</td><td>模拟请求、样本任务</td><td>已保存的工作要求</td></tr><tr><td>候选</td><td>样本候选</td><td>尚待用户确认的结果</td></tr><tr><td>当前版本</td><td>current、currentVersionId</td><td>正在使用的版本</td></tr><tr><td>制作要求</td><td>交接文本</td><td>提交给制作工具的内容</td></tr><tr><td>本机工作区</td><td>离线设计原型</td><td>数据保存范围</td></tr></tbody></table></div><h2 class="subhead">常见文案写法</h2><div class="two"><div class="example"><div class="example-label">标题与动作</div><h3>制作总览</h3><p>第 8、9 页待校准风格。</p><p><strong>操作：</strong>比较候选 / 保存草稿 / 创建修改任务</p></div><div class="example"><div class="example-label">错误与恢复</div><h3>保存失败，输入仍保留</h3><p>请重试或复制内容。</p><p class="small-note">依次交代问题、内容是否保留，以及可做的动作。</p></div></div><div class="note">Codex 仅在需要用户前往该工具执行时出现。SVG、PPT 与版本号对判断有帮助，可保留；内部协议字段放入技术详情。</div><h2 class="subhead">限制应出现在需要判断的地方</h2><p>连接信息集中在“连接状态”。上传、导出、跨设备保存处保留必要限制。不能通过删除“示例”或“未连接”伪装真实能力。</p></section><section id="workflow" data-od-id="section-workflow" class="ds-section" hidden><header><div class="eyebrow">06 / 状态与验收</div><h1 data-od-id="title-workflow">状态描述事实，不代替事实</h1><p class="intro">复制不等于提交，返回不等于采用，采用不等于检查完成。</p></header><div class="table-frame"><table><thead><tr><th>事实</th><th>状态文案</th><th>下一步</th></tr></thead><tbody><tr><td>要求已保存，尚未发送</td><td>待提交</td><td>复制制作要求</td></tr><tr><td>仅复制了文本</td><td>已复制，尚未开始</td><td>在制作工具中发送</td></tr><tr><td>已取得执行记录</td><td>处理中</td><td>查看任务或取消</td></tr><tr><td>结果返回但未采用</td><td>待确认</td><td>比较候选</td></tr><tr><td>用户采用结果</td><td>已采用 · 待检查</td><td>检查相关页面</td></tr><tr><td>执行失败</td><td>失败</td><td>调整要求后重试</td></tr><tr><td>请求已取消</td><td>已取消</td><td>查看记录</td></tr><tr><td>上游内容已更新</td><td>旧版 · 待更新</td><td>更新相关产物</td></tr></tbody></table></div><div class="note">当前工作区的生成、导出和云端同步尚未连接；既有执行记录需保留示例标识。本页组件反馈不提交真实请求。</div><h2 class="subhead">交付检查</h2><div class="checklist"><label><input type="checkbox">导航、标题与操作使用同一术语</label><label><input type="checkbox">保存、复制、处理与完成分别表达</label><label><input type="checkbox">主操作唯一，取消与返回可见</label><label><input type="checkbox">错误说明内容是否保留及恢复方法</label><label><input type="checkbox">候选采用保留版本比较与影响说明</label><label><input type="checkbox">删除前说明范围、不可撤销并二次确认</label><label><input type="checkbox">键盘焦点可见，图标具有明确名称</label><label><input type="checkbox">示例与未连接状态如实呈现</label></div><p class="small-note">勾选仅供本次人工核对，不表示系统已自动验收。</p><div class="resource-links"><a href="states.html">查看异常与版本交互规范</a><a href="product-ui-language.md">查看产品语言源文档</a><a href="index.html">返回工作台</a></div></section>
+<section id="tables" data-od-id="section-tables" class="ds-section" hidden>
+<header><div class="eyebrow">07 / 表格规范</div><h1 data-od-id="title-tables">一行一个对象，操作紧随事实</h1><p class="intro">适用于逐页进度、制作任务与版本记录。表格回答“哪一页、当前怎样、接下来做什么”。</p></header>
+<div class="example-label">交互示例 · 筛选、排序与逐页选择，仅作用于本页</div>
+<div class="spec-toolbar"><label>页面状态 <select id="table-filter" data-od-id="table-filter"><option value="all">全部页面</option><option value="review">待确认</option><option value="failed">失败</option><option value="missing">尚未生成</option></select></label><span id="table-count" role="status">3 页</span></div>
+<div class="table-frame"><table class="spec-table" data-od-id="page-table"><caption class="sr-only">页面制作进度示例</caption><thead><tr><th scope="col" class="select-col"><label class="check-target"><input type="checkbox" id="table-all" data-od-id="table-all" aria-label="选择当前筛选内所有可操作页面"></label></th><th scope="col" id="sort-heading" aria-sort="ascending"><button id="table-sort" data-od-id="table-sort" class="quiet">页面 · 升序</button></th><th scope="col">当前事实</th><th scope="col">下一步</th></tr></thead><tbody id="spec-table-body"></tbody></table></div>
+<div class="spec-toolbar"><span id="selection-count" role="status">未选择页面</span><button id="clear-table" data-od-id="clear-table" class="quiet">清除选择</button></div>
+<div class="two"><div><h2>列与行的组织</h2><p>对象名称靠左，数字右对齐，操作放在末列。长标题自然换行，不用省略号隐藏关键信息。状态与操作不挤进标题列。</p><p>示例首列固定为选择控件；对象列优先分配空间。至少保留 44px 操作区域，默认单元格内边距 16px。</p></div><div><h2>选择与批量操作</h2><p>全选只作用于当前筛选内可操作行，部分选择显示半选态。筛选变化时清空选择并更新计数；不可操作行说明原因。</p><p>只有明确选择后才能出现批量动作。动作前说明页数与对象；部分失败保留成功项，只重试失败页。</p></div></div>
+<h2 class="subhead">状态完整性</h2><div class="table-frame"><table><thead><tr><th scope="col">场景</th><th scope="col">呈现</th><th scope="col">操作规则</th></tr></thead><tbody><tr><td>加载中</td><td>保留表头与列宽，显示“正在加载页面”</td><td>暂不可选择，不以空数据代替加载</td></tr><tr><td>没有数据</td><td>“还没有页面”与创建入口</td><td>不显示无意义的分页</td></tr><tr><td>筛选无结果</td><td>“没有符合条件的页面”</td><td>可清除筛选，原数据保留</td></tr><tr><td>加载失败</td><td>说明失败；旧数据如保留需标明时间</td><td>重试，不清空已输入内容</td></tr><tr><td>排序与分页</td><td>当前方向、当前页和结果数可见</td><td>排序后回到第一页；跨页选择须单独说明</td></tr></tbody></table></div>
+<div class="note">窄屏保留对象、状态和下一动作，将每行重排为带字段名的纵向列表。仅必须横向比较的进度矩阵允许在独立区域滚动，不能让整个页面横向滚动。表头使用 scope，排序列使用 aria-sort；控件按正常 Tab 顺序访问，不将普通表格伪装为键盘网格。</div>
+</section>
+<section id="comparison" data-od-id="section-comparison" class="ds-section" hidden>
+<header><div class="eyebrow">08 / 候选对比</div><h1 id="title-comparison" data-od-id="title-comparison">先确认变化，再决定采用</h1><p class="intro">同一页面、同一种产物、固定基准并排比较。采用只改变目标产物，不隐式同步其他页面。</p></header>
+<div class="spec-toolbar"><span>第 8 页 · 正文 · 示例任务 Q08</span><span class="status" id="compare-status" role="status">待确认</span></div>
+<div class="compare-spec" data-od-id="candidate-comparison"><article data-od-id="baseline-panel"><header><h2>当前采用 · 请求基准</h2><p>正文 v4 · 项目 R18</p></header><div class="compare-copy"><h3>让现场与中心同步工作</h3><p>受理、调度、现场处理分别记录进度，完成后汇总处理结果。</p></div></article><article data-od-id="candidate-panel"><header><h2>候选 · 请求结果</h2><p>正文 v5 · 基于 v4</p></header><div class="compare-copy"><h3>让现场与中心同步工作</h3><p><mark>受理、调度与现场处理共享一条工单，状态变化同步更新，完成后保留处理依据。</mark></p><p class="small-note">修改：协作方式与完成后的记录要求；标题保留。</p></div></article></div>
+<div class="note"><strong>采用影响</strong><p>只更新第 8 页正文；相关提示词、原图、SVG 与 PPT 需检查并按依赖更新。其他页面不变。此处仅记录本页示例选择，不修改工作台。</p></div>
+<div class="row wrap"><button id="adopt-example" data-od-id="adopt-example" class="primary">采用候选</button><button id="keep-example" data-od-id="keep-example">保留当前版本</button><button id="reset-comparison" data-od-id="reset-comparison" class="quiet">重置示例</button></div><p id="compare-result" class="small-note" role="status">比较内容保持固定，作出决定后仍可回看。</p>
+<div class="two"><div><h2>视觉比较规则</h2><p>基准在左，候选在右；窄屏按基准、候选、影响、操作排列。两侧使用相同缩放比例，完整展示画面，支持放大，不裁切内容。</p><p>本例展示正文差异。图像变化需配合文字说明，不用红绿颜色单独传达差异。两侧标题与版本始终可见。</p></div><div><h2>操作与责任</h2><p>“采用候选”为唯一主要动作；“保留当前版本”不删除候选。重新生成应创建新请求，并保留本次比较记录。</p><p>采用前核对当前版本是否仍等于请求基准；发生变化时阻止采用，提示重新比较或建立新请求，不覆盖较新的结果。</p></div></div>
+<h2 class="subhead">异常与恢复</h2><div class="table-frame"><table><thead><tr><th scope="col">情况</th><th scope="col">界面文案</th><th scope="col">允许的操作</th></tr></thead><tbody><tr><td>候选尚未返回</td><td>“正在等待候选，当前版本保留”</td><td>查看任务或取消；不显示采用</td></tr><tr><td>生成失败 / 已取消</td><td>说明结果未返回，旧稿仍可查看</td><td>调整要求或新建请求</td></tr><tr><td>当前基准变化</td><td>“当前版本已更新，请重新比较”</td><td>阻止采用，保留双方快照</td></tr><tr><td>采用结果未知</td><td>“正在核实采用结果”</td><td>核实原操作，避免重复提交</td></tr><tr><td>部分页面失败</td><td>每页显示独立结果</td><td>逐页采用；失败项单独处理</td></tr><tr><td>已采用</td><td>“已采用 · 待检查”</td><td>返回工作台继续检查，不重复采用</td></tr></tbody></table></div>
+<div class="resource-links"><a href="states.html#conflict">查看版本冲突规范</a><a href="states.html#batch">查看批量返回规范</a></div>
+</section>
+</main></div><dialog id="ds-dialog" class="ds-dialog" aria-labelledby="example-title"><h2 id="example-title">采用前的影响说明</h2><p>这是组件交互示例。采用候选应只更新对应页面，并提示需要继续更新的 SVG 与 PPT。</p><p>本页不修改稿件，也不会启动生成。</p><button id="close-example" style="margin-top:24px">关闭说明</button></dialog><div id="ds-feedback" role="status" aria-live="polite"></div><script>/* Shared 24-unit line icons: 1.75 stroke, rounded ends, inherited semantic ink. */
+(function () {
+  const paths = {
+    overview:'<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M4 10h16M10 10v10"/>',
+    content:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 12h6M9 16h6"/>',
+    gallery:'<rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/>',
+    style:'<path d="M4 7h7m6 0h3M4 17h3m6 0h7"/><circle cx="14" cy="7" r="3"/><circle cx="10" cy="17" r="3"/>',
+    runs:'<path d="M6 4h8a3 3 0 0 1 3 3v10M13 13l4 4 4-4"/><circle cx="6" cy="4" r="2"/><path d="M4 11v7a2 2 0 0 0 2 2h5"/>',
+    left:'<path d="M19 12H5m6-6-6 6 6 6"/>',
+    right:'<path d="M5 12h14m-6-6 6 6-6 6"/>',
+    up:'<path d="M12 19V5m-6 6 6-6 6 6"/>',
+    down:'<path d="M12 5v14m-6-6 6 6 6-6"/>',
+    external:'<path d="M9 5H5v14h14v-4M13 5h6v6M19 5l-9 9"/>',
+    check:'<path d="m5 12 4.5 4.5L19 7"/>',
+    attention:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v5M12 16h.01"/>',
+    minus:'<path d="M5 12h14"/>',
+    plus:'<path d="M5 12h14M12 5v14"/>',
+    clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/>',
+    dot:'<circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/>'
+  };
+  window.uiIcon = function(name) {
+    if (!paths[name]) throw new Error('Unknown icon: '+name);
+    return '<svg class="ui-icon" data-icon="'+name+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'+paths[name]+'</svg>';
+  };
+  const glyphs={'←':'left','→':'right','↑':'up','↓':'down','↗':'external','✓':'check','●':'attention','—':'minus','＋':'plus','−':'minus'};
+  window.uiIconLabel = text => String(text).replace(/[←→↑↓↗✓●—＋−]/g, value=>window.uiIcon(glyphs[value]));
+})();
+
+
+const tabs=[...document.querySelectorAll('[data-section]')];
+function activate(id){if(!document.getElementById(id)?.classList.contains('ds-section'))id='principles';document.querySelectorAll('.ds-section').forEach(s=>s.hidden=s.id!==id);tabs.forEach(b=>{if(b.dataset.section===id)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});try{localStorage.setItem('deck-master-design-system-section',id)}catch(e){} }
+let saved='principles';try{saved=localStorage.getItem('deck-master-design-system-section')||saved}catch(e){}
+activate(location.hash.slice(1)||saved);tabs.forEach(b=>b.addEventListener('click',()=>{activate(b.dataset.section);history.replaceState(null,'','#'+b.dataset.section)}));window.addEventListener('hashchange',()=>activate(location.hash.slice(1)));
+document.querySelectorAll('[data-icon-name]').forEach(el=>el.innerHTML=uiIcon(el.dataset.iconName));document.querySelectorAll('[data-token]').forEach(el=>el.textContent=getComputedStyle(document.documentElement).getPropertyValue(el.dataset.token).trim());
+let timer;function feedback(text){document.getElementById('ds-feedback').textContent=text;clearTimeout(timer);timer=setTimeout(()=>document.getElementById('ds-feedback').textContent='',4000)}
+document.querySelectorAll('[data-feedback]').forEach(b=>b.addEventListener('click',()=>feedback(b.dataset.feedback)));
+document.getElementById('sample-form').addEventListener('submit',e=>{e.preventDefault();const input=document.getElementById('sample-name'),error=document.getElementById('name-error');const valid=!!input.value.trim();error.textContent=valid?'':'请填写项目名称。';input.setAttribute('aria-invalid',String(!valid));if(valid)feedback('名称已填写；本页不会创建项目');else input.focus()});
+const dialog=document.getElementById('ds-dialog');document.getElementById('open-example').addEventListener('click',()=>dialog.showModal());document.getElementById('close-example').addEventListener('click',()=>dialog.close());dialog.addEventListener('close',()=>document.getElementById('open-example').focus());
+
+const specRows=[{id:8,title:'服务分工',state:'review',label:'候选已返回',action:'比较候选'},{id:9,title:'运行机制',state:'failed',label:'生成失败，旧版保留',action:'查看失败原因'},{id:10,title:'试点安排',state:'missing',label:'尚未生成',action:'准备制作要求'}];
+let specAscending=true;const specSelected=new Set();
+function renderSpecTable(){const filter=document.getElementById('table-filter').value;const rows=specRows.filter(r=>filter==='all'||r.state===filter).sort((a,b)=>specAscending?a.id-b.id:b.id-a.id);document.getElementById('spec-table-body').innerHTML=rows.map(r=>`<tr data-selected="${specSelected.has(r.id)}"><td><label class="check-target"><input data-row-select="${r.id}" data-od-id="select-row-${r.id}" type="checkbox" aria-label="选择第 ${r.id} 页 ${r.title}" ${specSelected.has(r.id)?'checked':''}></label></td><td data-label="页面"><strong>${String(r.id).padStart(2,'0')} · ${r.title}</strong></td><td data-label="当前事实">${r.label}</td><td data-label="下一步"><button data-row-action="${r.id}" data-od-id="row-action-${r.id}">${r.action}</button></td></tr>`).join('');document.getElementById('table-count').textContent=rows.length+' 页';document.getElementById('selection-count').textContent=specSelected.size?'已选择 '+specSelected.size+' 页':'未选择页面';const all=document.getElementById('table-all');all.checked=rows.length>0&&rows.every(r=>specSelected.has(r.id));all.indeterminate=rows.some(r=>specSelected.has(r.id))&&!all.checked;all.disabled=!rows.length;document.getElementById('clear-table').disabled=!specSelected.size;document.getElementById('sort-heading').setAttribute('aria-sort',specAscending?'ascending':'descending');document.getElementById('table-sort').textContent='页面 · '+(specAscending?'升序':'降序');}
+document.getElementById('table-filter').addEventListener('change',()=>{specSelected.clear();renderSpecTable()});document.getElementById('table-sort').addEventListener('click',()=>{specAscending=!specAscending;renderSpecTable()});document.getElementById('table-all').addEventListener('change',e=>{const filter=document.getElementById('table-filter').value;specRows.filter(r=>filter==='all'||r.state===filter).forEach(r=>e.target.checked?specSelected.add(r.id):specSelected.delete(r.id));renderSpecTable()});document.getElementById('clear-table').addEventListener('click',()=>{specSelected.clear();renderSpecTable()});document.getElementById('spec-table-body').addEventListener('change',e=>{if(!e.target.dataset.rowSelect)return;const id=Number(e.target.dataset.rowSelect);e.target.checked?specSelected.add(id):specSelected.delete(id);renderSpecTable();document.querySelector('[data-row-select="'+id+'"]').focus()});document.getElementById('spec-table-body').addEventListener('click',e=>{const b=e.target.closest('[data-row-action]');if(!b)return;if(b.dataset.rowAction==='8'){activate('comparison');history.replaceState(null,'','#comparison');document.getElementById('title-comparison').setAttribute('tabindex','-1');document.getElementById('title-comparison').focus({preventScroll:true})}else feedback(b.dataset.rowAction==='9'?'示例：生成未完成，旧版保留。调整要求后可重试。':'示例：先填写制作要求，再保存任务。')});
+function decideExample(decision){const done=decision!=='reset';document.getElementById('compare-status').textContent=decision==='adopt'?'已采用 · 待检查':decision==='keep'?'已保留当前版本':'待确认';document.getElementById('compare-result').textContent=decision==='adopt'?'示例决定已记录：采用正文 v5；后续产物待检查。工作台未修改。':decision==='keep'?'示例决定已记录：继续使用正文 v4，候选保留。':'比较内容保持固定，作出决定后仍可回看。';document.getElementById('adopt-example').disabled=done;document.getElementById('keep-example').disabled=done;if(done)document.getElementById('reset-comparison').focus();}
+document.getElementById('adopt-example').addEventListener('click',()=>decideExample('adopt'));document.getElementById('keep-example').addEventListener('click',()=>decideExample('keep'));document.getElementById('reset-comparison').addEventListener('click',()=>decideExample('reset'));renderSpecTable();
+</script></body></html>

@@ -1,0 +1,130 @@
+{
+  "date": "2026-09-30",
+  "project": "deck-master-generation-workbench-v3-20260926",
+  "name": "Deck Master · 全链路生成工作台 v3",
+  "entry": "index.html",
+  "mcp_truncated": false,
+  "skipped": 0,
+  "source_dir": "/Users/dingcheng/Library/Application Support/Open Design/namespaces/release-stable/data/projects/deck-master-generation-workbench-v3-20260926",
+  "files": [
+    {
+      "path": "overview-24of24.png",
+      "bytes": 742699,
+      "sha256": "7c3e79b4c49efecc6872cdb320b592a2ce42923400141f4be60b1e74f2e208cf",
+      "source": "local bytes from MCP resolvedDir; MCP binary metadata matched",
+      "role": "reference screenshot"
+    },
+    {
+      "path": "app.js",
+      "bytes": 89355,
+      "sha256": "e39ae4eeedc09333fb32066775563416d089c099e30f4531feec4d2366f6e3f1",
+      "source": "MCP text exact match",
+      "role": "active design"
+    },
+    {
+      "path": "walkthrough-overview.png",
+      "bytes": 737139,
+      "sha256": "416e5508ecb3de028dec30e862a295af52d18a5c858bd407f3f399f32eddbc3a",
+      "source": "local bytes from MCP resolvedDir; MCP binary metadata matched",
+      "role": "reference screenshot"
+    },
+    {
+      "path": "states.js",
+      "bytes": 27622,
+      "sha256": "86cb990b610ca36bd1be645c0011a5269e23ef32eff574471f5a350a0e5a7a2e",
+      "source": "MCP text exact match",
+      "role": "active design"
+    },
+    {
+      "path": "style.css",
+      "bytes": 35552,
+      "sha256": "aa9a1d2f226eb08b583b8b07f3b12693a8d4e71fbe29c29cb4950ce6eca670b0",
+      "source": "MCP text exact match",
+      "role": "active design"
+    },
+    {
+      "path": "design-system.html",
+      "bytes": 73482,
+      "sha256": "2a091e217d07edace86d7883d1ee9cb974dcbd3283f1144e08a5ebf10e5d5bb8",
+      "source": "MCP text exact match",
+      "role": "active design"
+    },
+    {
+      "path": "product-ui-language.md",
+      "bytes": 3419,
+      "sha256": "9919f4431bb162d093c5892c550d81155c1ca1daadf57931667420963eab45e9",
+      "source": "MCP text exact match",
+      "role": "active design"
+    },
+    {
+      "path": "states.html",
+      "bytes": 3568,
+      "sha256": "d1e3bea90239bb925d23dab4682c94d69b15bd188009fc660b073553fc9ebbff",
+      "source": "MCP text exact match",
+      "role": "active design"
+    },
+    {
+      "path": "index.html",
+      "bytes": 2280,
+      "sha256": "26bdc216489e762d0d5d5dd7d797125384e92ac989bd342e4b3c3f6e4881d2c5",
+      "source": "MCP text exact match",
+      "role": "active design"
+    },
+    {
+      "path": "icons.js",
+      "bytes": 2010,
+      "sha256": "95fd179d9231f9993a8a98140a3711145a486bf022fb3096deaad56113da8456",
+      "source": "MCP text exact match",
+      "role": "active design"
+    },
+    {
+      "path": "states.css",
+      "bytes": 8016,
+      "sha256": "c012e13866bd2919f05ce280d8cae65d15e833f04bf473b1ec4c104514e34a4f",
+      "source": "MCP text exact match",
+      "role": "active design"
+    },
+    {
+      "path": "original-v2/states.js",
+      "bytes": 27181,
+      "sha256": "e713b1b0b48cdcefee1d38d532e9b811b606eed212e39290f3df97c37ee3f465",
+      "source": "MCP text exact match",
+      "role": "historical backup"
+    },
+    {
+      "path": "original-v2/app.js",
+      "bytes": 87522,
+      "sha256": "178643f1370b0086c18a9f665dcbb32fa50e064c32ee72cc6929f5b3eda33abb",
+      "source": "MCP text exact match",
+      "role": "historical backup"
+    },
+    {
+      "path": "original-v2/states.css",
+      "bytes": 6188,
+      "sha256": "cd70e183fe022a39ab251b31b562585f60144968efa5fb748da4c3a2c463caf6",
+      "source": "MCP text exact match",
+      "role": "historical backup"
+    },
+    {
+      "path": "original-v2/style.css",
+      "bytes": 23249,
+      "sha256": "69b02acc8d28d8c7e3f7b5100235a173beac6af245553ffe47e0c92be3a837bb",
+      "source": "MCP text exact match",
+      "role": "historical backup"
+    },
+    {
+      "path": "original-v2/states.html",
+      "bytes": 1608,
+      "sha256": "1e7a0e933ca1811663b31df2420c853d7690b0b6aee4c4929ff0cf57b19e92b1",
+      "source": "MCP text exact match",
+      "role": "historical backup"
+    },
+    {
+      "path": "original-v2/index.html",
+      "bytes": 509,
+      "sha256": "30a12289ad59bbeae6bfc791c97305bdc03ad08c221d47cb4613d170a8cc9925",
+      "source": "MCP text exact match",
+      "role": "historical backup"
+    }
+  ]
+}

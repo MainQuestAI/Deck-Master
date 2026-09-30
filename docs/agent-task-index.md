@@ -81,3 +81,10 @@ legacy companion migration and rollback.
 ## Workbench content operations
 
 For `content_ops.v1`, use `deck-master content plan --project <dir> --input <json>` then `content commit --plan-id … --base-revision … --operation-id <UUIDv4>`. Direct body/outline edits, reorder/remove, and bounded Host rewrite/merge/split share this transaction. Use `content inputs --input <patch.json>` for the recoverable workbench form of existing input updates, `content source --source-id … --revision …` for exact material versions, and `content lineage --page-id … --revision …` for derived-page provenance. Method: `skills/deck-master/references/input-update.md`.
+
+## Web UI active increment (2026-09-30)
+
+For the current UI integration and capability completion increment, read
+[Web UI v4 baseline](specs/deck-master-webui-v4-20260930/README.md).
+A now means UI implementation; B means capability completion. Historical
+Flow Quality and W01-W12 records keep their original names and evidence.
