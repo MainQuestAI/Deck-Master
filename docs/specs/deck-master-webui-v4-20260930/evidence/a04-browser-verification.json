@@ -132,5 +132,12 @@
    "p3_4": "新增回归 tests/rebuild/test_ui_journal.py::test_position_admits_source_reading_layer（source 层位置保存）",
    "p3_5": "accepted-then-fixed：681–767px 的 <768 强制单列钳制已移除，设计 280px 有效列规则唯一生效；720px 实测 2 列+降级提示（(592−40)/3=184<280→2）"
   }
+ },
+ "round3_verification": {
+  "note": "第三轮独立复审代理两次因提供方认证失败中断（Provider authentication failed）；以下为按同一核验清单在主线程执行的自验记录，提交后由 PR 层面评审补充独立性",
+  "global_gates": "978 passed（tests/rebuild -q，146.55s）+ ruff clean + git 干净 + 历史 a8f698e→bbcb2be→67c47f8→39ee545 + style.css 与收讫设计逐字节一致 + ui-clear-plan/result/backup 与 ui-position 四份镜像逐字节一致",
+  "a04_anchor": "代码推演七项 PASS（模块缓存/消费/双失效/解析式/无钳制/first 公式）；浏览器三轮（1200/6200/11000，CDP clearBrowserCache 后）：scrollTop 逐像素复原 ×3、锚点页=窗口首瓷片 ×3",
+  "b04": "decide 输入白名单/冲突完整 ref/投影容错 代码核验 PASS；11 测试在套件内通过",
+  "b05": "三锁固定顺序/verify→备份→删除次序/备份校验/missing_ok/去重/空列表/白名单/残行隔离/position 归属 代码核验 PASS；死锁推演（保存方单锁、清理方固定序多锁，无环）；11 测试在套件内通过"
  }
 }
