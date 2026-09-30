@@ -1,0 +1,265 @@
+{
+  "remote_main": "66da345c84de48933a76de577114f08dcebf4f0e",
+  "branches": [
+    {
+      "ref": "refs/heads/codex/flow-quality",
+      "sha": "3e1c70617701ceb01627e507de1592246ec47927",
+      "merged_in_main": true,
+      "checked_out": true,
+      "action": "retain"
+    },
+    {
+      "ref": "refs/heads/codex/generation-workbench-spec",
+      "sha": "dfeecd9f7a44bc9b2f99fe274c63281cea80c7e4",
+      "merged_in_main": false,
+      "checked_out": true,
+      "action": "retain"
+    },
+    {
+      "ref": "refs/heads/codex/shared-skill-sync",
+      "sha": "e2b3359184c63f1b74e70d6f967643778782a781",
+      "merged_in_main": false,
+      "checked_out": true,
+      "action": "retain"
+    },
+    {
+      "ref": "refs/heads/codex/webui-a-implementation",
+      "sha": "66da345c84de48933a76de577114f08dcebf4f0e",
+      "merged_in_main": true,
+      "checked_out": true,
+      "action": "retain"
+    },
+    {
+      "ref": "refs/heads/codex/webui-b0-1",
+      "sha": "ea144ac4064f796b0cee1ed75fe3c693b82d4802",
+      "merged_in_main": false,
+      "checked_out": true,
+      "action": "retain"
+    },
+    {
+      "ref": "refs/heads/codex/webui-b0-2",
+      "sha": "bb4b40af2e7394e63a62f8f1f32958abe42de4d4",
+      "merged_in_main": false,
+      "checked_out": true,
+      "action": "retain"
+    },
+    {
+      "ref": "refs/heads/codex/webui-b0-3",
+      "sha": "7287496d9b4476a6c9eac0516da2fb18732891bb",
+      "merged_in_main": false,
+      "checked_out": true,
+      "action": "retain"
+    },
+    {
+      "ref": "refs/heads/codex/webui-b1-1",
+      "sha": "00835ad205e5882528371e6c7344a2d1831b223c",
+      "merged_in_main": false,
+      "checked_out": true,
+      "action": "retain"
+    },
+    {
+      "ref": "refs/heads/codex/webui-g0-decision",
+      "sha": "f38418073d41927e56c3367af962b55b6983666a",
+      "merged_in_main": false,
+      "checked_out": false,
+      "action": "retain"
+    },
+    {
+      "ref": "refs/heads/codex/webui-rebuild",
+      "sha": "cbeebb6e95ed3464e8e725c08724c4b2383f5d09",
+      "merged_in_main": false,
+      "checked_out": true,
+      "action": "retain"
+    },
+    {
+      "ref": "refs/heads/codex/workbench-w01",
+      "sha": "caf523f772bfe942afe2a74bb06aeb966328c3e0",
+      "merged_in_main": true,
+      "checked_out": false,
+      "action": "archive-local-ref"
+    },
+    {
+      "ref": "refs/heads/codex/workbench-w01-pressure",
+      "sha": "54e8c74c4193d793250e6351e21658000e999267",
+      "merged_in_main": true,
+      "checked_out": false,
+      "action": "archive-local-ref"
+    },
+    {
+      "ref": "refs/heads/codex/workbench-w02",
+      "sha": "f046a41dfff303ddbfd8605c4a112495edeae7bf",
+      "merged_in_main": true,
+      "checked_out": false,
+      "action": "archive-local-ref"
+    },
+    {
+      "ref": "refs/heads/codex/workbench-w02-content-plan",
+      "sha": "63da7104cd1b66cd3089dadffa8f98f5dc58be2e",
+      "merged_in_main": true,
+      "checked_out": false,
+      "action": "archive-local-ref"
+    },
+    {
+      "ref": "refs/heads/codex/workbench-w02-protocol",
+      "sha": "906f08ceb3157587463119e39f70e10b574d08e6",
+      "merged_in_main": true,
+      "checked_out": false,
+      "action": "archive-local-ref"
+    },
+    {
+      "ref": "refs/heads/codex/workbench-w03-services",
+      "sha": "7b62b6294c38ee58a6a29b708df8b2b1981a851f",
+      "merged_in_main": true,
+      "checked_out": false,
+      "action": "archive-local-ref"
+    },
+    {
+      "ref": "refs/heads/codex/workbench-w03-ui",
+      "sha": "8eabda92876a2dd3a2ef1be7c7c541b75cda531b",
+      "merged_in_main": true,
+      "checked_out": false,
+      "action": "archive-local-ref"
+    },
+    {
+      "ref": "refs/heads/codex/workbench-w04-core",
+      "sha": "54f940dd80986c9d73077c1b4f2b234a452c083d",
+      "merged_in_main": true,
+      "checked_out": false,
+      "action": "archive-local-ref"
+    },
+    {
+      "ref": "refs/heads/codex/workbench-w04-ui",
+      "sha": "b11452ff32305a91d2dd743e7b1248e5c59126a1",
+      "merged_in_main": true,
+      "checked_out": false,
+      "action": "archive-local-ref"
+    },
+    {
+      "ref": "refs/heads/codex/workbench-w05-core",
+      "sha": "4640a02555a701e9dd41084df2b1fffced2c63f9",
+      "merged_in_main": true,
+      "checked_out": false,
+      "action": "archive-local-ref"
+    },
+    {
+      "ref": "refs/heads/codex/workbench-w05-ui",
+      "sha": "607e84541a0c314fa4211560ee3e7cac36840934",
+      "merged_in_main": true,
+      "checked_out": false,
+      "action": "archive-local-ref"
+    },
+    {
+      "ref": "refs/heads/codex/workbench-w06-core",
+      "sha": "b95323ca92c9ab18264a6cdbee4ead3c9130ce8d",
+      "merged_in_main": true,
+      "checked_out": false,
+      "action": "archive-local-ref"
+    },
+    {
+      "ref": "refs/heads/codex/workbench-w06-ui",
+      "sha": "78de53b9f9a1a08b1b91ab6330e28806d9ccbd80",
+      "merged_in_main": true,
+      "checked_out": false,
+      "action": "archive-local-ref"
+    },
+    {
+      "ref": "refs/heads/codex/workbench-w07-core",
+      "sha": "e1a111a3e7fd5ae6aafc43f40b047b129f4afabe",
+      "merged_in_main": true,
+      "checked_out": false,
+      "action": "archive-local-ref"
+    },
+    {
+      "ref": "refs/heads/codex/workbench-w07-ui",
+      "sha": "477690e545fa224759a58adc78373004e3b29d8c",
+      "merged_in_main": true,
+      "checked_out": false,
+      "action": "archive-local-ref"
+    },
+    {
+      "ref": "refs/heads/codex/workbench-w08-core",
+      "sha": "5a164c71e475d1172291f0cf157c649d371d5b3c",
+      "merged_in_main": true,
+      "checked_out": false,
+      "action": "archive-local-ref"
+    },
+    {
+      "ref": "refs/heads/codex/workbench-w08-ui",
+      "sha": "cbd2b469ec14a4af3d0067359a5b723b163f4ebf",
+      "merged_in_main": true,
+      "checked_out": false,
+      "action": "archive-local-ref"
+    },
+    {
+      "ref": "refs/heads/codex/workbench-w09-contract-fix",
+      "sha": "3f9986c1a74c8df3b7ac7f7905d5b97ff076a642",
+      "merged_in_main": true,
+      "checked_out": false,
+      "action": "archive-local-ref"
+    },
+    {
+      "ref": "refs/heads/codex/workbench-w09-core",
+      "sha": "44bdf47db936bf99bd6f4efad24a3823cc1f2b0f",
+      "merged_in_main": true,
+      "checked_out": false,
+      "action": "archive-local-ref"
+    },
+    {
+      "ref": "refs/heads/codex/workbench-w09-ui",
+      "sha": "f773af57a4ce7480cbb6b7e65d26e6a03aeea347",
+      "merged_in_main": true,
+      "checked_out": false,
+      "action": "archive-local-ref"
+    },
+    {
+      "ref": "refs/heads/codex/workbench-w10-core",
+      "sha": "9ce3857b57e538761323359ab2959979c17abb9f",
+      "merged_in_main": true,
+      "checked_out": false,
+      "action": "archive-local-ref"
+    },
+    {
+      "ref": "refs/heads/codex/workbench-w10-ui",
+      "sha": "d18b872d3ef3b88b93f98ac54712121b5875ffa3",
+      "merged_in_main": true,
+      "checked_out": false,
+      "action": "archive-local-ref"
+    },
+    {
+      "ref": "refs/heads/codex/workbench-w11-core",
+      "sha": "fca496a955c0b12c10eacdf9e8877727ed96b7fa",
+      "merged_in_main": true,
+      "checked_out": false,
+      "action": "archive-local-ref"
+    },
+    {
+      "ref": "refs/heads/codex/workbench-w11-ui",
+      "sha": "5792bc6bad54ddcfef3bca1a7779949061d4429c",
+      "merged_in_main": true,
+      "checked_out": false,
+      "action": "archive-local-ref"
+    },
+    {
+      "ref": "refs/heads/codex/workbench-w12-final",
+      "sha": "93c76a152394a50ad0bc226597992c5a4357b7a3",
+      "merged_in_main": false,
+      "checked_out": true,
+      "action": "retain"
+    },
+    {
+      "ref": "refs/heads/codex/workbench-w12-integration",
+      "sha": "629d625f4b012b8813efabb6355c584f4717b84d",
+      "merged_in_main": true,
+      "checked_out": false,
+      "action": "archive-local-ref"
+    },
+    {
+      "ref": "refs/heads/main",
+      "sha": "c93f5a2d1bb1ce9cc038ed3d42671cd5d3db7710",
+      "merged_in_main": true,
+      "checked_out": false,
+      "action": "retain"
+    }
+  ],
+  "worktrees_porcelain": "worktree /Users/dingcheng/Coding-Project/02-key-project/Deck-Master\nHEAD 3e1c70617701ceb01627e507de1592246ec47927\nbranch refs/heads/codex/flow-quality\n\nworktree /Users/dingcheng/.codex/worktrees/flow-quality-pr-review/Deck-Master\nHEAD fc6a94921d7a4f48d558c4857dc2af8a432dd51f\ndetached\n\nworktree /Users/dingcheng/.codex/worktrees/webui-a/Deck-Master\nHEAD 66da345c84de48933a76de577114f08dcebf4f0e\nbranch refs/heads/codex/webui-a-implementation\n\nworktree /Users/dingcheng/.codex/worktrees/workbench-implementation/Deck-Master\nHEAD 93c76a152394a50ad0bc226597992c5a4357b7a3\nbranch refs/heads/codex/workbench-w12-final\n\nworktree /Users/dingcheng/Coding-Project/02-key-project/Deck-Master-worktrees/webui-rebuild\nHEAD cbeebb6e95ed3464e8e725c08724c4b2383f5d09\nbranch refs/heads/codex/webui-rebuild\n\nworktree /Users/dingcheng/Deck-Master-workbench-spec\nHEAD dfeecd9f7a44bc9b2f99fe274c63281cea80c7e4\nbranch refs/heads/codex/generation-workbench-spec\n\nworktree /Users/dingcheng/dm-shared-skill-sync\nHEAD e2b3359184c63f1b74e70d6f967643778782a781\nbranch refs/heads/codex/shared-skill-sync\n\nworktree /Users/dingcheng/dm-webui-b0-1\nHEAD ea144ac4064f796b0cee1ed75fe3c693b82d4802\nbranch refs/heads/codex/webui-b0-1\n\nworktree /Users/dingcheng/dm-webui-b0-2\nHEAD bb4b40af2e7394e63a62f8f1f32958abe42de4d4\nbranch refs/heads/codex/webui-b0-2\n\nworktree /Users/dingcheng/dm-webui-b0-3\nHEAD 7287496d9b4476a6c9eac0516da2fb18732891bb\nbranch refs/heads/codex/webui-b0-3\n\nworktree /Users/dingcheng/dm-webui-b1-1\nHEAD 00835ad205e5882528371e6c7344a2d1831b223c\nbranch refs/heads/codex/webui-b1-1\n\n"
+}

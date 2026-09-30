@@ -1,0 +1,16 @@
+{
+  "status": "passed",
+  "scope": "Spec integrity only; not production acceptance",
+  "tasks": 15,
+  "new_ac": 45,
+  "old_ac": 87,
+  "gaps": 53,
+  "design_action_families": 107,
+  "received_files": 17,
+  "received_bytes": 1871399,
+  "dag": "acyclic",
+  "local_markdown_links": "valid",
+  "raw_design_hashes": "all match",
+  "current_core_tests": 148,
+  "behavior_probes": 5
+}

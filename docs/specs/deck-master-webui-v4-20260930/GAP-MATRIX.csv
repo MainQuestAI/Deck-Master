@@ -1,0 +1,54 @@
+id,feature,design_source,code_source,existing_packages,status,final_owner,remaining
+G01,视觉token/字体/图标,design-system.html; style.css,src/deck_master/resources/static/v2/tokens.css; src/deck_master/resources/static/v2/workbench.css,W03,部分符合,A01,接最新product覆盖；黑色主按钮、sans、控件与字体来源统一
+G02,数据表可读性/键盘/排序/选择,design-system.html#table,src/deck_master/resources/static/v2/views.js,W04,设计差距,A03,从roving grid改普通Tab；章节、筛选、下一步和批量范围可见
+G03,状态文案/错误/焦点,product-ui-language.md; states.js,src/deck_master/resources/static/v2/dom.js; src/deck_master/resources/static/v2/drafts.js,W03 W10,部分符合,A01,统一正式文案及真实状态；禁止模拟执行控件
+G04,项目新建/打开/示例/目录选择,app.js:projects,src/deck_master/launcher.py; src/deck_master/registry.py; src/deck_master/resources/static/v2/launcher-ui.js,W03,已有能力，重做呈现,A02,搜索卡片与空项目指导，补真实macOS选择/取消证据
+G05,主CLI与Skill打开新UI,app.js:projects,src/deck_master/cli.py; src/deck_master/web.py; skills/deck-master/SKILL.md,W03,主流程入口补齐,B02,view增加显式ui选择，同项目连贯进入；不改默认发布
+G06,当前项目可执行能力,app.js:connection-info,src/deck_master/web.py; src/deck_master/ui_journal.py; src/deck_master/resources/static/v2/project.js,W02 W03,功能差距，P05实测,B02,health静态能力与项目可用动作分开，旧格式/只读/历史给原因
+G07,五工作面和共享单页,app.js:navigate,src/deck_master/resources/static/v2/routes.js; src/deck_master/resources/static/v2/project.js,W03–W11,已有能力，重做呈现,A02,保持路由/跨项目隔离，改最新外壳及层级
+G08,候选计数活动schema,app.js:overview,src/deck_master/workbench.py; src/deck_master/resources/contracts/workbench-summary.v1.schema.json,W01 W07,契约缺陷，P03实测,B01,recorded/count响应必须有兼容schema分支
+G09,真实待办与下一动作,app.js:overview,src/deck_master/workbench.py; src/deck_master/resources/static/v2/views.js,W01 W04,功能差距，P02实测,B01,当前attention恒not_recorded；增加可溯源确定性动作投影
+G10,总览待办区与矩阵,app.js:overview,src/deck_master/resources/static/v2/views.js,W04,设计差距,A03,最新优先待办/余项/章节/提示词/下一步；禁用硬编码24页与样本结论
+G11,prompt摘要,app.js:matrix,src/deck_master/workbench.py,W01 W02,读模型差距，P02实测,B01,准备/冻结/实际提交独立事实，摘要不载入全文
+G12,整稿网格/连续/并排/列数,app.js:gallery,src/deck_master/resources/static/v2/gallery.js; src/deck_master/resources/static/v2/gallery-state.js,W04,已有能力，重做呈现,A04,按新图面、筛选与比较布局集成
+G13,大图缩略图缓存与导航,app.js:gallery,src/deck_master/resources/static/v2/images.js; src/deck_master/resources/static/v2/candidate-desk.js,W04 W12,未闭合故障,A04,旧压力记录有候选读取时导航timeout；定位并复验
+G14,整合材料/大纲/逐页关联,app.js:content,src/deck_master/content_plan.py; src/deck_master/resources/static/v2/content-sources.js,W02 W09,已有能力，重做呈现,A05,真实引用导航，旧项目推导标明，无假来源
+G15,材料上传/要求/影响判断,app.js:material-impact,src/deck_master/content_ops.py; src/deck_master/service.py; src/deck_master/resources/static/v2/content-sources.js,W09,已有能力，重做呈现,A05,沿用实际inputs路径/格式；已登记、已读取、已采用分开
+G16,直接编辑正文,states.js:正文,src/deck_master/editing.py; src/deck_master/resources/static/v2/content-edit.js,W05 W09,已有能力，重做呈现,A05,保留草稿及局部失效，直接保存与试作候选区分
+G17,正文与内容变更集候选,design-system.html:candidate,src/deck_master/changes.py; src/deck_master/candidates.py,W07 W09,功能差距，P01实测,B03,现只接受图像/SVG trial；增加Page与content_update候选及Task结果合同
+G18,正文候选左右差异,design-system.html:candidate,src/deck_master/resources/static/v2/candidate-desk.js; src/deck_master/resources/static/v2/text-diff.js,W05 W07,UI差距,A06,Page/Artifact分型，正文diff；不伪造图片预览
+G19,六阶段导航,app.js:page,src/deck_master/resources/static/v2/page-workbench.js; src/deck_master/resources/static/v2/routes.js,W05,已有能力，重做呈现,A04,来源/正文/prompt/原图/SVG/PPT同页同版本
+G20,准备/草稿/实际prompt/参数,app.js:promptParts,src/deck_master/generation.py; src/deck_master/resources/static/v2/request-view.js,W01 W02 W05,已有能力，重做呈现,A04,未知明确；冻结请求、Host申报、tool观察区别保留
+G21,保存prompt/首次图/重做图,app.js:save-prompt; queueImages,src/deck_master/changes.py; src/deck_master/resources/static/v2/trial-actions.js,W06 W07,已有能力，重做呈现,A05,草稿保存不执行；目标/预算/版本plan后提交
+G22,仅重建SVG,app.js:rebuild-svg,src/deck_master/changes.py; src/deck_master/candidates.py,W07,已有能力，重做呈现,A06,保留原图/实际prompt，采用SVG后PPT待更新
+G23,项目/章节/页面/产物标注,app.js:save-note; states.js,src/deck_master/annotation_service.py; src/deck_master/resources/static/v2/annotations.js,W06,已有能力，重做呈现,A05,范围与版本清楚；意见保存不自动创建执行
+G24,点/框/文本选区与无鼠标输入,app.js:bindRegion; apply-region,src/deck_master/text_sources.py; src/deck_master/resources/static/v2/text-selection.js,W06,已有能力，重做呈现,A05,缩放/letterbox坐标与Unicode范围准确，旧选区不自动迁移
+G25,批量事务/同页意见/幂等,states.js:batch,src/deck_master/changes.py; src/deck_master/operations.py,W06,已有能力，保留回归,A05,不重建事务服务；UI合并同页独立选区，错页负例
+G26,复制制作要求/手动发送,app.js:copyText; task-copy,src/deck_master/changes.py; src/deck_master/resources/static/v2/change-handoff.js,W06,已有能力，重做呈现,A07,复制成功只复制；真实task start才处理中；工具打开仅预填
+G27,请求/Attempt/调用/结果绑定,app.js:handoff,src/deck_master/generation.py; src/deck_master/tasks.py,W02 W07,已有人机链路证据,B06,继承真实W07证据；新增正文和风格路径分别补证
+G28,风格固定参考/选维度/目标事实,app.js:style,src/deck_master/styles.py; src/deck_master/resources/static/v2/style-calibration.js,W08,已有能力，重做呈现,A06,参考+目标+一句话默认，精细参数折叠
+G29,风格单页试作后扩展,app.js:batch-rest,src/deck_master/styles.py,W08,效果缺口,B06,已观察未选构图漂移；约束和真实正向扩展证据尚需补足
+G30,原图/SVG候选固定比较/采用,app.js:compareTask,src/deck_master/candidates.py; src/deck_master/resources/static/v2/candidate-desk.js,W07,已有能力，重做呈现,A06,等比例完整图，采用plan失效保护，参考放大
+G31,保留当前决定/再次打开,app.js:keep-task; keep-style,src/deck_master/candidates.py; src/deck_master/resources/static/v2/candidate-desk.js,W07,功能差距，源码确认,B04,现keep只是返回；新增持久决定和reopen，不删除候选
+G32,重试新请求与保留旧候选,app.js:retry-task; retry-style,src/deck_master/changes.py; src/deck_master/resources/static/v2/trial-actions.js,W07 W10,已有能力，重做呈现,A06,保留retry关系、原调用事实，不用传输重放当模型重试
+G33,候选后续失效/旧成品可访问,app.js:staleReason,src/deck_master/candidates.py; src/deck_master/editing.py; src/deck_master/workbench.py,W01 W07 W09,已有能力，保留回归,B03,新增正文候选也走统一失效；未改页保留，整稿PPT标旧
+G34,重排与移除,states.js:structure,src/deck_master/content_ops.py; src/deck_master/resources/static/v2/content-edit.js,W09,已有能力，重做呈现,A05,保持身份/记录历史/取消受影响未完成任务
+G35,合并/拆分/跨页改写,states.js:structure,src/deck_master/content_ops.py,W09,已有能力，重做呈现,A05,复用Host局部content_update与新页来源；新增回传后候选采用依赖B03，不假定已有该步骤
+G36,运行进度/部分返回/任务筛选,app.js:runs; states.js:batch,src/deck_master/run_desk.py; src/deck_master/resources/static/v2/run-desk.js,W10,已有能力，重做呈现,A07,工作面层级简化，结果逐页对应，处理PR66状态水合竞态
+G37,30分钟超时/取消/晚到,app.js:task-cancel; states.js,src/deck_master/run_desk.py; src/deck_master/tasks.py,W06 W10,已有能力，保留回归,A07,真实生命周期，超时后用户决定，无自动新调用
+G38,刷新/隐藏/重聚焦/断网,states.js,src/deck_master/resources/static/v2/summary-poll.js; src/deck_master/resources/static/v2/project.js,W03 W10,已有能力，保留回归,A07,依现有策略、保存读取位置和固定版本不跳动
+G39,草稿ACK/跨端口/未知保存/冲突,states.js:unknown; conflict,src/deck_master/ui_journal.py; src/deck_master/resources/static/v2/drafts.js; src/deck_master/resources/static/v2/business-operations.js,W02 W03 W10,已有能力，重做呈现,A07,保留原operation先查询、双稿并列，不自动覆盖
+G40,清除本机数据,app.js:reset,src/deck_master/ui_journal.py,无,功能语义必须收敛,B05,仅当前项目个人草稿/阅读设置，预览/备份/确认；禁止删业务项目任务候选
+G41,历史指定版本读取/比较,states.js:history,src/deck_master/web.py; src/deck_master/snapshots.py,W01 W11,已有能力，P04实测,A07,之前的revision路由缺口已解决；只重做UI并回归
+G42,历史恢复为新版本,states.js:history,src/deck_master/exports.py; src/deck_master/resources/static/v2/delivery-desk.js,W11,已有能力，未最终验收,A07,先查看比较再plan/commit；调用事实不回滚
+G43,review/delivery/engineering导出,app.js:export-review; export-engineering,src/deck_master/exports.py; src/deck_master/resources/static/v2/delivery-desk.js,W11,已有能力，未最终验收,B07,最终安装重验冻结快照、隐私清理和工程包恢复；UI不照抄未连接
+G44,下载/重取/越界防护,app.js:export,src/deck_master/web.py; src/deck_master/exports.py,W11,已有能力，未最终验收,B07,实际同源下载hash，跨项目/失效ID拒绝，不绕过Origin
+G45,交付readiness和专业质量,design-system.html:status,src/deck_master/editing.py; src/deck_master/resources/static/v2/delivery-desk.js,W11,已有能力，保留回归,A07,工程/专业/桌面证据分层，采用不等于PPT完成
+G46,wheel/sdist离线资源/Skill,index.html; style.css,pyproject.toml; tools/build_hook.py,W12,未最终闭合,B07,旧安装93c76a1摘要可追回，最终SHA必须重建
+G47,300×5×3压力/20分钟内存,app.js:gallery,src/deck_master/resources/static/v2/images.js; src/deck_master/workbench.py,W01 W04 W10 W12,未最终闭合,B07,已有pressure failure；保持原门槛，修根因后重测
+G48,30页真实项目与两轮视觉修改,app.js:全链路,docs/reports/workbench-v3-execution-20260926/W12.md,W12,缺实际验收材料/记录,B06,真实项目选定后执行；不得合成样本冒充真实项目
+G49,正常安装/回退/默认切换,product-ui-language.md,src/deck_master/install.py; src/deck_master/cli.py,W12,未最终闭合,B07,临时目录回退演练；默认发布及实际HOME迁移独立授权
+G50,六状态规范与完整动线,states.html; states.js,src/deck_master/resources/static/v2/app.js,W12,设计已收讫，产品待验,A08,逐状态实际HTTP/浏览器证据；状态规范页不进产品导航
+G51,原型localStorage/硬编码示例/模拟执行,app.js:initialArtifact; task-claim; reset,src/deck_master/resources/static/v2/app.js,不适用,仅设计参考，禁止移植为真状态,A01,保留原文件作设计；生产使用Python真数据，模拟只用于独立状态参考
+G52,合并/拆分回传后采用,states.js:return-structure / confirm-adopt-structure,src/deck_master/content_ops.py; src/deck_master/tasks.py,W09,采用时机功能差距，源码确认,B03,当前_accept_content_update接受结果即改稿；先存内容变更集候选，查看影响后原子采用
+G53,材料影响判断回传后采用,app.js:material-impact,src/deck_master/service.py; src/deck_master/tasks.py,W09,采用时机功能差距，源码确认,B03,新输入可登记待协调，trial回传先存候选；正文/大纲/输入对齐在用户采用后变更

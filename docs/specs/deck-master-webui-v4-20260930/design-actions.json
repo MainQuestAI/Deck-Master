@@ -1,0 +1,751 @@
+[
+  {
+    "file": "app.js",
+    "action_family": "add-material",
+    "line": 95,
+    "owner": "A05",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "adopt-style",
+    "line": 93,
+    "owner": "A06",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "adopt-task-*",
+    "line": 112,
+    "owner": "A06",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "apply-region",
+    "line": 80,
+    "owner": "A05",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "batch-rest",
+    "line": 93,
+    "owner": "A06",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "cancel-new-project",
+    "line": 140,
+    "owner": "A02",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "clear-region",
+    "line": 80,
+    "owner": "A05",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "close-modal",
+    "line": 104,
+    "owner": "A01",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "compare-layer",
+    "line": 182,
+    "owner": "A04",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "confirm-image",
+    "line": 156,
+    "owner": "A05",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "confirm-reset",
+    "line": 176,
+    "owner": "A07",
+    "disposition": "B05收敛到当前项目个人状态预览/备份/确认，禁止清业务事实"
+  },
+  {
+    "file": "app.js",
+    "action_family": "confirm-svg",
+    "line": 157,
+    "owner": "A06",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "connection-info",
+    "line": 49,
+    "owner": "A02",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "copy-style",
+    "line": 93,
+    "owner": "A06",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "create-prompt",
+    "line": 78,
+    "owner": "A05",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "draft-copy-*",
+    "line": 85,
+    "owner": "A02",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "draft-open-*",
+    "line": 51,
+    "owner": "A02",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "draft-request-*",
+    "line": 85,
+    "owner": "A02",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "enlarge-reference",
+    "line": 171,
+    "owner": "A06",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "enlarge-style-base",
+    "line": 170,
+    "owner": "A06",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "enlarge-style-candidate",
+    "line": 170,
+    "owner": "A06",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "export-engineering",
+    "line": 98,
+    "owner": "A07",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "export-review",
+    "line": 98,
+    "owner": "A07",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "export-version",
+    "line": 182,
+    "owner": "A07",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "gallery-columns-*",
+    "line": 75,
+    "owner": "A04",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "gallery-filter",
+    "line": 182,
+    "owner": "A04",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "gallery-search",
+    "line": 181,
+    "owner": "A04",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "gallery-stage-*",
+    "line": 75,
+    "owner": "A04",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "keep-style",
+    "line": 93,
+    "owner": "A06",
+    "disposition": "B04持久决定，不能只返回界面"
+  },
+  {
+    "file": "app.js",
+    "action_family": "keep-task-*",
+    "line": 112,
+    "owner": "A06",
+    "disposition": "B04持久决定，不能只返回界面"
+  },
+  {
+    "file": "app.js",
+    "action_family": "layout-*",
+    "line": 127,
+    "owner": "A04",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "mark-read",
+    "line": 80,
+    "owner": "A05",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "mark-toggle",
+    "line": 80,
+    "owner": "A05",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "material-impact",
+    "line": 95,
+    "owner": "A05",
+    "disposition": "B03输入影响trial候选；结果采用前不改稿"
+  },
+  {
+    "file": "app.js",
+    "action_family": "material-note",
+    "line": 181,
+    "owner": "A05",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "matrix-*",
+    "line": 67,
+    "owner": "A03",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "matrix-clear",
+    "line": 72,
+    "owner": "A03",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "matrix-search",
+    "line": 181,
+    "owner": "A03",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "missing-image",
+    "line": 59,
+    "owner": "A04",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "missing-ppt",
+    "line": 98,
+    "owner": "A04",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "nav-*",
+    "line": 122,
+    "owner": "A02",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "new-project",
+    "line": 51,
+    "owner": "A02",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "next-page",
+    "line": 82,
+    "owner": "A04",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "open-sample",
+    "line": 141,
+    "owner": "A02",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "overview-gallery",
+    "line": 64,
+    "owner": "A04",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "page-*",
+    "line": 61,
+    "owner": "A04",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "page-note",
+    "line": 181,
+    "owner": "A05",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "prev-page",
+    "line": 82,
+    "owner": "A04",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "project-search",
+    "line": 181,
+    "owner": "A02",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "prompt-draft",
+    "line": 181,
+    "owner": "A05",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "queue-image-*",
+    "line": 76,
+    "owner": "A05",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "queue-missing-images",
+    "line": 75,
+    "owner": "A05",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "rebuild-svg",
+    "line": 82,
+    "owner": "A06",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "regen-image",
+    "line": 81,
+    "owner": "A05",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "reset",
+    "line": 49,
+    "owner": "A07",
+    "disposition": "B05收敛到当前项目个人状态预览/备份/确认，禁止清业务事实"
+  },
+  {
+    "file": "app.js",
+    "action_family": "resume-style",
+    "line": 87,
+    "owner": "A06",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "retry-style",
+    "line": 93,
+    "owner": "A06",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "retry-task-*",
+    "line": 98,
+    "owner": "A06",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "right-*",
+    "line": 82,
+    "owner": "A04",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "save-new-project",
+    "line": 139,
+    "owner": "A02",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "save-note",
+    "line": 80,
+    "owner": "A05",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "save-prompt",
+    "line": 81,
+    "owner": "A05",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "source-pages-*",
+    "line": 95,
+    "owner": "A04",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "stage-*",
+    "line": 124,
+    "owner": "A04",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "style-back",
+    "line": 159,
+    "owner": "A06",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "style-cancel",
+    "line": 93,
+    "owner": "A06",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "style-claim",
+    "line": 162,
+    "owner": "A01",
+    "disposition": "仅设计样本；生产不得提供模拟推进"
+  },
+  {
+    "file": "app.js",
+    "action_family": "style-fail",
+    "line": 164,
+    "owner": "A01",
+    "disposition": "仅设计样本；生产不得提供模拟推进"
+  },
+  {
+    "file": "app.js",
+    "action_family": "style-next",
+    "line": 158,
+    "owner": "A06",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "style-queue",
+    "line": 93,
+    "owner": "A06",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "style-requirement",
+    "line": 181,
+    "owner": "A06",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "style-return",
+    "line": 163,
+    "owner": "A01",
+    "disposition": "仅设计样本；生产不得提供模拟推进"
+  },
+  {
+    "file": "app.js",
+    "action_family": "submit-note",
+    "line": 80,
+    "owner": "A05",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "app.js",
+    "action_family": "task-*",
+    "line": 134,
+    "owner": "A07",
+    "disposition": "copy/cancel/compare/open接真服务；claim/return/fail仅样本，生产删除"
+  },
+  {
+    "file": "app.js",
+    "action_family": "toggle-compare",
+    "line": 82,
+    "owner": "A04",
+    "disposition": "复用真实服务并按新设计呈现"
+  },
+  {
+    "file": "states.js",
+    "action_family": "adopt-batch",
+    "line": 28,
+    "owner": "A07",
+    "disposition": "仅规范样本动作；生产中的对应行为必须由实际服务验证，不移植模拟状态变化"
+  },
+  {
+    "file": "states.js",
+    "action_family": "adopt-structure",
+    "line": 25,
+    "owner": "A05",
+    "disposition": "仅规范样本动作；生产中的对应行为必须由实际服务验证，不移植模拟状态变化"
+  },
+  {
+    "file": "states.js",
+    "action_family": "cancel-batch",
+    "line": 24,
+    "owner": "A07",
+    "disposition": "仅规范样本动作；生产中的对应行为必须由实际服务验证，不移植模拟状态变化"
+  },
+  {
+    "file": "states.js",
+    "action_family": "check-batch",
+    "line": 24,
+    "owner": "A07",
+    "disposition": "仅规范样本动作；生产中的对应行为必须由实际服务验证，不移植模拟状态变化"
+  },
+  {
+    "file": "states.js",
+    "action_family": "check-unknown",
+    "line": 22,
+    "owner": "A07",
+    "disposition": "仅规范样本动作；生产中的对应行为必须由实际服务验证，不移植模拟状态变化"
+  },
+  {
+    "file": "states.js",
+    "action_family": "close-dialog",
+    "line": 27,
+    "owner": "A01",
+    "disposition": "仅规范样本动作；生产中的对应行为必须由实际服务验证，不移植模拟状态变化"
+  },
+  {
+    "file": "states.js",
+    "action_family": "compare-batch",
+    "line": 24,
+    "owner": "A07",
+    "disposition": "仅规范样本动作；生产中的对应行为必须由实际服务验证，不移植模拟状态变化"
+  },
+  {
+    "file": "states.js",
+    "action_family": "compare-history",
+    "line": 26,
+    "owner": "A07",
+    "disposition": "仅规范样本动作；生产中的对应行为必须由实际服务验证，不移植模拟状态变化"
+  },
+  {
+    "file": "states.js",
+    "action_family": "compare-text",
+    "line": 21,
+    "owner": "A06",
+    "disposition": "仅规范样本动作；生产中的对应行为必须由实际服务验证，不移植模拟状态变化"
+  },
+  {
+    "file": "states.js",
+    "action_family": "confirm-adopt-structure",
+    "line": 53,
+    "owner": "A05",
+    "disposition": "仅规范样本动作；生产中的对应行为必须由实际服务验证，不移植模拟状态变化"
+  },
+  {
+    "file": "states.js",
+    "action_family": "confirm-cancel-batch",
+    "line": 43,
+    "owner": "A07",
+    "disposition": "仅规范样本动作；生产中的对应行为必须由实际服务验证，不移植模拟状态变化"
+  },
+  {
+    "file": "states.js",
+    "action_family": "confirm-remove",
+    "line": 48,
+    "owner": "A05",
+    "disposition": "仅规范样本动作；生产中的对应行为必须由实际服务验证，不移植模拟状态变化"
+  },
+  {
+    "file": "states.js",
+    "action_family": "confirm-request-structure",
+    "line": 50,
+    "owner": "A05",
+    "disposition": "仅规范样本动作；生产中的对应行为必须由实际服务验证，不移植模拟状态变化"
+  },
+  {
+    "file": "states.js",
+    "action_family": "confirm-reset",
+    "line": 60,
+    "owner": "A01",
+    "disposition": "仅规范样本动作；生产中的对应行为必须由实际服务验证，不移植模拟状态变化"
+  },
+  {
+    "file": "states.js",
+    "action_family": "confirm-restore",
+    "line": 57,
+    "owner": "A07",
+    "disposition": "仅规范样本动作；生产中的对应行为必须由实际服务验证，不移植模拟状态变化"
+  },
+  {
+    "file": "states.js",
+    "action_family": "copy-local",
+    "line": 23,
+    "owner": "A07",
+    "disposition": "仅规范样本动作；生产中的对应行为必须由实际服务验证，不移植模拟状态变化"
+  },
+  {
+    "file": "states.js",
+    "action_family": "copy-server",
+    "line": 23,
+    "owner": "A07",
+    "disposition": "仅规范样本动作；生产中的对应行为必须由实际服务验证，不移植模拟状态变化"
+  },
+  {
+    "file": "states.js",
+    "action_family": "keep-batch",
+    "line": 28,
+    "owner": "A06",
+    "disposition": "仅规范样本动作；生产中的对应行为必须由实际服务验证，不移植模拟状态变化"
+  },
+  {
+    "file": "states.js",
+    "action_family": "move-down",
+    "line": 25,
+    "owner": "A05",
+    "disposition": "仅规范样本动作；生产中的对应行为必须由实际服务验证，不移植模拟状态变化"
+  },
+  {
+    "file": "states.js",
+    "action_family": "move-up",
+    "line": 25,
+    "owner": "A05",
+    "disposition": "仅规范样本动作；生产中的对应行为必须由实际服务验证，不移植模拟状态变化"
+  },
+  {
+    "file": "states.js",
+    "action_family": "new-batch-handoff",
+    "line": 24,
+    "owner": "A07",
+    "disposition": "仅规范样本动作；生产中的对应行为必须由实际服务验证，不移植模拟状态变化"
+  },
+  {
+    "file": "states.js",
+    "action_family": "new-later",
+    "line": 22,
+    "owner": "A07",
+    "disposition": "仅规范样本动作；生产中的对应行为必须由实际服务验证，不移植模拟状态变化"
+  },
+  {
+    "file": "states.js",
+    "action_family": "rebase-conflict",
+    "line": 23,
+    "owner": "A07",
+    "disposition": "仅规范样本动作；生产中的对应行为必须由实际服务验证，不移植模拟状态变化"
+  },
+  {
+    "file": "states.js",
+    "action_family": "remove-page",
+    "line": 25,
+    "owner": "A05",
+    "disposition": "仅规范样本动作；生产中的对应行为必须由实际服务验证，不移植模拟状态变化"
+  },
+  {
+    "file": "states.js",
+    "action_family": "replay-original",
+    "line": 22,
+    "owner": "A07",
+    "disposition": "仅规范样本动作；生产中的对应行为必须由实际服务验证，不移植模拟状态变化"
+  },
+  {
+    "file": "states.js",
+    "action_family": "request-structure",
+    "line": 25,
+    "owner": "A05",
+    "disposition": "仅规范样本动作；生产中的对应行为必须由实际服务验证，不移植模拟状态变化"
+  },
+  {
+    "file": "states.js",
+    "action_family": "restore-history",
+    "line": 26,
+    "owner": "A07",
+    "disposition": "仅规范样本动作；生产中的对应行为必须由实际服务验证，不移植模拟状态变化"
+  },
+  {
+    "file": "states.js",
+    "action_family": "retry-batch",
+    "line": 24,
+    "owner": "A07",
+    "disposition": "仅规范样本动作；生产中的对应行为必须由实际服务验证，不移植模拟状态变化"
+  },
+  {
+    "file": "states.js",
+    "action_family": "return-structure",
+    "line": 25,
+    "owner": "A05",
+    "disposition": "仅规范样本动作；生产中的对应行为必须由实际服务验证，不移植模拟状态变化"
+  },
+  {
+    "file": "states.js",
+    "action_family": "save-text",
+    "line": 21,
+    "owner": "A05",
+    "disposition": "仅规范样本动作；生产中的对应行为必须由实际服务验证，不移植模拟状态变化"
+  },
+  {
+    "file": "states.js",
+    "action_family": "verify-batch",
+    "line": 24,
+    "owner": "A07",
+    "disposition": "仅规范样本动作；生产中的对应行为必须由实际服务验证，不移植模拟状态变化"
+  },
+  {
+    "file": "states.js",
+    "action_family": "view-history",
+    "line": 26,
+    "owner": "A07",
+    "disposition": "仅规范样本动作；生产中的对应行为必须由实际服务验证，不移植模拟状态变化"
+  }
+]

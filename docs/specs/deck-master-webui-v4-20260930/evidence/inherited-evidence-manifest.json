@@ -1,0 +1,26 @@
+[
+  {
+    "source": "/tmp/deck-master-w12-installed-06/checks.json",
+    "received_as": "inherited-w12-installed-checks.json",
+    "sha256": "d3c2db99165075408dbf62c25ae0fe43d2e0e6fdf4293d397f8377bedf4c9d55",
+    "rerun_this_turn": false
+  },
+  {
+    "source": "/tmp/deck-master-w12-pressure-06/failure.json",
+    "received_as": "inherited-w12-pressure-failure.json",
+    "sha256": "d688835ef722ddbf25d929a8d5b7984e0607cb899bc814b6f226f47e2d7a7b15",
+    "rerun_this_turn": false
+  },
+  {
+    "source": "/Users/dingcheng/.codex/worktrees/workbench-implementation/Deck-Master/docs/reports/workbench-v3-execution-20260926/w07/real-host/checks.json",
+    "received_as": "inherited-w07-real-host-checks.json",
+    "sha256": "92608027bc6b4f2ecd1f44e3a5b0db18800e10030aa4e9c85f5ee462c4e2b8a1",
+    "rerun_this_turn": false
+  },
+  {
+    "source": "/Users/dingcheng/.codex/worktrees/workbench-implementation/Deck-Master/docs/reports/workbench-v3-execution-20260926/w08/real-host/visual-review.json",
+    "received_as": "inherited-w08-visual-review.json",
+    "sha256": "1c12e8a24ce53a7cf994ce4bd834d8749b919b5139512d8911fd553ac6b715e8",
+    "rerun_this_turn": false
+  }
+]

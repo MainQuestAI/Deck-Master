@@ -1,0 +1,116 @@
+{
+  "card": "A01",
+  "recorded_at": "2026-09-30T17:56:00+08:00",
+  "base": "5e2c4debddf4fa9d559dfde00bf98b70f471aa51",
+  "base_tag": "baseline/webui-v4-20260930",
+  "base_product_code": "66da345c84de48933a76de577114f08dcebf4f0e",
+  "environment": {
+    "worktree": "/Users/dingcheng/.codex/worktrees/webui-a/Deck-Master",
+    "branch": "codex/webui-a-implementation",
+    "python": "3.12 (main checkout .venv, PYTHONPATH=src pointed at this worktree)",
+    "browser": "Playwright Chromium via playwright-cli, sessions a01/a01check",
+    "service": "deck_master.web.WorkbenchServer on 127.0.0.1, real HTTP API, no mocks"
+  },
+  "fixture": {
+    "script": "docs/specs/deck-master-webui-v4-20260930/evidence/a01-browser-fixture.py",
+    "project": "synthetic editable verification sample, 3 pages, 33 tasks (27 awaiting_host, 4 running, 2 completed with 1 SVG result and 1 candidate), no model calls",
+    "note": "task/result fixtures reuse the same synthetic helpers as tests/rebuild/test_candidates.py"
+  },
+  "pr66_review": {
+    "pr": 66,
+    "head": "93c76a152394a50ad0bc226597992c5a4357b7a3",
+    "state": "OPEN",
+    "decision": "minimal port of the run-desk.js hunks only",
+    "ported": "choiceMade guard: set on filter change / pagination move / 核实最新执行状态 (which also gains persist()); hydrate skips saved-state restore when choiceMade and persists current state instead (covers draft-editor-replaced rehydration)",
+    "not_ported": [
+      "docs/reports/workbench-v3-execution-20260926/W12.md completion claims",
+      "execution-state.json / w12/ui/run-state-recovery.json evidence blocks",
+      "skills/deck-master/references/installation.md wording"
+    ],
+    "not_ported_reason": "W12 install/stress evidence belongs to B07 and must be rebuilt on the new integration SHA; the PR stays open and is not merged by A01",
+    "verified_behaviors": [
+      "slow /api/drafts (3s) + click 核实最新执行状态 before hydration -> live mode and page 1 preserved after hydration",
+      "offset=0 after 核实最新执行状态 survives a full reload",
+      "slow /api/drafts + status filter changed to failed before hydration -> filter preserved, 共 0 项",
+      "saved offset=30 still restores to page 2 with pinned revision after reload (regression)"
+    ]
+  },
+  "browser_verification": {
+    "viewports": [
+      "1280x800",
+      "1440x900"
+    ],
+    "ac01": {
+      "buttons_under_44px": {
+        "1280x800": "0 of 59 visible",
+        "1440x900": "0 of 59 visible"
+      },
+      "controls_under_44px": "0",
+      "computed": {
+        "primary_button": "background rgb(13,13,13), color rgb(255,255,255), min-height 44px, radius 12px",
+        "focus_visible": "outline 2px solid rgb(10,122,94) + 3px rgba(16,163,127,.12) ring (keyboard focus)",
+        "disabled_button": "background rgb(245,245,245), color rgb(110,110,110), opacity 1",
+        "body_and_panel_background": "rgb(255,255,255)",
+        "nav_active_background": "rgb(245,245,245)",
+        "icon_default": "18px (nav 20px per design)"
+      },
+      "tab_order": "from #view-title the Tab walk follows DOM order exactly: 查看版本与文件 -> 核实最新执行状态 -> 按修改组筛选 -> 按执行状态筛选 -> 只看需我处理 -> 查看这项任务...; no roving tabindex in run-desk/dom.js",
+      "focus_return": "放大固定参考图 modal -> Escape -> focus returns to the trigger button",
+      "fonts": "body/h1 font-family 'Söhne, Inter, system-ui, -apple-system, Segoe UI, sans-serif'; document.fonts.size 0; 0 external stylesheets/scripts; no @font-face; no CDN; no framework",
+      "aria_sort": "sortHeading foundation delivered in dom.js (th[scope=col][aria-sort] + quiet button, design-system section 07); no consuming surface inside A01 file scope yet - overview matrix sorting is A03 (G02), run-list rework is A07 (G36)"
+    },
+    "ac02": "see pr66_review.verified_behaviors",
+    "ac03": {
+      "loading": "run desk shows 正在读取当前执行状态… during an in-flight read while the previous 30 rows stay visible",
+      "empty_state": "status filter=failed -> 没有匹配的运行记录 + guidance + 阅读内容/查看整稿 actions",
+      "partial_error": "aborted /api/tasks -> '本机服务暂时无法连接，已读内容与本机输入仍保留。' + docs/agent-recovery-playbook.md#run-desk-recovery + 重试读取 button; rows kept; retry recovers to 共 33 项",
+      "disabled_reason_invisible": "pagination 上一页任务 on page 1: title 已在第一页。 (invisible mode intentionally keeps title only; the earlier aria-describedby claim was corrected in review - the note node is not mounted in that mode)",
+      "disabled_reason_visible": "historical revision task detail: cancel button disabled with visible 当前视图只读，不能取消任务。 + aria-describedby + title",
+      "sample_identity": "banner 这是可编辑的合成验证项目，未调用模型，也未进行专业质量验收。 + sidebar 合成验证项目 label + 历史版本 · 只读 banner",
+      "mock_actions_in_production": "grep over src/deck_master/resources/static/v2 found no 模拟/mock/initialArtifact/task-claim; simulated adopt/return/failure controls exist only in docs/design/webui-opendesign-20260930 prototype which stays design reference"
+    },
+    "screenshots": [
+      "output/playwright/a01/ac01-overview-1280.png",
+      "output/playwright/a01/ac01-runs-1440.png",
+      "output/playwright/a01/ac03-historical-disabled-reason-1280.png"
+    ],
+    "console": "only pre-existing favicon.ico 404; no JS errors"
+  },
+  "defect_found_and_fixed": {
+    "bug": "run-desk group filter passed an options array to replaceChildren without spread; Chromium stringified it to a '[object HTMLOptionElement]' text node, so the 按修改组筛选 dropdown was unusable",
+    "preexisting": true,
+    "fix": "spread the mapped options in render()",
+    "verified": "after fix the select exposes 33 real options"
+  },
+  "test_layers": {
+    "core_and_http": "PYTHONPATH=src pytest tests/rebuild -q -> 905 passed (141s); targeted pre-run: test_run_desk+test_browser_wire_digest 9 passed, web/workbench/summary-poll/package-boundary/install 106 passed",
+    "browser": "this file; real service, synthetic sample project, two viewports",
+    "real_authoring_tool": "not exercised in A01 (not this card's gate)",
+    "installation": "not exercised in A01 (B07 owns final install evidence)"
+  },
+  "open_items": [
+    "aria-sort as product behavior lands with A03 (matrix) / A07 (run list); A01 delivers the shared component only",
+    "PR66 remains OPEN; its W12 install/evidence files are intentionally not merged",
+    "G02 roving-grid -> Tab conversion and G12 gallery roving focus stay with A03/A04 per gap matrix"
+  ],
+  "review": {
+    "date": "2026-09-30",
+    "reviewer": "独立 code-review（ZCode code-reviewer 子代理）+ 人工复核",
+    "verdict": "可进入合并评审",
+    "findings_fixed": [
+      "P2-1 disabledReason 不可见模式悬空 aria-describedby：现在仅保留 title，不再引用未挂载节点",
+      "P2-2 标记这些结果已读 未置位 choiceMade：慢水合不再回滚用户的已读标记",
+      "P2-3 .download-link 40px -> 44px（链接型主动作也按点击目标规范）",
+      "P3 notice 去掉外层 role=status（子组件 loading/errorNote 自带 live 语义，避免嵌套双读）",
+      "P3 sortHeading 增加 direction 白名单校验",
+      "P3 hydrate 恢复的 group 失效时重置为所有修改组，不再带旧 change_id 查询",
+      "P3 重试读取先显示加载提示",
+      "P3 .nav button 移除 color 覆盖，交还设计覆盖层的 fg-2"
+    ],
+    "findings_noted_not_fixed": [
+      "runs 面无 DraftEditor 时 persist() no-op（candidateBatch 早退路径，属候选桌结构，A06/A07 消费时处理）",
+      "verify 单原因等信息密度问题不适用于 A 线"
+    ]
+  },
+  "head_after_review_fixes": "见本分支评审修复提交（36deca6 之上）"
+}

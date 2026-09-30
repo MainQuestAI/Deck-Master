@@ -1,0 +1,406 @@
+[
+  {
+    "id": "A01",
+    "title": "设计系统与交互基础",
+    "dependencies": [],
+    "status": "planned",
+    "owner": "A",
+    "acceptance": [
+      {
+        "id": "A01-AC01",
+        "text": "1280×800、1440×900下对照已收讫规范，按钮44px、普通Tab顺序、aria-sort与焦点返回成立；不引入框架、CDN或未授权字体。",
+        "status": "unverified"
+      },
+      {
+        "id": "A01-AC02",
+        "text": "慢UI状态读取不能覆盖用户已选择的筛选/页码；核实最新状态后offset=0能在刷新后保留。记录PR66复用或不复用的具体结论。",
+        "status": "unverified"
+      },
+      {
+        "id": "A01-AC03",
+        "text": "建立实际服务的加载、空态、局部错误、禁用原因和消息组件；移除生产入口的模拟接手/返回/失败动作，示例身份仍可见。",
+        "status": "unverified"
+      }
+    ]
+  },
+  {
+    "id": "A02",
+    "title": "项目入口与工作台外壳",
+    "dependencies": [
+      "A01",
+      "B02"
+    ],
+    "status": "planned",
+    "owner": "A",
+    "acceptance": [
+      {
+        "id": "A02-AC01",
+        "text": "新建、取消、原有项目、缺失目录、示例项目和返回项目列表均可走通；空项目给出唯一下一动作，不强行出现24页。",
+        "status": "unverified"
+      },
+      {
+        "id": "A02-AC02",
+        "text": "旧格式/只读样本/固定历史在动作处给出准确限制；服务可达不等于制作工具接手；导出真实可用时不照抄原型“未连接”。",
+        "status": "unverified"
+      },
+      {
+        "id": "A02-AC03",
+        "text": "macOS真实目录选择的选择与取消分别留证；若环境不可用，保持此条待验，不用注入成功替代。",
+        "status": "unverified"
+      }
+    ]
+  },
+  {
+    "id": "A03",
+    "title": "总览待办与制作矩阵",
+    "dependencies": [
+      "A02",
+      "B01"
+    ],
+    "status": "planned",
+    "owner": "A",
+    "acceptance": [
+      {
+        "id": "A03-AC01",
+        "text": "混合阶段24/30页项目的待办数量、原因和链接与B01投影一致；无真实风格判断时不得出现“8/9页风格偏离”等样本结论。",
+        "status": "unverified"
+      },
+      {
+        "id": "A03-AC02",
+        "text": "搜索/筛选/排序/章节行、结果数量、无匹配恢复和表头选择操作正确；批量选择只含当前过滤内可操作行，改变筛选清空批量选择。固定比较对象独立保留。",
+        "status": "unverified"
+      },
+      {
+        "id": "A03-AC03",
+        "text": "陌生使用者可在30秒内指出当前项目状态与下一动作，记录真实观察而非代答；历史视图固定且无业务写入。",
+        "status": "unverified"
+      }
+    ]
+  },
+  {
+    "id": "A04",
+    "title": "整稿阅读与单页制作链",
+    "dependencies": [
+      "A02"
+    ],
+    "status": "planned",
+    "owner": "A",
+    "acceptance": [
+      {
+        "id": "A04-AC01",
+        "text": "20–30页能连续查看而不逐图打开文件；2/3/4列、并排、放大、跨页与返回保持阅读位置及固定比较引用，未生成层保留空位。",
+        "status": "unverified"
+      },
+      {
+        "id": "A04-AC02",
+        "text": "每页过程引用可追溯；未知实际prompt/model/seed显示未记录，不能由当前草稿补造；历史切换不挪用当前产物。",
+        "status": "unverified"
+      },
+      {
+        "id": "A04-AC03",
+        "text": "大图加载中仍能切换工作面，离开页面释放请求/解码任务；复现旧W12导航超时并记录根因与修复，不能只延长测试等待。",
+        "status": "unverified"
+      }
+    ]
+  },
+  {
+    "id": "A05",
+    "title": "内容、材料与标注动作",
+    "dependencies": [
+      "A04",
+      "B03"
+    ],
+    "status": "planned",
+    "owner": "A",
+    "acceptance": [
+      {
+        "id": "A05-AC01",
+        "text": "整稿/章节/单页/产物的整页、点、框、文本选择按真实适用范围可操作；归一化坐标、文本code point、版本及产物身份绑定正确。",
+        "status": "unverified"
+      },
+      {
+        "id": "A05-AC02",
+        "text": "正文/意见/prompt草稿按项目+页面+基准隔离；刷新和切页不丢，保存未知先查原operation，冲突保留双方；保存意见不等于执行请求。",
+        "status": "unverified"
+      },
+      {
+        "id": "A05-AC03",
+        "text": "重排/移除、合并/拆分/跨页改写和材料更新接现有plan/commit；移除与范围变更显示影响，材料已登记、制作工具已读取、影响候选待确认与采用对齐分别呈现；合并/拆分在返回候选后先查看影响，再采用变更集。",
+        "status": "unverified"
+      }
+    ]
+  },
+  {
+    "id": "A06",
+    "title": "风格校准与候选决策",
+    "dependencies": [
+      "A04",
+      "B03",
+      "B04",
+      "B06"
+    ],
+    "status": "planned",
+    "owner": "A",
+    "acceptance": [
+      {
+        "id": "A06-AC01",
+        "text": "风格流程从参考→维度→单页试作→比较→采用/保留→明确扩展目标连续可操作；取消和重试不覆盖旧请求。",
+        "status": "unverified"
+      },
+      {
+        "id": "A06-AC02",
+        "text": "正文左右差异与原图/SVG等比完整画布分别渲染；同页同层固定左右基准，迟到刷新不换比较对象，基准变化禁用旧采用计划。",
+        "status": "unverified"
+      },
+      {
+        "id": "A06-AC03",
+        "text": "保留当前后刷新仍有该决定，可从历史重新打开候选；采用后准确显示下游待更新、检查待完成，绝不宣布整稿PPT已完成。",
+        "status": "unverified"
+      }
+    ]
+  },
+  {
+    "id": "A07",
+    "title": "任务、交付与恢复",
+    "dependencies": [
+      "A02",
+      "B04",
+      "B05"
+    ],
+    "status": "planned",
+    "owner": "A",
+    "acceptance": [
+      {
+        "id": "A07-AC01",
+        "text": "待提交/已复制尚未开始/处理中/待确认/已采用待检查/失败/取消/旧版各由事实驱动；批量乱序返回不串页，超时按现有30分钟语义提供取消或重新交接。",
+        "status": "unverified"
+      },
+      {
+        "id": "A07-AC02",
+        "text": "六状态页对应真实服务中的正文、保存未知、冲突、部分返回、结构调整、历史恢复；轮询遵循现有3/15秒、隐藏暂停与30秒退避，不影响草稿。",
+        "status": "unverified"
+      },
+      {
+        "id": "A07-AC03",
+        "text": "查看→比较→恢复生成新版本；导出显示冻结版本和文件清单、拒绝理由、重取入口。清理前显示精确范围及恢复备份，不删除任务/候选/调用事实。",
+        "status": "unverified"
+      }
+    ]
+  },
+  {
+    "id": "A08",
+    "title": "界面集成与设计验收",
+    "dependencies": [
+      "A03",
+      "A05",
+      "A06",
+      "A07"
+    ],
+    "status": "planned",
+    "owner": "A",
+    "acceptance": [
+      {
+        "id": "A08-AC01",
+        "text": "两目标视口覆盖五工作面及共享单页、键盘全流程、缩放和窄屏降级；逐项核对设计动作清单，无死按钮或纯演示执行结果。",
+        "status": "unverified"
+      },
+      {
+        "id": "A08-AC02",
+        "text": "同一真实服务完成进入→阅读→改一页→交接→返回→比较→再改、整稿操作、输入更新与三用途下载；模型步骤明确记录真实或合成层级。",
+        "status": "unverified"
+      },
+      {
+        "id": "A08-AC03",
+        "text": "已安装最终候选离线可用，无外部字体/CDN请求；引用B07安装及B06真实Host证据，完成设计差异单但不自行授权默认入口切换。",
+        "status": "unverified"
+      }
+    ]
+  },
+  {
+    "id": "B01",
+    "title": "可行动总览与读契约修复",
+    "dependencies": [],
+    "status": "planned",
+    "owner": "B",
+    "acceptance": [
+      {
+        "id": "B01-AC01",
+        "text": "无候选/有候选/损坏候选/任务未知分支均通过活动schema；既有/api/view与summary消费者不破坏，旧响应缺新增字段时前端降级。",
+        "status": "unverified"
+      },
+      {
+        "id": "B01-AC02",
+        "text": "提示词有准备/已冻结/有提交证据/未记录之分；待办按来源事实排序，返回稳定action_id、reason、page/layer、source_refs、enabled与阻断原因；无质量证据不判风格偏离。",
+        "status": "unverified"
+      },
+      {
+        "id": "B01-AC03",
+        "text": "同一revision只读稳定、损坏局部隔离、只计待决候选；不在summary展开全文或全候选详情。沿用300×5×3样本，warm≥100次p95≤250ms。",
+        "status": "unverified"
+      }
+    ]
+  },
+  {
+    "id": "B02",
+    "title": "主流程入口与项目能力",
+    "dependencies": [
+      "B01"
+    ],
+    "status": "planned",
+    "owner": "B",
+    "acceptance": [
+      {
+        "id": "B02-AC01",
+        "text": "create→continue→view/workbench可进入同一项目及其任务；新参数help/JSON/错误退出码实测；现有默认入口保持，Skill指向匹配的显式新入口。",
+        "status": "unverified"
+      },
+      {
+        "id": "B02-AC02",
+        "text": "现代项目、旧core项目、只读示例、历史、缺能力及不支持writer组合返回明确可用/禁用原因；服务宣称支持不再使项目出现可点击但必失败的动作。",
+        "status": "unverified"
+      },
+      {
+        "id": "B02-AC03",
+        "text": "只读不写迁移，旧项目不原地升级；Host/Origin/token/path/hash防线及旧CLI兼容回归通过；未来最低writer升级有明确拒绝与备份分支。",
+        "status": "unverified"
+      }
+    ]
+  },
+  {
+    "id": "B03",
+    "title": "正文与结构变更候选",
+    "dependencies": [
+      "B02"
+    ],
+    "status": "planned",
+    "owner": "B",
+    "acceptance": [
+      {
+        "id": "B03-AC01",
+        "text": "单页content trial和content_ops/inputs的显式trial可plan/commit/交接并由匹配能力Host返回候选；当前Page/页序/ContentPlan和下游在返回时不变；输入登记可记录新版本但保持待协调，采用前不伪称已对齐，候选身份与请求/任务/基准完整绑定，旧Host在调用前拒绝。",
+        "status": "unverified"
+      },
+      {
+        "id": "B03-AC02",
+        "text": "候选show/list/plan/adopt区分result_kind page/content_update/artifact；采用正文或结构变更集时复用局部内容更新与失效逻辑；展示新旧页、来源、页序、任务取消和输入对齐影响，未改页保留，旧成品仍可读，受影响下游不冒充当前。",
+        "status": "unverified"
+      },
+      {
+        "id": "B03-AC03",
+        "text": "基准变化、重复operation、部分返回、跨页乱序、取消晚到、保存超时重放通过；原图/SVG auto/trial不回归，批量采用全成或全败；重叠变更集拒绝混合采用，取消结构候选保留旧页，输入更新与晚到变更集冲突可恢复。",
+        "status": "unverified"
+      }
+    ]
+  },
+  {
+    "id": "B04",
+    "title": "候选保留与重新打开决定",
+    "dependencies": [
+      "B03"
+    ],
+    "status": "planned",
+    "owner": "B",
+    "acceptance": [
+      {
+        "id": "B04-AC01",
+        "text": "keep_current/reopen按candidate_id及expected_decision_ref写入，operation原子幂等且重复返回同结果；不同候选/项目不会串决定。",
+        "status": "unverified"
+      },
+      {
+        "id": "B04-AC02",
+        "text": "summary待确认数与详情在刷新及重启后吻合，历史revision可读其当时决定；决定/采用记录分别保存，不把曾采用误当当前采用。",
+        "status": "unverified"
+      },
+      {
+        "id": "B04-AC03",
+        "text": "决定冲突返回可恢复错误；历史页面与只读示例拒绝写入；关闭候选不回滚调用账，重新打开仍须重做当前采用plan。",
+        "status": "unverified"
+      }
+    ]
+  },
+  {
+    "id": "B05",
+    "title": "安全清理个人工作区状态",
+    "dependencies": [
+      "B02"
+    ],
+    "status": "planned",
+    "owner": "B",
+    "acceptance": [
+      {
+        "id": "B05-AC01",
+        "text": "plan列出本项目草稿与设置、数量、etag、恢复备份与不可删除项；cancel零写入，确认只清计划中同etag对象，不波及其他项目。",
+        "status": "unverified"
+      },
+      {
+        "id": "B05-AC02",
+        "text": "有未确认保存/未决operation恢复记录时拒绝清理并指向原状态查询；备份失败不得清理，后台编辑变化冲突保留双方，重复提交幂等。",
+        "status": "unverified"
+      },
+      {
+        "id": "B05-AC03",
+        "text": "清理不新增业务revision、不改变任何任务/调用/候选/产物hash；显式导入恢复文件可恢复个人输入，未同步浏览器缓冲按页面提示另行保全。",
+        "status": "unverified"
+      }
+    ]
+  },
+  {
+    "id": "B06",
+    "title": "风格约束与真实制作闭环",
+    "dependencies": [
+      "B03",
+      "B04"
+    ],
+    "status": "planned",
+    "owner": "B",
+    "acceptance": [
+      {
+        "id": "B06-AC01",
+        "text": "固定参考prompt及图像引用可追溯；只借选中风格、不复制参考事实，目标事实与未选维度形成明确保持项，unknown须人工复核，不自动宣布改善。",
+        "status": "unverified"
+      },
+      {
+        "id": "B06-AC02",
+        "text": "真实制作工具完成正向单页试作与跨页扩展，逐页阅图分别记录事实/选中维度/未选退化；不合格保留候选，重新调整要求；引用原W07证据而不重复伪造。",
+        "status": "unverified"
+      },
+      {
+        "id": "B06-AC03",
+        "text": "提供合适且获准的30页真实项目后完成两轮视觉修改、仅SVG修复、材料更新；记录实际调用、返工、手修和等待基线。没有真实项目时本条保持外部待验，合成样本不得关闭。",
+        "status": "unverified"
+      }
+    ]
+  },
+  {
+    "id": "B07",
+    "title": "安装、压力、导出与切换准备",
+    "dependencies": [
+      "B01",
+      "B02",
+      "B03",
+      "B04",
+      "B05",
+      "B06",
+      "A08"
+    ],
+    "status": "planned",
+    "owner": "B",
+    "acceptance": [
+      {
+        "id": "B07-AC01",
+        "text": "最终候选内全部ES Modules/CSS/图标/合法字体/Skill与source一致，Quickstart/错误恢复/离线资源和三用途下载实际运行；指定版本manifest/hash及privacy canary、工程包隔离恢复成立。",
+        "status": "unverified"
+      },
+      {
+        "id": "B07-AC02",
+        "text": "最终安装复验300页×5候选×3Attempt、20分钟压力：warm summary p95≤250ms、30页首屏≤2s、图像并发≤6/解码≤2、缓存60缩略图/4大图、末5分钟heap相对中段增幅≤20%；保留原始采样与失败。",
+        "status": "unverified"
+      },
+      {
+        "id": "B07-AC03",
+        "text": "87旧AC和新AC逐条分层闭合，准备并演练临时registry/项目/安装回退；真实HOME迁移和默认发布按既有独立授权执行。阻断未清零不能宣布正式交付。",
+        "status": "unverified"
+      }
+    ]
+  }
+]

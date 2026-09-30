@@ -1,0 +1,532 @@
+[
+  {
+    "id": "G01",
+    "feature": "视觉token/字体/图标",
+    "design_source": "design-system.html; style.css",
+    "code_source": "src/deck_master/resources/static/v2/tokens.css; src/deck_master/resources/static/v2/workbench.css",
+    "existing_packages": "W03",
+    "status": "部分符合",
+    "final_owner": "A01",
+    "remaining": "接最新product覆盖；黑色主按钮、sans、控件与字体来源统一"
+  },
+  {
+    "id": "G02",
+    "feature": "数据表可读性/键盘/排序/选择",
+    "design_source": "design-system.html#table",
+    "code_source": "src/deck_master/resources/static/v2/views.js",
+    "existing_packages": "W04",
+    "status": "设计差距",
+    "final_owner": "A03",
+    "remaining": "从roving grid改普通Tab；章节、筛选、下一步和批量范围可见"
+  },
+  {
+    "id": "G03",
+    "feature": "状态文案/错误/焦点",
+    "design_source": "product-ui-language.md; states.js",
+    "code_source": "src/deck_master/resources/static/v2/dom.js; src/deck_master/resources/static/v2/drafts.js",
+    "existing_packages": "W03 W10",
+    "status": "部分符合",
+    "final_owner": "A01",
+    "remaining": "统一正式文案及真实状态；禁止模拟执行控件"
+  },
+  {
+    "id": "G04",
+    "feature": "项目新建/打开/示例/目录选择",
+    "design_source": "app.js:projects",
+    "code_source": "src/deck_master/launcher.py; src/deck_master/registry.py; src/deck_master/resources/static/v2/launcher-ui.js",
+    "existing_packages": "W03",
+    "status": "已有能力，重做呈现",
+    "final_owner": "A02",
+    "remaining": "搜索卡片与空项目指导，补真实macOS选择/取消证据"
+  },
+  {
+    "id": "G05",
+    "feature": "主CLI与Skill打开新UI",
+    "design_source": "app.js:projects",
+    "code_source": "src/deck_master/cli.py; src/deck_master/web.py; skills/deck-master/SKILL.md",
+    "existing_packages": "W03",
+    "status": "主流程入口补齐",
+    "final_owner": "B02",
+    "remaining": "view增加显式ui选择，同项目连贯进入；不改默认发布"
+  },
+  {
+    "id": "G06",
+    "feature": "当前项目可执行能力",
+    "design_source": "app.js:connection-info",
+    "code_source": "src/deck_master/web.py; src/deck_master/ui_journal.py; src/deck_master/resources/static/v2/project.js",
+    "existing_packages": "W02 W03",
+    "status": "功能差距，P05实测",
+    "final_owner": "B02",
+    "remaining": "health静态能力与项目可用动作分开，旧格式/只读/历史给原因"
+  },
+  {
+    "id": "G07",
+    "feature": "五工作面和共享单页",
+    "design_source": "app.js:navigate",
+    "code_source": "src/deck_master/resources/static/v2/routes.js; src/deck_master/resources/static/v2/project.js",
+    "existing_packages": "W03–W11",
+    "status": "已有能力，重做呈现",
+    "final_owner": "A02",
+    "remaining": "保持路由/跨项目隔离，改最新外壳及层级"
+  },
+  {
+    "id": "G08",
+    "feature": "候选计数活动schema",
+    "design_source": "app.js:overview",
+    "code_source": "src/deck_master/workbench.py; src/deck_master/resources/contracts/workbench-summary.v1.schema.json",
+    "existing_packages": "W01 W07",
+    "status": "契约缺陷，P03实测",
+    "final_owner": "B01",
+    "remaining": "recorded/count响应必须有兼容schema分支"
+  },
+  {
+    "id": "G09",
+    "feature": "真实待办与下一动作",
+    "design_source": "app.js:overview",
+    "code_source": "src/deck_master/workbench.py; src/deck_master/resources/static/v2/views.js",
+    "existing_packages": "W01 W04",
+    "status": "功能差距，P02实测",
+    "final_owner": "B01",
+    "remaining": "当前attention恒not_recorded；增加可溯源确定性动作投影"
+  },
+  {
+    "id": "G10",
+    "feature": "总览待办区与矩阵",
+    "design_source": "app.js:overview",
+    "code_source": "src/deck_master/resources/static/v2/views.js",
+    "existing_packages": "W04",
+    "status": "设计差距",
+    "final_owner": "A03",
+    "remaining": "最新优先待办/余项/章节/提示词/下一步；禁用硬编码24页与样本结论"
+  },
+  {
+    "id": "G11",
+    "feature": "prompt摘要",
+    "design_source": "app.js:matrix",
+    "code_source": "src/deck_master/workbench.py",
+    "existing_packages": "W01 W02",
+    "status": "读模型差距，P02实测",
+    "final_owner": "B01",
+    "remaining": "准备/冻结/实际提交独立事实，摘要不载入全文"
+  },
+  {
+    "id": "G12",
+    "feature": "整稿网格/连续/并排/列数",
+    "design_source": "app.js:gallery",
+    "code_source": "src/deck_master/resources/static/v2/gallery.js; src/deck_master/resources/static/v2/gallery-state.js",
+    "existing_packages": "W04",
+    "status": "已有能力，重做呈现",
+    "final_owner": "A04",
+    "remaining": "按新图面、筛选与比较布局集成"
+  },
+  {
+    "id": "G13",
+    "feature": "大图缩略图缓存与导航",
+    "design_source": "app.js:gallery",
+    "code_source": "src/deck_master/resources/static/v2/images.js; src/deck_master/resources/static/v2/candidate-desk.js",
+    "existing_packages": "W04 W12",
+    "status": "未闭合故障",
+    "final_owner": "A04",
+    "remaining": "旧压力记录有候选读取时导航timeout；定位并复验"
+  },
+  {
+    "id": "G14",
+    "feature": "整合材料/大纲/逐页关联",
+    "design_source": "app.js:content",
+    "code_source": "src/deck_master/content_plan.py; src/deck_master/resources/static/v2/content-sources.js",
+    "existing_packages": "W02 W09",
+    "status": "已有能力，重做呈现",
+    "final_owner": "A05",
+    "remaining": "真实引用导航，旧项目推导标明，无假来源"
+  },
+  {
+    "id": "G15",
+    "feature": "材料上传/要求/影响判断",
+    "design_source": "app.js:material-impact",
+    "code_source": "src/deck_master/content_ops.py; src/deck_master/service.py; src/deck_master/resources/static/v2/content-sources.js",
+    "existing_packages": "W09",
+    "status": "已有能力，重做呈现",
+    "final_owner": "A05",
+    "remaining": "沿用实际inputs路径/格式；已登记、已读取、已采用分开"
+  },
+  {
+    "id": "G16",
+    "feature": "直接编辑正文",
+    "design_source": "states.js:正文",
+    "code_source": "src/deck_master/editing.py; src/deck_master/resources/static/v2/content-edit.js",
+    "existing_packages": "W05 W09",
+    "status": "已有能力，重做呈现",
+    "final_owner": "A05",
+    "remaining": "保留草稿及局部失效，直接保存与试作候选区分"
+  },
+  {
+    "id": "G17",
+    "feature": "正文与内容变更集候选",
+    "design_source": "design-system.html:candidate",
+    "code_source": "src/deck_master/changes.py; src/deck_master/candidates.py",
+    "existing_packages": "W07 W09",
+    "status": "功能差距，P01实测",
+    "final_owner": "B03",
+    "remaining": "现只接受图像/SVG trial；增加Page与content_update候选及Task结果合同"
+  },
+  {
+    "id": "G18",
+    "feature": "正文候选左右差异",
+    "design_source": "design-system.html:candidate",
+    "code_source": "src/deck_master/resources/static/v2/candidate-desk.js; src/deck_master/resources/static/v2/text-diff.js",
+    "existing_packages": "W05 W07",
+    "status": "UI差距",
+    "final_owner": "A06",
+    "remaining": "Page/Artifact分型，正文diff；不伪造图片预览"
+  },
+  {
+    "id": "G19",
+    "feature": "六阶段导航",
+    "design_source": "app.js:page",
+    "code_source": "src/deck_master/resources/static/v2/page-workbench.js; src/deck_master/resources/static/v2/routes.js",
+    "existing_packages": "W05",
+    "status": "已有能力，重做呈现",
+    "final_owner": "A04",
+    "remaining": "来源/正文/prompt/原图/SVG/PPT同页同版本"
+  },
+  {
+    "id": "G20",
+    "feature": "准备/草稿/实际prompt/参数",
+    "design_source": "app.js:promptParts",
+    "code_source": "src/deck_master/generation.py; src/deck_master/resources/static/v2/request-view.js",
+    "existing_packages": "W01 W02 W05",
+    "status": "已有能力，重做呈现",
+    "final_owner": "A04",
+    "remaining": "未知明确；冻结请求、Host申报、tool观察区别保留"
+  },
+  {
+    "id": "G21",
+    "feature": "保存prompt/首次图/重做图",
+    "design_source": "app.js:save-prompt; queueImages",
+    "code_source": "src/deck_master/changes.py; src/deck_master/resources/static/v2/trial-actions.js",
+    "existing_packages": "W06 W07",
+    "status": "已有能力，重做呈现",
+    "final_owner": "A05",
+    "remaining": "草稿保存不执行；目标/预算/版本plan后提交"
+  },
+  {
+    "id": "G22",
+    "feature": "仅重建SVG",
+    "design_source": "app.js:rebuild-svg",
+    "code_source": "src/deck_master/changes.py; src/deck_master/candidates.py",
+    "existing_packages": "W07",
+    "status": "已有能力，重做呈现",
+    "final_owner": "A06",
+    "remaining": "保留原图/实际prompt，采用SVG后PPT待更新"
+  },
+  {
+    "id": "G23",
+    "feature": "项目/章节/页面/产物标注",
+    "design_source": "app.js:save-note; states.js",
+    "code_source": "src/deck_master/annotation_service.py; src/deck_master/resources/static/v2/annotations.js",
+    "existing_packages": "W06",
+    "status": "已有能力，重做呈现",
+    "final_owner": "A05",
+    "remaining": "范围与版本清楚；意见保存不自动创建执行"
+  },
+  {
+    "id": "G24",
+    "feature": "点/框/文本选区与无鼠标输入",
+    "design_source": "app.js:bindRegion; apply-region",
+    "code_source": "src/deck_master/text_sources.py; src/deck_master/resources/static/v2/text-selection.js",
+    "existing_packages": "W06",
+    "status": "已有能力，重做呈现",
+    "final_owner": "A05",
+    "remaining": "缩放/letterbox坐标与Unicode范围准确，旧选区不自动迁移"
+  },
+  {
+    "id": "G25",
+    "feature": "批量事务/同页意见/幂等",
+    "design_source": "states.js:batch",
+    "code_source": "src/deck_master/changes.py; src/deck_master/operations.py",
+    "existing_packages": "W06",
+    "status": "已有能力，保留回归",
+    "final_owner": "A05",
+    "remaining": "不重建事务服务；UI合并同页独立选区，错页负例"
+  },
+  {
+    "id": "G26",
+    "feature": "复制制作要求/手动发送",
+    "design_source": "app.js:copyText; task-copy",
+    "code_source": "src/deck_master/changes.py; src/deck_master/resources/static/v2/change-handoff.js",
+    "existing_packages": "W06",
+    "status": "已有能力，重做呈现",
+    "final_owner": "A07",
+    "remaining": "复制成功只复制；真实task start才处理中；工具打开仅预填"
+  },
+  {
+    "id": "G27",
+    "feature": "请求/Attempt/调用/结果绑定",
+    "design_source": "app.js:handoff",
+    "code_source": "src/deck_master/generation.py; src/deck_master/tasks.py",
+    "existing_packages": "W02 W07",
+    "status": "已有人机链路证据",
+    "final_owner": "B06",
+    "remaining": "继承真实W07证据；新增正文和风格路径分别补证"
+  },
+  {
+    "id": "G28",
+    "feature": "风格固定参考/选维度/目标事实",
+    "design_source": "app.js:style",
+    "code_source": "src/deck_master/styles.py; src/deck_master/resources/static/v2/style-calibration.js",
+    "existing_packages": "W08",
+    "status": "已有能力，重做呈现",
+    "final_owner": "A06",
+    "remaining": "参考+目标+一句话默认，精细参数折叠"
+  },
+  {
+    "id": "G29",
+    "feature": "风格单页试作后扩展",
+    "design_source": "app.js:batch-rest",
+    "code_source": "src/deck_master/styles.py",
+    "existing_packages": "W08",
+    "status": "效果缺口",
+    "final_owner": "B06",
+    "remaining": "已观察未选构图漂移；约束和真实正向扩展证据尚需补足"
+  },
+  {
+    "id": "G30",
+    "feature": "原图/SVG候选固定比较/采用",
+    "design_source": "app.js:compareTask",
+    "code_source": "src/deck_master/candidates.py; src/deck_master/resources/static/v2/candidate-desk.js",
+    "existing_packages": "W07",
+    "status": "已有能力，重做呈现",
+    "final_owner": "A06",
+    "remaining": "等比例完整图，采用plan失效保护，参考放大"
+  },
+  {
+    "id": "G31",
+    "feature": "保留当前决定/再次打开",
+    "design_source": "app.js:keep-task; keep-style",
+    "code_source": "src/deck_master/candidates.py; src/deck_master/resources/static/v2/candidate-desk.js",
+    "existing_packages": "W07",
+    "status": "功能差距，源码确认",
+    "final_owner": "B04",
+    "remaining": "现keep只是返回；新增持久决定和reopen，不删除候选"
+  },
+  {
+    "id": "G32",
+    "feature": "重试新请求与保留旧候选",
+    "design_source": "app.js:retry-task; retry-style",
+    "code_source": "src/deck_master/changes.py; src/deck_master/resources/static/v2/trial-actions.js",
+    "existing_packages": "W07 W10",
+    "status": "已有能力，重做呈现",
+    "final_owner": "A06",
+    "remaining": "保留retry关系、原调用事实，不用传输重放当模型重试"
+  },
+  {
+    "id": "G33",
+    "feature": "候选后续失效/旧成品可访问",
+    "design_source": "app.js:staleReason",
+    "code_source": "src/deck_master/candidates.py; src/deck_master/editing.py; src/deck_master/workbench.py",
+    "existing_packages": "W01 W07 W09",
+    "status": "已有能力，保留回归",
+    "final_owner": "B03",
+    "remaining": "新增正文候选也走统一失效；未改页保留，整稿PPT标旧"
+  },
+  {
+    "id": "G34",
+    "feature": "重排与移除",
+    "design_source": "states.js:structure",
+    "code_source": "src/deck_master/content_ops.py; src/deck_master/resources/static/v2/content-edit.js",
+    "existing_packages": "W09",
+    "status": "已有能力，重做呈现",
+    "final_owner": "A05",
+    "remaining": "保持身份/记录历史/取消受影响未完成任务"
+  },
+  {
+    "id": "G35",
+    "feature": "合并/拆分/跨页改写",
+    "design_source": "states.js:structure",
+    "code_source": "src/deck_master/content_ops.py",
+    "existing_packages": "W09",
+    "status": "已有能力，重做呈现",
+    "final_owner": "A05",
+    "remaining": "复用Host局部content_update与新页来源；新增回传后候选采用依赖B03，不假定已有该步骤"
+  },
+  {
+    "id": "G36",
+    "feature": "运行进度/部分返回/任务筛选",
+    "design_source": "app.js:runs; states.js:batch",
+    "code_source": "src/deck_master/run_desk.py; src/deck_master/resources/static/v2/run-desk.js",
+    "existing_packages": "W10",
+    "status": "已有能力，重做呈现",
+    "final_owner": "A07",
+    "remaining": "工作面层级简化，结果逐页对应，处理PR66状态水合竞态"
+  },
+  {
+    "id": "G37",
+    "feature": "30分钟超时/取消/晚到",
+    "design_source": "app.js:task-cancel; states.js",
+    "code_source": "src/deck_master/run_desk.py; src/deck_master/tasks.py",
+    "existing_packages": "W06 W10",
+    "status": "已有能力，保留回归",
+    "final_owner": "A07",
+    "remaining": "真实生命周期，超时后用户决定，无自动新调用"
+  },
+  {
+    "id": "G38",
+    "feature": "刷新/隐藏/重聚焦/断网",
+    "design_source": "states.js",
+    "code_source": "src/deck_master/resources/static/v2/summary-poll.js; src/deck_master/resources/static/v2/project.js",
+    "existing_packages": "W03 W10",
+    "status": "已有能力，保留回归",
+    "final_owner": "A07",
+    "remaining": "依现有策略、保存读取位置和固定版本不跳动"
+  },
+  {
+    "id": "G39",
+    "feature": "草稿ACK/跨端口/未知保存/冲突",
+    "design_source": "states.js:unknown; conflict",
+    "code_source": "src/deck_master/ui_journal.py; src/deck_master/resources/static/v2/drafts.js; src/deck_master/resources/static/v2/business-operations.js",
+    "existing_packages": "W02 W03 W10",
+    "status": "已有能力，重做呈现",
+    "final_owner": "A07",
+    "remaining": "保留原operation先查询、双稿并列，不自动覆盖"
+  },
+  {
+    "id": "G40",
+    "feature": "清除本机数据",
+    "design_source": "app.js:reset",
+    "code_source": "src/deck_master/ui_journal.py",
+    "existing_packages": "无",
+    "status": "功能语义必须收敛",
+    "final_owner": "B05",
+    "remaining": "仅当前项目个人草稿/阅读设置，预览/备份/确认；禁止删业务项目任务候选"
+  },
+  {
+    "id": "G41",
+    "feature": "历史指定版本读取/比较",
+    "design_source": "states.js:history",
+    "code_source": "src/deck_master/web.py; src/deck_master/snapshots.py",
+    "existing_packages": "W01 W11",
+    "status": "已有能力，P04实测",
+    "final_owner": "A07",
+    "remaining": "之前的revision路由缺口已解决；只重做UI并回归"
+  },
+  {
+    "id": "G42",
+    "feature": "历史恢复为新版本",
+    "design_source": "states.js:history",
+    "code_source": "src/deck_master/exports.py; src/deck_master/resources/static/v2/delivery-desk.js",
+    "existing_packages": "W11",
+    "status": "已有能力，未最终验收",
+    "final_owner": "A07",
+    "remaining": "先查看比较再plan/commit；调用事实不回滚"
+  },
+  {
+    "id": "G43",
+    "feature": "review/delivery/engineering导出",
+    "design_source": "app.js:export-review; export-engineering",
+    "code_source": "src/deck_master/exports.py; src/deck_master/resources/static/v2/delivery-desk.js",
+    "existing_packages": "W11",
+    "status": "已有能力，未最终验收",
+    "final_owner": "B07",
+    "remaining": "最终安装重验冻结快照、隐私清理和工程包恢复；UI不照抄未连接"
+  },
+  {
+    "id": "G44",
+    "feature": "下载/重取/越界防护",
+    "design_source": "app.js:export",
+    "code_source": "src/deck_master/web.py; src/deck_master/exports.py",
+    "existing_packages": "W11",
+    "status": "已有能力，未最终验收",
+    "final_owner": "B07",
+    "remaining": "实际同源下载hash，跨项目/失效ID拒绝，不绕过Origin"
+  },
+  {
+    "id": "G45",
+    "feature": "交付readiness和专业质量",
+    "design_source": "design-system.html:status",
+    "code_source": "src/deck_master/editing.py; src/deck_master/resources/static/v2/delivery-desk.js",
+    "existing_packages": "W11",
+    "status": "已有能力，保留回归",
+    "final_owner": "A07",
+    "remaining": "工程/专业/桌面证据分层，采用不等于PPT完成"
+  },
+  {
+    "id": "G46",
+    "feature": "wheel/sdist离线资源/Skill",
+    "design_source": "index.html; style.css",
+    "code_source": "pyproject.toml; tools/build_hook.py",
+    "existing_packages": "W12",
+    "status": "未最终闭合",
+    "final_owner": "B07",
+    "remaining": "旧安装93c76a1摘要可追回，最终SHA必须重建"
+  },
+  {
+    "id": "G47",
+    "feature": "300×5×3压力/20分钟内存",
+    "design_source": "app.js:gallery",
+    "code_source": "src/deck_master/resources/static/v2/images.js; src/deck_master/workbench.py",
+    "existing_packages": "W01 W04 W10 W12",
+    "status": "未最终闭合",
+    "final_owner": "B07",
+    "remaining": "已有pressure failure；保持原门槛，修根因后重测"
+  },
+  {
+    "id": "G48",
+    "feature": "30页真实项目与两轮视觉修改",
+    "design_source": "app.js:全链路",
+    "code_source": "docs/reports/workbench-v3-execution-20260926/W12.md",
+    "existing_packages": "W12",
+    "status": "缺实际验收材料/记录",
+    "final_owner": "B06",
+    "remaining": "真实项目选定后执行；不得合成样本冒充真实项目"
+  },
+  {
+    "id": "G49",
+    "feature": "正常安装/回退/默认切换",
+    "design_source": "product-ui-language.md",
+    "code_source": "src/deck_master/install.py; src/deck_master/cli.py",
+    "existing_packages": "W12",
+    "status": "未最终闭合",
+    "final_owner": "B07",
+    "remaining": "临时目录回退演练；默认发布及实际HOME迁移独立授权"
+  },
+  {
+    "id": "G50",
+    "feature": "六状态规范与完整动线",
+    "design_source": "states.html; states.js",
+    "code_source": "src/deck_master/resources/static/v2/app.js",
+    "existing_packages": "W12",
+    "status": "设计已收讫，产品待验",
+    "final_owner": "A08",
+    "remaining": "逐状态实际HTTP/浏览器证据；状态规范页不进产品导航"
+  },
+  {
+    "id": "G51",
+    "feature": "原型localStorage/硬编码示例/模拟执行",
+    "design_source": "app.js:initialArtifact; task-claim; reset",
+    "code_source": "src/deck_master/resources/static/v2/app.js",
+    "existing_packages": "不适用",
+    "status": "仅设计参考，禁止移植为真状态",
+    "final_owner": "A01",
+    "remaining": "保留原文件作设计；生产使用Python真数据，模拟只用于独立状态参考"
+  },
+  {
+    "id": "G52",
+    "feature": "合并/拆分回传后采用",
+    "design_source": "states.js:return-structure / confirm-adopt-structure",
+    "code_source": "src/deck_master/content_ops.py; src/deck_master/tasks.py",
+    "existing_packages": "W09",
+    "status": "采用时机功能差距，源码确认",
+    "final_owner": "B03",
+    "remaining": "当前_accept_content_update接受结果即改稿；先存内容变更集候选，查看影响后原子采用"
+  },
+  {
+    "id": "G53",
+    "feature": "材料影响判断回传后采用",
+    "design_source": "app.js:material-impact",
+    "code_source": "src/deck_master/service.py; src/deck_master/tasks.py",
+    "existing_packages": "W09",
+    "status": "采用时机功能差距，源码确认",
+    "final_owner": "B03",
+    "remaining": "新输入可登记待协调，trial回传先存候选；正文/大纲/输入对齐在用户采用后变更"
+  }
+]
