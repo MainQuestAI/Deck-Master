@@ -2,6 +2,7 @@
 
 本轮核验代码为 main `66da345c84de48933a76de577114f08dcebf4f0e`，没有改生产代码。
 
+- `a05-browser-verification.json` / `output/playwright/a05/*.png`：**A05 实施后新增**（基线 0ccd8dd）：内容面 content-layout 双栏与材料四态、大纲块导航、标注 segmented+键盘百分比区域、文本 code point 选段、草稿按页/基准隔离与刷新保留、保存意见不创建任务、页序/移除/合并/拆分影响预览、材料更新进入待协调流的真实服务浏览器验证；合成证据。
 - `a04-browser-verification.json` / `output/playwright/a04/*.png`：**A04 实施后新增**（基线 a8f698e，冲刺支线 codex/webui-v4-completion）：整稿画廊设计布局（segmented/legend/slide-tile/有效列降级/页面搜索）、六段制作链（含来源段与提示词阶段切换）、连续阅读返回逐像素定位、并排同版比较与筛选外选中、历史固定只读无业务写、大图加载中切换工作面与离开零请求泄漏（W12 根因引 629d625，压力复测归 B07）的真实服务浏览器验证；24 页 create_gallery_sample 混合层项目，合成证据。
 - `a03-browser-verification.json` / `output/playwright/a03/*.png`：**A03 实施后新增**（基线 931f19c）：overview.js 待办面板消费 B01 next_actions 与 8 列矩阵（排序/搜索/章节/批量选择，普通 Tab）的 24 页混合项目真实服务浏览器验证。
 - `a02-browser-verification.json` / `output/playwright/a02/*.png`：**A02 实施后新增**（基线 e58d2df，含 B01/B02）：launcher 搜索与项目卡、五工作面外壳、连接面板消费 effective_actions（含 fixed_revision 前端组合）的真实服务浏览器验证；macOS 目录选择取消路径因终端无 UI 自动化权限保持待验。
