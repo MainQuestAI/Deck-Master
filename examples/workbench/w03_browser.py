@@ -91,16 +91,18 @@ def main():
             initial_compose = [created_store.read_object_json(ref) for ref in initial_doc['tasks']][0]
             source = root / 'synthetic-facts.md'
             source.write_text('# 合成事实\n仅说明工作台流程，没有客户成效。\n')
-            page.get_by_role('button', name='补充本机材料', exact=True).click()
-            page.get_by_label('材料文件完整路径', exact=True).fill(str(source))
-            page.get_by_role('button', name='登记材料', exact=True).click()
-            expect(page.get_by_role('dialog')).not_to_be_visible()
-            expect(page.get_by_text('synthetic-facts.md', exact=True)).to_be_visible()
+            page.get_by_text('调整任务要求与材料', exact=True).click()
+            page.get_by_label('新增材料完整路径（每行一个）', exact=True).fill(str(source))
+            page.get_by_label('本次输入变化说明', exact=True).fill('新增首次阅读材料')
+            page.get_by_role('button', name='预览材料与任务变化', exact=True).click()
+            page.get_by_role('button', name='确认输入并交接判断', exact=True).click()
+            expect(page.get_by_role('heading', name='当前任务', exact=True)).to_be_visible()
+            page.get_by_role('button', name='内容与来源', exact=True).click()
             latest_doc = created_store.load_document()
             tasks = [created_store.read_object_json(ref) for ref in latest_doc['tasks']]
             eligible = [task for task in tasks if task['status'] == 'awaiting_host']
             assert len(eligible) == 1 and eligible[0]['task_id'] != initial_compose['task_id']
-            page.get_by_role('button', name='整理内容并生成大纲', exact=True).click()
+            page.get_by_role('button', name='交接待整理内容', exact=True).click()
             expect(page.get_by_label('交接说明', exact=True)).to_have_value(re.compile(eligible[0]['task_id']))
             expect(page.get_by_text('待交接 · 尚未开始。将下面的说明复制到 Codex 后发送。', exact=True)).to_be_visible()
             page.keyboard.press('Escape')

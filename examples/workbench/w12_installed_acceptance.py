@@ -129,7 +129,7 @@ def build(args):
     shutil.copytree(unpacked / "examples/workbench", drivers)
     proof_tests = drivers / "verification-tests"
     proof_tests.mkdir()
-    for name in ("test_candidates.py", "page_visual_helpers.py"):
+    for name in ("test_candidates.py", "page_visual_helpers.py", "test_generation_protocol.py"):
         shutil.copyfile(unpacked / "tests/rebuild" / name, proof_tests / name)
     print(json.dumps({"manifest": str(distributions / "release.json"), "source_sha": commit, "v2_assets": len(static)}))
 
