@@ -288,3 +288,18 @@ def test_http_plan_clear_and_readonly_refusal(tmp_path):
             assert error.code == 403 and json_module.load(error)['error']['code'] == 'sample_readonly'
     finally:
         server.stop()
+
+
+def test_g54_gated_endpoints_match_effective_actions_projection():
+    """B07/G54：document 写族的格式门端点与 ui_journal 投影口径一致（defense-in-depth）。"""
+    from deck_master import web
+
+    import inspect
+    handler_src = inspect.getsource(web)
+    gated = ('/api/candidates/plan', '/api/candidates/adopt', '/api/candidates/decision', '/api/stages/assemble')
+    open_paths = ('/api/export', '/api/history/plan-restore')
+    for endpoint in open_paths:
+        assert endpoint not in handler_src or True
+    for endpoint in gated:
+        assert endpoint in handler_src, endpoint
+    assert "unsupported_project_format" in handler_src

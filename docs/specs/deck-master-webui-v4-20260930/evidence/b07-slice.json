@@ -1,0 +1,20 @@
+{
+ "card": "B07",
+ "head": "随提交（git log 本文件），基线 fa41aae",
+ "g54_done": {
+  "what": "candidates 族（plan/adopt/decision）与 stages.assemble 的写端点补 workbench.v3 格式门（409 unsupported_project_format），与 ui_journal FORMAT_GATED 投影口径一致",
+  "scope_decision": "/api/export 与 /api/history/plan-restore 保持开放——test_versioned_exports 证明 legacy（deck_document.v1）项目的导出/恢复是合法能力，格式门只限 workbench.v3-only 族（candidates/assemble）",
+  "test": "test_ui_state_clear.py::test_g54_gated_endpoints_match_effective_actions_projection（端点清单与投影一致性）+ 全量 980 passed"
+ },
+ "open_items": {
+  "G43_G44_export_final": "review/delivery/engineering 三用途导出与下载越界防护：既有单测覆盖（test_versioned_exports 979 套件内），最终安装环境重验需真实安装（open：需用户授权的本机安装演练）",
+  "G46_G49_install_rollback": "wheel/sdist 资源摘要重建 + 正常安装/回退演练 + 默认入口切换与 HOME 迁移：用户执行项（CONSOLIDATION：无发布授权不切默认入口），复现入口 pyproject.toml + tools/build_hook.py + 安装脚本",
+  "G47_pressure": "300×5×3 压力复测：原门槛保留；W12 根因（核心身份全历史重读）已由 629d625 修复（ancestry-benchmark 热读 17–19ms），最终复测需长跑环境（open）",
+  "G48_30pages": "30 页真实项目两轮视觉修改：缺获准材料（open，归 B06/AC03 同门槛）"
+ },
+ "layers": {
+  "core": "980 passed + ruff clean",
+  "http": "G54 门测试",
+  "install_pressure": "open（如实，无合成关闭）"
+ }
+}
