@@ -1,0 +1,57 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "ui_clear_result.v1 (persisted in the personal clear log for replay)",
+ "type": "object",
+ "additionalProperties": false,
+ "required": ["schema_version", "operation_id", "plan_id", "manifest_digest", "scope", "backup_ref", "cleared", "cleared_at"],
+ "properties": {
+  "schema_version": {
+   "const": "ui_clear_result.v1"
+  },
+  "operation_id": {
+   "type": "string",
+   "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+  },
+  "plan_id": {
+   "type": "string",
+   "pattern": "^clear-plan-[a-f0-9]{16}$"
+  },
+  "manifest_digest": {
+   "type": "string",
+   "pattern": "^[a-f0-9]{64}$"
+  },
+  "scope": {
+   "const": "current_project"
+  },
+  "backup_ref": {
+   "type": "string",
+   "pattern": "^\\.deckmaster/workbench/clear-backups/[A-Za-z0-9][A-Za-z0-9_.-]*\\.json$"
+  },
+  "cleared": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["kind", "id", "etag"],
+    "properties": {
+     "kind": {
+      "enum": ["draft", "gallery_state", "reading_position"]
+     },
+     "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+     },
+     "etag": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+     }
+    }
+   }
+  },
+  "cleared_at": {
+   "type": "string",
+   "format": "date-time"
+  }
+ }
+}

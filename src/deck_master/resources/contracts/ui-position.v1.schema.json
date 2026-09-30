@@ -42,7 +42,8 @@
         "svg",
         "ppt",
         "prepared_prompt",
-        "submitted_prompt"
+        "submitted_prompt",
+        "source"
       ]
     },
     "revision": {

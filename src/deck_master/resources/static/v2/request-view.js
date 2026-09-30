@@ -88,6 +88,13 @@ export function promptView(app, data, layer, onBasis = () => {}) {
     if (layer === 'prepared_prompt' && selected?.request) body.append(details('冻结参数与参考图',
       el('p', {class: 'muted'}, '仅表示请求要求，不表示当次实际使用。'), json(selected.request.input.parameters), references(scoped, selected.request.input.references, '请求参考图')));
   }
+  // 提示词是一个链路阶段、两个事实层：预备/冻结与实际提交分开保存，切换不改基准。
+  if (layer === 'prepared_prompt' || layer === 'submitted_prompt') {
+    const stages = el('div', {class: 'segmented', role: 'group', 'aria-label': '提示词阶段'});
+    for (const [key, label] of [['prepared_prompt', '预备与冻结'], ['submitted_prompt', '实际提交']]) stages.append(button(label,
+      () => app.go({layer: key}), false, {'aria-pressed': String(layer === key), class: layer === key ? 'active' : ''}));
+    container.append(el('div', {class: 'row'}, stages));
+  }
   if (layer === 'prepared_prompt' && records.length > 1) {
     const select = el('select', {'aria-label': '选择草稿绑定的预备提示词'}, el('option', {value: ''}, '先选择具体预备稿'), records.map(record => el('option', {value: record.ref.sha256}, `${record.label} · ${record.ref.sha256.slice(0, 8)}`)));
     select.value = selected?.ref.sha256 || '';

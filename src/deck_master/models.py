@@ -34,6 +34,7 @@ SCHEMA_FILES = {
     "candidate": "candidate.v1.schema.json",
     "candidate_selection": "candidate-selection.v1.schema.json",
     "candidate_adoption": "candidate-adoption.v1.schema.json",
+    "candidate_decision": "candidate-decision.v1.schema.json",
     "change_handoff": "handoff.v1.schema.json",
     "change_intent": "change-intent.v1.schema.json",
     "change_plan": "change-plan.v1.schema.json",
@@ -57,6 +58,9 @@ SCHEMA_FILES = {
     "ui_draft_recovery": "ui-draft-recovery.v1.schema.json",
     "ui_position": "ui-position.v1.schema.json",
     "ui_gallery": "ui-gallery.v1.schema.json",
+    "ui_clear_plan": "ui-clear-plan.v1.schema.json",
+    "ui_clear_result": "ui-clear-result.v1.schema.json",
+    "ui_clear_backup": "ui-clear-backup.v1.schema.json",
     "thumbnail": "thumbnail.v1.schema.json",
     "text_range": "text-range.v1.schema.json",
 }

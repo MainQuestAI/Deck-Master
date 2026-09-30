@@ -152,14 +152,20 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                 action = {'/api/drafts/save': ui_journal.save, '/api/drafts/import': ui_journal.import_recovery,
                           '/api/drafts/recovery': ui_journal.recovery_file, '/api/ui-state': ui_journal.save_position}[self.path]
                 result = action(self.store.project_root, **data)
+            elif self.path in ('/api/ui-state/plan-clear', '/api/ui-state/commit-clear'):
+                from . import ui_journal
+                action = {'/api/ui-state/plan-clear': ui_journal.plan_clear,
+                          '/api/ui-state/commit-clear': ui_journal.commit_clear}[self.path]
+                result = action(self.store.project_root, **data)
             elif self.path == '/api/gallery':
                 from .gallery_state import save
                 result = save(self.store.project_root, **data)
-            elif self.path in ('/api/annotations/batch', '/api/changes/plan', '/api/changes/commit', '/api/candidates/plan', '/api/candidates/adopt', '/api/stages/assemble', '/api/styles/propose', '/api/styles/confirm', '/api/styles/plan', '/api/content/plan', '/api/content/commit', '/api/content/inputs'):
+            elif self.path in ('/api/annotations/batch', '/api/changes/plan', '/api/changes/commit', '/api/candidates/plan', '/api/candidates/adopt', '/api/candidates/decision', '/api/stages/assemble', '/api/styles/propose', '/api/styles/confirm', '/api/styles/plan', '/api/content/plan', '/api/content/commit', '/api/content/inputs'):
                 from . import annotation_service, changes, candidates, stages, styles, content_ops
                 action = {'/api/content/plan': content_ops.plan, '/api/content/commit': content_ops.commit, '/api/content/inputs': content_ops.inputs, '/api/annotations/batch': annotation_service.save,
                           '/api/changes/plan': changes.plan, '/api/changes/commit': changes.commit,
                           '/api/candidates/plan': candidates.plan, '/api/candidates/adopt': candidates.adopt,
+                          '/api/candidates/decision': candidates.decide,
                           '/api/stages/assemble': stages.assemble,
                           '/api/styles/propose': styles.propose, '/api/styles/confirm': styles.confirm, '/api/styles/plan': styles.plan}[self.path]
                 result = action(self.store.project_root, **data)

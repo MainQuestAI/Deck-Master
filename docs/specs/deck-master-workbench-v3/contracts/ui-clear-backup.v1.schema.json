@@ -1,0 +1,47 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "ui_clear_backup.v1 (recovery backup written before any deletion)",
+ "type": "object",
+ "additionalProperties": false,
+ "required": ["schema_version", "operation_id", "manifest_digest", "records", "cleared_at"],
+ "properties": {
+  "schema_version": {
+   "const": "ui_clear_backup.v1"
+  },
+  "operation_id": {
+   "type": "string",
+   "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+  },
+  "manifest_digest": {
+   "type": "string",
+   "pattern": "^[a-f0-9]{64}$"
+  },
+  "records": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["kind", "id", "etag", "record"],
+    "properties": {
+     "kind": {
+      "enum": ["draft", "gallery_state", "reading_position"]
+     },
+     "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+     },
+     "etag": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+     },
+     "record": true
+    }
+   }
+  },
+  "cleared_at": {
+   "type": "string",
+   "format": "date-time"
+  }
+ }
+}

@@ -5,9 +5,12 @@ import copy
 import time
 import uuid
 
+import json
+
 from .local_state import MAX_BODY, LocalStateConflict, LocalStateError, local_lock, project_path, read_json, safe_path, write_json
 from .models import canonical_json_bytes, sha256_bytes, validate_schema
 from .snapshots import IDENTIFIER, committed_headers, load_snapshot
+from .tasks import _utc_now_iso
 from .store import Store
 
 
@@ -328,3 +331,233 @@ def save_position(project, *, position):
         record = {"position": position, "digest": digest(position), "updated_at": time.time()}
         write_json(path, record)
     return {"status": "saved", **record}
+
+
+# ---------------------------------------------------------------------------
+# B05 (INTERFACES "B05：个人状态清理"): clearing personal workspace state is a
+# two-phase personal action. plan reads and writes nothing; commit re-derives
+# the manifest, keeps a recovery backup, deletes only the planned objects and
+# logs the transaction in the personal journal — never as a business revision.
+# Project content, history, tasks, call ledger and candidates are out of scope.
+
+
+CLEAR_INPUT_KEYS = frozenset({"project_id", "scope", "draft_ids", "reading_preferences"})
+
+
+def _reject_unknown_clear_keys(input):
+    unknown = sorted(set(input) - CLEAR_INPUT_KEYS)
+    if unknown:
+        raise LocalStateError("input", "unknown clear request fields: " + ", ".join(unknown))
+
+
+def _clear_log_path(store):
+    return safe_path(store.project_root, ".deckmaster", "workbench", "clear-log.jsonl")
+
+
+def _clear_backup_path(store, manifest_digest):
+    return safe_path(store.project_root, ".deckmaster", "workbench", "clear-backups",
+                     manifest_digest[:16] + ".json")
+
+
+def _read_clear_log(store):
+    path = _clear_log_path(store)
+    entries = []
+    if path.exists():
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            try:
+                entry = json.loads(line)
+                validate_schema("ui_clear_result", entry)
+            except (ValueError, KeyError, TypeError):
+                continue  # 崩溃残行按缺失处理；已完成事务以项目状态为准
+            entries.append(entry)
+    return entries
+
+
+def _operation_committed(store, operation_id):
+    from .operations import committed_record
+    try:
+        return committed_record(store, operation_id) is not None
+    except Exception:
+        return False
+
+
+def _reading_items(store, doc, identity):
+    """Gallery record and saved reading position, damage-isolated."""
+    from . import gallery_state
+    items, kept_out = [], []
+    try:
+        record = gallery_state._read(store, doc, identity)
+    except (LocalStateError, ValueError, KeyError, TypeError):
+        record = None
+    if record is not None:
+        items.append({"kind": "gallery_state", "id": "gallery.json", "etag": record["etag"]})
+    elif safe_path(store.deck_root, "workbench", "gallery.json").exists():
+        kept_out.append("gallery_state: saved gallery record is damaged; kept for manual recovery")
+    position = read_json(_position_path(store))
+    if position is not None:
+        try:
+            validate_schema("ui_position", position.get("position"))
+            if position.get("digest") != digest(position["position"]):
+                raise LocalStateError("position", "saved position hash is invalid")
+            if position["position"]["project_id"] != doc["project_id"] or position["position"]["project_identity"] != identity:
+                raise LocalStateError("position", "saved position belongs to another project")
+            items.append({"kind": "reading_position", "id": "position.json", "etag": position["digest"]})
+        except (LocalStateError, ValueError, KeyError, TypeError):
+            kept_out.append("reading_position: saved position record is damaged or foreign; kept for manual recovery")
+    return items, kept_out
+
+
+def _clear_selection(input, records):
+    selected = input.get("draft_ids", "all")
+    if selected == "all":
+        return sorted(records)
+    if isinstance(selected, list) and all(isinstance(item, str) for item in selected):
+        unknown = [item for item in selected if item not in records]
+        if unknown:
+            raise LocalStateError("draft_ids", "selected drafts are not readable personal drafts of this project")
+        if len(selected) != len(set(selected)):
+            raise LocalStateError("draft_ids", "select each draft once")
+        return sorted(selected)
+    raise LocalStateError("draft_ids", "draft_ids is 'all' or a list of draft identities")
+
+
+def _clear_manifest(project, input):
+    """Derive the deletable items, blockers and damage notes from live state."""
+    store, doc, identity = context(project)
+    if input.get("project_id") != doc["project_id"]:
+        raise LocalStateError("project_id", "clear plan belongs to the current project")
+    if not isinstance(input.get("reading_preferences"), bool):
+        raise LocalStateError("reading_preferences", "reading_preferences is true or false")
+    listing = list_drafts(project)
+    records = {record["draft"]["draft_id"]: record for record in listing["records"]}
+    items, blockers = [], []
+    explicit = input.get("draft_ids", "all") != "all"
+    for draft_id in _clear_selection(input, records):
+        record = records[draft_id]
+        pending = record["draft"].get("pending")
+        if pending and not _operation_committed(store, pending["operation_id"]):
+            if explicit:
+                # 明确点名的未决草稿不进计划：先去查询原 operation 状态。
+                raise LocalStateError("draft_ids", f"draft {draft_id} holds an unconfirmed operation "
+                                      f"{pending['operation_id']}; query deck-master operations show first")
+            blockers.append({"kind": "draft", "id": draft_id, "reason_code": "unconfirmed_operation",
+                             "operation_id": pending["operation_id"],
+                             "next_action": "query deck-master operations show with this operation ID before clearing"})
+            continue
+        items.append({"kind": "draft", "id": draft_id, "etag": record["etag"]})
+    kept_out = [f"draft {error['draft_id']}: saved record is unreadable; kept for manual recovery"
+                for error in listing["errors"]]
+    if input["reading_preferences"]:
+        reading, damage = _reading_items(store, doc, identity)
+        items.extend(reading)
+        kept_out.extend(damage)
+    manifest = {"project_id": doc["project_id"], "project_identity": identity,
+                "scope": "current_project", "items": items}
+    return doc, identity, items, blockers, kept_out, digest(manifest)
+
+
+def plan_clear(project, *, input):
+    """Read-only clear plan: items, etags, blockers, kept-out damage, backup slot.
+
+    Cancel is this function alone — it performs no write anywhere.
+    """
+    if not isinstance(input, dict) or input.get("scope") != "current_project":
+        raise LocalStateError("scope", "clearing scope is current_project")
+    _reject_unknown_clear_keys(input)
+    doc, identity, items, blockers, kept_out, manifest_digest = _clear_manifest(project, input)
+    plan = {"schema_version": "ui_clear_plan.v1", "project_id": doc["project_id"], "project_identity": identity,
+            "scope": "current_project", "items": items, "blockers": blockers, "kept_out": kept_out,
+            "manifest_digest": manifest_digest, "plan_id": "clear-plan-" + manifest_digest[:16],
+            "backup_ref": ".deckmaster/workbench/clear-backups/" + manifest_digest[:16] + ".json"}
+    validate_schema("ui_clear_plan", plan)
+    return plan
+
+
+def commit_clear(project, *, operation_id, input, plan_id, manifest_digest):
+    """Backup, then delete exactly the planned same-etag objects; log for replay.
+
+    The manifest digest must match the live re-derivation: any draft added,
+    edited or removed since the plan (or a moved etag) refuses with 409 and
+    deletes nothing. Backup failure also deletes nothing. The transaction log
+    lives in the personal journal — the business Document is never revised.
+    """
+    if not IDENTIFIER.fullmatch(operation_id or ""):
+        raise LocalStateError("operation_id", "invalid clear operation identity")
+    if not isinstance(input, dict) or input.get("scope") != "current_project":
+        raise LocalStateError("scope", "clearing scope is current_project")
+    _reject_unknown_clear_keys(input)
+    store, doc, identity = context(project)
+    # 与三类保存方互斥：drafts/journal.lock、gallery.lock、position.lock 全程持有
+    # （固定获取顺序，保存方各自只取一把锁，不存在死锁环）。clear.lock 保护日志追加。
+    with local_lock(safe_path(_directory(store), "journal.lock")), \
+            local_lock(safe_path(store.deck_root, "workbench", "gallery.lock")), \
+            local_lock(safe_path(_position_path(store).parent, "position.lock")), \
+            local_lock(safe_path(_clear_log_path(store).parent, "clear.lock")):
+        for entry in _read_clear_log(store):
+            if entry["operation_id"] == operation_id:
+                return {"status": "cleared", "replayed": True, **entry}
+        expected_plan_id, expected_digest = plan_id, manifest_digest
+        if not isinstance(expected_digest, str) or len(expected_digest) != 64:
+            raise LocalStateError("manifest_digest", "manifest digest is required for the commit")
+        if expected_plan_id != "clear-plan-" + expected_digest[:16]:
+            raise LocalStateError("plan_id", "plan identifier does not match the manifest digest")
+        _doc, _identity, items, _blockers, _kept_out, live_digest = _clear_manifest(project, input)
+        if live_digest != expected_digest:
+            raise LocalStateConflict("manifest_digest",
+                                     "personal state changed since the plan; nothing was cleared, plan again")
+        # 删除前逐项复核 etag：后台已变化的对象退出本次清理（整体 409，双方保留）。
+        _verify_items_unchanged(store, items)
+        cleared_at = _utc_now_iso()
+        result = {"schema_version": "ui_clear_result.v1", "operation_id": operation_id,
+                  "plan_id": expected_plan_id, "manifest_digest": expected_digest, "scope": "current_project",
+                  "backup_ref": ".deckmaster/workbench/clear-backups/" + expected_digest[:16] + ".json",
+                  "cleared": items, "cleared_at": cleared_at}
+        validate_schema("ui_clear_result", result)
+        # 恢复备份先于任何删除；备份失败不得清理。
+        records = _clear_backup_records(store, items)
+        backup = {"schema_version": "ui_clear_backup.v1", "operation_id": operation_id,
+                  "manifest_digest": expected_digest, "records": records, "cleared_at": cleared_at}
+        validate_schema("ui_clear_backup", backup)
+        write_json(_clear_backup_path(store, expected_digest), backup)
+        for item in items:
+            path = _draft_path(store, item["id"]) if item["kind"] == "draft" else (
+                safe_path(store.deck_root, "workbench", "gallery.json") if item["kind"] == "gallery_state"
+                else _position_path(store))
+            path.unlink(missing_ok=True)  # 锁内复核 etag 后仍缺失=并发已删；按已清理如实记录
+        log_path = _clear_log_path(store)
+        with open(log_path, "a", encoding="utf-8") as handle:
+            handle.write(json.dumps(result, ensure_ascii=False) + "\n")
+        return {"status": "cleared", "replayed": False, **result}
+
+
+def _verify_items_unchanged(store, items):
+    for item in items:
+        if item["kind"] == "draft":
+            record = read_json(_draft_path(store, item["id"]))
+            current = record.get("etag") if record else None
+        elif item["kind"] == "gallery_state":
+            record = read_json(safe_path(store.deck_root, "workbench", "gallery.json"))
+            current = record.get("etag") if record else None
+        else:
+            record = read_json(_position_path(store))
+            current = record.get("digest") if record else None
+        if current != item["etag"]:
+            raise LocalStateConflict(item["id"], "personal object changed since the plan; nothing was cleared")
+
+
+def _clear_backup_records(store, items):
+    """Snapshot the exact bytes being removed so an explicit import can restore."""
+    records = []
+    for item in items:
+        if item["kind"] == "draft":
+            records.append({"kind": "draft", "id": item["id"], "etag": item["etag"],
+                            "record": read_json(_draft_path(store, item["id"]))})
+        elif item["kind"] == "gallery_state":
+            records.append({"kind": "gallery_state", "id": item["id"], "etag": item["etag"],
+                            "record": read_json(safe_path(store.deck_root, "workbench", "gallery.json"))})
+        else:
+            records.append({"kind": "reading_position", "id": item["id"], "etag": item["etag"],
+                            "record": read_json(_position_path(store))})
+    return records

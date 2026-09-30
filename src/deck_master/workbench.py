@@ -386,7 +386,27 @@ def _candidate_facts(ctx, tasks_by_id):
     adopted_shas = {a.get("candidate_ref", {}).get("sha256") for a in adoptions
                     if isinstance(a.get("candidate_ref"), dict)}
     adopted_ids = {a.get("candidate_id") for a in adoptions if isinstance(a.get("candidate_id"), str)}
-    facts, adopted, unreadable = [], 0, 0
+    # B04: keep_current 决定把候选移出待确认；reopen 恢复待决。决定记录按
+    # candidate_id 取最后一条；损坏的决定引用按损伤隔离处理——不做 kept
+    # 过滤（候选保持待决可见），不用猜测补齐。
+    kept_ids, decisions_readable = set(), True
+    for decision_ref in doc.get("candidate_decisions") or []:
+        try:
+            if not isinstance(decision_ref, dict):
+                raise ValueError("not a ref")
+            validate_ref(decision_ref, where="document/candidate_decisions")
+            record = ctx.read(decision_ref)
+            if not isinstance(record, dict) or record.get("schema_version") != "candidate_decision.v1":
+                raise ValueError("not a decision")
+        except READ_FAILURES + (ValueError,):
+            decisions_readable = False
+            continue
+        kept_ids.discard(record.get("candidate_id"))
+        if record.get("decision") == "keep_current":
+            kept_ids.add(record.get("candidate_id"))
+    if not decisions_readable:
+        kept_ids = set()
+    facts, adopted, kept, unreadable = [], 0, 0, 0
 
     def _usable_ref(ref):
         # Snapshot-level damage must stay as isolated as object-level damage:
@@ -423,6 +443,9 @@ def _candidate_facts(ctx, tasks_by_id):
         if candidate.get("candidate_id") in adopted_ids:
             adopted += 1
             continue
+        if candidate.get("candidate_id") in kept_ids:
+            kept += 1
+            continue
         page_id = candidate.get("page_id")
         page_ids = [page_id] if isinstance(page_id, str) else list(
             (tasks_by_id.get(candidate.get("task_id")) or {}).get("scope_pages") or [])
@@ -434,8 +457,8 @@ def _candidate_facts(ctx, tasks_by_id):
         facts.append(_fact("compare_candidates", "candidate_pending", ref["sha256"],
                            page_ids=page_ids, source_refs=source_refs,
                            layer=stage if stage in ("blueprint", "svg") else None))
-    block = ({"status": "recorded", "count": len(refs), "pending_count": len(refs) - adopted,
-              "adopted_count": adopted, "unreadable_count": unreadable} if refs
+    block = ({"status": "recorded", "count": len(refs), "pending_count": len(refs) - adopted - kept,
+              "adopted_count": adopted, "kept_count": kept, "unreadable_count": unreadable} if refs
              else {"status": "not_recorded"})
     return block, facts
 

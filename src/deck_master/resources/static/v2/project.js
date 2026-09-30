@@ -194,8 +194,14 @@ export class Project {
     const view = {overview, content, gallery, page: pageDetail, runs, style}[this.route.surface];
     this.main.append(view(this, data));
     if (this.route.surface === 'page') this.main.addEventListener('keydown', event => {
-      if (event.key !== 'Escape' || event.target.closest('textarea,input,select,[contenteditable]')) return;
-      event.preventDefault(); this.go({surface: 'gallery'});
+      const typing = event.target.closest('textarea,input,select,[contenteditable]');
+      if (event.key === 'Escape' && !typing) { event.preventDefault(); this.go({surface: 'gallery'}); return; }
+      // ←/→ 切换页（输入与可滚动阅读区除外），与单页制作链的上一页/下一页一致。
+      if ((event.key === 'ArrowLeft' || event.key === 'ArrowRight') && !typing && !event.target.closest('.page-image-viewport,.selectable-text,.evidence-json,.diff-lines')) {
+        const index = this.summary.pages.findIndex(p => p.page_id === this.route.page_id);
+        const next = this.summary.pages[index + (event.key === 'ArrowRight' ? 1 : -1)];
+        if (next) { event.preventDefault(); this.go({page_id: next.page_id}); }
+      }
     });
     const pending = this.summary.task_counts.awaiting_host || 0;
     this.pendingButton = button(`待交接 ${pending}`, () => this.go({surface: 'runs', task_id: null}), false, {'aria-label': `查看待交接任务，${pending} 项`});
