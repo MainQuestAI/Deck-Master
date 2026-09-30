@@ -60,6 +60,31 @@ export function heading(title, explanation, action) {
 export function empty(title, detail, action) {
   return el('section', {class: 'zero-state stack'}, el('h2', {}, title), el('p', {class: 'muted'}, detail), action);
 }
+// 以下状态组件对应 product-ui-language：先说发生了什么，再说内容是否保留，最后给可做的动作。
+export function loading(label = '正在读取…') {
+  return el('p', {class: 'loading-note muted', role: 'status'}, label);
+}
+export function errorNote({what, kept = '', next = '', ref = ''}) {
+  const node = el('div', {class: 'error-note', role: 'alert'}, el('p', {class: 'field-error'}, what));
+  if (kept) node.append(el('p', {class: 'muted'}, kept));
+  if (next) node.append(el('p', {class: 'muted'}, next));
+  if (ref) node.append(el('code', {class: 'muted'}, ref));
+  return node;
+}
+// 禁用控件必须给出原因；可见原因同时作为可访问描述，不可见时至少保留 title。
+export function disabledReason(control, reason, {visible = true} = {}) {
+  if (!reason) return control;
+  const note = el('p', {class: 'disabled-reason muted', id: `reason-${crypto.randomUUID()}`}, reason);
+  control.setAttribute('aria-describedby', [control.getAttribute('aria-describedby'), note.id].filter(Boolean).join(' '));
+  control.title = reason;
+  return visible ? el('div', {class: 'control-reason'}, control, note) : control;
+}
+// 表头排序基础组件（设计系统第 07 节）：scope 声明列，排序列声明 aria-sort，控件保持普通 Tab 顺序。
+export function sortHeading(label, direction, onToggle) {
+  const state = direction === 'ascending' ? '升序' : direction === 'descending' ? '降序' : '未排序';
+  return el('th', {scope: 'col', ...(direction ? {'aria-sort': direction} : {})},
+    button(`${label} · ${state}`, onToggle, false, {class: 'quiet'}));
+}
 export function downloadJSON(value, name) {
   const objectURL = URL.createObjectURL(new Blob([JSON.stringify(value, null, 2) + '\n'], {type: 'application/json'}));
   const link = el('a', {href: objectURL, download: name});
