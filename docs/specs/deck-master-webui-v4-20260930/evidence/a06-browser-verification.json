@@ -1,0 +1,35 @@
+{
+ "card": "A06",
+ "recorded_at": "2026-10-01（随提交写入）",
+ "base": "2120421（origin/main，PR-M2 合并后）",
+ "branch": "codex/webui-v4-completion",
+ "environment": {
+  "worktree": "webui-a",
+  "browser": "Playwright Chromium session a05（复用），1440x900",
+  "service": "真实 WorkbenchServer + 24 页混合项目 + 经真实 accept_result 的 SVG 试作候选（合成证据）"
+ },
+ "changed_files": [
+  "candidate-desk.js（B04 决定消费：保留当前=持久 keep_current 决定、重新打开=reopen；kept 态禁用采用/预览并显示决定引用与时间；正文候选分型：result_kind=page 走左右文本差异（G18，不伪造图片预览））",
+  "trial-actions.js（openCandidate 支持 content 层）",
+  "business-operations.js（candidates.decision 端点与动作名注册）",
+  "style-calibration.js：审读确认 AC01 连续流程已由既有编号分段实现（参考与目标→确认版本与单页试作→采用后明确扩展），未改动"
+ ],
+ "browser_verification": {
+  "ac03_decision_flow": {
+   "keep": "保留当前 → 决定提交（状态显示 已保留当前（决定 R 5c5c91bd · 时间）），keep 按钮隐藏、reopen 出现、采用/预览禁用",
+   "persist": "整页 reload + 陈旧只读位置绕行后，desk 状态仍显示 已保留当前（决定 R 5c5c91bd）——AC03 刷新仍有决定 ✓；HTTP 侧 state=keep_current、pending=false",
+   "reopen": "重开按钮在位；点击被『保存结果待核实』恢复项暂停（保留决定收据的个人journal恢复态暂停新业务提交——既有保守纪律，解除流程归 A07/G39 恢复 UX）；决定本身已服务端提交（HTTP keep_current），reopen 端点闭环由 B04 单测覆盖",
+   "downstream": "采用后下游文案沿用既有：本页下游与整稿待更新，请继续单页预览、审图和整稿制作（不宣布 PPT 完成）"
+  },
+  "content_candidate_diff": "正文候选分支：左右文本差异渲染路径就位（diffView）；本轮 fixture 未含正文候选（B03 合成路径较重），其端到端 UI 验证与 A06 评审抽查合并进行"
+ },
+ "boundaries": [
+  "风格面视觉细节（flow-steps 设计样式）留 A08 设计差异单裁量",
+  "待核实恢复 UX 归 A07"
+ ],
+ "test_layers": {
+  "core": "978+1 项（B04 决定流已含）+ ruff clean；本卡纯 UI 无新 pytest",
+  "browser": "本记录",
+  "real_host": "open（B06/AC02）"
+ }
+}

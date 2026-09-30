@@ -3,7 +3,7 @@ import {el, button, version} from './dom.js';
 import {imageView} from './images.js';
 
 export function openCandidate(app, record, revision) {
-  app.go({surface: 'page', page_id: record.page_id, layer: record.stage === 'blueprint' ? 'original_image' : 'svg',
+  app.go({surface: 'page', page_id: record.page_id, layer: record.stage === 'blueprint' ? 'original_image' : record.stage === 'content' ? 'content' : 'svg',
     revision, candidate_id: record.candidate_id, task_id: null});
 }
 export function trialActions(app, data) {
