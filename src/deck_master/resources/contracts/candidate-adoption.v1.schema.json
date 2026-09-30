@@ -4,136 +4,76 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "schema_version": {
-      "const": "candidate_adoption.v1"
-    },
-    "project_id": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 128
-    },
-    "base_revision": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 128
-    },
+    "schema_version": {"const": "candidate_adoption.v1"},
+    "project_id": {"type": "string", "minLength": 1, "maxLength": 128},
+    "base_revision": {"type": "string", "minLength": 1, "maxLength": 128},
     "selections": {
       "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "candidate_id": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 128
-          },
-          "candidate_ref": {
+      "minItems": 1,
+      "maxItems": 300,
+      "items": {"oneOf": [{"$ref": "#/$defs/slot_selection"}, {"$ref": "#/$defs/changeset_selection"}]}
+    },
+    "max_calls": {"const": 0}
+  },
+  "required": ["schema_version", "project_id", "base_revision", "selections", "max_calls"],
+  "$defs": {
+    "ref": {
+      "type": "object",
+      "required": ["path", "sha256"],
+      "additionalProperties": false,
+      "properties": {
+        "path": {"type": "string", "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"},
+        "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      }
+    },
+    "optional_ref": {"anyOf": [{"$ref": "#/$defs/ref"}, {"type": "null"}]},
+    "slot_selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "candidate_id": {"type": "string", "minLength": 1, "maxLength": 128},
+        "candidate_ref": {"$ref": "#/$defs/ref"},
+        "result_kind": {"enum": ["artifact", "page"]},
+        "page_id": {"type": "string", "minLength": 1, "maxLength": 128},
+        "stage": {"enum": ["blueprint", "svg", "content"]},
+        "target_ref": {"$ref": "#/$defs/optional_ref"},
+        "result_ref": {"$ref": "#/$defs/ref"},
+        "basis_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "downstream": {"type": "array", "items": {"type": "string"}}
+      },
+      "required": ["candidate_id", "candidate_ref", "page_id", "stage", "target_ref", "result_ref", "basis_digest", "downstream"]
+    },
+    "changeset_selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "candidate_id": {"type": "string", "minLength": 1, "maxLength": 128},
+        "candidate_ref": {"$ref": "#/$defs/ref"},
+        "result_kind": {"const": "content_update"},
+        "stage": {"const": "content"},
+        "result_ref": {"$ref": "#/$defs/ref"},
+        "plan_input_ref": {"$ref": "#/$defs/optional_ref"},
+        "basis_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "mapping": {
+          "type": "array",
+          "items": {
             "type": "object",
-            "required": [
-              "path",
-              "sha256"
-            ],
             "additionalProperties": false,
             "properties": {
-              "path": {
-                "type": "string",
-                "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
-              },
-              "sha256": {
-                "type": "string",
-                "pattern": "^[a-f0-9]{64}$"
-              }
-            }
-          },
-          "page_id": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 128
-          },
-          "stage": {
-            "enum": [
-              "blueprint",
-              "svg"
-            ]
-          },
-          "target_ref": {
-            "anyOf": [
-              {
-                "type": "object",
-                "required": [
-                  "path",
-                  "sha256"
-                ],
-                "additionalProperties": false,
-                "properties": {
-                  "path": {
-                    "type": "string",
-                    "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
-                  },
-                  "sha256": {
-                    "type": "string",
-                    "pattern": "^[a-f0-9]{64}$"
-                  }
-                }
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "result_ref": {
-            "type": "object",
-            "required": [
-              "path",
-              "sha256"
-            ],
-            "additionalProperties": false,
-            "properties": {
-              "path": {
-                "type": "string",
-                "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
-              },
-              "sha256": {
-                "type": "string",
-                "pattern": "^[a-f0-9]{64}$"
-              }
-            }
-          },
-          "basis_digest": {
-            "type": "string",
-            "pattern": "^[a-f0-9]{64}$"
-          },
-          "downstream": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+              "page_id": {"type": "string", "minLength": 1, "maxLength": 128},
+              "source_page_ids": {"type": "array", "items": {"type": "string", "minLength": 1, "maxLength": 128}},
+              "relation": {"enum": ["rewritten", "derived", "retained", "removed"]}
+            },
+            "required": ["page_id", "source_page_ids", "relation"]
           }
         },
-        "required": [
-          "candidate_id",
-          "candidate_ref",
-          "page_id",
-          "stage",
-          "target_ref",
-          "result_ref",
-          "basis_digest",
-          "downstream"
-        ]
+        "page_order": {"type": "array", "items": {"type": "string", "minLength": 1, "maxLength": 128}, "minItems": 1},
+        "superseded_tasks": {"type": "array", "items": {"type": "string"}},
+        "downstream": {"type": "array", "items": {"type": "string"}}
       },
-      "minItems": 1,
-      "maxItems": 300
-    },
-    "max_calls": {
-      "const": 0
+      "required": ["candidate_id", "candidate_ref", "result_kind", "stage", "result_ref", "plan_input_ref",
+                   "basis_digest", "mapping", "page_order", "superseded_tasks", "downstream"],
+      "not": {"required": ["page_id"]}
     }
-  },
-  "required": [
-    "schema_version",
-    "project_id",
-    "base_revision",
-    "selections",
-    "max_calls"
-  ]
+  }
 }

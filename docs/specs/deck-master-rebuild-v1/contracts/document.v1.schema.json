@@ -871,7 +871,8 @@
             "candidates.v1",
             "run-desk.v1",
             "style-recipes.v1",
-            "content-ops.v1"
+            "content-ops.v1",
+            "content-candidates.v1"
           ]
         }
       },
@@ -1003,7 +1004,8 @@
           "stage": {
             "enum": [
               "blueprint",
-              "svg"
+              "svg",
+              "content"
             ]
           },
           "result_ref": {
@@ -1023,15 +1025,86 @@
                 "pattern": "^[a-f0-9]{64}$"
               }
             }
+          },
+          "result_kind": {
+            "enum": [
+              "artifact",
+              "page",
+              "content_update"
+            ]
           }
         },
         "required": [
           "candidate_id",
           "candidate_ref",
           "revision_id",
-          "page_id",
-          "stage",
           "result_ref"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "required": [
+                "result_kind"
+              ],
+              "properties": {
+                "result_kind": {
+                  "const": "content_update"
+                }
+              }
+            },
+            "then": {
+              "not": {
+                "anyOf": [
+                  {
+                    "required": [
+                      "page_id"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "stage"
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "if": {
+              "required": [
+                "result_kind"
+              ],
+              "properties": {
+                "result_kind": {
+                  "enum": [
+                    "artifact",
+                    "page"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "page_id",
+                "stage"
+              ]
+            }
+          },
+          {
+            "if": {
+              "not": {
+                "required": [
+                  "result_kind"
+                ]
+              }
+            },
+            "then": {
+              "required": [
+                "page_id",
+                "stage"
+              ]
+            }
+          }
         ]
       }
     },

@@ -1,0 +1,123 @@
+{
+  "card": "B03",
+  "route": "B · 功能补齐",
+  "slice": "正文与结构变更候选（工程切片，待单独评审）",
+  "base": "50535eec0b29e2146159ee2346f96636d7cbbe3e",
+  "branch": "codex/webui-b-capabilities",
+  "environment": "macOS darwin 27.0.0 arm64; Python 3.12.12 venv（主仓库 .venv，dev依赖），PYTHONPATH=src 指向 webui-b 工作树",
+  "changed_files": [
+    "src/deck_master/candidates.py（三分支记录/_state/show/list/plan/adopt）",
+    "src/deck_master/changes.py（content trial 入口与能力要求）",
+    "src/deck_master/tasks.py（trial 接受分流：pages→page候选、content_update→变更集候选；task_inputs_current 路由）",
+    "src/deck_master/content_ops.py（mode=trial + refresh_plan_links 抽取）",
+    "src/deck_master/service.py（inputs patch mode=trial；accept_result 包装透传 result_kind/current_content_changed）",
+    "src/deck_master/models.py、store.py（writer floor content-candidates.v1）",
+    "contracts：candidate.v1（判别联合）、candidate-adoption.v1（联合 selections）、content-operation-input/plan（mode）、task.v1（stage=content）、document.v1（minimum_writer 枚举、candidate_adoptions 联合、stage 枚举）及全部规格镜像",
+    "tests/rebuild/test_content_candidates.py（新增15项）"
+  ],
+  "verification": [
+    {
+      "layer": "core",
+      "commands": [
+        "PYTHONPATH=src python -m pytest tests/rebuild/test_content_candidates.py -q（15 passed）",
+        "PYTHONPATH=src python -m pytest tests/rebuild/ -q --ignore=tests/rebuild/test_install.py（928 passed）",
+        "PYTHONPATH=src python -m pytest tests/rebuild/test_install.py -q（17 passed，合计945）",
+        "python -m ruff check（All checks passed）"
+      ],
+      "result": "pass"
+    },
+    {
+      "layer": "HTTP",
+      "commands": [
+        "test_http_serves_content_candidate_kinds：/api/candidates（listing 含 result_kind）、/api/candidates/{id}（page 分支 show）、POST /api/candidates/plan（session token + input 包装）"
+      ],
+      "result": "pass"
+    },
+    {
+      "layer": "评审修复回归",
+      "commands": [
+        "PYTHONPATH=src python -m pytest tests/rebuild/ -q --ignore=tests/rebuild/test_install.py（935 passed）",
+        "PYTHONPATH=src python -m pytest tests/rebuild/test_install.py -q（17 passed）",
+        "python -m ruff check（All checks passed）"
+      ],
+      "result": "pass"
+    }
+  ],
+  "acceptance_notes": {
+    "B03-AC01": [
+      "changes content trial：intent=content 单页 trial 可 plan/commit，任务携带 candidate_result+content_candidate；旧 Host 缺能力在 task_start 即拒绝（check_host）",
+      "content_ops rewrite/merge/split trial：commit 后 superseding 不发生，返回即候选；content_plan/页序/outputs 不变",
+      "inputs mode=trial：登记新来源版本，input_alignment 保持 needs_reconciliation；候选采用后才转 current",
+      "候选绑定：page 候选 request_ref=提交的 change plan ref（changes 路径）或 content_operation_ref（content_ops/inputs 路径）；changeset 候选 content_basis 固定 input_digest+页序+ContentPlan ref",
+      "旧核心：writer floor content-candidates.v1，老 SUPPORTED_WRITERS 读指针即拒绝（测试模拟）"
+    ],
+    "B03-AC02": [
+      "show/list/plan/adopt 全部按 result_kind 分支：artifact 保持原形状（不注入 page 键），page 给 page，content_update 给 content_update+mapping（rewritten/derived/retained/removed）",
+      "page 采用复用 content-edit 失效：blueprint 留作历史、svg/svg_preview/ppt_preview 清空、outputs 退役、content_plan 经共享 refresh_plan_links 重绑",
+      "changeset 采用复用 content_update 算法：同页迁移/保留、content_basis 绑定、page_derivation 记录、plan attach、未改页全保留、旧页历史可读",
+      "采用 plan 展示 mapping/页序/superseded tasks/downstream；取消结构候选不改稿"
+    ],
+    "B03-AC03": [
+      "基准变化：page 候选仅因 Page 身份变化而过期（精确 scope），changeset 因 input_digest/页序/plan 变化过期；AdoptionConflict 全批拒绝",
+      "重复 operation：同一 envelope 重放 already_applied 且候选不重复",
+      "取消晚到：cancelled trial 的迟到结果仅结算调用事实，current 不动",
+      "批量全成或全败：一项 basis 失效即整批拒绝、无 adoption 记录",
+      "重叠变更集：两变更集同批 one changeset per adoption 拒绝；与 slot 候选混合 atomically 拒绝",
+      "输入更新与晚到变更集冲突：后续 inputs 更新使变更集 content_basis=changed，采用被拒、候选保留可查询",
+      "图像/SVG auto/trial 无回归：test_candidates 19 项 + test_styles 13 项 + 全量 945 通过"
+    ]
+  },
+  "design_decisions": [
+    "changes content trial 走 change_binding→change plan ref 作为冻结请求；content_ops/inputs trial 走 content_operation_ref。_trial_request_ref 统一取值，候选校验绑定一致。",
+    "page 候选采用后 content_plan 重绑使用抽取的 refresh_plan_links（原 _revise_outline 的非 outline 分支），与本地编辑共用一条计划版本推进路径。",
+    "changeset 候选冻结时即完成 check_page 归一化，采用时再次校验，杜绝'候选返回后再改对象'。",
+    "trial 分支在 settle（调用事实入账）之后、内容应用之前分流，保证失败时调用事实不丢失（复用既有 settle-then-adopt 顺序）。",
+    "trial 任务继续/轮询排除（include_trials=False）不变：trial 内容任务与 trial 图像任务同样等待显式交接。"
+  ],
+  "open_items": [
+    "真实 Host 返回候选（AC01 的'匹配能力Host'路径）属 B06/真实验证层，本轮为合成Host证据。",
+    "浏览器候选台渲染 result_kind 分支属 A05/A06 消费；B04 候选决定（keep_current/reopen）另行实施。",
+    "发布/默认入口切换不在本切片授权范围。"
+  ],
+  "synthetic_evidence_only": true,
+  "real_host_calls": 0,
+  "production_acceptance": false,
+  "review_round_1": {
+    "reviewer": "独立 code-reviewer 代理（ZCode code-reviewer）",
+    "verdict": "不通过（P0 x1，P1 x1，P2 x3，P3 x7）",
+    "fix_commit": "69cee5ba7ca4b37c57c6297c283593e075683528",
+    "fixed": [
+      "P0 候选注册表毒化：记录路径强制 content_plan 且按 bind_result 同头校验（schema+validate_input against resulting page order）；畸形outline拒绝测试证明注册表保持可读",
+      "P1 无plan变更集记录/采用不对称：记录时拒绝 + inputs trial 指令要求提交 content_plan_input",
+      "P2 空项目 trial 死端：无页项目拒绝 mode=trial（auto 仍可派发 initial compose）",
+      "P3 采用仅在真实变化时清 outputs/推进 plan 版本；死键移除",
+      "P3 svg trial 被通用槽位比对误判 stale：所有 trial 统一经 candidates.inputs_current（含新增 content_identity 短路，修 inputs_update 提交前 task_summary 读未提交 revision）",
+      "P2 补测试：跨页乱序返回、changeset adopt 重放、目标漂移拒绝"
+    ],
+    "accepted_not_fixed": [
+      "P2 page 候选精确 scope 与 artifact 候选/接受时机的宽严差异：为 B03 合同的设计决定（INTERFACES \"可按精确scope\"），理由已记录于 design_decisions；行为不变",
+      "P3 intent=content 自由文本协议开关：与 INTERFACES 合同一致，schema 不收窄；已在 changes.py 注释说明",
+      "P3 changeset 记录时 StaleInputContext 与图像候选\"记录后过期\"体验差异：与 auto 路径一致，保留",
+      "P3 inputs trial 登记时 supersede 开放任务与 content_ops trial 的语义差异：与 auto inputs 行为一致，保留（本条为登记语义，非候选语义）",
+      "P3 新页 mapping source_page_ids=[]：inputs 材料不页域化，保留"
+    ],
+    "tests_after_fix": "test_content_candidates 22 passed；全量 952 passed（935+17 install）；ruff clean",
+    "review_round_2": {
+      "reviewer": "同一独立 code-reviewer 代理",
+      "verdict": "通过（P0/P1/P2 在原始触发向量上实证封死；遗留均为 P3 不阻塞）",
+      "closing_commit": "见 closing_commit 字段",
+      "closing_fixes": [
+        "补 svg stage=repair trial 回归测试：同页 auto 写 svg 槽后 trial 返回不再被误判 stale（复核确认的动机场景，此前无套件覆盖）",
+        "补 P0 毒化的 inputs-trial 路径变体测试（原始向量路径，validate_host_result 早退的唯一不设防路由）"
+      ],
+      "accepted_not_fixed_addendum": [
+        "P3 _apply_page_selection 与 adopt artifact 分支的 next() 无默认值：当前被 _plan 门挡住不可达，逻辑漂移时抛 StopIteration 而非 OperationError；评审遗漏登记，此处补登并接受"
+      ],
+      "remaining_open": [
+        "no-op changeset 采用仍推进 plan 版本（与 auto content_update 路径一致，属对齐取舍，与 page no-op 不对称）",
+        "AC03 部分返回/保存超时重放的内容候选直接用例（依赖共享机制与间接覆盖，后续测试债）"
+      ],
+      "tests_after_closing": "test_content_candidates 24 passed；全量 954 passed（937 除 install + 17 install）；ruff clean"
+    }
+  }
+}
