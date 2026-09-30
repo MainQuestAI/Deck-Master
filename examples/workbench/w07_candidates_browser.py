@@ -75,7 +75,12 @@ def main():
             page.route('**/api/candidates/adopt', lose_response, times=1)
             before_adoptions = len(flow.store.load_document().get('candidate_adoptions', []))
             adopt.click(); expect(page.get_by_text('保存结果待核实 · 新的业务提交已暂停', exact=True)).to_be_visible()
-            expect(adopt).to_be_disabled(); page.reload()
+            expect(adopt).to_be_disabled()
+            # The banner appears before POST completion; wait for the injected
+            # lost response before reloading, otherwise we test a pre-send abort.
+            expect(page.locator('.pending-operation')).to_contain_text('尚未确认保存结果', timeout=30000)
+            assert len(lost) == 1 and lost[0]['status'] == 200
+            page.reload()
             page.get_by_role('button', name='核实保存结果', exact=True).click()
             expect(page.get_by_text('保存结果待核实 · 新的业务提交已暂停', exact=True)).not_to_be_visible()
             check('lost_response_refresh_recovers_original_operation_once', len(lost) == 1 and lost[0]['status'] == 200 and len(flow.store.load_document()['candidate_adoptions']) == before_adoptions + 1)

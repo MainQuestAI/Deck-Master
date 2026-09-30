@@ -65,6 +65,7 @@ def main():
             with patch.object(run_desk, 'datetime', SimulatedClock):
                 page.get_by_role('button', name='核实最新执行状态', exact=True).click()
                 page.get_by_role('button', name='查看全部任务', exact=True).click()
+                expect(page.locator('.run-detail')).to_be_empty()
                 page.get_by_role('checkbox', name='只看需我处理', exact=True).check()
                 expect(page.locator(f'.run-task[data-task-id="{running["task_id"]}"]')).to_contain_text('核实原执行')
                 check('31_minute_projection_clock_only_requests_verification', flow.task(running['task_id'])['status'] == 'running')

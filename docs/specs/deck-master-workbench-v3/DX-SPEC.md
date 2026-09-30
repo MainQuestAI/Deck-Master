@@ -1,8 +1,19 @@
 # 开发与 Host 接入规格
 
-这份文件定义开发包必须交付的入口和示例。除明确标“当前可运行”外，v3 新命令和新接口均为**待实现提案**，不能复制后声称已支持。CLI 只有 `deck-master` 一个命令面，各子命令与 HTTP 复用相同 Service。
+截至 W11 合入，W01–W11 的 CLI/HTTP 已实施；W12 正在验证固定提交的隔离安装候选。CLI 只有 `deck-master` 一个命令面，各子命令与 HTTP 复用相同 Service。下面标为结构示意的旧设计 JSON 不能直接提交；活动合同以 `src/deck_master/resources/contracts/` 为准，可运行脚本从真实回包获取 ID。执行状态见 [W12](../../reports/workbench-v3-execution-20260926/W12.md)。
 
-## 1. 当前可运行：先看设计原型
+## 安装后 Quickstart（当前可运行）
+
+使用支持的 Python 3.11/3.12，向独立虚拟环境安装待验证 wheel，然后运行 `deck-master workbench --registry /path/to/isolated/projects.json --no-open`，打开返回 URL，点击「打开只读示例」。样例随包提供、无需模型，明确为合成只读项目。新项目使用「新建项目」，现有项目使用「选择项目文件夹」。读取、个人草稿、业务提交和 Host 执行各自独立；复制交接说明不会启动模型。
+
+`workbench --project <dir> --ui legacy --no-open` 可打开旧界面；停止项目服务用 `workbench --project <dir> --stop`，停止启动器用 `workbench --registry <file> --stop`。临时安装切换与回退均带 `--no-host-registration`，不修改实际 HOME。随包详细说明位于 `skill/deck-master/references/installation.md`。
+
+源码中的 `examples/workbench/w12_installed_acceptance.py build --source <checkout> --ref <commit> --out <new-dir>` 构建 wheel/sdist，并检查资源与重建一致性。使用候选的非 editable Python 运行生成目录内 `drivers/w12_installed_acceptance.py verify --manifest <dist/release.json> --out <new-dir>`。驱动与应用运行包分别定位；验证拒绝从 checkout 借核心资源。可安装 Python Playwright/pytest 作为验收工具，但没有 Node 构建依赖。
+
+首个理解结果的人工耗时尚未测量；自动脚本耗时不是用户理解耗时，30 页真实 Host、返工及等待基线仍待实际项目。
+
+
+## 1. 历史设计原型（可选参考）
 
 在本仓库根目录，Python 标准库足够启动合成原型，无安装和模型密钥：
 
@@ -12,9 +23,9 @@ python3 -m http.server 8766 --bind 127.0.0.1 --directory docs/specs/deck-master-
 
 浏览器打开 `http://127.0.0.1:8766/`。停止用 Ctrl+C。若端口已占用改为8767，并对应打开8767。第一项有用结果是看24页样本的同层联系表，再点第8页查看链路。这里不是安装后的真实工作台。
 
-当前核心源码安装沿用根 README 的 Python3.11/3.12 与 `pip install -e ".[dev]"`。`deck-master view --project <dir> --json` 当前只返回服务状态；W01 的显式 --revision/--summary/--page-id --lineage 才读取 Document（实施前仍为提案）；`view --open`启动或复用单项目服务。当前 `view --no-open`不能被文档冒称全局启动器。`continue`返回awaiting_host并以3退出可以是正常等待，不是生成失败。
+当前核心源码安装沿用根 README 的 Python3.11/3.12 与 `pip install -e ".[dev]"`。`deck-master view --project <dir> --json` 保留只返回服务状态的旧契约；W01 的显式 --revision/--summary/--page-id --lineage 已可读取 Document；`view --open`启动或复用单项目服务。当前 `view --no-open`不能被文档冒称全局启动器。`continue`返回awaiting_host并以3退出可以是正常等待，不是生成失败。
 
-## 2. W03 首次成功与默认配置（提案）
+## 2. W03 首次成功与默认配置（已实施）
 
 W03提供新的 `deck-master workbench` 子命令：无项目时打开项目入口，可用 `--project <dir>`直接打开已验证项目；新入口默认打开 `/v2/`，旧 `view --open`在切换授权前仍打开旧入口；`workbench --ui legacy`打开旧UI，`--no-open`只启动并输出URL；`--port 0`自动分配端口，可显式传可用loopback端口；`--registry <file>`支持隔离测试与多工作区，默认用户配置目录中独立的项目注册表。registry只记用户选择，不递归发现项目。不新增第二CLI可执行文件。
 
@@ -30,9 +41,9 @@ W03提供新的 `deck-master workbench` 子命令：无项目时打开项目入�
 | 任务超时 | 30min进入待核实 | 首版不开放UI缩短 | 不自动重发外部调用 |
 | 生产门控 | 共享核心决定 | 无绕过开关 | 版本/取消保护、质量、文件边界 |
 
-## 3. CLI / HTTP 对照（提案）
+## 3. CLI / HTTP 对照（已实施，参数以 --help 为准）
 
-下表新命令均需在对应卡实现并测试 `--help`、JSON与错误退出码。所有write参数采用 `--project`、`--base-revision`、`--operation-id`；基准读取用 `--revision`；页面用 `--page-id`。不要让前端直接写对象目录。
+下表命令已由对应卡实现，并测试 `--help`、JSON与错误退出码。所有write参数采用 `--project`、`--base-revision`、`--operation-id`；基准读取用 `--revision`；页面用 `--page-id`。不要让前端直接写对象目录。
 
 | 能力 | CLI | HTTP | 卡 |
 |---|---|---|---|
@@ -62,7 +73,7 @@ W03提供新的 `deck-master workbench` 子命令：无项目时打开项目入�
 }
 ```
 
-以上是结构示例，hash占位明确无效。W06必须随卡提供真正由临时样例生成的 `changes.json` 与可复制脚本：读取项目revision/ref→写文件→plan→commit→核实operation；示例从回包读取ID，不写固定假ID。暂不为本地应用新建SDK。
+以上是原设计结构示意，并非当前完整合同，hash占位明确无效。W06必须随卡提供真正由临时样例生成的 `changes.json` 与可复制脚本：读取项目revision/ref→写文件→plan→commit→核实operation；示例从回包读取ID，不写固定假ID。暂不为本地应用新建SDK。
 
 ## 4. Host最小协议与真实示例（W02）
 

@@ -59,6 +59,15 @@ jobs:
         run: python -m pip install --quiet -e ".[dev]"
       - name: Renderer-dependent tests (marked render; needs the toolchain)
         run: python -m pytest -q tests/rebuild -m render
+      - name: Install Chromium for local browser acceptance
+        run: python -m playwright install --with-deps chromium
+      - name: Build and install the wheel (no editable resource borrowing)
+        run: |
+          python -m pip wheel --no-deps --no-build-isolation -w /tmp/workbench-wheel .
+          python -m pip uninstall -y deck-master
+          python -m pip install --no-deps /tmp/workbench-wheel/deck_master-*.whl
+      - name: Offline installed UI and fixed-version downloads
+        run: python examples/workbench/w12_offline_browser.py --require-installed --font 'DejaVu Sans' --out /tmp/workbench-browser
 
   # Report roll-up: mark skipped/unavailable groups explicitly.
   report:

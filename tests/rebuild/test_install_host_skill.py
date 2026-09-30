@@ -296,3 +296,26 @@ def test_deferred_cleanup_requires_valid_preserved_manifest(isolated):
         install.activate(prefix, 'r1')
     assert links == {p.name: os.readlink(p) for p in (codex / 'skills').iterdir() if p.is_symlink()}
     assert os.readlink(prefix / '.deck-master/current') == 'releases/r1'
+
+
+def test_cli_rollback_can_leave_host_registration_untouched(tmp_path, monkeypatch, capsys):
+    """An isolated CLI rollback must not consult or mutate the real Host entry."""
+    from deck_master.cli import main
+    from deck_master import install
+    import json
+    import os
+    prefix = tmp_path / 'prefix'
+    for name in ('verified-one', 'verified-two'):
+        release = prefix / '.deck-master/releases' / name
+        release.mkdir(parents=True)
+        (release / 'release.json').write_text(json.dumps({'status': 'candidate_ready'}))
+    monkeypatch.setattr(install, '_codex_skill_root', lambda: tmp_path / 'host-skills')
+    foreign = tmp_path / 'host-skills/deck-master'
+    foreign.mkdir(parents=True)
+    (foreign / 'user.txt').write_text('keep')
+    install.activate(prefix, 'verified-one', register_host=False)
+    install.activate(prefix, 'verified-two', register_host=False)
+    assert main(['install', 'rollback', '--prefix', str(prefix), '--no-host-registration']) == 0
+    assert json.loads(capsys.readouterr().out)['release_id'] == 'verified-one'
+    assert os.readlink(prefix / '.deck-master/current') == 'releases/verified-one'
+    assert (foreign / 'user.txt').read_text() == 'keep'
