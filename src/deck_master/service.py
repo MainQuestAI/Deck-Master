@@ -972,7 +972,7 @@ def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, pa
 # task facts and materials. The update transaction saves inputs, supersedes
 # open tasks and dispatches compose/intent=input_revision in one commit.
 
-_INPUT_PATCH_FIELDS = {"task_patch", "source_changes", "reason"}
+_INPUT_PATCH_FIELDS = {"task_patch", "source_changes", "reason", "mode"}
 _INPUT_TASK_PATCH_FIELDS = {"title", "brief", "audience", "scenario",
                             "presentation_mode", "page_limit", "existing_decisions"}
 _PRESENTATION_MODES = ("live", "read_alone", "mixed")
@@ -1046,6 +1046,9 @@ def _normalize_input_patch(patch: dict, *, patch_dir: Path) -> dict:
     if not isinstance(reason, str) or not reason.strip():
         raise ServiceError("(patch)/reason", "a one-line summary of what changed is required")
     reason = reason.strip()
+    mode = patch.get("mode", "auto")
+    if mode not in ("auto", "trial"):
+        raise ServiceError("(patch)/mode", "input reconciliation runs auto or as an explicit trial")
 
     task_patch = patch.get("task_patch", {})
     if not isinstance(task_patch, dict):
@@ -1144,6 +1147,7 @@ def _normalize_input_patch(patch: dict, *, patch_dir: Path) -> dict:
         "task_patch": normalized_task,
         "source_changes": {"add": add, "replace": replace, "remove": remove, "metadata": metadata},
         "reason": reason,
+        "mode": mode,
     }
 
 
@@ -1331,12 +1335,20 @@ def inputs_update(
                 new_document["tasks"][index] = store.put_json_object(
                     {**task, "status": "superseded", "updated_at": _utc_now_iso()})
         task = _input_compose_task(new_document, operation_id=operation_id, reason=normalized["reason"])
+        if normalized.get("mode", "auto") == "trial":
+            # B03: the material-impact judgement comes back as an immutable
+            # content_update candidate; the registration itself stays honest
+            # (needs_reconciliation) and never claims alignment up front.
+            task["stage_request"] = {"mode": "trial", "stage": "content", "references": []}
+            task["required_capabilities"] = [*task.get("required_capabilities", []),
+                                              "candidate_result", "content_candidate"]
         new_document["tasks"] = list(new_document.get("tasks") or []) + [store.put_json_object(task)]
         alignment = input_alignment(new_document)
         result = {
             "status": "updated",
             "input_digest": new_digest,
             "input_alignment": alignment,
+            "mode": normalized.get("mode", "auto"),
             "revision_id": new_document['revision_id'],
             "superseded_tasks": superseded_ids,
             "diff": diff,
@@ -1424,7 +1436,7 @@ def accept_result(
             result_refs=outcome.get("result_refs") or [],
         )
     response["current_revision_id"] = current_revision
-    for key in ("candidate_ids", "candidate_refs", "current_artifacts_changed", "new_page_hashes", "unchanged_reason", "impact_summary", "work_complete", "operation_result", "journal_warning", "same_revision"):
+    for key in ("candidate_ids", "candidate_refs", "result_kind", "current_artifacts_changed", "current_content_changed", "input_alignment_after_adoption", "new_page_hashes", "unchanged_reason", "impact_summary", "work_complete", "operation_result", "journal_warning", "same_revision"):
         if key in outcome:
             response[key] = outcome[key]
     return response

@@ -341,7 +341,9 @@ def _lookup_task(document: dict, task_id: str, store: Store) -> dict:
 
 def task_inputs_current(store, document, task):
     from .candidates import is_trial, inputs_current
-    if is_trial(task):
+    if is_trial(task) and task.get('stage_request', {}).get('stage') not in ('repair', 'content'):
+        # Image trials use the per-page generation basis; content trials keep
+        # a precise per-page scope through the content basis instead (B03).
         return inputs_current(store, document, task)
     if content_identity(document) == task.get('produced_against'):
         return True
@@ -1040,6 +1042,15 @@ def _accept_result_locked(
         raise EnvelopeError("(result)/content_update",
                             "input_revision requires content_update; full pages cannot replace the deck")
     if content_update is not None:
+        from .candidates import is_trial, record_result
+        if is_trial(task):
+            # B03: an explicit content trial freezes the whole changeset as an
+            # immutable candidate; nothing is applied until adoption.
+            updated_task = {**task, "status": "completed", "updated_at": _utc_now_iso()}
+            return record_result(store, document=document, task=task, updated_task=updated_task,
+                                 artifacts=[], artifact_refs=[], generation_binding=None,
+                                 envelope=envelope, produced_against=produced_against,
+                                 result_digest=result_digest, content_update=content_update)
         return _accept_content_update(
             store, document=document, task=task, envelope=envelope,
             content_update=content_update, result_digest=result_digest,
@@ -1164,7 +1175,8 @@ def _accept_result_locked(
     if is_trial(task):
         return record_result(store, document=document, task=task, updated_task=updated_task,
                              artifacts=artifacts, artifact_refs=artifact_refs, generation_binding=generation_binding,
-                             envelope=envelope, produced_against=produced_against, result_digest=result_digest)
+                             envelope=envelope, produced_against=produced_against, result_digest=result_digest,
+                             page_refs=page_refs)
     validate_task_semantics(updated_task)
     task_ref = store.put_json_object(updated_task)
 

@@ -491,6 +491,12 @@
         "goals",
         "unresolved_facts"
       ]
+    },
+    "mode": {
+      "enum": [
+        "auto",
+        "trial"
+      ]
     }
   },
   "required": [

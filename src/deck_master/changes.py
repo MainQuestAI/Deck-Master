@@ -77,8 +77,12 @@ def _plan(store, document, value):
         stage = target.get('stage', {'page': 'repair', 'blueprint': 'blueprint', 'svg': 'reconstruct'}[slot])
         if stage not in ({'repair'} if slot == 'page' else {'blueprint'} if slot == 'blueprint' else {'reconstruct', 'repair'}):
             fail('targets/stage', 'stage does not match the selected layer')
-        if mode == 'trial' and slot == 'page':
-            fail('mode', 'trial supports original-image and SVG candidates')
+        if mode == 'trial' and slot == 'page' and value['intent'].strip() == 'content':
+            # B03: a single-page content trial returns one immutable Page
+            # candidate; current content moves only through explicit adoption.
+            pass
+        elif mode == 'trial' and slot == 'page':
+            fail('mode', 'content trials require intent "content"; other layers support original-image and SVG candidates')
         if extended and slot == 'svg':
             if not entry.get('blueprint'):
                 fail('targets/stage', 'SVG reconstruction requires a current original image')
@@ -220,6 +224,11 @@ def _new_task(store, ledger, basis, plan, change_ref, task_id, action):
             task['required_capabilities'].append('style_recipe')
         if action['mode'] == 'trial':
             task['required_capabilities'].append('candidate_result')
+            if action['write_slots'] == ['page']:
+                # B03: a content trial Host must declare the content capability;
+                # old Hosts are refused before they can claim the task.
+                from .candidates import CONTENT_CAPABILITY
+                task['required_capabilities'].append(CONTENT_CAPABILITY)
     validate_task_semantics(task)
     return task
 

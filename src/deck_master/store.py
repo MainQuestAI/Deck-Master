@@ -44,7 +44,7 @@ WORKBENCH_FORMAT = "deckmaster-current.v2"
 # Writers this core can read from a pointer and advance to (single source for
 # the store gate and the UI's effective-action projection).
 SUPPORTED_WRITERS = ("generation.v1", "content-plan.v1", "changes.v1", "candidates.v1",
-                     "run-desk.v1", "style-recipes.v1", "content-ops.v1")
+                     "run-desk.v1", "style-recipes.v1", "content-ops.v1", "content-candidates.v1")
 DECKMASTER_DIR = ".deckmaster"
 OPERATION_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
 

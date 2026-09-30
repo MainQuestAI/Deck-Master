@@ -489,7 +489,8 @@
           "enum": [
             "blueprint",
             "reconstruct",
-            "repair"
+            "repair",
+            "content"
           ]
         },
         "references": {

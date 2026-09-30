@@ -28,6 +28,9 @@ def _check(store, doc, value):
         fail('project_id', 'request belongs to another project')
     if value['base_revision'] != doc['revision_id'] or value['content_plan_ref'] != doc.get('content_plan'):
         fail('base_revision', 'Document or content plan changed; preserve input and replan', conflict=True)
+    mode = value.get('mode', 'auto')
+    if mode not in ('auto', 'trial'):
+        fail('mode', 'content operations run auto or as an explicit trial')
     ids = [t['page_id'] for t in value['targets']]
     if len(ids) != len(set(ids)):
         fail('targets', 'select unique page identities')
@@ -35,8 +38,10 @@ def _check(store, doc, value):
     if any(t['page_id'] not in entries or entries[t['page_id']]['page'] != t['page_ref'] for t in value['targets']):
         fail('targets', 'selected Page basis changed; no pages were edited', conflict=True)
     action = value['action']
+    if mode == 'trial' and action not in HOST_ACTIONS:
+        fail('mode', 'only rewrite/merge/split host actions can run as an explicit trial')
     allowed = {'page_order'} if action == 'reorder' else {'customer_visible'} if action == 'edit' else {'content_plan'} if action == 'outline' else set()
-    if set(value) - {'schema_version', 'project_id', 'base_revision', 'content_plan_ref', 'action', 'targets', 'instruction'} != allowed:
+    if set(value) - {'schema_version', 'project_id', 'base_revision', 'content_plan_ref', 'action', 'targets', 'instruction', 'mode'} != allowed:
         fail('input', 'provide exactly the payload for the selected action')
     if not value['instruction'].strip():
         fail('instruction', 'state the intended editorial change')
@@ -103,23 +108,43 @@ def _revise_outline(store, doc, updated, value, operation_id):
     previous_ref = doc.get('content_plan')
     if not previous_ref:
         return
+    if value['action'] == 'outline':
+        previous = store.read_object_json(previous_ref); revised = copy.deepcopy(previous)
+        revised.update(version=previous['version'] + 1, previous_ref=previous_ref, origin='user_edited', task_id=None, operation_id=operation_id)
+        revised['input'] = copy.deepcopy(value['content_plan'])
+        _finish_plan_revision(store, doc, revised, updated, operation_id)
+    else:
+        refresh_plan_links(store, doc, updated, operation_id)
+
+
+def refresh_plan_links(store, doc, updated, operation_id):
+    """Bump the plan version and rebuild page_links after page identities moved.
+
+    Shared by local edits and explicit Page-candidate adoption (B03); a moved
+    Page keeps its goal, chapters drop goals that left the deck, and the
+    source-reading input digest is preserved (an edit is not reconciliation).
+    """
+    previous_ref = doc.get('content_plan')
+    if not previous_ref:
+        return
     previous = store.read_object_json(previous_ref); revised = copy.deepcopy(previous)
     revised.update(version=previous['version'] + 1, previous_ref=previous_ref, origin='user_edited', task_id=None, operation_id=operation_id)
-    if value['action'] == 'outline':
-        revised['input'] = copy.deepcopy(value['content_plan'])
-    else:
-        ids = [p['page_id'] for p in updated['pages']]
-        by_page = {g['page_id']: g for g in revised['input']['goals']}
-        if not set(ids) <= set(by_page):
-            fail('content_plan', 'content plan does not cover these Pages; reconcile the outline first', conflict=True)
-        revised['input']['goals'] = [by_page[pid] for pid in ids]
-        goals = {g['goal_id'] for g in revised['input']['goals']}
-        chapters = []
-        for chapter in revised['input']['chapters']:
-            chapter['goal_ids'] = [gid for gid in chapter['goal_ids'] if gid in goals]
-            if chapter['goal_ids']:
-                chapters.append(chapter)
-        revised['input']['chapters'] = chapters
+    _finish_plan_revision(store, doc, revised, updated, operation_id)
+
+
+def _finish_plan_revision(store, doc, revised, updated, operation_id):
+    ids = [p['page_id'] for p in updated['pages']]
+    by_page = {g['page_id']: g for g in revised['input']['goals']}
+    if not set(ids) <= set(by_page):
+        fail('content_plan', 'content plan does not cover these Pages; reconcile the outline first', conflict=True)
+    revised['input']['goals'] = [by_page[pid] for pid in ids]
+    goals = {g['goal_id'] for g in revised['input']['goals']}
+    chapters = []
+    for chapter in revised['input']['chapters']:
+        chapter['goal_ids'] = [gid for gid in chapter['goal_ids'] if gid in goals]
+        if chapter['goal_ids']:
+            chapters.append(chapter)
+    revised['input']['chapters'] = chapters
     goals = {g['page_id']: g['goal_id'] for g in revised['input']['goals']}
     revised['page_links'] = [{'page_id': e['page_id'], 'page_ref': e['page'], 'goal_id': goals[e['page_id']]} for e in updated['pages']]
     # Preserve source-reading input digest. A manual edit is not reconciliation.
@@ -138,9 +163,10 @@ def commit(project, *, plan_id, base_revision, operation_id):
         if base_revision != doc['revision_id'] or planned != _plan(store, doc, planned['input']):
             fail('base_revision', 'content plan changed; no pages were changed', conflict=True)
         value = planned['input']; action = value['action']; ids = [t['page_id'] for t in value['targets']]
+        trial = value.get('mode', 'auto') == 'trial' and action in HOST_ACTIONS
         updated = bump_revision(copy.deepcopy(doc), {'operation_id': operation_id, 'kind': 'content_update', 'description': value['instruction'], 'read_set': []})
         require_writer(updated, 'content-ops.v1')
-        superseded = set(planned['impact']['superseded_tasks'])
+        superseded = set() if trial else set(planned['impact']['superseded_tasks'])
         from .tasks import _utc_now_iso
         for i, ref in enumerate(updated['tasks']):
             task = store.read_object_json(ref)
@@ -152,8 +178,14 @@ def commit(project, *, plan_id, base_revision, operation_id):
             task = _input_compose_task(updated, operation_id=operation_id, reason=value['instruction'])
             task['scope_pages'] = ids; task['content_operation_ref'] = plan_ref; task['inputs'].append(plan_ref)
             task['required_capabilities'].append('content_operations')
+            if trial:
+                # B03: an explicit trial returns an immutable content_update
+                # candidate; superseding and invalidation move to adoption.
+                task['stage_request'] = {'mode': 'trial', 'stage': 'content', 'references': []}
+                task['required_capabilities'] = [*task['required_capabilities'], 'candidate_result', 'content_candidate']
             task['instruction'] = ('明确的内容操作 ' + action + '：' + value['instruction'] + '\n仅处理所选页。rewrite 保留原 page_id；merge/split 返回全新 page_id，移除所选旧页。'
-                                   '未选页正文及目标不得改变。提交完整 content_plan 和 content_update，包含具体影响依据；不生成图片。')
+                                   '未选页正文及目标不得改变。提交完整 content_plan 和 content_update，包含具体影响依据；不生成图片。'
+                                   + ('当前为 trial：结果保存为候选，采用前不改动当前正文或页序。' if trial else ''))
             updated['tasks'].append(store.put_json_object(task)); task_ids = [task['task_id']]
         else:
             if action == 'edit':
@@ -172,7 +204,10 @@ def commit(project, *, plan_id, base_revision, operation_id):
                 _revise_outline(store, doc, updated, value, operation_id)
         result = {'status': 'dispatched' if task_ids else 'edited', 'revision_id': updated['revision_id'], 'plan_ref': plan_ref,
                   'action': action, 'task_ids': task_ids, 'impact': planned['impact'], 'image_calls': 0,
+                  'mode': 'trial' if trial else 'auto',
                   'page_order': [p['page_id'] for p in updated['pages']], 'annotation_policy': 'retain_original_basis'}
+        if trial:
+            result['trial_effect'] = 'the returned content_update is recorded as an immutable candidate; current pages, order and outputs change only through explicit adoption'
         return operations.commit_locked(store, document=updated, base_revision=base_revision, operation_id=operation_id,
                                         kind='content.commit', digest=digest, result=result)
 
