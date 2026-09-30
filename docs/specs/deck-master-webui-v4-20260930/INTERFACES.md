@@ -25,7 +25,7 @@
 
 拟增 `attention.items[]` / 顶层 `next_actions[]`：`action_id`、`kind`、`page_ids`、`layer`、`reason_code`、`source_refs`、`enabled`、`blocked_reason`、`revision_id`。状态derived/unknown区别；action_id由事实身份+kind稳定产生。只返回允许的动作种类，前端本地映射路线，不执行后端任意URL或命令。
 
-排序：保存未知/冲突等需先解决的恢复事项（个人journal由A另并列展示，不注入业务真相）→明确失败/超时→待决候选→未协调输入→缺层/依据已变→一般阅读。服务无专业记录时不生成“风格偏离”；质量不明是未判断。候选count保留总数，另增pending_count排除adopted/keep_current，引用决定事实。没有可执行动作时给原因与可读位置。
+排序：保存未知/冲突等需先解决的恢复事项（个人journal由A另并列展示，不注入业务真相）→待交接handoff（主执行回路步骤，先于重做类事项）→明确失败→待决候选→未协调输入→缺层/依据已变→一般阅读。超时/长时间运行中归入恢复层（与run_desk.task_row判定一致）。服务无专业记录时不生成“风格偏离”；质量不明是未判断。候选count保留总数，另增pending_count排除adopted/keep_current，引用决定事实。没有可执行动作时给原因与可读位置。
 
 ## B02：有效能力与主入口
 

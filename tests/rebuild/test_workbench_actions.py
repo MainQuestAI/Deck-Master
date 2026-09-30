@@ -273,9 +273,11 @@ def test_next_actions_order_reasons_and_stable_ids(flow, tmp_path):
 
     summary = workbench.workbench_summary(path)
     assert summary["input_alignment"] == "needs_reconciliation"
-    assert kinds(summary) == ["verify_execution", "inspect_failure", "replan", "compare_candidates",
-                              "reconcile_inputs", "prepare_stage", "refresh_stage", "handoff",
-                              "review_quality", "review_results"]
+    # handoff sits right below recovery: an awaiting task is the primary
+    # executable loop step and must not be buried behind rework or reading
+    assert kinds(summary) == ["verify_execution", "handoff", "inspect_failure", "replan",
+                              "compare_candidates", "reconcile_inputs", "prepare_stage",
+                              "refresh_stage", "review_quality", "review_results"]
     by_kind = {action["kind"]: action for action in summary["next_actions"]["actions"]}
     assert by_kind["verify_execution"]["reason_code"] == "unknown_calls_recorded"
     assert by_kind["inspect_failure"]["reason_code"] == "task_failed"
@@ -306,6 +308,43 @@ def test_next_actions_order_reasons_and_stable_ids(flow, tmp_path):
     assert workbench.workbench_summary(path) == summary
     fixed = store.current_revision_id()
     assert workbench.workbench_summary(path, revision=fixed) == workbench.workbench_summary(path, revision=fixed)
+    validate(summary)
+
+
+def test_snapshot_level_candidate_damage_is_isolated_not_fatal(project):
+    store = Store(project)
+    # snapshot-level damage: entries that are not valid object refs, plus a
+    # foreign-path entry, must not crash the summary or echo foreign paths
+    revision = store.current_revision_id()
+    path = store.revisions_dir / f"{revision}.json"
+    doc = json.loads(path.read_text("utf-8"))
+    doc["candidates"] = ["not-a-ref", {"path": "etc/passwd", "sha256": "0" * 64}]
+    doc["candidate_adoptions"] = ["oops"]
+    path.write_text(json.dumps(doc), "utf-8")
+    summary = workbench.workbench_summary(project)
+    assert summary["candidates"] == {"status": "recorded", "count": 2, "pending_count": 2,
+                                     "adopted_count": 0, "unreadable_count": 2}
+    compare = [a for a in summary["next_actions"]["actions"] if a["kind"] == "compare_candidates"][0]
+    assert compare["enabled"] is False and compare["blocked_reason"] == "candidate_unreadable"
+    assert compare["state"] == "unknown" and compare["source_refs"] == []
+    assert "etc/passwd" not in json.dumps(summary) and "not-a-ref" not in json.dumps(summary)
+    # the damage stays local: pages and stage actions still read
+    assert summary["pages"][0]["title"] is not None
+    assert "prepare_stage" in kinds(summary)
+    validate(summary)
+
+
+def test_frozen_record_damage_is_attributed_unreadable(flow):
+    path, store, task, native = flow
+    start(flow)
+    frozen = freeze(flow)
+    (path / frozen["request_ref"]["path"]).write_bytes(b"corrupted request object")
+    summary = workbench.workbench_summary(path)
+    prompt = summary["pages"][0]["prompt_summary"]
+    assert prompt["frozen"]["status"] == "unreadable" and prompt["frozen"]["unreadable_count"] == 1
+    # the frozen damage does not leak into the other prompt branches
+    assert prompt["prepared"]["status"] in ("recorded", "not_recorded")
+    assert prompt["submitted"]["status"] in ("recorded", "not_recorded", "unreadable")
     validate(summary)
 
 

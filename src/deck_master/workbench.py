@@ -239,15 +239,19 @@ def _deck_output(ctx):
 # without professional review evidence, quality stays "undetermined".
 ACTIONS_CAPABILITY = "workbench_actions.v1"
 
-# Ordering tiers: recovery first, then clear failures, pending candidates,
-# unreconciled inputs, missing/stale layers, and finally general reading.
+# Ordering tiers: recovery first, then the primary handoff loop, clear
+# failures, pending candidates, unreconciled inputs, missing/stale layers, and
+# finally general reading. A stale/timeout running task counts as recovery
+# (same as run_desk); handoff sits above failures so an awaiting task is never
+# buried behind rework, matching run_desk's human_actions ordering.
 _ACTION_TIERS = {
     "verify_execution": 1,
-    "inspect_failure": 2, "replan": 2,
-    "compare_candidates": 3,
-    "reconcile_inputs": 4,
-    "prepare_stage": 5, "refresh_stage": 5,
-    "handoff": 6, "review_results": 6, "review_quality": 6,
+    "handoff": 2,
+    "inspect_failure": 3, "replan": 3,
+    "compare_candidates": 4,
+    "reconcile_inputs": 5,
+    "prepare_stage": 6, "refresh_stage": 6,
+    "review_results": 7, "review_quality": 7,
 }
 
 
@@ -360,6 +364,9 @@ def _overview_facts(ctx, *, live, now):
                 request = ctx.read(request_ref)
                 if request.get("task_id") != task["task_id"] or request.get("project_id") != doc["project_id"]:
                     raise ValueError("foreign request")
+                # Identity/binding only: unlike page_lineage's full record
+                # check, this index deliberately skips input_hash so a 300-page
+                # deck never re-hashes every frozen request body.
                 frozen[request["input"]["page"]["page_id"]]["refs"].append(request_ref)
             except READ_FAILURES:
                 for page_id in scope:
@@ -375,12 +382,31 @@ def _candidate_facts(ctx, tasks_by_id):
     a damaged or unknown-task candidate stays pending and is isolated."""
     doc = ctx.document
     refs = doc.get("candidates") or []
-    adoptions = doc.get("candidate_adoptions") or []
+    adoptions = [a for a in doc.get("candidate_adoptions") or [] if isinstance(a, dict)]
     adopted_shas = {a.get("candidate_ref", {}).get("sha256") for a in adoptions
                     if isinstance(a.get("candidate_ref"), dict)}
     adopted_ids = {a.get("candidate_id") for a in adoptions if isinstance(a.get("candidate_id"), str)}
     facts, adopted, unreadable = [], 0, 0
+
+    def _usable_ref(ref):
+        # Snapshot-level damage must stay as isolated as object-level damage:
+        # entries that are not valid in-store refs are counted unreadable and
+        # never echoed into the public response.
+        if not isinstance(ref, dict):
+            return False
+        try:
+            validate_ref(ref, where="document/candidates")
+        except READ_FAILURES:
+            return False
+        return True
+
     for ref in refs:
+        if not _usable_ref(ref):
+            unreadable += 1
+            facts.append(_fact("compare_candidates", "candidate_pending", str(ref),
+                               page_ids=[], source_refs=[], layer=None, enabled=False,
+                               blocked_reason="candidate_unreadable", state="unknown"))
+            continue
         if ref.get("sha256") in adopted_shas:
             adopted += 1
             continue

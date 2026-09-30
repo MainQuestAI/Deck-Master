@@ -3,7 +3,7 @@
   "route": "B · 功能补齐",
   "slice": "可行动总览与读契约修复（工程切片，待单独评审）",
   "base": "eb6350ac8cbc2a1d0c3ae66ea95526e183512a91",
-  "head": "71db121b41f6eb8d1aa6a6aee52929d0f19be84b",
+  "head": "评审修复后见本分支最新提交（71db121 之上）",
   "branch": "codex/webui-b-capabilities",
   "environment": "macOS darwin 27.0.0 arm64; Python 3.12.12 venv（主仓库 .venv，dev依赖），PYTHONPATH=src 指向 webui-b 工作树",
   "changed_files": [
@@ -29,22 +29,27 @@
     },
     {
       "layer": "HTTP",
-      "commands": ["tests/rebuild/test_workbench_actions.py::test_http_serves_actions_and_health_advertises_capability；既有 web/e2e 套件 77 passed"],
+      "commands": [
+        "tests/rebuild/test_workbench_actions.py::test_http_serves_actions_and_health_advertises_capability；既有 web/e2e 套件 77 passed"
+      ],
       "result": "pass"
     },
     {
       "layer": "压力（合成）",
-      "commands": ["python docs/specs/deck-master-webui-v4-20260930/evidence/b01_pressure.py docs/specs/deck-master-webui-v4-20260930/evidence/b01-pressure.json"],
-      "result": "warm 120次 p50 72ms / p95 84ms / max 89ms ≤ 250ms；样本300页×5候选×3Attempt，6304元数据对象；冷读675ms未计入门槛"
+      "commands": [
+        "python docs/specs/deck-master-webui-v4-20260930/evidence/b01_pressure.py docs/specs/deck-master-webui-v4-20260930/evidence/b01-pressure.json"
+      ],
+      "result": "warm 120次 p50 72.77ms / p95 84.01ms / max 96.81ms ≤ 250ms（b01-pressure.json 原文）；样本300页×5候选×3Attempt，6304元数据对象；冷读684.65ms未计入门槛"
     }
   ],
   "behavior_notes": [
     "candidates：无记录 {status:not_recorded}；有记录 {status:recorded,count,pending_count,adopted_count,unreadable_count}，pending 排除已采纳（按提交账 candidate_adoptions 匹配）；keep_current 决定属 B04，届时扩展该块。",
     "prompt_summary：prepared/frozen/submitted 仅状态+引用，不展开正文；submitted.observer 在摘要层沿 artifact provenance 记录为 host_reported，tool_observed 升级仍属 page lineage 详情；缺失冻结记录不由草稿补全（测试覆盖）。",
-    "next_actions/attention：action_id=sha256(project|kind|reason|layer|事实身份)[:32]，同 revision 稳定；排序 tier：恢复(verify_execution) > 失败/超时(inspect_failure/replan) > 待决候选(compare_candidates) > 未协调输入(reconcile_inputs) > 缺层/依据已变(prepare_stage/refresh_stage) > 一般阅读(handoff/review_results/review_quality)；无质量证据不产生风格偏离动作。",
+    "next_actions/attention：action_id=sha256(project|kind|reason|layer|事实身份)[:32]，同 revision 稳定；排序 tier：恢复(verify_execution，含超时/长时间运行中，与run_desk一致) > 待交接(handoff，主执行回路) > 失败/重做(inspect_failure/replan) > 待决候选(compare_candidates) > 未协调输入(reconcile_inputs) > 缺层/依据已变(prepare_stage/refresh_stage) > 一般阅读(review_results/review_quality)；无质量证据不产生风格偏离动作。",
     "staleness（running≥30分钟）仅在 current 模式评估；fixed revision 读取不含时钟，字节稳定。",
     "损坏隔离：损坏候选/任务记录不崩溃，损坏候选计 pending 且 enabled=false+blocked_reason=candidate_unreadable；任务未知候选按其自身 page_id/任务 scope 回退。",
-    "web.py 仅改 /api/health 的 ui_capabilities 增加 workbench_actions.v1（只读投影）。"
+    "web.py 仅改 /api/health 的 ui_capabilities 增加 workbench_actions.v1（只读投影）。",
+    "评审修复：快照级损坏的 candidates/candidate_adoptions 条目（非dict、非法ref、外路路径）按 unreadable 隔离且不回显进公开响应；frozen 索引刻意跳过 input_hash（元数据索引，避免300页全量哈希），注释已标明。"
   ],
   "open_items": [
     "B01-AC01/AC02/AC03 的核心与HTTP层已由本切片关闭；浏览器层（A03 消费后的真实交互）与真实制作工具/安装层验收保持 open，属 A 线与 B07。",
@@ -53,5 +58,20 @@
   ],
   "synthetic_evidence_only": true,
   "real_host_calls": 0,
-  "production_acceptance": false
+  "production_acceptance": false,
+  "review": {
+    "date": "2026-09-30",
+    "reviewer": "独立 code-review（ZCode code-reviewer 子代理）+ 人工复核",
+    "verdict": "可进入合并评审",
+    "findings_fixed": [
+      "P2-1 快照级 candidates/adoptions 无保护解引用：非dict条目/非法ref/外路路径现在隔离为 unreadable，不再让整个 summary 422，也不回显外路路径（新增 test_snapshot_level_candidate_damage_is_isolated_not_fatal）",
+      "P2-2 handoff 排序：从 tier6 上调至恢复层之下（tier2），与 run_desk 的 human_actions 优先级一致；INTERFACES 排序说明同步更新，排序测试更新",
+      "P3-3 frozen 损坏归因与 recorded+unreadable 组合补测试（test_frozen_record_damage_is_attributed_unreadable）",
+      "P3-4 压力数字改为逐字引用已提交的 b01-pressure.json"
+    ],
+    "findings_noted_not_fixed": [
+      "P3-1 verify_execution 单原因投影（run_desk 详情可见完整集合，摘要层接受该信息损失）",
+      "P3-5 巨型合并动作：全部待决候选合并为一个 deck 级动作，A03 消费时确认粒度（可按页分组展示）"
+    ]
+  }
 }
