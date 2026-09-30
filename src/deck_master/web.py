@@ -146,6 +146,12 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             if sample and sample['readonly'] and self.path not in ('/api/ui-state', '/api/gallery', '/api/text-ranges/validate'):
                 self._send_json({'error': {'code': 'sample_readonly', 'message': 'this synthetic example is read-only; create your own project'}}, 403)
                 return
+            # G54（B07 回填）：document 写族端点补与 FORMAT_GATED 投影一致的格式门。
+            if self.path in ('/api/candidates/plan', '/api/candidates/adopt', '/api/candidates/decision', '/api/stages/assemble'):
+                document = self.store.load_document()
+                if document.get('compatibility', {}).get('project_format') != 'workbench.v3':
+                    self._send_json({'error': {'code': 'unsupported_project_format', 'message': 'this action requires a workbench.v3 project'}}, 409)
+                    return
             from . import editing, service
             if self.path in ('/api/drafts/save', '/api/drafts/import', '/api/drafts/recovery', '/api/ui-state'):
                 from . import ui_journal
