@@ -18,8 +18,8 @@ export function runDesk(app, data) {
   const attention = el('input', {type: 'checkbox', 'aria-label': '只看需我处理'});
   let page = data.runPage, selected = data.runDetail, disposed = false, serial = 0, busy = false;
   let state = {offset: 0, group: '', status: '', attention: false, seen: []};
-  let pinned = app.route.revision, live = !app.historical, pendingRefresh = false;
-  root.append(el('div', {class: 'panel-head'}, el('h2', {}, '运行记录'), button('核实最新执行状态', () => { live = true; state.offset = 0; read(); })),
+  let pinned = app.route.revision, live = !app.historical, pendingRefresh = false, choiceMade = false;
+  root.append(el('div', {class: 'panel-head'}, el('h2', {}, '运行记录'), button('核实最新执行状态', () => { choiceMade = true; live = true; state.offset = 0; persist(); read(); })),
     el('div', {class: 'panel-body stack'}, el('p', {class: 'muted'}, '当前执行状态与顶栏的页面阅读版本分开。正常处理中无需你操作；查看结果不代表采用或质量通过。'),
       el('div', {class: 'row wrap run-filters'}, group, status, el('label', {}, attention, '只看需我处理')), notice, detail, rows, pager));
   function persist() {
@@ -49,7 +49,7 @@ export function runDesk(app, data) {
       task.task_id && button('查看这项任务', () => app.go({task_id: task.task_id, revision: page.revision_id})))));
     if (!tasks.length) rows.append(empty(state.attention ? '本页没有需要你处理的记录' : '没有匹配的运行记录',
       '可继续阅读内容与制作状态。查看其它记录不会触发执行。', el('div', {class: 'row wrap'}, button('阅读内容', () => app.go({surface: 'content'})), button('查看整稿', () => app.go({surface: 'gallery'})))));
-    const move = offset => { state.offset = offset; state.revision = page.revision_id; pinned = page.revision_id; live = false; persist(); read(); };
+    const move = offset => { choiceMade = true; state.offset = offset; state.revision = page.revision_id; pinned = page.revision_id; live = false; persist(); read(); };
     pager.replaceChildren(button('上一页任务', () => move(Math.max(0, state.offset - 30)), false, {disabled: state.offset === 0}),
       el('span', {}, `第 ${Math.floor(state.offset / 30) + 1} 页 · 每页最多 30 项`),
       button('下一页任务', () => move(page.pagination.next_offset), false, {disabled: page.pagination.next_offset === null}));
@@ -112,7 +112,7 @@ export function runDesk(app, data) {
     finally { busy = false; if (pendingRefresh && !disposed) { pendingRefresh = false; read(); } }
   }
   for (const input of [group, status, attention]) input.addEventListener('change', () => {
-    state.group = group.value; state.status = status.value; state.attention = attention.checked; state.offset = 0; persist(); read();
+    choiceMade = true; state.group = group.value; state.status = status.value; state.attention = attention.checked; state.offset = 0; persist(); read();
   });
   const sync = () => { if (live && !document.hidden) read(); };
   app.root.addEventListener('summary-refreshed', sync);
@@ -123,12 +123,13 @@ export function runDesk(app, data) {
       if (disposed || editor !== app.editor) return;
       recovery.hydrate(editor);
       const saved = editor.draft.content.run_desk;
-      if (saved && typeof saved === 'object') {
+      if (!choiceMade && saved && typeof saved === 'object') {
         state = {offset: Number.isSafeInteger(saved.offset) && saved.offset >= 0 ? saved.offset : 0,
           group: typeof saved.group === 'string' ? saved.group : '', status: Object.hasOwn(statuses, saved.status) ? saved.status : '',
           attention: saved.attention === true, seen: Array.isArray(saved.seen) ? saved.seen.filter(v => typeof v === 'string').slice(-500) : []};
         if (state.offset) { live = false; pinned = typeof saved.revision === 'string' ? saved.revision : app.route.revision; state.revision = pinned; }
       }
+      if (choiceMade) persist();
       read();
     });
   }

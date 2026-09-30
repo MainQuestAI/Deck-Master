@@ -84,7 +84,7 @@ Stop the selected service using `workbench --registry … --stop` (launcher) or
 `workbench --project … --stop` (project). Stopping a service preserves its data;
 it does not prevent an independent CLI writer from being invoked.
 
-The five work areas are 制作总览, 内容与来源, 整稿画廊, 逐页查看 and 任务与交付.
+The five work areas are 制作总览, 内容与来源, 整稿画廊, 风格校准 and 任务与交付.
 The UI saves personal drafts separately from formal operations. Copying a Host
 handoff does not start a model. New output remains a candidate until explicitly
 adopted; an unknown response must be verified using its original operation ID.

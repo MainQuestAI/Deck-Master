@@ -1,6 +1,6 @@
 {
   "baseline": "d1c7c4600cb0fc781070116ed8cc8a1ff6b8b7ca",
-  "branch": "codex/workbench-w12-integration",
+  "branch": "codex/workbench-w12-final",
   "active_package": "W12",
   "sequence": [
     "W01.core",
@@ -239,7 +239,10 @@
     "W12": {
       "status": "engineering_verification_in_progress",
       "accepted": false,
-      "evidence": "W12.md"
+      "evidence": "W12.md",
+      "core_pull_request": "https://github.com/MainQuestAI/Deck-Master/pull/65",
+      "core_head": "629d625f4b012b8813efabb6355c584f4717b84d",
+      "core_merge_commit": "66da345c84de48933a76de577114f08dcebf4f0e"
     }
   },
   "acceptance": {
