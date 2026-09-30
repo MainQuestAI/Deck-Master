@@ -1,0 +1,62 @@
+[
+  {
+    "kind": "identity",
+    "n": 0,
+    "ms": 2009.9953749449924
+  },
+  {
+    "kind": "identity",
+    "n": 1,
+    "ms": 17.808916978538036
+  },
+  {
+    "kind": "identity",
+    "n": 2,
+    "ms": 16.983791952952743
+  },
+  {
+    "kind": "identity",
+    "n": 3,
+    "ms": 17.225207993760705
+  },
+  {
+    "kind": "identity",
+    "n": 4,
+    "ms": 19.123125006444752
+  },
+  {
+    "kind": "identity",
+    "n": 5,
+    "ms": 17.1356659848243
+  },
+  {
+    "kind": "fixed_fixture_revision",
+    "n": 0,
+    "ms": 9.845874970778823
+  },
+  {
+    "kind": "fixed_fixture_revision",
+    "n": 1,
+    "ms": 9.751082980073988
+  },
+  {
+    "kind": "fixed_fixture_revision",
+    "n": 2,
+    "ms": 10.100457933731377
+  },
+  {
+    "kind": "fixed_fixture_revision",
+    "n": 3,
+    "ms": 9.674749919213355
+  },
+  {
+    "kind": "fixed_fixture_revision",
+    "n": 4,
+    "ms": 9.87195794004947
+  },
+  {
+    "kind": "fixed_fixture_revision",
+    "n": 5,
+    "ms": 10.49083296675235
+  }
+]

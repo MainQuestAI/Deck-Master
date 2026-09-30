@@ -2,13 +2,12 @@
 from __future__ import annotations
 
 import copy
-from functools import lru_cache
 import time
 import uuid
 
 from .local_state import MAX_BODY, LocalStateConflict, LocalStateError, local_lock, project_path, read_json, safe_path, write_json
 from .models import canonical_json_bytes, sha256_bytes, validate_schema
-from .snapshots import IDENTIFIER, committed_snapshots, load_snapshot
+from .snapshots import IDENTIFIER, committed_headers, load_snapshot
 from .store import Store
 
 
@@ -16,16 +15,15 @@ def digest(value):
     return sha256_bytes(canonical_json_bytes(value))
 
 
-@lru_cache(maxsize=128)
 def _logical_identity(project, current_revision):
     # Genesis UUID distinguishes two projects with the same basename/page IDs,
     # yet remains stable when the same project is moved or copied for recovery.
     root = None
-    for doc in committed_snapshots(Store(project)):
-        root = doc
-    if root is None or root.get("parent_revision_id") is not None:
+    for header in committed_headers(Store(project), head=current_revision):
+        root = header
+    if root is None or root[2] is not None:
         raise LocalStateError("project", "project ancestry is incomplete")
-    return digest({"project_id": root["project_id"], "genesis_revision": root["revision_id"]})
+    return digest({"project_id": root[1], "genesis_revision": root[0]})
 
 
 def context(project):

@@ -179,3 +179,15 @@ acceptance; the W07 execution report records that separately.
 ### W09 内容编辑浏览器
 
 `w09_browser.py` 验证正文、页序、输入与保存恢复；`w09_browser_edges.py` 验证模拟 Host 的合并/拆分/改写、来源与冲突；`w09_source_browser.py` 验证材料用途、替换、移除及历史版本定位。均使用 `--out <new-dir>`，真实本地服务 + Chromium，显式合成材料/Host，模型调用为 0。真实 Host 材料判断另见 W09-CORE。
+
+## W11 / W12 固定导出与最终安装验证
+
+`w11_browser.py --out <new-dir> [--font Arial]` 使用真实编译/渲染与明确合成质量记录，验证三用途下载、历史恢复及未知回包。`w11_export_snapshot.py --project <project> --out <new-dir>` 检查指定项目的固定包，交付缺项会保留实际拒绝。
+
+`w12_installed_acceptance.py build --source <checkout> --ref <commit> --out <new-dir>` 从 Git archive 构建 wheel/sdist，并重建核对运行文件、33 项前端资源和唯一 Skill。使用已安装候选的 Python 执行生成目录的 `drivers/w12_installed_acceptance.py verify --manifest <dist/release.json> --out <new-dir>`，不能设置指向源码的 PYTHONPATH。验收工具使用 Python Playwright/pytest；Linux 明确选择已安装的 `--font 'DejaVu Sans'`。
+
+`w12_offline_browser.py --require-installed --out <new-dir>` 是 CI 的安装后门禁，阻断外网并检查 1440×900/1280×800、本地系统字体、全部静态资源和三用途下载。HAR 只留本机。`w10_pressure.py --fixture <existing-manifest-root> --source-commit <candidate-sha> --out <new-dir>` 在该候选解释器运行，完整计时 1200 秒，不能用 `--smoke` 关闭压力验收。
+
+`w12_rollback.py --prefix <temporary-prefix> --project <temporary-project> --previous <verified-release> --candidate <verified-release> --out <new-dir>` 演练停止项目服务、旧入口读取、临时切换和恢复候选。两版须先通过 `install candidate`；每次切换关闭 Host 注册。停止浏览器服务不是全局 CLI 写锁。
+
+脚本均不调用真实模型，不改实际 HOME。87 AC 索引、真实 Host 缺口及测量边界见 W12 执行报告，合成结果不能代替真实跨页效果或客户验收。

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+from functools import lru_cache
 import re
 
 from .models import validate_ref
@@ -88,11 +89,57 @@ def committed_snapshots(store):
         yield doc
 
 
+@lru_cache(maxsize=4096)
+def _cached_header(project, revision, signature):
+    # Retain only ancestry metadata, never a large mutable Document. Signature
+    # includes inode and nanosecond times so replacement/corruption invalidates it.
+    from .store import Store
+    doc = _snapshot(Store(project), revision)
+    return doc["project_id"], doc.get("parent_revision_id")
+
+
+def _header(store, revision):
+    if not isinstance(revision, str) or not IDENTIFIER.fullmatch(revision):
+        raise ReadModelError("invalid_revision", "revision", "invalid revision identifier", http_status=400)
+    path = store.revisions_dir / (revision + ".json")
+    if any(p.is_symlink() for p in (store.deck_root, store.revisions_dir, path)):
+        raise ReadModelError("revision_unavailable", "revision", "snapshot is not available in this project")
+    try:
+        stat = path.stat()
+        signature = (stat.st_dev, stat.st_ino, stat.st_size, stat.st_mtime_ns, stat.st_ctime_ns)
+        return _cached_header(str(store.project_root), revision, signature)
+    except OSError as exc:
+        raise ReadModelError("revision_unavailable", "revision", "snapshot is not readable in this project") from exc
+
+
+def committed_headers(store, *, head=None):
+    """Walk verified ancestry without reparsing every immutable large snapshot."""
+    if store.deck_root.is_symlink() or (store.deck_root / "current.json").is_symlink():
+        raise ReadModelError("project_unavailable", "project", "project snapshot is not readable")
+    revision = head or store.current_revision_id()
+    if revision is None:
+        raise ReadModelError("project_unavailable", "project", "project snapshot is not readable")
+    project_id = None; visited = set()
+    while revision and revision not in visited:
+        visited.add(revision)
+        identity, parent = _header(store, revision)
+        project_id = identity if project_id is None else project_id
+        if identity != project_id:
+            break
+        yield revision, identity, parent
+        revision = parent
+
+
 def load_snapshot(store, revision=None):
     """Read one committed snapshot; copied/orphan files never become history."""
-    if revision is not None and (not isinstance(revision, str) or not IDENTIFIER.fullmatch(revision)):
+    if revision is None:
+        return next(committed_snapshots(store))
+    if not isinstance(revision, str) or not IDENTIFIER.fullmatch(revision):
         raise ReadModelError("invalid_revision", "revision", "invalid revision identifier", http_status=400)
-    for doc in committed_snapshots(store):
-        if revision is None or doc["revision_id"] == revision:
-            return doc
+    for current, identity, _ in committed_headers(store):
+        if current == revision:
+            document = _snapshot(store, current)
+            if document["project_id"] != identity:
+                raise ReadModelError("revision_unavailable", "revision", "snapshot identity changed while reading")
+            return document
     raise ReadModelError("revision_not_found", "revision", "revision is not committed in this project")

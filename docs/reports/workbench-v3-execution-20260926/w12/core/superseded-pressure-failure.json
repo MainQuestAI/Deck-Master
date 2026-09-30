@@ -1,0 +1,8 @@
+{
+  "candidate": "9be105b3c3accf06bb80a4cdfda73ee713ef5909",
+  "error": "Locator expected to have attribute 'true'\nActual value: false \nCall log:\n  - Expect \"to_have_attribute\" get_by_role(\"navigation\", name=\"\u753b\u5eca\u56fe\u5c42\").get_by_role(\"button\", name=\"SVG\", exact=True) with timeout 5000ms\n  - waiting for get_by_role(\"navigation\", name=\"\u753b\u5eca\u56fe\u5c42\").get_by_role(\"button\", name=\"SVG\", exact=True)\n    14 \u00d7 locator resolved to <button class=\"\" type=\"button\" aria-pressed=\"false\">SVG</button>\n       - unexpected value \"false\"\n\nAria snapshot:\n- button \"SVG\"",
+  "javascript_errors": [],
+  "background_updates": 16,
+  "complete_20_minutes": false,
+  "raw_har": "retained locally"
+}
