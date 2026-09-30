@@ -15,6 +15,21 @@ import {Annotations} from './annotations.js';
 
 const pageTitle = (page, index) => `第 ${index + 1} 页 · ${page.title || '未命名页面'}`;
 const detail = (title, ...body) => el('details', {class: 'source-detail'}, el('summary', {}, title), ...body);
+// 六段制作链：材料来源 → 逐页稿 → 提示词 → 原图 → SVG → PPT，同一页同一固定版本。
+const chainStages = [
+  {layer: 'source', label: '来源'},
+  {layer: 'content', label: '逐页稿'},
+  {layer: 'prepared_prompt', label: '提示词', also: 'submitted_prompt'},
+  {layer: 'original_image', label: '原图'},
+  {layer: 'svg', label: 'SVG'},
+  {layer: 'ppt', label: 'PPT 预览'},
+];
+function chainState(stage) {
+  if (!stage || stage.existence === 'not_generated') return '尚未生成';
+  if (stage.existence !== 'recorded') return '暂不可读';
+  if (stage.applicability?.status === 'basis_changed') return '旧版 · 待更新';
+  return stage.applicability?.status === 'current' ? '可查看' : '适用性待核实';
+}
 function bulletItems(items) {
   return el('ul', {}, items.map(item => el('li', {}, typeof item === 'string' ? item : item.text, item.children?.length ? bulletItems(item.children) : null)));
 }
@@ -28,13 +43,16 @@ function bodyBlocks(blocks) {
     return el('p', {class: 'muted'}, '这个内容块暂不可读。');
   });
 }
-function sourceView(app, data) {
+function sourceBody(app, data) {
   const node = el('div', {class: 'stack'}, el('p', {}, `本页来源固定在 ${version(data.revision_id)}。`));
   const links = (data.content_plan?.goals || []).flatMap(g => g.source_links || []);
   if (app.health.ui_capabilities?.includes('content_ops.v1')) node.append(...links.map(link => button('查看材料 ' + (link.locator || '原文'), () => sourceReader(app, link, data.revision_id))));
   node.append(data.sources.citations.length ? el('pre', {class: 'evidence-json'}, JSON.stringify(data.sources.citations, null, 2)) : el('p', {class: 'muted'}, '此页未记录材料引用，不能据此补造来源。'),
-    button('回到此版本的内容与来源', () => { document.querySelector('#modal').close(); app.go({surface: 'content', revision: data.revision_id}); }));
+    button('回到此版本的内容与来源', () => { const dialog = document.querySelector('#modal'); if (dialog.open) dialog.close(); app.go({surface: 'content', revision: data.revision_id}); }));
   return node;
+}
+function sourceView(app, data) {
+  return modal('本页来源', sourceBody(app, data));
 }
 function contentView(app, data) {
   const visible = data.page?.customer_visible;
@@ -50,7 +68,7 @@ function contentView(app, data) {
     node.append(detail('正文原文与精确选段', el('label', {}, '选择文字对象 ', select), textSlot));
   }
   if (data.page?.customer_visible && !app.readonly && app.health.ui_capabilities?.includes('content_ops.v1') && data.revision_id === app.route.revision && data.page_id === app.route.page_id) node.append(pageContentEditor(app, data));
-  node.append(button('查看本页来源', () => modal('本页来源', sourceView(app, data)))); return node;
+  node.append(button('查看本页来源', () => sourceView(app, data))); return node;
 }
 function imageLayer(app, data, layer, title, releases) {
   const stage = data.stages[stageKey[layer]];
@@ -65,7 +83,11 @@ function imageLayer(app, data, layer, title, releases) {
     layer === 'svg' && el('p', {class: 'muted'}, 'SVG 安全图像预览；这里没有自由编辑或 OCR 文字层。'),
     layer === 'ppt' && el('p', {class: 'muted'}, '整稿制作后的按页 PPT 预览，按此快照读取；不是单页独立 PPT 编译。'));
 }
+function sourceLayer(app, data) {
+  return el('article', {class: 'page-copy stack'}, el('h2', {}, '本页来源与材料'), sourceBody(app, data));
+}
 function renderLayer(app, data, layer, title, releases, onBasis) {
+  if (layer === 'source') { onBasis?.(null, null); return sourceLayer(app, data); }
   if (layer === 'content') { onBasis?.(data.stages.content.ref, null); return contentView(app, data); }
   if (layer === 'prepared_prompt' || layer === 'submitted_prompt') {
     const scoped = Object.create(app); scoped.disposables = releases;
@@ -78,8 +100,28 @@ export function pageDetail(app, data) {
   if (app.route.candidate_id) return candidateDesk(app, data);
   const index = app.summary.pages.findIndex(p => p.page_id === data.page_id);
   const page = app.summary.pages[index], layer = app.route.layer, fixed = data.revision_id;
-  const node = el('div', {class: 'page-workbench'}, heading(pageTitle(page, index), `${layers[layer]} · ${version(fixed)} · 固定阅读基准`));
+  const activeStage = layer === 'submitted_prompt' ? 2 : chainStages.findIndex(item => item.layer === layer);
+  const stepPage = step => app.summary.pages[index + step];
+  const pager = el('div', {class: 'row page-pager'},
+    button('← 上一页', () => stepPage(-1) && app.go({page_id: stepPage(-1).page_id}), false,
+      {class: 'quiet', disabled: index <= 0, 'aria-label': `上一页，${stepPage(-1) ? pageTitle(stepPage(-1), index - 1) : '没有上一页'}`}),
+    button('下一页 →', () => stepPage(1) && app.go({page_id: stepPage(1).page_id}), false,
+      {class: 'quiet', disabled: index >= app.summary.pages.length - 1, 'aria-label': `下一页，${stepPage(1) ? pageTitle(stepPage(1), index + 1) : '没有下一页'}`}));
+  const node = el('div', {class: 'page-workbench'}, heading(pageTitle(page, index), `${layers[layer]} · ${version(fixed)} · 固定阅读基准`, pager));
   if (!app.health.ui_capabilities?.includes('page_detail.v1')) return el('div', {}, node, empty('核心需要升级', '单页证据与文本选段需要新版核心。此页面没有写入草稿。'));
+  const chain = el('nav', {class: 'chain', 'aria-label': '本页生成链路'});
+  const chainStates = [
+    data.sources.citations.length ? '可查看' : '记录缺失',
+    chainState(data.stages.content),
+    (data.prompts.prepared.length || data.prompts.submitted.text !== null || (data.generation?.requests || []).length) ? '可查看' : '记录缺失',
+    chainState(data.stages.blueprint),
+    chainState(data.stages.svg),
+    chainState(data.stages.ppt_preview),
+  ];
+  chainStages.forEach((item, i) => chain.append(button([el('span', {class: 'chain-number'}, `0${i + 1}`), item.label,
+    el('span', {class: 'chain-state'}, chainStates[i])], () => app.go({layer: item.layer}), false,
+    {class: i === activeStage ? 'active' : '', 'aria-current': i === activeStage ? 'step' : null,
+      'aria-label': `0${i + 1} ${item.label}，${chainStates[i]}`})));
   if (app.health.ui_capabilities?.includes('style_recipes.v1') && data.stages.blueprint.existence === 'recorded') node.append(button('以本页为风格参考', () => {
     app.styleSelection = {reference: {page_id:data.page_id, revision_id:data.revision_id, artifact_ref:data.stages.blueprint.ref, file:data.stages.blueprint.file, role:'reference'}, target_ids:[]};
     app.go({surface:'style', page_id:null, candidate_id:null, task_id:null, revision:app.latest.revision_id});
@@ -90,9 +132,6 @@ export function pageDetail(app, data) {
   const selector = el('select', {'aria-label': '转到页面'});
   app.summary.pages.forEach((p, n) => selector.append(el('option', {value: p.page_id}, pageTitle(p, n))));
   selector.value = page.page_id; selector.addEventListener('change', () => app.go({page_id: selector.value}));
-  const tabs = el('nav', {class: 'layer-tabs', 'aria-label': '页面层'}, button('来源', () => modal('本页来源', sourceView(app, data))));
-  for (const value of ['content', 'prepared_prompt', 'submitted_prompt', 'original_image', 'svg', 'ppt']) tabs.append(button(layers[value], () => app.go({layer: value}), false,
-    {'aria-current': value === layer ? 'page' : null, class: value === layer ? 'active' : ''}));
   const update = el('div', {class: 'notice', role: 'status', hidden: true});
   let lastSync = Date.now(), polling = false;
   const poll = async () => {
@@ -123,6 +162,10 @@ export function pageDetail(app, data) {
   function bindDraft(ref, text) {
     draftRef = ref;
     app.editor?.dispose(); app.editor = null;
+    if (layer === 'source') {
+      annotations?.bind(null, null);
+      draftSlot.replaceChildren(el('p', {class: 'muted'}, '个人草稿绑定逐页稿或提示词层；来源层只提供阅读。')); return;
+    }
     if (layer === 'prepared_prompt' && preparedRecords(data).length > 1 && !ref) {
       annotations?.bind(null, null);
       draftSlot.replaceChildren(el('p', {class: 'muted'}, '请选择明确的预备稿，再写绑定这份原文的个人草稿。')); return;
@@ -148,7 +191,7 @@ export function pageDetail(app, data) {
     const basis = generationBasis(app, data); basis.open = layer === 'original_image'; aside.append(basis);
   }
   if (layer === 'svg' || layer === 'ppt') aside.append(productionView(data));
-  if (app.business && app.health.ui_capabilities?.includes('annotations.v1')) {
+  if (app.business && app.health.ui_capabilities?.includes('annotations.v1') && layer !== 'source') {
     annotations = new Annotations(app, data, layer, original, draftSlot);
     if (app.editor) annotations.bind(app.editor, draftRef);
     aside.append(annotations.node); app.disposables.push(() => annotations.dispose());
@@ -210,5 +253,5 @@ export function pageDetail(app, data) {
       app.route.zoom = value; history.replaceState(null, '', routeHash(app.info, app.route)); app.savePosition();
     }); toolbar.append(el('label', {}, '阅读缩放 ', zoom));
   }
-  node.append(toolbar, tabs, update, compareControls, layout, trialActions(app, data)); return node;
+  node.append(chain, toolbar, update, compareControls, layout, trialActions(app, data)); return node;
 }
