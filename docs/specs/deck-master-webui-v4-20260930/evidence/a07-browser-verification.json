@@ -1,0 +1,21 @@
+{
+ "card": "A07",
+ "base": "2120421（PR-M2 后）",
+ "branch": "codex/webui-v4-completion",
+ "changed_files": [
+  "run-desk.js（新增 personalClearPanel：B05 两阶段清理接入任务与交付面——只读计划→范围/阻断/保留如实显示→确认清理→备份路径与已完成注记；删除原型无范围 reset 语义的入口）"
+ ],
+ "browser_verification": {
+  "ac03_clear": "真实服务端到端：生成清理计划（将清理 N 项：草稿/画廊选择/阅读位置 + 范围声明 任务、候选、调用记录与项目文件不在清理范围）→ 确认清理并保留备份 → 已清理 1 项；恢复备份在本机 .deckmaster/workbench/clear-backups/<digest>.json；/api/drafts 清空、view/summary revision 不变（不新增业务 revision）",
+  "ac01_ac02": "交接/进度/部分返回/候选/历史与轮询节奏由既有 run-desk/run-recovery/summary-poll/business-operations 机制承担（W10/W11 迁移+PR66 移植），本轮复核未改其行为；六状态对应与 3/15 秒轮询的浏览器证据归 A08 全工作面走查",
+  "defects": "无新增"
+ },
+ "boundaries": [
+  "AC03 恢复生成新版本的既有 restoration 流（delivery-desk/historyDesk）未改动，按 W11 证据延续",
+  "真实制作工具/安装 open"
+ ],
+ "test_layers": {
+  "core": "979 passed + ruff clean（B05 服务端测试覆盖清理语义）",
+  "browser": "本记录（合成项目）"
+ }
+}
