@@ -3,7 +3,7 @@
   "$id": "urn:deck-master:workbench-summary:v1",
   "title": "workbench_summary.v1 read projection (not a persistent object)",
   "type": "object",
-  "required": ["format", "project_id", "revision_id", "requested_revision", "snapshot_mode", "page_count", "pages", "task_counts", "unreadable_tasks", "outputs", "input_alignment", "quality", "candidates", "attempts", "evidence_level"],
+  "required": ["format", "project_id", "revision_id", "requested_revision", "snapshot_mode", "page_count", "pages", "task_counts", "unreadable_tasks", "outputs", "input_alignment", "quality", "candidates", "attempts", "next_actions", "evidence_level"],
   "additionalProperties": false,
   "properties": {
     "format": {"const": "workbench_summary.v1"},
@@ -18,9 +18,10 @@
     "outputs": {"type": "object", "required": ["pptx"], "additionalProperties": false, "properties": {"pptx": {"$ref": "#/$defs/deck_output"}}},
     "input_alignment": {"enum": ["no_content", "legacy_current", "current", "needs_reconciliation"]},
     "quality": {"type": "object", "required": ["status", "review_refs"], "properties": {"status": {"const": "detail_required"}, "review_refs": {"type": "array", "items": {"$ref": "#/$defs/ref"}}}, "additionalProperties": false},
-    "candidates": {"$ref": "#/$defs/not_recorded"},
+    "candidates": {"$ref": "#/$defs/candidates_summary"},
     "attempts": {"oneOf": [{"$ref": "#/$defs/not_recorded"}, {"type": "object", "required": ["status", "count"], "additionalProperties": false, "properties": {"status": {"const": "recorded"}, "count": {"type": "integer", "minimum": 1}}}]},
     "content_plan": {"type": "object", "required": ["status", "relation", "ref"]},
+    "next_actions": {"$ref": "#/$defs/next_actions"},
     "evidence_level": {"const": "engineering"}
   },
   "$defs": {
@@ -36,6 +37,90 @@
     "existence": {"enum": ["not_generated", "recorded", "unreadable"]},
     "error": {"type": "object", "required": ["code", "message", "next_action"], "properties": {"code": {"const": "object_unreadable"}, "message": {"type": "string"}, "next_action": {"type": "string"}}, "additionalProperties": false},
     "not_recorded": {"type": "object", "required": ["status"], "properties": {"status": {"const": "not_recorded"}}, "additionalProperties": false},
+    "candidates_summary": {
+      "oneOf": [
+        {"$ref": "#/$defs/not_recorded"},
+        {"type": "object", "required": ["status", "count", "pending_count", "adopted_count", "unreadable_count"], "additionalProperties": false,
+         "properties": {
+           "status": {"const": "recorded"},
+           "count": {"type": "integer", "minimum": 1},
+           "pending_count": {"type": "integer", "minimum": 0},
+           "adopted_count": {"type": "integer", "minimum": 0},
+           "unreadable_count": {"type": "integer", "minimum": 0}
+         }}
+      ]
+    },
+    "action_item": {
+      "type": "object",
+      "required": ["action_id", "kind", "page_ids", "layer", "reason_code", "source_refs", "enabled", "blocked_reason", "state", "revision_id"],
+      "additionalProperties": false,
+      "properties": {
+        "action_id": {"type": "string", "pattern": "^[a-f0-9]{32}$"},
+        "kind": {"enum": ["verify_execution", "inspect_failure", "replan", "compare_candidates", "reconcile_inputs", "prepare_stage", "refresh_stage", "handoff", "review_results", "review_quality"]},
+        "page_ids": {"type": "array", "items": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"}, "uniqueItems": true},
+        "layer": {"enum": ["blueprint", "svg", "svg_preview", "ppt_preview", "pptx", null]},
+        "reason_code": {"enum": ["unknown_calls_recorded", "running_task_stale", "running_task_unclaimed", "task_failed", "task_unreadable", "task_superseded", "candidate_pending", "content_needs_reconciliation", "stage_missing", "stage_basis_changed", "task_awaiting_host", "task_results_ready", "quality_reviews_recorded"]},
+        "source_refs": {"type": "array", "items": {"$ref": "#/$defs/ref"}},
+        "enabled": {"type": "boolean"},
+        "blocked_reason": {"enum": [null, "candidate_unreadable"]},
+        "state": {"enum": ["derived", "unknown"]},
+        "revision_id": {"type": "string"}
+      }
+    },
+    "attention_summary": {
+      "oneOf": [
+        {"$ref": "#/$defs/not_recorded"},
+        {"type": "object", "required": ["status", "items"], "additionalProperties": false,
+         "properties": {"status": {"const": "recorded"}, "items": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/action_item"}}}}
+      ]
+    },
+    "next_actions": {
+      "oneOf": [
+        {
+          "type": "object", "required": ["status", "actions"], "additionalProperties": false,
+          "properties": {
+            "status": {"const": "recorded"},
+            "actions": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/action_item"}}
+          }
+        },
+        {
+          "type": "object", "required": ["status", "reason_code", "readable"], "additionalProperties": false,
+          "properties": {
+            "status": {"const": "not_recorded"},
+            "reason_code": {"const": "no_pending_actions"},
+            "readable": {
+              "type": "object", "required": ["scope", "page_ids"], "additionalProperties": false,
+              "properties": {
+                "scope": {"enum": ["deck_pages", "no_content"]},
+                "page_ids": {"type": "array", "items": {"type": "string"}}
+              }
+            }
+          }
+        }
+      ]
+    },
+    "prompt_records": {
+      "oneOf": [
+        {"$ref": "#/$defs/not_recorded"},
+        {"type": "object", "required": ["status", "unreadable_count", "error"], "additionalProperties": false,
+         "properties": {"status": {"const": "unreadable"}, "unreadable_count": {"type": "integer", "minimum": 1}, "error": {"$ref": "#/$defs/error"}}},
+        {"type": "object", "required": ["status", "count", "refs"], "additionalProperties": false,
+         "properties": {"status": {"const": "recorded"}, "count": {"type": "integer", "minimum": 1}, "refs": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/ref"}}, "unreadable_count": {"type": "integer", "minimum": 1}}}
+      ]
+    },
+    "submitted_prompt": {
+      "oneOf": [
+        {"$ref": "#/$defs/not_recorded"},
+        {"type": "object", "required": ["status", "error"], "additionalProperties": false,
+         "properties": {"status": {"const": "unreadable"}, "error": {"$ref": "#/$defs/error"}}},
+        {"type": "object", "required": ["status", "ref", "observer", "basis"], "additionalProperties": false,
+         "properties": {"status": {"const": "recorded"}, "ref": {"$ref": "#/$defs/ref"}, "observer": {"const": "host_reported"}, "basis": {"const": "artifact.provenance.submitted_prompt"}}}
+      ]
+    },
+    "prompt_summary": {
+      "type": "object", "required": ["prepared", "frozen", "submitted"], "additionalProperties": false,
+      "properties": {"prepared": {"$ref": "#/$defs/prompt_records"}, "frozen": {"$ref": "#/$defs/prompt_records"}, "submitted": {"$ref": "#/$defs/submitted_prompt"}}
+    },
     "applicability": {
       "type": "object", "required": ["status"], "additionalProperties": false,
       "properties": {
@@ -72,8 +157,8 @@
       "properties": {"content": {"$ref": "#/$defs/stage"}, "blueprint": {"$ref": "#/$defs/stage"}, "svg": {"$ref": "#/$defs/stage"}, "svg_preview": {"$ref": "#/$defs/stage"}, "ppt_preview": {"$ref": "#/$defs/stage"}}
     },
     "page_summary": {
-      "type": "object", "required": ["page_id", "title", "stages", "execution", "attention"], "additionalProperties": false,
-      "properties": {"page_id": {"type": "string"}, "title": {"type": ["string", "null"]}, "stages": {"$ref": "#/$defs/stages"}, "execution": {"type": "array", "items": {"type": "object", "required": ["task_id", "kind", "status", "execution_ref"]}}, "attention": {"$ref": "#/$defs/not_recorded"}}
+      "type": "object", "required": ["page_id", "title", "stages", "execution", "prompt_summary", "attention"], "additionalProperties": false,
+      "properties": {"page_id": {"type": "string"}, "title": {"type": ["string", "null"]}, "stages": {"$ref": "#/$defs/stages"}, "execution": {"type": "array", "items": {"type": "object", "required": ["task_id", "kind", "status", "execution_ref"]}}, "prompt_summary": {"$ref": "#/$defs/prompt_summary"}, "attention": {"$ref": "#/$defs/attention_summary"}}
     },
     "deck_output": {
       "type": "object", "required": ["ref", "scope", "revision_id", "existence", "relation", "ordered_pages"], "additionalProperties": false,

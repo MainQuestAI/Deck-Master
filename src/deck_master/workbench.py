@@ -10,6 +10,7 @@ import copy
 import os
 import stat
 from collections import Counter, defaultdict
+from datetime import datetime, timezone
 from functools import lru_cache
 
 from .models import input_alignment, sha256_bytes, validate_ref, validate_schema
@@ -79,23 +80,21 @@ class _ReadContext:
         return self.objects[key]
 
 
-def _task_rows(ctx, *, summary=False):
+def _task_rows(ctx):
     rows = []
     for ref in ctx.document.get("tasks") or []:
         try:
             task = ctx.read(ref)
             if task.get("schema_version") != "deck_task.v1":
                 raise ValueError("not a task")
-            row = {"task_id": task["task_id"], "kind": task["kind"],
-                   "status": task["status"], "scope_pages": task.get("scope_pages") or [],
-                   "execution_ref": task.get("execution_ref"),
-                   "attempt_count": len(task.get("generation_attempts") or [])}
-            if not summary:
-                row.update(ref=ref, instruction=task.get("instruction"), updated_at=task.get("updated_at"),
-                           result_refs=task.get("result_refs") or [],
-                           request_count=len(task.get("generation_requests") or []),
-                           result_linkage="known" if task.get("result_refs") else "unknown")
-            rows.append(row)
+            rows.append({"task_id": task["task_id"], "kind": task["kind"],
+                         "status": task["status"], "scope_pages": task.get("scope_pages") or [],
+                         "execution_ref": task.get("execution_ref"),
+                         "attempt_count": len(task.get("generation_attempts") or []),
+                         "ref": ref, "instruction": task.get("instruction"), "updated_at": task.get("updated_at"),
+                         "result_refs": task.get("result_refs") or [],
+                         "request_count": len(task.get("generation_requests") or []),
+                         "result_linkage": "known" if task.get("result_refs") else "unknown"})
         except READ_FAILURES:
             rows.append({"ref": ref, "task_id": None, "status": "unreadable",
                          "detail": object_error()["message"], "error": object_error()})
@@ -234,12 +233,322 @@ def _deck_output(ctx):
     return result
 
 
+# B01 actionable overview (INTERFACES "B01：summary增补合同"). Every action is a
+# deterministic projection of committed facts; the frontend maps kinds to local
+# routes and never receives URLs or commands. No style-deviation action exists:
+# without professional review evidence, quality stays "undetermined".
+ACTIONS_CAPABILITY = "workbench_actions.v1"
+
+# Ordering tiers: recovery first, then clear failures, pending candidates,
+# unreconciled inputs, missing/stale layers, and finally general reading.
+_ACTION_TIERS = {
+    "verify_execution": 1,
+    "inspect_failure": 2, "replan": 2,
+    "compare_candidates": 3,
+    "reconcile_inputs": 4,
+    "prepare_stage": 5, "refresh_stage": 5,
+    "handoff": 6, "review_results": 6, "review_quality": 6,
+}
+
+
+def _action_id(project_id, kind, reason_code, layer, identities):
+    basis = "|".join((project_id, kind, reason_code, layer or "-", *sorted(set(identities))))
+    return sha256_bytes(basis.encode("utf-8"))[:32]
+
+
+def _parse_timestamp(value):
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        return parsed if parsed.tzinfo is not None else None
+    except (TypeError, ValueError, AttributeError):
+        return None
+
+
+def _verification_reason(task, *, live, now):
+    """Same deterministic checks as run_desk.task_row, with the reason kept
+    distinct; staleness is a live-clock fact and is not evaluated for fixed
+    revisions so the same revision always reads the same."""
+    if any(call.get("state") == "unknown" for call in task.get("call_allowances") or []):
+        return "unknown_calls_recorded"
+    started = _parse_timestamp(task.get("execution_started_at"))
+    wait_basis = started or _parse_timestamp(task.get("updated_at"))
+    if live and task.get("status") == "running" and wait_basis and (now - wait_basis).total_seconds() >= 1800:
+        return "running_task_stale"
+    if task.get("status") == "running" and not task.get("execution_ref"):
+        return "running_task_unclaimed"
+    return None
+
+
+def _fact(kind, reason_code, identity, *, page_ids, source_refs, layer=None,
+          enabled=True, blocked_reason=None, state="derived"):
+    return {"kind": kind, "reason_code": reason_code, "identity": identity, "page_ids": list(page_ids),
+            "layer": layer, "source_refs": source_refs, "enabled": enabled,
+            "blocked_reason": blocked_reason, "state": state}
+
+
+def _overview_facts(ctx, *, live, now):
+    """One bounded pass over committed tasks.
+
+    Produces the summary's slim task rows, per-fact deterministic actions, and
+    the per-page prompt indexes. Unreadable JSON task inputs that are not the
+    page package itself are attributed to the task's scope pages as potentially
+    damaged prepared-prompt records; damage stays local to its own record and
+    never crashes a page.
+    """
+    doc = ctx.document
+    page_shas = {(entry.get("page") or {}).get("sha256") for entry in doc.get("pages") or []}
+    page_shas.discard(None)
+    rows, facts = [], []
+    tasks_by_id = {}
+    prepared = defaultdict(lambda: {"refs": [], "unreadable": 0})
+    frozen = defaultdict(lambda: {"refs": [], "unreadable": 0})
+    for ref in doc.get("tasks") or []:
+        try:
+            task = ctx.read(ref)
+            if task.get("schema_version") != "deck_task.v1":
+                raise ValueError("not a task")
+        except READ_FAILURES:
+            rows.append({"ref": ref, "task_id": None, "status": "unreadable",
+                         "detail": object_error()["message"], "error": object_error()})
+            facts.append(_fact("inspect_failure", "task_unreadable", ref["sha256"],
+                               page_ids=[], source_refs=[ref], state="unknown"))
+            continue
+        tasks_by_id[task["task_id"]] = task
+        rows.append({"task_id": task["task_id"], "kind": task["kind"],
+                     "status": task["status"], "scope_pages": task.get("scope_pages") or [],
+                     "execution_ref": task.get("execution_ref"),
+                     "attempt_count": len(task.get("generation_attempts") or [])})
+        scope = task.get("scope_pages") or []
+        reason = _verification_reason(task, live=live, now=now)
+        if reason:
+            facts.append(_fact("verify_execution", reason, task["task_id"],
+                               page_ids=scope, source_refs=[ref]))
+        if task["status"] == "failed":
+            facts.append(_fact("inspect_failure", "task_failed", task["task_id"],
+                               page_ids=scope, source_refs=[ref]))
+        elif task["status"] == "superseded":
+            facts.append(_fact("replan", "task_superseded", task["task_id"],
+                               page_ids=scope, source_refs=[ref]))
+        elif task["status"] == "awaiting_host":
+            facts.append(_fact("handoff", "task_awaiting_host", task["task_id"],
+                               page_ids=scope, source_refs=[ref]))
+        elif task["status"] == "completed" and not task.get("candidate_refs") and task.get("result_refs"):
+            facts.append(_fact("review_results", "task_results_ready", task["task_id"],
+                               page_ids=scope, source_refs=[ref]))
+        for input_ref in task.get("inputs") or []:
+            try:
+                if not str(input_ref.get("path", "")).endswith(".json"):
+                    continue
+                if input_ref.get("sha256") in page_shas:
+                    continue  # the page package itself, never a prompt record
+                request = ctx.read(input_ref)
+                if not isinstance(request, dict):
+                    continue
+                if request.get("schema_version") != "deck_blueprint_request.v1":
+                    continue
+                prompt = request.get("prompt")
+                if not isinstance(prompt, str) or sha256_bytes(prompt.encode("utf-8")) != request.get("prompt_sha256"):
+                    raise ValueError("request prompt does not match its recorded hash")
+                page_id = request.get("page_id")
+                if isinstance(page_id, str):
+                    prepared[page_id]["refs"].append(input_ref)
+            except READ_FAILURES:
+                for page_id in scope:
+                    prepared[page_id]["unreadable"] += 1
+        for request_ref in task.get("generation_requests") or []:
+            try:
+                request = ctx.read(request_ref)
+                if request.get("task_id") != task["task_id"] or request.get("project_id") != doc["project_id"]:
+                    raise ValueError("foreign request")
+                frozen[request["input"]["page"]["page_id"]]["refs"].append(request_ref)
+            except READ_FAILURES:
+                for page_id in scope:
+                    frozen[page_id]["unreadable"] += 1
+    return {"rows": rows, "facts": facts, "tasks_by_id": tasks_by_id,
+            "prepared": prepared, "frozen": frozen}
+
+
+def _candidate_facts(ctx, tasks_by_id):
+    """Count recorded candidates from document facts and project the pending,
+    undecided ones as compare_candidates actions. Adoption is matched by the
+    committed adoption records first, so adopted candidates are not re-read;
+    a damaged or unknown-task candidate stays pending and is isolated."""
+    doc = ctx.document
+    refs = doc.get("candidates") or []
+    adoptions = doc.get("candidate_adoptions") or []
+    adopted_shas = {a.get("candidate_ref", {}).get("sha256") for a in adoptions
+                    if isinstance(a.get("candidate_ref"), dict)}
+    adopted_ids = {a.get("candidate_id") for a in adoptions if isinstance(a.get("candidate_id"), str)}
+    facts, adopted, unreadable = [], 0, 0
+    for ref in refs:
+        if ref.get("sha256") in adopted_shas:
+            adopted += 1
+            continue
+        try:
+            candidate = ctx.read(ref)
+            if not isinstance(candidate, dict) or candidate.get("schema_version") != "candidate.v1":
+                raise ValueError("not a candidate")
+        except READ_FAILURES:
+            unreadable += 1
+            facts.append(_fact("compare_candidates", "candidate_pending", ref["sha256"],
+                               page_ids=[], source_refs=[ref], layer=None, enabled=False,
+                               blocked_reason="candidate_unreadable", state="unknown"))
+            continue
+        if candidate.get("candidate_id") in adopted_ids:
+            adopted += 1
+            continue
+        page_id = candidate.get("page_id")
+        page_ids = [page_id] if isinstance(page_id, str) else list(
+            (tasks_by_id.get(candidate.get("task_id")) or {}).get("scope_pages") or [])
+        stage = candidate.get("stage")
+        source_refs = [ref]
+        result_ref = candidate.get("result_ref")
+        if isinstance(result_ref, dict) and isinstance(result_ref.get("sha256"), str):
+            source_refs.append(result_ref)
+        facts.append(_fact("compare_candidates", "candidate_pending", ref["sha256"],
+                           page_ids=page_ids, source_refs=source_refs,
+                           layer=stage if stage in ("blueprint", "svg") else None))
+    block = ({"status": "recorded", "count": len(refs), "pending_count": len(refs) - adopted,
+              "adopted_count": adopted, "unreadable_count": unreadable} if refs
+             else {"status": "not_recorded"})
+    return block, facts
+
+
+def _stage_facts(entry, stages, deck_output):
+    """Missing production layers and stale bases are page-scoped facts; an
+    unreadable stage is damage to report in stages, never a prepare action."""
+    facts = []
+    if stages["content"]["existence"] == "recorded" and stages["blueprint"]["existence"] == "not_generated":
+        facts.append(_fact("prepare_stage", "stage_missing", entry["page_id"] + ":blueprint",
+                           page_ids=[entry["page_id"]], source_refs=[entry["page"]], layer="blueprint"))
+    if stages["blueprint"]["existence"] == "recorded" and stages["svg"]["existence"] == "not_generated":
+        facts.append(_fact("prepare_stage", "stage_missing", entry["page_id"] + ":svg",
+                           page_ids=[entry["page_id"]], source_refs=[entry["blueprint"]], layer="svg"))
+    for slot in ("blueprint", "svg", "svg_preview", "ppt_preview"):
+        stage = stages[slot]
+        if stage["existence"] == "recorded" and (stage.get("applicability") or {}).get("status") == "basis_changed":
+            facts.append(_fact("refresh_stage", "stage_basis_changed", entry["page_id"] + ":" + slot,
+                               page_ids=[entry["page_id"]], source_refs=[stage["ref"]], layer=slot))
+    if deck_output.get("existence") == "recorded" and deck_output.get("applicability") == "basis_changed":
+        facts.append(_fact("refresh_stage", "stage_basis_changed", "deck:pptx",
+                           page_ids=[], source_refs=[deck_output["ref"]], layer="pptx"))
+    return facts
+
+
+def _deck_facts(ctx):
+    facts = []
+    if input_alignment(ctx.document) == "needs_reconciliation":
+        plan_ref = ctx.document.get("content_plan")
+        facts.append(_fact("reconcile_inputs", "content_needs_reconciliation", "content_basis",
+                           page_ids=[], source_refs=[plan_ref] if plan_ref else []))
+    if ctx.document.get("reviews"):
+        facts.append(_fact("review_quality", "quality_reviews_recorded", "reviews",
+                           page_ids=[], source_refs=list(ctx.document["reviews"])))
+    return facts
+
+
+def _merge_refs(ref_groups):
+    merged = {}
+    for refs in ref_groups:
+        for ref in refs:
+            if isinstance(ref, dict) and isinstance(ref.get("sha256"), str):
+                merged[(ref.get("path"), ref["sha256"])] = ref
+    return [copy.deepcopy(merged[key]) for key in sorted(merged)]
+
+
+def _action_sort_key(action):
+    return (_ACTION_TIERS[action["kind"]], action["kind"], action["reason_code"],
+            action["layer"] or "", action["page_ids"][0] if action["page_ids"] else "")
+
+
+def _assemble_actions(ctx, facts):
+    """Group per-fact actions by (kind, reason, layer, enabled, blocked, state)
+    into the ordered deck list and the per-page attention projections."""
+    doc = ctx.document
+    groups = defaultdict(list)
+    for fact in facts:
+        key = (fact["kind"], fact["reason_code"], fact["layer"], fact["enabled"],
+               fact["blocked_reason"], fact["state"])
+        groups[key].append(fact)
+    actions, per_page = [], defaultdict(list)
+    for (kind, reason, layer, enabled, blocked, state), members in groups.items():
+        actions.append({"action_id": _action_id(doc["project_id"], kind, reason, layer,
+                                                [m["identity"] for m in members]),
+                        "kind": kind, "page_ids": sorted({pid for m in members for pid in m["page_ids"]}),
+                        "layer": layer, "reason_code": reason,
+                        "source_refs": _merge_refs(m["source_refs"] for m in members),
+                        "enabled": enabled, "blocked_reason": blocked, "state": state,
+                        "revision_id": doc["revision_id"]})
+        by_page = defaultdict(list)
+        for member in members:
+            for page_id in member["page_ids"]:
+                by_page[page_id].append(member)
+        for page_id, page_members in by_page.items():
+            per_page[page_id].append(
+                {"action_id": _action_id(doc["project_id"], kind, reason, layer,
+                                         [m["identity"] for m in page_members] + ["page:" + page_id]),
+                 "kind": kind, "page_ids": [page_id], "layer": layer, "reason_code": reason,
+                 "source_refs": _merge_refs(m["source_refs"] for m in page_members),
+                 "enabled": enabled, "blocked_reason": blocked, "state": state,
+                 "revision_id": doc["revision_id"]})
+    actions.sort(key=_action_sort_key)
+    for items in per_page.values():
+        items.sort(key=_action_sort_key)
+    return actions, per_page
+
+
+def _prompt_records_block(index_entry):
+    refs = [copy.deepcopy(ref) for ref in index_entry["refs"]]
+    unreadable = index_entry["unreadable"]
+    if refs:
+        value = {"status": "recorded", "count": len(refs), "refs": refs}
+        if unreadable:
+            value["unreadable_count"] = unreadable
+        return value
+    if unreadable:
+        return {"status": "unreadable", "unreadable_count": unreadable, "error": object_error()}
+    return {"status": "not_recorded"}
+
+
+def _prompt_summary(ctx, entry, prepared, frozen):
+    """Metadata-only prompt overview: index refs, never prompt bodies. A missing
+    frozen record is never filled from drafts or configuration."""
+    page_id = entry["page_id"]
+    empty = {"refs": [], "unreadable": 0}
+    submitted = {"status": "not_recorded"}
+    if entry.get("blueprint"):
+        try:
+            artifact = ctx.read(entry["blueprint"])
+            ref = (artifact.get("provenance") or {}).get("submitted_prompt")
+            if ref:
+                validate_ref(ref, where="artifact/provenance.submitted_prompt")
+                ctx.object_stat(ref)
+                submitted = {"status": "recorded", "ref": copy.deepcopy(ref),
+                             "observer": "host_reported", "basis": "artifact.provenance.submitted_prompt"}
+        except READ_FAILURES:
+            submitted = {"status": "unreadable", "error": object_error()}
+    return {"prepared": _prompt_records_block(prepared.get(page_id) or empty),
+            "frozen": _prompt_records_block(frozen.get(page_id) or empty),
+            "submitted": submitted}
+
+
+def _next_actions_block(ctx, actions):
+    if actions:
+        return {"status": "recorded", "actions": actions}
+    page_ids = [entry["page_id"] for entry in ctx.document.get("pages") or []]
+    return {"status": "not_recorded", "reason_code": "no_pending_actions",
+            "readable": {"scope": "deck_pages" if page_ids else "no_content", "page_ids": page_ids}}
+
+
 def workbench_summary(project_dir, *, revision=None):
     from .content_plan import projection
     store = Store(project_dir)
     doc = load_snapshot(store, revision)
     ctx = _ReadContext(store, doc)
-    tasks = _task_rows(ctx, summary=True)
+    now = datetime.now(timezone.utc)
+    overview = _overview_facts(ctx, live=revision is None, now=now)
+    candidates_block, candidate_facts = _candidate_facts(ctx, overview["tasks_by_id"])
+    tasks = overview["rows"]
     by_page = defaultdict(list)
     counts = Counter()
     for task in tasks:
@@ -247,27 +556,37 @@ def workbench_summary(project_dir, *, revision=None):
         row = {k: task.get(k) for k in ("task_id", "kind", "status", "execution_ref")}
         for page_id in set(task.get("scope_pages") or []):
             by_page[page_id].append(row)
+    deck_output = _deck_output(ctx)
+    facts = [*overview["facts"], *candidate_facts, *_deck_facts(ctx)]
     pages = []
     for entry in doc.get("pages") or []:
         stages = {("content" if s == "page" else s): _stage(ctx, entry, s) for s in SLOTS}
         title = None
         if stages["content"]["existence"] == "recorded":
             title = (ctx.read(entry["page"]).get("customer_visible") or {}).get("title")
+        facts.extend(_stage_facts(entry, stages, deck_output))
         pages.append({"page_id": entry["page_id"], "title": title, "stages": stages,
                       "execution": copy.deepcopy(by_page[entry["page_id"]]),
+                      "prompt_summary": _prompt_summary(ctx, entry, overview["prepared"], overview["frozen"]),
                       "attention": {"status": "not_recorded"}})
+    actions, per_page = _assemble_actions(ctx, facts)
+    for page in pages:
+        items = per_page.get(page["page_id"])
+        if items:
+            page["attention"] = {"status": "recorded", "items": items}
     return {"format": "workbench_summary.v1", "project_id": doc["project_id"],
             "revision_id": doc["revision_id"], "requested_revision": revision,
             "snapshot_mode": "fixed" if revision is not None else "current",
             "page_count": len(pages), "pages": pages,
             "task_counts": dict(sorted(counts.items())),
             "unreadable_tasks": sum(t["status"] == "unreadable" for t in tasks),
-            "outputs": {"pptx": _deck_output(ctx)}, "input_alignment": input_alignment(doc),
+            "outputs": {"pptx": deck_output}, "input_alignment": input_alignment(doc),
             "content_plan": projection(store, doc, reader=ctx.read, summary=True),
             "quality": {"status": "detail_required", "review_refs": doc.get("reviews") or []},
-            "candidates": {"status": "recorded", "count": len(doc["candidates"])} if doc.get("candidates") else {"status": "not_recorded"},
+            "candidates": candidates_block,
             "attempts": {"status": "recorded", "count": sum(t.get("attempt_count", 0) for t in tasks)}
             if any(t.get("attempt_count") for t in tasks) else {"status": "not_recorded"},
+            "next_actions": _next_actions_block(ctx, actions),
             "evidence_level": "engineering"}
 
 

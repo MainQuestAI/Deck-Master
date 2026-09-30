@@ -373,7 +373,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             self._send_json({"status": "ok", **self.runtime_state,
                              "project_identity": _project_identity(self.store.project_root),
                              "ui_available": (self.static_dir / 'v2' / 'index.html').is_file(),
-                             "ui_capabilities": ["ui_draft.v1", "ui_gallery.v1", "thumbnails.v1", "fixed_snapshot.v1", "text_range.v1", "page_detail.v1", "annotations.v1", "changes.v1", "operations.v1", "candidates.v1", "stages.v1", "run_desk.v1", "style_recipes.v1", "content_ops.v1", "exports.v1", "restoration.v1"]})
+                             "ui_capabilities": ["ui_draft.v1", "ui_gallery.v1", "thumbnails.v1", "fixed_snapshot.v1", "text_range.v1", "page_detail.v1", "annotations.v1", "changes.v1", "operations.v1", "candidates.v1", "stages.v1", "run_desk.v1", "style_recipes.v1", "content_ops.v1", "exports.v1", "restoration.v1", "workbench_actions.v1"]})
             return
         if parsed.path == "/api/file":
             query = parse_qs(parsed.query)

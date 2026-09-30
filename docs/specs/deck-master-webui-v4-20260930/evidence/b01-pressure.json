@@ -1,0 +1,23 @@
+{
+  "probe": "b01_pressure",
+  "synthetic": true,
+  "real_host_calls": 0,
+  "production_acceptance": false,
+  "sample": {
+    "pages": 300,
+    "candidates_per_page": 5,
+    "attempts_per_page": 3,
+    "candidate_total": 1500,
+    "attempt_total": 900,
+    "metadata_objects": 6304,
+    "build_seconds": 6.52
+  },
+  "budget_ms": 250.0,
+  "cold_first_read_ms": 684.65,
+  "warm_runs": 120,
+  "warm_p50_ms": 72.77,
+  "warm_p95_ms": 84.01,
+  "warm_max_ms": 96.81,
+  "p95_within_budget": true,
+  "temporary_project_cleaned": true
+}
