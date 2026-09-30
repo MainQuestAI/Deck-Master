@@ -1,6 +1,6 @@
 import {get, post, readableError} from './api.js';
 import {el, button, heading, empty, field, modal, version, toast} from './dom.js';
-import {surfaces} from './routes.js';
+import {surfaces, layers} from './routes.js';
 
 export function localURL(value) {
   try {
@@ -16,11 +16,13 @@ export async function launcher(root, health) {
   const search = el('input', {type: 'search', placeholder: '搜索项目名称', 'aria-label': '搜索项目名称', autocomplete: 'off'});
   const count = el('span', {class: 'muted', role: 'status'});
   let entries = [];
+  const surfaceLabels = {...surfaces, page: '单页'};
   const positionText = entry => {
     const position = entry.position?.position;
     if (!position) return version(entry.revision_id);
-    const surface = surfaces[position.surface] || position.surface;
-    return `可继续上次阅读 · ${surface}${position.page_id ? ' · ' + position.page_id : ''} · ${version(position.revision || entry.revision_id)}`;
+    const surface = surfaceLabels[position.surface] || position.surface;
+    const layer = position.surface === 'page' && layers[position.layer] ? ' · ' + layers[position.layer] : '';
+    return `可继续上次阅读 · ${surface}${layer}${position.page_id ? ' · ' + position.page_id : ''} · ${version(position.revision || entry.revision_id)}`;
   };
   const renderList = () => {
     const term = search.value.trim().toLowerCase();
@@ -55,7 +57,7 @@ export async function launcher(root, health) {
   const refresh = async () => {
     try {
       const data = await get('/api/projects');
-      entries = data.projects;
+      entries = data.projects || [];
       renderList();
       message.textContent = '';
     } catch (error) { message.textContent = readableError(error); }

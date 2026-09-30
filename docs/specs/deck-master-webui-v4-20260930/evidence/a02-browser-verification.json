@@ -28,7 +28,7 @@
       "modern": "连接面板：本机服务=已连接·1.0.0.dev2；当前项目动作=10 项可用；制作工具=需交接·复制制作要求后到制作工具执行，不会自动开始；文件导出=可用（按当前版本固定导出）；云端同步=不提供；受限 0 项",
       "readonly_sample": "当前项目动作=没有可写动作；文件导出=不可用·只读示例，请新建自己的项目后编辑；10 项受限全部 sample_readonly",
       "v1_project": "6 项可用（drafts、candidates、inputs、run_desk、exports、restoration）；4 项受限（标注与意见/修改任务/内容与结构/风格校准=旧格式项目，该动作需要 workbench.v3 项目）——与 B02 评审修复后的真实门槛一致",
-      "historical": "历史版本横幅 + 连接面板：1 项可用（drafts）；9 项受限全部 fixed_revision（正在看历史版本，只读；回到当前版本后可操作）；文件导出=不可用·历史版本——fixed_revision 由前端按路由组合，服务端不产生",
+      "historical": "历史版本横幅 + 连接面板（评审修复后复验）：2 项可用（个人草稿、文件导出——中文标签）；8 项受限全部 fixed_revision（正在看历史版本，只读；回到当前版本后可操作）；文件导出=可用（按正在阅读的历史版本固定导出）——与交付面同路由真实提供的固定版本导出一致；fixed_revision 由前端按路由组合，服务端不产生。修复前该面板错误地将 exports 组合为不可用（9 项受限），与交付面自相矛盾，已按评审豁免。",
       "service_vs_host": "制作工具条目固定为 需交接 文案；导出按 effective_actions 真实显示（不照抄原型未连接）"
     },
     "ac03": {
@@ -38,7 +38,8 @@
     },
     "screenshots": [
       "output/playwright/a02/ac01-launcher-1280.png",
-      "output/playwright/a02/ac02-connection-modal-readonly-1280.png"
+      "output/playwright/a02/ac02-connection-modal-readonly-1280.png",
+      "output/playwright/a02/ac01-launcher-position-1280.png"
     ],
     "console": "无 JS 错误"
   },
@@ -53,5 +54,20 @@
     "browser": "本文件；真实 launcher + 项目服务",
     "macos_picker": "选择已证、取消待验（权限）",
     "real_authoring_tool": "不在本卡闸门"
+  },
+  "review": {
+    "date": "2026-09-30",
+    "reviewer": "独立 code-review（ZCode code-reviewer 子代理）+ 人工复核",
+    "verdict": "可进入合并评审（无 P1）",
+    "findings_fixed": [
+      "P2-1 历史视图连接面板与交付面矛盾：exports 与 drafts 同样豁免 fixed_revision 组合（固定版本导出是读取/产出动作而非文档写入，服务端按 revision 生成）；面板措辞区分 按正在阅读的历史版本固定导出；浏览器复验 2 项可用/8 项受限",
+      "P3-2 可用动作列表改用 actionLabels 中文（与受限列表同源）",
+      "P3-3 exports supported=false 时显示 该核心未提供此能力 兜底",
+      "P3-1 项目卡位置文本：surface 含 page 映射为 单页+层名，不泄漏内部路由名",
+      "P3-5 entries 空载荷兜底 || []"
+    ],
+    "findings_noted_not_fixed": [
+      "P3-4 历史视图 drafts 面板宣称与各工作面只读编辑器的跨面一致性——留待 A03+/对应工作面卡收敛（服务端能力宣称本身真实）"
+    ]
   }
 }

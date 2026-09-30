@@ -144,7 +144,9 @@ export class Project {
       writer_upgrade_required: '项目由更新的核心写入，请用匹配的核心继续。',
       fixed_revision: '正在看历史版本，只读；回到当前版本后可操作。'};
     const actions = (this.info.effective_actions || []).map(item => {
-      const fixed = this.historical && item.writable && item.action !== 'drafts';
+      // 历史视图的 fixed_revision 组合：个人草稿与按固定版本导出不受影响——
+      // 交付面在同一路由真实提供按该历史版本固定的导出（服务端按 revision 生成）。
+      const fixed = this.historical && item.writable && !['drafts', 'exports'].includes(item.action);
       return {action: item.action, supported: item.supported,
         writable: fixed ? false : item.writable, reason: fixed ? 'fixed_revision' : item.reason_code};
     });
@@ -156,9 +158,11 @@ export class Project {
       el('p', {}, '本机工作区，项目数据仅保存在这台电脑。服务可达不等于制作工具已接手；生成任务仍需复制制作要求后交接。'),
       el('dl', {class: 'request-facts stack'},
         fact('本机服务', `已连接 · ${this.health.service_version || '本机核心'}`),
-        fact('当前项目动作', writable.length ? `${writable.length} 项可用（${writable.map(item => item.action).join('、')}）` : '没有可写动作'),
+        fact('当前项目动作', writable.length ? `${writable.length} 项可用（${writable.map(item => actionLabels[item.action] || item.action).join('、')}）` : '没有可写动作'),
         fact('制作工具', '需交接 · 复制制作要求后到制作工具执行，不会自动开始'),
-        fact('文件导出', exportsAction && exportsAction.writable ? '可用（按当前版本固定导出）' : `不可用${exportsAction?.reason ? ' · ' + (reasons[exportsAction.reason] || exportsAction.reason) : ''}`),
+        fact('文件导出', exportsAction && exportsAction.writable
+          ? (this.historical ? '可用（按正在阅读的历史版本固定导出）' : '可用（按当前版本固定导出）')
+          : `不可用 · ${exportsAction && !exportsAction.supported ? '该核心未提供此能力' : (reasons[exportsAction?.reason] || exportsAction?.reason || '')}`),
         fact('云端同步', '不提供')),
       blocked.length > 0 && el('details', {}, el('summary', {}, `受限动作 ${blocked.length} 项`),
         el('div', {class: 'stack'}, blocked.map(item => el('p', {class: 'muted'},
