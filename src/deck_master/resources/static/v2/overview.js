@@ -44,7 +44,9 @@ function reasonText(action) {
     (action.blocked_reason === 'candidate_unreadable' ? ' 候选记录损坏，已隔离。' : '');
 }
 function todoMeta(action) {
-  return action.page_ids?.length ? `第 ${action.page_ids.join('、')} 页` : '项目级事项';
+  const pages = action.page_ids || [];
+  if (!pages.length) return '项目级事项';
+  return pages.length > 4 ? `第 ${pages.slice(0, 4).join('、')} 等共 ${pages.length} 页` : `第 ${pages.join('、')} 页`;
 }
 function todoButton(app, action, primary = false) {
   const blocked = action.enabled === false;
@@ -69,24 +71,39 @@ function todoPanel(app) {
           : el('p', {class: 'muted'}, '处理当前优先事项后，继续核对整稿。')));
     return node;
   }
-  const readable = block?.readable;
+  if (!block) {
+    // 旧核心没有待办投影：读模式引导，不臆断项目没有内容
+    return el('section', {class: 'overview-todos todo-clear'},
+      el('h2', {}, '当前核心未提供待办投影'),
+      el('p', {}, '升级核心后，这里会显示按真实事实排序的待办。现在可从整稿与下方矩阵阅读制作状态。'),
+      button('查看整稿', () => app.go({surface: 'gallery'})));
+  }
+  const readable = block.readable;
   return el('section', {class: 'overview-todos todo-clear'},
     el('h2', {}, '当前没有记录到制作待办'),
-    el('p', {}, readable?.scope === 'deck_pages' ? '各页产物记录齐备。可继续检查整稿内容与交付要求。' : '项目还没有页面内容；先到内容与来源整理材料。'),
-    readable?.scope === 'deck_pages' ? button('查看整稿', () => app.go({surface: 'gallery'})) : button('去整理内容', () => app.go({surface: 'content'})));
+    el('p', {}, readable?.scope === 'deck_pages' ? '各页产物记录齐备。可继续检查整稿内容与交付要求。' : '此版本没有记录到待办动作。'),
+    readable?.scope === 'deck_pages' ? button('查看整稿', () => app.go({surface: 'gallery'})) : button('查看矩阵', () => document.querySelector('.matrix-wrap')?.scrollIntoView({block: 'center'})));
 }
 
 function promptState(page) {
   const prompt = page.prompt_summary;
   if (!prompt) return 'unknown';
-  if (['submitted', 'frozen', 'prepared'].some(key => prompt[key]?.status === 'recorded')) return 'ready';
-  if (['submitted', 'frozen', 'prepared'].some(key => prompt[key]?.status === 'unreadable')) return 'unreadable';
+  const blocks = ['submitted', 'frozen', 'prepared'].map(key => prompt[key]).filter(Boolean);
+  if (blocks.some(block => block.status === 'recorded'))
+    return blocks.some(block => (block.unreadable_count || 0) > 0) ? 'partial' : 'ready';
+  if (blocks.some(block => block.status === 'unreadable')) return 'unreadable';
   return 'missing';
 }
+// 提示词列沿用设计稿文案：缺失是"记录缺失"而非"尚未生成"；部分损坏显示待核实。
+const promptView = state => ({ready: {icon: 'check', text: '已就绪'}, partial: {icon: 'attention', text: '记录待核实'},
+  unreadable: {icon: 'attention', text: '记录待核实'}, missing: {icon: 'attention', text: '记录缺失'},
+  unknown: {icon: 'attention', text: '待核实'}}[state]);
 function stageState(stage) {
   if (!stage || stage.existence === 'not_generated') return 'missing';
   if (stage.existence !== 'recorded') return 'unreadable';
-  return stage.applicability?.status === 'basis_changed' ? 'stale' : 'ready';
+  if (stage.applicability?.status === 'basis_changed') return 'stale';
+  // 与画廊口径一致：无可验证的存储绑定时只声明"待核实"，不断言已就绪
+  return stage.applicability?.status === 'current' ? 'ready' : 'unknown';
 }
 const cellView = state => ({ready: {icon: 'check', text: '已就绪'}, missing: {icon: 'minus', text: '尚未生成'},
   stale: {icon: 'attention', text: '旧版待更新'}, unreadable: {icon: 'attention', text: '暂不可读'},
@@ -114,22 +131,20 @@ function matrixPanel(app) {
   const pages = app.summary.pages;
   const pageIndex = new Map(pages.map((page, index) => [page.page_id, index]));
   const needsWork = page => (page.attention?.items?.length || 0) > 0 || promptState(page) === 'missing';
-  const chapterOf = () => null;
-  let chapterTitleOf = chapterOf;
+  const thumbs = new Map();
+  let chapterTitleOf = () => null;
   let filter = 'all', search = '', ascending = true, disposed = false;
   const selected = new Set();
   const count = el('span', {class: 'muted', role: 'status'});
   const selectionNote = el('span', {class: 'muted', role: 'status'});
   const clearButton = button('清除选择', () => { selected.clear(); render(); });
-  const styleButton = button('用所选页开始风格校准', () => {
-    const ids = [...selected];
-    app.go({surface: 'style', page_id: ids[0], targets: ids.slice(1)});
-  });
+  // 批量消费方随 A05（生成请求）/A06（风格目标）接入；本卡只交付选择范围机制，
+  // 不提供不传递选择的按钮。
   const searchInput = el('input', {type: 'search', placeholder: '搜索页码或标题', 'aria-label': '搜索页码或标题', autocomplete: 'off'});
   const filterAll = button('', () => setFilter('all'), false, {'aria-pressed': 'true'});
   const filterTodo = button('只看需要处理', () => setFilter('todo'), false, {'aria-pressed': 'false'});
   const allCheckbox = el('input', {type: 'checkbox', 'aria-label': '选择当前筛选内所有可操作页面'});
-  const table = el('table', {class: 'matrix'});
+  const table = el('table', {class: 'matrix', 'aria-label': '逐页制作进展'});
 
   function setFilter(value) {
     if (filter === value) return;
@@ -165,10 +180,6 @@ function matrixPanel(app) {
     filterTodo.setAttribute('aria-pressed', String(filter === 'todo'));
     selectionNote.textContent = selected.size ? `已选择 ${selected.size} 页` : '未选择页面';
     clearButton.disabled = !selected.size;
-    const styleReady = app.health.ui_capabilities?.includes('style_recipes.v1') && selected.size > 0
-      && [...selected].every(id => pages.find(p => p.page_id === id)?.stages.blueprint?.existence === 'recorded');
-    styleButton.disabled = !selected.size || !styleReady || app.readonly;
-    styleButton.title = app.readonly ? '当前视图只读，不能开始风格校准' : !styleReady && selected.size ? '所选页需要都有原图才能作为风格目标' : '';
     allCheckbox.checked = operable.length > 0 && operable.every(page => selected.has(page.page_id));
     allCheckbox.indeterminate = operable.some(page => selected.has(page.page_id)) && !allCheckbox.checked;
     allCheckbox.disabled = !operable.length;
@@ -196,8 +207,13 @@ function matrixPanel(app) {
       const thumb = el('span', {class: 'matrix-thumbnail', 'aria-hidden': true});
       const blueprint = page.stages.blueprint;
       if (blueprint?.existence === 'recorded' && blueprint.file) {
-        const view = imageView(app, blueprint, `第 ${number} 页缩略图`, {kind: 'thumb'});
-        app.disposables.push(view.dispose);
+        // 复用同一页的缩略图视图：render 重建表格不重新占用图片池
+        let view = thumbs.get(page.page_id);
+        if (!view) {
+          view = imageView(app, blueprint, `第 ${number} 页缩略图`, {kind: 'thumb'});
+          thumbs.set(page.page_id, view);
+          app.disposables.push(view.dispose);
+        }
         thumb.append(view.node);
       } else thumb.append(icon('minus'));
       const row = el('tr', {},
@@ -210,11 +226,11 @@ function matrixPanel(app) {
         el('th', {scope: 'row'}, button([thumb, el('span', {class: 'mono faint'}, number), el('span', {}, page.title || '未命名页面')],
           () => app.go({surface: 'page', page_id: page.page_id, layer: 'original_image'}),
           false, {class: 'title-button', 'aria-label': `打开第 ${number} 页`})),
-        cellButton(page, 'content', cellView(stageState(page.stages[stageKey.content]))),
-        cellButton(page, 'prepared_prompt', cellView(promptState(page)), 'prepared_prompt'),
-        cellButton(page, 'original_image', cellView(stageState(page.stages[stageKey.original_image]))),
-        cellButton(page, 'svg', cellView(stageState(page.stages[stageKey.svg]))),
-        cellButton(page, 'ppt', cellView(stageState(page.stages[stageKey.ppt]))),
+        el('td', {}, cellButton(page, 'content', cellView(stageState(page.stages[stageKey.content])))),
+        el('td', {}, cellButton(page, 'prepared_prompt', promptView(promptState(page)), 'prepared_prompt')),
+        el('td', {}, cellButton(page, 'original_image', cellView(stageState(page.stages[stageKey.original_image])))),
+        el('td', {}, cellButton(page, 'svg', cellView(stageState(page.stages[stageKey.svg])))),
+        el('td', {}, cellButton(page, 'ppt', cellView(stageState(page.stages[stageKey.ppt])))),
         el('td', {class: 'matrix-next'}, nextButton(page)));
       if (!needsWork(page)) row.title = '本页当前没有需要处理的动作';
       body.append(row);
@@ -250,7 +266,7 @@ function matrixPanel(app) {
     el('div', {class: 'section-head'}, el('h2', {}, '逐页制作进展'), count),
     el('div', {class: 'toolbar'}, el('div', {class: 'segmented', role: 'group', 'aria-label': '页面筛选'}, filterAll, filterTodo),
       el('label', {class: 'row wrap'}, searchInput, selectionNote)),
-    el('div', {class: 'row wrap'}, styleButton, clearButton),
+    el('div', {class: 'row wrap'}, clearButton),
     el('div', {class: 'matrix-wrap'}, table),
     el('div', {class: 'matrix-caption'},
       el('span', {}, icon('check'), ' 可查看　', icon('attention'), ' 需要处理　', icon('minus'), ' 尚未生成'),

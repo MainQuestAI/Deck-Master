@@ -12,7 +12,7 @@ const taskNames = {compose: '整理内容', blueprint: '制作原图', svg: '制
 const taskStatus = {awaiting_host: '待交接', running: '已记录处理中', completed: '结果已记录', failed: '执行失败', cancelled: '已取消', superseded: '已由新任务接续', blocked: '需要处理阻碍'};
 export function runs(app, data) {
   const selected = data.runDetail?.task || data.tasks.find(task => task.task_id === app.route.task_id);
-  const node = el('div', {}, heading('任务与交付', '任务状态按当前阅读版本展示。复制交接说明不会启动模型。',
+  const node = el('div', {}, heading(selected ? '当前任务' : '任务与交付', '任务状态按当前阅读版本展示。复制交接说明不会启动模型。',
     selected?.kind === 'compose' && selected.status === 'awaiting_host' && !app.readonly ? button('交接这项内容整理', () => app.handoff(selected.task_id), true) : null));
   if (app.health.ui_capabilities?.includes('exports.v1')) node.append(button('查看版本与文件', () => { const target = document.querySelector('#delivery-desk'); target?.scrollIntoView({block: 'start'}); target?.querySelector('h2')?.focus({preventScroll: true}); }));
   if (selected && app.returnTo && !app.returnTo.task_id) node.append(button('返回上次工作面', () => app.go(app.returnTo)));
