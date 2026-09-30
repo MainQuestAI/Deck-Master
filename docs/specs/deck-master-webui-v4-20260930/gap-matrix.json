@@ -528,5 +528,15 @@
     "status": "采用时机功能差距，源码确认",
     "final_owner": "B03",
     "remaining": "新输入可登记待协调，trial回传先存候选；正文/大纲/输入对齐在用户采用后变更"
+  },
+  {
+    "id": "G54",
+    "feature": "v1格式项目写端点格式门",
+    "design_source": "exports.py:359; candidates.py:198; restoration.py:48; service.py:1155",
+    "code_source": "src/deck_master/ui_journal.py",
+    "existing_packages": "W12",
+    "status": "端点行为不一致，B02评审实测",
+    "final_owner": "B07",
+    "remaining": "candidates/inputs/run_desk/exports/restoration 写路径无 workbench.v3 门（v1 项目实测可写并会原地升级）；补齐端点门或在合同明确放行，消除与投影/B02-AC03 的分歧"
   }
 ]

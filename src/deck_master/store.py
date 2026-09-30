@@ -41,6 +41,10 @@ from .models import (
 
 CURRENT_FORMAT = "deckmaster-current.v1"
 WORKBENCH_FORMAT = "deckmaster-current.v2"
+# Writers this core can read from a pointer and advance to (single source for
+# the store gate and the UI's effective-action projection).
+SUPPORTED_WRITERS = ("generation.v1", "content-plan.v1", "changes.v1", "candidates.v1",
+                     "run-desk.v1", "style-recipes.v1", "content-ops.v1")
 DECKMASTER_DIR = ".deckmaster"
 OPERATION_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
 
@@ -192,7 +196,7 @@ class Store:
             raise StoreError("current.json", f"unreadable pointer: {exc}") from exc
         if pointer.get("format") not in (CURRENT_FORMAT, WORKBENCH_FORMAT):
             raise StoreError("current.json", f"unknown pointer format {pointer.get('format')!r}")
-        if pointer.get("format") == WORKBENCH_FORMAT and pointer.get("minimum_writer") not in ("generation.v1", "content-plan.v1", "changes.v1", "candidates.v1", "run-desk.v1", "style-recipes.v1", "content-ops.v1"):
+        if pointer.get("format") == WORKBENCH_FORMAT and pointer.get("minimum_writer") not in SUPPORTED_WRITERS:
             raise StoreError("current.json", "unsupported minimum writer; use the matching core")
         return pointer
 

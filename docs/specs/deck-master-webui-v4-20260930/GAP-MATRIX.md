@@ -1,6 +1,6 @@
 # 功能与界面差距矩阵
 
-共53项功能核对，包含已有能力、UI适配、真实缺口和验收遗留，不能把53项全部计为缺失功能。
+共54项功能核对，包含已有能力、UI适配、真实缺口和验收遗留，不能把53项全部计为缺失功能。
 
 核验基准：main `66da345c84de48933a76de577114f08dcebf4f0e`。这里的“已有能力”不代表最终安装/真实项目验收通过。源码路径相对仓库；设计路径相对收讫目录。每行只有一个剩余项最终责任卡，消费方见任务依赖。
 
@@ -59,3 +59,4 @@
 | G51 | 原型localStorage/硬编码示例/模拟执行 | 仅设计参考，禁止移植为真状态（不适用） | [A01](task-cards/A01.md) | 保留原文件作设计；生产使用Python真数据，模拟只用于独立状态参考 | `app.js:initialArtifact; task-claim; reset` / `src/deck_master/resources/static/v2/app.js` |
 | G52 | 合并/拆分回传后采用 | 采用时机功能差距，源码确认（W09） | [B03](task-cards/B03.md) | 当前_accept_content_update接受结果即改稿；先存内容变更集候选，查看影响后原子采用 | `states.js:return-structure / confirm-adopt-structure` / `src/deck_master/content_ops.py; src/deck_master/tasks.py` |
 | G53 | 材料影响判断回传后采用 | 采用时机功能差距，源码确认（W09） | [B03](task-cards/B03.md) | 新输入可登记待协调，trial回传先存候选；正文/大纲/输入对齐在用户采用后变更 | `app.js:material-impact` / `src/deck_master/service.py; src/deck_master/tasks.py` |
+| G54 | v1格式项目写端点格式门 | 端点行为不一致，B02评审实测（W12） | [B07](task-cards/B07.md) | candidates/inputs/run_desk/exports/restoration 写路径无 workbench.v3 门（v1 项目实测可写并会原地升级）；补齐端点门或在合同明确放行，消除与投影/B02-AC03 的分歧 | `exports.py:359; candidates.py:198; restoration.py:48; service.py:1155` / `src/deck_master/ui_journal.py` |

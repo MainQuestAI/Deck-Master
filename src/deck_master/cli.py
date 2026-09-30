@@ -144,6 +144,7 @@ def build_parser() -> argparse.ArgumentParser:
     view_cmd.add_argument("--project", required=True)
     view_cmd.add_argument("--open", action="store_true", default=False)
     view_cmd.add_argument("--no-open", action="store_true")
+    view_cmd.add_argument("--ui", choices=("v2",), help="open the explicit new workbench UI with --open; the default entry stays unchanged without it")
     view_cmd.add_argument("--json", dest="as_json", action="store_true")
     view_cmd.add_argument("--revision", help="read a fixed committed Document snapshot")
     view_cmd.add_argument("--summary", action="store_true", help="read the lightweight workbench summary")
@@ -458,8 +459,9 @@ def main(argv: list[str] | None = None) -> int:
                 raise workbench.ReadModelError("invalid_input", "page_id", "provide a page identifier", http_status=400)
             if ((reading and options.open) or (options.lineage and not options.page_id)
                     or (options.summary and (options.page_id or options.lineage or options.content_plan))
-                    or (options.content_plan and (options.page_id or options.lineage))):
-                raise workbench.ReadModelError("invalid_input", "view", "read options cannot combine with --open; --lineage requires --page-id; --summary is whole-project", http_status=400)
+                    or (options.content_plan and (options.page_id or options.lineage))
+                    or (options.ui and not options.open)):
+                raise workbench.ReadModelError("invalid_input", "view", "read options cannot combine with --open; --lineage requires --page-id; --summary is whole-project; --ui requires --open", http_status=400)
             if options.content_plan:
                 from .content_plan import show
                 return _emit(show(options.project, revision=options.revision))
@@ -473,7 +475,7 @@ def main(argv: list[str] | None = None) -> int:
                 return _emit(project_view(options.project, revision=options.revision))
 
             if options.open:
-                return _emit(open_view(options.project, open_browser=not options.no_open))
+                return _emit(open_view(options.project, open_browser=not options.no_open, ui=options.ui))
             return _emit(service_status(options.project))
         if options.command == "import":
             return _emit(

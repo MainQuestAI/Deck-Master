@@ -80,6 +80,9 @@ Open the returned URL and choose **打开只读示例**. This bundled synthetic 
 requires no model account and does not authorize generation. Use **新建项目**
 or **选择项目文件夹** for your own material. `--project /path/to/project` opens
 one explicit project; `--ui legacy` reads the old interface with the same core.
+`deck-master view --project … --open --ui v2` opens the same project service at
+the explicit new workbench entry; `view --open` without `--ui` keeps the default
+entry.
 Stop the selected service using `workbench --registry … --stop` (launcher) or
 `workbench --project … --stop` (project). Stopping a service preserves its data;
 it does not prevent an independent CLI writer from being invoked.

@@ -25,13 +25,13 @@
 
 拟增 `attention.items[]` / 顶层 `next_actions[]`：`action_id`、`kind`、`page_ids`、`layer`、`reason_code`、`source_refs`、`enabled`、`blocked_reason`、`revision_id`。状态derived/unknown区别；action_id由事实身份+kind稳定产生。只返回允许的动作种类，前端本地映射路线，不执行后端任意URL或命令。
 
-排序：保存未知/冲突等需先解决的恢复事项（个人journal由A另并列展示，不注入业务真相）→明确失败/超时→待决候选→未协调输入→缺层/依据已变→一般阅读。服务无专业记录时不生成“风格偏离”；质量不明是未判断。候选count保留总数，另增pending_count排除adopted/keep_current，引用决定事实。没有可执行动作时给原因与可读位置。
+排序：保存未知/冲突等需先解决的恢复事项（个人journal由A另并列展示，不注入业务真相）→待交接handoff（主执行回路步骤，先于重做类事项）→明确失败→待决候选→未协调输入→缺层/依据已变→一般阅读。超时/长时间运行中归入恢复层（与run_desk.task_row判定一致）。服务无专业记录时不生成“风格偏离”；质量不明是未判断。候选count保留总数，另增pending_count排除adopted/keep_current，引用决定事实。没有可执行动作时给原因与可读位置。
 
-## B02：有效能力与主入口
+## B02：有效能力与主入口（已实施，切片见 evidence/b02-slice.json）
 
-保留 `/api/health.ui_capabilities` 作为server支持。在 `/api/project` 拟增 `effective_actions`，每项 `action`、`supported`、`writable`、`reason_code`，以及当前format/reader/writer信息。历史视图由A根据fixed模式进一步禁写；服务写接口仍独立验证，不信任前端disabled。
+保留 `/api/health.ui_capabilities` 作为server支持（单一常量 `web.UI_CAPABILITIES`）。`/api/project` 已增 `effective_actions`，每项 `action`、`supported`、`writable`、`reason_code`；响应同时携带 `project_format`、`minimum_writer`、`core_readers`、`core_writers`。动作族：`drafts`（个人journal，无需workbench.v3）、`annotations/changes/content/styles`（镜像各自服务的真实 workbench.v3 门槛，v1 格式禁用）、`candidates/inputs/run_desk/exports/restoration`（写路径当前无格式门，投影如实报告可写；端点补门缺口见 GAP-MATRIX G54，归 B07）。`reason_code` 是投影词汇表而非写端点的 error envelope 码（`sample_readonly` 与真实 403 码一致，其余为投影描述）。指针级不可读（未来format/writer）时返回降级载荷：`read_status.reason_code` + 全部动作禁用，不使 /api/project 整体失败。历史视图由A根据fixed模式进一步禁写（`fixed_revision` 由前端按route组合，服务端不产生）；服务写接口仍独立验证，不信任前端disabled。
 
-行为原因覆盖 `unsupported_project_format`、`reader_upgrade_required`、`writer_upgrade_required`、`sample_readonly`、`fixed_revision`；能映射既有错误时沿用既有码，不创建重复错误族。CLI拟增 `deck-master view --project … --open --ui v2`，既有不带--ui行为保留；workbench现有入口复用，不固定端口。
+行为原因覆盖 `unsupported_project_format`、`reader_upgrade_required`、`writer_upgrade_required`、`sample_readonly`、`fixed_revision`；除 `sample_readonly` 对应真实 403 码外，其余为投影词汇表（真实写拒绝仍以其服务层 envelope 码为准）。`deck-master view --project … --open --ui v2` 已实施（`--ui` 不带 `--open` 报 invalid_input/退出码2；选项非法退出码2）；既有不带--ui行为保留；workbench现有入口复用，不固定端口，Skill 指向显式新入口。
 
 ## B03：Page/内容变更集候选与Task结果
 

@@ -53,6 +53,14 @@ def _write_state(project_dir: Path, state: dict) -> None:
     publish(descriptor(project=project_dir), state)
 
 
+# Server-side capability names (single source for /api/health and the
+# /api/project effective-action projection).
+UI_CAPABILITIES = ("ui_draft.v1", "ui_gallery.v1", "thumbnails.v1", "fixed_snapshot.v1", "text_range.v1",
+                   "page_detail.v1", "annotations.v1", "changes.v1", "operations.v1", "candidates.v1",
+                   "stages.v1", "run_desk.v1", "style_recipes.v1", "content_ops.v1", "exports.v1",
+                   "restoration.v1", "workbench_actions.v1")
+
+
 class WorkbenchHandler(BaseHTTPRequestHandler):
     store: Store
     static_dir: Path
@@ -334,7 +342,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             try:
                 from . import ui_journal, service
                 if parsed.path == '/api/project':
-                    result = ui_journal.project_info(self.store.project_root)
+                    result = ui_journal.project_info(self.store.project_root, server_capabilities=UI_CAPABILITIES)
                 elif parsed.path == '/api/drafts':
                     result = ui_journal.list_drafts(self.store.project_root)
                 elif parsed.path == '/api/ui-state':
@@ -373,7 +381,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             self._send_json({"status": "ok", **self.runtime_state,
                              "project_identity": _project_identity(self.store.project_root),
                              "ui_available": (self.static_dir / 'v2' / 'index.html').is_file(),
-                             "ui_capabilities": ["ui_draft.v1", "ui_gallery.v1", "thumbnails.v1", "fixed_snapshot.v1", "text_range.v1", "page_detail.v1", "annotations.v1", "changes.v1", "operations.v1", "candidates.v1", "stages.v1", "run_desk.v1", "style_recipes.v1", "content_ops.v1", "exports.v1", "restoration.v1"]})
+                             "ui_capabilities": list(UI_CAPABILITIES)})
             return
         if parsed.path == "/api/file":
             query = parse_qs(parsed.query)
@@ -525,12 +533,14 @@ def _static_dir() -> Path:
     raise RuntimeError("static resources not available in this installation")
 
 
-def open_view(project_dir: Path | str, *, open_browser: bool = True) -> dict:
+def open_view(project_dir: Path | str, *, open_browser: bool = True, ui: str | None = None) -> dict:
     """``view --open``: reuse a healthy service, spawn a detached one if needed.
 
     The server runs in its own process (``python -m deck_master.view_server``),
     so it keeps serving after the CLI exits. Startup waits bounded on a health
     check; failures return ``unavailable`` with the real reason (spec 09.5).
+    ``ui="v2"`` opens the explicit new workbench entry; without it the default
+    entry is preserved unchanged.
     """
     project_dir = Path(project_dir).expanduser().resolve()
     if not (project_dir / ".deckmaster" / "current.json").is_file():
@@ -538,34 +548,46 @@ def open_view(project_dir: Path | str, *, open_browser: bool = True) -> dict:
             "review_url": None,
             "view_status": "unavailable",
             "detail": "project has no current Document; run create first",
+            "ui": ui,
         }
     try:
         state = ensure_service(project_dir)
     except ServiceUnavailable as exc:
-        return {"review_url": None, "view_status": "unavailable", "detail": str(exc)}
+        return {"review_url": None, "view_status": "unavailable", "detail": str(exc), "ui": ui}
     except Exception as exc:  # noqa: BLE001 - spawn/health failures surface as a real reason
-        return {"review_url": None, "view_status": "unavailable", "detail": f"view service failed: {exc}"}
+        return {"review_url": None, "view_status": "unavailable", "detail": f"view service failed: {exc}", "ui": ui}
+    # same incomplete-install guard as the launcher: never point the browser
+    # at a /v2/ entry the installed static tree cannot serve
+    ui_available = ui != "v2" or (_static_dir() / "v2" / "index.html").is_file()
+    if not ui_available:
+        return {"review_url": state["url"], "view_status": "core_ready_ui_unavailable",
+                "detail": "the v2 workbench UI is not present in this installation; use the default entry",
+                "port": state["port"], "pid": state.get("pid"),
+                "reused": state.get("reused", False), "ui": ui}
+    url = state["url"] + ("v2/" if ui == "v2" else "")
     if open_browser:
         opened = False
         try:
-            opened = bool(webbrowser.open(state["url"], new=2))
+            opened = bool(webbrowser.open(url, new=2))
         except Exception:  # noqa: BLE001 - no browser on this host
             opened = False
         if not opened:
             return {
-                "review_url": state["url"],
+                "review_url": url,
                 "view_status": "available",
                 "detail": "no browser could be opened; use the local URL above",
                 "port": state["port"],
                 "pid": state.get("pid"),
                 "reused": state.get("reused", False),
+                "ui": ui,
             }
     return {
-        "review_url": state["url"],
+        "review_url": url,
         "view_status": "opened" if open_browser else "available",
         "port": state["port"],
         "pid": state.get("pid"),
         "reused": state.get("reused", False),
+        "ui": ui,
     }
 
 

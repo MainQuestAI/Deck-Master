@@ -33,14 +33,116 @@ def context(project):
     return store, doc, _logical_identity(str(path), doc["revision_id"])
 
 
-def project_info(project):
-    store, doc, identity = context(project)
+# B02 (INTERFACES "B02：有效能力与主入口"): what the serving core supports and
+# what THIS project can do right now are separate facts. The projection below
+# never replaces the write gates - every write endpoint keeps validating on
+# its own and must not trust this list.
+CORE_READERS = ("deckmaster-current.v1", "deckmaster-current.v2")
+
+# (action, capability the serving core must advertise). "drafts" lives in the
+# personal journal and needs no workbench.v3 project. FORMAT_GATED families
+# mirror the real workbench.v3 gates in annotation_service/changes/content_ops/
+# styles; the remaining document families have no format gate in their write
+# paths today, so the projection reports them truthfully as writable and the
+# missing endpoint gates are backfilled as gap G54 (not fixed from this card).
+PROJECT_ACTIONS = (
+    ("drafts", "ui_draft.v1"),
+    ("annotations", "annotations.v1"),
+    ("changes", "changes.v1"),
+    ("candidates", "candidates.v1"),
+    ("content", "content_ops.v1"),
+    ("inputs", "content_ops.v1"),
+    ("styles", "style_recipes.v1"),
+    ("run_desk", "run_desk.v1"),
+    ("exports", "exports.v1"),
+    ("restoration", "restoration.v1"),
+)
+FORMAT_GATED = frozenset({"annotations", "changes", "content", "styles"})
+
+
+def _capabilities(server_capabilities):
+    # A caller without a live server (CLI, direct tests) describes this core.
+    if server_capabilities is None:
+        return {capability for _, capability in PROJECT_ACTIONS}
+    return set(server_capabilities)
+
+
+def _effective_actions(*, project_format, sample_readonly, server_capabilities=None):
+    """Project-level availability, truthful to the real write gates.
+
+    reason_code is a projection vocabulary, not the endpoints' error-envelope
+    codes: sample_readonly matches the real 403 code, unsupported_project_format
+    describes the format gate the gated families really enforce, and the two
+    upgrade reasons mirror store.read_current's pointer refusals. The
+    historical-view reason fixed_revision is composed by the UI from its route,
+    never by the server.
+    """
+    capabilities = _capabilities(server_capabilities)
+    actions = []
+    for action, capability in PROJECT_ACTIONS:
+        supported = capability in capabilities
+        writable, reason = True, None
+        if not supported:
+            writable = False
+        elif sample_readonly:
+            writable, reason = False, "sample_readonly"
+        elif action in FORMAT_GATED and project_format != "workbench.v3":
+            writable, reason = False, "unsupported_project_format"
+        actions.append({"action": action, "supported": supported,
+                        "writable": writable, "reason_code": reason})
+    return actions
+
+
+def _pointer_gate(project):
+    """Classify pointer-level refusals before the document loads, so the UI
+    gets an explainable payload instead of a failed boot. Reads the raw
+    pointer file on purpose: project_path() itself validates through the
+    snapshot loader, which is exactly what fails here."""
+    from pathlib import Path
+
+    from .store import SUPPORTED_WRITERS, WORKBENCH_FORMAT
+    root = Path(project).expanduser().resolve()
+    pointer = read_json(safe_path(root, ".deckmaster", "current.json"))
+    if not isinstance(pointer, dict):
+        return None
+    fmt = pointer.get("format")
+    if fmt not in CORE_READERS:
+        return "reader_upgrade_required", pointer
+    if fmt == WORKBENCH_FORMAT and pointer.get("minimum_writer") not in SUPPORTED_WRITERS:
+        return "writer_upgrade_required", pointer
+    return None
+
+
+def project_info(project, *, server_capabilities=None):
     from .samples import sample_info
+    from .store import SUPPORTED_WRITERS
+    gate = _pointer_gate(project)
+    if gate is not None:
+        reason, pointer = gate
+        capabilities = _capabilities(server_capabilities)
+        return {"project_id": None, "project_identity": None, "title": None, "revision_id": None,
+                "project_format": pointer.get("format"), "minimum_writer": pointer.get("minimum_writer"),
+                "core_readers": list(CORE_READERS), "core_writers": list(SUPPORTED_WRITERS),
+                "read_status": {"status": "unreadable", "reason_code": reason,
+                                "detail": "this core cannot read the project pointer; open it with a matching core"},
+                "host_execution": "handoff_required", "draft_journal": "ui_draft.v1", "sample": None,
+                "effective_actions": [{"action": action, "supported": capability in capabilities,
+                                       "writable": False, "reason_code": reason}
+                                      for action, capability in PROJECT_ACTIONS]}
+    store, doc, identity = context(project)
+    sample = sample_info(store.project_root)
+    compatibility = doc.get("compatibility", {})
+    project_format = compatibility.get("project_format", "deck_document.v1")
     return {"project_id": doc["project_id"], "project_identity": identity,
             "title": doc["task"]["title"], "revision_id": doc["revision_id"],
-            "project_format": doc.get("compatibility", {}).get("project_format", "deck_document.v1"),
+            "project_format": project_format,
+            "minimum_writer": compatibility.get("minimum_writer"),
+            "core_readers": list(CORE_READERS), "core_writers": list(SUPPORTED_WRITERS),
             "host_execution": "handoff_required", "draft_journal": "ui_draft.v1",
-            "sample": sample_info(store.project_root)}
+            "sample": sample,
+            "effective_actions": _effective_actions(project_format=project_format,
+                                                    sample_readonly=bool(sample and sample.get("readonly")),
+                                                    server_capabilities=server_capabilities)}
 
 
 def _directory(store):
