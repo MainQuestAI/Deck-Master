@@ -3,7 +3,7 @@
   "route": "B · 功能补齐",
   "slice": "正文与结构变更候选（工程切片，待单独评审）",
   "base": "50535eec0b29e2146159ee2346f96636d7cbbe3e",
-  "head": "7722a96a29da7e840c4464a780ed993209635e70",
+  "head": "69cee5ba7ca4b37c57c6297c283593e075683528",
   "branch": "codex/webui-b-capabilities",
   "environment": "macOS darwin 27.0.0 arm64; Python 3.12.12 venv（主仓库 .venv，dev依赖），PYTHONPATH=src 指向 webui-b 工作树",
   "changed_files": [
@@ -29,7 +29,18 @@
     },
     {
       "layer": "HTTP",
-      "commands": ["test_http_serves_content_candidate_kinds：/api/candidates（listing 含 result_kind）、/api/candidates/{id}（page 分支 show）、POST /api/candidates/plan（session token + input 包装）"],
+      "commands": [
+        "test_http_serves_content_candidate_kinds：/api/candidates（listing 含 result_kind）、/api/candidates/{id}（page 分支 show）、POST /api/candidates/plan（session token + input 包装）"
+      ],
+      "result": "pass"
+    },
+    {
+      "layer": "评审修复回归",
+      "commands": [
+        "PYTHONPATH=src python -m pytest tests/rebuild/ -q --ignore=tests/rebuild/test_install.py（935 passed）",
+        "PYTHONPATH=src python -m pytest tests/rebuild/test_install.py -q（17 passed）",
+        "python -m ruff check（All checks passed）"
+      ],
       "result": "pass"
     }
   ],
@@ -71,5 +82,26 @@
   ],
   "synthetic_evidence_only": true,
   "real_host_calls": 0,
-  "production_acceptance": false
+  "production_acceptance": false,
+  "review_round_1": {
+    "reviewer": "独立 code-reviewer 代理（ZCode code-reviewer）",
+    "verdict": "不通过（P0 x1，P1 x1，P2 x3，P3 x7）",
+    "fix_commit": "69cee5ba7ca4b37c57c6297c283593e075683528",
+    "fixed": [
+      "P0 候选注册表毒化：记录路径强制 content_plan 且按 bind_result 同头校验（schema+validate_input against resulting page order）；畸形outline拒绝测试证明注册表保持可读",
+      "P1 无plan变更集记录/采用不对称：记录时拒绝 + inputs trial 指令要求提交 content_plan_input",
+      "P2 空项目 trial 死端：无页项目拒绝 mode=trial（auto 仍可派发 initial compose）",
+      "P3 采用仅在真实变化时清 outputs/推进 plan 版本；死键移除",
+      "P3 svg trial 被通用槽位比对误判 stale：所有 trial 统一经 candidates.inputs_current（含新增 content_identity 短路，修 inputs_update 提交前 task_summary 读未提交 revision）",
+      "P2 补测试：跨页乱序返回、changeset adopt 重放、目标漂移拒绝"
+    ],
+    "accepted_not_fixed": [
+      "P2 page 候选精确 scope 与 artifact 候选/接受时机的宽严差异：为 B03 合同的设计决定（INTERFACES \"可按精确scope\"），理由已记录于 design_decisions；行为不变",
+      "P3 intent=content 自由文本协议开关：与 INTERFACES 合同一致，schema 不收窄；已在 changes.py 注释说明",
+      "P3 changeset 记录时 StaleInputContext 与图像候选\"记录后过期\"体验差异：与 auto 路径一致，保留",
+      "P3 inputs trial 登记时 supersede 开放任务与 content_ops trial 的语义差异：与 auto inputs 行为一致，保留（本条为登记语义，非候选语义）",
+      "P3 新页 mapping source_page_ids=[]：inputs 材料不页域化，保留"
+    ],
+    "tests_after_fix": "test_content_candidates 22 passed；全量 952 passed（935+17 install）；ruff clean"
+  }
 }
