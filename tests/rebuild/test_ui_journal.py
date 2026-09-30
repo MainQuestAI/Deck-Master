@@ -309,3 +309,16 @@ def test_every_work_surface_and_task_location_can_be_restored(project, surface):
         journal.save_position(project, position={**value, 'task_id': 'foreign-task'})
     with pytest.raises(ModelError):
         journal.save_position(project, position={**value, 'zoom': 100})
+
+
+def test_position_admits_source_reading_layer(project):
+    """A04 评审 P3-4 回归：六段制作链的来源层必须可持久化阅读位置。"""
+    store = Store(project)
+    doc = store.load_document()
+    info = journal.project_info(project)
+    value = {'schema_version': 'ui_position.v1', 'project_id': info['project_id'],
+             'project_identity': info['project_identity'], 'page_id': doc['pages'][0]['page_id'],
+             'surface': 'page', 'layer': 'source', 'revision': doc['revision_id'], 'zoom': 1, 'task_id': None}
+    saved = journal.save_position(project, position=value)
+    assert saved['position']['layer'] == 'source'
+    assert journal.read_position(project)['position']['layer'] == 'source'

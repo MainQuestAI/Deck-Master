@@ -1,80 +1,136 @@
 {
-  "card": "A04",
-  "recorded_at": "2026-10-01T01:20:00+08:00",
-  "base": "a8f698e（origin/main，PR-GOV 冲刺计划合并；A01/B01/B02/A02/A03/B03 + CONSOLIDATION.md）",
-  "branch": "codex/webui-v4-completion",
-  "environment": {
-    "worktree": "/Users/dingcheng/.codex/worktrees/webui-a/Deck-Master",
-    "browser": "Playwright Chromium via playwright-cli，session a04，1440x900 与 1280x800",
-    "service": "真实 WorkbenchServer + create_gallery_sample 24 页混合层合成项目（p03/p14 缺原图、p11/p21 PPT 过期、偶数页 SVG、子集 PPT 预览）+ p01 真实 trial 任务经 generation.freeze 冻结请求与未知调用（call_settle outcome=unknown）。无 mock；合成证据。",
-    "note": "首次进入需显式 /v2/ 入口（B02 显式 UI 选择；默认入口未授权切换）。"
+ "card": "A04",
+ "recorded_at": "2026-10-01（初版 01:21 提交时写入；复审修复后随提交更新，时间戳以 git 提交时间为准）",
+ "base": "a8f698e（origin/main，PR-GOV 冲刺计划合并；A01/B01/B02/A02/A03/B03 + CONSOLIDATION.md）",
+ "branch": "codex/webui-v4-completion",
+ "environment": {
+  "worktree": "/Users/dingcheng/.codex/worktrees/webui-a/Deck-Master",
+  "browser": "Playwright Chromium via playwright-cli，session a04，1440x900 与 1280x800",
+  "service": "真实 WorkbenchServer + create_gallery_sample 24 页混合层合成项目（p03/p14 缺原图、p11/p21 PPT 过期、偶数页 SVG、子集 PPT 预览）+ p01 真实 trial 任务经 generation.freeze 冻结请求与未知调用（call_settle outcome=unknown）。无 mock；合成证据。",
+  "note": "首次进入需显式 /v2/ 入口（B02 显式 UI 选择；默认入口未授权切换）。"
+ },
+ "changed_files": [
+  "src/deck_master/resources/static/v2/gallery.js（设计布局重排：segmented 图层计数/阅读方式/列数、legend、slide-tile 瓷片、页面搜索、有效列降级、连续阅读实测节距）",
+  "src/deck_master/resources/static/v2/page-workbench.js（六段制作链 chain 导航含来源段、上一页/下一页、来源层内联渲染、来源层无草稿说明）",
+  "src/deck_master/resources/static/v2/routes.js（layers 增加 source）",
+  "src/deck_master/resources/static/v2/request-view.js（提示词阶段切换：预备与冻结 / 实际提交）",
+  "src/deck_master/resources/static/v2/project.js（单页 ←/→ 键盘翻页，输入与滚动区除外）",
+  "src/deck_master/resources/static/v2/workbench.css（产品尾部随新标记更新；style.css 未改动，保持与收讫设计逐字节一致）",
+  "tests/rebuild/test_static_modules.py（新增：全部 v2 模块 node --check 语法回归）"
+ ],
+ "browser_verification": {
+  "ac01": {
+   "grid_and_layers": "整稿画廊 heading + legend（当前显示：原图 R 607ca499 · 显示 24/24 页 · 已选 N 页）+ segmented 图层计数（原图 22/24 · SVG 11/24 · PPT 8/24）；瓷片 slide-tile：mono 页码 01、状态标签（当前采用 ok / 尚无产物 / 旧版 · 待更新 warn）、章节名、参考标记、待办链接",
+   "columns": "2/3/4 列 segmented 生效；有效列按设计 280px 规则唯一判定（<768 钳制已按复审 P3-5 移除）：1440 下 4 列降为 2（--gallery-columns=2，瓷片宽 543px），3 列保持 3；1280 下保持 3；1100×800 下 3 列（(961-60)/3=300≥280）；720px 下 3→2（(592-40)/3=184<280）且降级提示可见",
+   "missing_layers": "缺少当前层筛选 → [p03,p14] 命中，空位 .empty-artifact（原图未生成）占位，不混入其他层图像；PPT 层 p03 尚无产物标签；SVG 层奇偶交替占位/画布正确（p01 空、p02 canvas…）",
+   "continuous_return_position": "连续阅读返回=解析式锚点定位（模块级节距缓存 + anchorIndex×实测节距 + offset×实测节距）：复审方法论 6 锚点 scrollTop 全部逐像素复原、二轮往返不动点稳定；锚点瓷片顶与 -offset×节距 恒定差 11px（边框几何常量，无累计）；插桩时间线确认恢复后无后续位移。演进记录：视口宽估算（偏差 633px）→ 实测首块+32（瓷片高度不均累计漂移，复审 P1）→ 模块级节距缓存+解析式定位（本版）",
+   "keyboard": "焦点瓷片 ArrowRight → 下一瓷片聚焦（p01→p02），Enter 打开对应页，Escape 返回画廊",
+   "compare": "选 p05+p06 → 并排比较 → .gallery.is-comparison 两瓷片同层（original_image）同版（607ca499）；同步缩放 200% → 双侧 pooled 宽 200%；关闭同步 → 单侧 150% 另一侧 100%；清空选页回联系表",
+   "search": "搜索 '14' → 1/24 一行；'zzz' → 没有匹配的页面空态；清除 → 24/24 恢复（搜索为临时 UI 状态，不入 ui_gallery.v1，filter 合同 additionalProperties:false 保持不变）",
+   "outside_selection": "比较中搜索 '05' → legend 显示 筛选命中 1/24 · 筛选外选中 1 页，比较仍保留（W04-AC03 选项保留口径；重排归 A05）",
+   "legend_sync_fix": "实施中发现搜索后 legend 计数不刷新（renderLegend 仅挂 renderControls），已移入 renderRows 复验；并修复 replaceChildren(false) 渲染出 'false' 文本（条件子节点改为先组数组）",
+   "screenshots": [
+    "output/playwright/a04/ac01-grid-1440.png",
+    "output/playwright/a04/ac01-compare-sync-zoom-1440.png",
+    "output/playwright/a04/w04ac07-svg-1280.png"
+   ]
   },
-  "changed_files": [
-    "src/deck_master/resources/static/v2/gallery.js（设计布局重排：segmented 图层计数/阅读方式/列数、legend、slide-tile 瓷片、页面搜索、有效列降级、连续阅读实测节距）",
-    "src/deck_master/resources/static/v2/page-workbench.js（六段制作链 chain 导航含来源段、上一页/下一页、来源层内联渲染、来源层无草稿说明）",
-    "src/deck_master/resources/static/v2/routes.js（layers 增加 source）",
-    "src/deck_master/resources/static/v2/request-view.js（提示词阶段切换：预备与冻结 / 实际提交）",
-    "src/deck_master/resources/static/v2/project.js（单页 ←/→ 键盘翻页，输入与滚动区除外）",
-    "src/deck_master/resources/static/v2/workbench.css（产品尾部随新标记更新；style.css 未改动，保持与收讫设计逐字节一致）",
-    "tests/rebuild/test_static_modules.py（新增：全部 v2 模块 node --check 语法回归）"
-  ],
-  "browser_verification": {
-    "ac01": {
-      "grid_and_layers": "整稿画廊 heading + legend（当前显示：原图 R 607ca499 · 显示 24/24 页 · 已选 N 页）+ segmented 图层计数（原图 22/24 · SVG 11/24 · PPT 8/24）；瓷片 slide-tile：mono 页码 01、状态标签（当前采用 ok / 尚无产物 / 旧版 · 待更新 warn）、章节名、参考标记、待办链接",
-      "columns": "2/3/4 列 segmented 生效；有效列按 (视口宽-20-(c-1)*20)/c<280 降级：1440 下 4 列降为 2（实测 --gallery-columns=2，瓷片宽 543px=(1125-40)/2），3 列保持 3；1280 下 (965-40)/3=301≥280 保持 3；<768 单列",
-      "missing_layers": "缺少当前层筛选 → [p03,p14] 命中，空位 .empty-artifact（原图未生成）占位，不混入其他层图像；PPT 层 p03 尚无产物标签；SVG 层奇偶交替占位/画布正确（p01 空、p02 canvas…）",
-      "continuous_return_position": "连续阅读瓷片宽 min(920px,100%)（实测 920）；滚动至 p10（scrollTop 5305）→ 打开单页 → Escape 返回 → scrollTop 逐像素保持 5305；锚点分片保存在 ui_gallery.v1（修复过程：连续阅读节距初版按视口宽估算偏差 633px，改为实测首块瓷片高度+32 后逐像素一致）",
-      "keyboard": "焦点瓷片 ArrowRight → 下一瓷片聚焦（p01→p02），Enter 打开对应页，Escape 返回画廊",
-      "compare": "选 p05+p06 → 并排比较 → .gallery.is-comparison 两瓷片同层（original_image）同版（607ca499）；同步缩放 200% → 双侧 pooled 宽 200%；关闭同步 → 单侧 150% 另一侧 100%；清空选页回联系表",
-      "search": "搜索 '14' → 1/24 一行；'zzz' → 没有匹配的页面空态；清除 → 24/24 恢复（搜索为临时 UI 状态，不入 ui_gallery.v1，filter 合同 additionalProperties:false 保持不变）",
-      "outside_selection": "比较中搜索 '05' → legend 显示 筛选命中 1/24 · 筛选外选中 1 页，比较仍保留（W04-AC03 选项保留口径；重排归 A05）",
-      "legend_sync_fix": "实施中发现搜索后 legend 计数不刷新（renderLegend 仅挂 renderControls），已移入 renderRows 复验；并修复 replaceChildren(false) 渲染出 'false' 文本（条件子节点改为先组数组）",
-      "screenshots": ["output/playwright/a04/ac01-grid-1440.png", "output/playwright/a04/ac01-compare-sync-zoom-1440.png", "output/playwright/a04/w04ac07-svg-1280.png"]
-    },
-    "ac02": {
-      "chain": "六段链路 nav aria-label=本页生成链路：01 来源，记录缺失 / 02 逐页稿，可查看 / 03 提示词，可查看 / 04 原图，可查看 / 05 SVG，尚未生成 / 06 PPT 预览，尚未生成——状态来自该固定修订的 stage 投影；active 段 aria-current=step",
-      "prompt_stages": "提示词段内 segmented 预备与冻结/实际提交；预备层 observer 标签『核心冻结 · 已保存要求，不代表已提交』；两条预备记录（冻结请求 1 + 预备稿 1）时强制显式选择（option 先选择具体预备稿），选择冻结请求后正文呈现 'A04 frozen request verification.'；实际提交层 → 『实际提示词未记录 / 未用另一份提示词替代』",
-      "unknown_fields": "当次生成依据面板：当次模型 未知、当次随机种子 未知（无项目默认值补造）；实际提示词未记录（W05-AC04）",
-      "source_stage": "链 01 来源 → 本页来源与材料 面板 + 『此页未记录材料引用，不能据此补造来源。』；来源层只读（个人草稿绑定逐页稿或提示词层；来源层只提供阅读——ui-draft.v1 layer 枚举不含 source，不伪造）",
-      "trace_clicks": "W05-AC01：原图 → 逐页稿 1 击（chain 02）→ 提示词 1 击（chain 03）≤3 击",
-      "draft_coexist": "预备层存在 .personal-draft 草稿编辑器，与冻结/实际分层并存，改草稿不改原图（W05-AC02）",
-      "history_fixed": "直接导航历史修订 e2df544b（24 页、冻结前）：历史版本 · 只读 banner；chain 状态按该修订投影（03 提示词，记录缺失 / 04 原图，尚未生成）——不挪用当前修订产物；无草稿 textarea；仅 POST /api/ui-state（个人阅读位置），零业务写。最老修订（0 页空项目）访问 p01 → 服务 404 『page is not present in this snapshot』→ UI 保留已读内容并提示，不替换（正确拒绝路径）",
-      "fixed_compare": "比较此页版本 → 选 R 36de4bfe → 固定比较：original data-revision=607ca499… 与 comparison data-revision=36de4bfe… 并存、互不替换；比较侧自带 generationBasis；切换/切换显示 与 结束固定比较 均工作（W05-AC03）",
-      "zoom": "原图层阅读缩放 150% → 画布 width=150% + URL zoom=1.5（路由持久）",
-      "pager": "上一页/下一页（p01 时上一页禁用）；键盘 ←/→ 翻页（输入框/滚动阅读区除外）",
-      "screenshots": ["output/playwright/a04/ac02-page-original-chain-1440.png", "output/playwright/a04/ac02-prompt-actual-unrecorded-1440.png", "output/playwright/a04/ac02-historical-fixed-1440.png", "output/playwright/a04/w05ac03-fixed-compare-1440.png"]
-    },
-    "ac03": {
-      "navigation_under_load": "连续阅读快速滚动 6 窗触发 11 次真实 /api/file 大图加载（CDP clearBrowserCache 后）→ 立即点击制作总览 → #view-title 变为制作总览用时 22-37ms（三轮复测）；不限速下换层到 SVG/PPT/原图收敛 58-68ms",
-      "release_on_leave": "离开画廊后 1.2-2.5s 观察窗内新增图片请求 0（无泄漏、无轮询残留）；对照 W12 失败模式（换层检查在候选压力下每请求约 4s、3/5 分钟超时）不复现",
-      "throttled_run": "CDP 1500ms 延迟限速下：离开时在途 loading 槽位 2 个，导航完成 3.6s（=2-3 次串行取数的纯网络耗时，UI 不阻塞、无请求风暴）；在途请求按 ImagePool 设计完成即弃（释放后字节不渲染），未观察 requestfailed——loopback 延迟低于中止窗口，中止路径由池 entry AbortController + 门控（网络≤6/解码≤2）在单测层保障（tests/rebuild/test_gallery_core.py 有界后台队列/前台提升/跨项目拒绝）",
-      "w12_rootcause_record": "旧失败：docs/reports/workbench-v3-execution-20260926/W12.md（后台版本前进时项目身份按新 revision 重读完整历史→请求约 4s→换层检查 3/5 分钟超时；保留失败记录 superseded-pressure-failure.json）。根因在核心不在 UI；修复 629d625『bound repeated ancestry decoding as history grows』（快照头按 inode/size/mtime/ctime 签名缓存 + 祖先解码有界；定点热读 17-19ms，证据 w12/core/ancestry-benchmark.json）。本卡复验 UI 导航不再受此影响；300×5×3 原门槛压力复测归 B07（G47），本卡不冒充通过",
-      "screenshots": []
-    },
-    "w04ac07_two_viewports": "1440x900 与 1280x800 截图（ac01-grid / w04ac07-svg-1280）：页标题、图层计数、状态标签（文字非仅颜色）、动作按钮可辨"
+  "ac02": {
+   "chain": "六段链路 nav aria-label=本页生成链路：01 来源，记录缺失 / 02 逐页稿，可查看 / 03 提示词，可查看 / 04 原图，可查看 / 05 SVG，尚未生成 / 06 PPT 预览，尚未生成——状态来自该固定修订的 stage 投影；active 段 aria-current=step",
+   "prompt_stages": "提示词段内 segmented 预备与冻结/实际提交；预备层 observer 标签『核心冻结 · 已保存要求，不代表已提交』；两条预备记录（冻结请求 1 + 预备稿 1）时强制显式选择（option 先选择具体预备稿），选择冻结请求后正文呈现 'A04 frozen request verification.'；实际提交层 → 『实际提示词未记录 / 未用另一份提示词替代』",
+   "unknown_fields": "当次生成依据面板：当次模型 未知、当次随机种子 未知（无项目默认值补造）；实际提示词未记录（W05-AC04）",
+   "source_stage": "链 01 来源 → 本页来源与材料 面板 + 『此页未记录材料引用，不能据此补造来源。』；来源层只读（个人草稿绑定逐页稿或提示词层；来源层只提供阅读——ui-draft.v1 layer 枚举不含 source，不伪造）",
+   "trace_clicks": "W05-AC01：原图 → 逐页稿 1 击（chain 02）→ 提示词 1 击（chain 03）≤3 击",
+   "draft_coexist": "预备层存在 .personal-draft 草稿编辑器，与冻结/实际分层并存，改草稿不改原图（W05-AC02）",
+   "history_fixed": "直接导航历史修订 e2df544b（24 页、冻结前）：历史版本 · 只读 banner；chain 状态按该修订投影（03 提示词，记录缺失 / 04 原图，尚未生成）——不挪用当前修订产物；无草稿 textarea；仅 POST /api/ui-state（个人阅读位置），零业务写。最老修订（0 页空项目）访问 p01 → 服务 404 『page is not present in this snapshot』→ UI 保留已读内容并提示，不替换（正确拒绝路径）",
+   "fixed_compare": "比较此页版本 → 选 R 36de4bfe → 固定比较：original data-revision=607ca499… 与 comparison data-revision=36de4bfe… 并存、互不替换；比较侧自带 generationBasis；切换/切换显示 与 结束固定比较 均工作（W05-AC03）",
+   "zoom": "原图层阅读缩放 150% → 画布 width=150% + URL zoom=1.5（路由持久）",
+   "pager": "上一页/下一页（p01 时上一页禁用）；键盘 ←/→ 翻页（输入框/滚动阅读区除外）",
+   "screenshots": [
+    "output/playwright/a04/ac02-page-original-chain-1440.png",
+    "output/playwright/a04/ac02-prompt-actual-unrecorded-1440.png",
+    "output/playwright/a04/ac02-historical-fixed-1440.png",
+    "output/playwright/a04/w05ac03-fixed-compare-1440.png"
+   ]
   },
-  "defects_found_and_fixed": [
-    "legend replaceChildren(false) 渲染出 'false' 文本（条件子节点改为数组后展开）",
-    "搜索后 legend 计数/筛选外提示不刷新（renderLegend 移入 renderRows）",
-    "连续阅读返回定位偏差 633px（节距估算按视口宽而非瓷片宽；改为实测首块瓷片+32px 后逐像素一致）",
-    "六段链按钮参数错位（dom.js button 签名误用，handler 落入 props）——静态检查发现即修",
-    "章节标题 slice(3) 截断无序号前缀的章节名——移除截断"
-  ],
-  "boundaries": [
-    "搜索词为临时 UI 状态：ui-gallery.v1 filter 合同 additionalProperties:false 未动，无跨线合同变更",
-    "style.css 未改动（保持与收讫设计逐字节一致）；产品适配全部落在 workbench.css",
-    "重排后仍选同 page_id（W04-AC03 后半句）归 A05 结构操作卡；runs 面无编辑器持久化 no-op 归 A07；本卡不越界",
-    "真实 Host 制作工具链路（B06/B07）、安装、300×5×3 压力复测、30 秒真实使用者观察保持 open，本卡不冒充完成"
-  ],
-  "test_layers": {
-    "core_and_http": "PYTHONPATH=src <主仓库venv> python -m pytest tests/rebuild -q = 955 passed（954 基线 + 本卡新增 test_static_modules），退出码 0；ruff check src/ tests/rebuild/ clean",
-    "browser": "本文件；真实服务 24 页混合层项目，合成证据标注；playwright-cli session a04",
-    "real_authoring_tool": "不在本卡闸门（B06）",
-    "install": "不在本卡闸门（B07）"
+  "ac03": {
+   "navigation_under_load": "连续阅读快速滚动 6 窗触发 11 次真实 /api/file 大图加载（CDP clearBrowserCache 后）→ 立即点击制作总览 → #view-title 变为制作总览用时 22-37ms（三轮复测）；不限速下换层到 SVG/PPT/原图收敛 58-68ms",
+   "release_on_leave": "离开画廊后 1.2-2.5s 观察窗内新增图片请求 0（无泄漏、无轮询残留）；对照 W12 失败模式（换层检查在候选压力下每请求约 4s、3/5 分钟超时）不复现",
+   "throttled_run": "CDP 1500ms 延迟限速下：离开时在途 loading 槽位 2 个，导航完成 3.6s（=2-3 次串行取数的纯网络耗时，UI 不阻塞、无请求风暴）；在途请求按 ImagePool 设计完成即弃（释放后字节不渲染），未观察 requestfailed——loopback 延迟低于中止窗口，中止路径由池 entry AbortController + 门控（网络≤6/解码≤2）在单测层保障（tests/rebuild/test_gallery_core.py 有界后台队列/前台提升/跨项目拒绝）",
+   "w12_rootcause_record": "旧失败：docs/reports/workbench-v3-execution-20260926/W12.md（后台版本前进时项目身份按新 revision 重读完整历史→请求约 4s→换层检查 3/5 分钟超时；保留失败记录 superseded-pressure-failure.json）。根因在核心不在 UI；修复 629d625『bound repeated ancestry decoding as history grows』（快照头按 inode/size/mtime/ctime 签名缓存 + 祖先解码有界；定点热读 17-19ms，证据 w12/core/ancestry-benchmark.json）。本卡复验 UI 导航不再受此影响；300×5×3 原门槛压力复测归 B07（G47），本卡不冒充通过",
+   "screenshots": []
   },
-  "commands": [
-    "PYTHONPATH=src /Users/dingcheng/Coding-Project/02-key-project/Deck-Master/.venv/bin/python -m pytest tests/rebuild -q  # 955 passed in 143.99s，exit 0",
-    "/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/.venv/bin/ruff check src/ tests/rebuild/  # All checks passed",
-    "tail -f /dev/null | PYTHONPATH=src <venv> python docs/specs/deck-master-webui-v4-20260930/evidence/a04-browser-fixture.py  # 服务 http://127.0.0.1:53308/（每次运行端口变化）"
-  ]
+  "w04ac07_two_viewports": "1440x900 与 1280x800 截图（ac01-grid / w04ac07-svg-1280）：页标题、图层计数、状态标签（文字非仅颜色）、动作按钮可辨",
+  "fix_verification": {
+   "p1_1": "source 层 /api/ui-state 三连 200（原 422）；.banners .notice 全程空；Escape 后继续 200",
+   "p1_2": "1100×800：computed gridTemplateColumns=3 列 = --gallery-columns=3；overflow=false；titleInside=true",
+   "p2_1": "1440 下选 4 列：.form-hint 可见（当前宽度不足以让每张图达到 280px，已按 2 列显示。）；选 3 列隐藏",
+   "p2_2": "网格 scrollTop 2000 → 搜索 '14'（1 行）→ 锚点保持搜索前位置（p19/0.066，非乱值）→ 清除 → 锚点与视口恢复原区域（首瓷片 p16）",
+   "p2_3": "连续阅读三轮（p06/p11/p02）：锚点页顶 = -offset×节距 逐像素（-231/-261/-206）；scrollTop 残差 ≤11px"
+  }
+ },
+ "defects_found_and_fixed": [
+  "legend replaceChildren(false) 渲染出 'false' 文本（条件子节点改为数组后展开）",
+  "搜索后 legend 计数/筛选外提示不刷新（renderLegend 移入 renderRows）",
+  "连续阅读返回定位偏差 633px（节距估算按视口宽而非瓷片宽；改为实测首块瓷片+32px 后逐像素一致）",
+  "六段链按钮参数错位（dom.js button 签名误用，handler 落入 props）——静态检查发现即修",
+  "章节标题 slice(3) 截断无序号前缀的章节名——移除截断"
+ ],
+ "boundaries": [
+  "搜索词为临时 UI 状态：ui-gallery.v1 filter 合同 additionalProperties:false 未动，无跨线合同变更",
+  "style.css 未改动（保持与收讫设计逐字节一致）；产品适配全部落在 workbench.css",
+  "重排后仍选同 page_id（W04-AC03 后半句）归 A05 结构操作卡；runs 面无编辑器持久化 no-op 归 A07；本卡不越界",
+  "真实 Host 制作工具链路（B06/B07）、安装、300×5×3 压力复测、30 秒真实使用者观察保持 open，本卡不冒充完成"
+ ],
+ "test_layers": {
+  "core_and_http": "PYTHONPATH=src <主仓库venv> python -m pytest tests/rebuild -q = 955 passed（954 基线 + 本卡新增 test_static_modules），退出码 0；ruff check src/ tests/rebuild/ clean",
+  "browser": "本文件；真实服务 24 页混合层项目，合成证据标注；playwright-cli session a04",
+  "real_authoring_tool": "不在本卡闸门（B06）",
+  "install": "不在本卡闸门（B07）"
+ },
+ "commands": [
+  "PYTHONPATH=src /Users/dingcheng/Coding-Project/02-key-project/Deck-Master/.venv/bin/python -m pytest tests/rebuild -q  # 955 passed in 143.99s，exit 0",
+  "/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/.venv/bin/ruff check src/ tests/rebuild/  # All checks passed",
+  "tail -f /dev/null | PYTHONPATH=src <venv> python docs/specs/deck-master-webui-v4-20260930/evidence/a04-browser-fixture.py  # 服务 http://127.0.0.1:53308/（每次运行端口变化）"
+ ],
+ "review_round1": {
+  "reviewer": "独立 code-review（ZCode code-reviewer 子代理，含真实浏览器实测）",
+  "verdict": "初审不通过（2 P1 / 4 P2 / 6 P3），P1 与可修 P2/P3 全部修复并浏览器+核心复验",
+  "p1_fixes": {
+   "p1_1_source_position": "source 层触发 /api/ui-state 422：ui-position.v1 layer 枚举缺 source。修复：合同枚举+镜像+INTERFACES 消费者说明（A04 节前注）。复验：来源层 /api/ui-state 全 200、无错误通知、Escape 回画廊后继续 200",
+   "p1_2_column_cascade": "768–1279px 下 workbench.css 媒体查询覆盖设计尾部 var 规则：CSS 2 列 vs JS 3 列，瓷片标题被裁。修复：删除 1279/767 两处 .gallery 列覆盖（列数完全由 style.css var + JS 有效列计算）。复验：1100×800 计算 3 列=--gallery-columns=3、无瓷片溢出、标题在界内"
+  },
+  "p2_fixes": {
+   "p2_1_downgrade_hint": "补设计 .form-hint 降级提示「当前宽度不足以让每张图达到 280px，已按 N 列显示。」；复验：1440+4列 显示且隐藏于 3列",
+   "p2_2_search_anchor": "搜索首帧 rememberAnchor 先于 query 变更（旧过滤+旧滚动=真实位置），清除搜索恢复搜索前锚点。复验：滚动区搜索 '14' 期间锚点=搜索前位置，清除后恢复且视口回到原区域",
+   "p2_3_return_correction": "锚点恢复后按锚点瓷片实测位置校正分片偏移（瓷片高度不均的累计估算误差）。复验：p06/p11/p02 三轮，锚点页顶精确落在 -offset×pitch（-231/-261/-206 px 与 offset×634 逐一相等），scrollTop 差 ≤11px 为恢复后 offset 重新取整",
+   "p2_4_wip_in_tree": "评审时工作树含 B04/B05 WIP 导致证据命令失败——B04/B05 已分别提交（0a93a15 / 432425e），树已干净"
+  },
+  "p3_fixes": {
+   "p3_1": "移除 chainStages 死字段 also",
+   "p3_2": "移除死类 compare-cover",
+   "p3_3": "accepted-not-fixed：瓷片 尚无产物/当前采用 与链路 尚未生成/可查看 均为收讫设计原文的两套词汇（app.js:75 galleryTiles vs app.js:75 chain），保持与设计一致",
+   "p3_4": "箭头翻页排除 .evidence-json/.diff-lines 可滚动区",
+   "p3_5": "accepted-not-fixed：无 node 环境跳过语法守卫与 test_browser_wire_digest 同一先例",
+   "p3_6": "证据补 head SHA 与复验时间戳"
+  }
+ },
+ "head": "本文件所在提交即 A04 评审修复提交（初版 2f1276c，复审修复经 amend；父提交 67c47f8 = B04+B05 合并切片，基线 a8f698e）",
+ "review_round2": {
+  "reviewer": "独立 code-review（ZCode code-reviewer 子代理第二轮，含真实浏览器复现）",
+  "verdict": "6/7 项核验通过；唯一遗留 P1=锚点校正不收敛（首轮返回漂移 84–448px、复验判据自指），另有 5 项 P3",
+  "p1_resolution": {
+   "root_cause": "复审实测推翻初版校正：rowHeight() 连续模式按『当前窗口首块瓷片』测距——窗口起点变化则节距变化，topSpace 随每次 renderRows 重算漂移，同一 scrollTop 映射到不同内容；初版『误差校正』与复审建议的迭代都在给不稳定基准打补丁",
+   "fix": "两步确定性修复：(1) 连续节距模块级缓存（首测为准，模式切换/视口变化失效）——topSpace 与 scrollTop 的映射全会话稳定；(2) 锚点恢复改解析式 scrollTop = anchorIndex×实测节距 + min(offset×实测节距, 节距−1)，渲染后 rowHeight() 恰测锚点瓷片节距，topSpace 同基准重算，tileRel = −offset×节距 解析成立、无需迭代",
+   "verification": "复审同方法论 6 锚点（p02/p06/p13/p16/p23/p03，含深行与 0.09–0.62 offset）：scrollTop 六例全部逐像素复原（900/3300/7800/9900/14000/1450），二轮往返 scrollTop 不动点 stable=true ×6；锚点瓷片顶与 −offset×节距 恒定差 11px（瓷片边框几何常量，无累计、不随 offset 放大）。插桩时间线（30ms–1s 六采样）确认恢复后无后续位移。早期复验中出现的 7796 反例经插桩证实为浏览器缓存旧模块所致（无 cache clear 的会话），非产品行为",
+   "probe_correction": "初版复验『p06/p11/p02 逐像素』与复审『同页 p06 不可复现』的差异根因：复验探针曾把点击目标页误当锚点页测量（anchor=rememberAnchor 按 scrollTop 所在行选取，可≠点击页）；修正探针后以锚点页为准"
+  },
+  "p3_fixes": {
+   "p3_1": "recorded_at 改为如实表述（随提交更新，以 git 时间为准）",
+   "p3_2": "head 字段记录实际提交位置（本文件所在提交 + 父提交 SHA）",
+   "p3_3": "fix_verification.p1_1 端点名更正为 /api/ui-state",
+   "p3_4": "新增回归 tests/rebuild/test_ui_journal.py::test_position_admits_source_reading_layer（source 层位置保存）",
+   "p3_5": "accepted-then-fixed：681–767px 的 <768 强制单列钳制已移除，设计 280px 有效列规则唯一生效；720px 实测 2 列+降级提示（(592−40)/3=184<280→2）"
+  }
+ }
 }

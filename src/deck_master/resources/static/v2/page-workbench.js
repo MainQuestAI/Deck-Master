@@ -19,7 +19,7 @@ const detail = (title, ...body) => el('details', {class: 'source-detail'}, el('s
 const chainStages = [
   {layer: 'source', label: '来源'},
   {layer: 'content', label: '逐页稿'},
-  {layer: 'prepared_prompt', label: '提示词', also: 'submitted_prompt'},
+  {layer: 'prepared_prompt', label: '提示词'},
   {layer: 'original_image', label: '原图'},
   {layer: 'svg', label: 'SVG'},
   {layer: 'ppt', label: 'PPT 预览'},

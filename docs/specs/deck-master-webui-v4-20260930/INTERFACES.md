@@ -41,6 +41,8 @@
 
 复用content_update的局部更新/版本失效算法，不能复制一套失效服务。结构及材料影响仍经content_ops/inputs分派，但本轮显式trial新增 `result_kind:content_update` 分支：候选固定完整content_update、ContentPlan、输入摘要与受影响页引用。Host结果接受只记录候选，采用才执行变更集。新输入登记可以进入待协调，不能提前改正文/页序或宣称对齐。单页Page分支可复用同一变更集执行器，不建立第二套内容更新代码。采用plan展示新旧页面映射、保留/移除、新ID派生关系、页序、相关任务取消与下游失效；取消/保留当前不改稿。一个变更集原子采用，重叠候选或不一致页序不能混批。只改一个页的候选可按精确scope检测并发；涉及完整页序/大纲/输入的变更集使用固定basis并拒绝相关并发变化。既有auto content_update命令保持其原语义，新UI必须显式请求trial，旧Host不支持时提前拒绝。新能力旧writer不支持时拒绝调用，并记录所需版本；旧图像/SVG候选可照常读取。新增合约不将任意磁盘Page文件当合法候选。
 
+## A04 补充（评审 P1-1）：ui-position.v1 的 layer 枚举新增 `source`（六段制作链第一段），镜像同步至 deck-master-workbench-v3/contracts；个人阅读位置在来源层照常保存。
+
 ## B04：候选决定
 
 拟增 POST `/api/candidates/decision`（对应单一CLI子命令 `deck-master candidates decision`；实施前按现有CLI树核对命名并同步help）。输入：`operation_id, base_revision, candidate_id, decision=keep_current|reopen, expected_decision_ref`。同源session与既有Origin校验；Host/脚本经CLI调用共享服务。

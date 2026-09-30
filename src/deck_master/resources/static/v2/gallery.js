@@ -10,6 +10,10 @@ export const stageLabel = stage => !stage || stage.existence === 'not_generated'
 const title = (page, index) => `第 ${index + 1} 页 · ${page.title || '未命名页面'}`;
 const layerNames = {original_image: '原图', svg: 'SVG', ppt: 'PPT'};
 const statuses = {all: '全部页面', missing: '缺少当前层', stale: '依据已变化', attention: '有个人意见', references: '个人参考页'};
+// 连续阅读节距的模块级缓存：跨视图挂载保持同一节距，使 topSpace 与 scrollTop
+// 的映射在整个会话内稳定（挂载级首测会随窗口起点漂移，导致锚点恢复失真）。
+let continuousPitch = null;
+const invalidatePitch = () => { continuousPitch = null; };
 // 已记录层的瓷片状态标签：事实来自 stage 投影，不用当前稿补造。
 const tileTag = stage => !stage || stage.existence !== 'recorded' ? (stage?.existence === 'not_generated' ? ['尚无产物', ''] : ['暂不可读', 'warn']) :
   stage.applicability?.status === 'basis_changed' ? ['旧版 · 待更新', 'warn'] :
@@ -58,11 +62,12 @@ export function gallery(app, data) {
   const node = el('div', {class: 'gallery-view'}, heading('整稿画廊', `${pages.length} 页 · ${version(app.route.revision)} · 同层、固定版本阅读`));
   const status = el('div', {class: 'gallery-save', role: 'status'});
   const legend = el('div', {class: 'legend gallery-legend', role: 'status'});
+  const hint = el('p', {class: 'form-hint', hidden: true});
   const controls = el('div', {class: 'gallery-controls'});
   const viewPort = el('div', {class: 'gallery-viewport', tabindex: '0', 'aria-label': '整稿画廊阅读区'});
   const topSpace = el('div', {'aria-hidden': true}); const grid = el('div', {class: 'gallery'}); const bottomSpace = el('div', {'aria-hidden': true});
   viewPort.append(topSpace, grid, bottomSpace);
-  node.append(controls, legend, status, viewPort, el('p', {class: 'matrix-caption'}, '方向键移动页面焦点，Enter 打开，Escape 从单页返回。个人参考不会自动写入风格方案。'));
+  node.append(controls, legend, status, hint, viewPort, el('p', {class: 'matrix-caption'}, '方向键移动页面焦点，Enter 打开，Escape 从单页返回。个人参考不会自动写入风格方案。'));
 
   function rememberAnchor() {
     if (disposed || restoring || state().mode === 'compare') return;
@@ -72,22 +77,24 @@ export function gallery(app, data) {
     if (canonical(anchor) !== canonical(state().anchor)) memory.update({anchor});
   }
   function resetReading(patch, preserveAnchor = false) {
+    if (patch.mode && patch.mode !== state().mode) invalidatePitch();
     rememberAnchor(); memory.update(patch); rowsKey = ''; renderControls();
     restoring = true; viewPort.scrollTop = state().mode !== 'compare' && preserveAnchor ? anchorTop() : 0; restoring = false; renderRows(true);
     if (!preserveAnchor) rememberAnchor();
   }
   // 设计尾部的列宽规则由这里等效执行：可用宽度放不下 280px 时降为 2 列。
   function columnsNow() {
-    if (state().mode === 'continuous' || innerWidth < 768) return 1;
+    if (state().mode === 'continuous') return 1;
     if (state().mode === 'compare') return Math.max(1, state().selected_page_ids.length);
+    // 设计规则唯一生效：可用宽度放不下 280px 时降为 2 列（无额外窄宽钳制）。
     const width = viewPort.clientWidth - 20;
     return state().columns > 2 && (width - (state().columns - 1) * 20) / state().columns < 280 ? 2 : state().columns;
   }
   function rowHeight() {
     if (state().mode === 'continuous') {
-      // 连续阅读瓷片宽是 min(920px,100%)，不随视口拉伸；有渲染实例时按实测节距取值。
+      if (continuousPitch) return continuousPitch;
       const first = grid.querySelector('.slide-tile');
-      if (first) { const measured = first.getBoundingClientRect().height + 32; if (measured > 200) return measured; }
+      if (first) { const measured = first.getBoundingClientRect().height + 32; if (measured > 200) { continuousPitch = measured; return measured; } }
       return Math.min(920, viewPort.clientWidth - 20) * 9 / 16 + 130;
     }
     return ((viewPort.clientWidth - 20 - (columnsNow() - 1) * 20) / columnsNow()) * 9 / 16 + 130;
@@ -168,12 +175,20 @@ export function gallery(app, data) {
   }
   const searchSlot = el('span', {class: 'gallery-search'});
   const search = el('input', {'aria-label': '搜索页面', placeholder: '搜索页码或标题'});
-  let searchTimer;
+  let searchTimer, preSearchAnchor = null;
   search.addEventListener('input', () => {
     clearTimeout(searchTimer);
     searchTimer = setTimeout(() => {
       if (search.value === query) return;
-      query = search.value; rememberAnchor(); rowsKey = ''; renderRows(true); rememberAnchor();
+      // 先按旧过滤保存真实阅读位置；锚点计算必须与当前过滤/滚动一致，不写临时乱值。
+      rememberAnchor();
+      if (!query && search.value) preSearchAnchor = {...state().anchor};
+      query = search.value;
+      if (!query && preSearchAnchor) { memory.update({anchor: preSearchAnchor}); preSearchAnchor = null; }
+      rowsKey = '';
+      restoring = true; renderRows(true);
+      viewPort.scrollTop = state().mode !== 'compare' ? anchorTop() : 0;
+      restoring = false;
     }, 120);
   });
   searchSlot.append(search);
@@ -206,7 +221,7 @@ export function gallery(app, data) {
       }
     } else image.append(el('div', {class: 'empty-artifact'}, el('span', {class: 'empty-symbol'}, icon('minus')),
       el('strong', {}, layers[state().layer]), el('span', {}, stageLabel(current))));
-    const cover = button(image, () => open(page), false, {class: (compare ? 'slide-cover compare-cover' : 'slide-cover'),
+    const cover = button(image, () => open(page), false, {class: 'slide-cover',
       'aria-label': '打开' + label, tabindex: page.page_id === focusId ? '0' : '-1'});
     cover.addEventListener('focus', () => { focusId = page.page_id; for (const [id, control] of cards) control.tabIndex = id === focusId ? 0 : -1; });
     cards.set(page.page_id, cover);
@@ -250,6 +265,10 @@ export function gallery(app, data) {
     grid.style.setProperty('--gallery-columns', compare ? String(Math.max(1, columns)) : String(columns));
     grid.style.removeProperty('grid-template-columns');
     if (compare) grid.style.setProperty('grid-template-columns', `repeat(${columns || 1}, minmax(0, 1fr))`);
+    // 设计降级提示：实际列数低于所选列数时说明原因（读屏与视觉同源）。
+    const downgraded = !compare && state().mode === 'grid' && columns !== state().columns;
+    hint.hidden = !downgraded;
+    if (downgraded) hint.textContent = `当前宽度不足以让每张图达到 280px，已按 ${columns} 列显示。`;
     grid.style.setProperty('--compare-height', `${Math.max(120, viewPort.clientHeight - 200)}px`);
     topSpace.style.height = `${compare ? 0 : first * height}px`; bottomSpace.style.height = `${compare ? 0 : Math.max(0, count - last) * height}px`;
     grid.style.gridAutoRows = compare ? 'auto' : `${height - 24}px`;
@@ -259,6 +278,27 @@ export function gallery(app, data) {
     viewPort.dataset.mode = state().mode; viewPort.dataset.visiblePages = String(cards.size);
     if (!cards.has(focusId) && cards.size) cards.values().next().value.tabIndex = 0;
     if (focused && cards.has(focused)) cards.get(focused).focus({preventScroll: true});
+  }
+  function alignAnchorTile() {
+    // 解析式锚点定位：锚点行渲染在窗口首位（first×估算节距），行内位移用
+    // 锚点瓷片实测节距表达——瓷片高度不均不再累计到跨行估算里，且设置后
+    // 重渲染的 topSpace 同式重算，落点稳定（不依赖迭代收敛）。
+    const anchor = state().anchor;
+    if (disposed || state().mode === 'compare' || !anchor.page_id) return;
+    const anchorIndex = filtered().findIndex(page => page.page_id === anchor.page_id);
+    if (anchorIndex < 0) return;
+    const tiles = [...grid.querySelectorAll('.slide-tile')];
+    const tile = grid.querySelector(`[data-page-id="${anchor.page_id}"]`);
+    const gap = state().mode === 'continuous' ? 32 : 24;
+    const measured = tile && tiles[tiles.indexOf(tile) + 1]
+      ? tiles[tiles.indexOf(tile) + 1].getBoundingClientRect().top - tile.getBoundingClientRect().top
+      : (tile ? tile.getBoundingClientRect().height : rowHeight() - 130) + gap;
+    // 行号与节距统一用锚点瓷片实测值：渲染后 rowHeight() 测的正是首块（锚点）
+    // 瓷片的实测节距，因此 topSpace = anchorIndex×pitch 与分片位移同基准，
+    // 重渲染后 first 仍等于锚点行，tileRel = -offset×pitch 解析成立且不动点稳定。
+    const pitch = Math.max(200, measured);
+    viewPort.scrollTop = anchorIndex * pitch + Math.min(anchor.offset * pitch, pitch - 1);
+    renderRows(true);
   }
   function onScroll() {
     cancelAnimationFrame(frame); frame = requestAnimationFrame(() => { renderRows(); if (userScrolled) rememberAnchor(); });
@@ -298,13 +338,14 @@ export function gallery(app, data) {
   const fitHeight = () => { viewPort.style.height = `${Math.max(280, innerHeight - viewPort.getBoundingClientRect().top - 64)}px`; };
   const observer = new ResizeObserver(() => { if (!disposed) { rowsKey = ''; renderRows(true); } });
   observer.observe(viewPort);
-  const resize = () => { fitHeight(); renderRows(true); };
+  const resize = () => { invalidatePitch(); fitHeight(); renderRows(true); };
   addEventListener('resize', resize);
   app.disposables.push(() => { rememberAnchor(); memory.flush(); disposed = true; cancelAnimationFrame(frame); observer.disconnect(); removeEventListener('resize', resize); unsubscribe(); views.forEach(view => view.dispose()); });
   renderControls();
   requestAnimationFrame(() => {
     if (disposed) return;
     fitHeight(); restoring = true; renderRows(true); viewPort.scrollTop = state().mode === 'compare' ? 0 : anchorTop(); renderRows(true); restoring = false;
+    alignAnchorTile();
     if (app.galleryFocus) { cards.get(app.galleryFocus)?.focus({preventScroll: true}); app.galleryFocus = null; }
   });
   return node;
