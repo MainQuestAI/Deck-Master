@@ -1,0 +1,70 @@
+{
+  "card": "A03",
+  "recorded_at": "2026-09-30T23:30:00+08:00",
+  "base": "931f19c（origin/main，含 A01/B01/B02/A02）",
+  "branch": "codex/webui-a-implementation",
+  "environment": {
+    "worktree": "/Users/dingcheng/.codex/worktrees/webui-a/Deck-Master",
+    "browser": "Playwright Chromium via playwright-cli, sessions a03/a03r/a03r2, 1440x900",
+    "service": "真实 WorkbenchServer + 24 页混合阶段合成项目（未知调用任务/待交接任务/经真实 accept_result 返回的合法候选/未协调 brief/缺层），无 mock"
+  },
+  "changed_files": [
+    "src/deck_master/resources/static/v2/overview.js（新增：待办面板消费 B01 next_actions；8 列矩阵——选择/页面(排序)/逐页稿/提示词/原图/SVG/PPT/下一步；筛选/搜索/章节行/批量选择；异步读取 /api/content-plan 章节投影）",
+    "src/deck_master/resources/static/v2/views.js（移除旧 overview 与 roving keydown 网格，改为再导出）",
+    "src/deck_master/resources/static/v2/style.css（追加设计尾部 31 行——A01 时预留的矩阵/待办样式；现与收讫设计 style.css 逐字节一致）",
+    "src/deck_master/resources/static/v2/workbench.css（矩阵规则对齐 8 列结构：选择列 44px、移除旧 5 列宽度/内边距覆盖、小屏 min-width 820px）"
+  ],
+  "browser_verification": {
+    "ac01": {
+      "baseline": "/api/view/summary 投影：6 动作（verify_execution p01 / handoff p01 / compare_candidates p01 / reconcile_inputs 全项目 / prepare_stage 24页缺层 / review_results），attention 共 27 项",
+      "todos_match": "待办面板优先项=1 页执行待核实（原因：任务记录了未知调用…；meta 第 p01 页）+ 接下来 5 类事项（1 页制作任务待交接 / 1 页候选待决定 / 输入待协调 / 24 页产物待补齐 / 结果待阅读）——数量、原因、顺序与 B01 投影逐项一致",
+      "no_sample_conclusions": "页面全文不含 风格偏离/风格待校准 等无证据结论（DOM 断言）",
+      "links": "优先项与各行按钮按 kind 映射真实路由（verify/handoff/review→runs，compare→runs，reconcile→content，prepare/refresh→page+layer）"
+    },
+    "ac02": {
+      "matrix": "24 行 + 1 章节行；表头 8 列；【几何对齐断言】表体 8 单元格 x 坐标与表头逐列一致（当前视图与历史视图均测，修复前表体 5 个产物按钮未包 td 坍缩进一个匿名单元格、选择列 44px 覆盖因特异性落败为 358px——均已修复）；选择列实测 44px；aria-sort 升/降序",
+      "search": "p05→1/24 一行；zzz→没有符合条件的页面 空态 + 清除筛选恢复 24/24（修复了清除后计数 0/24 的早退缺陷）；标题关键词同样命中",
+      "filter": "只看需要处理按钮显示实时数量；本 fixture 全部 24 页有待办（提示词缺失即计），排除路径由代码逻辑覆盖（filter === 'all' || needsWork）",
+      "sort": "表头点击翻转 aria-sort=descending，首行=最后一页、末行=第一页；排序保留选择（仅筛选/搜索清空）",
+      "selection": "行选择→已选择 N 页 + 表头半选态；表头全选仅当前过滤内可操作行（搜索范围 9 行→已选 9 页）；切换筛选/修改搜索清空选择；清除选择可用；批量消费方（生成请求/风格目标）随 A05/A06 接入，本卡不提供不传递选择的按钮（评审 P2-2 修复：移除误导性 用所选页开始风格校准 按钮）",
+      "keyboard": "普通 Tab 顺序（view-title→主动作→skip→五工作面导航→…），overview.js 无 roving tabindex/无方向键网格（G02 关闭）",
+      "prompt_column": "提示词列文案：已就绪 / 记录缺失 / 记录待核实（部分损坏）——沿用设计稿文案"
+    },
+    "ac03": {
+      "historical_fixed": "旧修订（24 页、0 原图早期状态）标题/矩阵显示该修订事实（R e73293b6 · 0 页已有原图），8 列几何对齐保持；无业务写 POST（/ui-state 阅读位置保存为个人 journal，不计业务写）",
+      "no_business_writes": "历史视图资源请求仅 thumbnails/GET、/api/history、/api/session（读），无任何业务写 POST",
+      "thirty_second_observation": "待验：本轮无真实受试者在场观察（EXECUTION：没有受试者观察时保持待验）；界面结构已按可30秒理解组织（优先待办面板+矩阵计数）"
+    },
+    "defect_found_and_fixed": "空态 清除筛选 后计数显示 0/24（setFilter('all') 在当前已是 all 时早退未重渲染）——修复为直接置状态并 render，复验恢复 24/24",
+    "screenshots": [
+      "output/playwright/a03/ac01-overview-todos-matrix-1440.png"
+    ],
+    "console": "仅既有 favicon.ico 404（服务端不提供 favicon，与 A01 起一致）；此前的 0 errors 声称有误（评审指出），现如实记录；修复后 runs 面 /api/candidates 无 422（fixture 改用真实 accept_result 产生合法候选）",
+    "runs_surface": "任务与交付 列表标题与选中任务的 当前任务 标题恢复（评审 P2-1：views.js 整文件重写时意外丢失的条件标题已还原）"
+  },
+  "boundaries": [
+    "批量生成请求（为所选缺图页保存请求）属 A05/G21 范围，本卡只交付选择机制与既有的风格校准批量入口",
+    "矩阵缩略图经 images.js 池化读取（kind=thumb），无蓝图页显示占位图标",
+    "章节行在 content plan 缺失/不可读时静默关闭，矩阵仍完整",
+    "本 fixture 全页均有待办，筛选排除路径未在浏览器中形成对照（逻辑覆盖+代码评审）"
+  ],
+  "test_layers": {
+    "core": "PYTHONPATH=src pytest tests/rebuild -q（见修复提交记录）",
+    "browser": "本文件；真实服务 24 页混合项目",
+    "real_authoring_tool": "不在本卡闸门"
+  },
+  "review": {
+    "date": "2026-09-30",
+    "reviewer": "独立 code-review（ZCode code-reviewer 子代理，含双视口真实浏览器实测与截图像素分析）+ 人工复核",
+    "verdict": "初审不可合并（3 项 P1），全部修复后复验通过",
+    "findings_fixed": [
+      "P1-1 表体 5 个产物按钮未包 td，坍缩进一个匿名单元格致表头表体错位（评审实测坐标证明）——已全部包 td，复验表体 8 单元格与表头逐列 x 对齐",
+      "P1-2 选择列 44px 被 style.css 设计尾部 .matrix thead th:first-child{width:32%} 以更高特异性压成 358px——workbench.css 改用同特异性选择器覆盖，实测 44px",
+      "P1-3 证据与实际渲染不符：原验证清单只有表头/机制级断言、无表体几何检查；console 0 errors 声称有误（favicon 404 恒在）；fixture 合成候选导致 /api/candidates 422——证据重写为含几何对齐断言的真实结果，fixture 改用真实 accept_result 流，截图重拍",
+      "P2-1 views.js 重写时意外丢失 runs 面选中任务的 当前任务 条件标题——已还原",
+      "P2-2 用所选页开始风格校准 按钮承诺传递选择但路由不携带——移除该按钮，批量消费方随 A05/A06 接入",
+      "P3：workbench.css 多余 }}；stageState 对 unknown applicability 改为 待核实（与画廊口径一致）；提示词列改用设计稿文案（记录缺失/记录待核实）并处理 unreadable_count；缩略图视图跨 render 复用（不再每次重建占用图片池）；旧核心缺 next_actions 时的读模式引导；表格 aria-label；todoMeta 页列表封顶"
+    ],
+    "verification_gap_acknowledged": "初版浏览器验证漏测表体列几何——本卡教训已记入：矩阵类改动必须断言表头/表体单元格坐标对齐，不能只测表头与机制"
+  }
+}
