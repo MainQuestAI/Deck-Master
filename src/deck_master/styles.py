@@ -72,6 +72,11 @@ def _proposal(store, document, value):
     dimensions = copy.deepcopy(value.get('dimensions', DEFAULT_DIMENSIONS))
     if not dimensions or any(not v.strip() for v in dimensions.values()):
         fail('dimensions', 'select at least one concrete visual dimension')
+    unknown = sorted(set(dimensions) - set(DIMENSIONS))
+    if unknown:
+        fail('dimensions', 'unknown style dimensions: ' + ', '.join(unknown))
+    # B06-AC01：未选维度成为显式保持项（沿用目标页），随 proposal/recipe 可追溯。
+    preserve_dimensions = {key: DIMENSIONS[key] for key in DIMENSIONS if key not in dimensions}
     targets, conflicts = [], []
     entries = {e['page_id']: e for e in document['pages']}
     resolutions = value.get('resolutions', {})
@@ -102,11 +107,12 @@ def _proposal(store, document, value):
     previous = _owned(store, document, recipe_id=value['parent_recipe_id'])[0] if value.get('parent_recipe_id') else None
     before = previous['input'] if previous else {}
     diff = [{'field': key, 'before': before.get(key), 'after': value.get(key)} for key in
-            ('reference', 'target_page_ids', 'instruction', 'dimensions', 'prompt_selection', 'host_suggestion', 'resolutions')
+            ('reference', 'target_page_ids', 'instruction', 'dimensions', 'preserve_dimensions', 'prompt_selection', 'host_suggestion', 'resolutions')
             if before.get(key) != value.get(key)]
     return {'schema_version': 'style_proposal.v1', 'project_id': document['project_id'],
             'base_revision': document['revision_id'], 'input': copy.deepcopy(value), 'targets': targets,
-            'reference_sources': _sources(store, reference), 'dimensions': dimensions, 'conflicts': conflicts,
+            'reference_sources': _sources(store, reference), 'dimensions': dimensions,
+            'preserve_dimensions': preserve_dimensions, 'conflicts': conflicts,
             'diff': diff, 'preserve_target_content': True,
             'suggestion_state': 'unconfirmed' if value.get('host_suggestion') else 'none'}
 
@@ -179,6 +185,8 @@ def instruction(recipe, page_id):
     lines = ['跨页风格试作。只借用明确选定的视觉维度，不复制参考页的标题、事实、数字、论点或其它正文。',
              '目标页结构化正文必须完整保留；未选维度沿用目标页。构图仅在单独选择 composition 时借用。',
              '用户简短要求：' + value['instruction'], '明确借用维度：' + json.dumps(dimensions, ensure_ascii=False)]
+    if recipe.get('preserve_dimensions'):
+        lines.append('明确保持维度（沿用目标页，不向参考看齐）：' + json.dumps(recipe['preserve_dimensions'], ensure_ascii=False))
     if value.get('prompt_selection'):
         lines.append('用户明确选择的原文片段（仅作风格参考，不作为目标正文）：' + value['prompt_selection']['selection']['excerpt'])
     if value.get('host_suggestion'):

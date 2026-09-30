@@ -230,3 +230,33 @@ def test_confirm_after_pointer_receipt_loss_recovers_without_duplicate_recipe(fl
     mutate(flow, 'p03')
     second = styles.confirm(flow.project, proposal_id=proposed['proposal_id'], base_revision=data['base_revision'], operation_id=op)
     assert first['operation_result'] == second['operation_result'] and len(flow.store.load_document()['style_recipes']) == 1
+
+
+def test_b06_preserve_dimensions_projected_scoped_and_in_instruction(flow):
+    """B06-AC01: 未选维度成为显式保持项并进入 instruction；维度键限定已知集合。"""
+    data = value(flow)
+    proposed = styles.propose(flow.project, input=data)
+    proposal = proposed['proposal']
+    # 默认选 palette+typography → 未选 density/lines/composition 成为保持项
+    assert proposal['preserve_dimensions'] == {'density': '密度', 'lines': '线条', 'composition': '构图'}
+    assert proposal['dimensions'] == {'palette': '借用参考页配色', 'typography': '借用参考页文字层级'}
+    # 未知维度键拒绝（范围校验）
+    with pytest.raises(OperationError) as unknown:
+        styles.propose(flow.project, input=value(flow, dimensions={'palette': '配色', 'texture': '质感'}))
+    assert 'texture' in unknown.value.payload()['error']['message']
+    # 选满五维 → preserve 为空
+    full = styles.propose(flow.project, input=value(flow, dimensions={k: DIMENSION_TEXT[k] for k in styles.DIMENSIONS}))
+    assert full['proposal']['preserve_dimensions'] == {}
+    # 确认后 recipe 携带保持项且 instruction 显式列出
+    confirmed = confirm(flow, data)
+    recipe_id = confirmed['recipe_id']
+    saved = styles.show(flow.project, recipe_id=recipe_id)
+    assert saved['recipe']['preserve_dimensions'] == {'density': '密度', 'lines': '线条', 'composition': '构图'}
+    text = styles.instruction(saved['recipe'], '*')
+    assert '明确保持维度' in text and 'density' in text and '沿用目标页' in text
+    # 显式借用维度不受影响
+    assert '明确借用维度' in text
+
+
+DIMENSION_TEXT = {'palette': '借用参考页配色', 'typography': '借用参考页文字层级',
+                  'density': '借用参考页密度', 'lines': '借用参考页线条', 'composition': '借用参考页构图'}
