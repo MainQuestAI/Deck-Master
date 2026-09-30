@@ -1,0 +1,82 @@
+{
+  "card": "B02",
+  "route": "B · 功能补齐",
+  "slice": "主流程入口与项目能力（工程切片，待单独评审）",
+  "base": "e1e99b3a8e0f8f6ad92180ba9a97e7e1a5fc0d22",
+  "branch": "codex/webui-b-capabilities",
+  "environment": "macOS darwin 27.0.0 arm64; Python 3.12.12 venv（主仓库 .venv，dev依赖），PYTHONPATH=src 指向 webui-b 工作树",
+  "changed_files": [
+    "src/deck_master/ui_journal.py（effective_actions 投影 + 指针级降级载荷）",
+    "src/deck_master/web.py（UI_CAPABILITIES 单一常量；/api/project 传入能力表；open_view 支持 --ui）",
+    "src/deck_master/cli.py（view --open --ui v2；--ui 不带 --open 报 invalid_input/退出码2）",
+    "src/deck_master/store.py（SUPPORTED_WRITERS 抽为单一常量）",
+    "skills/deck-master/SKILL.md、references/installation.md（显式新入口）",
+    "tests/rebuild/test_entry_capabilities.py（新增 11 项）"
+  ],
+  "actions_contract": {
+    "families": [
+      "drafts(journal,无格式门槛)",
+      "annotations",
+      "changes",
+      "candidates",
+      "content",
+      "inputs",
+      "styles",
+      "run_desk",
+      "exports",
+      "restoration"
+    ],
+    "fields": [
+      "action",
+      "supported",
+      "writable",
+      "reason_code"
+    ],
+    "reason_codes": {
+      "server": [
+        "sample_readonly",
+        "unsupported_project_format",
+        "reader_upgrade_required",
+        "writer_upgrade_required"
+      ],
+      "client_composed": [
+        "fixed_revision（A按route组合，服务端不产生）"
+      ]
+    },
+    "degraded_payload": "指针级不可读时 read_status.reason_code + 全动作禁用，/api/project 仍 200；真实场景为运行中服务被独立 CLI writer 升级",
+    "independent_gates": "写端点门槛不信任投影：v1 项目 changes.plan 仍按 'explicit workbench.v3' 拒绝（测试覆盖）"
+  },
+  "verification": [
+    {
+      "layer": "核心/HTTP",
+      "commands": [
+        "PYTHONPATH=src python -m pytest tests/rebuild/test_entry_capabilities.py -q（11 passed）"
+      ],
+      "result": "pass"
+    },
+    {
+      "layer": "回归",
+      "commands": [
+        "PYTHONPATH=src python -m pytest tests/rebuild -q（929 passed）",
+        "python -m ruff check（改动文件 All checks passed）"
+      ],
+      "result": "pass"
+    }
+  ],
+  "behavior_notes": [
+    "view --open --ui v2 打开 <url>/v2/ 并复用同项目服务；不带 --ui 保持原默认入口（根URL）不变",
+    "workbench --ui v2 与 view --open --ui v2 复用同一服务/port（测试断言 reused=true 且 /api/view/summary 返回该项目当前 revision）",
+    "只读示例：全部动作 writable=false + sample_readonly（能力仍 supported；阻塞在项目不在服务）",
+    "v1 格式项目（deck_document.v1）：drafts 可写，文档动作全部 unsupported_project_format；读取投影不原地升级（pointer/compatibility 字节不变，测试断言）",
+    "能力缺失（server_capabilities 去掉 changes.v1）：supported=false、writable=false、reason_code=null（不造新错误族）",
+    "Skill：主流程首次成页后自动调用改为 view --open --ui v2；installation.md 同步说明"
+  ],
+  "open_items": [
+    "B02-AC02 的浏览器层呈现（禁用原因展示、历史视图 fixed_revision 组合）属 A02 消费",
+    "真实制作工具/安装层验收保持 open（B07）",
+    "发布/默认入口切换不在本切片授权范围（view 默认仍为原入口）"
+  ],
+  "synthetic_evidence_only": true,
+  "real_host_calls": 0,
+  "production_acceptance": false
+}

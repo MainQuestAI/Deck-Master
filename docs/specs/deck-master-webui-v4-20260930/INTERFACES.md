@@ -27,11 +27,11 @@
 
 排序：保存未知/冲突等需先解决的恢复事项（个人journal由A另并列展示，不注入业务真相）→待交接handoff（主执行回路步骤，先于重做类事项）→明确失败→待决候选→未协调输入→缺层/依据已变→一般阅读。超时/长时间运行中归入恢复层（与run_desk.task_row判定一致）。服务无专业记录时不生成“风格偏离”；质量不明是未判断。候选count保留总数，另增pending_count排除adopted/keep_current，引用决定事实。没有可执行动作时给原因与可读位置。
 
-## B02：有效能力与主入口
+## B02：有效能力与主入口（已实施，切片见 evidence/b02-slice.json）
 
-保留 `/api/health.ui_capabilities` 作为server支持。在 `/api/project` 拟增 `effective_actions`，每项 `action`、`supported`、`writable`、`reason_code`，以及当前format/reader/writer信息。历史视图由A根据fixed模式进一步禁写；服务写接口仍独立验证，不信任前端disabled。
+保留 `/api/health.ui_capabilities` 作为server支持（单一常量 `web.UI_CAPABILITIES`）。`/api/project` 已增 `effective_actions`，每项 `action`、`supported`、`writable`、`reason_code`；响应同时携带 `project_format`、`minimum_writer`、`core_readers`、`core_writers`。动作族：`drafts`（个人journal，无需workbench.v3）与 `annotations/changes/candidates/content/inputs/styles/run_desk/exports/restoration`（文档动作，镜像 changes/annotation 服务的 workbench.v3 门槛）。指针级不可读（未来format/writer）时返回降级载荷：`read_status.reason_code` + 全部动作禁用，不使 /api/project 整体失败。历史视图由A根据fixed模式进一步禁写（`fixed_revision` 由前端按route组合，服务端不产生）；服务写接口仍独立验证，不信任前端disabled。
 
-行为原因覆盖 `unsupported_project_format`、`reader_upgrade_required`、`writer_upgrade_required`、`sample_readonly`、`fixed_revision`；能映射既有错误时沿用既有码，不创建重复错误族。CLI拟增 `deck-master view --project … --open --ui v2`，既有不带--ui行为保留；workbench现有入口复用，不固定端口。
+行为原因覆盖 `unsupported_project_format`、`reader_upgrade_required`、`writer_upgrade_required`、`sample_readonly`、`fixed_revision`；全部沿用既有错误族，无新码。`deck-master view --project … --open --ui v2` 已实施（`--ui` 不带 `--open` 报 invalid_input/退出码2；选项非法退出码2）；既有不带--ui行为保留；workbench现有入口复用，不固定端口，Skill 指向显式新入口。
 
 ## B03：Page/内容变更集候选与Task结果
 

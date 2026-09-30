@@ -41,7 +41,7 @@ deck_master_cli = [str(python), "-I", "-m", "deck_master"]
 
 ## 自动工作台（必守）
 
-create --draft / import draft / compose 结果**第一次形成至少一页后，主 Skill 必须立即自动调用 `deck-master view --open`**，再继续逐页制作；service 响应的 `next_action=auto_view_then_production` 就是该动作。不需要用户手动执行 view。同项目复用同一服务与 URL；服务失效才重启并更新实际地址。
+create --draft / import draft / compose 结果**第一次形成至少一页后，主 Skill 必须立即自动调用 `deck-master view --open --ui v2`**（显式新工作台入口；不带 `--ui` 仍是原有默认入口），再继续逐页制作；service 响应的 `next_action=auto_view_then_production` 就是该动作。不需要用户手动执行 view。同项目复用同一服务与 URL；服务失效才重启并更新实际地址。
 
 ## 真实性规则
 
