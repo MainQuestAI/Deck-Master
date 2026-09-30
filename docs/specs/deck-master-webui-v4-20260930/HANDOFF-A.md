@@ -1,5 +1,7 @@
 # 新A线接手入口
 
+> **历史入口（2026-09-30 起由 [CONSOLIDATION.md](CONSOLIDATION.md) 取代）**：双线已合并为单一冲刺支线 `codex/webui-v4-completion`。
+
 工作树：`/Users/dingcheng/.codex/worktrees/webui-a/Deck-Master`。分支：`codex/webui-a-implementation`。共同基线tag：`baseline/webui-v4-20260930`；运行 `git rev-parse HEAD`、`git status --short` 和 `git rev-parse baseline/webui-v4-20260930` 核对，实施前再核对远端main。
 
 依次读取根AGENTS/任务路由/恢复手册、本目录README、[A-UI-SPEC.md](A-UI-SPEC.md)、[接口合同](INTERFACES.md)、[差距矩阵](GAP-MATRIX.md)和[A01](task-cards/A01.md)。按该卡开始，不从旧W01重新做12包，也不把本目录设计样本当运行实现。

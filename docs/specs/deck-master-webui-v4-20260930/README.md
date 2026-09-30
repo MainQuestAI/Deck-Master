@@ -6,6 +6,10 @@
 
 ## 交付入口
 
+> **2026-09-30 起**：A/B 双线合并为单一冲刺，唯一入口改为 [CONSOLIDATION.md](CONSOLIDATION.md)（基线/进度/依赖/PR 组计划/冲刺纪律）；本目录其余表格为原始规划参考。
+
+| 内容 | 文件 |
+
 | 内容 | 文件 |
 |---|---|
 | 用户已定稿设计：17文件完整接收 | [收讫目录](../../design/webui-opendesign-20260930/README.md)、[原型](../../design/webui-opendesign-20260930/index.html)、[设计体系](../../design/webui-opendesign-20260930/design-system.html)、[状态页](../../design/webui-opendesign-20260930/states.html) |
