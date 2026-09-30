@@ -1,0 +1,75 @@
+{
+  "card": "B03",
+  "route": "B · 功能补齐",
+  "slice": "正文与结构变更候选（工程切片，待单独评审）",
+  "base": "50535eec0b29e2146159ee2346f96636d7cbbe3e",
+  "head": "7722a96a29da7e840c4464a780ed993209635e70",
+  "branch": "codex/webui-b-capabilities",
+  "environment": "macOS darwin 27.0.0 arm64; Python 3.12.12 venv（主仓库 .venv，dev依赖），PYTHONPATH=src 指向 webui-b 工作树",
+  "changed_files": [
+    "src/deck_master/candidates.py（三分支记录/_state/show/list/plan/adopt）",
+    "src/deck_master/changes.py（content trial 入口与能力要求）",
+    "src/deck_master/tasks.py（trial 接受分流：pages→page候选、content_update→变更集候选；task_inputs_current 路由）",
+    "src/deck_master/content_ops.py（mode=trial + refresh_plan_links 抽取）",
+    "src/deck_master/service.py（inputs patch mode=trial；accept_result 包装透传 result_kind/current_content_changed）",
+    "src/deck_master/models.py、store.py（writer floor content-candidates.v1）",
+    "contracts：candidate.v1（判别联合）、candidate-adoption.v1（联合 selections）、content-operation-input/plan（mode）、task.v1（stage=content）、document.v1（minimum_writer 枚举、candidate_adoptions 联合、stage 枚举）及全部规格镜像",
+    "tests/rebuild/test_content_candidates.py（新增15项）"
+  ],
+  "verification": [
+    {
+      "layer": "core",
+      "commands": [
+        "PYTHONPATH=src python -m pytest tests/rebuild/test_content_candidates.py -q（15 passed）",
+        "PYTHONPATH=src python -m pytest tests/rebuild/ -q --ignore=tests/rebuild/test_install.py（928 passed）",
+        "PYTHONPATH=src python -m pytest tests/rebuild/test_install.py -q（17 passed，合计945）",
+        "python -m ruff check（All checks passed）"
+      ],
+      "result": "pass"
+    },
+    {
+      "layer": "HTTP",
+      "commands": ["test_http_serves_content_candidate_kinds：/api/candidates（listing 含 result_kind）、/api/candidates/{id}（page 分支 show）、POST /api/candidates/plan（session token + input 包装）"],
+      "result": "pass"
+    }
+  ],
+  "acceptance_notes": {
+    "B03-AC01": [
+      "changes content trial：intent=content 单页 trial 可 plan/commit，任务携带 candidate_result+content_candidate；旧 Host 缺能力在 task_start 即拒绝（check_host）",
+      "content_ops rewrite/merge/split trial：commit 后 superseding 不发生，返回即候选；content_plan/页序/outputs 不变",
+      "inputs mode=trial：登记新来源版本，input_alignment 保持 needs_reconciliation；候选采用后才转 current",
+      "候选绑定：page 候选 request_ref=提交的 change plan ref（changes 路径）或 content_operation_ref（content_ops/inputs 路径）；changeset 候选 content_basis 固定 input_digest+页序+ContentPlan ref",
+      "旧核心：writer floor content-candidates.v1，老 SUPPORTED_WRITERS 读指针即拒绝（测试模拟）"
+    ],
+    "B03-AC02": [
+      "show/list/plan/adopt 全部按 result_kind 分支：artifact 保持原形状（不注入 page 键），page 给 page，content_update 给 content_update+mapping（rewritten/derived/retained/removed）",
+      "page 采用复用 content-edit 失效：blueprint 留作历史、svg/svg_preview/ppt_preview 清空、outputs 退役、content_plan 经共享 refresh_plan_links 重绑",
+      "changeset 采用复用 content_update 算法：同页迁移/保留、content_basis 绑定、page_derivation 记录、plan attach、未改页全保留、旧页历史可读",
+      "采用 plan 展示 mapping/页序/superseded tasks/downstream；取消结构候选不改稿"
+    ],
+    "B03-AC03": [
+      "基准变化：page 候选仅因 Page 身份变化而过期（精确 scope），changeset 因 input_digest/页序/plan 变化过期；AdoptionConflict 全批拒绝",
+      "重复 operation：同一 envelope 重放 already_applied 且候选不重复",
+      "取消晚到：cancelled trial 的迟到结果仅结算调用事实，current 不动",
+      "批量全成或全败：一项 basis 失效即整批拒绝、无 adoption 记录",
+      "重叠变更集：两变更集同批 one changeset per adoption 拒绝；与 slot 候选混合 atomically 拒绝",
+      "输入更新与晚到变更集冲突：后续 inputs 更新使变更集 content_basis=changed，采用被拒、候选保留可查询",
+      "图像/SVG auto/trial 无回归：test_candidates 19 项 + test_styles 13 项 + 全量 945 通过"
+    ]
+  },
+  "design_decisions": [
+    "changes content trial 走 change_binding→change plan ref 作为冻结请求；content_ops/inputs trial 走 content_operation_ref。_trial_request_ref 统一取值，候选校验绑定一致。",
+    "page 候选采用后 content_plan 重绑使用抽取的 refresh_plan_links（原 _revise_outline 的非 outline 分支），与本地编辑共用一条计划版本推进路径。",
+    "changeset 候选冻结时即完成 check_page 归一化，采用时再次校验，杜绝'候选返回后再改对象'。",
+    "trial 分支在 settle（调用事实入账）之后、内容应用之前分流，保证失败时调用事实不丢失（复用既有 settle-then-adopt 顺序）。",
+    "trial 任务继续/轮询排除（include_trials=False）不变：trial 内容任务与 trial 图像任务同样等待显式交接。"
+  ],
+  "open_items": [
+    "真实 Host 返回候选（AC01 的'匹配能力Host'路径）属 B06/真实验证层，本轮为合成Host证据。",
+    "浏览器候选台渲染 result_kind 分支属 A05/A06 消费；B04 候选决定（keep_current/reopen）另行实施。",
+    "发布/默认入口切换不在本切片授权范围。"
+  ],
+  "synthetic_evidence_only": true,
+  "real_host_calls": 0,
+  "production_acceptance": false
+}
