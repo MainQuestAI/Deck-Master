@@ -1,0 +1,42 @@
+{
+ "card": "A08",
+ "base": "b8bbf59（PR-M3 合并后）",
+ "branch": "codex/webui-v4-completion",
+ "environment": {
+  "worktree": "webui-a",
+  "browser": "Playwright Chromium session a08",
+  "service": "真实 WorkbenchServer + a06 fixture（24 页混合层 + SVG 试作候选），合成证据"
+ },
+ "two_viewport_matrix": {
+  "viewports": [
+   "1440x900",
+   "1280x800"
+  ],
+  "surfaces": [
+   "制作总览",
+   "内容与来源",
+   "整稿画廊",
+   "风格校准",
+   "任务与交付",
+   "单页(原图层)"
+  ],
+  "result": "12/12 渲染正确：各工作面 #view-title 与路由一致、无卡死、compact-note 窄宽提示在场；截图 output/playwright/a08/{overview,content,gallery,style,runs,page}-{1440,1280}.png"
+ },
+ "integration_checks": {
+  "cross_surface": "总览待办→页/层路由（A03）、画廊→单页六段链（A04）、单页候选→候选台决定（A06/B04）、任务与交付清理（A07/B05）共用真实服务数据，本轮截图会话内全链可达",
+  "console": "各面加载无新增 console error（favicon 404 为既有已知项）"
+ },
+ "design_deltas": [
+  "画廊：设计工具行为式分列（设计 segmented 含搜索+列数并排一行）→ 产品按信息密度分行（图层+筛选 / 搜索+方式+列数）；功能等价、信息架构保真",
+  "单页：设计右侧面板三 tab（执行提示词/标注/草稿）→ 产品按层上下文装配（原图层=生成依据+标注+草稿；SVG/PPT=制作与可编辑性）——能力超集，保留",
+  "风格面：设计 flow-steps 顶部步骤条 → 产品编号分段标题（1/2 段式）；连续流程等价，视觉步骤条留用户走查裁量",
+  "瓷片 meta 与设计的差异：产品增加比较勾选与参考标记（设计无比较态）——功能性必要增补",
+  "30 秒真实使用者观察：待验（无受试者在场，保持 open）"
+ ],
+ "thirty_second_observation": "open：EXECUTION 规定无受试者观察时保持待验；界面结构已按可30秒理解组织（各面标题+计数+主动作）",
+ "test_layers": {
+  "core": "979 passed + ruff clean（随各卡提交）",
+  "browser": "本记录 12 图",
+  "install": "归 B07"
+ }
+}
