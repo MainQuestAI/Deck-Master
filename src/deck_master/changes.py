@@ -216,7 +216,8 @@ def _new_task(store, ledger, basis, plan, change_ref, task_id, action):
         task, _ = tasks.reserve_allowances(store, ledger, task, action['max_calls'])
     task.update(protocol, change_binding={'change_ref': change_ref, 'action_id': action['action_id']})
     if 'mode' in action:
-        task['stage_request'] = {'mode': action['mode'], 'stage': action['stage'],
+        stage = 'content' if action['write_slots'] == ['page'] and action['mode'] == 'trial' else action['stage']
+        task['stage_request'] = {'mode': action['mode'], 'stage': stage,
                                  'references': _reference_files(store, basis, plan['input'].get('references', []))}
         if plan['input'].get('style_recipe_ref'):
             task['stage_request']['style_recipe_ref'] = plan['input']['style_recipe_ref']
@@ -224,7 +225,7 @@ def _new_task(store, ledger, basis, plan, change_ref, task_id, action):
             task['required_capabilities'].append('style_recipe')
         if action['mode'] == 'trial':
             task['required_capabilities'].append('candidate_result')
-            if action['write_slots'] == ['page']:
+            if stage == 'content':
                 # B03: a content trial Host must declare the content capability;
                 # old Hosts are refused before they can claim the task.
                 from .candidates import CONTENT_CAPABILITY

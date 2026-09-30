@@ -1336,6 +1336,12 @@ def inputs_update(
                     {**task, "status": "superseded", "updated_at": _utc_now_iso()})
         task = _input_compose_task(new_document, operation_id=operation_id, reason=normalized["reason"])
         if normalized.get("mode", "auto") == "trial":
+            if not new_document.get("pages"):
+                from .operations import OperationError
+                raise OperationError("content_invalid", "(patch)/mode",
+                                     "an explicit trial reconciles existing pages; this project has none yet")
+            task["instruction"] += (" 当前为显式 trial：除 content_update 外还须提交完整 content_plan_input；"
+                                    "结果保存为候选，采用前不改动当前正文、页序或产物。")
             # B03: the material-impact judgement comes back as an immutable
             # content_update candidate; the registration itself stays honest
             # (needs_reconciliation) and never claims alignment up front.
@@ -1436,7 +1442,7 @@ def accept_result(
             result_refs=outcome.get("result_refs") or [],
         )
     response["current_revision_id"] = current_revision
-    for key in ("candidate_ids", "candidate_refs", "result_kind", "current_artifacts_changed", "current_content_changed", "input_alignment_after_adoption", "new_page_hashes", "unchanged_reason", "impact_summary", "work_complete", "operation_result", "journal_warning", "same_revision"):
+    for key in ("candidate_ids", "candidate_refs", "result_kind", "current_artifacts_changed", "current_content_changed", "new_page_hashes", "unchanged_reason", "impact_summary", "work_complete", "operation_result", "journal_warning", "same_revision"):
         if key in outcome:
             response[key] = outcome[key]
     return response

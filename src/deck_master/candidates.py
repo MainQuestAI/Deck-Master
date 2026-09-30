@@ -15,7 +15,8 @@ import uuid
 from . import operations, tasks
 from .local_state import project_path
 from .models import (ModelError, bump_revision, canonical_json_bytes, compute_input_digest,
-                     require_writer, sha256_bytes, validate_schema, validate_task_semantics)
+                     content_identity, require_writer, sha256_bytes, validate_schema,
+                     validate_task_semantics)
 from .snapshots import load_snapshot
 from .store import Store
 
@@ -54,7 +55,13 @@ def generation_basis(store, document, page_id, stage):
 
 
 def inputs_current(store, document, task):
-    stage = 'content' if task.get('stage_request', {}).get('stage') in ('repair', 'content') else (
+    # Same freshness short-circuit as the generic task path: an identical
+    # content identity means pages, sources and task facts are unchanged, so
+    # the per-page basis comparison would be a no-op (and inputs_update may
+    # call this before the dispatch revision is even committed).
+    if content_identity(document) == task.get('produced_against'):
+        return True
+    stage = 'content' if task.get('stage_request', {}).get('stage') == 'content' else (
         'blueprint' if task['kind'] == 'blueprint' else 'svg')
     dispatched = load_snapshot(store, task['dispatch_revision'])
     return all(generation_basis(store, document, pid, stage) == generation_basis(store, dispatched, pid, stage)
@@ -296,9 +303,10 @@ def _record_page_result(store, *, document, task, updated_task, envelope, page_r
 
 def _record_changeset_result(store, *, document, task, updated_task, envelope, content_update,
                              produced_against, result_digest):
-    from .tasks import StaleInputContext, _validate_content_update_request, page_limit_violation
+    from .tasks import EnvelopeError, ModelError, StaleInputContext, _validate_content_update_request, page_limit_violation
     from .content import check_page
     from .content_ops import validate_host_result
+    from .content_plan import ContentPlanError, validate_input as validate_plan_input
     # Same validation head as a direct content_update adoption; nothing is applied.
     _validate_content_update_request(envelope, document, task, content_update)
     validate_host_result(store, document, task, content_update, envelope.get('content_plan'))
@@ -307,11 +315,23 @@ def _record_changeset_result(store, *, document, task, updated_task, envelope, c
     violation = page_limit_violation({'pages': content_update['page_order']})
     if violation:
         raise operations.OperationError('candidate_invalid', 'content_update/page_order', violation)
+    plan_value = envelope.get('content_plan')
+    # A compose.v1 changeset is only adoptable with its outline, and every
+    # stored record must pass the read-side linkage checks: validate the plan
+    # here exactly as adoption's bind_result will, against the resulting deck.
+    if plan_value is None:
+        raise EnvelopeError('(result)/content_plan',
+                            'compose.v1 content trials must submit the complete content_plan')
+    try:
+        resulting_pages = [{'page_id': pid} for pid in content_update['page_order']]
+        validate_plan_input(store, document, plan_value, resulting_pages)
+    except (ModelError, ContentPlanError) as exc:
+        raise EnvelopeError('(result)/content_plan', str(exc)) from exc
     frozen = copy.deepcopy(content_update)
     for index, page in enumerate(frozen.get('upsert_pages') or []):
         frozen['upsert_pages'][index] = check_page(page)
     changeset_ref = store.put_json_object(frozen)
-    plan_input_ref = store.put_json_object(envelope['content_plan']) if envelope.get('content_plan') else None
+    plan_input_ref = store.put_json_object(plan_value)
     candidate = {'schema_version': 'candidate.v1', 'candidate_id': 'candidate-' + uuid.uuid4().hex,
                  'project_id': document['project_id'], 'task_id': task['task_id'],
                  'created_at': tasks._utc_now_iso(), 'result_kind': 'content_update',
@@ -475,14 +495,21 @@ def plan(project, *, input):
 
 
 def _apply_page_selection(store, document, updated, selection, operation_id):
-    """One Page candidate adoption: the local content-edit invalidation rules."""
+    """One Page candidate adoption: the local content-edit invalidation rules.
+
+    A normalized-identical page changes nothing: no slots cleared, no output
+    retirement, no plan version bump — only the adoption record is written.
+    """
     from .content_ops import refresh_plan_links
     page = store.read_object_json(selection['result_ref']); validate_schema('page', page)
     if page['page_id'] != selection['page_id']:
         raise operations.OperationError('candidate_invalid', 'result_ref', 'result identity differs from the adoption plan')
     entry = next(e for e in updated['pages'] if e['page_id'] == selection['page_id'])
+    if entry['page'] == selection['result_ref']:
+        return
     entry['page'] = selection['result_ref']
     entry['svg'] = entry['svg_preview'] = entry['ppt_preview'] = None
+    updated['outputs'] = {key: None for key in updated['outputs']}
     refresh_plan_links(store, document, updated, operation_id)
 
 
@@ -581,8 +608,8 @@ def adopt(project, *, input, base_revision, operation_id):
                     entry['svg'] = None
                 adoptions.append({key: item[key] for key in ('candidate_id', 'candidate_ref', 'page_id', 'stage', 'result_ref')}
                                  | {'revision_id': updated['revision_id']})
-        if content:
-            updated['outputs'] = {key: None for key in updated['outputs']}
+        # content branches invalidate outputs themselves, only when the deck
+        # actually changed; a no-op adoption keeps exports usable
         updated['candidate_adoptions'] = adoptions
         require_writer(updated, CONTENT_WRITER if content else WRITER)
         result = {'status': 'adopted', 'revision_id': updated['revision_id'], 'candidate_ids': ids,

@@ -125,7 +125,7 @@ def adopt(path, store, ids, operation_id=None):
 def test_single_page_content_trial_records_candidate_without_touching_current(project):
     path, store = project
     task = dispatch_content_trial(path, store)
-    assert task['stage_request']['mode'] == 'trial' and task['stage_request']['stage'] == 'repair'
+    assert task['stage_request']['mode'] == 'trial' and task['stage_request']['stage'] == 'content'
     assert 'content_candidate' in task['required_capabilities'] and 'candidate_result' in task['required_capabilities']
     before = copy.deepcopy(store.load_document())
 
@@ -491,3 +491,128 @@ def test_http_serves_content_candidate_kinds(project):
         assert status == 200 and planned['plan']['selections'][0]['result_kind'] == 'page', planned
     finally:
         server.stop()
+
+
+# ------------------------------------------------- review-round fixes (P0/P1/P2)
+
+
+def test_malformed_content_plan_is_refused_and_cannot_poison_registry(project):
+    path, store = project
+    before = copy.deepcopy(store.load_document())
+    task = dispatch_content_ops_trial(path, store, 'rewrite', ('p01',))
+    start_task(path, task)
+    envelope = changeset_envelope(store, task, 'rewrite')
+    envelope['content_plan'] = {'garbage': True}
+    with pytest.raises(Exception) as caught:
+        accept(path, task, envelope)
+    assert 'content_plan' in str(caught.value)
+    after = store.load_document()
+    assert after.get('candidates') is None
+    assert after['pages'] == before['pages']
+    # the registry stays readable: the poisoned record was never persisted
+    assert candidates.listing(path)['candidates'] == []
+
+
+def test_changeset_without_required_plan_is_refused_at_record(project):
+    path, store = project
+    task = dispatch_content_ops_trial(path, store, 'rewrite', ('p01',))
+    start_task(path, task)
+    envelope = changeset_envelope(store, task, 'rewrite')
+    envelope.pop('content_plan')
+    with pytest.raises(Exception, match='content_plan'):
+        accept(path, task, envelope)
+    assert store.load_document().get('candidates') is None
+
+
+def test_plan_goal_identity_drift_is_refused_at_record(project):
+    path, store = project
+    task = dispatch_content_ops_trial(path, store, 'rewrite', ('p01',))
+    start_task(path, task)
+    envelope = changeset_envelope(store, task, 'rewrite')
+    # a valid-shaped outline that drops the goal identity of a retained page
+    envelope['content_plan'] = copy.deepcopy(envelope['content_plan'])
+    retained = next(g for g in envelope['content_plan']['goals'] if g['page_id'] == 'p02')
+    retained['goal_id'] = 'goal-rewritten-retained'
+    # the host-result scope gate rejects goal drift before the record path;
+    # either way nothing is persisted
+    with pytest.raises(Exception, match='unselected page goals'):
+        accept(path, task, envelope)
+    assert store.load_document().get('candidates') is None
+
+
+def test_inputs_trial_on_empty_project_is_refused(tmp_path):
+    path = tmp_path / 'empty'
+    # create without a draft makes a real zero-page project
+    service.create(path, brief='empty project trial', project_format='workbench.v3')
+    assert Store(path).load_document()['pages'] == []
+    material = tmp_path / 'empty-material.md'
+    material.write_text('# 空项目材料\n- 一条事实。\n')
+    with pytest.raises(Exception, match='none yet'):
+        content_ops.inputs(path, input={'reason': 'trial on empty', 'mode': 'trial',
+                                        'source_changes': {'add': [{'path': str(material)}]}},
+                           base_revision=Store(path).current_revision_id(), operation_id=str(uuid.uuid4()))
+    # auto mode still dispatches the initial compose on an empty project
+    ok = content_ops.inputs(path, input={'reason': 'auto still works',
+                                         'source_changes': {'add': [{'path': str(material)}]}},
+                            base_revision=Store(path).current_revision_id(), operation_id=str(uuid.uuid4()))
+    assert ok['operation_result']['status'] == 'updated'
+
+
+def test_out_of_order_returns_across_pages_record_independently(project):
+    path, store = project
+    first = dispatch_content_trial(path, store, 'p01')
+    second = dispatch_content_trial(path, store, 'p02')
+    start_task(path, second)
+    start_task(path, first)
+    # the later page returns first
+    second_result = accept(path, second, page_envelope(store, second, ' (two)'))
+    first_result = accept(path, first, page_envelope(store, first, ' (one)'))
+    recorded = [store.read_object_json(ref)['candidate_id'] for ref in store.load_document()['candidates']]
+    assert recorded == [*second_result['candidate_ids'], *first_result['candidate_ids']]
+    # one plan can adopt both page candidates; the other page keeps its slots
+    before = copy.deepcopy(store.load_document())
+    adopted = adopt(path, store, [*second_result['candidate_ids'], *first_result['candidate_ids']])
+    assert adopted['status'] == 'adopted'
+    after = store.load_document()
+    assert after['pages'][0]['page'] != before['pages'][0]['page']
+    assert after['pages'][1]['page'] != before['pages'][1]['page']
+    assert after['pages'][2] == before['pages'][2]
+
+
+def test_changeset_adoption_replays_same_operation(project):
+    path, store = project
+    task = dispatch_content_ops_trial(path, store, 'rewrite', ('p01',))
+    start_task(path, task)
+    result = accept(path, task, changeset_envelope(store, task, 'rewrite'))
+    cid = result['candidate_ids'][0]
+    value = candidates.plan(path, input={'schema_version': 'candidate_selection.v1',
+                                         'project_id': store.load_document()['project_id'],
+                                         'base_revision': store.current_revision_id(),
+                                         'candidate_ids': [cid]})['plan']
+    operation_id = str(uuid.uuid4())
+    first = candidates.adopt(path, input=value, base_revision=value['base_revision'],
+                             operation_id=operation_id)
+    replay = candidates.adopt(path, input=value, base_revision=value['base_revision'],
+                              operation_id=operation_id)
+    assert replay['operation_result'] == first['operation_result']
+    assert replay['committed_revision_id'] == first['committed_revision_id']
+    assert [p['page_id'] for p in store.load_document()['pages']] == ['p01', 'p02', 'p03']
+
+
+def test_noop_page_adoption_keeps_outputs_and_plan_version(project):
+    path, store = project
+    task = dispatch_content_trial(path, store, 'p01')
+    start_task(path, task)
+    # the candidate returns the identical page content: nothing to invalidate
+    entry = next(e for e in store.load_document()['pages'] if e['page_id'] == 'p01')
+    page = copy.deepcopy(store.read_object_json(entry['page']))
+    result = accept(path, task, {'kind': task['kind'], 'pages': [page]})
+    cid = result['candidate_ids'][0]
+    before = store.load_document()
+    plan_version = store.read_object_json(before['content_plan'])['version']
+    adopt(path, store, [cid])
+    after = store.load_document()
+    assert after['pages'][0]['page'] == before['pages'][0]['page']
+    assert after['outputs'] == before['outputs']
+    assert store.read_object_json(after['content_plan'])['version'] == plan_version
+    assert all(record['candidate_id'] == cid for record in after['candidate_adoptions'])

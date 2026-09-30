@@ -341,9 +341,11 @@ def _lookup_task(document: dict, task_id: str, store: Store) -> dict:
 
 def task_inputs_current(store, document, task):
     from .candidates import is_trial, inputs_current
-    if is_trial(task) and task.get('stage_request', {}).get('stage') not in ('repair', 'content'):
-        # Image trials use the per-page generation basis; content trials keep
-        # a precise per-page scope through the content basis instead (B03).
+    if is_trial(task):
+        # All trials read freshness through the candidate basis service: the
+        # generation basis for image/SVG, the precise content basis for
+        # content trials (B03). The generic slot comparison below would
+        # wrongly stale an SVG trial whose slot a sibling auto result moved.
         return inputs_current(store, document, task)
     if content_identity(document) == task.get('produced_against'):
         return True
